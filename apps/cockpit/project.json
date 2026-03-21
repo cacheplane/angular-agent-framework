@@ -1,0 +1,50 @@
+{
+  "name": "cockpit",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/cockpit/src",
+  "projectType": "application",
+  "tags": ["scope:cockpit", "type:app"],
+  "targets": {
+    "build": {
+      "executor": "@nx/next:build",
+      "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
+      "options": {
+        "outputPath": "dist/apps/cockpit"
+      },
+      "configurations": {
+        "development": {
+          "outputPath": "dist/apps/cockpit"
+        },
+        "production": {
+          "outputPath": "dist/apps/cockpit"
+        }
+      }
+    },
+    "serve": {
+      "executor": "@nx/next:server",
+      "defaultConfiguration": "development",
+      "options": {
+        "buildTarget": "cockpit:build",
+        "dev": true,
+        "port": 4201
+      },
+      "configurations": {
+        "development": {
+          "buildTarget": "cockpit:build:development",
+          "dev": true
+        },
+        "production": {
+          "buildTarget": "cockpit:build:production",
+          "dev": false
+        }
+      }
+    },
+    "test": {
+      "executor": "@nx/vite:test",
+      "options": {
+        "configFile": "apps/cockpit/vite.config.mts"
+      }
+    }
+  }
+}

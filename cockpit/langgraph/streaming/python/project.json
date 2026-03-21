@@ -1,0 +1,17 @@
+{
+  "name": "cockpit-langgraph-streaming-python",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "cockpit/langgraph/streaming/python/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{workspaceRoot}/dist/cockpit/langgraph/streaming/python"],
+      "options": {
+        "outputPath": "dist/cockpit/langgraph/streaming/python",
+        "main": "cockpit/langgraph/streaming/python/src/index.ts",
+        "tsConfig": "cockpit/langgraph/streaming/python/tsconfig.json"
+      }
+    }
+  }
+}

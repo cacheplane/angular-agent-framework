@@ -15,7 +15,14 @@
     "noUnusedLocals": true,
     "baseUrl": ".",
     "paths": {
+      "@cacheplane/cockpit-docs": ["libs/cockpit-docs/src/index.ts"],
       "@cacheplane/cockpit-registry": ["libs/cockpit-registry/src/index.ts"],
+      "@cacheplane/cockpit-shell": ["libs/cockpit-shell/src/index.ts"],
+      "@cacheplane/cockpit-testing": ["libs/cockpit-testing/src/index.ts"],
+      "@cacheplane/cockpit-ui": ["libs/cockpit-ui/src/index.ts"],
+      "@cacheplane/cockpit-langgraph-streaming-python": [
+        "cockpit/langgraph/streaming/python/src/index.ts"
+      ],
       "@cacheplane/stream-resource": ["libs/stream-resource/src/public-api.ts"]
     },
     "skipLibCheck": true,

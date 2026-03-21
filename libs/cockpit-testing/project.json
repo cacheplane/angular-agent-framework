@@ -1,0 +1,17 @@
+{
+  "name": "cockpit-testing",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/cockpit-testing/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{workspaceRoot}/dist/libs/cockpit-testing"],
+      "options": {
+        "outputPath": "dist/libs/cockpit-testing",
+        "main": "libs/cockpit-testing/src/index.ts",
+        "tsConfig": "libs/cockpit-testing/tsconfig.lib.json"
+      }
+    }
+  }
+}

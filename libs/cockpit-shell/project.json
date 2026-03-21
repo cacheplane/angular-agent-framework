@@ -1,0 +1,17 @@
+{
+  "name": "cockpit-shell",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/cockpit-shell/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{workspaceRoot}/dist/libs/cockpit-shell"],
+      "options": {
+        "outputPath": "dist/libs/cockpit-shell",
+        "main": "libs/cockpit-shell/src/index.ts",
+        "tsConfig": "libs/cockpit-shell/tsconfig.lib.json"
+      }
+    }
+  }
+}

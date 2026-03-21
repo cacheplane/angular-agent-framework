@@ -1,0 +1,16 @@
+{
+  "extends": "../../../../../tsconfig.base.json",
+  "compilerOptions": {
+    "baseUrl": "../../../../../",
+    "jsx": "react-jsx",
+    "outDir": "../../../../../dist/out-tsc",
+    "declaration": true,
+    "emitDeclarationOnly": false,
+    "paths": {
+      "@cacheplane/cockpit-registry": ["libs/cockpit-registry/src/index.ts"]
+    },
+    "types": ["node", "react"]
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["src/**/*.spec.ts"]
+}
