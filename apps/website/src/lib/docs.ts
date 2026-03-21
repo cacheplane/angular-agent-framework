@@ -5,7 +5,7 @@ import {
   resolveDocsBundle,
   toDocsSlug,
   type DocsBundle,
-} from '@cacheplane/cockpit-docs';
+} from '../../../../libs/cockpit-docs/src/index';
 
 const resolveContentDir = (...segments: string[]): string => {
   const workspacePath = path.join(process.cwd(), 'apps', 'website', ...segments);

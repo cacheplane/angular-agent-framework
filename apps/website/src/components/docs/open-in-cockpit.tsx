@@ -1,5 +1,5 @@
 import React from 'react';
-import { toCockpitHref, type DocsBundle } from '@cacheplane/cockpit-docs';
+import { toCockpitHref, type DocsBundle } from '../../../../../libs/cockpit-docs/src/index';
 
 interface OpenInCockpitProps {
   bundle: DocsBundle;

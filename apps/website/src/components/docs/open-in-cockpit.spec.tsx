@@ -1,7 +1,7 @@
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import { resolveDocsBundle } from '@cacheplane/cockpit-docs';
+import { resolveDocsBundle } from '../../../../../libs/cockpit-docs/src/index';
 import { OpenInCockpit } from './open-in-cockpit';
 
 describe('OpenInCockpit', () => {

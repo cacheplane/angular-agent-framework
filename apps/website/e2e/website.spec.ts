@@ -35,7 +35,7 @@ test('pricing page lead form validates required fields', async ({ page }) => {
 });
 
 test('docs page renders sidebar and content', async ({ page }) => {
-  await page.goto('/docs/introduction');
+  await page.goto('/docs/deep-agents/getting-started/overview/overview/python');
   await expect(page.locator('aside')).toBeVisible();
   await expect(page.locator('article')).toBeVisible();
 });
