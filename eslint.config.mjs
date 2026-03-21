@@ -5,7 +5,15 @@ export default [
   ...nx.configs['flat/typescript'],
   ...nx.configs['flat/javascript'],
   {
-    ignores: ['**/dist', '**/out-tsc', '**/next-env.d.ts'],
+    ignores: [
+      '**/dist',
+      '**/out-tsc',
+      '**/.next',
+      '**/.next/**',
+      '**/public/demo',
+      '**/public/demo/**',
+      '**/next-env.d.ts',
+    ],
   },
   {
     files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
