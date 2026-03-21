@@ -66,3 +66,22 @@ def test_graph_import_does_not_import_langchain_openai():
     spec.loader.exec_module(module)
 
     assert "langchain_openai" not in sys.modules
+
+
+@pytest.mark.smoke
+def test_graph_does_not_define_a_custom_checkpointer():
+    """LangGraph API manages persistence itself, so the exported graph should not set one."""
+    agent_path = Path(__file__).resolve().parents[1] / "src" / "chat_agent" / "agent.py"
+
+    import sys
+
+    sys.path.insert(0, str(agent_path.parents[1] / "src"))
+
+    spec = spec_from_file_location("deployed_agent_no_checkpointer", agent_path)
+    assert spec is not None
+    assert spec.loader is not None
+
+    module = module_from_spec(spec)
+    spec.loader.exec_module(module)
+
+    assert getattr(module.graph, "checkpointer", None) is None

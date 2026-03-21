@@ -5,7 +5,6 @@ from typing import TYPE_CHECKING, cast
 from dotenv import load_dotenv
 from langchain_core.messages import SystemMessage
 from langchain_core.runnables import RunnableConfig
-from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import END, START, MessagesState, StateGraph
 
 from chat_agent.config import Configuration
@@ -40,5 +39,6 @@ _builder.add_node("call_model", call_model)
 _builder.add_edge(START, "call_model")
 _builder.add_edge("call_model", END)
 
-# Compile with MemorySaver — persists thread state for the server lifetime
-graph = _builder.compile(checkpointer=MemorySaver())
+# LangGraph API manages persistence for deployed graphs, so keep the exported
+# graph free of a custom checkpointer.
+graph = _builder.compile()

@@ -12,7 +12,7 @@ dependencies = [
 [tool.uv]
 dev-dependencies = [
     "pytest>=8.0",
-    "langgraph-cli>=0.1",
+    "langgraph-cli[inmem]>=0.1",
 ]
 
 [build-system]
