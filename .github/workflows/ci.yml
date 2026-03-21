@@ -181,19 +181,19 @@ jobs:
           website_changed=false
           cockpit_changed=false
 
-          if printf '%s\n' "$affected_projects" | rg -x 'website' >/dev/null; then
+          if printf '%s\n' "$affected_projects" | grep -Fx 'website' >/dev/null; then
             website_changed=true
           fi
 
-          if printf '%s\n' "$affected_projects" | rg -x 'cockpit' >/dev/null; then
+          if printf '%s\n' "$affected_projects" | grep -Fx 'cockpit' >/dev/null; then
             cockpit_changed=true
           fi
 
-          if printf '%s\n' "$changed_files" | rg '^(\.github/workflows/ci\.yml|vercel\.json)$' >/dev/null; then
+          if printf '%s\n' "$changed_files" | grep -E '^(\.github/workflows/ci\.yml|vercel\.json)$' >/dev/null; then
             website_changed=true
           fi
 
-          if printf '%s\n' "$changed_files" | rg '^(\.github/workflows/ci\.yml|vercel\.cockpit\.json)$' >/dev/null; then
+          if printf '%s\n' "$changed_files" | grep -E '^(\.github/workflows/ci\.yml|vercel\.cockpit\.json)$' >/dev/null; then
             cockpit_changed=true
           fi
 
