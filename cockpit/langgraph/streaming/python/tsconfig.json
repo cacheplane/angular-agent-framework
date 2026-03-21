@@ -1,9 +1,9 @@
 {
-  "extends": "../../../../../tsconfig.base.json",
+  "extends": "../../../../tsconfig.base.json",
   "compilerOptions": {
-    "baseUrl": "../../../../../",
+    "baseUrl": "../../../../",
     "jsx": "react-jsx",
-    "outDir": "../../../../../dist/out-tsc",
+    "outDir": "../../../../dist/out-tsc",
     "declaration": true,
     "emitDeclarationOnly": false,
     "paths": {
