@@ -164,7 +164,7 @@ jobs:
       # Required GitHub secrets (Settings → Secrets and variables → Actions):
       #   VERCEL_TOKEN               — vercel.com/account/tokens
       #   VERCEL_ORG_ID              — Vercel team id
-      #   VERCEL_PROJECT_ID          — website project id
+      #   VERCEL_WEBSITE_PROJECT_ID  — website project id
       #   VERCEL_COCKPIT_PROJECT_ID  — cockpit project id
       - run: npm ci
       - run: npx playwright install --with-deps chromium
@@ -210,7 +210,7 @@ jobs:
         run: |
           mkdir -p .vercel
           cat > .vercel/project.json <<EOF
-          {"projectId":"${{ secrets.VERCEL_PROJECT_ID }}","orgId":"${{ secrets.VERCEL_ORG_ID }}","projectName":"stream-resource"}
+          {"projectId":"${{ secrets.VERCEL_WEBSITE_PROJECT_ID }}","orgId":"${{ secrets.VERCEL_ORG_ID }}","projectName":"stream-resource"}
           EOF
           npx vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
           rm -rf .vercel/output
