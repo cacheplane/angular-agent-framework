@@ -1,0 +1,290 @@
+:root {
+  color-scheme: dark;
+  --cockpit-bg: #08111f;
+  --cockpit-panel: #0f1b2d;
+  --cockpit-panel-border: rgba(138, 170, 214, 0.18);
+  --cockpit-panel-strong: #14243d;
+  --cockpit-text: #edf3ff;
+  --cockpit-text-muted: #96a8c7;
+  --cockpit-accent: #7dd3fc;
+  --cockpit-accent-strong: #38bdf8;
+  --cockpit-shadow: 0 24px 80px rgba(3, 9, 18, 0.45);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+  background:
+    radial-gradient(circle at top, rgba(61, 118, 168, 0.18), transparent 30%),
+    linear-gradient(180deg, #09101a 0%, var(--cockpit-bg) 100%);
+  color: var(--cockpit-text);
+  font-family:
+    Inter,
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    sans-serif;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font: inherit;
+}
+
+.cockpit-app {
+  min-height: 100vh;
+}
+
+.cockpit-shell {
+  display: grid;
+  grid-template-columns: 18rem minmax(0, 1fr);
+  min-height: 100vh;
+}
+
+.cockpit-sidebar,
+.cockpit-shell__workspace,
+.cockpit-prompt-drawer {
+  background: rgba(8, 17, 31, 0.88);
+  backdrop-filter: blur(14px);
+}
+
+.cockpit-sidebar {
+  display: grid;
+  gap: 1.5rem;
+  padding: 1.75rem 1.25rem;
+  border-right: 1px solid var(--cockpit-panel-border);
+}
+
+.cockpit-sidebar__header,
+.cockpit-shell__header {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.cockpit-sidebar h1,
+.cockpit-shell__header h2,
+.cockpit-run-mode__surface h2,
+.cockpit-code-mode__header h2,
+.cockpit-prompt-drawer h2,
+.cockpit-run-mode__context h3 {
+  margin: 0;
+  font-family:
+    'Iowan Old Style',
+    'Palatino Linotype',
+    'Book Antiqua',
+    Georgia,
+    serif;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.cockpit-shell__workspace {
+  display: grid;
+  gap: 1.5rem;
+  padding: 1.75rem;
+}
+
+.cockpit-shell__actions,
+.cockpit-shell__header,
+.cockpit-shell__mode-surface,
+.cockpit-run-mode,
+.cockpit-code-mode,
+.cockpit-prompt-drawer__header {
+  display: grid;
+  gap: 1rem;
+}
+
+.cockpit-shell__header {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+}
+
+.cockpit-shell__actions {
+  grid-auto-flow: column;
+  align-items: center;
+}
+
+.cockpit-shell__actions button,
+.cockpit-prompt-drawer button,
+.cockpit-code-mode__tabs button,
+[aria-label='Primary modes'] button,
+[aria-haspopup='menu'] {
+  border: 1px solid var(--cockpit-panel-border);
+  background: rgba(15, 27, 45, 0.9);
+  color: var(--cockpit-text);
+  border-radius: 999px;
+  padding: 0.75rem 1rem;
+}
+
+.cockpit-shell__actions button:last-child,
+[aria-label='Primary modes'] button[aria-pressed='true'] {
+  background: linear-gradient(180deg, rgba(56, 189, 248, 0.28), rgba(56, 189, 248, 0.14));
+  border-color: rgba(125, 211, 252, 0.35);
+}
+
+.cockpit-eyebrow,
+.cockpit-code-path {
+  margin: 0;
+  color: var(--cockpit-text-muted);
+  font-family:
+    'SFMono-Regular',
+    ui-monospace,
+    'Cascadia Code',
+    'Source Code Pro',
+    Menlo,
+    monospace;
+  font-size: 0.8rem;
+}
+
+.cockpit-shell__mode-surface,
+.cockpit-run-mode__surface,
+.cockpit-run-mode__context,
+.cockpit-code-mode,
+.cockpit-prompt-drawer,
+[aria-label='Primary modes'],
+[role='menu'],
+[aria-label='Prompt copy'],
+[aria-label='Docs mode'] {
+  border: 1px solid var(--cockpit-panel-border);
+  background: rgba(15, 27, 45, 0.72);
+  box-shadow: var(--cockpit-shadow);
+}
+
+.cockpit-shell__mode-surface,
+[aria-label='Docs mode'],
+.cockpit-code-mode {
+  padding: 1.25rem;
+}
+
+[aria-label='Primary modes'] {
+  display: inline-flex;
+  gap: 0.75rem;
+  width: fit-content;
+  padding: 0.5rem;
+  border-radius: 999px;
+}
+
+.cockpit-run-mode {
+  grid-template-columns: minmax(0, 1.8fr) minmax(16rem, 0.95fr);
+  align-items: start;
+}
+
+.cockpit-run-mode__surface,
+.cockpit-run-mode__context {
+  padding: 1.25rem;
+  min-height: 100%;
+}
+
+.cockpit-run-mode__viewport {
+  display: grid;
+  place-items: center;
+  min-height: 22rem;
+  border: 1px dashed rgba(125, 211, 252, 0.24);
+  background: linear-gradient(180deg, rgba(20, 36, 61, 0.5), rgba(8, 17, 31, 0.3));
+}
+
+.cockpit-code-mode__tabs,
+.cockpit-prompt-drawer__tabs {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.cockpit-code-mode__editor,
+.cockpit-prompt-drawer__body,
+[aria-label='Docs mode'] section {
+  border-top: 1px solid var(--cockpit-panel-border);
+  padding-top: 1rem;
+}
+
+.cockpit-prompt-drawer {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  bottom: 1rem;
+  width: min(28rem, calc(100vw - 2rem));
+  padding: 1.25rem;
+  border-radius: 1.25rem;
+  overflow: auto;
+  z-index: 20;
+}
+
+[aria-label='Language picker'] {
+  margin-top: 0.75rem;
+  display: grid;
+  gap: 0.5rem;
+}
+
+[aria-label='Cockpit navigation'] {
+  display: grid;
+  gap: 1.25rem;
+}
+
+[aria-label='Cockpit navigation'] h2,
+[aria-label='Cockpit navigation'] h3 {
+  margin: 0 0 0.5rem;
+}
+
+[aria-label='Cockpit navigation'] ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.4rem;
+}
+
+[aria-current='page'] {
+  color: var(--cockpit-accent);
+}
+
+pre,
+code {
+  font-family:
+    'SFMono-Regular',
+    ui-monospace,
+    'Cascadia Code',
+    'Source Code Pro',
+    Menlo,
+    monospace;
+}
+
+pre {
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+@media (max-width: 960px) {
+  .cockpit-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .cockpit-shell__header,
+  .cockpit-run-mode {
+    grid-template-columns: 1fr;
+  }
+
+  .cockpit-shell__actions {
+    grid-auto-flow: row;
+    justify-items: start;
+  }
+
+  .cockpit-prompt-drawer {
+    top: auto;
+    left: 1rem;
+    right: 1rem;
+    bottom: 1rem;
+    width: auto;
+    max-height: 70vh;
+  }
+}

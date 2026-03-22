@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import './cockpit.css';
 
 export const metadata = {
   title: 'Cockpit',
@@ -12,7 +13,7 @@ interface RootLayoutProps {
 export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body className="cockpit-app">{children}</body>
     </html>
   );
 }
