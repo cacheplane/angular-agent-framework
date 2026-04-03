@@ -1,6 +1,7 @@
 @import "tailwindcss";
 
 @theme {
+  /* Existing design tokens — preserved for backward compat */
   --color-bg: #080B14;
   --color-accent: #6C8EFF;
   --color-accent-glow: rgba(108, 142, 255, 0.35);
@@ -18,7 +19,25 @@
   --font-mono: "JetBrains Mono", monospace;
 }
 
+/* shadcn CSS variable tokens — new, non-conflicting names */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+}
+
 :root {
+  /* Existing legacy vars */
   --color-bg: #080B14;
   --color-accent: #6C8EFF;
   --color-accent-glow: rgba(108, 142, 255, 0.35);
@@ -30,6 +49,21 @@
   --color-text-muted: #4A527A;
   --color-sidebar-bg: #0A0D18;
   --color-angular-red: #DD0031;
+
+  /* shadcn semantic vars — maps to same palette */
+  --background: #080B14;
+  --foreground: #EEF1FF;
+  --primary: #6C8EFF;
+  --primary-foreground: #ffffff;
+  --card: #0A0D18;
+  --card-foreground: #EEF1FF;
+  --muted: #0D1020;
+  --muted-foreground: #8B96C8;
+  --border: #1a2040;
+  --input: #1a2040;
+  --ring: #6C8EFF;
+  --destructive: #FF6B6B;
+  --destructive-foreground: #ffffff;
 }
 
 * {
