@@ -1,4 +1,7 @@
 'use client';
+import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 
 const PLANS = [
   {
@@ -44,52 +47,49 @@ export function PricingGrid() {
     <section className="px-8 py-16 max-w-6xl mx-auto">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {PLANS.map((plan) => (
-          <div
+          <Card
             key={plan.name}
-            className="p-8 rounded-xl flex flex-col"
+            className="flex flex-col"
             style={{
               border: `1px solid ${plan.highlight ? '#6C8EFF' : 'rgba(108,142,255,0.15)'}`,
               boxShadow: plan.highlight ? '0 0 28px rgba(108,142,255,0.32)' : 'none',
-              background: 'rgba(108,142,255,0.02)',
-            }}>
-            <p
-              className="font-mono text-xs uppercase tracking-widest mb-4"
-              style={{ color: '#6C8EFF' }}>
-              {plan.name}
-            </p>
-            <p
-              style={{
-                fontFamily: 'var(--font-garamond)',
-                fontWeight: 700,
-                fontSize: 48,
-                color: '#EEF1FF',
-                lineHeight: 1,
-                marginBottom: 4,
-              }}>
-              {plan.price}
-            </p>
-            <p className="text-sm mb-8" style={{ color: '#4A527A' }}>{plan.period}</p>
-            <ul className="flex flex-col gap-2 mb-8 flex-1">
-              {plan.features.map((f) => (
-                <li key={f} className="text-sm flex items-center gap-2" style={{ color: '#8B96C8' }}>
-                  <span style={{ color: '#6C8EFF' }}>✓</span> {f}
-                </li>
-              ))}
-            </ul>
-            <a
-              href={plan.ctaHref}
-              className="text-center py-3 px-6 rounded font-mono text-sm transition-all"
-              style={{
-                background: plan.highlight ? '#6C8EFF' : 'transparent',
-                color: plan.highlight ? '#fff' : '#6C8EFF',
-                border: '1px solid #6C8EFF',
-                textDecoration: 'none',
-              }}
-              onMouseEnter={(e) => (e.currentTarget.style.boxShadow = '0 0 16px rgba(108,142,255,0.4)')}
-              onMouseLeave={(e) => (e.currentTarget.style.boxShadow = 'none')}>
-              {plan.cta}
-            </a>
-          </div>
+            }}
+          >
+            <CardHeader className="pb-0">
+              <Badge variant="default" className="w-fit mb-4">{plan.name}</Badge>
+              <p
+                style={{
+                  fontFamily: 'var(--font-garamond)',
+                  fontWeight: 700,
+                  fontSize: 48,
+                  color: '#EEF1FF',
+                  lineHeight: 1,
+                  marginBottom: 4,
+                }}
+              >
+                {plan.price}
+              </p>
+              <p className="text-sm" style={{ color: '#4A527A' }}>{plan.period}</p>
+            </CardHeader>
+            <CardContent className="flex-1 pt-6">
+              <ul className="flex flex-col gap-2">
+                {plan.features.map((f) => (
+                  <li key={f} className="text-sm flex items-center gap-2 text-muted-foreground">
+                    <span style={{ color: '#6C8EFF' }}>✓</span> {f}
+                  </li>
+                ))}
+              </ul>
+            </CardContent>
+            <CardFooter>
+              <Button
+                asChild
+                variant={plan.highlight ? 'default' : 'outline'}
+                className="w-full"
+              >
+                <a href={plan.ctaHref}>{plan.cta}</a>
+              </Button>
+            </CardFooter>
+          </Card>
         ))}
       </div>
     </section>
