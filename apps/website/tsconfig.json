@@ -17,6 +17,7 @@
         "name": "next"
       }
     ],
+    "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
       "@cacheplane/cockpit-docs": ["../../libs/cockpit-docs/src/index.ts"],
