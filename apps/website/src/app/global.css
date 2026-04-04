@@ -135,6 +135,7 @@ html {
   font-weight: 400;
 }
 
+.docs-prose { overflow-wrap: break-word; word-break: break-word; }
 .docs-prose h1 { font-size: 1.875rem; font-weight: 700; margin-top: 0; margin-bottom: 1rem; font-family: var(--font-garamond); }
 .docs-prose h2 { font-size: 1.5rem; font-weight: 600; margin-top: 2.5rem; margin-bottom: 1rem; font-family: var(--font-garamond); }
 .docs-prose h3 { font-size: 1.25rem; font-weight: 600; margin-top: 2rem; margin-bottom: 0.75rem; font-family: var(--font-garamond); }

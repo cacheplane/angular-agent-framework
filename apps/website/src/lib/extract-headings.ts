@@ -20,7 +20,8 @@ export function extractHeadings(source: string): DocHeading[] {
     const match = line.match(/^(#{2,3})\s+(.+)$/);
     if (match) {
       const text = match[2].replace(/`/g, '');
-      const id = text.toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-');
+      // Match rehype-slug's GitHub-style slugification
+      const id = text.toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-').replace(/^-+|-+$/g, '');
       headings.push({ id, text, level: match[1].length });
     }
   }
