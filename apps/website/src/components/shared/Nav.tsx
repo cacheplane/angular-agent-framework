@@ -5,7 +5,7 @@ import { tokens } from '../../../lib/design-tokens';
 
 const links = [
   { label: 'Docs', href: '/docs' },
-  { label: 'API', href: '/api-reference' },
+  { label: 'API', href: '/docs/api/stream-resource' },
   { label: 'Pricing', href: '/pricing' },
 ];
 
