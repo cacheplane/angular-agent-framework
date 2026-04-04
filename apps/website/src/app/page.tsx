@@ -19,15 +19,23 @@ export default async function HomePage() {
       <div style={{ position: 'absolute', width: 500, height: 500, borderRadius: '50%', background: tokens.gradient.cool, top: 3500, right: -150, filter: 'blur(80px)', pointerEvents: 'none' }} />
       <div style={{ position: 'absolute', width: 350, height: 350, borderRadius: '50%', background: tokens.gradient.coolLight, top: 5000, left: '30%', filter: 'blur(70px)', pointerEvents: 'none' }} />
 
+      {/* 1. Hook — headline, animation, CTA */}
       <HeroTwoCol />
-      <ArchDiagram />
+      {/* 2. Trust — quick credibility stats */}
+      <StatsStrip />
+      {/* 3. Value — why this product, with interactive code tabs */}
       <ValueProps />
+      {/* 4. Proof — 30-second code example (show, don't tell) */}
+      <CodeBlock />
+      {/* 5. Depth — capability showcases with expandable code */}
       <LangGraphShowcase />
       <DeepAgentsShowcase />
+      {/* 6. Architecture — technical credibility for evaluators */}
+      <ArchDiagram />
+      {/* 7. Features — compact summary grid */}
       <FeatureStrip />
-      <CodeBlock />
+      {/* 8. Convert — cockpit CTA */}
       <CockpitCTA />
-      <StatsStrip />
     </div>
   );
 }
