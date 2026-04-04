@@ -1,0 +1,69 @@
+# State Management
+
+How state flows through streamResource() — from LangGraph's server-side state machine to Angular Signals in your templates.
+
+## State lives on the server
+
+Unlike traditional Angular state management (NgRx, signals stores), agent state lives on the LangGraph Platform. Your Angular app is a stateless view layer.
+
+```
+LangGraph Platform (source of truth)
+  ↓ SSE stream
+FetchStreamTransport (transport layer)
+  ↓ events
+streamResource() (signal conversion)
+  ↓ Signals
+Angular templates (reactive rendering)
+```
+
+## The state shape
+
+Your state type defines what the agent manages. The `value()` signal exposes the full state object.
+
+```typescript
+interface ProjectState {
+  messages: BaseMessage[];
+  files: string[];
+  analysis: { score: number; issues: string[] };
+}
+
+const agent = streamResource<ProjectState>({
+  assistantId: 'project_agent',
+});
+
+// Access any state field as a reactive value
+const files = computed(() => agent.value().files);
+const score = computed(() => agent.value().analysis.score);
+```
+
+## Thread state vs application state
+
+<Callout type="info" title="Two kinds of state">
+Thread state (managed by LangGraph) and application state (managed by Angular) are separate concerns. Don't try to sync them — read thread state from signals, manage UI state with Angular signals.
+</Callout>
+
+```typescript
+// Thread state — from the agent
+const messages = agent.messages();     // Read-only signal
+const agentStatus = agent.status();    // Read-only signal
+
+// Application state — your Angular code
+const sidebarOpen = signal(true);      // Your UI state
+const selectedTab = signal('chat');    // Your UI state
+```
+
+## State updates are immutable
+
+Every state update from the agent creates a new signal value. Angular's change detection picks this up automatically.
+
+```typescript
+// This works with OnPush because the Signal reference changes
+@for (msg of agent.messages(); track $index) {
+  <p>{{ msg.content }}</p>
+}
+
+// Computed values re-evaluate when dependencies change
+const hasErrors = computed(() =>
+  agent.value().analysis.issues.length > 0
+);
+```
