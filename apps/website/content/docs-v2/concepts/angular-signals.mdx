@@ -59,3 +59,17 @@ Unlike traditional Angular HTTP patterns, streamResource doesn't use Observables
 <Callout type="tip" title="Why Signals over RxJS?">
 Signals are simpler for UI state. They synchronously read the latest value, compose with computed(), and integrate with Angular's template syntax. streamResource handles the async SSE connection internally and surfaces results as Signals.
 </Callout>
+
+## What's Next
+
+<CardGroup cols={2}>
+  <Card title="State Management" href="/docs/concepts/state-management">
+    Understand how LangGraph agent state flows into Angular Signals.
+  </Card>
+  <Card title="Streaming" href="/docs/guides/streaming">
+    See Signals in action with token-by-token streaming responses.
+  </Card>
+  <Card title="API Reference" href="/docs/api/stream-resource">
+    Full reference for every Signal exposed by streamResource.
+  </Card>
+</CardGroup>

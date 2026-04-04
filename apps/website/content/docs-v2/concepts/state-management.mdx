@@ -66,4 +66,18 @@ Every state update from the agent creates a new signal value. Angular's change d
 const hasErrors = computed(() =>
   agent.value().analysis.issues.length > 0
 );
+
+## What's Next
+
+<CardGroup cols={2}>
+  <Card title="Angular Signals" href="/docs/concepts/angular-signals">
+    Learn how streamResource uses Signals for reactive rendering.
+  </Card>
+  <Card title="Persistence" href="/docs/guides/persistence">
+    Persist thread state so users can resume conversations later.
+  </Card>
+  <Card title="Memory" href="/docs/guides/memory">
+    Preserve context across sessions with LangGraph's memory store.
+  </Card>
+</CardGroup>
 ```

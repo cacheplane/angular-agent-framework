@@ -63,3 +63,20 @@ const agent = streamResource<AgentState>({
 <Callout type="tip" title="Memory is server-side">
 The agent controls what gets stored in memory. streamResource() just surfaces the current state. Design your agent's state schema to include the fields you want to persist.
 </Callout>
+
+## What's Next
+
+<CardGroup cols={2}>
+  <Card title="Persistence" href="/docs/guides/persistence">
+    Save thread IDs and resume conversations across sessions.
+  </Card>
+  <Card title="Time Travel" href="/docs/guides/time-travel">
+    Replay and branch agent runs from any past checkpoint.
+  </Card>
+  <Card title="State Management" href="/docs/concepts/state-management">
+    Understand how agent state flows into Angular Signals.
+  </Card>
+  <Card title="Testing" href="/docs/guides/testing">
+    Test memory and state behavior with MockStreamTransport.
+  </Card>
+</CardGroup>

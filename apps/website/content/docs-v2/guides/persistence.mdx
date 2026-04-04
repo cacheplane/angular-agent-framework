@@ -87,3 +87,20 @@ When a connection drops, streamResource() can rejoin an in-progress run.
 await chat.joinStream(runId, lastEventId);
 // Picks up from where the connection was lost
 ```
+
+## What's Next
+
+<CardGroup cols={2}>
+  <Card title="Interrupts" href="/docs/guides/interrupts">
+    Pause agent execution and wait for human input with interrupt signals.
+  </Card>
+  <Card title="Memory" href="/docs/guides/memory">
+    Preserve context across sessions using LangGraph's memory store.
+  </Card>
+  <Card title="Streaming" href="/docs/guides/streaming">
+    Stream token-by-token responses and tool progress in real time.
+  </Card>
+  <Card title="Testing" href="/docs/guides/testing">
+    Test agent interactions deterministically with MockStreamTransport.
+  </Card>
+</CardGroup>
