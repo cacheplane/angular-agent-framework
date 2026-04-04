@@ -83,7 +83,7 @@ export async function ValueProps() {
   );
 
   return (
-    <section className="px-8 py-20 max-w-6xl mx-auto">
+    <section className="px-8 py-20 max-w-6xl mx-auto animate-on-scroll">
       <p className="font-mono text-xs uppercase tracking-widest mb-4 text-center"
         style={{ color: tokens.colors.accent }}>Why streamResource()?</p>
       <h2 style={{

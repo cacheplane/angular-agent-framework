@@ -29,7 +29,7 @@ export async function CodeBlock() {
   });
 
   return (
-    <section className="px-8 py-16 max-w-4xl mx-auto">
+    <section className="px-8 py-16 max-w-4xl mx-auto animate-on-scroll">
       <p className="font-mono text-xs uppercase tracking-widest mb-8 text-center"
         style={{ color: tokens.colors.accent }}>30-second example</p>
       <div style={{

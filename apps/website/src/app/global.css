@@ -54,6 +54,23 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Scroll-triggered fade-in for server components */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-on-scroll {
+  animation: fadeInUp 0.6s ease-out both;
+  animation-timeline: view();
+  animation-range: entry 0% entry 30%;
+}
+
+/* Smooth scroll */
+html {
+  scroll-behavior: smooth;
+}
+
 /* Shiki code blocks — tokyo-night theme */
 .shiki {
   padding: 1.5rem;
