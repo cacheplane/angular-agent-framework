@@ -1,6 +1,6 @@
 'use client';
 import { useState } from 'react';
-import { tokens } from '../../lib/design-tokens';
+import { tokens } from '../../../lib/design-tokens';
 
 export function LeadForm() {
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');

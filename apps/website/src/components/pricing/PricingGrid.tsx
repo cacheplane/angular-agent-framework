@@ -1,5 +1,5 @@
 'use client';
-import { tokens } from '../../lib/design-tokens';
+import { tokens } from '../../../lib/design-tokens';
 
 const PLANS = [
   {

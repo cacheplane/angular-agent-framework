@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useRef } from 'react';
-import { tokens } from '../../lib/design-tokens';
+import { tokens } from '../../../lib/design-tokens';
 
 export function GenerativeUIFrame() {
   const frameRef = useRef<HTMLDivElement>(null);

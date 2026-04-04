@@ -1,7 +1,7 @@
 import { GenerativeUIFrame } from './GenerativeUIFrame';
 import { CopyPromptButton } from '../docs/CopyPromptButton';
 import { getPromptBySlug } from '../../lib/docs';
-import { tokens } from '../../lib/design-tokens';
+import { tokens } from '../../../lib/design-tokens';
 
 function LangChainBadge() {
   return (

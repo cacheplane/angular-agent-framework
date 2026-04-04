@@ -1,4 +1,4 @@
-import { tokens } from '../../lib/design-tokens';
+import { tokens } from '../../../lib/design-tokens';
 
 export interface ApiEntry {
   name: string;

@@ -3,7 +3,7 @@ import { HeroTwoCol } from '../components/landing/HeroTwoCol';
 import { ArchDiagram } from '../components/landing/ArchDiagram';
 import { FeatureStrip } from '../components/landing/FeatureStrip';
 import { CodeBlock } from '../components/landing/CodeBlock';
-import { tokens } from '../lib/design-tokens';
+import { tokens } from '../../lib/design-tokens';
 
 export default async function HomePage() {
   return (

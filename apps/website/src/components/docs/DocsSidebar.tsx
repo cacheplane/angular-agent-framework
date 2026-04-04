@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { getAllDocsMeta } from '../../lib/docs';
-import { tokens } from '../../lib/design-tokens';
+import { tokens } from '../../../lib/design-tokens';
 
 export function DocsSidebar({ activeSlug }: { activeSlug: string }) {
   const docs = getAllDocsMeta();

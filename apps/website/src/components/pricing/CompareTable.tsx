@@ -1,5 +1,5 @@
 'use client';
-import { tokens } from '../../lib/design-tokens';
+import { tokens } from '../../../lib/design-tokens';
 
 const ROWS = [
   { feature: 'npm install', oss: true, seat: true, app: true, enterprise: true },

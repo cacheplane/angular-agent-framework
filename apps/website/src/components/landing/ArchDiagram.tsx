@@ -1,6 +1,6 @@
 'use client';
 import { motion } from 'framer-motion';
-import { tokens } from '../../lib/design-tokens';
+import { tokens } from '../../../lib/design-tokens';
 
 const NODES = [
   { id: 'angular', label: 'Angular App', x: 60, y: 100 },
