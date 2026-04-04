@@ -10,8 +10,8 @@ LangGraph checkpoints state at every super-step. streamResource() connects to th
 
 Save the thread ID to localStorage so conversations survive page refreshes.
 
-<Tabs items={['TypeScript', 'Template']}>
-<Tab>
+<Tabs>
+<Tab label="TypeScript">
 
 ```typescript
 // chat.component.ts
@@ -23,7 +23,7 @@ const chat = streamResource<{ messages: BaseMessage[] }>({
 ```
 
 </Tab>
-<Tab>
+<Tab label="Template">
 
 ```html
 <!-- Thread ID is managed automatically -->

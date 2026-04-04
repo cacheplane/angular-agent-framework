@@ -10,8 +10,8 @@ Use interrupts for human approval, late-binding decisions, or any step where the
 
 When an agent interrupts, the `interrupt()` signal contains the interrupt data.
 
-<Tabs items={['TypeScript', 'Template']}>
-<Tab>
+<Tabs>
+<Tab label="TypeScript">
 
 ```typescript
 // approval.component.ts
@@ -30,7 +30,7 @@ pendingApproval = computed(() => agent.interrupt());
 ```
 
 </Tab>
-<Tab>
+<Tab label="Template">
 
 ```html
 <!-- Show approval dialog when agent interrupts -->
