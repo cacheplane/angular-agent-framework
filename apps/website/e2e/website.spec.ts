@@ -34,7 +34,7 @@ test('pricing page lead form validates required fields', async ({ page }) => {
 
 test('docs page renders sidebar and content', async ({ page }) => {
   await page.goto('/docs/getting-started/introduction');
-  await expect(page.locator('aside')).toBeVisible();
+  await expect(page.locator('aside').first()).toBeVisible();
   await expect(page.locator('article')).toBeVisible();
 });
 
