@@ -1,14 +1,14 @@
 # Time Travel
 
-Time travel lets you inspect earlier states and replay alternate execution paths. streamResource() exposes the full checkpoint history and branch navigation through Angular Signals.
+Time travel lets you inspect earlier states and replay alternate execution paths. `streamResource()` exposes the full checkpoint history and branch navigation through Angular Signals. Use it to debug agent decisions, explore alternate paths, and build undo/redo experiences.
 
 <Callout type="info" title="Use cases">
-Debug agent decisions, explore alternate paths, and build undo/redo experiences for your users.
+Debug agent decisions, explore alternate paths, and build undo/redo experiences for your users. Time travel works with any LangGraph agent that persists checkpoints to a thread.
 </Callout>
 
 ## Browsing execution history
 
-The `history()` signal contains an array of `ThreadState` checkpoints.
+The `history()` signal contains an array of `ThreadState` checkpoints ordered from oldest to newest. Each checkpoint captures the complete agent state at that point in execution, including messages, intermediate results, and any custom state fields.
 
 ```typescript
 const agent = streamResource<AgentState>({
@@ -19,14 +19,21 @@ const agent = streamResource<AgentState>({
 // Full execution timeline
 const checkpoints = computed(() => agent.history());
 const checkpointCount = computed(() => agent.history().length);
+
+// Access a specific checkpoint
+const latestCheckpoint = computed(() => {
+  const history = agent.history();
+  return history[history.length - 1];
+});
 ```
+
+Each `ThreadState` entry exposes `checkpoint`, `metadata`, `created_at`, and the full `values` snapshot, giving you complete visibility into every step of execution.
 
 ## Forking from a checkpoint
 
-Submit with a specific checkpoint to branch execution from an earlier state.
+Submit with a specific checkpoint to branch execution from an earlier state. This creates a new branch in the thread graph while leaving the original path intact.
 
 ```typescript
-// Fork from the 3rd checkpoint with new input
 forkFromCheckpoint(index: number) {
   const checkpoint = this.agent.history()[index];
   this.agent.submit(
@@ -34,15 +41,30 @@ forkFromCheckpoint(index: number) {
     { checkpoint: checkpoint.checkpoint }
   );
 }
+
+// Fork with a completely different input
+retryWithAlternative(index: number, newInput: string) {
+  const checkpoint = this.agent.history()[index];
+  this.agent.submit(
+    { messages: [{ role: 'user', content: newInput }] },
+    { checkpoint: checkpoint.checkpoint }
+  );
+}
 ```
 
 ## Branch navigation
 
-Use `branch()` and `setBranch()` to navigate between execution branches.
+Use `branch()` and `setBranch()` to navigate between execution branches. Branches are automatically created when you fork from a checkpoint.
 
 ```typescript
-// Current branch
+// Current branch identifier
 const activeBranch = computed(() => agent.branch());
+
+// All available branches (if exposed by your graph)
+const allBranches = computed(() => agent.history()
+  .map(s => s.metadata?.branch)
+  .filter(Boolean)
+);
 
 // Switch to a different branch
 selectBranch(branchId: string) {
@@ -50,6 +72,103 @@ selectBranch(branchId: string) {
 }
 ```
 
+## Building a history UI
+
+Expose checkpoint history directly in your component to let users scrub through execution steps or rewind to any earlier state.
+
+<Tabs>
+<Tab label="history-viewer.component.ts">
+```typescript
+import { Component, inject, computed } from '@angular/core';
+import { streamResource } from '@stream-resource/angular';
+import { AgentService } from './agent.service';
+
+@Component({
+  selector: 'app-history-viewer',
+  templateUrl: './history-viewer.component.html',
+})
+export class HistoryViewerComponent {
+  private agentService = inject(AgentService);
+  readonly agent = this.agentService.agent;
+
+  readonly checkpoints = computed(() => this.agent.history());
+  readonly activeIndex = computed(() =>
+    this.checkpoints().length - 1
+  );
+
+  fork(index: number) {
+    const checkpoint = this.checkpoints()[index];
+    this.agent.submit(
+      { messages: [{ role: 'user', content: 'Try a different approach' }] },
+      { checkpoint: checkpoint.checkpoint }
+    );
+  }
+
+  formatTime(isoString: string): string {
+    return new Date(isoString).toLocaleTimeString();
+  }
+}
+```
+</Tab>
+<Tab label="history-viewer.component.html">
+```html
+<ul class="checkpoint-list">
+  @for (cp of checkpoints(); track cp.checkpoint.id; let i = $index) {
+    <li [class.active]="i === activeIndex()">
+      <span class="step">Step {{ i + 1 }}</span>
+      <span class="time">{{ formatTime(cp.created_at) }}</span>
+      <button (click)="fork(i)">Fork from here</button>
+    </li>
+  }
+</ul>
+```
+</Tab>
+</Tabs>
+
+## Comparing checkpoints
+
+Diff two checkpoints to understand exactly what changed between execution steps. This is useful for understanding tool call results, message additions, or state mutations.
+
+```typescript
+compareCheckpoints(indexA: number, indexB: number) {
+  const history = this.agent.history();
+  const stateA = history[indexA]?.values;
+  const stateB = history[indexB]?.values;
+
+  if (!stateA || !stateB) return null;
+
+  // Compare message counts
+  const messagesAdded = (stateB.messages?.length ?? 0)
+    - (stateA.messages?.length ?? 0);
+
+  // Identify changed keys
+  const changedKeys = Object.keys({ ...stateA, ...stateB }).filter(
+    key => JSON.stringify(stateA[key]) !== JSON.stringify(stateB[key])
+  );
+
+  return { messagesAdded, changedKeys };
+}
+```
+
+Use the comparison result to render a diff view, highlight changed fields in your UI, or log what the agent modified during a specific step.
+
 <Callout type="tip" title="Debugging workflow">
-Time travel is most useful during development. Inspect why an agent chose a particular path, then fork to test alternatives without restarting the conversation.
+Time travel is most useful during development. Inspect why an agent chose a particular path by comparing adjacent checkpoints, then fork to test alternatives without restarting the conversation. Combine `history()` with Angular DevTools to watch checkpoint arrays update in real time as the agent streams.
 </Callout>
+
+## What's Next
+
+<CardGroup cols={2}>
+  <Card title="Persistence" href="/docs-v2/guides/persistence">
+    Configure thread storage so checkpoints survive page reloads and are available across sessions.
+  </Card>
+  <Card title="Streaming" href="/docs-v2/guides/streaming">
+    Understand how streamResource() surfaces incremental updates and how history integrates with live streaming state.
+  </Card>
+  <Card title="API Reference" href="/docs-v2/reference/stream-resource">
+    Full reference for streamResource() options, signals, and the submit() API including checkpoint parameters.
+  </Card>
+  <Card title="Forking & Branching" href="/docs-v2/guides/branching">
+    Deep dive into branch management, merging strategies, and presenting multi-branch UIs to end users.
+  </Card>
+</CardGroup>
