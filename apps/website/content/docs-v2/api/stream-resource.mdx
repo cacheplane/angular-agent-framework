@@ -1,0 +1,38 @@
+# streamResource()
+
+Creates a streaming resource connected to a LangGraph agent. Must be called within an Angular injection context.
+
+## Signature
+
+```typescript
+function streamResource<TState>(options: StreamResourceOptions<TState>): StreamResource<TState>
+```
+
+## Options
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `assistantId` | `string` | Agent or graph identifier |
+| `apiUrl` | `string` | LangGraph Platform base URL |
+| `threadId` | `Signal<string \| null> \| string \| null` | Thread to connect to |
+| `onThreadId` | `(id: string) => void` | Called when a new thread is created |
+| `onInterrupt` | `(data: unknown) => void` | Called when the agent pauses for input |
+| `transport` | `StreamTransport` | Custom transport (default: FetchStreamTransport) |
+
+## Return type
+
+streamResource() returns an object with these Signal properties:
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `messages()` | `Signal<BaseMessage[]>` | Current message list |
+| `status()` | `Signal<'idle' \| 'streaming' \| 'error'>` | Stream status |
+| `error()` | `Signal<Error \| null>` | Last error, if any |
+| `threadId()` | `Signal<string \| null>` | Current thread ID |
+
+## Methods
+
+| Method | Description |
+|--------|-------------|
+| `submit(input)` | Send a message or resume from interrupt |
+| `history()` | Get execution history for time travel |
