@@ -1,5 +1,6 @@
 'use client';
 import { motion } from 'framer-motion';
+import { tokens } from '../../lib/design-tokens';
 
 const NODES = [
   { id: 'angular', label: 'Angular App', x: 60, y: 100 },
@@ -18,7 +19,7 @@ export function ArchDiagram() {
   return (
     <section className="px-8 py-16 flex flex-col items-center">
       <p className="font-mono text-xs uppercase tracking-widest mb-8"
-        style={{ color: 'var(--color-accent)' }}>Architecture</p>
+        style={{ color: tokens.colors.accent }}>Architecture</p>
       <motion.div
         initial={{ opacity: 0 }}
         whileInView={{ opacity: 1 }}
@@ -27,14 +28,14 @@ export function ArchDiagram() {
         <svg role="img" viewBox="0 0 820 200" width="100%" style={{ maxWidth: 820 }} aria-label="Architecture diagram showing Angular App connecting through streamResource and FetchStreamTransport to LangGraph Server">
           <defs>
             <radialGradient id="nodeGlow" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="rgba(108,142,255,0.3)" />
-              <stop offset="100%" stopColor="rgba(108,142,255,0)" />
+              <stop offset="0%" stopColor="rgba(0,64,144,0.15)" />
+              <stop offset="100%" stopColor="rgba(0,64,144,0)" />
             </radialGradient>
           </defs>
           {EDGES.map((edge) => (
             <g key={edge.from}>
-              <path d={edge.d} stroke="#6C8EFF" strokeWidth="1.5" fill="none" />
-              <circle r="3" fill="var(--color-accent)">
+              <path d={edge.d} stroke={tokens.colors.accent} strokeWidth="1.5" fill="none" opacity="0.4" />
+              <circle r="3" fill={tokens.colors.accent}>
                 <animateMotion dur="2s" repeatCount="indefinite" path={edge.d} />
               </circle>
             </g>
@@ -46,14 +47,14 @@ export function ArchDiagram() {
                 x={node.x - 60} y={node.y - 24}
                 width="140" height="48"
                 rx="6"
-                fill="#080B14"
-                stroke="#6C8EFF"
+                fill="rgba(255,255,255,0.5)"
+                stroke={tokens.colors.accentBorder}
                 strokeWidth="1"
               />
               <text
                 x={node.x + 10} y={node.y + 5}
                 textAnchor="middle"
-                fill="#8B96C8"
+                fill={tokens.colors.textSecondary}
                 fontSize="11"
                 fontFamily="var(--font-mono)">
                 {node.label}
