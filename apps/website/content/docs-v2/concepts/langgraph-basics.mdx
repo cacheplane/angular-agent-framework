@@ -1,0 +1,51 @@
+# LangGraph Basics
+
+LangGraph is a framework for building stateful AI agents as directed graphs. This page explains the core concepts for Angular developers who are new to agent development.
+
+## Graphs, nodes, and edges
+
+A LangGraph agent is a directed graph where:
+
+<Steps>
+<Step title="Nodes are functions">
+Each node performs one action — calling an LLM, querying a database, or making an API request. Nodes receive state and return updated state.
+</Step>
+<Step title="Edges define flow">
+Edges connect nodes. Conditional edges route execution based on state, enabling branching logic.
+</Step>
+<Step title="State is shared">
+All nodes read from and write to a shared state object. This state is what streamResource() exposes through its signals.
+</Step>
+</Steps>
+
+## How streamResource connects
+
+Your Angular app doesn't run the graph — LangGraph Platform does. streamResource() is the bridge:
+
+1. Your component calls `submit()` with user input
+2. FetchStreamTransport sends an HTTP POST to LangGraph Platform
+3. The platform runs the graph and streams state updates via SSE
+4. streamResource() updates its Signals as events arrive
+5. Angular re-renders your templates automatically
+
+## State design
+
+The generic type parameter in `streamResource<T>()` defines your agent's state shape.
+
+```typescript
+// Simple chat state
+streamResource<{ messages: BaseMessage[] }>({ ... })
+
+// Rich agent state with custom fields
+interface AgentState {
+  messages: BaseMessage[];
+  plan: string[];
+  currentStep: number;
+  results: Record<string, unknown>;
+}
+streamResource<AgentState>({ ... })
+```
+
+<Callout type="info" title="Learn more">
+For deeper LangGraph concepts (persistence, interrupts, memory), see the individual guide pages.
+</Callout>
