@@ -4,6 +4,8 @@ import { MdxRendererNew } from '../../../components/docs/MdxRenderer';
 import { DocsSearch } from '../../../components/docs/DocsSearch';
 import { getDocBySlug, getAllDocSlugs } from '../../../lib/docs-new';
 import { ApiDocRenderer, type ApiDocEntry } from '../../../components/docs/ApiDocRenderer';
+import { DocsTOC } from '../../../components/docs/DocsTOC';
+import { extractHeadings } from '../../../lib/extract-headings';
 import fs from 'fs';
 import path from 'path';
 
@@ -44,18 +46,21 @@ export default async function DocsPage({ params }: { params: Promise<{ slug?: st
     <div className="flex min-h-screen pt-16" style={{ background: 'var(--gradient-bg-flow)' }}>
       <DocsSearch />
       <DocsSidebarNew activeSection={section} activeSlug={slug} />
-      <div className="flex-1" style={{ background: 'rgba(255, 255, 255, 0.85)' }}>
-        <MdxRendererNew source={doc.content} section={section} slug={slug} title={doc.title} />
-        {section === 'api' && (() => {
-          const entries = loadApiDocs();
-          const target = API_NAME_MAP[slug];
-          const apiEntry = target ? entries.find((e: ApiDocEntry) => e.name === target) : null;
-          return apiEntry ? (
-            <div className="px-8 md:px-12 max-w-3xl pb-8">
-              <ApiDocRenderer entry={apiEntry} />
-            </div>
-          ) : null;
-        })()}
+      <div className="flex-1 flex" style={{ background: 'rgba(255, 255, 255, 0.85)' }}>
+        <div className="flex-1 min-w-0">
+          <MdxRendererNew source={doc.content} section={section} slug={slug} title={doc.title} />
+          {section === 'api' && (() => {
+            const entries = loadApiDocs();
+            const target = API_NAME_MAP[slug];
+            const apiEntry = target ? entries.find((e: ApiDocEntry) => e.name === target) : null;
+            return apiEntry ? (
+              <div className="px-6 md:px-12 max-w-3xl pb-8">
+                <ApiDocRenderer entry={apiEntry} />
+              </div>
+            ) : null;
+          })()}
+        </div>
+        <DocsTOC headings={extractHeadings(doc.content)} />
       </div>
     </div>
   );

@@ -82,3 +82,67 @@ html {
   font-size: 0.75rem;
   line-height: 1.7;
 }
+
+/* rehype-pretty-code — docs code blocks */
+.docs-prose [data-rehype-pretty-code-figure] {
+  margin: 1.5rem 0;
+}
+
+.docs-prose [data-rehype-pretty-code-figure] pre {
+  padding: 1.25rem 1.5rem;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+  overflow-x: auto;
+  font-size: 0.8rem;
+  line-height: 1.7;
+}
+
+.docs-prose [data-rehype-pretty-code-figure] code {
+  font-family: var(--font-mono), monospace;
+  font-size: inherit;
+  background: none !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  color: inherit !important;
+}
+
+.docs-prose [data-rehype-pretty-code-figure] [data-line] {
+  padding: 0 0.25rem;
+}
+
+.docs-prose [data-rehype-pretty-code-figure] [data-rehype-pretty-code-title] {
+  font-family: var(--font-mono), monospace;
+  font-size: 0.7rem;
+  color: #8b8fa3;
+  padding: 0.5rem 1.5rem;
+  background: #1a1b26;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 0.75rem 0.75rem 0 0;
+}
+
+.docs-prose [data-rehype-pretty-code-figure]:has([data-rehype-pretty-code-title]) pre {
+  border-radius: 0 0 0.75rem 0.75rem;
+}
+
+.docs-prose :not(pre) > code {
+  font-family: var(--font-mono), monospace;
+  font-size: 0.85em;
+  background: rgba(0, 64, 144, 0.06);
+  color: #004090;
+  padding: 0.15rem 0.4rem;
+  border-radius: 0.25rem;
+  font-weight: 400;
+}
+
+.docs-prose h1 { font-size: 1.875rem; font-weight: 700; margin-top: 0; margin-bottom: 1rem; font-family: var(--font-garamond); }
+.docs-prose h2 { font-size: 1.5rem; font-weight: 600; margin-top: 2.5rem; margin-bottom: 1rem; font-family: var(--font-garamond); }
+.docs-prose h3 { font-size: 1.25rem; font-weight: 600; margin-top: 2rem; margin-bottom: 0.75rem; font-family: var(--font-garamond); }
+.docs-prose p { line-height: 1.75; margin-bottom: 1.25rem; }
+.docs-prose ul, .docs-prose ol { margin-bottom: 1.25rem; }
+.docs-prose li { margin-bottom: 0.25rem; }
+
+.docs-prose table { width: 100%; border-collapse: collapse; font-size: 0.875rem; margin: 1.5rem 0; }
+.docs-prose th { text-align: left; padding: 0.5rem 0.75rem; font-family: var(--font-mono); font-size: 0.75rem; text-transform: uppercase; color: #8b8fa3; border-bottom: 1px solid rgba(0, 64, 144, 0.15); }
+.docs-prose td { padding: 0.5rem 0.75rem; border-bottom: 1px solid rgba(0, 64, 144, 0.08); color: #555770; }
+.docs-prose td code { font-size: 0.8em; }

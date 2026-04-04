@@ -1,5 +1,4 @@
 import { MDXRemote } from 'next-mdx-remote/rsc';
-import { CopyPromptButton } from './CopyPromptButton';
 import { tokens } from '../../../lib/design-tokens';
 import { Callout } from './mdx/Callout';
 import { Steps, Step } from './mdx/Steps';
@@ -8,6 +7,7 @@ import { Card, CardGroup } from './mdx/Card';
 import { CodeGroup } from './mdx/CodeGroup';
 import { DocsBreadcrumb } from './DocsBreadcrumb';
 import { DocsPrevNext } from './DocsPrevNext';
+import rehypePrettyCode from 'rehype-pretty-code';
 
 const mdxComponents = {
   Callout,
@@ -20,30 +20,10 @@ const mdxComponents = {
   CodeGroup,
 };
 
-interface Props {
-  source: string;
-  prompt?: string;
-}
-
-/** Legacy renderer for old cockpit-based docs */
-export function MdxRenderer({ source, prompt }: Props) {
-  return (
-    <article className="prose max-w-none py-8 px-8 flex-1"
-      style={{
-        '--tw-prose-body': tokens.colors.textSecondary,
-        '--tw-prose-headings': tokens.colors.textPrimary,
-        '--tw-prose-code': tokens.colors.accent,
-        background: 'rgba(255, 255, 255, 0.8)',
-      } as React.CSSProperties}>
-      {prompt && (
-        <div style={{ marginBottom: 24 }}>
-          <CopyPromptButton prompt={prompt} variant="docs" />
-        </div>
-      )}
-      <MDXRemote source={source} />
-    </article>
-  );
-}
+const rehypeOptions = {
+  theme: 'tokyo-night',
+  keepBackground: true,
+};
 
 interface NewProps {
   source: string;
@@ -52,19 +32,26 @@ interface NewProps {
   title: string;
 }
 
-/** New renderer with custom MDX components, breadcrumbs, and prev/next */
 export function MdxRendererNew({ source, section, slug, title }: NewProps) {
   return (
-    <div className="flex-1 py-8 px-8 md:px-12 max-w-3xl">
+    <div className="flex-1 py-8 px-6 md:px-12 max-w-3xl">
       <DocsBreadcrumb section={section} title={title} />
-      <article className="prose max-w-none"
+      <article className="docs-prose prose prose-slate max-w-none"
         style={{
           '--tw-prose-body': tokens.colors.textSecondary,
           '--tw-prose-headings': tokens.colors.textPrimary,
           '--tw-prose-code': tokens.colors.accent,
           '--tw-prose-links': tokens.colors.accent,
         } as React.CSSProperties}>
-        <MDXRemote source={source} components={mdxComponents} />
+        <MDXRemote
+          source={source}
+          components={mdxComponents}
+          options={{
+            mdxOptions: {
+              rehypePlugins: [[rehypePrettyCode, rehypeOptions] as any],
+            },
+          }}
+        />
       </article>
       <DocsPrevNext section={section} slug={slug} />
     </div>
