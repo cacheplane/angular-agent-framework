@@ -2,15 +2,34 @@
 import { Client } from '@langchain/langgraph-sdk';
 import { StreamResourceTransport, StreamEvent } from '../stream-resource.types';
 
+/**
+ * Production transport that connects to a LangGraph Platform API via HTTP and SSE.
+ *
+ * Creates threads automatically if no threadId is provided, and streams events
+ * using the LangGraph SDK client.
+ *
+ * @example
+ * ```typescript
+ * const transport = new FetchStreamTransport(
+ *   'http://localhost:2024',
+ *   (id) => console.log('New thread:', id),
+ * );
+ * ```
+ */
 export class FetchStreamTransport implements StreamResourceTransport {
   private client: Client;
   private onThreadId?: (id: string) => void;
 
+  /**
+   * @param apiUrl - Base URL of the LangGraph Platform API
+   * @param onThreadId - Optional callback invoked when a new thread is created
+   */
   constructor(apiUrl: string, onThreadId?: (id: string) => void) {
     this.client = new Client({ apiUrl });
     this.onThreadId = onThreadId;
   }
 
+  /** Open a streaming connection, creating a thread if needed. */
   async *stream(
     assistantId: string,
     threadId: string | null,
@@ -38,6 +57,7 @@ export class FetchStreamTransport implements StreamResourceTransport {
     }
   }
 
+  /** Join an already-started run without creating a new thread. */
   async *joinStream(
     threadId: string,
     runId: string,

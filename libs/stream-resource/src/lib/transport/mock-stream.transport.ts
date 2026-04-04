@@ -1,6 +1,20 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import { StreamResourceTransport, StreamEvent } from '../stream-resource.types';
 
+/**
+ * Test transport for deterministic agent testing without a real LangGraph server.
+ *
+ * Script event batches upfront, then emit them manually or step through them
+ * in your test specs. Supports error injection and close control.
+ *
+ * @example
+ * ```typescript
+ * const transport = new MockStreamTransport([
+ *   [{ type: 'values', data: { messages: [aiMsg('Hello')] } }],
+ *   [{ type: 'values', data: { status: 'done' } }],
+ * ]);
+ * ```
+ */
 export class MockStreamTransport implements StreamResourceTransport {
   private script: StreamEvent[][];
   private scriptIndex = 0;
@@ -11,30 +25,36 @@ export class MockStreamTransport implements StreamResourceTransport {
   private closed = false;
   private pendingError: Error | null = null;
 
+  /** @param script - Array of event batches. Each batch is emitted as a group. */
   constructor(script: StreamEvent[][] = []) {
     this.script = script;
   }
 
+  /** Advance to the next scripted batch and return its events. */
   nextBatch(): StreamEvent[] {
     if (this.scriptIndex >= this.script.length) return [];
     return this.script[this.scriptIndex++];
   }
 
+  /** Manually emit events into the stream. */
   emit(events: StreamEvent[]): void {
     this.eventQueue.push(...events);
     this.flush();
   }
 
+  /** Inject an error into the stream. */
   emitError(err: Error): void {
     this.pendingError = err;
     this.flush();
   }
 
+  /** Close the stream. Remaining queued events are drained before completion. */
   close(): void {
     this.closed = true;
     this.flush();
   }
 
+  /** Returns true if a stream is currently active. */
   isStreaming(): boolean {
     return this.streaming;
   }

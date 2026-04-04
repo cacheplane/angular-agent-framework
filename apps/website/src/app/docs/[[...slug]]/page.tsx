@@ -3,6 +3,27 @@ import { DocsSidebarNew } from '../../../components/docs/DocsSidebarNew';
 import { MdxRendererNew } from '../../../components/docs/MdxRenderer';
 import { DocsSearch } from '../../../components/docs/DocsSearch';
 import { getDocBySlug, getAllDocSlugs } from '../../../lib/docs-new';
+import { ApiDocRenderer, type ApiDocEntry } from '../../../components/docs/ApiDocRenderer';
+import fs from 'fs';
+import path from 'path';
+
+function loadApiDocs(): ApiDocEntry[] {
+  const candidates = [
+    path.join(process.cwd(), 'apps', 'website', 'content', 'docs-v2', 'api', 'api-docs.json'),
+    path.join(process.cwd(), 'content', 'docs-v2', 'api', 'api-docs.json'),
+  ];
+  for (const p of candidates) {
+    if (fs.existsSync(p)) return JSON.parse(fs.readFileSync(p, 'utf8'));
+  }
+  return [];
+}
+
+const API_NAME_MAP: Record<string, string> = {
+  'stream-resource': 'streamResource',
+  'provide-stream-resource': 'provideStreamResource',
+  'fetch-stream-transport': 'FetchStreamTransport',
+  'mock-stream-transport': 'MockStreamTransport',
+};
 
 export function generateStaticParams() {
   return getAllDocSlugs().map(({ section, slug }) => ({ slug: [section, slug] }));
@@ -25,6 +46,16 @@ export default async function DocsPage({ params }: { params: Promise<{ slug?: st
       <DocsSidebarNew activeSection={section} activeSlug={slug} />
       <div className="flex-1" style={{ background: 'rgba(255, 255, 255, 0.85)' }}>
         <MdxRendererNew source={doc.content} section={section} slug={slug} title={doc.title} />
+        {section === 'api' && (() => {
+          const entries = loadApiDocs();
+          const target = API_NAME_MAP[slug];
+          const apiEntry = target ? entries.find((e: ApiDocEntry) => e.name === target) : null;
+          return apiEntry ? (
+            <div className="px-8 md:px-12 max-w-3xl pb-8">
+              <ApiDocRenderer entry={apiEntry} />
+            </div>
+          ) : null;
+        })()}
       </div>
     </div>
   );
