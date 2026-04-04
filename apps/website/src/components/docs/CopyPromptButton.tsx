@@ -5,9 +5,10 @@ import { tokens } from '../../../lib/design-tokens';
 interface Props {
   prompt: string;
   variant?: 'hero' | 'docs';
+  label?: string;
 }
 
-export function CopyPromptButton({ prompt, variant = 'docs' }: Props) {
+export function CopyPromptButton({ prompt, variant = 'docs', label }: Props) {
   const [copied, setCopied] = useState(false);
 
   const handleClick = async () => {
@@ -46,7 +47,7 @@ export function CopyPromptButton({ prompt, variant = 'docs' }: Props) {
         e.currentTarget.style.boxShadow = 'none';
       }}>
       <span aria-hidden="true">{copied ? '\u2713' : '\u26A1'}</span>{' '}
-      {copied ? 'Copied!' : 'Copy prompt'}
+      {copied ? 'Copied!' : (label ?? 'Copy prompt')}
     </button>
   );
 }

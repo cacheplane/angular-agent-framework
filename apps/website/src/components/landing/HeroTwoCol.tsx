@@ -1,7 +1,8 @@
 import { GenerativeUIFrame } from './GenerativeUIFrame';
 import { CopyPromptButton } from '../docs/CopyPromptButton';
-import { getPromptBySlug } from '../../lib/docs';
 import { tokens } from '../../../lib/design-tokens';
+
+const SETUP_SNIPPET = 'npm install @cacheplane/stream-resource\n\n// app.config.ts\nprovideStreamResource({ apiUrl: \'http://localhost:2024\' })';
 
 function LangChainBadge() {
   return (
@@ -44,8 +45,6 @@ function AngularBadge() {
 }
 
 export async function HeroTwoCol() {
-  const prompt = getPromptBySlug(['getting-started']) ?? '';
-
   return (
     <section className="hero-two-col" aria-labelledby="hero-heading" style={{ position: 'relative', overflow: 'hidden' }}>
       <style>{`
@@ -115,7 +114,7 @@ export async function HeroTwoCol() {
         </p>
 
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 12 }}>
-          <CopyPromptButton prompt={prompt} variant="hero" />
+          <CopyPromptButton prompt={SETUP_SNIPPET} variant="hero" label="Copy setup" />
           <span style={{
             fontFamily: 'var(--font-mono)',
             fontSize: 12,
