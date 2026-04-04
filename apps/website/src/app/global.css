@@ -1,16 +1,17 @@
 @import "tailwindcss";
 
 @theme {
-  --color-bg: #080B14;
-  --color-accent: #6C8EFF;
-  --color-accent-glow: rgba(108, 142, 255, 0.35);
-  --color-accent-border: rgba(108, 142, 255, 0.15);
-  --color-accent-border-hover: rgba(108, 142, 255, 0.40);
-  --color-accent-surface: rgba(108, 142, 255, 0.08);
-  --color-text-primary: #EEF1FF;
-  --color-text-secondary: #8B96C8;
-  --color-text-muted: #4A527A;
-  --color-sidebar-bg: #0A0D18;
+  --color-bg: #f8f9fc;
+  --color-accent: #004090;
+  --color-accent-light: #64C3FD;
+  --color-accent-glow: rgba(0, 64, 144, 0.2);
+  --color-accent-border: rgba(0, 64, 144, 0.15);
+  --color-accent-border-hover: rgba(0, 64, 144, 0.3);
+  --color-accent-surface: rgba(0, 64, 144, 0.06);
+  --color-text-primary: #1a1a2e;
+  --color-text-secondary: #555770;
+  --color-text-muted: #8b8fa3;
+  --color-sidebar-bg: rgba(255, 255, 255, 0.45);
   --color-angular-red: #DD0031;
 
   --font-garamond: "EB Garamond", Georgia, serif;
@@ -19,17 +20,26 @@
 }
 
 :root {
-  --color-bg: #080B14;
-  --color-accent: #6C8EFF;
-  --color-accent-glow: rgba(108, 142, 255, 0.35);
-  --color-accent-border: rgba(108, 142, 255, 0.15);
-  --color-accent-border-hover: rgba(108, 142, 255, 0.40);
-  --color-accent-surface: rgba(108, 142, 255, 0.08);
-  --color-text-primary: #EEF1FF;
-  --color-text-secondary: #8B96C8;
-  --color-text-muted: #4A527A;
-  --color-sidebar-bg: #0A0D18;
+  --color-bg: #f8f9fc;
+  --color-accent: #004090;
+  --color-accent-light: #64C3FD;
+  --color-accent-glow: rgba(0, 64, 144, 0.2);
+  --color-accent-border: rgba(0, 64, 144, 0.15);
+  --color-accent-border-hover: rgba(0, 64, 144, 0.3);
+  --color-accent-surface: rgba(0, 64, 144, 0.06);
+  --color-text-primary: #1a1a2e;
+  --color-text-secondary: #555770;
+  --color-text-muted: #8b8fa3;
+  --color-sidebar-bg: rgba(255, 255, 255, 0.45);
   --color-angular-red: #DD0031;
+
+  --glass-bg: rgba(255, 255, 255, 0.45);
+  --glass-bg-hover: rgba(255, 255, 255, 0.55);
+  --glass-blur: 16px;
+  --glass-border: rgba(255, 255, 255, 0.6);
+  --glass-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+
+  --gradient-bg-flow: linear-gradient(135deg, #fef0f3 0%, #f4f0ff 45%, #eaf3ff 70%, #e6f4ff 100%);
 }
 
 * {
@@ -42,18 +52,6 @@ body {
   font-family: var(--font-inter);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-}
-
-.glow-text {
-  text-shadow: 0 0 40px rgba(108, 142, 255, 0.5);
-}
-
-.glow-demo {
-  box-shadow: 0 0 30px rgba(108, 142, 255, 0.25);
-}
-
-.glow-card {
-  box-shadow: 0 0 24px rgba(108, 142, 255, 0.3);
 }
 
 /* Shiki code blocks — tokyo-night theme */
