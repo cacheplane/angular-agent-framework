@@ -8,7 +8,7 @@ LangGraph calls them subgraphs (modular graph composition). Deep Agents calls th
 
 ## Tracking subagent execution
 
-The `subagents()` signal contains a Map of active subagent streams.
+The `subagents()` signal contains a Map of active subagent streams. Use it to inspect the full set of delegated tasks and their current state.
 
 ```typescript
 const orchestrator = streamResource<OrchestratorState>({
@@ -16,20 +16,25 @@ const orchestrator = streamResource<OrchestratorState>({
   subagentToolNames: ['research', 'analyze', 'summarize'],
 });
 
-// All subagent streams
+// All subagent streams (active and completed)
 const subagents = computed(() => orchestrator.subagents());
 
 // Only active ones
 const running = computed(() => orchestrator.activeSubagents());
 const runningCount = computed(() => running().length);
+
+// React to count changes
+effect(() => {
+  console.log(`${runningCount()} subagents currently running`);
+});
 ```
 
 ## Subagent stream details
 
-Each `SubagentStreamRef` provides its own signals.
+Each `SubagentStreamRef` exposes its own reactive signals — status, messages, and errors — so you can surface granular progress in your UI.
 
 ```typescript
-// Access a specific subagent
+// Access a specific subagent by its tool call ID
 const researchAgent = computed(() =>
   orchestrator.subagents().get('research-tool-call-id')
 );
@@ -37,7 +42,89 @@ const researchAgent = computed(() =>
 // Track its progress
 const researchStatus = computed(() => researchAgent()?.status());
 const researchMessages = computed(() => researchAgent()?.messages() ?? []);
+const researchError = computed(() => researchAgent()?.error());
 ```
+
+## Orchestrator pattern
+
+The orchestrator pattern delegates specialised work to subagents and merges their results. Each subagent runs its own graph independently while the parent coordinates.
+
+```typescript
+const pipeline = streamResource<PipelineState>({
+  assistantId: 'pipeline-orchestrator',
+  subagentToolNames: ['fetch-data', 'transform', 'validate', 'publish'],
+  filterSubagentMessages: true,
+});
+
+// Derive a summary of all subagent states
+const pipelineStatus = computed(() => {
+  const agents = pipeline.subagents();
+  const entries = [...agents.entries()];
+
+  return {
+    total: entries.length,
+    pending: entries.filter(([, a]) => a.status() === 'pending').length,
+    running: entries.filter(([, a]) => a.status() === 'streaming').length,
+    done: entries.filter(([, a]) => a.status() === 'complete').length,
+    failed: entries.filter(([, a]) => a.status() === 'error').length,
+  };
+});
+```
+
+## Subagent progress UI
+
+Render live progress for each subagent using the signals above.
+
+<Tabs>
+<Tab label="progress-panel.tsx">
+```typescript
+import { computed } from '@angular/core';
+
+@Component({
+  selector: 'app-subagent-progress',
+  template: `
+    @for (entry of subagentEntries(); track entry[0]) {
+      <div class="subagent-card" [attr.data-status]="entry[1].status()">
+        <span class="label">{{ entry[0] }}</span>
+        <span class="status">{{ entry[1].status() }}</span>
+        @if (entry[1].status() === 'error') {
+          <span class="error">{{ entry[1].error()?.message }}</span>
+        }
+      </div>
+    }
+  `,
+})
+export class SubagentProgressComponent {
+  orchestrator = inject(OrchestratorService).resource;
+
+  subagentEntries = computed(() =>
+    [...this.orchestrator.subagents().entries()]
+  );
+}
+```
+</Tab>
+<Tab label="progress-panel.html (template-only)">
+```html
+<!-- subagent-progress.component.html -->
+@for (entry of subagentEntries(); track entry[0]) {
+  <div class="subagent-card" [attr.data-status]="entry[1].status()">
+    <span class="label">{{ entry[0] }}</span>
+    <span class="status-badge status-{{ entry[1].status() }}">
+      {{ entry[1].status() }}
+    </span>
+
+    @if (entry[1].status() === 'streaming') {
+      <app-spinner />
+    }
+
+    @if (entry[1].status() === 'error') {
+      <p class="error-msg">{{ entry[1].error()?.message }}</p>
+    }
+  </div>
+}
+```
+</Tab>
+</Tabs>
 
 ## Filtering subagent messages
 
@@ -57,3 +144,55 @@ const parentMessages = computed(() => orchestrator.messages());
 <Callout type="tip" title="Subagent tool names">
 Set `subagentToolNames` to the tool names that spawn subagents. streamResource() uses this to identify which tool calls create subagent streams.
 </Callout>
+
+## Error handling per subagent
+
+Each subagent exposes its own `error()` signal so failures are isolated — one subagent failing does not stop the others.
+
+```typescript
+const agents = orchestrator.subagents();
+
+for (const [id, agent] of agents) {
+  effect(() => {
+    const err = agent.error();
+    if (err) {
+      console.error(`Subagent ${id} failed:`, err.message);
+      // Retry, surface to user, or fall back gracefully
+    }
+  });
+}
+
+// Collect all failed subagents reactively
+const failedAgents = computed(() =>
+  [...orchestrator.subagents().entries()].filter(
+    ([, agent]) => agent.status() === 'error'
+  )
+);
+```
+
+<Callout type="warning" title="Partial failures">
+Always check `failedAgents()` before presenting final results. A completed orchestrator can still have subagents that errored — success at the top level does not guarantee all delegates succeeded.
+</Callout>
+
+## When to use subagents vs a single agent
+
+<Callout type="info" title="Choosing your architecture">
+Use **subagents** when tasks are independent and can run in parallel, when each task needs its own context window, or when you want isolated error boundaries. Use a **single agent** for sequential reasoning, tasks that share tightly coupled state, or when latency from spawning subagents outweighs the parallelism benefit.
+</Callout>
+
+## What's Next
+
+<CardGroup cols={2}>
+  <Card title="Streaming" href="/docs-v2/guides/streaming">
+    Understand how streamResource() surfaces tokens, status, and errors in real time.
+  </Card>
+  <Card title="Testing" href="/docs-v2/guides/testing">
+    Write unit and integration tests for orchestrator graphs and subagent interactions.
+  </Card>
+  <Card title="API Reference" href="/docs-v2/api/stream-resource">
+    Full reference for streamResource() options, signals, and subagent configuration.
+  </Card>
+  <Card title="Error Handling" href="/docs-v2/guides/error-handling">
+    Patterns for retries, fallbacks, and surfacing errors from deeply nested agents.
+  </Card>
+</CardGroup>
