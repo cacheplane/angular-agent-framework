@@ -1,0 +1,106 @@
+# Testing
+
+MockStreamTransport lets you test agent interactions deterministically without a running LangGraph server. Script exact event sequences and step through them in your Angular test specs.
+
+<Callout type="tip" title="No flaky tests">
+MockStreamTransport eliminates network dependencies, timing issues, and server state. Every test run produces identical results.
+</Callout>
+
+## Basic test setup
+
+Create a MockStreamTransport with scripted events and pass it to streamResource.
+
+```typescript
+import { TestBed } from '@angular/core/testing';
+import { MockStreamTransport } from '@cacheplane/stream-resource';
+import type { StreamEvent } from '@cacheplane/stream-resource';
+
+describe('ChatComponent', () => {
+  it('should display agent messages', () => {
+    const transport = new MockStreamTransport();
+
+    TestBed.runInInjectionContext(() => {
+      const chat = streamResource<{ messages: BaseMessage[] }>({
+        assistantId: 'test_agent',
+        transport,
+      });
+
+      // Emit a values event
+      transport.emit([
+        { type: 'values', messages: [{ role: 'assistant', content: 'Hello!' }] },
+      ]);
+
+      expect(chat.messages().length).toBe(1);
+      expect(chat.messages()[0].content).toBe('Hello!');
+    });
+  });
+});
+```
+
+## Scripting event sequences
+
+Pass event batches to the constructor for sequential playback.
+
+```typescript
+const transport = new MockStreamTransport([
+  // Batch 1: Initial response
+  [{ type: 'values', messages: [{ role: 'assistant', content: 'Analyzing...' }] }],
+  // Batch 2: Final response
+  [{ type: 'values', messages: [{ role: 'assistant', content: 'Done!' }] }],
+]);
+
+// Advance through batches
+const batch1 = transport.nextBatch();  // First batch
+const batch2 = transport.nextBatch();  // Second batch
+```
+
+## Testing interrupts
+
+Script an interrupt event to test human-in-the-loop flows.
+
+```typescript
+it('should handle interrupts', () => {
+  const transport = new MockStreamTransport();
+
+  TestBed.runInInjectionContext(() => {
+    const agent = streamResource<AgentState>({
+      assistantId: 'approval_agent',
+      transport,
+    });
+
+    // Emit an interrupt
+    transport.emit([
+      { type: 'interrupt', value: { action: 'delete', risk: 'high' } },
+    ]);
+
+    expect(agent.interrupt()).toBeDefined();
+    expect(agent.interrupt()?.value.risk).toBe('high');
+  });
+});
+```
+
+## Testing errors
+
+Inject errors to test error handling.
+
+```typescript
+it('should surface errors', () => {
+  const transport = new MockStreamTransport();
+
+  TestBed.runInInjectionContext(() => {
+    const chat = streamResource<ChatState>({
+      assistantId: 'test_agent',
+      transport,
+    });
+
+    transport.emitError(new Error('Connection lost'));
+
+    expect(chat.error()).toBeDefined();
+    expect(chat.status()).toBe('error');
+  });
+});
+```
+
+<Callout type="warning" title="Injection context required">
+streamResource() must be called within an Angular injection context. In tests, wrap calls in `TestBed.runInInjectionContext()`.
+</Callout>
