@@ -75,7 +75,7 @@ export function PricingGrid() {
             <ul className="flex flex-col gap-2 mb-8 flex-1">
               {plan.features.map((f) => (
                 <li key={f} className="text-sm flex items-center gap-2" style={{ color: tokens.colors.textSecondary }}>
-                  <span style={{ color: tokens.colors.accent }}>&check;</span> {f}
+                  <span style={{ color: tokens.colors.accent }}>✓</span> {f}
                 </li>
               ))}
             </ul>
