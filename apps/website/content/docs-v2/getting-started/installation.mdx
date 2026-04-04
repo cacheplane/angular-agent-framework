@@ -1,0 +1,102 @@
+# Installation
+
+Detailed setup guide for streamResource() in your Angular application.
+
+## Requirements
+
+<Steps>
+<Step title="Angular 20+">
+streamResource() uses Angular Signals and the modern injection context API. Angular 20 or later is required.
+</Step>
+<Step title="Node.js 18+">
+Required for the build toolchain and package installation.
+</Step>
+<Step title="LangGraph Platform">
+A running LangGraph agent accessible via HTTP. Can be local (langgraph dev) or deployed (LangGraph Cloud).
+</Step>
+</Steps>
+
+## Install the package
+
+```bash
+npm install @cacheplane/stream-resource
+```
+
+This installs the library and its peer dependencies including `@langchain/langgraph-sdk`.
+
+## Configure the provider
+
+Add `provideStreamResource()` to your application configuration. This sets global defaults for all streamResource instances.
+
+```typescript
+// app.config.ts
+import { ApplicationConfig } from '@angular/core';
+import { provideStreamResource } from '@cacheplane/stream-resource';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideStreamResource({
+      apiUrl: process.env['LANGGRAPH_URL'] ?? 'http://localhost:2024',
+    }),
+  ],
+};
+```
+
+<Callout type="tip" title="Per-call overrides">
+Any option passed to `streamResource()` directly overrides the global provider config. You can set a default `apiUrl` globally and override it for specific agents.
+</Callout>
+
+## Environment setup
+
+<Tabs items={['Development', 'Production']}>
+<Tab>
+
+For local development, run a LangGraph server:
+
+```bash
+# Start LangGraph dev server
+langgraph dev
+
+# Your agent will be available at http://localhost:2024
+```
+
+</Tab>
+<Tab>
+
+For production, point to your LangGraph Cloud deployment:
+
+```typescript
+provideStreamResource({
+  apiUrl: 'https://your-project.langgraph.app',
+})
+```
+
+</Tab>
+</Tabs>
+
+## Verify installation
+
+Create a minimal test to verify the setup works:
+
+```typescript
+import { streamResource } from '@cacheplane/stream-resource';
+
+// In a component
+const test = streamResource({
+  assistantId: 'chat_agent',
+});
+
+// If status() returns 'idle', the setup is correct
+console.log(test.status()); // 'idle'
+```
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Quick Start" href="/docs/getting-started/quickstart">
+    Build your first chat component in 5 minutes
+  </Card>
+  <Card title="Angular Signals" href="/docs/concepts/angular-signals">
+    Understand how Signals power streamResource
+  </Card>
+</CardGroup>
