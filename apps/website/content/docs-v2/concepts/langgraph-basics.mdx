@@ -1,65 +1,383 @@
 # LangGraph Basics
 
-LangGraph is a framework for building stateful AI agents as directed graphs. This page explains the core concepts for Angular developers who are new to agent development.
+LangGraph is a framework for building stateful AI agents as directed graphs. If you're an Angular developer building AI-powered applications, this page teaches you how LangGraph agents work and why streamResource() is the natural bridge between your frontend and your agent backend.
 
-## Graphs, nodes, and edges
+<Callout type="info" title="Why graphs?">
+Graphs give you explicit control over agent behavior. Instead of a black-box prompt-and-pray approach, you define exactly how your agent reasons, when it calls tools, and where it pauses for human input. Every step is visible, testable, and debuggable.
+</Callout>
 
-A LangGraph agent is a directed graph where:
+## The Core Concepts
+
+A LangGraph agent has three building blocks:
+
+### Nodes — Functions That Do Work
+
+A node is a Python function that receives the current state, does something, and returns updated state. Every node has the same signature:
+
+```python
+def my_node(state: State, config: RunnableConfig) -> dict:
+    # Read from state
+    messages = state["messages"]
+
+    # Do work (call LLM, query DB, invoke tool)
+    response = llm.invoke(messages)
+
+    # Return state updates (merged into existing state)
+    return {"messages": [response]}
+```
+
+<Callout type="tip" title="Node return values">
+Nodes don't replace state — they return updates that get **merged** into the existing state. For lists like messages, LangGraph uses reducers (like `operator.add`) to accumulate entries instead of overwriting.
+</Callout>
+
+### Edges — Connections Between Nodes
+
+Edges define the execution flow. There are two types:
+
+**Normal edges** — always route to the next node:
+```python
+builder.add_edge(START, "call_model")   # Start → call_model
+builder.add_edge("call_model", END)     # call_model → End
+```
+
+**Conditional edges** — route based on state:
+```python
+def should_continue(state: State) -> str:
+    last_msg = state["messages"][-1]
+    if last_msg.tool_calls:
+        return "tools"      # Agent wants to use a tool
+    return END              # Agent is done, return response
+
+builder.add_conditional_edges("call_model", should_continue)
+```
+
+### State — The Shared Memory
+
+All nodes read from and write to a shared state object. You define its shape as a Python `TypedDict`:
+
+```python
+from typing_extensions import TypedDict, Annotated
+from operator import add
+
+class State(TypedDict):
+    messages: Annotated[list, add]   # Accumulates messages
+    plan: list[str]                   # Agent's current plan
+    results: dict                     # Tool results
+```
+
+This state is exactly what streamResource() exposes to your Angular app through Signals.
+
+## Building Your First Agent
+
+Here's the simplest possible agent — a chat model that takes messages and responds:
+
+<Tabs>
+<Tab label="agent.py">
+
+```python
+from langgraph.graph import END, START, MessagesState, StateGraph
+from langchain_openai import ChatOpenAI
+
+llm = ChatOpenAI(model="gpt-5-mini")
+
+def call_model(state: MessagesState) -> dict:
+    response = llm.invoke(state["messages"])
+    return {"messages": [response]}
+
+# Build the graph: START → call_model → END
+builder = StateGraph(MessagesState)
+builder.add_node("call_model", call_model)
+builder.add_edge(START, "call_model")
+builder.add_edge("call_model", END)
+
+graph = builder.compile()
+```
+
+</Tab>
+<Tab label="langgraph.json">
+
+```json
+{
+  "dependencies": ["."],
+  "graphs": {
+    "chat_agent": "./src/chat_agent/agent.py:graph"
+  },
+  "env": ".env",
+  "python_version": "3.12"
+}
+```
+
+</Tab>
+<Tab label="Angular component">
+
+```typescript
+// This is all you need on the Angular side
+const chat = streamResource<{ messages: BaseMessage[] }>({
+  assistantId: 'chat_agent',
+});
+
+// chat.messages() updates as the agent streams its response
+// chat.status() tells you if it's idle, loading, or done
+```
+
+</Tab>
+</Tabs>
+
+## Agent Patterns
+
+The power of LangGraph is in the patterns you can build. Each pattern maps to specific streamResource() signals.
+
+### Pattern 1: ReAct Agent (Tool Calling)
+
+The agent reasons, decides to call a tool, observes the result, and loops until it has an answer.
+
+```python
+from langgraph.prebuilt import ToolNode
+
+@tool
+def search_docs(query: str) -> str:
+    """Search the knowledge base."""
+    return vector_store.similarity_search(query)
+
+tools = [search_docs]
+
+def call_model(state: State) -> dict:
+    response = llm.bind_tools(tools).invoke(state["messages"])
+    return {"messages": [response]}
+
+def should_continue(state: State) -> str:
+    if state["messages"][-1].tool_calls:
+        return "tools"
+    return END
+
+builder = StateGraph(State)
+builder.add_node("model", call_model)
+builder.add_node("tools", ToolNode(tools))
+builder.add_edge(START, "model")
+builder.add_conditional_edges("model", should_continue)
+builder.add_edge("tools", "model")  # Loop back after tool execution
+
+graph = builder.compile()
+```
+
+**Angular connection:** Track tool execution in real-time:
+```typescript
+const agent = streamResource<AgentState>({
+  assistantId: 'react_agent',
+});
+
+// Watch tools execute
+const activeTools = computed(() => agent.toolProgress());
+const completedTools = computed(() => agent.toolCalls());
+```
+
+### Pattern 2: Human-in-the-Loop (Approval)
+
+The agent proposes an action and pauses. Your Angular UI shows an approval dialog. The user decides, and the agent resumes.
+
+```python
+from langgraph.types import Interrupt
+
+def propose_action(state: State) -> dict:
+    action = llm.invoke(state["messages"])
+    # Pause execution — Angular will show approval UI
+    raise Interrupt(value={
+        "action": "send_email",
+        "to": "client@example.com",
+        "body": action.content,
+    })
+
+def execute_action(state: State) -> dict:
+    # Only runs after human approves
+    send_email(state["pending_action"])
+    return {"messages": [{"role": "assistant", "content": "Email sent."}]}
+```
+
+**Angular connection:** The interrupt surfaces automatically:
+```typescript
+const agent = streamResource<AgentState>({
+  assistantId: 'approval_agent',
+});
+
+// Show approval UI when agent pauses
+const pendingAction = computed(() => agent.interrupt());
+
+// User clicks approve → resume the agent
+approve() {
+  agent.submit(null, { resume: { approved: true } });
+}
+```
+
+### Pattern 3: Multi-Agent Orchestration
+
+A supervisor agent delegates work to specialist sub-agents. Each sub-agent is its own graph.
+
+```python
+def supervisor(state: State) -> dict:
+    routing = llm.invoke([
+        {"role": "system", "content": "Route to: researcher, analyst, or writer"},
+        *state["messages"]
+    ])
+    return {"next_agent": routing.tool_calls[0].args["agent"]}
+
+builder = StateGraph(State)
+builder.add_node("supervisor", supervisor)
+builder.add_node("researcher", researcher_subgraph)
+builder.add_node("analyst", analyst_subgraph)
+builder.add_conditional_edges("supervisor", lambda s: s["next_agent"])
+```
+
+**Angular connection:** Track each sub-agent independently:
+```typescript
+const orchestrator = streamResource<OrchestratorState>({
+  assistantId: 'orchestrator',
+  subagentToolNames: ['researcher', 'analyst', 'writer'],
+});
+
+// See all active sub-agents
+const workers = computed(() => orchestrator.activeSubagents());
+const workerCount = computed(() => workers().length);
+```
+
+### Pattern 4: Persistent Conversations
+
+Thread-based persistence means conversations survive page refreshes, browser restarts, and even server deployments.
+
+```python
+from langgraph.checkpoint.postgres import PostgresSaver
+
+checkpointer = PostgresSaver.from_connection_string(DATABASE_URL)
+graph = builder.compile(checkpointer=checkpointer)
+
+# Each thread_id is a persistent conversation
+result = graph.invoke(
+    {"messages": [user_message]},
+    config={"configurable": {"thread_id": "user_123_session"}}
+)
+```
+
+**Angular connection:** Thread persistence is built into streamResource:
+```typescript
+const chat = streamResource<ChatState>({
+  assistantId: 'chat_agent',
+  threadId: signal(localStorage.getItem('threadId')),
+  onThreadId: (id) => localStorage.setItem('threadId', id),
+});
+
+// User returns tomorrow — same thread, full history restored
+// No code needed — streamResource handles it
+```
+
+## How streamResource() Bridges the Gap
+
+Here's why streamResource() is the natural Angular companion for LangGraph:
+
+<Tabs>
+<Tab label="The data flow">
 
 <Steps>
-<Step title="Nodes are functions">
-Each node performs one action — calling an LLM, querying a database, or making an API request. Nodes receive state and return updated state.
+<Step title="Your Angular App">
+Calls `submit({ messages: [userMsg] })` to send user input
 </Step>
-<Step title="Edges define flow">
-Edges connect nodes. Conditional edges route execution based on state, enabling branching logic.
+<Step title="streamResource()">
+Passes input to the transport layer
 </Step>
-<Step title="State is shared">
-All nodes read from and write to a shared state object. This state is what streamResource() exposes through its signals.
+<Step title="FetchStreamTransport">
+Sends HTTP POST to LangGraph Platform, opens SSE connection
+</Step>
+<Step title="LangGraph Platform">
+Executes graph nodes, calls tools, streams SSE events back
+</Step>
+<Step title="FetchStreamTransport">
+Parses SSE chunks into BehaviorSubjects
+</Step>
+<Step title="streamResource()">
+Converts BehaviorSubjects to Angular Signals via `toSignal()`
+</Step>
+<Step title="Your Angular App">
+Templates re-render automatically via OnPush change detection
 </Step>
 </Steps>
 
-## How streamResource connects
-
-Your Angular app doesn't run the graph — LangGraph Platform does. streamResource() is the bridge:
-
-1. Your component calls `submit()` with user input
-2. FetchStreamTransport sends an HTTP POST to LangGraph Platform
-3. The platform runs the graph and streams state updates via SSE
-4. streamResource() updates its Signals as events arrive
-5. Angular re-renders your templates automatically
-
-## State design
-
-The generic type parameter in `streamResource<T>()` defines your agent's state shape.
+</Tab>
+<Tab label="Signal mapping">
 
 ```typescript
-// Simple chat state
-streamResource<{ messages: BaseMessage[] }>({ ... })
+// Every LangGraph concept maps to a Signal:
 
-// Rich agent state with custom fields
-interface AgentState {
-  messages: BaseMessage[];
-  plan: string[];
-  currentStep: number;
-  results: Record<string, unknown>;
-}
-streamResource<AgentState>({ ... })
+// Agent state values
+agent.value()          // Signal<T> — full state object
+
+// Conversation
+agent.messages()       // Signal<BaseMessage[]> — message history
+
+// Lifecycle
+agent.status()         // Signal<ResourceStatus> — idle/loading/done
+agent.isLoading()      // Signal<boolean> — is the agent running?
+
+// Human-in-the-loop
+agent.interrupt()      // Signal<Interrupt> — agent is paused
+
+// Debugging
+agent.history()        // Signal<ThreadState[]> — checkpoint timeline
+agent.branch()         // Signal<string> — time-travel branch
+
+// Multi-agent
+agent.subagents()      // Signal<Map> — delegated agents
+agent.activeSubagents() // Signal<SubagentRef[]> — running workers
+agent.toolCalls()      // Signal<ToolCallWithResult[]> — tool results
 ```
 
-<Callout type="info" title="Learn more">
-For deeper LangGraph concepts (persistence, interrupts, memory), see the individual guide pages.
+</Tab>
+</Tabs>
+
+<Callout type="tip" title="Zero configuration streaming">
+You don't configure SSE, parse events, manage WebSocket connections, or handle reconnection. streamResource() does all of that. You call `submit()` and read Signals — that's the entire API surface for your Angular code.
 </Callout>
+
+## Graph API vs Functional API
+
+LangGraph offers two ways to define agents:
+
+**Graph API** (recommended for most cases):
+```python
+builder = StateGraph(State)
+builder.add_node("model", call_model)
+builder.add_edge(START, "model")
+graph = builder.compile()
+```
+
+**Functional API** (for simpler workflows):
+```python
+from langgraph.func import entrypoint, task
+
+@entrypoint
+async def agent(messages):
+    response = await call_model(messages)
+    return response
+```
+
+Both APIs produce the same output and work identically with streamResource(). Choose the Graph API when you need conditional routing, subgraphs, or interrupts. Choose the Functional API for simple, linear workflows.
 
 ## What's Next
 
 <CardGroup cols={2}>
   <Card title="Agent Architecture" href="/docs/concepts/agent-architecture">
-    Understand the planning, tool-calling, and execution lifecycle.
+    Deep dive into the planning, tool-calling, and execution lifecycle
   </Card>
   <Card title="Streaming" href="/docs/guides/streaming">
-    Stream token-by-token responses from your LangGraph agent.
+    Stream token-by-token responses with multiple stream modes
+  </Card>
+  <Card title="Interrupts" href="/docs/guides/interrupts">
+    Build human-in-the-loop approval flows
+  </Card>
+  <Card title="Subgraphs" href="/docs/guides/subgraphs">
+    Compose multi-agent systems with orchestrators
+  </Card>
+  <Card title="Persistence" href="/docs/guides/persistence">
+    Thread-based conversation persistence
   </Card>
   <Card title="Angular Signals" href="/docs/concepts/angular-signals">
-    Learn how streamResource exposes agent state as Angular Signals.
+    How Signals power streamResource's reactive model
   </Card>
 </CardGroup>
