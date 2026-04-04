@@ -1,0 +1,78 @@
+# Interrupts
+
+Interrupts let your LangGraph agent pause execution and wait for human input. streamResource() surfaces interrupts as Angular Signals, making it easy to build approval flows, confirmation dialogs, and human-in-the-loop experiences.
+
+<Callout type="info" title="When to use interrupts">
+Use interrupts for human approval, late-binding decisions, or any step where the agent needs external input before continuing.
+</Callout>
+
+## Basic interrupt handling
+
+When an agent interrupts, the `interrupt()` signal contains the interrupt data.
+
+<Tabs items={['TypeScript', 'Template']}>
+<Tab>
+
+```typescript
+// approval.component.ts
+interface ApprovalPayload {
+  action: string;
+  description: string;
+  risk: 'low' | 'medium' | 'high';
+}
+
+const agent = streamResource<AgentState>({
+  assistantId: 'approval_agent',
+});
+
+// Check for pending interrupts
+pendingApproval = computed(() => agent.interrupt());
+```
+
+</Tab>
+<Tab>
+
+```html
+<!-- Show approval dialog when agent interrupts -->
+@if (pendingApproval(); as approval) {
+  <div class="approval-dialog">
+    <h3>Agent needs approval</h3>
+    <p>{{ approval.value.description }}</p>
+    <p>Risk level: {{ approval.value.risk }}</p>
+    <button (click)="approve()">Approve</button>
+    <button (click)="reject()">Reject</button>
+  </div>
+}
+```
+
+</Tab>
+</Tabs>
+
+## Resuming from an interrupt
+
+Call `submit()` with the resume payload to continue execution.
+
+```typescript
+approve() {
+  this.agent.submit(null, { resume: { approved: true } });
+}
+
+reject() {
+  this.agent.submit(null, { resume: { approved: false, reason: 'User rejected' } });
+}
+```
+
+## Multiple interrupts
+
+The `interrupts()` signal tracks all interrupts received during a run, not just the current one.
+
+```typescript
+// Track interrupt history
+allInterrupts = computed(() => agent.interrupts());
+latestInterrupt = computed(() => agent.interrupt());
+interruptCount = computed(() => agent.interrupts().length);
+```
+
+<Callout type="warning" title="Typed interrupts">
+Use the BagTemplate generic parameter to type your interrupt payloads for full TypeScript safety.
+</Callout>
