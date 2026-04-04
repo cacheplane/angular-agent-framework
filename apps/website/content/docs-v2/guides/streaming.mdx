@@ -1,0 +1,53 @@
+# Streaming
+
+StreamResource provides token-by-token streaming from LangGraph agents via Server-Sent Events (SSE). Every update lands directly in Angular Signals.
+
+<Callout type="tip" title="Prerequisites">
+Make sure you've completed the Installation guide first.
+</Callout>
+
+## Basic streaming
+
+<Tabs items={['TypeScript', 'Template']}>
+<Tab>
+
+```typescript
+// chat.component.ts
+const chat = streamResource<{ messages: BaseMessage[] }>({
+  assistantId: 'chat_agent',
+});
+
+// Status updates as streaming progresses
+const isStreaming = computed(() => chat.status() === 'streaming');
+```
+
+</Tab>
+<Tab>
+
+```html
+<!-- chat.component.html -->
+@for (msg of chat.messages(); track $index) {
+  <p [class.streaming]="$last && isStreaming()">
+    {{ msg.content }}
+  </p>
+}
+```
+
+</Tab>
+</Tabs>
+
+## Stream status
+
+The `status()` signal reports the current state:
+
+<Steps>
+<Step title="idle">
+No active stream. Ready to send a message.
+</Step>
+<Step title="streaming">
+Tokens are arriving. Messages update in real-time.
+</Step>
+<Step title="error">
+Something went wrong. Check the error() signal for details.
+</Step>
+</Steps>

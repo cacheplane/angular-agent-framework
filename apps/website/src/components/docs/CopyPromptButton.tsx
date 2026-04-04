@@ -1,12 +1,14 @@
 'use client';
 import { useState } from 'react';
+import { tokens } from '../../../lib/design-tokens';
 
 interface Props {
   prompt: string;
   variant?: 'hero' | 'docs';
+  label?: string;
 }
 
-export function CopyPromptButton({ prompt, variant = 'docs' }: Props) {
+export function CopyPromptButton({ prompt, variant = 'docs', label }: Props) {
   const [copied, setCopied] = useState(false);
 
   const handleClick = async () => {
@@ -26,9 +28,9 @@ export function CopyPromptButton({ prompt, variant = 'docs' }: Props) {
       onClick={handleClick}
       aria-label={copied ? 'Prompt copied' : 'Copy prompt'}
       style={{
-        background: isHero ? '#6C8EFF' : 'transparent',
-        border: isHero ? 'none' : '1px solid rgba(108,142,255,0.4)',
-        color: isHero ? '#fff' : '#6C8EFF',
+        background: isHero ? tokens.colors.accent : 'transparent',
+        border: isHero ? 'none' : `1px solid ${tokens.colors.accentBorderHover}`,
+        color: isHero ? '#fff' : tokens.colors.accent,
         fontFamily: 'var(--font-mono)',
         fontSize: isHero ? '13px' : '12px',
         padding: isHero ? '12px 24px' : '8px 16px',
@@ -38,14 +40,14 @@ export function CopyPromptButton({ prompt, variant = 'docs' }: Props) {
       }}
       onMouseEnter={(e) => {
         e.currentTarget.style.boxShadow = isHero
-          ? '0 0 16px rgba(108,142,255,0.4)'
-          : '0 0 10px rgba(108,142,255,0.25)';
+          ? tokens.glow.button
+          : tokens.glow.border;
       }}
       onMouseLeave={(e) => {
         e.currentTarget.style.boxShadow = 'none';
       }}>
-      <span aria-hidden="true">{copied ? '✓' : '⚡'}</span>{' '}
-      {copied ? 'Copied!' : 'Copy prompt'}
+      <span aria-hidden="true">{copied ? '\u2713' : '\u26A1'}</span>{' '}
+      {copied ? 'Copied!' : (label ?? 'Copy prompt')}
     </button>
   );
 }

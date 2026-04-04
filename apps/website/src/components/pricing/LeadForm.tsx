@@ -1,9 +1,6 @@
 'use client';
 import { useState } from 'react';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import { Button } from '@/components/ui/button';
+import { tokens } from '../../../lib/design-tokens';
 
 export function LeadForm() {
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
@@ -25,60 +22,98 @@ export function LeadForm() {
     }
   };
 
+  const inputStyle: React.CSSProperties = {
+    background: 'rgba(255, 255, 255, 0.6)',
+    border: `1px solid ${tokens.glass.border}`,
+    color: tokens.colors.textPrimary,
+    borderRadius: '6px',
+    padding: '10px 14px',
+    width: '100%',
+    fontFamily: 'var(--font-inter)',
+    fontSize: '14px',
+    outline: 'none',
+  };
+
   return (
     <section id="lead-form" className="px-8 py-16 max-w-xl mx-auto">
-      <p
-        className="font-mono text-xs uppercase tracking-widest mb-8 text-center"
-        style={{ color: '#6C8EFF' }}
-      >
-        Enterprise
-      </p>
+      <p className="font-mono text-xs uppercase tracking-widest mb-8 text-center" style={{ color: tokens.colors.accent }}>Enterprise</p>
       <h2
         style={{
           fontFamily: 'var(--font-garamond)',
           fontWeight: 700,
           fontSize: 'clamp(24px, 3vw, 36px)',
-          color: '#EEF1FF',
+          color: tokens.colors.textPrimary,
           textAlign: 'center',
           marginBottom: 32,
-        }}
-      >
+        }}>
         Need volume seats or a custom contract?
       </h2>
-
       {status === 'sent' ? (
-        <p className="text-center text-muted-foreground">
-          Thanks — we&apos;ll be in touch within one business day.
-        </p>
+        <p className="text-center" style={{ color: tokens.colors.textSecondary }}>Thanks &mdash; we&apos;ll be in touch within one business day.</p>
       ) : (
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="lead-name">Name</Label>
-            <Input id="lead-name" name="name" placeholder="Name" required />
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="lead-email">Work email</Label>
-            <Input id="lead-email" name="email" type="email" placeholder="Work email" required />
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="lead-company">Company</Label>
-            <Input id="lead-company" name="company" placeholder="Company" />
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="lead-message">Use case</Label>
-            <Textarea
-              id="lead-message"
-              name="message"
-              placeholder="Tell us about your use case"
-              rows={4}
-            />
-          </div>
-          <Button type="submit" disabled={status === 'sending'} className="w-full mt-2">
-            {status === 'sending' ? 'Sending…' : 'Get in touch'}
-          </Button>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4"
+          style={{
+            background: tokens.glass.bg,
+            backdropFilter: `blur(${tokens.glass.blur})`,
+            WebkitBackdropFilter: `blur(${tokens.glass.blur})`,
+            border: `1px solid ${tokens.glass.border}`,
+            borderRadius: 12,
+            padding: 24,
+          }}>
+          <input
+            name="name"
+            placeholder="Name"
+            required
+            style={inputStyle}
+            onFocus={(e) => { e.target.style.borderColor = tokens.colors.accent; e.target.style.outline = `2px solid ${tokens.colors.accentGlow}`; e.target.style.outlineOffset = '2px'; }}
+            onBlur={(e) => { e.target.style.borderColor = tokens.glass.border; e.target.style.outline = 'none'; }}
+          />
+          <input
+            name="email"
+            type="email"
+            placeholder="Work email"
+            required
+            style={inputStyle}
+            onFocus={(e) => { e.target.style.borderColor = tokens.colors.accent; e.target.style.outline = `2px solid ${tokens.colors.accentGlow}`; e.target.style.outlineOffset = '2px'; }}
+            onBlur={(e) => { e.target.style.borderColor = tokens.glass.border; e.target.style.outline = 'none'; }}
+          />
+          <input
+            name="company"
+            placeholder="Company"
+            style={inputStyle}
+            onFocus={(e) => { e.target.style.borderColor = tokens.colors.accent; e.target.style.outline = `2px solid ${tokens.colors.accentGlow}`; e.target.style.outlineOffset = '2px'; }}
+            onBlur={(e) => { e.target.style.borderColor = tokens.glass.border; e.target.style.outline = 'none'; }}
+          />
+          <textarea
+            name="message"
+            placeholder="Tell us about your use case"
+            rows={4}
+            style={{ ...inputStyle, resize: 'vertical' }}
+            onFocus={(e) => { e.target.style.borderColor = tokens.colors.accent; e.target.style.outline = `2px solid ${tokens.colors.accentGlow}`; e.target.style.outlineOffset = '2px'; }}
+            onBlur={(e) => { e.target.style.borderColor = tokens.glass.border; e.target.style.outline = 'none'; }}
+          />
+          <button
+            type="submit"
+            disabled={status === 'sending'}
+            style={{
+              background: tokens.colors.accent,
+              color: '#fff',
+              border: 'none',
+              borderRadius: '6px',
+              padding: '12px 24px',
+              fontFamily: 'var(--font-mono)',
+              fontSize: '14px',
+              cursor: status === 'sending' ? 'not-allowed' : 'pointer',
+              opacity: status === 'sending' ? 0.6 : 1,
+              transition: 'box-shadow 0.2s',
+            }}
+            onMouseEnter={(e) => { if (status !== 'sending') e.currentTarget.style.boxShadow = tokens.glow.button; }}
+            onMouseLeave={(e) => (e.currentTarget.style.boxShadow = 'none')}>
+            {status === 'sending' ? 'Sending\u2026' : 'Get in touch'}
+          </button>
           {status === 'error' && (
             <p className="text-sm text-center" style={{ color: '#FF6B6B' }}>
-              Something went wrong — try again or email us directly.
+              Something went wrong &mdash; try again or email us directly.
             </p>
           )}
         </form>

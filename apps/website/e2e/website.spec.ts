@@ -7,14 +7,13 @@ test('landing page renders hero headline', async ({ page }) => {
   expect(headline).toContain('Angular');
 });
 
-test('landing page renders architecture diagram', async ({ page }) => {
+test('landing page renders architecture section', async ({ page }) => {
   await page.goto('/');
-  await expect(page.locator('svg[aria-label*="Architecture"]')).toBeVisible();
+  await expect(page.getByText('Architecture').first()).toBeVisible();
 });
 
 test('landing page renders 6 feature cards', async ({ page }) => {
   await page.goto('/');
-  // Feature section contains h2 "Features" and 6 cards
   const featureSection = page.locator('section').filter({ hasText: 'Features' });
   await expect(featureSection).toBeVisible();
 });
@@ -30,19 +29,18 @@ test('pricing page shows 4 plan cards', async ({ page }) => {
 test('pricing page lead form validates required fields', async ({ page }) => {
   await page.goto('/pricing');
   await page.click('button[type="submit"]');
-  // HTML5 validation prevents submit — form should still be visible
   await expect(page.locator('form')).toBeVisible();
 });
 
 test('docs page renders sidebar and content', async ({ page }) => {
-  await page.goto('/docs/deep-agents/getting-started/overview/overview/python');
+  await page.goto('/docs/getting-started/introduction');
   await expect(page.locator('aside')).toBeVisible();
   await expect(page.locator('article')).toBeVisible();
 });
 
-test('api reference page renders', async ({ page }) => {
-  await page.goto('/api-reference');
-  await expect(page.getByText('streamResource()', { exact: true }).first()).toBeVisible();
+test('api reference renders in docs', async ({ page }) => {
+  await page.goto('/docs/api/stream-resource');
+  await expect(page.getByText('streamResource()').first()).toBeVisible();
 });
 
 test('nav has pricing link', async ({ page }) => {

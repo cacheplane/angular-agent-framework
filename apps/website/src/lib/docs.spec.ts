@@ -1,42 +1,24 @@
 import { describe, expect, it } from 'vitest';
-import { getAllDocSlugs, getDocBySlug } from './docs';
+import { getAllDocSlugs, getDocBySlug } from './docs-new';
+import { allDocsPages } from './docs-config';
 
 describe('website docs bindings', () => {
-  it('lists product-first docs slugs from shared bundle metadata', () => {
-    expect(getAllDocSlugs()).toContainEqual([
-      'deep-agents',
-      'core-capabilities',
-      'planning',
-      'overview',
-      'python',
-    ]);
-    expect(getAllDocSlugs()).toContainEqual([
-      'langgraph',
-      'core-capabilities',
-      'streaming',
-      'build',
-      'python',
-    ]);
+  it('lists all doc slugs from config', () => {
+    const slugs = getAllDocSlugs();
+    expect(slugs.length).toBe(allDocsPages.length);
+    expect(slugs).toContainEqual({ section: 'getting-started', slug: 'introduction' });
+    expect(slugs).toContainEqual({ section: 'guides', slug: 'streaming' });
+    expect(slugs).toContainEqual({ section: 'api', slug: 'stream-resource' });
   });
 
-  it('falls back to the product getting-started overview when the requested language bundle does not exist', () => {
-    expect(
-      getDocBySlug([
-        'langgraph',
-        'core-capabilities',
-        'streaming',
-        'build',
-        'typescript',
-      ])
-    ).toMatchObject({
-      title: 'LangGraph Overview',
-      bundle: {
-        product: 'langgraph',
-        section: 'getting-started',
-        topic: 'overview',
-        page: 'overview',
-        language: 'python',
-      },
-    });
+  it('loads a doc by section and slug', () => {
+    const doc = getDocBySlug('getting-started', 'introduction');
+    expect(doc).not.toBeNull();
+    expect(doc?.title).toBe('Introduction');
+    expect(doc?.content).toContain('StreamResource');
+  });
+
+  it('returns null for non-existent doc', () => {
+    expect(getDocBySlug('guides', 'nonexistent')).toBeNull();
   });
 });

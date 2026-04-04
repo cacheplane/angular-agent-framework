@@ -1,4 +1,5 @@
 import { codeToHtml } from 'shiki';
+import { tokens } from '../../../lib/design-tokens';
 
 const EXAMPLE = `// app.config.ts
 provideStreamResource({ apiUrl: 'http://localhost:2024' })
@@ -27,22 +28,26 @@ export async function CodeBlock() {
     theme: 'tokyo-night',
   });
 
-  // tsHtml and templateHtml are trusted Shiki output generated at build time
-  // from hardcoded strings — not user input
   return (
-    <section className="px-8 py-16 max-w-4xl mx-auto">
+    <section className="px-8 py-16 max-w-4xl mx-auto animate-on-scroll">
       <p className="font-mono text-xs uppercase tracking-widest mb-8 text-center"
-        style={{ color: 'var(--color-accent)' }}>30-second example</p>
-      <div
-        className="rounded-t-xl overflow-hidden text-sm leading-relaxed"
-        style={{ border: '1px solid rgba(108,142,255,0.15)', borderBottom: 'none' }}
-        dangerouslySetInnerHTML={{ __html: tsHtml }}
-      />
-      <div
-        className="rounded-b-xl overflow-hidden text-sm leading-relaxed"
-        style={{ border: '1px solid rgba(108,142,255,0.15)', borderTop: '1px solid rgba(108,142,255,0.08)' }}
-        dangerouslySetInnerHTML={{ __html: templateHtml }}
-      />
+        style={{ color: tokens.colors.accent }}>30-second example</p>
+      <div style={{
+        borderRadius: 12,
+        border: `1px solid ${tokens.glass.border}`,
+        boxShadow: tokens.glass.shadow,
+        overflow: 'hidden',
+      }}>
+        <div
+          className="overflow-hidden text-sm leading-relaxed"
+          dangerouslySetInnerHTML={{ __html: tsHtml }}
+        />
+        <div
+          className="overflow-hidden text-sm leading-relaxed"
+          style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}
+          dangerouslySetInnerHTML={{ __html: templateHtml }}
+        />
+      </div>
     </section>
   );
 }
