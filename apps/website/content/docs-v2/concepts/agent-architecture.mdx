@@ -1,0 +1,55 @@
+# Agent Architecture
+
+How AI agents work — the planning, execution, and tool-calling lifecycle that streamResource() connects your Angular app to.
+
+## The agent loop
+
+An AI agent follows a cycle:
+
+<Steps>
+<Step title="Receive input">
+The user sends a message via `submit()`. streamResource() posts it to LangGraph Platform.
+</Step>
+<Step title="Plan">
+The LLM decides what to do next — respond directly, call a tool, or delegate to a subagent.
+</Step>
+<Step title="Execute">
+Tools run (database queries, API calls, code execution). Results feed back into state.
+</Step>
+<Step title="Respond">
+The agent streams its response token-by-token. streamResource() updates the `messages()` signal in real-time.
+</Step>
+<Step title="Checkpoint">
+State is checkpointed. The agent may loop back to Plan, or finish.
+</Step>
+</Steps>
+
+## Tool calling
+
+Agents extend their capabilities through tools. streamResource() tracks tool execution:
+
+```typescript
+const agent = streamResource<AgentState>({
+  assistantId: 'research_agent',
+});
+
+// Currently executing tools
+const tools = computed(() => agent.toolProgress());
+
+// Completed tool calls with results
+const completedTools = computed(() => agent.toolCalls());
+```
+
+## Multi-agent patterns
+
+Complex tasks use multiple agents working together:
+
+- **Orchestrator** — one agent delegates to specialized subagents
+- **Pipeline** — agents process sequentially, each refining the output
+- **Debate** — agents review each other's work
+
+streamResource() supports these patterns through the `subagents()` and `activeSubagents()` signals.
+
+<Callout type="tip" title="Start simple">
+Most applications only need a single agent with tools. Add subagents when you need true task delegation with isolated state.
+</Callout>
