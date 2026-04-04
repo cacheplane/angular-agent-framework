@@ -16,7 +16,8 @@ export default async function DocsPage({ params }: { params: Promise<{ slug?: st
   const prompt = getPromptBySlug(slug) ?? undefined;
 
   return (
-    <div className="flex min-h-screen pt-16">
+    <div className="flex min-h-screen pt-16"
+      style={{ background: 'var(--gradient-bg-flow)' }}>
       <DocsSidebar activeSlug={slug.join('/')} />
       <div className="flex-1">
         <div className="px-8 pt-8">
