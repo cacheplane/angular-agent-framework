@@ -3,26 +3,61 @@
 StreamResource brings full parity with React's `useStream()` hook to Angular 20+. It's the enterprise streaming resource for LangChain and Angular — built natively with Angular Signals, not wrapped or adapted.
 
 <Callout type="info" title="Who is this for?">
-StreamResource serves two audiences: Angular developers building AI-powered apps, and AI/agent developers who need an Angular frontend.
+StreamResource serves two audiences: **Angular developers** building AI-powered applications, and **AI/agent developers** who need a production Angular frontend for their LangGraph agents.
 </Callout>
 
-## What you'll build
+## What is streamResource()?
 
-With streamResource(), you can build Angular applications that connect to LangGraph agents with:
+`streamResource()` is an Angular function that creates a reactive connection to a LangGraph agent. It returns an object whose properties are Angular Signals — meaning your templates update automatically as the agent streams responses.
 
-- **Token-by-token streaming** via SSE
-- **Thread persistence** across sessions
-- **Human-in-the-loop** interrupts and approvals
-- **Time travel** debugging
-- **Deterministic testing** with MockStreamTransport
+```typescript
+const chat = streamResource<{ messages: BaseMessage[] }>({
+  assistantId: 'chat_agent',
+});
 
-## Next steps
+// Every property is a Signal
+chat.messages()    // Signal<BaseMessage[]>
+chat.status()      // Signal<'idle' | 'loading' | 'resolved' | 'error'>
+chat.interrupt()   // Signal<Interrupt | undefined>
+chat.history()     // Signal<ThreadState[]>
+```
+
+## What you can build
+
+<Steps>
+<Step title="Streaming chat interfaces">
+Token-by-token streaming with real-time UI updates. Messages arrive as they're generated.
+</Step>
+<Step title="Human-in-the-loop workflows">
+Agents pause for approval, confirmation, or correction. Your UI handles the interrupt and resumes execution.
+</Step>
+<Step title="Multi-agent dashboards">
+Track multiple subagents working in parallel, each with their own message stream and status.
+</Step>
+<Step title="Time-travel debugging tools">
+Inspect agent execution history, fork from checkpoints, and explore alternate paths.
+</Step>
+</Steps>
+
+## Guides
 
 <CardGroup cols={2}>
   <Card title="Quick Start" href="/docs/getting-started/quickstart">
-    Build your first streaming chat in 5 minutes
+    Build a chat component in 5 minutes
   </Card>
   <Card title="Installation" href="/docs/getting-started/installation">
-    Detailed setup and configuration guide
+    Detailed setup and configuration
+  </Card>
+  <Card title="Streaming" href="/docs/guides/streaming">
+    Token-by-token updates via SSE
+  </Card>
+  <Card title="Persistence" href="/docs/guides/persistence">
+    Thread persistence across sessions
+  </Card>
+  <Card title="Interrupts" href="/docs/guides/interrupts">
+    Human-in-the-loop approval flows
+  </Card>
+  <Card title="Testing" href="/docs/guides/testing">
+    Deterministic testing with MockStreamTransport
   </Card>
 </CardGroup>
