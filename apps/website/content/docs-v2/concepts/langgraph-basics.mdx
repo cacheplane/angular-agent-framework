@@ -275,23 +275,29 @@ Here's why streamResource() is the natural Angular companion for LangGraph:
 <Tabs>
 <Tab label="The data flow">
 
-```
-Your Angular App
-  ↓ submit({ messages: [userMsg] })
-streamResource()
-  ↓ HTTP POST to LangGraph Platform
-FetchStreamTransport
-  ↓ Creates thread, starts run
-LangGraph Platform
-  ↓ Executes graph nodes
-  ↓ Streams SSE events back
-FetchStreamTransport
-  ↓ Parses events into BehaviorSubjects
-streamResource()
-  ↓ Converts to Angular Signals via toSignal()
-Your Angular App
-  → Templates re-render automatically
-```
+<Steps>
+<Step title="Your Angular App">
+Calls `submit({ messages: [userMsg] })` to send user input
+</Step>
+<Step title="streamResource()">
+Passes input to the transport layer
+</Step>
+<Step title="FetchStreamTransport">
+Sends HTTP POST to LangGraph Platform, opens SSE connection
+</Step>
+<Step title="LangGraph Platform">
+Executes graph nodes, calls tools, streams SSE events back
+</Step>
+<Step title="FetchStreamTransport">
+Parses SSE chunks into BehaviorSubjects
+</Step>
+<Step title="streamResource()">
+Converts BehaviorSubjects to Angular Signals via `toSignal()`
+</Step>
+<Step title="Your Angular App">
+Templates re-render automatically via OnPush change detection
+</Step>
+</Steps>
 
 </Tab>
 <Tab label="Signal mapping">
