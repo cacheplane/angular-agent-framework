@@ -1,22 +1,23 @@
 import { GenerativeUIFrame } from './GenerativeUIFrame';
 import { CopyPromptButton } from '../docs/CopyPromptButton';
 import { getPromptBySlug } from '../../lib/docs';
+import { tokens } from '../../lib/design-tokens';
 
 function LangChainBadge() {
   return (
     <span style={{
       display: 'inline-flex', alignItems: 'center', gap: 6,
-      background: 'rgba(108,142,255,0.08)',
-      border: '1px solid rgba(108,142,255,0.15)',
+      background: 'rgba(0, 64, 144, 0.08)',
+      border: '1px solid rgba(0, 64, 144, 0.2)',
       borderRadius: 20, padding: '4px 10px 4px 8px',
-      fontFamily: 'var(--font-mono)', fontSize: 11, color: '#EEF1FF',
+      fontFamily: 'var(--font-mono)', fontSize: 11, color: tokens.colors.textPrimary,
     }}>
       <span style={{
         width: 14, height: 14, borderRadius: 3,
-        background: 'rgba(127,200,255,0.2)',
-        border: '1px solid rgba(127,200,255,0.4)',
+        background: 'rgba(0, 64, 144, 0.15)',
+        border: '1px solid rgba(0, 64, 144, 0.3)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        fontSize: 7, fontWeight: 700, color: '#7FC8FF', lineHeight: 1,
+        fontSize: 7, fontWeight: 700, color: tokens.colors.accent, lineHeight: 1,
       }}>LC</span>
       LangChain
     </span>
@@ -27,10 +28,10 @@ function AngularBadge() {
   return (
     <span style={{
       display: 'inline-flex', alignItems: 'center', gap: 6,
-      background: 'rgba(108,142,255,0.08)',
-      border: '1px solid rgba(108,142,255,0.15)',
+      background: 'rgba(221, 0, 49, 0.06)',
+      border: '1px solid rgba(221, 0, 49, 0.15)',
       borderRadius: 20, padding: '4px 10px 4px 8px',
-      fontFamily: 'var(--font-mono)', fontSize: 11, color: '#EEF1FF',
+      fontFamily: 'var(--font-mono)', fontSize: 11, color: tokens.colors.textPrimary,
     }}>
       <svg width="14" height="14" viewBox="0 0 250 250" aria-hidden={true}>
         <path fill="#DD0031" d="M125 30L31.9 63.2l14.2 123.1L125 230l78.9-43.7 14.2-123.1z"/>
@@ -46,7 +47,7 @@ export async function HeroTwoCol() {
   const prompt = getPromptBySlug(['getting-started']) ?? '';
 
   return (
-    <section className="hero-two-col" aria-labelledby="hero-heading">
+    <section className="hero-two-col" aria-labelledby="hero-heading" style={{ position: 'relative', overflow: 'hidden' }}>
       <style>{`
         .hero-two-col {
           display: flex;
@@ -54,16 +55,23 @@ export async function HeroTwoCol() {
           padding: 96px 40px 60px;
           gap: 48px;
           min-height: 100vh;
+          background: ${tokens.gradient.bgFlow};
         }
-        .hero-left { flex: 0 0 55%; max-width: 55%; }
-        .hero-right { flex: 0 0 45%; max-width: 45%; display: flex; justify-content: center; }
+        .hero-left { flex: 0 0 55%; max-width: 55%; position: relative; z-index: 1; }
+        .hero-right { flex: 0 0 45%; max-width: 45%; display: flex; justify-content: center; position: relative; z-index: 1; }
         @media (max-width: 767px) {
           .hero-two-col { flex-direction: column; padding: 80px 24px 40px; }
           .hero-left { flex: none; max-width: 100%; width: 100%; }
           .hero-right { flex: none; max-width: 100%; width: 100%; max-height: 300px; overflow: hidden; }
         }
       `}</style>
-      {/* Left column — 55% */}
+
+      {/* Ambient gradient blobs */}
+      <div style={{ position: 'absolute', width: 500, height: 500, borderRadius: '50%', background: tokens.gradient.warm, top: -150, left: -100, filter: 'blur(60px)', pointerEvents: 'none' }} />
+      <div style={{ position: 'absolute', width: 450, height: 450, borderRadius: '50%', background: tokens.gradient.cool, bottom: -100, right: -50, filter: 'blur(60px)', pointerEvents: 'none' }} />
+      <div style={{ position: 'absolute', width: 350, height: 350, borderRadius: '50%', background: tokens.gradient.coolLight, top: '30%', right: '20%', filter: 'blur(50px)', pointerEvents: 'none' }} />
+
+      {/* Left column */}
       <div className="hero-left">
         <div style={{ display: 'flex', gap: 8, marginBottom: 28, flexWrap: 'wrap' }}>
           <LangChainBadge />
@@ -75,24 +83,19 @@ export async function HeroTwoCol() {
           fontSize: 'clamp(36px, 4.5vw, 72px)',
           fontWeight: 800,
           lineHeight: 1.05,
-          color: '#EEF1FF',
+          color: tokens.colors.textPrimary,
           margin: 0,
           marginBottom: 20,
         }}>
           The Enterprise Streaming Resource for LangChain and{' '}
-          <span style={{
-            color: '#DD0031',
-            textShadow: '0 0 30px rgba(221,0,49,0.5)',
-          }}>
-            Angular
-          </span>
+          <span style={{ color: tokens.colors.angularRed }}>Angular</span>
         </h1>
 
         <p style={{
           fontFamily: 'var(--font-garamond)',
           fontStyle: 'italic',
           fontSize: 'clamp(16px, 1.8vw, 20px)',
-          color: '#8B96C8',
+          color: tokens.colors.textSecondary,
           maxWidth: '44ch',
           lineHeight: 1.5,
           margin: 0,
@@ -103,12 +106,12 @@ export async function HeroTwoCol() {
             fontStyle: 'normal',
             fontFamily: 'var(--font-mono)',
             fontSize: '0.8em',
-            background: 'rgba(108,142,255,0.08)',
-            color: '#6C8EFF',
+            background: tokens.colors.accentSurface,
+            color: tokens.colors.accent,
             padding: '2px 6px',
             borderRadius: 4,
           }}>useStream()</code>
-          {' '}— built natively for Angular 20+.
+          {' '}&mdash; built natively for Angular 20+.
         </p>
 
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 12 }}>
@@ -116,14 +119,14 @@ export async function HeroTwoCol() {
           <span style={{
             fontFamily: 'var(--font-mono)',
             fontSize: 12,
-            color: '#4A527A',
+            color: tokens.colors.textMuted,
           }}>
             npm install @cacheplane/stream-resource
           </span>
         </div>
       </div>
 
-      {/* Right column — 45% */}
+      {/* Right column */}
       <div className="hero-right">
         <GenerativeUIFrame />
       </div>
