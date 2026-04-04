@@ -1,3 +1,32 @@
 # MockStreamTransport
 
+`MockStreamTransport` is a test-friendly transport that replaces real network calls with an in-memory event emitter. Use it in unit and component tests to push values on demand and assert against your component's reactive state without a running server.
+
+```ts
+import { TestBed } from '@angular/core/testing';
+import {
+  provideStreamResource,
+  MockStreamTransport,
+} from '@ngxp/stream-resource';
+
+beforeEach(() => {
+  TestBed.configureTestingModule({
+    providers: [provideStreamResource({ transport: MockStreamTransport })],
+  });
+});
+
+it('reflects streamed value', () => {
+  const transport = TestBed.inject(MockStreamTransport);
+  // Emit a value into the stream
+  transport.emit('/api/repos/42', { id: 42, name: 'my-repo' });
+  // Assert your component's signal updated accordingly
+});
+```
+
+<Callout type="tip" title="Deterministic tests">
+  Because `MockStreamTransport` is synchronous by default, you can emit values
+  and assert state changes in the same test tick — no `fakeAsync` or `tick`
+  required.
+</Callout>
+
 {/* Auto-rendered from api-docs.json — see page component */}

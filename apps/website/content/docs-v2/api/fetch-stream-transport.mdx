@@ -1,3 +1,24 @@
 # FetchStreamTransport
 
+`FetchStreamTransport` is the production-ready transport that opens a real server-sent event connection using the browser's `fetch` API and reads a `ReadableStream` response body. It is the default transport you register with `provideStreamResource` in production builds.
+
+You rarely need to interact with `FetchStreamTransport` directly — simply provide it once at the application level and every `streamResource` will use it automatically. You would reach for it explicitly only when constructing a resource outside the normal DI tree or when you need to override the transport for a single resource while keeping the global default intact.
+
+```ts
+import { inject } from '@angular/core';
+import { streamResource, FetchStreamTransport } from '@ngxp/stream-resource';
+
+// Override transport for a single resource
+const events = streamResource<Event>({
+  url: () => '/api/events',
+  transport: inject(FetchStreamTransport),
+});
+```
+
+<Callout type="tip" title="Transport interface">
+  `FetchStreamTransport` implements the `StreamTransport` interface. You can
+  create custom transports (e.g. WebSocket-backed) by implementing the same
+  interface and providing them in place of this class.
+</Callout>
+
 {/* Auto-rendered from api-docs.json — see page component */}

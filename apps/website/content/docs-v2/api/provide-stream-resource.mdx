@@ -1,3 +1,28 @@
 # provideStreamResource()
 
+`provideStreamResource` is the provider factory that registers `stream-resource` in Angular's dependency injection system. Call it inside `bootstrapApplication` (or an `ApplicationConfig`) to configure the transport and any global defaults used by every `streamResource` in your app.
+
+```ts
+import { bootstrapApplication } from '@angular/platform-browser';
+import {
+  provideStreamResource,
+  FetchStreamTransport,
+} from '@ngxp/stream-resource';
+import { AppComponent } from './app/app.component';
+
+bootstrapApplication(AppComponent, {
+  providers: [
+    provideStreamResource({
+      transport: FetchStreamTransport,
+    }),
+  ],
+});
+```
+
+<Callout type="info" title="One provider, any transport">
+  Swap `FetchStreamTransport` for `MockStreamTransport` (or any custom class
+  implementing the `StreamTransport` interface) to change the transport for all
+  resources at once — useful for testing or SSR.
+</Callout>
+
 {/* Auto-rendered from api-docs.json — see page component */}
