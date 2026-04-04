@@ -1,63 +1,329 @@
 # Introduction
 
-StreamResource brings full parity with React's `useStream()` hook to Angular 20+. It's the enterprise streaming resource for LangChain and Angular — built natively with Angular Signals, not wrapped or adapted.
+StreamResource brings full parity with React's `useStream()` hook to Angular 20+. Build streaming AI applications with Angular Signals, connect to LangGraph agents, and ship production-ready frontends for your AI products.
 
-<Callout type="info" title="Who is this for?">
-StreamResource serves two audiences: **Angular developers** building AI-powered applications, and **AI/agent developers** who need a production Angular frontend for their LangGraph agents.
+<Callout type="info" title="What you'll learn">
+This guide walks you through the complete workflow: build a LangGraph agent in Python, run it locally, connect it to an Angular app with streamResource(), and deploy to production.
 </Callout>
 
 ## What is streamResource()?
 
-`streamResource()` is an Angular function that creates a reactive connection to a LangGraph agent. It returns an object whose properties are Angular Signals — meaning your templates update automatically as the agent streams responses.
+`streamResource()` is an Angular function that creates a reactive, streaming connection to a LangGraph agent. It returns an object whose properties are Angular Signals — meaning your templates update automatically as the agent streams responses, token by token.
 
 ```typescript
 const chat = streamResource<{ messages: BaseMessage[] }>({
   assistantId: 'chat_agent',
 });
 
-// Every property is a Signal
-chat.messages()    // Signal<BaseMessage[]>
-chat.status()      // Signal<'idle' | 'loading' | 'resolved' | 'error'>
-chat.interrupt()   // Signal<Interrupt | undefined>
-chat.history()     // Signal<ThreadState[]>
+// Every property is a Signal — reactive, synchronous, no subscriptions
+chat.messages()     // Signal<BaseMessage[]>
+chat.status()       // Signal<'idle' | 'loading' | 'resolved' | 'error'>
+chat.error()        // Signal<Error | null>
+chat.interrupt()    // Signal<Interrupt | undefined>
+chat.history()      // Signal<ThreadState[]>
 ```
 
-## What you can build
+No RxJS. No manual subscriptions. No async pipes. Just Signals that work with Angular's `OnPush` change detection out of the box.
+
+## The Architecture
+
+StreamResource sits between your Angular app and LangGraph Platform:
 
 <Steps>
-<Step title="Streaming chat interfaces">
-Token-by-token streaming with real-time UI updates. Messages arrive as they're generated.
+<Step title="Your Angular app calls streamResource()">
+Creates a reactive resource bound to a specific agent. All state is exposed as Signals.
 </Step>
-<Step title="Human-in-the-loop workflows">
-Agents pause for approval, confirmation, or correction. Your UI handles the interrupt and resumes execution.
+<Step title="FetchStreamTransport opens an SSE connection">
+Sends HTTP POST to LangGraph Platform, receives Server-Sent Events with state updates.
 </Step>
-<Step title="Multi-agent dashboards">
-Track multiple subagents working in parallel, each with their own message stream and status.
+<Step title="LangGraph Platform runs your agent graph">
+Executes nodes, calls tools, manages checkpoints. Streams results back in real-time.
 </Step>
-<Step title="Time-travel debugging tools">
-Inspect agent execution history, fork from checkpoints, and explore alternate paths.
+<Step title="Signals update your templates automatically">
+As tokens arrive, `messages()` updates. Angular re-renders only the affected components.
 </Step>
 </Steps>
 
-## Guides
+## Build Your Agent
+
+LangGraph agents are Python programs defined as directed graphs. Here's a minimal chat agent using the example from this repository:
+
+<Tabs items={['agent.py', 'langgraph.json']}>
+<Tab>
+
+```python
+# examples/chat-agent/src/chat_agent/agent.py
+from langchain_core.messages import SystemMessage
+from langchain_core.runnables import RunnableConfig
+from langgraph.graph import END, START, MessagesState, StateGraph
+from langchain_openai import ChatOpenAI
+
+llm = ChatOpenAI(model="gpt-4o-mini")
+
+def call_model(state: MessagesState, config: RunnableConfig) -> dict:
+    """Invoke the LLM with the current message history."""
+    system_prompt = config.get("configurable", {}).get(
+        "system_prompt", "You are a helpful assistant."
+    )
+    messages = [SystemMessage(content=system_prompt)] + state["messages"]
+    response = llm.invoke(messages)
+    return {"messages": [response]}
+
+# Build the graph: START -> call_model -> END
+builder = StateGraph(MessagesState)
+builder.add_node("call_model", call_model)
+builder.add_edge(START, "call_model")
+builder.add_edge("call_model", END)
+
+graph = builder.compile()
+```
+
+</Tab>
+<Tab>
+
+```json
+{
+  "dependencies": ["."],
+  "graphs": {
+    "chat_agent": "./src/chat_agent/agent.py:graph"
+  },
+  "env": ".env",
+  "python_version": "3.12"
+}
+```
+
+</Tab>
+</Tabs>
+
+<Callout type="tip" title="What's happening here?">
+`MessagesState` manages a list of messages. The `call_model` node takes the current messages, adds a system prompt, and calls the LLM. The graph runs this single node and returns the response. LangGraph handles streaming, checkpointing, and thread management automatically.
+</Callout>
+
+## Run Your Agent Locally
+
+<Steps>
+<Step title="Install the LangGraph CLI">
+
+```bash
+pip install -U "langgraph-cli[inmem]"
+```
+
+</Step>
+<Step title="Set up your environment">
+
+Create a `.env` file with your API keys:
+
+```bash
+OPENAI_API_KEY=sk-...
+LANGSMITH_API_KEY=lsv2_...
+```
+
+</Step>
+<Step title="Start the dev server">
+
+```bash
+cd examples/chat-agent
+langgraph dev
+```
+
+Your agent is now running at `http://localhost:2024`. You can test it in LangGraph Studio at `https://smith.langchain.com/studio/`.
+
+</Step>
+</Steps>
+
+## Connect with Angular
+
+Now connect your Angular app to the running agent using streamResource().
+
+<Steps>
+<Step title="Install the package">
+
+```bash
+npm install @cacheplane/stream-resource
+```
+
+</Step>
+<Step title="Configure the provider">
+
+```typescript
+// app.config.ts
+import { ApplicationConfig } from '@angular/core';
+import { provideStreamResource } from '@cacheplane/stream-resource';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideStreamResource({
+      apiUrl: 'http://localhost:2024',
+    }),
+  ],
+};
+```
+
+</Step>
+<Step title="Build your chat component">
+
+<Tabs items={['TypeScript', 'Template']}>
+<Tab>
+
+```typescript
+// chat.component.ts
+import { Component, signal, computed } from '@angular/core';
+import { streamResource } from '@cacheplane/stream-resource';
+import type { BaseMessage } from '@langchain/core/messages';
+
+@Component({
+  selector: 'app-chat',
+  templateUrl: './chat.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class ChatComponent {
+  input = signal('');
+
+  // Create the streaming resource — this is the core API
+  chat = streamResource<{ messages: BaseMessage[] }>({
+    assistantId: 'chat_agent',
+    threadId: signal(localStorage.getItem('threadId')),
+    onThreadId: (id) => localStorage.setItem('threadId', id),
+  });
+
+  // Derived signals — compose with computed()
+  isStreaming = computed(() => this.chat.status() === 'loading');
+  messageCount = computed(() => this.chat.messages().length);
+
+  send() {
+    const msg = this.input();
+    if (!msg.trim()) return;
+    this.chat.submit({
+      messages: [{ role: 'user', content: msg }],
+    });
+    this.input.set('');
+  }
+}
+```
+
+</Tab>
+<Tab>
+
+```html
+<!-- chat.component.html -->
+<div class="chat-container">
+  <!-- Message list — updates token-by-token -->
+  @for (msg of chat.messages(); track $index) {
+    <div [class]="'message ' + msg.role">
+      <p>{{ msg.content }}</p>
+    </div>
+  }
+
+  <!-- Streaming indicator -->
+  @if (isStreaming()) {
+    <div class="typing">Agent is thinking...</div>
+  }
+
+  <!-- Error display -->
+  @if (chat.error(); as err) {
+    <div class="error">{{ err.message }}</div>
+  }
+
+  <!-- Input form -->
+  <form (submit)="send(); $event.preventDefault()">
+    <input
+      [ngModel]="input()"
+      (ngModelChange)="input.set($event)"
+      placeholder="Type a message..."
+    />
+    <button type="submit" [disabled]="isStreaming()">
+      Send
+    </button>
+  </form>
+</div>
+```
+
+</Tab>
+</Tabs>
+
+</Step>
+<Step title="Run your Angular app">
+
+```bash
+ng serve
+```
+
+Open `http://localhost:4200` and start chatting with your agent. Messages stream in real-time as the LLM generates them.
+
+</Step>
+</Steps>
+
+## Key Concepts
+
+Here's what streamResource() gives you out of the box:
+
+| Feature | Signal | Description |
+|---------|--------|-------------|
+| **Messages** | `chat.messages()` | Live message list, updates as tokens arrive |
+| **Status** | `chat.status()` | Current state: idle, loading, resolved, error |
+| **Thread persistence** | `threadId` option | Conversations survive page refreshes |
+| **Interrupts** | `chat.interrupt()` | Agent pauses for human input |
+| **History** | `chat.history()` | Full checkpoint timeline for time-travel |
+| **Subagents** | `chat.subagents()` | Track delegated agent work |
+| **Tool calls** | `chat.toolCalls()` | See what tools the agent is using |
+
+## Deploy to Production
+
+When you're ready to go live, deploy your agent to LangGraph Cloud.
+
+<Steps>
+<Step title="Push your agent to GitHub">
+
+Your agent code (the Python project with `langgraph.json`) needs to be in a GitHub repository.
+
+</Step>
+<Step title="Deploy via LangSmith">
+
+Go to [LangSmith Deployments](https://smith.langchain.com) and click **+ New Deployment**. Connect your GitHub repo and deploy. This takes about 15 minutes.
+
+</Step>
+<Step title="Update your Angular config">
+
+Point `apiUrl` to your deployment URL:
+
+```typescript
+provideStreamResource({
+  apiUrl: 'https://your-deployment.langsmith.dev',
+})
+```
+
+</Step>
+</Steps>
+
+<Callout type="info" title="Stateless frontend">
+Your Angular app is a stateless client. All agent state lives on LangGraph Platform. This means you can deploy your Angular app anywhere — CDN, edge, SSR — without state management concerns.
+</Callout>
+
+## What's Next
 
 <CardGroup cols={2}>
   <Card title="Quick Start" href="/docs/getting-started/quickstart">
-    Build a chat component in 5 minutes
-  </Card>
-  <Card title="Installation" href="/docs/getting-started/installation">
-    Detailed setup and configuration
+    Detailed 5-minute walkthrough with a complete chat component
   </Card>
   <Card title="Streaming" href="/docs/guides/streaming">
-    Token-by-token updates via SSE
+    Token-by-token updates, stream modes, and status tracking
   </Card>
   <Card title="Persistence" href="/docs/guides/persistence">
-    Thread persistence across sessions
+    Thread persistence across sessions and reactive thread switching
   </Card>
   <Card title="Interrupts" href="/docs/guides/interrupts">
-    Human-in-the-loop approval flows
+    Human-in-the-loop approval and confirmation flows
   </Card>
   <Card title="Testing" href="/docs/guides/testing">
     Deterministic testing with MockStreamTransport
+  </Card>
+  <Card title="Angular Signals" href="/docs/concepts/angular-signals">
+    Deep dive into how Signals power streamResource
+  </Card>
+  <Card title="LangGraph Basics" href="/docs/concepts/langgraph-basics">
+    Graphs, nodes, edges, and state for Angular developers
+  </Card>
+  <Card title="API Reference" href="/docs/api/stream-resource">
+    Complete streamResource() function reference
   </Card>
 </CardGroup>
