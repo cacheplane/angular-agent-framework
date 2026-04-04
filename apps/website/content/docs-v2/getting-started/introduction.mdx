@@ -27,29 +27,16 @@ No RxJS. No manual subscriptions. No async pipes. Just Signals that work with An
 
 ## The Architecture
 
-StreamResource sits between your Angular app and LangGraph Platform:
+Watch a full conversation turn flow through the stack — from user input to rendered response:
 
-<Steps>
-<Step title="Your Angular app calls streamResource()">
-Creates a reactive resource bound to a specific agent. All state is exposed as Signals.
-</Step>
-<Step title="FetchStreamTransport opens an SSE connection">
-Sends HTTP POST to LangGraph Platform, receives Server-Sent Events with state updates.
-</Step>
-<Step title="LangGraph Platform runs your agent graph">
-Executes nodes, calls tools, manages checkpoints. Streams results back in real-time.
-</Step>
-<Step title="Signals update your templates automatically">
-As tokens arrive, `messages()` updates. Angular re-renders only the affected components.
-</Step>
-</Steps>
+<ArchFlowDiagram />
 
 ## Build Your Agent
 
 LangGraph agents are Python programs defined as directed graphs. Here's a minimal chat agent using the example from this repository:
 
-<Tabs items={['agent.py', 'langgraph.json']}>
-<Tab>
+<Tabs>
+<Tab label="agent.py">
 
 ```python
 # examples/chat-agent/src/chat_agent/agent.py
@@ -58,7 +45,7 @@ from langchain_core.runnables import RunnableConfig
 from langgraph.graph import END, START, MessagesState, StateGraph
 from langchain_openai import ChatOpenAI
 
-llm = ChatOpenAI(model="gpt-4o-mini")
+llm = ChatOpenAI(model="gpt-5-mini")
 
 def call_model(state: MessagesState, config: RunnableConfig) -> dict:
     """Invoke the LLM with the current message history."""
@@ -79,7 +66,7 @@ graph = builder.compile()
 ```
 
 </Tab>
-<Tab>
+<Tab label="langgraph.json">
 
 ```json
 {
@@ -162,8 +149,8 @@ export const appConfig: ApplicationConfig = {
 </Step>
 <Step title="Build your chat component">
 
-<Tabs items={['TypeScript', 'Template']}>
-<Tab>
+<Tabs>
+<Tab label="chat.component.ts">
 
 ```typescript
 // chat.component.ts
@@ -202,7 +189,7 @@ export class ChatComponent {
 ```
 
 </Tab>
-<Tab>
+<Tab label="chat.component.html">
 
 ```html
 <!-- chat.component.html -->
@@ -257,46 +244,91 @@ Open `http://localhost:4200` and start chatting with your agent. Messages stream
 
 Here's what streamResource() gives you out of the box:
 
-| Feature | Signal | Description |
-|---------|--------|-------------|
-| **Messages** | `chat.messages()` | Live message list, updates as tokens arrive |
-| **Status** | `chat.status()` | Current state: idle, loading, resolved, error |
-| **Thread persistence** | `threadId` option | Conversations survive page refreshes |
-| **Interrupts** | `chat.interrupt()` | Agent pauses for human input |
-| **History** | `chat.history()` | Full checkpoint timeline for time-travel |
-| **Subagents** | `chat.subagents()` | Track delegated agent work |
-| **Tool calls** | `chat.toolCalls()` | See what tools the agent is using |
+<CardGroup cols={2}>
+  <Card title="Messages" href="/docs/guides/streaming">
+    `chat.messages()` — live message list that updates as each token arrives from the agent
+  </Card>
+  <Card title="Status" href="/docs/guides/streaming">
+    `chat.status()` — current state: idle, loading, resolved, or error
+  </Card>
+  <Card title="Thread Persistence" href="/docs/guides/persistence">
+    `threadId` option — conversations survive page refreshes via localStorage or backend
+  </Card>
+  <Card title="Interrupts" href="/docs/guides/interrupts">
+    `chat.interrupt()` — agent pauses for human approval, your UI handles the decision
+  </Card>
+  <Card title="Time Travel" href="/docs/guides/time-travel">
+    `chat.history()` — full checkpoint timeline for debugging and branching
+  </Card>
+  <Card title="Subagents" href="/docs/guides/subgraphs">
+    `chat.subagents()` — track delegated agent work across multiple graphs
+  </Card>
+  <Card title="Tool Calls" href="/docs/guides/streaming">
+    `chat.toolCalls()` — see what tools the agent is invoking in real-time
+  </Card>
+  <Card title="Testing" href="/docs/guides/testing">
+    `MockStreamTransport` — deterministic testing without a running server
+  </Card>
+</CardGroup>
 
 ## Deploy to Production
 
-When you're ready to go live, deploy your agent to LangGraph Cloud.
+When you're ready to go live, deploy your agent to LangGraph Cloud and point your Angular app to the deployment URL.
 
 <Steps>
 <Step title="Push your agent to GitHub">
 
-Your agent code (the Python project with `langgraph.json`) needs to be in a GitHub repository.
+Your agent code (the Python project with `langgraph.json`) needs to be in a GitHub repository. Make sure your `langgraph.json` references the correct graph entry point.
+
+```bash
+git init && git add . && git commit -m "initial agent"
+gh repo create my-agent --public --source=. --push
+```
 
 </Step>
 <Step title="Deploy via LangSmith">
 
-Go to [LangSmith Deployments](https://smith.langchain.com) and click **+ New Deployment**. Connect your GitHub repo and deploy. This takes about 15 minutes.
+Go to [LangSmith Deployments](https://smith.langchain.com) and click **+ New Deployment**. Connect your GitHub account, select your repository, and deploy. The first deployment takes about 15 minutes.
+
+You'll receive a deployment URL like `https://my-agent-abc123.langsmith.dev`.
 
 </Step>
 <Step title="Update your Angular config">
 
-Point `apiUrl` to your deployment URL:
+Point `apiUrl` to your deployment URL and set up environment-based configuration:
 
 ```typescript
+// environment.ts
+export const environment = {
+  langgraphUrl: 'http://localhost:2024', // dev
+};
+
+// environment.prod.ts
+export const environment = {
+  langgraphUrl: 'https://my-agent-abc123.langsmith.dev', // prod
+};
+
+// app.config.ts
 provideStreamResource({
-  apiUrl: 'https://your-deployment.langsmith.dev',
+  apiUrl: environment.langgraphUrl,
 })
+```
+
+</Step>
+<Step title="Deploy your Angular app">
+
+Deploy your Angular frontend to any hosting platform — Vercel, Netlify, AWS, or your own infrastructure. Since streamResource() is a stateless client, your frontend has no server-side state requirements.
+
+```bash
+ng build --configuration production
+# Deploy dist/ to your hosting platform
 ```
 
 </Step>
 </Steps>
 
-<Callout type="info" title="Stateless frontend">
-Your Angular app is a stateless client. All agent state lives on LangGraph Platform. This means you can deploy your Angular app anywhere — CDN, edge, SSR — without state management concerns.
+<Callout type="tip" title="Stateless architecture">
+Your Angular app is a stateless client. All agent state — threads, checkpoints, memory — lives on LangGraph Platform. This means you can deploy your frontend anywhere (CDN, edge, SSR) without state management concerns. Scale your frontend independently of your agent infrastructure.
 </Callout>
 
 ## What's Next

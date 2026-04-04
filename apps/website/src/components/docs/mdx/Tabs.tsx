@@ -1,11 +1,23 @@
 'use client';
-import { useState, Children } from 'react';
+import { useState, Children, isValidElement } from 'react';
 import { tokens } from '../../../../lib/design-tokens';
+
+interface TabProps {
+  label?: string;
+  children: React.ReactNode;
+}
 
 export function Tabs({ items, children }: { items?: string[]; children: React.ReactNode }) {
   const [active, setActive] = useState(0);
   const tabs = Children.toArray(children);
-  const labels = items ?? tabs.map((_, i) => `Tab ${i + 1}`);
+
+  // Extract labels: from items prop, from Tab label prop, or fallback
+  const labels = items ?? tabs.map((child, i) => {
+    if (isValidElement<TabProps>(child) && child.props.label) {
+      return child.props.label;
+    }
+    return `Tab ${i + 1}`;
+  });
 
   return (
     <div style={{ marginTop: 16, marginBottom: 20 }}>
@@ -40,6 +52,6 @@ export function Tabs({ items, children }: { items?: string[]; children: React.Re
   );
 }
 
-export function Tab({ children }: { children: React.ReactNode }) {
+export function Tab({ children }: TabProps) {
   return <div>{children}</div>;
 }
