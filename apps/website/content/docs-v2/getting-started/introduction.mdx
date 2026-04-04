@@ -27,22 +27,9 @@ No RxJS. No manual subscriptions. No async pipes. Just Signals that work with An
 
 ## The Architecture
 
-StreamResource sits between your Angular app and LangGraph Platform:
+Watch a full conversation turn flow through the stack — from user input to rendered response:
 
-<Steps>
-<Step title="Your Angular app calls streamResource()">
-Creates a reactive resource bound to a specific agent. All state is exposed as Signals.
-</Step>
-<Step title="FetchStreamTransport opens an SSE connection">
-Sends HTTP POST to LangGraph Platform, receives Server-Sent Events with state updates.
-</Step>
-<Step title="LangGraph Platform runs your agent graph">
-Executes nodes, calls tools, manages checkpoints. Streams results back in real-time.
-</Step>
-<Step title="Signals update your templates automatically">
-As tokens arrive, `messages()` updates. Angular re-renders only the affected components.
-</Step>
-</Steps>
+<ArchFlowDiagram />
 
 ## Build Your Agent
 
