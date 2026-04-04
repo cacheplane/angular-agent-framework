@@ -1,0 +1,59 @@
+# Subgraphs
+
+Subgraphs let you compose complex agents from smaller, focused units. streamResource() tracks subagent execution through dedicated signals, giving you visibility into delegated work.
+
+<Callout type="info" title="Subgraphs vs subagents">
+LangGraph calls them subgraphs (modular graph composition). Deep Agents calls them subagents (task delegation). streamResource() supports both patterns through the same API.
+</Callout>
+
+## Tracking subagent execution
+
+The `subagents()` signal contains a Map of active subagent streams.
+
+```typescript
+const orchestrator = streamResource<OrchestratorState>({
+  assistantId: 'orchestrator',
+  subagentToolNames: ['research', 'analyze', 'summarize'],
+});
+
+// All subagent streams
+const subagents = computed(() => orchestrator.subagents());
+
+// Only active ones
+const running = computed(() => orchestrator.activeSubagents());
+const runningCount = computed(() => running().length);
+```
+
+## Subagent stream details
+
+Each `SubagentStreamRef` provides its own signals.
+
+```typescript
+// Access a specific subagent
+const researchAgent = computed(() =>
+  orchestrator.subagents().get('research-tool-call-id')
+);
+
+// Track its progress
+const researchStatus = computed(() => researchAgent()?.status());
+const researchMessages = computed(() => researchAgent()?.messages() ?? []);
+```
+
+## Filtering subagent messages
+
+By default, subagent messages appear in the parent's `messages()` signal. Filter them out for a cleaner parent view.
+
+```typescript
+const orchestrator = streamResource<OrchestratorState>({
+  assistantId: 'orchestrator',
+  filterSubagentMessages: true,  // Hide subagent messages from parent
+  subagentToolNames: ['research', 'analyze'],
+});
+
+// Parent messages only (no subagent chatter)
+const parentMessages = computed(() => orchestrator.messages());
+```
+
+<Callout type="tip" title="Subagent tool names">
+Set `subagentToolNames` to the tool names that spawn subagents. streamResource() uses this to identify which tool calls create subagent streams.
+</Callout>
