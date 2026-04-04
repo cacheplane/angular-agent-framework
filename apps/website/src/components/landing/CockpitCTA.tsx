@@ -6,7 +6,7 @@ export function CockpitCTA() {
   return (
     <section className="px-8 py-20 max-w-5xl mx-auto">
       <motion.div
-        className="rounded-2xl p-10 md:p-14"
+        className="rounded-2xl p-6 md:p-10 lg:p-14"
         style={{
           background: tokens.glass.bg,
           backdropFilter: `blur(${tokens.glass.blur})`,
@@ -60,7 +60,7 @@ export function CockpitCTA() {
             </div>
           </div>
           <div style={{ display: 'flex', minHeight: 140 }}>
-            <div style={{ width: 160, borderRight: '1px solid rgba(255,255,255,0.06)', padding: '10px 8px' }}>
+            <div className="hidden sm:block" style={{ width: 160, borderRight: '1px solid rgba(255,255,255,0.06)', padding: '10px 8px' }}>
               {['LangGraph', 'Streaming', 'Persistence', 'Interrupts'].map((item, i) => (
                 <div key={item} style={{
                   padding: '4px 8px', borderRadius: 4, marginBottom: 2,

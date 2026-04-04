@@ -1,4 +1,5 @@
 'use client';
+import { useState } from 'react';
 import Link from 'next/link';
 import { tokens } from '../../../lib/design-tokens';
 
@@ -16,9 +17,27 @@ function GitHubIcon() {
   );
 }
 
-export function Nav() {
+function MenuIcon() {
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-8 py-5"
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
+      <path d="M3 5h14M3 10h14M3 15h14" />
+    </svg>
+  );
+}
+
+function CloseIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
+      <path d="M5 5l10 10M15 5L5 15" />
+    </svg>
+  );
+}
+
+export function Nav() {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <nav className="fixed top-0 left-0 right-0 z-50"
       style={{
         borderBottom: `1px solid ${tokens.glass.border}`,
         background: tokens.glass.bg,
@@ -26,37 +45,81 @@ export function Nav() {
         WebkitBackdropFilter: `blur(${tokens.glass.blur})`,
         boxShadow: tokens.glass.shadow,
       }}>
-      <Link href="/" className="font-garamond text-xl font-bold" style={{ color: tokens.colors.textPrimary }}>
-        StreamResource
-      </Link>
-      <div className="flex items-center gap-8">
-        {links.map((l) => (
-          <Link key={l.href} href={l.href}
-            className="text-sm font-mono transition-colors"
+      {/* Top bar */}
+      <div className="flex items-center justify-between px-6 py-4 md:px-8 md:py-5">
+        <Link href="/" className="font-garamond text-xl font-bold" style={{ color: tokens.colors.textPrimary }}>
+          StreamResource
+        </Link>
+
+        {/* Desktop links */}
+        <div className="hidden md:flex items-center gap-8">
+          {links.map((l) => (
+            <Link key={l.href} href={l.href}
+              className="text-sm font-mono transition-colors"
+              style={{ color: tokens.colors.textSecondary }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = tokens.colors.accent)}
+              onMouseLeave={(e) => (e.currentTarget.style.color = tokens.colors.textSecondary)}>
+              {l.label}
+            </Link>
+          ))}
+          <a href="https://github.com/cacheplane/stream-resource"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="transition-colors"
             style={{ color: tokens.colors.textSecondary }}
             onMouseEnter={(e) => (e.currentTarget.style.color = tokens.colors.accent)}
-            onMouseLeave={(e) => (e.currentTarget.style.color = tokens.colors.textSecondary)}>
-            {l.label}
+            onMouseLeave={(e) => (e.currentTarget.style.color = tokens.colors.textSecondary)}
+            aria-label="GitHub repository">
+            <GitHubIcon />
+          </a>
+          <Link href="/pricing"
+            className="px-4 py-2 text-sm font-mono rounded transition-all"
+            style={{ background: tokens.colors.accent, color: '#fff' }}
+            onMouseEnter={(e) => (e.currentTarget.style.boxShadow = tokens.glow.button)}
+            onMouseLeave={(e) => (e.currentTarget.style.boxShadow = 'none')}>
+            Get Started
           </Link>
-        ))}
-        <a href="https://github.com/cacheplane/stream-resource"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="transition-colors"
-          style={{ color: tokens.colors.textSecondary }}
-          onMouseEnter={(e) => (e.currentTarget.style.color = tokens.colors.accent)}
-          onMouseLeave={(e) => (e.currentTarget.style.color = tokens.colors.textSecondary)}
-          aria-label="GitHub repository">
-          <GitHubIcon />
-        </a>
-        <Link href="/pricing"
-          className="px-4 py-2 text-sm font-mono rounded transition-all"
-          style={{ background: tokens.colors.accent, color: '#fff' }}
-          onMouseEnter={(e) => (e.currentTarget.style.boxShadow = tokens.glow.button)}
-          onMouseLeave={(e) => (e.currentTarget.style.boxShadow = 'none')}>
-          Get Started
-        </Link>
+        </div>
+
+        {/* Mobile hamburger */}
+        <button
+          className="md:hidden"
+          onClick={() => setOpen(!open)}
+          aria-label={open ? 'Close menu' : 'Open menu'}
+          style={{ color: tokens.colors.textPrimary }}>
+          {open ? <CloseIcon /> : <MenuIcon />}
+        </button>
       </div>
+
+      {/* Mobile menu */}
+      {open && (
+        <div className="md:hidden px-6 pb-5 flex flex-col gap-4"
+          style={{ borderTop: `1px solid ${tokens.glass.border}` }}>
+          {links.map((l) => (
+            <Link key={l.href} href={l.href}
+              onClick={() => setOpen(false)}
+              className="text-sm font-mono py-1"
+              style={{ color: tokens.colors.textSecondary }}>
+              {l.label}
+            </Link>
+          ))}
+          <div className="flex items-center gap-4 pt-2">
+            <a href="https://github.com/cacheplane/stream-resource"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ color: tokens.colors.textSecondary }}
+              aria-label="GitHub repository">
+              <GitHubIcon />
+            </a>
+            <Link href="/pricing"
+              onClick={() => setOpen(false)}
+              className="px-4 py-2 text-sm font-mono rounded"
+              style={{ background: tokens.colors.accent, color: '#fff' }}>
+              Get Started
+            </Link>
+          </div>
+        </div>
+      )}
     </nav>
   );
 }

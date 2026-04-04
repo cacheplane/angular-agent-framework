@@ -3,7 +3,7 @@ import { tokens } from '../../../lib/design-tokens';
 
 export function Footer() {
   return (
-    <footer className="px-8 py-12 mt-24"
+    <footer className="px-6 md:px-8 py-12 mt-24"
       style={{
         borderTop: `1px solid ${tokens.glass.border}`,
         background: 'rgba(255, 255, 255, 0.55)',
@@ -24,7 +24,7 @@ export function Footer() {
           </div>
         </div>
       </div>
-      <div className="max-w-6xl mx-auto mt-8 pt-8 flex items-center justify-between text-xs"
+      <div className="max-w-6xl mx-auto mt-8 pt-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs"
         style={{ borderTop: `1px solid ${tokens.glass.border}`, color: tokens.colors.textMuted }}>
         <span>&copy; {new Date().getFullYear()} StreamResource. All rights reserved.</span>
         <span>PolyForm Noncommercial 1.0.0 &middot; <Link href="/pricing" className="transition-colors">Commercial License</Link></span>
