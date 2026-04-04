@@ -24,6 +24,32 @@ import {
 import type { ThreadState, ToolProgress, ToolCallWithResult } from '@langchain/langgraph-sdk';
 import { createStreamManagerBridge } from './internals/stream-manager.bridge';
 
+/**
+ * Creates a streaming resource connected to a LangGraph agent.
+ *
+ * Must be called within an Angular injection context (component constructor,
+ * field initializer, or `runInInjectionContext`). Returns a ref object whose
+ * properties are Angular Signals that update in real-time as the agent streams.
+ *
+ * @typeParam T - The state shape returned by the agent (e.g., `{ messages: BaseMessage[] }`)
+ * @typeParam Bag - Optional bag template for typed interrupts and submit payloads
+ * @param options - Configuration for the streaming resource
+ * @returns A {@link StreamResourceRef} with reactive signals and action methods
+ *
+ * @example
+ * ```typescript
+ * // In a component field initializer
+ * const chat = streamResource<{ messages: BaseMessage[] }>({
+ *   assistantId: 'chat_agent',
+ *   apiUrl: 'http://localhost:2024',
+ *   threadId: signal(this.savedThreadId),
+ *   onThreadId: (id) => localStorage.setItem('threadId', id),
+ * });
+ *
+ * // Access signals in template
+ * // chat.messages(), chat.status(), chat.error()
+ * ```
+ */
 export function streamResource<
   T = Record<string, unknown>,
   Bag extends BagTemplate = BagTemplate,
