@@ -1,4 +1,5 @@
 'use client';
+import { tokens } from '../../lib/design-tokens';
 
 const PLANS = [
   {
@@ -48,13 +49,15 @@ export function PricingGrid() {
             key={plan.name}
             className="p-8 rounded-xl flex flex-col"
             style={{
-              border: `1px solid ${plan.highlight ? '#6C8EFF' : 'rgba(108,142,255,0.15)'}`,
-              boxShadow: plan.highlight ? '0 0 28px rgba(108,142,255,0.32)' : 'none',
-              background: 'rgba(108,142,255,0.02)',
+              border: `1px solid ${plan.highlight ? tokens.colors.accent : tokens.glass.border}`,
+              boxShadow: plan.highlight ? tokens.glow.card : tokens.glass.shadow,
+              background: plan.highlight ? 'rgba(255, 255, 255, 0.55)' : tokens.glass.bg,
+              backdropFilter: `blur(${tokens.glass.blur})`,
+              WebkitBackdropFilter: `blur(${tokens.glass.blur})`,
             }}>
             <p
               className="font-mono text-xs uppercase tracking-widest mb-4"
-              style={{ color: '#6C8EFF' }}>
+              style={{ color: tokens.colors.accent }}>
               {plan.name}
             </p>
             <p
@@ -62,17 +65,17 @@ export function PricingGrid() {
                 fontFamily: 'var(--font-garamond)',
                 fontWeight: 700,
                 fontSize: 48,
-                color: '#EEF1FF',
+                color: tokens.colors.textPrimary,
                 lineHeight: 1,
                 marginBottom: 4,
               }}>
               {plan.price}
             </p>
-            <p className="text-sm mb-8" style={{ color: '#4A527A' }}>{plan.period}</p>
+            <p className="text-sm mb-8" style={{ color: tokens.colors.textMuted }}>{plan.period}</p>
             <ul className="flex flex-col gap-2 mb-8 flex-1">
               {plan.features.map((f) => (
-                <li key={f} className="text-sm flex items-center gap-2" style={{ color: '#8B96C8' }}>
-                  <span style={{ color: '#6C8EFF' }}>✓</span> {f}
+                <li key={f} className="text-sm flex items-center gap-2" style={{ color: tokens.colors.textSecondary }}>
+                  <span style={{ color: tokens.colors.accent }}>&check;</span> {f}
                 </li>
               ))}
             </ul>
@@ -80,12 +83,12 @@ export function PricingGrid() {
               href={plan.ctaHref}
               className="text-center py-3 px-6 rounded font-mono text-sm transition-all"
               style={{
-                background: plan.highlight ? '#6C8EFF' : 'transparent',
-                color: plan.highlight ? '#fff' : '#6C8EFF',
-                border: '1px solid #6C8EFF',
+                background: plan.highlight ? tokens.colors.accent : 'transparent',
+                color: plan.highlight ? '#fff' : tokens.colors.accent,
+                border: `1px solid ${tokens.colors.accent}`,
                 textDecoration: 'none',
               }}
-              onMouseEnter={(e) => (e.currentTarget.style.boxShadow = '0 0 16px rgba(108,142,255,0.4)')}
+              onMouseEnter={(e) => (e.currentTarget.style.boxShadow = tokens.glow.button)}
               onMouseLeave={(e) => (e.currentTarget.style.boxShadow = 'none')}>
               {plan.cta}
             </a>
