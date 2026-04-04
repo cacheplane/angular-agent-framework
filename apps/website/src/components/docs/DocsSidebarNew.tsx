@@ -11,7 +11,7 @@ interface Props {
 
 function SectionGroup({ section, activeSection, activeSlug }: { section: DocsSection; activeSection: string; activeSlug: string }) {
   const hasActive = section.pages.some((p) => p.section === activeSection && p.slug === activeSlug);
-  const [open, setOpen] = useState(hasActive || true);
+  const [open, setOpen] = useState<boolean>(true);
   const headerColor = section.color === 'red' ? tokens.colors.angularRed : tokens.colors.accent;
 
   return (
