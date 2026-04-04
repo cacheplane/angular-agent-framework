@@ -12,8 +12,8 @@ const ROWS = [
   { feature: 'Priority support', oss: false, seat: false, app: false, enterprise: true },
 ];
 
-const Check = () => <span style={{ color: tokens.colors.accent }}>&check;</span>;
-const X = () => <span style={{ color: tokens.colors.textMuted }}>&mdash;</span>;
+const Check = () => <span style={{ color: tokens.colors.accent }}>✓</span>;
+const X = () => <span style={{ color: tokens.colors.textMuted }}>—</span>;
 
 export function CompareTable() {
   return (
