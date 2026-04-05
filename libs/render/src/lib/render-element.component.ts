@@ -137,35 +137,32 @@ export class RenderElementComponent {
     return Array.isArray(items) ? items : [];
   });
 
-  /** One child Injector per repeat item, providing RepeatScope. */
-  readonly repeatInjectors = computed(() => {
+  /** One RepeatScope per repeat item, shared between injectors and inputs. */
+  private readonly repeatScopes = computed(() => {
     const el = this.element();
     if (!el?.repeat) return [];
-    const items = this.repeatItems();
-    return items.map((item, index) => {
-      const scope: RepeatScope = {
-        item,
-        index,
-        basePath: `${el.repeat!.statePath}/${index}`,
-      };
-      return Injector.create({
+    return this.repeatItems().map((item, index) => ({
+      item,
+      index,
+      basePath: `${el.repeat!.statePath}/${index}`,
+    } satisfies RepeatScope));
+  });
+
+  /** One child Injector per repeat item, providing RepeatScope. */
+  readonly repeatInjectors = computed(() => {
+    return this.repeatScopes().map(scope =>
+      Injector.create({
         providers: [{ provide: REPEAT_SCOPE, useValue: scope }],
         parent: this.parentInjector,
-      });
-    });
+      }),
+    );
   });
 
   /** Resolved inputs for each repeat item. */
   readonly repeatInputs = computed(() => {
     const el = this.element();
     if (!el?.repeat) return [];
-    const items = this.repeatItems();
-    return items.map((item, index) => {
-      const scope: RepeatScope = {
-        item,
-        index,
-        basePath: `${el.repeat!.statePath}/${index}`,
-      };
+    return this.repeatScopes().map(scope => {
       const ctx = buildPropResolutionContext(
         this.ctx.store,
         scope,

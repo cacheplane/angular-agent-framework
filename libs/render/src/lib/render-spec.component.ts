@@ -57,12 +57,15 @@ export class RenderSpecComponent {
 
   private readonly config = inject(RENDER_CONFIG, { optional: true });
 
-  /** Internal store, created from spec.state when no external store is provided. */
-  private readonly internalStore = computed<StateStore | undefined>(() => {
-    const spec = this.spec();
-    if (!spec?.state) return undefined;
-    return signalStateStore(spec.state);
-  });
+  /** Internal store, lazily created once and reused across spec changes. */
+  private _internalStore: StateStore | undefined;
+
+  private getOrCreateInternalStore(): StateStore {
+    if (!this._internalStore) {
+      this._internalStore = signalStateStore(this.spec()?.state ?? {});
+    }
+    return this._internalStore;
+  }
 
   /** Resolved store: input > config > internal (from spec.state). */
   private readonly resolvedStore = computed<StateStore>(() => {
@@ -70,10 +73,7 @@ export class RenderSpecComponent {
     if (inputStore) return inputStore;
     const configStore = this.config?.store;
     if (configStore) return configStore;
-    const internal = this.internalStore();
-    if (internal) return internal;
-    // Fallback: empty store
-    return signalStateStore({});
+    return this.getOrCreateInternalStore();
   });
 
   /** Resolved registry: input > config. */

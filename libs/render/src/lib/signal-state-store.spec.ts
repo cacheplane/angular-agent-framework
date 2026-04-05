@@ -59,4 +59,14 @@ describe('signalStateStore', () => {
       expect(store.get('/items/1')).toBe('B');
     });
   });
+
+  it('should preserve array type when setting by index', () => {
+    TestBed.runInInjectionContext(() => {
+      const store = signalStateStore({ items: ['a', 'b', 'c'] });
+      store.set('/items/1', 'B');
+      const snapshot = store.getSnapshot();
+      expect(Array.isArray(snapshot['items'])).toBe(true);
+      expect(snapshot['items']).toEqual(['a', 'B', 'c']);
+    });
+  });
 });
