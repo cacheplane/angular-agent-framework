@@ -76,7 +76,7 @@ const pipelineStatus = computed(() => {
 Render live progress for each subagent using the signals above.
 
 <Tabs>
-<Tab label="progress-panel.tsx">
+<Tab label="progress-panel.component.ts">
 ```typescript
 import { computed } from '@angular/core';
 
@@ -183,16 +183,13 @@ Use **subagents** when tasks are independent and can run in parallel, when each 
 ## What's Next
 
 <CardGroup cols={2}>
-  <Card title="Streaming" href="/docs-v2/guides/streaming">
+  <Card title="Streaming" href="/docs/guides/streaming">
     Understand how streamResource() surfaces tokens, status, and errors in real time.
   </Card>
-  <Card title="Testing" href="/docs-v2/guides/testing">
+  <Card title="Testing" href="/docs/guides/testing">
     Write unit and integration tests for orchestrator graphs and subagent interactions.
   </Card>
-  <Card title="API Reference" href="/docs-v2/api/stream-resource">
+  <Card title="API Reference" href="/docs/api/stream-resource">
     Full reference for streamResource() options, signals, and subagent configuration.
-  </Card>
-  <Card title="Error Handling" href="/docs-v2/guides/error-handling">
-    Patterns for retries, fallbacks, and surfacing errors from deeply nested agents.
   </Card>
 </CardGroup>

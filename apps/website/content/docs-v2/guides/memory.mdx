@@ -1,82 +1,414 @@
 # Memory
 
-Memory in LangGraph preserves useful context that later steps can read back. streamResource() exposes memory through the messages and state signals, with thread persistence providing cross-session continuity.
+Memory gives your LangGraph agent the ability to recall past interactions, user preferences, and learned facts. There are two distinct kinds: short-term memory scoped to a single thread (conversation), and long-term memory that persists across threads using the LangGraph Store API. streamResource() surfaces both through Angular Signals so your components stay reactive without manual state wiring.
 
 <Callout type="info" title="Short-term vs long-term">
-Short-term memory lives within a thread (conversation history). Long-term memory persists across threads via LangGraph's memory store.
+Short-term memory lives within a thread — it is the conversation history plus any custom state fields your agent accumulates during a run. Long-term memory lives in the LangGraph Store and survives across threads, users, and sessions. Think of short-term as "what happened in this conversation" and long-term as "what the agent knows about this user."
 </Callout>
 
-## Short-term memory (thread-scoped)
+## Agent State with Custom Memory Fields
 
-Every message in a thread is automatically preserved. When you reconnect with the same `threadId`, the full conversation history is restored.
+Every LangGraph agent has a state schema. You control what the agent remembers by adding fields to that schema. Messages accumulate automatically, but you can define any additional fields the agent should track.
 
-```typescript
-const chat = streamResource<{ messages: BaseMessage[] }>({
-  assistantId: 'memory_agent',
-  threadId: signal(userId()),  // User-specific thread
-});
+<Tabs>
+<Tab label="agent.py">
 
-// Messages accumulate across the conversation
-const messageCount = computed(() => chat.messages().length);
+```python
+from typing_extensions import TypedDict, Annotated
+from operator import add
+from langgraph.graph import END, START, StateGraph
+from langchain_openai import ChatOpenAI
 
-// Resume where you left off on next visit
-// threadId persists, so history is restored
+llm = ChatOpenAI(model="gpt-5-mini")
+
+class State(TypedDict):
+    messages: Annotated[list, add]
+    user_preferences: dict          # Accumulated user preferences
+    conversation_summary: str       # Rolling summary of past context
+    mentioned_topics: list[str]     # Topics the user has brought up
+
+def call_model(state: State) -> dict:
+    system = "You are a helpful assistant."
+    if state.get("conversation_summary"):
+        system += f"\n\nPrevious context: {state['conversation_summary']}"
+    if state.get("user_preferences"):
+        system += f"\n\nUser preferences: {state['user_preferences']}"
+
+    response = llm.invoke([
+        {"role": "system", "content": system},
+        *state["messages"]
+    ])
+    return {"messages": [response]}
+
+def update_memory(state: State) -> dict:
+    """Extract preferences and topics from the latest exchange."""
+    extraction = llm.invoke([
+        {"role": "system", "content": (
+            "Extract any user preferences and topics from "
+            "this conversation. Return JSON with keys: "
+            "preferences (dict), topics (list[str]), summary (str)."
+        )},
+        *state["messages"][-4:]  # Last two exchanges
+    ])
+    parsed = parse_json(extraction.content)
+    return {
+        "user_preferences": {
+            **state.get("user_preferences", {}),
+            **parsed.get("preferences", {}),
+        },
+        "mentioned_topics": parsed.get("topics", []),
+        "conversation_summary": parsed.get("summary", ""),
+    }
+
+builder = StateGraph(State)
+builder.add_node("model", call_model)
+builder.add_node("update_memory", update_memory)
+builder.add_edge(START, "model")
+builder.add_edge("model", "update_memory")
+builder.add_edge("update_memory", END)
+
+graph = builder.compile()
 ```
 
-## Accessing agent state as memory
-
-The `value()` signal contains the full agent state, which can include custom memory fields.
+</Tab>
+<Tab label="memory.component.ts">
 
 ```typescript
+import { Component, computed, ChangeDetectionStrategy } from '@angular/core';
+import { streamResource, BaseMessage } from '@cacheplane/stream-resource';
+
 interface AgentState {
   messages: BaseMessage[];
-  userPreferences: { theme: string; language: string };
-  projectContext: { name: string; files: string[] };
+  user_preferences: Record<string, string>;
+  conversation_summary: string;
+  mentioned_topics: string[];
 }
 
-const agent = streamResource<AgentState>({
-  assistantId: 'context_agent',
-  threadId: signal(projectId()),
-});
+@Component({
+  selector: 'app-memory-chat',
+  templateUrl: './memory.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class MemoryChatComponent {
+  agent = streamResource<AgentState>({
+    assistantId: 'memory_agent',
+    threadId: signal(localStorage.getItem('memory-thread')),
+    onThreadId: (id) => localStorage.setItem('memory-thread', id),
+  });
 
-// Read memory fields from agent state
-const prefs = computed(() => agent.value().userPreferences);
-const context = computed(() => agent.value().projectContext);
+  // Reactive memory signals derived from agent state
+  preferences = computed(() => this.agent.value()?.user_preferences ?? {});
+  summary = computed(() => this.agent.value()?.conversation_summary ?? '');
+  topics = computed(() => this.agent.value()?.mentioned_topics ?? []);
+  messages = computed(() => this.agent.messages());
+
+  send(input: string) {
+    this.agent.submit({
+      messages: [{ role: 'user', content: input }],
+    });
+  }
+}
 ```
 
-## Cross-session memory
+</Tab>
+<Tab label="template">
 
-Thread persistence enables memory that spans sessions. The agent decides what to store in its state.
+```html
+<section class="chat">
+  @for (msg of messages(); track msg) {
+    <div [class]="msg.role">{{ msg.content }}</div>
+  }
+
+  @if (agent.isLoading()) {
+    <div class="typing-indicator">Agent is thinking...</div>
+  }
+</section>
+
+<!-- Memory sidebar -->
+<aside class="memory-panel">
+  @if (summary()) {
+    <h4>Context Summary</h4>
+    <p>{{ summary() }}</p>
+  }
+
+  @if (topics().length) {
+    <h4>Topics Discussed</h4>
+    <ul>
+      @for (topic of topics(); track topic) {
+        <li>{{ topic }}</li>
+      }
+    </ul>
+  }
+
+  @if (preferences() | keyvalue; as prefs) {
+    <h4>Learned Preferences</h4>
+    <dl>
+      @for (pref of prefs; track pref.key) {
+        <dt>{{ pref.key }}</dt>
+        <dd>{{ pref.value }}</dd>
+      }
+    </dl>
+  }
+</aside>
+```
+
+</Tab>
+</Tabs>
+
+<Callout type="tip" title="Node return values merge, not replace">
+When `update_memory` returns `user_preferences`, the dict is merged into the existing state. For list fields using the `Annotated[list, add]` reducer, new items are appended. Design your state schema with these merge semantics in mind.
+</Callout>
+
+## Short-Term Memory (Thread-Scoped)
+
+Short-term memory is the simplest form: the conversation history and any accumulated state fields within a single thread. Every message, tool call, and state update is automatically checkpointed. When a user reconnects with the same `threadId`, the full history is restored.
+
+```python
+from langgraph.checkpoint.postgres import PostgresSaver
+
+checkpointer = PostgresSaver.from_connection_string(DATABASE_URL)
+graph = builder.compile(checkpointer=checkpointer)
+
+# Every invocation within the same thread accumulates state
+result = graph.invoke(
+    {"messages": [{"role": "user", "content": "I prefer dark mode"}]},
+    config={"configurable": {"thread_id": "user_42_session"}}
+)
+
+# Later invocation — same thread, memory intact
+result = graph.invoke(
+    {"messages": [{"role": "user", "content": "What theme do I like?"}]},
+    config={"configurable": {"thread_id": "user_42_session"}}
+)
+# Agent responds: "You mentioned you prefer dark mode."
+```
+
+On the Angular side, thread-scoped memory requires no extra code. The `threadId` signal handles it:
 
 ```typescript
-// User returns days later — same threadId resumes context
-const agent = streamResource<AgentState>({
+const chat = streamResource<AgentState>({
   assistantId: 'memory_agent',
-  threadId: signal(localStorage.getItem('agent-thread')),
-  onThreadId: (id) => localStorage.setItem('agent-thread', id),
+  threadId: signal(userId()),  // Same user = same thread = same memory
 });
 
-// Agent recalls past decisions, preferences, and context
-// No explicit memory management needed on the Angular side
+// chat.messages() restores full history on reconnect
+// chat.value() restores all custom state fields
 ```
 
-<Callout type="tip" title="Memory is server-side">
-The agent controls what gets stored in memory. streamResource() just surfaces the current state. Design your agent's state schema to include the fields you want to persist.
+## Long-Term Memory (Cross-Thread) with the Store API
+
+Short-term memory disappears when you start a new thread. For knowledge that should persist across conversations — user preferences, learned facts, project context — use the LangGraph Store API. The Store is a key-value layer that any node can read from and write to, independent of the current thread.
+
+<Tabs>
+<Tab label="agent.py">
+
+```python
+from langgraph.graph import END, START, StateGraph, MessagesState
+from langgraph.store.base import BaseStore
+from langchain_openai import ChatOpenAI
+
+llm = ChatOpenAI(model="gpt-5-mini")
+
+def recall_memories(state: MessagesState, *, store: BaseStore, config) -> dict:
+    """Load long-term memories for this user before responding."""
+    user_id = config["configurable"]["user_id"]
+
+    # Fetch all memories in this user's namespace
+    memories = store.search(("memories", user_id))
+    memory_text = "\n".join(
+        f"- {m.value['content']}" for m in memories
+    )
+
+    system = (
+        "You are a helpful assistant with long-term memory.\n\n"
+        f"What you remember about this user:\n{memory_text}"
+    )
+    response = llm.invoke([
+        {"role": "system", "content": system},
+        *state["messages"]
+    ])
+    return {"messages": [response]}
+
+def save_memories(state: MessagesState, *, store: BaseStore, config) -> dict:
+    """Extract and persist new facts to the Store."""
+    user_id = config["configurable"]["user_id"]
+
+    extraction = llm.invoke([
+        {"role": "system", "content": (
+            "Extract new facts about the user from the latest "
+            "exchange. Return a JSON list of strings. "
+            "Return [] if nothing new."
+        )},
+        *state["messages"][-4:]
+    ])
+    facts = parse_json(extraction.content)
+
+    for fact in facts:
+        store.put(
+            ("memories", user_id),
+            key=str(uuid4()),
+            value={"content": fact},
+        )
+
+    return {}
+
+builder = StateGraph(MessagesState)
+builder.add_node("recall", recall_memories)
+builder.add_node("save", save_memories)
+builder.add_edge(START, "recall")
+builder.add_edge("recall", "save")
+builder.add_edge("save", END)
+
+graph = builder.compile()
+```
+
+</Tab>
+<Tab label="memory.component.ts">
+
+```typescript
+import { Component, computed, signal, ChangeDetectionStrategy } from '@angular/core';
+import { streamResource, BaseMessage } from '@cacheplane/stream-resource';
+
+@Component({
+  selector: 'app-longterm-chat',
+  templateUrl: './memory.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class LongTermChatComponent {
+  // Each conversation gets a new thread, but the agent
+  // remembers the user across all of them via the Store.
+  agent = streamResource<{ messages: BaseMessage[] }>({
+    assistantId: 'memory_agent',
+    config: { configurable: { user_id: 'user_42' } },
+  });
+
+  messages = computed(() => this.agent.messages());
+
+  send(input: string) {
+    this.agent.submit({
+      messages: [{ role: 'user', content: input }],
+    });
+  }
+}
+```
+
+</Tab>
+<Tab label="template">
+
+```html
+<section class="chat">
+  @for (msg of messages(); track msg) {
+    <div [class]="msg.role">{{ msg.content }}</div>
+  }
+
+  @if (agent.isLoading()) {
+    <div class="typing-indicator">Thinking...</div>
+  }
+
+  <form (ngSubmit)="send(input.value); input.value = ''">
+    <input #input placeholder="Ask me anything..." />
+    <button type="submit">Send</button>
+  </form>
+</section>
+```
+
+</Tab>
+</Tabs>
+
+<Callout type="warning" title="Store vs checkpointer">
+The checkpointer saves thread state (short-term memory). The Store saves cross-thread knowledge (long-term memory). They serve different purposes and you will typically use both. The checkpointer is configured at compile time; the Store is injected into nodes that declare a `store` parameter.
+</Callout>
+
+## Semantic Memory with Vector Search
+
+For agents that accumulate hundreds or thousands of memories, keyword matching is not enough. The Store API supports semantic search with embeddings, so your agent can retrieve the most relevant memories for any given context.
+
+```python
+from langchain_openai import OpenAIEmbeddings
+from langgraph.store.base import BaseStore
+
+def recall_relevant(state: MessagesState, *, store: BaseStore, config) -> dict:
+    """Retrieve memories semantically related to the current question."""
+    user_id = config["configurable"]["user_id"]
+    query = state["messages"][-1].content
+
+    # Vector search — returns memories ranked by cosine similarity
+    results = store.search(
+        ("memories", user_id),
+        query=query,
+        limit=5,
+    )
+
+    memory_text = "\n".join(
+        f"- [{r.score:.2f}] {r.value['content']}" for r in results
+    )
+
+    response = llm.invoke([
+        {"role": "system", "content": (
+            "Relevant memories (similarity score in brackets):\n"
+            f"{memory_text}\n\n"
+            "Use these memories to personalize your response."
+        )},
+        *state["messages"]
+    ])
+    return {"messages": [response]}
+```
+
+The `store.search()` call accepts a `query` string and returns results ranked by vector similarity. You control how many results to retrieve with the `limit` parameter. Each result includes a `score` field (0 to 1) indicating how relevant the memory is to the query.
+
+<Callout type="tip" title="Embedding configuration">
+Semantic search requires an embedding model configured on the Store. LangGraph Platform handles this configuration in `langgraph.json`. When running locally, pass the embeddings provider when constructing your Store instance.
+</Callout>
+
+## Surfacing Memory in Angular with value()
+
+The `value()` signal is the primary way memory surfaces in your Angular components. It contains the full agent state object, including all custom memory fields. Because it is a Signal, your template re-renders automatically through OnPush change detection whenever the agent state changes.
+
+```typescript
+// The value() signal contains everything the agent knows
+const state = agent.value();
+
+// Access specific memory fields
+const prefs = state?.user_preferences;
+const summary = state?.conversation_summary;
+const topics = state?.mentioned_topics;
+
+// Compose derived signals for template binding
+const hasMemory = computed(() => {
+  const val = agent.value();
+  return val?.conversation_summary || val?.mentioned_topics?.length;
+});
+```
+
+For long-term memory stored in the Store, the agent must explicitly include retrieved memories in its response or state output. The Store lives server-side; your Angular app only sees what the agent puts into the thread state.
+
+## Memory Best Practices
+
+<Callout type="tip" title="Design your state schema intentionally">
+Every field in your state schema is persisted by the checkpointer. Only include fields the agent actively uses. Avoid dumping raw LLM outputs into state — extract structured data instead.
+</Callout>
+
+<Callout type="warning" title="Memory is not unlimited">
+Thread state grows with every message and state update. For long-running conversations, consider summarizing older messages into a `conversation_summary` field and trimming the message list. This keeps checkpoints small and LLM context windows manageable.
+</Callout>
+
+<Callout type="info" title="Namespace your Store keys">
+Use hierarchical namespaces like `("memories", user_id)` or `("project", project_id, "notes")` to keep long-term memories organized. This also makes cleanup straightforward — delete an entire namespace when a user requests data removal.
 </Callout>
 
 ## What's Next
 
 <CardGroup cols={2}>
   <Card title="Persistence" href="/docs/guides/persistence">
-    Save thread IDs and resume conversations across sessions.
+    Configure checkpointers and thread storage for production deployments.
   </Card>
   <Card title="Time Travel" href="/docs/guides/time-travel">
     Replay and branch agent runs from any past checkpoint.
   </Card>
-  <Card title="State Management" href="/docs/concepts/state-management">
-    Understand how agent state flows into Angular Signals.
+  <Card title="Interrupts" href="/docs/guides/interrupts">
+    Pause for human input before the agent acts on its memory.
   </Card>
-  <Card title="Testing" href="/docs/guides/testing">
-    Test memory and state behavior with MockStreamTransport.
+  <Card title="State Management" href="/docs/concepts/state-management">
+    How agent state flows from LangGraph into Angular Signals.
   </Card>
 </CardGroup>
