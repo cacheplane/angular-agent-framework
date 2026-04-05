@@ -1,0 +1,23 @@
+{
+  "name": "cockpit-deep-agents-skills-angular",
+  "$schema": "../../../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "cockpit/deep-agents/skills/angular/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{workspaceRoot}/dist/cockpit/deep-agents/skills/angular"],
+      "options": {
+        "outputPath": "dist/cockpit/deep-agents/skills/angular",
+        "main": "cockpit/deep-agents/skills/angular/src/index.ts",
+        "tsConfig": "cockpit/deep-agents/skills/angular/tsconfig.json"
+      }
+    },
+    "smoke": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx tsx -e \"import { deepAgentsSkillsAngularModule } from './cockpit/deep-agents/skills/angular/src/index.ts'; const mod = deepAgentsSkillsAngularModule; if (mod.id !== 'deep-agents-skills-angular') throw new Error('Unexpected id: ' + mod.id); if (mod.title !== 'Deep Agents Skills (Angular)') throw new Error('Unexpected title: ' + mod.title); console.log(JSON.stringify({ id: mod.id, title: mod.title }));\""
+      }
+    }
+  }
+}

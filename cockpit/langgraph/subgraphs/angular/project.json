@@ -1,0 +1,24 @@
+{
+  "name": "cockpit-langgraph-subgraphs-angular",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "cockpit/langgraph/subgraphs/angular/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{workspaceRoot}/dist/cockpit/langgraph/subgraphs/angular"],
+      "options": {
+        "outputPath": "dist/cockpit/langgraph/subgraphs/angular",
+        "main": "cockpit/langgraph/subgraphs/angular/src/index.ts",
+        "tsConfig": "cockpit/langgraph/subgraphs/angular/tsconfig.json"
+      }
+    },
+    "smoke": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "cockpit/langgraph/subgraphs/angular",
+        "command": "npx tsx -e \"import { langgraphSubgraphsAngularModule } from './src/index.ts'; const module = langgraphSubgraphsAngularModule; if (module.id !== 'langgraph-subgraphs-angular' || module.title !== 'LangGraph Subgraphs (Angular)') { throw new Error('Unexpected module shape for ' + module.id); }\""
+      }
+    }
+  }
+}

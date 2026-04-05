@@ -1,0 +1,24 @@
+{
+  "name": "cockpit-langgraph-persistence-angular",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "cockpit/langgraph/persistence/angular/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{workspaceRoot}/dist/cockpit/langgraph/persistence/angular"],
+      "options": {
+        "outputPath": "dist/cockpit/langgraph/persistence/angular",
+        "main": "cockpit/langgraph/persistence/angular/src/index.ts",
+        "tsConfig": "cockpit/langgraph/persistence/angular/tsconfig.json"
+      }
+    },
+    "smoke": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "cockpit/langgraph/persistence/angular",
+        "command": "npx tsx -e \"import { langgraphPersistenceAngularModule } from './src/index.ts'; const module = langgraphPersistenceAngularModule; if (module.id !== 'langgraph-persistence-angular' || module.title !== 'LangGraph Persistence (Angular)') { throw new Error('Unexpected module shape for ' + module.id); }\""
+      }
+    }
+  }
+}

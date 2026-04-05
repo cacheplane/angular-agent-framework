@@ -1,0 +1,24 @@
+{
+  "name": "cockpit-langgraph-deployment-runtime-angular",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "cockpit/langgraph/deployment-runtime/angular/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{workspaceRoot}/dist/cockpit/langgraph/deployment-runtime/angular"],
+      "options": {
+        "outputPath": "dist/cockpit/langgraph/deployment-runtime/angular",
+        "main": "cockpit/langgraph/deployment-runtime/angular/src/index.ts",
+        "tsConfig": "cockpit/langgraph/deployment-runtime/angular/tsconfig.json"
+      }
+    },
+    "smoke": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "cockpit/langgraph/deployment-runtime/angular",
+        "command": "npx tsx -e \"import { langgraphDeploymentRuntimeAngularModule } from './src/index.ts'; const module = langgraphDeploymentRuntimeAngularModule; if (module.id !== 'langgraph-deployment-runtime-angular' || module.title !== 'LangGraph Deployment & Runtime (Angular)') { throw new Error('Unexpected module shape for ' + module.id); }\""
+      }
+    }
+  }
+}

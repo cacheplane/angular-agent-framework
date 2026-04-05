@@ -1,0 +1,23 @@
+{
+  "name": "cockpit-deep-agents-planning-angular",
+  "$schema": "../../../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "cockpit/deep-agents/planning/angular/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{workspaceRoot}/dist/cockpit/deep-agents/planning/angular"],
+      "options": {
+        "outputPath": "dist/cockpit/deep-agents/planning/angular",
+        "main": "cockpit/deep-agents/planning/angular/src/index.ts",
+        "tsConfig": "cockpit/deep-agents/planning/angular/tsconfig.json"
+      }
+    },
+    "smoke": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx tsx -e \"import { deepAgentsPlanningAngularModule } from './cockpit/deep-agents/planning/angular/src/index.ts'; const mod = deepAgentsPlanningAngularModule; if (mod.id !== 'deep-agents-planning-angular') throw new Error('Unexpected id: ' + mod.id); if (mod.title !== 'Deep Agents Planning (Angular)') throw new Error('Unexpected title: ' + mod.title); console.log(JSON.stringify({ id: mod.id, title: mod.title }));\""
+      }
+    }
+  }
+}

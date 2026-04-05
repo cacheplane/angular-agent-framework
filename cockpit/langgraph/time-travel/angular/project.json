@@ -1,0 +1,24 @@
+{
+  "name": "cockpit-langgraph-time-travel-angular",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "cockpit/langgraph/time-travel/angular/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{workspaceRoot}/dist/cockpit/langgraph/time-travel/angular"],
+      "options": {
+        "outputPath": "dist/cockpit/langgraph/time-travel/angular",
+        "main": "cockpit/langgraph/time-travel/angular/src/index.ts",
+        "tsConfig": "cockpit/langgraph/time-travel/angular/tsconfig.json"
+      }
+    },
+    "smoke": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "cockpit/langgraph/time-travel/angular",
+        "command": "npx tsx -e \"import { langgraphTimeTravelAngularModule } from './src/index.ts'; const module = langgraphTimeTravelAngularModule; if (module.id !== 'langgraph-time-travel-angular' || module.title !== 'LangGraph Time Travel (Angular)') { throw new Error('Unexpected module shape for ' + module.id); }\""
+      }
+    }
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "name": "cockpit-deep-agents-sandboxes-angular",
+  "$schema": "../../../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "cockpit/deep-agents/sandboxes/angular/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{workspaceRoot}/dist/cockpit/deep-agents/sandboxes/angular"],
+      "options": {
+        "outputPath": "dist/cockpit/deep-agents/sandboxes/angular",
+        "main": "cockpit/deep-agents/sandboxes/angular/src/index.ts",
+        "tsConfig": "cockpit/deep-agents/sandboxes/angular/tsconfig.json"
+      }
+    },
+    "smoke": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx tsx -e \"import { deepAgentsSandboxesAngularModule } from './cockpit/deep-agents/sandboxes/angular/src/index.ts'; const mod = deepAgentsSandboxesAngularModule; if (mod.id !== 'deep-agents-sandboxes-angular') throw new Error('Unexpected id: ' + mod.id); if (mod.title !== 'Deep Agents Sandboxes (Angular)') throw new Error('Unexpected title: ' + mod.title); console.log(JSON.stringify({ id: mod.id, title: mod.title }));\""
+      }
+    }
+  }
+}

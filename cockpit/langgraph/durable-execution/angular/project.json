@@ -1,0 +1,24 @@
+{
+  "name": "cockpit-langgraph-durable-execution-angular",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "cockpit/langgraph/durable-execution/angular/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{workspaceRoot}/dist/cockpit/langgraph/durable-execution/angular"],
+      "options": {
+        "outputPath": "dist/cockpit/langgraph/durable-execution/angular",
+        "main": "cockpit/langgraph/durable-execution/angular/src/index.ts",
+        "tsConfig": "cockpit/langgraph/durable-execution/angular/tsconfig.json"
+      }
+    },
+    "smoke": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "cockpit/langgraph/durable-execution/angular",
+        "command": "npx tsx -e \"import { langgraphDurableExecutionAngularModule } from './src/index.ts'; const module = langgraphDurableExecutionAngularModule; if (module.id !== 'langgraph-durable-execution-angular' || module.title !== 'LangGraph Durable Execution (Angular)') { throw new Error('Unexpected module shape for ' + module.id); }\""
+      }
+    }
+  }
+}
