@@ -10,6 +10,7 @@
   },
   "private": true,
   "devDependencies": {
+    "@angular-devkit/build-angular": "^21.2.6",
     "@angular-devkit/core": "~21.1.0",
     "@angular-devkit/schematics": "~21.1.0",
     "@angular/build": "~21.1.0",
