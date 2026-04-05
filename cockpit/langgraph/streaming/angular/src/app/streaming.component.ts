@@ -7,7 +7,7 @@ import { environment } from '../environments/environment';
 /**
  * Streaming demo — simplest possible @cacheplane/chat integration.
  *
- * Creates a streamResource ref and passes it to the prebuilt <chat-ui>
+ * Creates a streamResource ref and passes it to the prebuilt <chat>
  * composition. The composition handles message rendering, input, typing
  * indicator, and error display internally.
  */
@@ -15,7 +15,7 @@ import { environment } from '../environments/environment';
   selector: 'app-streaming',
   standalone: true,
   imports: [ChatComponent],
-  template: `<chat-ui [ref]="stream" class="block h-screen" />`,
+  template: `<chat [ref]="stream" class="block h-screen" />`,
 })
 export class StreamingComponent {
   protected readonly stream = streamResource({
