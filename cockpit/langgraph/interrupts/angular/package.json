@@ -1,11 +1,11 @@
 {
-  "name": "cockpit-langgraph-interrupts-angular",
+  "name": "@cacheplane/cockpit-langgraph-interrupts-angular",
   "version": "0.0.1",
-  "private": true,
-  "dependencies": {
-    "@cacheplane/stream-resource": "^0.0.1",
+  "peerDependencies": {
     "@cacheplane/chat": "^0.0.1",
-    "@langchain/core": "^0.3.0",
+    "@cacheplane/stream-resource": "^0.0.1",
     "@langchain/langgraph-sdk": "^0.0.36"
-  }
+  },
+  "license": "PolyForm-Noncommercial-1.0.0",
+  "sideEffects": false
 }

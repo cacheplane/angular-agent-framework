@@ -2,36 +2,22 @@
   "name": "cockpit-langgraph-streaming-angular",
   "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "cockpit/langgraph/streaming/angular/src",
-  "projectType": "application",
-  "tags": ["scope:cockpit", "type:example"],
+  "projectType": "library",
   "targets": {
     "build": {
-      "executor": "@angular/build:application",
+      "executor": "@nx/js:tsc",
+      "outputs": ["{workspaceRoot}/dist/cockpit/langgraph/streaming/angular"],
       "options": {
         "outputPath": "dist/cockpit/langgraph/streaming/angular",
-        "index": "cockpit/langgraph/streaming/angular/src/index.html",
-        "browser": "cockpit/langgraph/streaming/angular/src/main.ts",
-        "tsConfig": "cockpit/langgraph/streaming/angular/tsconfig.app.json",
-        "styles": ["cockpit/langgraph/streaming/angular/src/styles.css"]
-      },
-      "configurations": {
-        "development": {
-          "fileReplacements": [
-            {
-              "replace": "cockpit/langgraph/streaming/angular/src/environments/environment.ts",
-              "with": "cockpit/langgraph/streaming/angular/src/environments/environment.development.ts"
-            }
-          ]
-        }
-      },
-      "defaultConfiguration": "development"
+        "main": "cockpit/langgraph/streaming/angular/src/index.ts",
+        "tsConfig": "cockpit/langgraph/streaming/angular/tsconfig.json"
+      }
     },
-    "serve": {
-      "executor": "@angular/build:dev-server",
+    "smoke": {
+      "executor": "nx:run-commands",
       "options": {
-        "buildTarget": "cockpit-langgraph-streaming-angular:build:development",
-        "port": 4300,
-        "proxyConfig": "cockpit/langgraph/streaming/angular/proxy.conf.json"
+        "cwd": "cockpit/langgraph/streaming/angular",
+        "command": "npx tsx -e \"import { langgraphStreamingAngularModule } from './src/index.ts'; const module = langgraphStreamingAngularModule; if (module.id !== 'langgraph-streaming-angular' || module.title !== 'LangGraph Streaming (Angular)') { throw new Error('Unexpected module shape for ' + module.id); }\""
       }
     }
   }

@@ -20,13 +20,12 @@
       "@cacheplane/cockpit-shell": ["libs/cockpit-shell/src/index.ts"],
       "@cacheplane/cockpit-testing": ["libs/cockpit-testing/src/index.ts"],
       "@cacheplane/cockpit-ui": ["libs/cockpit-ui/src/index.ts"],
-      "@cacheplane/design-tokens": ["libs/design-tokens/src/index.ts"],
       "@cacheplane/cockpit-langgraph-streaming-python": [
         "cockpit/langgraph/streaming/python/src/index.ts"
       ],
       "@cacheplane/stream-resource": ["libs/stream-resource/src/public-api.ts"],
-      "@cacheplane/chat": ["libs/chat/src/index.ts"],
-      "@cacheplane/ui-react": ["libs/ui-react/src/index.ts"]
+      "@cacheplane/render": ["libs/render/src/public-api.ts"],
+      "@cacheplane/chat": ["libs/chat/src/public-api.ts"]
     },
     "skipLibCheck": true,
     "strict": true,

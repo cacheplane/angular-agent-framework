@@ -1,7 +1,6 @@
+// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import { bootstrapApplication } from '@angular/platform-browser';
-import { FilesystemComponent } from './app/filesystem.component';
-import { appConfig } from './app/app.config';
+import { appConfig } from './app.config';
+import { FilesystemAppComponent } from './app.component';
 
-bootstrapApplication(FilesystemComponent, appConfig).catch((err) =>
-  console.error(err)
-);
+bootstrapApplication(FilesystemAppComponent, appConfig).catch(console.error);

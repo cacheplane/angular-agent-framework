@@ -2,36 +2,22 @@
   "name": "cockpit-langgraph-deployment-runtime-angular",
   "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "cockpit/langgraph/deployment-runtime/angular/src",
-  "projectType": "application",
-  "tags": ["scope:cockpit", "type:example"],
+  "projectType": "library",
   "targets": {
     "build": {
-      "executor": "@angular/build:application",
+      "executor": "@nx/js:tsc",
+      "outputs": ["{workspaceRoot}/dist/cockpit/langgraph/deployment-runtime/angular"],
       "options": {
         "outputPath": "dist/cockpit/langgraph/deployment-runtime/angular",
-        "index": "cockpit/langgraph/deployment-runtime/angular/src/index.html",
-        "browser": "cockpit/langgraph/deployment-runtime/angular/src/main.ts",
-        "tsConfig": "cockpit/langgraph/deployment-runtime/angular/tsconfig.app.json",
-        "styles": ["cockpit/langgraph/deployment-runtime/angular/src/styles.css"]
-      },
-      "configurations": {
-        "development": {
-          "fileReplacements": [
-            {
-              "replace": "cockpit/langgraph/deployment-runtime/angular/src/environments/environment.ts",
-              "with": "cockpit/langgraph/deployment-runtime/angular/src/environments/environment.development.ts"
-            }
-          ]
-        }
-      },
-      "defaultConfiguration": "development"
+        "main": "cockpit/langgraph/deployment-runtime/angular/src/index.ts",
+        "tsConfig": "cockpit/langgraph/deployment-runtime/angular/tsconfig.json"
+      }
     },
-    "serve": {
-      "executor": "@angular/build:dev-server",
+    "smoke": {
+      "executor": "nx:run-commands",
       "options": {
-        "buildTarget": "cockpit-langgraph-deployment-runtime-angular:build:development",
-        "port": 4307,
-        "proxyConfig": "cockpit/langgraph/deployment-runtime/angular/proxy.conf.json"
+        "cwd": "cockpit/langgraph/deployment-runtime/angular",
+        "command": "npx tsx -e \"import { langgraphDeploymentRuntimeAngularModule } from './src/index.ts'; const module = langgraphDeploymentRuntimeAngularModule; if (module.id !== 'langgraph-deployment-runtime-angular' || module.title !== 'LangGraph Deployment & Runtime (Angular)') { throw new Error('Unexpected module shape for ' + module.id); }\""
       }
     }
   }

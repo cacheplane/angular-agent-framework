@@ -2,36 +2,21 @@
   "name": "cockpit-deep-agents-memory-angular",
   "$schema": "../../../../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "cockpit/deep-agents/memory/angular/src",
-  "projectType": "application",
-  "tags": ["scope:cockpit", "type:example"],
+  "projectType": "library",
   "targets": {
     "build": {
-      "executor": "@angular/build:application",
+      "executor": "@nx/js:tsc",
+      "outputs": ["{workspaceRoot}/dist/cockpit/deep-agents/memory/angular"],
       "options": {
         "outputPath": "dist/cockpit/deep-agents/memory/angular",
-        "index": "cockpit/deep-agents/memory/angular/src/index.html",
-        "browser": "cockpit/deep-agents/memory/angular/src/main.ts",
-        "tsConfig": "cockpit/deep-agents/memory/angular/tsconfig.app.json",
-        "styles": ["cockpit/deep-agents/memory/angular/src/styles.css"]
-      },
-      "configurations": {
-        "development": {
-          "fileReplacements": [
-            {
-              "replace": "cockpit/deep-agents/memory/angular/src/environments/environment.ts",
-              "with": "cockpit/deep-agents/memory/angular/src/environments/environment.development.ts"
-            }
-          ]
-        }
-      },
-      "defaultConfiguration": "development"
+        "main": "cockpit/deep-agents/memory/angular/src/index.ts",
+        "tsConfig": "cockpit/deep-agents/memory/angular/tsconfig.json"
+      }
     },
-    "serve": {
-      "executor": "@angular/build:dev-server",
+    "smoke": {
+      "executor": "nx:run-commands",
       "options": {
-        "buildTarget": "cockpit-deep-agents-memory-angular:build:development",
-        "port": 4313,
-        "proxyConfig": "cockpit/deep-agents/memory/angular/proxy.conf.json"
+        "command": "npx tsx -e \"import { deepAgentsMemoryAngularModule } from './cockpit/deep-agents/memory/angular/src/index.ts'; const mod = deepAgentsMemoryAngularModule; if (mod.id !== 'deep-agents-memory-angular') throw new Error('Unexpected id: ' + mod.id); if (mod.title !== 'Deep Agents Memory (Angular)') throw new Error('Unexpected title: ' + mod.title); console.log(JSON.stringify({ id: mod.id, title: mod.title }));\""
       }
     }
   }

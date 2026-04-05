@@ -1,7 +1,6 @@
+// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import { bootstrapApplication } from '@angular/platform-browser';
-import { DurableExecutionComponent } from './app/durable-execution.component';
-import { appConfig } from './app/app.config';
+import { appConfig } from './app.config';
+import { DurableExecutionAppComponent } from './app.component';
 
-bootstrapApplication(DurableExecutionComponent, appConfig).catch((err) =>
-  console.error(err)
-);
+bootstrapApplication(DurableExecutionAppComponent, appConfig).catch(console.error);

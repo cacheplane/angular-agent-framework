@@ -2,36 +2,21 @@
   "name": "cockpit-deep-agents-planning-angular",
   "$schema": "../../../../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "cockpit/deep-agents/planning/angular/src",
-  "projectType": "application",
-  "tags": ["scope:cockpit", "type:example"],
+  "projectType": "library",
   "targets": {
     "build": {
-      "executor": "@angular/build:application",
+      "executor": "@nx/js:tsc",
+      "outputs": ["{workspaceRoot}/dist/cockpit/deep-agents/planning/angular"],
       "options": {
         "outputPath": "dist/cockpit/deep-agents/planning/angular",
-        "index": "cockpit/deep-agents/planning/angular/src/index.html",
-        "browser": "cockpit/deep-agents/planning/angular/src/main.ts",
-        "tsConfig": "cockpit/deep-agents/planning/angular/tsconfig.app.json",
-        "styles": ["cockpit/deep-agents/planning/angular/src/styles.css"]
-      },
-      "configurations": {
-        "development": {
-          "fileReplacements": [
-            {
-              "replace": "cockpit/deep-agents/planning/angular/src/environments/environment.ts",
-              "with": "cockpit/deep-agents/planning/angular/src/environments/environment.development.ts"
-            }
-          ]
-        }
-      },
-      "defaultConfiguration": "development"
+        "main": "cockpit/deep-agents/planning/angular/src/index.ts",
+        "tsConfig": "cockpit/deep-agents/planning/angular/tsconfig.json"
+      }
     },
-    "serve": {
-      "executor": "@angular/build:dev-server",
+    "smoke": {
+      "executor": "nx:run-commands",
       "options": {
-        "buildTarget": "cockpit-deep-agents-planning-angular:build:development",
-        "port": 4310,
-        "proxyConfig": "cockpit/deep-agents/planning/angular/proxy.conf.json"
+        "command": "npx tsx -e \"import { deepAgentsPlanningAngularModule } from './cockpit/deep-agents/planning/angular/src/index.ts'; const mod = deepAgentsPlanningAngularModule; if (mod.id !== 'deep-agents-planning-angular') throw new Error('Unexpected id: ' + mod.id); if (mod.title !== 'Deep Agents Planning (Angular)') throw new Error('Unexpected title: ' + mod.title); console.log(JSON.stringify({ id: mod.id, title: mod.title }));\""
       }
     }
   }

@@ -2,36 +2,22 @@
   "name": "cockpit-langgraph-interrupts-angular",
   "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "cockpit/langgraph/interrupts/angular/src",
-  "projectType": "application",
-  "tags": ["scope:cockpit", "type:example"],
+  "projectType": "library",
   "targets": {
     "build": {
-      "executor": "@angular/build:application",
+      "executor": "@nx/js:tsc",
+      "outputs": ["{workspaceRoot}/dist/cockpit/langgraph/interrupts/angular"],
       "options": {
         "outputPath": "dist/cockpit/langgraph/interrupts/angular",
-        "index": "cockpit/langgraph/interrupts/angular/src/index.html",
-        "browser": "cockpit/langgraph/interrupts/angular/src/main.ts",
-        "tsConfig": "cockpit/langgraph/interrupts/angular/tsconfig.app.json",
-        "styles": ["cockpit/langgraph/interrupts/angular/src/styles.css"]
-      },
-      "configurations": {
-        "development": {
-          "fileReplacements": [
-            {
-              "replace": "cockpit/langgraph/interrupts/angular/src/environments/environment.ts",
-              "with": "cockpit/langgraph/interrupts/angular/src/environments/environment.development.ts"
-            }
-          ]
-        }
-      },
-      "defaultConfiguration": "development"
+        "main": "cockpit/langgraph/interrupts/angular/src/index.ts",
+        "tsConfig": "cockpit/langgraph/interrupts/angular/tsconfig.json"
+      }
     },
-    "serve": {
-      "executor": "@angular/build:dev-server",
+    "smoke": {
+      "executor": "nx:run-commands",
       "options": {
-        "buildTarget": "cockpit-langgraph-interrupts-angular:build:development",
-        "port": 4302,
-        "proxyConfig": "cockpit/langgraph/interrupts/angular/proxy.conf.json"
+        "cwd": "cockpit/langgraph/interrupts/angular",
+        "command": "npx tsx -e \"import { langgraphInterruptsAngularModule } from './src/index.ts'; const module = langgraphInterruptsAngularModule; if (module.id !== 'langgraph-interrupts-angular' || module.title !== 'LangGraph Interrupts (Angular)') { throw new Error('Unexpected module shape for ' + module.id); }\""
       }
     }
   }

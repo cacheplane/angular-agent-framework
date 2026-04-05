@@ -1,16 +1,7 @@
 {
-  "extends": "../../../../tsconfig.base.json",
+  "extends": "../../../../../../tsconfig.base.json",
   "compilerOptions": {
-    "target": "ES2022",
-    "module": "ES2022",
-    "moduleResolution": "bundler",
-    "experimentalDecorators": true,
-    "emitDeclarationOnly": false,
-    "noEmit": true,
-    "lib": [
-      "ES2022",
-      "dom"
-    ],
-    "strict": true
-  }
+    "module": "preserve"
+  },
+  "include": ["src/**/*.ts"]
 }

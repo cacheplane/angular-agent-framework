@@ -1,7 +1,6 @@
+// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import { bootstrapApplication } from '@angular/platform-browser';
-import { StreamingComponent } from './app/streaming.component';
-import { appConfig } from './app/app.config';
+import { appConfig } from './app.config';
+import { StreamingAppComponent } from './app.component';
 
-bootstrapApplication(StreamingComponent, appConfig).catch((err) =>
-  console.error(err)
-);
+bootstrapApplication(StreamingAppComponent, appConfig).catch(console.error);

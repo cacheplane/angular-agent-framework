@@ -2,36 +2,22 @@
   "name": "cockpit-langgraph-persistence-angular",
   "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "cockpit/langgraph/persistence/angular/src",
-  "projectType": "application",
-  "tags": ["scope:cockpit", "type:example"],
+  "projectType": "library",
   "targets": {
     "build": {
-      "executor": "@angular/build:application",
+      "executor": "@nx/js:tsc",
+      "outputs": ["{workspaceRoot}/dist/cockpit/langgraph/persistence/angular"],
       "options": {
         "outputPath": "dist/cockpit/langgraph/persistence/angular",
-        "index": "cockpit/langgraph/persistence/angular/src/index.html",
-        "browser": "cockpit/langgraph/persistence/angular/src/main.ts",
-        "tsConfig": "cockpit/langgraph/persistence/angular/tsconfig.app.json",
-        "styles": ["cockpit/langgraph/persistence/angular/src/styles.css"]
-      },
-      "configurations": {
-        "development": {
-          "fileReplacements": [
-            {
-              "replace": "cockpit/langgraph/persistence/angular/src/environments/environment.ts",
-              "with": "cockpit/langgraph/persistence/angular/src/environments/environment.development.ts"
-            }
-          ]
-        }
-      },
-      "defaultConfiguration": "development"
+        "main": "cockpit/langgraph/persistence/angular/src/index.ts",
+        "tsConfig": "cockpit/langgraph/persistence/angular/tsconfig.json"
+      }
     },
-    "serve": {
-      "executor": "@angular/build:dev-server",
+    "smoke": {
+      "executor": "nx:run-commands",
       "options": {
-        "buildTarget": "cockpit-langgraph-persistence-angular:build:development",
-        "port": 4301,
-        "proxyConfig": "cockpit/langgraph/persistence/angular/proxy.conf.json"
+        "cwd": "cockpit/langgraph/persistence/angular",
+        "command": "npx tsx -e \"import { langgraphPersistenceAngularModule } from './src/index.ts'; const module = langgraphPersistenceAngularModule; if (module.id !== 'langgraph-persistence-angular' || module.title !== 'LangGraph Persistence (Angular)') { throw new Error('Unexpected module shape for ' + module.id); }\""
       }
     }
   }

@@ -1,7 +1,6 @@
+// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import { bootstrapApplication } from '@angular/platform-browser';
-import { PersistenceComponent } from './app/persistence.component';
-import { appConfig } from './app/app.config';
+import { appConfig } from './app.config';
+import { PersistenceAppComponent } from './app.component';
 
-bootstrapApplication(PersistenceComponent, appConfig).catch((err) =>
-  console.error(err)
-);
+bootstrapApplication(PersistenceAppComponent, appConfig).catch(console.error);

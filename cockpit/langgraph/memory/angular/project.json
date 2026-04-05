@@ -2,36 +2,22 @@
   "name": "cockpit-langgraph-memory-angular",
   "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "cockpit/langgraph/memory/angular/src",
-  "projectType": "application",
-  "tags": ["scope:cockpit", "type:example"],
+  "projectType": "library",
   "targets": {
     "build": {
-      "executor": "@angular/build:application",
+      "executor": "@nx/js:tsc",
+      "outputs": ["{workspaceRoot}/dist/cockpit/langgraph/memory/angular"],
       "options": {
         "outputPath": "dist/cockpit/langgraph/memory/angular",
-        "index": "cockpit/langgraph/memory/angular/src/index.html",
-        "browser": "cockpit/langgraph/memory/angular/src/main.ts",
-        "tsConfig": "cockpit/langgraph/memory/angular/tsconfig.app.json",
-        "styles": ["cockpit/langgraph/memory/angular/src/styles.css"]
-      },
-      "configurations": {
-        "development": {
-          "fileReplacements": [
-            {
-              "replace": "cockpit/langgraph/memory/angular/src/environments/environment.ts",
-              "with": "cockpit/langgraph/memory/angular/src/environments/environment.development.ts"
-            }
-          ]
-        }
-      },
-      "defaultConfiguration": "development"
+        "main": "cockpit/langgraph/memory/angular/src/index.ts",
+        "tsConfig": "cockpit/langgraph/memory/angular/tsconfig.json"
+      }
     },
-    "serve": {
-      "executor": "@angular/build:dev-server",
+    "smoke": {
+      "executor": "nx:run-commands",
       "options": {
-        "buildTarget": "cockpit-langgraph-memory-angular:build:development",
-        "port": 4303,
-        "proxyConfig": "cockpit/langgraph/memory/angular/proxy.conf.json"
+        "cwd": "cockpit/langgraph/memory/angular",
+        "command": "npx tsx -e \"import { langgraphMemoryAngularModule } from './src/index.ts'; const module = langgraphMemoryAngularModule; if (module.id !== 'langgraph-memory-angular' || module.title !== 'LangGraph Memory (Angular)') { throw new Error('Unexpected module shape for ' + module.id); }\""
       }
     }
   }
