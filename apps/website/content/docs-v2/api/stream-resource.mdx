@@ -3,7 +3,7 @@
 `streamResource` is the core primitive of the library. It creates a reactive resource that opens a server-sent event stream, tracks loading and error states, and exposes the latest emitted value — all within Angular's signal-based reactivity model.
 
 ```ts
-import { streamResource } from '@ngxp/stream-resource';
+import { streamResource } from '@cacheplane/stream-resource';
 
 // Inside a component or service with injection context
 const repo = streamResource<Repository>({

@@ -80,7 +80,7 @@ Expose checkpoint history directly in your component to let users scrub through 
 <Tab label="history-viewer.component.ts">
 ```typescript
 import { Component, inject, computed } from '@angular/core';
-import { streamResource } from '@stream-resource/angular';
+import { streamResource } from '@cacheplane/stream-resource';
 import { AgentService } from './agent.service';
 
 @Component({
@@ -159,16 +159,13 @@ Time travel is most useful during development. Inspect why an agent chose a part
 ## What's Next
 
 <CardGroup cols={2}>
-  <Card title="Persistence" href="/docs-v2/guides/persistence">
+  <Card title="Persistence" href="/docs/guides/persistence">
     Configure thread storage so checkpoints survive page reloads and are available across sessions.
   </Card>
-  <Card title="Streaming" href="/docs-v2/guides/streaming">
+  <Card title="Streaming" href="/docs/guides/streaming">
     Understand how streamResource() surfaces incremental updates and how history integrates with live streaming state.
   </Card>
-  <Card title="API Reference" href="/docs-v2/reference/stream-resource">
+  <Card title="API Reference" href="/docs/api/stream-resource">
     Full reference for streamResource() options, signals, and the submit() API including checkpoint parameters.
-  </Card>
-  <Card title="Forking & Branching" href="/docs-v2/guides/branching">
-    Deep dive into branch management, merging strategies, and presenting multi-branch UIs to end users.
   </Card>
 </CardGroup>
