@@ -6,7 +6,7 @@ import { provideRender, RENDER_CONFIG } from './provide-render';
 import { defineAngularRegistry } from './define-angular-registry';
 import type { RenderConfig } from './render.types';
 
-@Component({ selector: 'test-card', standalone: true, template: '<div>card</div>' })
+@Component({ selector: 'render-test-card', standalone: true, template: '<div>card</div>' })
 class TestCardComponent {}
 
 describe('provideRender', () => {

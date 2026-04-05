@@ -2,18 +2,16 @@
 import { describe, it, expect } from 'vitest';
 import { Component, input } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import type { Spec, StateStore } from '@json-render/core';
+import type { Spec } from '@json-render/core';
 
-import { RenderSpecComponent } from './render-spec.component';
 import { defineAngularRegistry } from './define-angular-registry';
 import { signalStateStore } from './signal-state-store';
 import { provideRender, RENDER_CONFIG } from './provide-render';
-import type { AngularRegistry } from './render.types';
 
 // --- Test component ---
 
 @Component({
-  selector: 'test-text',
+  selector: 'render-test-text',
   standalone: true,
   template: '<span class="text">{{ label() }}</span>',
 })
@@ -40,7 +38,8 @@ describe('RenderSpecComponent — context resolution', () => {
     TestBed.runInInjectionContext(() => {
       const registry = defineAngularRegistry({ Text: TestTextComponent });
       const store = signalStateStore({ title: 'Hello' });
-      const handlers = { doSomething: () => {} };
+      // eslint-disable-next-line @typescript-eslint/no-empty-function
+      const handlers = { doSomething: (): void => {} };
       const functions = { upper: (args: Record<string, unknown>) => String(args['text']).toUpperCase() };
 
       // Simulate what the component does internally
@@ -108,6 +107,7 @@ describe('RenderSpecComponent — context resolution', () => {
     const config = TestBed.inject(RENDER_CONFIG);
     // Input store should take precedence
     expect(inputStore.get('/source')).toBe('input');
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     expect(config.store!.get('/source')).toBe('config');
     // In the component, input > config
   });

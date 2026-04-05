@@ -20,6 +20,7 @@ import { RENDER_CONTEXT } from './contexts/render-context';
 import { REPEAT_SCOPE } from './contexts/repeat-scope';
 import type { RepeatScope } from './contexts/repeat-scope';
 import { buildPropResolutionContext } from './internals/prop-signal';
+import type { AngularComponentRenderer } from './render.types';
 
 /**
  * Recursive element renderer.
@@ -71,10 +72,10 @@ export class RenderElementComponent {
   });
 
   /** The Angular component class for this element type. */
-  readonly componentClass = computed(() => {
+  readonly componentClass = computed<AngularComponentRenderer | null>(() => {
     const el = this.element();
-    if (!el) return undefined;
-    return this.ctx.registry.get(el.type);
+    if (!el) return null;
+    return this.ctx.registry.get(el.type) ?? null;
   });
 
   /** Prop resolution context built from store + repeat scope. */
@@ -90,7 +91,7 @@ export class RenderElementComponent {
   readonly visible = computed(() => {
     const el = this.element();
     if (!el) return false;
-    if (!this.componentClass()) return false;
+    if (this.componentClass() === null) return false;
     return evaluateVisibility(el.visible, this.propCtx());
   });
 

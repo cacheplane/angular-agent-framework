@@ -3,10 +3,10 @@ import { describe, it, expect } from 'vitest';
 import { Component } from '@angular/core';
 import { defineAngularRegistry } from './define-angular-registry';
 
-@Component({ selector: 'test-card', standalone: true, template: '<div>card</div>' })
+@Component({ selector: 'render-test-card', standalone: true, template: '<div>card</div>' })
 class TestCardComponent {}
 
-@Component({ selector: 'test-button', standalone: true, template: '<button>btn</button>' })
+@Component({ selector: 'render-test-button', standalone: true, template: '<button>btn</button>' })
 class TestButtonComponent {}
 
 describe('defineAngularRegistry', () => {

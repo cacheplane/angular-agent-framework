@@ -1,16 +1,14 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import { describe, it, expect } from 'vitest';
-import { Component, input, Injector, runInInjectionContext } from '@angular/core';
+import { Component, input } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import type { Spec, PropResolutionContext } from '@json-render/core';
+import type { Spec } from '@json-render/core';
 import {
   evaluateVisibility,
   resolveBindings,
   resolveElementProps,
 } from '@json-render/core';
 
-import { RENDER_CONTEXT } from './contexts/render-context';
-import type { RenderContext } from './contexts/render-context';
 import { defineAngularRegistry } from './define-angular-registry';
 import { signalStateStore } from './signal-state-store';
 import { buildPropResolutionContext } from './internals/prop-signal';
@@ -18,23 +16,12 @@ import { buildPropResolutionContext } from './internals/prop-signal';
 // --- Test components ---
 
 @Component({
-  selector: 'test-text',
+  selector: 'render-test-text',
   standalone: true,
   template: '<span>{{ label() }}</span>',
 })
 class TestTextComponent {
   readonly label = input<string>('');
-  readonly childKeys = input<string[]>([]);
-  readonly spec = input<Spec | null>(null);
-}
-
-@Component({
-  selector: 'test-counter',
-  standalone: true,
-  template: '<span>{{ count() }}</span>',
-})
-class TestCounterComponent {
-  readonly count = input<number>(0);
   readonly childKeys = input<string[]>([]);
   readonly spec = input<Spec | null>(null);
 }
@@ -226,10 +213,12 @@ describe('RenderElementComponent — children rendering', () => {
       const bindings = resolveBindings(rootEl.props ?? {}, ctx);
 
       // Simulate what resolvedInputs computes
+      // eslint-disable-next-line @typescript-eslint/no-empty-function
+      const noopEmit = (): void => {};
       const inputs = {
         ...resolved,
         bindings,
-        emit: () => {},
+        emit: noopEmit,
         loading: false,
         childKeys: rootEl.children ?? [],
         spec,
