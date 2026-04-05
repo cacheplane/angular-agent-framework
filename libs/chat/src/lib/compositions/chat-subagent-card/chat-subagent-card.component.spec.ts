@@ -10,19 +10,19 @@ describe('ChatSubagentCardComponent', () => {
 });
 
 describe('statusColor', () => {
-  it('returns gray for pending', () => {
-    expect(statusColor('pending')).toContain('gray');
+  it('returns muted style for pending', () => {
+    expect(statusColor('pending')).toContain('var(--chat-text-muted)');
   });
 
-  it('returns blue for running', () => {
-    expect(statusColor('running')).toContain('blue');
+  it('returns warning style for running', () => {
+    expect(statusColor('running')).toContain('var(--chat-warning-text)');
   });
 
-  it('returns green for complete', () => {
-    expect(statusColor('complete')).toContain('green');
+  it('returns success style for complete', () => {
+    expect(statusColor('complete')).toContain('var(--chat-success)');
   });
 
-  it('returns red for error', () => {
-    expect(statusColor('error')).toContain('red');
+  it('returns error style for error', () => {
+    expect(statusColor('error')).toContain('var(--chat-error-text)');
   });
 });
