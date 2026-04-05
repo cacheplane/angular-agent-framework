@@ -1,3 +1,5 @@
+import { readFileSync } from 'fs';
+import { resolve } from 'path';
 import { describe, expect, it } from 'vitest';
 import { colors, glass, gradient, glow, typography, tokens } from '../index';
 
@@ -43,5 +45,47 @@ describe('design-tokens', () => {
   it('all token objects are frozen (as const)', () => {
     expect(() => { (colors as any).bg = 'red'; }).toThrow();
     expect(() => { (glass as any).blur = '0px'; }).toThrow();
+  });
+
+  describe('tokens.css', () => {
+    const css = readFileSync(
+      resolve(__dirname, 'tokens.css'),
+      'utf-8',
+    );
+
+    it('defines all color tokens as CSS custom properties', () => {
+      expect(css).toContain('--ds-bg:');
+      expect(css).toContain('--ds-accent:');
+      expect(css).toContain('--ds-text-primary:');
+      expect(css).toContain('--ds-text-secondary:');
+      expect(css).toContain('--ds-text-muted:');
+      expect(css).toContain('--ds-accent-surface:');
+    });
+
+    it('defines glass tokens', () => {
+      expect(css).toContain('--ds-glass-bg:');
+      expect(css).toContain('--ds-glass-blur:');
+      expect(css).toContain('--ds-glass-border:');
+      expect(css).toContain('--ds-glass-shadow:');
+    });
+
+    it('defines gradient tokens', () => {
+      expect(css).toContain('--ds-gradient-bg-flow:');
+    });
+
+    it('defines typography tokens', () => {
+      expect(css).toContain('--ds-font-serif:');
+      expect(css).toContain('--ds-font-sans:');
+      expect(css).toContain('--ds-font-mono:');
+    });
+
+    it('defines glow tokens', () => {
+      expect(css).toContain('--ds-glow-hero:');
+      expect(css).toContain('--ds-glow-card:');
+    });
+
+    it('uses :root selector', () => {
+      expect(css).toContain(':root');
+    });
   });
 });

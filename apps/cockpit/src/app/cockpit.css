@@ -131,6 +131,7 @@ pre.shiki {
   border-radius: 0.5rem;
   overflow: hidden;
   margin: 0.75rem 0;
+  max-width: 100%;
 }
 .doc-codeblock__header {
   display: flex;
@@ -160,8 +161,8 @@ pre.shiki {
   cursor: pointer;
 }
 .doc-codeblock__copy:hover { color: #e0e0e0; }
-.doc-codeblock pre.shiki { margin: 0; border-radius: 0; border: none; }
-.code-mode-block pre.shiki { margin: 0; border-radius: 0; border: none; }
+.doc-codeblock pre.shiki { margin: 0; border-radius: 0; border: none; overflow-x: auto; }
+.code-mode-block pre.shiki { margin: 0; border-radius: 0; border: none; overflow-x: auto; }
 
 .doc-prompt {
   background: rgba(168, 85, 247, 0.04);

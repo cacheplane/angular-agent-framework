@@ -1,12 +1,29 @@
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
+@import "../../../../../libs/design-tokens/src/lib/tokens.css";
+@import "tailwindcss";
+
+@theme {
+  --color-bg: var(--ds-bg);
+  --color-surface: #ffffff;
+  --color-accent: var(--ds-accent);
+  --color-accent-light: var(--ds-accent-light);
+  --color-text-primary: var(--ds-text-primary);
+  --color-text-secondary: var(--ds-text-secondary);
+  --color-text-muted: var(--ds-text-muted);
+  --color-border: var(--ds-accent-border);
+  --color-error: #ef4444;
+  --color-success: #22c55e;
+  --font-sans: var(--ds-font-sans);
+  --font-serif: var(--ds-font-serif);
+  --font-mono: var(--ds-font-mono);
 }
+
+*, *::before, *::after { box-sizing: border-box; }
 
 body {
   margin: 0;
-  font-family: system-ui, -apple-system, sans-serif;
-  background: #08111f;
-  color: #edf3ff;
+  font-family: var(--ds-font-sans);
+  background: var(--ds-bg);
+  color: var(--ds-text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
