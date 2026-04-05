@@ -1,4 +1,4 @@
-import { tokens } from '../../../../lib/design-tokens';
+import { tokens } from '@cacheplane/design-tokens';
 
 const CALLOUT_STYLES = {
   info: {

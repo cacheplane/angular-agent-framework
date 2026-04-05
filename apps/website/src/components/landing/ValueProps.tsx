@@ -1,5 +1,5 @@
 import { codeToHtml } from 'shiki';
-import { tokens } from '../../../lib/design-tokens';
+import { tokens } from '@cacheplane/design-tokens';
 import { ValuePropsTabs } from './ValuePropsTabs';
 
 const TAB_DATA = [

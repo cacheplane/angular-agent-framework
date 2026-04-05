@@ -1,0 +1,7 @@
+{
+  "graphs": {
+    "durable-execution": "./src/graph.py:graph"
+  },
+  "dependencies": ["./pyproject.toml"],
+  "env": ".env"
+}

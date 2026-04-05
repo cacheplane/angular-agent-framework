@@ -1,27 +1,24 @@
 'use client';
 
-import React, { useEffect, useMemo, useState } from 'react';
-import { cockpitManifest } from '../../../../libs/cockpit-registry/src/index';
+import React, { useEffect, useState } from 'react';
+import { cockpitManifest } from '@cacheplane/cockpit-registry';
+import type { ContentBundle } from '../lib/content-bundle';
 import type { CapabilityPresentation, NavigationProduct } from '../lib/route-resolution';
 import { CodeMode } from './code-mode/code-mode';
-import { DocsMode } from './docs-mode/docs-mode';
+import { ApiMode } from './api-mode/api-mode';
+import { NarrativeDocs } from './narrative-docs/narrative-docs';
 import { ModeSwitcher } from './modes/mode-switcher';
-import { PromptDrawer } from './prompt-drawer/prompt-drawer';
 import { RunMode } from './run-mode/run-mode';
 import { CockpitSidebar } from './sidebar/cockpit-sidebar';
 
-const PRIMARY_MODES = ['Run', 'Code', 'Docs'] as const;
+const PRIMARY_MODES = ['Run', 'Code', 'Docs', 'API'] as const;
 type PrimaryMode = (typeof PRIMARY_MODES)[number];
-
-const DEFAULT_FRONTEND_ASSET_PATHS = [
-  'apps/cockpit/src/app/page.tsx',
-  'apps/cockpit/src/components/cockpit-shell.tsx',
-] as const;
 
 interface CockpitShellProps {
   navigationTree: NavigationProduct[];
   presentation: CapabilityPresentation;
   entryTitle: string;
+  contentBundle: ContentBundle;
 }
 
 const toLabel = (value: string) =>
@@ -30,40 +27,28 @@ const toLabel = (value: string) =>
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(' ');
 
+function MenuIcon() {
+  return (
+    <svg aria-hidden="true" width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <path d="M3 5h14M3 10h14M3 15h14" />
+    </svg>
+  );
+}
+
 export function CockpitShell({
   navigationTree,
   presentation,
   entryTitle,
+  contentBundle,
 }: CockpitShellProps) {
   const [isHydrated, setIsHydrated] = useState(false);
   const [activeMode, setActiveMode] = useState<PrimaryMode>('Run');
-  const [isPromptDrawerOpen, setIsPromptDrawerOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const isCapability = presentation.kind === 'capability';
-  const codeAssetPaths = useMemo(
-    () =>
-      isCapability
-        ? Array.from(new Set([...DEFAULT_FRONTEND_ASSET_PATHS, ...presentation.codeAssetPaths]))
-        : [...DEFAULT_FRONTEND_ASSET_PATHS],
-    [isCapability, presentation]
-  );
-  const promptAssetPaths = isCapability ? presentation.promptAssetPaths : [];
+  const codeAssetPaths = isCapability ? presentation.codeAssetPaths : [];
+  const backendAssetPaths = isCapability ? (presentation.backendAssetPaths ?? []) : [];
   const entry = presentation.entry;
   const contextLabel = `${toLabel(entry.product)} / ${toLabel(entry.section)} / ${entry.topic}`;
-  const docsSections = [
-    {
-      title: 'Start from the runnable surface',
-      body: `Run ${entryTitle} first, then switch to Code to inspect the frontend shell and capability module paths that power it.`,
-      code: codeAssetPaths[0] ?? presentation.docsPath,
-    },
-    {
-      title: 'Keep prompts close',
-      body:
-        promptAssetPaths.length > 0
-          ? 'Use the prompt drawer when you want the prompt path without losing the current workspace mode.'
-          : 'Prompt assets are not available for this entry, so the guide stays focused on the runnable surface and implementation files.',
-      code: promptAssetPaths[0],
-    },
-  ].filter((section) => Boolean(section.code || section.body));
 
   useEffect(() => {
     setIsHydrated(true);
@@ -72,69 +57,92 @@ export function CockpitShell({
   return (
     <main
       aria-label="Cockpit shell"
-      className="cockpit-shell"
+      className="grid md:grid-cols-[16rem_minmax(0,1fr)] min-h-screen"
       data-hydrated={isHydrated ? 'true' : 'false'}
     >
-      <CockpitSidebar
-        navigationTree={navigationTree}
-        manifest={cockpitManifest}
-        entry={entry}
-      />
+      {/* Desktop sidebar — hidden on mobile */}
+      <div className="hidden md:block">
+        <CockpitSidebar
+          navigationTree={navigationTree}
+          manifest={cockpitManifest}
+          entry={entry}
+        />
+      </div>
 
-      <section className="cockpit-shell__workspace">
-        <header className="cockpit-shell__header">
-          <div>
-            <p className="cockpit-eyebrow">{contextLabel}</p>
-            <h2>{entryTitle}</h2>
-            <p>
-              Start in Run, then move into the implementation files or guided docs as
-              needed.
-            </p>
+      {/* Mobile sidebar overlay */}
+      {isSidebarOpen && (
+        <>
+          <div
+            className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm md:hidden"
+            onClick={() => setIsSidebarOpen(false)}
+          />
+          <div
+            className="fixed top-0 left-0 bottom-0 w-64 z-50 overflow-y-auto md:hidden"
+            style={{
+              background: 'var(--ds-glass-bg)',
+              backdropFilter: 'blur(var(--ds-glass-blur))',
+              borderRight: '1px solid var(--ds-glass-border)',
+              boxShadow: 'var(--ds-glass-shadow)',
+            }}
+          >
+            <CockpitSidebar
+              navigationTree={navigationTree}
+              manifest={cockpitManifest}
+              entry={entry}
+            />
           </div>
+        </>
+      )}
 
-          <div className="cockpit-shell__actions">
-            <button type="button" onClick={() => setIsPromptDrawerOpen(true)}>
-              Open prompt assets
+      <section className="grid grid-rows-[auto_1fr] gap-2 p-4 bg-[var(--ds-glass-bg)] backdrop-blur-[var(--ds-glass-blur)]">
+        <header className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+          <div className="flex items-center gap-3">
+            <button
+              className="md:hidden"
+              onClick={() => setIsSidebarOpen(true)}
+              aria-label={isSidebarOpen ? 'Close navigation' : 'Open navigation'}
+              aria-expanded={isSidebarOpen}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ds-text-secondary)' }}
+            >
+              <MenuIcon />
             </button>
-            {isCapability ? <button type="button">Run example</button> : null}
+            <p className="hidden md:block text-[var(--ds-text-muted)] font-mono text-xs">{contextLabel}</p>
+            <span className="hidden md:block text-[var(--ds-accent-border)]">|</span>
+            <h2 className="text-sm font-medium text-[var(--ds-text-primary)]">{entryTitle}</h2>
+          </div>
+          <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0">
+            <ModeSwitcher
+              modes={PRIMARY_MODES}
+              activeMode={activeMode}
+              onChange={setActiveMode}
+            />
           </div>
         </header>
 
-        <ModeSwitcher
-          modes={PRIMARY_MODES}
-          activeMode={activeMode}
-          onChange={setActiveMode}
-        />
-
-        <div className="cockpit-shell__mode-surface">
+        <div className="min-h-0">
           {activeMode === 'Run' ? (
             <RunMode
               entryTitle={entryTitle}
-              codeAssetPaths={codeAssetPaths}
-              docsPath={presentation.docsPath}
+              runtimeUrl={contentBundle.runtimeUrl}
             />
           ) : null}
           {activeMode === 'Code' ? (
-            <CodeMode entryTitle={entryTitle} codeAssetPaths={codeAssetPaths} />
+            <CodeMode
+              entryTitle={entryTitle}
+              codeAssetPaths={codeAssetPaths}
+              backendAssetPaths={backendAssetPaths}
+              codeFiles={contentBundle.codeFiles}
+              promptFiles={contentBundle.promptFiles}
+            />
           ) : null}
           {activeMode === 'Docs' ? (
-            <DocsMode
-              entryTitle={entryTitle}
-              docsPath={presentation.docsPath}
-              summary={`Follow the live example, inspect the relevant implementation files, and keep prompt assets within reach for ${entryTitle}.`}
-              sections={docsSections}
-              promptCopy="Open prompt assets"
-            />
+            <NarrativeDocs narrativeDocs={contentBundle.narrativeDocs} />
+          ) : null}
+          {activeMode === 'API' ? (
+            <ApiMode docSections={contentBundle.docSections} />
           ) : null}
         </div>
       </section>
-
-      <PromptDrawer
-        isOpen={isPromptDrawerOpen}
-        entryTitle={entryTitle}
-        paths={promptAssetPaths}
-        onClose={() => setIsPromptDrawerOpen(false)}
-      />
     </main>
   );
 }

@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { tokens } from '../../../lib/design-tokens';
+import { tokens } from '@cacheplane/design-tokens';
 import { getPrevNextPages } from '../../lib/docs-config';
 
 export function DocsPrevNext({ section, slug }: { section: string; slug: string }) {

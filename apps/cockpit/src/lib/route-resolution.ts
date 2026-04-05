@@ -2,8 +2,21 @@ import {
   resolveManifestLanguage,
   type CockpitLanguage,
   type CockpitManifestEntry,
-} from '../../../../libs/cockpit-registry/src/index';
+} from '@cacheplane/cockpit-registry';
 import { langgraphStreamingPythonModule } from '../../../../cockpit/langgraph/streaming/python/src/index';
+import { langgraphPersistencePythonModule } from '../../../../cockpit/langgraph/persistence/python/src/index';
+import { langgraphInterruptsPythonModule } from '../../../../cockpit/langgraph/interrupts/python/src/index';
+import { langgraphMemoryPythonModule } from '../../../../cockpit/langgraph/memory/python/src/index';
+import { langgraphDurableExecutionPythonModule } from '../../../../cockpit/langgraph/durable-execution/python/src/index';
+import { langgraphSubgraphsPythonModule } from '../../../../cockpit/langgraph/subgraphs/python/src/index';
+import { langgraphTimeTravelPythonModule } from '../../../../cockpit/langgraph/time-travel/python/src/index';
+import { langgraphDeploymentRuntimePythonModule } from '../../../../cockpit/langgraph/deployment-runtime/python/src/index';
+import { deepAgentsMemoryPythonModule } from '../../../../cockpit/deep-agents/memory/python/src/index';
+import { deepAgentsPlanningPythonModule } from '../../../../cockpit/deep-agents/planning/python/src/index';
+import { deepAgentsFilesystemPythonModule } from '../../../../cockpit/deep-agents/filesystem/python/src/index';
+import { deepAgentsSubagentsPythonModule } from '../../../../cockpit/deep-agents/subagents/python/src/index';
+import { deepAgentsSkillsPythonModule } from '../../../../cockpit/deep-agents/skills/python/src/index';
+import { deepAgentsSandboxesPythonModule } from '../../../../cockpit/deep-agents/sandboxes/python/src/index';
 
 export interface ResolveCockpitEntryOptions {
   manifest: CockpitManifestEntry[];
@@ -36,9 +49,28 @@ export type CapabilityPresentation =
       docsPath: string;
       promptAssetPaths: string[];
       codeAssetPaths: string[];
+      backendAssetPaths: string[];
+      docsAssetPaths: string[];
+      runtimeUrl?: string;
+      devPort?: number;
     };
 
-const capabilityModules = [langgraphStreamingPythonModule];
+const capabilityModules = [
+  langgraphStreamingPythonModule,
+  langgraphPersistencePythonModule,
+  langgraphInterruptsPythonModule,
+  langgraphMemoryPythonModule,
+  langgraphDurableExecutionPythonModule,
+  langgraphSubgraphsPythonModule,
+  langgraphTimeTravelPythonModule,
+  langgraphDeploymentRuntimePythonModule,
+  deepAgentsMemoryPythonModule,
+  deepAgentsPlanningPythonModule,
+  deepAgentsFilesystemPythonModule,
+  deepAgentsSubagentsPythonModule,
+  deepAgentsSkillsPythonModule,
+  deepAgentsSandboxesPythonModule,
+];
 
 export const toCockpitPath = (entry: CockpitManifestEntry): string =>
   `/${entry.product}/${entry.section}/${entry.topic}/${entry.page}/${entry.language}`;
@@ -156,5 +188,9 @@ export const getCapabilityPresentation = (
     docsPath: module?.docsPath ?? entry.docsPath,
     promptAssetPaths: module?.promptAssetPaths ?? entry.promptAssetPaths,
     codeAssetPaths: module?.codeAssetPaths ?? entry.codeAssetPaths,
+    backendAssetPaths: module?.backendAssetPaths ?? [],
+    docsAssetPaths: module?.docsAssetPaths ?? [],
+    runtimeUrl: module?.runtimeUrl,
+    devPort: module?.devPort,
   };
 };

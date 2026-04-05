@@ -1,0 +1,38 @@
+{
+  "name": "cockpit-langgraph-durable-execution-angular",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "cockpit/langgraph/durable-execution/angular/src",
+  "projectType": "application",
+  "tags": ["scope:cockpit", "type:example"],
+  "targets": {
+    "build": {
+      "executor": "@angular/build:application",
+      "options": {
+        "outputPath": "dist/cockpit/langgraph/durable-execution/angular",
+        "index": "cockpit/langgraph/durable-execution/angular/src/index.html",
+        "browser": "cockpit/langgraph/durable-execution/angular/src/main.ts",
+        "tsConfig": "cockpit/langgraph/durable-execution/angular/tsconfig.app.json",
+        "styles": ["cockpit/langgraph/durable-execution/angular/src/styles.css"]
+      },
+      "configurations": {
+        "development": {
+          "fileReplacements": [
+            {
+              "replace": "cockpit/langgraph/durable-execution/angular/src/environments/environment.ts",
+              "with": "cockpit/langgraph/durable-execution/angular/src/environments/environment.development.ts"
+            }
+          ]
+        }
+      },
+      "defaultConfiguration": "development"
+    },
+    "serve": {
+      "executor": "@angular/build:dev-server",
+      "options": {
+        "buildTarget": "cockpit-langgraph-durable-execution-angular:build:development",
+        "port": 4304,
+        "proxyConfig": "cockpit/langgraph/durable-execution/angular/proxy.conf.json"
+      }
+    }
+  }
+}

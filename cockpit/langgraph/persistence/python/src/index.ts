@@ -11,6 +11,10 @@ export interface CockpitCapabilityModule {
   docsPath: string;
   promptAssetPaths: string[];
   codeAssetPaths: string[];
+  backendAssetPaths: string[];
+  docsAssetPaths: string[];
+  runtimeUrl?: string;
+  devPort?: number;
 }
 
 export const langgraphPersistencePythonModule: CockpitCapabilityModule = {
@@ -25,5 +29,14 @@ export const langgraphPersistencePythonModule: CockpitCapabilityModule = {
   title: 'LangGraph Persistence (Python)',
   docsPath: '/docs/langgraph/core-capabilities/persistence/overview/python',
   promptAssetPaths: ['cockpit/langgraph/persistence/python/prompts/persistence.md'],
-  codeAssetPaths: ['cockpit/langgraph/persistence/python/src/index.ts'],
+  codeAssetPaths: [
+    'cockpit/langgraph/persistence/angular/src/app/persistence.component.ts',
+    'cockpit/langgraph/persistence/angular/src/app/app.config.ts',
+  ],
+  backendAssetPaths: [
+    'cockpit/langgraph/persistence/python/src/graph.py',
+  ],
+  docsAssetPaths: ['cockpit/langgraph/persistence/python/docs/guide.md'],
+  runtimeUrl: 'langgraph/persistence',
+  devPort: 4301,
 };

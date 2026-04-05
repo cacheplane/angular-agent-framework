@@ -1,0 +1,38 @@
+{
+  "name": "cockpit-deep-agents-planning-angular",
+  "$schema": "../../../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "cockpit/deep-agents/planning/angular/src",
+  "projectType": "application",
+  "tags": ["scope:cockpit", "type:example"],
+  "targets": {
+    "build": {
+      "executor": "@angular/build:application",
+      "options": {
+        "outputPath": "dist/cockpit/deep-agents/planning/angular",
+        "index": "cockpit/deep-agents/planning/angular/src/index.html",
+        "browser": "cockpit/deep-agents/planning/angular/src/main.ts",
+        "tsConfig": "cockpit/deep-agents/planning/angular/tsconfig.app.json",
+        "styles": ["cockpit/deep-agents/planning/angular/src/styles.css"]
+      },
+      "configurations": {
+        "development": {
+          "fileReplacements": [
+            {
+              "replace": "cockpit/deep-agents/planning/angular/src/environments/environment.ts",
+              "with": "cockpit/deep-agents/planning/angular/src/environments/environment.development.ts"
+            }
+          ]
+        }
+      },
+      "defaultConfiguration": "development"
+    },
+    "serve": {
+      "executor": "@angular/build:dev-server",
+      "options": {
+        "buildTarget": "cockpit-deep-agents-planning-angular:build:development",
+        "port": 4310,
+        "proxyConfig": "cockpit/deep-agents/planning/angular/proxy.conf.json"
+      }
+    }
+  }
+}

@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { docsConfig, type DocsSection } from '../../lib/docs-config';
-import { tokens } from '../../../lib/design-tokens';
+import { tokens } from '@cacheplane/design-tokens';
 
 interface Props {
   activeSection: string;

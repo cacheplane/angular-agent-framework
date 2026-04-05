@@ -1,0 +1,7 @@
+{
+  "graphs": {
+    "filesystem": "./src/graph.py:graph"
+  },
+  "dependencies": ["./pyproject.toml"],
+  "env": ".env"
+}

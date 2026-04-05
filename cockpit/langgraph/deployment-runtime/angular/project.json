@@ -1,0 +1,38 @@
+{
+  "name": "cockpit-langgraph-deployment-runtime-angular",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "cockpit/langgraph/deployment-runtime/angular/src",
+  "projectType": "application",
+  "tags": ["scope:cockpit", "type:example"],
+  "targets": {
+    "build": {
+      "executor": "@angular/build:application",
+      "options": {
+        "outputPath": "dist/cockpit/langgraph/deployment-runtime/angular",
+        "index": "cockpit/langgraph/deployment-runtime/angular/src/index.html",
+        "browser": "cockpit/langgraph/deployment-runtime/angular/src/main.ts",
+        "tsConfig": "cockpit/langgraph/deployment-runtime/angular/tsconfig.app.json",
+        "styles": ["cockpit/langgraph/deployment-runtime/angular/src/styles.css"]
+      },
+      "configurations": {
+        "development": {
+          "fileReplacements": [
+            {
+              "replace": "cockpit/langgraph/deployment-runtime/angular/src/environments/environment.ts",
+              "with": "cockpit/langgraph/deployment-runtime/angular/src/environments/environment.development.ts"
+            }
+          ]
+        }
+      },
+      "defaultConfiguration": "development"
+    },
+    "serve": {
+      "executor": "@angular/build:dev-server",
+      "options": {
+        "buildTarget": "cockpit-langgraph-deployment-runtime-angular:build:development",
+        "port": 4307,
+        "proxyConfig": "cockpit/langgraph/deployment-runtime/angular/proxy.conf.json"
+      }
+    }
+  }
+}

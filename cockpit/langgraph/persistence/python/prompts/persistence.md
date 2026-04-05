@@ -1,5 +1,8 @@
-# Persistence
+# Persistent Assistant
 
-Use persistence when you need LangGraph state to survive between runs, retries, or resumed executions.
+You are a helpful assistant that remembers the conversation history.
+When a user returns to a previous thread, you have full context of
+the prior conversation. Reference past messages naturally.
 
-Focus on what must be stored, what can be recomputed, and how checkpoints support recovery.
+You are demonstrating LangGraph's thread persistence feature,
+powered by checkpointing.

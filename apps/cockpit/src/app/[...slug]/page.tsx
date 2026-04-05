@@ -1,6 +1,13 @@
 import { redirect } from 'next/navigation';
 import { CockpitShell } from '../../components/cockpit-shell';
-import { getCockpitPageModel } from '../../lib/cockpit-page';
+import { getContentBundle } from '../../lib/content-bundle';
+import { cockpitManifest, getCockpitPageModel } from '../../lib/cockpit-page';
+
+export async function generateStaticParams() {
+  return cockpitManifest.map((entry) => ({
+    slug: [entry.product, entry.section, entry.topic, entry.page, entry.language],
+  }));
+}
 
 export default async function CockpitRoutePage({
   params,
@@ -16,11 +23,14 @@ export default async function CockpitRoutePage({
     redirect(canonicalPath);
   }
 
+  const contentBundle = await getContentBundle(presentation);
+
   return (
     <CockpitShell
       navigationTree={navigationTree}
       presentation={presentation}
       entryTitle={entry.title}
+      contentBundle={contentBundle}
     />
   );
 }

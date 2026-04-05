@@ -1,6 +1,6 @@
 import { GenerativeUIFrame } from './GenerativeUIFrame';
 import { CopyPromptButton } from '../docs/CopyPromptButton';
-import { tokens } from '../../../lib/design-tokens';
+import { tokens } from '@cacheplane/design-tokens';
 
 const SETUP_SNIPPET = 'npm install @cacheplane/stream-resource\n\n// app.config.ts\nprovideStreamResource({ apiUrl: \'http://localhost:2024\' })';
 

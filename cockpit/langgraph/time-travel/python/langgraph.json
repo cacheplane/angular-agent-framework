@@ -1,0 +1,7 @@
+{
+  "graphs": {
+    "time-travel": "./src/graph.py:graph"
+  },
+  "dependencies": ["./pyproject.toml"],
+  "env": ".env"
+}

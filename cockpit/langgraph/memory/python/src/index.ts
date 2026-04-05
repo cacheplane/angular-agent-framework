@@ -11,6 +11,10 @@ export interface CockpitCapabilityModule {
   docsPath: string;
   promptAssetPaths: string[];
   codeAssetPaths: string[];
+  backendAssetPaths: string[];
+  docsAssetPaths: string[];
+  runtimeUrl?: string;
+  devPort?: number;
 }
 
 export const langgraphMemoryPythonModule: CockpitCapabilityModule = {
@@ -25,5 +29,14 @@ export const langgraphMemoryPythonModule: CockpitCapabilityModule = {
   title: 'LangGraph Memory (Python)',
   docsPath: '/docs/langgraph/core-capabilities/memory/overview/python',
   promptAssetPaths: ['cockpit/langgraph/memory/python/prompts/memory.md'],
-  codeAssetPaths: ['cockpit/langgraph/memory/python/src/index.ts'],
+  codeAssetPaths: [
+    'cockpit/langgraph/memory/angular/src/app/memory.component.ts',
+    'cockpit/langgraph/memory/angular/src/app/app.config.ts',
+  ],
+  backendAssetPaths: [
+    'cockpit/langgraph/memory/python/src/graph.py',
+  ],
+  docsAssetPaths: ['cockpit/langgraph/memory/python/docs/guide.md'],
+  runtimeUrl: 'langgraph/memory',
+  devPort: 4303,
 };

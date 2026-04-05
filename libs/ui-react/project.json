@@ -1,0 +1,27 @@
+{
+  "name": "ui-react",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/ui-react/src",
+  "projectType": "library",
+  "tags": ["scope:shared", "type:lib"],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{workspaceRoot}/dist/libs/ui-react"],
+      "options": {
+        "outputPath": "dist/libs/ui-react",
+        "main": "libs/ui-react/src/index.ts",
+        "tsConfig": "libs/ui-react/tsconfig.lib.json"
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    },
+    "test": {
+      "executor": "@nx/vite:test",
+      "options": {
+        "configFile": "libs/ui-react/vite.config.mts"
+      }
+    }
+  }
+}
