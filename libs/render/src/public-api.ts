@@ -1,3 +1,12 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// Public API surface for @cacheplane/render — exports added in subsequent tasks.
-export {};
+
+// Types
+export type {
+  AngularComponentInputs,
+  AngularComponentRenderer,
+  AngularRegistry,
+  RenderConfig,
+} from './lib/render.types';
+
+// Registry
+export { defineAngularRegistry } from './lib/define-angular-registry';
