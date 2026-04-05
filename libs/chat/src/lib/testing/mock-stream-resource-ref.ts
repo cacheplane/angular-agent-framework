@@ -1,10 +1,33 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-import { signal } from '@angular/core';
+import { signal, WritableSignal } from '@angular/core';
 import type { StreamResourceRef, SubagentStreamRef, ResourceStatus as ResourceStatusType, Interrupt, ThreadState, SubmitOptions } from '@cacheplane/stream-resource';
 import type { ToolProgress, ToolCallWithResult } from '@langchain/langgraph-sdk';
 import { ResourceStatus } from '@cacheplane/stream-resource';
 import type { BaseMessage, AIMessage as CoreAIMessage } from '@langchain/core/messages';
 import type { MessageMetadata } from '@langchain/langgraph-sdk/ui';
+
+/**
+ * A StreamResourceRef with writable signals for easy test control.
+ * Cast the result of createMockStreamResourceRef() to this type to access
+ * writable signals without unsafe casts in test files.
+ */
+export interface MockStreamResourceRef extends StreamResourceRef<any, any> {
+  messages: WritableSignal<BaseMessage[]>;
+  status: WritableSignal<ResourceStatusType>;
+  error: WritableSignal<unknown>;
+  interrupt: WritableSignal<Interrupt<any> | undefined>;
+  interrupts: WritableSignal<Interrupt<any>[]>;
+  isLoading: WritableSignal<boolean>;
+  hasValue: WritableSignal<boolean>;
+  value: WritableSignal<any>;
+  toolProgress: WritableSignal<ToolProgress[]>;
+  toolCalls: WritableSignal<ToolCallWithResult[]>;
+  branch: WritableSignal<string>;
+  history: WritableSignal<ThreadState<any>[]>;
+  isThreadLoading: WritableSignal<boolean>;
+  subagents: WritableSignal<Map<string, SubagentStreamRef>>;
+  activeSubagents: WritableSignal<SubagentStreamRef[]>;
+}
 
 /**
  * Creates a mock StreamResourceRef with writable signals for testing.
@@ -19,7 +42,7 @@ export function createMockStreamResourceRef(
     hasValue?: boolean;
     isThreadLoading?: boolean;
   } = {}
-): StreamResourceRef<any, any> {
+): MockStreamResourceRef {
   const messages$ = signal<BaseMessage[]>(initial.messages ?? []);
   const status$ = signal<ResourceStatusType>(initial.status ?? ResourceStatus.Idle);
   const isLoading$ = signal<boolean>(initial.isLoading ?? false);
@@ -36,7 +59,7 @@ export function createMockStreamResourceRef(
   const subagents$ = signal<Map<string, SubagentStreamRef>>(new Map());
   const activeSubagents$ = signal<SubagentStreamRef[]>([]);
 
-  const ref: StreamResourceRef<any, any> = {
+  const ref: MockStreamResourceRef = {
     value: value$,
     status: status$,
     isLoading: isLoading$,
@@ -69,5 +92,5 @@ export function createMockStreamResourceRef(
     getToolCalls: (_msg: CoreAIMessage): ToolCallWithResult[] => [],
   };
 
-  return ref;
+  return ref as MockStreamResourceRef;
 }

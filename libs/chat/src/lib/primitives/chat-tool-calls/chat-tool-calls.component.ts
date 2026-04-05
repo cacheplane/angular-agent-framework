@@ -8,6 +8,7 @@ import {
   ChangeDetectionStrategy,
 } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
+import { AIMessage } from '@langchain/core/messages';
 import type { BaseMessage } from '@langchain/core/messages';
 import type { StreamResourceRef } from '@cacheplane/stream-resource';
 import type { ToolCallWithResult } from '@langchain/langgraph-sdk';
@@ -36,8 +37,8 @@ export class ChatToolCallsComponent {
 
   readonly toolCalls = computed((): ToolCallWithResult[] => {
     const msg = this.message();
-    if (msg && 'tool_calls' in msg && Array.isArray((msg as any).tool_calls)) {
-      return (msg as any).tool_calls as ToolCallWithResult[];
+    if (msg instanceof AIMessage) {
+      return this.ref().getToolCalls(msg);
     }
     return this.ref().toolCalls();
   });

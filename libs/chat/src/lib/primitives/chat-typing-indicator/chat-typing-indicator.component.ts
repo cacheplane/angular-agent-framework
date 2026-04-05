@@ -21,9 +21,9 @@ export function isTyping(ref: StreamResourceRef<any, any>): boolean {
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (visible()) {
-      <ng-content>
+      <div role="status" aria-label="Agent is typing">
         <span class="chat-typing-indicator">...</span>
-      </ng-content>
+      </div>
     }
   `,
 })

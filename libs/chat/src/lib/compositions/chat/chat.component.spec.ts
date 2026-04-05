@@ -2,6 +2,7 @@
 import { describe, it, expect } from 'vitest';
 import { HumanMessage, AIMessage } from '@langchain/core/messages';
 import { ChatComponent } from './chat.component';
+import { messageContent } from '../shared/message-utils';
 
 describe('ChatComponent', () => {
   it('is defined as a class', () => {
@@ -9,14 +10,11 @@ describe('ChatComponent', () => {
   });
 
   it('messageContent returns string content as-is', () => {
-    // Extract and test the method as a standalone function (no injection context needed)
-    const messageContent = ChatComponent.prototype.messageContent;
     const msg = new HumanMessage('hello world');
     expect(messageContent(msg)).toBe('hello world');
   });
 
   it('messageContent serializes array content to JSON', () => {
-    const messageContent = ChatComponent.prototype.messageContent;
     const msg = new AIMessage({ content: [{ type: 'text', text: 'hi' }] });
     const result = messageContent(msg);
     expect(result).toContain('text');

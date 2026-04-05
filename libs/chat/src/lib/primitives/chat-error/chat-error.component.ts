@@ -24,10 +24,8 @@ export function extractErrorMessage(error: unknown): string | null {
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    @if (errorMessage()) {
-      <ng-content>
-        <span class="chat-error">{{ errorMessage() }}</span>
-      </ng-content>
+    @if (errorMessage(); as msg) {
+      <div role="alert">{{ msg }}</div>
     }
   `,
 })

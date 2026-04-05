@@ -7,7 +7,6 @@ import {
   ChangeDetectionStrategy,
 } from '@angular/core';
 import type { StreamResourceRef } from '@cacheplane/stream-resource';
-import type { BaseMessage } from '@langchain/core/messages';
 import { ChatMessagesComponent } from '../../primitives/chat-messages/chat-messages.component';
 import { MessageTemplateDirective } from '../../primitives/chat-messages/message-template.directive';
 import { ChatInputComponent } from '../../primitives/chat-input/chat-input.component';
@@ -19,6 +18,7 @@ import { DebugControlsComponent } from './debug-controls.component';
 import { DebugSummaryComponent } from './debug-summary.component';
 import type { DebugCheckpoint } from './debug-checkpoint-card.component';
 import { toDebugCheckpoint, extractStateValues } from './debug-utils';
+import { messageContent } from '../shared/message-utils';
 
 @Component({
   selector: 'chat-debug',
@@ -74,20 +74,10 @@ import { toDebugCheckpoint, extractStateValues } from './debug-utils';
             </ng-template>
           </chat-messages>
 
-          <chat-typing-indicator [ref]="ref()">
-            <div class="flex justify-start">
-              <div class="rounded-2xl px-4 py-2 bg-gray-100 text-gray-500 text-sm">
-                <span class="animate-pulse">Thinking...</span>
-              </div>
-            </div>
-          </chat-typing-indicator>
+          <chat-typing-indicator [ref]="ref()" />
         </div>
 
-        <chat-error [ref]="ref()">
-          <div class="px-4 py-3 bg-red-50 border-t border-red-200 text-sm text-red-700">
-            An error occurred. Please try again.
-          </div>
-        </chat-error>
+        <chat-error [ref]="ref()" />
 
         <div class="border-t border-gray-200 p-4">
           <chat-input
@@ -185,11 +175,8 @@ export class ChatDebugComponent {
     return extractStateValues(history[idx - 1]);
   });
 
-  messageContent(message: BaseMessage): string {
-    const content = message.content;
-    if (typeof content === 'string') return content;
-    return JSON.stringify(content);
-  }
+  // Message templates are intentionally co-located (shadcn copy-paste model)
+  readonly messageContent = messageContent;
 
   stepForward(): void {
     const idx = this.selectedCheckpointIndex();

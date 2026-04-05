@@ -3,6 +3,7 @@ import {
   Component,
   computed,
   input,
+  output,
   signal,
   ChangeDetectionStrategy,
 } from '@angular/core';
@@ -73,6 +74,11 @@ export class ChatTimelineSliderComponent {
 
   readonly history = computed((): ThreadState<any>[] => this.ref().history());
 
+  /** Emits the checkpoint_id when the user requests replay from that checkpoint. */
+  readonly replayRequested = output<string>();
+  /** Emits the checkpoint_id when the user requests a fork from that checkpoint. */
+  readonly forkRequested = output<string>();
+
   checkpointLabel(state: ThreadState<any>, index: number): string {
     if (state.checkpoint?.checkpoint_id) {
       return `Checkpoint ${index + 1}`;
@@ -82,14 +88,14 @@ export class ChatTimelineSliderComponent {
 
   replay(state: ThreadState<any>): void {
     if (state.checkpoint?.checkpoint_id) {
-      this.ref().setBranch(state.checkpoint?.checkpoint_id ?? '');
+      this.replayRequested.emit(state.checkpoint.checkpoint_id);
     }
   }
 
   fork(state: ThreadState<any>, index: number): void {
     this.selectedIndex.set(index);
     if (state.checkpoint?.checkpoint_id) {
-      this.ref().setBranch(state.checkpoint?.checkpoint_id ?? '');
+      this.forkRequested.emit(state.checkpoint.checkpoint_id);
     }
   }
 }
