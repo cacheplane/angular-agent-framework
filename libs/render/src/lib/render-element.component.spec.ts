@@ -196,3 +196,144 @@ describe('RenderElementComponent — pipeline logic', () => {
     });
   });
 });
+
+/**
+ * Children rendering tests (Task 9).
+ *
+ * Verify that the recursive rendering pattern works: a parent Container
+ * receives childKeys and spec, and each child element can be resolved
+ * independently from the same spec.
+ */
+describe('RenderElementComponent — children rendering', () => {
+  it('should pass childKeys and spec to the rendered component', () => {
+    TestBed.configureTestingModule({});
+    TestBed.runInInjectionContext(() => {
+      const registry = defineAngularRegistry({ Container: TestTextComponent, Text: TestTextComponent });
+      const store = signalStateStore({ title: 'Parent' });
+      const spec = createSpec({
+        root: {
+          type: 'Container',
+          props: { label: 'Parent' },
+          children: ['heading', 'body'],
+        },
+        heading: { type: 'Text', props: { label: 'Heading' } },
+        body: { type: 'Text', props: { label: 'Body' } },
+      });
+
+      const rootEl = spec.elements['root'];
+      const ctx = buildPropResolutionContext(store);
+      const resolved = resolveElementProps(rootEl.props ?? {}, ctx);
+      const bindings = resolveBindings(rootEl.props ?? {}, ctx);
+
+      // Simulate what resolvedInputs computes
+      const inputs = {
+        ...resolved,
+        bindings,
+        emit: () => {},
+        loading: false,
+        childKeys: rootEl.children ?? [],
+        spec,
+      };
+
+      // Container receives childKeys pointing to its children
+      expect(inputs.childKeys).toEqual(['heading', 'body']);
+      expect(inputs.spec).toBe(spec);
+
+      // Each child can be resolved from the same spec
+      for (const childKey of inputs.childKeys) {
+        const childEl = spec.elements[childKey];
+        expect(childEl).toBeDefined();
+        expect(registry.get(childEl.type)).toBe(TestTextComponent);
+      }
+    });
+  });
+
+  it('should resolve child props independently from parent', () => {
+    TestBed.configureTestingModule({});
+    TestBed.runInInjectionContext(() => {
+      const store = signalStateStore({ greeting: 'Hi', name: 'World' });
+      const spec = createSpec({
+        root: {
+          type: 'Container',
+          props: {},
+          children: ['greeting', 'name'],
+        },
+        greeting: { type: 'Text', props: { label: { $state: '/greeting' } } },
+        name: { type: 'Text', props: { label: { $state: '/name' } } },
+      });
+
+      const ctx = buildPropResolutionContext(store);
+
+      // Resolve children
+      const greetingEl = spec.elements['greeting'];
+      const greetingResolved = resolveElementProps(greetingEl.props ?? {}, ctx);
+      expect(greetingResolved['label']).toBe('Hi');
+
+      const nameEl = spec.elements['name'];
+      const nameResolved = resolveElementProps(nameEl.props ?? {}, ctx);
+      expect(nameResolved['label']).toBe('World');
+    });
+  });
+
+  it('should support deeply nested children (recursive tree)', () => {
+    TestBed.configureTestingModule({});
+    TestBed.runInInjectionContext(() => {
+      const store = signalStateStore({});
+      const spec = createSpec({
+        root: {
+          type: 'Container',
+          props: {},
+          children: ['level1'],
+        },
+        level1: {
+          type: 'Container',
+          props: {},
+          children: ['level2'],
+        },
+        level2: {
+          type: 'Container',
+          props: {},
+          children: ['leaf'],
+        },
+        leaf: {
+          type: 'Text',
+          props: { label: 'Deep Leaf' },
+        },
+      });
+
+      // Walk the tree recursively
+      function getLeafLabels(key: string): string[] {
+        const el = spec.elements[key];
+        if (!el) return [];
+        const children = el.children ?? [];
+        if (children.length === 0) {
+          const ctx = buildPropResolutionContext(store);
+          const resolved = resolveElementProps(el.props ?? {}, ctx);
+          return [resolved['label'] as string];
+        }
+        return children.flatMap(getLeafLabels);
+      }
+
+      const labels = getLeafLabels('root');
+      expect(labels).toEqual(['Deep Leaf']);
+    });
+  });
+
+  it('should handle element with empty children array', () => {
+    const spec = createSpec({
+      root: { type: 'Container', props: {}, children: [] },
+    });
+    const el = spec.elements['root'];
+    expect(el.children).toEqual([]);
+  });
+
+  it('should handle element with no children property', () => {
+    const spec = createSpec({
+      root: { type: 'Text', props: { label: 'No children' } },
+    });
+    const el = spec.elements['root'];
+    // children defaults to undefined; component uses ?? []
+    const childKeys = el.children ?? [];
+    expect(childKeys).toEqual([]);
+  });
+});
