@@ -1,0 +1,49 @@
+/**
+ * Design Tokens — CSS Custom Properties
+ *
+ * Single source of truth for the @cacheplane design system.
+ * Import this file in any app to get all tokens as CSS vars.
+ *
+ * Variable naming: --ds-{category}-{name}
+ * Matches the TS token objects in this library.
+ */
+:root {
+  /* Colors */
+  --ds-bg: #f8f9fc;
+  --ds-accent: #004090;
+  --ds-accent-light: #64C3FD;
+  --ds-accent-glow: rgba(0, 64, 144, 0.2);
+  --ds-accent-border: rgba(0, 64, 144, 0.15);
+  --ds-accent-border-hover: rgba(0, 64, 144, 0.3);
+  --ds-accent-surface: rgba(0, 64, 144, 0.06);
+  --ds-text-primary: #1a1a2e;
+  --ds-text-secondary: #555770;
+  --ds-text-muted: #8b8fa3;
+  --ds-sidebar-bg: rgba(255, 255, 255, 0.45);
+  --ds-angular-red: #DD0031;
+
+  /* Glass */
+  --ds-glass-bg: rgba(255, 255, 255, 0.45);
+  --ds-glass-bg-hover: rgba(255, 255, 255, 0.55);
+  --ds-glass-blur: 16px;
+  --ds-glass-border: rgba(255, 255, 255, 0.6);
+  --ds-glass-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+
+  /* Gradients */
+  --ds-gradient-warm: radial-gradient(circle, rgba(221, 0, 49, 0.18), transparent 70%);
+  --ds-gradient-cool: radial-gradient(circle, rgba(0, 64, 144, 0.18), transparent 70%);
+  --ds-gradient-cool-light: radial-gradient(circle, rgba(100, 195, 253, 0.15), transparent 70%);
+  --ds-gradient-bg-flow: linear-gradient(135deg, #fef0f3 0%, #f4f0ff 45%, #eaf3ff 70%, #e6f4ff 100%);
+
+  /* Glow */
+  --ds-glow-hero: 0 0 60px rgba(0, 64, 144, 0.15);
+  --ds-glow-demo: 0 0 30px rgba(0, 64, 144, 0.1);
+  --ds-glow-card: 0 0 24px rgba(0, 64, 144, 0.1);
+  --ds-glow-border: 0 0 12px rgba(0, 64, 144, 0.08);
+  --ds-glow-button: 0 0 16px rgba(0, 64, 144, 0.15);
+
+  /* Typography */
+  --ds-font-serif: 'EB Garamond', Georgia, serif;
+  --ds-font-sans: Inter, system-ui, sans-serif;
+  --ds-font-mono: 'JetBrains Mono', monospace;
+}

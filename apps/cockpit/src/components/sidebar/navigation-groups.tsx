@@ -75,7 +75,9 @@ function ProductGroup({
       {open && (
         <nav style={{ display: 'flex', flexDirection: 'column', marginTop: 4 }}>
           {product.sections.flatMap((section) =>
-            section.entries.map((entry) => {
+            section.entries
+              .filter((entry) => entry.topic !== 'overview')
+              .map((entry) => {
               const isActive =
                 entry.product === currentEntry.product &&
                 entry.section === currentEntry.section &&
