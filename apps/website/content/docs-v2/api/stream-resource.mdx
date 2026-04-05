@@ -2,6 +2,8 @@
 
 `streamResource` is the core primitive of the library. It creates a reactive resource that opens a server-sent event stream, tracks loading and error states, and exposes the latest emitted value — all within Angular's signal-based reactivity model.
 
+When the `url` signal changes, the resource tears down the previous connection and opens a fresh one automatically. You never write subscription management or cleanup logic yourself.
+
 ```ts
 import { streamResource } from '@cacheplane/stream-resource';
 
@@ -12,9 +14,30 @@ const repo = streamResource<Repository>({
 });
 
 // Use in template
-// repo.value() — latest emitted value (or undefined)
-// repo.status() — 'idle' | 'loading' | 'streaming' | 'error'
+// repo.value()     — latest emitted value (or undefined)
+// repo.status()    — 'idle' | 'loading' | 'streaming' | 'error'
+// repo.error()     — the thrown error, when status is 'error'
+// repo.interrupt() — call to cancel the stream immediately
 ```
+
+## Key signals
+
+| Signal | Type | Description |
+|--------|------|-------------|
+| `value()` | `T \| undefined` | The latest value emitted by the stream. Starts as `undefined` and updates with each SSE event. |
+| `status()` | `'idle' \| 'loading' \| 'streaming' \| 'error'` | Lifecycle state of the current connection. |
+| `error()` | `unknown` | The error thrown when `status()` is `'error'`. `undefined` otherwise. |
+| `interrupt()` | `() => void` | Closes the active stream without an error — useful for user-initiated cancellation. |
+
+## When to use
+
+Use `streamResource` whenever your UI needs to react to a live data stream from the server:
+
+- **AI / LLM responses** — stream tokens into a chat bubble as they arrive
+- **Live feeds** — stock tickers, activity logs, or progress updates
+- **Long-running jobs** — subscribe to backend task progress over SSE
+
+For plain HTTP requests that return a single value and complete, Angular's built-in `resource()` or `httpResource()` is a better fit.
 
 <Callout type="warning" title="Injection context required">
   `streamResource` must be called during construction, inside an injection
@@ -22,5 +45,31 @@ const repo = streamResource<Repository>({
   passed to `runInInjectionContext`). Calling it outside an injection context
   will throw.
 </Callout>
+
+## What's Next
+
+<CardGroup cols={3}>
+  <Card
+    title="Quickstart"
+    icon="rocket"
+    href="/docs-v2/quickstart"
+  >
+    Build your first streaming component end-to-end in under five minutes.
+  </Card>
+  <Card
+    title="Streaming Guide"
+    icon="wave-sine"
+    href="/docs-v2/guides/streaming"
+  >
+    Deep dive into SSE lifecycle, error handling, and reconnect strategies.
+  </Card>
+  <Card
+    title="Angular Signals"
+    icon="bolt"
+    href="/docs-v2/concepts/angular-signals"
+  >
+    Understand how stream-resource integrates with Angular's reactivity model.
+  </Card>
+</CardGroup>
 
 {/* Auto-rendered from api-docs.json — see page component */}

@@ -2,7 +2,12 @@
 
 `FetchStreamTransport` is the production-ready transport that opens a real server-sent event connection using the browser's `fetch` API and reads a `ReadableStream` response body. It is the default transport you register with `provideStreamResource` in production builds.
 
-You rarely need to interact with `FetchStreamTransport` directly — simply provide it once at the application level and every `streamResource` will use it automatically. You would reach for it explicitly only when constructing a resource outside the normal DI tree or when you need to override the transport for a single resource while keeping the global default intact.
+## When you interact with it directly
+
+In most apps you will never import or inject `FetchStreamTransport` by name — you register it once in `provideStreamResource` and forget about it. The two cases where you reach for it explicitly are:
+
+1. **Per-resource override** — you want one resource to use a different transport than the global default while everything else stays on `FetchStreamTransport`.
+2. **Outside the DI tree** — you are constructing a resource in a context where global providers are not available and you need to supply the transport manually.
 
 ```ts
 import { inject } from '@angular/core';
@@ -15,10 +20,46 @@ const events = streamResource<Event>({
 });
 ```
 
+## How it works
+
+`FetchStreamTransport` makes a `fetch` call to the given URL and expects the server to respond with `Content-Type: text/event-stream`. It then reads the `ReadableStream` body line-by-line, parses SSE `data:` fields, and emits each parsed JSON value into the resource signal.
+
+The transport handles:
+
+- **Backpressure** — reads chunks at the pace the browser delivers them
+- **Cancellation** — aborts the underlying `fetch` when `interrupt()` is called or the resource is destroyed
+- **Error propagation** — network errors and non-2xx responses surface through `resource.error()`
+
 <Callout type="tip" title="Transport interface">
   `FetchStreamTransport` implements the `StreamTransport` interface. You can
   create custom transports (e.g. WebSocket-backed) by implementing the same
   interface and providing them in place of this class.
 </Callout>
+
+## What's Next
+
+<CardGroup cols={3}>
+  <Card
+    title="Streaming Guide"
+    icon="wave-sine"
+    href="/docs-v2/guides/streaming"
+  >
+    Learn how the SSE lifecycle maps to resource signals and how to handle reconnects.
+  </Card>
+  <Card
+    title="Deployment"
+    icon="server"
+    href="/docs-v2/guides/deployment"
+  >
+    Server configuration for SSE: headers, timeouts, and edge runtime considerations.
+  </Card>
+  <Card
+    title="MockStreamTransport"
+    icon="flask"
+    href="/docs-v2/api/mock-stream-transport"
+  >
+    The test-time counterpart — push values synchronously without a real server.
+  </Card>
+</CardGroup>
 
 {/* Auto-rendered from api-docs.json — see page component */}

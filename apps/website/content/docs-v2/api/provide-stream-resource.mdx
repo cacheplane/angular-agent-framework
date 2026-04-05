@@ -1,6 +1,8 @@
 # provideStreamResource()
 
-`provideStreamResource` is the provider factory that registers `stream-resource` in Angular's dependency injection system. Call it inside `bootstrapApplication` (or an `ApplicationConfig`) to configure the transport and any global defaults used by every `streamResource` in your app.
+`provideStreamResource` is the provider factory that registers `stream-resource` in Angular's dependency injection system. Call it once inside `bootstrapApplication` (or an `ApplicationConfig`) to configure the transport and any global defaults used by every `streamResource` in your app.
+
+This is the single configuration point for the entire library. Rather than configuring each resource individually, you declare your transport here and every `streamResource` call throughout the app inherits it automatically.
 
 ```ts
 import { bootstrapApplication } from '@angular/platform-browser';
@@ -19,10 +21,54 @@ bootstrapApplication(AppComponent, {
 });
 ```
 
+## Global configuration
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `transport` | `Type<StreamTransport>` | The transport class to inject when resources request `StreamTransport`. Required. |
+
+## Swapping transports by environment
+
+Because `provideStreamResource` accepts a class token, you can vary the transport based on your environment without touching any component code:
+
+```ts
+// main.ts — production
+provideStreamResource({ transport: FetchStreamTransport })
+
+// main.spec.ts / TestBed — tests
+provideStreamResource({ transport: MockStreamTransport })
+```
+
 <Callout type="info" title="One provider, any transport">
   Swap `FetchStreamTransport` for `MockStreamTransport` (or any custom class
   implementing the `StreamTransport` interface) to change the transport for all
   resources at once — useful for testing or SSR.
 </Callout>
+
+## What's Next
+
+<CardGroup cols={3}>
+  <Card
+    title="Installation"
+    icon="package"
+    href="/docs-v2/installation"
+  >
+    Step-by-step setup guide including peer dependencies and NgModule support.
+  </Card>
+  <Card
+    title="Deployment"
+    icon="server"
+    href="/docs-v2/guides/deployment"
+  >
+    Configure transports for production, SSR, and edge runtimes.
+  </Card>
+  <Card
+    title="streamResource() API"
+    icon="code"
+    href="/docs-v2/api/stream-resource"
+  >
+    Full reference for the core primitive you configure here.
+  </Card>
+</CardGroup>
 
 {/* Auto-rendered from api-docs.json — see page component */}
