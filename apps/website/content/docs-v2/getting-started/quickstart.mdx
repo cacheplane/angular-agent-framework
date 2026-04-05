@@ -6,13 +6,15 @@ Build a streaming chat component with streamResource() in 5 minutes.
 Angular 20+ project with Node.js 18+. If you need setup help, see the [Installation](/docs/getting-started/installation) guide.
 </Callout>
 
-## 1. Install
+<Steps>
+<Step title="Install the package">
 
 ```bash
 npm install @cacheplane/stream-resource
 ```
 
-## 2. Configure the provider
+</Step>
+<Step title="Configure the provider">
 
 Add `provideStreamResource()` to your application config with your LangGraph Platform URL.
 
@@ -29,7 +31,8 @@ export const appConfig: ApplicationConfig = {
 };
 ```
 
-## 3. Create a chat component
+</Step>
+<Step title="Create a chat component">
 
 Use `streamResource()` in a component field initializer. Every property on the returned ref is an Angular Signal.
 
@@ -38,17 +41,19 @@ Use `streamResource()` in a component field initializer. Every property on the r
 
 ```typescript
 // chat.component.ts
-import { Component, signal, computed } from '@angular/core';
+import { Component, ChangeDetectionStrategy, signal, computed } from '@angular/core';
 import { streamResource } from '@cacheplane/stream-resource';
 import type { BaseMessage } from '@langchain/core/messages';
 
 @Component({
   selector: 'app-chat',
   templateUrl: './chat.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ChatComponent {
   input = signal('');
 
+  // 'chat_agent' maps to the key in your langgraph.json "graphs" config
   chat = streamResource<{ messages: BaseMessage[] }>({
     assistantId: 'chat_agent',
     threadId: signal(localStorage.getItem('threadId')),
@@ -82,6 +87,11 @@ export class ChatComponent {
     <div class="typing-indicator">Agent is thinking...</div>
   }
 
+  <!-- Error display -->
+  @if (chat.error(); as err) {
+    <div class="error">{{ err.message }}</div>
+  }
+
   <form (submit)="send(); $event.preventDefault()">
     <input
       [ngModel]="input()"
@@ -96,7 +106,8 @@ export class ChatComponent {
 </Tab>
 </Tabs>
 
-## 4. Start your LangGraph server
+</Step>
+<Step title="Start your LangGraph server">
 
 Make sure your LangGraph agent is running at the URL you configured.
 
@@ -104,7 +115,8 @@ Make sure your LangGraph agent is running at the URL you configured.
 langgraph dev
 ```
 
-## 5. Run your app
+</Step>
+<Step title="Run your app">
 
 ```bash
 ng serve
@@ -112,9 +124,12 @@ ng serve
 
 Open `http://localhost:4200` and start chatting with your agent.
 
+</Step>
+</Steps>
+
 ## Next steps
 
-<CardGroup cols={2}>
+<CardGroup cols={3}>
   <Card title="Streaming" href="/docs/guides/streaming">
     Learn about token-by-token updates and stream modes
   </Card>
@@ -124,7 +139,13 @@ Open `http://localhost:4200` and start chatting with your agent.
   <Card title="Interrupts" href="/docs/guides/interrupts">
     Add human-in-the-loop approval flows
   </Card>
-  <Card title="Testing" href="/docs/guides/testing">
-    Test your agent integration deterministically
+  <Card title="Angular Signals" href="/docs/concepts/angular-signals">
+    Deep dive into how Signals power streamResource
+  </Card>
+  <Card title="LangGraph Basics" href="/docs/concepts/langgraph-basics">
+    Graphs, nodes, edges, and state for Angular developers
+  </Card>
+  <Card title="API Reference" href="/docs/api/stream-resource">
+    Complete streamResource() function reference
   </Card>
 </CardGroup>

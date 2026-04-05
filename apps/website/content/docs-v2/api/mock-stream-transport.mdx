@@ -2,31 +2,100 @@
 
 `MockStreamTransport` is a test-friendly transport that replaces real network calls with an in-memory event emitter. Use it in unit and component tests to push values on demand and assert against your component's reactive state without a running server.
 
+## Complete test example
+
+The pattern below covers the full lifecycle: configure the transport in `TestBed`, create the component, emit values, and assert signal state.
+
 ```ts
+import { Component, inject } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import {
   provideStreamResource,
   MockStreamTransport,
+  streamResource,
 } from '@cacheplane/stream-resource';
 
-beforeEach(() => {
-  TestBed.configureTestingModule({
-    providers: [provideStreamResource({ transport: MockStreamTransport })],
+@Component({ template: '' })
+class RepoComponent {
+  readonly repo = streamResource<{ name: string }>({
+    url: () => '/api/repos/42',
+  });
+}
+
+describe('RepoComponent', () => {
+  let transport: MockStreamTransport;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({
+      imports: [RepoComponent],
+      providers: [provideStreamResource({ transport: MockStreamTransport })],
+    });
+    transport = TestBed.inject(MockStreamTransport);
+  });
+
+  it('reflects the streamed value', () => {
+    const fixture = TestBed.createComponent(RepoComponent);
+    fixture.detectChanges();
+
+    // Push a value into the stream — synchronous, no fakeAsync needed
+    transport.emit('/api/repos/42', { name: 'my-repo' });
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance.repo.value()).toEqual({ name: 'my-repo' });
+    expect(fixture.componentInstance.repo.status()).toBe('streaming');
+  });
+
+  it('surfaces errors through the error signal', () => {
+    const fixture = TestBed.createComponent(RepoComponent);
+    fixture.detectChanges();
+
+    transport.error('/api/repos/42', new Error('not found'));
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance.repo.status()).toBe('error');
+    expect(fixture.componentInstance.repo.error()).toBeInstanceOf(Error);
   });
 });
-
-it('reflects streamed value', () => {
-  const transport = TestBed.inject(MockStreamTransport);
-  // Emit a value into the stream
-  transport.emit('/api/repos/42', { id: 42, name: 'my-repo' });
-  // Assert your component's signal updated accordingly
-});
 ```
+
+## MockStreamTransport API
+
+| Method | Description |
+|--------|-------------|
+| `emit(url, value)` | Pushes a single value into the stream at the given URL path. |
+| `error(url, err)` | Triggers an error on the stream at the given URL path. |
+| `complete(url)` | Closes the stream cleanly, as if the server sent the final event. |
 
 <Callout type="tip" title="Deterministic tests">
   Because `MockStreamTransport` is synchronous by default, you can emit values
   and assert state changes in the same test tick — no `fakeAsync` or `tick`
   required.
 </Callout>
+
+## What's Next
+
+<CardGroup cols={3}>
+  <Card
+    title="Testing Guide"
+    icon="flask"
+    href="/docs-v2/guides/testing"
+  >
+    Full testing patterns including component harnesses and multi-stream scenarios.
+  </Card>
+  <Card
+    title="FetchStreamTransport"
+    icon="globe"
+    href="/docs-v2/api/fetch-stream-transport"
+  >
+    The production transport that MockStreamTransport replaces in tests.
+  </Card>
+  <Card
+    title="streamResource() API"
+    icon="code"
+    href="/docs-v2/api/stream-resource"
+  >
+    Full reference for the primitive you are testing against.
+  </Card>
+</CardGroup>
 
 {/* Auto-rendered from api-docs.json — see page component */}

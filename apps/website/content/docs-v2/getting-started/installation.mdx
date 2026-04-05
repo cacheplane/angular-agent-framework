@@ -32,11 +32,12 @@ Add `provideStreamResource()` to your application configuration. This sets globa
 // app.config.ts
 import { ApplicationConfig } from '@angular/core';
 import { provideStreamResource } from '@cacheplane/stream-resource';
+import { environment } from '../environments/environment';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideStreamResource({
-      apiUrl: process.env['LANGGRAPH_URL'] ?? 'http://localhost:2024',
+      apiUrl: environment.langgraphUrl,
     }),
   ],
 };
@@ -51,7 +52,14 @@ Any option passed to `streamResource()` directly overrides the global provider c
 <Tabs>
 <Tab label="Development">
 
-For local development, run a LangGraph server:
+For local development, configure your environment and run a LangGraph server:
+
+```typescript
+// src/environments/environment.ts
+export const environment = {
+  langgraphUrl: 'http://localhost:2024',
+};
+```
 
 ```bash
 # Start LangGraph dev server
@@ -66,9 +74,10 @@ langgraph dev
 For production, point to your LangGraph Cloud deployment:
 
 ```typescript
-provideStreamResource({
-  apiUrl: 'https://your-project.langgraph.app',
-})
+// src/environments/environment.prod.ts
+export const environment = {
+  langgraphUrl: 'https://your-project.langgraph.app',
+};
 ```
 
 </Tab>
@@ -76,19 +85,27 @@ provideStreamResource({
 
 ## Verify installation
 
-Create a minimal test to verify the setup works:
+Create a minimal component to verify the setup works. `streamResource()` must be called in an injection context (a component field initializer or inside `inject()`).
 
 ```typescript
-import { streamResource } from '@cacheplane/stream-resource';
-
-// In a component
-const test = streamResource({
-  assistantId: 'chat_agent',
-});
-
-// If status() returns 'idle', the setup is correct
-console.log(test.status()); // 'idle'
+// In a component field initializer (injection context)
+const test = streamResource({ assistantId: 'chat_agent' });
+console.log(test.status()); // 'idle' — setup is correct
 ```
+
+## Troubleshooting
+
+<Callout type="warning" title="Common issues">
+
+**Version mismatch** -- If you see errors about missing APIs or unknown decorators, confirm your Angular version is 20 or later. Run `ng version` to check. Earlier versions do not support the injection context APIs that streamResource() relies on.
+
+**CORS errors** -- If the browser console shows `Access-Control-Allow-Origin` errors, your LangGraph server is not configured for cross-origin requests. The LangGraph dev server allows all origins by default. For production, make sure your deployment's CORS policy includes your Angular app's domain.
+
+**Connection refused** -- If you see `ERR_CONNECTION_REFUSED`, verify your LangGraph server is running and that the `apiUrl` matches the correct host and port. Run `langgraph dev` and confirm the server starts at the expected address (default `http://localhost:2024`).
+
+**"NullInjectorError: No provider for StreamResourceConfig"** -- You forgot to add `provideStreamResource()` to your `appConfig` providers array. See the [Configure the provider](#configure-the-provider) section above.
+
+</Callout>
 
 ## Next steps
 
@@ -98,5 +115,11 @@ console.log(test.status()); // 'idle'
   </Card>
   <Card title="Angular Signals" href="/docs/concepts/angular-signals">
     Understand how Signals power streamResource
+  </Card>
+  <Card title="LangGraph Basics" href="/docs/concepts/langgraph-basics">
+    Graphs, nodes, edges, and state for Angular developers
+  </Card>
+  <Card title="API Reference" href="/docs/api/stream-resource">
+    Complete streamResource() function reference
   </Card>
 </CardGroup>

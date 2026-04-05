@@ -6,6 +6,102 @@ Subgraphs let you compose complex agents from smaller, focused units. streamReso
 LangGraph calls them subgraphs (modular graph composition). Deep Agents calls them subagents (task delegation). streamResource() supports both patterns through the same API.
 </Callout>
 
+## How subgraph composition works
+
+Subgraph composition starts on the agent side. Each subgraph is a fully compiled `StateGraph` that can be added as a node in a parent graph.
+
+<Tabs>
+<Tab label="agent.py">
+
+```python
+from langgraph.graph import END, START, MessagesState, StateGraph
+from langchain_openai import ChatOpenAI
+
+llm = ChatOpenAI(model="gpt-5-mini")
+
+# --- Research subgraph ---
+def search_web(state: MessagesState) -> dict:
+    query = state["messages"][-1].content
+    results = web_search(query)
+    return {"messages": [{"role": "assistant", "content": results}]}
+
+def summarize_results(state: MessagesState) -> dict:
+    response = llm.invoke(state["messages"])
+    return {"messages": [response]}
+
+research_builder = StateGraph(MessagesState)
+research_builder.add_node("search", search_web)
+research_builder.add_node("summarize", summarize_results)
+research_builder.add_edge(START, "search")
+research_builder.add_edge("search", "summarize")
+research_builder.add_edge("summarize", END)
+
+research_subgraph = research_builder.compile()
+
+# --- Analysis subgraph ---
+def analyze_data(state: MessagesState) -> dict:
+    response = llm.invoke([
+        {"role": "system", "content": "Analyze the data and provide insights."},
+        *state["messages"],
+    ])
+    return {"messages": [response]}
+
+analysis_builder = StateGraph(MessagesState)
+analysis_builder.add_node("analyze", analyze_data)
+analysis_builder.add_edge(START, "analyze")
+analysis_builder.add_edge("analyze", END)
+
+analysis_subgraph = analysis_builder.compile()
+
+# --- Parent orchestrator ---
+def route_task(state: MessagesState) -> str:
+    last = state["messages"][-1].content.lower()
+    if "research" in last or "search" in last:
+        return "research"
+    return "analyze"
+
+builder = StateGraph(MessagesState)
+builder.add_node("research", research_subgraph)
+builder.add_node("analyze", analysis_subgraph)
+builder.add_conditional_edges(START, route_task)
+builder.add_edge("research", END)
+builder.add_edge("analyze", END)
+
+graph = builder.compile()
+```
+
+</Tab>
+<Tab label="orchestrator.component.ts">
+
+```typescript
+import { Component, computed, inject, effect, ChangeDetectionStrategy } from '@angular/core';
+import { streamResource } from '@cacheplane/stream-resource';
+
+@Component({
+  selector: 'app-orchestrator',
+  templateUrl: './orchestrator.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class OrchestratorComponent {
+  readonly orchestrator = streamResource<OrchestratorState>({
+    assistantId: 'orchestrator',
+    subagentToolNames: ['research', 'analyze'],
+  });
+
+  readonly running = computed(() => this.orchestrator.activeSubagents());
+  readonly runningCount = computed(() => this.running().length);
+
+  send(text: string) {
+    this.orchestrator.submit({
+      messages: [{ role: 'user', content: text }],
+    });
+  }
+}
+```
+
+</Tab>
+</Tabs>
+
 ## Tracking subagent execution
 
 The `subagents()` signal contains a Map of active subagent streams. Use it to inspect the full set of delegated tasks and their current state.
@@ -64,7 +160,7 @@ const pipelineStatus = computed(() => {
   return {
     total: entries.length,
     pending: entries.filter(([, a]) => a.status() === 'pending').length,
-    running: entries.filter(([, a]) => a.status() === 'streaming').length,
+    running: entries.filter(([, a]) => a.status() === 'loading').length,
     done: entries.filter(([, a]) => a.status() === 'complete').length,
     failed: entries.filter(([, a]) => a.status() === 'error').length,
   };
@@ -78,21 +174,12 @@ Render live progress for each subagent using the signals above.
 <Tabs>
 <Tab label="progress-panel.component.ts">
 ```typescript
-import { computed } from '@angular/core';
+import { Component, computed, inject, ChangeDetectionStrategy } from '@angular/core';
 
 @Component({
   selector: 'app-subagent-progress',
-  template: `
-    @for (entry of subagentEntries(); track entry[0]) {
-      <div class="subagent-card" [attr.data-status]="entry[1].status()">
-        <span class="label">{{ entry[0] }}</span>
-        <span class="status">{{ entry[1].status() }}</span>
-        @if (entry[1].status() === 'error') {
-          <span class="error">{{ entry[1].error()?.message }}</span>
-        }
-      </div>
-    }
-  `,
+  templateUrl: './progress-panel.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SubagentProgressComponent {
   orchestrator = inject(OrchestratorService).resource;
@@ -103,9 +190,8 @@ export class SubagentProgressComponent {
 }
 ```
 </Tab>
-<Tab label="progress-panel.html (template-only)">
+<Tab label="progress-panel.component.html">
 ```html
-<!-- subagent-progress.component.html -->
 @for (entry of subagentEntries(); track entry[0]) {
   <div class="subagent-card" [attr.data-status]="entry[1].status()">
     <span class="label">{{ entry[0] }}</span>
@@ -113,7 +199,7 @@ export class SubagentProgressComponent {
       {{ entry[1].status() }}
     </span>
 
-    @if (entry[1].status() === 'streaming') {
+    @if (entry[1].status() === 'loading') {
       <app-spinner />
     }
 
@@ -185,6 +271,9 @@ Use **subagents** when tasks are independent and can run in parallel, when each 
 <CardGroup cols={2}>
   <Card title="Streaming" href="/docs/guides/streaming">
     Understand how streamResource() surfaces tokens, status, and errors in real time.
+  </Card>
+  <Card title="Time Travel" href="/docs/guides/time-travel">
+    Inspect earlier states and replay alternate execution paths with checkpoint history.
   </Card>
   <Card title="Testing" href="/docs/guides/testing">
     Write unit and integration tests for orchestrator graphs and subagent interactions.

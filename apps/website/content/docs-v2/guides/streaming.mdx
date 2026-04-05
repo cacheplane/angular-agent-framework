@@ -6,19 +6,67 @@ StreamResource provides token-by-token streaming from LangGraph agents via Serve
 Make sure you've completed the Installation guide first.
 </Callout>
 
-## Basic streaming
+## How streaming works
 
-Create a `streamResource` in your component, pass it a message, and bind to the resulting signals.
+Streaming starts on the agent side. LangGraph's `astream()` method controls what data is sent over the SSE connection. On the Angular side, `streamResource()` consumes those events and maps them to Signals.
 
 <Tabs>
+<Tab label="agent.py">
+
+```python
+from langgraph.graph import END, START, MessagesState, StateGraph
+from langchain_openai import ChatOpenAI
+
+llm = ChatOpenAI(model="gpt-5-mini", streaming=True)
+
+def call_model(state: MessagesState) -> dict:
+    response = llm.invoke(state["messages"])
+    return {"messages": [response]}
+
+builder = StateGraph(MessagesState)
+builder.add_node("call_model", call_model)
+builder.add_edge(START, "call_model")
+builder.add_edge("call_model", END)
+
+graph = builder.compile()
+
+# Stream modes control what SSE chunks contain:
+
+# "values" — full state snapshot after each node
+async for chunk in graph.astream(
+    {"messages": [("user", "Hello")]},
+    stream_mode="values",
+):
+    print(chunk)
+
+# "messages" — individual message tokens as generated
+async for chunk in graph.astream(
+    {"messages": [("user", "Hello")]},
+    stream_mode="messages",
+):
+    print(chunk)
+
+# "events" — raw run events (on_chain_start, on_llm_stream, etc.)
+async for event in graph.astream_events(
+    {"messages": [("user", "Hello")]},
+    version="v2",
+):
+    print(event["event"], event.get("data"))
+```
+
+</Tab>
 <Tab label="chat.component.ts">
 
 ```typescript
-import { Component, computed } from '@angular/core';
+import { Component, computed, ChangeDetectionStrategy } from '@angular/core';
 import { streamResource } from '@cacheplane/stream-resource';
 import { BaseMessage } from '@langchain/core/messages';
 
-@Component({ selector: 'app-chat', templateUrl: './chat.component.html' })
+@Component({
+  selector: 'app-chat',
+  templateUrl: './chat.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
 export class ChatComponent {
   readonly chat = streamResource<{ messages: BaseMessage[] }>({
     assistantId: 'chat_agent',
@@ -60,7 +108,7 @@ The `status()` signal reports the current lifecycle state of the SSE connection:
 <Step title="idle">
 No active stream. The resource is ready to accept a new message.
 </Step>
-<Step title="streaming">
+<Step title="loading">
 Tokens are arriving over the SSE connection. Signal values update in real-time with each chunk.
 </Step>
 <Step title="error">
@@ -125,11 +173,15 @@ If the SSE connection drops or the agent throws, `status()` transitions to `'err
 <Tab label="chat.component.ts">
 
 ```typescript
-import { Component, computed, effect } from '@angular/core';
+import { Component, computed, ChangeDetectionStrategy } from '@angular/core';
 import { streamResource } from '@cacheplane/stream-resource';
 import { BaseMessage } from '@langchain/core/messages';
 
-@Component({ selector: 'app-chat', templateUrl: './chat.component.html' })
+@Component({
+  selector: 'app-chat',
+  templateUrl: './chat.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
 export class ChatComponent {
   readonly chat = streamResource<{ messages: BaseMessage[] }>({
     assistantId: 'chat_agent',

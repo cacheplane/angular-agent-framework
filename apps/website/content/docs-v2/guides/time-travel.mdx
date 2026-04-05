@@ -6,6 +6,97 @@ Time travel lets you inspect earlier states and replay alternate execution paths
 Debug agent decisions, explore alternate paths, and build undo/redo experiences for your users. Time travel works with any LangGraph agent that persists checkpoints to a thread.
 </Callout>
 
+## How checkpointing works
+
+Time travel depends on checkpointing on the agent side. LangGraph automatically saves a checkpoint after every node execution when you compile your graph with a checkpointer.
+
+<Tabs>
+<Tab label="agent.py">
+
+```python
+from langgraph.graph import END, START, MessagesState, StateGraph
+from langgraph.checkpoint.memory import MemorySaver
+from langchain_openai import ChatOpenAI
+
+llm = ChatOpenAI(model="gpt-5-mini")
+
+def call_model(state: MessagesState) -> dict:
+    response = llm.invoke(state["messages"])
+    return {"messages": [response]}
+
+builder = StateGraph(MessagesState)
+builder.add_node("call_model", call_model)
+builder.add_edge(START, "call_model")
+builder.add_edge("call_model", END)
+
+# Compile with a checkpointer to enable time travel
+checkpointer = MemorySaver()
+graph = builder.compile(checkpointer=checkpointer)
+
+# Run the graph with a thread ID
+config = {"configurable": {"thread_id": "user_123"}}
+result = graph.invoke(
+    {"messages": [("user", "What is LangGraph?")]},
+    config=config,
+)
+
+# Browse checkpoint history server-side
+for state in graph.get_state_history(config):
+    print(f"Step: {state.metadata.get('step', '?')}")
+    print(f"  Checkpoint: {state.config['configurable']['checkpoint_id']}")
+    print(f"  Messages: {len(state.values.get('messages', []))}")
+
+# Replay from a specific checkpoint
+past_config = {
+    "configurable": {
+        "thread_id": "user_123",
+        "checkpoint_id": "<checkpoint-id-from-history>",
+    }
+}
+past_state = graph.get_state(past_config)
+```
+
+</Tab>
+<Tab label="history-viewer.component.ts">
+
+```typescript
+import { Component, inject, computed, ChangeDetectionStrategy } from '@angular/core';
+import { streamResource } from '@cacheplane/stream-resource';
+import { AgentService } from './agent.service';
+
+@Component({
+  selector: 'app-history-viewer',
+  templateUrl: './history-viewer.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class HistoryViewerComponent {
+  private agentService = inject(AgentService);
+  readonly agent = this.agentService.agent;
+
+  readonly checkpoints = computed(() => this.agent.history());
+  readonly checkpointCount = computed(() => this.agent.history().length);
+
+  readonly activeIndex = computed(() =>
+    this.checkpoints().length - 1
+  );
+
+  fork(index: number) {
+    const checkpoint = this.checkpoints()[index];
+    this.agent.submit(
+      { messages: [{ role: 'user', content: 'Try a different approach' }] },
+      { checkpoint: checkpoint.checkpoint }
+    );
+  }
+
+  formatTime(isoString: string): string {
+    return new Date(isoString).toLocaleTimeString();
+  }
+}
+```
+
+</Tab>
+</Tabs>
+
 ## Browsing execution history
 
 The `history()` signal contains an array of `ThreadState` checkpoints ordered from oldest to newest. Each checkpoint captures the complete agent state at that point in execution, including messages, intermediate results, and any custom state fields.
@@ -79,13 +170,14 @@ Expose checkpoint history directly in your component to let users scrub through 
 <Tabs>
 <Tab label="history-viewer.component.ts">
 ```typescript
-import { Component, inject, computed } from '@angular/core';
+import { Component, inject, computed, ChangeDetectionStrategy } from '@angular/core';
 import { streamResource } from '@cacheplane/stream-resource';
 import { AgentService } from './agent.service';
 
 @Component({
   selector: 'app-history-viewer',
   templateUrl: './history-viewer.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class HistoryViewerComponent {
   private agentService = inject(AgentService);
@@ -152,6 +244,43 @@ compareCheckpoints(indexA: number, indexB: number) {
 
 Use the comparison result to render a diff view, highlight changed fields in your UI, or log what the agent modified during a specific step.
 
+## Replaying with modified input
+
+Combine forking with new input to explore how the agent would have responded differently. This is the core of the undo/redo experience.
+
+```typescript
+@Component({
+  selector: 'app-replay',
+  templateUrl: './replay.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class ReplayComponent {
+  readonly agent = inject(AgentService).agent;
+
+  readonly history = computed(() => this.agent.history());
+  readonly canUndo = computed(() => this.history().length > 1);
+
+  undo() {
+    const history = this.history();
+    if (history.length < 2) return;
+
+    // Go back one step
+    const previousCheckpoint = history[history.length - 2];
+    this.agent.submit(undefined, {
+      checkpoint: previousCheckpoint.checkpoint,
+    });
+  }
+
+  replayWith(index: number, newMessage: string) {
+    const checkpoint = this.history()[index];
+    this.agent.submit(
+      { messages: [{ role: 'user', content: newMessage }] },
+      { checkpoint: checkpoint.checkpoint }
+    );
+  }
+}
+```
+
 <Callout type="tip" title="Debugging workflow">
 Time travel is most useful during development. Inspect why an agent chose a particular path by comparing adjacent checkpoints, then fork to test alternatives without restarting the conversation. Combine `history()` with Angular DevTools to watch checkpoint arrays update in real time as the agent streams.
 </Callout>
@@ -164,6 +293,9 @@ Time travel is most useful during development. Inspect why an agent chose a part
   </Card>
   <Card title="Streaming" href="/docs/guides/streaming">
     Understand how streamResource() surfaces incremental updates and how history integrates with live streaming state.
+  </Card>
+  <Card title="Subgraphs" href="/docs/guides/subgraphs">
+    Compose multi-agent systems with orchestrators and track subagent execution.
   </Card>
   <Card title="API Reference" href="/docs/api/stream-resource">
     Full reference for streamResource() options, signals, and the submit() API including checkpoint parameters.
