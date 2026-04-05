@@ -1,0 +1,7 @@
+{
+  "graphs": {
+    "skills": "./src/graph.py:graph"
+  },
+  "dependencies": ["./pyproject.toml"],
+  "env": ".env"
+}

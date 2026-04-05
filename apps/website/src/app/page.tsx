@@ -7,7 +7,7 @@ import { FeatureStrip } from '../components/landing/FeatureStrip';
 import { CodeBlock } from '../components/landing/CodeBlock';
 import { CockpitCTA } from '../components/landing/CockpitCTA';
 import { StatsStrip } from '../components/landing/StatsStrip';
-import { tokens } from '../../lib/design-tokens';
+import { tokens } from '@cacheplane/design-tokens';
 
 export default async function HomePage() {
   return (

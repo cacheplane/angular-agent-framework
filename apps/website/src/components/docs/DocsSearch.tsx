@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { allDocsPages, docsConfig } from '../../lib/docs-config';
-import { tokens } from '../../../lib/design-tokens';
+import { tokens } from '@cacheplane/design-tokens';
 
 export function DocsSearch() {
   const [open, setOpen] = useState(false);

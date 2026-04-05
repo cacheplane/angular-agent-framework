@@ -6,6 +6,12 @@
       "runtimeExecutable": "/bin/bash",
       "runtimeArgs": ["-c", "export PATH=/Users/blove/.nvm/versions/node/v22.14.0/bin:$PATH && npx nx serve website"],
       "port": 3000
+    },
+    {
+      "name": "cockpit",
+      "runtimeExecutable": "/bin/bash",
+      "runtimeArgs": ["-c", "export PATH=/Users/blove/.nvm/versions/node/v22.14.0/bin:$PATH && npx nx serve cockpit --port 4201"],
+      "port": 4201
     }
   ]
 }

@@ -1,0 +1,67 @@
+name: Deploy LangGraph
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'cockpit/**/python/**'
+  workflow_dispatch:
+    inputs:
+      capability:
+        description: 'Capability path (e.g., langgraph/streaming)'
+        required: false
+        type: string
+
+jobs:
+  deploy:
+    name: Deploy to LangGraph Cloud
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - name: langgraph-streaming
+            path: cockpit/langgraph/streaming/python
+          - name: langgraph-persistence
+            path: cockpit/langgraph/persistence/python
+          - name: langgraph-interrupts
+            path: cockpit/langgraph/interrupts/python
+          - name: langgraph-memory
+            path: cockpit/langgraph/memory/python
+          - name: langgraph-durable-execution
+            path: cockpit/langgraph/durable-execution/python
+          - name: langgraph-subgraphs
+            path: cockpit/langgraph/subgraphs/python
+          - name: langgraph-time-travel
+            path: cockpit/langgraph/time-travel/python
+          - name: langgraph-deployment-runtime
+            path: cockpit/langgraph/deployment-runtime/python
+          - name: deep-agents-planning
+            path: cockpit/deep-agents/planning/python
+          - name: deep-agents-filesystem
+            path: cockpit/deep-agents/filesystem/python
+          - name: deep-agents-subagents
+            path: cockpit/deep-agents/subagents/python
+          - name: deep-agents-memory
+            path: cockpit/deep-agents/memory/python
+          - name: deep-agents-skills
+            path: cockpit/deep-agents/skills/python
+          - name: deep-agents-sandboxes
+            path: cockpit/deep-agents/sandboxes/python
+    steps:
+      - uses: actions/checkout@v6.0.2
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install langgraph-cli
+        run: pip install langgraph-cli
+
+      - name: Deploy ${{ matrix.name }}
+        if: |
+          github.event_name == 'workflow_dispatch' && (inputs.capability == '' || contains(matrix.path, inputs.capability))
+          || github.event_name == 'push'
+        working-directory: ${{ matrix.path }}
+        run: langgraph deploy
+        env:
+          LANGSMITH_API_KEY: ${{ secrets.LANGSMITH_API_KEY }}

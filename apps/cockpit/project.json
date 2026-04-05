@@ -51,6 +51,167 @@
       "options": {
         "config": "apps/cockpit/playwright.config.ts"
       }
+    },
+    "serve-streaming": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "npx nx serve cockpit --port 4201",
+          "npx nx serve cockpit-langgraph-streaming-angular --port 4300",
+          "cd cockpit/langgraph/streaming/python && source $HOME/.local/bin/env 2>/dev/null; uv sync && uv run langgraph dev --port 8123"
+        ],
+        "parallel": true
+      }
+    },
+    "serve-persistence": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "npx nx serve cockpit --port 4201",
+          "npx nx serve cockpit-langgraph-persistence-angular --port 4301",
+          "cd cockpit/langgraph/persistence/python && source $HOME/.local/bin/env 2>/dev/null; uv sync && uv run langgraph dev --port 8123"
+        ],
+        "parallel": true
+      }
+    },
+    "serve-interrupts": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "npx nx serve cockpit --port 4201",
+          "npx nx serve cockpit-langgraph-interrupts-angular --port 4302",
+          "cd cockpit/langgraph/interrupts/python && source $HOME/.local/bin/env 2>/dev/null; uv sync && uv run langgraph dev --port 8123"
+        ],
+        "parallel": true
+      }
+    },
+    "serve-memory": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "npx nx serve cockpit --port 4201",
+          "npx nx serve cockpit-langgraph-memory-angular --port 4303",
+          "cd cockpit/langgraph/memory/python && source $HOME/.local/bin/env 2>/dev/null; uv sync && uv run langgraph dev --port 8123"
+        ],
+        "parallel": true
+      }
+    },
+    "serve-durable-execution": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "npx nx serve cockpit --port 4201",
+          "npx nx serve cockpit-langgraph-durable-execution-angular --port 4304",
+          "cd cockpit/langgraph/durable-execution/python && source $HOME/.local/bin/env 2>/dev/null; uv sync && uv run langgraph dev --port 8123"
+        ],
+        "parallel": true
+      }
+    },
+    "serve-subgraphs": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "npx nx serve cockpit --port 4201",
+          "npx nx serve cockpit-langgraph-subgraphs-angular --port 4305",
+          "cd cockpit/langgraph/subgraphs/python && source $HOME/.local/bin/env 2>/dev/null; uv sync && uv run langgraph dev --port 8123"
+        ],
+        "parallel": true
+      }
+    },
+    "serve-time-travel": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "npx nx serve cockpit --port 4201",
+          "npx nx serve cockpit-langgraph-time-travel-angular --port 4306",
+          "cd cockpit/langgraph/time-travel/python && source $HOME/.local/bin/env 2>/dev/null; uv sync && uv run langgraph dev --port 8123"
+        ],
+        "parallel": true
+      }
+    },
+    "serve-deployment-runtime": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "npx nx serve cockpit --port 4201",
+          "npx nx serve cockpit-langgraph-deployment-runtime-angular --port 4307",
+          "cd cockpit/langgraph/deployment-runtime/python && source $HOME/.local/bin/env 2>/dev/null; uv sync && uv run langgraph dev --port 8123"
+        ],
+        "parallel": true
+      }
+    },
+    "serve-planning": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "npx nx serve cockpit --port 4201",
+          "npx nx serve cockpit-deep-agents-planning-angular --port 4310",
+          "cd cockpit/deep-agents/planning/python && source $HOME/.local/bin/env 2>/dev/null; uv sync && uv run langgraph dev --port 8123"
+        ],
+        "parallel": true
+      }
+    },
+    "serve-filesystem": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "npx nx serve cockpit --port 4201",
+          "npx nx serve cockpit-deep-agents-filesystem-angular --port 4311",
+          "cd cockpit/deep-agents/filesystem/python && source $HOME/.local/bin/env 2>/dev/null; uv sync && uv run langgraph dev --port 8123"
+        ],
+        "parallel": true
+      }
+    },
+    "serve-da-subagents": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "npx nx serve cockpit --port 4201",
+          "npx nx serve cockpit-deep-agents-subagents-angular --port 4312",
+          "cd cockpit/deep-agents/subagents/python && source $HOME/.local/bin/env 2>/dev/null; uv sync && uv run langgraph dev --port 8123"
+        ],
+        "parallel": true
+      }
+    },
+    "serve-da-memory": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "npx nx serve cockpit --port 4201",
+          "npx nx serve cockpit-deep-agents-memory-angular --port 4313",
+          "cd cockpit/deep-agents/memory/python && source $HOME/.local/bin/env 2>/dev/null; uv sync && uv run langgraph dev --port 8123"
+        ],
+        "parallel": true
+      }
+    },
+    "serve-skills": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "npx nx serve cockpit --port 4201",
+          "npx nx serve cockpit-deep-agents-skills-angular --port 4314",
+          "cd cockpit/deep-agents/skills/python && source $HOME/.local/bin/env 2>/dev/null; uv sync && uv run langgraph dev --port 8123"
+        ],
+        "parallel": true
+      }
+    },
+    "serve-sandboxes": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "npx nx serve cockpit --port 4201",
+          "npx nx serve cockpit-deep-agents-sandboxes-angular --port 4315",
+          "cd cockpit/deep-agents/sandboxes/python && source $HOME/.local/bin/env 2>/dev/null; uv sync && uv run langgraph dev --port 8123"
+        ],
+        "parallel": true
+      }
+    },
+    "serve-all": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx tsx apps/cockpit/scripts/serve-example.ts --all",
+        "cwd": "."
+      }
     }
   }
 }

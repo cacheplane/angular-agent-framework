@@ -1,0 +1,11 @@
+{
+  "name": "cockpit-deep-agents-memory-angular",
+  "version": "0.0.1",
+  "private": true,
+  "dependencies": {
+    "@cacheplane/stream-resource": "^0.0.1",
+    "@cacheplane/chat": "^0.0.1",
+    "@langchain/core": "^0.3.0",
+    "@langchain/langgraph-sdk": "^0.0.36"
+  }
+}

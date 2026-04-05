@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import Link from 'next/link';
-import { tokens } from '../../../lib/design-tokens';
+import { tokens } from '@cacheplane/design-tokens';
 
 const links = [
   { label: 'Docs', href: '/docs' },

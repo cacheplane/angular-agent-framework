@@ -1,0 +1,7 @@
+{
+  "graphs": {
+    "deployment-runtime": "./src/graph.py:graph"
+  },
+  "dependencies": ["./pyproject.toml"],
+  "env": ".env"
+}

@@ -1,0 +1,27 @@
+{
+  "name": "design-tokens",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/design-tokens/src",
+  "projectType": "library",
+  "tags": ["scope:shared", "type:lib"],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{workspaceRoot}/dist/libs/design-tokens"],
+      "options": {
+        "outputPath": "dist/libs/design-tokens",
+        "main": "libs/design-tokens/src/index.ts",
+        "tsConfig": "libs/design-tokens/tsconfig.lib.json"
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    },
+    "test": {
+      "executor": "@nx/vite:test",
+      "options": {
+        "configFile": "libs/design-tokens/vite.config.mts"
+      }
+    }
+  }
+}

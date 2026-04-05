@@ -2,7 +2,7 @@ import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { buildNavigationTree } from '../../lib/route-resolution';
-import { cockpitManifest } from '../../../../../libs/cockpit-registry/src/index';
+import { cockpitManifest } from '@cacheplane/cockpit-registry';
 import { CockpitSidebar } from './cockpit-sidebar';
 
 describe('CockpitSidebar', () => {
@@ -25,7 +25,8 @@ describe('CockpitSidebar', () => {
 
     expect(html).toContain('Deep Agents');
     expect(html).toContain('LangGraph');
-    expect(html).toContain(entry.title);
+    // Title is stripped of product prefix: "LangGraph Streaming" → "Streaming"
+    expect(html).toContain('Streaming');
     expect(html).toContain('aria-current="page"');
     expect(html).not.toContain('<select');
     expect(html).toContain('Python');

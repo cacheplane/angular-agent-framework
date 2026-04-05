@@ -1,7 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { tokens } from '../../../lib/design-tokens';
+import { tokens } from '@cacheplane/design-tokens';
 
 function GitHubIcon() {
   return (

@@ -1,0 +1,38 @@
+{
+  "name": "cockpit-langgraph-memory-angular",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "cockpit/langgraph/memory/angular/src",
+  "projectType": "application",
+  "tags": ["scope:cockpit", "type:example"],
+  "targets": {
+    "build": {
+      "executor": "@angular/build:application",
+      "options": {
+        "outputPath": "dist/cockpit/langgraph/memory/angular",
+        "index": "cockpit/langgraph/memory/angular/src/index.html",
+        "browser": "cockpit/langgraph/memory/angular/src/main.ts",
+        "tsConfig": "cockpit/langgraph/memory/angular/tsconfig.app.json",
+        "styles": ["cockpit/langgraph/memory/angular/src/styles.css"]
+      },
+      "configurations": {
+        "development": {
+          "fileReplacements": [
+            {
+              "replace": "cockpit/langgraph/memory/angular/src/environments/environment.ts",
+              "with": "cockpit/langgraph/memory/angular/src/environments/environment.development.ts"
+            }
+          ]
+        }
+      },
+      "defaultConfiguration": "development"
+    },
+    "serve": {
+      "executor": "@angular/build:dev-server",
+      "options": {
+        "buildTarget": "cockpit-langgraph-memory-angular:build:development",
+        "port": 4303,
+        "proxyConfig": "cockpit/langgraph/memory/angular/proxy.conf.json"
+      }
+    }
+  }
+}

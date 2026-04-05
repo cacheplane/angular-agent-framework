@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { cockpitManifest } from '../../../../libs/cockpit-registry/src/index';
+import { cockpitManifest } from '@cacheplane/cockpit-registry';
 import {
   buildNavigationTree,
   getCapabilityPresentation,
@@ -83,7 +83,45 @@ describe('getCapabilityPresentation', () => {
       kind: 'capability',
       docsPath: '/docs/langgraph/core-capabilities/streaming/overview/python',
       promptAssetPaths: ['cockpit/langgraph/streaming/python/prompts/streaming.md'],
-      codeAssetPaths: ['cockpit/langgraph/streaming/python/src/index.ts'],
+      codeAssetPaths: [
+        'cockpit/langgraph/streaming/angular/src/app/streaming.component.ts',
+        'cockpit/langgraph/streaming/angular/src/app/app.config.ts',
+      ],
+    });
+  });
+
+  it('includes backendAssetPaths from the capability module', () => {
+    const entry = resolveCockpitEntry({
+      manifest: cockpitManifest,
+      product: 'langgraph',
+      section: 'core-capabilities',
+      topic: 'streaming',
+      page: 'overview',
+      language: 'python',
+    });
+    const presentation = getCapabilityPresentation(entry);
+
+    expect(presentation).toMatchObject({
+      kind: 'capability',
+      backendAssetPaths: ['cockpit/langgraph/streaming/python/src/graph.py'],
+    });
+  });
+
+  it('includes runtimeUrl and devPort from the capability module', () => {
+    const entry = resolveCockpitEntry({
+      manifest: cockpitManifest,
+      product: 'langgraph',
+      section: 'core-capabilities',
+      topic: 'streaming',
+      page: 'overview',
+      language: 'python',
+    });
+    const presentation = getCapabilityPresentation(entry);
+
+    expect(presentation).toMatchObject({
+      kind: 'capability',
+      runtimeUrl: 'langgraph/streaming',
+      devPort: 4300,
     });
   });
 

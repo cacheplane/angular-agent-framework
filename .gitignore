@@ -27,3 +27,10 @@ apps/website/public/demo/
 .next
 out
 .vercel
+
+# LangGraph
+.langgraph_api/
+langgraph-combined.json
+
+# Playwright
+test-results/

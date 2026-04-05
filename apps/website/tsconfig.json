@@ -24,7 +24,8 @@
       "@cacheplane/cockpit-registry": [
         "../../libs/cockpit-registry/src/index.ts"
       ],
-      "@cacheplane/cockpit-shell": ["../../libs/cockpit-shell/src/index.ts"]
+      "@cacheplane/cockpit-shell": ["../../libs/cockpit-shell/src/index.ts"],
+      "@cacheplane/design-tokens": ["../../libs/design-tokens/src/index.ts"]
     }
   },
   "include": [

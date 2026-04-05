@@ -1,0 +1,7 @@
+{
+  "graphs": {
+    "subagents": "./src/graph.py:graph"
+  },
+  "dependencies": ["./pyproject.toml"],
+  "env": ".env"
+}

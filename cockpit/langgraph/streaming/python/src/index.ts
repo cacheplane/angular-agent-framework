@@ -11,6 +11,10 @@ export interface CockpitCapabilityModule {
   docsPath: string;
   promptAssetPaths: string[];
   codeAssetPaths: string[];
+  backendAssetPaths: string[];
+  docsAssetPaths: string[];
+  runtimeUrl?: string;
+  devPort?: number;
 }
 
 export const langgraphStreamingPythonModule: CockpitCapabilityModule = {
@@ -25,5 +29,14 @@ export const langgraphStreamingPythonModule: CockpitCapabilityModule = {
   title: 'LangGraph Streaming (Python)',
   docsPath: '/docs/langgraph/core-capabilities/streaming/overview/python',
   promptAssetPaths: ['cockpit/langgraph/streaming/python/prompts/streaming.md'],
-  codeAssetPaths: ['cockpit/langgraph/streaming/python/src/index.ts'],
+  codeAssetPaths: [
+    'cockpit/langgraph/streaming/angular/src/app/streaming.component.ts',
+    'cockpit/langgraph/streaming/angular/src/app/app.config.ts',
+  ],
+  backendAssetPaths: [
+    'cockpit/langgraph/streaming/python/src/graph.py',
+  ],
+  docsAssetPaths: ['cockpit/langgraph/streaming/python/docs/guide.md'],
+  runtimeUrl: 'langgraph/streaming',
+  devPort: 4300,
 };

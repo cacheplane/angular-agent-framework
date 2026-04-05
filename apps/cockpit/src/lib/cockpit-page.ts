@@ -1,4 +1,4 @@
-import { cockpitManifest } from '../../../../libs/cockpit-registry/src/index';
+import { cockpitManifest } from '@cacheplane/cockpit-registry';
 import {
   buildNavigationTree,
   getCapabilityPresentation,
@@ -6,6 +6,8 @@ import {
   toCockpitPath,
   type NavigationProduct,
 } from './route-resolution';
+
+export { cockpitManifest };
 
 export interface CockpitPageModel {
   entry: ReturnType<typeof resolveCockpitEntry>;

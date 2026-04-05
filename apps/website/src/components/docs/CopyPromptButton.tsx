@@ -1,6 +1,6 @@
 'use client';
 import { useState } from 'react';
-import { tokens } from '../../../lib/design-tokens';
+import { tokens } from '@cacheplane/design-tokens';
 
 interface Props {
   prompt: string;

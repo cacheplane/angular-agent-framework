@@ -1,5 +1,5 @@
 import React from 'react';
-import { tokens } from '../../../../lib/design-tokens';
+import { tokens } from '@cacheplane/design-tokens';
 
 export function Steps({ children }: { children: React.ReactNode }) {
   const steps = React.Children.toArray(children);

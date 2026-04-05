@@ -1,0 +1,16 @@
+{
+  "name": "chat",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/chat/src",
+  "projectType": "library",
+  "tags": ["scope:shared", "type:lib"],
+  "targets": {
+    "build": {
+      "executor": "@nx/angular:package",
+      "outputs": ["{workspaceRoot}/dist/libs/chat"],
+      "options": {
+        "project": "libs/chat/ng-package.json"
+      }
+    }
+  }
+}

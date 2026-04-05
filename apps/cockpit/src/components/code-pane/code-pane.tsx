@@ -6,5 +6,5 @@ interface CodePaneProps {
 }
 
 export function CodePane({ paths }: CodePaneProps) {
-  return <CodeMode entryTitle="Implementation files" codeAssetPaths={paths} />;
+  return <CodeMode entryTitle="Implementation files" codeAssetPaths={paths} backendAssetPaths={[]} codeFiles={{}} promptFiles={{}} />;
 }

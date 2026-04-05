@@ -1,6 +1,6 @@
 'use client';
 import { useState, Children, isValidElement } from 'react';
-import { tokens } from '../../../../lib/design-tokens';
+import { tokens } from '@cacheplane/design-tokens';
 
 export function CodeGroup({ children }: { children: React.ReactNode }) {
   const [active, setActive] = useState(0);
