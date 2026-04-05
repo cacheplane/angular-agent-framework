@@ -1,7 +1,12 @@
 {
   "extends": "../../../../tsconfig.base.json",
   "compilerOptions": {
-    "module": "preserve"
+    "module": "preserve",
+    "skipLibCheck": true,
+    "paths": {
+      "@cacheplane/stream-resource": ["../../../../../../libs/stream-resource/src/public-api.ts"],
+      "@cacheplane/chat": ["../../../../../../libs/chat/src/public-api.ts"]
+    }
   },
   "include": ["src/**/*.ts"]
 }
