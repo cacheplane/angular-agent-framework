@@ -7,6 +7,7 @@ import {
   ChangeDetectionStrategy,
 } from '@angular/core';
 import type { StreamResourceRef } from '@cacheplane/stream-resource';
+import { ICON_WARNING } from '../../styles/chat-icons';
 
 export type InterruptAction = 'accept' | 'edit' | 'respond' | 'ignore';
 
@@ -16,38 +17,55 @@ export type InterruptAction = 'accept' | 'edit' | 'respond' | 'ignore';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (interrupt()) {
-      <div style="background: var(--chat-warning-bg); border: 1px solid var(--chat-border); border-radius: var(--chat-radius-card); padding: 16px; display: flex; flex-direction: column; gap: 12px;">
+      <div
+        role="alert"
+        class="flex flex-col gap-3 p-4 border"
+        style="background: var(--chat-warning-bg); border-color: var(--chat-border); border-radius: var(--chat-radius-card);"
+      >
         <!-- Warning header -->
-        <div style="display: flex; align-items: flex-start; gap: 8px;">
-          <span style="color: var(--chat-warning-text); font-size: 18px;">⚠</span>
-          <div style="flex: 1;">
-            <h3 style="font-size: 14px; font-weight: 600; color: var(--chat-warning-text); margin: 0;">Agent Interrupt</h3>
-            <p style="font-size: 14px; color: var(--chat-warning-text); margin: 4px 0 0;">{{ interruptPayload() }}</p>
+        <div class="flex items-start gap-2">
+          <span style="color: var(--chat-warning-text);" [innerHTML]="warningIcon"></span>
+          <div class="flex-1">
+            <h3 class="text-sm font-semibold m-0" style="color: var(--chat-warning-text);">Agent Interrupt</h3>
+            <p class="text-sm mt-1 mb-0" style="color: var(--chat-warning-text);">{{ interruptPayload() }}</p>
           </div>
         </div>
 
         <!-- Action buttons -->
-        <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+        <div class="flex flex-wrap gap-2">
           <button
-            style="padding: 6px 12px; font-size: 14px; font-weight: 500; background: var(--chat-bg-alt); color: var(--chat-text); border: 1px solid var(--chat-border); border-radius: var(--chat-radius-card); cursor: pointer;"
+            class="px-3 py-1.5 text-sm font-medium border cursor-pointer"
+            [style.background]="'var(--chat-bg-alt)'"
+            [style.color]="'var(--chat-text)'"
+            [style.border-color]="'var(--chat-border)'"
+            [style.border-radius]="'var(--chat-radius-card)'"
             (click)="action.emit('accept')"
           >
             Accept
           </button>
           <button
-            style="padding: 6px 12px; font-size: 14px; font-weight: 500; background: var(--chat-bg-alt); color: var(--chat-text); border: 1px solid var(--chat-border); border-radius: var(--chat-radius-card); cursor: pointer;"
+            class="px-3 py-1.5 text-sm font-medium border cursor-pointer"
+            [style.background]="'var(--chat-bg-alt)'"
+            [style.color]="'var(--chat-text)'"
+            [style.border-color]="'var(--chat-border)'"
+            [style.border-radius]="'var(--chat-radius-card)'"
             (click)="action.emit('edit')"
           >
             Edit
           </button>
           <button
-            style="padding: 6px 12px; font-size: 14px; font-weight: 500; background: var(--chat-bg-alt); color: var(--chat-text); border: 1px solid var(--chat-border); border-radius: var(--chat-radius-card); cursor: pointer;"
+            class="px-3 py-1.5 text-sm font-medium border cursor-pointer"
+            [style.background]="'var(--chat-bg-alt)'"
+            [style.color]="'var(--chat-text)'"
+            [style.border-color]="'var(--chat-border)'"
+            [style.border-radius]="'var(--chat-radius-card)'"
             (click)="action.emit('respond')"
           >
             Respond
           </button>
           <button
-            style="padding: 6px 12px; font-size: 14px; font-weight: 500; background: transparent; color: var(--chat-text-muted); border: none; cursor: pointer;"
+            class="px-3 py-1.5 text-sm font-medium bg-transparent border-0 cursor-pointer"
+            [style.color]="'var(--chat-text-muted)'"
             (click)="action.emit('ignore')"
           >
             Ignore
@@ -61,6 +79,8 @@ export class ChatInterruptPanelComponent {
   readonly ref = input.required<StreamResourceRef<any, any>>();
 
   readonly action = output<InterruptAction>();
+
+  readonly warningIcon = ICON_WARNING;
 
   readonly interrupt = computed(() => this.ref().interrupt());
 
