@@ -361,7 +361,7 @@ export function ChatFeaturesSection() {
       </div>
 
       {/* 3-col layout */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 440px 1fr', gap: '0 20px', maxWidth: 960, margin: '0 auto', alignItems: 'start' }}>
+      <div className="chat-features-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 440px 1fr', gap: '0 20px', maxWidth: 960, margin: '0 auto', alignItems: 'start' }}>
 
         {/* Left callouts */}
         <div id="feat-left" style={{ paddingTop: 8, display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -440,6 +440,23 @@ export function ChatFeaturesSection() {
         @keyframes sr-pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(.6)} }
         @keyframes sr-blink { 0%,100%{opacity:1} 50%{opacity:0} }
         @keyframes sr-bounce { 0%,80%,100%{transform:scale(.65);opacity:.5} 40%{transform:scale(1);opacity:1} }
+        @media (max-width: 767px) {
+          .chat-features-grid {
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 16px !important;
+            padding: 0 !important;
+          }
+          #feat-left, #feat-right {
+            flex-direction: row !important;
+            flex-wrap: wrap !important;
+            gap: 8px !important;
+          }
+          #feat-left > div, #feat-right > div {
+            flex: 1 1 calc(50% - 4px);
+            min-width: 140px;
+          }
+        }
       `}</style>
     </motion.section>
   );
