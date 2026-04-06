@@ -6,6 +6,6 @@
  */
 export const environment = {
   production: false,
-  langGraphApiUrl: 'http://localhost:4303/api',
+  langGraphApiUrl: '/api',
   streamingAssistantId: 'memory',
 };

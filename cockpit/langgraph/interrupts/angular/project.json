@@ -2,16 +2,51 @@
   "name": "cockpit-langgraph-interrupts-angular",
   "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "cockpit/langgraph/interrupts/angular/src",
-  "projectType": "library",
+  "projectType": "application",
   "targets": {
     "build": {
-      "executor": "@nx/js:tsc",
-      "outputs": ["{workspaceRoot}/dist/cockpit/langgraph/interrupts/angular"],
+      "executor": "@angular-devkit/build-angular:application",
+      "outputs": ["{options.outputPath}"],
       "options": {
         "outputPath": "dist/cockpit/langgraph/interrupts/angular",
-        "main": "cockpit/langgraph/interrupts/angular/src/index.ts",
-        "tsConfig": "cockpit/langgraph/interrupts/angular/tsconfig.json"
-      }
+        "index": "cockpit/langgraph/interrupts/angular/src/index.html",
+        "browser": "cockpit/langgraph/interrupts/angular/src/main.ts",
+        "tsConfig": "cockpit/langgraph/interrupts/angular/tsconfig.app.json",
+        "styles": ["cockpit/langgraph/interrupts/angular/src/styles.css"]
+      },
+      "configurations": {
+        "production": {
+          "outputHashing": "all"
+        },
+        "development": {
+          "optimization": false,
+          "extractLicenses": false,
+          "sourceMap": true,
+          "fileReplacements": [
+            {
+              "replace": "cockpit/langgraph/interrupts/angular/src/environments/environment.ts",
+              "with": "cockpit/langgraph/interrupts/angular/src/environments/environment.development.ts"
+            }
+          ]
+        }
+      },
+      "defaultConfiguration": "production"
+    },
+    "serve": {
+      "executor": "@angular-devkit/build-angular:dev-server",
+      "options": {
+        "port": 4302,
+        "proxyConfig": "cockpit/langgraph/interrupts/angular/proxy.conf.json"
+      },
+      "configurations": {
+        "production": {
+          "buildTarget": "cockpit-langgraph-interrupts-angular:build:production"
+        },
+        "development": {
+          "buildTarget": "cockpit-langgraph-interrupts-angular:build:development"
+        }
+      },
+      "defaultConfiguration": "development"
     },
     "smoke": {
       "executor": "nx:run-commands",

@@ -6,6 +6,6 @@
  */
 export const environment = {
   production: false,
-  langGraphApiUrl: 'http://localhost:4307/api',
+  langGraphApiUrl: '/api',
   deploymentRuntimeAssistantId: 'deployment-runtime',
 };

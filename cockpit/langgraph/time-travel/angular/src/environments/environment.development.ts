@@ -6,6 +6,6 @@
  */
 export const environment = {
   production: false,
-  langGraphApiUrl: 'http://localhost:4306/api',
+  langGraphApiUrl: '/api',
   streamingAssistantId: 'time-travel',
 };

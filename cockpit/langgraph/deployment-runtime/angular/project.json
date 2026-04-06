@@ -2,16 +2,51 @@
   "name": "cockpit-langgraph-deployment-runtime-angular",
   "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "cockpit/langgraph/deployment-runtime/angular/src",
-  "projectType": "library",
+  "projectType": "application",
   "targets": {
     "build": {
-      "executor": "@nx/js:tsc",
-      "outputs": ["{workspaceRoot}/dist/cockpit/langgraph/deployment-runtime/angular"],
+      "executor": "@angular-devkit/build-angular:application",
+      "outputs": ["{options.outputPath}"],
       "options": {
         "outputPath": "dist/cockpit/langgraph/deployment-runtime/angular",
-        "main": "cockpit/langgraph/deployment-runtime/angular/src/index.ts",
-        "tsConfig": "cockpit/langgraph/deployment-runtime/angular/tsconfig.json"
-      }
+        "index": "cockpit/langgraph/deployment-runtime/angular/src/index.html",
+        "browser": "cockpit/langgraph/deployment-runtime/angular/src/main.ts",
+        "tsConfig": "cockpit/langgraph/deployment-runtime/angular/tsconfig.app.json",
+        "styles": ["cockpit/langgraph/deployment-runtime/angular/src/styles.css"]
+      },
+      "configurations": {
+        "production": {
+          "outputHashing": "all"
+        },
+        "development": {
+          "optimization": false,
+          "extractLicenses": false,
+          "sourceMap": true,
+          "fileReplacements": [
+            {
+              "replace": "cockpit/langgraph/deployment-runtime/angular/src/environments/environment.ts",
+              "with": "cockpit/langgraph/deployment-runtime/angular/src/environments/environment.development.ts"
+            }
+          ]
+        }
+      },
+      "defaultConfiguration": "production"
+    },
+    "serve": {
+      "executor": "@angular-devkit/build-angular:dev-server",
+      "options": {
+        "port": 4307,
+        "proxyConfig": "cockpit/langgraph/deployment-runtime/angular/proxy.conf.json"
+      },
+      "configurations": {
+        "production": {
+          "buildTarget": "cockpit-langgraph-deployment-runtime-angular:build:production"
+        },
+        "development": {
+          "buildTarget": "cockpit-langgraph-deployment-runtime-angular:build:development"
+        }
+      },
+      "defaultConfiguration": "development"
     },
     "smoke": {
       "executor": "nx:run-commands",
