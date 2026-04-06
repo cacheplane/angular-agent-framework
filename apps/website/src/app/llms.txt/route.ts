@@ -5,9 +5,9 @@ function buildLlmsTxt(): string {
   // Inline version — updated by publish workflow
   const version = '0.1.0';
   return [
-    `# stream-resource v${version}`,
+    `# Angular Stream Resource v${version}`,
     '',
-    "Angular streaming library for LangChain/LangGraph. Provides streamResource() — full parity with React's useStream() hook, built on Angular Signals.",
+    "Angular Stream Resource — the enterprise streaming library for LangChain/LangGraph. Provides streamResource() — full parity with React's useStream() hook, built on Angular Signals.",
     '',
     '## Install',
     'npm install @cacheplane/stream-resource',
