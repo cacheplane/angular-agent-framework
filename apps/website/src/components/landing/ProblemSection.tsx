@@ -223,12 +223,12 @@ export function ProblemSection() {
       >
         {/* Labels row */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 10 }}>
-          <span style={{ fontFamily: 'var(--font-mono,"JetBrains Mono",monospace)', fontSize: '0.68rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: '#aaa' }}
+          <span style={{ fontFamily: 'var(--font-mono,"JetBrains Mono",monospace)', fontSize: 'max(12px, 0.68rem)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: '#aaa' }}
             aria-hidden="true">
             Project kickoff
           </span>
           <span style={{
-            fontFamily: 'var(--font-mono,"JetBrains Mono",monospace)', fontSize: '0.68rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em',
+            fontFamily: 'var(--font-mono,"JetBrains Mono",monospace)', fontSize: 'max(12px, 0.68rem)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em',
             color: tokens.colors.angularRed,
             opacity: showStall ? 1 : 0,
             transition: 'opacity 0.4s',
@@ -236,7 +236,7 @@ export function ProblemSection() {
             ⚠ Teams stall here
           </span>
           <span style={{
-            fontFamily: 'var(--font-mono,"JetBrains Mono",monospace)', fontSize: '0.68rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em',
+            fontFamily: 'var(--font-mono,"JetBrains Mono",monospace)', fontSize: 'max(12px, 0.68rem)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em',
             color: tokens.colors.accent,
             opacity: showEnd ? 1 : 0,
             transition: 'opacity 0.4s',
@@ -295,7 +295,7 @@ export function ProblemSection() {
             textAlign: 'center',
           }}>
             <div style={{ width: 2, height: 34, background: tokens.colors.angularRed, margin: '0 auto', borderRadius: 1 }} />
-            <div style={{ fontFamily: 'var(--font-mono,"JetBrains Mono",monospace)', fontSize: '0.6rem', color: tokens.colors.angularRed, whiteSpace: 'nowrap', marginTop: 3, fontWeight: 700 }}>
+            <div style={{ fontFamily: 'var(--font-mono,"JetBrains Mono",monospace)', fontSize: 'max(12px, 0.6rem)', color: tokens.colors.angularRed, whiteSpace: 'nowrap', marginTop: 3, fontWeight: 700 }}>
               50% abandon here
             </div>
           </div>
