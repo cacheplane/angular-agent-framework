@@ -9,7 +9,7 @@
  *   npx tsx scripts/assemble-examples.ts --skip-build
  */
 import { execSync } from 'child_process';
-import { cpSync, mkdirSync, rmSync, existsSync, writeFileSync } from 'fs';
+import { cpSync, mkdirSync, rmSync, existsSync, writeFileSync, readFileSync } from 'fs';
 import { resolve } from 'path';
 
 const root = resolve(__dirname, '..');
@@ -54,6 +54,20 @@ for (const cap of capabilities) {
 
   mkdirSync(dest, { recursive: true });
   cpSync(src, dest, { recursive: true });
+
+  // Fix <base href="/"> to point to the correct subpath so assets resolve correctly.
+  // Without this, main.js/styles.css/chunks load from the root (/) instead of
+  // /{product}/{topic}/ and return 404 in production.
+  const indexPath = resolve(dest, 'index.html');
+  if (existsSync(indexPath)) {
+    const html = readFileSync(indexPath, 'utf-8');
+    const fixed = html.replace(
+      '<base href="/">',
+      `<base href="/${cap.product}/${cap.topic}/">`,
+    );
+    writeFileSync(indexPath, fixed);
+  }
+
   console.log(`✅ ${cap.product}/${cap.topic}`);
 }
 
