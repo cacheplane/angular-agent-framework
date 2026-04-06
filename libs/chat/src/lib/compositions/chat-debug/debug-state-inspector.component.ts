@@ -13,7 +13,7 @@ import { JsonPipe } from '@angular/common';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="overflow-auto max-h-64">
-      <pre class="text-xs font-mono text-gray-700 whitespace-pre-wrap break-all">{{ state() | json }}</pre>
+      <pre class="text-xs font-mono text-[var(--chat-text)] whitespace-pre-wrap break-all">{{ state() | json }}</pre>
     </div>
   `,
 })
