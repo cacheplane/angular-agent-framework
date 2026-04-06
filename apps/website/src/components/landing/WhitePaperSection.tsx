@@ -64,14 +64,114 @@ export function WhitePaperSection() {
           alignItems: 'center',
         }}
       >
-        {/* Left — download CTA */}
+        {/* Left — form / soft gate */}
         <div>
           <p style={{
             fontFamily: 'var(--font-mono,"JetBrains Mono",monospace)',
             fontSize: '0.68rem', textTransform: 'uppercase', letterSpacing: '0.12em',
             fontWeight: 700, color: tokens.colors.accent, marginBottom: 14,
           }}>
-            Free Download
+            Get the Guide
+          </p>
+
+          {formState === 'done' ? (
+            <>
+              <div style={{
+                padding: '20px 24px', borderRadius: 12,
+                background: 'rgba(26,122,64,.07)', border: '1px solid rgba(26,122,64,.2)',
+                fontSize: '0.88rem', color: '#1a7a40', lineHeight: 1.55,
+              }}>
+                ✓ Check your inbox — the guide is on its way!
+              </div>
+              <a
+                href="/whitepaper.pdf"
+                download="streamresource-angular-agent-readiness-guide.pdf"
+                style={{
+                  display: 'inline-block',
+                  marginTop: 12,
+                  fontSize: '0.75rem',
+                  color: tokens.colors.textMuted,
+                  textDecoration: 'underline',
+                  fontFamily: 'Inter, sans-serif',
+                }}
+              >
+                or download directly
+              </a>
+            </>
+          ) : (
+            <>
+              <form onSubmit={handleSubmit}>
+                <label htmlFor="wp-name" className="sr-only">Name (optional)</label>
+                <input
+                  id="wp-name"
+                  aria-label="Name (optional)"
+                  style={inputStyle}
+                  type="text"
+                  placeholder="Name (optional)"
+                  value={name}
+                  onChange={e => setName(e.target.value)}
+                  disabled={formState === 'submitting'}
+                />
+                <label htmlFor="wp-email" className="sr-only">Email address</label>
+                <input
+                  id="wp-email"
+                  aria-label="Email address"
+                  style={{ ...inputStyle, marginBottom: 16 }}
+                  type="email"
+                  placeholder="Email address"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  required
+                  disabled={formState === 'submitting'}
+                />
+                {formState === 'error' && (
+                  <p style={{ fontSize: '0.8rem', color: tokens.colors.angularRed, marginBottom: 10 }}>
+                    Something went wrong — please try again.
+                  </p>
+                )}
+                <button
+                  type="submit"
+                  disabled={formState === 'submitting' || !email}
+                  style={{
+                    padding: '10px 24px', borderRadius: 9,
+                    background: email ? `rgba(0,64,144,.08)` : 'rgba(0,0,0,.04)',
+                    border: `1px solid ${email ? `rgba(0,64,144,.22)` : 'rgba(0,0,0,.08)'}`,
+                    color: email ? tokens.colors.accent : tokens.colors.textMuted,
+                    fontFamily: 'var(--font-mono,"JetBrains Mono",monospace)',
+                    fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em',
+                    cursor: email ? 'pointer' : 'not-allowed',
+                    transition: 'background .2s, border-color .2s',
+                  }}
+                >
+                  {formState === 'submitting' ? 'Sending…' : 'Send me the guide'}
+                </button>
+              </form>
+              <a
+                href="/whitepaper.pdf"
+                download="streamresource-angular-agent-readiness-guide.pdf"
+                style={{
+                  display: 'inline-block',
+                  marginTop: 12,
+                  fontSize: '0.75rem',
+                  color: tokens.colors.textMuted,
+                  textDecoration: 'underline',
+                  fontFamily: 'Inter, sans-serif',
+                }}
+              >
+                or download directly
+              </a>
+            </>
+          )}
+        </div>
+
+        {/* Right — value prop */}
+        <div>
+          <p style={{
+            fontFamily: 'var(--font-mono,"JetBrains Mono",monospace)',
+            fontSize: '0.62rem', textTransform: 'uppercase', letterSpacing: '0.1em',
+            fontWeight: 700, color: tokens.colors.textMuted, marginBottom: 16,
+          }}>
+            What&apos;s Inside
           </p>
           <h2 style={{
             fontFamily: 'var(--font-garamond,"EB Garamond",Georgia,serif)',
@@ -88,98 +188,6 @@ export function WhitePaperSection() {
             The Angular Agent Readiness Guide. Six chapters. Six production-readiness dimensions.
             What separates demos from shipped products.
           </p>
-          <a
-            href="/whitepaper.pdf"
-            download="streamresource-angular-agent-readiness-guide.pdf"
-            style={{
-              display: 'inline-flex', alignItems: 'center', gap: 8,
-              background: tokens.colors.accent, color: '#fff',
-              padding: '12px 28px', borderRadius: 10,
-              fontFamily: 'var(--font-mono,"JetBrains Mono",monospace)',
-              fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em',
-              textDecoration: 'none',
-              boxShadow: `0 4px 16px rgba(0,64,144,.28)`,
-              transition: 'box-shadow .2s, transform .2s',
-            }}
-            onMouseEnter={e => {
-              (e.currentTarget as HTMLAnchorElement).style.boxShadow = '0 6px 24px rgba(0,64,144,.4)';
-              (e.currentTarget as HTMLAnchorElement).style.transform = 'translateY(-1px)';
-            }}
-            onMouseLeave={e => {
-              (e.currentTarget as HTMLAnchorElement).style.boxShadow = '0 4px 16px rgba(0,64,144,.28)';
-              (e.currentTarget as HTMLAnchorElement).style.transform = 'translateY(0)';
-            }}
-          >
-            ↓ Download PDF
-          </a>
-        </div>
-
-        {/* Right — optional form */}
-        <div>
-          <p style={{
-            fontFamily: 'var(--font-mono,"JetBrains Mono",monospace)',
-            fontSize: '0.62rem', textTransform: 'uppercase', letterSpacing: '0.1em',
-            fontWeight: 700, color: tokens.colors.textMuted, marginBottom: 16,
-          }}>
-            Optional — Get notified of updates
-          </p>
-
-          {formState === 'done' ? (
-            <div style={{
-              padding: '20px 24px', borderRadius: 12,
-              background: 'rgba(26,122,64,.07)', border: '1px solid rgba(26,122,64,.2)',
-              fontSize: '0.88rem', color: '#1a7a40', lineHeight: 1.55,
-            }}>
-              ✓ Thanks! We'll reach out when the guide is updated.
-            </div>
-          ) : (
-            <form onSubmit={handleSubmit}>
-              <label htmlFor="wp-name" className="sr-only">Name (optional)</label>
-              <input
-                id="wp-name"
-                aria-label="Name (optional)"
-                style={inputStyle}
-                type="text"
-                placeholder="Name (optional)"
-                value={name}
-                onChange={e => setName(e.target.value)}
-                disabled={formState === 'submitting'}
-              />
-              <label htmlFor="wp-email" className="sr-only">Email address</label>
-              <input
-                id="wp-email"
-                aria-label="Email address"
-                style={{ ...inputStyle, marginBottom: 16 }}
-                type="email"
-                placeholder="Email address"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                required
-                disabled={formState === 'submitting'}
-              />
-              {formState === 'error' && (
-                <p style={{ fontSize: '0.8rem', color: tokens.colors.angularRed, marginBottom: 10 }}>
-                  Something went wrong — please try again.
-                </p>
-              )}
-              <button
-                type="submit"
-                disabled={formState === 'submitting' || !email}
-                style={{
-                  padding: '10px 24px', borderRadius: 9,
-                  background: email ? `rgba(0,64,144,.08)` : 'rgba(0,0,0,.04)',
-                  border: `1px solid ${email ? `rgba(0,64,144,.22)` : 'rgba(0,0,0,.08)'}`,
-                  color: email ? tokens.colors.accent : tokens.colors.textMuted,
-                  fontFamily: 'var(--font-mono,"JetBrains Mono",monospace)',
-                  fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em',
-                  cursor: email ? 'pointer' : 'not-allowed',
-                  transition: 'background .2s, border-color .2s',
-                }}
-              >
-                {formState === 'submitting' ? 'Sending…' : 'Notify me'}
-              </button>
-            </form>
-          )}
         </div>
       </motion.div>
     </section>

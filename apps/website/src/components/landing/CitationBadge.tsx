@@ -48,26 +48,32 @@ export function CitationBadge({ citation }: CitationBadgeProps) {
         aria-expanded={open}
         aria-haspopup="dialog"
         style={{
-          width: 13,
-          height: 13,
+          minWidth: 44,
+          minHeight: 44,
+          margin: '-15px -15px',
           borderRadius: '50%',
           background: 'transparent',
-          border: `1px solid ${open ? 'rgba(0,64,144,0.45)' : 'rgba(0,64,144,0.2)'}`,
           color: open ? 'rgba(0,64,144,0.7)' : 'rgba(0,64,144,0.35)',
-          fontSize: 7,
           fontFamily: "'JetBrains Mono', monospace",
           fontWeight: 700,
           cursor: 'pointer',
           display: 'inline-flex',
           alignItems: 'center',
           justifyContent: 'center',
-          lineHeight: 1,
           padding: 0,
-          transition: 'border-color 0.15s ease, color 0.15s ease',
+          transition: 'color 0.15s ease',
           flexShrink: 0,
         }}
       >
-        i
+        <span style={{
+          width: 13, height: 13, borderRadius: '50%',
+          border: `1px solid ${open ? 'rgba(0,64,144,0.45)' : 'rgba(0,64,144,0.2)'}`,
+          display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: 7, lineHeight: 1,
+          transition: 'border-color 0.15s ease',
+        }}>
+          i
+        </span>
       </button>
 
       {open && (

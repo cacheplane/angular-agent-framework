@@ -24,6 +24,17 @@ const mono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: 'Angular Stream Resource — Signal-Native Streaming for Angular + LangGraph',
   description: 'The Enterprise Streaming Resource for LangChain and Angular. Signal-native streaming, thread persistence, and production patterns for Angular 20+.',
+  openGraph: {
+    title: 'Angular Stream Resource',
+    description: 'Signal-native streaming for LangGraph — production patterns your Angular team can own.',
+    type: 'website',
+    siteName: 'Angular Stream Resource',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Angular Stream Resource',
+    description: 'Signal-native streaming for LangGraph — production patterns your Angular team can own.',
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

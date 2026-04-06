@@ -4,6 +4,7 @@ import { ValueProps } from '../components/landing/ValueProps';
 import { LangGraphShowcase } from '../components/landing/LangGraphShowcase';
 import { DeepAgentsShowcase } from '../components/landing/DeepAgentsShowcase';
 import { StatsStrip } from '../components/landing/StatsStrip';
+import { SocialProof } from '../components/landing/SocialProof';
 import { ProblemSection } from '../components/landing/ProblemSection';
 import { FullStackSection } from '../components/landing/FullStackSection';
 import { ChatFeaturesSection } from '../components/landing/ChatFeaturesSection';
@@ -28,6 +29,7 @@ export default async function HomePage() {
       <HeroTwoCol />
       {/* 2. Trust — quick credibility stats */}
       <StatsStrip />
+      <SocialProof />
       {/* 3. Problem — last-mile gap narrative */}
       <ProblemSection />
       {/* 4. Architecture — three-layer stack diagram */}

@@ -1,4 +1,5 @@
 'use client';
+import { useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { tokens } from '@cacheplane/design-tokens';
@@ -17,6 +18,68 @@ function NpmIcon() {
       <path d="M0 0v16h16V0H0zm13 13H8V5h2.5v5.5H13V5h-1V3H3v10h10V0H0v16h16V0H0z" opacity="0" />
       <path d="M0 0v16h16V0H0zm13 13h-2.5V5.5H8V13H3V3h10v10z" />
     </svg>
+  );
+}
+
+function NewsletterForm() {
+  const [email, setEmail] = useState('');
+  const [state, setState] = useState<'idle' | 'submitting' | 'done' | 'error'>('idle');
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email) return;
+    setState('submitting');
+    try {
+      const res = await fetch('/api/newsletter', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+      if (!res.ok) throw new Error();
+      setState('done');
+    } catch {
+      setState('error');
+    }
+  };
+
+  if (state === 'done') {
+    return <p className="text-sm mb-4" style={{ color: '#1a7a40' }}>✓ You&apos;re subscribed!</p>;
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="flex gap-2 mb-4 max-w-xs">
+      <label htmlFor="footer-email" className="sr-only">Email address</label>
+      <input
+        id="footer-email"
+        type="email"
+        placeholder="Email address"
+        value={email}
+        onChange={e => setEmail(e.target.value)}
+        required
+        disabled={state === 'submitting'}
+        className="text-sm rounded-lg px-3 py-2 flex-1"
+        style={{
+          background: 'rgba(255,255,255,0.7)',
+          border: `1px solid ${tokens.glass.border}`,
+          color: tokens.colors.textPrimary,
+          outline: 'none',
+        }}
+      />
+      <button
+        type="submit"
+        disabled={state === 'submitting' || !email}
+        className="text-xs font-mono font-bold uppercase tracking-wider rounded-lg px-4 py-2 whitespace-nowrap"
+        style={{
+          background: tokens.colors.accent,
+          color: '#fff',
+          border: 'none',
+          cursor: email ? 'pointer' : 'not-allowed',
+          opacity: email ? 1 : 0.5,
+        }}
+      >
+        {state === 'submitting' ? '...' : 'Subscribe'}
+      </button>
+    </form>
   );
 }
 
@@ -44,13 +107,14 @@ export function Footer() {
             <p className="text-sm mb-4" style={{ color: tokens.colors.textMuted, maxWidth: '36ch', lineHeight: 1.6 }}>
               The enterprise streaming resource for LangChain and Angular. Signal-native streaming built for production Angular 20+.
             </p>
+            <NewsletterForm />
             {/* Social links */}
             <div className="flex items-center gap-4">
               <a href="https://github.com/cacheplane/stream-resource"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="transition-colors"
-                style={{ color: tokens.colors.textMuted }}
+                style={{ color: tokens.colors.textMuted, minWidth: 44, minHeight: 44, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
                 onMouseEnter={(e) => (e.currentTarget.style.color = tokens.colors.accent)}
                 onMouseLeave={(e) => (e.currentTarget.style.color = tokens.colors.textMuted)}
                 aria-label="GitHub">
@@ -60,7 +124,7 @@ export function Footer() {
                 target="_blank"
                 rel="noopener noreferrer"
                 className="transition-colors"
-                style={{ color: tokens.colors.textMuted }}
+                style={{ color: tokens.colors.textMuted, minWidth: 44, minHeight: 44, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
                 onMouseEnter={(e) => (e.currentTarget.style.color = tokens.colors.accent)}
                 onMouseLeave={(e) => (e.currentTarget.style.color = tokens.colors.textMuted)}
                 aria-label="npm">
