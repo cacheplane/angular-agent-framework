@@ -30,8 +30,16 @@ export interface StreamManagerBridge {
 export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = BagTemplate>(
   { options, subjects, threadId$, destroy$ }: StreamManagerBridgeOptions<T, ResolvedBag>
 ): StreamManagerBridge {
+  // Intercept onThreadId to update currentThreadId when the transport
+  // auto-creates a thread. Without this, each submit() creates a new thread
+  // because currentThreadId stays null.
+  const userOnThreadId = options.onThreadId;
+  const wrappedOnThreadId = (id: string) => {
+    currentThreadId = id;
+    userOnThreadId?.(id);
+  };
   const transport: StreamResourceTransport =
-    options.transport ?? new FetchStreamTransport(options.apiUrl, options.onThreadId);
+    options.transport ?? new FetchStreamTransport(options.apiUrl, wrappedOnThreadId);
 
   let currentThreadId: string | null = null;
   let lastPayload: unknown = null;

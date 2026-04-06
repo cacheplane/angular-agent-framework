@@ -226,7 +226,12 @@ export class ChatDebugComponent {
       this.ref().isLoading(); // track
       const el = this.scrollContainer()?.nativeElement;
       if (el) {
-        setTimeout(() => el.scrollTop = el.scrollHeight, 0);
+        const isNearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 150;
+        if (isNearBottom) {
+          requestAnimationFrame(() => {
+            el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
+          });
+        }
       }
     });
   }

@@ -189,13 +189,20 @@ export class ChatComponent {
   private readonly messageCount = computed(() => this.ref().messages().length);
 
   constructor() {
-    // Auto-scroll to bottom when new messages arrive or loading state changes
+    // Auto-scroll to bottom when new messages arrive.
+    // Only scrolls if user is already near the bottom (within 150px),
+    // so reading earlier messages isn't interrupted.
     effect(() => {
       this.messageCount(); // track
       this.ref().isLoading(); // track
       const el = this.scrollContainer()?.nativeElement;
       if (el) {
-        setTimeout(() => el.scrollTop = el.scrollHeight, 0);
+        const isNearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 150;
+        if (isNearBottom) {
+          requestAnimationFrame(() => {
+            el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
+          });
+        }
       }
     });
   }
