@@ -282,20 +282,16 @@ jobs:
       - name: Build and assemble Angular examples
         if: steps.examples_changed.outputs.changed == 'true'
         run: npx tsx scripts/assemble-examples.ts
-      - name: Prepare examples Vercel project
+      - name: Deploy Angular examples to Vercel (production)
         if: steps.examples_changed.outputs.changed == 'true'
+        working-directory: deploy/examples
         run: |
           mkdir -p .vercel
           cat > .vercel/project.json <<EOF
           {"projectId":"${{ secrets.VERCEL_EXAMPLES_PROJECT_ID }}","orgId":"${{ secrets.VERCEL_ORG_ID }}","projectName":"cockpit-examples"}
           EOF
           npx vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
-          rm -rf .vercel/output
-      - name: Deploy Angular examples to Vercel (production)
-        if: steps.examples_changed.outputs.changed == 'true'
-        run: |
-          npx vercel build --prod --local-config vercel.examples.json --token=${{ secrets.VERCEL_TOKEN }}
-          npx vercel deploy --prebuilt --archive=tgz --prod --yes --token=${{ secrets.VERCEL_TOKEN }}
+          npx vercel deploy --prebuilt --prod --yes --token=${{ secrets.VERCEL_TOKEN }}
 
   production-smoke:
     name: Production smoke
