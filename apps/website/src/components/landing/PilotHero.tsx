@@ -43,8 +43,6 @@ export function PilotHero() {
           maxWidth: '56rem',
           margin: '0 auto',
           textAlign: 'center',
-          paddingTop: '6rem',
-          paddingBottom: '6rem',
           position: 'relative',
           zIndex: 1,
         }}
@@ -60,7 +58,6 @@ export function PilotHero() {
             style={{
               fontFamily: "'JetBrains Mono', monospace",
               fontSize: 11,
-              fontVariant: 'small-caps',
               letterSpacing: '0.08em',
               color: tokens.colors.accent,
               textTransform: 'uppercase',
