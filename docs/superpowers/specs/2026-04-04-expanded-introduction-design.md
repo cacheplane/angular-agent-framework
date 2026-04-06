@@ -15,7 +15,7 @@ Both Angular developers new to AI agents AND AI developers new to Angular. The t
 
 The introduction becomes a multi-section tutorial covering the complete workflow:
 
-### Section 1: What is StreamResource?
+### Section 1: What is Angular Stream Resource?
 - One-paragraph pitch: Angular Signals + LangGraph streaming
 - Key value props (3-4 bullets)
 - "What you'll build" preview — a streaming chat app connected to a real agent

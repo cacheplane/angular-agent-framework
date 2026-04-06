@@ -1,4 +1,4 @@
-# StreamResource — Angular Limitations vs React useStream()
+# Angular Stream Resource — Limitations vs React useStream()
 
 Features that are technically impossible or behaviorally degraded when
  porting LangGraph's React `useStream()` hook to Angular.
