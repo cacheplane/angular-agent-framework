@@ -4,11 +4,11 @@ import { motion } from 'framer-motion';
 import { tokens } from '../../../lib/design-tokens';
 import { CitationBadge } from './CitationBadge';
 
-const citation77 = {
-  source: 'McKinsey — State of AI 2024',
-  url: 'https://www.mckinsey.com/capabilities/quantumblack/our-insights/the-state-of-ai',
-  stat: 'Most companies remain in experimentation or pilot phases',
-  note: 'Workflow redesign and human validation are what drive real production value.',
+const gartnerCitation = {
+  source: 'Gartner — GenAI Project Failure (2026)',
+  url: 'https://www.gartner.com/en/articles/genai-project-failure',
+  stat: '50% of GenAI projects abandoned after proof of concept by end of 2025',
+  note: 'Poor data quality, inadequate risk controls, escalating costs, and unclear business value are the primary causes.',
 };
 
 export function PilotFooterCTA() {
@@ -74,7 +74,7 @@ export function PilotFooterCTA() {
             marginBottom: '2.5rem',
           }}
         >
-          Most teams are 77%<CitationBadge citation={citation77} /> of the way there. Angular Stream Resource closes the gap. Start with a conversation.
+          Half of GenAI projects die after proof of concept.<CitationBadge citation={gartnerCitation} /> Angular Stream Resource closes the gap. Start with a conversation.
         </p>
 
         {/* CTA buttons */}
