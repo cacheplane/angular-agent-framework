@@ -7,7 +7,11 @@ import { FeatureStrip } from '../components/landing/FeatureStrip';
 import { CodeBlock } from '../components/landing/CodeBlock';
 import { CockpitCTA } from '../components/landing/CockpitCTA';
 import { StatsStrip } from '../components/landing/StatsStrip';
-import { tokens } from '@cacheplane/design-tokens';
+import { ProblemSection } from '../components/landing/ProblemSection';
+import { FullStackSection } from '../components/landing/FullStackSection';
+import { ChatFeaturesSection } from '../components/landing/ChatFeaturesSection';
+import { FairComparisonSection } from '../components/landing/FairComparisonSection';
+import { tokens } from '../../lib/design-tokens';
 
 export default async function HomePage() {
   return (
@@ -18,23 +22,33 @@ export default async function HomePage() {
       <div style={{ position: 'absolute', width: 400, height: 400, borderRadius: '50%', background: tokens.gradient.warm, top: 2000, left: -100, filter: 'blur(80px)', pointerEvents: 'none' }} />
       <div style={{ position: 'absolute', width: 500, height: 500, borderRadius: '50%', background: tokens.gradient.cool, top: 3500, right: -150, filter: 'blur(80px)', pointerEvents: 'none' }} />
       <div style={{ position: 'absolute', width: 350, height: 350, borderRadius: '50%', background: tokens.gradient.coolLight, top: 5000, left: '30%', filter: 'blur(70px)', pointerEvents: 'none' }} />
+      <div style={{ position: 'absolute', width: 400, height: 400, borderRadius: '50%', background: tokens.gradient.warm, top: 6500, right: -100, filter: 'blur(80px)', pointerEvents: 'none' }} />
+      <div style={{ position: 'absolute', width: 350, height: 350, borderRadius: '50%', background: tokens.gradient.cool, top: 8000, left: '20%', filter: 'blur(70px)', pointerEvents: 'none' }} />
 
-      {/* 1. Hook — headline, animation, CTA */}
+      {/* 1. Hook */}
       <HeroTwoCol />
-      {/* 2. Trust — quick credibility stats */}
+      {/* 2. Trust */}
       <StatsStrip />
-      {/* 3. Value — why this product, with interactive code tabs */}
+      {/* 3. Problem */}
+      <ProblemSection />
+      {/* 4. Architecture */}
+      <FullStackSection />
+      {/* 5. Chat features */}
+      <ChatFeaturesSection />
+      {/* 6. Value */}
       <ValueProps />
-      {/* 4. Proof — 30-second code example (show, don't tell) */}
+      {/* 7. Proof */}
       <CodeBlock />
-      {/* 5. Depth — capability showcases with expandable code */}
+      {/* 8. Depth */}
       <LangGraphShowcase />
       <DeepAgentsShowcase />
-      {/* 6. Architecture — technical credibility for evaluators */}
+      {/* 9. Fair comparison */}
+      <FairComparisonSection />
+      {/* 10. Architecture */}
       <ArchDiagram />
-      {/* 7. Features — compact summary grid */}
+      {/* 11. Features */}
       <FeatureStrip />
-      {/* 8. Convert — cockpit CTA */}
+      {/* 12. Convert */}
       <CockpitCTA />
     </div>
   );
