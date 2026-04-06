@@ -98,7 +98,7 @@ export function Nav() {
           className="md:hidden"
           onClick={() => setOpen(!open)}
           aria-label={open ? 'Close menu' : 'Open menu'}
-          style={{ color: tokens.colors.textPrimary }}>
+          style={{ color: tokens.colors.textPrimary, minWidth: 44, minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           {open ? <CloseIcon /> : <MenuIcon />}
         </button>
       </div>
