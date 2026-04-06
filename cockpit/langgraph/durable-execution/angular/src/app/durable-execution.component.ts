@@ -1,4 +1,16 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+/**
+ * DurableExecutionComponent demonstrates LangGraph's durable execution model.
+ *
+ * Unlike a stateless API call, a LangGraph graph persists its execution state
+ * after every node. If the server restarts mid-run, the graph resumes from the
+ * last completed node — this is "durable execution".
+ *
+ * This example visualises the pipeline steps (`analyze → plan → generate`) and
+ * tracks which step the agent is currently executing via the `step` state key.
+ * A retry button is shown when the stream enters an error state, demonstrating
+ * how `stream.reload()` re-submits the last input to resume a failed run.
+ */
 import { Component, computed } from '@angular/core';
 import { ChatComponent } from '@cacheplane/chat';
 import { streamResource } from '@cacheplane/stream-resource';
