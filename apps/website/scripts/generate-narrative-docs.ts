@@ -10,7 +10,7 @@ const API_DOCS = 'apps/website/public/api-docs.json';
 const TOPICS = [
   {
     slug: 'introduction',
-    prompt: 'Write an introduction to the StreamResource Angular library. Explain what it does, who it is for, and why it exists. Include a minimal getting-started example.',
+    prompt: 'Write an introduction to the Angular Stream Resource library. Explain what it does, who it is for, and why it exists. Include a minimal getting-started example.',
   },
   {
     slug: 'streaming',
@@ -36,7 +36,7 @@ async function generateDoc(slug: string, prompt: string, apiDocsJson: string): P
     max_tokens: 2048,
     messages: [{
       role: 'user',
-      content: `You are writing documentation for the StreamResource Angular library.
+      content: `You are writing documentation for the Angular Stream Resource library.
 Here is the TypeDoc API reference JSON:\n\n${apiDocsJson}\n\n${prompt}
 
 Write clean, developer-friendly MDX documentation. Use precise, no-fluff prose. Include code examples. Start with a single # heading.`,

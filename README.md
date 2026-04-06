@@ -1,7 +1,7 @@
 <p align="center">
   <img
     src="https://stream-resource.dev/assets/hero.svg"
-    alt="stream-resource — The Enterprise Streaming Resource for LangChain and Angular"
+    alt="Angular Stream Resource — The Enterprise Streaming Resource for LangChain and Angular"
     width="100%"
   />
 </p>
@@ -111,7 +111,7 @@ That's it. `chat.messages()` is an Angular Signal. Bind it directly in your temp
 <p align="center">
   <img
     src="https://stream-resource.dev/assets/arch-diagram.svg"
-    alt="stream-resource architecture: Angular Component → streamResource() → StreamManager Bridge → LangGraph Platform, with signals returned reactively"
+    alt="Angular Stream Resource architecture: Angular Component → streamResource() → StreamManager Bridge → LangGraph Platform, with signals returned reactively"
     width="100%"
   />
 </p>
@@ -148,6 +148,6 @@ That's it. `chat.messages()` is an Angular Signal. Bind it directly in your temp
 `@cacheplane/stream-resource` is source-available software dual-licensed:
 
 - **PolyForm Noncommercial 1.0.0** — free for noncommercial use (personal projects, academic, research, non-profit internal tooling). See [`LICENSE`](./LICENSE).
-- **StreamResource Commercial License** — required for any for-profit or revenue-generating use. See [`LICENSE-COMMERCIAL`](./LICENSE-COMMERCIAL) and [`COMMERCIAL.md`](./COMMERCIAL.md).
+- **Angular Stream Resource Commercial License** — required for any for-profit or revenue-generating use. See [`LICENSE-COMMERCIAL`](./LICENSE-COMMERCIAL) and [`COMMERCIAL.md`](./COMMERCIAL.md).
 
 This is **not** an open-source license. Commercial use — including use in a for-profit product, service, or organization — requires a paid commercial license. See [pricing](https://stream-resource.dev/pricing).

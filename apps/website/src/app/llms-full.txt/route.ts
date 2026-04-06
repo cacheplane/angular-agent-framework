@@ -27,7 +27,7 @@ function loadAllPrompts(): string {
 
 export async function GET() {
   const sections = [
-    '# stream-resource — Full Reference\n\nSee /llms.txt for a compact summary.\n',
+    '# Angular Stream Resource — Full Reference\n\nSee /llms.txt for a compact summary.\n',
     '## API Reference (TypeDoc)\n\n' + loadApiDocs(),
     '## Prompt Recipes\n\n' + loadAllPrompts(),
     [

@@ -6,7 +6,7 @@
 
 ## Overview
 
-Refactor the StreamResource website from a dark navy solid-background design to a light, frosted-glass aesthetic with dual-brand ambient gradients. The design communicates the "bridge between Angular and LangGraph" through a warm→cool gradient flow (Angular red → LangGraph blue) with translucent glass panels floating on top.
+Refactor the Angular Stream Resource website from a dark navy solid-background design to a light, frosted-glass aesthetic with dual-brand ambient gradients. The design communicates the "bridge between Angular and LangGraph" through a warm→cool gradient flow (Angular red → LangGraph blue) with translucent glass panels floating on top.
 
 ## Design Decisions
 

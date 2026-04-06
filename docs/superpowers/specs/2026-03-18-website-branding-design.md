@@ -1,4 +1,4 @@
-# StreamResource Website — Brand Refresh Design Specification
+# Angular Stream Resource Website — Brand Refresh Design Specification
 
 **Date:** 2026-03-18
 **Status:** Approved
@@ -8,7 +8,7 @@
 
 ## Overview
 
-Update the StreamResource website design from its original warm "dark luxury" aesthetic (gold accent, warm cream text) to a cool indigo-blue neon aesthetic that aligns with LangChain's current brand energy while maintaining a distinct product identity.
+Update the Angular Stream Resource website design from its original warm "dark luxury" aesthetic (gold accent, warm cream text) to a cool indigo-blue neon aesthetic that aligns with LangChain's current brand energy while maintaining a distinct product identity.
 
 **Design direction:** Inspired by LangChain, not a copy. EB Garamond headlines are retained as the primary differentiator — the serif-meets-neon contrast is uncommon in the developer tools space and creates a distinctive signature. Accent color is indigo-blue `#6C8EFF` rather than LangChain's cyan `#7FC8FF`.
 

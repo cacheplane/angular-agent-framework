@@ -285,7 +285,7 @@ export function ProblemSection() {
             transition: 'opacity 0.4s, transform 0.4s',
           }}>
             <span style={{ width: 6, height: 6, borderRadius: '50%', background: tokens.colors.accent, display: 'inline-block', animation: 'sr-pulse 1.2s ease-in-out infinite' }} />
-            StreamResource closes the gap
+            Angular Stream Resource closes the gap
           </div>
           <span style={{
             fontFamily: 'var(--font-mono,"JetBrains Mono",monospace)', fontSize: '0.78rem', fontWeight: 700,

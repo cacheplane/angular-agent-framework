@@ -260,7 +260,7 @@ function buildHTML(chapters: Array<{ title: string; content: string }>): string 
 <body>
   <!-- Cover -->
   <div class="cover">
-    <div class="cover-eyebrow">StreamResource · Production Readiness Guide</div>
+    <div class="cover-eyebrow">Angular Stream Resource · Production Readiness Guide</div>
     <h1 class="cover-title">From Prototype<br>to Production</h1>
     <p class="cover-sub">The Angular Agent Readiness Guide</p>
     <div class="cover-meta">cacheplane.io · ${new Date().getFullYear()}</div>

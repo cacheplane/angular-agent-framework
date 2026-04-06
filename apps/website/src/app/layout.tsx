@@ -22,7 +22,7 @@ const mono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'StreamResource — LangChain Streaming for Angular',
+  title: 'Angular Stream Resource — LangChain Streaming for Angular',
   description: 'The Enterprise Streaming Resource for LangChain and Angular. streamResource() brings full parity with React useStream() to Angular 20+.',
 };
 

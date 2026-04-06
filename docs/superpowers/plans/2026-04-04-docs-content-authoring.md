@@ -1299,10 +1299,10 @@ Replace the full content of `apps/website/content/docs-v2/getting-started/introd
 ```mdx
 # Introduction
 
-StreamResource brings full parity with React's `useStream()` hook to Angular 20+. It's the enterprise streaming resource for LangChain and Angular — built natively with Angular Signals, not wrapped or adapted.
+Angular Stream Resource brings full parity with React's `useStream()` hook to Angular 20+. It's the enterprise streaming resource for LangChain and Angular — built natively with Angular Signals, not wrapped or adapted.
 
 <Callout type="info" title="Who is this for?">
-StreamResource serves two audiences: **Angular developers** building AI-powered applications, and **AI/agent developers** who need a production Angular frontend for their LangGraph agents.
+Angular Stream Resource serves two audiences: **Angular developers** building AI-powered applications, and **AI/agent developers** who need a production Angular frontend for their LangGraph agents.
 </Callout>
 
 ## What is streamResource()?

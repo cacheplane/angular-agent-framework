@@ -1,4 +1,4 @@
-# StreamResource — Agentic Docs & Hero Redesign Specification
+# Angular Stream Resource — Agentic Docs & Hero Redesign Specification
 
 **Date:** 2026-03-18
 **Status:** Approved
@@ -8,7 +8,7 @@
 
 ## Overview
 
-Two related changes to the StreamResource website:
+Two related changes to the Angular Stream Resource website:
 
 1. **Hero redesign** — two-column layout, smaller headline, Angular red for "Angular", LangChain + Angular logo badges, a generative UI browser animation with mouse-reactive neon glow, and a "Copy prompt" CTA replacing the npm install strip.
 
@@ -171,7 +171,7 @@ Targets Claude Code and Claude API agents. Downloadable from the Getting Started
 
 Content:
 ```markdown
-# stream-resource
+# Angular Stream Resource
 
 Angular streaming library for LangChain/LangGraph. Provides `streamResource()` — full parity with React's `useStream()`.
 

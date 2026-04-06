@@ -1,4 +1,4 @@
-# StreamResource Licensing Model — Design Specification
+# Angular Stream Resource Licensing Model — Design Specification
 
 **Date:** 2026-03-19
 **Status:** Implemented
@@ -8,7 +8,7 @@
 
 ## Overview
 
-StreamResource uses a **source-available dual-license model**. It is **not** open source and must never be described as MIT or OSI-approved. The project is publicly readable and freely usable for noncommercial purposes, with a paid commercial license required for any for-profit or revenue-generating use.
+Angular Stream Resource uses a **source-available dual-license model**. It is **not** open source and must never be described as MIT or OSI-approved. The project is publicly readable and freely usable for noncommercial purposes, with a paid commercial license required for any for-profit or revenue-generating use.
 
 ---
 
@@ -17,7 +17,7 @@ StreamResource uses a **source-available dual-license model**. It is **not** ope
 | File | Purpose |
 |---|---|
 | `LICENSE` | Full text of PolyForm Noncommercial 1.0.0 |
-| `LICENSE-COMMERCIAL` | Full text of the StreamResource Commercial License |
+| `LICENSE-COMMERCIAL` | Full text of the Angular Stream Resource Commercial License |
 | `COMMERCIAL.md` | Plain-English commercial licensing explainer |
 | `NOTICE` | Required copyright notice per PolyForm terms |
 
@@ -48,7 +48,7 @@ StreamResource uses a **source-available dual-license model**. It is **not** ope
 
 ## Commercial License
 
-**License:** StreamResource Commercial License
+**License:** Angular Stream Resource Commercial License
 **File:** `LICENSE-COMMERCIAL`
 
 ### Tiers
@@ -125,7 +125,7 @@ The free/community tier is called **"Community"** (not "Open Source").
 ### Pricing page copy
 
 - Free tier: "Community · Free · noncommercial use · PolyForm Noncommercial 1.0.0"
-- Commercial tiers: "Commercial use requires a paid StreamResource Commercial License"
+- Commercial tiers: "Commercial use requires a paid Angular Stream Resource Commercial License"
 
 ### Footer
 
@@ -151,7 +151,7 @@ Source-available licensing. Free for noncommercial use under PolyForm Noncommerc
 `@cacheplane/stream-resource` is source-available software dual-licensed:
 
 - **PolyForm Noncommercial 1.0.0** — free for noncommercial use. See LICENSE.
-- **StreamResource Commercial License** — required for any for-profit or revenue-generating use. See LICENSE-COMMERCIAL and COMMERCIAL.md.
+- **Angular Stream Resource Commercial License** — required for any for-profit or revenue-generating use. See LICENSE-COMMERCIAL and COMMERCIAL.md.
 
 This is **not** an open-source license. Commercial use requires a paid commercial license.
 ```

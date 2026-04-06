@@ -1,4 +1,4 @@
-# StreamResource — Design Specification
+# Angular Stream Resource — Design Specification
 
 **Date:** 2026-03-17
 **Status:** Approved
@@ -8,7 +8,7 @@
 
 ## Overview
 
-StreamResource is an Angular 20+ library that provides `streamResource()` — a full-parity implementation of LangGraph's React `useStream()` hook built on the Angular Resource API. It is designed for enterprise teams building production Angular applications on top of LangChain, LangGraph, and LangSmith.
+Angular Stream Resource is an Angular 20+ library that provides `streamResource()` — a full-parity implementation of LangGraph's React `useStream()` hook built on the Angular Resource API. It is designed for enterprise teams building production Angular applications on top of LangChain, LangGraph, and LangSmith.
 
 The project is delivered as an Nx monorepo containing:
 1. The publishable Angular library (`stream-resource`)

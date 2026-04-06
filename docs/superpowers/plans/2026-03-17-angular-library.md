@@ -1384,7 +1384,7 @@ git commit -m "feat(stream-resource): finalize public API barrel exports"
 Create `docs/limitations.md`:
 
 ```markdown
-# StreamResource — Angular Limitations vs React useStream()
+# Angular Stream Resource — Angular Limitations vs React useStream()
 
 Features that are technically impossible or behaviorally degraded when
 porting LangGraph's React `useStream()` hook to Angular.
@@ -1611,7 +1611,7 @@ Create `LICENSE`:
 ```
 MIT License (Non-Commercial Use Only)
 
-Copyright (c) 2025 StreamResource Contributors
+Copyright (c) 2025 Angular Stream Resource Contributors
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -1642,11 +1642,11 @@ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
 Create `LICENSE-COMMERCIAL`:
 
 ```
-StreamResource Commercial License
+Angular Stream Resource Commercial License
 
-Copyright (c) 2025 StreamResource Contributors
+Copyright (c) 2025 Angular Stream Resource Contributors
 
-Commercial use of StreamResource requires a paid license.
+Commercial use of Angular Stream Resource requires a paid license.
 
 DEVELOPER SEAT LICENSE: $500 per developer seat per year
 - Grants commercial use rights for one developer
@@ -1656,7 +1656,7 @@ DEVELOPER SEAT LICENSE: $500 per developer seat per year
 
 APPLICATION DEPLOYMENT LICENSE: $2,000 per application
 - Required for each production application or service that uses
-  StreamResource commercially
+  Angular Stream Resource commercially
 - Covers all environments (development, staging, production)
 - One-time purchase per application
 

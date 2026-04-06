@@ -1,4 +1,4 @@
-# stream-resource v0.0.1
+# Angular Stream Resource v0.0.1
 
 Angular streaming library for LangChain/LangGraph. Provides `streamResource()` — full parity with React's `useStream()`.
 

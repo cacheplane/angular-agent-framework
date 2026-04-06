@@ -167,7 +167,7 @@ Rendering:
 
 | Slug | Title | Content |
 |------|-------|---------|
-| `introduction` | Introduction | What is StreamResource, dual audience (Angular devs & AI devs), key value props, what you'll build |
+| `introduction` | Introduction | What is Angular Stream Resource, dual audience (Angular devs & AI devs), key value props, what you'll build |
 | `quickstart` | Quick Start | 5-minute end-to-end: install → configure → build chat component → run. Uses CardGroup to link to next steps. |
 | `installation` | Installation | npm install, provideStreamResource() config, environment variables, Angular version matrix, LangGraph Cloud setup |
 

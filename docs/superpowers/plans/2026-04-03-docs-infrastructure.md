@@ -192,10 +192,10 @@ Create `apps/website/content/docs-v2/getting-started/introduction.mdx`:
 ```mdx
 # Introduction
 
-StreamResource brings full parity with React's `useStream()` hook to Angular 20+. It's the enterprise streaming resource for LangChain and Angular — built natively with Angular Signals, not wrapped or adapted.
+Angular Stream Resource brings full parity with React's `useStream()` hook to Angular 20+. It's the enterprise streaming resource for LangChain and Angular — built natively with Angular Signals, not wrapped or adapted.
 
 <Callout type="info" title="Who is this for?">
-StreamResource serves two audiences: Angular developers building AI-powered apps, and AI/agent developers who need an Angular frontend.
+Angular Stream Resource serves two audiences: Angular developers building AI-powered apps, and AI/agent developers who need an Angular frontend.
 </Callout>
 
 ## What you'll build
@@ -227,7 +227,7 @@ Create `apps/website/content/docs-v2/guides/streaming.mdx`:
 ```mdx
 # Streaming
 
-StreamResource provides token-by-token streaming from LangGraph agents via Server-Sent Events (SSE). Every update lands directly in Angular Signals.
+Angular Stream Resource provides token-by-token streaming from LangGraph agents via Server-Sent Events (SSE). Every update lands directly in Angular Signals.
 
 <Callout type="tip" title="Prerequisites">
 Make sure you've completed the [Installation](/docs/getting-started/installation) guide first.

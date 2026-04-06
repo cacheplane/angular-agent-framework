@@ -40,7 +40,7 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-10 md:gap-8">
           {/* Brand */}
           <div className="md:col-span-2">
-            <p className="font-garamond text-xl font-bold mb-2" style={{ color: tokens.colors.textPrimary }}>StreamResource</p>
+            <p className="font-garamond text-xl font-bold mb-2" style={{ color: tokens.colors.textPrimary }}>Angular Stream Resource</p>
             <p className="text-sm mb-4" style={{ color: tokens.colors.textMuted, maxWidth: '36ch', lineHeight: 1.6 }}>
               The enterprise streaming resource for LangChain and Angular. Full parity with React useStream(), built natively for Angular 20+.
             </p>
@@ -127,7 +127,7 @@ export function Footer() {
         {/* Bottom bar */}
         <div className="mt-12 pt-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs"
           style={{ borderTop: `1px solid ${tokens.glass.border}`, color: tokens.colors.textMuted }}>
-          <span>&copy; {new Date().getFullYear()} StreamResource. All rights reserved.</span>
+          <span>&copy; {new Date().getFullYear()} Angular Stream Resource. All rights reserved.</span>
           <span>PolyForm Noncommercial 1.0.0 &middot; <Link href="/pricing" className="transition-colors"
             onMouseEnter={(e) => (e.currentTarget.style.color = tokens.colors.accent)}
             onMouseLeave={(e) => (e.currentTarget.style.color = tokens.colors.textMuted)}>Commercial License</Link></span>

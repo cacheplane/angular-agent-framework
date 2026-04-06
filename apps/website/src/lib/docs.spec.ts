@@ -15,7 +15,7 @@ describe('website docs bindings', () => {
     const doc = getDocBySlug('getting-started', 'introduction');
     expect(doc).not.toBeNull();
     expect(doc?.title).toBe('Introduction');
-    expect(doc?.content).toContain('StreamResource');
+    expect(doc?.content).toContain('Angular Stream Resource');
   });
 
   it('returns null for non-existent doc', () => {

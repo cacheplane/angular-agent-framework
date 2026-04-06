@@ -2,7 +2,7 @@
 
 ## Goal
 
-Add four new landing page sections that reframe StreamResource around the "last mile" production narrative: the problem (why AI projects stall), the full stack architecture, the @cacheplane/chat UI layer in depth, and a fair comparison table. Update one existing section (FeatureStrip) to remove an inaccurate claim. Existing sections are preserved as-is.
+Add four new landing page sections that reframe Angular Stream Resource around the "last mile" production narrative: the problem (why AI projects stall), the full stack architecture, the @cacheplane/chat UI layer in depth, and a fair comparison table. Update one existing section (FeatureStrip) to remove an inaccurate claim. Existing sections are preserved as-is.
 
 ## Architecture
 
@@ -36,7 +36,7 @@ SVG animations use `animateMotion` with `mpath` for particle flows and CSS `@key
 
 **Placement in page.tsx:** After `<StatsStrip />`, before `<ValueProps />`.
 
-**Narrative:** The last-mile gap. Three stats establish the problem. An animated progress bar shows teams stalling at 77% and StreamResource closing the gap to 100%.
+**Narrative:** The last-mile gap. Three stats establish the problem. An animated progress bar shows teams stalling at 77% and Angular Stream Resource closing the gap to 100%.
 
 ### Component structure
 
@@ -161,15 +161,15 @@ Each tab scenario is an `async` function using a local `wait(ms)` helper. Tab sw
 
 **Placement in page.tsx:** After `<DeepAgentsShowcase />`, before `<ArchDiagram />`.
 
-**Narrative:** Honest comparison of LangChain alone vs StreamResource. No attacks. Just what StreamResource adds on top.
+**Narrative:** Honest comparison of LangChain alone vs Angular Stream Resource. No attacks. Just what Angular Stream Resource adds on top.
 
 ### Component structure
 
-Eyebrow: "A fair comparison". Headline: "What StreamResource adds". Subtitle: "LangChain and LangGraph are excellent. This is what the Angular production layer provides on top."
+Eyebrow: "A fair comparison". Headline: "What Angular Stream Resource adds". Subtitle: "LangChain and LangGraph are excellent. This is what the Angular production layer provides on top."
 
 ### Comparison table
 
-Two columns: "LangChain + Angular (without StreamResource)" and "LangChain + Angular + StreamResource".
+Two columns: "LangChain + Angular (without Angular Stream Resource)" and "LangChain + Angular + Angular Stream Resource".
 
 | Capability | Without | With |
 |---|---|---|
@@ -190,7 +190,7 @@ Each "With" cell uses `tokens.colors.accent` text with a checkmark. Each "Withou
 
 **File:** `apps/website/src/components/landing/FeatureStrip.tsx`
 
-Remove the feature entry that reads "Generative UI — no established Angular pattern exists anywhere" or equivalent language that implies StreamResource is the only solution. Replace with: `{ icon: '🎨', title: 'Generative UI', desc: 'Agent-emitted Angular components via @cacheplane/render. Your component registry, your design — rendered inline from a JSON spec.' }`.
+Remove the feature entry that reads "Generative UI — no established Angular pattern exists anywhere" or equivalent language that implies Angular Stream Resource is the only solution. Replace with: `{ icon: '🎨', title: 'Generative UI', desc: 'Agent-emitted Angular components via @cacheplane/render. Your component registry, your design — rendered inline from a JSON spec.' }`.
 
 ---
 

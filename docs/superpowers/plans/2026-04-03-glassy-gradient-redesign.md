@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Refactor the StreamResource website from dark navy to a light frosted-glass aesthetic with dual-brand Angular/LangGraph ambient gradients.
+**Goal:** Refactor the Angular Stream Resource website from dark navy to a light frosted-glass aesthetic with dual-brand Angular/LangGraph ambient gradients.
 
 **Architecture:** Token-first approach — update `design-tokens.ts` and `global.css` first, then sweep all components to consume the new tokens. The warm→cool gradient flow (Angular red top-left → LangGraph blue bottom-right) serves as the continuous page backdrop, with balanced glass panels (14-16px blur, 40-50% white opacity) floating on top.
 
@@ -195,7 +195,7 @@ export function Nav() {
         boxShadow: tokens.glass.shadow,
       }}>
       <Link href="/" className="font-garamond text-xl font-bold" style={{ color: tokens.colors.textPrimary }}>
-        StreamResource
+        Angular Stream Resource
       </Link>
       <div className="flex items-center gap-8">
         {links.map((l) => (
@@ -255,7 +255,7 @@ export function Footer() {
       }}>
       <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-start justify-between gap-8">
         <div>
-          <p className="font-garamond text-lg font-bold" style={{ color: tokens.colors.textPrimary }}>StreamResource</p>
+          <p className="font-garamond text-lg font-bold" style={{ color: tokens.colors.textPrimary }}>Angular Stream Resource</p>
           <p className="text-sm mt-1" style={{ color: tokens.colors.textMuted }}>The Enterprise Streaming Resource for LangChain and Angular</p>
         </div>
         <div className="flex gap-12 text-sm">
@@ -269,7 +269,7 @@ export function Footer() {
       </div>
       <div className="max-w-6xl mx-auto mt-8 pt-8 flex items-center justify-between text-xs"
         style={{ borderTop: `1px solid ${tokens.glass.border}`, color: tokens.colors.textMuted }}>
-        <span>&copy; {new Date().getFullYear()} StreamResource. All rights reserved.</span>
+        <span>&copy; {new Date().getFullYear()} Angular Stream Resource. All rights reserved.</span>
         <span>PolyForm Noncommercial 1.0.0 &middot; <Link href="/pricing" className="transition-colors">Commercial License</Link></span>
       </div>
     </footer>
