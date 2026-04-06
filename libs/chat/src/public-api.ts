@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 
 // Shared types
-export type { ChatConfig, MessageTemplateType } from './lib/chat.types';
+export type { ChatConfig } from './lib/provide-chat';
+export type { MessageTemplateType } from './lib/chat.types';
 
 // Primitives
 export { ChatMessagesComponent } from './lib/primitives/chat-messages/chat-messages.component';
@@ -20,9 +21,6 @@ export { ChatGenerativeUiComponent } from './lib/primitives/chat-generative-ui/c
 
 // DI provider
 export { provideChat, CHAT_CONFIG } from './lib/provide-chat';
-
-// Legacy cp-chat component (used by cockpit example apps)
-export { ChatComponent as LegacyChatComponent } from './lib/chat.component';
 
 // Compositions
 export { ChatComponent } from './lib/compositions/chat/chat.component';
@@ -44,6 +42,14 @@ export { DebugControlsComponent } from './lib/compositions/chat-debug/debug-cont
 export { DebugSummaryComponent } from './lib/compositions/chat-debug/debug-summary.component';
 export { computeStateDiff } from './lib/compositions/chat-debug/state-diff';
 export type { DiffEntry } from './lib/compositions/chat-debug/state-diff';
+
+// Shared styles & utilities
+export { CHAT_THEME_STYLES } from './lib/styles/chat-theme';
+export { CHAT_MARKDOWN_STYLES, renderMarkdown } from './lib/styles/chat-markdown';
+export {
+  ICON_CHEVRON_DOWN, ICON_CHEVRON_UP, ICON_TOOL,
+  ICON_WARNING, ICON_AGENT, ICON_CHECK, ICON_SEND,
+} from './lib/styles/chat-icons';
 
 // Test utilities
 export { createMockStreamResourceRef } from './lib/testing/mock-stream-resource-ref';

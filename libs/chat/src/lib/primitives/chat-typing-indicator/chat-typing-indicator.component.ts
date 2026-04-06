@@ -7,10 +7,6 @@ import {
 } from '@angular/core';
 import type { StreamResourceRef } from '@cacheplane/stream-resource';
 
-/**
- * Returns whether the typing indicator should be visible.
- * Exported for unit testing without DOM rendering.
- */
 export function isTyping(ref: StreamResourceRef<any, any>): boolean {
   return ref.isLoading();
 }
@@ -25,7 +21,7 @@ export function isTyping(ref: StreamResourceRef<any, any>): boolean {
       width: 5px;
       height: 5px;
       border-radius: 50%;
-      background: var(--chat-text-muted, #777);
+      background: var(--chat-text-muted);
       animation: chat-dot-pulse 1.4s ease-in-out infinite;
     }
     .chat-dot:nth-child(2) { animation-delay: 0.2s; }
@@ -37,23 +33,14 @@ export function isTyping(ref: StreamResourceRef<any, any>): boolean {
   `],
   template: `
     @if (visible()) {
-      <div role="status" aria-label="Agent is typing" style="display: flex; flex-direction: column; gap: 6px;">
-        <div style="display: flex; align-items: center; gap: 8px;">
-          <div style="
-            width: 24px;
-            height: 24px;
-            background: var(--chat-avatar-bg, #333333);
-            color: var(--chat-avatar-text, #aaaaaa);
-            border-radius: var(--chat-radius-avatar, 8px);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 11px;
-            font-weight: 600;
-            flex-shrink: 0;
-          ">A</div>
-          <span style="font-size: 12px; color: var(--chat-text-muted, #777777); font-weight: 500;">Assistant</span>
-          <div style="display: flex; align-items: center; gap: 4px; padding-left: 4px;">
+      <div role="status" aria-label="Agent is typing" class="flex flex-col gap-1.5">
+        <div class="flex items-center gap-2">
+          <div
+            class="w-6 h-6 flex items-center justify-center text-[11px] font-semibold shrink-0"
+            style="background: var(--chat-avatar-bg); color: var(--chat-avatar-text); border-radius: var(--chat-radius-avatar);"
+          >A</div>
+          <span class="text-xs font-medium" style="color: var(--chat-text-muted);">Assistant</span>
+          <div class="flex items-center gap-1 pl-1">
             <span class="chat-dot"></span>
             <span class="chat-dot"></span>
             <span class="chat-dot"></span>
@@ -65,6 +52,5 @@ export function isTyping(ref: StreamResourceRef<any, any>): boolean {
 })
 export class ChatTypingIndicatorComponent {
   readonly ref = input.required<StreamResourceRef<any, any>>();
-
   readonly visible = computed(() => this.ref().isLoading());
 }

@@ -15,11 +15,11 @@ import { DebugStateInspectorComponent } from './debug-state-inspector.component'
   template: `
     <div class="space-y-3">
       <section>
-        <h4 class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">State Diff</h4>
+        <h4 class="text-xs font-semibold text-[var(--chat-text-muted)] uppercase tracking-wide mb-1">State Diff</h4>
         <chat-debug-state-diff [before]="previousState()" [after]="currentState()" />
       </section>
       <section>
-        <h4 class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Current State</h4>
+        <h4 class="text-xs font-semibold text-[var(--chat-text-muted)] uppercase tracking-wide mb-1">Current State</h4>
         <chat-debug-state-inspector [state]="currentState()" />
       </section>
     </div>

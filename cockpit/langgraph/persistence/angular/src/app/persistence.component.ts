@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { LegacyChatComponent } from '@cacheplane/chat';
+import { ChatComponent } from '@cacheplane/chat';
 import { streamResource } from '@cacheplane/stream-resource';
 import { environment } from '../environments/environment';
 
@@ -19,30 +19,8 @@ import { environment } from '../environments/environment';
 @Component({
   selector: 'app-persistence',
   standalone: true,
-  imports: [LegacyChatComponent],
-  template: `
-    <cp-chat
-      [messages]="stream.messages()"
-      [isLoading]="stream.isLoading()"
-      [error]="stream.error()"
-      (sendMessage)="send($event)">
-      <ng-template #sidebar>
-        <h3 style="font-size: 0.8rem; font-weight: 600; margin-bottom: 0.75rem; color: #1a1a2e;">Threads</h3>
-        @for (id of threadIds; track id) {
-          <button (click)="selectThread(id)"
-                  [style.color]="id === currentThreadId ? '#004090' : '#555770'"
-                  [style.background]="id === currentThreadId ? 'rgba(0,64,144,0.06)' : 'transparent'"
-                  style="display: block; width: 100%; text-align: left; padding: 6px 8px; border: none; cursor: pointer; font-size: 0.8rem; border-radius: 4px; font-family: monospace; margin-bottom: 2px;">
-            {{ id.substring(0, 12) }}...
-          </button>
-        }
-        <button (click)="newThread()"
-                style="margin-top: 0.75rem; padding: 6px 10px; border: 1px solid rgba(0,64,144,0.15); border-radius: 6px; background: none; cursor: pointer; font-size: 0.75rem; color: #004090; width: 100%;">
-          + New Thread
-        </button>
-      </ng-template>
-    </cp-chat>
-  `,
+  imports: [ChatComponent],
+  template: `<chat [ref]="stream" class="block h-screen" />`,
 })
 export class PersistenceComponent {
   /**
@@ -54,35 +32,5 @@ export class PersistenceComponent {
   protected readonly stream = streamResource({
     apiUrl: environment.langGraphApiUrl,
     assistantId: environment.streamingAssistantId,
-    onThreadId: (id: string) => {
-      this.currentThreadId = id;
-      if (!this.threadIds.includes(id)) this.threadIds.push(id);
-    },
   });
-
-  threadIds: string[] = [];
-  currentThreadId = '';
-
-  /**
-   * Submit a message to the current thread.
-   */
-  send(text: string): void {
-    this.stream.submit({ messages: [{ role: 'human', content: text }] });
-  }
-
-  /**
-   * Switch to an existing thread, loading its full message history.
-   */
-  selectThread(id: string): void {
-    this.currentThreadId = id;
-    this.stream.switchThread(id);
-  }
-
-  /**
-   * Start a new conversation thread.
-   */
-  newThread(): void {
-    this.currentThreadId = '';
-    this.stream.switchThread(null);
-  }
 }

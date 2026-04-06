@@ -1,5 +1,6 @@
 @import "../../../../../libs/design-tokens/src/lib/tokens.css";
 @import "tailwindcss";
+@source "../../../../../libs/chat/src/";
 
 @theme {
   --color-bg: var(--ds-bg);

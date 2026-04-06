@@ -13,7 +13,7 @@ import type { DebugCheckpoint } from './debug-checkpoint-card.component';
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="flex items-center gap-3 text-xs text-gray-500">
+    <div class="flex items-center gap-3 text-xs text-[var(--chat-text-muted)]">
       <span>{{ checkpoints().length }} step(s)</span>
       <span>{{ totalDuration() }}ms total</span>
     </div>

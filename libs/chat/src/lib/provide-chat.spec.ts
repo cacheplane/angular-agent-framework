@@ -2,11 +2,11 @@
 import { describe, it, expect } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { provideChat, CHAT_CONFIG } from './provide-chat';
-import type { ChatConfig } from './chat.types';
+import type { ChatConfig } from './provide-chat';
 
 describe('provideChat', () => {
   it('registers CHAT_CONFIG token with the provided config', () => {
-    const config: ChatConfig = { registry: undefined };
+    const config: ChatConfig = { renderRegistry: undefined };
 
     TestBed.configureTestingModule({
       providers: [provideChat(config)],

@@ -20,20 +20,20 @@ export interface DebugCheckpoint {
   template: `
     <button
       class="w-full text-left rounded-lg border px-3 py-2 transition-colors"
-      [class]="isSelected() ? 'border-blue-400 bg-blue-50' : 'border-gray-200 bg-white hover:bg-gray-50'"
+      [class]="isSelected() ? 'border-[var(--chat-input-focus-border)] bg-[var(--chat-bg-hover)]' : 'border-[var(--chat-border)] bg-[var(--chat-bg)] hover:bg-[var(--chat-bg-hover)]'"
       (click)="selected.emit()"
     >
-      <p class="text-xs font-medium text-gray-700 truncate">
+      <p class="text-xs font-medium text-[var(--chat-text)] truncate">
         {{ checkpoint().node ?? 'Unknown' }}
       </p>
       <div class="flex gap-2 mt-1">
         @if (checkpoint().duration !== null && checkpoint().duration !== undefined) {
-          <span class="text-xs px-1.5 py-0.5 rounded bg-gray-100 text-gray-500">
+          <span class="text-xs px-1.5 py-0.5 rounded bg-[var(--chat-bg-alt)] text-[var(--chat-text-muted)]">
             {{ checkpoint().duration }}ms
           </span>
         }
         @if (checkpoint().tokenCount !== null && checkpoint().tokenCount !== undefined) {
-          <span class="text-xs px-1.5 py-0.5 rounded bg-gray-100 text-gray-500">
+          <span class="text-xs px-1.5 py-0.5 rounded bg-[var(--chat-bg-alt)] text-[var(--chat-text-muted)]">
             {{ checkpoint().tokenCount }} tok
           </span>
         }
