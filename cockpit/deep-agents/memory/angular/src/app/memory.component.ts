@@ -11,19 +11,20 @@ import { environment } from '../environments/environment';
   template: `
     <div class="flex h-screen">
       <chat-debug [ref]="stream" class="flex-1 min-w-0" />
-      @if (memoryEntries().length > 0) {
-        <aside class="w-72 shrink-0 border-l overflow-y-auto p-4 space-y-2"
-               style="border-color: var(--chat-border, #333); background: var(--chat-bg, #171717); color: var(--chat-text, #e0e0e0);">
-          <h3 class="text-xs font-semibold uppercase tracking-wide mb-3"
-              style="color: var(--chat-text-muted, #777);">Agent Memory</h3>
-          @for (entry of memoryEntries(); track $index) {
-            <div class="text-sm py-1">
-              <span class="font-semibold" style="color: var(--chat-text-muted, #777);">{{ entry[0] }}:</span>
-              <span class="ml-1" style="color: var(--chat-text, #e0e0e0);">{{ entry[1] }}</span>
-            </div>
-          }
-        </aside>
-      }
+      <aside class="w-72 shrink-0 border-l overflow-y-auto p-4 space-y-2"
+             style="border-color: var(--chat-border, #333); background: var(--chat-bg, #171717); color: var(--chat-text, #e0e0e0);">
+        <h3 class="text-xs font-semibold uppercase tracking-wide mb-3"
+            style="color: var(--chat-text-muted, #777);">Agent Memory</h3>
+        @if (memoryEntries().length === 0) {
+          <p class="text-sm italic" style="color: var(--chat-text-muted, #777);">No facts learned yet. Have a conversation to build memory.</p>
+        }
+        @for (entry of memoryEntries(); track $index) {
+          <div class="text-sm py-1">
+            <span class="font-semibold" style="color: var(--chat-text-muted, #777);">{{ entry[0] }}:</span>
+            <span class="ml-1" style="color: var(--chat-text, #e0e0e0);">{{ entry[1] }}</span>
+          </div>
+        }
+      </aside>
     </div>
   `,
 })

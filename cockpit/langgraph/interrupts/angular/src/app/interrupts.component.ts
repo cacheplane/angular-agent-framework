@@ -46,20 +46,17 @@ export class InterruptsComponent {
   /**
    * Handle an interrupt action from the panel.
    *
-   * Submitting null resumes the graph unconditionally (LangGraph convention).
-   * Tier 3 will add edit/respond flows with richer resume payloads.
+   * Submitting null resumes the graph unconditionally — this is the
+   * LangGraph convention for "proceed without modification".
+   *
+   * In a production app, 'edit' would let the user modify the response
+   * before approval, and 'respond' would send a reply payload.
+   * For this demo, all actions simply resume the graph.
    */
   protected onInterruptAction(action: InterruptAction): void {
-    switch (action) {
-      case 'accept':
-        this.stream.submit(null);  // Resume with approval
-        break;
-      case 'ignore':
-      case 'respond':
-      case 'edit':
-        // For now, just resume — Tier 3 will add edit/respond flows
-        this.stream.submit(null);
-        break;
-    }
+    // In a production app, 'edit' would let the user modify the response before approval.
+    // For this demo, all actions simply resume the graph.
+    void action; // Each branch intentionally does the same thing in this demo
+    this.stream.submit(null);
   }
 }
