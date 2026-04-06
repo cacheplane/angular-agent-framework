@@ -16,14 +16,14 @@ import type { DebugCheckpoint } from './debug-checkpoint-card.component';
   template: `
     <div class="relative space-y-1">
       <!-- Vertical rail -->
-      <div class="absolute left-4 top-0 bottom-0 w-0.5 bg-gray-200"></div>
+      <div class="absolute left-4 top-0 bottom-0 w-0.5 bg-[var(--chat-border)]"></div>
 
       @for (cp of checkpoints(); track $index; let i = $index) {
         <div class="relative pl-8">
           <!-- Rail dot -->
           <div
             class="absolute left-3 top-3 w-2.5 h-2.5 rounded-full border-2"
-            [class]="i === selectedIndex() ? 'bg-blue-500 border-blue-500' : 'bg-white border-gray-300'"
+            [class]="i === selectedIndex() ? 'bg-[var(--chat-send-bg)] border-[var(--chat-input-focus-border)]' : 'bg-[var(--chat-bg)] border-[var(--chat-border)]'"
           ></div>
 
           <chat-debug-checkpoint-card

@@ -14,25 +14,25 @@ import type { StreamResourceRef } from '@cacheplane/stream-resource';
   template: `
     <div class="flex items-center gap-1">
       <button
-        class="px-2 py-1 text-xs rounded bg-gray-100 hover:bg-gray-200 transition-colors disabled:opacity-40"
+        class="px-2 py-1 text-xs rounded bg-[var(--chat-bg-alt)] hover:bg-[var(--chat-bg-hover)] transition-colors disabled:opacity-40"
         [disabled]="selectedIndex() <= 0"
         title="Jump to start"
         (click)="jumpToStart.emit()"
       >|&lt;</button>
       <button
-        class="px-2 py-1 text-xs rounded bg-gray-100 hover:bg-gray-200 transition-colors disabled:opacity-40"
+        class="px-2 py-1 text-xs rounded bg-[var(--chat-bg-alt)] hover:bg-[var(--chat-bg-hover)] transition-colors disabled:opacity-40"
         [disabled]="selectedIndex() <= 0"
         title="Step back"
         (click)="stepBack.emit()"
       >&lt;</button>
       <button
-        class="px-2 py-1 text-xs rounded bg-gray-100 hover:bg-gray-200 transition-colors disabled:opacity-40"
+        class="px-2 py-1 text-xs rounded bg-[var(--chat-bg-alt)] hover:bg-[var(--chat-bg-hover)] transition-colors disabled:opacity-40"
         [disabled]="selectedIndex() >= checkpointCount() - 1"
         title="Step forward"
         (click)="stepForward.emit()"
       >&gt;</button>
       <button
-        class="px-2 py-1 text-xs rounded bg-gray-100 hover:bg-gray-200 transition-colors disabled:opacity-40"
+        class="px-2 py-1 text-xs rounded bg-[var(--chat-bg-alt)] hover:bg-[var(--chat-bg-hover)] transition-colors disabled:opacity-40"
         [disabled]="selectedIndex() >= checkpointCount() - 1"
         title="Jump to end"
         (click)="jumpToEnd.emit()"

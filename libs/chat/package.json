@@ -9,7 +9,13 @@
     "@cacheplane/stream-resource": "^0.0.1",
     "@json-render/core": "^0.16.0",
     "@langchain/core": "^1.1.33",
-    "@langchain/langgraph-sdk": "^1.7.4"
+    "@langchain/langgraph-sdk": "^1.7.4",
+    "marked": "^15.0.0 || ^16.0.0"
+  },
+  "peerDependenciesMeta": {
+    "marked": {
+      "optional": true
+    }
   },
   "license": "PolyForm-Noncommercial-1.0.0",
   "sideEffects": false

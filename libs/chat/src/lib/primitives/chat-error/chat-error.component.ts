@@ -7,11 +7,6 @@ import {
 } from '@angular/core';
 import type { StreamResourceRef } from '@cacheplane/stream-resource';
 
-/**
- * Extracts a human-readable message from an error value.
- * Handles Error objects, strings, and unknown values.
- * Exported for unit testing without DOM rendering.
- */
 export function extractErrorMessage(error: unknown): string | null {
   if (!error) return null;
   if (error instanceof Error) return error.message;
@@ -25,12 +20,15 @@ export function extractErrorMessage(error: unknown): string | null {
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (errorMessage(); as msg) {
-      <div class="px-4 py-3 text-sm" style="background: var(--chat-error-bg, #2d1515); color: var(--chat-error-text, #f87171); border-radius: var(--chat-radius-card, 12px);" role="alert">{{ msg }}</div>
+      <div
+        class="px-4 py-3 text-sm"
+        style="background: var(--chat-error-bg); color: var(--chat-error-text); border-radius: var(--chat-radius-card);"
+        role="alert"
+      >{{ msg }}</div>
     }
   `,
 })
 export class ChatErrorComponent {
   readonly ref = input.required<StreamResourceRef<any, any>>();
-
   readonly errorMessage = computed(() => extractErrorMessage(this.ref().error()));
 }

@@ -16,7 +16,7 @@ import type { DiffEntry } from './state-diff';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (diffEntries().length === 0) {
-      <p class="text-xs text-gray-400 italic">No changes</p>
+      <p class="text-xs text-[var(--chat-text-muted)] italic">No changes</p>
     } @else {
       <div class="space-y-1">
         @for (entry of diffEntries(); track entry.path) {
@@ -26,7 +26,7 @@ import type { DiffEntry } from './state-diff';
           >
             <span class="font-semibold">{{ prefix(entry.type) }} {{ entry.path }}</span>
             @if (entry.type === 'changed') {
-              <span class="block pl-4 text-gray-500">{{ entry.before | json }} &rarr; {{ entry.after | json }}</span>
+              <span class="block pl-4 text-[var(--chat-text-muted)]">{{ entry.before | json }} &rarr; {{ entry.after | json }}</span>
             } @else if (entry.type === 'added') {
               <span class="block pl-4">{{ entry.after | json }}</span>
             } @else {
@@ -56,9 +56,9 @@ export class DebugStateDiffComponent {
 
   colorClass(type: DiffEntry['type']): string {
     switch (type) {
-      case 'added': return 'bg-green-50 text-green-700';
-      case 'removed': return 'bg-red-50 text-red-700';
-      case 'changed': return 'bg-amber-50 text-amber-700';
+      case 'added': return 'bg-[var(--chat-bg-alt)] text-[var(--chat-success)]';
+      case 'removed': return 'bg-[var(--chat-error-bg)] text-[var(--chat-error-text)]';
+      case 'changed': return 'bg-[var(--chat-warning-bg)] text-[var(--chat-warning-text)]';
     }
   }
 }

@@ -7,6 +7,7 @@ import {
   ChangeDetectionStrategy,
 } from '@angular/core';
 import type { SubagentStreamRef } from '@cacheplane/stream-resource';
+import { ICON_AGENT, ICON_CHEVRON_UP, ICON_CHEVRON_DOWN } from '../../styles/chat-icons';
 
 type SubagentStatus = 'pending' | 'running' | 'complete' | 'error';
 
@@ -26,40 +27,41 @@ export { statusColor };
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div style="border: 1px solid var(--chat-border); background: var(--chat-bg-alt); border-radius: var(--chat-radius-card); overflow: hidden;">
+    <div class="border overflow-hidden" style="background: var(--chat-bg-alt); border-color: var(--chat-border); border-radius: var(--chat-radius-card);">
       <!-- Card header -->
       <button
-        style="width: 100%; display: flex; align-items: center; justify-content: space-between; padding: 8px 16px; background: none; border: none; cursor: pointer; text-align: left; transition: background 0.15s;"
+        class="w-full flex items-center justify-between px-4 py-2 bg-transparent border-0 cursor-pointer text-left transition-colors duration-150"
         (click)="expanded.set(!expanded())"
         [attr.aria-expanded]="expanded()"
+        aria-label="Toggle subagent details"
       >
-        <div style="display: flex; align-items: center; gap: 8px;">
-          <span style="color: var(--chat-text-muted); font-size: 14px;">🤖</span>
-          <span style="font-size: 14px; font-weight: 500; color: var(--chat-text);">
+        <div class="flex items-center gap-2">
+          <span style="color: var(--chat-text-muted);" [innerHTML]="agentIcon"></span>
+          <span class="text-sm font-medium" [style.color]="'var(--chat-text)'">
             Subagent
-            <span style="font-family: monospace; font-size: 12px; color: var(--chat-text-muted); margin-left: 4px;">{{ subagent().toolCallId }}</span>
+            <span class="font-mono text-xs ml-1" style="color: var(--chat-text-muted);">{{ subagent().toolCallId }}</span>
           </span>
           <!-- Status badge -->
-          <span style="padding: 2px 8px; border-radius: 999px; font-size: 12px; font-weight: 500;" [style]="statusColor()">
+          <span class="px-2 py-0.5 rounded-full text-xs font-medium" [style]="statusColor()">
             {{ subagent().status() }}
           </span>
         </div>
-        <span style="color: var(--chat-text-muted); font-size: 12px;">{{ expanded() ? '▲' : '▼' }}</span>
+        <span class="text-xs" style="color: var(--chat-text-muted);"><span [innerHTML]="expanded() ? chevronUp : chevronDown"></span></span>
       </button>
 
       <!-- Expanded content -->
       @if (expanded()) {
-        <div style="border-top: 1px solid var(--chat-border); padding: 12px 16px; display: flex; flex-direction: column; gap: 12px;">
+        <div class="flex flex-col gap-3 px-4 py-3" style="border-top: 1px solid var(--chat-border);">
           <!-- Messages count -->
-          <div style="font-size: 12px; color: var(--chat-text-muted);">
+          <div class="text-xs" style="color: var(--chat-text-muted);">
             {{ subagent().messages().length }} message(s)
           </div>
 
           <!-- Latest values -->
           @if (subagent().messages().length > 0) {
             <div>
-              <p style="font-size: 11px; font-weight: 600; color: var(--chat-text-muted); text-transform: uppercase; letter-spacing: 0.08em; margin: 0 0 4px;">Latest Message</p>
-              <div style="font-size: 12px; color: var(--chat-text); background: var(--chat-bg); border-radius: var(--chat-radius-card); padding: 8px; font-family: monospace;">
+              <p class="text-[11px] font-semibold uppercase tracking-widest m-0 mb-1" style="color: var(--chat-text-muted);">Latest Message</p>
+              <div class="text-xs font-mono p-2" style="color: var(--chat-text); background: var(--chat-bg); border-radius: var(--chat-radius-card);">
                 {{ latestMessageContent() }}
               </div>
             </div>
@@ -73,6 +75,10 @@ export class ChatSubagentCardComponent {
   readonly subagent = input.required<SubagentStreamRef>();
 
   readonly expanded = signal(false);
+
+  readonly agentIcon = ICON_AGENT;
+  readonly chevronUp = ICON_CHEVRON_UP;
+  readonly chevronDown = ICON_CHEVRON_DOWN;
 
   readonly statusColor = computed(() => statusColor(this.subagent().status()));
 
