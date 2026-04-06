@@ -1,56 +1,31 @@
+// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import { Component, computed } from '@angular/core';
-import { LegacyChatComponent } from '@cacheplane/chat';
+import { ChatDebugComponent } from '@cacheplane/chat';
 import { streamResource } from '@cacheplane/stream-resource';
 import { environment } from '../environments/environment';
 
-/**
- * SubagentsComponent demonstrates the Deep Agents subagent delegation pattern.
- *
- * The orchestrator agent receives a task and delegates subtasks to specialist
- * subagents via tool calls. Each tool call spawns a child agent that streams
- * its own progress independently.
- *
- * Key integration points:
- * - `stream.subagents()` returns a Map<toolCallId, SubagentStreamRef>
- * - `subagentEntries` derives a sorted array for sidebar rendering
- * - Each entry shows the tool call ID (truncated), status badge, and message count
- * - Subagent statuses update reactively: pending → running → complete
- */
 @Component({
   selector: 'app-subagents',
   standalone: true,
-  imports: [LegacyChatComponent],
+  imports: [ChatDebugComponent],
   template: `
-    <cp-chat
-      [messages]="stream.messages()"
-      [isLoading]="stream.isLoading()"
-      [error]="stream.error()"
-      (sendMessage)="send($event)">
-      <ng-template #sidebar>
-        <h3 style="font-size: 0.8rem; font-weight: 600; margin-bottom: 0.75rem; color: #1a1a2e;">Subagents</h3>
-        @for (entry of subagentEntries(); track entry[0]) {
-          <div style="padding: 8px 0; border-bottom: 1px solid #e5e7eb;">
-            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
-              <span
-                style="display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em;"
-                [style.background]="entry[1].status() === 'complete' ? '#d1fae5' : entry[1].status() === 'running' ? '#dbeafe' : '#f3f4f6'"
-                [style.color]="entry[1].status() === 'complete' ? '#065f46' : entry[1].status() === 'running' ? '#1e40af' : '#6b7280'">
-                {{ entry[1].status() }}
-              </span>
-              <span style="font-size: 0.75rem; color: #6b7280; font-family: monospace;">
-                {{ entry[0].slice(0, 8) }}…
-              </span>
+    <div class="flex h-screen">
+      <chat-debug [ref]="stream" class="flex-1 min-w-0" />
+      @if (delegations().length > 0) {
+        <aside class="w-72 shrink-0 border-l overflow-y-auto p-4 space-y-2"
+               style="border-color: var(--chat-border, #333); background: var(--chat-bg, #171717); color: var(--chat-text, #e0e0e0);">
+          <h3 class="text-xs font-semibold uppercase tracking-wide mb-3"
+              style="color: var(--chat-text-muted, #777);">Subagent Delegations</h3>
+          @for (entry of delegations(); track $index) {
+            <div class="flex items-center gap-2 text-sm py-1">
+              <span class="shrink-0">🤖</span>
+              <span class="font-mono text-xs"
+                    style="color: var(--chat-text, #e0e0e0);">{{ entry.name }}</span>
             </div>
-            <div style="font-size: 0.75rem; color: #374151;">
-              {{ entry[1].messages().length }} message{{ entry[1].messages().length === 1 ? '' : 's' }}
-            </div>
-          </div>
-        }
-        @empty {
-          <p style="color: #8b8fa3; font-size: 0.8rem;">Ask a question to see subagent activity.</p>
-        }
-      </ng-template>
-    </cp-chat>
+          }
+        </aside>
+      }
+    </div>
   `,
 })
 export class SubagentsComponent {
@@ -59,9 +34,16 @@ export class SubagentsComponent {
     assistantId: environment.streamingAssistantId,
   });
 
-  subagentEntries = computed(() => Array.from(this.stream.subagents().entries()));
-
-  send(text: string): void {
-    this.stream.submit({ messages: [{ role: 'human', content: text }] });
-  }
+  protected readonly delegations = computed(() => {
+    const messages = this.stream.messages();
+    const entries: { name: string }[] = [];
+    for (const msg of messages) {
+      if ('tool_calls' in msg && Array.isArray((msg as any).tool_calls)) {
+        for (const tc of (msg as any).tool_calls) {
+          entries.push({ name: tc.name });
+        }
+      }
+    }
+    return entries;
+  });
 }
