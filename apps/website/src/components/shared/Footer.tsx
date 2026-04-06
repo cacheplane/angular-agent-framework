@@ -50,7 +50,7 @@ export function Footer() {
                 target="_blank"
                 rel="noopener noreferrer"
                 className="transition-colors"
-                style={{ color: tokens.colors.textMuted }}
+                style={{ color: tokens.colors.textMuted, minWidth: 44, minHeight: 44, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
                 onMouseEnter={(e) => (e.currentTarget.style.color = tokens.colors.accent)}
                 onMouseLeave={(e) => (e.currentTarget.style.color = tokens.colors.textMuted)}
                 aria-label="GitHub">
@@ -60,7 +60,7 @@ export function Footer() {
                 target="_blank"
                 rel="noopener noreferrer"
                 className="transition-colors"
-                style={{ color: tokens.colors.textMuted }}
+                style={{ color: tokens.colors.textMuted, minWidth: 44, minHeight: 44, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
                 onMouseEnter={(e) => (e.currentTarget.style.color = tokens.colors.accent)}
                 onMouseLeave={(e) => (e.currentTarget.style.color = tokens.colors.textMuted)}
                 aria-label="npm">
