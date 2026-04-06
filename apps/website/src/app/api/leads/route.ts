@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
-import { resend, FROM, NOTIFY_TO, addToAudience } from '../../../../lib/resend';
+import { sendEmail, FROM, NOTIFY_TO, addToAudience } from '../../../../lib/resend';
 import { leadNotificationHtml } from '../../../../emails/lead-notification';
 
 const LEADS_FILE = path.join(process.cwd(), 'data', 'leads.ndjson');
@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
   // Resend: email notification + audience (best-effort)
   try {
     await Promise.all([
-      resend.emails.send({
+      sendEmail({
         from: FROM,
         to: NOTIFY_TO,
         subject: `New lead: ${name}${company ? ` at ${company}` : ''}`,
