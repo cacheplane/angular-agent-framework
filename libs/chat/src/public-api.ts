@@ -21,6 +21,9 @@ export { ChatGenerativeUiComponent } from './lib/primitives/chat-generative-ui/c
 // DI provider
 export { provideChat, CHAT_CONFIG } from './lib/provide-chat';
 
+// Legacy cp-chat component (used by cockpit example apps)
+export { ChatComponent as LegacyChatComponent } from './lib/chat.component';
+
 // Compositions
 export { ChatComponent } from './lib/compositions/chat/chat.component';
 export { ChatInterruptPanelComponent } from './lib/compositions/chat-interrupt-panel/chat-interrupt-panel.component';

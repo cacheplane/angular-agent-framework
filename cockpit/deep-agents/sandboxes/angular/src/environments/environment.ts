@@ -6,6 +6,6 @@
  */
 export const environment = {
   production: true,
-  langGraphApiUrl: 'http://localhost:4315/api',
+  langGraphApiUrl: 'https://sandboxes-8c70b6ac20265827aa92397299fcb9f7.us.langgraph.app',
   streamingAssistantId: 'sandboxes',
 };
