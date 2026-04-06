@@ -9,7 +9,7 @@
  *   npx tsx scripts/assemble-examples.ts --skip-build
  */
 import { execSync } from 'child_process';
-import { cpSync, mkdirSync, rmSync, existsSync } from 'fs';
+import { cpSync, mkdirSync, rmSync, existsSync, writeFileSync } from 'fs';
 import { resolve } from 'path';
 
 const root = resolve(__dirname, '..');
@@ -57,4 +57,48 @@ for (const cap of capabilities) {
   console.log(`✅ ${cap.product}/${cap.topic}`);
 }
 
-console.log(`\nAssembled ${capabilities.length} apps to ${deployDir}`);
+// Create Vercel Build Output API structure for the serverless proxy
+// This bypasses Vercel's auto-routing which doesn't handle multi-segment catch-alls correctly
+const outputDir = resolve(deployDir, '.vercel/output');
+const staticDir = resolve(outputDir, 'static');
+const funcDir = resolve(outputDir, 'functions/api/[[...path]].func');
+
+// Copy static files to the output directory
+mkdirSync(staticDir, { recursive: true });
+for (const cap of capabilities) {
+  const src = resolve(deployDir, `${cap.product}/${cap.topic}`);
+  const dest = resolve(staticDir, `${cap.product}/${cap.topic}`);
+  cpSync(src, dest, { recursive: true });
+}
+
+// Build the serverless function
+mkdirSync(funcDir, { recursive: true });
+execSync(`npx esbuild scripts/examples-middleware.ts --bundle --format=cjs --platform=node --outfile=${funcDir}/index.js`, {
+  cwd: root,
+  stdio: 'inherit',
+});
+
+// Write function config
+writeFileSync(resolve(funcDir, '.vc-config.json'), JSON.stringify({
+  runtime: 'nodejs20.x',
+  handler: 'index.js',
+  launcherType: 'Nodejs',
+  shouldAddHelpers: true,
+}, null, 2));
+
+// Write output config with proper routing
+writeFileSync(resolve(outputDir, 'config.json'), JSON.stringify({
+  version: 3,
+  routes: [
+    { src: '^/api/(.*)', dest: '/api/[[...path]]', check: true },
+    { handle: 'filesystem' },
+    { src: '^/(langgraph|deep-agents)/([^/]+)/(.+\\..+)$', dest: '/$1/$2/$3' },
+    { src: '^/(langgraph|deep-agents)/([^/]+)(/.*)?$', dest: '/$1/$2/index.html' },
+    { handle: 'error' },
+    { status: 404, src: '.*', dest: '/404.html' },
+  ],
+}, null, 2));
+
+console.log('✅ .vercel/output/ (Build Output API with serverless proxy)');
+
+console.log(`\nAssembled ${capabilities.length} apps + proxy to ${deployDir}`);
