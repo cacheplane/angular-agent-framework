@@ -1,5 +1,6 @@
+// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import { Component } from '@angular/core';
-import { LegacyChatComponent } from '@cacheplane/chat';
+import { ChatComponent, ChatInterruptPanelComponent, type InterruptAction } from '@cacheplane/chat';
 import { streamResource } from '@cacheplane/stream-resource';
 import { environment } from '../environments/environment';
 
@@ -8,42 +9,26 @@ import { environment } from '../environments/environment';
  *
  * The LangGraph backend pauses execution when it needs human approval.
  * The `stream.interrupt()` signal provides the interrupt data, and
- * `stream.submit()` resumes execution with the human's decision.
+ * `stream.submit(null)` resumes execution with the human's decision.
  *
  * Key integration points:
- * - `stream.interrupt()` — current pause data
- * - `stream.submit({ resume: true })` — resume after approval
- * - The graph uses LangGraph's `interrupt()` function to pause
+ * - `stream.interrupt()` — current pause data (undefined when not interrupted)
+ * - `ChatInterruptPanelComponent` — renders the approval UI with action buttons
+ * - `stream.submit(null)` — resumes the graph (LangGraph convention)
  */
 @Component({
   selector: 'app-interrupts',
   standalone: true,
-  imports: [LegacyChatComponent],
+  imports: [ChatComponent, ChatInterruptPanelComponent],
   template: `
-    <cp-chat
-      [messages]="stream.messages()"
-      [isLoading]="stream.isLoading()"
-      [error]="stream.error()"
-      (sendMessage)="send($event)">
-      <ng-template #sidebar>
-        <h3 style="font-size: 0.8rem; font-weight: 600; margin-bottom: 0.75rem; color: #1a1a2e;">Approvals</h3>
-        @if (stream.interrupt()) {
-          <div style="padding: 8px; border: 1px solid rgba(0,64,144,0.15); border-radius: 6px; margin-bottom: 0.75rem; font-size: 0.8rem; color: #1a1a2e;">
-            <p style="margin: 0 0 8px 0;">{{ stream.interrupt() }}</p>
-            <button (click)="approve()"
-                    style="padding: 6px 10px; border: none; border-radius: 6px; background: #004090; color: white; cursor: pointer; font-size: 0.75rem; margin-right: 4px;">
-              Approve
-            </button>
-            <button (click)="reject()"
-                    style="padding: 6px 10px; border: 1px solid rgba(0,64,144,0.15); border-radius: 6px; background: none; cursor: pointer; font-size: 0.75rem; color: #004090;">
-              Reject
-            </button>
-          </div>
-        } @else {
-          <p style="font-size: 0.8rem; color: #555770;">No pending approvals</p>
-        }
-      </ng-template>
-    </cp-chat>
+    <div class="flex flex-col h-screen">
+      <chat [ref]="stream" class="flex-1 min-w-0" />
+      @if (stream.interrupt()) {
+        <div class="p-4" style="border-top: 1px solid var(--chat-border, #333);">
+          <chat-interrupt-panel [ref]="stream" (action)="onInterruptAction($event)" />
+        </div>
+      }
+    </div>
   `,
 })
 export class InterruptsComponent {
@@ -51,7 +36,7 @@ export class InterruptsComponent {
    * The streaming resource with interrupt support.
    *
    * When the LangGraph backend calls `interrupt()`, the `stream.interrupt()`
-   * signal emits the interrupt payload for display in the sidebar.
+   * signal emits the interrupt payload for display via ChatInterruptPanelComponent.
    */
   protected readonly stream = streamResource({
     apiUrl: environment.langGraphApiUrl,
@@ -59,25 +44,22 @@ export class InterruptsComponent {
   });
 
   /**
-   * Submit a message to the assistant.
+   * Handle an interrupt action from the panel.
+   *
+   * Submitting null resumes the graph unconditionally (LangGraph convention).
+   * Tier 3 will add edit/respond flows with richer resume payloads.
    */
-  send(text: string): void {
-    this.stream.submit({ messages: [{ role: 'human', content: text }] });
-  }
-
-  /**
-   * Approve the pending action and resume execution.
-   * Submitting null continues the graph (LangGraph convention).
-   */
-  approve(): void {
-    this.stream.submit(null);
-  }
-
-  /**
-   * Reject the pending action. Sends a resume value of false
-   * so the graph can handle rejection logic.
-   */
-  reject(): void {
-    this.stream.submit({ resume: false });
+  protected onInterruptAction(action: InterruptAction): void {
+    switch (action) {
+      case 'accept':
+        this.stream.submit(null);  // Resume with approval
+        break;
+      case 'ignore':
+      case 'respond':
+      case 'edit':
+        // For now, just resume — Tier 3 will add edit/respond flows
+        this.stream.submit(null);
+        break;
+    }
   }
 }
