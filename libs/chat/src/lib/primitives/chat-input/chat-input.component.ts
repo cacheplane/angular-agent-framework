@@ -5,6 +5,8 @@ import {
   input,
   output,
   signal,
+  viewChild,
+  ElementRef,
   ChangeDetectionStrategy,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -49,6 +51,7 @@ export function submitMessage(
         (focus)="focused.set(true)"
         (blur)="focused.set(false)"
         rows="1"
+        #textareaEl
         class="flex-1 bg-transparent border-0 outline-none resize-none max-h-[120px] overflow-y-auto"
         [style.color]="'var(--chat-text)'"
         [style.fontFamily]="'var(--chat-font-family)'"
@@ -79,11 +82,15 @@ export class ChatInputComponent {
   readonly isDisabled = computed(() => this.ref().isLoading());
   readonly focused = signal(false);
 
+  private readonly textareaEl = viewChild<ElementRef<HTMLTextAreaElement>>('textareaEl');
+
   onSubmit(): void {
     const submitted = submitMessage(this.ref(), this.messageText());
     if (submitted !== null) {
       this.submitted.emit(submitted);
       this.messageText.set('');
+      // Re-focus the textarea after submit
+      requestAnimationFrame(() => this.textareaEl()?.nativeElement.focus());
     }
   }
 
