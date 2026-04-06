@@ -6,6 +6,6 @@
  */
 export const environment = {
   production: true,
-  langGraphApiUrl: 'http://localhost:4301/api',
+  langGraphApiUrl: 'https://persistence-b4038c008b5e537787dda6a6774c8f91.us.langgraph.app',
   streamingAssistantId: 'persistence',
 };

@@ -5,48 +5,44 @@
   "projectType": "application",
   "targets": {
     "build": {
-      "executor": "@angular-devkit/build-angular:application",
-      "outputs": ["{options.outputPath}"],
+      "executor": "@angular/build:application",
+      "outputs": ["{options.outputPath.base}"],
       "options": {
-        "outputPath": "dist/cockpit/deep-agents/filesystem/angular",
-        "index": "cockpit/deep-agents/filesystem/angular/src/index.html",
+        "outputPath": {
+          "base": "dist/cockpit/deep-agents/filesystem/angular",
+          "browser": ""
+        },
         "browser": "cockpit/deep-agents/filesystem/angular/src/main.ts",
         "tsConfig": "cockpit/deep-agents/filesystem/angular/tsconfig.app.json",
         "styles": ["cockpit/deep-agents/filesystem/angular/src/styles.css"]
       },
       "configurations": {
         "production": {
-          "outputHashing": "all"
+          "budgets": [
+            { "type": "initial", "maximumWarning": "500kb", "maximumError": "1mb" },
+            { "type": "anyComponentStyle", "maximumWarning": "4kb", "maximumError": "8kb" }
+          ],
+          "outputHashing": "none"
         },
         "development": {
           "optimization": false,
           "extractLicenses": false,
-          "sourceMap": true,
-          "fileReplacements": [
-            {
-              "replace": "cockpit/deep-agents/filesystem/angular/src/environments/environment.ts",
-              "with": "cockpit/deep-agents/filesystem/angular/src/environments/environment.development.ts"
-            }
-          ]
+          "sourceMap": true
         }
       },
       "defaultConfiguration": "production"
     },
     "serve": {
-      "executor": "@angular-devkit/build-angular:dev-server",
-      "options": {
-        "port": 4311,
-        "proxyConfig": "cockpit/deep-agents/filesystem/angular/proxy.conf.json"
-      },
+      "continuous": true,
+      "executor": "@angular/build:dev-server",
       "configurations": {
-        "production": {
-          "buildTarget": "cockpit-deep-agents-filesystem-angular:build:production"
-        },
-        "development": {
-          "buildTarget": "cockpit-deep-agents-filesystem-angular:build:development"
-        }
+        "production": { "buildTarget": "cockpit-deep-agents-filesystem-angular:build:production" },
+        "development": { "buildTarget": "cockpit-deep-agents-filesystem-angular:build:development" }
       },
-      "defaultConfiguration": "development"
+      "defaultConfiguration": "development",
+      "options": {
+        "proxyConfig": "cockpit/deep-agents/filesystem/angular/proxy.conf.json"
+      }
     },
     "smoke": {
       "executor": "nx:run-commands",
