@@ -6,6 +6,7 @@ import { tokens } from '@cacheplane/design-tokens';
 const links = [
   { label: 'Docs', href: '/docs' },
   { label: 'API', href: '/docs/api/stream-resource' },
+  { label: 'Examples', href: 'https://cockpit.stream-resource.dev' },
   { label: 'Pricing', href: '/pricing' },
 ];
 
