@@ -1,66 +1,37 @@
+// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import { Component, computed } from '@angular/core';
-import { LegacyChatComponent } from '@cacheplane/chat';
+import { ChatDebugComponent } from '@cacheplane/chat';
 import { streamResource } from '@cacheplane/stream-resource';
 import { environment } from '../environments/environment';
 
-interface SkillInvocation {
-  skillName: string;
-  args: string;
-  result?: string;
-}
+const SKILL_ICONS: Record<string, string> = {
+  calculator: '🧮',
+  word_count: '🔢',
+  summarize: '📝',
+};
 
-/**
- * SkillsComponent demonstrates a multi-skill agent with specialized tools.
- *
- * The agent can calculate math expressions, count words, and summarize text
- * by selecting the appropriate skill tool for each user request. The sidebar
- * shows each skill invocation as a card with the skill name, input args,
- * and result.
- *
- * Key integration points:
- * - `stream.messages()` contains all messages including tool call data
- * - `computed()` derives skill invocation cards from tool calls in AI messages
- * - Invocations update reactively as the agent calls and receives tool results
- */
 @Component({
   selector: 'app-skills',
   standalone: true,
-  imports: [LegacyChatComponent],
+  imports: [ChatDebugComponent],
   template: `
-    <cp-chat
-      [messages]="stream.messages()"
-      [isLoading]="stream.isLoading()"
-      [error]="stream.error()"
-      (sendMessage)="send($event)">
-      <ng-template #sidebar>
-        <h3 style="font-size: 0.8rem; font-weight: 600; margin-bottom: 0.75rem; color: #1a1a2e;">Skill Invocations</h3>
-        @for (inv of skillInvocations(); track $index) {
-          <div style="padding: 8px; margin-bottom: 8px; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 0.8rem;">
-            <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
-              <span style="display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; background: #dbeafe; color: #1e40af;">
-                {{ inv.skillName }}
-              </span>
-              @if (inv.result) {
-                <span style="font-size: 0.7rem; color: #10b981; font-weight: 600;">done</span>
-              } @else {
-                <span style="font-size: 0.7rem; color: #004090; font-weight: 600;">running…</span>
-              }
+    <div class="flex h-screen">
+      <chat-debug [ref]="stream" class="flex-1 min-w-0" />
+      @if (skillInvocations().length > 0) {
+        <aside class="w-72 shrink-0 border-l overflow-y-auto p-4 space-y-2"
+               style="border-color: var(--chat-border, #333); background: var(--chat-bg, #171717); color: var(--chat-text, #e0e0e0);">
+          <h3 class="text-xs font-semibold uppercase tracking-wide mb-3"
+              style="color: var(--chat-text-muted, #777);">Skill Invocations</h3>
+          @for (inv of skillInvocations(); track $index) {
+            <div class="flex items-center gap-2 text-sm py-1">
+              <span class="shrink-0">{{ inv.icon }}</span>
+              <span class="font-mono text-xs"
+                    style="color: var(--chat-text, #e0e0e0);">{{ inv.name }}</span>
             </div>
-            <div style="color: #555770; font-family: monospace; font-size: 0.75rem; margin-bottom: 4px; word-break: break-all;">
-              {{ inv.args }}
-            </div>
-            @if (inv.result) {
-              <div style="color: #1a1a2e; font-size: 0.75rem; padding-top: 4px; border-top: 1px solid #f3f4f6;">
-                {{ inv.result }}
-              </div>
-            }
-          </div>
-        }
-        @empty {
-          <p style="color: #8b8fa3; font-size: 0.8rem;">Ask the agent to calculate, count words, or summarize text.</p>
-        }
-      </ng-template>
-    </cp-chat>
+          }
+        </aside>
+      }
+    </div>
   `,
 })
 export class SkillsComponent {
@@ -69,24 +40,18 @@ export class SkillsComponent {
     assistantId: environment.streamingAssistantId,
   });
 
-  skillInvocations = computed(() => {
-    const msgs = this.stream.messages();
-    const invocations: SkillInvocation[] = [];
-    for (const m of msgs) {
-      if ((m as any).tool_calls) {
-        for (const tc of (m as any).tool_calls) {
-          invocations.push({
-            skillName: tc.name,
-            args: JSON.stringify(tc.args),
-            result: tc.output,
-          });
+  protected readonly skillInvocations = computed(() => {
+    const messages = this.stream.messages();
+    const invocations: { name: string; icon: string }[] = [];
+    for (const msg of messages) {
+      if ('tool_calls' in msg && Array.isArray((msg as any).tool_calls)) {
+        for (const tc of (msg as any).tool_calls) {
+          if (tc.name === 'calculator' || tc.name === 'word_count' || tc.name === 'summarize') {
+            invocations.push({ name: tc.name, icon: SKILL_ICONS[tc.name] ?? '🔧' });
+          }
         }
       }
     }
     return invocations;
   });
-
-  send(text: string): void {
-    this.stream.submit({ messages: [{ role: 'human', content: text }] });
-  }
 }
