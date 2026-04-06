@@ -23,7 +23,7 @@ const mono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   title: 'StreamResource — LangChain Streaming for Angular',
-  description: 'The Enterprise Streaming Resource for LangChain and Angular. streamResource() brings full parity with React useStream() to Angular 20+.',
+  description: 'The Enterprise Streaming Resource for LangChain and Angular. Signal-native streaming, thread persistence, and production patterns for Angular 20+.',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
