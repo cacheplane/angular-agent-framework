@@ -91,7 +91,7 @@ export function streamResource<
 
   // Track hasValue — becomes true once values or messages arrive
   values$.pipe(takeUntil(destroy$)).subscribe(v => {
-    if (Object.keys(v as object).length > 0) hasValue$.next(true);
+    if (v != null && Object.keys(v as object).length > 0) hasValue$.next(true);
   });
   messages$.pipe(takeUntil(destroy$)).subscribe(m => { if (m.length > 0) hasValue$.next(true); });
 

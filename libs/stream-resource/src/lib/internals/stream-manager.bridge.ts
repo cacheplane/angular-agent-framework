@@ -30,8 +30,16 @@ export interface StreamManagerBridge {
 export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = BagTemplate>(
   { options, subjects, threadId$, destroy$ }: StreamManagerBridgeOptions<T, ResolvedBag>
 ): StreamManagerBridge {
+  // Intercept onThreadId to update currentThreadId when the transport
+  // auto-creates a thread. Without this, each submit() creates a new thread
+  // because currentThreadId stays null.
+  const userOnThreadId = options.onThreadId;
+  const wrappedOnThreadId = (id: string) => {
+    currentThreadId = id;
+    userOnThreadId?.(id);
+  };
   const transport: StreamResourceTransport =
-    options.transport ?? new FetchStreamTransport(options.apiUrl, options.onThreadId);
+    options.transport ?? new FetchStreamTransport(options.apiUrl, wrappedOnThreadId);
 
   let currentThreadId: string | null = null;
   let lastPayload: unknown = null;
@@ -102,24 +110,64 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
     if (isMessagesEvent(event.type)) {
       const msgs = normalizeMessages(event);
       if (!msgs) return;
-      if (options.toMessage) {
-        subjects.messages$.next(msgs.map(options.toMessage));
+
+      const normalized = options.toMessage
+        ? msgs.map(options.toMessage)
+        : msgs as BaseMessage[];
+
+      // For partial streaming events (messages/partial), merge into existing
+      // messages by id instead of replacing — preserves earlier messages
+      // (e.g. human messages) that aren't in the partial update.
+      if (event.type === 'messages/partial') {
+        const existing = subjects.messages$.value;
+        const merged = [...existing];
+        for (const msg of normalized) {
+          const id = (msg as unknown as Record<string, unknown>)['id'];
+          const idx = id ? merged.findIndex(m => (m as unknown as Record<string, unknown>)['id'] === id) : -1;
+          if (idx >= 0) {
+            merged[idx] = msg;
+          } else {
+            merged.push(msg);
+          }
+        }
+        subjects.messages$.next(merged);
       } else {
-        subjects.messages$.next(msgs as BaseMessage[]);
+        subjects.messages$.next(normalized);
       }
       return;
     }
 
+    // normalizeSdkEvent spreads event data directly into the event object,
+    // so the values/updates payload is at event['data'] (the original data object),
+    // NOT at event['values'] or event['updates'].
     switch (event.type) {
-      case 'values':
-        subjects.values$.next(event['values'] as T);
+      case 'values': {
+        const vals = extractEventData(event);
+        if (vals != null) {
+          subjects.values$.next(vals as T);
+          // Also sync messages$ from the values state so the full message
+          // history (including human messages) is available to consumers.
+          const stateMessages = (vals as Record<string, unknown>)['messages'];
+          if (Array.isArray(stateMessages)) {
+            if (options.toMessage) {
+              subjects.messages$.next(stateMessages.map(options.toMessage));
+            } else {
+              subjects.messages$.next(stateMessages as BaseMessage[]);
+            }
+          }
+        }
         break;
-      case 'updates':
-        subjects.values$.next({
-          ...subjects.values$.value,
-          ...(event['updates'] as object),
-        } as T);
+      }
+      case 'updates': {
+        const upd = extractEventData(event);
+        if (upd != null) {
+          subjects.values$.next({
+            ...subjects.values$.value,
+            ...(upd as object),
+          } as T);
+        }
         break;
+      }
       case 'error':
         subjects.error$.next(event['error']);
         subjects.status$.next(ResourceStatus.Error);
@@ -175,6 +223,29 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
       }
     },
   };
+}
+
+/**
+ * Extracts the payload data from a normalized SDK event.
+ *
+ * Handles two formats:
+ * 1. SDK events (via normalizeSdkEvent): data at event['data'] (record) + spread into event
+ * 2. Mock/test events: data at event[event.type] (e.g., event['values'], event['updates'])
+ */
+function extractEventData(event: StreamEvent): unknown {
+  // Try event['data'] first (SDK format from normalizeSdkEvent)
+  const d = event['data'];
+  if (d != null && typeof d === 'object' && !Array.isArray(d)) {
+    return d;
+  }
+  // Try event[event.type] (mock/test format: { type: 'values', values: {...} })
+  const named = event[event.type];
+  if (named != null && typeof named === 'object' && !Array.isArray(named)) {
+    return named;
+  }
+  // Fallback: reconstruct from remaining keys
+  const { type: _t, data: _d, ...rest } = event;
+  return Object.keys(rest).length > 0 ? rest : d;
 }
 
 function isMessagesEvent(type: StreamEvent['type']): boolean {

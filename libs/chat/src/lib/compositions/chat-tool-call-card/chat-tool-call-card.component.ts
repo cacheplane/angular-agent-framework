@@ -5,7 +5,6 @@ import {
   signal,
   ChangeDetectionStrategy,
 } from '@angular/core';
-import { ICON_TOOL, ICON_CHECK, ICON_CHEVRON_UP, ICON_CHEVRON_DOWN } from '../../styles/chat-icons';
 
 export interface ToolCallInfo {
   id: string;
@@ -29,13 +28,13 @@ export interface ToolCallInfo {
         aria-label="Toggle tool call details"
       >
         <div class="flex items-center gap-2">
-          <span style="color: var(--chat-text-muted);" [innerHTML]="toolIcon"></span>
+          <span style="color: var(--chat-text-muted);"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg></span>
           <span class="font-mono" [style.color]="'var(--chat-text)'">{{ toolCall().name }}</span>
           @if (toolCall().result !== undefined) {
-            <span class="flex items-center gap-1 text-xs" style="color: var(--chat-success);"><span [innerHTML]="checkIcon"></span> done</span>
+            <span class="flex items-center gap-1 text-xs" style="color: var(--chat-success);"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 6L5 8.5L9.5 3.5"/></svg> done</span>
           }
         </div>
-        <span class="text-xs" style="color: var(--chat-text-muted);"><span [innerHTML]="expanded() ? chevronUp : chevronDown"></span></span>
+        <span class="text-xs" style="color: var(--chat-text-muted);">@if (expanded()) {<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7.5L6 4.5L9 7.5"/></svg>} @else {<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4.5L6 7.5L9 4.5"/></svg>}</span>
       </button>
 
       <!-- Expanded content: inputs and outputs -->
@@ -61,10 +60,6 @@ export class ChatToolCallCardComponent {
 
   readonly expanded = signal(false);
 
-  readonly toolIcon = ICON_TOOL;
-  readonly checkIcon = ICON_CHECK;
-  readonly chevronUp = ICON_CHEVRON_UP;
-  readonly chevronDown = ICON_CHEVRON_DOWN;
 
   formatJson(value: unknown): string {
     if (typeof value === 'string') return value;

@@ -9,7 +9,6 @@ import {
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import type { StreamResourceRef } from '@cacheplane/stream-resource';
-import { ICON_SEND } from '../../styles/chat-icons';
 
 export function submitMessage(
   ref: StreamResourceRef<any, any>,
@@ -34,7 +33,7 @@ export function submitMessage(
   template: `
     <form
       (submit)="onSubmit(); $event.preventDefault()"
-      class="flex items-end gap-2 px-4 py-2.5 pl-[18px] border transition-colors duration-150"
+      class="flex items-center gap-2 px-4 py-2.5 pl-[18px] border transition-colors duration-150"
       [style.background]="'var(--chat-input-bg)'"
       [style.borderColor]="focused() ? 'var(--chat-input-focus-border)' : 'var(--chat-input-border)'"
       [style.borderRadius]="'var(--chat-radius-input)'"
@@ -63,8 +62,10 @@ export function submitMessage(
         [style.background]="'var(--chat-send-bg)'"
         [style.color]="'var(--chat-send-text)'"
         aria-label="Send message"
-        [innerHTML]="sendIcon"
       >
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M8 12V4M8 4L4 8M8 4L12 8"/>
+        </svg>
       </button>
     </form>
   `,
@@ -77,7 +78,6 @@ export class ChatInputComponent {
   readonly messageText = signal<string>('');
   readonly isDisabled = computed(() => this.ref().isLoading());
   readonly focused = signal(false);
-  readonly sendIcon = ICON_SEND;
 
   onSubmit(): void {
     const submitted = submitMessage(this.ref(), this.messageText());

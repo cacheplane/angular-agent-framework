@@ -11,7 +11,6 @@ import {
   ElementRef,
   ChangeDetectionStrategy,
   inject,
-  ViewEncapsulation,
 } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
 import type { StreamResourceRef } from '@cacheplane/stream-resource';
@@ -39,7 +38,6 @@ import { CHAT_MARKDOWN_STYLES, renderMarkdown } from '../../styles/chat-markdown
     ChatThreadListComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  encapsulation: ViewEncapsulation.None,
   styles: [CHAT_THEME_STYLES, CHAT_MARKDOWN_STYLES],
   template: `
     <div class="flex h-full overflow-hidden">
@@ -109,18 +107,15 @@ import { CHAT_MARKDOWN_STYLES, renderMarkdown } from '../../styles/chat-markdown
                 </div>
               </ng-template>
 
-              <!-- AI messages: no bubble, avatar + markdown -->
+              <!-- AI messages: avatar inline with content (ChatGPT pattern) -->
               <ng-template chatMessageTemplate="ai" let-message>
-                <div class="flex flex-col gap-1.5">
-                  <div class="flex items-center gap-2">
-                    <div
-                      class="w-6 h-6 flex items-center justify-center text-[11px] font-semibold shrink-0"
-                      style="background: var(--chat-avatar-bg); color: var(--chat-avatar-text); border-radius: var(--chat-radius-avatar);"
-                    >A</div>
-                    <span class="text-xs font-medium" style="color: var(--chat-text-muted);">Assistant</span>
-                  </div>
+                <div class="flex gap-3">
                   <div
-                    class="chat-md pl-8 break-words text-[length:var(--chat-font-size)] leading-[var(--chat-line-height)]"
+                    class="w-7 h-7 flex items-center justify-center text-xs font-semibold shrink-0 mt-0.5"
+                    style="background: var(--chat-avatar-bg); color: var(--chat-avatar-text); border-radius: var(--chat-radius-avatar);"
+                  >A</div>
+                  <div
+                    class="chat-md flex-1 min-w-0 break-words text-[length:var(--chat-font-size)] leading-[var(--chat-line-height)]"
                     style="color: var(--chat-text);"
                     [innerHTML]="renderMd(messageContent(message))"
                   ></div>
@@ -194,13 +189,20 @@ export class ChatComponent {
   private readonly messageCount = computed(() => this.ref().messages().length);
 
   constructor() {
-    // Auto-scroll to bottom when new messages arrive or loading state changes
+    // Auto-scroll to bottom when new messages arrive.
+    // Only scrolls if user is already near the bottom (within 150px),
+    // so reading earlier messages isn't interrupted.
     effect(() => {
       this.messageCount(); // track
       this.ref().isLoading(); // track
       const el = this.scrollContainer()?.nativeElement;
       if (el) {
-        setTimeout(() => el.scrollTop = el.scrollHeight, 0);
+        const isNearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 150;
+        if (isNearBottom) {
+          requestAnimationFrame(() => {
+            el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
+          });
+        }
       }
     });
   }
