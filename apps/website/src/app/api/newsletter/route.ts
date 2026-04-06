@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { resend, FROM, addToAudience } from '../../../../lib/resend';
+import { sendEmail, FROM, addToAudience } from '../../../../lib/resend';
 import { newsletterWelcomeHtml } from '../../../../emails/newsletter-welcome';
 
 export async function POST(req: NextRequest) {
@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
   // Resend: welcome email + audience (best-effort)
   try {
     await Promise.all([
-      resend.emails.send({
+      sendEmail({
         from: FROM,
         to: email,
         subject: 'Welcome to Angular Stream Resource updates',

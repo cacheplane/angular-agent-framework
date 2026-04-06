@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
-import { resend, FROM, addToAudience } from '../../../../lib/resend';
+import { sendEmail, FROM, addToAudience } from '../../../../lib/resend';
 import { whitepaperDownloadHtml } from '../../../../emails/whitepaper-download';
 
 const SIGNUPS_FILE = path.join(process.cwd(), 'data', 'whitepaper-signups.ndjson');
@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
   // Resend: send PDF download email + add to audience (best-effort)
   try {
     await Promise.all([
-      resend.emails.send({
+      sendEmail({
         from: FROM,
         to: email,
         subject: 'Your Angular Agent Readiness Guide',
