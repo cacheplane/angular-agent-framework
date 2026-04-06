@@ -16,13 +16,13 @@ const STATS: Array<{ num: string; label: string; citation: Citation }> = [
     },
   },
   {
-    num: '31%',
-    label: 'of prioritized AI use cases actually reach production',
+    num: '50%',
+    label: 'of GenAI projects abandoned after proof of concept',
     citation: {
-      source: 'ISG — AI Adoption Reports',
-      url: 'https://isg-one.com',
-      stat: '~31% of prioritized AI use cases reach production',
-      note: 'Enterprise AI initiatives consistently stall between pilot and production.',
+      source: 'Gartner — GenAI Project Failure (2026)',
+      url: 'https://www.gartner.com/en/articles/genai-project-failure',
+      stat: '50% of GenAI projects abandoned after proof of concept by end of 2025',
+      note: 'Poor data quality, inadequate risk controls, escalating costs, and unclear business value are the primary causes.',
     },
   },
   {
@@ -69,21 +69,21 @@ export function ProblemSection() {
     `linear-gradient(90deg, rgba(221,0,49,.6), rgba(221,0,49,.4))`
   );
   const [fillTransition, setFillTransition] = useState('none');
-  const counterRunning77 = phase === 'filling';
+  const counterRunning50 = phase === 'filling';
   const counterRunning100 = phase === 'closing' || phase === 'done';
-  const count77 = useCounter(77, 1700, counterRunning77);
-  const count100 = useCounter(23, 1000, counterRunning100);
+  const count50 = useCounter(50, 1700, counterRunning50);
+  const count100 = useCounter(50, 1000, counterRunning100);
   // 'done' timeout (4400ms) fires after closing counter finishes (3200 + 1000 = 4200ms)
-  // so 77 + count100 always reaches 100 before the phase snaps to literal 100
-  const displayCount = phase === 'done' ? 100 : phase === 'closing' ? 77 + count100 : count77;
+  // so 50 + count100 always reaches 100 before the phase snaps to literal 100
+  const displayCount = phase === 'done' ? 100 : phase === 'closing' ? 50 + count100 : count50;
 
   const runAnimation = useCallback(() => {
     if (phase !== 'idle') return;
     const timers: ReturnType<typeof setTimeout>[] = [];
-    // Phase 1 (150ms): fill to 77%
+    // Phase 1 (150ms): fill to 50% — half of projects reach POC
     timers.push(setTimeout(() => {
       setFillTransition('width 1.7s cubic-bezier(.4,0,.2,1)');
-      setFillWidth('77%');
+      setFillWidth('50%');
       setPhase('filling');
     }, 150));
     // Phase 2 (2100ms): stall — marker + hatch + shake
@@ -92,7 +92,7 @@ export function ProblemSection() {
     timers.push(setTimeout(() => {
       setFillTransition('width 1s cubic-bezier(.4,0,.2,1)');
       setFillGradient(
-        'linear-gradient(90deg, rgba(221,0,49,.5) 0%, rgba(221,0,49,.38) 70%, rgba(0,64,144,.8) 82%, #004090 100%)'
+        'linear-gradient(90deg, rgba(221,0,49,.5) 0%, rgba(221,0,49,.38) 40%, rgba(0,64,144,.8) 60%, #004090 100%)'
       );
       setFillWidth('100%');
       setPhase('closing');
@@ -266,8 +266,8 @@ export function ProblemSection() {
             {/* Hatch overlay (gap zone) — decorative */}
             <div aria-hidden="true" style={{
               position: 'absolute',
-              left: '77%', top: 0,
-              width: '23%', height: '100%',
+              left: '50%', top: 0,
+              width: '50%', height: '100%',
               overflow: 'hidden',
               opacity: showStall ? 1 : 0,
               transition: 'opacity 0.4s',
@@ -286,7 +286,7 @@ export function ProblemSection() {
           {/* Stall pin — outside the overflow:hidden track, decorative */}
           <div aria-hidden="true" style={{
             position: 'absolute',
-            left: '77%',
+            left: '50%',
             top: -8,
             transform: 'translateX(-50%)',
             opacity: showStall ? 1 : 0,
@@ -296,7 +296,7 @@ export function ProblemSection() {
           }}>
             <div style={{ width: 2, height: 34, background: tokens.colors.angularRed, margin: '0 auto', borderRadius: 1 }} />
             <div style={{ fontFamily: 'var(--font-mono,"JetBrains Mono",monospace)', fontSize: '0.6rem', color: tokens.colors.angularRed, whiteSpace: 'nowrap', marginTop: 3, fontWeight: 700 }}>
-              77%
+              50% abandon here
             </div>
           </div>
         </div>

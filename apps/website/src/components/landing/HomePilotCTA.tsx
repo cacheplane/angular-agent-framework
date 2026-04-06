@@ -3,11 +3,11 @@
 import { tokens } from '../../../lib/design-tokens';
 import { CitationBadge } from './CitationBadge';
 
-const citation77 = {
-  source: 'McKinsey — State of AI 2024',
-  url: 'https://www.mckinsey.com/capabilities/quantumblack/our-insights/the-state-of-ai',
-  stat: 'Most companies remain in experimentation or pilot phases',
-  note: 'Workflow redesign and human validation are what drive real production value.',
+const gartnerCitation = {
+  source: 'Gartner — GenAI Project Failure (2026)',
+  url: 'https://www.gartner.com/en/articles/genai-project-failure',
+  stat: '50% of GenAI projects abandoned after proof of concept by end of 2025',
+  note: 'Poor data quality, inadequate risk controls, escalating costs, and unclear business value are the primary causes.',
 };
 
 export function HomePilotCTA() {
@@ -27,7 +27,7 @@ export function HomePilotCTA() {
           Ready to ship your agent?
         </h2>
         <p style={{ fontFamily: 'Inter, sans-serif', fontSize: 16, lineHeight: 1.7, color: tokens.colors.textSecondary, marginBottom: 32 }}>
-          Most Angular teams are 77%<CitationBadge citation={citation77} /> of the way there. Our structured 3-month co-pilot engagement closes the gap.
+          Half of GenAI projects die after proof of concept.<CitationBadge citation={gartnerCitation} /> Yours doesn&apos;t have to. Our structured 3-month co-pilot engagement closes the gap.
         </p>
         <a
           href="/pilot-to-prod"

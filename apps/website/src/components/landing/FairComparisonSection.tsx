@@ -74,7 +74,7 @@ export function FairComparisonSection() {
           fontStyle: 'italic', fontSize: '1.05rem', color: tokens.colors.textSecondary,
           maxWidth: 560, margin: '0 auto',
         }}>
-          LangChain and LangGraph are excellent. This is what the Angular production layer provides on top.
+          LangGraph and @langchain/langgraph-sdk are excellent. This is what the Angular production layer provides on top.
         </p>
       </motion.div>
 
@@ -101,7 +101,7 @@ export function FairComparisonSection() {
           borderBottom: `1px solid ${tokens.glass.border}`,
           padding: '14px 24px',
         }}>
-          {['Capability', 'LangChain + Angular alone', 'With Angular Stream Resource'].map((h, i) => (
+          {['Capability', '@langchain/langgraph-sdk', 'With Angular Stream Resource'].map((h, i) => (
             <div key={h} style={{
               fontFamily: 'var(--font-mono,"JetBrains Mono",monospace)',
               fontSize: '0.62rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em',
