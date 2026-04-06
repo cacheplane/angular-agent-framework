@@ -2,6 +2,14 @@
 
 import { motion } from 'framer-motion';
 import { tokens } from '../../../lib/design-tokens';
+import { CitationBadge } from './CitationBadge';
+
+const citation77 = {
+  source: 'McKinsey — State of AI 2024',
+  url: 'https://www.mckinsey.com/capabilities/quantumblack/our-insights/the-state-of-ai',
+  stat: 'Most companies remain in experimentation or pilot phases',
+  note: 'Workflow redesign and human validation are what drive real production value.',
+};
 
 export function PilotFooterCTA() {
   return (
@@ -66,7 +74,7 @@ export function PilotFooterCTA() {
             marginBottom: '2.5rem',
           }}
         >
-          Most teams are 77% of the way there. StreamResource closes the gap. Start with a conversation.
+          Most teams are 77%<CitationBadge citation={citation77} /> of the way there. StreamResource closes the gap. Start with a conversation.
         </p>
 
         {/* CTA buttons */}

@@ -9,6 +9,7 @@ import { FullStackSection } from '../components/landing/FullStackSection';
 import { ChatFeaturesSection } from '../components/landing/ChatFeaturesSection';
 import { FairComparisonSection } from '../components/landing/FairComparisonSection';
 import { WhitePaperSection } from '../components/landing/WhitePaperSection';
+import { HomePilotCTA } from '../components/landing/HomePilotCTA';
 import { tokens } from '../../lib/design-tokens';
 
 export default async function HomePage() {
@@ -43,19 +44,7 @@ export default async function HomePage() {
       {/* 9. White paper free download */}
       <WhitePaperSection />
       {/* 10. Pilot program CTA */}
-      <section style={{ padding: '5rem 2rem' }}>
-        <div style={{ maxWidth: '42rem', margin: '0 auto', textAlign: 'center', background: tokens.glass.bg, border: `1px solid ${tokens.colors.accentBorder}`, borderRadius: 16, padding: '48px', backdropFilter: `blur(${tokens.glass.blur})` }}>
-          <h2 style={{ fontFamily: "'EB Garamond', serif", fontSize: 'clamp(24px, 4vw, 32px)', fontWeight: 700, color: tokens.colors.textPrimary, marginBottom: 16 }}>
-            Ready to ship your agent?
-          </h2>
-          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: 16, lineHeight: 1.7, color: tokens.colors.textSecondary, marginBottom: 32 }}>
-            Most Angular teams are 77% of the way there. Our structured 3-month pilot closes the gap.
-          </p>
-          <a href="/pilot-to-prod" style={{ display: 'inline-block', padding: '0.875rem 2rem', background: tokens.colors.accent, color: '#fff', fontFamily: 'Inter, sans-serif', fontSize: 15, fontWeight: 600, textDecoration: 'none', borderRadius: 6 }}>
-            Explore the Pilot Program →
-          </a>
-        </div>
-      </section>
+      <HomePilotCTA />
       {/* 11. Architecture — technical credibility */}
       <ArchDiagram />
     </div>

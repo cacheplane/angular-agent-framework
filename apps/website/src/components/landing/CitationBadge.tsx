@@ -48,13 +48,13 @@ export function CitationBadge({ citation }: CitationBadgeProps) {
         aria-expanded={open}
         aria-haspopup="dialog"
         style={{
-          width: 15,
-          height: 15,
+          width: 13,
+          height: 13,
           borderRadius: '50%',
-          background: open ? tokens.colors.accent : 'rgba(0,64,144,0.1)',
-          border: `1px solid ${open ? tokens.colors.accent : 'rgba(0,64,144,0.22)'}`,
-          color: open ? '#fff' : tokens.colors.accent,
-          fontSize: 8,
+          background: 'transparent',
+          border: `1px solid ${open ? 'rgba(0,64,144,0.45)' : 'rgba(0,64,144,0.2)'}`,
+          color: open ? 'rgba(0,64,144,0.7)' : 'rgba(0,64,144,0.35)',
+          fontSize: 7,
           fontFamily: "'JetBrains Mono', monospace",
           fontWeight: 700,
           cursor: 'pointer',
@@ -63,7 +63,7 @@ export function CitationBadge({ citation }: CitationBadgeProps) {
           justifyContent: 'center',
           lineHeight: 1,
           padding: 0,
-          transition: 'background 0.15s ease, border-color 0.15s ease, color 0.15s ease',
+          transition: 'border-color 0.15s ease, color 0.15s ease',
           flexShrink: 0,
         }}
       >
