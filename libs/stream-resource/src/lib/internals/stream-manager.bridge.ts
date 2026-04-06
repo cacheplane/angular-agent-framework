@@ -219,16 +219,23 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
 
 /**
  * Extracts the payload data from a normalized SDK event.
- * normalizeSdkEvent spreads record data into the event object and also
- * stores the original under event['data']. Prefer event['data'] when
- * it's a record; fall back to stripping event metadata keys.
+ *
+ * Handles two formats:
+ * 1. SDK events (via normalizeSdkEvent): data at event['data'] (record) + spread into event
+ * 2. Mock/test events: data at event[event.type] (e.g., event['values'], event['updates'])
  */
 function extractEventData(event: StreamEvent): unknown {
+  // Try event['data'] first (SDK format from normalizeSdkEvent)
   const d = event['data'];
   if (d != null && typeof d === 'object' && !Array.isArray(d)) {
     return d;
   }
-  // Fallback: the data was spread into the event — reconstruct
+  // Try event[event.type] (mock/test format: { type: 'values', values: {...} })
+  const named = event[event.type];
+  if (named != null && typeof named === 'object' && !Array.isArray(named)) {
+    return named;
+  }
+  // Fallback: reconstruct from remaining keys
   const { type: _t, data: _d, ...rest } = event;
   return Object.keys(rest).length > 0 ? rest : d;
 }
