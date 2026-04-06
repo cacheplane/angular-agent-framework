@@ -20,6 +20,11 @@ const capability = process.argv.find((a) => a === '--capability')
 
 const smoke = process.argv.includes('--smoke');
 
+const apiKey = process.env['LANGSMITH_API_KEY'] ?? '';
+const authHeaders: Record<string, string> = apiKey
+  ? { 'x-api-key': apiKey }
+  : {};
+
 const entries = capability
   ? [[capability, urls[capability]] as const]
   : Object.entries(urls);
@@ -36,7 +41,7 @@ for (const [name, url] of entries) {
 
   // Health check
   try {
-    const res = await fetch(`${url}/ok`, { signal: AbortSignal.timeout(10000) });
+    const res = await fetch(`${url}/ok`, { headers: authHeaders, signal: AbortSignal.timeout(10000) });
     const data = await res.json();
     if (!data.ok) throw new Error(`/ok returned ${JSON.stringify(data)}`);
     console.log(`✅ ${name}: healthy (${url})`);
@@ -50,7 +55,7 @@ for (const [name, url] of entries) {
     try {
       const threadRes = await fetch(`${url}/threads`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authHeaders },
         body: JSON.stringify({ metadata: {} }),
         signal: AbortSignal.timeout(10000),
       });
@@ -59,7 +64,7 @@ for (const [name, url] of entries) {
 
       const runRes = await fetch(`${url}/threads/${threadId}/runs/stream`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authHeaders },
         body: JSON.stringify({
           assistant_id: name,
           input: { messages: [{ role: 'human', content: 'hello' }] },

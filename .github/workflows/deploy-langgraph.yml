@@ -19,33 +19,33 @@ jobs:
     strategy:
       matrix:
         include:
-          - name: langgraph-streaming
+          - name: streaming
             path: cockpit/langgraph/streaming/python
-          - name: langgraph-persistence
+          - name: persistence
             path: cockpit/langgraph/persistence/python
-          - name: langgraph-interrupts
+          - name: interrupts
             path: cockpit/langgraph/interrupts/python
-          - name: langgraph-memory
+          - name: memory
             path: cockpit/langgraph/memory/python
-          - name: langgraph-durable-execution
+          - name: durable-execution
             path: cockpit/langgraph/durable-execution/python
-          - name: langgraph-subgraphs
+          - name: subgraphs
             path: cockpit/langgraph/subgraphs/python
-          - name: langgraph-time-travel
+          - name: time-travel
             path: cockpit/langgraph/time-travel/python
-          - name: langgraph-deployment-runtime
+          - name: deployment-runtime
             path: cockpit/langgraph/deployment-runtime/python
-          - name: deep-agents-planning
+          - name: planning
             path: cockpit/deep-agents/planning/python
-          - name: deep-agents-filesystem
+          - name: filesystem
             path: cockpit/deep-agents/filesystem/python
-          - name: deep-agents-subagents
+          - name: da-subagents
             path: cockpit/deep-agents/subagents/python
-          - name: deep-agents-memory
+          - name: da-memory
             path: cockpit/deep-agents/memory/python
-          - name: deep-agents-skills
+          - name: skills
             path: cockpit/deep-agents/skills/python
-          - name: deep-agents-sandboxes
+          - name: sandboxes
             path: cockpit/deep-agents/sandboxes/python
     steps:
       - uses: actions/checkout@v6.0.2
@@ -54,14 +54,25 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Install langgraph-cli
-        run: pip install langgraph-cli
+      - name: Install uv
+        run: pip install uv
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Write .env for deployment
+        if: |
+          github.event_name == 'workflow_dispatch' && (inputs.capability == '' || contains(matrix.path, inputs.capability))
+          || github.event_name == 'push'
+        working-directory: ${{ matrix.path }}
+        run: |
+          echo "OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}" > .env
 
       - name: Deploy ${{ matrix.name }}
         if: |
           github.event_name == 'workflow_dispatch' && (inputs.capability == '' || contains(matrix.path, inputs.capability))
           || github.event_name == 'push'
         working-directory: ${{ matrix.path }}
-        run: langgraph deploy
+        run: uv run --with langgraph-cli langgraph deploy --name ${{ matrix.name }} --no-wait
         env:
           LANGSMITH_API_KEY: ${{ secrets.LANGSMITH_API_KEY }}

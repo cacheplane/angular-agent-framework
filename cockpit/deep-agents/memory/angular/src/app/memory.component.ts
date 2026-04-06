@@ -1,31 +1,43 @@
-// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import { Component, computed } from '@angular/core';
-import { ChatDebugComponent } from '@cacheplane/chat';
+import { LegacyChatComponent } from '@cacheplane/chat';
 import { streamResource } from '@cacheplane/stream-resource';
 import { environment } from '../environments/environment';
 
+/**
+ * MemoryComponent demonstrates persistent agent memory across sessions.
+ *
+ * The agent extracts facts about the user from each conversation turn
+ * and stores them in `agent_memory` state. The sidebar shows all learned
+ * facts in real time as the agent updates its memory.
+ *
+ * Key integration points:
+ * - `stream.value()` contains the agent state including `agent_memory`
+ * - `computed()` derives key/value pairs for the sidebar
+ * - Memory entries update reactively as the agent learns new facts
+ */
 @Component({
   selector: 'app-da-memory',
   standalone: true,
-  imports: [ChatDebugComponent],
+  imports: [LegacyChatComponent],
   template: `
-    <div class="flex h-screen">
-      <chat-debug [ref]="stream" class="flex-1 min-w-0" />
-      <aside class="w-72 shrink-0 border-l overflow-y-auto p-4 space-y-2"
-             style="border-color: var(--chat-border, #333); background: var(--chat-bg, #171717); color: var(--chat-text, #e0e0e0);">
-        <h3 class="text-xs font-semibold uppercase tracking-wide mb-3"
-            style="color: var(--chat-text-muted, #777);">Agent Memory</h3>
-        @if (memoryEntries().length === 0) {
-          <p class="text-sm italic" style="color: var(--chat-text-muted, #777);">No facts learned yet. Have a conversation to build memory.</p>
-        }
-        @for (entry of memoryEntries(); track $index) {
-          <div class="text-sm py-1">
-            <span class="font-semibold" style="color: var(--chat-text-muted, #777);">{{ entry[0] }}:</span>
-            <span class="ml-1" style="color: var(--chat-text, #e0e0e0);">{{ entry[1] }}</span>
+    <cp-chat
+      [messages]="stream.messages()"
+      [isLoading]="stream.isLoading()"
+      [error]="stream.error()"
+      (sendMessage)="send($event)">
+      <ng-template #sidebar>
+        <h3 style="font-size: 0.8rem; font-weight: 600; margin-bottom: 0.75rem; color: #1a1a2e;">Learned Facts</h3>
+        @for (entry of memoryEntries(); track entry[0]) {
+          <div style="padding: 6px 0; font-size: 0.8rem; border-bottom: 1px solid #e5e7eb;">
+            <div style="font-weight: 600; color: #1a1a2e; margin-bottom: 2px;">{{ entry[0] }}</div>
+            <div style="color: #555770;">{{ entry[1] }}</div>
           </div>
         }
-      </aside>
-    </div>
+        @empty {
+          <p style="color: #8b8fa3; font-size: 0.8rem;">Tell the agent something about yourself to see it remember.</p>
+        }
+      </ng-template>
+    </cp-chat>
   `,
 })
 export class MemoryComponent {
@@ -34,10 +46,12 @@ export class MemoryComponent {
     assistantId: environment.streamingAssistantId,
   });
 
-  protected readonly memoryEntries = computed(() => {
-    const val = this.stream.value() as Record<string, unknown>;
-    const mem = val?.['agent_memory'];
-    if (!mem || typeof mem !== 'object') return [];
-    return Object.entries(mem as Record<string, string>);
+  memoryEntries = computed(() => {
+    const val = this.stream.value() as { agent_memory?: Record<string, string> } | undefined;
+    return Object.entries(val?.agent_memory ?? {});
   });
+
+  send(text: string): void {
+    this.stream.submit({ messages: [{ role: 'human', content: text }] });
+  }
 }

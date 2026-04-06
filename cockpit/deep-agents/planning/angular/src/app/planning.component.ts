@@ -1,37 +1,51 @@
-// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import { Component, computed } from '@angular/core';
-import { ChatDebugComponent } from '@cacheplane/chat';
+import { LegacyChatComponent } from '@cacheplane/chat';
 import { streamResource } from '@cacheplane/stream-resource';
 import { environment } from '../environments/environment';
 
+interface PlanStep {
+  title: string;
+  status: 'pending' | 'running' | 'complete';
+}
+
+/**
+ * PlanningComponent demonstrates agent task decomposition.
+ *
+ * The agent receives a complex task, breaks it into ordered steps,
+ * and executes them. The sidebar shows each step's status in real time.
+ *
+ * Key integration points:
+ * - `stream.value()` contains the plan state with step list
+ * - `computed()` derives the plan steps for the sidebar
+ * - Steps update reactively as the agent works through them
+ */
 @Component({
   selector: 'app-planning',
   standalone: true,
-  imports: [ChatDebugComponent],
+  imports: [LegacyChatComponent],
   template: `
-    <div class="flex h-screen">
-      <chat-debug [ref]="stream" class="flex-1 min-w-0" />
-      <aside class="w-72 shrink-0 border-l overflow-y-auto p-4 space-y-2"
-             style="border-color: var(--chat-border, #333); background: var(--chat-bg, #171717); color: var(--chat-text, #e0e0e0);">
-        <h3 class="text-xs font-semibold uppercase tracking-wide mb-3"
-            style="color: var(--chat-text-muted, #777);">Plan Steps</h3>
-        @if (planSteps().length === 0) {
-          <p class="text-sm italic" style="color: var(--chat-text-muted, #777);">No plan steps yet. Ask the agent to plan something.</p>
-        }
+    <cp-chat
+      [messages]="stream.messages()"
+      [isLoading]="stream.isLoading()"
+      [error]="stream.error()"
+      (sendMessage)="send($event)">
+      <ng-template #sidebar>
+        <h3 style="font-size: 0.8rem; font-weight: 600; margin-bottom: 0.75rem; color: #1a1a2e;">Task Plan</h3>
         @for (step of planSteps(); track $index) {
-          <div class="flex items-start gap-2 text-sm py-1">
-            <span class="shrink-0 mt-0.5"
-                  [style.color]="step.status === 'complete' ? 'var(--chat-accent, #4ade80)' : 'var(--chat-text-muted, #777)'">
-              {{ step.status === 'complete' ? '✓' : '○' }}
-            </span>
-            <span [style.text-decoration]="step.status === 'complete' ? 'line-through' : 'none'"
-                  style="color: var(--chat-text, #e0e0e0);">
+          <div style="display: flex; align-items: center; gap: 8px; padding: 6px 0; font-size: 0.8rem;">
+            <span style="width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;"
+                  [style.background]="step.status === 'complete' ? '#10b981' : step.status === 'running' ? '#004090' : '#d1d5db'"></span>
+            <span [style.color]="step.status === 'complete' ? '#555770' : '#1a1a2e'"
+                  [style.textDecoration]="step.status === 'complete' ? 'line-through' : 'none'">
               {{ step.title }}
             </span>
           </div>
         }
-      </aside>
-    </div>
+        @empty {
+          <p style="color: #8b8fa3; font-size: 0.8rem;">Ask a complex question to see the plan.</p>
+        }
+      </ng-template>
+    </cp-chat>
   `,
 })
 export class PlanningComponent {
@@ -40,9 +54,12 @@ export class PlanningComponent {
     assistantId: environment.streamingAssistantId,
   });
 
-  protected readonly planSteps = computed(() => {
-    const val = this.stream.value() as Record<string, unknown>;
-    const plan = val?.['plan'];
-    return Array.isArray(plan) ? plan as { title: string; status: string }[] : [];
+  planSteps = computed(() => {
+    const val = this.stream.value() as { plan?: PlanStep[] } | undefined;
+    return val?.plan ?? [];
   });
+
+  send(text: string): void {
+    this.stream.submit({ messages: [{ role: 'human', content: text }] });
+  }
 }
