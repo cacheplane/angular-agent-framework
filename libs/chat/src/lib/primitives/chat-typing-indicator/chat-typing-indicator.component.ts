@@ -33,18 +33,15 @@ export function isTyping(ref: StreamResourceRef<any, any>): boolean {
   `],
   template: `
     @if (visible()) {
-      <div role="status" aria-label="Agent is typing" class="flex flex-col gap-1.5">
-        <div class="flex items-center gap-2">
-          <div
-            class="w-6 h-6 flex items-center justify-center text-[11px] font-semibold shrink-0"
-            style="background: var(--chat-avatar-bg); color: var(--chat-avatar-text); border-radius: var(--chat-radius-avatar);"
-          >A</div>
-          <span class="text-xs font-medium" style="color: var(--chat-text-muted);">Assistant</span>
-          <div class="flex items-center gap-1 pl-1">
-            <span class="chat-dot"></span>
-            <span class="chat-dot"></span>
-            <span class="chat-dot"></span>
-          </div>
+      <div role="status" aria-label="Agent is typing" class="flex items-center gap-3">
+        <div
+          class="w-7 h-7 flex items-center justify-center text-xs font-semibold shrink-0"
+          style="background: var(--chat-avatar-bg); color: var(--chat-avatar-text); border-radius: var(--chat-radius-avatar);"
+        >A</div>
+        <div class="flex items-center gap-1">
+          <span class="chat-dot"></span>
+          <span class="chat-dot"></span>
+          <span class="chat-dot"></span>
         </div>
       </div>
     }

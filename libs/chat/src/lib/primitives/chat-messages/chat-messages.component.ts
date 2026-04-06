@@ -13,11 +13,16 @@ import { MessageTemplateDirective } from './message-template.directive';
 import type { MessageTemplateType } from '../../chat.types';
 
 /**
- * Maps a LangChain message `_getType()` string to a {@link MessageTemplateType}.
+ * Maps a LangChain message to a {@link MessageTemplateType}.
+ * Handles both class instances (with `_getType()`) and plain objects (with `type` property)
+ * since SSE stream events deliver plain JSON, not hydrated BaseMessage instances.
  * Exported as a standalone function so it can be unit-tested without DOM rendering.
  */
 export function getMessageType(message: BaseMessage): MessageTemplateType {
-  const type = message._getType();
+  // Try class method first, fall back to plain object property
+  const type = typeof message._getType === 'function'
+    ? message._getType()
+    : (message as unknown as Record<string, unknown>)['type'] as string ?? 'ai';
   switch (type) {
     case 'human':
       return 'human';

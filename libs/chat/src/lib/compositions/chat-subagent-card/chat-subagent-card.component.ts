@@ -7,7 +7,6 @@ import {
   ChangeDetectionStrategy,
 } from '@angular/core';
 import type { SubagentStreamRef } from '@cacheplane/stream-resource';
-import { ICON_AGENT, ICON_CHEVRON_UP, ICON_CHEVRON_DOWN } from '../../styles/chat-icons';
 
 type SubagentStatus = 'pending' | 'running' | 'complete' | 'error';
 
@@ -36,7 +35,7 @@ export { statusColor };
         aria-label="Toggle subagent details"
       >
         <div class="flex items-center gap-2">
-          <span style="color: var(--chat-text-muted);" [innerHTML]="agentIcon"></span>
+          <span style="color: var(--chat-text-muted);"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4"/><line x1="8" y1="16" x2="8" y2="16"/><line x1="16" y1="16" x2="16" y2="16"/></svg></span>
           <span class="text-sm font-medium" [style.color]="'var(--chat-text)'">
             Subagent
             <span class="font-mono text-xs ml-1" style="color: var(--chat-text-muted);">{{ subagent().toolCallId }}</span>
@@ -46,7 +45,7 @@ export { statusColor };
             {{ subagent().status() }}
           </span>
         </div>
-        <span class="text-xs" style="color: var(--chat-text-muted);"><span [innerHTML]="expanded() ? chevronUp : chevronDown"></span></span>
+        <span class="text-xs" style="color: var(--chat-text-muted);">@if (expanded()) {<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7.5L6 4.5L9 7.5"/></svg>} @else {<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4.5L6 7.5L9 4.5"/></svg>}</span>
       </button>
 
       <!-- Expanded content -->
@@ -76,9 +75,6 @@ export class ChatSubagentCardComponent {
 
   readonly expanded = signal(false);
 
-  readonly agentIcon = ICON_AGENT;
-  readonly chevronUp = ICON_CHEVRON_UP;
-  readonly chevronDown = ICON_CHEVRON_DOWN;
 
   readonly statusColor = computed(() => statusColor(this.subagent().status()));
 
