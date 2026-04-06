@@ -39,12 +39,12 @@ export function submitMessage(
         align-items: flex-end;
         gap: 8px;
         background: var(--chat-input-bg, #222222);
-        border: 1px solid {{ focused ? 'var(--chat-input-focus-border, #555555)' : 'var(--chat-input-border, #333333)' }};
+        border: 1px solid var(--chat-input-border, #333333);
         border-radius: var(--chat-radius-input, 24px);
         padding: 10px 14px 10px 18px;
         transition: border-color 0.15s;
       "
-      [style.borderColor]="focused ? 'var(--chat-input-focus-border, #555555)' : 'var(--chat-input-border, #333333)'"
+      [style.border-color]="focused ? 'var(--chat-input-focus-border, #555555)' : 'var(--chat-input-border, #333333)'"
     >
       <textarea
         [(ngModel)]="messageText"
