@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { resend, FROM, addToAudience } from '../../../../lib/resend';
-import NewsletterWelcome from '../../../../emails/newsletter-welcome';
+import { newsletterWelcomeHtml } from '../../../../emails/newsletter-welcome';
 
 export async function POST(req: NextRequest) {
   let body: { email?: string };
@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
         from: FROM,
         to: email,
         subject: 'Welcome to Angular Stream Resource updates',
-        react: NewsletterWelcome(),
+        html: newsletterWelcomeHtml(),
       }),
       addToAudience(email),
     ]);

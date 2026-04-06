@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
 import { resend, FROM, addToAudience } from '../../../../lib/resend';
-import WhitepaperDownload from '../../../../emails/whitepaper-download';
+import { whitepaperDownloadHtml } from '../../../../emails/whitepaper-download';
 
 const SIGNUPS_FILE = path.join(process.cwd(), 'data', 'whitepaper-signups.ndjson');
 
@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
         from: FROM,
         to: email,
         subject: 'Your Angular Agent Readiness Guide',
-        react: WhitepaperDownload({ name: name || undefined }),
+        html: whitepaperDownloadHtml(name || undefined),
       }),
       addToAudience(email, name || undefined),
     ]);

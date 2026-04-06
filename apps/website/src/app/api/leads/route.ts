@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
 import { resend, FROM, NOTIFY_TO, addToAudience } from '../../../../lib/resend';
-import LeadNotification from '../../../../emails/lead-notification';
+import { leadNotificationHtml } from '../../../../emails/lead-notification';
 
 const LEADS_FILE = path.join(process.cwd(), 'data', 'leads.ndjson');
 
@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
         from: FROM,
         to: NOTIFY_TO,
         subject: `New lead: ${name}${company ? ` at ${company}` : ''}`,
-        react: LeadNotification({ name, email, company, message, ts }),
+        html: leadNotificationHtml({ name, email, company, message, ts }),
       }),
       addToAudience(email, name),
     ]);
