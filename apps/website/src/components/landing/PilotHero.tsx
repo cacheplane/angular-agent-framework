@@ -75,7 +75,7 @@ export function PilotHero() {
               marginBottom: '1.5rem',
             }}
           >
-            StreamResource Pilot Program
+            Angular Stream Resource Pilot Program
           </span>
         </motion.div>
 
@@ -114,7 +114,7 @@ export function PilotHero() {
             marginBottom: '2.5rem',
           }}
         >
-          Most Angular teams are 77%<CitationBadge citation={citation77} /> of the way there. StreamResource closes the
+          Most Angular teams are 77%<CitationBadge citation={citation77} /> of the way there. Angular Stream Resource closes the
           gap — app deployment license, fixed price, your team owns the result.
         </motion.p>
 

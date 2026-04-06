@@ -74,7 +74,7 @@ export function PilotFooterCTA() {
             marginBottom: '2.5rem',
           }}
         >
-          Most teams are 77%<CitationBadge citation={citation77} /> of the way there. StreamResource closes the gap. Start with a conversation.
+          Most teams are 77%<CitationBadge citation={citation77} /> of the way there. Angular Stream Resource closes the gap. Start with a conversation.
         </p>
 
         {/* CTA buttons */}

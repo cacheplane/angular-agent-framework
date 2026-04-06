@@ -67,7 +67,7 @@ export function FairComparisonSection() {
           fontSize: 'clamp(26px,3.5vw,46px)', fontWeight: 800, lineHeight: 1.1,
           color: tokens.colors.textPrimary, marginBottom: 12,
         }}>
-          What StreamResource adds
+          What Angular Stream Resource adds
         </h2>
         <p style={{
           fontFamily: 'var(--font-garamond,"EB Garamond",Georgia,serif)',
@@ -101,7 +101,7 @@ export function FairComparisonSection() {
           borderBottom: `1px solid ${tokens.glass.border}`,
           padding: '14px 24px',
         }}>
-          {['Capability', 'LangChain + Angular alone', 'With StreamResource'].map((h, i) => (
+          {['Capability', 'LangChain + Angular alone', 'With Angular Stream Resource'].map((h, i) => (
             <div key={h} style={{
               fontFamily: 'var(--font-mono,"JetBrains Mono",monospace)',
               fontSize: '0.62rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em',
