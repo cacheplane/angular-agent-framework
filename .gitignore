@@ -28,12 +28,5 @@ apps/website/public/demo/
 out
 .vercel
 
-# LangGraph
-.langgraph_api/
-langgraph-combined.json
-
-# Playwright
-test-results/
-
-# Deploy output
-deploy/
+# Whitepaper signup data
+apps/website/data/
