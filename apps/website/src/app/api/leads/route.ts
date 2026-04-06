@@ -1,21 +1,49 @@
 import { NextRequest, NextResponse } from 'next/server';
+import fs from 'fs';
+import path from 'path';
+import { resend, FROM, NOTIFY_TO, addToAudience } from '../../../../lib/resend';
+import LeadNotification from '../../../../emails/lead-notification';
+
+const LEADS_FILE = path.join(process.cwd(), 'data', 'leads.ndjson');
 
 export async function POST(req: NextRequest) {
   const body = await req.json() as { name?: unknown; email?: unknown; company?: unknown; message?: unknown };
-  const { name, email, company, message } = body;
-  // Validate types and cap lengths to prevent log injection
   const sanitize = (v: unknown, max = 500): string =>
     typeof v === 'string' ? v.slice(0, max).trim() : '';
 
-  const safeName = sanitize(name, 200);
-  const safeEmail = sanitize(email, 320);
-  const safeCompany = sanitize(company, 200);
-  const safeMessage = sanitize(message, 2000);
+  const name = sanitize(body.name, 200);
+  const email = sanitize(body.email, 320);
+  const company = sanitize(body.company, 200);
+  const message = sanitize(body.message, 2000);
 
-  if (!safeName || !safeEmail) {
+  if (!name || !email) {
     return NextResponse.json({ error: 'name and email required' }, { status: 400 });
   }
-  // In production: send to CRM / email service
-  console.info('[lead]', { name: safeName, email: safeEmail, company: safeCompany, message: safeMessage, ts: new Date().toISOString() });
+
+  const ts = new Date().toISOString();
+
+  // NDJSON backup (always writes, even if Resend fails)
+  try {
+    fs.mkdirSync(path.dirname(LEADS_FILE), { recursive: true });
+    fs.appendFileSync(LEADS_FILE, JSON.stringify({ name, email, company, message, ts }) + '\n', 'utf8');
+  } catch (err) {
+    console.error('[leads] NDJSON write failed:', err);
+  }
+
+  // Resend: email notification + audience (best-effort)
+  try {
+    await Promise.all([
+      resend.emails.send({
+        from: FROM,
+        to: NOTIFY_TO,
+        subject: `New lead: ${name}${company ? ` at ${company}` : ''}`,
+        react: LeadNotification({ name, email, company, message, ts }),
+      }),
+      addToAudience(email, name),
+    ]);
+  } catch (err) {
+    console.error('[resend] lead notification failed:', err);
+  }
+
   return NextResponse.json({ ok: true });
 }
