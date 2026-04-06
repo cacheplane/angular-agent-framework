@@ -219,19 +219,23 @@ export class ChatDebugComponent {
   /** Track message count to trigger auto-scroll */
   private readonly messageCount = computed(() => this.ref().messages().length);
 
+  private prevMessageCount = 0;
+
   constructor() {
-    // Auto-scroll to bottom when new messages arrive or loading state changes
     effect(() => {
-      this.messageCount(); // track
+      const count = this.messageCount();
       this.ref().isLoading(); // track
       const el = this.scrollContainer()?.nativeElement;
-      if (el) {
-        const isNearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 150;
-        if (isNearBottom) {
-          requestAnimationFrame(() => {
-            el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
-          });
-        }
+      if (!el) return;
+
+      const isNewMessage = count !== this.prevMessageCount;
+      this.prevMessageCount = count;
+
+      const isNearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 150;
+      if (isNewMessage || isNearBottom) {
+        requestAnimationFrame(() => {
+          el.scrollTo({ top: el.scrollHeight, behavior: isNewMessage ? 'instant' : 'smooth' });
+        });
       }
     });
   }

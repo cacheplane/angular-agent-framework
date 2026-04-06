@@ -188,21 +188,26 @@ export class ChatComponent {
   /** Track message count to trigger auto-scroll */
   private readonly messageCount = computed(() => this.ref().messages().length);
 
+  private prevMessageCount = 0;
+
   constructor() {
-    // Auto-scroll to bottom when new messages arrive.
-    // Only scrolls if user is already near the bottom (within 150px),
-    // so reading earlier messages isn't interrupted.
+    // Auto-scroll to bottom:
+    // - Always scroll when message count increases (new message sent/received)
+    // - During streaming partials, only scroll if user is near bottom
     effect(() => {
-      this.messageCount(); // track
+      const count = this.messageCount();
       this.ref().isLoading(); // track
       const el = this.scrollContainer()?.nativeElement;
-      if (el) {
-        const isNearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 150;
-        if (isNearBottom) {
-          requestAnimationFrame(() => {
-            el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
-          });
-        }
+      if (!el) return;
+
+      const isNewMessage = count !== this.prevMessageCount;
+      this.prevMessageCount = count;
+
+      const isNearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 150;
+      if (isNewMessage || isNearBottom) {
+        requestAnimationFrame(() => {
+          el.scrollTo({ top: el.scrollHeight, behavior: isNewMessage ? 'instant' : 'smooth' });
+        });
       }
     });
   }
