@@ -5,7 +5,7 @@ import { ProblemSection } from '../../components/landing/ProblemSection';
 import { PricingSignal } from '../../components/landing/PricingSignal';
 import { WhitePaperGate } from '../../components/landing/WhitePaperGate';
 import { PilotFooterCTA } from '../../components/landing/PilotFooterCTA';
-import { tokens } from '../../lib/design-tokens';
+import { tokens } from '../../../lib/design-tokens';
 
 export const metadata = {
   title: 'Pilot to Production — StreamResource',
