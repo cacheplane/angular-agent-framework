@@ -280,7 +280,7 @@ export function WhitePaperGate() {
 
                 {formState === 'error' && (
                   <div
-                    role="alert"
+                    role="status"
                     aria-live="polite"
                     style={{
                       fontFamily: 'Inter, sans-serif',
