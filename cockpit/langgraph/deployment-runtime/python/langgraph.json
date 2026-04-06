@@ -2,6 +2,6 @@
   "graphs": {
     "deployment-runtime": "./src/graph.py:graph"
   },
-  "dependencies": ["./pyproject.toml"],
-  "env": ".env"
+  "dependencies": ["."],
+  "python_version": "3.12"
 }

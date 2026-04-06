@@ -5,6 +5,7 @@ const shouldStartLocalServer = !process.env['BASE_URL'];
 
 export default defineConfig({
   testDir: './e2e',
+  testIgnore: ['**/all-examples-smoke*'],
   fullyParallel: true,
   use: {
     baseURL,

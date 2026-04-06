@@ -6,6 +6,6 @@
  */
 export const environment = {
   production: true,
-  langGraphApiUrl: 'http://localhost:4313/api',
+  langGraphApiUrl: 'https://da-memory-15f767adfa6f5cd48bd45a0fa4db29b5.us.langgraph.app',
   streamingAssistantId: 'da-memory',
 };

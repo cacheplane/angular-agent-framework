@@ -1,0 +1,12 @@
+{
+  "framework": null,
+  "buildCommand": null,
+  "outputDirectory": "deploy/examples",
+  "installCommand": "npm ci",
+  "rewrites": [
+    { "source": "/langgraph/:path*/:file(.*\\..*)", "destination": "/langgraph/:path*/:file" },
+    { "source": "/langgraph/:path*", "destination": "/langgraph/:path*/index.html" },
+    { "source": "/deep-agents/:path*/:file(.*\\..*)", "destination": "/deep-agents/:path*/:file" },
+    { "source": "/deep-agents/:path*", "destination": "/deep-agents/:path*/index.html" }
+  ]
+}

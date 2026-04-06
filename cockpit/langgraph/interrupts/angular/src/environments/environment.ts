@@ -6,6 +6,6 @@
  */
 export const environment = {
   production: true,
-  langGraphApiUrl: 'http://localhost:4302/api',
+  langGraphApiUrl: 'https://interrupts-8e1524d6d8fb558381eed4618129bc50.us.langgraph.app',
   streamingAssistantId: 'interrupts',
 };

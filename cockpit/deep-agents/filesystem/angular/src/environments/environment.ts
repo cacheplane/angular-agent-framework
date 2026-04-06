@@ -6,6 +6,6 @@
  */
 export const environment = {
   production: true,
-  langGraphApiUrl: 'http://localhost:4311/api',
+  langGraphApiUrl: 'https://filesystem-2330285f57625bff8654bc026f70a6ae.us.langgraph.app',
   streamingAssistantId: 'filesystem',
 };

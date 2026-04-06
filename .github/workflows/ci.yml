@@ -179,6 +179,7 @@ jobs:
       #   VERCEL_ORG_ID              — Vercel team id
       #   VERCEL_WEBSITE_PROJECT_ID  — website project id
       #   VERCEL_COCKPIT_PROJECT_ID  — cockpit project id
+      #   VERCEL_EXAMPLES_PROJECT_ID — examples project id
       - run: npm ci
       - run: npx playwright install --with-deps chromium
       - name: Resolve deploy targets
@@ -259,3 +260,61 @@ jobs:
         if: steps.affected.outputs.cockpit == 'true'
         run: |
           npx tsx apps/cockpit/scripts/deploy-smoke.ts --url https://cockpit.stream-resource.dev --retries 20 --retry-delay-ms 5000
+
+      # ── Angular examples deploy ──────────────────────────────────────────
+      - name: Check if examples changed
+        id: examples_changed
+        run: |
+          base_sha="${{ github.event.before }}"
+          head_sha="${{ github.sha }}"
+          if [ -z "$base_sha" ] || [ "$base_sha" = "0000000000000000000000000000000000000000" ]; then
+            base_sha="$(git rev-parse "$head_sha^")"
+          fi
+          changed_files="$(git diff --name-only "$base_sha" "$head_sha")"
+          examples_changed=false
+          if printf '%s\n' "$changed_files" | grep -E '^cockpit/.*/angular/' >/dev/null; then
+            examples_changed=true
+          fi
+          if printf '%s\n' "$changed_files" | grep -E '^(vercel\.examples\.json|scripts/assemble-examples\.ts)$' >/dev/null; then
+            examples_changed=true
+          fi
+          echo "changed=$examples_changed" >> "$GITHUB_OUTPUT"
+      - name: Build and assemble Angular examples
+        if: steps.examples_changed.outputs.changed == 'true'
+        run: npx tsx scripts/assemble-examples.ts
+      - name: Prepare examples Vercel project
+        if: steps.examples_changed.outputs.changed == 'true'
+        run: |
+          mkdir -p .vercel
+          cat > .vercel/project.json <<EOF
+          {"projectId":"${{ secrets.VERCEL_EXAMPLES_PROJECT_ID }}","orgId":"${{ secrets.VERCEL_ORG_ID }}","projectName":"cockpit-examples"}
+          EOF
+          npx vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+          rm -rf .vercel/output
+      - name: Deploy Angular examples to Vercel (production)
+        if: steps.examples_changed.outputs.changed == 'true'
+        run: |
+          npx vercel build --prod --local-config vercel.examples.json --token=${{ secrets.VERCEL_TOKEN }}
+          npx vercel deploy --prebuilt --archive=tgz --prod --yes --token=${{ secrets.VERCEL_TOKEN }}
+
+  production-smoke:
+    name: Production smoke
+    needs: [deploy]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - uses: actions/checkout@v6.0.2
+      - uses: actions/setup-node@v6.3.0
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Verify LangGraph backends
+        run: npx tsx scripts/verify-langgraph-deployments.ts
+      - name: Run production smoke tests
+        run: npx playwright test apps/cockpit/e2e/production-smoke.spec.ts --reporter=list
+        env:
+          BASE_URL: https://cockpit.stream-resource.dev
+          EXAMPLES_URL: https://examples.stream-resource.dev
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
