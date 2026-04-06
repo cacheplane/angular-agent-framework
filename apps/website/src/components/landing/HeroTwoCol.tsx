@@ -100,17 +100,7 @@ export async function HeroTwoCol() {
           margin: 0,
           marginBottom: 32,
         }}>
-          Full parity with React{' '}
-          <code style={{
-            fontStyle: 'normal',
-            fontFamily: 'var(--font-mono)',
-            fontSize: '0.8em',
-            background: tokens.colors.accentSurface,
-            color: tokens.colors.accent,
-            padding: '2px 6px',
-            borderRadius: 4,
-          }}>useStream()</code>
-          {' '}&mdash; built natively for Angular 20+.
+          Signal-native streaming for LangGraph &mdash; production patterns your Angular team can own.
         </p>
 
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 12 }}>

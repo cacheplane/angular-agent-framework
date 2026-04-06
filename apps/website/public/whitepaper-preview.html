@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,700;1,400&family=Inter:wght@400;600&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Inter',sans-serif;color:#1a1a2e;background:#fff}
+  .chapter-body p{font-size:15px;line-height:1.75;color:#333;margin-bottom:18px}
+  .chapter-body h3{font-family:'EB Garamond',serif;font-size:22px;font-weight:700;color:#1a1a2e;margin:28px 0 12px}
+  .chapter-body ul{margin:0 0 18px 20px}
+  .chapter-body li{font-size:15px;line-height:1.7;color:#333;margin-bottom:6px}
+  .chapter-body pre{background:#1a1b26;color:#c8ccee;padding:20px 24px;border-radius:8px;font-size:13px;line-height:1.65;overflow-x:auto;margin:24px 0;white-space:pre-wrap}
+  .chapter-body code{font-family:'JetBrains Mono',monospace;font-size:13px}
+  .chapter-body strong{font-weight:600}
+</style>
+</head>
+<body>
+
+<!-- Cover -->
+<div style="height:100vh;display:flex;flex-direction:column;justify-content:flex-end;padding:80px 80px 100px;background:linear-gradient(135deg,#fef0f3 0%,#f4f0ff 45%,#eaf3ff 70%,#e6f4ff 100%);page-break-after:always">
+  <div style="font-family:monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.12em;color:#004090;font-weight:700;margin-bottom:24px">StreamResource · Production Readiness Guide</div>
+  <h1 style="font-family:'EB Garamond',serif;font-size:52px;font-weight:800;line-height:1.1;color:#1a1a2e;margin-bottom:20px">From Prototype<br>to Production</h1>
+  <p style="font-family:'EB Garamond',serif;font-style:italic;font-size:20px;color:#555770;margin-bottom:40px">The Angular Agent Readiness Guide</p>
+  <div style="font-size:13px;color:#888;font-family:monospace">cacheplane.io · 2026</div>
+  <div style="margin-top:16px;padding:8px 14px;background:rgba(255,160,50,.12);border:1px solid rgba(255,160,50,.3);border-radius:6px;font-family:monospace;font-size:11px;color:#c47a00;display:inline-block">⚠ PREVIEW — placeholder content. Set ANTHROPIC_API_KEY and run npm run generate-whitepaper for real content.</div>
+</div>
+
+<!-- TOC -->
+<div style="padding:80px;page-break-after:always">
+  <h2 style="font-family:'EB Garamond',serif;font-size:32px;font-weight:700;color:#1a1a2e;margin-bottom:32px">Contents</h2>
+  
+    <div style="display:flex;align-items:baseline;gap:8px;padding:10px 0;border-bottom:1px solid rgba(0,0,0,.06);font-size:15px;color:#444">
+      <span style="font-family:monospace;font-size:11px;color:#004090;font-weight:700;min-width:24px">01</span>
+      <span style="flex:1">Streaming State Management</span>
+    </div>
+    <div style="display:flex;align-items:baseline;gap:8px;padding:10px 0;border-bottom:1px solid rgba(0,0,0,.06);font-size:15px;color:#444">
+      <span style="font-family:monospace;font-size:11px;color:#004090;font-weight:700;min-width:24px">02</span>
+      <span style="flex:1">Thread Persistence</span>
+    </div>
+    <div style="display:flex;align-items:baseline;gap:8px;padding:10px 0;border-bottom:1px solid rgba(0,0,0,.06);font-size:15px;color:#444">
+      <span style="font-family:monospace;font-size:11px;color:#004090;font-weight:700;min-width:24px">03</span>
+      <span style="flex:1">Tool-Call Rendering</span>
+    </div>
+    <div style="display:flex;align-items:baseline;gap:8px;padding:10px 0;border-bottom:1px solid rgba(0,0,0,.06);font-size:15px;color:#444">
+      <span style="font-family:monospace;font-size:11px;color:#004090;font-weight:700;min-width:24px">04</span>
+      <span style="flex:1">Human Approval Flows</span>
+    </div>
+    <div style="display:flex;align-items:baseline;gap:8px;padding:10px 0;border-bottom:1px solid rgba(0,0,0,.06);font-size:15px;color:#444">
+      <span style="font-family:monospace;font-size:11px;color:#004090;font-weight:700;min-width:24px">05</span>
+      <span style="flex:1">Generative UI</span>
+    </div>
+    <div style="display:flex;align-items:baseline;gap:8px;padding:10px 0;border-bottom:1px solid rgba(0,0,0,.06);font-size:15px;color:#444">
+      <span style="font-family:monospace;font-size:11px;color:#004090;font-weight:700;min-width:24px">06</span>
+      <span style="flex:1">Deterministic Testing</span>
+    </div>
+</div>
+
+<!-- Chapters -->
+
+    <section style="padding:80px;page-break-before:always">
+      <div style="font-family:monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#004090;font-weight:700;margin-bottom:16px">Chapter 1</div>
+      <h2 style="font-family:'EB Garamond',serif;font-size:36px;font-weight:800;color:#1a1a2e;margin-bottom:28px;line-height:1.15">Streaming State Management</h2>
+      <div class="chapter-body"><h3>Overview</h3>
+<p>When you move from prototype to production, the requirements change fundamentally. What worked in a demo — direct API calls, synchronous state, manual zone management — falls apart at scale.</p>
+<h3>The Signals-Native Approach</h3>
+<p>StreamResource provides a signals-native approach that eliminates the boilerplate:</p>
+<pre><code>@Component({...})
+export class ChatComponent {
+  chat = streamResource<{ messages: BaseMessage[] }>({
+    assistantId: 'chat_agent',
+  });
+}
+</code></pre>
+<h3>Production Checklist</h3>
+<ul><li>Are your message signals OnPush-compatible?</li>
+<li>Is isStreaming() driving your loading UI without polling?</li>
+<li>Are you avoiding manual zone patching?</li></ul></div>
+    </section>
+    <section style="padding:80px;page-break-before:always">
+      <div style="font-family:monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#004090;font-weight:700;margin-bottom:16px">Chapter 2</div>
+      <h2 style="font-family:'EB Garamond',serif;font-size:36px;font-weight:800;color:#1a1a2e;margin-bottom:28px;line-height:1.15">Thread Persistence</h2>
+      <div class="chapter-body"><h3>Overview</h3>
+<p>Demos work with ephemeral state. Production agents need conversation history that survives page refreshes, tab switches, and navigation — wired to LangGraph's MemorySaver backend.</p>
+<h3>The threadId Pattern</h3>
+<pre><code>provideStreamResource({
+  apiUrl: 'http://localhost:2024',
+  threadId: signal(localStorage.getItem('threadId')),
+  onThreadId: (id) => localStorage.setItem('threadId', id),
+})
+</code></pre>
+<h3>Production Checklist</h3>
+<ul><li>Does your agent UI resume threads correctly after a browser refresh?</li>
+<li>Can users switch between conversations?</li>
+<li>Is thread state scoped correctly per user?</li></ul></div>
+    </section>
+    <section style="padding:80px;page-break-before:always">
+      <div style="font-family:monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#004090;font-weight:700;margin-bottom:16px">Chapter 3</div>
+      <h2 style="font-family:'EB Garamond',serif;font-size:36px;font-weight:800;color:#1a1a2e;margin-bottom:28px;line-height:1.15">Tool-Call Rendering</h2>
+      <div class="chapter-body"><h3>Overview</h3>
+<p>LangGraph agents invoke tools mid-stream. The UI needs to show tool execution state in real time — steps appearing as the tool runs, a final result, and collapsible history.</p>
+<h3>Progressive Disclosure</h3>
+<pre><code><chat-tool-call-card
+  [toolCall]="msg.tool_calls[0]"
+  [collapsed]="!isStreaming()">
+</chat-tool-call-card>
+</code></pre>
+<h3>Production Checklist</h3>
+<ul><li>Do your tool call cards handle partial step state during streaming?</li>
+<li>Is tool history collapsible after completion?</li>
+<li>Can you distinguish pending vs. completed tool calls?</li></ul></div>
+    </section>
+    <section style="padding:80px;page-break-before:always">
+      <div style="font-family:monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#004090;font-weight:700;margin-bottom:16px">Chapter 4</div>
+      <h2 style="font-family:'EB Garamond',serif;font-size:36px;font-weight:800;color:#1a1a2e;margin-bottom:28px;line-height:1.15">Human Approval Flows</h2>
+      <div class="chapter-body"><h3>Overview</h3>
+<p>Production agents that take consequential actions must pause for human approval before proceeding. This requires a tight loop between LangGraph's interrupt() primitive and Angular UI.</p>
+<h3>The Interrupt Pattern</h3>
+<pre><code>// In your component
+approved = computed(() => this.chat.interrupt()?.approved ?? false);
+onApprove() {
+  this.chat.submit(null, { command: { resume: true } });
+}
+</code></pre>
+<h3>Production Checklist</h3>
+<ul><li>Can your agent UI recover gracefully if a user cancels an interrupt?</li>
+<li>Are approve/edit/cancel actions clearly mapped to resume commands?</li>
+<li>Is interrupt state persisted across refreshes?</li></ul></div>
+    </section>
+    <section style="padding:80px;page-break-before:always">
+      <div style="font-family:monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#004090;font-weight:700;margin-bottom:16px">Chapter 5</div>
+      <h2 style="font-family:'EB Garamond',serif;font-size:36px;font-weight:800;color:#1a1a2e;margin-bottom:28px;line-height:1.15">Generative UI</h2>
+      <div class="chapter-body"><h3>Overview</h3>
+<p>The most advanced production agents emit structured UI specs — not just text. A data analysis agent might render a live table. A booking agent might render a reservation form.</p>
+<h3>The Registry Pattern</h3>
+<pre><code>defineAngularRegistry({
+  'data-table': DataTableComponent,
+  'booking-form': BookingFormComponent,
+  'chart-widget': ChartWidgetComponent,
+});
+</code></pre>
+<h3>Production Checklist</h3>
+<ul><li>Can your agent emit UI components without tight coupling to the frontend codebase?</li>
+<li>Does JSON patch streaming enable progressive UI updates?</li>
+<li>Is your component registry decoupled from agent logic?</li></ul></div>
+    </section>
+    <section style="padding:80px;page-break-before:always">
+      <div style="font-family:monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#004090;font-weight:700;margin-bottom:16px">Chapter 6</div>
+      <h2 style="font-family:'EB Garamond',serif;font-size:36px;font-weight:800;color:#1a1a2e;margin-bottom:28px;line-height:1.15">Deterministic Testing</h2>
+      <div class="chapter-body"><h3>Overview</h3>
+<p>Agent UIs are notoriously hard to test because they depend on live LLM responses. Flaky tests, slow CI, and inability to reproduce edge cases are the main reasons agent UIs ship with low confidence.</p>
+<h3>The MockStreamTransport Approach</h3>
+<pre><code>const ref = createMockStreamResourceRef<ChatState>();
+ref.messages.set([{ role: 'assistant', content: 'Hello' }]);
+ref.isStreaming.set(false);
+expect(fixture.nativeElement.querySelector('.message').textContent)
+  .toBe('Hello');
+</code></pre>
+<h3>Production Checklist</h3>
+<ul><li>Do your agent component tests run offline and complete in under 100ms each?</li>
+<li>Are streaming, interrupts, tool calls, and generative UI all tested in isolation?</li>
+<li>Is MockStreamTransport used instead of mocking streamResource() itself?</li></ul></div>
+    </section>
+
+</body>
+</html>

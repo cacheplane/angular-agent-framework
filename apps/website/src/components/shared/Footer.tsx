@@ -42,7 +42,7 @@ export function Footer() {
           <div className="md:col-span-2">
             <p className="font-garamond text-xl font-bold mb-2" style={{ color: tokens.colors.textPrimary }}>Angular Stream Resource</p>
             <p className="text-sm mb-4" style={{ color: tokens.colors.textMuted, maxWidth: '36ch', lineHeight: 1.6 }}>
-              The enterprise streaming resource for LangChain and Angular. Full parity with React useStream(), built natively for Angular 20+.
+              The enterprise streaming resource for LangChain and Angular. Signal-native streaming built for production Angular 20+.
             </p>
             {/* Social links */}
             <div className="flex items-center gap-4">
@@ -77,7 +77,7 @@ export function Footer() {
               onMouseLeave={(e) => (e.currentTarget.style.color = tokens.colors.textSecondary)}>
               Documentation
             </Link>
-            <Link href="/api-reference" className="transition-colors" style={{ color: tokens.colors.textSecondary }}
+            <Link href="/docs/api/stream-resource" className="transition-colors" style={{ color: tokens.colors.textSecondary }}
               onMouseEnter={(e) => (e.currentTarget.style.color = tokens.colors.accent)}
               onMouseLeave={(e) => (e.currentTarget.style.color = tokens.colors.textSecondary)}>
               API Reference

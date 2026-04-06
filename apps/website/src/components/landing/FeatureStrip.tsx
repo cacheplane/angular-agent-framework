@@ -7,7 +7,6 @@ const FEATURES = [
   { icon: '\uD83D\uDD17', title: 'Thread persistence', desc: 'MemorySaver-backed threads survive page refreshes via threadId signal and onThreadId callback.' },
   { icon: '\uD83D\uDCD0', title: 'Angular Signals', desc: 'Every state slice is an Angular Signal. Works with OnPush, async pipe, and computed().' },
   { icon: '\uD83E\uDDEA', title: 'MockStreamTransport', desc: 'Deterministic unit testing. Script event sequences and step through them in your specs.' },
-  { icon: '\uD83D\uDD27', title: 'Full useStream() parity', desc: 'Interrupts, tool calls, subagents, branch history, joinStream \u2014 everything the React SDK exposes.' },
   { icon: '\uD83C\uDFE2', title: 'Source-available licensing', desc: 'Free for noncommercial use under PolyForm Noncommercial 1.0.0. Commercial license at $500/seat/year or $2,000/app deployment.' },
 ];
 

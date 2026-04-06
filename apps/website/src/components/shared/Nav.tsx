@@ -4,10 +4,11 @@ import Link from 'next/link';
 import { tokens } from '@cacheplane/design-tokens';
 
 const links = [
-  { label: 'Docs', href: '/docs' },
-  { label: 'API', href: '/docs/api/stream-resource' },
-  { label: 'Examples', href: 'https://cockpit.stream-resource.dev' },
-  { label: 'Pricing', href: '/pricing' },
+  { label: 'Pilot to Prod', href: '/pilot-to-prod', external: false },
+  { label: 'Docs', href: '/docs', external: false },
+  { label: 'API', href: '/docs/api/stream-resource', external: false },
+  { label: 'Examples', href: 'https://cockpit.stream-resource.dev', external: true },
+  { label: 'Pricing', href: '/pricing', external: false },
 ];
 
 function GitHubIcon() {
@@ -54,7 +55,17 @@ export function Nav() {
 
         {/* Desktop links */}
         <div className="hidden md:flex items-center gap-8">
-          {links.map((l) => (
+          {links.map((l) => l.external ? (
+            <a key={l.href} href={l.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm font-mono transition-colors"
+              style={{ color: tokens.colors.textSecondary }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = tokens.colors.accent)}
+              onMouseLeave={(e) => (e.currentTarget.style.color = tokens.colors.textSecondary)}>
+              {l.label}
+            </a>
+          ) : (
             <Link key={l.href} href={l.href}
               className="text-sm font-mono transition-colors"
               style={{ color: tokens.colors.textSecondary }}
@@ -73,7 +84,7 @@ export function Nav() {
             aria-label="GitHub repository">
             <GitHubIcon />
           </a>
-          <Link href="/pricing"
+          <Link href="/pilot-to-prod#whitepaper-gate"
             className="px-4 py-2 text-sm font-mono rounded transition-all"
             style={{ background: tokens.colors.accent, color: '#fff' }}
             onMouseEnter={(e) => (e.currentTarget.style.boxShadow = tokens.glow.button)}
@@ -96,7 +107,16 @@ export function Nav() {
       {open && (
         <div className="md:hidden px-6 pb-5 flex flex-col gap-4"
           style={{ borderTop: `1px solid ${tokens.glass.border}` }}>
-          {links.map((l) => (
+          {links.map((l) => l.external ? (
+            <a key={l.href} href={l.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => setOpen(false)}
+              className="text-sm font-mono py-1"
+              style={{ color: tokens.colors.textSecondary }}>
+              {l.label}
+            </a>
+          ) : (
             <Link key={l.href} href={l.href}
               onClick={() => setOpen(false)}
               className="text-sm font-mono py-1"
@@ -112,7 +132,7 @@ export function Nav() {
               aria-label="GitHub repository">
               <GitHubIcon />
             </a>
-            <Link href="/pricing"
+            <Link href="/pilot-to-prod#whitepaper-gate"
               onClick={() => setOpen(false)}
               className="px-4 py-2 text-sm font-mono rounded"
               style={{ background: tokens.colors.accent, color: '#fff' }}>

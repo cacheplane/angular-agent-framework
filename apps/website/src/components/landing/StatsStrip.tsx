@@ -4,7 +4,7 @@ import { tokens } from '@cacheplane/design-tokens';
 
 const STATS = [
   { value: '14+', label: 'Capabilities' },
-  { value: '100%', label: 'useStream() Parity' },
+  { value: '100%', label: 'Signal-Native' },
   { value: '20+', label: 'Angular Version' },
   { value: 'OSS', label: 'Source Available' },
 ];

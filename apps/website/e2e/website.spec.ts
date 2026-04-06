@@ -12,10 +12,9 @@ test('landing page renders architecture section', async ({ page }) => {
   await expect(page.getByText('Architecture').first()).toBeVisible();
 });
 
-test('landing page renders 6 feature cards', async ({ page }) => {
+test('landing page renders fair comparison section', async ({ page }) => {
   await page.goto('/');
-  const featureSection = page.locator('section').filter({ hasText: 'Features' });
-  await expect(featureSection).toBeVisible();
+  await expect(page.getByText('What Angular Stream Resource adds').first()).toBeVisible();
 });
 
 test('pricing page shows 4 plan cards', async ({ page }) => {

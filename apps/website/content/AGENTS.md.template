@@ -1,6 +1,6 @@
 # stream-resource v@VERSION@
 
-Angular streaming library for LangChain/LangGraph. Provides `streamResource()` — full parity with React's `useStream()`.
+Angular streaming library for LangChain/LangGraph. Provides `streamResource()` — Signal-native streaming for Angular agents, built for LangGraph.
 
 ## Install
 npm install stream-resource

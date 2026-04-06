@@ -6,7 +6,8 @@
     "generate-agent-context": "npx tsx --tsconfig apps/website/tsconfig.json apps/website/scripts/generate-agent-context.ts",
     "generate-api-docs": "npx tsx apps/website/scripts/generate-api-docs.ts",
     "generate-narrative-docs": "npx tsx apps/website/scripts/generate-narrative-docs.ts",
-    "generate-docs": "npm run generate-api-docs && npm run generate-narrative-docs"
+    "generate-docs": "npm run generate-api-docs && npm run generate-narrative-docs",
+    "generate-whitepaper": "npx tsx apps/website/scripts/generate-whitepaper.ts"
   },
   "private": true,
   "devDependencies": {
@@ -19,6 +20,7 @@
     "@angular/elements": "~21.1.0",
     "@angular/language-service": "~21.1.0",
     "@anthropic-ai/sdk": "^0.79.0",
+    "puppeteer": "^22.0.0",
     "@eslint/js": "^9.8.0",
     "@json-render/core": "^0.16.0",
     "@nx/angular": "^22.5.4",

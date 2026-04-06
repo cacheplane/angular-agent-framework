@@ -60,32 +60,44 @@ export function LeadForm() {
             borderRadius: 12,
             padding: 24,
           }}>
+          <label htmlFor="lf-name" className="sr-only">Name</label>
           <input
+            id="lf-name"
             name="name"
+            aria-label="Name"
             placeholder="Name"
             required
             style={inputStyle}
             onFocus={(e) => { e.target.style.borderColor = tokens.colors.accent; e.target.style.outline = `2px solid ${tokens.colors.accentGlow}`; e.target.style.outlineOffset = '2px'; }}
             onBlur={(e) => { e.target.style.borderColor = tokens.glass.border; e.target.style.outline = 'none'; }}
           />
+          <label htmlFor="lf-email" className="sr-only">Work email</label>
           <input
+            id="lf-email"
             name="email"
             type="email"
+            aria-label="Work email"
             placeholder="Work email"
             required
             style={inputStyle}
             onFocus={(e) => { e.target.style.borderColor = tokens.colors.accent; e.target.style.outline = `2px solid ${tokens.colors.accentGlow}`; e.target.style.outlineOffset = '2px'; }}
             onBlur={(e) => { e.target.style.borderColor = tokens.glass.border; e.target.style.outline = 'none'; }}
           />
+          <label htmlFor="lf-company" className="sr-only">Company</label>
           <input
+            id="lf-company"
             name="company"
+            aria-label="Company"
             placeholder="Company"
             style={inputStyle}
             onFocus={(e) => { e.target.style.borderColor = tokens.colors.accent; e.target.style.outline = `2px solid ${tokens.colors.accentGlow}`; e.target.style.outlineOffset = '2px'; }}
             onBlur={(e) => { e.target.style.borderColor = tokens.glass.border; e.target.style.outline = 'none'; }}
           />
+          <label htmlFor="lf-message" className="sr-only">Tell us about your use case</label>
           <textarea
+            id="lf-message"
             name="message"
+            aria-label="Tell us about your use case"
             placeholder="Tell us about your use case"
             rows={4}
             style={{ ...inputStyle, resize: 'vertical' }}

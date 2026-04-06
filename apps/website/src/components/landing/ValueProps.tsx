@@ -93,16 +93,9 @@ export async function ValueProps() {
         color: tokens.colors.textPrimary,
         textAlign: 'center',
         marginBottom: 8,
-      }}>Full parity with React <code style={{
-        fontFamily: 'var(--font-mono)',
-        fontSize: '0.85em',
-        background: tokens.colors.accentSurface,
-        color: tokens.colors.accent,
-        padding: '2px 8px',
-        borderRadius: 6,
-      }}>useStream()</code></h2>
+      }}>Production patterns for Angular agents</h2>
       <p className="text-center mb-12" style={{ color: tokens.colors.textSecondary, maxWidth: '50ch', margin: '0 auto 48px' }}>
-        Built natively for Angular 20+. No wrappers, no adapters, no compromises.
+        Signal-native APIs for streaming, interrupts, and testing — built natively for Angular 20+.
       </p>
       <ValuePropsTabs tabs={tabs} />
     </section>

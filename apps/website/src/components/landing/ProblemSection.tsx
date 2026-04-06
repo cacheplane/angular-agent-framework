@@ -1,12 +1,40 @@
 'use client';
-import { useRef, useEffect, useState, useCallback } from 'react';
+import { useRef, useEffect, useState, useCallback, useId } from 'react';
 import { motion, useInView } from 'framer-motion';
-import { tokens } from '@cacheplane/design-tokens';
+import { tokens } from '../../../lib/design-tokens';
+import { CitationBadge, type Citation } from './CitationBadge';
 
-const STATS = [
-  { num: '66%', label: 'of AI solutions are almost right — not quite production-ready' },
-  { num: '31%', label: 'of prioritized AI use cases actually reach production' },
-  { num: '75%', label: 'of developers still want a human in the loop when trust breaks down' },
+const STATS: Array<{ num: string; label: string; citation: Citation }> = [
+  {
+    num: '66%',
+    label: 'of AI solutions are almost right — not quite production-ready',
+    citation: {
+      source: 'Stack Overflow Developer Survey 2025',
+      url: 'https://survey.stackoverflow.co/2025/ai',
+      stat: '66% of developers say AI tools are "almost right but not quite"',
+      note: 'AI accelerates prototyping but struggles to reach production-quality outcomes.',
+    },
+  },
+  {
+    num: '31%',
+    label: 'of prioritized AI use cases actually reach production',
+    citation: {
+      source: 'ISG — AI Adoption Reports',
+      url: 'https://isg-one.com',
+      stat: '~31% of prioritized AI use cases reach production',
+      note: 'Enterprise AI initiatives consistently stall between pilot and production.',
+    },
+  },
+  {
+    num: '75%',
+    label: 'of developers still want a human in the loop when trust breaks down',
+    citation: {
+      source: 'Stack Overflow Developer Survey 2025',
+      url: 'https://survey.stackoverflow.co/2025/ai',
+      stat: '75% of developers prefer human help when AI trust breaks down',
+      note: 'Production agents that take consequential actions require human oversight.',
+    },
+  },
 ];
 
 function useCounter(target: number, duration: number, running: boolean) {
@@ -30,6 +58,9 @@ function useCounter(target: number, duration: number, running: boolean) {
 type Phase = 'idle' | 'filling' | 'stall' | 'closing' | 'done';
 
 export function ProblemSection() {
+  const uid = useId();
+  const hatchId = `gap-hatch-${uid.replace(/:/g, '')}`;
+
   const triggerRef = useRef<HTMLDivElement>(null);
   const inView = useInView(triggerRef, { once: true, amount: 0.3 });
   const [phase, setPhase] = useState<Phase>('idle');
@@ -42,33 +73,39 @@ export function ProblemSection() {
   const counterRunning100 = phase === 'closing' || phase === 'done';
   const count77 = useCounter(77, 1700, counterRunning77);
   const count100 = useCounter(23, 1000, counterRunning100);
+  // 'done' timeout (4400ms) fires after closing counter finishes (3200 + 1000 = 4200ms)
+  // so 77 + count100 always reaches 100 before the phase snaps to literal 100
   const displayCount = phase === 'done' ? 100 : phase === 'closing' ? 77 + count100 : count77;
 
   const runAnimation = useCallback(() => {
     if (phase !== 'idle') return;
-    // Phase 1: fill to 77%
-    setTimeout(() => {
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    // Phase 1 (150ms): fill to 77%
+    timers.push(setTimeout(() => {
       setFillTransition('width 1.7s cubic-bezier(.4,0,.2,1)');
       setFillWidth('77%');
       setPhase('filling');
-    }, 150);
-    // Phase 2: stall
-    setTimeout(() => setPhase('stall'), 2100);
-    // Phase 3: close gap
-    setTimeout(() => {
+    }, 150));
+    // Phase 2 (2100ms): stall — marker + hatch + shake
+    timers.push(setTimeout(() => setPhase('stall'), 2100));
+    // Phase 3 (3200ms): close gap to 100%
+    timers.push(setTimeout(() => {
       setFillTransition('width 1s cubic-bezier(.4,0,.2,1)');
       setFillGradient(
         'linear-gradient(90deg, rgba(221,0,49,.5) 0%, rgba(221,0,49,.38) 70%, rgba(0,64,144,.8) 82%, #004090 100%)'
       );
       setFillWidth('100%');
       setPhase('closing');
-    }, 3200);
-    // Phase 4: done
-    setTimeout(() => setPhase('done'), 4400);
+    }, 3200));
+    // Phase 4 (4400ms): done — end labels + tagline
+    timers.push(setTimeout(() => setPhase('done'), 4400));
+    return timers;
   }, [phase]);
 
   useEffect(() => {
-    if (inView) runAnimation();
+    if (!inView) return;
+    const timers = runAnimation();
+    return () => timers?.forEach(clearTimeout);
   }, [inView, runAnimation]);
 
   const showStall = phase === 'stall';
@@ -122,7 +159,7 @@ export function ProblemSection() {
       {/* Stat cards */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(3, 1fr)',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
         gap: 16,
         maxWidth: 840,
         margin: '0 auto 36px',
@@ -145,17 +182,19 @@ export function ProblemSection() {
               boxShadow: tokens.glass.shadow,
             }}
           >
-            <div style={{
-              fontFamily: 'var(--font-garamond, "EB Garamond", Georgia, serif)',
-              fontSize: '3.4rem',
-              fontWeight: 800,
-              lineHeight: 1,
-              marginBottom: 10,
-              background: `linear-gradient(135deg, #c00, ${tokens.colors.angularRed})`,
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text',
-            }}>{s.num}</div>
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'center', marginBottom: 10 }}>
+              <span style={{
+                fontFamily: 'var(--font-garamond, "EB Garamond", Georgia, serif)',
+                fontSize: '3.4rem',
+                fontWeight: 800,
+                lineHeight: 1,
+                background: `linear-gradient(135deg, #c00, ${tokens.colors.angularRed})`,
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+              }}>{s.num}</span>
+              <CitationBadge citation={s.citation} />
+            </div>
             <p style={{ fontSize: '0.82rem', color: tokens.colors.textSecondary, lineHeight: 1.5 }}>
               {s.label}
             </p>
@@ -184,7 +223,8 @@ export function ProblemSection() {
       >
         {/* Labels row */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 10 }}>
-          <span style={{ fontFamily: 'var(--font-mono,"JetBrains Mono",monospace)', fontSize: '0.68rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: '#aaa' }}>
+          <span style={{ fontFamily: 'var(--font-mono,"JetBrains Mono",monospace)', fontSize: '0.68rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: '#aaa' }}
+            aria-hidden="true">
             Project kickoff
           </span>
           <span style={{
@@ -192,7 +232,7 @@ export function ProblemSection() {
             color: tokens.colors.angularRed,
             opacity: showStall ? 1 : 0,
             transition: 'opacity 0.4s',
-          }}>
+          }} aria-hidden="true">
             ⚠ Teams stall here
           </span>
           <span style={{
@@ -200,19 +240,20 @@ export function ProblemSection() {
             color: tokens.colors.accent,
             opacity: showEnd ? 1 : 0,
             transition: 'opacity 0.4s',
-          }}>
+          }} aria-hidden="true">
             ✓ Production
           </span>
         </div>
 
         {/* Track — overflow:hidden clips fill at container boundary, no border-radius artifact */}
-        <div style={{ position: 'relative', marginBottom: 10 }}>
+        <div style={{ position: 'relative', marginBottom: 10 }} role="progressbar" aria-valuenow={displayCount} aria-valuemin={0} aria-valuemax={100} aria-label="AI project completion">
           <div style={{
             height: 16,
             borderRadius: 8,
             background: 'rgba(0,0,0,0.07)',
             overflow: 'hidden',
             position: 'relative',
+            animation: showStall ? 'sr-shake 0.5s ease-in-out' : 'none',
           }}>
             <div style={{
               position: 'absolute',
@@ -222,8 +263,8 @@ export function ProblemSection() {
               background: fillGradient,
               transition: fillTransition,
             }} />
-            {/* Hatch overlay (gap zone) */}
-            <div style={{
+            {/* Hatch overlay (gap zone) — decorative */}
+            <div aria-hidden="true" style={{
               position: 'absolute',
               left: '77%', top: 0,
               width: '23%', height: '100%',
@@ -234,16 +275,16 @@ export function ProblemSection() {
             }}>
               <svg width="100%" height="100%" viewBox="0 0 100 16" preserveAspectRatio="none">
                 <defs>
-                  <pattern id="gap-hatch" patternUnits="userSpaceOnUse" width="10" height="10" patternTransform="rotate(45)">
+                  <pattern id={hatchId} patternUnits="userSpaceOnUse" width="10" height="10" patternTransform="rotate(45)">
                     <line x1="0" y1="0" x2="0" y2="10" stroke="rgba(221,0,49,.18)" strokeWidth="4" />
                   </pattern>
                 </defs>
-                <rect width="100" height="16" fill="url(#gap-hatch)" />
+                <rect width="100" height="16" fill={`url(#${hatchId})`} />
               </svg>
             </div>
           </div>
-          {/* Stall pin — outside the overflow:hidden track */}
-          <div style={{
+          {/* Stall pin — outside the overflow:hidden track, decorative */}
+          <div aria-hidden="true" style={{
             position: 'absolute',
             left: '77%',
             top: -8,
@@ -267,10 +308,10 @@ export function ProblemSection() {
             color: showEnd ? tokens.colors.accent : tokens.colors.angularRed,
             transition: 'color 0.4s',
             minWidth: 40,
-          }}>
+          }} aria-hidden="true">
             {displayCount}%
           </span>
-          <div style={{
+          <div aria-hidden="true" style={{
             display: 'inline-flex', alignItems: 'center', gap: 6,
             background: `rgba(0,64,144,0.08)`,
             border: `1px solid rgba(0,64,144,0.2)`,
@@ -294,7 +335,7 @@ export function ProblemSection() {
             transition: 'opacity 0.4s',
             minWidth: 40,
             textAlign: 'right',
-          }}>
+          }} aria-hidden="true">
             100%
           </span>
         </div>
@@ -316,6 +357,7 @@ export function ProblemSection() {
 
       <style>{`
         @keyframes sr-pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(.6)} }
+        @keyframes sr-shake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-3px)} 40%{transform:translateX(3px)} 60%{transform:translateX(-2px)} 80%{transform:translateX(2px)} }
       `}</style>
     </section>
   );
