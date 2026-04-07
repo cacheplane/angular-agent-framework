@@ -1,0 +1,242 @@
+# Events
+
+Elements in a spec can define event handlers via the `on` property. When a rendered component calls its `emit` function, the library looks up the corresponding action binding and dispatches it to a registered handler.
+
+## How Events Work
+
+The event flow has three parts:
+
+1. **Element definition** -- the `on` property maps event names to action bindings
+2. **Component** -- calls `emit('eventName')` when the user interacts
+3. **Handler** -- a registered function that executes the action
+
+```
+Component calls emit('submit')
+    --> Library looks up on.submit
+    --> Finds { action: 'handleSubmit', params: { formId: 'login' } }
+    --> Calls handlers['handleSubmit']({ formId: 'login' })
+```
+
+## Defining Event Handlers in a Spec
+
+The `on` property on a `UIElement` maps event names to action bindings:
+
+```typescript
+{
+  type: 'Button',
+  props: { label: 'Submit' },
+  on: {
+    click: { action: 'handleSubmit', params: { formId: 'login' } },
+  },
+}
+```
+
+Each binding has:
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `action` | `string` | The key used to look up the handler function |
+| `params` | `Record<string, unknown>` | Parameters passed to the handler |
+
+### Multiple Handlers per Event
+
+An event can trigger multiple actions by using an array:
+
+```typescript
+on: {
+  click: [
+    { action: 'trackAnalytics', params: { event: 'button_click' } },
+    { action: 'handleSubmit', params: { formId: 'login' } },
+  ],
+}
+```
+
+Both handlers are called in order when the component emits `click`.
+
+## The Emit Function
+
+Every rendered component receives an `emit` input -- a function with the signature `(event: string) => void`. Call it from your component to dispatch an event:
+
+```typescript
+import { Component, ChangeDetectionStrategy, input } from '@angular/core';
+
+@Component({
+  selector: 'app-button',
+  standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <button (click)="onClick()">{{ label() }}</button>
+  `,
+})
+export class ButtonComponent {
+  readonly label = input<string>('');
+  readonly emit = input<(event: string) => void>(() => {});
+  readonly childKeys = input<string[]>([]);
+  readonly spec = input<unknown>(null);
+
+  onClick() {
+    this.emit()('click');
+  }
+}
+```
+
+<Callout type="info" title="Emit is a Signal">
+Because `emit` is declared with `input()`, it is a Signal. Call `this.emit()` to get the function, then invoke it with the event name: `this.emit()('click')`.
+</Callout>
+
+## Registering Handlers
+
+Handlers are plain functions registered either globally via `provideRender()` or per-instance on `<render-spec>`:
+
+<Tabs>
+<Tab label="Per-instance">
+
+```typescript
+@Component({
+  selector: 'app-root',
+  standalone: true,
+  imports: [RenderSpecComponent],
+  template: `
+    <render-spec
+      [spec]="spec"
+      [registry]="registry"
+      [store]="store"
+      [handlers]="handlers"
+    />
+  `,
+})
+export class AppComponent {
+  store = signalStateStore({ submitted: false });
+
+  handlers = {
+    handleSubmit: (params: Record<string, unknown>) => {
+      console.log('Form submitted:', params['formId']);
+      this.store.set('/submitted', true);
+    },
+    trackAnalytics: (params: Record<string, unknown>) => {
+      console.log('Analytics event:', params['event']);
+    },
+  };
+}
+```
+
+</Tab>
+<Tab label="Global (provideRender)">
+
+```typescript
+// app.config.ts
+import { provideRender } from '@cacheplane/render';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideRender({
+      registry: myRegistry,
+      handlers: {
+        handleSubmit: (params) => {
+          console.log('Submit:', params);
+        },
+      },
+    }),
+  ],
+};
+```
+
+</Tab>
+</Tabs>
+
+### Handler Signature
+
+Each handler receives a `params` object and can return a value or a `Promise`:
+
+```typescript
+type Handler = (params: Record<string, unknown>) => unknown | Promise<unknown>;
+```
+
+### Resolution Priority
+
+Handlers resolve with the same priority as other inputs:
+
+1. `handlers` input on `<render-spec>` (highest priority)
+2. `handlers` in `provideRender()` config (fallback)
+
+## Action Dispatch Pattern
+
+A common pattern is to use handlers to update the state store in response to user interactions. This creates a unidirectional data flow:
+
+```
+User clicks button
+    --> emit('click')
+    --> handler updates store
+    --> Signals propagate
+    --> UI re-renders
+```
+
+Here is a complete example:
+
+```typescript
+const spec: Spec = {
+  root: 'app',
+  elements: {
+    app: {
+      type: 'Container',
+      props: {},
+      children: ['counter', 'increment'],
+    },
+    counter: {
+      type: 'Text',
+      props: { label: { $state: '/count' } },
+    },
+    increment: {
+      type: 'Button',
+      props: { label: 'Increment' },
+      on: {
+        click: { action: 'increment', params: {} },
+      },
+    },
+  },
+  state: { count: 0 },
+};
+
+const store = signalStateStore({ count: 0 });
+
+const handlers = {
+  increment: () => {
+    const current = store.get('/count') as number;
+    store.set('/count', current + 1);
+  },
+};
+```
+
+## Async Handlers
+
+Handlers can be asynchronous. The library does not await the return value, but you can use async functions for server calls or other asynchronous operations:
+
+```typescript
+const handlers = {
+  saveForm: async (params: Record<string, unknown>) => {
+    const snapshot = store.getSnapshot();
+    await fetch('/api/forms', {
+      method: 'POST',
+      body: JSON.stringify(snapshot),
+    });
+    store.set('/saved', true);
+  },
+};
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Registry Guide" href="/docs/render/guides/registry">
+    The emit input and component contract
+  </Card>
+  <Card title="State Store Guide" href="/docs/render/guides/state-store">
+    Updating state from handlers
+  </Card>
+  <Card title="Specs Guide" href="/docs/render/guides/specs">
+    The on property and event binding format
+  </Card>
+  <Card title="RenderSpecComponent API" href="/docs/render/api/render-spec-component">
+    Passing handlers to render-spec
+  </Card>
+</CardGroup>

@@ -1,0 +1,198 @@
+# State Store
+
+The state store holds the reactive state that drives your rendered UI. `@cacheplane/render` provides `signalStateStore()`, an Angular Signals-backed implementation of the `StateStore` interface from `@json-render/core`.
+
+## Creating a State Store
+
+```typescript
+import { signalStateStore } from '@cacheplane/render';
+
+const store = signalStateStore({
+  user: { name: 'Alice', age: 30 },
+  items: ['apple', 'banana', 'cherry'],
+  isVisible: true,
+});
+```
+
+The function accepts an optional initial state object (defaults to `{}`). It returns a `StateStore` that uses Angular Signals internally, so any state changes automatically trigger Angular's change detection.
+
+## JSON Pointer Paths
+
+All state access uses [JSON Pointer](https://datatracker.ietf.org/doc/html/rfc6901) paths. A JSON Pointer is a string that identifies a specific value within a JSON document.
+
+| Path | Resolves to |
+|------|-------------|
+| `/user/name` | `'Alice'` |
+| `/user/age` | `30` |
+| `/items/0` | `'apple'` |
+| `/items/2` | `'cherry'` |
+| `/isVisible` | `true` |
+
+Paths always start with `/`. Each segment separated by `/` traverses one level deeper into the object. Array elements are accessed by index.
+
+### Escaping
+
+JSON Pointer defines two escape sequences for special characters in property names:
+
+- `~0` represents `~`
+- `~1` represents `/`
+
+For example, to access a property named `a/b`, the pointer would be `/a~1b`.
+
+## Reading State
+
+Use `get()` to read a value at a path:
+
+```typescript
+const store = signalStateStore({ user: { name: 'Alice' } });
+
+store.get('/user/name');  // 'Alice'
+store.get('/user');       // { name: 'Alice' }
+store.get('/missing');    // undefined
+```
+
+## Writing State
+
+### Single Value
+
+Use `set()` to write a single value. The store performs an immutable update -- it clones the path to the target and sets the new value. If the new value is referentially equal to the current value, the update is skipped.
+
+```typescript
+store.set('/user/name', 'Bob');
+store.get('/user/name'); // 'Bob'
+```
+
+### Batch Updates
+
+Use `update()` to set multiple values in a single operation. This triggers only one notification to subscribers, regardless of how many values change.
+
+```typescript
+store.update({
+  '/user/name': 'Charlie',
+  '/user/age': 25,
+  '/isVisible': false,
+});
+```
+
+If none of the values actually change (all are referentially equal), no notification is triggered.
+
+## Snapshots
+
+Use `getSnapshot()` to get the entire state object:
+
+```typescript
+const store = signalStateStore({ x: 1, y: 2 });
+store.getSnapshot(); // { x: 1, y: 2 }
+
+store.set('/x', 10);
+store.getSnapshot(); // { x: 10, y: 2 }
+```
+
+## Subscribing to Changes
+
+Use `subscribe()` to register a callback that is invoked whenever the state changes. The function returns an unsubscribe function.
+
+```typescript
+const store = signalStateStore({ count: 0 });
+
+const unsubscribe = store.subscribe(() => {
+  console.log('State changed:', store.getSnapshot());
+});
+
+store.set('/count', 1); // logs: State changed: { count: 1 }
+store.set('/count', 2); // logs: State changed: { count: 2 }
+
+unsubscribe(); // stop listening
+store.set('/count', 3); // no log -- unsubscribed
+```
+
+## Reactive Behavior with Angular Signals
+
+Under the hood, `signalStateStore()` wraps the state in an Angular `signal()`. This means:
+
+- Components using `OnPush` change detection automatically update when the state changes
+- Props resolved via `$state` expressions in specs are re-evaluated when the underlying signal updates
+- The store integrates seamlessly with Angular's reactivity model -- no RxJS or manual subscription management needed
+
+```typescript
+// In a spec, $state props are automatically reactive
+{
+  type: 'Text',
+  props: {
+    label: { $state: '/user/name' },  // re-evaluated on state change
+  },
+}
+```
+
+## Working with Arrays
+
+The store preserves array types when updating elements by index:
+
+```typescript
+const store = signalStateStore({ items: ['a', 'b', 'c'] });
+
+store.set('/items/1', 'B');
+store.get('/items/1');    // 'B'
+store.get('/items');      // ['a', 'B', 'c']
+
+// The items value is still an array
+Array.isArray(store.get('/items')); // true
+```
+
+## Providing the Store
+
+You can provide a store in three ways. `RenderSpecComponent` resolves the store using this priority chain:
+
+<Steps>
+<Step title="Input (highest priority)">
+
+Pass a store directly to `<render-spec>`:
+
+```html
+<render-spec [spec]="spec" [store]="store" />
+```
+
+</Step>
+<Step title="Global config (via provideRender)">
+
+Set a store in `provideRender()`:
+
+```typescript
+provideRender({
+  registry: myRegistry,
+  store: signalStateStore({ theme: 'dark' }),
+})
+```
+
+</Step>
+<Step title="Internal (from spec.state)">
+
+If no external store is provided, `RenderSpecComponent` creates an internal `signalStateStore()` from `spec.state`:
+
+```typescript
+const spec: Spec = {
+  root: 'root',
+  elements: { /* ... */ },
+  state: { message: 'Hello' }, // used to create an internal store
+};
+```
+
+</Step>
+</Steps>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="signalStateStore() API" href="/docs/render/api/signal-state-store">
+    Full API reference for the state store factory
+  </Card>
+  <Card title="Specs Guide" href="/docs/render/guides/specs">
+    How $state expressions connect props to the store
+  </Card>
+  <Card title="Registry Guide" href="/docs/render/guides/registry">
+    Two-way bindings with $bindState
+  </Card>
+  <Card title="Events Guide" href="/docs/render/guides/events">
+    Updating state in response to events
+  </Card>
+</CardGroup>

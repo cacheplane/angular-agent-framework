@@ -1,0 +1,160 @@
+# ChatInterruptPanelComponent
+
+`ChatInterruptPanelComponent` is a composition that renders a styled interrupt card when the LangGraph agent pauses for human input. It displays the interrupt payload and provides action buttons for the user to accept, edit, respond to, or ignore the interrupt.
+
+**Selector:** `chat-interrupt-panel`
+
+**Import:**
+
+```typescript
+import { ChatInterruptPanelComponent } from '@cacheplane/chat';
+import type { InterruptAction } from '@cacheplane/chat';
+```
+
+## How It Works
+
+LangGraph agents can pause execution using interrupts -- checkpoints where the agent waits for human input before proceeding. The `ChatInterruptPanelComponent` reads the interrupt state from an `AgentRef` and renders a warning card with action buttons.
+
+When no interrupt is active, the component renders nothing.
+
+## Basic Usage
+
+```html
+<chat-interrupt-panel
+  [ref]="chatRef"
+  (action)="handleInterrupt($event)"
+/>
+```
+
+```typescript
+import type { InterruptAction } from '@cacheplane/chat';
+
+handleInterrupt(action: InterruptAction) {
+  switch (action) {
+    case 'accept':
+      this.chatRef.submit({ resume: true });
+      break;
+    case 'edit':
+      this.openEditor();
+      break;
+    case 'respond':
+      this.focusInput();
+      break;
+    case 'ignore':
+      // Do nothing, dismiss the panel
+      break;
+  }
+}
+```
+
+## API
+
+### Inputs
+
+| Input | Type | Default | Description |
+|-------|------|---------|-------------|
+| `ref` | `AgentRef<any, any>` | **Required** | The agent ref providing interrupt state |
+
+### Outputs
+
+| Output | Type | Description |
+|--------|------|-------------|
+| `action` | `InterruptAction` | Emits when the user clicks an action button |
+
+## InterruptAction Type
+
+```typescript
+type InterruptAction = 'accept' | 'edit' | 'respond' | 'ignore';
+```
+
+| Action | Button Label | Typical Use |
+|--------|-------------|-------------|
+| `'accept'` | Accept | Approve the agent's proposed action and resume execution |
+| `'edit'` | Edit | Open an editor to modify the agent's proposal before resuming |
+| `'respond'` | Respond | Send a text response back to the agent |
+| `'ignore'` | Ignore | Dismiss the interrupt without taking action |
+
+## Interrupt Payload Display
+
+The component extracts the interrupt payload and displays it as text:
+
+- If the interrupt value is a `string`, it is displayed directly
+- If the interrupt value is an object, it is serialized with `JSON.stringify()`
+
+## Styling
+
+The panel uses the chat theme's warning variables:
+
+| Variable | Applied To |
+|----------|-----------|
+| `--chat-warning-bg` | Panel background |
+| `--chat-warning-text` | Header and message text |
+| `--chat-border` | Panel border |
+| `--chat-radius-card` | Panel border radius |
+| `--chat-bg-alt` | Action button backgrounds |
+| `--chat-text` | Action button text |
+| `--chat-text-muted` | Ignore button text |
+
+## Primitive Alternative: ChatInterruptComponent
+
+If you need full control over the interrupt UI, use the lower-level `ChatInterruptComponent` primitive instead. It provides content projection via an `ng-template`:
+
+```html
+<chat-interrupt [ref]="chatRef">
+  <ng-template let-interrupt>
+    <div class="my-custom-interrupt">
+      <p>Agent paused: {{ interrupt.value }}</p>
+      <button (click)="resume()">Continue</button>
+    </div>
+  </ng-template>
+</chat-interrupt>
+```
+
+The primitive also exports a `getInterrupt()` helper function:
+
+```typescript
+import { getInterrupt } from '@cacheplane/chat';
+
+const interrupt = getInterrupt(chatRef); // Interrupt<any> | undefined
+```
+
+## Full Example
+
+```typescript
+import { Component, signal, ChangeDetectionStrategy } from '@angular/core';
+import { agent } from '@cacheplane/angular';
+import type { BaseMessage } from '@langchain/core/messages';
+import { ChatComponent, ChatInterruptPanelComponent } from '@cacheplane/chat';
+import type { InterruptAction } from '@cacheplane/chat';
+
+@Component({
+  selector: 'app-interrupt-demo',
+  standalone: true,
+  imports: [ChatComponent, ChatInterruptPanelComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <div style="height: 100vh; display: flex; flex-direction: column;">
+      <div style="flex: 1;">
+        <chat [ref]="chatRef" />
+      </div>
+
+      <chat-interrupt-panel
+        [ref]="chatRef"
+        (action)="onInterruptAction($event)"
+      />
+    </div>
+  `,
+})
+export class InterruptDemoComponent {
+  chatRef = agent<{ messages: BaseMessage[] }>({
+    assistantId: 'interrupt_agent',
+    threadId: signal(null),
+  });
+
+  onInterruptAction(action: InterruptAction) {
+    if (action === 'accept') {
+      this.chatRef.submit({ resume: true });
+    }
+  }
+}
+```

@@ -1,0 +1,231 @@
+# ChatDebugComponent
+
+`ChatDebugComponent` is a full debug cockpit that combines a chat interface with a side panel for inspecting LangGraph execution state. It renders the same chat UI as `ChatComponent` alongside a debug panel with a timeline, state inspector, diff viewer, and navigation controls.
+
+**Selector:** `chat-debug`
+
+**Import:**
+
+```typescript
+import { ChatDebugComponent } from '@cacheplane/chat';
+```
+
+## When to Use It
+
+Use `ChatDebugComponent` during development to understand what your LangGraph agent is doing at each step. The debug panel shows:
+
+- A timeline of execution checkpoints
+- State values at each checkpoint
+- A diff between consecutive checkpoints
+- Navigation controls to step through the execution history
+
+## Basic Usage
+
+```typescript
+import { Component, signal, ChangeDetectionStrategy } from '@angular/core';
+import { agent } from '@cacheplane/angular';
+import type { BaseMessage } from '@langchain/core/messages';
+import { ChatDebugComponent } from '@cacheplane/chat';
+
+@Component({
+  selector: 'app-debug-page',
+  standalone: true,
+  imports: [ChatDebugComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <div style="height: 100vh;">
+      <chat-debug [ref]="chatRef" />
+    </div>
+  `,
+})
+export class DebugPageComponent {
+  chatRef = agent<{ messages: BaseMessage[] }>({
+    assistantId: 'chat_agent',
+    threadId: signal(null),
+  });
+}
+```
+
+## API
+
+### Inputs
+
+| Input | Type | Default | Description |
+|-------|------|---------|-------------|
+| `ref` | `AgentRef<any, any>` | **Required** | The agent ref providing streaming state and execution history |
+
+## Layout
+
+The component renders a two-column layout:
+
+- **Left**: The chat area (messages, typing indicator, error display, input)
+- **Right**: The collapsible debug panel (320px wide)
+
+The debug panel can be toggled open/closed with a button on the divider.
+
+## Debug Panel Sections
+
+### Summary
+
+At the top, `DebugSummaryComponent` displays the total number of checkpoints and cumulative execution duration.
+
+### Controls
+
+`DebugControlsComponent` provides VCR-style navigation buttons:
+
+| Button | Action | Disabled When |
+|--------|--------|---------------|
+| `\|<` | Jump to start | Already at first checkpoint |
+| `<` | Step back | Already at first checkpoint |
+| `>` | Step forward | Already at last checkpoint |
+| `>\|` | Jump to end | Already at last checkpoint |
+
+### Timeline
+
+`DebugTimelineComponent` renders a vertical timeline rail with one `DebugCheckpointCardComponent` per checkpoint. Each card shows:
+
+- The node name (from `state.next[0]` or `"Step N"`)
+- Optional duration badge (milliseconds)
+- Optional token count badge
+- Visual selection state (highlighted dot and border)
+
+Click a checkpoint to select it and view its details below.
+
+### Detail
+
+When a checkpoint is selected, `DebugDetailComponent` renders two sections:
+
+1. **State Diff** (`DebugStateDiffComponent`): Shows what changed between the previous and current checkpoint as color-coded entries:
+   - Green (`+`): Added keys
+   - Red (`-`): Removed keys
+   - Yellow (`~`): Changed values (shows before and after)
+
+2. **Current State** (`DebugStateInspectorComponent`): Displays the full state values as formatted JSON.
+
+## Debug Sub-Components
+
+Each debug sub-component is exported individually for custom debug UIs:
+
+| Component | Selector | Purpose |
+|-----------|----------|---------|
+| `DebugTimelineComponent` | `chat-debug-timeline` | Vertical timeline of checkpoints |
+| `DebugCheckpointCardComponent` | `chat-debug-checkpoint-card` | Single checkpoint card in the timeline |
+| `DebugControlsComponent` | `chat-debug-controls` | VCR-style step navigation |
+| `DebugSummaryComponent` | `chat-debug-summary` | Step count and total duration |
+| `DebugDetailComponent` | `chat-debug-detail` | State diff + state inspector |
+| `DebugStateDiffComponent` | `chat-debug-state-diff` | Color-coded state diff |
+| `DebugStateInspectorComponent` | `chat-debug-state-inspector` | JSON state viewer |
+
+## Debug Utilities
+
+### toDebugCheckpoint()
+
+Converts a `ThreadState` entry to a `DebugCheckpoint`:
+
+```typescript
+import { toDebugCheckpoint } from '@cacheplane/chat';
+
+const checkpoint = toDebugCheckpoint(threadState, index);
+// { node: 'agent', checkpointId: 'abc123' }
+```
+
+### extractStateValues()
+
+Extracts the state values from a `ThreadState`, returning `{}` if unavailable:
+
+```typescript
+import { extractStateValues } from '@cacheplane/chat';
+
+const values = extractStateValues(threadState);
+// { messages: [...], someKey: 'value' }
+```
+
+### computeStateDiff()
+
+Computes a recursive diff between two state objects:
+
+```typescript
+import { computeStateDiff } from '@cacheplane/chat';
+import type { DiffEntry } from '@cacheplane/chat';
+
+const diff: DiffEntry[] = computeStateDiff(beforeState, afterState);
+```
+
+### DebugCheckpoint Type
+
+```typescript
+interface DebugCheckpoint {
+  node?: string;
+  duration?: number;
+  tokenCount?: number;
+  checkpointId?: string;
+}
+```
+
+### DiffEntry Type
+
+```typescript
+interface DiffEntry {
+  path: string;
+  type: 'added' | 'removed' | 'changed';
+  before?: unknown;
+  after?: unknown;
+}
+```
+
+## Building a Custom Debug Panel
+
+You can use the sub-components individually to build a custom debug layout:
+
+```typescript
+import { Component, signal, computed, ChangeDetectionStrategy } from '@angular/core';
+import {
+  DebugTimelineComponent,
+  DebugDetailComponent,
+  toDebugCheckpoint,
+  extractStateValues,
+} from '@cacheplane/chat';
+import type { DebugCheckpoint } from '@cacheplane/chat';
+
+@Component({
+  selector: 'app-custom-debug',
+  standalone: true,
+  imports: [DebugTimelineComponent, DebugDetailComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <div class="flex gap-4">
+      <chat-debug-timeline
+        [checkpoints]="checkpoints()"
+        [selectedIndex]="selectedIndex()"
+        (checkpointSelected)="selectedIndex.set($event)"
+      />
+
+      @if (selectedIndex() >= 0) {
+        <chat-debug-detail
+          [currentState]="currentState()"
+          [previousState]="previousState()"
+        />
+      }
+    </div>
+  `,
+})
+export class CustomDebugComponent {
+  // chatRef = agent(...)
+
+  selectedIndex = signal(-1);
+
+  checkpoints = computed((): DebugCheckpoint[] =>
+    this.chatRef.history().map((state, i) => toDebugCheckpoint(state, i))
+  );
+
+  currentState = computed(() =>
+    extractStateValues(this.chatRef.history()[this.selectedIndex()])
+  );
+
+  previousState = computed(() => {
+    const idx = this.selectedIndex();
+    if (idx <= 0) return {};
+    return extractStateValues(this.chatRef.history()[idx - 1]);
+  });
+}
+```

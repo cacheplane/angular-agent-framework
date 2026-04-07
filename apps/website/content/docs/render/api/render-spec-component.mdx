@@ -1,0 +1,192 @@
+# RenderSpecComponent
+
+The top-level entry point for rendering a `@json-render/core` spec as an Angular component tree.
+
+## Import
+
+```typescript
+import { RenderSpecComponent } from '@cacheplane/render';
+```
+
+## Selector
+
+```
+render-spec
+```
+
+## Usage
+
+```html
+<render-spec [spec]="spec" [registry]="registry" [store]="store" />
+```
+
+```typescript
+@Component({
+  imports: [RenderSpecComponent],
+  template: `<render-spec [spec]="spec" [registry]="registry" />`,
+})
+export class MyComponent {
+  spec: Spec = { /* ... */ };
+  registry = defineAngularRegistry({ /* ... */ });
+}
+```
+
+## Inputs
+
+| Input | Type | Default | Description |
+|-------|------|---------|-------------|
+| `spec` | `Spec \| null` | `null` | The json-render spec to render. When `null`, nothing is rendered. |
+| `registry` | `AngularRegistry \| undefined` | `undefined` | Component registry mapping element types to Angular components. |
+| `store` | `StateStore \| undefined` | `undefined` | State store for reactive prop resolution. |
+| `functions` | `Record<string, ComputedFunction> \| undefined` | `undefined` | Computed functions for `$fn` prop expressions. |
+| `handlers` | `Record<string, (params: Record<string, unknown>) => unknown \| Promise<unknown>> \| undefined` | `undefined` | Event handlers invoked when components call `emit()`. |
+| `loading` | `boolean` | `false` | Whether the spec is currently streaming. Passed to all rendered components as the `loading` input. |
+
+## Resolution Chain
+
+For `registry`, `store`, `functions`, and `handlers`, the component resolves values using this priority:
+
+<Steps>
+<Step title="Input (highest priority)">
+Values passed as component inputs.
+</Step>
+<Step title="RENDER_CONFIG (from provideRender)">
+Global defaults provided via `provideRender()`.
+</Step>
+<Step title="Internal fallback (lowest priority)">
+For `store`: an internal `signalStateStore()` is created from `spec.state` (or an empty object). For `registry`: an empty registry is used (no components resolve).
+</Step>
+</Steps>
+
+This means you can set defaults globally and override them per-instance:
+
+```typescript
+// Global config
+provideRender({
+  registry: defaultRegistry,
+  store: globalStore,
+  handlers: { log: (p) => console.log(p) },
+});
+
+// Per-instance override -- only registry is overridden
+<render-spec [spec]="spec" [registry]="customRegistry" />
+// store, functions, and handlers fall back to global config
+```
+
+## RENDER_CONTEXT
+
+`RenderSpecComponent` provides a `RENDER_CONTEXT` injection token to its children via `viewProviders`. This context is consumed by `RenderElementComponent` instances and contains:
+
+```typescript
+interface RenderContext {
+  registry: AngularRegistry;
+  store: StateStore;
+  functions?: Record<string, ComputedFunction>;
+  handlers?: Record<string, (params: Record<string, unknown>) => unknown | Promise<unknown>>;
+  loading?: boolean;
+}
+```
+
+The context is a `computed` signal that updates when any input or config changes. Child components can inject it directly:
+
+```typescript
+import { inject } from '@angular/core';
+import { RENDER_CONTEXT } from '@cacheplane/render';
+
+const ctx = inject(RENDER_CONTEXT);
+ctx.store.get('/some/path');
+```
+
+## Template Behavior
+
+The component renders a single `<render-element>` for the root element key from `spec.root`:
+
+```html
+<!-- Internal template -->
+@if (spec()?.root; as rootKey) {
+  <render-element [elementKey]="rootKey" [spec]="spec()!" />
+}
+```
+
+When `spec` is `null` or has no `root`, nothing is rendered.
+
+## Internal Store Behavior
+
+When no store is provided (neither as input nor via `RENDER_CONFIG`), the component lazily creates an internal `signalStateStore()` from `spec.state`. This internal store is created once and reused across spec changes -- it is not recreated when the spec input updates.
+
+```typescript
+// Spec with embedded state -- no external store needed
+const spec: Spec = {
+  root: 'root',
+  elements: {
+    root: { type: 'Text', props: { label: { $state: '/message' } } },
+  },
+  state: { message: 'Hello' },
+};
+```
+
+```html
+<!-- Internal store is created from spec.state -->
+<render-spec [spec]="spec" [registry]="registry" />
+```
+
+## Change Detection
+
+The component uses `ChangeDetectionStrategy.OnPush`. All reactive updates flow through Angular Signals, ensuring efficient change detection without zone-based triggers.
+
+## Complete Example
+
+```typescript
+import { Component, ChangeDetectionStrategy, signal } from '@angular/core';
+import {
+  RenderSpecComponent,
+  defineAngularRegistry,
+  signalStateStore,
+} from '@cacheplane/render';
+import type { Spec } from '@json-render/core';
+import { TextComponent } from './text.component';
+import { ButtonComponent } from './button.component';
+
+@Component({
+  selector: 'app-root',
+  standalone: true,
+  imports: [RenderSpecComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <render-spec
+      [spec]="spec"
+      [registry]="registry"
+      [store]="store"
+      [handlers]="handlers"
+      [loading]="isLoading()"
+    />
+  `,
+})
+export class AppComponent {
+  isLoading = signal(false);
+
+  registry = defineAngularRegistry({
+    Text: TextComponent,
+    Button: ButtonComponent,
+  });
+
+  store = signalStateStore({ count: 0 });
+
+  handlers = {
+    increment: () => {
+      const count = this.store.get('/count') as number;
+      this.store.set('/count', count + 1);
+    },
+  };
+
+  spec: Spec = {
+    root: 'app',
+    elements: {
+      app: {
+        type: 'Text',
+        props: { label: { $state: '/count' } },
+      },
+    },
+  };
+}
+```

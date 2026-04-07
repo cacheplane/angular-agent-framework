@@ -1,0 +1,138 @@
+# Installation
+
+Detailed setup guide for `@cacheplane/chat` in your Angular application.
+
+## Requirements
+
+<Steps>
+<Step title="Angular 20+">
+`@cacheplane/chat` uses Angular Signals, the `input()` function, and `contentChildren()`. Angular 20 or later is required.
+</Step>
+<Step title="@cacheplane/agent">
+The chat components read streaming state from `AgentRef`, which is provided by `@cacheplane/agent`. You must have `provideAgent()` configured before adding chat.
+</Step>
+<Step title="Node.js 18+">
+Required for the build toolchain and package installation.
+</Step>
+</Steps>
+
+## Install the package
+
+```bash
+npm install @cacheplane/chat
+```
+
+## Peer Dependencies
+
+`@cacheplane/chat` declares the following peer dependencies:
+
+| Package | Version | Required |
+|---------|---------|----------|
+| `@angular/core` | `^20.0.0 \|\| ^21.0.0` | Yes |
+| `@angular/common` | `^20.0.0 \|\| ^21.0.0` | Yes |
+| `@angular/forms` | `^20.0.0 \|\| ^21.0.0` | Yes |
+| `@cacheplane/angular` | `^0.0.1` | Yes |
+| `@cacheplane/render` | `^0.0.1` | Yes |
+| `@json-render/core` | `^0.16.0` | Yes |
+| `@langchain/core` | `^1.1.33` | Yes |
+| `@langchain/langgraph-sdk` | `^1.7.4` | Yes |
+| `marked` | `^15.0.0 \|\| ^16.0.0` | Optional |
+
+<Callout type="tip" title="Markdown rendering">
+The `marked` package is optional. When installed, AI messages are rendered as full markdown (headings, code blocks, tables, lists). Without it, the library falls back to plain text with `<br>` newline conversion.
+</Callout>
+
+To install everything at once:
+
+```bash
+npm install @cacheplane/chat @cacheplane/angular @cacheplane/render marked
+```
+
+## Configure provideChat()
+
+Add `provideChat()` alongside `provideAgent()` in your application configuration. This registers the `CHAT_CONFIG` injection token used by composition components.
+
+```typescript
+// app.config.ts
+import { ApplicationConfig } from '@angular/core';
+import { provideAgent } from '@cacheplane/angular';
+import { provideChat } from '@cacheplane/chat';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideAgent({
+      apiUrl: 'http://localhost:2024',
+    }),
+    provideChat({
+      assistantName: 'Assistant',
+      avatarLabel: 'A',
+    }),
+  ],
+};
+```
+
+<Callout type="info" title="provideChat() is optional">
+`provideChat()` is only needed if you want to set global configuration like `renderRegistry`, `avatarLabel`, or `assistantName`. All primitive and composition components work without it -- they use sensible defaults.
+</Callout>
+
+## Tailwind CSS
+
+The composition components use Tailwind CSS utility classes for layout. If you are using compositions like `ChatComponent` or `ChatDebugComponent`, make sure Tailwind is configured in your project.
+
+```bash
+npm install -D tailwindcss @tailwindcss/postcss
+```
+
+The primitives layer does not depend on Tailwind -- it uses only inline styles and content projection.
+
+## Verify the Setup
+
+Create a minimal component to verify everything is wired up:
+
+```typescript
+import { Component, signal } from '@angular/core';
+import { agent } from '@cacheplane/angular';
+import { ChatComponent } from '@cacheplane/chat';
+import type { BaseMessage } from '@langchain/core/messages';
+
+@Component({
+  selector: 'app-test-chat',
+  standalone: true,
+  imports: [ChatComponent],
+  template: `<div style="height: 400px;"><chat [ref]="ref" /></div>`,
+})
+export class TestChatComponent {
+  ref = agent<{ messages: BaseMessage[] }>({
+    assistantId: 'chat_agent',
+    threadId: signal(null),
+  });
+}
+```
+
+If you see the empty state message and can type in the input, the installation is working.
+
+## What's Next
+
+<CardGroup cols={3}>
+  <Card
+    title="Quick Start"
+    icon="rocket"
+    href="/docs/chat/getting-started/quickstart"
+  >
+    Build a working chat interface in 5 minutes.
+  </Card>
+  <Card
+    title="Configuration"
+    icon="settings"
+    href="/docs/chat/guides/configuration"
+  >
+    All provideChat() options explained.
+  </Card>
+  <Card
+    title="Theming"
+    icon="palette"
+    href="/docs/chat/guides/theming"
+  >
+    Customize the visual design with CSS custom properties.
+  </Card>
+</CardGroup>

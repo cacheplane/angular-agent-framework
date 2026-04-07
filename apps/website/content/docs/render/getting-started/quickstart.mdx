@@ -1,0 +1,175 @@
+# Quick Start
+
+Render a JSON spec as a live Angular component tree in 5 minutes.
+
+<Callout type="info" title="Prerequisites">
+Angular 20+ project with `@cacheplane/render` installed. See the [Installation](/docs/render/getting-started/installation) guide if you need setup help.
+</Callout>
+
+<Steps>
+<Step title="Create a component to render">
+
+Define a simple Angular component that will be rendered by the spec. Every rendered component receives inputs matching the `AngularComponentInputs` interface -- your custom props are spread alongside the standard inputs.
+
+```typescript
+// text.component.ts
+import { Component, ChangeDetectionStrategy, input } from '@angular/core';
+
+@Component({
+  selector: 'app-text',
+  standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `<p>{{ label() }}</p>`,
+})
+export class TextComponent {
+  readonly label = input<string>('');
+  readonly childKeys = input<string[]>([]);
+  readonly spec = input<unknown>(null);
+}
+```
+
+</Step>
+<Step title="Define a registry">
+
+Map element type names to Angular component classes using `defineAngularRegistry()`.
+
+```typescript
+// ui-registry.ts
+import { defineAngularRegistry } from '@cacheplane/render';
+import { TextComponent } from './text.component';
+
+export const uiRegistry = defineAngularRegistry({
+  Text: TextComponent,
+});
+```
+
+</Step>
+<Step title="Build a spec">
+
+A spec describes the UI tree as a flat map of elements. The `root` key points to the entry element.
+
+```typescript
+// app.component.ts
+import { Component, ChangeDetectionStrategy } from '@angular/core';
+import { RenderSpecComponent } from '@cacheplane/render';
+import type { Spec } from '@json-render/core';
+import { uiRegistry } from './ui-registry';
+
+@Component({
+  selector: 'app-root',
+  standalone: true,
+  imports: [RenderSpecComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <render-spec [spec]="spec" [registry]="registry" />
+  `,
+})
+export class AppComponent {
+  registry = uiRegistry;
+
+  spec: Spec = {
+    root: 'greeting',
+    elements: {
+      greeting: {
+        type: 'Text',
+        props: { label: 'Hello from @cacheplane/render!' },
+      },
+    },
+  };
+}
+```
+
+</Step>
+<Step title="Run your app">
+
+```bash
+ng serve
+```
+
+Open `http://localhost:4200`. You should see "Hello from @cacheplane/render!" rendered by your `TextComponent`.
+
+</Step>
+</Steps>
+
+## Adding Reactive State
+
+Specs become powerful when you connect them to a state store. Props with `$state` expressions read from the store reactively.
+
+```typescript
+import { Component, ChangeDetectionStrategy } from '@angular/core';
+import { RenderSpecComponent, signalStateStore } from '@cacheplane/render';
+import type { Spec } from '@json-render/core';
+import { uiRegistry } from './ui-registry';
+
+@Component({
+  selector: 'app-root',
+  standalone: true,
+  imports: [RenderSpecComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <render-spec [spec]="spec" [registry]="registry" [store]="store" />
+    <button (click)="updateName()">Change Name</button>
+  `,
+})
+export class AppComponent {
+  registry = uiRegistry;
+  store = signalStateStore({ name: 'World' });
+
+  spec: Spec = {
+    root: 'greeting',
+    elements: {
+      greeting: {
+        type: 'Text',
+        props: { label: { $state: '/name' } },
+      },
+    },
+  };
+
+  updateName() {
+    this.store.set('/name', 'Angular');
+  }
+}
+```
+
+Clicking the button updates the store, which reactively updates the rendered `TextComponent` label from "World" to "Angular".
+
+## Using Spec-Embedded State
+
+You can also embed initial state directly in the spec. When no external store is provided, `RenderSpecComponent` automatically creates an internal `signalStateStore` from `spec.state`:
+
+```typescript
+spec: Spec = {
+  root: 'greeting',
+  elements: {
+    greeting: {
+      type: 'Text',
+      props: { label: { $state: '/message' } },
+    },
+  },
+  state: {
+    message: 'State embedded in the spec!',
+  },
+};
+```
+
+```html
+<!-- No [store] input needed -- an internal store is created from spec.state -->
+<render-spec [spec]="spec" [registry]="registry" />
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Registry Guide" href="/docs/render/guides/registry">
+    Register multiple components and learn the input contract
+  </Card>
+  <Card title="Specs Guide" href="/docs/render/guides/specs">
+    Spec format, conditional rendering, and repeat loops
+  </Card>
+  <Card title="State Store Guide" href="/docs/render/guides/state-store">
+    Reactive state management with signalStateStore()
+  </Card>
+  <Card title="Events Guide" href="/docs/render/guides/events">
+    Event handlers and action dispatch
+  </Card>
+</CardGroup>

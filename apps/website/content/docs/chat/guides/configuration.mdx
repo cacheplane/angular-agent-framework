@@ -1,0 +1,120 @@
+# Configuration
+
+`@cacheplane/chat` uses Angular's dependency injection system for global configuration. The `provideChat()` function registers a `ChatConfig` object under the `CHAT_CONFIG` injection token.
+
+## provideChat()
+
+Call `provideChat()` in your application's provider array to set global configuration for chat components.
+
+```typescript
+// app.config.ts
+import { ApplicationConfig } from '@angular/core';
+import { provideChat } from '@cacheplane/chat';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideChat({
+      renderRegistry: myRegistry,
+      avatarLabel: 'AI',
+      assistantName: 'My Assistant',
+    }),
+  ],
+};
+```
+
+**Signature:**
+
+```typescript
+function provideChat(config: ChatConfig): EnvironmentProviders
+```
+
+`provideChat()` returns `EnvironmentProviders` (via `makeEnvironmentProviders`), so it works with `bootstrapApplication`, `ApplicationConfig`, or route-level providers.
+
+## ChatConfig Interface
+
+```typescript
+interface ChatConfig {
+  /** Default render registry for generative UI components. */
+  renderRegistry?: AngularRegistry;
+
+  /** Override the default AI avatar label (default: "A"). */
+  avatarLabel?: string;
+
+  /** Override the default assistant display name (default: "Assistant"). */
+  assistantName?: string;
+}
+```
+
+### Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `renderRegistry` | `AngularRegistry` | `undefined` | The component registry used by `ChatGenerativeUiComponent` to resolve JSON specs to Angular components. See the [Generative UI](/docs/chat/guides/generative-ui) guide. |
+| `avatarLabel` | `string` | `"A"` | Single character or short string displayed in the AI avatar badge next to assistant messages. |
+| `assistantName` | `string` | `"Assistant"` | Display name for the AI assistant, used in labels and ARIA attributes. |
+
+## CHAT_CONFIG Injection Token
+
+The `CHAT_CONFIG` token is an `InjectionToken<ChatConfig>` that you can inject directly in any component or service:
+
+```typescript
+import { inject } from '@angular/core';
+import { CHAT_CONFIG } from '@cacheplane/chat';
+import type { ChatConfig } from '@cacheplane/chat';
+
+@Component({ /* ... */ })
+export class MyComponent {
+  private config = inject(CHAT_CONFIG);
+
+  get avatarText(): string {
+    return this.config.avatarLabel ?? 'A';
+  }
+}
+```
+
+<Callout type="warning" title="Optional injection">
+If `provideChat()` has not been called, injecting `CHAT_CONFIG` will throw. Use `inject(CHAT_CONFIG, { optional: true })` if your component needs to work with or without global configuration.
+</Callout>
+
+## Per-Route Configuration
+
+Because `provideChat()` returns `EnvironmentProviders`, you can provide different configurations at the route level:
+
+```typescript
+// app.routes.ts
+import { provideChat } from '@cacheplane/chat';
+
+export const routes: Routes = [
+  {
+    path: 'support',
+    loadComponent: () => import('./support-chat.component'),
+    providers: [
+      provideChat({
+        assistantName: 'Support Bot',
+        avatarLabel: 'S',
+      }),
+    ],
+  },
+  {
+    path: 'code',
+    loadComponent: () => import('./code-chat.component'),
+    providers: [
+      provideChat({
+        assistantName: 'Code Assistant',
+        avatarLabel: 'C',
+        renderRegistry: codeRegistry,
+      }),
+    ],
+  },
+];
+```
+
+## Using Configuration Without provideChat()
+
+All composition components use sensible defaults. If you do not call `provideChat()`, components will:
+
+- Use `"A"` as the avatar label
+- Use `"Assistant"` as the assistant name
+- Have no render registry (generative UI will not render)
+
+This means you can use `ChatComponent`, `ChatInputComponent`, and all other components without any global configuration for basic chat functionality.

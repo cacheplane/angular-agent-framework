@@ -1,0 +1,140 @@
+# Markdown Rendering
+
+AI messages in `@cacheplane/chat` can render full markdown -- headings, code blocks, tables, lists, blockquotes, and inline formatting. This is powered by the `renderMarkdown()` utility and styled with `CHAT_MARKDOWN_STYLES`.
+
+## How It Works
+
+The markdown pipeline has two stages:
+
+1. **Parse**: The `renderMarkdown()` function converts markdown text to sanitized HTML using the `marked` library (dynamically imported). If `marked` is not installed, it falls back to plain text with `<br>` newline conversion.
+2. **Style**: The `CHAT_MARKDOWN_STYLES` constant provides CSS rules scoped under the `.chat-md` class, targeting all common markdown elements.
+
+## The renderMarkdown() Function
+
+```typescript
+import { renderMarkdown } from '@cacheplane/chat';
+import { DomSanitizer } from '@angular/platform-browser';
+
+// In a component:
+private sanitizer = inject(DomSanitizer);
+
+renderMd(content: string): SafeHtml {
+  return renderMarkdown(content, this.sanitizer);
+}
+```
+
+**Signature:**
+
+```typescript
+function renderMarkdown(content: string, sanitizer: DomSanitizer): SafeHtml
+```
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `content` | `string` | Raw markdown text to render |
+| `sanitizer` | `DomSanitizer` | Angular's DOM sanitizer for XSS protection |
+
+**Returns:** `SafeHtml` -- sanitized HTML that can be bound via `[innerHTML]`.
+
+**Behavior:**
+- When `marked` is installed, parses markdown to HTML, sanitizes it through Angular's `SecurityContext.HTML`, then marks the result as trusted.
+- When `marked` is not available, escapes HTML entities (`&`, `<`, `>`) and converts newlines to `<br>` tags.
+
+<Callout type="info" title="Dynamic import">
+The `marked` library is loaded via a dynamic `import('marked')` at module initialization time. This means it does not block initial bundle loading and resolves before the first render in most cases.
+</Callout>
+
+## CHAT_MARKDOWN_STYLES
+
+The `CHAT_MARKDOWN_STYLES` constant provides CSS rules for all standard markdown elements. It targets the `.chat-md` class using `::ng-deep` for view encapsulation compatibility.
+
+```typescript
+import { CHAT_MARKDOWN_STYLES } from '@cacheplane/chat';
+
+@Component({
+  styles: [CHAT_MARKDOWN_STYLES],
+  // ...
+})
+export class MyComponent {}
+```
+
+### Styled Elements
+
+The stylesheet covers the following markdown elements:
+
+| Element | Styling |
+|---------|---------|
+| `p` | Bottom margin of `0.75em`, last child has no bottom margin |
+| `code` (inline) | Background `var(--chat-bg-alt)`, padding, `4px` radius, monospace font |
+| `pre` | Background `var(--chat-bg-alt)`, `12px 16px` padding, horizontal scroll |
+| `pre code` | No extra background or padding (inherits from `pre`) |
+| `ul`, `ol` | `0.5em` vertical margin, `1.5em` left padding |
+| `li` | `0.25em` vertical margin |
+| `a` | Text color with underline |
+| `strong` | Font weight `600` |
+| `blockquote` | Left border `3px solid`, left padding `12px`, muted text color |
+| `h1` | `1.25em` font size, weight `600` |
+| `h2` | `1.125em` font size, weight `600` |
+| `h3` | `1em` font size, weight `600` |
+| `table` | Collapsed borders, full width |
+| `th` | Alt background, bold, `0.875em` |
+| `td` | Standard border and padding |
+
+All colors reference CSS custom properties from `CHAT_THEME_STYLES`, so markdown elements automatically respect your theme.
+
+## Using Markdown in Custom Components
+
+To render markdown in a custom message template, apply both the styles and the `.chat-md` class:
+
+```typescript
+import { Component, inject } from '@angular/core';
+import { DomSanitizer } from '@angular/platform-browser';
+import {
+  ChatMessagesComponent,
+  MessageTemplateDirective,
+  CHAT_MARKDOWN_STYLES,
+  renderMarkdown,
+} from '@cacheplane/chat';
+
+@Component({
+  selector: 'app-chat-view',
+  standalone: true,
+  imports: [ChatMessagesComponent, MessageTemplateDirective],
+  styles: [CHAT_MARKDOWN_STYLES],
+  template: `
+    <chat-messages [ref]="chatRef">
+      <ng-template chatMessageTemplate="ai" let-message>
+        <div
+          class="chat-md"
+          [innerHTML]="renderMd(message.content)"
+        ></div>
+      </ng-template>
+    </chat-messages>
+  `,
+})
+export class ChatViewComponent {
+  private sanitizer = inject(DomSanitizer);
+
+  // chatRef = agent(...)
+
+  renderMd(content: string | unknown) {
+    if (typeof content !== 'string') return '';
+    return renderMarkdown(content, this.sanitizer);
+  }
+}
+```
+
+<Callout type="tip" title="The .chat-md class is required">
+The markdown styles are scoped to `.chat-md`. Make sure the container element receiving `[innerHTML]` has this class, otherwise the rendered HTML will appear unstyled.
+</Callout>
+
+## Without marked
+
+If you choose not to install `marked`, markdown content will render as plain text with line breaks preserved. This can be appropriate for simple chat applications that do not need rich formatting.
+
+```bash
+# Full markdown support:
+npm install marked
+
+# Or skip it -- plain text fallback works automatically
+```

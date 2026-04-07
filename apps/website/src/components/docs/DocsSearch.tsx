@@ -1,10 +1,28 @@
 'use client';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { allDocsPages, docsConfig } from '../../lib/docs-config';
+import { docsConfig, type LibraryId } from '../../lib/docs-config';
 import { tokens } from '@cacheplane/design-tokens';
 
-export function DocsSearch() {
+interface SearchablePage {
+  title: string;
+  slug: string;
+  section: string;
+  library: LibraryId;
+  libraryTitle: string;
+}
+
+const allSearchablePages: SearchablePage[] = docsConfig.flatMap((lib) =>
+  lib.sections.flatMap((s) =>
+    s.pages.map((p) => ({
+      ...p,
+      library: lib.id,
+      libraryTitle: lib.title,
+    }))
+  )
+);
+
+export function DocsSearch({ library }: { library?: LibraryId }) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [selected, setSelected] = useState(0);
@@ -12,12 +30,13 @@ export function DocsSearch() {
   const router = useRouter();
 
   const results = query.length > 0
-    ? allDocsPages.filter((p) =>
+    ? allSearchablePages.filter((p) =>
         p.title.toLowerCase().includes(query.toLowerCase()) ||
         p.slug.toLowerCase().includes(query.toLowerCase()) ||
-        p.section.toLowerCase().includes(query.toLowerCase())
+        p.section.toLowerCase().includes(query.toLowerCase()) ||
+        p.libraryTitle.toLowerCase().includes(query.toLowerCase())
       ).slice(0, 8)
-    : allDocsPages.slice(0, 6);
+    : allSearchablePages.filter((p) => !library || p.library === library).slice(0, 6);
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
@@ -40,8 +59,8 @@ export function DocsSearch() {
     }
   }, [open]);
 
-  const navigate = (page: typeof allDocsPages[0]) => {
-    router.push(`/docs/${page.section}/${page.slug}`);
+  const navigate = (page: SearchablePage) => {
+    router.push(`/docs/${page.library}/${page.section}/${page.slug}`);
     setOpen(false);
   };
 
@@ -50,8 +69,6 @@ export function DocsSearch() {
     if (e.key === 'ArrowUp') { e.preventDefault(); setSelected((s) => Math.max(s - 1, 0)); }
     if (e.key === 'Enter' && results[selected]) { navigate(results[selected]); }
   };
-
-  const getSectionLabel = (sectionId: string) => docsConfig.find((s) => s.id === sectionId)?.title ?? sectionId;
 
   if (!open) return null;
 
@@ -91,7 +108,7 @@ export function DocsSearch() {
         <div style={{ maxHeight: 320, overflowY: 'auto', padding: 8 }}>
           {results.map((page, i) => (
             <button
-              key={`${page.section}/${page.slug}`}
+              key={`${page.library}/${page.section}/${page.slug}`}
               onClick={() => navigate(page)}
               className="w-full text-left"
               style={{
@@ -105,7 +122,7 @@ export function DocsSearch() {
                 fontFamily: 'var(--font-mono)', fontSize: '0.65rem',
                 color: tokens.colors.textMuted, background: 'rgba(0,0,0,0.04)',
                 padding: '2px 6px', borderRadius: 4,
-              }}>{getSectionLabel(page.section)}</span>
+              }}>{page.libraryTitle}</span>
             </button>
           ))}
           {results.length === 0 && (

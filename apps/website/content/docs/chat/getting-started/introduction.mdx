@@ -1,0 +1,113 @@
+# Introduction
+
+`@cacheplane/chat` is the Angular UI component library for building chat interfaces on top of `@cacheplane/agent`. It provides a complete set of composable, Signal-driven components that render messages, handle user input, display tool calls, manage interrupts, and support generative UI -- all styled with CSS custom properties and built for Angular 20+.
+
+<Callout type="info" title="What you'll learn">
+This guide explains the library's two-tier architecture, how it relates to the rest of the Cacheplane stack, and when to reach for the all-in-one composition versus assembling primitives yourself.
+</Callout>
+
+## Two-Tier Architecture
+
+The library is organized into two layers: **primitives** and **compositions**.
+
+### Primitives
+
+Primitives are low-level, headless components that read from an `AgentRef` and expose their state through content projection (`ng-template`). They carry no opinion about layout or styling. Use them when you need full control over how chat elements render.
+
+| Primitive | Selector | Purpose |
+|-----------|----------|---------|
+| `ChatMessagesComponent` | `chat-messages` | Iterates messages and renders via template directives |
+| `MessageTemplateDirective` | `ng-template[chatMessageTemplate]` | Declares a template for a specific message type |
+| `ChatInputComponent` | `chat-input` | Text input with submit handling and keyboard shortcuts |
+| `ChatTypingIndicatorComponent` | `chat-typing-indicator` | Animated dots shown while the agent is streaming |
+| `ChatErrorComponent` | `chat-error` | Displays error messages from the agent |
+| `ChatInterruptComponent` | `chat-interrupt` | Projects interrupt content via a template |
+| `ChatToolCallsComponent` | `chat-tool-calls` | Iterates tool calls and projects each via a template |
+| `ChatSubagentsComponent` | `chat-subagents` | Iterates active subagent streams via a template |
+| `ChatGenerativeUiComponent` | `chat-generative-ui` | Renders a JSON spec through `@cacheplane/render` |
+| `ChatThreadListComponent` | `chat-thread-list` | Renders a list of conversation threads |
+| `ChatTimelineComponent` | `chat-timeline` | Iterates checkpoint history via a template |
+
+### Compositions
+
+Compositions are opinionated, styled components that combine primitives into ready-to-use UI blocks. They include `CHAT_THEME_STYLES` and `CHAT_MARKDOWN_STYLES` out of the box.
+
+| Composition | Selector | Purpose |
+|-------------|----------|---------|
+| `ChatComponent` | `chat` | Full chat UI with messages, input, typing indicator, error, and thread sidebar |
+| `ChatInterruptPanelComponent` | `chat-interrupt-panel` | Styled interrupt card with accept/edit/respond/ignore actions |
+| `ChatToolCallCardComponent` | `chat-tool-call-card` | Expandable card showing tool name, inputs, and output |
+| `ChatSubagentCardComponent` | `chat-subagent-card` | Expandable card showing subagent status and messages |
+| `ChatDebugComponent` | `chat-debug` | Full debug cockpit with timeline, state inspector, and diff viewer |
+| `ChatTimelineSliderComponent` | `chat-timeline-slider` | Slider-based timeline navigation |
+
+## How the Stack Fits Together
+
+`@cacheplane/chat` sits between your application and two other Cacheplane libraries:
+
+```
+Your App
+  |
+  v
+@cacheplane/chat       <-- UI components (this library)
+  |         |
+  v         v
+@cacheplane/agent      @cacheplane/render
+  (streaming state)      (generative UI)
+  |
+  v
+LangGraph Platform
+```
+
+- **`@cacheplane/agent`** provides the `agent()` function and the `AgentRef` type. Every chat component accepts an `AgentRef` as its primary input. The ref exposes reactive Signals for `messages()`, `isLoading()`, `error()`, `interrupt()`, `toolCalls()`, `history()`, and more.
+
+- **`@cacheplane/render`** provides `RenderSpecComponent` and `AngularRegistry` for rendering JSON UI specs as Angular components. The `ChatGenerativeUiComponent` primitive delegates to `@cacheplane/render` under the hood, and you configure the registry through `provideChat()`.
+
+## When to Use `ChatComponent` vs. Custom Assembly
+
+**Use `ChatComponent`** when you want a complete, styled chat interface with minimal setup. It includes message rendering (with markdown), a text input, typing indicator, error display, interrupt banner, and an optional thread sidebar. Drop it in, pass an `AgentRef`, and you have a working chat.
+
+```html
+<chat [ref]="chatRef" />
+```
+
+**Assemble primitives** when you need to customize layout, add components between sections, change the message rendering logic, or integrate chat into a larger dashboard. Primitives give you building blocks without opinions.
+
+```html
+<chat-messages [ref]="chatRef">
+  <ng-template chatMessageTemplate="human" let-message>
+    <!-- your custom human message layout -->
+  </ng-template>
+  <ng-template chatMessageTemplate="ai" let-message>
+    <!-- your custom AI message layout -->
+  </ng-template>
+</chat-messages>
+
+<chat-input [ref]="chatRef" placeholder="Ask anything..." />
+```
+
+## What's Next
+
+<CardGroup cols={3}>
+  <Card
+    title="Installation"
+    icon="package"
+    href="/docs/chat/getting-started/installation"
+  >
+    Install the package and configure provideChat() in your app.
+  </Card>
+  <Card
+    title="Quick Start"
+    icon="rocket"
+    href="/docs/chat/getting-started/quickstart"
+  >
+    Get a working chat UI running in under 5 minutes.
+  </Card>
+  <Card
+    title="Theming"
+    icon="palette"
+    href="/docs/chat/guides/theming"
+  >
+    Customize colors, fonts, and spacing with CSS custom properties.
+  </Card>
+</CardGroup>

@@ -1,0 +1,132 @@
+# ChatConfig
+
+`ChatConfig` is the configuration interface accepted by `provideChat()`. It defines global settings for chat composition components including the generative UI registry, avatar styling, and assistant naming.
+
+**Import:**
+
+```typescript
+import type { ChatConfig } from '@cacheplane/chat';
+```
+
+## Interface Definition
+
+```typescript
+interface ChatConfig {
+  /** Default render registry for generative UI components. */
+  renderRegistry?: AngularRegistry;
+
+  /** Override the default AI avatar label (default: "A"). */
+  avatarLabel?: string;
+
+  /** Override the default assistant display name (default: "Assistant"). */
+  assistantName?: string;
+}
+```
+
+## Properties
+
+### renderRegistry
+
+```typescript
+renderRegistry?: AngularRegistry
+```
+
+The component registry used by `ChatGenerativeUiComponent` to resolve JSON UI specs to Angular components. This is an `AngularRegistry` from `@cacheplane/render`.
+
+When not provided, generative UI components will not render -- the `chat-generative-ui` primitive will simply show nothing for any spec passed to it.
+
+**Example:**
+
+```typescript
+import { createAngularRegistry } from '@cacheplane/render';
+import { WeatherCardComponent } from './weather-card.component';
+import { ChartComponent } from './chart.component';
+
+const registry = createAngularRegistry({
+  weather_card: WeatherCardComponent,
+  chart: ChartComponent,
+});
+
+provideChat({ renderRegistry: registry });
+```
+
+See the [Generative UI guide](/docs/chat/guides/generative-ui) for detailed setup.
+
+### avatarLabel
+
+```typescript
+avatarLabel?: string
+```
+
+A short string (typically one or two characters) displayed in the AI avatar badge that appears next to assistant messages in composition components.
+
+**Default:** `"A"`
+
+**Example:**
+
+```typescript
+provideChat({ avatarLabel: 'AI' });
+```
+
+The avatar badge is a small square element styled with `--chat-avatar-bg` and `--chat-avatar-text` CSS variables.
+
+### assistantName
+
+```typescript
+assistantName?: string
+```
+
+The display name for the AI assistant. Used in labels, ARIA attributes, and any place where the assistant needs a human-readable name.
+
+**Default:** `"Assistant"`
+
+**Example:**
+
+```typescript
+provideChat({ assistantName: 'Code Copilot' });
+```
+
+## Accessing ChatConfig at Runtime
+
+Inject `CHAT_CONFIG` to read configuration values in your own components:
+
+```typescript
+import { inject } from '@angular/core';
+import { CHAT_CONFIG } from '@cacheplane/chat';
+import type { ChatConfig } from '@cacheplane/chat';
+
+@Component({
+  selector: 'app-chat-header',
+  template: `
+    <h2>{{ assistantName }}</h2>
+  `,
+})
+export class ChatHeaderComponent {
+  private config = inject(CHAT_CONFIG, { optional: true });
+
+  get assistantName(): string {
+    return this.config?.assistantName ?? 'Assistant';
+  }
+}
+```
+
+## Relationship to Other Types
+
+`ChatConfig` references the following external type:
+
+| Type | Package | Description |
+|------|---------|-------------|
+| `AngularRegistry` | `@cacheplane/render` | Maps JSON spec type strings to Angular component classes |
+
+## Type Location
+
+The `ChatConfig` interface is defined in two files within the library:
+
+- `libs/chat/src/lib/provide-chat.ts` -- The canonical definition with JSDoc comments, alongside the `provideChat()` function and `CHAT_CONFIG` token
+- `libs/chat/src/lib/chat.types.ts` -- A simplified re-export for internal use
+
+The public API exports `ChatConfig` as a type-only export:
+
+```typescript
+export type { ChatConfig } from './lib/provide-chat';
+```
