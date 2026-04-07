@@ -3,6 +3,7 @@ import { EB_Garamond, Inter, JetBrains_Mono } from 'next/font/google';
 import './global.css';
 import { Nav } from '../components/shared/Nav';
 import { Footer } from '../components/shared/Footer';
+import { AnnouncementToast } from '../components/shared/AnnouncementToast';
 
 const garamond = EB_Garamond({
   subsets: ['latin'],
@@ -47,6 +48,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Nav />
         <main>{children}</main>
         <Footer />
+        <AnnouncementToast />
       </body>
     </html>
   );
