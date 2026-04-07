@@ -8,5 +8,8 @@ export const environment = {
   production: true,
   langGraphApiUrl: '/api',
   streamingAssistantId: 'planning',
+<<<<<<< HEAD
+=======
   planningAssistantId: 'planning',
+>>>>>>> origin/main
 };
