@@ -429,7 +429,7 @@ to:
 # Angular Stream Resource v0.0.1
 ```
 
-Note: All other references in these files (`streamResource()`, `provideStreamResource`, `import ... from 'stream-resource'`, `@stream-resource/mcp`, `stream-resource.dev`) are code/infrastructure references and should NOT be changed.
+Note: All other references in these files (`streamResource()`, `provideStreamResource`, `import ... from 'stream-resource'`, `@stream-resource/mcp`, `cacheplane.ai`) are code/infrastructure references and should NOT be changed.
 
 - [ ] **Step 3: Commit**
 

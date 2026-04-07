@@ -69,7 +69,7 @@
 2. Add `NEXT_PUBLIC_LANGGRAPH_URL` = `https://<your-langgraph-cloud-url>`
 3. Set for: Production + Preview + Development
 4. Trigger a redeploy
-5. Verify live demo at https://stream-resource.dev streams real responses
+5. Verify live demo at https://cacheplane.ai streams real responses
 
 ---
 

@@ -4,16 +4,16 @@ import { expect, test } from '@playwright/test';
  * Production smoke test — verifies the deployed stack works end-to-end.
  *
  * Requires:
- *   EXAMPLES_URL - e.g., https://examples.stream-resource.dev
+ *   EXAMPLES_URL - e.g., https://examples.cacheplane.ai
  *   OPENAI_API_KEY - for send/receive tests (optional)
  *
  * Run:
- *   BASE_URL=https://cockpit.stream-resource.dev \
- *   EXAMPLES_URL=https://examples.stream-resource.dev \
+ *   BASE_URL=https://cockpit.cacheplane.ai \
+ *   EXAMPLES_URL=https://examples.cacheplane.ai \
  *   npx playwright test apps/cockpit/e2e/production-smoke.spec.ts
  */
 
-const EXAMPLES_URL = process.env['EXAMPLES_URL'] ?? 'https://examples.stream-resource.dev';
+const EXAMPLES_URL = process.env['EXAMPLES_URL'] ?? 'https://examples.cacheplane.ai';
 
 const CAPABILITIES = [
   'langgraph/streaming',

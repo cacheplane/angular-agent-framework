@@ -755,7 +755,7 @@ const chat = streamResource({ assistantId: 'chat_agent', apiUrl: 'http://localho
 npx @stream-resource/mcp
 
 ## Full reference
-https://stream-resource.dev/llms-full.txt
+https://cacheplane.ai/llms-full.txt
 `.trim();
 }
 
@@ -887,7 +887,7 @@ Add to ~/.claude/settings.json:
 {"mcpServers":{"stream-resource":{"command":"npx","args":["@stream-resource/mcp"]}}}
 
 ## Version check
-If this file is stale, fetch the latest: https://stream-resource.dev/llms-full.txt
+If this file is stale, fetch the latest: https://cacheplane.ai/llms-full.txt
 ```
 
 Create `apps/website/content/AGENTS.md.template` with identical content (same file, different name).

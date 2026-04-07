@@ -1,6 +1,6 @@
 <p align="center">
   <img
-    src="https://stream-resource.dev/assets/hero.svg"
+    src="https://cacheplane.ai/assets/hero.svg"
     alt="Angular Stream Resource — The Enterprise Streaming Resource for LangChain and Angular"
     width="100%"
   />
@@ -110,7 +110,7 @@ That's it. `chat.messages()` is an Angular Signal. Bind it directly in your temp
 
 <p align="center">
   <img
-    src="https://stream-resource.dev/assets/arch-diagram.svg"
+    src="https://cacheplane.ai/assets/arch-diagram.svg"
     alt="Angular Stream Resource architecture: Angular Component → streamResource() → StreamManager Bridge → LangGraph Platform, with signals returned reactively"
     width="100%"
   />
@@ -129,17 +129,17 @@ That's it. `chat.messages()` is an Angular Signal. Bind it directly in your temp
 | **Application Deployment** | $2,000 / app | One-time per application — covers dev, staging, and prod |
 | **Enterprise** | Custom | Volume licensing, priority support, custom contract |
 
-[Full pricing details and license terms →](https://stream-resource.dev/pricing)
+[Full pricing details and license terms →](https://cacheplane.ai/pricing)
 
 ---
 
 ## Documentation
 
-- [Getting Started](https://stream-resource.dev/docs/getting-started)
-- [API Reference](https://stream-resource.dev/api-reference)
-- [Testing with MockStreamTransport](https://stream-resource.dev/docs/testing)
-- [Human-in-the-Loop / Interrupts](https://stream-resource.dev/docs/interrupts)
-- [Subagent Streaming](https://stream-resource.dev/docs/subagents)
+- [Getting Started](https://cacheplane.ai/docs/getting-started)
+- [API Reference](https://cacheplane.ai/api-reference)
+- [Testing with MockStreamTransport](https://cacheplane.ai/docs/testing)
+- [Human-in-the-Loop / Interrupts](https://cacheplane.ai/docs/interrupts)
+- [Subagent Streaming](https://cacheplane.ai/docs/subagents)
 
 ---
 
@@ -150,4 +150,4 @@ That's it. `chat.messages()` is an Angular Signal. Bind it directly in your temp
 - **PolyForm Noncommercial 1.0.0** — free for noncommercial use (personal projects, academic, research, non-profit internal tooling). See [`LICENSE`](./LICENSE).
 - **Angular Stream Resource Commercial License** — required for any for-profit or revenue-generating use. See [`LICENSE-COMMERCIAL`](./LICENSE-COMMERCIAL) and [`COMMERCIAL.md`](./COMMERCIAL.md).
 
-This is **not** an open-source license. Commercial use — including use in a for-profit product, service, or organization — requires a paid commercial license. See [pricing](https://stream-resource.dev/pricing).
+This is **not** an open-source license. Commercial use — including use in a for-profit product, service, or organization — requires a paid commercial license. See [pricing](https://cacheplane.ai/pricing).

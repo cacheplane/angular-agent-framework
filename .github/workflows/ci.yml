@@ -102,7 +102,7 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npx tsx apps/cockpit/scripts/deploy-smoke.ts --url https://cockpit.stream-resource.dev --dry-run
+      - run: npx tsx apps/cockpit/scripts/deploy-smoke.ts --url https://cockpit.cacheplane.ai --dry-run
 
   mcp:
     name: MCP — build / smoke
@@ -239,7 +239,7 @@ jobs:
         if: steps.affected.outputs.website == 'true'
         run: npx nx e2e website --skip-nx-cache
         env:
-          BASE_URL: https://stream-resource.dev
+          BASE_URL: https://cacheplane.ai
       - name: Prepare cockpit Vercel project
         if: steps.affected.outputs.cockpit == 'true'
         run: |
@@ -259,7 +259,7 @@ jobs:
       - name: Verify deployed cockpit
         if: steps.affected.outputs.cockpit == 'true'
         run: |
-          npx tsx apps/cockpit/scripts/deploy-smoke.ts --url https://cockpit.stream-resource.dev --retries 20 --retry-delay-ms 5000
+          npx tsx apps/cockpit/scripts/deploy-smoke.ts --url https://cockpit.cacheplane.ai --retries 20 --retry-delay-ms 5000
 
       # ── Angular examples deploy ──────────────────────────────────────────
       - name: Check if examples changed
@@ -311,6 +311,6 @@ jobs:
       - name: Run production smoke tests
         run: npx playwright test apps/cockpit/e2e/production-smoke.spec.ts --reporter=list
         env:
-          BASE_URL: https://cockpit.stream-resource.dev
-          EXAMPLES_URL: https://examples.stream-resource.dev
+          BASE_URL: https://cockpit.cacheplane.ai
+          EXAMPLES_URL: https://examples.cacheplane.ai
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
