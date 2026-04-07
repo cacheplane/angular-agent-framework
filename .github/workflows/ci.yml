@@ -278,6 +278,9 @@ jobs:
           if printf '%s\n' "$changed_files" | grep -E '^(vercel\.examples\.json|scripts/assemble-examples\.ts)$' >/dev/null; then
             examples_changed=true
           fi
+          if printf '%s\n' "$changed_files" | grep -E '^libs/(angular|chat|render)/' >/dev/null; then
+            examples_changed=true
+          fi
           echo "changed=$examples_changed" >> "$GITHUB_OUTPUT"
       - name: Build and assemble Angular examples
         if: steps.examples_changed.outputs.changed == 'true'
