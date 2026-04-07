@@ -102,14 +102,14 @@ Add `generateMetadata` or static `metadata` export:
 ```ts
 export const metadata = {
   openGraph: {
-    title: 'Angular Stream Resource',
+    title: 'Angular Agent Framework',
     description: 'Signal-native streaming for LangGraph — production patterns your Angular team can own.',
     images: ['/og-image.png'],
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Angular Stream Resource',
+    title: 'Angular Agent Framework',
     description: 'Signal-native streaming for LangGraph — production patterns your Angular team can own.',
     images: ['/og-image.png'],
   },

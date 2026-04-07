@@ -17,7 +17,7 @@
   Scope: `.github/workflows/`, `apps/website/project.json`, `apps/website/playwright.config.ts`, `project.json`, any minimal root/package scripts needed for gated execution
 - Worktree: `.worktrees/testing-runtime-tests`
   Owner: runtime/integration subagent
-  Scope: `libs/stream-resource/`, `examples/chat-agent/`, `e2e/stream-resource-e2e/`, target wiring for those suites
+  Scope: `libs/angular/`, `examples/chat-agent/`, `e2e/angular-e2e/`, target wiring for those suites
 - Worktree: `.worktrees/testing-mcp-artifacts`
   Owner: MCP artifact-verification subagent
   Scope: `packages/mcp/` only
@@ -38,7 +38,7 @@ These tracks are intentionally disjoint at the file level so they can be impleme
   Ensure website e2e/build targets are runnable in CI without ad hoc command duplication.
 - Modify: `apps/website/playwright.config.ts`
   Ensure CI can run website e2e with an explicit server strategy instead of relying on local-only defaults.
-- Modify: `libs/stream-resource/project.json`
+- Modify: `libs/angular/project.json`
   Keep canonical test command stable and add any missing integration-oriented targets if needed.
 - Modify: `project.json`
   Add reusable root targets if needed for example-server smoke commands that CI must invoke consistently.
@@ -50,7 +50,7 @@ These tracks are intentionally disjoint at the file level so they can be impleme
   Add root-level helper scripts only if they reduce workflow duplication materially.
 - Create/Modify: `packages/mcp/package-smoke.test.mjs`
   Keep built/source-package verification as a first-class smoke suite.
-- Create/Modify: `libs/stream-resource/src/lib/transport/*.spec.ts`
+- Create/Modify: `libs/angular/src/lib/transport/*.spec.ts`
   Add transport-level tests for real SDK-like event shapes and cancellation behavior.
 - Create/Modify: `examples/chat-agent/tests/test_agent.py`
   Separate always-on smoke/import tests from live-model integration tests.
@@ -112,19 +112,19 @@ Expected: every command referenced by workflows is locally runnable.
 **Worktree:** `.worktrees/testing-runtime-tests`
 
 **Files:**
-- Modify: `libs/stream-resource/src/lib/transport/fetch-stream.transport.ts`
-- Create/Modify: `libs/stream-resource/src/lib/transport/fetch-stream.transport.spec.ts`
-- Modify: `libs/stream-resource/src/lib/internals/stream-manager.bridge.spec.ts`
-- Modify: `libs/stream-resource/project.json`
+- Modify: `libs/angular/src/lib/transport/fetch-stream.transport.ts`
+- Create/Modify: `libs/angular/src/lib/transport/fetch-stream.transport.spec.ts`
+- Modify: `libs/angular/src/lib/internals/stream-manager.bridge.spec.ts`
+- Modify: `libs/angular/project.json`
 - Create/Modify: `examples/chat-agent/project.json` or modify `project.json`
 - Modify: `examples/chat-agent/tests/test_agent.py`
 - Modify: `examples/chat-agent/pyproject.toml`
-- Modify: `e2e/stream-resource-e2e/project.json` if needed
+- Modify: `e2e/angular-e2e/project.json` if needed
 
 - [ ] **Step 1: Baseline the existing runtime suite**
 
 Run:
-- `cd .worktrees/testing-runtime-tests && npx nx test stream-resource --skip-nx-cache`
+- `cd .worktrees/testing-runtime-tests && npx nx test angular --skip-nx-cache`
 - `cd .worktrees/testing-runtime-tests/examples/chat-agent && uv run pytest -q`
 
 Expected:
@@ -155,7 +155,7 @@ Expected result:
 - [ ] **Step 5: Verify**
 
 Run:
-- `cd .worktrees/testing-runtime-tests && npx nx test stream-resource --skip-nx-cache`
+- `cd .worktrees/testing-runtime-tests && npx nx test angular --skip-nx-cache`
 - `cd .worktrees/testing-runtime-tests/examples/chat-agent && uv run pytest -q`
 
 Expected: both commands pass, with the no-secrets subset always runnable.
@@ -250,7 +250,7 @@ Expected: deploy verification logic is syntactically correct and reusable.
 - [ ] **Step 3: Run the combined verification matrix from main**
 
 Minimum combined matrix:
-- `npx nx test stream-resource --skip-nx-cache`
+- `npx nx test angular --skip-nx-cache`
 - `npx nx build website --skip-nx-cache`
 - `npx nx build mcp --skip-nx-cache`
 - `npx nx test mcp --skip-nx-cache`

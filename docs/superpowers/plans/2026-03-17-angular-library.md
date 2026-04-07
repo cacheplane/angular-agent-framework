@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED: Use superpowers:subagent-driven-development (if subagents available) or superpowers:executing-plans to implement this plan. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Build and publish the `stream-resource` Angular 20+ library — a full-parity implementation of LangGraph's `useStream()` React hook using Angular Signals and RxJS.
+**Goal:** Build and publish the `angular` Angular 20+ library — a full-parity implementation of LangGraph's `useStream()` React hook using Angular Signals and RxJS.
 
-**Architecture:** `streamResource()` creates 12 `BehaviorSubject`s at injection context time, bridges them to LangGraph's `StreamManager` via `stream-manager.bridge.ts`, and exposes all state as Angular Signals via `toSignal()`. The public surface duck-types Angular's `ResourceRef<T>` while adding the full `useStream()` streaming API.
+**Architecture:** `agent()` creates 12 `BehaviorSubject`s at injection context time, bridges them to LangGraph's `StreamManager` via `stream-manager.bridge.ts`, and exposes all state as Angular Signals via `toSignal()`. The public surface duck-types Angular's `ResourceRef<T>` while adding the full `useStream()` streaming API.
 
 **Tech Stack:** Angular 20+, RxJS, `@langchain/langgraph-sdk`, `ng-packagr`, Nx, Vitest, TypeScript
 
@@ -13,14 +13,14 @@
 ## File Map
 
 ```
-libs/stream-resource/
+libs/angular/
 ├── src/
 │   ├── lib/
-│   │   ├── stream-resource.fn.ts           # streamResource() entry point
-│   │   ├── stream-resource.types.ts        # All public + internal types
-│   │   ├── stream-resource.provider.ts     # provideStreamResource() + injection token
+│   │   ├── angular.fn.ts           # agent() entry point
+│   │   ├── angular.types.ts        # All public + internal types
+│   │   ├── angular.provider.ts     # provideAgent() + injection token
 │   │   ├── transport/
-│   │   │   ├── transport.interface.ts      # StreamResourceTransport interface
+│   │   │   ├── transport.interface.ts      # AgentTransport interface
 │   │   │   ├── fetch-stream.transport.ts   # Default HTTP/SSE transport
 │   │   │   └── mock-stream.transport.ts    # Test transport (exported publicly)
 │   │   └── internals/
@@ -48,7 +48,7 @@ libs/stream-resource/
 - [ ] **Step 1: Install Nx and create the integrated monorepo**
 
 ```bash
-cd /Users/blove/repos/stream-resource
+cd /Users/blove/repos/angular
 npx create-nx-workspace@latest . \
   --preset=empty \
   --nxCloud=skip \
@@ -83,19 +83,19 @@ git commit -m "chore: scaffold Nx monorepo"
 ## Task 2: Generate Angular Library
 
 **Files:**
-- Create: `libs/stream-resource/` (full structure)
-- Create: `libs/stream-resource/src/public-api.ts`
-- Create: `libs/stream-resource/ng-package.json`
-- Create: `libs/stream-resource/project.json`
-- Create: `libs/stream-resource/vite.config.mts`
+- Create: `libs/angular/` (full structure)
+- Create: `libs/angular/src/public-api.ts`
+- Create: `libs/angular/ng-package.json`
+- Create: `libs/angular/project.json`
+- Create: `libs/angular/vite.config.mts`
 
 - [ ] **Step 1: Generate the publishable Angular library**
 
 ```bash
-npx nx g @nx/angular:library stream-resource \
+npx nx g @nx/angular:library angular \
   --publishable \
-  --importPath=stream-resource \
-  --directory=libs/stream-resource \
+  --importPath=angular \
+  --directory=libs/angular \
   --standalone \
   --unitTestRunner=none \
   --skipModule
@@ -109,7 +109,7 @@ npm install --save-dev vitest @vitest/coverage-v8 jsdom @angular/core/testing
 
 - [ ] **Step 3: Create `vite.config.mts`**
 
-Create `libs/stream-resource/vite.config.mts`:
+Create `libs/angular/vite.config.mts`:
 
 ```typescript
 import { defineConfig } from 'vite';
@@ -134,13 +134,13 @@ import '@angular/core/testing';
 
 - [ ] **Step 5: Update `project.json` to use Vitest**
 
-In `libs/stream-resource/project.json`, replace the `test` target with:
+In `libs/angular/project.json`, replace the `test` target with:
 
 ```json
 "test": {
   "executor": "@nx/vite:test",
   "options": {
-    "configFile": "libs/stream-resource/vite.config.mts"
+    "configFile": "libs/angular/vite.config.mts"
   }
 }
 ```
@@ -148,10 +148,10 @@ In `libs/stream-resource/project.json`, replace the `test` target with:
 - [ ] **Step 6: Verify the library builds**
 
 ```bash
-npx nx build stream-resource
+npx nx build angular
 ```
 
-Expected: build succeeds, output in `dist/libs/stream-resource`
+Expected: build succeeds, output in `dist/libs/angular`
 
 - [ ] **Step 7: Commit**
 
@@ -165,11 +165,11 @@ git commit -m "chore: generate publishable Angular library with Vitest"
 ## Task 3: Types Foundation
 
 **Files:**
-- Create: `libs/stream-resource/src/lib/stream-resource.types.ts`
+- Create: `libs/angular/src/lib/angular.types.ts`
 
 - [ ] **Step 1: Write types file**
 
-Create `libs/stream-resource/src/lib/stream-resource.types.ts`:
+Create `libs/angular/src/lib/angular.types.ts`:
 
 ```typescript
 import { Signal, ResourceStatus } from '@angular/core';
@@ -199,7 +199,7 @@ export interface StreamEvent {
   [key: string]: unknown;
 }
 
-export interface StreamResourceTransport {
+export interface AgentTransport {
   stream(
     assistantId: string,
     threadId: string | null,
@@ -218,7 +218,7 @@ export interface StreamResourceTransport {
 
 // ── Options ──────────────────────────────────────────────────────────────────
 
-export interface StreamResourceOptions<T, ResolvedBag extends BagTemplate> {
+export interface AgentOptions<T, ResolvedBag extends BagTemplate> {
   apiUrl: string;
   assistantId: string;
   threadId?: Signal<string | null> | string | null;
@@ -227,7 +227,7 @@ export interface StreamResourceOptions<T, ResolvedBag extends BagTemplate> {
   messagesKey?: string;
   throttle?: number | false;
   toMessage?: (msg: unknown) => BaseMessage;
-  transport?: StreamResourceTransport;
+  transport?: AgentTransport;
   filterSubagentMessages?: boolean;
   subagentToolNames?: string[];
 }
@@ -241,9 +241,9 @@ export interface SubagentStreamRef {
   messages: Signal<BaseMessage[]>;
 }
 
-// ── StreamResourceRef ────────────────────────────────────────────────────────
+// ── AgentRef ────────────────────────────────────────────────────────
 
-export interface StreamResourceRef<T, ResolvedBag extends BagTemplate> {
+export interface AgentRef<T, ResolvedBag extends BagTemplate> {
   // ResourceRef<T> compatible members (duck-typed, not inherited)
   value:    Signal<T>;
   status:   Signal<ResourceStatus>;
@@ -307,7 +307,7 @@ npm install @langchain/langgraph-sdk @langchain/core rxjs
 - [ ] **Step 3: Verify TypeScript compiles**
 
 ```bash
-npx nx build stream-resource
+npx nx build angular
 ```
 
 Expected: no TypeScript errors
@@ -315,8 +315,8 @@ Expected: no TypeScript errors
 - [ ] **Step 4: Commit**
 
 ```bash
-git add libs/stream-resource/src/lib/stream-resource.types.ts
-git commit -m "feat(stream-resource): add type definitions"
+git add libs/angular/src/lib/angular.types.ts
+git commit -m "feat(angular): add type definitions"
 ```
 
 ---
@@ -324,53 +324,53 @@ git commit -m "feat(stream-resource): add type definitions"
 ## Task 4: Transport Layer
 
 **Files:**
-- Create: `libs/stream-resource/src/lib/transport/transport.interface.ts`
-- Create: `libs/stream-resource/src/lib/transport/fetch-stream.transport.ts`
-- Create: `libs/stream-resource/src/lib/transport/mock-stream.transport.ts`
-- Test: `libs/stream-resource/src/lib/transport/mock-stream.transport.spec.ts`
+- Create: `libs/angular/src/lib/transport/transport.interface.ts`
+- Create: `libs/angular/src/lib/transport/fetch-stream.transport.ts`
+- Create: `libs/angular/src/lib/transport/mock-stream.transport.ts`
+- Test: `libs/angular/src/lib/transport/mock-stream.transport.spec.ts`
 
 - [ ] **Step 1: Create transport interface**
 
-Create `libs/stream-resource/src/lib/transport/transport.interface.ts`:
+Create `libs/angular/src/lib/transport/transport.interface.ts`:
 
 ```typescript
-export { StreamResourceTransport, StreamEvent } from '../stream-resource.types';
+export { AgentTransport, StreamEvent } from '../angular.types';
 ```
 
-- [ ] **Step 2: Write failing tests for MockStreamTransport**
+- [ ] **Step 2: Write failing tests for MockAgentTransport**
 
-Create `libs/stream-resource/src/lib/transport/mock-stream.transport.spec.ts`:
+Create `libs/angular/src/lib/transport/mock-stream.transport.spec.ts`:
 
 ```typescript
 import { describe, it, expect, beforeEach } from 'vitest';
-import { MockStreamTransport } from './mock-stream.transport';
+import { MockAgentTransport } from './mock-stream.transport';
 
-describe('MockStreamTransport', () => {
+describe('MockAgentTransport', () => {
   it('returns empty batch when no script provided', () => {
-    const t = new MockStreamTransport();
+    const t = new MockAgentTransport();
     expect(t.nextBatch()).toEqual([]);
   });
 
   it('returns batches in order from script', () => {
     const batch1 = [{ type: 'values' as const, values: {} }];
     const batch2 = [{ type: 'error' as const, error: 'oops' }];
-    const t = new MockStreamTransport([batch1, batch2]);
+    const t = new MockAgentTransport([batch1, batch2]);
     expect(t.nextBatch()).toEqual(batch1);
     expect(t.nextBatch()).toEqual(batch2);
   });
 
   it('returns empty batch when script exhausted', () => {
-    const t = new MockStreamTransport([[{ type: 'values' as const, values: {} }]]);
+    const t = new MockAgentTransport([[{ type: 'values' as const, values: {} }]]);
     t.nextBatch();
     expect(t.nextBatch()).toEqual([]);
   });
 
   it('isStreaming returns false initially', () => {
-    expect(new MockStreamTransport().isStreaming()).toBe(false);
+    expect(new MockAgentTransport().isStreaming()).toBe(false);
   });
 
   it('emit() triggers events on the stream iterable', async () => {
-    const t = new MockStreamTransport();
+    const t = new MockAgentTransport();
     const events: unknown[] = [];
     const ac = new AbortController();
     const iter = t.stream('agent', null, {}, ac.signal);
@@ -384,7 +384,7 @@ describe('MockStreamTransport', () => {
   });
 
   it('emitError() causes stream to throw', async () => {
-    const t = new MockStreamTransport();
+    const t = new MockAgentTransport();
     const ac = new AbortController();
     const iter = t.stream('agent', null, {}, ac.signal);
     t.emitError(new Error('transport error'));
@@ -398,19 +398,19 @@ describe('MockStreamTransport', () => {
 - [ ] **Step 3: Run tests to verify they fail**
 
 ```bash
-npx nx test stream-resource --testFile=src/lib/transport/mock-stream.transport.spec.ts
+npx nx test angular --testFile=src/lib/transport/mock-stream.transport.spec.ts
 ```
 
-Expected: FAIL — `MockStreamTransport` not found
+Expected: FAIL — `MockAgentTransport` not found
 
-- [ ] **Step 4: Implement MockStreamTransport**
+- [ ] **Step 4: Implement MockAgentTransport**
 
-Create `libs/stream-resource/src/lib/transport/mock-stream.transport.ts`:
+Create `libs/angular/src/lib/transport/mock-stream.transport.ts`:
 
 ```typescript
-import { StreamResourceTransport, StreamEvent } from '../stream-resource.types';
+import { AgentTransport, StreamEvent } from '../angular.types';
 
-export class MockStreamTransport implements StreamResourceTransport {
+export class MockAgentTransport implements AgentTransport {
   private script: StreamEvent[][];
   private scriptIndex = 0;
   private streaming = false;
@@ -482,13 +482,13 @@ export class MockStreamTransport implements StreamResourceTransport {
 
 - [ ] **Step 5: Create FetchStreamTransport**
 
-Create `libs/stream-resource/src/lib/transport/fetch-stream.transport.ts`:
+Create `libs/angular/src/lib/transport/fetch-stream.transport.ts`:
 
 ```typescript
 import { Client } from '@langchain/langgraph-sdk';
-import { StreamResourceTransport, StreamEvent } from '../stream-resource.types';
+import { AgentTransport, StreamEvent } from '../angular.types';
 
-export class FetchStreamTransport implements StreamResourceTransport {
+export class FetchStreamTransport implements AgentTransport {
   private client: Client;
   private onThreadId?: (id: string) => void;
 
@@ -542,7 +542,7 @@ export class FetchStreamTransport implements StreamResourceTransport {
 - [ ] **Step 6: Run tests — should pass**
 
 ```bash
-npx nx test stream-resource --testFile=src/lib/transport/mock-stream.transport.spec.ts
+npx nx test angular --testFile=src/lib/transport/mock-stream.transport.spec.ts
 ```
 
 Expected: all 6 tests PASS
@@ -550,8 +550,8 @@ Expected: all 6 tests PASS
 - [ ] **Step 7: Commit**
 
 ```bash
-git add libs/stream-resource/src/lib/transport/
-git commit -m "feat(stream-resource): add transport layer with MockStreamTransport"
+git add libs/angular/src/lib/transport/
+git commit -m "feat(angular): add transport layer with MockAgentTransport"
 ```
 
 ---
@@ -559,20 +559,20 @@ git commit -m "feat(stream-resource): add transport layer with MockStreamTranspo
 ## Task 5: StreamManager Bridge
 
 **Files:**
-- Create: `libs/stream-resource/src/lib/internals/stream-manager.bridge.ts`
-- Test: `libs/stream-resource/src/lib/internals/stream-manager.bridge.spec.ts`
+- Create: `libs/angular/src/lib/internals/stream-manager.bridge.ts`
+- Test: `libs/angular/src/lib/internals/stream-manager.bridge.spec.ts`
 
 - [ ] **Step 1: Write failing tests**
 
-Create `libs/stream-resource/src/lib/internals/stream-manager.bridge.spec.ts`:
+Create `libs/angular/src/lib/internals/stream-manager.bridge.spec.ts`:
 
 ```typescript
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { BehaviorSubject, Subject } from 'rxjs';
 import { ResourceStatus } from '@angular/core';
 import { createStreamManagerBridge } from './stream-manager.bridge';
-import { MockStreamTransport } from '../transport/mock-stream.transport';
-import { StreamSubjects } from '../stream-resource.types';
+import { MockAgentTransport } from '../transport/mock-stream.transport';
+import { StreamSubjects } from '../angular.types';
 import { of } from 'rxjs';
 
 function makeSubjects(): StreamSubjects<Record<string, unknown>> {
@@ -594,7 +594,7 @@ function makeSubjects(): StreamSubjects<Record<string, unknown>> {
 
 describe('createStreamManagerBridge', () => {
   it('creates a bridge with submit and stop methods', () => {
-    const transport = new MockStreamTransport();
+    const transport = new MockAgentTransport();
     const subjects = makeSubjects();
     const destroy$ = new Subject<void>();
     const bridge = createStreamManagerBridge({
@@ -609,7 +609,7 @@ describe('createStreamManagerBridge', () => {
   });
 
   it('sets status to Loading when submit is called', async () => {
-    const transport = new MockStreamTransport();
+    const transport = new MockAgentTransport();
     const subjects = makeSubjects();
     const destroy$ = new Subject<void>();
     const bridge = createStreamManagerBridge({
@@ -624,7 +624,7 @@ describe('createStreamManagerBridge', () => {
   });
 
   it('sets status to Resolved when stream completes', async () => {
-    const transport = new MockStreamTransport([
+    const transport = new MockAgentTransport([
       [{ type: 'values', values: { count: 1 } }],
     ]);
     const subjects = makeSubjects();
@@ -646,7 +646,7 @@ describe('createStreamManagerBridge', () => {
   });
 
   it('updates values$ when values event received', async () => {
-    const transport = new MockStreamTransport();
+    const transport = new MockAgentTransport();
     const subjects = makeSubjects();
     const destroy$ = new Subject<void>();
     const bridge = createStreamManagerBridge({
@@ -664,7 +664,7 @@ describe('createStreamManagerBridge', () => {
   });
 
   it('sets status to Error on transport error', async () => {
-    const transport = new MockStreamTransport();
+    const transport = new MockAgentTransport();
     const subjects = makeSubjects();
     const destroy$ = new Subject<void>();
     const bridge = createStreamManagerBridge({
@@ -682,7 +682,7 @@ describe('createStreamManagerBridge', () => {
   });
 
   it('stop() aborts the active stream', async () => {
-    const transport = new MockStreamTransport();
+    const transport = new MockAgentTransport();
     const subjects = makeSubjects();
     const destroy$ = new Subject<void>();
     const bridge = createStreamManagerBridge({
@@ -702,30 +702,30 @@ describe('createStreamManagerBridge', () => {
 - [ ] **Step 2: Run tests to verify they fail**
 
 ```bash
-npx nx test stream-resource --testFile=src/lib/internals/stream-manager.bridge.spec.ts
+npx nx test angular --testFile=src/lib/internals/stream-manager.bridge.spec.ts
 ```
 
 Expected: FAIL — `createStreamManagerBridge` not found
 
 - [ ] **Step 3: Implement the bridge**
 
-Create `libs/stream-resource/src/lib/internals/stream-manager.bridge.ts`:
+Create `libs/angular/src/lib/internals/stream-manager.bridge.ts`:
 
 ```typescript
 import { ResourceStatus } from '@angular/core';
 import { Observable, takeUntil } from 'rxjs';
 import {
-  StreamResourceOptions,
+  AgentOptions,
   StreamSubjects,
   StreamEvent,
-  StreamResourceTransport,
-} from '../stream-resource.types';
+  AgentTransport,
+} from '../angular.types';
 import { FetchStreamTransport } from '../transport/fetch-stream.transport';
 import { BagTemplate } from '@langchain/langgraph-sdk/ui';
 import type { BaseMessage } from '@langchain/core/messages';
 
 export interface StreamManagerBridgeOptions<T> {
-  options:   StreamResourceOptions<T, BagTemplate>;
+  options:   AgentOptions<T, BagTemplate>;
   subjects:  StreamSubjects<T>;
   threadId$: Observable<string | null>;
   destroy$:  Observable<void>;
@@ -742,7 +742,7 @@ export interface StreamManagerBridge {
 export function createStreamManagerBridge<T>(
   { options, subjects, threadId$, destroy$ }: StreamManagerBridgeOptions<T>
 ): StreamManagerBridge {
-  const transport: StreamResourceTransport =
+  const transport: AgentTransport =
     options.transport ?? new FetchStreamTransport(options.apiUrl, options.onThreadId);
 
   let currentThreadId: string | null = null;
@@ -880,7 +880,7 @@ export function createStreamManagerBridge<T>(
 - [ ] **Step 4: Run tests — should pass**
 
 ```bash
-npx nx test stream-resource --testFile=src/lib/internals/stream-manager.bridge.spec.ts
+npx nx test angular --testFile=src/lib/internals/stream-manager.bridge.spec.ts
 ```
 
 Expected: all 6 tests PASS
@@ -888,29 +888,29 @@ Expected: all 6 tests PASS
 - [ ] **Step 5: Commit**
 
 ```bash
-git add libs/stream-resource/src/lib/internals/
-git commit -m "feat(stream-resource): add StreamManager bridge"
+git add libs/angular/src/lib/internals/
+git commit -m "feat(angular): add StreamManager bridge"
 ```
 
 ---
 
-## Task 6: `streamResource()` Function
+## Task 6: `agent()` Function
 
 **Files:**
-- Create: `libs/stream-resource/src/lib/stream-resource.fn.ts`
-- Test: `libs/stream-resource/src/lib/stream-resource.fn.spec.ts`
+- Create: `libs/angular/src/lib/angular.fn.ts`
+- Test: `libs/angular/src/lib/angular.fn.spec.ts`
 
 - [ ] **Step 1: Write failing tests**
 
-Create `libs/stream-resource/src/lib/stream-resource.fn.spec.ts`:
+Create `libs/angular/src/lib/angular.fn.spec.ts`:
 
 ```typescript
 import { describe, it, expect, vi } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { Component, signal } from '@angular/core';
 import { ResourceStatus } from '@angular/core';
-import { streamResource } from './stream-resource.fn';
-import { MockStreamTransport } from './transport/mock-stream.transport';
+import { agent } from './angular.fn';
+import { MockAgentTransport } from './transport/mock-stream.transport';
 
 function withInjectionContext<T>(fn: () => T): T {
   let result!: T;
@@ -918,11 +918,11 @@ function withInjectionContext<T>(fn: () => T): T {
   return result;
 }
 
-describe('streamResource', () => {
+describe('agent', () => {
   it('returns a ref with initial idle status', () => {
-    const transport = new MockStreamTransport();
+    const transport = new MockAgentTransport();
     const ref = withInjectionContext(() =>
-      streamResource({ apiUrl: '', assistantId: 'a', transport })
+      agent({ apiUrl: '', assistantId: 'a', transport })
     );
     expect(ref.status()).toBe(ResourceStatus.Idle);
     expect(ref.isLoading()).toBe(false);
@@ -932,9 +932,9 @@ describe('streamResource', () => {
   });
 
   it('returns initialValues in value() immediately', () => {
-    const transport = new MockStreamTransport();
+    const transport = new MockAgentTransport();
     const ref = withInjectionContext(() =>
-      streamResource({
+      agent({
         apiUrl: '', assistantId: 'a', transport,
         initialValues: { count: 99 },
       })
@@ -943,18 +943,18 @@ describe('streamResource', () => {
   });
 
   it('status transitions to Loading on submit()', async () => {
-    const transport = new MockStreamTransport();
+    const transport = new MockAgentTransport();
     const ref = withInjectionContext(() =>
-      streamResource({ apiUrl: '', assistantId: 'a', transport })
+      agent({ apiUrl: '', assistantId: 'a', transport })
     );
     ref.submit({});
     expect(ref.isLoading()).toBe(true);
   });
 
   it('hasValue becomes true after values event', async () => {
-    const transport = new MockStreamTransport();
+    const transport = new MockAgentTransport();
     const ref = withInjectionContext(() =>
-      streamResource({ apiUrl: '', assistantId: 'a', transport })
+      agent({ apiUrl: '', assistantId: 'a', transport })
     );
     ref.submit({});
     transport.emit([{ type: 'values', values: { x: 1 } }]);
@@ -965,9 +965,9 @@ describe('streamResource', () => {
   });
 
   it('error() is set and status is Error on transport error', async () => {
-    const transport = new MockStreamTransport();
+    const transport = new MockAgentTransport();
     const ref = withInjectionContext(() =>
-      streamResource({ apiUrl: '', assistantId: 'a', transport })
+      agent({ apiUrl: '', assistantId: 'a', transport })
     );
     ref.submit({});
     transport.emitError(new Error('fail'));
@@ -977,9 +977,9 @@ describe('streamResource', () => {
   });
 
   it('stop() resolves the stream and sets status to Resolved', async () => {
-    const transport = new MockStreamTransport();
+    const transport = new MockAgentTransport();
     const ref = withInjectionContext(() =>
-      streamResource({ apiUrl: '', assistantId: 'a', transport })
+      agent({ apiUrl: '', assistantId: 'a', transport })
     );
     ref.submit({});
     await ref.stop();
@@ -988,10 +988,10 @@ describe('streamResource', () => {
   });
 
   it('reload() re-submits the last payload', async () => {
-    const transport = new MockStreamTransport();
+    const transport = new MockAgentTransport();
     const submitSpy = vi.fn();
     const ref = withInjectionContext(() =>
-      streamResource({ apiUrl: '', assistantId: 'a', transport })
+      agent({ apiUrl: '', assistantId: 'a', transport })
     );
     await ref.submit({ msg: 'hello' });
     transport.close();
@@ -1002,18 +1002,18 @@ describe('streamResource', () => {
   });
 
   it('accepts threadId as a Signal', () => {
-    const transport = new MockStreamTransport();
+    const transport = new MockAgentTransport();
     const threadId = signal<string | null>(null);
     const ref = withInjectionContext(() =>
-      streamResource({ apiUrl: '', assistantId: 'a', transport, threadId })
+      agent({ apiUrl: '', assistantId: 'a', transport, threadId })
     );
     expect(ref.status()).toBe(ResourceStatus.Idle);
   });
 
   it('messages() updates when messages event received', async () => {
-    const transport = new MockStreamTransport();
+    const transport = new MockAgentTransport();
     const ref = withInjectionContext(() =>
-      streamResource({ apiUrl: '', assistantId: 'a', transport })
+      agent({ apiUrl: '', assistantId: 'a', transport })
     );
     ref.submit({});
     transport.emit([{
@@ -1026,9 +1026,9 @@ describe('streamResource', () => {
   });
 
   it('switchThread() resets messages and values', () => {
-    const transport = new MockStreamTransport();
+    const transport = new MockAgentTransport();
     const ref = withInjectionContext(() =>
-      streamResource({ apiUrl: '', assistantId: 'a', transport })
+      agent({ apiUrl: '', assistantId: 'a', transport })
     );
     ref.switchThread('thread-2');
     expect(ref.messages()).toEqual([]);
@@ -1039,14 +1039,14 @@ describe('streamResource', () => {
 - [ ] **Step 2: Run tests to verify they fail**
 
 ```bash
-npx nx test stream-resource --testFile=src/lib/stream-resource.fn.spec.ts
+npx nx test angular --testFile=src/lib/angular.fn.spec.ts
 ```
 
-Expected: FAIL — `streamResource` not found
+Expected: FAIL — `agent` not found
 
-- [ ] **Step 3: Implement `streamResource()`**
+- [ ] **Step 3: Implement `agent()`**
 
-Create `libs/stream-resource/src/lib/stream-resource.fn.ts`:
+Create `libs/angular/src/lib/angular.fn.ts`:
 
 ```typescript
 import {
@@ -1062,19 +1062,19 @@ import type { BaseMessage } from '@langchain/core/messages';
 import type { BagTemplate, InferBag } from '@langchain/langgraph-sdk/ui';
 
 import {
-  StreamResourceOptions,
-  StreamResourceRef,
+  AgentOptions,
+  AgentRef,
   StreamSubjects,
   SubagentStreamRef,
-} from './stream-resource.types';
+} from './angular.types';
 import { createStreamManagerBridge } from './internals/stream-manager.bridge';
 
-export function streamResource<
+export function agent<
   T = Record<string, unknown>,
   Bag extends BagTemplate = BagTemplate,
 >(
-  options: StreamResourceOptions<T, InferBag<T, Bag>>,
-): StreamResourceRef<T, InferBag<T, Bag>> {
+  options: AgentOptions<T, InferBag<T, Bag>>,
+): AgentRef<T, InferBag<T, Bag>> {
   // Injection context required
   const destroyRef = inject(DestroyRef);
   const destroy$   = new Subject<void>();
@@ -1193,7 +1193,7 @@ export function streamResource<
 - [ ] **Step 4: Run tests — should pass**
 
 ```bash
-npx nx test stream-resource --testFile=src/lib/stream-resource.fn.spec.ts
+npx nx test angular --testFile=src/lib/angular.fn.spec.ts
 ```
 
 Expected: all 10 tests PASS
@@ -1201,7 +1201,7 @@ Expected: all 10 tests PASS
 - [ ] **Step 5: Run all library tests**
 
 ```bash
-npx nx test stream-resource
+npx nx test angular
 ```
 
 Expected: all tests PASS
@@ -1209,9 +1209,9 @@ Expected: all tests PASS
 - [ ] **Step 6: Commit**
 
 ```bash
-git add libs/stream-resource/src/lib/stream-resource.fn.ts \
-        libs/stream-resource/src/lib/stream-resource.fn.spec.ts
-git commit -m "feat(stream-resource): implement streamResource() function"
+git add libs/angular/src/lib/angular.fn.ts \
+        libs/angular/src/lib/angular.fn.spec.ts
+git commit -m "feat(angular): implement agent() function"
 ```
 
 ---
@@ -1219,32 +1219,32 @@ git commit -m "feat(stream-resource): implement streamResource() function"
 ## Task 7: Provider
 
 **Files:**
-- Create: `libs/stream-resource/src/lib/stream-resource.provider.ts`
-- Test: `libs/stream-resource/src/lib/stream-resource.provider.spec.ts`
+- Create: `libs/angular/src/lib/angular.provider.ts`
+- Test: `libs/angular/src/lib/angular.provider.spec.ts`
 
 - [ ] **Step 1: Write failing tests**
 
-Create `libs/stream-resource/src/lib/stream-resource.provider.spec.ts`:
+Create `libs/angular/src/lib/angular.provider.spec.ts`:
 
 ```typescript
 import { describe, it, expect } from 'vitest';
 import { TestBed } from '@angular/core/testing';
-import { provideStreamResource, STREAM_RESOURCE_CONFIG } from './stream-resource.provider';
-import { MockStreamTransport } from './transport/mock-stream.transport';
+import { provideAgent, STREAM_RESOURCE_CONFIG } from './angular.provider';
+import { MockAgentTransport } from './transport/mock-stream.transport';
 
-describe('provideStreamResource', () => {
+describe('provideAgent', () => {
   it('provides STREAM_RESOURCE_CONFIG token', () => {
     TestBed.configureTestingModule({
-      providers: [provideStreamResource({ apiUrl: 'https://api.example.com' })],
+      providers: [provideAgent({ apiUrl: 'https://api.example.com' })],
     });
     const config = TestBed.inject(STREAM_RESOURCE_CONFIG);
     expect(config.apiUrl).toBe('https://api.example.com');
   });
 
   it('provides custom transport via config', () => {
-    const transport = new MockStreamTransport();
+    const transport = new MockAgentTransport();
     TestBed.configureTestingModule({
-      providers: [provideStreamResource({ apiUrl: '', transport })],
+      providers: [provideAgent({ apiUrl: '', transport })],
     });
     const config = TestBed.inject(STREAM_RESOURCE_CONFIG);
     expect(config.transport).toBe(transport);
@@ -1255,28 +1255,28 @@ describe('provideStreamResource', () => {
 - [ ] **Step 2: Run to verify failure**
 
 ```bash
-npx nx test stream-resource --testFile=src/lib/stream-resource.provider.spec.ts
+npx nx test angular --testFile=src/lib/angular.provider.spec.ts
 ```
 
 Expected: FAIL
 
 - [ ] **Step 3: Implement provider**
 
-Create `libs/stream-resource/src/lib/stream-resource.provider.ts`:
+Create `libs/angular/src/lib/angular.provider.ts`:
 
 ```typescript
 import { InjectionToken, Provider } from '@angular/core';
-import { StreamResourceTransport } from './stream-resource.types';
+import { AgentTransport } from './angular.types';
 
-export interface StreamResourceConfig {
+export interface AgentConfig {
   apiUrl?:    string;
-  transport?: StreamResourceTransport;
+  transport?: AgentTransport;
 }
 
 export const STREAM_RESOURCE_CONFIG =
-  new InjectionToken<StreamResourceConfig>('STREAM_RESOURCE_CONFIG');
+  new InjectionToken<AgentConfig>('STREAM_RESOURCE_CONFIG');
 
-export function provideStreamResource(config: StreamResourceConfig): Provider {
+export function provideAgent(config: AgentConfig): Provider {
   return {
     provide: STREAM_RESOURCE_CONFIG,
     useValue: config,
@@ -1287,7 +1287,7 @@ export function provideStreamResource(config: StreamResourceConfig): Provider {
 - [ ] **Step 4: Run tests — should pass**
 
 ```bash
-npx nx test stream-resource --testFile=src/lib/stream-resource.provider.spec.ts
+npx nx test angular --testFile=src/lib/angular.provider.spec.ts
 ```
 
 Expected: PASS
@@ -1295,9 +1295,9 @@ Expected: PASS
 - [ ] **Step 5: Commit**
 
 ```bash
-git add libs/stream-resource/src/lib/stream-resource.provider.ts \
-        libs/stream-resource/src/lib/stream-resource.provider.spec.ts
-git commit -m "feat(stream-resource): add provideStreamResource() provider"
+git add libs/angular/src/lib/angular.provider.ts \
+        libs/angular/src/lib/angular.provider.spec.ts
+git commit -m "feat(angular): add provideAgent() provider"
 ```
 
 ---
@@ -1305,45 +1305,45 @@ git commit -m "feat(stream-resource): add provideStreamResource() provider"
 ## Task 8: Public API & Build Verification
 
 **Files:**
-- Modify: `libs/stream-resource/src/public-api.ts`
+- Modify: `libs/angular/src/public-api.ts`
 
 - [ ] **Step 1: Write the public API barrel**
 
-Replace contents of `libs/stream-resource/src/public-api.ts`:
+Replace contents of `libs/angular/src/public-api.ts`:
 
 ```typescript
 // Primary function
-export { streamResource } from './lib/stream-resource.fn';
+export { agent } from './lib/angular.fn';
 
 // Provider
-export { provideStreamResource, STREAM_RESOURCE_CONFIG } from './lib/stream-resource.provider';
-export type { StreamResourceConfig } from './lib/stream-resource.provider';
+export { provideAgent, STREAM_RESOURCE_CONFIG } from './lib/angular.provider';
+export type { AgentConfig } from './lib/angular.provider';
 
 // Public types
 export type {
-  StreamResourceOptions,
-  StreamResourceRef,
-  StreamResourceTransport,
+  AgentOptions,
+  AgentRef,
+  AgentTransport,
   StreamEvent,
   SubagentStreamRef,
-} from './lib/stream-resource.types';
+} from './lib/angular.types';
 
-// Re-export from SDK (consumers import from stream-resource, not langgraph-sdk)
+// Re-export from SDK (consumers import from angular, not langgraph-sdk)
 export type { BagTemplate, InferBag, Interrupt, ThreadState, SubmitOptions }
-  from './lib/stream-resource.types';
+  from './lib/angular.types';
 
 // Re-export ResourceStatus from Angular core for convenience
 export { ResourceStatus } from '@angular/core';
 
 // Test utilities (always exported — tree-shaken in prod builds)
-export { MockStreamTransport } from './lib/transport/mock-stream.transport';
+export { MockAgentTransport } from './lib/transport/mock-stream.transport';
 export { FetchStreamTransport } from './lib/transport/fetch-stream.transport';
 ```
 
 - [ ] **Step 2: Run all tests**
 
 ```bash
-npx nx test stream-resource
+npx nx test angular
 ```
 
 Expected: all tests PASS
@@ -1351,16 +1351,16 @@ Expected: all tests PASS
 - [ ] **Step 3: Build the library in production mode**
 
 ```bash
-npx nx build stream-resource --configuration=production
+npx nx build angular --configuration=production
 ```
 
-Expected: successful build, output in `dist/libs/stream-resource`
+Expected: successful build, output in `dist/libs/angular`
 
 - [ ] **Step 4: Verify the built package structure**
 
 ```bash
-ls dist/libs/stream-resource/
-cat dist/libs/stream-resource/package.json
+ls dist/libs/angular/
+cat dist/libs/angular/package.json
 ```
 
 Expected: `fesm2022/`, `esm2022/`, `index.d.ts`, `package.json` with `exports` map
@@ -1368,8 +1368,8 @@ Expected: `fesm2022/`, `esm2022/`, `index.d.ts`, `package.json` with `exports` m
 - [ ] **Step 5: Commit**
 
 ```bash
-git add libs/stream-resource/src/public-api.ts
-git commit -m "feat(stream-resource): finalize public API barrel exports"
+git add libs/angular/src/public-api.ts
+git commit -m "feat(angular): finalize public API barrel exports"
 ```
 
 ---
@@ -1384,7 +1384,7 @@ git commit -m "feat(stream-resource): finalize public API barrel exports"
 Create `docs/limitations.md`:
 
 ```markdown
-# Angular Stream Resource — Angular Limitations vs React useStream()
+# Angular Agent Framework — Angular Limitations vs React useStream()
 
 Features that are technically impossible or behaviorally degraded when
 porting LangGraph's React `useStream()` hook to Angular.
@@ -1405,7 +1405,7 @@ Rapid token-by-token streaming may produce more intermediate renders than
 the React equivalent.
 
 **Workaround:** Use the `throttle` option to coalesce rapid updates:
-`streamResource({ throttle: 50, ... })`. This applies
+`agent({ throttle: 50, ... })`. This applies
 `throttleTime(50ms, { leading: true, trailing: true })` to the `values$`
 and `messages$` streams.
 
@@ -1416,7 +1416,7 @@ and `messages$` streams.
 **React behavior:** LangGraph UI components can render on the server
 via React Server Components, enabling SSR of streamed AI responses.
 
-**Angular behavior:** `streamResource()` requires a browser environment
+**Angular behavior:** `agent()` requires a browser environment
 and an injection context. Angular has no equivalent of React Server
 Components. Server-side rendering of streaming content is not supported.
 
@@ -1431,7 +1431,7 @@ development to detect side effects. Tests written expecting this behavior
 will not port directly.
 
 **Angular behavior:** Angular has no `StrictMode` double-invocation
-equivalent. `streamResource()` is called once. No behavioral impact.
+equivalent. `agent()` is called once. No behavioral impact.
 
 **Workaround:** Not needed. Simply omit double-invocation assumptions
 from ported test patterns.
@@ -1535,11 +1535,11 @@ jobs:
           cache: npm
       - run: npm ci
       - name: Lint
-        run: npx nx lint stream-resource
+        run: npx nx lint angular
       - name: Test
-        run: npx nx test stream-resource --coverage
+        run: npx nx test angular --coverage
       - name: Build
-        run: npx nx build stream-resource --configuration=production
+        run: npx nx build angular --configuration=production
 ```
 
 - [ ] **Step 2: Create publish workflow**
@@ -1565,10 +1565,10 @@ jobs:
           cache: npm
           registry-url: https://registry.npmjs.org
       - run: npm ci
-      - run: npx nx test stream-resource
-      - run: npx nx build stream-resource --configuration=production
+      - run: npx nx test angular
+      - run: npx nx build angular --configuration=production
       - name: Publish to npm
-        run: npx nx-release-publish stream-resource
+        run: npx nx-release-publish angular
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 ```
@@ -1576,7 +1576,7 @@ jobs:
 - [ ] **Step 3: Final test run**
 
 ```bash
-npx nx test stream-resource
+npx nx test angular
 ```
 
 Expected: all tests PASS with coverage report
@@ -1584,7 +1584,7 @@ Expected: all tests PASS with coverage report
 - [ ] **Step 4: Final build verification**
 
 ```bash
-npx nx build stream-resource --configuration=production
+npx nx build angular --configuration=production
 ```
 
 Expected: clean build, no errors or warnings
@@ -1611,7 +1611,7 @@ Create `LICENSE`:
 ```
 MIT License (Non-Commercial Use Only)
 
-Copyright (c) 2025 Angular Stream Resource Contributors
+Copyright (c) 2025 Angular Agent Framework Contributors
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -1642,11 +1642,11 @@ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
 Create `LICENSE-COMMERCIAL`:
 
 ```
-Angular Stream Resource Commercial License
+Angular Agent Framework Commercial License
 
-Copyright (c) 2025 Angular Stream Resource Contributors
+Copyright (c) 2025 Angular Agent Framework Contributors
 
-Commercial use of Angular Stream Resource requires a paid license.
+Commercial use of Angular Agent Framework requires a paid license.
 
 DEVELOPER SEAT LICENSE: $500 per developer seat per year
 - Grants commercial use rights for one developer
@@ -1656,7 +1656,7 @@ DEVELOPER SEAT LICENSE: $500 per developer seat per year
 
 APPLICATION DEPLOYMENT LICENSE: $2,000 per application
 - Required for each production application or service that uses
-  Angular Stream Resource commercially
+  Angular Agent Framework commercially
 - Covers all environments (development, staging, production)
 - One-time purchase per application
 
@@ -1685,7 +1685,7 @@ git commit -m "docs: add MIT (non-commercial) and commercial license files"
 - [ ] **Run full test suite one last time**
 
 ```bash
-npx nx test stream-resource --reporter=verbose
+npx nx test angular --reporter=verbose
 ```
 
 Expected: all tests pass
@@ -1693,8 +1693,8 @@ Expected: all tests pass
 - [ ] **Build production artifact**
 
 ```bash
-npx nx build stream-resource --configuration=production
-ls -la dist/libs/stream-resource/
+npx nx build angular --configuration=production
+ls -la dist/libs/angular/
 ```
 
 Expected: built package ready to publish
@@ -1702,7 +1702,7 @@ Expected: built package ready to publish
 - [ ] **Verify package.json exports**
 
 ```bash
-cat dist/libs/stream-resource/package.json | grep -A 20 '"exports"'
+cat dist/libs/angular/package.json | grep -A 20 '"exports"'
 ```
 
-Expected: proper ESM/CJS exports map with `stream-resource` as the import path
+Expected: proper ESM/CJS exports map with `angular` as the import path

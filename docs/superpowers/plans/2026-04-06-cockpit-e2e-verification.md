@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking. This plan is SEQUENTIAL — each task requires a running server and Chrome browser verification that cannot be parallelized.
 
-**Goal:** Verify every cockpit capability example works end-to-end — Angular UI renders, Python backend responds, messages stream correctly, sidebar features display properly, and zero console errors. Fix any issues found in the chat/stream-resource libs.
+**Goal:** Verify every cockpit capability example works end-to-end — Angular UI renders, Python backend responds, messages stream correctly, sidebar features display properly, and zero console errors. Fix any issues found in the chat/angular libs.
 
 **Architecture:** For each example: start the serve script (Angular + Python), navigate Chrome to the port, send a test message, verify the response renders, check the capability-specific sidebar, screenshot for evidence, check console for errors. Kill servers between examples.
 
@@ -20,7 +20,7 @@ Before starting, ensure:
 ```bash
 # Symlink .env for all Python backends
 for dir in cockpit/langgraph/*/python cockpit/deep-agents/*/python; do
-  ln -sf /Users/blove/repos/stream-resource/.env "$dir/.env"
+  ln -sf /Users/blove/repos/angular/.env "$dir/.env"
 done
 ```
 

@@ -1,6 +1,6 @@
 # Interrupts
 
-Interrupts let your LangGraph agent pause mid-execution and hand control to a human. The agent proposes an action, the graph freezes, your Angular UI shows an approval dialog, the user decides, and the agent resumes with the human's decision. streamResource() surfaces interrupts as Angular Signals, so building approval flows, confirmation dialogs, and multi-step review experiences requires no manual event wiring.
+Interrupts let your LangGraph agent pause mid-execution and hand control to a human. The agent proposes an action, the graph freezes, your Angular UI shows an approval dialog, the user decides, and the agent resumes with the human's decision. agent() surfaces interrupts as Angular Signals, so building approval flows, confirmation dialogs, and multi-step review experiences requires no manual event wiring.
 
 <Callout type="info" title="When to use interrupts">
 Use interrupts when an agent action is irreversible (sending an email, placing an order, deleting data), when the agent needs a human decision it cannot make on its own, or when compliance requires explicit approval before execution.
@@ -18,7 +18,7 @@ The agent reasons about the user's request and determines an action that require
 The agent node calls `raise Interrupt(value={...})`, which freezes the graph. The interrupt payload is persisted in the checkpoint and streamed to the client.
 </Step>
 <Step title="UI Shows Dialog">
-streamResource() updates the `interrupt()` signal. Your Angular template detects the change through OnPush change detection and renders an approval dialog with the interrupt payload.
+agent() updates the `interrupt()` signal. Your Angular template detects the change through OnPush change detection and renders an approval dialog with the interrupt payload.
 </Step>
 <Step title="User Decides">
 The user reviews the proposed action and clicks Approve or Reject. Your component calls `agent.submit()` with a resume payload containing the decision.
@@ -131,7 +131,7 @@ Place the `raise Interrupt()` call in its own dedicated node. This gives you a c
 
 ## Angular: Building an Approval Component
 
-When the agent raises an interrupt, streamResource() populates the `interrupt()` signal with the interrupt payload. Your component reads this signal to render a dialog and calls `submit()` to resume.
+When the agent raises an interrupt, agent() populates the `interrupt()` signal with the interrupt payload. Your component reads this signal to render a dialog and calls `submit()` to resume.
 
 <Tabs>
 <Tab label="approval.component.ts">
@@ -143,7 +143,7 @@ import {
   signal,
   ChangeDetectionStrategy,
 } from '@angular/core';
-import { streamResource, BaseMessage } from '@cacheplane/stream-resource';
+import { agent, BaseMessage } from '@cacheplane/angular';
 
 interface ApprovalPayload {
   action: string;
@@ -164,7 +164,7 @@ interface AgentState {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ApprovalComponent {
-  agent = streamResource<AgentState>({
+  agent = agent<AgentState>({
     assistantId: 'approval_agent',
   });
 
@@ -354,7 +354,7 @@ import {
   computed,
   ChangeDetectionStrategy,
 } from '@angular/core';
-import { streamResource, BaseMessage } from '@cacheplane/stream-resource';
+import { agent, BaseMessage } from '@cacheplane/angular';
 
 interface StepApproval {
   step_number: number;
@@ -370,7 +370,7 @@ interface StepApproval {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DeployApprovalComponent {
-  agent = streamResource<{
+  agent = agent<{
     messages: BaseMessage[];
     plan: { step: string; description: string }[];
     current_step: number;
@@ -449,12 +449,12 @@ export class DeployApprovalComponent {
 
 ## Typed Interrupt Payloads with BagTemplate
 
-By default, `interrupt()` returns an untyped object. The BagTemplate generic parameter on streamResource() lets you define the exact shape of your interrupt payloads, giving you full TypeScript safety throughout your component.
+By default, `interrupt()` returns an untyped object. The BagTemplate generic parameter on agent() lets you define the exact shape of your interrupt payloads, giving you full TypeScript safety throughout your component.
 
-BagTemplate is a type parameter on the streamResource configuration that maps signal names to their types. When you specify an interrupt type through BagTemplate, the `interrupt()` signal returns a properly typed object instead of `unknown`. This means your template expressions, computed signals, and event handlers all benefit from compile-time checking.
+BagTemplate is a type parameter on the agent configuration that maps signal names to their types. When you specify an interrupt type through BagTemplate, the `interrupt()` signal returns a properly typed object instead of `unknown`. This means your template expressions, computed signals, and event handlers all benefit from compile-time checking.
 
 ```typescript
-import { streamResource, BagTemplate } from '@cacheplane/stream-resource';
+import { agent, BagTemplate } from '@cacheplane/angular';
 
 // Define the exact shape of your interrupt payload
 interface DeployApproval {
@@ -466,7 +466,7 @@ interface DeployApproval {
 }
 
 // Pass the interrupt type via BagTemplate
-const agent = streamResource<
+const agent = agent<
   DeployState,
   BagTemplate<{ interrupt: DeployApproval }>
 >({
@@ -556,6 +556,6 @@ Because interrupts are checkpointed, the user can close their browser, come back
     Stream token-by-token responses alongside interrupt events.
   </Card>
   <Card title="Testing" href="/docs/guides/testing">
-    Script interrupt events deterministically with MockStreamTransport.
+    Script interrupt events deterministically with MockAgentTransport.
   </Card>
 </CardGroup>

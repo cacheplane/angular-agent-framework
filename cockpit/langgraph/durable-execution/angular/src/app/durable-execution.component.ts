@@ -1,6 +1,6 @@
 import { Component, computed } from '@angular/core';
 import { ChatComponent } from '@cacheplane/chat';
-import { streamResource } from '@cacheplane/stream-resource';
+import { agent } from '@cacheplane/angular';
 import { environment } from '../environments/environment';
 
 /**
@@ -24,7 +24,7 @@ const STEP_LABELS: Record<string, string> = {
 
 /**
  * DurableExecutionComponent demonstrates fault-tolerant multi-step execution
- * with `streamResource()`.
+ * with `agent()`.
  *
  * This example shows how a graph checkpoints at each node, enabling it to
  * resume after failures. The backend processes each request through three
@@ -92,7 +92,7 @@ const STEP_LABELS: Record<string, string> = {
   `,
 })
 export class DurableExecutionComponent {
-  protected readonly stream = streamResource({
+  protected readonly stream = agent({
     apiUrl: environment.langGraphApiUrl,
     assistantId: environment.streamingAssistantId,
   });

@@ -1,47 +1,47 @@
-# Code Execution Sandbox with stream-resource
+# Code Execution Sandbox with angular
 
 <Summary>
-Build a chat interface that shows real-time code execution logs using `streamResource()` from
-`@cacheplane/stream-resource`. The agent writes Python code and runs it in a sandbox, and the
+Build a chat interface that shows real-time code execution logs using `agent()` from
+`@cacheplane/angular`. The agent writes Python code and runs it in a sandbox, and the
 sidebar displays each execution as a log entry with code input, stdout output, and exit status.
 </Summary>
 
 <Prompt>
-Add a code execution log sidebar to this Angular component using `streamResource()` from `@cacheplane/stream-resource`. Use `stream.messages()` to access tool call data from the `run_code` tool, derive `executionLogs` with `computed()`, and bind them to the sidebar via the `<cp-chat>` component from `@cacheplane/chat`.
+Add a code execution log sidebar to this Angular component using `agent()` from `@cacheplane/angular`. Use `stream.messages()` to access tool call data from the `run_code` tool, derive `executionLogs` with `computed()`, and bind them to the sidebar via the `<cp-chat>` component from `@cacheplane/chat`.
 </Prompt>
 
 <Steps>
 <Step title="Configure the provider">
 
-Set up `provideStreamResource()` in your app config with the LangGraph API URL:
+Set up `provideAgent()` in your app config with the LangGraph API URL:
 
 ```typescript
 // app.config.ts
 import { ApplicationConfig } from '@angular/core';
-import { provideStreamResource } from '@cacheplane/stream-resource';
+import { provideAgent } from '@cacheplane/angular';
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideStreamResource({
+    provideAgent({
       apiUrl: 'https://your-deployment.langgraph.app',
     }),
   ],
 };
 ```
 
-This makes the API URL available to all `streamResource()` calls in your app.
+This makes the API URL available to all `agent()` calls in your app.
 
 </Step>
 <Step title="Create the streaming resource">
 
-In your component, call `streamResource()` with the `assistantId` pointing to your sandboxes graph:
+In your component, call `agent()` with the `assistantId` pointing to your sandboxes graph:
 
 ```typescript
 // sandboxes.component.ts
-import { streamResource } from '@cacheplane/stream-resource';
+import { agent } from '@cacheplane/angular';
 
 export class SandboxesComponent {
-  protected readonly stream = streamResource({
+  protected readonly stream = agent({
     assistantId: 'sandboxes',
   });
 }
@@ -64,7 +64,7 @@ interface ExecutionLog {
 }
 
 export class SandboxesComponent {
-  protected readonly stream = streamResource({ assistantId: 'sandboxes' });
+  protected readonly stream = agent({ assistantId: 'sandboxes' });
 
   executionLogs = computed(() => {
     const msgs = this.stream.messages();

@@ -8,7 +8,7 @@ const CAPABILITIES = [
     title: 'Planning',
     description: 'Turn high-level goals into ordered action sequences with explicit constraints and checkpoints. The agent chooses next steps grounded in real context.',
     code: `// Agent plans and executes steps
-const planner = streamResource<PlanState>({
+const planner = agent<PlanState>({
   assistantId: 'planning_agent',
 });
 
@@ -25,7 +25,7 @@ const planner = streamResource<PlanState>({
     title: 'Subagents',
     description: 'Split complex tasks into focused workers with clear ownership boundaries. Each subagent handles a specialized piece and reports back.',
     code: `// Orchestrator delegates to subagents
-const orchestrator = streamResource<OrchestratorState>({
+const orchestrator = agent<OrchestratorState>({
   assistantId: 'orchestrator',
 });
 
@@ -42,7 +42,7 @@ const activeWorkers = computed(() =>
     title: 'Skills',
     description: 'Package repeatable agent behavior into focused, reusable instruction sets. Skills define scope, response format, and operational boundaries.',
     code: `// Agent uses a skill for code review
-const reviewer = streamResource<ReviewState>({
+const reviewer = agent<ReviewState>({
   assistantId: 'code_review_skill',
   input: {
     files: changedFiles(),
@@ -60,7 +60,7 @@ const issues = reviewer.messages()
     title: 'Memory',
     description: 'Retain useful intermediate context across agent turns without leaking irrelevant history. Memory shapes routing and improves response quality over time.',
     code: `// Agent with persistent memory
-const agent = streamResource<MemoryState>({
+const agent = agent<MemoryState>({
   assistantId: 'memory_agent',
   threadId: signal(userId()),
 });

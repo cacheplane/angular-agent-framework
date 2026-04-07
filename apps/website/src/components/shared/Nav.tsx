@@ -6,7 +6,7 @@ import { tokens } from '@cacheplane/design-tokens';
 const links = [
   { label: 'Pilot to Prod', href: '/pilot-to-prod', external: false },
   { label: 'Docs', href: '/docs', external: false },
-  { label: 'API', href: '/docs/api/stream-resource', external: false },
+  { label: 'API', href: '/docs/api/angular', external: false },
   { label: 'Examples', href: 'https://cockpit.stream-resource.dev', external: true },
   { label: 'Pricing', href: '/pricing', external: false },
 ];
@@ -50,7 +50,7 @@ export function Nav() {
       {/* Top bar */}
       <div className="flex items-center justify-between px-6 py-4 md:px-8 md:py-5">
         <Link href="/" className="font-garamond text-xl font-bold" style={{ color: tokens.colors.textPrimary }}>
-          Angular Stream Resource
+          Angular Agent Framework
         </Link>
 
         {/* Desktop links */}

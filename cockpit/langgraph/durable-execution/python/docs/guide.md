@@ -1,48 +1,48 @@
-# Durable Execution with stream-resource
+# Durable Execution with angular
 
 <Summary>
-Build a fault-tolerant chat interface using `streamResource()` from
-`@cacheplane/stream-resource`. The backend graph checkpoints state after
+Build a fault-tolerant chat interface using `agent()` from
+`@cacheplane/angular`. The backend graph checkpoints state after
 each node, enabling resume-on-failure. The sidebar monitors execution
 status in real time and exposes a "Retry" button when errors occur.
 </Summary>
 
 <Prompt>
-Add a durable multi-step execution workflow to this Angular component using `streamResource()` from `@cacheplane/stream-resource`. Display `stream.status()` as a colour-coded badge, show a `stream.hasValue()` indicator, and render a "Retry" button that calls `stream.reload()` when `stream.error()` is set. Bind `stream.messages()` in the template via the `<cp-chat>` component from `@cacheplane/chat`.
+Add a durable multi-step execution workflow to this Angular component using `agent()` from `@cacheplane/angular`. Display `stream.status()` as a colour-coded badge, show a `stream.hasValue()` indicator, and render a "Retry" button that calls `stream.reload()` when `stream.error()` is set. Bind `stream.messages()` in the template via the `<cp-chat>` component from `@cacheplane/chat`.
 </Prompt>
 
 <Steps>
 <Step title="Configure the provider">
 
-Set up `provideStreamResource()` in your app config with the LangGraph API URL:
+Set up `provideAgent()` in your app config with the LangGraph API URL:
 
 ```typescript
 // app.config.ts
 import { ApplicationConfig } from '@angular/core';
-import { provideStreamResource } from '@cacheplane/stream-resource';
+import { provideAgent } from '@cacheplane/angular';
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideStreamResource({
+    provideAgent({
       apiUrl: 'https://your-deployment.langgraph.app',
     }),
   ],
 };
 ```
 
-This makes the API URL available to all `streamResource()` calls in your app.
+This makes the API URL available to all `agent()` calls in your app.
 
 </Step>
 <Step title="Create the streaming resource">
 
-In your component, call `streamResource()` with the `assistantId` pointing to your durable-execution graph:
+In your component, call `agent()` with the `assistantId` pointing to your durable-execution graph:
 
 ```typescript
 // durable-execution.component.ts
-import { streamResource } from '@cacheplane/stream-resource';
+import { agent } from '@cacheplane/angular';
 
 export class DurableExecutionComponent {
-  protected readonly stream = streamResource({
+  protected readonly stream = agent({
     assistantId: 'durable-execution',
   });
 

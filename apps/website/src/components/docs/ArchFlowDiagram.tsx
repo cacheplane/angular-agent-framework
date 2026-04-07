@@ -95,7 +95,7 @@ export function ArchFlowDiagram() {
           <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#FEBC2E' }} />
           <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#28C840' }} />
         </div>
-        <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: tokens.colors.textMuted }}>streamResource() — live architecture flow</span>
+        <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: tokens.colors.textMuted }}>agent() — live architecture flow</span>
         <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: tokens.colors.textMuted, background: 'rgba(0,0,0,0.04)', padding: '2px 6px', borderRadius: 4 }}>localhost:4200</span>
       </div>
 

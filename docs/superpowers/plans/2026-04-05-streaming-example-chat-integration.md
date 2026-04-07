@@ -2,11 +2,11 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Wire the cockpit `langgraph/streaming/angular` example to correctly consume `@cacheplane/chat` and `@cacheplane/stream-resource`, making it buildable and serveable as a standalone Angular app against a real LangGraph backend.
+**Goal:** Wire the cockpit `langgraph/streaming/angular` example to correctly consume `@cacheplane/chat` and `@cacheplane/angular`, making it buildable and serveable as a standalone Angular app against a real LangGraph backend.
 
-**Architecture:** Standalone Angular app bootstrapped with `bootstrapApplication()`. Uses `provideStreamResource()` for global API URL, `provideChat()` for chat config. `StreamingComponent` creates a `streamResource()` ref and passes it to `<chat-ui [ref]>`. Proxied to LangGraph dev server on port 8123 via `/api`.
+**Architecture:** Standalone Angular app bootstrapped with `bootstrapApplication()`. Uses `provideAgent()` for global API URL, `provideChat()` for chat config. `StreamingComponent` creates a `agent()` ref and passes it to `<chat-ui [ref]>`. Proxied to LangGraph dev server on port 8123 via `/api`.
 
-**Tech Stack:** Angular 21, `@cacheplane/chat`, `@cacheplane/stream-resource`, `@angular-devkit/build-angular`, Tailwind CSS
+**Tech Stack:** Angular 21, `@cacheplane/chat`, `@cacheplane/angular`, `@angular-devkit/build-angular`, Tailwind CSS
 
 ---
 
@@ -14,7 +14,7 @@
 
 The streaming example has two problems:
 
-1. **Wrong API usage:** `StreamingComponent` uses `<cp-chat [messages] [isLoading] (sendMessage)>` — none of these exist. The actual `ChatComponent` has selector `chat-ui` and accepts `[ref]` (a `StreamResourceRef`).
+1. **Wrong API usage:** `StreamingComponent` uses `<cp-chat [messages] [isLoading] (sendMessage)>` — none of these exist. The actual `ChatComponent` has selector `chat-ui` and accepts `[ref]` (a `AgentRef`).
 
 2. **Duplicate entry points:** Two app components exist (`src/app.component.ts` and `src/app/streaming.component.ts`) from different branches being merged. Need to consolidate to one.
 
@@ -75,19 +75,19 @@ git commit -m "chore(cockpit): remove duplicate streaming entry points"
 
 - [ ] **Step 1: Rewrite the component**
 
-The component must use `chat-ui` selector (the actual ChatComponent selector) with `[ref]` input. Call `streamResource()` as a field initializer (valid injection context — no need for `runInInjectionContext`).
+The component must use `chat-ui` selector (the actual ChatComponent selector) with `[ref]` input. Call `agent()` as a field initializer (valid injection context — no need for `runInInjectionContext`).
 
 ```typescript
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import { Component } from '@angular/core';
 import { ChatComponent } from '@cacheplane/chat';
-import { streamResource } from '@cacheplane/stream-resource';
+import { agent } from '@cacheplane/angular';
 import { environment } from '../environments/environment';
 
 /**
  * Streaming demo — simplest possible @cacheplane/chat integration.
  *
- * Creates a streamResource ref and passes it to the prebuilt <chat-ui>
+ * Creates a agent ref and passes it to the prebuilt <chat-ui>
  * composition. The composition handles message rendering, input, typing
  * indicator, and error display internally.
  */
@@ -98,7 +98,7 @@ import { environment } from '../environments/environment';
   template: `<chat-ui [ref]="stream" class="block h-screen" />`,
 })
 export class StreamingComponent {
-  protected readonly stream = streamResource({
+  protected readonly stream = agent({
     assistantId: environment.streamingAssistantId,
   });
 }
@@ -129,13 +129,13 @@ git commit -m "feat(cockpit): rewrite streaming component with correct chat-ui A
 ```typescript
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import { ApplicationConfig } from '@angular/core';
-import { provideStreamResource } from '@cacheplane/stream-resource';
+import { provideAgent } from '@cacheplane/angular';
 import { provideChat } from '@cacheplane/chat';
 import { environment } from '../environments/environment';
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideStreamResource({ apiUrl: environment.langGraphApiUrl }),
+    provideAgent({ apiUrl: environment.langGraphApiUrl }),
     provideChat({}),
   ],
 };
@@ -346,7 +346,7 @@ Stop the LangGraph backend and submit a message. Verify the error component rend
 - [ ] **Step 5: Run library tests to verify no regressions**
 
 ```bash
-npx nx test render && npx nx test chat && npx nx test stream-resource
+npx nx test render && npx nx test chat && npx nx test angular
 ```
 
 - [ ] **Step 6: Document any issues found**

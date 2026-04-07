@@ -1,4 +1,4 @@
-# Angular Stream Resource Licensing Model — Design Specification
+# Angular Agent Framework Licensing Model — Design Specification
 
 **Date:** 2026-03-19
 **Status:** Implemented
@@ -8,7 +8,7 @@
 
 ## Overview
 
-Angular Stream Resource uses a **source-available dual-license model**. It is **not** open source and must never be described as MIT or OSI-approved. The project is publicly readable and freely usable for noncommercial purposes, with a paid commercial license required for any for-profit or revenue-generating use.
+Angular Agent Framework uses a **source-available dual-license model**. It is **not** open source and must never be described as MIT or OSI-approved. The project is publicly readable and freely usable for noncommercial purposes, with a paid commercial license required for any for-profit or revenue-generating use.
 
 ---
 
@@ -17,7 +17,7 @@ Angular Stream Resource uses a **source-available dual-license model**. It is **
 | File | Purpose |
 |---|---|
 | `LICENSE` | Full text of PolyForm Noncommercial 1.0.0 |
-| `LICENSE-COMMERCIAL` | Full text of the Angular Stream Resource Commercial License |
+| `LICENSE-COMMERCIAL` | Full text of the Angular Agent Framework Commercial License |
 | `COMMERCIAL.md` | Plain-English commercial licensing explainer |
 | `NOTICE` | Required copyright notice per PolyForm terms |
 
@@ -48,7 +48,7 @@ Angular Stream Resource uses a **source-available dual-license model**. It is **
 
 ## Commercial License
 
-**License:** Angular Stream Resource Commercial License
+**License:** Angular Agent Framework Commercial License
 **File:** `LICENSE-COMMERCIAL`
 
 ### Tiers
@@ -77,14 +77,14 @@ All `package.json` files must set:
 
 Affected packages:
 - Root `package.json`
-- `libs/stream-resource/package.json`
+- `libs/angular/package.json`
 - `packages/mcp/package.json`
 
 ---
 
 ## SPDX Headers
 
-All non-test, non-setup TypeScript source files in `libs/stream-resource/src/` and `packages/mcp/src/` must begin with:
+All non-test, non-setup TypeScript source files in `libs/angular/src/` and `packages/mcp/src/` must begin with:
 
 ```ts
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
@@ -125,7 +125,7 @@ The free/community tier is called **"Community"** (not "Open Source").
 ### Pricing page copy
 
 - Free tier: "Community · Free · noncommercial use · PolyForm Noncommercial 1.0.0"
-- Commercial tiers: "Commercial use requires a paid Angular Stream Resource Commercial License"
+- Commercial tiers: "Commercial use requires a paid Angular Agent Framework Commercial License"
 
 ### Footer
 
@@ -148,10 +148,10 @@ Source-available licensing. Free for noncommercial use under PolyForm Noncommerc
 ### README license section
 
 ```markdown
-`@cacheplane/stream-resource` is source-available software dual-licensed:
+`@cacheplane/angular` is source-available software dual-licensed:
 
 - **PolyForm Noncommercial 1.0.0** — free for noncommercial use. See LICENSE.
-- **Angular Stream Resource Commercial License** — required for any for-profit or revenue-generating use. See LICENSE-COMMERCIAL and COMMERCIAL.md.
+- **Angular Agent Framework Commercial License** — required for any for-profit or revenue-generating use. See LICENSE-COMMERCIAL and COMMERCIAL.md.
 
 This is **not** an open-source license. Commercial use requires a paid commercial license.
 ```

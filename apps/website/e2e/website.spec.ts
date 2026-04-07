@@ -14,7 +14,7 @@ test('landing page renders architecture section', async ({ page }) => {
 
 test('landing page renders fair comparison section', async ({ page }) => {
   await page.goto('/');
-  await expect(page.getByText('What Angular Stream Resource adds').first()).toBeVisible();
+  await expect(page.getByText('What Angular Agent Framework adds').first()).toBeVisible();
 });
 
 test('pricing page shows 4 plan cards', async ({ page }) => {
@@ -38,8 +38,8 @@ test('docs page renders sidebar and content', async ({ page }) => {
 });
 
 test('api reference renders in docs', async ({ page }) => {
-  await page.goto('/docs/api/stream-resource');
-  await expect(page.getByText('streamResource()').first()).toBeVisible();
+  await page.goto('/docs/api/angular');
+  await expect(page.getByText('agent()').first()).toBeVisible();
 });
 
 test('nav has pricing link', async ({ page }) => {

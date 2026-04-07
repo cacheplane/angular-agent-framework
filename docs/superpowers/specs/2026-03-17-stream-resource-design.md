@@ -1,4 +1,4 @@
-# Angular Stream Resource — Design Specification
+# Angular Agent Framework — Design Specification
 
 **Date:** 2026-03-17
 **Status:** Approved
@@ -8,10 +8,10 @@
 
 ## Overview
 
-Angular Stream Resource is an Angular 20+ library that provides `streamResource()` — a full-parity implementation of LangGraph's React `useStream()` hook built on the Angular Resource API. It is designed for enterprise teams building production Angular applications on top of LangChain, LangGraph, and LangSmith.
+Angular Agent Framework is an Angular 20+ library that provides `agent()` — a full-parity implementation of LangGraph's React `useStream()` hook built on the Angular Resource API. It is designed for enterprise teams building production Angular applications on top of LangChain, LangGraph, and LangSmith.
 
 The project is delivered as an Nx monorepo containing:
-1. The publishable Angular library (`stream-resource`)
+1. The publishable Angular library (`angular`)
 2. A Next.js marketing and documentation website
 3. A developer-first GitHub README
 
@@ -22,14 +22,14 @@ The project is delivered as an Nx monorepo containing:
 **Type:** Nx integrated monorepo
 
 ```
-stream-resource/
+angular/
 ├── libs/
-│   └── stream-resource/              # Publishable Angular library
+│   └── angular/              # Publishable Angular library
 │       ├── src/
 │       │   ├── lib/
-│       │   │   ├── stream-resource.fn.ts        # streamResource() entry point
-│       │   │   ├── stream-resource.types.ts     # Full public type surface
-│       │   │   ├── stream-resource.provider.ts  # provideStreamResource()
+│       │   │   ├── angular.fn.ts        # agent() entry point
+│       │   │   ├── angular.types.ts     # Full public type surface
+│       │   │   ├── angular.provider.ts  # provideAgent()
 │       │   │   ├── transport/
 │       │   │   │   ├── fetch-stream.transport.ts
 │       │   │   │   ├── mock-stream.transport.ts
@@ -66,7 +66,7 @@ stream-resource/
 │       └── src/
 │
 ├── e2e/
-│   ├── stream-resource-e2e/          # Integration tests (real LangGraph server)
+│   ├── angular-e2e/          # Integration tests (real LangGraph server)
 │   └── website-e2e/                  # Playwright e2e for website
 │
 ├── docs/
@@ -89,14 +89,14 @@ stream-resource/
 
 ### Package
 
-- **npm name:** `stream-resource`
+- **npm name:** `angular`
 - **Peer dependencies:** `@angular/core ^20.0.0 || ^21.0.0`, `@angular/common ^20.0.0 || ^21.0.0`, `@langchain/langgraph-sdk`
 - **Build:** `ng-packagr` via `@nx/angular:package`
 - **Tests:** Vitest + jsdom
 
 ### Generic Type Parameters
 
-`streamResource()` mirrors the LangGraph SDK's type system exactly:
+`agent()` mirrors the LangGraph SDK's type system exactly:
 
 ```typescript
 // BagTemplate — mirrors @langchain/langgraph-sdk BagTemplate
@@ -120,20 +120,20 @@ Implementers should import `BagTemplate` and `InferBag` directly from `@langchai
 
 ### Public API
 
-#### `streamResource(options)`
+#### `agent(options)`
 
 Primary exported function. Must be called within an Angular injection context (component constructor, field initializer, `inject()` call, or `runInInjectionContext()`).
 
 ```typescript
-export function streamResource<
+export function agent<
   T = Record<string, unknown>,
   Bag extends BagTemplate = BagTemplate
 >(
-  options: StreamResourceOptions<T, InferBag<T, Bag>>
-): StreamResourceRef<T, InferBag<T, Bag>>
+  options: AgentOptions<T, InferBag<T, Bag>>
+): AgentRef<T, InferBag<T, Bag>>
 ```
 
-#### `StreamResourceOptions`
+#### `AgentOptions`
 
 Full parity with `useStream()` options:
 
@@ -147,13 +147,13 @@ Full parity with `useStream()` options:
 | `messagesKey` | `string` | State key holding messages (default: `"messages"`) |
 | `throttle` | `number \| false` | Throttle rapid updates. Uses `throttleTime(n, asyncScheduler, { leading: true, trailing: true })`. `false` disables throttling. |
 | `toMessage` | `(msg) => BaseMessage` | Custom message class converter |
-| `transport` | `StreamResourceTransport` | Custom transport, replaces default `FetchStreamTransport` |
+| `transport` | `AgentTransport` | Custom transport, replaces default `FetchStreamTransport` |
 | `filterSubagentMessages` | `boolean` | Exclude subagent messages from main `messages` signal |
 | `subagentToolNames` | `string[]` | Tool names that identify subagent invocations |
 
-#### `StreamResourceRef<T, Bag>`
+#### `AgentRef<T, Bag>`
 
-Returned object that satisfies Angular's `ResourceRef<T>` interface structurally (duck-typed compatibility — `StreamResourceRef` is not a subclass of `ResourceRef`, it simply implements the same shape). This means it is compatible with any Angular API that accepts `ResourceRef<T>`.
+Returned object that satisfies Angular's `ResourceRef<T>` interface structurally (duck-typed compatibility — `AgentRef` is not a subclass of `ResourceRef`, it simply implements the same shape). This means it is compatible with any Angular API that accepts `ResourceRef<T>`.
 
 **`ResourceRef<T>` members implemented:**
 
@@ -166,10 +166,10 @@ Returned object that satisfies Angular's `ResourceRef<T>` interface structurally
 | `hasValue()` | `true` once values have been received at least once |
 | `reload()` | Re-submits the last `submit()` call with the same values. No-op if no prior submission. |
 
-**Additional `StreamResourceRef` members (streaming-specific):**
+**Additional `AgentRef` members (streaming-specific):**
 
 ```typescript
-interface StreamResourceRef<T, Bag> {
+interface AgentRef<T, Bag> {
   // ── Streaming state ──
   messages:        Signal<BaseMessage[]>
   interrupt:       Signal<Interrupt<Bag['InterruptType']> | undefined>
@@ -197,12 +197,12 @@ interface StreamResourceRef<T, Bag> {
 }
 ```
 
-#### `StreamSubjects<T>` (internal type, defined in `stream-resource.types.ts`)
+#### `StreamSubjects<T>` (internal type, defined in `angular.types.ts`)
 
 All `BehaviorSubject` instances created at construction time are collected into this type and passed to `createStreamManagerBridge`. It is an internal type — not exported from `public-api.ts`.
 
 ```typescript
-// Defined in: libs/stream-resource/src/lib/stream-resource.types.ts
+// Defined in: libs/angular/src/lib/angular.types.ts
 interface StreamSubjects<T> {
   status$:          BehaviorSubject<ResourceStatus>;
   values$:          BehaviorSubject<T>;
@@ -219,16 +219,16 @@ interface StreamSubjects<T> {
 }
 ```
 
-`ResourceStatus` is imported from `@angular/core` and **re-exported** from `stream-resource`'s `public-api.ts`. Consumers may import it from either `@angular/core` or `stream-resource` — both are equivalent.
+`ResourceStatus` is imported from `@angular/core` and **re-exported** from `angular`'s `public-api.ts`. Consumers may import it from either `@angular/core` or `angular` — both are equivalent.
 
-#### `provideStreamResource(config)`
+#### `provideAgent(config)`
 
-Optional root-level provider. Configured via `InjectionToken<StreamResourceConfig>`.
+Optional root-level provider. Configured via `InjectionToken<AgentConfig>`.
 
 ```typescript
-interface StreamResourceConfig {
-  apiUrl?:    string;           // Default apiUrl for all streamResource() calls
-  transport?: StreamResourceTransport; // Default transport (overridable per-call)
+interface AgentConfig {
+  apiUrl?:    string;           // Default apiUrl for all agent() calls
+  transport?: AgentTransport; // Default transport (overridable per-call)
 }
 ```
 
@@ -238,7 +238,7 @@ interface StreamResourceConfig {
 
 #### RxJS Core (key design decision)
 
-All `BehaviorSubject` instances are created once at construction time when `streamResource()` is called. Dynamic actions (`submit`, `stop`, `switchThread`, `joinStream`) push new values into these existing subjects — they never create new subjects. This is essential because `toSignal()` must be called in the injection context at construction time and cannot be called again later.
+All `BehaviorSubject` instances are created once at construction time when `agent()` is called. Dynamic actions (`submit`, `stop`, `switchThread`, `joinStream`) push new values into these existing subjects — they never create new subjects. This is essential because `toSignal()` must be called in the injection context at construction time and cannot be called again later.
 
 `StreamManager` from `@langchain/langgraph-sdk/ui` is wrapped in an RxJS pipeline. This was chosen over `effect()` because:
 
@@ -250,7 +250,7 @@ All `BehaviorSubject` instances are created once at construction time when `stre
 **Full construction pattern:**
 
 ```typescript
-export function streamResource<T, Bag>(options): StreamResourceRef<T, Bag> {
+export function agent<T, Bag>(options): AgentRef<T, Bag> {
   // Must be called in injection context
   const destroyRef = inject(DestroyRef);
   const destroy$   = new Subject<void>();
@@ -263,7 +263,7 @@ export function streamResource<T, Bag>(options): StreamResourceRef<T, Bag> {
   //   resolved → stream completed successfully (bridge sets this on stream end)
   //   error    → error received (bridge sets this, paired with error$.next(err))
   // ResourceStatus is imported from '@angular/core' and re-exported from
-  // stream-resource's public-api.ts so consumers can import it from either.
+  // angular's public-api.ts so consumers can import it from either.
   const status$          = new BehaviorSubject<ResourceStatus>(ResourceStatus.Idle);
   const values$          = new BehaviorSubject<T>(options.initialValues ?? {} as T);
   const messages$        = new BehaviorSubject<BaseMessage[]>([]);
@@ -278,7 +278,7 @@ export function streamResource<T, Bag>(options): StreamResourceRef<T, Bag> {
   const subagents$       = new BehaviorSubject<Map<string, SubagentStreamRef>>(new Map());
 
   // StreamSubjects<T> — all subjects passed to the bridge as a single object.
-  // Defined in stream-resource.types.ts (see type definition below).
+  // Defined in angular.types.ts (see type definition below).
   const subjects: StreamSubjects<T> = {
     status$, values$, messages$, error$,
     interrupt$, interrupts$, branch$, history$,
@@ -334,7 +334,7 @@ This file is the only place that directly calls `@langchain/langgraph-sdk/ui` in
 
 ```typescript
 interface StreamManagerBridgeOptions<T> {
-  options:   StreamResourceOptions<T, any>;
+  options:   AgentOptions<T, any>;
   subjects:  StreamSubjects<T>;       // All BehaviorSubjects (see StreamSubjects<T>)
   threadId$: Observable<string|null>; // Resolved from options.threadId at construction time
   destroy$:  Observable<void>;
@@ -357,12 +357,12 @@ The bridge implementation must inspect the actual `StreamManager` API from `@lan
 
 ### Testing
 
-#### `MockStreamTransport`
+#### `MockAgentTransport`
 
-Exported public testing API. Implements `StreamResourceTransport`. Lets consumers write deterministic unit tests.
+Exported public testing API. Implements `AgentTransport`. Lets consumers write deterministic unit tests.
 
 ```typescript
-class MockStreamTransport implements StreamResourceTransport {
+class MockAgentTransport implements AgentTransport {
   // Pass a script of event batches to replay in order
   constructor(script?: StreamEvent[][]) {}
 
@@ -382,11 +382,11 @@ class MockStreamTransport implements StreamResourceTransport {
 
 Usage pattern:
 ```typescript
-const transport = new MockStreamTransport([
+const transport = new MockAgentTransport([
   [{ type: 'values', values: { messages: [] } }],
   [{ type: 'messages', messages: [humanMsg, aiMsg] }],
 ]);
-const stream = streamResource({ transport, assistantId: 'test', apiUrl: '' });
+const stream = agent({ transport, assistantId: 'test', apiUrl: '' });
 // Step through the scripted event sequence one batch at a time:
 transport.emit(transport.nextBatch());
 transport.emit(transport.nextBatch());
@@ -403,7 +403,7 @@ transport.emit(transport.nextBatch());
 - `reload()` re-submits last values
 
 **E2E tests (real LangGraph server):**
-- Separate `e2e/stream-resource-e2e` project
+- Separate `e2e/angular-e2e` project
 - Requires a running LangGraph server (Docker Compose config provided at `e2e/docker-compose.yml`)
 - Tests the full streaming lifecycle against a real agent
 
@@ -461,7 +461,7 @@ Angular demo app compiled to Angular Elements (web components), embedded directl
 
 Two-stage pipeline run via `npm run generate-docs`:
 
-1. **`generate-api-docs.ts`** — runs TypeDoc against `libs/stream-resource/src`, outputs structured JSON
+1. **`generate-api-docs.ts`** — runs TypeDoc against `libs/angular/src`, outputs structured JSON
 2. **`generate-narrative-docs.ts`** — sends TypeDoc JSON + library source to Claude API. Model ID is read from `ANTHROPIC_MODEL` env var, defaulting to `claude-sonnet-4-6`. Generates polished MDX guides committed to `content/docs/`
 
 ### Playwright E2E
@@ -536,7 +536,7 @@ Documented in `docs/limitations.md`. Each entry follows this format:
 Key items:
 
 - **`useSyncExternalStore` concurrent-mode batching** — React's concurrent renderer batches state updates atomically. Angular has no equivalent; rapid stream events handled via RxJS pipeline may produce more intermediate signal updates. Workaround: use the `throttle` option.
-- **Server Components** — `streamResource()` is client-side only. No Angular equivalent of React Server Components exists. No workaround.
+- **Server Components** — `agent()` is client-side only. No Angular equivalent of React Server Components exists. No workaround.
 - **StrictMode double-invocation** — React's StrictMode invokes hooks twice for side-effect detection. Angular has no equivalent. No impact on behavior; noted for developers porting React test patterns.
 
 ---
@@ -547,7 +547,7 @@ Key items:
 |---|---|---|
 | `ci.yml` | Every PR and push to `main` | Lint → Vitest unit tests → build library |
 | `e2e.yml` | Merge to `main` | Spin up Docker Compose (LangGraph server) → run e2e suite → Playwright website tests |
-| `publish.yml` | Git tag `v*` | Build library → `nx-release-publish` → publish `stream-resource` to npm |
+| `publish.yml` | Git tag `v*` | Build library → `nx-release-publish` → publish `angular` to npm |
 
 Vercel deploys the website automatically on every push to `main` via the Vercel GitHub integration.
 

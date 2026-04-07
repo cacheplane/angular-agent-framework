@@ -10,23 +10,23 @@ const API_DOCS = 'apps/website/public/api-docs.json';
 const TOPICS = [
   {
     slug: 'introduction',
-    prompt: 'Write an introduction to the Angular Stream Resource library. Explain what it does, who it is for, and why it exists. Include a minimal getting-started example.',
+    prompt: 'Write an introduction to the Angular Agent Framework library. Explain what it does, who it is for, and why it exists. Include a minimal getting-started example.',
   },
   {
     slug: 'streaming',
-    prompt: 'Explain how token-by-token streaming works with streamResource(). Cover the messages signal, how chunks arrive, and how Angular re-renders on each chunk.',
+    prompt: 'Explain how token-by-token streaming works with agent(). Cover the messages signal, how chunks arrive, and how Angular re-renders on each chunk.',
   },
   {
     slug: 'thread-persistence',
-    prompt: 'Explain thread persistence in streamResource(). Cover threadId, onThreadId, and how to resume threads across page refreshes with localStorage.',
+    prompt: 'Explain thread persistence in agent(). Cover threadId, onThreadId, and how to resume threads across page refreshes with localStorage.',
   },
   {
     slug: 'configuration',
-    prompt: 'Explain provideStreamResource() and per-call configuration. Show how to set a global apiUrl and how to override it per-call.',
+    prompt: 'Explain provideAgent() and per-call configuration. Show how to set a global apiUrl and how to override it per-call.',
   },
   {
     slug: 'testing',
-    prompt: 'Explain how to unit test components that use streamResource() with MockStreamTransport. Show a complete test example.',
+    prompt: 'Explain how to unit test components that use agent() with MockAgentTransport. Show a complete test example.',
   },
 ];
 
@@ -36,7 +36,7 @@ async function generateDoc(slug: string, prompt: string, apiDocsJson: string): P
     max_tokens: 2048,
     messages: [{
       role: 'user',
-      content: `You are writing documentation for the Angular Stream Resource library.
+      content: `You are writing documentation for the Angular Agent Framework library.
 Here is the TypeDoc API reference JSON:\n\n${apiDocsJson}\n\n${prompt}
 
 Write clean, developer-friendly MDX documentation. Use precise, no-fluff prose. Include code examples. Start with a single # heading.`,

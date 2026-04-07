@@ -17,9 +17,9 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npx nx lint stream-resource
-      - run: npx nx test stream-resource --coverage
-      - run: npx nx build stream-resource --configuration=production
+      - run: npx nx lint angular
+      - run: npx nx test angular --coverage
+      - run: npx nx build angular --configuration=production
 
   website:
     name: Website — lint / build
@@ -224,7 +224,7 @@ jobs:
         run: |
           mkdir -p .vercel
           cat > .vercel/project.json <<EOF
-          {"projectId":"${{ secrets.VERCEL_WEBSITE_PROJECT_ID }}","orgId":"${{ secrets.VERCEL_ORG_ID }}","projectName":"stream-resource"}
+          {"projectId":"${{ secrets.VERCEL_WEBSITE_PROJECT_ID }}","orgId":"${{ secrets.VERCEL_ORG_ID }}","projectName":"angular"}
           EOF
           npx vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
           rm -rf .vercel/output

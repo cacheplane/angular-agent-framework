@@ -1,6 +1,6 @@
 # Memory
 
-Memory gives your LangGraph agent the ability to recall past interactions, user preferences, and learned facts. There are two distinct kinds: short-term memory scoped to a single thread (conversation), and long-term memory that persists across threads using the LangGraph Store API. streamResource() surfaces both through Angular Signals so your components stay reactive without manual state wiring.
+Memory gives your LangGraph agent the ability to recall past interactions, user preferences, and learned facts. There are two distinct kinds: short-term memory scoped to a single thread (conversation), and long-term memory that persists across threads using the LangGraph Store API. agent() surfaces both through Angular Signals so your components stay reactive without manual state wiring.
 
 <Callout type="info" title="Short-term vs long-term">
 Short-term memory lives within a thread — it is the conversation history plus any custom state fields your agent accumulates during a run. Long-term memory lives in the LangGraph Store and survives across threads, users, and sessions. Think of short-term as "what happened in this conversation" and long-term as "what the agent knows about this user."
@@ -75,7 +75,7 @@ graph = builder.compile()
 
 ```typescript
 import { Component, computed, ChangeDetectionStrategy } from '@angular/core';
-import { streamResource, BaseMessage } from '@cacheplane/stream-resource';
+import { agent, BaseMessage } from '@cacheplane/angular';
 
 interface AgentState {
   messages: BaseMessage[];
@@ -90,7 +90,7 @@ interface AgentState {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class MemoryChatComponent {
-  agent = streamResource<AgentState>({
+  agent = agent<AgentState>({
     assistantId: 'memory_agent',
     threadId: signal(localStorage.getItem('memory-thread')),
     onThreadId: (id) => localStorage.setItem('memory-thread', id),
@@ -186,7 +186,7 @@ result = graph.invoke(
 On the Angular side, thread-scoped memory requires no extra code. The `threadId` signal handles it:
 
 ```typescript
-const chat = streamResource<AgentState>({
+const chat = agent<AgentState>({
   assistantId: 'memory_agent',
   threadId: signal(userId()),  // Same user = same thread = same memory
 });
@@ -267,7 +267,7 @@ graph = builder.compile()
 
 ```typescript
 import { Component, computed, signal, ChangeDetectionStrategy } from '@angular/core';
-import { streamResource, BaseMessage } from '@cacheplane/stream-resource';
+import { agent, BaseMessage } from '@cacheplane/angular';
 
 @Component({
   selector: 'app-longterm-chat',
@@ -277,7 +277,7 @@ import { streamResource, BaseMessage } from '@cacheplane/stream-resource';
 export class LongTermChatComponent {
   // Each conversation gets a new thread, but the agent
   // remembers the user across all of them via the Store.
-  agent = streamResource<{ messages: BaseMessage[] }>({
+  agent = agent<{ messages: BaseMessage[] }>({
     assistantId: 'memory_agent',
     config: { configurable: { user_id: 'user_42' } },
   });

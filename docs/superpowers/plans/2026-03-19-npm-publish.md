@@ -1,4 +1,4 @@
-# npm Publish Plan — @cacheplane/stream-resource + @cacheplane/stream-resource-mcp
+# npm Publish Plan — @cacheplane/angular + @cacheplane/angular-mcp
 
 **Date:** 2026-03-19
 **Status:** Not started
@@ -12,8 +12,8 @@ Publish two packages to npm under the `@cacheplane` scope:
 
 | Package | Version | Registry path |
 |---|---|---|
-| `@cacheplane/stream-resource` | `0.0.1` | `libs/stream-resource/` |
-| `@cacheplane/stream-resource-mcp` | `0.1.0` | `packages/mcp/` |
+| `@cacheplane/angular` | `0.0.1` | `libs/angular/` |
+| `@cacheplane/angular-mcp` | `0.1.0` | `packages/mcp/` |
 
 ---
 
@@ -42,16 +42,16 @@ Add the token to GitHub repo secrets as `NPM_TOKEN`.
 
 ## What to Publish
 
-### `@cacheplane/stream-resource`
+### `@cacheplane/angular`
 
-- Source: `libs/stream-resource/`
-- Built by: `npx nx build stream-resource` → outputs to `dist/libs/stream-resource/`
-- Publish from: `dist/libs/stream-resource/` (Nx ng-packagr output)
-- Entry point: `dist/libs/stream-resource/index.d.ts` and `dist/libs/stream-resource/fesm2022/*.mjs`
+- Source: `libs/angular/`
+- Built by: `npx nx build angular` → outputs to `dist/libs/angular/`
+- Publish from: `dist/libs/angular/` (Nx ng-packagr output)
+- Entry point: `dist/libs/angular/index.d.ts` and `dist/libs/angular/fesm2022/*.mjs`
 
-The `libs/stream-resource/package.json` must have a `files` field or `ng-package.json` controls what gets included. Verify the dist output contains: `package.json`, `index.d.ts`, `fesm2022/`, `esm2022/`.
+The `libs/angular/package.json` must have a `files` field or `ng-package.json` controls what gets included. Verify the dist output contains: `package.json`, `index.d.ts`, `fesm2022/`, `esm2022/`.
 
-### `@cacheplane/stream-resource-mcp`
+### `@cacheplane/angular-mcp`
 
 - Source: `packages/mcp/`
 - Build command: `npm run build` (runs `tsc -p tsconfig.json` → outputs to `packages/mcp/dist/`)
@@ -71,15 +71,15 @@ The `libs/stream-resource/package.json` must have a `files` field or `ng-package
 ### Step 2: Build both packages
 
 ```bash
-npx nx build stream-resource
+npx nx build angular
 cd packages/mcp && npm run build && cd ../..
 ```
 
 ### Step 3: Dry-run publish
 
 ```bash
-# From dist/libs/stream-resource/
-cd dist/libs/stream-resource
+# From dist/libs/angular/
+cd dist/libs/angular
 npm publish --dry-run --access public
 
 # From packages/mcp/
@@ -93,7 +93,7 @@ Verify dry-run output shows only the intended files.
 
 ```bash
 # Library
-cd dist/libs/stream-resource
+cd dist/libs/angular
 npm publish --access public
 
 # MCP
@@ -119,9 +119,9 @@ publish:
         node-version: 22
         registry-url: 'https://registry.npmjs.org'
     - run: npm ci
-    - run: npx nx build stream-resource
+    - run: npx nx build angular
     - run: cd packages/mcp && npm run build
-    - run: cd dist/libs/stream-resource && npm publish --access public
+    - run: cd dist/libs/angular && npm publish --access public
       env:
         NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
     - run: cd packages/mcp && npm publish --access public
@@ -134,9 +134,9 @@ publish:
 ## Post-Publish
 
 - Verify packages appear at:
-  - https://www.npmjs.com/package/@cacheplane/stream-resource
-  - https://www.npmjs.com/package/@cacheplane/stream-resource-mcp
-- Update npm badge in README.md (badge already points to `@cacheplane/stream-resource`, will populate once published)
+  - https://www.npmjs.com/package/@cacheplane/angular
+  - https://www.npmjs.com/package/@cacheplane/angular-mcp
+- Update npm badge in README.md (badge already points to `@cacheplane/angular`, will populate once published)
 - Update `PricingGrid.tsx` `ctaHref` if needed (currently points to npm URL, which is already correct)
 
 ---

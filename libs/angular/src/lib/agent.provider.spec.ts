@@ -1,21 +1,21 @@
 import { describe, it, expect } from 'vitest';
 import { TestBed } from '@angular/core/testing';
-import { provideStreamResource, STREAM_RESOURCE_CONFIG } from './stream-resource.provider';
-import { MockStreamTransport } from './transport/mock-stream.transport';
+import { provideAgent, STREAM_RESOURCE_CONFIG } from './agent.provider';
+import { MockAgentTransport } from './transport/mock-stream.transport';
 
-describe('provideStreamResource', () => {
+describe('provideAgent', () => {
   it('provides STREAM_RESOURCE_CONFIG token', () => {
     TestBed.configureTestingModule({
-      providers: [provideStreamResource({ apiUrl: 'https://api.example.com' })],
+      providers: [provideAgent({ apiUrl: 'https://api.example.com' })],
     });
     const config = TestBed.inject(STREAM_RESOURCE_CONFIG);
     expect(config.apiUrl).toBe('https://api.example.com');
   });
 
   it('provides custom transport via config', () => {
-    const transport = new MockStreamTransport();
+    const transport = new MockAgentTransport();
     TestBed.configureTestingModule({
-      providers: [provideStreamResource({ apiUrl: '', transport })],
+      providers: [provideAgent({ apiUrl: '', transport })],
     });
     const config = TestBed.inject(STREAM_RESOURCE_CONFIG);
     expect(config.transport).toBe(transport);

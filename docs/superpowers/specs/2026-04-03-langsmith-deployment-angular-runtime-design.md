@@ -2,21 +2,21 @@
 
 ## Problem
 
-The cockpit's streaming example uses a hand-rolled `EventSource` service instead of the `stream-resource` library — the product being demonstrated. The LangGraph backend isn't deployed anywhere. There's no CI to deploy it. Developers can't see a working example of `streamResource()` in action.
+The cockpit's streaming example uses a hand-rolled `EventSource` service instead of the `angular` library — the product being demonstrated. The LangGraph backend isn't deployed anywhere. There's no CI to deploy it. Developers can't see a working example of `agent()` in action.
 
 ## Goal
 
-Rewrite the Angular streaming example to use `streamResource()` from `@cacheplane/stream-resource`. Deploy the LangGraph backend to LangGraph Cloud via CI. Make the cockpit's Run mode show a real working streaming chat powered by the library.
+Rewrite the Angular streaming example to use `agent()` from `@cacheplane/angular`. Deploy the LangGraph backend to LangGraph Cloud via CI. Make the cockpit's Run mode show a real working streaming chat powered by the library.
 
 ## Architecture
 
 ### Angular Example App
 
-The streaming component uses `streamResource()` directly — no wrapper service. The function provides Signals for all state (messages, loading, errors), making the component purely reactive.
+The streaming component uses `agent()` directly — no wrapper service. The function provides Signals for all state (messages, loading, errors), making the component purely reactive.
 
 ```
 Angular Component
-  └─ streamResource({ assistantId, apiUrl })
+  └─ agent({ assistantId, apiUrl })
        └─ FetchStreamTransport (built-in)
             └─ @langchain/langgraph-sdk Client
                  └─ LangGraph Cloud API
@@ -24,13 +24,13 @@ Angular Component
 
 **Key files:**
 
-- `cockpit/langgraph/streaming/angular/src/app/streaming.component.ts` — Standalone component with `streamResource()`. Chat UI bound to Signals. No service class needed.
-- `cockpit/langgraph/streaming/angular/src/app/app.config.ts` — `provideStreamResource({ apiUrl })` for global config.
+- `cockpit/langgraph/streaming/angular/src/app/streaming.component.ts` — Standalone component with `agent()`. Chat UI bound to Signals. No service class needed.
+- `cockpit/langgraph/streaming/angular/src/app/app.config.ts` — `provideAgent({ apiUrl })` for global config.
 - `cockpit/langgraph/streaming/angular/src/environments/environment.ts` — Production LangGraph Cloud URL + assistant ID.
 - `cockpit/langgraph/streaming/angular/src/environments/environment.development.ts` — Local dev URL (`http://localhost:8000`).
 
 **Dependencies added to cockpit Angular app:**
-- `@cacheplane/stream-resource` (the library)
+- `@cacheplane/angular` (the library)
 - `@langchain/langgraph-sdk` (peer dep)
 - `@langchain/core` (peer dep)
 
@@ -42,11 +42,11 @@ export class StreamingComponent {
   /**
    * Creates a streaming connection to the LangGraph Cloud backend.
    *
-   * The `streamResource()` function returns a ref with Angular Signals
+   * The `agent()` function returns a ref with Angular Signals
    * for messages, loading state, errors, and thread management.
    * All UI binds reactively — no manual subscriptions needed.
    */
-  protected readonly stream = streamResource<{ messages: BaseMessage[] }>({
+  protected readonly stream = agent<{ messages: BaseMessage[] }>({
     assistantId: environment.streamingAssistantId,
     apiUrl: environment.langGraphApiUrl,
   });
@@ -114,7 +114,7 @@ The `langgraphStreamingPythonModule.codeAssetPaths` already points to the Angula
 
 ## Deletions
 
-- `cockpit/langgraph/streaming/angular/src/app/streaming.service.ts` — Removed. `streamResource()` replaces the hand-rolled EventSource service.
+- `cockpit/langgraph/streaming/angular/src/app/streaming.service.ts` — Removed. `agent()` replaces the hand-rolled EventSource service.
 
 ## Out of Scope
 

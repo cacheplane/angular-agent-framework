@@ -1,14 +1,14 @@
 # Agent Architecture
 
-How AI agents work — the planning, execution, and tool-calling lifecycle that streamResource() connects your Angular app to. This page shows you the Python patterns that power modern agents and exactly how each pattern surfaces in Angular through `@cacheplane/stream-resource`.
+How AI agents work — the planning, execution, and tool-calling lifecycle that agent() connects your Angular app to. This page shows you the Python patterns that power modern agents and exactly how each pattern surfaces in Angular through `@cacheplane/angular`.
 
 <Callout type="info" title="Python + Angular, both sides">
-Every section below shows the Python backend code first, then the Angular frontend code that consumes it. You need both halves to build a production agent application — LangGraph handles the intelligence, streamResource() handles the reactivity.
+Every section below shows the Python backend code first, then the Angular frontend code that consumes it. You need both halves to build a production agent application — LangGraph handles the intelligence, agent() handles the reactivity.
 </Callout>
 
 ## The Agent Loop
 
-Every agent follows a five-phase cycle. Understanding this cycle is critical because each phase maps to a specific streamResource() signal in your Angular app.
+Every agent follows a five-phase cycle. Understanding this cycle is critical because each phase maps to a specific agent() signal in your Angular app.
 
 <Steps>
 <Step title="Receive">
@@ -52,7 +52,7 @@ tool_node = ToolNode(tools)
 
 </Step>
 <Step title="Respond">
-After tools finish (or if no tools were needed), the agent streams its final response token by token. streamResource() updates the `messages()` signal in real time so your Angular template re-renders incrementally.
+After tools finish (or if no tools were needed), the agent streams its final response token by token. agent() updates the `messages()` signal in real time so your Angular template re-renders incrementally.
 
 ```typescript
 // Angular side — messages update as tokens arrive
@@ -149,7 +149,7 @@ graph = builder.compile()
 
 ```typescript
 import { ChangeDetectionStrategy, Component, computed } from '@angular/core';
-import { streamResource } from '@cacheplane/stream-resource';
+import { agent } from '@cacheplane/angular';
 
 interface AgentState {
   messages: BaseMessage[];
@@ -173,7 +173,7 @@ interface AgentState {
   `,
 })
 export class ReactAgentComponent {
-  agent = streamResource<AgentState>({
+  agent = agent<AgentState>({
     assistantId: 'react_agent',
   });
 
@@ -235,7 +235,7 @@ The LLM reads the docstring to decide when to call a tool. A vague docstring lik
 
 ### How Tools Surface in Angular
 
-When the agent calls a tool, streamResource() exposes the execution lifecycle through two signals:
+When the agent calls a tool, agent() exposes the execution lifecycle through two signals:
 
 <Tabs>
 <Tab label="toolProgress()">
@@ -244,7 +244,7 @@ When the agent calls a tool, streamResource() exposes the execution lifecycle th
 // toolProgress() — tools currently executing
 // Updates in real time as tools start and complete
 
-const agent = streamResource<AgentState>({
+const agent = agent<AgentState>({
   assistantId: 'react_agent',
 });
 
@@ -325,7 +325,7 @@ The `should_continue` conditional edge detects `tool_calls` and routes to the `t
 <Step title="SSE event streams">
 LangGraph Platform streams the tool call and result as SSE events to the Angular client.
 </Step>
-<Step title="streamResource() updates signals">
+<Step title="agent() updates signals">
 `toolProgress()` updates during execution. `toolCalls()` updates when the tool completes. Both trigger OnPush change detection.
 </Step>
 </Steps>
@@ -401,7 +401,7 @@ graph = builder.compile()
 
 ```typescript
 import { ChangeDetectionStrategy, Component, computed } from '@angular/core';
-import { streamResource } from '@cacheplane/stream-resource';
+import { agent } from '@cacheplane/angular';
 
 interface OrchestratorState {
   messages: BaseMessage[];
@@ -437,7 +437,7 @@ interface OrchestratorState {
   `,
 })
 export class MultiAgentComponent {
-  orchestrator = streamResource<OrchestratorState>({
+  orchestrator = agent<OrchestratorState>({
     assistantId: 'orchestrator',
     subagentToolNames: ['researcher', 'analyst', 'writer'],
   });
@@ -464,7 +464,7 @@ export class MultiAgentComponent {
 </Tabs>
 
 <Callout type="tip" title="subagentToolNames is the key">
-The `subagentToolNames` option tells streamResource() which graph nodes are subagents. Without it, subagent execution looks like regular tool calls. With it, `activeSubagents()` and `subagents()` provide dedicated tracking with isolated message histories.
+The `subagentToolNames` option tells agent() which graph nodes are subagents. Without it, subagent execution looks like regular tool calls. With it, `activeSubagents()` and `subagents()` provide dedicated tracking with isolated message histories.
 </Callout>
 
 ## Error Handling and Recovery
@@ -493,7 +493,7 @@ When `handle_tool_error=True` is set, LangGraph catches `ToolException` and feed
 ### How Errors Surface in Angular
 
 ```typescript
-const agent = streamResource<AgentState>({
+const agent = agent<AgentState>({
   assistantId: 'react_agent',
 });
 
@@ -535,7 +535,7 @@ LangGraph defaults to 25 recursion steps. If your agent loops between `model` an
 
 ## Checkpointing and Debugging
 
-Every time a node completes, LangGraph saves a checkpoint — a full snapshot of the agent's state at that moment. streamResource() exposes this checkpoint timeline to Angular, giving you time-travel debugging for free.
+Every time a node completes, LangGraph saves a checkpoint — a full snapshot of the agent's state at that moment. agent() exposes this checkpoint timeline to Angular, giving you time-travel debugging for free.
 
 ### How Checkpoints Work
 
@@ -554,7 +554,7 @@ graph = builder.compile(checkpointer=checkpointer)
 ### Exposing Checkpoints in Angular
 
 ```typescript
-const agent = streamResource<AgentState>({
+const agent = agent<AgentState>({
   assistantId: 'react_agent',
   threadId: signal('thread_abc123'),
 });
@@ -696,6 +696,6 @@ Begin with a single agent and tools. Add human-in-the-loop when you need approva
     Debug agents by stepping through checkpoint history and branching.
   </Card>
   <Card title="Angular Signals" href="/docs/concepts/angular-signals">
-    How Signals power the reactive model behind streamResource().
+    How Signals power the reactive model behind agent().
   </Card>
 </CardGroup>

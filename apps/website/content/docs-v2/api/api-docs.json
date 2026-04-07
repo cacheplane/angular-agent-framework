@@ -87,7 +87,7 @@
     ]
   },
   {
-    "name": "MockStreamTransport",
+    "name": "MockAgentTransport",
     "kind": "class",
     "description": "Test transport for deterministic agent testing without a real LangGraph server.\n\nScript event batches upfront, then emit them manually or step through them\nin your test specs. Supports error injection and close control.",
     "params": [
@@ -99,7 +99,7 @@
       }
     ],
     "examples": [
-      "```typescript\nconst transport = new MockStreamTransport([\n  [{ type: 'values', data: { messages: [aiMsg('Hello')] } }],\n  [{ type: 'values', data: { status: 'done' } }],\n]);\n```"
+      "```typescript\nconst transport = new MockAgentTransport([\n  [{ type: 'values', data: { messages: [aiMsg('Hello')] } }],\n  [{ type: 'values', data: { status: 'done' } }],\n]);\n```"
     ],
     "properties": [],
     "methods": [
@@ -233,9 +233,9 @@
     "examples": []
   },
   {
-    "name": "StreamResourceConfig",
+    "name": "AgentConfig",
     "kind": "interface",
-    "description": "Global configuration for streamResource instances.\nProperties set here serve as defaults that can be overridden per-call.",
+    "description": "Global configuration for agent instances.\nProperties set here serve as defaults that can be overridden per-call.",
     "properties": [
       {
         "name": "apiUrl",
@@ -245,7 +245,7 @@
       },
       {
         "name": "transport",
-        "type": "StreamResourceTransport",
+        "type": "AgentTransport",
         "description": "Custom transport implementation. Defaults to FetchStreamTransport.",
         "optional": true
       }
@@ -253,9 +253,9 @@
     "examples": []
   },
   {
-    "name": "StreamResourceOptions",
+    "name": "AgentOptions",
     "kind": "interface",
-    "description": "Options for creating a streaming resource via streamResource.",
+    "description": "Options for creating a streaming resource via agent.",
     "properties": [
       {
         "name": "apiUrl",
@@ -319,7 +319,7 @@
       },
       {
         "name": "transport",
-        "type": "StreamResourceTransport",
+        "type": "AgentTransport",
         "description": "Custom transport. Defaults to FetchStreamTransport.",
         "optional": true
       }
@@ -327,9 +327,9 @@
     "examples": []
   },
   {
-    "name": "StreamResourceRef",
+    "name": "AgentRef",
     "kind": "interface",
-    "description": "Reactive reference returned by streamResource. All properties are Angular Signals.",
+    "description": "Reactive reference returned by agent. All properties are Angular Signals.",
     "properties": [
       {
         "name": "activeSubagents",
@@ -473,7 +473,7 @@
     "examples": []
   },
   {
-    "name": "StreamResourceTransport",
+    "name": "AgentTransport",
     "kind": "interface",
     "description": "Transport interface for connecting to a LangGraph agent.",
     "properties": [
@@ -718,14 +718,14 @@
     "examples": []
   },
   {
-    "name": "provideStreamResource",
+    "name": "provideAgent",
     "kind": "function",
-    "description": "Angular provider factory that registers global defaults for all\nstreamResource instances in the application.\n\nAdd to your `app.config.ts` or module providers array.",
-    "signature": "provideStreamResource(config: StreamResourceConfig): Provider",
+    "description": "Angular provider factory that registers global defaults for all\nagent instances in the application.\n\nAdd to your `app.config.ts` or module providers array.",
+    "signature": "provideAgent(config: AgentConfig): Provider",
     "params": [
       {
         "name": "config",
-        "type": "StreamResourceConfig",
+        "type": "AgentConfig",
         "description": "Global configuration merged with per-call options",
         "optional": false
       }
@@ -735,28 +735,28 @@
       "description": ""
     },
     "examples": [
-      "```typescript\n// app.config.ts\nexport const appConfig: ApplicationConfig = {\n  providers: [\n    provideStreamResource({ apiUrl: 'http://localhost:2024' }),\n  ],\n};\n```"
+      "```typescript\n// app.config.ts\nexport const appConfig: ApplicationConfig = {\n  providers: [\n    provideAgent({ apiUrl: 'http://localhost:2024' }),\n  ],\n};\n```"
     ]
   },
   {
-    "name": "streamResource",
+    "name": "agent",
     "kind": "function",
     "description": "Creates a streaming resource connected to a LangGraph agent.\n\nMust be called within an Angular injection context (component constructor,\nfield initializer, or `runInInjectionContext`). Returns a ref object whose\nproperties are Angular Signals that update in real-time as the agent streams.",
-    "signature": "streamResource(options: StreamResourceOptions<T, InferBag<T, Bag>>): StreamResourceRef<T, InferBag<T, Bag>>",
+    "signature": "agent(options: AgentOptions<T, InferBag<T, Bag>>): AgentRef<T, InferBag<T, Bag>>",
     "params": [
       {
         "name": "options",
-        "type": "StreamResourceOptions<T, InferBag<T, Bag>>",
+        "type": "AgentOptions<T, InferBag<T, Bag>>",
         "description": "Configuration for the streaming resource",
         "optional": false
       }
     ],
     "returns": {
-      "type": "StreamResourceRef<T, InferBag<T, Bag>>",
+      "type": "AgentRef<T, InferBag<T, Bag>>",
       "description": ""
     },
     "examples": [
-      "```typescript\n// In a component field initializer\nconst chat = streamResource<{ messages: BaseMessage[] }>({\n  assistantId: 'chat_agent',\n  apiUrl: 'http://localhost:2024',\n  threadId: signal(this.savedThreadId),\n  onThreadId: (id) => localStorage.setItem('threadId', id),\n});\n\n// Access signals in template\n// chat.messages(), chat.status(), chat.error()\n```"
+      "```typescript\n// In a component field initializer\nconst chat = agent<{ messages: BaseMessage[] }>({\n  assistantId: 'chat_agent',\n  apiUrl: 'http://localhost:2024',\n  threadId: signal(this.savedThreadId),\n  onThreadId: (id) => localStorage.setItem('threadId', id),\n});\n\n// Access signals in template\n// chat.messages(), chat.status(), chat.error()\n```"
     ]
   }
 ]

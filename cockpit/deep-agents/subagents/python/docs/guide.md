@@ -1,47 +1,47 @@
-# Child Agent Delegation with stream-resource
+# Child Agent Delegation with angular
 
 <Summary>
-Build a chat interface that shows real-time subagent activity using `streamResource()` from
-`@cacheplane/stream-resource`. An orchestrator agent delegates subtasks to specialist child
+Build a chat interface that shows real-time subagent activity using `agent()` from
+`@cacheplane/angular`. An orchestrator agent delegates subtasks to specialist child
 agents, and the sidebar displays each subagent's status and message count as they stream.
 </Summary>
 
 <Prompt>
-Add a subagent activity sidebar to this Angular component using `streamResource()` from `@cacheplane/stream-resource`. Use `stream.subagents()` to access the live Map of child agent streams, derive `subagentEntries` with `computed()`, and render them in the `<cp-chat>` sidebar.
+Add a subagent activity sidebar to this Angular component using `agent()` from `@cacheplane/angular`. Use `stream.subagents()` to access the live Map of child agent streams, derive `subagentEntries` with `computed()`, and render them in the `<cp-chat>` sidebar.
 </Prompt>
 
 <Steps>
 <Step title="Configure the provider">
 
-Set up `provideStreamResource()` in your app config with the LangGraph API URL:
+Set up `provideAgent()` in your app config with the LangGraph API URL:
 
 ```typescript
 // app.config.ts
 import { ApplicationConfig } from '@angular/core';
-import { provideStreamResource } from '@cacheplane/stream-resource';
+import { provideAgent } from '@cacheplane/angular';
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideStreamResource({
+    provideAgent({
       apiUrl: 'https://your-deployment.langgraph.app',
     }),
   ],
 };
 ```
 
-This makes the API URL available to all `streamResource()` calls in your app.
+This makes the API URL available to all `agent()` calls in your app.
 
 </Step>
 <Step title="Create the streaming resource">
 
-In your component, call `streamResource()` with the `assistantId` pointing to your subagents graph:
+In your component, call `agent()` with the `assistantId` pointing to your subagents graph:
 
 ```typescript
 // subagents.component.ts
-import { streamResource } from '@cacheplane/stream-resource';
+import { agent } from '@cacheplane/angular';
 
 export class SubagentsComponent {
-  protected readonly stream = streamResource({
+  protected readonly stream = agent({
     assistantId: 'subagents',
   });
 }
@@ -58,7 +58,7 @@ Use Angular's `computed()` to convert the subagents Map into a renderable array:
 import { computed } from '@angular/core';
 
 export class SubagentsComponent {
-  protected readonly stream = streamResource({ assistantId: 'subagents' });
+  protected readonly stream = agent({ assistantId: 'subagents' });
 
   subagentEntries = computed(() => Array.from(this.stream.subagents().entries()));
 }

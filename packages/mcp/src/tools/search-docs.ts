@@ -3,7 +3,7 @@ import { getApiDocs } from '../data/loader.js';
 
 export const searchDocsTool = {
   name: 'search_docs',
-  description: 'Search stream-resource documentation by keyword or phrase',
+  description: 'Search angular documentation by keyword or phrase',
   inputSchema: {
     type: 'object',
     properties: { query: { type: 'string', description: 'Search query' } },

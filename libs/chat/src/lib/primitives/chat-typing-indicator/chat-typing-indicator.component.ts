@@ -5,9 +5,9 @@ import {
   input,
   ChangeDetectionStrategy,
 } from '@angular/core';
-import type { StreamResourceRef } from '@cacheplane/stream-resource';
+import type { AgentRef } from '@cacheplane/angular';
 
-export function isTyping(ref: StreamResourceRef<any, any>): boolean {
+export function isTyping(ref: AgentRef<any, any>): boolean {
   return ref.isLoading();
 }
 
@@ -48,6 +48,6 @@ export function isTyping(ref: StreamResourceRef<any, any>): boolean {
   `,
 })
 export class ChatTypingIndicatorComponent {
-  readonly ref = input.required<StreamResourceRef<any, any>>();
+  readonly ref = input.required<AgentRef<any, any>>();
   readonly visible = computed(() => this.ref().isLoading());
 }

@@ -8,7 +8,7 @@ const CAPABILITIES = [
     title: 'Streaming',
     description: 'Surface intermediate progress while the graph runs. Token-by-token updates arrive via SSE and land directly in Angular Signals.',
     code: `// Token-by-token streaming
-const chat = streamResource<ChatState>({
+const chat = agent<ChatState>({
   assistantId: 'chat_agent',
 });
 
@@ -25,7 +25,7 @@ const chat = streamResource<ChatState>({
     title: 'Persistence',
     description: 'Execution state survives retries and resumptions. Thread-based checkpoint recovery means users never lose their conversation.',
     code: `// Thread persistence across sessions
-const chat = streamResource<ChatState>({
+const chat = agent<ChatState>({
   assistantId: 'agent',
   threadId: signal(localStorage.getItem('tid')),
   onThreadId: (id) => {
@@ -39,7 +39,7 @@ const chat = streamResource<ChatState>({
     title: 'Interrupts',
     description: 'Pause execution for human decisions \u2014 approvals, confirmations, corrections. Resume without losing any context or state.',
     code: `// Human-in-the-loop approval
-const agent = streamResource<AgentState>({
+const agent = agent<AgentState>({
   assistantId: 'approval_agent',
   onInterrupt: (data) => {
     this.approval.set(data);

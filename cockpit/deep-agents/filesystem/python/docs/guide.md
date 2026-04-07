@@ -1,47 +1,47 @@
-# File Operations with stream-resource
+# File Operations with angular
 
 <Summary>
-Build a chat interface that shows real-time file operation logs using `streamResource()` from
-`@cacheplane/stream-resource`. The agent reads and writes files using tool calls, and the
+Build a chat interface that shows real-time file operation logs using `agent()` from
+`@cacheplane/angular`. The agent reads and writes files using tool calls, and the
 sidebar displays each operation as it happens.
 </Summary>
 
 <Prompt>
-Add a file operations sidebar to this Angular component using `streamResource()` from `@cacheplane/stream-resource`. Use `stream.messages()` to access tool call data, derive `toolCallEntries` with `computed()`, and bind them to the sidebar via the `<cp-chat>` component from `@cacheplane/chat`.
+Add a file operations sidebar to this Angular component using `agent()` from `@cacheplane/angular`. Use `stream.messages()` to access tool call data, derive `toolCallEntries` with `computed()`, and bind them to the sidebar via the `<cp-chat>` component from `@cacheplane/chat`.
 </Prompt>
 
 <Steps>
 <Step title="Configure the provider">
 
-Set up `provideStreamResource()` in your app config with the LangGraph API URL:
+Set up `provideAgent()` in your app config with the LangGraph API URL:
 
 ```typescript
 // app.config.ts
 import { ApplicationConfig } from '@angular/core';
-import { provideStreamResource } from '@cacheplane/stream-resource';
+import { provideAgent } from '@cacheplane/angular';
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideStreamResource({
+    provideAgent({
       apiUrl: 'https://your-deployment.langgraph.app',
     }),
   ],
 };
 ```
 
-This makes the API URL available to all `streamResource()` calls in your app.
+This makes the API URL available to all `agent()` calls in your app.
 
 </Step>
 <Step title="Create the streaming resource">
 
-In your component, call `streamResource()` with the `assistantId` pointing to your filesystem graph:
+In your component, call `agent()` with the `assistantId` pointing to your filesystem graph:
 
 ```typescript
 // filesystem.component.ts
-import { streamResource } from '@cacheplane/stream-resource';
+import { agent } from '@cacheplane/angular';
 
 export class FilesystemComponent {
-  protected readonly stream = streamResource({
+  protected readonly stream = agent({
     assistantId: 'filesystem',
   });
 }
@@ -64,7 +64,7 @@ interface ToolCallEntry {
 }
 
 export class FilesystemComponent {
-  protected readonly stream = streamResource({ assistantId: 'filesystem' });
+  protected readonly stream = agent({ assistantId: 'filesystem' });
 
   toolCallEntries = computed(() => {
     const msg = this.stream.messages();

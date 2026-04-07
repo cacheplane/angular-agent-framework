@@ -59,7 +59,7 @@ export interface StreamEvent {
 }
 
 /** Transport interface for connecting to a LangGraph agent. */
-export interface StreamResourceTransport {
+export interface AgentTransport {
   /** Open a streaming connection to an agent and yield events. */
   stream(
     assistantId: string,
@@ -79,8 +79,8 @@ export interface StreamResourceTransport {
 
 // ── Options ──────────────────────────────────────────────────────────────────
 
-/** Options for creating a streaming resource via {@link streamResource}. */
-export interface StreamResourceOptions<T, ResolvedBag extends BagTemplate> {
+/** Options for creating a streaming resource via {@link agent}. */
+export interface AgentOptions<T, ResolvedBag extends BagTemplate> {
   /** Base URL of the LangGraph Platform API. */
   apiUrl: string;
   /** Agent or graph identifier on the LangGraph platform. */
@@ -98,7 +98,7 @@ export interface StreamResourceOptions<T, ResolvedBag extends BagTemplate> {
   /** Custom message deserializer for non-standard message formats. */
   toMessage?: (msg: unknown) => BaseMessage;
   /** Custom transport. Defaults to FetchStreamTransport. */
-  transport?: StreamResourceTransport;
+  transport?: AgentTransport;
   /** When true, subagent messages are filtered from the main messages signal. */
   filterSubagentMessages?: boolean;
   /** Tool names that indicate a subagent invocation. */
@@ -119,10 +119,10 @@ export interface SubagentStreamRef {
   messages: Signal<BaseMessage[]>;
 }
 
-// ── StreamResourceRef ────────────────────────────────────────────────────────
+// ── AgentRef ────────────────────────────────────────────────────────
 
-/** Reactive reference returned by {@link streamResource}. All properties are Angular Signals. */
-export interface StreamResourceRef<T, ResolvedBag extends BagTemplate> {
+/** Reactive reference returned by {@link agent}. All properties are Angular Signals. */
+export interface AgentRef<T, ResolvedBag extends BagTemplate> {
   // ResourceRef<T> compatible members (duck-typed, not inherited)
   /** Current agent state values. */
   value:    Signal<T>;

@@ -53,7 +53,7 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           LANGSMITH_API_KEY: ${{ secrets.LANGSMITH_API_KEY }}
           LANGSMITH_TRACING: "true"
-          LANGSMITH_PROJECT: stream-resource-e2e-ci
+          LANGSMITH_PROJECT: angular-e2e-ci
 
       - name: Wait for server to be ready
         run: |
@@ -66,6 +66,6 @@ jobs:
           curl -sf http://localhost:2024/ok || (echo "Server failed to start after 60s" && exit 1)
 
       - name: Run e2e tests
-        run: npx nx e2e stream-resource-e2e
+        run: npx nx e2e angular-e2e
         env:
           LANGGRAPH_URL: http://localhost:2024

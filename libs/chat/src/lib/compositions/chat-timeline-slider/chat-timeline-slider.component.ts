@@ -7,7 +7,7 @@ import {
   signal,
   ChangeDetectionStrategy,
 } from '@angular/core';
-import type { StreamResourceRef, ThreadState } from '@cacheplane/stream-resource';
+import type { AgentRef, ThreadState } from '@cacheplane/angular';
 
 @Component({
   selector: 'chat-timeline-slider',
@@ -72,7 +72,7 @@ import type { StreamResourceRef, ThreadState } from '@cacheplane/stream-resource
   `,
 })
 export class ChatTimelineSliderComponent {
-  readonly ref = input.required<StreamResourceRef<any, any>>();
+  readonly ref = input.required<AgentRef<any, any>>();
 
   readonly selectedIndex = signal<number>(-1);
 

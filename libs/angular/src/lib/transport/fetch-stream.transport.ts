@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import { Client } from '@langchain/langgraph-sdk';
-import { StreamResourceTransport, StreamEvent } from '../stream-resource.types';
+import { AgentTransport, StreamEvent } from '../agent.types';
 
 /**
  * Production transport that connects to a LangGraph Platform API via HTTP and SSE.
@@ -16,7 +16,7 @@ import { StreamResourceTransport, StreamEvent } from '../stream-resource.types';
  * );
  * ```
  */
-export class FetchStreamTransport implements StreamResourceTransport {
+export class FetchStreamTransport implements AgentTransport {
   private client: Client;
   private onThreadId?: (id: string) => void;
 

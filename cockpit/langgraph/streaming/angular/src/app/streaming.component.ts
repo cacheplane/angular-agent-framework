@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import { Component } from '@angular/core';
 import { ChatComponent } from '@cacheplane/chat';
-import { streamResource } from '@cacheplane/stream-resource';
+import { agent } from '@cacheplane/angular';
 import { environment } from '../environments/environment';
 
 /**
  * Streaming demo — simplest possible @cacheplane/chat integration.
  *
- * Creates a streamResource ref and passes it to the prebuilt <chat>
+ * Creates a agent ref and passes it to the prebuilt <chat>
  * composition. The composition handles message rendering, input, typing
  * indicator, and error display internally.
  */
@@ -18,7 +18,7 @@ import { environment } from '../environments/environment';
   template: `<chat [ref]="stream" class="block h-screen" />`,
 })
 export class StreamingComponent {
-  protected readonly stream = streamResource({
+  protected readonly stream = agent({
     apiUrl: environment.langGraphApiUrl,
     assistantId: environment.streamingAssistantId,
   });

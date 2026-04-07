@@ -2,11 +2,11 @@
 import { describe, it, expect, vi } from 'vitest';
 import { signal, computed } from '@angular/core';
 import { submitMessage } from './chat-input.component';
-import { createMockStreamResourceRef } from '../../testing/mock-stream-resource-ref';
+import { createMockAgentRef } from '../../testing/mock-agent-ref';
 
 describe('submitMessage()', () => {
   it('calls ref.submit with a human message containing the trimmed text', () => {
-    const mockRef = createMockStreamResourceRef();
+    const mockRef = createMockAgentRef();
     const submitSpy = vi.spyOn(mockRef, 'submit');
 
     submitMessage(mockRef, '  hello world  ');
@@ -19,13 +19,13 @@ describe('submitMessage()', () => {
   });
 
   it('returns the trimmed text on successful submit', () => {
-    const mockRef = createMockStreamResourceRef();
+    const mockRef = createMockAgentRef();
     const result = submitMessage(mockRef, '  hello  ');
     expect(result).toBe('hello');
   });
 
   it('does not call ref.submit and returns null for whitespace-only text', () => {
-    const mockRef = createMockStreamResourceRef();
+    const mockRef = createMockAgentRef();
     const submitSpy = vi.spyOn(mockRef, 'submit');
 
     const result = submitMessage(mockRef, '   ');
@@ -35,7 +35,7 @@ describe('submitMessage()', () => {
   });
 
   it('does not call ref.submit and returns null for empty string', () => {
-    const mockRef = createMockStreamResourceRef();
+    const mockRef = createMockAgentRef();
     const submitSpy = vi.spyOn(mockRef, 'submit');
 
     const result = submitMessage(mockRef, '');
@@ -47,7 +47,7 @@ describe('submitMessage()', () => {
 
 describe('ChatInputComponent — isDisabled computed', () => {
   it('isDisabled is false when ref.isLoading is false', () => {
-    const mockRef = createMockStreamResourceRef({ isLoading: false });
+    const mockRef = createMockAgentRef({ isLoading: false });
     const ref$ = signal(mockRef);
 
     const isDisabled = computed(() => ref$().isLoading());
@@ -56,7 +56,7 @@ describe('ChatInputComponent — isDisabled computed', () => {
   });
 
   it('isDisabled is true when ref.isLoading is true', () => {
-    const mockRef = createMockStreamResourceRef({ isLoading: true });
+    const mockRef = createMockAgentRef({ isLoading: true });
     const ref$ = signal(mockRef);
 
     const isDisabled = computed(() => ref$().isLoading());
@@ -65,8 +65,8 @@ describe('ChatInputComponent — isDisabled computed', () => {
   });
 
   it('isDisabled updates reactively when ref changes', () => {
-    const idleRef = createMockStreamResourceRef({ isLoading: false });
-    const loadingRef = createMockStreamResourceRef({ isLoading: true });
+    const idleRef = createMockAgentRef({ isLoading: false });
+    const loadingRef = createMockAgentRef({ isLoading: true });
     const ref$ = signal(idleRef);
 
     const isDisabled = computed(() => ref$().isLoading());

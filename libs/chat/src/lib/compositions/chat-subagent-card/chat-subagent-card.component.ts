@@ -6,7 +6,7 @@ import {
   signal,
   ChangeDetectionStrategy,
 } from '@angular/core';
-import type { SubagentStreamRef } from '@cacheplane/stream-resource';
+import type { SubagentStreamRef } from '@cacheplane/angular';
 
 type SubagentStatus = 'pending' | 'running' | 'complete' | 'error';
 

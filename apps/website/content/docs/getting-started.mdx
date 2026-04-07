@@ -1,23 +1,23 @@
 # Getting Started
 
-Add stream-resource to your Angular 20+ application.
+Add angular to your Angular 20+ application.
 
 ## Installation
 
 ```bash
-npm install stream-resource@latest
+npm install angular@latest
 ```
 
 ## Setup
 
-In `app.config.ts`, add `provideStreamResource` to your providers:
+In `app.config.ts`, add `provideAgent` to your providers:
 
 ```typescript
-import { provideStreamResource } from 'stream-resource';
+import { provideAgent } from 'angular';
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideStreamResource({ apiUrl: 'http://localhost:2024' }),
+    provideAgent({ apiUrl: 'http://localhost:2024' }),
   ],
 };
 ```
@@ -25,7 +25,7 @@ export const appConfig: ApplicationConfig = {
 ## Your first component
 
 ```typescript
-import { streamResource } from 'stream-resource';
+import { agent } from 'angular';
 
 @Component({
   template: `
@@ -38,10 +38,10 @@ import { streamResource } from 'stream-resource';
   `,
 })
 export class ChatComponent {
-  chat = streamResource<{ messages: BaseMessage[] }>({
+  chat = agent<{ messages: BaseMessage[] }>({
     assistantId: 'chat_agent',
   });
 }
 ```
 
-`streamResource()` MUST be called in an Angular injection context (component field initializer or constructor). Never call it in `ngOnInit`.
+`agent()` MUST be called in an Angular injection context (component field initializer or constructor). Never call it in `ngOnInit`.

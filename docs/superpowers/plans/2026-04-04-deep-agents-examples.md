@@ -6,7 +6,7 @@
 
 **Architecture:** Each capability follows the LangGraph example pattern but with richer sidebar content. The Python graphs use LangGraph tool-calling patterns (agents that invoke tools). The Angular components leverage `stream.toolCalls()`, `stream.toolProgress()`, and `stream.subagents()` signals for real-time agent activity visualization.
 
-**Tech Stack:** Angular 21, `@cacheplane/stream-resource`, `@cacheplane/chat`, LangGraph (Python), Playwright
+**Tech Stack:** Angular 21, `@cacheplane/angular`, `@cacheplane/chat`, LangGraph (Python), Playwright
 
 ---
 
@@ -76,7 +76,7 @@ def write_file(path: str, content: str) -> str:
 
 **Angular Component** — Sidebar shows subagent activity using `stream.subagents()`. Each subagent has a status badge and message count. This is the flagship Deep Agents feature.
 
-**Python Graph** — Orchestrator agent that delegates to specialist subagents via tool calls. Uses `subagentToolNames` option in `streamResource()`.
+**Python Graph** — Orchestrator agent that delegates to specialist subagents via tool calls. Uses `subagentToolNames` option in `agent()`.
 
 ---
 

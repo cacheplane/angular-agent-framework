@@ -3,7 +3,7 @@ import { describe, it, expect } from 'vitest';
 import { signal } from '@angular/core';
 import { HumanMessage, AIMessage, SystemMessage, ToolMessage, FunctionMessage } from '@langchain/core/messages';
 import { getMessageType } from './chat-messages.component';
-import { createMockStreamResourceRef } from '../../testing/mock-stream-resource-ref';
+import { createMockAgentRef } from '../../testing/mock-agent-ref';
 
 describe('getMessageType', () => {
   it('maps HumanMessage to "human"', () => {
@@ -37,7 +37,7 @@ describe('getMessageType', () => {
 describe('ChatMessagesComponent — computed messages', () => {
   it('messages() signal reflects the ref messages signal', () => {
     const msgs = [new HumanMessage('hi'), new AIMessage('hello')];
-    const mockRef = createMockStreamResourceRef({ messages: msgs });
+    const mockRef = createMockAgentRef({ messages: msgs });
 
     // Simulate what the component computes: ref().messages()
     const ref$ = signal(mockRef);
@@ -49,14 +49,14 @@ describe('ChatMessagesComponent — computed messages', () => {
   });
 
   it('messages() updates reactively when ref messages change', () => {
-    const mockRef = createMockStreamResourceRef({ messages: [] });
+    const mockRef = createMockAgentRef({ messages: [] });
     const ref$ = signal(mockRef);
     const messages = () => ref$().messages();
 
     expect(messages()).toHaveLength(0);
 
     // Swap the ref to one with messages to test signal reactivity
-    const updatedRef = createMockStreamResourceRef({
+    const updatedRef = createMockAgentRef({
       messages: [new HumanMessage('new message')],
     });
     ref$.set(updatedRef);

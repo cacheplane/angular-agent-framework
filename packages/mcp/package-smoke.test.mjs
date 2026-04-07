@@ -14,7 +14,7 @@ const packageJsonPath = path.join(outputRoot, 'package.json');
 
 test('source package manifest entrypoints exist locally', () => {
   const packageJson = require('./package.json');
-  const binPath = packageJson.bin['@cacheplane/stream-resource-mcp'];
+  const binPath = packageJson.bin['@cacheplane/angular-mcp'];
 
   assert.equal(fs.existsSync(path.join(workspaceRoot, 'packages/mcp', packageJson.main)), true);
   assert.equal(fs.existsSync(path.join(workspaceRoot, 'packages/mcp', binPath)), true);
@@ -26,7 +26,7 @@ function loadBuiltPackageJson() {
 
 test('built package manifest entrypoints resolve inside Nx output', () => {
   const packageJson = loadBuiltPackageJson();
-  const binPath = packageJson.bin['@cacheplane/stream-resource-mcp'];
+  const binPath = packageJson.bin['@cacheplane/angular-mcp'];
 
   assert.equal(fs.existsSync(path.join(outputRoot, packageJson.main)), true);
   assert.equal(fs.existsSync(path.join(outputRoot, binPath)), true);
@@ -47,7 +47,7 @@ test('built package can discover bundled api docs from package root', () => {
     assert.equal(fs.existsSync(path.join(outputRoot, 'api-docs.json')), true);
     assert.equal(fs.existsSync(path.join(tempCwd, 'api-docs.json')), false);
     assert.equal(fs.existsSync(path.join(tempCwd, 'apps/website/public/api-docs.json')), false);
-    assert.equal(getAllSymbolNames().includes('streamResource'), true);
+    assert.equal(getAllSymbolNames().includes('agent'), true);
   } finally {
     process.chdir(originalCwd);
     fs.rmSync(tempCwd, { recursive: true, force: true });

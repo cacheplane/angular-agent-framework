@@ -1,20 +1,20 @@
-# provideStreamResource()
+# provideAgent()
 
-`provideStreamResource` is the provider factory that registers `stream-resource` in Angular's dependency injection system. Call it once inside `bootstrapApplication` (or an `ApplicationConfig`) to configure the transport and any global defaults used by every `streamResource` in your app.
+`provideAgent` is the provider factory that registers `angular` in Angular's dependency injection system. Call it once inside `bootstrapApplication` (or an `ApplicationConfig`) to configure the transport and any global defaults used by every `agent` in your app.
 
-This is the single configuration point for the entire library. Rather than configuring each resource individually, you declare your transport here and every `streamResource` call throughout the app inherits it automatically.
+This is the single configuration point for the entire library. Rather than configuring each resource individually, you declare your transport here and every `agent` call throughout the app inherits it automatically.
 
 ```ts
 import { bootstrapApplication } from '@angular/platform-browser';
 import {
-  provideStreamResource,
+  provideAgent,
   FetchStreamTransport,
-} from '@cacheplane/stream-resource';
+} from '@cacheplane/angular';
 import { AppComponent } from './app/app.component';
 
 bootstrapApplication(AppComponent, {
   providers: [
-    provideStreamResource({
+    provideAgent({
       transport: FetchStreamTransport,
     }),
   ],
@@ -29,18 +29,18 @@ bootstrapApplication(AppComponent, {
 
 ## Swapping transports by environment
 
-Because `provideStreamResource` accepts a class token, you can vary the transport based on your environment without touching any component code:
+Because `provideAgent` accepts a class token, you can vary the transport based on your environment without touching any component code:
 
 ```ts
 // main.ts — production
-provideStreamResource({ transport: FetchStreamTransport })
+provideAgent({ transport: FetchStreamTransport })
 
 // main.spec.ts / TestBed — tests
-provideStreamResource({ transport: MockStreamTransport })
+provideAgent({ transport: MockAgentTransport })
 ```
 
 <Callout type="info" title="One provider, any transport">
-  Swap `FetchStreamTransport` for `MockStreamTransport` (or any custom class
+  Swap `FetchStreamTransport` for `MockAgentTransport` (or any custom class
   implementing the `StreamTransport` interface) to change the transport for all
   resources at once — useful for testing or SSR.
 </Callout>
@@ -63,9 +63,9 @@ provideStreamResource({ transport: MockStreamTransport })
     Configure transports for production, SSR, and edge runtimes.
   </Card>
   <Card
-    title="streamResource() API"
+    title="agent() API"
     icon="code"
-    href="/docs-v2/api/stream-resource"
+    href="/docs-v2/api/angular"
   >
     Full reference for the core primitive you configure here.
   </Card>

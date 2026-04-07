@@ -2,7 +2,7 @@ import { GenerativeUIFrame } from './GenerativeUIFrame';
 import { CopyPromptButton } from '../docs/CopyPromptButton';
 import { tokens } from '@cacheplane/design-tokens';
 
-const SETUP_SNIPPET = 'npm install @cacheplane/stream-resource\n\n// app.config.ts\nprovideStreamResource({ apiUrl: \'http://localhost:2024\' })';
+const SETUP_SNIPPET = 'npm install @cacheplane/angular\n\n// app.config.ts\nprovideAgent({ apiUrl: \'http://localhost:2024\' })';
 
 function LangChainBadge() {
   return (
@@ -110,7 +110,7 @@ export async function HeroTwoCol() {
             fontSize: 12,
             color: tokens.colors.textMuted,
           }}>
-            npm install @cacheplane/stream-resource
+            npm install @cacheplane/angular
           </span>
         </div>
       </div>

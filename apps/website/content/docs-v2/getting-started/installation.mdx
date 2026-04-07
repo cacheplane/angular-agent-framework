@@ -1,12 +1,12 @@
 # Installation
 
-Detailed setup guide for streamResource() in your Angular application.
+Detailed setup guide for agent() in your Angular application.
 
 ## Requirements
 
 <Steps>
 <Step title="Angular 20+">
-streamResource() uses Angular Signals and the modern injection context API. Angular 20 or later is required.
+agent() uses Angular Signals and the modern injection context API. Angular 20 or later is required.
 </Step>
 <Step title="Node.js 18+">
 Required for the build toolchain and package installation.
@@ -19,24 +19,24 @@ A running LangGraph agent accessible via HTTP. Can be local (langgraph dev) or d
 ## Install the package
 
 ```bash
-npm install @cacheplane/stream-resource
+npm install @cacheplane/angular
 ```
 
 This installs the library and its peer dependencies including `@langchain/langgraph-sdk`.
 
 ## Configure the provider
 
-Add `provideStreamResource()` to your application configuration. This sets global defaults for all streamResource instances.
+Add `provideAgent()` to your application configuration. This sets global defaults for all agent instances.
 
 ```typescript
 // app.config.ts
 import { ApplicationConfig } from '@angular/core';
-import { provideStreamResource } from '@cacheplane/stream-resource';
+import { provideAgent } from '@cacheplane/angular';
 import { environment } from '../environments/environment';
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideStreamResource({
+    provideAgent({
       apiUrl: environment.langgraphUrl,
     }),
   ],
@@ -44,7 +44,7 @@ export const appConfig: ApplicationConfig = {
 ```
 
 <Callout type="tip" title="Per-call overrides">
-Any option passed to `streamResource()` directly overrides the global provider config. You can set a default `apiUrl` globally and override it for specific agents.
+Any option passed to `agent()` directly overrides the global provider config. You can set a default `apiUrl` globally and override it for specific agents.
 </Callout>
 
 ## Environment setup
@@ -85,11 +85,11 @@ export const environment = {
 
 ## Verify installation
 
-Create a minimal component to verify the setup works. `streamResource()` must be called in an injection context (a component field initializer or inside `inject()`).
+Create a minimal component to verify the setup works. `agent()` must be called in an injection context (a component field initializer or inside `inject()`).
 
 ```typescript
 // In a component field initializer (injection context)
-const test = streamResource({ assistantId: 'chat_agent' });
+const test = agent({ assistantId: 'chat_agent' });
 console.log(test.status()); // 'idle' — setup is correct
 ```
 
@@ -97,13 +97,13 @@ console.log(test.status()); // 'idle' — setup is correct
 
 <Callout type="warning" title="Common issues">
 
-**Version mismatch** -- If you see errors about missing APIs or unknown decorators, confirm your Angular version is 20 or later. Run `ng version` to check. Earlier versions do not support the injection context APIs that streamResource() relies on.
+**Version mismatch** -- If you see errors about missing APIs or unknown decorators, confirm your Angular version is 20 or later. Run `ng version` to check. Earlier versions do not support the injection context APIs that agent() relies on.
 
 **CORS errors** -- If the browser console shows `Access-Control-Allow-Origin` errors, your LangGraph server is not configured for cross-origin requests. The LangGraph dev server allows all origins by default. For production, make sure your deployment's CORS policy includes your Angular app's domain.
 
 **Connection refused** -- If you see `ERR_CONNECTION_REFUSED`, verify your LangGraph server is running and that the `apiUrl` matches the correct host and port. Run `langgraph dev` and confirm the server starts at the expected address (default `http://localhost:2024`).
 
-**"NullInjectorError: No provider for StreamResourceConfig"** -- You forgot to add `provideStreamResource()` to your `appConfig` providers array. See the [Configure the provider](#configure-the-provider) section above.
+**"NullInjectorError: No provider for AgentConfig"** -- You forgot to add `provideAgent()` to your `appConfig` providers array. See the [Configure the provider](#configure-the-provider) section above.
 
 </Callout>
 
@@ -114,12 +114,12 @@ console.log(test.status()); // 'idle' — setup is correct
     Build your first chat component in 5 minutes
   </Card>
   <Card title="Angular Signals" href="/docs/concepts/angular-signals">
-    Understand how Signals power streamResource
+    Understand how Signals power agent
   </Card>
   <Card title="LangGraph Basics" href="/docs/concepts/langgraph-basics">
     Graphs, nodes, edges, and state for Angular developers
   </Card>
-  <Card title="API Reference" href="/docs/api/stream-resource">
-    Complete streamResource() function reference
+  <Card title="API Reference" href="/docs/api/angular">
+    Complete agent() function reference
   </Card>
 </CardGroup>

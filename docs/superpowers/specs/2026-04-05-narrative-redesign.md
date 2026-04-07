@@ -2,7 +2,7 @@
 
 ## Goal
 
-Add four new landing page sections that reframe Angular Stream Resource around the "last mile" production narrative: the problem (why AI projects stall), the full stack architecture, the @cacheplane/chat UI layer in depth, and a fair comparison table. Update one existing section (FeatureStrip) to remove an inaccurate claim. Existing sections are preserved as-is.
+Add four new landing page sections that reframe Angular Agent Framework around the "last mile" production narrative: the problem (why AI projects stall), the full stack architecture, the @cacheplane/chat UI layer in depth, and a fair comparison table. Update one existing section (FeatureStrip) to remove an inaccurate claim. Existing sections are preserved as-is.
 
 ## Architecture
 
@@ -36,7 +36,7 @@ SVG animations use `animateMotion` with `mpath` for particle flows and CSS `@key
 
 **Placement in page.tsx:** After `<StatsStrip />`, before `<ValueProps />`.
 
-**Narrative:** The last-mile gap. Three stats establish the problem. An animated progress bar shows teams stalling at 77% and Angular Stream Resource closing the gap to 100%.
+**Narrative:** The last-mile gap. Three stats establish the problem. An animated progress bar shows teams stalling at 77% and Angular Agent Framework closing the gap to 100%.
 
 ### Component structure
 
@@ -86,7 +86,7 @@ The tagline: *"Your backend agent may already work. The frontend and production 
 
 **Placement in page.tsx:** After `<ProblemSection />`, before `<ValueProps />`.
 
-**Narrative:** Three-layer architecture. Particles animate downward through each connector, showing data flowing from LangGraph → stream-resource → chat → render.
+**Narrative:** Three-layer architecture. Particles animate downward through each connector, showing data flowing from LangGraph → angular → chat → render.
 
 ### Component structure
 
@@ -99,7 +99,7 @@ Dark card (`#1a1b26`), centered, width 220px. Shows "LangGraph Cloud" label and 
 ### Layer cards
 
 Three cards with the established color scheme:
-- `@cacheplane/stream-resource` — blue (`#004090`), tag "Primitives"
+- `@cacheplane/angular` — blue (`#004090`), tag "Primitives"
 - `@cacheplane/chat` — purple (`#5a00c8`), tag "UI Layer"
 - `@cacheplane/render` — green (`#1a7a40`), tag "Gen UI"
 
@@ -161,24 +161,24 @@ Each tab scenario is an `async` function using a local `wait(ms)` helper. Tab sw
 
 **Placement in page.tsx:** After `<DeepAgentsShowcase />`, before `<ArchDiagram />`.
 
-**Narrative:** Honest comparison of LangChain alone vs Angular Stream Resource. No attacks. Just what Angular Stream Resource adds on top.
+**Narrative:** Honest comparison of LangChain alone vs Angular Agent Framework. No attacks. Just what Angular Agent Framework adds on top.
 
 ### Component structure
 
-Eyebrow: "A fair comparison". Headline: "What Angular Stream Resource adds". Subtitle: "LangChain and LangGraph are excellent. This is what the Angular production layer provides on top."
+Eyebrow: "A fair comparison". Headline: "What Angular Agent Framework adds". Subtitle: "LangChain and LangGraph are excellent. This is what the Angular production layer provides on top."
 
 ### Comparison table
 
-Two columns: "LangChain + Angular (without Angular Stream Resource)" and "LangChain + Angular + Angular Stream Resource".
+Two columns: "LangChain + Angular (without Angular Agent Framework)" and "LangChain + Angular + Angular Agent Framework".
 
 | Capability | Without | With |
 |---|---|---|
-| Token streaming | Custom SSE wiring + zone management | `streamResource()` signal, zero boilerplate |
+| Token streaming | Custom SSE wiring + zone management | `agent()` signal, zero boilerplate |
 | Thread persistence | Manual localStorage + API calls | `threadId` signal + `onThreadId` callback |
 | Interrupt flows | Custom polling or WebSocket | `interrupt()` signal + resume built in |
 | Tool-call rendering | Custom event parsing | `<chat-tool-call-card>` or headless `<chat-tool-calls>` |
 | Generative UI | No established pattern | `<chat-generative-ui>` + `<render-spec>` + registry |
-| Deterministic testing | Mock HTTP + tick management | `MockStreamTransport` + writable signals |
+| Deterministic testing | Mock HTTP + tick management | `MockAgentTransport` + writable signals |
 | Human approval UI | Build from scratch | `<chat-interrupt-panel>` |
 | Prebuilt full chat | Build from scratch | `<chat>` drop-in |
 
@@ -190,7 +190,7 @@ Each "With" cell uses `tokens.colors.accent` text with a checkmark. Each "Withou
 
 **File:** `apps/website/src/components/landing/FeatureStrip.tsx`
 
-Remove the feature entry that reads "Generative UI — no established Angular pattern exists anywhere" or equivalent language that implies Angular Stream Resource is the only solution. Replace with: `{ icon: '🎨', title: 'Generative UI', desc: 'Agent-emitted Angular components via @cacheplane/render. Your component registry, your design — rendered inline from a JSON spec.' }`.
+Remove the feature entry that reads "Generative UI — no established Angular pattern exists anywhere" or equivalent language that implies Angular Agent Framework is the only solution. Replace with: `{ icon: '🎨', title: 'Generative UI', desc: 'Agent-emitted Angular components via @cacheplane/render. Your component registry, your design — rendered inline from a JSON spec.' }`.
 
 ---
 

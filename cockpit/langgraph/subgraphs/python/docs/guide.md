@@ -1,28 +1,28 @@
-# Nested Agent Delegation with Subgraphs and stream-resource
+# Nested Agent Delegation with Subgraphs and angular
 
 <Summary>
-Build a chat interface that visualizes nested agent delegation using `streamResource()` from
-`@cacheplane/stream-resource`. A parent orchestrator dispatches research tasks to a child
+Build a chat interface that visualizes nested agent delegation using `agent()` from
+`@cacheplane/angular`. A parent orchestrator dispatches research tasks to a child
 subgraph, and the sidebar tracks each subagent's status in real time using `stream.subagents()`.
 </Summary>
 
 <Prompt>
-Add a subgraph-powered orchestrator to this Angular component using `streamResource()` from `@cacheplane/stream-resource`. Use `stream.subagents()` to track active child subgraph executions, and derive a `subagentEntries` signal with `computed()` for template iteration. Bind `stream.messages()` via the `<cp-chat>` component from `@cacheplane/chat`.
+Add a subgraph-powered orchestrator to this Angular component using `agent()` from `@cacheplane/angular`. Use `stream.subagents()` to track active child subgraph executions, and derive a `subagentEntries` signal with `computed()` for template iteration. Bind `stream.messages()` via the `<cp-chat>` component from `@cacheplane/chat`.
 </Prompt>
 
 <Steps>
 <Step title="Configure the provider">
 
-Set up `provideStreamResource()` in your app config with the LangGraph API URL:
+Set up `provideAgent()` in your app config with the LangGraph API URL:
 
 ```typescript
 // app.config.ts
 import { ApplicationConfig } from '@angular/core';
-import { provideStreamResource } from '@cacheplane/stream-resource';
+import { provideAgent } from '@cacheplane/angular';
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideStreamResource({
+    provideAgent({
       apiUrl: 'https://your-deployment.langgraph.app',
     }),
   ],
@@ -32,15 +32,15 @@ export const appConfig: ApplicationConfig = {
 </Step>
 <Step title="Create the streaming resource">
 
-In your component, call `streamResource()` with the assistant ID pointing to your subgraphs graph:
+In your component, call `agent()` with the assistant ID pointing to your subgraphs graph:
 
 ```typescript
 // subgraphs.component.ts
 import { Component, computed } from '@angular/core';
-import { streamResource } from '@cacheplane/stream-resource';
+import { agent } from '@cacheplane/angular';
 
 export class SubgraphsComponent {
-  protected readonly stream = streamResource({
+  protected readonly stream = agent({
     assistantId: 'subgraphs',
   });
 
@@ -114,7 +114,7 @@ parent_graph.add_edge("research", END)
 graph = parent_graph.compile()
 ```
 
-The child subgraph is compiled and passed as a node to the parent graph. LangGraph streams subgraph events separately, which `stream-resource` captures and exposes through `stream.subagents()`.
+The child subgraph is compiled and passed as a node to the parent graph. LangGraph streams subgraph events separately, which `angular` captures and exposes through `stream.subagents()`.
 
 <Tip>
 Child subgraphs can have their own state, checkpointers, and tools. This pattern is ideal for multi-agent systems where specialized agents handle distinct concerns.

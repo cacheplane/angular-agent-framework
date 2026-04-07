@@ -1,47 +1,47 @@
-# Task Decomposition with stream-resource
+# Task Decomposition with angular
 
 <Summary>
-Build a chat interface that shows real-time task decomposition using `streamResource()` from
-`@cacheplane/stream-resource`. The agent breaks complex requests into ordered steps, and the
+Build a chat interface that shows real-time task decomposition using `agent()` from
+`@cacheplane/angular`. The agent breaks complex requests into ordered steps, and the
 sidebar displays each step's status as the agent works through them.
 </Summary>
 
 <Prompt>
-Add a task planning sidebar to this Angular component using `streamResource()` from `@cacheplane/stream-resource`. Use `stream.value()` to access the agent's plan state, derive `planSteps` with `computed()`, and bind them to the sidebar via the `<cp-chat>` component from `@cacheplane/chat`.
+Add a task planning sidebar to this Angular component using `agent()` from `@cacheplane/angular`. Use `stream.value()` to access the agent's plan state, derive `planSteps` with `computed()`, and bind them to the sidebar via the `<cp-chat>` component from `@cacheplane/chat`.
 </Prompt>
 
 <Steps>
 <Step title="Configure the provider">
 
-Set up `provideStreamResource()` in your app config with the LangGraph API URL:
+Set up `provideAgent()` in your app config with the LangGraph API URL:
 
 ```typescript
 // app.config.ts
 import { ApplicationConfig } from '@angular/core';
-import { provideStreamResource } from '@cacheplane/stream-resource';
+import { provideAgent } from '@cacheplane/angular';
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideStreamResource({
+    provideAgent({
       apiUrl: 'https://your-deployment.langgraph.app',
     }),
   ],
 };
 ```
 
-This makes the API URL available to all `streamResource()` calls in your app.
+This makes the API URL available to all `agent()` calls in your app.
 
 </Step>
 <Step title="Create the streaming resource">
 
-In your component, call `streamResource()` with the `assistantId` pointing to your planning graph:
+In your component, call `agent()` with the `assistantId` pointing to your planning graph:
 
 ```typescript
 // planning.component.ts
-import { streamResource } from '@cacheplane/stream-resource';
+import { agent } from '@cacheplane/angular';
 
 export class PlanningComponent {
-  protected readonly stream = streamResource({
+  protected readonly stream = agent({
     assistantId: 'planning',
   });
 }
@@ -63,7 +63,7 @@ interface PlanStep {
 }
 
 export class PlanningComponent {
-  protected readonly stream = streamResource({ assistantId: 'planning' });
+  protected readonly stream = agent({ assistantId: 'planning' });
 
   planSteps = computed(() => {
     const val = this.stream.value() as { plan?: PlanStep[] } | undefined;

@@ -1,6 +1,6 @@
-# MockStreamTransport
+# MockAgentTransport
 
-`MockStreamTransport` is a test-friendly transport that replaces real network calls with an in-memory event emitter. Use it in unit and component tests to push values on demand and assert against your component's reactive state without a running server.
+`MockAgentTransport` is a test-friendly transport that replaces real network calls with an in-memory event emitter. Use it in unit and component tests to push values on demand and assert against your component's reactive state without a running server.
 
 ## Complete test example
 
@@ -10,27 +10,27 @@ The pattern below covers the full lifecycle: configure the transport in `TestBed
 import { Component, inject } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import {
-  provideStreamResource,
-  MockStreamTransport,
-  streamResource,
-} from '@cacheplane/stream-resource';
+  provideAgent,
+  MockAgentTransport,
+  agent,
+} from '@cacheplane/angular';
 
 @Component({ template: '' })
 class RepoComponent {
-  readonly repo = streamResource<{ name: string }>({
+  readonly repo = agent<{ name: string }>({
     url: () => '/api/repos/42',
   });
 }
 
 describe('RepoComponent', () => {
-  let transport: MockStreamTransport;
+  let transport: MockAgentTransport;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [RepoComponent],
-      providers: [provideStreamResource({ transport: MockStreamTransport })],
+      providers: [provideAgent({ transport: MockAgentTransport })],
     });
-    transport = TestBed.inject(MockStreamTransport);
+    transport = TestBed.inject(MockAgentTransport);
   });
 
   it('reflects the streamed value', () => {
@@ -58,7 +58,7 @@ describe('RepoComponent', () => {
 });
 ```
 
-## MockStreamTransport API
+## MockAgentTransport API
 
 | Method | Description |
 |--------|-------------|
@@ -67,7 +67,7 @@ describe('RepoComponent', () => {
 | `complete(url)` | Closes the stream cleanly, as if the server sent the final event. |
 
 <Callout type="tip" title="Deterministic tests">
-  Because `MockStreamTransport` is synchronous by default, you can emit values
+  Because `MockAgentTransport` is synchronous by default, you can emit values
   and assert state changes in the same test tick — no `fakeAsync` or `tick`
   required.
 </Callout>
@@ -87,12 +87,12 @@ describe('RepoComponent', () => {
     icon="globe"
     href="/docs-v2/api/fetch-stream-transport"
   >
-    The production transport that MockStreamTransport replaces in tests.
+    The production transport that MockAgentTransport replaces in tests.
   </Card>
   <Card
-    title="streamResource() API"
+    title="agent() API"
     icon="code"
-    href="/docs-v2/api/stream-resource"
+    href="/docs-v2/api/angular"
   >
     Full reference for the primitive you are testing against.
   </Card>

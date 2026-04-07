@@ -16,7 +16,7 @@ Your agent code needs a `langgraph.json` manifest at the project root. This file
 }
 ```
 
-The `graphs` key maps an assistant ID (used by `streamResource()` on the Angular side) to the Python module path and graph variable. The `env` key points to a file with secrets like `OPENAI_API_KEY` that will be injected at runtime.
+The `graphs` key maps an assistant ID (used by `agent()` on the Angular side) to the Python module path and graph variable. The `env` key points to a file with secrets like `OPENAI_API_KEY` that will be injected at runtime.
 
 ### Agent entry point
 
@@ -105,15 +105,15 @@ export const environment = {
 </Tab>
 </Tabs>
 
-Wire the environment into `provideStreamResource()`:
+Wire the environment into `provideAgent()`:
 
 ```typescript
-import { provideStreamResource } from '@cacheplane/stream-resource';
+import { provideAgent } from '@cacheplane/angular';
 import { environment } from '../environments/environment';
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideStreamResource({
+    provideAgent({
       apiUrl: environment.langgraphUrl,
     }),
   ],
@@ -154,7 +154,7 @@ import { langGraphAuthInterceptor } from './auth.interceptor';
 export const appConfig: ApplicationConfig = {
   providers: [
     provideHttpClient(withInterceptors([langGraphAuthInterceptor])),
-    provideStreamResource({
+    provideAgent({
       apiUrl: environment.langgraphUrl,
     }),
   ],
@@ -198,11 +198,11 @@ During local development with `langgraph dev`, CORS is permissive by default. Yo
 
 ## Error boundaries
 
-Production apps need graceful error handling. Build a reactive error boundary using `streamResource()` signals.
+Production apps need graceful error handling. Build a reactive error boundary using `agent()` signals.
 
 ```typescript
 import { ChangeDetectionStrategy, Component, computed } from '@angular/core';
-import { streamResource } from '@cacheplane/stream-resource';
+import { agent } from '@cacheplane/angular';
 
 @Component({
   selector: 'app-chat',
@@ -217,7 +217,7 @@ import { streamResource } from '@cacheplane/stream-resource';
   `,
 })
 export class ChatComponent {
-  chat = streamResource<MessagesState>({
+  chat = agent<MessagesState>({
     assistantId: 'chat_agent',
   });
 
@@ -248,7 +248,7 @@ For automated retries (network blips, transient 5xx errors), wrap `.submit()` wi
 
 ```typescript
 export async function retrySubmit(
-  chat: ReturnType<typeof streamResource>,
+  chat: ReturnType<typeof agent>,
   input: Record<string, unknown>,
   maxAttempts = 3,
 ): Promise<void> {
@@ -283,7 +283,7 @@ if (savedRunId) {
 `joinStream()` replays any events the client missed, then switches to live streaming. This works because all state lives on the LangGraph Platform, and the SSE endpoint supports event ID-based resumption.
 
 <Callout type="tip" title="Stateless client pattern">
-`streamResource()` is a stateless client. All state lives on the LangGraph Platform. This means your Angular app can be deployed anywhere (CDN, edge, SSR) without state management concerns. Scale your frontend independently of your agent infrastructure.
+`agent()` is a stateless client. All state lives on the LangGraph Platform. This means your Angular app can be deployed anywhere (CDN, edge, SSR) without state management concerns. Scale your frontend independently of your agent infrastructure.
 </Callout>
 
 ## CI/CD pipeline
@@ -371,7 +371,7 @@ effect(() => {
 
 <Steps>
 <Step title="Set production apiUrl">
-Point `provideStreamResource({ apiUrl })` to your LangGraph Cloud deployment URL via `environment.prod.ts`.
+Point `provideAgent({ apiUrl })` to your LangGraph Cloud deployment URL via `environment.prod.ts`.
 </Step>
 <Step title="Configure authentication">
 Add an HTTP interceptor to attach `x-api-key` headers to all LangGraph requests.
@@ -420,8 +420,8 @@ Confirm LangSmith traces are arriving and set up alerts for error rate spikes an
   <Card title="LangGraph Basics" href="/docs/concepts/langgraph-basics">
     Understand the agent patterns your deployment will serve.
   </Card>
-  <Card title="API Reference" href="/docs/api/provide-stream-resource">
-    Full reference for provideStreamResource configuration options.
+  <Card title="API Reference" href="/docs/api/provide-angular">
+    Full reference for provideAgent configuration options.
   </Card>
   <Card title="Error Handling" href="/docs/guides/error-handling">
     Deep dive into error recovery patterns beyond basic error boundaries.

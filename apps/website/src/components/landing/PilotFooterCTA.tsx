@@ -74,7 +74,7 @@ export function PilotFooterCTA() {
             marginBottom: '2.5rem',
           }}
         >
-          Half of GenAI projects die after proof of concept.<CitationBadge citation={gartnerCitation} /> Angular Stream Resource closes the gap. Start with a conversation.
+          Half of GenAI projects die after proof of concept.<CitationBadge citation={gartnerCitation} /> Angular Agent Framework closes the gap. Start with a conversation.
         </p>
 
         {/* CTA buttons */}

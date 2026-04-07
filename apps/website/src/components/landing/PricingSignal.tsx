@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { tokens } from '../../../lib/design-tokens';
 
 const features = [
-  'stream-resource license for one app in production',
+  'angular license for one app in production',
   '3-month co-pilot engagement alongside your team',
   'Architecture reviews, code pairing, unblocking sessions',
   'Patterns your team owns and can replicate',
@@ -78,7 +78,7 @@ export function PricingSignal() {
                 marginTop: '8px',
               }}
             >
-              App deployment license. Includes stream-resource + 3-month co-pilot engagement.
+              App deployment license. Includes angular + 3-month co-pilot engagement.
             </span>
           </div>
 

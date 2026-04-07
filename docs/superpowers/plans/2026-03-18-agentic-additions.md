@@ -1,10 +1,10 @@
-# Angular Stream Resource — Agentic Additions Implementation Plan
+# Angular Agent Framework — Agentic Additions Implementation Plan
 
 > **For agentic workers:** REQUIRED: Use superpowers:subagent-driven-development (if subagents available) or superpowers:executing-plans to implement this plan. Steps use checkbox (`- [ ]`) syntax for tracking. Set up an isolated workspace first using superpowers:using-git-worktrees.
 
 **Goal:** Add the hero redesign, agentic docs infrastructure, and MCP server package described in the two approved specs, layered on top of the base website plan (`2026-03-18-website.md`).
 
-**Architecture:** Three independent additions to the monorepo: (1) replace `Hero.tsx` with a two-column `HeroTwoCol.tsx` + `GenerativeUIFrame.tsx` SVG animation; (2) add `CopyPromptButton`, prompt files, `llms.txt` routes, `CLAUDE.md`/`AGENTS.md`, and a `getPromptBySlug` loader to the website; (3) scaffold `packages/mcp/` as a new Nx library publishing `@stream-resource/mcp` with six MCP tools backed by TypeDoc JSON.
+**Architecture:** Three independent additions to the monorepo: (1) replace `Hero.tsx` with a two-column `HeroTwoCol.tsx` + `GenerativeUIFrame.tsx` SVG animation; (2) add `CopyPromptButton`, prompt files, `llms.txt` routes, `CLAUDE.md`/`AGENTS.md`, and a `getPromptBySlug` loader to the website; (3) scaffold `packages/mcp/` as a new Nx library publishing `@angular/mcp` with six MCP tools backed by TypeDoc JSON.
 
 **Tech Stack:** Next.js 15, TypeScript, `@modelcontextprotocol/sdk`, TypeDoc, Nx
 
@@ -49,7 +49,7 @@ packages/mcp/
 │   │   ├── search-docs.ts
 │   │   ├── get-example.ts
 │   │   ├── scaffold-chat-component.ts
-│   │   ├── add-stream-resource.ts
+│   │   ├── add-angular.ts
 │   │   └── get-thread-persistence-pattern.ts
 │   └── data/
 │       └── loader.ts                     # Reads api-docs.json, exposes typed helpers
@@ -74,7 +74,7 @@ Download Angular logo SVG into the project:
 ```bash
 mkdir -p apps/website/public/logos
 curl -o apps/website/public/logos/angular.svg \
-  "https://angular.dev/assets/icons/logo.svg" 2>/dev/null || \
+  "https://stream-resource.dev/assets/icons/logo.svg" 2>/dev/null || \
   echo '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 250 250"><path fill="#DD0031" d="M125 30L31.9 63.2l14.2 123.1L125 230l78.9-43.7 14.2-123.1z"/><path fill="#C3002F" d="M125 30v22.2l-61.7 162.4L125 230z"/><path fill="#fff" d="M125 52.1L66.8 182.6h21.7l11.7-29.2h49.4l11.7 29.2H183L125 52.1zm17 83.3h-34l17-40.9z"/></svg>',
 ```
 
@@ -395,7 +395,7 @@ export async function HeroTwoCol() {
             fontSize: 12,
             color: '#4A527A',
           }}>
-            npm install stream-resource
+            npm install angular
           </span>
         </div>
       </div>
@@ -535,17 +535,17 @@ export function getPromptBySlug(slug: string[]): string | null {
 Create `apps/website/content/prompts/getting-started.md`:
 
 ```
-Add stream-resource to my Angular 20+ application.
+Add angular to my Angular 20+ application.
 
-Install: npm install stream-resource
+Install: npm install angular
 
-1. In app.config.ts, add provideStreamResource({ apiUrl: 'http://localhost:2024' }) to the providers array. Import it from 'stream-resource'.
+1. In app.config.ts, add provideAgent({ apiUrl: 'http://localhost:2024' }) to the providers array. Import it from 'angular'.
 
-2. Create a ChatComponent that calls streamResource<{ messages: BaseMessage[] }>({ assistantId: 'chat_agent' }) in the constructor or as a field initializer. streamResource() MUST be called inside an Angular injection context — constructor or field initializer is correct; ngOnInit is not.
+2. Create a ChatComponent that calls agent<{ messages: BaseMessage[] }>({ assistantId: 'chat_agent' }) in the constructor or as a field initializer. agent() MUST be called inside an Angular injection context — constructor or field initializer is correct; ngOnInit is not.
 
 3. The component template should loop over chat.messages() using @for and render each message's content. Add an input field and a button that calls chat.submit({ messages: [{ role: 'human', content: inputValue }] }).
 
-4. In app.config.ts provideStreamResource call, the apiUrl should point to the LangGraph server. For local dev this is http://localhost:2024. For production use the LangGraph Platform URL from environment.ts.
+4. In app.config.ts provideAgent call, the apiUrl should point to the LangGraph server. For local dev this is http://localhost:2024. For production use the LangGraph Platform URL from environment.ts.
 
 The library is framework-integrated: no subscriptions, no async pipe needed — chat.messages() is an Angular Signal that updates token by token as the LLM responds.
 ```
@@ -553,15 +553,15 @@ The library is framework-integrated: no subscriptions, no async pipe needed — 
 Create `apps/website/content/prompts/streaming.md`:
 
 ```
-Configure token-by-token streaming in my Angular component that uses stream-resource.
+Configure token-by-token streaming in my Angular component that uses angular.
 
-The component already has streamResource() set up. Now:
+The component already has agent() set up. Now:
 
 1. In the template, bind to chat.messages() with @for — each BaseMessage has a .content property. The template re-renders automatically as tokens arrive because messages() is a Signal.
 
 2. Show a loading indicator while streaming: use chat.isLoading() in an @if block.
 
-3. To throttle rapid re-renders (if performance is a concern), pass throttle: 50 to streamResource() options — this throttles Signal updates to at most one per 50ms while preserving the final value.
+3. To throttle rapid re-renders (if performance is a concern), pass throttle: 50 to agent() options — this throttles Signal updates to at most one per 50ms while preserving the final value.
 
 4. To show the stream status more precisely, bind to chat.status() which returns 'idle' | 'loading' | 'resolved' | 'error'.
 
@@ -571,17 +571,17 @@ Do not use async pipe or subscribe() — the signals update automatically.
 Create `apps/website/content/prompts/thread-persistence.md`:
 
 ```
-Add thread persistence to my Angular component that uses stream-resource, so conversations survive page refresh.
+Add thread persistence to my Angular component that uses angular, so conversations survive page refresh.
 
 1. On component init, read the stored thread ID: const storedId = localStorage.getItem('chat-thread-id').
 
 2. Create a signal: threadId = signal<string | null>(storedId).
 
-3. Pass it to streamResource: streamResource({ ..., threadId: this.threadId, onThreadId: (id) => { this.threadId.set(id); localStorage.setItem('chat-thread-id', id); } }).
+3. Pass it to agent: agent({ ..., threadId: this.threadId, onThreadId: (id) => { this.threadId.set(id); localStorage.setItem('chat-thread-id', id); } }).
 
 4. The onThreadId callback fires once when the server creates a new thread. After that, the same thread ID is reused and the full conversation history is restored from the LangGraph server.
 
-5. To start a new conversation, call this.threadId.set(null) — this causes streamResource to create a fresh thread on the next submit.
+5. To start a new conversation, call this.threadId.set(null) — this causes agent to create a fresh thread on the next submit.
 
 No changes to the template are needed.
 ```
@@ -589,31 +589,31 @@ No changes to the template are needed.
 Create `apps/website/content/prompts/configuration.md`:
 
 ```
-Configure stream-resource globally and per-component in my Angular application.
+Configure angular globally and per-component in my Angular application.
 
-Global config (applies to all streamResource() calls in the app):
-In app.config.ts, provideStreamResource({ apiUrl: 'https://my-langgraph-server.com', }) — import provideStreamResource from 'stream-resource'.
+Global config (applies to all agent() calls in the app):
+In app.config.ts, provideAgent({ apiUrl: 'https://my-langgraph-server.com', }) — import provideAgent from 'angular'.
 
 Per-call override (overrides global config for one component):
-Pass apiUrl directly to streamResource({ apiUrl: 'https://other-server.com', assistantId: 'my-agent' }) — per-call options take precedence over global config.
+Pass apiUrl directly to agent({ apiUrl: 'https://other-server.com', assistantId: 'my-agent' }) — per-call options take precedence over global config.
 
 Custom transport (for auth headers, logging, or testing):
-Implement StreamResourceTransport interface — it has one method: stream(input, options). Pass it as transport: myTransport to either provideStreamResource or streamResource(). FetchStreamTransport is the default.
+Implement AgentTransport interface — it has one method: stream(input, options). Pass it as transport: myTransport to either provideAgent or agent(). FetchStreamTransport is the default.
 
 To pass a system prompt to the LangGraph agent per-thread, use the config option:
-streamResource({ config: { configurable: { system_prompt: 'You are a helpful assistant.' } } })
+agent({ config: { configurable: { system_prompt: 'You are a helpful assistant.' } } })
 ```
 
 Create `apps/website/content/prompts/testing.md`:
 
 ```
-Write unit tests for my Angular component that uses stream-resource, without hitting a real LangGraph server.
+Write unit tests for my Angular component that uses angular, without hitting a real LangGraph server.
 
-Use MockStreamTransport from 'stream-resource'. It implements StreamResourceTransport and lets you script exactly what events the stream emits.
+Use MockAgentTransport from 'angular'. It implements AgentTransport and lets you script exactly what events the stream emits.
 
 Test setup:
-const transport = new MockStreamTransport();
-const chat = streamResource({ transport, assistantId: 'test', apiUrl: '' });
+const transport = new MockAgentTransport();
+const chat = agent({ transport, assistantId: 'test', apiUrl: '' });
 
 To emit a streaming response:
 transport.emit([
@@ -630,7 +630,7 @@ transport.emitError(new Error('Network failure'));
 expect(chat.status()).toBe('error');
 expect(chat.error()).toBeInstanceOf(Error);
 
-Never mock streamResource() itself — always use MockStreamTransport and test through the real function.
+Never mock agent() itself — always use MockAgentTransport and test through the real function.
 ```
 
 - [ ] **Step 4: Update `MdxRenderer.tsx` to accept and render `CopyPromptButton`**
@@ -729,30 +729,30 @@ import path from 'path';
 import pkg from '../../../package.json';
 
 function buildLlmsTxt(): string {
-  return `# Angular Stream Resource v${pkg.version}
+  return `# Angular Agent Framework v${pkg.version}
 
-Angular streaming library for LangChain/LangGraph. Provides streamResource() — full parity with React's useStream() hook, built on Angular Signals.
+Angular streaming library for LangChain/LangGraph. Provides agent() — full parity with React's useStream() hook, built on Angular Signals.
 
 ## Install
-npm install stream-resource
+npm install angular
 
 ## Key API
-- streamResource(options): StreamResourceRef — call in Angular injection context (constructor or field initializer)
-- provideStreamResource(config): Provider — register in app.config.ts for global defaults
-- StreamResourceRef.messages(): Signal<BaseMessage[]> — updates token by token
-- StreamResourceRef.submit(values): Promise<void> — send a message / trigger a run
-- StreamResourceRef.status(): Signal<'idle'|'loading'|'resolved'|'error'>
-- StreamResourceRef.threadId signal + onThreadId callback — thread persistence across refreshes
-- MockStreamTransport — deterministic unit testing without a real server
+- agent(options): AgentRef — call in Angular injection context (constructor or field initializer)
+- provideAgent(config): Provider — register in app.config.ts for global defaults
+- AgentRef.messages(): Signal<BaseMessage[]> — updates token by token
+- AgentRef.submit(values): Promise<void> — send a message / trigger a run
+- AgentRef.status(): Signal<'idle'|'loading'|'resolved'|'error'>
+- AgentRef.threadId signal + onThreadId callback — thread persistence across refreshes
+- MockAgentTransport — deterministic unit testing without a real server
 
 ## Minimal example
-import { streamResource } from 'stream-resource';
-const chat = streamResource({ assistantId: 'chat_agent', apiUrl: 'http://localhost:2024' });
+import { agent } from 'angular';
+const chat = agent({ assistantId: 'chat_agent', apiUrl: 'http://localhost:2024' });
 // Template: @for (msg of chat.messages(); track $index) { <p>{{ msg.content }}</p> }
 // Submit: chat.submit({ messages: [{ role: 'human', content: input }] })
 
 ## MCP server
-npx @stream-resource/mcp
+npx @angular/mcp
 
 ## Full reference
 https://stream-resource.dev/llms-full.txt
@@ -798,11 +798,11 @@ function loadAllPrompts(): string {
 
 export async function GET() {
   const sections = [
-    '# Angular Stream Resource — Full Reference\n\nSee /llms.txt for a compact summary.\n',
+    '# Angular Agent Framework — Full Reference\n\nSee /llms.txt for a compact summary.\n',
     '## API Reference (TypeDoc)\n\n' + loadApiDocs(),
     '## Prompt Recipes\n\n' + loadAllPrompts(),
-    '## Common Gotchas\n\nstreamResource() MUST be called inside an Angular injection context.\nDo not call it in ngOnInit — use constructor or field initializer.\nDo not mock streamResource() in tests — use MockStreamTransport.\nRxJS is an internal implementation detail — do not import rxjs in consumer code.',
-    '## MCP server\n\nnpx @stream-resource/mcp\nAdd to Claude Code settings.json, Cursor .cursor/mcp.json, or any MCP-compatible agent.',
+    '## Common Gotchas\n\nagent() MUST be called inside an Angular injection context.\nDo not call it in ngOnInit — use constructor or field initializer.\nDo not mock agent() in tests — use MockAgentTransport.\nRxJS is an internal implementation detail — do not import rxjs in consumer code.',
+    '## MCP server\n\nnpx @angular/mcp\nAdd to Claude Code settings.json, Cursor .cursor/mcp.json, or any MCP-compatible agent.',
   ];
 
   return new NextResponse(sections.join('\n\n---\n\n'), {
@@ -844,26 +844,26 @@ These files are generated at build time and served as static downloads from the 
 Create `apps/website/content/CLAUDE.md.template`:
 
 ```
-# Angular Stream Resource v@VERSION@
+# Angular Agent Framework v@VERSION@
 
-Angular streaming library for LangChain/LangGraph. Provides `streamResource()` — full parity with React's `useStream()`.
+Angular streaming library for LangChain/LangGraph. Provides `agent()` — full parity with React's `useStream()`.
 
 ## Install
-npm install stream-resource
+npm install angular
 
 ## Key requirement
-`streamResource()` MUST be called within an Angular injection context (component constructor or field initializer). Calling it in ngOnInit or any async context throws "NG0203: inject() must be called from an injection context".
+`agent()` MUST be called within an Angular injection context (component constructor or field initializer). Calling it in ngOnInit or any async context throws "NG0203: inject() must be called from an injection context".
 
 ## Basic usage
 ```typescript
 // app.config.ts
-import { provideStreamResource } from 'stream-resource';
+import { provideAgent } from 'angular';
 export const appConfig: ApplicationConfig = {
-  providers: [provideStreamResource({ apiUrl: 'http://localhost:2024' })]
+  providers: [provideAgent({ apiUrl: 'http://localhost:2024' })]
 };
 
 // chat.component.ts
-import { streamResource } from 'stream-resource';
+import { agent } from 'angular';
 import type { BaseMessage } from '@langchain/core/messages';
 
 @Component({ template: `
@@ -871,20 +871,20 @@ import type { BaseMessage } from '@langchain/core/messages';
   <button (click)="send()">Send</button>
 `})
 export class ChatComponent {
-  chat = streamResource<{ messages: BaseMessage[] }>({ assistantId: 'chat_agent' });
+  chat = agent<{ messages: BaseMessage[] }>({ assistantId: 'chat_agent' });
   send() { this.chat.submit({ messages: [{ role: 'human', content: 'Hello' }] }); }
 }
 ```
 
 ## Key patterns
 - Thread persistence: `threadId: signal(localStorage.getItem('t'))` + `onThreadId: (id) => localStorage.setItem('t', id)`
-- Global config: `provideStreamResource({ apiUrl })` in app.config.ts
-- Per-call override: pass `apiUrl` directly to `streamResource()`
-- Testing: use `MockStreamTransport` — never mock `streamResource()` itself
+- Global config: `provideAgent({ apiUrl })` in app.config.ts
+- Per-call override: pass `apiUrl` directly to `agent()`
+- Testing: use `MockAgentTransport` — never mock `agent()` itself
 
 ## MCP server (for tool access)
 Add to ~/.claude/settings.json:
-{"mcpServers":{"stream-resource":{"command":"npx","args":["@stream-resource/mcp"]}}}
+{"mcpServers":{"angular":{"command":"npx","args":["@angular/mcp"]}}}
 
 ## Version check
 If this file is stale, fetch the latest: https://stream-resource.dev/llms-full.txt
@@ -962,11 +962,11 @@ Create `packages/mcp/package.json`:
 
 ```json
 {
-  "name": "@stream-resource/mcp",
+  "name": "@angular/mcp",
   "version": "0.1.0",
-  "description": "MCP server for the stream-resource Angular library",
+  "description": "MCP server for the angular Angular library",
   "main": "dist/index.js",
-  "bin": { "@stream-resource/mcp": "dist/index.js" },
+  "bin": { "@angular/mcp": "dist/index.js" },
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "start": "node dist/index.js"
@@ -1091,11 +1091,11 @@ import { getApiReferenceTool, handleGetApiReference } from './tools/get-api-refe
 import { searchDocsTool, handleSearchDocs } from './tools/search-docs.js';
 import { getExampleTool, handleGetExample } from './tools/get-example.js';
 import { scaffoldChatComponentTool, handleScaffoldChatComponent } from './tools/scaffold-chat-component.js';
-import { addStreamResourceTool, handleAddStreamResource } from './tools/add-stream-resource.js';
+import { addAgentTool, handleAddAgent } from './tools/add-angular.js';
 import { getThreadPersistencePatternTool, handleGetThreadPersistencePattern } from './tools/get-thread-persistence-pattern.js';
 
 const server = new Server(
-  { name: 'stream-resource', version: '0.1.0' },
+  { name: 'angular', version: '0.1.0' },
   { capabilities: { tools: {} } }
 );
 
@@ -1104,7 +1104,7 @@ const TOOLS = [
   searchDocsTool,
   getExampleTool,
   scaffoldChatComponentTool,
-  addStreamResourceTool,
+  addAgentTool,
   getThreadPersistencePatternTool,
 ];
 
@@ -1118,7 +1118,7 @@ server.setRequestHandler(CallToolRequestSchema, async (req) => {
     case 'search_docs':              return handleSearchDocs(a);
     case 'get_example':              return handleGetExample(a);
     case 'scaffold_chat_component':  return handleScaffoldChatComponent(a);
-    case 'add_stream_resource':      return handleAddStreamResource(a);
+    case 'add_angular':      return handleAddAgent(a);
     case 'get_thread_persistence_pattern': return handleGetThreadPersistencePattern(a);
     default: return { content: [{ type: 'text', text: `Unknown tool: ${name}` }] };
   }
@@ -1140,7 +1140,7 @@ Expected: project details printed.
 
 ```bash
 git add packages/mcp/
-git commit -m "feat(mcp): scaffold @stream-resource/mcp package"
+git commit -m "feat(mcp): scaffold @angular/mcp package"
 ```
 
 ---
@@ -1152,7 +1152,7 @@ git commit -m "feat(mcp): scaffold @stream-resource/mcp package"
 - Create: `packages/mcp/src/tools/search-docs.ts`
 - Create: `packages/mcp/src/tools/get-example.ts`
 - Create: `packages/mcp/src/tools/scaffold-chat-component.ts`
-- Create: `packages/mcp/src/tools/add-stream-resource.ts`
+- Create: `packages/mcp/src/tools/add-angular.ts`
 - Create: `packages/mcp/src/tools/get-thread-persistence-pattern.ts`
 
 - [ ] **Step 1: Create `get-api-reference.ts`**
@@ -1164,10 +1164,10 @@ import { findSymbol, getAllSymbolNames } from '../data/loader.js';
 
 export const getApiReferenceTool = {
   name: 'get_api_reference',
-  description: 'Get the full API documentation for a stream-resource symbol',
+  description: 'Get the full API documentation for a angular symbol',
   inputSchema: {
     type: 'object',
-    properties: { symbol: { type: 'string', description: 'Symbol name, e.g. "streamResource"' } },
+    properties: { symbol: { type: 'string', description: 'Symbol name, e.g. "agent"' } },
     required: ['symbol'],
   },
 };
@@ -1197,7 +1197,7 @@ import { getApiDocs } from '../data/loader.js';
 
 export const searchDocsTool = {
   name: 'search_docs',
-  description: 'Search stream-resource documentation by keyword or phrase',
+  description: 'Search angular documentation by keyword or phrase',
   inputSchema: {
     type: 'object',
     properties: { query: { type: 'string', description: 'Search query' } },
@@ -1234,9 +1234,9 @@ Create `packages/mcp/src/tools/get-example.ts`:
 
 ```typescript
 const EXAMPLES: Record<string, string> = {
-  'basic-chat': `// Basic chat component with stream-resource
+  'basic-chat': `// Basic chat component with angular
 import { Component } from '@angular/core';
-import { streamResource } from 'stream-resource';
+import { agent } from 'angular';
 import type { BaseMessage } from '@langchain/core/messages';
 
 @Component({
@@ -1251,7 +1251,7 @@ import type { BaseMessage } from '@langchain/core/messages';
   \`,
 })
 export class ChatComponent {
-  chat = streamResource<{ messages: BaseMessage[] }>({
+  chat = agent<{ messages: BaseMessage[] }>({
     assistantId: 'chat_agent',
   });
   send(content: string) {
@@ -1262,7 +1262,7 @@ export class ChatComponent {
 
   'thread-persistence': `// Thread persistence with localStorage
 import { Component, signal } from '@angular/core';
-import { streamResource } from 'stream-resource';
+import { agent } from 'angular';
 import type { BaseMessage } from '@langchain/core/messages';
 
 @Component({ selector: 'app-chat', template: \`
@@ -1273,7 +1273,7 @@ import type { BaseMessage } from '@langchain/core/messages';
 export class ChatComponent {
   threadId = signal<string | null>(localStorage.getItem('chat-thread'));
 
-  chat = streamResource<{ messages: BaseMessage[] }>({
+  chat = agent<{ messages: BaseMessage[] }>({
     assistantId: 'chat_agent',
     threadId: this.threadId,
     onThreadId: (id) => {
@@ -1288,11 +1288,11 @@ export class ChatComponent {
 
   'system-prompt': `// System prompt configuration per session
 import { Component } from '@angular/core';
-import { streamResource } from 'stream-resource';
+import { agent } from 'angular';
 
 @Component({ selector: 'app-chat', template: '' })
 export class ChatComponent {
-  chat = streamResource({
+  chat = agent({
     assistantId: 'chat_agent',
     config: {
       configurable: {
@@ -1302,16 +1302,16 @@ export class ChatComponent {
   });
 }`,
 
-  'mock-testing': `// Unit testing with MockStreamTransport
+  'mock-testing': `// Unit testing with MockAgentTransport
 import { TestBed } from '@angular/core/testing';
-import { streamResource, MockStreamTransport } from 'stream-resource';
+import { agent, MockAgentTransport } from 'angular';
 import type { BaseMessage } from '@langchain/core/messages';
 
 describe('ChatComponent', () => {
   it('updates messages signal when transport emits', () => {
     TestBed.runInInjectionContext(() => {
-      const transport = new MockStreamTransport();
-      const chat = streamResource<{ messages: BaseMessage[] }>({
+      const transport = new MockAgentTransport();
+      const chat = agent<{ messages: BaseMessage[] }>({
         assistantId: 'test', transport,
       });
       transport.emit([
@@ -1325,7 +1325,7 @@ describe('ChatComponent', () => {
 
   'interrupts': `// Handling interrupts (human-in-the-loop)
 import { Component } from '@angular/core';
-import { streamResource } from 'stream-resource';
+import { agent } from 'angular';
 
 @Component({
   selector: 'app-chat',
@@ -1340,14 +1340,14 @@ import { streamResource } from 'stream-resource';
   \`,
 })
 export class ChatComponent {
-  chat = streamResource({ assistantId: 'agent_with_interrupts' });
+  chat = agent({ assistantId: 'agent_with_interrupts' });
   approve() { this.chat.submit(null, { command: { resume: true } }); }
   reject()  { this.chat.submit(null, { command: { resume: false } }); }
 }`,
 
   'subagent-progress': `// Showing subagent tool call progress
 import { Component } from '@angular/core';
-import { streamResource } from 'stream-resource';
+import { agent } from 'angular';
 
 @Component({
   selector: 'app-chat',
@@ -1358,13 +1358,13 @@ import { streamResource } from 'stream-resource';
   \`,
 })
 export class ChatComponent {
-  chat = streamResource({ assistantId: 'research_agent' });
+  chat = agent({ assistantId: 'research_agent' });
 }`,
 
   'custom-transport': `// Custom transport with auth headers
-import { StreamResourceTransport } from 'stream-resource';
+import { AgentTransport } from 'angular';
 
-export class AuthTransport implements StreamResourceTransport {
+export class AuthTransport implements AgentTransport {
   async *stream(input: unknown, options: unknown): AsyncGenerator<unknown> {
     const token = await getAuthToken(); // your auth logic
     const res = await fetch('/api/stream', {
@@ -1394,7 +1394,7 @@ const VALID_PATTERNS = Object.keys(EXAMPLES);
 
 export const getExampleTool = {
   name: 'get_example',
-  description: 'Get a complete runnable code example for a stream-resource pattern',
+  description: 'Get a complete runnable code example for a angular pattern',
   inputSchema: {
     type: 'object',
     properties: {
@@ -1424,7 +1424,7 @@ Create `packages/mcp/src/tools/scaffold-chat-component.ts`:
 ```typescript
 export const scaffoldChatComponentTool = {
   name: 'scaffold_chat_component',
-  description: 'Generate a complete Angular chat component using stream-resource',
+  description: 'Generate a complete Angular chat component using angular',
   inputSchema: {
     type: 'object',
     properties: {
@@ -1455,7 +1455,7 @@ export function handleScaffoldChatComponent(args: Record<string, unknown>) {
     },` : "";
 
   const code = `import { Component${persistenceImport} } from '@angular/core';
-import { streamResource } from 'stream-resource';
+import { agent } from 'angular';
 import type { BaseMessage } from '@langchain/core/messages';
 
 @Component({
@@ -1479,7 +1479,7 @@ import type { BaseMessage } from '@langchain/core/messages';
 })
 export class ${componentName} {${persistenceFields}
 
-  chat = streamResource<{ messages: BaseMessage[] }>({
+  chat = agent<{ messages: BaseMessage[] }>({
     apiUrl: '${apiUrl}',
     assistantId: '${assistantId}',${persistenceOptions}
   });
@@ -1499,16 +1499,16 @@ export class ${componentName} {${persistenceFields}
 }
 ```
 
-- [ ] **Step 5: Create `add-stream-resource.ts`**
+- [ ] **Step 5: Create `add-angular.ts`**
 
-Create `packages/mcp/src/tools/add-stream-resource.ts`:
+Create `packages/mcp/src/tools/add-angular.ts`:
 
 ```typescript
 import fs from 'fs';
 
-export const addStreamResourceTool = {
-  name: 'add_stream_resource',
-  description: 'Generate npm install command and app.config.ts diff to add stream-resource to an Angular project',
+export const addAgentTool = {
+  name: 'add_angular',
+  description: 'Generate npm install command and app.config.ts diff to add angular to an Angular project',
   inputSchema: {
     type: 'object',
     properties: {
@@ -1518,7 +1518,7 @@ export const addStreamResourceTool = {
   },
 };
 
-export function handleAddStreamResource(args: Record<string, unknown>) {
+export function handleAddAgent(args: Record<string, unknown>) {
   const appConfigPath = args['appConfigPath'] as string;
 
   if (!fs.existsSync(appConfigPath)) {
@@ -1529,20 +1529,20 @@ export function handleAddStreamResource(args: Record<string, unknown>) {
     return { content: [{ type: 'text', text: `File does not appear to be an Angular app.config.ts (no ApplicationConfig found): ${appConfigPath}` }] };
   }
 
-  const diff = `Steps to add stream-resource:
+  const diff = `Steps to add angular:
 
 1. Install the package:
 \`\`\`bash
-npm install stream-resource
+npm install angular
 \`\`\`
 
 2. Apply this change to ${appConfigPath}:
 \`\`\`diff
-+import { provideStreamResource } from 'stream-resource';
++import { provideAgent } from 'angular';
 
  export const appConfig: ApplicationConfig = {
    providers: [
-+    provideStreamResource({ apiUrl: 'REPLACE_WITH_YOUR_LANGGRAPH_URL' }),
++    provideAgent({ apiUrl: 'REPLACE_WITH_YOUR_LANGGRAPH_URL' }),
      // ... existing providers
    ]
  };
@@ -1563,7 +1563,7 @@ const PATTERNS = {
   localStorage: `// Thread persistence with localStorage
 threadId = signal<string | null>(localStorage.getItem('chat-thread-id'));
 
-chat = streamResource({
+chat = agent({
   assistantId: 'chat_agent',
   threadId: this.threadId,
   onThreadId: (id: string) => {
@@ -1578,7 +1578,7 @@ chat = streamResource({
   sessionStorage: `// Thread persistence with sessionStorage (clears on tab close)
 threadId = signal<string | null>(sessionStorage.getItem('chat-thread-id'));
 
-chat = streamResource({
+chat = agent({
   assistantId: 'chat_agent',
   threadId: this.threadId,
   onThreadId: (id: string) => {
@@ -1591,7 +1591,7 @@ chat = streamResource({
 // TODO: replace saveThread / loadThread with your store (e.g. NgRx, a service, IndexedDB)
 threadId = signal<string | null>(loadThread());
 
-chat = streamResource({
+chat = agent({
   assistantId: 'chat_agent',
   threadId: this.threadId,
   onThreadId: (id: string) => {
@@ -1647,7 +1647,7 @@ Expected: JSON response listing all 6 tools.
 
 ```bash
 git add packages/mcp/src/tools/ packages/mcp/src/index.ts package-lock.json
-git commit -m "feat(mcp): implement all six MCP tools for stream-resource"
+git commit -m "feat(mcp): implement all six MCP tools for angular"
 ```
 
 ---
@@ -1657,7 +1657,7 @@ git commit -m "feat(mcp): implement all six MCP tools for stream-resource"
 - [ ] **Run Angular unit tests (unchanged)**
 
 ```bash
-npx nx test stream-resource
+npx nx test angular
 ```
 
 Expected: all tests pass.

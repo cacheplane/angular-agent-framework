@@ -22,10 +22,10 @@ function loadApiDocs(): ApiDocEntry[] {
 }
 
 const API_NAME_MAP: Record<string, string> = {
-  'stream-resource': 'streamResource',
-  'provide-stream-resource': 'provideStreamResource',
+  'angular': 'agent',
+  'provide-angular': 'provideAgent',
   'fetch-stream-transport': 'FetchStreamTransport',
-  'mock-stream-transport': 'MockStreamTransport',
+  'mock-stream-transport': 'MockAgentTransport',
 };
 
 export function generateStaticParams() {

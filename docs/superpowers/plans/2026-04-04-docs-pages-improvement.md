@@ -70,8 +70,8 @@ Expand from 59 to ~100 lines. Add:
 ### Task 4: Expand API Reference Stubs (THIN → ADEQUATE)
 
 **Files:**
-- `apps/website/content/docs-v2/api/stream-resource.mdx`
-- `apps/website/content/docs-v2/api/provide-stream-resource.mdx`
+- `apps/website/content/docs-v2/api/angular.mdx`
+- `apps/website/content/docs-v2/api/provide-angular.mdx`
 - `apps/website/content/docs-v2/api/fetch-stream-transport.mdx`
 - `apps/website/content/docs-v2/api/mock-stream-transport.mdx`
 

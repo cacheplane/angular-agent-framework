@@ -321,7 +321,7 @@ import {
   ViewEncapsulation,
 } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
-import type { StreamResourceRef } from '@cacheplane/stream-resource';
+import type { AgentRef } from '@cacheplane/angular';
 import { ChatMessagesComponent } from '../../primitives/chat-messages/chat-messages.component';
 import { MessageTemplateDirective } from '../../primitives/chat-messages/message-template.directive';
 import { ChatInputComponent } from '../../primitives/chat-input/chat-input.component';
@@ -487,7 +487,7 @@ import { CHAT_MARKDOWN_STYLES, renderMarkdown } from '../../styles/chat-markdown
 export class ChatComponent {
   private readonly sanitizer = inject(DomSanitizer);
 
-  readonly ref = input.required<StreamResourceRef<any, any>>();
+  readonly ref = input.required<AgentRef<any, any>>();
   readonly threads = input<Thread[]>([]);
   readonly activeThreadId = input<string>('');
   readonly threadSelected = output<string>();
@@ -525,7 +525,7 @@ export class ChatComponent {
 npx nx test chat
 ```
 
-Expected: All tests pass. The spec tests use `createMockStreamResourceRef()` which doesn't depend on template rendering.
+Expected: All tests pass. The spec tests use `createMockAgentRef()` which doesn't depend on template rendering.
 
 - [ ] **Step 3: Commit**
 
@@ -655,11 +655,11 @@ import {
   ChangeDetectionStrategy,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import type { StreamResourceRef } from '@cacheplane/stream-resource';
+import type { AgentRef } from '@cacheplane/angular';
 import { ICON_SEND } from '../../styles/chat-icons';
 
 export function submitMessage(
-  ref: StreamResourceRef<any, any>,
+  ref: AgentRef<any, any>,
   text: string,
 ): string | null {
   const trimmed = text.trim();
@@ -717,7 +717,7 @@ export function submitMessage(
   `,
 })
 export class ChatInputComponent {
-  readonly ref = input.required<StreamResourceRef<any, any>>();
+  readonly ref = input.required<AgentRef<any, any>>();
   readonly submitOnEnter = input<boolean>(true);
   readonly placeholder = input<string>('');
   readonly submitted = output<string>();
@@ -761,9 +761,9 @@ import {
   input,
   ChangeDetectionStrategy,
 } from '@angular/core';
-import type { StreamResourceRef } from '@cacheplane/stream-resource';
+import type { AgentRef } from '@cacheplane/angular';
 
-export function isTyping(ref: StreamResourceRef<any, any>): boolean {
+export function isTyping(ref: AgentRef<any, any>): boolean {
   return ref.isLoading();
 }
 
@@ -807,7 +807,7 @@ export function isTyping(ref: StreamResourceRef<any, any>): boolean {
   `,
 })
 export class ChatTypingIndicatorComponent {
-  readonly ref = input.required<StreamResourceRef<any, any>>();
+  readonly ref = input.required<AgentRef<any, any>>();
   readonly visible = computed(() => this.ref().isLoading());
 }
 ```
@@ -823,7 +823,7 @@ import {
   input,
   ChangeDetectionStrategy,
 } from '@angular/core';
-import type { StreamResourceRef } from '@cacheplane/stream-resource';
+import type { AgentRef } from '@cacheplane/angular';
 
 export function extractErrorMessage(error: unknown): string | null {
   if (!error) return null;
@@ -847,7 +847,7 @@ export function extractErrorMessage(error: unknown): string | null {
   `,
 })
 export class ChatErrorComponent {
-  readonly ref = input.required<StreamResourceRef<any, any>>();
+  readonly ref = input.required<AgentRef<any, any>>();
   readonly errorMessage = computed(() => extractErrorMessage(this.ref().error()));
 }
 ```
@@ -1050,7 +1050,7 @@ done
 ```bash
 npx nx test chat
 npx nx test render
-npx nx test stream-resource
+npx nx test angular
 ```
 
 Expected: All tests pass across all three libraries.

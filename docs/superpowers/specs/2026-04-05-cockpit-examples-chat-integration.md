@@ -17,7 +17,7 @@ Phase 2 (separate spec) will customize each example with capability-specific con
 Each example gets:
 1. Delete duplicate `src/app.component.ts` + `src/app.config.ts`
 2. Rewrite capability component: `<chat [ref]="stream">` (or `<chat-debug [ref]="stream">` for deep-agents)
-3. `app.config.ts` with `provideStreamResource` + `provideChat`
+3. `app.config.ts` with `provideAgent` + `provideChat`
 4. `main.ts` bootstrapping the capability component
 5. `project.json` with `@angular-devkit/build-angular:application` build + `dev-server` serve
 6. `tsconfig.app.json` with `lib: ["es2022", "dom"]` + `emitDeclarationOnly: false`

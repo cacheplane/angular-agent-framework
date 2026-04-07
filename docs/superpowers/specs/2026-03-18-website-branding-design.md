@@ -1,14 +1,14 @@
-# Angular Stream Resource Website — Brand Refresh Design Specification
+# Angular Agent Framework Website — Brand Refresh Design Specification
 
 **Date:** 2026-03-18
 **Status:** Approved
-**Supersedes:** Section 3 (Next.js Website Architecture) of `2026-03-17-stream-resource-design.md`
+**Supersedes:** Section 3 (Next.js Website Architecture) of `2026-03-17-angular-design.md`
 
 ---
 
 ## Overview
 
-Update the Angular Stream Resource website design from its original warm "dark luxury" aesthetic (gold accent, warm cream text) to a cool indigo-blue neon aesthetic that aligns with LangChain's current brand energy while maintaining a distinct product identity.
+Update the Angular Agent Framework website design from its original warm "dark luxury" aesthetic (gold accent, warm cream text) to a cool indigo-blue neon aesthetic that aligns with LangChain's current brand energy while maintaining a distinct product identity.
 
 **Design direction:** Inspired by LangChain, not a copy. EB Garamond headlines are retained as the primary differentiator — the serif-meets-neon contrast is uncommon in the developer tools space and creates a distinctive signature. Accent color is indigo-blue `#6C8EFF` rather than LangChain's cyan `#7FC8FF`.
 
@@ -76,7 +76,7 @@ Glow is **not** applied to: sidebar, comparison table, form inputs at rest, feat
 - EB Garamond 156px headline with letter-by-letter reveal animation (GSAP-style stagger)
 - The word "Angular" renders in `#6C8EFF` with `text-shadow: 0 0 40px rgba(108,142,255,0.5)`
 - Subhead: Inter 20px `#8B96C8`
-- `npm install stream-resource` install strip below: JetBrains Mono, border `rgba(108,142,255,0.15)`, copy button with accent glow on hover
+- `npm install angular` install strip below: JetBrains Mono, border `rgba(108,142,255,0.15)`, copy button with accent glow on hover
 
 ### Architecture Diagram
 
@@ -168,7 +168,7 @@ No glow treatment on any docs page. Functional and calm.
 
 ## 7. What Is Not Changing
 
-The following are unchanged from `2026-03-17-stream-resource-design.md`:
+The following are unchanged from `2026-03-17-angular-design.md`:
 
 - Page structure and routes (`/`, `/pricing`, `/docs/[slug]`, `/api-reference`)
 - Component architecture (`Hero`, `ArchDiagram`, `FeatureStrip`, `PricingGrid`, etc.)

@@ -75,7 +75,7 @@ export function PilotHero() {
               marginBottom: '1.5rem',
             }}
           >
-            Angular Stream Resource Pilot Program
+            Angular Agent Framework Pilot Program
           </span>
         </motion.div>
 
@@ -114,7 +114,7 @@ export function PilotHero() {
             marginBottom: '2.5rem',
           }}
         >
-          Half of GenAI projects die after proof of concept.<CitationBadge citation={gartnerCitation} /> Yours doesn&apos;t have to. Angular Stream Resource closes the
+          Half of GenAI projects die after proof of concept.<CitationBadge citation={gartnerCitation} /> Yours doesn&apos;t have to. Angular Agent Framework closes the
           gap — app deployment license, fixed price, your team owns the result.
         </motion.p>
 

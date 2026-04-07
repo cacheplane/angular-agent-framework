@@ -6,11 +6,11 @@
 
 ## Overview
 
-Replace the cockpit-manifest-driven docs system (74 pages, 5-segment slugs) with a focused, Diataxis-structured documentation site. 19 purposeful pages covering streamResource() usage with every LangGraph and Deep Agents capability. Mintlify-inspired UI with custom MDX components, Cmd+K search, collapsible sidebar, and glass design treatment.
+Replace the cockpit-manifest-driven docs system (74 pages, 5-segment slugs) with a focused, Diataxis-structured documentation site. 19 purposeful pages covering agent() usage with every LangGraph and Deep Agents capability. Mintlify-inspired UI with custom MDX components, Cmd+K search, collapsible sidebar, and glass design treatment.
 
 **Audience:** Both Angular developers learning agents AND AI/agent developers learning Angular — with separate entry points.
 
-**Content scope:** Full product docs — streamResource usage AND LangGraph/Deep Agents concepts. Self-contained, users don't need to leave the site.
+**Content scope:** Full product docs — agent usage AND LangGraph/Deep Agents concepts. Self-contained, users don't need to leave the site.
 
 ## Design Decisions
 
@@ -167,9 +167,9 @@ Rendering:
 
 | Slug | Title | Content |
 |------|-------|---------|
-| `introduction` | Introduction | What is Angular Stream Resource, dual audience (Angular devs & AI devs), key value props, what you'll build |
+| `introduction` | Introduction | What is Angular Agent Framework, dual audience (Angular devs & AI devs), key value props, what you'll build |
 | `quickstart` | Quick Start | 5-minute end-to-end: install → configure → build chat component → run. Uses CardGroup to link to next steps. |
-| `installation` | Installation | npm install, provideStreamResource() config, environment variables, Angular version matrix, LangGraph Cloud setup |
+| `installation` | Installation | npm install, provideAgent() config, environment variables, Angular version matrix, LangGraph Cloud setup |
 
 ### Guides (8 pages)
 
@@ -181,26 +181,26 @@ Rendering:
 | `memory` | Memory | Short-term (thread-scoped conversation), long-term (cross-session), memory store, namespace-based storage, semantic search. |
 | `time-travel` | Time Travel | History browsing via history(), forking from checkpoints, replay, debugging agent decisions, branch selection UI. |
 | `subgraphs` | Subgraphs | Modular agent composition, orchestrator pattern, subagent delegation, tracking subagent progress, multi-graph state. |
-| `testing` | Testing | MockStreamTransport, scripting events, stepping through sequences, Angular TestBed integration, deterministic specs. |
+| `testing` | Testing | MockAgentTransport, scripting events, stepping through sequences, Angular TestBed integration, deterministic specs. |
 | `deployment` | Deployment | Production config, LangGraph Cloud setup, environment variables, error boundaries, retry patterns, health checks. |
 
 ### Concepts (4 pages)
 
 | Slug | Title | Content |
 |------|-------|---------|
-| `angular-signals` | Angular Signals | How streamResource maps to Signals, OnPush change detection, computed(), effect(), Signal-based templates, comparison with RxJS. |
+| `angular-signals` | Angular Signals | How agent maps to Signals, OnPush change detection, computed(), effect(), Signal-based templates, comparison with RxJS. |
 | `langgraph-basics` | LangGraph Basics | Graphs, nodes, edges, state, checkpoints explained for Angular developers. Graph API vs Functional API. When to use each. |
-| `agent-architecture` | Agent Architecture | How agents work: planning → tool calling → state machine → control flow. Agent lifecycle, the role of streamResource in the loop. |
+| `agent-architecture` | Agent Architecture | How agents work: planning → tool calling → state machine → control flow. Agent lifecycle, the role of agent in the loop. |
 | `state-management` | State Management | State design, reducers, MessagesState, thread state vs application state, state serialization, checkpoint structure. |
 
 ### API Reference (4 pages)
 
 | Slug | Title | Content |
 |------|-------|---------|
-| `stream-resource` | streamResource() | Full function signature, all options (assistantId, threadId, onThreadId, onInterrupt, transport, etc.), return type, all signals, all methods (submit, history, etc.). |
-| `provide-stream-resource` | provideStreamResource() | Provider factory, StreamResourceConfig interface, global defaults, per-call overrides. |
+| `angular` | agent() | Full function signature, all options (assistantId, threadId, onThreadId, onInterrupt, transport, etc.), return type, all signals, all methods (submit, history, etc.). |
+| `provide-angular` | provideAgent() | Provider factory, AgentConfig interface, global defaults, per-call overrides. |
 | `fetch-stream-transport` | FetchStreamTransport | Constructor, connect/disconnect, SSE handling, error events, retry behavior, custom headers. |
-| `mock-stream-transport` | MockStreamTransport | Constructor, script() method, step() method, reset(), event types, testing patterns. |
+| `mock-stream-transport` | MockAgentTransport | Constructor, script() method, step() method, reset(), event types, testing patterns. |
 
 ## Files to Create/Modify
 
@@ -239,8 +239,8 @@ Rendering:
 - `concepts/langgraph-basics.mdx`
 - `concepts/agent-architecture.mdx`
 - `concepts/state-management.mdx`
-- `api/stream-resource.mdx`
-- `api/provide-stream-resource.mdx`
+- `api/angular.mdx`
+- `api/provide-angular.mdx`
 - `api/fetch-stream-transport.mdx`
 - `api/mock-stream-transport.mdx`
 

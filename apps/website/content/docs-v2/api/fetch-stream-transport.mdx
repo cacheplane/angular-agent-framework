@@ -1,20 +1,20 @@
 # FetchStreamTransport
 
-`FetchStreamTransport` is the production-ready transport that opens a real server-sent event connection using the browser's `fetch` API and reads a `ReadableStream` response body. It is the default transport you register with `provideStreamResource` in production builds.
+`FetchStreamTransport` is the production-ready transport that opens a real server-sent event connection using the browser's `fetch` API and reads a `ReadableStream` response body. It is the default transport you register with `provideAgent` in production builds.
 
 ## When you interact with it directly
 
-In most apps you will never import or inject `FetchStreamTransport` by name — you register it once in `provideStreamResource` and forget about it. The two cases where you reach for it explicitly are:
+In most apps you will never import or inject `FetchStreamTransport` by name — you register it once in `provideAgent` and forget about it. The two cases where you reach for it explicitly are:
 
 1. **Per-resource override** — you want one resource to use a different transport than the global default while everything else stays on `FetchStreamTransport`.
 2. **Outside the DI tree** — you are constructing a resource in a context where global providers are not available and you need to supply the transport manually.
 
 ```ts
 import { inject } from '@angular/core';
-import { streamResource, FetchStreamTransport } from '@cacheplane/stream-resource';
+import { agent, FetchStreamTransport } from '@cacheplane/angular';
 
 // Override transport for a single resource
-const events = streamResource<Event>({
+const events = agent<Event>({
   url: () => '/api/events',
   transport: inject(FetchStreamTransport),
 });
@@ -54,7 +54,7 @@ The transport handles:
     Server configuration for SSE: headers, timeouts, and edge runtime considerations.
   </Card>
   <Card
-    title="MockStreamTransport"
+    title="MockAgentTransport"
     icon="flask"
     href="/docs-v2/api/mock-stream-transport"
   >

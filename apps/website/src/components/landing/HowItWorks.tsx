@@ -17,7 +17,7 @@ const phases: Phase[] = [
     number: 1,
     title: 'Integration Sprint',
     description:
-      'We install stream-resource into your Angular workspace, wire it to your LangGraph backend, and ship your first streamed response. Your team sees tokens flowing within days.',
+      'We install angular into your Angular workspace, wire it to your LangGraph backend, and ship your first streamed response. Your team sees tokens flowing within days.',
     deliverable: '✓ First stream live',
   },
   {

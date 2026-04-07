@@ -1,6 +1,6 @@
 # Time Travel
 
-Time travel lets you inspect earlier states and replay alternate execution paths. `streamResource()` exposes the full checkpoint history and branch navigation through Angular Signals. Use it to debug agent decisions, explore alternate paths, and build undo/redo experiences.
+Time travel lets you inspect earlier states and replay alternate execution paths. `agent()` exposes the full checkpoint history and branch navigation through Angular Signals. Use it to debug agent decisions, explore alternate paths, and build undo/redo experiences.
 
 <Callout type="info" title="Use cases">
 Debug agent decisions, explore alternate paths, and build undo/redo experiences for your users. Time travel works with any LangGraph agent that persists checkpoints to a thread.
@@ -61,7 +61,7 @@ past_state = graph.get_state(past_config)
 
 ```typescript
 import { Component, inject, computed, ChangeDetectionStrategy } from '@angular/core';
-import { streamResource } from '@cacheplane/stream-resource';
+import { agent } from '@cacheplane/angular';
 import { AgentService } from './agent.service';
 
 @Component({
@@ -102,7 +102,7 @@ export class HistoryViewerComponent {
 The `history()` signal contains an array of `ThreadState` checkpoints ordered from oldest to newest. Each checkpoint captures the complete agent state at that point in execution, including messages, intermediate results, and any custom state fields.
 
 ```typescript
-const agent = streamResource<AgentState>({
+const agent = agent<AgentState>({
   assistantId: 'agent',
   threadId: signal(threadId),
 });
@@ -171,7 +171,7 @@ Expose checkpoint history directly in your component to let users scrub through 
 <Tab label="history-viewer.component.ts">
 ```typescript
 import { Component, inject, computed, ChangeDetectionStrategy } from '@angular/core';
-import { streamResource } from '@cacheplane/stream-resource';
+import { agent } from '@cacheplane/angular';
 import { AgentService } from './agent.service';
 
 @Component({
@@ -292,12 +292,12 @@ Time travel is most useful during development. Inspect why an agent chose a part
     Configure thread storage so checkpoints survive page reloads and are available across sessions.
   </Card>
   <Card title="Streaming" href="/docs/guides/streaming">
-    Understand how streamResource() surfaces incremental updates and how history integrates with live streaming state.
+    Understand how agent() surfaces incremental updates and how history integrates with live streaming state.
   </Card>
   <Card title="Subgraphs" href="/docs/guides/subgraphs">
     Compose multi-agent systems with orchestrators and track subagent execution.
   </Card>
-  <Card title="API Reference" href="/docs/api/stream-resource">
-    Full reference for streamResource() options, signals, and the submit() API including checkpoint parameters.
+  <Card title="API Reference" href="/docs/api/angular">
+    Full reference for agent() options, signals, and the submit() API including checkpoint parameters.
   </Card>
 </CardGroup>

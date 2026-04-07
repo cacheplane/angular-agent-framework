@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { tokens } from '@cacheplane/design-tokens';
 
-const CMD = 'npm install @cacheplane/stream-resource';
+const CMD = 'npm install @cacheplane/angular';
 
 export function InstallStrip() {
   const [copied, setCopied] = useState(false);

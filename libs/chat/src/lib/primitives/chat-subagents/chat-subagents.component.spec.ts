@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import { describe, it, expect } from 'vitest';
 import { signal, computed } from '@angular/core';
-import { createMockStreamResourceRef } from '../../testing/mock-stream-resource-ref';
-import type { SubagentStreamRef } from '@cacheplane/stream-resource';
+import { createMockAgentRef } from '../../testing/mock-agent-ref';
+import type { SubagentStreamRef } from '@cacheplane/angular';
 
 describe('ChatSubagentsComponent — activeSubagents computed', () => {
   it('returns empty array when no active subagents', () => {
-    const mockRef = createMockStreamResourceRef();
+    const mockRef = createMockAgentRef();
     const ref$ = signal(mockRef);
 
     const activeSubagents = computed(() => ref$().activeSubagents());
@@ -23,7 +23,7 @@ describe('ChatSubagentsComponent — activeSubagents computed', () => {
       error: signal(null),
     } as any;
 
-    const mockRef = createMockStreamResourceRef();
+    const mockRef = createMockAgentRef();
     (mockRef.activeSubagents as ReturnType<typeof signal<SubagentStreamRef[]>>).set([mockSubagent]);
 
     const ref$ = signal(mockRef);
@@ -34,8 +34,8 @@ describe('ChatSubagentsComponent — activeSubagents computed', () => {
   });
 
   it('activeSubagents updates reactively when ref changes', () => {
-    const emptyRef = createMockStreamResourceRef();
-    const loadedRef = createMockStreamResourceRef();
+    const emptyRef = createMockAgentRef();
+    const loadedRef = createMockAgentRef();
     const mockSubagent: SubagentStreamRef = {
       id: 'sub_2',
       isLoading: signal(false),

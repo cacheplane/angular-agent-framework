@@ -1,47 +1,47 @@
-# Multi-Skill Agent with stream-resource
+# Multi-Skill Agent with angular
 
 <Summary>
-Build a chat interface that shows real-time skill invocations using `streamResource()` from
-`@cacheplane/stream-resource`. The agent selects from specialized tools (calculator, word counter,
+Build a chat interface that shows real-time skill invocations using `agent()` from
+`@cacheplane/angular`. The agent selects from specialized tools (calculator, word counter,
 summarizer) based on the user's request, and the sidebar displays each skill invocation as a card.
 </Summary>
 
 <Prompt>
-Add a skill invocation sidebar to this Angular component using `streamResource()` from `@cacheplane/stream-resource`. Use `stream.messages()` to access tool call data, derive `skillInvocations` with `computed()`, and bind them to the sidebar via the `<cp-chat>` component from `@cacheplane/chat`.
+Add a skill invocation sidebar to this Angular component using `agent()` from `@cacheplane/angular`. Use `stream.messages()` to access tool call data, derive `skillInvocations` with `computed()`, and bind them to the sidebar via the `<cp-chat>` component from `@cacheplane/chat`.
 </Prompt>
 
 <Steps>
 <Step title="Configure the provider">
 
-Set up `provideStreamResource()` in your app config with the LangGraph API URL:
+Set up `provideAgent()` in your app config with the LangGraph API URL:
 
 ```typescript
 // app.config.ts
 import { ApplicationConfig } from '@angular/core';
-import { provideStreamResource } from '@cacheplane/stream-resource';
+import { provideAgent } from '@cacheplane/angular';
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideStreamResource({
+    provideAgent({
       apiUrl: 'https://your-deployment.langgraph.app',
     }),
   ],
 };
 ```
 
-This makes the API URL available to all `streamResource()` calls in your app.
+This makes the API URL available to all `agent()` calls in your app.
 
 </Step>
 <Step title="Create the streaming resource">
 
-In your component, call `streamResource()` with the `assistantId` pointing to your skills graph:
+In your component, call `agent()` with the `assistantId` pointing to your skills graph:
 
 ```typescript
 // skills.component.ts
-import { streamResource } from '@cacheplane/stream-resource';
+import { agent } from '@cacheplane/angular';
 
 export class SkillsComponent {
-  protected readonly stream = streamResource({
+  protected readonly stream = agent({
     assistantId: 'skills',
   });
 }
@@ -64,7 +64,7 @@ interface SkillInvocation {
 }
 
 export class SkillsComponent {
-  protected readonly stream = streamResource({ assistantId: 'skills' });
+  protected readonly stream = agent({ assistantId: 'skills' });
 
   skillInvocations = computed(() => {
     const msgs = this.stream.messages();

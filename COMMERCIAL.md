@@ -1,9 +1,9 @@
 # Commercial Licensing
 
-`@cacheplane/stream-resource` is source-available software dual-licensed under:
+`@cacheplane/angular` is source-available software dual-licensed under:
 
 - **PolyForm Noncommercial 1.0.0** — free for noncommercial use (see [`LICENSE`](./LICENSE))
-- **Angular Stream Resource Commercial License** — required for commercial use (see [`LICENSE-COMMERCIAL`](./LICENSE-COMMERCIAL))
+- **Angular Agent Framework Commercial License** — required for commercial use (see [`LICENSE-COMMERCIAL`](./LICENSE-COMMERCIAL))
 
 ## What requires a commercial license?
 

@@ -3,7 +3,7 @@ const PATTERNS: Record<string, string> = {
   localStorage: `// Thread persistence with localStorage
 threadId = signal<string | null>(localStorage.getItem('chat-thread-id'));
 
-chat = streamResource({
+chat = agent({
   assistantId: 'chat_agent',
   threadId: this.threadId,
   onThreadId: (id: string) => {
@@ -18,7 +18,7 @@ chat = streamResource({
   sessionStorage: `// Thread persistence with sessionStorage (clears on tab close)
 threadId = signal<string | null>(sessionStorage.getItem('chat-thread-id'));
 
-chat = streamResource({
+chat = agent({
   assistantId: 'chat_agent',
   threadId: this.threadId,
   onThreadId: (id: string) => {
@@ -31,7 +31,7 @@ chat = streamResource({
 // TODO: replace saveThread / loadThread with your store (e.g. NgRx, a service, IndexedDB)
 threadId = signal<string | null>(loadThread());
 
-chat = streamResource({
+chat = agent({
   assistantId: 'chat_agent',
   threadId: this.threadId,
   onThreadId: (id: string) => {

@@ -1,14 +1,14 @@
-# streamResource()
+# agent()
 
-`streamResource` is the core primitive of the library. It creates a reactive resource that opens a server-sent event stream, tracks loading and error states, and exposes the latest emitted value — all within Angular's signal-based reactivity model.
+`agent` is the core primitive of the library. It creates a reactive resource that opens a server-sent event stream, tracks loading and error states, and exposes the latest emitted value — all within Angular's signal-based reactivity model.
 
 When the `url` signal changes, the resource tears down the previous connection and opens a fresh one automatically. You never write subscription management or cleanup logic yourself.
 
 ```ts
-import { streamResource } from '@cacheplane/stream-resource';
+import { agent } from '@cacheplane/angular';
 
 // Inside a component or service with injection context
-const repo = streamResource<Repository>({
+const repo = agent<Repository>({
   url: () => `/api/repos/${this.repoId()}`,
   transport: inject(FetchStreamTransport),
 });
@@ -31,7 +31,7 @@ const repo = streamResource<Repository>({
 
 ## When to use
 
-Use `streamResource` whenever your UI needs to react to a live data stream from the server:
+Use `agent` whenever your UI needs to react to a live data stream from the server:
 
 - **AI / LLM responses** — stream tokens into a chat bubble as they arrive
 - **Live feeds** — stock tickers, activity logs, or progress updates
@@ -40,7 +40,7 @@ Use `streamResource` whenever your UI needs to react to a live data stream from 
 For plain HTTP requests that return a single value and complete, Angular's built-in `resource()` or `httpResource()` is a better fit.
 
 <Callout type="warning" title="Injection context required">
-  `streamResource` must be called during construction, inside an injection
+  `agent` must be called during construction, inside an injection
   context (e.g. a component constructor, field initializer, or a function
   passed to `runInInjectionContext`). Calling it outside an injection context
   will throw.
@@ -68,7 +68,7 @@ For plain HTTP requests that return a single value and complete, Angular's built
     icon="bolt"
     href="/docs-v2/concepts/angular-signals"
   >
-    Understand how stream-resource integrates with Angular's reactivity model.
+    Understand how angular integrates with Angular's reactivity model.
   </Card>
 </CardGroup>
 

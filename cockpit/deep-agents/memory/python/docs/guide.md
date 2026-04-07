@@ -1,45 +1,45 @@
-# Persistent Agent Memory with stream-resource
+# Persistent Agent Memory with angular
 
 <Summary>
-Build a chat interface where the agent remembers facts about the user across turns using `streamResource()` from `@cacheplane/stream-resource`. The agent stores learned facts in `agent_memory` state, and the sidebar displays them in real time.
+Build a chat interface where the agent remembers facts about the user across turns using `agent()` from `@cacheplane/angular`. The agent stores learned facts in `agent_memory` state, and the sidebar displays them in real time.
 </Summary>
 
 <Prompt>
-Add a memory sidebar to this Angular component using `streamResource()` from `@cacheplane/stream-resource`. Use `stream.value()` to access the agent's `agent_memory` state, derive `memoryEntries` with `computed()`, and bind them to the sidebar via the `<cp-chat>` component from `@cacheplane/chat`.
+Add a memory sidebar to this Angular component using `agent()` from `@cacheplane/angular`. Use `stream.value()` to access the agent's `agent_memory` state, derive `memoryEntries` with `computed()`, and bind them to the sidebar via the `<cp-chat>` component from `@cacheplane/chat`.
 </Prompt>
 
 <Steps>
 <Step title="Configure the provider">
 
-Set up `provideStreamResource()` in your app config with the LangGraph API URL:
+Set up `provideAgent()` in your app config with the LangGraph API URL:
 
 ```typescript
 // app.config.ts
 import { ApplicationConfig } from '@angular/core';
-import { provideStreamResource } from '@cacheplane/stream-resource';
+import { provideAgent } from '@cacheplane/angular';
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideStreamResource({
+    provideAgent({
       apiUrl: 'https://your-deployment.langgraph.app',
     }),
   ],
 };
 ```
 
-This makes the API URL available to all `streamResource()` calls in your app.
+This makes the API URL available to all `agent()` calls in your app.
 
 </Step>
 <Step title="Create the streaming resource">
 
-In your component, call `streamResource()` with the `assistantId` pointing to your memory graph:
+In your component, call `agent()` with the `assistantId` pointing to your memory graph:
 
 ```typescript
 // memory.component.ts
-import { streamResource } from '@cacheplane/stream-resource';
+import { agent } from '@cacheplane/angular';
 
 export class MemoryComponent {
-  protected readonly stream = streamResource({
+  protected readonly stream = agent({
     assistantId: 'da-memory',
   });
 }
@@ -56,7 +56,7 @@ Use Angular's `computed()` to reactively derive the memory key/value pairs from 
 import { computed } from '@angular/core';
 
 export class MemoryComponent {
-  protected readonly stream = streamResource({ assistantId: 'da-memory' });
+  protected readonly stream = agent({ assistantId: 'da-memory' });
 
   memoryEntries = computed(() => {
     const val = this.stream.value() as { agent_memory?: Record<string, string> } | undefined;

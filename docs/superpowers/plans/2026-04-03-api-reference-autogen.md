@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Add JSDoc to all public API symbols in the stream-resource library, enhance the TypeDoc generation script, create a rendering component, and wire API docs into the docs framework with CI automation.
+**Goal:** Add JSDoc to all public API symbols in the angular library, enhance the TypeDoc generation script, create a rendering component, and wire API docs into the docs framework with CI automation.
 
 **Architecture:** JSDoc annotations on library source → TypeDoc extracts to `api-docs.json` → Server component reads JSON at build time → Renders glass-card API pages in the docs framework. CI runs `generate-api-docs` before website build.
 
@@ -12,15 +12,15 @@
 
 ---
 
-### Task 1: Add JSDoc to streamResource() and provideStreamResource()
+### Task 1: Add JSDoc to agent() and provideAgent()
 
 **Files:**
-- Modify: `libs/stream-resource/src/lib/stream-resource.fn.ts`
-- Modify: `libs/stream-resource/src/lib/stream-resource.provider.ts`
+- Modify: `libs/angular/src/lib/angular.fn.ts`
+- Modify: `libs/angular/src/lib/angular.provider.ts`
 
-- [ ] **Step 1: Add JSDoc to streamResource() function**
+- [ ] **Step 1: Add JSDoc to agent() function**
 
-Add this JSDoc block immediately before the `export function streamResource` declaration at line 27 of `stream-resource.fn.ts`:
+Add this JSDoc block immediately before the `export function agent` declaration at line 27 of `angular.fn.ts`:
 
 ```typescript
 /**
@@ -33,12 +33,12 @@ Add this JSDoc block immediately before the `export function streamResource` dec
  * @typeParam T - The state shape returned by the agent (e.g., `{ messages: BaseMessage[] }`)
  * @typeParam Bag - Optional bag template for typed interrupts and submit payloads
  * @param options - Configuration for the streaming resource
- * @returns A {@link StreamResourceRef} with reactive signals and action methods
+ * @returns A {@link AgentRef} with reactive signals and action methods
  *
  * @example
  * ```typescript
  * // In a component field initializer
- * const chat = streamResource<{ messages: BaseMessage[] }>({
+ * const chat = agent<{ messages: BaseMessage[] }>({
  *   assistantId: 'chat_agent',
  *   apiUrl: 'http://localhost:2024',
  *   threadId: signal(this.savedThreadId),
@@ -51,29 +51,29 @@ Add this JSDoc block immediately before the `export function streamResource` dec
  */
 ```
 
-- [ ] **Step 2: Add JSDoc to provideStreamResource() and StreamResourceConfig**
+- [ ] **Step 2: Add JSDoc to provideAgent() and AgentConfig**
 
-In `stream-resource.provider.ts`, add JSDoc:
+In `angular.provider.ts`, add JSDoc:
 
 ```typescript
 /**
- * Global configuration for streamResource instances.
+ * Global configuration for agent instances.
  * Properties set here serve as defaults that can be overridden per-call.
  */
-export interface StreamResourceConfig {
+export interface AgentConfig {
   /** Base URL of the LangGraph Platform API (e.g., `'http://localhost:2024'`). */
   apiUrl?:    string;
   /** Custom transport implementation. Defaults to {@link FetchStreamTransport}. */
-  transport?: StreamResourceTransport;
+  transport?: AgentTransport;
 }
 ```
 
-And before `provideStreamResource`:
+And before `provideAgent`:
 
 ```typescript
 /**
  * Angular provider factory that registers global defaults for all
- * streamResource instances in the application.
+ * agent instances in the application.
  *
  * Add to your `app.config.ts` or module providers array.
  *
@@ -85,7 +85,7 @@ And before `provideStreamResource`:
  * // app.config.ts
  * export const appConfig: ApplicationConfig = {
  *   providers: [
- *     provideStreamResource({ apiUrl: 'http://localhost:2024' }),
+ *     provideAgent({ apiUrl: 'http://localhost:2024' }),
  *   ],
  * };
  * ```
@@ -95,8 +95,8 @@ And before `provideStreamResource`:
 - [ ] **Step 3: Commit**
 
 ```bash
-git add libs/stream-resource/src/lib/stream-resource.fn.ts libs/stream-resource/src/lib/stream-resource.provider.ts
-git commit -m "docs(stream-resource): add JSDoc to streamResource() and provideStreamResource()"
+git add libs/angular/src/lib/angular.fn.ts libs/angular/src/lib/angular.provider.ts
+git commit -m "docs(angular): add JSDoc to agent() and provideAgent()"
 ```
 
 ---
@@ -104,15 +104,15 @@ git commit -m "docs(stream-resource): add JSDoc to streamResource() and provideS
 ### Task 2: Add JSDoc to Types
 
 **Files:**
-- Modify: `libs/stream-resource/src/lib/stream-resource.types.ts`
+- Modify: `libs/angular/src/lib/angular.types.ts`
 
-- [ ] **Step 1: Add JSDoc to StreamResourceOptions interface**
+- [ ] **Step 1: Add JSDoc to AgentOptions interface**
 
-Add JSDoc to each property of `StreamResourceOptions` (starting at line 78):
+Add JSDoc to each property of `AgentOptions` (starting at line 78):
 
 ```typescript
-/** Options for creating a streaming resource via {@link streamResource}. */
-export interface StreamResourceOptions<T, ResolvedBag extends BagTemplate> {
+/** Options for creating a streaming resource via {@link agent}. */
+export interface AgentOptions<T, ResolvedBag extends BagTemplate> {
   /** Base URL of the LangGraph Platform API. */
   apiUrl: string;
   /** Agent or graph identifier on the LangGraph platform. */
@@ -130,7 +130,7 @@ export interface StreamResourceOptions<T, ResolvedBag extends BagTemplate> {
   /** Custom message deserializer for non-standard message formats. */
   toMessage?: (msg: unknown) => BaseMessage;
   /** Custom transport. Defaults to FetchStreamTransport. */
-  transport?: StreamResourceTransport;
+  transport?: AgentTransport;
   /** When true, subagent messages are filtered from the main messages signal. */
   filterSubagentMessages?: boolean;
   /** Tool names that indicate a subagent invocation. */
@@ -138,13 +138,13 @@ export interface StreamResourceOptions<T, ResolvedBag extends BagTemplate> {
 }
 ```
 
-- [ ] **Step 2: Add JSDoc to StreamResourceRef interface**
+- [ ] **Step 2: Add JSDoc to AgentRef interface**
 
-Add JSDoc to each property of `StreamResourceRef` (starting at line 103):
+Add JSDoc to each property of `AgentRef` (starting at line 103):
 
 ```typescript
-/** Reactive reference returned by {@link streamResource}. All properties are Angular Signals. */
-export interface StreamResourceRef<T, ResolvedBag extends BagTemplate> {
+/** Reactive reference returned by {@link agent}. All properties are Angular Signals. */
+export interface AgentRef<T, ResolvedBag extends BagTemplate> {
   /** Current agent state values. */
   value:    Signal<T>;
   /** Current resource status: idle, loading, resolved, or error. */
@@ -198,7 +198,7 @@ export interface StreamResourceRef<T, ResolvedBag extends BagTemplate> {
 }
 ```
 
-- [ ] **Step 3: Add JSDoc to StreamEvent, StreamResourceTransport, SubagentStreamRef**
+- [ ] **Step 3: Add JSDoc to StreamEvent, AgentTransport, SubagentStreamRef**
 
 ```typescript
 /** An event emitted by a LangGraph stream. */
@@ -209,7 +209,7 @@ export interface StreamEvent {
 }
 
 /** Transport interface for connecting to a LangGraph agent. */
-export interface StreamResourceTransport {
+export interface AgentTransport {
   /** Open a streaming connection to an agent and yield events. */
   stream(assistantId: string, threadId: string | null, payload: unknown, signal: AbortSignal): AsyncIterable<StreamEvent>;
   /** Join an already-started run without creating a new one. */
@@ -232,8 +232,8 @@ export interface SubagentStreamRef {
 - [ ] **Step 4: Commit**
 
 ```bash
-git add libs/stream-resource/src/lib/stream-resource.types.ts
-git commit -m "docs(stream-resource): add JSDoc to all public types and interfaces"
+git add libs/angular/src/lib/angular.types.ts
+git commit -m "docs(angular): add JSDoc to all public types and interfaces"
 ```
 
 ---
@@ -241,8 +241,8 @@ git commit -m "docs(stream-resource): add JSDoc to all public types and interfac
 ### Task 3: Add JSDoc to Transports
 
 **Files:**
-- Modify: `libs/stream-resource/src/lib/transport/fetch-stream.transport.ts`
-- Modify: `libs/stream-resource/src/lib/transport/mock-stream.transport.ts`
+- Modify: `libs/angular/src/lib/transport/fetch-stream.transport.ts`
+- Modify: `libs/angular/src/lib/transport/mock-stream.transport.ts`
 
 - [ ] **Step 1: Add JSDoc to FetchStreamTransport**
 
@@ -274,7 +274,7 @@ Add JSDoc to the constructor:
    */
 ```
 
-- [ ] **Step 2: Add JSDoc to MockStreamTransport**
+- [ ] **Step 2: Add JSDoc to MockAgentTransport**
 
 Add before the class declaration at line 4:
 
@@ -287,7 +287,7 @@ Add before the class declaration at line 4:
  *
  * @example
  * ```typescript
- * const transport = new MockStreamTransport([
+ * const transport = new MockAgentTransport([
  *   [{ type: 'values', data: { messages: [aiMsg('Hello')] } }],
  *   [{ type: 'values', data: { status: 'done' } }],
  * ]);
@@ -320,8 +320,8 @@ Add JSDoc to key methods:
 - [ ] **Step 3: Commit**
 
 ```bash
-git add libs/stream-resource/src/lib/transport/
-git commit -m "docs(stream-resource): add JSDoc to FetchStreamTransport and MockStreamTransport"
+git add libs/angular/src/lib/transport/
+git commit -m "docs(angular): add JSDoc to FetchStreamTransport and MockAgentTransport"
 ```
 
 ---
@@ -458,8 +458,8 @@ function reflectionToEntry(ref: any): ApiDocEntry | null {
 
 async function main() {
   const candidates = [
-    'libs/stream-resource/src/public-api.ts',
-    'packages/stream-resource/src/public-api.ts',
+    'libs/angular/src/public-api.ts',
+    'packages/angular/src/public-api.ts',
   ];
   const entryPoint = candidates.find((p) => fs.existsSync(p));
   if (!entryPoint) {
@@ -676,8 +676,8 @@ git commit -m "feat(website): add ApiDocRenderer component for autogenerated API
 ### Task 6: Create API Reference MDX Pages
 
 **Files:**
-- Modify: `apps/website/content/docs-v2/api/stream-resource.mdx`
-- Create: `apps/website/content/docs-v2/api/provide-stream-resource.mdx`
+- Modify: `apps/website/content/docs-v2/api/angular.mdx`
+- Create: `apps/website/content/docs-v2/api/provide-angular.mdx`
 - Create: `apps/website/content/docs-v2/api/fetch-stream-transport.mdx`
 - Create: `apps/website/content/docs-v2/api/mock-stream-transport.mdx`
 
@@ -685,16 +685,16 @@ Since MDX can't directly read JSON, the API doc pages will be simple MDX with a 
 
 - [ ] **Step 1: Create all 4 API MDX pages**
 
-`apps/website/content/docs-v2/api/stream-resource.mdx`:
+`apps/website/content/docs-v2/api/angular.mdx`:
 ```mdx
-# streamResource()
+# agent()
 
 {/* Auto-rendered from api-docs.json — see page component */}
 ```
 
-`apps/website/content/docs-v2/api/provide-stream-resource.mdx`:
+`apps/website/content/docs-v2/api/provide-angular.mdx`:
 ```mdx
-# provideStreamResource()
+# provideAgent()
 
 {/* Auto-rendered from api-docs.json — see page component */}
 ```
@@ -708,7 +708,7 @@ Since MDX can't directly read JSON, the API doc pages will be simple MDX with a 
 
 `apps/website/content/docs-v2/api/mock-stream-transport.mdx`:
 ```mdx
-# MockStreamTransport
+# MockAgentTransport
 
 {/* Auto-rendered from api-docs.json — see page component */}
 ```
@@ -737,10 +737,10 @@ function loadApiDocEntry(slug: string): ApiDocEntry | null {
 
 function matchEntry(entries: ApiDocEntry[], slug: string): ApiDocEntry | null {
   const nameMap: Record<string, string> = {
-    'stream-resource': 'streamResource',
-    'provide-stream-resource': 'provideStreamResource',
+    'angular': 'agent',
+    'provide-angular': 'provideAgent',
     'fetch-stream-transport': 'FetchStreamTransport',
-    'mock-stream-transport': 'MockStreamTransport',
+    'mock-stream-transport': 'MockAgentTransport',
   };
   const target = nameMap[slug];
   if (!target) return null;
@@ -817,7 +817,7 @@ Expected: Build succeeds
 
 - [ ] **Step 3: Verify in browser**
 
-Open http://localhost:3000/docs/api/stream-resource
+Open http://localhost:3000/docs/api/angular
 Verify: Glass card with function signature, parameters, examples renders
 
 - [ ] **Step 4: Commit any fixes**

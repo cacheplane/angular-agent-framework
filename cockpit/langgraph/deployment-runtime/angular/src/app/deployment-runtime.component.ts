@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import { Component } from '@angular/core';
 import { ChatComponent } from '@cacheplane/chat';
-import { streamResource } from '@cacheplane/stream-resource';
+import { agent } from '@cacheplane/angular';
 import { environment } from '../environments/environment';
 
 /**
  * Deployment-runtime demo — production deployment patterns.
  *
- * Shows how streamResource() connects to a deployed LangGraph Cloud
+ * Shows how agent() connects to a deployed LangGraph Cloud
  * instance using environment-specific API URLs and assistant IDs.
  */
 @Component({
@@ -17,7 +17,7 @@ import { environment } from '../environments/environment';
   template: `<chat [ref]="stream" class="block h-screen" />`,
 })
 export class DeploymentRuntimeComponent {
-  protected readonly stream = streamResource({
+  protected readonly stream = agent({
     apiUrl: environment.langGraphApiUrl,
     assistantId: environment.deploymentRuntimeAssistantId,
   });

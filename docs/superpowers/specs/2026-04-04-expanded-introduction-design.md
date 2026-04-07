@@ -5,7 +5,7 @@
 
 ## Overview
 
-The current introduction is a brief 64-line overview. It needs to become the primary onboarding experience — teaching developers the full workflow from building a LangGraph agent to connecting it with Angular via streamResource().
+The current introduction is a brief 64-line overview. It needs to become the primary onboarding experience — teaching developers the full workflow from building a LangGraph agent to connecting it with Angular via agent().
 
 ## Target Audience
 
@@ -15,7 +15,7 @@ Both Angular developers new to AI agents AND AI developers new to Angular. The t
 
 The introduction becomes a multi-section tutorial covering the complete workflow:
 
-### Section 1: What is Angular Stream Resource?
+### Section 1: What is Angular Agent Framework?
 - One-paragraph pitch: Angular Signals + LangGraph streaming
 - Key value props (3-4 bullets)
 - "What you'll build" preview — a streaming chat app connected to a real agent
@@ -33,9 +33,9 @@ The introduction becomes a multi-section tutorial covering the complete workflow
 - Test in LangGraph Studio
 
 ### Section 4: Connect with Angular
-- Install streamResource: `npm install @cacheplane/stream-resource`
+- Install agent: `npm install @cacheplane/angular`
 - Configure provider in `app.config.ts`
-- Create a chat component with `streamResource()`
+- Create a chat component with `agent()`
 - Show TypeScript + Template code with Tabs
 - Explain the Signals: messages(), status(), error()
 

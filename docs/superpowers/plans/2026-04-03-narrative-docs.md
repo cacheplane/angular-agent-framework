@@ -422,10 +422,10 @@ git commit -m "feat(cockpit): add four-mode shell with Docs and API modes"
 - [ ] **Step 1: Write the tutorial**
 
 ```markdown
-# Streaming with stream-resource
+# Streaming with angular
 
 This guide walks through building a real-time streaming chat interface using
-`streamResource()` from `@cacheplane/stream-resource` connected to a LangGraph
+`agent()` from `@cacheplane/angular` connected to a LangGraph
 backend on LangSmith Cloud.
 
 ## What you'll build
@@ -436,31 +436,31 @@ visual feedback instead of waiting for a complete response.
 
 ## 1. Configure the provider
 
-Set up `provideStreamResource()` in your app config with the LangGraph Cloud URL:
+Set up `provideAgent()` in your app config with the LangGraph Cloud URL:
 
 ```typescript
-import { provideStreamResource } from '@cacheplane/stream-resource';
+import { provideAgent } from '@cacheplane/angular';
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideStreamResource({
+    provideAgent({
       apiUrl: 'https://your-deployment.langgraph.app',
     }),
   ],
 };
 ```
 
-This makes the API URL available to all `streamResource()` calls in your app.
+This makes the API URL available to all `agent()` calls in your app.
 
 ## 2. Create the streaming resource
 
-In your component, call `streamResource()` in a field initializer (injection context required):
+In your component, call `agent()` in a field initializer (injection context required):
 
 ```typescript
-import { streamResource } from '@cacheplane/stream-resource';
+import { agent } from '@cacheplane/angular';
 
 export class StreamingComponent {
-  protected readonly stream = streamResource({
+  protected readonly stream = agent({
     assistantId: 'streaming',
   });
 }
@@ -532,7 +532,7 @@ in your Angular code must match the graph name in `langgraph.json`.
 
 ## Key concepts
 
-- **No service layer needed** — `streamResource()` replaces wrapper services entirely
+- **No service layer needed** — `agent()` replaces wrapper services entirely
 - **Signal-based** — all state is exposed as Angular Signals for zero-boilerplate reactivity
 - **Thread management** — use `stream.switchThread()` to manage conversation history
 - **Error recovery** — check `stream.error()` and call `stream.reload()` to retry

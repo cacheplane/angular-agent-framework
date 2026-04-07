@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import fs from 'fs';
 
-export const addStreamResourceTool = {
-  name: 'add_stream_resource',
-  description: 'Generate npm install command and app.config.ts diff to add stream-resource',
+export const addAgentTool = {
+  name: 'add_angular',
+  description: 'Generate npm install command and app.config.ts diff to add angular',
   inputSchema: {
     type: 'object',
     properties: {
@@ -13,7 +13,7 @@ export const addStreamResourceTool = {
   },
 };
 
-export function handleAddStreamResource(args: Record<string, unknown>) {
+export function handleAddAgent(args: Record<string, unknown>) {
   const appConfigPath = args['appConfigPath'] as string;
 
   if (!fs.existsSync(appConfigPath)) {
@@ -24,20 +24,20 @@ export function handleAddStreamResource(args: Record<string, unknown>) {
     return { content: [{ type: 'text', text: `File does not appear to be an Angular app.config.ts: ${appConfigPath}` }] };
   }
 
-  const result = `Steps to add stream-resource:
+  const result = `Steps to add angular:
 
 1. Install the package:
 \`\`\`bash
-npm install @cacheplane/stream-resource
+npm install @cacheplane/angular
 \`\`\`
 
 2. Apply this change to ${appConfigPath}:
 \`\`\`diff
-+import { provideStreamResource } from '@cacheplane/stream-resource';
++import { provideAgent } from '@cacheplane/angular';
 
  export const appConfig: ApplicationConfig = {
    providers: [
-+    provideStreamResource({ apiUrl: 'REPLACE_WITH_YOUR_LANGGRAPH_URL' }),
++    provideAgent({ apiUrl: 'REPLACE_WITH_YOUR_LANGGRAPH_URL' }),
      // ... existing providers
    ]
  };

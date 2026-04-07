@@ -2,15 +2,15 @@
 import { describe, it, expect } from 'vitest';
 import { signal, computed } from '@angular/core';
 import { AIMessage, HumanMessage } from '@langchain/core/messages';
-import { createMockStreamResourceRef } from '../../testing/mock-stream-resource-ref';
-import type { ToolCallWithResult } from '@cacheplane/stream-resource';
+import { createMockAgentRef } from '../../testing/mock-agent-ref';
+import type { ToolCallWithResult } from '@cacheplane/angular';
 
 describe('ChatToolCallsComponent — toolCalls computed', () => {
   it('returns ref.toolCalls() when no message is provided', () => {
     const mockToolCalls: ToolCallWithResult[] = [
       { id: 'call_1', name: 'get_weather', args: { city: 'NYC' }, result: null } as any,
     ];
-    const mockRef = createMockStreamResourceRef();
+    const mockRef = createMockAgentRef();
     (mockRef.toolCalls as ReturnType<typeof signal<ToolCallWithResult[]>>).set(mockToolCalls);
 
     const ref$ = signal(mockRef);
@@ -21,7 +21,7 @@ describe('ChatToolCallsComponent — toolCalls computed', () => {
   });
 
   it('returns ref.toolCalls() when message has no tool_calls', () => {
-    const mockRef = createMockStreamResourceRef();
+    const mockRef = createMockAgentRef();
     const msg = new HumanMessage('hello');
 
     const ref$ = signal(mockRef);
@@ -40,7 +40,7 @@ describe('ChatToolCallsComponent — toolCalls computed', () => {
   });
 
   it('returns message tool_calls when message has tool_calls', () => {
-    const mockRef = createMockStreamResourceRef();
+    const mockRef = createMockAgentRef();
     const msg = new AIMessage({
       content: '',
       tool_calls: [{ id: 'call_2', name: 'search', args: { query: 'test' } }],
@@ -63,8 +63,8 @@ describe('ChatToolCallsComponent — toolCalls computed', () => {
   });
 
   it('toolCalls updates reactively when ref changes', () => {
-    const emptyRef = createMockStreamResourceRef();
-    const loadedRef = createMockStreamResourceRef();
+    const emptyRef = createMockAgentRef();
+    const loadedRef = createMockAgentRef();
     const mockToolCalls: ToolCallWithResult[] = [
       { id: 'call_3', name: 'calculator', args: {}, result: null } as any,
     ];

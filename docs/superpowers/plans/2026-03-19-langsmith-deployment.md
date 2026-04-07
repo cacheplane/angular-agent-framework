@@ -88,7 +88,7 @@ The CI workflow (`.github/workflows/e2e.yml`) already does this automatically an
 
 ```bash
 LANGSMITH_TRACING=true
-LANGSMITH_PROJECT=stream-resource-example
+LANGSMITH_PROJECT=angular-example
 LANGSMITH_API_KEY=<your key>
 ```
 
@@ -143,7 +143,7 @@ From the LangSmith dashboard → Deployments → your deployment → Environment
 | `OPENAI_API_KEY` | Your OpenAI key |
 | `OPENAI_MODEL` | `gpt-4o-mini` (default) or preferred model |
 | `LANGSMITH_TRACING` | `true` (optional, for production tracing) |
-| `LANGSMITH_PROJECT` | `stream-resource-example` |
+| `LANGSMITH_PROJECT` | `angular-example` |
 
 ---
 
@@ -173,7 +173,7 @@ Visit https://stream-resource.dev and confirm the `<stream-chat-demo>` web compo
 
 The `.github/workflows/e2e.yml` workflow runs e2e tests against a **local** LangGraph dev server (not the cloud deployment). This is intentional — cloud tests would require a dedicated test deployment or environment.
 
-**LangSmith CI tracing project:** `stream-resource-e2e-ci`
+**LangSmith CI tracing project:** `angular-e2e-ci`
 
 ---
 

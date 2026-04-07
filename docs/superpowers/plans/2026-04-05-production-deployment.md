@@ -797,7 +797,7 @@ This task is performed manually — not code changes.
 In the Vercel dashboard:
 1. Create a new project named `cockpit-examples` in the `cacheplane` org
 2. Set the framework to "Other" (static)
-3. Link to the `stream-resource` GitHub repo
+3. Link to the `angular` GitHub repo
 4. Set the root directory to `.` (workspace root)
 5. Note the project ID
 

@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Refactor the Angular Stream Resource website from dark navy to a light frosted-glass aesthetic with dual-brand Angular/LangGraph ambient gradients.
+**Goal:** Refactor the Angular Agent Framework website from dark navy to a light frosted-glass aesthetic with dual-brand Angular/LangGraph ambient gradients.
 
 **Architecture:** Token-first approach — update `design-tokens.ts` and `global.css` first, then sweep all components to consume the new tokens. The warm→cool gradient flow (Angular red top-left → LangGraph blue bottom-right) serves as the continuous page backdrop, with balanced glass panels (14-16px blur, 40-50% white opacity) floating on top.
 
@@ -195,7 +195,7 @@ export function Nav() {
         boxShadow: tokens.glass.shadow,
       }}>
       <Link href="/" className="font-garamond text-xl font-bold" style={{ color: tokens.colors.textPrimary }}>
-        Angular Stream Resource
+        Angular Agent Framework
       </Link>
       <div className="flex items-center gap-8">
         {links.map((l) => (
@@ -255,7 +255,7 @@ export function Footer() {
       }}>
       <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-start justify-between gap-8">
         <div>
-          <p className="font-garamond text-lg font-bold" style={{ color: tokens.colors.textPrimary }}>Angular Stream Resource</p>
+          <p className="font-garamond text-lg font-bold" style={{ color: tokens.colors.textPrimary }}>Angular Agent Framework</p>
           <p className="text-sm mt-1" style={{ color: tokens.colors.textMuted }}>The Enterprise Streaming Resource for LangChain and Angular</p>
         </div>
         <div className="flex gap-12 text-sm">
@@ -269,7 +269,7 @@ export function Footer() {
       </div>
       <div className="max-w-6xl mx-auto mt-8 pt-8 flex items-center justify-between text-xs"
         style={{ borderTop: `1px solid ${tokens.glass.border}`, color: tokens.colors.textMuted }}>
-        <span>&copy; {new Date().getFullYear()} Angular Stream Resource. All rights reserved.</span>
+        <span>&copy; {new Date().getFullYear()} Angular Agent Framework. All rights reserved.</span>
         <span>PolyForm Noncommercial 1.0.0 &middot; <Link href="/pricing" className="transition-colors">Commercial License</Link></span>
       </div>
     </footer>
@@ -298,7 +298,7 @@ git commit -m "feat(website): apply glass treatment to Footer"
 import { useState } from 'react';
 import { tokens } from '../../../lib/design-tokens';
 
-const CMD = 'npm install @cacheplane/stream-resource';
+const CMD = 'npm install @cacheplane/angular';
 
 export function InstallStrip() {
   const [copied, setCopied] = useState(false);
@@ -541,7 +541,7 @@ export async function HeroTwoCol() {
             fontSize: 12,
             color: tokens.colors.textMuted,
           }}>
-            npm install @cacheplane/stream-resource
+            npm install @cacheplane/angular
           </span>
         </div>
       </div>
@@ -582,7 +582,7 @@ import { tokens } from '../../lib/design-tokens';
 
 const NODES = [
   { id: 'angular', label: 'Angular App', x: 60, y: 100 },
-  { id: 'sr', label: 'streamResource()', x: 260, y: 100 },
+  { id: 'sr', label: 'agent()', x: 260, y: 100 },
   { id: 'transport', label: 'FetchStreamTransport', x: 480, y: 100 },
   { id: 'langgraph', label: 'LangGraph Server', x: 700, y: 100 },
 ];
@@ -603,7 +603,7 @@ export function ArchDiagram() {
         whileInView={{ opacity: 1 }}
         viewport={{ once: true }}
         transition={{ duration: 0.6 }}>
-        <svg role="img" viewBox="0 0 820 200" width="100%" style={{ maxWidth: 820 }} aria-label="Architecture diagram showing Angular App connecting through streamResource and FetchStreamTransport to LangGraph Server">
+        <svg role="img" viewBox="0 0 820 200" width="100%" style={{ maxWidth: 820 }} aria-label="Architecture diagram showing Angular App connecting through agent and FetchStreamTransport to LangGraph Server">
           <defs>
             <radialGradient id="nodeGlow" cx="50%" cy="50%" r="50%">
               <stop offset="0%" stopColor="rgba(0,64,144,0.15)" />
@@ -671,7 +671,7 @@ const FEATURES = [
   { icon: '\u26A1', title: 'Token-by-token streaming', desc: 'Real-time SSE streaming via FetchStreamTransport. Messages update as each token arrives.' },
   { icon: '\uD83D\uDD17', title: 'Thread persistence', desc: 'MemorySaver-backed threads survive page refreshes via threadId signal and onThreadId callback.' },
   { icon: '\uD83D\uDCD0', title: 'Angular Signals', desc: 'Every state slice is an Angular Signal. Works with OnPush, async pipe, and computed().' },
-  { icon: '\uD83E\uDDEA', title: 'MockStreamTransport', desc: 'Deterministic unit testing. Script event sequences and step through them in your specs.' },
+  { icon: '\uD83E\uDDEA', title: 'MockAgentTransport', desc: 'Deterministic unit testing. Script event sequences and step through them in your specs.' },
   { icon: '\uD83D\uDD27', title: 'Full useStream() parity', desc: 'Interrupts, tool calls, subagents, branch history, joinStream \u2014 everything the React SDK exposes.' },
   { icon: '\uD83C\uDFE2', title: 'Source-available licensing', desc: 'Free for noncommercial use under PolyForm Noncommercial 1.0.0. Commercial license at $500/seat/year or $2,000/app deployment.' },
 ];
@@ -733,10 +733,10 @@ import { codeToHtml } from 'shiki';
 import { tokens } from '../../lib/design-tokens';
 
 const EXAMPLE = `// app.config.ts
-provideStreamResource({ apiUrl: 'http://localhost:2024' })
+provideAgent({ apiUrl: 'http://localhost:2024' })
 
 // chat.component.ts
-const chat = streamResource<{ messages: BaseMessage[] }>({
+const chat = agent<{ messages: BaseMessage[] }>({
   assistantId: 'chat_agent',
   threadId: signal(this.threadId),
   onThreadId: (id) => localStorage.setItem('threadId', id),
@@ -830,7 +830,7 @@ export function GenerativeUIFrame() {
     <div
       ref={frameRef}
       role="img"
-      aria-label="Animated demo of stream-resource rendering a generative UI"
+      aria-label="Animated demo of angular rendering a generative UI"
       className="rounded-xl overflow-hidden"
       style={{
         border: `1px solid ${tokens.glass.border}`,
@@ -1216,7 +1216,7 @@ const PLANS = [
     features: ['PolyForm Noncommercial 1.0.0', 'Personal projects', 'Academic & research', 'Non-profit internal use'],
     highlight: false,
     cta: 'Get Started',
-    ctaHref: 'https://www.npmjs.com/package/@cacheplane/stream-resource',
+    ctaHref: 'https://www.npmjs.com/package/@cacheplane/angular',
   },
   {
     name: 'Developer Seat',
@@ -1676,7 +1676,7 @@ import { ApiRefTable, type ApiEntry } from '../../components/docs/ApiRefTable';
 // Placeholder entries — replaced by generated api-docs.json in Task W9
 const ENTRIES: ApiEntry[] = [
   {
-    name: 'streamResource()',
+    name: 'agent()',
     type: 'function',
     description: 'Creates a streaming resource connected to a LangGraph agent. Must be called within an Angular injection context.',
     params: [
@@ -1687,11 +1687,11 @@ const ENTRIES: ApiEntry[] = [
     ],
   },
   {
-    name: 'provideStreamResource()',
+    name: 'provideAgent()',
     type: 'function',
     description: 'Angular provider factory. Registers global defaults for apiUrl and transport.',
     params: [
-      { name: 'config', type: 'StreamResourceConfig', desc: 'Global config merged with per-call options.' },
+      { name: 'config', type: 'AgentConfig', desc: 'Global config merged with per-call options.' },
     ],
   },
 ];

@@ -1,9 +1,9 @@
 # Testing
 
-MockStreamTransport lets you test agent interactions deterministically without a running LangGraph server. Script exact event sequences, step through streaming lifecycles, and verify every signal transition in your Angular test specs.
+MockAgentTransport lets you test agent interactions deterministically without a running LangGraph server. Script exact event sequences, step through streaming lifecycles, and verify every signal transition in your Angular test specs.
 
 <Callout type="tip" title="No flaky tests">
-MockStreamTransport eliminates network dependencies, timing issues, and server state. Every test run produces identical results. Your CI pipeline stays green.
+MockAgentTransport eliminates network dependencies, timing issues, and server state. Every test run produces identical results. Your CI pipeline stays green.
 </Callout>
 
 ## Python: Testing the Agent
@@ -39,24 +39,24 @@ async def test_agent_uses_tools():
 With MemorySaver and a mocked LLM, agent tests run in milliseconds. Use `langchain_core.language_models.FakeListChatModel` to remove the LLM dependency entirely.
 </Callout>
 
-## MockStreamTransport: Basic Setup
+## MockAgentTransport: Basic Setup
 
-On the Angular side, MockStreamTransport replaces the real HTTP transport. Create it inside `TestBed.runInInjectionContext` so streamResource() has access to Angular's dependency injection.
+On the Angular side, MockAgentTransport replaces the real HTTP transport. Create it inside `TestBed.runInInjectionContext` so agent() has access to Angular's dependency injection.
 
 <Tabs>
 <Tab label="chat.spec.ts">
 
 ```typescript
 import { TestBed } from '@angular/core/testing';
-import { MockStreamTransport, streamResource } from '@cacheplane/stream-resource';
-import type { BaseMessage } from '@cacheplane/stream-resource';
+import { MockAgentTransport, agent } from '@cacheplane/angular';
+import type { BaseMessage } from '@cacheplane/angular';
 
 describe('ChatComponent', () => {
   it('should display agent messages', () => {
-    const transport = new MockStreamTransport();
+    const transport = new MockAgentTransport();
 
     TestBed.runInInjectionContext(() => {
-      const chat = streamResource<{ messages: BaseMessage[] }>({
+      const chat = agent<{ messages: BaseMessage[] }>({
         assistantId: 'test_agent',
         transport,
       });
@@ -81,7 +81,7 @@ describe('ChatComponent', () => {
 
 ```typescript
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { streamResource } from '@cacheplane/stream-resource';
+import { agent } from '@cacheplane/angular';
 
 @Component({
   selector: 'app-chat',
@@ -89,7 +89,7 @@ import { streamResource } from '@cacheplane/stream-resource';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ChatComponent {
-  chat = streamResource<{ messages: BaseMessage[] }>({
+  chat = agent<{ messages: BaseMessage[] }>({
     assistantId: 'chat_agent',
   });
 
@@ -107,7 +107,7 @@ export class ChatComponent {
 Pass event batches to the constructor for sequential playback. Each call to `nextBatch()` advances one step — giving you frame-by-frame control over what the component sees.
 
 ```typescript
-const transport = new MockStreamTransport([
+const transport = new MockAgentTransport([
   // Batch 1: Agent starts thinking
   [{ type: 'values', messages: [{ role: 'assistant', content: 'Analyzing...' }] }],
   // Batch 2: Agent finishes
@@ -115,7 +115,7 @@ const transport = new MockStreamTransport([
 ]);
 
 TestBed.runInInjectionContext(() => {
-  const chat = streamResource<{ messages: BaseMessage[] }>({
+  const chat = agent<{ messages: BaseMessage[] }>({
     assistantId: 'test_agent',
     transport,
   });
@@ -140,17 +140,17 @@ The most common test pattern verifies the full submit-to-resolved lifecycle: sub
 
 ```typescript
 import { TestBed } from '@angular/core/testing';
-import { MockStreamTransport, streamResource } from '@cacheplane/stream-resource';
+import { MockAgentTransport, agent } from '@cacheplane/angular';
 
 describe('streaming lifecycle', () => {
   it('should transition through loading → values → resolved', () => {
-    const transport = new MockStreamTransport([
+    const transport = new MockAgentTransport([
       [{ type: 'values', messages: [{ role: 'assistant', content: 'Thinking...' }] }],
       [{ type: 'values', messages: [{ role: 'assistant', content: 'Done!' }] }],
     ]);
 
     TestBed.runInInjectionContext(() => {
-      const chat = streamResource<{ messages: BaseMessage[] }>({
+      const chat = agent<{ messages: BaseMessage[] }>({
         assistantId: 'test_agent',
         transport,
       });
@@ -187,7 +187,7 @@ describe('streaming lifecycle', () => {
 
 ```typescript
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { streamResource } from '@cacheplane/stream-resource';
+import { agent } from '@cacheplane/angular';
 
 @Component({
   selector: 'app-chat',
@@ -202,7 +202,7 @@ import { streamResource } from '@cacheplane/stream-resource';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ChatComponent {
-  chat = streamResource<{ messages: BaseMessage[] }>({
+  chat = agent<{ messages: BaseMessage[] }>({
     assistantId: 'chat_agent',
   });
 
@@ -224,14 +224,14 @@ Script an interrupt event to test human-in-the-loop flows. Verify the interrupt 
 
 ```typescript
 import { TestBed } from '@angular/core/testing';
-import { MockStreamTransport, streamResource } from '@cacheplane/stream-resource';
+import { MockAgentTransport, agent } from '@cacheplane/angular';
 
 describe('interrupt handling', () => {
   it('should surface interrupt and resume on approval', () => {
-    const transport = new MockStreamTransport();
+    const transport = new MockAgentTransport();
 
     TestBed.runInInjectionContext(() => {
-      const agent = streamResource<{ messages: BaseMessage[] }>({
+      const agent = agent<{ messages: BaseMessage[] }>({
         assistantId: 'approval_agent',
         transport,
       });
@@ -272,7 +272,7 @@ describe('interrupt handling', () => {
 
 ```typescript
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { streamResource } from '@cacheplane/stream-resource';
+import { agent } from '@cacheplane/angular';
 
 @Component({
   selector: 'app-approval',
@@ -289,7 +289,7 @@ import { streamResource } from '@cacheplane/stream-resource';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ApprovalComponent {
-  agent = streamResource<{ messages: BaseMessage[] }>({
+  agent = agent<{ messages: BaseMessage[] }>({
     assistantId: 'approval_agent',
   });
 
@@ -315,14 +315,14 @@ Inject errors with `emitError()` to verify your component handles failures grace
 
 ```typescript
 import { TestBed } from '@angular/core/testing';
-import { MockStreamTransport, streamResource } from '@cacheplane/stream-resource';
+import { MockAgentTransport, agent } from '@cacheplane/angular';
 
 describe('error handling', () => {
   it('should surface errors and set error status', () => {
-    const transport = new MockStreamTransport();
+    const transport = new MockAgentTransport();
 
     TestBed.runInInjectionContext(() => {
-      const chat = streamResource<{ messages: BaseMessage[] }>({
+      const chat = agent<{ messages: BaseMessage[] }>({
         assistantId: 'test_agent',
         transport,
       });
@@ -340,10 +340,10 @@ describe('error handling', () => {
   });
 
   it('should recover from errors on retry', () => {
-    const transport = new MockStreamTransport();
+    const transport = new MockAgentTransport();
 
     TestBed.runInInjectionContext(() => {
-      const chat = streamResource<{ messages: BaseMessage[] }>({
+      const chat = agent<{ messages: BaseMessage[] }>({
         assistantId: 'test_agent',
         transport,
       });
@@ -374,7 +374,7 @@ describe('error handling', () => {
 
 ```typescript
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { streamResource } from '@cacheplane/stream-resource';
+import { agent } from '@cacheplane/angular';
 
 @Component({
   selector: 'app-chat',
@@ -389,7 +389,7 @@ import { streamResource } from '@cacheplane/stream-resource';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ChatComponent {
-  chat = streamResource<{ messages: BaseMessage[] }>({
+  chat = agent<{ messages: BaseMessage[] }>({
     assistantId: 'chat_agent',
   });
   private lastMessage = '';
@@ -415,12 +415,12 @@ Verify that switching threads loads the correct conversation state and clears th
 ```typescript
 describe('thread switching', () => {
   it('should load new thread state on switch', () => {
-    const transport = new MockStreamTransport();
+    const transport = new MockAgentTransport();
 
     TestBed.runInInjectionContext(() => {
       const threadId = signal<string | null>('thread_A');
 
-      const chat = streamResource<{ messages: BaseMessage[] }>({
+      const chat = agent<{ messages: BaseMessage[] }>({
         assistantId: 'test_agent',
         threadId,
         transport,
@@ -450,10 +450,10 @@ describe('thread switching', () => {
   });
 
   it('should create a new thread when switching to null', () => {
-    const transport = new MockStreamTransport();
+    const transport = new MockAgentTransport();
 
     TestBed.runInInjectionContext(() => {
-      const chat = streamResource<{ messages: BaseMessage[] }>({
+      const chat = agent<{ messages: BaseMessage[] }>({
         assistantId: 'test_agent',
         transport,
       });
@@ -478,16 +478,16 @@ describe('thread switching', () => {
 
 <Steps>
 <Step title="Install dependencies">
-Make sure `@cacheplane/stream-resource` is available in your test environment. MockStreamTransport ships with the main package — no extra install needed.
+Make sure `@cacheplane/angular` is available in your test environment. MockAgentTransport ships with the main package — no extra install needed.
 </Step>
 <Step title="Create the transport">
-Instantiate `MockStreamTransport` with optional pre-scripted batches for sequential playback, or leave it empty for imperative `emit()` calls.
+Instantiate `MockAgentTransport` with optional pre-scripted batches for sequential playback, or leave it empty for imperative `emit()` calls.
 </Step>
 <Step title="Wrap in injection context">
-Call `TestBed.runInInjectionContext(() => { ... })` so streamResource() can access Angular's injector for signal creation and cleanup.
+Call `TestBed.runInInjectionContext(() => { ... })` so agent() can access Angular's injector for signal creation and cleanup.
 </Step>
 <Step title="Create the resource">
-Pass the transport to streamResource() via the `transport` option. All other options (assistantId, threadId, onThreadId) work identically to production code.
+Pass the transport to agent() via the `transport` option. All other options (assistantId, threadId, onThreadId) work identically to production code.
 </Step>
 <Step title="Script events">
 Use `transport.emit()` for ad-hoc events, `transport.nextBatch()` for pre-scripted sequences, or `transport.emitError()` for failure scenarios.
@@ -505,12 +505,12 @@ For end-to-end confidence, run tests against a real LangGraph dev server. The La
 # Start the dev server
 langgraph dev --config langgraph.json
 
-# Run Angular tests against it (no MockStreamTransport needed)
+# Run Angular tests against it (no MockAgentTransport needed)
 ng test --watch=false
 ```
 
 <Callout type="warning" title="Integration tests are slow">
-Integration tests hit a real server and (potentially) a real LLM. Reserve them for CI pipelines or pre-release smoke tests. Use MockStreamTransport for the vast majority of your test suite — it runs in milliseconds with zero external dependencies.
+Integration tests hit a real server and (potentially) a real LLM. Reserve them for CI pipelines or pre-release smoke tests. Use MockAgentTransport for the vast majority of your test suite — it runs in milliseconds with zero external dependencies.
 </Callout>
 
 ## What's Next
@@ -526,6 +526,6 @@ Integration tests hit a real server and (potentially) a real LLM. Reserve them f
     Thread persistence patterns that pair with thread-switching tests.
   </Card>
   <Card title="API Reference" href="/docs/api/mock-stream-transport">
-    Full reference for MockStreamTransport options and methods.
+    Full reference for MockAgentTransport options and methods.
   </Card>
 </CardGroup>

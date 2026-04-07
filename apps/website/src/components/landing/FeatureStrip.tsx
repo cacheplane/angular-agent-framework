@@ -6,7 +6,7 @@ const FEATURES = [
   { icon: '\u26A1', title: 'Token-by-token streaming', desc: 'Real-time SSE streaming via FetchStreamTransport. Messages update as each token arrives.' },
   { icon: '\uD83D\uDD17', title: 'Thread persistence', desc: 'MemorySaver-backed threads survive page refreshes via threadId signal and onThreadId callback.' },
   { icon: '\uD83D\uDCD0', title: 'Angular Signals', desc: 'Every state slice is an Angular Signal. Works with OnPush, async pipe, and computed().' },
-  { icon: '\uD83E\uDDEA', title: 'MockStreamTransport', desc: 'Deterministic unit testing. Script event sequences and step through them in your specs.' },
+  { icon: '\uD83E\uDDEA', title: 'MockAgentTransport', desc: 'Deterministic unit testing. Script event sequences and step through them in your specs.' },
   { icon: '\uD83C\uDFE2', title: 'Source-available licensing', desc: 'Free for noncommercial use under PolyForm Noncommercial 1.0.0. Commercial license at $500/seat/year or $2,000/app deployment.' },
 ];
 

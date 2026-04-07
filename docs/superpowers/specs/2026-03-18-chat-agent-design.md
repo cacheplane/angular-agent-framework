@@ -2,13 +2,13 @@
 
 **Date:** 2026-03-18
 **Status:** Approved
-**Location:** `examples/chat-agent/` in the `stream-resource` monorepo
+**Location:** `examples/chat-agent/` in the `angular` monorepo
 
 ---
 
 ## Overview
 
-A minimal Python LangGraph chat agent that serves as the reference backend for the `stream-resource` Angular library. It demonstrates every currently-implemented `streamResource()` feature: token-by-token message streaming, thread persistence across page refreshes, and LangSmith tracing.
+A minimal Python LangGraph chat agent that serves as the reference backend for the `angular` Angular library. It demonstrates every currently-implemented `agent()` feature: token-by-token message streaming, thread persistence across page refreshes, and LangSmith tracing.
 
 The example is self-contained inside the monorepo and supports two modes: local development via `langgraph dev` and cloud deployment via `langgraph deploy` to LangSmith-managed infrastructure.
 
@@ -18,7 +18,7 @@ The example is self-contained inside the monorepo and supports two modes: local 
 
 - Provide a runnable Python backend that the Angular library's `FetchStreamTransport` can connect to out of the box
 - Demonstrate streaming, thread persistence (`MemorySaver` + `threadId`), and configurable system prompt
-- Serve as the target server for `e2e/stream-resource-e2e/` Playwright integration tests
+- Serve as the target server for `e2e/angular-e2e/` Playwright integration tests
 - Serve as the backend for the website's live Angular Elements demo
 
 ---
@@ -79,7 +79,7 @@ class Configuration(TypedDict):
 Passed via `RunnableConfig["configurable"]`. The Angular client can set this per-thread:
 
 ```typescript
-streamResource({
+agent({
   assistantId: 'chat_agent',
   config: { configurable: { system_prompt: 'You are a coding assistant.' } },
 })
@@ -89,14 +89,14 @@ streamResource({
 
 ## 5. Angular Integration
 
-The Angular app connects via `provideStreamResource` and `streamResource()`:
+The Angular app connects via `provideAgent` and `agent()`:
 
 ```typescript
 // app.config.ts
-provideStreamResource({ apiUrl: 'http://localhost:2024' })
+provideAgent({ apiUrl: 'http://localhost:2024' })
 
 // chat.component.ts
-const chat = streamResource<{ messages: BaseMessage[] }>({
+const chat = agent<{ messages: BaseMessage[] }>({
   // Local dev: use graph_id string ('chat_agent')
   // LangSmith cloud: use the assistant UUID from the LangSmith console
   assistantId: environment.assistantId,
@@ -124,7 +124,7 @@ const chat = streamResource<{ messages: BaseMessage[] }>({
 | `OPENAI_MODEL` | No | Model name (default: `gpt-5-mini`). Change to `gpt-4o-mini` if `gpt-5-mini` is unavailable in your account |
 | `LANGSMITH_API_KEY` | Deploy only | Required for `langgraph deploy`. Not needed for local `langgraph dev` |
 | `LANGSMITH_TRACING` | No | Set to `true` to enable LangSmith trace logging during local dev |
-| `LANGSMITH_PROJECT` | No | Project name in LangSmith UI (default: `stream-resource-example`) |
+| `LANGSMITH_PROJECT` | No | Project name in LangSmith UI (default: `angular-example`) |
 
 ---
 
@@ -165,7 +165,7 @@ Two pytest integration tests in `tests/test_agent.py`:
 
 2. **`test_thread_persistence`** — submits two messages on the same `thread_id` via `MemorySaver`, asserts the second response demonstrates awareness of the first. Verifies thread checkpointing.
 
-Tests require `OPENAI_API_KEY` and are skipped in CI when not present (`pytest.mark.skipif`). Streaming behavior is covered by `e2e/stream-resource-e2e/` Playwright tests.
+Tests require `OPENAI_API_KEY` and are skipped in CI when not present (`pytest.mark.skipif`). Streaming behavior is covered by `e2e/angular-e2e/` Playwright tests.
 
 ---
 

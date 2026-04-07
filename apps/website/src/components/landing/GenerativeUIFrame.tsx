@@ -27,7 +27,7 @@ export function GenerativeUIFrame() {
     <div
       ref={frameRef}
       role="img"
-      aria-label="Animated demo of Angular Stream Resource orchestrating a multi-step agent UI"
+      aria-label="Animated demo of Angular Agent Framework orchestrating a multi-step agent UI"
       className="rounded-xl overflow-hidden"
       style={{
         border: `1px solid ${tokens.glass.border}`,

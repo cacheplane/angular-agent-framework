@@ -2,11 +2,11 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Implement capability-specific sidebars for all 9 incomplete cockpit examples, validating that the chat and stream-resource libraries fully support every LangGraph and Deep Agent capability. Each example is a minimal, isolated Angular app that uses the libs — changes discovered here feed back into the libs.
+**Goal:** Implement capability-specific sidebars for all 9 incomplete cockpit examples, validating that the chat and angular libraries fully support every LangGraph and Deep Agent capability. Each example is a minimal, isolated Angular app that uses the libs — changes discovered here feed back into the libs.
 
-**Architecture:** Each example follows the pattern: `streamResource()` → `<chat [ref]="stream">` + custom sidebar derived from `stream.value()` or `stream.messages()`. Sidebars are built directly in each example's component using Tailwind classes and the chat theme CSS vars. No new library components needed — the sidebars are example-specific UI, not reusable primitives.
+**Architecture:** Each example follows the pattern: `agent()` → `<chat [ref]="stream">` + custom sidebar derived from `stream.value()` or `stream.messages()`. Sidebars are built directly in each example's component using Tailwind classes and the chat theme CSS vars. No new library components needed — the sidebars are example-specific UI, not reusable primitives.
 
-**Tech Stack:** Angular 20+, `@cacheplane/chat`, `@cacheplane/stream-resource`, Tailwind CSS v4
+**Tech Stack:** Angular 20+, `@cacheplane/chat`, `@cacheplane/angular`, Tailwind CSS v4
 
 **Parallelism:** Tasks 1-4 (LangGraph examples) are independent. Tasks 5-8 (Deep Agent examples) are independent. All can run in parallel within their group.
 
@@ -66,7 +66,7 @@ template: `
 
 Key rules:
 - Import `ChatComponent` from `@cacheplane/chat`
-- Use `streamResource()` from `@cacheplane/stream-resource`
+- Use `agent()` from `@cacheplane/angular`
 - Derive sidebar state with `computed()` from `stream.value()` or `stream.messages()`
 - Use Tailwind + chat theme CSS vars for styling
 - The `<chat>` component handles all message rendering, input, typing, errors internally
@@ -91,7 +91,7 @@ Replace the component with a layout that has chat + thread sidebar:
 ```typescript
 import { Component, signal, computed } from '@angular/core';
 import { ChatComponent } from '@cacheplane/chat';
-import { streamResource } from '@cacheplane/stream-resource';
+import { agent } from '@cacheplane/angular';
 import { environment } from '../environments/environment';
 
 interface ThreadEntry {
@@ -146,7 +146,7 @@ export class PersistenceComponent {
   readonly activeThreadId = signal<string>('');
   readonly threadList = signal<ThreadEntry[]>([]);
 
-  protected readonly stream = streamResource({
+  protected readonly stream = agent({
     apiUrl: environment.langGraphApiUrl,
     assistantId: environment.persistenceAssistantId,
     onThreadId: (id: string) => {
@@ -209,7 +209,7 @@ Read `cockpit/langgraph/time-travel/angular/src/app/time-travel.component.ts`.
 ```typescript
 import { Component, computed } from '@angular/core';
 import { ChatComponent } from '@cacheplane/chat';
-import { streamResource } from '@cacheplane/stream-resource';
+import { agent } from '@cacheplane/angular';
 import { environment } from '../environments/environment';
 
 @Component({
@@ -268,7 +268,7 @@ import { environment } from '../environments/environment';
   `,
 })
 export class TimeTravelComponent {
-  protected readonly stream = streamResource({
+  protected readonly stream = agent({
     apiUrl: environment.langGraphApiUrl,
     assistantId: environment.timeTravelAssistantId,
   });
@@ -320,7 +320,7 @@ Read `cockpit/langgraph/durable-execution/angular/src/app/durable-execution.comp
 ```typescript
 import { Component, computed } from '@angular/core';
 import { ChatComponent } from '@cacheplane/chat';
-import { streamResource } from '@cacheplane/stream-resource';
+import { agent } from '@cacheplane/angular';
 import { environment } from '../environments/environment';
 
 const PIPELINE_STEPS = ['analyze', 'plan', 'generate'] as const;
@@ -374,7 +374,7 @@ const PIPELINE_STEPS = ['analyze', 'plan', 'generate'] as const;
   `,
 })
 export class DurableExecutionComponent {
-  protected readonly stream = streamResource({
+  protected readonly stream = agent({
     apiUrl: environment.langGraphApiUrl,
     assistantId: environment.durableExecutionAssistantId,
   });
@@ -429,7 +429,7 @@ Read `cockpit/deep-agents/planning/angular/src/app/planning.component.ts`.
 ```typescript
 import { Component, computed } from '@angular/core';
 import { ChatComponent } from '@cacheplane/chat';
-import { streamResource } from '@cacheplane/stream-resource';
+import { agent } from '@cacheplane/angular';
 import { environment } from '../environments/environment';
 
 interface PlanStep {
@@ -477,7 +477,7 @@ interface PlanStep {
   `,
 })
 export class PlanningComponent {
-  protected readonly stream = streamResource({
+  protected readonly stream = agent({
     apiUrl: environment.langGraphApiUrl,
     assistantId: environment.planningAssistantId,
   });
@@ -527,7 +527,7 @@ Derive file operations from `stream.messages()` by filtering for tool call messa
 ```typescript
 import { Component, computed } from '@angular/core';
 import { ChatComponent } from '@cacheplane/chat';
-import { streamResource } from '@cacheplane/stream-resource';
+import { agent } from '@cacheplane/angular';
 import { environment } from '../environments/environment';
 
 interface FileOp {
@@ -568,7 +568,7 @@ interface FileOp {
   `,
 })
 export class FilesystemComponent {
-  protected readonly stream = streamResource({
+  protected readonly stream = agent({
     apiUrl: environment.langGraphApiUrl,
     assistantId: environment.filesystemAssistantId,
   });
@@ -635,7 +635,7 @@ Read `cockpit/deep-agents/subagents/angular/src/app/subagents.component.ts`.
 ```typescript
 import { Component, computed } from '@angular/core';
 import { ChatComponent } from '@cacheplane/chat';
-import { streamResource } from '@cacheplane/stream-resource';
+import { agent } from '@cacheplane/angular';
 import { environment } from '../environments/environment';
 
 interface Delegation {
@@ -676,7 +676,7 @@ interface Delegation {
   `,
 })
 export class SubagentsComponent {
-  protected readonly stream = streamResource({
+  protected readonly stream = agent({
     apiUrl: environment.langGraphApiUrl,
     assistantId: environment.subagentsAssistantId,
   });
@@ -737,7 +737,7 @@ Same pattern as the LangGraph memory example but using `agent_memory` state fiel
 ```typescript
 import { Component, computed } from '@angular/core';
 import { ChatComponent } from '@cacheplane/chat';
-import { streamResource } from '@cacheplane/stream-resource';
+import { agent } from '@cacheplane/angular';
 import { environment } from '../environments/environment';
 
 @Component({
@@ -769,7 +769,7 @@ import { environment } from '../environments/environment';
   `,
 })
 export class MemoryComponent {
-  protected readonly stream = streamResource({
+  protected readonly stream = agent({
     apiUrl: environment.langGraphApiUrl,
     assistantId: environment.memoryAssistantId,
   });
@@ -814,7 +814,7 @@ Read `cockpit/deep-agents/skills/angular/src/app/skills.component.ts`.
 ```typescript
 import { Component, computed } from '@angular/core';
 import { ChatComponent } from '@cacheplane/chat';
-import { streamResource } from '@cacheplane/stream-resource';
+import { agent } from '@cacheplane/angular';
 import { environment } from '../environments/environment';
 
 interface SkillInvocation {
@@ -855,7 +855,7 @@ interface SkillInvocation {
   `,
 })
 export class SkillsComponent {
-  protected readonly stream = streamResource({
+  protected readonly stream = agent({
     apiUrl: environment.langGraphApiUrl,
     assistantId: environment.skillsAssistantId,
   });
@@ -919,7 +919,7 @@ Read `cockpit/deep-agents/sandboxes/angular/src/app/sandboxes.component.ts`.
 ```typescript
 import { Component, computed } from '@angular/core';
 import { ChatComponent } from '@cacheplane/chat';
-import { streamResource } from '@cacheplane/stream-resource';
+import { agent } from '@cacheplane/angular';
 import { environment } from '../environments/environment';
 
 interface CodeExecution {
@@ -967,7 +967,7 @@ interface CodeExecution {
   `,
 })
 export class SandboxesComponent {
-  protected readonly stream = streamResource({
+  protected readonly stream = agent({
     apiUrl: environment.langGraphApiUrl,
     assistantId: environment.sandboxesAssistantId,
   });
@@ -1036,7 +1036,7 @@ Expected: All 14 examples build successfully.
 - [ ] **Step 2: Run library tests**
 
 ```bash
-npx nx test chat && npx nx test render && npx nx test stream-resource
+npx nx test chat && npx nx test render && npx nx test angular
 ```
 
 Expected: All tests pass.

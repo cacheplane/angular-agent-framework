@@ -3,7 +3,7 @@ import {
   inject, DestroyRef, computed,
   isSignal, Signal,
 } from '@angular/core';
-import { STREAM_RESOURCE_CONFIG } from './stream-resource.provider';
+import { STREAM_RESOURCE_CONFIG } from './agent.provider';
 import { toSignal, toObservable } from '@angular/core/rxjs-interop';
 import {
   BehaviorSubject, Subject, of,
@@ -15,12 +15,12 @@ import type { Interrupt } from '@langchain/langgraph-sdk';
 import type { BagTemplate, InferBag } from '@langchain/langgraph-sdk';
 
 import {
-  StreamResourceOptions,
-  StreamResourceRef,
+  AgentOptions,
+  AgentRef,
   StreamSubjects,
   SubagentStreamRef,
   ResourceStatus,
-} from './stream-resource.types';
+} from './agent.types';
 import type { ThreadState, ToolProgress, ToolCallWithResult } from '@langchain/langgraph-sdk';
 import { createStreamManagerBridge } from './internals/stream-manager.bridge';
 
@@ -34,12 +34,12 @@ import { createStreamManagerBridge } from './internals/stream-manager.bridge';
  * @typeParam T - The state shape returned by the agent (e.g., `{ messages: BaseMessage[] }`)
  * @typeParam Bag - Optional bag template for typed interrupts and submit payloads
  * @param options - Configuration for the streaming resource
- * @returns A {@link StreamResourceRef} with reactive signals and action methods
+ * @returns A {@link AgentRef} with reactive signals and action methods
  *
  * @example
  * ```typescript
  * // In a component field initializer
- * const chat = streamResource<{ messages: BaseMessage[] }>({
+ * const chat = agent<{ messages: BaseMessage[] }>({
  *   assistantId: 'chat_agent',
  *   apiUrl: 'http://localhost:2024',
  *   threadId: signal(this.savedThreadId),
@@ -50,12 +50,12 @@ import { createStreamManagerBridge } from './internals/stream-manager.bridge';
  * // chat.messages(), chat.status(), chat.error()
  * ```
  */
-export function streamResource<
+export function agent<
   T = Record<string, unknown>,
   Bag extends BagTemplate = BagTemplate,
 >(
-  options: StreamResourceOptions<T, InferBag<T, Bag>>,
-): StreamResourceRef<T, InferBag<T, Bag>> {
+  options: AgentOptions<T, InferBag<T, Bag>>,
+): AgentRef<T, InferBag<T, Bag>> {
   // Injection context required
   const destroyRef   = inject(DestroyRef);
   const globalConfig = inject(STREAM_RESOURCE_CONFIG, { optional: true });

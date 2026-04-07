@@ -2,11 +2,11 @@
 
 ## Problem
 
-The cockpit has 8 LangGraph capability modules but only Streaming has a working Angular example. The other 7 (Persistence, Durable Execution, Interrupts, Memory, Subgraphs, Time Travel, Deployment Runtime) show placeholder metadata. Developers visiting the cockpit can't see working examples of these critical `streamResource()` features.
+The cockpit has 8 LangGraph capability modules but only Streaming has a working Angular example. The other 7 (Persistence, Durable Execution, Interrupts, Memory, Subgraphs, Time Travel, Deployment Runtime) show placeholder metadata. Developers visiting the cockpit can't see working examples of these critical `agent()` features.
 
 ## Goal
 
-Build all 8 LangGraph capability examples end-to-end: Angular demo apps using `streamResource()`, Python LangGraph backends, tutorial docs, API reference pages, and Playwright e2e tests. All examples share a common chat UI component from `@cacheplane/chat` (built iteratively alongside the first examples).
+Build all 8 LangGraph capability examples end-to-end: Angular demo apps using `agent()`, Python LangGraph backends, tutorial docs, API reference pages, and Playwright e2e tests. All examples share a common chat UI component from `@cacheplane/chat` (built iteratively alongside the first examples).
 
 ## Architecture
 
@@ -31,8 +31,8 @@ cockpit/langgraph/{capability}/
 └── angular/
     ├── src/
     │   ├── app/
-    │   │   ├── {capability}.component.ts   # Demo using streamResource()
-    │   │   └── app.config.ts               # provideStreamResource()
+    │   │   ├── {capability}.component.ts   # Demo using agent()
+    │   │   └── app.config.ts               # provideAgent()
     │   ├── environments/
     │   │   ├── environment.ts
     │   │   └── environment.development.ts
@@ -93,7 +93,7 @@ export class PersistenceComponent { ... }
 
 ### What Each Capability Demonstrates
 
-| Capability | `streamResource()` Feature | UI Extension | Python Graph Pattern |
+| Capability | `agent()` Feature | UI Extension | Python Graph Pattern |
 |---|---|---|---|
 | **Streaming** | `messages()`, `submit()`, `isLoading()` | (base chat) | Single generate node |
 | **Persistence** | `switchThread()`, `onThreadId()`, `history()` | Thread picker sidebar | Checkpointer (in-memory) |
@@ -143,7 +143,7 @@ Port assignments:
 
 Each `guide.md` follows the streaming example's structure:
 ```markdown
-# {Capability} with stream-resource
+# {Capability} with angular
 
 <Summary>...</Summary>
 <Prompt>Agentic coding prompt for this capability</Prompt>
@@ -151,7 +151,7 @@ Each `guide.md` follows the streaming example's structure:
 <Steps>
 <Step title="Configure the provider">...</Step>
 <Step title="Create the resource">
-  Show the specific streamResource() usage for this capability
+  Show the specific agent() usage for this capability
 </Step>
 <Step title="Bind the template">
   Show capability-specific template bindings
