@@ -58,7 +58,7 @@ export class MyComponent {
 }
 ```
 
-<Callout type="warn" title="Required provider">
+<Callout type="warning" title="Required provider">
 Injecting `CHAT_CONFIG` without calling `provideChat()` will throw a `NullInjectorError`. Use `inject(CHAT_CONFIG, { optional: true })` if your component should work without global configuration.
 </Callout>
 

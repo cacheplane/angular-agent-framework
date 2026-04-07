@@ -72,7 +72,7 @@ export class MyComponent {
 }
 ```
 
-<Callout type="warn" title="Optional injection">
+<Callout type="warning" title="Optional injection">
 If `provideChat()` has not been called, injecting `CHAT_CONFIG` will throw. Use `inject(CHAT_CONFIG, { optional: true })` if your component needs to work with or without global configuration.
 </Callout>
 
