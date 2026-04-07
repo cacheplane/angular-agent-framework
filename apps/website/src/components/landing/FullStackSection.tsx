@@ -72,8 +72,8 @@ const HORIZON_ITEMS = ['Voice UI primitives', 'Video stream rendering', 'Collabo
 function Connector({ layer }: { layer: typeof LAYERS[0] }) {
   if (!layer.connFill) return null;
   return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', height: 52 }}>
-      <svg width="4" height="52" viewBox="0 0 4 52" overflow="visible">
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', height: 52, zIndex: 0 }}>
+      <svg width="4" height="52" viewBox="0 0 4 52" overflow="hidden">
         <line x1="2" y1="0" x2="2" y2="52" stroke={layer.connColor} strokeWidth="2" strokeDasharray="3 3" />
         <circle r="3.5" fill={layer.connFill}>
           <animateMotion dur={`${layer.connDur}s`} repeatCount="indefinite" begin="0s">
@@ -171,6 +171,8 @@ export function FullStackSection() {
               padding: '20px 20px 18px',
               background: layer.bg,
               border: `2px solid ${layer.border}`,
+              position: 'relative',
+              zIndex: 1,
             }}>
               {/* Tag — inline, not absolute. Fixes Gen UI overlap bug. */}
               <span style={{
