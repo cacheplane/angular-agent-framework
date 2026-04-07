@@ -4,9 +4,8 @@
     {
       "name": "website-dev",
       "runtimeExecutable": "/bin/bash",
-      "runtimeArgs": ["-c", "export PATH=/Users/blove/.nvm/versions/node/v22.14.0/bin:$PATH && npx nx serve website --port $PORT"],
-      "port": 3000,
-      "autoPort": true
+      "runtimeArgs": ["-c", "export PATH=/Users/blove/.nvm/versions/node/v22.14.0/bin:$PATH && npx nx serve website"],
+      "port": 3000
     },
     {
       "name": "cockpit",

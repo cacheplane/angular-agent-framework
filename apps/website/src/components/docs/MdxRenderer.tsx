@@ -11,6 +11,7 @@ import { ArchFlowDiagram } from './ArchFlowDiagram';
 import { DocsBreadcrumb } from './DocsBreadcrumb';
 import { DocsPrevNext } from './DocsPrevNext';
 import { type LibraryId } from '../../lib/docs-config';
+import remarkGfm from 'remark-gfm';
 import rehypePrettyCode from 'rehype-pretty-code';
 import rehypeSlug from 'rehype-slug';
 
@@ -57,6 +58,7 @@ export function MdxRenderer({ source, library, section, slug, title }: MdxRender
           components={mdxComponents}
           options={{
             mdxOptions: {
+              remarkPlugins: [remarkGfm],
               rehypePlugins: [rehypeSlug, [rehypePrettyCode, rehypeOptions] as any],
             },
           }}
