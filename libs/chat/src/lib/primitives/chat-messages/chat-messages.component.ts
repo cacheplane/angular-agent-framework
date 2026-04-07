@@ -9,6 +9,12 @@ import {
 import { NgTemplateOutlet } from '@angular/common';
 import type { BaseMessage } from '@langchain/core/messages';
 import type { AgentRef } from '@cacheplane/angular';
+<<<<<<< HEAD
+=======
+import type { ViewRegistry } from '@cacheplane/render';
+import type { StateStore } from '@json-render/core';
+import { RenderSpecComponent, toRenderRegistry } from '@cacheplane/render';
+>>>>>>> origin/main
 import { MessageTemplateDirective } from './message-template.directive';
 import type { MessageTemplateType } from '../../chat.types';
 
@@ -42,7 +48,11 @@ export function getMessageType(message: BaseMessage): MessageTemplateType {
 @Component({
   selector: 'chat-messages',
   standalone: true,
+<<<<<<< HEAD
   imports: [NgTemplateOutlet, MessageTemplateDirective],
+=======
+  imports: [NgTemplateOutlet, MessageTemplateDirective, RenderSpecComponent],
+>>>>>>> origin/main
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @for (message of messages(); track $index) {
@@ -53,19 +63,69 @@ export function getMessageType(message: BaseMessage): MessageTemplateType {
           [ngTemplateOutletContext]="{ $implicit: message, index: $index }"
         />
       }
+<<<<<<< HEAD
+=======
+
+      @if (renderRegistry() && getUiSpec(message); as spec) {
+        <div class="ml-10 mt-2">
+          <render-spec
+            [spec]="$any(spec)"
+            [registry]="renderRegistry()!"
+            [store]="store()"
+          />
+        </div>
+      }
+>>>>>>> origin/main
     }
   `,
 })
 export class ChatMessagesComponent {
   readonly ref = input.required<AgentRef<any, any>>();
+<<<<<<< HEAD
+=======
+  readonly views = input<ViewRegistry | undefined>(undefined);
+  readonly store = input<StateStore | undefined>(undefined);
+>>>>>>> origin/main
 
   readonly messageTemplates = contentChildren(MessageTemplateDirective);
 
   readonly messages = computed(() => this.ref().messages());
 
   readonly getMessageType = getMessageType;
+<<<<<<< HEAD
+=======
+  readonly getUiSpec = getUiSpec;
+
+  /** Convert ViewRegistry to AngularRegistry for render-spec */
+  readonly renderRegistry = computed(() => {
+    const v = this.views();
+    return v ? toRenderRegistry(v) : undefined;
+  });
+>>>>>>> origin/main
 
   findTemplate(type: MessageTemplateType): MessageTemplateDirective | undefined {
     return this.messageTemplates().find(t => t.chatMessageTemplate() === type);
   }
 }
+<<<<<<< HEAD
+=======
+
+/**
+ * Extracts a UI spec from a message if present.
+ * Checks the message's `ui` field and `additional_kwargs.ui` field.
+ */
+export function getUiSpec(message: BaseMessage): unknown | null {
+  const msg = message as unknown as Record<string, unknown>;
+  if (msg['ui'] && isValidSpec(msg['ui'])) return msg['ui'];
+  const kwargs = msg['additional_kwargs'] as Record<string, unknown> | undefined;
+  if (kwargs?.['ui'] && isValidSpec(kwargs['ui'])) return kwargs['ui'];
+  return null;
+}
+
+function isValidSpec(value: unknown): boolean {
+  return typeof value === 'object'
+    && value !== null
+    && 'root' in (value as Record<string, unknown>)
+    && 'elements' in (value as Record<string, unknown>);
+}
+>>>>>>> origin/main
