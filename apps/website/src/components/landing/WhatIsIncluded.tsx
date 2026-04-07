@@ -36,7 +36,7 @@ const cards = [
     description:
       'One license covers one Angular application in production. angular is included for that app. The 3-month engagement is how we get you there together.',
     bullets: [
-      '$20,000 · one app in production',
+      'One app in production',
       'angular license included',
       'Patterns your team can replicate',
     ],

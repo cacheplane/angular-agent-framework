@@ -53,8 +53,8 @@ export const docsConfig: DocsSection[] = [
     id: 'api',
     color: 'blue',
     pages: [
-      { title: 'agent()', slug: 'angular', section: 'api' },
-      { title: 'provideAgent()', slug: 'provide-angular', section: 'api' },
+      { title: 'agent()', slug: 'agent', section: 'api' },
+      { title: 'provideAgent()', slug: 'provide-agent', section: 'api' },
       { title: 'FetchStreamTransport', slug: 'fetch-stream-transport', section: 'api' },
       { title: 'MockAgentTransport', slug: 'mock-stream-transport', section: 'api' },
     ],

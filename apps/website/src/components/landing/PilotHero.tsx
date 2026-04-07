@@ -194,7 +194,7 @@ export function PilotHero() {
             letterSpacing: '0.02em',
           }}
         >
-          App deployment license · $20,000 · 3-month co-pilot engagement
+          Included with every app deployment license · 3-month co-pilot engagement
         </motion.p>
       </div>
     </section>

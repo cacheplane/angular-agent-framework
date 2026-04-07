@@ -22,8 +22,8 @@ function loadApiDocs(): ApiDocEntry[] {
 }
 
 const API_NAME_MAP: Record<string, string> = {
-  'angular': 'agent',
-  'provide-angular': 'provideAgent',
+  'agent': 'agent',
+  'provide-agent': 'provideAgent',
   'fetch-stream-transport': 'FetchStreamTransport',
   'mock-stream-transport': 'MockAgentTransport',
 };

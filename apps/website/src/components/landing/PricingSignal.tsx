@@ -67,7 +67,7 @@ export function PricingSignal() {
                 lineHeight: 1,
               }}
             >
-              $20,000
+              Included
             </span>
             <span
               style={{
@@ -78,7 +78,7 @@ export function PricingSignal() {
                 marginTop: '8px',
               }}
             >
-              App deployment license. Includes angular + 3-month co-pilot engagement.
+              The 3-month pilot engagement is included with every app deployment license.
             </span>
           </div>
 

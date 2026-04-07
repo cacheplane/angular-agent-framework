@@ -23,8 +23,8 @@ const PLANS = [
   {
     name: 'App Deployment',
     price: '$2,000',
-    period: '/app one-time',
-    features: ['Per-application license', 'All environments covered', 'No seat limits', 'Perpetual for version'],
+    period: '/app/year',
+    features: ['Per-application license', 'All environments covered', 'No seat limits', '12-month license term'],
     highlight: false,
     cta: 'Buy License',
     ctaHref: '#lead-form',

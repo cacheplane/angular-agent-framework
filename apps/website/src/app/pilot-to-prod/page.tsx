@@ -10,7 +10,7 @@ import { tokens } from '../../../lib/design-tokens';
 
 export const metadata = {
   title: 'Pilot to Production — Angular Agent Framework',
-  description: 'Close the last-mile gap. Purchase an app deployment license and we work alongside your Angular team for 3 months to ship your first agent to production.',
+  description: 'Close the last-mile gap. The 3-month pilot engagement is included with every app deployment license. We work alongside your Angular team to ship your first agent to production.',
 };
 
 export default function PilotToProdPage() {
