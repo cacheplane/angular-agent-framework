@@ -25,7 +25,15 @@ export class FetchStreamTransport implements AgentTransport {
    * @param onThreadId - Optional callback invoked when a new thread is created
    */
   constructor(apiUrl: string, onThreadId?: (id: string) => void) {
-    this.client = new Client({ apiUrl });
+    // Normalize relative paths (e.g. '/api') to absolute URLs.
+    // The LangGraph SDK Client requires an absolute URL, but production
+    // environments use relative paths that are proxied by Vercel middleware.
+    const absoluteUrl = apiUrl.startsWith('http://') || apiUrl.startsWith('https://')
+      ? apiUrl
+      : typeof window !== 'undefined'
+        ? `${window.location.origin}${apiUrl}`
+        : apiUrl;
+    this.client = new Client({ apiUrl: absoluteUrl });
     this.onThreadId = onThreadId;
   }
 
