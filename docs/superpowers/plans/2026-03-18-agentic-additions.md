@@ -74,7 +74,7 @@ Download Angular logo SVG into the project:
 ```bash
 mkdir -p apps/website/public/logos
 curl -o apps/website/public/logos/angular.svg \
-  "https://stream-resource.dev/assets/icons/logo.svg" 2>/dev/null || \
+  "https://cacheplane.ai/assets/icons/logo.svg" 2>/dev/null || \
   echo '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 250 250"><path fill="#DD0031" d="M125 30L31.9 63.2l14.2 123.1L125 230l78.9-43.7 14.2-123.1z"/><path fill="#C3002F" d="M125 30v22.2l-61.7 162.4L125 230z"/><path fill="#fff" d="M125 52.1L66.8 182.6h21.7l11.7-29.2h49.4l11.7 29.2H183L125 52.1zm17 83.3h-34l17-40.9z"/></svg>',
 ```
 
@@ -755,7 +755,7 @@ const chat = agent({ assistantId: 'chat_agent', apiUrl: 'http://localhost:2024' 
 npx @angular/mcp
 
 ## Full reference
-https://stream-resource.dev/llms-full.txt
+https://cacheplane.ai/llms-full.txt
 `.trim();
 }
 
@@ -887,7 +887,7 @@ Add to ~/.claude/settings.json:
 {"mcpServers":{"angular":{"command":"npx","args":["@angular/mcp"]}}}
 
 ## Version check
-If this file is stale, fetch the latest: https://stream-resource.dev/llms-full.txt
+If this file is stale, fetch the latest: https://cacheplane.ai/llms-full.txt
 ```
 
 Create `apps/website/content/AGENTS.md.template` with identical content (same file, different name).

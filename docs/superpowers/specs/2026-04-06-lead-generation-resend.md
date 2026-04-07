@@ -95,7 +95,7 @@ Sent to the user after white paper form submission.
 
 - **To:** User's email
 - **Subject:** `Your Angular Agent Readiness Guide`
-- **Body:** Brief intro, prominent "Download the Guide" button linking to `https://stream-resource.dev/whitepaper.pdf`, chapter summary list.
+- **Body:** Brief intro, prominent "Download the Guide" button linking to `https://cacheplane.ai/whitepaper.pdf`, chapter summary list.
 
 ### `newsletter-welcome.tsx`
 

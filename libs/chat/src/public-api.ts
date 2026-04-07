@@ -51,5 +51,13 @@ export {
   ICON_WARNING, ICON_AGENT, ICON_CHECK, ICON_SEND,
 } from './lib/styles/chat-icons';
 
+// Views (re-exported from @cacheplane/render for convenience)
+export { views, withViews, withoutViews, toRenderRegistry } from '@cacheplane/render';
+export type { ViewRegistry } from '@cacheplane/render';
+export { provideViews, VIEW_REGISTRY } from '@cacheplane/render';
+
+// Spec detection
+export { getUiSpec } from './lib/primitives/chat-messages/chat-messages.component';
+
 // Test utilities
 export { createMockAgentRef } from './lib/testing/mock-agent-ref';

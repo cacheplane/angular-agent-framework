@@ -172,7 +172,7 @@ interface WhitepaperDownloadProps {
   name?: string;
 }
 
-const DOWNLOAD_URL = 'https://stream-resource.dev/whitepaper.pdf';
+const DOWNLOAD_URL = 'https://cacheplane.ai/whitepaper.pdf';
 
 export default function WhitepaperDownload({ name }: WhitepaperDownloadProps) {
   return (
@@ -248,7 +248,7 @@ export default function NewsletterWelcome() {
             You'll receive updates on new capabilities, production patterns, and Angular agent best practices.
             We keep it focused and infrequent — no spam.
           </Text>
-          <Button href="https://stream-resource.dev/docs" style={{
+          <Button href="https://cacheplane.ai/docs" style={{
             backgroundColor: '#004090', color: '#fff', padding: '12px 28px',
             borderRadius: 10, fontSize: 14, fontWeight: 700, textDecoration: 'none',
           }}>

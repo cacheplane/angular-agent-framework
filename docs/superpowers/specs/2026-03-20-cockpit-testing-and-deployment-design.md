@@ -94,7 +94,7 @@ These tests validate the shell contract, not capability business logic.
 
 The cockpit is deployed as a product surface at:
 
-- `cockpit.stream-resource.dev`
+- `cockpit.cacheplane.ai`
 
 Deployment verification should confirm:
 

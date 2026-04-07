@@ -193,7 +193,7 @@ npm install angular
 npx @angular/mcp  (add to Claude Code settings for tool access)
 
 ## Version
-@VERSION@  — regenerate if stale: https://stream-resource.dev/llms-full.txt
+@VERSION@  — regenerate if stale: https://cacheplane.ai/llms-full.txt
 ```
 
 ### `AGENTS.md`

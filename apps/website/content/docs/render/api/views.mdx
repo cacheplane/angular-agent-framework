@@ -1,0 +1,135 @@
+---
+title: views()
+description: Create and compose view registries for generative UI rendering
+---
+
+# views()
+
+Creates an immutable view registry mapping names to Angular components. Views are rendered inline in the chat when the agent produces a JSON spec.
+
+## Usage
+
+```typescript
+import { views } from '@cacheplane/render';
+
+const ui = views({
+  'plan-checklist': PlanChecklistComponent,
+  'file-preview': FilePreviewComponent,
+  'code-output': CodeOutputComponent,
+});
+```
+
+Pass to the chat component:
+
+```html
+<chat [ref]="stream" [views]="ui" />
+```
+
+Or provide globally via DI:
+
+```typescript
+import { provideViews } from '@cacheplane/render';
+
+// app.config.ts
+providers: [provideViews(ui)]
+```
+
+## Composition
+
+Compose registries via object spread. Last key wins for overrides:
+
+```typescript
+const all = views({
+  ...thirdPartyViews,
+  ...myViews,
+  'chart': MyCustomChart, // overrides thirdPartyViews['chart']
+});
+```
+
+## API
+
+### `views(map)`
+
+Creates a frozen `ViewRegistry` from a `Record<string, Type<unknown>>`.
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `map` | `Record<string, Type<unknown>>` | Name → Angular component mapping |
+| **Returns** | `ViewRegistry` | Frozen immutable registry |
+
+### `withViews(base, additions)`
+
+Adds new views without overwriting existing entries. Existing keys in `base` are preserved.
+
+```typescript
+const extended = withViews(base, {
+  'new-widget': NewWidget,    // added
+  'existing': Other,          // IGNORED — base already has 'existing'
+});
+```
+
+### `withoutViews(base, ...names)`
+
+Removes views by name:
+
+```typescript
+const restricted = withoutViews(base, 'dangerous-widget', 'internal-tool');
+```
+
+### `provideViews(registry)`
+
+Angular DI provider. Works at app level or route level:
+
+```typescript
+// Global
+providers: [provideViews(ui)]
+
+// Route-scoped
+{ path: 'planning', providers: [provideViews(planningViews)] }
+```
+
+### `toRenderRegistry(registry)`
+
+Converts a `ViewRegistry` to the low-level `AngularRegistry` type used by `<render-spec>`. Called internally by the chat component — most developers won't need this.
+
+## View Components
+
+View components are standard Angular standalone components. They receive props as `input()` signals:
+
+```typescript
+@Component({
+  selector: 'plan-checklist',
+  standalone: true,
+  template: `
+    <div class="border rounded-xl p-4">
+      <h4>{{ title() }}</h4>
+      <ng-content />
+    </div>
+  `,
+})
+export class PlanChecklistComponent {
+  readonly title = input<string>('Plan');
+}
+```
+
+## How Specs Are Detected
+
+The chat component checks each message for a `ui` field containing a valid spec:
+
+```json
+{
+  "type": "tool",
+  "content": "...",
+  "ui": {
+    "root": "plan",
+    "elements": {
+      "plan": {
+        "type": "plan-checklist",
+        "props": { "title": "My Plan" }
+      }
+    }
+  }
+}
+```
+
+The `type` in the spec is matched against the view registry to resolve the Angular component.

@@ -11,7 +11,7 @@
 Define a single integrated cockpit application that serves as:
 
 - the live reference surface for all supported capabilities
-- a marketing asset at `cockpit.stream-resource.dev`
+- a marketing asset at `cockpit.cacheplane.ai`
 - the canonical integration surface for examples and testing
 
 ---

@@ -23,7 +23,7 @@ Any use in a for-profit product, service, or organization requires a paid commer
 
 ## Purchase or inquire
 
-- Website: https://stream-resource.dev/pricing
+- Website: https://cacheplane.ai/pricing
 - Email: hello@cacheplane.ai
 
 See [`LICENSE-COMMERCIAL`](./LICENSE-COMMERCIAL) for the full commercial license terms.

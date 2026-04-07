@@ -429,7 +429,7 @@ to:
 # Angular Agent Framework v0.0.1
 ```
 
-Note: All other references in these files (`agent()`, `provideAgent`, `import ... from 'angular'`, `@angular/mcp`, `stream-resource.dev`) are code/infrastructure references and should NOT be changed.
+Note: All other references in these files (`agent()`, `provideAgent`, `import ... from 'angular'`, `@angular/mcp`, `cacheplane.ai`) are code/infrastructure references and should NOT be changed.
 
 - [ ] **Step 3: Commit**
 
