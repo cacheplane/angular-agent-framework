@@ -9,6 +9,7 @@
     "next": "~16.1.6",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "remark-gfm": "^4.0.1",
     "resend": "^6.10.0",
     "shiki": "*",
     "tailwind-merge": "^2.5.0"

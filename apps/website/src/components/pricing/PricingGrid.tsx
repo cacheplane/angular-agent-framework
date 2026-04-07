@@ -15,7 +15,7 @@ const PLANS = [
     name: 'Developer Seat',
     price: '$500',
     period: '/seat/year',
-    features: ['Commercial use', '12-month release lock', 'Email support', 'All features'],
+    features: ['Commercial use', '12-month license', 'Email support', 'All features'],
     highlight: false,
     cta: 'Buy License',
     ctaHref: '#lead-form',

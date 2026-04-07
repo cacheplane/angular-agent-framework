@@ -12,6 +12,7 @@ import { DocsBreadcrumb } from './DocsBreadcrumb';
 import { DocsPrevNext } from './DocsPrevNext';
 import rehypePrettyCode from 'rehype-pretty-code';
 import rehypeSlug from 'rehype-slug';
+import remarkGfm from 'remark-gfm';
 
 const mdxComponents = {
   Callout,
@@ -55,6 +56,7 @@ export function MdxRendererNew({ source, section, slug, title }: NewProps) {
           components={mdxComponents}
           options={{
             mdxOptions: {
+              remarkPlugins: [remarkGfm],
               rehypePlugins: [rehypeSlug, [rehypePrettyCode, rehypeOptions] as any],
             },
           }}

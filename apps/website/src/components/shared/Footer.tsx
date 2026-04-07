@@ -103,7 +103,7 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-10 md:gap-8">
           {/* Brand */}
           <div className="md:col-span-2">
-            <p className="font-garamond text-xl font-bold mb-2" style={{ color: tokens.colors.textPrimary }}>Angular Agent Framework</p>
+            <p className="font-garamond text-xl font-bold mb-2" style={{ color: tokens.colors.textPrimary }}>🛩️ Angular Agent Framework</p>
             <p className="text-sm mb-4" style={{ color: tokens.colors.textMuted, maxWidth: '36ch', lineHeight: 1.6 }}>
               The enterprise Angular agent framework for LangChain. Signal-native streaming built for production Angular 20+.
             </p>
