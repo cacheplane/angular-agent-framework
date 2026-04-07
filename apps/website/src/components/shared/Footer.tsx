@@ -105,7 +105,7 @@ export function Footer() {
           <div className="md:col-span-2">
             <p className="font-garamond text-xl font-bold mb-2" style={{ color: tokens.colors.textPrimary }}>Angular Agent Framework</p>
             <p className="text-sm mb-4" style={{ color: tokens.colors.textMuted, maxWidth: '36ch', lineHeight: 1.6 }}>
-              The enterprise streaming resource for LangChain and Angular. Signal-native streaming built for production Angular 20+.
+              The enterprise Angular agent framework for LangChain. Signal-native streaming built for production Angular 20+.
             </p>
             <NewsletterForm />
             {/* Social links */}
