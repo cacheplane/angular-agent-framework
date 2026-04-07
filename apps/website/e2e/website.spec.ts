@@ -28,7 +28,7 @@ test('pricing page shows 4 plan cards', async ({ page }) => {
 test('pricing page lead form validates required fields', async ({ page }) => {
   await page.goto('/pricing');
   await page.click('button[type="submit"]');
-  await expect(page.locator('form')).toBeVisible();
+  await expect(page.locator('form').first()).toBeVisible();
 });
 
 test('docs page renders sidebar and content', async ({ page }) => {
