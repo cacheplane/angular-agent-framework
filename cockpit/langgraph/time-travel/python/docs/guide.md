@@ -1,29 +1,29 @@
-# Time Travel with stream-resource
+# Time Travel with angular
 
 <Summary>
-Build a chat interface with time travel using `streamResource()` from
-`@cacheplane/stream-resource`. Browse the checkpoint history via `stream.history()`,
+Build a chat interface with time travel using `agent()` from
+`@cacheplane/angular`. Browse the checkpoint history via `stream.history()`,
 see the active branch via `stream.branch()`, and fork the conversation from any
 past state with `stream.setBranch(checkpointId)`.
 </Summary>
 
 <Prompt>
-Add time travel to this Angular component using `streamResource()` from `@cacheplane/stream-resource`. Display checkpoint history from `stream.history()` in the sidebar. Highlight the active branch using `stream.branch()`. Call `stream.setBranch(id)` when the user clicks a checkpoint to fork the conversation from that point.
+Add time travel to this Angular component using `agent()` from `@cacheplane/angular`. Display checkpoint history from `stream.history()` in the sidebar. Highlight the active branch using `stream.branch()`. Call `stream.setBranch(id)` when the user clicks a checkpoint to fork the conversation from that point.
 </Prompt>
 
 <Steps>
 <Step title="Configure the provider">
 
-Set up `provideStreamResource()` in your app config with the LangGraph API URL:
+Set up `provideAgent()` in your app config with the LangGraph API URL:
 
 ```typescript
 // app.config.ts
 import { ApplicationConfig } from '@angular/core';
-import { provideStreamResource } from '@cacheplane/stream-resource';
+import { provideAgent } from '@cacheplane/angular';
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideStreamResource({
+    provideAgent({
       apiUrl: 'https://your-deployment.langgraph.app',
     }),
   ],
@@ -33,15 +33,15 @@ export const appConfig: ApplicationConfig = {
 </Step>
 <Step title="Create the streaming resource">
 
-In your component, call `streamResource()`. The history and branch signals are
+In your component, call `agent()`. The history and branch signals are
 available automatically — no extra config needed:
 
 ```typescript
 // time-travel.component.ts
-import { streamResource } from '@cacheplane/stream-resource';
+import { agent } from '@cacheplane/angular';
 
 export class TimeTravelComponent {
-  protected readonly stream = streamResource({
+  protected readonly stream = agent({
     assistantId: 'time-travel',
   });
 }

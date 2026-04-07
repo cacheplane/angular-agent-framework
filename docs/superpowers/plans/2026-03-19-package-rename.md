@@ -11,10 +11,10 @@ Rename both published packages to the `@cacheplane` npm scope.
 
 | Before | After |
 |---|---|
-| `stream-resource` | `@cacheplane/stream-resource` |
-| `@stream-resource/mcp` | `@cacheplane/stream-resource-mcp` |
+| `angular` | `@cacheplane/angular` |
+| `@angular/mcp` | `@cacheplane/angular-mcp` |
 
-The website brand name **stream-resource** (used in the hero SVG wordmark, site title, and domain) is unchanged.
+The website brand name **angular** (used in the hero SVG wordmark, site title, and domain) is unchanged.
 
 ---
 
@@ -24,15 +24,15 @@ The website brand name **stream-resource** (used in the hero SVG wordmark, site 
 
 | File | Change |
 |---|---|
-| `libs/stream-resource/package.json` | `"name": "@cacheplane/stream-resource"` |
-| `packages/mcp/package.json` | `"name": "@cacheplane/stream-resource-mcp"`, `"bin": { "@cacheplane/stream-resource-mcp": "dist/index.js" }` |
+| `libs/angular/package.json` | `"name": "@cacheplane/angular"` |
+| `packages/mcp/package.json` | `"name": "@cacheplane/angular-mcp"`, `"bin": { "@cacheplane/angular-mcp": "dist/index.js" }` |
 
 ### TypeScript path aliases
 
 **`tsconfig.base.json`:**
 ```json
 "paths": {
-  "@cacheplane/stream-resource": ["libs/stream-resource/src/public-api.ts"]
+  "@cacheplane/angular": ["libs/angular/src/public-api.ts"]
 }
 ```
 
@@ -40,7 +40,7 @@ The website brand name **stream-resource** (used in the hero SVG wordmark, site 
 
 - `apps/demo/src/app/chat-demo/chat-demo.component.ts`
 - `packages/mcp/src/tools/get-example.ts` (all template string import examples)
-- `packages/mcp/src/tools/add-stream-resource.ts` (install command + generated diff)
+- `packages/mcp/src/tools/add-angular.ts` (install command + generated diff)
 - `packages/mcp/src/tools/scaffold-chat-component.ts` (generated code)
 - `apps/website/src/components/shared/InstallStrip.tsx`
 - `apps/website/src/components/pricing/PricingGrid.tsx` (npm URL)
@@ -54,7 +54,7 @@ The website brand name **stream-resource** (used in the hero SVG wordmark, site 
 
 ### MCP binary name
 
-The `npx` command changed from `npx @stream-resource/mcp` to `npx @cacheplane/stream-resource-mcp`.
+The `npx` command changed from `npx @angular/mcp` to `npx @cacheplane/angular-mcp`.
 
 ---
 

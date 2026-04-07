@@ -30,7 +30,7 @@ Add these lines to the end of `apps/website/.env.example`:
 # Resend (https://resend.com — free tier: 3,000 emails/month)
 RESEND_API_KEY=re_xxxxxxxxxxxxxxxxxxxxxxxxxxxx
 RESEND_AUDIENCE_ID=aud_xxxxxxxxxxxxxxxxxxxxxxxxxxxx
-RESEND_FROM="Angular Stream Resource <hello@cacheplane.io>"
+RESEND_FROM="Angular Agent Framework <hello@cacheplane.io>"
 RESEND_NOTIFY_TO=hello@cacheplane.io
 ```
 
@@ -62,7 +62,7 @@ import { Resend } from 'resend';
 export const resend = new Resend(process.env.RESEND_API_KEY);
 
 export const AUDIENCE_ID = process.env.RESEND_AUDIENCE_ID || '';
-export const FROM = process.env.RESEND_FROM || 'Angular Stream Resource <hello@cacheplane.io>';
+export const FROM = process.env.RESEND_FROM || 'Angular Agent Framework <hello@cacheplane.io>';
 export const NOTIFY_TO = process.env.RESEND_NOTIFY_TO || 'hello@cacheplane.io';
 
 /** Add a contact to the Resend audience. Fails silently. */
@@ -181,7 +181,7 @@ export default function WhitepaperDownload({ name }: WhitepaperDownloadProps) {
       <Body style={{ fontFamily: 'Inter, Arial, sans-serif', backgroundColor: '#f4f4f5', padding: '40px 0' }}>
         <Container style={{ maxWidth: 520, margin: '0 auto', backgroundColor: '#fff', borderRadius: 12, padding: '32px 40px', border: '1px solid #e4e4e7' }}>
           <Text style={{ fontSize: 11, fontFamily: 'monospace', textTransform: 'uppercase' as const, letterSpacing: '0.08em', color: '#004090', fontWeight: 700 }}>
-            Angular Stream Resource
+            Angular Agent Framework
           </Text>
           <Text style={{ fontSize: 22, fontWeight: 700, color: '#1a1a2e', margin: '12px 0 8px' }}>
             Your Angular Agent Readiness Guide
@@ -200,7 +200,7 @@ export default function WhitepaperDownload({ name }: WhitepaperDownloadProps) {
           </Section>
           <Hr style={{ borderColor: '#e4e4e7', margin: '16px 0' }} />
           <Text style={{ fontSize: 12, color: '#a1a1aa', lineHeight: '1.5' }}>
-            Angular Stream Resource — Signal-native streaming for LangGraph.
+            Angular Agent Framework — Signal-native streaming for LangGraph.
           </Text>
         </Container>
       </Body>
@@ -239,10 +239,10 @@ export default function NewsletterWelcome() {
       <Body style={{ fontFamily: 'Inter, Arial, sans-serif', backgroundColor: '#f4f4f5', padding: '40px 0' }}>
         <Container style={{ maxWidth: 520, margin: '0 auto', backgroundColor: '#fff', borderRadius: 12, padding: '32px 40px', border: '1px solid #e4e4e7' }}>
           <Text style={{ fontSize: 11, fontFamily: 'monospace', textTransform: 'uppercase' as const, letterSpacing: '0.08em', color: '#004090', fontWeight: 700 }}>
-            Angular Stream Resource
+            Angular Agent Framework
           </Text>
           <Text style={{ fontSize: 22, fontWeight: 700, color: '#1a1a2e', margin: '12px 0 8px' }}>
-            Welcome to Angular Stream Resource updates
+            Welcome to Angular Agent Framework updates
           </Text>
           <Text style={{ fontSize: 14, color: '#3f3f46', lineHeight: '1.6', margin: '0 0 24px' }}>
             You'll receive updates on new capabilities, production patterns, and Angular agent best practices.
@@ -256,7 +256,7 @@ export default function NewsletterWelcome() {
           </Button>
           <Hr style={{ borderColor: '#e4e4e7', margin: '24px 0 16px' }} />
           <Text style={{ fontSize: 12, color: '#a1a1aa', lineHeight: '1.5' }}>
-            Angular Stream Resource — Signal-native streaming for LangGraph.
+            Angular Agent Framework — Signal-native streaming for LangGraph.
           </Text>
         </Container>
       </Body>
@@ -463,7 +463,7 @@ export async function POST(req: NextRequest) {
       resend.emails.send({
         from: FROM,
         to: email,
-        subject: 'Welcome to Angular Stream Resource updates',
+        subject: 'Welcome to Angular Agent Framework updates',
         react: NewsletterWelcome(),
       }),
       addToAudience(email),

@@ -5,7 +5,7 @@ import {
   input,
   ChangeDetectionStrategy,
 } from '@angular/core';
-import type { StreamResourceRef } from '@cacheplane/stream-resource';
+import type { AgentRef } from '@cacheplane/angular';
 
 export function extractErrorMessage(error: unknown): string | null {
   if (!error) return null;
@@ -29,6 +29,6 @@ export function extractErrorMessage(error: unknown): string | null {
   `,
 })
 export class ChatErrorComponent {
-  readonly ref = input.required<StreamResourceRef<any, any>>();
+  readonly ref = input.required<AgentRef<any, any>>();
   readonly errorMessage = computed(() => extractErrorMessage(this.ref().error()));
 }

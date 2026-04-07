@@ -2,18 +2,18 @@
 import { Observable, takeUntil } from 'rxjs';
 import {
   ResourceStatus,
-  StreamResourceOptions,
+  AgentOptions,
   StreamSubjects,
   StreamEvent,
-  StreamResourceTransport,
-} from '../stream-resource.types';
+  AgentTransport,
+} from '../agent.types';
 import { FetchStreamTransport } from '../transport/fetch-stream.transport';
 import { BagTemplate } from '@langchain/langgraph-sdk';
 import type { BaseMessage } from '@langchain/core/messages';
 import type { Interrupt } from '@langchain/langgraph-sdk';
 
 export interface StreamManagerBridgeOptions<T, ResolvedBag extends BagTemplate = BagTemplate> {
-  options:   StreamResourceOptions<T, ResolvedBag>;
+  options:   AgentOptions<T, ResolvedBag>;
   subjects:  StreamSubjects<T, ResolvedBag>;
   threadId$: Observable<string | null>;
   destroy$:  Observable<void>;
@@ -38,7 +38,7 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
     currentThreadId = id;
     userOnThreadId?.(id);
   };
-  const transport: StreamResourceTransport =
+  const transport: AgentTransport =
     options.transport ?? new FetchStreamTransport(options.apiUrl, wrappedOnThreadId);
 
   let currentThreadId: string | null = null;

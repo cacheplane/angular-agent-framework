@@ -52,4 +52,4 @@ export {
 } from './lib/styles/chat-icons';
 
 // Test utilities
-export { createMockStreamResourceRef } from './lib/testing/mock-stream-resource-ref';
+export { createMockAgentRef } from './lib/testing/mock-agent-ref';

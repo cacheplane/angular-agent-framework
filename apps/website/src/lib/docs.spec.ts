@@ -8,14 +8,14 @@ describe('website docs bindings', () => {
     expect(slugs.length).toBe(allDocsPages.length);
     expect(slugs).toContainEqual({ section: 'getting-started', slug: 'introduction' });
     expect(slugs).toContainEqual({ section: 'guides', slug: 'streaming' });
-    expect(slugs).toContainEqual({ section: 'api', slug: 'stream-resource' });
+    expect(slugs).toContainEqual({ section: 'api', slug: 'angular' });
   });
 
   it('loads a doc by section and slug', () => {
     const doc = getDocBySlug('getting-started', 'introduction');
     expect(doc).not.toBeNull();
     expect(doc?.title).toBe('Introduction');
-    expect(doc?.content).toContain('Angular Stream Resource');
+    expect(doc?.content).toContain('Angular Agent Framework');
   });
 
   it('returns null for non-existent doc', () => {

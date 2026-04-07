@@ -27,21 +27,21 @@ function loadAllPrompts(): string {
 
 export async function GET() {
   const sections = [
-    '# Angular Stream Resource — Full Reference\n\nSee /llms.txt for a compact summary.\n',
+    '# Angular Agent Framework — Full Reference\n\nSee /llms.txt for a compact summary.\n',
     '## API Reference (TypeDoc)\n\n' + loadApiDocs(),
     '## Prompt Recipes\n\n' + loadAllPrompts(),
     [
       '## Common Gotchas',
       '',
-      'streamResource() MUST be called inside an Angular injection context.',
+      'agent() MUST be called inside an Angular injection context.',
       'Do not call it in ngOnInit — use constructor or field initializer.',
-      'Do not mock streamResource() in tests — use MockStreamTransport.',
+      'Do not mock agent() in tests — use MockAgentTransport.',
       'RxJS is an internal implementation detail — do not import rxjs in consumer code.',
     ].join('\n'),
     [
       '## MCP server',
       '',
-      'npx @cacheplane/stream-resource-mcp',
+      'npx @cacheplane/angular-mcp',
       'Add to Claude Code settings.json, Cursor .cursor/mcp.json, or any MCP-compatible agent.',
     ].join('\n'),
   ];

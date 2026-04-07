@@ -4,9 +4,9 @@
 
 **Goal:** Wire all 13 remaining cockpit Angular examples to correctly consume `@cacheplane/chat`, making each a buildable standalone Angular app.
 
-**Architecture:** Each example follows the streaming reference pattern: standalone Angular app with `bootstrapApplication()`, `provideStreamResource()` + `provideChat()`, Angular CLI build/serve targets, proxy to LangGraph backend. LangGraph examples use `<chat>`, deep-agents examples use `<chat-debug>`.
+**Architecture:** Each example follows the streaming reference pattern: standalone Angular app with `bootstrapApplication()`, `provideAgent()` + `provideChat()`, Angular CLI build/serve targets, proxy to LangGraph backend. LangGraph examples use `<chat>`, deep-agents examples use `<chat-debug>`.
 
-**Tech Stack:** Angular 21, `@cacheplane/chat`, `@cacheplane/stream-resource`, `@angular-devkit/build-angular`
+**Tech Stack:** Angular 21, `@cacheplane/chat`, `@cacheplane/angular`, `@angular-devkit/build-angular`
 
 **Spec:** `docs/superpowers/specs/2026-04-05-cockpit-examples-chat-integration.md`
 
@@ -20,7 +20,7 @@ The streaming example (`cockpit/langgraph/streaming/angular/`) is the proven pat
 1. **Delete** `src/app.component.ts` (duplicate)
 2. **Delete** `src/app.config.ts` (duplicate at root level)
 3. **Rewrite** `src/app/{capability}.component.ts` — use `<chat [ref]>` or `<chat-debug [ref]>`
-4. **Rewrite** `src/app/app.config.ts` — `provideStreamResource` + `provideChat`
+4. **Rewrite** `src/app/app.config.ts` — `provideAgent` + `provideChat`
 5. **Rewrite** `src/main.ts` — bootstrap correct component
 6. **Rewrite** `project.json` — `@angular-devkit/build-angular:application` + `dev-server`
 7. **Update** `tsconfig.app.json` — add `lib`, `emitDeclarationOnly`
@@ -33,7 +33,7 @@ The streaming example (`cockpit/langgraph/streaming/angular/`) is the proven pat
 
 **Examples:** persistence, interrupts, memory, time-travel, subgraphs, durable-execution, deployment-runtime
 
-Each LangGraph example component uses `<chat [ref]="stream" class="block h-screen" />` as the template. The component creates `streamResource()` with the capability-specific `assistantId`.
+Each LangGraph example component uses `<chat [ref]="stream" class="block h-screen" />` as the template. The component creates `agent()` with the capability-specific `assistantId`.
 
 **Configuration per example:**
 
@@ -64,7 +64,7 @@ Each component follows this template (replace `{Topic}`, `{topic}`, `{selector}`
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import { Component } from '@angular/core';
 import { ChatComponent } from '@cacheplane/chat';
-import { streamResource } from '@cacheplane/stream-resource';
+import { agent } from '@cacheplane/angular';
 import { environment } from '../environments/environment';
 
 @Component({
@@ -74,7 +74,7 @@ import { environment } from '../environments/environment';
   template: `<chat [ref]="stream" class="block h-screen" />`,
 })
 export class {Topic}Component {
-  protected readonly stream = streamResource({
+  protected readonly stream = agent({
     apiUrl: environment.langGraphApiUrl,
     assistantId: environment.{topic}AssistantId,
   });
@@ -88,13 +88,13 @@ Where each example uses its existing environment config keys (e.g., `environment
 ```typescript
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import { ApplicationConfig } from '@angular/core';
-import { provideStreamResource } from '@cacheplane/stream-resource';
+import { provideAgent } from '@cacheplane/angular';
 import { provideChat } from '@cacheplane/chat';
 import { environment } from '../environments/environment';
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideStreamResource({ apiUrl: environment.langGraphApiUrl }),
+    provideAgent({ apiUrl: environment.langGraphApiUrl }),
     provideChat({}),
   ],
 };
@@ -300,7 +300,7 @@ git commit -m "feat(cockpit): wire 6 Deep Agents Angular examples to @cacheplane
 - [ ] **Step 1: Run library tests**
 
 ```bash
-npx nx test render && npx nx test chat && npx nx test stream-resource
+npx nx test render && npx nx test chat && npx nx test angular
 ```
 
 Expected: All pass.

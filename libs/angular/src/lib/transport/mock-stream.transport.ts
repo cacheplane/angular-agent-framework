@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-import { StreamResourceTransport, StreamEvent } from '../stream-resource.types';
+import { AgentTransport, StreamEvent } from '../agent.types';
 
 /**
  * Test transport for deterministic agent testing without a real LangGraph server.
@@ -9,13 +9,13 @@ import { StreamResourceTransport, StreamEvent } from '../stream-resource.types';
  *
  * @example
  * ```typescript
- * const transport = new MockStreamTransport([
+ * const transport = new MockAgentTransport([
  *   [{ type: 'values', data: { messages: [aiMsg('Hello')] } }],
  *   [{ type: 'values', data: { status: 'done' } }],
  * ]);
  * ```
  */
-export class MockStreamTransport implements StreamResourceTransport {
+export class MockAgentTransport implements AgentTransport {
   private script: StreamEvent[][];
   private scriptIndex = 0;
   private streaming = false;

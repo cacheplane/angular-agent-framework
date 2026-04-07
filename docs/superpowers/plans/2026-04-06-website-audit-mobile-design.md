@@ -302,7 +302,7 @@ import { tokens } from '../../../lib/design-tokens';
 
 const BADGES = [
   { icon: '★', label: 'GitHub Stars', value: 'Open Source' },
-  { icon: '↓', label: 'npm', value: '@cacheplane/stream-resource' },
+  { icon: '↓', label: 'npm', value: '@cacheplane/angular' },
   { icon: '⚖', label: 'License', value: 'Source Available' },
 ];
 
@@ -490,7 +490,7 @@ In `WhitePaperSection.tsx`, restructure the two-column grid:
 ```tsx
 <a
   href="/whitepaper.pdf"
-  download="streamresource-angular-agent-readiness-guide.pdf"
+  download="angular-agent-readiness-guide.pdf"
   style={{
     display: 'inline-block',
     marginTop: 12,
@@ -532,18 +532,18 @@ In `apps/website/src/app/layout.tsx`, update the `metadata` export (line 24-27):
 
 ```ts
 export const metadata: Metadata = {
-  title: 'Angular Stream Resource — Signal-Native Streaming for Angular + LangGraph',
+  title: 'Angular Agent Framework — Signal-Native Streaming for Angular + LangGraph',
   description: 'The Enterprise Streaming Resource for LangChain and Angular. Signal-native streaming, thread persistence, and production patterns for Angular 20+.',
   openGraph: {
-    title: 'Angular Stream Resource',
+    title: 'Angular Agent Framework',
     description: 'Signal-native streaming for LangGraph — production patterns your Angular team can own.',
     images: ['/og-image.png'],
     type: 'website',
-    siteName: 'Angular Stream Resource',
+    siteName: 'Angular Agent Framework',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Angular Stream Resource',
+    title: 'Angular Agent Framework',
     description: 'Signal-native streaming for LangGraph — production patterns your Angular team can own.',
     images: ['/og-image.png'],
   },
@@ -553,7 +553,7 @@ export const metadata: Metadata = {
 - [ ] **Step 2: Create OG image**
 
 Create a simple OG image (1200x630) using the existing Puppeteer pipeline or a static design. The image should show:
-- "Angular Stream Resource" in EB Garamond
+- "Angular Agent Framework" in EB Garamond
 - Tagline in Inter
 - Gradient background matching the site (`tokens.gradient.bgFlow`)
 

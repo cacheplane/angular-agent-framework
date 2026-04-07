@@ -2,7 +2,7 @@
 import { describe, it, expect } from 'vitest';
 import { signal, computed } from '@angular/core';
 import { extractErrorMessage } from './chat-error.component';
-import { createMockStreamResourceRef } from '../../testing/mock-stream-resource-ref';
+import { createMockAgentRef } from '../../testing/mock-agent-ref';
 
 describe('extractErrorMessage()', () => {
   it('returns null for null error', () => {
@@ -28,7 +28,7 @@ describe('extractErrorMessage()', () => {
 
 describe('ChatErrorComponent — errorMessage computed', () => {
   it('errorMessage is null when ref.error is null', () => {
-    const mockRef = createMockStreamResourceRef({ error: null });
+    const mockRef = createMockAgentRef({ error: null });
     const ref$ = signal(mockRef);
 
     const errorMessage = computed(() => extractErrorMessage(ref$().error()));
@@ -37,7 +37,7 @@ describe('ChatErrorComponent — errorMessage computed', () => {
   });
 
   it('errorMessage reflects Error object message', () => {
-    const mockRef = createMockStreamResourceRef({ error: new Error('boom') });
+    const mockRef = createMockAgentRef({ error: new Error('boom') });
     const ref$ = signal(mockRef);
 
     const errorMessage = computed(() => extractErrorMessage(ref$().error()));
@@ -46,7 +46,7 @@ describe('ChatErrorComponent — errorMessage computed', () => {
   });
 
   it('errorMessage reflects string error', () => {
-    const mockRef = createMockStreamResourceRef({ error: 'timeout' });
+    const mockRef = createMockAgentRef({ error: 'timeout' });
     const ref$ = signal(mockRef);
 
     const errorMessage = computed(() => extractErrorMessage(ref$().error()));
@@ -55,8 +55,8 @@ describe('ChatErrorComponent — errorMessage computed', () => {
   });
 
   it('errorMessage updates reactively when ref changes', () => {
-    const noErrorRef = createMockStreamResourceRef({ error: null });
-    const errorRef = createMockStreamResourceRef({ error: new Error('failed') });
+    const noErrorRef = createMockAgentRef({ error: null });
+    const errorRef = createMockAgentRef({ error: new Error('failed') });
     const ref$ = signal(noErrorRef);
 
     const errorMessage = computed(() => extractErrorMessage(ref$().error()));

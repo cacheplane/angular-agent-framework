@@ -4,9 +4,9 @@
 
 **Goal:** Build an Angular chat component library with headless primitives and prebuilt Tailwind compositions for LangGraph, LangChain, and Deep Agent UIs.
 
-**Architecture:** Two-layer design — headless primitives (unstyled, logic-only, composable via `ng-template`) and prebuilt compositions (Tailwind + shadcn model). All components accept a `StreamResourceRef` from `@cacheplane/stream-resource`. Generative UI hosted via `@cacheplane/render`. Debug component provides agent execution inspection.
+**Architecture:** Two-layer design — headless primitives (unstyled, logic-only, composable via `ng-template`) and prebuilt compositions (Tailwind + shadcn model). All components accept a `AgentRef` from `@cacheplane/angular`. Generative UI hosted via `@cacheplane/render`. Debug component provides agent execution inspection.
 
-**Tech Stack:** Angular 21+, `@cacheplane/stream-resource`, `@cacheplane/render`, Tailwind CSS, Nx 22, ng-packagr, Vitest
+**Tech Stack:** Angular 21+, `@cacheplane/angular`, `@cacheplane/render`, Tailwind CSS, Nx 22, ng-packagr, Vitest
 
 **Spec:** `docs/superpowers/specs/2026-04-04-chat-component-library-design.md` — Deliverable 2
 
@@ -81,7 +81,7 @@ libs/chat/
 │   │   │       ├── chat-timeline-slider.component.ts
 │   │   │       └── chat-timeline-slider.component.spec.ts
 │   │   └── testing/
-│   │       └── mock-stream-resource-ref.ts         # Test utility for creating mock refs
+│   │       └── mock-angular-ref.ts         # Test utility for creating mock refs
 │   ├── public-api.ts
 │   └── test-setup.ts
 ├── project.json
@@ -122,7 +122,7 @@ npx nx generate @nx/angular:library chat --directory=libs/chat --publishable --i
     "@angular/core": "^20.0.0 || ^21.0.0",
     "@angular/common": "^20.0.0 || ^21.0.0",
     "@cacheplane/render": "^0.0.1",
-    "@cacheplane/stream-resource": "^0.0.1",
+    "@cacheplane/angular": "^0.0.1",
     "@langchain/core": "^1.1.33"
   },
   "license": "PolyForm-Noncommercial-1.0.0",
@@ -194,7 +194,7 @@ git commit -m "chore: scaffold @cacheplane/chat library"
 
 **Files:**
 - Create: `libs/chat/src/lib/chat.types.ts`
-- Create: `libs/chat/src/lib/testing/mock-stream-resource-ref.ts`
+- Create: `libs/chat/src/lib/testing/mock-angular-ref.ts`
 
 - [ ] **Step 1: Create chat types**
 
@@ -203,7 +203,7 @@ Create `libs/chat/src/lib/chat.types.ts`:
 ```typescript
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import type { Signal } from '@angular/core';
-import type { StreamResourceRef } from '@cacheplane/stream-resource';
+import type { AgentRef } from '@cacheplane/angular';
 import type { AngularRegistry } from '@cacheplane/render';
 import type { BaseMessage } from '@langchain/core/messages';
 
@@ -227,23 +227,23 @@ export interface MessageContext {
 export type MessageTemplateType = 'human' | 'ai' | 'tool' | 'system' | 'function';
 ```
 
-- [ ] **Step 2: Create mock StreamResourceRef test utility**
+- [ ] **Step 2: Create mock AgentRef test utility**
 
-Create `libs/chat/src/lib/testing/mock-stream-resource-ref.ts`:
+Create `libs/chat/src/lib/testing/mock-angular-ref.ts`:
 
 ```typescript
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import { signal, computed } from '@angular/core';
-import type { StreamResourceRef } from '@cacheplane/stream-resource';
-import { ResourceStatus } from '@cacheplane/stream-resource';
+import type { AgentRef } from '@cacheplane/angular';
+import { ResourceStatus } from '@cacheplane/angular';
 import type { BaseMessage } from '@langchain/core/messages';
 import { HumanMessage, AIMessage } from '@langchain/core/messages';
 
 /**
- * Create a mock StreamResourceRef for testing chat components.
+ * Create a mock AgentRef for testing chat components.
  * All signals are writable for easy test setup.
  */
-export function createMockStreamResourceRef(
+export function createMockAgentRef(
   overrides: Partial<{
     messages: BaseMessage[];
     status: ResourceStatus;
@@ -251,7 +251,7 @@ export function createMockStreamResourceRef(
     interrupt: unknown;
     isLoading: boolean;
   }> = {},
-): StreamResourceRef<any> {
+): AgentRef<any> {
   const messages = signal<BaseMessage[]>(overrides.messages ?? []);
   const status = signal(overrides.status ?? ResourceStatus.Idle);
   const error = signal<unknown>(overrides.error ?? undefined);
@@ -292,7 +292,7 @@ export function createMockStreamResourceRef(
     setBranch: () => {},
     getMessagesMetadata: () => undefined,
     getToolCalls: () => [],
-  } as unknown as StreamResourceRef<any>;
+  } as unknown as AgentRef<any>;
 }
 ```
 
@@ -324,7 +324,7 @@ import { Component, signal } from '@angular/core';
 import { HumanMessage, AIMessage } from '@langchain/core/messages';
 import { ChatMessagesComponent } from './chat-messages.component';
 import { MessageTemplateDirective } from './message-template.directive';
-import { createMockStreamResourceRef } from '../../testing/mock-stream-resource-ref';
+import { createMockAgentRef } from '../../testing/mock-angular-ref';
 
 @Component({
   standalone: true,
@@ -341,7 +341,7 @@ import { createMockStreamResourceRef } from '../../testing/mock-stream-resource-
   `,
 })
 class TestHostComponent {
-  chatRef = createMockStreamResourceRef({
+  chatRef = createMockAgentRef({
     messages: [
       new HumanMessage('Hello'),
       new AIMessage('Hi there!'),
@@ -364,7 +364,7 @@ describe('ChatMessagesComponent', () => {
   it('should render empty when no messages', () => {
     TestBed.configureTestingModule({ imports: [TestHostComponent] });
     const fixture = TestBed.createComponent(TestHostComponent);
-    fixture.componentInstance.chatRef = createMockStreamResourceRef({ messages: [] });
+    fixture.componentInstance.chatRef = createMockAgentRef({ messages: [] });
     fixture.detectChanges();
 
     expect(fixture.nativeElement.textContent.trim()).toBe('');
@@ -411,7 +411,7 @@ import {
   ChangeDetectionStrategy,
 } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
-import type { StreamResourceRef } from '@cacheplane/stream-resource';
+import type { AgentRef } from '@cacheplane/angular';
 import type { BaseMessage } from '@langchain/core/messages';
 import { MessageTemplateDirective } from './message-template.directive';
 import type { MessageTemplateType } from '../../chat.types';
@@ -432,7 +432,7 @@ import type { MessageTemplateType } from '../../chat.types';
   `,
 })
 export class ChatMessagesComponent {
-  readonly ref = input.required<StreamResourceRef<any>>();
+  readonly ref = input.required<AgentRef<any>>();
 
   private readonly templates = contentChildren(MessageTemplateDirective);
 
@@ -485,20 +485,20 @@ Create `libs/chat/src/lib/primitives/chat-input/chat-input.component.spec.ts`:
 import { describe, it, expect, vi } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { ChatInputComponent } from './chat-input.component';
-import { createMockStreamResourceRef } from '../../testing/mock-stream-resource-ref';
+import { createMockAgentRef } from '../../testing/mock-angular-ref';
 
 describe('ChatInputComponent', () => {
   it('should render a text input and submit button', () => {
     TestBed.configureTestingModule({ imports: [ChatInputComponent] });
     const fixture = TestBed.createComponent(ChatInputComponent);
-    fixture.componentRef.setInput('ref', createMockStreamResourceRef());
+    fixture.componentRef.setInput('ref', createMockAgentRef());
     fixture.detectChanges();
 
     expect(fixture.nativeElement.querySelector('textarea, input')).toBeTruthy();
   });
 
   it('should call ref.submit when form is submitted', async () => {
-    const ref = createMockStreamResourceRef();
+    const ref = createMockAgentRef();
     const submitSpy = vi.spyOn(ref, 'submit').mockResolvedValue(undefined);
 
     TestBed.configureTestingModule({ imports: [ChatInputComponent] });
@@ -515,7 +515,7 @@ describe('ChatInputComponent', () => {
   });
 
   it('should not submit empty messages', () => {
-    const ref = createMockStreamResourceRef();
+    const ref = createMockAgentRef();
     const submitSpy = vi.spyOn(ref, 'submit');
 
     TestBed.configureTestingModule({ imports: [ChatInputComponent] });
@@ -530,7 +530,7 @@ describe('ChatInputComponent', () => {
   it('should disable input when loading', () => {
     TestBed.configureTestingModule({ imports: [ChatInputComponent] });
     const fixture = TestBed.createComponent(ChatInputComponent);
-    fixture.componentRef.setInput('ref', createMockStreamResourceRef({ isLoading: true }));
+    fixture.componentRef.setInput('ref', createMockAgentRef({ isLoading: true }));
     fixture.detectChanges();
 
     const textarea = fixture.nativeElement.querySelector('textarea, input');
@@ -558,7 +558,7 @@ import {
   ChangeDetectionStrategy,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import type { StreamResourceRef } from '@cacheplane/stream-resource';
+import type { AgentRef } from '@cacheplane/angular';
 import { HumanMessage } from '@langchain/core/messages';
 
 @Component({
@@ -583,7 +583,7 @@ import { HumanMessage } from '@langchain/core/messages';
   `,
 })
 export class ChatInputComponent {
-  readonly ref = input.required<StreamResourceRef<any>>();
+  readonly ref = input.required<AgentRef<any>>();
   readonly submitOnEnter = input<boolean>(true);
   readonly placeholder = input<string>('Type a message...');
 
@@ -649,14 +649,14 @@ Create `libs/chat/src/lib/primitives/chat-typing-indicator/chat-typing-indicator
 import { describe, it, expect } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { ChatTypingIndicatorComponent } from './chat-typing-indicator.component';
-import { createMockStreamResourceRef } from '../../testing/mock-stream-resource-ref';
-import { ResourceStatus } from '@cacheplane/stream-resource';
+import { createMockAgentRef } from '../../testing/mock-angular-ref';
+import { ResourceStatus } from '@cacheplane/angular';
 
 describe('ChatTypingIndicatorComponent', () => {
   it('should render when loading', () => {
     TestBed.configureTestingModule({ imports: [ChatTypingIndicatorComponent] });
     const fixture = TestBed.createComponent(ChatTypingIndicatorComponent);
-    fixture.componentRef.setInput('ref', createMockStreamResourceRef({ isLoading: true }));
+    fixture.componentRef.setInput('ref', createMockAgentRef({ isLoading: true }));
     fixture.detectChanges();
 
     expect(fixture.nativeElement.textContent.trim()).not.toBe('');
@@ -665,7 +665,7 @@ describe('ChatTypingIndicatorComponent', () => {
   it('should be empty when not loading', () => {
     TestBed.configureTestingModule({ imports: [ChatTypingIndicatorComponent] });
     const fixture = TestBed.createComponent(ChatTypingIndicatorComponent);
-    fixture.componentRef.setInput('ref', createMockStreamResourceRef({ isLoading: false }));
+    fixture.componentRef.setInput('ref', createMockAgentRef({ isLoading: false }));
     fixture.detectChanges();
 
     expect(fixture.nativeElement.textContent.trim()).toBe('');
@@ -680,13 +680,13 @@ Create `libs/chat/src/lib/primitives/chat-error/chat-error.component.spec.ts`:
 import { describe, it, expect } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { ChatErrorComponent } from './chat-error.component';
-import { createMockStreamResourceRef } from '../../testing/mock-stream-resource-ref';
+import { createMockAgentRef } from '../../testing/mock-angular-ref';
 
 describe('ChatErrorComponent', () => {
   it('should render error message when error exists', () => {
     TestBed.configureTestingModule({ imports: [ChatErrorComponent] });
     const fixture = TestBed.createComponent(ChatErrorComponent);
-    fixture.componentRef.setInput('ref', createMockStreamResourceRef({ error: new Error('Connection failed') }));
+    fixture.componentRef.setInput('ref', createMockAgentRef({ error: new Error('Connection failed') }));
     fixture.detectChanges();
 
     expect(fixture.nativeElement.textContent).toContain('Connection failed');
@@ -695,7 +695,7 @@ describe('ChatErrorComponent', () => {
   it('should be empty when no error', () => {
     TestBed.configureTestingModule({ imports: [ChatErrorComponent] });
     const fixture = TestBed.createComponent(ChatErrorComponent);
-    fixture.componentRef.setInput('ref', createMockStreamResourceRef());
+    fixture.componentRef.setInput('ref', createMockAgentRef());
     fixture.detectChanges();
 
     expect(fixture.nativeElement.textContent.trim()).toBe('');
@@ -714,7 +714,7 @@ Create `libs/chat/src/lib/primitives/chat-typing-indicator/chat-typing-indicator
 ```typescript
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import { Component, computed, input, ChangeDetectionStrategy } from '@angular/core';
-import type { StreamResourceRef } from '@cacheplane/stream-resource';
+import type { AgentRef } from '@cacheplane/angular';
 
 @Component({
   selector: 'chat-typing-indicator',
@@ -731,7 +731,7 @@ import type { StreamResourceRef } from '@cacheplane/stream-resource';
   `,
 })
 export class ChatTypingIndicatorComponent {
-  readonly ref = input.required<StreamResourceRef<any>>();
+  readonly ref = input.required<AgentRef<any>>();
 }
 ```
 
@@ -740,7 +740,7 @@ Create `libs/chat/src/lib/primitives/chat-error/chat-error.component.ts`:
 ```typescript
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import { Component, computed, input, ChangeDetectionStrategy } from '@angular/core';
-import type { StreamResourceRef } from '@cacheplane/stream-resource';
+import type { AgentRef } from '@cacheplane/angular';
 
 @Component({
   selector: 'chat-error',
@@ -755,7 +755,7 @@ import type { StreamResourceRef } from '@cacheplane/stream-resource';
   `,
 })
 export class ChatErrorComponent {
-  readonly ref = input.required<StreamResourceRef<any>>();
+  readonly ref = input.required<AgentRef<any>>();
 
   protected readonly errorMessage = computed(() => {
     const err = this.ref().error();
@@ -797,7 +797,7 @@ import { describe, it, expect } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { Component } from '@angular/core';
 import { ChatInterruptComponent } from './chat-interrupt.component';
-import { createMockStreamResourceRef } from '../../testing/mock-stream-resource-ref';
+import { createMockAgentRef } from '../../testing/mock-angular-ref';
 
 @Component({
   standalone: true,
@@ -811,7 +811,7 @@ import { createMockStreamResourceRef } from '../../testing/mock-stream-resource-
   `,
 })
 class TestHostComponent {
-  chatRef = createMockStreamResourceRef({
+  chatRef = createMockAgentRef({
     interrupt: { kind: 'approval', message: 'Approve this action?' },
   });
 }
@@ -828,7 +828,7 @@ describe('ChatInterruptComponent', () => {
   it('should not render when no interrupt', () => {
     TestBed.configureTestingModule({ imports: [TestHostComponent] });
     const fixture = TestBed.createComponent(TestHostComponent);
-    fixture.componentInstance.chatRef = createMockStreamResourceRef();
+    fixture.componentInstance.chatRef = createMockAgentRef();
     fixture.detectChanges();
 
     expect(fixture.nativeElement.querySelector('.interrupt-content')).toBeNull();
@@ -855,7 +855,7 @@ import {
   ChangeDetectionStrategy,
 } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
-import type { StreamResourceRef } from '@cacheplane/stream-resource';
+import type { AgentRef } from '@cacheplane/angular';
 
 @Component({
   selector: 'chat-interrupt',
@@ -871,7 +871,7 @@ import type { StreamResourceRef } from '@cacheplane/stream-resource';
   `,
 })
 export class ChatInterruptComponent {
-  readonly ref = input.required<StreamResourceRef<any>>();
+  readonly ref = input.required<AgentRef<any>>();
 
   protected readonly template = contentChild(TemplateRef);
   protected readonly interrupt = computed(() => this.ref().interrupt());
@@ -909,7 +909,7 @@ import { describe, it, expect } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { Component, TemplateRef } from '@angular/core';
 import { ChatToolCallsComponent } from './chat-tool-calls.component';
-import { createMockStreamResourceRef } from '../../testing/mock-stream-resource-ref';
+import { createMockAgentRef } from '../../testing/mock-angular-ref';
 
 @Component({
   standalone: true,
@@ -923,7 +923,7 @@ import { createMockStreamResourceRef } from '../../testing/mock-stream-resource-
   `,
 })
 class TestHostComponent {
-  chatRef = createMockStreamResourceRef();
+  chatRef = createMockAgentRef();
 }
 
 describe('ChatToolCallsComponent', () => {
@@ -943,13 +943,13 @@ Create `libs/chat/src/lib/primitives/chat-subagents/chat-subagents.component.spe
 import { describe, it, expect } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { ChatSubagentsComponent } from './chat-subagents.component';
-import { createMockStreamResourceRef } from '../../testing/mock-stream-resource-ref';
+import { createMockAgentRef } from '../../testing/mock-angular-ref';
 
 describe('ChatSubagentsComponent', () => {
   it('should render', () => {
     TestBed.configureTestingModule({ imports: [ChatSubagentsComponent] });
     const fixture = TestBed.createComponent(ChatSubagentsComponent);
-    fixture.componentRef.setInput('ref', createMockStreamResourceRef());
+    fixture.componentRef.setInput('ref', createMockAgentRef());
     fixture.detectChanges();
     expect(fixture).toBeTruthy();
   });
@@ -975,7 +975,7 @@ import {
   ChangeDetectionStrategy,
 } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
-import type { StreamResourceRef } from '@cacheplane/stream-resource';
+import type { AgentRef } from '@cacheplane/angular';
 import type { BaseMessage } from '@langchain/core/messages';
 
 @Component({
@@ -992,7 +992,7 @@ import type { BaseMessage } from '@langchain/core/messages';
   `,
 })
 export class ChatToolCallsComponent {
-  readonly ref = input.required<StreamResourceRef<any>>();
+  readonly ref = input.required<AgentRef<any>>();
 
   protected readonly template = contentChild(TemplateRef);
   /** Optional: filter tool calls to a specific message */
@@ -1023,7 +1023,7 @@ import {
   ChangeDetectionStrategy,
 } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
-import type { StreamResourceRef } from '@cacheplane/stream-resource';
+import type { AgentRef } from '@cacheplane/angular';
 
 @Component({
   selector: 'chat-subagents',
@@ -1039,7 +1039,7 @@ import type { StreamResourceRef } from '@cacheplane/stream-resource';
   `,
 })
 export class ChatSubagentsComponent {
-  readonly ref = input.required<StreamResourceRef<any>>();
+  readonly ref = input.required<AgentRef<any>>();
 
   protected readonly template = contentChild(TemplateRef);
   protected readonly activeSubagents = computed(() => this.ref().activeSubagents());
@@ -1192,13 +1192,13 @@ Create `libs/chat/src/lib/primitives/chat-timeline/chat-timeline.component.spec.
 import { describe, it, expect } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { ChatTimelineComponent } from './chat-timeline.component';
-import { createMockStreamResourceRef } from '../../testing/mock-stream-resource-ref';
+import { createMockAgentRef } from '../../testing/mock-angular-ref';
 
 describe('ChatTimelineComponent', () => {
   it('should render', () => {
     TestBed.configureTestingModule({ imports: [ChatTimelineComponent] });
     const fixture = TestBed.createComponent(ChatTimelineComponent);
-    fixture.componentRef.setInput('ref', createMockStreamResourceRef());
+    fixture.componentRef.setInput('ref', createMockAgentRef());
     fixture.detectChanges();
     expect(fixture).toBeTruthy();
   });
@@ -1243,7 +1243,7 @@ import {
   ChangeDetectionStrategy,
 } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
-import type { StreamResourceRef } from '@cacheplane/stream-resource';
+import type { AgentRef } from '@cacheplane/angular';
 
 @Component({
   selector: 'chat-timeline',
@@ -1263,7 +1263,7 @@ import type { StreamResourceRef } from '@cacheplane/stream-resource';
   `,
 })
 export class ChatTimelineComponent {
-  readonly ref = input.required<StreamResourceRef<any>>();
+  readonly ref = input.required<AgentRef<any>>();
 
   readonly checkpointSelected = output<{ checkpointId: string; index: number }>();
 
@@ -1400,11 +1400,11 @@ import { describe, it, expect } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { HumanMessage, AIMessage } from '@langchain/core/messages';
 import { ChatComponent } from './chat.component';
-import { createMockStreamResourceRef } from '../../testing/mock-stream-resource-ref';
+import { createMockAgentRef } from '../../testing/mock-angular-ref';
 
 describe('ChatComponent', () => {
   it('should render messages, input, and typing indicator', () => {
-    const ref = createMockStreamResourceRef({
+    const ref = createMockAgentRef({
       messages: [new HumanMessage('Hello'), new AIMessage('Hi!')],
     });
 
@@ -1418,7 +1418,7 @@ describe('ChatComponent', () => {
   });
 
   it('should render error when present', () => {
-    const ref = createMockStreamResourceRef({
+    const ref = createMockAgentRef({
       error: new Error('Stream failed'),
     });
 
@@ -1443,7 +1443,7 @@ Create `libs/chat/src/lib/compositions/chat/chat.component.ts`:
 ```typescript
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import { Component, input, ChangeDetectionStrategy } from '@angular/core';
-import type { StreamResourceRef } from '@cacheplane/stream-resource';
+import type { AgentRef } from '@cacheplane/angular';
 import { ChatMessagesComponent } from '../../primitives/chat-messages/chat-messages.component';
 import { MessageTemplateDirective } from '../../primitives/chat-messages/message-template.directive';
 import { ChatInputComponent } from '../../primitives/chat-input/chat-input.component';
@@ -1505,7 +1505,7 @@ import { ChatInterruptComponent } from '../../primitives/chat-interrupt/chat-int
   `,
 })
 export class ChatComponent {
-  readonly ref = input.required<StreamResourceRef<any>>();
+  readonly ref = input.required<AgentRef<any>>();
 }
 ```
 
@@ -1539,7 +1539,7 @@ Create `libs/chat/src/lib/compositions/chat-interrupt-panel/chat-interrupt-panel
 ```typescript
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import { Component, input, output, ChangeDetectionStrategy } from '@angular/core';
-import type { StreamResourceRef } from '@cacheplane/stream-resource';
+import type { AgentRef } from '@cacheplane/angular';
 
 export type InterruptAction = 'accept' | 'edit' | 'respond' | 'ignore';
 
@@ -1580,7 +1580,7 @@ export type InterruptAction = 'accept' | 'edit' | 'respond' | 'ignore';
   `,
 })
 export class ChatInterruptPanelComponent {
-  readonly ref = input.required<StreamResourceRef<any>>();
+  readonly ref = input.required<AgentRef<any>>();
   readonly action = output<InterruptAction>();
 }
 ```
@@ -1638,7 +1638,7 @@ Create `libs/chat/src/lib/compositions/chat-subagent-card/chat-subagent-card.com
 ```typescript
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import { Component, computed, input, signal, ChangeDetectionStrategy } from '@angular/core';
-import type { SubagentStreamRef } from '@cacheplane/stream-resource';
+import type { SubagentStreamRef } from '@cacheplane/angular';
 
 @Component({
   selector: 'chat-subagent-card',
@@ -1952,7 +1952,7 @@ Create `libs/chat/src/lib/compositions/chat-debug/chat-debug.component.ts`:
 ```typescript
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import { Component, computed, input, signal, ChangeDetectionStrategy } from '@angular/core';
-import type { StreamResourceRef } from '@cacheplane/stream-resource';
+import type { AgentRef } from '@cacheplane/angular';
 import { ChatMessagesComponent } from '../../primitives/chat-messages/chat-messages.component';
 import { MessageTemplateDirective } from '../../primitives/chat-messages/message-template.directive';
 import { ChatInputComponent } from '../../primitives/chat-input/chat-input.component';
@@ -2033,7 +2033,7 @@ import { DebugDetailComponent } from './debug-detail.component';
   styles: [`:host { display: block; position: relative; height: 100%; }`],
 })
 export class ChatDebugComponent {
-  readonly ref = input.required<StreamResourceRef<any>>();
+  readonly ref = input.required<AgentRef<any>>();
 
   protected readonly debugOpen = signal(true);
   protected readonly selectedCheckpointIndex = signal(-1);
@@ -2067,12 +2067,12 @@ Create `libs/chat/src/lib/compositions/chat-debug/chat-debug.component.spec.ts`:
 import { describe, it, expect } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { ChatDebugComponent } from './chat-debug.component';
-import { createMockStreamResourceRef } from '../../testing/mock-stream-resource-ref';
+import { createMockAgentRef } from '../../testing/mock-angular-ref';
 import { HumanMessage, AIMessage } from '@langchain/core/messages';
 
 describe('ChatDebugComponent', () => {
   it('should render chat area and debug panel', () => {
-    const ref = createMockStreamResourceRef({
+    const ref = createMockAgentRef({
       messages: [new HumanMessage('test')],
     });
 
@@ -2149,7 +2149,7 @@ export { DebugStateDiffComponent } from './lib/compositions/chat-debug/debug-sta
 // DebugToolCallDetail, DebugLatencyBar, DebugControls, DebugSummary
 
 // Test utilities
-export { createMockStreamResourceRef } from './lib/testing/mock-stream-resource-ref';
+export { createMockAgentRef } from './lib/testing/mock-angular-ref';
 ```
 
 - [ ] **Step 2: Run all tests**

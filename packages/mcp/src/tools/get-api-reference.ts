@@ -3,10 +3,10 @@ import { findSymbol, getAllSymbolNames } from '../data/loader.js';
 
 export const getApiReferenceTool = {
   name: 'get_api_reference',
-  description: 'Get the full API documentation for a stream-resource symbol',
+  description: 'Get the full API documentation for a angular symbol',
   inputSchema: {
     type: 'object',
-    properties: { symbol: { type: 'string', description: 'Symbol name, e.g. "streamResource"' } },
+    properties: { symbol: { type: 'string', description: 'Symbol name, e.g. "agent"' } },
     required: ['symbol'],
   },
 };

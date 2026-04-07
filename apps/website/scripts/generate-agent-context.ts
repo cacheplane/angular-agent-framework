@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 
 // Read version from library package.json (not website)
-const libPkgPath = path.join(__dirname, '..', '..', '..', 'libs', 'stream-resource', 'package.json');
+const libPkgPath = path.join(__dirname, '..', '..', '..', 'libs', 'angular', 'package.json');
 let version = '0.1.0';
 if (fs.existsSync(libPkgPath)) {
   const libPkg = JSON.parse(fs.readFileSync(libPkgPath, 'utf8')) as { version?: string };

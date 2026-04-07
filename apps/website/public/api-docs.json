@@ -1,7 +1,7 @@
 {
 	"schemaVersion": "2.0",
 	"id": 0,
-	"name": "stream-resource",
+	"name": "angular",
 	"variant": "project",
 	"kind": 1,
 	"flags": {},
@@ -21,7 +21,7 @@
 					"flags": {},
 					"sources": [
 						{
-							"fileName": "libs/stream-resource/src/lib/transport/fetch-stream.transport.ts",
+							"fileName": "libs/angular/src/lib/transport/fetch-stream.transport.ts",
 							"line": 8,
 							"character": 2
 						}
@@ -35,7 +35,7 @@
 							"flags": {},
 							"sources": [
 								{
-									"fileName": "libs/stream-resource/src/lib/transport/fetch-stream.transport.ts",
+									"fileName": "libs/angular/src/lib/transport/fetch-stream.transport.ts",
 									"line": 8,
 									"character": 2
 								}
@@ -102,7 +102,7 @@
 								"type": "reference",
 								"target": 206,
 								"name": "FetchStreamTransport",
-								"package": "stream-resource"
+								"package": "angular"
 							}
 						}
 					]
@@ -115,7 +115,7 @@
 					"flags": {},
 					"sources": [
 						{
-							"fileName": "libs/stream-resource/src/lib/transport/fetch-stream.transport.ts",
+							"fileName": "libs/angular/src/lib/transport/fetch-stream.transport.ts",
 							"line": 41,
 							"character": 9
 						}
@@ -137,7 +137,7 @@
 							},
 							"sources": [
 								{
-									"fileName": "libs/stream-resource/src/lib/transport/fetch-stream.transport.ts",
+									"fileName": "libs/angular/src/lib/transport/fetch-stream.transport.ts",
 									"line": 41,
 									"character": 9
 								}
@@ -215,7 +215,7 @@
 										"type": "reference",
 										"target": 97,
 										"name": "StreamEvent",
-										"package": "stream-resource"
+										"package": "angular"
 									}
 								],
 								"name": "AsyncIterable",
@@ -224,14 +224,14 @@
 							"implementationOf": {
 								"type": "reference",
 								"target": 92,
-								"name": "StreamResourceTransport.joinStream"
+								"name": "AgentTransport.joinStream"
 							}
 						}
 					],
 					"implementationOf": {
 						"type": "reference",
 						"target": 91,
-						"name": "StreamResourceTransport.joinStream"
+						"name": "AgentTransport.joinStream"
 					}
 				},
 				{
@@ -242,7 +242,7 @@
 					"flags": {},
 					"sources": [
 						{
-							"fileName": "libs/stream-resource/src/lib/transport/fetch-stream.transport.ts",
+							"fileName": "libs/angular/src/lib/transport/fetch-stream.transport.ts",
 							"line": 13,
 							"character": 9
 						}
@@ -256,7 +256,7 @@
 							"flags": {},
 							"sources": [
 								{
-									"fileName": "libs/stream-resource/src/lib/transport/fetch-stream.transport.ts",
+									"fileName": "libs/angular/src/lib/transport/fetch-stream.transport.ts",
 									"line": 13,
 									"character": 9
 								}
@@ -334,7 +334,7 @@
 										"type": "reference",
 										"target": 97,
 										"name": "StreamEvent",
-										"package": "stream-resource"
+										"package": "angular"
 									}
 								],
 								"name": "AsyncIterable",
@@ -343,14 +343,14 @@
 							"implementationOf": {
 								"type": "reference",
 								"target": 86,
-								"name": "StreamResourceTransport.stream"
+								"name": "AgentTransport.stream"
 							}
 						}
 					],
 					"implementationOf": {
 						"type": "reference",
 						"target": 85,
-						"name": "StreamResourceTransport.stream"
+						"name": "AgentTransport.stream"
 					}
 				}
 			],
@@ -371,7 +371,7 @@
 			],
 			"sources": [
 				{
-					"fileName": "libs/stream-resource/src/lib/transport/fetch-stream.transport.ts",
+					"fileName": "libs/angular/src/lib/transport/fetch-stream.transport.ts",
 					"line": 4,
 					"character": 13
 				}
@@ -380,14 +380,14 @@
 				{
 					"type": "reference",
 					"target": 84,
-					"name": "StreamResourceTransport",
-					"package": "stream-resource"
+					"name": "AgentTransport",
+					"package": "angular"
 				}
 			]
 		},
 		{
 			"id": 173,
-			"name": "MockStreamTransport",
+			"name": "MockAgentTransport",
 			"variant": "declaration",
 			"kind": 128,
 			"flags": {},
@@ -400,7 +400,7 @@
 					"flags": {},
 					"sources": [
 						{
-							"fileName": "libs/stream-resource/src/lib/transport/mock-stream.transport.ts",
+							"fileName": "libs/angular/src/lib/transport/mock-stream.transport.ts",
 							"line": 13,
 							"character": 2
 						}
@@ -408,13 +408,13 @@
 					"signatures": [
 						{
 							"id": 175,
-							"name": "MockStreamTransport",
+							"name": "MockAgentTransport",
 							"variant": "signature",
 							"kind": 16384,
 							"flags": {},
 							"sources": [
 								{
-									"fileName": "libs/stream-resource/src/lib/transport/mock-stream.transport.ts",
+									"fileName": "libs/angular/src/lib/transport/mock-stream.transport.ts",
 									"line": 13,
 									"character": 2
 								}
@@ -434,7 +434,7 @@
 												"type": "reference",
 												"target": 97,
 												"name": "StreamEvent",
-												"package": "stream-resource"
+												"package": "angular"
 											}
 										}
 									},
@@ -444,8 +444,8 @@
 							"type": {
 								"type": "reference",
 								"target": 173,
-								"name": "MockStreamTransport",
-								"package": "stream-resource"
+								"name": "MockAgentTransport",
+								"package": "angular"
 							}
 						}
 					]
@@ -458,7 +458,7 @@
 					"flags": {},
 					"sources": [
 						{
-							"fileName": "libs/stream-resource/src/lib/transport/mock-stream.transport.ts",
+							"fileName": "libs/angular/src/lib/transport/mock-stream.transport.ts",
 							"line": 32,
 							"character": 2
 						}
@@ -472,7 +472,7 @@
 							"flags": {},
 							"sources": [
 								{
-									"fileName": "libs/stream-resource/src/lib/transport/mock-stream.transport.ts",
+									"fileName": "libs/angular/src/lib/transport/mock-stream.transport.ts",
 									"line": 32,
 									"character": 2
 								}
@@ -492,7 +492,7 @@
 					"flags": {},
 					"sources": [
 						{
-							"fileName": "libs/stream-resource/src/lib/transport/mock-stream.transport.ts",
+							"fileName": "libs/angular/src/lib/transport/mock-stream.transport.ts",
 							"line": 22,
 							"character": 2
 						}
@@ -506,7 +506,7 @@
 							"flags": {},
 							"sources": [
 								{
-									"fileName": "libs/stream-resource/src/lib/transport/mock-stream.transport.ts",
+									"fileName": "libs/angular/src/lib/transport/mock-stream.transport.ts",
 									"line": 22,
 									"character": 2
 								}
@@ -524,7 +524,7 @@
 											"type": "reference",
 											"target": 97,
 											"name": "StreamEvent",
-											"package": "stream-resource"
+											"package": "angular"
 										}
 									}
 								}
@@ -544,7 +544,7 @@
 					"flags": {},
 					"sources": [
 						{
-							"fileName": "libs/stream-resource/src/lib/transport/mock-stream.transport.ts",
+							"fileName": "libs/angular/src/lib/transport/mock-stream.transport.ts",
 							"line": 27,
 							"character": 2
 						}
@@ -558,7 +558,7 @@
 							"flags": {},
 							"sources": [
 								{
-									"fileName": "libs/stream-resource/src/lib/transport/mock-stream.transport.ts",
+									"fileName": "libs/angular/src/lib/transport/mock-stream.transport.ts",
 									"line": 27,
 									"character": 2
 								}
@@ -597,7 +597,7 @@
 					"flags": {},
 					"sources": [
 						{
-							"fileName": "libs/stream-resource/src/lib/transport/mock-stream.transport.ts",
+							"fileName": "libs/angular/src/lib/transport/mock-stream.transport.ts",
 							"line": 37,
 							"character": 2
 						}
@@ -611,7 +611,7 @@
 							"flags": {},
 							"sources": [
 								{
-									"fileName": "libs/stream-resource/src/lib/transport/mock-stream.transport.ts",
+									"fileName": "libs/angular/src/lib/transport/mock-stream.transport.ts",
 									"line": 37,
 									"character": 2
 								}
@@ -631,7 +631,7 @@
 					"flags": {},
 					"sources": [
 						{
-							"fileName": "libs/stream-resource/src/lib/transport/mock-stream.transport.ts",
+							"fileName": "libs/angular/src/lib/transport/mock-stream.transport.ts",
 							"line": 17,
 							"character": 2
 						}
@@ -645,7 +645,7 @@
 							"flags": {},
 							"sources": [
 								{
-									"fileName": "libs/stream-resource/src/lib/transport/mock-stream.transport.ts",
+									"fileName": "libs/angular/src/lib/transport/mock-stream.transport.ts",
 									"line": 17,
 									"character": 2
 								}
@@ -656,7 +656,7 @@
 									"type": "reference",
 									"target": 97,
 									"name": "StreamEvent",
-									"package": "stream-resource"
+									"package": "angular"
 								}
 							}
 						}
@@ -670,7 +670,7 @@
 					"flags": {},
 					"sources": [
 						{
-							"fileName": "libs/stream-resource/src/lib/transport/mock-stream.transport.ts",
+							"fileName": "libs/angular/src/lib/transport/mock-stream.transport.ts",
 							"line": 41,
 							"character": 9
 						}
@@ -684,7 +684,7 @@
 							"flags": {},
 							"sources": [
 								{
-									"fileName": "libs/stream-resource/src/lib/transport/mock-stream.transport.ts",
+									"fileName": "libs/angular/src/lib/transport/mock-stream.transport.ts",
 									"line": 41,
 									"character": 9
 								}
@@ -762,7 +762,7 @@
 										"type": "reference",
 										"target": 97,
 										"name": "StreamEvent",
-										"package": "stream-resource"
+										"package": "angular"
 									}
 								],
 								"name": "AsyncIterable",
@@ -771,14 +771,14 @@
 							"implementationOf": {
 								"type": "reference",
 								"target": 86,
-								"name": "StreamResourceTransport.stream"
+								"name": "AgentTransport.stream"
 							}
 						}
 					],
 					"implementationOf": {
 						"type": "reference",
 						"target": 85,
-						"name": "StreamResourceTransport.stream"
+						"name": "AgentTransport.stream"
 					}
 				}
 			],
@@ -803,7 +803,7 @@
 			],
 			"sources": [
 				{
-					"fileName": "libs/stream-resource/src/lib/transport/mock-stream.transport.ts",
+					"fileName": "libs/angular/src/lib/transport/mock-stream.transport.ts",
 					"line": 3,
 					"character": 13
 				}
@@ -812,8 +812,8 @@
 				{
 					"type": "reference",
 					"target": 84,
-					"name": "StreamResourceTransport",
-					"package": "stream-resource"
+					"name": "AgentTransport",
+					"package": "angular"
 				}
 			]
 		},
@@ -1100,7 +1100,7 @@
 					"flags": {},
 					"sources": [
 						{
-							"fileName": "libs/stream-resource/src/lib/stream-resource.types.ts",
+							"fileName": "libs/angular/src/lib/angular.types.ts",
 							"line": 40,
 							"character": 2
 						}
@@ -1174,7 +1174,7 @@
 			],
 			"sources": [
 				{
-					"fileName": "libs/stream-resource/src/lib/stream-resource.types.ts",
+					"fileName": "libs/angular/src/lib/angular.types.ts",
 					"line": 39,
 					"character": 17
 				}
@@ -1188,7 +1188,7 @@
 					"flags": {},
 					"sources": [
 						{
-							"fileName": "libs/stream-resource/src/lib/stream-resource.types.ts",
+							"fileName": "libs/angular/src/lib/angular.types.ts",
 							"line": 43,
 							"character": 2
 						}
@@ -1215,7 +1215,7 @@
 		},
 		{
 			"id": 10,
-			"name": "StreamResourceConfig",
+			"name": "AgentConfig",
 			"variant": "declaration",
 			"kind": 256,
 			"flags": {},
@@ -1230,7 +1230,7 @@
 					},
 					"sources": [
 						{
-							"fileName": "libs/stream-resource/src/lib/stream-resource.provider.ts",
+							"fileName": "libs/angular/src/lib/angular.provider.ts",
 							"line": 5,
 							"character": 2
 						}
@@ -1250,7 +1250,7 @@
 					},
 					"sources": [
 						{
-							"fileName": "libs/stream-resource/src/lib/stream-resource.provider.ts",
+							"fileName": "libs/angular/src/lib/angular.provider.ts",
 							"line": 6,
 							"character": 2
 						}
@@ -1258,8 +1258,8 @@
 					"type": {
 						"type": "reference",
 						"target": 84,
-						"name": "StreamResourceTransport",
-						"package": "stream-resource"
+						"name": "AgentTransport",
+						"package": "angular"
 					}
 				}
 			],
@@ -1274,7 +1274,7 @@
 			],
 			"sources": [
 				{
-					"fileName": "libs/stream-resource/src/lib/stream-resource.provider.ts",
+					"fileName": "libs/angular/src/lib/angular.provider.ts",
 					"line": 4,
 					"character": 17
 				}
@@ -1282,7 +1282,7 @@
 		},
 		{
 			"id": 13,
-			"name": "StreamResourceOptions",
+			"name": "AgentOptions",
 			"variant": "declaration",
 			"kind": 256,
 			"flags": {},
@@ -1295,7 +1295,7 @@
 					"flags": {},
 					"sources": [
 						{
-							"fileName": "libs/stream-resource/src/lib/stream-resource.types.ts",
+							"fileName": "libs/angular/src/lib/angular.types.ts",
 							"line": 66,
 							"character": 2
 						}
@@ -1313,7 +1313,7 @@
 					"flags": {},
 					"sources": [
 						{
-							"fileName": "libs/stream-resource/src/lib/stream-resource.types.ts",
+							"fileName": "libs/angular/src/lib/angular.types.ts",
 							"line": 67,
 							"character": 2
 						}
@@ -1333,7 +1333,7 @@
 					},
 					"sources": [
 						{
-							"fileName": "libs/stream-resource/src/lib/stream-resource.types.ts",
+							"fileName": "libs/angular/src/lib/angular.types.ts",
 							"line": 75,
 							"character": 2
 						}
@@ -1353,7 +1353,7 @@
 					},
 					"sources": [
 						{
-							"fileName": "libs/stream-resource/src/lib/stream-resource.types.ts",
+							"fileName": "libs/angular/src/lib/angular.types.ts",
 							"line": 70,
 							"character": 2
 						}
@@ -1370,8 +1370,8 @@
 								"type": "reference",
 								"target": 14,
 								"name": "T",
-								"package": "stream-resource",
-								"qualifiedName": "StreamResourceOptions.T",
+								"package": "angular",
+								"qualifiedName": "AgentOptions.T",
 								"refersToTypeParameter": true
 							}
 						],
@@ -1389,7 +1389,7 @@
 					},
 					"sources": [
 						{
-							"fileName": "libs/stream-resource/src/lib/stream-resource.types.ts",
+							"fileName": "libs/angular/src/lib/angular.types.ts",
 							"line": 71,
 							"character": 2
 						}
@@ -1409,7 +1409,7 @@
 					},
 					"sources": [
 						{
-							"fileName": "libs/stream-resource/src/lib/stream-resource.types.ts",
+							"fileName": "libs/angular/src/lib/angular.types.ts",
 							"line": 69,
 							"character": 2
 						}
@@ -1461,7 +1461,7 @@
 					},
 					"sources": [
 						{
-							"fileName": "libs/stream-resource/src/lib/stream-resource.types.ts",
+							"fileName": "libs/angular/src/lib/angular.types.ts",
 							"line": 76,
 							"character": 2
 						}
@@ -1484,7 +1484,7 @@
 					},
 					"sources": [
 						{
-							"fileName": "libs/stream-resource/src/lib/stream-resource.types.ts",
+							"fileName": "libs/angular/src/lib/angular.types.ts",
 							"line": 68,
 							"character": 2
 						}
@@ -1538,7 +1538,7 @@
 					},
 					"sources": [
 						{
-							"fileName": "libs/stream-resource/src/lib/stream-resource.types.ts",
+							"fileName": "libs/angular/src/lib/angular.types.ts",
 							"line": 72,
 							"character": 2
 						}
@@ -1567,7 +1567,7 @@
 					},
 					"sources": [
 						{
-							"fileName": "libs/stream-resource/src/lib/stream-resource.types.ts",
+							"fileName": "libs/angular/src/lib/angular.types.ts",
 							"line": 73,
 							"character": 2
 						}
@@ -1625,7 +1625,7 @@
 					},
 					"sources": [
 						{
-							"fileName": "libs/stream-resource/src/lib/stream-resource.types.ts",
+							"fileName": "libs/angular/src/lib/angular.types.ts",
 							"line": 74,
 							"character": 2
 						}
@@ -1633,8 +1633,8 @@
 					"type": {
 						"type": "reference",
 						"target": 84,
-						"name": "StreamResourceTransport",
-						"package": "stream-resource"
+						"name": "AgentTransport",
+						"package": "angular"
 					}
 				}
 			],
@@ -1658,7 +1658,7 @@
 			],
 			"sources": [
 				{
-					"fileName": "libs/stream-resource/src/lib/stream-resource.types.ts",
+					"fileName": "libs/angular/src/lib/angular.types.ts",
 					"line": 65,
 					"character": 17
 				}
@@ -1688,7 +1688,7 @@
 		},
 		{
 			"id": 33,
-			"name": "StreamResourceRef",
+			"name": "AgentRef",
 			"variant": "declaration",
 			"kind": 256,
 			"flags": {},
@@ -1701,7 +1701,7 @@
 					"flags": {},
 					"sources": [
 						{
-							"fileName": "libs/stream-resource/src/lib/stream-resource.types.ts",
+							"fileName": "libs/angular/src/lib/angular.types.ts",
 							"line": 113,
 							"character": 2
 						}
@@ -1720,7 +1720,7 @@
 									"type": "reference",
 									"target": 101,
 									"name": "SubagentStreamRef",
-									"package": "stream-resource"
+									"package": "angular"
 								}
 							}
 						],
@@ -1736,7 +1736,7 @@
 					"flags": {},
 					"sources": [
 						{
-							"fileName": "libs/stream-resource/src/lib/stream-resource.types.ts",
+							"fileName": "libs/angular/src/lib/angular.types.ts",
 							"line": 107,
 							"character": 2
 						}
@@ -1766,7 +1766,7 @@
 					"flags": {},
 					"sources": [
 						{
-							"fileName": "libs/stream-resource/src/lib/stream-resource.types.ts",
+							"fileName": "libs/angular/src/lib/angular.types.ts",
 							"line": 95,
 							"character": 2
 						}
@@ -1796,7 +1796,7 @@
 					"flags": {},
 					"sources": [
 						{
-							"fileName": "libs/stream-resource/src/lib/stream-resource.types.ts",
+							"fileName": "libs/angular/src/lib/angular.types.ts",
 							"line": 121,
 							"character": 2
 						}
@@ -1902,7 +1902,7 @@
 					"flags": {},
 					"sources": [
 						{
-							"fileName": "libs/stream-resource/src/lib/stream-resource.types.ts",
+							"fileName": "libs/angular/src/lib/angular.types.ts",
 							"line": 122,
 							"character": 2
 						}
@@ -1967,7 +1967,7 @@
 					"flags": {},
 					"sources": [
 						{
-							"fileName": "libs/stream-resource/src/lib/stream-resource.types.ts",
+							"fileName": "libs/angular/src/lib/angular.types.ts",
 							"line": 96,
 							"character": 2
 						}
@@ -1997,7 +1997,7 @@
 					"flags": {},
 					"sources": [
 						{
-							"fileName": "libs/stream-resource/src/lib/stream-resource.types.ts",
+							"fileName": "libs/angular/src/lib/angular.types.ts",
 							"line": 108,
 							"character": 2
 						}
@@ -2020,8 +2020,8 @@
 											"type": "reference",
 											"target": 34,
 											"name": "T",
-											"package": "stream-resource",
-											"qualifiedName": "StreamResourceRef.T",
+											"package": "angular",
+											"qualifiedName": "AgentRef.T",
 											"refersToTypeParameter": true
 										}
 									],
@@ -2042,7 +2042,7 @@
 					"flags": {},
 					"sources": [
 						{
-							"fileName": "libs/stream-resource/src/lib/stream-resource.types.ts",
+							"fileName": "libs/angular/src/lib/angular.types.ts",
 							"line": 101,
 							"character": 2
 						}
@@ -2072,8 +2072,8 @@
 													"type": "reference",
 													"target": 35,
 													"name": "ResolvedBag",
-													"package": "stream-resource",
-													"qualifiedName": "StreamResourceRef.ResolvedBag",
+													"package": "angular",
+													"qualifiedName": "AgentRef.ResolvedBag",
 													"refersToTypeParameter": true
 												}
 											}
@@ -2100,7 +2100,7 @@
 					"flags": {},
 					"sources": [
 						{
-							"fileName": "libs/stream-resource/src/lib/stream-resource.types.ts",
+							"fileName": "libs/angular/src/lib/angular.types.ts",
 							"line": 102,
 							"character": 2
 						}
@@ -2129,8 +2129,8 @@
 												"type": "reference",
 												"target": 35,
 												"name": "ResolvedBag",
-												"package": "stream-resource",
-												"qualifiedName": "StreamResourceRef.ResolvedBag",
+												"package": "angular",
+												"qualifiedName": "AgentRef.ResolvedBag",
 												"refersToTypeParameter": true
 											}
 										}
@@ -2152,7 +2152,7 @@
 					"flags": {},
 					"sources": [
 						{
-							"fileName": "libs/stream-resource/src/lib/stream-resource.types.ts",
+							"fileName": "libs/angular/src/lib/angular.types.ts",
 							"line": 94,
 							"character": 2
 						}
@@ -2182,7 +2182,7 @@
 					"flags": {},
 					"sources": [
 						{
-							"fileName": "libs/stream-resource/src/lib/stream-resource.types.ts",
+							"fileName": "libs/angular/src/lib/angular.types.ts",
 							"line": 109,
 							"character": 2
 						}
@@ -2212,7 +2212,7 @@
 					"flags": {},
 					"sources": [
 						{
-							"fileName": "libs/stream-resource/src/lib/stream-resource.types.ts",
+							"fileName": "libs/angular/src/lib/angular.types.ts",
 							"line": 119,
 							"character": 2
 						}
@@ -2287,7 +2287,7 @@
 					"flags": {},
 					"sources": [
 						{
-							"fileName": "libs/stream-resource/src/lib/stream-resource.types.ts",
+							"fileName": "libs/angular/src/lib/angular.types.ts",
 							"line": 100,
 							"character": 2
 						}
@@ -2360,7 +2360,7 @@
 					"flags": {},
 					"sources": [
 						{
-							"fileName": "libs/stream-resource/src/lib/stream-resource.types.ts",
+							"fileName": "libs/angular/src/lib/angular.types.ts",
 							"line": 97,
 							"character": 2
 						}
@@ -2397,7 +2397,7 @@
 					"flags": {},
 					"sources": [
 						{
-							"fileName": "libs/stream-resource/src/lib/stream-resource.types.ts",
+							"fileName": "libs/angular/src/lib/angular.types.ts",
 							"line": 120,
 							"character": 2
 						}
@@ -2447,7 +2447,7 @@
 					"flags": {},
 					"sources": [
 						{
-							"fileName": "libs/stream-resource/src/lib/stream-resource.types.ts",
+							"fileName": "libs/angular/src/lib/angular.types.ts",
 							"line": 93,
 							"character": 2
 						}
@@ -2483,7 +2483,7 @@
 					"flags": {},
 					"sources": [
 						{
-							"fileName": "libs/stream-resource/src/lib/stream-resource.types.ts",
+							"fileName": "libs/angular/src/lib/angular.types.ts",
 							"line": 117,
 							"character": 2
 						}
@@ -2532,7 +2532,7 @@
 					"flags": {},
 					"sources": [
 						{
-							"fileName": "libs/stream-resource/src/lib/stream-resource.types.ts",
+							"fileName": "libs/angular/src/lib/angular.types.ts",
 							"line": 112,
 							"character": 2
 						}
@@ -2561,7 +2561,7 @@
 										"type": "reference",
 										"target": 101,
 										"name": "SubagentStreamRef",
-										"package": "stream-resource"
+										"package": "angular"
 									}
 								],
 								"name": "Map",
@@ -2580,7 +2580,7 @@
 					"flags": {},
 					"sources": [
 						{
-							"fileName": "libs/stream-resource/src/lib/stream-resource.types.ts",
+							"fileName": "libs/angular/src/lib/angular.types.ts",
 							"line": 116,
 							"character": 2
 						}
@@ -2620,8 +2620,8 @@
 															"type": "reference",
 															"target": 35,
 															"name": "ResolvedBag",
-															"package": "stream-resource",
-															"qualifiedName": "StreamResourceRef.ResolvedBag",
+															"package": "angular",
+															"qualifiedName": "AgentRef.ResolvedBag",
 															"refersToTypeParameter": true
 														}
 													},
@@ -2719,7 +2719,7 @@
 					"flags": {},
 					"sources": [
 						{
-							"fileName": "libs/stream-resource/src/lib/stream-resource.types.ts",
+							"fileName": "libs/angular/src/lib/angular.types.ts",
 							"line": 118,
 							"character": 2
 						}
@@ -2778,7 +2778,7 @@
 					"flags": {},
 					"sources": [
 						{
-							"fileName": "libs/stream-resource/src/lib/stream-resource.types.ts",
+							"fileName": "libs/angular/src/lib/angular.types.ts",
 							"line": 104,
 							"character": 2
 						}
@@ -2817,7 +2817,7 @@
 					"flags": {},
 					"sources": [
 						{
-							"fileName": "libs/stream-resource/src/lib/stream-resource.types.ts",
+							"fileName": "libs/angular/src/lib/angular.types.ts",
 							"line": 103,
 							"character": 2
 						}
@@ -2856,7 +2856,7 @@
 					"flags": {},
 					"sources": [
 						{
-							"fileName": "libs/stream-resource/src/lib/stream-resource.types.ts",
+							"fileName": "libs/angular/src/lib/angular.types.ts",
 							"line": 92,
 							"character": 2
 						}
@@ -2873,8 +2873,8 @@
 								"type": "reference",
 								"target": 34,
 								"name": "T",
-								"package": "stream-resource",
-								"qualifiedName": "StreamResourceRef.T",
+								"package": "angular",
+								"qualifiedName": "AgentRef.T",
 								"refersToTypeParameter": true
 							}
 						],
@@ -2915,7 +2915,7 @@
 			],
 			"sources": [
 				{
-					"fileName": "libs/stream-resource/src/lib/stream-resource.types.ts",
+					"fileName": "libs/angular/src/lib/angular.types.ts",
 					"line": 90,
 					"character": 17
 				}
@@ -2945,7 +2945,7 @@
 		},
 		{
 			"id": 84,
-			"name": "StreamResourceTransport",
+			"name": "AgentTransport",
 			"variant": "declaration",
 			"kind": 256,
 			"flags": {},
@@ -2960,7 +2960,7 @@
 					},
 					"sources": [
 						{
-							"fileName": "libs/stream-resource/src/lib/stream-resource.types.ts",
+							"fileName": "libs/angular/src/lib/angular.types.ts",
 							"line": 55,
 							"character": 2
 						}
@@ -2982,7 +2982,7 @@
 							},
 							"sources": [
 								{
-									"fileName": "libs/stream-resource/src/lib/stream-resource.types.ts",
+									"fileName": "libs/angular/src/lib/angular.types.ts",
 									"line": 55,
 									"character": 2
 								}
@@ -3060,7 +3060,7 @@
 										"type": "reference",
 										"target": 97,
 										"name": "StreamEvent",
-										"package": "stream-resource"
+										"package": "angular"
 									}
 								],
 								"name": "AsyncIterable",
@@ -3077,7 +3077,7 @@
 					"flags": {},
 					"sources": [
 						{
-							"fileName": "libs/stream-resource/src/lib/stream-resource.types.ts",
+							"fileName": "libs/angular/src/lib/angular.types.ts",
 							"line": 47,
 							"character": 2
 						}
@@ -3091,7 +3091,7 @@
 							"flags": {},
 							"sources": [
 								{
-									"fileName": "libs/stream-resource/src/lib/stream-resource.types.ts",
+									"fileName": "libs/angular/src/lib/angular.types.ts",
 									"line": 47,
 									"character": 2
 								}
@@ -3169,7 +3169,7 @@
 										"type": "reference",
 										"target": 97,
 										"name": "StreamEvent",
-										"package": "stream-resource"
+										"package": "angular"
 									}
 								],
 								"name": "AsyncIterable",
@@ -3190,7 +3190,7 @@
 			],
 			"sources": [
 				{
-					"fileName": "libs/stream-resource/src/lib/stream-resource.types.ts",
+					"fileName": "libs/angular/src/lib/angular.types.ts",
 					"line": 46,
 					"character": 17
 				}
@@ -3204,7 +3204,7 @@
 				{
 					"type": "reference",
 					"target": 173,
-					"name": "MockStreamTransport"
+					"name": "MockAgentTransport"
 				}
 			]
 		},
@@ -3223,7 +3223,7 @@
 					"flags": {},
 					"sources": [
 						{
-							"fileName": "libs/stream-resource/src/lib/stream-resource.types.ts",
+							"fileName": "libs/angular/src/lib/angular.types.ts",
 							"line": 85,
 							"character": 2
 						}
@@ -3296,7 +3296,7 @@
 					"flags": {},
 					"sources": [
 						{
-							"fileName": "libs/stream-resource/src/lib/stream-resource.types.ts",
+							"fileName": "libs/angular/src/lib/angular.types.ts",
 							"line": 83,
 							"character": 2
 						}
@@ -3343,7 +3343,7 @@
 					"flags": {},
 					"sources": [
 						{
-							"fileName": "libs/stream-resource/src/lib/stream-resource.types.ts",
+							"fileName": "libs/angular/src/lib/angular.types.ts",
 							"line": 82,
 							"character": 2
 						}
@@ -3361,7 +3361,7 @@
 					"flags": {},
 					"sources": [
 						{
-							"fileName": "libs/stream-resource/src/lib/stream-resource.types.ts",
+							"fileName": "libs/angular/src/lib/angular.types.ts",
 							"line": 84,
 							"character": 2
 						}
@@ -3413,7 +3413,7 @@
 			],
 			"sources": [
 				{
-					"fileName": "libs/stream-resource/src/lib/stream-resource.types.ts",
+					"fileName": "libs/angular/src/lib/angular.types.ts",
 					"line": 81,
 					"character": 17
 				}
@@ -5034,12 +5034,12 @@
 			},
 			"sources": [
 				{
-					"fileName": "libs/stream-resource/src/lib/stream-resource.types.ts",
+					"fileName": "libs/angular/src/lib/angular.types.ts",
 					"line": 26,
 					"character": 13
 				},
 				{
-					"fileName": "libs/stream-resource/src/lib/stream-resource.types.ts",
+					"fileName": "libs/angular/src/lib/angular.types.ts",
 					"line": 35,
 					"character": 12
 				}
@@ -5074,12 +5074,12 @@
 			},
 			"sources": [
 				{
-					"fileName": "libs/stream-resource/src/lib/stream-resource.types.ts",
+					"fileName": "libs/angular/src/lib/angular.types.ts",
 					"line": 26,
 					"character": 13
 				},
 				{
-					"fileName": "libs/stream-resource/src/lib/stream-resource.types.ts",
+					"fileName": "libs/angular/src/lib/angular.types.ts",
 					"line": 35,
 					"character": 12
 				}
@@ -5103,7 +5103,7 @@
 							},
 							"sources": [
 								{
-									"fileName": "libs/stream-resource/src/lib/stream-resource.types.ts",
+									"fileName": "libs/angular/src/lib/angular.types.ts",
 									"line": 31,
 									"character": 2
 								}
@@ -5124,7 +5124,7 @@
 							},
 							"sources": [
 								{
-									"fileName": "libs/stream-resource/src/lib/stream-resource.types.ts",
+									"fileName": "libs/angular/src/lib/angular.types.ts",
 									"line": 27,
 									"character": 2
 								}
@@ -5145,7 +5145,7 @@
 							},
 							"sources": [
 								{
-									"fileName": "libs/stream-resource/src/lib/stream-resource.types.ts",
+									"fileName": "libs/angular/src/lib/angular.types.ts",
 									"line": 28,
 									"character": 2
 								}
@@ -5166,7 +5166,7 @@
 							},
 							"sources": [
 								{
-									"fileName": "libs/stream-resource/src/lib/stream-resource.types.ts",
+									"fileName": "libs/angular/src/lib/angular.types.ts",
 									"line": 32,
 									"character": 2
 								}
@@ -5187,7 +5187,7 @@
 							},
 							"sources": [
 								{
-									"fileName": "libs/stream-resource/src/lib/stream-resource.types.ts",
+									"fileName": "libs/angular/src/lib/angular.types.ts",
 									"line": 29,
 									"character": 2
 								}
@@ -5208,7 +5208,7 @@
 							},
 							"sources": [
 								{
-									"fileName": "libs/stream-resource/src/lib/stream-resource.types.ts",
+									"fileName": "libs/angular/src/lib/angular.types.ts",
 									"line": 30,
 									"character": 2
 								}
@@ -5247,7 +5247,7 @@
 			},
 			"sources": [
 				{
-					"fileName": "libs/stream-resource/src/lib/stream-resource.provider.ts",
+					"fileName": "libs/angular/src/lib/angular.provider.ts",
 					"line": 9,
 					"character": 13
 				}
@@ -5263,8 +5263,8 @@
 					{
 						"type": "reference",
 						"target": 10,
-						"name": "StreamResourceConfig",
-						"package": "stream-resource"
+						"name": "AgentConfig",
+						"package": "angular"
 					}
 				],
 				"name": "InjectionToken",
@@ -5274,13 +5274,13 @@
 		},
 		{
 			"id": 6,
-			"name": "provideStreamResource",
+			"name": "provideAgent",
 			"variant": "declaration",
 			"kind": 64,
 			"flags": {},
 			"sources": [
 				{
-					"fileName": "libs/stream-resource/src/lib/stream-resource.provider.ts",
+					"fileName": "libs/angular/src/lib/angular.provider.ts",
 					"line": 12,
 					"character": 16
 				}
@@ -5288,13 +5288,13 @@
 			"signatures": [
 				{
 					"id": 7,
-					"name": "provideStreamResource",
+					"name": "provideAgent",
 					"variant": "signature",
 					"kind": 4096,
 					"flags": {},
 					"sources": [
 						{
-							"fileName": "libs/stream-resource/src/lib/stream-resource.provider.ts",
+							"fileName": "libs/angular/src/lib/angular.provider.ts",
 							"line": 12,
 							"character": 16
 						}
@@ -5309,8 +5309,8 @@
 							"type": {
 								"type": "reference",
 								"target": 10,
-								"name": "StreamResourceConfig",
-								"package": "stream-resource"
+								"name": "AgentConfig",
+								"package": "angular"
 							}
 						}
 					],
@@ -5329,13 +5329,13 @@
 		},
 		{
 			"id": 1,
-			"name": "streamResource",
+			"name": "agent",
 			"variant": "declaration",
 			"kind": 64,
 			"flags": {},
 			"sources": [
 				{
-					"fileName": "libs/stream-resource/src/lib/stream-resource.fn.ts",
+					"fileName": "libs/angular/src/lib/angular.fn.ts",
 					"line": 26,
 					"character": 16
 				}
@@ -5343,13 +5343,13 @@
 			"signatures": [
 				{
 					"id": 2,
-					"name": "streamResource",
+					"name": "agent",
 					"variant": "signature",
 					"kind": 4096,
 					"flags": {},
 					"sources": [
 						{
-							"fileName": "libs/stream-resource/src/lib/stream-resource.fn.ts",
+							"fileName": "libs/angular/src/lib/angular.fn.ts",
 							"line": 26,
 							"character": 16
 						}
@@ -5417,7 +5417,7 @@
 										"type": "reference",
 										"target": 3,
 										"name": "T",
-										"package": "stream-resource",
+										"package": "angular",
 										"refersToTypeParameter": true
 									},
 									{
@@ -5428,14 +5428,14 @@
 												"type": "reference",
 												"target": 3,
 												"name": "T",
-												"package": "stream-resource",
+												"package": "angular",
 												"refersToTypeParameter": true
 											},
 											{
 												"type": "reference",
 												"target": 4,
 												"name": "Bag",
-												"package": "stream-resource",
+												"package": "angular",
 												"refersToTypeParameter": true
 											}
 										],
@@ -5443,8 +5443,8 @@
 										"package": "@langchain/langgraph-sdk"
 									}
 								],
-								"name": "StreamResourceOptions",
-								"package": "stream-resource"
+								"name": "AgentOptions",
+								"package": "angular"
 							}
 						}
 					],
@@ -5456,7 +5456,7 @@
 								"type": "reference",
 								"target": 3,
 								"name": "T",
-								"package": "stream-resource",
+								"package": "angular",
 								"refersToTypeParameter": true
 							},
 							{
@@ -5467,14 +5467,14 @@
 										"type": "reference",
 										"target": 3,
 										"name": "T",
-										"package": "stream-resource",
+										"package": "angular",
 										"refersToTypeParameter": true
 									},
 									{
 										"type": "reference",
 										"target": 4,
 										"name": "Bag",
-										"package": "stream-resource",
+										"package": "angular",
 										"refersToTypeParameter": true
 									}
 								],
@@ -5482,8 +5482,8 @@
 								"package": "@langchain/langgraph-sdk"
 							}
 						],
-						"name": "StreamResourceRef",
-						"package": "stream-resource"
+						"name": "AgentRef",
+						"package": "angular"
 					}
 				}
 			]
@@ -5534,537 +5534,537 @@
 			]
 		}
 	],
-	"packageName": "stream-resource",
+	"packageName": "angular",
 	"readme": [
 		{
 			"kind": "text",
-			"text": "# stream-resource\n\nThis library was generated with [Nx](https://nx.dev)."
+			"text": "# angular\n\nThis library was generated with [Nx](https://nx.dev)."
 		}
 	],
 	"symbolIdMap": {
 		"0": {
-			"packageName": "stream-resource",
+			"packageName": "angular",
 			"packagePath": "src/public-api.ts",
 			"qualifiedName": ""
 		},
 		"1": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.fn.ts",
-			"qualifiedName": "streamResource"
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.fn.ts",
+			"qualifiedName": "agent"
 		},
 		"2": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.fn.ts",
-			"qualifiedName": "streamResource"
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.fn.ts",
+			"qualifiedName": "agent"
 		},
 		"3": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.fn.ts",
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.fn.ts",
 			"qualifiedName": "T"
 		},
 		"4": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.fn.ts",
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.fn.ts",
 			"qualifiedName": "Bag"
 		},
 		"5": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.fn.ts",
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.fn.ts",
 			"qualifiedName": "options"
 		},
 		"6": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.provider.ts",
-			"qualifiedName": "provideStreamResource"
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.provider.ts",
+			"qualifiedName": "provideAgent"
 		},
 		"7": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.provider.ts",
-			"qualifiedName": "provideStreamResource"
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.provider.ts",
+			"qualifiedName": "provideAgent"
 		},
 		"8": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.provider.ts",
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.provider.ts",
 			"qualifiedName": "config"
 		},
 		"9": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.provider.ts",
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.provider.ts",
 			"qualifiedName": "STREAM_RESOURCE_CONFIG"
 		},
 		"10": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.provider.ts",
-			"qualifiedName": "StreamResourceConfig"
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.provider.ts",
+			"qualifiedName": "AgentConfig"
 		},
 		"11": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.provider.ts",
-			"qualifiedName": "StreamResourceConfig.apiUrl"
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.provider.ts",
+			"qualifiedName": "AgentConfig.apiUrl"
 		},
 		"12": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.provider.ts",
-			"qualifiedName": "StreamResourceConfig.transport"
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.provider.ts",
+			"qualifiedName": "AgentConfig.transport"
 		},
 		"13": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.types.ts",
-			"qualifiedName": "StreamResourceOptions"
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.types.ts",
+			"qualifiedName": "AgentOptions"
 		},
 		"14": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.types.ts",
-			"qualifiedName": "StreamResourceOptions.T"
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.types.ts",
+			"qualifiedName": "AgentOptions.T"
 		},
 		"15": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.types.ts",
-			"qualifiedName": "StreamResourceOptions.ResolvedBag"
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.types.ts",
+			"qualifiedName": "AgentOptions.ResolvedBag"
 		},
 		"16": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.types.ts",
-			"qualifiedName": "StreamResourceOptions.apiUrl"
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.types.ts",
+			"qualifiedName": "AgentOptions.apiUrl"
 		},
 		"17": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.types.ts",
-			"qualifiedName": "StreamResourceOptions.assistantId"
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.types.ts",
+			"qualifiedName": "AgentOptions.assistantId"
 		},
 		"18": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.types.ts",
-			"qualifiedName": "StreamResourceOptions.threadId"
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.types.ts",
+			"qualifiedName": "AgentOptions.threadId"
 		},
 		"19": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.types.ts",
-			"qualifiedName": "StreamResourceOptions.onThreadId"
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.types.ts",
+			"qualifiedName": "AgentOptions.onThreadId"
 		},
 		"20": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.types.ts",
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.types.ts",
 			"qualifiedName": "__type"
 		},
 		"21": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.types.ts",
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.types.ts",
 			"qualifiedName": "__type"
 		},
 		"22": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.types.ts",
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.types.ts",
 			"qualifiedName": "id"
 		},
 		"23": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.types.ts",
-			"qualifiedName": "StreamResourceOptions.initialValues"
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.types.ts",
+			"qualifiedName": "AgentOptions.initialValues"
 		},
 		"24": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.types.ts",
-			"qualifiedName": "StreamResourceOptions.messagesKey"
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.types.ts",
+			"qualifiedName": "AgentOptions.messagesKey"
 		},
 		"25": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.types.ts",
-			"qualifiedName": "StreamResourceOptions.throttle"
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.types.ts",
+			"qualifiedName": "AgentOptions.throttle"
 		},
 		"26": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.types.ts",
-			"qualifiedName": "StreamResourceOptions.toMessage"
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.types.ts",
+			"qualifiedName": "AgentOptions.toMessage"
 		},
 		"27": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.types.ts",
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.types.ts",
 			"qualifiedName": "__type"
 		},
 		"28": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.types.ts",
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.types.ts",
 			"qualifiedName": "__type"
 		},
 		"29": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.types.ts",
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.types.ts",
 			"qualifiedName": "msg"
 		},
 		"30": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.types.ts",
-			"qualifiedName": "StreamResourceOptions.transport"
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.types.ts",
+			"qualifiedName": "AgentOptions.transport"
 		},
 		"31": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.types.ts",
-			"qualifiedName": "StreamResourceOptions.filterSubagentMessages"
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.types.ts",
+			"qualifiedName": "AgentOptions.filterSubagentMessages"
 		},
 		"32": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.types.ts",
-			"qualifiedName": "StreamResourceOptions.subagentToolNames"
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.types.ts",
+			"qualifiedName": "AgentOptions.subagentToolNames"
 		},
 		"33": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.types.ts",
-			"qualifiedName": "StreamResourceRef"
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.types.ts",
+			"qualifiedName": "AgentRef"
 		},
 		"34": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.types.ts",
-			"qualifiedName": "StreamResourceRef.T"
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.types.ts",
+			"qualifiedName": "AgentRef.T"
 		},
 		"35": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.types.ts",
-			"qualifiedName": "StreamResourceRef.ResolvedBag"
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.types.ts",
+			"qualifiedName": "AgentRef.ResolvedBag"
 		},
 		"36": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.types.ts",
-			"qualifiedName": "StreamResourceRef.value"
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.types.ts",
+			"qualifiedName": "AgentRef.value"
 		},
 		"37": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.types.ts",
-			"qualifiedName": "StreamResourceRef.status"
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.types.ts",
+			"qualifiedName": "AgentRef.status"
 		},
 		"38": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.types.ts",
-			"qualifiedName": "StreamResourceRef.isLoading"
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.types.ts",
+			"qualifiedName": "AgentRef.isLoading"
 		},
 		"39": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.types.ts",
-			"qualifiedName": "StreamResourceRef.error"
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.types.ts",
+			"qualifiedName": "AgentRef.error"
 		},
 		"40": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.types.ts",
-			"qualifiedName": "StreamResourceRef.hasValue"
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.types.ts",
+			"qualifiedName": "AgentRef.hasValue"
 		},
 		"41": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.types.ts",
-			"qualifiedName": "StreamResourceRef.reload"
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.types.ts",
+			"qualifiedName": "AgentRef.reload"
 		},
 		"42": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.types.ts",
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.types.ts",
 			"qualifiedName": "__type"
 		},
 		"43": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.types.ts",
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.types.ts",
 			"qualifiedName": "__type"
 		},
 		"44": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.types.ts",
-			"qualifiedName": "StreamResourceRef.messages"
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.types.ts",
+			"qualifiedName": "AgentRef.messages"
 		},
 		"45": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.types.ts",
-			"qualifiedName": "StreamResourceRef.interrupt"
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.types.ts",
+			"qualifiedName": "AgentRef.interrupt"
 		},
 		"46": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.types.ts",
-			"qualifiedName": "StreamResourceRef.interrupts"
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.types.ts",
+			"qualifiedName": "AgentRef.interrupts"
 		},
 		"47": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.types.ts",
-			"qualifiedName": "StreamResourceRef.toolProgress"
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.types.ts",
+			"qualifiedName": "AgentRef.toolProgress"
 		},
 		"48": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.types.ts",
-			"qualifiedName": "StreamResourceRef.toolCalls"
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.types.ts",
+			"qualifiedName": "AgentRef.toolCalls"
 		},
 		"49": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.types.ts",
-			"qualifiedName": "StreamResourceRef.branch"
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.types.ts",
+			"qualifiedName": "AgentRef.branch"
 		},
 		"50": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.types.ts",
-			"qualifiedName": "StreamResourceRef.history"
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.types.ts",
+			"qualifiedName": "AgentRef.history"
 		},
 		"51": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.types.ts",
-			"qualifiedName": "StreamResourceRef.isThreadLoading"
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.types.ts",
+			"qualifiedName": "AgentRef.isThreadLoading"
 		},
 		"52": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.types.ts",
-			"qualifiedName": "StreamResourceRef.subagents"
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.types.ts",
+			"qualifiedName": "AgentRef.subagents"
 		},
 		"53": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.types.ts",
-			"qualifiedName": "StreamResourceRef.activeSubagents"
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.types.ts",
+			"qualifiedName": "AgentRef.activeSubagents"
 		},
 		"54": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.types.ts",
-			"qualifiedName": "StreamResourceRef.submit"
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.types.ts",
+			"qualifiedName": "AgentRef.submit"
 		},
 		"55": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.types.ts",
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.types.ts",
 			"qualifiedName": "__type"
 		},
 		"56": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.types.ts",
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.types.ts",
 			"qualifiedName": "__type"
 		},
 		"57": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.types.ts",
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.types.ts",
 			"qualifiedName": "values"
 		},
 		"58": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.types.ts",
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.types.ts",
 			"qualifiedName": "opts"
 		},
 		"59": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.types.ts",
-			"qualifiedName": "StreamResourceRef.stop"
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.types.ts",
+			"qualifiedName": "AgentRef.stop"
 		},
 		"60": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.types.ts",
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.types.ts",
 			"qualifiedName": "__type"
 		},
 		"61": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.types.ts",
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.types.ts",
 			"qualifiedName": "__type"
 		},
 		"62": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.types.ts",
-			"qualifiedName": "StreamResourceRef.switchThread"
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.types.ts",
+			"qualifiedName": "AgentRef.switchThread"
 		},
 		"63": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.types.ts",
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.types.ts",
 			"qualifiedName": "__type"
 		},
 		"64": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.types.ts",
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.types.ts",
 			"qualifiedName": "__type"
 		},
 		"65": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.types.ts",
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.types.ts",
 			"qualifiedName": "threadId"
 		},
 		"66": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.types.ts",
-			"qualifiedName": "StreamResourceRef.joinStream"
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.types.ts",
+			"qualifiedName": "AgentRef.joinStream"
 		},
 		"67": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.types.ts",
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.types.ts",
 			"qualifiedName": "__type"
 		},
 		"68": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.types.ts",
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.types.ts",
 			"qualifiedName": "__type"
 		},
 		"69": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.types.ts",
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.types.ts",
 			"qualifiedName": "runId"
 		},
 		"70": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.types.ts",
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.types.ts",
 			"qualifiedName": "lastEventId"
 		},
 		"71": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.types.ts",
-			"qualifiedName": "StreamResourceRef.setBranch"
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.types.ts",
+			"qualifiedName": "AgentRef.setBranch"
 		},
 		"72": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.types.ts",
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.types.ts",
 			"qualifiedName": "__type"
 		},
 		"73": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.types.ts",
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.types.ts",
 			"qualifiedName": "__type"
 		},
 		"74": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.types.ts",
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.types.ts",
 			"qualifiedName": "branch"
 		},
 		"75": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.types.ts",
-			"qualifiedName": "StreamResourceRef.getMessagesMetadata"
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.types.ts",
+			"qualifiedName": "AgentRef.getMessagesMetadata"
 		},
 		"76": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.types.ts",
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.types.ts",
 			"qualifiedName": "__type"
 		},
 		"77": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.types.ts",
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.types.ts",
 			"qualifiedName": "__type"
 		},
 		"78": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.types.ts",
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.types.ts",
 			"qualifiedName": "msg"
 		},
 		"79": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.types.ts",
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.types.ts",
 			"qualifiedName": "idx"
 		},
 		"80": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.types.ts",
-			"qualifiedName": "StreamResourceRef.getToolCalls"
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.types.ts",
+			"qualifiedName": "AgentRef.getToolCalls"
 		},
 		"81": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.types.ts",
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.types.ts",
 			"qualifiedName": "__type"
 		},
 		"82": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.types.ts",
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.types.ts",
 			"qualifiedName": "__type"
 		},
 		"83": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.types.ts",
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.types.ts",
 			"qualifiedName": "msg"
 		},
 		"84": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.types.ts",
-			"qualifiedName": "StreamResourceTransport"
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.types.ts",
+			"qualifiedName": "AgentTransport"
 		},
 		"85": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.types.ts",
-			"qualifiedName": "StreamResourceTransport.stream"
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.types.ts",
+			"qualifiedName": "AgentTransport.stream"
 		},
 		"86": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.types.ts",
-			"qualifiedName": "StreamResourceTransport.stream"
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.types.ts",
+			"qualifiedName": "AgentTransport.stream"
 		},
 		"87": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.types.ts",
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.types.ts",
 			"qualifiedName": "assistantId"
 		},
 		"88": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.types.ts",
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.types.ts",
 			"qualifiedName": "threadId"
 		},
 		"89": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.types.ts",
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.types.ts",
 			"qualifiedName": "payload"
 		},
 		"90": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.types.ts",
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.types.ts",
 			"qualifiedName": "signal"
 		},
 		"91": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.types.ts",
-			"qualifiedName": "StreamResourceTransport.joinStream"
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.types.ts",
+			"qualifiedName": "AgentTransport.joinStream"
 		},
 		"92": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.types.ts",
-			"qualifiedName": "StreamResourceTransport.joinStream"
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.types.ts",
+			"qualifiedName": "AgentTransport.joinStream"
 		},
 		"93": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.types.ts",
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.types.ts",
 			"qualifiedName": "threadId"
 		},
 		"94": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.types.ts",
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.types.ts",
 			"qualifiedName": "runId"
 		},
 		"95": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.types.ts",
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.types.ts",
 			"qualifiedName": "lastEventId"
 		},
 		"96": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.types.ts",
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.types.ts",
 			"qualifiedName": "signal"
 		},
 		"97": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.types.ts",
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.types.ts",
 			"qualifiedName": "StreamEvent"
 		},
 		"98": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.types.ts",
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.types.ts",
 			"qualifiedName": "StreamEvent.type"
 		},
 		"99": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.types.ts",
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.types.ts",
 			"qualifiedName": "StreamEvent.__index"
 		},
 		"101": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.types.ts",
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.types.ts",
 			"qualifiedName": "SubagentStreamRef"
 		},
 		"102": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.types.ts",
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.types.ts",
 			"qualifiedName": "SubagentStreamRef.toolCallId"
 		},
 		"103": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.types.ts",
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.types.ts",
 			"qualifiedName": "SubagentStreamRef.status"
 		},
 		"104": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.types.ts",
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.types.ts",
 			"qualifiedName": "SubagentStreamRef.values"
 		},
 		"105": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.types.ts",
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.types.ts",
 			"qualifiedName": "SubagentStreamRef.messages"
 		},
 		"106": {
@@ -6148,7 +6148,7 @@
 			"qualifiedName": "Interrupt.when"
 		},
 		"123": {
-			"packageName": "stream-resource",
+			"packageName": "angular",
 			"packagePath": "",
 			"qualifiedName": "__type"
 		},
@@ -6353,266 +6353,266 @@
 			"qualifiedName": "run"
 		},
 		"164": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.types.ts",
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.types.ts",
 			"qualifiedName": "ResourceStatus"
 		},
 		"165": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.types.ts",
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.types.ts",
 			"qualifiedName": "__object"
 		},
 		"166": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.types.ts",
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.types.ts",
 			"qualifiedName": "__object.Idle"
 		},
 		"167": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.types.ts",
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.types.ts",
 			"qualifiedName": "__object.Loading"
 		},
 		"168": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.types.ts",
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.types.ts",
 			"qualifiedName": "__object.Reloading"
 		},
 		"169": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.types.ts",
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.types.ts",
 			"qualifiedName": "__object.Resolved"
 		},
 		"170": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.types.ts",
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.types.ts",
 			"qualifiedName": "__object.Error"
 		},
 		"171": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.types.ts",
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.types.ts",
 			"qualifiedName": "__object.Local"
 		},
 		"172": {
-			"packageName": "stream-resource",
-			"packagePath": "src/lib/stream-resource.types.ts",
+			"packageName": "angular",
+			"packagePath": "src/lib/angular.types.ts",
 			"qualifiedName": "ResourceStatus"
 		},
 		"173": {
-			"packageName": "stream-resource",
+			"packageName": "angular",
 			"packagePath": "src/lib/transport/mock-stream.transport.ts",
-			"qualifiedName": "MockStreamTransport"
+			"qualifiedName": "MockAgentTransport"
 		},
 		"174": {
-			"packageName": "stream-resource",
+			"packageName": "angular",
 			"packagePath": "src/lib/transport/mock-stream.transport.ts",
-			"qualifiedName": "MockStreamTransport.__constructor"
+			"qualifiedName": "MockAgentTransport.__constructor"
 		},
 		"175": {
-			"packageName": "stream-resource",
+			"packageName": "angular",
 			"packagePath": "src/lib/transport/mock-stream.transport.ts",
-			"qualifiedName": "MockStreamTransport"
+			"qualifiedName": "MockAgentTransport"
 		},
 		"176": {
-			"packageName": "stream-resource",
+			"packageName": "angular",
 			"packagePath": "src/lib/transport/mock-stream.transport.ts",
 			"qualifiedName": "script"
 		},
 		"186": {
-			"packageName": "stream-resource",
+			"packageName": "angular",
 			"packagePath": "src/lib/transport/mock-stream.transport.ts",
-			"qualifiedName": "MockStreamTransport.nextBatch"
+			"qualifiedName": "MockAgentTransport.nextBatch"
 		},
 		"187": {
-			"packageName": "stream-resource",
+			"packageName": "angular",
 			"packagePath": "src/lib/transport/mock-stream.transport.ts",
-			"qualifiedName": "MockStreamTransport.nextBatch"
+			"qualifiedName": "MockAgentTransport.nextBatch"
 		},
 		"188": {
-			"packageName": "stream-resource",
+			"packageName": "angular",
 			"packagePath": "src/lib/transport/mock-stream.transport.ts",
-			"qualifiedName": "MockStreamTransport.emit"
+			"qualifiedName": "MockAgentTransport.emit"
 		},
 		"189": {
-			"packageName": "stream-resource",
+			"packageName": "angular",
 			"packagePath": "src/lib/transport/mock-stream.transport.ts",
-			"qualifiedName": "MockStreamTransport.emit"
+			"qualifiedName": "MockAgentTransport.emit"
 		},
 		"190": {
-			"packageName": "stream-resource",
+			"packageName": "angular",
 			"packagePath": "src/lib/transport/mock-stream.transport.ts",
 			"qualifiedName": "events"
 		},
 		"191": {
-			"packageName": "stream-resource",
+			"packageName": "angular",
 			"packagePath": "src/lib/transport/mock-stream.transport.ts",
-			"qualifiedName": "MockStreamTransport.emitError"
+			"qualifiedName": "MockAgentTransport.emitError"
 		},
 		"192": {
-			"packageName": "stream-resource",
+			"packageName": "angular",
 			"packagePath": "src/lib/transport/mock-stream.transport.ts",
-			"qualifiedName": "MockStreamTransport.emitError"
+			"qualifiedName": "MockAgentTransport.emitError"
 		},
 		"193": {
-			"packageName": "stream-resource",
+			"packageName": "angular",
 			"packagePath": "src/lib/transport/mock-stream.transport.ts",
 			"qualifiedName": "err"
 		},
 		"194": {
-			"packageName": "stream-resource",
+			"packageName": "angular",
 			"packagePath": "src/lib/transport/mock-stream.transport.ts",
-			"qualifiedName": "MockStreamTransport.close"
+			"qualifiedName": "MockAgentTransport.close"
 		},
 		"195": {
-			"packageName": "stream-resource",
+			"packageName": "angular",
 			"packagePath": "src/lib/transport/mock-stream.transport.ts",
-			"qualifiedName": "MockStreamTransport.close"
+			"qualifiedName": "MockAgentTransport.close"
 		},
 		"196": {
-			"packageName": "stream-resource",
+			"packageName": "angular",
 			"packagePath": "src/lib/transport/mock-stream.transport.ts",
-			"qualifiedName": "MockStreamTransport.isStreaming"
+			"qualifiedName": "MockAgentTransport.isStreaming"
 		},
 		"197": {
-			"packageName": "stream-resource",
+			"packageName": "angular",
 			"packagePath": "src/lib/transport/mock-stream.transport.ts",
-			"qualifiedName": "MockStreamTransport.isStreaming"
+			"qualifiedName": "MockAgentTransport.isStreaming"
 		},
 		"198": {
-			"packageName": "stream-resource",
+			"packageName": "angular",
 			"packagePath": "src/lib/transport/mock-stream.transport.ts",
-			"qualifiedName": "MockStreamTransport.stream"
+			"qualifiedName": "MockAgentTransport.stream"
 		},
 		"199": {
-			"packageName": "stream-resource",
+			"packageName": "angular",
 			"packagePath": "src/lib/transport/mock-stream.transport.ts",
-			"qualifiedName": "MockStreamTransport.stream"
+			"qualifiedName": "MockAgentTransport.stream"
 		},
 		"200": {
-			"packageName": "stream-resource",
+			"packageName": "angular",
 			"packagePath": "src/lib/transport/mock-stream.transport.ts",
 			"qualifiedName": "_assistantId"
 		},
 		"201": {
-			"packageName": "stream-resource",
+			"packageName": "angular",
 			"packagePath": "src/lib/transport/mock-stream.transport.ts",
 			"qualifiedName": "_threadId"
 		},
 		"202": {
-			"packageName": "stream-resource",
+			"packageName": "angular",
 			"packagePath": "src/lib/transport/mock-stream.transport.ts",
 			"qualifiedName": "_payload"
 		},
 		"203": {
-			"packageName": "stream-resource",
+			"packageName": "angular",
 			"packagePath": "src/lib/transport/mock-stream.transport.ts",
 			"qualifiedName": "signal"
 		},
 		"206": {
-			"packageName": "stream-resource",
+			"packageName": "angular",
 			"packagePath": "src/lib/transport/fetch-stream.transport.ts",
 			"qualifiedName": "FetchStreamTransport"
 		},
 		"207": {
-			"packageName": "stream-resource",
+			"packageName": "angular",
 			"packagePath": "src/lib/transport/fetch-stream.transport.ts",
 			"qualifiedName": "FetchStreamTransport.__constructor"
 		},
 		"208": {
-			"packageName": "stream-resource",
+			"packageName": "angular",
 			"packagePath": "src/lib/transport/fetch-stream.transport.ts",
 			"qualifiedName": "FetchStreamTransport"
 		},
 		"209": {
-			"packageName": "stream-resource",
+			"packageName": "angular",
 			"packagePath": "src/lib/transport/fetch-stream.transport.ts",
 			"qualifiedName": "apiUrl"
 		},
 		"210": {
-			"packageName": "stream-resource",
+			"packageName": "angular",
 			"packagePath": "src/lib/transport/fetch-stream.transport.ts",
 			"qualifiedName": "onThreadId"
 		},
 		"211": {
-			"packageName": "stream-resource",
+			"packageName": "angular",
 			"packagePath": "src/lib/transport/fetch-stream.transport.ts",
 			"qualifiedName": "__type"
 		},
 		"212": {
-			"packageName": "stream-resource",
+			"packageName": "angular",
 			"packagePath": "src/lib/transport/fetch-stream.transport.ts",
 			"qualifiedName": "__type"
 		},
 		"213": {
-			"packageName": "stream-resource",
+			"packageName": "angular",
 			"packagePath": "src/lib/transport/fetch-stream.transport.ts",
 			"qualifiedName": "id"
 		},
 		"219": {
-			"packageName": "stream-resource",
+			"packageName": "angular",
 			"packagePath": "src/lib/transport/fetch-stream.transport.ts",
 			"qualifiedName": "FetchStreamTransport.stream"
 		},
 		"220": {
-			"packageName": "stream-resource",
+			"packageName": "angular",
 			"packagePath": "src/lib/transport/fetch-stream.transport.ts",
 			"qualifiedName": "FetchStreamTransport.stream"
 		},
 		"221": {
-			"packageName": "stream-resource",
+			"packageName": "angular",
 			"packagePath": "src/lib/transport/fetch-stream.transport.ts",
 			"qualifiedName": "assistantId"
 		},
 		"222": {
-			"packageName": "stream-resource",
+			"packageName": "angular",
 			"packagePath": "src/lib/transport/fetch-stream.transport.ts",
 			"qualifiedName": "threadId"
 		},
 		"223": {
-			"packageName": "stream-resource",
+			"packageName": "angular",
 			"packagePath": "src/lib/transport/fetch-stream.transport.ts",
 			"qualifiedName": "payload"
 		},
 		"224": {
-			"packageName": "stream-resource",
+			"packageName": "angular",
 			"packagePath": "src/lib/transport/fetch-stream.transport.ts",
 			"qualifiedName": "signal"
 		},
 		"225": {
-			"packageName": "stream-resource",
+			"packageName": "angular",
 			"packagePath": "src/lib/transport/fetch-stream.transport.ts",
 			"qualifiedName": "FetchStreamTransport.joinStream"
 		},
 		"226": {
-			"packageName": "stream-resource",
+			"packageName": "angular",
 			"packagePath": "src/lib/transport/fetch-stream.transport.ts",
 			"qualifiedName": "FetchStreamTransport.joinStream"
 		},
 		"227": {
-			"packageName": "stream-resource",
+			"packageName": "angular",
 			"packagePath": "src/lib/transport/fetch-stream.transport.ts",
 			"qualifiedName": "threadId"
 		},
 		"228": {
-			"packageName": "stream-resource",
+			"packageName": "angular",
 			"packagePath": "src/lib/transport/fetch-stream.transport.ts",
 			"qualifiedName": "runId"
 		},
 		"229": {
-			"packageName": "stream-resource",
+			"packageName": "angular",
 			"packagePath": "src/lib/transport/fetch-stream.transport.ts",
 			"qualifiedName": "lastEventId"
 		},
 		"230": {
-			"packageName": "stream-resource",
+			"packageName": "angular",
 			"packagePath": "src/lib/transport/fetch-stream.transport.ts",
 			"qualifiedName": "signal"
 		}
 	},
 	"files": {
 		"entries": {
-			"1": "libs/stream-resource/src/public-api.ts",
-			"2": "libs/stream-resource/README.md",
-			"3": "libs/stream-resource"
+			"1": "libs/angular/src/public-api.ts",
+			"2": "libs/angular/README.md",
+			"3": "libs/angular"
 		},
 		"reflections": {
 			"1": 0,

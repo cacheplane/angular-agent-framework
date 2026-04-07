@@ -48,7 +48,7 @@ async function runStream(ctx: ScenarioCtx) {
   const { out, cur } = makeAIBubble();
   litRight(0);
   await typeText(out, cur,
-    'LangGraph structures your agent as a graph of nodes and edges. Each node returns a partial state update. Angular Stream Resource connects to that stream and exposes each update as Angular signals — so your template reacts as tokens arrive.',
+    'LangGraph structures your agent as a graph of nodes and edges. Each node returns a partial state update. Angular Agent Framework connects to that stream and exposes each update as Angular signals — so your template reacts as tokens arrive.',
     30
   );
   if (ctx.token !== token) return;

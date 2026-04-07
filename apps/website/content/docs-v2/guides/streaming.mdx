@@ -1,6 +1,6 @@
 # Streaming
 
-StreamResource provides token-by-token streaming from LangGraph agents via Server-Sent Events (SSE). Every update lands directly in Angular Signals — no subscriptions, no manual change detection.
+Agent provides token-by-token streaming from LangGraph agents via Server-Sent Events (SSE). Every update lands directly in Angular Signals — no subscriptions, no manual change detection.
 
 <Callout type="tip" title="Prerequisites">
 Make sure you've completed the Installation guide first.
@@ -8,7 +8,7 @@ Make sure you've completed the Installation guide first.
 
 ## How streaming works
 
-Streaming starts on the agent side. LangGraph's `astream()` method controls what data is sent over the SSE connection. On the Angular side, `streamResource()` consumes those events and maps them to Signals.
+Streaming starts on the agent side. LangGraph's `astream()` method controls what data is sent over the SSE connection. On the Angular side, `agent()` consumes those events and maps them to Signals.
 
 <Tabs>
 <Tab label="agent.py">
@@ -59,7 +59,7 @@ async for event in graph.astream_events(
 
 ```typescript
 import { Component, computed, ChangeDetectionStrategy } from '@angular/core';
-import { streamResource } from '@cacheplane/stream-resource';
+import { agent } from '@cacheplane/angular';
 import { BaseMessage } from '@langchain/core/messages';
 
 @Component({
@@ -68,7 +68,7 @@ import { BaseMessage } from '@langchain/core/messages';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ChatComponent {
-  readonly chat = streamResource<{ messages: BaseMessage[] }>({
+  readonly chat = agent<{ messages: BaseMessage[] }>({
     assistantId: 'chat_agent',
   });
 
@@ -126,7 +126,7 @@ LangGraph supports three stream modes. Pass `streamMode` to control what each SS
 ```typescript
 // Receives the full agent state after every node execution.
 // Best for message-based chat interfaces.
-const chat = streamResource<{ messages: BaseMessage[] }>({
+const chat = agent<{ messages: BaseMessage[] }>({
   assistantId: 'chat_agent',
   streamMode: 'values',
 });
@@ -140,7 +140,7 @@ const chat = streamResource<{ messages: BaseMessage[] }>({
 ```typescript
 // Streams individual message tokens as they are generated.
 // Best for token-by-token rendering with lowest perceived latency.
-const chat = streamResource<{ messages: BaseMessage[] }>({
+const chat = agent<{ messages: BaseMessage[] }>({
   assistantId: 'chat_agent',
   streamMode: 'messages',
 });
@@ -152,7 +152,7 @@ const chat = streamResource<{ messages: BaseMessage[] }>({
 ```typescript
 // Emits raw LangGraph run events (on_chain_start, on_llm_stream, etc.).
 // Best for advanced observability or custom progress indicators.
-const chat = streamResource<{ messages: BaseMessage[] }>({
+const chat = agent<{ messages: BaseMessage[] }>({
   assistantId: 'chat_agent',
   streamMode: 'events',
 });
@@ -174,7 +174,7 @@ If the SSE connection drops or the agent throws, `status()` transitions to `'err
 
 ```typescript
 import { Component, computed, ChangeDetectionStrategy } from '@angular/core';
-import { streamResource } from '@cacheplane/stream-resource';
+import { agent } from '@cacheplane/angular';
 import { BaseMessage } from '@langchain/core/messages';
 
 @Component({
@@ -183,7 +183,7 @@ import { BaseMessage } from '@langchain/core/messages';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ChatComponent {
-  readonly chat = streamResource<{ messages: BaseMessage[] }>({
+  readonly chat = agent<{ messages: BaseMessage[] }>({
     assistantId: 'chat_agent',
   });
 
@@ -217,10 +217,10 @@ export class ChatComponent {
 
 ## Throttle configuration
 
-By default StreamResource emits a signal update for every incoming SSE chunk. On fast connections this can trigger hundreds of renders per second. Use the `throttle` option to coalesce updates.
+By default Agent emits a signal update for every incoming SSE chunk. On fast connections this can trigger hundreds of renders per second. Use the `throttle` option to coalesce updates.
 
 ```typescript
-const chat = streamResource<{ messages: BaseMessage[] }>({
+const chat = agent<{ messages: BaseMessage[] }>({
   assistantId: 'chat_agent',
   // Batch incoming chunks and flush at most once every 50 ms
   throttle: 50,
@@ -249,9 +249,9 @@ Each call to `chat.submit()` opens a new SSE connection. Connections are automat
     Pause agent execution mid-stream to collect human input before continuing.
   </Card>
   <Card title="Testing" href="/docs/guides/testing">
-    Unit-test components that use streamResource with the built-in test harness.
+    Unit-test components that use agent with the built-in test harness.
   </Card>
-  <Card title="API Reference" href="/docs/api/stream-resource">
-    Full option reference for streamResource(), including all configuration keys.
+  <Card title="API Reference" href="/docs/api/angular">
+    Full option reference for agent(), including all configuration keys.
   </Card>
 </CardGroup>

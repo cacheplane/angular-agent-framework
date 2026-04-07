@@ -10,10 +10,10 @@ import {
   ChangeDetectionStrategy,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import type { StreamResourceRef } from '@cacheplane/stream-resource';
+import type { AgentRef } from '@cacheplane/angular';
 
 export function submitMessage(
-  ref: StreamResourceRef<any, any>,
+  ref: AgentRef<any, any>,
   text: string,
 ): string | null {
   const trimmed = text.trim();
@@ -74,7 +74,7 @@ export function submitMessage(
   `,
 })
 export class ChatInputComponent {
-  readonly ref = input.required<StreamResourceRef<any, any>>();
+  readonly ref = input.required<AgentRef<any, any>>();
   readonly submitOnEnter = input<boolean>(true);
   readonly placeholder = input<string>('');
   readonly submitted = output<string>();

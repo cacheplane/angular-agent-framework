@@ -25,10 +25,10 @@ Primary reader: Engineering managers and CTOs evaluating whether to purchase an 
 
 ### Copy per layer
 
-**@cacheplane/stream-resource (Primitives)**
+**@cacheplane/angular (Primitives)**
 - Outcome: "Ship streaming agents without building the plumbing."
 - Problem: Wiring SSE into Angular requires weeks of zone patching, manual subscription management, and custom thread-persistence code — most of which breaks under load or after a page refresh.
-- Solution: streamResource() gives your team production-ready streaming, thread persistence, interrupt handling, and a deterministic test transport on day one.
+- Solution: agent() gives your team production-ready streaming, thread persistence, interrupt handling, and a deterministic test transport on day one.
 
 **@cacheplane/chat (UI Layer)**
 - Outcome: "Accessible agent UI in days, not sprints."

@@ -4,7 +4,7 @@ import { tokens } from '../../../lib/design-tokens';
 
 const BADGES = [
   { icon: '★', label: 'GitHub Stars', value: 'Open Source' },
-  { icon: '↓', label: 'npm', value: '@cacheplane/stream-resource' },
+  { icon: '↓', label: 'npm', value: '@cacheplane/angular' },
   { icon: '⚖', label: 'License', value: 'Source Available' },
 ];
 

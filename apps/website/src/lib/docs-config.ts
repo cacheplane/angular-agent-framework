@@ -53,10 +53,10 @@ export const docsConfig: DocsSection[] = [
     id: 'api',
     color: 'blue',
     pages: [
-      { title: 'streamResource()', slug: 'stream-resource', section: 'api' },
-      { title: 'provideStreamResource()', slug: 'provide-stream-resource', section: 'api' },
+      { title: 'agent()', slug: 'angular', section: 'api' },
+      { title: 'provideAgent()', slug: 'provide-angular', section: 'api' },
       { title: 'FetchStreamTransport', slug: 'fetch-stream-transport', section: 'api' },
-      { title: 'MockStreamTransport', slug: 'mock-stream-transport', section: 'api' },
+      { title: 'MockAgentTransport', slug: 'mock-stream-transport', section: 'api' },
     ],
   },
 ];

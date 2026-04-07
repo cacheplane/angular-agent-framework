@@ -124,9 +124,9 @@ const TAB_DATA = [
     id: 'reactive',
     label: 'Reactive by Default',
     headline: 'Every State Slice is a Signal',
-    description: 'streamResource() exposes messages, status, error, and threadId as Angular Signals. Compose them with computed(), bind them in templates, and let OnPush change detection handle the rest. No manual subscriptions. No RxJS boilerplate.',
+    description: 'agent() exposes messages, status, error, and threadId as Angular Signals. Compose them with computed(), bind them in templates, and let OnPush change detection handle the rest. No manual subscriptions. No RxJS boilerplate.',
     code: `// chat.component.ts
-const chat = streamResource<ChatState>({
+const chat = agent<ChatState>({
   assistantId: 'agent',
 });
 
@@ -147,7 +147,7 @@ const lastMessage = computed(() =>
     headline: 'Full Agent Lifecycle Support',
     description: 'Handle interrupts for human-in-the-loop approval, process tool calls, navigate branch history, and manage subagent delegation. Every LangGraph agent pattern has a first-class Angular API — no React translation layer needed.',
     code: `// approval.component.ts
-const agent = streamResource<AgentState>({
+const agent = agent<AgentState>({
   assistantId: 'approval_agent',
   onInterrupt: (interrupt) => {
     // Agent paused — surface to user
@@ -168,16 +168,16 @@ const branches = agent.history();`,
     id: 'testing',
     label: 'Test Everything',
     headline: 'Deterministic Agent Testing',
-    description: 'MockStreamTransport lets you script exact event sequences and step through them in your specs. No flaky SSE connections, no timing issues, no running LangGraph server. Test agent behavior the same way you test any Angular service.',
+    description: 'MockAgentTransport lets you script exact event sequences and step through them in your specs. No flaky SSE connections, no timing issues, no running LangGraph server. Test agent behavior the same way you test any Angular service.',
     code: `// chat.component.spec.ts
-const transport = new MockStreamTransport();
+const transport = new MockAgentTransport();
 
 transport.script([
   { type: 'values', data: { messages: [aiMsg('Hello')] } },
   { type: 'values', data: { status: 'done' } },
 ]);
 
-const chat = streamResource<ChatState>({
+const chat = agent<ChatState>({
   transport,
   assistantId: 'test_agent',
 });
@@ -202,7 +202,7 @@ export async function ValueProps() {
   return (
     <section className="px-8 py-20 max-w-6xl mx-auto">
       <p className="font-mono text-xs uppercase tracking-widest mb-4 text-center"
-        style={{ color: tokens.colors.accent }}>Why streamResource()?</p>
+        style={{ color: tokens.colors.accent }}>Why agent()?</p>
       <h2 style={{
         fontFamily: 'var(--font-garamond)',
         fontWeight: 800,
@@ -346,7 +346,7 @@ const CAPABILITIES = [
     title: 'Streaming',
     description: 'Surface intermediate progress while the graph runs. Token-by-token updates arrive via SSE and land directly in Angular Signals.',
     code: `// Token-by-token streaming
-const chat = streamResource<ChatState>({
+const chat = agent<ChatState>({
   assistantId: 'chat_agent',
 });
 
@@ -363,7 +363,7 @@ const chat = streamResource<ChatState>({
     title: 'Persistence',
     description: 'Execution state survives retries and resumptions. Thread-based checkpoint recovery means users never lose their conversation.',
     code: `// Thread persistence across sessions
-const chat = streamResource<ChatState>({
+const chat = agent<ChatState>({
   assistantId: 'agent',
   threadId: signal(localStorage.getItem('tid')),
   onThreadId: (id) => {
@@ -377,7 +377,7 @@ const chat = streamResource<ChatState>({
     title: 'Interrupts',
     description: 'Pause execution for human decisions — approvals, confirmations, corrections. Resume without losing any context or state.',
     code: `// Human-in-the-loop approval
-const agent = streamResource<AgentState>({
+const agent = agent<AgentState>({
   assistantId: 'approval_agent',
   onInterrupt: (data) => {
     this.approval.set(data);
@@ -474,7 +474,7 @@ const CAPABILITIES = [
     title: 'Planning',
     description: 'Turn high-level goals into ordered action sequences with explicit constraints and checkpoints. The agent chooses next steps grounded in real context.',
     code: `// Agent plans and executes steps
-const planner = streamResource<PlanState>({
+const planner = agent<PlanState>({
   assistantId: 'planning_agent',
 });
 
@@ -491,7 +491,7 @@ const planner = streamResource<PlanState>({
     title: 'Subagents',
     description: 'Split complex tasks into focused workers with clear ownership boundaries. Each subagent handles a specialized piece and reports back.',
     code: `// Orchestrator delegates to subagents
-const orchestrator = streamResource<OrchestratorState>({
+const orchestrator = agent<OrchestratorState>({
   assistantId: 'orchestrator',
 });
 
@@ -508,7 +508,7 @@ const activeWorkers = computed(() =>
     title: 'Skills',
     description: 'Package repeatable agent behavior into focused, reusable instruction sets. Skills define scope, response format, and operational boundaries.',
     code: `// Agent uses a skill for code review
-const reviewer = streamResource<ReviewState>({
+const reviewer = agent<ReviewState>({
   assistantId: 'code_review_skill',
   input: {
     files: changedFiles(),
@@ -526,7 +526,7 @@ const issues = reviewer.messages()
     title: 'Memory',
     description: 'Retain useful intermediate context across agent turns without leaking irrelevant history. Memory shapes routing and improves response quality over time.',
     code: `// Agent with persistent memory
-const agent = streamResource<MemoryState>({
+const agent = agent<MemoryState>({
   assistantId: 'memory_agent',
   threadId: signal(userId()),
 });

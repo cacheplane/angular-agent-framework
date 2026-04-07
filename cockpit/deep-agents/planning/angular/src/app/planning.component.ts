@@ -1,6 +1,6 @@
 import { Component, computed } from '@angular/core';
 import { ChatComponent } from '@cacheplane/chat';
-import { streamResource } from '@cacheplane/stream-resource';
+import { agent } from '@cacheplane/angular';
 import { environment } from '../environments/environment';
 
 /**
@@ -63,7 +63,7 @@ export class PlanningComponent {
    * The graph returns a `plan` array alongside messages in its state.
    * Each plan entry has a `title` and `status` that drive the sidebar checklist.
    */
-  protected readonly stream = streamResource({
+  protected readonly stream = agent({
     apiUrl: environment.langGraphApiUrl,
     assistantId: environment.streamingAssistantId,
   });

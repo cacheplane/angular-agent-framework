@@ -2,10 +2,10 @@ import { codeToHtml } from 'shiki';
 import { tokens } from '@cacheplane/design-tokens';
 
 const EXAMPLE = `// app.config.ts
-provideStreamResource({ apiUrl: 'http://localhost:2024' })
+provideAgent({ apiUrl: 'http://localhost:2024' })
 
 // chat.component.ts
-const chat = streamResource<{ messages: BaseMessage[] }>({
+const chat = agent<{ messages: BaseMessage[] }>({
   assistantId: 'chat_agent',
   threadId: signal(this.threadId),
   onThreadId: (id) => localStorage.setItem('threadId', id),

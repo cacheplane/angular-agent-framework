@@ -9,7 +9,7 @@ import { PilotFooterCTA } from '../../components/landing/PilotFooterCTA';
 import { tokens } from '../../../lib/design-tokens';
 
 export const metadata = {
-  title: 'Pilot to Production — Angular Stream Resource',
+  title: 'Pilot to Production — Angular Agent Framework',
   description: 'Close the last-mile gap. Purchase an app deployment license and we work alongside your Angular team for 3 months to ship your first agent to production.',
 };
 

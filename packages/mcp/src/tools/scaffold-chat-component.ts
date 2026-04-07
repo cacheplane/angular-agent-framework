@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 export const scaffoldChatComponentTool = {
   name: 'scaffold_chat_component',
-  description: 'Generate a complete Angular chat component using stream-resource',
+  description: 'Generate a complete Angular chat component using angular',
   inputSchema: {
     type: 'object',
     properties: {
@@ -29,7 +29,7 @@ export function handleScaffoldChatComponent(args: Record<string, unknown>) {
     : '';
 
   const code = `import { Component${persistenceImport} } from '@angular/core';
-import { streamResource } from '@cacheplane/stream-resource';
+import { agent } from '@cacheplane/angular';
 import type { BaseMessage } from '@langchain/core/messages';
 
 @Component({
@@ -53,7 +53,7 @@ import type { BaseMessage } from '@langchain/core/messages';
 })
 export class ${componentName} {${persistenceFields}
 
-  chat = streamResource<{ messages: BaseMessage[] }>({
+  chat = agent<{ messages: BaseMessage[] }>({
     apiUrl: '${apiUrl}',
     assistantId: '${assistantId}',${persistenceOptions}
   });

@@ -7,9 +7,9 @@ const TAB_DATA = [
     id: 'reactive',
     label: 'Reactive by Default',
     headline: 'Every State Slice is a Signal',
-    description: 'streamResource() exposes messages, status, error, and threadId as Angular Signals. Compose them with computed(), bind them in templates, and let OnPush change detection handle the rest. No manual subscriptions. No RxJS boilerplate.',
+    description: 'agent() exposes messages, status, error, and threadId as Angular Signals. Compose them with computed(), bind them in templates, and let OnPush change detection handle the rest. No manual subscriptions. No RxJS boilerplate.',
     code: `// chat.component.ts
-const chat = streamResource<ChatState>({
+const chat = agent<ChatState>({
   assistantId: 'agent',
 });
 
@@ -30,7 +30,7 @@ const lastMessage = computed(() =>
     headline: 'Full Agent Lifecycle Support',
     description: 'Handle interrupts for human-in-the-loop approval, process tool calls, navigate branch history, and manage subagent delegation. Every LangGraph agent pattern has a first-class Angular API — no React translation layer needed.',
     code: `// approval.component.ts
-const agent = streamResource<AgentState>({
+const agent = agent<AgentState>({
   assistantId: 'approval_agent',
   onInterrupt: (interrupt) => {
     // Agent paused — surface to user
@@ -51,16 +51,16 @@ const branches = agent.history();`,
     id: 'testing',
     label: 'Test Everything',
     headline: 'Deterministic Agent Testing',
-    description: 'MockStreamTransport lets you script exact event sequences and step through them in your specs. No flaky SSE connections, no timing issues, no running LangGraph server. Test agent behavior the same way you test any Angular service.',
+    description: 'MockAgentTransport lets you script exact event sequences and step through them in your specs. No flaky SSE connections, no timing issues, no running LangGraph server. Test agent behavior the same way you test any Angular service.',
     code: `// chat.component.spec.ts
-const transport = new MockStreamTransport();
+const transport = new MockAgentTransport();
 
 transport.script([
   { type: 'values', data: { messages: [aiMsg('Hello')] } },
   { type: 'values', data: { status: 'done' } },
 ]);
 
-const chat = streamResource<ChatState>({
+const chat = agent<ChatState>({
   transport,
   assistantId: 'test_agent',
 });
@@ -85,7 +85,7 @@ export async function ValueProps() {
   return (
     <section className="px-8 py-20 max-w-6xl mx-auto animate-on-scroll">
       <p className="font-mono text-xs uppercase tracking-widest mb-4 text-center"
-        style={{ color: tokens.colors.accent }}>Why streamResource()?</p>
+        style={{ color: tokens.colors.accent }}>Why agent()?</p>
       <h2 style={{
         fontFamily: 'var(--font-garamond)',
         fontWeight: 800,

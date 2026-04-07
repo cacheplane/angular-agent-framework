@@ -2,7 +2,7 @@
 
 ## Problem
 
-The cockpit shows boilerplate code (page.tsx, cockpit-shell.tsx) instead of real implementation code. There's no Angular example app to embed in Run mode. Docs mode shows generic placeholder text. Developers visiting the cockpit can't see what they actually need: a working example of stream-resource with Angular + LangGraph, the code that makes it work, and auto-generated documentation.
+The cockpit shows boilerplate code (page.tsx, cockpit-shell.tsx) instead of real implementation code. There's no Angular example app to embed in Run mode. Docs mode shows generic placeholder text. Developers visiting the cockpit can't see what they actually need: a working example of angular with Angular + LangGraph, the code that makes it work, and auto-generated documentation.
 
 ## Goal
 
@@ -33,7 +33,7 @@ cockpit/langgraph/streaming/
     ├── src/
     │   ├── app/
     │   │   ├── streaming.component.ts   # Demo component with streaming chat UI
-    │   │   ├── streaming.service.ts     # stream-resource service wrapping LangSmith API
+    │   │   ├── streaming.service.ts     # angular service wrapping LangSmith API
     │   │   └── app.config.ts            # Angular standalone bootstrap config
     │   ├── index.html
     │   ├── main.ts
@@ -133,13 +133,13 @@ The cockpit boilerplate files (page.tsx, cockpit-shell.tsx) are no longer shown 
 
 ### Angular App (`cockpit/langgraph/streaming/angular/`)
 
-A minimal chat UI that demonstrates stream-resource's streaming capability:
+A minimal chat UI that demonstrates angular's streaming capability:
 
-- **`streaming.component.ts`**: Standalone Angular component with a chat interface. Text input, send button, message list. Messages stream in token-by-token using stream-resource's streaming API. Well-documented with JSDoc explaining each part of the streaming integration.
+- **`streaming.component.ts`**: Standalone Angular component with a chat interface. Text input, send button, message list. Messages stream in token-by-token using angular's streaming API. Well-documented with JSDoc explaining each part of the streaming integration.
 
-- **`streaming.service.ts`**: Injectable service wrapping the stream-resource client. Exposes a `stream(prompt: string): Observable<StreamEvent>` method. JSDoc documents the connection setup, LangSmith configuration, and event types.
+- **`streaming.service.ts`**: Injectable service wrapping the angular client. Exposes a `stream(prompt: string): Observable<StreamEvent>` method. JSDoc documents the connection setup, LangSmith configuration, and event types.
 
-- **`app.config.ts`**: Minimal Angular standalone config with `provideHttpClient()` and any stream-resource providers.
+- **`app.config.ts`**: Minimal Angular standalone config with `provideHttpClient()` and any angular providers.
 
 ### Python Backend (`cockpit/langgraph/streaming/python/`)
 

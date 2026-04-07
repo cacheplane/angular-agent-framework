@@ -6,7 +6,7 @@ const ROWS = [
   {
     capability: 'Token streaming',
     without: 'Custom SSE wiring + zone management',
-    with: 'streamResource() signal, zero boilerplate',
+    with: 'agent() signal, zero boilerplate',
   },
   {
     capability: 'Thread persistence',
@@ -31,7 +31,7 @@ const ROWS = [
   {
     capability: 'Deterministic testing',
     without: 'Mock HTTP + tick management',
-    with: 'MockStreamTransport + writable signals',
+    with: 'MockAgentTransport + writable signals',
   },
   {
     capability: 'Human approval UI',
@@ -67,7 +67,7 @@ export function FairComparisonSection() {
           fontSize: 'clamp(26px,3.5vw,46px)', fontWeight: 800, lineHeight: 1.1,
           color: tokens.colors.textPrimary, marginBottom: 12,
         }}>
-          What Angular Stream Resource adds
+          What Angular Agent Framework adds
         </h2>
         <p style={{
           fontFamily: 'var(--font-garamond,"EB Garamond",Georgia,serif)',
@@ -101,7 +101,7 @@ export function FairComparisonSection() {
           borderBottom: `1px solid ${tokens.glass.border}`,
           padding: '14px 24px',
         }}>
-          {['Capability', '@langchain/langgraph-sdk', 'With Angular Stream Resource'].map((h, i) => (
+          {['Capability', '@langchain/langgraph-sdk', 'With Angular Agent Framework'].map((h, i) => (
             <div key={h} style={{
               fontFamily: 'var(--font-mono,"JetBrains Mono",monospace)',
               fontSize: '0.62rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em',
@@ -137,7 +137,7 @@ export function FairComparisonSection() {
               {row.without}
             </div>
             <div style={{ fontSize: '0.8rem', color: tokens.colors.accent, fontWeight: 500, lineHeight: 1.5, display: 'flex', alignItems: 'flex-start', gap: 6, flexWrap: 'wrap' }}>
-              <span className="md:hidden" style={{ fontFamily: 'var(--font-mono,"JetBrains Mono",monospace)', fontSize: '0.62rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', width: '100%', marginBottom: 2 }}>With Angular Stream Resource</span>
+              <span className="md:hidden" style={{ fontFamily: 'var(--font-mono,"JetBrains Mono",monospace)', fontSize: '0.62rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', width: '100%', marginBottom: 2 }}>With Angular Agent Framework</span>
               <span style={{ color: '#1a7a40', marginTop: 2, flexShrink: 0 }}>✓</span>
               <span style={{ fontFamily: row.with.startsWith('<') ? 'var(--font-mono,"JetBrains Mono",monospace)' : 'inherit', fontSize: row.with.startsWith('<') ? '0.72rem' : '0.8rem' }}>
                 {row.with}

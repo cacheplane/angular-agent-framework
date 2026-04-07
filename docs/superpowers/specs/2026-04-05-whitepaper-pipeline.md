@@ -81,9 +81,9 @@ Context: Angular teams building LangGraph-powered agents must wire SSE event str
 
 Cover:
 - Why streaming state is hard in Angular (zone.js, change detection, timing)
-- The signals-native approach: how streamResource() exposes messages() as Signal<AIMessage[]>
+- The signals-native approach: how agent() exposes messages() as Signal<AIMessage[]>
 - How isStreaming() lets developers drive loading UI without polling
-- Code example: minimal streamResource() setup (TypeScript snippet, 8-12 lines)
+- Code example: minimal agent() setup (TypeScript snippet, 8-12 lines)
 - Production checklist item: "Are your message signals OnPush-compatible?"
 
 Tone: Direct, technical, peer-to-peer. No fluff. Audience is senior Angular engineers.`,
@@ -103,7 +103,7 @@ Cover:
 - The threadId signal and onThreadId callback pattern
 - How to persist threadId to localStorage and restore on mount
 - Thread list UI and switching between conversations
-- Code example: provideStreamResource() with threadId (8-12 lines)
+- Code example: provideAgent() with threadId (8-12 lines)
 - Production checklist item: "Does your agent UI resume threads correctly after a browser refresh?"
 
 Tone: Direct, technical, peer-to-peer. No fluff. Audience is senior Angular engineers.`,
@@ -141,7 +141,7 @@ Context: Production agents that take consequential actions — sending emails, d
 Cover:
 - The LangGraph interrupt() and Command.RESUME pattern
 - Why polling and custom websocket approaches are brittle
-- The interrupt() signal in streamResource() and how it maps to approval state
+- The interrupt() signal in agent() and how it maps to approval state
 - <chat-interrupt> headless and <chat-interrupt-panel> prebuilt
 - The three approval actions: approve, edit, cancel — and how each maps to a resume command
 - Code example: interrupt signal binding (8-12 lines)
@@ -181,10 +181,10 @@ Context: Agent UIs are notoriously hard to test because they depend on live LLM 
 
 Cover:
 - Why testing agent components against real LLM APIs is impractical
-- The MockStreamTransport approach: scripted event sequences, no server needed
-- createMockStreamResourceRef(): writable signals you control directly in tests
+- The MockAgentTransport approach: scripted event sequences, no server needed
+- createMockAgentRef(): writable signals you control directly in tests
 - How to test streaming, interrupts, tool calls, and generative UI in isolation
-- Code example: createMockStreamResourceRef() test pattern (10-14 lines)
+- Code example: createMockAgentRef() test pattern (10-14 lines)
 - Production checklist item: "Do your agent component tests run offline and complete in under 100ms each?"
 
 Tone: Direct, technical, peer-to-peer. No fluff. Audience is senior Angular engineers.`,
@@ -260,7 +260,7 @@ function buildHTML(chapters: Array<{ title: string; content: string }>): string 
 <body>
   <!-- Cover -->
   <div class="cover">
-    <div class="cover-eyebrow">Angular Stream Resource · Production Readiness Guide</div>
+    <div class="cover-eyebrow">Angular Agent Framework · Production Readiness Guide</div>
     <h1 class="cover-title">From Prototype<br>to Production</h1>
     <p class="cover-sub">The Angular Agent Readiness Guide</p>
     <div class="cover-meta">cacheplane.io · ${new Date().getFullYear()}</div>

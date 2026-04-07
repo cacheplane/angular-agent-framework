@@ -9,7 +9,7 @@ const PLANS = [
     features: ['PolyForm Noncommercial 1.0.0', 'Personal projects', 'Academic & research', 'Non-profit internal use'],
     highlight: false,
     cta: 'Get Started',
-    ctaHref: 'https://www.npmjs.com/package/@cacheplane/stream-resource',
+    ctaHref: 'https://www.npmjs.com/package/@cacheplane/angular',
   },
   {
     name: 'Developer Seat',

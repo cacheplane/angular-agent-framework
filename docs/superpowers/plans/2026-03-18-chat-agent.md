@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED: Use superpowers:subagent-driven-development (if subagents available) or superpowers:executing-plans to implement this plan. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Build a Python LangGraph chat agent in `examples/chat-agent/` and TypeScript e2e tests in `e2e/stream-resource-e2e/` that together verify the full `stream-resource` Angular library against a real LangGraph server.
+**Goal:** Build a Python LangGraph chat agent in `examples/chat-agent/` and TypeScript e2e tests in `e2e/angular-e2e/` that together verify the full `angular` Angular library against a real LangGraph server.
 
 **Architecture:** A single-node `MessagesState` LangGraph graph with `MemorySaver` checkpointer and configurable system prompt, served by `langgraph dev` locally and `langgraph deploy` to LangSmith cloud. TypeScript e2e tests use the `@langchain/langgraph-sdk` `Client` directly to verify the server's streaming, thread persistence, and configuration behaviour. A GitHub Actions workflow spins up `langgraph dev` and runs the e2e suite on every push to `main`.
 
@@ -35,7 +35,7 @@ examples/chat-agent/
         ├── config.py                     # Configuration TypedDict
         └── agent.py                      # StateGraph + MemorySaver, exports `graph`
 
-e2e/stream-resource-e2e/
+e2e/angular-e2e/
 ├── project.json                          # Nx project: e2e target via @nx/vite:test
 ├── vite.config.mts                       # Vitest, node env, 60s timeout
 ├── tsconfig.json                         # extends tsconfig.base.json, node types
@@ -118,7 +118,7 @@ OPENAI_API_KEY=your-openai-api-key-here
 OPENAI_MODEL=gpt-5-mini
 LANGSMITH_API_KEY=your-langsmith-api-key-here
 LANGSMITH_TRACING=false
-LANGSMITH_PROJECT=stream-resource-example
+LANGSMITH_PROJECT=angular-example
 ```
 
 - [ ] **Step 5: Create `.gitignore`**
@@ -404,27 +404,27 @@ git commit -m "test(chat-agent): add thread persistence integration test"
 ## Task 5: E2E Project Scaffold
 
 **Files:**
-- Create: `e2e/stream-resource-e2e/project.json`
-- Create: `e2e/stream-resource-e2e/vite.config.mts`
-- Create: `e2e/stream-resource-e2e/tsconfig.json`
+- Create: `e2e/angular-e2e/project.json`
+- Create: `e2e/angular-e2e/vite.config.mts`
+- Create: `e2e/angular-e2e/tsconfig.json`
 
-The e2e tests use the `@langchain/langgraph-sdk` `Client` (already a dependency of the monorepo via `stream-resource`) to test the HTTP/SSE protocol directly — no browser or Angular DI required. Tests are gated on `LANGGRAPH_URL` being set, so they skip safely in standard unit test runs.
+The e2e tests use the `@langchain/langgraph-sdk` `Client` (already a dependency of the monorepo via `angular`) to test the HTTP/SSE protocol directly — no browser or Angular DI required. Tests are gated on `LANGGRAPH_URL` being set, so they skip safely in standard unit test runs.
 
 - [ ] **Step 1: Create `project.json`**
 
-Create `e2e/stream-resource-e2e/project.json`:
+Create `e2e/angular-e2e/project.json`:
 
 ```json
 {
-  "name": "stream-resource-e2e",
+  "name": "angular-e2e",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "projectType": "application",
-  "sourceRoot": "e2e/stream-resource-e2e/src",
+  "sourceRoot": "e2e/angular-e2e/src",
   "targets": {
     "e2e": {
       "executor": "@nx/vite:test",
       "options": {
-        "configFile": "e2e/stream-resource-e2e/vite.config.mts"
+        "configFile": "e2e/angular-e2e/vite.config.mts"
       }
     }
   }
@@ -433,7 +433,7 @@ Create `e2e/stream-resource-e2e/project.json`:
 
 - [ ] **Step 2: Create `vite.config.mts`**
 
-Create `e2e/stream-resource-e2e/vite.config.mts`:
+Create `e2e/angular-e2e/vite.config.mts`:
 
 ```typescript
 import { defineConfig } from 'vite';
@@ -452,7 +452,7 @@ export default defineConfig({
 
 - [ ] **Step 3: Create `tsconfig.json`**
 
-Create `e2e/stream-resource-e2e/tsconfig.json`:
+Create `e2e/angular-e2e/tsconfig.json`:
 
 ```json
 {
@@ -467,13 +467,13 @@ Create `e2e/stream-resource-e2e/tsconfig.json`:
 - [ ] **Step 4: Create `src/` directory with a placeholder**
 
 ```bash
-mkdir -p e2e/stream-resource-e2e/src
+mkdir -p e2e/angular-e2e/src
 ```
 
 - [ ] **Step 5: Verify Nx recognises the project**
 
 ```bash
-npx nx show project stream-resource-e2e
+npx nx show project angular-e2e
 ```
 
 Expected: project details printed with the `e2e` target listed.
@@ -481,8 +481,8 @@ Expected: project details printed with the `e2e` target listed.
 - [ ] **Step 6: Commit**
 
 ```bash
-git add e2e/stream-resource-e2e/
-git commit -m "chore(e2e): scaffold stream-resource-e2e Nx project"
+git add e2e/angular-e2e/
+git commit -m "chore(e2e): scaffold angular-e2e Nx project"
 ```
 
 ---
@@ -490,11 +490,11 @@ git commit -m "chore(e2e): scaffold stream-resource-e2e Nx project"
 ## Task 6: E2E Tests
 
 **Files:**
-- Create: `e2e/stream-resource-e2e/src/chat-agent.e2e.spec.ts`
+- Create: `e2e/angular-e2e/src/chat-agent.e2e.spec.ts`
 
 - [ ] **Step 1: Write the test file**
 
-Create `e2e/stream-resource-e2e/src/chat-agent.e2e.spec.ts`:
+Create `e2e/angular-e2e/src/chat-agent.e2e.spec.ts`:
 
 ```typescript
 import { beforeAll, describe, expect, it } from 'vitest';
@@ -610,7 +610,7 @@ describe.skipIf(!process.env['LANGGRAPH_URL'])('chat-agent e2e', () => {
 - [ ] **Step 2: Verify tests skip cleanly without server**
 
 ```bash
-npx nx e2e stream-resource-e2e
+npx nx e2e angular-e2e
 ```
 
 Expected: `chat-agent e2e` suite is skipped (0 tests run, 0 failures) because `LANGGRAPH_URL` is not set.
@@ -625,7 +625,7 @@ langgraph dev --no-browser
 
 Then in the main terminal:
 ```bash
-LANGGRAPH_URL=http://localhost:2024 npx nx e2e stream-resource-e2e
+LANGGRAPH_URL=http://localhost:2024 npx nx e2e angular-e2e
 ```
 
 Expected: 3 tests PASS (requires `OPENAI_API_KEY` in the server's `.env`).
@@ -633,7 +633,7 @@ Expected: 3 tests PASS (requires `OPENAI_API_KEY` in the server's `.env`).
 - [ ] **Step 4: Commit**
 
 ```bash
-git add e2e/stream-resource-e2e/src/chat-agent.e2e.spec.ts
+git add e2e/angular-e2e/src/chat-agent.e2e.spec.ts
 git commit -m "test(e2e): add chat-agent end-to-end tests"
 ```
 
@@ -685,7 +685,7 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           LANGSMITH_API_KEY: ${{ secrets.LANGSMITH_API_KEY }}
           LANGSMITH_TRACING: "true"
-          LANGSMITH_PROJECT: stream-resource-e2e-ci
+          LANGSMITH_PROJECT: angular-e2e-ci
 
       - name: Wait for server to be ready
         run: |
@@ -698,7 +698,7 @@ jobs:
           curl -sf http://localhost:2024/ok || (echo "Server failed to start after 60s" && exit 1)
 
       - name: Run e2e tests
-        run: npx nx e2e stream-resource-e2e
+        run: npx nx e2e angular-e2e
         env:
           LANGGRAPH_URL: http://localhost:2024
 ```
@@ -714,7 +714,7 @@ Expected: `YAML valid` (no output means no error).
 - [ ] **Step 3: Run the full angular unit test suite one last time to confirm nothing is broken**
 
 ```bash
-npx nx test stream-resource
+npx nx test angular
 ```
 
 Expected: 24 tests PASS.
@@ -723,7 +723,7 @@ Expected: 24 tests PASS.
 
 ```bash
 git add .github/workflows/e2e.yml
-git commit -m "ci: add E2E workflow — langgraph dev + stream-resource-e2e"
+git commit -m "ci: add E2E workflow — langgraph dev + angular-e2e"
 ```
 
 ---
@@ -733,7 +733,7 @@ git commit -m "ci: add E2E workflow — langgraph dev + stream-resource-e2e"
 - [ ] **Run unit tests**
 
 ```bash
-npx nx test stream-resource
+npx nx test angular
 ```
 
 Expected: 24 tests PASS.
@@ -745,7 +745,7 @@ Expected: 24 tests PASS.
 cd examples/chat-agent && langgraph dev --no-browser
 
 # Terminal 2
-LANGGRAPH_URL=http://localhost:2024 npx nx e2e stream-resource-e2e
+LANGGRAPH_URL=http://localhost:2024 npx nx e2e angular-e2e
 ```
 
 Expected: 3 e2e tests PASS.

@@ -2,11 +2,11 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Rewrite the Angular streaming example to use `streamResource()` from `@cacheplane/stream-resource`, add environment config for LangGraph Cloud, and create a CI workflow that deploys the LangGraph backend on merge to main (with manual dispatch for testing).
+**Goal:** Rewrite the Angular streaming example to use `agent()` from `@cacheplane/angular`, add environment config for LangGraph Cloud, and create a CI workflow that deploys the LangGraph backend on merge to main (with manual dispatch for testing).
 
-**Architecture:** Delete the hand-rolled `StreamingService`, replace with `streamResource()` Signal-based API. Add Angular environment files for dev/prod LangGraph URLs. Create a GitHub Action that runs `langgraph deploy` from the capability's python directory. Update `app.config.ts` to use `provideStreamResource()`.
+**Architecture:** Delete the hand-rolled `StreamingService`, replace with `agent()` Signal-based API. Add Angular environment files for dev/prod LangGraph URLs. Create a GitHub Action that runs `langgraph deploy` from the capability's python directory. Update `app.config.ts` to use `provideAgent()`.
 
-**Tech Stack:** Angular 19+ (standalone), `@cacheplane/stream-resource`, `@langchain/langgraph-sdk`, `@langchain/core`, GitHub Actions, `langgraph-cli`
+**Tech Stack:** Angular 19+ (standalone), `@cacheplane/angular`, `@langchain/langgraph-sdk`, `@langchain/core`, GitHub Actions, `langgraph-cli`
 
 ---
 
@@ -15,9 +15,9 @@
 | Action | File | Responsibility |
 |--------|------|----------------|
 | Delete | `cockpit/langgraph/streaming/angular/src/app/streaming.service.ts` | Remove hand-rolled EventSource service |
-| Modify | `cockpit/langgraph/streaming/angular/src/app/streaming.component.ts` | Use `streamResource()` with Signals |
-| Modify | `cockpit/langgraph/streaming/angular/src/app/app.config.ts` | Use `provideStreamResource()` |
-| Modify | `cockpit/langgraph/streaming/angular/package.json` | Add stream-resource + LangGraph deps |
+| Modify | `cockpit/langgraph/streaming/angular/src/app/streaming.component.ts` | Use `agent()` with Signals |
+| Modify | `cockpit/langgraph/streaming/angular/src/app/app.config.ts` | Use `provideAgent()` |
+| Modify | `cockpit/langgraph/streaming/angular/package.json` | Add angular + LangGraph deps |
 | Create | `cockpit/langgraph/streaming/angular/src/environments/environment.ts` | Prod LangGraph Cloud URL |
 | Create | `cockpit/langgraph/streaming/angular/src/environments/environment.development.ts` | Local dev URL |
 | Create | `.github/workflows/deploy-langgraph.yml` | CI deployment workflow |
@@ -51,7 +51,7 @@ rm cockpit/langgraph/streaming/angular/src/app/streaming.service.ts
  */
 export const environment = {
   production: true,
-  langGraphApiUrl: 'https://stream-resource-streaming.langgraph.app',
+  langGraphApiUrl: 'https://angular-streaming.langgraph.app',
   streamingAssistantId: 'streaming',
 };
 ```
@@ -83,12 +83,12 @@ git commit -m "refactor(cockpit): remove StreamingService, add environment confi
 
 ---
 
-### Task 2: Add stream-resource dependencies
+### Task 2: Add angular dependencies
 
 **Files:**
 - Modify: `cockpit/langgraph/streaming/angular/package.json`
 
-- [ ] **Step 1: Update package.json with stream-resource and LangGraph deps**
+- [ ] **Step 1: Update package.json with angular and LangGraph deps**
 
 ```json
 {
@@ -96,7 +96,7 @@ git commit -m "refactor(cockpit): remove StreamingService, add environment confi
   "version": "0.0.1",
   "private": true,
   "dependencies": {
-    "@cacheplane/stream-resource": "^0.0.1",
+    "@cacheplane/angular": "^0.0.1",
     "@langchain/core": "^0.3.0",
     "@langchain/langgraph-sdk": "^0.0.36"
   }
@@ -111,12 +111,12 @@ Run: `npm install`
 
 ```bash
 git add cockpit/langgraph/streaming/angular/package.json package-lock.json
-git commit -m "chore(cockpit): add stream-resource and LangGraph SDK deps to Angular example"
+git commit -m "chore(cockpit): add angular and LangGraph SDK deps to Angular example"
 ```
 
 ---
 
-### Task 3: Rewrite app.config.ts to use provideStreamResource
+### Task 3: Rewrite app.config.ts to use provideAgent
 
 **Files:**
 - Modify: `cockpit/langgraph/streaming/angular/src/app/app.config.ts`
@@ -126,19 +126,19 @@ git commit -m "chore(cockpit): add stream-resource and LangGraph SDK deps to Ang
 ```ts
 // cockpit/langgraph/streaming/angular/src/app/app.config.ts
 import { ApplicationConfig } from '@angular/core';
-import { provideStreamResource } from '@cacheplane/stream-resource';
+import { provideAgent } from '@cacheplane/angular';
 import { environment } from '../environments/environment';
 
 /**
  * Application configuration for the LangGraph Streaming demo.
  *
- * Uses `provideStreamResource()` to set the global LangGraph API URL.
- * All `streamResource()` calls in this app inherit this URL unless
+ * Uses `provideAgent()` to set the global LangGraph API URL.
+ * All `agent()` calls in this app inherit this URL unless
  * overridden at the call site.
  */
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideStreamResource({
+    provideAgent({
       apiUrl: environment.langGraphApiUrl,
     }),
   ],
@@ -149,35 +149,35 @@ export const appConfig: ApplicationConfig = {
 
 ```bash
 git add cockpit/langgraph/streaming/angular/src/app/app.config.ts
-git commit -m "feat(cockpit): configure provideStreamResource in Angular app"
+git commit -m "feat(cockpit): configure provideAgent in Angular app"
 ```
 
 ---
 
-### Task 4: Rewrite StreamingComponent to use streamResource()
+### Task 4: Rewrite StreamingComponent to use agent()
 
 **Files:**
 - Modify: `cockpit/langgraph/streaming/angular/src/app/streaming.component.ts`
 
-- [ ] **Step 1: Replace streaming.component.ts with streamResource-based implementation**
+- [ ] **Step 1: Replace streaming.component.ts with agent-based implementation**
 
 ```ts
 // cockpit/langgraph/streaming/angular/src/app/streaming.component.ts
 import { Component, computed, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { streamResource, ResourceStatus } from '@cacheplane/stream-resource';
+import { agent, ResourceStatus } from '@cacheplane/angular';
 import type { BaseMessage } from '@langchain/core/messages';
 import { environment } from '../environments/environment';
 
 /**
- * StreamingComponent demonstrates real-time LLM streaming with `streamResource()`.
+ * StreamingComponent demonstrates real-time LLM streaming with `agent()`.
  *
  * This standalone Angular component provides a chat interface that sends
  * messages to a LangGraph backend deployed on LangSmith Cloud. The response
  * streams in token-by-token, updating the UI reactively via Angular Signals.
  *
  * Key integration points:
- * - `streamResource()` creates a Signal-based streaming ref
+ * - `agent()` creates a Signal-based streaming ref
  * - `stream.messages()` provides reactive access to the conversation
  * - `stream.submit()` fires a message to the LangGraph backend
  * - `stream.isLoading()` tracks whether a response is in progress
@@ -289,14 +289,14 @@ export class StreamingComponent {
   /**
    * The streaming resource ref — connects to the LangGraph Cloud backend.
    *
-   * `streamResource()` must be called in an injection context (component
+   * `agent()` must be called in an injection context (component
    * constructor or field initializer). It returns a ref with Signals for
    * messages, status, errors, and thread management.
    *
    * The `assistantId` maps to the graph name in `langgraph.json`.
-   * The `apiUrl` is inherited from `provideStreamResource()` in app.config.ts.
+   * The `apiUrl` is inherited from `provideAgent()` in app.config.ts.
    */
-  protected readonly stream = streamResource({
+  protected readonly stream = agent({
     assistantId: environment.streamingAssistantId,
   });
 
@@ -323,7 +323,7 @@ export class StreamingComponent {
 ```
 
 Key changes from the old component:
-- Removed `StreamingService` import — `streamResource()` replaces it entirely
+- Removed `StreamingService` import — `agent()` replaces it entirely
 - Uses `@for` control flow instead of `*ngFor` (Angular 19+)
 - Uses `@if` instead of `*ngIf`
 - `prompt` is now a `signal()` instead of a plain string
@@ -336,7 +336,7 @@ Key changes from the old component:
 
 ```bash
 git add cockpit/langgraph/streaming/angular/src/app/streaming.component.ts
-git commit -m "feat(cockpit): rewrite StreamingComponent to use streamResource()"
+git commit -m "feat(cockpit): rewrite StreamingComponent to use agent()"
 ```
 
 ---
@@ -357,7 +357,7 @@ codeAssetPaths: [
 ],
 ```
 
-Note: `streaming.service.ts` is removed. `app.config.ts` is added because it shows `provideStreamResource()` — important for developers to see.
+Note: `streaming.service.ts` is removed. `app.config.ts` is added because it shows `provideAgent()` — important for developers to see.
 
 - [ ] **Step 2: Commit**
 
@@ -451,5 +451,5 @@ Expected: ALL PASS
 
 ```bash
 git add apps/cockpit/src
-git commit -m "test(cockpit): update tests for streamResource migration"
+git commit -m "test(cockpit): update tests for agent migration"
 ```

@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
-import { streamResource } from './stream-resource.fn';
-import { MockStreamTransport } from './transport/mock-stream.transport';
-import { ResourceStatus } from './stream-resource.types';
+import { agent } from './agent.fn';
+import { MockAgentTransport } from './transport/mock-stream.transport';
+import { ResourceStatus } from './agent.types';
 
 function withInjectionContext<T>(fn: () => T): T {
   let result!: T;
@@ -11,13 +11,13 @@ function withInjectionContext<T>(fn: () => T): T {
   return result;
 }
 
-describe('streamResource', () => {
+describe('agent', () => {
   beforeEach(() => TestBed.configureTestingModule({}));
 
   it('returns a ref with initial idle status', () => {
-    const transport = new MockStreamTransport();
+    const transport = new MockAgentTransport();
     const ref = withInjectionContext(() =>
-      streamResource({ apiUrl: '', assistantId: 'a', transport })
+      agent({ apiUrl: '', assistantId: 'a', transport })
     );
     expect(ref.status()).toBe(ResourceStatus.Idle);
     expect(ref.isLoading()).toBe(false);
@@ -27,9 +27,9 @@ describe('streamResource', () => {
   });
 
   it('returns initialValues in value() immediately', () => {
-    const transport = new MockStreamTransport();
+    const transport = new MockAgentTransport();
     const ref = withInjectionContext(() =>
-      streamResource({
+      agent({
         apiUrl: '', assistantId: 'a', transport,
         initialValues: { count: 99 },
       })
@@ -38,18 +38,18 @@ describe('streamResource', () => {
   });
 
   it('status transitions to Loading on submit()', async () => {
-    const transport = new MockStreamTransport();
+    const transport = new MockAgentTransport();
     const ref = withInjectionContext(() =>
-      streamResource({ apiUrl: '', assistantId: 'a', transport })
+      agent({ apiUrl: '', assistantId: 'a', transport })
     );
     ref.submit({});
     expect(ref.isLoading()).toBe(true);
   });
 
   it('hasValue becomes true after values event', async () => {
-    const transport = new MockStreamTransport();
+    const transport = new MockAgentTransport();
     const ref = withInjectionContext(() =>
-      streamResource({ apiUrl: '', assistantId: 'a', transport })
+      agent({ apiUrl: '', assistantId: 'a', transport })
     );
     ref.submit({});
     transport.emit([{ type: 'values', values: { x: 1 } }]);
@@ -60,9 +60,9 @@ describe('streamResource', () => {
   });
 
   it('error() is set and status is Error on transport error', async () => {
-    const transport = new MockStreamTransport();
+    const transport = new MockAgentTransport();
     const ref = withInjectionContext(() =>
-      streamResource({ apiUrl: '', assistantId: 'a', transport })
+      agent({ apiUrl: '', assistantId: 'a', transport })
     );
     ref.submit({});
     transport.emitError(new Error('fail'));
@@ -72,9 +72,9 @@ describe('streamResource', () => {
   });
 
   it('stop() resolves the stream and sets status to Resolved', async () => {
-    const transport = new MockStreamTransport();
+    const transport = new MockAgentTransport();
     const ref = withInjectionContext(() =>
-      streamResource({ apiUrl: '', assistantId: 'a', transport })
+      agent({ apiUrl: '', assistantId: 'a', transport })
     );
     ref.submit({});
     await ref.stop();
@@ -83,9 +83,9 @@ describe('streamResource', () => {
   });
 
   it('reload() re-submits the last payload', async () => {
-    const transport = new MockStreamTransport();
+    const transport = new MockAgentTransport();
     const ref = withInjectionContext(() =>
-      streamResource({ apiUrl: '', assistantId: 'a', transport })
+      agent({ apiUrl: '', assistantId: 'a', transport })
     );
     await ref.submit({ msg: 'hello' });
     transport.close();
@@ -96,18 +96,18 @@ describe('streamResource', () => {
   });
 
   it('accepts threadId as a Signal', () => {
-    const transport = new MockStreamTransport();
+    const transport = new MockAgentTransport();
     const threadId = signal<string | null>(null);
     const ref = withInjectionContext(() =>
-      streamResource({ apiUrl: '', assistantId: 'a', transport, threadId })
+      agent({ apiUrl: '', assistantId: 'a', transport, threadId })
     );
     expect(ref.status()).toBe(ResourceStatus.Idle);
   });
 
   it('messages() updates when messages event received', async () => {
-    const transport = new MockStreamTransport();
+    const transport = new MockAgentTransport();
     const ref = withInjectionContext(() =>
-      streamResource({ apiUrl: '', assistantId: 'a', transport })
+      agent({ apiUrl: '', assistantId: 'a', transport })
     );
     ref.submit({});
     transport.emit([{
@@ -120,19 +120,19 @@ describe('streamResource', () => {
   });
 
   it('switchThread() resets messages and values', () => {
-    const transport = new MockStreamTransport();
+    const transport = new MockAgentTransport();
     const ref = withInjectionContext(() =>
-      streamResource({ apiUrl: '', assistantId: 'a', transport })
+      agent({ apiUrl: '', assistantId: 'a', transport })
     );
     ref.switchThread('thread-2');
     expect(ref.messages()).toEqual([]);
   });
 
   it('resets state when a bound threadId signal changes', async () => {
-    const transport = new MockStreamTransport();
+    const transport = new MockAgentTransport();
     const threadId = signal<string | null>('thread-1');
     const ref = withInjectionContext(() =>
-      streamResource({ apiUrl: '', assistantId: 'a', transport, threadId })
+      agent({ apiUrl: '', assistantId: 'a', transport, threadId })
     );
 
     ref.submit({});

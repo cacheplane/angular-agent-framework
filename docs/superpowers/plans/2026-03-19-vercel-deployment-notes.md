@@ -116,4 +116,4 @@ In production, `NEXT_PUBLIC_LANGGRAPH_URL` must be set to the LangGraph Cloud de
 ## 6. Domain
 
 **Production URL:** https://stream-resource.dev
-**Vercel project:** https://vercel.com/cacheplane/stream-resource
+**Vercel project:** https://vercel.com/cacheplane/angular

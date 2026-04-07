@@ -41,7 +41,7 @@ export default async function HomePage() {
       {/* 7. Depth — capability showcases */}
       <LangGraphShowcase />
       <DeepAgentsShowcase />
-      {/* 8. Fair comparison — honest LangChain + Angular Stream Resource table */}
+      {/* 8. Fair comparison — honest LangChain + Angular Agent Framework table */}
       <FairComparisonSection />
       {/* 9. White paper free download */}
       <WhitePaperSection />

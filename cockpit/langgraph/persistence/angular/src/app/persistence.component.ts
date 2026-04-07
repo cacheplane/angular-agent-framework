@@ -1,6 +1,6 @@
 import { Component, signal } from '@angular/core';
 import { ChatComponent } from '@cacheplane/chat';
-import { streamResource } from '@cacheplane/stream-resource';
+import { agent } from '@cacheplane/angular';
 import { environment } from '../environments/environment';
 
 interface Thread {
@@ -9,7 +9,7 @@ interface Thread {
 }
 
 /**
- * PersistenceComponent demonstrates thread persistence with `streamResource()`.
+ * PersistenceComponent demonstrates thread persistence with `agent()`.
  *
  * Layout: a full-height flex row with the `<chat>` area (flex-1) on the left
  * and a fixed-width thread-picker sidebar on the right.
@@ -91,7 +91,7 @@ export class PersistenceComponent {
    * The `onThreadId` callback fires when a new thread is created,
    * allowing us to track thread IDs for the sidebar picker.
    */
-  protected readonly stream = streamResource({
+  protected readonly stream = agent({
     apiUrl: environment.langGraphApiUrl,
     assistantId: environment.streamingAssistantId,
     onThreadId: (id: string) => {

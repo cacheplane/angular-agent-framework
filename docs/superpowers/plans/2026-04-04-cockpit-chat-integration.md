@@ -4,9 +4,9 @@
 
 **Goal:** Update cockpit capability examples to consume `@cacheplane/chat` components, validating the library's API against real LangGraph and Deep Agent use cases.
 
-**Architecture:** Each capability example is a standalone Angular app with its own backend and LangSmith deployment. Examples import `@cacheplane/chat` and `@cacheplane/stream-resource`. The cockpit (React/Next.js) embeds them via the existing embed strategy.
+**Architecture:** Each capability example is a standalone Angular app with its own backend and LangSmith deployment. Examples import `@cacheplane/chat` and `@cacheplane/angular`. The cockpit (React/Next.js) embeds them via the existing embed strategy.
 
-**Tech Stack:** Angular 21+, `@cacheplane/chat`, `@cacheplane/stream-resource`, Nx 22
+**Tech Stack:** Angular 21+, `@cacheplane/chat`, `@cacheplane/angular`, Nx 22
 
 **Spec:** `docs/superpowers/specs/2026-04-04-chat-component-library-design.md` — Deliverable 3
 
@@ -25,7 +25,7 @@ cockpit/
 │   │   ├── src/
 │   │   │   ├── app/
 │   │   │   │   ├── app.component.ts       # Uses <chat>
-│   │   │   │   └── app.config.ts          # provideStreamResource + provideChat
+│   │   │   │   └── app.config.ts          # provideAgent + provideChat
 │   │   │   ├── main.ts
 │   │   │   └── index.html
 │   │   ├── package.json
@@ -64,12 +64,12 @@ This is the reference example — all others follow this pattern.
 ```typescript
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import { ApplicationConfig } from '@angular/core';
-import { provideStreamResource } from '@cacheplane/stream-resource';
+import { provideAgent } from '@cacheplane/angular';
 import { provideChat } from '@cacheplane/chat';
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideStreamResource({
+    provideAgent({
       apiUrl: 'http://localhost:2024',
     }),
     provideChat({}),
@@ -83,7 +83,7 @@ export const appConfig: ApplicationConfig = {
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import { Component, inject, Injector, OnInit } from '@angular/core';
 import { runInInjectionContext } from '@angular/core';
-import { streamResource } from '@cacheplane/stream-resource';
+import { agent } from '@cacheplane/angular';
 import { ChatComponent } from '@cacheplane/chat';
 import type { BaseMessage } from '@langchain/core/messages';
 
@@ -99,11 +99,11 @@ import type { BaseMessage } from '@langchain/core/messages';
 })
 export class AppComponent implements OnInit {
   private readonly injector = inject(Injector);
-  chat!: ReturnType<typeof streamResource>;
+  chat!: ReturnType<typeof agent>;
 
   ngOnInit() {
     runInInjectionContext(this.injector, () => {
-      this.chat = streamResource<{ messages: BaseMessage[] }>({
+      this.chat = agent<{ messages: BaseMessage[] }>({
         assistantId: 'chat_agent',
       });
     });
@@ -113,7 +113,7 @@ export class AppComponent implements OnInit {
 
 - [ ] **Step 3: Create main.ts and package.json**
 
-Standard Angular bootstrap + package.json with peer deps on `@cacheplane/chat` and `@cacheplane/stream-resource`.
+Standard Angular bootstrap + package.json with peer deps on `@cacheplane/chat` and `@cacheplane/angular`.
 
 - [ ] **Step 4: Verify example builds**
 

@@ -59,7 +59,7 @@ Two-layer Angular chat library: headless primitives + prebuilt Tailwind composit
 
 **Tests:** 112 passing.
 
-**Peer deps:** `@cacheplane/render`, `@cacheplane/stream-resource`, `@angular/core`, `@angular/common`, `@langchain/core`
+**Peer deps:** `@cacheplane/render`, `@cacheplane/angular`, `@angular/core`, `@angular/common`, `@langchain/core`
 
 ### Cockpit Integration — 14 Angular Examples
 
@@ -129,7 +129,7 @@ All 14 standalone Angular apps consuming @cacheplane/chat, each with Angular CLI
 | AI message style | No bubble, plain text + avatar | ChatGPT pattern |
 | Theming | CSS custom properties on `:host` | No runtime overhead, works with any CSS framework |
 | Template overrides | `chatMessageTemplate` directive | Full rendering control per message type |
-| State ownership | Consumer passes StreamResourceRef | Chat components never create it internally |
+| State ownership | Consumer passes AgentRef | Chat components never create it internally |
 | Rendering | ngTemplateOutlet recursion | Proven pattern from hashbrown |
 
 ---
@@ -140,7 +140,7 @@ All 14 standalone Angular apps consuming @cacheplane/chat, each with Angular CLI
 libs/render/                          # @cacheplane/render
 libs/chat/                            # @cacheplane/chat
 libs/chat/src/lib/styles/chat-theme.css  # CSS custom properties
-libs/stream-resource/                 # @cacheplane/stream-resource (existing)
+libs/angular/                 # @cacheplane/angular (existing)
 cockpit/langgraph/*/angular/          # 8 LangGraph examples
 cockpit/deep-agents/*/angular/        # 6 Deep Agents examples
 apps/cockpit/                         # Next.js cockpit shell
@@ -170,7 +170,7 @@ npx tsx apps/cockpit/scripts/serve-example.ts --capability=streaming
 npx tsx apps/cockpit/scripts/serve-example.ts --all
 
 # Test
-npx nx test render && npx nx test chat && npx nx test stream-resource
+npx nx test render && npx nx test chat && npx nx test angular
 
 # Build all examples
 npx nx run-many -t build --projects='cockpit-*-angular'

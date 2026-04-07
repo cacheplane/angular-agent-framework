@@ -13,7 +13,7 @@ Build a rich, extensible Angular chat component library for LangGraph, LangChain
 ### Deliverables
 
 1. **`@cacheplane/render`** (`libs/render`) — Angular rendering layer for `@json-render/core`
-2. **`@cacheplane/chat`** (`libs/chat`) — Chat UI component library built on `@cacheplane/stream-resource`
+2. **`@cacheplane/chat`** (`libs/chat`) — Chat UI component library built on `@cacheplane/angular`
 3. **Cockpit integration** — Update capability examples to consume `@cacheplane/chat`
 
 ### Architecture: Layered Stack
@@ -27,7 +27,7 @@ Build a rich, extensible Angular chat component library for LangGraph, LangChain
        ↓
 cockpit examples           (standalone Angular apps, independently deployed)
        ↑
-@cacheplane/stream-resource (peer dep — existing library)
+@cacheplane/angular (peer dep — existing library)
 ```
 
 ---
@@ -95,19 +95,19 @@ Modeled after hashbrown's proven `ngTemplateOutlet` recursion pattern:
 
 ### Purpose
 
-Angular chat component library providing headless primitives and prebuilt Tailwind compositions for LangGraph/LangChain/Deep Agent UIs. Consumer passes a `StreamResourceRef` — the chat library renders from its signals.
+Angular chat component library providing headless primitives and prebuilt Tailwind compositions for LangGraph/LangChain/Deep Agent UIs. Consumer passes a `AgentRef` — the chat library renders from its signals.
 
 ### Peer Dependencies
 
 - `@cacheplane/render`
-- `@cacheplane/stream-resource`
+- `@cacheplane/angular`
 - `@angular/core`
 - `@angular/common`
 - `@langchain/core` (for `BaseMessage` types)
 
 ### Design Principles
 
-- **Consumer owns the `StreamResourceRef`** — chat components accept it as an input, never create it internally
+- **Consumer owns the `AgentRef`** — chat components accept it as an input, never create it internally
 - **Headless primitives** — unstyled, logic-only components with content projection via `ng-template` + structural directives
 - **Prebuilt compositions** — styled with Tailwind, following the shadcn model (copy source to customize)
 - **Tree-shakeable** — every component is standalone and independently importable
@@ -200,7 +200,7 @@ A collapsible right panel (like browser DevTools) providing deep visibility into
 
 | Component | Selector | Responsibility |
 |-----------|----------|---------------|
-| `ChatDebug` | `<chat-debug>` | Top-level shell. Accepts `StreamResourceRef`. Orchestrates sub-components. |
+| `ChatDebug` | `<chat-debug>` | Top-level shell. Accepts `AgentRef`. Orchestrates sub-components. |
 | `DebugTimeline` | `<debug-timeline>` | Vertical checkpoint list with connecting rail. Supports branching for forks. Click to select. |
 | `DebugCheckpointCard` | `<debug-checkpoint-card>` | Per-checkpoint: node name, duration badge, token count, type indicator. |
 | `DebugDetail` | `<debug-detail>` | Detail panel for selected checkpoint. |
@@ -242,7 +242,7 @@ A collapsible right panel (like browser DevTools) providing deep visibility into
 - **Streaming-aware:** New checkpoints append in real-time. "Lock to latest" toggle auto-follows or lets developer pin to historical checkpoint.
 - **State diff is the primary debug view** — what changed between checkpoints is the highest-signal information.
 - **Branch-aware timeline** — LangGraph forks render as branching paths (like a git graph), not a flat list.
-- **Data source:** Reads from `StreamResourceRef.history()` and the existing `@langchain/langgraph-sdk` APIs via stream-resource's transport layer. No direct SDK dependency.
+- **Data source:** Reads from `AgentRef.history()` and the existing `@langchain/langgraph-sdk` APIs via angular's transport layer. No direct SDK dependency.
 
 ---
 
@@ -285,7 +285,7 @@ The cockpit examples serve as integration tests and validation for the component
 
 Providers set DI defaults. All components also accept direct inputs, so providers are optional.
 
-`@cacheplane/chat` does NOT call `provideStreamResource()` — that is the consumer's responsibility.
+`@cacheplane/chat` does NOT call `provideAgent()` — that is the consumer's responsibility.
 
 ### Public API Exports
 
@@ -317,7 +317,7 @@ Providers set DI defaults. All components also accept direct inputs, so provider
 | Layer | Approach |
 |-------|----------|
 | `@cacheplane/render` unit tests | Render json-render specs against a test catalog, assert DOM output. Use json-render/core's existing test specs where applicable. |
-| `@cacheplane/chat` unit tests | Use `MockStreamTransport` (exists in stream-resource). Create `StreamResourceRef` with mock data, verify component rendering. |
+| `@cacheplane/chat` unit tests | Use `MockAgentTransport` (exists in angular). Create `AgentRef` with mock data, verify component rendering. |
 | `@cacheplane/chat` integration tests | Cockpit examples serve as integration tests — real backend, real LangSmith, real streaming. |
 | Debug component tests | Mock `history()` signal with checkpoint fixtures. Verify timeline, state diff, tool call rendering. |
 
@@ -342,5 +342,5 @@ Providers set DI defaults. All components also accept direct inputs, so provider
 | Component granularity | Headless primitives + prebuilt compositions | Radix + shadcn model — consumers pick their level |
 | Generative UI integration | Built-in render host component | `<chat-generative-ui>` wraps @cacheplane/render, peer dep |
 | Styling | Tailwind CSS (shadcn model) | Consumers copy/customize source, CSS vars for theming |
-| State ownership | Consumer passes StreamResourceRef | Most flexible, consistent with headless philosophy |
+| State ownership | Consumer passes AgentRef | Most flexible, consistent with headless philosophy |
 | Cockpit examples | Standalone Angular apps, existing embed strategy | Independent deployment, own backend/LangSmith, developer-consumable |

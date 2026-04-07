@@ -216,7 +216,7 @@ import {
   output,
   ChangeDetectionStrategy,
 } from '@angular/core';
-import type { StreamResourceRef } from '@cacheplane/stream-resource';
+import type { AgentRef } from '@cacheplane/angular';
 import { ChatMessagesComponent } from '../../primitives/chat-messages/chat-messages.component';
 import { MessageTemplateDirective } from '../../primitives/chat-messages/message-template.directive';
 import { ChatInputComponent } from '../../primitives/chat-input/chat-input.component';
@@ -414,7 +414,7 @@ import { messageContent } from '../shared/message-utils';
   `,
 })
 export class ChatComponent {
-  readonly ref = input.required<StreamResourceRef<any, any>>();
+  readonly ref = input.required<AgentRef<any, any>>();
   readonly threads = input<Thread[]>([]);
   readonly activeThreadId = input<string>('');
   readonly threadSelected = output<string>();
@@ -797,7 +797,7 @@ git commit -m "fix(cockpit): update streaming example selector chat-ui → chat"
 
 - [ ] **Step 1: Run all library tests**
 
-Run: `npx nx test render && npx nx test chat && npx nx test stream-resource`
+Run: `npx nx test render && npx nx test chat && npx nx test angular`
 
 Expected: All pass.
 

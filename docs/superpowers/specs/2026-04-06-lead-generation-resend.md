@@ -33,7 +33,7 @@ import { Resend } from 'resend';
 export const resend = new Resend(process.env.RESEND_API_KEY);
 
 export const AUDIENCE_ID = process.env.RESEND_AUDIENCE_ID || '';
-export const FROM = process.env.RESEND_FROM || 'Angular Stream Resource <hello@cacheplane.io>';
+export const FROM = process.env.RESEND_FROM || 'Angular Agent Framework <hello@cacheplane.io>';
 export const NOTIFY_TO = process.env.RESEND_NOTIFY_TO || 'hello@cacheplane.io';
 ```
 
@@ -102,7 +102,7 @@ Sent to the user after white paper form submission.
 Sent to the user after newsletter signup.
 
 - **To:** User's email
-- **Subject:** `Welcome to Angular Stream Resource updates`
+- **Subject:** `Welcome to Angular Agent Framework updates`
 - **Body:** Brief confirmation, what to expect (product updates, new capabilities), link to docs.
 
 All templates use React Email components (`@react-email/components`) with inline styles matching the site's design tokens (navy text, blue accent, EB Garamond headings where appropriate).
@@ -117,13 +117,13 @@ All templates use React Email components (`@react-email/components`) with inline
 # Resend (https://resend.com — free tier: 3,000 emails/month)
 RESEND_API_KEY=re_xxxxxxxxxxxxxxxxxxxxxxxxxxxx
 RESEND_AUDIENCE_ID=aud_xxxxxxxxxxxxxxxxxxxxxxxxxxxx
-RESEND_FROM="Angular Stream Resource <hello@cacheplane.io>"
+RESEND_FROM="Angular Agent Framework <hello@cacheplane.io>"
 RESEND_NOTIFY_TO=hello@cacheplane.io
 ```
 
 **Vercel setup:**
 1. Install Resend integration from Vercel marketplace (auto-provisions `RESEND_API_KEY`)
-2. Create one audience in Resend dashboard: "Angular Stream Resource"
+2. Create one audience in Resend dashboard: "Angular Agent Framework"
 3. Copy audience ID to `RESEND_AUDIENCE_ID` env var
 4. Set `RESEND_FROM` and `RESEND_NOTIFY_TO` in Vercel project settings
 

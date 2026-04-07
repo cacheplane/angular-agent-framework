@@ -1,47 +1,47 @@
-# Thread Persistence with stream-resource
+# Thread Persistence with angular
 
 <Summary>
-Build a chat interface with thread persistence using `streamResource()` from
-`@cacheplane/stream-resource`. Conversations survive browser refreshes and
+Build a chat interface with thread persistence using `agent()` from
+`@cacheplane/angular`. Conversations survive browser refreshes and
 can be resumed using `stream.switchThread(id)`.
 </Summary>
 
 <Prompt>
-Add thread persistence to this Angular component using `streamResource()` from `@cacheplane/stream-resource`. Use the `onThreadId` callback to capture thread IDs, `stream.switchThread(id)` to resume conversations, and `stream.switchThread(null)` to start fresh. Bind `stream.messages()` in the template via the `<cp-chat>` component from `@cacheplane/chat`.
+Add thread persistence to this Angular component using `agent()` from `@cacheplane/angular`. Use the `onThreadId` callback to capture thread IDs, `stream.switchThread(id)` to resume conversations, and `stream.switchThread(null)` to start fresh. Bind `stream.messages()` in the template via the `<cp-chat>` component from `@cacheplane/chat`.
 </Prompt>
 
 <Steps>
 <Step title="Configure the provider">
 
-Set up `provideStreamResource()` in your app config with the LangGraph API URL:
+Set up `provideAgent()` in your app config with the LangGraph API URL:
 
 ```typescript
 // app.config.ts
 import { ApplicationConfig } from '@angular/core';
-import { provideStreamResource } from '@cacheplane/stream-resource';
+import { provideAgent } from '@cacheplane/angular';
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideStreamResource({
+    provideAgent({
       apiUrl: 'https://your-deployment.langgraph.app',
     }),
   ],
 };
 ```
 
-This makes the API URL available to all `streamResource()` calls in your app.
+This makes the API URL available to all `agent()` calls in your app.
 
 </Step>
 <Step title="Create the streaming resource with onThreadId">
 
-In your component, call `streamResource()` with the `onThreadId` callback to capture new thread IDs:
+In your component, call `agent()` with the `onThreadId` callback to capture new thread IDs:
 
 ```typescript
 // persistence.component.ts
-import { streamResource } from '@cacheplane/stream-resource';
+import { agent } from '@cacheplane/angular';
 
 export class PersistenceComponent {
-  protected readonly stream = streamResource({
+  protected readonly stream = agent({
     assistantId: 'persistence',
     onThreadId: (id: string) => {
       this.currentThreadId = id;

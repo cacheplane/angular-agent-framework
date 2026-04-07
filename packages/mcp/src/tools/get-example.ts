@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 const EXAMPLES: Record<string, string> = {
-  'basic-chat': `// Basic chat component with stream-resource
+  'basic-chat': `// Basic chat component with angular
 import { Component } from '@angular/core';
-import { streamResource } from '@cacheplane/stream-resource';
+import { agent } from '@cacheplane/angular';
 import type { BaseMessage } from '@langchain/core/messages';
 
 @Component({
@@ -17,7 +17,7 @@ import type { BaseMessage } from '@langchain/core/messages';
   \`,
 })
 export class ChatComponent {
-  chat = streamResource<{ messages: BaseMessage[] }>({ assistantId: 'chat_agent' });
+  chat = agent<{ messages: BaseMessage[] }>({ assistantId: 'chat_agent' });
   send(content: string) {
     if (!content.trim()) return;
     this.chat.submit({ messages: [{ role: 'human', content }] } as any);
@@ -26,13 +26,13 @@ export class ChatComponent {
 
   'thread-persistence': `// Thread persistence with localStorage
 import { Component, signal } from '@angular/core';
-import { streamResource } from '@cacheplane/stream-resource';
+import { agent } from '@cacheplane/angular';
 import type { BaseMessage } from '@langchain/core/messages';
 
 @Component({ selector: 'app-chat', template: '' })
 export class ChatComponent {
   threadId = signal<string | null>(localStorage.getItem('chat-thread'));
-  chat = streamResource<{ messages: BaseMessage[] }>({
+  chat = agent<{ messages: BaseMessage[] }>({
     assistantId: 'chat_agent',
     threadId: this.threadId,
     onThreadId: (id) => { this.threadId.set(id); localStorage.setItem('chat-thread', id); },
@@ -42,26 +42,26 @@ export class ChatComponent {
 
   'system-prompt': `// System prompt configuration per session
 import { Component } from '@angular/core';
-import { streamResource } from '@cacheplane/stream-resource';
+import { agent } from '@cacheplane/angular';
 
 @Component({ selector: 'app-chat', template: '' })
 export class ChatComponent {
-  chat = streamResource({
+  chat = agent({
     assistantId: 'chat_agent',
     config: { configurable: { system_prompt: 'You are a helpful coding assistant.' } },
   });
 }`,
 
-  'mock-testing': `// Unit testing with MockStreamTransport
+  'mock-testing': `// Unit testing with MockAgentTransport
 import { TestBed } from '@angular/core/testing';
-import { streamResource, MockStreamTransport } from '@cacheplane/stream-resource';
+import { agent, MockAgentTransport } from '@cacheplane/angular';
 import type { BaseMessage } from '@langchain/core/messages';
 
 describe('ChatComponent', () => {
   it('updates messages when transport emits', () => {
     TestBed.runInInjectionContext(() => {
-      const transport = new MockStreamTransport();
-      const chat = streamResource<{ messages: BaseMessage[] }>({ assistantId: 'test', transport });
+      const transport = new MockAgentTransport();
+      const chat = agent<{ messages: BaseMessage[] }>({ assistantId: 'test', transport });
       transport.emit([
         { type: 'messages', messages: [[{ type: 'ai', content: 'Hello!' }, { id: '1' }]] },
       ]);
@@ -73,7 +73,7 @@ describe('ChatComponent', () => {
 
   'interrupts': `// Handling interrupts (human-in-the-loop)
 import { Component } from '@angular/core';
-import { streamResource } from '@cacheplane/stream-resource';
+import { agent } from '@cacheplane/angular';
 
 @Component({
   selector: 'app-chat',
@@ -88,14 +88,14 @@ import { streamResource } from '@cacheplane/stream-resource';
   \`,
 })
 export class ChatComponent {
-  chat = streamResource({ assistantId: 'agent_with_interrupts' });
+  chat = agent({ assistantId: 'agent_with_interrupts' });
   approve() { this.chat.submit(null, { command: { resume: true } }); }
   reject()  { this.chat.submit(null, { command: { resume: false } }); }
 }`,
 
   'subagent-progress': `// Showing subagent tool call progress
 import { Component } from '@angular/core';
-import { streamResource } from '@cacheplane/stream-resource';
+import { agent } from '@cacheplane/angular';
 
 @Component({
   selector: 'app-chat',
@@ -106,13 +106,13 @@ import { streamResource } from '@cacheplane/stream-resource';
   \`,
 })
 export class ChatComponent {
-  chat = streamResource({ assistantId: 'research_agent' });
+  chat = agent({ assistantId: 'research_agent' });
 }`,
 
   'custom-transport': `// Custom transport with auth headers
-import { StreamResourceTransport } from '@cacheplane/stream-resource';
+import { AgentTransport } from '@cacheplane/angular';
 
-export class AuthTransport implements StreamResourceTransport {
+export class AuthTransport implements AgentTransport {
   async *stream(input: unknown, _options: unknown): AsyncGenerator<unknown> {
     const token = await getAuthToken(); // your auth logic
     const res = await fetch('/api/stream', {
@@ -141,7 +141,7 @@ const VALID_PATTERNS = Object.keys(EXAMPLES);
 
 export const getExampleTool = {
   name: 'get_example',
-  description: 'Get a complete runnable code example for a stream-resource pattern',
+  description: 'Get a complete runnable code example for a angular pattern',
   inputSchema: {
     type: 'object',
     properties: {

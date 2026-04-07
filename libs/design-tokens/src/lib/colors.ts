@@ -1,5 +1,5 @@
 /**
- * Core color palette for the stream-resource design system.
+ * Core color palette for the angular design system.
  *
  * Light theme with LangGraph blue accent and Angular red brand color.
  * Used across both the website and cockpit.

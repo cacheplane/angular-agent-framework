@@ -1,6 +1,6 @@
 # Quick Start
 
-Build a streaming chat component with streamResource() in 5 minutes.
+Build a streaming chat component with agent() in 5 minutes.
 
 <Callout type="info" title="Prerequisites">
 Angular 20+ project with Node.js 18+. If you need setup help, see the [Installation](/docs/getting-started/installation) guide.
@@ -10,21 +10,21 @@ Angular 20+ project with Node.js 18+. If you need setup help, see the [Installat
 <Step title="Install the package">
 
 ```bash
-npm install @cacheplane/stream-resource
+npm install @cacheplane/angular
 ```
 
 </Step>
 <Step title="Configure the provider">
 
-Add `provideStreamResource()` to your application config with your LangGraph Platform URL.
+Add `provideAgent()` to your application config with your LangGraph Platform URL.
 
 ```typescript
 // app.config.ts
-import { provideStreamResource } from '@cacheplane/stream-resource';
+import { provideAgent } from '@cacheplane/angular';
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideStreamResource({
+    provideAgent({
       apiUrl: 'http://localhost:2024',
     }),
   ],
@@ -34,7 +34,7 @@ export const appConfig: ApplicationConfig = {
 </Step>
 <Step title="Create a chat component">
 
-Use `streamResource()` in a component field initializer. Every property on the returned ref is an Angular Signal.
+Use `agent()` in a component field initializer. Every property on the returned ref is an Angular Signal.
 
 <Tabs>
 <Tab label="TypeScript">
@@ -42,7 +42,7 @@ Use `streamResource()` in a component field initializer. Every property on the r
 ```typescript
 // chat.component.ts
 import { Component, ChangeDetectionStrategy, signal, computed } from '@angular/core';
-import { streamResource } from '@cacheplane/stream-resource';
+import { agent } from '@cacheplane/angular';
 import type { BaseMessage } from '@langchain/core/messages';
 
 @Component({
@@ -54,7 +54,7 @@ export class ChatComponent {
   input = signal('');
 
   // 'chat_agent' maps to the key in your langgraph.json "graphs" config
-  chat = streamResource<{ messages: BaseMessage[] }>({
+  chat = agent<{ messages: BaseMessage[] }>({
     assistantId: 'chat_agent',
     threadId: signal(localStorage.getItem('threadId')),
     onThreadId: (id) => localStorage.setItem('threadId', id),
@@ -140,12 +140,12 @@ Open `http://localhost:4200` and start chatting with your agent.
     Add human-in-the-loop approval flows
   </Card>
   <Card title="Angular Signals" href="/docs/concepts/angular-signals">
-    Deep dive into how Signals power streamResource
+    Deep dive into how Signals power agent
   </Card>
   <Card title="LangGraph Basics" href="/docs/concepts/langgraph-basics">
     Graphs, nodes, edges, and state for Angular developers
   </Card>
-  <Card title="API Reference" href="/docs/api/stream-resource">
-    Complete streamResource() function reference
+  <Card title="API Reference" href="/docs/api/angular">
+    Complete agent() function reference
   </Card>
 </CardGroup>

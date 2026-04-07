@@ -1,7 +1,7 @@
 {
-  "name": "stream-resource",
+  "name": "angular",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "libs/stream-resource/src",
+  "sourceRoot": "libs/angular/src",
   "prefix": "lib",
   "projectType": "library",
   "release": {
@@ -17,12 +17,12 @@
       "executor": "@nx/angular:package",
       "outputs": ["{workspaceRoot}/dist/{projectRoot}"],
       "options": {
-        "project": "libs/stream-resource/ng-package.json",
-        "tsConfig": "libs/stream-resource/tsconfig.lib.json"
+        "project": "libs/angular/ng-package.json",
+        "tsConfig": "libs/angular/tsconfig.lib.json"
       },
       "configurations": {
         "production": {
-          "tsConfig": "libs/stream-resource/tsconfig.lib.prod.json"
+          "tsConfig": "libs/angular/tsconfig.lib.prod.json"
         },
         "development": {}
       },
@@ -39,7 +39,7 @@
     "test": {
       "executor": "@nx/vite:test",
       "options": {
-        "configFile": "libs/stream-resource/vite.config.mts"
+        "configFile": "libs/angular/vite.config.mts"
       }
     }
   }

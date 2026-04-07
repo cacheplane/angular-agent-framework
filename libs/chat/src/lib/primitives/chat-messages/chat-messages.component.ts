@@ -8,7 +8,7 @@ import {
 } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
 import type { BaseMessage } from '@langchain/core/messages';
-import type { StreamResourceRef } from '@cacheplane/stream-resource';
+import type { AgentRef } from '@cacheplane/angular';
 import { MessageTemplateDirective } from './message-template.directive';
 import type { MessageTemplateType } from '../../chat.types';
 
@@ -57,7 +57,7 @@ export function getMessageType(message: BaseMessage): MessageTemplateType {
   `,
 })
 export class ChatMessagesComponent {
-  readonly ref = input.required<StreamResourceRef<any, any>>();
+  readonly ref = input.required<AgentRef<any, any>>();
 
   readonly messageTemplates = contentChildren(MessageTemplateDirective);
 

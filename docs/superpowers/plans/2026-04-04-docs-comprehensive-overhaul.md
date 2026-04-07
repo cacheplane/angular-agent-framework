@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Bring all 18 docs pages to gold standard quality — every page shows both Python agent code AND Angular streamResource code, uses correct MDX syntax, has 200+ lines of rich content, and tells the product story.
+**Goal:** Bring all 18 docs pages to gold standard quality — every page shows both Python agent code AND Angular agent code, uses correct MDX syntax, has 200+ lines of rich content, and tells the product story.
 
-**Architecture:** Each task rewrites one MDX file. The gold standard is `introduction.mdx` (337 lines) and `langgraph-basics.mdx` (384 lines). Every page should pair Python LangGraph patterns with Angular streamResource consumption, use correct Tab label syntax, include Callouts, Steps, and CardGroup navigation.
+**Architecture:** Each task rewrites one MDX file. The gold standard is `introduction.mdx` (337 lines) and `langgraph-basics.mdx` (384 lines). Every page should pair Python LangGraph patterns with Angular agent consumption, use correct Tab label syntax, include Callouts, Steps, and CardGroup navigation.
 
 **Tech Stack:** MDX with custom components (Callout, Steps, Tabs/Tab with label prop, CardGroup/Card, FeatureChips, ArchFlowDiagram)
 
@@ -18,11 +18,11 @@
 
 - [ ] **Step 1: Fix import path inconsistency**
 
-Search all MDX and TSX files for `@ngxp/stream-resource` and `@stream-resource/angular`. Replace ALL with `@cacheplane/stream-resource`.
+Search all MDX and TSX files for `@ngxp/angular` and `@angular/angular`. Replace ALL with `@cacheplane/angular`.
 
-Run: `grep -rn "@ngxp/stream-resource\|@stream-resource/angular" apps/website/content/docs-v2/ apps/website/src/`
+Run: `grep -rn "@ngxp/angular\|@angular/angular" apps/website/content/docs-v2/ apps/website/src/`
 
-Replace all occurrences with `@cacheplane/stream-resource`.
+Replace all occurrences with `@cacheplane/angular`.
 
 - [ ] **Step 2: Fix API method inconsistency**
 
@@ -71,7 +71,7 @@ New content needed:
 Current: 5-bullet overview, single code snippet, 3-line pattern list.
 
 New content needed:
-- Full ReAct agent pattern with Python code + Angular streamResource code
+- Full ReAct agent pattern with Python code + Angular agent code
 - Tool calling: Python `@tool` decorator → Angular `toolCalls()` signal
 - Multi-agent: Python supervisor graph → Angular `subagents()` signal
 - Error handling and recovery patterns
@@ -158,7 +158,7 @@ New content needed:
 ### Task 9: Polish `guides/streaming.mdx` (206 lines — fix issues)
 
 Fix:
-- Import path: `@stream-resource/angular` → `@cacheplane/stream-resource`
+- Import path: `@angular/angular` → `@cacheplane/angular`
 - `.stream()` → `.submit()`
 - `'streaming'` status → `'loading'`
 - Add Python agent showing `stream_mode` configuration
@@ -203,7 +203,7 @@ Fix:
 
 ### Task 14: Expand 4 API Reference Pages
 
-Fix import path `@ngxp/stream-resource` → `@cacheplane/stream-resource` in all 4.
+Fix import path `@ngxp/angular` → `@cacheplane/angular` in all 4.
 Add "What's Next" CardGroup to all 4.
 Expand intros with more context about when/why to use each.
 
@@ -222,9 +222,9 @@ Total: 15 tasks, ~14 files rewritten.
 
 - [ ] 200+ lines of content
 - [ ] Python LangGraph code showing the agent/server pattern
-- [ ] Angular streamResource code showing the frontend consumption
+- [ ] Angular agent code showing the frontend consumption
 - [ ] Both paired together to tell the product story
-- [ ] All imports use `@cacheplane/stream-resource`
+- [ ] All imports use `@cacheplane/angular`
 - [ ] All Tab components use `<Tab label="...">` syntax
 - [ ] `ChangeDetectionStrategy.OnPush` in component examples
 - [ ] At least 2 Callouts (tip, info, or warning)

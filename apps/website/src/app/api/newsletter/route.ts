@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
       sendEmail({
         from: FROM,
         to: email,
-        subject: 'Welcome to Angular Stream Resource updates',
+        subject: 'Welcome to Angular Agent Framework updates',
         html: newsletterWelcomeHtml(),
       }),
       addToAudience(email),

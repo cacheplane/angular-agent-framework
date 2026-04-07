@@ -6,7 +6,7 @@ import {
   output,
   ChangeDetectionStrategy,
 } from '@angular/core';
-import type { StreamResourceRef } from '@cacheplane/stream-resource';
+import type { AgentRef } from '@cacheplane/angular';
 
 export type InterruptAction = 'accept' | 'edit' | 'respond' | 'ignore';
 
@@ -75,7 +75,7 @@ export type InterruptAction = 'accept' | 'edit' | 'respond' | 'ignore';
   `,
 })
 export class ChatInterruptPanelComponent {
-  readonly ref = input.required<StreamResourceRef<any, any>>();
+  readonly ref = input.required<AgentRef<any, any>>();
 
   readonly action = output<InterruptAction>();
 

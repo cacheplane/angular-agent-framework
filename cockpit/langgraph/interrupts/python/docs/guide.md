@@ -1,47 +1,47 @@
-# Human-in-the-Loop Interrupts with stream-resource
+# Human-in-the-Loop Interrupts with angular
 
 <Summary>
-Build a chat interface with human-in-the-loop approval using `streamResource()` from
-`@cacheplane/stream-resource`. The LangGraph backend pauses execution for approval,
+Build a chat interface with human-in-the-loop approval using `agent()` from
+`@cacheplane/angular`. The LangGraph backend pauses execution for approval,
 and the frontend resumes it with `stream.submit()`.
 </Summary>
 
 <Prompt>
-Add human-in-the-loop approval to this Angular component using `streamResource()` from `@cacheplane/stream-resource`. Use `stream.interrupt()` to display pending approvals, `stream.submit(null)` to approve and resume execution, and `stream.submit({ resume: false })` to reject. Bind `stream.messages()` in the template via the `<cp-chat>` component from `@cacheplane/chat`.
+Add human-in-the-loop approval to this Angular component using `agent()` from `@cacheplane/angular`. Use `stream.interrupt()` to display pending approvals, `stream.submit(null)` to approve and resume execution, and `stream.submit({ resume: false })` to reject. Bind `stream.messages()` in the template via the `<cp-chat>` component from `@cacheplane/chat`.
 </Prompt>
 
 <Steps>
 <Step title="Configure the provider">
 
-Set up `provideStreamResource()` in your app config with the LangGraph API URL:
+Set up `provideAgent()` in your app config with the LangGraph API URL:
 
 ```typescript
 // app.config.ts
 import { ApplicationConfig } from '@angular/core';
-import { provideStreamResource } from '@cacheplane/stream-resource';
+import { provideAgent } from '@cacheplane/angular';
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideStreamResource({
+    provideAgent({
       apiUrl: 'https://your-deployment.langgraph.app',
     }),
   ],
 };
 ```
 
-This makes the API URL available to all `streamResource()` calls in your app.
+This makes the API URL available to all `agent()` calls in your app.
 
 </Step>
 <Step title="Create the streaming resource">
 
-In your component, call `streamResource()` with the assistant ID that maps to your interrupts graph:
+In your component, call `agent()` with the assistant ID that maps to your interrupts graph:
 
 ```typescript
 // interrupts.component.ts
-import { streamResource } from '@cacheplane/stream-resource';
+import { agent } from '@cacheplane/angular';
 
 export class InterruptsComponent {
-  protected readonly stream = streamResource({
+  protected readonly stream = agent({
     assistantId: 'interrupts',
   });
 }

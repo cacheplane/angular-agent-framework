@@ -45,7 +45,7 @@ Appears below the title. Brief description of what the guide covers. Cyan-tinted
 Authors write `guide.md` files using standard markdown with HTML component tags:
 
 ```markdown
-# Streaming with stream-resource
+# Streaming with angular
 
 <Summary>
 Build a real-time streaming chat with Angular + LangGraph.
@@ -54,25 +54,25 @@ Build a real-time streaming chat with Angular + LangGraph.
 <Steps>
 <Step title="Configure the provider">
 
-Set up `provideStreamResource()` in your app config:
+Set up `provideAgent()` in your app config:
 
 ```typescript
 // app.config.ts
-import { provideStreamResource } from '@cacheplane/stream-resource';
+import { provideAgent } from '@cacheplane/angular';
 
 export const appConfig: ApplicationConfig = {
-  providers: [provideStreamResource({ apiUrl: '...' })],
+  providers: [provideAgent({ apiUrl: '...' })],
 };
 ```
 
 </Step>
 <Step title="Create the streaming resource">
 
-Call `streamResource()` in a field initializer:
+Call `agent()` in a field initializer:
 
 ```typescript
 // streaming.component.ts
-protected readonly stream = streamResource({
+protected readonly stream = agent({
   assistantId: 'streaming',
 });
 ```
@@ -81,7 +81,7 @@ protected readonly stream = streamResource({
 </Steps>
 
 <Tip>
-No service layer needed — `streamResource()` replaces wrapper services.
+No service layer needed — `agent()` replaces wrapper services.
 </Tip>
 
 <Warning>
@@ -90,8 +90,8 @@ Never expose your LangSmith API key in client-side code.
 
 <Prompt>
 Add real-time LLM streaming to this Angular component using
-`streamResource()` from `@cacheplane/stream-resource`. Configure
-`provideStreamResource({ apiUrl })` in the app config, then call
+`agent()` from `@cacheplane/angular`. Configure
+`provideAgent({ apiUrl })` in the app config, then call
 `stream.submit()` to send messages. Bind `stream.messages()` in the
 template using `@for` — all Signals, no subscriptions needed.
 </Prompt>

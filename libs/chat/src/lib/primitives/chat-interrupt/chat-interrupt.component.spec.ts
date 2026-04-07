@@ -2,18 +2,18 @@
 import { describe, it, expect } from 'vitest';
 import { signal, computed } from '@angular/core';
 import { getInterrupt } from './chat-interrupt.component';
-import { createMockStreamResourceRef } from '../../testing/mock-stream-resource-ref';
-import type { Interrupt } from '@cacheplane/stream-resource';
+import { createMockAgentRef } from '../../testing/mock-agent-ref';
+import type { Interrupt } from '@cacheplane/angular';
 
 describe('getInterrupt()', () => {
   it('returns undefined when no interrupt is present', () => {
-    const mockRef = createMockStreamResourceRef();
+    const mockRef = createMockAgentRef();
     expect(getInterrupt(mockRef)).toBeUndefined();
   });
 
   it('returns the interrupt value when present', () => {
     const mockInterrupt: Interrupt<any> = { value: { question: 'Confirm?' } } as any;
-    const mockRef = createMockStreamResourceRef();
+    const mockRef = createMockAgentRef();
     // Cast to access writable signal for test setup
     (mockRef.interrupt as ReturnType<typeof signal<Interrupt<any> | undefined>>).set(mockInterrupt);
 
@@ -23,7 +23,7 @@ describe('getInterrupt()', () => {
 
 describe('ChatInterruptComponent — interrupt computed', () => {
   it('interrupt is undefined when ref has no interrupt', () => {
-    const mockRef = createMockStreamResourceRef();
+    const mockRef = createMockAgentRef();
     const ref$ = signal(mockRef);
 
     const interrupt = computed(() => ref$().interrupt());
@@ -33,7 +33,7 @@ describe('ChatInterruptComponent — interrupt computed', () => {
 
   it('interrupt reflects ref.interrupt value when present', () => {
     const mockInterrupt: Interrupt<any> = { value: { step: 'confirm' } } as any;
-    const mockRef = createMockStreamResourceRef();
+    const mockRef = createMockAgentRef();
     (mockRef.interrupt as ReturnType<typeof signal<Interrupt<any> | undefined>>).set(mockInterrupt);
 
     const ref$ = signal(mockRef);
@@ -43,8 +43,8 @@ describe('ChatInterruptComponent — interrupt computed', () => {
   });
 
   it('interrupt updates reactively when ref changes', () => {
-    const noInterruptRef = createMockStreamResourceRef();
-    const interruptRef = createMockStreamResourceRef();
+    const noInterruptRef = createMockAgentRef();
+    const interruptRef = createMockAgentRef();
     const mockInterrupt: Interrupt<any> = { value: { type: 'human_review' } } as any;
     (interruptRef.interrupt as ReturnType<typeof signal<Interrupt<any> | undefined>>).set(mockInterrupt);
 

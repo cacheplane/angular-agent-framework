@@ -1,6 +1,6 @@
 import { Component, computed } from '@angular/core';
 import { ChatComponent } from '@cacheplane/chat';
-import { streamResource } from '@cacheplane/stream-resource';
+import { agent } from '@cacheplane/angular';
 import { environment } from '../environments/environment';
 
 /**
@@ -51,7 +51,7 @@ export class MemoryComponent {
    * The graph returns an `agent_memory` (or `memory`) dict alongside messages
    * in its state. We derive a reactive signal from `stream.value()` for display.
    */
-  protected readonly stream = streamResource({
+  protected readonly stream = agent({
     apiUrl: environment.langGraphApiUrl,
     assistantId: environment.streamingAssistantId,
   });

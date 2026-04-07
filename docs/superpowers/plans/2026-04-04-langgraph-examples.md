@@ -4,9 +4,9 @@
 
 **Goal:** Build all 8 LangGraph capability examples with Angular apps, Python backends, tutorial docs, and e2e tests — plus a shared `@cacheplane/chat` Angular component library.
 
-**Architecture:** Each capability follows the established streaming example pattern: Angular standalone component using `streamResource()`, Python LangGraph `StateGraph`, tutorial guide.md with component tags, Playwright e2e tests. The `@cacheplane/chat` library extracts the shared chat UI. All capabilities register in `route-resolution.ts` for cockpit rendering.
+**Architecture:** Each capability follows the established streaming example pattern: Angular standalone component using `agent()`, Python LangGraph `StateGraph`, tutorial guide.md with component tags, Playwright e2e tests. The `@cacheplane/chat` library extracts the shared chat UI. All capabilities register in `route-resolution.ts` for cockpit rendering.
 
-**Tech Stack:** Angular 21, `@cacheplane/stream-resource`, `@cacheplane/chat` (new), LangGraph (Python), Shiki, Playwright, Vitest
+**Tech Stack:** Angular 21, `@cacheplane/angular`, `@cacheplane/chat` (new), LangGraph (Python), Shiki, Playwright, Vitest
 
 ---
 
@@ -45,7 +45,7 @@
 
 - [ ] **Step 1: Scaffold the Angular library**
 
-Create `libs/chat/project.json` following the `libs/stream-resource/project.json` pattern but for an Angular library:
+Create `libs/chat/project.json` following the `libs/angular/project.json` pattern but for an Angular library:
 
 ```json
 {
@@ -212,7 +212,7 @@ import { ChatMessageComponent } from './chat-message.component';
 import { ChatInputComponent } from './chat-input.component';
 
 /**
- * Headful chat component for stream-resource demos.
+ * Headful chat component for angular demos.
  *
  * Renders a message list, input bar, and optional sidebar.
  * Used by all LangGraph cockpit examples.
@@ -295,13 +295,13 @@ This is the first full example after Streaming. It demonstrates `stream.switchTh
 
 #### Angular app: `cockpit/langgraph/persistence/angular/`
 - `project.json` — same pattern as streaming, port 4301
-- `package.json` — deps: `@cacheplane/stream-resource`, `@cacheplane/chat`, `@langchain/core`, `@langchain/langgraph-sdk`
+- `package.json` — deps: `@cacheplane/angular`, `@cacheplane/chat`, `@langchain/core`, `@langchain/langgraph-sdk`
 - `tsconfig.json`, `tsconfig.app.json` — same as streaming
 - `proxy.conf.json` — proxy /api to localhost:8124
 - `src/index.html`, `src/main.ts`, `src/styles.css` — same pattern
 - `src/environments/environment.ts` — apiUrl: `http://localhost:4301/api`
 - `src/environments/environment.development.ts` — same
-- `src/app/app.config.ts` — `provideStreamResource({ apiUrl })`
+- `src/app/app.config.ts` — `provideAgent({ apiUrl })`
 - `src/app/persistence.component.ts` — Uses `ChatComponent` from `@cacheplane/chat` with a thread picker sidebar
 
 #### Python backend: `cockpit/langgraph/persistence/python/`
@@ -351,7 +351,7 @@ The persistence component uses `@cacheplane/chat` with a sidebar showing thread 
   `,
 })
 export class PersistenceComponent {
-  protected readonly stream = streamResource({
+  protected readonly stream = agent({
     apiUrl: environment.langGraphApiUrl,
     assistantId: environment.streamingAssistantId,
     onThreadId: (id) => {
@@ -546,7 +546,7 @@ git push
 When dispatching subagents for Tasks 2-8 (capability examples), each subagent needs:
 
 1. **The complete streaming example** as a reference pattern (all file contents)
-2. **The capability-specific details** from the research (graph pattern, streamResource features, component extension)
+2. **The capability-specific details** from the research (graph pattern, agent features, component extension)
 3. **The port assignment** and capability name
 4. **The guide.md template** following the streaming guide's component tag structure
 

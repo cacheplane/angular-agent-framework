@@ -8,7 +8,7 @@ import {
   ChangeDetectionStrategy,
 } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
-import type { StreamResourceRef, SubagentStreamRef } from '@cacheplane/stream-resource';
+import type { AgentRef, SubagentStreamRef } from '@cacheplane/angular';
 
 @Component({
   selector: 'chat-subagents',
@@ -27,7 +27,7 @@ import type { StreamResourceRef, SubagentStreamRef } from '@cacheplane/stream-re
   `,
 })
 export class ChatSubagentsComponent {
-  readonly ref = input.required<StreamResourceRef<any, any>>();
+  readonly ref = input.required<AgentRef<any, any>>();
 
   readonly templateRef = contentChild(TemplateRef);
 

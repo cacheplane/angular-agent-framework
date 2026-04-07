@@ -83,9 +83,9 @@ The existing `DocsMode` component is renamed to `ApiMode`. Same functionality â€
 ### guide.md Content (First Example: Streaming)
 
 A tutorial that walks through:
-1. What streaming does in stream-resource
-2. Setting up `provideStreamResource()` with a LangGraph Cloud URL
-3. Creating a component with `streamResource()`
+1. What streaming does in angular
+2. Setting up `provideAgent()` with a LangGraph Cloud URL
+3. Creating a component with `agent()`
 4. Binding the template to Signals (`stream.messages()`, `stream.isLoading()`)
 5. Submitting messages with `stream.submit()`
 6. Error handling and thread management

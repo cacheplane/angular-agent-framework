@@ -5,7 +5,7 @@ import {
   input,
   ChangeDetectionStrategy,
 } from '@angular/core';
-import type { StreamResourceRef } from '@cacheplane/stream-resource';
+import type { AgentRef } from '@cacheplane/angular';
 import type { DebugCheckpoint } from './debug-checkpoint-card.component';
 
 @Component({
@@ -20,7 +20,7 @@ import type { DebugCheckpoint } from './debug-checkpoint-card.component';
   `,
 })
 export class DebugSummaryComponent {
-  readonly ref = input.required<StreamResourceRef<any, any>>();
+  readonly ref = input.required<AgentRef<any, any>>();
   readonly checkpoints = input<DebugCheckpoint[]>([]);
 
   readonly totalDuration = computed(() =>

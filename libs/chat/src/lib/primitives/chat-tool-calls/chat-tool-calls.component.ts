@@ -10,7 +10,7 @@ import {
 import { NgTemplateOutlet } from '@angular/common';
 import { AIMessage } from '@langchain/core/messages';
 import type { BaseMessage } from '@langchain/core/messages';
-import type { StreamResourceRef } from '@cacheplane/stream-resource';
+import type { AgentRef } from '@cacheplane/angular';
 import type { ToolCallWithResult } from '@langchain/langgraph-sdk';
 
 @Component({
@@ -30,7 +30,7 @@ import type { ToolCallWithResult } from '@langchain/langgraph-sdk';
   `,
 })
 export class ChatToolCallsComponent {
-  readonly ref = input.required<StreamResourceRef<any, any>>();
+  readonly ref = input.required<AgentRef<any, any>>();
   readonly message = input<BaseMessage | undefined>(undefined);
 
   readonly templateRef = contentChild(TemplateRef);

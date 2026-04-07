@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import { describe, it, expect } from 'vitest';
-import { createMockStreamResourceRef } from './mock-stream-resource-ref';
-import { ResourceStatus } from '@cacheplane/stream-resource';
+import { createMockAgentRef } from './mock-agent-ref';
+import { ResourceStatus } from '@cacheplane/angular';
 
-describe('createMockStreamResourceRef', () => {
+describe('createMockAgentRef', () => {
   it('creates a mock with default values', () => {
-    const ref = createMockStreamResourceRef();
+    const ref = createMockAgentRef();
 
     expect(ref.messages()).toEqual([]);
     expect(ref.status()).toBe(ResourceStatus.Idle);
@@ -24,7 +24,7 @@ describe('createMockStreamResourceRef', () => {
   });
 
   it('accepts initial values for signals', () => {
-    const ref = createMockStreamResourceRef({
+    const ref = createMockAgentRef({
       status: ResourceStatus.Loading,
       isLoading: true,
       hasValue: true,
@@ -40,7 +40,7 @@ describe('createMockStreamResourceRef', () => {
   });
 
   it('has callable action methods', async () => {
-    const ref = createMockStreamResourceRef();
+    const ref = createMockAgentRef();
 
     await expect(ref.submit(null)).resolves.toBeUndefined();
     await expect(ref.stop()).resolves.toBeUndefined();
@@ -51,13 +51,13 @@ describe('createMockStreamResourceRef', () => {
   });
 
   it('getMessagesMetadata returns undefined by default', () => {
-    const ref = createMockStreamResourceRef();
+    const ref = createMockAgentRef();
     const result = ref.getMessagesMetadata({} as any);
     expect(result).toBeUndefined();
   });
 
   it('getToolCalls returns empty array by default', () => {
-    const ref = createMockStreamResourceRef();
+    const ref = createMockAgentRef();
     const result = ref.getToolCalls({} as any);
     expect(result).toEqual([]);
   });

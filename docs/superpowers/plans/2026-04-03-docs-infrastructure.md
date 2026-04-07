@@ -79,10 +79,10 @@ export const docsConfig: DocsSection[] = [
     id: 'api',
     color: 'blue',
     pages: [
-      { title: 'streamResource()', slug: 'stream-resource', section: 'api' },
-      { title: 'provideStreamResource()', slug: 'provide-stream-resource', section: 'api' },
+      { title: 'agent()', slug: 'angular', section: 'api' },
+      { title: 'provideAgent()', slug: 'provide-angular', section: 'api' },
       { title: 'FetchStreamTransport', slug: 'fetch-stream-transport', section: 'api' },
-      { title: 'MockStreamTransport', slug: 'mock-stream-transport', section: 'api' },
+      { title: 'MockAgentTransport', slug: 'mock-stream-transport', section: 'api' },
     ],
   },
 ];
@@ -181,7 +181,7 @@ git commit -m "feat(website): add new docs loader (cockpit-independent)"
 **Files:**
 - Create: `apps/website/content/docs-v2/getting-started/introduction.mdx`
 - Create: `apps/website/content/docs-v2/guides/streaming.mdx`
-- Create: `apps/website/content/docs-v2/api/stream-resource.mdx`
+- Create: `apps/website/content/docs-v2/api/angular.mdx`
 
 These prove the system works end-to-end. Real content comes in the follow-up plan.
 
@@ -192,21 +192,21 @@ Create `apps/website/content/docs-v2/getting-started/introduction.mdx`:
 ```mdx
 # Introduction
 
-Angular Stream Resource brings full parity with React's `useStream()` hook to Angular 20+. It's the enterprise streaming resource for LangChain and Angular — built natively with Angular Signals, not wrapped or adapted.
+Angular Agent Framework brings full parity with React's `useStream()` hook to Angular 20+. It's the enterprise streaming resource for LangChain and Angular — built natively with Angular Signals, not wrapped or adapted.
 
 <Callout type="info" title="Who is this for?">
-Angular Stream Resource serves two audiences: Angular developers building AI-powered apps, and AI/agent developers who need an Angular frontend.
+Angular Agent Framework serves two audiences: Angular developers building AI-powered apps, and AI/agent developers who need an Angular frontend.
 </Callout>
 
 ## What you'll build
 
-With streamResource(), you can build Angular applications that connect to LangGraph agents with:
+With agent(), you can build Angular applications that connect to LangGraph agents with:
 
 - **Token-by-token streaming** via SSE
 - **Thread persistence** across sessions
 - **Human-in-the-loop** interrupts and approvals
 - **Time travel** debugging
-- **Deterministic testing** with MockStreamTransport
+- **Deterministic testing** with MockAgentTransport
 
 ## Next steps
 
@@ -227,7 +227,7 @@ Create `apps/website/content/docs-v2/guides/streaming.mdx`:
 ```mdx
 # Streaming
 
-Angular Stream Resource provides token-by-token streaming from LangGraph agents via Server-Sent Events (SSE). Every update lands directly in Angular Signals.
+Angular Agent Framework provides token-by-token streaming from LangGraph agents via Server-Sent Events (SSE). Every update lands directly in Angular Signals.
 
 <Callout type="tip" title="Prerequisites">
 Make sure you've completed the [Installation](/docs/getting-started/installation) guide first.
@@ -239,7 +239,7 @@ Make sure you've completed the [Installation](/docs/getting-started/installation
 <Tab>
 ```typescript
 // chat.component.ts
-const chat = streamResource<{ messages: BaseMessage[] }>({
+const chat = agent<{ messages: BaseMessage[] }>({
   assistantId: 'chat_agent',
 });
 
@@ -278,17 +278,17 @@ Something went wrong. Check `error()` for details.
 
 - [ ] **Step 3: Create API reference page**
 
-Create `apps/website/content/docs-v2/api/stream-resource.mdx`:
+Create `apps/website/content/docs-v2/api/angular.mdx`:
 
 ```mdx
-# streamResource()
+# agent()
 
 Creates a streaming resource connected to a LangGraph agent. Must be called within an Angular injection context.
 
 ## Signature
 
 ```typescript
-function streamResource<TState>(options: StreamResourceOptions<TState>): StreamResource<TState>
+function agent<TState>(options: AgentOptions<TState>): Agent<TState>
 ```
 
 ## Options
@@ -304,7 +304,7 @@ function streamResource<TState>(options: StreamResourceOptions<TState>): StreamR
 
 ## Return type
 
-`streamResource()` returns an object with these Signal properties:
+`agent()` returns an object with these Signal properties:
 
 | Property | Type | Description |
 |----------|------|-------------|
@@ -1106,7 +1106,7 @@ git commit -m "feat(website): wire up new docs routing with sidebar, search, and
 Open:
 - http://localhost:3000/docs/getting-started/introduction
 - http://localhost:3000/docs/guides/streaming
-- http://localhost:3000/docs/api/stream-resource
+- http://localhost:3000/docs/api/angular
 
 Verify each renders correctly with custom MDX components.
 

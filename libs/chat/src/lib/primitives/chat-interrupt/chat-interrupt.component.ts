@@ -8,14 +8,14 @@ import {
   ChangeDetectionStrategy,
 } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
-import type { Interrupt } from '@cacheplane/stream-resource';
-import type { StreamResourceRef } from '@cacheplane/stream-resource';
+import type { Interrupt } from '@cacheplane/angular';
+import type { AgentRef } from '@cacheplane/angular';
 
 /**
- * Retrieves the current interrupt value from a StreamResourceRef.
+ * Retrieves the current interrupt value from a AgentRef.
  * Exported for unit testing without DOM rendering.
  */
-export function getInterrupt(ref: StreamResourceRef<any, any>): Interrupt<any> | undefined {
+export function getInterrupt(ref: AgentRef<any, any>): Interrupt<any> | undefined {
   return ref.interrupt();
 }
 
@@ -36,7 +36,7 @@ export function getInterrupt(ref: StreamResourceRef<any, any>): Interrupt<any> |
   `,
 })
 export class ChatInterruptComponent {
-  readonly ref = input.required<StreamResourceRef<any, any>>();
+  readonly ref = input.required<AgentRef<any, any>>();
 
   readonly templateRef = contentChild(TemplateRef);
 

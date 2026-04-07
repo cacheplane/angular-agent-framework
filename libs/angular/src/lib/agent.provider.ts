@@ -1,24 +1,24 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import { InjectionToken, Provider } from '@angular/core';
-import { StreamResourceTransport } from './stream-resource.types';
+import { AgentTransport } from './agent.types';
 
 /**
- * Global configuration for streamResource instances.
+ * Global configuration for agent instances.
  * Properties set here serve as defaults that can be overridden per-call.
  */
-export interface StreamResourceConfig {
+export interface AgentConfig {
   /** Base URL of the LangGraph Platform API (e.g., `'http://localhost:2024'`). */
   apiUrl?:    string;
   /** Custom transport implementation. Defaults to {@link FetchStreamTransport}. */
-  transport?: StreamResourceTransport;
+  transport?: AgentTransport;
 }
 
 export const STREAM_RESOURCE_CONFIG =
-  new InjectionToken<StreamResourceConfig>('STREAM_RESOURCE_CONFIG');
+  new InjectionToken<AgentConfig>('STREAM_RESOURCE_CONFIG');
 
 /**
  * Angular provider factory that registers global defaults for all
- * streamResource instances in the application.
+ * agent instances in the application.
  *
  * Add to your `app.config.ts` or module providers array.
  *
@@ -30,12 +30,12 @@ export const STREAM_RESOURCE_CONFIG =
  * // app.config.ts
  * export const appConfig: ApplicationConfig = {
  *   providers: [
- *     provideStreamResource({ apiUrl: 'http://localhost:2024' }),
+ *     provideAgent({ apiUrl: 'http://localhost:2024' }),
  *   ],
  * };
  * ```
  */
-export function provideStreamResource(config: StreamResourceConfig): Provider {
+export function provideAgent(config: AgentConfig): Provider {
   return {
     provide: STREAM_RESOURCE_CONFIG,
     useValue: config,

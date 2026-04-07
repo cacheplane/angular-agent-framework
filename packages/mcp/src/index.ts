@@ -7,11 +7,11 @@ import { getApiReferenceTool, handleGetApiReference } from './tools/get-api-refe
 import { searchDocsTool, handleSearchDocs } from './tools/search-docs.js';
 import { getExampleTool, handleGetExample } from './tools/get-example.js';
 import { scaffoldChatComponentTool, handleScaffoldChatComponent } from './tools/scaffold-chat-component.js';
-import { addStreamResourceTool, handleAddStreamResource } from './tools/add-stream-resource.js';
+import { addAgentTool, handleAddAgent } from './tools/add-agent.js';
 import { getThreadPersistencePatternTool, handleGetThreadPersistencePattern } from './tools/get-thread-persistence-pattern.js';
 
 const server = new Server(
-  { name: 'stream-resource', version: '0.1.0' },
+  { name: 'angular', version: '0.1.0' },
   { capabilities: { tools: {} } }
 );
 
@@ -20,7 +20,7 @@ const TOOLS = [
   searchDocsTool,
   getExampleTool,
   scaffoldChatComponentTool,
-  addStreamResourceTool,
+  addAgentTool,
   getThreadPersistencePatternTool,
 ];
 
@@ -34,7 +34,7 @@ server.setRequestHandler(CallToolRequestSchema, async (req) => {
     case 'search_docs':                    return handleSearchDocs(a);
     case 'get_example':                    return handleGetExample(a);
     case 'scaffold_chat_component':        return handleScaffoldChatComponent(a);
-    case 'add_stream_resource':            return handleAddStreamResource(a);
+    case 'add_angular':            return handleAddAgent(a);
     case 'get_thread_persistence_pattern': return handleGetThreadPersistencePattern(a);
     default: return { content: [{ type: 'text', text: `Unknown tool: ${name}` }] };
   }

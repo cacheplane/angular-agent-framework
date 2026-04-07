@@ -1,9 +1,9 @@
 # Subgraphs
 
-Subgraphs let you compose complex agents from smaller, focused units. streamResource() tracks subagent execution through dedicated signals, giving you visibility into delegated work.
+Subgraphs let you compose complex agents from smaller, focused units. agent() tracks subagent execution through dedicated signals, giving you visibility into delegated work.
 
 <Callout type="info" title="Subgraphs vs subagents">
-LangGraph calls them subgraphs (modular graph composition). Deep Agents calls them subagents (task delegation). streamResource() supports both patterns through the same API.
+LangGraph calls them subgraphs (modular graph composition). Deep Agents calls them subagents (task delegation). agent() supports both patterns through the same API.
 </Callout>
 
 ## How subgraph composition works
@@ -75,7 +75,7 @@ graph = builder.compile()
 
 ```typescript
 import { Component, computed, inject, effect, ChangeDetectionStrategy } from '@angular/core';
-import { streamResource } from '@cacheplane/stream-resource';
+import { agent } from '@cacheplane/angular';
 
 @Component({
   selector: 'app-orchestrator',
@@ -83,7 +83,7 @@ import { streamResource } from '@cacheplane/stream-resource';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class OrchestratorComponent {
-  readonly orchestrator = streamResource<OrchestratorState>({
+  readonly orchestrator = agent<OrchestratorState>({
     assistantId: 'orchestrator',
     subagentToolNames: ['research', 'analyze'],
   });
@@ -107,7 +107,7 @@ export class OrchestratorComponent {
 The `subagents()` signal contains a Map of active subagent streams. Use it to inspect the full set of delegated tasks and their current state.
 
 ```typescript
-const orchestrator = streamResource<OrchestratorState>({
+const orchestrator = agent<OrchestratorState>({
   assistantId: 'orchestrator',
   subagentToolNames: ['research', 'analyze', 'summarize'],
 });
@@ -146,7 +146,7 @@ const researchError = computed(() => researchAgent()?.error());
 The orchestrator pattern delegates specialised work to subagents and merges their results. Each subagent runs its own graph independently while the parent coordinates.
 
 ```typescript
-const pipeline = streamResource<PipelineState>({
+const pipeline = agent<PipelineState>({
   assistantId: 'pipeline-orchestrator',
   subagentToolNames: ['fetch-data', 'transform', 'validate', 'publish'],
   filterSubagentMessages: true,
@@ -217,7 +217,7 @@ export class SubagentProgressComponent {
 By default, subagent messages appear in the parent's `messages()` signal. Filter them out for a cleaner parent view.
 
 ```typescript
-const orchestrator = streamResource<OrchestratorState>({
+const orchestrator = agent<OrchestratorState>({
   assistantId: 'orchestrator',
   filterSubagentMessages: true,  // Hide subagent messages from parent
   subagentToolNames: ['research', 'analyze'],
@@ -228,7 +228,7 @@ const parentMessages = computed(() => orchestrator.messages());
 ```
 
 <Callout type="tip" title="Subagent tool names">
-Set `subagentToolNames` to the tool names that spawn subagents. streamResource() uses this to identify which tool calls create subagent streams.
+Set `subagentToolNames` to the tool names that spawn subagents. agent() uses this to identify which tool calls create subagent streams.
 </Callout>
 
 ## Error handling per subagent
@@ -270,7 +270,7 @@ Use **subagents** when tasks are independent and can run in parallel, when each 
 
 <CardGroup cols={2}>
   <Card title="Streaming" href="/docs/guides/streaming">
-    Understand how streamResource() surfaces tokens, status, and errors in real time.
+    Understand how agent() surfaces tokens, status, and errors in real time.
   </Card>
   <Card title="Time Travel" href="/docs/guides/time-travel">
     Inspect earlier states and replay alternate execution paths with checkpoint history.
@@ -278,7 +278,7 @@ Use **subagents** when tasks are independent and can run in parallel, when each 
   <Card title="Testing" href="/docs/guides/testing">
     Write unit and integration tests for orchestrator graphs and subagent interactions.
   </Card>
-  <Card title="API Reference" href="/docs/api/stream-resource">
-    Full reference for streamResource() options, signals, and subagent configuration.
+  <Card title="API Reference" href="/docs/api/angular">
+    Full reference for agent() options, signals, and subagent configuration.
   </Card>
 </CardGroup>

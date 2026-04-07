@@ -6,7 +6,7 @@
 
 **Architecture:** Extend `CockpitCapabilityModule` with `backendAssetPaths`. Add a JSDoc/docstring extraction layer to `getContentBundle()` that produces `DocSection[]`. Re-add Docs mode to the shell. Update the streaming capability module to point to real Angular + Python files. Build the first Angular demo app and Python LangGraph backend.
 
-**Tech Stack:** Next.js 16, Tailwind v4, shadcn/ui, Shiki, Vitest, Angular 19 (standalone), LangGraph (Python), stream-resource library
+**Tech Stack:** Next.js 16, Tailwind v4, shadcn/ui, Shiki, Vitest, Angular 19 (standalone), LangGraph (Python), angular library
 
 ---
 
@@ -796,7 +796,7 @@ import { provideHttpClient } from '@angular/common/http';
  * Application configuration for the LangGraph Streaming demo.
  *
  * Provides HttpClient for communicating with the LangGraph backend
- * via the stream-resource library.
+ * via the angular library.
  */
 export const appConfig: ApplicationConfig = {
   providers: [provideHttpClient()],

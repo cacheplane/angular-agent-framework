@@ -32,9 +32,9 @@
 
 ### What we implement together
 - Add `"files": ["dist", "README.md", "LICENSE", "NOTICE"]` to `packages/mcp/package.json`
-- Verify `libs/stream-resource` build output includes the right files
+- Verify `libs/angular` build output includes the right files
 - Dry-run publish both packages
-- Publish `@cacheplane/stream-resource` and `@cacheplane/stream-resource-mcp`
+- Publish `@cacheplane/angular` and `@cacheplane/angular-mcp`
 - Add a CI `publish` job triggered on `v*.*.*` tags
 
 **Reference:** `docs/superpowers/plans/2026-03-19-npm-publish.md`
@@ -65,7 +65,7 @@
 **Blocked on:** Item 2 (need the deployed LangGraph Cloud URL first)
 
 ### Steps (after LangSmith deployment)
-1. Vercel Dashboard → cacheplane / stream-resource → Settings → Environment Variables
+1. Vercel Dashboard → cacheplane / angular → Settings → Environment Variables
 2. Add `NEXT_PUBLIC_LANGGRAPH_URL` = `https://<your-langgraph-cloud-url>`
 3. Set for: Production + Preview + Development
 4. Trigger a redeploy

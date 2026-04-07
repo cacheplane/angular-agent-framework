@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import { Component, computed } from '@angular/core';
 import { ChatComponent } from '@cacheplane/chat';
-import { streamResource } from '@cacheplane/stream-resource';
+import { agent } from '@cacheplane/angular';
 import { environment } from '../environments/environment';
 
 /**
- * MemoryComponent demonstrates cross-thread persistent context with `streamResource()`.
+ * MemoryComponent demonstrates cross-thread persistent context with `agent()`.
  *
  * This example shows how an agent can learn and remember facts about the user
  * across separate conversations. The graph maintains a `memory` dict in its
@@ -47,7 +47,7 @@ export class MemoryComponent {
    * The graph returns a `memory` dict alongside messages in its state.
    * We expose it via `stream.value()` and derive a reactive signal for display.
    */
-  protected readonly stream = streamResource({
+  protected readonly stream = agent({
     apiUrl: environment.langGraphApiUrl,
     assistantId: environment.streamingAssistantId,
   });

@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import { Component } from '@angular/core';
 import { ChatComponent, ChatInterruptPanelComponent, type InterruptAction } from '@cacheplane/chat';
-import { streamResource } from '@cacheplane/stream-resource';
+import { agent } from '@cacheplane/angular';
 import { environment } from '../environments/environment';
 
 /**
- * InterruptsComponent demonstrates human-in-the-loop with `streamResource()`.
+ * InterruptsComponent demonstrates human-in-the-loop with `agent()`.
  *
  * The LangGraph backend pauses execution when it needs human approval.
  * The `stream.interrupt()` signal provides the interrupt data, and
@@ -38,7 +38,7 @@ export class InterruptsComponent {
    * When the LangGraph backend calls `interrupt()`, the `stream.interrupt()`
    * signal emits the interrupt payload for display via ChatInterruptPanelComponent.
    */
-  protected readonly stream = streamResource({
+  protected readonly stream = agent({
     apiUrl: environment.langGraphApiUrl,
     assistantId: environment.streamingAssistantId,
   });

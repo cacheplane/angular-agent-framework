@@ -7,7 +7,7 @@ const commitments = [
   {
     icon: '📄',
     title: 'One license, one app.',
-    desc: '$20,000 covers one application deployed to production. stream-resource is licensed for that app. Buy more licenses as you scale to more apps.',
+    desc: '$20,000 covers one application deployed to production. angular is licensed for that app. Buy more licenses as you scale to more apps.',
   },
   {
     icon: '👥',

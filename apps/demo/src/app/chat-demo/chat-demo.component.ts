@@ -1,5 +1,5 @@
 import { Component, Input, OnInit, Injector, runInInjectionContext } from '@angular/core';
-import { streamResource } from '@cacheplane/stream-resource';
+import { agent } from '@cacheplane/angular';
 import type { BaseMessage } from '@langchain/core/messages';
 
 @Component({
@@ -34,14 +34,14 @@ export class ChatDemoComponent implements OnInit {
   @Input() apiUrl = 'http://localhost:2024';
   @Input() assistantId = 'chat_agent';
 
-  chat: ReturnType<typeof streamResource<{ messages: BaseMessage[] }>> | null = null;
+  chat: ReturnType<typeof agent<{ messages: BaseMessage[] }>> | null = null;
 
   constructor(private injector: Injector) {}
 
   ngOnInit() {
     // @Input() values are available in ngOnInit, so use runInInjectionContext
     runInInjectionContext(this.injector, () => {
-      this.chat = streamResource<{ messages: BaseMessage[] }>({
+      this.chat = agent<{ messages: BaseMessage[] }>({
         apiUrl: this.apiUrl,
         assistantId: this.assistantId,
       });

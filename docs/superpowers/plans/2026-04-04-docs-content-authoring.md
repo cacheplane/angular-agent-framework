@@ -4,7 +4,7 @@
 
 **Goal:** Write all 15 remaining docs pages with real code examples from cockpit implementations, using the MDX component system (Callout, Steps, Tabs, CardGroup).
 
-**Architecture:** Each task writes one MDX file to `apps/website/content/docs-v2/[section]/[slug].mdx`. Content uses cockpit capability patterns adapted for streamResource() Angular usage. All tasks are independent and can be parallelized. The 3 existing placeholder pages (introduction, streaming, stream-resource API) are already written.
+**Architecture:** Each task writes one MDX file to `apps/website/content/docs-v2/[section]/[slug].mdx`. Content uses cockpit capability patterns adapted for agent() Angular usage. All tasks are independent and can be parallelized. The 3 existing placeholder pages (introduction, streaming, angular API) are already written.
 
 **Tech Stack:** MDX with custom components (Callout, Steps, Tabs, Tab, CardGroup, Card)
 
@@ -24,7 +24,7 @@ This is the most important onboarding page. Walk through building a chat compone
 ```mdx
 # Quick Start
 
-Build a streaming chat component with streamResource() in 5 minutes.
+Build a streaming chat component with agent() in 5 minutes.
 
 <Callout type="info" title="Prerequisites">
 Angular 20+ project with Node.js 18+. If you need setup help, see the [Installation](/docs/getting-started/installation) guide.
@@ -33,20 +33,20 @@ Angular 20+ project with Node.js 18+. If you need setup help, see the [Installat
 ## 1. Install
 
 ```bash
-npm install @cacheplane/stream-resource
+npm install @cacheplane/angular
 ```
 
 ## 2. Configure the provider
 
-Add `provideStreamResource()` to your application config with your LangGraph Platform URL.
+Add `provideAgent()` to your application config with your LangGraph Platform URL.
 
 ```typescript
 // app.config.ts
-import { provideStreamResource } from '@cacheplane/stream-resource';
+import { provideAgent } from '@cacheplane/angular';
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideStreamResource({
+    provideAgent({
       apiUrl: 'http://localhost:2024',
     }),
   ],
@@ -55,7 +55,7 @@ export const appConfig: ApplicationConfig = {
 
 ## 3. Create a chat component
 
-Use `streamResource()` in a component field initializer. Every property on the returned ref is an Angular Signal.
+Use `agent()` in a component field initializer. Every property on the returned ref is an Angular Signal.
 
 <Tabs items={['TypeScript', 'Template']}>
 <Tab>
@@ -63,7 +63,7 @@ Use `streamResource()` in a component field initializer. Every property on the r
 ```typescript
 // chat.component.ts
 import { Component, signal, computed } from '@angular/core';
-import { streamResource } from '@cacheplane/stream-resource';
+import { agent } from '@cacheplane/angular';
 import type { BaseMessage } from '@langchain/core/messages';
 
 @Component({
@@ -73,7 +73,7 @@ import type { BaseMessage } from '@langchain/core/messages';
 export class ChatComponent {
   input = signal('');
 
-  chat = streamResource<{ messages: BaseMessage[] }>({
+  chat = agent<{ messages: BaseMessage[] }>({
     assistantId: 'chat_agent',
     threadId: signal(localStorage.getItem('threadId')),
     onThreadId: (id) => localStorage.setItem('threadId', id),
@@ -173,13 +173,13 @@ git commit -m "docs(website): write Quick Start guide"
 ```mdx
 # Installation
 
-Detailed setup guide for streamResource() in your Angular application.
+Detailed setup guide for agent() in your Angular application.
 
 ## Requirements
 
 <Steps>
 <Step title="Angular 20+">
-streamResource() uses Angular Signals and the modern injection context API. Angular 20 or later is required.
+agent() uses Angular Signals and the modern injection context API. Angular 20 or later is required.
 </Step>
 <Step title="Node.js 18+">
 Required for the build toolchain and package installation.
@@ -192,23 +192,23 @@ A running LangGraph agent accessible via HTTP. Can be local (langgraph dev) or d
 ## Install the package
 
 ```bash
-npm install @cacheplane/stream-resource
+npm install @cacheplane/angular
 ```
 
 This installs the library and its peer dependencies including `@langchain/langgraph-sdk`.
 
 ## Configure the provider
 
-Add `provideStreamResource()` to your application configuration. This sets global defaults for all streamResource instances.
+Add `provideAgent()` to your application configuration. This sets global defaults for all agent instances.
 
 ```typescript
 // app.config.ts
 import { ApplicationConfig } from '@angular/core';
-import { provideStreamResource } from '@cacheplane/stream-resource';
+import { provideAgent } from '@cacheplane/angular';
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideStreamResource({
+    provideAgent({
       apiUrl: process.env['LANGGRAPH_URL'] ?? 'http://localhost:2024',
     }),
   ],
@@ -216,7 +216,7 @@ export const appConfig: ApplicationConfig = {
 ```
 
 <Callout type="tip" title="Per-call overrides">
-Any option passed to `streamResource()` directly overrides the global provider config. You can set a default `apiUrl` globally and override it for specific agents.
+Any option passed to `agent()` directly overrides the global provider config. You can set a default `apiUrl` globally and override it for specific agents.
 </Callout>
 
 ## Environment setup
@@ -239,7 +239,7 @@ langgraph dev
 For production, point to your LangGraph Cloud deployment:
 
 ```typescript
-provideStreamResource({
+provideAgent({
   apiUrl: 'https://your-project.langgraph.app',
 })
 ```
@@ -252,10 +252,10 @@ provideStreamResource({
 Create a minimal test to verify the setup works:
 
 ```typescript
-import { streamResource } from '@cacheplane/stream-resource';
+import { agent } from '@cacheplane/angular';
 
 // In a component
-const test = streamResource({
+const test = agent({
   assistantId: 'chat_agent',
 });
 
@@ -270,7 +270,7 @@ console.log(test.status()); // 'idle'
     Build your first chat component in 5 minutes
   </Card>
   <Card title="Angular Signals" href="/docs/concepts/angular-signals">
-    Understand how Signals power streamResource
+    Understand how Signals power agent
   </Card>
 </CardGroup>
 ```
@@ -296,10 +296,10 @@ Source: `cockpit/langgraph/persistence/` — state checkpointing and thread reco
 ```mdx
 # Persistence
 
-Thread persistence keeps conversations alive across page refreshes, browser restarts, and session changes. streamResource() manages thread state through the `threadId` signal and `onThreadId` callback.
+Thread persistence keeps conversations alive across page refreshes, browser restarts, and session changes. agent() manages thread state through the `threadId` signal and `onThreadId` callback.
 
 <Callout type="info" title="How it works">
-LangGraph checkpoints state at every super-step. streamResource() connects to these checkpoints via thread IDs, letting you resume exactly where you left off.
+LangGraph checkpoints state at every super-step. agent() connects to these checkpoints via thread IDs, letting you resume exactly where you left off.
 </Callout>
 
 ## Basic thread persistence
@@ -311,7 +311,7 @@ Save the thread ID to localStorage so conversations survive page refreshes.
 
 ```typescript
 // chat.component.ts
-const chat = streamResource<{ messages: BaseMessage[] }>({
+const chat = agent<{ messages: BaseMessage[] }>({
   assistantId: 'chat_agent',
   threadId: signal(localStorage.getItem('threadId')),
   onThreadId: (id) => localStorage.setItem('threadId', id),
@@ -340,7 +340,7 @@ Pass a Signal as `threadId` to reactively switch between conversations.
 // conversation-list.component.ts
 activeThreadId = signal<string | null>(null);
 
-chat = streamResource<{ messages: BaseMessage[] }>({
+chat = agent<{ messages: BaseMessage[] }>({
   assistantId: 'chat_agent',
   threadId: this.activeThreadId,  // Signal — switches reactively
   onThreadId: (id) => this.activeThreadId.set(id),
@@ -349,7 +349,7 @@ chat = streamResource<{ messages: BaseMessage[] }>({
 // Switch to a different conversation
 selectThread(id: string) {
   this.activeThreadId.set(id);
-  // streamResource automatically loads the new thread's state
+  // agent automatically loads the new thread's state
 }
 ```
 
@@ -376,7 +376,7 @@ loadConversation(threadId: string) {
 
 ## Checkpoint recovery
 
-When a connection drops, streamResource() can rejoin an in-progress run.
+When a connection drops, agent() can rejoin an in-progress run.
 
 ```typescript
 // Rejoin a running stream
@@ -406,7 +406,7 @@ Source: `cockpit/langgraph/interrupts/` — human-in-the-loop pausing with typed
 ```mdx
 # Interrupts
 
-Interrupts let your LangGraph agent pause execution and wait for human input. streamResource() surfaces interrupts as Angular Signals, making it easy to build approval flows, confirmation dialogs, and human-in-the-loop experiences.
+Interrupts let your LangGraph agent pause execution and wait for human input. agent() surfaces interrupts as Angular Signals, making it easy to build approval flows, confirmation dialogs, and human-in-the-loop experiences.
 
 <Callout type="info" title="When to use interrupts">
 Use interrupts for human approval, late-binding decisions, or any step where the agent needs external input before continuing.
@@ -427,7 +427,7 @@ interface ApprovalPayload {
   risk: 'low' | 'medium' | 'high';
 }
 
-const agent = streamResource<AgentState>({
+const agent = agent<AgentState>({
   assistantId: 'approval_agent',
 });
 
@@ -505,7 +505,7 @@ Source: `cockpit/langgraph/memory/` + `cockpit/deep-agents/memory/` — durable 
 ```mdx
 # Memory
 
-Memory in LangGraph preserves useful context that later steps can read back. streamResource() exposes memory through the messages and state signals, with thread persistence providing cross-session continuity.
+Memory in LangGraph preserves useful context that later steps can read back. agent() exposes memory through the messages and state signals, with thread persistence providing cross-session continuity.
 
 <Callout type="info" title="Short-term vs long-term">
 Short-term memory lives within a thread (conversation history). Long-term memory persists across threads via LangGraph's memory store.
@@ -516,7 +516,7 @@ Short-term memory lives within a thread (conversation history). Long-term memory
 Every message in a thread is automatically preserved. When you reconnect with the same `threadId`, the full conversation history is restored.
 
 ```typescript
-const chat = streamResource<{ messages: BaseMessage[] }>({
+const chat = agent<{ messages: BaseMessage[] }>({
   assistantId: 'memory_agent',
   threadId: signal(userId()),  // User-specific thread
 });
@@ -539,7 +539,7 @@ interface AgentState {
   projectContext: { name: string; files: string[] };
 }
 
-const agent = streamResource<AgentState>({
+const agent = agent<AgentState>({
   assistantId: 'context_agent',
   threadId: signal(projectId()),
 });
@@ -555,7 +555,7 @@ Thread persistence enables memory that spans sessions. The agent decides what to
 
 ```typescript
 // User returns days later — same threadId resumes context
-const agent = streamResource<AgentState>({
+const agent = agent<AgentState>({
   assistantId: 'memory_agent',
   threadId: signal(localStorage.getItem('agent-thread')),
   onThreadId: (id) => localStorage.setItem('agent-thread', id),
@@ -566,7 +566,7 @@ const agent = streamResource<AgentState>({
 ```
 
 <Callout type="tip" title="Memory is server-side">
-The agent controls what gets stored in memory. streamResource() just surfaces the current state. Design your agent's state schema to include the fields you want to persist.
+The agent controls what gets stored in memory. agent() just surfaces the current state. Design your agent's state schema to include the fields you want to persist.
 </Callout>
 ```
 
@@ -591,7 +591,7 @@ Source: `cockpit/langgraph/time-travel/` — checkpoint inspection and execution
 ```mdx
 # Time Travel
 
-Time travel lets you inspect earlier states and replay alternate execution paths. streamResource() exposes the full checkpoint history and branch navigation through Angular Signals.
+Time travel lets you inspect earlier states and replay alternate execution paths. agent() exposes the full checkpoint history and branch navigation through Angular Signals.
 
 <Callout type="info" title="Use cases">
 Debug agent decisions, explore alternate paths, and build undo/redo experiences for your users.
@@ -602,7 +602,7 @@ Debug agent decisions, explore alternate paths, and build undo/redo experiences 
 The `history()` signal contains an array of `ThreadState` checkpoints.
 
 ```typescript
-const agent = streamResource<AgentState>({
+const agent = agent<AgentState>({
   assistantId: 'agent',
   threadId: signal(threadId),
 });
@@ -667,10 +667,10 @@ Source: `cockpit/langgraph/subgraphs/` + `cockpit/deep-agents/subagents/` — mo
 ```mdx
 # Subgraphs
 
-Subgraphs let you compose complex agents from smaller, focused units. streamResource() tracks subagent execution through dedicated signals, giving you visibility into delegated work.
+Subgraphs let you compose complex agents from smaller, focused units. agent() tracks subagent execution through dedicated signals, giving you visibility into delegated work.
 
 <Callout type="info" title="Subgraphs vs subagents">
-LangGraph calls them subgraphs (modular graph composition). Deep Agents calls them subagents (task delegation). streamResource() supports both patterns through the same API.
+LangGraph calls them subgraphs (modular graph composition). Deep Agents calls them subagents (task delegation). agent() supports both patterns through the same API.
 </Callout>
 
 ## Tracking subagent execution
@@ -678,7 +678,7 @@ LangGraph calls them subgraphs (modular graph composition). Deep Agents calls th
 The `subagents()` signal contains a Map of active subagent streams.
 
 ```typescript
-const orchestrator = streamResource<OrchestratorState>({
+const orchestrator = agent<OrchestratorState>({
   assistantId: 'orchestrator',
   subagentToolNames: ['research', 'analyze', 'summarize'],
 });
@@ -711,7 +711,7 @@ const researchMessages = computed(() => researchAgent()?.messages() ?? []);
 By default, subagent messages appear in the parent's `messages()` signal. Filter them out for a cleaner parent view.
 
 ```typescript
-const orchestrator = streamResource<OrchestratorState>({
+const orchestrator = agent<OrchestratorState>({
   assistantId: 'orchestrator',
   filterSubagentMessages: true,  // Hide subagent messages from parent
   subagentToolNames: ['research', 'analyze'],
@@ -722,7 +722,7 @@ const parentMessages = computed(() => orchestrator.messages());
 ```
 
 <Callout type="tip" title="Subagent tool names">
-Set `subagentToolNames` to the tool names that spawn subagents. streamResource() uses this to identify which tool calls create subagent streams.
+Set `subagentToolNames` to the tool names that spawn subagents. agent() uses this to identify which tool calls create subagent streams.
 </Callout>
 ```
 
@@ -742,32 +742,32 @@ git commit -m "docs(website): write Subgraphs guide"
 
 - [ ] **Step 1: Write the testing guide**
 
-Source: `MockStreamTransport` from the library — deterministic agent testing.
+Source: `MockAgentTransport` from the library — deterministic agent testing.
 
 ```mdx
 # Testing
 
-MockStreamTransport lets you test agent interactions deterministically without a running LangGraph server. Script exact event sequences and step through them in your Angular test specs.
+MockAgentTransport lets you test agent interactions deterministically without a running LangGraph server. Script exact event sequences and step through them in your Angular test specs.
 
 <Callout type="tip" title="No flaky tests">
-MockStreamTransport eliminates network dependencies, timing issues, and server state. Every test run produces identical results.
+MockAgentTransport eliminates network dependencies, timing issues, and server state. Every test run produces identical results.
 </Callout>
 
 ## Basic test setup
 
-Create a MockStreamTransport with scripted events and pass it to streamResource.
+Create a MockAgentTransport with scripted events and pass it to agent.
 
 ```typescript
 import { TestBed } from '@angular/core/testing';
-import { MockStreamTransport } from '@cacheplane/stream-resource';
-import type { StreamEvent } from '@cacheplane/stream-resource';
+import { MockAgentTransport } from '@cacheplane/angular';
+import type { StreamEvent } from '@cacheplane/angular';
 
 describe('ChatComponent', () => {
   it('should display agent messages', () => {
-    const transport = new MockStreamTransport();
+    const transport = new MockAgentTransport();
 
     TestBed.runInInjectionContext(() => {
-      const chat = streamResource<{ messages: BaseMessage[] }>({
+      const chat = agent<{ messages: BaseMessage[] }>({
         assistantId: 'test_agent',
         transport,
       });
@@ -789,7 +789,7 @@ describe('ChatComponent', () => {
 Pass event batches to the constructor for sequential playback.
 
 ```typescript
-const transport = new MockStreamTransport([
+const transport = new MockAgentTransport([
   // Batch 1: Initial response
   [{ type: 'values', messages: [{ role: 'assistant', content: 'Analyzing...' }] }],
   // Batch 2: Final response
@@ -807,10 +807,10 @@ Script an interrupt event to test human-in-the-loop flows.
 
 ```typescript
 it('should handle interrupts', () => {
-  const transport = new MockStreamTransport();
+  const transport = new MockAgentTransport();
 
   TestBed.runInInjectionContext(() => {
-    const agent = streamResource<AgentState>({
+    const agent = agent<AgentState>({
       assistantId: 'approval_agent',
       transport,
     });
@@ -832,10 +832,10 @@ Inject errors to test error handling.
 
 ```typescript
 it('should surface errors', () => {
-  const transport = new MockStreamTransport();
+  const transport = new MockAgentTransport();
 
   TestBed.runInInjectionContext(() => {
-    const chat = streamResource<ChatState>({
+    const chat = agent<ChatState>({
       assistantId: 'test_agent',
       transport,
     });
@@ -849,7 +849,7 @@ it('should surface errors', () => {
 ```
 
 <Callout type="warning" title="Injection context required">
-streamResource() must be called within an Angular injection context. In tests, wrap calls in `TestBed.runInInjectionContext()`.
+agent() must be called within an Angular injection context. In tests, wrap calls in `TestBed.runInInjectionContext()`.
 </Callout>
 ```
 
@@ -874,7 +874,7 @@ Source: `cockpit/langgraph/deployment-runtime/` — production configuration.
 ```mdx
 # Deployment
 
-Configure streamResource() for production with LangGraph Cloud, environment-based URLs, and error handling patterns.
+Configure agent() for production with LangGraph Cloud, environment-based URLs, and error handling patterns.
 
 ## Production configuration
 
@@ -885,7 +885,7 @@ Point `apiUrl` to your LangGraph Cloud deployment.
 
 ```typescript
 // app.config.ts
-provideStreamResource({
+provideAgent({
   apiUrl: environment.langgraphUrl,
 })
 ```
@@ -902,7 +902,7 @@ export const environment = {
 
 ```typescript
 // app.config.ts
-provideStreamResource({
+provideAgent({
   apiUrl: 'https://your-project.langgraph.app',
 })
 ```
@@ -915,7 +915,7 @@ provideStreamResource({
 Handle errors gracefully in production.
 
 ```typescript
-const chat = streamResource<ChatState>({
+const chat = agent<ChatState>({
   assistantId: 'chat_agent',
 });
 
@@ -943,7 +943,7 @@ await chat.joinStream(runId, lastEventId);
 ```
 
 <Callout type="tip" title="Stateless client pattern">
-streamResource() is a stateless client. All state lives on the LangGraph Platform. This means your Angular app can be deployed anywhere (CDN, edge, SSR) without state management concerns.
+agent() is a stateless client. All state lives on the LangGraph Platform. This means your Angular app can be deployed anywhere (CDN, edge, SSR) without state management concerns.
 </Callout>
 
 ## Checklist
@@ -983,15 +983,15 @@ git commit -m "docs(website): write Deployment guide"
 ```mdx
 # Angular Signals
 
-streamResource() is built on Angular Signals — the reactive primitive introduced in Angular 16+. Every property on a StreamResourceRef is a Signal, making it work seamlessly with OnPush change detection, computed values, and effect callbacks.
+agent() is built on Angular Signals — the reactive primitive introduced in Angular 16+. Every property on a AgentRef is a Signal, making it work seamlessly with OnPush change detection, computed values, and effect callbacks.
 
 ## Signals primer
 
 A Signal is a reactive value container. When a Signal's value changes, Angular automatically re-renders any template that reads it.
 
 ```typescript
-// streamResource returns Signals, not Observables
-const chat = streamResource<ChatState>({ assistantId: 'agent' });
+// agent returns Signals, not Observables
+const chat = agent<ChatState>({ assistantId: 'agent' });
 
 chat.messages()    // Signal<BaseMessage[]> — call to read
 chat.status()      // Signal<ResourceStatus>
@@ -1001,7 +1001,7 @@ chat.isLoading()   // Signal<boolean> (computed)
 
 ## Computed values
 
-Use `computed()` to derive new Signals from streamResource signals.
+Use `computed()` to derive new Signals from agent signals.
 
 ```typescript
 const lastMessage = computed(() =>
@@ -1019,7 +1019,7 @@ const isIdle = computed(() =>
 
 ## OnPush change detection
 
-Because Signals trigger change detection automatically, streamResource works perfectly with `ChangeDetectionStrategy.OnPush`.
+Because Signals trigger change detection automatically, agent works perfectly with `ChangeDetectionStrategy.OnPush`.
 
 ```typescript
 @Component({
@@ -1031,16 +1031,16 @@ Because Signals trigger change detection automatically, streamResource works per
   `,
 })
 export class ChatComponent {
-  chat = streamResource<ChatState>({ assistantId: 'agent' });
+  chat = agent<ChatState>({ assistantId: 'agent' });
 }
 ```
 
 ## No RxJS required
 
-Unlike traditional Angular HTTP patterns, streamResource doesn't use Observables. There are no subscriptions to manage, no async pipes needed, and no memory leak risks.
+Unlike traditional Angular HTTP patterns, agent doesn't use Observables. There are no subscriptions to manage, no async pipes needed, and no memory leak risks.
 
 <Callout type="tip" title="Why Signals over RxJS?">
-Signals are simpler for UI state. They synchronously read the latest value, compose with computed(), and integrate with Angular's template syntax. streamResource handles the async SSE connection internally and surfaces results as Signals.
+Signals are simpler for UI state. They synchronously read the latest value, compose with computed(), and integrate with Angular's template syntax. agent handles the async SSE connection internally and surfaces results as Signals.
 </Callout>
 ```
 
@@ -1077,27 +1077,27 @@ Each node performs one action — calling an LLM, querying a database, or making
 Edges connect nodes. Conditional edges route execution based on state, enabling branching logic.
 </Step>
 <Step title="State is shared">
-All nodes read from and write to a shared state object. This state is what streamResource() exposes through its signals.
+All nodes read from and write to a shared state object. This state is what agent() exposes through its signals.
 </Step>
 </Steps>
 
-## How streamResource connects
+## How agent connects
 
-Your Angular app doesn't run the graph — LangGraph Platform does. streamResource() is the bridge:
+Your Angular app doesn't run the graph — LangGraph Platform does. agent() is the bridge:
 
 1. Your component calls `submit()` with user input
 2. FetchStreamTransport sends an HTTP POST to LangGraph Platform
 3. The platform runs the graph and streams state updates via SSE
-4. streamResource() updates its Signals as events arrive
+4. agent() updates its Signals as events arrive
 5. Angular re-renders your templates automatically
 
 ## State design
 
-The generic type parameter in `streamResource<T>()` defines your agent's state shape.
+The generic type parameter in `agent<T>()` defines your agent's state shape.
 
 ```typescript
 // Simple chat state
-streamResource<{ messages: BaseMessage[] }>({ ... })
+agent<{ messages: BaseMessage[] }>({ ... })
 
 // Rich agent state with custom fields
 interface AgentState {
@@ -1106,7 +1106,7 @@ interface AgentState {
   currentStep: number;
   results: Record<string, unknown>;
 }
-streamResource<AgentState>({ ... })
+agent<AgentState>({ ... })
 ```
 
 <Callout type="info" title="Learn more">
@@ -1133,7 +1133,7 @@ git commit -m "docs(website): write LangGraph Basics concept page"
 ```mdx
 # Agent Architecture
 
-How AI agents work — the planning, execution, and tool-calling lifecycle that streamResource() connects your Angular app to.
+How AI agents work — the planning, execution, and tool-calling lifecycle that agent() connects your Angular app to.
 
 ## The agent loop
 
@@ -1141,7 +1141,7 @@ An AI agent follows a cycle:
 
 <Steps>
 <Step title="Receive input">
-The user sends a message via `submit()`. streamResource() posts it to LangGraph Platform.
+The user sends a message via `submit()`. agent() posts it to LangGraph Platform.
 </Step>
 <Step title="Plan">
 The LLM decides what to do next — respond directly, call a tool, or delegate to a subagent.
@@ -1150,7 +1150,7 @@ The LLM decides what to do next — respond directly, call a tool, or delegate t
 Tools run (database queries, API calls, code execution). Results feed back into state.
 </Step>
 <Step title="Respond">
-The agent streams its response token-by-token. streamResource() updates the `messages()` signal in real-time.
+The agent streams its response token-by-token. agent() updates the `messages()` signal in real-time.
 </Step>
 <Step title="Checkpoint">
 State is checkpointed. The agent may loop back to Plan, or finish.
@@ -1159,10 +1159,10 @@ State is checkpointed. The agent may loop back to Plan, or finish.
 
 ## Tool calling
 
-Agents extend their capabilities through tools. streamResource() tracks tool execution:
+Agents extend their capabilities through tools. agent() tracks tool execution:
 
 ```typescript
-const agent = streamResource<AgentState>({
+const agent = agent<AgentState>({
   assistantId: 'research_agent',
 });
 
@@ -1181,7 +1181,7 @@ Complex tasks use multiple agents working together:
 - **Pipeline** — agents process sequentially, each refining the output
 - **Debate** — agents review each other's work
 
-streamResource() supports these patterns through the `subagents()` and `activeSubagents()` signals.
+agent() supports these patterns through the `subagents()` and `activeSubagents()` signals.
 
 <Callout type="tip" title="Start simple">
 Most applications only need a single agent with tools. Add subagents when you need true task delegation with isolated state.
@@ -1207,7 +1207,7 @@ git commit -m "docs(website): write Agent Architecture concept page"
 ```mdx
 # State Management
 
-How state flows through streamResource() — from LangGraph's server-side state machine to Angular Signals in your templates.
+How state flows through agent() — from LangGraph's server-side state machine to Angular Signals in your templates.
 
 ## State lives on the server
 
@@ -1218,7 +1218,7 @@ LangGraph Platform (source of truth)
   ↓ SSE stream
 FetchStreamTransport (transport layer)
   ↓ events
-streamResource() (signal conversion)
+agent() (signal conversion)
   ↓ Signals
 Angular templates (reactive rendering)
 ```
@@ -1234,7 +1234,7 @@ interface ProjectState {
   analysis: { score: number; issues: string[] };
 }
 
-const agent = streamResource<ProjectState>({
+const agent = agent<ProjectState>({
   assistantId: 'project_agent',
 });
 
@@ -1299,18 +1299,18 @@ Replace the full content of `apps/website/content/docs-v2/getting-started/introd
 ```mdx
 # Introduction
 
-Angular Stream Resource brings full parity with React's `useStream()` hook to Angular 20+. It's the enterprise streaming resource for LangChain and Angular — built natively with Angular Signals, not wrapped or adapted.
+Angular Agent Framework brings full parity with React's `useStream()` hook to Angular 20+. It's the enterprise streaming resource for LangChain and Angular — built natively with Angular Signals, not wrapped or adapted.
 
 <Callout type="info" title="Who is this for?">
-Angular Stream Resource serves two audiences: **Angular developers** building AI-powered applications, and **AI/agent developers** who need a production Angular frontend for their LangGraph agents.
+Angular Agent Framework serves two audiences: **Angular developers** building AI-powered applications, and **AI/agent developers** who need a production Angular frontend for their LangGraph agents.
 </Callout>
 
-## What is streamResource()?
+## What is agent()?
 
-`streamResource()` is an Angular function that creates a reactive connection to a LangGraph agent. It returns an object whose properties are Angular Signals — meaning your templates update automatically as the agent streams responses.
+`agent()` is an Angular function that creates a reactive connection to a LangGraph agent. It returns an object whose properties are Angular Signals — meaning your templates update automatically as the agent streams responses.
 
 ```typescript
-const chat = streamResource<{ messages: BaseMessage[] }>({
+const chat = agent<{ messages: BaseMessage[] }>({
   assistantId: 'chat_agent',
 });
 
@@ -1357,7 +1357,7 @@ Inspect agent execution history, fork from checkpoints, and explore alternate pa
     Human-in-the-loop approval flows
   </Card>
   <Card title="Testing" href="/docs/guides/testing">
-    Deterministic testing with MockStreamTransport
+    Deterministic testing with MockAgentTransport
   </Card>
 </CardGroup>
 ```
@@ -1396,7 +1396,7 @@ Open each page in the browser and verify content loads:
 - http://localhost:3000/docs/concepts/langgraph-basics
 - http://localhost:3000/docs/concepts/agent-architecture
 - http://localhost:3000/docs/concepts/state-management
-- http://localhost:3000/docs/api/stream-resource (existing)
+- http://localhost:3000/docs/api/angular (existing)
 
 - [ ] **Step 3: Commit any fixes**
 

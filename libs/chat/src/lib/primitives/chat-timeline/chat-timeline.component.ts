@@ -9,7 +9,7 @@ import {
   ChangeDetectionStrategy,
 } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
-import type { StreamResourceRef, ThreadState } from '@cacheplane/stream-resource';
+import type { AgentRef, ThreadState } from '@cacheplane/angular';
 
 @Component({
   selector: 'chat-timeline',
@@ -28,7 +28,7 @@ import type { StreamResourceRef, ThreadState } from '@cacheplane/stream-resource
   `,
 })
 export class ChatTimelineComponent {
-  readonly ref = input.required<StreamResourceRef<any, any>>();
+  readonly ref = input.required<AgentRef<any, any>>();
 
   readonly checkpointSelected = output<ThreadState<any>>();
 

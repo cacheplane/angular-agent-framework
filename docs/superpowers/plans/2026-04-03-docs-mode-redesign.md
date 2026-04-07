@@ -682,56 +682,56 @@ git commit -m "feat(cockpit): update NarrativeDocs with constrained width and cl
 - [ ] **Step 1: Replace guide.md with the component-tagged version**
 
 ```markdown
-# Streaming with stream-resource
+# Streaming with angular
 
 <Summary>
-Build a real-time streaming chat interface using `streamResource()` from
-`@cacheplane/stream-resource` connected to a LangGraph backend on LangSmith Cloud.
+Build a real-time streaming chat interface using `agent()` from
+`@cacheplane/angular` connected to a LangGraph backend on LangSmith Cloud.
 </Summary>
 
 <Prompt>
-Add real-time LLM streaming to this Angular component using `streamResource()` from `@cacheplane/stream-resource`. Configure `provideStreamResource({ apiUrl })` in the app config, then call `stream.submit()` to send messages. Bind `stream.messages()` in the template using `@for` — all Signals, no subscriptions needed.
+Add real-time LLM streaming to this Angular component using `agent()` from `@cacheplane/angular`. Configure `provideAgent({ apiUrl })` in the app config, then call `stream.submit()` to send messages. Bind `stream.messages()` in the template using `@for` — all Signals, no subscriptions needed.
 </Prompt>
 
 <Steps>
 <Step title="Configure the provider">
 
-Set up `provideStreamResource()` in your app config with the LangGraph Cloud URL:
+Set up `provideAgent()` in your app config with the LangGraph Cloud URL:
 
 ```typescript
 // app.config.ts
 import { ApplicationConfig } from '@angular/core';
-import { provideStreamResource } from '@cacheplane/stream-resource';
+import { provideAgent } from '@cacheplane/angular';
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideStreamResource({
+    provideAgent({
       apiUrl: 'https://your-deployment.langgraph.app',
     }),
   ],
 };
 ```
 
-This makes the API URL available to all `streamResource()` calls in your app.
+This makes the API URL available to all `agent()` calls in your app.
 
 </Step>
 <Step title="Create the streaming resource">
 
-In your component, call `streamResource()` in a field initializer (injection context required):
+In your component, call `agent()` in a field initializer (injection context required):
 
 ```typescript
 // streaming.component.ts
-import { streamResource } from '@cacheplane/stream-resource';
+import { agent } from '@cacheplane/angular';
 
 export class StreamingComponent {
-  protected readonly stream = streamResource({
+  protected readonly stream = agent({
     assistantId: 'streaming',
   });
 }
 ```
 
 <Note>
-`streamResource()` must be called within an Angular injection context — a component field initializer or constructor body.
+`agent()` must be called within an Angular injection context — a component field initializer or constructor body.
 </Note>
 
 </Step>
@@ -798,7 +798,7 @@ Deploy with `langgraph deploy` from `langgraph-cli`. The `assistantId` in your A
 </Steps>
 
 <Tip>
-No service layer needed — `streamResource()` replaces wrapper services entirely. It handles connection lifecycle, state management, and error recovery.
+No service layer needed — `agent()` replaces wrapper services entirely. It handles connection lifecycle, state management, and error recovery.
 </Tip>
 
 <Warning>

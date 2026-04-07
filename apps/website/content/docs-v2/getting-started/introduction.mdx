@@ -1,17 +1,17 @@
 # Introduction
 
-StreamResource is the Signal-native streaming library for Angular 20+ — built natively for LangGraph, without React translation layers. Build streaming AI applications with Angular Signals, connect to LangGraph agents, and ship production-ready frontends for your AI products.
+Agent is the Signal-native streaming library for Angular 20+ — built natively for LangGraph, without React translation layers. Build streaming AI applications with Angular Signals, connect to LangGraph agents, and ship production-ready frontends for your AI products.
 
 <Callout type="info" title="What you'll learn">
-This guide walks you through the complete workflow: build a LangGraph agent in Python, run it locally, connect it to an Angular app with streamResource(), and deploy to production.
+This guide walks you through the complete workflow: build a LangGraph agent in Python, run it locally, connect it to an Angular app with agent(), and deploy to production.
 </Callout>
 
-## What is streamResource()?
+## What is agent()?
 
-`streamResource()` is an Angular function that creates a reactive, streaming connection to a LangGraph agent. It returns an object whose properties are Angular Signals — meaning your templates update automatically as the agent streams responses, token by token.
+`agent()` is an Angular function that creates a reactive, streaming connection to a LangGraph agent. It returns an object whose properties are Angular Signals — meaning your templates update automatically as the agent streams responses, token by token.
 
 ```typescript
-const chat = streamResource<{ messages: BaseMessage[] }>({
+const chat = agent<{ messages: BaseMessage[] }>({
   assistantId: 'chat_agent',
 });
 
@@ -120,13 +120,13 @@ Your agent is now running at `http://localhost:2024`. You can test it in LangGra
 
 ## Connect with Angular
 
-Now connect your Angular app to the running agent using streamResource().
+Now connect your Angular app to the running agent using agent().
 
 <Steps>
 <Step title="Install the package">
 
 ```bash
-npm install @cacheplane/stream-resource
+npm install @cacheplane/angular
 ```
 
 </Step>
@@ -135,11 +135,11 @@ npm install @cacheplane/stream-resource
 ```typescript
 // app.config.ts
 import { ApplicationConfig } from '@angular/core';
-import { provideStreamResource } from '@cacheplane/stream-resource';
+import { provideAgent } from '@cacheplane/angular';
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideStreamResource({
+    provideAgent({
       apiUrl: 'http://localhost:2024',
     }),
   ],
@@ -155,7 +155,7 @@ export const appConfig: ApplicationConfig = {
 ```typescript
 // chat.component.ts
 import { Component, signal, computed } from '@angular/core';
-import { streamResource } from '@cacheplane/stream-resource';
+import { agent } from '@cacheplane/angular';
 import type { BaseMessage } from '@langchain/core/messages';
 
 @Component({
@@ -167,7 +167,7 @@ export class ChatComponent {
   input = signal('');
 
   // Create the streaming resource — this is the core API
-  chat = streamResource<{ messages: BaseMessage[] }>({
+  chat = agent<{ messages: BaseMessage[] }>({
     assistantId: 'chat_agent',
     threadId: signal(localStorage.getItem('threadId')),
     onThreadId: (id) => localStorage.setItem('threadId', id),
@@ -242,7 +242,7 @@ Open `http://localhost:4200` and start chatting with your agent. Messages stream
 
 ## Key Concepts
 
-Everything streamResource() gives you out of the box — click any to learn more:
+Everything agent() gives you out of the box — click any to learn more:
 
 <FeatureChips />
 
@@ -284,7 +284,7 @@ export const environment = {
 };
 
 // app.config.ts
-provideStreamResource({
+provideAgent({
   apiUrl: environment.langgraphUrl,
 })
 ```
@@ -292,7 +292,7 @@ provideStreamResource({
 </Step>
 <Step title="Deploy your Angular app">
 
-Deploy your Angular frontend to any hosting platform — Vercel, Netlify, AWS, or your own infrastructure. Since streamResource() is a stateless client, your frontend has no server-side state requirements.
+Deploy your Angular frontend to any hosting platform — Vercel, Netlify, AWS, or your own infrastructure. Since agent() is a stateless client, your frontend has no server-side state requirements.
 
 ```bash
 ng build --configuration production
@@ -322,15 +322,15 @@ Your Angular app is a stateless client. All agent state — threads, checkpoints
     Human-in-the-loop approval and confirmation flows
   </Card>
   <Card title="Testing" href="/docs/guides/testing">
-    Deterministic testing with MockStreamTransport
+    Deterministic testing with MockAgentTransport
   </Card>
   <Card title="Angular Signals" href="/docs/concepts/angular-signals">
-    Deep dive into how Signals power streamResource
+    Deep dive into how Signals power agent
   </Card>
   <Card title="LangGraph Basics" href="/docs/concepts/langgraph-basics">
     Graphs, nodes, edges, and state for Angular developers
   </Card>
-  <Card title="API Reference" href="/docs/api/stream-resource">
-    Complete streamResource() function reference
+  <Card title="API Reference" href="/docs/api/angular">
+    Complete agent() function reference
   </Card>
 </CardGroup>

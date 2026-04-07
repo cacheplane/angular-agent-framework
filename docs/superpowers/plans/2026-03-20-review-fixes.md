@@ -4,7 +4,7 @@
 
 **Goal:** Fix the four review regressions in stream event handling, reactive thread switching, MCP package entrypoints, and MCP API docs discovery without regressing the current deployment.
 
-**Architecture:** Split the work into two isolated tracks. The `libs/stream-resource` track fixes LangGraph transport normalization and reactive thread resets. The `packages/mcp` track fixes packaged entrypoints and ensures API docs ship with and load from the published artifact. Each track gets its own worktree and verification loop, then both are integrated back into the single-commit history on `main`.
+**Architecture:** Split the work into two isolated tracks. The `libs/angular` track fixes LangGraph transport normalization and reactive thread resets. The `packages/mcp` track fixes packaged entrypoints and ensures API docs ship with and load from the published artifact. Each track gets its own worktree and verification loop, then both are integrated back into the single-commit history on `main`.
 
 **Tech Stack:** Nx, Angular signals, RxJS, TypeScript, Node.js, LangGraph SDK, MCP package packaging
 
@@ -12,15 +12,15 @@
 
 ## File Map
 
-- Modify: `libs/stream-resource/src/lib/transport/fetch-stream.transport.ts`
+- Modify: `libs/angular/src/lib/transport/fetch-stream.transport.ts`
   Normalise LangGraph SDK stream event names into the shapes the bridge already consumes.
-- Modify: `libs/stream-resource/src/lib/internals/stream-manager.bridge.ts`
+- Modify: `libs/angular/src/lib/internals/stream-manager.bridge.ts`
   Reset stream state when a bound `threadId` observable changes, matching `switchThread()`.
-- Modify: `libs/stream-resource/src/lib/internals/stream-manager.bridge.spec.ts`
+- Modify: `libs/angular/src/lib/internals/stream-manager.bridge.spec.ts`
   Add regression coverage for reactive thread switching and real event normalization behavior at the bridge level.
-- Modify: `libs/stream-resource/src/lib/transport/mock-stream.transport.ts`
+- Modify: `libs/angular/src/lib/transport/mock-stream.transport.ts`
   Only if needed to keep transport tests representative of the real normalized stream shape.
-- Modify: `libs/stream-resource/src/lib/stream-resource.fn.spec.ts`
+- Modify: `libs/angular/src/lib/angular.fn.spec.ts`
   Add or update integration tests around `threadId` signal changes if the bridge tests are not sufficient.
 - Modify: `packages/mcp/package.json`
   Point `main`, `bin`, and `start` at the actual built output path.
@@ -63,7 +63,7 @@ Expected: lockfile-compatible install with no dependency graph changes.
 
 - [ ] **Step 5: Run targeted baseline tests before changes**
 
-Run in `review-lib-fixes`: `npx nx test stream-resource --skip-nx-cache`
+Run in `review-lib-fixes`: `npx nx test angular --skip-nx-cache`
 Run in `review-mcp-fixes`: `npx tsc -p packages/mcp/tsconfig.json`
 Expected: baseline status captured before implementation begins.
 
@@ -72,8 +72,8 @@ Expected: baseline status captured before implementation begins.
 ### Task 2: Fix LangGraph message event normalization
 
 **Files:**
-- Modify: `libs/stream-resource/src/lib/transport/fetch-stream.transport.ts`
-- Test: `libs/stream-resource/src/lib/internals/stream-manager.bridge.spec.ts`
+- Modify: `libs/angular/src/lib/transport/fetch-stream.transport.ts`
+- Test: `libs/angular/src/lib/internals/stream-manager.bridge.spec.ts`
 
 - [ ] **Step 1: Write a failing regression test for real LangGraph message event variants**
 
@@ -81,7 +81,7 @@ Add a test that feeds `messages/partial`, `messages/complete`, and `messages/met
 
 - [ ] **Step 2: Run the targeted test to verify it fails**
 
-Run: `npx vitest run libs/stream-resource/src/lib/internals/stream-manager.bridge.spec.ts -t "normalizes LangGraph message events"`
+Run: `npx vitest run libs/angular/src/lib/internals/stream-manager.bridge.spec.ts -t "normalizes LangGraph message events"`
 Expected: FAIL because `messages/partial` and `messages/complete` are not mapped to `messages`.
 
 - [ ] **Step 3: Implement the minimal transport normalization**
@@ -93,7 +93,7 @@ Map LangGraph message stream event names to the local event contract:
 
 - [ ] **Step 4: Re-run the targeted test**
 
-Run: `npx vitest run libs/stream-resource/src/lib/internals/stream-manager.bridge.spec.ts -t "normalizes LangGraph message events"`
+Run: `npx vitest run libs/angular/src/lib/internals/stream-manager.bridge.spec.ts -t "normalizes LangGraph message events"`
 Expected: PASS
 
 ---
@@ -101,9 +101,9 @@ Expected: PASS
 ### Task 3: Reset bridge state when the bound `threadId` changes
 
 **Files:**
-- Modify: `libs/stream-resource/src/lib/internals/stream-manager.bridge.ts`
-- Test: `libs/stream-resource/src/lib/internals/stream-manager.bridge.spec.ts`
-- Test: `libs/stream-resource/src/lib/stream-resource.fn.spec.ts`
+- Modify: `libs/angular/src/lib/internals/stream-manager.bridge.ts`
+- Test: `libs/angular/src/lib/internals/stream-manager.bridge.spec.ts`
+- Test: `libs/angular/src/lib/angular.fn.spec.ts`
 
 - [ ] **Step 1: Write a failing regression test for reactive thread changes**
 
@@ -111,7 +111,7 @@ Add a test where `threadId$` emits one thread, bridge state is populated, then `
 
 - [ ] **Step 2: Run the targeted test to verify it fails**
 
-Run: `npx vitest run libs/stream-resource/src/lib/internals/stream-manager.bridge.spec.ts -t "resets state when threadId observable changes"`
+Run: `npx vitest run libs/angular/src/lib/internals/stream-manager.bridge.spec.ts -t "resets state when threadId observable changes"`
 Expected: FAIL because the subscription only mutates `currentThreadId`.
 
 - [ ] **Step 3: Implement the minimal reset behavior**
@@ -121,8 +121,8 @@ Extract a shared reset helper used by both the `threadId$` subscription and `swi
 - [ ] **Step 4: Re-run targeted tests**
 
 Run:
-- `npx vitest run libs/stream-resource/src/lib/internals/stream-manager.bridge.spec.ts`
-- `npx vitest run libs/stream-resource/src/lib/stream-resource.fn.spec.ts`
+- `npx vitest run libs/angular/src/lib/internals/stream-manager.bridge.spec.ts`
+- `npx vitest run libs/angular/src/lib/angular.fn.spec.ts`
 Expected: PASS
 
 ---
@@ -196,7 +196,7 @@ Expected: tests pass and the built artifact includes both the runnable entrypoin
 ### Task 6: Integrate, review, and verify end-to-end
 
 **Files:**
-- Verify: `libs/stream-resource/**/*`
+- Verify: `libs/angular/**/*`
 - Verify: `packages/mcp/**/*`
 
 - [ ] **Step 1: Merge both worktree branches back into the main working tree**
@@ -206,7 +206,7 @@ Use non-interactive git commands only.
 - [ ] **Step 2: Run full targeted verification from the main tree**
 
 Run:
-- `npx nx test stream-resource --skip-nx-cache`
+- `npx nx test angular --skip-nx-cache`
 - `npx nx build mcp --skip-nx-cache`
 - `node dist/packages/mcp/src/index.js --help || true`
 

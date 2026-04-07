@@ -18,13 +18,13 @@ const NODES: NodeDef[] = [
     id: 'angular',
     label: 'Angular App',
     subtitle: 'Components & Signals',
-    description: 'Your Angular components call streamResource() and bind the returned Signals directly in templates. OnPush change detection handles re-renders automatically.',
+    description: 'Your Angular components call agent() and bind the returned Signals directly in templates. OnPush change detection handles re-renders automatically.',
     side: 'angular',
     icon: '🅰️',
   },
   {
     id: 'sr',
-    label: 'streamResource()',
+    label: 'agent()',
     subtitle: 'Reactive Bridge',
     description: 'The core primitive. Creates a reactive resource that exposes messages, status, error, and threadId as Angular Signals. Manages the full agent lifecycle — streaming, interrupts, branching, and thread persistence.',
     side: 'bridge',
@@ -34,7 +34,7 @@ const NODES: NodeDef[] = [
     id: 'transport',
     label: 'FetchStreamTransport',
     subtitle: 'SSE Connection',
-    description: 'Handles the HTTP/SSE transport layer. Opens a server-sent events connection to LangGraph Cloud, parses streaming chunks, and feeds them into the resource. Swappable with MockStreamTransport for testing.',
+    description: 'Handles the HTTP/SSE transport layer. Opens a server-sent events connection to LangGraph Cloud, parses streaming chunks, and feeds them into the resource. Swappable with MockAgentTransport for testing.',
     side: 'bridge',
     icon: '📡',
   },
@@ -119,7 +119,7 @@ export function ArchDiagram() {
         maxWidth: '50ch',
         margin: '0 auto 64px',
         lineHeight: 1.6,
-      }}>Click any component to learn how data flows from your Angular app through streamResource to LangGraph and back.</p>
+      }}>Click any component to learn how data flows from your Angular app through agent to LangGraph and back.</p>
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 items-start">
         {/* Left: vertical node stack */}

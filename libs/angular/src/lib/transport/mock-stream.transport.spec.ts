@@ -1,32 +1,32 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { MockStreamTransport } from './mock-stream.transport';
+import { MockAgentTransport } from './mock-stream.transport';
 
-describe('MockStreamTransport', () => {
+describe('MockAgentTransport', () => {
   it('returns empty batch when no script provided', () => {
-    const t = new MockStreamTransport();
+    const t = new MockAgentTransport();
     expect(t.nextBatch()).toEqual([]);
   });
 
   it('returns batches in order from script', () => {
     const batch1 = [{ type: 'values' as const, values: {} }];
     const batch2 = [{ type: 'error' as const, error: 'oops' }];
-    const t = new MockStreamTransport([batch1, batch2]);
+    const t = new MockAgentTransport([batch1, batch2]);
     expect(t.nextBatch()).toEqual(batch1);
     expect(t.nextBatch()).toEqual(batch2);
   });
 
   it('returns empty batch when script exhausted', () => {
-    const t = new MockStreamTransport([[{ type: 'values' as const, values: {} }]]);
+    const t = new MockAgentTransport([[{ type: 'values' as const, values: {} }]]);
     t.nextBatch();
     expect(t.nextBatch()).toEqual([]);
   });
 
   it('isStreaming returns false initially', () => {
-    expect(new MockStreamTransport().isStreaming()).toBe(false);
+    expect(new MockAgentTransport().isStreaming()).toBe(false);
   });
 
   it('emit() triggers events on the stream iterable', async () => {
-    const t = new MockStreamTransport();
+    const t = new MockAgentTransport();
     const events: unknown[] = [];
     const ac = new AbortController();
     const iter = t.stream('agent', null, {}, ac.signal);
@@ -40,7 +40,7 @@ describe('MockStreamTransport', () => {
   });
 
   it('emitError() causes stream to throw', async () => {
-    const t = new MockStreamTransport();
+    const t = new MockAgentTransport();
     const ac = new AbortController();
     const iter = t.stream('agent', null, {}, ac.signal);
     t.emitError(new Error('transport error'));

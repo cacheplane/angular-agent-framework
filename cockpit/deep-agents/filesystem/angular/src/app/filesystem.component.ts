@@ -1,6 +1,6 @@
 import { Component, computed } from '@angular/core';
 import { ChatComponent } from '@cacheplane/chat';
-import { streamResource } from '@cacheplane/stream-resource';
+import { agent } from '@cacheplane/angular';
 import { environment } from '../environments/environment';
 
 /**
@@ -65,7 +65,7 @@ export class FilesystemComponent {
    * The graph uses `read_file` and `write_file` tool calls that appear
    * in `stream.messages()`. We filter and display them in the sidebar.
    */
-  protected readonly stream = streamResource({
+  protected readonly stream = agent({
     apiUrl: environment.langGraphApiUrl,
     assistantId: environment.streamingAssistantId,
   });

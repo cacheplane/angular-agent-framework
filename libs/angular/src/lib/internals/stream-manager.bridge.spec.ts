@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { BehaviorSubject, Subject } from 'rxjs';
 import { createStreamManagerBridge } from './stream-manager.bridge';
-import { MockStreamTransport } from '../transport/mock-stream.transport';
-import { ResourceStatus, StreamResourceTransport, StreamSubjects } from '../stream-resource.types';
+import { MockAgentTransport } from '../transport/mock-stream.transport';
+import { ResourceStatus, AgentTransport, StreamSubjects } from '../agent.types';
 import { of } from 'rxjs';
 
 function makeSubjects(): StreamSubjects<Record<string, unknown>> {
@@ -24,7 +24,7 @@ function makeSubjects(): StreamSubjects<Record<string, unknown>> {
 
 describe('createStreamManagerBridge', () => {
   it('creates a bridge with submit and stop methods', () => {
-    const transport = new MockStreamTransport();
+    const transport = new MockAgentTransport();
     const subjects = makeSubjects();
     const destroy$ = new Subject<void>();
     const bridge = createStreamManagerBridge({
@@ -39,7 +39,7 @@ describe('createStreamManagerBridge', () => {
   });
 
   it('sets status to Loading when submit is called', async () => {
-    const transport = new MockStreamTransport();
+    const transport = new MockAgentTransport();
     const subjects = makeSubjects();
     const destroy$ = new Subject<void>();
     const bridge = createStreamManagerBridge({
@@ -54,7 +54,7 @@ describe('createStreamManagerBridge', () => {
   });
 
   it('sets status to Resolved when stream completes', async () => {
-    const transport = new MockStreamTransport([
+    const transport = new MockAgentTransport([
       [{ type: 'values', values: { count: 1 } }],
     ]);
     const subjects = makeSubjects();
@@ -76,7 +76,7 @@ describe('createStreamManagerBridge', () => {
   });
 
   it('updates values$ when values event received', async () => {
-    const transport = new MockStreamTransport();
+    const transport = new MockAgentTransport();
     const subjects = makeSubjects();
     const destroy$ = new Subject<void>();
     const bridge = createStreamManagerBridge({
@@ -94,7 +94,7 @@ describe('createStreamManagerBridge', () => {
   });
 
   it('sets status to Error on transport error', async () => {
-    const transport = new MockStreamTransport();
+    const transport = new MockAgentTransport();
     const subjects = makeSubjects();
     const destroy$ = new Subject<void>();
     const bridge = createStreamManagerBridge({
@@ -114,7 +114,7 @@ describe('createStreamManagerBridge', () => {
   it.each(['messages/partial', 'messages/complete'] as const)(
     'updates messages$ when SDK %s events are received',
     async (type) => {
-      const transport = new MockStreamTransport();
+      const transport = new MockAgentTransport();
       const subjects = makeSubjects();
       const destroy$ = new Subject<void>();
       const bridge = createStreamManagerBridge({
@@ -140,7 +140,7 @@ describe('createStreamManagerBridge', () => {
   );
 
   it('ignores late events from the previous stream after threadId changes', async () => {
-    const transport = new MockStreamTransport();
+    const transport = new MockAgentTransport();
     const subjects = makeSubjects();
     const destroy$ = new Subject<void>();
     const threadId$ = new BehaviorSubject<string | null>('thread-1');
@@ -169,7 +169,7 @@ describe('createStreamManagerBridge', () => {
 
   it('aborts the active stream when threadId changes', async () => {
     const abortSignals: AbortSignal[] = [];
-    const transport: StreamResourceTransport = {
+    const transport: AgentTransport = {
       async *stream(_assistantId, _threadId, _payload, signal) {
         abortSignals.push(signal);
         await new Promise<void>(resolve => {
@@ -201,7 +201,7 @@ describe('createStreamManagerBridge', () => {
   });
 
   it('stop() aborts the active stream', async () => {
-    const transport = new MockStreamTransport();
+    const transport = new MockAgentTransport();
     const subjects = makeSubjects();
     const destroy$ = new Subject<void>();
     const bridge = createStreamManagerBridge({

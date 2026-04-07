@@ -20,7 +20,7 @@
 
 <!-- Cover -->
 <div style="height:100vh;display:flex;flex-direction:column;justify-content:flex-end;padding:80px 80px 100px;background:linear-gradient(135deg,#fef0f3 0%,#f4f0ff 45%,#eaf3ff 70%,#e6f4ff 100%);page-break-after:always">
-  <div style="font-family:monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.12em;color:#004090;font-weight:700;margin-bottom:24px">StreamResource · Production Readiness Guide</div>
+  <div style="font-family:monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.12em;color:#004090;font-weight:700;margin-bottom:24px">Agent · Production Readiness Guide</div>
   <h1 style="font-family:'EB Garamond',serif;font-size:52px;font-weight:800;line-height:1.1;color:#1a1a2e;margin-bottom:20px">From Prototype<br>to Production</h1>
   <p style="font-family:'EB Garamond',serif;font-style:italic;font-size:20px;color:#555770;margin-bottom:40px">The Angular Agent Readiness Guide</p>
   <div style="font-size:13px;color:#888;font-family:monospace">cacheplane.io · 2026</div>
@@ -65,10 +65,10 @@
       <div class="chapter-body"><h3>Overview</h3>
 <p>When you move from prototype to production, the requirements change fundamentally. What worked in a demo — direct API calls, synchronous state, manual zone management — falls apart at scale.</p>
 <h3>The Signals-Native Approach</h3>
-<p>StreamResource provides a signals-native approach that eliminates the boilerplate:</p>
+<p>Agent provides a signals-native approach that eliminates the boilerplate:</p>
 <pre><code>@Component({...})
 export class ChatComponent {
-  chat = streamResource<{ messages: BaseMessage[] }>({
+  chat = agent<{ messages: BaseMessage[] }>({
     assistantId: 'chat_agent',
   });
 }
@@ -84,7 +84,7 @@ export class ChatComponent {
       <div class="chapter-body"><h3>Overview</h3>
 <p>Demos work with ephemeral state. Production agents need conversation history that survives page refreshes, tab switches, and navigation — wired to LangGraph's MemorySaver backend.</p>
 <h3>The threadId Pattern</h3>
-<pre><code>provideStreamResource({
+<pre><code>provideAgent({
   apiUrl: 'http://localhost:2024',
   threadId: signal(localStorage.getItem('threadId')),
   onThreadId: (id) => localStorage.setItem('threadId', id),
@@ -150,8 +150,8 @@ onApprove() {
       <h2 style="font-family:'EB Garamond',serif;font-size:36px;font-weight:800;color:#1a1a2e;margin-bottom:28px;line-height:1.15">Deterministic Testing</h2>
       <div class="chapter-body"><h3>Overview</h3>
 <p>Agent UIs are notoriously hard to test because they depend on live LLM responses. Flaky tests, slow CI, and inability to reproduce edge cases are the main reasons agent UIs ship with low confidence.</p>
-<h3>The MockStreamTransport Approach</h3>
-<pre><code>const ref = createMockStreamResourceRef<ChatState>();
+<h3>The MockAgentTransport Approach</h3>
+<pre><code>const ref = createMockAgentRef<ChatState>();
 ref.messages.set([{ role: 'assistant', content: 'Hello' }]);
 ref.isStreaming.set(false);
 expect(fixture.nativeElement.querySelector('.message').textContent)
@@ -160,7 +160,7 @@ expect(fixture.nativeElement.querySelector('.message').textContent)
 <h3>Production Checklist</h3>
 <ul><li>Do your agent component tests run offline and complete in under 100ms each?</li>
 <li>Are streaming, interrupts, tool calls, and generative UI all tested in isolation?</li>
-<li>Is MockStreamTransport used instead of mocking streamResource() itself?</li></ul></div>
+<li>Is MockAgentTransport used instead of mocking agent() itself?</li></ul></div>
     </section>
 
 </body>

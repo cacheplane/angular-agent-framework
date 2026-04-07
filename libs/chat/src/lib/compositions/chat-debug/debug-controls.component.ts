@@ -5,7 +5,7 @@ import {
   output,
   ChangeDetectionStrategy,
 } from '@angular/core';
-import type { StreamResourceRef } from '@cacheplane/stream-resource';
+import type { AgentRef } from '@cacheplane/angular';
 
 @Component({
   selector: 'chat-debug-controls',
@@ -41,7 +41,7 @@ import type { StreamResourceRef } from '@cacheplane/stream-resource';
   `,
 })
 export class DebugControlsComponent {
-  readonly ref = input.required<StreamResourceRef<any, any>>();
+  readonly ref = input.required<AgentRef<any, any>>();
   readonly checkpointCount = input<number>(0);
   readonly selectedIndex = input<number>(-1);
   readonly stepForward = output<void>();
