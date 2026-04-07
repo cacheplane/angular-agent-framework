@@ -2,7 +2,7 @@
 
 ## Problem
 
-The cockpit has 14 capability examples (8 LangGraph + 6 Deep Agents), each with an Angular frontend and a Python LangGraph backend. None are deployed to production. The Angular `environment.ts` files still point to `localhost`, the LangGraph Cloud deployments have never been triggered, and there is no hosting for the Angular apps. The cockpit at `https://cockpit.stream-resource.dev` deploys via Vercel but its Run mode iframes show nothing because the Angular apps aren't hosted anywhere.
+The cockpit has 14 capability examples (8 LangGraph + 6 Deep Agents), each with an Angular frontend and a Python LangGraph backend. None are deployed to production. The Angular `environment.ts` files still point to `localhost`, the LangGraph Cloud deployments have never been triggered, and there is no hosting for the Angular apps. The cockpit at `https://cockpit.cacheplane.ai` deploys via Vercel but its Run mode iframes show nothing because the Angular apps aren't hosted anywhere.
 
 ## Goal
 
@@ -11,13 +11,13 @@ Deploy the full stack to production in three phases:
 2. Build and deploy all 14 Angular apps to Vercel as static sites
 3. Wire the cockpit to the production Angular apps and verify end-to-end
 
-After completion, a user visiting `https://cockpit.stream-resource.dev`, navigating to any capability, and switching to Run mode sees a working chat interface that sends messages to a production LangGraph Cloud backend and receives AI responses.
+After completion, a user visiting `https://cockpit.cacheplane.ai`, navigating to any capability, and switching to Run mode sees a working chat interface that sends messages to a production LangGraph Cloud backend and receives AI responses.
 
 ## Architecture Overview
 
 ```
-cockpit.stream-resource.dev (Vercel / Next.js)
-  └─ iframe src: examples.stream-resource.dev/{product}/{topic}/
+cockpit.cacheplane.ai (Vercel / Next.js)
+  └─ iframe src: examples.cacheplane.ai/{product}/{topic}/
        └─ Angular static app (Vercel)
             └─ API proxy → https://{org}-{name}.us.langgraph.app
                  └─ LangGraph Cloud (LangSmith-hosted Python backend)
@@ -78,7 +78,7 @@ For each of the 14 backends:
 
 ### What needs to happen
 
-1. **Create a Vercel project** for `examples.stream-resource.dev`. This is a static hosting project — no framework, just serves static files.
+1. **Create a Vercel project** for `examples.cacheplane.ai`. This is a static hosting project — no framework, just serves static files.
 
 2. **Update Angular `environment.ts` production files** — replace `http://localhost:4XXX/api` with the LangGraph Cloud URL for each capability (from `deployment-urls.json`). The development files stay pointing to localhost for local dev.
 
@@ -100,7 +100,7 @@ For each of the 14 backends:
 
 6. **Add CI deploy job** — a new job in `ci.yml` (or a separate workflow) that builds, assembles, and deploys all Angular apps on push to main.
 
-7. **Set `NEXT_PUBLIC_COCKPIT_RUNTIME_BASE_URL`** — in the cockpit's Vercel project environment variables, set this to `https://examples.stream-resource.dev`. The cockpit's `content-bundle.ts` uses this to construct iframe URLs like `https://examples.stream-resource.dev/langgraph/streaming/`.
+7. **Set `NEXT_PUBLIC_COCKPIT_RUNTIME_BASE_URL`** — in the cockpit's Vercel project environment variables, set this to `https://examples.cacheplane.ai`. The cockpit's `content-bundle.ts` uses this to construct iframe URLs like `https://examples.cacheplane.ai/langgraph/streaming/`.
 
 ### Angular Proxy in Production
 
@@ -118,7 +118,7 @@ export const environment = {
 
 ### CORS
 
-LangGraph Cloud backends need to allow requests from `examples.stream-resource.dev`. LangGraph Cloud typically allows CORS from any origin for the streaming API, but this should be verified. If CORS is restricted, the LangGraph deployment config may need a `cors_allowed_origins` setting.
+LangGraph Cloud backends need to allow requests from `examples.cacheplane.ai`. LangGraph Cloud typically allows CORS from any origin for the streaming API, but this should be verified. If CORS is restricted, the LangGraph deployment config may need a `cors_allowed_origins` setting.
 
 ### Verification
 
@@ -131,7 +131,7 @@ For each of the 14 Angular apps:
 
 ### What exists
 
-- Cockpit deploys to `https://cockpit.stream-resource.dev` via Vercel
+- Cockpit deploys to `https://cockpit.cacheplane.ai` via Vercel
 - CI deploy job already exists and runs on push to main
 - Post-deploy smoke script already exists (`cockpit-deploy-smoke`)
 
@@ -140,7 +140,7 @@ For each of the 14 Angular apps:
 1. **Set `NEXT_PUBLIC_COCKPIT_RUNTIME_BASE_URL`** in Vercel (done in Phase 2)
 2. **Trigger cockpit redeploy** — the env var change requires a redeploy for Next.js to pick it up
 3. **Verify the cockpit renders** — navigate to cockpit, confirm sidebar loads with all capabilities (no "overview" entries)
-4. **Verify Run mode** — for each capability, switch to Run mode, confirm the iframe loads the Angular app from `examples.stream-resource.dev`
+4. **Verify Run mode** — for each capability, switch to Run mode, confirm the iframe loads the Angular app from `examples.cacheplane.ai`
 5. **End-to-end smoke** — for a representative subset (at minimum streaming, persistence, planning), send a message in Run mode and verify AI response
 
 ### CI Verification Pipeline
@@ -160,8 +160,8 @@ production-smoke:
     - run: npx playwright install --with-deps chromium
     - run: npx playwright test apps/cockpit/e2e/production-smoke.spec.ts
       env:
-        BASE_URL: https://cockpit.stream-resource.dev
-        EXAMPLES_URL: https://examples.stream-resource.dev
+        BASE_URL: https://cockpit.cacheplane.ai
+        EXAMPLES_URL: https://examples.cacheplane.ai
         OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 ```
 

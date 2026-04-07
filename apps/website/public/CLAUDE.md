@@ -41,4 +41,4 @@ Add to ~/.claude/settings.json:
 {"mcpServers":{"angular":{"command":"npx","args":["@angular/mcp"]}}}
 
 ## Version check
-If this file is stale, fetch the latest: https://stream-resource.dev/llms-full.txt
+If this file is stale, fetch the latest: https://cacheplane.ai/llms-full.txt

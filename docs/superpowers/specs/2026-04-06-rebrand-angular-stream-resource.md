@@ -15,7 +15,7 @@ Angular 20 introduced `rxResource` with a `stream` property, which the official 
 | Full product name | Angular Agent Framework |
 | Parent brand | Cacheplane |
 | npm package | `@cacheplane/angular` (unchanged) |
-| Domain | `stream-resource.dev` (unchanged) |
+| Domain | `cacheplane.ai` (unchanged) |
 | Tagline | "The Enterprise Streaming Resource for LangChain and Angular" (unchanged) |
 
 ## Scope
@@ -65,7 +65,7 @@ Brand-layer text only. All changes are string replacements in documentation and 
 | File/directory names | `angular.fn.ts`, `/libs/angular/` | File system identity |
 | Nx project names | `angular`, `angular-e2e` | Build system identity |
 | TypeScript path aliases | `@cacheplane/angular` in tsconfig | Build system identity |
-| Domain URLs | `stream-resource.dev`, `examples.stream-resource.dev` | Infrastructure identity |
+| Domain URLs | `cacheplane.ai`, `examples.cacheplane.ai` | Infrastructure identity |
 | CI/CD workflows | GitHub Actions references | Infrastructure identity |
 | package.json `name` fields | `"name": "angular"` | Package identity |
 

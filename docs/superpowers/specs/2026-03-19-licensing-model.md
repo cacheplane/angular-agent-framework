@@ -60,7 +60,7 @@ Angular Agent Framework uses a **source-available dual-license model**. It is **
 | Enterprise | Custom | Volume licensing, priority support, custom contract |
 
 **Contact:** hello@cacheplane.ai
-**Pricing page:** https://stream-resource.dev/pricing
+**Pricing page:** https://cacheplane.ai/pricing
 
 **Governing law:** State of Oregon, Deschutes County, United States.
 **Copyright:** Brian Love d/b/a cacheplane

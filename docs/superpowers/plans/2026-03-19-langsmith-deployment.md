@@ -165,7 +165,7 @@ Either push a commit or manually trigger a redeploy from the Vercel dashboard.
 
 ### Step 3: Verify live demo works
 
-Visit https://stream-resource.dev and confirm the `<stream-chat-demo>` web component connects and streams responses.
+Visit https://cacheplane.ai and confirm the `<stream-chat-demo>` web component connects and streams responses.
 
 ---
 

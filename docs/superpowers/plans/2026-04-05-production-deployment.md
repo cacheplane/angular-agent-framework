@@ -4,7 +4,7 @@
 
 **Goal:** Deploy all 14 capability backends to LangGraph Cloud, host all 14 Angular example apps on Vercel, wire the cockpit to production URLs, and verify end-to-end with smoke tests.
 
-**Architecture:** Three-phase deployment: (1) deploy Python backends to LangGraph Cloud via existing `deploy-langgraph.yml`, capture URLs into a registry file; (2) update Angular production environments with LangGraph Cloud URLs, build and deploy as static sites to a new Vercel project at `examples.stream-resource.dev`; (3) set `NEXT_PUBLIC_COCKPIT_RUNTIME_BASE_URL` in cockpit Vercel env, add a production smoke test to CI that verifies the full stack.
+**Architecture:** Three-phase deployment: (1) deploy Python backends to LangGraph Cloud via existing `deploy-langgraph.yml`, capture URLs into a registry file; (2) update Angular production environments with LangGraph Cloud URLs, build and deploy as static sites to a new Vercel project at `examples.cacheplane.ai`; (3) set `NEXT_PUBLIC_COCKPIT_RUNTIME_BASE_URL` in cockpit Vercel env, add a production smoke test to CI that verifies the full stack.
 
 **Tech Stack:** LangGraph Cloud (LangSmith), Vercel, Angular static builds, Playwright, GitHub Actions
 
@@ -667,16 +667,16 @@ import { expect, test } from '@playwright/test';
  * cockpit → iframe → Angular app → LangGraph Cloud backend → AI response.
  *
  * Requires environment variables:
- *   EXAMPLES_URL  - e.g., https://examples.stream-resource.dev
+ *   EXAMPLES_URL  - e.g., https://examples.cacheplane.ai
  *   OPENAI_API_KEY - for send/receive tests (optional, skips if not set)
  *
  * Run against production:
- *   BASE_URL=https://cockpit.stream-resource.dev \
- *   EXAMPLES_URL=https://examples.stream-resource.dev \
+ *   BASE_URL=https://cockpit.cacheplane.ai \
+ *   EXAMPLES_URL=https://examples.cacheplane.ai \
  *   npx playwright test apps/cockpit/e2e/production-smoke.spec.ts
  */
 
-const EXAMPLES_URL = process.env['EXAMPLES_URL'] ?? 'https://examples.stream-resource.dev';
+const EXAMPLES_URL = process.env['EXAMPLES_URL'] ?? 'https://examples.cacheplane.ai';
 
 const CAPABILITIES = [
   'langgraph/streaming',
@@ -772,8 +772,8 @@ Add a new job after the `deploy` job in `.github/workflows/ci.yml`:
       - name: Run production smoke tests
         run: npx playwright test apps/cockpit/e2e/production-smoke.spec.ts --reporter=list
         env:
-          BASE_URL: https://cockpit.stream-resource.dev
-          EXAMPLES_URL: https://examples.stream-resource.dev
+          BASE_URL: https://cockpit.cacheplane.ai
+          EXAMPLES_URL: https://examples.cacheplane.ai
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 ```
 
@@ -810,20 +810,20 @@ In GitHub repo Settings → Secrets:
 - [ ] **Step 3: Set cockpit env var in Vercel**
 
 In the cockpit Vercel project settings → Environment Variables:
-1. Add `NEXT_PUBLIC_COCKPIT_RUNTIME_BASE_URL` = `https://examples.stream-resource.dev`
+1. Add `NEXT_PUBLIC_COCKPIT_RUNTIME_BASE_URL` = `https://examples.cacheplane.ai`
 2. Apply to Production environment
 
 - [ ] **Step 4: Set examples domain in Vercel**
 
 In the examples Vercel project settings → Domains:
-1. Add `examples.stream-resource.dev`
+1. Add `examples.cacheplane.ai`
 2. Configure DNS (CNAME to `cname.vercel-dns.com`)
 
 - [ ] **Step 5: Trigger initial deploy**
 
 Push all committed changes to `main`. The CI pipeline will:
 1. Build and deploy the cockpit (picks up `NEXT_PUBLIC_COCKPIT_RUNTIME_BASE_URL`)
-2. Build and deploy the Angular examples to `examples.stream-resource.dev`
+2. Build and deploy the Angular examples to `examples.cacheplane.ai`
 3. Run the production smoke test
 
 - [ ] **Step 6: Verify end-to-end**
@@ -834,15 +834,15 @@ npx tsx scripts/verify-langgraph-deployments.ts --smoke
 
 # Verify examples load
 for cap in langgraph/streaming langgraph/persistence deep-agents/planning; do
-  curl -s -o /dev/null -w "%{http_code} $cap\n" "https://examples.stream-resource.dev/$cap/"
+  curl -s -o /dev/null -w "%{http_code} $cap\n" "https://examples.cacheplane.ai/$cap/"
 done
 
 # Verify cockpit
-curl -s -o /dev/null -w "%{http_code} cockpit\n" "https://cockpit.stream-resource.dev"
+curl -s -o /dev/null -w "%{http_code} cockpit\n" "https://cockpit.cacheplane.ai"
 
 # Run full production smoke
-BASE_URL=https://cockpit.stream-resource.dev \
-EXAMPLES_URL=https://examples.stream-resource.dev \
+BASE_URL=https://cockpit.cacheplane.ai \
+EXAMPLES_URL=https://examples.cacheplane.ai \
 npx playwright test apps/cockpit/e2e/production-smoke.spec.ts --reporter=list
 ```
 

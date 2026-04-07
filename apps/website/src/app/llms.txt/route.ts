@@ -31,7 +31,7 @@ function buildLlmsTxt(): string {
     'npx @cacheplane/angular-mcp',
     '',
     '## Full reference',
-    'https://stream-resource.dev/llms-full.txt',
+    'https://cacheplane.ai/llms-full.txt',
   ].join('\n');
 }
 

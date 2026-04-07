@@ -1,7 +1,9 @@
 import { Component, computed } from '@angular/core';
-import { ChatComponent } from '@cacheplane/chat';
+import { ChatComponent, views } from '@cacheplane/chat';
+import { signalStateStore } from '@cacheplane/render';
 import { agent } from '@cacheplane/angular';
 import { environment } from '../environments/environment';
+import { StepPipelineComponent } from './views/step-pipeline.component';
 
 /**
  * Pipeline step definition for the vertical progress indicator.
@@ -37,7 +39,7 @@ const STEP_LABELS: Record<string, string> = {
   imports: [ChatComponent],
   template: `
     <div class="flex h-screen">
-      <chat [ref]="stream" class="flex-1 min-w-0" />
+      <chat [ref]="stream" [views]="ui" [store]="uiStore" class="flex-1 min-w-0" />
       <aside class="w-64 shrink-0 border-l overflow-y-auto p-4"
              style="border-color: var(--chat-border, #333); background: var(--chat-bg, #171717); color: var(--chat-text, #e0e0e0);">
         <h3 class="text-xs font-semibold uppercase tracking-wide mb-6"
@@ -92,6 +94,12 @@ const STEP_LABELS: Record<string, string> = {
   `,
 })
 export class DurableExecutionComponent {
+  readonly ui = views({
+    'step-pipeline': StepPipelineComponent,
+  });
+
+  readonly uiStore = signalStateStore({});
+
   protected readonly stream = agent({
     apiUrl: environment.langGraphApiUrl,
     assistantId: environment.streamingAssistantId,

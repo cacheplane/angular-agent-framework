@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import { InjectionToken, makeEnvironmentProviders } from '@angular/core';
-import type { AngularRegistry } from '@cacheplane/render';
+import type { ViewRegistry } from '@cacheplane/render';
 
 export interface ChatConfig {
-  /** Default render registry for generative UI components. */
-  renderRegistry?: AngularRegistry;
+  /** View registry for generative UI rendering. */
+  views?: ViewRegistry;
   /** Override the default AI avatar label (default: "A"). */
   avatarLabel?: string;
   /** Override the default assistant display name (default: "Assistant"). */
