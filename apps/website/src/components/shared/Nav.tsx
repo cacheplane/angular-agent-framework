@@ -95,10 +95,10 @@ export function Nav() {
 
         {/* Mobile hamburger */}
         <button
-          className="md:hidden"
+          className="flex md:hidden items-center justify-center"
           onClick={() => setOpen(!open)}
           aria-label={open ? 'Close menu' : 'Open menu'}
-          style={{ color: tokens.colors.textPrimary, minWidth: 44, minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          style={{ color: tokens.colors.textPrimary, minWidth: 44, minHeight: 44 }}>
           {open ? <CloseIcon /> : <MenuIcon />}
         </button>
       </div>
