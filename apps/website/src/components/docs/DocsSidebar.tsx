@@ -51,7 +51,7 @@ function SectionGroup({ section, activeSection, activeSlug }: { section: DocsSec
   );
 }
 
-export function DocsSidebarNew({ activeSection, activeSlug }: Props) {
+export function DocsSidebar({ activeSection, activeSlug }: Props) {
   return (
     <aside
       className="w-64 shrink-0 py-6 overflow-y-auto hidden md:block"

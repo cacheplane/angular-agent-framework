@@ -32,14 +32,14 @@ const rehypeOptions = {
   keepBackground: true,
 };
 
-interface NewProps {
+interface MdxRendererProps {
   source: string;
   section: string;
   slug: string;
   title: string;
 }
 
-export function MdxRendererNew({ source, section, slug, title }: NewProps) {
+export function MdxRenderer({ source, section, slug, title }: MdxRendererProps) {
   return (
     <div className="flex-1 py-8 px-4 sm:px-6 md:px-12 md:max-w-3xl overflow-x-hidden">
       <DocsBreadcrumb section={section} title={title} />

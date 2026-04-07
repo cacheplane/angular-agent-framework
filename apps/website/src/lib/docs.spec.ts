@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getAllDocSlugs, getDocBySlug } from './docs-new';
+import { getAllDocSlugs, getDocBySlug } from './docs';
 import { allDocsPages } from './docs-config';
 
 describe('website docs bindings', () => {
