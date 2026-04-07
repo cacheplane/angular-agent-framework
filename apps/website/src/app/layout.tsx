@@ -23,7 +23,7 @@ const mono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   title: 'Angular Agent Framework — Signal-Native Streaming for Angular + LangGraph',
-  description: 'The Enterprise Streaming Resource for LangChain and Angular. Signal-native streaming, thread persistence, and production patterns for Angular 20+.',
+  description: 'The enterprise Angular agent framework for LangChain. Signal-native streaming, thread persistence, and production patterns for Angular 20+.',
   openGraph: {
     title: 'Angular Agent Framework',
     description: 'Signal-native streaming for LangGraph — production patterns your Angular team can own.',

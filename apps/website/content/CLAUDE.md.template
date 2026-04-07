@@ -1,23 +1,23 @@
-# stream-resource v@VERSION@
+# Angular Agent Framework v@VERSION@
 
-Angular streaming library for LangChain/LangGraph. Provides `streamResource()` — Signal-native streaming for Angular agents, built for LangGraph.
+Angular agent framework for LangChain/LangGraph. Provides `agent()` — Signal-native streaming for Angular agents, built for LangGraph.
 
 ## Install
-npm install stream-resource
+npm install @cacheplane/angular
 
 ## Key requirement
-`streamResource()` MUST be called within an Angular injection context (component constructor or field initializer). Calling it in ngOnInit or any async context throws "NG0203: inject() must be called from an injection context".
+`agent()` MUST be called within an Angular injection context (component constructor or field initializer). Calling it in ngOnInit or any async context throws "NG0203: inject() must be called from an injection context".
 
 ## Basic usage
 ```typescript
 // app.config.ts
-import { provideStreamResource } from 'stream-resource';
+import { provideAgent } from '@cacheplane/angular';
 export const appConfig: ApplicationConfig = {
-  providers: [provideStreamResource({ apiUrl: 'http://localhost:2024' })]
+  providers: [provideAgent({ apiUrl: 'http://localhost:2024' })]
 };
 
 // chat.component.ts
-import { streamResource } from 'stream-resource';
+import { agent } from '@cacheplane/angular';
 import type { BaseMessage } from '@langchain/core/messages';
 
 @Component({ template: `
@@ -25,20 +25,20 @@ import type { BaseMessage } from '@langchain/core/messages';
   <button (click)="send()">Send</button>
 `})
 export class ChatComponent {
-  chat = streamResource<{ messages: BaseMessage[] }>({ assistantId: 'chat_agent' });
+  chat = agent<{ messages: BaseMessage[] }>({ assistantId: 'chat_agent' });
   send() { this.chat.submit({ messages: [{ role: 'human', content: 'Hello' }] }); }
 }
 ```
 
 ## Key patterns
 - Thread persistence: `threadId: signal(localStorage.getItem('t'))` + `onThreadId: (id) => localStorage.setItem('t', id)`
-- Global config: `provideStreamResource({ apiUrl })` in app.config.ts
-- Per-call override: pass `apiUrl` directly to `streamResource()`
-- Testing: use `MockStreamTransport` — never mock `streamResource()` itself
+- Global config: `provideAgent({ apiUrl })` in app.config.ts
+- Per-call override: pass `apiUrl` directly to `agent()`
+- Testing: use `MockAgentTransport` — never mock `agent()` itself
 
 ## MCP server (for tool access)
 Add to ~/.claude/settings.json:
-{"mcpServers":{"stream-resource":{"command":"npx","args":["@stream-resource/mcp"]}}}
+{"mcpServers":{"angular-agent":{"command":"npx","args":["@cacheplane/angular-mcp"]}}}
 
 ## Version check
 If this file is stale, fetch the latest: https://stream-resource.dev/llms-full.txt

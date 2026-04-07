@@ -86,7 +86,7 @@ export async function HeroTwoCol() {
           margin: 0,
           marginBottom: 20,
         }}>
-          The Enterprise Streaming Resource for LangChain and{' '}
+          The Enterprise Agent Framework for LangChain and{' '}
           <span style={{ color: tokens.colors.angularRed }}>Angular</span>
         </h1>
 
