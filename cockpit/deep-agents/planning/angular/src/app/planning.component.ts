@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import { Component, computed } from '@angular/core';
 import { ChatComponent } from '@cacheplane/chat';
 import { agent } from '@cacheplane/angular';
@@ -24,21 +23,11 @@ interface PlanStep {
  * - `planSteps` is derived from `stream.value()` for reactive sidebar rendering
  * - Step status icons update in real time as the agent progresses
  */
-=======
-import { Component } from '@angular/core';
-import { ChatComponent, views } from '@cacheplane/chat';
-import { signalStateStore } from '@cacheplane/render';
-import { agent } from '@cacheplane/angular';
-import { environment } from '../environments/environment';
-import { PlanChecklistComponent } from './views/plan-checklist.component';
-import { CheckboxRowComponent } from './views/checkbox-row.component';
 
->>>>>>> origin/main
 @Component({
   selector: 'app-planning',
   standalone: true,
   imports: [ChatComponent],
-<<<<<<< HEAD
   template: `
     <div class="flex h-screen">
       <chat [ref]="stream" class="flex-1 min-w-0" />
@@ -98,20 +87,4 @@ export class PlanningComponent {
         : 'pending') as PlanStep['status'],
     }));
   });
-=======
-  template: `<chat [ref]="stream" [views]="ui" [store]="uiStore" class="block h-screen" />`,
-})
-export class PlanningComponent {
-  protected readonly stream = agent({
-    apiUrl: environment.langGraphApiUrl,
-    assistantId: environment.planningAssistantId,
-  });
-
-  readonly ui = views({
-    'plan-checklist': PlanChecklistComponent,
-    'checkbox-row': CheckboxRowComponent,
-  });
-
-  readonly uiStore = signalStateStore({});
->>>>>>> origin/main
 }
