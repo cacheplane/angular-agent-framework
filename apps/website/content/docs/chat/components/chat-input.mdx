@@ -1,0 +1,159 @@
+# ChatInputComponent
+
+`ChatInputComponent` is the text input primitive for sending messages to a LangGraph agent. It provides a textarea with auto-sizing, a send button, keyboard handling, and automatic disabling while the agent is loading.
+
+**Selector:** `chat-input`
+
+**Import:**
+
+```typescript
+import { ChatInputComponent, submitMessage } from '@cacheplane/chat';
+```
+
+## Basic Usage
+
+```html
+<chat-input
+  [ref]="chatRef"
+  [submitOnEnter]="true"
+  placeholder="Type a message..."
+  (submitted)="onMessageSent($event)"
+/>
+```
+
+## API
+
+### Inputs
+
+| Input | Type | Default | Description |
+|-------|------|---------|-------------|
+| `ref` | `AgentRef<any, any>` | **Required** | The agent ref to submit messages to |
+| `submitOnEnter` | `boolean` | `true` | When `true`, pressing Enter submits the message. Shift+Enter inserts a newline. When `false`, Enter always inserts a newline. |
+| `placeholder` | `string` | `''` | Placeholder text shown when the input is empty |
+
+### Outputs
+
+| Output | Type | Description |
+|--------|------|-------------|
+| `submitted` | `string` | Emits the trimmed message text after successful submission |
+
+## Behavior
+
+### Submit Flow
+
+When the user submits (via Enter key or clicking the send button):
+
+1. The message text is trimmed
+2. If empty after trimming, nothing happens
+3. `ref.submit()` is called with `{ messages: [{ role: 'human', content: trimmed }] }`
+4. The `submitted` output emits the trimmed text
+5. The input is cleared
+6. Focus is returned to the textarea
+
+### Disabled State
+
+The input is automatically disabled when `ref.isLoading()` returns `true`. This prevents sending messages while the agent is processing. Both the textarea and the send button reflect the disabled state.
+
+### Auto-Sizing
+
+The textarea uses `field-sizing: content` CSS, which allows it to grow with its content up to a maximum height of `120px`. After that, the textarea scrolls internally.
+
+### Keyboard Handling
+
+| Key | `submitOnEnter: true` | `submitOnEnter: false` |
+|-----|----------------------|----------------------|
+| Enter | Submits the message | Inserts a newline |
+| Shift+Enter | Inserts a newline | Inserts a newline |
+
+## submitMessage() Helper
+
+The `submitMessage()` function is exported as a standalone utility for programmatic message submission:
+
+```typescript
+import { submitMessage } from '@cacheplane/chat';
+
+function sendGreeting(ref: AgentRef<any, any>) {
+  const result = submitMessage(ref, 'Hello!');
+  // result is 'Hello!' or null if the text was empty
+}
+```
+
+**Signature:**
+
+```typescript
+function submitMessage(
+  ref: AgentRef<any, any>,
+  text: string
+): string | null
+```
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `ref` | `AgentRef<any, any>` | The agent ref to submit to |
+| `text` | `string` | The message text to send |
+
+**Returns:** The trimmed message string if submitted, or `null` if the trimmed text was empty.
+
+The function calls `ref.submit({ messages: [{ role: 'human', content: trimmed }] })` under the hood.
+
+## Styling
+
+The component renders a `<form>` containing a `<textarea>` and a `<button>`. It uses the following CSS custom properties from the chat theme:
+
+| Variable | Applied To |
+|----------|-----------|
+| `--chat-input-bg` | Form background |
+| `--chat-input-border` | Form border (unfocused) |
+| `--chat-input-focus-border` | Form border (focused) |
+| `--chat-radius-input` | Form border radius |
+| `--chat-text` | Textarea text color |
+| `--chat-font-family` | Textarea font |
+| `--chat-send-bg` | Send button background |
+| `--chat-send-text` | Send button icon color |
+
+## ARIA
+
+The component includes accessibility attributes:
+
+- The form has `role="search"` and `aria-label="Message input"`
+- The textarea has `aria-label="Type a message"`
+- The send button has `aria-label="Send message"`
+
+## Full Example
+
+```typescript
+import { Component, signal, ChangeDetectionStrategy } from '@angular/core';
+import { agent } from '@cacheplane/angular';
+import type { BaseMessage } from '@langchain/core/messages';
+import { ChatInputComponent } from '@cacheplane/chat';
+
+@Component({
+  selector: 'app-input-demo',
+  standalone: true,
+  imports: [ChatInputComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <div class="border rounded-lg p-4">
+      <chat-input
+        [ref]="chatRef"
+        [submitOnEnter]="true"
+        placeholder="Ask a question..."
+        (submitted)="lastMessage.set($event)"
+      />
+      @if (lastMessage()) {
+        <p class="text-sm mt-2 text-gray-500">
+          Last sent: {{ lastMessage() }}
+        </p>
+      }
+    </div>
+  `,
+})
+export class InputDemoComponent {
+  chatRef = agent<{ messages: BaseMessage[] }>({
+    assistantId: 'chat_agent',
+    threadId: signal(null),
+  });
+
+  lastMessage = signal('');
+}
+```

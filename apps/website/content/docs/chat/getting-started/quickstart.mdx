@@ -1,0 +1,201 @@
+# Quick Start
+
+Build a streaming chat UI with `@cacheplane/chat` in 5 minutes.
+
+<Callout type="info" title="Prerequisites">
+Angular 20+ project with `@cacheplane/agent` already configured. If you need setup help, see the [Agent Installation](/docs/agent/getting-started/installation) guide first.
+</Callout>
+
+<Steps>
+<Step title="Install the package">
+
+```bash
+npm install @cacheplane/chat
+```
+
+</Step>
+<Step title="Configure providers">
+
+Add both `provideAgent()` and `provideChat()` to your application config.
+
+```typescript
+// app.config.ts
+import { ApplicationConfig } from '@angular/core';
+import { provideAgent } from '@cacheplane/angular';
+import { provideChat } from '@cacheplane/chat';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideAgent({
+      apiUrl: 'http://localhost:2024',
+    }),
+    provideChat({
+      assistantName: 'My Assistant',
+      avatarLabel: 'AI',
+    }),
+  ],
+};
+```
+
+</Step>
+<Step title="Create a chat page">
+
+Use `agent()` to create a streaming connection and pass the returned `AgentRef` to `ChatComponent`.
+
+```typescript
+// chat-page.component.ts
+import { Component, ChangeDetectionStrategy, signal } from '@angular/core';
+import { agent } from '@cacheplane/angular';
+import type { BaseMessage } from '@langchain/core/messages';
+import { ChatComponent } from '@cacheplane/chat';
+
+@Component({
+  selector: 'app-chat-page',
+  standalone: true,
+  imports: [ChatComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <div style="height: 100vh;">
+      <chat [ref]="chatRef" />
+    </div>
+  `,
+})
+export class ChatPageComponent {
+  chatRef = agent<{ messages: BaseMessage[] }>({
+    assistantId: 'chat_agent',
+    threadId: signal(null),
+    onThreadId: (id) => console.log('Thread created:', id),
+  });
+}
+```
+
+</Step>
+<Step title="Run it">
+
+Start your LangGraph agent and Angular dev server:
+
+<Tabs>
+<Tab label="LangGraph">
+
+```bash
+cd your-agent-directory
+langgraph dev
+```
+
+</Tab>
+<Tab label="Angular">
+
+```bash
+ng serve
+```
+
+</Tab>
+</Tabs>
+
+Navigate to your chat page. You should see an empty state with the message "Send a message to start a conversation." Type a message and press Enter -- the agent will stream its response in real time.
+
+</Step>
+</Steps>
+
+## What You Get Out of the Box
+
+The `ChatComponent` composition includes:
+
+- **Message rendering** with markdown support for AI messages (paragraphs, code blocks, lists, tables)
+- **Right-aligned user bubbles** and left-aligned AI messages with an avatar
+- **Auto-scroll** that follows new messages and streaming content
+- **Typing indicator** (animated dots) while the agent is processing
+- **Error display** when the agent encounters an error
+- **Interrupt banner** when the agent pauses for human input
+- **Thread sidebar** (optional) for multi-conversation support
+- **Keyboard handling** with Enter to send and Shift+Enter for newlines
+
+## Going Further: Custom Message Templates
+
+If you need more control over how messages render, drop down to the primitives layer. Here is the same chat with custom message templates:
+
+```typescript
+import { Component, ChangeDetectionStrategy, signal, inject } from '@angular/core';
+import { DomSanitizer } from '@angular/platform-browser';
+import { agent } from '@cacheplane/angular';
+import type { BaseMessage } from '@langchain/core/messages';
+import {
+  ChatMessagesComponent,
+  MessageTemplateDirective,
+  ChatInputComponent,
+  ChatTypingIndicatorComponent,
+  renderMarkdown,
+} from '@cacheplane/chat';
+
+@Component({
+  selector: 'app-custom-chat',
+  standalone: true,
+  imports: [
+    ChatMessagesComponent,
+    MessageTemplateDirective,
+    ChatInputComponent,
+    ChatTypingIndicatorComponent,
+  ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <chat-messages [ref]="chatRef">
+      <ng-template chatMessageTemplate="human" let-message>
+        <div class="my-human-bubble">
+          {{ message.content }}
+        </div>
+      </ng-template>
+
+      <ng-template chatMessageTemplate="ai" let-message>
+        <div class="my-ai-message" [innerHTML]="renderMd(message.content)"></div>
+      </ng-template>
+    </chat-messages>
+
+    <chat-typing-indicator [ref]="chatRef" />
+
+    <chat-input
+      [ref]="chatRef"
+      [submitOnEnter]="true"
+      placeholder="Ask me anything..."
+    />
+  `,
+})
+export class CustomChatComponent {
+  private sanitizer = inject(DomSanitizer);
+
+  chatRef = agent<{ messages: BaseMessage[] }>({
+    assistantId: 'chat_agent',
+    threadId: signal(null),
+  });
+
+  renderMd(content: string) {
+    if (typeof content !== 'string') return '';
+    return renderMarkdown(content, this.sanitizer);
+  }
+}
+```
+
+## What's Next
+
+<CardGroup cols={3}>
+  <Card
+    title="Theming"
+    icon="palette"
+    href="/docs/chat/guides/theming"
+  >
+    Customize the look and feel with CSS variables.
+  </Card>
+  <Card
+    title="Configuration"
+    icon="settings"
+    href="/docs/chat/guides/configuration"
+  >
+    Explore all provideChat() options.
+  </Card>
+  <Card
+    title="Components"
+    icon="layout"
+    href="/docs/chat/components/chat"
+  >
+    Deep dive into the ChatComponent API.
+  </Card>
+</CardGroup>

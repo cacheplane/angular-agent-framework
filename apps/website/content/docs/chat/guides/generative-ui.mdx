@@ -1,0 +1,183 @@
+# Generative UI
+
+Generative UI lets your LangGraph agent return structured JSON specs that render as Angular components in the chat. This bridges `@cacheplane/chat` and `@cacheplane/render`, enabling dynamic, interactive UI elements inline with chat messages.
+
+## How It Works
+
+The flow is:
+
+1. Your LangGraph agent returns a JSON UI spec (a `Spec` object from `@json-render/core`) as part of its response
+2. Your Angular code passes the spec to `ChatGenerativeUiComponent`
+3. The component delegates to `RenderSpecComponent` from `@cacheplane/render`
+4. The render registry maps spec types to Angular components, rendering them dynamically
+
+```
+Agent Response (JSON Spec)
+  --> ChatGenerativeUiComponent
+    --> RenderSpecComponent (@cacheplane/render)
+      --> Your Angular Component
+```
+
+## ChatGenerativeUiComponent
+
+The `chat-generative-ui` primitive renders a single JSON spec using the `@cacheplane/render` pipeline.
+
+**Selector:** `chat-generative-ui`
+
+| Input | Type | Default | Description |
+|-------|------|---------|-------------|
+| `spec` | `Spec \| null` | `null` | The JSON render spec to display |
+| `registry` | `AngularRegistry \| undefined` | `undefined` | Component registry mapping spec types to Angular components |
+| `store` | `StateStore \| undefined` | `undefined` | Optional state store for interactive specs |
+| `loading` | `boolean` | `false` | Whether the spec is still streaming |
+
+### Basic Usage
+
+```html
+<chat-generative-ui
+  [spec]="mySpec"
+  [registry]="registry"
+  [loading]="isStreaming()"
+/>
+```
+
+## Setting Up the Render Registry
+
+The render registry tells `@cacheplane/render` which Angular component to instantiate for each spec type. Register it globally via `provideChat()`:
+
+```typescript
+// app.config.ts
+import { provideChat } from '@cacheplane/chat';
+import { createAngularRegistry } from '@cacheplane/render';
+import { WeatherCardComponent } from './components/weather-card.component';
+import { ChartComponent } from './components/chart.component';
+
+const registry = createAngularRegistry({
+  weather_card: WeatherCardComponent,
+  chart: ChartComponent,
+});
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideChat({
+      renderRegistry: registry,
+    }),
+  ],
+};
+```
+
+## Rendering Generative UI in Messages
+
+To display generative UI inline with chat messages, use the `ChatGenerativeUiComponent` inside a custom AI message template. The exact approach depends on how your agent structures its responses.
+
+### Example: Tool Call with UI Spec
+
+If your agent returns UI specs as tool call results:
+
+```typescript
+import { Component, inject } from '@angular/core';
+import {
+  ChatMessagesComponent,
+  MessageTemplateDirective,
+  ChatGenerativeUiComponent,
+  CHAT_CONFIG,
+} from '@cacheplane/chat';
+import type { ChatConfig } from '@cacheplane/chat';
+
+@Component({
+  selector: 'app-gen-ui-chat',
+  standalone: true,
+  imports: [
+    ChatMessagesComponent,
+    MessageTemplateDirective,
+    ChatGenerativeUiComponent,
+  ],
+  template: `
+    <chat-messages [ref]="chatRef">
+      <ng-template chatMessageTemplate="tool" let-message>
+        @if (isSpec(message.content)) {
+          <chat-generative-ui
+            [spec]="parseSpec(message.content)"
+            [registry]="config.renderRegistry"
+          />
+        } @else {
+          <pre>{{ message.content }}</pre>
+        }
+      </ng-template>
+    </chat-messages>
+  `,
+})
+export class GenUiChatComponent {
+  config = inject(CHAT_CONFIG);
+  // chatRef = agent(...)
+
+  isSpec(content: unknown): boolean {
+    return typeof content === 'object' && content !== null && 'type' in content;
+  }
+
+  parseSpec(content: unknown) {
+    return content as any;
+  }
+}
+```
+
+### Example: Custom Widget Component
+
+Create an Angular component that the registry maps to:
+
+```typescript
+// weather-card.component.ts
+import { Component, input } from '@angular/core';
+
+@Component({
+  selector: 'app-weather-card',
+  standalone: true,
+  template: `
+    <div class="weather-card">
+      <h3>{{ props().city }}</h3>
+      <p>{{ props().temperature }}F -- {{ props().condition }}</p>
+    </div>
+  `,
+})
+export class WeatherCardComponent {
+  readonly props = input.required<{
+    city: string;
+    temperature: number;
+    condition: string;
+  }>();
+}
+```
+
+When the agent returns a spec like `{ "type": "weather_card", "props": { "city": "Seattle", "temperature": 62, "condition": "Cloudy" } }`, the render pipeline instantiates `WeatherCardComponent` with those props.
+
+## Loading State
+
+Pass `[loading]="true"` while the spec is still being streamed. The render component can use this to show skeleton states or progress indicators:
+
+```html
+<chat-generative-ui
+  [spec]="partialSpec"
+  [registry]="registry"
+  [loading]="chatRef.isLoading()"
+/>
+```
+
+## State Store
+
+For interactive generative UI components that need shared state (forms, selections, etc.), pass a `StateStore`:
+
+```typescript
+import { createStateStore } from '@json-render/core';
+
+const store = createStateStore({ selectedItem: null });
+```
+
+```html
+<chat-generative-ui
+  [spec]="spec"
+  [registry]="registry"
+  [store]="store"
+/>
+```
+
+The store is passed through to the rendered component, enabling two-way data flow between the generative UI and your application.

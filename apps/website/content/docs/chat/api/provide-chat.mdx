@@ -1,0 +1,179 @@
+# provideChat()
+
+`provideChat` is the provider factory that registers `@cacheplane/chat` configuration in Angular's dependency injection system. Call it once in your `ApplicationConfig` (or at the route level) to set global defaults used by chat composition components.
+
+```typescript
+import { provideChat } from '@cacheplane/chat';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideChat({
+      renderRegistry: myRegistry,
+      avatarLabel: 'AI',
+      assistantName: 'My Assistant',
+    }),
+  ],
+};
+```
+
+## Signature
+
+```typescript
+function provideChat(config: ChatConfig): EnvironmentProviders
+```
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `config` | `ChatConfig` | Configuration object with optional render registry, avatar label, and assistant name |
+
+**Returns:** `EnvironmentProviders` -- created via `makeEnvironmentProviders()`, compatible with `bootstrapApplication`, `ApplicationConfig`, and route-level `providers`.
+
+## What It Does
+
+`provideChat()` registers a single provider:
+
+```typescript
+{ provide: CHAT_CONFIG, useValue: config }
+```
+
+This makes the `ChatConfig` object available throughout the application via the `CHAT_CONFIG` injection token.
+
+## CHAT_CONFIG Injection Token
+
+```typescript
+import { CHAT_CONFIG } from '@cacheplane/chat';
+
+const CHAT_CONFIG: InjectionToken<ChatConfig>;
+```
+
+The token is an `InjectionToken<ChatConfig>` that can be injected in any component, directive, or service:
+
+```typescript
+import { inject } from '@angular/core';
+import { CHAT_CONFIG } from '@cacheplane/chat';
+
+@Component({ /* ... */ })
+export class MyComponent {
+  private chatConfig = inject(CHAT_CONFIG);
+}
+```
+
+<Callout type="warning" title="Required provider">
+Injecting `CHAT_CONFIG` without calling `provideChat()` will throw a `NullInjectorError`. Use `inject(CHAT_CONFIG, { optional: true })` if your component should work without global configuration.
+</Callout>
+
+## Configuration Options
+
+See the [ChatConfig API reference](/docs/chat/api/chat-config) for the full interface definition.
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `renderRegistry` | `AngularRegistry` | `undefined` | Component registry for generative UI |
+| `avatarLabel` | `string` | `"A"` | AI avatar badge text |
+| `assistantName` | `string` | `"Assistant"` | AI assistant display name |
+
+## Usage Patterns
+
+### Application-Wide Configuration
+
+```typescript
+// app.config.ts
+import { provideAgent } from '@cacheplane/angular';
+import { provideChat } from '@cacheplane/chat';
+import { createAngularRegistry } from '@cacheplane/render';
+import { WeatherCardComponent } from './components/weather-card.component';
+
+const registry = createAngularRegistry({
+  weather_card: WeatherCardComponent,
+});
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideAgent({ apiUrl: 'http://localhost:2024' }),
+    provideChat({
+      renderRegistry: registry,
+      avatarLabel: 'B',
+      assistantName: 'Bot',
+    }),
+  ],
+};
+```
+
+### Route-Level Configuration
+
+Provide different chat configurations for different parts of your application:
+
+```typescript
+// app.routes.ts
+export const routes: Routes = [
+  {
+    path: 'support',
+    loadComponent: () => import('./support/support-chat.component'),
+    providers: [
+      provideChat({
+        assistantName: 'Support Agent',
+        avatarLabel: 'S',
+      }),
+    ],
+  },
+  {
+    path: 'coding',
+    loadComponent: () => import('./coding/code-chat.component'),
+    providers: [
+      provideChat({
+        assistantName: 'Code Helper',
+        avatarLabel: 'C',
+        renderRegistry: codeWidgetRegistry,
+      }),
+    ],
+  },
+];
+```
+
+### Without provideChat()
+
+All chat components work without `provideChat()`. They use defaults:
+
+- Avatar label: `"A"`
+- Assistant name: `"Assistant"`
+- No render registry (generative UI disabled)
+
+```typescript
+// This works fine without provideChat()
+@Component({
+  imports: [ChatComponent],
+  template: `<chat [ref]="chatRef" />`,
+})
+export class SimpleChatComponent {
+  chatRef = agent<{ messages: BaseMessage[] }>({
+    assistantId: 'chat_agent',
+    threadId: signal(null),
+  });
+}
+```
+
+## What's Next
+
+<CardGroup cols={3}>
+  <Card
+    title="ChatConfig"
+    icon="settings"
+    href="/docs/chat/api/chat-config"
+  >
+    Full ChatConfig interface reference.
+  </Card>
+  <Card
+    title="Generative UI"
+    icon="layout"
+    href="/docs/chat/guides/generative-ui"
+  >
+    Set up renderRegistry for dynamic UI components.
+  </Card>
+  <Card
+    title="Configuration Guide"
+    icon="book"
+    href="/docs/chat/guides/configuration"
+  >
+    Configuration patterns and best practices.
+  </Card>
+</CardGroup>

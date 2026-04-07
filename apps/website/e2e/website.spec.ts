@@ -32,14 +32,20 @@ test('pricing page lead form validates required fields', async ({ page }) => {
 });
 
 test('docs page renders sidebar and content', async ({ page }) => {
-  await page.goto('/docs/getting-started/introduction');
+  await page.goto('/docs/agent/getting-started/introduction');
   await expect(page.locator('aside').first()).toBeVisible();
   await expect(page.locator('article')).toBeVisible();
 });
 
-test.skip('api reference renders in docs', async ({ page }) => {
-  // Skipped: /docs/api/agent page not yet available after rebrand (PR #39)
-  await page.goto('/docs/api/agent');
+test('docs landing page shows library cards', async ({ page }) => {
+  await page.goto('/docs');
+  await expect(page.getByText('Agent').first()).toBeVisible();
+  await expect(page.getByText('Render').first()).toBeVisible();
+  await expect(page.getByText('Chat').first()).toBeVisible();
+});
+
+test('api reference renders in docs', async ({ page }) => {
+  await page.goto('/docs/agent/api/agent');
   await expect(page.locator('article').first()).toBeVisible();
 });
 

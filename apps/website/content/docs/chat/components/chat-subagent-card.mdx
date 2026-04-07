@@ -1,0 +1,136 @@
+# ChatSubagentCardComponent
+
+`ChatSubagentCardComponent` is a composition that renders an expandable card for a subagent stream. It displays the subagent's tool call ID, current status (with a color-coded badge), and expands to show the message count and latest message content.
+
+**Selector:** `chat-subagent-card`
+
+**Import:**
+
+```typescript
+import { ChatSubagentCardComponent } from '@cacheplane/chat';
+```
+
+## Basic Usage
+
+```html
+<chat-subagent-card [subagent]="subagentRef" />
+```
+
+## API
+
+### Inputs
+
+| Input | Type | Default | Description |
+|-------|------|---------|-------------|
+| `subagent` | `SubagentStreamRef` | **Required** | The subagent stream reference to display |
+
+## SubagentStreamRef
+
+The `SubagentStreamRef` type comes from `@cacheplane/angular`. It provides reactive state for a subagent:
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `toolCallId` | `string` | The ID linking this subagent to its parent tool call |
+| `status()` | `Signal<'pending' \| 'running' \| 'complete' \| 'error'>` | Current execution status |
+| `messages()` | `Signal<BaseMessage[]>` | Messages produced by the subagent |
+
+## Card Behavior
+
+### Collapsed State (Default)
+
+The card header shows:
+- An agent icon on the left
+- "Subagent" label with the `toolCallId` in monospace
+- A color-coded status badge
+- A chevron toggle on the right
+
+### Expanded State
+
+Clicking the header toggles expansion. The expanded area shows:
+- Message count (e.g., "3 message(s)")
+- The content of the latest message (either as plain text or serialized JSON)
+
+### Status Badge Colors
+
+The status badge uses different chat theme variables based on the current status:
+
+| Status | Background | Text Color |
+|--------|-----------|------------|
+| `pending` | `--chat-bg-alt` | `--chat-text-muted` |
+| `running` | `--chat-warning-bg` | `--chat-warning-text` |
+| `complete` | (none) | `--chat-success` |
+| `error` | `--chat-error-bg` | `--chat-error-text` |
+
+## Using with ChatSubagentsComponent
+
+The `ChatSubagentsComponent` primitive iterates over active subagent streams from an `AgentRef`. Combine it with `ChatSubagentCardComponent`:
+
+```html
+<chat-subagents [ref]="chatRef">
+  <ng-template let-subagent>
+    <chat-subagent-card [subagent]="subagent" />
+  </ng-template>
+</chat-subagents>
+```
+
+## Full Example
+
+```typescript
+import { Component, signal, ChangeDetectionStrategy } from '@angular/core';
+import { agent } from '@cacheplane/angular';
+import type { BaseMessage } from '@langchain/core/messages';
+import {
+  ChatComponent,
+  ChatSubagentsComponent,
+  ChatSubagentCardComponent,
+} from '@cacheplane/chat';
+
+@Component({
+  selector: 'app-subagent-demo',
+  standalone: true,
+  imports: [ChatComponent, ChatSubagentsComponent, ChatSubagentCardComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <div style="height: 100vh; display: flex; flex-direction: column;">
+      <div style="flex: 1;">
+        <chat [ref]="chatRef" />
+      </div>
+
+      <div class="p-4">
+        <h3 class="text-sm font-semibold mb-2">Active Subagents</h3>
+        <div class="space-y-2">
+          <chat-subagents [ref]="chatRef">
+            <ng-template let-subagent>
+              <chat-subagent-card [subagent]="subagent" />
+            </ng-template>
+          </chat-subagents>
+        </div>
+      </div>
+    </div>
+  `,
+})
+export class SubagentDemoComponent {
+  chatRef = agent<{ messages: BaseMessage[] }>({
+    assistantId: 'multi_agent',
+    threadId: signal(null),
+  });
+}
+```
+
+## Styling
+
+The card uses the following CSS custom properties:
+
+| Variable | Applied To |
+|----------|-----------|
+| `--chat-bg-alt` | Card background |
+| `--chat-bg` | Latest message content background |
+| `--chat-border` | Card border, section dividers |
+| `--chat-radius-card` | Card border radius |
+| `--chat-text` | Subagent label, message content |
+| `--chat-text-muted` | Agent icon, tool call ID, chevron, message count |
+
+## ARIA
+
+- The header button has `aria-expanded` reflecting the current state
+- The button has `aria-label="Toggle subagent details"`

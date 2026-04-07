@@ -1,0 +1,220 @@
+# provideRender()
+
+Registers global default configuration for `@cacheplane/render` via Angular's dependency injection system.
+
+## Import
+
+```typescript
+import { provideRender, RENDER_CONFIG } from '@cacheplane/render';
+```
+
+## Signature
+
+```typescript
+function provideRender(config: RenderConfig): EnvironmentProviders;
+```
+
+### Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `config` | `RenderConfig` | Configuration object with default registry, store, functions, and handlers |
+
+### Returns
+
+`EnvironmentProviders` -- suitable for use in `ApplicationConfig.providers` or `bootstrapApplication()`.
+
+## RenderConfig
+
+```typescript
+interface RenderConfig {
+  registry?: AngularRegistry;
+  store?: StateStore;
+  functions?: Record<string, ComputedFunction>;
+  handlers?: Record<string, (params: Record<string, unknown>) => unknown | Promise<unknown>>;
+}
+```
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `registry` | `AngularRegistry` | Default component registry for all `<render-spec>` instances |
+| `store` | `StateStore` | Default state store for all `<render-spec>` instances |
+| `functions` | `Record<string, ComputedFunction>` | Default computed functions for `$fn` prop expressions |
+| `handlers` | `Record<string, Handler>` | Default event handlers for action dispatch |
+
+All properties are optional. Only provide the defaults you need.
+
+## RENDER_CONFIG Token
+
+The configuration is stored in the `RENDER_CONFIG` injection token:
+
+```typescript
+import { InjectionToken } from '@angular/core';
+
+const RENDER_CONFIG = new InjectionToken<RenderConfig>('RENDER_CONFIG');
+```
+
+You can inject it directly if needed:
+
+```typescript
+import { inject } from '@angular/core';
+import { RENDER_CONFIG } from '@cacheplane/render';
+
+const config = inject(RENDER_CONFIG, { optional: true });
+// null if provideRender() was not called
+```
+
+## Usage
+
+### Basic Setup
+
+```typescript
+// app.config.ts
+import { ApplicationConfig } from '@angular/core';
+import { provideRender, defineAngularRegistry } from '@cacheplane/render';
+import { TextComponent } from './components/text.component';
+import { CardComponent } from './components/card.component';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideRender({
+      registry: defineAngularRegistry({
+        Text: TextComponent,
+        Card: CardComponent,
+      }),
+    }),
+  ],
+};
+```
+
+### With Store and Handlers
+
+```typescript
+import {
+  provideRender,
+  defineAngularRegistry,
+  signalStateStore,
+} from '@cacheplane/render';
+
+const globalStore = signalStateStore({ theme: 'light' });
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideRender({
+      registry: defineAngularRegistry({
+        Text: TextComponent,
+        Card: CardComponent,
+      }),
+      store: globalStore,
+      functions: {
+        uppercase: (args: Record<string, unknown>) =>
+          String(args['text']).toUpperCase(),
+      },
+      handlers: {
+        toggleTheme: () => {
+          const current = globalStore.get('/theme');
+          globalStore.set('/theme', current === 'light' ? 'dark' : 'light');
+        },
+      },
+    }),
+  ],
+};
+```
+
+### Registry Only
+
+If you only need a global registry and want to provide stores per-instance:
+
+```typescript
+provideRender({
+  registry: defineAngularRegistry({
+    Text: TextComponent,
+    Card: CardComponent,
+    Button: ButtonComponent,
+  }),
+})
+```
+
+## Resolution Priority
+
+`RenderSpecComponent` resolves each configuration value using this priority:
+
+| Priority | Source | Description |
+|----------|--------|-------------|
+| 1 (highest) | Component input | `[registry]`, `[store]`, `[functions]`, `[handlers]` on `<render-spec>` |
+| 2 | `RENDER_CONFIG` | Global defaults from `provideRender()` |
+| 3 (lowest) | Internal fallback | Empty registry, internal `signalStateStore()` from `spec.state` |
+
+This means inputs always win over global config:
+
+```typescript
+// Global config
+provideRender({ registry: registryA, store: storeA });
+
+// In template -- registryB overrides registryA, but storeA is still used
+<render-spec [spec]="spec" [registry]="registryB" />
+```
+
+## Global vs Component-Level Config
+
+<Tabs>
+<Tab label="Global config">
+
+Use `provideRender()` when you want shared defaults across your entire application:
+
+```typescript
+// All <render-spec> instances use this registry by default
+provideRender({ registry: myRegistry })
+```
+
+This is ideal when you have a single component library that all specs should use.
+
+</Tab>
+<Tab label="Component-level config">
+
+Pass inputs directly to `<render-spec>` when different parts of your app need different configurations:
+
+```typescript
+// Dashboard uses one registry
+<render-spec [spec]="dashboardSpec" [registry]="dashboardRegistry" />
+
+// Form builder uses a different registry
+<render-spec [spec]="formSpec" [registry]="formRegistry" />
+```
+
+This is useful when you have multiple rendering contexts with different component sets.
+
+</Tab>
+<Tab label="Combined">
+
+Use both for a layered approach -- global defaults with per-instance overrides:
+
+```typescript
+// Global: shared registry and handlers
+provideRender({
+  registry: baseRegistry,
+  handlers: { log: (p) => console.log(p) },
+});
+
+// Component: override store, keep global registry and handlers
+<render-spec [spec]="spec" [store]="localStore" />
+```
+
+</Tab>
+</Tabs>
+
+## Optional Provider
+
+`provideRender()` is not required. If you skip it, `RenderSpecComponent` requires you to pass `registry` and `store` as inputs (or relies on the internal store fallback).
+
+```html
+<!-- Works without provideRender() -- all config via inputs -->
+<render-spec [spec]="spec" [registry]="registry" [store]="store" />
+```
+
+## Related
+
+- [RenderSpecComponent API](/docs/render/api/render-spec-component) -- how the component uses `RENDER_CONFIG`
+- [defineAngularRegistry()](/docs/render/api/define-angular-registry) -- creating registries to pass to config
+- [signalStateStore()](/docs/render/api/signal-state-store) -- creating stores to pass to config
+- [Installation](/docs/render/getting-started/installation) -- initial setup with `provideRender()`

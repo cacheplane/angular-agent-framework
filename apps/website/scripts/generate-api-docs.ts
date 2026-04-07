@@ -126,7 +126,7 @@ async function main() {
   const entryPoint = candidates.find((p) => fs.existsSync(p));
   if (!entryPoint) {
     console.warn('Library entry point not found — generating empty api-docs.json');
-    const outDir = 'apps/website/content/docs-v2/api';
+    const outDir = 'apps/website/content/docs/agent/api';
     fs.mkdirSync(outDir, { recursive: true });
     fs.writeFileSync(path.join(outDir, 'api-docs.json'), JSON.stringify([], null, 2));
     return;
@@ -152,7 +152,7 @@ async function main() {
     if (entry) entries.push(entry);
   }
 
-  const outDir = 'apps/website/content/docs-v2/api';
+  const outDir = 'apps/website/content/docs/agent/api';
   fs.mkdirSync(outDir, { recursive: true });
   fs.writeFileSync(path.join(outDir, 'api-docs.json'), JSON.stringify(entries, null, 2));
   console.log(`✓ api-docs.json written (${entries.length} entries)`);

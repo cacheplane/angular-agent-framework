@@ -1,0 +1,148 @@
+# ChatComponent
+
+`ChatComponent` is the all-in-one composition that provides a complete, styled chat interface. It combines message rendering, text input, typing indicator, error display, interrupt handling, and an optional thread sidebar into a single component.
+
+**Selector:** `chat`
+
+**Import:**
+
+```typescript
+import { ChatComponent } from '@cacheplane/chat';
+```
+
+## When to Use It
+
+Use `ChatComponent` when you want a fully functional chat UI with minimal setup. It handles:
+
+- Rendering human, AI, tool, and system messages with appropriate templates
+- Markdown rendering for AI messages
+- Auto-scrolling to new messages and streaming content
+- Typing indicator while the agent is processing
+- Error banner for agent errors
+- Interrupt banner when the agent pauses
+- Optional thread sidebar for multi-conversation support
+- Enter to send, Shift+Enter for newlines
+
+If you need to customize the message layout, add components between sections, or build a fundamentally different chat layout, use the [primitives](/docs/chat/getting-started/introduction#primitives) directly instead.
+
+## Basic Usage
+
+```typescript
+import { Component, signal } from '@angular/core';
+import { agent } from '@cacheplane/angular';
+import { ChatComponent } from '@cacheplane/chat';
+import type { BaseMessage } from '@langchain/core/messages';
+
+@Component({
+  selector: 'app-chat-page',
+  standalone: true,
+  imports: [ChatComponent],
+  template: `
+    <div style="height: 100vh;">
+      <chat [ref]="chatRef" />
+    </div>
+  `,
+})
+export class ChatPageComponent {
+  chatRef = agent<{ messages: BaseMessage[] }>({
+    assistantId: 'chat_agent',
+    threadId: signal(null),
+  });
+}
+```
+
+<Callout type="tip" title="Height is required">
+`ChatComponent` uses `height: 100%` with flex layout. Make sure its parent container has an explicit height, otherwise the component will collapse to zero height.
+</Callout>
+
+## API
+
+### Inputs
+
+| Input | Type | Default | Description |
+|-------|------|---------|-------------|
+| `ref` | `AgentRef<any, any>` | **Required** | The agent ref providing streaming state. Created by `agent()` from `@cacheplane/angular`. |
+| `threads` | `Thread[]` | `[]` | List of threads to display in the sidebar. Each thread must have an `id` property. |
+| `activeThreadId` | `string` | `''` | The ID of the currently active thread, used for highlighting in the sidebar. |
+
+### Outputs
+
+| Output | Type | Description |
+|--------|------|-------------|
+| `threadSelected` | `string` | Emits when a thread is clicked in the sidebar. Payload is the thread ID. |
+
+### Thread Type
+
+```typescript
+type Thread = { id: string; [key: string]: unknown };
+```
+
+## Thread Sidebar
+
+When you pass a non-empty `threads` array, a sidebar appears on the left (hidden on mobile by default):
+
+```typescript
+@Component({
+  template: `
+    <chat
+      [ref]="chatRef"
+      [threads]="threads()"
+      [activeThreadId]="currentThreadId()"
+      (threadSelected)="onThreadSelected($event)"
+    />
+  `,
+})
+export class ChatWithThreadsComponent {
+  chatRef = agent<{ messages: BaseMessage[] }>({
+    assistantId: 'chat_agent',
+    threadId: signal(null),
+  });
+
+  threads = signal([
+    { id: 'thread-1' },
+    { id: 'thread-2' },
+    { id: 'thread-3' },
+  ]);
+
+  currentThreadId = signal('thread-1');
+
+  onThreadSelected(threadId: string) {
+    this.currentThreadId.set(threadId);
+    this.chatRef.switchThread(threadId);
+  }
+}
+```
+
+## Message Templates
+
+`ChatComponent` ships with four built-in message templates:
+
+| Type | Layout |
+|------|--------|
+| `human` | Right-aligned bubble with user background and border radius |
+| `ai` | Left-aligned with avatar badge, markdown-rendered content |
+| `tool` | Full-width monospace card with alt background |
+| `system` | Centered, italic, muted text |
+
+## Auto-Scroll Behavior
+
+The component tracks message count and loading state to auto-scroll:
+
+- **New message**: Scrolls to bottom immediately (using `behavior: 'instant'`)
+- **Streaming updates**: Scrolls smoothly only if the user is near the bottom (within 150px)
+- **User scrolled up**: Does not auto-scroll during streaming to avoid disrupting reading
+
+## Styling
+
+`ChatComponent` includes `CHAT_THEME_STYLES` and `CHAT_MARKDOWN_STYLES` in its component styles. Override any CSS custom property on the `chat` element or a parent. See the [Theming guide](/docs/chat/guides/theming) for the full variable reference.
+
+## Included Primitives
+
+Under the hood, `ChatComponent` composes these primitives:
+
+- `ChatMessagesComponent` with `MessageTemplateDirective` for message rendering
+- `ChatInputComponent` for text input (with `submitOnEnter` and a placeholder)
+- `ChatTypingIndicatorComponent` for the animated typing dots
+- `ChatErrorComponent` for error display
+- `ChatInterruptComponent` for the interrupt banner
+- `ChatThreadListComponent` for the sidebar

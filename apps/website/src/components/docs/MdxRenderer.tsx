@@ -10,6 +10,7 @@ import { FeatureChips } from './mdx/FeatureChips';
 import { ArchFlowDiagram } from './ArchFlowDiagram';
 import { DocsBreadcrumb } from './DocsBreadcrumb';
 import { DocsPrevNext } from './DocsPrevNext';
+import { type LibraryId } from '../../lib/docs-config';
 import rehypePrettyCode from 'rehype-pretty-code';
 import rehypeSlug from 'rehype-slug';
 import remarkGfm from 'remark-gfm';
@@ -33,17 +34,18 @@ const rehypeOptions = {
   keepBackground: true,
 };
 
-interface NewProps {
+interface MdxRendererProps {
   source: string;
+  library: LibraryId;
   section: string;
   slug: string;
   title: string;
 }
 
-export function MdxRendererNew({ source, section, slug, title }: NewProps) {
+export function MdxRenderer({ source, library, section, slug, title }: MdxRendererProps) {
   return (
     <div className="flex-1 py-8 px-4 sm:px-6 md:px-12 md:max-w-3xl overflow-x-hidden">
-      <DocsBreadcrumb section={section} title={title} />
+      <DocsBreadcrumb library={library} section={section} title={title} />
       <article className="docs-prose prose prose-slate max-w-none"
         style={{
           '--tw-prose-body': tokens.colors.textSecondary,
@@ -62,7 +64,7 @@ export function MdxRendererNew({ source, section, slug, title }: NewProps) {
           }}
         />
       </article>
-      <DocsPrevNext section={section} slug={slug} />
+      <DocsPrevNext library={library} section={section} slug={slug} />
     </div>
   );
 }

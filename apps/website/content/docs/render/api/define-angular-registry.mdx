@@ -1,0 +1,132 @@
+# defineAngularRegistry()
+
+Creates an `AngularRegistry` that maps element type names to Angular component classes.
+
+## Import
+
+```typescript
+import { defineAngularRegistry } from '@cacheplane/render';
+```
+
+## Signature
+
+```typescript
+function defineAngularRegistry(
+  componentMap: Record<string, AngularComponentRenderer>,
+): AngularRegistry;
+```
+
+### Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `componentMap` | `Record<string, AngularComponentRenderer>` | An object mapping type name strings to Angular component classes |
+
+`AngularComponentRenderer` is defined as `Type<unknown>` -- any Angular component class.
+
+### Returns
+
+An `AngularRegistry` object with two methods:
+
+```typescript
+interface AngularRegistry {
+  get(name: string): AngularComponentRenderer | undefined;
+  names(): string[];
+}
+```
+
+| Method | Description |
+|--------|-------------|
+| `get(name)` | Returns the component class for the given type name, or `undefined` if not registered |
+| `names()` | Returns an array of all registered type name strings |
+
+## Usage
+
+### Basic Registry
+
+```typescript
+import { defineAngularRegistry } from '@cacheplane/render';
+import { TextComponent } from './text.component';
+import { CardComponent } from './card.component';
+
+const registry = defineAngularRegistry({
+  Text: TextComponent,
+  Card: CardComponent,
+});
+
+registry.get('Text');    // TextComponent
+registry.get('Card');    // CardComponent
+registry.get('Missing'); // undefined
+registry.names();        // ['Text', 'Card']
+```
+
+### With provideRender()
+
+```typescript
+import { provideRender, defineAngularRegistry } from '@cacheplane/render';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideRender({
+      registry: defineAngularRegistry({
+        Text: TextComponent,
+        Card: CardComponent,
+        Button: ButtonComponent,
+      }),
+    }),
+  ],
+};
+```
+
+### As a Component Input
+
+```typescript
+@Component({
+  imports: [RenderSpecComponent],
+  template: `<render-spec [spec]="spec" [registry]="registry" />`,
+})
+export class MyComponent {
+  registry = defineAngularRegistry({
+    Text: TextComponent,
+  });
+}
+```
+
+## Internal Behavior
+
+The function converts the input object to an internal `Map<string, AngularComponentRenderer>` for O(1) lookups:
+
+```typescript
+function defineAngularRegistry(
+  componentMap: Record<string, AngularComponentRenderer>,
+): AngularRegistry {
+  const map = new Map(Object.entries(componentMap));
+  return {
+    get: (name: string) => map.get(name),
+    names: () => [...map.keys()],
+  };
+}
+```
+
+<Callout type="info" title="Immutable after creation">
+The registry is immutable after creation. To add or remove components, create a new registry with the updated component map. The internal `Map` is created once and not exposed for mutation.
+</Callout>
+
+## Type Name Conventions
+
+Type names in the registry must match the `type` field in your spec elements exactly (case-sensitive):
+
+```typescript
+// Registry
+defineAngularRegistry({ Text: TextComponent });
+
+// Spec -- must match exactly
+{ type: 'Text', props: { label: 'Hello' } }   // matches
+{ type: 'text', props: { label: 'Hello' } }   // does NOT match
+```
+
+## Related
+
+- [Component Registry Guide](/docs/render/guides/registry) -- full guide on creating registries and the component input contract
+- [AngularComponentInputs](/docs/render/guides/registry#the-component-input-contract) -- the standard input interface for rendered components
+- [provideRender()](/docs/render/api/provide-render) -- setting a global registry

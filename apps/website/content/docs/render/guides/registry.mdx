@@ -1,0 +1,256 @@
+# Component Registry
+
+The component registry maps element type names from your spec to Angular component classes. It is the bridge between the declarative JSON spec and your Angular component tree.
+
+## Creating a Registry
+
+Use `defineAngularRegistry()` to create a registry from a plain object mapping type names to component classes:
+
+```typescript
+import { defineAngularRegistry } from '@cacheplane/render';
+import { TextComponent } from './text.component';
+import { CardComponent } from './card.component';
+import { ButtonComponent } from './button.component';
+import { ContainerComponent } from './container.component';
+
+export const uiRegistry = defineAngularRegistry({
+  Text: TextComponent,
+  Card: CardComponent,
+  Button: ButtonComponent,
+  Container: ContainerComponent,
+});
+```
+
+The returned `AngularRegistry` object has two methods:
+
+- `get(name: string)` -- returns the component class for the given type name, or `undefined` if not registered
+- `names()` -- returns an array of all registered type names
+
+```typescript
+uiRegistry.get('Text');    // TextComponent
+uiRegistry.get('Unknown'); // undefined
+uiRegistry.names();        // ['Text', 'Card', 'Button', 'Container']
+```
+
+## The Component Input Contract
+
+Every component rendered by `@cacheplane/render` receives inputs conforming to the `AngularComponentInputs` interface. Your custom props from the spec are spread as additional inputs alongside the standard ones.
+
+### Standard Inputs
+
+| Input | Type | Description |
+|-------|------|-------------|
+| `emit` | `(event: string) => void` | Function to dispatch named events |
+| `bindings` | `Record<string, string>` | Two-way binding paths: prop name to absolute state path |
+| `loading` | `boolean` | Whether the spec is currently streaming |
+| `childKeys` | `string[]` | Element keys for recursive child rendering |
+| `spec` | `Spec` | The full spec object (for child resolution) |
+
+### Custom Props
+
+Any props defined in the element's `props` are resolved and passed as additional inputs. For example, given this element:
+
+```json
+{
+  "type": "Text",
+  "props": {
+    "label": "Hello",
+    "size": "large"
+  }
+}
+```
+
+Your component receives `label` and `size` as inputs alongside the standard inputs.
+
+## Writing a Renderable Component
+
+Here is a complete example of a component designed to work with the rendering system:
+
+```typescript
+import { Component, ChangeDetectionStrategy, input } from '@angular/core';
+import type { Spec } from '@json-render/core';
+
+@Component({
+  selector: 'app-card',
+  standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <div class="card">
+      <h2>{{ title() }}</h2>
+      <p>{{ description() }}</p>
+      @if (loading()) {
+        <div class="loading-indicator">Loading...</div>
+      }
+    </div>
+  `,
+})
+export class CardComponent {
+  // Custom props from the spec
+  readonly title = input<string>('');
+  readonly description = input<string>('');
+
+  // Standard inputs from AngularComponentInputs
+  readonly emit = input<(event: string) => void>(() => {});
+  readonly bindings = input<Record<string, string>>({});
+  readonly loading = input<boolean>(false);
+  readonly childKeys = input<string[]>([]);
+  readonly spec = input<Spec | null>(null);
+}
+```
+
+<Callout type="tip" title="Input defaults">
+Always provide default values for your inputs. The rendering system spreads resolved props onto the component, but not all standard inputs are guaranteed to have values in every context.
+</Callout>
+
+## Two-Way Bindings
+
+When a prop uses `$bindState`, the `bindings` input receives a mapping from the prop name to the state path. This enables two-way binding patterns:
+
+```typescript
+// In your spec
+{
+  type: 'Input',
+  props: {
+    value: { $bindState: '/form/email' },
+    label: 'Email',
+  },
+}
+```
+
+Your component receives:
+
+- `value` resolved to the current state value (e.g., `"test@example.com"`)
+- `bindings` set to `{ value: '/form/email' }`
+
+You can use the bindings map to write back to the store:
+
+```typescript
+import { Component, ChangeDetectionStrategy, input, inject } from '@angular/core';
+import { RENDER_CONTEXT } from '@cacheplane/render';
+
+@Component({
+  selector: 'app-input',
+  standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <label>{{ label() }}</label>
+    <input [value]="value()" (input)="onInput($event)" />
+  `,
+})
+export class InputComponent {
+  readonly value = input<string>('');
+  readonly label = input<string>('');
+  readonly bindings = input<Record<string, string>>({});
+  readonly childKeys = input<string[]>([]);
+  readonly spec = input<unknown>(null);
+
+  private readonly ctx = inject(RENDER_CONTEXT);
+
+  onInput(event: Event) {
+    const path = this.bindings()['value'];
+    if (path) {
+      const target = event.target as HTMLInputElement;
+      this.ctx.store.set(path, target.value);
+    }
+  }
+}
+```
+
+## Recursive Children
+
+Container components can render their children by using the `childKeys` and `spec` inputs with `RenderElementComponent`:
+
+```typescript
+import { Component, ChangeDetectionStrategy, input } from '@angular/core';
+import { RenderElementComponent } from '@cacheplane/render';
+import type { Spec } from '@json-render/core';
+
+@Component({
+  selector: 'app-container',
+  standalone: true,
+  imports: [RenderElementComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <div class="container">
+      @for (key of childKeys(); track key) {
+        <render-element [elementKey]="key" [spec]="spec()!" />
+      }
+    </div>
+  `,
+})
+export class ContainerComponent {
+  readonly childKeys = input<string[]>([]);
+  readonly spec = input<Spec | null>(null);
+  readonly loading = input<boolean>(false);
+  readonly emit = input<(event: string) => void>(() => {});
+  readonly bindings = input<Record<string, string>>({});
+}
+```
+
+This enables deeply nested component trees -- containers render their children, which can themselves be containers with more children.
+
+## Providing the Registry
+
+You can provide the registry in two ways:
+
+<Tabs>
+<Tab label="Global (provideRender)">
+
+```typescript
+// app.config.ts
+import { provideRender, defineAngularRegistry } from '@cacheplane/render';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideRender({
+      registry: defineAngularRegistry({
+        Text: TextComponent,
+        Card: CardComponent,
+      }),
+    }),
+  ],
+};
+```
+
+```html
+<!-- Registry is resolved from RENDER_CONFIG automatically -->
+<render-spec [spec]="spec" />
+```
+
+</Tab>
+<Tab label="Per-instance (input)">
+
+```typescript
+// component.ts
+registry = defineAngularRegistry({
+  Text: TextComponent,
+  Card: CardComponent,
+});
+```
+
+```html
+<!-- Registry passed as input takes precedence over global config -->
+<render-spec [spec]="spec" [registry]="registry" />
+```
+
+</Tab>
+</Tabs>
+
+When both are provided, the input always takes precedence over the global config.
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="defineAngularRegistry() API" href="/docs/render/api/define-angular-registry">
+    Full API reference for the registry factory
+  </Card>
+  <Card title="Specs Guide" href="/docs/render/guides/specs">
+    Spec format, children, conditional rendering, and loops
+  </Card>
+  <Card title="Events Guide" href="/docs/render/guides/events">
+    Event handling with the emit function
+  </Card>
+  <Card title="State Store Guide" href="/docs/render/guides/state-store">
+    Reactive state management with signalStateStore()
+  </Card>
+</CardGroup>

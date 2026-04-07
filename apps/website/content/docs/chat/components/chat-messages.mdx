@@ -1,0 +1,205 @@
+# ChatMessagesComponent
+
+`ChatMessagesComponent` is the core primitive for rendering chat messages. It iterates over the messages from an `AgentRef` and renders each one using a matching `MessageTemplateDirective`. This gives you full control over how each message type is displayed.
+
+**Selector:** `chat-messages`
+
+**Import:**
+
+```typescript
+import {
+  ChatMessagesComponent,
+  MessageTemplateDirective,
+  getMessageType,
+} from '@cacheplane/chat';
+```
+
+## How It Works
+
+1. The component reads `ref().messages()` to get the current message list
+2. For each message, it calls `getMessageType()` to determine the template type
+3. It finds the matching `MessageTemplateDirective` among its content children
+4. It renders the message using `ngTemplateOutlet` with the message as the implicit context
+
+## Basic Usage
+
+```html
+<chat-messages [ref]="chatRef">
+  <ng-template chatMessageTemplate="human" let-message>
+    <div class="user-bubble">{{ message.content }}</div>
+  </ng-template>
+
+  <ng-template chatMessageTemplate="ai" let-message>
+    <div class="ai-message">{{ message.content }}</div>
+  </ng-template>
+
+  <ng-template chatMessageTemplate="tool" let-message>
+    <pre>{{ message.content }}</pre>
+  </ng-template>
+
+  <ng-template chatMessageTemplate="system" let-message>
+    <em>{{ message.content }}</em>
+  </ng-template>
+</chat-messages>
+```
+
+## API
+
+### Inputs
+
+| Input | Type | Default | Description |
+|-------|------|---------|-------------|
+| `ref` | `AgentRef<any, any>` | **Required** | The agent ref providing streaming state |
+
+### Content Children
+
+The component queries all `MessageTemplateDirective` instances declared as content children. Each directive declares which message type it handles.
+
+### Template Context
+
+Each template receives:
+
+| Variable | Type | Description |
+|----------|------|-------------|
+| `$implicit` (via `let-message`) | `BaseMessage` | The LangChain message object |
+| `index` | `number` | The index of the message in the array |
+
+```html
+<ng-template chatMessageTemplate="ai" let-message let-idx="index">
+  <div>Message #{{ idx }}: {{ message.content }}</div>
+</ng-template>
+```
+
+## MessageTemplateDirective
+
+The `MessageTemplateDirective` is a structural directive applied to `ng-template` elements. It declares which message type the template should handle.
+
+**Selector:** `ng-template[chatMessageTemplate]`
+
+```typescript
+import { MessageTemplateDirective } from '@cacheplane/chat';
+```
+
+### Input
+
+| Input | Type | Description |
+|-------|------|-------------|
+| `chatMessageTemplate` | `MessageTemplateType` | The message type this template handles |
+
+### MessageTemplateType
+
+```typescript
+type MessageTemplateType = 'human' | 'ai' | 'tool' | 'system' | 'function';
+```
+
+## getMessageType()
+
+The `getMessageType()` function maps a LangChain `BaseMessage` to a `MessageTemplateType`. It handles both class instances (with `_getType()` method) and plain JSON objects (with a `type` property), since SSE stream events deliver plain JSON rather than hydrated class instances.
+
+```typescript
+import { getMessageType } from '@cacheplane/chat';
+import type { BaseMessage } from '@langchain/core/messages';
+
+const type = getMessageType(message); // 'human' | 'ai' | 'tool' | 'system' | 'function'
+```
+
+**Mapping logic:**
+
+| Message type string | Returns |
+|--------------------|---------|
+| `'human'` | `'human'` |
+| `'ai'` | `'ai'` |
+| `'tool'` | `'tool'` |
+| `'system'` | `'system'` |
+| `'function'` | `'function'` |
+| Any other value | `'ai'` (default fallback) |
+
+## Working with Message Content
+
+LangChain messages have a `content` property that can be either a `string` or a structured array. The library exports a `messageContent()` utility (used internally by compositions) that handles both cases:
+
+```typescript
+// If content is a string, returns it directly
+// If content is structured, serializes to JSON
+function messageContent(message: BaseMessage): string
+```
+
+For custom templates, you can access `message.content` directly and handle the type yourself:
+
+```html
+<ng-template chatMessageTemplate="ai" let-message>
+  @if (isString(message.content)) {
+    <div [innerHTML]="renderMd(message.content)"></div>
+  } @else {
+    <pre>{{ message.content | json }}</pre>
+  }
+</ng-template>
+```
+
+## Full Example
+
+```typescript
+import { Component, inject, ChangeDetectionStrategy, signal } from '@angular/core';
+import { DomSanitizer } from '@angular/platform-browser';
+import { agent } from '@cacheplane/angular';
+import type { BaseMessage } from '@langchain/core/messages';
+import {
+  ChatMessagesComponent,
+  MessageTemplateDirective,
+  CHAT_MARKDOWN_STYLES,
+  renderMarkdown,
+} from '@cacheplane/chat';
+
+@Component({
+  selector: 'app-messages-demo',
+  standalone: true,
+  imports: [ChatMessagesComponent, MessageTemplateDirective],
+  styles: [CHAT_MARKDOWN_STYLES],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <chat-messages [ref]="chatRef">
+      <ng-template chatMessageTemplate="human" let-message>
+        <div class="flex justify-end mb-4">
+          <div class="bg-blue-600 text-white rounded-2xl px-4 py-2 max-w-[70%]">
+            {{ message.content }}
+          </div>
+        </div>
+      </ng-template>
+
+      <ng-template chatMessageTemplate="ai" let-message>
+        <div class="flex gap-3 mb-4">
+          <div class="w-8 h-8 bg-gray-200 rounded-lg flex items-center justify-center text-xs font-bold">
+            AI
+          </div>
+          <div class="chat-md flex-1" [innerHTML]="renderMd(message.content)"></div>
+        </div>
+      </ng-template>
+
+      <ng-template chatMessageTemplate="tool" let-message>
+        <div class="bg-gray-100 rounded-lg p-3 font-mono text-sm mb-4">
+          {{ message.content }}
+        </div>
+      </ng-template>
+
+      <ng-template chatMessageTemplate="system" let-message>
+        <div class="text-center text-gray-500 text-xs italic mb-4">
+          {{ message.content }}
+        </div>
+      </ng-template>
+    </chat-messages>
+  `,
+})
+export class MessagesDemoComponent {
+  private sanitizer = inject(DomSanitizer);
+
+  chatRef = agent<{ messages: BaseMessage[] }>({
+    assistantId: 'chat_agent',
+    threadId: signal(null),
+  });
+
+  renderMd(content: string | unknown) {
+    if (typeof content !== 'string') return '';
+    return renderMarkdown(content, this.sanitizer);
+  }
+}
+```

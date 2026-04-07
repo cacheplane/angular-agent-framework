@@ -1,0 +1,149 @@
+# Theming
+
+`@cacheplane/chat` uses CSS custom properties (variables) for all visual styling. Every color, radius, font, and spacing value is controlled by a variable prefixed with `--chat-`, making it straightforward to match your application's design system.
+
+## How Theming Works
+
+Composition components include `CHAT_THEME_STYLES` in their `styles` array. This stylesheet defines all CSS custom properties on the `:host` element and applies dark mode by default, with automatic light mode support via `prefers-color-scheme`.
+
+```typescript
+import { CHAT_THEME_STYLES } from '@cacheplane/chat';
+
+@Component({
+  // ...
+  styles: [CHAT_THEME_STYLES],
+})
+export class MyComponent {}
+```
+
+## CSS Custom Properties Reference
+
+### Colors
+
+| Variable | Dark Default | Light Default | Purpose |
+|----------|-------------|---------------|---------|
+| `--chat-bg` | `#171717` | `#ffffff` | Main background |
+| `--chat-bg-alt` | `#222222` | `#f5f5f5` | Alternate background (code blocks, cards) |
+| `--chat-bg-hover` | `#2a2a2a` | `#ebebeb` | Hover state background |
+| `--chat-text` | `#e0e0e0` | `#1a1a1a` | Primary text color |
+| `--chat-text-muted` | `#777777` | `#999999` | Secondary/muted text |
+| `--chat-text-placeholder` | `#666666` | `#999999` | Input placeholder text |
+| `--chat-border` | `#333333` | `#e5e5e5` | Primary border color |
+| `--chat-border-light` | `#2a2a2a` | `#f0f0f0` | Subtle border color |
+| `--chat-user-bg` | `#2a2a2a` | `#f0f0f0` | User message bubble background |
+| `--chat-user-text` | `#f5f5f5` | `#1a1a1a` | User message text |
+| `--chat-user-border` | `#333333` | `transparent` | User message bubble border |
+| `--chat-avatar-bg` | `#333333` | `#f0f0f0` | Avatar background |
+| `--chat-avatar-text` | `#aaaaaa` | `#666666` | Avatar text/icon color |
+| `--chat-input-bg` | `#222222` | `#f5f5f5` | Input field background |
+| `--chat-input-border` | `#333333` | `#e5e5e5` | Input field border |
+| `--chat-input-focus-border` | `#555555` | `#cccccc` | Input focus border |
+| `--chat-send-bg` | `#444444` | `#e5e5e5` | Send button background |
+| `--chat-send-text` | `#aaaaaa` | `#999999` | Send button icon color |
+| `--chat-error-bg` | `#2d1515` | `#fef2f2` | Error background |
+| `--chat-error-text` | `#f87171` | `#dc2626` | Error text |
+| `--chat-warning-bg` | `#2d2315` | `#fffbeb` | Warning/interrupt background |
+| `--chat-warning-text` | `#fbbf24` | `#d97706` | Warning/interrupt text |
+| `--chat-success` | `#4ade80` | `#16a34a` | Success indicator color |
+
+### Layout & Typography
+
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `--chat-radius-message` | `20px` | Message bubble border radius |
+| `--chat-radius-input` | `24px` | Input field border radius |
+| `--chat-radius-card` | `12px` | Card border radius (tool calls, errors) |
+| `--chat-radius-avatar` | `8px` | Avatar border radius |
+| `--chat-max-width` | `720px` | Maximum content width |
+| `--chat-font-family` | `-apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif` | Font stack |
+| `--chat-font-size` | `15px` | Base font size |
+| `--chat-line-height` | `1.6` | Base line height |
+
+## Customizing the Theme
+
+Override any variable in your global styles or on a parent element:
+
+```css
+/* styles.css */
+chat {
+  --chat-bg: #0a0a0a;
+  --chat-user-bg: #1e40af;
+  --chat-user-text: #ffffff;
+  --chat-radius-message: 12px;
+  --chat-font-family: 'Inter', sans-serif;
+}
+```
+
+Or scope overrides to a specific container:
+
+```css
+.my-chat-container {
+  --chat-bg: #fafafa;
+  --chat-text: #111111;
+  --chat-max-width: 960px;
+}
+```
+
+## Dark and Light Mode
+
+The theme defaults to dark mode. Light mode activates automatically when the user's system preference is `prefers-color-scheme: light`, unless the host element has `data-chat-theme="dark"` set.
+
+You can force a specific theme:
+
+```html
+<!-- Force dark mode regardless of system preference -->
+<chat [ref]="chatRef" data-chat-theme="dark" />
+
+<!-- Force light mode regardless of system preference -->
+<chat [ref]="chatRef" data-chat-theme="light" />
+```
+
+The logic in `CHAT_THEME_STYLES` works as follows:
+
+1. Dark variables are applied by default on `:host`
+2. `@media (prefers-color-scheme: light)` overrides with light variables, unless `data-chat-theme="dark"` is set
+3. `[data-chat-theme="light"]` forces light variables regardless of system preference
+
+## Using CHAT_THEME_STYLES in Custom Components
+
+If you are building custom compositions using the primitives, import `CHAT_THEME_STYLES` to get the same CSS variables:
+
+```typescript
+import { Component } from '@angular/core';
+import { CHAT_THEME_STYLES } from '@cacheplane/chat';
+
+@Component({
+  selector: 'my-custom-chat',
+  styles: [CHAT_THEME_STYLES],
+  template: `
+    <div style="color: var(--chat-text); background: var(--chat-bg);">
+      <!-- your custom layout using chat primitives -->
+    </div>
+  `,
+})
+export class MyCustomChatComponent {}
+```
+
+## Brand Color Example
+
+Here is a complete example applying a branded color scheme:
+
+```css
+chat {
+  /* Brand blues */
+  --chat-user-bg: #2563eb;
+  --chat-user-text: #ffffff;
+  --chat-user-border: #1d4ed8;
+  --chat-input-focus-border: #3b82f6;
+  --chat-send-bg: #2563eb;
+  --chat-send-text: #ffffff;
+
+  /* Softer corners */
+  --chat-radius-message: 16px;
+  --chat-radius-input: 20px;
+  --chat-radius-card: 8px;
+
+  /* Wider content area */
+  --chat-max-width: 800px;
+}
+```
