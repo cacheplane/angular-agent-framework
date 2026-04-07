@@ -1,6 +1,6 @@
 #!/usr/bin/env npx tsx
 /**
- * Build all 14 Angular example apps and assemble them into a deploy directory.
+ * Build all Angular example apps and assemble them into a deploy directory.
  *
  * Output: deploy/examples/{product}/{topic}/ with index.html, main.js, styles.css
  *
