@@ -16,7 +16,7 @@ export function wrapEmail(opts: {
     ${opts.body}
     <div style="border-top:1px solid #e4e4e7;margin-top:28px;padding-top:16px">
       <p style="font-size:11px;color:#a1a1aa;line-height:1.5;margin:0">Angular Agent Framework — Signal-native streaming for LangGraph.</p>
-      ${opts.showUnsubscribe ? '<p style="font-size:10px;color:#d4d4d8;margin:6px 0 0"><a href="https://stream-resource.dev/api/unsubscribe?email=RECIPIENT" style="color:#d4d4d8;text-decoration:underline">Unsubscribe</a></p>' : ''}
+      ${opts.showUnsubscribe ? '<p style="font-size:10px;color:#d4d4d8;margin:6px 0 0"><a href="https://cacheplane.ai/api/unsubscribe?email=RECIPIENT" style="color:#d4d4d8;text-decoration:underline">Unsubscribe</a></p>' : ''}
     </div>
   </div>
 </div>

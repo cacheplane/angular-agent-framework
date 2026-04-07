@@ -1627,7 +1627,7 @@ NON-COMMERCIAL USE is defined as:
 - Internal tooling at non-profit organizations
 
 COMMERCIAL USE requires a separate commercial license. See LICENSE-COMMERCIAL
-or visit https://stream-resource.dev/pricing for details.
+or visit https://cacheplane.ai/pricing for details.
 
 The above copyright notice and this permission notice shall be included in all
 copies or substantial portions of the Software.
@@ -1664,9 +1664,9 @@ ENTERPRISE LICENSE: Custom pricing
 - Volume seat discounts (10+ developers)
 - Unlimited deployment licenses
 - Dedicated support and SLA agreements
-- Contact: enterprise@stream-resource.dev
+- Contact: enterprise@cacheplane.ai
 
-To purchase a license, visit: https://stream-resource.dev/pricing
+To purchase a license, visit: https://cacheplane.ai/pricing
 
 Unauthorized commercial use is a violation of this license.
 ```

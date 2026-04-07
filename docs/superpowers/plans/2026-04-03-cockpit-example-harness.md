@@ -1242,7 +1242,7 @@ The `runtimeUrl` field on the capability module is used with `NEXT_PUBLIC_COCKPI
 runtimeUrl: 'langgraph/streaming',  // → ${NEXT_PUBLIC_COCKPIT_RUNTIME_BASE_URL}/langgraph/streaming
 ```
 
-This resolves to e.g., `https://examples.stream-resource.dev/langgraph/streaming` in production.
+This resolves to e.g., `https://examples.cacheplane.ai/langgraph/streaming` in production.
 
 - [ ] **Step 4: Add deployment instructions to the streaming prompt (as a code comment in graph.py)**
 
