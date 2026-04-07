@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
 import { sendEmail, FROM, addToAudience } from '../../../../lib/resend';
-import { loopsUpsertContact, loopsSendEvent } from '../../../../lib/loops';
+import { scheduleWhitepaperDrip } from '../../../../lib/drip';
 import { whitepaperDownloadHtml } from '../../../../emails/whitepaper-download';
 
 const SIGNUPS_FILE = path.join(process.cwd(), 'data', 'whitepaper-signups.ndjson');
@@ -40,15 +40,7 @@ export async function POST(req: NextRequest) {
         html: whitepaperDownloadHtml(name || undefined),
       }),
       addToAudience(email, name || undefined),
-      loopsUpsertContact({
-        email,
-        firstName: name || undefined,
-        source: 'whitepaper',
-      }),
-      loopsSendEvent({
-        email,
-        eventName: 'whitepaper_downloaded',
-      }),
+      scheduleWhitepaperDrip(email),
     ]);
   } catch (err) {
     console.error('[resend] whitepaper email failed:', err);

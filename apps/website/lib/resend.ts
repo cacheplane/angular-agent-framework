@@ -15,13 +15,19 @@ export const FROM = process.env.RESEND_FROM || 'Angular Agent Framework <hello@c
 export const NOTIFY_TO = process.env.RESEND_NOTIFY_TO || 'hello@cacheplane.io';
 
 /** Send an email via Resend. No-ops when API key is missing. */
-export async function sendEmail(opts: { from: string; to: string; subject: string; html: string }) {
+export async function sendEmail(opts: { from: string; to: string; subject: string; html: string; scheduledAt?: string }) {
   const client = getResend();
   if (!client) {
     console.info('[resend] skipped (no API key):', opts.subject);
     return;
   }
-  await client.emails.send(opts);
+  await client.emails.send({
+    from: opts.from,
+    to: opts.to,
+    subject: opts.subject,
+    html: opts.html,
+    ...(opts.scheduledAt ? { scheduledAt: opts.scheduledAt } : {}),
+  });
 }
 
 /** Add a contact to the Resend audience. Fails silently. */
