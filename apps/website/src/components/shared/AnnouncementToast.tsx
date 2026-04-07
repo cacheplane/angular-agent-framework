@@ -11,18 +11,20 @@ const ANNOUNCEMENT_DATE = '2026-04-07';
 const STORAGE_KEY = `dismissed-announcement-${ANNOUNCEMENT_DATE}`;
 const DELAY_MS = 30_000;
 
+type Step = 'cta' | 'form' | 'sent';
+
 export function AnnouncementToast() {
   const [visible, setVisible] = useState(false);
+  const [step, setStep] = useState<Step>('cta');
+  const [email, setEmail] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    // Check if already dismissed for this announcement date
     try {
       if (localStorage.getItem(STORAGE_KEY) === 'true') return;
     } catch {
-      // localStorage unavailable (SSR, private browsing)
       return;
     }
-
     const timer = setTimeout(() => setVisible(true), DELAY_MS);
     return () => clearTimeout(timer);
   }, []);
@@ -31,9 +33,36 @@ export function AnnouncementToast() {
     setVisible(false);
     try {
       localStorage.setItem(STORAGE_KEY, 'true');
-    } catch {
-      // ignore
-    }
+    } catch { /* ignore */ }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email) return;
+    setSubmitting(true);
+    try {
+      await fetch('/api/whitepaper-signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+    } catch { /* best-effort */ }
+    setStep('sent');
+    setSubmitting(false);
+    // Auto-dismiss after showing success
+    setTimeout(dismiss, 4000);
+  };
+
+  const inputStyle: React.CSSProperties = {
+    width: '100%',
+    background: 'rgba(255,255,255,0.7)',
+    border: `1px solid ${tokens.glass.border}`,
+    borderRadius: 8,
+    padding: '8px 12px',
+    fontSize: '0.82rem',
+    color: tokens.colors.textPrimary,
+    fontFamily: 'Inter, sans-serif',
+    outline: 'none',
   };
 
   return (
@@ -82,7 +111,7 @@ export function AnnouncementToast() {
             ×
           </button>
 
-          {/* Content */}
+          {/* Eyebrow */}
           <p style={{
             fontFamily: 'var(--font-mono,"JetBrains Mono",monospace)',
             fontSize: '0.62rem',
@@ -94,6 +123,8 @@ export function AnnouncementToast() {
           }}>
             Free Guide
           </p>
+
+          {/* Title */}
           <p style={{
             fontFamily: 'var(--font-garamond,"EB Garamond",Georgia,serif)',
             fontSize: '1.05rem',
@@ -104,56 +135,131 @@ export function AnnouncementToast() {
           }}>
             From Prototype to Production
           </p>
-          <p style={{
-            fontSize: '0.82rem',
-            color: tokens.colors.textSecondary,
-            lineHeight: 1.5,
-            marginBottom: 16,
-          }}>
-            Six production-readiness dimensions for Angular agents. Get the guide.
-          </p>
-          <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-            <a
-              href="/whitepaper.pdf"
-              download="angular-agent-readiness-guide.pdf"
-              onClick={dismiss}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 6,
-                background: tokens.colors.accent,
-                color: '#fff',
-                padding: '8px 18px',
-                borderRadius: 8,
-                fontFamily: 'var(--font-mono,"JetBrains Mono",monospace)',
-                fontSize: '0.7rem',
-                fontWeight: 700,
-                textTransform: 'uppercase',
-                letterSpacing: '0.06em',
-                textDecoration: 'none',
-                transition: 'box-shadow .2s',
-              }}
-              onMouseEnter={e => (e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,64,144,.3)')}
-              onMouseLeave={e => (e.currentTarget.style.boxShadow = 'none')}
-            >
-              ↓ Download
-            </a>
-            <button
-              onClick={dismiss}
-              style={{
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                fontFamily: 'var(--font-mono,"JetBrains Mono",monospace)',
-                fontSize: '0.68rem',
-                color: tokens.colors.textMuted,
-                textDecoration: 'underline',
-                padding: '8px 4px',
-              }}
-            >
-              Not now
-            </button>
-          </div>
+
+          {step === 'cta' && (
+            <>
+              <p style={{
+                fontSize: '0.82rem',
+                color: tokens.colors.textSecondary,
+                lineHeight: 1.5,
+                marginBottom: 16,
+              }}>
+                Six production-readiness dimensions for Angular agents. Get the guide.
+              </p>
+              <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                <button
+                  onClick={() => setStep('form')}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    background: tokens.colors.accent,
+                    color: '#fff',
+                    padding: '8px 18px',
+                    borderRadius: 8,
+                    fontFamily: 'var(--font-mono,"JetBrains Mono",monospace)',
+                    fontSize: '0.7rem',
+                    fontWeight: 700,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.06em',
+                    border: 'none',
+                    cursor: 'pointer',
+                    transition: 'box-shadow .2s',
+                  }}
+                  onMouseEnter={e => (e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,64,144,.3)')}
+                  onMouseLeave={e => (e.currentTarget.style.boxShadow = 'none')}
+                >
+                  ↓ Get the Guide
+                </button>
+                <button
+                  onClick={dismiss}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    fontFamily: 'var(--font-mono,"JetBrains Mono",monospace)',
+                    fontSize: '0.68rem',
+                    color: tokens.colors.textMuted,
+                    textDecoration: 'underline',
+                    padding: '8px 4px',
+                  }}
+                >
+                  Not now
+                </button>
+              </div>
+            </>
+          )}
+
+          {step === 'form' && (
+            <form onSubmit={handleSubmit} style={{ marginTop: 8 }}>
+              <label htmlFor="toast-email" className="sr-only">Email address</label>
+              <input
+                id="toast-email"
+                type="email"
+                placeholder="Email address"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                required
+                disabled={submitting}
+                autoFocus
+                style={{ ...inputStyle, marginBottom: 10 }}
+                onFocus={e => (e.currentTarget.style.borderColor = tokens.colors.accent)}
+                onBlur={e => (e.currentTarget.style.borderColor = tokens.glass.border)}
+              />
+              <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                <button
+                  type="submit"
+                  disabled={submitting || !email}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    background: email ? tokens.colors.accent : 'rgba(0,0,0,.08)',
+                    color: email ? '#fff' : tokens.colors.textMuted,
+                    padding: '8px 18px',
+                    borderRadius: 8,
+                    fontFamily: 'var(--font-mono,"JetBrains Mono",monospace)',
+                    fontSize: '0.7rem',
+                    fontWeight: 700,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.06em',
+                    border: 'none',
+                    cursor: email ? 'pointer' : 'not-allowed',
+                    transition: 'box-shadow .2s, background .2s',
+                  }}
+                >
+                  {submitting ? 'Sending...' : '↓ Send me the guide'}
+                </button>
+              </div>
+              <a
+                href="/whitepaper.pdf"
+                download="angular-agent-readiness-guide.pdf"
+                onClick={dismiss}
+                style={{
+                  display: 'inline-block',
+                  marginTop: 10,
+                  fontSize: '0.7rem',
+                  color: tokens.colors.textMuted,
+                  textDecoration: 'underline',
+                  fontFamily: 'Inter, sans-serif',
+                }}
+              >
+                or download directly
+              </a>
+            </form>
+          )}
+
+          {step === 'sent' && (
+            <div style={{ marginTop: 8 }}>
+              <p style={{
+                fontSize: '0.85rem',
+                color: '#1a7a40',
+                lineHeight: 1.5,
+              }}>
+                ✓ Check your inbox — the guide is on its way!
+              </p>
+            </div>
+          )}
         </motion.div>
       )}
     </AnimatePresence>
