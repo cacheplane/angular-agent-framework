@@ -36,10 +36,10 @@ This file is for agents working in this repository. It is contributor-facing, no
 
 ## Repo Layout
 
-- `libs/stream-resource`: main Angular library.
+- `libs/agent`: main Angular library (`@cacheplane/angular`).
 - `apps/website`: docs and marketing site.
-- `packages/mcp`: MCP server package.
-- `e2e/stream-resource-e2e`: end-to-end coverage for the workspace.
+- `packages/mcp`: MCP server package (`@cacheplane/angular-mcp`).
+- `e2e/agent-e2e`: end-to-end coverage for the workspace.
 - `apps/demo` and `apps/demo-e2e`: demo application and related end-to-end coverage.
 
 ## Working in This Repo

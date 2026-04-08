@@ -10,7 +10,7 @@ export default function DocsLandingPage() {
           Documentation
         </h1>
         <p className="text-lg mb-12" style={{ color: tokens.colors.textSecondary }}>
-          Angular Stream Resource is a suite of libraries for building AI agent interfaces.
+          Angular Agent Framework is a suite of libraries for building AI agent interfaces.
           Choose a library to get started.
         </p>
 
