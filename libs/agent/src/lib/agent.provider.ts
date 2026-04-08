@@ -13,8 +13,8 @@ export interface AgentConfig {
   transport?: AgentTransport;
 }
 
-export const STREAM_RESOURCE_CONFIG =
-  new InjectionToken<AgentConfig>('STREAM_RESOURCE_CONFIG');
+export const AGENT_CONFIG =
+  new InjectionToken<AgentConfig>('AGENT_CONFIG');
 
 /**
  * Angular provider factory that registers global defaults for all
@@ -37,7 +37,7 @@ export const STREAM_RESOURCE_CONFIG =
  */
 export function provideAgent(config: AgentConfig): Provider {
   return {
-    provide: STREAM_RESOURCE_CONFIG,
+    provide: AGENT_CONFIG,
     useValue: config,
   };
 }

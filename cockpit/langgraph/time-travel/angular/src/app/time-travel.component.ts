@@ -109,7 +109,7 @@ export class TimeTravelComponent {
   /** Index of the currently selected checkpoint in the sidebar. */
   protected readonly selectedIndex = signal<number>(-1);
 
-  /** Checkpoint history derived from the stream resource. */
+  /** Checkpoint history derived from the agent. */
   protected readonly checkpoints = computed(
     (): ThreadState<any>[] => this.stream.history(),
   );

@@ -3,7 +3,7 @@
 export { agent } from './lib/agent.fn';
 
 // Provider
-export { provideAgent, STREAM_RESOURCE_CONFIG } from './lib/agent.provider';
+export { provideAgent, AGENT_CONFIG } from './lib/agent.provider';
 export type { AgentConfig } from './lib/agent.provider';
 
 // Public types

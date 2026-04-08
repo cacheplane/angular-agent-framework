@@ -3,7 +3,7 @@ import {
   inject, DestroyRef, computed,
   isSignal, Signal,
 } from '@angular/core';
-import { STREAM_RESOURCE_CONFIG } from './agent.provider';
+import { AGENT_CONFIG } from './agent.provider';
 import { toSignal, toObservable } from '@angular/core/rxjs-interop';
 import {
   BehaviorSubject, Subject, of,
@@ -58,7 +58,7 @@ export function agent<
 ): AgentRef<T, InferBag<T, Bag>> {
   // Injection context required
   const destroyRef   = inject(DestroyRef);
-  const globalConfig = inject(STREAM_RESOURCE_CONFIG, { optional: true });
+  const globalConfig = inject(AGENT_CONFIG, { optional: true });
   const destroy$     = new Subject<void>();
   destroyRef.onDestroy(() => { destroy$.next(); destroy$.complete(); });
 
