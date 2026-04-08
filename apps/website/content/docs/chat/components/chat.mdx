@@ -62,6 +62,8 @@ export class ChatPageComponent {
 | Input | Type | Default | Description |
 |-------|------|---------|-------------|
 | `ref` | `AgentRef<any, any>` | **Required** | The agent ref providing streaming state. Created by `agent()` from `@cacheplane/angular`. |
+| `views` | `ViewRegistry \| undefined` | `undefined` | View registry for generative UI. Maps spec type names to Angular components. Created with `views()` from `@cacheplane/chat`. |
+| `store` | `StateStore \| undefined` | `undefined` | Optional state store for interactive generative UI specs. |
 | `threads` | `Thread[]` | `[]` | List of threads to display in the sidebar. Each thread must have an `id` property. |
 | `activeThreadId` | `string` | `''` | The ID of the currently active thread, used for highlighting in the sidebar. |
 
@@ -123,6 +125,25 @@ export class ChatWithThreadsComponent {
 | `ai` | Left-aligned with avatar badge, markdown-rendered content |
 | `tool` | Full-width monospace card with alt background |
 | `system` | Centered, italic, muted text |
+
+## Generative UI
+
+When you pass a `[views]` registry, the component auto-detects JSON specs in AI messages and renders them as Angular components:
+
+```html
+<chat [ref]="chatRef" [views]="myViews" />
+```
+
+```typescript
+import { views } from '@cacheplane/chat';
+import { WeatherCardComponent } from './weather-card.component';
+
+const myViews = views({
+  weather_card: WeatherCardComponent,
+});
+```
+
+AI messages containing JSON are parsed character-by-character as tokens stream. Components render incrementally — string props grow visibly as tokens arrive. See the [Generative UI guide](/docs/chat/guides/generative-ui) for full setup.
 
 ## Auto-Scroll Behavior
 
