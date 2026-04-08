@@ -1,7 +1,7 @@
 {
   "name": "@cacheplane/angular-mcp",
   "version": "0.1.0",
-  "description": "MCP server for the angular Angular library",
+  "description": "MCP server for the @cacheplane/angular library",
   "license": "PolyForm-Noncommercial-1.0.0",
   "main": "src/index.js",
   "bin": { "@cacheplane/angular-mcp": "src/index.js" },
