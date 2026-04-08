@@ -2,5 +2,6 @@
   "framework": "nextjs",
   "buildCommand": "npx nx build cockpit --skip-nx-cache",
   "outputDirectory": "dist/apps/cockpit/.next",
-  "installCommand": "npm ci"
+  "installCommand": "npm ci",
+  "$comment": "NEXT_PUBLIC_COCKPIT_RUNTIME_BASE_URL set in Vercel env vars to https://examples.cacheplane.ai"
 }
