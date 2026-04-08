@@ -110,7 +110,7 @@ export function Footer() {
             <NewsletterForm />
             {/* Social links */}
             <div className="flex items-center gap-4">
-              <a href="https://github.com/cacheplane/stream-resource"
+              <a href="https://github.com/cacheplane/angular"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="transition-colors"
@@ -156,7 +156,7 @@ export function Footer() {
               onMouseLeave={(e) => (e.currentTarget.style.color = tokens.colors.textSecondary)}>
               Pricing
             </Link>
-            <a href="https://github.com/cacheplane/stream-resource"
+            <a href="https://github.com/cacheplane/angular"
               target="_blank" rel="noopener noreferrer"
               className="transition-colors" style={{ color: tokens.colors.textSecondary }}
               onMouseEnter={(e) => (e.currentTarget.style.color = tokens.colors.accent)}

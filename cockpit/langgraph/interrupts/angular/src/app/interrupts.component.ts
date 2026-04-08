@@ -1,16 +1,8 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import { Component } from '@angular/core';
-<<<<<<< HEAD
 import { ChatComponent, ChatInterruptPanelComponent, type InterruptAction } from '@cacheplane/chat';
 import { agent } from '@cacheplane/angular';
 import { environment } from '../environments/environment';
-=======
-import { ChatComponent, ChatInterruptPanelComponent, type InterruptAction, views } from '@cacheplane/chat';
-import { signalStateStore } from '@cacheplane/render';
-import { agent } from '@cacheplane/angular';
-import { environment } from '../environments/environment';
-import { ApprovalCardComponent } from './views/approval-card.component';
->>>>>>> origin/main
 
 /**
  * InterruptsComponent demonstrates human-in-the-loop with `agent()`.
@@ -30,11 +22,7 @@ import { ApprovalCardComponent } from './views/approval-card.component';
   imports: [ChatComponent, ChatInterruptPanelComponent],
   template: `
     <div class="flex flex-col h-screen">
-<<<<<<< HEAD
       <chat [ref]="stream" class="flex-1 min-w-0" />
-=======
-      <chat [ref]="stream" [views]="ui" [store]="uiStore" class="flex-1 min-w-0" />
->>>>>>> origin/main
       @if (stream.interrupt()) {
         <div class="p-4" style="border-top: 1px solid var(--chat-border, #333);">
           <chat-interrupt-panel [ref]="stream" (action)="onInterruptAction($event)" />
@@ -44,15 +32,6 @@ import { ApprovalCardComponent } from './views/approval-card.component';
   `,
 })
 export class InterruptsComponent {
-<<<<<<< HEAD
-=======
-  readonly ui = views({
-    'approval-card': ApprovalCardComponent,
-  });
-
-  readonly uiStore = signalStateStore({});
-
->>>>>>> origin/main
   /**
    * The streaming resource with interrupt support.
    *

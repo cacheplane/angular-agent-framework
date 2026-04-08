@@ -74,7 +74,7 @@ export function Nav() {
               {l.label}
             </Link>
           ))}
-          <a href="https://github.com/cacheplane/stream-resource"
+          <a href="https://github.com/cacheplane/angular"
             target="_blank"
             rel="noopener noreferrer"
             className="transition-colors"
@@ -125,7 +125,7 @@ export function Nav() {
             </Link>
           ))}
           <div className="flex items-center gap-4 pt-2">
-            <a href="https://github.com/cacheplane/stream-resource"
+            <a href="https://github.com/cacheplane/angular"
               target="_blank"
               rel="noopener noreferrer"
               style={{ color: tokens.colors.textSecondary }}

@@ -14,12 +14,6 @@ import {
 } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
 import type { AgentRef } from '@cacheplane/angular';
-<<<<<<< HEAD
-=======
-import type { ViewRegistry } from '@cacheplane/render';
-import type { StateStore } from '@json-render/core';
-import { VIEW_REGISTRY } from '@cacheplane/render';
->>>>>>> origin/main
 import { ChatMessagesComponent } from '../../primitives/chat-messages/chat-messages.component';
 import { MessageTemplateDirective } from '../../primitives/chat-messages/message-template.directive';
 import { ChatInputComponent } from '../../primitives/chat-input/chat-input.component';
@@ -102,11 +96,7 @@ import { CHAT_MARKDOWN_STYLES, renderMarkdown } from '../../styles/chat-markdown
               </div>
             }
 
-<<<<<<< HEAD
             <chat-messages [ref]="ref()">
-=======
-            <chat-messages [ref]="ref()" [views]="resolvedViews()" [store]="store()">
->>>>>>> origin/main
               <!-- Human messages: right-aligned bubble -->
               <ng-template chatMessageTemplate="human" let-message>
                 <div class="flex justify-end">
@@ -186,30 +176,12 @@ export class ChatComponent {
   private readonly sanitizer = inject(DomSanitizer);
 
   readonly ref = input.required<AgentRef<any, any>>();
-<<<<<<< HEAD
   readonly threads = input<Thread[]>([]);
   readonly activeThreadId = input<string>('');
   readonly threadSelected = output<string>();
   readonly sidebarOpen = signal(false);
 
-=======
-  readonly views = input<ViewRegistry | undefined>(undefined);
-  readonly store = input<StateStore | undefined>(undefined);
-  readonly threads = input<Thread[]>([]);
-  readonly activeThreadId = input<string>('');
-  readonly threadSelected = output<string>();
-  readonly action = output<{ name: string; params: Record<string, unknown> }>();
-  readonly sidebarOpen = signal(false);
 
-  // Inject DI-provided registry as fallback
-  private readonly diViews = inject(VIEW_REGISTRY, { optional: true });
-
-  // Resolved registry: input takes precedence over DI
-  protected readonly resolvedViews = computed(() =>
-    this.views() ?? this.diViews ?? undefined
-  );
-
->>>>>>> origin/main
   readonly messageContent = messageContent;
 
   private readonly scrollContainer = viewChild<ElementRef<HTMLElement>>('scrollContainer');

@@ -56,8 +56,5 @@ export { views, withViews, withoutViews, toRenderRegistry } from '@cacheplane/re
 export type { ViewRegistry } from '@cacheplane/render';
 export { provideViews, VIEW_REGISTRY } from '@cacheplane/render';
 
-// Spec detection
-export { getUiSpec } from './lib/primitives/chat-messages/chat-messages.component';
-
 // Test utilities
 export { createMockAgentRef } from './lib/testing/mock-agent-ref';
