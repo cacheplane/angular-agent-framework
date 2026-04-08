@@ -6,6 +6,7 @@
     "@angular/common": "^20.0.0 || ^21.0.0",
     "@angular/forms": "^20.0.0 || ^21.0.0",
     "@cacheplane/render": "^0.0.1",
+    "@cacheplane/partial-json": "^0.0.1",
     "@cacheplane/angular": "^0.0.1",
     "@json-render/core": "^0.16.0",
     "@langchain/core": "^1.1.33",

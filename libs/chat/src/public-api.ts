@@ -56,5 +56,11 @@ export { views, withViews, withoutViews, toRenderRegistry } from '@cacheplane/re
 export type { ViewRegistry } from '@cacheplane/render';
 export { provideViews, VIEW_REGISTRY } from '@cacheplane/render';
 
+// Streaming / Generative UI
+export { createContentClassifier } from './lib/streaming/content-classifier';
+export type { ContentClassifier, ContentType } from './lib/streaming/content-classifier';
+export { createParseTreeStore } from './lib/streaming/parse-tree-store';
+export type { ParseTreeStore, ElementAccumulationState } from './lib/streaming/parse-tree-store';
+
 // Test utilities
 export { createMockAgentRef } from './lib/testing/mock-agent-ref';

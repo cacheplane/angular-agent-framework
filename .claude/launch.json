@@ -13,6 +13,12 @@
       "runtimeExecutable": "/bin/bash",
       "runtimeArgs": ["-c", "export PATH=/Users/blove/.nvm/versions/node/v22.14.0/bin:$PATH && npx nx serve cockpit --port 4201"],
       "port": 4201
+    },
+    {
+      "name": "streaming",
+      "runtimeExecutable": "/bin/bash",
+      "runtimeArgs": ["-c", "export PATH=/Users/blove/.nvm/versions/node/v22.14.0/bin:$PATH && npx nx serve cockpit-langgraph-streaming-angular --port 4300"],
+      "port": 4300
     }
   ]
 }

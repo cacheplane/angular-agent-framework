@@ -64,12 +64,11 @@ export class RenderElementComponent {
   private readonly repeatScope = inject(REPEAT_SCOPE, { optional: true });
   readonly parentInjector = inject(Injector);
 
-  /** The UIElement definition from the spec. */
-  readonly element: Signal<UIElement | undefined> = computed(() => {
-    const spec = this.spec();
-    const key = this.elementKey();
-    return spec?.elements?.[key];
-  });
+  /** The UIElement definition from the spec. Only propagates when reference changes. */
+  readonly element: Signal<UIElement | undefined> = computed(
+    () => this.spec()?.elements?.[this.elementKey()],
+    { equal: Object.is },
+  );
 
   /** The Angular component class for this element type. */
   readonly componentClass = computed<AngularComponentRenderer | null>(() => {

@@ -326,3 +326,49 @@ describe('RenderElementComponent — children rendering', () => {
     expect(childKeys).toEqual([]);
   });
 });
+
+describe('RenderElementComponent — element-level memoization', () => {
+  it('element lookup returns same reference when spec changes but element is unchanged', () => {
+    TestBed.configureTestingModule({});
+    TestBed.runInInjectionContext(() => {
+      const { signal, computed } = require('@angular/core');
+
+      // Simulate two spec snapshots with structural sharing:
+      // el-1 is the same reference in both, el-2 is different
+      const sharedEl1 = { type: 'Text', props: { label: 'Same' } };
+      const spec1 = createSpec({
+        root: { type: 'Container', props: {}, children: ['el-1', 'el-2'] },
+        'el-1': sharedEl1,
+        'el-2': { type: 'Text', props: { label: 'Old' } },
+      });
+
+      // spec2 reuses the same el-1 reference (structural sharing)
+      const spec2 = {
+        ...spec1,
+        elements: {
+          ...spec1.elements,
+          'el-2': { type: 'Text', props: { label: 'New' } },
+        },
+      } as Spec;
+      // el-1 is the SAME object reference
+      expect(spec2.elements['el-1']).toBe(spec1.elements['el-1']);
+
+      // Simulate what the component does: computed with Object.is equality
+      const specSignal = signal(spec1);
+      const elementKey = signal('el-1');
+      const element = computed(
+        () => specSignal()?.elements?.[elementKey()],
+        { equal: Object.is },
+      );
+
+      const ref1 = element();
+      expect(ref1).toBe(sharedEl1);
+
+      // Update spec — el-1 reference unchanged due to structural sharing
+      specSignal.set(spec2);
+      const ref2 = element();
+      // With Object.is equality, computed returns same reference
+      expect(ref2).toBe(ref1);
+    });
+  });
+});
