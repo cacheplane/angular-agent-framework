@@ -5,7 +5,7 @@ import {
   ChatToolCallsComponent,
   ChatToolCallCardComponent,
 } from '@cacheplane/chat';
-import { streamResource } from '@cacheplane/stream-resource';
+import { agent } from '@cacheplane/angular';
 import { environment } from '../environments/environment';
 
 /**
@@ -38,7 +38,7 @@ import { environment } from '../environments/environment';
   `,
 })
 export class ToolCallsComponent {
-  protected readonly stream = streamResource({
+  protected readonly stream = agent({
     apiUrl: environment.langGraphApiUrl,
     assistantId: environment.streamingAssistantId,
   });

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import { Component, signal } from '@angular/core';
 import { ChatComponent, CHAT_THEME_STYLES } from '@cacheplane/chat';
-import { streamResource } from '@cacheplane/stream-resource';
+import { agent } from '@cacheplane/angular';
 import { environment } from '../environments/environment';
 
 const THEMES: Record<string, Record<string, string>> = {
@@ -83,7 +83,7 @@ const THEMES: Record<string, Record<string, string>> = {
   `,
 })
 export class ThemingComponent {
-  protected readonly stream = streamResource({
+  protected readonly stream = agent({
     apiUrl: environment.langGraphApiUrl,
     assistantId: environment.streamingAssistantId,
   });

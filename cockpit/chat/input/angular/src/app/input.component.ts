@@ -2,7 +2,7 @@
 import { Component, computed } from '@angular/core';
 import { ChatInputComponent as ChatInputPrimitive } from '@cacheplane/chat';
 import { ChatMessagesComponent } from '@cacheplane/chat';
-import { streamResource } from '@cacheplane/stream-resource';
+import { agent } from '@cacheplane/angular';
 import { environment } from '../environments/environment';
 
 /**
@@ -52,7 +52,7 @@ import { environment } from '../environments/environment';
   `,
 })
 export class InputComponent {
-  protected readonly stream = streamResource({
+  protected readonly stream = agent({
     apiUrl: environment.langGraphApiUrl,
     assistantId: environment.streamingAssistantId,
   });
