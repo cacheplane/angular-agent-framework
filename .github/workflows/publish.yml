@@ -16,9 +16,9 @@ jobs:
           cache: npm
           registry-url: https://registry.npmjs.org
       - run: npm ci
-      - run: npx nx test stream-resource
-      - run: npx nx build stream-resource --configuration=production
+      - run: npx nx test langchain
+      - run: npx nx build langchain --configuration=production
       - name: Publish to npm
-        run: npx nx-release-publish stream-resource
+        run: npx nx-release-publish langchain
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

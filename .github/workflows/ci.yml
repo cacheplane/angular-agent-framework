@@ -17,9 +17,9 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npx nx lint stream-resource
-      - run: npx nx test stream-resource --coverage
-      - run: npx nx build stream-resource --configuration=production
+      - run: npx nx lint langchain
+      - run: npx nx test langchain --coverage
+      - run: npx nx build langchain --configuration=production
 
   website:
     name: Website — lint / build
