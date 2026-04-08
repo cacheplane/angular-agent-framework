@@ -14,6 +14,8 @@ import {
 } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
 import type { AgentRef } from '@cacheplane/angular';
+import type { ViewRegistry } from '@cacheplane/render';
+import type { StateStore } from '@json-render/core';
 import { ChatMessagesComponent } from '../../primitives/chat-messages/chat-messages.component';
 import { MessageTemplateDirective } from '../../primitives/chat-messages/message-template.directive';
 import { ChatInputComponent } from '../../primitives/chat-input/chat-input.component';
@@ -176,6 +178,8 @@ export class ChatComponent {
   private readonly sanitizer = inject(DomSanitizer);
 
   readonly ref = input.required<AgentRef<any, any>>();
+  readonly views = input<ViewRegistry | undefined>(undefined);
+  readonly store = input<StateStore | undefined>(undefined);
   readonly threads = input<Thread[]>([]);
   readonly activeThreadId = input<string>('');
   readonly threadSelected = output<string>();
