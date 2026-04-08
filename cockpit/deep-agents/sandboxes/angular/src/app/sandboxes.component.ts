@@ -1,7 +1,9 @@
 import { Component, computed } from '@angular/core';
-import { ChatComponent } from '@cacheplane/chat';
+import { ChatComponent, views } from '@cacheplane/chat';
 import { agent } from '@cacheplane/angular';
+import { signalStateStore } from '@cacheplane/render';
 import { environment } from '../environments/environment';
+import { CodeExecutionComponent } from './views/code-execution.component';
 
 /**
  * Represents a parsed code execution: the code that was run and its output.
@@ -28,7 +30,7 @@ interface CodeExecution {
   imports: [ChatComponent],
   template: `
     <div class="flex h-screen">
-      <chat [ref]="stream" class="flex-1 min-w-0" />
+      <chat [ref]="stream" [views]="ui" [store]="uiStore" class="flex-1 min-w-0" />
       <aside class="w-80 shrink-0 border-l overflow-y-auto p-4 space-y-3"
              style="border-color: var(--chat-border, #333); background: var(--chat-bg, #171717); color: var(--chat-text, #e0e0e0);">
         <h3 class="text-xs font-semibold uppercase tracking-wide"
@@ -59,6 +61,9 @@ interface CodeExecution {
   `,
 })
 export class SandboxesComponent {
+  readonly ui = views({ 'code-execution': CodeExecutionComponent });
+  readonly uiStore = signalStateStore({});
+
   protected readonly stream = agent({
     apiUrl: environment.langGraphApiUrl,
     assistantId: environment.streamingAssistantId,
