@@ -12,45 +12,14 @@ import type { ChatConfig } from '@cacheplane/chat';
 
 ```typescript
 interface ChatConfig {
-  /** Default render registry for generative UI components. */
-  renderRegistry?: AngularRegistry;
-
   /** Override the default AI avatar label (default: "A"). */
   avatarLabel?: string;
-
   /** Override the default assistant display name (default: "Assistant"). */
   assistantName?: string;
 }
 ```
 
 ## Properties
-
-### renderRegistry
-
-```typescript
-renderRegistry?: AngularRegistry
-```
-
-The component registry used by `ChatGenerativeUiComponent` to resolve JSON UI specs to Angular components. This is an `AngularRegistry` from `@cacheplane/render`.
-
-When not provided, generative UI components will not render -- the `chat-generative-ui` primitive will simply show nothing for any spec passed to it.
-
-**Example:**
-
-```typescript
-import { createAngularRegistry } from '@cacheplane/render';
-import { WeatherCardComponent } from './weather-card.component';
-import { ChartComponent } from './chart.component';
-
-const registry = createAngularRegistry({
-  weather_card: WeatherCardComponent,
-  chart: ChartComponent,
-});
-
-provideChat({ renderRegistry: registry });
-```
-
-See the [Generative UI guide](/docs/chat/guides/generative-ui) for detailed setup.
 
 ### avatarLabel
 
@@ -109,14 +78,6 @@ export class ChatHeaderComponent {
   }
 }
 ```
-
-## Relationship to Other Types
-
-`ChatConfig` references the following external type:
-
-| Type | Package | Description |
-|------|---------|-------------|
-| `AngularRegistry` | `@cacheplane/render` | Maps JSON spec type strings to Angular component classes |
 
 ## Type Location
 

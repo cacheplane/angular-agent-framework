@@ -26,7 +26,7 @@ const ROWS = [
   {
     capability: 'Generative UI',
     without: 'No established pattern',
-    with: '<chat-generative-ui> + <render-spec> + registry',
+    with: 'Auto-detected from stream + <render-spec> + views()',
   },
   {
     capability: 'Deterministic testing',

@@ -1,0 +1,124 @@
+# Streaming
+
+The `ChatComponent` automatically classifies AI message content and routes it to the appropriate renderer. This page explains how the streaming pipeline works and how to use the classification APIs directly for custom integrations.
+
+## Content Classification
+
+Each AI message is processed by a `ContentClassifier` that examines the content as it streams token-by-token. The classifier determines the content type from the first non-whitespace character:
+
+| Trigger | Content Type | What Happens |
+|---------|-------------|--------------|
+| First non-whitespace is `{` | `json-render` | Parsed as a JSON spec via `@cacheplane/partial-json` |
+| Any other text | `markdown` | Rendered as markdown prose |
+
+<Callout type="info" title="Per-message classification">
+Each message gets its own classifier instance. Classification happens once per message — the type is determined by the first meaningful character and never changes.
+</Callout>
+
+## The Streaming Pipeline
+
+For JSON spec messages, the pipeline is:
+
+```
+Tokens arrive character-by-character
+  → ContentClassifier detects { → switches to json-render mode
+  → PartialJsonParser builds a parse tree incrementally
+  → ParseTreeStore materializes tree → Spec signal (structural sharing)
+  → RenderSpecComponent renders with element-level memoization
+```
+
+**Structural sharing** means that when a new token arrives, only the affected element's object reference changes. Sibling elements keep the same reference, so Angular's change detection skips them entirely. This makes streaming efficient even for large specs with many elements.
+
+## Using ContentClassifier Directly
+
+For custom message rendering outside of `ChatComponent`, use `createContentClassifier()`:
+
+```typescript
+import { createContentClassifier } from '@cacheplane/chat';
+
+// Create a classifier instance (must be in an Angular injection context)
+const classifier = createContentClassifier();
+
+// Feed content snapshots — the classifier computes deltas internally
+classifier.update('{"root":"r1","elements":{"r1":{"type":"Te');
+classifier.update('{"root":"r1","elements":{"r1":{"type":"Text","props":{"label":"Hello"}}}}');
+
+// Read reactive signals
+console.log(classifier.type());         // 'json-render'
+console.log(classifier.spec());         // { root: 'r1', elements: { ... } }
+console.log(classifier.markdown());     // '' (empty for pure JSON)
+console.log(classifier.streaming());    // false (complete JSON)
+
+// Clean up when done
+classifier.dispose();
+```
+
+### Signals
+
+| Signal | Type | Description |
+|--------|------|-------------|
+| `type` | `Signal<ContentType>` | `'undetermined'`, `'markdown'`, `'json-render'`, `'a2ui'`, or `'mixed'` |
+| `markdown` | `Signal<string>` | Accumulated markdown prose (empty for pure JSON) |
+| `spec` | `Signal<Spec \| null>` | Materialized JSON-render spec with structural sharing |
+| `elementStates` | `Signal<Map<string, ElementAccumulationState>>` | Per-element tracking of which properties have been received |
+| `streaming` | `Signal<boolean>` | `true` while content is still arriving |
+
+### ContentType
+
+```typescript
+type ContentType = 'undetermined' | 'markdown' | 'json-render' | 'a2ui' | 'mixed';
+```
+
+## Using ParseTreeStore Directly
+
+For lower-level control over JSON-to-Spec materialization:
+
+```typescript
+import { createPartialJsonParser } from '@cacheplane/partial-json';
+import { createParseTreeStore } from '@cacheplane/chat';
+
+const parser = createPartialJsonParser();
+const store = createParseTreeStore(parser);
+
+// Feed tokens
+store.push('{"root":"r1","elements":{"r1":{"type":"Text"');
+console.log(store.spec());  // partial spec with r1.type = "Text"
+
+store.push(',"props":{"label":"Hello"}}}}');
+console.log(store.spec());  // complete spec
+
+// Track element accumulation
+const states = store.elementStates();
+console.log(states.get('r1'));
+// { hasType: true, hasProps: true, hasChildren: false, streaming: false }
+```
+
+### ElementAccumulationState
+
+```typescript
+interface ElementAccumulationState {
+  hasType: boolean;      // /elements/{key}/type received
+  hasProps: boolean;     // /elements/{key}/props received
+  hasChildren: boolean;  // /elements/{key}/children received
+  streaming: boolean;    // still receiving data for this element
+}
+```
+
+## What's Next
+
+<CardGroup cols={2}>
+  <Card
+    title="Generative UI"
+    icon="layout"
+    href="/docs/chat/guides/generative-ui"
+  >
+    Set up view registries and render JSON specs in chat messages.
+  </Card>
+  <Card
+    title="ContentClassifier API"
+    icon="book"
+    href="/docs/chat/api/content-classifier"
+  >
+    Full API reference for createContentClassifier().
+  </Card>
+</CardGroup>
