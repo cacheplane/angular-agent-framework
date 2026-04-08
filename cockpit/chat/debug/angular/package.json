@@ -1,0 +1,11 @@
+{
+  "name": "@cacheplane/cockpit-chat-debug-angular",
+  "version": "0.0.1",
+  "peerDependencies": {
+    "@cacheplane/chat": "^0.0.1",
+    "@cacheplane/angular": "^0.0.1",
+    "@langchain/langgraph-sdk": "^0.0.36"
+  },
+  "license": "PolyForm-Noncommercial-1.0.0",
+  "sideEffects": false
+}
