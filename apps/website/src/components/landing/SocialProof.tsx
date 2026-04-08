@@ -2,23 +2,23 @@
 import { motion } from 'framer-motion';
 import { tokens } from '../../../lib/design-tokens';
 
-const COMPANIES = [
-  'Klarna',
-  'Elastic',
-  'Rakuten',
-  'GitLab',
-  'Cloudflare',
-  'Coinbase',
-  'LinkedIn',
-  'Lyft',
-  'Cisco',
-  'Workday',
-  'ServiceNow',
-  'Monday',
+const LOGOS = [
+  { name: 'Klarna', src: '/logos/klarna.svg', width: 80 },
+  { name: 'Elastic', src: '/logos/elastic.svg', width: 90 },
+  { name: 'Rakuten', src: '/logos/rakuten.svg', width: 85 },
+  { name: 'GitLab', src: '/logos/gitlab.svg', width: 32 },
+  { name: 'Cloudflare', src: '/logos/cloudflare.svg', width: 34 },
+  { name: 'Coinbase', src: '/logos/coinbase.svg', width: 32 },
+  { name: 'Stripe', src: '/logos/stripe.svg', width: 70 },
+  { name: 'Lyft', src: '/logos/lyft.svg', width: 50 },
+  { name: 'Cisco', src: '/logos/cisco.svg', width: 70 },
+  { name: 'Shopify', src: '/logos/shopify.svg', width: 32 },
+  { name: 'Databricks', src: '/logos/databricks.svg', width: 32 },
+  { name: 'Snowflake', src: '/logos/snowflake.svg', width: 32 },
 ];
 
 /** Duplicate for seamless infinite scroll */
-const SCROLL_ITEMS = [...COMPANIES, ...COMPANIES];
+const SCROLL_ITEMS = [...LOGOS, ...LOGOS];
 
 export function SocialProof() {
   return (
@@ -54,17 +54,17 @@ export function SocialProof() {
           WebkitBackdropFilter: `blur(${tokens.glass.blur})`,
           border: `1px solid ${tokens.glass.border}`,
           overflow: 'hidden',
-          padding: '32px 0',
+          padding: '28px 0',
         }}>
           {/* Fade edges */}
           <div style={{
             position: 'absolute', left: 0, top: 0, bottom: 0, width: 100, zIndex: 1,
-            background: 'linear-gradient(to right, rgba(248,249,252,0.9), transparent)',
+            background: 'linear-gradient(to right, rgba(248,249,252,0.95), transparent)',
             pointerEvents: 'none',
           }} />
           <div style={{
             position: 'absolute', right: 0, top: 0, bottom: 0, width: 100, zIndex: 1,
-            background: 'linear-gradient(to left, rgba(248,249,252,0.9), transparent)',
+            background: 'linear-gradient(to left, rgba(248,249,252,0.95), transparent)',
             pointerEvents: 'none',
           }} />
 
@@ -74,30 +74,41 @@ export function SocialProof() {
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: 72,
+              gap: 56,
               width: 'max-content',
               paddingLeft: 48,
               paddingRight: 48,
             }}
           >
-            {SCROLL_ITEMS.map((company, i) => (
-              <span
-                key={`${company}-${i}`}
+            {SCROLL_ITEMS.map((logo, i) => (
+              <div
+                key={`${logo.name}-${i}`}
                 style={{
-                  fontFamily: 'var(--font-inter, Inter, system-ui, sans-serif)',
-                  fontSize: 22,
-                  fontWeight: 800,
-                  color: tokens.colors.textPrimary,
-                  opacity: 0.35,
-                  whiteSpace: 'nowrap',
-                  letterSpacing: '-0.02em',
-                  userSelect: 'none',
-                  lineHeight: 1,
-                  padding: '4px 0',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  height: 36,
+                  flexShrink: 0,
+                  opacity: 0.4,
+                  padding: '0 8px',
                 }}
               >
-                {company}
-              </span>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={logo.src}
+                  alt={logo.name}
+                  width={logo.width}
+                  height={36}
+                  style={{
+                    objectFit: 'contain',
+                    filter: 'grayscale(100%) brightness(0.2)',
+                    userSelect: 'none',
+                    pointerEvents: 'none',
+                  }}
+                  loading="lazy"
+                  draggable={false}
+                />
+              </div>
             ))}
           </div>
         </div>
