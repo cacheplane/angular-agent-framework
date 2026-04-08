@@ -1,0 +1,27 @@
+{
+  "name": "partial-json",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/partial-json/src",
+  "projectType": "library",
+  "tags": ["scope:shared", "type:lib"],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{workspaceRoot}/dist/libs/partial-json"],
+      "options": {
+        "outputPath": "dist/libs/partial-json",
+        "main": "libs/partial-json/src/index.ts",
+        "tsConfig": "libs/partial-json/tsconfig.lib.json"
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    },
+    "test": {
+      "executor": "@nx/vite:test",
+      "options": {
+        "configFile": "libs/partial-json/vite.config.mts"
+      }
+    }
+  }
+}

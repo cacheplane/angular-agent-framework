@@ -1,7 +1,7 @@
 <p align="center">
   <img
     src="https://cacheplane.ai/assets/hero.svg"
-    alt="Angular Agent Framework — The Enterprise Streaming Resource for LangChain and Angular"
+    alt="Angular Stream Resource — The Enterprise Streaming Resource for LangChain and Angular"
     width="100%"
   />
 </p>
@@ -11,13 +11,13 @@
 </p>
 
 <p align="center">
-  <a href="https://www.npmjs.com/package/@cacheplane/angular">
-    <img alt="npm version" src="https://img.shields.io/npm/v/@cacheplane%2Fangular?color=6C8EFF&labelColor=080B14&style=flat-square" />
+  <a href="https://www.npmjs.com/package/@cacheplane/stream-resource">
+    <img alt="npm version" src="https://img.shields.io/npm/v/@cacheplane%2Fstream-resource?color=6C8EFF&labelColor=080B14&style=flat-square" />
   </a>
   <a href="./LICENSE">
     <img alt="License: PolyForm Noncommercial + Commercial" src="https://img.shields.io/badge/license-PolyForm%20Noncommercial%20%2B%20Commercial-6C8EFF?labelColor=080B14&style=flat-square" />
   </a>
-  <a href="https://cacheplane.ai">
+  <a href="https://angular.dev">
     <img alt="Angular 20+" src="https://img.shields.io/badge/Angular-20%2B-6C8EFF?labelColor=080B14&style=flat-square" />
   </a>
   <a href="https://langchain-ai.github.io/langgraph/">
@@ -27,14 +27,14 @@
 
 ---
 
-`agent()` is the Angular equivalent of LangGraph's React `useStream()` hook — a full-parity implementation built on Angular Signals and the Angular Resource API. It gives enterprise Angular teams the same production-grade streaming primitives available to React developers on LangChain, without compromises or workarounds. Drop it into any Angular 20+ component, point it at your LangGraph Platform endpoint, and get reactive, signal-driven access to streaming state, messages, tool calls, interrupts, and thread history.
+`streamResource()` is the Angular equivalent of LangGraph's React `useStream()` hook — a full-parity implementation built on Angular Signals and the Angular Resource API. It gives enterprise Angular teams the same production-grade streaming primitives available to React developers on LangChain, without compromises or workarounds. Drop it into any Angular 20+ component, point it at your LangGraph Platform endpoint, and get reactive, signal-driven access to streaming state, messages, tool calls, interrupts, and thread history.
 
 ---
 
 ## Install
 
 ```bash
-npm install @cacheplane/angular
+npm install @cacheplane/stream-resource
 ```
 
 **Peer dependencies:** `@angular/core ^20.0.0 || ^21.0.0`, `@langchain/core ^1.1.0`, `@langchain/langgraph-sdk ^1.7.0`, `rxjs ~7.8.0`
@@ -45,7 +45,7 @@ npm install @cacheplane/angular
 
 ```typescript
 import { Component } from '@angular/core';
-import { agent } from '@cacheplane/angular';
+import { streamResource } from '@cacheplane/stream-resource';
 import type { BaseMessage } from '@langchain/core/messages';
 
 @Component({
@@ -65,7 +65,7 @@ import type { BaseMessage } from '@langchain/core/messages';
   `,
 })
 export class ChatComponent {
-  chat = agent<{ messages: BaseMessage[] }>({
+  chat = streamResource<{ messages: BaseMessage[] }>({
     apiUrl: 'https://your-langgraph-platform.com',
     assistantId: 'my-agent',
     messagesKey: 'messages',
@@ -83,7 +83,7 @@ That's it. `chat.messages()` is an Angular Signal. Bind it directly in your temp
 
 ## Feature Comparison
 
-| Feature | `agent()` (Angular) | `useStream()` (React) |
+| Feature | `streamResource()` (Angular) | `useStream()` (React) |
 |---|---|---|
 | Streaming state as reactive primitives | Angular Signals | React state |
 | Messages signal | `messages()` | `messages` |
@@ -99,7 +99,7 @@ That's it. `chat.messages()` is an Angular Signal. Bind it directly in your temp
 | Submit | `submit(values, opts?)` | `submit(values, opts?)` |
 | Stop | `stop()` | `stop()` |
 | Reload last submission | `reload()` | — |
-| Custom transport (for testing) | `MockAgentTransport` | mock fetch |
+| Custom transport (for testing) | `MockStreamTransport` | mock fetch |
 | Angular `ResourceRef<T>` compatibility | Full duck-type parity | N/A |
 | Angular 20+ Signals API | Native | N/A |
 | SSR / Server Components | Client-side only | React Server Components (React) |
@@ -111,12 +111,12 @@ That's it. `chat.messages()` is an Angular Signal. Bind it directly in your temp
 <p align="center">
   <img
     src="https://cacheplane.ai/assets/arch-diagram.svg"
-    alt="Angular Agent Framework architecture: Angular Component → agent() → StreamManager Bridge → LangGraph Platform, with signals returned reactively"
+    alt="Angular Stream Resource architecture: Angular Component → streamResource() → StreamManager Bridge → LangGraph Platform, with signals returned reactively"
     width="100%"
   />
 </p>
 
-`agent()` creates 12 `BehaviorSubject`s at injection-context time — once, at component construction. The `StreamManager` bridge (the only file that touches `@langchain/langgraph-sdk` internals) pushes stream events into those subjects. `toSignal()` converts each subject to an Angular Signal, also at construction time. Dynamic actions (`submit`, `stop`, `switchThread`) push into the existing subjects — no new subjects are ever created after construction. This architecture is required because `toSignal()` must be called in an injection context and cannot be called again later.
+`streamResource()` creates 12 `BehaviorSubject`s at injection-context time — once, at component construction. The `StreamManager` bridge (the only file that touches `@langchain/langgraph-sdk` internals) pushes stream events into those subjects. `toSignal()` converts each subject to an Angular Signal, also at construction time. Dynamic actions (`submit`, `stop`, `switchThread`) push into the existing subjects — no new subjects are ever created after construction. This architecture is required because `toSignal()` must be called in an injection context and cannot be called again later.
 
 ---
 
@@ -137,7 +137,7 @@ That's it. `chat.messages()` is an Angular Signal. Bind it directly in your temp
 
 - [Getting Started](https://cacheplane.ai/docs/getting-started)
 - [API Reference](https://cacheplane.ai/api-reference)
-- [Testing with MockAgentTransport](https://cacheplane.ai/docs/testing)
+- [Testing with MockStreamTransport](https://cacheplane.ai/docs/testing)
 - [Human-in-the-Loop / Interrupts](https://cacheplane.ai/docs/interrupts)
 - [Subagent Streaming](https://cacheplane.ai/docs/subagents)
 
@@ -145,9 +145,9 @@ That's it. `chat.messages()` is an Angular Signal. Bind it directly in your temp
 
 ## License
 
-`@cacheplane/angular` is source-available software dual-licensed:
+`@cacheplane/stream-resource` is source-available software dual-licensed:
 
 - **PolyForm Noncommercial 1.0.0** — free for noncommercial use (personal projects, academic, research, non-profit internal tooling). See [`LICENSE`](./LICENSE).
-- **Angular Agent Framework Commercial License** — required for any for-profit or revenue-generating use. See [`LICENSE-COMMERCIAL`](./LICENSE-COMMERCIAL) and [`COMMERCIAL.md`](./COMMERCIAL.md).
+- **Angular Stream Resource Commercial License** — required for any for-profit or revenue-generating use. See [`LICENSE-COMMERCIAL`](./LICENSE-COMMERCIAL) and [`COMMERCIAL.md`](./COMMERCIAL.md).
 
 This is **not** an open-source license. Commercial use — including use in a for-profit product, service, or organization — requires a paid commercial license. See [pricing](https://cacheplane.ai/pricing).

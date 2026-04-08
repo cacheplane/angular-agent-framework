@@ -23,6 +23,9 @@ import { ChatTypingIndicatorComponent } from '../../primitives/chat-typing-indic
 import { ChatErrorComponent } from '../../primitives/chat-error/chat-error.component';
 import { ChatInterruptComponent } from '../../primitives/chat-interrupt/chat-interrupt.component';
 import { ChatThreadListComponent, Thread } from '../../primitives/chat-thread-list/chat-thread-list.component';
+import { ChatGenerativeUiComponent } from '../../primitives/chat-generative-ui/chat-generative-ui.component';
+import { toRenderRegistry } from '@cacheplane/render';
+import { createContentClassifier, type ContentClassifier } from '../../streaming/content-classifier';
 import { messageContent } from '../shared/message-utils';
 import { CHAT_THEME_STYLES } from '../../styles/chat-theme';
 import { CHAT_MARKDOWN_STYLES, renderMarkdown } from '../../styles/chat-markdown';
@@ -38,6 +41,7 @@ import { CHAT_MARKDOWN_STYLES, renderMarkdown } from '../../styles/chat-markdown
     ChatErrorComponent,
     ChatInterruptComponent,
     ChatThreadListComponent,
+    ChatGenerativeUiComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styles: [CHAT_THEME_STYLES, CHAT_MARKDOWN_STYLES],
@@ -109,18 +113,33 @@ import { CHAT_MARKDOWN_STYLES, renderMarkdown } from '../../styles/chat-markdown
                 </div>
               </ng-template>
 
-              <!-- AI messages: avatar inline with content (ChatGPT pattern) -->
-              <ng-template chatMessageTemplate="ai" let-message>
+              <!-- AI messages: classified rendering (markdown + generative UI) -->
+              <ng-template chatMessageTemplate="ai" let-message let-index="index">
+                @let content = messageContent(message);
+                @let classified = classifyMessage(content, index);
                 <div class="flex gap-3">
                   <div
                     class="w-7 h-7 flex items-center justify-center text-xs font-semibold shrink-0 mt-0.5"
                     style="background: var(--chat-avatar-bg); color: var(--chat-avatar-text); border-radius: var(--chat-radius-avatar);"
                   >A</div>
-                  <div
-                    class="chat-md flex-1 min-w-0 break-words text-[length:var(--chat-font-size)] leading-[var(--chat-line-height)]"
-                    style="color: var(--chat-text);"
-                    [innerHTML]="renderMd(messageContent(message))"
-                  ></div>
+                  <div class="flex-1 min-w-0 flex flex-col gap-2">
+                    @if (classified.markdown(); as md) {
+                      <div
+                        class="chat-md break-words text-[length:var(--chat-font-size)] leading-[var(--chat-line-height)]"
+                        style="color: var(--chat-text);"
+                        [innerHTML]="renderMd(md)"
+                      ></div>
+                    }
+
+                    @if (classified.spec(); as spec) {
+                      <chat-generative-ui
+                        [spec]="spec"
+                        [registry]="renderRegistry()"
+                        [store]="store()"
+                        [loading]="ref().isLoading()"
+                      />
+                    }
+                  </div>
                 </div>
               </ng-template>
 
@@ -186,6 +205,14 @@ export class ChatComponent {
   readonly sidebarOpen = signal(false);
 
 
+  private readonly classifiers = new Map<number, ContentClassifier>();
+
+  /** Convert ViewRegistry → AngularRegistry for ChatGenerativeUiComponent. */
+  readonly renderRegistry = computed(() => {
+    const v = this.views();
+    return v ? toRenderRegistry(v) : undefined;
+  });
+
   readonly messageContent = messageContent;
 
   private readonly scrollContainer = viewChild<ElementRef<HTMLElement>>('scrollContainer');
@@ -215,6 +242,23 @@ export class ChatComponent {
         });
       }
     });
+  }
+
+  classifyMessage(content: string, index: number): ContentClassifier {
+    let classifier = this.classifiers.get(index);
+    if (!classifier) {
+      classifier = createContentClassifier();
+      this.classifiers.set(index, classifier);
+    }
+    classifier.update(content);
+    return classifier;
+  }
+
+  clearClassifiers(): void {
+    for (const [, c] of this.classifiers) {
+      c.dispose();
+    }
+    this.classifiers.clear();
   }
 
   renderMd(content: string) {

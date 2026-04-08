@@ -6,7 +6,7 @@ import { tokens } from '@cacheplane/design-tokens';
 const links = [
   { label: 'Pilot to Prod', href: '/pilot-to-prod', external: false },
   { label: 'Docs', href: '/docs', external: false },
-  { label: 'API', href: '/docs/agent/api/agent', external: false },
+  { label: 'API', href: '/docs/api/stream-resource', external: false },
   { label: 'Examples', href: 'https://cockpit.cacheplane.ai', external: true },
   { label: 'Pricing', href: '/pricing', external: false },
 ];
@@ -50,7 +50,7 @@ export function Nav() {
       {/* Top bar */}
       <div className="flex items-center justify-between px-6 py-4 md:px-8 md:py-5">
         <Link href="/" className="font-garamond text-xl font-bold" style={{ color: tokens.colors.textPrimary }}>
-          🛩️ Angular Agent Framework
+          Angular Stream Resource
         </Link>
 
         {/* Desktop links */}
@@ -74,7 +74,7 @@ export function Nav() {
               {l.label}
             </Link>
           ))}
-          <a href="https://github.com/cacheplane/angular"
+          <a href="https://github.com/cacheplane/stream-resource"
             target="_blank"
             rel="noopener noreferrer"
             className="transition-colors"
@@ -95,10 +95,10 @@ export function Nav() {
 
         {/* Mobile hamburger */}
         <button
-          className="flex md:hidden items-center justify-center"
+          className="md:hidden"
           onClick={() => setOpen(!open)}
           aria-label={open ? 'Close menu' : 'Open menu'}
-          style={{ color: tokens.colors.textPrimary, minWidth: 44, minHeight: 44 }}>
+          style={{ color: tokens.colors.textPrimary }}>
           {open ? <CloseIcon /> : <MenuIcon />}
         </button>
       </div>
@@ -125,7 +125,7 @@ export function Nav() {
             </Link>
           ))}
           <div className="flex items-center gap-4 pt-2">
-            <a href="https://github.com/cacheplane/angular"
+            <a href="https://github.com/cacheplane/stream-resource"
               target="_blank"
               rel="noopener noreferrer"
               style={{ color: tokens.colors.textSecondary }}
