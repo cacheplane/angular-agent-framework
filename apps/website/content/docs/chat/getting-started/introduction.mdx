@@ -24,7 +24,6 @@ Primitives are low-level, headless components that read from an `AgentRef` and e
 | `ChatInterruptComponent` | `chat-interrupt` | Projects interrupt content via a template |
 | `ChatToolCallsComponent` | `chat-tool-calls` | Iterates tool calls and projects each via a template |
 | `ChatSubagentsComponent` | `chat-subagents` | Iterates active subagent streams via a template |
-| `ChatGenerativeUiComponent` | `chat-generative-ui` | Renders a JSON spec through `@cacheplane/render` |
 | `ChatThreadListComponent` | `chat-thread-list` | Renders a list of conversation threads |
 | `ChatTimelineComponent` | `chat-timeline` | Iterates checkpoint history via a template |
 
@@ -61,7 +60,7 @@ LangGraph Platform
 
 - **`@cacheplane/agent`** provides the `agent()` function and the `AgentRef` type. Every chat component accepts an `AgentRef` as its primary input. The ref exposes reactive Signals for `messages()`, `isLoading()`, `error()`, `interrupt()`, `toolCalls()`, `history()`, and more.
 
-- **`@cacheplane/render`** provides `RenderSpecComponent` and `AngularRegistry` for rendering JSON UI specs as Angular components. The `ChatGenerativeUiComponent` primitive delegates to `@cacheplane/render` under the hood, and you configure the registry through `provideChat()`.
+- **`@cacheplane/render`** provides `RenderSpecComponent` and view registries for rendering JSON UI specs as Angular components. The `ChatComponent` auto-detects JSON specs in AI messages and renders them through `@cacheplane/render` — pass a view registry via the `[views]` input.
 
 ## When to Use `ChatComponent` vs. Custom Assembly
 

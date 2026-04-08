@@ -17,7 +17,6 @@ export { ChatSubagentsComponent } from './lib/primitives/chat-subagents/chat-sub
 export { ChatThreadListComponent } from './lib/primitives/chat-thread-list/chat-thread-list.component';
 export type { Thread } from './lib/primitives/chat-thread-list/chat-thread-list.component';
 export { ChatTimelineComponent } from './lib/primitives/chat-timeline/chat-timeline.component';
-export { ChatGenerativeUiComponent } from './lib/primitives/chat-generative-ui/chat-generative-ui.component';
 
 // DI provider
 export { provideChat, CHAT_CONFIG } from './lib/provide-chat';

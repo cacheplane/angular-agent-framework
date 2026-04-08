@@ -186,9 +186,9 @@ const FEATURES: Record<FeatKey, FeatDef> = {
     question: 'Walk me through LangGraph state.', run: runStream,
   },
   genui: {
-    label: 'Generative UI', color: '#1a7a40', rgb: '26,122,64', badgeText: 'chat-generative-ui',
-    left:  [{ tag: '<chat-generative-ui>', body: 'Intercepts onCustomEvent from the agent stream. Wraps <render-spec> and your component registry.', color: '#1a7a40', rgb: '26,122,64' }],
-    right: [{ tag: '<render-spec>', body: 'Resolves your Angular component by name, passes props as signals, streams JSON patch updates.', color: '#1a7a40', rgb: '26,122,64' }],
+    label: 'Generative UI', color: '#1a7a40', rgb: '26,122,64', badgeText: 'streaming auto-detect',
+    left:  [{ tag: 'ContentClassifier', body: 'Auto-detects JSON specs in AI messages. Streams partial JSON character-by-character with structural sharing.', color: '#1a7a40', rgb: '26,122,64' }],
+    right: [{ tag: '<render-spec>', body: 'Resolves your Angular component by name, passes props as signals, renders incrementally as tokens arrive.', color: '#1a7a40', rgb: '26,122,64' }],
     question: 'Show Q4 revenue by region.', run: runGenUI,
   },
   tools: {

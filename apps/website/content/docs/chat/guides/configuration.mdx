@@ -14,7 +14,6 @@ import { provideChat } from '@cacheplane/chat';
 export const appConfig: ApplicationConfig = {
   providers: [
     provideChat({
-      renderRegistry: myRegistry,
       avatarLabel: 'AI',
       assistantName: 'My Assistant',
     }),
@@ -34,9 +33,6 @@ function provideChat(config: ChatConfig): EnvironmentProviders
 
 ```typescript
 interface ChatConfig {
-  /** Default render registry for generative UI components. */
-  renderRegistry?: AngularRegistry;
-
   /** Override the default AI avatar label (default: "A"). */
   avatarLabel?: string;
 
@@ -49,7 +45,6 @@ interface ChatConfig {
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `renderRegistry` | `AngularRegistry` | `undefined` | The component registry used by `ChatGenerativeUiComponent` to resolve JSON specs to Angular components. See the [Generative UI](/docs/chat/guides/generative-ui) guide. |
 | `avatarLabel` | `string` | `"A"` | Single character or short string displayed in the AI avatar badge next to assistant messages. |
 | `assistantName` | `string` | `"Assistant"` | Display name for the AI assistant, used in labels and ARIA attributes. |
 

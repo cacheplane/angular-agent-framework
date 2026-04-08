@@ -1,0 +1,83 @@
+# createContentClassifier()
+
+Factory function that creates a `ContentClassifier` — a stateful, per-message service that detects content type from the token stream and routes to the appropriate parser.
+
+**Import:**
+
+```typescript
+import { createContentClassifier } from '@cacheplane/chat';
+import type { ContentClassifier, ContentType } from '@cacheplane/chat';
+```
+
+## Signature
+
+```typescript
+function createContentClassifier(): ContentClassifier
+```
+
+**Returns:** `ContentClassifier` — a stateful classifier instance. Must be called within an Angular injection context (signals require it).
+
+## ContentClassifier Interface
+
+```typescript
+interface ContentClassifier {
+  /** Feed the full message content snapshot. Internally computes delta. */
+  update(content: string): void;
+
+  /** Detected content type. */
+  readonly type: Signal<ContentType>;
+
+  /** Accumulated markdown prose. Empty for pure JSON messages. */
+  readonly markdown: Signal<string>;
+
+  /** Materialized JSON-render spec. Null until JSON is detected. */
+  readonly spec: Signal<Spec | null>;
+
+  /** Per-element accumulation tracking. */
+  readonly elementStates: Signal<Map<string, ElementAccumulationState>>;
+
+  /** True while content is still arriving. */
+  readonly streaming: Signal<boolean>;
+
+  /** Clean up resources. */
+  dispose(): void;
+}
+```
+
+## ContentType
+
+```typescript
+type ContentType = 'undetermined' | 'markdown' | 'json-render' | 'a2ui' | 'mixed';
+```
+
+| Value | Meaning |
+|-------|---------|
+| `undetermined` | No content received yet |
+| `markdown` | Plain text / markdown prose |
+| `json-render` | JSON spec detected (first non-whitespace is `{`) |
+| `a2ui` | A2UI payload detected (future) |
+| `mixed` | Markdown followed by structured content (future) |
+
+## Usage
+
+```typescript
+const classifier = createContentClassifier();
+
+// Feed full content snapshots — delta is computed internally
+classifier.update('Hello world');
+classifier.type();      // 'markdown'
+classifier.markdown();  // 'Hello world'
+
+// For JSON content
+const jsonClassifier = createContentClassifier();
+jsonClassifier.update('{"root":"r1","elements":{}}');
+jsonClassifier.type();  // 'json-render'
+jsonClassifier.spec();  // { root: 'r1', elements: {} }
+
+// Always dispose when done
+classifier.dispose();
+```
+
+<Callout type="tip" title="Delta processing">
+Pass the **full** message content each time, not just new characters. The classifier tracks `processedLength` internally and only processes the delta.
+</Callout>

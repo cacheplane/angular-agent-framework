@@ -8,7 +8,6 @@ import { provideChat } from '@cacheplane/chat';
 export const appConfig: ApplicationConfig = {
   providers: [
     provideChat({
-      renderRegistry: myRegistry,
       avatarLabel: 'AI',
       assistantName: 'My Assistant',
     }),
@@ -68,7 +67,6 @@ See the [ChatConfig API reference](/docs/chat/api/chat-config) for the full inte
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `renderRegistry` | `AngularRegistry` | `undefined` | Component registry for generative UI |
 | `avatarLabel` | `string` | `"A"` | AI avatar badge text |
 | `assistantName` | `string` | `"Assistant"` | AI assistant display name |
 
@@ -80,18 +78,11 @@ See the [ChatConfig API reference](/docs/chat/api/chat-config) for the full inte
 // app.config.ts
 import { provideAgent } from '@cacheplane/angular';
 import { provideChat } from '@cacheplane/chat';
-import { createAngularRegistry } from '@cacheplane/render';
-import { WeatherCardComponent } from './components/weather-card.component';
-
-const registry = createAngularRegistry({
-  weather_card: WeatherCardComponent,
-});
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideAgent({ apiUrl: 'http://localhost:2024' }),
     provideChat({
-      renderRegistry: registry,
       avatarLabel: 'B',
       assistantName: 'Bot',
     }),
@@ -123,7 +114,6 @@ export const routes: Routes = [
       provideChat({
         assistantName: 'Code Helper',
         avatarLabel: 'C',
-        renderRegistry: codeWidgetRegistry,
       }),
     ],
   },
@@ -136,7 +126,7 @@ All chat components work without `provideChat()`. They use defaults:
 
 - Avatar label: `"A"`
 - Assistant name: `"Assistant"`
-- No render registry (generative UI disabled)
+- Generative UI requires `[views]` input on `ChatComponent`
 
 ```typescript
 // This works fine without provideChat()
@@ -167,7 +157,7 @@ export class SimpleChatComponent {
     icon="layout"
     href="/docs/chat/guides/generative-ui"
   >
-    Set up renderRegistry for dynamic UI components.
+    Set up view registries for dynamic UI components.
   </Card>
   <Card
     title="Configuration Guide"
