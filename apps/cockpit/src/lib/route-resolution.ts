@@ -17,22 +17,7 @@ import { deepAgentsFilesystemPythonModule } from '../../../../cockpit/deep-agent
 import { deepAgentsSubagentsPythonModule } from '../../../../cockpit/deep-agents/subagents/python/src/index';
 import { deepAgentsSkillsPythonModule } from '../../../../cockpit/deep-agents/skills/python/src/index';
 import { deepAgentsSandboxesPythonModule } from '../../../../cockpit/deep-agents/sandboxes/python/src/index';
-import { renderSpecRenderingPythonModule } from '../../../../cockpit/render/spec-rendering/python/src/index';
-import { renderElementRenderingPythonModule } from '../../../../cockpit/render/element-rendering/python/src/index';
-import { renderStateManagementPythonModule } from '../../../../cockpit/render/state-management/python/src/index';
-import { renderRegistryPythonModule } from '../../../../cockpit/render/registry/python/src/index';
-import { renderRepeatLoopsPythonModule } from '../../../../cockpit/render/repeat-loops/python/src/index';
-import { renderComputedFunctionsPythonModule } from '../../../../cockpit/render/computed-functions/python/src/index';
-import { chatMessagesPythonModule } from '../../../../cockpit/chat/messages/python/src/index';
-import { chatInputPythonModule } from '../../../../cockpit/chat/input/python/src/index';
-import { chatInterruptsPythonModule } from '../../../../cockpit/chat/interrupts/python/src/index';
-import { chatToolCallsPythonModule } from '../../../../cockpit/chat/tool-calls/python/src/index';
-import { chatSubagentsPythonModule } from '../../../../cockpit/chat/subagents/python/src/index';
-import { chatThreadsPythonModule } from '../../../../cockpit/chat/threads/python/src/index';
-import { chatTimelinePythonModule } from '../../../../cockpit/chat/timeline/python/src/index';
-import { chatGenerativeUiPythonModule } from '../../../../cockpit/chat/generative-ui/python/src/index';
-import { chatDebugPythonModule } from '../../../../cockpit/chat/debug/python/src/index';
-import { chatThemingPythonModule } from '../../../../cockpit/chat/theming/python/src/index';
+import { langgraphGenerativeUiPythonModule } from '../../../../cockpit/langgraph/generative-ui/python/src/index';
 
 export interface ResolveCockpitEntryOptions {
   manifest: CockpitManifestEntry[];
@@ -86,22 +71,7 @@ const capabilityModules = [
   deepAgentsSubagentsPythonModule,
   deepAgentsSkillsPythonModule,
   deepAgentsSandboxesPythonModule,
-  renderSpecRenderingPythonModule,
-  renderElementRenderingPythonModule,
-  renderStateManagementPythonModule,
-  renderRegistryPythonModule,
-  renderRepeatLoopsPythonModule,
-  renderComputedFunctionsPythonModule,
-  chatMessagesPythonModule,
-  chatInputPythonModule,
-  chatInterruptsPythonModule,
-  chatToolCallsPythonModule,
-  chatSubagentsPythonModule,
-  chatThreadsPythonModule,
-  chatTimelinePythonModule,
-  chatGenerativeUiPythonModule,
-  chatDebugPythonModule,
-  chatThemingPythonModule,
+  langgraphGenerativeUiPythonModule,
 ];
 
 export const toCockpitPath = (entry: CockpitManifestEntry): string =>
@@ -167,7 +137,7 @@ export const resolveCockpitEntry = ({
 export const buildNavigationTree = (
   manifest: CockpitManifestEntry[]
 ): NavigationProduct[] => {
-  const products: CockpitManifestEntry['product'][] = ['deep-agents', 'langgraph', 'render', 'chat'];
+  const products: CockpitManifestEntry['product'][] = ['deep-agents', 'langgraph'];
   const sections: CockpitManifestEntry['section'][] = [
     'getting-started',
     'core-capabilities',
