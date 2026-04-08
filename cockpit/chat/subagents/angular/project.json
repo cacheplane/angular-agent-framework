@@ -1,0 +1,61 @@
+{
+  "name": "cockpit-chat-subagents-angular",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "cockpit/chat/subagents/angular/src",
+  "projectType": "application",
+  "targets": {
+    "build": {
+      "executor": "@angular/build:application",
+      "outputs": ["{options.outputPath.base}"],
+      "options": {
+        "outputPath": {
+          "base": "dist/cockpit/chat/subagents/angular",
+          "browser": ""
+        },
+        "browser": "cockpit/chat/subagents/angular/src/main.ts",
+        "tsConfig": "cockpit/chat/subagents/angular/tsconfig.app.json",
+        "styles": ["cockpit/chat/subagents/angular/src/styles.css"]
+      },
+      "configurations": {
+        "production": {
+          "budgets": [
+            { "type": "initial", "maximumWarning": "500kb", "maximumError": "1mb" },
+            { "type": "anyComponentStyle", "maximumWarning": "4kb", "maximumError": "8kb" }
+          ],
+          "outputHashing": "none"
+        },
+        "development": {
+          "optimization": false,
+          "extractLicenses": false,
+          "sourceMap": true,
+          "fileReplacements": [
+            {
+              "replace": "cockpit/chat/subagents/angular/src/environments/environment.ts",
+              "with": "cockpit/chat/subagents/angular/src/environments/environment.development.ts"
+            }
+          ]
+        }
+      },
+      "defaultConfiguration": "production"
+    },
+    "serve": {
+      "continuous": true,
+      "executor": "@angular/build:dev-server",
+      "configurations": {
+        "production": { "buildTarget": "cockpit-chat-subagents-angular:build:production" },
+        "development": { "buildTarget": "cockpit-chat-subagents-angular:build:development" }
+      },
+      "defaultConfiguration": "development",
+      "options": {
+        "proxyConfig": "cockpit/chat/subagents/angular/proxy.conf.json"
+      }
+    },
+    "smoke": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "cockpit/chat/subagents/angular",
+        "command": "npx tsx -e \"import { chatSubagentsAngularModule } from './src/index.ts'; const module = chatSubagentsAngularModule; if (module.id !== 'chat-subagents-angular' || module.title !== 'Chat Subagents (Angular)') { throw new Error('Unexpected module shape for ' + module.id); }\""
+      }
+    }
+  }
+}
