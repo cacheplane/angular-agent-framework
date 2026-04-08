@@ -5,3 +5,4 @@ export type {
   JsonNumberNode, JsonBooleanNode, JsonNullNode,
   JsonNode, ParseEvent, PartialJsonParser,
 } from './lib/types';
+export { createPartialJsonParser } from './lib/parser';
