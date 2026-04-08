@@ -93,7 +93,6 @@ export function SocialProof() {
                   padding: '0 8px',
                 }}
               >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={logo.src}
                   alt={logo.name}
