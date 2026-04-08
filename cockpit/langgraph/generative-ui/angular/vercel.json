@@ -1,0 +1,6 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "npx nx build cockpit-langgraph-generative-ui-angular",
+  "outputDirectory": "dist/cockpit/langgraph/generative-ui/angular/browser",
+  "framework": null
+}
