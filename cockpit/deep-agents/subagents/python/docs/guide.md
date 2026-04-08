@@ -153,3 +153,7 @@ For real parallel subagent execution, use `asyncio.gather()` inside `run_subagen
 <Tip>
 The `@empty` block in `@for` renders when no subagents have been spawned yet — a clean placeholder before the first message is submitted.
 </Tip>
+
+<Related>
+- [Chat Subagents](/chat/core-capabilities/subagents/overview/python) — Learn how ChatSubagentsComponent visualizes nested agent delegation
+</Related>

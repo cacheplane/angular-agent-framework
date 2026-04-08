@@ -162,3 +162,8 @@ every state update. There is no separate API call needed — just read `stream.v
 Never expose your LangSmith API key in client-side code. Use server-side environment
 variables or a proxy.
 </Warning>
+
+<Related>
+- [Chat Messages](/chat/core-capabilities/messages/overview/python) — Learn how ChatMessagesComponent renders messages
+- [Chat Threads](/chat/core-capabilities/threads/overview/python) — Learn how ChatThreadsComponent manages conversation threads
+</Related>

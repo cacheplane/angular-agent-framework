@@ -130,3 +130,7 @@ The `<cp-chat>` component handles message rendering, input, loading states, and 
 <Warning>
 Never expose your LangSmith API key in client-side code. Use server-side environment variables or a proxy.
 </Warning>
+
+<Related>
+- [Chat Subagents](/chat/core-capabilities/subagents/overview/python) — Learn how ChatSubagentsComponent visualizes nested agent delegation
+</Related>

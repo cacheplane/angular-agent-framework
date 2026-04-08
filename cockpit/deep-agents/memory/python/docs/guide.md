@@ -144,3 +144,7 @@ Because LangGraph persists state across turns in a thread, `agent_memory` accumu
 <Tip>
 The `@empty` block in `@for` renders when the memory dict is empty — a clean way to show a placeholder before the user shares any personal information.
 </Tip>
+
+<Related>
+- [Chat Threads](/chat/core-capabilities/threads/overview/python) — Learn how ChatThreadsComponent manages conversation threads
+</Related>

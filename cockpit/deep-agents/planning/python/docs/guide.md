@@ -150,3 +150,7 @@ For real step-by-step execution, add one node per step and update the step's `st
 <Tip>
 The `@empty` block in `@for` renders when the plan array is empty — a clean way to show a placeholder before the user submits their first complex question.
 </Tip>
+
+<Related>
+- [Chat Tool Calls](/chat/core-capabilities/tool-calls/overview/python) — Learn how ChatToolCallsComponent renders tool call activity
+</Related>
