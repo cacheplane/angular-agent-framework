@@ -1,0 +1,21 @@
+// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+import { Component, input } from '@angular/core';
+import type { Spec } from '@json-render/core';
+import { RenderElementComponent } from '@cacheplane/render';
+
+@Component({
+  selector: 'app-container',
+  standalone: true,
+  imports: [RenderElementComponent],
+  template: `
+    <div class="flex flex-col gap-3">
+      @for (key of childKeys(); track key) {
+        <render-element [elementKey]="key" [spec]="spec()" />
+      }
+    </div>
+  `,
+})
+export class ContainerComponent {
+  readonly childKeys = input<string[]>([]);
+  readonly spec = input.required<Spec>();
+}
