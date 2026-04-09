@@ -39,6 +39,12 @@ interface ContentClassifier {
   /** True while content is still arriving. */
   readonly streaming: Signal<boolean>;
 
+  /** A2UI surfaces parsed from the stream. */
+  readonly a2uiSurfaces: Signal<Map<string, A2uiSurface>>;
+
+  /** Parse errors encountered (non-fatal). */
+  readonly errors: Signal<string[]>;
+
   /** Clean up resources. */
   dispose(): void;
 }
@@ -55,8 +61,16 @@ type ContentType = 'undetermined' | 'markdown' | 'json-render' | 'a2ui' | 'mixed
 | `undetermined` | No content received yet |
 | `markdown` | Plain text / markdown prose |
 | `json-render` | JSON spec detected (first non-whitespace is `{`) |
-| `a2ui` | A2UI payload detected (future) |
-| `mixed` | Markdown followed by structured content (future) |
+| `a2ui` | A2UI payload detected via `---a2ui_JSON---` prefix, parsed as JSONL messages |
+| `mixed` | Markdown followed by structured content |
+
+### a2uiSurfaces
+
+When the content type is `a2ui`, this signal contains all parsed A2UI surfaces with their components and data models. The map is keyed by surface ID and updates incrementally as JSONL lines arrive during streaming.
+
+### errors
+
+Parse errors are captured but don't stop the classifier. Partial results continue to render. Useful for diagnostics — check this signal when debugging unexpected rendering behavior or malformed agent output.
 
 ## Usage
 

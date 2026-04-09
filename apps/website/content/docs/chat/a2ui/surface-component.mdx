@@ -1,0 +1,116 @@
+# A2uiSurfaceComponent
+
+Angular component that renders a single A2UI surface. It converts the surface's component map and data model into a json-render `Spec`, then delegates rendering to `RenderSpecComponent`.
+
+**Import:**
+
+```typescript
+import { A2uiSurfaceComponent } from '@cacheplane/chat';
+```
+
+**Selector:** `a2ui-surface`
+
+## Inputs
+
+| Input | Type | Required | Description |
+|-------|------|----------|-------------|
+| `surface` | `A2uiSurface` | Yes | The surface to render |
+| `catalog` | `ViewRegistry` | Yes | Component registry used to resolve A2UI type names to Angular components |
+
+## How It Works
+
+`A2uiSurfaceComponent` bridges the A2UI surface model to the json-render engine in three steps:
+
+**1. Convert surface to Spec (`surfaceToSpec`)**
+
+The `surfaceToSpec()` function walks the flat component map and produces a json-render `Spec`. It requires a component with `id: 'root'` to be present — if no root exists, nothing renders.
+
+**2. Resolve dynamic values**
+
+Before the spec is emitted, each component prop is evaluated against the surface's data model. A prop can be:
+
+- A literal value — passed through as-is
+- A path reference `{ path: '/some/pointer' }` — resolved via JSON Pointer against `dataModel`
+- A function call `{ call: 'formatCurrency', args: { ... } }` — executed by the built-in function registry
+- A template string `"Hello ${/name}"` — interpolated with values from `dataModel`
+
+**3. Expand template children**
+
+When a component's `children` field is an `A2uiChildTemplate` (`{ path, componentId }`), the surface component expands it over the array at `path` in the data model. Each array item gets its own cloned element with props resolved in that item's scope.
+
+**4. Render via RenderSpecComponent**
+
+The final `Spec` is passed to `RenderSpecComponent` along with the `ViewRegistry` (converted to an Angular registry via `toRenderRegistry`). Rendering is fully reactive — when the surface signal updates, the spec recomputes and only affected elements re-render.
+
+## Usage Outside ChatComponent
+
+`A2uiSurfaceComponent` is used internally by `ChatComponent`, but you can also use it directly to embed a surface in any Angular template.
+
+```typescript
+import { Component, signal } from '@angular/core';
+import { A2uiSurfaceComponent, createA2uiSurfaceStore, a2uiBasicCatalog } from '@cacheplane/chat';
+import { createA2uiMessageParser } from '@cacheplane/a2ui';
+
+@Component({
+  selector: 'app-agent-panel',
+  standalone: true,
+  imports: [A2uiSurfaceComponent],
+  template: `
+    @if (store.surface('dashboard')() as surface) {
+      <a2ui-surface [surface]="surface" [catalog]="catalog" />
+    }
+  `,
+})
+export class AgentPanelComponent {
+  readonly catalog = a2uiBasicCatalog();
+  readonly store = createA2uiSurfaceStore();
+  private readonly parser = createA2uiMessageParser();
+
+  receiveChunk(chunk: string): void {
+    for (const msg of this.parser.push(chunk)) {
+      this.store.apply(msg);
+    }
+  }
+}
+```
+
+<Callout type="info" title="Root component required">
+The surface must contain a component with `id: 'root'`. If no root component has been received yet (for example, while the agent is still streaming), `A2uiSurfaceComponent` renders nothing until one arrives.
+</Callout>
+
+## surfaceToSpec()
+
+The conversion function is exported for testing or custom rendering pipelines.
+
+**Import:**
+
+```typescript
+import { surfaceToSpec } from '@cacheplane/chat';
+```
+
+**Signature:**
+
+```typescript
+function surfaceToSpec(surface: A2uiSurface): Spec | null
+```
+
+Returns `null` when the surface has no `root` component. Otherwise returns a complete json-render `Spec` with all dynamic values resolved against the current `dataModel`.
+
+## What's Next
+
+<CardGroup cols={2}>
+  <Card
+    title="Surface Store"
+    icon="database"
+    href="/docs/chat/a2ui/surface-store"
+  >
+    Manage surfaces and apply A2UI messages reactively.
+  </Card>
+  <Card
+    title="Component Catalog"
+    icon="grid"
+    href="/docs/chat/a2ui/catalog"
+  >
+    All 12 built-in components and their props.
+  </Card>
+</CardGroup>

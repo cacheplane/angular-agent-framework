@@ -1,0 +1,281 @@
+# Component Catalog
+
+The built-in A2UI catalog provides 12 Angular components covering display, layout, and interactive controls. It is included automatically when using `ChatComponent`, and can be instantiated directly for custom rendering setups.
+
+**Import:**
+
+```typescript
+import { a2uiBasicCatalog } from '@cacheplane/chat';
+```
+
+## Signature
+
+```typescript
+function a2uiBasicCatalog(): ViewRegistry
+```
+
+Returns a `ViewRegistry` mapping 12 A2UI type names to their Angular component implementations. Pass the result to `A2uiSurfaceComponent` or use it as a starting point for a custom registry.
+
+```typescript
+const catalog = a2uiBasicCatalog();
+```
+
+## Display Components
+
+### Text
+
+Renders a span of text.
+
+| A2UI type | Angular component | Selector |
+|-----------|-------------------|----------|
+| `Text` | `A2uiTextComponent` | `a2ui-text` |
+
+| Prop | Type | Description |
+|------|------|-------------|
+| `text` | `string` | The text content to display |
+
+```json
+{"id": "greeting", "component": "Text", "text": "Hello, world!"}
+```
+
+### Image
+
+Renders an `<img>` element.
+
+| A2UI type | Angular component | Selector |
+|-----------|-------------------|----------|
+| `Image` | `A2uiImageComponent` | `a2ui-image` |
+
+| Prop | Type | Description |
+|------|------|-------------|
+| `url` | `string` | Image source URL |
+| `alt` | `string` | Alt text for accessibility |
+
+### Icon
+
+Renders an icon glyph as a text span. The `name` prop is displayed directly — use an emoji or a Unicode symbol.
+
+| A2UI type | Angular component | Selector |
+|-----------|-------------------|----------|
+| `Icon` | `A2uiIconComponent` | `a2ui-icon` |
+
+| Prop | Type | Description |
+|------|------|-------------|
+| `name` | `string` | Glyph to render (e.g., `"✓"`, `"⚠️"`) |
+
+### Divider
+
+Renders a horizontal rule. Has no props.
+
+| A2UI type | Angular component | Selector |
+|-----------|-------------------|----------|
+| `Divider` | `A2uiDividerComponent` | `a2ui-divider` |
+
+## Layout Components
+
+Layout components receive `childKeys` — an array of component IDs — and render each child via json-render's `RenderElementComponent`. They also receive the full `spec` so that child elements can be looked up by key.
+
+### Row
+
+Arranges children horizontally with a flex row layout.
+
+| A2UI type | Angular component | Selector |
+|-----------|-------------------|----------|
+| `Row` | `A2uiRowComponent` | `a2ui-row` |
+
+| Prop | Type | Description |
+|------|------|-------------|
+| `childKeys` | `string[]` | Ordered list of child component IDs |
+| `spec` | `Spec` | Injected automatically by the render engine |
+
+### Column
+
+Arranges children vertically with a flex column layout.
+
+| A2UI type | Angular component | Selector |
+|-----------|-------------------|----------|
+| `Column` | `A2uiColumnComponent` | `a2ui-column` |
+
+| Prop | Type | Description |
+|------|------|-------------|
+| `childKeys` | `string[]` | Ordered list of child component IDs |
+| `spec` | `Spec` | Injected automatically by the render engine |
+
+### Card
+
+Renders children inside a rounded bordered card container with an optional title.
+
+| A2UI type | Angular component | Selector |
+|-----------|-------------------|----------|
+| `Card` | `A2uiCardComponent` | `a2ui-card` |
+
+| Prop | Type | Description |
+|------|------|-------------|
+| `title` | `string` | Optional card heading |
+| `childKeys` | `string[]` | Ordered list of child component IDs |
+| `spec` | `Spec` | Injected automatically by the render engine |
+
+### List
+
+Renders children in a scrollable vertical list (max height 24rem).
+
+| A2UI type | Angular component | Selector |
+|-----------|-------------------|----------|
+| `List` | `A2uiListComponent` | `a2ui-list` |
+
+| Prop | Type | Description |
+|------|------|-------------|
+| `childKeys` | `string[]` | Ordered list of child component IDs |
+| `spec` | `Spec` | Injected automatically by the render engine |
+
+<Callout type="info" title="Template children">
+For data-driven lists, use the `A2uiChildTemplate` form instead of static `childKeys`. Set `children` to `{"path": "/items", "componentId": "item-template"}` and the surface component will expand the template once per array item. See the [Surface Component](/docs/chat/a2ui/surface-component) page for details.
+</Callout>
+
+## Interactive Components
+
+Interactive components support **two-way data binding** and **button actions**. They use two special props:
+
+- `_bindings` — a `Record<string, string>` mapping prop names to JSON Pointer paths in the data model. When the user changes the value, the component emits an `a2ui:datamodel:` event to update the model.
+- `emit` — injected by the render engine; components call it to dispatch events back to the chat.
+
+### Button
+
+Renders a button that dispatches an action when clicked.
+
+| A2UI type | Angular component | Selector |
+|-----------|-------------------|----------|
+| `Button` | `A2uiButtonComponent` | `a2ui-button` |
+
+| Prop | Type | Description |
+|------|------|-------------|
+| `label` | `string` | Button label text |
+| `variant` | `'primary' \| 'borderless'` | Visual style. Defaults to `'primary'` |
+| `disabled` | `boolean` | Disables the button when `true` |
+| `action` | `A2uiAction` | Action to execute on click (event or function call) |
+| `checks` | `A2uiCheck[]` | Validation checks — button is disabled if any fail |
+| `emit` | injected | Event emitter provided by the render engine |
+
+**Action types:**
+
+```json
+// Emit a named event (sent back to the agent)
+{"action": {"event": {"name": "submit", "context": {"formId": "contact"}}}}
+
+// Execute a local function (e.g., open a URL)
+{"action": {"functionCall": {"call": "openUrl", "args": {"url": "https://example.com"}}}}
+```
+
+**Validation checks** reference built-in validators by name. If any check fails, the button is automatically disabled:
+
+```json
+{"checks": [{"call": "required", "args": {"value": {"path": "/email"}}, "message": "Email is required"}]}
+```
+
+### TextField
+
+A single-line text input with optional label and placeholder.
+
+| A2UI type | Angular component | Selector |
+|-----------|-------------------|----------|
+| `TextField` | `A2uiTextFieldComponent` | `a2ui-text-field` |
+
+| Prop | Type | Description |
+|------|------|-------------|
+| `label` | `string` | Input label |
+| `value` | `string` | Current value (bind via `_bindings`) |
+| `placeholder` | `string` | Placeholder text |
+| `_bindings` | `Record<string, string>` | Bind `value` to a data model path |
+| `emit` | injected | Event emitter provided by the render engine |
+
+```json
+{
+  "id": "name-field",
+  "component": "TextField",
+  "label": "Your name",
+  "value": {"path": "/name"},
+  "_bindings": {"value": "/name"}
+}
+```
+
+### CheckBox
+
+A labeled checkbox with two-way binding for its checked state.
+
+| A2UI type | Angular component | Selector |
+|-----------|-------------------|----------|
+| `CheckBox` | `A2uiCheckBoxComponent` | `a2ui-check-box` |
+
+| Prop | Type | Description |
+|------|------|-------------|
+| `label` | `string` | Checkbox label |
+| `checked` | `boolean` | Current checked state (bind via `_bindings`) |
+| `_bindings` | `Record<string, string>` | Bind `checked` to a data model path |
+| `emit` | injected | Event emitter provided by the render engine |
+
+### ChoicePicker
+
+A dropdown select control with a list of string options.
+
+| A2UI type | Angular component | Selector |
+|-----------|-------------------|----------|
+| `ChoicePicker` | `A2uiChoicePickerComponent` | `a2ui-choice-picker` |
+
+| Prop | Type | Description |
+|------|------|-------------|
+| `label` | `string` | Select label |
+| `options` | `string[]` | List of available options |
+| `selected` | `string` | Currently selected value (bind via `_bindings`) |
+| `_bindings` | `Record<string, string>` | Bind `selected` to a data model path |
+| `emit` | injected | Event emitter provided by the render engine |
+
+## Built-in Functions
+
+Props that use `A2uiFunctionCall` can reference these built-in functions:
+
+| Function | Args | Description |
+|----------|------|-------------|
+| `formatNumber` | `value`, `precision`, `grouping` | Formats a number with optional decimal places and thousands grouping |
+| `formatCurrency` | `value`, `locale`, `currency` | Formats a number as a currency string (default: `en-US` / `USD`) |
+| `formatDate` | `value`, `locale` | Formats an ISO date string using `toLocaleDateString` |
+| `pluralize` | `count`, `singular`, `plural` | Returns singular or plural form based on count |
+| `openUrl` | `url` | Opens a URL in a new tab (also usable as a button action) |
+| `and` | any named args | Returns `true` if all arg values are truthy |
+| `or` | any named args | Returns `true` if any arg value is truthy |
+| `not` | `value` | Negates a boolean value |
+
+## Component Summary
+
+| A2UI Type | Angular Component | Category |
+|-----------|-------------------|----------|
+| `Text` | `A2uiTextComponent` | Display |
+| `Image` | `A2uiImageComponent` | Display |
+| `Icon` | `A2uiIconComponent` | Display |
+| `Divider` | `A2uiDividerComponent` | Display |
+| `Row` | `A2uiRowComponent` | Layout |
+| `Column` | `A2uiColumnComponent` | Layout |
+| `Card` | `A2uiCardComponent` | Layout |
+| `List` | `A2uiListComponent` | Layout |
+| `Button` | `A2uiButtonComponent` | Interactive |
+| `TextField` | `A2uiTextFieldComponent` | Interactive |
+| `CheckBox` | `A2uiCheckBoxComponent` | Interactive |
+| `ChoicePicker` | `A2uiChoicePickerComponent` | Interactive |
+
+## What's Next
+
+<CardGroup cols={2}>
+  <Card
+    title="A2UI Overview"
+    icon="book-open"
+    href="/docs/chat/a2ui/overview"
+  >
+    How the A2UI protocol works end-to-end.
+  </Card>
+  <Card
+    title="Surface Component"
+    icon="layers"
+    href="/docs/chat/a2ui/surface-component"
+  >
+    Render surfaces and understand dynamic value resolution.
+  </Card>
+</CardGroup>

@@ -60,7 +60,7 @@ LangGraph Platform
 
 - **`@cacheplane/agent`** provides the `agent()` function and the `AgentRef` type. Every chat component accepts an `AgentRef` as its primary input. The ref exposes reactive Signals for `messages()`, `isLoading()`, `error()`, `interrupt()`, `toolCalls()`, `history()`, and more.
 
-- **`@cacheplane/render`** provides `RenderSpecComponent` and view registries for rendering JSON UI specs as Angular components. The `ChatComponent` auto-detects JSON specs in AI messages and renders them through `@cacheplane/render` — pass a view registry via the `[views]` input.
+- **`@cacheplane/render`** provides `RenderSpecComponent` and view registries for rendering JSON UI specs as Angular components. The `ChatComponent` auto-detects JSON specs in AI messages and renders them through `@cacheplane/render` — pass a view registry via the `[views]` input. The `ChatComponent` also auto-detects A2UI v0.9 payloads and renders them using a built-in 12-component catalog.
 
 ## When to Use `ChatComponent` vs. Custom Assembly
 
