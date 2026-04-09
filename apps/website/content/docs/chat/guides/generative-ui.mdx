@@ -131,6 +131,10 @@ export class InteractiveChatComponent {
 
 The store enables two-way data binding between generative UI components and your application via `$state` and `$bindState` prop expressions in specs.
 
+## A2UI Protocol
+
+For agents that implement Google's A2UI v0.9 protocol, `ChatComponent` auto-detects A2UI payloads (prefixed with `---a2ui_JSON---`) and renders them using the built-in A2UI catalog. See the [A2UI guide](/docs/chat/a2ui/overview) for details.
+
 ## What's Next
 
 <CardGroup cols={2}>
@@ -147,5 +151,8 @@ The store enables two-way data binding between generative UI components and your
     href="/docs/render/guides/specs"
   >
     Full reference for the JSON spec format, prop expressions, and element types.
+  </Card>
+  <Card title="A2UI Protocol" icon="layers" href="/docs/chat/a2ui/overview">
+    Render A2UI v0.9 surfaces with the built-in 12-component catalog.
   </Card>
 </CardGroup>

@@ -1,0 +1,147 @@
+# A2UI Overview
+
+A2UI is an open standard for agent-driven user interfaces. It lets an AI agent describe a structured UI — components, layout, and live data — using a simple JSON protocol, and have that UI rendered automatically inside a chat session.
+
+The `ChatComponent` includes built-in A2UI support with no extra configuration. When an agent response begins with the `---a2ui_JSON---` sentinel, the chat switches to A2UI rendering mode automatically.
+
+<Callout type="info" title="Spec version">
+The implementation follows the A2UI v0.9 specification. For the full protocol reference, see [a2ui.org](https://a2ui.org).
+</Callout>
+
+## How It Works in ChatComponent
+
+When content arrives with the `---a2ui_JSON---` prefix, the streaming pipeline switches to JSONL mode. Each newline-delimited JSON object is parsed as an A2UI message and handed to the surface store.
+
+```
+AI response starts with ---a2ui_JSON---
+  → ContentClassifier sets type = 'a2ui'
+  → createA2uiMessageParser() parses JSONL line-by-line
+  → Each A2uiMessage is applied to A2uiSurfaceStore
+  → Surfaces signal updates reactively
+  → A2uiSurfaceComponent renders each surface via json-render
+```
+
+The surface store maintains a `Map<string, A2uiSurface>` keyed by surface ID. Each surface holds a flat component map, a data model, theme metadata, and the catalog ID used to resolve components.
+
+The `ChatComponent` provides the built-in `a2uiBasicCatalog` automatically — you do not need to configure a catalog to start using A2UI.
+
+## The Four Message Types
+
+The A2UI protocol is built on four message types. Agents compose entire interfaces by sending sequences of these messages.
+
+| Message | Purpose |
+|---------|---------|
+| `createSurface` | Creates a new named surface with a catalog ID and optional theme |
+| `updateComponents` | Adds or replaces components on a surface (merged by component ID) |
+| `updateDataModel` | Sets or patches a value in the surface data model via JSON Pointer |
+| `deleteSurface` | Removes a surface and all its components |
+
+### createSurface
+
+Declares a new surface. Must be sent before any other message for that surface ID.
+
+```json
+{"createSurface": {"surfaceId": "order-status", "catalogId": "basic"}}
+```
+
+### updateComponents
+
+Sends one or more component definitions. Each component has a unique `id`, a `component` type name, and any component-specific props.
+
+```json
+{"updateComponents": {
+  "surfaceId": "order-status",
+  "components": [
+    {"id": "root", "component": "Column", "children": ["title", "status"]},
+    {"id": "title", "component": "Text", "text": "Your Order"},
+    {"id": "status", "component": "Text", "text": {"path": "/state"}}
+  ]
+}}
+```
+
+### updateDataModel
+
+Sets values at a JSON Pointer path in the surface's data model. Components whose props reference these paths re-render automatically.
+
+```json
+{"updateDataModel": {"surfaceId": "order-status", "path": "/state", "value": "Shipped"}}
+```
+
+Omit `path` (or use `/`) to replace the entire data model at once.
+
+### deleteSurface
+
+Removes a surface from the store and dismisses its rendered output.
+
+```json
+{"deleteSurface": {"surfaceId": "order-status"}}
+```
+
+## A2UI vs json-render
+
+Both A2UI and json-render produce rendered UIs inside chat messages, but they serve different purposes.
+
+| | A2UI | json-render |
+|-|------|-------------|
+| Protocol | Multi-message JSONL stream | Single JSON object |
+| State | Surfaces with live data models | Stateless spec |
+| Interactivity | Two-way bindings, button actions, validation | Read-only display |
+| Detection | `---a2ui_JSON---` prefix | First character is `{` |
+| Use case | Agent-driven dynamic UIs | Rich content cards |
+
+Use **A2UI** when the agent needs to build an interface incrementally, bind it to live data, or respond to user interactions. Use **json-render** for rich one-shot content cards — formatted results, structured data displays, and similar read-only output.
+
+## Quick Setup
+
+No configuration is required. Add `ChatComponent` to your template and A2UI content is detected and rendered automatically:
+
+```typescript
+import { ChatComponent } from '@cacheplane/chat';
+
+@Component({
+  template: `<cp-chat [stream]="stream" />`,
+  imports: [ChatComponent],
+})
+export class AppComponent {
+  stream = /* your AI stream */;
+}
+```
+
+When the AI response starts with `---a2ui_JSON---`, the chat renders the surfaces using the built-in `a2uiBasicCatalog`. No inputs to set, no catalog to register.
+
+<Callout type="tip" title="Custom catalogs">
+To use your own components or extend the built-in set, pass a `ViewRegistry` to the chat. See the [Catalog reference](/docs/chat/a2ui/catalog) for details.
+</Callout>
+
+## What's Next
+
+<CardGroup cols={2}>
+  <Card
+    title="Surface Component"
+    icon="layers"
+    href="/docs/chat/a2ui/surface-component"
+  >
+    API reference for A2uiSurfaceComponent — render a surface outside ChatComponent.
+  </Card>
+  <Card
+    title="Surface Store"
+    icon="database"
+    href="/docs/chat/a2ui/surface-store"
+  >
+    API reference for createA2uiSurfaceStore() and the apply/surfaces/surface interface.
+  </Card>
+  <Card
+    title="Component Catalog"
+    icon="grid"
+    href="/docs/chat/a2ui/catalog"
+  >
+    Reference for all 12 built-in components and their props.
+  </Card>
+  <Card
+    title="Streaming"
+    icon="zap"
+    href="/docs/chat/guides/streaming"
+  >
+    How the streaming pipeline detects and routes A2UI content.
+  </Card>
+</CardGroup>
