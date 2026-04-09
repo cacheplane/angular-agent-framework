@@ -23,11 +23,26 @@ export function surfaceToSpec(surface: A2uiSurface): Spec | null {
   for (const [id, comp] of surface.components) {
     const props: Record<string, unknown> = {};
 
-    // Resolve all props except reserved keys
+    // Resolve all props except reserved keys, tracking binding paths
     const reserved = new Set(['id', 'component', 'children', 'action', 'checks']);
+    const bindings: Record<string, string> = {};
     for (const [key, value] of Object.entries(comp)) {
       if (reserved.has(key)) continue;
+      if (typeof value === 'object' && value !== null && 'path' in value && !('call' in value)) {
+        bindings[key] = (value as any).path;
+      }
       props[key] = resolveDynamic(value, surface.dataModel);
+    }
+    if (Object.keys(bindings).length > 0) {
+      props['_bindings'] = bindings;
+    }
+    // Pass action through
+    if (comp.action) {
+      props['action'] = comp.action;
+    }
+    // Pass checks through
+    if (comp.checks) {
+      props['checks'] = comp.checks;
     }
 
     // Map children
