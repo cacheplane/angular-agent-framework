@@ -1,0 +1,42 @@
+// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+import { Component, computed } from '@angular/core';
+import { JsonPipe } from '@angular/common';
+import { ChatComponent, ChatInterruptPanelComponent } from '@cacheplane/chat';
+import { agent } from '@cacheplane/angular';
+import { environment } from '../environments/environment';
+
+/**
+ * InterruptsComponent demonstrates human-in-the-loop approval gates
+ * using ChatComponent and ChatInterruptPanelComponent.
+ *
+ * Shows interrupt payload and action buttons in a sidebar panel.
+ */
+@Component({
+  selector: 'app-interrupts',
+  standalone: true,
+  imports: [ChatComponent, ChatInterruptPanelComponent, JsonPipe],
+  template: `
+    <div class="flex h-screen">
+      <chat [ref]="stream" class="flex-1 min-w-0" />
+      <aside class="w-80 shrink-0 border-l overflow-y-auto p-4 space-y-4"
+             style="border-color: var(--chat-border, #333); background: var(--chat-bg, #171717); color: var(--chat-text, #e0e0e0);">
+        <h3 class="text-xs font-semibold uppercase tracking-wide"
+            style="color: var(--chat-text-muted, #777);">Interrupt Panel</h3>
+        <chat-interrupt-panel [ref]="stream" />
+        <div class="mt-4">
+          <h4 class="text-xs font-semibold uppercase tracking-wide mb-2"
+              style="color: var(--chat-text-muted, #777);">Stream Status</h4>
+          <p class="text-xs font-mono" style="color: var(--chat-text-muted, #777);">{{ streamStatus() }}</p>
+        </div>
+      </aside>
+    </div>
+  `,
+})
+export class InterruptsComponent {
+  protected readonly stream = agent({
+    apiUrl: environment.langGraphApiUrl,
+    assistantId: environment.streamingAssistantId,
+  });
+
+  protected readonly streamStatus = computed(() => this.stream.status());
+}

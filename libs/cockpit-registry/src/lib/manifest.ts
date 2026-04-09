@@ -30,6 +30,32 @@ const APPROVED_TOPICS = {
       'deployment-runtime',
     ],
   },
+  render: {
+    'getting-started': ['overview'],
+    'core-capabilities': [
+      'spec-rendering',
+      'element-rendering',
+      'state-management',
+      'registry',
+      'repeat-loops',
+      'computed-functions',
+    ],
+  },
+  chat: {
+    'getting-started': ['overview'],
+    'core-capabilities': [
+      'messages',
+      'input',
+      'interrupts',
+      'tool-calls',
+      'subagents',
+      'threads',
+      'timeline',
+      'generative-ui',
+      'debug',
+      'theming',
+    ],
+  },
 } as const;
 
 const toTitle = (value: string): string =>
@@ -38,8 +64,18 @@ const toTitle = (value: string): string =>
     .map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1))
     .join(' ');
 
-const getProductTitle = (product: CockpitProduct): string =>
-  product === 'deep-agents' ? 'Deep Agents' : 'LangGraph';
+const getProductTitle = (product: CockpitProduct): string => {
+  switch (product) {
+    case 'deep-agents':
+      return 'Deep Agents';
+    case 'langgraph':
+      return 'LangGraph';
+    case 'render':
+      return 'Render';
+    case 'chat':
+      return 'Chat';
+  }
+};
 
 const getOverviewIdentity = (product: CockpitProduct): CockpitManifestIdentity => ({
   product,

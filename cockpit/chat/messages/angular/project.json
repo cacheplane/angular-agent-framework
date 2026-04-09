@@ -1,0 +1,61 @@
+{
+  "name": "cockpit-chat-messages-angular",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "cockpit/chat/messages/angular/src",
+  "projectType": "application",
+  "targets": {
+    "build": {
+      "executor": "@angular/build:application",
+      "outputs": ["{options.outputPath.base}"],
+      "options": {
+        "outputPath": {
+          "base": "dist/cockpit/chat/messages/angular",
+          "browser": ""
+        },
+        "browser": "cockpit/chat/messages/angular/src/main.ts",
+        "tsConfig": "cockpit/chat/messages/angular/tsconfig.app.json",
+        "styles": ["cockpit/chat/messages/angular/src/styles.css"]
+      },
+      "configurations": {
+        "production": {
+          "budgets": [
+            { "type": "initial", "maximumWarning": "500kb", "maximumError": "1mb" },
+            { "type": "anyComponentStyle", "maximumWarning": "4kb", "maximumError": "8kb" }
+          ],
+          "outputHashing": "none"
+        },
+        "development": {
+          "optimization": false,
+          "extractLicenses": false,
+          "sourceMap": true,
+          "fileReplacements": [
+            {
+              "replace": "cockpit/chat/messages/angular/src/environments/environment.ts",
+              "with": "cockpit/chat/messages/angular/src/environments/environment.development.ts"
+            }
+          ]
+        }
+      },
+      "defaultConfiguration": "production"
+    },
+    "serve": {
+      "continuous": true,
+      "executor": "@angular/build:dev-server",
+      "configurations": {
+        "production": { "buildTarget": "cockpit-chat-messages-angular:build:production" },
+        "development": { "buildTarget": "cockpit-chat-messages-angular:build:development" }
+      },
+      "defaultConfiguration": "development",
+      "options": {
+        "proxyConfig": "cockpit/chat/messages/angular/proxy.conf.json"
+      }
+    },
+    "smoke": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "cockpit/chat/messages/angular",
+        "command": "npx tsx -e \"import { chatMessagesAngularModule } from './src/index.ts'; const module = chatMessagesAngularModule; if (module.id !== 'chat-messages-angular' || module.title !== 'Chat Messages (Angular)') { throw new Error('Unexpected module shape for ' + module.id); }\""
+      }
+    }
+  }
+}

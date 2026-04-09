@@ -24,6 +24,28 @@ const expectedTopics = {
     ['core-capabilities', 'time-travel'],
     ['core-capabilities', 'deployment-runtime'],
   ],
+  render: [
+    ['getting-started', 'overview'],
+    ['core-capabilities', 'spec-rendering'],
+    ['core-capabilities', 'element-rendering'],
+    ['core-capabilities', 'state-management'],
+    ['core-capabilities', 'registry'],
+    ['core-capabilities', 'repeat-loops'],
+    ['core-capabilities', 'computed-functions'],
+  ],
+  chat: [
+    ['getting-started', 'overview'],
+    ['core-capabilities', 'messages'],
+    ['core-capabilities', 'input'],
+    ['core-capabilities', 'interrupts'],
+    ['core-capabilities', 'tool-calls'],
+    ['core-capabilities', 'subagents'],
+    ['core-capabilities', 'threads'],
+    ['core-capabilities', 'timeline'],
+    ['core-capabilities', 'generative-ui'],
+    ['core-capabilities', 'debug'],
+    ['core-capabilities', 'theming'],
+  ],
 } as const;
 
 describe('cockpitManifest', () => {
@@ -63,6 +85,8 @@ describe('cockpitManifest', () => {
     expect(docsOnlyEntries).toEqual([
       'deep-agents/getting-started/overview',
       'langgraph/getting-started/overview',
+      'render/getting-started/overview',
+      'chat/getting-started/overview',
     ]);
   });
 
@@ -71,7 +95,7 @@ describe('cockpitManifest', () => {
       (entry) => entry.entryKind === 'capability'
     );
 
-    expect(capabilityEntries).toHaveLength(14);
+    expect(capabilityEntries).toHaveLength(30);
 
     for (const entry of capabilityEntries) {
       expect(entry.supportedLanguages).toEqual(['python']);

@@ -4,7 +4,7 @@
  */
 export interface Capability {
   id: string;
-  product: 'langgraph' | 'deep-agents';
+  product: 'langgraph' | 'deep-agents' | 'render' | 'chat';
   topic: string;
   angularProject: string;
   port: number;
@@ -27,6 +27,24 @@ export const capabilities: readonly Capability[] = [
   { id: 'da-memory', product: 'deep-agents', topic: 'memory', angularProject: 'cockpit-deep-agents-memory-angular', port: 4313, pythonDir: 'cockpit/deep-agents/memory/python', graphName: 'da-memory' },
   { id: 'skills', product: 'deep-agents', topic: 'skills', angularProject: 'cockpit-deep-agents-skills-angular', port: 4314, pythonDir: 'cockpit/deep-agents/skills/python', graphName: 'skills' },
   { id: 'sandboxes', product: 'deep-agents', topic: 'sandboxes', angularProject: 'cockpit-deep-agents-sandboxes-angular', port: 4315, pythonDir: 'cockpit/deep-agents/sandboxes/python', graphName: 'sandboxes' },
+  // Render capabilities
+  { id: 'spec-rendering', product: 'render', topic: 'spec-rendering', angularProject: 'cockpit-render-spec-rendering-angular', port: 4401, pythonDir: 'cockpit/render/spec-rendering/python', graphName: 'spec-rendering' },
+  { id: 'element-rendering', product: 'render', topic: 'element-rendering', angularProject: 'cockpit-render-element-rendering-angular', port: 4402, pythonDir: 'cockpit/render/element-rendering/python', graphName: 'element-rendering' },
+  { id: 'state-management', product: 'render', topic: 'state-management', angularProject: 'cockpit-render-state-management-angular', port: 4403, pythonDir: 'cockpit/render/state-management/python', graphName: 'state-management' },
+  { id: 'r-registry', product: 'render', topic: 'registry', angularProject: 'cockpit-render-registry-angular', port: 4404, pythonDir: 'cockpit/render/registry/python', graphName: 'r-registry' },
+  { id: 'repeat-loops', product: 'render', topic: 'repeat-loops', angularProject: 'cockpit-render-repeat-loops-angular', port: 4405, pythonDir: 'cockpit/render/repeat-loops/python', graphName: 'repeat-loops' },
+  { id: 'computed-functions', product: 'render', topic: 'computed-functions', angularProject: 'cockpit-render-computed-functions-angular', port: 4406, pythonDir: 'cockpit/render/computed-functions/python', graphName: 'computed-functions' },
+  // Chat capabilities
+  { id: 'c-messages', product: 'chat', topic: 'messages', angularProject: 'cockpit-chat-messages-angular', port: 4501, pythonDir: 'cockpit/chat/messages/python', graphName: 'c-messages' },
+  { id: 'c-input', product: 'chat', topic: 'input', angularProject: 'cockpit-chat-input-angular', port: 4502, pythonDir: 'cockpit/chat/input/python', graphName: 'c-input' },
+  { id: 'c-interrupts', product: 'chat', topic: 'interrupts', angularProject: 'cockpit-chat-interrupts-angular', port: 4503, pythonDir: 'cockpit/chat/interrupts/python', graphName: 'c-interrupts' },
+  { id: 'c-tool-calls', product: 'chat', topic: 'tool-calls', angularProject: 'cockpit-chat-tool-calls-angular', port: 4504, pythonDir: 'cockpit/chat/tool-calls/python', graphName: 'c-tool-calls' },
+  { id: 'c-subagents', product: 'chat', topic: 'subagents', angularProject: 'cockpit-chat-subagents-angular', port: 4505, pythonDir: 'cockpit/chat/subagents/python', graphName: 'c-subagents' },
+  { id: 'c-threads', product: 'chat', topic: 'threads', angularProject: 'cockpit-chat-threads-angular', port: 4506, pythonDir: 'cockpit/chat/threads/python', graphName: 'c-threads' },
+  { id: 'c-timeline', product: 'chat', topic: 'timeline', angularProject: 'cockpit-chat-timeline-angular', port: 4507, pythonDir: 'cockpit/chat/timeline/python', graphName: 'c-timeline' },
+  { id: 'c-generative-ui', product: 'chat', topic: 'generative-ui', angularProject: 'cockpit-chat-generative-ui-angular', port: 4508, pythonDir: 'cockpit/chat/generative-ui/python', graphName: 'c-generative-ui' },
+  { id: 'c-debug', product: 'chat', topic: 'debug', angularProject: 'cockpit-chat-debug-angular', port: 4509, pythonDir: 'cockpit/chat/debug/python', graphName: 'c-debug' },
+  { id: 'c-theming', product: 'chat', topic: 'theming', angularProject: 'cockpit-chat-theming-angular', port: 4510, pythonDir: 'cockpit/chat/theming/python', graphName: 'c-theming' },
 ] as const;
 
 export function findCapability(id: string): Capability | undefined {

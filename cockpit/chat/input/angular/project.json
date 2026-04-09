@@ -1,0 +1,61 @@
+{
+  "name": "cockpit-chat-input-angular",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "cockpit/chat/input/angular/src",
+  "projectType": "application",
+  "targets": {
+    "build": {
+      "executor": "@angular/build:application",
+      "outputs": ["{options.outputPath.base}"],
+      "options": {
+        "outputPath": {
+          "base": "dist/cockpit/chat/input/angular",
+          "browser": ""
+        },
+        "browser": "cockpit/chat/input/angular/src/main.ts",
+        "tsConfig": "cockpit/chat/input/angular/tsconfig.app.json",
+        "styles": ["cockpit/chat/input/angular/src/styles.css"]
+      },
+      "configurations": {
+        "production": {
+          "budgets": [
+            { "type": "initial", "maximumWarning": "500kb", "maximumError": "1mb" },
+            { "type": "anyComponentStyle", "maximumWarning": "4kb", "maximumError": "8kb" }
+          ],
+          "outputHashing": "none"
+        },
+        "development": {
+          "optimization": false,
+          "extractLicenses": false,
+          "sourceMap": true,
+          "fileReplacements": [
+            {
+              "replace": "cockpit/chat/input/angular/src/environments/environment.ts",
+              "with": "cockpit/chat/input/angular/src/environments/environment.development.ts"
+            }
+          ]
+        }
+      },
+      "defaultConfiguration": "production"
+    },
+    "serve": {
+      "continuous": true,
+      "executor": "@angular/build:dev-server",
+      "configurations": {
+        "production": { "buildTarget": "cockpit-chat-input-angular:build:production" },
+        "development": { "buildTarget": "cockpit-chat-input-angular:build:development" }
+      },
+      "defaultConfiguration": "development",
+      "options": {
+        "proxyConfig": "cockpit/chat/input/angular/proxy.conf.json"
+      }
+    },
+    "smoke": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "cockpit/chat/input/angular",
+        "command": "npx tsx -e \"import { chatInputAngularModule } from './src/index.ts'; const module = chatInputAngularModule; if (module.id !== 'chat-input-angular' || module.title !== 'Chat Input (Angular)') { throw new Error('Unexpected module shape for ' + module.id); }\""
+      }
+    }
+  }
+}

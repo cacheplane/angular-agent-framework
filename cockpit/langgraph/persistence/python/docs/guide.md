@@ -150,3 +150,8 @@ The `<cp-chat>` component handles message rendering, input, loading states, and 
 <Warning>
 Never expose your LangSmith API key in client-side code. Use server-side environment variables or a proxy.
 </Warning>
+
+<Related>
+- [Chat Threads](/chat/core-capabilities/threads/overview/python) — Learn how ChatThreadsComponent manages conversation threads
+- [Chat Timeline](/chat/core-capabilities/timeline/overview/python) — Explore ChatTimelineComponent for visualizing thread history
+</Related>

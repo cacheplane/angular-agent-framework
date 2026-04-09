@@ -121,3 +121,8 @@ No service layer needed — `agent()` replaces wrapper services entirely. It han
 Never expose your LangSmith API key in client-side code. Use server-side environment variables or a proxy.
 </Warning>
 
+<Related>
+- [Chat Messages](/chat/core-capabilities/messages/overview/python) — Learn how ChatMessagesComponent renders messages
+- [Chat Input](/chat/core-capabilities/input/overview/python) — Explore ChatInputComponent for message submission
+</Related>
+

@@ -57,11 +57,11 @@ export function CockpitShell({
   return (
     <main
       aria-label="Cockpit shell"
-      className="grid md:grid-cols-[16rem_minmax(0,1fr)] min-h-screen"
+      className="grid md:grid-cols-[16rem_minmax(0,1fr)] h-screen overflow-hidden"
       data-hydrated={isHydrated ? 'true' : 'false'}
     >
       {/* Desktop sidebar — hidden on mobile */}
-      <div className="hidden md:block">
+      <div className="hidden md:block overflow-y-auto">
         <CockpitSidebar
           navigationTree={navigationTree}
           manifest={cockpitManifest}
@@ -94,7 +94,7 @@ export function CockpitShell({
         </>
       )}
 
-      <section className="grid grid-rows-[auto_1fr] gap-2 p-4 bg-[var(--ds-glass-bg)] backdrop-blur-[var(--ds-glass-blur)]">
+      <section className="grid grid-rows-[auto_1fr] gap-2 p-4 overflow-hidden bg-[var(--ds-glass-bg)] backdrop-blur-[var(--ds-glass-blur)]">
         <header className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
           <div className="flex items-center gap-3">
             <button

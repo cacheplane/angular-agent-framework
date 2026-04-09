@@ -1,0 +1,61 @@
+{
+  "name": "cockpit-render-state-management-angular",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "cockpit/render/state-management/angular/src",
+  "projectType": "application",
+  "targets": {
+    "build": {
+      "executor": "@angular/build:application",
+      "outputs": ["{options.outputPath.base}"],
+      "options": {
+        "outputPath": {
+          "base": "dist/cockpit/render/state-management/angular",
+          "browser": ""
+        },
+        "browser": "cockpit/render/state-management/angular/src/main.ts",
+        "tsConfig": "cockpit/render/state-management/angular/tsconfig.app.json",
+        "styles": ["cockpit/render/state-management/angular/src/styles.css"]
+      },
+      "configurations": {
+        "production": {
+          "budgets": [
+            { "type": "initial", "maximumWarning": "500kb", "maximumError": "1mb" },
+            { "type": "anyComponentStyle", "maximumWarning": "4kb", "maximumError": "8kb" }
+          ],
+          "outputHashing": "none"
+        },
+        "development": {
+          "optimization": false,
+          "extractLicenses": false,
+          "sourceMap": true,
+          "fileReplacements": [
+            {
+              "replace": "cockpit/render/state-management/angular/src/environments/environment.ts",
+              "with": "cockpit/render/state-management/angular/src/environments/environment.development.ts"
+            }
+          ]
+        }
+      },
+      "defaultConfiguration": "production"
+    },
+    "serve": {
+      "continuous": true,
+      "executor": "@angular/build:dev-server",
+      "configurations": {
+        "production": { "buildTarget": "cockpit-render-state-management-angular:build:production" },
+        "development": { "buildTarget": "cockpit-render-state-management-angular:build:development" }
+      },
+      "defaultConfiguration": "development",
+      "options": {
+        "proxyConfig": "cockpit/render/state-management/angular/proxy.conf.json"
+      }
+    },
+    "smoke": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "cockpit/render/state-management/angular",
+        "command": "npx tsx -e \"import { renderStateManagementAngularModule } from './src/index.ts'; const module = renderStateManagementAngularModule; if (module.id !== 'render-state-management-angular' || module.title !== 'Render State Management (Angular)') { throw new Error('Unexpected module shape for ' + module.id); }\""
+      }
+    }
+  }
+}

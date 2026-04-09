@@ -1,0 +1,12 @@
+/* Global styles for the repeat-loops capability demo */
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.skeleton-shimmer {
+  background: linear-gradient(90deg, rgb(31 41 55 / 0) 0%, rgb(55 65 81 / 0.3) 50%, rgb(31 41 55 / 0) 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}

@@ -1,0 +1,66 @@
+// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+import { Component, computed } from '@angular/core';
+import { ChatInputComponent as ChatInputPrimitive } from '@cacheplane/chat';
+import { ChatMessagesComponent } from '@cacheplane/chat';
+import { agent } from '@cacheplane/angular';
+import { environment } from '../environments/environment';
+
+/**
+ * InputComponent showcases ChatInputComponent features including
+ * keyboard handling, disabled state, and custom placeholder.
+ * A sidebar displays the current input state.
+ */
+@Component({
+  selector: 'app-input',
+  standalone: true,
+  imports: [ChatInputPrimitive, ChatMessagesComponent],
+  template: `
+    <div class="flex h-screen">
+      <div class="flex-1 flex flex-col min-w-0">
+        <header class="px-4 py-3 border-b" style="border-color: var(--chat-border, #333); background: var(--chat-bg, #171717);">
+          <h1 class="text-sm font-semibold" style="color: var(--chat-text, #e0e0e0);">Chat Input Demo</h1>
+        </header>
+        <div class="flex-1 overflow-y-auto">
+          <chat-messages [ref]="stream" />
+        </div>
+        <div class="px-4 py-2" style="background: var(--chat-bg, #171717);">
+          <chat-input [ref]="stream" placeholder="Try typing here..." (send)="submitMessage($event)" />
+        </div>
+      </div>
+      <aside class="w-72 shrink-0 border-l overflow-y-auto p-4 space-y-4"
+             style="border-color: var(--chat-border, #333); background: var(--chat-bg, #171717); color: var(--chat-text, #e0e0e0);">
+        <h3 class="text-xs font-semibold uppercase tracking-wide"
+            style="color: var(--chat-text-muted, #777);">Input State</h3>
+        <dl class="text-xs space-y-2" style="color: var(--chat-text-muted, #777);">
+          <dt class="font-semibold">Stream Status</dt>
+          <dd class="font-mono">{{ streamStatus() }}</dd>
+          <dt class="font-semibold">Is Loading</dt>
+          <dd class="font-mono">{{ isLoading() }}</dd>
+        </dl>
+        <div class="mt-4">
+          <h4 class="text-xs font-semibold uppercase tracking-wide mb-2"
+              style="color: var(--chat-text-muted, #777);">Features</h4>
+          <ul class="text-xs space-y-1 list-disc list-inside" style="color: var(--chat-text-muted, #777);">
+            <li>Custom placeholder text</li>
+            <li>Enter to send</li>
+            <li>Shift+Enter for newline</li>
+            <li>Auto-disable while streaming</li>
+          </ul>
+        </div>
+      </aside>
+    </div>
+  `,
+})
+export class InputComponent {
+  protected readonly stream = agent({
+    apiUrl: environment.langGraphApiUrl,
+    assistantId: environment.streamingAssistantId,
+  });
+
+  protected readonly streamStatus = computed(() => this.stream.status());
+  protected readonly isLoading = computed(() => this.stream.status() === 'streaming');
+
+  submitMessage(content: string) {
+    this.stream.submit([{ role: 'human', content }]);
+  }
+}

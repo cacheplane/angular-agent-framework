@@ -47,11 +47,18 @@ describe('buildNavigationTree', () => {
   it('groups manifest entries by product and section', () => {
     const tree = buildNavigationTree(cockpitManifest);
 
+    expect(tree).toHaveLength(4);
     expect(tree[0]).toMatchObject({
       product: 'deep-agents',
     });
     expect(tree[1]).toMatchObject({
       product: 'langgraph',
+    });
+    expect(tree[2]).toMatchObject({
+      product: 'render',
+    });
+    expect(tree[3]).toMatchObject({
+      product: 'chat',
     });
   });
 });
@@ -122,6 +129,40 @@ describe('getCapabilityPresentation', () => {
       kind: 'capability',
       runtimeUrl: 'langgraph/streaming',
       devPort: 4300,
+    });
+  });
+
+  it('presents render capabilities with module-backed metadata', () => {
+    const entry = resolveCockpitEntry({
+      manifest: cockpitManifest,
+      product: 'render',
+      section: 'core-capabilities',
+      topic: 'spec-rendering',
+      page: 'overview',
+      language: 'python',
+    });
+    const presentation = getCapabilityPresentation(entry);
+
+    expect(presentation).toMatchObject({
+      kind: 'capability',
+      docsPath: '/docs/render/core-capabilities/spec-rendering/overview/python',
+    });
+  });
+
+  it('presents chat capabilities with module-backed metadata', () => {
+    const entry = resolveCockpitEntry({
+      manifest: cockpitManifest,
+      product: 'chat',
+      section: 'core-capabilities',
+      topic: 'messages',
+      page: 'overview',
+      language: 'python',
+    });
+    const presentation = getCapabilityPresentation(entry);
+
+    expect(presentation).toMatchObject({
+      kind: 'capability',
+      docsPath: '/docs/chat/core-capabilities/messages/overview/python',
     });
   });
 

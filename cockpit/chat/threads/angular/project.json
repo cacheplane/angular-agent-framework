@@ -1,0 +1,61 @@
+{
+  "name": "cockpit-chat-threads-angular",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "cockpit/chat/threads/angular/src",
+  "projectType": "application",
+  "targets": {
+    "build": {
+      "executor": "@angular/build:application",
+      "outputs": ["{options.outputPath.base}"],
+      "options": {
+        "outputPath": {
+          "base": "dist/cockpit/chat/threads/angular",
+          "browser": ""
+        },
+        "browser": "cockpit/chat/threads/angular/src/main.ts",
+        "tsConfig": "cockpit/chat/threads/angular/tsconfig.app.json",
+        "styles": ["cockpit/chat/threads/angular/src/styles.css"]
+      },
+      "configurations": {
+        "production": {
+          "budgets": [
+            { "type": "initial", "maximumWarning": "500kb", "maximumError": "1mb" },
+            { "type": "anyComponentStyle", "maximumWarning": "4kb", "maximumError": "8kb" }
+          ],
+          "outputHashing": "none"
+        },
+        "development": {
+          "optimization": false,
+          "extractLicenses": false,
+          "sourceMap": true,
+          "fileReplacements": [
+            {
+              "replace": "cockpit/chat/threads/angular/src/environments/environment.ts",
+              "with": "cockpit/chat/threads/angular/src/environments/environment.development.ts"
+            }
+          ]
+        }
+      },
+      "defaultConfiguration": "production"
+    },
+    "serve": {
+      "continuous": true,
+      "executor": "@angular/build:dev-server",
+      "configurations": {
+        "production": { "buildTarget": "cockpit-chat-threads-angular:build:production" },
+        "development": { "buildTarget": "cockpit-chat-threads-angular:build:development" }
+      },
+      "defaultConfiguration": "development",
+      "options": {
+        "proxyConfig": "cockpit/chat/threads/angular/proxy.conf.json"
+      }
+    },
+    "smoke": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "cockpit/chat/threads/angular",
+        "command": "npx tsx -e \"import { chatThreadsAngularModule } from './src/index.ts'; const module = chatThreadsAngularModule; if (module.id !== 'chat-threads-angular' || module.title !== 'Chat Threads (Angular)') { throw new Error('Unexpected module shape for ' + module.id); }\""
+      }
+    }
+  }
+}

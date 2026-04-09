@@ -147,3 +147,7 @@ The `<cp-chat>` component handles message rendering, input, loading states, and 
 <Warning>
 Never expose your LangSmith API key in client-side code. Use server-side environment variables or a proxy.
 </Warning>
+
+<Related>
+- [Chat Interrupts](/chat/core-capabilities/interrupts/overview/python) — Learn how ChatInterruptsComponent handles human-in-the-loop approval flows
+</Related>

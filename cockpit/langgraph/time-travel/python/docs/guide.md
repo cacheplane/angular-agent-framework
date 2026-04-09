@@ -143,3 +143,8 @@ The list grows as the conversation progresses, giving you a full audit trail.
 effect on the next `stream.submit()` call. Calling `setBranch` without
 submitting does not modify the thread state.
 </Warning>
+
+<Related>
+- [Chat Timeline](/chat/core-capabilities/timeline/overview/python) — Explore ChatTimelineComponent for visualizing thread history
+- [Chat Debug](/chat/core-capabilities/debug/overview/python) — Learn how ChatDebugComponent aids in debugging agent behavior
+</Related>
