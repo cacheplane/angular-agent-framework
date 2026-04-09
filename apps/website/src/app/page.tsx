@@ -29,7 +29,7 @@ export default async function HomePage() {
       <HeroTwoCol />
       {/* 2. Trust — quick credibility stats */}
       <StatsStrip />
-      <SocialProof />
+      {/* <SocialProof /> */}
       {/* 3. Problem — last-mile gap narrative */}
       <ProblemSection />
       {/* 4. Architecture — three-layer stack diagram */}
