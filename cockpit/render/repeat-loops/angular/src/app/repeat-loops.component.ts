@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-import { Component, input, OnDestroy, viewChild, ElementRef, effect } from '@angular/core';
+import { Component, computed, input, OnDestroy, viewChild, ElementRef, effect } from '@angular/core';
 import {
   RenderSpecComponent,
   RenderElementComponent,
@@ -17,8 +17,8 @@ import { REPEAT_LOOPS_SPECS } from './specs';
   selector: 'demo-text',
   standalone: true,
   template: `
-    @if (content()) {
-      <p class="text-gray-100 text-sm">{{ content() }}</p>
+    @if (displayContent()) {
+      <p class="text-gray-100 text-sm">{{ displayContent() }}</p>
     } @else if (loading()) {
       <div class="space-y-1.5 py-1">
         <div class="h-3 w-full bg-gray-800 rounded skeleton-shimmer"></div>
@@ -28,7 +28,11 @@ import { REPEAT_LOOPS_SPECS } from './specs';
   `,
 })
 class DemoTextComponent {
-  readonly content = input('');
+  readonly content = input<unknown>('');
+  readonly displayContent = computed(() => {
+    const c = this.content();
+    return typeof c === 'string' ? c : '';
+  });
   readonly childKeys = input<string[]>([]);
   readonly spec = input<Spec | null>(null);
   readonly bindings = input<Record<string, string>>({});
@@ -41,8 +45,8 @@ class DemoTextComponent {
   standalone: true,
   imports: [RenderElementComponent],
   template: `
-    @if (content()) {
-      <h2 class="text-lg font-bold text-gray-100 mb-2">{{ content() }}</h2>
+    @if (displayContent()) {
+      <h2 class="text-lg font-bold text-gray-100 mb-2">{{ displayContent() }}</h2>
     } @else if (loading()) {
       <div class="h-5 w-48 bg-gray-700 rounded skeleton-shimmer mb-2"></div>
     }
@@ -58,7 +62,11 @@ class DemoTextComponent {
   `,
 })
 class DemoHeadingComponent {
-  readonly content = input('');
+  readonly content = input<unknown>('');
+  readonly displayContent = computed(() => {
+    const c = this.content();
+    return typeof c === 'string' ? c : '';
+  });
   readonly childKeys = input<string[]>([]);
   readonly spec = input<Spec | null>(null);
   readonly bindings = input<Record<string, string>>({});
