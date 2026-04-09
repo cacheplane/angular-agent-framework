@@ -1,14 +1,17 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-import { Component, input, computed, signal } from '@angular/core';
-import { JsonPipe } from '@angular/common';
+import { Component, input, OnDestroy } from '@angular/core';
 import {
   RenderSpecComponent,
+  RenderElementComponent,
   defineAngularRegistry,
   signalStateStore,
 } from '@cacheplane/render';
 import type { Spec } from '@json-render/core';
+import { StreamingSimulator } from '../../../../shared/streaming-simulator';
+import { StreamingTimelineComponent } from '../../../../shared/streaming-timeline.component';
+import { COMPUTED_FUNCTIONS_SPECS } from './specs';
 
-// --- Inline view component ---
+// --- Inline view components ---
 
 @Component({
   selector: 'demo-value',
@@ -27,129 +30,114 @@ class DemoValueComponent {
   readonly spec = input<Spec | null>(null);
 }
 
-/**
- * ComputedFunctionsComponent demonstrates computed functions from @cacheplane/render.
- *
- * Shows how custom functions registered via provideRender transform data
- * for prop resolution in render specs. The main area renders computed values.
- * The sidebar shows the function registry, live computed outputs, and an
- * editable input.
- */
 @Component({
-  selector: 'app-computed-functions',
+  selector: 'demo-heading',
   standalone: true,
-  imports: [RenderSpecComponent, JsonPipe],
+  imports: [RenderElementComponent],
   template: `
-    <div class="flex h-screen bg-gray-950 text-gray-100">
-      <!-- Main area: computed value demos -->
-      <main class="flex-1 min-w-0 p-8 overflow-y-auto">
-        <h1 class="text-2xl font-bold mb-6">Computed Functions</h1>
-        <p class="text-gray-400 text-sm mb-6">
-          Custom functions are registered via <code class="text-blue-400">provideRender</code>
-          and invoked in render specs with <code class="text-blue-400">{{ '$fn' }}</code> expressions.
-          Each function receives <code class="text-blue-400">args: Record&lt;string, unknown&gt;</code>.
-        </p>
-        <div class="rounded-lg border border-gray-800 p-6 bg-gray-900 space-y-2">
-          <render-spec [spec]="spec" [registry]="registry" [store]="store" />
-        </div>
-      </main>
+    <h2 class="text-lg font-bold text-gray-100">{{ content() }}</h2>
+    @for (key of childKeys(); track key) {
+      <render-element [elementKey]="key" [spec]="spec()!" />
+    }
+  `,
+})
+class DemoHeadingComponent {
+  readonly content = input('');
+  readonly childKeys = input<string[]>([]);
+  readonly spec = input<Spec | null>(null);
+}
 
-      <!-- Sidebar: function registry + live outputs -->
-      <aside class="w-96 shrink-0 border-l border-gray-800 overflow-y-auto p-4 space-y-4 bg-gray-950">
-        <h3 class="text-xs font-semibold uppercase tracking-wide text-gray-500">Registered Functions</h3>
-        <div class="rounded-lg p-4 space-y-1 bg-gray-900 border border-gray-800">
-          @for (name of functionNames; track name) {
-            <div class="text-sm font-mono px-2 py-1 rounded bg-gray-950 text-gray-300">{{ name }}</div>
-          }
-        </div>
-
-        <h3 class="text-xs font-semibold uppercase tracking-wide text-gray-500">Live Computed Outputs</h3>
-        <div class="rounded-lg p-4 space-y-3 bg-gray-900 border border-gray-800">
-          <div>
-            <label class="block text-xs font-medium mb-1 text-gray-500">formatDate("2024-06-15")</label>
-            <span class="text-sm text-gray-100">{{ formattedDate() }}</span>
-          </div>
-          <div>
-            <label class="block text-xs font-medium mb-1 text-gray-500">uppercase("render specs")</label>
-            <span class="text-sm text-gray-100">{{ uppercased() }}</span>
-          </div>
-          <div>
-            <label class="block text-xs font-medium mb-1 text-gray-500">multiply(7, 6)</label>
-            <span class="text-sm text-gray-100">{{ multiplied() }}</span>
-          </div>
-          <div>
-            <label class="block text-xs font-medium mb-1 text-gray-500">Input Value</label>
-            <input class="w-full px-2 py-1 rounded text-sm bg-gray-950 text-gray-100 border border-gray-800 focus:border-blue-600 outline-none"
-                   [value]="inputValue()"
-                   (input)="inputValue.set($any($event.target).value)" />
-          </div>
-          <div>
-            <label class="block text-xs font-medium mb-1 text-gray-500">reverse(input)</label>
-            <span class="text-sm text-gray-100 font-mono">{{ reversed() }}</span>
-          </div>
-        </div>
-
-        <div>
-          <h4 class="text-xs font-semibold uppercase tracking-wide mb-2 text-gray-500">Function Config (JSON)</h4>
-          <pre class="text-xs font-mono overflow-x-auto p-3 rounded bg-gray-900 text-gray-400 border border-gray-800">{{ functionNames | json }}</pre>
-        </div>
-      </aside>
+@Component({
+  selector: 'demo-card',
+  standalone: true,
+  imports: [RenderElementComponent],
+  template: `
+    <div class="rounded-lg border border-gray-800 bg-gray-900 p-4 mb-3">
+      <h3 class="text-sm font-semibold text-gray-200 mb-2">{{ title() }}</h3>
+      @for (key of childKeys(); track key) {
+        <render-element [elementKey]="key" [spec]="spec()!" />
+      }
     </div>
   `,
 })
-export class ComputedFunctionsComponent {
+class DemoCardComponent {
+  readonly title = input('');
+  readonly childKeys = input<string[]>([]);
+  readonly spec = input<Spec | null>(null);
+}
+
+@Component({
+  selector: 'app-computed-functions',
+  standalone: true,
+  imports: [RenderSpecComponent, StreamingTimelineComponent],
+  template: `
+    <div class="flex flex-col h-screen bg-gray-950 text-gray-100">
+      <!-- Spec picker -->
+      <div class="flex items-center gap-2 px-4 py-3 border-b border-gray-800">
+        <span class="text-xs text-gray-500 uppercase tracking-wide font-semibold mr-2">Spec:</span>
+        @for (spec of specs; track spec.label; let i = $index) {
+          <button
+            class="text-xs px-3 py-1.5 rounded-md transition-colors"
+            [class]="i === activeIndex ? 'bg-indigo-500 text-white font-semibold' : 'bg-gray-800 text-gray-400 hover:text-gray-200'"
+            (click)="selectSpec(i)">
+            {{ spec.label }}
+          </button>
+        }
+      </div>
+
+      <!-- Split panes -->
+      <div class="flex flex-1 min-h-0">
+        <!-- Left: Live Render Output -->
+        <div class="flex-1 overflow-y-auto p-6 border-r border-gray-800">
+          <div class="text-[10px] text-gray-500 uppercase tracking-widest font-semibold mb-4">Live Render Output</div>
+          @if (simulator.spec(); as renderedSpec) {
+            <render-spec [spec]="renderedSpec" [registry]="registry" [store]="store" [loading]="simulator.playing()" />
+          } @else {
+            <div class="text-gray-600 text-sm italic">Press play to start streaming...</div>
+          }
+        </div>
+
+        <!-- Right: Streaming JSON -->
+        <div class="w-80 shrink-0 overflow-y-auto p-4 bg-gray-900/50">
+          <div class="text-[10px] text-gray-500 uppercase tracking-widest font-semibold mb-4">Streaming JSON</div>
+          <pre class="text-[11px] font-mono text-gray-300 leading-relaxed whitespace-pre-wrap break-all">{{ simulator.rawJson() }}<span class="text-indigo-400 animate-pulse">|</span></pre>
+          <div class="mt-3 flex justify-between text-[10px]">
+            <span class="text-indigo-400">{{ simulator.playing() ? 'Streaming...' : simulator.position() >= simulator.total() ? 'Complete' : 'Paused' }}</span>
+            <span class="text-gray-500">{{ percent() }}%</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Timeline bar -->
+      <streaming-timeline [simulator]="simulator" class="border-t border-gray-800" />
+    </div>
+  `,
+})
+export class ComputedFunctionsComponent implements OnDestroy {
+  protected readonly specs = COMPUTED_FUNCTIONS_SPECS;
+  protected activeIndex = 0;
+
+  protected readonly simulator = new StreamingSimulator(this.specs[0].json);
+
   protected readonly registry = defineAngularRegistry({
     Value: DemoValueComponent,
+    Heading: DemoHeadingComponent,
+    Card: DemoCardComponent,
   });
 
-  protected readonly store = signalStateStore({
-    dateStr: '2024-06-15T12:00:00Z',
-    text: 'render specs are powerful',
-    a: 7,
-    b: 6,
-  });
+  protected readonly store = signalStateStore({});
 
-  protected readonly spec: Spec = {
-    root: 'root',
-    elements: {
-      root: {
-        type: 'Value',
-        props: {
-          label: 'Formatted Date',
-          value: { $fn: 'formatDate', args: { value: { $state: '/dateStr' } } },
-        },
-        children: ['upper', 'mult'],
-      },
-      upper: {
-        type: 'Value',
-        props: {
-          label: 'Uppercase',
-          value: { $fn: 'uppercase', args: { value: { $state: '/text' } } },
-        },
-      },
-      mult: {
-        type: 'Value',
-        props: {
-          label: 'Multiply',
-          value: { $fn: 'multiply', args: { a: { $state: '/a' }, b: { $state: '/b' } } },
-        },
-      },
-    },
-  } as Spec;
+  protected percent(): number {
+    return Math.round(this.simulator.progress() * 100);
+  }
 
-  protected readonly inputValue = signal('hello world');
+  protected selectSpec(index: number): void {
+    this.activeIndex = index;
+    this.simulator.setSource(this.specs[index].json);
+    this.simulator.play();
+  }
 
-  protected readonly formattedDate = computed(() =>
-    new Date('2024-06-15T12:00:00Z').toLocaleDateString('en-US', {
-      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
-    })
-  );
-
-  protected readonly uppercased = computed(() => 'render specs are powerful'.toUpperCase());
-  protected readonly multiplied = computed(() => 7 * 6);
-  protected readonly reversed = computed(() =>
-    this.inputValue().split('').reverse().join('')
-  );
-
-  protected readonly functionNames = ['formatDate', 'uppercase', 'multiply', 'reverse'];
+  ngOnDestroy(): void {
+    this.simulator.destroy();
+  }
 }
