@@ -19,6 +19,7 @@ export interface ContentClassifier {
   readonly elementStates: Signal<Map<string, ElementAccumulationState>>;
   readonly a2uiSurfaces: Signal<Map<string, A2uiSurface>>;
   readonly streaming: Signal<boolean>;
+  readonly errors: Signal<string[]>;
   dispose(): void;
 }
 
@@ -28,6 +29,7 @@ export function createContentClassifier(): ContentClassifier {
   const specSignal = signal<Spec | null>(null);
   const elementStatesSignal = signal<Map<string, ElementAccumulationState>>(new Map());
   const streamingSignal = signal<boolean>(false);
+  const errorsSignal = signal<string[]>([]);
 
   let processedLength = 0;
   let store: ParseTreeStore | null = null;
@@ -118,7 +120,11 @@ export function createContentClassifier(): ContentClassifier {
           }
         }
         const jsonContent = content.slice(jsonStartIndex);
-        initJsonStore(jsonContent);
+        try {
+          initJsonStore(jsonContent);
+        } catch (err) {
+          errorsSignal.update(prev => [...prev, err instanceof Error ? err.message : String(err)]);
+        }
         processedLength = content.length;
       } else if (detected === 'a2ui') {
         streamingSignal.set(true);
@@ -127,9 +133,13 @@ export function createContentClassifier(): ContentClassifier {
         jsonStartIndex = content.indexOf(A2UI_PREFIX) + A2UI_PREFIX.length;
         const a2uiContent = content.slice(jsonStartIndex);
         if (a2uiContent.length > 0) {
-          const msgs = a2uiParser.push(a2uiContent);
-          for (const msg of msgs) a2uiStore.apply(msg);
-          a2uiSurfacesSignal.set(a2uiStore.surfaces());
+          try {
+            const msgs = a2uiParser.push(a2uiContent);
+            for (const msg of msgs) a2uiStore.apply(msg);
+            a2uiSurfacesSignal.set(a2uiStore.surfaces());
+          } catch (err) {
+            errorsSignal.update(prev => [...prev, err instanceof Error ? err.message : String(err)]);
+          }
         }
         processedLength = content.length;
       }
@@ -146,14 +156,22 @@ export function createContentClassifier(): ContentClassifier {
       markdownSignal.set(content);
     } else if (currentType === 'json-render') {
       if (store) {
-        store.push(delta);
-        syncJsonSignals();
+        try {
+          store.push(delta);
+          syncJsonSignals();
+        } catch (err) {
+          errorsSignal.update(prev => [...prev, err instanceof Error ? err.message : String(err)]);
+        }
       }
     } else if (currentType === 'a2ui') {
       if (a2uiParser && a2uiStore) {
-        const msgs = a2uiParser.push(delta);
-        for (const msg of msgs) a2uiStore.apply(msg);
-        a2uiSurfacesSignal.set(a2uiStore.surfaces());
+        try {
+          const msgs = a2uiParser.push(delta);
+          for (const msg of msgs) a2uiStore.apply(msg);
+          a2uiSurfacesSignal.set(a2uiStore.surfaces());
+        } catch (err) {
+          errorsSignal.update(prev => [...prev, err instanceof Error ? err.message : String(err)]);
+        }
       }
     }
   }
@@ -172,6 +190,7 @@ export function createContentClassifier(): ContentClassifier {
     elementStates: elementStatesSignal.asReadonly(),
     a2uiSurfaces: a2uiSurfacesSignal.asReadonly(),
     streaming: streamingSignal.asReadonly(),
+    errors: errorsSignal.asReadonly(),
     dispose,
   };
 }

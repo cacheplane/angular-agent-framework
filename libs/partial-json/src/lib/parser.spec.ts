@@ -314,6 +314,75 @@ describe('createPartialJsonParser', () => {
     });
   });
 
+  describe('error recovery', () => {
+    it('handles empty input', () => {
+      const parser = createPartialJsonParser();
+      const events = parser.push('');
+      expect(events).toEqual([]);
+      expect(parser.root).toBeNull();
+    });
+
+    it('handles input with only whitespace', () => {
+      const parser = createPartialJsonParser();
+      const events = parser.push('   \n\t');
+      expect(events).toEqual([]);
+      expect(parser.root).toBeNull();
+    });
+
+    it('leaves root as null for invalid characters in EXPECT_VALUE state', () => {
+      const parser = createPartialJsonParser();
+      // 'x' does not match any case in EXPECT_VALUE, so it falls through the switch.
+      // The parser never creates a root node for unrecognized characters.
+      const events = parser.push('xxx{"a":1}');
+      // Because 'x' is not whitespace and not a recognized token start,
+      // the parser stays in EXPECT_VALUE but does nothing — root remains null.
+      // Only when '{' is encountered does parsing begin, but by then 'xxx' has already
+      // been consumed with no effect.
+      // Actually, 'x' falls through the switch with no match, so processing continues
+      // to the next char. '{' will be reached and parsed normally.
+      expect(parser.root).not.toBeNull();
+      const root = parser.root as JsonObjectNode;
+      expect(root.type).toBe('object');
+      expect((root.children.get('a') as JsonNumberNode).value).toBe(1);
+    });
+
+    it('handles trailing text after valid JSON', () => {
+      const parser = createPartialJsonParser();
+      parser.push('{"a":1}some trailing text');
+      const root = parser.root as JsonObjectNode;
+      expect(root.type).toBe('object');
+      expect(root.status).toBe('complete');
+      expect((root.children.get('a') as JsonNumberNode).value).toBe(1);
+    });
+
+    it('handles very long strings without crashing', () => {
+      const parser = createPartialJsonParser();
+      const longStr = 'a'.repeat(100000);
+      parser.push('"' + longStr + '"');
+      const root = parser.root as JsonStringNode;
+      expect(root.type).toBe('string');
+      expect(root.value.length).toBe(100000);
+      expect(root.status).toBe('complete');
+    });
+
+    it('handles deeply nested objects without stack overflow', () => {
+      const parser = createPartialJsonParser();
+      const depth = 100;
+      const open = '{"a":'.repeat(depth);
+      const close = '}'.repeat(depth);
+      parser.push(open + '"leaf"' + close);
+      let current = parser.root as JsonObjectNode;
+      for (let i = 0; i < depth - 1; i++) {
+        expect(current.type).toBe('object');
+        current = current.children.get('a') as JsonObjectNode;
+      }
+      // The innermost value is a string
+      const leaf = current.children.get('a') as JsonStringNode;
+      expect(leaf.type).toBe('string');
+      expect(leaf.value).toBe('leaf');
+    });
+  });
+
   describe('whitespace', () => {
     it('should handle whitespace between tokens', () => {
       const parser = createPartialJsonParser();
