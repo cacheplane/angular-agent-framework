@@ -9,3 +9,5 @@ export type {
   A2uiMessage, A2uiSurface,
 } from './lib/types';
 export { getByPointer, setByPointer, deleteByPointer } from './lib/pointer';
+export { createA2uiMessageParser } from './lib/parser';
+export type { A2uiMessageParser } from './lib/parser';
