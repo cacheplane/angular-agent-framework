@@ -141,7 +141,7 @@ export function Footer() {
               onMouseLeave={(e) => (e.currentTarget.style.color = tokens.colors.textSecondary)}>
               Documentation
             </Link>
-            <Link href="/docs/api/angular" className="transition-colors" style={{ color: tokens.colors.textSecondary }}
+            <Link href="/docs/agent/api/agent" className="transition-colors" style={{ color: tokens.colors.textSecondary }}
               onMouseEnter={(e) => (e.currentTarget.style.color = tokens.colors.accent)}
               onMouseLeave={(e) => (e.currentTarget.style.color = tokens.colors.textSecondary)}>
               API Reference
