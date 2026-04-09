@@ -94,7 +94,7 @@ class DemoCardComponent {
   standalone: true,
   imports: [RenderSpecComponent, StreamingTimelineComponent],
   template: `
-    <div class="flex flex-col h-screen bg-gray-950 text-gray-100">
+    <div class="flex flex-col h-full bg-gray-950 text-gray-100">
       <!-- Spec picker -->
       <div class="flex items-center gap-2 px-4 py-3 border-b border-gray-800">
         <span class="text-xs text-gray-500 uppercase tracking-wide font-semibold mr-2">Spec:</span>
