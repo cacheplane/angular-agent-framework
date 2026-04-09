@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-import { Component } from '@angular/core';
-import { ChatComponent, ChatThreadListComponent } from '@cacheplane/chat';
+import { Component, signal } from '@angular/core';
+import { ChatComponent, ChatThreadListComponent, type Thread } from '@cacheplane/chat';
 import { agent } from '@cacheplane/angular';
 import { environment } from '../environments/environment';
 
@@ -18,9 +18,12 @@ import { environment } from '../environments/environment';
              style="border-color: var(--chat-border, #333); background: var(--chat-bg, #171717); color: var(--chat-text, #e0e0e0);">
         <h3 class="text-xs font-semibold uppercase tracking-wide"
             style="color: var(--chat-text-muted, #777);">Threads</h3>
-        <chat-thread-list [ref]="stream" />
+        <chat-thread-list
+          [threads]="threads()"
+          [activeThreadId]="activeThreadId()"
+          (threadSelected)="onThreadSelected($event)" />
       </aside>
-      <chat [ref]="stream" class="flex-1 min-w-0" />
+      <chat [ref]="stream" [threads]="threads()" [activeThreadId]="activeThreadId()" (threadSelected)="onThreadSelected($event)" class="flex-1 min-w-0" />
     </div>
   `,
 })
@@ -29,4 +32,16 @@ export class ThreadsComponent {
     apiUrl: environment.langGraphApiUrl,
     assistantId: environment.streamingAssistantId,
   });
+
+  protected readonly threads = signal<Thread[]>([
+    { id: 'thread-1', title: 'First Conversation' },
+    { id: 'thread-2', title: 'Second Conversation' },
+    { id: 'thread-3', title: 'Third Conversation' },
+  ]);
+
+  protected readonly activeThreadId = signal('thread-1');
+
+  protected onThreadSelected(threadId: string): void {
+    this.activeThreadId.set(threadId);
+  }
 }
