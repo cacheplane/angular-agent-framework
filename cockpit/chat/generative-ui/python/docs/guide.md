@@ -1,76 +1,73 @@
-# Chat Generative UI with @cacheplane/chat
+# Generative UI with Streaming Auto-Detection
 
 <Summary>
-Render dynamic UI components within chat messages using
-ChatGenerativeUiComponent. The agent embeds JSON render specs
-in responses that are rendered as live Angular components.
+Render dynamic UI components within chat messages using the streaming
+auto-detection pipeline. As tokens stream in, the system detects JSON,
+parses it incrementally, and renders Angular components in real time.
 </Summary>
 
 <Prompt>
-Add generative UI to your chat interface using `ChatGenerativeUiComponent`
-from `@cacheplane/chat` and `provideRender()` from `@cacheplane/render`.
-Configure both providers to enable spec detection and rendering.
+Add generative UI to your chat interface using `views()` from
+`@cacheplane/chat`. Register view components and pass them to
+`ChatComponent` via the `[views]` input.
 </Prompt>
 
 <Steps>
-<Step title="Configure the render provider">
+<Step title="Define view components">
 
-Generative UI requires both `provideChat()` and `provideRender()`:
+Create Angular components for each UI type the agent can emit.
+Each component uses `input()` signals to receive props from the
+rendered spec.
+
+</Step>
+<Step title="Register views">
+
+Use the `views()` function to map spec type names to Angular components:
 
 ```typescript
-import { provideRender } from '@cacheplane/render';
-import { provideChat } from '@cacheplane/chat';
+import { views } from '@cacheplane/chat';
 
-export const appConfig: ApplicationConfig = {
-  providers: [
-    provideStreamResource({ apiUrl: environment.langGraphApiUrl }),
-    provideChat({}),
-    provideRender({}),
-  ],
-};
+const myViews = views({
+  weather_card: WeatherCardComponent,
+  stat_card: StatCardComponent,
+  container: ContainerComponent,
+});
 ```
 
 </Step>
-<Step title="Create a spec-emitting agent">
+<Step title="Bind views to ChatComponent">
 
-Configure the backend agent to include JSON render specs in its
-responses using fenced code blocks with the `render-spec` tag.
-
-</Step>
-<Step title="Detect specs in messages">
-
-ChatGenerativeUiComponent automatically scans messages for render
-spec code blocks and extracts them for rendering.
-
-</Step>
-<Step title="Render with ChatGenerativeUiComponent">
-
-Use the component in your template alongside ChatComponent:
+Pass the view map to `ChatComponent` via the `[views]` input:
 
 ```html
-<chat [ref]="stream" />
-<chat-generative-ui [ref]="stream" />
+<chat [ref]="agentRef" [views]="myViews" />
 ```
 
 </Step>
-<Step title="Customize the component registry">
+<Step title="Configure the agent prompt">
 
-Register custom Angular components to handle specific spec types:
-
-```typescript
-provideRender({
-  registry: defineAngularRegistry({
-    card: MyCardComponent,
-    chart: MyChartComponent,
-  }),
-})
-```
+Instruct the LLM to respond with raw JSON following the Spec schema.
+No code fences or markdown — just valid JSON so the streaming pipeline
+can detect and parse it incrementally.
 
 </Step>
 </Steps>
 
+## How Streaming Auto-Detection Works
+
+1. **Token streaming** — The LLM streams response tokens to the client.
+2. **ContentClassifier** — Inspects the incoming token buffer and detects
+   when the content is JSON rather than plain text or markdown.
+3. **Partial JSON parser** — As JSON tokens arrive, a partial parser
+   builds an incremental parse tree without waiting for the full payload.
+4. **ParseTreeStore** — Materializes the partial parse tree into a live
+   `Spec` object (elements map + root key) that updates on every chunk.
+5. **Component rendering** — The `[views]` registry resolves each element
+   type to an Angular component, which renders incrementally as the spec
+   grows.
+
 <Tip>
-Generative UI bridges the gap between conversational AI and rich
-interactive interfaces — the agent can create forms, dashboards,
-and visualizations on the fly.
+Because detection and parsing happen on every streamed chunk, the user
+sees UI components materialize progressively — cards appear and fill in
+as the LLM generates the JSON structure.
 </Tip>

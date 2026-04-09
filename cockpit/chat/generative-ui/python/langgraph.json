@@ -1,6 +1,6 @@
 {
   "graphs": {
-    "c-generative-ui": "./src/graph.py:graph"
+    "generative_ui": "./src/graph.py:graph"
   },
   "dependencies": ["."],
   "python_version": "3.12",
