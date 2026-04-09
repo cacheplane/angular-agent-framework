@@ -22,6 +22,9 @@ class DemoTextComponent {
   readonly content = input('');
   readonly childKeys = input<string[]>([]);
   readonly spec = input<Spec | null>(null);
+  readonly bindings = input<Record<string, string>>({});
+  readonly emit = input<(event: string) => void>(() => {});
+  readonly loading = input(false);
 }
 
 @Component({
@@ -33,6 +36,9 @@ class DemoHeadingComponent {
   readonly content = input('');
   readonly childKeys = input<string[]>([]);
   readonly spec = input<Spec | null>(null);
+  readonly bindings = input<Record<string, string>>({});
+  readonly emit = input<(event: string) => void>(() => {});
+  readonly loading = input(false);
 }
 
 @Component({
@@ -44,6 +50,9 @@ class DemoBadgeComponent {
   readonly label = input('');
   readonly childKeys = input<string[]>([]);
   readonly spec = input<Spec | null>(null);
+  readonly bindings = input<Record<string, string>>({});
+  readonly emit = input<(event: string) => void>(() => {});
+  readonly loading = input(false);
 }
 
 @Component({
@@ -63,6 +72,9 @@ class DemoCardComponent {
   readonly title = input('');
   readonly childKeys = input<string[]>([]);
   readonly spec = input<Spec | null>(null);
+  readonly bindings = input<Record<string, string>>({});
+  readonly emit = input<(event: string) => void>(() => {});
+  readonly loading = input(false);
 }
 
 @Component({
