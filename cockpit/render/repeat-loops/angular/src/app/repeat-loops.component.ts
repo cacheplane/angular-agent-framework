@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-import { Component, input, OnDestroy } from '@angular/core';
+import { Component, input, OnDestroy, viewChild, ElementRef, effect } from '@angular/core';
 import {
   RenderSpecComponent,
   RenderElementComponent,
@@ -122,7 +122,7 @@ class DemoCardComponent {
       <!-- Split panes -->
       <div class="flex flex-1 min-h-0">
         <!-- Left: Live Render Output -->
-        <div class="flex-1 overflow-y-auto p-6 border-r border-gray-800">
+        <div class="flex-1 overflow-y-auto p-6">
           <div class="text-[10px] text-gray-500 uppercase tracking-widest font-semibold mb-4">Live Render Output</div>
           @if (simulator.spec(); as renderedSpec) {
             <render-spec [spec]="renderedSpec" [registry]="registry" [store]="store" [loading]="simulator.playing()" />
@@ -131,39 +131,42 @@ class DemoCardComponent {
           }
         </div>
 
-        <!-- Center: Controls panel -->
-        <div class="w-48 shrink-0 border-x border-gray-800 p-4 bg-gray-900/30">
-          <div class="text-[10px] text-gray-500 uppercase tracking-widest font-semibold mb-4">List Controls</div>
-          <div class="space-y-3">
-            <button
-              class="w-full text-xs px-3 py-1.5 rounded-md bg-indigo-500 text-white font-semibold hover:bg-indigo-400 transition-colors"
-              (click)="addItem()">
-              + Add Item
-            </button>
-            @if (getItems().length) {
-              <div class="space-y-1">
-                @for (item of getItems(); track $index) {
-                  <div class="flex items-center justify-between text-xs">
-                    <span class="text-gray-300 truncate">{{ item }}</span>
-                    <button class="text-gray-500 hover:text-red-400 text-[10px] transition-colors"
-                            (click)="removeItem($index)">x</button>
-                  </div>
-                }
-              </div>
-            }
-            <p class="text-[10px] text-gray-600 leading-relaxed">
-              Modify <code class="text-indigo-400/70 font-mono">/items</code> array in the store.
-            </p>
+        <!-- Right: JSON + Controls -->
+        <div class="w-80 shrink-0 flex flex-col border-l border-gray-800 bg-gray-900/50">
+          <!-- Streaming JSON (scrollable) -->
+          <div class="flex-1 overflow-y-auto p-4" #jsonPane>
+            <div class="text-[10px] text-gray-500 uppercase tracking-widest font-semibold mb-4">Streaming JSON</div>
+            <pre class="text-[11px] font-mono text-gray-300 leading-relaxed whitespace-pre-wrap break-all">{{ simulator.rawJson() }}<span class="text-indigo-400 animate-pulse">|</span></pre>
+            <div class="mt-3 flex justify-between text-[10px]">
+              <span class="text-indigo-400">{{ simulator.playing() ? 'Streaming...' : simulator.position() >= simulator.total() ? 'Complete' : 'Paused' }}</span>
+              <span class="text-gray-500">{{ percent() }}%</span>
+            </div>
           </div>
-        </div>
 
-        <!-- Right: Streaming JSON -->
-        <div class="w-80 shrink-0 overflow-y-auto p-4 bg-gray-900/50">
-          <div class="text-[10px] text-gray-500 uppercase tracking-widest font-semibold mb-4">Streaming JSON</div>
-          <pre class="text-[11px] font-mono text-gray-300 leading-relaxed whitespace-pre-wrap break-all">{{ simulator.rawJson() }}<span class="text-indigo-400 animate-pulse">|</span></pre>
-          <div class="mt-3 flex justify-between text-[10px]">
-            <span class="text-indigo-400">{{ simulator.playing() ? 'Streaming...' : simulator.position() >= simulator.total() ? 'Complete' : 'Paused' }}</span>
-            <span class="text-gray-500">{{ percent() }}%</span>
+          <!-- Controls (pinned at bottom) -->
+          <div class="shrink-0 border-t border-gray-800 p-4">
+            <div class="text-[10px] text-gray-500 uppercase tracking-widest font-semibold mb-3">List Controls</div>
+            <div class="space-y-3">
+              <button
+                class="w-full text-xs px-3 py-1.5 rounded-md bg-indigo-500 text-white font-semibold hover:bg-indigo-400 transition-colors"
+                (click)="addItem()">
+                + Add Item
+              </button>
+              @if (getItems().length) {
+                <div class="space-y-1">
+                  @for (item of getItems(); track $index) {
+                    <div class="flex items-center justify-between text-xs">
+                      <span class="text-gray-300 truncate">{{ item }}</span>
+                      <button class="text-gray-500 hover:text-red-400 text-[10px] transition-colors"
+                              (click)="removeItem($index)">x</button>
+                    </div>
+                  }
+                </div>
+              }
+              <p class="text-[10px] text-gray-600 leading-relaxed">
+                Modify <code class="text-indigo-400/70 font-mono">/items</code> array in the store.
+              </p>
+            </div>
           </div>
         </div>
       </div>
@@ -178,6 +181,20 @@ export class RepeatLoopsComponent implements OnDestroy {
   protected activeIndex = 0;
 
   protected readonly simulator = new StreamingSimulator(this.specs[0].json);
+
+  private readonly jsonPane = viewChild<ElementRef<HTMLElement>>('jsonPane');
+
+  constructor() {
+    effect(() => {
+      this.simulator.rawJson();
+      const el = this.jsonPane()?.nativeElement;
+      if (el) {
+        requestAnimationFrame(() => {
+          el.scrollTop = el.scrollHeight;
+        });
+      }
+    });
+  }
 
   protected readonly registry = defineAngularRegistry({
     Text: DemoTextComponent,
