@@ -125,13 +125,13 @@ export class SpecRenderingComponent implements OnDestroy {
     Card: DemoCardComponent,
   });
 
-  protected readonly store = signalStateStore({ greeting: 'Hello from RenderSpec!' });
+  protected readonly store = signalStateStore({});
 
   protected percent(): number {
     return Math.round(this.simulator.progress() * 100);
   }
 
-  selectSpec(index: number): void {
+  protected selectSpec(index: number): void {
     this.activeIndex = index;
     this.simulator.setSource(this.specs[index].json);
     this.simulator.play();
