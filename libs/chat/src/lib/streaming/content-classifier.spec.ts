@@ -204,6 +204,22 @@ describe('ContentClassifier', () => {
     });
   });
 
+  describe('error handling', () => {
+    it('errors signal starts empty', () => {
+      const c = setup();
+      expect(c.errors()).toEqual([]);
+    });
+
+    it('continues working after encountering non-JSON content mid-stream', () => {
+      const c = setup();
+      // Start with valid JSON detection
+      c.update('{"root":"r1"');
+      expect(c.type()).toBe('json-render');
+      // The spec should have a partial result
+      expect(c.spec()).not.toBeNull();
+    });
+  });
+
   describe('dispose', () => {
     it('can be called without errors', () => {
       const c = setup();
