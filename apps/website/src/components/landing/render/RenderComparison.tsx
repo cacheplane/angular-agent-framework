@@ -1,0 +1,98 @@
+// apps/website/src/components/landing/render/RenderComparison.tsx
+'use client';
+import { motion } from 'framer-motion';
+import { tokens } from '@cacheplane/design-tokens';
+
+const ROWS = [
+  { capability: 'New agent output', theirs: 'Frontend deploy required', ours: 'Spec change only, no deploy' },
+  { capability: 'Component swapping', theirs: 'Rewrite agent + frontend', ours: 'Swap registry entry' },
+  { capability: 'Streaming updates', theirs: 'Manual DOM manipulation', ours: 'JSON patch streaming, automatic' },
+  { capability: 'Testing specs', theirs: 'Integration tests only', ours: 'Unit test specs in isolation' },
+  { capability: 'Frontend/agent coupling', theirs: 'Tight — changes break both', ours: 'Decoupled via spec contract' },
+  { capability: 'Iteration speed', theirs: 'Days per change', ours: 'Minutes per change' },
+  { capability: 'Open standard', theirs: 'Proprietary format', ours: 'Vercel json-render spec' },
+];
+
+export function RenderComparison() {
+  return (
+    <section style={{ padding: '80px 32px' }}>
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.5 }}
+        style={{ textAlign: 'center', marginBottom: 48 }}
+      >
+        <p style={{
+          fontFamily: 'var(--font-mono,"JetBrains Mono",monospace)',
+          fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.12em',
+          fontWeight: 700, color: tokens.colors.accent, marginBottom: 14,
+        }}>
+          Head to Head
+        </p>
+        <h2 style={{
+          fontFamily: 'var(--font-garamond,"EB Garamond",Georgia,serif)',
+          fontSize: 'clamp(26px,3.5vw,42px)', fontWeight: 800, lineHeight: 1.1,
+          color: tokens.colors.textPrimary,
+        }}>
+          Hardcoded agent UI vs @cacheplane/render
+        </h2>
+      </motion.div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.5, delay: 0.15 }}
+        style={{
+          maxWidth: 860, margin: '0 auto', borderRadius: 20,
+          background: tokens.glass.bg, backdropFilter: `blur(${tokens.glass.blur})`,
+          WebkitBackdropFilter: `blur(${tokens.glass.blur})`,
+          border: `1px solid ${tokens.glass.border}`, boxShadow: tokens.glass.shadow, overflow: 'hidden',
+        }}
+      >
+        <div style={{
+          display: 'grid', gridTemplateColumns: '1fr 1fr 1fr',
+          background: 'rgba(255,255,255,.3)', borderBottom: `1px solid ${tokens.glass.border}`, padding: '14px 24px',
+        }}>
+          {['Capability', 'Hardcoded Approach', '@cacheplane/render'].map((h, i) => (
+            <div key={h} style={{
+              fontFamily: 'var(--font-mono,"JetBrains Mono",monospace)',
+              fontSize: '0.62rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em',
+              color: i === 2 ? '#1a7a40' : tokens.colors.textMuted,
+            }}>
+              {h}
+            </div>
+          ))}
+        </div>
+        {ROWS.map((row, i) => (
+          <motion.div
+            key={row.capability}
+            initial={{ opacity: 0, x: -8 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: i * 0.05, duration: 0.35 }}
+            style={{
+              display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', padding: '14px 24px',
+              borderBottom: i < ROWS.length - 1 ? '1px solid rgba(0,0,0,.05)' : 'none', alignItems: 'center',
+            }}
+          >
+            <div style={{
+              fontFamily: 'var(--font-mono,"JetBrains Mono",monospace)',
+              fontSize: '0.72rem', fontWeight: 700, color: tokens.colors.textPrimary,
+            }}>
+              {row.capability}
+            </div>
+            <div style={{ fontSize: '0.8rem', color: tokens.colors.textMuted, paddingRight: 16, lineHeight: 1.5 }}>
+              {row.theirs}
+            </div>
+            <div style={{ fontSize: '0.8rem', color: '#1a7a40', fontWeight: 500, lineHeight: 1.5, display: 'flex', alignItems: 'flex-start', gap: 6 }}>
+              <span style={{ color: '#1a7a40', marginTop: 2, flexShrink: 0 }}>✓</span>
+              <span>{row.ours}</span>
+            </div>
+          </motion.div>
+        ))}
+      </motion.div>
+    </section>
+  );
+}
