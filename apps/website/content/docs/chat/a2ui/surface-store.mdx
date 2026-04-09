@@ -1,0 +1,148 @@
+# createA2uiSurfaceStore()
+
+Factory function that creates an `A2uiSurfaceStore` — a reactive store that accumulates A2UI messages into a live `Map` of surfaces.
+
+**Import:**
+
+```typescript
+import { createA2uiSurfaceStore } from '@cacheplane/chat';
+```
+
+## Signature
+
+```typescript
+function createA2uiSurfaceStore(): A2uiSurfaceStore
+```
+
+**Returns:** `A2uiSurfaceStore` — a stateful store backed by Angular signals. Can be created outside an injection context.
+
+## A2uiSurfaceStore Interface
+
+```typescript
+interface A2uiSurfaceStore {
+  /** Apply an A2UI message, updating surfaces reactively. */
+  apply(message: A2uiMessage): void;
+
+  /** Signal containing all current surfaces, keyed by surfaceId. */
+  readonly surfaces: Signal<Map<string, A2uiSurface>>;
+
+  /** Returns a computed signal for a single surface by ID. */
+  surface(surfaceId: string): Signal<A2uiSurface | undefined>;
+}
+```
+
+### `apply(message)`
+
+Processes one `A2uiMessage` and updates the internal surfaces signal. All four message types are handled:
+
+| Message type | Behavior |
+|--------------|----------|
+| `createSurface` | Creates a new `A2uiSurface` entry with an empty component map and data model |
+| `updateComponents` | Merges the provided components into the surface's component map by `id` — existing components are replaced, others are kept |
+| `updateDataModel` | Applies a JSON Pointer patch to the surface's data model (see below) |
+| `deleteSurface` | Removes the surface from the map entirely |
+
+Messages for unknown surface IDs are silently ignored (except `createSurface`, which registers the surface).
+
+### `surfaces`
+
+A readonly `Signal<Map<string, A2uiSurface>>` containing all active surfaces. Each map operation produces a new `Map` reference so that Angular's change detection triggers correctly.
+
+### `surface(surfaceId)`
+
+Returns a `computed` signal for a single surface. The signal emits `undefined` until a `createSurface` message registers it, and `undefined` again after `deleteSurface` removes it.
+
+```typescript
+const dashboard = store.surface('dashboard');
+// dashboard() is A2uiSurface | undefined
+```
+
+## updateDataModel Semantics
+
+The `updateDataModel` message uses JSON Pointer (RFC 6901) paths to address values in the data model.
+
+| `path` | `value` | Effect |
+|--------|---------|--------|
+| `undefined` or `'/'` | Object | Replaces the entire data model |
+| `/some/path` | Any value | Sets `dataModel[some][path]` to `value` |
+| `/some/path` | `undefined` | Deletes the value at that path |
+
+```json
+// Replace entire model
+{"updateDataModel": {"surfaceId": "s1", "value": {"name": "Alice", "score": 42}}}
+
+// Set a single field
+{"updateDataModel": {"surfaceId": "s1", "path": "/score", "value": 99}}
+
+// Delete a field
+{"updateDataModel": {"surfaceId": "s1", "path": "/score"}}
+```
+
+## Usage with createA2uiMessageParser
+
+The surface store is designed to work with `createA2uiMessageParser`, which parses raw JSONL chunks into typed `A2uiMessage` objects.
+
+```typescript
+import { createA2uiSurfaceStore } from '@cacheplane/chat';
+import { createA2uiMessageParser } from '@cacheplane/a2ui';
+import { effect } from '@angular/core';
+
+const store = createA2uiSurfaceStore();
+const parser = createA2uiMessageParser();
+
+// Feed raw JSONL chunks as they arrive from the stream
+function onChunk(chunk: string): void {
+  const messages = parser.push(chunk);
+  for (const msg of messages) {
+    store.apply(msg);
+  }
+}
+
+// React to surface changes
+effect(() => {
+  const surface = store.surface('dashboard')();
+  if (surface) {
+    console.log('Components:', [...surface.components.keys()]);
+    console.log('Data model:', surface.dataModel);
+  }
+});
+```
+
+<Callout type="info" title="JSONL envelope format">
+The parser expects each line to be wrapped in an envelope object: `{"createSurface": {...}}`, `{"updateComponents": {...}}`, etc. The envelope key determines the message type; its value is the message payload.
+</Callout>
+
+## A2uiSurface Shape
+
+Each surface stored in the map has the following structure:
+
+```typescript
+interface A2uiSurface {
+  surfaceId: string;
+  catalogId: string;
+  theme?: A2uiTheme;
+  components: Map<string, A2uiComponent>;
+  dataModel: Record<string, unknown>;
+}
+```
+
+The `components` map is keyed by component ID. The `dataModel` is a plain object that components reference via JSON Pointer paths in their props.
+
+## What's Next
+
+<CardGroup cols={2}>
+  <Card
+    title="Surface Component"
+    icon="layers"
+    href="/docs/chat/a2ui/surface-component"
+  >
+    Render a surface using A2uiSurfaceComponent.
+  </Card>
+  <Card
+    title="Component Catalog"
+    icon="grid"
+    href="/docs/chat/a2ui/catalog"
+  >
+    All 12 built-in components and their props.
+  </Card>
+</CardGroup>
