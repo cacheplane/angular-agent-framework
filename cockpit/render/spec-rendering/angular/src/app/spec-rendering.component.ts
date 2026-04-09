@@ -1,12 +1,15 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-import { Component, input, signal, computed } from '@angular/core';
-import { JsonPipe } from '@angular/common';
+import { Component, input, OnDestroy } from '@angular/core';
 import {
   RenderSpecComponent,
+  RenderElementComponent,
   defineAngularRegistry,
   signalStateStore,
 } from '@cacheplane/render';
 import type { Spec } from '@json-render/core';
+import { StreamingSimulator } from '../../../../shared/streaming-simulator';
+import { StreamingTimelineComponent } from '../../../../shared/streaming-timeline.component';
+import { SPEC_RENDERING_SPECS } from './specs';
 
 // --- Inline view components registered in the demo registry ---
 
@@ -43,108 +46,98 @@ class DemoBadgeComponent {
   readonly spec = input<Spec | null>(null);
 }
 
-/**
- * SpecRenderingComponent demonstrates RenderSpecComponent from @cacheplane/render.
- *
- * Shows how JSON render specs are converted into live Angular components.
- * The main area displays the rendered output via render-spec, while the
- * sidebar shows the JSON spec and a button to cycle through different specs.
- */
 @Component({
-  selector: 'app-spec-rendering',
+  selector: 'demo-card',
   standalone: true,
-  imports: [RenderSpecComponent, JsonPipe],
+  imports: [RenderElementComponent],
   template: `
-    <div class="flex h-screen bg-gray-950 text-gray-100">
-      <!-- Main area: rendered output -->
-      <main class="flex-1 min-w-0 p-8 overflow-y-auto">
-        <h1 class="text-2xl font-bold mb-6">Spec Rendering</h1>
-        <p class="text-gray-400 text-sm mb-6">
-          RenderSpecComponent takes a JSON spec and a registry of component types,
-          then renders the spec tree into live Angular components.
-        </p>
-        <div class="rounded-lg border border-gray-800 p-6 bg-gray-900">
-          <render-spec [spec]="currentSpec()" [registry]="registry" [store]="store" />
-        </div>
-      </main>
-
-      <!-- Sidebar: spec JSON + controls -->
-      <aside class="w-96 shrink-0 border-l border-gray-800 overflow-y-auto p-4 space-y-4 bg-gray-950">
-        <h3 class="text-xs font-semibold uppercase tracking-wide text-gray-500">
-          Active Spec ({{ specIndex() + 1 }} / {{ specs.length }})
-        </h3>
-        <button
-          class="w-full px-3 py-1.5 rounded text-xs font-medium bg-blue-600 text-white hover:bg-blue-500"
-          (click)="cycleSpec()">
-          Next Spec
-        </button>
-        <div>
-          <h4 class="text-xs font-semibold uppercase tracking-wide mb-2 text-gray-500">JSON Spec</h4>
-          <pre class="text-xs font-mono overflow-x-auto p-3 rounded bg-gray-900 text-gray-400 border border-gray-800">{{ currentSpec() | json }}</pre>
-        </div>
-      </aside>
+    <div class="rounded-lg border border-gray-800 bg-gray-900 p-4 mb-3">
+      <h3 class="text-sm font-semibold text-gray-200 mb-2">{{ title() }}</h3>
+      @for (key of childKeys(); track key) {
+        <render-element [elementKey]="key" [spec]="spec()!" />
+      }
     </div>
   `,
 })
-export class SpecRenderingComponent {
+class DemoCardComponent {
+  readonly title = input('');
+  readonly childKeys = input<string[]>([]);
+  readonly spec = input<Spec | null>(null);
+}
+
+@Component({
+  selector: 'app-spec-rendering',
+  standalone: true,
+  imports: [RenderSpecComponent, StreamingTimelineComponent],
+  template: `
+    <div class="flex flex-col h-screen bg-gray-950 text-gray-100">
+      <!-- Spec picker -->
+      <div class="flex items-center gap-2 px-4 py-3 border-b border-gray-800">
+        <span class="text-xs text-gray-500 uppercase tracking-wide font-semibold mr-2">Spec:</span>
+        @for (spec of specs; track spec.label; let i = $index) {
+          <button
+            class="text-xs px-3 py-1.5 rounded-md transition-colors"
+            [class]="i === activeIndex ? 'bg-indigo-500 text-white font-semibold' : 'bg-gray-800 text-gray-400 hover:text-gray-200'"
+            (click)="selectSpec(i)">
+            {{ spec.label }}
+          </button>
+        }
+      </div>
+
+      <!-- Split panes -->
+      <div class="flex flex-1 min-h-0">
+        <!-- Left: Live Render Output -->
+        <div class="flex-1 overflow-y-auto p-6 border-r border-gray-800">
+          <div class="text-[10px] text-gray-500 uppercase tracking-widest font-semibold mb-4">Live Render Output</div>
+          @if (simulator.spec(); as renderedSpec) {
+            <render-spec [spec]="renderedSpec" [registry]="registry" [store]="store" [loading]="simulator.playing()" />
+          } @else {
+            <div class="text-gray-600 text-sm italic">Press play to start streaming...</div>
+          }
+        </div>
+
+        <!-- Right: Streaming JSON -->
+        <div class="w-80 shrink-0 overflow-y-auto p-4 bg-gray-900/50">
+          <div class="text-[10px] text-gray-500 uppercase tracking-widest font-semibold mb-4">Streaming JSON</div>
+          <pre class="text-[11px] font-mono text-gray-300 leading-relaxed whitespace-pre-wrap break-all">{{ simulator.rawJson() }}<span class="text-indigo-400 animate-pulse">|</span></pre>
+          <div class="mt-3 flex justify-between text-[10px]">
+            <span class="text-indigo-400">{{ simulator.playing() ? 'Streaming...' : simulator.position() >= simulator.total() ? 'Complete' : 'Paused' }}</span>
+            <span class="text-gray-500">{{ percent() }}%</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Timeline bar -->
+      <streaming-timeline [simulator]="simulator" class="border-t border-gray-800" />
+    </div>
+  `,
+})
+export class SpecRenderingComponent implements OnDestroy {
+  protected readonly specs = SPEC_RENDERING_SPECS;
+  protected activeIndex = 0;
+
+  protected readonly simulator = new StreamingSimulator(this.specs[0].json);
+
   protected readonly registry = defineAngularRegistry({
     Text: DemoTextComponent,
     Heading: DemoHeadingComponent,
     Badge: DemoBadgeComponent,
+    Card: DemoCardComponent,
   });
 
   protected readonly store = signalStateStore({ greeting: 'Hello from RenderSpec!' });
 
-  protected readonly specs: Spec[] = [
-    {
-      root: 'root',
-      elements: {
-        root: {
-          type: 'Heading',
-          props: { content: 'Welcome to Spec Rendering' },
-          children: ['desc'],
-        },
-        desc: {
-          type: 'Text',
-          props: { content: 'This UI is rendered entirely from a JSON specification.' },
-        },
-      },
-    } as Spec,
-    {
-      root: 'root',
-      elements: {
-        root: {
-          type: 'Badge',
-          props: { label: 'Live Preview' },
-          children: ['info'],
-        },
-        info: {
-          type: 'Text',
-          props: { content: 'Badges, headings, and text -- all from JSON.' },
-        },
-      },
-    } as Spec,
-    {
-      root: 'root',
-      elements: {
-        root: {
-          type: 'Text',
-          props: { content: { $state: '/greeting' } },
-          children: ['sub'],
-        },
-        sub: {
-          type: 'Badge',
-          props: { label: 'State-bound' },
-        },
-      },
-    } as Spec,
-  ];
+  protected percent(): number {
+    return Math.round(this.simulator.progress() * 100);
+  }
 
-  protected readonly specIndex = signal(0);
+  selectSpec(index: number): void {
+    this.activeIndex = index;
+    this.simulator.setSource(this.specs[index].json);
+    this.simulator.play();
+  }
 
-  protected readonly currentSpec = computed(() => this.specs[this.specIndex()]);
-
-  cycleSpec() {
-    this.specIndex.update(i => (i + 1) % this.specs.length);
+  ngOnDestroy(): void {
+    this.simulator.destroy();
   }
 }
