@@ -42,9 +42,19 @@ describe('resolveDynamic', () => {
     expect(resolveDynamic('Price: \\${100}', model)).toBe('Price: ${100}');
   });
 
-  it('returns function calls as-is (Phase 2)', () => {
-    const fn = { call: 'formatDate', args: { value: '2026-01-01' } };
-    expect(resolveDynamic(fn, model)).toBe('[formatDate]');
+  it('executes function calls', () => {
+    const fn = { call: 'pluralize', args: { count: 1, singular: 'item', plural: 'items' } };
+    expect(resolveDynamic(fn, model)).toBe('item');
+  });
+
+  it('resolves dynamic args in function calls', () => {
+    const fn = { call: 'pluralize', args: { count: { path: '/user/age' }, singular: 'year', plural: 'years' } };
+    expect(resolveDynamic(fn, model)).toBe('years');
+  });
+
+  it('falls back to [name] for unknown functions', () => {
+    const fn = { call: 'unknownFn', args: {} };
+    expect(resolveDynamic(fn, model)).toBe('[unknownFn]');
   });
 
   it('resolves array elements', () => {

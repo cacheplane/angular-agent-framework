@@ -13,7 +13,7 @@ import { Component, input } from '@angular/core';
         [value]="value()"
         [placeholder]="placeholder()"
         class="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white"
-        readonly
+        (input)="onInput($event)"
       />
     </div>
   `,
@@ -22,4 +22,14 @@ export class A2uiTextFieldComponent {
   readonly label = input<string>('');
   readonly value = input<string>('');
   readonly placeholder = input<string>('');
+  readonly _bindings = input<Record<string, string>>({});
+  readonly emit = input<(event: string) => void>(() => { /* noop */ });
+
+  onInput(event: Event): void {
+    const val = (event.target as HTMLInputElement).value;
+    const path = this._bindings()?.['value'];
+    if (path) {
+      this.emit()(`a2ui:datamodel:${path}:${val}`);
+    }
+  }
 }

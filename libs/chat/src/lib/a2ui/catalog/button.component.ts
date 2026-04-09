@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import { Component, input } from '@angular/core';
+import type { A2uiAction, A2uiCheck } from '@cacheplane/a2ui';
+import { validateChecks } from '@cacheplane/a2ui';
 
 @Component({
   selector: 'a2ui-button',
@@ -8,7 +10,8 @@ import { Component, input } from '@angular/core';
     <button
       class="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
       [class]="variant() === 'borderless' ? 'bg-transparent hover:bg-white/10' : 'bg-blue-600 hover:bg-blue-700 text-white'"
-      [disabled]="disabled()"
+      [disabled]="disabled() || !isValid()"
+      (click)="handleClick()"
     >{{ label() }}</button>
   `,
 })
@@ -16,4 +19,26 @@ export class A2uiButtonComponent {
   readonly label = input<string>('');
   readonly variant = input<string>('primary');
   readonly disabled = input<boolean>(false);
+  readonly action = input<A2uiAction | undefined>(undefined);
+  readonly checks = input<A2uiCheck[]>([]);
+  readonly emit = input<(event: string) => void>(() => { /* noop */ });
+
+  isValid(): boolean {
+    const c = this.checks();
+    if (!c || c.length === 0) return true;
+    return validateChecks(c).valid;
+  }
+
+  handleClick(): void {
+    const act = this.action();
+    if (!act) return;
+    if ('event' in act) {
+      this.emit()(`a2ui:action:${JSON.stringify(act.event)}`);
+    } else if ('functionCall' in act) {
+      const fc = act.functionCall;
+      if (fc.call === 'openUrl' && typeof globalThis.window !== 'undefined') {
+        globalThis.window.open(String(fc.args['url'] ?? ''), '_blank');
+      }
+    }
+  }
 }

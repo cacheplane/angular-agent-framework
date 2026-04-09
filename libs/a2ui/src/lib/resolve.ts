@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import type { A2uiPathRef, A2uiFunctionCall } from './types';
 import { getByPointer } from './pointer';
+import { executeFunction } from './functions';
 
 export interface A2uiScope {
   basePath: string;
@@ -50,9 +51,16 @@ export function resolveDynamic(
     return resolvePathRef(value, model, scope);
   }
 
-  // Function call — stub for Phase 2
+  // Function call — execute registered function
   if (isFunctionCall(value)) {
-    return `[${(value as A2uiFunctionCall).call}]`;
+    const fc = value as A2uiFunctionCall;
+    // Resolve args that may themselves be dynamic
+    const resolvedArgs: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(fc.args)) {
+      resolvedArgs[k] = resolveDynamic(v, model, scope);
+    }
+    const result = executeFunction(fc.call, resolvedArgs, model);
+    return result ?? `[${fc.call}]`;
   }
 
   // Template string interpolation
