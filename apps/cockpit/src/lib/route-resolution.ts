@@ -17,7 +17,6 @@ import { deepAgentsFilesystemPythonModule } from '../../../../cockpit/deep-agent
 import { deepAgentsSubagentsPythonModule } from '../../../../cockpit/deep-agents/subagents/python/src/index';
 import { deepAgentsSkillsPythonModule } from '../../../../cockpit/deep-agents/skills/python/src/index';
 import { deepAgentsSandboxesPythonModule } from '../../../../cockpit/deep-agents/sandboxes/python/src/index';
-import { langgraphGenerativeUiPythonModule } from '../../../../cockpit/langgraph/generative-ui/python/src/index';
 
 export interface ResolveCockpitEntryOptions {
   manifest: CockpitManifestEntry[];
@@ -71,7 +70,6 @@ const capabilityModules = [
   deepAgentsSubagentsPythonModule,
   deepAgentsSkillsPythonModule,
   deepAgentsSandboxesPythonModule,
-  langgraphGenerativeUiPythonModule,
 ];
 
 export const toCockpitPath = (entry: CockpitManifestEntry): string =>
