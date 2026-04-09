@@ -8,3 +8,4 @@ export type {
   A2uiCreateSurface, A2uiUpdateComponents, A2uiUpdateDataModel, A2uiDeleteSurface,
   A2uiMessage, A2uiSurface,
 } from './lib/types';
+export { getByPointer, setByPointer, deleteByPointer } from './lib/pointer';
