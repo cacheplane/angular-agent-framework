@@ -100,7 +100,7 @@ export function Footer() {
         transition={{ duration: 0.5 }}>
 
         {/* Top section: brand + columns */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-10 md:gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-10 md:gap-8">
           {/* Brand */}
           <div className="md:col-span-2">
             <p className="font-garamond text-xl font-bold mb-2" style={{ color: tokens.colors.textPrimary }}>🛩️ Angular Agent Framework</p>
@@ -163,6 +163,26 @@ export function Footer() {
               onMouseLeave={(e) => (e.currentTarget.style.color = tokens.colors.textSecondary)}>
               GitHub
             </a>
+          </div>
+
+          {/* Libraries column */}
+          <div className="flex flex-col gap-2.5 text-sm">
+            <span className="font-mono text-xs uppercase tracking-wider mb-1" style={{ color: tokens.colors.accent }}>Libraries</span>
+            <Link href="/angular" className="transition-colors" style={{ color: tokens.colors.textSecondary }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = tokens.colors.accent)}
+              onMouseLeave={(e) => (e.currentTarget.style.color = tokens.colors.textSecondary)}>
+              Angular
+            </Link>
+            <Link href="/render" className="transition-colors" style={{ color: tokens.colors.textSecondary }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = tokens.colors.accent)}
+              onMouseLeave={(e) => (e.currentTarget.style.color = tokens.colors.textSecondary)}>
+              Render
+            </Link>
+            <Link href="/chat" className="transition-colors" style={{ color: tokens.colors.textSecondary }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = tokens.colors.accent)}
+              onMouseLeave={(e) => (e.currentTarget.style.color = tokens.colors.textSecondary)}>
+              Chat
+            </Link>
           </div>
 
           {/* Resources column */}
