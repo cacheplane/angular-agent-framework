@@ -6,13 +6,12 @@ test.describe('Render Registry Example', () => {
     await page.waitForSelector('app-registry', { state: 'attached' });
   });
 
-  test('renders the sidebar with registry info', async ({ page }) => {
-    await expect(page.locator('chat')).toBeVisible();
-    await expect(page.locator('aside')).toBeVisible();
-    await expect(page.locator('.registry-info')).toBeVisible();
+  test('renders spec picker and timeline', async ({ page }) => {
+    await expect(page.locator('button', { hasText: 'Basic Types' })).toBeVisible();
+    await expect(page.locator('streaming-timeline')).toBeVisible();
   });
 
-  test('displays the component registry heading', async ({ page }) => {
-    await expect(page.locator('aside h3')).toHaveText('Component Registry');
+  test('shows streaming JSON pane', async ({ page }) => {
+    await expect(page.locator('pre')).toBeVisible();
   });
 });

@@ -6,14 +6,12 @@ test.describe('Render Spec Rendering Example', () => {
     await page.waitForSelector('app-spec-rendering', { state: 'attached' });
   });
 
-  test('renders the chat interface with render preview sidebar', async ({ page }) => {
-    await expect(page.locator('chat')).toBeVisible();
-    await expect(page.locator('aside')).toBeVisible();
-    await expect(page.locator('aside h3')).toHaveText('Live Render Preview');
+  test('renders spec picker and timeline', async ({ page }) => {
+    await expect(page.locator('button', { hasText: 'Heading + Text' })).toBeVisible();
+    await expect(page.locator('streaming-timeline')).toBeVisible();
   });
 
-  test('displays the JSON spec in the sidebar', async ({ page }) => {
-    await expect(page.locator('aside pre')).toBeVisible();
-    await expect(page.locator('aside pre')).toContainText('container');
+  test('shows streaming JSON pane', async ({ page }) => {
+    await expect(page.locator('pre')).toBeVisible();
   });
 });

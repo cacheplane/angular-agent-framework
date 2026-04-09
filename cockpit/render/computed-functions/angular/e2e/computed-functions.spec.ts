@@ -6,14 +6,12 @@ test.describe('Render Computed Functions Example', () => {
     await page.waitForSelector('app-computed-functions', { state: 'attached' });
   });
 
-  test('renders the sidebar with computed values', async ({ page }) => {
-    await expect(page.locator('chat')).toBeVisible();
-    await expect(page.locator('aside')).toBeVisible();
-    await expect(page.locator('.computed-values')).toBeVisible();
+  test('renders spec picker and timeline', async ({ page }) => {
+    await expect(page.locator('button', { hasText: 'Text Transforms' })).toBeVisible();
+    await expect(page.locator('streaming-timeline')).toBeVisible();
   });
 
-  test('displays computed functions heading', async ({ page }) => {
-    await expect(page.locator('aside h3')).toHaveText('Computed Values');
-    await expect(page.locator('aside pre')).toContainText('formatDate');
+  test('shows streaming JSON pane', async ({ page }) => {
+    await expect(page.locator('pre')).toBeVisible();
   });
 });
