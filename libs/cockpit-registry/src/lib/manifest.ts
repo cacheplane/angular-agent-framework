@@ -28,7 +28,6 @@ const APPROVED_TOPICS = {
       'subgraphs',
       'time-travel',
       'deployment-runtime',
-      'generative-ui',
     ],
   },
   render: {

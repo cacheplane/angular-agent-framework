@@ -1,5 +1,5 @@
 export const environment = {
   production: true,
   langGraphApiUrl: '/api',
-  streamingAssistantId: 'c-generative-ui',
+  generativeUiAssistantId: 'generative_ui',
 };
