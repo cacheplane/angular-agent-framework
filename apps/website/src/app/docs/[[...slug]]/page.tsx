@@ -5,7 +5,6 @@ import { DocsSearch } from '../../../components/docs/DocsSearch';
 import { getDocBySlug, getAllDocSlugs } from '../../../lib/docs-new';
 import { ApiDocRenderer, type ApiDocEntry } from '../../../components/docs/ApiDocRenderer';
 import { DocsTOC } from '../../../components/docs/DocsTOC';
-import { DocsMobileNav } from '../../../components/docs/DocsMobileNav';
 import { extractHeadings } from '../../../lib/extract-headings';
 import fs from 'fs';
 import path from 'path';
@@ -49,9 +48,6 @@ export default async function DocsPage({ params }: { params: Promise<{ slug?: st
       <DocsSidebarNew activeSection={section} activeSlug={slug} />
       <div className="flex-1 flex min-w-0" style={{ background: 'rgba(255, 255, 255, 0.85)' }}>
         <div className="flex-1 min-w-0">
-          <div className="px-4 pt-4 sm:hidden">
-            <DocsMobileNav activeSection={section} activeSlug={slug} />
-          </div>
           <MdxRendererNew source={doc.content} section={section} slug={slug} title={doc.title} />
           {section === 'api' && (() => {
             const entries = loadApiDocs();

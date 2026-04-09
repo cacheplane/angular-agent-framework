@@ -1,7 +1,9 @@
 'use client';
 import { useState } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { tokens } from '@cacheplane/design-tokens';
+import { docsConfig } from '../../lib/docs-config';
 
 const links = [
   { label: 'Pilot to Prod', href: '/pilot-to-prod', external: false },
@@ -37,6 +39,20 @@ function CloseIcon() {
 
 export function Nav() {
   const [open, setOpen] = useState(false);
+  const pathname = usePathname();
+  const isDocsPage = pathname.startsWith('/docs');
+  const pathParts = pathname.split('/').filter(Boolean);
+  const activeSection = isDocsPage && pathParts.length >= 2 ? pathParts[1] : '';
+  const activeSlug = isDocsPage && pathParts.length >= 3 ? pathParts[2] : '';
+  const [openSections, setOpenSections] = useState<Set<string>>(() => new Set(activeSection ? [activeSection] : []));
+
+  const toggleSection = (id: string) => {
+    setOpenSections(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50"
@@ -106,7 +122,7 @@ export function Nav() {
       {/* Mobile menu */}
       {open && (
         <div className="md:hidden px-6 pb-5 flex flex-col gap-4"
-          style={{ borderTop: `1px solid ${tokens.glass.border}` }}>
+          style={{ borderTop: `1px solid ${tokens.glass.border}`, maxHeight: '80vh', overflowY: 'auto' }}>
           {links.map((l) => l.external ? (
             <a key={l.href} href={l.href}
               target="_blank"
@@ -139,6 +155,54 @@ export function Nav() {
               Get Started
             </Link>
           </div>
+          {isDocsPage && (
+            <>
+              <div style={{ borderTop: `1px solid ${tokens.glass.border}`, margin: '8px 0 4px' }} />
+              <span className="font-mono text-xs uppercase tracking-wider"
+                style={{ color: tokens.colors.accent, fontWeight: 600 }}>
+                Documentation
+              </span>
+              {docsConfig.map((section) => (
+                <div key={section.id}>
+                  <button
+                    onClick={() => toggleSection(section.id)}
+                    className="flex items-center gap-2 w-full text-left font-mono text-xs uppercase tracking-wider py-1"
+                    style={{
+                      color: section.color === 'red' ? tokens.colors.angularRed : tokens.colors.accent,
+                      fontWeight: 600, background: 'none', border: 'none', cursor: 'pointer',
+                    }}
+                  >
+                    <span style={{
+                      display: 'inline-block', transition: 'transform 0.2s',
+                      transform: openSections.has(section.id) ? 'rotate(90deg)' : 'rotate(0deg)',
+                      fontSize: '0.6rem',
+                    }}>
+                      ▶
+                    </span>
+                    {section.title}
+                  </button>
+                  {openSections.has(section.id) && section.pages.map((page) => {
+                    const isActive = page.section === activeSection && page.slug === activeSlug;
+                    return (
+                      <Link
+                        key={`${page.section}/${page.slug}`}
+                        href={`/docs/${page.section}/${page.slug}`}
+                        onClick={() => setOpen(false)}
+                        className="block pl-6 py-1 text-sm"
+                        style={{
+                          color: isActive ? tokens.colors.accent : tokens.colors.textSecondary,
+                          background: isActive ? tokens.colors.accentSurface : 'transparent',
+                          borderRadius: 4,
+                        }}
+                      >
+                        {page.title}
+                      </Link>
+                    );
+                  })}
+                </div>
+              ))}
+            </>
+          )}
         </div>
       )}
     </nav>
