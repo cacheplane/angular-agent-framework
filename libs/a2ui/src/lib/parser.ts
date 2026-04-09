@@ -2,7 +2,6 @@
 import type { A2uiMessage } from './types';
 
 const ENVELOPE_KEYS = ['createSurface', 'updateComponents', 'updateDataModel', 'deleteSurface'] as const;
-type EnvelopeKey = typeof ENVELOPE_KEYS[number];
 
 export interface A2uiMessageParser {
   push(chunk: string): A2uiMessage[];
