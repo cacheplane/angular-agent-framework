@@ -5,7 +5,6 @@ import { DocsSearch } from '../../../../../components/docs/DocsSearch';
 import { getDocBySlug, getAllDocSlugs } from '../../../../../lib/docs';
 import { ApiDocRenderer, type ApiDocEntry } from '../../../../../components/docs/ApiDocRenderer';
 import { DocsTOC } from '../../../../../components/docs/DocsTOC';
-import { DocsMobileNav } from '../../../../../components/docs/DocsMobileNav';
 import { extractHeadings } from '../../../../../lib/extract-headings';
 import { getLibraryConfig, type LibraryId } from '../../../../../lib/docs-config';
 import fs from 'fs';
@@ -50,10 +49,7 @@ export default async function DocsPage({ params }: { params: Promise<{ library: 
       <DocsSidebar activeLibrary={library as LibraryId} activeSection={section} activeSlug={slug} />
       <div className="flex-1 flex min-w-0" style={{ background: 'rgba(255, 255, 255, 0.85)' }}>
         <div className="flex-1 min-w-0">
-          <div className="px-4 pt-4 sm:hidden">
-            <DocsMobileNav activeLibrary={library as LibraryId} activeSection={section} activeSlug={slug} />
-          </div>
-          <MdxRenderer source={doc.content} library={library as LibraryId} section={section} slug={slug} title={doc.title} />
+<MdxRenderer source={doc.content} library={library as LibraryId} section={section} slug={slug} title={doc.title} />
           {section === 'api' && (() => {
             const entries = loadApiDocs(library);
             const nameMap = API_NAME_MAP[library] ?? {};
