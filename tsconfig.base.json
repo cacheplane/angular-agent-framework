@@ -26,7 +26,8 @@
       "@cacheplane/angular": ["libs/agent/src/public-api.ts"],
       "@cacheplane/render": ["libs/render/src/public-api.ts"],
       "@cacheplane/chat": ["libs/chat/src/public-api.ts"],
-      "@cacheplane/partial-json": ["libs/partial-json/src/index.ts"]
+      "@cacheplane/partial-json": ["libs/partial-json/src/index.ts"],
+      "@cacheplane/a2ui": ["libs/a2ui/src/index.ts"]
     },
     "skipLibCheck": true,
     "strict": true,

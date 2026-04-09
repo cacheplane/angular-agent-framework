@@ -178,6 +178,32 @@ describe('ContentClassifier', () => {
     });
   });
 
+  describe('a2ui JSONL parsing', () => {
+    it('parses A2UI messages and exposes surfaces', () => {
+      const c = setup();
+      c.update(
+        '---a2ui_JSON---' +
+        '{"version":"v0.9","createSurface":{"surfaceId":"s1","catalogId":"basic"}}\n' +
+        '{"version":"v0.9","updateComponents":{"surfaceId":"s1","components":[{"id":"root","component":"Text","text":"Hi"}]}}\n'
+      );
+      expect(c.type()).toBe('a2ui');
+      expect(c.a2uiSurfaces().size).toBe(1);
+      expect(c.a2uiSurfaces().get('s1')!.components.get('root')!.component).toBe('Text');
+    });
+
+    it('accumulates A2UI messages across updates', () => {
+      const c = setup();
+      c.update('---a2ui_JSON---{"version":"v0.9","createSurface":{"surfaceId":"s1","catalogId":"basic"}}\n');
+      expect(c.a2uiSurfaces().size).toBe(1);
+
+      c.update(
+        '---a2ui_JSON---{"version":"v0.9","createSurface":{"surfaceId":"s1","catalogId":"basic"}}\n' +
+        '{"version":"v0.9","updateDataModel":{"surfaceId":"s1","path":"/name","value":"Alice"}}\n'
+      );
+      expect((c.a2uiSurfaces().get('s1')!.dataModel as any).name).toBe('Alice');
+    });
+  });
+
   describe('dispose', () => {
     it('can be called without errors', () => {
       const c = setup();

@@ -27,7 +27,7 @@ export default [
         'error',
         {
           type: 'attribute',
-          prefix: 'chat',
+          prefix: ['chat', 'a2ui'],
           style: 'camelCase',
         },
       ],
@@ -35,7 +35,7 @@ export default [
         'error',
         {
           type: 'element',
-          prefix: 'chat',
+          prefix: ['chat', 'a2ui'],
           style: 'kebab-case',
         },
       ],

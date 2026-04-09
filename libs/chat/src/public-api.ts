@@ -61,5 +61,11 @@ export type { ContentClassifier, ContentType } from './lib/streaming/content-cla
 export { createParseTreeStore } from './lib/streaming/parse-tree-store';
 export type { ParseTreeStore, ElementAccumulationState } from './lib/streaming/parse-tree-store';
 
+// A2UI
+export { createA2uiSurfaceStore } from './lib/a2ui/surface-store';
+export type { A2uiSurfaceStore } from './lib/a2ui/surface-store';
+export { A2uiSurfaceComponent } from './lib/a2ui/surface.component';
+export { a2uiBasicCatalog } from './lib/a2ui/catalog/index';
+
 // Test utilities
 export { createMockAgentRef } from './lib/testing/mock-agent-ref';

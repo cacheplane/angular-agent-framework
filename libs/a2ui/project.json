@@ -1,0 +1,23 @@
+{
+  "name": "a2ui",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/a2ui/src",
+  "projectType": "library",
+  "tags": ["scope:shared", "type:lib"],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{workspaceRoot}/dist/libs/a2ui"],
+      "options": {
+        "outputPath": "dist/libs/a2ui",
+        "main": "libs/a2ui/src/index.ts",
+        "tsConfig": "libs/a2ui/tsconfig.lib.json"
+      }
+    },
+    "lint": { "executor": "@nx/eslint:lint" },
+    "test": {
+      "executor": "@nx/vite:test",
+      "options": { "configFile": "libs/a2ui/vite.config.mts" }
+    }
+  }
+}

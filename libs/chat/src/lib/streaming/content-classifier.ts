@@ -3,6 +3,9 @@ import { signal, type Signal } from '@angular/core';
 import type { Spec } from '@json-render/core';
 import { createPartialJsonParser } from '@cacheplane/partial-json';
 import { createParseTreeStore, type ElementAccumulationState, type ParseTreeStore } from './parse-tree-store';
+import { createA2uiMessageParser, type A2uiMessageParser } from '@cacheplane/a2ui';
+import type { A2uiSurface } from '@cacheplane/a2ui';
+import { createA2uiSurfaceStore, type A2uiSurfaceStore } from '../a2ui/surface-store';
 
 export type ContentType = 'undetermined' | 'markdown' | 'json-render' | 'a2ui' | 'mixed';
 
@@ -14,6 +17,7 @@ export interface ContentClassifier {
   readonly markdown: Signal<string>;
   readonly spec: Signal<Spec | null>;
   readonly elementStates: Signal<Map<string, ElementAccumulationState>>;
+  readonly a2uiSurfaces: Signal<Map<string, A2uiSurface>>;
   readonly streaming: Signal<boolean>;
   dispose(): void;
 }
@@ -28,6 +32,10 @@ export function createContentClassifier(): ContentClassifier {
   let processedLength = 0;
   let store: ParseTreeStore | null = null;
   let jsonStartIndex = 0;
+
+  let a2uiParser: A2uiMessageParser | null = null;
+  let a2uiStore: A2uiSurfaceStore | null = null;
+  const a2uiSurfacesSignal = signal<Map<string, A2uiSurface>>(new Map());
 
   function detectType(content: string): ContentType {
     // Find first non-whitespace character
@@ -114,10 +122,14 @@ export function createContentClassifier(): ContentClassifier {
         processedLength = content.length;
       } else if (detected === 'a2ui') {
         streamingSignal.set(true);
+        a2uiParser = createA2uiMessageParser();
+        a2uiStore = createA2uiSurfaceStore();
         jsonStartIndex = content.indexOf(A2UI_PREFIX) + A2UI_PREFIX.length;
-        const jsonContent = content.slice(jsonStartIndex);
-        if (jsonContent.length > 0) {
-          initJsonStore(jsonContent);
+        const a2uiContent = content.slice(jsonStartIndex);
+        if (a2uiContent.length > 0) {
+          const msgs = a2uiParser.push(a2uiContent);
+          for (const msg of msgs) a2uiStore.apply(msg);
+          a2uiSurfacesSignal.set(a2uiStore.surfaces());
         }
         processedLength = content.length;
       }
@@ -132,16 +144,24 @@ export function createContentClassifier(): ContentClassifier {
 
     if (currentType === 'markdown' || currentType === 'mixed') {
       markdownSignal.set(content);
-    } else if (currentType === 'json-render' || currentType === 'a2ui') {
+    } else if (currentType === 'json-render') {
       if (store) {
         store.push(delta);
         syncJsonSignals();
+      }
+    } else if (currentType === 'a2ui') {
+      if (a2uiParser && a2uiStore) {
+        const msgs = a2uiParser.push(delta);
+        for (const msg of msgs) a2uiStore.apply(msg);
+        a2uiSurfacesSignal.set(a2uiStore.surfaces());
       }
     }
   }
 
   function dispose(): void {
     store = null;
+    a2uiParser = null;
+    a2uiStore = null;
   }
 
   return {
@@ -150,6 +170,7 @@ export function createContentClassifier(): ContentClassifier {
     markdown: markdownSignal.asReadonly(),
     spec: specSignal.asReadonly(),
     elementStates: elementStatesSignal.asReadonly(),
+    a2uiSurfaces: a2uiSurfacesSignal.asReadonly(),
     streaming: streamingSignal.asReadonly(),
     dispose,
   };

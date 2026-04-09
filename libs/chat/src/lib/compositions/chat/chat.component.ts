@@ -29,6 +29,9 @@ import { createContentClassifier, type ContentClassifier } from '../../streaming
 import { messageContent } from '../shared/message-utils';
 import { CHAT_THEME_STYLES } from '../../styles/chat-theme';
 import { CHAT_MARKDOWN_STYLES, renderMarkdown } from '../../styles/chat-markdown';
+import { A2uiSurfaceComponent } from '../../a2ui/surface.component';
+import { a2uiBasicCatalog } from '../../a2ui/catalog/index';
+import { KeyValuePipe } from '@angular/common';
 
 @Component({
   selector: 'chat',
@@ -42,6 +45,8 @@ import { CHAT_MARKDOWN_STYLES, renderMarkdown } from '../../styles/chat-markdown
     ChatInterruptComponent,
     ChatThreadListComponent,
     ChatGenerativeUiComponent,
+    A2uiSurfaceComponent,
+    KeyValuePipe,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styles: [CHAT_THEME_STYLES, CHAT_MARKDOWN_STYLES],
@@ -139,6 +144,15 @@ import { CHAT_MARKDOWN_STYLES, renderMarkdown } from '../../styles/chat-markdown
                         [loading]="ref().isLoading()"
                       />
                     }
+
+                    @if (classified.type() === 'a2ui') {
+                      @for (entry of classified.a2uiSurfaces() | keyvalue; track entry.key) {
+                        <a2ui-surface
+                          [surface]="entry.value"
+                          [catalog]="a2uiCatalog"
+                        />
+                      }
+                    }
                   </div>
                 </div>
               </ng-template>
@@ -203,6 +217,8 @@ export class ChatComponent {
   readonly activeThreadId = input<string>('');
   readonly threadSelected = output<string>();
   readonly sidebarOpen = signal(false);
+
+  protected readonly a2uiCatalog = a2uiBasicCatalog();
 
 
   private readonly classifiers = new Map<number, ContentClassifier>();
