@@ -4,7 +4,7 @@ import { ValueProps } from '../components/landing/ValueProps';
 import { LangGraphShowcase } from '../components/landing/LangGraphShowcase';
 import { DeepAgentsShowcase } from '../components/landing/DeepAgentsShowcase';
 import { StatsStrip } from '../components/landing/StatsStrip';
-import { SocialProof } from '../components/landing/SocialProof';
+// import { SocialProof } from '../components/landing/SocialProof';
 import { ProblemSection } from '../components/landing/ProblemSection';
 import { FullStackSection } from '../components/landing/FullStackSection';
 import { ChatFeaturesSection } from '../components/landing/ChatFeaturesSection';
