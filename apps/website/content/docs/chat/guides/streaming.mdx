@@ -110,7 +110,7 @@ A2UI content uses a different detection trigger than JSON-render specs. Instead 
 
 Once detected, the classifier switches to A2UI mode and parses the remaining content as JSONL — one JSON object per line — rather than a single JSON object. Each line represents an A2UI message that builds up surfaces with components and data models.
 
-The resulting surfaces are available via `classifier.a2uiSurfaces()`, which returns a `Map<string, A2uiSurface>` keyed by surface ID. See the [A2UI guide](/docs/chat/a2ui/overview) for full details on the A2UI protocol and surface structure.
+The resulting surfaces are available via `classifier.a2uiSurfaces()`, which returns a `Map<string, A2uiSurface>` keyed by surface ID. See the [A2UI guide](/docs/render/a2ui/overview) for full details on the A2UI protocol and surface structure.
 
 ## Error Handling
 
