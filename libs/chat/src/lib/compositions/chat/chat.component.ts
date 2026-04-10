@@ -10,9 +10,7 @@ import {
   viewChild,
   ElementRef,
   ChangeDetectionStrategy,
-  inject,
 } from '@angular/core';
-import { DomSanitizer } from '@angular/platform-browser';
 import type { AgentRef } from '@cacheplane/angular';
 import type { ViewRegistry, RenderEvent } from '@cacheplane/render';
 import type { A2uiActionMessage } from '@cacheplane/a2ui';
@@ -29,7 +27,8 @@ import { toRenderRegistry } from '@cacheplane/render';
 import { createContentClassifier, type ContentClassifier } from '../../streaming/content-classifier';
 import { messageContent } from '../shared/message-utils';
 import { CHAT_THEME_STYLES } from '../../styles/chat-theme';
-import { CHAT_MARKDOWN_STYLES, renderMarkdown } from '../../styles/chat-markdown';
+import { CHAT_MARKDOWN_STYLES } from '../../styles/chat-markdown';
+import { ChatStreamingMdComponent } from '../../streaming/streaming-markdown.component';
 import { A2uiSurfaceComponent } from '../../a2ui/surface.component';
 import type { ChatRenderEvent } from './chat-render-event';
 import { KeyValuePipe } from '@angular/common';
@@ -46,6 +45,7 @@ import { KeyValuePipe } from '@angular/common';
     ChatInterruptComponent,
     ChatThreadListComponent,
     ChatGenerativeUiComponent,
+    ChatStreamingMdComponent,
     A2uiSurfaceComponent,
     KeyValuePipe,
   ],
@@ -130,11 +130,12 @@ import { KeyValuePipe } from '@angular/common';
                   >A</div>
                   <div class="flex-1 min-w-0 flex flex-col gap-2">
                     @if (classified.markdown(); as md) {
-                      <div
+                      <chat-streaming-md
                         class="chat-md break-words text-[length:var(--chat-font-size)] leading-[var(--chat-line-height)]"
                         style="color: var(--chat-text);"
-                        [innerHTML]="renderMd(md)"
-                      ></div>
+                        [content]="md"
+                        [streaming]="ref().isLoading()"
+                      />
                     }
 
                     @if (classified.spec(); as spec) {
@@ -216,7 +217,6 @@ import { KeyValuePipe } from '@angular/common';
   `,
 })
 export class ChatComponent {
-  private readonly sanitizer = inject(DomSanitizer);
 
   readonly ref = input.required<AgentRef<any, any>>();
   readonly views = input<ViewRegistry | undefined>(undefined);
@@ -253,7 +253,13 @@ export class ChatComponent {
     // - During streaming partials, only scroll if user is near bottom
     effect(() => {
       const count = this.messageCount();
-      this.ref().isLoading(); // track
+      // Track last message content to trigger scroll during streaming partials
+      const msgs = this.ref().messages();
+      const lastContent = msgs.length > 0
+        ? (msgs[msgs.length - 1] as unknown as Record<string, unknown>)['content']
+        : undefined;
+      void lastContent; // consume the tracked value
+
       const el = this.scrollContainer()?.nativeElement;
       if (!el) return;
 
@@ -284,10 +290,6 @@ export class ChatComponent {
       c.dispose();
     }
     this.classifiers.clear();
-  }
-
-  renderMd(content: string) {
-    return renderMarkdown(content, this.sanitizer);
   }
 
   onSpecEvent(event: RenderEvent, messageIndex: number): void {

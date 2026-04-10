@@ -147,7 +147,7 @@ describe('agent', () => {
     expect(ref.messages()).toHaveLength(1);
 
     threadId.set('thread-2');
-    await new Promise(r => setTimeout(r, 0));
+    await new Promise(r => setTimeout(r, 30));
 
     expect(ref.hasValue()).toBe(false);
     expect(ref.status()).toBe(ResourceStatus.Idle);

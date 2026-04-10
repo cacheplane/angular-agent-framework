@@ -49,5 +49,14 @@ export function isTyping(ref: AgentRef<any, any>): boolean {
 })
 export class ChatTypingIndicatorComponent {
   readonly ref = input.required<AgentRef<any, any>>();
-  readonly visible = computed(() => this.ref().isLoading());
+  readonly visible = computed(() => {
+    if (!this.ref().isLoading()) return false;
+    const msgs = this.ref().messages();
+    if (msgs.length === 0) return true;
+    const last = msgs[msgs.length - 1];
+    const type = typeof last._getType === 'function'
+      ? last._getType()
+      : (last as unknown as Record<string, unknown>)['type'] as string;
+    return type !== 'ai';
+  });
 }
