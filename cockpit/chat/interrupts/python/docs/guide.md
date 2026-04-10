@@ -13,13 +13,13 @@ and render approval/rejection controls.
 </Prompt>
 
 <Steps>
-<Step title="Configure the stream resource">
+<Step title="Configure the agent ref">
 
-Set up `streamResource()` which automatically detects interrupt states
+Set up `agent()` which automatically detects interrupt states
 from the LangGraph backend:
 
 ```typescript
-protected readonly stream = streamResource({
+protected readonly stream = agent({
   apiUrl: environment.langGraphApiUrl,
   assistantId: environment.streamingAssistantId,
 });
@@ -28,7 +28,7 @@ protected readonly stream = streamResource({
 </Step>
 <Step title="Detect interrupt state">
 
-Check the stream status for interrupt events. The stream resource exposes
+Check the stream status for interrupt events. The agent ref exposes
 interrupt data when the graph pauses:
 
 ```typescript

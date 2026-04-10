@@ -77,10 +77,10 @@ store.update((draft) => {
 </Step>
 <Step title="Connect to the backend">
 
-Use `streamResource()` to receive repeat specs from the agent:
+Use `agent()` to receive repeat specs from the agent:
 
 ```typescript
-protected readonly stream = streamResource({
+protected readonly stream = agent({
   apiUrl: environment.langGraphApiUrl,
   assistantId: environment.streamingAssistantId,
 });

@@ -2,7 +2,7 @@
 Chat Timeline Graph
 
 A standard conversational agent. Timeline and checkpoint navigation
-is managed by stream-resource on the frontend side.
+is managed by the agent() ref on the frontend side.
 """
 
 from pathlib import Path
@@ -16,7 +16,7 @@ PROMPTS_DIR = Path(__file__).parent.parent / "prompts"
 def build_timeline_graph():
     """
     Constructs a standard conversational agent.
-    Timeline/history navigation is handled by the stream-resource frontend.
+    Timeline/history navigation is handled by the Angular agent() frontend.
     """
     llm = ChatOpenAI(model="gpt-5-mini", streaming=True)
 

@@ -44,7 +44,7 @@ out of the box. Listen for the `send` event:
 <Step title="Track loading state">
 
 The input automatically disables while the stream is active. Access
-loading state via the stream resource:
+loading state via the agent ref:
 
 ```typescript
 protected readonly isLoading = computed(() => this.stream.status() === 'streaming');
