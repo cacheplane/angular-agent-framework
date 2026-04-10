@@ -38,7 +38,7 @@ test.describe('Production: Angular example apps load', () => {
       const url = `${EXAMPLES_URL}/${cap}/`;
       const res = await page.goto(url, { timeout: 15000 });
       expect(res?.status()).toBe(200);
-      await expect(page.locator('cp-chat')).toBeVisible({ timeout: 10000 });
+      await expect(page.locator('chat')).toBeVisible({ timeout: 10000 });
     });
   }
 });
@@ -59,10 +59,10 @@ test.describe('Production: send/receive smoke', () => {
   for (const cap of ['langgraph/streaming', 'deep-agents/planning'] as const) {
     test(`${cap} sends and receives a message`, async ({ page }) => {
       await page.goto(`${EXAMPLES_URL}/${cap}/`, { timeout: 15000 });
-      await expect(page.locator('cp-chat')).toBeVisible({ timeout: 10000 });
+      await expect(page.locator('chat')).toBeVisible({ timeout: 10000 });
       await page.fill('input[name="prompt"]', 'hello');
       await page.click('button[type="submit"]');
-      await expect(page.locator('.cp-message--ai')).toBeVisible({ timeout: 30000 });
+      await expect(page.locator('.chat-md')).toBeVisible({ timeout: 30000 });
     });
   }
 });

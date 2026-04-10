@@ -35,7 +35,7 @@ test.describe('All Examples Smoke Test', () => {
       await page.waitForSelector(example.selector, { state: 'attached', timeout: 10000 });
 
       // Verify the chat component renders
-      await expect(page.locator('cp-chat')).toBeVisible({ timeout: 5000 });
+      await expect(page.locator('chat')).toBeVisible({ timeout: 5000 });
 
       // Verify input and send button exist
       await expect(page.locator('input[name="prompt"]')).toBeVisible({ timeout: 5000 });
@@ -58,8 +58,8 @@ test.describe('All Examples Send Message Test', () => {
       await page.click('button[type="submit"]');
 
       // Wait for AI response
-      await expect(page.locator('.cp-message--ai, [class*="message--ai"]')).toBeVisible({ timeout: 30000 });
-      await expect(page.locator('.cp-message--ai .cp-message__content, [class*="message__content"]')).not.toBeEmpty({ timeout: 30000 });
+      await expect(page.locator('.chat-md')).toBeVisible({ timeout: 30000 });
+      await expect(page.locator('.chat-md')).not.toBeEmpty({ timeout: 30000 });
     });
   }
 });
