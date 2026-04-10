@@ -27,7 +27,7 @@ export function RenderFooterCTA() {
           <a href="/whitepapers/render.pdf" download
             style={{
               display: 'inline-block', padding: '0.875rem 2rem',
-              background: '#1a7a40', color: '#fff',
+              background: tokens.colors.renderGreen, color: '#fff',
               fontFamily: 'Inter, sans-serif', fontSize: 15, fontWeight: 600,
               textDecoration: 'none', borderRadius: 6,
             }}>

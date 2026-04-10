@@ -12,7 +12,7 @@ export function ChatLandingHero() {
         <motion.div initial={{ y: 16 }} animate={{ y: 0 }} transition={{ duration: 0.5 }}>
           <span style={{
             fontFamily: "'JetBrains Mono', monospace", fontSize: 11, letterSpacing: '0.08em',
-            color: '#5a00c8', textTransform: 'uppercase', display: 'inline-block', marginBottom: '1.5rem',
+            color: tokens.colors.chatPurple, textTransform: 'uppercase', display: 'inline-block', marginBottom: '1.5rem',
           }}>
             @cacheplane/chat
           </span>
@@ -39,7 +39,7 @@ export function ChatLandingHero() {
           <a href="/whitepapers/chat.pdf" download
             style={{
               display: 'inline-flex', alignItems: 'center', gap: 6,
-              background: '#5a00c8', color: '#fff', fontFamily: 'Inter, sans-serif',
+              background: tokens.colors.chatPurple, color: '#fff', fontFamily: 'Inter, sans-serif',
               fontSize: 15, fontWeight: 600, padding: '0.875rem 1.75rem', borderRadius: 8,
               textDecoration: 'none', boxShadow: tokens.glow.button, minHeight: 44,
             }}>
@@ -50,7 +50,7 @@ export function ChatLandingHero() {
               display: 'inline-flex', alignItems: 'center', gap: 6,
               background: tokens.glass.bg, backdropFilter: `blur(${tokens.glass.blur})`,
               WebkitBackdropFilter: `blur(${tokens.glass.blur})`,
-              color: '#5a00c8', fontFamily: 'Inter, sans-serif',
+              color: tokens.colors.chatPurple, fontFamily: 'Inter, sans-serif',
               fontSize: 15, fontWeight: 600, padding: '0.875rem 1.75rem', borderRadius: 8,
               textDecoration: 'none', border: '1px solid rgba(90,0,200,0.2)', minHeight: 44,
             }}>
