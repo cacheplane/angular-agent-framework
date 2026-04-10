@@ -2,6 +2,7 @@
 import { Component, signal } from '@angular/core';
 import { ChatComponent, ChatThreadListComponent, type Thread } from '@cacheplane/chat';
 import { agent } from '@cacheplane/angular';
+import { ExampleChatLayoutComponent } from '@cacheplane/example-layouts';
 import { environment } from '../environments/environment';
 
 /**
@@ -11,20 +12,20 @@ import { environment } from '../environments/environment';
 @Component({
   selector: 'app-threads',
   standalone: true,
-  imports: [ChatComponent, ChatThreadListComponent],
+  imports: [ChatComponent, ChatThreadListComponent, ExampleChatLayoutComponent],
   template: `
-    <div class="flex h-screen">
-      <aside class="w-64 shrink-0 border-r overflow-y-auto p-4 space-y-4"
-             style="border-color: var(--chat-border, #333); background: var(--chat-bg, #171717); color: var(--chat-text, #e0e0e0);">
+    <example-chat-layout sidebarPosition="left" sidebarWidth="w-64">
+      <chat main [ref]="stream" [threads]="threads()" [activeThreadId]="activeThreadId()" (threadSelected)="onThreadSelected($event)" class="flex-1 min-w-0" />
+      <div sidebar class="p-4 space-y-4"
+           style="background: var(--chat-bg, #171717); color: var(--chat-text, #e0e0e0);">
         <h3 class="text-xs font-semibold uppercase tracking-wide"
             style="color: var(--chat-text-muted, #777);">Threads</h3>
         <chat-thread-list
           [threads]="threads()"
           [activeThreadId]="activeThreadId()"
           (threadSelected)="onThreadSelected($event)" />
-      </aside>
-      <chat [ref]="stream" [threads]="threads()" [activeThreadId]="activeThreadId()" (threadSelected)="onThreadSelected($event)" class="flex-1 min-w-0" />
-    </div>
+      </div>
+    </example-chat-layout>
   `,
 })
 export class ThreadsComponent {

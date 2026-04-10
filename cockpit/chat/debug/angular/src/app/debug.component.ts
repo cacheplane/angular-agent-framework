@@ -2,6 +2,7 @@
 import { Component } from '@angular/core';
 import { ChatDebugComponent } from '@cacheplane/chat';
 import { agent } from '@cacheplane/angular';
+import { ExampleChatLayoutComponent } from '@cacheplane/example-layouts';
 import { environment } from '../environments/environment';
 
 /**
@@ -12,11 +13,11 @@ import { environment } from '../environments/environment';
 @Component({
   selector: 'app-debug',
   standalone: true,
-  imports: [ChatDebugComponent],
+  imports: [ChatDebugComponent, ExampleChatLayoutComponent],
   template: `
-    <div class="h-screen">
-      <chat-debug [ref]="stream" />
-    </div>
+    <example-chat-layout>
+      <chat-debug main [ref]="stream" />
+    </example-chat-layout>
   `,
 })
 export class DebugPageComponent {
