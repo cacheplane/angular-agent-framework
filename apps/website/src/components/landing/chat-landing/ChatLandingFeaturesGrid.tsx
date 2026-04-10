@@ -4,11 +4,11 @@ import { motion } from 'framer-motion';
 import { tokens } from '@cacheplane/design-tokens';
 
 const FEATURES = [
-  { title: 'Messages', desc: 'Streaming message display with token-by-token rendering. Markdown support, auto-scroll, and accessible message list.', iframePath: 'chat/messages' },
-  { title: 'Input', desc: 'Chat input with send and interrupt controls. Keyboard shortcuts, disabled state during streaming, accessible labels.', iframePath: 'chat/input' },
-  { title: 'Generative UI', desc: 'Inline spec rendering in conversation. json-render and Google A2UI specs render as native Angular components within the chat.', iframePath: 'chat/generative-ui' },
-  { title: 'Theming', desc: 'CSS custom property theming that integrates with your design system. Swap colors, fonts, spacing without touching component code.', iframePath: 'chat/theming' },
-  { title: 'Debug', desc: 'Agent state inspector for development. View messages, tool calls, interrupts, and streaming state in real time.', iframePath: 'chat/debug' },
+  { title: 'Messages', desc: 'Streaming message display with token-by-token rendering. Markdown support, auto-scroll, and accessible message list.', iframePath: 'chat/core-capabilities/messages/overview/python' },
+  { title: 'Input', desc: 'Chat input with send and interrupt controls. Keyboard shortcuts, disabled state during streaming, accessible labels.', iframePath: 'chat/core-capabilities/input/overview/python' },
+  { title: 'Generative UI', desc: 'Inline spec rendering in conversation. json-render and Google A2UI specs render as native Angular components within the chat.', iframePath: 'chat/core-capabilities/generative-ui/overview/python' },
+  { title: 'Theming', desc: 'CSS custom property theming that integrates with your design system. Swap colors, fonts, spacing without touching component code.', iframePath: 'chat/core-capabilities/theming/overview/python' },
+  { title: 'Debug', desc: 'Agent state inspector for development. View messages, tool calls, interrupts, and streaming state in real time.', iframePath: 'chat/core-capabilities/debug/overview/python' },
 ];
 
 export function ChatLandingFeaturesGrid() {
