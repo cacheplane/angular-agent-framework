@@ -7,7 +7,7 @@ test.describe('LangGraph Deployment Runtime Example', () => {
   });
 
   test('renders the chat interface with deployment sidebar', async ({ page }) => {
-    await expect(page.locator('cp-chat')).toBeVisible();
+    await expect(page.locator('chat')).toBeVisible();
     await expect(page.locator('input[name="prompt"]')).toBeVisible();
     await expect(page.locator('text=Deployment')).toBeVisible();
   });
@@ -15,7 +15,7 @@ test.describe('LangGraph Deployment Runtime Example', () => {
   test('sends a message and receives a response', async ({ page }) => {
     await page.fill('input[name="prompt"]', 'hello');
     await page.click('button[type="submit"]');
-    await expect(page.locator('.cp-message--ai')).toBeVisible({ timeout: 30000 });
-    await expect(page.locator('.cp-message--ai .cp-message__content')).not.toBeEmpty({ timeout: 30000 });
+    await expect(page.locator('.chat-md')).toBeVisible({ timeout: 30000 });
+    await expect(page.locator('.chat-md')).not.toBeEmpty({ timeout: 30000 });
   });
 });
