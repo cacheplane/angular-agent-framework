@@ -152,6 +152,23 @@ Each handler receives a `params` object and can return a value or a `Promise`:
 type Handler = (params: Record<string, unknown>) => unknown | Promise<unknown>;
 ```
 
+### Injection Context
+
+Handlers execute inside Angular's `runInInjectionContext`. This means you can call `inject()` to access services:
+
+```typescript
+const handlers = {
+  saveForm: async (params: Record<string, unknown>) => {
+    const http = inject(HttpClient);
+    const snapshot = store.getSnapshot();
+    await firstValueFrom(http.post('/api/forms', snapshot));
+    store.set('/saved', true);
+  },
+};
+```
+
+This works for handlers passed via `[handlers]` on `<render-spec>`, `provideRender()`, or `ChatComponent`.
+
 ### Resolution Priority
 
 Handlers resolve with the same priority as other inputs:

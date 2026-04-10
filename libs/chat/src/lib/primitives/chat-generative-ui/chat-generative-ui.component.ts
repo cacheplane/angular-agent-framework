@@ -20,6 +20,7 @@ import { RenderSpecComponent } from '@cacheplane/render';
         [spec]="spec()"
         [registry]="registry()"
         [store]="store()"
+        [handlers]="handlers()"
         [loading]="loading()"
         (events)="events.emit($event)"
       />
@@ -30,6 +31,7 @@ export class ChatGenerativeUiComponent {
   readonly spec = input<Spec | null>(null);
   readonly registry = input<AngularRegistry | undefined>(undefined);
   readonly store = input<StateStore | undefined>(undefined);
+  readonly handlers = input<Record<string, (params: Record<string, unknown>) => unknown | Promise<unknown>> | undefined>(undefined);
   readonly loading = input<boolean>(false);
   readonly events = output<RenderEvent>();
 }

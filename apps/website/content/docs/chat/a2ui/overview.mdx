@@ -160,6 +160,33 @@ export class MyComponent {
 }
 ```
 
+## Custom Function Call Handlers
+
+When an A2UI button has a `functionCall` action, the `call` name is looked up in the `[handlers]` map on `ChatComponent`. This lets you define client-side behavior triggered by agent-built UI:
+
+```typescript
+@Component({
+  template: `<chat [ref]="agentRef" [views]="catalog" [handlers]="handlers" />`,
+})
+export class MyComponent {
+  agentRef = agent({ apiUrl: '/api', assistantId: 'my-agent' });
+  catalog = a2uiBasicCatalog();
+
+  handlers = {
+    addToCart: async (args: Record<string, unknown>) => {
+      const cart = inject(CartService);
+      return cart.add(args['sku'] as string);
+    },
+  };
+}
+```
+
+The agent sends a button with `{"action": {"functionCall": {"call": "addToCart", "args": {"sku": "ABC"}}}}`. When clicked, the `addToCart` handler runs in Angular's injection context — `inject()` works for accessing services.
+
+If no consumer handler matches the `call` name, built-in handlers are used as fallbacks (e.g., `openUrl` opens a URL in a new tab).
+
+Handler return values are emitted on the `RenderHandlerEvent` — observe them via the `renderEvent` output on `ChatComponent`.
+
 ## What's Next
 
 <CardGroup cols={2}>
