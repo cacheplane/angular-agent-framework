@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-import { signal, type Signal } from '@angular/core';
+import { signal, untracked, type Signal } from '@angular/core';
 import type { Spec } from '@json-render/core';
 import { createPartialJsonParser } from '@cacheplane/partial-json';
 import { createParseTreeStore, type ElementAccumulationState, type ParseTreeStore } from './parse-tree-store';
@@ -98,82 +98,88 @@ export function createContentClassifier(): ContentClassifier {
   }
 
   function update(content: string): void {
-    const currentType = typeSignal();
+    // Wrap in untracked() because this is called during template rendering
+    // (via classifyMessage in ChatComponent's AI message template). Angular's
+    // NG0600 forbids writing signals during change detection; untracked()
+    // opts out of the reactive graph for this imperative push-based update.
+    untracked(() => {
+      const currentType = typeSignal();
 
-    if (currentType === 'undetermined') {
-      const detected = detectType(content);
-      if (detected === 'undetermined') return;
+      if (currentType === 'undetermined') {
+        const detected = detectType(content);
+        if (detected === 'undetermined') return;
 
-      typeSignal.set(detected);
+        typeSignal.set(detected);
 
-      if (detected === 'markdown') {
+        if (detected === 'markdown') {
+          markdownSignal.set(content);
+          processedLength = content.length;
+        } else if (detected === 'json-render') {
+          streamingSignal.set(true);
+          // Find where JSON starts (skip whitespace)
+          jsonStartIndex = 0;
+          for (let i = 0; i < content.length; i++) {
+            if (content[i] !== ' ' && content[i] !== '\t' && content[i] !== '\n' && content[i] !== '\r') {
+              jsonStartIndex = i;
+              break;
+            }
+          }
+          const jsonContent = content.slice(jsonStartIndex);
+          try {
+            initJsonStore(jsonContent);
+          } catch (err) {
+            errorsSignal.update(prev => [...prev, err instanceof Error ? err.message : String(err)]);
+          }
+          processedLength = content.length;
+        } else if (detected === 'a2ui') {
+          streamingSignal.set(true);
+          a2uiParser = createA2uiMessageParser();
+          a2uiStore = createA2uiSurfaceStore();
+          jsonStartIndex = content.indexOf(A2UI_PREFIX) + A2UI_PREFIX.length;
+          const a2uiContent = content.slice(jsonStartIndex);
+          if (a2uiContent.length > 0) {
+            try {
+              const msgs = a2uiParser.push(a2uiContent);
+              for (const msg of msgs) a2uiStore.apply(msg);
+              a2uiSurfacesSignal.set(a2uiStore.surfaces());
+            } catch (err) {
+              errorsSignal.update(prev => [...prev, err instanceof Error ? err.message : String(err)]);
+            }
+          }
+          processedLength = content.length;
+        }
+        return;
+      }
+
+      // Compute delta
+      const delta = content.slice(processedLength);
+      processedLength = content.length;
+
+      if (delta.length === 0) return;
+
+      if (currentType === 'markdown' || currentType === 'mixed') {
         markdownSignal.set(content);
-        processedLength = content.length;
-      } else if (detected === 'json-render') {
-        streamingSignal.set(true);
-        // Find where JSON starts (skip whitespace)
-        jsonStartIndex = 0;
-        for (let i = 0; i < content.length; i++) {
-          if (content[i] !== ' ' && content[i] !== '\t' && content[i] !== '\n' && content[i] !== '\r') {
-            jsonStartIndex = i;
-            break;
+      } else if (currentType === 'json-render') {
+        if (store) {
+          try {
+            store.push(delta);
+            syncJsonSignals();
+          } catch (err) {
+            errorsSignal.update(prev => [...prev, err instanceof Error ? err.message : String(err)]);
           }
         }
-        const jsonContent = content.slice(jsonStartIndex);
-        try {
-          initJsonStore(jsonContent);
-        } catch (err) {
-          errorsSignal.update(prev => [...prev, err instanceof Error ? err.message : String(err)]);
-        }
-        processedLength = content.length;
-      } else if (detected === 'a2ui') {
-        streamingSignal.set(true);
-        a2uiParser = createA2uiMessageParser();
-        a2uiStore = createA2uiSurfaceStore();
-        jsonStartIndex = content.indexOf(A2UI_PREFIX) + A2UI_PREFIX.length;
-        const a2uiContent = content.slice(jsonStartIndex);
-        if (a2uiContent.length > 0) {
+      } else if (currentType === 'a2ui') {
+        if (a2uiParser && a2uiStore) {
           try {
-            const msgs = a2uiParser.push(a2uiContent);
+            const msgs = a2uiParser.push(delta);
             for (const msg of msgs) a2uiStore.apply(msg);
             a2uiSurfacesSignal.set(a2uiStore.surfaces());
           } catch (err) {
             errorsSignal.update(prev => [...prev, err instanceof Error ? err.message : String(err)]);
           }
         }
-        processedLength = content.length;
       }
-      return;
-    }
-
-    // Compute delta
-    const delta = content.slice(processedLength);
-    processedLength = content.length;
-
-    if (delta.length === 0) return;
-
-    if (currentType === 'markdown' || currentType === 'mixed') {
-      markdownSignal.set(content);
-    } else if (currentType === 'json-render') {
-      if (store) {
-        try {
-          store.push(delta);
-          syncJsonSignals();
-        } catch (err) {
-          errorsSignal.update(prev => [...prev, err instanceof Error ? err.message : String(err)]);
-        }
-      }
-    } else if (currentType === 'a2ui') {
-      if (a2uiParser && a2uiStore) {
-        try {
-          const msgs = a2uiParser.push(delta);
-          for (const msg of msgs) a2uiStore.apply(msg);
-          a2uiSurfacesSignal.set(a2uiStore.surfaces());
-        } catch (err) {
-          errorsSignal.update(prev => [...prev, err instanceof Error ? err.message : String(err)]);
-        }
-      }
-    }
+    });
   }
 
   function dispose(): void {
