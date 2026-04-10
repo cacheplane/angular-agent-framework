@@ -47,6 +47,7 @@ const capabilities = [
   { product: 'chat', topic: 'generative-ui' },
   { product: 'chat', topic: 'debug' },
   { product: 'chat', topic: 'theming' },
+  { product: 'chat', topic: 'a2ui' },
 ];
 
 if (!skipBuild) {
