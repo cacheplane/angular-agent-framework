@@ -8,6 +8,10 @@
     { "source": "/langgraph/:path*/:file(.*\\..*)", "destination": "/langgraph/:path*/:file" },
     { "source": "/langgraph/:path*", "destination": "/langgraph/:path*/index.html" },
     { "source": "/deep-agents/:path*/:file(.*\\..*)", "destination": "/deep-agents/:path*/:file" },
-    { "source": "/deep-agents/:path*", "destination": "/deep-agents/:path*/index.html" }
+    { "source": "/deep-agents/:path*", "destination": "/deep-agents/:path*/index.html" },
+    { "source": "/render/:path*/:file(.*\\..*)", "destination": "/render/:path*/:file" },
+    { "source": "/render/:path*", "destination": "/render/:path*/index.html" },
+    { "source": "/chat/:path*/:file(.*\\..*)", "destination": "/chat/:path*/:file" },
+    { "source": "/chat/:path*", "destination": "/chat/:path*/index.html" }
   ]
 }

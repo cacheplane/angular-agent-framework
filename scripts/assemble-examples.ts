@@ -31,10 +31,26 @@ const capabilities = [
   { product: 'deep-agents', topic: 'memory' },
   { product: 'deep-agents', topic: 'skills' },
   { product: 'deep-agents', topic: 'sandboxes' },
+  { product: 'render', topic: 'spec-rendering' },
+  { product: 'render', topic: 'element-rendering' },
+  { product: 'render', topic: 'state-management' },
+  { product: 'render', topic: 'registry' },
+  { product: 'render', topic: 'repeat-loops' },
+  { product: 'render', topic: 'computed-functions' },
+  { product: 'chat', topic: 'messages' },
+  { product: 'chat', topic: 'input' },
+  { product: 'chat', topic: 'interrupts' },
+  { product: 'chat', topic: 'tool-calls' },
+  { product: 'chat', topic: 'subagents' },
+  { product: 'chat', topic: 'threads' },
+  { product: 'chat', topic: 'timeline' },
+  { product: 'chat', topic: 'generative-ui' },
+  { product: 'chat', topic: 'debug' },
+  { product: 'chat', topic: 'theming' },
 ];
 
 if (!skipBuild) {
-  console.log('Building all 14 Angular apps...');
+  console.log(`Building all ${capabilities.length} Angular apps...`);
   execSync("npx nx run-many -t build --projects='cockpit-*-angular' --skip-nx-cache", {
     cwd: root,
     stdio: 'inherit',
@@ -106,8 +122,8 @@ writeFileSync(resolve(outputDir, 'config.json'), JSON.stringify({
   routes: [
     { src: '^/api/(.*)', dest: '/api/[[...path]]', check: true },
     { handle: 'filesystem' },
-    { src: '^/(langgraph|deep-agents)/([^/]+)/(.+\\..+)$', dest: '/$1/$2/$3' },
-    { src: '^/(langgraph|deep-agents)/([^/]+)(/.*)?$', dest: '/$1/$2/index.html' },
+    { src: '^/(langgraph|deep-agents|render|chat)/([^/]+)/(.+\\..+)$', dest: '/$1/$2/$3' },
+    { src: '^/(langgraph|deep-agents|render|chat)/([^/]+)(/.*)?$', dest: '/$1/$2/index.html' },
     { handle: 'error' },
     { status: 404, src: '.*', dest: '/404.html' },
   ],
