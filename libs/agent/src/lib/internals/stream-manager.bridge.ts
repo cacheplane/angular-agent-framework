@@ -255,7 +255,10 @@ function isMessagesEvent(type: StreamEvent['type']): boolean {
 function normalizeMessages(event: StreamEvent): unknown[] | null {
   const directMessages = event['messages'];
   if (Array.isArray(directMessages)) {
-    return directMessages;
+    // Filter out non-message metadata objects (e.g. { langgraph_node, langgraph_triggers })
+    // that the LangGraph SDK includes alongside real messages in messages/* events.
+    const filtered = directMessages.filter(isMessageLike);
+    return filtered.length > 0 ? filtered : null;
   }
 
   const data = event['data'];
