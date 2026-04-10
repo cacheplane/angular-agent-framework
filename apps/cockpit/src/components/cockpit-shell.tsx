@@ -10,6 +10,7 @@ import { NarrativeDocs } from './narrative-docs/narrative-docs';
 import { ModeSwitcher } from './modes/mode-switcher';
 import { RunMode } from './run-mode/run-mode';
 import { CockpitSidebar } from './sidebar/cockpit-sidebar';
+import { MobileNavOverlay } from './mobile-nav-overlay';
 
 const PRIMARY_MODES = ['Run', 'Code', 'Docs', 'API'] as const;
 type PrimaryMode = (typeof PRIMARY_MODES)[number];
@@ -69,30 +70,14 @@ export function CockpitShell({
         />
       </div>
 
-      {/* Mobile sidebar overlay */}
-      {isSidebarOpen && (
-        <>
-          <div
-            className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm md:hidden"
-            onClick={() => setIsSidebarOpen(false)}
-          />
-          <div
-            className="fixed top-0 left-0 bottom-0 w-64 z-50 overflow-y-auto md:hidden"
-            style={{
-              background: 'var(--ds-glass-bg)',
-              backdropFilter: 'blur(var(--ds-glass-blur))',
-              borderRight: '1px solid var(--ds-glass-border)',
-              boxShadow: 'var(--ds-glass-shadow)',
-            }}
-          >
-            <CockpitSidebar
-              navigationTree={navigationTree}
-              manifest={cockpitManifest}
-              entry={entry}
-            />
-          </div>
-        </>
-      )}
+      {/* Mobile full-screen nav overlay */}
+      <MobileNavOverlay
+        navigationTree={navigationTree}
+        manifest={cockpitManifest}
+        entry={entry}
+        isOpen={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
+      />
 
       <section className="grid grid-rows-[auto_1fr] gap-2 p-4 overflow-hidden bg-[var(--ds-glass-bg)] backdrop-blur-[var(--ds-glass-blur)]">
         <header className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
