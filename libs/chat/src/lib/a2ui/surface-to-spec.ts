@@ -3,7 +3,7 @@ import type { Spec, UIElement } from '@json-render/core';
 import type { A2uiSurface, A2uiChildTemplate } from '@cacheplane/a2ui';
 import { resolveDynamic, getByPointer, evaluateCheckRules, isPathRef } from '@cacheplane/a2ui';
 
-const RESERVED_KEYS = new Set(['id', 'component', 'children', 'action', 'checks']);
+const RESERVED_KEYS = new Set(['id', 'component', 'children', 'action', 'checks', '_bindings']);
 
 /**
  * Converts an A2UI surface to a json-render Spec by:
