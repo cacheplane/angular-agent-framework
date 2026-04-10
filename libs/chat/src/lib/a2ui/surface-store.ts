@@ -22,6 +22,7 @@ export function createA2uiSurfaceStore(): A2uiSurfaceStore {
           surfaceId: message.surfaceId,
           catalogId: message.catalogId,
           theme: message.theme,
+          sendDataModel: message.sendDataModel,
           components: new Map(),
           dataModel: {},
         });

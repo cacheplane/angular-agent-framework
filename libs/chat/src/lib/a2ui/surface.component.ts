@@ -3,7 +3,7 @@ import {
   Component, computed, input, output, ChangeDetectionStrategy,
 } from '@angular/core';
 import type { Spec } from '@json-render/core';
-import type { A2uiSurface, A2uiChildTemplate } from '@cacheplane/a2ui';
+import type { A2uiSurface, A2uiChildTemplate, A2uiActionMessage } from '@cacheplane/a2ui';
 import { resolveDynamic, getByPointer, evaluateCheckRules } from '@cacheplane/a2ui';
 import { RenderSpecComponent, toRenderRegistry } from '@cacheplane/render';
 import type { ViewRegistry, RenderEvent } from '@cacheplane/render';
@@ -41,10 +41,21 @@ export function surfaceToSpec(surface: A2uiSurface): Spec | null {
     if (comp.action) {
       if ('event' in comp.action) {
         const evt = comp.action.event;
+        const resolvedContext: Record<string, unknown> = {};
+        if (evt.context) {
+          for (const [key, value] of Object.entries(evt.context)) {
+            resolvedContext[key] = resolveDynamic(value, surface.dataModel);
+          }
+        }
         on = {
           click: {
             action: 'a2ui:event',
-            params: { surfaceId: surface.surfaceId, name: evt.name, context: evt.context },
+            params: {
+              surfaceId: surface.surfaceId,
+              sourceComponentId: id,
+              name: evt.name,
+              context: resolvedContext,
+            },
           },
         };
       } else if ('functionCall' in comp.action) {
@@ -102,6 +113,32 @@ export function surfaceToSpec(surface: A2uiSurface): Spec | null {
   return { root: 'root', elements, state: surface.dataModel } as Spec;
 }
 
+/** Builds a v0.9 A2uiActionMessage from handler params and the current surface. */
+export function buildA2uiActionMessage(
+  params: Record<string, unknown>,
+  surface: A2uiSurface,
+): A2uiActionMessage {
+  const message: A2uiActionMessage = {
+    version: 'v0.9',
+    action: {
+      name: params['name'] as string,
+      surfaceId: surface.surfaceId,
+      sourceComponentId: params['sourceComponentId'] as string,
+      timestamp: new Date().toISOString(),
+      context: (params['context'] as Record<string, unknown>) ?? {},
+    },
+  };
+  if (surface.sendDataModel) {
+    message.metadata = {
+      a2uiClientDataModel: {
+        version: 'v0.9',
+        surfaces: { [surface.surfaceId]: surface.dataModel },
+      },
+    };
+  }
+  return message;
+}
+
 @Component({
   selector: 'a2ui-surface',
   standalone: true,
@@ -123,6 +160,7 @@ export class A2uiSurfaceComponent {
   readonly catalog = input.required<ViewRegistry>();
   readonly handlers = input<Record<string, (params: Record<string, unknown>) => unknown | Promise<unknown>>>({});
   readonly events = output<RenderEvent>();
+  readonly action = output<A2uiActionMessage>();
 
   /** Convert the A2UI surface to a json-render Spec for rendering. */
   readonly spec = computed(() => surfaceToSpec(this.surface()));
@@ -135,7 +173,9 @@ export class A2uiSurfaceComponent {
     const consumerHandlers = this.handlers();
     return {
       'a2ui:event': (params: Record<string, unknown>) => {
-        return params;
+        const message = buildA2uiActionMessage(params, this.surface());
+        this.action.emit(message);
+        return message;
       },
       'a2ui:localAction': (params: Record<string, unknown>) => {
         const call = params['call'] as string;

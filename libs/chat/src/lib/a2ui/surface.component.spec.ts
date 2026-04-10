@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import { describe, it, expect } from 'vitest';
 import type { A2uiSurface, A2uiComponent } from '@cacheplane/a2ui';
-import { surfaceToSpec } from './surface.component';
+import { surfaceToSpec, buildA2uiActionMessage } from './surface.component';
 
 describe('A2uiSurfaceComponent — data flow', () => {
   function makeSurface(components: A2uiComponent[], dataModel: Record<string, unknown> = {}): A2uiSurface {
@@ -79,7 +79,7 @@ describe('surfaceToSpec — action mapping', () => {
     expect(btnElement.on).toBeDefined();
     expect(btnElement.on!['click']).toEqual({
       action: 'a2ui:event',
-      params: { surfaceId: 's1', name: 'formSubmit', context: { formId: 'signup' } },
+      params: { surfaceId: 's1', sourceComponentId: 'btn', name: 'formSubmit', context: { formId: 'signup' } },
     });
     expect(btnElement.props['action']).toBeUndefined();
   });
@@ -151,6 +151,97 @@ describe('A2uiSurfaceComponent — consumer handlers', () => {
       action: 'a2ui:localAction',
       params: { call: 'addToCart', args: { sku: 'ABC' } },
     });
+  });
+});
+
+describe('surfaceToSpec — v0.9 event action', () => {
+  function makeSurface(components: A2uiComponent[], dataModel: Record<string, unknown> = {}): A2uiSurface {
+    const map = new Map<string, A2uiComponent>();
+    for (const c of components) map.set(c.id, c);
+    return { surfaceId: 's1', catalogId: 'basic', components: map, dataModel };
+  }
+
+  it('resolves context DynamicValue paths against data model', () => {
+    const surface = makeSurface(
+      [
+        { id: 'root', component: 'Column', children: ['btn'] },
+        {
+          id: 'btn',
+          component: 'Button',
+          label: 'Submit',
+          action: { event: { name: 'formSubmit', context: { email: { path: '/email' } } } },
+        },
+      ],
+      { email: 'alice@example.com' },
+    );
+    const spec = surfaceToSpec(surface)!;
+    const params = spec.elements['btn'].on!['click'].params;
+    expect(params['context']).toEqual({ email: 'alice@example.com' });
+  });
+
+  it('resolves context FunctionCall values', () => {
+    const surface = makeSurface(
+      [
+        { id: 'root', component: 'Column', children: ['btn'] },
+        {
+          id: 'btn',
+          component: 'Button',
+          label: 'Format',
+          action: { event: { name: 'show', context: { price: { call: 'formatCurrency', args: { value: { path: '/amount' } } } } } },
+        },
+      ],
+      { amount: 42 },
+    );
+    const spec = surfaceToSpec(surface)!;
+    const params = spec.elements['btn'].on!['click'].params;
+    expect(params['context']).toEqual({ price: '$42.00' });
+  });
+
+  it('passes literal context values through unchanged', () => {
+    const surface = makeSurface(
+      [
+        { id: 'root', component: 'Column', children: ['btn'] },
+        {
+          id: 'btn',
+          component: 'Button',
+          label: 'Go',
+          action: { event: { name: 'navigate', context: { page: 'home' } } },
+        },
+      ],
+    );
+    const spec = surfaceToSpec(surface)!;
+    const params = spec.elements['btn'].on!['click'].params;
+    expect(params['context']).toEqual({ page: 'home' });
+  });
+
+  it('includes sourceComponentId in event action params', () => {
+    const surface = makeSurface([
+      { id: 'root', component: 'Column', children: ['submit-btn'] },
+      {
+        id: 'submit-btn',
+        component: 'Button',
+        label: 'Submit',
+        action: { event: { name: 'formSubmit' } },
+      },
+    ]);
+    const spec = surfaceToSpec(surface)!;
+    const params = spec.elements['submit-btn'].on!['click'].params;
+    expect(params['sourceComponentId']).toBe('submit-btn');
+  });
+
+  it('defaults context to empty object when not specified', () => {
+    const surface = makeSurface([
+      { id: 'root', component: 'Column', children: ['btn'] },
+      {
+        id: 'btn',
+        component: 'Button',
+        label: 'Click',
+        action: { event: { name: 'clicked' } },
+      },
+    ]);
+    const spec = surfaceToSpec(surface)!;
+    const params = spec.elements['btn'].on!['click'].params;
+    expect(params['context']).toEqual({});
   });
 });
 
@@ -244,5 +335,73 @@ describe('surfaceToSpec — validation', () => {
     );
     const spec = surfaceToSpec(surface)!;
     expect(spec.elements['root'].props['checks']).toBeUndefined();
+  });
+});
+
+describe('buildA2uiActionMessage', () => {
+  function makeSurface(
+    components: A2uiComponent[],
+    dataModel: Record<string, unknown> = {},
+    sendDataModel?: boolean,
+  ): A2uiSurface {
+    const map = new Map<string, A2uiComponent>();
+    for (const c of components) map.set(c.id, c);
+    return { surfaceId: 's1', catalogId: 'basic', sendDataModel, components: map, dataModel };
+  }
+
+  it('builds a v0.9 action message with all required fields', () => {
+    const surface = makeSurface([{ id: 'root', component: 'Text' }]);
+    const params = {
+      surfaceId: 's1',
+      sourceComponentId: 'submit-btn',
+      name: 'formSubmit',
+      context: { email: 'alice@example.com' },
+    };
+    const msg = buildA2uiActionMessage(params, surface);
+    expect(msg.version).toBe('v0.9');
+    expect(msg.action.name).toBe('formSubmit');
+    expect(msg.action.surfaceId).toBe('s1');
+    expect(msg.action.sourceComponentId).toBe('submit-btn');
+    expect(msg.action.context).toEqual({ email: 'alice@example.com' });
+    expect(msg.action.timestamp).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+    expect(msg.metadata).toBeUndefined();
+  });
+
+  it('attaches data model when sendDataModel is true', () => {
+    const surface = makeSurface(
+      [{ id: 'root', component: 'Text' }],
+      { name: 'Alice', email: 'alice@co.com' },
+      true,
+    );
+    const params = { surfaceId: 's1', sourceComponentId: 'btn', name: 'submit', context: {} };
+    const msg = buildA2uiActionMessage(params, surface);
+    expect(msg.metadata).toBeDefined();
+    expect(msg.metadata!.a2uiClientDataModel.version).toBe('v0.9');
+    expect(msg.metadata!.a2uiClientDataModel.surfaces['s1']).toEqual({ name: 'Alice', email: 'alice@co.com' });
+  });
+
+  it('does not attach data model when sendDataModel is false', () => {
+    const surface = makeSurface(
+      [{ id: 'root', component: 'Text' }],
+      { name: 'Alice' },
+      false,
+    );
+    const params = { surfaceId: 's1', sourceComponentId: 'btn', name: 'submit', context: {} };
+    const msg = buildA2uiActionMessage(params, surface);
+    expect(msg.metadata).toBeUndefined();
+  });
+
+  it('does not attach data model when sendDataModel is undefined', () => {
+    const surface = makeSurface([{ id: 'root', component: 'Text' }], { name: 'Alice' });
+    const params = { surfaceId: 's1', sourceComponentId: 'btn', name: 'submit', context: {} };
+    const msg = buildA2uiActionMessage(params, surface);
+    expect(msg.metadata).toBeUndefined();
+  });
+
+  it('defaults context to empty object when not provided in params', () => {
+    const surface = makeSurface([{ id: 'root', component: 'Text' }]);
+    const params = { surfaceId: 's1', sourceComponentId: 'btn', name: 'click' } as any;
+    const msg = buildA2uiActionMessage(params, surface);
+    expect(msg.action.context).toEqual({});
   });
 });

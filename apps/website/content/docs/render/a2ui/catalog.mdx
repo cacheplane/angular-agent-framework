@@ -159,10 +159,10 @@ Renders a button that dispatches an action when clicked.
 **Action types:**
 
 ```json
-// Emit a named event (sent back to the agent)
-{"action": {"event": {"name": "submit", "context": {"formId": "contact"}}}}
+// Emit a named event with resolved context (sent back to the agent as v0.9 action)
+{"action": {"event": {"name": "submit", "context": {"email": {"path": "/email"}, "formId": "contact"}}}}
 
-// Execute a local function (e.g., open a URL)
+// Execute a local function (e.g., open a URL) — agent never sees this
 {"action": {"functionCall": {"call": "openUrl", "args": {"url": "https://example.com"}}}}
 ```
 

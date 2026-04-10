@@ -96,4 +96,16 @@ describe('createA2uiSurfaceStore', () => {
     store.apply({ type: 'updateComponents', surfaceId: 'nope', components: [] });
     expect(store.surfaces().size).toBe(0);
   });
+
+  it('preserves sendDataModel flag from createSurface', () => {
+    const store = setup();
+    store.apply({ type: 'createSurface', surfaceId: 's1', catalogId: 'basic', sendDataModel: true });
+    expect(store.surfaces().get('s1')!.sendDataModel).toBe(true);
+  });
+
+  it('defaults sendDataModel to undefined when not set', () => {
+    const store = setup();
+    store.apply({ type: 'createSurface', surfaceId: 's1', catalogId: 'basic' });
+    expect(store.surfaces().get('s1')!.sendDataModel).toBeUndefined();
+  });
 });

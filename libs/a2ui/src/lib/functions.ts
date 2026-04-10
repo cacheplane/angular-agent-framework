@@ -57,8 +57,10 @@ const FUNCTIONS: Record<string, FnExecutor> = {
 
   // Navigation
   openUrl: (args) => {
-    if (typeof globalThis.window !== 'undefined') {
-      globalThis.window.open(String(args['url']), '_blank');
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const win = globalThis as any;
+    if (typeof win['window'] !== 'undefined') {
+      win['window'].open(String(args['url']), '_blank');
     }
     return null;
   },

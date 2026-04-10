@@ -12,7 +12,7 @@ from langchain_core.messages import AIMessage
 A2UI_PREFIX = "---a2ui_JSON---"
 
 CONTACT_FORM_JSONL = A2UI_PREFIX + "\n" + "\n".join([
-    json.dumps({"type": "createSurface", "surfaceId": "contact", "catalogId": "basic"}),
+    json.dumps({"type": "createSurface", "surfaceId": "contact", "catalogId": "basic", "sendDataModel": True}),
     json.dumps({"type": "updateDataModel", "surfaceId": "contact", "value": {
         "name": "", "email": "", "department": "Engineering", "consent": False,
     }}),
@@ -56,7 +56,11 @@ CONTACT_FORM_JSONL = A2UI_PREFIX + "\n" + "\n".join([
              ]}},
               "message": "Complete all required fields and agree to be contacted"},
          ],
-         "action": {"event": {"name": "formSubmit", "context": {"formId": "contact"}}}},
+         "action": {"event": {"name": "formSubmit", "context": {
+             "name": {"path": "/name"},
+             "email": {"path": "/email"},
+             "department": {"path": "/department"},
+         }}}},
     ]}),
 ])
 
@@ -71,10 +75,10 @@ def build_a2ui_graph():
     async def create_form(state: MessagesState) -> dict:
         last = state["messages"][-1]
 
-        # If this is an a2ui_event, route to event handling
+        # If this is a v0.9 action message, route to event handling
         try:
             payload = json.loads(last.content)
-            if isinstance(payload, dict) and payload.get("type") == "a2ui_event":
+            if isinstance(payload, dict) and payload.get("version") == "v0.9" and "action" in payload:
                 return await handle_event(state, payload)
         except (json.JSONDecodeError, AttributeError):
             pass
@@ -83,9 +87,28 @@ def build_a2ui_graph():
         return {"messages": [AIMessage(content=CONTACT_FORM_JSONL)]}
 
     async def handle_event(state: MessagesState, payload: dict) -> dict:
-        name = payload.get("context", {}).get("formId", "unknown")
+        action = payload["action"]
+        context = action.get("context", {})
+        name = context.get("name", "Unknown")
+        email = context.get("email", "not provided")
+        department = context.get("department", "not specified")
+
+        # Full data model is available via metadata when sendDataModel is true.
+        # Use it when you need values beyond what context provides.
+        data_model = (  # noqa: F841
+            payload.get("metadata", {})
+            .get("a2uiClientDataModel", {})
+            .get("surfaces", {})
+            .get(action["surfaceId"], {})
+        )
+
         return {"messages": [AIMessage(
-            content=f"Thanks for submitting the **{name}** form! We'll be in touch soon.",
+            content=(
+                f"Thanks **{name}**! We received your submission:\n\n"
+                f"- **Email:** {email}\n"
+                f"- **Department:** {department}\n\n"
+                f"We'll be in touch soon."
+            ),
         )]}
 
     graph = StateGraph(MessagesState)

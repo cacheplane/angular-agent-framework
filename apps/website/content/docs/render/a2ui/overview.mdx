@@ -289,6 +289,111 @@ Validation styling uses CSS custom properties:
 | `--a2ui-input-bg` | `rgba(255,255,255,0.05)` | Input background |
 | `--a2ui-label` | `rgba(255,255,255,0.6)` | Label text color |
 
+## Events & Data Model Transport
+
+When a user triggers an event action (e.g., clicking a button with `action.event`), the Angular renderer builds a v0.9-compliant action message and sends it back to the agent. Local actions (`action.functionCall`) execute client-side only — the agent never sees them.
+
+### Action Message Shape
+
+The outbound message follows the [v0.9 spec](https://a2ui.org):
+
+```json
+{
+  "version": "v0.9",
+  "action": {
+    "name": "formSubmit",
+    "surfaceId": "contact",
+    "sourceComponentId": "submit-btn",
+    "timestamp": "2026-04-10T14:30:00.000Z",
+    "context": {
+      "name": "Alice",
+      "email": "alice@example.com"
+    }
+  }
+}
+```
+
+| Field | Description |
+|-------|-------------|
+| `version` | Always `"v0.9"` |
+| `action.name` | The event name from the component's `action.event.name` |
+| `action.surfaceId` | The surface that owns this component |
+| `action.sourceComponentId` | The `id` of the component that triggered the event |
+| `action.timestamp` | ISO 8601 timestamp of when the action was dispatched |
+| `action.context` | Resolved values from `action.event.context` — path refs and function calls are evaluated against the current data model |
+
+### Context Resolution
+
+Context values in `action.event.context` are `DynamicValue`s — they can be literals, path references, or function calls. They are resolved at dispatch time against the current data model:
+
+```json
+{
+  "action": {
+    "event": {
+      "name": "formSubmit",
+      "context": {
+        "name": {"path": "/name"},
+        "email": {"path": "/email"},
+        "total": {"call": "formatCurrency", "args": {"value": {"path": "/amount"}}}
+      }
+    }
+  }
+}
+```
+
+When the user clicks the button, the renderer resolves `/name` and `/email` from the data model and calls `formatCurrency` on `/amount`, producing a flat `context` object with concrete values.
+
+### sendDataModel
+
+Set `sendDataModel: true` on `createSurface` to attach the full data model snapshot to every outbound action:
+
+```json
+{"type": "createSurface", "surfaceId": "contact", "catalogId": "basic", "sendDataModel": true}
+```
+
+When enabled, the action message includes a `metadata` field:
+
+```json
+{
+  "version": "v0.9",
+  "action": { "..." : "..." },
+  "metadata": {
+    "a2uiClientDataModel": {
+      "version": "v0.9",
+      "surfaces": {
+        "contact": {
+          "name": "Alice",
+          "email": "alice@example.com",
+          "department": "Engineering"
+        }
+      }
+    }
+  }
+}
+```
+
+The data model is only sent with event actions — there are no passive change notifications on input changes. This matches the v0.9 spec requirement that the data model piggybacks on outbound messages.
+
+### Angular Integration
+
+`A2uiSurfaceComponent` exposes two outputs:
+
+| Output | Type | Description |
+|--------|------|-------------|
+| `(action)` | `A2uiActionMessage` | Agent-bound action messages — the complete v0.9 envelope |
+| `(events)` | `RenderEvent` | All render events (state changes, handler calls, lifecycle) for observation |
+
+`ChatComponent` auto-routes `(action)` events to the agent as human messages. For standalone usage, bind `(action)` directly:
+
+```html
+<a2ui-surface
+  [surface]="surface()"
+  [catalog]="catalog"
+  (action)="sendToAgent($event)"
+  (events)="logEvent($event)"
+/>
+```
+
 ## What's Next
 
 <CardGroup cols={2}>
