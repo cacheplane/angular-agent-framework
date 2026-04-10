@@ -290,6 +290,23 @@ export class ChatComponent {
   }
 
   onA2uiEvent(event: RenderEvent, messageIndex: number, surfaceId: string): void {
+    // Auto-route A2UI event actions back to the agent
+    if (event.type === 'handler' && event.action === 'a2ui:event') {
+      const params = event.params as Record<string, unknown>;
+      this.ref().submit({
+        messages: [{
+          role: 'human',
+          content: JSON.stringify({
+            type: 'a2ui_event',
+            surfaceId: params['surfaceId'],
+            name: params['name'],
+            context: params['context'],
+          }),
+        }],
+      });
+    }
+
+    // Still emit for consumer observation/logging
     this.renderEvent.emit({ messageIndex, surfaceId, event });
   }
 }

@@ -125,6 +125,41 @@ When the AI response starts with `---a2ui_JSON---`, the chat renders the surface
 To extend or replace the built-in components, compose catalogs with `withViews()` or `views()`. See the [Custom Catalogs guide](/docs/chat/guides/custom-catalogs) for details.
 </Callout>
 
+## Automatic Event Routing
+
+When an A2UI button fires an `a2ui:event` action, `ChatComponent` automatically
+routes it back to the agent as a human message. No manual `(renderEvent)` wiring
+is needed for standard A2UI event flows.
+
+The event is sent as a JSON-encoded human message:
+
+```json
+{
+  "type": "a2ui_event",
+  "surfaceId": "contact",
+  "name": "formSubmit",
+  "context": { "formId": "contact" }
+}
+```
+
+The `renderEvent` output still fires for all events, so consumers can observe
+or log events without intercepting the routing.
+
+### Minimal Consumer Setup
+
+```typescript
+import { ChatComponent, a2uiBasicCatalog } from '@cacheplane/chat';
+import { agent } from '@cacheplane/angular';
+
+@Component({
+  template: `<chat [ref]="agentRef" [views]="catalog" />`,
+})
+export class MyComponent {
+  agentRef = agent({ apiUrl: '/api', assistantId: 'my-agent' });
+  catalog = a2uiBasicCatalog();
+}
+```
+
 ## What's Next
 
 <CardGroup cols={2}>
