@@ -1,10 +1,13 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import { describe, it, expect } from 'vitest';
+import { A2uiImageComponent } from './image.component';
 
 describe('A2uiImageComponent', () => {
-  it('is a display-only component with no behavioral logic', () => {
-    // A2uiImageComponent renders url() and alt() as an <img>.
-    // No methods, no events, no bindings — purely declarative.
-    expect(true).toBe(true);
+  // Display-only component: renders url() and alt() as an <img>.
+  // No methods, events, or bindings — purely declarative.
+  // Signal-based inputs require the angular() vite plugin for TestBed tests.
+
+  it('exports the component class', () => {
+    expect(A2uiImageComponent).toBeDefined();
   });
 });
