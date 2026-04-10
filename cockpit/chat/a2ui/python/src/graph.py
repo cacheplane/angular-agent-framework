@@ -6,12 +6,8 @@ builds an interactive contact form on the Angular frontend.
 """
 
 import json
-from pathlib import Path
 from langgraph.graph import StateGraph, MessagesState, END
-from langchain_openai import ChatOpenAI
-from langchain_core.messages import SystemMessage, AIMessage
-
-PROMPTS_DIR = Path(__file__).parent.parent / "prompts"
+from langchain_core.messages import AIMessage
 
 A2UI_PREFIX = "---a2ui_JSON---"
 
@@ -53,7 +49,6 @@ def build_a2ui_graph():
     - create_form: emits the A2UI contact form surface
     - handle_event: responds to form submission events
     """
-    llm = ChatOpenAI(model="gpt-5-mini", streaming=True)
 
     async def create_form(state: MessagesState) -> dict:
         last = state["messages"][-1]
