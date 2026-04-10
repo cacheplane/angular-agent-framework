@@ -12,12 +12,12 @@ const PAIN_POINTS = [
 ];
 
 const SOLUTIONS = [
-  'Declarative UI specs via json-render standard',
-  'Hot-swappable component registry',
+  'Declarative UI specs — Vercel json-render + Google A2UI',
+  'Hot-swappable component registry with extensible handlers',
   'No frontend deploy for new capabilities',
   'Progressive JSON patch streaming',
-  'Signal-native state management',
-  'Vercel-backed open standard',
+  '18 built-in A2UI components with v0.9 CheckRule validation',
+  'Two open standards, one rendering engine',
 ];
 
 export function RenderProblemSolution() {

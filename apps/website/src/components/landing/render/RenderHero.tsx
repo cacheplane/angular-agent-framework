@@ -3,7 +3,7 @@
 import { motion } from 'framer-motion';
 import { tokens } from '@cacheplane/design-tokens';
 
-const BADGES = ['Angular 20+', 'Vercel json-render', 'JSON Patch streaming'];
+const BADGES = ['Angular 20+', 'Vercel json-render', 'Google A2UI', 'JSON Patch streaming'];
 
 export function RenderHero() {
   return (
@@ -31,7 +31,7 @@ export function RenderHero() {
             fontFamily: 'Inter, sans-serif', fontSize: 18, color: tokens.colors.textSecondary,
             maxWidth: '52ch', margin: '0 auto', lineHeight: 1.6, marginBottom: '2rem',
           }}>
-          Built on Vercel's json-render spec — an open standard you already trust. @cacheplane/render brings it to Angular with streaming JSON patches, component registries, and signal-native state.
+          Built on Vercel's json-render spec and Google's A2UI protocol — open standards you already trust. @cacheplane/render brings both to Angular with streaming JSON patches, component registries, and signal-native state.
         </motion.p>
 
         <motion.div initial={{ y: 14 }} animate={{ y: 0 }} transition={{ duration: 0.6, delay: 0.15 }}
