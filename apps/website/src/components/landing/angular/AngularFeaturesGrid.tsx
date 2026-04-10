@@ -4,12 +4,12 @@ import { motion } from 'framer-motion';
 import { tokens } from '@cacheplane/design-tokens';
 
 const FEATURES = [
-  { title: 'agent() API', desc: 'Signal-native streaming with automatic state management. One function to connect your Angular app to LangGraph.', iframePath: 'langgraph/streaming' },
-  { title: 'Thread Persistence', desc: 'Conversations survive page refreshes. Built-in threadId signal with localStorage restore and thread list UI.', iframePath: 'langgraph/persistence' },
-  { title: 'Interrupt Handling', desc: 'Human-in-the-loop approval flows. interrupt() signal maps directly to approve, edit, or cancel actions.', iframePath: 'langgraph/interrupts' },
-  { title: 'Tool Call Support', desc: 'Structured tool execution state. Progressive disclosure — live steps, completion, collapsible history.', iframePath: 'langgraph/tool-calls' },
-  { title: 'Time Travel', desc: 'Navigate agent state history. Replay, inspect, and debug any point in a conversation timeline.', iframePath: 'langgraph/time-travel' },
-  { title: 'DeepAgent Support', desc: 'Multi-agent orchestration with full streaming support. Subgraphs, delegation, parallel execution.', iframePath: 'deep-agents/subgraphs' },
+  { title: 'agent() API', desc: 'Signal-native streaming with automatic state management. One function to connect your Angular app to LangGraph.', iframePath: 'langgraph/core-capabilities/streaming/overview/python' },
+  { title: 'Thread Persistence', desc: 'Conversations survive page refreshes. Built-in threadId signal with localStorage restore and thread list UI.', iframePath: 'langgraph/core-capabilities/persistence/overview/python' },
+  { title: 'Interrupt Handling', desc: 'Human-in-the-loop approval flows. interrupt() signal maps directly to approve, edit, or cancel actions.', iframePath: 'langgraph/core-capabilities/interrupts/overview/python' },
+  { title: 'Tool Call Support', desc: 'Structured tool execution state. Progressive disclosure — live steps, completion, collapsible history.', iframePath: 'langgraph/core-capabilities/subgraphs/overview/python' },
+  { title: 'Time Travel', desc: 'Navigate agent state history. Replay, inspect, and debug any point in a conversation timeline.', iframePath: 'langgraph/core-capabilities/time-travel/overview/python' },
+  { title: 'DeepAgent Support', desc: 'Multi-agent orchestration with full streaming support. Subgraphs, delegation, parallel execution.', iframePath: 'deep-agents/core-capabilities/subagents/overview/python' },
 ];
 
 export function AngularFeaturesGrid() {

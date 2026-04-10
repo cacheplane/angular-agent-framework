@@ -4,12 +4,12 @@ import { motion } from 'framer-motion';
 import { tokens } from '@cacheplane/design-tokens';
 
 const FEATURES = [
-  { title: 'Spec Rendering', desc: 'Render declarative UI specs from agent output. The agent emits JSON, your Angular components materialize it.', iframePath: 'render/spec-rendering' },
-  { title: 'Element Rendering', desc: 'Map spec elements to Angular components. Each element type resolves to a registered component automatically.', iframePath: 'render/element-rendering' },
-  { title: 'State Management', desc: 'Signal-native state store for spec data. Reactive updates flow through your component tree via signalStateStore().', iframePath: 'render/state-management' },
-  { title: 'Component Registry', desc: 'Register Angular components by type. defineAngularRegistry() maps spec types to your components — swap without touching the agent.', iframePath: 'render/registry' },
-  { title: 'Repeat Loops', desc: 'Render lists from spec arrays. Dynamic list rendering with automatic add/remove as streaming data arrives.', iframePath: 'render/repeat-loops' },
-  { title: 'Computed Functions', desc: 'Derive values reactively from spec state. Computed properties update automatically as upstream data changes.', iframePath: 'render/computed-functions' },
+  { title: 'Spec Rendering', desc: 'Render declarative UI specs from agent output. The agent emits JSON, your Angular components materialize it.', iframePath: 'render/core-capabilities/spec-rendering/overview/python' },
+  { title: 'Element Rendering', desc: 'Map spec elements to Angular components. Each element type resolves to a registered component automatically.', iframePath: 'render/core-capabilities/element-rendering/overview/python' },
+  { title: 'State Management', desc: 'Signal-native state store for spec data. Reactive updates flow through your component tree via signalStateStore().', iframePath: 'render/core-capabilities/state-management/overview/python' },
+  { title: 'Component Registry', desc: 'Register Angular components by type. defineAngularRegistry() maps spec types to your components — swap without touching the agent.', iframePath: 'render/core-capabilities/registry/overview/python' },
+  { title: 'Repeat Loops', desc: 'Render lists from spec arrays. Dynamic list rendering with automatic add/remove as streaming data arrives.', iframePath: 'render/core-capabilities/repeat-loops/overview/python' },
+  { title: 'Computed Functions', desc: 'Derive values reactively from spec state. Computed properties update automatically as upstream data changes.', iframePath: 'render/core-capabilities/computed-functions/overview/python' },
 ];
 
 export function RenderFeaturesGrid() {
