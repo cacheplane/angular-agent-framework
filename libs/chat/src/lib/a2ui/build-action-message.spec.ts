@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import { describe, it, expect } from 'vitest';
 import type { A2uiSurface, A2uiComponent } from '@cacheplane/a2ui';
-import { buildA2uiActionMessage } from './surface.component';
+import { buildA2uiActionMessage } from './build-action-message';
 
 describe('buildA2uiActionMessage', () => {
   function makeSurface(
