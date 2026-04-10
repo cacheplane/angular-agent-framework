@@ -102,6 +102,17 @@ export const docsConfig: DocsLibrary[] = [
         ],
       },
       {
+        title: 'A2UI',
+        id: 'a2ui',
+        color: 'red',
+        pages: [
+          { title: 'Overview', slug: 'overview', section: 'a2ui' },
+          { title: 'A2uiSurfaceComponent', slug: 'surface-component', section: 'a2ui' },
+          { title: 'createA2uiSurfaceStore()', slug: 'surface-store', section: 'a2ui' },
+          { title: 'Component Catalog', slug: 'catalog', section: 'a2ui' },
+        ],
+      },
+      {
         title: 'API Reference',
         id: 'api',
         color: 'blue',
@@ -165,17 +176,6 @@ export const docsConfig: DocsLibrary[] = [
           { title: 'createMockAgentRef()', slug: 'create-mock-agent-ref', section: 'api' },
           { title: 'createContentClassifier()', slug: 'content-classifier', section: 'api' },
           { title: 'createParseTreeStore()', slug: 'parse-tree-store', section: 'api' },
-        ],
-      },
-      {
-        title: 'A2UI',
-        id: 'a2ui',
-        color: 'red',
-        pages: [
-          { title: 'Overview', slug: 'overview', section: 'a2ui' },
-          { title: 'A2uiSurfaceComponent', slug: 'surface-component', section: 'a2ui' },
-          { title: 'createA2uiSurfaceStore()', slug: 'surface-store', section: 'a2ui' },
-          { title: 'Component Catalog', slug: 'catalog', section: 'a2ui' },
         ],
       },
     ],
