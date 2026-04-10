@@ -153,3 +153,96 @@ describe('A2uiSurfaceComponent — consumer handlers', () => {
     });
   });
 });
+
+describe('surfaceToSpec — validation', () => {
+  function makeSurface(components: A2uiComponent[], dataModel: Record<string, unknown> = {}): A2uiSurface {
+    const map = new Map<string, A2uiComponent>();
+    for (const c of components) map.set(c.id, c);
+    return { surfaceId: 's1', catalogId: 'basic', components: map, dataModel };
+  }
+
+  it('evaluates checks and attaches validationResult prop', () => {
+    const surface = makeSurface(
+      [
+        {
+          id: 'root', component: 'TextField', label: 'Name',
+          value: { path: '/name' },
+          checks: [
+            { condition: { call: 'required', args: { value: { path: '/name' } } }, message: 'Name required' },
+          ],
+        },
+      ],
+      { name: 'Alice' },
+    );
+    const spec = surfaceToSpec(surface)!;
+    expect(spec.elements['root'].props['validationResult']).toEqual({ valid: true, errors: [] });
+  });
+
+  it('attaches failing validationResult when check fails', () => {
+    const surface = makeSurface(
+      [
+        {
+          id: 'root', component: 'TextField', label: 'Name',
+          value: { path: '/name' },
+          checks: [
+            { condition: { call: 'required', args: { value: { path: '/name' } } }, message: 'Name required' },
+          ],
+        },
+      ],
+      { name: '' },
+    );
+    const spec = surfaceToSpec(surface)!;
+    expect(spec.elements['root'].props['validationResult']).toEqual({ valid: false, errors: ['Name required'] });
+  });
+
+  it('evaluates composite and condition', () => {
+    const surface = makeSurface(
+      [
+        {
+          id: 'root', component: 'Button', label: 'Submit',
+          checks: [
+            {
+              condition: {
+                call: 'and',
+                args: {
+                  values: [
+                    { call: 'required', args: { value: { path: '/name' } } },
+                    { call: 'email', args: { value: { path: '/email' } } },
+                  ],
+                },
+              },
+              message: 'All fields required',
+            },
+          ],
+        },
+      ],
+      { name: 'Alice', email: 'alice@example.com' },
+    );
+    const spec = surfaceToSpec(surface)!;
+    expect(spec.elements['root'].props['validationResult']).toEqual({ valid: true, errors: [] });
+  });
+
+  it('does not attach validationResult when no checks defined', () => {
+    const surface = makeSurface([
+      { id: 'root', component: 'Text', text: 'Hello' },
+    ]);
+    const spec = surfaceToSpec(surface)!;
+    expect(spec.elements['root'].props['validationResult']).toBeUndefined();
+  });
+
+  it('does not pass raw checks as props', () => {
+    const surface = makeSurface(
+      [
+        {
+          id: 'root', component: 'TextField', label: 'Name',
+          checks: [
+            { condition: { call: 'required', args: { value: { path: '/name' } } }, message: 'Required' },
+          ],
+        },
+      ],
+      { name: 'Alice' },
+    );
+    const spec = surfaceToSpec(surface)!;
+    expect(spec.elements['root'].props['checks']).toBeUndefined();
+  });
+});

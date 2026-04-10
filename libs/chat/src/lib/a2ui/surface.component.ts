@@ -4,7 +4,7 @@ import {
 } from '@angular/core';
 import type { Spec } from '@json-render/core';
 import type { A2uiSurface, A2uiChildTemplate } from '@cacheplane/a2ui';
-import { resolveDynamic, getByPointer } from '@cacheplane/a2ui';
+import { resolveDynamic, getByPointer, evaluateCheckRules } from '@cacheplane/a2ui';
 import { RenderSpecComponent, toRenderRegistry } from '@cacheplane/render';
 import type { ViewRegistry, RenderEvent } from '@cacheplane/render';
 
@@ -57,9 +57,9 @@ export function surfaceToSpec(surface: A2uiSurface): Spec | null {
         };
       }
     }
-    // Pass checks through
+    // Evaluate checks and attach pre-computed validation result
     if (comp.checks) {
-      props['checks'] = comp.checks;
+      props['validationResult'] = evaluateCheckRules(comp.checks, surface.dataModel);
     }
 
     // Map children
