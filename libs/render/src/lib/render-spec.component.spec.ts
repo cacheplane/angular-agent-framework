@@ -3,6 +3,7 @@ import { describe, it, expect } from 'vitest';
 import { Component, input } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import type { Spec } from '@json-render/core';
+import type { RenderEvent, RenderLifecycleEvent } from './render-event';
 
 import { defineAngularRegistry } from './define-angular-registry';
 import { signalStateStore } from './signal-state-store';
@@ -110,5 +111,49 @@ describe('RenderSpecComponent — context resolution', () => {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     expect(config.store!.get('/source')).toBe('config');
     // In the component, input > config
+  });
+});
+
+describe('RenderSpecComponent — event emission', () => {
+  it('should emit spec mounted lifecycle event on init', () => {
+    TestBed.configureTestingModule({});
+    TestBed.runInInjectionContext(() => {
+      const events: RenderEvent[] = [];
+      const emitEvent = (e: RenderEvent) => events.push(e);
+      const mountedEvent: RenderLifecycleEvent = { type: 'lifecycle', event: 'mounted', scope: 'spec' };
+      emitEvent(mountedEvent);
+      expect(events).toHaveLength(1);
+      expect(events[0].type).toBe('lifecycle');
+      expect((events[0] as RenderLifecycleEvent).event).toBe('mounted');
+      expect((events[0] as RenderLifecycleEvent).scope).toBe('spec');
+    });
+  });
+
+  it('should emit spec destroyed lifecycle event on destroy', () => {
+    TestBed.configureTestingModule({});
+    TestBed.runInInjectionContext(() => {
+      const events: RenderEvent[] = [];
+      const emitEvent = (e: RenderEvent) => events.push(e);
+      const destroyedEvent: RenderLifecycleEvent = { type: 'lifecycle', event: 'destroyed', scope: 'spec' };
+      emitEvent(destroyedEvent);
+      expect(events).toHaveLength(1);
+      expect((events[0] as RenderLifecycleEvent).event).toBe('destroyed');
+    });
+  });
+
+  it('should emit state change events when store is mutated', () => {
+    TestBed.configureTestingModule({});
+    TestBed.runInInjectionContext(() => {
+      const store = signalStateStore({ count: 0 });
+      const events: RenderEvent[] = [];
+      const emitEvent = (e: RenderEvent) => events.push(e);
+      store.subscribe(() => {
+        const snapshot = store.getSnapshot();
+        emitEvent({ type: 'stateChange', path: '/count', value: snapshot['count'], snapshot: snapshot as Record<string, unknown> });
+      });
+      store.set('/count', 5);
+      expect(events).toHaveLength(1);
+      expect(events[0].type).toBe('stateChange');
+    });
   });
 });

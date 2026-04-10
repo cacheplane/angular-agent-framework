@@ -3,8 +3,12 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  DestroyRef,
+  effect,
   inject,
   input,
+  OnInit,
+  output,
 } from '@angular/core';
 import type { ComputedFunction, Spec, StateStore } from '@json-render/core';
 
@@ -14,6 +18,7 @@ import { RENDER_CONTEXT } from './contexts/render-context';
 import type { RenderContext } from './contexts/render-context';
 import type { AngularRegistry } from './render.types';
 import { signalStateStore } from './signal-state-store';
+import type { RenderEvent } from './render-event';
 
 /**
  * Top-level entry point for rendering a json-render spec.
@@ -47,15 +52,17 @@ import { signalStateStore } from './signal-state-store';
     }
   `,
 })
-export class RenderSpecComponent {
+export class RenderSpecComponent implements OnInit {
   readonly spec = input<Spec | null>(null);
   readonly registry = input<AngularRegistry | undefined>(undefined);
   readonly store = input<StateStore | undefined>(undefined);
   readonly functions = input<Record<string, ComputedFunction> | undefined>(undefined);
   readonly handlers = input<Record<string, (params: Record<string, unknown>) => unknown | Promise<unknown>> | undefined>(undefined);
   readonly loading = input<boolean>(false);
+  readonly events = output<RenderEvent>();
 
   private readonly config = inject(RENDER_CONFIG, { optional: true });
+  private readonly destroyRef = inject(DestroyRef);
 
   /** Internal store, lazily created once and reused across spec changes. */
   private _internalStore: StateStore | undefined;
@@ -86,12 +93,69 @@ export class RenderSpecComponent {
     return { get: () => undefined, names: () => [] };
   });
 
+  /** Wraps input handlers to emit RenderHandlerEvent after execution. */
+  private readonly wrappedHandlers = computed(() => {
+    const inputHandlers = this.handlers() ?? this.config?.handlers;
+    if (!inputHandlers) return undefined;
+    const wrapped: Record<string, (params: Record<string, unknown>) => unknown | Promise<unknown>> = {};
+    for (const [name, handler] of Object.entries(inputHandlers)) {
+      wrapped[name] = (params: Record<string, unknown>) => {
+        const result = handler(params);
+        if (result instanceof Promise) {
+          result.then(
+            (r) => {
+              this.events.emit({ type: 'handler', action: name, params, result: r });
+            },
+            () => {
+              this.events.emit({ type: 'handler', action: name, params, result: undefined });
+            },
+          );
+        } else {
+          this.events.emit({ type: 'handler', action: name, params, result });
+        }
+        return result;
+      };
+    }
+    return wrapped;
+  });
+
+  /** Emits a RenderEvent through the events output. */
+  private readonly emitEvent = (event: RenderEvent) => {
+    this.events.emit(event);
+  };
+
   /** The RenderContext provided to children via viewProviders. */
   readonly _context = computed<RenderContext>(() => ({
     registry: this.resolvedRegistry(),
     store: this.resolvedStore(),
     functions: this.functions() ?? this.config?.functions,
-    handlers: this.handlers() ?? this.config?.handlers,
+    handlers: this.wrappedHandlers(),
+    emitEvent: this.emitEvent,
     loading: this.loading(),
   }));
+
+  constructor() {
+    // Subscribe to store changes and emit state change events
+    effect(() => {
+      const store = this.resolvedStore();
+      const unsub = store.subscribe(() => {
+        const snapshot = store.getSnapshot() as Record<string, unknown>;
+        this.events.emit({
+          type: 'stateChange',
+          path: '/',
+          value: snapshot,
+          snapshot,
+        });
+      });
+      this.destroyRef.onDestroy(unsub);
+    });
+
+    this.destroyRef.onDestroy(() => {
+      this.events.emit({ type: 'lifecycle', event: 'destroyed', scope: 'spec' });
+    });
+  }
+
+  ngOnInit(): void {
+    this.events.emit({ type: 'lifecycle', event: 'mounted', scope: 'spec' });
+  }
 }

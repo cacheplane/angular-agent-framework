@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import {
-  Component, computed, input, ChangeDetectionStrategy,
+  Component, computed, input, output, ChangeDetectionStrategy,
 } from '@angular/core';
 import type { Spec } from '@json-render/core';
 import type { A2uiSurface, A2uiChildTemplate } from '@cacheplane/a2ui';
 import { resolveDynamic, getByPointer } from '@cacheplane/a2ui';
 import { RenderSpecComponent, toRenderRegistry } from '@cacheplane/render';
-import type { ViewRegistry } from '@cacheplane/render';
+import type { ViewRegistry, RenderEvent } from '@cacheplane/render';
 
 /**
  * Converts an A2UI surface to a json-render Spec by:
@@ -36,9 +36,26 @@ export function surfaceToSpec(surface: A2uiSurface): Spec | null {
     if (Object.keys(bindings).length > 0) {
       props['_bindings'] = bindings;
     }
-    // Pass action through
+    // Map action to spec `on` binding
+    let on: Record<string, { action: string; params: Record<string, unknown> }> | undefined;
     if (comp.action) {
-      props['action'] = comp.action;
+      if ('event' in comp.action) {
+        const evt = comp.action.event;
+        on = {
+          click: {
+            action: 'a2ui:event',
+            params: { surfaceId: surface.surfaceId, name: evt.name, context: evt.context },
+          },
+        };
+      } else if ('functionCall' in comp.action) {
+        const fc = comp.action.functionCall;
+        on = {
+          click: {
+            action: 'a2ui:localAction',
+            params: { call: fc.call, args: fc.args },
+          },
+        };
+      }
     }
     // Pass checks through
     if (comp.checks) {
@@ -78,10 +95,11 @@ export function surfaceToSpec(surface: A2uiSurface): Spec | null {
       type: comp.component,
       props,
       ...(children ? { children } : {}),
+      ...(on ? { on } : {}),
     };
   }
 
-  return { root: 'root', elements } as Spec;
+  return { root: 'root', elements, state: surface.dataModel } as Spec;
 }
 
 @Component({
@@ -94,6 +112,8 @@ export function surfaceToSpec(surface: A2uiSurface): Spec | null {
       <render-spec
         [spec]="s"
         [registry]="registry()"
+        [handlers]="handlers"
+        (events)="onRenderEvent($event)"
       />
     }
   `,
@@ -101,10 +121,29 @@ export function surfaceToSpec(surface: A2uiSurface): Spec | null {
 export class A2uiSurfaceComponent {
   readonly surface = input.required<A2uiSurface>();
   readonly catalog = input.required<ViewRegistry>();
+  readonly events = output<RenderEvent>();
 
   /** Convert the A2UI surface to a json-render Spec for rendering. */
   readonly spec = computed(() => surfaceToSpec(this.surface()));
 
   /** Convert ViewRegistry to AngularRegistry for RenderSpecComponent. */
   readonly registry = computed(() => toRenderRegistry(this.catalog()));
+
+  readonly handlers: Record<string, (params: Record<string, unknown>) => unknown> = {
+    'a2ui:event': (params) => {
+      return params;
+    },
+    'a2ui:localAction': (params) => {
+      const call = params['call'] as string;
+      const args = (params['args'] as Record<string, unknown>) ?? {};
+      if (call === 'openUrl' && typeof globalThis.window !== 'undefined') {
+        globalThis.window.open(String(args['url'] ?? ''), '_blank');
+      }
+      return undefined;
+    },
+  };
+
+  onRenderEvent(event: RenderEvent): void {
+    this.events.emit(event);
+  }
 }

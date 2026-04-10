@@ -31,3 +31,11 @@ export { RenderSpecComponent } from './lib/render-spec.component';
 export { views, withViews, withoutViews, toRenderRegistry } from './lib/views';
 export type { ViewRegistry } from './lib/views';
 export { provideViews, VIEW_REGISTRY } from './lib/provide-views';
+
+// Events
+export type {
+  RenderEvent,
+  RenderHandlerEvent,
+  RenderStateChangeEvent,
+  RenderLifecycleEvent,
+} from './lib/render-event';
