@@ -37,7 +37,7 @@ export function RenderWhitePaperGate() {
   };
 
   return (
-    <section id="whitepaper-gate" style={{ padding: '80px 32px' }}>
+    <section id="render-whitepaper-gate" style={{ padding: '80px 32px' }}>
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
@@ -76,7 +76,7 @@ export function RenderWhitePaperGate() {
           <a href="/whitepapers/render.pdf" download="cacheplane-render-enterprise-guide.pdf"
             style={{
               display: 'inline-flex', alignItems: 'center', gap: 8,
-              background: '#1a7a40', color: '#fff',
+              background: tokens.colors.renderGreen, color: '#fff',
               padding: '12px 28px', borderRadius: 10,
               fontFamily: 'var(--font-mono,"JetBrains Mono",monospace)',
               fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em',
@@ -98,7 +98,7 @@ export function RenderWhitePaperGate() {
             <div style={{
               padding: '20px 24px', borderRadius: 12,
               background: 'rgba(26,122,64,.07)', border: '1px solid rgba(26,122,64,.2)',
-              fontSize: '0.88rem', color: '#1a7a40', lineHeight: 1.55,
+              fontSize: '0.88rem', color: tokens.colors.renderGreen, lineHeight: 1.55,
             }}>
               ✓ Thanks! We'll reach out when the guide is updated.
             </div>
@@ -121,7 +121,7 @@ export function RenderWhitePaperGate() {
                   padding: '10px 24px', borderRadius: 9,
                   background: email ? 'rgba(26,122,64,.08)' : 'rgba(0,0,0,.04)',
                   border: `1px solid ${email ? 'rgba(26,122,64,.22)' : 'rgba(0,0,0,.08)'}`,
-                  color: email ? '#1a7a40' : tokens.colors.textMuted,
+                  color: email ? tokens.colors.renderGreen : tokens.colors.textMuted,
                   fontFamily: 'var(--font-mono,"JetBrains Mono",monospace)',
                   fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em',
                   cursor: email ? 'pointer' : 'not-allowed',

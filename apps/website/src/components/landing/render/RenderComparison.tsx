@@ -60,7 +60,7 @@ export function RenderComparison() {
             <div key={h} style={{
               fontFamily: 'var(--font-mono,"JetBrains Mono",monospace)',
               fontSize: '0.62rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em',
-              color: i === 2 ? '#1a7a40' : tokens.colors.textMuted,
+              color: i === 2 ? tokens.colors.renderGreen : tokens.colors.textMuted,
             }}>
               {h}
             </div>
@@ -87,8 +87,8 @@ export function RenderComparison() {
             <div style={{ fontSize: '0.8rem', color: tokens.colors.textMuted, paddingRight: 16, lineHeight: 1.5 }}>
               {row.theirs}
             </div>
-            <div style={{ fontSize: '0.8rem', color: '#1a7a40', fontWeight: 500, lineHeight: 1.5, display: 'flex', alignItems: 'flex-start', gap: 6 }}>
-              <span style={{ color: '#1a7a40', marginTop: 2, flexShrink: 0 }}>✓</span>
+            <div style={{ fontSize: '0.8rem', color: tokens.colors.renderGreen, fontWeight: 500, lineHeight: 1.5, display: 'flex', alignItems: 'flex-start', gap: 6 }}>
+              <span style={{ color: tokens.colors.renderGreen, marginTop: 2, flexShrink: 0 }}>✓</span>
               <span>{row.ours}</span>
             </div>
           </motion.div>

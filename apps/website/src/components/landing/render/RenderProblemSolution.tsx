@@ -66,7 +66,7 @@ export function RenderProblemSolution() {
           <span style={{
             display: 'inline-block', fontFamily: "'JetBrains Mono', monospace",
             fontSize: '0.58rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em',
-            padding: '2px 9px', borderRadius: 5, color: '#fff', background: '#1a7a40', marginBottom: 16,
+            padding: '2px 9px', borderRadius: 5, color: '#fff', background: tokens.colors.renderGreen, marginBottom: 16,
           }}>
             With @cacheplane/render
           </span>
@@ -79,7 +79,7 @@ export function RenderProblemSolution() {
           <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
             {SOLUTIONS.map(s => (
               <li key={s} style={{ display: 'flex', gap: 8, fontSize: '0.85rem', color: '#333', lineHeight: 1.5 }}>
-                <span style={{ color: '#1a7a40', flexShrink: 0 }}>✓</span> {s}
+                <span style={{ color: tokens.colors.renderGreen, flexShrink: 0 }}>✓</span> {s}
               </li>
             ))}
           </ul>
