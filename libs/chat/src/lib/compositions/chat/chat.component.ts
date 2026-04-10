@@ -14,7 +14,7 @@ import {
 } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
 import type { AgentRef } from '@cacheplane/angular';
-import type { ViewRegistry } from '@cacheplane/render';
+import type { ViewRegistry, RenderEvent } from '@cacheplane/render';
 import type { StateStore } from '@json-render/core';
 import { ChatMessagesComponent } from '../../primitives/chat-messages/chat-messages.component';
 import { MessageTemplateDirective } from '../../primitives/chat-messages/message-template.directive';
@@ -30,7 +30,7 @@ import { messageContent } from '../shared/message-utils';
 import { CHAT_THEME_STYLES } from '../../styles/chat-theme';
 import { CHAT_MARKDOWN_STYLES, renderMarkdown } from '../../styles/chat-markdown';
 import { A2uiSurfaceComponent } from '../../a2ui/surface.component';
-import { a2uiBasicCatalog } from '../../a2ui/catalog/index';
+import type { ChatRenderEvent } from './chat-render-event';
 import { KeyValuePipe } from '@angular/common';
 
 @Component({
@@ -142,15 +142,19 @@ import { KeyValuePipe } from '@angular/common';
                         [registry]="renderRegistry()"
                         [store]="store()"
                         [loading]="ref().isLoading()"
+                        (events)="onSpecEvent($event, index)"
                       />
                     }
 
                     @if (classified.type() === 'a2ui') {
-                      @for (entry of classified.a2uiSurfaces() | keyvalue; track entry.key) {
-                        <a2ui-surface
-                          [surface]="entry.value"
-                          [catalog]="a2uiCatalog"
-                        />
+                      @if (views(); as catalog) {
+                        @for (entry of classified.a2uiSurfaces() | keyvalue; track entry.key) {
+                          <a2ui-surface
+                            [surface]="entry.value"
+                            [catalog]="catalog"
+                            (events)="onA2uiEvent($event, index, entry.key)"
+                          />
+                        }
                       }
                     }
                   </div>
@@ -218,7 +222,7 @@ export class ChatComponent {
   readonly threadSelected = output<string>();
   readonly sidebarOpen = signal(false);
 
-  protected readonly a2uiCatalog = a2uiBasicCatalog();
+  readonly renderEvent = output<ChatRenderEvent>();
 
 
   private readonly classifiers = new Map<number, ContentClassifier>();
@@ -279,5 +283,13 @@ export class ChatComponent {
 
   renderMd(content: string) {
     return renderMarkdown(content, this.sanitizer);
+  }
+
+  onSpecEvent(event: RenderEvent, messageIndex: number): void {
+    this.renderEvent.emit({ messageIndex, event });
+  }
+
+  onA2uiEvent(event: RenderEvent, messageIndex: number, surfaceId: string): void {
+    this.renderEvent.emit({ messageIndex, surfaceId, event });
   }
 }
