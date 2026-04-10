@@ -3,9 +3,11 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  DestroyRef,
   inject,
   Injector,
   input,
+  OnInit,
   type Signal,
 } from '@angular/core';
 import { NgComponentOutlet } from '@angular/common';
@@ -56,13 +58,42 @@ import type { AngularComponentRenderer } from './render.types';
     }
   `,
 })
-export class RenderElementComponent {
+export class RenderElementComponent implements OnInit {
   readonly elementKey = input.required<string>();
   readonly spec = input.required<Spec>();
 
   private readonly ctx = inject(RENDER_CONTEXT);
   private readonly repeatScope = inject(REPEAT_SCOPE, { optional: true });
   readonly parentInjector = inject(Injector);
+  private readonly destroyRef = inject(DestroyRef);
+
+  constructor() {
+    this.destroyRef.onDestroy(() => {
+      const el = this.element();
+      if (el && (el as any)['lifecycle'] && this.ctx.emitEvent) {
+        this.ctx.emitEvent({
+          type: 'lifecycle',
+          event: 'destroyed',
+          scope: 'element',
+          elementKey: this.elementKey(),
+          elementType: el.type,
+        });
+      }
+    });
+  }
+
+  ngOnInit(): void {
+    const el = this.element();
+    if (el && (el as any)['lifecycle'] && this.ctx.emitEvent) {
+      this.ctx.emitEvent({
+        type: 'lifecycle',
+        event: 'mounted',
+        scope: 'element',
+        elementKey: this.elementKey(),
+        elementType: el.type,
+      });
+    }
+  }
 
   /** The UIElement definition from the spec. Only propagates when reference changes. */
   readonly element: Signal<UIElement | undefined> = computed(
