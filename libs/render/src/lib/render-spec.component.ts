@@ -102,9 +102,14 @@ export class RenderSpecComponent implements OnInit {
       wrapped[name] = (params: Record<string, unknown>) => {
         const result = handler(params);
         if (result instanceof Promise) {
-          result.then((r) => {
-            this.events.emit({ type: 'handler', action: name, params, result: r });
-          });
+          result.then(
+            (r) => {
+              this.events.emit({ type: 'handler', action: name, params, result: r });
+            },
+            () => {
+              this.events.emit({ type: 'handler', action: name, params, result: undefined });
+            },
+          );
         } else {
           this.events.emit({ type: 'handler', action: name, params, result });
         }

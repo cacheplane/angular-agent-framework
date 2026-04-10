@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-import { Component, input, signal } from '@angular/core';
+import { Component, computed, effect, input, signal } from '@angular/core';
 import type { Spec } from '@json-render/core';
 import { RenderElementComponent } from '@cacheplane/render';
 
@@ -39,22 +39,19 @@ export class A2uiTabsComponent {
   protected readonly activeIndex = signal(0);
 
   constructor() {
-    const sel = this.selected;
-    if (typeof sel === 'function') {
-      this.activeIndex.set(sel());
-    }
+    effect(() => {
+      this.activeIndex.set(this.selected());
+    });
   }
 
-  get activeChildKeys(): () => string[] {
-    return () => {
-      const idx = this.activeIndex();
-      const allTabs = this.tabs();
-      if (idx >= 0 && idx < allTabs.length) {
-        return allTabs[idx].childKeys;
-      }
-      return [];
-    };
-  }
+  readonly activeChildKeys = computed(() => {
+    const idx = this.activeIndex();
+    const allTabs = this.tabs();
+    if (idx >= 0 && idx < allTabs.length) {
+      return allTabs[idx].childKeys;
+    }
+    return [];
+  });
 
   selectTab(index: number): void {
     this.activeIndex.set(index);
