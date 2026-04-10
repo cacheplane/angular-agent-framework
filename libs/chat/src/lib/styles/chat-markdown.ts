@@ -47,6 +47,18 @@ export function renderMarkdown(content: string, sanitizer: DomSanitizer): SafeHt
 }
 
 /**
+ * Renders markdown to a sanitized HTML string (not SafeHtml).
+ * Used by the streaming markdown component for direct innerHTML assignment.
+ */
+export function renderMarkdownToString(content: string, sanitizer: DomSanitizer): string {
+  if (markedParse) {
+    const html = markedParse(content);
+    return sanitizer.sanitize(SecurityContext.HTML, html) ?? '';
+  }
+  return plainTextToHtml(content);
+}
+
+/**
  * CSS for styling rendered markdown HTML.
  * Uses .chat-md class prefix to avoid global conflicts.
  * Must be included in a component with ViewEncapsulation.None or via ::ng-deep.
