@@ -158,48 +158,66 @@ export function Nav() {
           </div>
           {isDocsPage && (
             <>
-              <div style={{ borderTop: `1px solid ${tokens.glass.border}`, margin: '4px 0' }} />
+              <div style={{ borderTop: `1px solid ${tokens.glass.border}`, marginTop: 8, marginBottom: 12 }} />
               {docsConfig.filter(lib => lib.id === activeLibrary || !activeLibrary).map((lib) => (
                 <div key={lib.id}>
-                  {lib.sections.map((section) => (
-                    <div key={section.id}>
-                      <button
-                        onClick={() => toggleSection(section.id)}
-                        className="flex items-center gap-2 w-full text-left text-sm py-1"
-                        style={{
-                          color: tokens.colors.textPrimary,
-                          fontWeight: 500, background: 'none', border: 'none', cursor: 'pointer',
-                          fontFamily: 'Inter, sans-serif',
-                        }}
-                      >
-                        <span style={{
-                          display: 'inline-block', transition: 'transform 0.2s',
-                          transform: openSections.has(section.id) ? 'rotate(90deg)' : 'rotate(0deg)',
-                          fontSize: '0.5rem', color: tokens.colors.textMuted,
-                        }}>
-                          ▶
-                        </span>
-                        {section.title}
-                      </button>
-                      {openSections.has(section.id) && section.pages.map((page) => {
-                        const isActive = page.section === activeSection && page.slug === activeSlug;
-                        return (
-                          <Link
-                            key={`${lib.id}/${page.section}/${page.slug}`}
-                            href={`/docs/${lib.id}/${page.section}/${page.slug}`}
-                            onClick={() => setOpen(false)}
-                            className="block pl-5 py-1 text-sm"
-                            style={{
-                              color: isActive ? tokens.colors.accent : tokens.colors.textMuted,
-                              fontFamily: 'Inter, sans-serif',
-                            }}
-                          >
-                            {page.title}
-                          </Link>
-                        );
-                      })}
-                    </div>
-                  ))}
+                  {lib.sections.map((section) => {
+                    const headerColor = section.color === 'red' ? tokens.colors.angularRed : tokens.colors.accent;
+                    return (
+                      <div key={section.id} style={{ marginBottom: 8 }}>
+                        <button
+                          onClick={() => toggleSection(section.id)}
+                          className="w-full text-left flex items-center justify-between"
+                          style={{
+                            background: 'none', border: 'none', cursor: 'pointer',
+                            padding: '10px 0',
+                          }}
+                        >
+                          <span style={{
+                            fontFamily: 'var(--font-mono,"JetBrains Mono",monospace)',
+                            fontSize: '0.7rem', fontWeight: 600, textTransform: 'uppercase',
+                            letterSpacing: '0.06em', color: headerColor,
+                          }}>
+                            {section.title}
+                          </span>
+                          <span style={{
+                            color: tokens.colors.textMuted, fontSize: 10,
+                            transition: 'transform 0.2s',
+                            transform: openSections.has(section.id) ? 'rotate(0)' : 'rotate(-90deg)',
+                          }}>
+                            &#9662;
+                          </span>
+                        </button>
+                        {openSections.has(section.id) && (
+                          <nav style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                            {section.pages.map((page) => {
+                              const isActive = page.section === activeSection && page.slug === activeSlug;
+                              return (
+                                <Link
+                                  key={`${lib.id}/${page.section}/${page.slug}`}
+                                  href={`/docs/${lib.id}/${page.section}/${page.slug}`}
+                                  onClick={() => setOpen(false)}
+                                  style={{
+                                    display: 'block',
+                                    padding: '10px 12px',
+                                    borderRadius: 8,
+                                    fontSize: '0.9rem',
+                                    color: isActive ? tokens.colors.accent : tokens.colors.textSecondary,
+                                    background: isActive ? tokens.colors.accentSurface : 'transparent',
+                                    textDecoration: 'none',
+                                    minHeight: 44,
+                                    lineHeight: '24px',
+                                  }}
+                                >
+                                  {page.title}
+                                </Link>
+                              );
+                            })}
+                          </nav>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               ))}
             </>
