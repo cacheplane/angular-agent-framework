@@ -1,6 +1,6 @@
 # Component Catalog
 
-The built-in A2UI catalog provides 12 Angular components covering display, layout, and interactive controls. It is included automatically when using `ChatComponent`, and can be instantiated directly for custom rendering setups.
+The built-in A2UI catalog provides 18 Angular components covering display, layout, interactive controls, media, and advanced inputs. It is included automatically when using `ChatComponent`, and can be instantiated directly for custom rendering setups.
 
 **Import:**
 
@@ -14,7 +14,7 @@ import { a2uiBasicCatalog } from '@cacheplane/chat';
 function a2uiBasicCatalog(): ViewRegistry
 ```
 
-Returns a `ViewRegistry` mapping 12 A2UI type names to their Angular component implementations. Pass the result to `A2uiSurfaceComponent` or use it as a starting point for a custom registry.
+Returns a `ViewRegistry` mapping 18 A2UI type names to their Angular component implementations. Pass the result to `A2uiSurfaceComponent` or use it as a starting point for a custom registry.
 
 ```typescript
 const catalog = a2uiBasicCatalog();
@@ -229,6 +229,177 @@ A dropdown select control with a list of string options.
 | `_bindings` | `Record<string, string>` | Bind `selected` to a data model path |
 | `emit` | injected | Event emitter provided by the render engine |
 
+### DateTimeInput
+
+A date, time, or datetime input with two-way binding.
+
+| A2UI type | Angular component | Selector |
+|-----------|-------------------|----------|
+| `DateTimeInput` | `A2uiDateTimeInputComponent` | `a2ui-date-time-input` |
+
+| Prop | Type | Description |
+|------|------|-------------|
+| `label` | `string` | Input label |
+| `value` | `string` | Current value (bind via `_bindings`) |
+| `inputType` | `'date' \| 'time' \| 'datetime-local'` | HTML input type. Defaults to `'date'` |
+| `min` | `string` | Minimum allowed value |
+| `max` | `string` | Maximum allowed value |
+| `_bindings` | `Record<string, string>` | Bind `value` to a data model path |
+| `emit` | injected | Event emitter provided by the render engine |
+
+```json
+{
+  "id": "date-field",
+  "component": "DateTimeInput",
+  "label": "Appointment date",
+  "value": {"path": "/appointmentDate"},
+  "inputType": "date",
+  "_bindings": {"value": "/appointmentDate"}
+}
+```
+
+### Slider
+
+A range slider input with two-way binding.
+
+| A2UI type | Angular component | Selector |
+|-----------|-------------------|----------|
+| `Slider` | `A2uiSliderComponent` | `a2ui-slider` |
+
+| Prop | Type | Description |
+|------|------|-------------|
+| `label` | `string` | Slider label |
+| `value` | `number` | Current value (bind via `_bindings`) |
+| `min` | `number` | Minimum value |
+| `max` | `number` | Maximum value |
+| `step` | `number` | Step increment |
+| `_bindings` | `Record<string, string>` | Bind `value` to a data model path |
+| `emit` | injected | Event emitter provided by the render engine |
+
+```json
+{
+  "id": "volume",
+  "component": "Slider",
+  "label": "Volume",
+  "value": {"path": "/volume"},
+  "min": 0,
+  "max": 100,
+  "step": 1,
+  "_bindings": {"value": "/volume"}
+}
+```
+
+## Layout Components (continued)
+
+### Tabs
+
+A tabbed container that shows one child panel at a time based on the selected tab index.
+
+| A2UI type | Angular component | Selector |
+|-----------|-------------------|----------|
+| `Tabs` | `A2uiTabsComponent` | `a2ui-tabs` |
+
+| Prop | Type | Description |
+|------|------|-------------|
+| `tabs` | `{label: string, childKeys: string[]}[]` | Tab definitions with labels and child component IDs |
+| `selected` | `number` | Currently selected tab index. Defaults to `0` |
+| `_bindings` | `Record<string, string>` | Bind `selected` to a data model path |
+| `spec` | `Spec` | Injected automatically by the render engine |
+| `emit` | injected | Event emitter provided by the render engine |
+
+```json
+{
+  "id": "info-tabs",
+  "component": "Tabs",
+  "tabs": [
+    {"label": "Overview", "childKeys": ["overview-content"]},
+    {"label": "Details", "childKeys": ["detail-list"]}
+  ],
+  "selected": 0,
+  "_bindings": {"selected": "/activeTab"}
+}
+```
+
+### Modal
+
+A dialog overlay that renders child content when open. Supports an optional title and dismissible close button.
+
+| A2UI type | Angular component | Selector |
+|-----------|-------------------|----------|
+| `Modal` | `A2uiModalComponent` | `a2ui-modal` |
+
+| Prop | Type | Description |
+|------|------|-------------|
+| `title` | `string` | Optional modal heading |
+| `open` | `boolean` | Whether the modal is visible |
+| `childKeys` | `string[]` | Child component IDs rendered inside the modal body |
+| `dismissible` | `boolean` | Shows a close button when `true`. Defaults to `true` |
+| `_bindings` | `Record<string, string>` | Bind `open` to a data model path |
+| `spec` | `Spec` | Injected automatically by the render engine |
+| `emit` | injected | Event emitter provided by the render engine |
+
+```json
+{
+  "id": "confirm-dialog",
+  "component": "Modal",
+  "title": "Confirm Action",
+  "open": {"path": "/showConfirm"},
+  "childKeys": ["confirm-message", "confirm-buttons"],
+  "dismissible": true,
+  "_bindings": {"open": "/showConfirm"}
+}
+```
+
+## Media Components
+
+### Video
+
+Renders an HTML5 `<video>` element.
+
+| A2UI type | Angular component | Selector |
+|-----------|-------------------|----------|
+| `Video` | `A2uiVideoComponent` | `a2ui-video` |
+
+| Prop | Type | Description |
+|------|------|-------------|
+| `url` | `string` | **Required.** Video source URL |
+| `poster` | `string` | Poster image URL shown before playback |
+| `autoplay` | `boolean` | Start playback automatically. Defaults to `false` |
+| `controls` | `boolean` | Show native playback controls. Defaults to `true` |
+
+```json
+{
+  "id": "intro-video",
+  "component": "Video",
+  "url": "https://example.com/intro.mp4",
+  "poster": "https://example.com/poster.jpg",
+  "controls": true
+}
+```
+
+### AudioPlayer
+
+Renders an HTML5 `<audio>` element.
+
+| A2UI type | Angular component | Selector |
+|-----------|-------------------|----------|
+| `AudioPlayer` | `A2uiAudioPlayerComponent` | `a2ui-audio-player` |
+
+| Prop | Type | Description |
+|------|------|-------------|
+| `url` | `string` | **Required.** Audio source URL |
+| `autoplay` | `boolean` | Start playback automatically. Defaults to `false` |
+| `controls` | `boolean` | Show native playback controls. Defaults to `true` |
+
+```json
+{
+  "id": "podcast",
+  "component": "AudioPlayer",
+  "url": "https://example.com/episode.mp3",
+  "controls": true
+}
+```
+
 ## Built-in Functions
 
 Props that use `A2uiFunctionCall` can reference these built-in functions:
@@ -260,6 +431,12 @@ Props that use `A2uiFunctionCall` can reference these built-in functions:
 | `TextField` | `A2uiTextFieldComponent` | Interactive |
 | `CheckBox` | `A2uiCheckBoxComponent` | Interactive |
 | `ChoicePicker` | `A2uiChoicePickerComponent` | Interactive |
+| `Tabs` | `A2uiTabsComponent` | Layout |
+| `Modal` | `A2uiModalComponent` | Layout |
+| `Video` | `A2uiVideoComponent` | Media |
+| `AudioPlayer` | `A2uiAudioPlayerComponent` | Media |
+| `DateTimeInput` | `A2uiDateTimeInputComponent` | Interactive |
+| `Slider` | `A2uiSliderComponent` | Interactive |
 
 ## What's Next
 

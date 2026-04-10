@@ -77,6 +77,17 @@ Removes a surface from the store and dismisses its rendered output.
 {"deleteSurface": {"surfaceId": "order-status"}}
 ```
 
+## Action-Event Bridge
+
+A2UI actions (button clicks, form events) now map directly to render-spec `on` bindings. When `surfaceToSpec()` converts a surface to a spec, each component's `action` prop is translated into an `on` binding on the corresponding spec element. This means A2UI actions flow through the render-lib event system rather than being handled ad-hoc by individual components.
+
+The bridge provides two default handlers:
+
+- `a2ui:event` -- dispatches named events (e.g., `submit`, `cancel`) back to the agent
+- `a2ui:localAction` -- executes local function calls (e.g., `openUrl`)
+
+This unified event flow means consumers can observe all A2UI interactions through the `RenderEvent` stream on `RenderSpecComponent`, including handler execution, state changes, and lifecycle signals. See the [Render Events](/docs/render/events) page for the full event type reference.
+
 ## A2UI vs json-render
 
 Both A2UI and json-render produce rendered UIs inside chat messages, but they serve different purposes.
@@ -135,7 +146,7 @@ To use your own components or extend the built-in set, pass a `ViewRegistry` to 
     icon="grid"
     href="/docs/chat/a2ui/catalog"
   >
-    Reference for all 12 built-in components and their props.
+    Reference for all 18 built-in components and their props.
   </Card>
   <Card
     title="Streaming"

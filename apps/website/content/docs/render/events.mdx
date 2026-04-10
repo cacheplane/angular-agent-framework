@@ -1,0 +1,109 @@
+---
+title: Events
+description: Generalized event system for render-spec — handler events, state changes, and lifecycle signals.
+---
+
+# Render Events
+
+`RenderSpecComponent` emits a stream of typed events via its `events` output. This provides visibility into handler execution, state mutations, and component lifecycle without coupling to any specific transport.
+
+## Event Types
+
+All events are discriminated by the `type` field:
+
+```typescript
+type RenderEvent =
+  | RenderHandlerEvent
+  | RenderStateChangeEvent
+  | RenderLifecycleEvent;
+```
+
+### RenderHandlerEvent
+
+Emitted when a handler executes in response to a component event (e.g., button click).
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `type` | `'handler'` | Discriminant |
+| `action` | `string` | Handler name from the `on` binding |
+| `params` | `Record<string, unknown>` | Resolved parameters |
+| `result` | `unknown` | Return value (if sync or awaited) |
+
+### RenderStateChangeEvent
+
+Emitted when the `StateStore` is mutated via `set()` or `update()`.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `type` | `'stateChange'` | Discriminant |
+| `path` | `string` | JSON Pointer path that changed |
+| `value` | `unknown` | New value |
+| `snapshot` | `Record<string, unknown>` | Full state after change |
+
+### RenderLifecycleEvent
+
+Emitted on component mount/destroy at spec or element level.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `type` | `'lifecycle'` | Discriminant |
+| `event` | `'mounted' \| 'destroyed'` | Lifecycle phase |
+| `scope` | `'spec' \| 'element'` | Granularity |
+| `elementKey` | `string?` | Element key (element scope only) |
+| `elementType` | `string?` | Component type (element scope only) |
+
+## Usage
+
+```html
+<render-spec
+  [spec]="spec()"
+  [registry]="registry"
+  [handlers]="handlers"
+  (events)="onEvent($event)"
+/>
+```
+
+```typescript
+onEvent(event: RenderEvent) {
+  switch (event.type) {
+    case 'handler':
+      console.log(`Handler ${event.action} called with`, event.params);
+      break;
+    case 'stateChange':
+      console.log(`State changed at ${event.path}:`, event.value);
+      break;
+    case 'lifecycle':
+      console.log(`${event.scope} ${event.event}`, event.elementKey ?? '');
+      break;
+  }
+}
+```
+
+## Handlers + Events Together
+
+Input handlers execute locally. The `events` output notifies the consumer after execution:
+
+```typescript
+const handlers = {
+  saveForm: (params) => api.save(params),
+};
+
+// Consumer also sees: { type: 'handler', action: 'saveForm', params: {...}, result: {...} }
+```
+
+Handlers handle, events notify. Use handlers for local side effects, events for routing to external systems.
+
+## Element Lifecycle (Opt-In)
+
+By default, only spec-level lifecycle events are emitted. To enable element-level lifecycle for a specific element, set `lifecycle: true` on the element in the spec:
+
+```json
+{
+  "root": "main",
+  "elements": {
+    "main": { "type": "Card", "props": {}, "lifecycle": true }
+  }
+}
+```
+
+This emits `mounted` and `destroyed` events for that element, including `elementKey` and `elementType`.

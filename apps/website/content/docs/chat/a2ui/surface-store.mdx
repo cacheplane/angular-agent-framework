@@ -57,6 +57,10 @@ const dashboard = store.surface('dashboard');
 // dashboard() is A2uiSurface | undefined
 ```
 
+## Data Model and Render-Lib State Sync
+
+The surface's `dataModel` is synchronized into the render-lib `StateStore` when `surfaceToSpec()` converts the surface to a spec. The conversion sets `state: surface.dataModel` on the produced `Spec`, which initializes the render-lib's internal `StateStore` with the surface data. When components with `_bindings` update values (e.g., a text field changing), those updates flow through the render-lib `StateStore`, and each mutation emits a `RenderStateChangeEvent` through the render-lib event system. This means consumers observing the `events` output on `A2uiSurfaceComponent` see all data model changes as typed `RenderStateChangeEvent` objects with `path`, `value`, and `snapshot` fields.
+
 ## updateDataModel Semantics
 
 The `updateDataModel` message uses JSON Pointer (RFC 6901) paths to address values in the data model.
@@ -143,6 +147,6 @@ The `components` map is keyed by component ID. The `dataModel` is a plain object
     icon="grid"
     href="/docs/chat/a2ui/catalog"
   >
-    All 12 built-in components and their props.
+    All 18 built-in components and their props.
   </Card>
 </CardGroup>

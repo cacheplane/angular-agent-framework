@@ -17,6 +17,14 @@ import { A2uiSurfaceComponent } from '@cacheplane/chat';
 | `surface` | `A2uiSurface` | Yes | The surface to render |
 | `catalog` | `ViewRegistry` | Yes | Component registry used to resolve A2UI type names to Angular components |
 
+## Outputs
+
+| Output | Type | Description |
+|--------|------|-------------|
+| `events` | `RenderEvent` | Emits render events from the underlying `RenderSpecComponent` -- handler execution, state changes, and lifecycle signals |
+
+The `events` output forwards all `RenderEvent` emissions from the render engine. This includes events triggered by the default A2UI handlers (`a2ui:event` and `a2ui:localAction`) as well as any state change or lifecycle events.
+
 ## How It Works
 
 `A2uiSurfaceComponent` bridges the A2UI surface model to the json-render engine in three steps:
@@ -34,11 +42,15 @@ Before the spec is emitted, each component prop is evaluated against the surface
 - A function call `{ call: 'formatCurrency', args: { ... } }` — executed by the built-in function registry
 - A template string `"Hello ${/name}"` — interpolated with values from `dataModel`
 
-**3. Expand template children**
+**3. Map actions to `on` bindings**
+
+`surfaceToSpec()` converts each component's A2UI `action` prop into a render-spec `on` binding on the corresponding element. Event actions map to the `a2ui:event` handler, and function call actions map to the `a2ui:localAction` handler. This bridges the A2UI interaction model to the render-lib event system.
+
+**4. Expand template children**
 
 When a component's `children` field is an `A2uiChildTemplate` (`{ path, componentId }`), the surface component expands it over the array at `path` in the data model. Each array item gets its own cloned element with props resolved in that item's scope.
 
-**4. Render via RenderSpecComponent**
+**5. Render via RenderSpecComponent**
 
 The final `Spec` is passed to `RenderSpecComponent` along with the `ViewRegistry` (converted to an Angular registry via `toRenderRegistry`). Rendering is fully reactive — when the surface signal updates, the spec recomputes and only affected elements re-render.
 
@@ -111,6 +123,6 @@ Returns `null` when the surface has no `root` component. Otherwise returns a com
     icon="grid"
     href="/docs/chat/a2ui/catalog"
   >
-    All 12 built-in components and their props.
+    All 18 built-in components and their props.
   </Card>
 </CardGroup>
