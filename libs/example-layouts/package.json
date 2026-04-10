@@ -1,0 +1,10 @@
+{
+  "name": "@cacheplane/example-layouts",
+  "version": "0.0.1",
+  "peerDependencies": {
+    "@angular/core": "^20.0.0 || ^21.0.0",
+    "@angular/common": "^20.0.0 || ^21.0.0"
+  },
+  "license": "PolyForm-Noncommercial-1.0.0",
+  "sideEffects": false
+}
