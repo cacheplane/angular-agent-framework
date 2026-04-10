@@ -56,3 +56,74 @@ describe('A2uiSurfaceComponent — data flow', () => {
     expect(surfaceToSpec(surface)).toBeNull();
   });
 });
+
+describe('surfaceToSpec — action mapping', () => {
+  function makeSurface(components: A2uiComponent[], dataModel: Record<string, unknown> = {}): A2uiSurface {
+    const map = new Map<string, A2uiComponent>();
+    for (const c of components) map.set(c.id, c);
+    return { surfaceId: 's1', catalogId: 'basic', components: map, dataModel };
+  }
+
+  it('maps event action to spec on binding', () => {
+    const surface = makeSurface([
+      { id: 'root', component: 'Column', children: ['btn'] },
+      {
+        id: 'btn',
+        component: 'Button',
+        label: 'Submit',
+        action: { event: { name: 'formSubmit', context: { formId: 'signup' } } },
+      },
+    ]);
+    const spec = surfaceToSpec(surface)!;
+    const btnElement = spec.elements['btn'];
+    expect(btnElement.on).toBeDefined();
+    expect(btnElement.on!['click']).toEqual({
+      action: 'a2ui:event',
+      params: { surfaceId: 's1', name: 'formSubmit', context: { formId: 'signup' } },
+    });
+    expect(btnElement.props['action']).toBeUndefined();
+  });
+
+  it('maps local action to spec on binding', () => {
+    const surface = makeSurface([
+      { id: 'root', component: 'Column', children: ['btn'] },
+      {
+        id: 'btn',
+        component: 'Button',
+        label: 'Open',
+        action: { functionCall: { call: 'openUrl', args: { url: 'https://example.com' } } },
+      },
+    ]);
+    const spec = surfaceToSpec(surface)!;
+    const btnElement = spec.elements['btn'];
+    expect(btnElement.on!['click']).toEqual({
+      action: 'a2ui:localAction',
+      params: { call: 'openUrl', args: { url: 'https://example.com' } },
+    });
+  });
+
+  it('passes through elements without actions unchanged', () => {
+    const surface = makeSurface([
+      { id: 'root', component: 'Text', text: 'Hello' },
+    ]);
+    const spec = surfaceToSpec(surface)!;
+    expect(spec.elements['root'].on).toBeUndefined();
+  });
+});
+
+describe('surfaceToSpec — state initialization', () => {
+  function makeSurface(components: A2uiComponent[], dataModel: Record<string, unknown> = {}): A2uiSurface {
+    const map = new Map<string, A2uiComponent>();
+    for (const c of components) map.set(c.id, c);
+    return { surfaceId: 's1', catalogId: 'basic', components: map, dataModel };
+  }
+
+  it('initializes spec state from surface dataModel', () => {
+    const surface = makeSurface(
+      [{ id: 'root', component: 'Text', text: 'Hi' }],
+      { count: 0, name: 'test' },
+    );
+    const spec = surfaceToSpec(surface)!;
+    expect(spec.state).toEqual({ count: 0, name: 'test' });
+  });
+});
