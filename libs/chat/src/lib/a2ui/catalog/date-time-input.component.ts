@@ -2,6 +2,7 @@
 import { Component, input, ChangeDetectionStrategy } from '@angular/core';
 import type { A2uiValidationResult } from '@cacheplane/a2ui';
 import { A2uiValidationErrorsComponent } from './validation-errors.component';
+import { emitBinding } from './emit-binding';
 
 @Component({
   selector: 'a2ui-date-time-input',
@@ -40,9 +41,6 @@ export class A2uiDateTimeInputComponent {
 
   onChange(event: Event): void {
     const val = (event.target as HTMLInputElement).value;
-    const path = this._bindings()?.['value'];
-    if (path) {
-      this.emit()(`a2ui:datamodel:${path}:${val}`);
-    }
+    emitBinding(this.emit(), this._bindings(), 'value', val);
   }
 }

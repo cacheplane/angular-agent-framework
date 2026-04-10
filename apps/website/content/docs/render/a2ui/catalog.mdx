@@ -185,6 +185,7 @@ A single-line text input with optional label and placeholder.
 | `label` | `string` | Input label |
 | `value` | `string` | Current value (bind via `_bindings`) |
 | `placeholder` | `string` | Placeholder text |
+| `validationResult` | `A2uiValidationResult` | Validation state — shows errors below input when invalid |
 | `_bindings` | `Record<string, string>` | Bind `value` to a data model path |
 | `emit` | injected | Event emitter provided by the render engine |
 
@@ -210,6 +211,7 @@ A labeled checkbox with two-way binding for its checked state.
 |------|------|-------------|
 | `label` | `string` | Checkbox label |
 | `checked` | `boolean` | Current checked state (bind via `_bindings`) |
+| `validationResult` | `A2uiValidationResult` | Validation state — shows errors below checkbox when invalid |
 | `_bindings` | `Record<string, string>` | Bind `checked` to a data model path |
 | `emit` | injected | Event emitter provided by the render engine |
 
@@ -226,6 +228,7 @@ A dropdown select control with a list of string options.
 | `label` | `string` | Select label |
 | `options` | `string[]` | List of available options |
 | `selected` | `string` | Currently selected value (bind via `_bindings`) |
+| `validationResult` | `A2uiValidationResult` | Validation state — shows errors below dropdown when invalid |
 | `_bindings` | `Record<string, string>` | Bind `selected` to a data model path |
 | `emit` | injected | Event emitter provided by the render engine |
 
@@ -244,6 +247,7 @@ A date, time, or datetime input with two-way binding.
 | `inputType` | `'date' \| 'time' \| 'datetime-local'` | HTML input type. Defaults to `'date'` |
 | `min` | `string` | Minimum allowed value |
 | `max` | `string` | Maximum allowed value |
+| `validationResult` | `A2uiValidationResult` | Validation state — shows errors below input when invalid |
 | `_bindings` | `Record<string, string>` | Bind `value` to a data model path |
 | `emit` | injected | Event emitter provided by the render engine |
 
@@ -273,6 +277,7 @@ A range slider input with two-way binding.
 | `min` | `number` | Minimum value |
 | `max` | `number` | Maximum value |
 | `step` | `number` | Step increment |
+| `validationResult` | `A2uiValidationResult` | Validation state — shows errors below slider when invalid |
 | `_bindings` | `Record<string, string>` | Bind `value` to a data model path |
 | `emit` | injected | Event emitter provided by the render engine |
 

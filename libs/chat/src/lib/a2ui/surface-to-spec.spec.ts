@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import { describe, it, expect } from 'vitest';
 import type { A2uiSurface, A2uiComponent } from '@cacheplane/a2ui';
-import { surfaceToSpec, buildA2uiActionMessage } from './surface.component';
+import { surfaceToSpec } from './surface-to-spec';
+
+function makeSurface(components: A2uiComponent[], dataModel: Record<string, unknown> = {}): A2uiSurface {
+  const map = new Map<string, A2uiComponent>();
+  for (const c of components) map.set(c.id, c);
+  return { surfaceId: 's1', catalogId: 'basic', components: map, dataModel };
+}
 
 describe('A2uiSurfaceComponent — data flow', () => {
-  function makeSurface(components: A2uiComponent[], dataModel: Record<string, unknown> = {}): A2uiSurface {
-    const map = new Map<string, A2uiComponent>();
-    for (const c of components) map.set(c.id, c);
-    return { surfaceId: 's1', catalogId: 'basic', components: map, dataModel };
-  }
-
   it('resolves root component from surface', () => {
     const surface = makeSurface([
       { id: 'root', component: 'Column', children: ['t1'] },
@@ -58,12 +58,6 @@ describe('A2uiSurfaceComponent — data flow', () => {
 });
 
 describe('surfaceToSpec — action mapping', () => {
-  function makeSurface(components: A2uiComponent[], dataModel: Record<string, unknown> = {}): A2uiSurface {
-    const map = new Map<string, A2uiComponent>();
-    for (const c of components) map.set(c.id, c);
-    return { surfaceId: 's1', catalogId: 'basic', components: map, dataModel };
-  }
-
   it('maps event action to spec on binding', () => {
     const surface = makeSurface([
       { id: 'root', component: 'Column', children: ['btn'] },
@@ -112,12 +106,6 @@ describe('surfaceToSpec — action mapping', () => {
 });
 
 describe('surfaceToSpec — state initialization', () => {
-  function makeSurface(components: A2uiComponent[], dataModel: Record<string, unknown> = {}): A2uiSurface {
-    const map = new Map<string, A2uiComponent>();
-    for (const c of components) map.set(c.id, c);
-    return { surfaceId: 's1', catalogId: 'basic', components: map, dataModel };
-  }
-
   it('initializes spec state from surface dataModel', () => {
     const surface = makeSurface(
       [{ id: 'root', component: 'Text', text: 'Hi' }],
@@ -129,12 +117,6 @@ describe('surfaceToSpec — state initialization', () => {
 });
 
 describe('A2uiSurfaceComponent — consumer handlers', () => {
-  function makeSurface(components: A2uiComponent[], dataModel: Record<string, unknown> = {}): A2uiSurface {
-    const map = new Map<string, A2uiComponent>();
-    for (const c of components) map.set(c.id, c);
-    return { surfaceId: 's1', catalogId: 'basic', components: map, dataModel };
-  }
-
   it('maps functionCall action call name to a2ui:localAction params', () => {
     const surface = makeSurface([
       { id: 'root', component: 'Column', children: ['btn'] },
@@ -155,12 +137,6 @@ describe('A2uiSurfaceComponent — consumer handlers', () => {
 });
 
 describe('surfaceToSpec — v0.9 event action', () => {
-  function makeSurface(components: A2uiComponent[], dataModel: Record<string, unknown> = {}): A2uiSurface {
-    const map = new Map<string, A2uiComponent>();
-    for (const c of components) map.set(c.id, c);
-    return { surfaceId: 's1', catalogId: 'basic', components: map, dataModel };
-  }
-
   it('resolves context DynamicValue paths against data model', () => {
     const surface = makeSurface(
       [
@@ -246,12 +222,6 @@ describe('surfaceToSpec — v0.9 event action', () => {
 });
 
 describe('surfaceToSpec — validation', () => {
-  function makeSurface(components: A2uiComponent[], dataModel: Record<string, unknown> = {}): A2uiSurface {
-    const map = new Map<string, A2uiComponent>();
-    for (const c of components) map.set(c.id, c);
-    return { surfaceId: 's1', catalogId: 'basic', components: map, dataModel };
-  }
-
   it('evaluates checks and attaches validationResult prop', () => {
     const surface = makeSurface(
       [
@@ -338,70 +308,21 @@ describe('surfaceToSpec — validation', () => {
   });
 });
 
-describe('buildA2uiActionMessage', () => {
-  function makeSurface(
-    components: A2uiComponent[],
-    dataModel: Record<string, unknown> = {},
-    sendDataModel?: boolean,
-  ): A2uiSurface {
-    const map = new Map<string, A2uiComponent>();
-    for (const c of components) map.set(c.id, c);
-    return { surfaceId: 's1', catalogId: 'basic', sendDataModel, components: map, dataModel };
-  }
-
-  it('builds a v0.9 action message with all required fields', () => {
-    const surface = makeSurface([{ id: 'root', component: 'Text' }]);
-    const params = {
-      surfaceId: 's1',
-      sourceComponentId: 'submit-btn',
-      name: 'formSubmit',
-      context: { email: 'alice@example.com' },
-    };
-    const msg = buildA2uiActionMessage(params, surface);
-    expect(msg.version).toBe('v0.9');
-    expect(msg.action.name).toBe('formSubmit');
-    expect(msg.action.surfaceId).toBe('s1');
-    expect(msg.action.sourceComponentId).toBe('submit-btn');
-    expect(msg.action.context).toEqual({ email: 'alice@example.com' });
-    expect(msg.action.timestamp).toMatch(/^\d{4}-\d{2}-\d{2}T/);
-    expect(msg.metadata).toBeUndefined();
-  });
-
-  it('attaches data model when sendDataModel is true', () => {
+describe('surfaceToSpec — binding tracking', () => {
+  it('attaches _bindings prop for path ref values', () => {
     const surface = makeSurface(
-      [{ id: 'root', component: 'Text' }],
-      { name: 'Alice', email: 'alice@co.com' },
-      true,
-    );
-    const params = { surfaceId: 's1', sourceComponentId: 'btn', name: 'submit', context: {} };
-    const msg = buildA2uiActionMessage(params, surface);
-    expect(msg.metadata).toBeDefined();
-    expect(msg.metadata!.a2uiClientDataModel.version).toBe('v0.9');
-    expect(msg.metadata!.a2uiClientDataModel.surfaces['s1']).toEqual({ name: 'Alice', email: 'alice@co.com' });
-  });
-
-  it('does not attach data model when sendDataModel is false', () => {
-    const surface = makeSurface(
-      [{ id: 'root', component: 'Text' }],
+      [{ id: 'root', component: 'TextField', label: 'Name', value: { path: '/name' } as any }],
       { name: 'Alice' },
-      false,
     );
-    const params = { surfaceId: 's1', sourceComponentId: 'btn', name: 'submit', context: {} };
-    const msg = buildA2uiActionMessage(params, surface);
-    expect(msg.metadata).toBeUndefined();
+    const spec = surfaceToSpec(surface)!;
+    expect(spec.elements['root'].props['_bindings']).toEqual({ value: '/name' });
   });
 
-  it('does not attach data model when sendDataModel is undefined', () => {
-    const surface = makeSurface([{ id: 'root', component: 'Text' }], { name: 'Alice' });
-    const params = { surfaceId: 's1', sourceComponentId: 'btn', name: 'submit', context: {} };
-    const msg = buildA2uiActionMessage(params, surface);
-    expect(msg.metadata).toBeUndefined();
-  });
-
-  it('defaults context to empty object when not provided in params', () => {
-    const surface = makeSurface([{ id: 'root', component: 'Text' }]);
-    const params = { surfaceId: 's1', sourceComponentId: 'btn', name: 'click' } as any;
-    const msg = buildA2uiActionMessage(params, surface);
-    expect(msg.action.context).toEqual({});
+  it('does not attach _bindings for literal values', () => {
+    const surface = makeSurface([
+      { id: 'root', component: 'Text', text: 'Hello' },
+    ]);
+    const spec = surfaceToSpec(surface)!;
+    expect(spec.elements['root'].props['_bindings']).toBeUndefined();
   });
 });

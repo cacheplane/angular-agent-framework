@@ -66,10 +66,41 @@ export type { ParseTreeStore, ElementAccumulationState } from './lib/streaming/p
 export { createA2uiSurfaceStore } from './lib/a2ui/surface-store';
 export type { A2uiSurfaceStore } from './lib/a2ui/surface-store';
 export { A2uiSurfaceComponent } from './lib/a2ui/surface.component';
+export { surfaceToSpec } from './lib/a2ui/surface-to-spec';
+export { buildA2uiActionMessage } from './lib/a2ui/build-action-message';
 export { a2uiBasicCatalog } from './lib/a2ui/catalog/index';
 export { A2uiValidationErrorsComponent } from './lib/a2ui/catalog/validation-errors.component';
-export { buildA2uiActionMessage } from './lib/a2ui/surface.component';
-export type { A2uiActionMessage, A2uiClientDataModel } from '@cacheplane/a2ui';
+export { emitBinding } from './lib/a2ui/catalog/emit-binding';
+
+// A2UI catalog components (for custom catalog composition via withViews)
+export { A2uiTextFieldComponent } from './lib/a2ui/catalog/text-field.component';
+export { A2uiCheckBoxComponent } from './lib/a2ui/catalog/check-box.component';
+export { A2uiButtonComponent } from './lib/a2ui/catalog/button.component';
+export { A2uiChoicePickerComponent } from './lib/a2ui/catalog/choice-picker.component';
+export { A2uiSliderComponent } from './lib/a2ui/catalog/slider.component';
+export { A2uiDateTimeInputComponent } from './lib/a2ui/catalog/date-time-input.component';
+export { A2uiTextComponent } from './lib/a2ui/catalog/text.component';
+export { A2uiIconComponent } from './lib/a2ui/catalog/icon.component';
+export { A2uiImageComponent } from './lib/a2ui/catalog/image.component';
+export { A2uiColumnComponent } from './lib/a2ui/catalog/column.component';
+export { A2uiRowComponent } from './lib/a2ui/catalog/row.component';
+export { A2uiCardComponent } from './lib/a2ui/catalog/card.component';
+export { A2uiDividerComponent } from './lib/a2ui/catalog/divider.component';
+export { A2uiListComponent } from './lib/a2ui/catalog/list.component';
+export { A2uiModalComponent } from './lib/a2ui/catalog/modal.component';
+export { A2uiTabsComponent } from './lib/a2ui/catalog/tabs.component';
+export { A2uiAudioPlayerComponent } from './lib/a2ui/catalog/audio-player.component';
+export { A2uiVideoComponent } from './lib/a2ui/catalog/video.component';
+
+// A2UI types (re-exported from @cacheplane/a2ui for convenience)
+export type {
+  A2uiActionMessage, A2uiClientDataModel,
+  A2uiSurface, A2uiComponent, A2uiTheme,
+  DynamicValue, DynamicString, DynamicNumber, DynamicBoolean,
+  A2uiPathRef, A2uiFunctionCall,
+  A2uiCheckRule, A2uiValidationResult,
+} from '@cacheplane/a2ui';
+export { isPathRef, isFunctionCall } from '@cacheplane/a2ui';
 
 // Test utilities
 export { createMockAgentRef } from './lib/testing/mock-agent-ref';

@@ -17,3 +17,4 @@ export type { A2uiScope } from './lib/resolve';
 export { executeFunction } from './lib/functions';
 export { evaluateCheckRules } from './lib/validate';
 export type { A2uiValidationResult } from './lib/validate';
+export { isPathRef, isFunctionCall } from './lib/guards';
