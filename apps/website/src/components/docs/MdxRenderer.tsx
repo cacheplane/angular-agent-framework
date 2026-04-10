@@ -59,7 +59,8 @@ export function MdxRenderer({ source, library, section, slug, title }: MdxRender
           options={{
             mdxOptions: {
               remarkPlugins: [remarkGfm],
-              rehypePlugins: [rehypeSlug, [rehypePrettyCode, rehypeOptions] as any],
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          rehypePlugins: [rehypeSlug, [rehypePrettyCode, rehypeOptions] as any],
             },
           }}
         />

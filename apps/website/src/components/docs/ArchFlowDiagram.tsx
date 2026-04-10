@@ -43,18 +43,19 @@ export function ArchFlowDiagram() {
       setLogs([]);
       setBubbles([]);
 
-      SCENARIO.forEach((step, i) => {
+      SCENARIO.forEach((step) => {
         timeouts.push(setTimeout(() => {
           setLogs(prev => [...prev, step.log]);
           if (step.chatBubble) {
+            const bubble = step.chatBubble;
             setBubbles(prev => {
-              const existing = prev.findIndex(b => b.role === step.chatBubble!.role && b.role === 'assistant');
-              if (existing >= 0 && step.chatBubble!.role === 'assistant') {
+              const existing = prev.findIndex(b => b.role === bubble.role && b.role === 'assistant');
+              if (existing >= 0 && bubble.role === 'assistant') {
                 const updated = [...prev];
-                updated[existing] = step.chatBubble!;
+                updated[existing] = bubble;
                 return updated;
               }
-              return [...prev, step.chatBubble!];
+              return [...prev, bubble];
             });
           }
           if (logRef.current) logRef.current.scrollTop = logRef.current.scrollHeight;
