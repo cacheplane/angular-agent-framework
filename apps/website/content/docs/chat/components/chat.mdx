@@ -64,6 +64,7 @@ export class ChatPageComponent {
 | `ref` | `AgentRef<any, any>` | **Required** | The agent ref providing streaming state. Created by `agent()` from `@cacheplane/angular`. |
 | `views` | `ViewRegistry \| undefined` | `undefined` | View registry for generative UI. Maps spec type names to Angular components. Created with `views()` from `@cacheplane/chat`. |
 | `store` | `StateStore \| undefined` | `undefined` | Optional state store for interactive generative UI specs. |
+| `handlers` | `Record<string, (params: Record<string, unknown>) => unknown \| Promise<unknown>>` | `{}` | Event handlers for generative UI specs and A2UI `functionCall` actions. Handlers run in Angular injection context — `inject()` is available inside handler functions. |
 | `threads` | `Thread[]` | `[]` | List of threads to display in the sidebar. Each thread must have an `id` property. |
 | `activeThreadId` | `string` | `''` | The ID of the currently active thread, used for highlighting in the sidebar. |
 

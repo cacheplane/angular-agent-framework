@@ -127,3 +127,29 @@ describe('surfaceToSpec — state initialization', () => {
     expect(spec.state).toEqual({ count: 0, name: 'test' });
   });
 });
+
+describe('A2uiSurfaceComponent — consumer handlers', () => {
+  function makeSurface(components: A2uiComponent[], dataModel: Record<string, unknown> = {}): A2uiSurface {
+    const map = new Map<string, A2uiComponent>();
+    for (const c of components) map.set(c.id, c);
+    return { surfaceId: 's1', catalogId: 'basic', components: map, dataModel };
+  }
+
+  it('maps functionCall action call name to a2ui:localAction params', () => {
+    const surface = makeSurface([
+      { id: 'root', component: 'Column', children: ['btn'] },
+      {
+        id: 'btn',
+        component: 'Button',
+        label: 'Add',
+        action: { functionCall: { call: 'addToCart', args: { sku: 'ABC' } } },
+      },
+    ]);
+    const spec = surfaceToSpec(surface)!;
+    const btnElement = spec.elements['btn'];
+    expect(btnElement.on!['click']).toEqual({
+      action: 'a2ui:localAction',
+      params: { call: 'addToCart', args: { sku: 'ABC' } },
+    });
+  });
+});

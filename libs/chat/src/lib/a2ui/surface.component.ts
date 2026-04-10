@@ -112,7 +112,7 @@ export function surfaceToSpec(surface: A2uiSurface): Spec | null {
       <render-spec
         [spec]="s"
         [registry]="registry()"
-        [handlers]="handlers"
+        [handlers]="internalHandlers()"
         (events)="onRenderEvent($event)"
       />
     }
@@ -121,6 +121,7 @@ export function surfaceToSpec(surface: A2uiSurface): Spec | null {
 export class A2uiSurfaceComponent {
   readonly surface = input.required<A2uiSurface>();
   readonly catalog = input.required<ViewRegistry>();
+  readonly handlers = input<Record<string, (params: Record<string, unknown>) => unknown | Promise<unknown>>>({});
   readonly events = output<RenderEvent>();
 
   /** Convert the A2UI surface to a json-render Spec for rendering. */
@@ -129,19 +130,30 @@ export class A2uiSurfaceComponent {
   /** Convert ViewRegistry to AngularRegistry for RenderSpecComponent. */
   readonly registry = computed(() => toRenderRegistry(this.catalog()));
 
-  readonly handlers: Record<string, (params: Record<string, unknown>) => unknown> = {
-    'a2ui:event': (params) => {
-      return params;
-    },
-    'a2ui:localAction': (params) => {
-      const call = params['call'] as string;
-      const args = (params['args'] as Record<string, unknown>) ?? {};
-      if (call === 'openUrl' && typeof globalThis.window !== 'undefined') {
-        globalThis.window.open(String(args['url'] ?? ''), '_blank');
-      }
-      return undefined;
-    },
-  };
+  /** Merge built-in A2UI handlers with consumer-provided handlers. */
+  readonly internalHandlers = computed(() => {
+    const consumerHandlers = this.handlers();
+    return {
+      'a2ui:event': (params: Record<string, unknown>) => {
+        return params;
+      },
+      'a2ui:localAction': (params: Record<string, unknown>) => {
+        const call = params['call'] as string;
+        const args = (params['args'] as Record<string, unknown>) ?? {};
+
+        // Consumer handler takes priority
+        if (consumerHandlers[call]) {
+          return consumerHandlers[call](args);
+        }
+
+        // Built-in fallback
+        if (call === 'openUrl' && typeof globalThis.window !== 'undefined') {
+          globalThis.window.open(String(args['url'] ?? ''), '_blank');
+        }
+        return undefined;
+      },
+    };
+  });
 
   onRenderEvent(event: RenderEvent): void {
     this.events.emit(event);

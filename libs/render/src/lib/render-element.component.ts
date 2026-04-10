@@ -8,6 +8,7 @@ import {
   Injector,
   input,
   OnInit,
+  runInInjectionContext,
   type Signal,
 } from '@angular/core';
 import { NgComponentOutlet } from '@angular/common';
@@ -135,7 +136,9 @@ export class RenderElementComponent implements OnInit {
     for (const b of bindings) {
       const handler = this.ctx.handlers?.[b.action];
       if (handler) {
-        handler(b.params as Record<string, unknown> ?? {});
+        runInInjectionContext(this.parentInjector, () =>
+          handler(b.params as Record<string, unknown> ?? {}),
+        );
       }
     }
   };

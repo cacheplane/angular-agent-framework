@@ -327,6 +327,30 @@ describe('RenderElementComponent — children rendering', () => {
   });
 });
 
+describe('RenderElementComponent — handler injection context', () => {
+  it('should allow handlers to call inject() inside runInInjectionContext', () => {
+    TestBed.configureTestingModule({});
+    TestBed.runInInjectionContext(() => {
+      const { Injector, runInInjectionContext, inject, DestroyRef } = require('@angular/core');
+      const injector = Injector.create({ providers: [] });
+
+      let destroyRefAccessed = false;
+      const handler = (params: Record<string, unknown>) => {
+        // This would throw outside injection context
+        runInInjectionContext(injector, () => {
+          const dr = inject(DestroyRef);
+          destroyRefAccessed = dr !== undefined;
+        });
+        return params;
+      };
+
+      const result = handler({ test: true });
+      expect(destroyRefAccessed).toBe(true);
+      expect(result).toEqual({ test: true });
+    });
+  });
+});
+
 describe('RenderElementComponent — element-level memoization', () => {
   it('element lookup returns same reference when spec changes but element is unchanged', () => {
     TestBed.configureTestingModule({});

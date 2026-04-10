@@ -141,6 +141,7 @@ import { KeyValuePipe } from '@angular/common';
                         [spec]="spec"
                         [registry]="renderRegistry()"
                         [store]="store()"
+                        [handlers]="handlers()"
                         [loading]="ref().isLoading()"
                         (events)="onSpecEvent($event, index)"
                       />
@@ -152,6 +153,7 @@ import { KeyValuePipe } from '@angular/common';
                           <a2ui-surface
                             [surface]="entry.value"
                             [catalog]="catalog"
+                            [handlers]="handlers()"
                             (events)="onA2uiEvent($event, index, entry.key)"
                           />
                         }
@@ -217,6 +219,7 @@ export class ChatComponent {
   readonly ref = input.required<AgentRef<any, any>>();
   readonly views = input<ViewRegistry | undefined>(undefined);
   readonly store = input<StateStore | undefined>(undefined);
+  readonly handlers = input<Record<string, (params: Record<string, unknown>) => unknown | Promise<unknown>>>({});
   readonly threads = input<Thread[]>([]);
   readonly activeThreadId = input<string>('');
   readonly threadSelected = output<string>();
