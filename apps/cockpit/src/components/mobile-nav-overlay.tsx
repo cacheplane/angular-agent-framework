@@ -43,10 +43,9 @@ export function MobileNavOverlay({
   }, [isOpen]);
 
   useEffect(() => {
-    if (state === 'closing') {
-      const timer = setTimeout(() => setState('closed'), 150);
-      return () => clearTimeout(timer);
-    }
+    if (state !== 'closing') return;
+    const timer = setTimeout(() => setState('closed'), 150);
+    return () => clearTimeout(timer);
   }, [state]);
 
   useEffect(() => {
