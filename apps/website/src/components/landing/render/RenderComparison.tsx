@@ -10,7 +10,8 @@ const ROWS = [
   { capability: 'Testing specs', theirs: 'Integration tests only', ours: 'Unit test specs in isolation' },
   { capability: 'Frontend/agent coupling', theirs: 'Tight — changes break both', ours: 'Decoupled via spec contract' },
   { capability: 'Iteration speed', theirs: 'Days per change', ours: 'Minutes per change' },
-  { capability: 'Open standard', theirs: 'Proprietary format', ours: 'Vercel json-render spec' },
+  { capability: 'Open standards', theirs: 'Proprietary format', ours: 'Vercel json-render + Google A2UI' },
+  { capability: 'A2UI components', theirs: 'Build from scratch', ours: '18 built-in, extensible catalog' },
 ];
 
 export function RenderComparison() {

@@ -14,10 +14,10 @@ const PAIN_POINTS = [
 
 const SOLUTIONS = [
   'Pre-built accessible components',
-  'json-render spec support via @cacheplane/render',
-  'Google A2UI spec support out of the box',
-  'Debug tooling included',
-  'CSS custom property theming',
+  'Vercel json-render spec via @cacheplane/render',
+  'Google A2UI spec — 18 built-in components, v0.9 CheckRule validation',
+  'Consumer-extensible action handlers for both specs',
+  'Debug tooling + CSS custom property theming included',
   'Every feature ships together — not incrementally',
 ];
 

@@ -9,8 +9,8 @@ const ROWS = [
   { capability: 'Input handling', theirs: 'Sprint 2', ours: 'Included' },
   { capability: 'Accessibility (WCAG)', theirs: 'Sprint 2-3', ours: 'Included' },
   { capability: 'Theming / design system', theirs: 'Sprint 3', ours: 'Included (CSS custom properties)' },
-  { capability: 'Generative UI (json-render)', theirs: 'Sprint 4+', ours: 'Included (via @cacheplane/render)' },
-  { capability: 'Google A2UI spec', theirs: 'Sprint 5+', ours: 'Included' },
+  { capability: 'Generative UI (json-render)', theirs: 'Sprint 4+', ours: 'Included — Vercel json-render spec' },
+  { capability: 'Google A2UI spec', theirs: 'Sprint 5+', ours: '18 components, v0.9 validation, extensible handlers' },
   { capability: 'Debug tooling', theirs: 'Often never', ours: 'Included' },
   { capability: 'Time to production', theirs: '4-6 weeks', ours: 'Days' },
 ];
