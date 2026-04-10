@@ -80,6 +80,14 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
     subjects.error$.next(undefined);
     lastPayload = payload;
 
+    // Optimistically inject human messages so they appear immediately
+    // without waiting for the server to echo them back.
+    const inputMessages = (payload as Record<string, unknown>)?.['messages'];
+    if (Array.isArray(inputMessages) && inputMessages.length > 0) {
+      const existing = subjects.messages$.value;
+      subjects.messages$.next([...existing, ...inputMessages as BaseMessage[]]);
+    }
+
     try {
       const iter = transport.stream(
         options.assistantId,

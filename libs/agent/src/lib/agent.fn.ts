@@ -123,8 +123,9 @@ export function agent<
     destroy$: destroy$.asObservable(),
   });
 
-  // Throttle helper
-  const ms = typeof options.throttle === 'number' ? options.throttle : 0;
+  // Throttle helper — default 16ms (~60fps) to batch SSE token updates into
+  // at most one signal update per frame, preventing change detection storms.
+  const ms = typeof options.throttle === 'number' ? options.throttle : 16;
   const maybeThrottle = <V>(obs: BehaviorSubject<V>) =>
     ms > 0
       ? obs.pipe(throttleTime(ms, asyncScheduler, { leading: true, trailing: true }))
