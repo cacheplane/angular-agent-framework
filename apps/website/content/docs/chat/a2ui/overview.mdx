@@ -187,6 +187,108 @@ If no consumer handler matches the `call` name, built-in handlers are used as fa
 
 Handler return values are emitted on the `RenderHandlerEvent` — observe them via the `renderEvent` output on `ChatComponent`.
 
+## Validation
+
+A2UI v0.9 uses `CheckRule` objects for client-side validation. Input components and buttons can define a `checks` array — each check has a `condition` (a `DynamicBoolean`) and an error `message`.
+
+### CheckRule Shape
+
+```json
+{
+  "checks": [
+    {
+      "condition": { "call": "required", "args": { "value": { "path": "/name" } } },
+      "message": "Name is required"
+    }
+  ]
+}
+```
+
+The `condition` can be:
+- A **boolean literal**: `true` or `false`
+- A **path reference**: `{ "path": "/agreed" }` — resolves to a data model value
+- A **FunctionCall**: `{ "call": "required", "args": { ... } }` — invokes a named function
+- A **composite**: `{ "call": "and", "args": { "values": [...] } }` — combines multiple conditions
+
+### Built-in Functions
+
+| Category | Functions |
+|----------|-----------|
+| Validation | `required`, `regex`, `length`, `numeric`, `email` |
+| Logic | `and`, `or`, `not` |
+| Formatting | `formatString`, `formatNumber`, `formatCurrency`, `formatDate`, `pluralize` |
+| Navigation | `openUrl` |
+
+### Input Component Behavior
+
+Input components (`TextField`, `CheckBox`, `ChoicePicker`, `Slider`, `DateTimeInput`) validate continuously — errors display inline as the user interacts. The input border changes color to indicate validation state.
+
+### Button Behavior
+
+Per the v0.9 spec: if any check fails, the button is automatically disabled. Error messages display below the button.
+
+### Composite Conditions
+
+Use `and`, `or`, and `not` to compose complex validation rules:
+
+```json
+{
+  "condition": {
+    "call": "and",
+    "args": {
+      "values": [
+        { "call": "required", "args": { "value": { "path": "/name" } } },
+        { "call": "or", "args": { "values": [
+          { "call": "required", "args": { "value": { "path": "/email" } } },
+          { "call": "required", "args": { "value": { "path": "/phone" } } }
+        ]}}
+      ]
+    }
+  },
+  "message": "Name required, plus email or phone"
+}
+```
+
+### Custom Catalog Components
+
+Custom catalog components receive a pre-computed `validationResult` prop:
+
+```typescript
+interface A2uiValidationResult {
+  valid: boolean;
+  errors: string[];
+}
+```
+
+Use the shared `A2uiValidationErrorsComponent` for consistent error display:
+
+```typescript
+import { A2uiValidationErrorsComponent } from '@cacheplane/chat';
+
+@Component({
+  imports: [A2uiValidationErrorsComponent],
+  template: `
+    <input [value]="value()" />
+    <a2ui-validation-errors [result]="validationResult()" />
+  `,
+})
+export class MyCustomInputComponent {
+  readonly value = input('');
+  readonly validationResult = input<A2uiValidationResult>({ valid: true, errors: [] });
+}
+```
+
+### Theming
+
+Validation styling uses CSS custom properties:
+
+| Property | Default | Usage |
+|----------|---------|-------|
+| `--a2ui-error` | `#ef4444` | Error text and invalid border color |
+| `--a2ui-border` | `rgba(255,255,255,0.1)` | Default input border |
+| `--a2ui-input-bg` | `rgba(255,255,255,0.05)` | Input background |
+| `--a2ui-label` | `rgba(255,255,255,0.6)` | Label text color |
+
 ## What's Next
 
 <CardGroup cols={2}>

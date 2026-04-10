@@ -23,10 +23,20 @@ CONTACT_FORM_JSONL = A2UI_PREFIX + "\n" + "\n".join([
         ]},
         {"id": "name_field", "component": "TextField",
          "label": "Name", "value": {"path": "/name"}, "placeholder": "Your full name",
-         "_bindings": {"value": "/name"}},
+         "_bindings": {"value": "/name"},
+         "checks": [
+             {"condition": {"call": "required", "args": {"value": {"path": "/name"}}},
+              "message": "Name is required"},
+         ]},
         {"id": "email_field", "component": "TextField",
          "label": "Email", "value": {"path": "/email"}, "placeholder": "you@company.com",
-         "_bindings": {"value": "/email"}},
+         "_bindings": {"value": "/email"},
+         "checks": [
+             {"condition": {"call": "required", "args": {"value": {"path": "/email"}}},
+              "message": "Email is required"},
+             {"condition": {"call": "email", "args": {"value": {"path": "/email"}}},
+              "message": "Must be a valid email address"},
+         ]},
         {"id": "dept_picker", "component": "ChoicePicker",
          "label": "Department",
          "options": ["Engineering", "Sales", "Support", "Marketing"],
@@ -38,6 +48,14 @@ CONTACT_FORM_JSONL = A2UI_PREFIX + "\n" + "\n".join([
         {"id": "divider", "component": "Divider"},
         {"id": "submit_btn", "component": "Button",
          "label": "Submit",
+         "checks": [
+             {"condition": {"call": "and", "args": {"values": [
+                 {"call": "required", "args": {"value": {"path": "/name"}}},
+                 {"call": "email", "args": {"value": {"path": "/email"}}},
+                 {"path": "/consent"},
+             ]}},
+              "message": "Complete all required fields and agree to be contacted"},
+         ],
          "action": {"event": {"name": "formSubmit", "context": {"formId": "contact"}}}},
     ]}),
 ])

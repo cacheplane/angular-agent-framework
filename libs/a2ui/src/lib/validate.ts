@@ -1,37 +1,20 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-import type { A2uiCheck } from './types';
+import type { A2uiCheckRule } from './types';
+import { resolveDynamic } from './resolve';
 
 export interface A2uiValidationResult {
   valid: boolean;
   errors: string[];
 }
 
-type Validator = (args: Record<string, unknown>) => boolean;
-
-const VALIDATORS: Record<string, Validator> = {
-  required: (args) => args['value'] != null && String(args['value']).trim() !== '',
-  regex: (args) => new RegExp(String(args['pattern'])).test(String(args['value'] ?? '')),
-  length: (args) => {
-    const len = String(args['value'] ?? '').length;
-    const min = Number(args['min'] ?? 0);
-    const max = Number(args['max'] ?? Infinity);
-    return len >= min && len <= max;
-  },
-  numeric: (args) => {
-    const n = Number(args['value']);
-    return !isNaN(n) && n >= Number(args['min'] ?? -Infinity) && n <= Number(args['max'] ?? Infinity);
-  },
-  email: (args) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(args['value'] ?? '')),
-};
-
-export function validateChecks(checks: A2uiCheck[]): A2uiValidationResult {
+export function evaluateCheckRules(
+  checks: A2uiCheckRule[],
+  model: Record<string, unknown>,
+): A2uiValidationResult {
   const errors: string[] = [];
   for (const check of checks) {
-    const validator = VALIDATORS[check.call];
-    if (!validator) continue;
-    if (!validator(check.args)) {
-      errors.push(check.message);
-    }
+    const result = resolveDynamic(check.condition, model);
+    if (!result) errors.push(check.message);
   }
   return { valid: errors.length === 0, errors };
 }

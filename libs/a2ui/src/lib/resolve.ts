@@ -46,6 +46,11 @@ export function resolveDynamic(
 ): unknown {
   if (value == null) return value;
 
+  // Array — recurse into each element
+  if (Array.isArray(value)) {
+    return value.map(item => resolveDynamic(item, model, scope));
+  }
+
   // Path reference
   if (isPathRef(value)) {
     return resolvePathRef(value, model, scope);

@@ -64,4 +64,21 @@ describe('resolveDynamic', () => {
   it('returns undefined for non-existent paths', () => {
     expect(resolveDynamic({ path: '/missing' }, model)).toBeUndefined();
   });
+
+  it('resolves arrays by recursing into each element', () => {
+    const arr = [
+      { path: '/user/name' },
+      'literal',
+      42,
+    ];
+    expect(resolveDynamic(arr, model)).toEqual(['Alice', 'literal', 42]);
+  });
+
+  it('resolves nested function calls in arrays', () => {
+    const arr = [
+      { call: 'pluralize', args: { count: 1, singular: 'cat', plural: 'cats' } },
+      { call: 'pluralize', args: { count: 2, singular: 'dog', plural: 'dogs' } },
+    ];
+    expect(resolveDynamic(arr, model)).toEqual(['cat', 'dogs']);
+  });
 });

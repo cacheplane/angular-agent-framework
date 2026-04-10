@@ -3,6 +3,24 @@
 type FnExecutor = (args: Record<string, unknown>, model: Record<string, unknown>) => unknown;
 
 const FUNCTIONS: Record<string, FnExecutor> = {
+  // Validation functions
+  required: (args) => args['value'] != null && String(args['value']).trim() !== '',
+  regex: (args) => new RegExp(String(args['pattern'])).test(String(args['value'] ?? '')),
+  length: (args) => {
+    const len = String(args['value'] ?? '').length;
+    return len >= Number(args['min'] ?? 0) && len <= Number(args['max'] ?? Infinity);
+  },
+  numeric: (args) => {
+    const n = Number(args['value']);
+    return !isNaN(n) && n >= Number(args['min'] ?? -Infinity) && n <= Number(args['max'] ?? Infinity);
+  },
+  email: (args) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(args['value'] ?? '')),
+
+  // Formatting functions
+  formatString: (args) => {
+    const template = String(args['template'] ?? '');
+    return template.replace(/\$\{(\w+)\}/g, (_, key) => String(args[key] ?? ''));
+  },
   formatNumber: (args) => {
     const n = Number(args['value']);
     const precision = Number(args['precision'] ?? 0);
@@ -19,21 +37,31 @@ const FUNCTIONS: Record<string, FnExecutor> = {
   },
   formatDate: (args) => {
     return new Date(String(args['value'])).toLocaleDateString(
-      String(args['locale'] ?? undefined),
+      args['locale'] != null ? String(args['locale']) : undefined,
     );
   },
   pluralize: (args) => {
     return Number(args['count']) === 1 ? String(args['singular']) : String(args['plural']);
   },
+
+  // Logic functions
+  and: (args) => {
+    const values = args['values'];
+    return Array.isArray(values) ? values.every(Boolean) : Object.values(args).every(Boolean);
+  },
+  or: (args) => {
+    const values = args['values'];
+    return Array.isArray(values) ? values.some(Boolean) : Object.values(args).some(Boolean);
+  },
+  not: (args) => !args['value'],
+
+  // Navigation
   openUrl: (args) => {
     if (typeof globalThis.window !== 'undefined') {
       globalThis.window.open(String(args['url']), '_blank');
     }
     return null;
   },
-  and: (args) => Object.values(args).every(Boolean),
-  or: (args) => Object.values(args).some(Boolean),
-  not: (args) => !args['value'],
 };
 
 export function executeFunction(

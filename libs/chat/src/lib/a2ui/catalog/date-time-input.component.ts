@@ -1,22 +1,30 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-import { Component, input } from '@angular/core';
+import { Component, input, ChangeDetectionStrategy } from '@angular/core';
+import type { A2uiValidationResult } from '@cacheplane/a2ui';
+import { A2uiValidationErrorsComponent } from './validation-errors.component';
 
 @Component({
   selector: 'a2ui-date-time-input',
   standalone: true,
+  imports: [A2uiValidationErrorsComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="flex flex-col gap-1">
       @if (label()) {
-        <label class="text-xs text-white/60">{{ label() }}</label>
+        <label class="text-xs" style="color: var(--a2ui-label, rgba(255,255,255,0.6));">{{ label() }}</label>
       }
       <input
         [type]="inputType()"
         [value]="value()"
         [min]="min()"
         [max]="max()"
-        class="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white"
+        class="rounded-lg px-3 py-2 text-sm"
+        [style.background]="'var(--a2ui-input-bg, rgba(255,255,255,0.05))'"
+        [style.color]="'var(--a2ui-input-text, white)'"
+        [style.border]="validationResult().valid ? '1px solid var(--a2ui-border, rgba(255,255,255,0.1))' : '1px solid var(--a2ui-error, #ef4444)'"
         (change)="onChange($event)"
       />
+      <a2ui-validation-errors [result]="validationResult()" />
     </div>
   `,
 })
@@ -26,6 +34,7 @@ export class A2uiDateTimeInputComponent {
   readonly inputType = input<'date' | 'time' | 'datetime-local'>('date');
   readonly min = input<string>('');
   readonly max = input<string>('');
+  readonly validationResult = input<A2uiValidationResult>({ valid: true, errors: [] });
   readonly _bindings = input<Record<string, string>>({});
   readonly emit = input<(event: string) => void>(() => { /* noop */ });
 

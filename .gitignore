@@ -1,6 +1,7 @@
 # Worktrees
 .worktrees/
 .superpowers/
+.claude/worktrees/
 
 # Node
 node_modules/

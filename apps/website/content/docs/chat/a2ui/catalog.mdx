@@ -153,7 +153,7 @@ Renders a button that dispatches an action when clicked.
 | `variant` | `'primary' \| 'borderless'` | Visual style. Defaults to `'primary'` |
 | `disabled` | `boolean` | Disables the button when `true` |
 | `action` | `A2uiAction` | Action to execute on click (event or function call) |
-| `checks` | `A2uiCheck[]` | Validation checks — button is disabled if any fail |
+| `validationResult` | `A2uiValidationResult` | Pre-computed validation result — button is disabled if `valid` is `false` |
 | `emit` | injected | Event emitter provided by the render engine |
 
 **Action types:**

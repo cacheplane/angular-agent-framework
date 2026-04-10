@@ -1,71 +1,111 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import { describe, it, expect } from 'vitest';
-import { validateChecks } from './validate';
-import type { A2uiCheck } from './types';
+import { evaluateCheckRules } from './validate';
+import type { A2uiCheckRule } from './types';
 
-describe('validateChecks', () => {
-  it('required passes for non-empty value', () => {
-    const checks: A2uiCheck[] = [{ call: 'required', args: { value: 'hello' }, message: 'Required' }];
-    expect(validateChecks(checks)).toEqual({ valid: true, errors: [] });
-  });
+describe('evaluateCheckRules', () => {
+  const model = { name: 'Alice', email: 'alice@example.com', zip: '', agreed: true };
 
-  it('required fails for empty string', () => {
-    const checks: A2uiCheck[] = [{ call: 'required', args: { value: '' }, message: 'Required' }];
-    expect(validateChecks(checks)).toEqual({ valid: false, errors: ['Required'] });
-  });
-
-  it('required fails for null', () => {
-    const checks: A2uiCheck[] = [{ call: 'required', args: { value: null }, message: 'Required' }];
-    expect(validateChecks(checks)).toEqual({ valid: false, errors: ['Required'] });
-  });
-
-  it('regex passes for matching pattern', () => {
-    const checks: A2uiCheck[] = [{ call: 'regex', args: { value: 'abc123', pattern: '^[a-z]+\\d+$' }, message: 'Bad format' }];
-    expect(validateChecks(checks)).toEqual({ valid: true, errors: [] });
-  });
-
-  it('regex fails for non-matching', () => {
-    const checks: A2uiCheck[] = [{ call: 'regex', args: { value: '!!!', pattern: '^\\w+$' }, message: 'Bad' }];
-    expect(validateChecks(checks).valid).toBe(false);
-  });
-
-  it('length passes within range', () => {
-    const checks: A2uiCheck[] = [{ call: 'length', args: { value: 'hello', min: 3, max: 10 }, message: 'Length' }];
-    expect(validateChecks(checks).valid).toBe(true);
-  });
-
-  it('length fails below min', () => {
-    const checks: A2uiCheck[] = [{ call: 'length', args: { value: 'hi', min: 3 }, message: 'Too short' }];
-    expect(validateChecks(checks).valid).toBe(false);
-  });
-
-  it('numeric passes in range', () => {
-    const checks: A2uiCheck[] = [{ call: 'numeric', args: { value: 5, min: 0, max: 10 }, message: 'Range' }];
-    expect(validateChecks(checks).valid).toBe(true);
-  });
-
-  it('email passes for valid email', () => {
-    const checks: A2uiCheck[] = [{ call: 'email', args: { value: 'a@b.com' }, message: 'Email' }];
-    expect(validateChecks(checks).valid).toBe(true);
-  });
-
-  it('email fails for invalid', () => {
-    const checks: A2uiCheck[] = [{ call: 'email', args: { value: 'not-email' }, message: 'Email' }];
-    expect(validateChecks(checks).valid).toBe(false);
-  });
-
-  it('collects multiple errors', () => {
-    const checks: A2uiCheck[] = [
-      { call: 'required', args: { value: '' }, message: 'Required' },
-      { call: 'email', args: { value: '' }, message: 'Email' },
+  it('passes when condition evaluates to true', () => {
+    const checks: A2uiCheckRule[] = [
+      { condition: { call: 'required', args: { value: { path: '/name' } } }, message: 'Name required' },
     ];
-    const result = validateChecks(checks);
-    expect(result.valid).toBe(false);
-    expect(result.errors).toHaveLength(2);
+    expect(evaluateCheckRules(checks, model)).toEqual({ valid: true, errors: [] });
   });
 
-  it('ignores unknown check functions', () => {
-    const checks: A2uiCheck[] = [{ call: 'unknownCheck', args: {}, message: 'Unknown' }];
-    expect(validateChecks(checks).valid).toBe(true);
+  it('fails when condition evaluates to false', () => {
+    const checks: A2uiCheckRule[] = [
+      { condition: { call: 'required', args: { value: { path: '/zip' } } }, message: 'Zip required' },
+    ];
+    expect(evaluateCheckRules(checks, model)).toEqual({ valid: false, errors: ['Zip required'] });
+  });
+
+  it('resolves path references in condition args', () => {
+    const checks: A2uiCheckRule[] = [
+      { condition: { call: 'email', args: { value: { path: '/email' } } }, message: 'Invalid email' },
+    ];
+    expect(evaluateCheckRules(checks, model)).toEqual({ valid: true, errors: [] });
+  });
+
+  it('supports boolean literal conditions', () => {
+    const checks: A2uiCheckRule[] = [
+      { condition: true, message: 'Always passes' },
+    ];
+    expect(evaluateCheckRules(checks, model)).toEqual({ valid: true, errors: [] });
+  });
+
+  it('supports path ref conditions (boolean in data model)', () => {
+    const checks: A2uiCheckRule[] = [
+      { condition: { path: '/agreed' }, message: 'Must agree' },
+    ];
+    expect(evaluateCheckRules(checks, model)).toEqual({ valid: true, errors: [] });
+  });
+
+  it('handles falsy path ref conditions', () => {
+    const modelWithFalse = { ...model, agreed: false };
+    const checks: A2uiCheckRule[] = [
+      { condition: { path: '/agreed' }, message: 'Must agree' },
+    ];
+    expect(evaluateCheckRules(checks, modelWithFalse)).toEqual({ valid: false, errors: ['Must agree'] });
+  });
+
+  it('supports nested and/or composition', () => {
+    const checks: A2uiCheckRule[] = [
+      {
+        condition: {
+          call: 'and',
+          args: {
+            values: [
+              { call: 'required', args: { value: { path: '/name' } } },
+              { call: 'email', args: { value: { path: '/email' } } },
+            ],
+          },
+        },
+        message: 'Name and valid email required',
+      },
+    ];
+    expect(evaluateCheckRules(checks, model)).toEqual({ valid: true, errors: [] });
+  });
+
+  it('nested and fails when inner condition fails', () => {
+    const checks: A2uiCheckRule[] = [
+      {
+        condition: {
+          call: 'and',
+          args: {
+            values: [
+              { call: 'required', args: { value: { path: '/name' } } },
+              { call: 'required', args: { value: { path: '/zip' } } },
+            ],
+          },
+        },
+        message: 'All fields required',
+      },
+    ];
+    expect(evaluateCheckRules(checks, model)).toEqual({ valid: false, errors: ['All fields required'] });
+  });
+
+  it('collects multiple errors from multiple checks', () => {
+    const checks: A2uiCheckRule[] = [
+      { condition: { call: 'required', args: { value: { path: '/zip' } } }, message: 'Zip required' },
+      { condition: false, message: 'Always fails' },
+    ];
+    const result = evaluateCheckRules(checks, model);
+    expect(result.valid).toBe(false);
+    expect(result.errors).toEqual(['Zip required', 'Always fails']);
+  });
+
+  it('returns valid for empty checks array', () => {
+    expect(evaluateCheckRules([], model)).toEqual({ valid: true, errors: [] });
+  });
+
+  it('supports regex with path-resolved value', () => {
+    const checks: A2uiCheckRule[] = [
+      {
+        condition: { call: 'regex', args: { value: { path: '/name' }, pattern: '^[A-Z]' } },
+        message: 'Must start with uppercase',
+      },
+    ];
+    expect(evaluateCheckRules(checks, model)).toEqual({ valid: true, errors: [] });
   });
 });

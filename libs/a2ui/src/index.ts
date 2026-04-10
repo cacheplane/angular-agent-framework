@@ -3,7 +3,7 @@ export type {
   A2uiTheme, A2uiPathRef, A2uiFunctionCall,
   DynamicValue, DynamicString, DynamicNumber, DynamicBoolean, DynamicStringList,
   A2uiChildTemplate, A2uiChildList,
-  A2uiEventAction, A2uiLocalAction, A2uiAction, A2uiCheck,
+  A2uiEventAction, A2uiLocalAction, A2uiAction, A2uiCheckRule,
   A2uiComponent,
   A2uiCreateSurface, A2uiUpdateComponents, A2uiUpdateDataModel, A2uiDeleteSurface,
   A2uiMessage, A2uiSurface,
@@ -14,5 +14,5 @@ export type { A2uiMessageParser } from './lib/parser';
 export { resolveDynamic } from './lib/resolve';
 export type { A2uiScope } from './lib/resolve';
 export { executeFunction } from './lib/functions';
-export { validateChecks } from './lib/validate';
+export { evaluateCheckRules } from './lib/validate';
 export type { A2uiValidationResult } from './lib/validate';

@@ -1,32 +1,29 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-import { Component, input } from '@angular/core';
-import type { A2uiCheck } from '@cacheplane/a2ui';
-import { validateChecks } from '@cacheplane/a2ui';
+import { Component, input, ChangeDetectionStrategy } from '@angular/core';
+import type { A2uiValidationResult } from '@cacheplane/a2ui';
+import { A2uiValidationErrorsComponent } from './validation-errors.component';
 
 @Component({
   selector: 'a2ui-button',
   standalone: true,
+  imports: [A2uiValidationErrorsComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <button
       class="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
       [class]="variant() === 'borderless' ? 'bg-transparent hover:bg-white/10' : 'bg-blue-600 hover:bg-blue-700 text-white'"
-      [disabled]="disabled() || !isValid()"
+      [disabled]="disabled() || !validationResult().valid"
       (click)="handleClick()"
     >{{ label() }}</button>
+    <a2ui-validation-errors [result]="validationResult()" />
   `,
 })
 export class A2uiButtonComponent {
   readonly label = input<string>('');
   readonly variant = input<string>('primary');
   readonly disabled = input<boolean>(false);
-  readonly checks = input<A2uiCheck[]>([]);
+  readonly validationResult = input<A2uiValidationResult>({ valid: true, errors: [] });
   readonly emit = input<(event: string) => void>(() => { /* noop */ });
-
-  isValid(): boolean {
-    const c = this.checks();
-    if (!c || c.length === 0) return true;
-    return validateChecks(c).valid;
-  }
 
   handleClick(): void {
     this.emit()('click');
