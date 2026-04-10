@@ -2,6 +2,7 @@
 import { Component, computed } from '@angular/core';
 import { ChatInputComponent as ChatInputPrimitive } from '@cacheplane/chat';
 import { ChatMessagesComponent } from '@cacheplane/chat';
+import { ExampleChatLayoutComponent } from '@cacheplane/example-layouts';
 import { agent } from '@cacheplane/angular';
 import { environment } from '../environments/environment';
 
@@ -13,10 +14,10 @@ import { environment } from '../environments/environment';
 @Component({
   selector: 'app-input',
   standalone: true,
-  imports: [ChatInputPrimitive, ChatMessagesComponent],
+  imports: [ChatInputPrimitive, ChatMessagesComponent, ExampleChatLayoutComponent],
   template: `
-    <div class="flex h-screen">
-      <div class="flex-1 flex flex-col min-w-0">
+    <example-chat-layout sidebarWidth="w-72">
+      <div main class="flex-1 flex flex-col min-w-0">
         <header class="px-4 py-3 border-b" style="border-color: var(--chat-border, #333); background: var(--chat-bg, #171717);">
           <h1 class="text-sm font-semibold" style="color: var(--chat-text, #e0e0e0);">Chat Input Demo</h1>
         </header>
@@ -27,8 +28,7 @@ import { environment } from '../environments/environment';
           <chat-input [ref]="stream" placeholder="Try typing here..." (send)="submitMessage($event)" />
         </div>
       </div>
-      <aside class="w-72 shrink-0 border-l overflow-y-auto p-4 space-y-4"
-             style="border-color: var(--chat-border, #333); background: var(--chat-bg, #171717); color: var(--chat-text, #e0e0e0);">
+      <div sidebar class="p-4 space-y-4" style="background: var(--chat-bg, #171717); color: var(--chat-text, #e0e0e0);">
         <h3 class="text-xs font-semibold uppercase tracking-wide"
             style="color: var(--chat-text-muted, #777);">Input State</h3>
         <dl class="text-xs space-y-2" style="color: var(--chat-text-muted, #777);">
@@ -47,8 +47,8 @@ import { environment } from '../environments/environment';
             <li>Auto-disable while streaming</li>
           </ul>
         </div>
-      </aside>
-    </div>
+      </div>
+    </example-chat-layout>
   `,
 })
 export class InputComponent {
