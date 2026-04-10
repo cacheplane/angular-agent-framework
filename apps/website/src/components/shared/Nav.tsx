@@ -192,23 +192,16 @@ export function Nav() {
                         style={{
                           width: '100%', textAlign: 'left', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                           background: 'none', border: 'none', cursor: 'pointer',
-                          padding: '12px 4px', minHeight: 44,
+                          padding: '12px 14px', minHeight: 48, borderRadius: 8,
+                          fontFamily: 'Inter, sans-serif', fontSize: 16, lineHeight: '24px',
+                          color: tokens.colors.textPrimary,
                         }}
                       >
-                        <span style={{
-                          fontFamily: 'var(--font-mono,"JetBrains Mono",monospace)',
-                          fontSize: '0.7rem', fontWeight: 600, textTransform: 'uppercase',
-                          letterSpacing: '0.06em', color: headerColor,
-                        }}>
-                          {section.title}
-                        </span>
-                        <span style={{
-                          color: tokens.colors.textMuted, fontSize: 10,
-                          transition: 'transform 0.2s',
-                          transform: openSections.has(section.id) ? 'rotate(0)' : 'rotate(-90deg)',
-                        }}>
-                          &#9662;
-                        </span>
+                        {section.title}
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke={tokens.colors.textMuted} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                          style={{ transition: 'transform 0.2s', transform: openSections.has(section.id) ? 'rotate(180deg)' : 'rotate(0)', flexShrink: 0 }}>
+                          <path d="M4 6l4 4 4-4" />
+                        </svg>
                       </button>
                       {openSections.has(section.id) && (
                         <nav style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
