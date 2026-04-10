@@ -394,6 +394,42 @@ The data model is only sent with event actions — there are no passive change n
 />
 ```
 
+## Data Model Bindings
+
+When the agent sets component properties using path references (`{ "path": "/name" }`), the surface component
+tracks these as **bindings** — a mapping from prop name to JSON Pointer path. These bindings are passed to
+catalog components as the `_bindings` prop.
+
+### How Bindings Work
+
+1. **Agent sends components** with path references: `{ "value": { "path": "/form/name" } }`
+2. **`surfaceToSpec`** resolves the path to a current value AND records the binding in `_bindings`
+3. **Catalog component** reads the resolved value normally. When the user changes the value, it emits an `a2ui:datamodel` event via the `emit` callback
+4. **The event format** is `a2ui:datamodel:{path}:{value}`
+
+### Using `emitBinding`
+
+Custom catalog components can use the `emitBinding` utility for consistent binding emission:
+
+```typescript
+import { emitBinding } from '@cacheplane/chat';
+
+// In your component's change handler:
+onInput(event: Event): void {
+  const val = (event.target as HTMLInputElement).value;
+  emitBinding(this.emit(), this._bindings(), 'value', val);
+}
+```
+
+### Known Limitations
+
+The current binding mechanism is client-side only — the `a2ui:datamodel` events are emitted
+but do not yet flow through the render lib's `StateStore`. Data model updates from user input
+are not reflected back to other components in real time. Full `StateStore` integration is planned
+for a future release.
+
+Data model state is refreshed when the agent sends an `updateDataModel` message.
+
 ## What's Next
 
 <CardGroup cols={2}>
