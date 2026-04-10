@@ -2,6 +2,7 @@
 import { Component, computed, effect, input, signal } from '@angular/core';
 import type { Spec } from '@json-render/core';
 import { RenderElementComponent } from '@cacheplane/render';
+import { emitBinding } from './emit-binding';
 
 @Component({
   selector: 'a2ui-tabs',
@@ -55,9 +56,6 @@ export class A2uiTabsComponent {
 
   selectTab(index: number): void {
     this.activeIndex.set(index);
-    const path = this._bindings()?.['selected'];
-    if (path) {
-      this.emit()(`a2ui:datamodel:${path}:${index}`);
-    }
+    emitBinding(this.emit(), this._bindings(), 'selected', index);
   }
 }

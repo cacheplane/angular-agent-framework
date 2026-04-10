@@ -2,6 +2,7 @@
 import { Component, input, ChangeDetectionStrategy } from '@angular/core';
 import type { A2uiValidationResult } from '@cacheplane/a2ui';
 import { A2uiValidationErrorsComponent } from './validation-errors.component';
+import { emitBinding } from './emit-binding';
 
 @Component({
   selector: 'a2ui-choice-picker',
@@ -36,9 +37,6 @@ export class A2uiChoicePickerComponent {
 
   onChange(event: Event): void {
     const val = (event.target as HTMLSelectElement).value;
-    const path = this._bindings()?.['selected'];
-    if (path) {
-      this.emit()(`a2ui:datamodel:${path}:${val}`);
-    }
+    emitBinding(this.emit(), this._bindings(), 'selected', val);
   }
 }

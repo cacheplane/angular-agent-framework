@@ -2,6 +2,7 @@
 import { Component, input } from '@angular/core';
 import type { Spec } from '@json-render/core';
 import { RenderElementComponent } from '@cacheplane/render';
+import { emitBinding } from './emit-binding';
 
 @Component({
   selector: 'a2ui-modal',
@@ -41,9 +42,6 @@ export class A2uiModalComponent {
 
   onBackdropClick(): void {
     if (!this.dismissible()) return;
-    const path = this._bindings()?.['open'];
-    if (path) {
-      this.emit()(`a2ui:datamodel:${path}:false`);
-    }
+    emitBinding(this.emit(), this._bindings(), 'open', false);
   }
 }
