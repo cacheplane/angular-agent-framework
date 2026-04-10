@@ -69,6 +69,7 @@ export { A2uiSurfaceComponent } from './lib/a2ui/surface.component';
 export { a2uiBasicCatalog } from './lib/a2ui/catalog/index';
 export { A2uiValidationErrorsComponent } from './lib/a2ui/catalog/validation-errors.component';
 export { buildA2uiActionMessage } from './lib/a2ui/surface.component';
+export { surfaceToSpec } from './lib/a2ui/surface-to-spec';
 export type { A2uiActionMessage, A2uiClientDataModel } from '@cacheplane/a2ui';
 
 // Test utilities
