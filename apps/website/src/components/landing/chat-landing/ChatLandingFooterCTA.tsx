@@ -27,7 +27,7 @@ export function ChatLandingFooterCTA() {
           <a href="/whitepapers/chat.pdf" download
             style={{
               display: 'inline-block', padding: '0.875rem 2rem',
-              background: '#5a00c8', color: '#fff',
+              background: tokens.colors.chatPurple, color: '#fff',
               fontFamily: 'Inter, sans-serif', fontSize: 15, fontWeight: 600,
               textDecoration: 'none', borderRadius: 6,
             }}>
@@ -36,7 +36,7 @@ export function ChatLandingFooterCTA() {
           <a href="/pilot-to-prod"
             style={{
               display: 'inline-block', padding: '0.875rem 2rem',
-              background: tokens.glass.bg, color: '#5a00c8',
+              background: tokens.glass.bg, color: tokens.colors.chatPurple,
               fontFamily: 'Inter, sans-serif', fontSize: 15, fontWeight: 600,
               textDecoration: 'none', borderRadius: 6,
               border: '1px solid rgba(90,0,200,0.2)',

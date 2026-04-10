@@ -41,7 +41,7 @@ export function ChatLandingCodeShowcase() {
         <p style={{
           fontFamily: 'var(--font-mono,"JetBrains Mono",monospace)',
           fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.12em',
-          fontWeight: 700, color: '#5a00c8', marginBottom: 14,
+          fontWeight: 700, color: tokens.colors.chatPurple, marginBottom: 14,
         }}>
           Developer Experience
         </p>
@@ -73,7 +73,7 @@ export function ChatLandingCodeShowcase() {
             }}>
               <span style={{
                 fontFamily: "'JetBrains Mono', monospace", fontSize: '0.68rem',
-                fontWeight: 700, color: '#5a00c8',
+                fontWeight: 700, color: tokens.colors.chatPurple,
               }}>
                 {s.title}
               </span>

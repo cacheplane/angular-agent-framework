@@ -28,7 +28,7 @@ export function ChatLandingComparison() {
         <p style={{
           fontFamily: 'var(--font-mono,"JetBrains Mono",monospace)',
           fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.12em',
-          fontWeight: 700, color: '#5a00c8', marginBottom: 14,
+          fontWeight: 700, color: tokens.colors.chatPurple, marginBottom: 14,
         }}>
           Head to Head
         </p>
@@ -61,7 +61,7 @@ export function ChatLandingComparison() {
             <div key={h} style={{
               fontFamily: 'var(--font-mono,"JetBrains Mono",monospace)',
               fontSize: '0.62rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em',
-              color: i === 2 ? '#5a00c8' : tokens.colors.textMuted,
+              color: i === 2 ? tokens.colors.chatPurple : tokens.colors.textMuted,
             }}>
               {h}
             </div>
@@ -88,7 +88,7 @@ export function ChatLandingComparison() {
             <div style={{ fontSize: '0.8rem', color: tokens.colors.textMuted, paddingRight: 16, lineHeight: 1.5 }}>
               {row.theirs}
             </div>
-            <div style={{ fontSize: '0.8rem', color: '#5a00c8', fontWeight: 500, lineHeight: 1.5, display: 'flex', alignItems: 'flex-start', gap: 6 }}>
+            <div style={{ fontSize: '0.8rem', color: tokens.colors.chatPurple, fontWeight: 500, lineHeight: 1.5, display: 'flex', alignItems: 'flex-start', gap: 6 }}>
               <span style={{ color: '#1a7a40', marginTop: 2, flexShrink: 0 }}>✓</span>
               <span>{row.ours}</span>
             </div>

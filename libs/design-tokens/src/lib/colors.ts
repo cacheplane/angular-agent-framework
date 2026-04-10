@@ -29,6 +29,10 @@ export const colors = Object.freeze({
   sidebarBg: 'rgba(255, 255, 255, 0.45)',
   /** Angular brand red */
   angularRed: '#DD0031',
+  /** Render library — green */
+  renderGreen: '#1a7a40',
+  /** Chat library — purple */
+  chatPurple: '#5a00c8',
 } as const);
 
 export type Colors = typeof colors;

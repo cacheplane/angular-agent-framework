@@ -37,7 +37,7 @@ export function ChatLandingWhitePaperGate() {
   };
 
   return (
-    <section id="whitepaper-gate" style={{ padding: '80px 32px' }}>
+    <section id="chat-whitepaper-gate" style={{ padding: '80px 32px' }}>
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
@@ -55,7 +55,7 @@ export function ChatLandingWhitePaperGate() {
           <p style={{
             fontFamily: 'var(--font-mono,"JetBrains Mono",monospace)',
             fontSize: '0.68rem', textTransform: 'uppercase', letterSpacing: '0.12em',
-            fontWeight: 700, color: '#5a00c8', marginBottom: 14,
+            fontWeight: 700, color: tokens.colors.chatPurple, marginBottom: 14,
           }}>
             Free Download
           </p>
@@ -76,7 +76,7 @@ export function ChatLandingWhitePaperGate() {
           <a href="/whitepapers/chat.pdf" download="cacheplane-chat-enterprise-guide.pdf"
             style={{
               display: 'inline-flex', alignItems: 'center', gap: 8,
-              background: '#5a00c8', color: '#fff',
+              background: tokens.colors.chatPurple, color: '#fff',
               padding: '12px 28px', borderRadius: 10,
               fontFamily: 'var(--font-mono,"JetBrains Mono",monospace)',
               fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em',
@@ -121,7 +121,7 @@ export function ChatLandingWhitePaperGate() {
                   padding: '10px 24px', borderRadius: 9,
                   background: email ? 'rgba(90,0,200,.08)' : 'rgba(0,0,0,.04)',
                   border: `1px solid ${email ? 'rgba(90,0,200,.22)' : 'rgba(0,0,0,.08)'}`,
-                  color: email ? '#5a00c8' : tokens.colors.textMuted,
+                  color: email ? tokens.colors.chatPurple : tokens.colors.textMuted,
                   fontFamily: 'var(--font-mono,"JetBrains Mono",monospace)',
                   fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em',
                   cursor: email ? 'pointer' : 'not-allowed',

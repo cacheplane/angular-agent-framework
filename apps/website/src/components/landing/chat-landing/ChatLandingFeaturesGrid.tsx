@@ -24,7 +24,7 @@ export function ChatLandingFeaturesGrid() {
         <p style={{
           fontFamily: 'var(--font-mono,"JetBrains Mono",monospace)',
           fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.12em',
-          fontWeight: 700, color: '#5a00c8', marginBottom: 14,
+          fontWeight: 700, color: tokens.colors.chatPurple, marginBottom: 14,
         }}>
           Features
         </p>
@@ -39,7 +39,7 @@ export function ChatLandingFeaturesGrid() {
 
       <div style={{
         maxWidth: 1000, margin: '0 auto',
-        display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(440px, 1fr))', gap: 24,
+        display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(440px, 100%), 1fr))', gap: 24,
       }}>
         {FEATURES.map((feat, i) => (
           <motion.div
@@ -74,6 +74,7 @@ export function ChatLandingFeaturesGrid() {
                 title={feat.title}
                 style={{ width: '100%', height: 320, border: 'none', display: 'block' }}
                 loading="lazy"
+                sandbox="allow-scripts allow-same-origin"
               />
             </div>
           </motion.div>
