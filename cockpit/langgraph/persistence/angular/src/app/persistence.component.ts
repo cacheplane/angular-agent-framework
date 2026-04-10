@@ -1,6 +1,7 @@
 import { Component, signal } from '@angular/core';
 import { ChatComponent } from '@cacheplane/chat';
 import { agent } from '@cacheplane/angular';
+import { ExampleChatLayoutComponent } from '@cacheplane/example-layouts';
 import { environment } from '../environments/environment';
 
 interface Thread {
@@ -22,61 +23,50 @@ interface Thread {
 @Component({
   selector: 'app-persistence',
   standalone: true,
-  imports: [ChatComponent],
-  styles: `
-    :host {
-      display: flex;
-      height: 100vh;
-    }
-  `,
+  imports: [ChatComponent, ExampleChatLayoutComponent],
   template: `
-    <chat [ref]="stream" class="block flex-1 min-w-0" />
+    <example-chat-layout sidebarWidth="w-56">
+      <chat main [ref]="stream" class="block flex-1 min-w-0" />
 
-    <aside
-      class="w-56 flex flex-col border-l"
-      style="
-        border-color: var(--chat-border);
-        background: var(--chat-bg-alt);
-        color: var(--chat-text);
-      "
-    >
-      <div
-        class="px-3 py-2 text-xs font-semibold uppercase tracking-wide border-b"
-        style="border-color: var(--chat-border); color: var(--chat-text-muted)"
+      <div sidebar
+        class="flex flex-col"
+        style="background: var(--chat-bg-alt); color: var(--chat-text);"
       >
-        Threads
-      </div>
-
-      <div class="flex-1 overflow-y-auto">
-        @for (thread of threads(); track thread.id) {
-          <button
-            class="w-full text-left px-3 py-2 text-sm truncate transition-colors"
-            [class.font-semibold]="thread.id === activeThreadId()"
-            [style.background]="thread.id === activeThreadId() ? 'var(--chat-bg-hover)' : 'transparent'"
-            (mouseenter)="$event.currentTarget.style.background = 'var(--chat-bg-hover)'"
-            (mouseleave)="$event.currentTarget.style.background = thread.id === activeThreadId() ? 'var(--chat-bg-hover)' : 'transparent'"
-            (click)="switchThread(thread.id)"
-          >
-            {{ thread.label }}
-          </button>
-        }
-      </div>
-
-      <div class="p-2 border-t" style="border-color: var(--chat-border)">
-        <button
-          class="w-full rounded px-3 py-1.5 text-sm font-medium transition-colors"
-          style="
-            background: var(--chat-bg-hover);
-            color: var(--chat-text);
-          "
-          (mouseenter)="$event.currentTarget.style.opacity = '0.8'"
-          (mouseleave)="$event.currentTarget.style.opacity = '1'"
-          (click)="newThread()"
+        <div
+          class="px-3 py-2 text-xs font-semibold uppercase tracking-wide border-b"
+          style="border-color: var(--chat-border); color: var(--chat-text-muted)"
         >
-          + New Thread
-        </button>
+          Threads
+        </div>
+
+        <div class="flex-1 overflow-y-auto">
+          @for (thread of threads(); track thread.id) {
+            <button
+              class="w-full text-left px-3 py-2 text-sm truncate transition-colors"
+              [class.font-semibold]="thread.id === activeThreadId()"
+              [style.background]="thread.id === activeThreadId() ? 'var(--chat-bg-hover)' : 'transparent'"
+              (mouseenter)="$event.currentTarget.style.background = 'var(--chat-bg-hover)'"
+              (mouseleave)="$event.currentTarget.style.background = thread.id === activeThreadId() ? 'var(--chat-bg-hover)' : 'transparent'"
+              (click)="switchThread(thread.id)"
+            >
+              {{ thread.label }}
+            </button>
+          }
+        </div>
+
+        <div class="p-2 border-t" style="border-color: var(--chat-border)">
+          <button
+            class="w-full rounded px-3 py-1.5 text-sm font-medium transition-colors"
+            style="background: var(--chat-bg-hover); color: var(--chat-text);"
+            (mouseenter)="$event.currentTarget.style.opacity = '0.8'"
+            (mouseleave)="$event.currentTarget.style.opacity = '1'"
+            (click)="newThread()"
+          >
+            + New Thread
+          </button>
+        </div>
       </div>
-    </aside>
+    </example-chat-layout>
   `,
 })
 export class PersistenceComponent {

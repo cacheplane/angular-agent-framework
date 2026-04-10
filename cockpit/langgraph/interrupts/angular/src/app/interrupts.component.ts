@@ -2,6 +2,7 @@
 import { Component } from '@angular/core';
 import { ChatComponent, ChatInterruptPanelComponent, views, type InterruptAction } from '@cacheplane/chat';
 import { agent } from '@cacheplane/angular';
+import { ExampleChatLayoutComponent } from '@cacheplane/example-layouts';
 import { signalStateStore } from '@cacheplane/render';
 import { environment } from '../environments/environment';
 import { ApprovalCardComponent } from './views/approval-card.component';
@@ -21,16 +22,18 @@ import { ApprovalCardComponent } from './views/approval-card.component';
 @Component({
   selector: 'app-interrupts',
   standalone: true,
-  imports: [ChatComponent, ChatInterruptPanelComponent],
+  imports: [ChatComponent, ChatInterruptPanelComponent, ExampleChatLayoutComponent],
   template: `
-    <div class="flex flex-col h-screen">
-      <chat [ref]="stream" [views]="ui" [store]="uiStore" class="flex-1 min-w-0" />
-      @if (stream.interrupt()) {
-        <div class="p-4" style="border-top: 1px solid var(--chat-border, #333);">
-          <chat-interrupt-panel [ref]="stream" (action)="onInterruptAction($event)" />
-        </div>
-      }
-    </div>
+    <example-chat-layout>
+      <div main class="flex flex-col h-full">
+        <chat [ref]="stream" [views]="ui" [store]="uiStore" class="flex-1 min-w-0" />
+        @if (stream.interrupt()) {
+          <div class="p-4" style="border-top: 1px solid var(--chat-border, #333);">
+            <chat-interrupt-panel [ref]="stream" (action)="onInterruptAction($event)" />
+          </div>
+        }
+      </div>
+    </example-chat-layout>
   `,
 })
 export class InterruptsComponent {

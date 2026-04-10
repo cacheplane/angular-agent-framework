@@ -9,6 +9,7 @@ import {
 import type { Spec } from '@json-render/core';
 import { StreamingSimulator } from '../../../../shared/streaming-simulator';
 import { StreamingTimelineComponent } from '../../../../shared/streaming-timeline.component';
+import { ExampleSplitLayoutComponent } from '@cacheplane/example-layouts';
 import { REGISTRY_SPECS } from './specs';
 
 // --- Inline view components registered in the demo registry ---
@@ -131,11 +132,11 @@ class DemoCardComponent {
 @Component({
   selector: 'app-registry',
   standalone: true,
-  imports: [RenderSpecComponent, StreamingTimelineComponent],
+  imports: [RenderSpecComponent, StreamingTimelineComponent, ExampleSplitLayoutComponent],
   template: `
-    <div class="flex flex-col h-full bg-gray-950 text-gray-100">
+    <example-split-layout>
       <!-- Spec picker -->
-      <div class="flex items-center gap-2 px-4 py-3 border-b border-gray-800">
+      <div header class="flex items-center gap-2 px-4 py-3">
         <span class="text-xs text-gray-500 uppercase tracking-wide font-semibold mr-2">Spec:</span>
         @for (spec of specs; track spec.label; let i = $index) {
           <button
@@ -147,35 +148,32 @@ class DemoCardComponent {
         }
       </div>
 
-      <!-- Split panes -->
-      <div class="flex flex-col md:flex-row flex-1 min-h-0">
-        <!-- Left: Live Render Output -->
-        <div class="flex-1 overflow-y-auto p-4 md:p-6 min-h-[200px] md:min-h-0">
-          <div class="text-[10px] text-gray-500 uppercase tracking-widest font-semibold mb-4">Live Render Output</div>
-          @if (simulator.spec(); as renderedSpec) {
-            <render-spec [spec]="renderedSpec" [registry]="registry" [store]="store" [loading]="simulator.playing()" />
-          } @else {
-            <div class="text-gray-600 text-sm italic">Press play to start streaming...</div>
-          }
-        </div>
+      <!-- Left: Live Render Output -->
+      <div primary>
+        <div class="text-[10px] text-gray-500 uppercase tracking-widest font-semibold mb-4">Live Render Output</div>
+        @if (simulator.spec(); as renderedSpec) {
+          <render-spec [spec]="renderedSpec" [registry]="registry" [store]="store" [loading]="simulator.playing()" />
+        } @else {
+          <div class="text-gray-600 text-sm italic">Press play to start streaming...</div>
+        }
+      </div>
 
-        <!-- Right: JSON + Controls -->
-        <div class="w-full md:w-80 shrink-0 flex flex-col border-t md:border-t-0 md:border-l border-gray-800 bg-gray-900/50">
-          <!-- Streaming JSON (scrollable) -->
-          <div class="flex-1 overflow-y-auto p-4" #jsonPane>
-            <div class="text-[10px] text-gray-500 uppercase tracking-widest font-semibold mb-4">Streaming JSON</div>
-            <pre class="text-[11px] font-mono text-gray-300 leading-relaxed whitespace-pre-wrap break-all">{{ simulator.rawJson() }}<span class="text-indigo-400 animate-pulse">|</span></pre>
-            <div class="mt-3 flex justify-between text-[10px]">
-              <span class="text-indigo-400">{{ simulator.playing() ? 'Streaming...' : simulator.position() >= simulator.total() ? 'Complete' : 'Paused' }}</span>
-              <span class="text-gray-500">{{ percent() }}%</span>
-            </div>
+      <!-- Right: JSON + Controls -->
+      <div secondary class="flex flex-col h-full">
+        <!-- Streaming JSON (scrollable) -->
+        <div class="flex-1 overflow-y-auto p-4" #jsonPane>
+          <div class="text-[10px] text-gray-500 uppercase tracking-widest font-semibold mb-4">Streaming JSON</div>
+          <pre class="text-[11px] font-mono text-gray-300 leading-relaxed whitespace-pre-wrap break-all">{{ simulator.rawJson() }}<span class="text-indigo-400 animate-pulse">|</span></pre>
+          <div class="mt-3 flex justify-between text-[10px]">
+            <span class="text-indigo-400">{{ simulator.playing() ? 'Streaming...' : simulator.position() >= simulator.total() ? 'Complete' : 'Paused' }}</span>
+            <span class="text-gray-500">{{ percent() }}%</span>
           </div>
         </div>
       </div>
 
       <!-- Timeline bar -->
-      <streaming-timeline [simulator]="simulator" class="border-t border-gray-800" />
-    </div>
+      <streaming-timeline footer [simulator]="simulator" class="border-t border-gray-800" />
+    </example-split-layout>
   `,
 })
 export class RegistryComponent implements OnDestroy {

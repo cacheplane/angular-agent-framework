@@ -2,6 +2,7 @@ import { Component, computed, signal } from '@angular/core';
 import { ChatComponent } from '@cacheplane/chat';
 import { agent } from '@cacheplane/angular';
 import type { ThreadState } from '@cacheplane/angular';
+import { ExampleChatLayoutComponent } from '@cacheplane/example-layouts';
 import { environment } from '../environments/environment';
 
 /**
@@ -17,15 +18,16 @@ import { environment } from '../environments/environment';
 @Component({
   selector: 'app-time-travel',
   standalone: true,
-  imports: [ChatComponent],
+  imports: [ChatComponent, ExampleChatLayoutComponent],
   template: `
-    <div class="flex h-screen">
+    <example-chat-layout>
       <!-- Chat panel -->
-      <chat [ref]="stream" class="block flex-1" />
+      <chat main [ref]="stream" class="block flex-1" />
 
       <!-- Checkpoint timeline sidebar -->
-      <aside
-        class="w-72 border-l border-[var(--chat-border)] bg-[var(--chat-bg)] flex flex-col overflow-hidden"
+      <div sidebar
+        class="flex flex-col overflow-hidden"
+        style="background: var(--chat-bg, #171717); color: var(--chat-text, #e0e0e0);"
       >
         <div class="px-4 py-3 border-b border-[var(--chat-border)]">
           <h2 class="text-sm font-semibold text-[var(--chat-text)] uppercase tracking-wide">
@@ -96,8 +98,8 @@ import { environment } from '../environments/environment';
             </div>
           }
         </div>
-      </aside>
-    </div>
+      </div>
+    </example-chat-layout>
   `,
 })
 export class TimeTravelComponent {
