@@ -195,7 +195,6 @@ export function Nav() {
             {(mobileTab === 'docs' && isDocsPage && currentLib) && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 {currentLib.sections.map((section) => {
-                  const headerColor = section.color === 'red' ? tokens.colors.angularRed : tokens.colors.accent;
                   return (
                     <div key={section.id}>
                       <button
