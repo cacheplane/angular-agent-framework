@@ -48,11 +48,10 @@ export interface A2uiLocalAction {
 
 export type A2uiAction = A2uiEventAction | A2uiLocalAction;
 
-// --- Validation (Phase 2 — type definitions only) ---
+// --- Validation (v0.9 CheckRule) ---
 
-export interface A2uiCheck {
-  call: string;
-  args: Record<string, unknown>;
+export interface A2uiCheckRule {
+  condition: DynamicBoolean;
   message: string;
 }
 
@@ -63,7 +62,7 @@ export interface A2uiComponent {
   component: string;
   children?: A2uiChildList;
   action?: A2uiAction;
-  checks?: A2uiCheck[];
+  checks?: A2uiCheckRule[];
   [key: string]: unknown;
 }
 
