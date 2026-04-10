@@ -7,6 +7,7 @@ export type {
   A2uiComponent,
   A2uiCreateSurface, A2uiUpdateComponents, A2uiUpdateDataModel, A2uiDeleteSurface,
   A2uiMessage, A2uiSurface,
+  A2uiClientDataModel, A2uiActionMessage,
 } from './lib/types';
 export { getByPointer, setByPointer, deleteByPointer } from './lib/pointer';
 export { createA2uiMessageParser } from './lib/parser';

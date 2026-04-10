@@ -106,6 +106,30 @@ export interface A2uiSurface {
   surfaceId: string;
   catalogId: string;
   theme?: A2uiTheme;
+  sendDataModel?: boolean;
   components: Map<string, A2uiComponent>;
   dataModel: Record<string, unknown>;
+}
+
+// --- v0.9 Outbound Action ---
+
+/** v0.9 client data model envelope — attached when sendDataModel is true. */
+export interface A2uiClientDataModel {
+  version: 'v0.9';
+  surfaces: Record<string, Record<string, unknown>>;
+}
+
+/** v0.9 outbound action message — sent when a component's event action fires. */
+export interface A2uiActionMessage {
+  version: 'v0.9';
+  action: {
+    name: string;
+    surfaceId: string;
+    sourceComponentId: string;
+    timestamp: string;
+    context: Record<string, unknown>;
+  };
+  metadata?: {
+    a2uiClientDataModel: A2uiClientDataModel;
+  };
 }
