@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any -- TypeDoc reflection API is untyped */
 import { Application, TSConfigReader, ReflectionKind } from 'typedoc';
 import fs from 'fs';
 import path from 'path';

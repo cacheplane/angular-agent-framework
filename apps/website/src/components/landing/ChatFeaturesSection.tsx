@@ -212,7 +212,8 @@ export function ChatFeaturesSection() {
   const msgsRef = useRef<HTMLDivElement>(null);
 
   const buildCtx = useCallback((token: number): ScenarioCtx => {
-    const msgs = msgsRef.current!;
+    const msgs = msgsRef.current;
+    if (!msgs) return {} as ScenarioCtx;
     const scroll = () => { msgs.scrollTop = msgs.scrollHeight; };
 
     const addUser = (text: string) => {
@@ -259,7 +260,7 @@ export function ChatFeaturesSection() {
       for (const ch of text) {
         if (tokenRef.current !== token) return;
         const s = document.createElement('span'); s.textContent = ch;
-        out.parentNode!.insertBefore(s, cur);
+        out.parentNode?.insertBefore(s, cur);
         scroll();
         await wait(ms);
       }
