@@ -78,11 +78,11 @@ store.get('/name'); // Signal<string>
 </Step>
 <Step title="Connect to the LangGraph backend">
 
-Use `streamResource()` to connect to the agent and display render specs
+Use `agent()` to connect to the agent and display render specs
 from the conversation:
 
 ```typescript
-protected readonly stream = streamResource({
+protected readonly stream = agent({
   apiUrl: environment.langGraphApiUrl,
   assistantId: environment.streamingAssistantId,
 });

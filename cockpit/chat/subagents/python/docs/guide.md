@@ -28,10 +28,10 @@ graph.add_node("analysis_agent", analysis_agent)
 <Step title="Track subagent status">
 
 Each subagent node emits status updates that the frontend tracks.
-The stream resource automatically detects node transitions:
+The agent ref automatically detects node transitions:
 
 ```typescript
-protected readonly stream = streamResource({
+protected readonly stream = agent({
   apiUrl: environment.langGraphApiUrl,
   assistantId: environment.streamingAssistantId,
 });

@@ -71,10 +71,10 @@ const spec = {
 </Step>
 <Step title="Connect to the backend">
 
-Use `streamResource()` to receive specs with computed props from the agent:
+Use `agent()` to receive specs with computed props from the agent:
 
 ```typescript
-protected readonly stream = streamResource({
+protected readonly stream = agent({
   apiUrl: environment.langGraphApiUrl,
   assistantId: environment.streamingAssistantId,
 });

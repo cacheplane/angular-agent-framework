@@ -15,11 +15,11 @@ to navigate checkpoints and branch from previous conversation states.
 <Steps>
 <Step title="Enable history tracking">
 
-History tracking is built into `streamResource()`. Each message exchange
+History tracking is built into `agent()`. Each message exchange
 creates a checkpoint automatically:
 
 ```typescript
-protected readonly stream = streamResource({
+protected readonly stream = agent({
   apiUrl: environment.langGraphApiUrl,
   assistantId: environment.streamingAssistantId,
 });

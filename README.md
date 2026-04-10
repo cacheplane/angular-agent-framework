@@ -1,13 +1,13 @@
 <p align="center">
   <img
     src="https://cacheplane.ai/assets/hero.svg"
-    alt="Angular Agent Framework — The Enterprise Streaming Resource for LangChain and Angular"
+    alt="Angular Agent Framework — The Angular Agent Framework for LangChain"
     width="100%"
   />
 </p>
 
 <p align="center">
-  <em>The Enterprise Streaming Resource for LangChain and Angular</em>
+  <em>The Angular Agent Framework for LangChain</em>
 </p>
 
 <p align="center">
@@ -27,7 +27,7 @@
 
 ---
 
-`streamResource()` is the Angular equivalent of LangGraph's React `useStream()` hook — a full-parity implementation built on Angular Signals and the Angular Resource API. It gives enterprise Angular teams the same production-grade streaming primitives available to React developers on LangChain, without compromises or workarounds. Drop it into any Angular 20+ component, point it at your LangGraph Platform endpoint, and get reactive, signal-driven access to streaming state, messages, tool calls, interrupts, and thread history.
+`agent()` is the Angular equivalent of LangGraph's React `useStream()` hook — a full-parity implementation built on Angular Signals and the Angular Resource API. It gives enterprise Angular teams the same production-grade streaming primitives available to React developers on LangChain, without compromises or workarounds. Drop it into any Angular 20+ component, point it at your LangGraph Platform endpoint, and get reactive, signal-driven access to streaming state, messages, tool calls, interrupts, and thread history.
 
 ---
 
@@ -45,7 +45,7 @@ npm install @cacheplane/angular
 
 ```typescript
 import { Component } from '@angular/core';
-import { streamResource } from '@cacheplane/angular';
+import { agent } from '@cacheplane/angular';
 import type { BaseMessage } from '@langchain/core/messages';
 
 @Component({
@@ -65,7 +65,7 @@ import type { BaseMessage } from '@langchain/core/messages';
   `,
 })
 export class ChatComponent {
-  chat = streamResource<{ messages: BaseMessage[] }>({
+  chat = agent<{ messages: BaseMessage[] }>({
     apiUrl: 'https://your-langgraph-platform.com',
     assistantId: 'my-agent',
     messagesKey: 'messages',
@@ -83,7 +83,7 @@ That's it. `chat.messages()` is an Angular Signal. Bind it directly in your temp
 
 ## Feature Comparison
 
-| Feature | `streamResource()` (Angular) | `useStream()` (React) |
+| Feature | `agent()` (Angular) | `useStream()` (React) |
 |---|---|---|
 | Streaming state as reactive primitives | Angular Signals | React state |
 | Messages signal | `messages()` | `messages` |
@@ -111,12 +111,12 @@ That's it. `chat.messages()` is an Angular Signal. Bind it directly in your temp
 <p align="center">
   <img
     src="https://cacheplane.ai/assets/arch-diagram.svg"
-    alt="Angular Agent Framework architecture: Angular Component → streamResource() → StreamManager Bridge → LangGraph Platform, with signals returned reactively"
+    alt="Angular Agent Framework architecture: Angular Component → agent() → StreamManager Bridge → LangGraph Platform, with signals returned reactively"
     width="100%"
   />
 </p>
 
-`streamResource()` creates 12 `BehaviorSubject`s at injection-context time — once, at component construction. The `StreamManager` bridge (the only file that touches `@langchain/langgraph-sdk` internals) pushes stream events into those subjects. `toSignal()` converts each subject to an Angular Signal, also at construction time. Dynamic actions (`submit`, `stop`, `switchThread`) push into the existing subjects — no new subjects are ever created after construction. This architecture is required because `toSignal()` must be called in an injection context and cannot be called again later.
+`agent()` creates 12 `BehaviorSubject`s at injection-context time — once, at component construction. The `StreamManager` bridge (the only file that touches `@langchain/langgraph-sdk` internals) pushes stream events into those subjects. `toSignal()` converts each subject to an Angular Signal, also at construction time. Dynamic actions (`submit`, `stop`, `switchThread`) push into the existing subjects — no new subjects are ever created after construction. This architecture is required because `toSignal()` must be called in an injection context and cannot be called again later.
 
 ---
 

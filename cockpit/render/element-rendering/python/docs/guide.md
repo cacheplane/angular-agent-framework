@@ -68,10 +68,10 @@ Visibility conditions at any level control the entire subtree below.
 </Step>
 <Step title="Connect to the backend">
 
-Use `streamResource()` to receive element specs from the agent:
+Use `agent()` to receive element specs from the agent:
 
 ```typescript
-protected readonly stream = streamResource({
+protected readonly stream = agent({
   apiUrl: environment.langGraphApiUrl,
   assistantId: environment.streamingAssistantId,
 });

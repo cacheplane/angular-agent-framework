@@ -15,11 +15,11 @@ switching between conversations.
 <Steps>
 <Step title="Configure thread support">
 
-Thread management is built into `streamResource()`. Each thread gets
+Thread management is built into `agent()`. Each thread gets
 a unique ID that persists its conversation state:
 
 ```typescript
-protected readonly stream = streamResource({
+protected readonly stream = agent({
   apiUrl: environment.langGraphApiUrl,
   assistantId: environment.streamingAssistantId,
 });
