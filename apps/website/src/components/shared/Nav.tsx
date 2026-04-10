@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { tokens } from '@cacheplane/design-tokens';
@@ -47,6 +47,16 @@ export function Nav() {
   const activeSlug = isDocsPage && pathParts.length >= 4 ? pathParts[3] : '';
 
   const [mobileTab, setMobileTab] = useState<'site' | 'docs'>(isDocsPage ? 'docs' : 'site');
+
+  // Lock body scroll when mobile menu is open
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => { document.body.style.overflow = ''; };
+  }, [open]);
   const [mobileLibrary, setMobileLibrary] = useState(activeLibrary || 'agent');
   const [openSections, setOpenSections] = useState<Set<string>>(() => new Set(activeSection ? [activeSection] : []));
 
@@ -151,9 +161,10 @@ export function Nav() {
     {open && (
       <div className="md:hidden fixed left-0 right-0 bottom-0"
         style={{
-          top: 65,
+          top: 57,
           zIndex: 9999,
           background: 'rgba(255,255,255,0.98)',
+          borderTop: `1px solid ${tokens.glass.border}`,
             backdropFilter: `blur(${tokens.glass.blur})`,
             WebkitBackdropFilter: `blur(${tokens.glass.blur})`,
             overflowY: 'auto',
@@ -198,9 +209,9 @@ export function Nav() {
                         }}
                       >
                         {section.title}
-                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke={tokens.colors.textMuted} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-                          style={{ transition: 'transform 0.2s', transform: openSections.has(section.id) ? 'rotate(180deg)' : 'rotate(0)', flexShrink: 0 }}>
-                          <path d="M4 6l4 4 4-4" />
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke={tokens.colors.textMuted} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                          style={{ transition: 'transform 0.25s ease', transform: openSections.has(section.id) ? 'rotate(180deg)' : 'rotate(0)', flexShrink: 0 }}>
+                          <path d="M5 7.5l5 5 5-5" />
                         </svg>
                       </button>
                       {openSections.has(section.id) && (
