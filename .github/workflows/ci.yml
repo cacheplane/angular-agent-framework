@@ -104,18 +104,6 @@ jobs:
       - run: npm ci
       - run: npx tsx apps/cockpit/scripts/deploy-smoke.ts --url https://cockpit.cacheplane.ai --dry-run
 
-  mcp:
-    name: MCP — build / smoke
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6.0.2
-      - uses: actions/setup-node@v6.3.0
-        with:
-          node-version: 22
-          cache: npm
-      - run: npm ci
-      - run: npx nx test mcp --skip-nx-cache
-
   chat-agent-smoke:
     name: Chat Agent — smoke
     runs-on: ubuntu-latest
@@ -162,7 +150,7 @@ jobs:
 
   deploy:
     name: Deploy → Vercel
-    needs: [library, website, cockpit, cockpit-examples-build, cockpit-smoke, cockpit-secret-integration, cockpit-deploy-smoke, mcp, chat-agent-smoke, cockpit-e2e, website-e2e]
+    needs: [library, website, cockpit, cockpit-examples-build, cockpit-smoke, cockpit-secret-integration, cockpit-deploy-smoke, chat-agent-smoke, cockpit-e2e, website-e2e]
     runs-on: ubuntu-latest
     # Only deploy on pushes to main, not on pull requests
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'

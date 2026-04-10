@@ -1,0 +1,94 @@
+---
+title: Custom Catalogs
+description: Compose custom component catalogs for generative UI using ViewRegistry composition.
+---
+
+# Custom Catalogs
+
+Both json-render specs and A2UI surfaces render through the same `ViewRegistry`. Compose catalogs using `views`, `withViews`, and `withoutViews` from `@cacheplane/render`.
+
+## Using the Built-In A2UI Catalog
+
+```typescript
+import { a2uiBasicCatalog } from '@cacheplane/chat';
+
+<chat [ref]="agentRef" [views]="a2uiBasicCatalog()" />
+```
+
+## Adding Custom Components
+
+```typescript
+import { withViews } from '@cacheplane/render';
+import { a2uiBasicCatalog } from '@cacheplane/chat';
+
+const catalog = withViews(a2uiBasicCatalog(), {
+  Chart: MyChartComponent,
+  DataGrid: MyDataGridComponent,
+});
+
+<chat [ref]="agentRef" [views]="catalog" />
+```
+
+## Overriding Built-In Components
+
+```typescript
+import { views } from '@cacheplane/render';
+import { a2uiBasicCatalog } from '@cacheplane/chat';
+
+const catalog = views({
+  ...a2uiBasicCatalog(),
+  Button: MyBrandedButtonComponent,
+});
+```
+
+## Removing Components
+
+```typescript
+import { withoutViews } from '@cacheplane/render';
+import { a2uiBasicCatalog } from '@cacheplane/chat';
+
+const catalog = withoutViews(a2uiBasicCatalog(), 'Modal', 'Video');
+```
+
+## Custom-Only (No A2UI)
+
+```typescript
+import { views } from '@cacheplane/render';
+
+const catalog = views({
+  Chart: MyChartComponent,
+  Table: MyTableComponent,
+});
+
+<chat [ref]="agentRef" [views]="catalog" />
+```
+
+## No Generative UI
+
+If `views` is not provided, no generative UI renders. Specs and A2UI surfaces are silently skipped.
+
+```html
+<chat [ref]="agentRef" />
+```
+
+## Writing a Custom Component
+
+Custom components receive the standard `AngularComponentInputs`:
+
+```typescript
+@Component({
+  selector: 'my-chart',
+  standalone: true,
+  template: `<canvas #chart></canvas>`,
+})
+export class MyChartComponent {
+  readonly data = input<number[]>([]);
+  readonly title = input<string>('');
+  readonly childKeys = input<string[]>([]);
+  readonly spec = input.required<Spec>();
+  readonly emit = input<(event: string) => void>(() => {});
+  readonly loading = input<boolean>(false);
+}
+```
+
+The component receives resolved props as inputs. `childKeys` and `spec` enable recursive child rendering. `emit` triggers event handlers defined in the spec's `on` bindings.

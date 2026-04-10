@@ -2,7 +2,7 @@
 
 A2UI is an open standard for agent-driven user interfaces. It lets an AI agent describe a structured UI — components, layout, and live data — using a simple JSON protocol, and have that UI rendered automatically inside a chat session.
 
-The `ChatComponent` includes built-in A2UI support with no extra configuration. When an agent response begins with the `---a2ui_JSON---` sentinel, the chat switches to A2UI rendering mode automatically.
+When an agent response begins with the `---a2ui_JSON---` sentinel, the chat switches to A2UI rendering mode automatically — provided you supply a component catalog via the `views` input.
 
 <Callout type="info" title="Spec version">
 The implementation follows the A2UI v0.9 specification. For the full protocol reference, see [a2ui.org](https://a2ui.org).
@@ -23,7 +23,7 @@ AI response starts with ---a2ui_JSON---
 
 The surface store maintains a `Map<string, A2uiSurface>` keyed by surface ID. Each surface holds a flat component map, a data model, theme metadata, and the catalog ID used to resolve components.
 
-The `ChatComponent` provides the built-in `a2uiBasicCatalog` automatically — you do not need to configure a catalog to start using A2UI.
+To render A2UI surfaces, pass a `ViewRegistry` to the `ChatComponent` via the `views` input. The `a2uiBasicCatalog()` function provides the 18 built-in components.
 
 ## The Four Message Types
 
@@ -77,6 +77,17 @@ Removes a surface from the store and dismisses its rendered output.
 {"deleteSurface": {"surfaceId": "order-status"}}
 ```
 
+## Action-Event Bridge
+
+A2UI actions (button clicks, form events) now map directly to render-spec `on` bindings. When `surfaceToSpec()` converts a surface to a spec, each component's `action` prop is translated into an `on` binding on the corresponding spec element. This means A2UI actions flow through the render-lib event system rather than being handled ad-hoc by individual components.
+
+The bridge provides two default handlers:
+
+- `a2ui:event` -- dispatches named events (e.g., `submit`, `cancel`) back to the agent
+- `a2ui:localAction` -- executes local function calls (e.g., `openUrl`)
+
+This unified event flow means consumers can observe all A2UI interactions through the `RenderEvent` stream on `RenderSpecComponent`, including handler execution, state changes, and lifecycle signals. See the [Render Events](/docs/render/events) page for the full event type reference.
+
 ## A2UI vs json-render
 
 Both A2UI and json-render produce rendered UIs inside chat messages, but they serve different purposes.
@@ -93,24 +104,25 @@ Use **A2UI** when the agent needs to build an interface incrementally, bind it t
 
 ## Quick Setup
 
-No configuration is required. Add `ChatComponent` to your template and A2UI content is detected and rendered automatically:
+Pass `a2uiBasicCatalog()` to the `views` input to enable A2UI rendering:
 
 ```typescript
-import { ChatComponent } from '@cacheplane/chat';
+import { ChatComponent, a2uiBasicCatalog } from '@cacheplane/chat';
 
 @Component({
-  template: `<cp-chat [stream]="stream" />`,
+  template: `<chat [ref]="agentRef" [views]="catalog" />`,
   imports: [ChatComponent],
 })
 export class AppComponent {
-  stream = /* your AI stream */;
+  catalog = a2uiBasicCatalog();
+  agentRef = /* your AgentRef */;
 }
 ```
 
-When the AI response starts with `---a2ui_JSON---`, the chat renders the surfaces using the built-in `a2uiBasicCatalog`. No inputs to set, no catalog to register.
+When the AI response starts with `---a2ui_JSON---`, the chat renders the surfaces using the provided catalog.
 
 <Callout type="tip" title="Custom catalogs">
-To use your own components or extend the built-in set, pass a `ViewRegistry` to the chat. See the [Catalog reference](/docs/chat/a2ui/catalog) for details.
+To extend or replace the built-in components, compose catalogs with `withViews()` or `views()`. See the [Custom Catalogs guide](/docs/chat/guides/custom-catalogs) for details.
 </Callout>
 
 ## What's Next
@@ -135,7 +147,7 @@ To use your own components or extend the built-in set, pass a `ViewRegistry` to 
     icon="grid"
     href="/docs/chat/a2ui/catalog"
   >
-    Reference for all 12 built-in components and their props.
+    Reference for all 18 built-in components and their props.
   </Card>
   <Card
     title="Streaming"

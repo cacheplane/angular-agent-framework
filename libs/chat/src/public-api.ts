@@ -23,6 +23,7 @@ export { provideChat, CHAT_CONFIG } from './lib/provide-chat';
 
 // Compositions
 export { ChatComponent } from './lib/compositions/chat/chat.component';
+export type { ChatRenderEvent } from './lib/compositions/chat/chat-render-event';
 export { ChatInterruptPanelComponent } from './lib/compositions/chat-interrupt-panel/chat-interrupt-panel.component';
 export type { InterruptAction } from './lib/compositions/chat-interrupt-panel/chat-interrupt-panel.component';
 export { ChatToolCallCardComponent } from './lib/compositions/chat-tool-call-card/chat-tool-call-card.component';

@@ -2,10 +2,11 @@
 import {
   Component,
   input,
+  output,
   ChangeDetectionStrategy,
 } from '@angular/core';
 import type { Spec, StateStore } from '@json-render/core';
-import type { AngularRegistry } from '@cacheplane/render';
+import type { AngularRegistry, RenderEvent } from '@cacheplane/render';
 import { RenderSpecComponent } from '@cacheplane/render';
 
 @Component({
@@ -20,6 +21,7 @@ import { RenderSpecComponent } from '@cacheplane/render';
         [registry]="registry()"
         [store]="store()"
         [loading]="loading()"
+        (events)="events.emit($event)"
       />
     }
   `,
@@ -29,4 +31,5 @@ export class ChatGenerativeUiComponent {
   readonly registry = input<AngularRegistry | undefined>(undefined);
   readonly store = input<StateStore | undefined>(undefined);
   readonly loading = input<boolean>(false);
+  readonly events = output<RenderEvent>();
 }
