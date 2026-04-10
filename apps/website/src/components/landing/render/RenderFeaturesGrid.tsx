@@ -40,7 +40,7 @@ export function RenderFeaturesGrid() {
 
       <div style={{
         maxWidth: 1000, margin: '0 auto',
-        display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(440px, 1fr))', gap: 24,
+        display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(440px, 100%), 1fr))', gap: 24,
       }}>
         {FEATURES.map((feat, i) => (
           <motion.div
@@ -75,6 +75,7 @@ export function RenderFeaturesGrid() {
                 title={feat.title}
                 style={{ width: '100%', height: 320, border: 'none', display: 'block' }}
                 loading="lazy"
+                sandbox="allow-scripts allow-same-origin"
               />
             </div>
           </motion.div>

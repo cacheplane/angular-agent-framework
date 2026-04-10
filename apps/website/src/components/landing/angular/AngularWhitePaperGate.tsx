@@ -37,7 +37,7 @@ export function AngularWhitePaperGate() {
   };
 
   return (
-    <section id="whitepaper-gate" style={{ padding: '80px 32px' }}>
+    <section id="angular-whitepaper-gate" style={{ padding: '80px 32px' }}>
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}

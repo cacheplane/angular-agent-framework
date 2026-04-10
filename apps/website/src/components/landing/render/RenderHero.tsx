@@ -39,7 +39,7 @@ export function RenderHero() {
           <a href="/whitepapers/render.pdf" download
             style={{
               display: 'inline-flex', alignItems: 'center', gap: 6,
-              background: '#1a7a40', color: '#fff', fontFamily: 'Inter, sans-serif',
+              background: tokens.colors.renderGreen, color: '#fff', fontFamily: 'Inter, sans-serif',
               fontSize: 15, fontWeight: 600, padding: '0.875rem 1.75rem', borderRadius: 8,
               textDecoration: 'none', boxShadow: tokens.glow.button, minHeight: 44,
             }}>

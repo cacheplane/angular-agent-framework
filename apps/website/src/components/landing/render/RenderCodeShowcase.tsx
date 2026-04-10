@@ -64,7 +64,7 @@ export function RenderCodeShowcase() {
             }}>
               <span style={{
                 fontFamily: "'JetBrains Mono', monospace", fontSize: '0.68rem',
-                fontWeight: 700, color: '#1a7a40',
+                fontWeight: 700, color: tokens.colors.renderGreen,
               }}>
                 {s.title}
               </span>
