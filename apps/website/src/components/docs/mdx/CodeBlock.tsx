@@ -30,8 +30,8 @@ export function Pre({ children, ...props }: React.HTMLAttributes<HTMLPreElement>
   };
 
   return (
-    <div style={{ position: 'relative' }}>
-      <pre ref={ref} {...props}>{children}</pre>
+    <div style={{ position: 'relative', maxWidth: '100%', overflow: 'hidden' }}>
+      <pre ref={ref} {...props} style={{ ...((props as Record<string, unknown>).style as React.CSSProperties), overflowX: 'auto' }}>{children}</pre>
       <button
         onClick={copy}
         aria-label={copied ? 'Copied' : 'Copy code'}
