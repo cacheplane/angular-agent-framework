@@ -158,31 +158,24 @@ export function Nav() {
           </div>
           {isDocsPage && (
             <>
-              <div style={{ borderTop: `1px solid ${tokens.glass.border}`, margin: '8px 0 4px' }} />
-              <span className="font-mono text-xs uppercase tracking-wider"
-                style={{ color: tokens.colors.accent, fontWeight: 600 }}>
-                Documentation
-              </span>
+              <div style={{ borderTop: `1px solid ${tokens.glass.border}`, margin: '4px 0' }} />
               {docsConfig.filter(lib => lib.id === activeLibrary || !activeLibrary).map((lib) => (
                 <div key={lib.id}>
-                  <span className="font-mono text-xs uppercase tracking-wider py-1 block"
-                    style={{ color: tokens.colors.accent, fontWeight: 700, fontSize: '0.65rem' }}>
-                    {lib.title}
-                  </span>
                   {lib.sections.map((section) => (
                     <div key={section.id}>
                       <button
                         onClick={() => toggleSection(section.id)}
-                        className="flex items-center gap-2 w-full text-left font-mono text-xs uppercase tracking-wider py-1"
+                        className="flex items-center gap-2 w-full text-left text-sm py-1"
                         style={{
-                          color: section.color === 'red' ? tokens.colors.angularRed : tokens.colors.accent,
-                          fontWeight: 600, background: 'none', border: 'none', cursor: 'pointer',
+                          color: tokens.colors.textPrimary,
+                          fontWeight: 500, background: 'none', border: 'none', cursor: 'pointer',
+                          fontFamily: 'Inter, sans-serif',
                         }}
                       >
                         <span style={{
                           display: 'inline-block', transition: 'transform 0.2s',
                           transform: openSections.has(section.id) ? 'rotate(90deg)' : 'rotate(0deg)',
-                          fontSize: '0.6rem',
+                          fontSize: '0.5rem', color: tokens.colors.textMuted,
                         }}>
                           ▶
                         </span>
@@ -195,11 +188,10 @@ export function Nav() {
                             key={`${lib.id}/${page.section}/${page.slug}`}
                             href={`/docs/${lib.id}/${page.section}/${page.slug}`}
                             onClick={() => setOpen(false)}
-                            className="block pl-6 py-1 text-sm"
+                            className="block pl-5 py-1 text-sm"
                             style={{
-                              color: isActive ? tokens.colors.accent : tokens.colors.textSecondary,
-                              background: isActive ? tokens.colors.accentSurface : 'transparent',
-                              borderRadius: 4,
+                              color: isActive ? tokens.colors.accent : tokens.colors.textMuted,
+                              fontFamily: 'Inter, sans-serif',
                             }}
                           >
                             {page.title}
