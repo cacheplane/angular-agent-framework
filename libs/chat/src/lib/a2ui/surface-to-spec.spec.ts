@@ -325,4 +325,17 @@ describe('surfaceToSpec — binding tracking', () => {
     const spec = surfaceToSpec(surface)!;
     expect(spec.elements['root'].props['_bindings']).toBeUndefined();
   });
+
+  it('filters out agent-authored _bindings and uses auto-detected bindings', () => {
+    const surface = makeSurface(
+      [{
+        id: 'root', component: 'TextField', label: 'Name',
+        value: { path: '/name' } as any,
+        _bindings: { value: '/name' },
+      } as any],
+      { name: 'Alice' },
+    );
+    const spec = surfaceToSpec(surface)!;
+    expect(spec.elements['root'].props['_bindings']).toEqual({ value: '/name' });
+  });
 });

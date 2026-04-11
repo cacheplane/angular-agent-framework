@@ -75,12 +75,17 @@ Components bind to the data model using path references:
 
 ```json
 {"id": "name_field", "component": "TextField",
- "label": "Name", "value": {"path": "/name"},
- "_bindings": {"value": "/name"}}
+ "label": "Name", "value": {"path": "/name"}}
 ```
 
-When the user types in the field, the value at `/name` in the data model
-updates automatically via the render-lib StateStore.
+The `surfaceToSpec` function auto-detects path references and populates
+`_bindings` for each input component — agents do not write `_bindings`
+directly. When the user changes a bound input, the component emits a
+data model update event.
+
+**Known limitation:** Data model updates from user input do not currently
+reflect to other components in real time. The agent can refresh state by
+sending a new `updateDataModel` message.
 
 </Step>
 <Step title="Event routing">

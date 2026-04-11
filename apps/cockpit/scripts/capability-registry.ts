@@ -45,6 +45,7 @@ export const capabilities: readonly Capability[] = [
   { id: 'c-generative-ui', product: 'chat', topic: 'generative-ui', angularProject: 'cockpit-chat-generative-ui-angular', port: 4508, pythonDir: 'cockpit/chat/generative-ui/python', graphName: 'c-generative-ui' },
   { id: 'c-debug', product: 'chat', topic: 'debug', angularProject: 'cockpit-chat-debug-angular', port: 4509, pythonDir: 'cockpit/chat/debug/python', graphName: 'c-debug' },
   { id: 'c-theming', product: 'chat', topic: 'theming', angularProject: 'cockpit-chat-theming-angular', port: 4510, pythonDir: 'cockpit/chat/theming/python', graphName: 'c-theming' },
+  { id: 'c-a2ui', product: 'chat', topic: 'a2ui', angularProject: 'cockpit-chat-a2ui-angular', port: 4511, pythonDir: 'cockpit/chat/a2ui/python', graphName: 'c-a2ui' },
 ] as const;
 
 export function findCapability(id: string): Capability | undefined {

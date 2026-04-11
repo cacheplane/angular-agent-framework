@@ -1,6 +1,6 @@
 {
   "graphs": {
-    "a2ui_form": "./src/graph.py:graph"
+    "c-a2ui": "./src/graph.py:graph"
   },
   "dependencies": ["."],
   "python_version": "3.12",
