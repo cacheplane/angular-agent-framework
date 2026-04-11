@@ -55,7 +55,7 @@ export function AngularCodeShowcase() {
 
       <div style={{
         maxWidth: 900, margin: '0 auto',
-        display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(380px, 1fr))', gap: 24,
+        display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(380px, 100%), 1fr))', gap: 24,
       }}>
         {[{ title: 'Minimal Setup', code: SNIPPET_1 }, { title: 'Full Configuration', code: SNIPPET_2 }].map((s, i) => (
           <motion.div

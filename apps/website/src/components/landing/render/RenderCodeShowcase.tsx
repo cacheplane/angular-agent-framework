@@ -47,7 +47,7 @@ export function RenderCodeShowcase() {
 
       <div style={{
         maxWidth: 900, margin: '0 auto',
-        display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(380px, 1fr))', gap: 24,
+        display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(380px, 100%), 1fr))', gap: 24,
       }}>
         {[{ title: 'Registry Setup', code: SNIPPET_1 }, { title: 'Template Binding', code: SNIPPET_2 }].map((s, i) => (
           <motion.div
