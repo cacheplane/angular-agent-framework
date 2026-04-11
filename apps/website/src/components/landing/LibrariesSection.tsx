@@ -75,7 +75,7 @@ export function LibrariesSection() {
       <div style={{
         maxWidth: 1000, margin: '0 auto',
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(min(280px, 100%), 1fr))',
         gap: 24,
       }}>
         {LIBRARIES.map((lib, i) => (
