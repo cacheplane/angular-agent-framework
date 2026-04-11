@@ -20,10 +20,10 @@ test.describe('LangGraph Streaming Example', () => {
     await page.click('button[type="submit"]');
 
     // Wait for the AI response to appear
-    await expect(page.locator('.chat-md')).toBeVisible({ timeout: 30000 });
+    await expect(page.locator('.chat-md').first()).toBeVisible({ timeout: 30000 });
 
     // The AI response should have content
-    await expect(page.locator('.chat-md')).not.toBeEmpty({ timeout: 30000 });
+    await expect(page.locator('.chat-md').first()).not.toBeEmpty({ timeout: 30000 });
 
     // The button should show Send again (not Streaming...)
     await expect(page.locator('button[type="submit"]')).toHaveText('Send', { timeout: 30000 });

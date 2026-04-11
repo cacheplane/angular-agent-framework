@@ -15,7 +15,7 @@ test.describe('Deep Agents Skills Example', () => {
   test('sends a message and receives a response', async ({ page }) => {
     await page.fill('textarea[name="messageText"]', 'What is 42 times 7?');
     await page.click('button[type="submit"]');
-    await expect(page.locator('.chat-md')).toBeVisible({ timeout: 30000 });
-    await expect(page.locator('.chat-md')).not.toBeEmpty({ timeout: 30000 });
+    await expect(page.locator('.chat-md').first()).toBeVisible({ timeout: 30000 });
+    await expect(page.locator('.chat-md').first()).not.toBeEmpty({ timeout: 30000 });
   });
 });

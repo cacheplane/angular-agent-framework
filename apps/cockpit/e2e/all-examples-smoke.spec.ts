@@ -59,8 +59,8 @@ test.describe('All Examples Send Message Test', () => {
       await page.click('button[type="submit"]');
 
       // Wait for AI response
-      await expect(page.locator('.chat-md')).toBeVisible({ timeout: 30000 });
-      await expect(page.locator('.chat-md')).not.toBeEmpty({ timeout: 30000 });
+      await expect(page.locator('.chat-md').first()).toBeVisible({ timeout: 30000 });
+      await expect(page.locator('.chat-md').first()).not.toBeEmpty({ timeout: 30000 });
     });
   }
 });

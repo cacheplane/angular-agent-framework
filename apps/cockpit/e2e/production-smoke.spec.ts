@@ -63,7 +63,7 @@ test.describe('Production: send/receive smoke', () => {
       await expect(page.locator('chat')).toBeVisible({ timeout: 10000 });
       await page.fill('textarea[name="messageText"]', 'hello');
       await page.click('button[type="submit"]');
-      await expect(page.locator('.chat-md')).toBeVisible({ timeout: 30000 });
+      await expect(page.locator('.chat-md').first()).toBeVisible({ timeout: 30000 });
     });
   }
 });
