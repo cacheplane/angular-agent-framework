@@ -1,7 +1,5 @@
-// apps/website/src/components/landing/render/RenderCodeShowcase.tsx
-'use client';
-import { motion } from 'framer-motion';
 import { tokens } from '@cacheplane/design-tokens';
+import { HighlightedCode } from '../HighlightedCode';
 
 const SNIPPET_1 = `import { defineAngularRegistry } from '@cacheplane/render';
 import { TableComponent } from './table.component';
@@ -19,16 +17,15 @@ const SNIPPET_2 = `<render-spec
   [state]="stateStore"
 />`;
 
-export function RenderCodeShowcase() {
+const SNIPPETS = [
+  { title: 'Registry Setup', code: SNIPPET_1, lang: 'typescript' },
+  { title: 'Template Binding', code: SNIPPET_2, lang: 'html' },
+];
+
+export async function RenderCodeShowcase() {
   return (
     <section style={{ padding: '80px 32px' }}>
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.5 }}
-        style={{ textAlign: 'center', marginBottom: 48 }}
-      >
+      <div style={{ textAlign: 'center', marginBottom: 48 }}>
         <p style={{
           fontFamily: 'var(--font-mono,"JetBrains Mono",monospace)',
           fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.12em',
@@ -43,19 +40,15 @@ export function RenderCodeShowcase() {
         }}>
           Generative UI in a few lines
         </h2>
-      </motion.div>
+      </div>
 
       <div style={{
         maxWidth: 900, margin: '0 auto',
         display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(380px, 100%), 1fr))', gap: 24,
       }}>
-        {[{ title: 'Registry Setup', code: SNIPPET_1 }, { title: 'Template Binding', code: SNIPPET_2 }].map((s, i) => (
-          <motion.div
+        {SNIPPETS.map((s) => (
+          <div
             key={s.title}
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.45, delay: i * 0.1 }}
             style={{ borderRadius: 14, overflow: 'hidden', border: `1px solid ${tokens.glass.border}` }}
           >
             <div style={{
@@ -69,14 +62,8 @@ export function RenderCodeShowcase() {
                 {s.title}
               </span>
             </div>
-            <pre style={{
-              background: '#1a1b26', color: '#c8ccee', padding: '20px 24px',
-              fontSize: '0.78rem', lineHeight: 1.65, margin: 0, overflowX: 'auto',
-              fontFamily: "'JetBrains Mono', monospace",
-            }}>
-              <code>{s.code}</code>
-            </pre>
-          </motion.div>
+            <HighlightedCode code={s.code} lang={s.lang} />
+          </div>
         ))}
       </div>
     </section>
