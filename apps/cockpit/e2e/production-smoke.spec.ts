@@ -13,6 +13,7 @@ import { expect, test } from '@playwright/test';
  *   npx playwright test apps/cockpit/e2e/production-smoke.spec.ts
  */
 
+const COCKPIT_URL = process.env['BASE_URL'] ?? 'https://cockpit.cacheplane.ai';
 const EXAMPLES_URL = process.env['EXAMPLES_URL'] ?? 'https://examples.cacheplane.ai';
 
 const CAPABILITIES = [
@@ -45,7 +46,7 @@ test.describe('Production: Angular example apps load', () => {
 
 test.describe('Production: cockpit loads correctly', () => {
   test('cockpit loads with sidebar navigation', async ({ page }) => {
-    await page.goto('/', { timeout: 15000 });
+    await page.goto(COCKPIT_URL, { timeout: 15000 });
     await expect(page.getByRole('navigation', { name: 'Cockpit navigation' })).toBeVisible();
     const links = await page.locator('nav a').allTextContents();
     const overviewLinks = links.filter((t) => t.toLowerCase().includes('overview'));
@@ -60,7 +61,7 @@ test.describe('Production: send/receive smoke', () => {
     test(`${cap} sends and receives a message`, async ({ page }) => {
       await page.goto(`${EXAMPLES_URL}/${cap}/`, { timeout: 15000 });
       await expect(page.locator('chat')).toBeVisible({ timeout: 10000 });
-      await page.fill('input[name="prompt"]', 'hello');
+      await page.fill('textarea[name="messageText"]', 'hello');
       await page.click('button[type="submit"]');
       await expect(page.locator('.chat-md')).toBeVisible({ timeout: 30000 });
     });
