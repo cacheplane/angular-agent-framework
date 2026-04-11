@@ -4,11 +4,11 @@ import { motion } from 'framer-motion';
 import { tokens } from '@cacheplane/design-tokens';
 
 const PAIN_POINTS = [
-  'Zone.js interference with SSE event streams',
-  'Manual subscription management and cleanup',
-  'Custom SSE wiring that breaks under load',
-  'Incompatibility with OnPush change detection',
-  'No deterministic test story for streaming',
+  'Raw Client + for-await SSE loop — no Angular integration',
+  'Manual BehaviorSubject → Signal wiring for each state slice',
+  'Thread persistence, interrupt handling built from scratch',
+  'No OnPush-compatible signal API — custom change detection workarounds',
+  'Testing against live LangGraph API — slow, flaky, non-deterministic',
 ];
 
 const SOLUTIONS = [
@@ -42,13 +42,13 @@ export function AngularProblemSolution() {
             fontSize: '0.58rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em',
             padding: '2px 9px', borderRadius: 5, color: '#fff', background: '#b71c1c', marginBottom: 16,
           }}>
-            Without @cacheplane/angular
+            With @langchain/langgraph-sdk alone
           </span>
           <h3 style={{
             fontFamily: "'EB Garamond', serif", fontSize: '1.3rem', fontWeight: 700,
             color: tokens.colors.textPrimary, lineHeight: 1.25, marginBottom: 16,
           }}>
-            Your LangGraph agent works. Your Angular frontend doesn't stream it.
+            The JS SDK gives you a Client. You build everything else.
           </h3>
           <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
             {PAIN_POINTS.map(p => (

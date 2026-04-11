@@ -4,15 +4,15 @@ import { motion } from 'framer-motion';
 import { tokens } from '@cacheplane/design-tokens';
 
 const ROWS = [
-  { capability: 'SSE streaming', theirs: 'Manual wiring', ours: 'Signal-native via agent()' },
-  { capability: 'State management', theirs: 'Custom signals', ours: 'Built-in reactive state' },
-  { capability: 'Thread persistence', theirs: 'DIY localStorage', ours: 'Built-in threadId signal + restore' },
-  { capability: 'Interrupt handling', theirs: 'Manual Command.RESUME', ours: 'interrupt() signal + approve/edit/cancel' },
-  { capability: 'Tool call rendering', theirs: 'Raw events', ours: 'Structured tool call state' },
-  { capability: 'Time travel', theirs: 'Not included', ours: 'Built-in state history' },
-  { capability: 'Testing', theirs: 'Against live API', ours: 'MockStreamTransport, offline, <100ms' },
-  { capability: 'OnPush compatibility', theirs: 'Requires workarounds', ours: 'Native signal support' },
-  { capability: 'DeepAgent support', theirs: 'Not included', ours: 'Full multi-agent orchestration' },
+  { capability: 'SSE streaming', theirs: 'Raw Client + for-await loop', ours: 'Signal-native via agent()' },
+  { capability: 'State management', theirs: 'Manual BehaviorSubject → Signal', ours: 'Built-in reactive state' },
+  { capability: 'Thread persistence', theirs: 'DIY localStorage + API calls', ours: 'Built-in threadId signal + restore' },
+  { capability: 'Interrupt handling', theirs: 'Manual Command.RESUME wiring', ours: 'interrupt() signal + approve/edit/cancel' },
+  { capability: 'Tool call rendering', theirs: 'Parse raw SSE events', ours: 'Structured tool call state' },
+  { capability: 'Time travel', theirs: 'Build from scratch', ours: 'Built-in state history' },
+  { capability: 'Testing', theirs: 'Against live API', ours: 'MockAgentTransport, offline, <100ms' },
+  { capability: 'OnPush compatibility', theirs: 'Custom change detection workarounds', ours: 'Native signal support' },
+  { capability: 'React parity', theirs: 'useStream() is React-only', ours: 'agent() — full useStream() parity for Angular' },
 ];
 
 export function AngularComparison() {
@@ -37,7 +37,7 @@ export function AngularComparison() {
           fontSize: 'clamp(26px,3.5vw,42px)', fontWeight: 800, lineHeight: 1.1,
           color: tokens.colors.textPrimary,
         }}>
-          LangGraph Angular SDK vs @cacheplane/angular
+          @langchain/langgraph-sdk vs @cacheplane/angular
         </h2>
       </motion.div>
 
@@ -57,7 +57,7 @@ export function AngularComparison() {
           display: 'grid', gridTemplateColumns: 'minmax(100px, 1fr) minmax(120px, 1fr) minmax(120px, 1fr)',
           background: 'rgba(255,255,255,.3)', borderBottom: `1px solid ${tokens.glass.border}`, padding: '14px 24px',
         }}>
-          {['Capability', 'LangGraph Angular SDK', '@cacheplane/angular'].map((h, i) => (
+          {['Capability', '@langchain/langgraph-sdk', '@cacheplane/angular'].map((h, i) => (
             <div key={h} style={{
               fontFamily: 'var(--font-mono,"JetBrains Mono",monospace)',
               fontSize: '0.62rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em',
