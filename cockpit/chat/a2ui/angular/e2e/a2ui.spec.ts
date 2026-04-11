@@ -11,7 +11,7 @@ test.describe('A2UI Example', () => {
   });
 
   test('displays input and send button', async ({ page }) => {
-    await expect(page.locator('input[name="prompt"]')).toBeVisible({ timeout: 5000 });
+    await expect(page.locator('textarea[name="messageText"]')).toBeVisible({ timeout: 5000 });
     await expect(page.locator('button[type="submit"]')).toBeVisible({ timeout: 5000 });
   });
 });

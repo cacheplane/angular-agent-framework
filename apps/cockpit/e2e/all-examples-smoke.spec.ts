@@ -39,7 +39,7 @@ test.describe('All Examples Smoke Test', () => {
       await expect(page.locator('chat')).toBeVisible({ timeout: 5000 });
 
       // Verify input and send button exist
-      await expect(page.locator('input[name="prompt"]')).toBeVisible({ timeout: 5000 });
+      await expect(page.locator('textarea[name="messageText"]')).toBeVisible({ timeout: 5000 });
       await expect(page.locator('button[type="submit"]')).toBeVisible({ timeout: 5000 });
     });
   }
@@ -55,7 +55,7 @@ test.describe('All Examples Send Message Test', () => {
       await page.waitForSelector(example.selector, { state: 'attached', timeout: 10000 });
 
       // Type and send a message
-      await page.fill('input[name="prompt"]', 'hello');
+      await page.fill('textarea[name="messageText"]', 'hello');
       await page.click('button[type="submit"]');
 
       // Wait for AI response

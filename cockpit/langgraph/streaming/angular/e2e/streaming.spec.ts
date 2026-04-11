@@ -7,14 +7,14 @@ test.describe('LangGraph Streaming Example', () => {
   });
 
   test('renders the chat interface', async ({ page }) => {
-    await expect(page.locator('input[name="prompt"]')).toBeVisible();
+    await expect(page.locator('textarea[name="messageText"]')).toBeVisible();
     await expect(page.locator('button[type="submit"]')).toBeVisible();
     await expect(page.locator('button[type="submit"]')).toHaveText('Send');
   });
 
   test('sends a message and receives a streamed response', async ({ page }) => {
     // Type a message
-    await page.fill('input[name="prompt"]', 'Say exactly: test response ok');
+    await page.fill('textarea[name="messageText"]', 'Say exactly: test response ok');
 
     // Click send
     await page.click('button[type="submit"]');

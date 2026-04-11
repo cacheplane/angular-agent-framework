@@ -8,12 +8,12 @@ test.describe('Deep Agents Memory Example', () => {
 
   test('renders the chat interface with memory sidebar', async ({ page }) => {
     await expect(page.locator('chat')).toBeVisible();
-    await expect(page.locator('input[name="prompt"]')).toBeVisible();
+    await expect(page.locator('textarea[name="messageText"]')).toBeVisible();
     await expect(page.locator('text=Tell the agent something about yourself to see it remember.')).toBeVisible();
   });
 
   test('sends a message and receives a response', async ({ page }) => {
-    await page.fill('input[name="prompt"]', 'My name is Alex and I love hiking.');
+    await page.fill('textarea[name="messageText"]', 'My name is Alex and I love hiking.');
     await page.click('button[type="submit"]');
     await expect(page.locator('.chat-md')).toBeVisible({ timeout: 30000 });
     await expect(page.locator('.chat-md')).not.toBeEmpty({ timeout: 30000 });
