@@ -2,6 +2,7 @@
 'use client';
 import { motion } from 'framer-motion';
 import { tokens } from '@cacheplane/design-tokens';
+import { EmbedFrame } from '../EmbedFrame';
 
 const FEATURES = [
   { title: 'Spec Rendering', desc: 'Render declarative UI specs from agent output. The agent emits JSON, your Angular components materialize it.', iframePath: 'render/core-capabilities/spec-rendering/overview/python' },
@@ -69,15 +70,11 @@ export function RenderFeaturesGrid() {
                 {feat.desc}
               </p>
             </div>
-            <div style={{ borderTop: `1px solid ${tokens.glass.border}`, background: 'rgba(0,0,0,0.02)' }}>
-              <iframe
-                src={`https://cockpit.cacheplane.ai/${feat.iframePath}`}
-                title={feat.title}
-                style={{ width: '100%', height: 320, border: 'none', display: 'block' }}
-                loading="lazy"
-                sandbox="allow-scripts allow-same-origin"
-              />
-            </div>
+            <EmbedFrame
+              src={`https://cockpit.cacheplane.ai/${feat.iframePath}`}
+              title={feat.title}
+              height={400}
+            />
           </motion.div>
         ))}
       </div>
