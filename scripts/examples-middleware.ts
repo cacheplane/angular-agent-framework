@@ -24,6 +24,25 @@ const DEPLOYMENT_URLS: Record<string, string> = {
   'da-memory': 'https://da-memory-15f767adfa6f5cd48bd45a0fa4db29b5.us.langgraph.app',
   'skills': 'https://skills-802ff50f64325f1ea973cff1c97a49f9.us.langgraph.app',
   'sandboxes': 'https://sandboxes-8c70b6ac20265827aa92397299fcb9f7.us.langgraph.app',
+  // Chat capabilities (URLs updated after first deployment)
+  'c-a2ui': 'PENDING_DEPLOYMENT',
+  'c-debug': 'PENDING_DEPLOYMENT',
+  'c-generative-ui': 'PENDING_DEPLOYMENT',
+  'c-input': 'PENDING_DEPLOYMENT',
+  'c-interrupts': 'PENDING_DEPLOYMENT',
+  'c-messages': 'PENDING_DEPLOYMENT',
+  'c-subagents': 'PENDING_DEPLOYMENT',
+  'c-theming': 'PENDING_DEPLOYMENT',
+  'c-threads': 'PENDING_DEPLOYMENT',
+  'c-timeline': 'PENDING_DEPLOYMENT',
+  'c-tool-calls': 'PENDING_DEPLOYMENT',
+  // Render capabilities
+  'r-computed-functions': 'PENDING_DEPLOYMENT',
+  'r-element-rendering': 'PENDING_DEPLOYMENT',
+  'r-registry': 'PENDING_DEPLOYMENT',
+  'r-repeat-loops': 'PENDING_DEPLOYMENT',
+  'r-spec-rendering': 'PENDING_DEPLOYMENT',
+  'r-state-management': 'PENDING_DEPLOYMENT',
 };
 
 const PATH_TO_KEY: Record<string, string> = {
@@ -41,6 +60,25 @@ const PATH_TO_KEY: Record<string, string> = {
   'deep-agents/memory': 'da-memory',
   'deep-agents/skills': 'skills',
   'deep-agents/sandboxes': 'sandboxes',
+  // Chat capabilities
+  'chat/a2ui': 'c-a2ui',
+  'chat/debug': 'c-debug',
+  'chat/generative-ui': 'c-generative-ui',
+  'chat/input': 'c-input',
+  'chat/interrupts': 'c-interrupts',
+  'chat/messages': 'c-messages',
+  'chat/subagents': 'c-subagents',
+  'chat/theming': 'c-theming',
+  'chat/threads': 'c-threads',
+  'chat/timeline': 'c-timeline',
+  'chat/tool-calls': 'c-tool-calls',
+  // Render capabilities
+  'render/computed-functions': 'r-computed-functions',
+  'render/element-rendering': 'r-element-rendering',
+  'render/registry': 'r-registry',
+  'render/repeat-loops': 'r-repeat-loops',
+  'render/spec-rendering': 'r-spec-rendering',
+  'render/state-management': 'r-state-management',
 };
 
 function resolveBackend(referer: string | undefined): string {
