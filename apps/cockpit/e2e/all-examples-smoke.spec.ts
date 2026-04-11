@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 
 /**
  * Smoke test that verifies every capability example's Angular app is running
- * and can render the chat interface. Requires all 14 Angular apps to be served.
+ * and can render the chat interface. Requires all 15 Angular apps to be served.
  *
  * Run with: npx playwright test apps/cockpit/e2e/all-examples-smoke.spec.ts
  *
@@ -26,6 +26,7 @@ const EXAMPLES = [
   { name: 'da-memory', port: 4313, selector: 'app-da-memory' },
   { name: 'skills', port: 4314, selector: 'app-skills' },
   { name: 'sandboxes', port: 4315, selector: 'app-sandboxes' },
+  { name: 'c-a2ui', port: 4511, selector: 'app-a2ui' },
 ] as const;
 
 test.describe('All Examples Smoke Test', () => {

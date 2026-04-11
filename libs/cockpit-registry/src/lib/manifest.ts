@@ -54,6 +54,7 @@ const APPROVED_TOPICS = {
       'generative-ui',
       'debug',
       'theming',
+      'a2ui',
     ],
   },
 } as const;

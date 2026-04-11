@@ -134,9 +134,9 @@ For data-driven lists, use the `A2uiChildTemplate` form instead of static `child
 
 ## Interactive Components
 
-Interactive components support **two-way data binding** and **button actions**. They use two special props:
+Interactive components support **two-way data binding** and **button actions**. They receive two special injected props:
 
-- `_bindings` — a `Record<string, string>` mapping prop names to JSON Pointer paths in the data model. When the user changes the value, the component emits an `a2ui:datamodel:` event to update the model.
+- `_bindings` — a `Record<string, string>` auto-populated by `surfaceToSpec()` from path references in the component definition. Maps prop names to JSON Pointer paths. When the user changes a bound value, the component emits an `a2ui:datamodel:` event. Agents do **not** write `_bindings` directly — they use path references (e.g., `{"path": "/name"}`) and the render pipeline extracts bindings automatically.
 - `emit` — injected by the render engine; components call it to dispatch events back to the chat.
 
 ### Button
@@ -183,10 +183,10 @@ A single-line text input with optional label and placeholder.
 | Prop | Type | Description |
 |------|------|-------------|
 | `label` | `string` | Input label |
-| `value` | `string` | Current value (bind via `_bindings`) |
+| `value` | `string` | Current value (resolved from path reference) |
 | `placeholder` | `string` | Placeholder text |
 | `validationResult` | `A2uiValidationResult` | Validation state — shows errors below input when invalid |
-| `_bindings` | `Record<string, string>` | Bind `value` to a data model path |
+| `_bindings` | `Record<string, string>` | Auto-populated by `surfaceToSpec()` from path references |
 | `emit` | injected | Event emitter provided by the render engine |
 
 ```json
@@ -194,10 +194,11 @@ A single-line text input with optional label and placeholder.
   "id": "name-field",
   "component": "TextField",
   "label": "Your name",
-  "value": {"path": "/name"},
-  "_bindings": {"value": "/name"}
+  "value": {"path": "/name"}
 }
 ```
+
+The path reference `{"path": "/name"}` is resolved by `surfaceToSpec()`, which also populates `_bindings` automatically.
 
 ### CheckBox
 
@@ -210,9 +211,9 @@ A labeled checkbox with two-way binding for its checked state.
 | Prop | Type | Description |
 |------|------|-------------|
 | `label` | `string` | Checkbox label |
-| `checked` | `boolean` | Current checked state (bind via `_bindings`) |
+| `checked` | `boolean` | Current checked state (resolved from path reference) |
 | `validationResult` | `A2uiValidationResult` | Validation state — shows errors below checkbox when invalid |
-| `_bindings` | `Record<string, string>` | Bind `checked` to a data model path |
+| `_bindings` | `Record<string, string>` | Auto-populated by `surfaceToSpec()` from path references |
 | `emit` | injected | Event emitter provided by the render engine |
 
 ### ChoicePicker
@@ -227,9 +228,9 @@ A dropdown select control with a list of string options.
 |------|------|-------------|
 | `label` | `string` | Select label |
 | `options` | `string[]` | List of available options |
-| `selected` | `string` | Currently selected value (bind via `_bindings`) |
+| `selected` | `string` | Currently selected value (resolved from path reference) |
 | `validationResult` | `A2uiValidationResult` | Validation state — shows errors below dropdown when invalid |
-| `_bindings` | `Record<string, string>` | Bind `selected` to a data model path |
+| `_bindings` | `Record<string, string>` | Auto-populated by `surfaceToSpec()` from path references |
 | `emit` | injected | Event emitter provided by the render engine |
 
 ### DateTimeInput
@@ -243,12 +244,12 @@ A date, time, or datetime input with two-way binding.
 | Prop | Type | Description |
 |------|------|-------------|
 | `label` | `string` | Input label |
-| `value` | `string` | Current value (bind via `_bindings`) |
+| `value` | `string` | Current value (resolved from path reference) |
 | `inputType` | `'date' \| 'time' \| 'datetime-local'` | HTML input type. Defaults to `'date'` |
 | `min` | `string` | Minimum allowed value |
 | `max` | `string` | Maximum allowed value |
 | `validationResult` | `A2uiValidationResult` | Validation state — shows errors below input when invalid |
-| `_bindings` | `Record<string, string>` | Bind `value` to a data model path |
+| `_bindings` | `Record<string, string>` | Auto-populated by `surfaceToSpec()` from path references |
 | `emit` | injected | Event emitter provided by the render engine |
 
 ```json
@@ -257,8 +258,7 @@ A date, time, or datetime input with two-way binding.
   "component": "DateTimeInput",
   "label": "Appointment date",
   "value": {"path": "/appointmentDate"},
-  "inputType": "date",
-  "_bindings": {"value": "/appointmentDate"}
+  "inputType": "date"
 }
 ```
 
@@ -278,7 +278,7 @@ A range slider input with two-way binding.
 | `max` | `number` | Maximum value |
 | `step` | `number` | Step increment |
 | `validationResult` | `A2uiValidationResult` | Validation state — shows errors below slider when invalid |
-| `_bindings` | `Record<string, string>` | Bind `value` to a data model path |
+| `_bindings` | `Record<string, string>` | Auto-populated by `surfaceToSpec()` from path references |
 | `emit` | injected | Event emitter provided by the render engine |
 
 ```json
@@ -289,8 +289,7 @@ A range slider input with two-way binding.
   "value": {"path": "/volume"},
   "min": 0,
   "max": 100,
-  "step": 1,
-  "_bindings": {"value": "/volume"}
+  "step": 1
 }
 ```
 
@@ -308,7 +307,7 @@ A tabbed container that shows one child panel at a time based on the selected ta
 |------|------|-------------|
 | `tabs` | `{label: string, childKeys: string[]}[]` | Tab definitions with labels and child component IDs |
 | `selected` | `number` | Currently selected tab index. Defaults to `0` |
-| `_bindings` | `Record<string, string>` | Bind `selected` to a data model path |
+| `_bindings` | `Record<string, string>` | Auto-populated by `surfaceToSpec()` from path references |
 | `spec` | `Spec` | Injected automatically by the render engine |
 | `emit` | injected | Event emitter provided by the render engine |
 
@@ -320,8 +319,7 @@ A tabbed container that shows one child panel at a time based on the selected ta
     {"label": "Overview", "childKeys": ["overview-content"]},
     {"label": "Details", "childKeys": ["detail-list"]}
   ],
-  "selected": 0,
-  "_bindings": {"selected": "/activeTab"}
+  "selected": {"path": "/activeTab"}
 }
 ```
 
@@ -350,8 +348,7 @@ A dialog overlay that renders child content when open. Supports an optional titl
   "title": "Confirm Action",
   "open": {"path": "/showConfirm"},
   "childKeys": ["confirm-message", "confirm-buttons"],
-  "dismissible": true,
-  "_bindings": {"open": "/showConfirm"}
+  "dismissible": true
 }
 ```
 

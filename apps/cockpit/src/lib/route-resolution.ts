@@ -33,6 +33,7 @@ import { chatTimelinePythonModule } from '../../../../cockpit/chat/timeline/pyth
 import { chatGenerativeUiPythonModule } from '../../../../cockpit/chat/generative-ui/python/src/index';
 import { chatDebugPythonModule } from '../../../../cockpit/chat/debug/python/src/index';
 import { chatThemingPythonModule } from '../../../../cockpit/chat/theming/python/src/index';
+import { chatA2uiPythonModule } from '../../../../cockpit/chat/a2ui/python/src/index';
 
 export interface ResolveCockpitEntryOptions {
   manifest: CockpitManifestEntry[];
@@ -102,6 +103,7 @@ const capabilityModules = [
   chatGenerativeUiPythonModule,
   chatDebugPythonModule,
   chatThemingPythonModule,
+  chatA2uiPythonModule,
 ];
 
 export const toCockpitPath = (entry: CockpitManifestEntry): string =>
