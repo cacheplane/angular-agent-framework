@@ -31,7 +31,7 @@ export function ChatLandingProblemSolution() {
         transition={{ duration: 0.5 }}
         style={{
           maxWidth: 900, margin: '0 auto',
-          display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: 32,
+          display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(360px, 100%), 1fr))', gap: 32,
         }}
       >
         <div style={{

@@ -8,7 +8,6 @@ import { StatsStrip } from '../components/landing/StatsStrip';
 import { ProblemSection } from '../components/landing/ProblemSection';
 import { LibrariesSection } from '../components/landing/LibrariesSection';
 import { ChatFeaturesSection } from '../components/landing/ChatFeaturesSection';
-import { FairComparisonSection } from '../components/landing/FairComparisonSection';
 import { WhitePaperSection } from '../components/landing/WhitePaperSection';
 import { HomePilotCTA } from '../components/landing/HomePilotCTA';
 import { tokens } from '../../lib/design-tokens';
@@ -41,8 +40,6 @@ export default async function HomePage() {
       {/* 7. Depth — capability showcases */}
       <LangGraphShowcase />
       <DeepAgentsShowcase />
-      {/* 8. Fair comparison — honest LangChain + Angular Agent Framework table */}
-      <FairComparisonSection />
       {/* 9. White paper free download */}
       <WhitePaperSection />
       {/* 10. Pilot program CTA */}

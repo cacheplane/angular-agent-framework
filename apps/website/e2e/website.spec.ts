@@ -12,9 +12,9 @@ test('landing page renders architecture section', async ({ page }) => {
   await expect(page.getByText('Architecture').first()).toBeVisible();
 });
 
-test('landing page renders fair comparison section', async ({ page }) => {
+test('landing page renders libraries section', async ({ page }) => {
   await page.goto('/');
-  await expect(page.getByText('What Angular Agent Framework adds').first()).toBeVisible();
+  await expect(page.getByText('Three libraries. One architecture.').first()).toBeVisible();
 });
 
 test('pricing page shows 4 plan cards', async ({ page }) => {

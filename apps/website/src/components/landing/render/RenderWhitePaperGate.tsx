@@ -48,7 +48,7 @@ export function RenderWhitePaperGate() {
           background: tokens.glass.bg, backdropFilter: `blur(${tokens.glass.blur})`,
           WebkitBackdropFilter: `blur(${tokens.glass.blur})`,
           border: `1px solid ${tokens.glass.border}`, boxShadow: tokens.glass.shadow,
-          padding: '48px 56px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 56, alignItems: 'center',
+          padding: '32px 24px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(320px, 100%), 1fr))', gap: 56, alignItems: 'center',
         }}
       >
         <div>

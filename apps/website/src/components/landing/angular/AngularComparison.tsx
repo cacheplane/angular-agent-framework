@@ -50,11 +50,11 @@ export function AngularComparison() {
           maxWidth: 860, margin: '0 auto', borderRadius: 20,
           background: tokens.glass.bg, backdropFilter: `blur(${tokens.glass.blur})`,
           WebkitBackdropFilter: `blur(${tokens.glass.blur})`,
-          border: `1px solid ${tokens.glass.border}`, boxShadow: tokens.glass.shadow, overflow: 'hidden',
+          border: `1px solid ${tokens.glass.border}`, boxShadow: tokens.glass.shadow, overflow: 'auto',
         }}
       >
         <div style={{
-          display: 'grid', gridTemplateColumns: '1fr 1fr 1fr',
+          display: 'grid', gridTemplateColumns: 'minmax(100px, 1fr) minmax(120px, 1fr) minmax(120px, 1fr)',
           background: 'rgba(255,255,255,.3)', borderBottom: `1px solid ${tokens.glass.border}`, padding: '14px 24px',
         }}>
           {['Capability', 'LangGraph Angular SDK', '@cacheplane/angular'].map((h, i) => (
@@ -75,7 +75,7 @@ export function AngularComparison() {
             viewport={{ once: true }}
             transition={{ delay: i * 0.05, duration: 0.35 }}
             style={{
-              display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', padding: '14px 24px',
+              display: 'grid', gridTemplateColumns: 'minmax(100px, 1fr) minmax(120px, 1fr) minmax(120px, 1fr)', padding: '14px 24px',
               borderBottom: i < ROWS.length - 1 ? '1px solid rgba(0,0,0,.05)' : 'none', alignItems: 'center',
             }}
           >
