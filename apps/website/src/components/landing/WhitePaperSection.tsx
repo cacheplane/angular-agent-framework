@@ -43,7 +43,24 @@ export function WhitePaperSection() {
 
   return (
     <section style={{ padding: '80px 32px' }}>
+      <style>{`
+        .wp-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 56px;
+          align-items: center;
+          padding: 48px 56px;
+        }
+        @media (max-width: 767px) {
+          .wp-grid {
+            grid-template-columns: 1fr;
+            gap: 32px;
+            padding: 32px 24px;
+          }
+        }
+      `}</style>
       <motion.div
+        className="wp-grid"
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
@@ -57,11 +74,6 @@ export function WhitePaperSection() {
           WebkitBackdropFilter: `blur(${tokens.glass.blur})`,
           border: `1px solid ${tokens.glass.border}`,
           boxShadow: tokens.glass.shadow,
-          padding: '48px 56px',
-          display: 'grid',
-          gridTemplateColumns: '1fr 1fr',
-          gap: 56,
-          alignItems: 'center',
         }}
       >
         {/* Left — form / soft gate */}

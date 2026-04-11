@@ -448,6 +448,9 @@ export function ChatFeaturesSection() {
             gap: 16px !important;
             padding: 0 !important;
           }
+          .chat-features-grid > div:nth-child(2) {
+            height: 380px !important;
+          }
           #feat-left, #feat-right {
             flex-direction: row !important;
             flex-wrap: wrap !important;

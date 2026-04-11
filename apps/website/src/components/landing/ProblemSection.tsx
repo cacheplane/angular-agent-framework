@@ -113,7 +113,7 @@ export function ProblemSection() {
   const showEnd = phase === 'done';
 
   return (
-    <section style={{ padding: '80px 32px' }}>
+    <section className="problem-section" style={{ padding: '80px 32px' }}>
       {/* Eyebrow + headline */}
       <motion.div
         initial={{ opacity: 0, y: 16 }}
@@ -205,6 +205,7 @@ export function ProblemSection() {
       {/* Gap animation */}
       <motion.div
         ref={triggerRef}
+        className="problem-gap-card"
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
@@ -358,6 +359,10 @@ export function ProblemSection() {
       <style>{`
         @keyframes sr-pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(.6)} }
         @keyframes sr-shake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-3px)} 40%{transform:translateX(3px)} 60%{transform:translateX(-2px)} 80%{transform:translateX(2px)} }
+        @media (max-width: 767px) {
+          .problem-section { padding: 60px 20px !important; }
+          .problem-gap-card { padding: 24px 20px !important; }
+        }
       `}</style>
     </section>
   );
