@@ -104,13 +104,14 @@ export function CockpitShell({
           </div>
         </header>
 
-        <div className="min-h-0">
-          {activeMode === 'Run' ? (
+        <div className="min-h-0 relative">
+          {/* RunMode stays mounted to preserve iframe state across tab switches */}
+          <div className={`h-full ${activeMode === 'Run' ? '' : 'invisible absolute inset-0'}`}>
             <RunMode
               entryTitle={entryTitle}
               runtimeUrl={contentBundle.runtimeUrl}
             />
-          ) : null}
+          </div>
           {activeMode === 'Code' ? (
             <CodeMode
               entryTitle={entryTitle}
