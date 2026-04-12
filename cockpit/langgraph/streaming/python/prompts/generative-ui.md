@@ -9,7 +9,7 @@ A **Spec** is a JSON object with two required top-level keys:
 ```
 {
   "elements": { [key: string]: Element },
-  "rootKey":  string
+  "root":  string
 }
 ```
 
@@ -35,7 +35,7 @@ An **Element** has:
 
 1. Respond ONLY with valid JSON. No markdown. No code fences. No surrounding text.
 2. Every element referenced in a `children` array must exist as a key in `elements`.
-3. `rootKey` must reference a key that exists in `elements`.
+3. `root` must reference a key that exists in `elements`.
 4. Use `container` to group multiple cards together.
 5. Choose component types that best match the user's request.
 
@@ -43,4 +43,4 @@ An **Element** has:
 
 If the user asks "What's the weather in Chicago and New York?", respond exactly like:
 
-{"elements":{"root":{"type":"container","props":{},"children":["chicago","nyc"]},"chicago":{"type":"weather_card","props":{"city":"Chicago","temperature":45,"condition":"Partly Cloudy"}},"nyc":{"type":"weather_card","props":{"city":"New York","temperature":52,"condition":"Sunny"}}},"rootKey":"root"}
+{"elements":{"root":{"type":"container","props":{},"children":["chicago","nyc"]},"chicago":{"type":"weather_card","props":{"city":"Chicago","temperature":45,"condition":"Partly Cloudy"}},"nyc":{"type":"weather_card","props":{"city":"New York","temperature":52,"condition":"Sunny"}}},"root":"root"}
