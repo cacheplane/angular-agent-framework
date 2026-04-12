@@ -17,6 +17,7 @@ jobs:
     name: Deploy to LangGraph Cloud
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         include:
           - name: streaming
@@ -47,6 +48,42 @@ jobs:
             path: cockpit/deep-agents/skills/python
           - name: sandboxes
             path: cockpit/deep-agents/sandboxes/python
+          # Chat capabilities
+          - name: c-a2ui
+            path: cockpit/chat/a2ui/python
+          - name: c-debug
+            path: cockpit/chat/debug/python
+          - name: c-generative-ui
+            path: cockpit/chat/generative-ui/python
+          - name: c-input
+            path: cockpit/chat/input/python
+          - name: c-interrupts
+            path: cockpit/chat/interrupts/python
+          - name: c-messages
+            path: cockpit/chat/messages/python
+          - name: c-subagents
+            path: cockpit/chat/subagents/python
+          - name: c-theming
+            path: cockpit/chat/theming/python
+          - name: c-threads
+            path: cockpit/chat/threads/python
+          - name: c-timeline
+            path: cockpit/chat/timeline/python
+          - name: c-tool-calls
+            path: cockpit/chat/tool-calls/python
+          # Render capabilities
+          - name: r-computed-functions
+            path: cockpit/render/computed-functions/python
+          - name: r-element-rendering
+            path: cockpit/render/element-rendering/python
+          - name: r-registry
+            path: cockpit/render/registry/python
+          - name: r-repeat-loops
+            path: cockpit/render/repeat-loops/python
+          - name: r-spec-rendering
+            path: cockpit/render/spec-rendering/python
+          - name: r-state-management
+            path: cockpit/render/state-management/python
     steps:
       - uses: actions/checkout@v6.0.2
 

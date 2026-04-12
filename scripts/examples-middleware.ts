@@ -24,6 +24,25 @@ const DEPLOYMENT_URLS: Record<string, string> = {
   'da-memory': 'https://da-memory-15f767adfa6f5cd48bd45a0fa4db29b5.us.langgraph.app',
   'skills': 'https://skills-802ff50f64325f1ea973cff1c97a49f9.us.langgraph.app',
   'sandboxes': 'https://sandboxes-8c70b6ac20265827aa92397299fcb9f7.us.langgraph.app',
+  // Chat capabilities
+  'c-a2ui': 'https://c-a2ui-8e9f0ef287d25d2fb134d7f881570d1c.us.langgraph.app',
+  'c-debug': 'https://c-debug-98cf2d0aa084584c93cbd6c40ab260bd.us.langgraph.app',
+  'c-generative-ui': 'https://c-generative-ui-8ad5bc56908f5a45b033bd8258d61bb1.us.langgraph.app',
+  'c-input': 'https://c-input-5b25fd46dcdf5e0086fa4ef01349e332.us.langgraph.app',
+  'c-interrupts': 'https://c-interrupts-fdb30735b73352ddbf58f7388ae5fce5.us.langgraph.app',
+  'c-messages': 'https://c-messages-46ae9adfa13e5ebeae5b3b6e6a03038e.us.langgraph.app',
+  'c-subagents': 'https://c-subagents-687f67b7a44257f096f9c700a9982b33.us.langgraph.app',
+  'c-theming': 'https://c-theming-d76a27db156351b4936f4b6a995519db.us.langgraph.app',
+  'c-threads': 'https://c-threads-d14fe73520c353c89c3c45529c284646.us.langgraph.app',
+  'c-timeline': 'https://c-timeline-f53431e515ca54dea03f08f7f75e344c.us.langgraph.app',
+  'c-tool-calls': 'https://c-tool-calls-6541936001185fb88f83888136d36b5b.us.langgraph.app',
+  // Render capabilities
+  'r-computed-functions': 'https://r-computed-functions-d13875d7991f586f986f8fa78b3b5150.us.langgraph.app',
+  'r-element-rendering': 'https://r-element-rendering-72a833e9aeb1504aa1b2f62283fe7d0d.us.langgraph.app',
+  'r-registry': 'https://r-registry-8dfd9a501a9d554aad4a63b4b5eb7d63.us.langgraph.app',
+  'r-repeat-loops': 'https://r-repeat-loops-3d57704b1c4b5af999beab9f300dc81e.us.langgraph.app',
+  'r-spec-rendering': 'https://r-spec-rendering-92ee35b6e8565f0c87eed4e8de085f28.us.langgraph.app',
+  'r-state-management': 'https://r-state-management-298d402c1f3b5a729ef1872e3d6b83be.us.langgraph.app',
 };
 
 const PATH_TO_KEY: Record<string, string> = {
@@ -41,6 +60,25 @@ const PATH_TO_KEY: Record<string, string> = {
   'deep-agents/memory': 'da-memory',
   'deep-agents/skills': 'skills',
   'deep-agents/sandboxes': 'sandboxes',
+  // Chat capabilities
+  'chat/a2ui': 'c-a2ui',
+  'chat/debug': 'c-debug',
+  'chat/generative-ui': 'c-generative-ui',
+  'chat/input': 'c-input',
+  'chat/interrupts': 'c-interrupts',
+  'chat/messages': 'c-messages',
+  'chat/subagents': 'c-subagents',
+  'chat/theming': 'c-theming',
+  'chat/threads': 'c-threads',
+  'chat/timeline': 'c-timeline',
+  'chat/tool-calls': 'c-tool-calls',
+  // Render capabilities
+  'render/computed-functions': 'r-computed-functions',
+  'render/element-rendering': 'r-element-rendering',
+  'render/registry': 'r-registry',
+  'render/repeat-loops': 'r-repeat-loops',
+  'render/spec-rendering': 'r-spec-rendering',
+  'render/state-management': 'r-state-management',
 };
 
 function resolveBackend(referer: string | undefined): string {
