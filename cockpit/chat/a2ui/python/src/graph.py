@@ -66,7 +66,7 @@ CONTACT_FORM_JSONL = A2UI_PREFIX + "\n" + "\n".join([
              "action": {"event": {"name": "formSubmit", "context": {"formId": "contact"}}}},
         ],
     }}),
-])
+]) + "\n"  # Trailing newline required — parser processes at \n boundaries
 
 
 def build_a2ui_graph():
