@@ -31,6 +31,26 @@ const CAPABILITIES = [
   'deep-agents/memory',
   'deep-agents/skills',
   'deep-agents/sandboxes',
+  'chat/messages',
+  'chat/input',
+  'chat/interrupts',
+  'chat/tool-calls',
+  'chat/subagents',
+  'chat/threads',
+  'chat/timeline',
+  'chat/generative-ui',
+  'chat/debug',
+  'chat/theming',
+  'chat/a2ui',
+] as const;
+
+const RENDER_CAPABILITIES = [
+  'render/spec-rendering',
+  'render/element-rendering',
+  'render/state-management',
+  'render/registry',
+  'render/repeat-loops',
+  'render/computed-functions',
 ] as const;
 
 test.describe('Production: Angular example apps load', () => {
@@ -40,6 +60,16 @@ test.describe('Production: Angular example apps load', () => {
       const res = await page.goto(url, { timeout: 15000 });
       expect(res?.status()).toBe(200);
       await expect(page.locator('chat')).toBeVisible({ timeout: 10000 });
+    });
+  }
+});
+
+test.describe('Production: Render example apps load', () => {
+  for (const cap of RENDER_CAPABILITIES) {
+    test(`${cap} loads at examples URL`, async ({ page }) => {
+      const url = `${EXAMPLES_URL}/${cap}/`;
+      const res = await page.goto(url, { timeout: 15000 });
+      expect(res?.status()).toBe(200);
     });
   }
 });
@@ -57,7 +87,7 @@ test.describe('Production: cockpit loads correctly', () => {
 test.describe('Production: send/receive smoke', () => {
   test.skip(() => !process.env['OPENAI_API_KEY'], 'Requires OPENAI_API_KEY');
 
-  for (const cap of ['langgraph/streaming', 'deep-agents/planning'] as const) {
+  for (const cap of ['langgraph/streaming', 'deep-agents/planning', 'chat/a2ui'] as const) {
     test(`${cap} sends and receives a message`, async ({ page }) => {
       await page.goto(`${EXAMPLES_URL}/${cap}/`, { timeout: 15000 });
       await expect(page.locator('chat')).toBeVisible({ timeout: 10000 });
