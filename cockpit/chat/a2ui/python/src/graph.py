@@ -17,6 +17,8 @@ from langchain_core.messages import AIMessage
 A2UI_PREFIX = "---a2ui_JSON---"
 
 # v0.9 envelope format: each message is {"<type>": {<payload>}}
+# Trailing \n is critical — the A2UI parser is line-based and only
+# processes complete lines terminated by newlines.
 CONTACT_FORM_JSONL = A2UI_PREFIX + "\n" + "\n".join([
     json.dumps({"createSurface": {
         "surfaceId": "contact", "catalogId": "basic", "sendDataModel": True,
@@ -66,7 +68,7 @@ CONTACT_FORM_JSONL = A2UI_PREFIX + "\n" + "\n".join([
              "action": {"event": {"name": "formSubmit", "context": {"formId": "contact"}}}},
         ],
     }}),
-])
+]) + "\n"
 
 
 def build_a2ui_graph():
