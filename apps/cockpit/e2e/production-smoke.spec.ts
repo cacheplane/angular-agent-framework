@@ -53,12 +53,27 @@ const RENDER_CAPABILITIES = [
   'render/computed-functions',
 ] as const;
 
+const CHAT_PRIMITIVE_CAPABILITIES = new Set([
+  'chat/messages',
+  'chat/input',
+  'chat/debug',
+]);
+
+const A2UI_CAPABILITIES = new Set([
+  'chat/a2ui',
+]);
+
 test.describe('Production: Angular example apps load', () => {
   for (const cap of CAPABILITIES) {
     test(`${cap} loads at examples URL`, async ({ page }) => {
       const url = `${EXAMPLES_URL}/${cap}/`;
       const res = await page.goto(url, { timeout: 15000 });
       expect(res?.status()).toBe(200);
+      if (CHAT_PRIMITIVE_CAPABILITIES.has(cap)) {
+        await expect(page.getByRole('search', { name: 'Message input' })).toBeVisible({ timeout: 10000 });
+        return;
+      }
+
       await expect(page.locator('chat')).toBeVisible({ timeout: 10000 });
     });
   }
@@ -93,6 +108,11 @@ test.describe('Production: send/receive smoke', () => {
       await expect(page.locator('chat')).toBeVisible({ timeout: 10000 });
       await page.fill('textarea[name="messageText"]', 'hello');
       await page.click('button[type="submit"]');
+      if (A2UI_CAPABILITIES.has(cap)) {
+        await expect(page.getByRole('heading', { name: 'Contact Us' })).toBeVisible({ timeout: 30000 });
+        return;
+      }
+
       await expect(page.locator('.chat-md').first()).toBeVisible({ timeout: 30000 });
     });
   }
