@@ -150,7 +150,19 @@ jobs:
 
   deploy:
     name: Deploy → Vercel
-    needs: [library, website, cockpit, cockpit-examples-build, cockpit-smoke, cockpit-secret-integration, cockpit-deploy-smoke, chat-agent-smoke, cockpit-e2e, website-e2e]
+    needs:
+      [
+        library,
+        website,
+        cockpit,
+        cockpit-examples-build,
+        cockpit-smoke,
+        cockpit-secret-integration,
+        cockpit-deploy-smoke,
+        chat-agent-smoke,
+        cockpit-e2e,
+        website-e2e,
+      ]
     runs-on: ubuntu-latest
     # Only deploy on pushes to main, not on pull requests
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
@@ -297,8 +309,10 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx playwright install --with-deps chromium
-      - name: Verify LangGraph backends
-        run: npx tsx scripts/verify-langgraph-deployments.ts
+      - name: Verify shared LangGraph backend
+        run: npx tsx scripts/verify-shared-deployment.ts
+        env:
+          LANGSMITH_API_KEY: ${{ secrets.LANGSMITH_API_KEY }}
       - name: Run production smoke tests
         run: npx playwright test apps/cockpit/e2e/production-smoke.spec.ts --reporter=list
         env:

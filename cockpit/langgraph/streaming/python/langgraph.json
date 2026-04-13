@@ -1,7 +1,7 @@
 {
   "graphs": {
     "streaming": "./src/graph.py:graph",
-    "generative_ui": "./src/chat_graphs.py:generative_ui",
+    "c-generative-ui": "./src/chat_graphs.py:generative_ui",
     "c-messages": "./src/chat_graphs.py:c_messages",
     "c-input": "./src/chat_graphs.py:c_input",
     "c-debug": "./src/chat_graphs.py:c_debug",
@@ -11,7 +11,7 @@
     "c-timeline": "./src/chat_graphs.py:c_timeline",
     "c-tool-calls": "./src/chat_graphs.py:c_tool_calls",
     "c-subagents": "./src/chat_graphs.py:c_subagents",
-    "a2ui_form": "./src/a2ui_graph.py:graph"
+    "c-a2ui": "./src/a2ui_graph.py:graph"
   },
   "dependencies": [
     "."
