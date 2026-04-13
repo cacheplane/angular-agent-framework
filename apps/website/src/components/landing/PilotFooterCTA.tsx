@@ -1,6 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import Link from 'next/link';
 import { tokens } from '../../../lib/design-tokens';
 import { CitationBadge } from './CitationBadge';
 
@@ -88,9 +89,8 @@ export function PilotFooterCTA() {
           }}
         >
           {/* Primary CTA */}
-          <motion.a
-            href="#whitepaper-gate"
-            whileHover={{ boxShadow: '0 0 20px rgba(255, 255, 255, 0.3)' }}
+          <Link
+            href="/pilot-to-prod"
             style={{
               display: 'inline-block',
               padding: '0.875rem 2rem',
@@ -105,7 +105,7 @@ export function PilotFooterCTA() {
             }}
           >
             Start Your Pilot →
-          </motion.a>
+          </Link>
 
           {/* Secondary CTA */}
           <a
