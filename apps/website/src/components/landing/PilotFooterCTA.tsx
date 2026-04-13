@@ -89,7 +89,7 @@ export function PilotFooterCTA() {
         >
           {/* Primary CTA */}
           <motion.a
-            href="#whitepaper-gate"
+            href="/pilot-to-prod"
             whileHover={{ boxShadow: '0 0 20px rgba(255, 255, 255, 0.3)' }}
             style={{
               display: 'inline-block',
