@@ -42,7 +42,7 @@ export function WhitePaperSection() {
   };
 
   return (
-    <section style={{ padding: '80px 32px' }}>
+    <section className="wp-section" style={{ padding: '80px 32px' }}>
       <style>{`
         .wp-grid {
           display: grid;
@@ -52,6 +52,7 @@ export function WhitePaperSection() {
           padding: 48px 56px;
         }
         @media (max-width: 767px) {
+          .wp-section { padding: 60px 20px !important; }
           .wp-grid {
             grid-template-columns: 1fr;
             gap: 32px;

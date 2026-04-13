@@ -57,7 +57,13 @@ function Connector({ fromRgb, toRgb }: { fromRgb: string; toRgb: string }) {
 
 export function TheStack() {
   return (
-    <section style={{ padding: '80px 32px' }}>
+    <section className="the-stack" style={{ padding: '80px 32px' }}>
+      <style>{`
+        @media (max-width: 767px) {
+          .the-stack { padding: 60px 20px !important; }
+          .the-stack-card { padding: 24px 20px 20px !important; }
+        }
+      `}</style>
       <motion.div
         initial={{ opacity: 0, y: 16 }}
         whileInView={{ opacity: 1, y: 0 }}
@@ -109,6 +115,7 @@ export function TheStack() {
               />
             )}
             <motion.div
+              className="the-stack-card"
               initial={{ opacity: 0, y: 24 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}

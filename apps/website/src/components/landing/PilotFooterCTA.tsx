@@ -21,8 +21,15 @@ export function PilotFooterCTA() {
         padding: '0 2rem',
       }}
     >
-      <style>{`.pilot-footer-secondary-btn:hover { border-color: rgba(255,255,255,0.6) !important; }`}</style>
+      <style>{`
+        .pilot-footer-secondary-btn:hover { border-color: rgba(255,255,255,0.6) !important; }
+        @media (max-width: 767px) {
+          .pilot-footer-inner { padding-top: 4rem !important; padding-bottom: 4rem !important; }
+          .pilot-footer-heading { font-size: clamp(28px, 6vw, 42px) !important; }
+        }
+      `}</style>
       <motion.div
+        className="pilot-footer-inner"
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
@@ -53,6 +60,7 @@ export function PilotFooterCTA() {
         {/* Heading */}
         <h2
           id="pilot-footer-cta-heading"
+          className="pilot-footer-heading"
           style={{
             fontFamily: 'var(--font-garamond, "EB Garamond", Georgia, serif)',
             fontSize: '42px',
