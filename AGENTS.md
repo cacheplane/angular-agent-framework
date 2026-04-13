@@ -47,6 +47,7 @@ This file is for agents working in this repository. It is contributor-facing, no
 - The workspace is Nx-based. Prefer project-scoped commands over broad workspace runs unless the task actually needs broader verification.
 - Inspect `project.json`, `nx.json`, and existing scripts before inventing commands.
 - If you need Nx-specific syntax or behavior and it is not obvious from local config, verify it from current Nx docs rather than relying on memory.
+- The intended always-on LangSmith footprint is one shared cockpit dev deployment. Active capability keys in `deployment-urls.json` may all point at the same URL, and render demos stay local/static.
 - Respect generated and public-facing context files. If the task changes docs, API surface, positioning, or package guidance, check whether agent context or docs should be regenerated.
 
 ## Docs and Generated Context

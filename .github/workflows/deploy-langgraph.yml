@@ -4,88 +4,31 @@ on:
   push:
     branches: [main]
     paths:
-      - 'cockpit/**/python/**'
+      - 'cockpit/langgraph/**/python/**'
+      - 'cockpit/deep-agents/**/python/**'
+      - 'apps/cockpit/scripts/capability-registry.ts'
+      - 'scripts/generate-shared-deployment-config.ts'
+      - 'deployments/shared-dev/langgraph.json'
   workflow_dispatch:
     inputs:
       capability:
-        description: 'Capability path (e.g., langgraph/streaming)'
+        description: 'Deprecated and ignored by the shared deployment flow'
         required: false
         type: string
 
 jobs:
   deploy:
-    name: Deploy to LangGraph Cloud
+    name: Deploy shared cockpit-dev to LangGraph Cloud
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - name: streaming
-            path: cockpit/langgraph/streaming/python
-          - name: persistence
-            path: cockpit/langgraph/persistence/python
-          - name: interrupts
-            path: cockpit/langgraph/interrupts/python
-          - name: memory
-            path: cockpit/langgraph/memory/python
-          - name: durable-execution
-            path: cockpit/langgraph/durable-execution/python
-          - name: subgraphs
-            path: cockpit/langgraph/subgraphs/python
-          - name: time-travel
-            path: cockpit/langgraph/time-travel/python
-          - name: deployment-runtime
-            path: cockpit/langgraph/deployment-runtime/python
-          - name: planning
-            path: cockpit/deep-agents/planning/python
-          - name: filesystem
-            path: cockpit/deep-agents/filesystem/python
-          - name: da-subagents
-            path: cockpit/deep-agents/subagents/python
-          - name: da-memory
-            path: cockpit/deep-agents/memory/python
-          - name: skills
-            path: cockpit/deep-agents/skills/python
-          - name: sandboxes
-            path: cockpit/deep-agents/sandboxes/python
-          # Chat capabilities
-          - name: c-a2ui
-            path: cockpit/chat/a2ui/python
-          - name: c-debug
-            path: cockpit/chat/debug/python
-          - name: c-generative-ui
-            path: cockpit/chat/generative-ui/python
-          - name: c-input
-            path: cockpit/chat/input/python
-          - name: c-interrupts
-            path: cockpit/chat/interrupts/python
-          - name: c-messages
-            path: cockpit/chat/messages/python
-          - name: c-subagents
-            path: cockpit/chat/subagents/python
-          - name: c-theming
-            path: cockpit/chat/theming/python
-          - name: c-threads
-            path: cockpit/chat/threads/python
-          - name: c-timeline
-            path: cockpit/chat/timeline/python
-          - name: c-tool-calls
-            path: cockpit/chat/tool-calls/python
-          # Render capabilities
-          - name: r-computed-functions
-            path: cockpit/render/computed-functions/python
-          - name: r-element-rendering
-            path: cockpit/render/element-rendering/python
-          - name: r-registry
-            path: cockpit/render/registry/python
-          - name: r-repeat-loops
-            path: cockpit/render/repeat-loops/python
-          - name: r-spec-rendering
-            path: cockpit/render/spec-rendering/python
-          - name: r-state-management
-            path: cockpit/render/state-management/python
     steps:
       - uses: actions/checkout@v6.0.2
+
+      - uses: actions/setup-node@v6.3.0
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
 
       - uses: actions/setup-python@v5
         with:
@@ -97,19 +40,16 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Write .env for deployment
-        if: |
-          github.event_name == 'workflow_dispatch' && (inputs.capability == '' || contains(matrix.path, inputs.capability))
-          || github.event_name == 'push'
-        working-directory: ${{ matrix.path }}
-        run: |
-          echo "OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}" > .env
+      - name: Generate shared deployment manifest
+        run: npx tsx scripts/generate-shared-deployment-config.ts
 
-      - name: Deploy ${{ matrix.name }}
-        if: |
-          github.event_name == 'workflow_dispatch' && (inputs.capability == '' || contains(matrix.path, inputs.capability))
-          || github.event_name == 'push'
-        working-directory: ${{ matrix.path }}
-        run: uv run --with langgraph-cli langgraph deploy --name ${{ matrix.name }} --no-wait
+      - name: Write .env for shared deployment
+        run: |
+          mkdir -p deployments/shared-dev
+          echo "OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}" > deployments/shared-dev/.env
+
+      - name: Deploy cockpit-dev
+        working-directory: deployments/shared-dev
+        run: uv run --with langgraph-cli langgraph deploy --config langgraph.json --name cockpit-dev --no-wait
         env:
           LANGSMITH_API_KEY: ${{ secrets.LANGSMITH_API_KEY }}
