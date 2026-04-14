@@ -8,6 +8,7 @@ import { docsConfig } from '../../lib/docs-config';
 const links = [
   { label: 'Pilot to Prod', href: '/pilot-to-prod', external: false },
   { label: 'Docs', href: '/docs', external: false },
+  { label: 'Solutions', href: '/solutions', external: false },
   { label: 'API', href: '/docs/agent/api/agent', external: false },
   { label: 'Examples', href: 'https://cockpit.cacheplane.ai', external: true },
   { label: 'Pricing', href: '/pricing', external: false },
