@@ -5,6 +5,7 @@ import { RenderFeaturesGrid } from '../../components/landing/render/RenderFeatur
 import { RenderCodeShowcase } from '../../components/landing/render/RenderCodeShowcase';
 import { RenderComparison } from '../../components/landing/render/RenderComparison';
 import { RenderWhitePaperGate } from '../../components/landing/render/RenderWhitePaperGate';
+import { RenderStackSiblings } from '../../components/landing/render/RenderStackSiblings';
 import { RenderFooterCTA } from '../../components/landing/render/RenderFooterCTA';
 import { tokens } from '@cacheplane/design-tokens';
 
@@ -25,6 +26,7 @@ export default function RenderPage() {
       <RenderCodeShowcase />
       <RenderComparison />
       <RenderWhitePaperGate />
+      <RenderStackSiblings />
       <RenderFooterCTA />
     </div>
   );

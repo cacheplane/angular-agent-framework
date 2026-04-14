@@ -37,7 +37,12 @@ export function ChatLandingWhitePaperGate() {
   };
 
   return (
-    <section id="chat-whitepaper-gate" style={{ padding: '80px 32px' }}>
+    <section id="chat-whitepaper-gate" className="chat-wp-gate" style={{ padding: '80px 32px' }}>
+      <style>{`
+        @media (max-width: 767px) {
+          .chat-wp-gate { padding: 60px 20px !important; }
+        }
+      `}</style>
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
@@ -57,7 +62,7 @@ export function ChatLandingWhitePaperGate() {
             fontSize: '0.68rem', textTransform: 'uppercase', letterSpacing: '0.12em',
             fontWeight: 700, color: tokens.colors.chatPurple, marginBottom: 14,
           }}>
-            Free Download
+            Chat Guide
           </p>
           <h2 style={{
             fontFamily: 'var(--font-garamond,"EB Garamond",Georgia,serif)',
@@ -71,7 +76,13 @@ export function ChatLandingWhitePaperGate() {
             fontStyle: 'italic', fontSize: '1rem', color: tokens.colors.textSecondary,
             lineHeight: 1.55, marginBottom: 28,
           }}>
-            Five chapters covering the sprint tax, batteries-included components, theming and design system integration, generative UI in chat, and debug tooling.
+            Five chapters covering the sprint tax, batteries-included components, theming and design system integration, generative UI with Vercel json-render, Google A2UI support, and debug tooling.
+          </p>
+          <p style={{
+            fontFamily: 'Inter, sans-serif', fontSize: '0.8rem',
+            color: tokens.colors.textMuted, marginBottom: 20,
+          }}>
+            Part of the Cacheplane Angular Agent Framework.
           </p>
           <a href="/whitepapers/chat.pdf" download="cacheplane-chat-enterprise-guide.pdf"
             style={{

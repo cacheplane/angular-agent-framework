@@ -37,7 +37,12 @@ export function RenderWhitePaperGate() {
   };
 
   return (
-    <section id="render-whitepaper-gate" style={{ padding: '80px 32px' }}>
+    <section id="render-whitepaper-gate" className="render-wp-gate" style={{ padding: '80px 32px' }}>
+      <style>{`
+        @media (max-width: 767px) {
+          .render-wp-gate { padding: 60px 20px !important; }
+        }
+      `}</style>
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
@@ -57,7 +62,7 @@ export function RenderWhitePaperGate() {
             fontSize: '0.68rem', textTransform: 'uppercase', letterSpacing: '0.12em',
             fontWeight: 700, color: tokens.colors.accent, marginBottom: 14,
           }}>
-            Free Download
+            Render Guide
           </p>
           <h2 style={{
             fontFamily: 'var(--font-garamond,"EB Garamond",Georgia,serif)',
@@ -71,7 +76,13 @@ export function RenderWhitePaperGate() {
             fontStyle: 'italic', fontSize: '1rem', color: tokens.colors.textSecondary,
             lineHeight: 1.55, marginBottom: 28,
           }}>
-            Five chapters covering the coupling problem, declarative UI specs with Vercel's json-render standard, the component registry, streaming JSON patches, and state management.
+            Five chapters covering the coupling problem, declarative UI specs with Vercel's json-render standard and Google's A2UI protocol, the component registry, streaming JSON patches, and signal-native state management.
+          </p>
+          <p style={{
+            fontFamily: 'Inter, sans-serif', fontSize: '0.8rem',
+            color: tokens.colors.textMuted, marginBottom: 20,
+          }}>
+            Part of the Cacheplane Angular Agent Framework.
           </p>
           <a href="/whitepapers/render.pdf" download="cacheplane-render-enterprise-guide.pdf"
             style={{

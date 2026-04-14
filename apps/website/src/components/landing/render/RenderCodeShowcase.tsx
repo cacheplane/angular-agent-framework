@@ -24,7 +24,8 @@ const SNIPPETS = [
 
 export async function RenderCodeShowcase() {
   return (
-    <section style={{ padding: '80px 32px' }}>
+    <section className="render-code" style={{ padding: '80px 32px' }}>
+      <style>{`@media (max-width: 767px) { .render-code { padding: 60px 20px !important; } }`}</style>
       <div style={{ textAlign: 'center', marginBottom: 48 }}>
         <p style={{
           fontFamily: 'var(--font-mono,"JetBrains Mono",monospace)',

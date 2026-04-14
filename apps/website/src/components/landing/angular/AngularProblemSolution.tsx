@@ -22,7 +22,8 @@ const SOLUTIONS = [
 
 export function AngularProblemSolution() {
   return (
-    <section style={{ padding: '80px 32px' }}>
+    <section className="angular-problem" style={{ padding: '80px 32px' }}>
+      <style>{`@media (max-width: 767px) { .angular-problem { padding: 60px 20px !important; } }`}</style>
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}

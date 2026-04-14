@@ -33,7 +33,8 @@ const SNIPPETS = [
 
 export async function ChatLandingCodeShowcase() {
   return (
-    <section style={{ padding: '80px 32px' }}>
+    <section className="chat-code" style={{ padding: '80px 32px' }}>
+      <style>{`@media (max-width: 767px) { .chat-code { padding: 60px 20px !important; } }`}</style>
       <div style={{ textAlign: 'center', marginBottom: 48 }}>
         <p style={{
           fontFamily: 'var(--font-mono,"JetBrains Mono",monospace)',

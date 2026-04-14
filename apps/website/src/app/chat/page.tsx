@@ -5,6 +5,7 @@ import { ChatLandingFeaturesGrid } from '../../components/landing/chat-landing/C
 import { ChatLandingCodeShowcase } from '../../components/landing/chat-landing/ChatLandingCodeShowcase';
 import { ChatLandingComparison } from '../../components/landing/chat-landing/ChatLandingComparison';
 import { ChatLandingWhitePaperGate } from '../../components/landing/chat-landing/ChatLandingWhitePaperGate';
+import { ChatLandingStackSiblings } from '../../components/landing/chat-landing/ChatLandingStackSiblings';
 import { ChatLandingFooterCTA } from '../../components/landing/chat-landing/ChatLandingFooterCTA';
 import { tokens } from '@cacheplane/design-tokens';
 
@@ -25,6 +26,7 @@ export default function ChatPage() {
       <ChatLandingCodeShowcase />
       <ChatLandingComparison />
       <ChatLandingWhitePaperGate />
+      <ChatLandingStackSiblings />
       <ChatLandingFooterCTA />
     </div>
   );

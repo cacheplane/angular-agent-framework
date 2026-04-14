@@ -37,7 +37,12 @@ export function AngularWhitePaperGate() {
   };
 
   return (
-    <section id="angular-whitepaper-gate" style={{ padding: '80px 32px' }}>
+    <section id="angular-whitepaper-gate" className="angular-wp-gate" style={{ padding: '80px 32px' }}>
+      <style>{`
+        @media (max-width: 767px) {
+          .angular-wp-gate { padding: 60px 20px !important; }
+        }
+      `}</style>
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
@@ -57,7 +62,7 @@ export function AngularWhitePaperGate() {
             fontSize: '0.68rem', textTransform: 'uppercase', letterSpacing: '0.12em',
             fontWeight: 700, color: tokens.colors.accent, marginBottom: 14,
           }}>
-            Free Download
+            Agent Guide
           </p>
           <h2 style={{
             fontFamily: 'var(--font-garamond,"EB Garamond",Georgia,serif)',
@@ -71,7 +76,13 @@ export function AngularWhitePaperGate() {
             fontStyle: 'italic', fontSize: '1rem', color: tokens.colors.textSecondary,
             lineHeight: 1.55, marginBottom: 28,
           }}>
-            Six chapters covering the last-mile problem, the agent() API, thread persistence, interrupts, full LangGraph feature coverage, and deterministic testing.
+            Six chapters covering the last-mile gap, the agent() API, thread persistence, interrupts, time-travel, and deterministic testing with MockAgentTransport.
+          </p>
+          <p style={{
+            fontFamily: 'Inter, sans-serif', fontSize: '0.8rem',
+            color: tokens.colors.textMuted, marginBottom: 20,
+          }}>
+            Part of the Cacheplane Angular Agent Framework.
           </p>
           <a href="/whitepapers/angular.pdf" download="cacheplane-angular-enterprise-guide.pdf"
             style={{
