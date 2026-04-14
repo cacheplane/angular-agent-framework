@@ -5,7 +5,6 @@ import type { ProofPoint } from '../../../lib/solutions-data';
 
 interface SolutionProofPointsProps {
   color: string;
-  rgb: string;
   proofPoints: ProofPoint[];
 }
 

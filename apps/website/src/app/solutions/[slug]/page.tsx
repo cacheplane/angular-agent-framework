@@ -80,7 +80,6 @@ export default async function SolutionPage({ params }: PageProps) {
       <SolutionHero solution={solution} />
       <SolutionProblem
         color={solution.color}
-        rgb={solution.rgb}
         painPoints={solution.painPoints}
       />
       <SolutionArchitecture
@@ -90,7 +89,6 @@ export default async function SolutionPage({ params }: PageProps) {
       />
       <SolutionProofPoints
         color={solution.color}
-        rgb={solution.rgb}
         proofPoints={solution.proofPoints}
       />
       <WhitePaperSection />

@@ -5,7 +5,6 @@ import type { SolutionPainPoint } from '../../../lib/solutions-data';
 
 interface SolutionProblemProps {
   color: string;
-  rgb: string;
   painPoints: SolutionPainPoint[];
 }
 

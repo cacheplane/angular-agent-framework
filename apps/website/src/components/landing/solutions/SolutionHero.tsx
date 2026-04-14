@@ -24,7 +24,7 @@ export function SolutionHero({ solution }: SolutionHeroProps) {
         }}
         className="py-24 md:py-32"
       >
-        <motion.div initial={{ y: 16 }} animate={{ y: 0 }} transition={{ duration: 0.5 }}>
+        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
           <span
             style={{
               fontFamily: 'var(--font-mono, "JetBrains Mono", monospace)',
@@ -42,8 +42,8 @@ export function SolutionHero({ solution }: SolutionHeroProps) {
 
         <motion.h1
           id="solution-hero-heading"
-          initial={{ y: 20 }}
-          animate={{ y: 0 }}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.05 }}
           style={{
             fontFamily: 'var(--font-garamond, "EB Garamond", Georgia, serif)',
@@ -60,8 +60,8 @@ export function SolutionHero({ solution }: SolutionHeroProps) {
         </motion.h1>
 
         <motion.p
-          initial={{ y: 14 }}
-          animate={{ y: 0 }}
+          initial={{ opacity: 0, y: 14 }}
+          animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.1 }}
           style={{
             fontFamily: 'Inter, sans-serif',
@@ -77,8 +77,8 @@ export function SolutionHero({ solution }: SolutionHeroProps) {
         </motion.p>
 
         <motion.div
-          initial={{ y: 14 }}
-          animate={{ y: 0 }}
+          initial={{ opacity: 0, y: 14 }}
+          animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.15 }}
           style={{
             display: 'flex',
