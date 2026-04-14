@@ -247,6 +247,22 @@ export class ChatComponent {
 
   private prevMessageCount = 0;
 
+  /**
+   * Route `state_update` custom events from the agent stream to the render
+   * state store so that components bound to `$state` paths reactively update.
+   */
+  private readonly customEventEffect = effect(() => {
+    const events = this.ref().customEvents();
+    const store = this.store();
+    if (!store || events.length === 0) return;
+
+    for (const event of events) {
+      if (event.name === 'state_update' && event.data && typeof event.data === 'object') {
+        store.update(event.data as Record<string, unknown>);
+      }
+    }
+  });
+
   constructor() {
     // Auto-scroll to bottom:
     // - Always scroll when message count increases (new message sent/received)
