@@ -52,6 +52,7 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
     subjects.history$.next([]);
     subjects.interrupt$.next(undefined);
     subjects.interrupts$.next([]);
+    subjects.custom$.next([]);
     subjects.isThreadLoading$.next(false);
   }
 
@@ -78,6 +79,7 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
 
     subjects.status$.next(ResourceStatus.Loading);
     subjects.error$.next(undefined);
+    subjects.custom$.next([]);
     lastPayload = payload;
 
     // Optimistically inject human messages so they appear immediately
@@ -186,6 +188,14 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
       case 'interrupts':
         subjects.interrupts$.next(event['interrupts'] as Interrupt[]);
         break;
+      case 'custom': {
+        const eventData = event['data'] as Record<string, unknown> | undefined;
+        const name = (event['name'] ?? eventData?.['name'] ?? '') as string;
+        const data = eventData?.['data'] ?? eventData;
+        const current = subjects.custom$.value;
+        subjects.custom$.next([...current, { name, data }]);
+        break;
+      }
       // TODO: 'tool_progress' → subjects.toolProgress$.next(...)
       // TODO: 'tool_calls'    → subjects.toolCalls$.next(...)
       // These require matching the LangGraph SDK's ToolProgressEvent/ToolCallEvent
