@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import { signal, WritableSignal } from '@angular/core';
-import type { AgentRef, SubagentStreamRef, ResourceStatus as ResourceStatusType, Interrupt, ThreadState, SubmitOptions } from '@cacheplane/angular';
+import type { AgentRef, SubagentStreamRef, ResourceStatus as ResourceStatusType, Interrupt, ThreadState, SubmitOptions, CustomStreamEvent } from '@cacheplane/angular';
 import type { ToolProgress, ToolCallWithResult } from '@langchain/langgraph-sdk';
 import { ResourceStatus } from '@cacheplane/angular';
 import type { BaseMessage, AIMessage as CoreAIMessage } from '@langchain/core/messages';
@@ -27,6 +27,7 @@ export interface MockAgentRef extends AgentRef<any, any> {
   isThreadLoading: WritableSignal<boolean>;
   subagents: WritableSignal<Map<string, SubagentStreamRef>>;
   activeSubagents: WritableSignal<SubagentStreamRef[]>;
+  customEvents: WritableSignal<CustomStreamEvent[]>;
 }
 
 /**
@@ -58,6 +59,7 @@ export function createMockAgentRef(
   const isThreadLoading$ = signal<boolean>(initial.isThreadLoading ?? false);
   const subagents$ = signal<Map<string, SubagentStreamRef>>(new Map());
   const activeSubagents$ = signal<SubagentStreamRef[]>([]);
+  const customEvents$ = signal<CustomStreamEvent[]>([]);
 
   const ref: MockAgentRef = {
     value: value$,
@@ -80,6 +82,7 @@ export function createMockAgentRef(
 
     subagents: subagents$,
     activeSubagents: activeSubagents$,
+    customEvents: customEvents$,
 
     submit: (_values: any, _opts?: SubmitOptions) => Promise.resolve(),
     stop: () => Promise.resolve(),

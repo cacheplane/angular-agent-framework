@@ -11,6 +11,7 @@ export type {
   AgentOptions,
   AgentRef,
   AgentTransport,
+  CustomStreamEvent,
   StreamEvent,
   SubagentStreamRef,
 } from './lib/agent.types';

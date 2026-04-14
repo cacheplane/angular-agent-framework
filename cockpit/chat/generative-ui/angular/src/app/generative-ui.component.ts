@@ -4,14 +4,21 @@ import { ChatComponent, views } from '@cacheplane/chat';
 import { agent } from '@cacheplane/angular';
 import { ExampleChatLayoutComponent } from '@cacheplane/example-layouts';
 import { environment } from '../environments/environment';
-import { WeatherCardComponent } from './views/weather-card.component';
+
 import { StatCardComponent } from './views/stat-card.component';
 import { ContainerComponent } from './views/container.component';
+import { DashboardGridComponent } from './views/dashboard-grid.component';
+import { LineChartComponent } from './views/line-chart.component';
+import { BarChartComponent } from './views/bar-chart.component';
+import { DataGridComponent } from './views/data-grid.component';
 
-const myViews = views({
-  weather_card: WeatherCardComponent,
+const dashboardViews = views({
   stat_card: StatCardComponent,
   container: ContainerComponent,
+  dashboard_grid: DashboardGridComponent,
+  line_chart: LineChartComponent,
+  bar_chart: BarChartComponent,
+  data_grid: DataGridComponent,
 });
 
 @Component({
@@ -20,7 +27,7 @@ const myViews = views({
   imports: [ChatComponent, ExampleChatLayoutComponent],
   template: `
     <example-chat-layout>
-      <chat main [ref]="agentRef" [views]="myViews" class="flex-1 min-w-0" />
+      <chat main [ref]="agentRef" [views]="dashboardViews" class="flex-1 min-w-0" />
     </example-chat-layout>
   `,
 })
@@ -29,5 +36,5 @@ export class GenerativeUiComponent {
     apiUrl: environment.langGraphApiUrl,
     assistantId: environment.generativeUiAssistantId,
   });
-  protected readonly myViews = myViews;
+  protected readonly dashboardViews = dashboardViews;
 }

@@ -50,6 +50,12 @@
         "proxyConfig": "cockpit/chat/generative-ui/angular/proxy.conf.json"
       }
     },
+    "test": {
+      "executor": "@angular/build:unit-test",
+      "options": {
+        "tsConfig": "cockpit/chat/generative-ui/angular/tsconfig.spec.json"
+      }
+    },
     "smoke": {
       "executor": "nx:run-commands",
       "options": {

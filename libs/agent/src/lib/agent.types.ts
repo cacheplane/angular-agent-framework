@@ -58,6 +58,14 @@ export interface StreamEvent {
   [key: string]: unknown;
 }
 
+/** A custom event emitted by the LangGraph backend via adispatch_custom_event(). */
+export interface CustomStreamEvent {
+  /** Event name set by the backend (e.g., 'state_update'). */
+  name: string;
+  /** Arbitrary payload from the backend. */
+  data: unknown;
+}
+
 /** Transport interface for connecting to a LangGraph agent. */
 export interface AgentTransport {
   /** Open a streaming connection to an agent and yield events. */
@@ -163,6 +171,9 @@ export interface AgentRef<T, ResolvedBag extends BagTemplate> {
   /** Filtered list of subagents with status 'running'. */
   activeSubagents: Signal<SubagentStreamRef[]>;
 
+  /** Custom events emitted by the LangGraph backend during the current run. */
+  customEvents:    Signal<CustomStreamEvent[]>;
+
   // Actions
   /** Send a message or resume from an interrupt. Returns immediately. */
   submit:              (values: ResolvedBag['UpdateType'] | null, opts?: SubmitOptions) => Promise<void>;
@@ -196,4 +207,5 @@ export interface StreamSubjects<T, ResolvedBag extends BagTemplate = BagTemplate
   toolProgress$:    BehaviorSubject<ToolProgress[]>;
   toolCalls$:       BehaviorSubject<ToolCallWithResult[]>;
   subagents$:       BehaviorSubject<Map<string, SubagentStreamRef>>;
+  custom$:          BehaviorSubject<CustomStreamEvent[]>;
 }
