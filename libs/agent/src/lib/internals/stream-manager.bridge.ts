@@ -219,6 +219,7 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
       if (!currentThreadId) return;
       abortController?.abort();
       abortController = new AbortController();
+      subjects.custom$.next([]);
       subjects.status$.next(ResourceStatus.Loading);
       try {
         const iter = transport.joinStream

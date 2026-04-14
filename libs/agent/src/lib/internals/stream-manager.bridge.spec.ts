@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { BehaviorSubject, Subject } from 'rxjs';
 import { createStreamManagerBridge } from './stream-manager.bridge';
 import { MockAgentTransport } from '../transport/mock-stream.transport';
-import { ResourceStatus, AgentTransport, StreamSubjects } from '../agent.types';
+import { ResourceStatus, AgentTransport, StreamSubjects, CustomStreamEvent } from '../agent.types';
 import { of } from 'rxjs';
 
 function makeSubjects(): StreamSubjects<Record<string, unknown>> {
@@ -19,6 +19,7 @@ function makeSubjects(): StreamSubjects<Record<string, unknown>> {
     toolProgress$:    new BehaviorSubject([]),
     toolCalls$:       new BehaviorSubject([]),
     subagents$:       new BehaviorSubject(new Map()),
+    custom$:          new BehaviorSubject<CustomStreamEvent[]>([]),
   };
 }
 
