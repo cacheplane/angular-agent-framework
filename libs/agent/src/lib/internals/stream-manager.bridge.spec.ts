@@ -298,4 +298,102 @@ describe('createStreamManagerBridge', () => {
     expect(subjects.status$.value).toBe(ResourceStatus.Resolved);
     destroy$.next();
   });
+
+  it('routes custom events to custom$ subject', async () => {
+    const transport = new MockAgentTransport();
+    const subjects = makeSubjects();
+    const destroy$ = new Subject<void>();
+    const bridge = createStreamManagerBridge({
+      options: { apiUrl: '', assistantId: 'test', transport },
+      subjects,
+      threadId$: of(null),
+      destroy$: destroy$.asObservable(),
+    });
+
+    bridge.submit({});
+    transport.emit([{
+      type: 'custom',
+      data: { name: 'state_update', data: { '/mrr/value': 42000 } },
+    } as any]);
+    transport.close();
+
+    await new Promise(r => setTimeout(r, 10));
+
+    expect(subjects.custom$.value).toHaveLength(1);
+    expect(subjects.custom$.value[0]).toEqual({ name: 'state_update', data: { '/mrr/value': 42000 } });
+    destroy$.next();
+  });
+
+  it('accumulates multiple custom events in order', async () => {
+    const transport = new MockAgentTransport();
+    const subjects = makeSubjects();
+    const destroy$ = new Subject<void>();
+    const bridge = createStreamManagerBridge({
+      options: { apiUrl: '', assistantId: 'test', transport },
+      subjects,
+      threadId$: of(null),
+      destroy$: destroy$.asObservable(),
+    });
+
+    bridge.submit({});
+    transport.emit([{
+      type: 'custom',
+      data: { name: 'state_update', data: { '/mrr/value': 42000 } },
+    } as any]);
+    transport.emit([{
+      type: 'custom',
+      data: { name: 'progress', data: { step: 2 } },
+    } as any]);
+    transport.close();
+
+    await new Promise(r => setTimeout(r, 10));
+
+    expect(subjects.custom$.value).toHaveLength(2);
+    expect(subjects.custom$.value[0]).toEqual({ name: 'state_update', data: { '/mrr/value': 42000 } });
+    expect(subjects.custom$.value[1]).toEqual({ name: 'progress', data: { step: 2 } });
+    destroy$.next();
+  });
+
+  it('clears custom$ on a new submit', async () => {
+    const transport = new MockAgentTransport();
+    const subjects = makeSubjects();
+    const destroy$ = new Subject<void>();
+    const bridge = createStreamManagerBridge({
+      options: { apiUrl: '', assistantId: 'test', transport },
+      subjects,
+      threadId$: of(null),
+      destroy$: destroy$.asObservable(),
+    });
+
+    // First submit with a custom event
+    bridge.submit({});
+    transport.emit([{
+      type: 'custom',
+      data: { name: 'state_update', data: { '/mrr/value': 42000 } },
+    } as any]);
+    transport.close();
+    await new Promise(r => setTimeout(r, 10));
+
+    expect(subjects.custom$.value).toHaveLength(1);
+
+    // Second submit — custom$ should reset to []
+    const transport2 = new MockAgentTransport();
+    // Replace internal transport by re-creating the bridge with the same subjects
+    const destroy2$ = new Subject<void>();
+    const bridge2 = createStreamManagerBridge({
+      options: { apiUrl: '', assistantId: 'test', transport: transport2 },
+      subjects,
+      threadId$: of(null),
+      destroy$: destroy2$.asObservable(),
+    });
+    bridge2.submit({});
+    await new Promise(r => setTimeout(r, 10));
+
+    expect(subjects.custom$.value).toHaveLength(0);
+
+    transport2.close();
+    await new Promise(r => setTimeout(r, 10));
+    destroy$.next();
+    destroy2$.next();
+  });
 });
