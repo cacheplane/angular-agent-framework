@@ -23,7 +23,7 @@ import { ChatErrorComponent } from '../../primitives/chat-error/chat-error.compo
 import { ChatInterruptComponent } from '../../primitives/chat-interrupt/chat-interrupt.component';
 import { ChatThreadListComponent, Thread } from '../../primitives/chat-thread-list/chat-thread-list.component';
 import { ChatGenerativeUiComponent } from '../../primitives/chat-generative-ui/chat-generative-ui.component';
-import { toRenderRegistry } from '@cacheplane/render';
+import { toRenderRegistry, signalStateStore } from '@cacheplane/render';
 import { createContentClassifier, type ContentClassifier } from '../../streaming/content-classifier';
 import { messageContent } from '../shared/message-utils';
 import { CHAT_THEME_STYLES } from '../../styles/chat-theme';
@@ -142,7 +142,7 @@ import { KeyValuePipe } from '@angular/common';
                       <chat-generative-ui
                         [spec]="spec"
                         [registry]="renderRegistry()"
-                        [store]="store()"
+                        [store]="resolvedStore()"
                         [handlers]="handlers()"
                         [loading]="ref().isLoading()"
                         (events)="onSpecEvent($event, index)"
@@ -230,6 +230,19 @@ export class ChatComponent {
   readonly renderEvent = output<ChatRenderEvent>();
 
 
+  private readonly _internalStore = signalStateStore({});
+
+  /**
+   * Resolved store: use the explicitly provided store input, or fall back to
+   * an internal store when `views` are provided (generative-ui use case).
+   */
+  readonly resolvedStore = computed(() => {
+    const explicit = this.store();
+    if (explicit) return explicit;
+    if (this.views()) return this._internalStore;
+    return undefined;
+  });
+
   private readonly classifiers = new Map<number, ContentClassifier>();
 
   /** Convert ViewRegistry → AngularRegistry for ChatGenerativeUiComponent. */
@@ -246,6 +259,22 @@ export class ChatComponent {
   private readonly messageCount = computed(() => this.ref().messages().length);
 
   private prevMessageCount = 0;
+
+  /**
+   * Route `state_update` custom events from the agent stream to the render
+   * state store so that components bound to `$state` paths reactively update.
+   */
+  protected readonly customEventEffect = effect(() => {
+    const events = this.ref().customEvents();
+    const store = this.resolvedStore();
+    if (!store || events.length === 0) return;
+
+    for (const event of events) {
+      if (event.name === 'state_update' && event.data && typeof event.data === 'object') {
+        store.update(event.data as Record<string, unknown>);
+      }
+    }
+  });
 
   constructor() {
     // Auto-scroll to bottom:

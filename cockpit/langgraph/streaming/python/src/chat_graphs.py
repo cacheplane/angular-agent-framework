@@ -44,4 +44,4 @@ c_threads = _build_prompt_graph("threads.md")
 c_timeline = _build_prompt_graph("timeline.md")
 c_tool_calls = _build_prompt_graph("tool-calls.md")
 c_subagents = _build_prompt_graph("subagents.md")
-generative_ui = _build_prompt_graph("generative-ui.md")
+from src.dashboard_graph import graph as generative_ui

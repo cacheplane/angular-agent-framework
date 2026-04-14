@@ -17,6 +17,7 @@ import type { BagTemplate, InferBag } from '@langchain/langgraph-sdk';
 import {
   AgentOptions,
   AgentRef,
+  CustomStreamEvent,
   StreamSubjects,
   SubagentStreamRef,
   ResourceStatus,
@@ -81,6 +82,7 @@ export function agent<
   const toolProgress$    = new BehaviorSubject<ToolProgress[]>([]);
   const toolCalls$       = new BehaviorSubject<ToolCallWithResult[]>([]);
   const subagents$       = new BehaviorSubject<Map<string, SubagentStreamRef>>(new Map());
+  const custom$          = new BehaviorSubject<CustomStreamEvent[]>([]);
   const hasValue$        = new BehaviorSubject<boolean>(false);
 
   function resetDerivedThreadState(): void {
@@ -98,7 +100,7 @@ export function agent<
   const subjects: StreamSubjects<T, InferBag<T, Bag>> = {
     status$, values$, messages$, error$,
     interrupt$, interrupts$, branch$, history$,
-    isThreadLoading$, toolProgress$, toolCalls$, subagents$,
+    isThreadLoading$, toolProgress$, toolCalls$, subagents$, custom$,
   };
 
   // threadId$ — resolved before bridge creation (injection context required for toObservable)
@@ -145,6 +147,7 @@ export function agent<
   const toolProgSig  = toSignal(toolProgress$,    { initialValue: [] });
   const toolCallsSig = toSignal(toolCalls$,       { initialValue: [] });
   const subagentsSig = toSignal(subagents$,       { initialValue: new Map<string, SubagentStreamRef>() });
+  const customSig    = toSignal(custom$,           { initialValue: [] as CustomStreamEvent[] });
 
   const isLoading    = computed(() => statusSig() === ResourceStatus.Loading);
   const activeSubagents = computed(() =>
@@ -175,6 +178,9 @@ export function agent<
     // Subagents
     subagents:       subagentsSig,
     activeSubagents,
+
+    // Custom events
+    customEvents:    customSig,
 
     // Actions
     // submit() fires the stream in the background and resolves immediately
