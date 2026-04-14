@@ -5,6 +5,7 @@ import { AngularFeaturesGrid } from '../../components/landing/angular/AngularFea
 import { AngularCodeShowcase } from '../../components/landing/angular/AngularCodeShowcase';
 import { AngularComparison } from '../../components/landing/angular/AngularComparison';
 import { AngularWhitePaperGate } from '../../components/landing/angular/AngularWhitePaperGate';
+import { AngularStackSiblings } from '../../components/landing/angular/AngularStackSiblings';
 import { AngularFooterCTA } from '../../components/landing/angular/AngularFooterCTA';
 import { tokens } from '@cacheplane/design-tokens';
 
@@ -25,6 +26,7 @@ export default function AngularPage() {
       <AngularCodeShowcase />
       <AngularComparison />
       <AngularWhitePaperGate />
+      <AngularStackSiblings />
       <AngularFooterCTA />
     </div>
   );

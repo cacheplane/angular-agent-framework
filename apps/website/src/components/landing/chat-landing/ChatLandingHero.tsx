@@ -1,14 +1,35 @@
 // apps/website/src/components/landing/chat-landing/ChatLandingHero.tsx
 'use client';
 import { motion } from 'framer-motion';
+import Link from 'next/link';
 import { tokens } from '@cacheplane/design-tokens';
 
 const BADGES = ['Angular 20+', 'Vercel json-render', 'Google A2UI', 'WCAG accessible'];
 
 export function ChatLandingHero() {
   return (
-    <section aria-labelledby="chat-hero-heading" style={{ position: 'relative', overflow: 'hidden', padding: '0 2rem' }}>
+    <section className="chat-hero" aria-labelledby="chat-hero-heading" style={{ position: 'relative', overflow: 'hidden', padding: '0 2rem' }}>
+      <style>{`
+        @media (max-width: 767px) {
+          .chat-hero { padding: 0 1.25rem !important; }
+        }
+      `}</style>
       <div style={{ maxWidth: '56rem', margin: '0 auto', textAlign: 'center', position: 'relative', zIndex: 1 }} className="py-24 md:py-32">
+        {/* Stack breadcrumb */}
+        <motion.div initial={{ y: 16 }} animate={{ y: 0 }} transition={{ duration: 0.5 }}>
+          <div style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0,
+            fontFamily: "'JetBrains Mono', monospace", fontSize: 10, letterSpacing: '0.08em',
+            textTransform: 'uppercase', marginBottom: '0.75rem',
+          }}>
+            <Link href="/angular" style={{ color: tokens.colors.textMuted, fontWeight: 500, textDecoration: 'none' }}>Agent</Link>
+            <span style={{ color: tokens.colors.textMuted, margin: '0 6px' }}>→</span>
+            <Link href="/render" style={{ color: tokens.colors.textMuted, fontWeight: 500, textDecoration: 'none' }}>Render</Link>
+            <span style={{ color: tokens.colors.textMuted, margin: '0 6px' }}>→</span>
+            <span style={{ color: tokens.colors.chatPurple, fontWeight: 700 }}>Chat</span>
+          </div>
+        </motion.div>
+
         <motion.div initial={{ y: 16 }} animate={{ y: 0 }} transition={{ duration: 0.5 }}>
           <span style={{
             fontFamily: "'JetBrains Mono', monospace", fontSize: 11, letterSpacing: '0.08em',
@@ -45,7 +66,7 @@ export function ChatLandingHero() {
             }}>
             Download the Guide
           </a>
-          <a href="/docs"
+          <Link href="/docs"
             style={{
               display: 'inline-flex', alignItems: 'center', gap: 6,
               background: tokens.glass.bg, backdropFilter: `blur(${tokens.glass.blur})`,
@@ -55,7 +76,7 @@ export function ChatLandingHero() {
               textDecoration: 'none', border: '1px solid rgba(90,0,200,0.2)', minHeight: 44,
             }}>
             View Docs
-          </a>
+          </Link>
         </motion.div>
 
         <motion.div initial={{ y: 14 }} animate={{ y: 0 }} transition={{ duration: 0.6, delay: 0.2 }}
