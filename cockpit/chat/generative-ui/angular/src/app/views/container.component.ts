@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-import { Component, input } from '@angular/core';
+import { Component, computed, input } from '@angular/core';
 import type { Spec } from '@json-render/core';
 import { RenderElementComponent } from '@cacheplane/render';
 
@@ -8,7 +8,7 @@ import { RenderElementComponent } from '@cacheplane/render';
   standalone: true,
   imports: [RenderElementComponent],
   template: `
-    <div class="flex flex-col gap-3">
+    <div [class]="layoutClass()">
       @for (key of childKeys(); track key) {
         <render-element [elementKey]="key" [spec]="spec()" />
       }
@@ -18,4 +18,11 @@ import { RenderElementComponent } from '@cacheplane/render';
 export class ContainerComponent {
   readonly childKeys = input<string[]>([]);
   readonly spec = input.required<Spec>();
+  readonly direction = input<'row' | 'column'>('column');
+
+  readonly layoutClass = computed(() =>
+    this.direction() === 'row'
+      ? 'flex flex-row flex-wrap gap-3'
+      : 'flex flex-col gap-3'
+  );
 }
