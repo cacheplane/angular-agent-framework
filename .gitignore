@@ -31,3 +31,15 @@ out
 
 # Whitepaper signup data
 apps/website/data/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+
+# LangGraph local runtime
+.langgraph_api/
+
+# Local LangGraph deployment deps
+deployments/*/deps/
