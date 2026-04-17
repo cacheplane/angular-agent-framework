@@ -127,7 +127,7 @@ export function Nav() {
               {l.label}
             </Link>
           ))}
-          <a href="https://github.com/cacheplane/angular"
+          <a href="https://github.com/cacheplane/angular-agent-framework"
             target="_blank"
             rel="noopener noreferrer"
             className="transition-colors"
@@ -263,7 +263,7 @@ export function Nav() {
                     </LinkEl>
                   );
                 })}
-                <a href="https://github.com/cacheplane/angular"
+                <a href="https://github.com/cacheplane/angular-agent-framework"
                   target="_blank" rel="noopener noreferrer"
                   onClick={() => setOpen(false)}
                   style={{
