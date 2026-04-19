@@ -42,8 +42,26 @@
     }
   },
   "release": {
+    "projects": ["agent", "render", "chat"],
+    "projectsRelationship": "independent",
+    "releaseTagPattern": "{projectName}@v{version}",
     "version": {
-      "preVersionCommand": "npx nx run-many -t build"
+      "preVersionCommand": "npx nx run-many -t build -p agent,render,chat",
+      "conventionalCommits": true,
+      "preserveMatchingDependencyRanges": false,
+      "updateDependents": "always",
+      "generatorOptions": {
+        "packageRoot": "{projectRoot}",
+        "currentVersionResolver": "git-tag",
+        "fallbackCurrentVersionResolver": "disk"
+      }
+    },
+    "changelog": {
+      "projectChangelogs": {
+        "createRelease": "github",
+        "file": "{projectRoot}/CHANGELOG.md"
+      },
+      "workspaceChangelog": false
     }
   },
   "generators": {
