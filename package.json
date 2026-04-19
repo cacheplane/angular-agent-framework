@@ -8,7 +8,11 @@
     "generate-narrative-docs": "npx tsx apps/website/scripts/generate-narrative-docs.ts",
     "generate-docs": "npm run generate-api-docs && npm run generate-narrative-docs",
     "generate-whitepaper": "npx tsx apps/website/scripts/generate-whitepaper.ts",
-    "prepare": "husky"
+    "prepare": "husky",
+    "release:dry": "nx release --dry-run",
+    "release:version": "nx release version",
+    "release:changelog": "nx release changelog",
+    "release:publish": "nx release publish"
   },
   "private": true,
   "devDependencies": {
