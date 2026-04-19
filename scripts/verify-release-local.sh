@@ -4,7 +4,6 @@ set -euo pipefail
 # Verify the nx release pipeline end-to-end against a local Verdaccio registry.
 # Does NOT modify git state or publish to the real npm registry.
 
-ORIGINAL_NPM_CONFIG_REGISTRY="${npm_config_registry:-}"
 LOCAL_REGISTRY="http://localhost:4873/"
 
 cleanup() {
