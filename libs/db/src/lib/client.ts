@@ -15,6 +15,7 @@ export function createDb(connectionString: string): Db {
   if (!connectionString) {
     throw new Error('createDb: connection string is required');
   }
+  // prepare: false — required by Vercel Postgres / PgBouncer transaction pooling.
   const sql = postgres(connectionString, { prepare: false });
   const db = drizzle(sql, { schema }) as Db;
   db.close = () => sql.end();
