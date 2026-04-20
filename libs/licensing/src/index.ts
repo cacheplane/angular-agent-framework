@@ -15,3 +15,4 @@ export { createTelemetryClient } from './lib/telemetry.js';
 export type { RunLicenseCheckOptions } from './lib/run-license-check.js';
 export { runLicenseCheck } from './lib/run-license-check.js';
 export { LICENSE_PUBLIC_KEY } from './lib/license-public-key.js';
+export { inferNoncommercial } from './lib/infer-noncommercial.js';

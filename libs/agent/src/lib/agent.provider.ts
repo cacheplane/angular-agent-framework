@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import { InjectionToken, Provider } from '@angular/core';
-import { runLicenseCheck, LICENSE_PUBLIC_KEY } from '@cacheplane/licensing';
+import {
+  runLicenseCheck,
+  LICENSE_PUBLIC_KEY,
+  inferNoncommercial,
+} from '@cacheplane/licensing';
 import { AgentTransport } from './agent.types';
 
 const PACKAGE_NAME = '@cacheplane/angular';
@@ -39,15 +43,6 @@ export interface AgentConfig {
 }
 
 export const AGENT_CONFIG = new InjectionToken<AgentConfig>('AGENT_CONFIG');
-
-function inferNoncommercial(): boolean {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const proc = (globalThis as any)['process'];
-  if (proc && proc.env) {
-    return proc.env['NODE_ENV'] !== 'production';
-  }
-  return false;
-}
 
 /**
  * Angular provider factory that registers global defaults for all
