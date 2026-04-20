@@ -29,6 +29,7 @@
       "@cacheplane/partial-json": ["libs/partial-json/src/index.ts"],
       "@cacheplane/a2ui": ["libs/a2ui/src/index.ts"],
       "@cacheplane/licensing": ["libs/licensing/src/index.ts"],
+      "@cacheplane/licensing/testing": ["libs/licensing/src/testing.ts"],
       "@cacheplane/example-layouts": ["libs/example-layouts/src/public-api.ts"]
     },
     "skipLibCheck": true,

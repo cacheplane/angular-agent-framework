@@ -1568,32 +1568,85 @@ git commit -m "docs(licensing): add README and shared test fixtures"
 ## Task 10: Integrate license check into `@cacheplane/angular`
 
 **Files:**
-- Modify: `libs/licensing/src/index.ts`
+- Create: `libs/licensing/src/testing.ts`
+- Modify: `tsconfig.base.json` (add `@cacheplane/licensing/testing` path)
+- Modify: `libs/licensing/tsconfig.lib.json` (exclude `src/testing.ts`)
+- Modify: `libs/agent/tsconfig.json` (remove `baseUrl: "."` override)
+- Modify: `libs/agent/src/test-setup.ts` (scoped sha512 patch)
 - Modify: `libs/agent/src/lib/agent.provider.ts`
 - Modify: `libs/agent/src/lib/agent.provider.spec.ts`
 - Modify: `libs/agent/package.json`
 
 **Guardrails (read before starting):**
 
-- **Do NOT commit any private key to the repo.** The only fixture under `libs/licensing/fixtures/` is `dev-public-key.hex`. There is no `dev-private-key.hex`. Do not create one. Every test must mint its keypair at runtime via `generateKeyPair()` from `@cacheplane/licensing`.
+- **Do NOT commit any private key to the repo.** The only fixture under `libs/licensing/fixtures/` is `dev-public-key.hex`. There is no `dev-private-key.hex`. Do not create one. Every test must mint its keypair at runtime via `generateKeyPair()` from `@cacheplane/licensing/testing`.
 - **Do NOT modify `libs/licensing/src/lib/testing/keypair.ts`** in this task. `generateKeyPair()` must stay non-deterministic.
-- **Do NOT change `libs/licensing/tsconfig.lib.json`.** The `testing/**` exclude stays; testing helpers must not ship in the published `dist/`.
-- **Do NOT change `libs/licensing/project.json`** or the prebuild wiring.
+- **Do NOT modify `libs/licensing/project.json`** or the prebuild wiring.
 - **Architectural key:** the provider hardcodes `LICENSE_PUBLIC_KEY` in production, but `AgentConfig` gains an `@internal __licensePublicKey?: Uint8Array` escape hatch so tests can verify against an ephemeral pair without touching the compile-time constant. Mirror the shape of the existing `__licenseEnvHint` hook.
-- **If tests fail in jsdom** with an `ed25519`/`SubtleCrypto` cross-realm `ArrayBuffer` error, first report the failure back to the controller (do not silently monkeypatch `sha512Async` in `test-setup.ts`). We'll decide together whether the patch is warranted.
-- **If Nx complains about resolving `@cacheplane/licensing`** during test or build, first report the failure back to the controller. Do not unilaterally edit `libs/agent/tsconfig.json` (especially `baseUrl`) or `tsconfig.base.json`.
+- **Testing helpers stay source-only.** A new `@cacheplane/licensing/testing` subpath maps via TS paths to `libs/licensing/src/testing.ts`. `src/testing.ts` is excluded from `tsconfig.lib.json` so testing helpers never ship in the published `dist/`. Downstream consumers cannot import `@cacheplane/licensing/testing`.
 
-- [ ] **Step 1: Expose the testing helpers from the licensing index**
+- [ ] **Step 1: Create the testing subpath entry**
 
-Append to `libs/licensing/src/index.ts`:
+Create `libs/licensing/src/testing.ts`:
 
 ```ts
-// Testing subpath — not a stable public API. Safe to use from this monorepo's
-// own tests; downstream consumers should not rely on these.
+// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// Monorepo-internal test helpers. NOT part of the published package —
+// excluded from `tsconfig.lib.json` so nothing here ships in dist.
+// Downstream consumers cannot import `@cacheplane/licensing/testing`.
 export { generateKeyPair, signLicense } from './lib/testing/keypair';
 export type { DevKeyPair } from './lib/testing/keypair';
 export { __resetRunLicenseCheckStateForTests } from './lib/run-license-check';
 export { __resetNagStateForTests } from './lib/nag';
+```
+
+- [ ] **Step 1b: Register the path alias in `tsconfig.base.json`**
+
+In the `compilerOptions.paths` block, add this line directly below `"@cacheplane/licensing"`:
+
+```json
+      "@cacheplane/licensing/testing": ["libs/licensing/src/testing.ts"],
+```
+
+- [ ] **Step 1c: Exclude `src/testing.ts` from the licensing lib build**
+
+In `libs/licensing/tsconfig.lib.json`, add `"src/testing.ts"` to the existing exclude:
+
+```json
+  "exclude": ["src/**/*.spec.ts", "src/lib/testing/**", "src/testing.ts"]
+```
+
+- [ ] **Step 1d: Remove the `baseUrl` override from `libs/agent/tsconfig.json`**
+
+`libs/agent/tsconfig.json` currently sets `"baseUrl": "."`, which shifts path resolution relative to the agent dir and prevents `@cacheplane/licensing` from resolving. Delete that line — the `chat` and `render` tsconfigs don't have it either.
+
+- [ ] **Step 1e: Patch `sha512Async` in `libs/agent/src/test-setup.ts`**
+
+`@noble/ed25519` defaults to `crypto.subtle.digest('sha-512', ...)`. jsdom's SubtleCrypto rejects TypedArrays from the Node realm with "2nd argument is not instance of ArrayBuffer" (cross-realm instanceof). Scope a Node-crypto replacement to the agent test env only:
+
+```ts
+import { getTestBed } from '@angular/core/testing';
+import {
+  BrowserTestingModule,
+  platformBrowserTesting,
+} from '@angular/platform-browser/testing';
+import * as ed from '@noble/ed25519';
+import { createHash } from 'node:crypto';
+
+// jsdom's SubtleCrypto rejects cross-realm TypedArrays. Route sha512 through
+// Node's crypto module, which has no cross-realm constraints. Scoped to agent
+// test-setup only — does not affect production code or the published package.
+ed.etc.sha512Async = async (...messages: Uint8Array[]): Promise<Uint8Array> => {
+  const hash = createHash('sha512');
+  for (const m of messages) hash.update(m);
+  return new Uint8Array(hash.digest());
+};
+
+getTestBed().initTestEnvironment(
+  BrowserTestingModule,
+  platformBrowserTesting(),
+  { teardown: { destroyAfterEach: true } },
+);
 ```
 
 - [ ] **Step 2: Replace `libs/agent/src/lib/agent.provider.spec.ts` with the updated test suite**
@@ -1609,7 +1662,7 @@ import {
   generateKeyPair,
   __resetRunLicenseCheckStateForTests,
   __resetNagStateForTests,
-} from '@cacheplane/licensing';
+} from '@cacheplane/licensing/testing';
 
 describe('provideAgent', () => {
   beforeEach(() => {
@@ -1785,7 +1838,11 @@ Expected: build succeeds.
 - [ ] **Step 8: Commit**
 
 ```bash
-git add libs/agent/src/lib/agent.provider.ts libs/agent/src/lib/agent.provider.spec.ts libs/agent/package.json libs/licensing/src/index.ts
+git add libs/licensing/src/testing.ts libs/licensing/tsconfig.lib.json \
+  tsconfig.base.json \
+  libs/agent/tsconfig.json libs/agent/src/test-setup.ts \
+  libs/agent/src/lib/agent.provider.ts libs/agent/src/lib/agent.provider.spec.ts \
+  libs/agent/package.json
 git commit -m "feat(agent): run license check at provider init"
 ```
 
@@ -1818,7 +1875,7 @@ import { provideRender, RENDER_CONFIG } from './provide-render';
 import {
   __resetRunLicenseCheckStateForTests,
   __resetNagStateForTests,
-} from '@cacheplane/licensing';
+} from '@cacheplane/licensing/testing';
 
 describe('provideRender', () => {
   beforeEach(() => {
@@ -1972,7 +2029,7 @@ import { provideChat, CHAT_CONFIG } from './provide-chat';
 import {
   __resetRunLicenseCheckStateForTests,
   __resetNagStateForTests,
-} from '@cacheplane/licensing';
+} from '@cacheplane/licensing/testing';
 
 describe('provideChat', () => {
   beforeEach(() => {
