@@ -116,10 +116,81 @@ export async function handleCheckoutCompleted(
 }
 
 export async function handleSubscriptionUpdated(
-  _sub: Stripe.Subscription,
-  _deps: HandlerDeps,
+  sub: Stripe.Subscription,
+  deps: HandlerDeps,
 ): Promise<void> {
-  throw new Error('handleSubscriptionUpdated: not yet implemented');
+  const lineItem = sub.items?.data?.[0];
+  if (!lineItem) {
+    throw new Error(`handleSubscriptionUpdated: subscription ${sub.id} has no items`);
+  }
+  const priceMetadata = (lineItem.price?.metadata ?? {}) as Record<string, string>;
+  const tier = extractTier(priceMetadata);
+  const seats = computeSeats(tier, lineItem.quantity);
+  const currentPeriodEnd = (sub as any).current_period_end as number | undefined;
+  const expiresAt = currentPeriodEnd
+    ? new Date(currentPeriodEnd * 1000)
+    : new Date(Date.now() + deps.defaultTtlDays * 24 * 60 * 60 * 1000);
+  const customerId = typeof sub.customer === 'string' ? sub.customer : sub.customer?.id;
+  if (!customerId) {
+    throw new Error(`handleSubscriptionUpdated: subscription ${sub.id} has no customer`);
+  }
+
+  const existing = await deps.getLicense(deps.db, sub.id);
+
+  const claimsUnchanged =
+    existing !== null &&
+    existing.tier === tier &&
+    existing.seats === seats &&
+    existing.expiresAt.getTime() === expiresAt.getTime();
+
+  // Email source: prefer existing license (captured at checkout), else pull
+  // from Stripe customer.
+  let email = existing?.customerEmail;
+  if (!email) {
+    const customer = await deps.stripe.customers.retrieve(customerId);
+    if ('deleted' in customer && customer.deleted) {
+      throw new Error(`handleSubscriptionUpdated: customer ${customerId} is deleted`);
+    }
+    email = (customer as Stripe.Customer).email ?? undefined;
+    if (!email) {
+      throw new Error(`handleSubscriptionUpdated: no email for customer ${customerId}`);
+    }
+  }
+
+  if (claimsUnchanged && existing) {
+    await deps.upsertLicense(deps.db, {
+      stripeCustomerId: existing.stripeCustomerId,
+      stripeSubscriptionId: existing.stripeSubscriptionId,
+      customerEmail: existing.customerEmail,
+      tier: existing.tier,
+      seats: existing.seats,
+      expiresAt: existing.expiresAt,
+      lastToken: existing.lastToken,
+    });
+    return;
+  }
+
+  const token = await deps.mintToken(
+    { stripeCustomerId: customerId, tier, seats, expiresAt },
+    deps.privateKeyHex,
+  );
+
+  await deps.upsertLicense(deps.db, {
+    stripeCustomerId: customerId,
+    stripeSubscriptionId: sub.id,
+    customerEmail: email,
+    tier,
+    seats,
+    expiresAt,
+    lastToken: token,
+  });
+
+  await deps.sendLicenseEmail({
+    resendApiKey: deps.resendApiKey,
+    from: deps.emailFrom,
+    to: email,
+    vars: { tier, seats, token, expiresAt },
+  });
 }
 
 export async function handleSubscriptionDeleted(

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import type Stripe from 'stripe';
+import type { License } from '@cacheplane/db';
 import { handleEvent, type HandlerDeps } from './handlers.js';
 
 function makeDeps(overrides: Partial<HandlerDeps> = {}): HandlerDeps {
@@ -123,5 +124,118 @@ describe('handleCheckoutCompleted', () => {
       ),
     ).rejects.toThrow(/cacheplane_tier/);
     expect(deps.deleteProcessedEvent).toHaveBeenCalledWith(deps.db, 'evt_co2');
+  });
+});
+
+describe('handleSubscriptionUpdated', () => {
+  function sub(overrides: any = {}): Stripe.Subscription {
+    return {
+      id: 'sub_u',
+      customer: 'cus_u',
+      current_period_end: 1_800_000_000,
+      items: {
+        data: [
+          {
+            quantity: 3,
+            price: { metadata: { cacheplane_tier: 'developer-seat' } },
+          },
+        ],
+      },
+      ...overrides,
+    } as Stripe.Subscription;
+  }
+
+  function existingLicense(overrides: Partial<License> = {}): License {
+    return {
+      id: 'lic_u',
+      stripeCustomerId: 'cus_u',
+      stripeSubscriptionId: 'sub_u',
+      customerEmail: 'u@example.com',
+      tier: 'developer-seat',
+      seats: 3,
+      expiresAt: new Date(1_800_000_000 * 1000),
+      revokedAt: null,
+      lastToken: 'OLD.TOKEN',
+      issuedAt: new Date(),
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      ...overrides,
+    } as License;
+  }
+
+  function deps(license: License | null): HandlerDeps {
+    return makeDeps({
+      getLicense: vi.fn().mockResolvedValue(license),
+      upsertLicense: vi.fn().mockImplementation((_db, input) =>
+        Promise.resolve({ ...(license ?? {}), ...input, id: 'lic_u', createdAt: new Date(), updatedAt: new Date(), issuedAt: new Date(), revokedAt: null }),
+      ),
+      mintToken: vi.fn().mockResolvedValue('NEW.TOKEN'),
+      sendLicenseEmail: vi.fn().mockResolvedValue({ resendId: 're_u' }),
+      stripe: {
+        checkout: { sessions: { retrieve: vi.fn() } },
+        subscriptions: { retrieve: vi.fn() },
+      } as any,
+    });
+  }
+
+  it('upserts without minting or emailing when claims are unchanged', async () => {
+    const d = deps(existingLicense());
+    await handleEvent(
+      { id: 'evt_u_noop', type: 'customer.subscription.updated', data: { object: sub() } } as Stripe.Event,
+      d,
+    );
+    expect(d.mintToken).not.toHaveBeenCalled();
+    expect(d.sendLicenseEmail).not.toHaveBeenCalled();
+    expect(d.upsertLicense).toHaveBeenCalledTimes(1);
+    const arg = (d.upsertLicense as unknown as { mock: { calls: any[][] } }).mock.calls[0][1];
+    expect(arg.lastToken).toBe('OLD.TOKEN');
+  });
+
+  it('mints and emails when seats change', async () => {
+    const d = deps(existingLicense({ seats: 2 }));
+    await handleEvent(
+      { id: 'evt_u_seats', type: 'customer.subscription.updated', data: { object: sub() } } as Stripe.Event,
+      d,
+    );
+    expect(d.mintToken).toHaveBeenCalledTimes(1);
+    expect(d.sendLicenseEmail).toHaveBeenCalledTimes(1);
+    const arg = (d.upsertLicense as unknown as { mock: { calls: any[][] } }).mock.calls[0][1];
+    expect(arg.lastToken).toBe('NEW.TOKEN');
+    expect(arg.seats).toBe(3);
+  });
+
+  it('mints and emails when tier changes', async () => {
+    const d = deps(existingLicense({ tier: 'app-deployment', seats: 1 }));
+    await handleEvent(
+      { id: 'evt_u_tier', type: 'customer.subscription.updated', data: { object: sub() } } as Stripe.Event,
+      d,
+    );
+    expect(d.mintToken).toHaveBeenCalledTimes(1);
+    expect(d.sendLicenseEmail).toHaveBeenCalledTimes(1);
+  });
+
+  it('mints and emails when expires_at changes', async () => {
+    const d = deps(existingLicense({ expiresAt: new Date(1_700_000_000 * 1000) }));
+    await handleEvent(
+      { id: 'evt_u_exp', type: 'customer.subscription.updated', data: { object: sub() } } as Stripe.Event,
+      d,
+    );
+    expect(d.mintToken).toHaveBeenCalledTimes(1);
+    expect(d.sendLicenseEmail).toHaveBeenCalledTimes(1);
+  });
+
+  it('mints and emails when no existing license is found (first time)', async () => {
+    const d = deps(null);
+    (d.stripe as any).customers = {
+      retrieve: vi.fn().mockResolvedValue({ email: 'new@example.com' }),
+    };
+    await handleEvent(
+      { id: 'evt_u_new', type: 'customer.subscription.updated', data: { object: sub() } } as Stripe.Event,
+      d,
+    );
+    expect(d.mintToken).toHaveBeenCalledTimes(1);
+    expect(d.sendLicenseEmail).toHaveBeenCalledTimes(1);
+    const sendArg = (d.sendLicenseEmail as unknown as { mock: { calls: any[][] } }).mock.calls[0][0];
+    expect(sendArg.to).toBe('new@example.com');
   });
 });
