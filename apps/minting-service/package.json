@@ -2,5 +2,11 @@
   "name": "@cacheplane/minting-service",
   "version": "0.0.1",
   "type": "module",
-  "private": true
+  "private": true,
+  "dependencies": {
+    "drizzle-orm": "^0.45.2",
+    "postgres": "^3.4.9",
+    "resend": "^6.10.0",
+    "stripe": "^22.0.2"
+  }
 }

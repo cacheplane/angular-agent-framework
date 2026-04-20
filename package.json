@@ -39,6 +39,7 @@
     "@swc/helpers": "0.5.18",
     "@tailwindcss/postcss": "^4.2.2",
     "@testcontainers/postgresql": "^11.14.0",
+    "@types/node": "^25.6.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "@typescript-eslint/utils": "^8.40.0",
@@ -93,7 +94,8 @@
     "rehype-pretty-code": "^0.14.3",
     "rehype-slug": "^6.0.0",
     "rxjs": "~7.8.0",
-    "shiki": "^4.0.2"
+    "shiki": "^4.0.2",
+    "stripe": "^22.0.2"
   },
   "nx": {
     "includedScripts": [],
