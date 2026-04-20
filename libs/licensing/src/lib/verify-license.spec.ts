@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import { beforeAll, describe, it, expect } from 'vitest';
 import { verifyLicense } from './verify-license';
-import { generateKeyPair, signLicense, type DevKeyPair } from './testing/keypair';
+import { signLicense } from './sign-license';
+import { generateKeyPair, type DevKeyPair } from './testing/keypair';
 import type { LicenseClaims } from './license-token';
 
 const BASE_CLAIMS: LicenseClaims = {

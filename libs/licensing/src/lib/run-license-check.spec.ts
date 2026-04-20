@@ -2,7 +2,8 @@
 import { afterEach, beforeEach, describe, it, expect, vi } from 'vitest';
 import { runLicenseCheck, __resetRunLicenseCheckStateForTests } from './run-license-check';
 import { __resetNagStateForTests } from './nag';
-import { generateKeyPair, signLicense, type DevKeyPair } from './testing/keypair';
+import { signLicense } from './sign-license';
+import { generateKeyPair, type DevKeyPair } from './testing/keypair';
 import type { LicenseClaims } from './license-token';
 
 const BASE: LicenseClaims = {
