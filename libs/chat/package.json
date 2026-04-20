@@ -5,6 +5,7 @@
     "@angular/core": "^20.0.0 || ^21.0.0",
     "@angular/common": "^20.0.0 || ^21.0.0",
     "@angular/forms": "^20.0.0 || ^21.0.0",
+    "@angular/platform-browser": "^20.0.0 || ^21.0.0",
     "@cacheplane/licensing": "^0.0.1",
     "@cacheplane/render": "^0.0.1",
     "@cacheplane/a2ui": "^0.0.1",
