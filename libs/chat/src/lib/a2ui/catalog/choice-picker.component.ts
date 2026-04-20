@@ -11,8 +11,9 @@ import { emitBinding } from './emit-binding';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="flex flex-col gap-1">
-      @if (label()) { <label class="text-xs" style="color: var(--a2ui-label, rgba(255,255,255,0.6));">{{ label() }}</label> }
+      @if (label()) { <label [htmlFor]="_inputId" class="text-xs" style="color: var(--a2ui-label, rgba(255,255,255,0.6));">{{ label() }}</label> }
       <select
+        [id]="_inputId"
         class="rounded-lg px-3 py-2 text-sm"
         [style.background]="'var(--a2ui-input-bg, rgba(255,255,255,0.05))'"
         [style.color]="'var(--a2ui-input-text, white)'"
@@ -28,6 +29,9 @@ import { emitBinding } from './emit-binding';
   `,
 })
 export class A2uiChoicePickerComponent {
+  private static _idCounter = 0;
+  protected readonly _inputId = `a2ui-choice-picker-${++A2uiChoicePickerComponent._idCounter}`;
+
   readonly label = input<string>('');
   readonly options = input<string[]>([]);
   readonly selected = input<string>('');

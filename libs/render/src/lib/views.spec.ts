@@ -2,13 +2,13 @@ import { describe, it, expect } from 'vitest';
 import { Component } from '@angular/core';
 import { views, withViews, withoutViews, toRenderRegistry } from './views';
 
-@Component({ selector: 'test-a', standalone: true, template: 'A' })
+@Component({ selector: 'render-test-a', standalone: true, template: 'A' })
 class CompA {}
 
-@Component({ selector: 'test-b', standalone: true, template: 'B' })
+@Component({ selector: 'render-test-b', standalone: true, template: 'B' })
 class CompB {}
 
-@Component({ selector: 'test-c', standalone: true, template: 'C' })
+@Component({ selector: 'render-test-c', standalone: true, template: 'C' })
 class CompC {}
 
 describe('views()', () => {

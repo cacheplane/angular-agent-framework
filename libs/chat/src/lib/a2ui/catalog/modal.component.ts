@@ -17,7 +17,12 @@ import { emitBinding } from './emit-binding';
       >
         <div
           class="absolute inset-0 bg-black/60 backdrop-blur-sm"
+          role="button"
+          tabindex="0"
+          aria-label="Dismiss dialog"
           (click)="onBackdropClick()"
+          (keydown.enter)="onBackdropClick()"
+          (keydown.space)="onBackdropClick()"
         ></div>
         <div class="relative bg-gray-900 border border-white/10 rounded-xl p-6 max-w-lg w-full mx-4 shadow-2xl">
           @if (title()) {
