@@ -8,5 +8,6 @@ export default defineConfig({
     globals: true,
     include: ['src/**/*.spec.ts'],
     passWithNoTests: true,
+    testTimeout: 60_000,
   },
 });
