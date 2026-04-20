@@ -18,6 +18,20 @@
     "test": {
       "executor": "@nx/vitest:test",
       "options": { "configFile": "libs/db/vite.config.mts" }
+    },
+    "db:generate": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "drizzle-kit generate",
+        "cwd": "libs/db"
+      }
+    },
+    "db:migrate": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "drizzle-kit migrate",
+        "cwd": "libs/db"
+      }
     }
   }
 }
