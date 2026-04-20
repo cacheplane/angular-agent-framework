@@ -9,6 +9,13 @@
     "test": {
       "executor": "@nx/vitest:test",
       "options": { "configFile": "apps/minting-service/vite.config.mts" }
+    },
+    "remint": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsx scripts/remint.ts",
+        "cwd": "apps/minting-service"
+      }
     }
   }
 }
