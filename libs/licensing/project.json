@@ -1,0 +1,23 @@
+{
+  "name": "licensing",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/licensing/src",
+  "projectType": "library",
+  "tags": ["scope:shared", "type:lib"],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{workspaceRoot}/dist/libs/licensing"],
+      "options": {
+        "outputPath": "dist/libs/licensing",
+        "main": "libs/licensing/src/index.ts",
+        "tsConfig": "libs/licensing/tsconfig.lib.json"
+      }
+    },
+    "lint": { "executor": "@nx/eslint:lint" },
+    "test": {
+      "executor": "@nx/vite:test",
+      "options": { "configFile": "libs/licensing/vite.config.mts" }
+    }
+  }
+}

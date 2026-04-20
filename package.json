@@ -78,6 +78,7 @@
     "@langchain/core": "^1.1.33",
     "@langchain/langgraph-sdk": "^1.7.4",
     "@modelcontextprotocol/sdk": "^1.27.1",
+    "@noble/ed25519": "^2.3.0",
     "framer-motion": "^12.38.0",
     "next": "~16.1.6",
     "next-mdx-remote": "^6.0.0",
