@@ -5,8 +5,7 @@
     "noPropertyAccessFromIndexSignature": true,
     "module": "preserve",
     "emitDeclarationOnly": false,
-    "composite": false,
-    "baseUrl": "."
+    "composite": false
   },
   "angularCompilerOptions": {
     "enableI18nLegacyMessageIdFormat": false,
