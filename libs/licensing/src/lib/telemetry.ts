@@ -19,13 +19,16 @@ export interface CreateTelemetryClientOptions {
 }
 
 function isOptedOut(): boolean {
-  const envFlag =
-    typeof process !== 'undefined' && process.env
-      ? process.env.CACHEPLANE_TELEMETRY
-      : undefined;
+  // Access `process` via globalThis so this module bundles cleanly for
+  // browser/Angular targets where `process` is not a declared global.
+  const g = globalThis as {
+    process?: { env?: Record<string, string | undefined> };
+    CACHEPLANE_TELEMETRY?: unknown;
+  };
+  const envFlag = g.process?.env?.['CACHEPLANE_TELEMETRY'];
   if (envFlag === '0' || envFlag === 'false') return true;
-  const g = (globalThis as Record<string, unknown>).CACHEPLANE_TELEMETRY;
-  if (g === false || g === 0 || g === '0') return true;
+  const override = g.CACHEPLANE_TELEMETRY;
+  if (override === false || override === 0 || override === '0') return true;
   return false;
 }
 

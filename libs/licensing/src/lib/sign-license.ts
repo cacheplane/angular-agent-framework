@@ -3,8 +3,11 @@ import * as ed from '@noble/ed25519';
 import type { LicenseClaims } from './license-token.js';
 
 function bytesToBase64Url(bytes: Uint8Array): string {
-  return Buffer.from(bytes)
-    .toString('base64')
+  // btoa is available in Node 16+ and all browsers; avoids Buffer so this
+  // module is safe to bundle for browser/Angular consumers.
+  let bin = '';
+  for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+  return btoa(bin)
     .replace(/\+/g, '-')
     .replace(/\//g, '_')
     .replace(/=+$/, '');

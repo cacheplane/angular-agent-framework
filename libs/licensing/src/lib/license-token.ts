@@ -32,7 +32,12 @@ function base64UrlToBytes(s: string): Uint8Array | null {
     // base64url -> base64
     const pad = '='.repeat((4 - (s.length % 4)) % 4);
     const b64 = (s + pad).replace(/-/g, '+').replace(/_/g, '/');
-    return Uint8Array.from(Buffer.from(b64, 'base64'));
+    // atob is available in Node 16+ and all browsers; avoids Buffer so this
+    // module is safe to bundle for browser/Angular consumers.
+    const bin = atob(b64);
+    const out = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+    return out;
   } catch {
     return null;
   }
@@ -40,16 +45,20 @@ function base64UrlToBytes(s: string): Uint8Array | null {
 
 function isLicenseClaims(value: unknown): value is LicenseClaims {
   if (!value || typeof value !== 'object') return false;
+  // Bracket access required because `Record<string, unknown>` is an index
+  // signature; Angular consumers enable `noPropertyAccessFromIndexSignature`.
   const v = value as Record<string, unknown>;
+  const tier = v['tier'];
+  const seats = v['seats'];
   return (
-    typeof v.sub === 'string' &&
-    (v.tier === 'developer-seat' ||
-      v.tier === 'app-deployment' ||
-      v.tier === 'enterprise') &&
-    typeof v.iat === 'number' &&
-    typeof v.exp === 'number' &&
-    typeof v.seats === 'number' &&
-    v.seats >= 1
+    typeof v['sub'] === 'string' &&
+    (tier === 'developer-seat' ||
+      tier === 'app-deployment' ||
+      tier === 'enterprise') &&
+    typeof v['iat'] === 'number' &&
+    typeof v['exp'] === 'number' &&
+    typeof seats === 'number' &&
+    seats >= 1
   );
 }
 
