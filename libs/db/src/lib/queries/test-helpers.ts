@@ -16,7 +16,9 @@ export interface TestDb {
  * Drizzle client plus a cleanup function. Call `cleanup` in afterAll.
  */
 export async function startTestDb(): Promise<TestDb> {
-  const container: StartedPostgreSqlContainer = await new PostgreSqlContainer('postgres:16').start();
+  // Ryuk (the reaper container) sometimes hangs on macOS; cleanup() handles teardown.
+  process.env['TESTCONTAINERS_RYUK_DISABLED'] = 'true';
+  const container: StartedPostgreSqlContainer = await new PostgreSqlContainer('postgres:16-alpine').start();
   const sql = postgres(container.getConnectionUri(), { prepare: false });
   const db = drizzle(sql, { schema });
 
