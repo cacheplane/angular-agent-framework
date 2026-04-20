@@ -1851,17 +1851,23 @@ git commit -m "feat(agent): run license check at provider init"
 ## Task 11: Integrate license check into `@cacheplane/render`
 
 **Files:**
+- Modify: `libs/render/tsconfig.json` (remove `baseUrl: "."` override, same reason as agent in T10)
 - Modify: `libs/render/src/lib/provide-render.ts`
 - Modify: `libs/render/src/lib/render.types.ts`
 - Create: `libs/render/src/lib/provide-render.spec.ts`
 - Modify: `libs/render/package.json`
 
-**Guardrails (same as T10; read before starting):**
+**Guardrails:**
 
 - Do not commit any private key to the repo. `libs/licensing/fixtures/` contains only `dev-public-key.hex`.
-- Do not modify `libs/licensing/src/lib/testing/keypair.ts`, `libs/licensing/tsconfig.lib.json`, or `libs/licensing/project.json`.
+- Do not modify `libs/licensing/src/lib/testing/keypair.ts`, `libs/licensing/tsconfig.lib.json`, `libs/licensing/project.json`, or the `@cacheplane/licensing/testing` subpath wiring set up in T10.
 - Mirror agent's `__licensePublicKey` override on `RenderConfig` for symmetry.
-- If tests or build fail due to jsdom/Nx issues, stop and report to the controller rather than patching `test-setup.ts` or `tsconfig.base.json` unilaterally.
+- The render test only covers the missing-license warn path (no ed25519 work), so no `sha512Async` patch is needed in `libs/render/src/test-setup.ts`.
+- If tests or build fail in unexpected ways, stop and report to the controller.
+
+- [ ] **Step 0: Remove the `baseUrl` override from `libs/render/tsconfig.json`**
+
+Same as the agent fix in T10 Step 1d — `baseUrl: "."` in the per-lib tsconfig shifts path resolution and breaks `@cacheplane/licensing`. Delete the `"baseUrl": "."` line.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -1997,7 +2003,7 @@ Expected: build succeeds.
 - [ ] **Step 7: Commit**
 
 ```bash
-git add libs/render/src/lib/provide-render.ts libs/render/src/lib/provide-render.spec.ts libs/render/src/lib/render.types.ts libs/render/package.json
+git add libs/render/tsconfig.json libs/render/src/lib/provide-render.ts libs/render/src/lib/provide-render.spec.ts libs/render/src/lib/render.types.ts libs/render/package.json
 git commit -m "feat(render): run license check at provider init"
 ```
 
