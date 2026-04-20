@@ -1568,11 +1568,22 @@ git commit -m "docs(licensing): add README and shared test fixtures"
 ## Task 10: Integrate license check into `@cacheplane/angular`
 
 **Files:**
+- Modify: `libs/licensing/src/index.ts`
 - Modify: `libs/agent/src/lib/agent.provider.ts`
 - Modify: `libs/agent/src/lib/agent.provider.spec.ts`
 - Modify: `libs/agent/package.json`
 
-- [ ] **Step 1: Expose the test-only keypair helpers from `@cacheplane/licensing`**
+**Guardrails (read before starting):**
+
+- **Do NOT commit any private key to the repo.** The only fixture under `libs/licensing/fixtures/` is `dev-public-key.hex`. There is no `dev-private-key.hex`. Do not create one. Every test must mint its keypair at runtime via `generateKeyPair()` from `@cacheplane/licensing`.
+- **Do NOT modify `libs/licensing/src/lib/testing/keypair.ts`** in this task. `generateKeyPair()` must stay non-deterministic.
+- **Do NOT change `libs/licensing/tsconfig.lib.json`.** The `testing/**` exclude stays; testing helpers must not ship in the published `dist/`.
+- **Do NOT change `libs/licensing/project.json`** or the prebuild wiring.
+- **Architectural key:** the provider hardcodes `LICENSE_PUBLIC_KEY` in production, but `AgentConfig` gains an `@internal __licensePublicKey?: Uint8Array` escape hatch so tests can verify against an ephemeral pair without touching the compile-time constant. Mirror the shape of the existing `__licenseEnvHint` hook.
+- **If tests fail in jsdom** with an `ed25519`/`SubtleCrypto` cross-realm `ArrayBuffer` error, first report the failure back to the controller (do not silently monkeypatch `sha512Async` in `test-setup.ts`). We'll decide together whether the patch is warranted.
+- **If Nx complains about resolving `@cacheplane/licensing`** during test or build, first report the failure back to the controller. Do not unilaterally edit `libs/agent/tsconfig.json` (especially `baseUrl`) or `tsconfig.base.json`.
+
+- [ ] **Step 1: Expose the testing helpers from the licensing index**
 
 Append to `libs/licensing/src/index.ts`:
 
@@ -1581,19 +1592,31 @@ Append to `libs/licensing/src/index.ts`:
 // own tests; downstream consumers should not rely on these.
 export { generateKeyPair, signLicense } from './lib/testing/keypair';
 export type { DevKeyPair } from './lib/testing/keypair';
+export { __resetRunLicenseCheckStateForTests } from './lib/run-license-check';
+export { __resetNagStateForTests } from './lib/nag';
 ```
 
 - [ ] **Step 2: Replace `libs/agent/src/lib/agent.provider.spec.ts` with the updated test suite**
 
 ```ts
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-import { describe, it, expect, vi } from 'vitest';
+import { beforeEach, describe, it, expect, vi } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { provideAgent, AGENT_CONFIG } from './agent.provider';
 import { MockAgentTransport } from './transport/mock-stream.transport';
-import { signLicense, generateKeyPair } from '@cacheplane/licensing';
+import {
+  signLicense,
+  generateKeyPair,
+  __resetRunLicenseCheckStateForTests,
+  __resetNagStateForTests,
+} from '@cacheplane/licensing';
 
 describe('provideAgent', () => {
+  beforeEach(() => {
+    __resetRunLicenseCheckStateForTests();
+    __resetNagStateForTests();
+  });
+
   it('provides AGENT_CONFIG token', () => {
     TestBed.configureTestingModule({
       providers: [provideAgent({ apiUrl: 'https://api.example.com' })],
@@ -1626,7 +1649,15 @@ describe('provideAgent', () => {
       kp.privateKey,
     );
     TestBed.configureTestingModule({
-      providers: [provideAgent({ apiUrl: '', license: token })],
+      providers: [
+        provideAgent({
+          apiUrl: '',
+          license: token,
+          // @internal hook — verifies against the ephemeral pair so the test
+          // doesn't need to know/mint the production public key.
+          __licensePublicKey: kp.publicKey,
+        }),
+      ],
     });
     TestBed.inject(AGENT_CONFIG);
     // Allow microtasks from the ed25519 verify + telemetry fire-and-forget.
@@ -1653,7 +1684,7 @@ describe('provideAgent', () => {
 - [ ] **Step 3: Run tests to verify they fail**
 
 Run: `npx nx test agent`
-Expected: FAIL — `license` not a known property of `AgentConfig`.
+Expected: FAIL — `license` / `__licensePublicKey` not known properties of `AgentConfig`, and `@cacheplane/licensing` doesn't yet export the reset helpers.
 
 - [ ] **Step 4: Implement provider changes**
 
@@ -1692,13 +1723,21 @@ export interface AgentConfig {
    * Test-only env hint override. Not part of the stable API.
    */
   __licenseEnvHint?: { isNoncommercial: boolean };
+  /**
+   * @internal
+   * Test-only public-key override. Defaults to the compile-time embedded
+   * `LICENSE_PUBLIC_KEY`. Not part of the stable API.
+   */
+  __licensePublicKey?: Uint8Array;
 }
 
 export const AGENT_CONFIG = new InjectionToken<AgentConfig>('AGENT_CONFIG');
 
 function inferNoncommercial(): boolean {
-  if (typeof process !== 'undefined' && process.env) {
-    return process.env.NODE_ENV !== 'production';
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const proc = (globalThis as any)['process'];
+  if (proc && proc.env) {
+    return proc.env['NODE_ENV'] !== 'production';
   }
   return false;
 }
@@ -1713,7 +1752,7 @@ export function provideAgent(config: AgentConfig): Provider {
     package: PACKAGE_NAME,
     version: PACKAGE_VERSION,
     token: config.license,
-    publicKey: LICENSE_PUBLIC_KEY,
+    publicKey: config.__licensePublicKey ?? LICENSE_PUBLIC_KEY,
     telemetryEndpoint: TELEMETRY_ENDPOINT,
     isNoncommercial:
       config.__licenseEnvHint?.isNoncommercial ?? inferNoncommercial(),
@@ -1735,6 +1774,8 @@ Edit `libs/agent/package.json` — add to the `peerDependencies` block:
 
 Run: `npx nx test agent`
 Expected: PASS — all 4 tests green.
+
+**If tests fail:** stop and report the exact failure to the controller. Do not create a dev private-key fixture, do not alter `keypair.ts`, do not monkeypatch `sha512Async`, do not edit `tsconfig.base.json` or `libs/agent/tsconfig.json`.
 
 - [ ] **Step 7: Verify agent still builds**
 
@@ -1758,6 +1799,13 @@ git commit -m "feat(agent): run license check at provider init"
 - Create: `libs/render/src/lib/provide-render.spec.ts`
 - Modify: `libs/render/package.json`
 
+**Guardrails (same as T10; read before starting):**
+
+- Do not commit any private key to the repo. `libs/licensing/fixtures/` contains only `dev-public-key.hex`.
+- Do not modify `libs/licensing/src/lib/testing/keypair.ts`, `libs/licensing/tsconfig.lib.json`, or `libs/licensing/project.json`.
+- Mirror agent's `__licensePublicKey` override on `RenderConfig` for symmetry.
+- If tests or build fail due to jsdom/Nx issues, stop and report to the controller rather than patching `test-setup.ts` or `tsconfig.base.json` unilaterally.
+
 - [ ] **Step 1: Write the failing test**
 
 `libs/render/src/lib/provide-render.spec.ts`:
@@ -1767,9 +1815,15 @@ git commit -m "feat(agent): run license check at provider init"
 import { beforeEach, describe, it, expect, vi } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { provideRender, RENDER_CONFIG } from './provide-render';
+import {
+  __resetRunLicenseCheckStateForTests,
+  __resetNagStateForTests,
+} from '@cacheplane/licensing';
 
 describe('provideRender', () => {
   beforeEach(() => {
+    __resetRunLicenseCheckStateForTests();
+    __resetNagStateForTests();
     globalThis.console.warn = vi.fn();
   });
 
@@ -1809,6 +1863,12 @@ In `libs/render/src/lib/render.types.ts`, add to the `RenderConfig` interface:
    * Test-only env hint override. Not part of the stable API.
    */
   __licenseEnvHint?: { isNoncommercial: boolean };
+  /**
+   * @internal
+   * Test-only public-key override. Defaults to the compile-time embedded
+   * `LICENSE_PUBLIC_KEY`. Not part of the stable API.
+   */
+  __licensePublicKey?: Uint8Array;
 ```
 
 - [ ] **Step 3: Implement provider changes**
@@ -1830,8 +1890,10 @@ const PACKAGE_VERSION =
 const TELEMETRY_ENDPOINT = 'https://telemetry.cacheplane.dev/v1/ping';
 
 function inferNoncommercial(): boolean {
-  if (typeof process !== 'undefined' && process.env) {
-    return process.env.NODE_ENV !== 'production';
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const proc = (globalThis as any)['process'];
+  if (proc && proc.env) {
+    return proc.env['NODE_ENV'] !== 'production';
   }
   return false;
 }
@@ -1843,7 +1905,7 @@ export function provideRender(config: RenderConfig) {
     package: PACKAGE_NAME,
     version: PACKAGE_VERSION,
     token: config.license,
-    publicKey: LICENSE_PUBLIC_KEY,
+    publicKey: config.__licensePublicKey ?? LICENSE_PUBLIC_KEY,
     telemetryEndpoint: TELEMETRY_ENDPOINT,
     isNoncommercial:
       config.__licenseEnvHint?.isNoncommercial ?? inferNoncommercial(),
@@ -1868,6 +1930,8 @@ Edit `libs/render/package.json` — add to the `peerDependencies` block:
 Run: `npx nx test render`
 Expected: PASS — new spec green, existing render tests still green.
 
+**If tests or build fail:** stop and report the exact failure to the controller.
+
 - [ ] **Step 6: Verify render still builds**
 
 Run: `npx nx build render`
@@ -1889,6 +1953,13 @@ git commit -m "feat(render): run license check at provider init"
 - Create: `libs/chat/src/lib/provide-chat.spec.ts`
 - Modify: `libs/chat/package.json`
 
+**Guardrails (same as T10; read before starting):**
+
+- Do not commit any private key to the repo. `libs/licensing/fixtures/` contains only `dev-public-key.hex`.
+- Do not modify `libs/licensing/src/lib/testing/keypair.ts`, `libs/licensing/tsconfig.lib.json`, or `libs/licensing/project.json`.
+- Mirror agent's `__licensePublicKey` override on `ChatConfig` for symmetry.
+- If tests or build fail due to jsdom/Nx issues, stop and report to the controller rather than patching `test-setup.ts` or `tsconfig.base.json` unilaterally.
+
 - [ ] **Step 1: Write the failing test**
 
 `libs/chat/src/lib/provide-chat.spec.ts`:
@@ -1898,9 +1969,15 @@ git commit -m "feat(render): run license check at provider init"
 import { beforeEach, describe, it, expect, vi } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { provideChat, CHAT_CONFIG } from './provide-chat';
+import {
+  __resetRunLicenseCheckStateForTests,
+  __resetNagStateForTests,
+} from '@cacheplane/licensing';
 
 describe('provideChat', () => {
   beforeEach(() => {
+    __resetRunLicenseCheckStateForTests();
+    __resetNagStateForTests();
     globalThis.console.warn = vi.fn();
   });
 
@@ -1947,8 +2024,10 @@ const PACKAGE_VERSION =
 const TELEMETRY_ENDPOINT = 'https://telemetry.cacheplane.dev/v1/ping';
 
 function inferNoncommercial(): boolean {
-  if (typeof process !== 'undefined' && process.env) {
-    return process.env.NODE_ENV !== 'production';
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const proc = (globalThis as any)['process'];
+  if (proc && proc.env) {
+    return proc.env['NODE_ENV'] !== 'production';
   }
   return false;
 }
@@ -1967,6 +2046,12 @@ export interface ChatConfig {
    * Test-only env hint override. Not part of the stable API.
    */
   __licenseEnvHint?: { isNoncommercial: boolean };
+  /**
+   * @internal
+   * Test-only public-key override. Defaults to the compile-time embedded
+   * `LICENSE_PUBLIC_KEY`. Not part of the stable API.
+   */
+  __licensePublicKey?: Uint8Array;
 }
 
 export const CHAT_CONFIG = new InjectionToken<ChatConfig>('CHAT_CONFIG');
@@ -1976,7 +2061,7 @@ export function provideChat(config: ChatConfig) {
     package: PACKAGE_NAME,
     version: PACKAGE_VERSION,
     token: config.license,
-    publicKey: LICENSE_PUBLIC_KEY,
+    publicKey: config.__licensePublicKey ?? LICENSE_PUBLIC_KEY,
     telemetryEndpoint: TELEMETRY_ENDPOINT,
     isNoncommercial:
       config.__licenseEnvHint?.isNoncommercial ?? inferNoncommercial(),
@@ -2000,6 +2085,8 @@ Edit `libs/chat/package.json` — add to the `peerDependencies` block:
 
 Run: `npx nx test chat`
 Expected: PASS — new spec green, existing chat tests still green.
+
+**If tests or build fail:** stop and report the exact failure to the controller.
 
 - [ ] **Step 5: Verify chat still builds**
 
