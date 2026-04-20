@@ -91,8 +91,8 @@ Migrations run from `@cacheplane/db` via `nx run db:migrate`. Operator runs it m
 | `stripe_customer_id` | `text not null` | for lookups by customer |
 | `stripe_subscription_id` | `text not null unique` | **the natural key** — UPSERT target |
 | `customer_email` | `text not null` | captured at checkout; where license emails go |
-| `tier` | `text not null` | `'dev-seat'` or `'app-deployment'` (enforced by app, not DB — easy to extend) |
-| `seats` | `integer not null` | dev-seat: Stripe line-item quantity; app-deployment: 1 |
+| `tier` | `text not null` | `'developer-seat'` or `'app-deployment'` (enforced by app, not DB — easy to extend; matches `LicenseTier` in `@cacheplane/licensing`) |
+| `seats` | `integer not null` | developer-seat: Stripe line-item quantity; app-deployment: 1 |
 | `issued_at` | `timestamptz not null default now()` | last time we minted/rotated the token for this row |
 | `expires_at` | `timestamptz not null` | matches `exp` claim in the signed token |
 | `revoked_at` | `timestamptz` | null = active; set on `customer.subscription.deleted` |
@@ -182,7 +182,7 @@ export async function handleEvent(event: Stripe.Event): Promise<void> {
 
 1. Expand line items: `stripe.checkout.sessions.retrieve(session.id, { expand: ['line_items.data.price'] })`.
 2. Extract tier from `line_items[0].price.metadata.cacheplane_tier`. Throw if missing/invalid.
-3. Compute `seats` from `line_items[0].quantity` per tier rules (dev-seat: quantity; app-deployment: 1).
+3. Compute `seats` from `line_items[0].quantity` per tier rules (developer-seat: quantity; app-deployment: 1).
 4. Pre-generate `id = crypto.randomUUID()` for the row (so we can use it as `jti` in the token).
 5. Retrieve the subscription to get `current_period_end` → `expires_at`.
 6. `mintToken({ sub: stripe_customer_id, tier, seats, exp: expires_at, jti: id })`.
