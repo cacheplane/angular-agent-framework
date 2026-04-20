@@ -1,0 +1,11 @@
+{
+  "installCommand": "cd ../.. && npm ci",
+  "buildCommand": "cd ../.. && npx tsc --noEmit -p apps/minting-service/tsconfig.app.json",
+  "framework": null,
+  "functions": {
+    "api/*.ts": {
+      "runtime": "nodejs20.x",
+      "maxDuration": 10
+    }
+  }
+}
