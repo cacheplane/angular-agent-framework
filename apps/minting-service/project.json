@@ -1,0 +1,14 @@
+{
+  "name": "minting-service",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/minting-service/src",
+  "projectType": "application",
+  "tags": ["scope:service", "type:app"],
+  "targets": {
+    "lint": { "executor": "@nx/eslint:lint" },
+    "test": {
+      "executor": "@nx/vitest:test",
+      "options": { "configFile": "apps/minting-service/vite.config.mts" }
+    }
+  }
+}
