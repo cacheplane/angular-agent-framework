@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-import type { LicenseClaims } from './license-token';
-import type { VerifyResult } from './verify-license';
+import type { LicenseClaims } from './license-token.js';
+import type { VerifyResult } from './verify-license.js';
 
 export type LicenseStatus =
   | 'licensed'       // valid signed token, not expired

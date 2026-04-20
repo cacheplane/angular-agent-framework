@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-import { LICENSE_PUBLIC_KEY_HEX } from './license-public-key.generated';
+import { LICENSE_PUBLIC_KEY_HEX } from './license-public-key.generated.js';
 
 function hexToBytes(hex: string): Uint8Array {
   const out = new Uint8Array(hex.length / 2);

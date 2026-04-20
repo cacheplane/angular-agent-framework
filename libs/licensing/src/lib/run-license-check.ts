@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-import { verifyLicense } from './verify-license';
-import { evaluateLicense, type LicenseStatus } from './evaluate-license';
-import { emitNag } from './nag';
-import { createTelemetryClient } from './telemetry';
+import { verifyLicense } from './verify-license.js';
+import { evaluateLicense, type LicenseStatus } from './evaluate-license.js';
+import { emitNag } from './nag.js';
+import { createTelemetryClient } from './telemetry.js';
 
 export interface RunLicenseCheckOptions {
   /** Fully-qualified host package name. */

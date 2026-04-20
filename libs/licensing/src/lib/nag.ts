@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-import type { EvaluateResult } from './evaluate-license';
+import type { EvaluateResult } from './evaluate-license.js';
 
 export interface EmitNagOptions {
   /** Fully-qualified npm package name, e.g. "@cacheplane/angular". */
