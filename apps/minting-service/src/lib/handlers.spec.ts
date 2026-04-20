@@ -239,3 +239,30 @@ describe('handleSubscriptionUpdated', () => {
     expect(sendArg.to).toBe('new@example.com');
   });
 });
+
+describe('handleSubscriptionDeleted', () => {
+  it('calls revokeLicense and does not email or mint', async () => {
+    const d = makeDeps({
+      revokeLicense: vi.fn().mockResolvedValue({ id: 'lic_d' }),
+    });
+    await handleEvent(
+      { id: 'evt_del', type: 'customer.subscription.deleted', data: { object: { id: 'sub_d' } } } as Stripe.Event,
+      d,
+    );
+    expect(d.revokeLicense).toHaveBeenCalledWith(d.db, 'sub_d');
+    expect(d.mintToken).not.toHaveBeenCalled();
+    expect(d.sendLicenseEmail).not.toHaveBeenCalled();
+  });
+
+  it('is idempotent — no throw if license is already absent', async () => {
+    const d = makeDeps({
+      revokeLicense: vi.fn().mockResolvedValue(null),
+    });
+    await expect(
+      handleEvent(
+        { id: 'evt_del2', type: 'customer.subscription.deleted', data: { object: { id: 'sub_nope' } } } as Stripe.Event,
+        d,
+      ),
+    ).resolves.toBeUndefined();
+  });
+});
