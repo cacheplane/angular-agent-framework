@@ -9,7 +9,11 @@ let client: Stripe | null = null;
  */
 export function getStripe(apiKey: string): Stripe {
   if (!client) {
-    client = new Stripe(apiKey, { apiVersion: '2024-06-20' });
+    // apiVersion pinned to 2024-06-20 for subscription shape stability
+    // (current_period_end remained at top-level in this version). Cast needed
+    // because Stripe SDK types only admit the latest LatestApiVersion literal.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    client = new Stripe(apiKey, { apiVersion: '2024-06-20' as any });
   }
   return client;
 }
