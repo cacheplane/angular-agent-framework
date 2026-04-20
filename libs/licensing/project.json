@@ -23,7 +23,7 @@
     },
     "lint": { "executor": "@nx/eslint:lint" },
     "test": {
-      "executor": "@nx/vite:test",
+      "executor": "@nx/vitest:test",
       "dependsOn": ["prebuild"],
       "options": { "configFile": "libs/licensing/vite.config.mts" }
     }
