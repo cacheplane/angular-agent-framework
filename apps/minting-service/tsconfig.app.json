@@ -5,8 +5,10 @@
     "moduleResolution": "NodeNext",
     "target": "ES2022",
     "outDir": "../../dist/apps/minting-service",
-    "emitDeclarationOnly": false,
-    "declaration": false
+    "composite": false,
+    "declaration": false,
+    "declarationMap": false,
+    "emitDeclarationOnly": false
   },
   "include": ["src/**/*.ts", "api/**/*.ts"],
   "exclude": ["src/**/*.spec.ts", "api/**/*.spec.ts"]
