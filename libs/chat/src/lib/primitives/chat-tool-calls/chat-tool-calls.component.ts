@@ -35,9 +35,7 @@ export class ChatToolCallsComponent {
   readonly toolCalls = computed((): ChatToolCall[] => {
     const msg = this.message();
     if (msg && msg.role === 'assistant' && Array.isArray(msg.content)) {
-      const blocks = msg.content.filter(b => b.type === 'tool_use') as Array<{
-        type: 'tool_use'; id: string; name: string; args: unknown;
-      }>;
+      const blocks = msg.content.filter((b) => b.type === 'tool_use');
       const all = this.agent().toolCalls();
       return blocks
         .map(b => all.find(tc => tc.id === b.id))
