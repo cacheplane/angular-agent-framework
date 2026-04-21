@@ -13,6 +13,7 @@ import {
 } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
 import type { AgentRef } from '../../agent.types';
+import { toChatAgent } from '../../to-chat-agent';
 import { ChatMessagesComponent } from '@cacheplane/chat';
 import { MessageTemplateDirective } from '@cacheplane/chat';
 import { ChatInputComponent } from '@cacheplane/chat';
@@ -56,7 +57,7 @@ import { CHAT_MARKDOWN_STYLES, renderMarkdown } from '@cacheplane/chat';
           aria-live="polite"
         >
           <div class="max-w-[var(--chat-max-width)] mx-auto flex flex-col gap-5">
-            <chat-messages [ref]="ref()">
+            <chat-messages [agent]="chatAgent()">
               <!-- Human messages: right-aligned bubble -->
               <ng-template chatMessageTemplate="human" let-message>
                 <div class="flex justify-end">
@@ -100,17 +101,17 @@ import { CHAT_MARKDOWN_STYLES, renderMarkdown } from '@cacheplane/chat';
               </ng-template>
             </chat-messages>
 
-            <chat-typing-indicator [ref]="ref()" />
+            <chat-typing-indicator [agent]="chatAgent()" />
           </div>
         </div>
 
-        <chat-error [ref]="ref()" />
+        <chat-error [agent]="chatAgent()" />
 
         <!-- Input area -->
         <div class="border-t px-5 py-4" style="border-color: var(--chat-border);">
           <div class="max-w-[var(--chat-max-width)] mx-auto">
             <chat-input
-              [ref]="ref()"
+              [agent]="chatAgent()"
               [submitOnEnter]="true"
               placeholder="Type a message..."
             />
@@ -191,6 +192,8 @@ export class ChatDebugComponent {
   private readonly sanitizer = inject(DomSanitizer);
 
   readonly ref = input.required<AgentRef<any, any>>();
+
+  protected readonly chatAgent = computed(() => toChatAgent(this.ref()));
 
   readonly debugOpen = signal<boolean>(true);
   readonly selectedCheckpointIndex = signal<number>(-1);

@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+import { describe, it, expect } from 'vitest';
 import type { ChatAgent } from '../agent';
 
 /**

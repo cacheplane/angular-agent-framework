@@ -80,7 +80,7 @@ export function toChatAgent<T>(ref: AgentRef<T, any>): ChatAgent {
  * previously-seen length and emits only the tail slice.
  */
 function buildCustomEvents$(
-  ref: AgentRef<unknown, unknown>,
+  ref: AgentRef<unknown, any>,
 ): Observable<ChatCustomEvent> {
   const subject = new Subject<ChatCustomEvent>();
   let seen = 0;

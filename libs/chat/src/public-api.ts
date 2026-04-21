@@ -18,6 +18,7 @@ export type {
   ChatSubagentStatus,
   ChatSubmitInput,
   ChatSubmitOptions,
+  ChatCustomEvent,
 } from './lib/agent';
 export {
   isUserMessage,
