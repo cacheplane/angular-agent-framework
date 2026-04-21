@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// TODO(phase-2): migrate from AgentRef to ChatAgent contract.
 import {
   Component,
   computed,

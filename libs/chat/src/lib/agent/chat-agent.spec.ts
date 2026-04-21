@@ -11,8 +11,8 @@ describe('ChatAgent interface', () => {
       error: signal(null),
       toolCalls: signal([]),
       state: signal({}),
-      submit: async () => {},
-      stop: async () => {},
+      submit: async () => Promise.resolve(),
+      stop: async () => Promise.resolve(),
     };
     expect(agent.status()).toBe('idle');
   });
@@ -27,8 +27,8 @@ describe('ChatAgent interface', () => {
       state: signal({}),
       interrupt: signal(undefined),
       subagents: signal(new Map()),
-      submit: async () => {},
-      stop: async () => {},
+      submit: async () => Promise.resolve(),
+      stop: async () => Promise.resolve(),
     };
     expect(agent.interrupt?.()).toBeUndefined();
   });
