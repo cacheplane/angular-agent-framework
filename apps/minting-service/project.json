@@ -5,6 +5,14 @@
   "projectType": "application",
   "tags": ["scope:service", "type:app"],
   "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{projectRoot}/.vercel/output"],
+      "options": {
+        "command": "node scripts/build.mjs",
+        "cwd": "apps/minting-service"
+      }
+    },
     "lint": { "executor": "@nx/eslint:lint" },
     "test": {
       "executor": "@nx/vitest:test",
