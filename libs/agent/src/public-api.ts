@@ -23,6 +23,9 @@ export type { BagTemplate, InferBag, Interrupt, ThreadState, SubmitOptions }
 // Re-export ResourceStatus shim for convenience
 export { ResourceStatus } from './lib/agent.types';
 
+// Chat adapter
+export { toChatAgent } from './lib/to-chat-agent';
+
 // Test utilities (always exported — tree-shaken in prod builds)
 export { MockAgentTransport } from './lib/transport/mock-stream.transport';
 export { FetchStreamTransport } from './lib/transport/fetch-stream.transport';

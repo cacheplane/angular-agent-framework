@@ -99,14 +99,20 @@ function toChatMessage(m: BaseMessage): ChatMessage {
 }
 
 function toChatToolCall(tc: ToolCallWithResult): ChatToolCall {
-  const hasResult = tc.result !== undefined;
-  const status: ChatToolCallStatus = hasResult ? 'complete' : 'running';
+  const stateMap: Record<string, ChatToolCallStatus> = {
+    pending: 'pending',
+    completed: 'complete',
+    error: 'error',
+  };
+  const status: ChatToolCallStatus = stateMap[tc.state] ?? 'running';
+  const result = tc.result as (Record<string, unknown> | undefined);
   return {
-    id: tc.id ?? cryptoRandom(),
-    name: tc.name,
-    args: tc.args,
+    id: tc.id,
+    name: tc.call.name,
+    args: tc.call.args,
     status,
-    result: tc.result,
+    result: result?.['content'],
+    error: tc.state === 'error' ? result?.['content'] : undefined,
   };
 }
 
