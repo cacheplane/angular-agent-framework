@@ -4,5 +4,5 @@
     "outDir": "../../dist/out-tsc",
     "types": ["vitest/globals", "node"]
   },
-  "include": ["src/**/*.spec.ts", "api/**/*.spec.ts", "src/**/*.ts", "api/**/*.ts"]
+  "include": ["src/**/*.spec.ts", "handlers/**/*.spec.ts", "src/**/*.ts", "handlers/**/*.ts"]
 }

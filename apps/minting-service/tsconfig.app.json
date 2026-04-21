@@ -10,6 +10,6 @@
     "declarationMap": false,
     "emitDeclarationOnly": false
   },
-  "include": ["src/**/*.ts", "api/**/*.ts", "scripts/**/*.ts"],
-  "exclude": ["src/**/*.spec.ts", "api/**/*.spec.ts", "scripts/**/*.spec.ts"]
+  "include": ["src/**/*.ts", "handlers/**/*.ts", "scripts/**/*.ts"],
+  "exclude": ["src/**/*.spec.ts", "handlers/**/*.spec.ts", "scripts/**/*.spec.ts"]
 }
