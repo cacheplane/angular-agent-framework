@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// TODO(phase-2): migrate from AgentRef to ChatAgent contract.
 import {
   Component,
   computed,
@@ -9,7 +8,25 @@ import {
   ChangeDetectionStrategy,
 } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
-import type { AgentRef, SubagentStreamRef } from '@cacheplane/langgraph';
+import type { ChatAgent } from '../../agent';
+import type { ChatSubagent } from '../../agent/chat-subagent';
+
+/**
+ * Returns the list of currently-active subagents on the agent. "Active" means
+ * the subagent status is neither `complete` nor `error`. Returns an empty list
+ * when the runtime does not expose a subagents surface.
+ * Exported for unit testing without DOM rendering.
+ */
+export function activeSubagentsFromAgent(agent: ChatAgent): ChatSubagent[] {
+  const map = agent.subagents?.();
+  if (!map) return [];
+  const out: ChatSubagent[] = [];
+  map.forEach((sa) => {
+    const s = sa.status();
+    if (s !== 'complete' && s !== 'error') out.push(sa);
+  });
+  return out;
+}
 
 @Component({
   selector: 'chat-subagents',
@@ -17,7 +34,7 @@ import type { AgentRef, SubagentStreamRef } from '@cacheplane/langgraph';
   imports: [NgTemplateOutlet],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    @for (subagent of activeSubagents(); track $index) {
+    @for (subagent of activeSubagents(); track subagent.toolCallId) {
       @if (templateRef()) {
         <ng-container
           [ngTemplateOutlet]="templateRef()!"
@@ -28,9 +45,9 @@ import type { AgentRef, SubagentStreamRef } from '@cacheplane/langgraph';
   `,
 })
 export class ChatSubagentsComponent {
-  readonly ref = input.required<AgentRef<any, any>>();
+  readonly agent = input.required<ChatAgent>();
 
   readonly templateRef = contentChild(TemplateRef);
 
-  readonly activeSubagents = computed((): SubagentStreamRef[] => this.ref().activeSubagents());
+  readonly activeSubagents = computed(() => activeSubagentsFromAgent(this.agent()));
 }
