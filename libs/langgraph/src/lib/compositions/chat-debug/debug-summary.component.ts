@@ -5,7 +5,7 @@ import {
   input,
   ChangeDetectionStrategy,
 } from '@angular/core';
-import type { AgentRef } from '@cacheplane/langgraph';
+import type { AgentRef } from '../../agent.types';
 import type { DebugCheckpoint } from './debug-checkpoint-card.component';
 
 @Component({

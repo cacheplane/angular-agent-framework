@@ -12,21 +12,21 @@ import {
   ChangeDetectionStrategy,
 } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
-import type { AgentRef } from '@cacheplane/langgraph';
-import { ChatMessagesComponent } from '../../primitives/chat-messages/chat-messages.component';
-import { MessageTemplateDirective } from '../../primitives/chat-messages/message-template.directive';
-import { ChatInputComponent } from '../../primitives/chat-input/chat-input.component';
-import { ChatTypingIndicatorComponent } from '../../primitives/chat-typing-indicator/chat-typing-indicator.component';
-import { ChatErrorComponent } from '../../primitives/chat-error/chat-error.component';
+import type { AgentRef } from '../../agent.types';
+import { ChatMessagesComponent } from '@cacheplane/chat';
+import { MessageTemplateDirective } from '@cacheplane/chat';
+import { ChatInputComponent } from '@cacheplane/chat';
+import { ChatTypingIndicatorComponent } from '@cacheplane/chat';
+import { ChatErrorComponent } from '@cacheplane/chat';
 import { DebugTimelineComponent } from './debug-timeline.component';
 import { DebugDetailComponent } from './debug-detail.component';
 import { DebugControlsComponent } from './debug-controls.component';
 import { DebugSummaryComponent } from './debug-summary.component';
 import type { DebugCheckpoint } from './debug-checkpoint-card.component';
 import { toDebugCheckpoint, extractStateValues } from './debug-utils';
-import { messageContent } from '../shared/message-utils';
-import { CHAT_THEME_STYLES } from '../../styles/chat-theme';
-import { CHAT_MARKDOWN_STYLES, renderMarkdown } from '../../styles/chat-markdown';
+import { messageContent } from '@cacheplane/chat';
+import { CHAT_THEME_STYLES } from '@cacheplane/chat';
+import { CHAT_MARKDOWN_STYLES, renderMarkdown } from '@cacheplane/chat';
 
 @Component({
   selector: 'chat-debug',
