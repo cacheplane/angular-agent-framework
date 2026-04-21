@@ -8,3 +8,4 @@ export type { ChatStatus } from './chat-status';
 export type { ChatInterrupt } from './chat-interrupt';
 export type { ChatSubagent, ChatSubagentStatus } from './chat-subagent';
 export type { ChatSubmitInput, ChatSubmitOptions } from './chat-submit';
+export type { ChatCustomEvent } from './chat-custom-event';
