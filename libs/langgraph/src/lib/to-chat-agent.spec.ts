@@ -2,7 +2,8 @@
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { HumanMessage, AIMessage } from '@langchain/core/messages';
-import type { AgentRef } from './agent.types';
+import type { ChatAgent, ChatCustomEvent } from '@cacheplane/chat';
+import type { AgentRef, CustomStreamEvent } from './agent.types';
 import { ResourceStatus } from './agent.types';
 import { toChatAgent } from './to-chat-agent';
 
@@ -93,5 +94,36 @@ describe('toChatAgent (LangGraph adapter)', () => {
       await chat.stop();
       expect(stopped).toBe(true);
     });
+  });
+
+  it('exposes customEvents$ that emits newly-appended events with type aliased from name', () => {
+    const customSig = signal<CustomStreamEvent[]>([]);
+    const ref = stubAgentRef({ customEvents: customSig });
+
+    let adapter!: ChatAgent;
+    TestBed.runInInjectionContext(() => {
+      adapter = toChatAgent(ref);
+    });
+
+    const received: ChatCustomEvent[] = [];
+    adapter.customEvents$!.subscribe((e) => received.push(e));
+
+    customSig.set([{ name: 'state_update', data: { counter: 1 } }]);
+    TestBed.flushEffects();
+
+    expect(received).toEqual([
+      { type: 'state_update', data: { counter: 1 } },
+    ]);
+
+    customSig.set([
+      { name: 'state_update', data: { counter: 1 } },
+      { name: 'a2ui.surface', data: { surfaceId: 'main' } },
+    ]);
+    TestBed.flushEffects();
+
+    expect(received).toEqual([
+      { type: 'state_update', data: { counter: 1 } },
+      { type: 'a2ui.surface', data: { surfaceId: 'main' } },
+    ]);
   });
 });

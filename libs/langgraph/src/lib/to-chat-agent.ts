@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-import { computed, Signal } from '@angular/core';
+import { computed, effect, Signal } from '@angular/core';
+import { Subject, type Observable } from 'rxjs';
 import type { BaseMessage } from '@langchain/core/messages';
 import type { ToolCallWithResult, Interrupt } from '@langchain/langgraph-sdk';
 import type {
   ChatAgent,
+  ChatCustomEvent,
   ChatMessage,
   ChatRole,
   ChatStatus,
@@ -14,7 +16,7 @@ import type {
   ChatSubmitInput,
   ChatSubmitOptions,
 } from '@cacheplane/chat';
-import type { AgentRef, SubagentStreamRef } from './agent.types';
+import type { AgentRef, CustomStreamEvent, SubagentStreamRef } from './agent.types';
 import { ResourceStatus } from './agent.types';
 
 /**
@@ -22,7 +24,8 @@ import { ResourceStatus } from './agent.types';
  * The returned object is a live view; it reads from the same signals and
  * writes back via AgentRef.submit / AgentRef.stop.
  *
- * Must be called within an Angular injection context (uses `computed`).
+ * Must be called within an Angular injection context (uses `computed` and
+ * `effect`).
  */
 export function toChatAgent<T>(ref: AgentRef<T, any>): ChatAgent {
   const messages = computed<ChatMessage[]>(() =>
@@ -52,6 +55,8 @@ export function toChatAgent<T>(ref: AgentRef<T, any>): ChatAgent {
     return out;
   });
 
+  const customEvents$ = buildCustomEvents$(ref);
+
   return {
     messages,
     status,
@@ -61,10 +66,40 @@ export function toChatAgent<T>(ref: AgentRef<T, any>): ChatAgent {
     state,
     interrupt,
     subagents,
+    customEvents$,
     submit: (input: ChatSubmitInput, opts?: ChatSubmitOptions) =>
       ref.submit(buildSubmitPayload(input), opts ? { signal: opts.signal } as never : undefined),
     stop: () => ref.stop(),
   };
+}
+
+/**
+ * Build an Observable<ChatCustomEvent> that bridges LangGraph's
+ * `Signal<CustomStreamEvent[]>` (append-only array) into a stream of newly
+ * emitted events. Each effect firing compares against a cursor tracking the
+ * previously-seen length and emits only the tail slice.
+ */
+function buildCustomEvents$(
+  ref: AgentRef<unknown, unknown>,
+): Observable<ChatCustomEvent> {
+  const subject = new Subject<ChatCustomEvent>();
+  let seen = 0;
+  effect(() => {
+    const all = ref.customEvents();
+    if (all.length < seen) {
+      // Stream reset (new session, thread switch, etc.). Rewind cursor.
+      seen = 0;
+    }
+    for (let i = seen; i < all.length; i++) {
+      subject.next(toChatCustomEvent(all[i]));
+    }
+    seen = all.length;
+  });
+  return subject.asObservable();
+}
+
+function toChatCustomEvent(e: CustomStreamEvent): ChatCustomEvent {
+  return { type: e.name, data: e.data };
 }
 
 function mapStatus(s: ResourceStatus): ChatStatus {
