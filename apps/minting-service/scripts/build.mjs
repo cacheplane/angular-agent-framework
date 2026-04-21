@@ -2,13 +2,16 @@
 /**
  * Builds the minting-service API functions using Vercel Build Output API v3.
  *
- * - Bundles each `api/*.ts` into a self-contained CommonJS module via esbuild,
- *   inlining workspace deps (@cacheplane/*) and npm deps alike so no install
- *   step is required inside each function directory.
+ * - Bundles each `handlers/*.ts` into a self-contained CommonJS module via
+ *   esbuild, inlining workspace deps (@cacheplane/*) and npm deps alike so no
+ *   install step is required inside each function directory.
  * - Writes to `.vercel/output/functions/api/<name>.func/` with the companion
  *   `.vc-config.json` Vercel's Node runtime expects.
  * - Writes `.vercel/output/config.json` at the top level so Vercel picks up
- *   the Build Output API layout instead of scanning `api/` for TS sources.
+ *   the Build Output API layout instead of scanning the rootDirectory for TS
+ *   sources. The sources live outside `api/` on purpose — Vercel otherwise
+ *   auto-runs @vercel/node on top of our build, which doesn't resolve the
+ *   workspace tsconfig paths and fails the deploy.
  *
  * Run via `nx build minting-service`, which sets `cwd` to this app.
  */
@@ -18,15 +21,15 @@ import { basename, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const appRoot = resolve(fileURLToPath(import.meta.url), '..', '..');
-const apiDir = join(appRoot, 'api');
+const handlersDir = join(appRoot, 'handlers');
 const outputRoot = join(appRoot, '.vercel', 'output');
 const functionsRoot = join(outputRoot, 'functions', 'api');
 
 async function listEntries() {
-  const files = await readdir(apiDir);
+  const files = await readdir(handlersDir);
   return files
     .filter((f) => f.endsWith('.ts') && !f.endsWith('.spec.ts') && !f.endsWith('.d.ts'))
-    .map((f) => join(apiDir, f));
+    .map((f) => join(handlersDir, f));
 }
 
 async function buildEntry(entry) {
@@ -74,7 +77,7 @@ async function main() {
 
   const entries = await listEntries();
   if (entries.length === 0) {
-    throw new Error(`no api entries found in ${apiDir}`);
+    throw new Error(`no handler entries found in ${handlersDir}`);
   }
 
   await Promise.all(entries.map(buildEntry));
