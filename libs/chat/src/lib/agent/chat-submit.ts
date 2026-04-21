@@ -2,7 +2,7 @@
 import type { ChatContentBlock } from './chat-content-block';
 
 export interface ChatSubmitInput {
-  /** New user message to append. Mutually compatible with `resume` and `state`. */
+  /** New user message to append. May be combined with `resume` and/or `state` in the same submit call. */
   message?: string | ChatContentBlock[];
   /** Resume payload for an active interrupt. */
   resume?: unknown;
