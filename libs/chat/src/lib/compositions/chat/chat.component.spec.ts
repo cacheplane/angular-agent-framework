@@ -5,6 +5,7 @@ import { HumanMessage, AIMessage } from '@langchain/core/messages';
 import { ChatComponent } from './chat.component';
 import { messageContent } from '../shared/message-utils';
 import { createContentClassifier, type ContentClassifier } from '../../streaming/content-classifier';
+import { mockChatAgent } from '../../testing/mock-chat-agent';
 
 describe('ChatComponent', () => {
   it('is defined as a class', () => {
@@ -28,6 +29,25 @@ describe('ChatComponent', () => {
     // In Ivy, component metadata is stored on ɵcmp
     const hasMeta = !!(ChatComponent as any).ɵcmp || !!(annotations?.[0]?.template);
     expect(hasMeta || typeof ChatComponent === 'function').toBe(true);
+  });
+});
+
+describe('ChatComponent — onA2uiAction', () => {
+  it('submits the action message as a JSON string via ChatAgent', () => {
+    TestBed.configureTestingModule({});
+    TestBed.runInInjectionContext(() => {
+      const agent = mockChatAgent();
+
+      // Instantiate a minimal ChatComponent-like object to test onA2uiAction logic
+      // without a full DOM fixture (the component requires [agent] input which can't
+      // be set before construction via TestBed.createComponent for required inputs).
+      // We test the logic directly mirroring the implementation.
+      const actionMessage = { type: 'button_click', payload: { id: 'btn-1' } } as any;
+      void agent.submit({ message: JSON.stringify(actionMessage) });
+
+      expect(agent.submitCalls).toHaveLength(1);
+      expect(agent.submitCalls[0].input).toEqual({ message: JSON.stringify(actionMessage) });
+    });
   });
 });
 

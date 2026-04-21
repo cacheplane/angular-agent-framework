@@ -11,6 +11,7 @@ import {
   ElementRef,
   ChangeDetectionStrategy,
 } from '@angular/core';
+import type { ChatAgent } from '../../agent';
 import type { AgentRef } from '@cacheplane/langgraph';
 import type { ViewRegistry, RenderEvent } from '@cacheplane/render';
 import type { A2uiActionMessage } from '@cacheplane/a2ui';
@@ -97,7 +98,7 @@ import { KeyValuePipe } from '@angular/common';
           aria-live="polite"
         >
           <div class="max-w-[var(--chat-max-width)] mx-auto flex flex-col gap-5">
-            @if (ref().messages().length === 0 && !ref().isLoading()) {
+            @if (agent().messages().length === 0 && !agent().isLoading()) {
               <!-- Empty state -->
               <div class="flex flex-col items-center justify-center py-20 gap-3" role="status">
                 <div
@@ -108,7 +109,7 @@ import { KeyValuePipe } from '@angular/common';
               </div>
             }
 
-            <chat-messages [ref]="ref()">
+            <chat-messages [agent]="agent()">
               <!-- Human messages: right-aligned bubble -->
               <ng-template chatMessageTemplate="human" let-message>
                 <div class="flex justify-end">
@@ -134,7 +135,7 @@ import { KeyValuePipe } from '@angular/common';
                         class="chat-md break-words text-[length:var(--chat-font-size)] leading-[var(--chat-line-height)]"
                         style="color: var(--chat-text);"
                         [content]="md"
-                        [streaming]="ref().isLoading()"
+                        [streaming]="agent().isLoading()"
                       />
                     }
 
@@ -144,7 +145,7 @@ import { KeyValuePipe } from '@angular/common';
                         [registry]="renderRegistry()"
                         [store]="resolvedStore()"
                         [handlers]="handlers()"
-                        [loading]="ref().isLoading()"
+                        [loading]="agent().isLoading()"
                         (events)="onSpecEvent($event, index)"
                       />
                     }
@@ -184,29 +185,31 @@ import { KeyValuePipe } from '@angular/common';
               </ng-template>
             </chat-messages>
 
-            <chat-typing-indicator [ref]="ref()" />
+            <chat-typing-indicator [agent]="agent()" />
           </div>
         </div>
 
         <!-- Interrupt banner -->
-        <chat-interrupt [ref]="ref()">
-          <ng-template let-interrupt>
-            <div class="px-5 py-3 border-t" style="background: var(--chat-warning-bg); border-color: var(--chat-border);">
-              <p class="text-sm m-0" style="color: var(--chat-warning-text);">Agent paused: {{ interrupt.value }}</p>
-            </div>
-          </ng-template>
-        </chat-interrupt>
+        @if (langgraphRef()) {
+          <chat-interrupt [ref]="langgraphRef()!">
+            <ng-template let-interrupt>
+              <div class="px-5 py-3 border-t" style="background: var(--chat-warning-bg); border-color: var(--chat-border);">
+                <p class="text-sm m-0" style="color: var(--chat-warning-text);">Agent paused: {{ interrupt.value }}</p>
+              </div>
+            </ng-template>
+          </chat-interrupt>
+        }
 
         <!-- Error banner -->
         <div class="px-5 pb-2">
-          <chat-error [ref]="ref()" />
+          <chat-error [agent]="agent()" />
         </div>
 
         <!-- Input area -->
         <div class="border-t px-5 py-4" style="border-color: var(--chat-border);">
           <div class="max-w-[var(--chat-max-width)] mx-auto">
             <chat-input
-              [ref]="ref()"
+              [agent]="agent()"
               [submitOnEnter]="true"
               placeholder="Type a message..."
             />
@@ -218,7 +221,18 @@ import { KeyValuePipe } from '@angular/common';
 })
 export class ChatComponent {
 
-  readonly ref = input.required<AgentRef<any, any>>();
+  readonly agent = input.required<ChatAgent>();
+
+  /**
+   * TEMPORARY escape hatch for Phase-1: primitives not yet migrated
+   * (chat-interrupt, chat-subagents, a2ui surfaces relying on customEvents)
+   * still require an AgentRef. Pass the same underlying LangGraph ref alongside
+   * `agent`. Remove once Phase-2 migrates these primitives.
+   * TODO(phase-2): remove langgraphRef input once chat-interrupt and
+   * customEvents are migrated to the ChatAgent contract.
+   */
+  readonly langgraphRef = input<AgentRef<any, any> | undefined>(undefined);
+
   readonly views = input<ViewRegistry | undefined>(undefined);
   readonly store = input<StateStore | undefined>(undefined);
   readonly handlers = input<Record<string, (params: Record<string, unknown>) => unknown | Promise<unknown>>>({});
@@ -256,16 +270,19 @@ export class ChatComponent {
   private readonly scrollContainer = viewChild<ElementRef<HTMLElement>>('scrollContainer');
 
   /** Track message count to trigger auto-scroll */
-  private readonly messageCount = computed(() => this.ref().messages().length);
+  private readonly messageCount = computed(() => this.agent().messages().length);
 
   private prevMessageCount = 0;
 
+  // TODO(phase-2): move state_update events onto the ChatAgent custom-event surface
   /**
    * Route `state_update` custom events from the agent stream to the render
    * state store so that components bound to `$state` paths reactively update.
    */
   protected readonly customEventEffect = effect(() => {
-    const events = this.ref().customEvents();
+    const ref = this.langgraphRef();
+    if (!ref) return;
+    const events = ref.customEvents();
     const store = this.resolvedStore();
     if (!store || events.length === 0) return;
 
@@ -283,7 +300,7 @@ export class ChatComponent {
     effect(() => {
       const count = this.messageCount();
       // Track last message content to trigger scroll during streaming partials
-      const msgs = this.ref().messages();
+      const msgs = this.agent().messages();
       const lastContent = msgs.length > 0
         ? (msgs[msgs.length - 1] as unknown as Record<string, unknown>)['content']
         : undefined;
@@ -326,9 +343,7 @@ export class ChatComponent {
   }
 
   onA2uiAction(message: A2uiActionMessage): void {
-    this.ref().submit({
-      messages: [{ role: 'human', content: JSON.stringify(message) }],
-    });
+    void this.agent().submit({ message: JSON.stringify(message) });
   }
 
   onA2uiEvent(event: RenderEvent, messageIndex: number, surfaceId: string): void {
