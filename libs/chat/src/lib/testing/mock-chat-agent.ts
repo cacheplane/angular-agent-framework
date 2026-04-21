@@ -59,7 +59,7 @@ export function mockChatAgent(opts: MockChatAgentOptions = {}): MockChatAgent {
     messages, status, isLoading, error, toolCalls, state,
     ...(interrupt ? { interrupt } : {}),
     ...(subagents ? { subagents } : {}),
-    submit: async (input, opts) => { submitCalls.push({ input, opts }); },
+    submit: async (input, submitOpts) => { submitCalls.push({ input, opts: submitOpts }); },
     stop: async () => { stopCount++; },
     submitCalls,
     get stopCount() { return stopCount; },
