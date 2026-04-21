@@ -1,0 +1,37 @@
+{
+  "name": "db",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/db/src",
+  "projectType": "library",
+  "tags": ["scope:shared", "type:lib"],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{workspaceRoot}/dist/libs/db"],
+      "options": {
+        "outputPath": "dist/libs/db",
+        "main": "libs/db/src/index.ts",
+        "tsConfig": "libs/db/tsconfig.lib.json"
+      }
+    },
+    "lint": { "executor": "@nx/eslint:lint" },
+    "test": {
+      "executor": "@nx/vitest:test",
+      "options": { "configFile": "libs/db/vite.config.mts" }
+    },
+    "db:generate": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "drizzle-kit generate",
+        "cwd": "libs/db"
+      }
+    },
+    "db:migrate": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "drizzle-kit migrate",
+        "cwd": "libs/db"
+      }
+    }
+  }
+}

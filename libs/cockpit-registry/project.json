@@ -18,7 +18,7 @@
       "executor": "@nx/eslint:lint"
     },
     "test": {
-      "executor": "@nx/vite:test",
+      "executor": "@nx/vitest:test",
       "options": {
         "configFile": "libs/cockpit-registry/vite.config.mts"
       }

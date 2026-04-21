@@ -1,0 +1,31 @@
+{
+  "name": "licensing",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/licensing/src",
+  "projectType": "library",
+  "tags": ["scope:shared", "type:lib"],
+  "targets": {
+    "prebuild": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node libs/licensing/scripts/generate-public-key.mjs"
+      }
+    },
+    "build": {
+      "executor": "@nx/js:tsc",
+      "dependsOn": ["prebuild"],
+      "outputs": ["{workspaceRoot}/dist/libs/licensing"],
+      "options": {
+        "outputPath": "dist/libs/licensing",
+        "main": "libs/licensing/src/index.ts",
+        "tsConfig": "libs/licensing/tsconfig.lib.json"
+      }
+    },
+    "lint": { "executor": "@nx/eslint:lint" },
+    "test": {
+      "executor": "@nx/vitest:test",
+      "dependsOn": ["prebuild"],
+      "options": { "configFile": "libs/licensing/vite.config.mts" }
+    }
+  }
+}

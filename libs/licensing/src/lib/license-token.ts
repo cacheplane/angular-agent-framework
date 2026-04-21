@@ -1,0 +1,88 @@
+// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+
+/** The tier a license grants. */
+export type LicenseTier = 'developer-seat' | 'app-deployment' | 'enterprise';
+
+/** Claims carried inside a signed license token. */
+export interface LicenseClaims {
+  /** Customer id (Stripe customer). */
+  sub: string;
+  /** Tier the license grants. */
+  tier: LicenseTier;
+  /** Issued-at, epoch seconds. */
+  iat: number;
+  /** Expires-at, epoch seconds. */
+  exp: number;
+  /** Seat count (>=1). */
+  seats: number;
+}
+
+export type ParseLicenseTokenResult =
+  | {
+      ok: true;
+      claims: LicenseClaims;
+      /** Raw bytes that were signed (UTF-8 of the payload segment). */
+      signedMessage: Uint8Array;
+      signature: Uint8Array;
+    }
+  | { ok: false; reason: 'malformed' };
+
+function base64UrlToBytes(s: string): Uint8Array | null {
+  try {
+    // base64url -> base64
+    const pad = '='.repeat((4 - (s.length % 4)) % 4);
+    const b64 = (s + pad).replace(/-/g, '+').replace(/_/g, '/');
+    // atob is available in Node 16+ and all browsers; avoids Buffer so this
+    // module is safe to bundle for browser/Angular consumers.
+    const bin = atob(b64);
+    const out = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+    return out;
+  } catch {
+    return null;
+  }
+}
+
+function isLicenseClaims(value: unknown): value is LicenseClaims {
+  if (!value || typeof value !== 'object') return false;
+  // Bracket access required because `Record<string, unknown>` is an index
+  // signature; Angular consumers enable `noPropertyAccessFromIndexSignature`.
+  const v = value as Record<string, unknown>;
+  const tier = v['tier'];
+  const seats = v['seats'];
+  return (
+    typeof v['sub'] === 'string' &&
+    (tier === 'developer-seat' ||
+      tier === 'app-deployment' ||
+      tier === 'enterprise') &&
+    typeof v['iat'] === 'number' &&
+    typeof v['exp'] === 'number' &&
+    typeof seats === 'number' &&
+    seats >= 1
+  );
+}
+
+/**
+ * Parse a compact license token of the form `<base64url(payload-json)>.<base64url(ed25519-sig)>`.
+ * Does NOT verify the signature — see {@link verifyLicense}.
+ */
+export function parseLicenseToken(token: string): ParseLicenseTokenResult {
+  const parts = token.split('.');
+  if (parts.length !== 2) return { ok: false, reason: 'malformed' };
+  const [payloadSeg, signatureSeg] = parts;
+
+  const payloadBytes = base64UrlToBytes(payloadSeg);
+  const signature = base64UrlToBytes(signatureSeg);
+  if (!payloadBytes || !signature) return { ok: false, reason: 'malformed' };
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(new TextDecoder().decode(payloadBytes));
+  } catch {
+    return { ok: false, reason: 'malformed' };
+  }
+
+  if (!isLicenseClaims(parsed)) return { ok: false, reason: 'malformed' };
+
+  return { ok: true, claims: parsed, signedMessage: payloadBytes, signature };
+}

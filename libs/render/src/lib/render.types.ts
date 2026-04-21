@@ -29,4 +29,17 @@ export interface RenderConfig {
   store?: StateStore;
   functions?: Record<string, ComputedFunction>;
   handlers?: Record<string, (params: Record<string, unknown>) => unknown | Promise<unknown>>;
+  /** Signed license token from cacheplane.dev. Optional; omitted in dev. */
+  license?: string;
+  /**
+   * @internal
+   * Test-only env hint override. Not part of the stable API.
+   */
+  __licenseEnvHint?: { isNoncommercial: boolean };
+  /**
+   * @internal
+   * Test-only public-key override. Defaults to the compile-time embedded
+   * `LICENSE_PUBLIC_KEY`. Not part of the stable API.
+   */
+  __licensePublicKey?: Uint8Array;
 }

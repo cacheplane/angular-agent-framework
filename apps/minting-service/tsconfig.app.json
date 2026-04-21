@@ -1,0 +1,15 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "target": "ES2022",
+    "outDir": "../../dist/apps/minting-service",
+    "composite": false,
+    "declaration": false,
+    "declarationMap": false,
+    "emitDeclarationOnly": false
+  },
+  "include": ["src/**/*.ts", "api/**/*.ts", "scripts/**/*.ts"],
+  "exclude": ["src/**/*.spec.ts", "api/**/*.spec.ts", "scripts/**/*.spec.ts"]
+}

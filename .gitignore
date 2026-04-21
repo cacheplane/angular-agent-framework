@@ -43,3 +43,6 @@ __pycache__/
 
 # Local LangGraph deployment deps
 deployments/*/deps/
+
+# Generated license public key (produced by libs/licensing/scripts/generate-public-key.mjs)
+libs/licensing/src/lib/license-public-key.generated.ts

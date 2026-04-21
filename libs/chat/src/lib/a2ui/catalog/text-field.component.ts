@@ -11,8 +11,9 @@ import { emitBinding } from './emit-binding';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="flex flex-col gap-1">
-      @if (label()) { <label class="text-xs" style="color: var(--a2ui-label, rgba(255,255,255,0.6));">{{ label() }}</label> }
+      @if (label()) { <label [htmlFor]="_inputId" class="text-xs" style="color: var(--a2ui-label, rgba(255,255,255,0.6));">{{ label() }}</label> }
       <input
+        [id]="_inputId"
         type="text"
         [value]="value()"
         [placeholder]="placeholder()"
@@ -27,6 +28,9 @@ import { emitBinding } from './emit-binding';
   `,
 })
 export class A2uiTextFieldComponent {
+  private static _idCounter = 0;
+  protected readonly _inputId = `a2ui-text-field-${++A2uiTextFieldComponent._idCounter}`;
+
   readonly label = input<string>('');
   readonly value = input<string>('');
   readonly placeholder = input<string>('');

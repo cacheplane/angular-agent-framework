@@ -1,0 +1,14 @@
+{
+  "name": "@cacheplane/db",
+  "version": "0.0.1",
+  "license": "PolyForm-Noncommercial-1.0.0",
+  "sideEffects": false,
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "peerDependencies": {
+    "drizzle-orm": "^0.45.0",
+    "postgres": "^3.4.0"
+  }
+}
