@@ -5,7 +5,7 @@ import {
   input,
   ChangeDetectionStrategy,
 } from '@angular/core';
-import type { AgentRef } from '@cacheplane/angular';
+import type { AgentRef } from '@cacheplane/langgraph';
 
 export function isTyping(ref: AgentRef<any, any>): boolean {
   return ref.isLoading();

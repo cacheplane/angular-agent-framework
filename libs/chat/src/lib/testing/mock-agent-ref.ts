@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import { signal, WritableSignal } from '@angular/core';
-import type { AgentRef, SubagentStreamRef, ResourceStatus as ResourceStatusType, Interrupt, ThreadState, SubmitOptions, CustomStreamEvent } from '@cacheplane/angular';
+import type { AgentRef, SubagentStreamRef, ResourceStatus as ResourceStatusType, Interrupt, ThreadState, SubmitOptions, CustomStreamEvent } from '@cacheplane/langgraph';
 import type { ToolProgress, ToolCallWithResult } from '@langchain/langgraph-sdk';
-import { ResourceStatus } from '@cacheplane/angular';
+import { ResourceStatus } from '@cacheplane/langgraph';
 import type { BaseMessage, AIMessage as CoreAIMessage } from '@langchain/core/messages';
 import type { MessageMetadata } from '@langchain/langgraph-sdk/ui';
 

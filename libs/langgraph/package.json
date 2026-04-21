@@ -1,5 +1,5 @@
 {
-  "name": "@cacheplane/angular",
+  "name": "@cacheplane/langgraph",
   "version": "0.0.1",
   "peerDependencies": {
     "@cacheplane/chat": "^0.0.1",

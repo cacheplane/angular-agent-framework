@@ -6,7 +6,7 @@ import {
   ChatToolCallCardComponent,
 } from '@cacheplane/chat';
 import { ExampleChatLayoutComponent } from '@cacheplane/example-layouts';
-import { agent } from '@cacheplane/angular';
+import { agent } from '@cacheplane/langgraph';
 import { environment } from '../environments/environment';
 
 /**

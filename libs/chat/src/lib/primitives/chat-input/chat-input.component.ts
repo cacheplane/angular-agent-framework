@@ -10,7 +10,7 @@ import {
   ChangeDetectionStrategy,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import type { AgentRef } from '@cacheplane/angular';
+import type { AgentRef } from '@cacheplane/langgraph';
 
 export function submitMessage(
   ref: AgentRef<any, any>,

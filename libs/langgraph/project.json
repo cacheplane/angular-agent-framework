@@ -1,7 +1,7 @@
 {
-  "name": "agent",
+  "name": "langgraph",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "libs/agent/src",
+  "sourceRoot": "libs/langgraph/src",
   "prefix": "lib",
   "projectType": "library",
   "release": {
@@ -17,12 +17,12 @@
       "executor": "@nx/angular:package",
       "outputs": ["{workspaceRoot}/dist/{projectRoot}"],
       "options": {
-        "project": "libs/agent/ng-package.json",
-        "tsConfig": "libs/agent/tsconfig.lib.json"
+        "project": "libs/langgraph/ng-package.json",
+        "tsConfig": "libs/langgraph/tsconfig.lib.json"
       },
       "configurations": {
         "production": {
-          "tsConfig": "libs/agent/tsconfig.lib.prod.json"
+          "tsConfig": "libs/langgraph/tsconfig.lib.prod.json"
         },
         "development": {}
       },
@@ -39,7 +39,7 @@
     "test": {
       "executor": "@nx/vitest:test",
       "options": {
-        "configFile": "libs/agent/vite.config.mts"
+        "configFile": "libs/langgraph/vite.config.mts"
       }
     }
   }

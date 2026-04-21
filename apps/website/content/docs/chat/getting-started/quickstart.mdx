@@ -21,7 +21,7 @@ Add both `provideAgent()` and `provideChat()` to your application config.
 ```typescript
 // app.config.ts
 import { ApplicationConfig } from '@angular/core';
-import { provideAgent } from '@cacheplane/angular';
+import { provideAgent } from '@cacheplane/langgraph';
 import { provideChat } from '@cacheplane/chat';
 
 export const appConfig: ApplicationConfig = {
@@ -45,7 +45,7 @@ Use `agent()` to create a streaming connection and pass the returned `AgentRef` 
 ```typescript
 // chat-page.component.ts
 import { Component, ChangeDetectionStrategy, signal } from '@angular/core';
-import { agent } from '@cacheplane/angular';
+import { agent } from '@cacheplane/langgraph';
 import type { BaseMessage } from '@langchain/core/messages';
 import { ChatComponent } from '@cacheplane/chat';
 
@@ -117,7 +117,7 @@ If you need more control over how messages render, drop down to the primitives l
 ```typescript
 import { Component, ChangeDetectionStrategy, signal, inject } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
-import { agent } from '@cacheplane/angular';
+import { agent } from '@cacheplane/langgraph';
 import type { BaseMessage } from '@langchain/core/messages';
 import {
   ChatMessagesComponent,

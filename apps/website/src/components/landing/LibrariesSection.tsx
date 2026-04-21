@@ -7,7 +7,7 @@ const LIBRARIES = [
   {
     id: 'angular',
     tag: 'Agent',
-    pkg: '@cacheplane/angular',
+    pkg: '@cacheplane/langgraph',
     color: tokens.colors.accent,
     rgb: '0,64,144',
     oneLiner: 'Signal-native streaming for LangGraph agents',

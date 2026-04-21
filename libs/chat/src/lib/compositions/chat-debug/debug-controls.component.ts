@@ -5,7 +5,7 @@ import {
   output,
   ChangeDetectionStrategy,
 } from '@angular/core';
-import type { AgentRef } from '@cacheplane/angular';
+import type { AgentRef } from '@cacheplane/langgraph';
 
 @Component({
   selector: 'chat-debug-controls',

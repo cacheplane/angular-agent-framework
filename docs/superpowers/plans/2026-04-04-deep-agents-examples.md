@@ -6,7 +6,7 @@
 
 **Architecture:** Each capability follows the LangGraph example pattern but with richer sidebar content. The Python graphs use LangGraph tool-calling patterns (agents that invoke tools). The Angular components leverage `stream.toolCalls()`, `stream.toolProgress()`, and `stream.subagents()` signals for real-time agent activity visualization.
 
-**Tech Stack:** Angular 21, `@cacheplane/angular`, `@cacheplane/chat`, LangGraph (Python), Playwright
+**Tech Stack:** Angular 21, `@cacheplane/langgraph`, `@cacheplane/chat`, LangGraph (Python), Playwright
 
 ---
 

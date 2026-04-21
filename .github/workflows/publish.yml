@@ -17,8 +17,8 @@ jobs:
           registry-url: https://registry.npmjs.org
       - run: npm ci
       - run: npx nx test mcp --skip-nx-cache
-      - run: npx nx test agent
-      - run: npx nx build agent --configuration=production
+      - run: npx nx test langgraph
+      - run: npx nx build langgraph --configuration=production
       - name: Publish to npm
         run: npx nx-release-publish agent
         env:

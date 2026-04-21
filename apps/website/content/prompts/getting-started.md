@@ -1,8 +1,8 @@
 Add angular to my Angular 20+ application.
 
-Install: npm install @cacheplane/angular@latest
+Install: npm install @cacheplane/langgraph@latest
 
-1. In app.config.ts, add provideAgent({ apiUrl: 'http://localhost:2024' }) to the providers array. Import it from '@cacheplane/angular'.
+1. In app.config.ts, add provideAgent({ apiUrl: 'http://localhost:2024' }) to the providers array. Import it from '@cacheplane/langgraph'.
 
 2. Create a ChatComponent that calls agent<{ messages: BaseMessage[] }>({ assistantId: 'chat_agent' }) in the constructor or as a field initializer. agent() MUST be called inside an Angular injection context — constructor or field initializer is correct; ngOnInit is not.
 

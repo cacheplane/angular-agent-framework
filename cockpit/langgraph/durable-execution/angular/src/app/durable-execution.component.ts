@@ -1,6 +1,6 @@
 import { Component, computed } from '@angular/core';
 import { ChatComponent, views } from '@cacheplane/chat';
-import { agent } from '@cacheplane/angular';
+import { agent } from '@cacheplane/langgraph';
 import { signalStateStore } from '@cacheplane/render';
 import { ExampleChatLayoutComponent } from '@cacheplane/example-layouts';
 import { environment } from '../environments/environment';

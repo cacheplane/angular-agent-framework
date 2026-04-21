@@ -69,7 +69,7 @@ export function AngularProblemSolution() {
             fontSize: '0.58rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em',
             padding: '2px 9px', borderRadius: 5, color: '#fff', background: '#1a7a40', marginBottom: 16,
           }}>
-            With @cacheplane/angular
+            With @cacheplane/langgraph
           </span>
           <h3 style={{
             fontFamily: "'EB Garamond', serif", fontSize: '1.3rem', fontWeight: 700,

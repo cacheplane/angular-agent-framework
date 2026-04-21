@@ -1863,7 +1863,7 @@ git commit -m "feat(chat): add ContentClassifier for streaming content type dete
 - Modify: `libs/chat/src/lib/compositions/chat/chat.component.spec.ts`
 - Modify: `libs/chat/src/public-api.ts`
 
-**Context:** The current `ChatComponent` uses `AgentRef` (from `@cacheplane/angular`), has `views` input of type `ViewRegistry`, and `store` input of type `StateStore`. The AI message template uses `flex gap-3` with inline avatar (ChatGPT pattern, no "Assistant" label). `ChatGenerativeUiComponent` takes `AngularRegistry` — use `toRenderRegistry()` to convert from `ViewRegistry`.
+**Context:** The current `ChatComponent` uses `AgentRef` (from `@cacheplane/langgraph`), has `views` input of type `ViewRegistry`, and `store` input of type `StateStore`. The AI message template uses `flex gap-3` with inline avatar (ChatGPT pattern, no "Assistant" label). `ChatGenerativeUiComponent` takes `AngularRegistry` — use `toRenderRegistry()` to convert from `ViewRegistry`.
 
 - [ ] **Step 1: Write failing tests for classified rendering**
 

@@ -6,7 +6,7 @@ The cockpit's streaming example uses a hand-rolled `EventSource` service instead
 
 ## Goal
 
-Rewrite the Angular streaming example to use `agent()` from `@cacheplane/angular`. Deploy the LangGraph backend to LangGraph Cloud via CI. Make the cockpit's Run mode show a real working streaming chat powered by the library.
+Rewrite the Angular streaming example to use `agent()` from `@cacheplane/langgraph`. Deploy the LangGraph backend to LangGraph Cloud via CI. Make the cockpit's Run mode show a real working streaming chat powered by the library.
 
 ## Architecture
 
@@ -30,7 +30,7 @@ Angular Component
 - `cockpit/langgraph/streaming/angular/src/environments/environment.development.ts` — Local dev URL (`http://localhost:8000`).
 
 **Dependencies added to cockpit Angular app:**
-- `@cacheplane/angular` (the library)
+- `@cacheplane/langgraph` (the library)
 - `@langchain/langgraph-sdk` (peer dep)
 - `@langchain/core` (peer dep)
 

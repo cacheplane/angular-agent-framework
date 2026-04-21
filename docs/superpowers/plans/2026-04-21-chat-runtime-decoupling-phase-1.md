@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Introduce a runtime-neutral `ChatAgent` contract in `@cacheplane/chat`, adapt LangGraph to it, rename `@cacheplane/angular` → `@cacheplane/langgraph`, ship an optional `@cacheplane/ag-ui` adapter, and migrate the core chat primitives to consume `ChatAgent`. Website and docs aligned in lockstep.
+**Goal:** Introduce a runtime-neutral `ChatAgent` contract in `@cacheplane/chat`, adapt LangGraph to it, rename `@cacheplane/langgraph` → `@cacheplane/langgraph`, ship an optional `@cacheplane/ag-ui` adapter, and migrate the core chat primitives to consume `ChatAgent`. Website and docs aligned in lockstep.
 
-**Architecture:** Chat owns `ChatAgent` and its data types (AG-UI-shaped but chat-owned). Two adapter packages produce `ChatAgent`: `@cacheplane/langgraph` (wrapping LangGraph SDK, was `@cacheplane/angular`) and new `@cacheplane/ag-ui` (wrapping `@ag-ui/client`'s `AbstractAgent`). Chat primitives depend only on `ChatAgent`. Clean break pre-1.0.
+**Architecture:** Chat owns `ChatAgent` and its data types (AG-UI-shaped but chat-owned). Two adapter packages produce `ChatAgent`: `@cacheplane/langgraph` (wrapping LangGraph SDK, was `@cacheplane/langgraph`) and new `@cacheplane/ag-ui` (wrapping `@ag-ui/client`'s `AbstractAgent`). Chat primitives depend only on `ChatAgent`. Clean break pre-1.0.
 
 **Tech Stack:** TypeScript, Angular 20+, Nx monorepo, Jest/Vitest for unit tests, RxJS (AG-UI adapter only), `@langchain/langgraph-sdk`, `@ag-ui/client`, `@ag-ui/core`.
 
@@ -16,9 +16,9 @@
 
 - **A — Contract** (`@cacheplane/chat`): define `ChatAgent` and data types. Additive; no consumer changes yet.
 - **B — Test harness** (`@cacheplane/chat`): `mockChatAgent()` and conformance suite. Enables TDD for migrations.
-- **C — LangGraph adapter** (`@cacheplane/angular`): add `toChatAgent()`. Additive; existing API untouched.
+- **C — LangGraph adapter** (`@cacheplane/langgraph`): add `toChatAgent()`. Additive; existing API untouched.
 - **D — Primitive migration** (`@cacheplane/chat`): switch 6 primitives + `chat` composition from `AgentRef` to `ChatAgent`. Breaking.
-- **E — Package rename** (`@cacheplane/angular` → `@cacheplane/langgraph`). Breaking.
+- **E — Package rename** (`@cacheplane/langgraph` → `@cacheplane/langgraph`). Breaking.
 - **F — AG-UI adapter** (new `@cacheplane/ag-ui`): reducer + signals wrapper for `AbstractAgent`.
 - **G — Website & docs**: arch diagram, migration guide, capability matrix, AG-UI demo.
 
@@ -714,17 +714,17 @@ git commit -m "feat(chat): add ChatAgent conformance test suite"
 
 ---
 
-## Workstream C — LangGraph adapter (`toChatAgent()` in current `@cacheplane/angular`)
+## Workstream C — LangGraph adapter (`toChatAgent()` in current `@cacheplane/langgraph`)
 
 ### Task C1: Add `toChatAgent()` translation function
 
 **Files:**
-- Create: `libs/agent/src/lib/to-chat-agent.ts`
-- Test: `libs/agent/src/lib/to-chat-agent.spec.ts`
+- Create: `libs/langgraph/src/lib/to-chat-agent.ts`
+- Test: `libs/langgraph/src/lib/to-chat-agent.spec.ts`
 
 - [ ] **Step 1: Add peer/runtime dep on `@cacheplane/chat`**
 
-Modify `libs/agent/package.json` — add to `peerDependencies`:
+Modify `libs/langgraph/package.json` — add to `peerDependencies`:
 
 ```json
 "@cacheplane/chat": "^0.0.1"
@@ -735,7 +735,7 @@ Note: this introduces a reverse coupling which we accept temporarily; the produc
 - [ ] **Step 2: Write the failing test**
 
 ```ts
-// libs/agent/src/lib/to-chat-agent.spec.ts
+// libs/langgraph/src/lib/to-chat-agent.spec.ts
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { HumanMessage, AIMessage } from '@langchain/core/messages';
@@ -837,14 +837,14 @@ describe('toChatAgent (LangGraph adapter)', () => {
 - [ ] **Step 3: Run test to confirm failure**
 
 ```bash
-npx nx test agent --test-path-pattern=to-chat-agent
+npx nx test langgraph --test-path-pattern=to-chat-agent
 ```
 Expected: FAIL.
 
 - [ ] **Step 4: Implement `toChatAgent()`**
 
 ```ts
-// libs/agent/src/lib/to-chat-agent.ts
+// libs/langgraph/src/lib/to-chat-agent.ts
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import { computed, Signal } from '@angular/core';
 import type { BaseMessage } from '@langchain/core/messages';
@@ -996,14 +996,14 @@ Note: the exact `__resume__` key used to carry interrupt resumption through `Age
 - [ ] **Step 5: Run tests and verify pass**
 
 ```bash
-npx nx test agent --test-path-pattern=to-chat-agent
+npx nx test langgraph --test-path-pattern=to-chat-agent
 ```
 Expected: PASS (6 tests).
 
 - [ ] **Step 6: Commit**
 
 ```bash
-git add libs/agent/src/lib/to-chat-agent.ts libs/agent/src/lib/to-chat-agent.spec.ts libs/agent/package.json
+git add libs/langgraph/src/lib/to-chat-agent.ts libs/langgraph/src/lib/to-chat-agent.spec.ts libs/langgraph/package.json
 git commit -m "feat(agent): add toChatAgent() adapter to runtime-neutral ChatAgent contract"
 ```
 
@@ -1012,11 +1012,11 @@ git commit -m "feat(agent): add toChatAgent() adapter to runtime-neutral ChatAge
 ### Task C2: Export `toChatAgent` from agent package
 
 **Files:**
-- Modify: `libs/agent/src/public-api.ts`
+- Modify: `libs/langgraph/src/public-api.ts`
 
 - [ ] **Step 1: Add export**
 
-Append to `libs/agent/src/public-api.ts`:
+Append to `libs/langgraph/src/public-api.ts`:
 
 ```ts
 // Chat adapter
@@ -1026,14 +1026,14 @@ export { toChatAgent } from './lib/to-chat-agent';
 - [ ] **Step 2: Build**
 
 ```bash
-npx nx build agent
+npx nx build langgraph
 ```
 Expected: SUCCESS.
 
 - [ ] **Step 3: Commit**
 
 ```bash
-git add libs/agent/src/public-api.ts
+git add libs/langgraph/src/public-api.ts
 git commit -m "feat(agent): export toChatAgent"
 ```
 
@@ -1042,12 +1042,12 @@ git commit -m "feat(agent): export toChatAgent"
 ### Task C3: Run conformance suite against `toChatAgent()`
 
 **Files:**
-- Create: `libs/agent/src/lib/to-chat-agent.conformance.spec.ts`
+- Create: `libs/langgraph/src/lib/to-chat-agent.conformance.spec.ts`
 
 - [ ] **Step 1: Write the conformance test**
 
 ```ts
-// libs/agent/src/lib/to-chat-agent.conformance.spec.ts
+// libs/langgraph/src/lib/to-chat-agent.conformance.spec.ts
 import { TestBed } from '@angular/core/testing';
 import { runChatAgentConformance } from '@cacheplane/chat';
 import { toChatAgent } from './to-chat-agent';
@@ -1096,14 +1096,14 @@ runChatAgentConformance('toChatAgent', () => {
 - [ ] **Step 2: Run test**
 
 ```bash
-npx nx test agent --test-path-pattern=to-chat-agent.conformance
+npx nx test langgraph --test-path-pattern=to-chat-agent.conformance
 ```
 Expected: PASS (8 tests).
 
 - [ ] **Step 3: Commit**
 
 ```bash
-git add libs/agent/src/lib/to-chat-agent.conformance.spec.ts
+git add libs/langgraph/src/lib/to-chat-agent.conformance.spec.ts
 git commit -m "test(agent): verify toChatAgent satisfies ChatAgent conformance"
 ```
 
@@ -1136,7 +1136,7 @@ Replace imports and input in `chat-input.component.ts`:
 
 ```ts
 import type { ChatAgent } from '@cacheplane/chat';
-// remove: import type { AgentRef } from '@cacheplane/angular';
+// remove: import type { AgentRef } from '@cacheplane/langgraph';
 
 export function submitMessage(agent: ChatAgent, text: string): string | null {
   const trimmed = text.trim();
@@ -1382,11 +1382,11 @@ npx nx lint chat
 Then:
 
 ```bash
-rg --no-heading "@cacheplane/angular|AgentRef|BaseMessage" libs/chat/src/lib/primitives/chat-input libs/chat/src/lib/primitives/chat-messages libs/chat/src/lib/primitives/chat-tool-calls libs/chat/src/lib/primitives/chat-typing-indicator libs/chat/src/lib/primitives/chat-error libs/chat/src/lib/compositions/chat
+rg --no-heading "@cacheplane/langgraph|AgentRef|BaseMessage" libs/chat/src/lib/primitives/chat-input libs/chat/src/lib/primitives/chat-messages libs/chat/src/lib/primitives/chat-tool-calls libs/chat/src/lib/primitives/chat-typing-indicator libs/chat/src/lib/primitives/chat-error libs/chat/src/lib/compositions/chat
 ```
 Expected: no matches.
 
-If any match is found, extract it into a follow-up task before proceeding. Interrupt, subagents, timeline, debug, generative-ui primitives are out of Phase 1 and may still import `@cacheplane/angular` — document this in the composition's file header with a `TODO(phase-2)` or `TODO(phase-3)` comment.
+If any match is found, extract it into a follow-up task before proceeding. Interrupt, subagents, timeline, debug, generative-ui primitives are out of Phase 1 and may still import `@cacheplane/langgraph` — document this in the composition's file header with a `TODO(phase-2)` or `TODO(phase-3)` comment.
 
 - [ ] **Step 2: Full chat test run**
 
@@ -1411,15 +1411,15 @@ git commit -m "chore(chat): mark remaining primitives as phase-2/phase-3 migrati
 
 ---
 
-## Workstream E — Rename `@cacheplane/angular` → `@cacheplane/langgraph`
+## Workstream E — Rename `@cacheplane/langgraph` → `@cacheplane/langgraph`
 
 ### Task E1: Rename the package identifier
 
 **Files:**
-- Modify: `libs/agent/package.json`
-- Modify: `libs/agent/project.json`
-- Modify: `libs/agent/ng-package.json`
-- Modify: `libs/agent/README.md`
+- Modify: `libs/langgraph/package.json`
+- Modify: `libs/langgraph/project.json`
+- Modify: `libs/langgraph/ng-package.json`
+- Modify: `libs/langgraph/README.md`
 
 - [ ] **Step 1: Update `package.json`** — set `"name": "@cacheplane/langgraph"`.
 
@@ -1427,7 +1427,7 @@ git commit -m "chore(chat): mark remaining primitives as phase-2/phase-3 migrati
 
 - [ ] **Step 3: Update `ng-package.json`** — adjust `dest` path to match renamed package.
 
-- [ ] **Step 4: Update `libs/agent/src/lib/agent.provider.ts`**
+- [ ] **Step 4: Update `libs/langgraph/src/lib/agent.provider.ts`**
 
 ```ts
 const PACKAGE_NAME = '@cacheplane/langgraph';
@@ -1435,15 +1435,15 @@ const PACKAGE_NAME = '@cacheplane/langgraph';
 
 And update `__CACHEPLANE_AGENT_VERSION__` define if present in `vite.config.mts` to `__CACHEPLANE_LANGGRAPH_VERSION__`.
 
-- [ ] **Step 5: Update `libs/agent/README.md`** — rename heading and all `@cacheplane/angular` references.
+- [ ] **Step 5: Update `libs/langgraph/README.md`** — rename heading and all `@cacheplane/langgraph` references.
 
-- [ ] **Step 6: Do NOT rename the directory** (`libs/agent/`) in this task — Nx project paths are stable. Directory rename, if desired, is a separate cleanup follow-up.
+- [ ] **Step 6: Do NOT rename the directory** (`libs/langgraph/`) in this task — Nx project paths are stable. Directory rename, if desired, is a separate cleanup follow-up.
 
 - [ ] **Step 7: Commit**
 
 ```bash
-git add libs/agent/package.json libs/agent/project.json libs/agent/ng-package.json libs/agent/README.md libs/agent/src/lib/agent.provider.ts
-git commit -m "refactor(langgraph): rename @cacheplane/angular to @cacheplane/langgraph"
+git add libs/langgraph/package.json libs/langgraph/project.json libs/langgraph/ng-package.json libs/langgraph/README.md libs/langgraph/src/lib/agent.provider.ts
+git commit -m "refactor(langgraph): rename @cacheplane/langgraph to @cacheplane/langgraph"
 ```
 
 ---
@@ -1457,50 +1457,50 @@ git commit -m "refactor(langgraph): rename @cacheplane/angular to @cacheplane/la
 
 Replace:
 ```json
-"@cacheplane/angular": ["libs/agent/src/public-api.ts"]
+"@cacheplane/langgraph": ["libs/langgraph/src/public-api.ts"]
 ```
 with:
 ```json
-"@cacheplane/langgraph": ["libs/agent/src/public-api.ts"]
+"@cacheplane/langgraph": ["libs/langgraph/src/public-api.ts"]
 ```
 
-Keep `@cacheplane/angular` as an alias pointing to the same entry for one migration tick, OR remove immediately for a clean break (preferred). Choose clean break:
+Keep `@cacheplane/langgraph` as an alias pointing to the same entry for one migration tick, OR remove immediately for a clean break (preferred). Choose clean break:
 
 ```bash
-rg -n '"@cacheplane/angular"' tsconfig.base.json
+rg -n '"@cacheplane/langgraph"' tsconfig.base.json
 ```
 
 - [ ] **Step 2: Commit**
 
 ```bash
 git add tsconfig.base.json
-git commit -m "build: retarget @cacheplane/angular alias to @cacheplane/langgraph"
+git commit -m "build: retarget @cacheplane/langgraph alias to @cacheplane/langgraph"
 ```
 
 ---
 
 ### Task E3: Update all internal imports
 
-**Files:** everything that imports `@cacheplane/angular`.
+**Files:** everything that imports `@cacheplane/langgraph`.
 
 - [ ] **Step 1: Find all internal callers**
 
 ```bash
-rg -l "@cacheplane/angular" libs apps
+rg -l "@cacheplane/langgraph" libs apps
 ```
 
 - [ ] **Step 2: Perform the replacement** (manually or via sed with review)
 
-For each matching file, replace `@cacheplane/angular` with `@cacheplane/langgraph`:
+For each matching file, replace `@cacheplane/langgraph` with `@cacheplane/langgraph`:
 
 ```bash
-rg -l "@cacheplane/angular" libs apps | xargs sed -i '' 's|@cacheplane/angular|@cacheplane/langgraph|g'
+rg -l "@cacheplane/langgraph" libs apps | xargs sed -i '' 's|@cacheplane/langgraph|@cacheplane/langgraph|g'
 ```
 
 - [ ] **Step 3: Verify no matches remain**
 
 ```bash
-rg "@cacheplane/angular" libs apps
+rg "@cacheplane/langgraph" libs apps
 ```
 Expected: no matches (outside of spec/plan docs and historical CHANGELOG entries).
 
@@ -1522,7 +1522,7 @@ Expected: PASS.
 
 ```bash
 git add -u
-git commit -m "refactor: replace @cacheplane/angular imports with @cacheplane/langgraph"
+git commit -m "refactor: replace @cacheplane/langgraph imports with @cacheplane/langgraph"
 ```
 
 ---
@@ -1532,7 +1532,7 @@ git commit -m "refactor: replace @cacheplane/angular imports with @cacheplane/la
 **Files:**
 - Modify: `libs/licensing/README.md`
 
-- [ ] **Step 1: Replace `@cacheplane/angular` mentions with `@cacheplane/langgraph`** in the README.
+- [ ] **Step 1: Replace `@cacheplane/langgraph` mentions with `@cacheplane/langgraph`** in the README.
 
 - [ ] **Step 2: Note** — licensing specs test arbitrary package name strings and do not need code changes.
 
@@ -1555,7 +1555,7 @@ git commit -m "docs(licensing): update consumer list to @cacheplane/langgraph"
 Create or append to `docs/migrations/2026-04-21-cacheplane-angular-to-langgraph.md`:
 
 ```markdown
-# Migration: `@cacheplane/angular` → `@cacheplane/langgraph`
+# Migration: `@cacheplane/langgraph` → `@cacheplane/langgraph`
 
 **Date:** 2026-04-21
 
@@ -1563,13 +1563,13 @@ The LangGraph adapter package has been renamed. Replace all imports:
 
 ```ts
 // before
-import { agent, provideAgent } from '@cacheplane/angular';
+import { agent, provideAgent } from '@cacheplane/langgraph';
 
 // after
 import { agent, provideAgent } from '@cacheplane/langgraph';
 ```
 
-`@cacheplane/angular` is no longer published. The rename reflects the package's actual role (LangGraph SDK adapter) and makes room for additional framework-level packages.
+`@cacheplane/langgraph` is no longer published. The rename reflects the package's actual role (LangGraph SDK adapter) and makes room for additional framework-level packages.
 
 In the same release, chat primitives migrated from `AgentRef` to the runtime-neutral `ChatAgent` contract. Use `toChatAgent(agentRef)` to adapt:
 
@@ -1587,7 +1587,7 @@ const chatAgent = toChatAgent(ref);
 
 ```bash
 git add docs/migrations/
-git commit -m "docs: add migration guide for @cacheplane/angular rename"
+git commit -m "docs: add migration guide for @cacheplane/langgraph rename"
 ```
 
 ---
@@ -2242,7 +2242,7 @@ git commit -m "docs(ag-ui): add README"
 - [ ] **Step 1: Locate existing architecture pages**
 
 ```bash
-rg -l "architecture|@cacheplane/angular" apps/website/src
+rg -l "architecture|@cacheplane/langgraph" apps/website/src
 ```
 
 - [ ] **Step 2: Replace or add the three-box diagram** (see spec) as SVG or Mermaid in the architecture page. Include the three packages (chat / langgraph / ag-ui) and the `ChatAgent` contract in the center.
@@ -2429,5 +2429,5 @@ Description: link to spec and plan; summarize workstreams A–G; include migrati
 - Every file path above is absolute to repo root. Don't introduce new path aliases beyond the one `@cacheplane/ag-ui` entry.
 - `toChatAgent()` must be called inside an Angular injection context because it uses `computed()`; tests use `TestBed.runInInjectionContext`.
 - Do not modify the not-yet-migrated primitives (`chat-interrupt`, `chat-subagents`, `chat-timeline`, `chat-debug`, `chat-generative-ui`, `chat-thread-list`) in Phase 1 — they continue to import from `@cacheplane/langgraph` until Phase 2/3.
-- The `@cacheplane/angular` → `@cacheplane/langgraph` rename does not rename the `libs/agent/` directory; that's a mechanical cleanup deferred to keep this PR reviewable.
+- The `@cacheplane/langgraph` → `@cacheplane/langgraph` rename does not rename the `libs/langgraph/` directory; that's a mechanical cleanup deferred to keep this PR reviewable.
 - If `@ag-ui/client` / `@ag-ui/core` versions drift during implementation, pin the adapter to the versions you tested against and update the `peerDependencies` range accordingly.

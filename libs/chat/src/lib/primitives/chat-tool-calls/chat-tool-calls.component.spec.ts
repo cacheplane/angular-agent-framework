@@ -3,7 +3,7 @@ import { describe, it, expect } from 'vitest';
 import { signal, computed } from '@angular/core';
 import { AIMessage, HumanMessage } from '@langchain/core/messages';
 import { createMockAgentRef } from '../../testing/mock-agent-ref';
-import type { ToolCallWithResult } from '@cacheplane/angular';
+import type { ToolCallWithResult } from '@cacheplane/langgraph';
 
 describe('ChatToolCallsComponent — toolCalls computed', () => {
   it('returns ref.toolCalls() when no message is provided', () => {

@@ -3,7 +3,7 @@ import { describe, it, expect } from 'vitest';
 import { signal, computed } from '@angular/core';
 import { getInterrupt } from './chat-interrupt.component';
 import { createMockAgentRef } from '../../testing/mock-agent-ref';
-import type { Interrupt } from '@cacheplane/angular';
+import type { Interrupt } from '@cacheplane/langgraph';
 
 describe('getInterrupt()', () => {
   it('returns undefined when no interrupt is present', () => {

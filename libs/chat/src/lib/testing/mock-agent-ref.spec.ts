@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import { describe, it, expect } from 'vitest';
 import { createMockAgentRef } from './mock-agent-ref';
-import { ResourceStatus } from '@cacheplane/angular';
+import { ResourceStatus } from '@cacheplane/langgraph';
 
 describe('createMockAgentRef', () => {
   it('creates a mock with default values', () => {

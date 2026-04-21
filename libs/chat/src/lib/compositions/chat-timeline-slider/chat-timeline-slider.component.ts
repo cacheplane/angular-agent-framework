@@ -7,7 +7,7 @@ import {
   signal,
   ChangeDetectionStrategy,
 } from '@angular/core';
-import type { AgentRef, ThreadState } from '@cacheplane/angular';
+import type { AgentRef, ThreadState } from '@cacheplane/langgraph';
 
 @Component({
   selector: 'chat-timeline-slider',

@@ -11,7 +11,7 @@ import {
   ElementRef,
   ChangeDetectionStrategy,
 } from '@angular/core';
-import type { AgentRef } from '@cacheplane/angular';
+import type { AgentRef } from '@cacheplane/langgraph';
 import type { ViewRegistry, RenderEvent } from '@cacheplane/render';
 import type { A2uiActionMessage } from '@cacheplane/a2ui';
 import type { StateStore } from '@json-render/core';

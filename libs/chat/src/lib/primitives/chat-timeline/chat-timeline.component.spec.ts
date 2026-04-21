@@ -2,7 +2,7 @@
 import { describe, it, expect } from 'vitest';
 import { signal, computed } from '@angular/core';
 import { createMockAgentRef } from '../../testing/mock-agent-ref';
-import type { ThreadState } from '@cacheplane/angular';
+import type { ThreadState } from '@cacheplane/langgraph';
 
 const makeState = (id: string): ThreadState<any> =>
   ({ checkpoint_id: id, values: {}, next: [], metadata: {} } as any);

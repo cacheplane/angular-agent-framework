@@ -10,7 +10,7 @@ import {
 import { NgTemplateOutlet } from '@angular/common';
 import { AIMessage } from '@langchain/core/messages';
 import type { BaseMessage } from '@langchain/core/messages';
-import type { AgentRef } from '@cacheplane/angular';
+import type { AgentRef } from '@cacheplane/langgraph';
 import type { ToolCallWithResult } from '@langchain/langgraph-sdk';
 
 @Component({

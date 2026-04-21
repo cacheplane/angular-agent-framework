@@ -6,9 +6,9 @@
 
 ## Problem
 
-`@cacheplane/chat` imports `AgentRef`, `SubagentStreamRef`, `Interrupt`, `ThreadState`, `ToolCallWithResult`, and `ResourceStatus` from `@cacheplane/angular` across nearly every primitive and composition. `@cacheplane/angular` is a LangGraph SDK adapter — its types are LangGraph-shaped (`BaseMessage` from `@langchain/core`, `Interrupt`/`ThreadState` from `@langchain/langgraph-sdk`). Consequently, chat's public API is LangGraph-specific: a user cannot drive chat primitives from CopilotKit's AG-UI runtime, Mastra, CrewAI, Microsoft Agent Framework, or a custom backend without re-implementing `AgentRef`.
+`@cacheplane/chat` imports `AgentRef`, `SubagentStreamRef`, `Interrupt`, `ThreadState`, `ToolCallWithResult`, and `ResourceStatus` from `@cacheplane/langgraph` across nearly every primitive and composition. `@cacheplane/langgraph` is a LangGraph SDK adapter — its types are LangGraph-shaped (`BaseMessage` from `@langchain/core`, `Interrupt`/`ThreadState` from `@langchain/langgraph-sdk`). Consequently, chat's public API is LangGraph-specific: a user cannot drive chat primitives from CopilotKit's AG-UI runtime, Mastra, CrewAI, Microsoft Agent Framework, or a custom backend without re-implementing `AgentRef`.
 
-`@cacheplane/render` has **no** dependency on `@cacheplane/angular` and is already decoupled from the agent runtime (though it remains coupled to the Angular framework — out of scope for this spec).
+`@cacheplane/render` has **no** dependency on `@cacheplane/langgraph` and is already decoupled from the agent runtime (though it remains coupled to the Angular framework — out of scope for this spec).
 
 ## Goal
 
@@ -31,7 +31,7 @@ Chat primitives accept a runtime-neutral `ChatAgent` contract. Existing LangGrap
       │                          │                   │
       │                 @cacheplane/langgraph   @cacheplane/ag-ui
       │                 (renamed from           (new, optional)
-      │                  @cacheplane/angular)
+      │                  @cacheplane/langgraph)
       │                          │                   │
       └── user code              ▼                   ▼
                             @langchain/*         @ag-ui/client
@@ -41,7 +41,7 @@ Chat primitives accept a runtime-neutral `ChatAgent` contract. Existing LangGrap
 ### Package roles
 
 - **`@cacheplane/chat`** — owns `ChatAgent` and all neutral data types; owns all primitives and compositions. Peer deps: Angular, `@cacheplane/render`, `@cacheplane/licensing`, `@cacheplane/a2ui`, `@cacheplane/partial-json`. **No dependency on any agent runtime.**
-- **`@cacheplane/langgraph`** — renamed from `@cacheplane/angular`. Wraps the LangGraph SDK; exports `agent()`, `AgentRef`, transports, and `toChatAgent(agentRef) → ChatAgent`. Keeps today's surface for users who want raw LangGraph access plus the adapter for chat.
+- **`@cacheplane/langgraph`** — renamed from `@cacheplane/langgraph`. Wraps the LangGraph SDK; exports `agent()`, `AgentRef`, transports, and `toChatAgent(agentRef) → ChatAgent`. Keeps today's surface for users who want raw LangGraph access plus the adapter for chat.
 - **`@cacheplane/ag-ui`** — new. Wraps `@ag-ui/client`'s `AbstractAgent` Observable into `ChatAgent` signals. Exports `toChatAgent(agent: AbstractAgent)` and a convenience `provideAgUiAgent({ url, agentId })`.
 - **User-written adapter** — any custom backend (Vercel AI SDK direct, homegrown SSE, etc.) implements `ChatAgent` without a library.
 
@@ -152,9 +152,9 @@ Reducer is a plain function so it can be unit-tested without Angular.
 
 All libs are currently at 0.0.1. A breaking change is acceptable.
 
-- Rename `@cacheplane/angular` → `@cacheplane/langgraph`. Update all internal consumers.
+- Rename `@cacheplane/langgraph` → `@cacheplane/langgraph`. Update all internal consumers.
 - Primitive inputs change from `AgentRef`-flavored types to `ChatAgent` types. No transitional overloads.
-- Publish a tombstone `@cacheplane/angular` (or README redirect) pointing to the new package.
+- Publish a tombstone `@cacheplane/langgraph` (or README redirect) pointing to the new package.
 - CHANGELOG entries per phase documenting the import path and shape changes.
 - Website and docs updated in lockstep with each phase (see Website & docs section).
 
@@ -166,7 +166,7 @@ Each phase ships as its own spec → implementation plan → PR set.
 Primitives migrated: `provide-chat`, `chat-input`, `chat-messages`, `chat-tool-calls`, `chat-error`, `chat-typing-indicator`, `chat` composition (core path).
 
 - Introduce `ChatAgent`, `ChatMessage`, `ChatToolCall`, `ChatSubmitInput`, `ChatStatus` in `@cacheplane/chat`.
-- Rename `@cacheplane/angular` → `@cacheplane/langgraph`; add `toChatAgent()`.
+- Rename `@cacheplane/langgraph` → `@cacheplane/langgraph`; add `toChatAgent()`.
 - Ship `@cacheplane/ag-ui` covering lifecycle, message, tool-call, state events.
 - Update affected tests; introduce `mockChatAgent()` helper under `@cacheplane/chat/testing`.
 
@@ -188,7 +188,7 @@ Treat documentation as a first-class deliverable of each phase, not a follow-up:
 - **Architecture diagram** (the three-box diagram above) replaces any existing runtime-coupled diagram on the website.
 - **Getting started** guides bifurcate: LangGraph path (`@cacheplane/langgraph`) and AG-UI path (`@cacheplane/ag-ui`), both ending in `toChatAgent()` fed to `<cp-chat>`.
 - **Capability matrix** — a table listing each primitive/composition and which runtimes it supports (core / interrupts / subagents / history).
-- **Migration guide** — dedicated page for the `@cacheplane/angular` → `@cacheplane/langgraph` rename plus primitive input changes.
+- **Migration guide** — dedicated page for the `@cacheplane/langgraph` → `@cacheplane/langgraph` rename plus primitive input changes.
 - **API reference** — `ChatAgent`, `ChatMessage`, etc. documented with examples for each adapter.
 - **Examples repo / apps/website demos** — at least one AG-UI-driven demo (e.g., against a Mastra or CopilotKit backend) to prove the decoupling end-to-end.
 
@@ -205,11 +205,11 @@ Website updates ship with each phase's PR; no phase is considered complete until
 
 - **AG-UI protocol churn.** Draft events (MetaEvent, extended run events) are moving. Mitigate by pinning Phase 1 to stable core events only; Phase 2 accepts the risk of AG-UI adapter churn without affecting chat or LangGraph adapter.
 - **Interrupt semantic divergence.** AG-UI's interrupt model is not 1:1 with LangGraph's. The `ChatInterrupt` shape must be broad enough for both; Phase 2 spec locks this down.
-- **Naming break.** `@cacheplane/angular` → `@cacheplane/langgraph` forces import updates. Acceptable pre-1.0; migration guide mitigates.
+- **Naming break.** `@cacheplane/langgraph` → `@cacheplane/langgraph` forces import updates. Acceptable pre-1.0; migration guide mitigates.
 - **Hidden LangGraph assumptions in primitives.** Some primitives may rely on `BaseMessage`-specific fields (e.g., `additional_kwargs`). Phase 1 audit surfaces these and folds them into `ChatMessage` or explicit escape hatches.
 
 ## Open questions for reviewer
 
-1. Confirm the `@cacheplane/angular` → `@cacheplane/langgraph` rename (vs. keeping the old name).
+1. Confirm the `@cacheplane/langgraph` → `@cacheplane/langgraph` rename (vs. keeping the old name).
 2. Confirm that history / time-travel stays LangGraph-only and is not part of the contract.
 3. Any appetite for a `@cacheplane/vercel-ai` or `@cacheplane/mastra` adapter in a later phase, or is AG-UI enough for non-LangGraph coverage?

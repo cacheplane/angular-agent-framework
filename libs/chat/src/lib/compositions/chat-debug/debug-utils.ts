@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-import type { ThreadState } from '@cacheplane/angular';
+import type { ThreadState } from '@cacheplane/langgraph';
 import type { DebugCheckpoint } from './debug-checkpoint-card.component';
 
 /**

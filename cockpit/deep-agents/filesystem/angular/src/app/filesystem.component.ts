@@ -1,7 +1,7 @@
 import { Component, computed } from '@angular/core';
 import { ChatComponent, views } from '@cacheplane/chat';
 import { ExampleChatLayoutComponent } from '@cacheplane/example-layouts';
-import { agent } from '@cacheplane/angular';
+import { agent } from '@cacheplane/langgraph';
 import { signalStateStore } from '@cacheplane/render';
 import { environment } from '../environments/environment';
 import { FilePreviewComponent } from './views/file-preview.component';

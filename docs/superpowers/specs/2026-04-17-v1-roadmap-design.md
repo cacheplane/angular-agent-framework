@@ -1,4 +1,4 @@
-# v1 Roadmap — `@cacheplane/angular`, `@cacheplane/render`, `@cacheplane/chat`
+# v1 Roadmap — `@cacheplane/langgraph`, `@cacheplane/render`, `@cacheplane/chat`
 
 **Date:** 2026-04-17
 **Status:** Approved design — ready for implementation plan
@@ -7,7 +7,7 @@
 
 Publish three production-ready npm packages at version `1.0.0`:
 
-- `@cacheplane/angular` (source in `libs/agent`)
+- `@cacheplane/langgraph` (source in `libs/langgraph`)
 - `@cacheplane/render` (source in `libs/render`)
 - `@cacheplane/chat` (source in `libs/chat`)
 
@@ -50,7 +50,7 @@ Each library follows the same checklist. Order: agent → render → chat.
 - **License check wired in** — init-time offline signature verification + nag UX (see §3)
 - **Cockpit examples updated** — any API change lands with matching cockpit update in the same PR
 
-### `@cacheplane/angular` (source: `libs/agent`)
+### `@cacheplane/langgraph` (source: `libs/langgraph`)
 
 - Primary API: agent primitives, signals, LangGraph SDK integration
 - Most mature of the three; stabilization effort is reviewing + formalizing existing API
@@ -75,7 +75,7 @@ Each library follows the same checklist. Order: agent → render → chat.
 Goal: `nx release` (single command) → tagged commits, changelogs, npm publish with provenance.
 
 - **Nx Release** configured with per-package semver and independent version lines
-- **Tag format:** `<pkg>@v<version>` (e.g., `@cacheplane/angular@v1.0.0`)
+- **Tag format:** `<pkg>@v<version>` (e.g., `@cacheplane/langgraph@v1.0.0`)
 - **Changelog:** Keep-a-Changelog format, one `CHANGELOG.md` per library
 - **Conventional commits** enforced in CI (commitlint) to drive changelog generation
 - **npm publish with provenance** (`--provenance` flag, GitHub OIDC)

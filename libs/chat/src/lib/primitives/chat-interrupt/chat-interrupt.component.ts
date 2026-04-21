@@ -8,8 +8,8 @@ import {
   ChangeDetectionStrategy,
 } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
-import type { Interrupt } from '@cacheplane/angular';
-import type { AgentRef } from '@cacheplane/angular';
+import type { Interrupt } from '@cacheplane/langgraph';
+import type { AgentRef } from '@cacheplane/langgraph';
 
 /**
  * Retrieves the current interrupt value from a AgentRef.

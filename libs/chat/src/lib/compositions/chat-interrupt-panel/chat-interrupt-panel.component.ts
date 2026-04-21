@@ -6,7 +6,7 @@ import {
   output,
   ChangeDetectionStrategy,
 } from '@angular/core';
-import type { AgentRef } from '@cacheplane/angular';
+import type { AgentRef } from '@cacheplane/langgraph';
 
 export type InterruptAction = 'accept' | 'edit' | 'respond' | 'ignore';
 

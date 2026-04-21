@@ -11,7 +11,7 @@ import {
   ChangeDetectionStrategy,
 } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
-import type { AgentRef } from '@cacheplane/angular';
+import type { AgentRef } from '@cacheplane/langgraph';
 import { ChatMessagesComponent } from '../../primitives/chat-messages/chat-messages.component';
 import { MessageTemplateDirective } from '../../primitives/chat-messages/message-template.directive';
 import { ChatInputComponent } from '../../primitives/chat-input/chat-input.component';

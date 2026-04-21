@@ -4,9 +4,9 @@
 
 **Goal:** Build an Angular chat component library with headless primitives and prebuilt Tailwind compositions for LangGraph, LangChain, and Deep Agent UIs.
 
-**Architecture:** Two-layer design — headless primitives (unstyled, logic-only, composable via `ng-template`) and prebuilt compositions (Tailwind + shadcn model). All components accept a `AgentRef` from `@cacheplane/angular`. Generative UI hosted via `@cacheplane/render`. Debug component provides agent execution inspection.
+**Architecture:** Two-layer design — headless primitives (unstyled, logic-only, composable via `ng-template`) and prebuilt compositions (Tailwind + shadcn model). All components accept a `AgentRef` from `@cacheplane/langgraph`. Generative UI hosted via `@cacheplane/render`. Debug component provides agent execution inspection.
 
-**Tech Stack:** Angular 21+, `@cacheplane/angular`, `@cacheplane/render`, Tailwind CSS, Nx 22, ng-packagr, Vitest
+**Tech Stack:** Angular 21+, `@cacheplane/langgraph`, `@cacheplane/render`, Tailwind CSS, Nx 22, ng-packagr, Vitest
 
 **Spec:** `docs/superpowers/specs/2026-04-04-chat-component-library-design.md` — Deliverable 2
 
@@ -122,7 +122,7 @@ npx nx generate @nx/angular:library chat --directory=libs/chat --publishable --i
     "@angular/core": "^20.0.0 || ^21.0.0",
     "@angular/common": "^20.0.0 || ^21.0.0",
     "@cacheplane/render": "^0.0.1",
-    "@cacheplane/angular": "^0.0.1",
+    "@cacheplane/langgraph": "^0.0.1",
     "@langchain/core": "^1.1.33"
   },
   "license": "PolyForm-Noncommercial-1.0.0",
@@ -203,7 +203,7 @@ Create `libs/chat/src/lib/chat.types.ts`:
 ```typescript
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import type { Signal } from '@angular/core';
-import type { AgentRef } from '@cacheplane/angular';
+import type { AgentRef } from '@cacheplane/langgraph';
 import type { AngularRegistry } from '@cacheplane/render';
 import type { BaseMessage } from '@langchain/core/messages';
 
@@ -234,8 +234,8 @@ Create `libs/chat/src/lib/testing/mock-angular-ref.ts`:
 ```typescript
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import { signal, computed } from '@angular/core';
-import type { AgentRef } from '@cacheplane/angular';
-import { ResourceStatus } from '@cacheplane/angular';
+import type { AgentRef } from '@cacheplane/langgraph';
+import { ResourceStatus } from '@cacheplane/langgraph';
 import type { BaseMessage } from '@langchain/core/messages';
 import { HumanMessage, AIMessage } from '@langchain/core/messages';
 
@@ -411,7 +411,7 @@ import {
   ChangeDetectionStrategy,
 } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
-import type { AgentRef } from '@cacheplane/angular';
+import type { AgentRef } from '@cacheplane/langgraph';
 import type { BaseMessage } from '@langchain/core/messages';
 import { MessageTemplateDirective } from './message-template.directive';
 import type { MessageTemplateType } from '../../chat.types';
@@ -558,7 +558,7 @@ import {
   ChangeDetectionStrategy,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import type { AgentRef } from '@cacheplane/angular';
+import type { AgentRef } from '@cacheplane/langgraph';
 import { HumanMessage } from '@langchain/core/messages';
 
 @Component({
@@ -650,7 +650,7 @@ import { describe, it, expect } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { ChatTypingIndicatorComponent } from './chat-typing-indicator.component';
 import { createMockAgentRef } from '../../testing/mock-angular-ref';
-import { ResourceStatus } from '@cacheplane/angular';
+import { ResourceStatus } from '@cacheplane/langgraph';
 
 describe('ChatTypingIndicatorComponent', () => {
   it('should render when loading', () => {
@@ -714,7 +714,7 @@ Create `libs/chat/src/lib/primitives/chat-typing-indicator/chat-typing-indicator
 ```typescript
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import { Component, computed, input, ChangeDetectionStrategy } from '@angular/core';
-import type { AgentRef } from '@cacheplane/angular';
+import type { AgentRef } from '@cacheplane/langgraph';
 
 @Component({
   selector: 'chat-typing-indicator',
@@ -740,7 +740,7 @@ Create `libs/chat/src/lib/primitives/chat-error/chat-error.component.ts`:
 ```typescript
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import { Component, computed, input, ChangeDetectionStrategy } from '@angular/core';
-import type { AgentRef } from '@cacheplane/angular';
+import type { AgentRef } from '@cacheplane/langgraph';
 
 @Component({
   selector: 'chat-error',
@@ -855,7 +855,7 @@ import {
   ChangeDetectionStrategy,
 } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
-import type { AgentRef } from '@cacheplane/angular';
+import type { AgentRef } from '@cacheplane/langgraph';
 
 @Component({
   selector: 'chat-interrupt',
@@ -975,7 +975,7 @@ import {
   ChangeDetectionStrategy,
 } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
-import type { AgentRef } from '@cacheplane/angular';
+import type { AgentRef } from '@cacheplane/langgraph';
 import type { BaseMessage } from '@langchain/core/messages';
 
 @Component({
@@ -1023,7 +1023,7 @@ import {
   ChangeDetectionStrategy,
 } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
-import type { AgentRef } from '@cacheplane/angular';
+import type { AgentRef } from '@cacheplane/langgraph';
 
 @Component({
   selector: 'chat-subagents',
@@ -1243,7 +1243,7 @@ import {
   ChangeDetectionStrategy,
 } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
-import type { AgentRef } from '@cacheplane/angular';
+import type { AgentRef } from '@cacheplane/langgraph';
 
 @Component({
   selector: 'chat-timeline',
@@ -1443,7 +1443,7 @@ Create `libs/chat/src/lib/compositions/chat/chat.component.ts`:
 ```typescript
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import { Component, input, ChangeDetectionStrategy } from '@angular/core';
-import type { AgentRef } from '@cacheplane/angular';
+import type { AgentRef } from '@cacheplane/langgraph';
 import { ChatMessagesComponent } from '../../primitives/chat-messages/chat-messages.component';
 import { MessageTemplateDirective } from '../../primitives/chat-messages/message-template.directive';
 import { ChatInputComponent } from '../../primitives/chat-input/chat-input.component';
@@ -1539,7 +1539,7 @@ Create `libs/chat/src/lib/compositions/chat-interrupt-panel/chat-interrupt-panel
 ```typescript
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import { Component, input, output, ChangeDetectionStrategy } from '@angular/core';
-import type { AgentRef } from '@cacheplane/angular';
+import type { AgentRef } from '@cacheplane/langgraph';
 
 export type InterruptAction = 'accept' | 'edit' | 'respond' | 'ignore';
 
@@ -1638,7 +1638,7 @@ Create `libs/chat/src/lib/compositions/chat-subagent-card/chat-subagent-card.com
 ```typescript
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import { Component, computed, input, signal, ChangeDetectionStrategy } from '@angular/core';
-import type { SubagentStreamRef } from '@cacheplane/angular';
+import type { SubagentStreamRef } from '@cacheplane/langgraph';
 
 @Component({
   selector: 'chat-subagent-card',
@@ -1952,7 +1952,7 @@ Create `libs/chat/src/lib/compositions/chat-debug/chat-debug.component.ts`:
 ```typescript
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import { Component, computed, input, signal, ChangeDetectionStrategy } from '@angular/core';
-import type { AgentRef } from '@cacheplane/angular';
+import type { AgentRef } from '@cacheplane/langgraph';
 import { ChatMessagesComponent } from '../../primitives/chat-messages/chat-messages.component';
 import { MessageTemplateDirective } from '../../primitives/chat-messages/message-template.directive';
 import { ChatInputComponent } from '../../primitives/chat-input/chat-input.component';

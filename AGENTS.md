@@ -36,9 +36,9 @@ This file is for agents working in this repository. It is contributor-facing, no
 
 ## Repo Layout
 
-- `libs/agent`: main Angular library (`@cacheplane/angular`).
+- `libs/langgraph`: main Angular library (`@cacheplane/langgraph`).
 - `apps/website`: docs and marketing site.
-- `packages/mcp`: MCP server package (`@cacheplane/angular-mcp`).
+- `packages/mcp`: MCP server package (`@cacheplane/langgraph-mcp`).
 - `e2e/agent-e2e`: end-to-end coverage for the workspace.
 - `apps/demo` and `apps/demo-e2e`: demo application and related end-to-end coverage.
 

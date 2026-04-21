@@ -5,7 +5,7 @@ import {
   input,
   ChangeDetectionStrategy,
 } from '@angular/core';
-import type { AgentRef } from '@cacheplane/angular';
+import type { AgentRef } from '@cacheplane/langgraph';
 
 export function extractErrorMessage(error: unknown): string | null {
   if (!error) return null;

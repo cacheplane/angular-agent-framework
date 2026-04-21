@@ -8,7 +8,7 @@ import {
 } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
 import type { BaseMessage } from '@langchain/core/messages';
-import type { AgentRef } from '@cacheplane/angular';
+import type { AgentRef } from '@cacheplane/langgraph';
 import { MessageTemplateDirective } from './message-template.directive';
 import type { MessageTemplateType } from '../../chat.types';
 

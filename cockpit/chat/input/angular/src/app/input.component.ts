@@ -3,7 +3,7 @@ import { Component, computed } from '@angular/core';
 import { ChatInputComponent as ChatInputPrimitive } from '@cacheplane/chat';
 import { ChatMessagesComponent } from '@cacheplane/chat';
 import { ExampleChatLayoutComponent } from '@cacheplane/example-layouts';
-import { agent } from '@cacheplane/angular';
+import { agent } from '@cacheplane/langgraph';
 import { environment } from '../environments/environment';
 
 /**

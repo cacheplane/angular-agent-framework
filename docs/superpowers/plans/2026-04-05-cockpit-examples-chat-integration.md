@@ -6,7 +6,7 @@
 
 **Architecture:** Each example follows the streaming reference pattern: standalone Angular app with `bootstrapApplication()`, `provideAgent()` + `provideChat()`, Angular CLI build/serve targets, proxy to LangGraph backend. LangGraph examples use `<chat>`, deep-agents examples use `<chat-debug>`.
 
-**Tech Stack:** Angular 21, `@cacheplane/chat`, `@cacheplane/angular`, `@angular-devkit/build-angular`
+**Tech Stack:** Angular 21, `@cacheplane/chat`, `@cacheplane/langgraph`, `@angular-devkit/build-angular`
 
 **Spec:** `docs/superpowers/specs/2026-04-05-cockpit-examples-chat-integration.md`
 
@@ -64,7 +64,7 @@ Each component follows this template (replace `{Topic}`, `{topic}`, `{selector}`
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import { Component } from '@angular/core';
 import { ChatComponent } from '@cacheplane/chat';
-import { agent } from '@cacheplane/angular';
+import { agent } from '@cacheplane/langgraph';
 import { environment } from '../environments/environment';
 
 @Component({
@@ -88,7 +88,7 @@ Where each example uses its existing environment config keys (e.g., `environment
 ```typescript
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import { ApplicationConfig } from '@angular/core';
-import { provideAgent } from '@cacheplane/angular';
+import { provideAgent } from '@cacheplane/langgraph';
 import { provideChat } from '@cacheplane/chat';
 import { environment } from '../environments/environment';
 

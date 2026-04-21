@@ -59,7 +59,7 @@ export function AngularHero() {
             fontFamily: "'JetBrains Mono', monospace", fontSize: 11, letterSpacing: '0.08em',
             color: tokens.colors.accent, textTransform: 'uppercase', display: 'inline-block', marginBottom: '1.5rem',
           }}>
-            @cacheplane/angular
+            @cacheplane/langgraph
           </span>
         </motion.div>
 
@@ -1037,7 +1037,7 @@ import { tokens } from '@cacheplane/design-tokens';
 const SIBLINGS = [
   {
     tag: 'Agent',
-    pkg: '@cacheplane/angular',
+    pkg: '@cacheplane/langgraph',
     color: tokens.colors.accent,
     rgb: '0,64,144',
     headline: 'The reactive bridge to LangGraph',
@@ -1194,7 +1194,7 @@ import { tokens } from '@cacheplane/design-tokens';
 const SIBLINGS = [
   {
     tag: 'Agent',
-    pkg: '@cacheplane/angular',
+    pkg: '@cacheplane/langgraph',
     color: tokens.colors.accent,
     rgb: '0,64,144',
     headline: 'The reactive bridge to LangGraph',

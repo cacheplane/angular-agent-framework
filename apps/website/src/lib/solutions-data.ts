@@ -57,7 +57,7 @@ export const SOLUTIONS: SolutionConfig[] = [
     architectureLayers: [
       {
         library: 'Agent',
-        pkg: '@cacheplane/angular',
+        pkg: '@cacheplane/langgraph',
         role: 'Signal-native streaming with first-class interrupt support. Every agent action can require human approval before execution. Thread persistence gives you a complete, immutable history of every decision.',
       },
       {
@@ -106,7 +106,7 @@ export const SOLUTIONS: SolutionConfig[] = [
     architectureLayers: [
       {
         library: 'Agent',
-        pkg: '@cacheplane/angular',
+        pkg: '@cacheplane/langgraph',
         role: 'Streams query results token-by-token as the LangGraph agent reasons over your data. Thread persistence means users can refine questions without re-running expensive queries.',
       },
       {
@@ -155,7 +155,7 @@ export const SOLUTIONS: SolutionConfig[] = [
     architectureLayers: [
       {
         library: 'Agent',
-        pkg: '@cacheplane/angular',
+        pkg: '@cacheplane/langgraph',
         role: 'LangGraph interrupts let the agent pause before sensitive actions — refunds, account changes, escalations. Thread persistence preserves the full conversation across bot-to-human handoffs.',
       },
       {

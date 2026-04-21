@@ -150,7 +150,7 @@ Tone: Direct, technical, peer-to-peer. No fluff. Audience is senior Angular engi
     id: 'angular',
     title: 'The Enterprise Guide to Agent Streaming in Angular',
     subtitle: 'Ship LangGraph agents in Angular — without building the plumbing',
-    eyebrow: '@cacheplane/angular · Enterprise Guide',
+    eyebrow: '@cacheplane/langgraph · Enterprise Guide',
     coverGradient: 'linear-gradient(135deg, #eaf3ff 0%, #e6f4ff 45%, #f4f0ff 70%, #fef0f3 100%)',
     outputPdf: 'apps/website/public/whitepapers/angular.pdf',
     outputHtml: 'apps/website/public/whitepapers/angular-preview.html',
@@ -181,7 +181,7 @@ Tone: Direct, technical, peer-to-peer. No fluff. Audience is senior Angular engi
 
 Chapter topic: The agent() API
 
-Context: @cacheplane/angular exposes a signal-native API for streaming LangGraph agents into Angular components. The core primitive is agent() — a function that returns reactive signals wired directly to the agent stream, with no manual subscription management, no zone-patching, and no token accumulation logic.
+Context: @cacheplane/langgraph exposes a signal-native API for streaming LangGraph agents into Angular components. The core primitive is agent() — a function that returns reactive signals wired directly to the agent stream, with no manual subscription management, no zone-patching, and no token accumulation logic.
 
 Cover:
 - How agent() returns a structured ref with typed signals: messages(), isStreaming(), error(), interrupt()
@@ -220,7 +220,7 @@ Tone: Direct, technical, peer-to-peer. No fluff. Audience is senior Angular engi
 
 Chapter topic: Interrupt & Approval Flows
 
-Context: Agents that take real-world actions — sending emails, executing queries, modifying records — must pause for human confirmation. LangGraph's interrupt() primitive enables this on the backend. @cacheplane/angular surfaces it as a reactive signal, eliminating the need for polling, websockets, or custom resume endpoints.
+Context: Agents that take real-world actions — sending emails, executing queries, modifying records — must pause for human confirmation. LangGraph's interrupt() primitive enables this on the backend. @cacheplane/langgraph surfaces it as a reactive signal, eliminating the need for polling, websockets, or custom resume endpoints.
 
 Cover:
 - How LangGraph interrupt() pauses graph execution and what the resume payload looks like
@@ -239,7 +239,7 @@ Tone: Direct, technical, peer-to-peer. No fluff. Audience is senior Angular engi
 
 Chapter topic: Full LangGraph Feature Coverage
 
-Context: Most Angular LLM integrations support basic chat. @cacheplane/angular is designed for the full LangGraph feature surface: tool calls, subgraphs, time travel, and DeepAgent multi-agent coordination. Teams shouldn't have to drop down to raw SSE parsing to access advanced graph features.
+Context: Most Angular LLM integrations support basic chat. @cacheplane/langgraph is designed for the full LangGraph feature surface: tool calls, subgraphs, time travel, and DeepAgent multi-agent coordination. Teams shouldn't have to drop down to raw SSE parsing to access advanced graph features.
 
 Cover:
 - Tool call streaming: how tool invocation events surface through the agent ref without manual parsing
@@ -424,7 +424,7 @@ Cover:
 - The headless tier: chat-messages, chat-input, chat-tool-calls, chat-interrupt — behavior without styling
 - The prebuilt tier: chat-prebuilt — a full chat interface in one component, zero configuration
 - How the two tiers compose: using prebuilt for 90% of UI, dropping to headless for custom sections
-- The component model: how @cacheplane/chat connects to the agent ref from @cacheplane/angular
+- The component model: how @cacheplane/chat connects to the agent ref from @cacheplane/langgraph
 - Message rendering: how AIMessage[] from the agent signal maps to chat message display
 - Code example: <chat-prebuilt> with an agent ref (6-10 lines)
 - When to use headless vs. prebuilt and how to migrate between them

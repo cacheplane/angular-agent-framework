@@ -1,10 +1,10 @@
 {
-  "name": "@cacheplane/angular-mcp",
+  "name": "@cacheplane/langgraph-mcp",
   "version": "0.1.0",
-  "description": "MCP server for the @cacheplane/angular library",
+  "description": "MCP server for the @cacheplane/langgraph library",
   "license": "PolyForm-Noncommercial-1.0.0",
   "main": "src/index.js",
-  "bin": { "@cacheplane/angular-mcp": "src/index.js" },
+  "bin": { "@cacheplane/langgraph-mcp": "src/index.js" },
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "smoke": "node --test package-smoke.test.mjs",

@@ -11,8 +11,8 @@ Rename both published packages to the `@cacheplane` npm scope.
 
 | Before | After |
 |---|---|
-| `angular` | `@cacheplane/angular` |
-| `@angular/mcp` | `@cacheplane/angular-mcp` |
+| `angular` | `@cacheplane/langgraph` |
+| `@angular/mcp` | `@cacheplane/langgraph-mcp` |
 
 The website brand name **angular** (used in the hero SVG wordmark, site title, and domain) is unchanged.
 
@@ -24,15 +24,15 @@ The website brand name **angular** (used in the hero SVG wordmark, site title, a
 
 | File | Change |
 |---|---|
-| `libs/angular/package.json` | `"name": "@cacheplane/angular"` |
-| `packages/mcp/package.json` | `"name": "@cacheplane/angular-mcp"`, `"bin": { "@cacheplane/angular-mcp": "dist/index.js" }` |
+| `libs/angular/package.json` | `"name": "@cacheplane/langgraph"` |
+| `packages/mcp/package.json` | `"name": "@cacheplane/langgraph-mcp"`, `"bin": { "@cacheplane/langgraph-mcp": "dist/index.js" }` |
 
 ### TypeScript path aliases
 
 **`tsconfig.base.json`:**
 ```json
 "paths": {
-  "@cacheplane/angular": ["libs/angular/src/public-api.ts"]
+  "@cacheplane/langgraph": ["libs/angular/src/public-api.ts"]
 }
 ```
 
@@ -54,7 +54,7 @@ The website brand name **angular** (used in the hero SVG wordmark, site title, a
 
 ### MCP binary name
 
-The `npx` command changed from `npx @angular/mcp` to `npx @cacheplane/angular-mcp`.
+The `npx` command changed from `npx @angular/mcp` to `npx @cacheplane/langgraph-mcp`.
 
 ---
 

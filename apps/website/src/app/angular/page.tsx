@@ -10,7 +10,7 @@ import { AngularFooterCTA } from '../../components/landing/angular/AngularFooter
 import { tokens } from '@cacheplane/design-tokens';
 
 export const metadata = {
-  title: '@cacheplane/angular — Agent Streaming for Angular',
+  title: '@cacheplane/langgraph — Agent Streaming for Angular',
   description: 'Ship LangGraph agents in Angular. Signal-native streaming, thread persistence, interrupts, and deterministic testing.',
 };
 
