@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import { signal, WritableSignal } from '@angular/core';
+import type { Observable } from 'rxjs';
 import type {
   ChatAgent,
   ChatMessage,
@@ -10,16 +11,18 @@ import type {
   ChatSubmitInput,
   ChatSubmitOptions,
 } from '../agent';
+import type { ChatCustomEvent } from '../agent/chat-custom-event';
 
 export interface MockChatAgent extends ChatAgent {
-  messages:  WritableSignal<ChatMessage[]>;
-  status:    WritableSignal<ChatStatus>;
-  isLoading: WritableSignal<boolean>;
-  error:     WritableSignal<unknown>;
-  toolCalls: WritableSignal<ChatToolCall[]>;
-  state:     WritableSignal<Record<string, unknown>>;
-  interrupt?: WritableSignal<ChatInterrupt | undefined>;
-  subagents?: WritableSignal<Map<string, ChatSubagent>>;
+  messages:      WritableSignal<ChatMessage[]>;
+  status:        WritableSignal<ChatStatus>;
+  isLoading:     WritableSignal<boolean>;
+  error:         WritableSignal<unknown>;
+  toolCalls:     WritableSignal<ChatToolCall[]>;
+  state:         WritableSignal<Record<string, unknown>>;
+  interrupt?:    WritableSignal<ChatInterrupt | undefined>;
+  subagents?:    WritableSignal<Map<string, ChatSubagent>>;
+  customEvents$?: Observable<ChatCustomEvent>;
   /** Captured calls to submit() in order. */
   submitCalls: Array<{ input: ChatSubmitInput; opts?: ChatSubmitOptions }>;
   /** Count of stop() invocations. */
@@ -35,6 +38,7 @@ export interface MockChatAgentOptions {
   state?: Record<string, unknown>;
   withInterrupt?: boolean;
   withSubagents?: boolean;
+  customEvents$?: Observable<ChatCustomEvent>;
 }
 
 export function mockChatAgent(opts: MockChatAgentOptions = {}): MockChatAgent {
@@ -57,8 +61,9 @@ export function mockChatAgent(opts: MockChatAgentOptions = {}): MockChatAgent {
 
   const agent: MockChatAgent = {
     messages, status, isLoading, error, toolCalls, state,
-    ...(interrupt ? { interrupt } : {}),
-    ...(subagents ? { subagents } : {}),
+    ...(interrupt      ? { interrupt }                            : {}),
+    ...(subagents      ? { subagents }                            : {}),
+    ...(opts.customEvents$ ? { customEvents$: opts.customEvents$ } : {}),
     submit: async (input, submitOpts) => { submitCalls.push({ input, opts: submitOpts }); },
     stop: async () => { stopCount++; },
     submitCalls,

@@ -55,5 +55,14 @@ export function runChatAgentConformance(
       const result = factory().stop();
       expect(result).toBeInstanceOf(Promise);
     });
+
+    it('if customEvents$ is present, it is an Observable-like with .subscribe', () => {
+      const agent = factory();
+      if (agent.customEvents$ !== undefined) {
+        expect(typeof agent.customEvents$.subscribe).toBe('function');
+      } else {
+        expect(agent.customEvents$).toBeUndefined();
+      }
+    });
   });
 }
