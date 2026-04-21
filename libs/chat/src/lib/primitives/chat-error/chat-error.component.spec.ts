@@ -2,7 +2,7 @@
 import { describe, it, expect } from 'vitest';
 import { signal, computed } from '@angular/core';
 import { extractErrorMessage } from './chat-error.component';
-import { createMockAgentRef } from '../../testing/mock-agent-ref';
+import { mockChatAgent } from '../../testing/mock-chat-agent';
 
 describe('extractErrorMessage()', () => {
   it('returns null for null error', () => {
@@ -27,42 +27,42 @@ describe('extractErrorMessage()', () => {
 });
 
 describe('ChatErrorComponent — errorMessage computed', () => {
-  it('errorMessage is null when ref.error is null', () => {
-    const mockRef = createMockAgentRef({ error: null });
-    const ref$ = signal(mockRef);
+  it('errorMessage is null when agent.error is null', () => {
+    const agent = mockChatAgent({ error: null });
+    const agent$ = signal(agent);
 
-    const errorMessage = computed(() => extractErrorMessage(ref$().error()));
+    const errorMessage = computed(() => extractErrorMessage(agent$().error()));
 
     expect(errorMessage()).toBeNull();
   });
 
   it('errorMessage reflects Error object message', () => {
-    const mockRef = createMockAgentRef({ error: new Error('boom') });
-    const ref$ = signal(mockRef);
+    const agent = mockChatAgent({ status: 'error', error: new Error('boom') });
+    const agent$ = signal(agent);
 
-    const errorMessage = computed(() => extractErrorMessage(ref$().error()));
+    const errorMessage = computed(() => extractErrorMessage(agent$().error()));
 
     expect(errorMessage()).toBe('boom');
   });
 
   it('errorMessage reflects string error', () => {
-    const mockRef = createMockAgentRef({ error: 'timeout' });
-    const ref$ = signal(mockRef);
+    const agent = mockChatAgent({ error: 'timeout' });
+    const agent$ = signal(agent);
 
-    const errorMessage = computed(() => extractErrorMessage(ref$().error()));
+    const errorMessage = computed(() => extractErrorMessage(agent$().error()));
 
     expect(errorMessage()).toBe('timeout');
   });
 
-  it('errorMessage updates reactively when ref changes', () => {
-    const noErrorRef = createMockAgentRef({ error: null });
-    const errorRef = createMockAgentRef({ error: new Error('failed') });
-    const ref$ = signal(noErrorRef);
+  it('errorMessage updates reactively when agent changes', () => {
+    const noErrorAgent = mockChatAgent({ error: null });
+    const errorAgent = mockChatAgent({ status: 'error', error: new Error('failed') });
+    const agent$ = signal(noErrorAgent);
 
-    const errorMessage = computed(() => extractErrorMessage(ref$().error()));
+    const errorMessage = computed(() => extractErrorMessage(agent$().error()));
 
     expect(errorMessage()).toBeNull();
-    ref$.set(errorRef);
+    agent$.set(errorAgent);
     expect(errorMessage()).toBe('failed');
   });
 });

@@ -5,7 +5,7 @@ import {
   input,
   ChangeDetectionStrategy,
 } from '@angular/core';
-import type { AgentRef } from '@cacheplane/langgraph';
+import type { ChatAgent } from '../../agent';
 
 export function extractErrorMessage(error: unknown): string | null {
   if (!error) return null;
@@ -29,6 +29,6 @@ export function extractErrorMessage(error: unknown): string | null {
   `,
 })
 export class ChatErrorComponent {
-  readonly ref = input.required<AgentRef<any, any>>();
-  readonly errorMessage = computed(() => extractErrorMessage(this.ref().error()));
+  readonly agent = input.required<ChatAgent>();
+  readonly errorMessage = computed(() => extractErrorMessage(this.agent().error()));
 }
