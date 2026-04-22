@@ -54,6 +54,7 @@ export type { InterruptAction } from './lib/compositions/chat-interrupt-panel/ch
 export { ChatToolCallCardComponent } from './lib/compositions/chat-tool-call-card/chat-tool-call-card.component';
 export type { ToolCallInfo } from './lib/compositions/chat-tool-call-card/chat-tool-call-card.component';
 export { ChatSubagentCardComponent } from './lib/compositions/chat-subagent-card/chat-subagent-card.component';
+export { ChatTimelineSliderComponent } from './lib/compositions/chat-timeline-slider/chat-timeline-slider.component';
 
 // Shared styles & utilities
 export { CHAT_THEME_STYLES } from './lib/styles/chat-theme';

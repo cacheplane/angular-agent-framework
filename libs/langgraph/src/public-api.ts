@@ -31,8 +31,6 @@ export { MockAgentTransport } from './lib/transport/mock-stream.transport';
 export { FetchStreamTransport } from './lib/transport/fetch-stream.transport';
 
 // LangGraph-specific chat primitives (checkpoint_id / ThreadState / fork-replay UI)
-export { ChatTimelineSliderComponent } from './lib/compositions/chat-timeline-slider/chat-timeline-slider.component';
-
 export { ChatDebugComponent } from './lib/compositions/chat-debug/chat-debug.component';
 export { toDebugCheckpoint, extractStateValues } from './lib/compositions/chat-debug/debug-utils';
 export { DebugCheckpointCardComponent } from './lib/compositions/chat-debug/debug-checkpoint-card.component';

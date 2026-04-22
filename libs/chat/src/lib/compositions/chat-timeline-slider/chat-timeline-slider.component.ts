@@ -1,14 +1,9 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// TODO(phase-3): migrate from AgentRef to ChatAgent contract.
 import {
-  Component,
-  computed,
-  input,
-  output,
-  signal,
+  Component, computed, input, output, signal,
   ChangeDetectionStrategy,
 } from '@angular/core';
-import type { AgentRef, ThreadState } from '../../agent.types';
+import type { ChatAgentWithHistory, ChatCheckpoint } from '../../agent';
 
 @Component({
   selector: 'chat-timeline-slider',
@@ -26,12 +21,11 @@ import type { AgentRef, ThreadState } from '../../agent.types';
       }
 
       <div class="space-y-1">
-        @for (state of history(); track $index; let i = $index) {
+        @for (cp of history(); track $index; let i = $index) {
           <div
             class="flex items-center gap-2 rounded-lg border px-3 py-2 transition-colors"
             [class]="i === selectedIndex() ? 'border-[var(--chat-input-focus-border)] bg-[var(--chat-bg-hover)]' : 'border-[var(--chat-border)] bg-[var(--chat-bg)] hover:bg-[var(--chat-bg-hover)]'"
           >
-            <!-- Checkpoint indicator -->
             <span
               class="w-5 h-5 flex items-center justify-center rounded-full text-xs font-bold"
               [class]="i === selectedIndex() ? 'bg-[var(--chat-send-bg)] text-[var(--chat-send-text)]' : 'bg-[var(--chat-bg-alt)] text-[var(--chat-text-muted)]'"
@@ -39,32 +33,26 @@ import type { AgentRef, ThreadState } from '../../agent.types';
               {{ i + 1 }}
             </span>
 
-            <!-- Checkpoint info -->
             <div class="flex-1 min-w-0">
               <p class="text-xs font-medium text-[var(--chat-text)] truncate">
-                {{ checkpointLabel(state, i) }}
+                {{ cp.label ?? 'Step ' + (i + 1) }}
               </p>
-              @if (state.checkpoint?.checkpoint_id) {
-                <p class="text-xs text-[var(--chat-text-muted)] font-mono truncate">{{ state.checkpoint?.checkpoint_id }}</p>
+              @if (cp.id) {
+                <p class="text-xs text-[var(--chat-text-muted)] font-mono truncate">{{ cp.id }}</p>
               }
             </div>
 
-            <!-- Action buttons -->
             <div class="flex gap-1 shrink-0">
               <button
                 class="px-2 py-1 text-xs rounded bg-[var(--chat-bg-alt)] text-[var(--chat-text)] hover:bg-[var(--chat-bg-hover)] transition-colors"
                 title="Replay from this checkpoint"
-                (click)="replay(state)"
-              >
-                Replay
-              </button>
+                (click)="replay(cp)"
+              >Replay</button>
               <button
                 class="px-2 py-1 text-xs rounded bg-[var(--chat-bg-alt)] text-[var(--chat-text)] hover:bg-[var(--chat-bg-hover)] transition-colors"
                 title="Fork from this checkpoint"
-                (click)="fork(state, i)"
-              >
-                Fork
-              </button>
+                (click)="fork(cp, i)"
+              >Fork</button>
             </div>
           </div>
         }
@@ -73,34 +61,21 @@ import type { AgentRef, ThreadState } from '../../agent.types';
   `,
 })
 export class ChatTimelineSliderComponent {
-  readonly ref = input.required<AgentRef<any, any>>();
+  readonly agent = input.required<ChatAgentWithHistory>();
 
   readonly selectedIndex = signal<number>(-1);
 
-  readonly history = computed((): ThreadState<any>[] => this.ref().history());
+  readonly history = computed<ChatCheckpoint[]>(() => this.agent().history());
 
-  /** Emits the checkpoint_id when the user requests replay from that checkpoint. */
   readonly replayRequested = output<string>();
-  /** Emits the checkpoint_id when the user requests a fork from that checkpoint. */
   readonly forkRequested = output<string>();
 
-  checkpointLabel(state: ThreadState<any>, index: number): string {
-    if (state.checkpoint?.checkpoint_id) {
-      return `Checkpoint ${index + 1}`;
-    }
-    return `State ${index + 1}`;
+  replay(cp: ChatCheckpoint): void {
+    if (cp.id) this.replayRequested.emit(cp.id);
   }
 
-  replay(state: ThreadState<any>): void {
-    if (state.checkpoint?.checkpoint_id) {
-      this.replayRequested.emit(state.checkpoint.checkpoint_id);
-    }
-  }
-
-  fork(state: ThreadState<any>, index: number): void {
+  fork(cp: ChatCheckpoint, index: number): void {
     this.selectedIndex.set(index);
-    if (state.checkpoint?.checkpoint_id) {
-      this.forkRequested.emit(state.checkpoint.checkpoint_id);
-    }
+    if (cp.id) this.forkRequested.emit(cp.id);
   }
 }
