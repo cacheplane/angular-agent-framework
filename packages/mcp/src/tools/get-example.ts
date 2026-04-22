@@ -2,7 +2,7 @@
 const EXAMPLES: Record<string, string> = {
   'basic-chat': `// Basic chat component with angular
 import { Component } from '@angular/core';
-import { agent } from '@cacheplane/angular';
+import { agent } from '@cacheplane/langgraph';
 import type { BaseMessage } from '@langchain/core/messages';
 
 @Component({
@@ -26,7 +26,7 @@ export class ChatComponent {
 
   'thread-persistence': `// Thread persistence with localStorage
 import { Component, signal } from '@angular/core';
-import { agent } from '@cacheplane/angular';
+import { agent } from '@cacheplane/langgraph';
 import type { BaseMessage } from '@langchain/core/messages';
 
 @Component({ selector: 'app-chat', template: '' })
@@ -42,7 +42,7 @@ export class ChatComponent {
 
   'system-prompt': `// System prompt configuration per session
 import { Component } from '@angular/core';
-import { agent } from '@cacheplane/angular';
+import { agent } from '@cacheplane/langgraph';
 
 @Component({ selector: 'app-chat', template: '' })
 export class ChatComponent {
@@ -54,7 +54,7 @@ export class ChatComponent {
 
   'mock-testing': `// Unit testing with MockAgentTransport
 import { TestBed } from '@angular/core/testing';
-import { agent, MockAgentTransport } from '@cacheplane/angular';
+import { agent, MockAgentTransport } from '@cacheplane/langgraph';
 import type { BaseMessage } from '@langchain/core/messages';
 
 describe('ChatComponent', () => {
@@ -73,7 +73,7 @@ describe('ChatComponent', () => {
 
   'interrupts': `// Handling interrupts (human-in-the-loop)
 import { Component } from '@angular/core';
-import { agent } from '@cacheplane/angular';
+import { agent } from '@cacheplane/langgraph';
 
 @Component({
   selector: 'app-chat',
@@ -95,7 +95,7 @@ export class ChatComponent {
 
   'subagent-progress': `// Showing subagent tool call progress
 import { Component } from '@angular/core';
-import { agent } from '@cacheplane/angular';
+import { agent } from '@cacheplane/langgraph';
 
 @Component({
   selector: 'app-chat',
@@ -110,7 +110,7 @@ export class ChatComponent {
 }`,
 
   'custom-transport': `// Custom transport with auth headers
-import { AgentTransport } from '@cacheplane/angular';
+import { AgentTransport } from '@cacheplane/langgraph';
 
 export class AuthTransport implements AgentTransport {
   async *stream(input: unknown, _options: unknown): AsyncGenerator<unknown> {

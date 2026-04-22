@@ -1,6 +1,6 @@
 Write unit tests for my Angular component that uses angular, without hitting a real LangGraph server.
 
-Use MockAgentTransport from '@cacheplane/angular'. It implements AgentTransport and lets you script exactly what events the stream emits.
+Use MockAgentTransport from '@cacheplane/langgraph'. It implements AgentTransport and lets you script exactly what events the stream emits.
 
 Test setup:
 const transport = new MockAgentTransport();

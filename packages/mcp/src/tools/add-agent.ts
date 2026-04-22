@@ -28,12 +28,12 @@ export function handleAddAgent(args: Record<string, unknown>) {
 
 1. Install the package:
 \`\`\`bash
-npm install @cacheplane/angular
+npm install @cacheplane/langgraph
 \`\`\`
 
 2. Apply this change to ${appConfigPath}:
 \`\`\`diff
-+import { provideAgent } from '@cacheplane/angular';
++import { provideAgent } from '@cacheplane/langgraph';
 
  export const appConfig: ApplicationConfig = {
    providers: [

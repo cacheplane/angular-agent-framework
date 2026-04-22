@@ -99,7 +99,7 @@ Dark card (`#1a1b26`), centered, width 220px. Shows "LangGraph Cloud" label and 
 ### Layer cards
 
 Three cards with the established color scheme:
-- `@cacheplane/angular` — blue (`#004090`), tag "Primitives"
+- `@cacheplane/langgraph` — blue (`#004090`), tag "Primitives"
 - `@cacheplane/chat` — purple (`#5a00c8`), tag "UI Layer"
 - `@cacheplane/render` — green (`#1a7a40`), tag "Gen UI"
 

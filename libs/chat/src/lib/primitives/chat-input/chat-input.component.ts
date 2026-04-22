@@ -10,15 +10,15 @@ import {
   ChangeDetectionStrategy,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import type { AgentRef } from '@cacheplane/angular';
+import type { ChatAgent } from '../../agent';
 
 export function submitMessage(
-  ref: AgentRef<any, any>,
+  agent: ChatAgent,
   text: string,
 ): string | null {
   const trimmed = text.trim();
   if (!trimmed) return null;
-  ref.submit({ messages: [{ role: 'human', content: trimmed }] });
+  void agent.submit({ message: trimmed });
   return trimmed;
 }
 
@@ -74,18 +74,18 @@ export function submitMessage(
   `,
 })
 export class ChatInputComponent {
-  readonly ref = input.required<AgentRef<any, any>>();
+  readonly agent = input.required<ChatAgent>();
   readonly submitOnEnter = input<boolean>(true);
   readonly placeholder = input<string>('');
   readonly submitted = output<string>();
   readonly messageText = signal<string>('');
-  readonly isDisabled = computed(() => this.ref().isLoading());
+  readonly isDisabled = computed(() => this.agent().isLoading());
   readonly focused = signal(false);
 
   private readonly textareaEl = viewChild<ElementRef<HTMLTextAreaElement>>('textareaEl');
 
   onSubmit(): void {
-    const submitted = submitMessage(this.ref(), this.messageText());
+    const submitted = submitMessage(this.agent(), this.messageText());
     if (submitted !== null) {
       this.submitted.emit(submitted);
       this.messageText.set('');

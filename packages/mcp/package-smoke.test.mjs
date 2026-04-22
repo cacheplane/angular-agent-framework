@@ -14,7 +14,7 @@ const packageJsonPath = path.join(outputRoot, 'package.json');
 
 test('source package manifest entrypoints exist locally', () => {
   const packageJson = require('./package.json');
-  const binPath = packageJson.bin['@cacheplane/angular-mcp'];
+  const binPath = packageJson.bin['@cacheplane/langgraph-mcp'];
 
   assert.equal(fs.existsSync(path.join(workspaceRoot, 'packages/mcp', packageJson.main)), true);
   assert.equal(fs.existsSync(path.join(workspaceRoot, 'packages/mcp', binPath)), true);
@@ -26,7 +26,7 @@ function loadBuiltPackageJson() {
 
 test('built package manifest entrypoints resolve inside Nx output', () => {
   const packageJson = loadBuiltPackageJson();
-  const binPath = packageJson.bin['@cacheplane/angular-mcp'];
+  const binPath = packageJson.bin['@cacheplane/langgraph-mcp'];
 
   assert.equal(fs.existsSync(path.join(outputRoot, packageJson.main)), true);
   assert.equal(fs.existsSync(path.join(outputRoot, binPath)), true);

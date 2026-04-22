@@ -203,8 +203,8 @@ Sibling data is defined inline in each StackSiblings component (not imported fro
 | Page | Card 1 | Card 2 |
 |---|---|---|
 | `/angular` | Render (green, `@cacheplane/render`, "Agents that render UI — on open standards") | Chat (purple, `@cacheplane/chat`, "Production chat UI in days, not sprints") |
-| `/render` | Agent (blue, `@cacheplane/angular`, "The reactive bridge to LangGraph") | Chat (purple, `@cacheplane/chat`, "Production chat UI in days, not sprints") |
-| `/chat` | Agent (blue, `@cacheplane/angular`, "The reactive bridge to LangGraph") | Render (green, `@cacheplane/render`, "Agents that render UI — on open standards") |
+| `/render` | Agent (blue, `@cacheplane/langgraph`, "The reactive bridge to LangGraph") | Chat (purple, `@cacheplane/chat`, "Production chat UI in days, not sprints") |
+| `/chat` | Agent (blue, `@cacheplane/langgraph`, "The reactive bridge to LangGraph") | Render (green, `@cacheplane/render`, "Agents that render UI — on open standards") |
 
 ### Mobile Breakpoint
 

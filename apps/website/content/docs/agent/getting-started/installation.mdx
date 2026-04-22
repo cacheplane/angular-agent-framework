@@ -19,7 +19,7 @@ A running LangGraph agent accessible via HTTP. Can be local (langgraph dev) or d
 ## Install the package
 
 ```bash
-npm install @cacheplane/angular
+npm install @cacheplane/langgraph
 ```
 
 This installs the library and its peer dependencies including `@langchain/langgraph-sdk`.
@@ -31,7 +31,7 @@ Add `provideAgent()` to your application configuration. This sets global default
 ```typescript
 // app.config.ts
 import { ApplicationConfig } from '@angular/core';
-import { provideAgent } from '@cacheplane/angular';
+import { provideAgent } from '@cacheplane/langgraph';
 import { environment } from '../environments/environment';
 
 export const appConfig: ApplicationConfig = {

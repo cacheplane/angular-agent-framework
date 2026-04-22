@@ -31,7 +31,7 @@ npm install @cacheplane/chat
 | `@angular/core` | `^20.0.0 \|\| ^21.0.0` | Yes |
 | `@angular/common` | `^20.0.0 \|\| ^21.0.0` | Yes |
 | `@angular/forms` | `^20.0.0 \|\| ^21.0.0` | Yes |
-| `@cacheplane/angular` | `^0.0.1` | Yes |
+| `@cacheplane/langgraph` | `^0.0.1` | Yes |
 | `@cacheplane/render` | `^0.0.1` | Yes |
 | `@json-render/core` | `^0.16.0` | Yes |
 | `@langchain/core` | `^1.1.33` | Yes |
@@ -45,7 +45,7 @@ The `marked` package is optional. When installed, AI messages are rendered as fu
 To install everything at once:
 
 ```bash
-npm install @cacheplane/chat @cacheplane/angular @cacheplane/render marked
+npm install @cacheplane/chat @cacheplane/langgraph @cacheplane/render marked
 ```
 
 ## Configure provideChat()
@@ -55,7 +55,7 @@ Add `provideChat()` alongside `provideAgent()` in your application configuration
 ```typescript
 // app.config.ts
 import { ApplicationConfig } from '@angular/core';
-import { provideAgent } from '@cacheplane/angular';
+import { provideAgent } from '@cacheplane/langgraph';
 import { provideChat } from '@cacheplane/chat';
 
 export const appConfig: ApplicationConfig = {
@@ -91,7 +91,7 @@ Create a minimal component to verify everything is wired up:
 
 ```typescript
 import { Component, signal } from '@angular/core';
-import { agent } from '@cacheplane/angular';
+import { agent } from '@cacheplane/langgraph';
 import { ChatComponent } from '@cacheplane/chat';
 import type { BaseMessage } from '@langchain/core/messages';
 

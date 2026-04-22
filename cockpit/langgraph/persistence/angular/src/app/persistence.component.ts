@@ -1,6 +1,6 @@
 import { Component, signal } from '@angular/core';
 import { ChatComponent } from '@cacheplane/chat';
-import { agent } from '@cacheplane/angular';
+import { agent, toChatAgent } from '@cacheplane/langgraph';
 import { ExampleChatLayoutComponent } from '@cacheplane/example-layouts';
 import { environment } from '../environments/environment';
 
@@ -26,7 +26,7 @@ interface Thread {
   imports: [ChatComponent, ExampleChatLayoutComponent],
   template: `
     <example-chat-layout sidebarWidth="w-56">
-      <chat main [ref]="stream" class="block flex-1 min-w-0" />
+      <chat main [agent]="chatAgent" class="block flex-1 min-w-0" />
 
       <div sidebar
         class="flex flex-col"
@@ -98,6 +98,7 @@ export class PersistenceComponent {
       }
     },
   });
+  protected readonly chatAgent = toChatAgent(this.stream);
 
   /** Switch to an existing thread by ID. */
   switchThread(id: string): void {

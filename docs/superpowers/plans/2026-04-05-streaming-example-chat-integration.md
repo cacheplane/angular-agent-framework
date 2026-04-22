@@ -2,11 +2,11 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Wire the cockpit `langgraph/streaming/angular` example to correctly consume `@cacheplane/chat` and `@cacheplane/angular`, making it buildable and serveable as a standalone Angular app against a real LangGraph backend.
+**Goal:** Wire the cockpit `langgraph/streaming/angular` example to correctly consume `@cacheplane/chat` and `@cacheplane/langgraph`, making it buildable and serveable as a standalone Angular app against a real LangGraph backend.
 
 **Architecture:** Standalone Angular app bootstrapped with `bootstrapApplication()`. Uses `provideAgent()` for global API URL, `provideChat()` for chat config. `StreamingComponent` creates a `agent()` ref and passes it to `<chat-ui [ref]>`. Proxied to LangGraph dev server on port 8123 via `/api`.
 
-**Tech Stack:** Angular 21, `@cacheplane/chat`, `@cacheplane/angular`, `@angular-devkit/build-angular`, Tailwind CSS
+**Tech Stack:** Angular 21, `@cacheplane/chat`, `@cacheplane/langgraph`, `@angular-devkit/build-angular`, Tailwind CSS
 
 ---
 
@@ -81,7 +81,7 @@ The component must use `chat-ui` selector (the actual ChatComponent selector) wi
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import { Component } from '@angular/core';
 import { ChatComponent } from '@cacheplane/chat';
-import { agent } from '@cacheplane/angular';
+import { agent } from '@cacheplane/langgraph';
 import { environment } from '../environments/environment';
 
 /**
@@ -129,7 +129,7 @@ git commit -m "feat(cockpit): rewrite streaming component with correct chat-ui A
 ```typescript
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import { ApplicationConfig } from '@angular/core';
-import { provideAgent } from '@cacheplane/angular';
+import { provideAgent } from '@cacheplane/langgraph';
 import { provideChat } from '@cacheplane/chat';
 import { environment } from '../environments/environment';
 

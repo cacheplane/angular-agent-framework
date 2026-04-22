@@ -8,7 +8,7 @@ and displays it in a live sidebar.
 </Summary>
 
 <Prompt>
-Add persistent agent memory to this Angular component using `agent()` from `@cacheplane/angular`. Use `stream.value()` to access the `memory` field in graph state, derive a reactive `memoryEntries` signal with Angular's `computed()`, and render the facts in a sidebar panel via the `<cp-chat>` component from `@cacheplane/chat`.
+Add persistent agent memory to this Angular component using `agent()` from `@cacheplane/langgraph`. Use `stream.value()` to access the `memory` field in graph state, derive a reactive `memoryEntries` signal with Angular's `computed()`, and render the facts in a sidebar panel via the `<cp-chat>` component from `@cacheplane/chat`.
 </Prompt>
 
 <Steps>
@@ -19,7 +19,7 @@ Set up `provideAgent()` in your app config with the LangGraph API URL:
 ```typescript
 // app.config.ts
 import { ApplicationConfig } from '@angular/core';
-import { provideAgent } from '@cacheplane/angular';
+import { provideAgent } from '@cacheplane/langgraph';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -37,7 +37,7 @@ In your component, call `agent()` pointing at the `memory` assistant:
 
 ```typescript
 // memory.component.ts
-import { agent } from '@cacheplane/angular';
+import { agent } from '@cacheplane/langgraph';
 
 export class MemoryComponent {
   protected readonly stream = agent({

@@ -29,7 +29,7 @@ If you need to customize the message layout, add components between sections, or
 
 ```typescript
 import { Component, signal } from '@angular/core';
-import { agent } from '@cacheplane/angular';
+import { agent } from '@cacheplane/langgraph';
 import { ChatComponent } from '@cacheplane/chat';
 import type { BaseMessage } from '@langchain/core/messages';
 
@@ -61,7 +61,7 @@ export class ChatPageComponent {
 
 | Input | Type | Default | Description |
 |-------|------|---------|-------------|
-| `ref` | `AgentRef<any, any>` | **Required** | The agent ref providing streaming state. Created by `agent()` from `@cacheplane/angular`. |
+| `ref` | `AgentRef<any, any>` | **Required** | The agent ref providing streaming state. Created by `agent()` from `@cacheplane/langgraph`. |
 | `views` | `ViewRegistry \| undefined` | `undefined` | View registry for generative UI. Maps spec type names to Angular components. Created with `views()` from `@cacheplane/chat`. |
 | `store` | `StateStore \| undefined` | `undefined` | Optional state store for interactive generative UI specs. |
 | `handlers` | `Record<string, (params: Record<string, unknown>) => unknown \| Promise<unknown>>` | `{}` | Event handlers for generative UI specs and A2UI `functionCall` actions. Handlers run in Angular injection context — `inject()` is available inside handler functions. |

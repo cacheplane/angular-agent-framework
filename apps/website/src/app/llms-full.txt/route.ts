@@ -41,7 +41,7 @@ export async function GET() {
     [
       '## MCP server',
       '',
-      'npx @cacheplane/angular-mcp',
+      'npx @cacheplane/langgraph-mcp',
       'Add to Claude Code settings.json, Cursor .cursor/mcp.json, or any MCP-compatible agent.',
     ].join('\n'),
   ];

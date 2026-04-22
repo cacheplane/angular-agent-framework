@@ -298,7 +298,7 @@ git commit -m "feat(website): apply glass treatment to Footer"
 import { useState } from 'react';
 import { tokens } from '../../../lib/design-tokens';
 
-const CMD = 'npm install @cacheplane/angular';
+const CMD = 'npm install @cacheplane/langgraph';
 
 export function InstallStrip() {
   const [copied, setCopied] = useState(false);
@@ -541,7 +541,7 @@ export async function HeroTwoCol() {
             fontSize: 12,
             color: tokens.colors.textMuted,
           }}>
-            npm install @cacheplane/angular
+            npm install @cacheplane/langgraph
           </span>
         </div>
       </div>
@@ -1216,7 +1216,7 @@ const PLANS = [
     features: ['PolyForm Noncommercial 1.0.0', 'Personal projects', 'Academic & research', 'Non-profit internal use'],
     highlight: false,
     cta: 'Get Started',
-    ctaHref: 'https://www.npmjs.com/package/@cacheplane/angular',
+    ctaHref: 'https://www.npmjs.com/package/@cacheplane/langgraph',
   },
   {
     name: 'Developer Seat',

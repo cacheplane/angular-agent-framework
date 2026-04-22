@@ -4,9 +4,9 @@
 
 **Goal:** Update cockpit capability examples to consume `@cacheplane/chat` components, validating the library's API against real LangGraph and Deep Agent use cases.
 
-**Architecture:** Each capability example is a standalone Angular app with its own backend and LangSmith deployment. Examples import `@cacheplane/chat` and `@cacheplane/angular`. The cockpit (React/Next.js) embeds them via the existing embed strategy.
+**Architecture:** Each capability example is a standalone Angular app with its own backend and LangSmith deployment. Examples import `@cacheplane/chat` and `@cacheplane/langgraph`. The cockpit (React/Next.js) embeds them via the existing embed strategy.
 
-**Tech Stack:** Angular 21+, `@cacheplane/chat`, `@cacheplane/angular`, Nx 22
+**Tech Stack:** Angular 21+, `@cacheplane/chat`, `@cacheplane/langgraph`, Nx 22
 
 **Spec:** `docs/superpowers/specs/2026-04-04-chat-component-library-design.md` — Deliverable 3
 
@@ -64,7 +64,7 @@ This is the reference example — all others follow this pattern.
 ```typescript
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import { ApplicationConfig } from '@angular/core';
-import { provideAgent } from '@cacheplane/angular';
+import { provideAgent } from '@cacheplane/langgraph';
 import { provideChat } from '@cacheplane/chat';
 
 export const appConfig: ApplicationConfig = {
@@ -83,7 +83,7 @@ export const appConfig: ApplicationConfig = {
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import { Component, inject, Injector, OnInit } from '@angular/core';
 import { runInInjectionContext } from '@angular/core';
-import { agent } from '@cacheplane/angular';
+import { agent } from '@cacheplane/langgraph';
 import { ChatComponent } from '@cacheplane/chat';
 import type { BaseMessage } from '@langchain/core/messages';
 
@@ -113,7 +113,7 @@ export class AppComponent implements OnInit {
 
 - [ ] **Step 3: Create main.ts and package.json**
 
-Standard Angular bootstrap + package.json with peer deps on `@cacheplane/chat` and `@cacheplane/angular`.
+Standard Angular bootstrap + package.json with peer deps on `@cacheplane/chat` and `@cacheplane/langgraph`.
 
 - [ ] **Step 4: Verify example builds**
 

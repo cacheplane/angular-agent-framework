@@ -6,9 +6,19 @@ import {
   output,
   ChangeDetectionStrategy,
 } from '@angular/core';
-import type { AgentRef } from '@cacheplane/angular';
+import type { ChatAgent } from '../../agent';
+import type { ChatInterrupt } from '../../agent/chat-interrupt';
 
 export type InterruptAction = 'accept' | 'edit' | 'respond' | 'ignore';
+
+/**
+ * Retrieves the current interrupt value from a ChatAgent, or undefined when
+ * the runtime does not expose interrupts.
+ * Exported for unit testing without DOM rendering.
+ */
+export function getInterruptFromAgent(agent: ChatAgent): ChatInterrupt | undefined {
+  return agent.interrupt?.();
+}
 
 @Component({
   selector: 'chat-interrupt-panel',
@@ -75,12 +85,11 @@ export type InterruptAction = 'accept' | 'edit' | 'respond' | 'ignore';
   `,
 })
 export class ChatInterruptPanelComponent {
-  readonly ref = input.required<AgentRef<any, any>>();
+  readonly agent = input.required<ChatAgent>();
 
   readonly action = output<InterruptAction>();
 
-
-  readonly interrupt = computed(() => this.ref().interrupt());
+  readonly interrupt = computed(() => getInterruptFromAgent(this.agent()));
 
   readonly interruptPayload = computed(() => {
     const interrupt = this.interrupt();

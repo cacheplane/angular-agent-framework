@@ -2,12 +2,12 @@
 
 <Summary>
 Build a chat interface that shows real-time file operation logs using `agent()` from
-`@cacheplane/angular`. The agent reads and writes files using tool calls, and the
+`@cacheplane/langgraph`. The agent reads and writes files using tool calls, and the
 sidebar displays each operation as it happens.
 </Summary>
 
 <Prompt>
-Add a file operations sidebar to this Angular component using `agent()` from `@cacheplane/angular`. Use `stream.messages()` to access tool call data, derive `toolCallEntries` with `computed()`, and bind them to the sidebar via the `<cp-chat>` component from `@cacheplane/chat`.
+Add a file operations sidebar to this Angular component using `agent()` from `@cacheplane/langgraph`. Use `stream.messages()` to access tool call data, derive `toolCallEntries` with `computed()`, and bind them to the sidebar via the `<cp-chat>` component from `@cacheplane/chat`.
 </Prompt>
 
 <Steps>
@@ -18,7 +18,7 @@ Set up `provideAgent()` in your app config with the LangGraph API URL:
 ```typescript
 // app.config.ts
 import { ApplicationConfig } from '@angular/core';
-import { provideAgent } from '@cacheplane/angular';
+import { provideAgent } from '@cacheplane/langgraph';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -38,7 +38,7 @@ In your component, call `agent()` with the `assistantId` pointing to your filesy
 
 ```typescript
 // filesystem.component.ts
-import { agent } from '@cacheplane/angular';
+import { agent } from '@cacheplane/langgraph';
 
 export class FilesystemComponent {
   protected readonly stream = agent({

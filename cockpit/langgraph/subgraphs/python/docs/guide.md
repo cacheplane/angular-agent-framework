@@ -2,12 +2,12 @@
 
 <Summary>
 Build a chat interface that visualizes nested agent delegation using `agent()` from
-`@cacheplane/angular`. A parent orchestrator dispatches research tasks to a child
+`@cacheplane/langgraph`. A parent orchestrator dispatches research tasks to a child
 subgraph, and the sidebar tracks each subagent's status in real time using `stream.subagents()`.
 </Summary>
 
 <Prompt>
-Add a subgraph-powered orchestrator to this Angular component using `agent()` from `@cacheplane/angular`. Use `stream.subagents()` to track active child subgraph executions, and derive a `subagentEntries` signal with `computed()` for template iteration. Bind `stream.messages()` via the `<cp-chat>` component from `@cacheplane/chat`.
+Add a subgraph-powered orchestrator to this Angular component using `agent()` from `@cacheplane/langgraph`. Use `stream.subagents()` to track active child subgraph executions, and derive a `subagentEntries` signal with `computed()` for template iteration. Bind `stream.messages()` via the `<cp-chat>` component from `@cacheplane/chat`.
 </Prompt>
 
 <Steps>
@@ -18,7 +18,7 @@ Set up `provideAgent()` in your app config with the LangGraph API URL:
 ```typescript
 // app.config.ts
 import { ApplicationConfig } from '@angular/core';
-import { provideAgent } from '@cacheplane/angular';
+import { provideAgent } from '@cacheplane/langgraph';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -37,7 +37,7 @@ In your component, call `agent()` with the assistant ID pointing to your subgrap
 ```typescript
 // subgraphs.component.ts
 import { Component, computed } from '@angular/core';
-import { agent } from '@cacheplane/angular';
+import { agent } from '@cacheplane/langgraph';
 
 export class SubgraphsComponent {
   protected readonly stream = agent({

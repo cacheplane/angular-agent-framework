@@ -5,7 +5,7 @@ Angular framework libraries.
 
 ## Status
 
-Private, pre-1.0. Consumed by `@cacheplane/angular`, `@cacheplane/render`, and
+Private, pre-1.0. Consumed by `@cacheplane/langgraph`, `@cacheplane/render`, and
 `@cacheplane/chat`. Not intended as a standalone import.
 
 ## Behavior

@@ -463,7 +463,7 @@ Create `cockpit/langgraph/generative-ui/angular/src/app/generative-ui.component.
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import { Component } from '@angular/core';
 import { ChatComponent, views } from '@cacheplane/chat';
-import { agent } from '@cacheplane/angular';
+import { agent } from '@cacheplane/langgraph';
 import { environment } from '../environments/environment';
 import { WeatherCardComponent } from './views/weather-card.component';
 import { StatCardComponent } from './views/stat-card.component';
@@ -498,7 +498,7 @@ Create `cockpit/langgraph/generative-ui/angular/src/app/app.config.ts`:
 ```typescript
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import { ApplicationConfig } from '@angular/core';
-import { provideAgent } from '@cacheplane/angular';
+import { provideAgent } from '@cacheplane/langgraph';
 import { provideChat } from '@cacheplane/chat';
 import { environment } from '../environments/environment';
 
@@ -619,7 +619,7 @@ Create `cockpit/langgraph/generative-ui/angular/package.json`:
   "peerDependencies": {
     "@cacheplane/chat": "^0.0.1",
     "@cacheplane/render": "^0.0.1",
-    "@cacheplane/angular": "^0.0.1",
+    "@cacheplane/langgraph": "^0.0.1",
     "@json-render/core": "^0.16.0",
     "@langchain/langgraph-sdk": "^0.0.36"
   },

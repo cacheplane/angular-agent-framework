@@ -92,7 +92,7 @@ cockpit/chat/a2ui/
 ```typescript
 import { Component } from '@angular/core';
 import { ChatComponent, a2uiBasicCatalog } from '@cacheplane/chat';
-import { agent } from '@cacheplane/angular';
+import { agent } from '@cacheplane/langgraph';
 import { environment } from '../environments/environment';
 
 @Component({

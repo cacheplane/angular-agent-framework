@@ -19,7 +19,7 @@ Import `a2uiBasicCatalog()` and pass it via the `[views]` input:
 
 ```typescript
 import { ChatComponent, a2uiBasicCatalog } from '@cacheplane/chat';
-import { agent } from '@cacheplane/angular';
+import { agent } from '@cacheplane/langgraph';
 
 @Component({
   selector: 'app-a2ui',

@@ -6,11 +6,9 @@ import {
   signal,
   ChangeDetectionStrategy,
 } from '@angular/core';
-import type { SubagentStreamRef } from '@cacheplane/angular';
+import type { ChatSubagent, ChatSubagentStatus } from '../../agent/chat-subagent';
 
-type SubagentStatus = 'pending' | 'running' | 'complete' | 'error';
-
-function statusColor(status: SubagentStatus): string {
+function statusColor(status: ChatSubagentStatus): string {
   switch (status) {
     case 'pending':  return 'background: var(--chat-bg-alt); color: var(--chat-text-muted);';
     case 'running':  return 'background: var(--chat-warning-bg); color: var(--chat-warning-text);';
@@ -71,7 +69,7 @@ export { statusColor };
   `,
 })
 export class ChatSubagentCardComponent {
-  readonly subagent = input.required<SubagentStreamRef>();
+  readonly subagent = input.required<ChatSubagent>();
 
   readonly expanded = signal(false);
 

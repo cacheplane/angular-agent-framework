@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Make `nx release` a one-command release pipeline for `@cacheplane/angular`, `@cacheplane/render`, `@cacheplane/chat` — independent per-package semver, Keep-a-Changelog changelogs, enforced conventional commits, GitHub Actions publish with npm provenance.
+**Goal:** Make `nx release` a one-command release pipeline for `@cacheplane/langgraph`, `@cacheplane/render`, `@cacheplane/chat` — independent per-package semver, Keep-a-Changelog changelogs, enforced conventional commits, GitHub Actions publish with npm provenance.
 
 **Architecture:** Nx Release handles version bumps + changelog generation from conventional commits. Local workflow: developer runs `nx release version` + `nx release changelog` → commits + tags are pushed → GitHub Actions `release.yml` triggers on `<pkg>@v*` tag pattern → runs `nx release publish` with npm provenance via OIDC. Commitlint enforces the conventional commit contract via a husky `commit-msg` hook locally and a CI job on PRs. Verdaccio provides a local dry-run smoke test so we catch config errors without burning a version number.
 
@@ -14,7 +14,7 @@
 
 ### In scope
 - Nx Release configured for independent per-package versioning of agent / render / chat
-- Tag format: `<pkg>@v<version>` (e.g., `@cacheplane/angular@v1.0.0`)
+- Tag format: `<pkg>@v<version>` (e.g., `@cacheplane/langgraph@v1.0.0`)
 - `CHANGELOG.md` per library in Keep-a-Changelog format, auto-updated by Nx Release
 - Conventional commits enforced locally (husky) and on PRs (GitHub Action)
 - GitHub Actions workflow `release.yml` that publishes with `--provenance` via OIDC
@@ -35,7 +35,7 @@
 - `.husky/commit-msg` — husky hook for commitlint
 - `.github/workflows/release.yml` — new release workflow
 - `.github/workflows/commitlint.yml` — PR commitlint CI
-- `libs/agent/CHANGELOG.md` — Keep-a-Changelog seed
+- `libs/langgraph/CHANGELOG.md` — Keep-a-Changelog seed
 - `libs/render/CHANGELOG.md` — seed
 - `libs/chat/CHANGELOG.md` — seed
 - `scripts/verify-release-local.sh` — Verdaccio dry-run smoke
@@ -43,7 +43,7 @@
 
 **Modify:**
 - `nx.json` — expand `release` block (projects, version, changelog, tag format)
-- `libs/agent/package.json` — add `publishConfig`
+- `libs/langgraph/package.json` — add `publishConfig`
 - `libs/render/package.json` — add `publishConfig`
 - `libs/chat/package.json` — add `publishConfig`
 - `package.json` — add devDeps (`@commitlint/cli`, `@commitlint/config-conventional`, `husky`) + release scripts + `prepare` hook
@@ -209,16 +209,16 @@ git commit -m "ci(release): enforce conventional commits on PRs"
 ## Task 3: Seed CHANGELOG.md for each library
 
 **Files:**
-- Create: `libs/agent/CHANGELOG.md`
+- Create: `libs/langgraph/CHANGELOG.md`
 - Create: `libs/render/CHANGELOG.md`
 - Create: `libs/chat/CHANGELOG.md`
 
-- [ ] **Step 1: Create `libs/agent/CHANGELOG.md`**
+- [ ] **Step 1: Create `libs/langgraph/CHANGELOG.md`**
 
 ```markdown
 # Changelog
 
-All notable changes to `@cacheplane/angular` will be documented in this file.
+All notable changes to `@cacheplane/langgraph` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
@@ -256,7 +256,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Run:
 ```bash
-git add libs/agent/CHANGELOG.md libs/render/CHANGELOG.md libs/chat/CHANGELOG.md
+git add libs/langgraph/CHANGELOG.md libs/render/CHANGELOG.md libs/chat/CHANGELOG.md
 git commit -m "docs(release): seed Keep-a-Changelog files for v1 packages"
 ```
 
@@ -265,18 +265,18 @@ git commit -m "docs(release): seed Keep-a-Changelog files for v1 packages"
 ## Task 4: Add `publishConfig` to each library's `package.json`
 
 **Files:**
-- Modify: `libs/agent/package.json`
+- Modify: `libs/langgraph/package.json`
 - Modify: `libs/render/package.json`
 - Modify: `libs/chat/package.json`
 
 The `publishConfig.provenance` flag tells npm to use the OIDC token from GitHub Actions to sign the published package.
 
-- [ ] **Step 1: Edit `libs/agent/package.json`**
+- [ ] **Step 1: Edit `libs/langgraph/package.json`**
 
 Add a `publishConfig` key before `peerDependencies`:
 ```json
 {
-  "name": "@cacheplane/angular",
+  "name": "@cacheplane/langgraph",
   "version": "0.0.1",
   "publishConfig": {
     "access": "public",
@@ -300,7 +300,7 @@ Add the same `publishConfig` block.
 
 Run:
 ```bash
-for f in libs/agent/package.json libs/render/package.json libs/chat/package.json; do
+for f in libs/langgraph/package.json libs/render/package.json libs/chat/package.json; do
   node -e "JSON.parse(require('fs').readFileSync('$f', 'utf8'))" && echo "$f OK"
 done
 ```
@@ -311,7 +311,7 @@ Expected: three lines of `... OK`.
 
 Run:
 ```bash
-git add libs/agent/package.json libs/render/package.json libs/chat/package.json
+git add libs/langgraph/package.json libs/render/package.json libs/chat/package.json
 git commit -m "feat(release): enable npm provenance for v1 packages"
 ```
 
@@ -360,7 +360,7 @@ Replace with:
 
 **Key behaviors:**
 - `projectsRelationship: "independent"` — each package versions on its own schedule
-- `releaseTagPattern: "{projectName}@v{version}"` — produces e.g. `agent@v1.0.0`. Note: the Nx project name is `agent` (not `@cacheplane/angular`); the tag uses the project name.
+- `releaseTagPattern: "{projectName}@v{version}"` — produces e.g. `agent@v1.0.0`. Note: the Nx project name is `agent` (not `@cacheplane/langgraph`); the tag uses the project name.
 - `conventionalCommits: true` — analyze commits since last tag to determine bump
 - `currentVersionResolver: "git-tag"` — reads current version from latest matching tag, falls back to `package.json` on first release
 - `projectChangelogs` writes per-library `CHANGELOG.md`; `createRelease: "github"` publishes GitHub Releases
@@ -636,7 +636,7 @@ Create `docs/release-runbook.md`:
 ```markdown
 # Release Runbook
 
-How to cut a new release of `@cacheplane/angular`, `@cacheplane/render`, or `@cacheplane/chat`.
+How to cut a new release of `@cacheplane/langgraph`, `@cacheplane/render`, or `@cacheplane/chat`.
 
 ## Prerequisites
 
@@ -673,7 +673,7 @@ How to cut a new release of `@cacheplane/angular`, `@cacheplane/render`, or `@ca
    git tag --contains HEAD
    ```
 
-   Expected: one commit per bumped package (e.g., `chore(release): publish @cacheplane/angular@1.0.0`) and matching tags like `agent@v1.0.0`.
+   Expected: one commit per bumped package (e.g., `chore(release): publish @cacheplane/langgraph@1.0.0`) and matching tags like `agent@v1.0.0`.
 
 4. **Push commits + tags:**
 
@@ -685,7 +685,7 @@ How to cut a new release of `@cacheplane/angular`, `@cacheplane/render`, or `@ca
 
 5. **Verify on npm:**
 
-   - https://www.npmjs.com/package/@cacheplane/angular
+   - https://www.npmjs.com/package/@cacheplane/langgraph
    - https://www.npmjs.com/package/@cacheplane/render
    - https://www.npmjs.com/package/@cacheplane/chat
 
@@ -726,7 +726,7 @@ Provide `version-spec` (e.g., `patch`, `1.0.1`) or leave empty to use convention
 
 ## Version policy
 
-- `@cacheplane/angular`, `@cacheplane/render`, `@cacheplane/chat` follow semver independently.
+- `@cacheplane/langgraph`, `@cacheplane/render`, `@cacheplane/chat` follow semver independently.
 - Breaking changes to any public export = major bump.
 - New exports or non-breaking API additions = minor bump.
 - Bug fixes with no API change = patch bump.

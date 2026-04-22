@@ -101,7 +101,7 @@ Each card structure:
 
 **Card 1 — Agent** (color: `tokens.colors.accent` / `#004090`, rgb: `0,64,144`):
 - Tag: `AGENT`
-- Package: `@cacheplane/angular`
+- Package: `@cacheplane/langgraph`
 - Headline: "The reactive bridge to LangGraph"
 - Value prop: "Signal-native streaming connects your Angular templates directly to LangGraph agent state. Interrupts, persistence, time-travel, and branch history — every LangGraph feature has a first-class Angular API. Test deterministically with MockAgentTransport."
 - Pills: `Angular Signals` · `LangGraph Cloud` · `MockAgentTransport`

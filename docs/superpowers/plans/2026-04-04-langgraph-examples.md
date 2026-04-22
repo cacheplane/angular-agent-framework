@@ -6,7 +6,7 @@
 
 **Architecture:** Each capability follows the established streaming example pattern: Angular standalone component using `agent()`, Python LangGraph `StateGraph`, tutorial guide.md with component tags, Playwright e2e tests. The `@cacheplane/chat` library extracts the shared chat UI. All capabilities register in `route-resolution.ts` for cockpit rendering.
 
-**Tech Stack:** Angular 21, `@cacheplane/angular`, `@cacheplane/chat` (new), LangGraph (Python), Shiki, Playwright, Vitest
+**Tech Stack:** Angular 21, `@cacheplane/langgraph`, `@cacheplane/chat` (new), LangGraph (Python), Shiki, Playwright, Vitest
 
 ---
 
@@ -295,7 +295,7 @@ This is the first full example after Streaming. It demonstrates `stream.switchTh
 
 #### Angular app: `cockpit/langgraph/persistence/angular/`
 - `project.json` — same pattern as streaming, port 4301
-- `package.json` — deps: `@cacheplane/angular`, `@cacheplane/chat`, `@langchain/core`, `@langchain/langgraph-sdk`
+- `package.json` — deps: `@cacheplane/langgraph`, `@cacheplane/chat`, `@langchain/core`, `@langchain/langgraph-sdk`
 - `tsconfig.json`, `tsconfig.app.json` — same as streaming
 - `proxy.conf.json` — proxy /api to localhost:8124
 - `src/index.html`, `src/main.ts`, `src/styles.css` — same pattern

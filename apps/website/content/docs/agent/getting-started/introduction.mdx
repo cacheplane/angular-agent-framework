@@ -126,7 +126,7 @@ Now connect your Angular app to the running agent using agent().
 <Step title="Install the package">
 
 ```bash
-npm install @cacheplane/angular
+npm install @cacheplane/langgraph
 ```
 
 </Step>
@@ -135,7 +135,7 @@ npm install @cacheplane/angular
 ```typescript
 // app.config.ts
 import { ApplicationConfig } from '@angular/core';
-import { provideAgent } from '@cacheplane/angular';
+import { provideAgent } from '@cacheplane/langgraph';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -155,7 +155,7 @@ export const appConfig: ApplicationConfig = {
 ```typescript
 // chat.component.ts
 import { Component, signal, computed } from '@angular/core';
-import { agent } from '@cacheplane/angular';
+import { agent } from '@cacheplane/langgraph';
 import type { BaseMessage } from '@langchain/core/messages';
 
 @Component({

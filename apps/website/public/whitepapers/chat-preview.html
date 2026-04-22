@@ -102,7 +102,7 @@ Each primitive accepts an `agentRef` input and wires itself to the shared agent 
 <p>---</p>
 <h3>The Prebuilt Tier</h3>
 <p>`chat-prebuilt` is a single component that composes all four headless primitives internally, applies a production-quality default theme, and handles responsive layout. Zero configuration is required beyond connecting an agent reference.</p>
-<pre><code>import { AgentService } from '@cacheplane/angular';
+<pre><code>import { AgentService } from '@cacheplane/langgraph';
 import { ChatPrebuiltComponent } from '@cacheplane/chat';
 <p>@Component({
   selector: 'app-support',
@@ -122,7 +122,7 @@ export class SupportComponent {
 <p>That is a fully functional streaming chat interface. Message history, input handling, tool call display, and interrupt controls are all included.</p>
 <p>---</p>
 <h3>How the Component Model Connects</h3>
-<p>Both tiers consume the `AgentRef` produced by `@cacheplane/angular`. The `AgentRef` is a stable reference that exposes an `AIMessage[]` signal, a send method, and a cancellation interface. Components bind to this ref and react to signal emissions via Angular's standard reactivity primitives — no custom change detection strategies required, no zone workarounds.</p>
+<p>Both tiers consume the `AgentRef` produced by `@cacheplane/langgraph`. The `AgentRef` is a stable reference that exposes an `AIMessage[]` signal, a send method, and a cancellation interface. Components bind to this ref and react to signal emissions via Angular's standard reactivity primitives — no custom change detection strategies required, no zone workarounds.</p>
 <p>When the agent emits a new token mid-stream, the `AIMessage[]` signal updates, and `chat-messages` incrementally patches the DOM. The mechanism is straightforward signal subscription. There is no proprietary diffing layer to reason about.</p>
 <p>---</p>
 <h3>Composing the Two Tiers</h3>

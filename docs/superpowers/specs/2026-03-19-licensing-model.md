@@ -148,7 +148,7 @@ Source-available licensing. Free for noncommercial use under PolyForm Noncommerc
 ### README license section
 
 ```markdown
-`@cacheplane/angular` is source-available software dual-licensed:
+`@cacheplane/langgraph` is source-available software dual-licensed:
 
 - **PolyForm Noncommercial 1.0.0** — free for noncommercial use. See LICENSE.
 - **Angular Agent Framework Commercial License** — required for any for-profit or revenue-generating use. See LICENSE-COMMERCIAL and COMMERCIAL.md.

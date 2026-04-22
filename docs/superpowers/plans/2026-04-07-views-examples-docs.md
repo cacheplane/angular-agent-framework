@@ -374,7 +374,7 @@ Views are Angular components that the agent can render inline in the chat. Regis
 ```typescript
 import { views } from '@cacheplane/render';
 import { ChatComponent } from '@cacheplane/chat';
-import { agent } from '@cacheplane/angular';
+import { agent } from '@cacheplane/langgraph';
 
 const ui = views({
   'plan-checklist': PlanChecklistComponent,

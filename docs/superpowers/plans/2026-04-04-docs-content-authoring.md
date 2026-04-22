@@ -33,7 +33,7 @@ Angular 20+ project with Node.js 18+. If you need setup help, see the [Installat
 ## 1. Install
 
 ```bash
-npm install @cacheplane/angular
+npm install @cacheplane/langgraph
 ```
 
 ## 2. Configure the provider
@@ -42,7 +42,7 @@ Add `provideAgent()` to your application config with your LangGraph Platform URL
 
 ```typescript
 // app.config.ts
-import { provideAgent } from '@cacheplane/angular';
+import { provideAgent } from '@cacheplane/langgraph';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -63,7 +63,7 @@ Use `agent()` in a component field initializer. Every property on the returned r
 ```typescript
 // chat.component.ts
 import { Component, signal, computed } from '@angular/core';
-import { agent } from '@cacheplane/angular';
+import { agent } from '@cacheplane/langgraph';
 import type { BaseMessage } from '@langchain/core/messages';
 
 @Component({
@@ -192,7 +192,7 @@ A running LangGraph agent accessible via HTTP. Can be local (langgraph dev) or d
 ## Install the package
 
 ```bash
-npm install @cacheplane/angular
+npm install @cacheplane/langgraph
 ```
 
 This installs the library and its peer dependencies including `@langchain/langgraph-sdk`.
@@ -204,7 +204,7 @@ Add `provideAgent()` to your application configuration. This sets global default
 ```typescript
 // app.config.ts
 import { ApplicationConfig } from '@angular/core';
-import { provideAgent } from '@cacheplane/angular';
+import { provideAgent } from '@cacheplane/langgraph';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -252,7 +252,7 @@ provideAgent({
 Create a minimal test to verify the setup works:
 
 ```typescript
-import { agent } from '@cacheplane/angular';
+import { agent } from '@cacheplane/langgraph';
 
 // In a component
 const test = agent({
@@ -759,8 +759,8 @@ Create a MockAgentTransport with scripted events and pass it to agent.
 
 ```typescript
 import { TestBed } from '@angular/core/testing';
-import { MockAgentTransport } from '@cacheplane/angular';
-import type { StreamEvent } from '@cacheplane/angular';
+import { MockAgentTransport } from '@cacheplane/langgraph';
+import type { StreamEvent } from '@cacheplane/langgraph';
 
 describe('ChatComponent', () => {
   it('should display agent messages', () => {

@@ -18,11 +18,11 @@
 
 - [ ] **Step 1: Fix import path inconsistency**
 
-Search all MDX and TSX files for `@ngxp/angular` and `@angular/angular`. Replace ALL with `@cacheplane/angular`.
+Search all MDX and TSX files for `@ngxp/angular` and `@angular/angular`. Replace ALL with `@cacheplane/langgraph`.
 
 Run: `grep -rn "@ngxp/angular\|@angular/angular" apps/website/content/docs-v2/ apps/website/src/`
 
-Replace all occurrences with `@cacheplane/angular`.
+Replace all occurrences with `@cacheplane/langgraph`.
 
 - [ ] **Step 2: Fix API method inconsistency**
 
@@ -158,7 +158,7 @@ New content needed:
 ### Task 9: Polish `guides/streaming.mdx` (206 lines — fix issues)
 
 Fix:
-- Import path: `@angular/angular` → `@cacheplane/angular`
+- Import path: `@angular/angular` → `@cacheplane/langgraph`
 - `.stream()` → `.submit()`
 - `'streaming'` status → `'loading'`
 - Add Python agent showing `stream_mode` configuration
@@ -203,7 +203,7 @@ Fix:
 
 ### Task 14: Expand 4 API Reference Pages
 
-Fix import path `@ngxp/angular` → `@cacheplane/angular` in all 4.
+Fix import path `@ngxp/angular` → `@cacheplane/langgraph` in all 4.
 Add "What's Next" CardGroup to all 4.
 Expand intros with more context about when/why to use each.
 
@@ -224,7 +224,7 @@ Total: 15 tasks, ~14 files rewritten.
 - [ ] Python LangGraph code showing the agent/server pattern
 - [ ] Angular agent code showing the frontend consumption
 - [ ] Both paired together to tell the product story
-- [ ] All imports use `@cacheplane/angular`
+- [ ] All imports use `@cacheplane/langgraph`
 - [ ] All Tab components use `<Tab label="...">` syntax
 - [ ] `ChangeDetectionStrategy.OnPush` in component examples
 - [ ] At least 2 Callouts (tip, info, or warning)

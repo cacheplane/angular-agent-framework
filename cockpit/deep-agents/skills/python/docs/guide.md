@@ -2,12 +2,12 @@
 
 <Summary>
 Build a chat interface that shows real-time skill invocations using `agent()` from
-`@cacheplane/angular`. The agent selects from specialized tools (calculator, word counter,
+`@cacheplane/langgraph`. The agent selects from specialized tools (calculator, word counter,
 summarizer) based on the user's request, and the sidebar displays each skill invocation as a card.
 </Summary>
 
 <Prompt>
-Add a skill invocation sidebar to this Angular component using `agent()` from `@cacheplane/angular`. Use `stream.messages()` to access tool call data, derive `skillInvocations` with `computed()`, and bind them to the sidebar via the `<cp-chat>` component from `@cacheplane/chat`.
+Add a skill invocation sidebar to this Angular component using `agent()` from `@cacheplane/langgraph`. Use `stream.messages()` to access tool call data, derive `skillInvocations` with `computed()`, and bind them to the sidebar via the `<cp-chat>` component from `@cacheplane/chat`.
 </Prompt>
 
 <Steps>
@@ -18,7 +18,7 @@ Set up `provideAgent()` in your app config with the LangGraph API URL:
 ```typescript
 // app.config.ts
 import { ApplicationConfig } from '@angular/core';
-import { provideAgent } from '@cacheplane/angular';
+import { provideAgent } from '@cacheplane/langgraph';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -38,7 +38,7 @@ In your component, call `agent()` with the `assistantId` pointing to your skills
 
 ```typescript
 // skills.component.ts
-import { agent } from '@cacheplane/angular';
+import { agent } from '@cacheplane/langgraph';
 
 export class SkillsComponent {
   protected readonly stream = agent({

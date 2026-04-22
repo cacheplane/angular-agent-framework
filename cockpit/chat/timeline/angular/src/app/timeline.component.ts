@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import { Component } from '@angular/core';
-import { ChatComponent, ChatTimelineSliderComponent } from '@cacheplane/chat';
+import { ChatComponent } from '@cacheplane/chat';
 import { ExampleChatLayoutComponent } from '@cacheplane/example-layouts';
-import { agent } from '@cacheplane/angular';
+import { agent, toChatAgent, ChatTimelineSliderComponent } from '@cacheplane/langgraph';
 import { environment } from '../environments/environment';
 
 /**
@@ -16,7 +16,7 @@ import { environment } from '../environments/environment';
   imports: [ChatComponent, ChatTimelineSliderComponent, ExampleChatLayoutComponent],
   template: `
     <example-chat-layout sidebarWidth="w-80">
-      <chat main [ref]="stream" class="flex-1 min-w-0" />
+      <chat main [agent]="chatAgent" class="flex-1 min-w-0" />
       <div sidebar class="p-4 space-y-4" style="background: var(--chat-bg, #171717); color: var(--chat-text, #e0e0e0);">
         <h3 class="text-xs font-semibold uppercase tracking-wide"
             style="color: var(--chat-text-muted, #777);">Timeline</h3>
@@ -38,4 +38,5 @@ export class TimelineComponent {
     apiUrl: environment.langGraphApiUrl,
     assistantId: environment.streamingAssistantId,
   });
+  protected readonly chatAgent = toChatAgent(this.stream);
 }

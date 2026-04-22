@@ -1,7 +1,7 @@
 import { Component, computed } from '@angular/core';
 import { ChatComponent } from '@cacheplane/chat';
 import { ExampleChatLayoutComponent } from '@cacheplane/example-layouts';
-import { agent } from '@cacheplane/angular';
+import { agent, toChatAgent } from '@cacheplane/langgraph';
 import { environment } from '../environments/environment';
 
 /**
@@ -22,7 +22,7 @@ import { environment } from '../environments/environment';
   imports: [ChatComponent, ExampleChatLayoutComponent],
   template: `
     <example-chat-layout sidebarWidth="w-72">
-      <chat main [ref]="stream" class="flex-1 min-w-0" />
+      <chat main [agent]="chatAgent" class="flex-1 min-w-0" />
       <div sidebar class="p-4 space-y-2" style="background: var(--chat-bg, #171717); color: var(--chat-text, #e0e0e0);">
         <h3 class="text-xs font-semibold uppercase tracking-wide"
             style="color: var(--chat-text-muted, #777);">
@@ -55,6 +55,7 @@ export class MemoryComponent {
     apiUrl: environment.langGraphApiUrl,
     assistantId: environment.streamingAssistantId,
   });
+  protected readonly chatAgent = toChatAgent(this.stream);
 
   /**
    * Reactive list of [key, value] memory entries derived from the graph state.

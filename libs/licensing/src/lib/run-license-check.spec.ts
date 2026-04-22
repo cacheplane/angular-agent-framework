@@ -35,7 +35,7 @@ describe('runLicenseCheck', () => {
 
   it('does not warn with a valid token and still fires telemetry', async () => {
     const status = await runLicenseCheck({
-      package: '@cacheplane/angular',
+      package: '@cacheplane/langgraph',
       version: '1.0.0',
       token: validToken,
       publicKey: kp.publicKey,
@@ -53,7 +53,7 @@ describe('runLicenseCheck', () => {
 
   it('warns when token is missing', async () => {
     const status = await runLicenseCheck({
-      package: '@cacheplane/angular',
+      package: '@cacheplane/langgraph',
       version: '1.0.0',
       publicKey: kp.publicKey,
       nowSec: 1_900_000_000,
@@ -67,7 +67,7 @@ describe('runLicenseCheck', () => {
 
   it('is idempotent per (package, token) pair', async () => {
     await runLicenseCheck({
-      package: '@cacheplane/angular',
+      package: '@cacheplane/langgraph',
       version: '1.0.0',
       token: validToken,
       publicKey: kp.publicKey,
@@ -77,7 +77,7 @@ describe('runLicenseCheck', () => {
       fetch: fetchMock,
     });
     await runLicenseCheck({
-      package: '@cacheplane/angular',
+      package: '@cacheplane/langgraph',
       version: '1.0.0',
       token: validToken,
       publicKey: kp.publicKey,
@@ -94,7 +94,7 @@ describe('runLicenseCheck', () => {
   it('re-runs when token changes (e.g., after key rotation in the host)', async () => {
     const otherToken = await signLicense({ ...BASE, sub: 'cus_xyz' }, kp.privateKey);
     await runLicenseCheck({
-      package: '@cacheplane/angular',
+      package: '@cacheplane/langgraph',
       version: '1.0.0',
       token: validToken,
       publicKey: kp.publicKey,
@@ -104,7 +104,7 @@ describe('runLicenseCheck', () => {
       fetch: fetchMock,
     });
     await runLicenseCheck({
-      package: '@cacheplane/angular',
+      package: '@cacheplane/langgraph',
       version: '1.0.0',
       token: otherToken,
       publicKey: kp.publicKey,

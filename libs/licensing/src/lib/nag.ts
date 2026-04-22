@@ -2,7 +2,7 @@
 import type { EvaluateResult } from './evaluate-license.js';
 
 export interface EmitNagOptions {
-  /** Fully-qualified npm package name, e.g. "@cacheplane/angular". */
+  /** Fully-qualified npm package name, e.g. "@cacheplane/langgraph". */
   package: string;
   /** Injected warn channel; defaults to `console.warn`. */
   warn?: (message: string) => void;

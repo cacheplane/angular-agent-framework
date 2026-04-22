@@ -34,7 +34,7 @@
 - Add `"files": ["dist", "README.md", "LICENSE", "NOTICE"]` to `packages/mcp/package.json`
 - Verify `libs/angular` build output includes the right files
 - Dry-run publish both packages
-- Publish `@cacheplane/angular` and `@cacheplane/angular-mcp`
+- Publish `@cacheplane/langgraph` and `@cacheplane/langgraph-mcp`
 - Add a CI `publish` job triggered on `v*.*.*` tags
 
 **Reference:** `docs/superpowers/plans/2026-03-19-npm-publish.md`

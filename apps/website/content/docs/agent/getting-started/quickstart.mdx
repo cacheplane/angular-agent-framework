@@ -10,7 +10,7 @@ Angular 20+ project with Node.js 18+. If you need setup help, see the [Installat
 <Step title="Install the package">
 
 ```bash
-npm install @cacheplane/angular
+npm install @cacheplane/langgraph
 ```
 
 </Step>
@@ -20,7 +20,7 @@ Add `provideAgent()` to your application config with your LangGraph Platform URL
 
 ```typescript
 // app.config.ts
-import { provideAgent } from '@cacheplane/angular';
+import { provideAgent } from '@cacheplane/langgraph';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -42,7 +42,7 @@ Use `agent()` in a component field initializer. Every property on the returned r
 ```typescript
 // chat.component.ts
 import { Component, ChangeDetectionStrategy, signal, computed } from '@angular/core';
-import { agent } from '@cacheplane/angular';
+import { agent } from '@cacheplane/langgraph';
 import type { BaseMessage } from '@langchain/core/messages';
 
 @Component({

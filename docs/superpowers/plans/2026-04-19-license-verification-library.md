@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Ship `@cacheplane/licensing` — a pure-TS library that performs offline Ed25519 license verification, surfaces a grace-period + nag UX, and sends non-blocking anonymous telemetry — then wire it into `@cacheplane/angular`, `@cacheplane/render`, and `@cacheplane/chat` so a licensed app initializes silently and an unlicensed app sees a console nudge but still runs.
+**Goal:** Ship `@cacheplane/licensing` — a pure-TS library that performs offline Ed25519 license verification, surfaces a grace-period + nag UX, and sends non-blocking anonymous telemetry — then wire it into `@cacheplane/langgraph`, `@cacheplane/render`, and `@cacheplane/chat` so a licensed app initializes silently and an unlicensed app sees a console nudge but still runs.
 
 **Architecture:** `@cacheplane/licensing` is a framework-agnostic TypeScript library (built with `@nx/js:tsc`, same pattern as `libs/a2ui`) that exposes four seams:
 
@@ -48,8 +48,8 @@ Each Angular library receives an optional `license` field on its existing config
 
 **Modified Angular libraries** — integrate license check into providers:
 
-- `libs/agent/src/lib/agent.provider.ts` — add `license?: string` to `AgentConfig`; call `runLicenseCheck` inside `provideAgent`
-- `libs/agent/src/lib/agent.provider.spec.ts` — tests that config is still honored and license check is invoked
+- `libs/langgraph/src/lib/agent.provider.ts` — add `license?: string` to `AgentConfig`; call `runLicenseCheck` inside `provideAgent`
+- `libs/langgraph/src/lib/agent.provider.spec.ts` — tests that config is still honored and license check is invoked
 - `libs/render/src/lib/provide-render.ts` — add `license?: string` to `RenderConfig`; call `runLicenseCheck`
 - `libs/render/src/lib/render.types.ts` — add `license?: string` on `RenderConfig`
 - `libs/render/src/lib/provide-render.spec.ts` — **create**; license check wired
@@ -59,7 +59,7 @@ Each Angular library receives an optional `license` field on its existing config
 **Workspace** — wiring:
 
 - `tsconfig.base.json` — add `"@cacheplane/licensing": ["libs/licensing/src/index.ts"]` path alias
-- `libs/agent/package.json` — add `@cacheplane/licensing` to `peerDependencies` with `^0.0.1`
+- `libs/langgraph/package.json` — add `@cacheplane/licensing` to `peerDependencies` with `^0.0.1`
 - `libs/render/package.json` — add `@cacheplane/licensing` to `peerDependencies` with `^0.0.1`
 - `libs/chat/package.json` — add `@cacheplane/licensing` to `peerDependencies` with `^0.0.1`
 - `package.json` — add `@noble/ed25519` to root `dependencies`
@@ -747,26 +747,26 @@ describe('emitNag', () => {
   });
 
   it('is silent when status is licensed', () => {
-    emitNag({ status: 'licensed' }, { package: '@cacheplane/angular', warn });
+    emitNag({ status: 'licensed' }, { package: '@cacheplane/langgraph', warn });
     expect(warn).not.toHaveBeenCalled();
   });
 
   it('is silent when status is noncommercial', () => {
-    emitNag({ status: 'noncommercial' }, { package: '@cacheplane/angular', warn });
+    emitNag({ status: 'noncommercial' }, { package: '@cacheplane/langgraph', warn });
     expect(warn).not.toHaveBeenCalled();
   });
 
   it('warns with a stable prefix when status is missing', () => {
-    emitNag({ status: 'missing' }, { package: '@cacheplane/angular', warn });
+    emitNag({ status: 'missing' }, { package: '@cacheplane/langgraph', warn });
     expect(warn).toHaveBeenCalledTimes(1);
     const message = warn.mock.calls[0][0] as string;
     expect(message).toContain('[cacheplane]');
-    expect(message).toContain('@cacheplane/angular');
+    expect(message).toContain('@cacheplane/langgraph');
     expect(message).toContain('cacheplane.dev/pricing');
   });
 
   it('warns differently for grace / expired / tampered', () => {
-    emitNag({ status: 'grace' }, { package: '@cacheplane/angular', warn });
+    emitNag({ status: 'grace' }, { package: '@cacheplane/langgraph', warn });
     emitNag({ status: 'expired' }, { package: '@cacheplane/render', warn });
     emitNag({ status: 'tampered' }, { package: '@cacheplane/chat', warn });
     expect(warn).toHaveBeenCalledTimes(3);
@@ -776,13 +776,13 @@ describe('emitNag', () => {
   });
 
   it('dedupes repeated calls for the same package + status', () => {
-    emitNag({ status: 'missing' }, { package: '@cacheplane/angular', warn });
-    emitNag({ status: 'missing' }, { package: '@cacheplane/angular', warn });
+    emitNag({ status: 'missing' }, { package: '@cacheplane/langgraph', warn });
+    emitNag({ status: 'missing' }, { package: '@cacheplane/langgraph', warn });
     expect(warn).toHaveBeenCalledTimes(1);
   });
 
   it('does not dedupe across different packages', () => {
-    emitNag({ status: 'missing' }, { package: '@cacheplane/angular', warn });
+    emitNag({ status: 'missing' }, { package: '@cacheplane/langgraph', warn });
     emitNag({ status: 'missing' }, { package: '@cacheplane/render', warn });
     expect(warn).toHaveBeenCalledTimes(2);
   });
@@ -803,7 +803,7 @@ Expected: FAIL — `emitNag is not a function`.
 import type { EvaluateResult } from './evaluate-license';
 
 export interface EmitNagOptions {
-  /** Fully-qualified npm package name, e.g. "@cacheplane/angular". */
+  /** Fully-qualified npm package name, e.g. "@cacheplane/langgraph". */
   package: string;
   /** Injected warn channel; defaults to `console.warn`. */
   warn?: (message: string) => void;
@@ -896,7 +896,7 @@ describe('createTelemetryClient', () => {
     });
 
     await client.send({
-      package: '@cacheplane/angular',
+      package: '@cacheplane/langgraph',
       version: '1.0.0',
       licenseId: 'cus_123',
     });
@@ -906,7 +906,7 @@ describe('createTelemetryClient', () => {
     expect(url).toBe('https://telemetry.example.com/v1/ping');
     expect(init.method).toBe('POST');
     const body = JSON.parse(init.body as string);
-    expect(body.package).toBe('@cacheplane/angular');
+    expect(body.package).toBe('@cacheplane/langgraph');
     expect(body.version).toBe('1.0.0');
     expect(body.license_id).toBe('cus_123');
     expect(typeof body.anon_instance_id).toBe('string');
@@ -919,8 +919,8 @@ describe('createTelemetryClient', () => {
       endpoint: 'https://telemetry.example.com/v1/ping',
       fetch: fetchMock,
     });
-    await client.send({ package: '@cacheplane/angular', version: '1.0.0' });
-    await client.send({ package: '@cacheplane/angular', version: '1.0.0' });
+    await client.send({ package: '@cacheplane/langgraph', version: '1.0.0' });
+    await client.send({ package: '@cacheplane/langgraph', version: '1.0.0' });
 
     const id1 = JSON.parse(fetchMock.mock.calls[0][1].body as string).anon_instance_id;
     const id2 = JSON.parse(fetchMock.mock.calls[1][1].body as string).anon_instance_id;
@@ -934,7 +934,7 @@ describe('createTelemetryClient', () => {
       endpoint: 'https://telemetry.example.com/v1/ping',
       fetch: fetchMock,
     });
-    await client.send({ package: '@cacheplane/angular', version: '1.0.0' });
+    await client.send({ package: '@cacheplane/langgraph', version: '1.0.0' });
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
@@ -945,7 +945,7 @@ describe('createTelemetryClient', () => {
       endpoint: 'https://telemetry.example.com/v1/ping',
       fetch: fetchMock,
     });
-    await client.send({ package: '@cacheplane/angular', version: '1.0.0' });
+    await client.send({ package: '@cacheplane/langgraph', version: '1.0.0' });
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
@@ -956,7 +956,7 @@ describe('createTelemetryClient', () => {
       fetch: fetchMock,
     });
     await expect(
-      client.send({ package: '@cacheplane/angular', version: '1.0.0' }),
+      client.send({ package: '@cacheplane/langgraph', version: '1.0.0' }),
     ).resolves.toBeUndefined();
   });
 });
@@ -1279,7 +1279,7 @@ describe('runLicenseCheck', () => {
 
   it('does not warn with a valid token and still fires telemetry', async () => {
     const status = await runLicenseCheck({
-      package: '@cacheplane/angular',
+      package: '@cacheplane/langgraph',
       version: '1.0.0',
       token: validToken,
       publicKey: kp.publicKey,
@@ -1297,7 +1297,7 @@ describe('runLicenseCheck', () => {
 
   it('warns when token is missing', async () => {
     const status = await runLicenseCheck({
-      package: '@cacheplane/angular',
+      package: '@cacheplane/langgraph',
       version: '1.0.0',
       publicKey: kp.publicKey,
       nowSec: 1_900_000_000,
@@ -1311,7 +1311,7 @@ describe('runLicenseCheck', () => {
 
   it('is idempotent per (package, token) pair', async () => {
     await runLicenseCheck({
-      package: '@cacheplane/angular',
+      package: '@cacheplane/langgraph',
       version: '1.0.0',
       token: validToken,
       publicKey: kp.publicKey,
@@ -1321,7 +1321,7 @@ describe('runLicenseCheck', () => {
       fetch: fetchMock,
     });
     await runLicenseCheck({
-      package: '@cacheplane/angular',
+      package: '@cacheplane/langgraph',
       version: '1.0.0',
       token: validToken,
       publicKey: kp.publicKey,
@@ -1338,7 +1338,7 @@ describe('runLicenseCheck', () => {
   it('re-runs when token changes (e.g., after key rotation in the host)', async () => {
     const otherToken = await signLicense({ ...BASE, sub: 'cus_xyz' }, kp.privateKey);
     await runLicenseCheck({
-      package: '@cacheplane/angular',
+      package: '@cacheplane/langgraph',
       version: '1.0.0',
       token: validToken,
       publicKey: kp.publicKey,
@@ -1348,7 +1348,7 @@ describe('runLicenseCheck', () => {
       fetch: fetchMock,
     });
     await runLicenseCheck({
-      package: '@cacheplane/angular',
+      package: '@cacheplane/langgraph',
       version: '1.0.0',
       token: otherToken,
       publicKey: kp.publicKey,
@@ -1539,7 +1539,7 @@ Angular framework libraries.
 
 ## Status
 
-Private, pre-1.0. Consumed by `@cacheplane/angular`, `@cacheplane/render`, and
+Private, pre-1.0. Consumed by `@cacheplane/langgraph`, `@cacheplane/render`, and
 `@cacheplane/chat`. Not intended as a standalone import.
 
 ## Behavior
@@ -1565,17 +1565,17 @@ git commit -m "docs(licensing): add README and shared test fixtures"
 
 ---
 
-## Task 10: Integrate license check into `@cacheplane/angular`
+## Task 10: Integrate license check into `@cacheplane/langgraph`
 
 **Files:**
 - Create: `libs/licensing/src/testing.ts`
 - Modify: `tsconfig.base.json` (add `@cacheplane/licensing/testing` path)
 - Modify: `libs/licensing/tsconfig.lib.json` (exclude `src/testing.ts`)
-- Modify: `libs/agent/tsconfig.json` (remove `baseUrl: "."` override)
-- Modify: `libs/agent/src/test-setup.ts` (scoped sha512 patch)
-- Modify: `libs/agent/src/lib/agent.provider.ts`
-- Modify: `libs/agent/src/lib/agent.provider.spec.ts`
-- Modify: `libs/agent/package.json`
+- Modify: `libs/langgraph/tsconfig.json` (remove `baseUrl: "."` override)
+- Modify: `libs/langgraph/src/test-setup.ts` (scoped sha512 patch)
+- Modify: `libs/langgraph/src/lib/agent.provider.ts`
+- Modify: `libs/langgraph/src/lib/agent.provider.spec.ts`
+- Modify: `libs/langgraph/package.json`
 
 **Guardrails (read before starting):**
 
@@ -1616,11 +1616,11 @@ In `libs/licensing/tsconfig.lib.json`, add `"src/testing.ts"` to the existing ex
   "exclude": ["src/**/*.spec.ts", "src/lib/testing/**", "src/testing.ts"]
 ```
 
-- [ ] **Step 1d: Remove the `baseUrl` override from `libs/agent/tsconfig.json`**
+- [ ] **Step 1d: Remove the `baseUrl` override from `libs/langgraph/tsconfig.json`**
 
-`libs/agent/tsconfig.json` currently sets `"baseUrl": "."`, which shifts path resolution relative to the agent dir and prevents `@cacheplane/licensing` from resolving. Delete that line — the `chat` and `render` tsconfigs don't have it either.
+`libs/langgraph/tsconfig.json` currently sets `"baseUrl": "."`, which shifts path resolution relative to the agent dir and prevents `@cacheplane/licensing` from resolving. Delete that line — the `chat` and `render` tsconfigs don't have it either.
 
-- [ ] **Step 1e: Patch `sha512Async` in `libs/agent/src/test-setup.ts`**
+- [ ] **Step 1e: Patch `sha512Async` in `libs/langgraph/src/test-setup.ts`**
 
 `@noble/ed25519` defaults to `crypto.subtle.digest('sha-512', ...)`. jsdom's SubtleCrypto rejects TypedArrays from the Node realm with "2nd argument is not instance of ArrayBuffer" (cross-realm instanceof). Scope a Node-crypto replacement to the agent test env only:
 
@@ -1649,7 +1649,7 @@ getTestBed().initTestEnvironment(
 );
 ```
 
-- [ ] **Step 2: Replace `libs/agent/src/lib/agent.provider.spec.ts` with the updated test suite**
+- [ ] **Step 2: Replace `libs/langgraph/src/lib/agent.provider.spec.ts` with the updated test suite**
 
 ```ts
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
@@ -1729,7 +1729,7 @@ describe('provideAgent', () => {
     TestBed.inject(AGENT_CONFIG);
     await new Promise((r) => setTimeout(r, 0));
     const calls = warn.mock.calls.map((c) => String(c[0]));
-    expect(calls.some((m) => m.includes('[cacheplane] @cacheplane/angular'))).toBe(true);
+    expect(calls.some((m) => m.includes('[cacheplane] @cacheplane/langgraph'))).toBe(true);
   });
 });
 ```
@@ -1741,7 +1741,7 @@ Expected: FAIL — `license` / `__licensePublicKey` not known properties of `Age
 
 - [ ] **Step 4: Implement provider changes**
 
-Replace `libs/agent/src/lib/agent.provider.ts` with:
+Replace `libs/langgraph/src/lib/agent.provider.ts` with:
 
 ```ts
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
@@ -1749,7 +1749,7 @@ import { InjectionToken, Provider } from '@angular/core';
 import { runLicenseCheck, LICENSE_PUBLIC_KEY } from '@cacheplane/licensing';
 import { AgentTransport } from './agent.types';
 
-const PACKAGE_NAME = '@cacheplane/angular';
+const PACKAGE_NAME = '@cacheplane/langgraph';
 // Wired up by the release pipeline — imported lazily to avoid a hard build-time
 // dependency on package.json.
 declare const __CACHEPLANE_AGENT_VERSION__: string | undefined;
@@ -1817,7 +1817,7 @@ export function provideAgent(config: AgentConfig): Provider {
 
 - [ ] **Step 5: Add `@cacheplane/licensing` as a peer dependency**
 
-Edit `libs/agent/package.json` — add to the `peerDependencies` block:
+Edit `libs/langgraph/package.json` — add to the `peerDependencies` block:
 
 ```json
     "@cacheplane/licensing": "^0.0.1",
@@ -1828,7 +1828,7 @@ Edit `libs/agent/package.json` — add to the `peerDependencies` block:
 Run: `npx nx test agent`
 Expected: PASS — all 4 tests green.
 
-**If tests fail:** stop and report the exact failure to the controller. Do not create a dev private-key fixture, do not alter `keypair.ts`, do not monkeypatch `sha512Async`, do not edit `tsconfig.base.json` or `libs/agent/tsconfig.json`.
+**If tests fail:** stop and report the exact failure to the controller. Do not create a dev private-key fixture, do not alter `keypair.ts`, do not monkeypatch `sha512Async`, do not edit `tsconfig.base.json` or `libs/langgraph/tsconfig.json`.
 
 - [ ] **Step 7: Verify agent still builds**
 
@@ -1840,9 +1840,9 @@ Expected: build succeeds.
 ```bash
 git add libs/licensing/src/testing.ts libs/licensing/tsconfig.lib.json \
   tsconfig.base.json \
-  libs/agent/tsconfig.json libs/agent/src/test-setup.ts \
-  libs/agent/src/lib/agent.provider.ts libs/agent/src/lib/agent.provider.spec.ts \
-  libs/agent/package.json
+  libs/langgraph/tsconfig.json libs/langgraph/src/test-setup.ts \
+  libs/langgraph/src/lib/agent.provider.ts libs/langgraph/src/lib/agent.provider.spec.ts \
+  libs/langgraph/package.json
 git commit -m "feat(agent): run license check at provider init"
 ```
 

@@ -5,7 +5,7 @@
 
 ## Overview
 
-`@cacheplane/stream-resource` was merged into `@cacheplane/angular` during the rebrand (PR #39). The source code, Nx project, and tsconfig path mapping are already gone. What remains is the empty `libs/stream-resource/` directory and stale references across README, LICENSE-COMMERCIAL, and cockpit docs. This spec covers removing the directory and updating all references so the monorepo reflects 3 libraries (angular, render, chat) — not 4.
+`@cacheplane/stream-resource` was merged into `@cacheplane/langgraph` during the rebrand (PR #39). The source code, Nx project, and tsconfig path mapping are already gone. What remains is the empty `libs/stream-resource/` directory and stale references across README, LICENSE-COMMERCIAL, and cockpit docs. This spec covers removing the directory and updating all references so the monorepo reflects 3 libraries (angular, render, chat) — not 4.
 
 ## Scope
 

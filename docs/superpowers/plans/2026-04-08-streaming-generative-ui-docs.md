@@ -186,7 +186,7 @@ Pass a `ViewRegistry` via the `[views]` input on `ChatComponent`:
 
 ```typescript
 import { Component, signal } from '@angular/core';
-import { agent } from '@cacheplane/angular';
+import { agent } from '@cacheplane/langgraph';
 import { ChatComponent, views } from '@cacheplane/chat';
 import type { BaseMessage } from '@langchain/core/messages';
 import { WeatherCardComponent } from './weather-card.component';
@@ -675,7 +675,7 @@ The full table should be:
 ```
 | Input | Type | Default | Description |
 |-------|------|---------|-------------|
-| `ref` | `AgentRef<any, any>` | **Required** | The agent ref providing streaming state. Created by `agent()` from `@cacheplane/angular`. |
+| `ref` | `AgentRef<any, any>` | **Required** | The agent ref providing streaming state. Created by `agent()` from `@cacheplane/langgraph`. |
 | `views` | `ViewRegistry \| undefined` | `undefined` | View registry for generative UI. Maps spec type names to Angular components. Created with `views()` from `@cacheplane/chat`. |
 | `store` | `StateStore \| undefined` | `undefined` | Optional state store for interactive generative UI specs. |
 | `threads` | `Thread[]` | `[]` | List of threads to display in the sidebar. Each thread must have an `id` property. |
@@ -793,7 +793,7 @@ Update the "Application-Wide Configuration" example: remove `createAngularRegist
 
 ```typescript
 // app.config.ts
-import { provideAgent } from '@cacheplane/angular';
+import { provideAgent } from '@cacheplane/langgraph';
 import { provideChat } from '@cacheplane/chat';
 
 export const appConfig: ApplicationConfig = {

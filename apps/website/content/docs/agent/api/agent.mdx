@@ -5,7 +5,7 @@
 When the `url` signal changes, the resource tears down the previous connection and opens a fresh one automatically. You never write subscription management or cleanup logic yourself.
 
 ```ts
-import { agent } from '@cacheplane/angular';
+import { agent } from '@cacheplane/langgraph';
 
 // Inside a component or service with injection context
 const repo = agent<Repository>({

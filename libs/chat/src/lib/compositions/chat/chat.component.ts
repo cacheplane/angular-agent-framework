@@ -10,8 +10,11 @@ import {
   viewChild,
   ElementRef,
   ChangeDetectionStrategy,
+  DestroyRef,
+  inject,
 } from '@angular/core';
-import type { AgentRef } from '@cacheplane/angular';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import type { ChatAgent } from '../../agent';
 import type { ViewRegistry, RenderEvent } from '@cacheplane/render';
 import type { A2uiActionMessage } from '@cacheplane/a2ui';
 import type { StateStore } from '@json-render/core';
@@ -97,7 +100,7 @@ import { KeyValuePipe } from '@angular/common';
           aria-live="polite"
         >
           <div class="max-w-[var(--chat-max-width)] mx-auto flex flex-col gap-5">
-            @if (ref().messages().length === 0 && !ref().isLoading()) {
+            @if (agent().messages().length === 0 && !agent().isLoading()) {
               <!-- Empty state -->
               <div class="flex flex-col items-center justify-center py-20 gap-3" role="status">
                 <div
@@ -108,7 +111,7 @@ import { KeyValuePipe } from '@angular/common';
               </div>
             }
 
-            <chat-messages [ref]="ref()">
+            <chat-messages [agent]="agent()">
               <!-- Human messages: right-aligned bubble -->
               <ng-template chatMessageTemplate="human" let-message>
                 <div class="flex justify-end">
@@ -134,7 +137,7 @@ import { KeyValuePipe } from '@angular/common';
                         class="chat-md break-words text-[length:var(--chat-font-size)] leading-[var(--chat-line-height)]"
                         style="color: var(--chat-text);"
                         [content]="md"
-                        [streaming]="ref().isLoading()"
+                        [streaming]="agent().isLoading()"
                       />
                     }
 
@@ -144,7 +147,7 @@ import { KeyValuePipe } from '@angular/common';
                         [registry]="renderRegistry()"
                         [store]="resolvedStore()"
                         [handlers]="handlers()"
-                        [loading]="ref().isLoading()"
+                        [loading]="agent().isLoading()"
                         (events)="onSpecEvent($event, index)"
                       />
                     }
@@ -184,29 +187,31 @@ import { KeyValuePipe } from '@angular/common';
               </ng-template>
             </chat-messages>
 
-            <chat-typing-indicator [ref]="ref()" />
+            <chat-typing-indicator [agent]="agent()" />
           </div>
         </div>
 
         <!-- Interrupt banner -->
-        <chat-interrupt [ref]="ref()">
-          <ng-template let-interrupt>
-            <div class="px-5 py-3 border-t" style="background: var(--chat-warning-bg); border-color: var(--chat-border);">
-              <p class="text-sm m-0" style="color: var(--chat-warning-text);">Agent paused: {{ interrupt.value }}</p>
-            </div>
-          </ng-template>
-        </chat-interrupt>
+        @if (agent().interrupt) {
+          <chat-interrupt [agent]="agent()">
+            <ng-template let-interrupt>
+              <div class="px-5 py-3 border-t" style="background: var(--chat-warning-bg); border-color: var(--chat-border);">
+                <p class="text-sm m-0" style="color: var(--chat-warning-text);">Agent paused: {{ interrupt.value }}</p>
+              </div>
+            </ng-template>
+          </chat-interrupt>
+        }
 
         <!-- Error banner -->
         <div class="px-5 pb-2">
-          <chat-error [ref]="ref()" />
+          <chat-error [agent]="agent()" />
         </div>
 
         <!-- Input area -->
         <div class="border-t px-5 py-4" style="border-color: var(--chat-border);">
           <div class="max-w-[var(--chat-max-width)] mx-auto">
             <chat-input
-              [ref]="ref()"
+              [agent]="agent()"
               [submitOnEnter]="true"
               placeholder="Type a message..."
             />
@@ -218,7 +223,8 @@ import { KeyValuePipe } from '@angular/common';
 })
 export class ChatComponent {
 
-  readonly ref = input.required<AgentRef<any, any>>();
+  readonly agent = input.required<ChatAgent>();
+
   readonly views = input<ViewRegistry | undefined>(undefined);
   readonly store = input<StateStore | undefined>(undefined);
   readonly handlers = input<Record<string, (params: Record<string, unknown>) => unknown | Promise<unknown>>>({});
@@ -243,6 +249,9 @@ export class ChatComponent {
     return undefined;
   });
 
+  private readonly destroyRef = inject(DestroyRef);
+  private customEventsSubscribed = false;
+
   private readonly classifiers = new Map<number, ContentClassifier>();
 
   /** Convert ViewRegistry → AngularRegistry for ChatGenerativeUiComponent. */
@@ -256,34 +265,56 @@ export class ChatComponent {
   private readonly scrollContainer = viewChild<ElementRef<HTMLElement>>('scrollContainer');
 
   /** Track message count to trigger auto-scroll */
-  private readonly messageCount = computed(() => this.ref().messages().length);
+  private readonly messageCount = computed(() => this.agent().messages().length);
 
   private prevMessageCount = 0;
 
-  /**
-   * Route `state_update` custom events from the agent stream to the render
-   * state store so that components bound to `$state` paths reactively update.
-   */
-  protected readonly customEventEffect = effect(() => {
-    const events = this.ref().customEvents();
-    const store = this.resolvedStore();
-    if (!store || events.length === 0) return;
-
-    for (const event of events) {
-      if (event.name === 'state_update' && event.data && typeof event.data === 'object') {
-        store.update(event.data as Record<string, unknown>);
-      }
-    }
-  });
-
   constructor() {
+    // Route `state_update` custom events from the agent stream to the render
+    // state store so components bound to `$state` paths reactively update.
+    // customEvents$ is optional — runtimes without custom-event support leave
+    // it undefined and this wiring becomes a no-op after the first effect run.
+    // Guard with customEventsSubscribed so we subscribe at most once even if
+    // the effect re-runs due to other reactive reads. We only set the flag
+    // after successfully reading the required `agent` input, so it remains
+    // false until Angular has satisfied the required-input contract.
+    effect(() => {
+      if (this.customEventsSubscribed) return;
+      let agent: ReturnType<typeof this.agent>;
+      try {
+        agent = this.agent();
+      } catch {
+        // Required input not yet available — skip this run; effect will retry.
+        return;
+      }
+      this.customEventsSubscribed = true;
+      const stream$ = agent.customEvents$;
+      if (!stream$) return;
+      stream$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((event) => {
+        if (event.type !== 'state_update') return;
+        const data = event['data'];
+        if (!data || typeof data !== 'object') return;
+        const store = this.resolvedStore();
+        if (!store) return;
+        store.update(data as Record<string, unknown>);
+      });
+    });
+
     // Auto-scroll to bottom:
     // - Always scroll when message count increases (new message sent/received)
     // - During streaming partials, only scroll if user is near bottom
     effect(() => {
-      const count = this.messageCount();
+      // Guard against required `agent` input not yet being set (can fire
+      // during initial change detection before input signals are populated).
+      let count: number;
+      let msgs: ReturnType<ReturnType<typeof this.agent>['messages']>;
+      try {
+        count = this.messageCount();
+        msgs = this.agent().messages();
+      } catch {
+        return;
+      }
       // Track last message content to trigger scroll during streaming partials
-      const msgs = this.ref().messages();
       const lastContent = msgs.length > 0
         ? (msgs[msgs.length - 1] as unknown as Record<string, unknown>)['content']
         : undefined;
@@ -326,9 +357,7 @@ export class ChatComponent {
   }
 
   onA2uiAction(message: A2uiActionMessage): void {
-    this.ref().submit({
-      messages: [{ role: 'human', content: JSON.stringify(message) }],
-    });
+    void this.agent().submit({ message: JSON.stringify(message) });
   }
 
   onA2uiEvent(event: RenderEvent, messageIndex: number, surfaceId: string): void {

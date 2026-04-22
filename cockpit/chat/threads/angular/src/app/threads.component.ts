@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import { Component, signal } from '@angular/core';
 import { ChatComponent, ChatThreadListComponent, type Thread } from '@cacheplane/chat';
-import { agent } from '@cacheplane/angular';
+import { agent, toChatAgent } from '@cacheplane/langgraph';
 import { ExampleChatLayoutComponent } from '@cacheplane/example-layouts';
 import { environment } from '../environments/environment';
 
@@ -15,7 +15,7 @@ import { environment } from '../environments/environment';
   imports: [ChatComponent, ChatThreadListComponent, ExampleChatLayoutComponent],
   template: `
     <example-chat-layout sidebarPosition="left" sidebarWidth="w-64">
-      <chat main [ref]="stream" [threads]="threads()" [activeThreadId]="activeThreadId()" (threadSelected)="onThreadSelected($event)" class="flex-1 min-w-0" />
+      <chat main [agent]="chatAgent" [threads]="threads()" [activeThreadId]="activeThreadId()" (threadSelected)="onThreadSelected($event)" class="flex-1 min-w-0" />
       <div sidebar class="p-4 space-y-4"
            style="background: var(--chat-bg, #171717); color: var(--chat-text, #e0e0e0);">
         <h3 class="text-xs font-semibold uppercase tracking-wide"
@@ -33,6 +33,7 @@ export class ThreadsComponent {
     apiUrl: environment.langGraphApiUrl,
     assistantId: environment.streamingAssistantId,
   });
+  protected readonly chatAgent = toChatAgent(this.stream);
 
   protected readonly threads = signal<Thread[]>([
     { id: 'thread-1', title: 'First Conversation' },

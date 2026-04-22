@@ -2,11 +2,11 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Rewrite the Angular streaming example to use `agent()` from `@cacheplane/angular`, add environment config for LangGraph Cloud, and create a CI workflow that deploys the LangGraph backend on merge to main (with manual dispatch for testing).
+**Goal:** Rewrite the Angular streaming example to use `agent()` from `@cacheplane/langgraph`, add environment config for LangGraph Cloud, and create a CI workflow that deploys the LangGraph backend on merge to main (with manual dispatch for testing).
 
 **Architecture:** Delete the hand-rolled `StreamingService`, replace with `agent()` Signal-based API. Add Angular environment files for dev/prod LangGraph URLs. Create a GitHub Action that runs `langgraph deploy` from the capability's python directory. Update `app.config.ts` to use `provideAgent()`.
 
-**Tech Stack:** Angular 19+ (standalone), `@cacheplane/angular`, `@langchain/langgraph-sdk`, `@langchain/core`, GitHub Actions, `langgraph-cli`
+**Tech Stack:** Angular 19+ (standalone), `@cacheplane/langgraph`, `@langchain/langgraph-sdk`, `@langchain/core`, GitHub Actions, `langgraph-cli`
 
 ---
 
@@ -96,7 +96,7 @@ git commit -m "refactor(cockpit): remove StreamingService, add environment confi
   "version": "0.0.1",
   "private": true,
   "dependencies": {
-    "@cacheplane/angular": "^0.0.1",
+    "@cacheplane/langgraph": "^0.0.1",
     "@langchain/core": "^0.3.0",
     "@langchain/langgraph-sdk": "^0.0.36"
   }
@@ -126,7 +126,7 @@ git commit -m "chore(cockpit): add angular and LangGraph SDK deps to Angular exa
 ```ts
 // cockpit/langgraph/streaming/angular/src/app/app.config.ts
 import { ApplicationConfig } from '@angular/core';
-import { provideAgent } from '@cacheplane/angular';
+import { provideAgent } from '@cacheplane/langgraph';
 import { environment } from '../environments/environment';
 
 /**
@@ -165,7 +165,7 @@ git commit -m "feat(cockpit): configure provideAgent in Angular app"
 // cockpit/langgraph/streaming/angular/src/app/streaming.component.ts
 import { Component, computed, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { agent, ResourceStatus } from '@cacheplane/angular';
+import { agent, ResourceStatus } from '@cacheplane/langgraph';
 import type { BaseMessage } from '@langchain/core/messages';
 import { environment } from '../environments/environment';
 

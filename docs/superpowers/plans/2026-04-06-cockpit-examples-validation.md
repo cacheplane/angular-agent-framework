@@ -6,7 +6,7 @@
 
 **Architecture:** Each example follows the pattern: `agent()` → `<chat [ref]="stream">` + custom sidebar derived from `stream.value()` or `stream.messages()`. Sidebars are built directly in each example's component using Tailwind classes and the chat theme CSS vars. No new library components needed — the sidebars are example-specific UI, not reusable primitives.
 
-**Tech Stack:** Angular 20+, `@cacheplane/chat`, `@cacheplane/angular`, Tailwind CSS v4
+**Tech Stack:** Angular 20+, `@cacheplane/chat`, `@cacheplane/langgraph`, Tailwind CSS v4
 
 **Parallelism:** Tasks 1-4 (LangGraph examples) are independent. Tasks 5-8 (Deep Agent examples) are independent. All can run in parallel within their group.
 
@@ -66,7 +66,7 @@ template: `
 
 Key rules:
 - Import `ChatComponent` from `@cacheplane/chat`
-- Use `agent()` from `@cacheplane/angular`
+- Use `agent()` from `@cacheplane/langgraph`
 - Derive sidebar state with `computed()` from `stream.value()` or `stream.messages()`
 - Use Tailwind + chat theme CSS vars for styling
 - The `<chat>` component handles all message rendering, input, typing, errors internally
@@ -91,7 +91,7 @@ Replace the component with a layout that has chat + thread sidebar:
 ```typescript
 import { Component, signal, computed } from '@angular/core';
 import { ChatComponent } from '@cacheplane/chat';
-import { agent } from '@cacheplane/angular';
+import { agent } from '@cacheplane/langgraph';
 import { environment } from '../environments/environment';
 
 interface ThreadEntry {
@@ -209,7 +209,7 @@ Read `cockpit/langgraph/time-travel/angular/src/app/time-travel.component.ts`.
 ```typescript
 import { Component, computed } from '@angular/core';
 import { ChatComponent } from '@cacheplane/chat';
-import { agent } from '@cacheplane/angular';
+import { agent } from '@cacheplane/langgraph';
 import { environment } from '../environments/environment';
 
 @Component({
@@ -320,7 +320,7 @@ Read `cockpit/langgraph/durable-execution/angular/src/app/durable-execution.comp
 ```typescript
 import { Component, computed } from '@angular/core';
 import { ChatComponent } from '@cacheplane/chat';
-import { agent } from '@cacheplane/angular';
+import { agent } from '@cacheplane/langgraph';
 import { environment } from '../environments/environment';
 
 const PIPELINE_STEPS = ['analyze', 'plan', 'generate'] as const;
@@ -429,7 +429,7 @@ Read `cockpit/deep-agents/planning/angular/src/app/planning.component.ts`.
 ```typescript
 import { Component, computed } from '@angular/core';
 import { ChatComponent } from '@cacheplane/chat';
-import { agent } from '@cacheplane/angular';
+import { agent } from '@cacheplane/langgraph';
 import { environment } from '../environments/environment';
 
 interface PlanStep {
@@ -527,7 +527,7 @@ Derive file operations from `stream.messages()` by filtering for tool call messa
 ```typescript
 import { Component, computed } from '@angular/core';
 import { ChatComponent } from '@cacheplane/chat';
-import { agent } from '@cacheplane/angular';
+import { agent } from '@cacheplane/langgraph';
 import { environment } from '../environments/environment';
 
 interface FileOp {
@@ -635,7 +635,7 @@ Read `cockpit/deep-agents/subagents/angular/src/app/subagents.component.ts`.
 ```typescript
 import { Component, computed } from '@angular/core';
 import { ChatComponent } from '@cacheplane/chat';
-import { agent } from '@cacheplane/angular';
+import { agent } from '@cacheplane/langgraph';
 import { environment } from '../environments/environment';
 
 interface Delegation {
@@ -737,7 +737,7 @@ Same pattern as the LangGraph memory example but using `agent_memory` state fiel
 ```typescript
 import { Component, computed } from '@angular/core';
 import { ChatComponent } from '@cacheplane/chat';
-import { agent } from '@cacheplane/angular';
+import { agent } from '@cacheplane/langgraph';
 import { environment } from '../environments/environment';
 
 @Component({
@@ -814,7 +814,7 @@ Read `cockpit/deep-agents/skills/angular/src/app/skills.component.ts`.
 ```typescript
 import { Component, computed } from '@angular/core';
 import { ChatComponent } from '@cacheplane/chat';
-import { agent } from '@cacheplane/angular';
+import { agent } from '@cacheplane/langgraph';
 import { environment } from '../environments/environment';
 
 interface SkillInvocation {
@@ -919,7 +919,7 @@ Read `cockpit/deep-agents/sandboxes/angular/src/app/sandboxes.component.ts`.
 ```typescript
 import { Component, computed } from '@angular/core';
 import { ChatComponent } from '@cacheplane/chat';
-import { agent } from '@cacheplane/angular';
+import { agent } from '@cacheplane/langgraph';
 import { environment } from '../environments/environment';
 
 interface CodeExecution {

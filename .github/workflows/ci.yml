@@ -17,9 +17,9 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npx nx lint agent
-      - run: npx nx test agent --coverage
-      - run: npx nx build agent --configuration=production
+      - run: npx nx lint langgraph
+      - run: npx nx test langgraph --coverage
+      - run: npx nx build langgraph --configuration=production
 
   website:
     name: Website — lint / build
