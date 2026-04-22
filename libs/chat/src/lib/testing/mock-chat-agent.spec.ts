@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import { mockChatAgent } from './mock-chat-agent';
+import type { ChatAgentWithHistory } from '../agent';
 
 describe('mockChatAgent', () => {
   it('starts in idle state with empty messages', () => {
@@ -38,5 +39,19 @@ describe('mockChatAgent', () => {
     expect(agent.subagents).toBeDefined();
     expect(agent.interrupt!()).toBeUndefined();
     expect(agent.subagents!().size).toBe(0);
+  });
+});
+
+describe('mockChatAgent with history', () => {
+  it('exposes history signal when history option supplied', () => {
+    const agent = mockChatAgent({ history: [{ id: 'c1', label: 'start', values: {} }] });
+    const withHistory = agent as ChatAgentWithHistory;
+    expect(typeof withHistory.history).toBe('function');
+    expect(withHistory.history()).toEqual([{ id: 'c1', label: 'start', values: {} }]);
+  });
+
+  it('omits history when option absent', () => {
+    const agent = mockChatAgent({});
+    expect((agent as Partial<ChatAgentWithHistory>).history).toBeUndefined();
   });
 });

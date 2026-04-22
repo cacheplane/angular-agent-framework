@@ -4,7 +4,8 @@ import { Subject, type Observable } from 'rxjs';
 import type { BaseMessage } from '@langchain/core/messages';
 import type { ToolCallWithResult, Interrupt } from '@langchain/langgraph-sdk';
 import type {
-  ChatAgent,
+  ChatAgentWithHistory,
+  ChatCheckpoint,
   ChatCustomEvent,
   ChatMessage,
   ChatRole,
@@ -16,7 +17,7 @@ import type {
   ChatSubmitInput,
   ChatSubmitOptions,
 } from '@cacheplane/chat';
-import type { AgentRef, CustomStreamEvent, SubagentStreamRef } from './agent.types';
+import type { AgentRef, CustomStreamEvent, SubagentStreamRef, ThreadState } from './agent.types';
 import { ResourceStatus } from './agent.types';
 
 /**
@@ -27,7 +28,7 @@ import { ResourceStatus } from './agent.types';
  * Must be called within an Angular injection context (uses `computed` and
  * `effect`).
  */
-export function toChatAgent<T>(ref: AgentRef<T, any>): ChatAgent {
+export function toChatAgent<T>(ref: AgentRef<T, any>): ChatAgentWithHistory {
   const messages = computed<ChatMessage[]>(() =>
     ref.messages().map(toChatMessage),
   );
@@ -57,6 +58,10 @@ export function toChatAgent<T>(ref: AgentRef<T, any>): ChatAgent {
 
   const customEvents$ = buildCustomEvents$(ref);
 
+  const history = computed<ChatCheckpoint[]>(() =>
+    ref.history().map(toChatCheckpoint),
+  );
+
   return {
     messages,
     status,
@@ -67,6 +72,7 @@ export function toChatAgent<T>(ref: AgentRef<T, any>): ChatAgent {
     interrupt,
     subagents,
     customEvents$,
+    history,
     submit: (input: ChatSubmitInput, opts?: ChatSubmitOptions) =>
       ref.submit(buildSubmitPayload(input), opts ? { signal: opts.signal } as never : undefined),
     stop: () => ref.stop(),
@@ -182,4 +188,16 @@ function buildSubmitPayload(input: ChatSubmitInput): unknown {
 
 function randomId(): string {
   return Math.random().toString(36).slice(2);
+}
+
+function toChatCheckpoint(state: ThreadState<unknown>): ChatCheckpoint {
+  return {
+    id:    state.checkpoint?.checkpoint_id ?? undefined,
+    label: state.next?.[0] ?? undefined,
+    values: isRecord(state.values) ? state.values : {},
+  };
+}
+
+function isRecord(v: unknown): v is Record<string, unknown> {
+  return typeof v === 'object' && v !== null && !Array.isArray(v);
 }

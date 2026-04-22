@@ -3,7 +3,7 @@ import { describe, it, expect } from 'vitest';
 import { computeStateDiff } from './state-diff';
 import type { DiffEntry } from './state-diff';
 import { toDebugCheckpoint, extractStateValues } from './debug-utils';
-import type { DebugCheckpoint } from './debug-checkpoint-card.component';
+import type { ChatCheckpoint } from '../../agent';
 import { DebugCheckpointCardComponent } from './debug-checkpoint-card.component';
 import { DebugControlsComponent } from './debug-controls.component';
 import { DebugSummaryComponent } from './debug-summary.component';
@@ -86,46 +86,41 @@ describe('computeStateDiff', () => {
 // ── toDebugCheckpoint ──────────────────────────────────────────────────────
 
 describe('toDebugCheckpoint', () => {
-  it('uses first next node as name when available', () => {
-    const state = { next: ['agent'], checkpoint: { checkpoint_id: 'cp1' } } as any;
-    const cp = toDebugCheckpoint(state, 0);
-    expect(cp.node).toBe('agent');
-    expect(cp.checkpointId).toBe('cp1');
+  it('uses label as node name when available', () => {
+    const cp: ChatCheckpoint = { id: 'cp1', label: 'agent', values: {} };
+    const result = toDebugCheckpoint(cp, 0);
+    expect(result.node).toBe('agent');
+    expect(result.checkpointId).toBe('cp1');
   });
 
-  it('falls back to Step N when next is empty', () => {
-    const state = { next: [], checkpoint: {} } as any;
-    const cp = toDebugCheckpoint(state, 2);
-    expect(cp.node).toBe('Step 3');
+  it('falls back to Step N when label is absent', () => {
+    const cp: ChatCheckpoint = { values: {} };
+    const result = toDebugCheckpoint(cp, 2);
+    expect(result.node).toBe('Step 3');
   });
 
-  it('returns undefined checkpointId when not present', () => {
-    const state = { next: ['tool'], checkpoint: {} } as any;
-    const cp = toDebugCheckpoint(state, 0);
-    expect(cp.checkpointId).toBeUndefined();
+  it('returns undefined checkpointId when id is not present', () => {
+    const cp: ChatCheckpoint = { label: 'tool', values: {} };
+    const result = toDebugCheckpoint(cp, 0);
+    expect(result.checkpointId).toBeUndefined();
   });
 });
 
 // ── extractStateValues ─────────────────────────────────────────────────────
 
 describe('extractStateValues', () => {
-  it('returns empty object for undefined state', () => {
+  it('returns empty object for undefined checkpoint', () => {
     expect(extractStateValues(undefined)).toEqual({});
   });
 
-  it('extracts values from a ThreadState', () => {
-    const state = { values: { messages: [], count: 5 } } as any;
-    expect(extractStateValues(state)).toEqual({ messages: [], count: 5 });
+  it('extracts values from a ChatCheckpoint', () => {
+    const cp: ChatCheckpoint = { values: { messages: [], count: 5 } };
+    expect(extractStateValues(cp)).toEqual({ messages: [], count: 5 });
   });
 
-  it('returns empty object for non-object values', () => {
-    const state = { values: 'invalid' } as any;
-    expect(extractStateValues(state)).toEqual({});
-  });
-
-  it('returns empty object for array values', () => {
-    const state = { values: [1, 2, 3] } as any;
-    expect(extractStateValues(state)).toEqual({});
+  it('returns empty object for a checkpoint with empty values', () => {
+    const cp: ChatCheckpoint = { values: {} };
+    expect(extractStateValues(cp)).toEqual({});
   });
 });
 

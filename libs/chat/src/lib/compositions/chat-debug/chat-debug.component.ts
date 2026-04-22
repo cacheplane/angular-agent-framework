@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// TODO(phase-3): migrate from AgentRef to ChatAgent contract.
 import {
   Component,
   computed,
@@ -12,19 +11,15 @@ import {
   ChangeDetectionStrategy,
 } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
-import type { AgentRef } from '../../agent.types';
-import { toChatAgent } from '../../to-chat-agent';
-import {
-  ChatMessagesComponent,
-  MessageTemplateDirective,
-  ChatInputComponent,
-  ChatTypingIndicatorComponent,
-  ChatErrorComponent,
-  messageContent,
-  CHAT_THEME_STYLES,
-  CHAT_MARKDOWN_STYLES,
-  renderMarkdown,
-} from '@cacheplane/chat';
+import type { ChatAgentWithHistory } from '../../agent';
+import { ChatMessagesComponent } from '../../primitives/chat-messages/chat-messages.component';
+import { MessageTemplateDirective } from '../../primitives/chat-messages/message-template.directive';
+import { ChatInputComponent } from '../../primitives/chat-input/chat-input.component';
+import { ChatTypingIndicatorComponent } from '../../primitives/chat-typing-indicator/chat-typing-indicator.component';
+import { ChatErrorComponent } from '../../primitives/chat-error/chat-error.component';
+import { messageContent } from '../shared/message-utils';
+import { CHAT_THEME_STYLES } from '../../styles/chat-theme';
+import { CHAT_MARKDOWN_STYLES, renderMarkdown } from '../../styles/chat-markdown';
 import { DebugTimelineComponent } from './debug-timeline.component';
 import { DebugDetailComponent } from './debug-detail.component';
 import { DebugControlsComponent } from './debug-controls.component';
@@ -60,7 +55,7 @@ import { toDebugCheckpoint, extractStateValues } from './debug-utils';
           aria-live="polite"
         >
           <div class="max-w-[var(--chat-max-width)] mx-auto flex flex-col gap-5">
-            <chat-messages [agent]="chatAgent()">
+            <chat-messages [agent]="agent()">
               <!-- Human messages: right-aligned bubble -->
               <ng-template chatMessageTemplate="human" let-message>
                 <div class="flex justify-end">
@@ -104,17 +99,17 @@ import { toDebugCheckpoint, extractStateValues } from './debug-utils';
               </ng-template>
             </chat-messages>
 
-            <chat-typing-indicator [agent]="chatAgent()" />
+            <chat-typing-indicator [agent]="agent()" />
           </div>
         </div>
 
-        <chat-error [agent]="chatAgent()" />
+        <chat-error [agent]="agent()" />
 
         <!-- Input area -->
         <div class="border-t px-5 py-4" style="border-color: var(--chat-border);">
           <div class="max-w-[var(--chat-max-width)] mx-auto">
             <chat-input
-              [agent]="chatAgent()"
+              [agent]="agent()"
               [submitOnEnter]="true"
               placeholder="Type a message..."
             />
@@ -193,26 +188,24 @@ import { toDebugCheckpoint, extractStateValues } from './debug-utils';
 export class ChatDebugComponent {
   private readonly sanitizer = inject(DomSanitizer);
 
-  readonly ref = input.required<AgentRef<any, any>>();
-
-  protected readonly chatAgent = computed(() => toChatAgent(this.ref()));
+  readonly agent = input.required<ChatAgentWithHistory>();
 
   readonly debugOpen = signal<boolean>(true);
   readonly selectedCheckpointIndex = signal<number>(-1);
 
   readonly checkpoints = computed((): DebugCheckpoint[] =>
-    this.ref().history().map((state, i) => toDebugCheckpoint(state, i)),
+    this.agent().history().map((cp, i) => toDebugCheckpoint(cp, i)),
   );
 
   readonly selectedState = computed((): Record<string, unknown> => {
     const idx = this.selectedCheckpointIndex();
-    const history = this.ref().history();
+    const history = this.agent().history();
     return extractStateValues(history[idx]);
   });
 
   readonly previousState = computed((): Record<string, unknown> => {
     const idx = this.selectedCheckpointIndex();
-    const history = this.ref().history();
+    const history = this.agent().history();
     if (idx <= 0) return {};
     return extractStateValues(history[idx - 1]);
   });
@@ -223,14 +216,14 @@ export class ChatDebugComponent {
   private readonly scrollContainer = viewChild<ElementRef<HTMLElement>>('scrollContainer');
 
   /** Track message count to trigger auto-scroll */
-  private readonly messageCount = computed(() => this.ref().messages().length);
+  private readonly messageCount = computed(() => this.agent().messages().length);
 
   private prevMessageCount = 0;
 
   constructor() {
     effect(() => {
       const count = this.messageCount();
-      this.ref().isLoading(); // track
+      this.agent().isLoading(); // track
       const el = this.scrollContainer()?.nativeElement;
       if (!el) return;
 

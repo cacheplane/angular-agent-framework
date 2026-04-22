@@ -97,6 +97,24 @@ describe('toChatAgent (LangGraph adapter)', () => {
     });
   });
 
+  it('translates ThreadState history into ChatCheckpoint[]', () => {
+    TestBed.runInInjectionContext(() => {
+      const ref = stubAgentRef({
+        history: signal([
+          { values: { step: 1 }, next: ['nodeA'], checkpoint: { checkpoint_id: 'ck1' } },
+          { values: { step: 2 }, next: [],         checkpoint: { checkpoint_id: 'ck2' } },
+          { values: { step: 3 }, next: ['nodeC'], checkpoint: undefined },
+        ] as any),
+      });
+      const chat = toChatAgent(ref);
+      expect(chat.history()).toEqual([
+        { id: 'ck1', label: 'nodeA', values: { step: 1 } },
+        { id: 'ck2', label: undefined, values: { step: 2 } },
+        { id: undefined, label: 'nodeC', values: { step: 3 } },
+      ]);
+    });
+  });
+
   it('exposes customEvents$ that emits newly-appended events with type aliased from name', () => {
     const customSig = signal<CustomStreamEvent[]>([]);
     const ref = stubAgentRef({ customEvents: customSig });

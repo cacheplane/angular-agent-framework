@@ -10,6 +10,7 @@ import type {
   ChatSubagent,
   ChatSubmitInput,
   ChatSubmitOptions,
+  ChatCheckpoint,
 } from '../agent';
 import type { ChatCustomEvent } from '../agent/chat-custom-event';
 
@@ -22,6 +23,7 @@ export interface MockChatAgent extends ChatAgent {
   state:         WritableSignal<Record<string, unknown>>;
   interrupt?:    WritableSignal<ChatInterrupt | undefined>;
   subagents?:    WritableSignal<Map<string, ChatSubagent>>;
+  history?:      WritableSignal<ChatCheckpoint[]>;
   customEvents$?: Observable<ChatCustomEvent>;
   /** Captured calls to submit() in order. */
   submitCalls: Array<{ input: ChatSubmitInput; opts?: ChatSubmitOptions }>;
@@ -38,6 +40,7 @@ export interface MockChatAgentOptions {
   state?: Record<string, unknown>;
   withInterrupt?: boolean;
   withSubagents?: boolean;
+  history?: ChatCheckpoint[];
   customEvents$?: Observable<ChatCustomEvent>;
 }
 
@@ -55,6 +58,9 @@ export function mockChatAgent(opts: MockChatAgentOptions = {}): MockChatAgent {
   const subagents = opts.withSubagents
     ? signal<Map<string, ChatSubagent>>(new Map())
     : undefined;
+  const history = opts.history
+    ? signal<ChatCheckpoint[]>(opts.history)
+    : undefined;
 
   const submitCalls: MockChatAgent['submitCalls'] = [];
   let stopCount = 0;
@@ -63,6 +69,7 @@ export function mockChatAgent(opts: MockChatAgentOptions = {}): MockChatAgent {
     messages, status, isLoading, error, toolCalls, state,
     ...(interrupt      ? { interrupt }                            : {}),
     ...(subagents      ? { subagents }                            : {}),
+    ...(history        ? { history }                              : {}),
     ...(opts.customEvents$ ? { customEvents$: opts.customEvents$ } : {}),
     submit: async (input, submitOpts) => { submitCalls.push({ input, opts: submitOpts }); },
     stop: async () => { stopCount++; },

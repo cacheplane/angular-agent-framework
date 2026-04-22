@@ -19,6 +19,8 @@ export type {
   ChatSubmitInput,
   ChatSubmitOptions,
   ChatCustomEvent,
+  ChatCheckpoint,
+  ChatAgentWithHistory,
 } from './lib/agent';
 export {
   isUserMessage,
@@ -39,6 +41,7 @@ export { ChatToolCallsComponent } from './lib/primitives/chat-tool-calls/chat-to
 export { ChatSubagentsComponent } from './lib/primitives/chat-subagents/chat-subagents.component';
 export { ChatThreadListComponent } from './lib/primitives/chat-thread-list/chat-thread-list.component';
 export type { Thread } from './lib/primitives/chat-thread-list/chat-thread-list.component';
+export { ChatTimelineComponent } from './lib/primitives/chat-timeline/chat-timeline.component';
 
 // DI provider
 export { provideChat, CHAT_CONFIG } from './lib/provide-chat';
@@ -51,6 +54,8 @@ export type { InterruptAction } from './lib/compositions/chat-interrupt-panel/ch
 export { ChatToolCallCardComponent } from './lib/compositions/chat-tool-call-card/chat-tool-call-card.component';
 export type { ToolCallInfo } from './lib/compositions/chat-tool-call-card/chat-tool-call-card.component';
 export { ChatSubagentCardComponent } from './lib/compositions/chat-subagent-card/chat-subagent-card.component';
+export { ChatTimelineSliderComponent } from './lib/compositions/chat-timeline-slider/chat-timeline-slider.component';
+export { ChatDebugComponent } from './lib/compositions/chat-debug/chat-debug.component';
 
 // Shared styles & utilities
 export { CHAT_THEME_STYLES } from './lib/styles/chat-theme';
@@ -116,3 +121,4 @@ export { isPathRef, isFunctionCall } from '@cacheplane/a2ui';
 export { mockChatAgent } from './lib/testing/mock-chat-agent';
 export type { MockChatAgent, MockChatAgentOptions } from './lib/testing/mock-chat-agent';
 export { runChatAgentConformance } from './lib/testing/chat-agent-conformance';
+export { runChatAgentWithHistoryConformance } from './lib/testing/chat-agent-with-history-conformance';
