@@ -29,7 +29,7 @@ const LIBRARIES = [
   {
     id: 'angular',
     tag: 'Agent',
-    pkg: '@cacheplane/angular',
+    pkg: '@cacheplane/langgraph',
     color: tokens.colors.accent,
     rgb: '0,64,144',
     oneLiner: 'Signal-native streaming for LangGraph agents',
@@ -466,7 +466,7 @@ import { AngularFooterCTA } from '../../components/landing/angular/AngularFooter
 import { tokens } from '@cacheplane/design-tokens';
 
 export const metadata = {
-  title: '@cacheplane/angular — Agent Streaming for Angular',
+  title: '@cacheplane/langgraph — Agent Streaming for Angular',
   description: 'Ship LangGraph agents in Angular. Signal-native streaming, thread persistence, interrupts, and deterministic testing.',
 };
 
@@ -507,7 +507,7 @@ export function AngularHero() {
             fontFamily: "'JetBrains Mono', monospace", fontSize: 11, letterSpacing: '0.08em',
             color: tokens.colors.accent, textTransform: 'uppercase', display: 'inline-block', marginBottom: '1.5rem',
           }}>
-            @cacheplane/angular
+            @cacheplane/langgraph
           </span>
         </motion.div>
 
@@ -616,7 +616,7 @@ export function AngularProblemSolution() {
             fontSize: '0.58rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em',
             padding: '2px 9px', borderRadius: 5, color: '#fff', background: '#b71c1c', marginBottom: 16,
           }}>
-            Without @cacheplane/angular
+            Without @cacheplane/langgraph
           </span>
           <h3 style={{
             fontFamily: "'EB Garamond', serif", fontSize: '1.3rem', fontWeight: 700,
@@ -643,7 +643,7 @@ export function AngularProblemSolution() {
             fontSize: '0.58rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em',
             padding: '2px 9px', borderRadius: 5, color: '#fff', background: '#1a7a40', marginBottom: 16,
           }}>
-            With @cacheplane/angular
+            With @cacheplane/langgraph
           </span>
           <h3 style={{
             fontFamily: "'EB Garamond', serif", fontSize: '1.3rem', fontWeight: 700,
@@ -763,7 +763,7 @@ export function AngularFeaturesGrid() {
 import { motion } from 'framer-motion';
 import { tokens } from '@cacheplane/design-tokens';
 
-const SNIPPET_1 = `import { agent } from '@cacheplane/angular';
+const SNIPPET_1 = `import { agent } from '@cacheplane/langgraph';
 
 const chat = agent({
   graphId: 'my-agent',
@@ -775,7 +775,7 @@ chat.messages();    // Signal<AIMessage[]>
 chat.isStreaming(); // Signal<boolean>
 chat.interrupt();   // Signal<Interrupt | null>`;
 
-const SNIPPET_2 = `import { provideAgent } from '@cacheplane/angular';
+const SNIPPET_2 = `import { provideAgent } from '@cacheplane/langgraph';
 
 provideAgent({
   graphId: 'my-agent',
@@ -894,7 +894,7 @@ export function AngularComparison() {
           fontSize: 'clamp(26px,3.5vw,42px)', fontWeight: 800, lineHeight: 1.1,
           color: tokens.colors.textPrimary,
         }}>
-          LangGraph Angular SDK vs @cacheplane/angular
+          LangGraph Angular SDK vs @cacheplane/langgraph
         </h2>
       </motion.div>
 
@@ -914,7 +914,7 @@ export function AngularComparison() {
           display: 'grid', gridTemplateColumns: '1fr 1fr 1fr',
           background: 'rgba(255,255,255,.3)', borderBottom: `1px solid ${tokens.glass.border}`, padding: '14px 24px',
         }}>
-          {['Capability', 'LangGraph Angular SDK', '@cacheplane/angular'].map((h, i) => (
+          {['Capability', 'LangGraph Angular SDK', '@cacheplane/langgraph'].map((h, i) => (
             <div key={h} style={{
               fontFamily: 'var(--font-mono,"JetBrains Mono",monospace)',
               fontSize: '0.62rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em',
@@ -1521,7 +1521,7 @@ export function dripAngularFollowupHtml(day: number): { subject: string; html: s
         body: `
           <p style="font-size:11px;font-family:monospace;text-transform:uppercase;letter-spacing:0.08em;color:#004090;font-weight:700;margin:0 0 8px">Guide Follow-up</p>
           <p style="font-size:20px;font-weight:700;color:#1a1a2e;margin:0 0 14px;line-height:1.3">Did you read Chapter 2 on the agent() API?</p>
-          <p style="font-size:14px;color:#555770;line-height:1.7;margin:0 0 24px">Chapter 2 covers the <strong>agent() API</strong> — signal-native streaming, provideAgent(), and reactive state management. It's the fastest way to understand what @cacheplane/angular does differently.</p>
+          <p style="font-size:14px;color:#555770;line-height:1.7;margin:0 0 24px">Chapter 2 covers the <strong>agent() API</strong> — signal-native streaming, provideAgent(), and reactive state management. It's the fastest way to understand what @cacheplane/langgraph does differently.</p>
           <a href="https://cacheplane.ai/docs" style="display:inline-block;background-color:#004090;color:#fff;padding:12px 28px;border-radius:8px;font-size:14px;font-weight:700;text-decoration:none">Explore the Docs →</a>
         `,
         showUnsubscribe: true,
@@ -1531,12 +1531,12 @@ export function dripAngularFollowupHtml(day: number): { subject: string; html: s
 
   if (day === 5) {
     return {
-      subject: 'LangGraph Angular SDK vs @cacheplane/angular',
+      subject: 'LangGraph Angular SDK vs @cacheplane/langgraph',
       html: wrapEmail({
         body: `
           <p style="font-size:11px;font-family:monospace;text-transform:uppercase;letter-spacing:0.08em;color:#004090;font-weight:700;margin:0 0 8px">Comparison</p>
-          <p style="font-size:20px;font-weight:700;color:#1a1a2e;margin:0 0 14px;line-height:1.3">LangGraph Angular SDK vs @cacheplane/angular</p>
-          <p style="font-size:14px;color:#555770;line-height:1.7;margin:0 0 24px">The official LangGraph Angular SDK gives you basic SSE wiring. @cacheplane/angular gives you signal-native streaming, thread persistence, interrupt handling, time travel, DeepAgent support, and deterministic testing — production patterns your team can own.</p>
+          <p style="font-size:20px;font-weight:700;color:#1a1a2e;margin:0 0 14px;line-height:1.3">LangGraph Angular SDK vs @cacheplane/langgraph</p>
+          <p style="font-size:14px;color:#555770;line-height:1.7;margin:0 0 24px">The official LangGraph Angular SDK gives you basic SSE wiring. @cacheplane/langgraph gives you signal-native streaming, thread persistence, interrupt handling, time travel, DeepAgent support, and deterministic testing — production patterns your team can own.</p>
           <a href="https://cacheplane.ai/angular" style="display:inline-block;background-color:#004090;color:#fff;padding:12px 28px;border-radius:8px;font-size:14px;font-weight:700;text-decoration:none">See the Full Comparison →</a>
         `,
         showUnsubscribe: true,

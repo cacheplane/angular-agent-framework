@@ -33,7 +33,7 @@ The introduction becomes a multi-section tutorial covering the complete workflow
 - Test in LangGraph Studio
 
 ### Section 4: Connect with Angular
-- Install agent: `npm install @cacheplane/angular`
+- Install agent: `npm install @cacheplane/langgraph`
 - Configure provider in `app.config.ts`
 - Create a chat component with `agent()`
 - Show TypeScript + Template code with Tabs

@@ -8,10 +8,7 @@ import {
   ChangeDetectionStrategy,
 } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
-import { AIMessage } from '@langchain/core/messages';
-import type { BaseMessage } from '@langchain/core/messages';
-import type { AgentRef } from '@cacheplane/angular';
-import type { ToolCallWithResult } from '@langchain/langgraph-sdk';
+import type { ChatAgent, ChatMessage, ChatToolCall } from '../../agent';
 
 @Component({
   selector: 'chat-tool-calls',
@@ -30,16 +27,20 @@ import type { ToolCallWithResult } from '@langchain/langgraph-sdk';
   `,
 })
 export class ChatToolCallsComponent {
-  readonly ref = input.required<AgentRef<any, any>>();
-  readonly message = input<BaseMessage | undefined>(undefined);
+  readonly agent = input.required<ChatAgent>();
+  readonly message = input<ChatMessage | undefined>(undefined);
 
   readonly templateRef = contentChild(TemplateRef);
 
-  readonly toolCalls = computed((): ToolCallWithResult[] => {
+  readonly toolCalls = computed((): ChatToolCall[] => {
     const msg = this.message();
-    if (msg instanceof AIMessage) {
-      return this.ref().getToolCalls(msg);
+    if (msg && msg.role === 'assistant' && Array.isArray(msg.content)) {
+      const blocks = msg.content.filter((b) => b.type === 'tool_use');
+      const all = this.agent().toolCalls();
+      return blocks
+        .map(b => all.find(tc => tc.id === b.id))
+        .filter((x): x is ChatToolCall => !!x);
     }
-    return this.ref().toolCalls();
+    return this.agent().toolCalls();
   });
 }

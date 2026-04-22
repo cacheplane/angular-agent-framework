@@ -2,13 +2,13 @@
 
 <Summary>
 Deploy a LangGraph graph to LangGraph Cloud and connect an Angular app using
-`agent()` from `@cacheplane/angular`. This tutorial covers
+`agent()` from `@cacheplane/langgraph`. This tutorial covers
 `langgraph deploy`, environment configuration, Vercel hosting for Angular, and
 CI automation.
 </Summary>
 
 <Prompt>
-Build a production-ready Angular chat app that connects to a LangGraph Cloud deployment using `agent()` from `@cacheplane/angular`. Configure the `apiUrl` to point to your deployed LangGraph Cloud endpoint and set `assistantId` to match the graph name in `langgraph.json`. Display the deployment status via `stream.status()` and show the thread ID from the `onThreadId` callback.
+Build a production-ready Angular chat app that connects to a LangGraph Cloud deployment using `agent()` from `@cacheplane/langgraph`. Configure the `apiUrl` to point to your deployed LangGraph Cloud endpoint and set `assistantId` to match the graph name in `langgraph.json`. Display the deployment status via `stream.status()` and show the thread ID from the `onThreadId` callback.
 </Prompt>
 
 <Steps>
@@ -76,7 +76,7 @@ In your component, pass the deployment URL and assistant ID to `agent()`:
 
 ```typescript
 // deployment-runtime.component.ts
-import { agent } from '@cacheplane/angular';
+import { agent } from '@cacheplane/langgraph';
 import { environment } from '../environments/environment';
 
 export class DeploymentRuntimeComponent {

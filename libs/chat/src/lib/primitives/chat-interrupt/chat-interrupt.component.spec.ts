@@ -1,58 +1,57 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import { describe, it, expect } from 'vitest';
-import { signal, computed } from '@angular/core';
+import { signal, computed, type WritableSignal } from '@angular/core';
 import { getInterrupt } from './chat-interrupt.component';
-import { createMockAgentRef } from '../../testing/mock-agent-ref';
-import type { Interrupt } from '@cacheplane/angular';
+import { mockChatAgent } from '../../testing/mock-chat-agent';
+import type { ChatInterrupt } from '../../agent/chat-interrupt';
 
 describe('getInterrupt()', () => {
-  it('returns undefined when no interrupt is present', () => {
-    const mockRef = createMockAgentRef();
-    expect(getInterrupt(mockRef)).toBeUndefined();
+  it('returns undefined when the runtime does not expose interrupt', () => {
+    const agent = mockChatAgent(); // no withInterrupt → agent.interrupt absent
+    expect(getInterrupt(agent)).toBeUndefined();
   });
 
-  it('returns the interrupt value when present', () => {
-    const mockInterrupt: Interrupt<any> = { value: { question: 'Confirm?' } } as any;
-    const mockRef = createMockAgentRef();
-    // Cast to access writable signal for test setup
-    (mockRef.interrupt as ReturnType<typeof signal<Interrupt<any> | undefined>>).set(mockInterrupt);
+  it('returns undefined when the interrupt signal holds undefined', () => {
+    const agent = mockChatAgent({ withInterrupt: true });
+    expect(getInterrupt(agent)).toBeUndefined();
+  });
 
-    expect(getInterrupt(mockRef)).toBe(mockInterrupt);
+  it('returns the interrupt value when the signal holds one', () => {
+    const ix: ChatInterrupt = { id: 'ix-1', value: { question: 'Confirm?' }, resumable: true };
+    const agent = mockChatAgent({ withInterrupt: true });
+    (agent.interrupt as WritableSignal<ChatInterrupt | undefined>).set(ix);
+    expect(getInterrupt(agent)).toBe(ix);
   });
 });
 
 describe('ChatInterruptComponent — interrupt computed', () => {
-  it('interrupt is undefined when ref has no interrupt', () => {
-    const mockRef = createMockAgentRef();
-    const ref$ = signal(mockRef);
-
-    const interrupt = computed(() => ref$().interrupt());
-
+  it('interrupt is undefined when agent does not expose interrupt', () => {
+    const agent = mockChatAgent();
+    const agent$ = signal(agent);
+    const interrupt = computed(() => agent$().interrupt?.());
     expect(interrupt()).toBeUndefined();
   });
 
-  it('interrupt reflects ref.interrupt value when present', () => {
-    const mockInterrupt: Interrupt<any> = { value: { step: 'confirm' } } as any;
-    const mockRef = createMockAgentRef();
-    (mockRef.interrupt as ReturnType<typeof signal<Interrupt<any> | undefined>>).set(mockInterrupt);
-
-    const ref$ = signal(mockRef);
-    const interrupt = computed(() => ref$().interrupt());
-
-    expect(interrupt()).toBe(mockInterrupt);
+  it('interrupt reflects agent.interrupt value when present', () => {
+    const ix: ChatInterrupt = { id: 'ix-1', value: { step: 'confirm' }, resumable: true };
+    const agent = mockChatAgent({ withInterrupt: true });
+    (agent.interrupt as WritableSignal<ChatInterrupt | undefined>).set(ix);
+    const agent$ = signal(agent);
+    const interrupt = computed(() => agent$().interrupt?.());
+    expect(interrupt()).toBe(ix);
   });
 
-  it('interrupt updates reactively when ref changes', () => {
-    const noInterruptRef = createMockAgentRef();
-    const interruptRef = createMockAgentRef();
-    const mockInterrupt: Interrupt<any> = { value: { type: 'human_review' } } as any;
-    (interruptRef.interrupt as ReturnType<typeof signal<Interrupt<any> | undefined>>).set(mockInterrupt);
+  it('interrupt updates reactively when agent changes', () => {
+    const noIx = mockChatAgent({ withInterrupt: true });
+    const withIx = mockChatAgent({ withInterrupt: true });
+    const ix: ChatInterrupt = { id: 'ix-2', value: { type: 'human_review' }, resumable: true };
+    (withIx.interrupt as WritableSignal<ChatInterrupt | undefined>).set(ix);
 
-    const ref$ = signal(noInterruptRef);
-    const interrupt = computed(() => ref$().interrupt());
+    const agent$ = signal<ReturnType<typeof mockChatAgent>>(noIx);
+    const interrupt = computed(() => agent$().interrupt?.());
 
     expect(interrupt()).toBeUndefined();
-    ref$.set(interruptRef);
-    expect(interrupt()).toBe(mockInterrupt);
+    agent$.set(withIx);
+    expect(interrupt()).toBe(ix);
   });
 });

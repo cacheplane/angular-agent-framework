@@ -3,7 +3,7 @@ import { Component, computed } from '@angular/core';
 import { ChatInputComponent as ChatInputPrimitive } from '@cacheplane/chat';
 import { ChatMessagesComponent } from '@cacheplane/chat';
 import { ExampleChatLayoutComponent } from '@cacheplane/example-layouts';
-import { agent } from '@cacheplane/angular';
+import { agent, toChatAgent } from '@cacheplane/langgraph';
 import { environment } from '../environments/environment';
 
 /**
@@ -22,10 +22,10 @@ import { environment } from '../environments/environment';
           <h1 class="text-sm font-semibold" style="color: var(--chat-text, #e0e0e0);">Chat Input Demo</h1>
         </header>
         <div class="flex-1 overflow-y-auto">
-          <chat-messages [ref]="stream" />
+          <chat-messages [agent]="chatAgent" />
         </div>
         <div class="px-4 py-2" style="background: var(--chat-bg, #171717);">
-          <chat-input [ref]="stream" placeholder="Try typing here..." (send)="submitMessage($event)" />
+          <chat-input [agent]="chatAgent" placeholder="Try typing here..." (send)="submitMessage($event)" />
         </div>
       </div>
       <div sidebar class="p-4 space-y-4" style="background: var(--chat-bg, #171717); color: var(--chat-text, #e0e0e0);">
@@ -56,11 +56,12 @@ export class InputComponent {
     apiUrl: environment.langGraphApiUrl,
     assistantId: environment.streamingAssistantId,
   });
+  protected readonly chatAgent = toChatAgent(this.stream);
 
   protected readonly streamStatus = computed(() => this.stream.status());
   protected readonly isLoading = computed(() => this.stream.isLoading());
 
   submitMessage(content: string) {
-    this.stream.submit([{ role: 'human', content }]);
+    this.chatAgent.submit({ message: content });
   }
 }

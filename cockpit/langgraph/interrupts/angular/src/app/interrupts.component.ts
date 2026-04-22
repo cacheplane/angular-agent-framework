@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import { Component } from '@angular/core';
 import { ChatComponent, ChatInterruptPanelComponent, views, type InterruptAction } from '@cacheplane/chat';
-import { agent } from '@cacheplane/angular';
+import { agent, toChatAgent } from '@cacheplane/langgraph';
 import { ExampleChatLayoutComponent } from '@cacheplane/example-layouts';
 import { signalStateStore } from '@cacheplane/render';
 import { environment } from '../environments/environment';
@@ -26,10 +26,10 @@ import { ApprovalCardComponent } from './views/approval-card.component';
   template: `
     <example-chat-layout>
       <div main class="flex flex-col h-full">
-        <chat [ref]="stream" [views]="ui" [store]="uiStore" class="flex-1 min-w-0" />
-        @if (stream.interrupt()) {
+        <chat [agent]="chatAgent" [views]="ui" [store]="uiStore" class="flex-1 min-w-0" />
+        @if (chatAgent.interrupt()) {
           <div class="p-4" style="border-top: 1px solid var(--chat-border, #333);">
-            <chat-interrupt-panel [ref]="stream" (action)="onInterruptAction($event)" />
+            <chat-interrupt-panel [agent]="chatAgent" (action)="onInterruptAction($event)" />
           </div>
         }
       </div>
@@ -50,6 +50,7 @@ export class InterruptsComponent {
     apiUrl: environment.langGraphApiUrl,
     assistantId: environment.streamingAssistantId,
   });
+  protected readonly chatAgent = toChatAgent(this.stream);
 
   /**
    * Handle an interrupt action from the panel.
@@ -65,6 +66,6 @@ export class InterruptsComponent {
     // In a production app, 'edit' would let the user modify the response before approval.
     // For this demo, all actions simply resume the graph.
     void action; // Each branch intentionally does the same thing in this demo
-    this.stream.submit(null);
+    void this.chatAgent.submit({ resume: null });
   }
 }

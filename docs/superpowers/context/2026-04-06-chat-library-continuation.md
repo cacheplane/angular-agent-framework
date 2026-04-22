@@ -59,7 +59,7 @@ Two-layer Angular chat library: headless primitives + prebuilt Tailwind composit
 
 **Tests:** 112 passing.
 
-**Peer deps:** `@cacheplane/render`, `@cacheplane/angular`, `@angular/core`, `@angular/common`, `@langchain/core`
+**Peer deps:** `@cacheplane/render`, `@cacheplane/langgraph`, `@angular/core`, `@angular/common`, `@langchain/core`
 
 ### Cockpit Integration — 14 Angular Examples
 
@@ -140,7 +140,7 @@ All 14 standalone Angular apps consuming @cacheplane/chat, each with Angular CLI
 libs/render/                          # @cacheplane/render
 libs/chat/                            # @cacheplane/chat
 libs/chat/src/lib/styles/chat-theme.css  # CSS custom properties
-libs/angular/                 # @cacheplane/angular (existing)
+libs/angular/                 # @cacheplane/langgraph (existing)
 cockpit/langgraph/*/angular/          # 8 LangGraph examples
 cockpit/deep-agents/*/angular/        # 6 Deep Agents examples
 apps/cockpit/                         # Next.js cockpit shell

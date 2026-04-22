@@ -6,7 +6,7 @@
 
 **Architecture:** Modify `ChatComponent.onA2uiEvent()` to auto-route `a2ui:event` actions via `this.ref().submit()`. Then scaffold a new `cockpit/chat/a2ui/` example with Angular app (using `a2uiBasicCatalog()`) and Python LangGraph agent that emits A2UI JSONL for a contact form.
 
-**Tech Stack:** Angular 20+, `@cacheplane/angular`, `@cacheplane/chat`, `@cacheplane/a2ui`, LangGraph Python, Vitest, Playwright
+**Tech Stack:** Angular 20+, `@cacheplane/langgraph`, `@cacheplane/chat`, `@cacheplane/a2ui`, LangGraph Python, Vitest, Playwright
 
 ---
 
@@ -261,7 +261,7 @@ export const environment = {
 ```typescript
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import { ApplicationConfig } from '@angular/core';
-import { provideAgent } from '@cacheplane/angular';
+import { provideAgent } from '@cacheplane/langgraph';
 import { provideChat } from '@cacheplane/chat';
 import { environment } from '../environments/environment';
 
@@ -279,7 +279,7 @@ export const appConfig: ApplicationConfig = {
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import { Component } from '@angular/core';
 import { ChatComponent, a2uiBasicCatalog } from '@cacheplane/chat';
-import { agent } from '@cacheplane/angular';
+import { agent } from '@cacheplane/langgraph';
 import { environment } from '../environments/environment';
 
 @Component({
@@ -636,7 +636,7 @@ Import `a2uiBasicCatalog()` and pass it via the `[views]` input:
 
 ```typescript
 import { ChatComponent, a2uiBasicCatalog } from '@cacheplane/chat';
-import { agent } from '@cacheplane/angular';
+import { agent } from '@cacheplane/langgraph';
 
 @Component({
   selector: 'app-a2ui',
@@ -828,7 +828,7 @@ or log events without intercepting the routing.
 
 ```typescript
 import { ChatComponent, a2uiBasicCatalog } from '@cacheplane/chat';
-import { agent } from '@cacheplane/angular';
+import { agent } from '@cacheplane/langgraph';
 
 @Component({
   template: `<chat [ref]="agentRef" [views]="catalog" />`,

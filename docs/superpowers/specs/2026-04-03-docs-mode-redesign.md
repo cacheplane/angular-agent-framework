@@ -58,7 +58,7 @@ Set up `provideAgent()` in your app config:
 
 ```typescript
 // app.config.ts
-import { provideAgent } from '@cacheplane/angular';
+import { provideAgent } from '@cacheplane/langgraph';
 
 export const appConfig: ApplicationConfig = {
   providers: [provideAgent({ apiUrl: '...' })],
@@ -90,7 +90,7 @@ Never expose your LangSmith API key in client-side code.
 
 <Prompt>
 Add real-time LLM streaming to this Angular component using
-`agent()` from `@cacheplane/angular`. Configure
+`agent()` from `@cacheplane/langgraph`. Configure
 `provideAgent({ apiUrl })` in the app config, then call
 `stream.submit()` to send messages. Bind `stream.messages()` in the
 template using `@for` — all Signals, no subscriptions needed.

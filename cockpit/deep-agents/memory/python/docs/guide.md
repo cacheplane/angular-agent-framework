@@ -1,11 +1,11 @@
 # Persistent Agent Memory with angular
 
 <Summary>
-Build a chat interface where the agent remembers facts about the user across turns using `agent()` from `@cacheplane/angular`. The agent stores learned facts in `agent_memory` state, and the sidebar displays them in real time.
+Build a chat interface where the agent remembers facts about the user across turns using `agent()` from `@cacheplane/langgraph`. The agent stores learned facts in `agent_memory` state, and the sidebar displays them in real time.
 </Summary>
 
 <Prompt>
-Add a memory sidebar to this Angular component using `agent()` from `@cacheplane/angular`. Use `stream.value()` to access the agent's `agent_memory` state, derive `memoryEntries` with `computed()`, and bind them to the sidebar via the `<cp-chat>` component from `@cacheplane/chat`.
+Add a memory sidebar to this Angular component using `agent()` from `@cacheplane/langgraph`. Use `stream.value()` to access the agent's `agent_memory` state, derive `memoryEntries` with `computed()`, and bind them to the sidebar via the `<cp-chat>` component from `@cacheplane/chat`.
 </Prompt>
 
 <Steps>
@@ -16,7 +16,7 @@ Set up `provideAgent()` in your app config with the LangGraph API URL:
 ```typescript
 // app.config.ts
 import { ApplicationConfig } from '@angular/core';
-import { provideAgent } from '@cacheplane/angular';
+import { provideAgent } from '@cacheplane/langgraph';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -36,7 +36,7 @@ In your component, call `agent()` with the `assistantId` pointing to your memory
 
 ```typescript
 // memory.component.ts
-import { agent } from '@cacheplane/angular';
+import { agent } from '@cacheplane/langgraph';
 
 export class MemoryComponent {
   protected readonly stream = agent({

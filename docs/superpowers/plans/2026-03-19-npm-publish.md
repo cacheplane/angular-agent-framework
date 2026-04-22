@@ -1,4 +1,4 @@
-# npm Publish Plan — @cacheplane/angular + @cacheplane/angular-mcp
+# npm Publish Plan — @cacheplane/langgraph + @cacheplane/langgraph-mcp
 
 **Date:** 2026-03-19
 **Status:** Not started
@@ -12,8 +12,8 @@ Publish two packages to npm under the `@cacheplane` scope:
 
 | Package | Version | Registry path |
 |---|---|---|
-| `@cacheplane/angular` | `0.0.1` | `libs/angular/` |
-| `@cacheplane/angular-mcp` | `0.1.0` | `packages/mcp/` |
+| `@cacheplane/langgraph` | `0.0.1` | `libs/angular/` |
+| `@cacheplane/langgraph-mcp` | `0.1.0` | `packages/mcp/` |
 
 ---
 
@@ -42,7 +42,7 @@ Add the token to GitHub repo secrets as `NPM_TOKEN`.
 
 ## What to Publish
 
-### `@cacheplane/angular`
+### `@cacheplane/langgraph`
 
 - Source: `libs/angular/`
 - Built by: `npx nx build angular` → outputs to `dist/libs/angular/`
@@ -51,7 +51,7 @@ Add the token to GitHub repo secrets as `NPM_TOKEN`.
 
 The `libs/angular/package.json` must have a `files` field or `ng-package.json` controls what gets included. Verify the dist output contains: `package.json`, `index.d.ts`, `fesm2022/`, `esm2022/`.
 
-### `@cacheplane/angular-mcp`
+### `@cacheplane/langgraph-mcp`
 
 - Source: `packages/mcp/`
 - Build command: `npm run build` (runs `tsc -p tsconfig.json` → outputs to `packages/mcp/dist/`)
@@ -134,9 +134,9 @@ publish:
 ## Post-Publish
 
 - Verify packages appear at:
-  - https://www.npmjs.com/package/@cacheplane/angular
-  - https://www.npmjs.com/package/@cacheplane/angular-mcp
-- Update npm badge in README.md (badge already points to `@cacheplane/angular`, will populate once published)
+  - https://www.npmjs.com/package/@cacheplane/langgraph
+  - https://www.npmjs.com/package/@cacheplane/langgraph-mcp
+- Update npm badge in README.md (badge already points to `@cacheplane/langgraph`, will populate once published)
 - Update `PricingGrid.tsx` `ctaHref` if needed (currently points to npm URL, which is already correct)
 
 ---

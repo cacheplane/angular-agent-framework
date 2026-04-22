@@ -1,78 +1,76 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { signal, computed } from '@angular/core';
 import { submitMessage } from './chat-input.component';
-import { createMockAgentRef } from '../../testing/mock-agent-ref';
+import { mockChatAgent } from '../../testing/mock-chat-agent';
 
 describe('submitMessage()', () => {
-  it('calls ref.submit with a human message containing the trimmed text', () => {
-    const mockRef = createMockAgentRef();
-    const submitSpy = vi.spyOn(mockRef, 'submit');
+  it('calls agent.submit with { message: trimmed text }', async () => {
+    const agent = mockChatAgent();
 
-    submitMessage(mockRef, '  hello world  ');
+    submitMessage(agent, '  hello world  ');
 
-    expect(submitSpy).toHaveBeenCalledOnce();
-    const args = submitSpy.mock.calls[0][0] as { messages: Array<{ role: string; content: string }> };
-    expect(args.messages).toHaveLength(1);
-    expect(args.messages[0].role).toBe('human');
-    expect(args.messages[0].content).toBe('hello world');
+    // Flush the async submit (it's void-async, we just need microtask flush)
+    await Promise.resolve();
+    expect(agent.submitCalls).toHaveLength(1);
+    expect(agent.submitCalls[0].input).toEqual({ message: 'hello world' });
   });
 
   it('returns the trimmed text on successful submit', () => {
-    const mockRef = createMockAgentRef();
-    const result = submitMessage(mockRef, '  hello  ');
+    const agent = mockChatAgent();
+    const result = submitMessage(agent, '  hello  ');
     expect(result).toBe('hello');
   });
 
-  it('does not call ref.submit and returns null for whitespace-only text', () => {
-    const mockRef = createMockAgentRef();
-    const submitSpy = vi.spyOn(mockRef, 'submit');
+  it('does not call agent.submit and returns null for whitespace-only text', async () => {
+    const agent = mockChatAgent();
 
-    const result = submitMessage(mockRef, '   ');
+    const result = submitMessage(agent, '   ');
 
-    expect(submitSpy).not.toHaveBeenCalled();
+    await Promise.resolve();
+    expect(agent.submitCalls).toHaveLength(0);
     expect(result).toBeNull();
   });
 
-  it('does not call ref.submit and returns null for empty string', () => {
-    const mockRef = createMockAgentRef();
-    const submitSpy = vi.spyOn(mockRef, 'submit');
+  it('does not call agent.submit and returns null for empty string', async () => {
+    const agent = mockChatAgent();
 
-    const result = submitMessage(mockRef, '');
+    const result = submitMessage(agent, '');
 
-    expect(submitSpy).not.toHaveBeenCalled();
+    await Promise.resolve();
+    expect(agent.submitCalls).toHaveLength(0);
     expect(result).toBeNull();
   });
 });
 
 describe('ChatInputComponent — isDisabled computed', () => {
-  it('isDisabled is false when ref.isLoading is false', () => {
-    const mockRef = createMockAgentRef({ isLoading: false });
-    const ref$ = signal(mockRef);
+  it('isDisabled is false when agent.isLoading is false', () => {
+    const agent = mockChatAgent({ isLoading: false });
+    const agent$ = signal(agent);
 
-    const isDisabled = computed(() => ref$().isLoading());
+    const isDisabled = computed(() => agent$().isLoading());
 
     expect(isDisabled()).toBe(false);
   });
 
-  it('isDisabled is true when ref.isLoading is true', () => {
-    const mockRef = createMockAgentRef({ isLoading: true });
-    const ref$ = signal(mockRef);
+  it('isDisabled is true when agent.isLoading is true', () => {
+    const agent = mockChatAgent({ isLoading: true });
+    const agent$ = signal(agent);
 
-    const isDisabled = computed(() => ref$().isLoading());
+    const isDisabled = computed(() => agent$().isLoading());
 
     expect(isDisabled()).toBe(true);
   });
 
-  it('isDisabled updates reactively when ref changes', () => {
-    const idleRef = createMockAgentRef({ isLoading: false });
-    const loadingRef = createMockAgentRef({ isLoading: true });
-    const ref$ = signal(idleRef);
+  it('isDisabled updates reactively when agent changes', () => {
+    const idleAgent = mockChatAgent({ isLoading: false });
+    const loadingAgent = mockChatAgent({ isLoading: true });
+    const agent$ = signal(idleAgent);
 
-    const isDisabled = computed(() => ref$().isLoading());
+    const isDisabled = computed(() => agent$().isLoading());
 
     expect(isDisabled()).toBe(false);
-    ref$.set(loadingRef);
+    agent$.set(loadingAgent);
     expect(isDisabled()).toBe(true);
   });
 });

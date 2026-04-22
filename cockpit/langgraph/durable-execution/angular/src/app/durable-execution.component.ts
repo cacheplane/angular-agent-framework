@@ -1,6 +1,6 @@
 import { Component, computed } from '@angular/core';
 import { ChatComponent, views } from '@cacheplane/chat';
-import { agent } from '@cacheplane/angular';
+import { agent, toChatAgent } from '@cacheplane/langgraph';
 import { signalStateStore } from '@cacheplane/render';
 import { ExampleChatLayoutComponent } from '@cacheplane/example-layouts';
 import { environment } from '../environments/environment';
@@ -40,7 +40,7 @@ const STEP_LABELS: Record<string, string> = {
   imports: [ChatComponent, ExampleChatLayoutComponent],
   template: `
     <example-chat-layout sidebarWidth="w-64">
-      <chat main [ref]="stream" [views]="ui" [store]="uiStore" class="flex-1 min-w-0" />
+      <chat main [agent]="chatAgent" [views]="ui" [store]="uiStore" class="flex-1 min-w-0" />
       <div sidebar class="p-4"
            style="background: var(--chat-bg, #171717); color: var(--chat-text, #e0e0e0);">
         <h3 class="text-xs font-semibold uppercase tracking-wide mb-6"
@@ -102,6 +102,7 @@ export class DurableExecutionComponent {
     apiUrl: environment.langGraphApiUrl,
     assistantId: environment.streamingAssistantId,
   });
+  protected readonly chatAgent = toChatAgent(this.stream);
 
   /**
    * Derives the 3-step pipeline status from the graph's `state.step` field.

@@ -13,7 +13,7 @@ Build a rich, extensible Angular chat component library for LangGraph, LangChain
 ### Deliverables
 
 1. **`@cacheplane/render`** (`libs/render`) — Angular rendering layer for `@json-render/core`
-2. **`@cacheplane/chat`** (`libs/chat`) — Chat UI component library built on `@cacheplane/angular`
+2. **`@cacheplane/chat`** (`libs/chat`) — Chat UI component library built on `@cacheplane/langgraph`
 3. **Cockpit integration** — Update capability examples to consume `@cacheplane/chat`
 
 ### Architecture: Layered Stack
@@ -27,7 +27,7 @@ Build a rich, extensible Angular chat component library for LangGraph, LangChain
        ↓
 cockpit examples           (standalone Angular apps, independently deployed)
        ↑
-@cacheplane/angular (peer dep — existing library)
+@cacheplane/langgraph (peer dep — existing library)
 ```
 
 ---
@@ -100,7 +100,7 @@ Angular chat component library providing headless primitives and prebuilt Tailwi
 ### Peer Dependencies
 
 - `@cacheplane/render`
-- `@cacheplane/angular`
+- `@cacheplane/langgraph`
 - `@angular/core`
 - `@angular/common`
 - `@langchain/core` (for `BaseMessage` types)

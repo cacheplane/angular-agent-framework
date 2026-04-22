@@ -6,7 +6,7 @@ import {
   ChatTypingIndicatorComponent,
 } from '@cacheplane/chat';
 import { ExampleChatLayoutComponent } from '@cacheplane/example-layouts';
-import { agent } from '@cacheplane/angular';
+import { agent, toChatAgent } from '@cacheplane/langgraph';
 import { environment } from '../environments/environment';
 
 /**
@@ -27,11 +27,11 @@ import { environment } from '../environments/environment';
           <h1 class="text-sm font-semibold" style="color: var(--chat-text, #e0e0e0);">Chat Messages Primitives</h1>
         </header>
         <div class="flex-1 overflow-y-auto">
-          <chat-messages [ref]="stream" />
+          <chat-messages [agent]="chatAgent" />
         </div>
         <div class="px-4 py-2" style="background: var(--chat-bg, #171717);">
-          <chat-typing-indicator [ref]="stream" />
-          <chat-input [ref]="stream" (send)="submitMessage($event)" />
+          <chat-typing-indicator [agent]="chatAgent" />
+          <chat-input [agent]="chatAgent" (send)="submitMessage($event)" />
         </div>
       </div>
       <div sidebar class="p-4 space-y-4" style="background: var(--chat-bg, #171717); color: var(--chat-text, #e0e0e0);">
@@ -51,8 +51,9 @@ export class MessagesComponent {
     apiUrl: environment.langGraphApiUrl,
     assistantId: environment.streamingAssistantId,
   });
+  protected readonly chatAgent = toChatAgent(this.stream);
 
   submitMessage(content: string) {
-    this.stream.submit([{ role: 'human', content }]);
+    this.chatAgent.submit({ message: content });
   }
 }

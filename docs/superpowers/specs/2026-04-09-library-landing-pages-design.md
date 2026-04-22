@@ -35,7 +35,7 @@ Subtitle: "Everything your Angular team needs to ship AI agents to production."
 3-card grid (responsive: 1 col mobile, 3 col desktop):
 
 Card 1 — Angular (blue #004090)
-  Package: @cacheplane/angular
+  Package: @cacheplane/langgraph
   One-liner: "Signal-native streaming for LangGraph agents"
   Chips: agent(), provideAgent(), interrupt(), MockStreamTransport
   CTA: "Explore Angular →" → /angular
@@ -105,7 +105,7 @@ Each page uses the same ambient gradient blob pattern as the home page and pilot
 ### 2a. `/angular` — Agent Streaming Core
 
 **Hero:**
-- Eyebrow: `@cacheplane/angular`
+- Eyebrow: `@cacheplane/langgraph`
 - Headline: "Ship LangGraph agents in Angular — without building the plumbing"
 - Subheadline: "Signal-native streaming, thread persistence, interrupts, and deterministic testing. The complete agent primitive layer for Angular 20+."
 - Primary CTA: "Download the Guide" → `/whitepapers/angular.pdf`
@@ -129,11 +129,11 @@ Each page uses the same ambient gradient blob pattern as the home page and pilot
 - Minimal `agent()` setup (8-10 lines)
 - `provideAgent()` configuration with thread persistence (10-12 lines)
 
-**ComparisonTable: "LangGraph Angular SDK vs @cacheplane/angular"**
+**ComparisonTable: "LangGraph Angular SDK vs @cacheplane/langgraph"**
 
 Head-to-head against the recently released official LangGraph Angular SDK:
 
-| Capability | LangGraph Angular SDK | @cacheplane/angular |
+| Capability | LangGraph Angular SDK | @cacheplane/langgraph |
 |---|---|---|
 | SSE streaming | Manual wiring | Signal-native via agent() |
 | State management | Custom signals | Built-in reactive state |
@@ -314,7 +314,7 @@ Create 3 new drip campaign files, one per library whitepaper. Each follows the s
 
 **Angular drip (`emails/drip-angular-followup.ts`):**
 - Day 2: "Did you read Chapter 2 on the agent() API?" — highlights the core API, links to docs
-- Day 5: "LangGraph Angular SDK vs @cacheplane/angular" — comparison narrative, links to `/angular`
+- Day 5: "LangGraph Angular SDK vs @cacheplane/langgraph" — comparison narrative, links to `/angular`
 - Day 10: "The pilot program includes hands-on integration" — pilot program intro, links to `/pilot-to-prod`
 - Day 20: "Ready to ship your LangGraph agent? Let's talk." — soft sales outreach
 
@@ -412,7 +412,7 @@ Get Started
 
 ## 7. Follow-Up Tasks (Out of Scope)
 
-- **Consolidate @cacheplane/stream-resource into @cacheplane/angular** — merge the base primitives library into the agent library so there are truly 3 libraries, not 4. Tracked as a separate task.
+- **Consolidate @cacheplane/stream-resource into @cacheplane/langgraph** — merge the base primitives library into the agent library so there are truly 3 libraries, not 4. Tracked as a separate task.
 - **Editorial review of generated whitepaper content** — the pipeline generates content via Claude API; human review of tone, accuracy, and messaging is a follow-up.
 
 ---

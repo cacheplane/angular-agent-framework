@@ -23,7 +23,7 @@
       "@cacheplane/cockpit-langgraph-streaming-python": [
         "cockpit/langgraph/streaming/python/src/index.ts"
       ],
-      "@cacheplane/angular": ["libs/agent/src/public-api.ts"],
+      "@cacheplane/langgraph": ["libs/langgraph/src/public-api.ts"],
       "@cacheplane/render": ["libs/render/src/public-api.ts"],
       "@cacheplane/chat": ["libs/chat/src/public-api.ts"],
       "@cacheplane/partial-json": ["libs/partial-json/src/index.ts"],

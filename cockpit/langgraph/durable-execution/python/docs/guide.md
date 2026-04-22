@@ -2,13 +2,13 @@
 
 <Summary>
 Build a fault-tolerant chat interface using `agent()` from
-`@cacheplane/angular`. The backend graph checkpoints state after
+`@cacheplane/langgraph`. The backend graph checkpoints state after
 each node, enabling resume-on-failure. The sidebar monitors execution
 status in real time and exposes a "Retry" button when errors occur.
 </Summary>
 
 <Prompt>
-Add a durable multi-step execution workflow to this Angular component using `agent()` from `@cacheplane/angular`. Display `stream.status()` as a colour-coded badge, show a `stream.hasValue()` indicator, and render a "Retry" button that calls `stream.reload()` when `stream.error()` is set. Bind `stream.messages()` in the template via the `<cp-chat>` component from `@cacheplane/chat`.
+Add a durable multi-step execution workflow to this Angular component using `agent()` from `@cacheplane/langgraph`. Display `stream.status()` as a colour-coded badge, show a `stream.hasValue()` indicator, and render a "Retry" button that calls `stream.reload()` when `stream.error()` is set. Bind `stream.messages()` in the template via the `<cp-chat>` component from `@cacheplane/chat`.
 </Prompt>
 
 <Steps>
@@ -19,7 +19,7 @@ Set up `provideAgent()` in your app config with the LangGraph API URL:
 ```typescript
 // app.config.ts
 import { ApplicationConfig } from '@angular/core';
-import { provideAgent } from '@cacheplane/angular';
+import { provideAgent } from '@cacheplane/langgraph';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -39,7 +39,7 @@ In your component, call `agent()` with the `assistantId` pointing to your durabl
 
 ```typescript
 // durable-execution.component.ts
-import { agent } from '@cacheplane/angular';
+import { agent } from '@cacheplane/langgraph';
 
 export class DurableExecutionComponent {
   protected readonly stream = agent({

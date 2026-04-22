@@ -425,7 +425,7 @@ git commit -m "feat(cockpit): add four-mode shell with Docs and API modes"
 # Streaming with angular
 
 This guide walks through building a real-time streaming chat interface using
-`agent()` from `@cacheplane/angular` connected to a LangGraph
+`agent()` from `@cacheplane/langgraph` connected to a LangGraph
 backend on LangSmith Cloud.
 
 ## What you'll build
@@ -439,7 +439,7 @@ visual feedback instead of waiting for a complete response.
 Set up `provideAgent()` in your app config with the LangGraph Cloud URL:
 
 ```typescript
-import { provideAgent } from '@cacheplane/angular';
+import { provideAgent } from '@cacheplane/langgraph';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -457,7 +457,7 @@ This makes the API URL available to all `agent()` calls in your app.
 In your component, call `agent()` in a field initializer (injection context required):
 
 ```typescript
-import { agent } from '@cacheplane/angular';
+import { agent } from '@cacheplane/langgraph';
 
 export class StreamingComponent {
   protected readonly stream = agent({

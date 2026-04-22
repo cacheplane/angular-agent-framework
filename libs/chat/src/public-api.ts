@@ -4,6 +4,29 @@
 export type { ChatConfig } from './lib/provide-chat';
 export type { MessageTemplateType } from './lib/chat.types';
 
+// ChatAgent contract (runtime-neutral)
+export type {
+  ChatAgent,
+  ChatMessage,
+  ChatRole,
+  ChatContentBlock,
+  ChatToolCall,
+  ChatToolCallStatus,
+  ChatStatus,
+  ChatInterrupt,
+  ChatSubagent,
+  ChatSubagentStatus,
+  ChatSubmitInput,
+  ChatSubmitOptions,
+  ChatCustomEvent,
+} from './lib/agent';
+export {
+  isUserMessage,
+  isAssistantMessage,
+  isToolMessage,
+  isSystemMessage,
+} from './lib/agent';
+
 // Primitives
 export { ChatMessagesComponent } from './lib/primitives/chat-messages/chat-messages.component';
 export { MessageTemplateDirective } from './lib/primitives/chat-messages/message-template.directive';
@@ -16,7 +39,6 @@ export { ChatToolCallsComponent } from './lib/primitives/chat-tool-calls/chat-to
 export { ChatSubagentsComponent } from './lib/primitives/chat-subagents/chat-subagents.component';
 export { ChatThreadListComponent } from './lib/primitives/chat-thread-list/chat-thread-list.component';
 export type { Thread } from './lib/primitives/chat-thread-list/chat-thread-list.component';
-export { ChatTimelineComponent } from './lib/primitives/chat-timeline/chat-timeline.component';
 
 // DI provider
 export { provideChat, CHAT_CONFIG } from './lib/provide-chat';
@@ -29,23 +51,11 @@ export type { InterruptAction } from './lib/compositions/chat-interrupt-panel/ch
 export { ChatToolCallCardComponent } from './lib/compositions/chat-tool-call-card/chat-tool-call-card.component';
 export type { ToolCallInfo } from './lib/compositions/chat-tool-call-card/chat-tool-call-card.component';
 export { ChatSubagentCardComponent } from './lib/compositions/chat-subagent-card/chat-subagent-card.component';
-export { ChatTimelineSliderComponent } from './lib/compositions/chat-timeline-slider/chat-timeline-slider.component';
-export { ChatDebugComponent } from './lib/compositions/chat-debug/chat-debug.component';
-export { toDebugCheckpoint, extractStateValues } from './lib/compositions/chat-debug/debug-utils';
-export { DebugCheckpointCardComponent } from './lib/compositions/chat-debug/debug-checkpoint-card.component';
-export type { DebugCheckpoint } from './lib/compositions/chat-debug/debug-checkpoint-card.component';
-export { DebugStateInspectorComponent } from './lib/compositions/chat-debug/debug-state-inspector.component';
-export { DebugStateDiffComponent } from './lib/compositions/chat-debug/debug-state-diff.component';
-export { DebugTimelineComponent } from './lib/compositions/chat-debug/debug-timeline.component';
-export { DebugDetailComponent } from './lib/compositions/chat-debug/debug-detail.component';
-export { DebugControlsComponent } from './lib/compositions/chat-debug/debug-controls.component';
-export { DebugSummaryComponent } from './lib/compositions/chat-debug/debug-summary.component';
-export { computeStateDiff } from './lib/compositions/chat-debug/state-diff';
-export type { DiffEntry } from './lib/compositions/chat-debug/state-diff';
 
 // Shared styles & utilities
 export { CHAT_THEME_STYLES } from './lib/styles/chat-theme';
 export { CHAT_MARKDOWN_STYLES, renderMarkdown } from './lib/styles/chat-markdown';
+export { messageContent } from './lib/compositions/shared/message-utils';
 export {
   ICON_CHEVRON_DOWN, ICON_CHEVRON_UP, ICON_TOOL,
   ICON_WARNING, ICON_AGENT, ICON_CHECK, ICON_SEND,
@@ -103,4 +113,6 @@ export type {
 export { isPathRef, isFunctionCall } from '@cacheplane/a2ui';
 
 // Test utilities
-export { createMockAgentRef } from './lib/testing/mock-agent-ref';
+export { mockChatAgent } from './lib/testing/mock-chat-agent';
+export type { MockChatAgent, MockChatAgentOptions } from './lib/testing/mock-chat-agent';
+export { runChatAgentConformance } from './lib/testing/chat-agent-conformance';

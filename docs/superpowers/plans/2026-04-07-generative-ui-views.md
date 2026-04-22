@@ -548,7 +548,7 @@ export class CheckboxRowComponent {
 import { Component } from '@angular/core';
 import { ChatComponent, views } from '@cacheplane/chat';
 import { signalStateStore } from '@cacheplane/render';
-import { agent } from '@cacheplane/angular';
+import { agent } from '@cacheplane/langgraph';
 import { environment } from '../environments/environment';
 import { PlanChecklistComponent } from './views/plan-checklist.component';
 import { CheckboxRowComponent } from './views/checkbox-row.component';

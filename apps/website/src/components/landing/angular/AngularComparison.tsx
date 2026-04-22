@@ -42,7 +42,7 @@ export function AngularComparison() {
           fontSize: 'clamp(26px,3.5vw,42px)', fontWeight: 800, lineHeight: 1.1,
           color: tokens.colors.textPrimary,
         }}>
-          @langchain/langgraph-sdk vs @cacheplane/angular
+          @langchain/langgraph-sdk vs @cacheplane/langgraph
         </h2>
       </motion.div>
 
@@ -62,7 +62,7 @@ export function AngularComparison() {
           display: 'grid', gridTemplateColumns: 'minmax(100px, 1fr) minmax(120px, 1fr) minmax(120px, 1fr)',
           background: 'rgba(255,255,255,.3)', borderBottom: `1px solid ${tokens.glass.border}`, padding: '14px 24px',
         }}>
-          {['Capability', '@langchain/langgraph-sdk', '@cacheplane/angular'].map((h, i) => (
+          {['Capability', '@langchain/langgraph-sdk', '@cacheplane/langgraph'].map((h, i) => (
             <div key={h} style={{
               fontFamily: 'var(--font-mono,"JetBrains Mono",monospace)',
               fontSize: '0.62rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em',

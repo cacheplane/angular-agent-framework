@@ -35,7 +35,7 @@ export function AngularHero() {
             fontFamily: "'JetBrains Mono', monospace", fontSize: 11, letterSpacing: '0.08em',
             color: tokens.colors.accent, textTransform: 'uppercase', display: 'inline-block', marginBottom: '1.5rem',
           }}>
-            @cacheplane/angular
+            @cacheplane/langgraph
           </span>
         </motion.div>
 

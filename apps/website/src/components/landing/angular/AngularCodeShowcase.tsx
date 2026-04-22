@@ -1,7 +1,7 @@
 import { tokens } from '@cacheplane/design-tokens';
 import { HighlightedCode } from '../HighlightedCode';
 
-const SNIPPET_1 = `import { agent } from '@cacheplane/angular';
+const SNIPPET_1 = `import { agent } from '@cacheplane/langgraph';
 
 const chat = agent({
   graphId: 'my-agent',
@@ -13,7 +13,7 @@ chat.messages();    // Signal<AIMessage[]>
 chat.isStreaming(); // Signal<boolean>
 chat.interrupt();   // Signal<Interrupt | null>`;
 
-const SNIPPET_2 = `import { provideAgent } from '@cacheplane/angular';
+const SNIPPET_2 = `import { provideAgent } from '@cacheplane/langgraph';
 
 provideAgent({
   graphId: 'my-agent',

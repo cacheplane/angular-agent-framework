@@ -5,10 +5,21 @@ import {
   input,
   ChangeDetectionStrategy,
 } from '@angular/core';
-import type { AgentRef } from '@cacheplane/angular';
+import type { ChatAgent } from '../../agent';
 
-export function isTyping(ref: AgentRef<any, any>): boolean {
-  return ref.isLoading();
+export function isTyping(agent: ChatAgent): boolean {
+  if (!agent.isLoading()) return false;
+  const msgs = agent.messages();
+  if (msgs.length === 0) return true;
+  const last = msgs[msgs.length - 1];
+  if (last.role === 'user') return true;
+  if (last.role === 'assistant') {
+    // Empty assistant message: string is empty or content block array is empty
+    return typeof last.content === 'string'
+      ? !last.content
+      : last.content.length === 0;
+  }
+  return false;
 }
 
 @Component({
@@ -48,15 +59,6 @@ export function isTyping(ref: AgentRef<any, any>): boolean {
   `,
 })
 export class ChatTypingIndicatorComponent {
-  readonly ref = input.required<AgentRef<any, any>>();
-  readonly visible = computed(() => {
-    if (!this.ref().isLoading()) return false;
-    const msgs = this.ref().messages();
-    if (msgs.length === 0) return true;
-    const last = msgs[msgs.length - 1];
-    const type = typeof last._getType === 'function'
-      ? last._getType()
-      : (last as unknown as Record<string, unknown>)['type'] as string;
-    return type !== 'ai';
-  });
+  readonly agent = input.required<ChatAgent>();
+  readonly visible = computed(() => isTyping(this.agent()));
 }

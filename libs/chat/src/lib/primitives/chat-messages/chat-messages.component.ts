@@ -7,33 +7,24 @@ import {
   ChangeDetectionStrategy,
 } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
-import type { BaseMessage } from '@langchain/core/messages';
-import type { AgentRef } from '@cacheplane/angular';
+import type { ChatAgent, ChatMessage } from '../../agent';
 import { MessageTemplateDirective } from './message-template.directive';
 import type { MessageTemplateType } from '../../chat.types';
 
 /**
- * Maps a LangChain message to a {@link MessageTemplateType}.
- * Handles both class instances (with `_getType()`) and plain objects (with `type` property)
- * since SSE stream events deliver plain JSON, not hydrated BaseMessage instances.
+ * Maps a {@link ChatMessage} to a {@link MessageTemplateType}.
  * Exported as a standalone function so it can be unit-tested without DOM rendering.
  */
-export function getMessageType(message: BaseMessage): MessageTemplateType {
-  // Try class method first, fall back to plain object property
-  const type = typeof message._getType === 'function'
-    ? message._getType()
-    : (message as unknown as Record<string, unknown>)['type'] as string ?? 'ai';
-  switch (type) {
-    case 'human':
+export function getMessageType(message: ChatMessage): MessageTemplateType {
+  switch (message.role) {
+    case 'user':
       return 'human';
-    case 'ai':
+    case 'assistant':
       return 'ai';
     case 'tool':
       return 'tool';
     case 'system':
       return 'system';
-    case 'function':
-      return 'function';
     default:
       return 'ai';
   }
@@ -57,11 +48,11 @@ export function getMessageType(message: BaseMessage): MessageTemplateType {
   `,
 })
 export class ChatMessagesComponent {
-  readonly ref = input.required<AgentRef<any, any>>();
+  readonly agent = input.required<ChatAgent>();
 
   readonly messageTemplates = contentChildren(MessageTemplateDirective);
 
-  readonly messages = computed(() => this.ref().messages());
+  readonly messages = computed(() => this.agent().messages());
 
   readonly getMessageType = getMessageType;
 
