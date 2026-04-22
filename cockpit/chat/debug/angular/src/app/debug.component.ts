@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import { Component } from '@angular/core';
-import { ChatDebugComponent } from '@cacheplane/langgraph';
-import { agent } from '@cacheplane/langgraph';
+import { ChatDebugComponent } from '@cacheplane/chat';
+import { agent, toChatAgent } from '@cacheplane/langgraph';
 import { ExampleChatLayoutComponent } from '@cacheplane/example-layouts';
 import { environment } from '../environments/environment';
 
@@ -16,7 +16,7 @@ import { environment } from '../environments/environment';
   imports: [ChatDebugComponent, ExampleChatLayoutComponent],
   template: `
     <example-chat-layout>
-      <chat-debug main [ref]="stream" />
+      <chat-debug main [agent]="chatAgent" />
     </example-chat-layout>
   `,
 })
@@ -25,4 +25,5 @@ export class DebugPageComponent {
     apiUrl: environment.langGraphApiUrl,
     assistantId: environment.streamingAssistantId,
   });
+  protected readonly chatAgent = toChatAgent(this.stream);
 }

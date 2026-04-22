@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import { Component } from '@angular/core';
-import { ChatComponent } from '@cacheplane/chat';
+import { ChatComponent, ChatTimelineSliderComponent } from '@cacheplane/chat';
 import { ExampleChatLayoutComponent } from '@cacheplane/example-layouts';
-import { agent, toChatAgent, ChatTimelineSliderComponent } from '@cacheplane/langgraph';
+import { agent, toChatAgent } from '@cacheplane/langgraph';
 import { environment } from '../environments/environment';
 
 /**
@@ -20,7 +20,7 @@ import { environment } from '../environments/environment';
       <div sidebar class="p-4 space-y-4" style="background: var(--chat-bg, #171717); color: var(--chat-text, #e0e0e0);">
         <h3 class="text-xs font-semibold uppercase tracking-wide"
             style="color: var(--chat-text-muted, #777);">Timeline</h3>
-        <chat-timeline-slider [ref]="stream" />
+        <chat-timeline-slider [agent]="chatAgent" />
         <div class="mt-4">
           <h4 class="text-xs font-semibold uppercase tracking-wide mb-2"
               style="color: var(--chat-text-muted, #777);">How It Works</h4>

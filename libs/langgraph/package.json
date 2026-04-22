@@ -5,8 +5,6 @@
     "@cacheplane/chat": "^0.0.1",
     "@cacheplane/licensing": "^0.0.1",
     "@angular/core": "^20.0.0 || ^21.0.0",
-    "@angular/common": "^20.0.0 || ^21.0.0",
-    "@angular/platform-browser": "^20.0.0 || ^21.0.0",
     "@langchain/core": "^1.1.33",
     "@langchain/langgraph-sdk": "^1.7.4",
     "rxjs": "~7.8.0"
