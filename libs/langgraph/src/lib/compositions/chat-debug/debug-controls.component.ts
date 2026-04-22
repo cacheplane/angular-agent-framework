@@ -5,7 +5,6 @@ import {
   output,
   ChangeDetectionStrategy,
 } from '@angular/core';
-import type { AgentRef } from '../../agent.types';
 
 @Component({
   selector: 'chat-debug-controls',
@@ -41,7 +40,6 @@ import type { AgentRef } from '../../agent.types';
   `,
 })
 export class DebugControlsComponent {
-  readonly ref = input.required<AgentRef<any, any>>();
   readonly checkpointCount = input<number>(0);
   readonly selectedIndex = input<number>(-1);
   readonly stepForward = output<void>();

@@ -54,6 +54,6 @@ export class MessagesComponent {
   protected readonly chatAgent = toChatAgent(this.stream);
 
   submitMessage(content: string) {
-    this.stream.submit([{ role: 'human', content }]);
+    this.chatAgent.submit({ message: content });
   }
 }

@@ -14,20 +14,23 @@ import {
 import { DomSanitizer } from '@angular/platform-browser';
 import type { AgentRef } from '../../agent.types';
 import { toChatAgent } from '../../to-chat-agent';
-import { ChatMessagesComponent } from '@cacheplane/chat';
-import { MessageTemplateDirective } from '@cacheplane/chat';
-import { ChatInputComponent } from '@cacheplane/chat';
-import { ChatTypingIndicatorComponent } from '@cacheplane/chat';
-import { ChatErrorComponent } from '@cacheplane/chat';
+import {
+  ChatMessagesComponent,
+  MessageTemplateDirective,
+  ChatInputComponent,
+  ChatTypingIndicatorComponent,
+  ChatErrorComponent,
+  messageContent,
+  CHAT_THEME_STYLES,
+  CHAT_MARKDOWN_STYLES,
+  renderMarkdown,
+} from '@cacheplane/chat';
 import { DebugTimelineComponent } from './debug-timeline.component';
 import { DebugDetailComponent } from './debug-detail.component';
 import { DebugControlsComponent } from './debug-controls.component';
 import { DebugSummaryComponent } from './debug-summary.component';
 import type { DebugCheckpoint } from './debug-checkpoint-card.component';
 import { toDebugCheckpoint, extractStateValues } from './debug-utils';
-import { messageContent } from '@cacheplane/chat';
-import { CHAT_THEME_STYLES } from '@cacheplane/chat';
-import { CHAT_MARKDOWN_STYLES, renderMarkdown } from '@cacheplane/chat';
 
 @Component({
   selector: 'chat-debug',
@@ -149,13 +152,12 @@ import { CHAT_MARKDOWN_STYLES, renderMarkdown } from '@cacheplane/chat';
 
           <!-- Summary -->
           <div class="px-3 py-2 border-b" style="border-color: var(--chat-border-light);">
-            <chat-debug-summary [ref]="ref()" [checkpoints]="checkpoints()" />
+            <chat-debug-summary [checkpoints]="checkpoints()" />
           </div>
 
           <!-- Controls -->
           <div class="px-3 py-2 border-b" style="border-color: var(--chat-border-light);">
             <chat-debug-controls
-              [ref]="ref()"
               [checkpointCount]="checkpoints().length"
               [selectedIndex]="selectedCheckpointIndex()"
               (stepForward)="stepForward()"

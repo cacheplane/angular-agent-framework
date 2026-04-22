@@ -62,6 +62,6 @@ export class InputComponent {
   protected readonly isLoading = computed(() => this.stream.isLoading());
 
   submitMessage(content: string) {
-    this.stream.submit([{ role: 'human', content }]);
+    this.chatAgent.submit({ message: content });
   }
 }

@@ -5,7 +5,6 @@ import {
   input,
   ChangeDetectionStrategy,
 } from '@angular/core';
-import type { AgentRef } from '../../agent.types';
 import type { DebugCheckpoint } from './debug-checkpoint-card.component';
 
 @Component({
@@ -20,7 +19,6 @@ import type { DebugCheckpoint } from './debug-checkpoint-card.component';
   `,
 })
 export class DebugSummaryComponent {
-  readonly ref = input.required<AgentRef<any, any>>();
   readonly checkpoints = input<DebugCheckpoint[]>([]);
 
   readonly totalDuration = computed(() =>
