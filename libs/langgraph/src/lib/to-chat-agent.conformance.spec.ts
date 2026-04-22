@@ -6,6 +6,7 @@ import { signal } from '@angular/core';
 import { ResourceStatus } from './agent.types';
 import type { AgentRef } from './agent.types';
 
+/* eslint-disable @typescript-eslint/no-empty-function */
 function minimalRef(): AgentRef<unknown, any> {
   return {
     value:           signal<unknown>({}),

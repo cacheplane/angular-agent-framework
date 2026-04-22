@@ -7,6 +7,7 @@ import type { AgentRef, CustomStreamEvent } from './agent.types';
 import { ResourceStatus } from './agent.types';
 import { toChatAgent } from './to-chat-agent';
 
+/* eslint-disable @typescript-eslint/no-empty-function */
 function stubAgentRef(overrides: Partial<AgentRef<unknown, any>> = {}): AgentRef<unknown, any> {
   return {
     value:           signal<unknown>(null),
