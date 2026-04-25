@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import { Component, computed } from '@angular/core';
 import { ChatComponent } from '@cacheplane/chat';
-import { agent, toChatAgent } from '@cacheplane/langgraph';
+import { agent, toAgent } from '@cacheplane/langgraph';
 import { ExampleChatLayoutComponent } from '@cacheplane/example-layouts';
 import { environment } from '../environments/environment';
 
@@ -52,7 +52,7 @@ export class MemoryComponent {
     apiUrl: environment.langGraphApiUrl,
     assistantId: environment.streamingAssistantId,
   });
-  protected readonly chatAgent = toChatAgent(this.stream);
+  protected readonly chatAgent = toAgent(this.stream);
 
   /**
    * Reactive list of [key, value] memory entries derived from the graph state.

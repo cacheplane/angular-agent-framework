@@ -1,7 +1,7 @@
 import { Component, computed } from '@angular/core';
 import { ChatComponent, views } from '@cacheplane/chat';
 import { ExampleChatLayoutComponent } from '@cacheplane/example-layouts';
-import { agent, toChatAgent } from '@cacheplane/langgraph';
+import { agent, toAgent } from '@cacheplane/langgraph';
 import { signalStateStore } from '@cacheplane/render';
 import { environment } from '../environments/environment';
 import { CalculatorResultComponent } from './views/calculator-result.component';
@@ -75,7 +75,7 @@ export class SkillsComponent {
     apiUrl: environment.langGraphApiUrl,
     assistantId: environment.streamingAssistantId,
   });
-  protected readonly chatAgent = toChatAgent(this.stream);
+  protected readonly chatAgent = toAgent(this.stream);
 
   private readonly SKILL_NAMES = new Set(['calculator', 'word_count', 'summarize']);
 

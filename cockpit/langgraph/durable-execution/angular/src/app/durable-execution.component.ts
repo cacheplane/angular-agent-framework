@@ -1,6 +1,6 @@
 import { Component, computed } from '@angular/core';
 import { ChatComponent, views } from '@cacheplane/chat';
-import { agent, toChatAgent } from '@cacheplane/langgraph';
+import { agent, toAgent } from '@cacheplane/langgraph';
 import { signalStateStore } from '@cacheplane/render';
 import { ExampleChatLayoutComponent } from '@cacheplane/example-layouts';
 import { environment } from '../environments/environment';
@@ -102,7 +102,7 @@ export class DurableExecutionComponent {
     apiUrl: environment.langGraphApiUrl,
     assistantId: environment.streamingAssistantId,
   });
-  protected readonly chatAgent = toChatAgent(this.stream);
+  protected readonly chatAgent = toAgent(this.stream);
 
   /**
    * Derives the 3-step pipeline status from the graph's `state.step` field.

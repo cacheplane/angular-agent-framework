@@ -3,7 +3,7 @@ import { Component, computed } from '@angular/core';
 import { ChatInputComponent as ChatInputPrimitive } from '@cacheplane/chat';
 import { ChatMessagesComponent } from '@cacheplane/chat';
 import { ExampleChatLayoutComponent } from '@cacheplane/example-layouts';
-import { agent, toChatAgent } from '@cacheplane/langgraph';
+import { agent, toAgent } from '@cacheplane/langgraph';
 import { environment } from '../environments/environment';
 
 /**
@@ -56,7 +56,7 @@ export class InputComponent {
     apiUrl: environment.langGraphApiUrl,
     assistantId: environment.streamingAssistantId,
   });
-  protected readonly chatAgent = toChatAgent(this.stream);
+  protected readonly chatAgent = toAgent(this.stream);
 
   protected readonly streamStatus = computed(() => this.stream.status());
   protected readonly isLoading = computed(() => this.stream.isLoading());

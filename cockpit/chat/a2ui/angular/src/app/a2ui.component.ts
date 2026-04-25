@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import { Component } from '@angular/core';
 import { ChatComponent, a2uiBasicCatalog } from '@cacheplane/chat';
-import { agent, toChatAgent } from '@cacheplane/langgraph';
+import { agent, toAgent } from '@cacheplane/langgraph';
 import { environment } from '../environments/environment';
 
 @Component({
@@ -15,6 +15,6 @@ export class A2uiComponent {
     apiUrl: environment.langGraphApiUrl,
     assistantId: environment.a2uiAssistantId,
   });
-  protected readonly chatAgent = toChatAgent(this.agentRef);
+  protected readonly chatAgent = toAgent(this.agentRef);
   protected readonly catalog = a2uiBasicCatalog();
 }
