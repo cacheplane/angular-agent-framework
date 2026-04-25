@@ -2,7 +2,7 @@
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { HumanMessage, AIMessage } from '@langchain/core/messages';
-import type { Agent, AgentCustomEvent } from '@cacheplane/chat';
+import type { Agent, AgentEvent } from '@cacheplane/chat';
 import type { AgentRef, CustomStreamEvent } from './agent.types';
 import { ResourceStatus } from './agent.types';
 import { toAgent } from './to-agent';
@@ -115,7 +115,39 @@ describe('toAgent (LangGraph adapter)', () => {
     });
   });
 
-  it('exposes customEvents$ that emits newly-appended events with type aliased from name', () => {
+  it('translates a state_update CustomStreamEvent into AgentStateUpdateEvent', () => {
+    TestBed.runInInjectionContext(() => {
+      const customEvents = signal<any[]>([]);
+      const ref = stubAgentRef({ customEvents } as any);
+      const chat = toAgent(ref);
+
+      const received: any[] = [];
+      chat.events$.subscribe((e) => received.push(e));
+
+      customEvents.set([{ name: 'state_update', data: { count: 1 } }]);
+      TestBed.flushEffects();
+
+      expect(received).toEqual([{ type: 'state_update', data: { count: 1 } }]);
+    });
+  });
+
+  it('wraps non-state_update CustomStreamEvent as AgentCustomEvent', () => {
+    TestBed.runInInjectionContext(() => {
+      const customEvents = signal<any[]>([]);
+      const ref = stubAgentRef({ customEvents } as any);
+      const chat = toAgent(ref);
+
+      const received: any[] = [];
+      chat.events$.subscribe((e) => received.push(e));
+
+      customEvents.set([{ name: 'tick', data: 42 }]);
+      TestBed.flushEffects();
+
+      expect(received).toEqual([{ type: 'custom', name: 'tick', data: 42 }]);
+    });
+  });
+
+  it('exposes events$ that emits newly-appended events as structured AgentEvent', () => {
     const customSig = signal<CustomStreamEvent[]>([]);
     const ref = stubAgentRef({ customEvents: customSig });
 
@@ -124,8 +156,8 @@ describe('toAgent (LangGraph adapter)', () => {
       adapter = toAgent(ref);
     });
 
-    const received: AgentCustomEvent[] = [];
-    adapter.customEvents$!.subscribe((e) => received.push(e));
+    const received: AgentEvent[] = [];
+    adapter.events$.subscribe((e) => received.push(e));
 
     customSig.set([{ name: 'state_update', data: { counter: 1 } }]);
     TestBed.flushEffects();
@@ -142,7 +174,7 @@ describe('toAgent (LangGraph adapter)', () => {
 
     expect(received).toEqual([
       { type: 'state_update', data: { counter: 1 } },
-      { type: 'a2ui.surface', data: { surfaceId: 'main' } },
+      { type: 'custom', name: 'a2ui.surface', data: { surfaceId: 'main' } },
     ]);
   });
 });
