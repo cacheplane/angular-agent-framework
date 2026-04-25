@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import { signal, WritableSignal } from '@angular/core';
-import type { Observable } from 'rxjs';
+import { EMPTY, type Observable } from 'rxjs';
 import type {
   Agent,
   Message,
@@ -10,9 +10,9 @@ import type {
   Subagent,
   AgentSubmitInput,
   AgentSubmitOptions,
+  AgentEvent,
   AgentCheckpoint,
 } from '../agent';
-import type { AgentCustomEvent } from '../agent/agent-custom-event';
 
 export interface MockAgent extends Agent {
   messages:      WritableSignal<Message[]>;
@@ -24,7 +24,7 @@ export interface MockAgent extends Agent {
   interrupt?:    WritableSignal<AgentInterrupt | undefined>;
   subagents?:    WritableSignal<Map<string, Subagent>>;
   history?:      WritableSignal<AgentCheckpoint[]>;
-  customEvents$?: Observable<AgentCustomEvent>;
+  events$:       Observable<AgentEvent>;
   /** Captured calls to submit() in order. */
   submitCalls: Array<{ input: AgentSubmitInput; opts?: AgentSubmitOptions }>;
   /** Count of stop() invocations. */
@@ -41,7 +41,7 @@ export interface MockAgentOptions {
   withInterrupt?: boolean;
   withSubagents?: boolean;
   history?: AgentCheckpoint[];
-  customEvents$?: Observable<AgentCustomEvent>;
+  events$?: Observable<AgentEvent>;
 }
 
 export function mockAgent(opts: MockAgentOptions = {}): MockAgent {
@@ -67,10 +67,10 @@ export function mockAgent(opts: MockAgentOptions = {}): MockAgent {
 
   const agent: MockAgent = {
     messages, status, isLoading, error, toolCalls, state,
-    ...(interrupt      ? { interrupt }                            : {}),
-    ...(subagents      ? { subagents }                            : {}),
-    ...(history        ? { history }                              : {}),
-    ...(opts.customEvents$ ? { customEvents$: opts.customEvents$ } : {}),
+    ...(interrupt ? { interrupt } : {}),
+    ...(subagents ? { subagents } : {}),
+    ...(history   ? { history }   : {}),
+    events$: opts.events$ ?? EMPTY,
     submit: async (input, submitOpts) => { submitCalls.push({ input, opts: submitOpts }); },
     stop: async () => { stopCount++; },
     submitCalls,

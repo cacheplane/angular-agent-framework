@@ -8,6 +8,10 @@ export type { AgentStatus } from './agent-status';
 export type { AgentInterrupt } from './agent-interrupt';
 export type { Subagent, SubagentStatus } from './subagent';
 export type { AgentSubmitInput, AgentSubmitOptions } from './agent-submit';
-export type { AgentCustomEvent } from './agent-custom-event';
+export type {
+  AgentEvent,
+  AgentStateUpdateEvent,
+  AgentCustomEvent,
+} from './agent-event';
 export type { AgentCheckpoint } from './agent-checkpoint';
 export type { AgentWithHistory } from './agent-with-history';

@@ -57,13 +57,9 @@ export function runAgentConformance(
       expect(result).toBeInstanceOf(Promise);
     });
 
-    it('if customEvents$ is present, it is an Observable-like with .subscribe', () => {
+    it('events$ is an Observable-like with .subscribe', () => {
       const agent = factory();
-      if (agent.customEvents$ !== undefined) {
-        expect(typeof agent.customEvents$.subscribe).toBe('function');
-      } else {
-        expect(agent.customEvents$).toBeUndefined();
-      }
+      expect(typeof agent.events$.subscribe).toBe('function');
     });
   });
 }

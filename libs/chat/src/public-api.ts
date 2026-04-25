@@ -19,6 +19,8 @@ export type {
   SubagentStatus,
   AgentSubmitInput,
   AgentSubmitOptions,
+  AgentEvent,
+  AgentStateUpdateEvent,
   AgentCustomEvent,
   AgentCheckpoint,
 } from './lib/agent';

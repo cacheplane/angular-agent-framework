@@ -4,18 +4,9 @@ import { Subject, type Observable } from 'rxjs';
 import type { BaseMessage } from '@langchain/core/messages';
 import type { ToolCallWithResult, Interrupt } from '@langchain/langgraph-sdk';
 import type {
-  AgentWithHistory,
-  AgentCheckpoint,
-  AgentCustomEvent,
-  Message,
-  Role,
-  AgentStatus,
-  ToolCall,
-  ToolCallStatus,
-  AgentInterrupt,
-  Subagent,
-  AgentSubmitInput,
-  AgentSubmitOptions,
+  AgentWithHistory, AgentCheckpoint, AgentEvent,
+  Message, Role, ToolCall, ToolCallStatus, AgentStatus,
+  AgentInterrupt, Subagent, AgentSubmitInput, AgentSubmitOptions,
 } from '@cacheplane/chat';
 import type { AgentRef, CustomStreamEvent, SubagentStreamRef, ThreadState } from './agent.types';
 import { ResourceStatus } from './agent.types';
@@ -56,7 +47,7 @@ export function toAgent<T>(ref: AgentRef<T, any>): AgentWithHistory {
     return out;
   });
 
-  const customEvents$ = buildCustomEvents$(ref);
+  const events$ = buildEvents$(ref);
 
   const history = computed<AgentCheckpoint[]>(() =>
     ref.history().map(toCheckpoint),
@@ -71,7 +62,7 @@ export function toAgent<T>(ref: AgentRef<T, any>): AgentWithHistory {
     state,
     interrupt,
     subagents,
-    customEvents$,
+    events$,
     history,
     submit: (input: AgentSubmitInput, opts?: AgentSubmitOptions) =>
       ref.submit(buildSubmitPayload(input), opts ? { signal: opts.signal } as never : undefined),
@@ -80,15 +71,15 @@ export function toAgent<T>(ref: AgentRef<T, any>): AgentWithHistory {
 }
 
 /**
- * Build an Observable<AgentCustomEvent> that bridges LangGraph's
+ * Build an Observable<AgentEvent> that bridges LangGraph's
  * `Signal<CustomStreamEvent[]>` (append-only array) into a stream of newly
  * emitted events. Each effect firing compares against a cursor tracking the
  * previously-seen length and emits only the tail slice.
  */
-function buildCustomEvents$(
+function buildEvents$(
   ref: AgentRef<unknown, any>,
-): Observable<AgentCustomEvent> {
-  const subject = new Subject<AgentCustomEvent>();
+): Observable<AgentEvent> {
+  const subject = new Subject<AgentEvent>();
   let seen = 0;
   effect(() => {
     const all = ref.customEvents();
@@ -97,15 +88,18 @@ function buildCustomEvents$(
       seen = 0;
     }
     for (let i = seen; i < all.length; i++) {
-      subject.next(toCustomEvent(all[i]));
+      subject.next(toAgentEvent(all[i]));
     }
     seen = all.length;
   });
   return subject.asObservable();
 }
 
-function toCustomEvent(e: CustomStreamEvent): AgentCustomEvent {
-  return { type: e.name, data: e.data };
+function toAgentEvent(e: CustomStreamEvent): AgentEvent {
+  if (e.name === 'state_update' && isRecord(e.data)) {
+    return { type: 'state_update', data: e.data };
+  }
+  return { type: 'custom', name: e.name, data: e.data };
 }
 
 function mapStatus(s: ResourceStatus): AgentStatus {

@@ -6,7 +6,7 @@ import type { ToolCall } from './tool-call';
 import type { AgentStatus } from './agent-status';
 import type { AgentInterrupt } from './agent-interrupt';
 import type { Subagent } from './subagent';
-import type { AgentCustomEvent } from './agent-custom-event';
+import type { AgentEvent } from './agent-event';
 import type { AgentSubmitInput, AgentSubmitOptions } from './agent-submit';
 
 /**
@@ -15,9 +15,12 @@ import type { AgentSubmitInput, AgentSubmitOptions } from './agent-submit';
  * Implementations are produced by runtime adapters (e.g. a LangGraph or
  * AG-UI adapter) or by user code for custom backends.
  *
- * `interrupt`, `subagents`, and `customEvents$` are optional: runtimes that
- * do not support these concepts should leave them undefined, and primitives
- * that need them check presence and render a neutral fallback when absent.
+ * `interrupt` and `subagents` are optional: runtimes that do not support these
+ * concepts should leave them undefined, and primitives that need them check
+ * presence and render a neutral fallback when absent.
+ *
+ * Invariant: state lives on signals; `events$` carries only things that are
+ * not derivable from signals.
  */
 export interface Agent {
   // Core state
@@ -33,7 +36,9 @@ export interface Agent {
   stop:   () => Promise<void>;
 
   // Extended (optional; absent when runtime does not support)
-  interrupt?:     Signal<AgentInterrupt | undefined>;
-  subagents?:     Signal<Map<string, Subagent>>;
-  customEvents$?: Observable<AgentCustomEvent>;
+  interrupt?: Signal<AgentInterrupt | undefined>;
+  subagents?: Signal<Map<string, Subagent>>;
+
+  // Events stream (required; emit EMPTY if runtime produces no events)
+  events$: Observable<AgentEvent>;
 }
