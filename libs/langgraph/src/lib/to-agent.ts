@@ -4,62 +4,62 @@ import { Subject, type Observable } from 'rxjs';
 import type { BaseMessage } from '@langchain/core/messages';
 import type { ToolCallWithResult, Interrupt } from '@langchain/langgraph-sdk';
 import type {
-  ChatAgentWithHistory,
-  ChatCheckpoint,
-  ChatCustomEvent,
-  ChatMessage,
-  ChatRole,
-  ChatStatus,
-  ChatToolCall,
-  ChatToolCallStatus,
-  ChatInterrupt,
-  ChatSubagent,
-  ChatSubmitInput,
-  ChatSubmitOptions,
+  AgentWithHistory,
+  AgentCheckpoint,
+  AgentCustomEvent,
+  Message,
+  Role,
+  AgentStatus,
+  ToolCall,
+  ToolCallStatus,
+  AgentInterrupt,
+  Subagent,
+  AgentSubmitInput,
+  AgentSubmitOptions,
 } from '@cacheplane/chat';
 import type { AgentRef, CustomStreamEvent, SubagentStreamRef, ThreadState } from './agent.types';
 import { ResourceStatus } from './agent.types';
 
 /**
- * Adapts a LangGraph AgentRef to the runtime-neutral ChatAgent contract.
+ * Adapts a LangGraph AgentRef to the runtime-neutral Agent contract.
  * The returned object is a live view; it reads from the same signals and
  * writes back via AgentRef.submit / AgentRef.stop.
  *
  * Must be called within an Angular injection context (uses `computed` and
  * `effect`).
  */
-export function toChatAgent<T>(ref: AgentRef<T, any>): ChatAgentWithHistory {
-  const messages = computed<ChatMessage[]>(() =>
-    ref.messages().map(toChatMessage),
+export function toAgent<T>(ref: AgentRef<T, any>): AgentWithHistory {
+  const messages = computed<Message[]>(() =>
+    ref.messages().map(toMessage),
   );
 
-  const toolCalls = computed<ChatToolCall[]>(() =>
-    ref.toolCalls().map(toChatToolCall),
+  const toolCalls = computed<ToolCall[]>(() =>
+    ref.toolCalls().map(toToolCall),
   );
 
-  const status = computed<ChatStatus>(() => mapStatus(ref.status()));
+  const status = computed<AgentStatus>(() => mapStatus(ref.status()));
 
   const state = computed<Record<string, unknown>>(() => {
     const v = ref.value();
     return v && typeof v === 'object' ? (v as Record<string, unknown>) : {};
   });
 
-  const interrupt = computed<ChatInterrupt | undefined>(() => {
+  const interrupt = computed<AgentInterrupt | undefined>(() => {
     const ix = ref.interrupt();
-    return ix ? toChatInterrupt(ix) : undefined;
+    return ix ? toInterrupt(ix) : undefined;
   });
 
-  const subagents = computed<Map<string, ChatSubagent>>(() => {
+  const subagents = computed<Map<string, Subagent>>(() => {
     const src = ref.subagents();
-    const out = new Map<string, ChatSubagent>();
-    src.forEach((sa, key) => out.set(key, toChatSubagent(sa)));
+    const out = new Map<string, Subagent>();
+    src.forEach((sa, key) => out.set(key, toSubagent(sa)));
     return out;
   });
 
   const customEvents$ = buildCustomEvents$(ref);
 
-  const history = computed<ChatCheckpoint[]>(() =>
-    ref.history().map(toChatCheckpoint),
+  const history = computed<AgentCheckpoint[]>(() =>
+    ref.history().map(toCheckpoint),
   );
 
   return {
@@ -73,22 +73,22 @@ export function toChatAgent<T>(ref: AgentRef<T, any>): ChatAgentWithHistory {
     subagents,
     customEvents$,
     history,
-    submit: (input: ChatSubmitInput, opts?: ChatSubmitOptions) =>
+    submit: (input: AgentSubmitInput, opts?: AgentSubmitOptions) =>
       ref.submit(buildSubmitPayload(input), opts ? { signal: opts.signal } as never : undefined),
     stop: () => ref.stop(),
   };
 }
 
 /**
- * Build an Observable<ChatCustomEvent> that bridges LangGraph's
+ * Build an Observable<AgentCustomEvent> that bridges LangGraph's
  * `Signal<CustomStreamEvent[]>` (append-only array) into a stream of newly
  * emitted events. Each effect firing compares against a cursor tracking the
  * previously-seen length and emits only the tail slice.
  */
 function buildCustomEvents$(
   ref: AgentRef<unknown, any>,
-): Observable<ChatCustomEvent> {
-  const subject = new Subject<ChatCustomEvent>();
+): Observable<AgentCustomEvent> {
+  const subject = new Subject<AgentCustomEvent>();
   let seen = 0;
   effect(() => {
     const all = ref.customEvents();
@@ -97,18 +97,18 @@ function buildCustomEvents$(
       seen = 0;
     }
     for (let i = seen; i < all.length; i++) {
-      subject.next(toChatCustomEvent(all[i]));
+      subject.next(toCustomEvent(all[i]));
     }
     seen = all.length;
   });
   return subject.asObservable();
 }
 
-function toChatCustomEvent(e: CustomStreamEvent): ChatCustomEvent {
+function toCustomEvent(e: CustomStreamEvent): AgentCustomEvent {
   return { type: e.name, data: e.data };
 }
 
-function mapStatus(s: ResourceStatus): ChatStatus {
+function mapStatus(s: ResourceStatus): AgentStatus {
   switch (s) {
     case ResourceStatus.Error: return 'error';
     case ResourceStatus.Loading:
@@ -119,12 +119,12 @@ function mapStatus(s: ResourceStatus): ChatStatus {
   }
 }
 
-function toChatMessage(m: BaseMessage): ChatMessage {
+function toMessage(m: BaseMessage): Message {
   const raw = m as unknown as Record<string, unknown>;
   const typeVal = typeof m._getType === 'function'
     ? m._getType()
     : (raw['type'] as string | undefined) ?? 'ai';
-  const role: ChatRole =
+  const role: Role =
     typeVal === 'human' ? 'user' :
     typeVal === 'tool'  ? 'tool' :
     typeVal === 'system' ? 'system' :
@@ -139,13 +139,13 @@ function toChatMessage(m: BaseMessage): ChatMessage {
   };
 }
 
-function toChatToolCall(tc: ToolCallWithResult): ChatToolCall {
-  const stateMap: Record<string, ChatToolCallStatus> = {
+function toToolCall(tc: ToolCallWithResult): ToolCall {
+  const stateMap: Record<string, ToolCallStatus> = {
     pending: 'pending',
     completed: 'complete',
     error: 'error',
   };
-  const status: ChatToolCallStatus = stateMap[tc.state] ?? 'running';
+  const status: ToolCallStatus = stateMap[tc.state] ?? 'running';
   const result = tc.result as (Record<string, unknown> | undefined);
   return {
     id: tc.id,
@@ -157,7 +157,7 @@ function toChatToolCall(tc: ToolCallWithResult): ChatToolCall {
   };
 }
 
-function toChatInterrupt(ix: Interrupt<unknown>): ChatInterrupt {
+function toInterrupt(ix: Interrupt<unknown>): AgentInterrupt {
   const raw = ix as unknown as Record<string, unknown>;
   return {
     id: (raw['id'] as string | undefined) ?? randomId(),
@@ -166,21 +166,21 @@ function toChatInterrupt(ix: Interrupt<unknown>): ChatInterrupt {
   };
 }
 
-function toChatSubagent(sa: SubagentStreamRef): ChatSubagent {
+function toSubagent(sa: SubagentStreamRef): Subagent {
   return {
     toolCallId: sa.toolCallId,
     status: sa.status,
-    messages: computed(() => sa.messages().map(toChatMessage)) as Signal<ChatMessage[]>,
+    messages: computed(() => sa.messages().map(toMessage)) as Signal<Message[]>,
     state: sa.values as Signal<Record<string, unknown>>,
   };
 }
 
-function buildSubmitPayload(input: ChatSubmitInput): unknown {
+function buildSubmitPayload(input: AgentSubmitInput): unknown {
   if (input.resume !== undefined) return { __resume__: input.resume };
   if (input.message !== undefined) {
     const content = typeof input.message === 'string'
       ? input.message
-      : input.message.map((b) => (b.type === 'text' ? b.text : JSON.stringify(b))).join('');
+      : input.message.map((b: any) => (b.type === 'text' ? b.text : JSON.stringify(b))).join('');
     return { messages: [{ role: 'human', content }], ...(input.state ?? {}) };
   }
   return input.state ?? {};
@@ -190,7 +190,7 @@ function randomId(): string {
   return Math.random().toString(36).slice(2);
 }
 
-function toChatCheckpoint(state: ThreadState<unknown>): ChatCheckpoint {
+function toCheckpoint(state: ThreadState<unknown>): AgentCheckpoint {
   return {
     id:    state.checkpoint?.checkpoint_id ?? undefined,
     label: state.next?.[0] ?? undefined,

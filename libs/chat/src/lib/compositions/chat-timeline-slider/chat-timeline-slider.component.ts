@@ -3,7 +3,7 @@ import {
   Component, computed, input, output, signal,
   ChangeDetectionStrategy,
 } from '@angular/core';
-import type { ChatAgentWithHistory, ChatCheckpoint } from '../../agent';
+import type { AgentWithHistory, AgentCheckpoint } from '../../agent';
 
 @Component({
   selector: 'chat-timeline-slider',
@@ -61,20 +61,20 @@ import type { ChatAgentWithHistory, ChatCheckpoint } from '../../agent';
   `,
 })
 export class ChatTimelineSliderComponent {
-  readonly agent = input.required<ChatAgentWithHistory>();
+  readonly agent = input.required<AgentWithHistory>();
 
   readonly selectedIndex = signal<number>(-1);
 
-  readonly history = computed<ChatCheckpoint[]>(() => this.agent().history());
+  readonly history = computed<AgentCheckpoint[]>(() => this.agent().history());
 
   readonly replayRequested = output<string>();
   readonly forkRequested = output<string>();
 
-  replay(cp: ChatCheckpoint): void {
+  replay(cp: AgentCheckpoint): void {
     if (cp.id) this.replayRequested.emit(cp.id);
   }
 
-  fork(cp: ChatCheckpoint, index: number): void {
+  fork(cp: AgentCheckpoint, index: number): void {
     this.selectedIndex.set(index);
     if (cp.id) this.forkRequested.emit(cp.id);
   }

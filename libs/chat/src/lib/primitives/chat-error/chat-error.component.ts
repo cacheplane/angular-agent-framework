@@ -5,7 +5,7 @@ import {
   input,
   ChangeDetectionStrategy,
 } from '@angular/core';
-import type { ChatAgent } from '../../agent';
+import type { Agent } from '../../agent';
 
 export function extractErrorMessage(error: unknown): string | null {
   if (!error) return null;
@@ -29,6 +29,6 @@ export function extractErrorMessage(error: unknown): string | null {
   `,
 })
 export class ChatErrorComponent {
-  readonly agent = input.required<ChatAgent>();
+  readonly agent = input.required<Agent>();
   readonly errorMessage = computed(() => extractErrorMessage(this.agent().error()));
 }

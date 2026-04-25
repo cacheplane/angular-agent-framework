@@ -1,21 +1,21 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import { describe, it, expect } from 'vitest';
 import { signal, computed } from '@angular/core';
-import { mockChatAgent } from '../../testing/mock-chat-agent';
-import type { ChatCheckpoint } from '../../agent';
+import { mockAgent } from '../../testing/mock-agent';
+import type { AgentCheckpoint } from '../../agent';
 
 describe('ChatTimelineComponent', () => {
   it('renders a template for each checkpoint', () => {
-    const checkpoints: ChatCheckpoint[] = [
+    const checkpoints: AgentCheckpoint[] = [
       { id: 'a', label: 'nodeA', values: {} },
       { id: 'b', label: 'nodeB', values: {} },
     ];
-    const agent = mockChatAgent({ history: checkpoints });
+    const agent = mockAgent({ history: checkpoints });
 
     // Mirrors the computed inside ChatTimelineComponent:
-    // history = computed<ChatCheckpoint[]>(() => this.agent().history())
+    // history = computed<AgentCheckpoint[]>(() => this.agent().history())
     const agentSig = signal(agent as any);
-    const history = computed<ChatCheckpoint[]>(() => agentSig().history());
+    const history = computed<AgentCheckpoint[]>(() => agentSig().history());
 
     expect(history()).toHaveLength(2);
     // Simulate what the @for template renders: index:label

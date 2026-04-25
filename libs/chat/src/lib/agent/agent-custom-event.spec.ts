@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-import type { ChatCustomEvent } from './chat-custom-event';
+import type { AgentCustomEvent } from './agent-custom-event';
 
-describe('ChatCustomEvent', () => {
+describe('AgentCustomEvent', () => {
   it('accepts a minimal { type } event', () => {
-    const event: ChatCustomEvent = { type: 'state_update' };
+    const event: AgentCustomEvent = { type: 'state_update' };
     expect(event.type).toBe('state_update');
   });
 
   it('accepts arbitrary additional fields via index signature', () => {
-    const event: ChatCustomEvent = {
+    const event: AgentCustomEvent = {
       type: 'a2ui.surface',
       surfaceId: 'main',
       payload: { foo: 'bar' },
@@ -19,7 +19,7 @@ describe('ChatCustomEvent', () => {
   });
 
   it('allows AG-UI-shaped events to pass through without remapping', () => {
-    const agUiEvent: ChatCustomEvent = {
+    const agUiEvent: AgentCustomEvent = {
       type: 'TEXT_MESSAGE_START',
       messageId: 'msg-1',
       role: 'assistant',

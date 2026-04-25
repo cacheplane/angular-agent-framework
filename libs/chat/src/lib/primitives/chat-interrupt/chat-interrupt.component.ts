@@ -8,15 +8,15 @@ import {
   ChangeDetectionStrategy,
 } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
-import type { ChatAgent } from '../../agent';
-import type { ChatInterrupt } from '../../agent/chat-interrupt';
+import type { Agent } from '../../agent';
+import type { AgentInterrupt } from '../../agent/agent-interrupt';
 
 /**
- * Retrieves the current interrupt value from a ChatAgent, or undefined when
+ * Retrieves the current interrupt value from an Agent, or undefined when
  * the runtime does not expose interrupts.
  * Exported for unit testing without DOM rendering.
  */
-export function getInterrupt(agent: ChatAgent): ChatInterrupt | undefined {
+export function getInterrupt(agent: Agent): AgentInterrupt | undefined {
   return agent.interrupt?.();
 }
 
@@ -37,7 +37,7 @@ export function getInterrupt(agent: ChatAgent): ChatInterrupt | undefined {
   `,
 })
 export class ChatInterruptComponent {
-  readonly agent = input.required<ChatAgent>();
+  readonly agent = input.required<Agent>();
 
   readonly templateRef = contentChild(TemplateRef);
 

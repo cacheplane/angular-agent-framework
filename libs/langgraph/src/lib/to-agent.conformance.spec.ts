@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import { TestBed } from '@angular/core/testing';
-import { runChatAgentConformance } from '@cacheplane/chat';
-import { toChatAgent } from './to-chat-agent';
+import { runAgentConformance } from '@cacheplane/chat';
+import { toAgent } from './to-agent';
 import { signal } from '@angular/core';
 import { ResourceStatus } from './agent.types';
 import type { AgentRef } from './agent.types';
@@ -36,10 +36,10 @@ function minimalRef(): AgentRef<unknown, any> {
   } as AgentRef<unknown, any>;
 }
 
-runChatAgentConformance('toChatAgent', () => {
-  let agent!: ReturnType<typeof toChatAgent>;
+runAgentConformance('toAgent', () => {
+  let agent!: ReturnType<typeof toAgent>;
   TestBed.runInInjectionContext(() => {
-    agent = toChatAgent(minimalRef());
+    agent = toAgent(minimalRef());
   });
   return agent;
 });

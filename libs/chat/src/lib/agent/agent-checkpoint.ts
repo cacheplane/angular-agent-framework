@@ -7,7 +7,7 @@
  * it back to the parent app on replay/fork, and the parent app dispatches
  * to the underlying runtime.
  */
-export interface ChatCheckpoint {
+export interface AgentCheckpoint {
   /** Adapter-opaque checkpoint identifier (e.g. LangGraph checkpoint_id). */
   id?: string;
   /** Human-friendly label for the checkpoint (e.g. next node name). */

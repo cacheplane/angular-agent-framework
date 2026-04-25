@@ -2,22 +2,22 @@
 import { describe, it, expect } from 'vitest';
 import { signal, computed } from '@angular/core';
 import { isTyping } from './chat-typing-indicator.component';
-import { mockChatAgent } from '../../testing/mock-chat-agent';
-import type { ChatMessage } from '../../agent';
+import { mockAgent } from '../../testing/mock-agent';
+import type { Message } from '../../agent';
 
 describe('isTyping()', () => {
   it('returns false when agent.isLoading is false', () => {
-    const agent = mockChatAgent({ isLoading: false });
+    const agent = mockAgent({ isLoading: false });
     expect(isTyping(agent)).toBe(false);
   });
 
   it('returns true when agent.isLoading is true and messages is empty', () => {
-    const agent = mockChatAgent({ isLoading: true, messages: [] });
+    const agent = mockAgent({ isLoading: true, messages: [] });
     expect(isTyping(agent)).toBe(true);
   });
 
   it('returns true when loading and last message is user', () => {
-    const agent = mockChatAgent({
+    const agent = mockAgent({
       isLoading: true,
       messages: [{ id: '1', role: 'user', content: 'hi' }],
     });
@@ -25,7 +25,7 @@ describe('isTyping()', () => {
   });
 
   it('returns false when loading and last message is non-empty assistant', () => {
-    const agent = mockChatAgent({
+    const agent = mockAgent({
       isLoading: true,
       messages: [
         { id: '1', role: 'user', content: 'hi' },
@@ -36,7 +36,7 @@ describe('isTyping()', () => {
   });
 
   it('returns true when loading and last message is empty-content assistant', () => {
-    const agent = mockChatAgent({
+    const agent = mockAgent({
       isLoading: true,
       messages: [
         { id: '1', role: 'user', content: 'hi' },
@@ -47,7 +47,7 @@ describe('isTyping()', () => {
   });
 
   it('returns true when loading and last assistant message has empty block array', () => {
-    const agent = mockChatAgent({
+    const agent = mockAgent({
       isLoading: true,
       messages: [
         { id: '1', role: 'user', content: 'hi' },
@@ -60,7 +60,7 @@ describe('isTyping()', () => {
 
 describe('ChatTypingIndicatorComponent — visible computed', () => {
   it('visible is false when agent.isLoading is false', () => {
-    const agent = mockChatAgent({ isLoading: false });
+    const agent = mockAgent({ isLoading: false });
     const agent$ = signal(agent);
 
     const visible = computed(() => isTyping(agent$()));
@@ -69,7 +69,7 @@ describe('ChatTypingIndicatorComponent — visible computed', () => {
   });
 
   it('visible is true when agent.isLoading is true and no messages', () => {
-    const agent = mockChatAgent({ isLoading: true, messages: [] });
+    const agent = mockAgent({ isLoading: true, messages: [] });
     const agent$ = signal(agent);
 
     const visible = computed(() => isTyping(agent$()));
@@ -78,8 +78,8 @@ describe('ChatTypingIndicatorComponent — visible computed', () => {
   });
 
   it('visible updates reactively when agent changes', () => {
-    const idleAgent = mockChatAgent({ isLoading: false });
-    const loadingAgent = mockChatAgent({
+    const idleAgent = mockAgent({ isLoading: false });
+    const loadingAgent = mockAgent({
       isLoading: true,
       messages: [{ id: '1', role: 'user', content: 'hi' }],
     });

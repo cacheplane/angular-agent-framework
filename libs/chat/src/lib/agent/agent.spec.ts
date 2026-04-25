@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import { signal } from '@angular/core';
-import type { ChatAgent } from './chat-agent';
+import type { Agent } from './agent';
 
-describe('ChatAgent interface', () => {
+describe('Agent interface', () => {
   it('accepts a minimal implementation without optional capabilities', () => {
-    const agent: ChatAgent = {
+    const agent: Agent = {
       messages: signal([]),
       status: signal('idle'),
       isLoading: signal(false),
@@ -18,7 +18,7 @@ describe('ChatAgent interface', () => {
   });
 
   it('accepts an implementation with interrupts and subagents', () => {
-    const agent: ChatAgent = {
+    const agent: Agent = {
       messages: signal([]),
       status: signal('idle'),
       isLoading: signal(false),

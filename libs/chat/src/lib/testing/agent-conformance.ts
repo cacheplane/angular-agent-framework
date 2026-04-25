@@ -1,17 +1,17 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import { describe, it, expect } from 'vitest';
-import type { ChatAgent } from '../agent';
+import type { Agent } from '../agent';
 
 /**
  * Runs a suite of contract conformance assertions against a factory that
- * produces a fresh ChatAgent. Adapter packages should call this in their
+ * produces a fresh Agent. Adapter packages should call this in their
  * own test suites to verify the contract is satisfied.
  */
-export function runChatAgentConformance(
+export function runAgentConformance(
   label: string,
-  factory: () => ChatAgent,
+  factory: () => Agent,
 ): void {
-  describe(`${label} — ChatAgent conformance`, () => {
+  describe(`${label} — Agent conformance`, () => {
     it('exposes required core signals', () => {
       const a = factory();
       expect(typeof a.messages).toBe('function');

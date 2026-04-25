@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import { Component } from '@angular/core';
 import { ChatComponent, views } from '@cacheplane/chat';
-import { agent, toChatAgent } from '@cacheplane/langgraph';
+import { agent, toAgent } from '@cacheplane/langgraph';
 import { ExampleChatLayoutComponent } from '@cacheplane/example-layouts';
 import { environment } from '../environments/environment';
 
@@ -36,6 +36,6 @@ export class GenerativeUiComponent {
     apiUrl: environment.langGraphApiUrl,
     assistantId: environment.generativeUiAssistantId,
   });
-  protected readonly chatAgent = toChatAgent(this.agentRef);
+  protected readonly chatAgent = toAgent(this.agentRef);
   protected readonly dashboardViews = dashboardViews;
 }

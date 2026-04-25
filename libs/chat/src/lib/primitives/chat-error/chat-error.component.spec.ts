@@ -2,7 +2,7 @@
 import { describe, it, expect } from 'vitest';
 import { signal, computed } from '@angular/core';
 import { extractErrorMessage } from './chat-error.component';
-import { mockChatAgent } from '../../testing/mock-chat-agent';
+import { mockAgent } from '../../testing/mock-agent';
 
 describe('extractErrorMessage()', () => {
   it('returns null for null error', () => {
@@ -28,7 +28,7 @@ describe('extractErrorMessage()', () => {
 
 describe('ChatErrorComponent — errorMessage computed', () => {
   it('errorMessage is null when agent.error is null', () => {
-    const agent = mockChatAgent({ error: null });
+    const agent = mockAgent({ error: null });
     const agent$ = signal(agent);
 
     const errorMessage = computed(() => extractErrorMessage(agent$().error()));
@@ -37,7 +37,7 @@ describe('ChatErrorComponent — errorMessage computed', () => {
   });
 
   it('errorMessage reflects Error object message', () => {
-    const agent = mockChatAgent({ status: 'error', error: new Error('boom') });
+    const agent = mockAgent({ status: 'error', error: new Error('boom') });
     const agent$ = signal(agent);
 
     const errorMessage = computed(() => extractErrorMessage(agent$().error()));
@@ -46,7 +46,7 @@ describe('ChatErrorComponent — errorMessage computed', () => {
   });
 
   it('errorMessage reflects string error', () => {
-    const agent = mockChatAgent({ error: 'timeout' });
+    const agent = mockAgent({ error: 'timeout' });
     const agent$ = signal(agent);
 
     const errorMessage = computed(() => extractErrorMessage(agent$().error()));
@@ -55,8 +55,8 @@ describe('ChatErrorComponent — errorMessage computed', () => {
   });
 
   it('errorMessage updates reactively when agent changes', () => {
-    const noErrorAgent = mockChatAgent({ error: null });
-    const errorAgent = mockChatAgent({ status: 'error', error: new Error('failed') });
+    const noErrorAgent = mockAgent({ error: null });
+    const errorAgent = mockAgent({ status: 'error', error: new Error('failed') });
     const agent$ = signal(noErrorAgent);
 
     const errorMessage = computed(() => extractErrorMessage(agent$().error()));

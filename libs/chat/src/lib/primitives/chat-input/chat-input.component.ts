@@ -10,10 +10,10 @@ import {
   ChangeDetectionStrategy,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import type { ChatAgent } from '../../agent';
+import type { Agent } from '../../agent';
 
 export function submitMessage(
-  agent: ChatAgent,
+  agent: Agent,
   text: string,
 ): string | null {
   const trimmed = text.trim();
@@ -74,7 +74,7 @@ export function submitMessage(
   `,
 })
 export class ChatInputComponent {
-  readonly agent = input.required<ChatAgent>();
+  readonly agent = input.required<Agent>();
   readonly submitOnEnter = input<boolean>(true);
   readonly placeholder = input<string>('');
   readonly submitted = output<string>();

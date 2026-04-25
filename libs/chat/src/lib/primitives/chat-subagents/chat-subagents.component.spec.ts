@@ -2,10 +2,10 @@
 import { describe, it, expect } from 'vitest';
 import { signal, computed, type WritableSignal } from '@angular/core';
 import { activeSubagentsFromAgent } from './chat-subagents.component';
-import { mockChatAgent } from '../../testing/mock-chat-agent';
-import type { ChatSubagent, ChatSubagentStatus } from '../../agent/chat-subagent';
+import { mockAgent } from '../../testing/mock-agent';
+import type { Subagent, SubagentStatus } from '../../agent/subagent';
 
-function makeSubagent(toolCallId: string, status: ChatSubagentStatus): ChatSubagent {
+function makeSubagent(toolCallId: string, status: SubagentStatus): Subagent {
   return {
     toolCallId,
     status: signal(status),
@@ -16,20 +16,20 @@ function makeSubagent(toolCallId: string, status: ChatSubagentStatus): ChatSubag
 
 describe('activeSubagentsFromAgent()', () => {
   it('returns an empty array when agent does not expose subagents', () => {
-    const agent = mockChatAgent(); // no withSubagents
+    const agent = mockAgent(); // no withSubagents
     expect(activeSubagentsFromAgent(agent)).toEqual([]);
   });
 
   it('returns an empty array when the subagents map is empty', () => {
-    const agent = mockChatAgent({ withSubagents: true });
+    const agent = mockAgent({ withSubagents: true });
     expect(activeSubagentsFromAgent(agent)).toEqual([]);
   });
 
   it('includes subagents with status pending or running', () => {
-    const agent = mockChatAgent({ withSubagents: true });
+    const agent = mockAgent({ withSubagents: true });
     const pending = makeSubagent('tc-1', 'pending');
     const running = makeSubagent('tc-2', 'running');
-    (agent.subagents as WritableSignal<Map<string, ChatSubagent>>).set(
+    (agent.subagents as WritableSignal<Map<string, Subagent>>).set(
       new Map([['tc-1', pending], ['tc-2', running]]),
     );
     const active = activeSubagentsFromAgent(agent);
@@ -39,11 +39,11 @@ describe('activeSubagentsFromAgent()', () => {
   });
 
   it('excludes subagents with status complete or error', () => {
-    const agent = mockChatAgent({ withSubagents: true });
+    const agent = mockAgent({ withSubagents: true });
     const complete = makeSubagent('tc-1', 'complete');
     const error    = makeSubagent('tc-2', 'error');
     const running  = makeSubagent('tc-3', 'running');
-    (agent.subagents as WritableSignal<Map<string, ChatSubagent>>).set(
+    (agent.subagents as WritableSignal<Map<string, Subagent>>).set(
       new Map([
         ['tc-1', complete],
         ['tc-2', error],
@@ -55,10 +55,10 @@ describe('activeSubagentsFromAgent()', () => {
   });
 });
 
-describe('ChatSubagentsComponent — activeSubagents computed', () => {
+describe('SubagentsComponent — activeSubagents computed', () => {
   it('reflects the agent map and updates reactively', () => {
-    const agent = mockChatAgent({ withSubagents: true });
-    const writable = agent.subagents as WritableSignal<Map<string, ChatSubagent>>;
+    const agent = mockAgent({ withSubagents: true });
+    const writable = agent.subagents as WritableSignal<Map<string, Subagent>>;
     const running = makeSubagent('tc-1', 'running');
 
     const agent$ = signal(agent);

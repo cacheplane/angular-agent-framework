@@ -4,7 +4,7 @@ import {
   TemplateRef, ChangeDetectionStrategy,
 } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
-import type { ChatAgentWithHistory, ChatCheckpoint } from '../../agent';
+import type { AgentWithHistory, AgentCheckpoint } from '../../agent';
 
 @Component({
   selector: 'chat-timeline',
@@ -23,15 +23,15 @@ import type { ChatAgentWithHistory, ChatCheckpoint } from '../../agent';
   `,
 })
 export class ChatTimelineComponent {
-  readonly agent = input.required<ChatAgentWithHistory>();
+  readonly agent = input.required<AgentWithHistory>();
 
-  readonly checkpointSelected = output<ChatCheckpoint>();
+  readonly checkpointSelected = output<AgentCheckpoint>();
 
   readonly templateRef = contentChild(TemplateRef);
 
-  readonly history = computed<ChatCheckpoint[]>(() => this.agent().history());
+  readonly history = computed<AgentCheckpoint[]>(() => this.agent().history());
 
-  selectCheckpoint(cp: ChatCheckpoint): void {
+  selectCheckpoint(cp: AgentCheckpoint): void {
     this.checkpointSelected.emit(cp);
   }
 }

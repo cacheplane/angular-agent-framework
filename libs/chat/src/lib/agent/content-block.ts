@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 
-export type ChatContentBlock =
+export type ContentBlock =
   | { type: 'text'; text: string }
   | { type: 'image'; url: string; alt?: string }
   | { type: 'tool_use'; id: string; name: string; args: unknown }

@@ -8,7 +8,7 @@ import {
   ChangeDetectionStrategy,
 } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
-import type { ChatAgent, ChatMessage, ChatToolCall } from '../../agent';
+import type { Agent, Message, ToolCall } from '../../agent';
 
 @Component({
   selector: 'chat-tool-calls',
@@ -27,19 +27,19 @@ import type { ChatAgent, ChatMessage, ChatToolCall } from '../../agent';
   `,
 })
 export class ChatToolCallsComponent {
-  readonly agent = input.required<ChatAgent>();
-  readonly message = input<ChatMessage | undefined>(undefined);
+  readonly agent = input.required<Agent>();
+  readonly message = input<Message | undefined>(undefined);
 
   readonly templateRef = contentChild(TemplateRef);
 
-  readonly toolCalls = computed((): ChatToolCall[] => {
+  readonly toolCalls = computed((): ToolCall[] => {
     const msg = this.message();
     if (msg && msg.role === 'assistant' && Array.isArray(msg.content)) {
       const blocks = msg.content.filter((b) => b.type === 'tool_use');
       const all = this.agent().toolCalls();
       return blocks
         .map(b => all.find(tc => tc.id === b.id))
-        .filter((x): x is ChatToolCall => !!x);
+        .filter((x): x is ToolCall => !!x);
     }
     return this.agent().toolCalls();
   });

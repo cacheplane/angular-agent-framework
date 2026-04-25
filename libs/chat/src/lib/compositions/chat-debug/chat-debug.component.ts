@@ -11,7 +11,7 @@ import {
   ChangeDetectionStrategy,
 } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
-import type { ChatAgentWithHistory } from '../../agent';
+import type { AgentWithHistory } from '../../agent';
 import { ChatMessagesComponent } from '../../primitives/chat-messages/chat-messages.component';
 import { MessageTemplateDirective } from '../../primitives/chat-messages/message-template.directive';
 import { ChatInputComponent } from '../../primitives/chat-input/chat-input.component';
@@ -188,7 +188,7 @@ import { toDebugCheckpoint, extractStateValues } from './debug-utils';
 export class ChatDebugComponent {
   private readonly sanitizer = inject(DomSanitizer);
 
-  readonly agent = input.required<ChatAgentWithHistory>();
+  readonly agent = input.required<AgentWithHistory>();
 
   readonly debugOpen = signal<boolean>(true);
   readonly selectedCheckpointIndex = signal<number>(-1);

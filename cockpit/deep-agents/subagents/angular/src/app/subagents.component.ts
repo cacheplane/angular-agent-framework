@@ -1,7 +1,7 @@
 import { Component, computed } from '@angular/core';
 import { ChatComponent } from '@cacheplane/chat';
 import { ExampleChatLayoutComponent } from '@cacheplane/example-layouts';
-import { agent, toChatAgent } from '@cacheplane/langgraph';
+import { agent, toAgent } from '@cacheplane/langgraph';
 import { environment } from '../environments/environment';
 
 /**
@@ -59,7 +59,7 @@ export class SubagentsComponent {
     apiUrl: environment.langGraphApiUrl,
     assistantId: environment.streamingAssistantId,
   });
-  protected readonly chatAgent = toChatAgent(this.stream);
+  protected readonly chatAgent = toAgent(this.stream);
 
   /**
    * Reactive delegation list derived from messages.

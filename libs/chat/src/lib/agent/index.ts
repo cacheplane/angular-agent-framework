@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-export type { ChatAgent } from './chat-agent';
-export type { ChatMessage, ChatRole } from './chat-message';
-export { isUserMessage, isAssistantMessage, isToolMessage, isSystemMessage } from './chat-message';
-export type { ChatContentBlock } from './chat-content-block';
-export type { ChatToolCall, ChatToolCallStatus } from './chat-tool-call';
-export type { ChatStatus } from './chat-status';
-export type { ChatInterrupt } from './chat-interrupt';
-export type { ChatSubagent, ChatSubagentStatus } from './chat-subagent';
-export type { ChatSubmitInput, ChatSubmitOptions } from './chat-submit';
-export type { ChatCustomEvent } from './chat-custom-event';
-export type { ChatCheckpoint } from './chat-checkpoint';
-export type { ChatAgentWithHistory } from './chat-agent-with-history';
+export type { Agent } from './agent';
+export type { Message, Role } from './message';
+export { isUserMessage, isAssistantMessage, isToolMessage, isSystemMessage } from './message';
+export type { ContentBlock } from './content-block';
+export type { ToolCall, ToolCallStatus } from './tool-call';
+export type { AgentStatus } from './agent-status';
+export type { AgentInterrupt } from './agent-interrupt';
+export type { Subagent, SubagentStatus } from './subagent';
+export type { AgentSubmitInput, AgentSubmitOptions } from './agent-submit';
+export type { AgentCustomEvent } from './agent-custom-event';
+export type { AgentCheckpoint } from './agent-checkpoint';
+export type { AgentWithHistory } from './agent-with-history';

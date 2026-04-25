@@ -2,7 +2,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { ChatTimelineSliderComponent } from './chat-timeline-slider.component';
-import type { ChatCheckpoint } from '../../agent';
+import type { AgentCheckpoint } from '../../agent';
 
 describe('ChatTimelineSliderComponent', () => {
   it('replay() emits the checkpoint id when id is present', () => {
@@ -10,7 +10,7 @@ describe('ChatTimelineSliderComponent', () => {
       const slider = new ChatTimelineSliderComponent();
       const spy = vi.fn();
       slider.replayRequested.subscribe(spy);
-      slider.replay({ id: 'ck1', values: {} } as ChatCheckpoint);
+      slider.replay({ id: 'ck1', values: {} } as AgentCheckpoint);
       expect(spy).toHaveBeenCalledWith('ck1');
     });
   });
@@ -20,7 +20,7 @@ describe('ChatTimelineSliderComponent', () => {
       const slider = new ChatTimelineSliderComponent();
       const spy = vi.fn();
       slider.replayRequested.subscribe(spy);
-      slider.replay({ values: {} } as ChatCheckpoint);
+      slider.replay({ values: {} } as AgentCheckpoint);
       expect(spy).not.toHaveBeenCalled();
     });
   });
@@ -30,7 +30,7 @@ describe('ChatTimelineSliderComponent', () => {
       const slider = new ChatTimelineSliderComponent();
       const spy = vi.fn();
       slider.forkRequested.subscribe(spy);
-      slider.fork({ id: 'ck2', values: {} } as ChatCheckpoint, 3);
+      slider.fork({ id: 'ck2', values: {} } as AgentCheckpoint, 3);
       expect(slider.selectedIndex()).toBe(3);
       expect(spy).toHaveBeenCalledWith('ck2');
     });

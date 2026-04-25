@@ -4,23 +4,23 @@
 export type { ChatConfig } from './lib/provide-chat';
 export type { MessageTemplateType } from './lib/chat.types';
 
-// ChatAgent contract (runtime-neutral)
+// Agent contract (runtime-neutral)
 export type {
-  ChatAgent,
-  ChatMessage,
-  ChatRole,
-  ChatContentBlock,
-  ChatToolCall,
-  ChatToolCallStatus,
-  ChatStatus,
-  ChatInterrupt,
-  ChatSubagent,
-  ChatSubagentStatus,
-  ChatSubmitInput,
-  ChatSubmitOptions,
-  ChatCustomEvent,
-  ChatCheckpoint,
-  ChatAgentWithHistory,
+  Agent,
+  AgentWithHistory,
+  Message,
+  Role,
+  ContentBlock,
+  ToolCall,
+  ToolCallStatus,
+  AgentStatus,
+  AgentInterrupt,
+  Subagent,
+  SubagentStatus,
+  AgentSubmitInput,
+  AgentSubmitOptions,
+  AgentCustomEvent,
+  AgentCheckpoint,
 } from './lib/agent';
 export {
   isUserMessage,
@@ -118,7 +118,7 @@ export type {
 export { isPathRef, isFunctionCall } from '@cacheplane/a2ui';
 
 // Test utilities
-export { mockChatAgent } from './lib/testing/mock-chat-agent';
-export type { MockChatAgent, MockChatAgentOptions } from './lib/testing/mock-chat-agent';
-export { runChatAgentConformance } from './lib/testing/chat-agent-conformance';
-export { runChatAgentWithHistoryConformance } from './lib/testing/chat-agent-with-history-conformance';
+export { mockAgent } from './lib/testing/mock-agent';
+export type { MockAgent, MockAgentOptions } from './lib/testing/mock-agent';
+export { runAgentConformance } from './lib/testing/agent-conformance';
+export { runAgentWithHistoryConformance } from './lib/testing/agent-with-history-conformance';

@@ -8,9 +8,9 @@ import { HumanMessage, AIMessage } from '@langchain/core/messages';
 import { ChatComponent } from './chat.component';
 import { messageContent } from '../shared/message-utils';
 import { createContentClassifier, type ContentClassifier } from '../../streaming/content-classifier';
-import { mockChatAgent } from '../../testing/mock-chat-agent';
+import { mockAgent } from '../../testing/mock-agent';
 import { signalStateStore } from '@cacheplane/render';
-import type { ChatCustomEvent } from '../../agent/chat-custom-event';
+import type { AgentCustomEvent } from '../../agent/agent-custom-event';
 
 describe('ChatComponent', () => {
   it('is defined as a class', () => {
@@ -38,10 +38,10 @@ describe('ChatComponent', () => {
 });
 
 describe('ChatComponent — onA2uiAction', () => {
-  it('submits the action message as a JSON string via ChatAgent', () => {
+  it('submits the action message as a JSON string via Agent', () => {
     TestBed.configureTestingModule({});
     TestBed.runInInjectionContext(() => {
-      const agent = mockChatAgent();
+      const agent = mockAgent();
 
       // Instantiate a minimal ChatComponent-like object to test onA2uiAction logic
       // without a full DOM fixture (the component requires [agent] input which can't
@@ -133,9 +133,9 @@ describe('ChatComponent — customEvents$ routing', () => {
   it('routes state_update customEvents to the resolved render store', () => {
     TestBed.configureTestingModule({});
     TestBed.runInInjectionContext(() => {
-      const events$ = new Subject<ChatCustomEvent>();
+      const events$ = new Subject<AgentCustomEvent>();
       const store = signalStateStore({});
-      const agent = mockChatAgent({ customEvents$: events$.asObservable() });
+      const agent = mockAgent({ customEvents$: events$.asObservable() });
       const destroyRef = inject(DestroyRef);
 
       // Re-implement the exact routing effect from ChatComponent's constructor
@@ -168,9 +168,9 @@ describe('ChatComponent — customEvents$ routing', () => {
   it('ignores non-state_update events and events with non-object data', () => {
     TestBed.configureTestingModule({});
     TestBed.runInInjectionContext(() => {
-      const events$ = new Subject<ChatCustomEvent>();
+      const events$ = new Subject<AgentCustomEvent>();
       const store = signalStateStore({ initial: true });
-      const agent = mockChatAgent({ customEvents$: events$.asObservable() });
+      const agent = mockAgent({ customEvents$: events$.asObservable() });
       const destroyRef = inject(DestroyRef);
 
       const agentSig = signal(agent);

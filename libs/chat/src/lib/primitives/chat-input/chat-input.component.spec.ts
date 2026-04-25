@@ -2,11 +2,11 @@
 import { describe, it, expect } from 'vitest';
 import { signal, computed } from '@angular/core';
 import { submitMessage } from './chat-input.component';
-import { mockChatAgent } from '../../testing/mock-chat-agent';
+import { mockAgent } from '../../testing/mock-agent';
 
 describe('submitMessage()', () => {
   it('calls agent.submit with { message: trimmed text }', async () => {
-    const agent = mockChatAgent();
+    const agent = mockAgent();
 
     submitMessage(agent, '  hello world  ');
 
@@ -17,13 +17,13 @@ describe('submitMessage()', () => {
   });
 
   it('returns the trimmed text on successful submit', () => {
-    const agent = mockChatAgent();
+    const agent = mockAgent();
     const result = submitMessage(agent, '  hello  ');
     expect(result).toBe('hello');
   });
 
   it('does not call agent.submit and returns null for whitespace-only text', async () => {
-    const agent = mockChatAgent();
+    const agent = mockAgent();
 
     const result = submitMessage(agent, '   ');
 
@@ -33,7 +33,7 @@ describe('submitMessage()', () => {
   });
 
   it('does not call agent.submit and returns null for empty string', async () => {
-    const agent = mockChatAgent();
+    const agent = mockAgent();
 
     const result = submitMessage(agent, '');
 
@@ -45,7 +45,7 @@ describe('submitMessage()', () => {
 
 describe('ChatInputComponent — isDisabled computed', () => {
   it('isDisabled is false when agent.isLoading is false', () => {
-    const agent = mockChatAgent({ isLoading: false });
+    const agent = mockAgent({ isLoading: false });
     const agent$ = signal(agent);
 
     const isDisabled = computed(() => agent$().isLoading());
@@ -54,7 +54,7 @@ describe('ChatInputComponent — isDisabled computed', () => {
   });
 
   it('isDisabled is true when agent.isLoading is true', () => {
-    const agent = mockChatAgent({ isLoading: true });
+    const agent = mockAgent({ isLoading: true });
     const agent$ = signal(agent);
 
     const isDisabled = computed(() => agent$().isLoading());
@@ -63,8 +63,8 @@ describe('ChatInputComponent — isDisabled computed', () => {
   });
 
   it('isDisabled updates reactively when agent changes', () => {
-    const idleAgent = mockChatAgent({ isLoading: false });
-    const loadingAgent = mockChatAgent({ isLoading: true });
+    const idleAgent = mockAgent({ isLoading: false });
+    const loadingAgent = mockAgent({ isLoading: true });
     const agent$ = signal(idleAgent);
 
     const isDisabled = computed(() => agent$().isLoading());

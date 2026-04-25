@@ -1,19 +1,19 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import { describe, it, expect } from 'vitest';
-import type { ChatAgentWithHistory, ChatCheckpoint } from '../agent';
-import { runChatAgentConformance } from './chat-agent-conformance';
+import type { AgentWithHistory, AgentCheckpoint } from '../agent';
+import { runAgentConformance } from './agent-conformance';
 
 /**
- * Conformance suite for ChatAgentWithHistory implementations.
+ * Conformance suite for AgentWithHistory implementations.
  *
- * Runs the base ChatAgent conformance suite, then verifies the history
- * signal is present and returns an array of ChatCheckpoint-shaped entries.
+ * Runs the base Agent conformance suite, then verifies the history
+ * signal is present and returns an array of AgentCheckpoint-shaped entries.
  */
-export function runChatAgentWithHistoryConformance(
+export function runAgentWithHistoryConformance(
   label: string,
-  factory: (seed?: { history?: ChatCheckpoint[] }) => ChatAgentWithHistory,
+  factory: (seed?: { history?: AgentCheckpoint[] }) => AgentWithHistory,
 ): void {
-  runChatAgentConformance(label, () => factory());
+  runAgentConformance(label, () => factory());
 
   describe(`${label} — history`, () => {
     it('exposes a history signal', () => {
@@ -23,7 +23,7 @@ export function runChatAgentWithHistoryConformance(
     });
 
     it('reflects seeded checkpoints', () => {
-      const seed: ChatCheckpoint[] = [
+      const seed: AgentCheckpoint[] = [
         { id: 'c1', label: 'Step 1', values: { foo: 1 } },
         { id: 'c2', label: 'Step 2', values: { foo: 2 } },
       ];

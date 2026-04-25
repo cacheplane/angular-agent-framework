@@ -14,7 +14,7 @@ import {
   inject,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import type { ChatAgent } from '../../agent';
+import type { Agent } from '../../agent';
 import type { ViewRegistry, RenderEvent } from '@cacheplane/render';
 import type { A2uiActionMessage } from '@cacheplane/a2ui';
 import type { StateStore } from '@json-render/core';
@@ -223,7 +223,7 @@ import { KeyValuePipe } from '@angular/common';
 })
 export class ChatComponent {
 
-  readonly agent = input.required<ChatAgent>();
+  readonly agent = input.required<Agent>();
 
   readonly views = input<ViewRegistry | undefined>(undefined);
   readonly store = input<StateStore | undefined>(undefined);

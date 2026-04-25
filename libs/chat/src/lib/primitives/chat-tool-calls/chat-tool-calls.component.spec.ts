@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import { describe, it, expect } from 'vitest';
 import { signal, computed } from '@angular/core';
-import { mockChatAgent } from '../../testing/mock-chat-agent';
-import type { ChatMessage, ChatToolCall } from '../../agent';
+import { mockAgent } from '../../testing/mock-agent';
+import type { Message, ToolCall } from '../../agent';
 
-describe('ChatToolCallsComponent — toolCalls computed', () => {
+describe('ToolCallsComponent — toolCalls computed', () => {
   it('returns agent.toolCalls() when no message is provided', () => {
-    const mockToolCalls: ChatToolCall[] = [
+    const mockToolCalls: ToolCall[] = [
       { id: 'call_1', name: 'get_weather', args: { city: 'NYC' }, status: 'complete', result: 'sunny' },
     ];
-    const agent = mockChatAgent({ toolCalls: mockToolCalls });
+    const agent = mockAgent({ toolCalls: mockToolCalls });
 
     const agent$ = signal(agent);
     const toolCalls = computed(() => agent$().toolCalls());
@@ -19,13 +19,13 @@ describe('ChatToolCallsComponent — toolCalls computed', () => {
   });
 
   it('returns agent.toolCalls() when message is a user message (no tool_use blocks)', () => {
-    const agent = mockChatAgent();
-    const msg: ChatMessage = { id: '1', role: 'user', content: 'hello' };
+    const agent = mockAgent();
+    const msg: Message = { id: '1', role: 'user', content: 'hello' };
 
     const agent$ = signal(agent);
-    const message$ = signal<ChatMessage | undefined>(msg);
+    const message$ = signal<Message | undefined>(msg);
 
-    const toolCalls = computed((): ChatToolCall[] => {
+    const toolCalls = computed((): ToolCall[] => {
       const m = message$();
       if (m && m.role === 'assistant' && Array.isArray(m.content)) {
         const blocks = m.content.filter((b: any) => b.type === 'tool_use') as Array<{
@@ -34,7 +34,7 @@ describe('ChatToolCallsComponent — toolCalls computed', () => {
         const all = agent$().toolCalls();
         return blocks
           .map(b => all.find(tc => tc.id === b.id))
-          .filter((x): x is ChatToolCall => !!x);
+          .filter((x): x is ToolCall => !!x);
       }
       return agent$().toolCalls();
     });
@@ -42,22 +42,22 @@ describe('ChatToolCallsComponent — toolCalls computed', () => {
     expect(toolCalls()).toHaveLength(0);
   });
 
-  it('returns matched ChatToolCalls when message has tool_use content blocks', () => {
-    const mockToolCalls: ChatToolCall[] = [
+  it('returns matched ToolCalls when message has tool_use content blocks', () => {
+    const mockToolCalls: ToolCall[] = [
       { id: 'call_2', name: 'search', args: { query: 'test' }, status: 'complete', result: 'results' },
     ];
-    const agent = mockChatAgent({ toolCalls: mockToolCalls });
+    const agent = mockAgent({ toolCalls: mockToolCalls });
 
-    const msg: ChatMessage = {
+    const msg: Message = {
       id: '2',
       role: 'assistant',
       content: [{ type: 'tool_use', id: 'call_2', name: 'search', args: { query: 'test' } }],
     };
 
     const agent$ = signal(agent);
-    const message$ = signal<ChatMessage | undefined>(msg);
+    const message$ = signal<Message | undefined>(msg);
 
-    const toolCalls = computed((): ChatToolCall[] => {
+    const toolCalls = computed((): ToolCall[] => {
       const m = message$();
       if (m && m.role === 'assistant' && Array.isArray(m.content)) {
         const blocks = m.content.filter((b: any) => b.type === 'tool_use') as Array<{
@@ -66,7 +66,7 @@ describe('ChatToolCallsComponent — toolCalls computed', () => {
         const all = agent$().toolCalls();
         return blocks
           .map(b => all.find(tc => tc.id === b.id))
-          .filter((x): x is ChatToolCall => !!x);
+          .filter((x): x is ToolCall => !!x);
       }
       return agent$().toolCalls();
     });
@@ -77,8 +77,8 @@ describe('ChatToolCallsComponent — toolCalls computed', () => {
   });
 
   it('toolCalls updates reactively when agent changes', () => {
-    const emptyAgent = mockChatAgent();
-    const loadedAgent = mockChatAgent({
+    const emptyAgent = mockAgent();
+    const loadedAgent = mockAgent({
       toolCalls: [{ id: 'call_3', name: 'calculator', args: {}, status: 'complete' }],
     });
 

@@ -3,7 +3,7 @@ import { Component, computed } from '@angular/core';
 import { JsonPipe } from '@angular/common';
 import { ChatComponent, ChatInterruptPanelComponent } from '@cacheplane/chat';
 import { ExampleChatLayoutComponent } from '@cacheplane/example-layouts';
-import { agent, toChatAgent } from '@cacheplane/langgraph';
+import { agent, toAgent } from '@cacheplane/langgraph';
 import { environment } from '../environments/environment';
 
 /**
@@ -37,7 +37,7 @@ export class InterruptsComponent {
     apiUrl: environment.langGraphApiUrl,
     assistantId: environment.streamingAssistantId,
   });
-  protected readonly chatAgent = toChatAgent(this.stream);
+  protected readonly chatAgent = toAgent(this.stream);
 
   protected readonly streamStatus = computed(() => this.stream.status());
 }

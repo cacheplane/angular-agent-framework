@@ -6,17 +6,17 @@ import {
   output,
   ChangeDetectionStrategy,
 } from '@angular/core';
-import type { ChatAgent } from '../../agent';
-import type { ChatInterrupt } from '../../agent/chat-interrupt';
+import type { Agent } from '../../agent';
+import type { AgentInterrupt } from '../../agent/agent-interrupt';
 
 export type InterruptAction = 'accept' | 'edit' | 'respond' | 'ignore';
 
 /**
- * Retrieves the current interrupt value from a ChatAgent, or undefined when
+ * Retrieves the current interrupt value from an Agent, or undefined when
  * the runtime does not expose interrupts.
  * Exported for unit testing without DOM rendering.
  */
-export function getInterruptFromAgent(agent: ChatAgent): ChatInterrupt | undefined {
+export function getInterruptFromAgent(agent: Agent): AgentInterrupt | undefined {
   return agent.interrupt?.();
 }
 
@@ -85,7 +85,7 @@ export function getInterruptFromAgent(agent: ChatAgent): ChatInterrupt | undefin
   `,
 })
 export class ChatInterruptPanelComponent {
-  readonly agent = input.required<ChatAgent>();
+  readonly agent = input.required<Agent>();
 
   readonly action = output<InterruptAction>();
 

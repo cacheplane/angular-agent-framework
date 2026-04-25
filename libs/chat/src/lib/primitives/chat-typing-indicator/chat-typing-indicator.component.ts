@@ -5,9 +5,9 @@ import {
   input,
   ChangeDetectionStrategy,
 } from '@angular/core';
-import type { ChatAgent } from '../../agent';
+import type { Agent } from '../../agent';
 
-export function isTyping(agent: ChatAgent): boolean {
+export function isTyping(agent: Agent): boolean {
   if (!agent.isLoading()) return false;
   const msgs = agent.messages();
   if (msgs.length === 0) return true;
@@ -59,6 +59,6 @@ export function isTyping(agent: ChatAgent): boolean {
   `,
 })
 export class ChatTypingIndicatorComponent {
-  readonly agent = input.required<ChatAgent>();
+  readonly agent = input.required<Agent>();
   readonly visible = computed(() => isTyping(this.agent()));
 }

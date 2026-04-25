@@ -7,15 +7,15 @@ import {
   ChangeDetectionStrategy,
 } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
-import type { ChatAgent, ChatMessage } from '../../agent';
+import type { Agent, Message } from '../../agent';
 import { MessageTemplateDirective } from './message-template.directive';
 import type { MessageTemplateType } from '../../chat.types';
 
 /**
- * Maps a {@link ChatMessage} to a {@link MessageTemplateType}.
+ * Maps a {@link Message} to a {@link MessageTemplateType}.
  * Exported as a standalone function so it can be unit-tested without DOM rendering.
  */
-export function getMessageType(message: ChatMessage): MessageTemplateType {
+export function getMessageType(message: Message): MessageTemplateType {
   switch (message.role) {
     case 'user':
       return 'human';
@@ -48,7 +48,7 @@ export function getMessageType(message: ChatMessage): MessageTemplateType {
   `,
 })
 export class ChatMessagesComponent {
-  readonly agent = input.required<ChatAgent>();
+  readonly agent = input.required<Agent>();
 
   readonly messageTemplates = contentChildren(MessageTemplateDirective);
 

@@ -8,8 +8,8 @@ import {
   ChangeDetectionStrategy,
 } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
-import type { ChatAgent } from '../../agent';
-import type { ChatSubagent } from '../../agent/chat-subagent';
+import type { Agent } from '../../agent';
+import type { Subagent } from '../../agent/subagent';
 
 /**
  * Returns the list of currently-active subagents on the agent. "Active" means
@@ -17,10 +17,10 @@ import type { ChatSubagent } from '../../agent/chat-subagent';
  * when the runtime does not expose a subagents surface.
  * Exported for unit testing without DOM rendering.
  */
-export function activeSubagentsFromAgent(agent: ChatAgent): ChatSubagent[] {
+export function activeSubagentsFromAgent(agent: Agent): Subagent[] {
   const map = agent.subagents?.();
   if (!map) return [];
-  const out: ChatSubagent[] = [];
+  const out: Subagent[] = [];
   map.forEach((sa) => {
     const s = sa.status();
     if (s !== 'complete' && s !== 'error') out.push(sa);
@@ -45,7 +45,7 @@ export function activeSubagentsFromAgent(agent: ChatAgent): ChatSubagent[] {
   `,
 })
 export class ChatSubagentsComponent {
-  readonly agent = input.required<ChatAgent>();
+  readonly agent = input.required<Agent>();
 
   readonly templateRef = contentChild(TemplateRef);
 

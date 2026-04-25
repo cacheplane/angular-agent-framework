@@ -2,43 +2,43 @@
 import { describe, it, expect } from 'vitest';
 import { signal } from '@angular/core';
 import { getMessageType } from './chat-messages.component';
-import { mockChatAgent } from '../../testing/mock-chat-agent';
-import type { ChatMessage } from '../../agent';
+import { mockAgent } from '../../testing/mock-agent';
+import type { Message } from '../../agent';
 
 describe('getMessageType', () => {
   it('maps user role to "human"', () => {
-    const msg: ChatMessage = { id: '1', role: 'user', content: 'hello' };
+    const msg: Message = { id: '1', role: 'user', content: 'hello' };
     expect(getMessageType(msg)).toBe('human');
   });
 
   it('maps assistant role to "ai"', () => {
-    const msg: ChatMessage = { id: '2', role: 'assistant', content: 'response' };
+    const msg: Message = { id: '2', role: 'assistant', content: 'response' };
     expect(getMessageType(msg)).toBe('ai');
   });
 
   it('maps system role to "system"', () => {
-    const msg: ChatMessage = { id: '3', role: 'system', content: 'system prompt' };
+    const msg: Message = { id: '3', role: 'system', content: 'system prompt' };
     expect(getMessageType(msg)).toBe('system');
   });
 
   it('maps tool role to "tool"', () => {
-    const msg: ChatMessage = { id: '4', role: 'tool', content: 'result', toolCallId: 'call_1' };
+    const msg: Message = { id: '4', role: 'tool', content: 'result', toolCallId: 'call_1' };
     expect(getMessageType(msg)).toBe('tool');
   });
 
   it('falls back to "ai" for unknown roles', () => {
-    const msg = { id: '5', role: 'unknown', content: '' } as unknown as ChatMessage;
+    const msg = { id: '5', role: 'unknown', content: '' } as unknown as Message;
     expect(getMessageType(msg)).toBe('ai');
   });
 });
 
-describe('ChatMessagesComponent — computed messages', () => {
+describe('MessagesComponent — computed messages', () => {
   it('messages() signal reflects the agent messages signal', () => {
-    const msgs: ChatMessage[] = [
+    const msgs: Message[] = [
       { id: '1', role: 'user', content: 'hi' },
       { id: '2', role: 'assistant', content: 'hello' },
     ];
-    const agent = mockChatAgent({ messages: msgs });
+    const agent = mockAgent({ messages: msgs });
 
     const agent$ = signal(agent);
     const messages = () => agent$().messages();
@@ -49,13 +49,13 @@ describe('ChatMessagesComponent — computed messages', () => {
   });
 
   it('messages() updates reactively when agent messages change', () => {
-    const agent = mockChatAgent({ messages: [] });
+    const agent = mockAgent({ messages: [] });
     const agent$ = signal(agent);
     const messages = () => agent$().messages();
 
     expect(messages()).toHaveLength(0);
 
-    const updatedAgent = mockChatAgent({
+    const updatedAgent = mockAgent({
       messages: [{ id: '1', role: 'user', content: 'new message' }],
     });
     agent$.set(updatedAgent);
@@ -64,7 +64,7 @@ describe('ChatMessagesComponent — computed messages', () => {
   });
 });
 
-describe('ChatMessagesComponent — findTemplate logic', () => {
+describe('MessagesComponent — findTemplate logic', () => {
   it('findTemplate returns matching directive by type', () => {
     const templates = [
       { chatMessageTemplate: () => 'human' as const, templateRef: {} },

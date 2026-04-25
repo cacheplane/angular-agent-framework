@@ -1,7 +1,7 @@
 import { Component, computed } from '@angular/core';
 import { ChatComponent, views } from '@cacheplane/chat';
 import { ExampleChatLayoutComponent } from '@cacheplane/example-layouts';
-import { agent, toChatAgent } from '@cacheplane/langgraph';
+import { agent, toAgent } from '@cacheplane/langgraph';
 import { signalStateStore } from '@cacheplane/render';
 import { environment } from '../environments/environment';
 import { CodeExecutionComponent } from './views/code-execution.component';
@@ -68,7 +68,7 @@ export class SandboxesComponent {
     apiUrl: environment.langGraphApiUrl,
     assistantId: environment.streamingAssistantId,
   });
-  protected readonly chatAgent = toChatAgent(this.stream);
+  protected readonly chatAgent = toAgent(this.stream);
 
   /**
    * Derived signal: extracts code executions from the message stream.
