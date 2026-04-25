@@ -10,7 +10,7 @@ import { messageContent } from '../shared/message-utils';
 import { createContentClassifier, type ContentClassifier } from '../../streaming/content-classifier';
 import { mockAgent } from '../../testing/mock-agent';
 import { signalStateStore } from '@cacheplane/render';
-import type { AgentCustomEvent } from '../../agent/agent-custom-event';
+import type { AgentEvent } from '../../agent/agent-event';
 
 describe('ChatComponent', () => {
   it('is defined as a class', () => {
@@ -120,7 +120,7 @@ describe('ChatComponent — content classification', () => {
   });
 });
 
-describe('ChatComponent — customEvents$ routing', () => {
+describe('ChatComponent — events$ routing', () => {
   // Angular 21 zoneless mode (ZONELESS_ENABLED defaults to true) means
   // ComponentFixture.autoDetect cannot be disabled, making createComponent
   // + setInput impractical for required-input signal components.  We test the
@@ -128,14 +128,14 @@ describe('ChatComponent — customEvents$ routing', () => {
   // exactly the effect body in ChatComponent's constructor — the same pattern
   // used by other primitive specs in this library.  These tests verify the
   // routing contract: state_update events update the store; other event types
-  // and non-object data payloads are silently ignored.
+  // are silently ignored.
 
-  it('routes state_update customEvents to the resolved render store', () => {
+  it('routes state_update events to the resolved render store', () => {
     TestBed.configureTestingModule({});
     TestBed.runInInjectionContext(() => {
-      const events$ = new Subject<AgentCustomEvent>();
+      const events$ = new Subject<AgentEvent>();
       const store = signalStateStore({});
-      const agent = mockAgent({ customEvents$: events$.asObservable() });
+      const agent = mockAgent({ events$: events$.asObservable() });
       const destroyRef = inject(DestroyRef);
 
       // Re-implement the exact routing effect from ChatComponent's constructor
@@ -147,13 +147,9 @@ describe('ChatComponent — customEvents$ routing', () => {
       effect(() => {
         if (subscribed) return;
         subscribed = true;
-        const stream$ = agentSig().customEvents$;
-        if (!stream$) return;
-        stream$.pipe(takeUntilDestroyed(destroyRef)).subscribe((event) => {
+        agentSig().events$.pipe(takeUntilDestroyed(destroyRef)).subscribe((event) => {
           if (event.type !== 'state_update') return;
-          const data = event['data'];
-          if (!data || typeof data !== 'object') return;
-          storeSig().update(data as Record<string, unknown>);
+          storeSig().update(event.data);
         });
       });
 
@@ -165,12 +161,12 @@ describe('ChatComponent — customEvents$ routing', () => {
     });
   });
 
-  it('ignores non-state_update events and events with non-object data', () => {
+  it('ignores non-state_update events', () => {
     TestBed.configureTestingModule({});
     TestBed.runInInjectionContext(() => {
-      const events$ = new Subject<AgentCustomEvent>();
+      const events$ = new Subject<AgentEvent>();
       const store = signalStateStore({ initial: true });
-      const agent = mockAgent({ customEvents$: events$.asObservable() });
+      const agent = mockAgent({ events$: events$.asObservable() });
       const destroyRef = inject(DestroyRef);
 
       const agentSig = signal(agent);
@@ -179,20 +175,15 @@ describe('ChatComponent — customEvents$ routing', () => {
       effect(() => {
         if (subscribed) return;
         subscribed = true;
-        const stream$ = agentSig().customEvents$;
-        if (!stream$) return;
-        stream$.pipe(takeUntilDestroyed(destroyRef)).subscribe((event) => {
+        agentSig().events$.pipe(takeUntilDestroyed(destroyRef)).subscribe((event) => {
           if (event.type !== 'state_update') return;
-          const data = event['data'];
-          if (!data || typeof data !== 'object') return;
-          storeSig().update(data as Record<string, unknown>);
+          storeSig().update(event.data);
         });
       });
 
       // Flush pending effects so the subscription is established before emitting.
       TestBed.flushEffects();
-      events$.next({ type: 'a2ui.surface', data: { surfaceId: 'main' } });
-      events$.next({ type: 'state_update', data: 'not-an-object' });
+      events$.next({ type: 'custom', name: 'a2ui.surface', data: { surfaceId: 'main' } });
 
       expect(store.getSnapshot()).toEqual({ initial: true });
     });

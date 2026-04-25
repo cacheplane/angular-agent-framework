@@ -250,7 +250,7 @@ export class ChatComponent {
   });
 
   private readonly destroyRef = inject(DestroyRef);
-  private customEventsSubscribed = false;
+  private eventsSubscribed = false;
 
   private readonly classifiers = new Map<number, ContentClassifier>();
 
@@ -270,33 +270,23 @@ export class ChatComponent {
   private prevMessageCount = 0;
 
   constructor() {
-    // Route `state_update` custom events from the agent stream to the render
-    // state store so components bound to `$state` paths reactively update.
-    // customEvents$ is optional — runtimes without custom-event support leave
-    // it undefined and this wiring becomes a no-op after the first effect run.
-    // Guard with customEventsSubscribed so we subscribe at most once even if
-    // the effect re-runs due to other reactive reads. We only set the flag
-    // after successfully reading the required `agent` input, so it remains
-    // false until Angular has satisfied the required-input contract.
+    // Route state_update events from the agent to the render state store
+    // so components bound to $state paths reactively update.
     effect(() => {
-      if (this.customEventsSubscribed) return;
+      if (this.eventsSubscribed) return;
       let agent: ReturnType<typeof this.agent>;
       try {
         agent = this.agent();
       } catch {
-        // Required input not yet available — skip this run; effect will retry.
+        // Required input not yet available — skip; effect will retry.
         return;
       }
-      this.customEventsSubscribed = true;
-      const stream$ = agent.customEvents$;
-      if (!stream$) return;
-      stream$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((event) => {
+      this.eventsSubscribed = true;
+      agent.events$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((event) => {
         if (event.type !== 'state_update') return;
-        const data = event['data'];
-        if (!data || typeof data !== 'object') return;
         const store = this.resolvedStore();
         if (!store) return;
-        store.update(data as Record<string, unknown>);
+        store.update(event.data);
       });
     });
 
