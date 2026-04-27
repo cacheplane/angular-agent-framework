@@ -75,6 +75,7 @@
     "apps/*"
   ],
   "dependencies": {
+    "@ag-ui/client": "^0.0.52",
     "@angular/common": "~21.1.0",
     "@angular/compiler": "~21.1.0",
     "@angular/core": "~21.1.0",
@@ -86,6 +87,7 @@
     "@modelcontextprotocol/sdk": "^1.27.1",
     "@noble/ed25519": "^2.3.0",
     "drizzle-orm": "^0.45.2",
+    "fast-json-patch": "^3.1.1",
     "framer-motion": "^12.38.0",
     "next": "~16.1.6",
     "next-mdx-remote": "^6.0.0",
