@@ -15,23 +15,24 @@
     "noUnusedLocals": true,
     "baseUrl": ".",
     "paths": {
+      "@cacheplane/ag-ui": ["libs/ag-ui/src/public-api.ts"],
+      "@cacheplane/a2ui": ["libs/a2ui/src/index.ts"],
+      "@cacheplane/chat": ["libs/chat/src/public-api.ts"],
       "@cacheplane/cockpit-docs": ["libs/cockpit-docs/src/index.ts"],
+      "@cacheplane/cockpit-langgraph-streaming-python": [
+        "cockpit/langgraph/streaming/python/src/index.ts"
+      ],
       "@cacheplane/cockpit-registry": ["libs/cockpit-registry/src/index.ts"],
       "@cacheplane/cockpit-shell": ["libs/cockpit-shell/src/index.ts"],
       "@cacheplane/cockpit-testing": ["libs/cockpit-testing/src/index.ts"],
       "@cacheplane/cockpit-ui": ["libs/cockpit-ui/src/index.ts"],
-      "@cacheplane/cockpit-langgraph-streaming-python": [
-        "cockpit/langgraph/streaming/python/src/index.ts"
-      ],
-      "@cacheplane/langgraph": ["libs/langgraph/src/public-api.ts"],
-      "@cacheplane/render": ["libs/render/src/public-api.ts"],
-      "@cacheplane/chat": ["libs/chat/src/public-api.ts"],
-      "@cacheplane/partial-json": ["libs/partial-json/src/index.ts"],
-      "@cacheplane/a2ui": ["libs/a2ui/src/index.ts"],
       "@cacheplane/db": ["libs/db/src/index.ts"],
+      "@cacheplane/example-layouts": ["libs/example-layouts/src/public-api.ts"],
+      "@cacheplane/langgraph": ["libs/langgraph/src/public-api.ts"],
       "@cacheplane/licensing": ["libs/licensing/src/index.ts"],
       "@cacheplane/licensing/testing": ["libs/licensing/src/testing.ts"],
-      "@cacheplane/example-layouts": ["libs/example-layouts/src/public-api.ts"]
+      "@cacheplane/partial-json": ["libs/partial-json/src/index.ts"],
+      "@cacheplane/render": ["libs/render/src/public-api.ts"]
     },
     "skipLibCheck": true,
     "strict": true,
