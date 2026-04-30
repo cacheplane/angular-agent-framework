@@ -4,10 +4,21 @@ on:
   push:
     tags:
       - 'v*'
+  workflow_dispatch:
+    inputs:
+      dry-run:
+        description: 'Dry run (no actual publish)'
+        type: boolean
+        default: true
 
 jobs:
   publish:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write  # for npm provenance
+    env:
+      NPM_PUBLISHABLE_PROJECTS: chat,langgraph,ag-ui,render,a2ui,partial-json,licensing,mcp
     steps:
       - uses: actions/checkout@v6.0.2
       - uses: actions/setup-node@v6.3.0
@@ -15,11 +26,21 @@ jobs:
           node-version: 22
           cache: npm
           registry-url: https://registry.npmjs.org
+
       - run: npm ci
-      - run: npx nx test mcp --skip-nx-cache
-      - run: npx nx test langgraph
-      - run: npx nx build langgraph --configuration=production
+
+      - name: Lint, test, build publishable projects
+        run: npx nx run-many -t lint,test,build --projects=$NPM_PUBLISHABLE_PROJECTS --skip-nx-cache
+
       - name: Publish to npm
-        run: npx nx-release-publish agent
+        if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.dry-run == false)
+        run: npx nx release publish --groups=publishable
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_CONFIG_PROVENANCE: 'true'
+
+      - name: Publish to npm (dry run)
+        if: github.event_name == 'workflow_dispatch' && inputs.dry-run == true
+        run: npx nx release publish --groups=publishable --dry-run
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

@@ -42,8 +42,23 @@
     }
   },
   "release": {
+    "groups": {
+      "publishable": {
+        "projects": [
+          "chat",
+          "langgraph",
+          "ag-ui",
+          "render",
+          "a2ui",
+          "partial-json",
+          "licensing",
+          "mcp"
+        ],
+        "projectsRelationship": "independent"
+      }
+    },
     "version": {
-      "preVersionCommand": "npx nx run-many -t build"
+      "preVersionCommand": "npx nx run-many -t build --projects=chat,langgraph,ag-ui,render,a2ui,partial-json,licensing,mcp"
     }
   },
   "generators": {

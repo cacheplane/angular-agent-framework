@@ -15,5 +15,6 @@
   "bugs": {
     "url": "https://github.com/cacheplane/angular-agent-framework/issues"
   },
-  "sideEffects": false
+  "sideEffects": false,
+  "private": true
 }
