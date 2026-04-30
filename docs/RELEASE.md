@@ -2,7 +2,9 @@
 
 The eight publishable libraries (`@cacheplane/chat`, `@cacheplane/langgraph`, `@cacheplane/ag-ui`, `@cacheplane/render`, `@cacheplane/a2ui`, `@cacheplane/partial-json`, `@cacheplane/licensing`, `@cacheplane/langgraph-mcp`) ship together at a synchronized version via Nx Release. During the `0.0.x` exploratory phase, only patch bumps are used.
 
-## One-shot release (recommended)
+## One-shot release (recommended; second release onward)
+
+> First release? See **[First release ever](#first-release-ever)** below — the flow is different because there's no prior tag/registry version yet.
 
 From a clean main branch:
 
@@ -45,11 +47,23 @@ npx nx release publish --groups=publishable
 
 ## First release ever
 
-The very first publish needs `--first-release` to skip the "previous tag exists" check:
+The very first publish ships the version currently on disk (`0.0.1`) — no version bump. `--first-release` skips the "previous tag exists" check and the "package already on registry" check.
 
 ```bash
-npx nx release patch --first-release
+# 1. Build everything
+npx nx run-many -t build --projects=chat,langgraph,ag-ui,render,a2ui,partial-json,licensing,mcp
+
+# 2. Generate the initial CHANGELOG, commit, and tag v0.0.1
+npx nx release changelog 0.0.1 --first-release
+
+# 3. Publish 0.0.1 to npm
+npx nx release publish --groups=publishable --first-release
+
+# 4. Push the commit and tag
+git push origin main --tags
 ```
+
+After the first release, subsequent patch bumps use the one-shot flow above (no `--first-release` flag).
 
 ## Dry run
 
