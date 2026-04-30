@@ -54,11 +54,30 @@
           "licensing",
           "mcp"
         ],
-        "projectsRelationship": "independent"
+        "projectsRelationship": "fixed"
       }
     },
     "version": {
-      "preVersionCommand": "npx nx run-many -t build --projects=chat,langgraph,ag-ui,render,a2ui,partial-json,licensing,mcp"
+      "preVersionCommand": "npx nx run-many -t build --projects=chat,langgraph,ag-ui,render,a2ui,partial-json,licensing,mcp",
+      "updateDependents": "auto",
+      "preserveLocalDependencyProtocols": true
+    },
+    "changelog": {
+      "workspaceChangelog": {
+        "createRelease": "github",
+        "renderOptions": {
+          "authors": true,
+          "commitReferences": true,
+          "versionTitleDate": true
+        }
+      },
+      "projectChangelogs": false,
+      "git": {
+        "commit": true,
+        "commitMessage": "chore(release): publish v{version}",
+        "tag": true,
+        "tagMessage": "v{version}"
+      }
     }
   },
   "generators": {

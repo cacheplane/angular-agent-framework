@@ -1,6 +1,6 @@
 {
   "name": "@cacheplane/langgraph-mcp",
-  "version": "0.1.0",
+  "version": "0.0.1",
   "description": "MCP server for the @cacheplane/langgraph library",
   "license": "MIT",
   "repository": {
@@ -13,7 +13,9 @@
     "url": "https://github.com/cacheplane/angular-agent-framework/issues"
   },
   "main": "src/index.js",
-  "bin": { "@cacheplane/langgraph-mcp": "src/index.js" },
+  "bin": {
+    "@cacheplane/langgraph-mcp": "src/index.js"
+  },
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "smoke": "node --test package-smoke.test.mjs",

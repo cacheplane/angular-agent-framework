@@ -2,8 +2,8 @@
   "name": "@cacheplane/ag-ui",
   "version": "0.0.1",
   "peerDependencies": {
-    "@cacheplane/chat": "^0.0.1",
-    "@cacheplane/licensing": "^0.0.1",
+    "@cacheplane/chat": "*",
+    "@cacheplane/licensing": "*",
     "@angular/core": "^20.0.0 || ^21.0.0",
     "@ag-ui/client": "*",
     "fast-json-patch": "*",

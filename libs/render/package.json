@@ -5,7 +5,7 @@
     "@angular/core": "^20.0.0 || ^21.0.0",
     "@angular/common": "^20.0.0 || ^21.0.0",
     "@json-render/core": "^0.16.0",
-    "@cacheplane/licensing": "^0.0.1"
+    "@cacheplane/licensing": "*"
   },
   "license": "MIT",
   "repository": {
