@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// SPDX-License-Identifier: MIT
 import { beforeAll, describe, it, expect } from 'vitest';
 import { verifyLicense } from './verify-license';
 import { signLicense } from './sign-license';

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// SPDX-License-Identifier: MIT
 import type { A2uiSurface, A2uiActionMessage } from '@cacheplane/a2ui';
 
 /** Builds a v0.9 A2uiActionMessage from handler params and the current surface. */

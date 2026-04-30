@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// SPDX-License-Identifier: MIT
 
 /** Emits a data model binding event if the prop has a binding path. */
 export function emitBinding(

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// SPDX-License-Identifier: MIT
 import { Type } from '@angular/core';
 import type { AngularRegistry } from './render.types';
 import { defineAngularRegistry } from './define-angular-registry';

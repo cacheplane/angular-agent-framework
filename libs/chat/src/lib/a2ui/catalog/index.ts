@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// SPDX-License-Identifier: MIT
 import { views, type ViewRegistry } from '@cacheplane/render';
 import { A2uiAudioPlayerComponent } from './audio-player.component';
 import { A2uiButtonComponent } from './button.component';

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// SPDX-License-Identifier: MIT
 
 /** Kinds of JSON values a node can represent. */
 export type JsonNodeType = 'object' | 'array' | 'string' | 'number' | 'boolean' | 'null';

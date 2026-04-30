@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// SPDX-License-Identifier: MIT
 import { computed, effect, Signal } from '@angular/core';
 import { Subject, type Observable } from 'rxjs';
 import type { BaseMessage } from '@langchain/core/messages';

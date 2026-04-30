@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// SPDX-License-Identifier: MIT
 import type { A2uiPathRef, A2uiFunctionCall } from './types';
 
 /** Narrows an unknown value to A2uiPathRef — has `path` but not `call`. */

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// SPDX-License-Identifier: MIT
 import { describe, it, expect, vi } from 'vitest';
 import { Observable } from 'rxjs';
 import type { AbstractAgent, BaseEvent } from '@ag-ui/client';

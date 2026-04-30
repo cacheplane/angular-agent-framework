@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// SPDX-License-Identifier: MIT
 import * as ed from '@noble/ed25519';
 import { parseLicenseToken, type LicenseClaims } from './license-token.js';
 

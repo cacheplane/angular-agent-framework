@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// SPDX-License-Identifier: MIT
 export type {
   JsonNodeType, JsonNodeStatus, JsonNodeBase,
   JsonObjectNode, JsonArrayNode, JsonStringNode,

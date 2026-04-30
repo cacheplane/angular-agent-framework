@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// SPDX-License-Identifier: MIT
 import { Component, computed } from '@angular/core';
 import { JsonPipe } from '@angular/common';
 import { ChatComponent, ChatInterruptPanelComponent } from '@cacheplane/chat';

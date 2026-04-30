@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// SPDX-License-Identifier: MIT
 import type { LicenseClaims } from './license-token.js';
 import type { VerifyResult } from './verify-license.js';
 
