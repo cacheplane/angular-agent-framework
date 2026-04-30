@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// SPDX-License-Identifier: MIT
 import { ApplicationConfig } from '@angular/core';
 import { provideRender } from '@cacheplane/render';
 

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// SPDX-License-Identifier: MIT
 import { mockAgent } from './mock-agent';
 import type { AgentWithHistory } from '../agent';
 

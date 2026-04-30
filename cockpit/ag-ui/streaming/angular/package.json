@@ -5,6 +5,6 @@
     "@cacheplane/ag-ui": "^0.0.1",
     "@cacheplane/chat": "^0.0.1"
   },
-  "license": "PolyForm-Noncommercial-1.0.0",
+  "license": "MIT",
   "sideEffects": false
 }

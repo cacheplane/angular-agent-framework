@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// SPDX-License-Identifier: MIT
 import { describe, it, expect } from 'vitest';
 import { Component, input } from '@angular/core';
 import { TestBed } from '@angular/core/testing';

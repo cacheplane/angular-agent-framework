@@ -3,8 +3,13 @@ Commercial License
 Copyright (c) 2026 Brian Love d/b/a cacheplane. All rights reserved.
 
 This Commercial License ("License") governs commercial use of the
-@cacheplane/langgraph software ("Software"). Use of the Software for
-commercial purposes requires a valid license purchased from cacheplane.
+cacheplane minting service ("Software"), located in apps/minting-service/
+of the angular-agent-framework repository. This License applies solely to
+the minting service component and does not govern any other part of the
+repository, which is released separately under the MIT License.
+
+Use of the Software for commercial purposes requires a valid license
+purchased from cacheplane.
 
 --- LICENSE TIERS ---
 
@@ -36,12 +41,12 @@ applications, in accordance with the scope of the purchased tier.
 
 Restrictions. You may not:
   (a) sublicense, sell, resell, or transfer the Software as a standalone
-      product or library;
+      product or service;
   (b) use the Software outside the scope of your purchased license tier;
   (c) remove or alter any copyright, trademark, or proprietary notices.
 
 No Redistribution. You may not distribute the Software or make it available
-to third parties as a library, package, or SDK, whether modified or
+to third parties as a service, package, or SDK, whether modified or
 unmodified, without a separate written agreement with cacheplane.
 
 Warranty Disclaimer. THE SOFTWARE IS PROVIDED "AS IS" WITHOUT WARRANTY OF

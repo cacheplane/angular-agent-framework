@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// SPDX-License-Identifier: MIT
 import { Component, inject } from '@angular/core';
 import { ChatComponent } from '@cacheplane/chat';
 import { AG_UI_AGENT } from '@cacheplane/ag-ui';

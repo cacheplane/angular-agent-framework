@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// SPDX-License-Identifier: MIT
 export type {
   A2uiTheme, A2uiPathRef, A2uiFunctionCall,
   DynamicValue, DynamicString, DynamicNumber, DynamicBoolean, DynamicStringList,

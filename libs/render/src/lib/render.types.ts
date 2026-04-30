@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// SPDX-License-Identifier: MIT
 import { Type } from '@angular/core';
 import type { Spec, StateStore, ComputedFunction } from '@json-render/core';
 

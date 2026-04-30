@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// SPDX-License-Identifier: MIT
 import { Client } from '@langchain/langgraph-sdk';
 import { AgentTransport, StreamEvent } from '../agent.types';
 

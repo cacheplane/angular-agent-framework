@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// SPDX-License-Identifier: MIT
 import { markEventProcessed, deleteProcessedEvent } from './processed-events.js';
 import { startTestDb, type TestDb } from './test-helpers.js';
 

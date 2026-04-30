@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// SPDX-License-Identifier: MIT
 import { Component, computed } from '@angular/core';
 import { ChatInputComponent as ChatInputPrimitive } from '@cacheplane/chat';
 import { ChatMessagesComponent } from '@cacheplane/chat';

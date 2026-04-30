@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// SPDX-License-Identifier: MIT
 import { pgTable, uuid, text, integer, timestamp, index } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 

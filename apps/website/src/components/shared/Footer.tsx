@@ -220,11 +220,13 @@ export function Footer() {
               onMouseLeave={(e) => (e.currentTarget.style.color = tokens.colors.textSecondary)}>
               npm Package
             </a>
-            <Link href="/pricing" className="transition-colors" style={{ color: tokens.colors.textSecondary }}
+            <a href="https://github.com/cacheplane/angular-agent-framework/blob/main/LICENSE"
+              target="_blank" rel="noopener noreferrer"
+              className="transition-colors" style={{ color: tokens.colors.textSecondary }}
               onMouseEnter={(e) => (e.currentTarget.style.color = tokens.colors.accent)}
               onMouseLeave={(e) => (e.currentTarget.style.color = tokens.colors.textSecondary)}>
-              Commercial License
-            </Link>
+              MIT License
+            </a>
           </div>
         </div>
 
@@ -232,9 +234,9 @@ export function Footer() {
         <div className="mt-12 pt-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs"
           style={{ borderTop: `1px solid ${tokens.glass.border}`, color: tokens.colors.textMuted }}>
           <span>&copy; {new Date().getFullYear()} Angular Agent Framework. All rights reserved.</span>
-          <span>PolyForm Noncommercial 1.0.0 &middot; <Link href="/pricing" className="transition-colors"
+          <span>MIT License &middot; <Link href="/pricing" className="transition-colors"
             onMouseEnter={(e) => (e.currentTarget.style.color = tokens.colors.accent)}
-            onMouseLeave={(e) => (e.currentTarget.style.color = tokens.colors.textMuted)}>Commercial License</Link></span>
+            onMouseLeave={(e) => (e.currentTarget.style.color = tokens.colors.textMuted)}>Pricing</Link></span>
         </div>
       </motion.div>
     </footer>

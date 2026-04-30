@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// SPDX-License-Identifier: MIT
 import { Component, signal } from '@angular/core';
 import { ChatComponent, ChatThreadListComponent, type Thread } from '@cacheplane/chat';
 import { agent, toAgent } from '@cacheplane/langgraph';

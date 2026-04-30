@@ -9,6 +9,15 @@
     "fast-json-patch": "*",
     "rxjs": "~7.8.0"
   },
-  "license": "PolyForm-Noncommercial-1.0.0",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cacheplane/angular-agent-framework.git",
+    "directory": "libs/ag-ui"
+  },
+  "homepage": "https://github.com/cacheplane/angular-agent-framework#readme",
+  "bugs": {
+    "url": "https://github.com/cacheplane/angular-agent-framework/issues"
+  },
   "sideEffects": false
 }

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// SPDX-License-Identifier: MIT
 import { computed, signal, type Signal } from '@angular/core';
 import type { A2uiMessage, A2uiSurface } from '@cacheplane/a2ui';
 import { setByPointer, deleteByPointer } from '@cacheplane/a2ui';

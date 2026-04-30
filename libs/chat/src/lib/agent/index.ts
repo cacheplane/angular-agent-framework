@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// SPDX-License-Identifier: MIT
 export type { Agent } from './agent';
 export type { Message, Role } from './message';
 export { isUserMessage, isAssistantMessage, isToolMessage, isSystemMessage } from './message';

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// SPDX-License-Identifier: MIT
 import { describe, it, expect } from 'vitest';
 import { Component } from '@angular/core';
 import { defineAngularRegistry } from './define-angular-registry';

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// SPDX-License-Identifier: MIT
 
 /**
  * Render-state-store sync event. Adapters emit this when the runtime

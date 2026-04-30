@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// SPDX-License-Identifier: MIT
 import { afterEach, beforeEach, describe, it, expect } from 'vitest';
 import { inferNoncommercial } from './infer-noncommercial.js';
 

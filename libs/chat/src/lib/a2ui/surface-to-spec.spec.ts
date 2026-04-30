@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// SPDX-License-Identifier: MIT
 import { describe, it, expect } from 'vitest';
 import type { A2uiSurface, A2uiComponent } from '@cacheplane/a2ui';
 import { surfaceToSpec } from './surface-to-spec';

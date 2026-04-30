@@ -1,5 +1,5 @@
 // libs/ag-ui/src/lib/testing/provide-fake-ag-ui-agent.spec.ts
-// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// SPDX-License-Identifier: MIT
 import { describe, it, expect } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { AG_UI_AGENT } from '../provide-ag-ui-agent';

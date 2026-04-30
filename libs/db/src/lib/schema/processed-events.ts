@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// SPDX-License-Identifier: MIT
 import { pgTable, text, timestamp } from 'drizzle-orm/pg-core';
 
 export const processedEvents = pgTable('processed_events', {

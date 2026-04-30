@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// SPDX-License-Identifier: MIT
 
 /**
  * Runtime-neutral snapshot of a point in an agent's execution history.

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// SPDX-License-Identifier: MIT
 import type { Signal } from '@angular/core';
 import type { Agent } from './agent';
 import type { AgentCheckpoint } from './agent-checkpoint';

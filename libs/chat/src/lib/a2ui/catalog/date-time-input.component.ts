@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// SPDX-License-Identifier: MIT
 import { Component, input, ChangeDetectionStrategy } from '@angular/core';
 import type { A2uiValidationResult } from '@cacheplane/a2ui';
 import { A2uiValidationErrorsComponent } from './validation-errors.component';

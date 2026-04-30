@@ -2,6 +2,7 @@
   "name": "@cacheplane/minting-service",
   "version": "0.0.1",
   "type": "module",
+  "license": "SEE LICENSE IN LICENSE",
   "private": true,
   "dependencies": {
     "drizzle-orm": "^0.45.2",

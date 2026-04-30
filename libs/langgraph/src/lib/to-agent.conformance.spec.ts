@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// SPDX-License-Identifier: MIT
 import { TestBed } from '@angular/core/testing';
 import { runAgentConformance } from '@cacheplane/chat';
 import { toAgent } from './to-agent';

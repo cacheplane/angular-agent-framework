@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// SPDX-License-Identifier: MIT
 const EXAMPLES: Record<string, string> = {
   'basic-chat': `// Basic chat component with angular
 import { Component } from '@angular/core';

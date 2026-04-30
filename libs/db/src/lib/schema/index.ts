@@ -1,3 +1,3 @@
-// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// SPDX-License-Identifier: MIT
 export * from './licenses.js';
 export * from './processed-events.js';

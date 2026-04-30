@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// SPDX-License-Identifier: MIT
 import { describe, it, expect } from 'vitest';
 import { ChatToolCallCardComponent } from './chat-tool-call-card.component';
 import type { ToolCallInfo } from './chat-tool-call-card.component';
