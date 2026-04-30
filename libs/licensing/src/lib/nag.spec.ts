@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// SPDX-License-Identifier: MIT
 import { afterEach, beforeEach, describe, it, expect, vi } from 'vitest';
 import { emitNag, __resetNagStateForTests } from './nag';
 

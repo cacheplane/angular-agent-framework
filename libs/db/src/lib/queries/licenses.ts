@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// SPDX-License-Identifier: MIT
 import { eq, sql } from 'drizzle-orm';
 import type { Db } from '../client.js';
 import { licenses, type License, type NewLicense } from '../schema/licenses.js';

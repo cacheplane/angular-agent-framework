@@ -15,7 +15,7 @@
     <img alt="npm version" src="https://img.shields.io/npm/v/@cacheplane%2Fangular?color=6C8EFF&labelColor=080B14&style=flat-square" />
   </a>
   <a href="./LICENSE">
-    <img alt="License: PolyForm Noncommercial + Commercial" src="https://img.shields.io/badge/license-PolyForm%20Noncommercial%20%2B%20Commercial-6C8EFF?labelColor=080B14&style=flat-square" />
+    <img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-6C8EFF?labelColor=080B14&style=flat-square" />
   </a>
   <a href="https://angular.dev">
     <img alt="Angular 20+" src="https://img.shields.io/badge/Angular-20%2B-6C8EFF?labelColor=080B14&style=flat-square" />
@@ -120,19 +120,6 @@ That's it. `chat.messages()` is an Angular Signal. Bind it directly in your temp
 
 ---
 
-## Pricing
-
-| Tier | Price | Use Case |
-|---|---|---|
-| **Community** | Free | Noncommercial use — personal projects, academic, research, non-profit |
-| **Developer Seat** | $500 / seat / year | Commercial use — 12-month release window locked at purchase |
-| **Application Deployment** | $2,000 / app | One-time per application — covers dev, staging, and prod |
-| **Enterprise** | Custom | Volume licensing, priority support, custom contract |
-
-[Full pricing details and license terms →](https://cacheplane.ai/pricing)
-
----
-
 ## Documentation
 
 - [Getting Started](https://cacheplane.ai/docs/getting-started)
@@ -145,9 +132,6 @@ That's it. `chat.messages()` is an Angular Signal. Bind it directly in your temp
 
 ## License
 
-`@cacheplane/langgraph` is source-available software dual-licensed:
+**MIT** — free for any use. See [`LICENSE`](./LICENSE).
 
-- **PolyForm Noncommercial 1.0.0** — free for noncommercial use (personal projects, academic, research, non-profit internal tooling). See [`LICENSE`](./LICENSE).
-- **Angular Agent Framework Commercial License** — required for any for-profit or revenue-generating use. See [`LICENSE-COMMERCIAL`](./LICENSE-COMMERCIAL) and [`COMMERCIAL.md`](./COMMERCIAL.md).
-
-This is **not** an open-source license. Commercial use — including use in a for-profit product, service, or organization — requires a paid commercial license. See [pricing](https://cacheplane.ai/pricing).
+`@cacheplane/langgraph` and all libraries in this repository are released under the [MIT License](./LICENSE). You are free to use, modify, and distribute them in both commercial and noncommercial projects without restriction.

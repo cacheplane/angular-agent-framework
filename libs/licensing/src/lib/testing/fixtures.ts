@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// SPDX-License-Identifier: MIT
 // Shared test fixtures: helper to produce signed tokens against a freshly
 // generated keypair. Not exported from the package's public index.
 import { signLicense } from '../sign-license';

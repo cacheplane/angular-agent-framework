@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// SPDX-License-Identifier: MIT
 import { SecurityContext } from '@angular/core';
 import type { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 

@@ -6,6 +6,6 @@
     "@cacheplane/langgraph": "^0.0.1",
     "@langchain/langgraph-sdk": "^0.0.36"
   },
-  "license": "PolyForm-Noncommercial-1.0.0",
+  "license": "MIT",
   "sideEffects": false
 }

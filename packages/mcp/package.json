@@ -2,7 +2,16 @@
   "name": "@cacheplane/langgraph-mcp",
   "version": "0.1.0",
   "description": "MCP server for the @cacheplane/langgraph library",
-  "license": "PolyForm-Noncommercial-1.0.0",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cacheplane/angular-agent-framework.git",
+    "directory": "packages/mcp"
+  },
+  "homepage": "https://github.com/cacheplane/angular-agent-framework#readme",
+  "bugs": {
+    "url": "https://github.com/cacheplane/angular-agent-framework/issues"
+  },
   "main": "src/index.js",
   "bin": { "@cacheplane/langgraph-mcp": "src/index.js" },
   "scripts": {

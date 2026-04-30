@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// SPDX-License-Identifier: MIT
 
 function parsePointer(pointer: string): string[] {
   if (!pointer || pointer === '/') return [];

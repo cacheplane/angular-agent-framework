@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// SPDX-License-Identifier: MIT
 
 type FnExecutor = (args: Record<string, unknown>, model: Record<string, unknown>) => unknown;
 

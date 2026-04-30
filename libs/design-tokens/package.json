@@ -1,6 +1,15 @@
 {
   "name": "@cacheplane/design-tokens",
   "version": "0.0.1",
-  "license": "PolyForm-Noncommercial-1.0.0",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cacheplane/angular-agent-framework.git",
+    "directory": "libs/design-tokens"
+  },
+  "homepage": "https://github.com/cacheplane/angular-agent-framework#readme",
+  "bugs": {
+    "url": "https://github.com/cacheplane/angular-agent-framework/issues"
+  },
   "sideEffects": false
 }

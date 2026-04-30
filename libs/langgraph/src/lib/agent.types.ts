@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// SPDX-License-Identifier: MIT
 import { Signal } from '@angular/core';
 import type { ResourceStatus as NgResourceStatus } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';

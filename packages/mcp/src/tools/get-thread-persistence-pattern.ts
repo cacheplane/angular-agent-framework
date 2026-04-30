@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// SPDX-License-Identifier: MIT
 const PATTERNS: Record<string, string> = {
   localStorage: `// Thread persistence with localStorage
 threadId = signal<string | null>(localStorage.getItem('chat-thread-id'));

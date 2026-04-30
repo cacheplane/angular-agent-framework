@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// SPDX-License-Identifier: MIT
 import type { DemoSpec } from '../../../../spec-rendering/angular/src/app/specs';
 
 export const REGISTRY_SPECS: DemoSpec[] = [

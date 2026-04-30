@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// SPDX-License-Identifier: MIT
 // TEST-ONLY utility: do not export from the package's public index.
 import * as ed from '@noble/ed25519';
 

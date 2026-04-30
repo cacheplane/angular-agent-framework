@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// SPDX-License-Identifier: MIT
 import type { Spec, UIElement } from '@json-render/core';
 import type { A2uiSurface, A2uiChildTemplate } from '@cacheplane/a2ui';
 import { resolveDynamic, getByPointer, evaluateCheckRules, isPathRef } from '@cacheplane/a2ui';

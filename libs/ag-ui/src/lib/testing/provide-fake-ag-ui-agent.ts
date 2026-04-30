@@ -1,5 +1,5 @@
 // libs/ag-ui/src/lib/testing/provide-fake-ag-ui-agent.ts
-// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// SPDX-License-Identifier: MIT
 import { type Provider } from '@angular/core';
 import { AG_UI_AGENT } from '../provide-ag-ui-agent';
 import { toAgent } from '../to-agent';

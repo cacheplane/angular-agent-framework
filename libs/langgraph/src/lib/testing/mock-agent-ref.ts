@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// SPDX-License-Identifier: MIT
 import { signal, WritableSignal } from '@angular/core';
 import type { AgentRef, SubagentStreamRef, ResourceStatus as ResourceStatusType, Interrupt, ThreadState, SubmitOptions, CustomStreamEvent } from '../agent.types';
 import type { ToolProgress, ToolCallWithResult } from '@langchain/langgraph-sdk';

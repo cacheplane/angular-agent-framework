@@ -1,7 +1,7 @@
 {
   "name": "stream-resource",
   "version": "0.0.0",
-  "license": "PolyForm-Noncommercial-1.0.0",
+  "license": "MIT",
   "scripts": {
     "postinstall": "node libs/licensing/scripts/generate-public-key.mjs",
     "generate-agent-context": "npx tsx --tsconfig apps/website/tsconfig.json apps/website/scripts/generate-agent-context.ts",

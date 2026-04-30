@@ -1,6 +1,15 @@
 {
   "name": "@cacheplane/partial-json",
   "version": "0.0.1",
-  "license": "PolyForm-Noncommercial-1.0.0",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cacheplane/angular-agent-framework.git",
+    "directory": "libs/partial-json"
+  },
+  "homepage": "https://github.com/cacheplane/angular-agent-framework#readme",
+  "bugs": {
+    "url": "https://github.com/cacheplane/angular-agent-framework/issues"
+  },
   "sideEffects": false
 }

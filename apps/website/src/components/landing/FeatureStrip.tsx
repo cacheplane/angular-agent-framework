@@ -7,7 +7,7 @@ const FEATURES = [
   { icon: '\uD83D\uDD17', title: 'Thread persistence', desc: 'MemorySaver-backed threads survive page refreshes via threadId signal and onThreadId callback.' },
   { icon: '\uD83D\uDCD0', title: 'Angular Signals', desc: 'Every state slice is an Angular Signal. Works with OnPush, async pipe, and computed().' },
   { icon: '\uD83E\uDDEA', title: 'MockAgentTransport', desc: 'Deterministic unit testing. Script event sequences and step through them in your specs.' },
-  { icon: '\uD83C\uDFE2', title: 'Source-available licensing', desc: 'Free for noncommercial use under PolyForm Noncommercial 1.0.0. Commercial license at $500/seat/year or $2,000/app deployment.' },
+  { icon: '\uD83C\uDFE2', title: 'MIT Licensed', desc: 'Free for any use — personal, commercial, or enterprise — under the MIT License. No restrictions.' },
 ];
 
 export function FeatureStrip() {
