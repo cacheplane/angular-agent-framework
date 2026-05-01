@@ -1,54 +1,57 @@
-import { Component, computed, input } from '@angular/core';
+// libs/example-layouts/src/lib/example-chat-layout.component.ts
+// SPDX-License-Identifier: MIT
+import { Component, ChangeDetectionStrategy, input } from '@angular/core';
 
-/**
- * Responsive chat-style layout with a main content area and optional sidebar.
- *
- * Content projection slots:
- * - `[main]` — primary content area (required)
- * - `[sidebar]` — optional sidebar that stacks below on mobile, beside on desktop
- *
- * When no `[sidebar]` content is projected, the `<aside>` collapses via `:empty` CSS.
- */
 @Component({
   selector: 'example-chat-layout',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styles: `
     :host {
       display: flex;
       flex-direction: column;
       height: 100vh;
       height: 100dvh;
+      background: var(--ngaf-chat-bg, #fff);
+      color: var(--ngaf-chat-text, #1a1a1a);
+      font-family: var(--ngaf-chat-font-family, system-ui, sans-serif);
     }
-    aside:empty {
-      display: none;
+    .layout {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      min-height: 0;
+    }
+    .layout__main { flex: 1; min-width: 0; min-height: 0; display: flex; flex-direction: column; }
+    .layout__sidebar {
+      width: 100%;
+      flex-shrink: 0;
+      border-top: 1px solid var(--ngaf-chat-separator, #e5e5e5);
+      overflow-y: auto;
+    }
+    .layout__sidebar:empty { display: none; }
+    @media (min-width: 768px) {
+      .layout { flex-direction: row; }
+      .layout--sidebar-left { flex-direction: row-reverse; }
+      .layout__sidebar {
+        width: var(--example-layout-sidebar-width, 18rem);
+        border-top: 0;
+        border-left: 1px solid var(--ngaf-chat-separator, #e5e5e5);
+      }
+      .layout--sidebar-left .layout__sidebar {
+        border-left: 0;
+        border-right: 1px solid var(--ngaf-chat-separator, #e5e5e5);
+      }
     }
   `,
   template: `
-    <div [class]="containerClasses()">
-      <div class="flex-1 min-w-0 min-h-0 flex flex-col">
-        <ng-content select="[main]" />
-      </div>
-      <aside [class]="sidebarClasses()">
-        <ng-content select="[sidebar]" />
-      </aside>
+    <div [class]="'layout layout--sidebar-' + sidebarPosition()" [style.--example-layout-sidebar-width]="sidebarWidth()">
+      <div class="layout__main"><ng-content select="[main]" /></div>
+      <aside class="layout__sidebar"><ng-content select="[sidebar]" /></aside>
     </div>
   `,
 })
 export class ExampleChatLayoutComponent {
   readonly sidebarPosition = input<'left' | 'right'>('right');
-  readonly sidebarWidth = input('w-72');
-
-  protected readonly containerClasses = computed(() => {
-    const base = 'flex flex-col md:flex-row flex-1 min-h-0';
-    return this.sidebarPosition() === 'left'
-      ? `${base} md:flex-row-reverse`
-      : base;
-  });
-
-  protected readonly sidebarClasses = computed(() => {
-    const width = this.sidebarWidth();
-    const position = this.sidebarPosition();
-    const borderClass = position === 'left' ? 'md:border-r' : 'md:border-l';
-    return `w-full md:${width} shrink-0 border-t md:border-t-0 ${borderClass} border-gray-800 overflow-y-auto`;
-  });
+  readonly sidebarWidth = input('18rem');
 }
