@@ -10,6 +10,8 @@ jobs:
   library:
     name: Library — lint / test / build
     runs-on: ubuntu-latest
+    env:
+      LIBS: chat,langgraph,ag-ui,render,a2ui,partial-json,licensing
     steps:
       - uses: actions/checkout@v6.0.2
       - uses: actions/setup-node@v6.3.0
@@ -17,9 +19,9 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npx nx lint langgraph
-      - run: npx nx test langgraph --coverage
-      - run: npx nx build langgraph --configuration=production
+      - run: npx nx run-many -t lint --projects=$LIBS
+      - run: npx nx run-many -t test --projects=$LIBS --coverage
+      - run: npx nx run-many -t build --projects=$LIBS --configuration=production
 
   website:
     name: Website — lint / build
