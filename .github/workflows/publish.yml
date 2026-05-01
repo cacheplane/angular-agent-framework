@@ -21,9 +21,14 @@ jobs:
       NPM_PUBLISHABLE_PROJECTS: chat,langgraph,ag-ui,render,a2ui,partial-json,licensing
     steps:
       - uses: actions/checkout@v6.0.2
+      # Node 24 ships npm 11+ which fully implements npm trusted publishing
+      # over OIDC. Node 22 is LTS but locked at npm 10.x, which has only
+      # partial trusted-publishing support and fails OIDC on this registry.
+      # The rest of CI (lint/test/build) runs on Node 22; this workflow
+      # uses Node 24 specifically for the publish step.
       - uses: actions/setup-node@v6.3.0
         with:
-          node-version: 22
+          node-version: 24
           cache: npm
           registry-url: https://registry.npmjs.org
 
