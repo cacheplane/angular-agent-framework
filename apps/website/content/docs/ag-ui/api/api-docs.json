@@ -1,0 +1,488 @@
+[
+  {
+    "name": "FakeAgent",
+    "kind": "class",
+    "description": "In-process AG-UI agent that emits a canned streaming response.\n\nUse for offline demos and tests where a real backend isn't available.\nEchoes a fixed assistant reply token-by-token with realistic timing.\n\nNOT for production use.",
+    "params": [
+      {
+        "name": "opts",
+        "type": "object",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "examples": [],
+    "properties": [
+      {
+        "name": "agentId",
+        "type": "string",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "description",
+        "type": "string",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "isRunning",
+        "type": "boolean",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "messages",
+        "type": "object | object | object | object | object | object | object[]",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "state",
+        "type": "any",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "subscribers",
+        "type": "AgentSubscriber[]",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "threadId",
+        "type": "string",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "methods": [
+      {
+        "name": "abortRun",
+        "signature": "abortRun()",
+        "description": "",
+        "params": []
+      },
+      {
+        "name": "addMessage",
+        "signature": "addMessage(message: object | object | object | object | object | object | object)",
+        "description": "",
+        "params": [
+          {
+            "name": "message",
+            "type": "object | object | object | object | object | object | object",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
+        "name": "addMessages",
+        "signature": "addMessages(messages: object | object | object | object | object | object | object[])",
+        "description": "",
+        "params": [
+          {
+            "name": "messages",
+            "type": "object | object | object | object | object | object | object[]",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
+        "name": "apply",
+        "signature": "apply(input: object, events$: Observable<objectOutputType<object, ZodTypeAny, \"passthrough\">>, subscribers: AgentSubscriber[])",
+        "description": "",
+        "params": [
+          {
+            "name": "input",
+            "type": "object",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "events$",
+            "type": "Observable<objectOutputType<object, ZodTypeAny, \"passthrough\">>",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "subscribers",
+            "type": "AgentSubscriber[]",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
+        "name": "clone",
+        "signature": "clone()",
+        "description": "",
+        "params": []
+      },
+      {
+        "name": "connect",
+        "signature": "connect(input: object)",
+        "description": "",
+        "params": [
+          {
+            "name": "input",
+            "type": "object",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
+        "name": "connectAgent",
+        "signature": "connectAgent(parameters: Partial<Pick<object, \"runId\" | \"tools\" | \"context\" | \"forwardedProps\">>, subscriber: AgentSubscriber)",
+        "description": "",
+        "params": [
+          {
+            "name": "parameters",
+            "type": "Partial<Pick<object, \"runId\" | \"tools\" | \"context\" | \"forwardedProps\">>",
+            "description": "",
+            "optional": true
+          },
+          {
+            "name": "subscriber",
+            "type": "AgentSubscriber",
+            "description": "",
+            "optional": true
+          }
+        ]
+      },
+      {
+        "name": "detachActiveRun",
+        "signature": "detachActiveRun()",
+        "description": "",
+        "params": []
+      },
+      {
+        "name": "getCapabilities",
+        "signature": "getCapabilities()",
+        "description": "Returns the agent's current capabilities.\nOptional — subclasses implement this to advertise what they support.",
+        "params": []
+      },
+      {
+        "name": "legacy_to_be_removed_runAgentBridged",
+        "signature": "legacy_to_be_removed_runAgentBridged(config: Partial<Pick<object, \"runId\" | \"tools\" | \"context\" | \"forwardedProps\">>)",
+        "description": "",
+        "params": [
+          {
+            "name": "config",
+            "type": "Partial<Pick<object, \"runId\" | \"tools\" | \"context\" | \"forwardedProps\">>",
+            "description": "",
+            "optional": true
+          }
+        ]
+      },
+      {
+        "name": "onError",
+        "signature": "onError(input: object, error: Error, subscribers: AgentSubscriber[])",
+        "description": "",
+        "params": [
+          {
+            "name": "input",
+            "type": "object",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "error",
+            "type": "Error",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "subscribers",
+            "type": "AgentSubscriber[]",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
+        "name": "onFinalize",
+        "signature": "onFinalize(input: object, subscribers: AgentSubscriber[])",
+        "description": "",
+        "params": [
+          {
+            "name": "input",
+            "type": "object",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "subscribers",
+            "type": "AgentSubscriber[]",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
+        "name": "onInitialize",
+        "signature": "onInitialize(input: object, subscribers: AgentSubscriber[])",
+        "description": "",
+        "params": [
+          {
+            "name": "input",
+            "type": "object",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "subscribers",
+            "type": "AgentSubscriber[]",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
+        "name": "prepareRunAgentInput",
+        "signature": "prepareRunAgentInput(parameters: Partial<Pick<object, \"runId\" | \"tools\" | \"context\" | \"forwardedProps\">>)",
+        "description": "",
+        "params": [
+          {
+            "name": "parameters",
+            "type": "Partial<Pick<object, \"runId\" | \"tools\" | \"context\" | \"forwardedProps\">>",
+            "description": "",
+            "optional": true
+          }
+        ]
+      },
+      {
+        "name": "processApplyEvents",
+        "signature": "processApplyEvents(input: object, events$: Observable<AgentStateMutation>, subscribers: AgentSubscriber[])",
+        "description": "",
+        "params": [
+          {
+            "name": "input",
+            "type": "object",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "events$",
+            "type": "Observable<AgentStateMutation>",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "subscribers",
+            "type": "AgentSubscriber[]",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
+        "name": "run",
+        "signature": "run(input: object)",
+        "description": "",
+        "params": [
+          {
+            "name": "input",
+            "type": "object",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
+        "name": "runAgent",
+        "signature": "runAgent(parameters: Partial<Pick<object, \"runId\" | \"tools\" | \"context\" | \"forwardedProps\">>, subscriber: AgentSubscriber)",
+        "description": "",
+        "params": [
+          {
+            "name": "parameters",
+            "type": "Partial<Pick<object, \"runId\" | \"tools\" | \"context\" | \"forwardedProps\">>",
+            "description": "",
+            "optional": true
+          },
+          {
+            "name": "subscriber",
+            "type": "AgentSubscriber",
+            "description": "",
+            "optional": true
+          }
+        ]
+      },
+      {
+        "name": "setMessages",
+        "signature": "setMessages(messages: object | object | object | object | object | object | object[])",
+        "description": "",
+        "params": [
+          {
+            "name": "messages",
+            "type": "object | object | object | object | object | object | object[]",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
+        "name": "setState",
+        "signature": "setState(state: any)",
+        "description": "",
+        "params": [
+          {
+            "name": "state",
+            "type": "any",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
+        "name": "subscribe",
+        "signature": "subscribe(subscriber: AgentSubscriber)",
+        "description": "",
+        "params": [
+          {
+            "name": "subscriber",
+            "type": "AgentSubscriber",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
+        "name": "use",
+        "signature": "use(middlewares: Middleware<> | MiddlewareFunction[])",
+        "description": "",
+        "params": [
+          {
+            "name": "middlewares",
+            "type": "Middleware<> | MiddlewareFunction[]",
+            "description": "",
+            "optional": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "AgUiAgentConfig",
+    "kind": "interface",
+    "description": "Configuration for the AG-UI agent provider.\nHttpAgentConfig shape (from @ag-ui/client@0.0.52):\n  - url: string (required) — endpoint for the HTTP agent\n  - agentId: string (optional) — agent identifier\n  - threadId: string (optional) — thread identifier\n  - headers: Record<string, string> (optional) — custom HTTP headers",
+    "properties": [
+      {
+        "name": "agentId",
+        "type": "string",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "headers",
+        "type": "Record<string, string>",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "threadId",
+        "type": "string",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "url",
+        "type": "string",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "FakeAgUiAgentConfig",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "delayMs",
+        "type": "number",
+        "description": "Milliseconds between successive token emissions.",
+        "optional": true
+      },
+      {
+        "name": "tokens",
+        "type": "string[]",
+        "description": "Tokens streamed back as the assistant reply.",
+        "optional": true
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "injectAgUiAgent",
+    "kind": "function",
+    "description": "Injects the AG_UI_AGENT from Angular's dependency injection container.\nUse this in components or services that have been provided via provideAgUiAgent().",
+    "signature": "injectAgUiAgent(): Agent",
+    "params": [],
+    "returns": {
+      "type": "Agent",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "provideAgUiAgent",
+    "kind": "function",
+    "description": "Provides an Agent instance wired through HttpAgent and toAgent.\nConstructs an HttpAgent from config and wraps it in the runtime-neutral\nAgent contract via toAgent(). Returns a provider array suitable for\nbootstrapApplication or TestBed.configureTestingModule().",
+    "signature": "provideAgUiAgent(config: AgUiAgentConfig): Provider[]",
+    "params": [
+      {
+        "name": "config",
+        "type": "AgUiAgentConfig",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "Provider[]",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "provideFakeAgUiAgent",
+    "kind": "function",
+    "description": "Registers an in-process FakeAgent under AG_UI_AGENT.\n\nUse for offline demos and development. Drop-in replacement for\nprovideAgUiAgent({ url }) when no real backend is available.",
+    "signature": "provideFakeAgUiAgent(config: FakeAgUiAgentConfig): Provider[]",
+    "params": [
+      {
+        "name": "config",
+        "type": "FakeAgUiAgentConfig",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "Provider[]",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "toAgent",
+    "kind": "function",
+    "description": "Wraps an AG-UI AbstractAgent into the runtime-neutral Agent contract.\n\nThe adapter subscribes to source.subscribe({ onEvent }) and reduces every\nevent into the produced Agent's signals. submit() optimistically appends the\nuser message to both our signals and the source agent's internal message\nlist, then calls source.runAgent(). stop() calls source.abortRun().\n\nSubscription cleanup: the returned Agent does NOT manage its own lifetime.\nCallers using DI should rely on the provider's destroy hook; direct callers\nof toAgent() should treat the returned object's lifecycle as tied to the\nagent instance they constructed. The subscriber registered via\nsource.subscribe() will fire for the lifetime of source.",
+    "signature": "toAgent(source: AbstractAgent<>): Agent",
+    "params": [
+      {
+        "name": "source",
+        "type": "AbstractAgent<>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "Agent",
+      "description": ""
+    },
+    "examples": []
+  }
+]

@@ -1,0 +1,3388 @@
+[
+  {
+    "name": "A2uiAudioPlayerComponent",
+    "kind": "class",
+    "description": "",
+    "params": [],
+    "examples": [],
+    "properties": [
+      {
+        "name": "autoplay",
+        "type": "InputSignal<boolean>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "controls",
+        "type": "InputSignal<boolean>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "url",
+        "type": "InputSignal<string>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "methods": []
+  },
+  {
+    "name": "A2uiButtonComponent",
+    "kind": "class",
+    "description": "",
+    "params": [],
+    "examples": [],
+    "properties": [
+      {
+        "name": "disabled",
+        "type": "InputSignal<boolean>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "emit",
+        "type": "InputSignal<object>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "label",
+        "type": "InputSignal<string>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "validationResult",
+        "type": "InputSignal<A2uiValidationResult>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "variant",
+        "type": "InputSignal<string>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "methods": [
+      {
+        "name": "handleClick",
+        "signature": "handleClick()",
+        "description": "",
+        "params": []
+      }
+    ]
+  },
+  {
+    "name": "A2uiCardComponent",
+    "kind": "class",
+    "description": "",
+    "params": [],
+    "examples": [],
+    "properties": [
+      {
+        "name": "childKeys",
+        "type": "InputSignal<string[]>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "spec",
+        "type": "InputSignal<Spec>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "title",
+        "type": "InputSignal<string>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "methods": []
+  },
+  {
+    "name": "A2uiCheckBoxComponent",
+    "kind": "class",
+    "description": "",
+    "params": [],
+    "examples": [],
+    "properties": [
+      {
+        "name": "_bindings",
+        "type": "InputSignal<Record<string, string>>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "checked",
+        "type": "InputSignal<boolean>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "emit",
+        "type": "InputSignal<object>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "label",
+        "type": "InputSignal<string>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "validationResult",
+        "type": "InputSignal<A2uiValidationResult>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "methods": [
+      {
+        "name": "onChange",
+        "signature": "onChange(event: Event)",
+        "description": "",
+        "params": [
+          {
+            "name": "event",
+            "type": "Event",
+            "description": "",
+            "optional": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "A2uiChoicePickerComponent",
+    "kind": "class",
+    "description": "",
+    "params": [],
+    "examples": [],
+    "properties": [
+      {
+        "name": "_bindings",
+        "type": "InputSignal<Record<string, string>>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "_inputId",
+        "type": "string",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "emit",
+        "type": "InputSignal<object>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "label",
+        "type": "InputSignal<string>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "options",
+        "type": "InputSignal<string[]>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "selected",
+        "type": "InputSignal<string>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "validationResult",
+        "type": "InputSignal<A2uiValidationResult>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "methods": [
+      {
+        "name": "onChange",
+        "signature": "onChange(event: Event)",
+        "description": "",
+        "params": [
+          {
+            "name": "event",
+            "type": "Event",
+            "description": "",
+            "optional": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "A2uiColumnComponent",
+    "kind": "class",
+    "description": "",
+    "params": [],
+    "examples": [],
+    "properties": [
+      {
+        "name": "childKeys",
+        "type": "InputSignal<string[]>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "spec",
+        "type": "InputSignal<Spec>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "methods": []
+  },
+  {
+    "name": "A2uiDateTimeInputComponent",
+    "kind": "class",
+    "description": "",
+    "params": [],
+    "examples": [],
+    "properties": [
+      {
+        "name": "_bindings",
+        "type": "InputSignal<Record<string, string>>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "_inputId",
+        "type": "string",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "emit",
+        "type": "InputSignal<object>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "inputType",
+        "type": "InputSignal<\"date\" | \"time\" | \"datetime-local\">",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "label",
+        "type": "InputSignal<string>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "max",
+        "type": "InputSignal<string>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "min",
+        "type": "InputSignal<string>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "validationResult",
+        "type": "InputSignal<A2uiValidationResult>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "value",
+        "type": "InputSignal<string>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "methods": [
+      {
+        "name": "onChange",
+        "signature": "onChange(event: Event)",
+        "description": "",
+        "params": [
+          {
+            "name": "event",
+            "type": "Event",
+            "description": "",
+            "optional": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "A2uiDividerComponent",
+    "kind": "class",
+    "description": "",
+    "params": [],
+    "examples": [],
+    "properties": [],
+    "methods": []
+  },
+  {
+    "name": "A2uiIconComponent",
+    "kind": "class",
+    "description": "",
+    "params": [],
+    "examples": [],
+    "properties": [
+      {
+        "name": "name",
+        "type": "InputSignal<string>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "methods": []
+  },
+  {
+    "name": "A2uiImageComponent",
+    "kind": "class",
+    "description": "",
+    "params": [],
+    "examples": [],
+    "properties": [
+      {
+        "name": "alt",
+        "type": "InputSignal<string>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "url",
+        "type": "InputSignal<string>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "methods": []
+  },
+  {
+    "name": "A2uiListComponent",
+    "kind": "class",
+    "description": "",
+    "params": [],
+    "examples": [],
+    "properties": [
+      {
+        "name": "childKeys",
+        "type": "InputSignal<string[]>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "spec",
+        "type": "InputSignal<Spec>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "methods": []
+  },
+  {
+    "name": "A2uiModalComponent",
+    "kind": "class",
+    "description": "",
+    "params": [],
+    "examples": [],
+    "properties": [
+      {
+        "name": "_bindings",
+        "type": "InputSignal<Record<string, string>>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "childKeys",
+        "type": "InputSignal<string[]>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "dismissible",
+        "type": "InputSignal<boolean>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "emit",
+        "type": "InputSignal<object>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "open",
+        "type": "InputSignal<boolean>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "spec",
+        "type": "InputSignal<Spec>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "title",
+        "type": "InputSignal<string>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "methods": [
+      {
+        "name": "onBackdropClick",
+        "signature": "onBackdropClick()",
+        "description": "",
+        "params": []
+      }
+    ]
+  },
+  {
+    "name": "A2uiRowComponent",
+    "kind": "class",
+    "description": "",
+    "params": [],
+    "examples": [],
+    "properties": [
+      {
+        "name": "childKeys",
+        "type": "InputSignal<string[]>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "spec",
+        "type": "InputSignal<Spec>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "methods": []
+  },
+  {
+    "name": "A2uiSliderComponent",
+    "kind": "class",
+    "description": "",
+    "params": [],
+    "examples": [],
+    "properties": [
+      {
+        "name": "_bindings",
+        "type": "InputSignal<Record<string, string>>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "_inputId",
+        "type": "string",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "emit",
+        "type": "InputSignal<object>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "label",
+        "type": "InputSignal<string>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "max",
+        "type": "InputSignal<number>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "min",
+        "type": "InputSignal<number>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "step",
+        "type": "InputSignal<number>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "validationResult",
+        "type": "InputSignal<A2uiValidationResult>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "value",
+        "type": "InputSignal<number>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "methods": [
+      {
+        "name": "onInput",
+        "signature": "onInput(event: Event)",
+        "description": "",
+        "params": [
+          {
+            "name": "event",
+            "type": "Event",
+            "description": "",
+            "optional": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "A2uiSurfaceComponent",
+    "kind": "class",
+    "description": "",
+    "params": [],
+    "examples": [],
+    "properties": [
+      {
+        "name": "action",
+        "type": "OutputEmitterRef<A2uiActionMessage>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "catalog",
+        "type": "InputSignal<Readonly<Record<string, Type<unknown>>>>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "events",
+        "type": "OutputEmitterRef<RenderEvent>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "handlers",
+        "type": "InputSignal<Record<string, object>>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "internalHandlers",
+        "type": "Signal<object>",
+        "description": "Merge built-in A2UI handlers with consumer-provided handlers.",
+        "optional": false
+      },
+      {
+        "name": "registry",
+        "type": "Signal<AngularRegistry>",
+        "description": "Convert ViewRegistry to AngularRegistry for RenderSpecComponent.",
+        "optional": false
+      },
+      {
+        "name": "spec",
+        "type": "Signal<Spec | null>",
+        "description": "Convert the A2UI surface to a json-render Spec for rendering.",
+        "optional": false
+      },
+      {
+        "name": "surface",
+        "type": "InputSignal<A2uiSurface>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "methods": [
+      {
+        "name": "onRenderEvent",
+        "signature": "onRenderEvent(event: RenderEvent)",
+        "description": "",
+        "params": [
+          {
+            "name": "event",
+            "type": "RenderEvent",
+            "description": "",
+            "optional": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "A2uiTabsComponent",
+    "kind": "class",
+    "description": "",
+    "params": [],
+    "examples": [],
+    "properties": [
+      {
+        "name": "_bindings",
+        "type": "InputSignal<Record<string, string>>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "activeChildKeys",
+        "type": "Signal<string[]>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "activeIndex",
+        "type": "WritableSignal<number>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "childKeys",
+        "type": "InputSignal<string[]>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "emit",
+        "type": "InputSignal<object>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "selected",
+        "type": "InputSignal<number>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "spec",
+        "type": "InputSignal<Spec>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "tabs",
+        "type": "InputSignal<object[]>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "methods": [
+      {
+        "name": "selectTab",
+        "signature": "selectTab(index: number)",
+        "description": "",
+        "params": [
+          {
+            "name": "index",
+            "type": "number",
+            "description": "",
+            "optional": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "A2uiTextComponent",
+    "kind": "class",
+    "description": "",
+    "params": [],
+    "examples": [],
+    "properties": [
+      {
+        "name": "text",
+        "type": "InputSignal<string>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "methods": []
+  },
+  {
+    "name": "A2uiTextFieldComponent",
+    "kind": "class",
+    "description": "",
+    "params": [],
+    "examples": [],
+    "properties": [
+      {
+        "name": "_bindings",
+        "type": "InputSignal<Record<string, string>>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "_inputId",
+        "type": "string",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "emit",
+        "type": "InputSignal<object>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "label",
+        "type": "InputSignal<string>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "placeholder",
+        "type": "InputSignal<string>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "validationResult",
+        "type": "InputSignal<A2uiValidationResult>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "value",
+        "type": "InputSignal<string>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "methods": [
+      {
+        "name": "onInput",
+        "signature": "onInput(event: Event)",
+        "description": "",
+        "params": [
+          {
+            "name": "event",
+            "type": "Event",
+            "description": "",
+            "optional": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "A2uiValidationErrorsComponent",
+    "kind": "class",
+    "description": "",
+    "params": [],
+    "examples": [],
+    "properties": [
+      {
+        "name": "result",
+        "type": "InputSignal<A2uiValidationResult>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "methods": []
+  },
+  {
+    "name": "A2uiVideoComponent",
+    "kind": "class",
+    "description": "",
+    "params": [],
+    "examples": [],
+    "properties": [
+      {
+        "name": "autoplay",
+        "type": "InputSignal<boolean>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "controls",
+        "type": "InputSignal<boolean>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "poster",
+        "type": "InputSignal<string>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "url",
+        "type": "InputSignal<string>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "methods": []
+  },
+  {
+    "name": "ChatComponent",
+    "kind": "class",
+    "description": "",
+    "params": [],
+    "examples": [],
+    "properties": [
+      {
+        "name": "activeThreadId",
+        "type": "InputSignal<string>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "agent",
+        "type": "InputSignal<Agent>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "handlers",
+        "type": "InputSignal<Record<string, object>>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "messageContent",
+        "type": "object",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "renderEvent",
+        "type": "OutputEmitterRef<ChatRenderEvent>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "renderRegistry",
+        "type": "Signal<AngularRegistry | undefined>",
+        "description": "Convert ViewRegistry → AngularRegistry for ChatGenerativeUiComponent.",
+        "optional": false
+      },
+      {
+        "name": "resolvedStore",
+        "type": "Signal<StateStore | undefined>",
+        "description": "Resolved store: use the explicitly provided store input, or fall back to\nan internal store when `views` are provided (generative-ui use case).",
+        "optional": false
+      },
+      {
+        "name": "sidebarOpen",
+        "type": "WritableSignal<boolean>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "store",
+        "type": "InputSignal<StateStore | undefined>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "threads",
+        "type": "InputSignal<Thread[]>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "threadSelected",
+        "type": "OutputEmitterRef<string>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "views",
+        "type": "InputSignal<Readonly<Record<string, Type<unknown>>> | undefined>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "methods": [
+      {
+        "name": "classifyMessage",
+        "signature": "classifyMessage(content: string, index: number)",
+        "description": "",
+        "params": [
+          {
+            "name": "content",
+            "type": "string",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "index",
+            "type": "number",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
+        "name": "clearClassifiers",
+        "signature": "clearClassifiers()",
+        "description": "",
+        "params": []
+      },
+      {
+        "name": "onA2uiAction",
+        "signature": "onA2uiAction(message: A2uiActionMessage)",
+        "description": "",
+        "params": [
+          {
+            "name": "message",
+            "type": "A2uiActionMessage",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
+        "name": "onA2uiEvent",
+        "signature": "onA2uiEvent(event: RenderEvent, messageIndex: number, surfaceId: string)",
+        "description": "",
+        "params": [
+          {
+            "name": "event",
+            "type": "RenderEvent",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "messageIndex",
+            "type": "number",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "surfaceId",
+            "type": "string",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
+        "name": "onSpecEvent",
+        "signature": "onSpecEvent(event: RenderEvent, messageIndex: number)",
+        "description": "",
+        "params": [
+          {
+            "name": "event",
+            "type": "RenderEvent",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "messageIndex",
+            "type": "number",
+            "description": "",
+            "optional": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "ChatDebugComponent",
+    "kind": "class",
+    "description": "",
+    "params": [],
+    "examples": [],
+    "properties": [
+      {
+        "name": "agent",
+        "type": "InputSignal<AgentWithHistory>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "checkpoints",
+        "type": "Signal<DebugCheckpoint[]>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "debugOpen",
+        "type": "WritableSignal<boolean>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "messageContent",
+        "type": "object",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "previousState",
+        "type": "Signal<Record<string, unknown>>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "selectedCheckpointIndex",
+        "type": "WritableSignal<number>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "selectedState",
+        "type": "Signal<Record<string, unknown>>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "methods": [
+      {
+        "name": "jumpToEnd",
+        "signature": "jumpToEnd()",
+        "description": "",
+        "params": []
+      },
+      {
+        "name": "jumpToStart",
+        "signature": "jumpToStart()",
+        "description": "",
+        "params": []
+      },
+      {
+        "name": "renderMd",
+        "signature": "renderMd(content: string)",
+        "description": "",
+        "params": [
+          {
+            "name": "content",
+            "type": "string",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
+        "name": "stepBack",
+        "signature": "stepBack()",
+        "description": "",
+        "params": []
+      },
+      {
+        "name": "stepForward",
+        "signature": "stepForward()",
+        "description": "",
+        "params": []
+      }
+    ]
+  },
+  {
+    "name": "ChatErrorComponent",
+    "kind": "class",
+    "description": "",
+    "params": [],
+    "examples": [],
+    "properties": [
+      {
+        "name": "agent",
+        "type": "InputSignal<Agent>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "errorMessage",
+        "type": "Signal<string | null>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "methods": []
+  },
+  {
+    "name": "ChatInputComponent",
+    "kind": "class",
+    "description": "",
+    "params": [],
+    "examples": [],
+    "properties": [
+      {
+        "name": "agent",
+        "type": "InputSignal<Agent>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "focused",
+        "type": "WritableSignal<boolean>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "isDisabled",
+        "type": "Signal<boolean>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "messageText",
+        "type": "WritableSignal<string>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "placeholder",
+        "type": "InputSignal<string>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "submitOnEnter",
+        "type": "InputSignal<boolean>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "submitted",
+        "type": "OutputEmitterRef<string>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "methods": [
+      {
+        "name": "onKeydown",
+        "signature": "onKeydown(event: KeyboardEvent)",
+        "description": "",
+        "params": [
+          {
+            "name": "event",
+            "type": "KeyboardEvent",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
+        "name": "onSubmit",
+        "signature": "onSubmit()",
+        "description": "",
+        "params": []
+      }
+    ]
+  },
+  {
+    "name": "ChatInterruptComponent",
+    "kind": "class",
+    "description": "",
+    "params": [],
+    "examples": [],
+    "properties": [
+      {
+        "name": "agent",
+        "type": "InputSignal<Agent>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "interrupt",
+        "type": "Signal<AgentInterrupt | undefined>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "templateRef",
+        "type": "Signal<TemplateRef<any> | undefined>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "methods": []
+  },
+  {
+    "name": "ChatInterruptPanelComponent",
+    "kind": "class",
+    "description": "",
+    "params": [],
+    "examples": [],
+    "properties": [
+      {
+        "name": "action",
+        "type": "OutputEmitterRef<InterruptAction>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "agent",
+        "type": "InputSignal<Agent>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "interrupt",
+        "type": "Signal<AgentInterrupt | undefined>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "interruptPayload",
+        "type": "Signal<string>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "methods": []
+  },
+  {
+    "name": "ChatMessagesComponent",
+    "kind": "class",
+    "description": "",
+    "params": [],
+    "examples": [],
+    "properties": [
+      {
+        "name": "agent",
+        "type": "InputSignal<Agent>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "getMessageType",
+        "type": "object",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "messages",
+        "type": "Signal<Message[]>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "messageTemplates",
+        "type": "Signal<readonly MessageTemplateDirective[]>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "methods": [
+      {
+        "name": "findTemplate",
+        "signature": "findTemplate(type: MessageTemplateType)",
+        "description": "",
+        "params": [
+          {
+            "name": "type",
+            "type": "MessageTemplateType",
+            "description": "",
+            "optional": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "ChatSubagentCardComponent",
+    "kind": "class",
+    "description": "",
+    "params": [],
+    "examples": [],
+    "properties": [
+      {
+        "name": "expanded",
+        "type": "WritableSignal<boolean>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "latestMessageContent",
+        "type": "Signal<string>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "statusColor",
+        "type": "Signal<string>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "subagent",
+        "type": "InputSignal<Subagent>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "methods": []
+  },
+  {
+    "name": "ChatSubagentsComponent",
+    "kind": "class",
+    "description": "",
+    "params": [],
+    "examples": [],
+    "properties": [
+      {
+        "name": "activeSubagents",
+        "type": "Signal<Subagent[]>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "agent",
+        "type": "InputSignal<Agent>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "templateRef",
+        "type": "Signal<TemplateRef<any> | undefined>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "methods": []
+  },
+  {
+    "name": "ChatThreadListComponent",
+    "kind": "class",
+    "description": "",
+    "params": [],
+    "examples": [],
+    "properties": [
+      {
+        "name": "activeThreadId",
+        "type": "InputSignal<string>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "templateRef",
+        "type": "Signal<TemplateRef<any> | undefined>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "threads",
+        "type": "InputSignal<Thread[]>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "threadSelected",
+        "type": "OutputEmitterRef<string>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "methods": [
+      {
+        "name": "selectThread",
+        "signature": "selectThread(threadId: string)",
+        "description": "",
+        "params": [
+          {
+            "name": "threadId",
+            "type": "string",
+            "description": "",
+            "optional": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "ChatTimelineComponent",
+    "kind": "class",
+    "description": "",
+    "params": [],
+    "examples": [],
+    "properties": [
+      {
+        "name": "agent",
+        "type": "InputSignal<AgentWithHistory>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "checkpointSelected",
+        "type": "OutputEmitterRef<AgentCheckpoint>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "history",
+        "type": "Signal<AgentCheckpoint[]>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "templateRef",
+        "type": "Signal<TemplateRef<any> | undefined>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "methods": [
+      {
+        "name": "selectCheckpoint",
+        "signature": "selectCheckpoint(cp: AgentCheckpoint)",
+        "description": "",
+        "params": [
+          {
+            "name": "cp",
+            "type": "AgentCheckpoint",
+            "description": "",
+            "optional": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "ChatTimelineSliderComponent",
+    "kind": "class",
+    "description": "",
+    "params": [],
+    "examples": [],
+    "properties": [
+      {
+        "name": "agent",
+        "type": "InputSignal<AgentWithHistory>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "forkRequested",
+        "type": "OutputEmitterRef<string>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "history",
+        "type": "Signal<AgentCheckpoint[]>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "replayRequested",
+        "type": "OutputEmitterRef<string>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "selectedIndex",
+        "type": "WritableSignal<number>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "methods": [
+      {
+        "name": "fork",
+        "signature": "fork(cp: AgentCheckpoint, index: number)",
+        "description": "",
+        "params": [
+          {
+            "name": "cp",
+            "type": "AgentCheckpoint",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "index",
+            "type": "number",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
+        "name": "replay",
+        "signature": "replay(cp: AgentCheckpoint)",
+        "description": "",
+        "params": [
+          {
+            "name": "cp",
+            "type": "AgentCheckpoint",
+            "description": "",
+            "optional": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "ChatToolCallCardComponent",
+    "kind": "class",
+    "description": "",
+    "params": [],
+    "examples": [],
+    "properties": [
+      {
+        "name": "expanded",
+        "type": "WritableSignal<boolean>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "toolCall",
+        "type": "InputSignal<ToolCallInfo>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "methods": [
+      {
+        "name": "formatJson",
+        "signature": "formatJson(value: unknown)",
+        "description": "",
+        "params": [
+          {
+            "name": "value",
+            "type": "unknown",
+            "description": "",
+            "optional": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "ChatToolCallsComponent",
+    "kind": "class",
+    "description": "",
+    "params": [],
+    "examples": [],
+    "properties": [
+      {
+        "name": "agent",
+        "type": "InputSignal<Agent>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "message",
+        "type": "InputSignal<Message | undefined>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "templateRef",
+        "type": "Signal<TemplateRef<any> | undefined>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "toolCalls",
+        "type": "Signal<ToolCall[]>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "methods": []
+  },
+  {
+    "name": "ChatTypingIndicatorComponent",
+    "kind": "class",
+    "description": "",
+    "params": [],
+    "examples": [],
+    "properties": [
+      {
+        "name": "agent",
+        "type": "InputSignal<Agent>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "visible",
+        "type": "Signal<boolean>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "methods": []
+  },
+  {
+    "name": "MessageTemplateDirective",
+    "kind": "class",
+    "description": "",
+    "params": [],
+    "examples": [],
+    "properties": [
+      {
+        "name": "chatMessageTemplate",
+        "type": "InputSignal<MessageTemplateType>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "templateRef",
+        "type": "TemplateRef<any>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "methods": []
+  },
+  {
+    "name": "A2uiActionMessage",
+    "kind": "interface",
+    "description": "v0.9 outbound action message — sent when a component's event action fires.",
+    "properties": [
+      {
+        "name": "action",
+        "type": "object",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "metadata",
+        "type": "object",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "version",
+        "type": "\"v0.9\"",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "A2uiCheckRule",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "condition",
+        "type": "DynamicBoolean",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "message",
+        "type": "string",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "A2uiClientDataModel",
+    "kind": "interface",
+    "description": "v0.9 client data model envelope — attached when sendDataModel is true.",
+    "properties": [
+      {
+        "name": "surfaces",
+        "type": "Record<string, Record<string, unknown>>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "version",
+        "type": "\"v0.9\"",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "A2uiComponent",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "action",
+        "type": "A2uiAction",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "checks",
+        "type": "A2uiCheckRule[]",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "children",
+        "type": "A2uiChildList",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "component",
+        "type": "string",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "id",
+        "type": "string",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "A2uiFunctionCall",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "args",
+        "type": "Record<string, unknown>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "call",
+        "type": "string",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "returnType",
+        "type": "string",
+        "description": "",
+        "optional": true
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "A2uiPathRef",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "path",
+        "type": "string",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "A2uiSurface",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "catalogId",
+        "type": "string",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "components",
+        "type": "Map<string, A2uiComponent>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "dataModel",
+        "type": "Record<string, unknown>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "sendDataModel",
+        "type": "boolean",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "surfaceId",
+        "type": "string",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "theme",
+        "type": "A2uiTheme",
+        "description": "",
+        "optional": true
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "A2uiSurfaceStore",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "surfaces",
+        "type": "Signal<Map<string, A2uiSurface>>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "apply",
+        "type": "unknown",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "surface",
+        "type": "unknown",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "A2uiTheme",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "agentDisplayName",
+        "type": "string",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "iconUrl",
+        "type": "string",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "primaryColor",
+        "type": "string",
+        "description": "",
+        "optional": true
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "A2uiValidationResult",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "errors",
+        "type": "string[]",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "valid",
+        "type": "boolean",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "Agent",
+    "kind": "interface",
+    "description": "Runtime-neutral contract chat primitives consume.\n\nImplementations are produced by runtime adapters (e.g. a LangGraph or\nAG-UI adapter) or by user code for custom backends.\n\n`interrupt` and `subagents` are optional: runtimes that do not support these\nconcepts should leave them undefined, and primitives that need them check\npresence and render a neutral fallback when absent.\n\nInvariant: state lives on signals; `events$` carries only things that are\nnot derivable from signals.",
+    "properties": [
+      {
+        "name": "error",
+        "type": "Signal<unknown>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "events$",
+        "type": "Observable<AgentEvent>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "interrupt",
+        "type": "Signal<AgentInterrupt | undefined>",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "isLoading",
+        "type": "Signal<boolean>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "messages",
+        "type": "Signal<Message[]>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "state",
+        "type": "Signal<Record<string, unknown>>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "status",
+        "type": "Signal<AgentStatus>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "stop",
+        "type": "object",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "subagents",
+        "type": "Signal<Map<string, Subagent>>",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "submit",
+        "type": "object",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "toolCalls",
+        "type": "Signal<ToolCall[]>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "AgentCheckpoint",
+    "kind": "interface",
+    "description": "Runtime-neutral snapshot of a point in an agent's execution history.\n\nConsumed by time-travel / debug UIs. `id` is adapter-opaque — UIs emit\nit back to the parent app on replay/fork, and the parent app dispatches\nto the underlying runtime.",
+    "properties": [
+      {
+        "name": "id",
+        "type": "string",
+        "description": "Adapter-opaque checkpoint identifier (e.g. LangGraph checkpoint_id).",
+        "optional": true
+      },
+      {
+        "name": "label",
+        "type": "string",
+        "description": "Human-friendly label for the checkpoint (e.g. next node name).",
+        "optional": true
+      },
+      {
+        "name": "values",
+        "type": "Record<string, unknown>",
+        "description": "State snapshot at this checkpoint.",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "AgentCustomEvent",
+    "kind": "interface",
+    "description": "Escape hatch for runtime-specific or user-defined events that do not\n(yet) have a well-known structured variant. `name` carries the runtime\nevent name; `data` carries the payload verbatim.",
+    "properties": [
+      {
+        "name": "data",
+        "type": "unknown",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "name",
+        "type": "string",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "type",
+        "type": "\"custom\"",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "AgentInterrupt",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "id",
+        "type": "string",
+        "description": "Stable identifier for this interrupt instance.",
+        "optional": false
+      },
+      {
+        "name": "resumable",
+        "type": "boolean",
+        "description": "True when the runtime supports resuming via `submit({ resume })`.",
+        "optional": false
+      },
+      {
+        "name": "value",
+        "type": "unknown",
+        "description": "Opaque payload the app renders. Runtime-specific shape.",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "AgentStateUpdateEvent",
+    "kind": "interface",
+    "description": "Render-state-store sync event. Adapters emit this when the runtime\npublishes a state-snapshot intended for the chat library's render store\n(used by generative UI and a2ui surfaces).",
+    "properties": [
+      {
+        "name": "data",
+        "type": "Record<string, unknown>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "type",
+        "type": "\"state_update\"",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "AgentSubmitInput",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "message",
+        "type": "string | ContentBlock[]",
+        "description": "New user message to append. May be combined with `resume` and/or `state` in the same submit call.",
+        "optional": true
+      },
+      {
+        "name": "resume",
+        "type": "unknown",
+        "description": "Resume payload for an active interrupt.",
+        "optional": true
+      },
+      {
+        "name": "state",
+        "type": "Record<string, unknown>",
+        "description": "State patch to merge before submitting (runtime-interpreted).",
+        "optional": true
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "AgentSubmitOptions",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "signal",
+        "type": "AbortSignal",
+        "description": "",
+        "optional": true
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "AgentWithHistory",
+    "kind": "interface",
+    "description": "Extends Agent with a required `history` signal.\n\nCompositions that need time-travel / checkpoint data (chat-timeline,\nchat-debug) take this richer contract. Adapters that cannot supply\nhistory should return plain Agent instead of stubbing an empty array.",
+    "properties": [
+      {
+        "name": "error",
+        "type": "Signal<unknown>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "events$",
+        "type": "Observable<AgentEvent>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "history",
+        "type": "Signal<AgentCheckpoint[]>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "interrupt",
+        "type": "Signal<AgentInterrupt | undefined>",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "isLoading",
+        "type": "Signal<boolean>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "messages",
+        "type": "Signal<Message[]>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "state",
+        "type": "Signal<Record<string, unknown>>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "status",
+        "type": "Signal<AgentStatus>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "stop",
+        "type": "object",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "subagents",
+        "type": "Signal<Map<string, Subagent>>",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "submit",
+        "type": "object",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "toolCalls",
+        "type": "Signal<ToolCall[]>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "ChatConfig",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "__licenseEnvHint",
+        "type": "object",
+        "description": "Test-only env hint override. Not part of the stable API.",
+        "optional": true
+      },
+      {
+        "name": "__licensePublicKey",
+        "type": "Uint8Array<ArrayBufferLike>",
+        "description": "Test-only public-key override. Defaults to the compile-time embedded\n`LICENSE_PUBLIC_KEY`. Not part of the stable API.",
+        "optional": true
+      },
+      {
+        "name": "assistantName",
+        "type": "string",
+        "description": "Override the default assistant display name (default: \"Assistant\").",
+        "optional": true
+      },
+      {
+        "name": "avatarLabel",
+        "type": "string",
+        "description": "Override the default AI avatar label (default: \"A\").",
+        "optional": true
+      },
+      {
+        "name": "license",
+        "type": "string",
+        "description": "Signed license token from cacheplane.dev. Optional; omitted in dev.",
+        "optional": true
+      },
+      {
+        "name": "renderRegistry",
+        "type": "AngularRegistry",
+        "description": "Default render registry for generative UI components.",
+        "optional": true
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "ChatRenderEvent",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "event",
+        "type": "RenderEvent",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "messageIndex",
+        "type": "number",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "surfaceId",
+        "type": "string",
+        "description": "",
+        "optional": true
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "ContentClassifier",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "a2uiSurfaces",
+        "type": "Signal<Map<string, A2uiSurface>>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "elementStates",
+        "type": "Signal<Map<string, ElementAccumulationState>>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "errors",
+        "type": "Signal<string[]>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "markdown",
+        "type": "Signal<string>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "spec",
+        "type": "Signal<Spec | null>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "streaming",
+        "type": "Signal<boolean>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "type",
+        "type": "Signal<ContentType>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "dispose",
+        "type": "unknown",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "update",
+        "type": "unknown",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "ElementAccumulationState",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "hasChildren",
+        "type": "boolean",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "hasProps",
+        "type": "boolean",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "hasType",
+        "type": "boolean",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "streaming",
+        "type": "boolean",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "Message",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "content",
+        "type": "string | ContentBlock[]",
+        "description": "Plain text, or a list of structured content blocks.",
+        "optional": false
+      },
+      {
+        "name": "extra",
+        "type": "Record<string, unknown>",
+        "description": "Runtime-specific extras; do not rely on shape in portable code.",
+        "optional": true
+      },
+      {
+        "name": "id",
+        "type": "string",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "name",
+        "type": "string",
+        "description": "Optional display/author name.",
+        "optional": true
+      },
+      {
+        "name": "role",
+        "type": "Role",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "toolCallId",
+        "type": "string",
+        "description": "Present when role === 'tool'.",
+        "optional": true
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "MockAgent",
+    "kind": "interface",
+    "description": "Runtime-neutral contract chat primitives consume.\n\nImplementations are produced by runtime adapters (e.g. a LangGraph or\nAG-UI adapter) or by user code for custom backends.\n\n`interrupt` and `subagents` are optional: runtimes that do not support these\nconcepts should leave them undefined, and primitives that need them check\npresence and render a neutral fallback when absent.\n\nInvariant: state lives on signals; `events$` carries only things that are\nnot derivable from signals.",
+    "properties": [
+      {
+        "name": "error",
+        "type": "WritableSignal<unknown>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "events$",
+        "type": "Observable<AgentEvent>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "history",
+        "type": "WritableSignal<AgentCheckpoint[]>",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "interrupt",
+        "type": "WritableSignal<AgentInterrupt | undefined>",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "isLoading",
+        "type": "WritableSignal<boolean>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "messages",
+        "type": "WritableSignal<Message[]>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "state",
+        "type": "WritableSignal<Record<string, unknown>>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "status",
+        "type": "WritableSignal<AgentStatus>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "stop",
+        "type": "object",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "stopCount",
+        "type": "number",
+        "description": "Count of stop() invocations.",
+        "optional": false
+      },
+      {
+        "name": "subagents",
+        "type": "WritableSignal<Map<string, Subagent>>",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "submit",
+        "type": "object",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "submitCalls",
+        "type": "object[]",
+        "description": "Captured calls to submit() in order.",
+        "optional": false
+      },
+      {
+        "name": "toolCalls",
+        "type": "WritableSignal<ToolCall[]>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "MockAgentOptions",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "error",
+        "type": "unknown",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "events$",
+        "type": "Observable<AgentEvent>",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "history",
+        "type": "AgentCheckpoint[]",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "isLoading",
+        "type": "boolean",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "messages",
+        "type": "Message[]",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "state",
+        "type": "Record<string, unknown>",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "status",
+        "type": "AgentStatus",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "toolCalls",
+        "type": "ToolCall[]",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "withInterrupt",
+        "type": "boolean",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "withSubagents",
+        "type": "boolean",
+        "description": "",
+        "optional": true
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "ParseTreeStore",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "elementStates",
+        "type": "Signal<Map<string, ElementAccumulationState>>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "spec",
+        "type": "Signal<Spec | null>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "push",
+        "type": "unknown",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "Subagent",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "messages",
+        "type": "Signal<Message[]>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "name",
+        "type": "string",
+        "description": "Optional human-readable name.",
+        "optional": true
+      },
+      {
+        "name": "state",
+        "type": "Signal<Record<string, unknown>>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "status",
+        "type": "Signal<SubagentStatus>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "toolCallId",
+        "type": "string",
+        "description": "Tool call ID that spawned this subagent.",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "ToolCall",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "args",
+        "type": "unknown",
+        "description": "Arguments. May be partial while streaming (`status !== 'complete'`).",
+        "optional": false
+      },
+      {
+        "name": "error",
+        "type": "unknown",
+        "description": "Optional error payload when status === 'error'.",
+        "optional": true
+      },
+      {
+        "name": "id",
+        "type": "string",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "name",
+        "type": "string",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "result",
+        "type": "unknown",
+        "description": "Present when status === 'complete' or 'error'.",
+        "optional": true
+      },
+      {
+        "name": "status",
+        "type": "ToolCallStatus",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "ToolCallInfo",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "args",
+        "type": "unknown",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "id",
+        "type": "string",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "name",
+        "type": "string",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "result",
+        "type": "unknown",
+        "description": "",
+        "optional": true
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "AgentEvent",
+    "kind": "type",
+    "description": "Discriminated union of events flowing on `Agent.events$`.\n\nInvariant: state lives on signals (`messages`, `status`, `toolCalls`,\n`state`, `interrupt`, `subagents`, `history`); events on `events$`\ncarry only things that are not derivable from signals. New variants\nare added purely additively when patterns prove necessary.",
+    "signature": "AgentStateUpdateEvent | AgentCustomEvent",
+    "examples": []
+  },
+  {
+    "name": "AgentStatus",
+    "kind": "type",
+    "description": "",
+    "signature": "\"idle\" | \"running\" | \"error\"",
+    "examples": []
+  },
+  {
+    "name": "ContentBlock",
+    "kind": "type",
+    "description": "",
+    "signature": "object | object | object | object",
+    "examples": []
+  },
+  {
+    "name": "ContentType",
+    "kind": "type",
+    "description": "",
+    "signature": "\"undetermined\" | \"markdown\" | \"json-render\" | \"a2ui\" | \"mixed\"",
+    "examples": []
+  },
+  {
+    "name": "DynamicBoolean",
+    "kind": "type",
+    "description": "",
+    "signature": "DynamicValue<boolean>",
+    "examples": []
+  },
+  {
+    "name": "DynamicNumber",
+    "kind": "type",
+    "description": "",
+    "signature": "DynamicValue<number>",
+    "examples": []
+  },
+  {
+    "name": "DynamicString",
+    "kind": "type",
+    "description": "",
+    "signature": "DynamicValue<string>",
+    "examples": []
+  },
+  {
+    "name": "DynamicValue",
+    "kind": "type",
+    "description": "A value that can be a literal, a path reference, or a function call.",
+    "signature": "T | A2uiPathRef | A2uiFunctionCall",
+    "examples": []
+  },
+  {
+    "name": "InterruptAction",
+    "kind": "type",
+    "description": "",
+    "signature": "\"accept\" | \"edit\" | \"respond\" | \"ignore\"",
+    "examples": []
+  },
+  {
+    "name": "MessageTemplateType",
+    "kind": "type",
+    "description": "",
+    "signature": "\"human\" | \"ai\" | \"tool\" | \"system\" | \"function\"",
+    "examples": []
+  },
+  {
+    "name": "Role",
+    "kind": "type",
+    "description": "",
+    "signature": "\"user\" | \"assistant\" | \"system\" | \"tool\"",
+    "examples": []
+  },
+  {
+    "name": "SubagentStatus",
+    "kind": "type",
+    "description": "",
+    "signature": "\"pending\" | \"running\" | \"complete\" | \"error\"",
+    "examples": []
+  },
+  {
+    "name": "Thread",
+    "kind": "type",
+    "description": "",
+    "signature": "unknown",
+    "examples": []
+  },
+  {
+    "name": "ToolCallStatus",
+    "kind": "type",
+    "description": "",
+    "signature": "\"pending\" | \"running\" | \"complete\" | \"error\"",
+    "examples": []
+  },
+  {
+    "name": "ViewRegistry",
+    "kind": "type",
+    "description": "A registry of view components available for generative UI rendering.\nPlain frozen object mapping view names to Angular component types.\nCompose via object spread: `views({ ...base, ...more })`.",
+    "signature": "Readonly<Record<string, Type<unknown>>>",
+    "examples": []
+  },
+  {
+    "name": "a2uiBasicCatalog",
+    "kind": "function",
+    "description": "",
+    "signature": "a2uiBasicCatalog(): ViewRegistry",
+    "params": [],
+    "returns": {
+      "type": "ViewRegistry",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "buildA2uiActionMessage",
+    "kind": "function",
+    "description": "Builds a v0.9 A2uiActionMessage from handler params and the current surface.",
+    "signature": "buildA2uiActionMessage(params: Record<string, unknown>, surface: A2uiSurface): A2uiActionMessage",
+    "params": [
+      {
+        "name": "params",
+        "type": "Record<string, unknown>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "surface",
+        "type": "A2uiSurface",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "A2uiActionMessage",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "createA2uiSurfaceStore",
+    "kind": "function",
+    "description": "",
+    "signature": "createA2uiSurfaceStore(): A2uiSurfaceStore",
+    "params": [],
+    "returns": {
+      "type": "A2uiSurfaceStore",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "createContentClassifier",
+    "kind": "function",
+    "description": "",
+    "signature": "createContentClassifier(): ContentClassifier",
+    "params": [],
+    "returns": {
+      "type": "ContentClassifier",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "createParseTreeStore",
+    "kind": "function",
+    "description": "",
+    "signature": "createParseTreeStore(parser: PartialJsonParser): ParseTreeStore",
+    "params": [
+      {
+        "name": "parser",
+        "type": "PartialJsonParser",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "ParseTreeStore",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "emitBinding",
+    "kind": "function",
+    "description": "Emits a data model binding event if the prop has a binding path.",
+    "signature": "emitBinding(emit: object, bindings: Record<string, string> | undefined, prop: string, value: unknown): void",
+    "params": [
+      {
+        "name": "emit",
+        "type": "object",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "bindings",
+        "type": "Record<string, string> | undefined",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "prop",
+        "type": "string",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "value",
+        "type": "unknown",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "void",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "extractErrorMessage",
+    "kind": "function",
+    "description": "",
+    "signature": "extractErrorMessage(error: unknown): string | null",
+    "params": [
+      {
+        "name": "error",
+        "type": "unknown",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "string | null",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "getInterrupt",
+    "kind": "function",
+    "description": "Retrieves the current interrupt value from an Agent, or undefined when\nthe runtime does not expose interrupts.\nExported for unit testing without DOM rendering.",
+    "signature": "getInterrupt(agent: Agent): AgentInterrupt | undefined",
+    "params": [
+      {
+        "name": "agent",
+        "type": "Agent",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "AgentInterrupt | undefined",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "getMessageType",
+    "kind": "function",
+    "description": "Maps a Message to a MessageTemplateType.\nExported as a standalone function so it can be unit-tested without DOM rendering.",
+    "signature": "getMessageType(message: Message): MessageTemplateType",
+    "params": [
+      {
+        "name": "message",
+        "type": "Message",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "MessageTemplateType",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "isAssistantMessage",
+    "kind": "function",
+    "description": "",
+    "signature": "isAssistantMessage(m: Message): m is Message & { role: \"assistant\" }",
+    "params": [
+      {
+        "name": "m",
+        "type": "Message",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "m is Message & { role: \"assistant\" }",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "isFunctionCall",
+    "kind": "function",
+    "description": "Narrows an unknown value to A2uiFunctionCall — has `call` and `args`.",
+    "signature": "isFunctionCall(value: unknown): value is A2uiFunctionCall",
+    "params": [
+      {
+        "name": "value",
+        "type": "unknown",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "value is A2uiFunctionCall",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "isPathRef",
+    "kind": "function",
+    "description": "Narrows an unknown value to A2uiPathRef — has `path` but not `call`.",
+    "signature": "isPathRef(value: unknown): value is A2uiPathRef",
+    "params": [
+      {
+        "name": "value",
+        "type": "unknown",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "value is A2uiPathRef",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "isSystemMessage",
+    "kind": "function",
+    "description": "",
+    "signature": "isSystemMessage(m: Message): m is Message & { role: \"system\" }",
+    "params": [
+      {
+        "name": "m",
+        "type": "Message",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "m is Message & { role: \"system\" }",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "isToolMessage",
+    "kind": "function",
+    "description": "",
+    "signature": "isToolMessage(m: Message): m is Message & { role: \"tool\" }",
+    "params": [
+      {
+        "name": "m",
+        "type": "Message",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "m is Message & { role: \"tool\" }",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "isTyping",
+    "kind": "function",
+    "description": "",
+    "signature": "isTyping(agent: Agent): boolean",
+    "params": [
+      {
+        "name": "agent",
+        "type": "Agent",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "boolean",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "isUserMessage",
+    "kind": "function",
+    "description": "",
+    "signature": "isUserMessage(m: Message): m is Message & { role: \"user\" }",
+    "params": [
+      {
+        "name": "m",
+        "type": "Message",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "m is Message & { role: \"user\" }",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "messageContent",
+    "kind": "function",
+    "description": "Extracts a human-readable string from a message's content.\nHandles string content directly; serializes structured (array) content to JSON.",
+    "signature": "messageContent(message: BaseMessage<>): string",
+    "params": [
+      {
+        "name": "message",
+        "type": "BaseMessage<>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "string",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "mockAgent",
+    "kind": "function",
+    "description": "",
+    "signature": "mockAgent(opts: MockAgentOptions): MockAgent",
+    "params": [
+      {
+        "name": "opts",
+        "type": "MockAgentOptions",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "MockAgent",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "provideChat",
+    "kind": "function",
+    "description": "",
+    "signature": "provideChat(config: ChatConfig): EnvironmentProviders",
+    "params": [
+      {
+        "name": "config",
+        "type": "ChatConfig",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "EnvironmentProviders",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "provideViews",
+    "kind": "function",
+    "description": "",
+    "signature": "provideViews(registry: ViewRegistry): EnvironmentProviders",
+    "params": [
+      {
+        "name": "registry",
+        "type": "ViewRegistry",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "EnvironmentProviders",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "renderMarkdown",
+    "kind": "function",
+    "description": "Renders markdown content to sanitized HTML.\nFalls back to plain text with newline->br conversion if `marked` is not installed.",
+    "signature": "renderMarkdown(content: string, sanitizer: DomSanitizer<>): SafeHtml",
+    "params": [
+      {
+        "name": "content",
+        "type": "string",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "sanitizer",
+        "type": "DomSanitizer<>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "SafeHtml",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "runAgentConformance",
+    "kind": "function",
+    "description": "Runs a suite of contract conformance assertions against a factory that\nproduces a fresh Agent. Adapter packages should call this in their\nown test suites to verify the contract is satisfied.",
+    "signature": "runAgentConformance(label: string, factory: object): void",
+    "params": [
+      {
+        "name": "label",
+        "type": "string",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "factory",
+        "type": "object",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "void",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "runAgentWithHistoryConformance",
+    "kind": "function",
+    "description": "Conformance suite for AgentWithHistory implementations.\n\nRuns the base Agent conformance suite, then verifies the history\nsignal is present and returns an array of AgentCheckpoint-shaped entries.",
+    "signature": "runAgentWithHistoryConformance(label: string, factory: object): void",
+    "params": [
+      {
+        "name": "label",
+        "type": "string",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "factory",
+        "type": "object",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "void",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "submitMessage",
+    "kind": "function",
+    "description": "",
+    "signature": "submitMessage(agent: Agent, text: string): string | null",
+    "params": [
+      {
+        "name": "agent",
+        "type": "Agent",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "text",
+        "type": "string",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "string | null",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "surfaceToSpec",
+    "kind": "function",
+    "description": "Converts an A2UI surface to a json-render Spec by:\n1. Walking the flat component map\n2. Resolving DynamicValue props against the data model\n3. Mapping A2UI children (string[] or template) to json-render children\n4. Producing a Spec with root + elements",
+    "signature": "surfaceToSpec(surface: A2uiSurface): Spec | null",
+    "params": [
+      {
+        "name": "surface",
+        "type": "A2uiSurface",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "Spec | null",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "toRenderRegistry",
+    "kind": "function",
+    "description": "Converts a ViewRegistry to an AngularRegistry for use with RenderSpecComponent.",
+    "signature": "toRenderRegistry(registry: ViewRegistry): AngularRegistry",
+    "params": [
+      {
+        "name": "registry",
+        "type": "ViewRegistry",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "AngularRegistry",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "views",
+    "kind": "function",
+    "description": "Creates a view registry from a name → component map.",
+    "signature": "views(map: Record<string, Type<unknown>>): ViewRegistry",
+    "params": [
+      {
+        "name": "map",
+        "type": "Record<string, Type<unknown>>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "ViewRegistry",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "withoutViews",
+    "kind": "function",
+    "description": "Removes views from a registry by name.",
+    "signature": "withoutViews(base: ViewRegistry, names: string[]): ViewRegistry",
+    "params": [
+      {
+        "name": "base",
+        "type": "ViewRegistry",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "names",
+        "type": "string[]",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "ViewRegistry",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "withViews",
+    "kind": "function",
+    "description": "Adds views to a registry without overwriting existing entries.\nNew keys are added; keys that already exist in `base` are preserved.",
+    "signature": "withViews(base: ViewRegistry, additions: Record<string, Type<unknown>>): ViewRegistry",
+    "params": [
+      {
+        "name": "base",
+        "type": "ViewRegistry",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "additions",
+        "type": "Record<string, Type<unknown>>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "ViewRegistry",
+      "description": ""
+    },
+    "examples": []
+  }
+]
