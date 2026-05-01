@@ -1,5 +1,5 @@
 import { HeroTwoCol } from '../components/landing/HeroTwoCol';
-import { StatsStrip } from '../components/landing/StatsStrip';
+import { PositioningStrip } from '../components/landing/PositioningStrip';
 import { ProblemSection } from '../components/landing/ProblemSection';
 import { PilotSolution } from '../components/landing/PilotSolution';
 import { TheStack } from '../components/landing/TheStack';
@@ -18,8 +18,8 @@ export default async function HomePage() {
 
       {/* 1. Hook — headline, animation, CTA */}
       <HeroTwoCol />
-      {/* 2. Trust — quick credibility stats */}
-      <StatsStrip />
+      {/* 2. Differentiation — positioning vs other agent UIs */}
+      <PositioningStrip />
       {/* 3. Problem — last-mile gap narrative */}
       <ProblemSection />
       {/* 4. Solution — pilot-to-prod program */}
