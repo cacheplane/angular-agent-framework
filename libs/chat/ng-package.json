@@ -3,5 +3,9 @@
   "dest": "../../dist/libs/chat",
   "lib": {
     "entryFile": "src/public-api.ts"
-  }
+  },
+  "allowedNonPeerDependencies": [],
+  "assets": [
+    { "input": "src/lib/styles", "glob": "chat.css", "output": "." }
+  ]
 }

@@ -1,0 +1,87 @@
+/* libs/chat/src/lib/styles/chat.css */
+/* SPDX-License-Identifier: MIT */
+
+/*
+ * Optional global stylesheet for @ngaf/chat. Import once in your global
+ * styles to:
+ *   1. Override design tokens at :root (instead of per :host).
+ *   2. Reach into chat components with parallel global selectors.
+ *
+ * Usage:
+ *   /* in src/styles.css *​/
+ *   @import '@ngaf/chat/chat.css';
+ *
+ *   :root { --ngaf-chat-primary: oklch(0.55 0.22 264); }
+ */
+
+:root {
+  --ngaf-chat-bg: rgb(255, 255, 255);
+  --ngaf-chat-surface: rgb(255, 255, 255);
+  --ngaf-chat-surface-alt: rgb(251, 251, 251);
+  --ngaf-chat-primary: rgb(28, 28, 28);
+  --ngaf-chat-on-primary: rgb(255, 255, 255);
+  --ngaf-chat-text: rgb(28, 28, 28);
+  --ngaf-chat-text-muted: rgb(115, 115, 115);
+  --ngaf-chat-separator: rgb(229, 229, 229);
+  --ngaf-chat-muted: rgb(200, 200, 200);
+  --ngaf-chat-error-bg: #fef2f2;
+  --ngaf-chat-error-border: #fecaca;
+  --ngaf-chat-error-text: #dc2626;
+  --ngaf-chat-warning-bg: #fffbeb;
+  --ngaf-chat-warning-text: #b45309;
+  --ngaf-chat-success: #16a34a;
+  --ngaf-chat-shadow-sm: 0 1px 2px rgba(0,0,0,.05);
+  --ngaf-chat-shadow-md: 0 4px 6px -1px rgba(0,0,0,.10), 0 2px 4px -1px rgba(0,0,0,.06);
+  --ngaf-chat-shadow-lg: 0 10px 15px -3px rgba(0,0,0,.10), 0 4px 6px -2px rgba(0,0,0,.05);
+  --ngaf-chat-radius-bubble: 15px;
+  --ngaf-chat-radius-input: 20px;
+  --ngaf-chat-radius-card: 8px;
+  --ngaf-chat-radius-button: 8px;
+  --ngaf-chat-radius-launcher: 9999px;
+  --ngaf-chat-max-width: 48rem;
+  --ngaf-chat-font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --ngaf-chat-font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  --ngaf-chat-font-size: 1rem;
+  --ngaf-chat-font-size-sm: 0.875rem;
+  --ngaf-chat-font-size-xs: 0.75rem;
+  --ngaf-chat-line-height: 1.6;
+  --ngaf-chat-line-height-tight: 1.5;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-ngaf-chat-theme="light"]) {
+    --ngaf-chat-bg: rgb(17, 17, 17);
+    --ngaf-chat-surface: rgb(28, 28, 28);
+    --ngaf-chat-surface-alt: rgb(44, 44, 44);
+    --ngaf-chat-primary: rgb(255, 255, 255);
+    --ngaf-chat-on-primary: rgb(28, 28, 28);
+    --ngaf-chat-text: rgb(245, 245, 245);
+    --ngaf-chat-text-muted: rgb(160, 160, 160);
+    --ngaf-chat-separator: rgb(45, 45, 45);
+    --ngaf-chat-muted: rgb(60, 60, 60);
+    --ngaf-chat-error-bg: rgb(45, 21, 21);
+    --ngaf-chat-error-border: #dc2626;
+    --ngaf-chat-error-text: #fca5a5;
+    --ngaf-chat-warning-bg: rgb(45, 35, 21);
+    --ngaf-chat-warning-text: #fbbf24;
+    --ngaf-chat-success: #4ade80;
+  }
+}
+
+[data-ngaf-chat-theme="dark"] {
+  --ngaf-chat-bg: rgb(17, 17, 17);
+  --ngaf-chat-surface: rgb(28, 28, 28);
+  --ngaf-chat-surface-alt: rgb(44, 44, 44);
+  --ngaf-chat-primary: rgb(255, 255, 255);
+  --ngaf-chat-on-primary: rgb(28, 28, 28);
+  --ngaf-chat-text: rgb(245, 245, 245);
+  --ngaf-chat-text-muted: rgb(160, 160, 160);
+  --ngaf-chat-separator: rgb(45, 45, 45);
+  --ngaf-chat-muted: rgb(60, 60, 60);
+  --ngaf-chat-error-bg: rgb(45, 21, 21);
+  --ngaf-chat-error-border: #dc2626;
+  --ngaf-chat-error-text: #fca5a5;
+  --ngaf-chat-warning-bg: rgb(45, 35, 21);
+  --ngaf-chat-warning-text: #fbbf24;
+  --ngaf-chat-success: #4ade80;
+}

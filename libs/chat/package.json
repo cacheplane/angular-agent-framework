@@ -1,6 +1,17 @@
 {
   "name": "@ngaf/chat",
   "version": "0.0.2",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "default": "./fesm2022/ngaf-chat.mjs"
+    },
+    "./testing": {
+      "types": "./testing.d.ts",
+      "default": "./fesm2022/ngaf-chat-testing.mjs"
+    },
+    "./chat.css": "./chat.css"
+  },
   "peerDependencies": {
     "@angular/core": "^20.0.0 || ^21.0.0",
     "@angular/common": "^20.0.0 || ^21.0.0",
