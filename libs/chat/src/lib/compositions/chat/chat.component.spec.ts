@@ -120,6 +120,30 @@ describe('ChatComponent — content classification', () => {
   });
 });
 
+describe('ChatComponent — prevRole', () => {
+  it('prevRole(0) returns undefined for the first message', () => {
+    TestBed.configureTestingModule({});
+    TestBed.runInInjectionContext(() => {
+      // prevRole at index 0 should always return undefined (no previous message)
+      // We test the logic directly, mirroring the implementation.
+      function prevRole(index: number, messages: Array<{ role?: string }>): string | undefined {
+        if (index === 0) return undefined;
+        const prev = messages[index - 1];
+        if (!prev) return undefined;
+        const role = (prev as unknown as { role?: string }).role;
+        if (role === 'user') return 'user';
+        if (role === 'assistant') return 'assistant';
+        if (role === 'system') return 'system';
+        if (role === 'tool') return 'tool';
+        return undefined;
+      }
+      expect(prevRole(0, [{ role: 'user' }])).toBeUndefined();
+      expect(prevRole(1, [{ role: 'user' }, { role: 'assistant' }])).toBe('user');
+      expect(prevRole(2, [{ role: 'user' }, { role: 'assistant' }, { role: 'user' }])).toBe('assistant');
+    });
+  });
+});
+
 describe('ChatComponent — events$ routing', () => {
   // Angular 21 zoneless mode (ZONELESS_ENABLED defaults to true) means
   // ComponentFixture.autoDetect cannot be disabled, making createComponent

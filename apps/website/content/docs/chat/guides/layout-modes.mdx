@@ -1,0 +1,153 @@
+# Layout Modes
+
+`@ngaf/chat` ships three ready-made layout compositions. Pick the one that best fits how chat fits into your application.
+
+| Mode | Component | Best for |
+|---|---|---|
+| Embedded | `<chat>` | Chat is the primary purpose of the page |
+| Popup | `<chat-popup>` | Non-intrusive assistant overlay on any page |
+| Sidebar | `<chat-sidebar>` | Copilot panel alongside existing app content |
+
+## Embedded — `<chat>`
+
+The embedded composition fills its parent container using `height: 100%` and a flex column layout. Use it when the chat is the main feature of a route.
+
+**When to pick this mode:**
+- Chat is the whole page (e.g., a dedicated `/chat` route)
+- You control the container's dimensions and want the chat to fill them
+- You do not need to show app content alongside the chat simultaneously
+
+```typescript
+import { Component, ChangeDetectionStrategy, signal } from '@angular/core';
+import { agent } from '@ngaf/langgraph';
+import { ChatComponent } from '@ngaf/chat';
+
+@Component({
+  selector: 'app-chat-page',
+  standalone: true,
+  imports: [ChatComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <div style="height: 100vh;">
+      <chat [agent]="chatAgent" />
+    </div>
+  `,
+})
+export class ChatPageComponent {
+  protected readonly chatAgent = agent({
+    assistantId: 'chat_agent',
+    threadId: signal(null),
+  });
+}
+```
+
+<Callout type="tip" title="Height is required">
+`<chat>` uses `height: 100%`. Give its parent an explicit height or the component will collapse to zero.
+</Callout>
+
+## Popup — `<chat-popup>`
+
+The popup composition renders a circular launcher button fixed to the bottom-right corner of the viewport. Clicking it opens a floating chat window. The window can be dismissed without losing the conversation.
+
+**When to pick this mode:**
+- Chat is a secondary feature on pages that already have a purpose
+- You want minimal disruption to existing layouts
+- Support chat, help bots, or contextual assistants
+
+```typescript
+import { Component, ChangeDetectionStrategy, signal } from '@angular/core';
+import { agent } from '@ngaf/langgraph';
+import { ChatPopupComponent } from '@ngaf/chat';
+
+@Component({
+  selector: 'app-root',
+  standalone: true,
+  imports: [ChatPopupComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- your existing app content -->
+    <router-outlet />
+
+    <!-- chat launcher + window, position: fixed internally -->
+    <chat-popup [agent]="chatAgent" />
+  `,
+})
+export class AppComponent {
+  protected readonly chatAgent = agent({
+    assistantId: 'support_agent',
+    threadId: signal(null),
+  });
+}
+```
+
+Programmatic control is available via template reference or two-way binding:
+
+```html
+<!-- Open from a custom button -->
+<button (click)="popup.openWindow()">Ask AI</button>
+<chat-popup [agent]="chatAgent" #popup />
+
+<!-- Two-way binding -->
+<chat-popup [agent]="chatAgent" [(open)]="chatIsOpen" />
+```
+
+## Sidebar — `<chat-sidebar>`
+
+The sidebar composition renders a slide-in panel anchored to the right edge. It supports two modes: overlay (default) and push-content. In push-content mode, your projected app content is shifted left rather than covered.
+
+**When to pick this mode:**
+- Copilot experience where the user references the app while chatting
+- You want both the chat and the app content visible at the same time
+- Dashboards, editors, or data-heavy pages where context matters
+
+```typescript
+import { Component, ChangeDetectionStrategy, signal } from '@angular/core';
+import { agent } from '@ngaf/langgraph';
+import { ChatSidebarComponent } from '@ngaf/chat';
+
+@Component({
+  selector: 'app-shell',
+  standalone: true,
+  imports: [ChatSidebarComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <chat-sidebar [agent]="chatAgent" [pushContent]="true">
+      <!-- app content is projected here and shifts when sidebar opens -->
+      <main>
+        <router-outlet />
+      </main>
+    </chat-sidebar>
+  `,
+})
+export class AppShellComponent {
+  protected readonly chatAgent = agent({
+    assistantId: 'copilot_agent',
+    threadId: signal(null),
+  });
+}
+```
+
+Toggle the sidebar from a nav button:
+
+```html
+<nav>
+  <button (click)="sidebar.toggle()">
+    Chat
+  </button>
+</nav>
+
+<chat-sidebar [agent]="chatAgent" #sidebar>
+  <main><router-outlet /></main>
+</chat-sidebar>
+```
+
+## Choosing a Mode
+
+| Question | Answer |
+|---|---|
+| Is chat the whole page? | Use `<chat>` |
+| Should chat be invisible until needed? | Use `<chat-popup>` |
+| Should chat and app content coexist? | Use `<chat-sidebar>` |
+| Should the sidebar push content aside? | Use `<chat-sidebar [pushContent]="true">` |
+
+All three compositions share the same `--ngaf-chat-*` token system. See [Theming](/docs/chat/guides/theming) to customize colors, shapes, and typography across all modes at once.

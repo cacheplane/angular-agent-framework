@@ -12,14 +12,14 @@ import {
 } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
 import type { AgentWithHistory } from '../../agent';
-import { ChatMessagesComponent } from '../../primitives/chat-messages/chat-messages.component';
-import { MessageTemplateDirective } from '../../primitives/chat-messages/message-template.directive';
+import { ChatMessageListComponent } from '../../primitives/chat-message-list/chat-message-list.component';
+import { MessageTemplateDirective } from '../../primitives/chat-message-list/message-template.directive';
 import { ChatInputComponent } from '../../primitives/chat-input/chat-input.component';
 import { ChatTypingIndicatorComponent } from '../../primitives/chat-typing-indicator/chat-typing-indicator.component';
 import { ChatErrorComponent } from '../../primitives/chat-error/chat-error.component';
 import { messageContent } from '../shared/message-utils';
-import { CHAT_THEME_STYLES } from '../../styles/chat-theme';
-import { CHAT_MARKDOWN_STYLES, renderMarkdown } from '../../styles/chat-markdown';
+import { CHAT_HOST_TOKENS } from '../../styles/chat-tokens';
+import { renderMarkdown } from '../../streaming/markdown-render';
 import { DebugTimelineComponent } from './debug-timeline.component';
 import { DebugDetailComponent } from './debug-detail.component';
 import { DebugControlsComponent } from './debug-controls.component';
@@ -31,7 +31,7 @@ import { toDebugCheckpoint, extractStateValues } from './debug-utils';
   selector: 'chat-debug',
   standalone: true,
   imports: [
-    ChatMessagesComponent,
+    ChatMessageListComponent,
     MessageTemplateDirective,
     ChatInputComponent,
     ChatTypingIndicatorComponent,
@@ -42,40 +42,233 @@ import { toDebugCheckpoint, extractStateValues } from './debug-utils';
     DebugSummaryComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  styles: [CHAT_THEME_STYLES, CHAT_MARKDOWN_STYLES],
+  styles: [
+    CHAT_HOST_TOKENS,
+    `
+    :host {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      overflow: hidden;
+      background: var(--ngaf-chat-bg);
+    }
+
+    /* Layout */
+    .chat-debug__layout { display: flex; height: 100%; }
+
+    /* Chat column */
+    .chat-debug__chat { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+    .chat-debug__messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: var(--ngaf-chat-space-6) var(--ngaf-chat-space-5);
+    }
+    .chat-debug__messages-inner {
+      max-width: var(--ngaf-chat-max-width);
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: var(--ngaf-chat-space-5);
+    }
+
+    /* Message templates */
+    .chat-debug__msg-human { display: flex; justify-content: flex-end; }
+    .chat-debug__msg-human__bubble {
+      max-width: 75%;
+      padding: 10px 16px;
+      font-size: var(--ngaf-chat-font-size);
+      line-height: var(--ngaf-chat-line-height);
+      word-break: break-words;
+      border-radius: var(--ngaf-chat-radius-bubble) var(--ngaf-chat-radius-bubble) 6px var(--ngaf-chat-radius-bubble);
+      background: var(--ngaf-chat-surface-alt);
+      color: var(--ngaf-chat-text);
+      border: 1px solid var(--ngaf-chat-separator);
+    }
+
+    .chat-debug__msg-ai { display: flex; gap: 12px; }
+    .chat-debug__msg-ai__avatar {
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: var(--ngaf-chat-font-size-xs);
+      font-weight: 600;
+      flex-shrink: 0;
+      margin-top: 2px;
+      border-radius: 8px;
+      background: var(--ngaf-chat-surface-alt);
+      color: var(--ngaf-chat-text-muted);
+    }
+    .chat-debug__msg-ai__content {
+      flex: 1;
+      min-width: 0;
+      word-break: break-words;
+      font-size: var(--ngaf-chat-font-size);
+      line-height: var(--ngaf-chat-line-height);
+      color: var(--ngaf-chat-text);
+    }
+
+    .chat-debug__msg-tool {
+      padding: 10px 14px;
+      font-family: var(--ngaf-chat-font-mono);
+      font-size: 13px;
+      word-break: break-words;
+      white-space: pre-wrap;
+      border-radius: var(--ngaf-chat-radius-card);
+      border: 1px solid var(--ngaf-chat-separator);
+      background: var(--ngaf-chat-surface-alt);
+      color: var(--ngaf-chat-text);
+    }
+
+    .chat-debug__msg-system { display: flex; justify-content: center; }
+    .chat-debug__msg-system__text {
+      font-size: var(--ngaf-chat-font-size-xs);
+      font-style: italic;
+      color: var(--ngaf-chat-text-muted);
+    }
+
+    /* Input bar */
+    .chat-debug__input-bar {
+      border-top: 1px solid var(--ngaf-chat-separator);
+      padding: var(--ngaf-chat-space-4) var(--ngaf-chat-space-5);
+    }
+    .chat-debug__input-inner {
+      max-width: var(--ngaf-chat-max-width);
+      margin: 0 auto;
+    }
+
+    /* Debug panel toggle */
+    .chat-debug__toggle-btn {
+      width: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: none;
+      border-left: 1px solid var(--ngaf-chat-separator);
+      cursor: pointer;
+      transition: background 150ms ease;
+      background: var(--ngaf-chat-surface-alt);
+      color: var(--ngaf-chat-text-muted);
+    }
+    .chat-debug__toggle-btn:hover {
+      background: color-mix(in srgb, var(--ngaf-chat-text) 5%, transparent);
+    }
+
+    /* Debug panel */
+    .chat-debug__panel {
+      width: 320px;
+      border-left: 1px solid var(--ngaf-chat-separator);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      flex-shrink: 0;
+      background: var(--ngaf-chat-bg);
+    }
+    .chat-debug__panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--ngaf-chat-separator);
+    }
+    .chat-debug__panel-title {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin: 0;
+      color: var(--ngaf-chat-text-muted);
+    }
+    .chat-debug__panel-close {
+      font-size: var(--ngaf-chat-font-size-xs);
+      background: transparent;
+      border: 0;
+      cursor: pointer;
+      color: var(--ngaf-chat-text-muted);
+      transition: color 150ms ease;
+    }
+    .chat-debug__panel-close:hover { color: var(--ngaf-chat-text); }
+
+    .chat-debug__panel-section {
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--ngaf-chat-separator);
+    }
+    .chat-debug__panel-timeline {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px 12px;
+    }
+    .chat-debug__panel-detail {
+      border-top: 1px solid var(--ngaf-chat-separator);
+      padding: 8px 12px;
+      max-height: 256px;
+      overflow-y: auto;
+    }
+
+    /* Markdown rendering */
+    :host ::ng-deep .chat-md p { margin: 0 0 0.75em; }
+    :host ::ng-deep .chat-md p:last-child { margin-bottom: 0; }
+    :host ::ng-deep .chat-md code {
+      background: var(--ngaf-chat-surface-alt);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.875em;
+      font-family: var(--ngaf-chat-font-mono);
+    }
+    :host ::ng-deep .chat-md pre {
+      background: var(--ngaf-chat-surface-alt);
+      padding: 12px 16px;
+      border-radius: var(--ngaf-chat-radius-card);
+      overflow-x: auto;
+      margin: 0.75em 0;
+    }
+    :host ::ng-deep .chat-md pre code { background: none; padding: 0; }
+    :host ::ng-deep .chat-md ul, :host ::ng-deep .chat-md ol { margin: 0.5em 0; padding-left: 1.5em; }
+    :host ::ng-deep .chat-md li { margin: 0.25em 0; }
+    :host ::ng-deep .chat-md a { color: var(--ngaf-chat-text); text-decoration: underline; }
+    :host ::ng-deep .chat-md strong { font-weight: 600; }
+    :host ::ng-deep .chat-md blockquote {
+      border-left: 3px solid var(--ngaf-chat-separator);
+      padding-left: 12px;
+      margin: 0.75em 0;
+      color: var(--ngaf-chat-text-muted);
+    }
+    :host ::ng-deep .chat-md h1, :host ::ng-deep .chat-md h2, :host ::ng-deep .chat-md h3, :host ::ng-deep .chat-md h4 { margin: 1em 0 0.5em; font-weight: 600; }
+    :host ::ng-deep .chat-md h1 { font-size: 1.25em; }
+    :host ::ng-deep .chat-md h2 { font-size: 1.125em; }
+    :host ::ng-deep .chat-md h3 { font-size: 1em; }
+    :host ::ng-deep .chat-md table { border-collapse: collapse; width: 100%; margin: 0.75em 0; }
+    :host ::ng-deep .chat-md th, :host ::ng-deep .chat-md td { border: 1px solid var(--ngaf-chat-separator); padding: 6px 12px; text-align: left; }
+    :host ::ng-deep .chat-md th { background: var(--ngaf-chat-surface-alt); font-weight: 600; font-size: 0.875em; }
+    `,
+  ],
   template: `
-    <div class="flex h-full">
+    <div class="chat-debug__layout">
       <!-- Chat area -->
-      <div class="flex flex-col flex-1 min-w-0">
+      <div class="chat-debug__chat">
         <div
           #scrollContainer
-          class="flex-1 overflow-y-auto px-5 py-6"
+          class="chat-debug__messages"
           role="log"
           aria-label="Chat messages"
           aria-live="polite"
         >
-          <div class="max-w-[var(--chat-max-width)] mx-auto flex flex-col gap-5">
-            <chat-messages [agent]="agent()">
+          <div class="chat-debug__messages-inner">
+            <chat-message-list [agent]="agent()">
               <!-- Human messages: right-aligned bubble -->
               <ng-template chatMessageTemplate="human" let-message>
-                <div class="flex justify-end">
-                  <div
-                    class="max-w-[75%] px-4 py-2.5 text-[length:var(--chat-font-size)] leading-[var(--chat-line-height)] break-words border"
-                    style="background: var(--chat-user-bg); color: var(--chat-user-text); border-color: var(--chat-user-border); border-radius: var(--chat-radius-message) var(--chat-radius-message) 6px var(--chat-radius-message);"
-                  >{{ messageContent(message) }}</div>
+                <div class="chat-debug__msg-human">
+                  <div class="chat-debug__msg-human__bubble">{{ messageContent(message) }}</div>
                 </div>
               </ng-template>
 
               <!-- AI messages: avatar inline with content (ChatGPT pattern) -->
               <ng-template chatMessageTemplate="ai" let-message>
-                <div class="flex gap-3">
+                <div class="chat-debug__msg-ai">
+                  <div class="chat-debug__msg-ai__avatar">A</div>
                   <div
-                    class="w-7 h-7 flex items-center justify-center text-xs font-semibold shrink-0 mt-0.5"
-                    style="background: var(--chat-avatar-bg); color: var(--chat-avatar-text); border-radius: var(--chat-radius-avatar);"
-                  >A</div>
-                  <div
-                    class="chat-md flex-1 min-w-0 break-words text-[length:var(--chat-font-size)] leading-[var(--chat-line-height)]"
-                    style="color: var(--chat-text);"
+                    class="chat-md chat-debug__msg-ai__content"
                     [innerHTML]="renderMd(messageContent(message))"
                   ></div>
                 </div>
@@ -83,21 +276,16 @@ import { toDebugCheckpoint, extractStateValues } from './debug-utils';
 
               <!-- Tool messages: monospace card -->
               <ng-template chatMessageTemplate="tool" let-message>
-                <div
-                  class="px-3.5 py-2.5 font-mono text-[13px] break-words whitespace-pre-wrap border"
-                  style="background: var(--chat-bg-alt); color: var(--chat-text); border-color: var(--chat-border); border-radius: var(--chat-radius-card);"
-                >{{ messageContent(message) }}</div>
+                <div class="chat-debug__msg-tool">{{ messageContent(message) }}</div>
               </ng-template>
 
               <!-- System messages: centered italic -->
               <ng-template chatMessageTemplate="system" let-message>
-                <div class="flex justify-center" role="status">
-                  <span class="text-xs italic" style="color: var(--chat-text-muted);">
-                    {{ messageContent(message) }}
-                  </span>
+                <div class="chat-debug__msg-system" role="status">
+                  <span class="chat-debug__msg-system__text">{{ messageContent(message) }}</span>
                 </div>
               </ng-template>
-            </chat-messages>
+            </chat-message-list>
 
             <chat-typing-indicator [agent]="agent()" />
           </div>
@@ -106,8 +294,8 @@ import { toDebugCheckpoint, extractStateValues } from './debug-utils';
         <chat-error [agent]="agent()" />
 
         <!-- Input area -->
-        <div class="border-t px-5 py-4" style="border-color: var(--chat-border);">
-          <div class="max-w-[var(--chat-max-width)] mx-auto">
+        <div class="chat-debug__input-bar">
+          <div class="chat-debug__input-inner">
             <chat-input
               [agent]="agent()"
               [submitOnEnter]="true"
@@ -120,8 +308,7 @@ import { toDebugCheckpoint, extractStateValues } from './debug-utils';
       <!-- Debug panel toggle (when closed) -->
       @if (!debugOpen()) {
         <button
-          class="w-8 flex items-center justify-center border-l border-t-0 border-r-0 border-b-0 cursor-pointer transition-colors duration-150"
-          style="border-color: var(--chat-border); background: var(--chat-bg-alt); color: var(--chat-text-muted);"
+          class="chat-debug__toggle-btn"
           title="Open debug panel"
           (click)="debugOpen.set(true)"
         >
@@ -131,27 +318,23 @@ import { toDebugCheckpoint, extractStateValues } from './debug-utils';
 
       <!-- Debug panel -->
       @if (debugOpen()) {
-        <div
-          class="w-80 border-l flex flex-col overflow-hidden shrink-0"
-          style="border-color: var(--chat-border); background: var(--chat-bg);"
-        >
+        <div class="chat-debug__panel">
           <!-- Header -->
-          <div class="flex items-center justify-between px-3 py-2 border-b" style="border-color: var(--chat-border);">
-            <h3 class="text-[11px] font-semibold uppercase tracking-wider m-0" style="color: var(--chat-text-muted);">Debug</h3>
+          <div class="chat-debug__panel-header">
+            <h3 class="chat-debug__panel-title">Debug</h3>
             <button
-              class="text-xs bg-transparent border-0 cursor-pointer transition-colors duration-150"
-              style="color: var(--chat-text-muted);"
+              class="chat-debug__panel-close"
               (click)="debugOpen.set(false)"
             >&raquo; Close</button>
           </div>
 
           <!-- Summary -->
-          <div class="px-3 py-2 border-b" style="border-color: var(--chat-border-light);">
+          <div class="chat-debug__panel-section">
             <chat-debug-summary [checkpoints]="checkpoints()" />
           </div>
 
           <!-- Controls -->
-          <div class="px-3 py-2 border-b" style="border-color: var(--chat-border-light);">
+          <div class="chat-debug__panel-section">
             <chat-debug-controls
               [checkpointCount]="checkpoints().length"
               [selectedIndex]="selectedCheckpointIndex()"
@@ -163,7 +346,7 @@ import { toDebugCheckpoint, extractStateValues } from './debug-utils';
           </div>
 
           <!-- Timeline -->
-          <div class="flex-1 overflow-y-auto px-3 py-2">
+          <div class="chat-debug__panel-timeline">
             <chat-debug-timeline
               [checkpoints]="checkpoints()"
               [selectedIndex]="selectedCheckpointIndex()"
@@ -173,7 +356,7 @@ import { toDebugCheckpoint, extractStateValues } from './debug-utils';
 
           <!-- Detail -->
           @if (selectedCheckpointIndex() >= 0) {
-            <div class="border-t px-3 py-2 max-h-64 overflow-y-auto" style="border-color: var(--chat-border);">
+            <div class="chat-debug__panel-detail">
               <chat-debug-detail
                 [currentState]="selectedState()"
                 [previousState]="previousState()"

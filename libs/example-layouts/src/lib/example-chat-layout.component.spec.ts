@@ -29,7 +29,7 @@ class NoSidebarHostComponent {}
   standalone: true,
   imports: [ExampleChatLayoutComponent],
   template: `
-    <example-chat-layout sidebarPosition="left" sidebarWidth="w-64">
+    <example-chat-layout sidebarPosition="left" sidebarWidth="16rem">
       <div main data-testid="main-content">Main</div>
       <div sidebar data-testid="sidebar-content">Sidebar</div>
     </example-chat-layout>
@@ -41,7 +41,7 @@ class LeftSidebarHostComponent {}
   standalone: true,
   imports: [ExampleChatLayoutComponent],
   template: `
-    <example-chat-layout sidebarWidth="w-80">
+    <example-chat-layout sidebarWidth="20rem">
       <div main data-testid="main-content">Main</div>
       <div sidebar data-testid="sidebar-content">Sidebar</div>
     </example-chat-layout>
@@ -63,7 +63,7 @@ describe('ExampleChatLayoutComponent', () => {
     expect(el.querySelector('[data-testid="sidebar-content"]')?.textContent).toBe('Sidebar Content');
   });
 
-  it('should use flex-col md:flex-row for responsive layout', async () => {
+  it('should render .layout and .layout--sidebar-right for default right position', async () => {
     await TestBed.configureTestingModule({
       imports: [TestHostComponent],
     }).compileComponents();
@@ -72,9 +72,22 @@ describe('ExampleChatLayoutComponent', () => {
     fixture.detectChanges();
 
     const el = fixture.nativeElement as HTMLElement;
-    const flexContainer = el.querySelector('.flex.flex-col');
-    expect(flexContainer).toBeTruthy();
-    expect(flexContainer?.classList.contains('md:flex-row')).toBe(true);
+    const layoutEl = el.querySelector('.layout');
+    expect(layoutEl).toBeTruthy();
+    expect(layoutEl?.classList.contains('layout--sidebar-right')).toBe(true);
+  });
+
+  it('should render .layout__main and .layout__sidebar containers', async () => {
+    await TestBed.configureTestingModule({
+      imports: [TestHostComponent],
+    }).compileComponents();
+
+    const fixture = TestBed.createComponent(TestHostComponent);
+    fixture.detectChanges();
+
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.querySelector('.layout__main')).toBeTruthy();
+    expect(el.querySelector('.layout__sidebar')).toBeTruthy();
   });
 
   it('should hide aside when no sidebar content is projected', async () => {
@@ -92,7 +105,7 @@ describe('ExampleChatLayoutComponent', () => {
     expect(aside?.children.length).toBe(0);
   });
 
-  it('should apply md:flex-row-reverse for left sidebar position', async () => {
+  it('should apply layout--sidebar-left for left sidebar position', async () => {
     await TestBed.configureTestingModule({
       imports: [LeftSidebarHostComponent],
     }).compileComponents();
@@ -101,25 +114,12 @@ describe('ExampleChatLayoutComponent', () => {
     fixture.detectChanges();
 
     const el = fixture.nativeElement as HTMLElement;
-    const flexContainer = el.querySelector('.flex.flex-col');
-    expect(flexContainer?.classList.contains('md:flex-row-reverse')).toBe(true);
+    const layoutEl = el.querySelector('.layout');
+    expect(layoutEl?.classList.contains('layout--sidebar-left')).toBe(true);
+    expect(layoutEl?.classList.contains('layout--sidebar-right')).toBe(false);
   });
 
-  it('should use border-r instead of border-l for left sidebar', async () => {
-    await TestBed.configureTestingModule({
-      imports: [LeftSidebarHostComponent],
-    }).compileComponents();
-
-    const fixture = TestBed.createComponent(LeftSidebarHostComponent);
-    fixture.detectChanges();
-
-    const el = fixture.nativeElement as HTMLElement;
-    const aside = el.querySelector('aside');
-    expect(aside?.classList.contains('md:border-r')).toBe(true);
-    expect(aside?.classList.contains('md:border-l')).toBe(false);
-  });
-
-  it('should apply custom sidebar width class', async () => {
+  it('should bind custom sidebar width as CSS custom property', async () => {
     await TestBed.configureTestingModule({
       imports: [CustomWidthHostComponent],
     }).compileComponents();
@@ -128,11 +128,12 @@ describe('ExampleChatLayoutComponent', () => {
     fixture.detectChanges();
 
     const el = fixture.nativeElement as HTMLElement;
-    const aside = el.querySelector('aside');
-    expect(aside?.classList.contains('md:w-80')).toBe(true);
+    const layoutEl = el.querySelector('.layout') as HTMLElement;
+    expect(layoutEl).toBeTruthy();
+    expect(layoutEl?.style.getPropertyValue('--example-layout-sidebar-width')).toBe('20rem');
   });
 
-  it('should apply default w-72 sidebar width', async () => {
+  it('should use default sidebarWidth of 18rem', async () => {
     await TestBed.configureTestingModule({
       imports: [TestHostComponent],
     }).compileComponents();
@@ -141,8 +142,8 @@ describe('ExampleChatLayoutComponent', () => {
     fixture.detectChanges();
 
     const el = fixture.nativeElement as HTMLElement;
-    const aside = el.querySelector('aside');
-    expect(aside?.classList.contains('md:w-72')).toBe(true);
+    const layoutEl = el.querySelector('.layout') as HTMLElement;
+    expect(layoutEl?.style.getPropertyValue('--example-layout-sidebar-width')).toBe('18rem');
   });
 
   it('should set host to full viewport height', async () => {

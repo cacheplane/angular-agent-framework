@@ -1,0 +1,127 @@
+# ChatSidebarComponent
+
+`ChatSidebarComponent` is a composition that renders a slide-in chat panel anchored to the right edge of the screen. Unlike a popup window, the sidebar can optionally push your app content aside rather than overlaying it, keeping both the chat and your UI visible at the same time.
+
+**Selector:** `chat-sidebar`
+
+**Import:**
+
+```typescript
+import { ChatSidebarComponent } from '@ngaf/chat';
+```
+
+## When to Use It
+
+Use `ChatSidebarComponent` when you want the chat to be accessible without completely obscuring the underlying application. It works well for copilot-style experiences where the user references the app while talking to the assistant.
+
+If you need a floating overlay that does not affect layout, use [`<chat-popup>`](/docs/chat/components/chat-popup). If you need the chat to always fill its container, use [`<chat>`](/docs/chat/components/chat).
+
+## Basic Usage
+
+```typescript
+import { Component, ChangeDetectionStrategy, signal } from '@angular/core';
+import { agent } from '@ngaf/langgraph';
+import { ChatSidebarComponent } from '@ngaf/chat';
+
+@Component({
+  selector: 'app-shell',
+  standalone: true,
+  imports: [ChatSidebarComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <chat-sidebar [agent]="chatAgent">
+      <!-- your app content -->
+      <main>
+        <router-outlet />
+      </main>
+    </chat-sidebar>
+  `,
+})
+export class AppShellComponent {
+  protected readonly chatAgent = agent({
+    assistantId: 'chat_agent',
+    threadId: signal(null),
+  });
+}
+```
+
+## Push-Content Mode
+
+When `pushContent` is `true`, the sidebar shifts the projected `<ng-content>` to the left rather than overlaying it. This keeps your application content fully visible alongside the chat panel.
+
+```html
+<chat-sidebar [agent]="chatAgent" [pushContent]="true">
+  <main>
+    <router-outlet />
+  </main>
+</chat-sidebar>
+```
+
+<Callout type="tip" title="Layout requirements">
+In push-content mode, `ChatSidebarComponent` uses `display: flex` on its host. The projected content should be designed to reflow gracefully when its available width is reduced.
+</Callout>
+
+## API
+
+### Inputs
+
+| Input | Type | Default | Description |
+|-------|------|---------|-------------|
+| `agent` | `LangGraphAgent<any, any>` | **Required** | The agent providing streaming state |
+| `open` | `boolean` | `false` | Two-way bindable. Controls whether the sidebar is open |
+| `pushContent` | `boolean` | `false` | When `true`, the sidebar shifts projected content rather than overlaying it |
+
+### Outputs
+
+| Output | Type | Description |
+|--------|------|-------------|
+| `openChange` | `boolean` | Emits when the sidebar opens or closes. Use with `[(open)]` for two-way binding |
+
+### Slots
+
+| Slot | Selector | Description |
+|------|----------|-------------|
+| App content | (default) | Projected via `<ng-content>`. Rendered alongside or behind the chat panel |
+| Header content | `[chatHeader]` | Projected into the sidebar header bar. Replaces the default title |
+
+### Methods
+
+| Method | Description |
+|--------|-------------|
+| `toggle()` | Toggles the sidebar between open and closed |
+| `openWindow()` | Opens the sidebar |
+| `closeWindow()` | Closes the sidebar |
+
+## Controlled Open State
+
+```typescript
+@Component({
+  template: `
+    <button (click)="sidebarOpen.set(!sidebarOpen())">Toggle Chat</button>
+
+    <chat-sidebar
+      [agent]="chatAgent"
+      [pushContent]="true"
+      [(open)]="sidebarOpen"
+    >
+      <main><router-outlet /></main>
+    </chat-sidebar>
+  `,
+})
+export class AppShellComponent {
+  sidebarOpen = signal(false);
+  chatAgent = agent({ assistantId: 'chat_agent', threadId: signal(null) });
+}
+```
+
+## Styling
+
+Override the sidebar width using a CSS custom property:
+
+```css
+chat-sidebar {
+  --ngaf-chat-sidebar-width: 420px;
+}
+```
+
+See [Theming](/docs/chat/guides/theming) for the full token reference.

@@ -2,6 +2,10 @@
 
 `ChatComponent` is the all-in-one composition that provides a complete, styled chat interface. It combines message rendering, text input, typing indicator, error display, interrupt handling, and an optional thread sidebar into a single component.
 
+<Callout type="info" title="No Tailwind required">
+`ChatComponent` ships with its own design tokens and component-scoped styles. No PostCSS config, no Tailwind setup, and no global stylesheet import is needed.
+</Callout>
+
 **Selector:** `chat`
 
 **Import:**
@@ -160,15 +164,30 @@ The component tracks message count and loading state to auto-scroll:
 - **Streaming updates**: Scrolls smoothly only if the user is near the bottom (within 150px)
 - **User scrolled up**: Does not auto-scroll during streaming to avoid disrupting reading
 
+## Message Pattern
+
+`ChatComponent` renders messages using an asymmetric pattern:
+
+- **User messages** — right-aligned filled bubble using `--ngaf-chat-primary` background and `--ngaf-chat-on-primary` text
+- **Assistant messages** — inline (no bubble), left-aligned, with hover controls (copy, thumbs up/down) that appear on pointer-over
+
 ## Styling
 
-`ChatComponent` includes `CHAT_THEME_STYLES` and `CHAT_MARKDOWN_STYLES` in its component styles. Override any CSS custom property on the `chat` element or a parent. See the [Theming guide](/docs/chat/guides/theming) for the full variable reference.
+Override any CSS custom property on the `chat` element or a parent. See the [Theming guide](/docs/chat/guides/theming) for the full `--ngaf-chat-*` token reference.
+
+```css
+/* Example: brand color override */
+chat {
+  --ngaf-chat-primary: #2563eb;
+  --ngaf-chat-on-primary: #ffffff;
+}
+```
 
 ## Included Primitives
 
 Under the hood, `ChatComponent` composes these primitives:
 
-- `ChatMessagesComponent` with `MessageTemplateDirective` for message rendering
+- `ChatMessageListComponent` with `MessageTemplateDirective` for message rendering
 - `ChatInputComponent` for text input (with `submitOnEnter` and a placeholder)
 - `ChatTypingIndicatorComponent` for the animated typing dots
 - `ChatErrorComponent` for error display

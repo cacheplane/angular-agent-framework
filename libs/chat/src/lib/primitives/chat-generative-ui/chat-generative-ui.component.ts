@@ -1,3 +1,4 @@
+// libs/chat/src/lib/primitives/chat-generative-ui/chat-generative-ui.component.ts
 // SPDX-License-Identifier: MIT
 import {
   Component,
@@ -8,12 +9,15 @@ import {
 import type { Spec, StateStore } from '@json-render/core';
 import type { AngularRegistry, RenderEvent } from '@ngaf/render';
 import { RenderSpecComponent } from '@ngaf/render';
+import { CHAT_HOST_TOKENS } from '../../styles/chat-tokens';
+import { CHAT_GENERATIVE_UI_STYLES } from '../../styles/chat-generative-ui.styles';
 
 @Component({
   selector: 'chat-generative-ui',
   standalone: true,
   imports: [RenderSpecComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  styles: [CHAT_HOST_TOKENS, CHAT_GENERATIVE_UI_STYLES],
   template: `
     @if (spec()) {
       <render-spec

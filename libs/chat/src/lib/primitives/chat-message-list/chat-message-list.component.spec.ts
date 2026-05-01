@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 import { describe, it, expect } from 'vitest';
 import { signal } from '@angular/core';
-import { getMessageType } from './chat-messages.component';
+import { getMessageType } from './chat-message-list.component';
 import { mockAgent } from '../../testing/mock-agent';
 import type { Message } from '../../agent';
 
@@ -32,7 +32,7 @@ describe('getMessageType', () => {
   });
 });
 
-describe('MessagesComponent — computed messages', () => {
+describe('ChatMessageListComponent — computed messages', () => {
   it('messages() signal reflects the agent messages signal', () => {
     const msgs: Message[] = [
       { id: '1', role: 'user', content: 'hi' },
@@ -64,7 +64,7 @@ describe('MessagesComponent — computed messages', () => {
   });
 });
 
-describe('MessagesComponent — findTemplate logic', () => {
+describe('ChatMessageListComponent — findTemplate logic', () => {
   it('findTemplate returns matching directive by type', () => {
     const templates = [
       { chatMessageTemplate: () => 'human' as const, templateRef: {} },

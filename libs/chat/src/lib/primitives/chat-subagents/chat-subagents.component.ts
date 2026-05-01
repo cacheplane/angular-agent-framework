@@ -1,3 +1,4 @@
+// libs/chat/src/lib/primitives/chat-subagents/chat-subagents.component.ts
 // SPDX-License-Identifier: MIT
 import {
   Component,
@@ -10,13 +11,8 @@ import {
 import { NgTemplateOutlet } from '@angular/common';
 import type { Agent } from '../../agent';
 import type { Subagent } from '../../agent/subagent';
+import { ChatSubagentCardComponent } from '../../compositions/chat-subagent-card/chat-subagent-card.component';
 
-/**
- * Returns the list of currently-active subagents on the agent. "Active" means
- * the subagent status is neither `complete` nor `error`. Returns an empty list
- * when the runtime does not expose a subagents surface.
- * Exported for unit testing without DOM rendering.
- */
 export function activeSubagentsFromAgent(agent: Agent): Subagent[] {
   const map = agent.subagents?.();
   if (!map) return [];
@@ -31,23 +27,20 @@ export function activeSubagentsFromAgent(agent: Agent): Subagent[] {
 @Component({
   selector: 'chat-subagents',
   standalone: true,
-  imports: [NgTemplateOutlet],
+  imports: [NgTemplateOutlet, ChatSubagentCardComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @for (subagent of activeSubagents(); track subagent.toolCallId) {
       @if (templateRef()) {
-        <ng-container
-          [ngTemplateOutlet]="templateRef()!"
-          [ngTemplateOutletContext]="{ $implicit: subagent }"
-        />
+        <ng-container [ngTemplateOutlet]="templateRef()!" [ngTemplateOutletContext]="{ $implicit: subagent }" />
+      } @else {
+        <chat-subagent-card [subagent]="subagent" />
       }
     }
   `,
 })
 export class ChatSubagentsComponent {
   readonly agent = input.required<Agent>();
-
   readonly templateRef = contentChild(TemplateRef);
-
   readonly activeSubagents = computed(() => activeSubagentsFromAgent(this.agent()));
 }

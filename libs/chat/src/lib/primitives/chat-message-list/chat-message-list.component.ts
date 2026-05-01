@@ -10,6 +10,8 @@ import { NgTemplateOutlet } from '@angular/common';
 import type { Agent, Message } from '../../agent';
 import { MessageTemplateDirective } from './message-template.directive';
 import type { MessageTemplateType } from '../../chat.types';
+import { CHAT_HOST_TOKENS } from '../../styles/chat-tokens';
+import { CHAT_MESSAGE_LIST_STYLES } from '../../styles/chat-message-list.styles';
 
 /**
  * Maps a {@link Message} to a {@link MessageTemplateType}.
@@ -31,10 +33,11 @@ export function getMessageType(message: Message): MessageTemplateType {
 }
 
 @Component({
-  selector: 'chat-messages',
+  selector: 'chat-message-list',
   standalone: true,
   imports: [NgTemplateOutlet, MessageTemplateDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  styles: [CHAT_HOST_TOKENS, CHAT_MESSAGE_LIST_STYLES],
   template: `
     @for (message of messages(); track $index) {
       @let template = findTemplate(getMessageType(message));
@@ -47,7 +50,7 @@ export function getMessageType(message: Message): MessageTemplateType {
     }
   `,
 })
-export class ChatMessagesComponent {
+export class ChatMessageListComponent {
   readonly agent = input.required<Agent>();
 
   readonly messageTemplates = contentChildren(MessageTemplateDirective);

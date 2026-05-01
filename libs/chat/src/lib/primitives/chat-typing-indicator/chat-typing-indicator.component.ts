@@ -1,11 +1,9 @@
+// libs/chat/src/lib/primitives/chat-typing-indicator/chat-typing-indicator.component.ts
 // SPDX-License-Identifier: MIT
-import {
-  Component,
-  computed,
-  input,
-  ChangeDetectionStrategy,
-} from '@angular/core';
+import { Component, ChangeDetectionStrategy, input, computed } from '@angular/core';
 import type { Agent } from '../../agent';
+import { CHAT_HOST_TOKENS } from '../../styles/chat-tokens';
+import { CHAT_TYPING_INDICATOR_STYLES } from '../../styles/chat-typing-indicator.styles';
 
 export function isTyping(agent: Agent): boolean {
   if (!agent.isLoading()) return false;
@@ -14,7 +12,6 @@ export function isTyping(agent: Agent): boolean {
   const last = msgs[msgs.length - 1];
   if (last.role === 'user') return true;
   if (last.role === 'assistant') {
-    // Empty assistant message: string is empty or content block array is empty
     return typeof last.content === 'string'
       ? !last.content
       : last.content.length === 0;
@@ -26,34 +23,13 @@ export function isTyping(agent: Agent): boolean {
   selector: 'chat-typing-indicator',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  styles: [`
-    .chat-dot {
-      display: inline-block;
-      width: 5px;
-      height: 5px;
-      border-radius: 50%;
-      background: var(--chat-text-muted);
-      animation: chat-dot-pulse 1.4s ease-in-out infinite;
-    }
-    .chat-dot:nth-child(2) { animation-delay: 0.2s; }
-    .chat-dot:nth-child(3) { animation-delay: 0.4s; }
-    @keyframes chat-dot-pulse {
-      0%, 80%, 100% { opacity: 0.3; transform: scale(0.8); }
-      40% { opacity: 1; transform: scale(1); }
-    }
-  `],
+  styles: [CHAT_HOST_TOKENS, CHAT_TYPING_INDICATOR_STYLES],
   template: `
     @if (visible()) {
-      <div role="status" aria-label="Agent is typing" class="flex items-center gap-3">
-        <div
-          class="w-7 h-7 flex items-center justify-center text-xs font-semibold shrink-0"
-          style="background: var(--chat-avatar-bg); color: var(--chat-avatar-text); border-radius: var(--chat-radius-avatar);"
-        >A</div>
-        <div class="flex items-center gap-1">
-          <span class="chat-dot"></span>
-          <span class="chat-dot"></span>
-          <span class="chat-dot"></span>
-        </div>
+      <div class="chat-typing__dots" role="status" aria-label="Assistant is typing">
+        <span class="chat-typing__dot"></span>
+        <span class="chat-typing__dot"></span>
+        <span class="chat-typing__dot"></span>
       </div>
     }
   `,

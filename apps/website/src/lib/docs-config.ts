@@ -145,6 +145,7 @@ export const docsConfig: DocsLibrary[] = [
         id: 'guides',
         color: 'blue',
         pages: [
+          { title: 'Layout Modes', slug: 'layout-modes', section: 'guides' },
           { title: 'Theming', slug: 'theming', section: 'guides' },
           { title: 'Markdown Rendering', slug: 'markdown', section: 'guides' },
           { title: 'Generative UI', slug: 'generative-ui', section: 'guides' },
@@ -159,7 +160,10 @@ export const docsConfig: DocsLibrary[] = [
         color: 'red',
         pages: [
           { title: 'ChatComponent', slug: 'chat', section: 'components' },
-          { title: 'ChatMessages', slug: 'chat-messages', section: 'components' },
+          { title: 'ChatPopup', slug: 'chat-popup', section: 'components' },
+          { title: 'ChatSidebar', slug: 'chat-sidebar', section: 'components' },
+          { title: 'ChatMessageList', slug: 'chat-message-list', section: 'components' },
+          { title: 'ChatTrace', slug: 'chat-trace', section: 'components' },
           { title: 'ChatInput', slug: 'chat-input', section: 'components' },
           { title: 'ChatInterruptPanel', slug: 'chat-interrupt-panel', section: 'components' },
           { title: 'ChatToolCallCard', slug: 'chat-tool-call-card', section: 'components' },

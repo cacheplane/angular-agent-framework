@@ -8,6 +8,7 @@ import {
 } from '@angular/core';
 import type { Agent } from '../../agent';
 import type { AgentInterrupt } from '../../agent/agent-interrupt';
+import { CHAT_HOST_TOKENS } from '../../styles/chat-tokens';
 
 export type InterruptAction = 'accept' | 'edit' | 'respond' | 'ignore';
 
@@ -24,61 +25,71 @@ export function getInterruptFromAgent(agent: Agent): AgentInterrupt | undefined 
   selector: 'chat-interrupt-panel',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
+  styles: [
+    CHAT_HOST_TOKENS,
+    `
+    .chat-interrupt-panel {
+      background: var(--ngaf-chat-warning-bg);
+      color: var(--ngaf-chat-warning-text);
+      border-left: 3px solid var(--ngaf-chat-warning-text);
+      border-radius: var(--ngaf-chat-radius-card);
+      padding: 12px 16px;
+      margin: 0 var(--ngaf-chat-space-6) var(--ngaf-chat-space-2);
+      font-size: var(--ngaf-chat-font-size-sm);
+    }
+    .chat-interrupt-panel__title {
+      font-weight: 600;
+      margin: 0 0 4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .chat-interrupt-panel__body {
+      margin: 0 0 8px;
+      opacity: 0.95;
+    }
+    .chat-interrupt-panel__actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .chat-interrupt-panel__btn {
+      padding: 4px 12px;
+      font-size: var(--ngaf-chat-font-size-sm);
+      border-radius: var(--ngaf-chat-radius-button);
+      border: 0;
+      cursor: pointer;
+      background: var(--ngaf-chat-primary);
+      color: var(--ngaf-chat-on-primary);
+      transition: transform 200ms ease;
+    }
+    .chat-interrupt-panel__btn:hover { transform: scale(1.03); }
+    .chat-interrupt-panel__btn--secondary {
+      background: transparent;
+      color: var(--ngaf-chat-warning-text);
+      border: 1px solid var(--ngaf-chat-warning-text);
+    }
+    `,
+  ],
   template: `
     @if (interrupt()) {
-      <div
-        role="alert"
-        class="flex flex-col gap-3 p-4 border"
-        style="background: var(--chat-warning-bg); border-color: var(--chat-border); border-radius: var(--chat-radius-card);"
-      >
+      <div role="alert" class="chat-interrupt-panel">
         <!-- Warning header -->
-        <div class="flex items-start gap-2">
-          <span style="color: var(--chat-warning-text);"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span>
-          <div class="flex-1">
-            <h3 class="text-sm font-semibold m-0" style="color: var(--chat-warning-text);">Agent Interrupt</h3>
-            <p class="text-sm mt-1 mb-0" style="color: var(--chat-warning-text);">{{ interruptPayload() }}</p>
-          </div>
-        </div>
+        <p class="chat-interrupt-panel__title">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          Agent Interrupt
+        </p>
+        <p class="chat-interrupt-panel__body">{{ interruptPayload() }}</p>
 
         <!-- Action buttons -->
-        <div class="flex flex-wrap gap-2">
+        <div class="chat-interrupt-panel__actions">
+          <button class="chat-interrupt-panel__btn" (click)="action.emit('accept')">Accept</button>
+          <button class="chat-interrupt-panel__btn" (click)="action.emit('edit')">Edit</button>
+          <button class="chat-interrupt-panel__btn" (click)="action.emit('respond')">Respond</button>
           <button
-            class="px-3 py-1.5 text-sm font-medium border cursor-pointer"
-            [style.background]="'var(--chat-bg-alt)'"
-            [style.color]="'var(--chat-text)'"
-            [style.border-color]="'var(--chat-border)'"
-            [style.border-radius]="'var(--chat-radius-card)'"
-            (click)="action.emit('accept')"
-          >
-            Accept
-          </button>
-          <button
-            class="px-3 py-1.5 text-sm font-medium border cursor-pointer"
-            [style.background]="'var(--chat-bg-alt)'"
-            [style.color]="'var(--chat-text)'"
-            [style.border-color]="'var(--chat-border)'"
-            [style.border-radius]="'var(--chat-radius-card)'"
-            (click)="action.emit('edit')"
-          >
-            Edit
-          </button>
-          <button
-            class="px-3 py-1.5 text-sm font-medium border cursor-pointer"
-            [style.background]="'var(--chat-bg-alt)'"
-            [style.color]="'var(--chat-text)'"
-            [style.border-color]="'var(--chat-border)'"
-            [style.border-radius]="'var(--chat-radius-card)'"
-            (click)="action.emit('respond')"
-          >
-            Respond
-          </button>
-          <button
-            class="px-3 py-1.5 text-sm font-medium bg-transparent border-0 cursor-pointer"
-            [style.color]="'var(--chat-text-muted)'"
+            class="chat-interrupt-panel__btn chat-interrupt-panel__btn--secondary"
             (click)="action.emit('ignore')"
-          >
-            Ignore
-          </button>
+          >Ignore</button>
         </div>
       </div>
     }

@@ -1,14 +1,14 @@
-# ChatMessagesComponent
+# ChatMessageListComponent
 
-`ChatMessagesComponent` is the core primitive for rendering chat messages. It iterates over the messages from a `LangGraphAgent` and renders each one using a matching `MessageTemplateDirective`. This gives you full control over how each message type is displayed.
+`ChatMessageListComponent` is the core primitive for rendering chat messages. It iterates over the messages from a `LangGraphAgent` and renders each one using a matching `MessageTemplateDirective`. This gives you full control over how each message type is displayed.
 
-**Selector:** `chat-messages`
+**Selector:** `chat-message-list`
 
 **Import:**
 
 ```typescript
 import {
-  ChatMessagesComponent,
+  ChatMessageListComponent,
   MessageTemplateDirective,
   getMessageType,
 } from '@ngaf/chat';
@@ -16,7 +16,7 @@ import {
 
 ## How It Works
 
-1. The component reads `ref().messages()` to get the current message list
+1. The component reads `agent().messages()` to get the current message list
 2. For each message, it calls `getMessageType()` to determine the template type
 3. It finds the matching `MessageTemplateDirective` among its content children
 4. It renders the message using `ngTemplateOutlet` with the message as the implicit context
@@ -24,7 +24,7 @@ import {
 ## Basic Usage
 
 ```html
-<chat-messages [ref]="chatRef">
+<chat-message-list [agent]="chatAgent">
   <ng-template chatMessageTemplate="human" let-message>
     <div class="user-bubble">{{ message.content }}</div>
   </ng-template>
@@ -40,7 +40,7 @@ import {
   <ng-template chatMessageTemplate="system" let-message>
     <em>{{ message.content }}</em>
   </ng-template>
-</chat-messages>
+</chat-message-list>
 ```
 
 ## API
@@ -49,7 +49,7 @@ import {
 
 | Input | Type | Default | Description |
 |-------|------|---------|-------------|
-| `ref` | `LangGraphAgent<any, any>` | **Required** | The agent providing streaming state |
+| `agent` | `LangGraphAgent<any, any>` | **Required** | The agent providing streaming state |
 
 ### Content Children
 
@@ -144,55 +144,50 @@ import { DomSanitizer } from '@angular/platform-browser';
 import { agent } from '@ngaf/langgraph';
 import type { BaseMessage } from '@langchain/core/messages';
 import {
-  ChatMessagesComponent,
+  ChatMessageListComponent,
   MessageTemplateDirective,
-  CHAT_MARKDOWN_STYLES,
   renderMarkdown,
 } from '@ngaf/chat';
 
 @Component({
   selector: 'app-messages-demo',
   standalone: true,
-  imports: [ChatMessagesComponent, MessageTemplateDirective],
-  styles: [CHAT_MARKDOWN_STYLES],
+  imports: [ChatMessageListComponent, MessageTemplateDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <chat-messages [ref]="chatRef">
+    <chat-message-list [agent]="chatAgent">
       <ng-template chatMessageTemplate="human" let-message>
-        <div class="flex justify-end mb-4">
-          <div class="bg-blue-600 text-white rounded-2xl px-4 py-2 max-w-[70%]">
+        <div style="display: flex; justify-content: flex-end; margin-bottom: 1rem;">
+          <div style="background: var(--ngaf-chat-primary); color: var(--ngaf-chat-on-primary); border-radius: var(--ngaf-chat-radius-bubble); padding: 0.5rem 1rem; max-width: 70%;">
             {{ message.content }}
           </div>
         </div>
       </ng-template>
 
       <ng-template chatMessageTemplate="ai" let-message>
-        <div class="flex gap-3 mb-4">
-          <div class="w-8 h-8 bg-gray-200 rounded-lg flex items-center justify-center text-xs font-bold">
-            AI
-          </div>
-          <div class="chat-md flex-1" [innerHTML]="renderMd(message.content)"></div>
+        <div style="display: flex; gap: 0.75rem; margin-bottom: 1rem;">
+          <div style="flex: 1;" [innerHTML]="renderMd(message.content)"></div>
         </div>
       </ng-template>
 
       <ng-template chatMessageTemplate="tool" let-message>
-        <div class="bg-gray-100 rounded-lg p-3 font-mono text-sm mb-4">
+        <div style="background: var(--ngaf-chat-surface-alt); border-radius: var(--ngaf-chat-radius-card); padding: 0.75rem; font-family: var(--ngaf-chat-font-mono); font-size: var(--ngaf-chat-font-size-sm); margin-bottom: 1rem;">
           {{ message.content }}
         </div>
       </ng-template>
 
       <ng-template chatMessageTemplate="system" let-message>
-        <div class="text-center text-gray-500 text-xs italic mb-4">
+        <div style="text-align: center; color: var(--ngaf-chat-text-muted); font-size: var(--ngaf-chat-font-size-xs); font-style: italic; margin-bottom: 1rem;">
           {{ message.content }}
         </div>
       </ng-template>
-    </chat-messages>
+    </chat-message-list>
   `,
 })
 export class MessagesDemoComponent {
   private sanitizer = inject(DomSanitizer);
 
-  chatRef = agent<{ messages: BaseMessage[] }>({
+  chatAgent = agent<{ messages: BaseMessage[] }>({
     assistantId: 'chat_agent',
     threadId: signal(null),
   });

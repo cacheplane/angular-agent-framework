@@ -32,7 +32,7 @@ describe('ExampleSplitLayoutComponent', () => {
     expect(el.querySelector('[data-testid="footer"]')?.textContent).toBe('Footer');
   });
 
-  it('should use responsive flex-col md:flex-row for split panes', async () => {
+  it('should render .split__body container', async () => {
     await TestBed.configureTestingModule({
       imports: [TestHostComponent],
     }).compileComponents();
@@ -41,11 +41,10 @@ describe('ExampleSplitLayoutComponent', () => {
     fixture.detectChanges();
 
     const el = fixture.nativeElement as HTMLElement;
-    const splitContainer = el.querySelector('.flex.flex-col.md\\:flex-row.flex-1.min-h-0');
-    expect(splitContainer).toBeTruthy();
+    expect(el.querySelector('.split__body')).toBeTruthy();
   });
 
-  it('should have header with bottom border', async () => {
+  it('should render .split__header containing header slot', async () => {
     await TestBed.configureTestingModule({
       imports: [TestHostComponent],
     }).compileComponents();
@@ -54,12 +53,12 @@ describe('ExampleSplitLayoutComponent', () => {
     fixture.detectChanges();
 
     const el = fixture.nativeElement as HTMLElement;
-    const headerContainer = el.querySelector('.shrink-0.border-b.border-gray-800');
+    const headerContainer = el.querySelector('.split__header');
     expect(headerContainer).toBeTruthy();
     expect(headerContainer?.querySelector('[data-testid="header"]')).toBeTruthy();
   });
 
-  it('should have secondary pane with correct responsive classes', async () => {
+  it('should render .split__primary and .split__secondary containers', async () => {
     await TestBed.configureTestingModule({
       imports: [TestHostComponent],
     }).compileComponents();
@@ -68,8 +67,26 @@ describe('ExampleSplitLayoutComponent', () => {
     fixture.detectChanges();
 
     const el = fixture.nativeElement as HTMLElement;
-    const secondary = el.querySelector('.w-full.md\\:w-80');
+    const primary = el.querySelector('.split__primary');
+    expect(primary).toBeTruthy();
+    expect(primary?.querySelector('[data-testid="primary"]')).toBeTruthy();
+
+    const secondary = el.querySelector('.split__secondary');
     expect(secondary).toBeTruthy();
-    expect(secondary?.classList.contains('shrink-0')).toBe(true);
+    expect(secondary?.querySelector('[data-testid="secondary"]')).toBeTruthy();
+  });
+
+  it('should render .split__footer containing footer slot', async () => {
+    await TestBed.configureTestingModule({
+      imports: [TestHostComponent],
+    }).compileComponents();
+
+    const fixture = TestBed.createComponent(TestHostComponent);
+    fixture.detectChanges();
+
+    const el = fixture.nativeElement as HTMLElement;
+    const footer = el.querySelector('.split__footer');
+    expect(footer).toBeTruthy();
+    expect(footer?.querySelector('[data-testid="footer"]')).toBeTruthy();
   });
 });

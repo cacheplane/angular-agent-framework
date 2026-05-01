@@ -1,0 +1,141 @@
+# ChatTraceComponent
+
+`ChatTraceComponent` is a primitive that renders a collapsible trace row for a single agent execution step. It shows a status indicator, label, optional metadata, and default slot content. Traces auto-expand while running and auto-collapse when done.
+
+**Selector:** `chat-trace`
+
+**Import:**
+
+```typescript
+import { ChatTraceComponent } from '@ngaf/chat';
+```
+
+## When to Use It
+
+Use `ChatTraceComponent` when you want to expose agent reasoning steps, tool calls, or subgraph transitions to the user. It pairs well with the `<chat-message-list>` primitive to interleave execution traces with message bubbles.
+
+For a fully managed tool call display, see [`<chat-tool-call-card>`](/docs/chat/components/chat-tool-call-card).
+
+## Basic Usage
+
+```html
+<chat-trace state="running">
+  Searching knowledge base...
+</chat-trace>
+```
+
+## API
+
+### Inputs
+
+| Input | Type | Default | Description |
+|-------|------|---------|-------------|
+| `state` | `'pending' \| 'running' \| 'done' \| 'error'` | `'pending'` | Current execution state. Controls the status icon and auto-expand behavior |
+
+### Outputs
+
+None. State transitions are driven by the `state` input.
+
+### Slots
+
+| Slot | Selector | Description |
+|------|----------|-------------|
+| Default | (none) | Main trace content. Shown when the trace is expanded |
+| Label | `[traceLabel]` | Custom label text in the trace header. Defaults to the state name |
+| Icon | `[traceIcon]` | Custom icon in the trace header. Replaces the default state icon |
+| Meta | `[traceMeta]` | Additional metadata shown in the header (e.g., duration, token count) |
+
+### Methods
+
+| Method | Description |
+|--------|-------------|
+| `toggle()` | Manually toggles the expanded/collapsed state |
+
+## State Behavior
+
+| State | Auto-expand | Status icon | Color |
+|-------|------------|-------------|-------|
+| `pending` | No | Clock | Muted |
+| `running` | Yes | Spinner | Warning |
+| `done` | Collapses | Checkmark | Success |
+| `error` | Yes | X mark | Error |
+
+When `state` transitions from any value to `'running'`, the trace automatically expands. When `state` transitions to `'done'`, the trace automatically collapses. When `state` transitions to `'error'`, the trace automatically expands so the error content is visible.
+
+## Examples
+
+### Tool call in progress
+
+```html
+<chat-trace [state]="toolState()">
+  <span traceLabel>{{ toolName }}</span>
+  <span traceMeta>{{ elapsedMs }}ms</span>
+
+  <pre>{{ toolArgs | json }}</pre>
+</chat-trace>
+```
+
+### Custom icon
+
+```html
+<chat-trace state="running">
+  <svg traceIcon aria-hidden="true"><!-- search icon --></svg>
+  <span traceLabel>Searching documents</span>
+
+  <p>Query: "{{ searchQuery }}"</p>
+</chat-trace>
+```
+
+### Full component example
+
+```typescript
+import { Component, ChangeDetectionStrategy, signal } from '@angular/core';
+import { agent } from '@ngaf/langgraph';
+import { ChatTraceComponent, ChatMessageListComponent } from '@ngaf/chat';
+
+@Component({
+  selector: 'app-traced-chat',
+  standalone: true,
+  imports: [ChatMessageListComponent, ChatTraceComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <div style="height: 100vh; display: flex; flex-direction: column;">
+      <chat-message-list [agent]="chatAgent">
+        <ng-template chatMessageTemplate="ai" let-message>
+          <!-- Show tool traces before the AI message -->
+          @for (step of chatAgent.steps(); track step.id) {
+            <chat-trace [state]="step.state">
+              <span traceLabel>{{ step.name }}</span>
+              <pre>{{ step.output | json }}</pre>
+            </chat-trace>
+          }
+          <div>{{ message.content }}</div>
+        </ng-template>
+      </chat-message-list>
+    </div>
+  `,
+})
+export class TracedChatComponent {
+  protected readonly chatAgent = agent({
+    assistantId: 'chat_agent',
+    threadId: signal(null),
+  });
+}
+```
+
+## Styling
+
+The component uses the following `--ngaf-chat-*` tokens:
+
+| Token | Applied to |
+|---|---|
+| `--ngaf-chat-surface-alt` | Trace row background |
+| `--ngaf-chat-separator` | Row border |
+| `--ngaf-chat-radius-card` | Row border radius |
+| `--ngaf-chat-text` | Label and content |
+| `--ngaf-chat-text-muted` | Meta text, icon |
+| `--ngaf-chat-warning-text` | Running state icon |
+| `--ngaf-chat-success` | Done state icon |
+| `--ngaf-chat-error-text` | Error state icon |
+
+See [Theming](/docs/chat/guides/theming) for the full token reference.

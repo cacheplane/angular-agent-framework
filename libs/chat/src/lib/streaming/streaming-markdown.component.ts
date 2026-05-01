@@ -10,7 +10,7 @@ import {
 } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
 import { createStreamingMarkdownRenderer, type StreamingMarkdownRenderer } from './streaming-markdown';
-import { renderMarkdownToString } from '../styles/chat-markdown';
+import { renderMarkdownToString } from './markdown-render';
 
 /**
  * Renders markdown content using a streaming append-only DOM renderer
