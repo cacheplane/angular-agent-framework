@@ -1,0 +1,71 @@
+# Quick Start
+
+Bind `<chat>` from `@ngaf/chat` to an AG-UI backend in 5 minutes.
+
+<Callout type="info" title="Prerequisites">
+Angular 20+ project with Node.js 22+. If you need setup help, see the [Installation](/docs/ag-ui/getting-started/installation) guide.
+</Callout>
+
+<Steps>
+<Step title="Install the packages">
+
+```bash
+npm install @ngaf/chat @ngaf/ag-ui
+```
+
+</Step>
+<Step title="Configure the provider">
+
+Add `provideAgUiAgent()` to your application config with your AG-UI backend URL.
+
+```ts
+// app.config.ts
+import { ApplicationConfig } from '@angular/core';
+import { provideAgUiAgent } from '@ngaf/ag-ui';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideAgUiAgent({ url: 'http://localhost:3000/agent' }),
+  ],
+};
+```
+
+For offline development without a backend, swap to `provideFakeAgUiAgent({})` — it serves canned streaming responses for UI work.
+
+</Step>
+<Step title="Use in a component">
+
+```ts
+import { Component, inject } from '@angular/core';
+import { ChatComponent } from '@ngaf/chat';
+import { AG_UI_AGENT } from '@ngaf/ag-ui';
+
+@Component({
+  selector: 'app-streaming',
+  standalone: true,
+  imports: [ChatComponent],
+  template: `<chat [agent]="agent" />`,
+})
+export class StreamingComponent {
+  protected readonly agent = inject(AG_UI_AGENT);
+}
+```
+
+That's it. The `<chat>` composition handles streaming messages, tool calls, errors, and submit — all bound to the AG-UI backend through the `Agent` contract.
+
+</Step>
+</Steps>
+
+## What to read next
+
+- The [`@ngaf/chat` Components](/docs/chat/components/chat) reference covers the primitives the `<chat>` composition uses internally — handy if you want to compose your own layout.
+- Looking for LangGraph instead of AG-UI? See [`@ngaf/langgraph`](/docs/agent/getting-started/quickstart).
+
+## Switching backends without changing UI
+
+The point of the runtime-neutral `Agent` contract is that swapping backends is a one-line change in `app.config.ts`. The component code stays the same:
+
+```diff
+- providers: [provideAgent({ apiUrl: '...' })],   // LangGraph
++ providers: [provideAgUiAgent({ url: '...' })],  // AG-UI
+```

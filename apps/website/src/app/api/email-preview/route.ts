@@ -22,9 +22,9 @@ const TEMPLATES: Record<string, () => { subject: string; html: string }> = {
   'lead-notification': () => ({
     subject: 'New lead: Brian at Cacheplane',
     html: leadNotificationHtml({
-      name: 'Brian Love',
-      email: 'brian@cacheplane.io',
-      company: 'Cacheplane',
+      name: 'Sample Lead',
+      email: 'demo@example.com',
+      company: 'Example Corp',
       message: 'Interested in the pilot program for our Angular + LangGraph project.',
       ts: new Date().toISOString(),
     }),

@@ -1,0 +1,52 @@
+# Introduction
+
+`@ngaf/ag-ui` is the runtime adapter that wraps an [AG-UI](https://github.com/ag-ui-protocol/ag-ui) `AbstractAgent` into the runtime-neutral `Agent` contract from `@ngaf/chat`. The chat UI primitives consume the Agent contract; the AG-UI adapter translates between the contract and the AG-UI event protocol.
+
+<Callout type="info" title="What is AG-UI?">
+AG-UI is the open agent-to-UI protocol from the CopilotKit ecosystem. It standardizes how agent runtimes stream events (messages, tool calls, state updates) to a frontend. Used by **CrewAI**, **Mastra**, **Microsoft Agent Framework**, **AG2**, **Pydantic AI**, **AWS Strands**, and the **CopilotKit runtime**. One adapter unlocks all of them.
+</Callout>
+
+## How it fits
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  @ngaf/chat  (UI primitives — runtime-neutral)              │
+│  <chat>, <chat-messages>, <chat-input>, <chat-debug>, …     │
+└─────────────────────────┬───────────────────────────────────┘
+                          │ Agent contract (signals + events$)
+                          │
+              ┌───────────┴───────────┐
+              ▼                       ▼
+   @ngaf/langgraph              @ngaf/ag-ui
+   (toAgent: AgentRef→Agent)    (toAgent: AbstractAgent→Agent)
+              │                       │
+              ▼                       ▼
+   LangGraph Platform           Any AG-UI backend
+                                (CrewAI, Mastra, MS AF,
+                                 CopilotKit runtime, …)
+```
+
+## What you get
+
+- **`toAgent(source: AbstractAgent): Agent`** — wraps any `AbstractAgent` subclass (custom transports, mocks).
+- **`provideAgUiAgent({ url })`** — DI convenience that instantiates `HttpAgent` under the hood for the common SSE/HTTP case.
+- **`FakeAgent`** — in-process `AbstractAgent` subclass that emits canned streaming events for offline demos and tests.
+
+## What's covered
+
+Scope of the first release:
+- `messages` (streaming token deltas via `TEXT_MESSAGE_*` events)
+- `status` / `isLoading` / `error` (lifecycle via `RUN_STARTED/FINISHED/ERROR`)
+- `toolCalls` (streaming tool calls via `TOOL_CALL_*` events)
+- `state` (snapshots and JSON-Patch deltas)
+- `events$` (custom events; discriminates `state_update`)
+
+Out of scope for now (use `@ngaf/langgraph` if you need these):
+- Interrupts
+- Subagents
+- History / time-travel
+
+## Next steps
+
+- [Quick Start](/docs/ag-ui/getting-started/quickstart) — bind `<chat>` to an AG-UI backend in 5 minutes.
+- [Installation](/docs/ag-ui/getting-started/installation) — npm install + provider setup.

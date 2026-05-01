@@ -1,0 +1,97 @@
+# Installation
+
+## Prerequisites
+
+- Angular 20 or later
+- Node.js 22+
+- An AG-UI-compatible backend running locally or remotely (CrewAI, Mastra, Microsoft Agent Framework, AG2, Pydantic AI, AWS Strands, CopilotKit runtime, or your own subclass of `AbstractAgent`)
+
+## Install packages
+
+```bash
+npm install @ngaf/chat @ngaf/ag-ui
+```
+
+`@ngaf/chat` provides the chat UI primitives. `@ngaf/ag-ui` provides the adapter that wires an AG-UI backend into the `Agent` contract those primitives consume.
+
+## Configure the provider
+
+In your app config:
+
+```ts
+import { ApplicationConfig } from '@angular/core';
+import { provideAgUiAgent } from '@ngaf/ag-ui';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideAgUiAgent({
+      url: 'http://localhost:3000/agent',  // your AG-UI backend
+    }),
+  ],
+};
+```
+
+`provideAgUiAgent` accepts:
+
+| Option | Type | Description |
+|---|---|---|
+| `url` | `string` | **Required.** AG-UI backend HTTP/SSE endpoint. |
+| `agentId` | `string` | Optional. Identifies a specific agent on the backend. |
+| `threadId` | `string` | Optional. Resume an existing conversation thread. |
+| `headers` | `Record<string, string>` | Optional. Custom request headers (auth, tracing). |
+
+## Use in a component
+
+```ts
+import { Component, inject } from '@angular/core';
+import { ChatComponent } from '@ngaf/chat';
+import { AG_UI_AGENT } from '@ngaf/ag-ui';
+
+@Component({
+  selector: 'app-streaming',
+  standalone: true,
+  imports: [ChatComponent],
+  template: `<chat [agent]="agent" />`,
+})
+export class StreamingComponent {
+  protected readonly agent = inject(AG_UI_AGENT);
+}
+```
+
+## No backend yet?
+
+Use the `FakeAgent` for offline demos:
+
+```ts
+import { provideFakeAgUiAgent } from '@ngaf/ag-ui';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideFakeAgUiAgent({
+      tokens: ['Hello', ' from', ' a', ' fake', ' agent.'],
+      delayMs: 60,
+    }),
+  ],
+};
+```
+
+`FakeAgent` extends `AbstractAgent` and emits a canned `RUN_STARTED → TEXT_MESSAGE_START → TEXT_MESSAGE_CONTENT × N → TEXT_MESSAGE_END → RUN_FINISHED` sequence. Drop-in replacement for `provideAgUiAgent({ url })` while you're prototyping.
+
+## Custom transport
+
+If you have a backend that speaks AG-UI but not over HTTP, subclass `AbstractAgent` directly and feed it to `toAgent`:
+
+```ts
+import { AbstractAgent, type RunAgentInput, type BaseEvent } from '@ag-ui/client';
+import { Observable } from 'rxjs';
+import { toAgent } from '@ngaf/ag-ui';
+
+class MyCustomAgent extends AbstractAgent {
+  protected run(input: RunAgentInput): Observable<BaseEvent> {
+    // Your custom transport (WebSocket, in-process worker, etc.)
+    // emits BaseEvent events.
+  }
+}
+
+const agent = toAgent(new MyCustomAgent());
+```

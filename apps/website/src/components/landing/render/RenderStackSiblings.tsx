@@ -22,6 +22,15 @@ const SIBLINGS = [
     href: '/chat',
     ctaLabel: 'Explore Chat',
   },
+  {
+    tag: 'AG-UI',
+    pkg: '@ngaf/ag-ui',
+    color: tokens.colors.accent,
+    rgb: '0,64,144',
+    headline: 'Run any AG-UI compatible backend',
+    href: 'https://github.com/cacheplane/angular-agent-framework/tree/main/libs/ag-ui',
+    ctaLabel: 'Explore AG-UI',
+  },
 ];
 
 export function RenderStackSiblings() {

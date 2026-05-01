@@ -40,6 +40,18 @@ const LIBRARIES = [
     href: '/chat',
     ctaLabel: 'Explore Chat',
   },
+  {
+    id: 'ag-ui',
+    tag: 'AG-UI',
+    pkg: '@ngaf/ag-ui',
+    color: tokens.colors.accent,
+    rgb: '0,64,144',
+    headline: 'Run any AG-UI compatible backend',
+    description: "AG-UI is the open agent-to-UI protocol used by CrewAI, Mastra, Microsoft Agent Framework, AG2, Pydantic AI, AWS Strands, and the CopilotKit runtime. The @ngaf/ag-ui adapter wraps an AbstractAgent into the same Agent contract @ngaf/chat consumes — same UI, different runtime.",
+    pills: ['CrewAI', 'Mastra', 'Microsoft AF', 'CopilotKit'],
+    href: 'https://github.com/cacheplane/angular-agent-framework/tree/main/libs/ag-ui',
+    ctaLabel: 'Explore AG-UI',
+  },
 ];
 
 function Connector({ fromRgb, toRgb }: { fromRgb: string; toRgb: string }) {
@@ -90,7 +102,7 @@ export function TheStack() {
           color: tokens.colors.textPrimary,
           marginBottom: 10,
         }}>
-          Three libraries. One architecture.<br />
+          Four libraries. One architecture.<br />
           Every layer you need.
         </h2>
         <p style={{
@@ -101,7 +113,7 @@ export function TheStack() {
           maxWidth: 520,
           margin: '0 auto',
         }}>
-          Your LangGraph agent already works. These three libraries ship it.
+          Whatever your agent runtime — LangGraph, AG-UI, or your own backend — these libraries ship it.
         </p>
       </motion.div>
 

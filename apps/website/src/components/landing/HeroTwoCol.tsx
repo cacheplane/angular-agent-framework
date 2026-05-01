@@ -2,7 +2,7 @@ import { GenerativeUIFrame } from './GenerativeUIFrame';
 import { CopyPromptButton } from '../docs/CopyPromptButton';
 import { tokens } from '@ngaf/design-tokens';
 
-const SETUP_SNIPPET = 'npm install @ngaf/langgraph\n\n// app.config.ts\nprovideAgent({ apiUrl: \'http://localhost:2024\' })';
+const SETUP_SNIPPET = 'npm install @ngaf/chat @ngaf/langgraph\n\n// app.config.ts\nprovideAgent({ apiUrl: \'http://localhost:2024\' })\n\n// or with @ngaf/ag-ui:\nprovideAgUiAgent({ url: \'http://localhost:3000/agent\' })';
 
 function LangChainBadge() {
   return (
@@ -21,6 +21,27 @@ function LangChainBadge() {
         fontSize: 7, fontWeight: 700, color: tokens.colors.accent, lineHeight: 1,
       }}>LC</span>
       LangChain
+    </span>
+  );
+}
+
+function AgUiBadge() {
+  return (
+    <span style={{
+      display: 'inline-flex', alignItems: 'center', gap: 6,
+      background: 'rgba(0, 64, 144, 0.06)',
+      border: '1px solid rgba(0, 64, 144, 0.18)',
+      borderRadius: 20, padding: '4px 10px 4px 8px',
+      fontFamily: 'var(--font-mono)', fontSize: 11, color: tokens.colors.textPrimary,
+    }}>
+      <span style={{
+        width: 14, height: 14, borderRadius: 3,
+        background: 'rgba(0, 64, 144, 0.12)',
+        border: '1px solid rgba(0, 64, 144, 0.25)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        fontSize: 7, fontWeight: 700, color: tokens.colors.accent, lineHeight: 1,
+      }}>AG</span>
+      AG-UI
     </span>
   );
 }
@@ -74,6 +95,7 @@ export async function HeroTwoCol() {
       <div className="hero-left">
         <div style={{ display: 'flex', gap: 8, marginBottom: 28, flexWrap: 'wrap' }}>
           <LangChainBadge />
+          <AgUiBadge />
           <AngularBadge />
         </div>
 
@@ -86,7 +108,7 @@ export async function HeroTwoCol() {
           margin: 0,
           marginBottom: 20,
         }}>
-          The Enterprise Agent Framework for LangChain and{' '}
+          The Enterprise Agent Framework for{' '}
           <span style={{ color: tokens.colors.angularRed }}>Angular</span>
         </h1>
 
@@ -100,7 +122,7 @@ export async function HeroTwoCol() {
           margin: 0,
           marginBottom: 32,
         }}>
-          Signal-native streaming for LangGraph &mdash; production patterns your Angular team can own.
+          Signal-native chat UI for any agent runtime &mdash; LangGraph, AG-UI, or your own backend.
         </p>
 
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 12 }}>
@@ -110,7 +132,7 @@ export async function HeroTwoCol() {
             fontSize: 12,
             color: tokens.colors.textMuted,
           }}>
-            npm install @ngaf/langgraph
+            npm install @ngaf/chat @ngaf/langgraph
           </span>
         </div>
       </div>

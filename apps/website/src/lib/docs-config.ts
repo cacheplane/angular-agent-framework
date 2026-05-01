@@ -1,4 +1,4 @@
-export type LibraryId = 'agent' | 'render' | 'chat';
+export type LibraryId = 'agent' | 'render' | 'chat' | 'ag-ui';
 
 export interface DocsPage {
   title: string;
@@ -176,6 +176,23 @@ export const docsConfig: DocsLibrary[] = [
           { title: 'createMockAgentRef()', slug: 'create-mock-agent-ref', section: 'api' },
           { title: 'createContentClassifier()', slug: 'content-classifier', section: 'api' },
           { title: 'createParseTreeStore()', slug: 'parse-tree-store', section: 'api' },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'ag-ui',
+    title: 'AG-UI',
+    description: 'Adapter for any AG-UI-compatible backend (CrewAI, Mastra, Microsoft AF, AG2, Pydantic AI, AWS Strands, CopilotKit runtime)',
+    sections: [
+      {
+        title: 'Getting Started',
+        id: 'getting-started',
+        color: 'blue',
+        pages: [
+          { title: 'Introduction', slug: 'introduction', section: 'getting-started' },
+          { title: 'Quick Start', slug: 'quickstart', section: 'getting-started' },
+          { title: 'Installation', slug: 'installation', section: 'getting-started' },
         ],
       },
     ],
