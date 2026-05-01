@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-import { signLicense, type LicenseClaims } from '@cacheplane/licensing';
+import { signLicense, type LicenseClaims } from '@ngaf/licensing';
 import type { MintableTier } from './tier.js';
 
 export interface MintInput {

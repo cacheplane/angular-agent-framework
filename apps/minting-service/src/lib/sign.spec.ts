@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import * as ed from '@noble/ed25519';
-import { verifyLicense } from '@cacheplane/licensing';
+import { verifyLicense } from '@ngaf/licensing';
 import { mintToken } from './sign.js';
 
 async function makeKeypair() {

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import { parseArgs, runRemint, type RemintDeps } from './remint.js';
-import type { License } from '@cacheplane/db';
+import type { License } from '@ngaf/db';
 
 function makeLicense(overrides: Partial<License> = {}): License {
   return {

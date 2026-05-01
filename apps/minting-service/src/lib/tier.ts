@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-import type { LicenseTier } from '@cacheplane/licensing';
+import type { LicenseTier } from '@ngaf/licensing';
 
 export type MintableTier = Extract<LicenseTier, 'developer-seat' | 'app-deployment'>;
 

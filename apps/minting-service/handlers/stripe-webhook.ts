@@ -8,7 +8,7 @@ import {
   upsertLicense,
   getLicense,
   revokeLicense,
-} from '@cacheplane/db';
+} from '@ngaf/db';
 import { loadEnv } from '../src/lib/env.js';
 import { getStripe } from '../src/lib/stripe.js';
 import { mintToken } from '../src/lib/sign.js';
