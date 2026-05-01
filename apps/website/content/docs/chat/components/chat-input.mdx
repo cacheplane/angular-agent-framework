@@ -27,7 +27,7 @@ import { ChatInputComponent, submitMessage } from '@ngaf/chat';
 
 | Input | Type | Default | Description |
 |-------|------|---------|-------------|
-| `ref` | `AgentRef<any, any>` | **Required** | The agent ref to submit messages to |
+| `ref` | `LangGraphAgent<any, any>` | **Required** | The agent to submit messages to |
 | `submitOnEnter` | `boolean` | `true` | When `true`, pressing Enter submits the message. Shift+Enter inserts a newline. When `false`, Enter always inserts a newline. |
 | `placeholder` | `string` | `''` | Placeholder text shown when the input is empty |
 
@@ -72,7 +72,7 @@ The `submitMessage()` function is exported as a standalone utility for programma
 ```typescript
 import { submitMessage } from '@ngaf/chat';
 
-function sendGreeting(ref: AgentRef<any, any>) {
+function sendGreeting(ref: LangGraphAgent<any, any>) {
   const result = submitMessage(ref, 'Hello!');
   // result is 'Hello!' or null if the text was empty
 }
@@ -82,14 +82,14 @@ function sendGreeting(ref: AgentRef<any, any>) {
 
 ```typescript
 function submitMessage(
-  ref: AgentRef<any, any>,
+  ref: LangGraphAgent<any, any>,
   text: string
 ): string | null
 ```
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `ref` | `AgentRef<any, any>` | The agent ref to submit to |
+| `ref` | `LangGraphAgent<any, any>` | The agent to submit to |
 | `text` | `string` | The message text to send |
 
 **Returns:** The trimmed message string if submitted, or `null` if the trimmed text was empty.

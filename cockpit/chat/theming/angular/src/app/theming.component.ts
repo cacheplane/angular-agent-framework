@@ -3,7 +3,7 @@ import { Component, signal } from '@angular/core';
 import { TitleCasePipe } from '@angular/common';
 import { ChatComponent } from '@ngaf/chat';
 import { ExampleChatLayoutComponent } from '@ngaf/example-layouts';
-import { agent, toAgent } from '@ngaf/langgraph';
+import { agent } from '@ngaf/langgraph';
 import { environment } from '../environments/environment';
 
 const THEMES: Record<string, Record<string, string>> = {
@@ -52,7 +52,7 @@ const THEMES: Record<string, Record<string, string>> = {
   imports: [ChatComponent, ExampleChatLayoutComponent, TitleCasePipe],
   template: `
     <example-chat-layout sidebarWidth="w-72">
-      <chat main [agent]="chatAgent" class="flex-1 min-w-0" />
+      <chat main [agent]="agent" class="flex-1 min-w-0" />
       <div sidebar class="p-4 space-y-4" style="background: var(--chat-bg, #171717); color: var(--chat-text, #e0e0e0);">
         <h3 class="text-xs font-semibold uppercase tracking-wide"
             style="color: var(--chat-text-muted, #777);">Theme Picker</h3>
@@ -84,11 +84,10 @@ const THEMES: Record<string, Record<string, string>> = {
   `,
 })
 export class ThemingComponent {
-  protected readonly stream = agent({
+  protected readonly agent = agent({
     apiUrl: environment.langGraphApiUrl,
     assistantId: environment.streamingAssistantId,
   });
-  protected readonly chatAgent = toAgent(this.stream);
 
   protected readonly themeNames = Object.keys(THEMES);
   protected readonly activeTheme = signal('dark');

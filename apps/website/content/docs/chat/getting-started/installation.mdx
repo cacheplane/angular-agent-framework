@@ -9,7 +9,7 @@ Detailed setup guide for `@ngaf/chat` in your Angular application.
 `@ngaf/chat` uses Angular Signals, the `input()` function, and `contentChildren()`. Angular 20 or later is required.
 </Step>
 <Step title="@ngaf/agent">
-The chat components read streaming state from `AgentRef`, which is provided by `@ngaf/agent`. You must have `provideAgent()` configured before adding chat.
+The chat components read streaming state from `LangGraphAgent`, which is returned by `agent()` from `@ngaf/langgraph`. You must have `provideAgent()` configured before adding chat.
 </Step>
 <Step title="Node.js 18+">
 Required for the build toolchain and package installation.

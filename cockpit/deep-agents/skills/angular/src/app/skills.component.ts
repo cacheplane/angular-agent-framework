@@ -1,7 +1,7 @@
 import { Component, computed } from '@angular/core';
 import { ChatComponent, views } from '@ngaf/chat';
 import { ExampleChatLayoutComponent } from '@ngaf/example-layouts';
-import { agent, toAgent } from '@ngaf/langgraph';
+import { agent } from '@ngaf/langgraph';
 import { signalStateStore } from '@ngaf/render';
 import { environment } from '../environments/environment';
 import { CalculatorResultComponent } from './views/calculator-result.component';
@@ -33,7 +33,7 @@ interface SkillInvocation {
   imports: [ChatComponent, ExampleChatLayoutComponent],
   template: `
     <example-chat-layout sidebarWidth="w-72">
-      <chat main [agent]="chatAgent" [views]="ui" [store]="uiStore" class="flex-1 min-w-0" />
+      <chat main [agent]="agent" [views]="ui" [store]="uiStore" class="flex-1 min-w-0" />
       <div sidebar class="p-4 space-y-3" style="background: var(--chat-bg, #171717); color: var(--chat-text, #e0e0e0);">
         <h3 class="text-xs font-semibold uppercase tracking-wide"
             style="color: var(--chat-text-muted, #777);">Skill Invocations</h3>
@@ -71,11 +71,10 @@ export class SkillsComponent {
   readonly ui = views({ 'calculator-result': CalculatorResultComponent, 'word-count-result': WordCountResultComponent });
   readonly uiStore = signalStateStore({});
 
-  protected readonly stream = agent({
+  protected readonly agent = agent({
     apiUrl: environment.langGraphApiUrl,
     assistantId: environment.streamingAssistantId,
   });
-  protected readonly chatAgent = toAgent(this.stream);
 
   private readonly SKILL_NAMES = new Set(['calculator', 'word_count', 'summarize']);
 
@@ -86,7 +85,7 @@ export class SkillsComponent {
    * each with its corresponding tool result message via tool_call_id.
    */
   protected readonly invocations = computed<SkillInvocation[]>(() => {
-    const msgs = this.stream.messages();
+    const msgs = this.agent.langGraphMessages();
     const resultMap = new Map<string, string>();
 
     // Build a lookup of tool_call_id -> result content from tool messages

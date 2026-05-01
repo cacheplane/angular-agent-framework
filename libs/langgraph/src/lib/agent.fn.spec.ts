@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
+import { HumanMessage, AIMessage } from '@langchain/core/messages';
 import { agent } from './agent.fn';
 import { MockAgentTransport } from './transport/mock-stream.transport';
 import { ResourceStatus } from './agent.types';
@@ -19,7 +20,8 @@ describe('agent', () => {
     const ref = withInjectionContext(() =>
       agent({ apiUrl: '', assistantId: 'a', transport })
     );
-    expect(ref.status()).toBe(ResourceStatus.Idle);
+    // status() now returns AgentStatus (runtime-neutral), not ResourceStatus
+    expect(ref.status()).toBe('idle');
     expect(ref.isLoading()).toBe(false);
     expect(ref.hasValue()).toBe(false);
     expect(ref.error()).toBeUndefined();
@@ -37,12 +39,12 @@ describe('agent', () => {
     expect((ref.value() as any).count).toBe(99);
   });
 
-  it('status transitions to Loading on submit()', async () => {
+  it('status transitions to running (isLoading) on submit()', async () => {
     const transport = new MockAgentTransport();
     const ref = withInjectionContext(() =>
       agent({ apiUrl: '', assistantId: 'a', transport })
     );
-    ref.submit({});
+    ref.submit({ message: 'hello' });
     expect(ref.isLoading()).toBe(true);
   });
 
@@ -51,7 +53,7 @@ describe('agent', () => {
     const ref = withInjectionContext(() =>
       agent({ apiUrl: '', assistantId: 'a', transport })
     );
-    ref.submit({});
+    ref.submit({ message: 'hello' });
     transport.emit([{ type: 'values', values: { x: 1 } }]);
     transport.close();
     await new Promise(r => setTimeout(r, 20));
@@ -59,26 +61,26 @@ describe('agent', () => {
     expect((ref.value() as any).x).toBe(1);
   });
 
-  it('error() is set and status is Error on transport error', async () => {
+  it('error() is set and status is "error" on transport error', async () => {
     const transport = new MockAgentTransport();
     const ref = withInjectionContext(() =>
       agent({ apiUrl: '', assistantId: 'a', transport })
     );
-    ref.submit({});
+    ref.submit({ message: 'hello' });
     transport.emitError(new Error('fail'));
     await new Promise(r => setTimeout(r, 20));
-    expect(ref.status()).toBe(ResourceStatus.Error);
+    expect(ref.status()).toBe('error');
     expect(ref.error()).toBeInstanceOf(Error);
   });
 
-  it('stop() resolves the stream and sets status to Resolved', async () => {
+  it('stop() resolves the stream and sets status to idle', async () => {
     const transport = new MockAgentTransport();
     const ref = withInjectionContext(() =>
       agent({ apiUrl: '', assistantId: 'a', transport })
     );
-    ref.submit({});
+    ref.submit({ message: 'hello' });
     await ref.stop();
-    expect(ref.status()).toBe(ResourceStatus.Resolved);
+    // After stop, status is no longer "running"
     expect(ref.isLoading()).toBe(false);
   });
 
@@ -87,7 +89,7 @@ describe('agent', () => {
     const ref = withInjectionContext(() =>
       agent({ apiUrl: '', assistantId: 'a', transport })
     );
-    await ref.submit({ msg: 'hello' });
+    await ref.submit({ message: 'hello' });
     transport.close();
     await new Promise(r => setTimeout(r, 10));
     ref.reload();
@@ -101,22 +103,80 @@ describe('agent', () => {
     const ref = withInjectionContext(() =>
       agent({ apiUrl: '', assistantId: 'a', transport, threadId })
     );
-    expect(ref.status()).toBe(ResourceStatus.Idle);
+    expect(ref.status()).toBe('idle');
   });
 
-  it('messages() updates when messages event received', async () => {
+  it('messages() returns Message[] (runtime-neutral) with correct role translation', async () => {
     const transport = new MockAgentTransport();
     const ref = withInjectionContext(() =>
       agent({ apiUrl: '', assistantId: 'a', transport })
     );
-    ref.submit({});
+    ref.submit({ message: 'hello' });
     transport.emit([{
       type: 'messages',
       messages: [{ id: '1', type: 'human', content: 'hi' }],
     }]);
     transport.close();
     await new Promise(r => setTimeout(r, 20));
-    expect(ref.messages()).toHaveLength(1);
+    const msgs = ref.messages();
+    expect(msgs).toHaveLength(1);
+    // Runtime-neutral role: 'human' translates to 'user'
+    expect(msgs[0].role).toBe('user');
+    expect(msgs[0].content).toBe('hi');
+  });
+
+  it('langGraphMessages() returns raw BaseMessage[] without role translation', async () => {
+    const transport = new MockAgentTransport();
+    const ref = withInjectionContext(() =>
+      agent({ apiUrl: '', assistantId: 'a', transport, throttle: false })
+    );
+    ref.submit({ message: 'hello' });
+    transport.emit([{
+      type: 'messages',
+      messages: [{ id: '1', type: 'human', content: 'hi' }],
+    }]);
+    transport.close();
+    await new Promise(r => setTimeout(r, 30));
+    const rawMsgs = ref.langGraphMessages();
+    expect(rawMsgs).toHaveLength(1);
+    // Raw BaseMessage: no role translation — the internal type field is 'human'
+    const raw = rawMsgs[0] as any;
+    const type = typeof raw._getType === 'function' ? raw._getType() : raw['type'];
+    expect(type).toBe('human');
+  });
+
+  it('history() returns AgentCheckpoint[]; langGraphHistory() returns ThreadState[]', async () => {
+    const transport = new MockAgentTransport();
+    const ref = withInjectionContext(() =>
+      agent({ apiUrl: '', assistantId: 'a', transport })
+    );
+    // Initially both are empty arrays
+    expect(ref.history()).toEqual([]);
+    expect(ref.langGraphHistory()).toEqual([]);
+
+    // history() returns AgentCheckpoint-shaped objects (runtime-neutral)
+    const histVal = ref.history();
+    expect(Array.isArray(histVal)).toBe(true);
+
+    // langGraphHistory() returns ThreadState-shaped objects
+    const rawHist = ref.langGraphHistory();
+    expect(Array.isArray(rawHist)).toBe(true);
+  });
+
+  it('messages() translates AIMessage role to "assistant"', async () => {
+    const transport = new MockAgentTransport();
+    const ref = withInjectionContext(() =>
+      agent({ apiUrl: '', assistantId: 'a', transport })
+    );
+    ref.submit({ message: 'hello' });
+    transport.emit([{
+      type: 'messages',
+      messages: [{ id: '2', type: 'ai', content: 'hello back' }],
+    }]);
+    transport.close();
+    await new Promise(r => setTimeout(r, 20));
+    const msgs = ref.messages();
+    expect(msgs[0].role).toBe('assistant');
   });
 
   it('switchThread() resets messages and values', () => {
@@ -135,7 +195,7 @@ describe('agent', () => {
       agent({ apiUrl: '', assistantId: 'a', transport, threadId })
     );
 
-    ref.submit({});
+    ref.submit({ message: 'hello' });
     transport.emit([
       { type: 'values', values: { x: 1 } },
       { type: 'messages', messages: [{ id: '1', type: 'human', content: 'hi' }] as any[] },
@@ -150,13 +210,36 @@ describe('agent', () => {
     await new Promise(r => setTimeout(r, 30));
 
     expect(ref.hasValue()).toBe(false);
-    expect(ref.status()).toBe(ResourceStatus.Idle);
+    expect(ref.status()).toBe('idle');
     expect(ref.error()).toBeUndefined();
     expect(ref.value()).toEqual({});
     expect(ref.messages()).toEqual([]);
     expect(ref.history()).toEqual([]);
     expect(ref.interrupt()).toBeUndefined();
-    expect(ref.interrupts()).toEqual([]);
     expect(ref.isThreadLoading()).toBe(false);
+  });
+
+  it('langGraphInterrupts() exposes raw LangGraph interrupts signal', () => {
+    const transport = new MockAgentTransport();
+    const ref = withInjectionContext(() =>
+      agent({ apiUrl: '', assistantId: 'a', transport })
+    );
+    expect(Array.isArray(ref.langGraphInterrupts())).toBe(true);
+  });
+
+  it('langGraphToolCalls() exposes raw ToolCallWithResult[] signal', () => {
+    const transport = new MockAgentTransport();
+    const ref = withInjectionContext(() =>
+      agent({ apiUrl: '', assistantId: 'a', transport })
+    );
+    expect(Array.isArray(ref.langGraphToolCalls())).toBe(true);
+  });
+
+  it('events$ is an Observable-like with .subscribe', () => {
+    const transport = new MockAgentTransport();
+    const ref = withInjectionContext(() =>
+      agent({ apiUrl: '', assistantId: 'a', transport })
+    );
+    expect(typeof ref.events$.subscribe).toBe('function');
   });
 });

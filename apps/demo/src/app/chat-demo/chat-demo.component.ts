@@ -1,6 +1,5 @@
 import { Component, Input, OnInit, Injector, runInInjectionContext } from '@angular/core';
 import { agent } from '@ngaf/langgraph';
-import type { BaseMessage } from '@langchain/core/messages';
 
 @Component({
   selector: 'stream-chat-demo',
@@ -8,7 +7,7 @@ import type { BaseMessage } from '@langchain/core/messages';
   template: `
     <div class="chat-demo">
       <div class="messages" *ngIf="chat">
-        <div *ngFor="let msg of chat.messages()" class="message" [class.ai]="msg.getType() === 'ai'">
+        <div *ngFor="let msg of chat.messages()" class="message" [class.ai]="msg.role === 'assistant'">
           {{ msg.content }}
         </div>
         <div *ngIf="chat.isLoading()" class="loading">Thinking…</div>
@@ -34,14 +33,14 @@ export class ChatDemoComponent implements OnInit {
   @Input() apiUrl = 'http://localhost:2024';
   @Input() assistantId = 'chat_agent';
 
-  chat: ReturnType<typeof agent<{ messages: BaseMessage[] }>> | null = null;
+  chat: ReturnType<typeof agent> | null = null;
 
   constructor(private injector: Injector) {}
 
   ngOnInit() {
     // @Input() values are available in ngOnInit, so use runInInjectionContext
     runInInjectionContext(this.injector, () => {
-      this.chat = agent<{ messages: BaseMessage[] }>({
+      this.chat = agent({
         apiUrl: this.apiUrl,
         assistantId: this.assistantId,
       });
@@ -55,7 +54,6 @@ export class ChatDemoComponent implements OnInit {
     const content = input.value.trim();
     if (!content || !this.chat) return;
     input.value = '';
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    this.chat.submit({ messages: [{ role: 'human', content }] } as any);
+    this.chat.submit({ message: content });
   }
 }

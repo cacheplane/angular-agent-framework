@@ -1,7 +1,7 @@
 import { Component, computed } from '@angular/core';
 import { ChatComponent } from '@ngaf/chat';
 import { ExampleChatLayoutComponent } from '@ngaf/example-layouts';
-import { agent, toAgent } from '@ngaf/langgraph';
+import { agent } from '@ngaf/langgraph';
 import { environment } from '../environments/environment';
 
 /**
@@ -31,7 +31,7 @@ interface Delegation {
   imports: [ChatComponent, ExampleChatLayoutComponent],
   template: `
     <example-chat-layout sidebarWidth="w-72">
-      <chat main [agent]="chatAgent" class="flex-1 min-w-0" />
+      <chat main [agent]="agent" class="flex-1 min-w-0" />
       <div sidebar class="p-4 space-y-2" style="background: var(--chat-bg, #171717); color: var(--chat-text, #e0e0e0);">
         <h3 class="text-xs font-semibold uppercase tracking-wide"
             style="color: var(--chat-text-muted, #777);">Delegations</h3>
@@ -55,11 +55,10 @@ export class SubagentsComponent {
   /**
    * The streaming resource connected to the subagents orchestrator graph.
    */
-  protected readonly stream = agent({
+  protected readonly agent = agent({
     apiUrl: environment.langGraphApiUrl,
     assistantId: environment.streamingAssistantId,
   });
-  protected readonly chatAgent = toAgent(this.stream);
 
   /**
    * Reactive delegation list derived from messages.
@@ -68,7 +67,7 @@ export class SubagentsComponent {
    * ToolMessage results (by tool_call_id) to determine completion status.
    */
   protected readonly delegations = computed<Delegation[]>(() => {
-    const msgs = this.stream.messages();
+    const msgs = this.agent.langGraphMessages();
     const toolResultIds = new Set<string>();
     const errorResultIds = new Set<string>();
 

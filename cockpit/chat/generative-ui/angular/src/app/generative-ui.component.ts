@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 import { Component } from '@angular/core';
 import { ChatComponent, views } from '@ngaf/chat';
-import { agent, toAgent } from '@ngaf/langgraph';
+import { agent } from '@ngaf/langgraph';
 import { ExampleChatLayoutComponent } from '@ngaf/example-layouts';
 import { environment } from '../environments/environment';
 
@@ -27,15 +27,14 @@ const dashboardViews = views({
   imports: [ChatComponent, ExampleChatLayoutComponent],
   template: `
     <example-chat-layout>
-      <chat main [agent]="chatAgent" [views]="dashboardViews" class="flex-1 min-w-0" />
+      <chat main [agent]="agent" [views]="dashboardViews" class="flex-1 min-w-0" />
     </example-chat-layout>
   `,
 })
 export class GenerativeUiComponent {
-  protected readonly agentRef = agent({
+  protected readonly agent = agent({
     apiUrl: environment.langGraphApiUrl,
     assistantId: environment.generativeUiAssistantId,
   });
-  protected readonly chatAgent = toAgent(this.agentRef);
   protected readonly dashboardViews = dashboardViews;
 }

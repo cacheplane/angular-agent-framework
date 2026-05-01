@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 import { Component } from '@angular/core';
 import { ChatDebugComponent } from '@ngaf/chat';
-import { agent, toAgent } from '@ngaf/langgraph';
+import { agent } from '@ngaf/langgraph';
 import { ExampleChatLayoutComponent } from '@ngaf/example-layouts';
 import { environment } from '../environments/environment';
 
@@ -16,14 +16,13 @@ import { environment } from '../environments/environment';
   imports: [ChatDebugComponent, ExampleChatLayoutComponent],
   template: `
     <example-chat-layout>
-      <chat-debug main [agent]="chatAgent" />
+      <chat-debug main [agent]="agent" />
     </example-chat-layout>
   `,
 })
 export class DebugPageComponent {
-  protected readonly stream = agent({
+  protected readonly agent = agent({
     apiUrl: environment.langGraphApiUrl,
     assistantId: environment.streamingAssistantId,
   });
-  protected readonly chatAgent = toAgent(this.stream);
 }

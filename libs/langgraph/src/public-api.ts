@@ -9,7 +9,7 @@ export type { AgentConfig } from './lib/agent.provider';
 // Public types
 export type {
   AgentOptions,
-  AgentRef,
+  LangGraphAgent,
   AgentTransport,
   CustomStreamEvent,
   StreamEvent,
@@ -23,13 +23,10 @@ export type { BagTemplate, InferBag, Interrupt, ThreadState, SubmitOptions }
 // Re-export ResourceStatus shim for convenience
 export { ResourceStatus } from './lib/agent.types';
 
-// Chat adapter
-export { toAgent } from './lib/to-agent';
-
 // Test utilities (always exported — tree-shaken in prod builds)
 export { MockAgentTransport } from './lib/transport/mock-stream.transport';
 export { FetchStreamTransport } from './lib/transport/fetch-stream.transport';
 
-// Mock test utility for LangGraph AgentRef
-export { createMockAgentRef } from './lib/testing/mock-agent-ref';
-export type { MockAgentRef } from './lib/testing/mock-agent-ref';
+// Mock test utility for LangGraph agent
+export { mockLangGraphAgent } from './lib/testing/mock-langgraph-agent';
+export type { MockLangGraphAgent } from './lib/testing/mock-langgraph-agent';

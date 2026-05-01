@@ -3,7 +3,7 @@ import { Component, computed } from '@angular/core';
 import { JsonPipe } from '@angular/common';
 import { ChatComponent, ChatInterruptPanelComponent } from '@ngaf/chat';
 import { ExampleChatLayoutComponent } from '@ngaf/example-layouts';
-import { agent, toAgent } from '@ngaf/langgraph';
+import { agent } from '@ngaf/langgraph';
 import { environment } from '../environments/environment';
 
 /**
@@ -18,11 +18,11 @@ import { environment } from '../environments/environment';
   imports: [ChatComponent, ChatInterruptPanelComponent, JsonPipe, ExampleChatLayoutComponent],
   template: `
     <example-chat-layout sidebarWidth="w-80">
-      <chat main [agent]="chatAgent" class="flex-1 min-w-0" />
+      <chat main [agent]="agent" class="flex-1 min-w-0" />
       <div sidebar class="p-4 space-y-4" style="background: var(--chat-bg, #171717); color: var(--chat-text, #e0e0e0);">
         <h3 class="text-xs font-semibold uppercase tracking-wide"
             style="color: var(--chat-text-muted, #777);">Interrupt Panel</h3>
-        <chat-interrupt-panel [agent]="chatAgent" />
+        <chat-interrupt-panel [agent]="agent" />
         <div class="mt-4">
           <h4 class="text-xs font-semibold uppercase tracking-wide mb-2"
               style="color: var(--chat-text-muted, #777);">Stream Status</h4>
@@ -33,11 +33,10 @@ import { environment } from '../environments/environment';
   `,
 })
 export class InterruptsComponent {
-  protected readonly stream = agent({
+  protected readonly agent = agent({
     apiUrl: environment.langGraphApiUrl,
     assistantId: environment.streamingAssistantId,
   });
-  protected readonly chatAgent = toAgent(this.stream);
 
-  protected readonly streamStatus = computed(() => this.stream.status());
+  protected readonly streamStatus = computed(() => this.agent.status());
 }

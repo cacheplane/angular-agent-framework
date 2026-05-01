@@ -4,4 +4,4 @@ This capability demonstrates real-time token streaming from an AG-UI compatible 
 
 Key components used: `<chat>`, `<chat-messages>`, `<chat-input>`, `<chat-typing-indicator>`. The `provideAgUiAgent` provider handles SSE event processing from the AG-UI streaming endpoint, and the chat components subscribe reactively without any manual subscription management.
 
-The demo illustrates the chat-runtime decoupling: the same `<chat>` composition works with any agent runtime — LangGraph, AG-UI, or others — by conforming to the `AgentRef` interface.
+The demo illustrates the chat-runtime decoupling: the same `<chat>` composition works with any agent runtime — LangGraph, AG-UI, or others — by conforming to the runtime-neutral `Agent` contract from `@ngaf/chat`.

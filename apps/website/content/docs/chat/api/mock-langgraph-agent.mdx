@@ -1,24 +1,24 @@
-# createMockAgentRef()
+# mockLangGraphAgent()
 
-`createMockAgentRef()` creates a mock `AgentRef` with writable signals for testing chat components. Instead of connecting to a real LangGraph agent, you get an object whose signals you can set directly to simulate any agent state.
+`mockLangGraphAgent()` creates a mock `LangGraphAgent` with writable signals for testing chat components. Instead of connecting to a real LangGraph agent, you get an object whose signals you can set directly to simulate any agent state.
 
 **Import:**
 
 ```typescript
-import { createMockAgentRef } from '@ngaf/chat';
+import { mockLangGraphAgent } from '@ngaf/chat';
 ```
 
 ## Signature
 
 ```typescript
-function createMockAgentRef(initial?: {
+function mockLangGraphAgent(initial?: {
   messages?: BaseMessage[];
   status?: ResourceStatus;
   isLoading?: boolean;
   error?: unknown;
   hasValue?: boolean;
   isThreadLoading?: boolean;
-}): MockAgentRef
+}): MockLangGraphAgent
 ```
 
 ### Parameters
@@ -35,17 +35,17 @@ function createMockAgentRef(initial?: {
 | `status` | `ResourceStatus` | `ResourceStatus.Idle` | Initial resource status |
 | `isLoading` | `boolean` | `false` | Initial loading state |
 | `error` | `unknown` | `null` | Initial error value |
-| `hasValue` | `boolean` | `false` | Whether the ref has a resolved value |
+| `hasValue` | `boolean` | `false` | Whether the agent has a resolved value |
 | `isThreadLoading` | `boolean` | `false` | Whether thread data is loading |
 
 ### Returns
 
-A `MockAgentRef` object -- an `AgentRef` with all signals replaced by `WritableSignal` instances.
+A `MockLangGraphAgent` object — a `LangGraphAgent` with all signals replaced by `WritableSignal` instances.
 
-## MockAgentRef Interface
+## MockLangGraphAgent Interface
 
 ```typescript
-interface MockAgentRef extends AgentRef<any, any> {
+interface MockLangGraphAgent extends LangGraphAgent<any, any> {
   messages: WritableSignal<BaseMessage[]>;
   status: WritableSignal<ResourceStatus>;
   error: WritableSignal<unknown>;
@@ -64,11 +64,11 @@ interface MockAgentRef extends AgentRef<any, any> {
 }
 ```
 
-Every property on `MockAgentRef` is a `WritableSignal`, so you can call `.set()` to control the state directly in your tests.
+Every property on `MockLangGraphAgent` is a `WritableSignal`, so you can call `.set()` to control the state directly in your tests.
 
 ## Mock Methods
 
-The mock provides no-op implementations for all `AgentRef` methods:
+The mock provides no-op implementations for all `LangGraphAgent` methods:
 
 | Method | Behavior |
 |--------|----------|
@@ -85,15 +85,15 @@ The mock provides no-op implementations for all `AgentRef` methods:
 
 ```typescript
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { createMockAgentRef, ChatComponent } from '@ngaf/chat';
-import type { MockAgentRef } from '@ngaf/chat';
+import { mockLangGraphAgent, ChatComponent } from '@ngaf/chat';
+import type { MockLangGraphAgent } from '@ngaf/chat';
 
 describe('ChatComponent', () => {
   let fixture: ComponentFixture<ChatComponent>;
-  let mockRef: MockAgentRef;
+  let mockAgent: MockLangGraphAgent;
 
   beforeEach(async () => {
-    mockRef = createMockAgentRef({
+    mockAgent = mockLangGraphAgent({
       messages: [],
       isLoading: false,
     });
@@ -103,7 +103,7 @@ describe('ChatComponent', () => {
     }).compileComponents();
 
     fixture = TestBed.createComponent(ChatComponent);
-    fixture.componentRef.setInput('ref', mockRef);
+    fixture.componentRef.setInput('ref', mockAgent);
     fixture.detectChanges();
   });
 
@@ -113,7 +113,7 @@ describe('ChatComponent', () => {
   });
 
   it('should render messages when set', () => {
-    mockRef.messages.set([
+    mockAgent.messages.set([
       { content: 'Hello', _getType: () => 'human' } as any,
       { content: 'Hi there!', _getType: () => 'ai' } as any,
     ]);
@@ -131,23 +131,23 @@ describe('ChatComponent', () => {
 ### Loading State
 
 ```typescript
-const ref = createMockAgentRef({ isLoading: true });
+const agent = mockLangGraphAgent({ isLoading: true });
 // Typing indicator will appear, input will be disabled
 ```
 
 ### Error State
 
 ```typescript
-const ref = createMockAgentRef();
-ref.error.set(new Error('Connection failed'));
+const agent = mockLangGraphAgent();
+agent.error.set(new Error('Connection failed'));
 // ChatErrorComponent will display "Connection failed"
 ```
 
 ### Interrupt State
 
 ```typescript
-const ref = createMockAgentRef();
-ref.interrupt.set({
+const agent = mockLangGraphAgent();
+agent.interrupt.set({
   value: 'Please confirm the deletion',
   resumable: true,
   ns: [],
@@ -158,8 +158,8 @@ ref.interrupt.set({
 ### Tool Calls
 
 ```typescript
-const ref = createMockAgentRef();
-ref.toolCalls.set([
+const agent = mockLangGraphAgent();
+agent.toolCalls.set([
   {
     id: 'call_1',
     name: 'search_docs',
@@ -172,8 +172,8 @@ ref.toolCalls.set([
 ### History (for Debug Components)
 
 ```typescript
-const ref = createMockAgentRef();
-ref.history.set([
+const agent = mockLangGraphAgent();
+agent.history.set([
   {
     values: { messages: [], count: 0 },
     next: ['agent'],
@@ -189,12 +189,12 @@ ref.history.set([
 
 ## Testing Custom Components
 
-Use `createMockAgentRef()` to test any component that accepts an `AgentRef` input:
+Use `mockLangGraphAgent()` to test any component that accepts a `LangGraphAgent` input:
 
 ```typescript
 import { Component, input } from '@angular/core';
-import type { AgentRef } from '@ngaf/langgraph';
-import { createMockAgentRef } from '@ngaf/chat';
+import type { LangGraphAgent } from '@ngaf/langgraph';
+import { mockLangGraphAgent } from '@ngaf/chat';
 
 // Your component
 @Component({
@@ -202,12 +202,12 @@ import { createMockAgentRef } from '@ngaf/chat';
   template: `Messages: {{ ref().messages().length }}`,
 })
 export class MessageCountComponent {
-  ref = input.required<AgentRef<any, any>>();
+  ref = input.required<LangGraphAgent<any, any>>();
 }
 
 // Test
 it('should display message count', () => {
-  const mockRef = createMockAgentRef({
+  const mockAgent = mockLangGraphAgent({
     messages: [
       { content: 'One', _getType: () => 'human' } as any,
       { content: 'Two', _getType: () => 'ai' } as any,
@@ -215,7 +215,7 @@ it('should display message count', () => {
   });
 
   const fixture = TestBed.createComponent(MessageCountComponent);
-  fixture.componentRef.setInput('ref', mockRef);
+  fixture.componentRef.setInput('ref', mockAgent);
   fixture.detectChanges();
 
   expect(fixture.nativeElement.textContent).toContain('Messages: 2');
@@ -227,9 +227,9 @@ it('should display message count', () => {
 Since the mock methods are plain functions, you can replace them with spies:
 
 ```typescript
-const ref = createMockAgentRef();
+const agent = mockLangGraphAgent();
 const submitSpy = jest.fn().mockResolvedValue(undefined);
-ref.submit = submitSpy;
+agent.submit = submitSpy;
 
 // After triggering a submit in the component:
 expect(submitSpy).toHaveBeenCalledWith({

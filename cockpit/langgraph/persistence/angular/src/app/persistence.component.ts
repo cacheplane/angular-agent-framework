@@ -1,6 +1,6 @@
 import { Component, signal } from '@angular/core';
 import { ChatComponent } from '@ngaf/chat';
-import { agent, toAgent } from '@ngaf/langgraph';
+import { agent } from '@ngaf/langgraph';
 import { ExampleChatLayoutComponent } from '@ngaf/example-layouts';
 import { environment } from '../environments/environment';
 
@@ -26,7 +26,7 @@ interface Thread {
   imports: [ChatComponent, ExampleChatLayoutComponent],
   template: `
     <example-chat-layout sidebarWidth="w-56">
-      <chat main [agent]="chatAgent" class="block flex-1 min-w-0" />
+      <chat main [agent]="agent" class="block flex-1 min-w-0" />
 
       <div sidebar
         class="flex flex-col"
@@ -81,7 +81,7 @@ export class PersistenceComponent {
    * The `onThreadId` callback fires when a new thread is created,
    * allowing us to track thread IDs for the sidebar picker.
    */
-  protected readonly stream = agent({
+  protected readonly agent = agent({
     apiUrl: environment.langGraphApiUrl,
     assistantId: environment.streamingAssistantId,
     onThreadId: (id: string) => {
@@ -98,17 +98,16 @@ export class PersistenceComponent {
       }
     },
   });
-  protected readonly chatAgent = toAgent(this.stream);
 
   /** Switch to an existing thread by ID. */
   switchThread(id: string): void {
     this.activeThreadId.set(id);
-    this.stream.switchThread(id);
+    this.agent.switchThread(id);
   }
 
   /** Start a brand-new thread. */
   newThread(): void {
     this.activeThreadId.set(null);
-    this.stream.switchThread(null);
+    this.agent.switchThread(null);
   }
 }

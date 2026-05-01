@@ -1,6 +1,6 @@
 import { Component, computed, signal } from '@angular/core';
 import { ChatComponent } from '@ngaf/chat';
-import { agent, toAgent } from '@ngaf/langgraph';
+import { agent } from '@ngaf/langgraph';
 import type { ThreadState } from '@ngaf/langgraph';
 import { ExampleChatLayoutComponent } from '@ngaf/example-layouts';
 import { environment } from '../environments/environment';
@@ -22,7 +22,7 @@ import { environment } from '../environments/environment';
   template: `
     <example-chat-layout>
       <!-- Chat panel -->
-      <chat main [agent]="chatAgent" class="block flex-1" />
+      <chat main [agent]="agent" class="block flex-1" />
 
       <!-- Checkpoint timeline sidebar -->
       <div sidebar
@@ -103,18 +103,17 @@ import { environment } from '../environments/environment';
   `,
 })
 export class TimeTravelComponent {
-  protected readonly stream = agent({
+  protected readonly agent = agent({
     apiUrl: environment.langGraphApiUrl,
     assistantId: environment.streamingAssistantId,
   });
-  protected readonly chatAgent = toAgent(this.stream);
 
   /** Index of the currently selected checkpoint in the sidebar. */
   protected readonly selectedIndex = signal<number>(-1);
 
   /** Checkpoint history derived from the agent. */
   protected readonly checkpoints = computed(
-    (): ThreadState<any>[] => this.stream.history(),
+    (): ThreadState<any>[] => this.agent.langGraphHistory(),
   );
 
   /** Display label for a checkpoint entry. */
@@ -132,7 +131,7 @@ export class TimeTravelComponent {
   protected replay(state: ThreadState<any>, index: number): void {
     if (state.checkpoint?.checkpoint_id) {
       this.selectedIndex.set(index);
-      this.stream.setBranch(state.checkpoint.checkpoint_id);
+      this.agent.setBranch(state.checkpoint.checkpoint_id);
     }
   }
 
@@ -140,7 +139,7 @@ export class TimeTravelComponent {
   protected fork(state: ThreadState<any>, index: number): void {
     if (state.checkpoint?.checkpoint_id) {
       this.selectedIndex.set(index);
-      this.stream.setBranch(state.checkpoint.checkpoint_id);
+      this.agent.setBranch(state.checkpoint.checkpoint_id);
     }
   }
 }
