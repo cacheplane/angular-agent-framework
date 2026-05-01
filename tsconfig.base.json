@@ -18,6 +18,7 @@
       "@ngaf/ag-ui": ["libs/ag-ui/src/public-api.ts"],
       "@ngaf/a2ui": ["libs/a2ui/src/index.ts"],
       "@ngaf/chat": ["libs/chat/src/public-api.ts"],
+      "@ngaf/chat/testing": ["libs/chat/testing/public-api.ts"],
       "@ngaf/cockpit-docs": ["libs/cockpit-docs/src/index.ts"],
       "@ngaf/cockpit-langgraph-streaming-python": [
         "cockpit/langgraph/streaming/python/src/index.ts"

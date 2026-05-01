@@ -119,33 +119,42 @@ function reflectionToEntry(ref: any): ApiDocEntry | null {
   return null;
 }
 
-async function main() {
-  const candidates = [
-    'libs/angular/src/public-api.ts',
-    'packages/angular/src/public-api.ts',
-  ];
-  const entryPoint = candidates.find((p) => fs.existsSync(p));
-  if (!entryPoint) {
-    console.warn('Library entry point not found — generating empty api-docs.json');
-    const outDir = 'apps/website/content/docs/agent/api';
+interface LibraryEntryConfig {
+  /** Doc-site library slug (e.g. 'agent', 'chat') — used as the output folder under apps/website/content/docs/. */
+  docSlug: string;
+  /** TypeDoc entry point — usually libs/<name>/src/public-api.ts. */
+  entryPoint: string;
+}
+
+const LIBRARIES: LibraryEntryConfig[] = [
+  { docSlug: 'agent',  entryPoint: 'libs/langgraph/src/public-api.ts' },
+  { docSlug: 'chat',   entryPoint: 'libs/chat/src/public-api.ts' },
+  { docSlug: 'render', entryPoint: 'libs/render/src/public-api.ts' },
+  { docSlug: 'ag-ui',  entryPoint: 'libs/ag-ui/src/public-api.ts' },
+];
+
+async function generateForLibrary(cfg: LibraryEntryConfig): Promise<void> {
+  const outDir = `apps/website/content/docs/${cfg.docSlug}/api`;
+  if (!fs.existsSync(cfg.entryPoint)) {
+    console.warn(`Entry point not found for ${cfg.docSlug}: ${cfg.entryPoint} — writing empty api-docs.json`);
     fs.mkdirSync(outDir, { recursive: true });
     fs.writeFileSync(path.join(outDir, 'api-docs.json'), JSON.stringify([], null, 2));
     return;
   }
 
-  const libDir = path.dirname(path.dirname(entryPoint));
+  const libDir = path.dirname(path.dirname(cfg.entryPoint));
   const libTsconfig = fs.existsSync(path.join(libDir, 'tsconfig.lib.json'))
     ? path.join(libDir, 'tsconfig.lib.json')
     : undefined;
 
   const app = await Application.bootstrapWithPlugins({
-    entryPoints: [entryPoint],
+    entryPoints: [cfg.entryPoint],
     skipErrorChecking: true,
     ...(libTsconfig ? { tsconfig: libTsconfig } : {}),
   });
   app.options.addReader(new TSConfigReader());
   const project = await app.convert();
-  if (!project) throw new Error('TypeDoc failed to convert project');
+  if (!project) throw new Error(`TypeDoc failed to convert ${cfg.docSlug}`);
 
   const entries: ApiDocEntry[] = [];
   for (const child of project.children ?? []) {
@@ -153,10 +162,15 @@ async function main() {
     if (entry) entries.push(entry);
   }
 
-  const outDir = 'apps/website/content/docs/agent/api';
   fs.mkdirSync(outDir, { recursive: true });
   fs.writeFileSync(path.join(outDir, 'api-docs.json'), JSON.stringify(entries, null, 2));
-  console.log(`✓ api-docs.json written (${entries.length} entries)`);
+  console.log(`✓ ${cfg.docSlug}/api/api-docs.json (${entries.length} entries)`);
+}
+
+async function main() {
+  for (const cfg of LIBRARIES) {
+    await generateForLibrary(cfg);
+  }
 }
 
 main().catch((e) => { console.error(e); process.exit(1); });

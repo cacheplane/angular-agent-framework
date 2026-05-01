@@ -1,0 +1,605 @@
+[
+  {
+    "name": "RenderElementComponent",
+    "kind": "class",
+    "description": "Recursive element renderer.\n\nFor each element key it:\n1. Looks up the UIElement from spec.elements\n2. Resolves the component class from the registry\n3. Evaluates visibility\n4. Resolves prop expressions and bindings\n5. Renders via NgComponentOutlet with resolved inputs\n\nFor elements with `repeat`, it iterates over the state array,\ncreating a child Injector with RepeatScope for each item.",
+    "params": [],
+    "examples": [],
+    "properties": [
+      {
+        "name": "componentClass",
+        "type": "Signal<AngularComponentRenderer | null>",
+        "description": "The Angular component class for this element type.",
+        "optional": false
+      },
+      {
+        "name": "element",
+        "type": "Signal<UIElement<string, Record<string, unknown>> | undefined>",
+        "description": "The UIElement definition from the spec. Only propagates when reference changes.",
+        "optional": false
+      },
+      {
+        "name": "elementKey",
+        "type": "InputSignal<string>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "parentInjector",
+        "type": "Injector<>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "repeatInjectors",
+        "type": "Signal<DestroyableInjector<>[]>",
+        "description": "One child Injector per repeat item, providing RepeatScope.",
+        "optional": false
+      },
+      {
+        "name": "repeatInputs",
+        "type": "Signal<object[]>",
+        "description": "Resolved inputs for each repeat item.",
+        "optional": false
+      },
+      {
+        "name": "resolvedInputs",
+        "type": "Signal<object>",
+        "description": "Resolved inputs for non-repeat elements.",
+        "optional": false
+      },
+      {
+        "name": "spec",
+        "type": "InputSignal<Spec>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "visible",
+        "type": "Signal<boolean>",
+        "description": "Whether the element is visible (non-repeat path).",
+        "optional": false
+      }
+    ],
+    "methods": [
+      {
+        "name": "ngOnInit",
+        "signature": "ngOnInit()",
+        "description": "A callback method that is invoked immediately after the\ndefault change detector has checked the directive's\ndata-bound properties for the first time,\nand before any of the view or content children have been checked.\nIt is invoked only once when the directive is instantiated.",
+        "params": []
+      }
+    ]
+  },
+  {
+    "name": "RenderSpecComponent",
+    "kind": "class",
+    "description": "Top-level entry point for rendering a json-render spec.\n\nAccepts the spec, registry, store, functions, handlers, and loading\nas inputs. Provides `RENDER_CONTEXT` to child `RenderElementComponent`\ninstances via `viewProviders`.\n\nFalls back to `RENDER_CONFIG` (from `provideRender()`) for registry\nand store defaults when inputs are not provided.",
+    "params": [],
+    "examples": [
+      "```html\n<render-spec [spec]=\"spec()\" [registry]=\"registry\" [store]=\"store\" />\n```"
+    ],
+    "properties": [
+      {
+        "name": "_context",
+        "type": "Signal<RenderContext>",
+        "description": "The RenderContext provided to children via viewProviders.",
+        "optional": false
+      },
+      {
+        "name": "events",
+        "type": "OutputEmitterRef<RenderEvent>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "functions",
+        "type": "InputSignal<Record<string, ComputedFunction> | undefined>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "handlers",
+        "type": "InputSignal<Record<string, object> | undefined>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "loading",
+        "type": "InputSignal<boolean>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "registry",
+        "type": "InputSignal<AngularRegistry | undefined>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "spec",
+        "type": "InputSignal<Spec | null>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "store",
+        "type": "InputSignal<StateStore | undefined>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "methods": [
+      {
+        "name": "ngOnInit",
+        "signature": "ngOnInit()",
+        "description": "A callback method that is invoked immediately after the\ndefault change detector has checked the directive's\ndata-bound properties for the first time,\nand before any of the view or content children have been checked.\nIt is invoked only once when the directive is instantiated.",
+        "params": []
+      }
+    ]
+  },
+  {
+    "name": "AngularComponentInputs",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "bindings",
+        "type": "Record<string, string>",
+        "description": "Two-way binding paths: prop name → absolute state path",
+        "optional": true
+      },
+      {
+        "name": "childKeys",
+        "type": "string[]",
+        "description": "Child element keys for recursive rendering",
+        "optional": false
+      },
+      {
+        "name": "emit",
+        "type": "object",
+        "description": "Emit a named event",
+        "optional": false
+      },
+      {
+        "name": "loading",
+        "type": "boolean",
+        "description": "Whether the spec is currently streaming",
+        "optional": true
+      },
+      {
+        "name": "spec",
+        "type": "Spec",
+        "description": "The full spec (for child resolution)",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "AngularRegistry",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "get",
+        "type": "unknown",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "names",
+        "type": "unknown",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "RenderConfig",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "__licenseEnvHint",
+        "type": "object",
+        "description": "Test-only env hint override. Not part of the stable API.",
+        "optional": true
+      },
+      {
+        "name": "__licensePublicKey",
+        "type": "Uint8Array<ArrayBufferLike>",
+        "description": "Test-only public-key override. Defaults to the compile-time embedded\n`LICENSE_PUBLIC_KEY`. Not part of the stable API.",
+        "optional": true
+      },
+      {
+        "name": "functions",
+        "type": "Record<string, ComputedFunction>",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "handlers",
+        "type": "Record<string, object>",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "license",
+        "type": "string",
+        "description": "Signed license token from cacheplane.dev. Optional; omitted in dev.",
+        "optional": true
+      },
+      {
+        "name": "registry",
+        "type": "AngularRegistry",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "store",
+        "type": "StateStore",
+        "description": "",
+        "optional": true
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "RenderContext",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "emitEvent",
+        "type": "object",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "functions",
+        "type": "Record<string, ComputedFunction>",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "handlers",
+        "type": "Record<string, object>",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "loading",
+        "type": "boolean",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "registry",
+        "type": "AngularRegistry",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "store",
+        "type": "StateStore",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "RenderHandlerEvent",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "action",
+        "type": "string",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "params",
+        "type": "Record<string, unknown>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "result",
+        "type": "unknown",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "type",
+        "type": "\"handler\"",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "RenderLifecycleEvent",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "elementKey",
+        "type": "string",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "elementType",
+        "type": "string",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "event",
+        "type": "\"mounted\" | \"destroyed\"",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "scope",
+        "type": "\"spec\" | \"element\"",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "type",
+        "type": "\"lifecycle\"",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "RenderStateChangeEvent",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "path",
+        "type": "string",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "snapshot",
+        "type": "Record<string, unknown>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "type",
+        "type": "\"stateChange\"",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "value",
+        "type": "unknown",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "RepeatScope",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "basePath",
+        "type": "string",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "index",
+        "type": "number",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "item",
+        "type": "unknown",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "AngularComponentRenderer",
+    "kind": "type",
+    "description": "",
+    "signature": "Type<unknown>",
+    "examples": []
+  },
+  {
+    "name": "RenderEvent",
+    "kind": "type",
+    "description": "",
+    "signature": "RenderHandlerEvent | RenderStateChangeEvent | RenderLifecycleEvent",
+    "examples": []
+  },
+  {
+    "name": "ViewRegistry",
+    "kind": "type",
+    "description": "A registry of view components available for generative UI rendering.\nPlain frozen object mapping view names to Angular component types.\nCompose via object spread: `views({ ...base, ...more })`.",
+    "signature": "Readonly<Record<string, Type<unknown>>>",
+    "examples": []
+  },
+  {
+    "name": "defineAngularRegistry",
+    "kind": "function",
+    "description": "",
+    "signature": "defineAngularRegistry(componentMap: Record<string, AngularComponentRenderer>): AngularRegistry",
+    "params": [
+      {
+        "name": "componentMap",
+        "type": "Record<string, AngularComponentRenderer>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "AngularRegistry",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "provideRender",
+    "kind": "function",
+    "description": "",
+    "signature": "provideRender(config: RenderConfig): EnvironmentProviders",
+    "params": [
+      {
+        "name": "config",
+        "type": "RenderConfig",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "EnvironmentProviders",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "provideViews",
+    "kind": "function",
+    "description": "",
+    "signature": "provideViews(registry: ViewRegistry): EnvironmentProviders",
+    "params": [
+      {
+        "name": "registry",
+        "type": "ViewRegistry",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "EnvironmentProviders",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "signalStateStore",
+    "kind": "function",
+    "description": "",
+    "signature": "signalStateStore(initialState: StateModel): StateStore",
+    "params": [
+      {
+        "name": "initialState",
+        "type": "StateModel",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "StateStore",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "toRenderRegistry",
+    "kind": "function",
+    "description": "Converts a ViewRegistry to an AngularRegistry for use with RenderSpecComponent.",
+    "signature": "toRenderRegistry(registry: ViewRegistry): AngularRegistry",
+    "params": [
+      {
+        "name": "registry",
+        "type": "ViewRegistry",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "AngularRegistry",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "views",
+    "kind": "function",
+    "description": "Creates a view registry from a name → component map.",
+    "signature": "views(map: Record<string, Type<unknown>>): ViewRegistry",
+    "params": [
+      {
+        "name": "map",
+        "type": "Record<string, Type<unknown>>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "ViewRegistry",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "withoutViews",
+    "kind": "function",
+    "description": "Removes views from a registry by name.",
+    "signature": "withoutViews(base: ViewRegistry, names: string[]): ViewRegistry",
+    "params": [
+      {
+        "name": "base",
+        "type": "ViewRegistry",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "names",
+        "type": "string[]",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "ViewRegistry",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "withViews",
+    "kind": "function",
+    "description": "Adds views to a registry without overwriting existing entries.\nNew keys are added; keys that already exist in `base` are preserved.",
+    "signature": "withViews(base: ViewRegistry, additions: Record<string, Type<unknown>>): ViewRegistry",
+    "params": [
+      {
+        "name": "base",
+        "type": "ViewRegistry",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "additions",
+        "type": "Record<string, Type<unknown>>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "ViewRegistry",
+      "description": ""
+    },
+    "examples": []
+  }
+]

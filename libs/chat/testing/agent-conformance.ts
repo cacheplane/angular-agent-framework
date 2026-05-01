@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 import { describe, it, expect } from 'vitest';
-import type { Agent } from '../agent';
+import type { Agent } from '@ngaf/chat';
 
 /**
  * Runs a suite of contract conformance assertions against a factory that

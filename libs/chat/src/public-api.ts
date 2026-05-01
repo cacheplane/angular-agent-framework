@@ -119,8 +119,9 @@ export type {
 } from '@ngaf/a2ui';
 export { isPathRef, isFunctionCall } from '@ngaf/a2ui';
 
-// Test utilities
+// Test utilities (no vitest dep — safe to ship in the main runtime bundle)
 export { mockAgent } from './lib/testing/mock-agent';
 export type { MockAgent, MockAgentOptions } from './lib/testing/mock-agent';
-export { runAgentConformance } from './lib/testing/agent-conformance';
-export { runAgentWithHistoryConformance } from './lib/testing/agent-with-history-conformance';
+
+// Conformance helpers ship from the secondary entry point @ngaf/chat/testing
+// (they import vitest at module level; keeping them out of the main bundle).

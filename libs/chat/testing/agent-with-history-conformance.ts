@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 import { describe, it, expect } from 'vitest';
-import type { AgentWithHistory, AgentCheckpoint } from '../agent';
+import type { AgentWithHistory, AgentCheckpoint } from '@ngaf/chat';
 import { runAgentConformance } from './agent-conformance';
 
 /**
