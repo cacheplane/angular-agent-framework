@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import type Stripe from 'stripe';
-import type { License } from '@cacheplane/db';
+import type { License } from '@ngaf/db';
 import { handleEvent, type HandlerDeps } from './handlers.js';
 
 function makeDeps(overrides: Partial<HandlerDeps> = {}): HandlerDeps {

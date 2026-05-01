@@ -3,7 +3,7 @@
  * Builds the minting-service API functions using Vercel Build Output API v3.
  *
  * - Bundles each `handlers/*.ts` into a self-contained CommonJS module via
- *   esbuild, inlining workspace deps (@cacheplane/*) and npm deps alike so no
+ *   esbuild, inlining workspace deps (@ngaf/*) and npm deps alike so no
  *   install step is required inside each function directory.
  * - Writes to `.vercel/output/functions/api/<name>.func/` with the companion
  *   `.vc-config.json` Vercel's Node runtime expects.
@@ -44,7 +44,7 @@ async function buildEntry(entry) {
     platform: 'node',
     target: 'node20',
     format: 'cjs',
-    // Lets esbuild resolve `@cacheplane/*` via tsconfig paths and
+    // Lets esbuild resolve `@ngaf/*` via tsconfig paths and
     // follows `extends` up to the workspace tsconfig.base.json.
     tsconfig: join(appRoot, 'tsconfig.app.json'),
     // @vercel/node provides these as ambient in the runtime environment.
