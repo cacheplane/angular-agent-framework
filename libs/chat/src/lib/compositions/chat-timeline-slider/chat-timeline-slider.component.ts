@@ -1,63 +1,148 @@
+// libs/chat/src/lib/compositions/chat-timeline-slider/chat-timeline-slider.component.ts
 // SPDX-License-Identifier: MIT
 import {
   Component, computed, input, output, signal,
   ChangeDetectionStrategy,
 } from '@angular/core';
 import type { AgentWithHistory, AgentCheckpoint } from '../../agent';
+import { CHAT_HOST_TOKENS } from '../../styles/chat-tokens';
 
 @Component({
   selector: 'chat-timeline-slider',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
+  styles: [CHAT_HOST_TOKENS, `
+    :host { display: block; padding: var(--ngaf-chat-space-2); }
+    .timeline-slider__header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 var(--ngaf-chat-space-1) var(--ngaf-chat-space-2);
+    }
+    .timeline-slider__title {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--ngaf-chat-text-muted);
+      margin: 0;
+    }
+    .timeline-slider__count {
+      font-size: var(--ngaf-chat-font-size-xs);
+      color: var(--ngaf-chat-text-muted);
+    }
+    .timeline-slider__empty {
+      text-align: center;
+      padding: var(--ngaf-chat-space-4);
+      color: var(--ngaf-chat-text-muted);
+      font-size: var(--ngaf-chat-font-size-xs);
+    }
+    .timeline-slider__list {
+      list-style: none;
+      padding-left: 12px;
+      margin: 0;
+      border-left: 1px solid var(--ngaf-chat-separator);
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .timeline-slider__entry {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 8px;
+      margin-left: -1px;
+      border-left: 2px solid transparent;
+      border-radius: var(--ngaf-chat-radius-button);
+      cursor: default;
+      color: var(--ngaf-chat-text-muted);
+      font-size: var(--ngaf-chat-font-size-sm);
+      transition: background 150ms ease;
+    }
+    .timeline-slider__entry:hover { background: color-mix(in srgb, var(--ngaf-chat-text) 5%, transparent); }
+    .timeline-slider__entry[data-active="true"] {
+      border-left-color: var(--ngaf-chat-primary);
+      color: var(--ngaf-chat-text);
+    }
+    .timeline-slider__index {
+      width: 22px;
+      height: 22px;
+      border-radius: 9999px;
+      background: var(--ngaf-chat-surface-alt);
+      color: var(--ngaf-chat-text-muted);
+      font-size: 11px;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .timeline-slider__entry[data-active="true"] .timeline-slider__index {
+      background: var(--ngaf-chat-primary);
+      color: var(--ngaf-chat-on-primary);
+    }
+    .timeline-slider__body { flex: 1; min-width: 0; }
+    .timeline-slider__label {
+      font-weight: 500;
+      color: var(--ngaf-chat-text);
+      margin: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: var(--ngaf-chat-font-size-sm);
+    }
+    .timeline-slider__id {
+      font-family: var(--ngaf-chat-font-mono);
+      font-size: 11px;
+      color: var(--ngaf-chat-text-muted);
+      margin: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .timeline-slider__actions { display: flex; gap: 4px; flex-shrink: 0; }
+    .timeline-slider__btn {
+      padding: 2px 8px;
+      font-size: var(--ngaf-chat-font-size-xs);
+      border-radius: var(--ngaf-chat-radius-button);
+      background: var(--ngaf-chat-surface-alt);
+      color: var(--ngaf-chat-text);
+      border: 0;
+      cursor: pointer;
+      transition: background 150ms ease;
+    }
+    .timeline-slider__btn:hover { background: color-mix(in srgb, var(--ngaf-chat-text) 8%, transparent); }
+  `],
   template: `
-    <div class="flex flex-col gap-2">
-      <div class="flex items-center justify-between px-1">
-        <h3 class="text-xs font-semibold text-[var(--chat-text-muted)] uppercase tracking-wide">Timeline</h3>
-        <span class="text-xs text-[var(--chat-text-muted)]">{{ history().length }} checkpoint(s)</span>
-      </div>
+    <div class="timeline-slider__header">
+      <h3 class="timeline-slider__title">Timeline</h3>
+      <span class="timeline-slider__count">{{ history().length }} checkpoint(s)</span>
+    </div>
 
-      @if (history().length === 0) {
-        <p class="text-xs text-[var(--chat-text-muted)] text-center py-4">No checkpoints yet.</p>
-      }
-
-      <div class="space-y-1">
+    @if (history().length === 0) {
+      <p class="timeline-slider__empty">No checkpoints yet.</p>
+    } @else {
+      <ul class="timeline-slider__list">
         @for (cp of history(); track $index; let i = $index) {
-          <div
-            class="flex items-center gap-2 rounded-lg border px-3 py-2 transition-colors"
-            [class]="i === selectedIndex() ? 'border-[var(--chat-input-focus-border)] bg-[var(--chat-bg-hover)]' : 'border-[var(--chat-border)] bg-[var(--chat-bg)] hover:bg-[var(--chat-bg-hover)]'"
+          <li
+            class="timeline-slider__entry"
+            [attr.data-active]="i === selectedIndex() ? 'true' : null"
           >
-            <span
-              class="w-5 h-5 flex items-center justify-center rounded-full text-xs font-bold"
-              [class]="i === selectedIndex() ? 'bg-[var(--chat-send-bg)] text-[var(--chat-send-text)]' : 'bg-[var(--chat-bg-alt)] text-[var(--chat-text-muted)]'"
-            >
-              {{ i + 1 }}
-            </span>
-
-            <div class="flex-1 min-w-0">
-              <p class="text-xs font-medium text-[var(--chat-text)] truncate">
-                {{ cp.label ?? 'Step ' + (i + 1) }}
-              </p>
+            <span class="timeline-slider__index">{{ i + 1 }}</span>
+            <div class="timeline-slider__body">
+              <p class="timeline-slider__label">{{ cp.label ?? 'Step ' + (i + 1) }}</p>
               @if (cp.id) {
-                <p class="text-xs text-[var(--chat-text-muted)] font-mono truncate">{{ cp.id }}</p>
+                <p class="timeline-slider__id">{{ cp.id }}</p>
               }
             </div>
-
-            <div class="flex gap-1 shrink-0">
-              <button
-                class="px-2 py-1 text-xs rounded bg-[var(--chat-bg-alt)] text-[var(--chat-text)] hover:bg-[var(--chat-bg-hover)] transition-colors"
-                title="Replay from this checkpoint"
-                (click)="replay(cp)"
-              >Replay</button>
-              <button
-                class="px-2 py-1 text-xs rounded bg-[var(--chat-bg-alt)] text-[var(--chat-text)] hover:bg-[var(--chat-bg-hover)] transition-colors"
-                title="Fork from this checkpoint"
-                (click)="fork(cp, i)"
-              >Fork</button>
+            <div class="timeline-slider__actions">
+              <button type="button" class="timeline-slider__btn" title="Replay from this checkpoint" (click)="replay(cp)">Replay</button>
+              <button type="button" class="timeline-slider__btn" title="Fork from this checkpoint" (click)="fork(cp, i)">Fork</button>
             </div>
-          </div>
+          </li>
         }
-      </div>
-    </div>
+      </ul>
+    }
   `,
 })
 export class ChatTimelineSliderComponent {
