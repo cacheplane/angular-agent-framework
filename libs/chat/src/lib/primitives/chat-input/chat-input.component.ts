@@ -1,3 +1,4 @@
+// libs/chat/src/lib/primitives/chat-input/chat-input.component.ts
 // SPDX-License-Identifier: MIT
 import {
   Component,
@@ -11,7 +12,13 @@ import {
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import type { Agent } from '../../agent';
+import { CHAT_HOST_TOKENS } from '../../styles/chat-tokens';
+import { CHAT_INPUT_STYLES } from '../../styles/chat-input.styles';
 
+/**
+ * Submits a trimmed message to the agent.
+ * Returns the trimmed string on success, or `null` if the input was empty.
+ */
 export function submitMessage(
   agent: Agent,
   text: string,
@@ -27,50 +34,44 @@ export function submitMessage(
   standalone: true,
   imports: [FormsModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  styles: [`
-    textarea {
-      field-sizing: content;
-    }
-  `],
+  styles: [CHAT_HOST_TOKENS, CHAT_INPUT_STYLES],
   template: `
-    <form
-      (submit)="onSubmit(); $event.preventDefault()"
-      class="flex items-center gap-2 px-4 py-2.5 pl-[18px] border transition-colors duration-150"
-      [style.background]="'var(--chat-input-bg)'"
-      [style.borderColor]="focused() ? 'var(--chat-input-focus-border)' : 'var(--chat-input-border)'"
-      [style.borderRadius]="'var(--chat-radius-input)'"
-      role="search"
-      aria-label="Message input"
-    >
-      <textarea
-        [(ngModel)]="messageText"
-        name="messageText"
-        [placeholder]="placeholder()"
-        [disabled]="isDisabled()"
-        (keydown.enter)="onKeydown($any($event))"
-        (focus)="focused.set(true)"
-        (blur)="focused.set(false)"
-        rows="1"
-        #textareaEl
-        class="flex-1 bg-transparent border-0 outline-none resize-none max-h-[120px] overflow-y-auto"
-        [style.color]="'var(--chat-text)'"
-        [style.fontFamily]="'var(--chat-font-family)'"
-        style="font-size: 15px; line-height: 1.6;"
-        aria-label="Type a message"
-      ></textarea>
-      <button
-        type="submit"
-        [disabled]="isDisabled()"
-        class="w-8 h-8 rounded-full flex items-center justify-center shrink-0 border-0 cursor-pointer transition-colors duration-150 disabled:opacity-50"
-        [style.background]="'var(--chat-send-bg)'"
-        [style.color]="'var(--chat-send-text)'"
-        aria-label="Send message"
-      >
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M8 12V4M8 4L4 8M8 4L12 8"/>
-        </svg>
-      </button>
-    </form>
+    <div class="chat-input__container">
+      <ng-content select="[chatInputBanner]" />
+      <ng-content select="[chatInputAttachments]" />
+      <div class="chat-input__pill" (click)="focusTextarea()">
+        <ng-content select="[chatInputLeading]" />
+        <textarea
+          #textareaEl
+          class="chat-input__textarea"
+          [(ngModel)]="messageTextProxy"
+          name="messageText"
+          [placeholder]="placeholder()"
+          [disabled]="isDisabled()"
+          (keydown.enter)="onKeydown($any($event))"
+          (focus)="focused.set(true)"
+          (blur)="focused.set(false)"
+          rows="1"
+          aria-label="Type a message"
+        ></textarea>
+        <div class="chat-input__controls">
+          <ng-content select="[chatInputTrailing]" />
+          <button
+            type="button"
+            class="chat-input__send"
+            [disabled]="!canSubmit()"
+            (click)="onSubmit()"
+            aria-label="Send message"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <line x1="12" y1="19" x2="12" y2="5"/>
+              <polyline points="5 12 12 5 19 12"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+      <ng-content select="[chatInputFooter]" />
+    </div>
   `,
 })
 export class ChatInputComponent {
@@ -82,14 +83,26 @@ export class ChatInputComponent {
   readonly isDisabled = computed(() => this.agent().isLoading());
   readonly focused = signal(false);
 
+  /** Two-way binding helper for ngModel */
+  get messageTextProxy(): string { return this.messageText(); }
+  set messageTextProxy(v: string) { this.messageText.set(v); }
+
+  readonly canSubmit = computed(() => {
+    if (this.isDisabled()) return false;
+    return this.messageText().trim().length > 0;
+  });
+
   private readonly textareaEl = viewChild<ElementRef<HTMLTextAreaElement>>('textareaEl');
+
+  focusTextarea(): void {
+    this.textareaEl()?.nativeElement.focus();
+  }
 
   onSubmit(): void {
     const submitted = submitMessage(this.agent(), this.messageText());
     if (submitted !== null) {
       this.submitted.emit(submitted);
       this.messageText.set('');
-      // Re-focus the textarea after submit
       requestAnimationFrame(() => this.textareaEl()?.nativeElement.focus());
     }
   }
