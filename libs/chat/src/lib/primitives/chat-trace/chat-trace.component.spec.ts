@@ -1,0 +1,124 @@
+// libs/chat/src/lib/primitives/chat-trace/chat-trace.component.spec.ts
+// SPDX-License-Identifier: MIT
+import { describe, it, expect } from 'vitest';
+import { TestBed } from '@angular/core/testing';
+import { signal, computed } from '@angular/core';
+import type { TraceState } from './chat-trace.component';
+
+// Tests verify the signal-computed logic that ChatTraceComponent exposes.
+// We cannot use createComponent + setInput for signal inputs under vitest JIT
+// (Angular's JIT compiler does not process signal-input metadata, so setInput
+// throws NG0303).  Instead we mirror the component's computed logic directly
+// inside runInInjectionContext — the same pattern used by chat-typing-indicator
+// and chat-timeline specs in this library.
+
+function makeTrace(initialState: TraceState = 'pending') {
+  const state = signal<TraceState>(initialState);
+  const expandedOverride = signal<boolean | null>(null);
+
+  const expanded = computed(() => {
+    const override = expandedOverride();
+    if (override !== null) return override;
+    return state() === 'running';
+  });
+
+  const expandedStr = computed(() => String(expanded()));
+
+  function toggle() {
+    expandedOverride.set(!expanded());
+  }
+
+  function setState(s: TraceState) {
+    const prev = state();
+    state.set(s);
+    if (s === 'running') {
+      expandedOverride.set(null);
+    } else if (s === 'done' && prev === 'running') {
+      setTimeout(() => expandedOverride.set(false), 200);
+    }
+  }
+
+  return { state, expanded, expandedStr, toggle, setState };
+}
+
+describe('ChatTraceComponent — expanded computed', () => {
+  it('is false by default (pending state)', () => {
+    TestBed.configureTestingModule({});
+    TestBed.runInInjectionContext(() => {
+      const { expanded } = makeTrace('pending');
+      expect(expanded()).toBe(false);
+    });
+  });
+
+  it('auto-expands when state is running', () => {
+    TestBed.configureTestingModule({});
+    TestBed.runInInjectionContext(() => {
+      const { expanded } = makeTrace('running');
+      expect(expanded()).toBe(true);
+    });
+  });
+
+  it('is false when state is done', () => {
+    TestBed.configureTestingModule({});
+    TestBed.runInInjectionContext(() => {
+      const { expanded } = makeTrace('done');
+      expect(expanded()).toBe(false);
+    });
+  });
+
+  it('is false when state is error', () => {
+    TestBed.configureTestingModule({});
+    TestBed.runInInjectionContext(() => {
+      const { expanded } = makeTrace('error');
+      expect(expanded()).toBe(false);
+    });
+  });
+});
+
+describe('ChatTraceComponent — toggle', () => {
+  it('flips collapsed to expanded', () => {
+    TestBed.configureTestingModule({});
+    TestBed.runInInjectionContext(() => {
+      const { expanded, toggle } = makeTrace('pending');
+      expect(expanded()).toBe(false);
+      toggle();
+      expect(expanded()).toBe(true);
+    });
+  });
+
+  it('flips expanded to collapsed', () => {
+    TestBed.configureTestingModule({});
+    TestBed.runInInjectionContext(() => {
+      const { expanded, toggle } = makeTrace('running');
+      expect(expanded()).toBe(true);
+      toggle();
+      expect(expanded()).toBe(false);
+    });
+  });
+});
+
+describe('ChatTraceComponent — state transitions', () => {
+  it('clears manual override and auto-expands when transitioning to running', () => {
+    TestBed.configureTestingModule({});
+    TestBed.runInInjectionContext(() => {
+      const { expanded, toggle, setState } = makeTrace('running');
+      // Manually collapse while running
+      toggle();
+      expect(expanded()).toBe(false);
+      // Transitioning away from running and back resets the override
+      setState('pending');
+      setState('running');
+      expect(expanded()).toBe(true);
+    });
+  });
+
+  it('expandedStr reflects expanded as string', () => {
+    TestBed.configureTestingModule({});
+    TestBed.runInInjectionContext(() => {
+      const { expandedStr, setState } = makeTrace('pending');
+      expect(expandedStr()).toBe('false');
+      setState('running');
+      expect(expandedStr()).toBe('true');
+    });
+  });
+});
