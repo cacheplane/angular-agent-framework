@@ -18,8 +18,8 @@ import type { Agent } from '../../agent';
 import type { ViewRegistry, RenderEvent } from '@ngaf/render';
 import type { A2uiActionMessage } from '@ngaf/a2ui';
 import type { StateStore } from '@json-render/core';
-import { ChatMessagesComponent } from '../../primitives/chat-messages/chat-messages.component';
-import { MessageTemplateDirective } from '../../primitives/chat-messages/message-template.directive';
+import { ChatMessageListComponent } from '../../primitives/chat-message-list/chat-message-list.component';
+import { MessageTemplateDirective } from '../../primitives/chat-message-list/message-template.directive';
 import { ChatInputComponent } from '../../primitives/chat-input/chat-input.component';
 import { ChatTypingIndicatorComponent } from '../../primitives/chat-typing-indicator/chat-typing-indicator.component';
 import { ChatErrorComponent } from '../../primitives/chat-error/chat-error.component';
@@ -40,7 +40,7 @@ import { KeyValuePipe } from '@angular/common';
   selector: 'chat',
   standalone: true,
   imports: [
-    ChatMessagesComponent,
+    ChatMessageListComponent,
     MessageTemplateDirective,
     ChatInputComponent,
     ChatTypingIndicatorComponent,
@@ -111,7 +111,7 @@ import { KeyValuePipe } from '@angular/common';
               </div>
             }
 
-            <chat-messages [agent]="agent()">
+            <chat-message-list [agent]="agent()">
               <!-- Human messages: right-aligned bubble -->
               <ng-template chatMessageTemplate="human" let-message>
                 <div class="flex justify-end">
@@ -185,7 +185,7 @@ import { KeyValuePipe } from '@angular/common';
                   </span>
                 </div>
               </ng-template>
-            </chat-messages>
+            </chat-message-list>
 
             <chat-typing-indicator [agent]="agent()" />
           </div>

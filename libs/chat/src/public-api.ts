@@ -32,9 +32,9 @@ export {
 } from './lib/agent';
 
 // Primitives
-export { ChatMessagesComponent } from './lib/primitives/chat-messages/chat-messages.component';
-export { MessageTemplateDirective } from './lib/primitives/chat-messages/message-template.directive';
-export { getMessageType } from './lib/primitives/chat-messages/chat-messages.component';
+export { ChatMessageListComponent } from './lib/primitives/chat-message-list/chat-message-list.component';
+export { MessageTemplateDirective } from './lib/primitives/chat-message-list/message-template.directive';
+export { getMessageType } from './lib/primitives/chat-message-list/chat-message-list.component';
 export { ChatInputComponent, submitMessage } from './lib/primitives/chat-input/chat-input.component';
 export { ChatTypingIndicatorComponent, isTyping } from './lib/primitives/chat-typing-indicator/chat-typing-indicator.component';
 export { ChatErrorComponent, extractErrorMessage } from './lib/primitives/chat-error/chat-error.component';

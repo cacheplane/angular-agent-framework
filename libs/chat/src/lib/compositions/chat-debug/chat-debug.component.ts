@@ -12,8 +12,8 @@ import {
 } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
 import type { AgentWithHistory } from '../../agent';
-import { ChatMessagesComponent } from '../../primitives/chat-messages/chat-messages.component';
-import { MessageTemplateDirective } from '../../primitives/chat-messages/message-template.directive';
+import { ChatMessageListComponent } from '../../primitives/chat-message-list/chat-message-list.component';
+import { MessageTemplateDirective } from '../../primitives/chat-message-list/message-template.directive';
 import { ChatInputComponent } from '../../primitives/chat-input/chat-input.component';
 import { ChatTypingIndicatorComponent } from '../../primitives/chat-typing-indicator/chat-typing-indicator.component';
 import { ChatErrorComponent } from '../../primitives/chat-error/chat-error.component';
@@ -31,7 +31,7 @@ import { toDebugCheckpoint, extractStateValues } from './debug-utils';
   selector: 'chat-debug',
   standalone: true,
   imports: [
-    ChatMessagesComponent,
+    ChatMessageListComponent,
     MessageTemplateDirective,
     ChatInputComponent,
     ChatTypingIndicatorComponent,
@@ -55,7 +55,7 @@ import { toDebugCheckpoint, extractStateValues } from './debug-utils';
           aria-live="polite"
         >
           <div class="max-w-[var(--chat-max-width)] mx-auto flex flex-col gap-5">
-            <chat-messages [agent]="agent()">
+            <chat-message-list [agent]="agent()">
               <!-- Human messages: right-aligned bubble -->
               <ng-template chatMessageTemplate="human" let-message>
                 <div class="flex justify-end">
@@ -97,7 +97,7 @@ import { toDebugCheckpoint, extractStateValues } from './debug-utils';
                   </span>
                 </div>
               </ng-template>
-            </chat-messages>
+            </chat-message-list>
 
             <chat-typing-indicator [agent]="agent()" />
           </div>
