@@ -63,7 +63,12 @@ import type { ChatRenderEvent } from './chat-render-event';
       padding: 60px 20px;
       color: var(--ngaf-chat-text-muted);
       text-align: center;
+      flex: 1;
+      min-height: 0;
     }
+    .chat-empty[hidden] { display: none; }
+    .chat-empty__title { font-size: 1.125rem; font-weight: 500; color: var(--ngaf-chat-text); margin: 0; }
+    .chat-empty__sub { margin: 0; font-size: var(--ngaf-chat-font-size-sm); }
     .chat-empty__title { font-size: 1.125rem; font-weight: 500; color: var(--ngaf-chat-text); margin: 0; }
     .chat-empty__sub { margin: 0; font-size: var(--ngaf-chat-font-size-sm); }
     .chat-scroll { flex: 1; min-height: 0; overflow-y: auto; }
@@ -85,11 +90,12 @@ import type { ChatRenderEvent } from './chat-render-event';
         <chat-window>
           <ng-content select="[chatHeader]" chatHeader />
           <div chatBody class="chat-scroll" #scrollContainer>
-            @if (agent().messages().length === 0 && !agent().isLoading()) {
-              <div class="chat-empty">
-                <ng-content select="[chatEmptyState]" />
-              </div>
-            }
+            <div class="chat-empty" [hidden]="agent().messages().length !== 0 || agent().isLoading()">
+              <ng-content select="[chatEmptyState]">
+                <p class="chat-empty__title">How can I help?</p>
+                <p class="chat-empty__sub">Ask anything to get started.</p>
+              </ng-content>
+            </div>
 
             <chat-message-list [agent]="agent()">
               <ng-template chatMessageTemplate="human" let-message let-i="index">

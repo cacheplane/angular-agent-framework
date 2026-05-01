@@ -44,7 +44,8 @@ export function submitMessage(
         <textarea
           #textareaEl
           class="chat-input__textarea"
-          [(ngModel)]="messageTextProxy"
+          [ngModel]="messageText()"
+          (ngModelChange)="messageText.set($event)"
           name="messageText"
           [placeholder]="placeholder()"
           [disabled]="isDisabled()"
@@ -83,9 +84,7 @@ export class ChatInputComponent {
   readonly isDisabled = computed(() => this.agent().isLoading());
   readonly focused = signal(false);
 
-  /** Two-way binding helper for ngModel */
-  get messageTextProxy(): string { return this.messageText(); }
-  set messageTextProxy(v: string) { this.messageText.set(v); }
+
 
   readonly canSubmit = computed(() => {
     if (this.isDisabled()) return false;

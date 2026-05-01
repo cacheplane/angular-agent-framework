@@ -36,22 +36,30 @@ export const CHAT_MESSAGE_STYLES = `
   }
 
   .chat-message__caret {
-    display: inline-block;
+    display: none;
     margin-left: 2px;
     width: 0.6ch;
     color: var(--ngaf-chat-text-muted);
     animation: ngaf-chat-caret-blink 1.2s step-end infinite;
   }
+  :host([data-role="assistant"][data-current="true"][data-streaming="true"]) .chat-message__caret {
+    display: inline-block;
+  }
+
+  .chat-message__plain { /* system / tool fallback */ }
 
   .chat-message__controls {
+    display: none;
     position: absolute;
     left: 0;
     bottom: -28px;
-    display: flex;
     gap: 1rem;
     opacity: 0;
     transition: opacity 200ms ease;
     pointer-events: none;
+  }
+  :host([data-role="assistant"]) .chat-message__controls {
+    display: flex;
   }
   :host([data-role="assistant"]:hover) .chat-message__controls,
   :host([data-role="assistant"]:focus-within) .chat-message__controls,
