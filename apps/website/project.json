@@ -9,7 +9,6 @@
       "executor": "@nx/next:build",
       "outputs": ["{options.outputPath}"],
       "defaultConfiguration": "production",
-      "dependsOn": ["demo:build"],
       "options": {
         "outputPath": "dist/apps/website"
       },
@@ -53,7 +52,6 @@
     },
     "e2e": {
       "executor": "@nx/playwright:playwright",
-      "dependsOn": [{ "projects": ["demo"], "target": "build" }],
       "options": {
         "config": "apps/website/playwright.config.ts"
       }
