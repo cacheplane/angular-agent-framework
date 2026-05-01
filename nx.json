@@ -42,6 +42,7 @@
     }
   },
   "release": {
+    "releaseTagPattern": "v{version}",
     "groups": {
       "publishable": {
         "projects": [

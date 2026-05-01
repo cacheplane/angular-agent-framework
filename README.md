@@ -12,7 +12,7 @@
 
 <p align="center">
   <a href="https://www.npmjs.com/package/@ngaf/langgraph">
-    <img alt="npm version" src="https://img.shields.io/npm/v/@cacheplane%2Fangular?color=6C8EFF&labelColor=080B14&style=flat-square" />
+    <img alt="npm version" src="https://img.shields.io/npm/v/@ngaf%2Flanggraph?color=6C8EFF&labelColor=080B14&style=flat-square" />
   </a>
   <a href="./LICENSE">
     <img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-6C8EFF?labelColor=080B14&style=flat-square" />
