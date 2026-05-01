@@ -3,7 +3,7 @@ import { Component, computed } from '@angular/core';
 import { ChatInputComponent as ChatInputPrimitive } from '@ngaf/chat';
 import { ChatMessagesComponent } from '@ngaf/chat';
 import { ExampleChatLayoutComponent } from '@ngaf/example-layouts';
-import { agent, toAgent } from '@ngaf/langgraph';
+import { agent } from '@ngaf/langgraph';
 import { environment } from '../environments/environment';
 
 /**
@@ -22,10 +22,10 @@ import { environment } from '../environments/environment';
           <h1 class="text-sm font-semibold" style="color: var(--chat-text, #e0e0e0);">Chat Input Demo</h1>
         </header>
         <div class="flex-1 overflow-y-auto">
-          <chat-messages [agent]="chatAgent" />
+          <chat-messages [agent]="agent" />
         </div>
         <div class="px-4 py-2" style="background: var(--chat-bg, #171717);">
-          <chat-input [agent]="chatAgent" placeholder="Try typing here..." (send)="submitMessage($event)" />
+          <chat-input [agent]="agent" placeholder="Try typing here..." (send)="submitMessage($event)" />
         </div>
       </div>
       <div sidebar class="p-4 space-y-4" style="background: var(--chat-bg, #171717); color: var(--chat-text, #e0e0e0);">
@@ -52,16 +52,15 @@ import { environment } from '../environments/environment';
   `,
 })
 export class InputComponent {
-  protected readonly stream = agent({
+  protected readonly agent = agent({
     apiUrl: environment.langGraphApiUrl,
     assistantId: environment.streamingAssistantId,
   });
-  protected readonly chatAgent = toAgent(this.stream);
 
-  protected readonly streamStatus = computed(() => this.stream.status());
-  protected readonly isLoading = computed(() => this.stream.isLoading());
+  protected readonly streamStatus = computed(() => this.agent.status());
+  protected readonly isLoading = computed(() => this.agent.isLoading());
 
   submitMessage(content: string) {
-    this.chatAgent.submit({ message: content });
+    this.agent.submit({ message: content });
   }
 }

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 import { Component, computed } from '@angular/core';
 import { ChatComponent } from '@ngaf/chat';
-import { agent, toAgent } from '@ngaf/langgraph';
+import { agent } from '@ngaf/langgraph';
 import { ExampleChatLayoutComponent } from '@ngaf/example-layouts';
 import { environment } from '../environments/environment';
 
@@ -23,7 +23,7 @@ import { environment } from '../environments/environment';
   imports: [ChatComponent, ExampleChatLayoutComponent],
   template: `
     <example-chat-layout>
-      <chat main [agent]="chatAgent" class="flex-1 min-w-0" />
+      <chat main [agent]="agent" class="flex-1 min-w-0" />
       <div sidebar class="p-4 space-y-2"
            style="background: var(--chat-bg, #171717); color: var(--chat-text, #e0e0e0);">
         <h3 class="text-xs font-semibold uppercase tracking-wide"
@@ -51,18 +51,17 @@ export class SubgraphsComponent {
    * `stream.subagents()` is a Signal<Map<string, SubagentStreamRef>> that updates
    * as the parent orchestrator dispatches work to child subgraphs.
    */
-  protected readonly stream = agent({
+  protected readonly agent = agent({
     apiUrl: environment.langGraphApiUrl,
     assistantId: environment.streamingAssistantId,
   });
-  protected readonly chatAgent = toAgent(this.stream);
 
   /**
    * Derived signal: converts the subagents Map to an array for template iteration.
    * Using `computed()` ensures the template re-renders whenever the Map changes.
    */
   protected readonly subagentEntries = computed(() => {
-    const map = this.stream.subagents();
+    const map = this.agent.subagents()!
     return Array.from(map.entries()).map(([id, ref]) => ({
       id,
       status: ref.status(),

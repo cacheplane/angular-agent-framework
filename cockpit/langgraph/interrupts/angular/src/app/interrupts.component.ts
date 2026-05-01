@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 import { Component } from '@angular/core';
 import { ChatComponent, ChatInterruptPanelComponent, views, type InterruptAction } from '@ngaf/chat';
-import { agent, toAgent } from '@ngaf/langgraph';
+import { agent } from '@ngaf/langgraph';
 import { ExampleChatLayoutComponent } from '@ngaf/example-layouts';
 import { signalStateStore } from '@ngaf/render';
 import { environment } from '../environments/environment';
@@ -26,10 +26,10 @@ import { ApprovalCardComponent } from './views/approval-card.component';
   template: `
     <example-chat-layout>
       <div main class="flex flex-col h-full">
-        <chat [agent]="chatAgent" [views]="ui" [store]="uiStore" class="flex-1 min-w-0" />
-        @if (chatAgent.interrupt()) {
+        <chat [agent]="agent" [views]="ui" [store]="uiStore" class="flex-1 min-w-0" />
+        @if (agent.interrupt()) {
           <div class="p-4" style="border-top: 1px solid var(--chat-border, #333);">
-            <chat-interrupt-panel [agent]="chatAgent" (action)="onInterruptAction($event)" />
+            <chat-interrupt-panel [agent]="agent" (action)="onInterruptAction($event)" />
           </div>
         }
       </div>
@@ -46,11 +46,10 @@ export class InterruptsComponent {
    * When the LangGraph backend calls `interrupt()`, the `stream.interrupt()`
    * signal emits the interrupt payload for display via ChatInterruptPanelComponent.
    */
-  protected readonly stream = agent({
+  protected readonly agent = agent({
     apiUrl: environment.langGraphApiUrl,
     assistantId: environment.streamingAssistantId,
   });
-  protected readonly chatAgent = toAgent(this.stream);
 
   /**
    * Handle an interrupt action from the panel.
@@ -66,6 +65,6 @@ export class InterruptsComponent {
     // In a production app, 'edit' would let the user modify the response before approval.
     // For this demo, all actions simply resume the graph.
     void action; // Each branch intentionally does the same thing in this demo
-    void this.chatAgent.submit({ resume: null });
+    void this.agent.submit({ resume: null });
   }
 }

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 import { Component } from '@angular/core';
 import { ChatComponent } from '@ngaf/chat';
-import { agent, toAgent } from '@ngaf/langgraph';
+import { agent } from '@ngaf/langgraph';
 import { ExampleChatLayoutComponent } from '@ngaf/example-layouts';
 import { environment } from '../environments/environment';
 
@@ -17,14 +17,13 @@ import { environment } from '../environments/environment';
   imports: [ChatComponent, ExampleChatLayoutComponent],
   template: `
     <example-chat-layout>
-      <chat main [agent]="chatAgent" class="flex-1 min-w-0" />
+      <chat main [agent]="agent" class="flex-1 min-w-0" />
     </example-chat-layout>
   `,
 })
 export class DeploymentRuntimeComponent {
-  protected readonly stream = agent({
+  protected readonly agent = agent({
     apiUrl: environment.langGraphApiUrl,
     assistantId: environment.deploymentRuntimeAssistantId,
   });
-  protected readonly chatAgent = toAgent(this.stream);
 }

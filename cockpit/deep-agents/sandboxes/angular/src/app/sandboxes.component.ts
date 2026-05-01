@@ -1,7 +1,7 @@
 import { Component, computed } from '@angular/core';
 import { ChatComponent, views } from '@ngaf/chat';
 import { ExampleChatLayoutComponent } from '@ngaf/example-layouts';
-import { agent, toAgent } from '@ngaf/langgraph';
+import { agent } from '@ngaf/langgraph';
 import { signalStateStore } from '@ngaf/render';
 import { environment } from '../environments/environment';
 import { CodeExecutionComponent } from './views/code-execution.component';
@@ -31,7 +31,7 @@ interface CodeExecution {
   imports: [ChatComponent, ExampleChatLayoutComponent],
   template: `
     <example-chat-layout sidebarWidth="w-80">
-      <chat main [agent]="chatAgent" [views]="ui" [store]="uiStore" class="flex-1 min-w-0" />
+      <chat main [agent]="agent" [views]="ui" [store]="uiStore" class="flex-1 min-w-0" />
       <div sidebar class="p-4 space-y-3" style="background: var(--chat-bg, #171717); color: var(--chat-text, #e0e0e0);">
         <h3 class="text-xs font-semibold uppercase tracking-wide"
             style="color: var(--chat-text-muted, #777);">Execution Output</h3>
@@ -64,11 +64,10 @@ export class SandboxesComponent {
   readonly ui = views({ 'code-execution': CodeExecutionComponent });
   readonly uiStore = signalStateStore({});
 
-  protected readonly stream = agent({
+  protected readonly agent = agent({
     apiUrl: environment.langGraphApiUrl,
     assistantId: environment.streamingAssistantId,
   });
-  protected readonly chatAgent = toAgent(this.stream);
 
   /**
    * Derived signal: extracts code executions from the message stream.
@@ -78,7 +77,7 @@ export class SandboxesComponent {
    * JSON with {stdout, stderr, exit_status} fields.
    */
   protected readonly executions = computed<CodeExecution[]>(() => {
-    const msgs = this.stream.messages();
+    const msgs = this.agent.langGraphMessages();
     const resultMap = new Map<string, { stdout: string; stderr: string; exitStatus: number }>();
 
     // Build a lookup of tool_call_id -> parsed result from tool messages
