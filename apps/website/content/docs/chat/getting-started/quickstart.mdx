@@ -14,6 +14,34 @@ npm install @ngaf/chat
 ```
 
 </Step>
+<Step title="Set up Tailwind CSS">
+
+`ChatComponent` ships its layout as Tailwind utility classes and does not include a precompiled stylesheet. If your project does not already use Tailwind v4, add it now:
+
+```bash
+npm install -D tailwindcss @tailwindcss/postcss
+```
+
+Create `.postcssrc.json` at the project root:
+
+```json
+{
+  "plugins": {
+    "@tailwindcss/postcss": {}
+  }
+}
+```
+
+Add the following to `src/styles.css`:
+
+```css
+@import "tailwindcss";
+@source "../node_modules/@ngaf/chat";
+```
+
+The `@source` directive opts the published `@ngaf/chat` bundle into Tailwind's class scan; without it the chat renders as a column of unstyled blocks. Restart `ng serve` after creating `.postcssrc.json`. See [Installation → Tailwind CSS](/docs/chat/getting-started/installation#tailwind-css) for details.
+
+</Step>
 <Step title="Configure providers">
 
 Add both `provideAgent()` and `provideChat()` to your application config.

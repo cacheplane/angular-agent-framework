@@ -14,6 +14,9 @@ The chat components read streaming state from `LangGraphAgent`, which is returne
 <Step title="Node.js 18+">
 Required for the build toolchain and package installation.
 </Step>
+<Step title="Tailwind CSS v4 (for compositions)">
+The `ChatComponent` and `ChatDebugComponent` compositions use Tailwind utility classes for layout. Consumers must have Tailwind v4 configured in their project and `@source "../node_modules/@ngaf/chat"` declared in their stylesheet. See [Tailwind CSS](#tailwind-css) below. Primitives-only consumers can skip this.
+</Step>
 </Steps>
 
 ## Install the package
@@ -77,13 +80,58 @@ export const appConfig: ApplicationConfig = {
 
 ## Tailwind CSS
 
-The composition components use Tailwind CSS utility classes for layout. If you are using compositions like `ChatComponent` or `ChatDebugComponent`, make sure Tailwind is configured in your project.
+<Callout type="warning" title="Required for compositions">
+Compositions like `ChatComponent` and `ChatDebugComponent` use Tailwind CSS utility classes (`flex`, `gap-3`, `max-w-[75%]`, `md:flex`, ...) for layout. **The library does not ship a precompiled stylesheet**, so without Tailwind the chat renders as a column of full-width boxes with no spacing or alignment.
+
+The primitives layer (e.g. `ChatMessagesComponent`, `ChatInputComponent` used directly) does not depend on Tailwind — it uses inline styles and CSS custom properties only.
+</Callout>
+
+If your project already uses Tailwind v4, skip ahead to [Scan the chat package](#scan-the-ngafchat-package). Otherwise:
+
+<Steps>
+<Step title="Install Tailwind">
 
 ```bash
 npm install -D tailwindcss @tailwindcss/postcss
 ```
 
-The primitives layer does not depend on Tailwind -- it uses only inline styles and content projection.
+</Step>
+<Step title="Add a PostCSS config">
+
+Create `.postcssrc.json` at the project root:
+
+```json
+{
+  "plugins": {
+    "@tailwindcss/postcss": {}
+  }
+}
+```
+
+</Step>
+<Step title="Import Tailwind in src/styles.css">
+
+```css
+@import "tailwindcss";
+
+/* Tell Tailwind to scan @ngaf/chat for utility classes used in the
+   composition templates. Without this, layout classes from the
+   library are tree-shaken away. */
+@source "../node_modules/@ngaf/chat";
+```
+
+</Step>
+</Steps>
+
+### Scan the @ngaf/chat package
+
+Tailwind v4 auto-discovers source files in your project but ignores `node_modules` by default. Because the chat compositions ship their utility classes inside the published bundle, you must opt those files in with `@source`:
+
+```css
+@source "../node_modules/@ngaf/chat";
+```
+
+Without this directive, classes like `flex`, `w-10`, `gap-3`, and `max-w-[75%]` will not appear in your compiled CSS, and the chat will visibly collapse to an unstyled column. Restart `ng serve` after adding `.postcssrc.json` so the new PostCSS pipeline takes effect.
 
 ## Verify the Setup
 
