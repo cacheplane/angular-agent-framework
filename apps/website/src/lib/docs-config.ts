@@ -150,6 +150,7 @@ export const docsConfig: DocsLibrary[] = [
           { title: 'Generative UI', slug: 'generative-ui', section: 'guides' },
           { title: 'Streaming', slug: 'streaming', section: 'guides' },
           { title: 'Configuration', slug: 'configuration', section: 'guides' },
+          { title: 'Writing an Adapter', slug: 'writing-an-adapter', section: 'guides' },
         ],
       },
       {
