@@ -14,14 +14,12 @@ test('landing page renders architecture section', async ({ page }) => {
 
 test('landing page renders libraries section', async ({ page }) => {
   await page.goto('/');
-  await expect(page.getByText('Three libraries. One architecture.').first()).toBeVisible();
+  await expect(page.getByText('Four libraries. One architecture.').first()).toBeVisible();
 });
 
-test('pricing page shows 4 plan cards', async ({ page }) => {
+test('pricing page shows plan cards', async ({ page }) => {
   await page.goto('/pricing');
-  await expect(page.getByText('Community').first()).toBeVisible();
-  await expect(page.getByText('Developer Seat').first()).toBeVisible();
-  await expect(page.getByText('App Deployment').first()).toBeVisible();
+  await expect(page.getByText('Open Source').first()).toBeVisible();
   await expect(page.getByText('Enterprise').first()).toBeVisible();
 });
 
@@ -42,6 +40,7 @@ test('docs landing page shows library cards', async ({ page }) => {
   await expect(page.getByText('Agent').first()).toBeVisible();
   await expect(page.getByText('Render').first()).toBeVisible();
   await expect(page.getByText('Chat').first()).toBeVisible();
+  await expect(page.getByText('AG-UI').first()).toBeVisible();
 });
 
 test('api reference renders in docs', async ({ page }) => {
