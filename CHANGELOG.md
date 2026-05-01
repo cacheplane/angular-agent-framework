@@ -1,3 +1,14 @@
+## 0.0.2 (2026-05-01)
+
+### 🩹 Fixes
+
+- **minting-service:** rename @cacheplane/* imports to @ngaf/* ([#150](https://github.com/cacheplane/angular-agent-framework/pull/150), [#145](https://github.com/cacheplane/angular-agent-framework/issues/145))
+
+### ❤️ Thank You
+
+- Brian Love @blove
+- Claude Opus 4
+
 ## 0.0.1 (2026-05-01)
 
 ### 🚀 Features
