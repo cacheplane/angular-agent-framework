@@ -12,10 +12,6 @@
     "url": "https://github.com/cacheplane/angular-agent-framework/issues"
   },
   "sideEffects": false,
-  "publishConfig": {
-    "access": "public",
-    "provenance": true
-  },
   "peerDependencies": {
     "@noble/ed25519": "^2.2.3"
   }
