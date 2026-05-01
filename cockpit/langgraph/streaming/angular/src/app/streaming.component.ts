@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
 import { Component } from '@angular/core';
-import { ChatComponent } from '@cacheplane/chat';
-import { agent, toAgent } from '@cacheplane/langgraph';
-import { ExampleChatLayoutComponent } from '@cacheplane/example-layouts';
+import { ChatComponent } from '@ngaf/chat';
+import { agent, toAgent } from '@ngaf/langgraph';
+import { ExampleChatLayoutComponent } from '@ngaf/example-layouts';
 import { environment } from '../environments/environment';
 
 /**
- * Streaming demo — simplest possible @cacheplane/chat integration.
+ * Streaming demo — simplest possible @ngaf/chat integration.
  *
  * Creates a agent ref and passes it to the prebuilt <chat>
  * composition. The composition handles message rendering, input, typing

@@ -1,13 +1,13 @@
 # Theming
 
-`@cacheplane/chat` uses CSS custom properties (variables) for all visual styling. Every color, radius, font, and spacing value is controlled by a variable prefixed with `--chat-`, making it straightforward to match your application's design system.
+`@ngaf/chat` uses CSS custom properties (variables) for all visual styling. Every color, radius, font, and spacing value is controlled by a variable prefixed with `--chat-`, making it straightforward to match your application's design system.
 
 ## How Theming Works
 
 Composition components include `CHAT_THEME_STYLES` in their `styles` array. This stylesheet defines all CSS custom properties on the `:host` element and applies dark mode by default, with automatic light mode support via `prefers-color-scheme`.
 
 ```typescript
-import { CHAT_THEME_STYLES } from '@cacheplane/chat';
+import { CHAT_THEME_STYLES } from '@ngaf/chat';
 
 @Component({
   // ...
@@ -110,7 +110,7 @@ If you are building custom compositions using the primitives, import `CHAT_THEME
 
 ```typescript
 import { Component } from '@angular/core';
-import { CHAT_THEME_STYLES } from '@cacheplane/chat';
+import { CHAT_THEME_STYLES } from '@ngaf/chat';
 
 @Component({
   selector: 'my-custom-chat',

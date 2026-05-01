@@ -29,7 +29,7 @@ export function handleScaffoldChatComponent(args: Record<string, unknown>) {
     : '';
 
   const code = `import { Component${persistenceImport} } from '@angular/core';
-import { agent } from '@cacheplane/langgraph';
+import { agent } from '@ngaf/langgraph';
 import type { BaseMessage } from '@langchain/core/messages';
 
 @Component({

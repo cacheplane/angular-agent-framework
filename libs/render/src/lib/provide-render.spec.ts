@@ -8,7 +8,7 @@ import type { RenderConfig } from './render.types';
 import {
   __resetRunLicenseCheckStateForTests,
   __resetNagStateForTests,
-} from '@cacheplane/licensing/testing';
+} from '@ngaf/licensing/testing';
 
 @Component({ selector: 'render-test-card', standalone: true, template: '<div>card</div>' })
 class TestCardComponent {}
@@ -51,7 +51,7 @@ describe('provideRender', () => {
     const warn = globalThis.console.warn as ReturnType<typeof vi.fn>;
     expect(
       warn.mock.calls.some((c) =>
-        String(c[0]).includes('[cacheplane] @cacheplane/render'),
+        String(c[0]).includes('[cacheplane] @ngaf/render'),
       ),
     ).toBe(true);
   });

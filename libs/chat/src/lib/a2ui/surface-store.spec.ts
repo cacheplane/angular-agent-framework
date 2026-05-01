@@ -2,7 +2,7 @@
 import { describe, it, expect } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { createA2uiSurfaceStore } from './surface-store';
-import type { A2uiMessage } from '@cacheplane/a2ui';
+import type { A2uiMessage } from '@ngaf/a2ui';
 
 describe('createA2uiSurfaceStore', () => {
   function setup() {

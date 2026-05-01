@@ -1,9 +1,9 @@
 # provideChat()
 
-`provideChat` is the provider factory that registers `@cacheplane/chat` configuration in Angular's dependency injection system. Call it once in your `ApplicationConfig` (or at the route level) to set global defaults used by chat composition components.
+`provideChat` is the provider factory that registers `@ngaf/chat` configuration in Angular's dependency injection system. Call it once in your `ApplicationConfig` (or at the route level) to set global defaults used by chat composition components.
 
 ```typescript
-import { provideChat } from '@cacheplane/chat';
+import { provideChat } from '@ngaf/chat';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -40,7 +40,7 @@ This makes the `ChatConfig` object available throughout the application via the 
 ## CHAT_CONFIG Injection Token
 
 ```typescript
-import { CHAT_CONFIG } from '@cacheplane/chat';
+import { CHAT_CONFIG } from '@ngaf/chat';
 
 const CHAT_CONFIG: InjectionToken<ChatConfig>;
 ```
@@ -49,7 +49,7 @@ The token is an `InjectionToken<ChatConfig>` that can be injected in any compone
 
 ```typescript
 import { inject } from '@angular/core';
-import { CHAT_CONFIG } from '@cacheplane/chat';
+import { CHAT_CONFIG } from '@ngaf/chat';
 
 @Component({ /* ... */ })
 export class MyComponent {
@@ -76,8 +76,8 @@ See the [ChatConfig API reference](/docs/chat/api/chat-config) for the full inte
 
 ```typescript
 // app.config.ts
-import { provideAgent } from '@cacheplane/langgraph';
-import { provideChat } from '@cacheplane/chat';
+import { provideAgent } from '@ngaf/langgraph';
+import { provideChat } from '@ngaf/chat';
 
 export const appConfig: ApplicationConfig = {
   providers: [

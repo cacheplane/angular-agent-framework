@@ -116,7 +116,7 @@ Context: The most advanced production agents emit structured UI specs — not ju
 
 Cover:
 - The onCustomEvent pattern in LangGraph: how agents emit structured data
-- The @cacheplane/render approach: json-render specs, defineAngularRegistry(), <render-spec>
+- The @ngaf/render approach: json-render specs, defineAngularRegistry(), <render-spec>
 - How JSON patch streaming enables progressive UI updates (rows appearing as data arrives)
 - The registry pattern: decoupling agent from component implementation
 - Code example: defineAngularRegistry() registration (8-12 lines)
@@ -150,7 +150,7 @@ Tone: Direct, technical, peer-to-peer. No fluff. Audience is senior Angular engi
     id: 'angular',
     title: 'The Enterprise Guide to Agent Streaming in Angular',
     subtitle: 'Ship LangGraph agents in Angular — without building the plumbing',
-    eyebrow: '@cacheplane/langgraph · Enterprise Guide',
+    eyebrow: '@ngaf/langgraph · Enterprise Guide',
     coverGradient: 'linear-gradient(135deg, #eaf3ff 0%, #e6f4ff 45%, #f4f0ff 70%, #fef0f3 100%)',
     outputPdf: 'apps/website/public/whitepapers/angular.pdf',
     outputHtml: 'apps/website/public/whitepapers/angular-preview.html',
@@ -181,7 +181,7 @@ Tone: Direct, technical, peer-to-peer. No fluff. Audience is senior Angular engi
 
 Chapter topic: The agent() API
 
-Context: @cacheplane/langgraph exposes a signal-native API for streaming LangGraph agents into Angular components. The core primitive is agent() — a function that returns reactive signals wired directly to the agent stream, with no manual subscription management, no zone-patching, and no token accumulation logic.
+Context: @ngaf/langgraph exposes a signal-native API for streaming LangGraph agents into Angular components. The core primitive is agent() — a function that returns reactive signals wired directly to the agent stream, with no manual subscription management, no zone-patching, and no token accumulation logic.
 
 Cover:
 - How agent() returns a structured ref with typed signals: messages(), isStreaming(), error(), interrupt()
@@ -220,7 +220,7 @@ Tone: Direct, technical, peer-to-peer. No fluff. Audience is senior Angular engi
 
 Chapter topic: Interrupt & Approval Flows
 
-Context: Agents that take real-world actions — sending emails, executing queries, modifying records — must pause for human confirmation. LangGraph's interrupt() primitive enables this on the backend. @cacheplane/langgraph surfaces it as a reactive signal, eliminating the need for polling, websockets, or custom resume endpoints.
+Context: Agents that take real-world actions — sending emails, executing queries, modifying records — must pause for human confirmation. LangGraph's interrupt() primitive enables this on the backend. @ngaf/langgraph surfaces it as a reactive signal, eliminating the need for polling, websockets, or custom resume endpoints.
 
 Cover:
 - How LangGraph interrupt() pauses graph execution and what the resume payload looks like
@@ -239,7 +239,7 @@ Tone: Direct, technical, peer-to-peer. No fluff. Audience is senior Angular engi
 
 Chapter topic: Full LangGraph Feature Coverage
 
-Context: Most Angular LLM integrations support basic chat. @cacheplane/langgraph is designed for the full LangGraph feature surface: tool calls, subgraphs, time travel, and DeepAgent multi-agent coordination. Teams shouldn't have to drop down to raw SSE parsing to access advanced graph features.
+Context: Most Angular LLM integrations support basic chat. @ngaf/langgraph is designed for the full LangGraph feature surface: tool calls, subgraphs, time travel, and DeepAgent multi-agent coordination. Teams shouldn't have to drop down to raw SSE parsing to access advanced graph features.
 
 Cover:
 - Tool call streaming: how tool invocation events surface through the agent ref without manual parsing
@@ -277,7 +277,7 @@ Tone: Direct, technical, peer-to-peer. No fluff. Audience is senior Angular engi
     id: 'render',
     title: 'The Enterprise Guide to Generative UI in Angular',
     subtitle: 'Agents that render UI — without coupling to your frontend',
-    eyebrow: '@cacheplane/render · Enterprise Guide',
+    eyebrow: '@ngaf/render · Enterprise Guide',
     coverGradient: 'linear-gradient(135deg, #e8f5e9 0%, #eaf3ff 45%, #f4f0ff 70%, #fef0f3 100%)',
     outputPdf: 'apps/website/public/whitepapers/render.pdf',
     outputHtml: 'apps/website/public/whitepapers/render-preview.html',
@@ -308,14 +308,14 @@ Tone: Direct, technical, peer-to-peer. No fluff. Audience is senior Angular engi
 
 Chapter topic: Declarative UI Specs & the json-render Standard
 
-Context: Vercel's json-render spec defines a framework-agnostic standard for describing UI as structured JSON. An agent emits a json-render document. A frontend interprets it. Neither side knows how the other is implemented. @cacheplane/render implements this standard for Angular, with streaming JSON patch support on top.
+Context: Vercel's json-render spec defines a framework-agnostic standard for describing UI as structured JSON. An agent emits a json-render document. A frontend interprets it. Neither side knows how the other is implemented. @ngaf/render implements this standard for Angular, with streaming JSON patch support on top.
 
 Cover:
 - What a json-render document looks like: component name, props, children (concrete example)
 - Why an open standard matters: portability across frameworks, LLM prompt stability, community tooling
 - How the spec handles conditional rendering, iteration, and computed properties
 - Google's A2UI spec and how it extends json-render for agent-specific patterns
-- The @cacheplane/render implementation: <render-spec> directive consumes a json-render document
+- The @ngaf/render implementation: <render-spec> directive consumes a json-render document
 - How LLMs generate valid json-render output: prompt patterns that produce spec-compliant JSON
 
 Tone: Direct, technical, peer-to-peer. No fluff. Audience is senior Angular engineers.`,
@@ -327,7 +327,7 @@ Tone: Direct, technical, peer-to-peer. No fluff. Audience is senior Angular engi
 
 Chapter topic: The Component Registry
 
-Context: A json-render document references components by name. The registry is what maps those names to actual Angular components. defineAngularRegistry() is the @cacheplane/render API for declaring this mapping — it's the seam between the open standard and your specific component library.
+Context: A json-render document references components by name. The registry is what maps those names to actual Angular components. defineAngularRegistry() is the @ngaf/render API for declaring this mapping — it's the seam between the open standard and your specific component library.
 
 Cover:
 - How defineAngularRegistry() maps string component names to Angular component classes
@@ -347,7 +347,7 @@ Tone: Direct, technical, peer-to-peer. No fluff. Audience is senior Angular engi
 
 Chapter topic: Streaming JSON Patches
 
-Context: Generative UI is most powerful when it streams. A data table with 50 rows should appear progressively — rows rendering as the agent produces them, not after a 3-second wait for the full JSON payload. @cacheplane/render uses JSON Patch (RFC 6902) to apply incremental updates to the UI spec as it streams, enabling skeleton states and progressive rendering.
+Context: Generative UI is most powerful when it streams. A data table with 50 rows should appear progressively — rows rendering as the agent produces them, not after a 3-second wait for the full JSON payload. @ngaf/render uses JSON Patch (RFC 6902) to apply incremental updates to the UI spec as it streams, enabling skeleton states and progressive rendering.
 
 Cover:
 - Why streaming full JSON documents on each update is impractical for large UI specs
@@ -355,7 +355,7 @@ Cover:
 - How the agent emits patch operations instead of full spec replacements
 - Partial-JSON parsing: rendering valid portions of an incomplete JSON stream
 - Skeleton states: how to show placeholder UI while the spec is still arriving
-- Code example: consuming streaming patch events in a @cacheplane/render component (8-12 lines)
+- Code example: consuming streaming patch events in a @ngaf/render component (8-12 lines)
 - Performance: why patch-based updates are O(change) not O(spec size)
 
 Tone: Direct, technical, peer-to-peer. No fluff. Audience is senior Angular engineers.`,
@@ -367,7 +367,7 @@ Tone: Direct, technical, peer-to-peer. No fluff. Audience is senior Angular engi
 
 Chapter topic: State Management & Computed Functions
 
-Context: Static UI specs only go so far. Production generative UI needs computed properties — values derived from other spec fields — and repeat loops for rendering collections. @cacheplane/render's signalStateStore() and computed function support bring dynamic behavior into the spec without requiring custom component logic.
+Context: Static UI specs only go so far. Production generative UI needs computed properties — values derived from other spec fields — and repeat loops for rendering collections. @ngaf/render's signalStateStore() and computed function support bring dynamic behavior into the spec without requiring custom component logic.
 
 Cover:
 - signalStateStore(): agent-managed state that components can read and update
@@ -387,7 +387,7 @@ Tone: Direct, technical, peer-to-peer. No fluff. Audience is senior Angular engi
     id: 'chat',
     title: 'The Enterprise Guide to Agent Chat Interfaces in Angular',
     subtitle: 'Production agent chat UI in days, not sprints',
-    eyebrow: '@cacheplane/chat · Enterprise Guide',
+    eyebrow: '@ngaf/chat · Enterprise Guide',
     coverGradient: 'linear-gradient(135deg, #f3e8ff 0%, #f4f0ff 45%, #eaf3ff 70%, #e6f4ff 100%)',
     outputPdf: 'apps/website/public/whitepapers/chat.pdf',
     outputHtml: 'apps/website/public/whitepapers/chat-preview.html',
@@ -407,7 +407,7 @@ Cover:
 - The hidden costs: accessibility is harder than it looks, streaming token display has edge cases, tool call state machines are complex
 - What "good enough for demo" looks like vs. what production chat UI actually requires
 - The opportunity cost: senior Angular engineers spending sprints on chat chrome instead of agent integration
-- The @cacheplane/chat thesis: ship the chat UI on day one, spend the sprints on what differentiates your product
+- The @ngaf/chat thesis: ship the chat UI on day one, spend the sprints on what differentiates your product
 
 Tone: Direct, technical, peer-to-peer. No fluff. Audience is senior Angular engineers.`,
       },
@@ -418,13 +418,13 @@ Tone: Direct, technical, peer-to-peer. No fluff. Audience is senior Angular engi
 
 Chapter topic: Batteries-Included Components
 
-Context: @cacheplane/chat ships two tiers of components: headless primitives that own behavior and state with no styling opinions, and prebuilt components that are production-ready out of the box. Teams choose the tier that matches their customization needs.
+Context: @ngaf/chat ships two tiers of components: headless primitives that own behavior and state with no styling opinions, and prebuilt components that are production-ready out of the box. Teams choose the tier that matches their customization needs.
 
 Cover:
 - The headless tier: chat-messages, chat-input, chat-tool-calls, chat-interrupt — behavior without styling
 - The prebuilt tier: chat-prebuilt — a full chat interface in one component, zero configuration
 - How the two tiers compose: using prebuilt for 90% of UI, dropping to headless for custom sections
-- The component model: how @cacheplane/chat connects to the agent ref from @cacheplane/langgraph
+- The component model: how @ngaf/chat connects to the agent ref from @ngaf/langgraph
 - Message rendering: how AIMessage[] from the agent signal maps to chat message display
 - Code example: <chat-prebuilt> with an agent ref (6-10 lines)
 - When to use headless vs. prebuilt and how to migrate between them
@@ -438,10 +438,10 @@ Tone: Direct, technical, peer-to-peer. No fluff. Audience is senior Angular engi
 
 Chapter topic: Theming & Design System Integration
 
-Context: Chat UI that looks like a generic chatbot is a product liability. Enterprise teams need chat components that match their design system — typography, color palette, border radius, spacing. @cacheplane/chat uses CSS custom properties and design tokens to make this integration straightforward without requiring component source access.
+Context: Chat UI that looks like a generic chatbot is a product liability. Enterprise teams need chat components that match their design system — typography, color palette, border radius, spacing. @ngaf/chat uses CSS custom properties and design tokens to make this integration straightforward without requiring component source access.
 
 Cover:
-- The CSS custom property API: how @cacheplane/chat exposes design decisions as variables
+- The CSS custom property API: how @ngaf/chat exposes design decisions as variables
 - Design token mapping: aligning chat component tokens with your existing design system tokens
 - Typography integration: font family, size scale, and line height control
 - Color system integration: surface colors, text colors, accent colors, and semantic state colors
@@ -458,13 +458,13 @@ Tone: Direct, technical, peer-to-peer. No fluff. Audience is senior Angular engi
 
 Chapter topic: Generative UI in Chat
 
-Context: The most capable agent chat interfaces don't just display text — they render agent-generated UI directly in the message stream. A financial agent renders a live data table. A scheduling agent renders a booking form. @cacheplane/chat supports both the json-render spec and Google's A2UI spec out of the box, with streaming patch support.
+Context: The most capable agent chat interfaces don't just display text — they render agent-generated UI directly in the message stream. A financial agent renders a live data table. A scheduling agent renders a booking form. @ngaf/chat supports both the json-render spec and Google's A2UI spec out of the box, with streaming patch support.
 
 Cover:
 - How generative UI messages appear in the chat message stream alongside text messages
 - The json-render spec: how agents emit structured UI specs that chat renders automatically
 - Google's A2UI spec: what it adds for agent-specific UI patterns (actions, approvals, structured data)
-- How @cacheplane/chat integrates with @cacheplane/render for component resolution
+- How @ngaf/chat integrates with @ngaf/render for component resolution
 - The registry pattern in a chat context: registering custom components that agents can emit
 - Code example: enabling generative UI in chat with a component registry (8-12 lines)
 - Progressive rendering: how streaming JSON patches create the live UI update effect in chat
@@ -478,7 +478,7 @@ Tone: Direct, technical, peer-to-peer. No fluff. Audience is senior Angular engi
 
 Chapter topic: Debug Tooling
 
-Context: Debugging agent chat is hard. The message stream is opaque, tool call state transitions are fast, and interrupt flows have timing edge cases. chat-debug is @cacheplane/chat's built-in debug panel — a developer overlay that surfaces agent state, raw message events, tool call history, and interrupt state in real time.
+Context: Debugging agent chat is hard. The message stream is opaque, tool call state transitions are fast, and interrupt flows have timing edge cases. chat-debug is @ngaf/chat's built-in debug panel — a developer overlay that surfaces agent state, raw message events, tool call history, and interrupt state in real time.
 
 Cover:
 - What chat-debug shows: raw AIMessage[] state, streaming event log, tool call state machine, interrupt payload

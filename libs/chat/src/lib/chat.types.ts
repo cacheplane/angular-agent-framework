@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-import type { AngularRegistry } from '@cacheplane/render';
+import type { AngularRegistry } from '@ngaf/render';
 
 export interface ChatConfig {
   registry?: AngularRegistry;

@@ -1,7 +1,7 @@
 // apps/website/src/components/landing/render/RenderComparison.tsx
 'use client';
 import { motion } from 'framer-motion';
-import { tokens } from '@cacheplane/design-tokens';
+import { tokens } from '@ngaf/design-tokens';
 
 const ROWS = [
   { capability: 'New agent output', theirs: 'Frontend deploy required', ours: 'Spec change only, no deploy' },
@@ -41,7 +41,7 @@ export function RenderComparison() {
           fontSize: 'clamp(26px,3.5vw,42px)', fontWeight: 800, lineHeight: 1.1,
           color: tokens.colors.textPrimary,
         }}>
-          Hardcoded agent UI vs @cacheplane/render
+          Hardcoded agent UI vs @ngaf/render
         </h2>
       </motion.div>
 
@@ -61,7 +61,7 @@ export function RenderComparison() {
           display: 'grid', gridTemplateColumns: 'minmax(100px, 1fr) minmax(120px, 1fr) minmax(120px, 1fr)',
           background: 'rgba(255,255,255,.3)', borderBottom: `1px solid ${tokens.glass.border}`, padding: '14px 24px',
         }}>
-          {['Capability', 'Hardcoded Approach', '@cacheplane/render'].map((h, i) => (
+          {['Capability', 'Hardcoded Approach', '@ngaf/render'].map((h, i) => (
             <div key={h} style={{
               fontFamily: 'var(--font-mono,"JetBrains Mono",monospace)',
               fontSize: '0.62rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em',

@@ -1,5 +1,5 @@
 import { Component, Input, OnInit, Injector, runInInjectionContext } from '@angular/core';
-import { agent } from '@cacheplane/langgraph';
+import { agent } from '@ngaf/langgraph';
 import type { BaseMessage } from '@langchain/core/messages';
 
 @Component({

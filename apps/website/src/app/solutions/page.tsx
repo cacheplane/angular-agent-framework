@@ -1,4 +1,4 @@
-import { tokens } from '@cacheplane/design-tokens';
+import { tokens } from '@ngaf/design-tokens';
 import { SolutionsGrid } from '../../components/landing/solutions/SolutionsGrid';
 import { WhitePaperSection } from '../../components/landing/WhitePaperSection';
 import { PilotFooterCTA } from '../../components/landing/PilotFooterCTA';

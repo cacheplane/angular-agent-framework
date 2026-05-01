@@ -1,7 +1,7 @@
-import { tokens } from '@cacheplane/design-tokens';
+import { tokens } from '@ngaf/design-tokens';
 import { HighlightedCode } from '../HighlightedCode';
 
-const SNIPPET_1 = `import { defineAngularRegistry } from '@cacheplane/render';
+const SNIPPET_1 = `import { defineAngularRegistry } from '@ngaf/render';
 import { TableComponent } from './table.component';
 import { ChartComponent } from './chart.component';
 

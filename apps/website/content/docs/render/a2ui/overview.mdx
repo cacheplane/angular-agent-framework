@@ -107,7 +107,7 @@ Use **A2UI** when the agent needs to build an interface incrementally, bind it t
 Pass `a2uiBasicCatalog()` to the `views` input to enable A2UI rendering:
 
 ```typescript
-import { ChatComponent, a2uiBasicCatalog } from '@cacheplane/chat';
+import { ChatComponent, a2uiBasicCatalog } from '@ngaf/chat';
 
 @Component({
   template: `<chat [ref]="agentRef" [views]="catalog" />`,
@@ -148,8 +148,8 @@ or log events without intercepting the routing.
 ### Minimal Consumer Setup
 
 ```typescript
-import { ChatComponent, a2uiBasicCatalog } from '@cacheplane/chat';
-import { agent } from '@cacheplane/langgraph';
+import { ChatComponent, a2uiBasicCatalog } from '@ngaf/chat';
+import { agent } from '@ngaf/langgraph';
 
 @Component({
   template: `<chat [ref]="agentRef" [views]="catalog" />`,
@@ -263,7 +263,7 @@ interface A2uiValidationResult {
 Use the shared `A2uiValidationErrorsComponent` for consistent error display:
 
 ```typescript
-import { A2uiValidationErrorsComponent } from '@cacheplane/chat';
+import { A2uiValidationErrorsComponent } from '@ngaf/chat';
 
 @Component({
   imports: [A2uiValidationErrorsComponent],
@@ -412,7 +412,7 @@ catalog components as the `_bindings` prop.
 Custom catalog components can use the `emitBinding` utility for consistent binding emission:
 
 ```typescript
-import { emitBinding } from '@cacheplane/chat';
+import { emitBinding } from '@ngaf/chat';
 
 // In your component's change handler:
 onInput(event: Event): void {

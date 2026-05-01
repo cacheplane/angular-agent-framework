@@ -1,7 +1,7 @@
 import React from 'react';
 import type {
   CockpitManifestEntry,
-} from '@cacheplane/cockpit-registry';
+} from '@ngaf/cockpit-registry';
 import type { NavigationProduct } from '../../lib/route-resolution';
 import { LanguagePicker } from './language-picker';
 import { NavigationGroups } from './navigation-groups';

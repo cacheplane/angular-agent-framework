@@ -1,5 +1,5 @@
 {
-  "name": "@cacheplane/cockpit-render-repeat-loops-python",
+  "name": "@ngaf/cockpit-render-repeat-loops-python",
   "version": "0.0.1",
   "license": "MIT",
   "sideEffects": false

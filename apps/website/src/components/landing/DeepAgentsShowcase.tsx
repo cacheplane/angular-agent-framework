@@ -1,5 +1,5 @@
 import { codeToHtml } from 'shiki';
-import { tokens } from '@cacheplane/design-tokens';
+import { tokens } from '@ngaf/design-tokens';
 import { CapabilityCard } from './CapabilityCard';
 
 const CAPABILITIES = [

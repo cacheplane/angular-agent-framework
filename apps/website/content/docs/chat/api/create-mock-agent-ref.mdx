@@ -5,7 +5,7 @@
 **Import:**
 
 ```typescript
-import { createMockAgentRef } from '@cacheplane/chat';
+import { createMockAgentRef } from '@ngaf/chat';
 ```
 
 ## Signature
@@ -85,8 +85,8 @@ The mock provides no-op implementations for all `AgentRef` methods:
 
 ```typescript
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { createMockAgentRef, ChatComponent } from '@cacheplane/chat';
-import type { MockAgentRef } from '@cacheplane/chat';
+import { createMockAgentRef, ChatComponent } from '@ngaf/chat';
+import type { MockAgentRef } from '@ngaf/chat';
 
 describe('ChatComponent', () => {
   let fixture: ComponentFixture<ChatComponent>;
@@ -193,8 +193,8 @@ Use `createMockAgentRef()` to test any component that accepts an `AgentRef` inpu
 
 ```typescript
 import { Component, input } from '@angular/core';
-import type { AgentRef } from '@cacheplane/langgraph';
-import { createMockAgentRef } from '@cacheplane/chat';
+import type { AgentRef } from '@ngaf/langgraph';
+import { createMockAgentRef } from '@ngaf/chat';
 
 // Your component
 @Component({

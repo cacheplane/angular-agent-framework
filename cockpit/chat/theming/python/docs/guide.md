@@ -1,4 +1,4 @@
-# Chat Theming with @cacheplane/chat
+# Chat Theming with @ngaf/chat
 
 <Summary>
 Customize chat appearance using CSS custom properties and
@@ -8,7 +8,7 @@ for runtime theme switching.
 
 <Prompt>
 Add theming to your chat interface using CSS custom properties and
-`CHAT_THEME_STYLES` from `@cacheplane/chat`. Create theme presets
+`CHAT_THEME_STYLES` from `@ngaf/chat`. Create theme presets
 and a theme picker for switching themes at runtime.
 </Prompt>
 
@@ -32,7 +32,7 @@ Chat components use CSS custom properties for all visual styling:
 Use `CHAT_THEME_STYLES` to apply a complete theme:
 
 ```typescript
-import { CHAT_THEME_STYLES } from '@cacheplane/chat';
+import { CHAT_THEME_STYLES } from '@ngaf/chat';
 ```
 
 </Step>

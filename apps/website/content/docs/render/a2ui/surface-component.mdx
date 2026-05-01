@@ -5,7 +5,7 @@ Angular component that renders a single A2UI surface. It converts the surface's 
 **Import:**
 
 ```typescript
-import { A2uiSurfaceComponent } from '@cacheplane/chat';
+import { A2uiSurfaceComponent } from '@ngaf/chat';
 ```
 
 **Selector:** `a2ui-surface`
@@ -60,8 +60,8 @@ The final `Spec` is passed to `RenderSpecComponent` along with the `ViewRegistry
 
 ```typescript
 import { Component, signal } from '@angular/core';
-import { A2uiSurfaceComponent, createA2uiSurfaceStore, a2uiBasicCatalog } from '@cacheplane/chat';
-import { createA2uiMessageParser } from '@cacheplane/a2ui';
+import { A2uiSurfaceComponent, createA2uiSurfaceStore, a2uiBasicCatalog } from '@ngaf/chat';
+import { createA2uiMessageParser } from '@ngaf/a2ui';
 
 @Component({
   selector: 'app-agent-panel',
@@ -97,7 +97,7 @@ The conversion function is exported for testing or custom rendering pipelines.
 **Import:**
 
 ```typescript
-import { surfaceToSpec } from '@cacheplane/chat';
+import { surfaceToSpec } from '@ngaf/chat';
 ```
 
 **Signature:**

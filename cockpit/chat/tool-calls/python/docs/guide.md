@@ -1,4 +1,4 @@
-# Chat Tool Calls with @cacheplane/chat
+# Chat Tool Calls with @ngaf/chat
 
 <Summary>
 Display tool call execution and results using ChatToolCallsComponent
@@ -9,7 +9,7 @@ renders each call with its arguments and response.
 <Prompt>
 Add tool call visualization to your chat interface using
 `ChatToolCallsComponent` and `ChatToolCallCardComponent` from
-`@cacheplane/chat`. Display active tool calls in a sidebar.
+`@ngaf/chat`. Display active tool calls in a sidebar.
 </Prompt>
 
 <Steps>

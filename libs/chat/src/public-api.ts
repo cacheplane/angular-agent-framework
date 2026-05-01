@@ -68,10 +68,10 @@ export {
   ICON_WARNING, ICON_AGENT, ICON_CHECK, ICON_SEND,
 } from './lib/styles/chat-icons';
 
-// Views (re-exported from @cacheplane/render for convenience)
-export { views, withViews, withoutViews, toRenderRegistry } from '@cacheplane/render';
-export type { ViewRegistry } from '@cacheplane/render';
-export { provideViews, VIEW_REGISTRY } from '@cacheplane/render';
+// Views (re-exported from @ngaf/render for convenience)
+export { views, withViews, withoutViews, toRenderRegistry } from '@ngaf/render';
+export type { ViewRegistry } from '@ngaf/render';
+export { provideViews, VIEW_REGISTRY } from '@ngaf/render';
 
 // Streaming / Generative UI
 export { createContentClassifier } from './lib/streaming/content-classifier';
@@ -109,15 +109,15 @@ export { A2uiTabsComponent } from './lib/a2ui/catalog/tabs.component';
 export { A2uiAudioPlayerComponent } from './lib/a2ui/catalog/audio-player.component';
 export { A2uiVideoComponent } from './lib/a2ui/catalog/video.component';
 
-// A2UI types (re-exported from @cacheplane/a2ui for convenience)
+// A2UI types (re-exported from @ngaf/a2ui for convenience)
 export type {
   A2uiActionMessage, A2uiClientDataModel,
   A2uiSurface, A2uiComponent, A2uiTheme,
   DynamicValue, DynamicString, DynamicNumber, DynamicBoolean,
   A2uiPathRef, A2uiFunctionCall,
   A2uiCheckRule, A2uiValidationResult,
-} from '@cacheplane/a2ui';
-export { isPathRef, isFunctionCall } from '@cacheplane/a2ui';
+} from '@ngaf/a2ui';
+export { isPathRef, isFunctionCall } from '@ngaf/a2ui';
 
 // Test utilities
 export { mockAgent } from './lib/testing/mock-agent';

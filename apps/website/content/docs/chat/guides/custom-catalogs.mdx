@@ -5,12 +5,12 @@ description: Compose custom component catalogs for generative UI using ViewRegis
 
 # Custom Catalogs
 
-Both json-render specs and A2UI surfaces render through the same `ViewRegistry`. Compose catalogs using `views`, `withViews`, and `withoutViews` from `@cacheplane/render`.
+Both json-render specs and A2UI surfaces render through the same `ViewRegistry`. Compose catalogs using `views`, `withViews`, and `withoutViews` from `@ngaf/render`.
 
 ## Using the Built-In A2UI Catalog
 
 ```typescript
-import { a2uiBasicCatalog } from '@cacheplane/chat';
+import { a2uiBasicCatalog } from '@ngaf/chat';
 
 <chat [ref]="agentRef" [views]="a2uiBasicCatalog()" />
 ```
@@ -18,8 +18,8 @@ import { a2uiBasicCatalog } from '@cacheplane/chat';
 ## Adding Custom Components
 
 ```typescript
-import { withViews } from '@cacheplane/render';
-import { a2uiBasicCatalog } from '@cacheplane/chat';
+import { withViews } from '@ngaf/render';
+import { a2uiBasicCatalog } from '@ngaf/chat';
 
 const catalog = withViews(a2uiBasicCatalog(), {
   Chart: MyChartComponent,
@@ -32,8 +32,8 @@ const catalog = withViews(a2uiBasicCatalog(), {
 ## Overriding Built-In Components
 
 ```typescript
-import { views } from '@cacheplane/render';
-import { a2uiBasicCatalog } from '@cacheplane/chat';
+import { views } from '@ngaf/render';
+import { a2uiBasicCatalog } from '@ngaf/chat';
 
 const catalog = views({
   ...a2uiBasicCatalog(),
@@ -44,8 +44,8 @@ const catalog = views({
 ## Removing Components
 
 ```typescript
-import { withoutViews } from '@cacheplane/render';
-import { a2uiBasicCatalog } from '@cacheplane/chat';
+import { withoutViews } from '@ngaf/render';
+import { a2uiBasicCatalog } from '@ngaf/chat';
 
 const catalog = withoutViews(a2uiBasicCatalog(), 'Modal', 'Video');
 ```
@@ -53,7 +53,7 @@ const catalog = withoutViews(a2uiBasicCatalog(), 'Modal', 'Video');
 ## Custom-Only (No A2UI)
 
 ```typescript
-import { views } from '@cacheplane/render';
+import { views } from '@ngaf/render';
 
 const catalog = views({
   Chart: MyChartComponent,

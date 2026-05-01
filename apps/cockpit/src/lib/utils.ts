@@ -1,1 +1,1 @@
-export { cn } from '@cacheplane/ui-react';
+export { cn } from '@ngaf/ui-react';

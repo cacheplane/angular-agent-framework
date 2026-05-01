@@ -10,7 +10,7 @@ Creates an immutable view registry mapping names to Angular components. Views ar
 ## Usage
 
 ```typescript
-import { views } from '@cacheplane/render';
+import { views } from '@ngaf/render';
 
 const ui = views({
   'plan-checklist': PlanChecklistComponent,
@@ -28,7 +28,7 @@ Pass to the chat component:
 Or provide globally via DI:
 
 ```typescript
-import { provideViews } from '@cacheplane/render';
+import { provideViews } from '@ngaf/render';
 
 // app.config.ts
 providers: [provideViews(ui)]

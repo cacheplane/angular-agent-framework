@@ -2,9 +2,9 @@
 import {
   Component, computed, input, output, ChangeDetectionStrategy,
 } from '@angular/core';
-import type { A2uiSurface, A2uiActionMessage } from '@cacheplane/a2ui';
-import { RenderSpecComponent, toRenderRegistry } from '@cacheplane/render';
-import type { ViewRegistry, RenderEvent } from '@cacheplane/render';
+import type { A2uiSurface, A2uiActionMessage } from '@ngaf/a2ui';
+import { RenderSpecComponent, toRenderRegistry } from '@ngaf/render';
+import type { ViewRegistry, RenderEvent } from '@ngaf/render';
 import { surfaceToSpec } from './surface-to-spec';
 import { buildA2uiActionMessage } from './build-action-message';
 

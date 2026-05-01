@@ -1,4 +1,4 @@
-# Spec Rendering with @cacheplane/render
+# Spec Rendering with @ngaf/render
 
 <Summary>
 Render Angular components from JSON specifications using RenderSpecComponent.
@@ -8,7 +8,7 @@ them with reactive prop bindings.
 
 <Prompt>
 Add JSON-driven UI rendering to this Angular component using `RenderSpecComponent`
-from `@cacheplane/render`. Define a registry with `defineAngularRegistry()`, create
+from `@ngaf/render`. Define a registry with `defineAngularRegistry()`, create
 a state store with `signalStateStore()`, and pass a JSON spec to the template.
 </Prompt>
 
@@ -20,8 +20,8 @@ Set up `provideRender()` in your app config with a component registry:
 ```typescript
 // app.config.ts
 import { ApplicationConfig } from '@angular/core';
-import { provideRender } from '@cacheplane/render';
-import { defineAngularRegistry } from '@cacheplane/render';
+import { provideRender } from '@ngaf/render';
+import { defineAngularRegistry } from '@ngaf/render';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -68,7 +68,7 @@ Use `signalStateStore()` to create a reactive state store that your spec
 can bind to:
 
 ```typescript
-import { signalStateStore } from '@cacheplane/render';
+import { signalStateStore } from '@ngaf/render';
 
 const store = signalStateStore({ count: 0, name: '' });
 store.set('/count', 1);

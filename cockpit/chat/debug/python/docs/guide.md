@@ -1,4 +1,4 @@
-# Chat Debug with @cacheplane/chat
+# Chat Debug with @ngaf/chat
 
 <Summary>
 Inspect conversation state, diffs, and graph execution using the
@@ -8,7 +8,7 @@ state inspector, and diff viewer for development.
 
 <Prompt>
 Add a debug panel to your chat interface using `ChatDebugComponent`
-from `@cacheplane/chat`. This replaces `ChatComponent` and provides
+from `@ngaf/chat`. This replaces `ChatComponent` and provides
 full development inspection capabilities.
 </Prompt>
 
@@ -19,7 +19,7 @@ Use `ChatDebugComponent` instead of `ChatComponent` for the full
 debug experience:
 
 ```typescript
-import { ChatDebugComponent } from '@cacheplane/chat';
+import { ChatDebugComponent } from '@ngaf/chat';
 ```
 
 </Step>

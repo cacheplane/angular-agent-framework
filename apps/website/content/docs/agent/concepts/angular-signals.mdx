@@ -60,7 +60,7 @@ const status = toSignal(status$, { initialValue: 'idle' });
 <Tab label="What you see">
 
 ```typescript
-import { agent } from '@cacheplane/langgraph';
+import { agent } from '@ngaf/langgraph';
 
 // You never touch BehaviorSubjects or toSignal() yourself.
 // agent() hands you clean Signals:
@@ -154,7 +154,7 @@ console.log(chat.isLoading());  // false
 
 ```typescript
 import { computed } from '@angular/core';
-import { agent } from '@cacheplane/langgraph';
+import { agent } from '@ngaf/langgraph';
 
 const chat = agent<ChatState>({
   assistantId: 'chat_agent',
@@ -259,7 +259,7 @@ Angular's new control flow syntax (`@if`, `@for`, `@switch`) works naturally wit
 
 ```typescript
 import { ChangeDetectionStrategy, Component, computed, effect, ElementRef, ViewChild } from '@angular/core';
-import { agent } from '@cacheplane/langgraph';
+import { agent } from '@ngaf/langgraph';
 
 @Component({
   selector: 'app-chat',
@@ -457,7 +457,7 @@ graph = builder.compile()
 
 ```typescript
 import { ChangeDetectionStrategy, Component, computed, effect } from '@angular/core';
-import { agent } from '@cacheplane/langgraph';
+import { agent } from '@ngaf/langgraph';
 
 @Component({
   selector: 'app-chat',

@@ -18,7 +18,7 @@ jobs:
       contents: read
       id-token: write  # for npm provenance
     env:
-      NPM_PUBLISHABLE_PROJECTS: chat,langgraph,ag-ui,render,a2ui,partial-json,licensing,mcp
+      NPM_PUBLISHABLE_PROJECTS: chat,langgraph,ag-ui,render,a2ui,partial-json,licensing
     steps:
       - uses: actions/checkout@v6.0.2
       - uses: actions/setup-node@v6.3.0

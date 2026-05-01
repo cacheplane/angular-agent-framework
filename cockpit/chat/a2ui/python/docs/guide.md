@@ -1,4 +1,4 @@
-# A2UI Surfaces with @cacheplane/chat
+# A2UI Surfaces with @ngaf/chat
 
 <Summary>
 Render agent-driven interactive UI using the A2UI (Agent-to-UI) protocol.
@@ -8,7 +8,7 @@ The agent streams JSONL messages that build surfaces from the built-in
 
 <Prompt>
 Add A2UI surface rendering to your chat interface using `a2uiBasicCatalog()`
-from `@cacheplane/chat`. Pass it to `ChatComponent` via the `[views]` input
+from `@ngaf/chat`. Pass it to `ChatComponent` via the `[views]` input
 to enable A2UI surface rendering with automatic event routing.
 </Prompt>
 
@@ -18,8 +18,8 @@ to enable A2UI surface rendering with automatic event routing.
 Import `a2uiBasicCatalog()` and pass it via the `[views]` input:
 
 ```typescript
-import { ChatComponent, a2uiBasicCatalog } from '@cacheplane/chat';
-import { agent } from '@cacheplane/langgraph';
+import { ChatComponent, a2uiBasicCatalog } from '@ngaf/chat';
+import { agent } from '@ngaf/langgraph';
 
 @Component({
   selector: 'app-a2ui',

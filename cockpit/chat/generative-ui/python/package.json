@@ -1,5 +1,5 @@
 {
-  "name": "@cacheplane/cockpit-chat-generative-ui-python",
+  "name": "@ngaf/cockpit-chat-generative-ui-python",
   "version": "0.0.1",
   "license": "MIT",
   "sideEffects": false

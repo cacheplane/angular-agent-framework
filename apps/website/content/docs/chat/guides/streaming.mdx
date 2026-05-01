@@ -8,7 +8,7 @@ Each AI message is processed by a `ContentClassifier` that examines the content 
 
 | Trigger | Content Type | What Happens |
 |---------|-------------|--------------|
-| First non-whitespace is `{` | `json-render` | Parsed as a JSON spec via `@cacheplane/partial-json` |
+| First non-whitespace is `{` | `json-render` | Parsed as a JSON spec via `@ngaf/partial-json` |
 | Any other text | `markdown` | Rendered as markdown prose |
 
 <Callout type="info" title="Per-message classification">
@@ -34,7 +34,7 @@ Tokens arrive character-by-character
 For custom message rendering outside of `ChatComponent`, use `createContentClassifier()`:
 
 ```typescript
-import { createContentClassifier } from '@cacheplane/chat';
+import { createContentClassifier } from '@ngaf/chat';
 
 // Create a classifier instance (must be in an Angular injection context)
 const classifier = createContentClassifier();
@@ -74,8 +74,8 @@ type ContentType = 'undetermined' | 'markdown' | 'json-render' | 'a2ui' | 'mixed
 For lower-level control over JSON-to-Spec materialization:
 
 ```typescript
-import { createPartialJsonParser } from '@cacheplane/partial-json';
-import { createParseTreeStore } from '@cacheplane/chat';
+import { createPartialJsonParser } from '@ngaf/partial-json';
+import { createParseTreeStore } from '@ngaf/chat';
 
 const parser = createPartialJsonParser();
 const store = createParseTreeStore(parser);

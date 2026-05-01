@@ -2,12 +2,12 @@
 
 <Summary>
 Build a chat interface that shows real-time code execution logs using `agent()` from
-`@cacheplane/langgraph`. The agent writes Python code and runs it in a sandbox, and the
+`@ngaf/langgraph`. The agent writes Python code and runs it in a sandbox, and the
 sidebar displays each execution as a log entry with code input, stdout output, and exit status.
 </Summary>
 
 <Prompt>
-Add a code execution log sidebar to this Angular component using `agent()` from `@cacheplane/langgraph`. Use `stream.messages()` to access tool call data from the `run_code` tool, derive `executionLogs` with `computed()`, and bind them to the sidebar via the `<cp-chat>` component from `@cacheplane/chat`.
+Add a code execution log sidebar to this Angular component using `agent()` from `@ngaf/langgraph`. Use `stream.messages()` to access tool call data from the `run_code` tool, derive `executionLogs` with `computed()`, and bind them to the sidebar via the `<cp-chat>` component from `@ngaf/chat`.
 </Prompt>
 
 <Steps>
@@ -18,7 +18,7 @@ Set up `provideAgent()` in your app config with the LangGraph API URL:
 ```typescript
 // app.config.ts
 import { ApplicationConfig } from '@angular/core';
-import { provideAgent } from '@cacheplane/langgraph';
+import { provideAgent } from '@ngaf/langgraph';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -38,7 +38,7 @@ In your component, call `agent()` with the `assistantId` pointing to your sandbo
 
 ```typescript
 // sandboxes.component.ts
-import { agent } from '@cacheplane/langgraph';
+import { agent } from '@ngaf/langgraph';
 
 export class SandboxesComponent {
   protected readonly stream = agent({

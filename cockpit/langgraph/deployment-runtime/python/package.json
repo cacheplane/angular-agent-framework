@@ -1,5 +1,5 @@
 {
-  "name": "@cacheplane/cockpit-langgraph-deployment-runtime-python",
+  "name": "@ngaf/cockpit-langgraph-deployment-runtime-python",
   "version": "0.0.1",
   "license": "MIT",
   "sideEffects": false

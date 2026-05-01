@@ -4,10 +4,10 @@ import {
   runLicenseCheck,
   LICENSE_PUBLIC_KEY,
   inferNoncommercial,
-} from '@cacheplane/licensing';
+} from '@ngaf/licensing';
 import { AgentTransport } from './agent.types';
 
-const PACKAGE_NAME = '@cacheplane/langgraph';
+const PACKAGE_NAME = '@ngaf/langgraph';
 // Wired up by the release pipeline — imported lazily to avoid a hard build-time
 // dependency on package.json.
 declare const __CACHEPLANE_AGENT_VERSION__: string | undefined;

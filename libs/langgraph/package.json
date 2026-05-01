@@ -1,9 +1,9 @@
 {
-  "name": "@cacheplane/langgraph",
+  "name": "@ngaf/langgraph",
   "version": "0.0.1",
   "peerDependencies": {
-    "@cacheplane/chat": "*",
-    "@cacheplane/licensing": "*",
+    "@ngaf/chat": "*",
+    "@ngaf/licensing": "*",
     "@angular/core": "^20.0.0 || ^21.0.0",
     "@langchain/core": "^1.1.33",
     "@langchain/langgraph-sdk": "^1.7.4",

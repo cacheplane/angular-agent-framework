@@ -1,7 +1,7 @@
 // apps/website/src/components/landing/render/RenderProblemSolution.tsx
 'use client';
 import { motion } from 'framer-motion';
-import { tokens } from '@cacheplane/design-tokens';
+import { tokens } from '@ngaf/design-tokens';
 
 const PAIN_POINTS = [
   'Hardcoded component logic per agent',
@@ -43,7 +43,7 @@ export function RenderProblemSolution() {
             fontSize: '0.58rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em',
             padding: '2px 9px', borderRadius: 5, color: '#fff', background: '#b71c1c', marginBottom: 16,
           }}>
-            Without @cacheplane/render
+            Without @ngaf/render
           </span>
           <h3 style={{
             fontFamily: "'EB Garamond', serif", fontSize: '1.3rem', fontWeight: 700,
@@ -69,7 +69,7 @@ export function RenderProblemSolution() {
             fontSize: '0.58rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em',
             padding: '2px 9px', borderRadius: 5, color: '#fff', background: tokens.colors.renderGreen, marginBottom: 16,
           }}>
-            With @cacheplane/render
+            With @ngaf/render
           </span>
           <h3 style={{
             fontFamily: "'EB Garamond', serif", fontSize: '1.3rem', fontWeight: 700,

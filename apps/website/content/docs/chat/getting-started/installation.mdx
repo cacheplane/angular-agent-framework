@@ -1,15 +1,15 @@
 # Installation
 
-Detailed setup guide for `@cacheplane/chat` in your Angular application.
+Detailed setup guide for `@ngaf/chat` in your Angular application.
 
 ## Requirements
 
 <Steps>
 <Step title="Angular 20+">
-`@cacheplane/chat` uses Angular Signals, the `input()` function, and `contentChildren()`. Angular 20 or later is required.
+`@ngaf/chat` uses Angular Signals, the `input()` function, and `contentChildren()`. Angular 20 or later is required.
 </Step>
-<Step title="@cacheplane/agent">
-The chat components read streaming state from `AgentRef`, which is provided by `@cacheplane/agent`. You must have `provideAgent()` configured before adding chat.
+<Step title="@ngaf/agent">
+The chat components read streaming state from `AgentRef`, which is provided by `@ngaf/agent`. You must have `provideAgent()` configured before adding chat.
 </Step>
 <Step title="Node.js 18+">
 Required for the build toolchain and package installation.
@@ -19,20 +19,20 @@ Required for the build toolchain and package installation.
 ## Install the package
 
 ```bash
-npm install @cacheplane/chat
+npm install @ngaf/chat
 ```
 
 ## Peer Dependencies
 
-`@cacheplane/chat` declares the following peer dependencies:
+`@ngaf/chat` declares the following peer dependencies:
 
 | Package | Version | Required |
 |---------|---------|----------|
 | `@angular/core` | `^20.0.0 \|\| ^21.0.0` | Yes |
 | `@angular/common` | `^20.0.0 \|\| ^21.0.0` | Yes |
 | `@angular/forms` | `^20.0.0 \|\| ^21.0.0` | Yes |
-| `@cacheplane/langgraph` | `^0.0.1` | Yes |
-| `@cacheplane/render` | `^0.0.1` | Yes |
+| `@ngaf/langgraph` | `^0.0.1` | Yes |
+| `@ngaf/render` | `^0.0.1` | Yes |
 | `@json-render/core` | `^0.16.0` | Yes |
 | `@langchain/core` | `^1.1.33` | Yes |
 | `@langchain/langgraph-sdk` | `^1.7.4` | Yes |
@@ -45,7 +45,7 @@ The `marked` package is optional. When installed, AI messages are rendered as fu
 To install everything at once:
 
 ```bash
-npm install @cacheplane/chat @cacheplane/langgraph @cacheplane/render marked
+npm install @ngaf/chat @ngaf/langgraph @ngaf/render marked
 ```
 
 ## Configure provideChat()
@@ -55,8 +55,8 @@ Add `provideChat()` alongside `provideAgent()` in your application configuration
 ```typescript
 // app.config.ts
 import { ApplicationConfig } from '@angular/core';
-import { provideAgent } from '@cacheplane/langgraph';
-import { provideChat } from '@cacheplane/chat';
+import { provideAgent } from '@ngaf/langgraph';
+import { provideChat } from '@ngaf/chat';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -91,8 +91,8 @@ Create a minimal component to verify everything is wired up:
 
 ```typescript
 import { Component, signal } from '@angular/core';
-import { agent } from '@cacheplane/langgraph';
-import { ChatComponent } from '@cacheplane/chat';
+import { agent } from '@ngaf/langgraph';
+import { ChatComponent } from '@ngaf/chat';
 import type { BaseMessage } from '@langchain/core/messages';
 
 @Component({

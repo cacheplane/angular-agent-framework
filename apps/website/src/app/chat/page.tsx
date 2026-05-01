@@ -7,10 +7,10 @@ import { ChatLandingComparison } from '../../components/landing/chat-landing/Cha
 import { ChatLandingWhitePaperGate } from '../../components/landing/chat-landing/ChatLandingWhitePaperGate';
 import { ChatLandingStackSiblings } from '../../components/landing/chat-landing/ChatLandingStackSiblings';
 import { ChatLandingFooterCTA } from '../../components/landing/chat-landing/ChatLandingFooterCTA';
-import { tokens } from '@cacheplane/design-tokens';
+import { tokens } from '@ngaf/design-tokens';
 
 export const metadata = {
-  title: '@cacheplane/chat — Batteries-Included Agent Chat for Angular',
+  title: '@ngaf/chat — Batteries-Included Agent Chat for Angular',
   description: 'Production agent chat UI in days, not sprints. Built on Vercel json-render and Google A2UI specs.',
 };
 

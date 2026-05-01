@@ -1,7 +1,7 @@
 'use client';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-import { tokens } from '@cacheplane/design-tokens';
+import { tokens } from '@ngaf/design-tokens';
 import type { ArchitectureLayer } from '../../../lib/solutions-data';
 
 const LIBRARY_META: Record<string, { color: string; rgb: string; href: string }> = {

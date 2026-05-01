@@ -3,7 +3,7 @@
 
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-import { tokens } from '@cacheplane/design-tokens';
+import { tokens } from '@ngaf/design-tokens';
 
 export function AngularFooterCTA() {
   return (

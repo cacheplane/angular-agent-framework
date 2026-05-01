@@ -1,4 +1,4 @@
-# Registry with @cacheplane/render
+# Registry with @ngaf/render
 
 <Summary>
 Map type strings to Angular component classes using defineAngularRegistry.
@@ -8,7 +8,7 @@ to reference components by name.
 
 <Prompt>
 Add a component registry to this Angular application using
-`defineAngularRegistry()` from `@cacheplane/render`. Register component
+`defineAngularRegistry()` from `@ngaf/render`. Register component
 types, look them up with `registry.get()`, and list all types with
 `registry.names()`.
 </Prompt>
@@ -32,7 +32,7 @@ export class BadgeComponent { @Input() label = ''; }
 Map type strings to component classes:
 
 ```typescript
-import { defineAngularRegistry } from '@cacheplane/render';
+import { defineAngularRegistry } from '@ngaf/render';
 
 const registry = defineAngularRegistry({
   card: CardComponent,

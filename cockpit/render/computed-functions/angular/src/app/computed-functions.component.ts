@@ -5,11 +5,11 @@ import {
   RenderElementComponent,
   defineAngularRegistry,
   signalStateStore,
-} from '@cacheplane/render';
+} from '@ngaf/render';
 import type { Spec } from '@json-render/core';
 import { StreamingSimulator } from '../../../../shared/streaming-simulator';
 import { StreamingTimelineComponent } from '../../../../shared/streaming-timeline.component';
-import { ExampleSplitLayoutComponent } from '@cacheplane/example-layouts';
+import { ExampleSplitLayoutComponent } from '@ngaf/example-layouts';
 import { COMPUTED_FUNCTIONS_SPECS } from './specs';
 
 // --- Inline view components ---

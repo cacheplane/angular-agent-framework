@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { docsConfig } from '../../lib/docs-config';
-import { tokens } from '@cacheplane/design-tokens';
+import { tokens } from '@ngaf/design-tokens';
 
 export default function DocsLandingPage() {
   return (

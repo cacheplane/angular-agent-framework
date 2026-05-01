@@ -15,7 +15,7 @@ export default [
             '@nx/vite',
             'vitest',
             // peerDeps used by later tasks (stub-only in Task 1)
-            '@cacheplane/licensing',
+            '@ngaf/licensing',
             'fast-json-patch',
             'rxjs',
           ],

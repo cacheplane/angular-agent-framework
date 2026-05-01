@@ -7,7 +7,7 @@ The component registry maps element type names from your spec to Angular compone
 Use `defineAngularRegistry()` to create a registry from a plain object mapping type names to component classes:
 
 ```typescript
-import { defineAngularRegistry } from '@cacheplane/render';
+import { defineAngularRegistry } from '@ngaf/render';
 import { TextComponent } from './text.component';
 import { CardComponent } from './card.component';
 import { ButtonComponent } from './button.component';
@@ -34,7 +34,7 @@ uiRegistry.names();        // ['Text', 'Card', 'Button', 'Container']
 
 ## The Component Input Contract
 
-Every component rendered by `@cacheplane/render` receives inputs conforming to the `AngularComponentInputs` interface. Your custom props from the spec are spread as additional inputs alongside the standard ones.
+Every component rendered by `@ngaf/render` receives inputs conforming to the `AngularComponentInputs` interface. Your custom props from the spec are spread as additional inputs alongside the standard ones.
 
 ### Standard Inputs
 
@@ -126,7 +126,7 @@ You can use the bindings map to write back to the store:
 
 ```typescript
 import { Component, ChangeDetectionStrategy, input, inject } from '@angular/core';
-import { RENDER_CONTEXT } from '@cacheplane/render';
+import { RENDER_CONTEXT } from '@ngaf/render';
 
 @Component({
   selector: 'app-input',
@@ -162,7 +162,7 @@ Container components can render their children by using the `childKeys` and `spe
 
 ```typescript
 import { Component, ChangeDetectionStrategy, input } from '@angular/core';
-import { RenderElementComponent } from '@cacheplane/render';
+import { RenderElementComponent } from '@ngaf/render';
 import type { Spec } from '@json-render/core';
 
 @Component({
@@ -198,7 +198,7 @@ You can provide the registry in two ways:
 
 ```typescript
 // app.config.ts
-import { provideRender, defineAngularRegistry } from '@cacheplane/render';
+import { provideRender, defineAngularRegistry } from '@ngaf/render';
 
 export const appConfig: ApplicationConfig = {
   providers: [

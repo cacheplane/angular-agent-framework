@@ -20,7 +20,7 @@
 
 <!-- Cover -->
 <div style="height:100vh;display:flex;flex-direction:column;justify-content:flex-end;padding:80px 80px 100px;background:linear-gradient(135deg, #e8f5e9 0%, #eaf3ff 45%, #f4f0ff 70%, #fef0f3 100%);page-break-after:always">
-  <div style="font-family:monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.12em;color:#004090;font-weight:700;margin-bottom:24px">@cacheplane/render · Enterprise Guide</div>
+  <div style="font-family:monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.12em;color:#004090;font-weight:700;margin-bottom:24px">@ngaf/render · Enterprise Guide</div>
   <h1 style="font-family:'EB Garamond',serif;font-size:52px;font-weight:800;line-height:1.1;color:#1a1a2e;margin-bottom:20px">The<br>Enterprise<br>Guide<br>to<br>Generative<br>UI<br>in<br>Angular</h1>
   <p style="font-family:'EB Garamond',serif;font-style:italic;font-size:20px;color:#555770;margin-bottom:40px">Agents that render UI — without coupling to your frontend</p>
   <div style="font-size:13px;color:#888;font-family:monospace">cacheplane.io · 2026</div>
@@ -134,8 +134,8 @@
 <p>Computed properties use `{{expression}}` interpolation within prop values. Expressions are evaluated against a runtime context object supplied by the host application. The spec deliberately keeps the expression language minimal — it is not a scripting environment.</p>
 <h3>Google's A2UI Extension</h3>
 <p>Google's A2UI spec extends json-render for agent-native patterns. It introduces `intent` nodes, which describe what the agent wants to accomplish rather than prescribing a specific component. A2UI also formalizes `action` bindings — structured event handlers that dispatch typed payloads back to the agent rather than calling arbitrary JavaScript. For teams building bidirectional agent interfaces, A2UI's interaction model is worth adopting alongside the base spec.</p>
-<h3>@cacheplane/render in Angular</h3>
-<p>`@cacheplane/render` implements json-render for Angular via the `<render-spec>` directive. Pass it a document and a component registry:</p>
+<h3>@ngaf/render in Angular</h3>
+<p>`@ngaf/render` implements json-render for Angular via the `<render-spec>` directive. Pass it a document and a component registry:</p>
 <pre><code>@Component({
   template: `<render-spec [document]="agentOutput" [registry]="registry" />`
 })
@@ -156,7 +156,7 @@ export class AgentShellComponent {
 <p>The component registry is the load-bearing joint between a json-render document and your Angular application. A render spec can name any component it wants; the registry decides what that name actually means at runtime. Get this layer right and you have a stable, evolvable surface for generative UI. Get it wrong and you have a fragile string-matching problem scattered across your codebase.</p>
 <h3>Mapping Names to Components</h3>
 <p>`defineAngularRegistry()` accepts a plain object where each key is the component name a spec will reference, and each value is the corresponding Angular component class. Nothing more.</p>
-<pre><code>import { defineAngularRegistry } from '@cacheplane/render';
+<pre><code>import { defineAngularRegistry } from '@ngaf/render';
 import { MetricCardComponent } from './metric-card.component';
 import { DataTableComponent } from './data-table.component';
 import { AlertBannerComponent } from './alert-banner.component';
@@ -204,9 +204,9 @@ import { ChartComponent } from './chart.component';
 </code></pre>
 <p>This is the correct abstraction for generative UI streaming. The agent's output token stream maps cleanly to patch operations: a new row is an `add`, a corrected value is a `replace`, a retracted field is a `remove`. The frontend accumulates these deltas against a baseline spec document rather than swapping documents wholesale.</p>
 <h3>Partial-JSON Parsing and Skeleton States</h3>
-<p>Before a complete patch operation has arrived, you need somewhere to be. `@cacheplane/render` handles this through two mechanisms working in parallel.</p>
+<p>Before a complete patch operation has arrived, you need somewhere to be. `@ngaf/render` handles this through two mechanisms working in parallel.</p>
 <p>First, partial-JSON parsing allows the renderer to extract and apply structurally valid operations from an incomplete stream. If three operations are fully formed and the fourth is mid-token, the first three are applied immediately. The incomplete operation is buffered until its closing delimiter arrives.</p>
-<p>Second, skeleton states are declared in the baseline spec. Before any patches arrive, `@cacheplane/render` renders placeholder elements — shimmer rows, empty card outlines, header shells — based on the spec's `skeleton` annotations. As patches land, real content replaces placeholders in place. Users see a structured, stable layout from the first render frame.</p>
+<p>Second, skeleton states are declared in the baseline spec. Before any patches arrive, `@ngaf/render` renders placeholder elements — shimmer rows, empty card outlines, header shells — based on the spec's `skeleton` annotations. As patches land, real content replaces placeholders in place. Users see a structured, stable layout from the first render frame.</p>
 <h3>Consuming Patch Events in Angular</h3>
 <pre><code>@Component({ changeDetection: ChangeDetectionStrategy.OnPush })
 export class ReportViewComponent {
@@ -230,7 +230,7 @@ export class ReportViewComponent {
       <div style="font-family:monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#004090;font-weight:700;margin-bottom:16px">Chapter 5</div>
       <h2 style="font-family:'EB Garamond',serif;font-size:36px;font-weight:800;color:#1a1a2e;margin-bottom:28px;line-height:1.15">State Management & Computed Functions</h2>
       <div class="chapter-body"><h3>Chapter 4: State Management & Computed Functions</h3>
-<p>Static specs describe structure. They fall short the moment your UI needs to reflect derived state — a total calculated from line items, a label that changes based on a flag, a list of cards rendered from an array. For generative UI to be production-ready, the spec itself must support dynamic behavior. `@cacheplane/render` addresses this through `signalStateStore()`, computed properties, and repeat loops — mechanisms that let an agent define reactive UI logic declaratively, without pushing that responsibility into custom component code.</p>
+<p>Static specs describe structure. They fall short the moment your UI needs to reflect derived state — a total calculated from line items, a label that changes based on a flag, a list of cards rendered from an array. For generative UI to be production-ready, the spec itself must support dynamic behavior. `@ngaf/render` addresses this through `signalStateStore()`, computed properties, and repeat loops — mechanisms that let an agent define reactive UI logic declaratively, without pushing that responsibility into custom component code.</p>
 <h3>signalStateStore(): Agent-Managed Reactive State</h3>
 <p>`signalStateStore()` creates a Signal-backed state container that both the rendering engine and your Angular components can read from and write to. When an agent generates a spec, it can seed this store with initial values. Components rendered from that spec subscribe to the store automatically — no `@Input()` wiring, no manual change detection.</p>
 <pre><code>const store = signalStateStore({

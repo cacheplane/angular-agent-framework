@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-import type { A2uiSurface, A2uiActionMessage } from '@cacheplane/a2ui';
+import type { A2uiSurface, A2uiActionMessage } from '@ngaf/a2ui';
 
 /** Builds a v0.9 A2uiActionMessage from handler params and the current surface. */
 export function buildA2uiActionMessage(

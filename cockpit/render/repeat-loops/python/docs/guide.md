@@ -1,4 +1,4 @@
-# Repeat Loops with @cacheplane/render
+# Repeat Loops with @ngaf/render
 
 <Summary>
 Iterate over arrays in the state store using repeat specs. Each iteration
@@ -8,7 +8,7 @@ for per-item rendering.
 
 <Prompt>
 Add repeat rendering to this Angular component using repeat specs from
-`@cacheplane/render`. Define array state, create a repeat spec template,
+`@ngaf/render`. Define array state, create a repeat spec template,
 access RepeatScope context, and add/remove items dynamically.
 </Prompt>
 
@@ -18,7 +18,7 @@ access RepeatScope context, and add/remove items dynamically.
 Create a state store with an array to iterate over:
 
 ```typescript
-import { signalStateStore } from '@cacheplane/render';
+import { signalStateStore } from '@ngaf/render';
 
 const store = signalStateStore({
   items: [

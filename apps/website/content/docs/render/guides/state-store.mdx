@@ -1,11 +1,11 @@
 # State Store
 
-The state store holds the reactive state that drives your rendered UI. `@cacheplane/render` provides `signalStateStore()`, an Angular Signals-backed implementation of the `StateStore` interface from `@json-render/core`.
+The state store holds the reactive state that drives your rendered UI. `@ngaf/render` provides `signalStateStore()`, an Angular Signals-backed implementation of the `StateStore` interface from `@json-render/core`.
 
 ## Creating a State Store
 
 ```typescript
-import { signalStateStore } from '@cacheplane/render';
+import { signalStateStore } from '@ngaf/render';
 
 const store = signalStateStore({
   user: { name: 'Alice', age: 30 },

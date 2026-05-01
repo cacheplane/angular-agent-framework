@@ -1,7 +1,7 @@
 // apps/website/src/components/landing/chat-landing/ChatLandingComparison.tsx
 'use client';
 import { motion } from 'framer-motion';
-import { tokens } from '@cacheplane/design-tokens';
+import { tokens } from '@ngaf/design-tokens';
 
 const ROWS = [
   { capability: 'Message rendering', theirs: 'Sprint 1', ours: 'Included' },
@@ -42,7 +42,7 @@ export function ChatLandingComparison() {
           fontSize: 'clamp(26px,3.5vw,42px)', fontWeight: 800, lineHeight: 1.1,
           color: tokens.colors.textPrimary,
         }}>
-          Incrementally building chat vs @cacheplane/chat
+          Incrementally building chat vs @ngaf/chat
         </h2>
       </motion.div>
 
@@ -62,7 +62,7 @@ export function ChatLandingComparison() {
           display: 'grid', gridTemplateColumns: 'minmax(100px, 1fr) minmax(120px, 1fr) minmax(120px, 1fr)',
           background: 'rgba(255,255,255,.3)', borderBottom: `1px solid ${tokens.glass.border}`, padding: '14px 24px',
         }}>
-          {['Capability', 'Build Incrementally', '@cacheplane/chat'].map((h, i) => (
+          {['Capability', 'Build Incrementally', '@ngaf/chat'].map((h, i) => (
             <div key={h} style={{
               fontFamily: 'var(--font-mono,"JetBrains Mono",monospace)',
               fontSize: '0.62rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em',

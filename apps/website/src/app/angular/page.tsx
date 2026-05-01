@@ -7,10 +7,10 @@ import { AngularComparison } from '../../components/landing/angular/AngularCompa
 import { AngularWhitePaperGate } from '../../components/landing/angular/AngularWhitePaperGate';
 import { AngularStackSiblings } from '../../components/landing/angular/AngularStackSiblings';
 import { AngularFooterCTA } from '../../components/landing/angular/AngularFooterCTA';
-import { tokens } from '@cacheplane/design-tokens';
+import { tokens } from '@ngaf/design-tokens';
 
 export const metadata = {
-  title: '@cacheplane/langgraph — Agent Streaming for Angular',
+  title: '@ngaf/langgraph — Agent Streaming for Angular',
   description: 'Ship LangGraph agents in Angular. Signal-native streaming, thread persistence, interrupts, and deterministic testing.',
 };
 

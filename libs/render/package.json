@@ -1,11 +1,11 @@
 {
-  "name": "@cacheplane/render",
+  "name": "@ngaf/render",
   "version": "0.0.1",
   "peerDependencies": {
     "@angular/core": "^20.0.0 || ^21.0.0",
     "@angular/common": "^20.0.0 || ^21.0.0",
     "@json-render/core": "^0.16.0",
-    "@cacheplane/licensing": "*"
+    "@ngaf/licensing": "*"
   },
   "license": "MIT",
   "repository": {

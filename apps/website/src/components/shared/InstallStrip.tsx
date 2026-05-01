@@ -1,8 +1,8 @@
 'use client';
 import { useState } from 'react';
-import { tokens } from '@cacheplane/design-tokens';
+import { tokens } from '@ngaf/design-tokens';
 
-const CMD = 'npm install @cacheplane/langgraph';
+const CMD = 'npm install @ngaf/langgraph';
 
 export function InstallStrip() {
   const [copied, setCopied] = useState(false);

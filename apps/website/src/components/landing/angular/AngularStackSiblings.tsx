@@ -1,12 +1,12 @@
 'use client';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-import { tokens } from '@cacheplane/design-tokens';
+import { tokens } from '@ngaf/design-tokens';
 
 const SIBLINGS = [
   {
     tag: 'Gen UI',
-    pkg: '@cacheplane/render',
+    pkg: '@ngaf/render',
     color: tokens.colors.renderGreen,
     rgb: '26,122,64',
     headline: 'Agents that render UI — on open standards',
@@ -15,7 +15,7 @@ const SIBLINGS = [
   },
   {
     tag: 'Chat',
-    pkg: '@cacheplane/chat',
+    pkg: '@ngaf/chat',
     color: tokens.colors.chatPurple,
     rgb: '90,0,200',
     headline: 'Production chat UI in days, not sprints',

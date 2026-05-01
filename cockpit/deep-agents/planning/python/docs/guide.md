@@ -2,12 +2,12 @@
 
 <Summary>
 Build a chat interface that shows real-time task decomposition using `agent()` from
-`@cacheplane/langgraph`. The agent breaks complex requests into ordered steps, and the
+`@ngaf/langgraph`. The agent breaks complex requests into ordered steps, and the
 sidebar displays each step's status as the agent works through them.
 </Summary>
 
 <Prompt>
-Add a task planning sidebar to this Angular component using `agent()` from `@cacheplane/langgraph`. Use `stream.value()` to access the agent's plan state, derive `planSteps` with `computed()`, and bind them to the sidebar via the `<cp-chat>` component from `@cacheplane/chat`.
+Add a task planning sidebar to this Angular component using `agent()` from `@ngaf/langgraph`. Use `stream.value()` to access the agent's plan state, derive `planSteps` with `computed()`, and bind them to the sidebar via the `<cp-chat>` component from `@ngaf/chat`.
 </Prompt>
 
 <Steps>
@@ -18,7 +18,7 @@ Set up `provideAgent()` in your app config with the LangGraph API URL:
 ```typescript
 // app.config.ts
 import { ApplicationConfig } from '@angular/core';
-import { provideAgent } from '@cacheplane/langgraph';
+import { provideAgent } from '@ngaf/langgraph';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -38,7 +38,7 @@ In your component, call `agent()` with the `assistantId` pointing to your planni
 
 ```typescript
 // planning.component.ts
-import { agent } from '@cacheplane/langgraph';
+import { agent } from '@ngaf/langgraph';
 
 export class PlanningComponent {
   protected readonly stream = agent({

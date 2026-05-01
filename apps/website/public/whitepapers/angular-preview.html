@@ -20,7 +20,7 @@
 
 <!-- Cover -->
 <div style="height:100vh;display:flex;flex-direction:column;justify-content:flex-end;padding:80px 80px 100px;background:linear-gradient(135deg, #eaf3ff 0%, #e6f4ff 45%, #f4f0ff 70%, #fef0f3 100%);page-break-after:always">
-  <div style="font-family:monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.12em;color:#004090;font-weight:700;margin-bottom:24px">@cacheplane/langgraph · Enterprise Guide</div>
+  <div style="font-family:monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.12em;color:#004090;font-weight:700;margin-bottom:24px">@ngaf/langgraph · Enterprise Guide</div>
   <h1 style="font-family:'EB Garamond',serif;font-size:52px;font-weight:800;line-height:1.1;color:#1a1a2e;margin-bottom:20px">The<br>Enterprise<br>Guide<br>to<br>Agent<br>Streaming<br>in<br>Angular</h1>
   <p style="font-family:'EB Garamond',serif;font-style:italic;font-size:20px;color:#555770;margin-bottom:40px">Ship LangGraph agents in Angular — without building the plumbing</p>
   <div style="font-size:13px;color:#888;font-family:monospace">cacheplane.io · 2026</div>
@@ -91,7 +91,7 @@
       <div style="font-family:monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#004090;font-weight:700;margin-bottom:16px">Chapter 2</div>
       <h2 style="font-family:'EB Garamond',serif;font-size:36px;font-weight:800;color:#1a1a2e;margin-bottom:28px;line-height:1.15">The agent() API</h2>
       <div class="chapter-body"><h3>Chapter 3: The agent() API</h3>
-<p>The core primitive in `@cacheplane/langgraph` is `agent()` — a factory function that returns a structured ref containing typed signals wired directly to a LangGraph agent stream. You call it once, bind the signals in your template, and the component reacts to every streamed token without a subscription, a zone trigger, or an accumulation buffer in sight.</p>
+<p>The core primitive in `@ngaf/langgraph` is `agent()` — a factory function that returns a structured ref containing typed signals wired directly to a LangGraph agent stream. You call it once, bind the signals in your template, and the component reacts to every streamed token without a subscription, a zone trigger, or an accumulation buffer in sight.</p>
 <h3>What agent() Returns</h3>
 <p>`agent()` returns an `AgentRef` object with four signals:</p>
 <pre><code>interface AgentRef {
@@ -185,12 +185,12 @@ Thread persistence is one of those features that feels optional until a user los
       <div style="font-family:monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#004090;font-weight:700;margin-bottom:16px">Chapter 4</div>
       <h2 style="font-family:'EB Garamond',serif;font-size:36px;font-weight:800;color:#1a1a2e;margin-bottom:28px;line-height:1.15">Interrupt & Approval Flows</h2>
       <div class="chapter-body"><h3>Chapter 7: Interrupt & Approval Flows</h3>
-<p>Agents that interact with external systems — firing off emails, mutating database records, executing privileged queries — cannot operate as fire-and-forget processes in an enterprise context. Execution must be pauseable, inspectable, and resumable with explicit human intent. LangGraph's `interrupt()` primitive and `@cacheplane/langgraph`'s reactive surface for it give you exactly that, without polling loops or bespoke WebSocket plumbing.</p>
+<p>Agents that interact with external systems — firing off emails, mutating database records, executing privileged queries — cannot operate as fire-and-forget processes in an enterprise context. Execution must be pauseable, inspectable, and resumable with explicit human intent. LangGraph's `interrupt()` primitive and `@ngaf/langgraph`'s reactive surface for it give you exactly that, without polling loops or bespoke WebSocket plumbing.</p>
 <h3>How LangGraph interrupt() Works</h3>
 <p>When a LangGraph node calls `interrupt(payload)`, graph execution halts at that checkpoint. The payload is an arbitrary object you define — typically the action description, affected resource identifiers, and any data the reviewer needs to make a decision. The graph persists this state to its checkpointer and waits. Nothing proceeds until a resume command arrives with the correct thread ID and checkpoint reference.</p>
 <p>The resume payload follows a typed contract: `{ action: "approve" | "edit" | "cancel", data?: unknown }`. On `approve`, the graph continues with the original node inputs. On `edit`, your modified `data` is injected, replacing what the node would have used. On `cancel`, LangGraph short-circuits the remaining path and routes to whatever terminal state you've configured for rejected flows.</p>
 <h3>The Interrupt Signal in Angular</h3>
-<p>`@cacheplane/langgraph` exposes this checkpoint state directly on the agent reference. The `interrupt` property is a computed signal that starts as `null` and transitions to an `InterruptState` object the moment the backend checkpoint is written:</p>
+<p>`@ngaf/langgraph` exposes this checkpoint state directly on the agent reference. The `interrupt` property is a computed signal that starts as `null` and transitions to an `InterruptState` object the moment the backend checkpoint is written:</p>
 <pre><code>const agent = injectAgentRef({ threadId });
 <p>const interrupt = agent.interrupt; // Signal<InterruptState | null></p>
 <p>const handleApprove = () =>
@@ -221,16 +221,16 @@ Thread persistence is one of those features that feels optional until a user los
       <div style="font-family:monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#004090;font-weight:700;margin-bottom:16px">Chapter 5</div>
       <h2 style="font-family:'EB Garamond',serif;font-size:36px;font-weight:800;color:#1a1a2e;margin-bottom:28px;line-height:1.15">Full LangGraph Feature Coverage</h2>
       <div class="chapter-body"><h3>Chapter 4: Full LangGraph Feature Coverage</h3>
-<p>Basic chat streaming is a solved problem. The real engineering challenge begins when your graph does something more interesting—calls a tool, delegates to a subagent, or needs to rewind to a prior checkpoint. Most Angular LLM libraries handle the simple case and then quietly stop working. This chapter documents how `@cacheplane/langgraph` exposes the full LangGraph feature surface through a coherent signal-based API.</p>
+<p>Basic chat streaming is a solved problem. The real engineering challenge begins when your graph does something more interesting—calls a tool, delegates to a subagent, or needs to rewind to a prior checkpoint. Most Angular LLM libraries handle the simple case and then quietly stop working. This chapter documents how `@ngaf/langgraph` exposes the full LangGraph feature surface through a coherent signal-based API.</p>
 <p>---</p>
 <h3>Tool Call Streaming</h3>
-<p>When a LangGraph node invokes a tool, the graph emits a structured sequence of events: the tool call intent, intermediate streaming deltas, and the final tool result. Rather than requiring you to parse raw SSE frames and reconstruct this sequence manually, `@cacheplane/langgraph` surfaces tool invocation lifecycle through the agent ref directly.</p>
+<p>When a LangGraph node invokes a tool, the graph emits a structured sequence of events: the tool call intent, intermediate streaming deltas, and the final tool result. Rather than requiring you to parse raw SSE frames and reconstruct this sequence manually, `@ngaf/langgraph` surfaces tool invocation lifecycle through the agent ref directly.</p>
 <p>The `toolCalls` signal on the agent ref updates reactively as each tool call progresses. You get the tool name, input arguments as they stream in, execution status, and the final output—all typed, all reactive. Your component never needs to touch the underlying event stream to render a "Searching the web…" indicator or display structured tool output inline.</p>
 <p>This matters because tool call parsing is subtle. Argument deltas arrive as partial JSON strings. Parallel tool calls interleave. A naive implementation collapses these into noise. The library handles reconstruction and ordering internally.</p>
 <p>---</p>
 <h3>Subgraph Event Propagation</h3>
 <p>LangGraph supports nested graphs, and real production agents use them. Events emitted inside a subgraph are namespaced by graph path, which means consuming them correctly requires understanding the event hierarchy.</p>
-<p>`@cacheplane/langgraph` flattens subgraph events into the parent stream while preserving their origin metadata. If you care about which subgraph produced a message—for routing UI panels, for logging, or for debugging—you have access to the full event path. If you don't care, the default signal behavior aggregates everything cleanly without requiring you to configure traversal logic.</p>
+<p>`@ngaf/langgraph` flattens subgraph events into the parent stream while preserving their origin metadata. If you care about which subgraph produced a message—for routing UI panels, for logging, or for debugging—you have access to the full event path. If you don't care, the default signal behavior aggregates everything cleanly without requiring you to configure traversal logic.</p>
 <p>---</p>
 <h3>Time Travel</h3>
 <p>LangGraph's checkpoint system allows you to rewind graph state to any prior node execution and re-run from that point. This is not a niche feature—it's the foundation of any agent UI that allows users to correct mistakes or explore alternative paths.</p>
@@ -238,7 +238,7 @@ Thread persistence is one of those features that feels optional until a user los
 <p>---</p>
 <h3>DeepAgent Multi-Agent Coordination</h3>
 <p>DeepAgent introduces orchestrator-subagent topology at the stream level. An orchestrator dispatches work to specialized agents and aggregates their outputs. From the stream consumer's perspective, this produces interleaved events from multiple graph instances.</p>
-<p>`@cacheplane/langgraph` maps each active agent to its own scoped signal context. The orchestrator's agent ref exposes a `subagents` signal—a reactive map of active agent IDs to their respective state signals. You can bind a list of subagent components to this map and let Angular's `@for` loop handle the rest. Agent addition, completion, and failure all propagate as signal updates without manual subscription management.</p>
+<p>`@ngaf/langgraph` maps each active agent to its own scoped signal context. The orchestrator's agent ref exposes a `subagents` signal—a reactive map of active agent IDs to their respective state signals. You can bind a list of subagent components to this map and let Angular's `@for` loop handle the rest. Agent addition, completion, and failure all propagate as signal updates without manual subscription management.</p>
 <p>---</p>
 <h3>The `onCustomEvent` Hook</h3>
 <p>LangGraph nodes can emit arbitrary structured events outside the message channel. These are the primitives for generative UI, analytics instrumentation, and intermediate state reporting.</p>

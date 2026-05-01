@@ -1,6 +1,6 @@
 # Configuration
 
-`@cacheplane/chat` uses Angular's dependency injection system for global configuration. The `provideChat()` function registers a `ChatConfig` object under the `CHAT_CONFIG` injection token.
+`@ngaf/chat` uses Angular's dependency injection system for global configuration. The `provideChat()` function registers a `ChatConfig` object under the `CHAT_CONFIG` injection token.
 
 ## provideChat()
 
@@ -9,7 +9,7 @@ Call `provideChat()` in your application's provider array to set global configur
 ```typescript
 // app.config.ts
 import { ApplicationConfig } from '@angular/core';
-import { provideChat } from '@cacheplane/chat';
+import { provideChat } from '@ngaf/chat';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -54,8 +54,8 @@ The `CHAT_CONFIG` token is an `InjectionToken<ChatConfig>` that you can inject d
 
 ```typescript
 import { inject } from '@angular/core';
-import { CHAT_CONFIG } from '@cacheplane/chat';
-import type { ChatConfig } from '@cacheplane/chat';
+import { CHAT_CONFIG } from '@ngaf/chat';
+import type { ChatConfig } from '@ngaf/chat';
 
 @Component({ /* ... */ })
 export class MyComponent {
@@ -77,7 +77,7 @@ Because `provideChat()` returns `EnvironmentProviders`, you can provide differen
 
 ```typescript
 // app.routes.ts
-import { provideChat } from '@cacheplane/chat';
+import { provideChat } from '@ngaf/chat';
 
 export const routes: Routes = [
   {

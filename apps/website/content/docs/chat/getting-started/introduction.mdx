@@ -1,6 +1,6 @@
 # Introduction
 
-`@cacheplane/chat` is the Angular UI component library for building chat interfaces on top of `@cacheplane/agent`. It provides a complete set of composable, Signal-driven components that render messages, handle user input, display tool calls, manage interrupts, and support generative UI -- all styled with CSS custom properties and built for Angular 20+.
+`@ngaf/chat` is the Angular UI component library for building chat interfaces on top of `@ngaf/agent`. It provides a complete set of composable, Signal-driven components that render messages, handle user input, display tool calls, manage interrupts, and support generative UI -- all styled with CSS custom properties and built for Angular 20+.
 
 <Callout type="info" title="What you'll learn">
 This guide explains the library's two-tier architecture, how it relates to the rest of the Cacheplane stack, and when to reach for the all-in-one composition versus assembling primitives yourself.
@@ -42,25 +42,25 @@ Compositions are opinionated, styled components that combine primitives into rea
 
 ## How the Stack Fits Together
 
-`@cacheplane/chat` sits between your application and two other Cacheplane libraries:
+`@ngaf/chat` sits between your application and two other Cacheplane libraries:
 
 ```
 Your App
   |
   v
-@cacheplane/chat       <-- UI components (this library)
+@ngaf/chat       <-- UI components (this library)
   |         |
   v         v
-@cacheplane/agent      @cacheplane/render
+@ngaf/agent      @ngaf/render
   (streaming state)      (generative UI)
   |
   v
 LangGraph Platform
 ```
 
-- **`@cacheplane/agent`** provides the `agent()` function and the `AgentRef` type. Every chat component accepts an `AgentRef` as its primary input. The ref exposes reactive Signals for `messages()`, `isLoading()`, `error()`, `interrupt()`, `toolCalls()`, `history()`, and more.
+- **`@ngaf/agent`** provides the `agent()` function and the `AgentRef` type. Every chat component accepts an `AgentRef` as its primary input. The ref exposes reactive Signals for `messages()`, `isLoading()`, `error()`, `interrupt()`, `toolCalls()`, `history()`, and more.
 
-- **`@cacheplane/render`** provides `RenderSpecComponent` and view registries for rendering JSON UI specs as Angular components. The `ChatComponent` auto-detects JSON specs in AI messages and renders them through `@cacheplane/render` — pass a view registry via the `[views]` input. The `ChatComponent` also auto-detects A2UI v0.9 payloads and renders them using a built-in 12-component catalog.
+- **`@ngaf/render`** provides `RenderSpecComponent` and view registries for rendering JSON UI specs as Angular components. The `ChatComponent` auto-detects JSON specs in AI messages and renders them through `@ngaf/render` — pass a view registry via the `[views]` input. The `ChatComponent` also auto-detects A2UI v0.9 payloads and renders them using a built-in 12-component catalog.
 
 ## When to Use `ChatComponent` vs. Custom Assembly
 

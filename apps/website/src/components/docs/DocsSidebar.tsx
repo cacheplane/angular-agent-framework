@@ -3,7 +3,7 @@ import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { docsConfig, getLibraryConfig, type DocsSection, type LibraryId } from '../../lib/docs-config';
-import { tokens } from '@cacheplane/design-tokens';
+import { tokens } from '@ngaf/design-tokens';
 
 interface Props {
   activeLibrary: LibraryId;

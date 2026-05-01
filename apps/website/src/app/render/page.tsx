@@ -7,10 +7,10 @@ import { RenderComparison } from '../../components/landing/render/RenderComparis
 import { RenderWhitePaperGate } from '../../components/landing/render/RenderWhitePaperGate';
 import { RenderStackSiblings } from '../../components/landing/render/RenderStackSiblings';
 import { RenderFooterCTA } from '../../components/landing/render/RenderFooterCTA';
-import { tokens } from '@cacheplane/design-tokens';
+import { tokens } from '@ngaf/design-tokens';
 
 export const metadata = {
-  title: '@cacheplane/render — Generative UI for Angular',
+  title: '@ngaf/render — Generative UI for Angular',
   description: 'Agents that render UI without coupling to your frontend. Built on Vercel json-render spec.',
 };
 

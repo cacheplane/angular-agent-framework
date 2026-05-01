@@ -2,13 +2,13 @@
 
 <Summary>
 Build a chat interface with time travel using `agent()` from
-`@cacheplane/langgraph`. Browse the checkpoint history via `stream.history()`,
+`@ngaf/langgraph`. Browse the checkpoint history via `stream.history()`,
 see the active branch via `stream.branch()`, and fork the conversation from any
 past state with `stream.setBranch(checkpointId)`.
 </Summary>
 
 <Prompt>
-Add time travel to this Angular component using `agent()` from `@cacheplane/langgraph`. Display checkpoint history from `stream.history()` in the sidebar. Highlight the active branch using `stream.branch()`. Call `stream.setBranch(id)` when the user clicks a checkpoint to fork the conversation from that point.
+Add time travel to this Angular component using `agent()` from `@ngaf/langgraph`. Display checkpoint history from `stream.history()` in the sidebar. Highlight the active branch using `stream.branch()`. Call `stream.setBranch(id)` when the user clicks a checkpoint to fork the conversation from that point.
 </Prompt>
 
 <Steps>
@@ -19,7 +19,7 @@ Set up `provideAgent()` in your app config with the LangGraph API URL:
 ```typescript
 // app.config.ts
 import { ApplicationConfig } from '@angular/core';
-import { provideAgent } from '@cacheplane/langgraph';
+import { provideAgent } from '@ngaf/langgraph';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -38,7 +38,7 @@ available automatically — no extra config needed:
 
 ```typescript
 // time-travel.component.ts
-import { agent } from '@cacheplane/langgraph';
+import { agent } from '@ngaf/langgraph';
 
 export class TimeTravelComponent {
   protected readonly stream = agent({

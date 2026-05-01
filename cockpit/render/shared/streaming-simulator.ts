@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 import { signal, computed } from '@angular/core';
-import { createPartialJsonParser, materialize } from '@cacheplane/partial-json';
-import type { PartialJsonParser, ParseEvent } from '@cacheplane/partial-json';
+import { createPartialJsonParser, materialize } from '@ngaf/partial-json';
+import type { PartialJsonParser, ParseEvent } from '@ngaf/partial-json';
 import type { Spec } from '@json-render/core';
 
 export class StreamingSimulator {

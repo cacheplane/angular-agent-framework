@@ -4,8 +4,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import type {
   CockpitLanguage,
   CockpitManifestEntry,
-} from '@cacheplane/cockpit-registry';
-import { resolveManifestLanguage } from '@cacheplane/cockpit-registry';
+} from '@ngaf/cockpit-registry';
+import { resolveManifestLanguage } from '@ngaf/cockpit-registry';
 import { toCockpitPath } from '../../lib/route-resolution';
 
 const LANGUAGE_OPTIONS: Array<{ language: CockpitLanguage; label: string }> = [

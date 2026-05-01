@@ -61,7 +61,7 @@ past_state = graph.get_state(past_config)
 
 ```typescript
 import { Component, inject, computed, ChangeDetectionStrategy } from '@angular/core';
-import { agent } from '@cacheplane/langgraph';
+import { agent } from '@ngaf/langgraph';
 import { AgentService } from './agent.service';
 
 @Component({
@@ -171,7 +171,7 @@ Expose checkpoint history directly in your component to let users scrub through 
 <Tab label="history-viewer.component.ts">
 ```typescript
 import { Component, inject, computed, ChangeDetectionStrategy } from '@angular/core';
-import { agent } from '@cacheplane/langgraph';
+import { agent } from '@ngaf/langgraph';
 import { AgentService } from './agent.service';
 
 @Component({

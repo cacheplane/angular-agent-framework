@@ -1,5 +1,5 @@
 {
-  "name": "@cacheplane/example-layouts",
+  "name": "@ngaf/example-layouts",
   "version": "0.0.1",
   "peerDependencies": {
     "@angular/core": "^20.0.0 || ^21.0.0",

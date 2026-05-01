@@ -1,5 +1,5 @@
 {
-  "name": "@cacheplane/cockpit-render-spec-rendering-python",
+  "name": "@ngaf/cockpit-render-spec-rendering-python",
   "version": "0.0.1",
   "license": "MIT",
   "sideEffects": false

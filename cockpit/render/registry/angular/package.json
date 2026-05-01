@@ -1,8 +1,8 @@
 {
-  "name": "@cacheplane/cockpit-render-registry-angular",
+  "name": "@ngaf/cockpit-render-registry-angular",
   "version": "0.0.1",
   "peerDependencies": {
-    "@cacheplane/render": "^0.0.1"
+    "@ngaf/render": "^0.0.1"
   },
   "license": "MIT",
   "sideEffects": false

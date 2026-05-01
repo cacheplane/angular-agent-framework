@@ -1,7 +1,7 @@
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import { cockpitManifest } from '@cacheplane/cockpit-registry';
+import { cockpitManifest } from '@ngaf/cockpit-registry';
 import { buildNavigationTree } from '../lib/route-resolution';
 import { MobileNavOverlay } from './mobile-nav-overlay';
 

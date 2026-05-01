@@ -1,16 +1,16 @@
 # Quick Start
 
-Build a streaming chat UI with `@cacheplane/chat` in 5 minutes.
+Build a streaming chat UI with `@ngaf/chat` in 5 minutes.
 
 <Callout type="info" title="Prerequisites">
-Angular 20+ project with `@cacheplane/agent` already configured. If you need setup help, see the [Agent Installation](/docs/agent/getting-started/installation) guide first.
+Angular 20+ project with `@ngaf/agent` already configured. If you need setup help, see the [Agent Installation](/docs/agent/getting-started/installation) guide first.
 </Callout>
 
 <Steps>
 <Step title="Install the package">
 
 ```bash
-npm install @cacheplane/chat
+npm install @ngaf/chat
 ```
 
 </Step>
@@ -21,8 +21,8 @@ Add both `provideAgent()` and `provideChat()` to your application config.
 ```typescript
 // app.config.ts
 import { ApplicationConfig } from '@angular/core';
-import { provideAgent } from '@cacheplane/langgraph';
-import { provideChat } from '@cacheplane/chat';
+import { provideAgent } from '@ngaf/langgraph';
+import { provideChat } from '@ngaf/chat';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -45,9 +45,9 @@ Use `agent()` to create a streaming connection and pass the returned `AgentRef` 
 ```typescript
 // chat-page.component.ts
 import { Component, ChangeDetectionStrategy, signal } from '@angular/core';
-import { agent } from '@cacheplane/langgraph';
+import { agent } from '@ngaf/langgraph';
 import type { BaseMessage } from '@langchain/core/messages';
-import { ChatComponent } from '@cacheplane/chat';
+import { ChatComponent } from '@ngaf/chat';
 
 @Component({
   selector: 'app-chat-page',
@@ -117,7 +117,7 @@ If you need more control over how messages render, drop down to the primitives l
 ```typescript
 import { Component, ChangeDetectionStrategy, signal, inject } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
-import { agent } from '@cacheplane/langgraph';
+import { agent } from '@ngaf/langgraph';
 import type { BaseMessage } from '@langchain/core/messages';
 import {
   ChatMessagesComponent,
@@ -125,7 +125,7 @@ import {
   ChatInputComponent,
   ChatTypingIndicatorComponent,
   renderMarkdown,
-} from '@cacheplane/chat';
+} from '@ngaf/chat';
 
 @Component({
   selector: 'app-custom-chat',

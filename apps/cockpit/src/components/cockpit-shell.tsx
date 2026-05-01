@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { cockpitManifest } from '@cacheplane/cockpit-registry';
+import { cockpitManifest } from '@ngaf/cockpit-registry';
 import type { ContentBundle } from '../lib/content-bundle';
 import type { CapabilityPresentation, NavigationProduct } from '../lib/route-resolution';
 import { CodeMode } from './code-mode/code-mode';
