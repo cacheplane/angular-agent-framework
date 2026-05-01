@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 import { signal, untracked, type Signal } from '@angular/core';
 import type { Spec } from '@json-render/core';
-import { createPartialJsonParser } from '@cacheplane/partial-json';
+import { createPartialJsonParser } from '@ngaf/partial-json';
 import { createParseTreeStore, type ElementAccumulationState, type ParseTreeStore } from './parse-tree-store';
-import { createA2uiMessageParser, type A2uiMessageParser } from '@cacheplane/a2ui';
-import type { A2uiSurface } from '@cacheplane/a2ui';
+import { createA2uiMessageParser, type A2uiMessageParser } from '@ngaf/a2ui';
+import type { A2uiSurface } from '@ngaf/a2ui';
 import { createA2uiSurfaceStore, type A2uiSurfaceStore } from '../a2ui/surface-store';
 
 export type ContentType = 'undetermined' | 'markdown' | 'json-render' | 'a2ui' | 'mixed';

@@ -1,5 +1,5 @@
 {
-  "name": "@cacheplane/cockpit-chat-subagents-python",
+  "name": "@ngaf/cockpit-chat-subagents-python",
   "version": "0.0.1",
   "license": "MIT",
   "sideEffects": false

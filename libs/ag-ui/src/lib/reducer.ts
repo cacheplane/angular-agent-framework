@@ -7,7 +7,7 @@ import type { WritableSignal } from '@angular/core';
 import type { Subject } from 'rxjs';
 import type {
   Message, AgentStatus, ToolCall, AgentEvent,
-} from '@cacheplane/chat';
+} from '@ngaf/chat';
 import type { BaseEvent } from '@ag-ui/client';
 import { applyPatch, type Operation } from 'fast-json-patch';
 

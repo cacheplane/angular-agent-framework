@@ -11,7 +11,7 @@
 </p>
 
 <p align="center">
-  <a href="https://www.npmjs.com/package/@cacheplane/langgraph">
+  <a href="https://www.npmjs.com/package/@ngaf/langgraph">
     <img alt="npm version" src="https://img.shields.io/npm/v/@cacheplane%2Fangular?color=6C8EFF&labelColor=080B14&style=flat-square" />
   </a>
   <a href="./LICENSE">
@@ -34,7 +34,7 @@
 ## Install
 
 ```bash
-npm install @cacheplane/langgraph
+npm install @ngaf/langgraph
 ```
 
 **Peer dependencies:** `@angular/core ^20.0.0 || ^21.0.0`, `@langchain/core ^1.1.0`, `@langchain/langgraph-sdk ^1.7.0`, `rxjs ~7.8.0`
@@ -45,7 +45,7 @@ npm install @cacheplane/langgraph
 
 ```typescript
 import { Component } from '@angular/core';
-import { agent } from '@cacheplane/langgraph';
+import { agent } from '@ngaf/langgraph';
 import type { BaseMessage } from '@langchain/core/messages';
 
 @Component({
@@ -134,4 +134,4 @@ That's it. `chat.messages()` is an Angular Signal. Bind it directly in your temp
 
 **MIT** — free for any use. See [`LICENSE`](./LICENSE).
 
-`@cacheplane/langgraph` and all libraries in this repository are released under the [MIT License](./LICENSE). You are free to use, modify, and distribute them in both commercial and noncommercial projects without restriction.
+`@ngaf/langgraph` and all libraries in this repository are released under the [MIT License](./LICENSE). You are free to use, modify, and distribute them in both commercial and noncommercial projects without restriction.

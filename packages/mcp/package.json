@@ -1,7 +1,8 @@
 {
-  "name": "@cacheplane/langgraph-mcp",
+  "name": "@ngaf/langgraph-mcp",
   "version": "0.0.1",
-  "description": "MCP server for the @cacheplane/langgraph library",
+  "private": true,
+  "description": "MCP server for the @ngaf/langgraph library",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -14,7 +15,7 @@
   },
   "main": "src/index.js",
   "bin": {
-    "@cacheplane/langgraph-mcp": "src/index.js"
+    "@ngaf/langgraph-mcp": "src/index.js"
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",

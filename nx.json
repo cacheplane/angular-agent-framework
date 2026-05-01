@@ -51,14 +51,13 @@
           "render",
           "a2ui",
           "partial-json",
-          "licensing",
-          "mcp"
+          "licensing"
         ],
         "projectsRelationship": "fixed"
       }
     },
     "version": {
-      "preVersionCommand": "npx nx run-many -t build --projects=chat,langgraph,ag-ui,render,a2ui,partial-json,licensing,mcp",
+      "preVersionCommand": "npx nx run-many -t build --projects=chat,langgraph,ag-ui,render,a2ui,partial-json,licensing",
       "updateDependents": "auto",
       "preserveLocalDependencyProtocols": true
     },

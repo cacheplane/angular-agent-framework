@@ -1,4 +1,4 @@
-# Chat Subagents with @cacheplane/chat
+# Chat Subagents with @ngaf/chat
 
 <Summary>
 Track and display subagent orchestration using ChatSubagentsComponent
@@ -8,7 +8,7 @@ as the orchestrator delegates work.
 
 <Prompt>
 Add subagent tracking to your chat interface using `ChatSubagentsComponent`
-and `ChatSubagentCardComponent` from `@cacheplane/chat`. Display active
+and `ChatSubagentCardComponent` from `@ngaf/chat`. Display active
 subagents with real-time status in a sidebar.
 </Prompt>
 

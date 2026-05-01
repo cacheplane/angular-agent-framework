@@ -1,6 +1,6 @@
 'use client';
 import { motion } from 'framer-motion';
-import { tokens } from '@cacheplane/design-tokens';
+import { tokens } from '@ngaf/design-tokens';
 
 export function CockpitCTA() {
   return (

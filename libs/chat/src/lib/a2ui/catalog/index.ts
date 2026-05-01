@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-import { views, type ViewRegistry } from '@cacheplane/render';
+import { views, type ViewRegistry } from '@ngaf/render';
 import { A2uiAudioPlayerComponent } from './audio-player.component';
 import { A2uiButtonComponent } from './button.component';
 import { A2uiCardComponent } from './card.component';

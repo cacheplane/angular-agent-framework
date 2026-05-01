@@ -1,4 +1,4 @@
-# State Management with @cacheplane/render
+# State Management with @ngaf/render
 
 <Summary>
 Manage reactive UI state using signalStateStore with JSON Pointer paths.
@@ -8,7 +8,7 @@ automatic UI propagation.
 
 <Prompt>
 Add reactive state management to this Angular component using
-`signalStateStore()` from `@cacheplane/render`. Create a store with
+`signalStateStore()` from `@ngaf/render`. Create a store with
 nested state, read values with get(), write with set(), and batch
 updates with update().
 </Prompt>
@@ -19,7 +19,7 @@ updates with update().
 Initialize a `signalStateStore()` with your initial state shape:
 
 ```typescript
-import { signalStateStore } from '@cacheplane/render';
+import { signalStateStore } from '@ngaf/render';
 
 const store = signalStateStore({
   user: { name: '', age: 0 },

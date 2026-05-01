@@ -1,4 +1,4 @@
-# Chat Messages with @cacheplane/chat
+# Chat Messages with @ngaf/chat
 
 <Summary>
 Render chat messages using the primitive components ChatMessagesComponent,
@@ -8,7 +8,7 @@ give full control over message layout, input handling, and loading states.
 
 <Prompt>
 Build a chat interface using the individual message primitives from
-`@cacheplane/chat`. Import `ChatMessagesComponent`, `ChatInputComponent`,
+`@ngaf/chat`. Import `ChatMessagesComponent`, `ChatInputComponent`,
 and `ChatTypingIndicatorComponent` separately instead of the composed
 `ChatComponent`.
 </Prompt>
@@ -23,7 +23,7 @@ import {
   ChatMessagesComponent,
   ChatInputComponent,
   ChatTypingIndicatorComponent,
-} from '@cacheplane/chat';
+} from '@ngaf/chat';
 ```
 
 </Step>

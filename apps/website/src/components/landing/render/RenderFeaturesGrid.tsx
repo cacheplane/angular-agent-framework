@@ -1,7 +1,7 @@
 // apps/website/src/components/landing/render/RenderFeaturesGrid.tsx
 'use client';
 import { motion } from 'framer-motion';
-import { tokens } from '@cacheplane/design-tokens';
+import { tokens } from '@ngaf/design-tokens';
 import { EmbedFrame } from '../EmbedFrame';
 
 const FEATURES = [

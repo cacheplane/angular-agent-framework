@@ -1,7 +1,7 @@
 // apps/website/src/components/landing/angular/AngularProblemSolution.tsx
 'use client';
 import { motion } from 'framer-motion';
-import { tokens } from '@cacheplane/design-tokens';
+import { tokens } from '@ngaf/design-tokens';
 
 const PAIN_POINTS = [
   'Raw Client + for-await SSE loop — no Angular integration',
@@ -69,7 +69,7 @@ export function AngularProblemSolution() {
             fontSize: '0.58rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em',
             padding: '2px 9px', borderRadius: 5, color: '#fff', background: '#1a7a40', marginBottom: 16,
           }}>
-            With @cacheplane/langgraph
+            With @ngaf/langgraph
           </span>
           <h3 style={{
             fontFamily: "'EB Garamond', serif", fontSize: '1.3rem', fontWeight: 700,

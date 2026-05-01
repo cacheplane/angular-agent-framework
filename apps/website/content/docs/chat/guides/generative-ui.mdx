@@ -16,7 +16,7 @@ AI message content (token by token)
     → JSON specs via RenderSpecComponent + your view registry
 ```
 
-The JSON path uses `@cacheplane/partial-json` to parse incomplete JSON character-by-character, producing a live `Spec` signal with structural sharing — unchanged elements keep the same object reference so Angular skips re-rendering them.
+The JSON path uses `@ngaf/partial-json` to parse incomplete JSON character-by-character, producing a live `Spec` signal with structural sharing — unchanged elements keep the same object reference so Angular skips re-rendering them.
 
 ## Setup
 
@@ -24,8 +24,8 @@ Pass a `ViewRegistry` via the `[views]` input on `ChatComponent`:
 
 ```typescript
 import { Component, signal } from '@angular/core';
-import { agent } from '@cacheplane/langgraph';
-import { ChatComponent, views } from '@cacheplane/chat';
+import { agent } from '@ngaf/langgraph';
+import { ChatComponent, views } from '@ngaf/chat';
 import type { BaseMessage } from '@langchain/core/messages';
 import { WeatherCardComponent } from './weather-card.component';
 import { ChartComponent } from './chart.component';
@@ -116,7 +116,7 @@ Because the JSON is parsed character-by-character as tokens arrive:
 For interactive generative UI (forms, selections), pass a `StateStore` via the `[store]` input:
 
 ```typescript
-import { signalStateStore } from '@cacheplane/render';
+import { signalStateStore } from '@ngaf/render';
 
 @Component({
   template: `

@@ -11,7 +11,7 @@ import {
   ChatMessagesComponent,
   MessageTemplateDirective,
   getMessageType,
-} from '@cacheplane/chat';
+} from '@ngaf/chat';
 ```
 
 ## How It Works
@@ -77,7 +77,7 @@ The `MessageTemplateDirective` is a structural directive applied to `ng-template
 **Selector:** `ng-template[chatMessageTemplate]`
 
 ```typescript
-import { MessageTemplateDirective } from '@cacheplane/chat';
+import { MessageTemplateDirective } from '@ngaf/chat';
 ```
 
 ### Input
@@ -97,7 +97,7 @@ type MessageTemplateType = 'human' | 'ai' | 'tool' | 'system' | 'function';
 The `getMessageType()` function maps a LangChain `BaseMessage` to a `MessageTemplateType`. It handles both class instances (with `_getType()` method) and plain JSON objects (with a `type` property), since SSE stream events deliver plain JSON rather than hydrated class instances.
 
 ```typescript
-import { getMessageType } from '@cacheplane/chat';
+import { getMessageType } from '@ngaf/chat';
 import type { BaseMessage } from '@langchain/core/messages';
 
 const type = getMessageType(message); // 'human' | 'ai' | 'tool' | 'system' | 'function'
@@ -141,14 +141,14 @@ For custom templates, you can access `message.content` directly and handle the t
 ```typescript
 import { Component, inject, ChangeDetectionStrategy, signal } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
-import { agent } from '@cacheplane/langgraph';
+import { agent } from '@ngaf/langgraph';
 import type { BaseMessage } from '@langchain/core/messages';
 import {
   ChatMessagesComponent,
   MessageTemplateDirective,
   CHAT_MARKDOWN_STYLES,
   renderMarkdown,
-} from '@cacheplane/chat';
+} from '@ngaf/chat';
 
 @Component({
   selector: 'app-messages-demo',

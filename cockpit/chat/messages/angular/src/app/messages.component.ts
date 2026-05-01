@@ -4,13 +4,13 @@ import {
   ChatMessagesComponent,
   ChatInputComponent,
   ChatTypingIndicatorComponent,
-} from '@cacheplane/chat';
-import { ExampleChatLayoutComponent } from '@cacheplane/example-layouts';
-import { agent, toAgent } from '@cacheplane/langgraph';
+} from '@ngaf/chat';
+import { ExampleChatLayoutComponent } from '@ngaf/example-layouts';
+import { agent, toAgent } from '@ngaf/langgraph';
 import { environment } from '../environments/environment';
 
 /**
- * MessagesComponent demonstrates the chat message primitives from @cacheplane/chat.
+ * MessagesComponent demonstrates the chat message primitives from @ngaf/chat.
  *
  * Uses ChatMessagesComponent, ChatInputComponent, and ChatTypingIndicatorComponent
  * individually rather than the composed ChatComponent, giving full control

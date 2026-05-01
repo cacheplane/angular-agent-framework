@@ -14,7 +14,7 @@ import { createHash } from 'node:crypto';
 // which has no cross-realm constraints and produces the same digest.
 //
 // Scoped to libs/langgraph test-setup only — this does not affect production code
-// or the published package (@cacheplane/langgraph). The @noble/ed25519 default
+// or the published package (@ngaf/langgraph). The @noble/ed25519 default
 // remains in place for all non-test consumers.
 ed.etc.sha512Async = async (...messages: Uint8Array[]): Promise<Uint8Array> => {
   const hash = createHash('sha512');

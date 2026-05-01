@@ -1,7 +1,7 @@
 // apps/website/src/components/landing/chat-landing/ChatLandingProblemSolution.tsx
 'use client';
 import { motion } from 'framer-motion';
-import { tokens } from '@cacheplane/design-tokens';
+import { tokens } from '@ngaf/design-tokens';
 
 const PAIN_POINTS = [
   'Message rendering from scratch',
@@ -14,7 +14,7 @@ const PAIN_POINTS = [
 
 const SOLUTIONS = [
   'Pre-built accessible components',
-  'Vercel json-render spec via @cacheplane/render',
+  'Vercel json-render spec via @ngaf/render',
   'Google A2UI spec — 18 built-in components, v0.9 CheckRule validation',
   'Consumer-extensible action handlers for both specs',
   'Debug tooling + CSS custom property theming included',
@@ -44,7 +44,7 @@ export function ChatLandingProblemSolution() {
             fontSize: '0.58rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em',
             padding: '2px 9px', borderRadius: 5, color: '#fff', background: '#b71c1c', marginBottom: 16,
           }}>
-            Without @cacheplane/chat
+            Without @ngaf/chat
           </span>
           <h3 style={{
             fontFamily: "'EB Garamond', serif", fontSize: '1.3rem', fontWeight: 700,
@@ -70,7 +70,7 @@ export function ChatLandingProblemSolution() {
             fontSize: '0.58rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em',
             padding: '2px 9px', borderRadius: 5, color: '#fff', background: '#1a7a40', marginBottom: 16,
           }}>
-            With @cacheplane/chat
+            With @ngaf/chat
           </span>
           <h3 style={{
             fontFamily: "'EB Garamond', serif", fontSize: '1.3rem', fontWeight: 700,

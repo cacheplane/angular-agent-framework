@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 import { InjectionToken, inject, type Provider } from '@angular/core';
 import { HttpAgent } from '@ag-ui/client';
-import type { Agent } from '@cacheplane/chat';
+import type { Agent } from '@ngaf/chat';
 import { toAgent } from './to-agent';
 
 /**

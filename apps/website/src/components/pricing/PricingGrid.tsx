@@ -1,5 +1,5 @@
 'use client';
-import { tokens } from '@cacheplane/design-tokens';
+import { tokens } from '@ngaf/design-tokens';
 
 const PLANS = [
   {
@@ -9,7 +9,7 @@ const PLANS = [
     features: ['MIT License', 'All libraries', 'Commercial use welcome', 'Community support'],
     highlight: false,
     cta: 'Get Started',
-    ctaHref: 'https://www.npmjs.com/package/@cacheplane/langgraph',
+    ctaHref: 'https://www.npmjs.com/package/@ngaf/langgraph',
   },
   {
     name: 'Enterprise',

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 import { Component } from '@angular/core';
-import { ChatComponent, a2uiBasicCatalog } from '@cacheplane/chat';
-import { agent, toAgent } from '@cacheplane/langgraph';
+import { ChatComponent, a2uiBasicCatalog } from '@ngaf/chat';
+import { agent, toAgent } from '@ngaf/langgraph';
 import { environment } from '../environments/environment';
 
 @Component({

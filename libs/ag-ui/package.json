@@ -1,9 +1,9 @@
 {
-  "name": "@cacheplane/ag-ui",
+  "name": "@ngaf/ag-ui",
   "version": "0.0.1",
   "peerDependencies": {
-    "@cacheplane/chat": "*",
-    "@cacheplane/licensing": "*",
+    "@ngaf/chat": "*",
+    "@ngaf/licensing": "*",
     "@angular/core": "^20.0.0 || ^21.0.0",
     "@ag-ui/client": "*",
     "fast-json-patch": "*",

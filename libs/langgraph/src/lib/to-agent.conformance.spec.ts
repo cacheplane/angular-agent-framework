@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 import { TestBed } from '@angular/core/testing';
-import { runAgentConformance } from '@cacheplane/chat';
+import { runAgentConformance } from '@ngaf/chat';
 import { toAgent } from './to-agent';
 import { signal } from '@angular/core';
 import { ResourceStatus } from './agent.types';

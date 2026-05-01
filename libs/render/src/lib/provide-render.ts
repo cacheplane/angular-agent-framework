@@ -4,10 +4,10 @@ import {
   runLicenseCheck,
   LICENSE_PUBLIC_KEY,
   inferNoncommercial,
-} from '@cacheplane/licensing';
+} from '@ngaf/licensing';
 import type { RenderConfig } from './render.types';
 
-const PACKAGE_NAME = '@cacheplane/render';
+const PACKAGE_NAME = '@ngaf/render';
 declare const __CACHEPLANE_RENDER_VERSION__: string | undefined;
 const PACKAGE_VERSION =
   typeof __CACHEPLANE_RENDER_VERSION__ !== 'undefined'

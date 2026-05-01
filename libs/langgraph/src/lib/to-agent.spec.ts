@@ -2,7 +2,7 @@
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { HumanMessage, AIMessage } from '@langchain/core/messages';
-import type { Agent, AgentEvent } from '@cacheplane/chat';
+import type { Agent, AgentEvent } from '@ngaf/chat';
 import type { AgentRef, CustomStreamEvent } from './agent.types';
 import { ResourceStatus } from './agent.types';
 import { toAgent } from './to-agent';

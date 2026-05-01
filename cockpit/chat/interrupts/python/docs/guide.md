@@ -1,4 +1,4 @@
-# Chat Interrupts with @cacheplane/chat
+# Chat Interrupts with @ngaf/chat
 
 <Summary>
 Implement human-in-the-loop approval gates using LangGraph interrupts
@@ -8,7 +8,7 @@ an approval UI before proceeding.
 
 <Prompt>
 Add interrupt handling to your chat interface using `ChatInterruptPanelComponent`
-from `@cacheplane/chat`. Detect when the stream enters an interrupted state
+from `@ngaf/chat`. Detect when the stream enters an interrupted state
 and render approval/rejection controls.
 </Prompt>
 

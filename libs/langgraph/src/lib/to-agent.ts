@@ -7,7 +7,7 @@ import type {
   AgentWithHistory, AgentCheckpoint, AgentEvent,
   Message, Role, ToolCall, ToolCallStatus, AgentStatus,
   AgentInterrupt, Subagent, AgentSubmitInput, AgentSubmitOptions,
-} from '@cacheplane/chat';
+} from '@ngaf/chat';
 import type { AgentRef, CustomStreamEvent, SubagentStreamRef, ThreadState } from './agent.types';
 import { ResourceStatus } from './agent.types';
 

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 import { computed, signal, type Signal } from '@angular/core';
-import type { A2uiMessage, A2uiSurface } from '@cacheplane/a2ui';
-import { setByPointer, deleteByPointer } from '@cacheplane/a2ui';
+import type { A2uiMessage, A2uiSurface } from '@ngaf/a2ui';
+import { setByPointer, deleteByPointer } from '@ngaf/a2ui';
 
 export interface A2uiSurfaceStore {
   apply(message: A2uiMessage): void;

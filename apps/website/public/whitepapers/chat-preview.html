@@ -20,7 +20,7 @@
 
 <!-- Cover -->
 <div style="height:100vh;display:flex;flex-direction:column;justify-content:flex-end;padding:80px 80px 100px;background:linear-gradient(135deg, #f3e8ff 0%, #f4f0ff 45%, #eaf3ff 70%, #e6f4ff 100%);page-break-after:always">
-  <div style="font-family:monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.12em;color:#004090;font-weight:700;margin-bottom:24px">@cacheplane/chat · Enterprise Guide</div>
+  <div style="font-family:monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.12em;color:#004090;font-weight:700;margin-bottom:24px">@ngaf/chat · Enterprise Guide</div>
   <h1 style="font-family:'EB Garamond',serif;font-size:52px;font-weight:800;line-height:1.1;color:#1a1a2e;margin-bottom:20px">The<br>Enterprise<br>Guide<br>to<br>Agent<br>Chat<br>Interfaces<br>in<br>Angular</h1>
   <p style="font-family:'EB Garamond',serif;font-style:italic;font-size:20px;color:#555770;margin-bottom:40px">Production agent chat UI in days, not sprints</p>
   <div style="font-size:13px;color:#888;font-family:monospace">cacheplane.io · 2026</div>
@@ -79,7 +79,7 @@ Each item on this list is a contained engineering problem. Together, they consti
 <h3>The Opportunity Cost</h3>
 <p>Senior Angular engineers who spend three sprints on chat infrastructure are not spending those sprints on agent integration. They are not building the domain-specific tool interfaces, the custom interrupt flows, or the application state management that ties agent output to the rest of the product. Those are the things that will differentiate the application. The scroll behavior will not.</p>
 <h3>The Thesis</h3>
-<p>`@cacheplane/chat` exists to eliminate the sprint tax. Ship the chat UI on day one—message rendering, streaming, tool call cards, interrupt panels, accessibility, mobile layout, all of it—and spend the sprints on what actually matters: the integration work that is specific to your agent, your domain, and your users.</p>
+<p>`@ngaf/chat` exists to eliminate the sprint tax. Ship the chat UI on day one—message rendering, streaming, tool call cards, interrupt panels, accessibility, mobile layout, all of it—and spend the sprints on what actually matters: the integration work that is specific to your agent, your domain, and your users.</p>
 <p>The backend is ready. The chat UI should be too.</p></div>
     </section>
     <section style="padding:80px;page-break-before:always">
@@ -87,7 +87,7 @@ Each item on this list is a contained engineering problem. Together, they consti
       <h2 style="font-family:'EB Garamond',serif;font-size:36px;font-weight:800;color:#1a1a2e;margin-bottom:28px;line-height:1.15">Batteries-Included Components</h2>
       <div class="chapter-body"><h3>Chapter 4: Batteries-Included Components</h3>
 <h3>Two Tiers, One Decision</h3>
-<p>`@cacheplane/chat` ships two distinct component tiers. The prebuilt tier gives you a production-ready chat interface with a single element. The headless tier gives you behavior and state without a single line of CSS opinion. Your team picks the tier that matches how much control you actually need — not how much you think you might need someday.</p>
+<p>`@ngaf/chat` ships two distinct component tiers. The prebuilt tier gives you a production-ready chat interface with a single element. The headless tier gives you behavior and state without a single line of CSS opinion. Your team picks the tier that matches how much control you actually need — not how much you think you might need someday.</p>
 <p>Most teams start with prebuilt and never leave. That is the correct call.</p>
 <p>---</p>
 <h3>The Headless Tier</h3>
@@ -102,8 +102,8 @@ Each primitive accepts an `agentRef` input and wires itself to the shared agent 
 <p>---</p>
 <h3>The Prebuilt Tier</h3>
 <p>`chat-prebuilt` is a single component that composes all four headless primitives internally, applies a production-quality default theme, and handles responsive layout. Zero configuration is required beyond connecting an agent reference.</p>
-<pre><code>import { AgentService } from '@cacheplane/langgraph';
-import { ChatPrebuiltComponent } from '@cacheplane/chat';
+<pre><code>import { AgentService } from '@ngaf/langgraph';
+import { ChatPrebuiltComponent } from '@ngaf/chat';
 <p>@Component({
   selector: 'app-support',
   imports: [ChatPrebuiltComponent],
@@ -122,7 +122,7 @@ export class SupportComponent {
 <p>That is a fully functional streaming chat interface. Message history, input handling, tool call display, and interrupt controls are all included.</p>
 <p>---</p>
 <h3>How the Component Model Connects</h3>
-<p>Both tiers consume the `AgentRef` produced by `@cacheplane/langgraph`. The `AgentRef` is a stable reference that exposes an `AIMessage[]` signal, a send method, and a cancellation interface. Components bind to this ref and react to signal emissions via Angular's standard reactivity primitives — no custom change detection strategies required, no zone workarounds.</p>
+<p>Both tiers consume the `AgentRef` produced by `@ngaf/langgraph`. The `AgentRef` is a stable reference that exposes an `AIMessage[]` signal, a send method, and a cancellation interface. Components bind to this ref and react to signal emissions via Angular's standard reactivity primitives — no custom change detection strategies required, no zone workarounds.</p>
 <p>When the agent emits a new token mid-stream, the `AIMessage[]` signal updates, and `chat-messages` incrementally patches the DOM. The mechanism is straightforward signal subscription. There is no proprietary diffing layer to reason about.</p>
 <p>---</p>
 <h3>Composing the Two Tiers</h3>
@@ -136,17 +136,17 @@ export class SupportComponent {
       <div style="font-family:monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#004090;font-weight:700;margin-bottom:16px">Chapter 3</div>
       <h2 style="font-family:'EB Garamond',serif;font-size:36px;font-weight:800;color:#1a1a2e;margin-bottom:28px;line-height:1.15">Theming & Design System Integration</h2>
       <div class="chapter-body"><h3>Chapter 6: Theming & Design System Integration</h3>
-<p>A chat interface that looks like it came from a SaaS starter kit is a trust problem. Users notice when a modal, sidebar, or embedded panel breaks the visual contract established by the rest of your product. For enterprise teams, that inconsistency signals a lack of ownership — and in agent-facing tools, ownership matters. This chapter covers how to bring `@cacheplane/chat` fully into your design system without forking component source or writing brittle CSS overrides.</p>
+<p>A chat interface that looks like it came from a SaaS starter kit is a trust problem. Users notice when a modal, sidebar, or embedded panel breaks the visual contract established by the rest of your product. For enterprise teams, that inconsistency signals a lack of ownership — and in agent-facing tools, ownership matters. This chapter covers how to bring `@ngaf/chat` fully into your design system without forking component source or writing brittle CSS overrides.</p>
 <p>---</p>
 <h3>The CSS Custom Property API</h3>
-<p>`@cacheplane/chat` exposes all visual decisions as CSS custom properties scoped under the `--cp-` namespace. These are not internal implementation details — they are the public API for visual configuration. Properties are declared on the host element and cascade normally through Shadow DOM boundaries where applicable, giving you a single override surface regardless of where components are mounted in the Angular component tree.</p>
+<p>`@ngaf/chat` exposes all visual decisions as CSS custom properties scoped under the `--cp-` namespace. These are not internal implementation details — they are the public API for visual configuration. Properties are declared on the host element and cascade normally through Shadow DOM boundaries where applicable, giving you a single override surface regardless of where components are mounted in the Angular component tree.</p>
 <p>The token surface covers six categories: color (surface, text, border, accent, semantic), typography (family, size scale, weight, line height), spacing (component padding, message gap, input height), shape (border radius at three scale points), motion (transition duration and easing), and elevation (box shadow values).</p>
 <p>---</p>
 <h3>Design Token Mapping</h3>
-<p>If your design system already emits CSS custom properties — through Style Dictionary, Theo, or a Figma Tokens pipeline — mapping to `@cacheplane/chat` is a one-to-one alias operation. Define the mappings in a single stylesheet or Angular style encapsulation block. Avoid hardcoding raw values into `--cp-` properties directly; alias through your own tokens so that upstream design system changes propagate automatically.</p>
+<p>If your design system already emits CSS custom properties — through Style Dictionary, Theo, or a Figma Tokens pipeline — mapping to `@ngaf/chat` is a one-to-one alias operation. Define the mappings in a single stylesheet or Angular style encapsulation block. Avoid hardcoding raw values into `--cp-` properties directly; alias through your own tokens so that upstream design system changes propagate automatically.</p>
 <p>---</p>
 <h3>Typography Integration</h3>
-<p>Font family, size scale, and line height are independently configurable. `--cp-font-family` accepts any valid CSS font stack. Size tokens (`--cp-text-sm`, `--cp-text-base`, `--cp-text-lg`) map to the message body, metadata labels, and heading contexts respectively. If your type scale uses `rem` values derived from a root size override, `@cacheplane/chat` respects document root sizing — no unit conversion required.</p>
+<p>Font family, size scale, and line height are independently configurable. `--cp-font-family` accepts any valid CSS font stack. Size tokens (`--cp-text-sm`, `--cp-text-base`, `--cp-text-lg`) map to the message body, metadata labels, and heading contexts respectively. If your type scale uses `rem` values derived from a root size override, `@ngaf/chat` respects document root sizing — no unit conversion required.</p>
 <p>---</p>
 <h3>Color System Integration</h3>
 <p>Surface tokens (`--cp-surface-base`, `--cp-surface-raised`, `--cp-surface-input`) control background layering. Text tokens handle primary content, secondary metadata, and disabled states. `--cp-accent` drives interactive elements — send buttons, link text, focus rings. Semantic tokens (`--cp-color-error`, `--cp-color-warning`, `--cp-color-success`) control inline status indicators on message delivery states and tool call results. Map these directly to your semantic palette.</p>
@@ -171,7 +171,7 @@ export class SupportComponent {
 <p>Ten properties. Full brand alignment. No component source required.</p>
 <p>---</p>
 <h3>Token Limits and the Headless Tier</h3>
-<p>CSS custom properties cannot retheme structural decisions: message bubble layout, avatar placement geometry, the composition of the input toolbar, or the ordering of action elements. If your design system requires layout-level divergence — for example, a top-mounted input bar or a two-column transcript layout — the token API will not reach that far. That is the correct boundary for dropping to the headless tier, where `@cacheplane/chat/headless` exposes behavior and state without any rendered output, and your team owns the template entirely. Use tokens for brand alignment; use headless for structural ownership.</p></div>
+<p>CSS custom properties cannot retheme structural decisions: message bubble layout, avatar placement geometry, the composition of the input toolbar, or the ordering of action elements. If your design system requires layout-level divergence — for example, a top-mounted input bar or a two-column transcript layout — the token API will not reach that far. That is the correct boundary for dropping to the headless tier, where `@ngaf/chat/headless` exposes behavior and state without any rendered output, and your team owns the template entirely. Use tokens for brand alignment; use headless for structural ownership.</p></div>
     </section>
     <section style="padding:80px;page-break-before:always">
       <div style="font-family:monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#004090;font-weight:700;margin-bottom:16px">Chapter 4</div>
@@ -179,17 +179,17 @@ export class SupportComponent {
       <div class="chapter-body"><h3>Chapter 7: Generative UI in Chat</h3>
 <p>Text responses have a ceiling. When a financial agent needs to surface a sortable data table or a scheduling agent needs to render an interactive booking form, prose falls short. Generative UI closes that gap by allowing agents to emit structured UI specifications directly into the message stream — specifications that the chat interface resolves into live Angular components.</p>
 <h3>How Generative UI Messages Work in the Stream</h3>
-<p>From the chat renderer's perspective, a generative UI message is just another message type. The message stream carries a `type` discriminator — `text`, `tool_call`, `ui_spec`, and so on. When `@cacheplane/chat` encounters a `ui_spec` message, it routes it to the UI renderer instead of the text pipeline. The result is that a data table, approval card, or booking form appears inline between conversational turns, indistinguishable in position from any other message bubble, but rendered as a fully interactive Angular component.</p>
+<p>From the chat renderer's perspective, a generative UI message is just another message type. The message stream carries a `type` discriminator — `text`, `tool_call`, `ui_spec`, and so on. When `@ngaf/chat` encounters a `ui_spec` message, it routes it to the UI renderer instead of the text pipeline. The result is that a data table, approval card, or booking form appears inline between conversational turns, indistinguishable in position from any other message bubble, but rendered as a fully interactive Angular component.</p>
 <h3>The json-render Spec</h3>
 <p>The json-render specification is a JSON-based declarative format for describing UI trees. An agent emits a payload describing component type, props, and children. The chat layer deserializes that payload and resolves each component node against a registry. Because the spec is declarative and serializable, it travels cleanly over SSE or WebSocket streams and requires no client-side code changes when an agent starts emitting new component types — only a registry entry.</p>
 <h3>Google's A2UI Spec</h3>
-<p>A2UI extends the base idea with agent-specific primitives that json-render doesn't cover. It introduces first-class concepts for approval flows (a structured action requires explicit user confirmation before the agent proceeds), structured data cards with typed field schemas, and multi-step task UI. Where json-render is a general rendering protocol, A2UI is opinionated about agent interaction patterns. `@cacheplane/chat` supports both specs out of the box, detecting the discriminator on the incoming message and routing accordingly.</p>
-<h3>Integration with @cacheplane/render</h3>
-<p>The rendering layer is handled by `@cacheplane/render`, which owns component resolution, prop binding, and the registry itself. `@cacheplane/chat` delegates all spec rendering to `@cacheplane/render` — the chat library doesn't need to know how components are resolved, only that the renderer accepts a spec and returns a mounted component. This separation keeps the chat layer focused on message orchestration and keeps the rendering logic reusable outside of chat contexts.</p>
+<p>A2UI extends the base idea with agent-specific primitives that json-render doesn't cover. It introduces first-class concepts for approval flows (a structured action requires explicit user confirmation before the agent proceeds), structured data cards with typed field schemas, and multi-step task UI. Where json-render is a general rendering protocol, A2UI is opinionated about agent interaction patterns. `@ngaf/chat` supports both specs out of the box, detecting the discriminator on the incoming message and routing accordingly.</p>
+<h3>Integration with @ngaf/render</h3>
+<p>The rendering layer is handled by `@ngaf/render`, which owns component resolution, prop binding, and the registry itself. `@ngaf/chat` delegates all spec rendering to `@ngaf/render` — the chat library doesn't need to know how components are resolved, only that the renderer accepts a spec and returns a mounted component. This separation keeps the chat layer focused on message orchestration and keeps the rendering logic reusable outside of chat contexts.</p>
 <h3>The Registry Pattern in Chat</h3>
 <p>Custom components are registered once and become available to any agent that knows the component identifier. The registry maps string keys to Angular component classes. Any component the agent might emit — a custom chart, a domain-specific form, a confirmation widget — needs a corresponding entry.</p>
-<pre><code>import { provideChatRenderer } from '@cacheplane/chat';
-import { provideRenderRegistry } from '@cacheplane/render';
+<pre><code>import { provideChatRenderer } from '@ngaf/chat';
+import { provideRenderRegistry } from '@ngaf/render';
 import { DataTableComponent } from './components/data-table.component';
 import { BookingFormComponent } from './components/booking-form.component';
 import { ApprovalCardComponent } from './components/approval-card.component';
@@ -206,7 +206,7 @@ import { ApprovalCardComponent } from './components/approval-card.component';
 </code></pre></p>
 <p>Any component the agent emits by key is resolved here. Unknown keys fall back to a configurable fallback component rather than throwing.</p>
 <h3>Progressive Rendering via Streaming JSON Patches</h3>
-<p>Agents don't emit complete UI specs in a single chunk. They stream JSON patches — RFC 6902 operations that incrementally build the spec as the model generates it. `@cacheplane/chat` applies each patch to the in-progress spec and triggers Angular's change detection cycle. The effect is a component that populates live: table rows appear as the agent reasons through the data, form fields materialize in sequence. This isn't a loading spinner followed by a full render — it's the UI itself arriving progressively, which is both faster to first meaningful paint and more transparent about what the agent is doing.</p></div>
+<p>Agents don't emit complete UI specs in a single chunk. They stream JSON patches — RFC 6902 operations that incrementally build the spec as the model generates it. `@ngaf/chat` applies each patch to the in-progress spec and triggers Angular's change detection cycle. The effect is a component that populates live: table rows appear as the agent reasons through the data, form fields materialize in sequence. This isn't a loading spinner followed by a full render — it's the UI itself arriving progressively, which is both faster to first meaningful paint and more transparent about what the agent is doing.</p></div>
     </section>
     <section style="padding:80px;page-break-before:always">
       <div style="font-family:monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#004090;font-weight:700;margin-bottom:16px">Chapter 5</div>
@@ -214,14 +214,14 @@ import { ApprovalCardComponent } from './components/approval-card.component';
       <div class="chapter-body"><h3>Chapter 7: Debug Tooling</h3>
 <p>Debugging a running agent is fundamentally different from debugging a REST call. There is no single request to inspect in the network tab. The state lives across a stream of discrete events, tool invocations happen inside the graph before responses surface, and interrupt flows depend on timing between the UI and the server-side checkpoint. Standard browser tooling was not built for this. `chat-debug` was.</p>
 <h3>What chat-debug Exposes</h3>
-<p>`chat-debug` is a developer overlay built into `@cacheplane/chat`. When active, it renders a resizable panel alongside your chat interface that gives you a live view of four distinct concerns.</p>
+<p>`chat-debug` is a developer overlay built into `@ngaf/chat`. When active, it renders a resizable panel alongside your chat interface that gives you a live view of four distinct concerns.</p>
 <p><strong>Raw message state</strong> surfaces the full `AIMessage[]` array as it exists in the agent signal at any given moment — not a serialized snapshot, but the live signal value. You can watch content chunks arrive and accumulate during streaming without manually logging signal reads.</p>
 <p><strong>The streaming event log</strong> shows every server-sent event in the order it was received, including event type, timestamp, and raw payload. This is where you catch malformed chunk sequences, unexpected `end` events, and latency gaps between tool execution and the next assistant turn.</p>
 <p><strong>The tool call state machine</strong> tracks each tool invocation through its full lifecycle: `pending`, `executing`, `complete`, or `error`. For each call you see the tool name, the serialized input payload, the output value, and wall-clock execution time. When a tool is slow or returning unexpected output, this panel removes the guesswork.</p>
 <p><strong>Interrupt state</strong> shows the full interrupt payload at the moment the graph pauses, including the checkpoint ID and any structured data the graph passed to the UI. After the user responds, the panel records what was submitted. If your interrupt flow has a bug, the before-and-after diff is right there.</p>
 <h3>Adding chat-debug</h3>
-<p>Drop `ChatDebugComponent` into any host component that already uses the `@cacheplane/chat` primitives. No providers, no configuration file. In dev mode it activates automatically.</p>
-<pre><code>import { ChatDebugComponent } from '@cacheplane/chat/debug';
+<p>Drop `ChatDebugComponent` into any host component that already uses the `@ngaf/chat` primitives. No providers, no configuration file. In dev mode it activates automatically.</p>
+<pre><code>import { ChatDebugComponent } from '@ngaf/chat/debug';
 <p>@Component({
   imports: [ChatDebugComponent],
   template: `
@@ -236,7 +236,7 @@ export class AppShell {}
 <p>Clicking any message in the raw state view expands it into a structured inspector showing message type, role, content blocks, and metadata fields. Streamed messages show their final assembled content alongside a chunk count. Tool call messages link directly to the corresponding entry in the tool call state machine view.</p>
 <p>The tool call inspector is the most useful surface for backend integration bugs. Input and output payloads are formatted as syntax-highlighted JSON. Execution timing lets you correlate slow tool responses with latency you see in the event log.</p>
 <h3>Angular DevTools Integration</h3>
-<p>Agent signals registered through `@cacheplane/chat` appear as named signals in the Angular DevTools component tree. You can inspect `messageStream`, `interruptState`, and `toolCallRegistry` directly in the DevTools panel without instrumentation code. The signal graph reflects live state, so you can pause, inspect, and resume without affecting the stream.</p>
+<p>Agent signals registered through `@ngaf/chat` appear as named signals in the Angular DevTools component tree. You can inspect `messageStream`, `interruptState`, and `toolCallRegistry` directly in the DevTools panel without instrumentation code. The signal graph reflects live state, so you can pause, inspect, and resume without affecting the stream.</p>
 <h3>Production Safety</h3>
 <p>`chat-debug` uses a build-time token that resolves to a no-op component in production. The overlay never renders, and tree-shaking removes the debug module entirely from the production bundle. No conditional guards in application code are required. The separation is enforced at the library level.</p>
 <p>When a stream misbehaves in development, `chat-debug` gives you the full picture in one place. That is its only job, and it does it without adding complexity to your application architecture.</p></div>

@@ -57,17 +57,17 @@ export const SOLUTIONS: SolutionConfig[] = [
     architectureLayers: [
       {
         library: 'Agent',
-        pkg: '@cacheplane/langgraph',
+        pkg: '@ngaf/langgraph',
         role: 'Signal-native streaming with first-class interrupt support. Every agent action can require human approval before execution. Thread persistence gives you a complete, immutable history of every decision.',
       },
       {
         library: 'Render',
-        pkg: '@cacheplane/render',
+        pkg: '@ngaf/render',
         role: 'Approval workflows rendered as structured UI — not chat messages. The agent proposes an action, renders a confirmation card, and waits for the human gate before proceeding.',
       },
       {
         library: 'Chat',
-        pkg: '@cacheplane/chat',
+        pkg: '@ngaf/chat',
         role: 'Debug overlay shows every tool call, interrupt, and state transition. Your compliance team can review exactly what happened, when, and why — in a UI they can understand.',
       },
     ],
@@ -106,17 +106,17 @@ export const SOLUTIONS: SolutionConfig[] = [
     architectureLayers: [
       {
         library: 'Agent',
-        pkg: '@cacheplane/langgraph',
+        pkg: '@ngaf/langgraph',
         role: 'Streams query results token-by-token as the LangGraph agent reasons over your data. Thread persistence means users can refine questions without re-running expensive queries.',
       },
       {
         library: 'Render',
-        pkg: '@cacheplane/render',
+        pkg: '@ngaf/render',
         role: 'The agent emits chart specs, data tables, and KPI cards as structured render specs. Your Angular components render them with streaming JSON patches — live-updating visualizations as data arrives.',
       },
       {
         library: 'Chat',
-        pkg: '@cacheplane/chat',
+        pkg: '@ngaf/chat',
         role: 'Pre-built generative UI panel renders charts and tables inline with the conversation. Users ask follow-up questions and see updated visualizations without leaving the chat.',
       },
     ],
@@ -155,17 +155,17 @@ export const SOLUTIONS: SolutionConfig[] = [
     architectureLayers: [
       {
         library: 'Agent',
-        pkg: '@cacheplane/langgraph',
+        pkg: '@ngaf/langgraph',
         role: 'LangGraph interrupts let the agent pause before sensitive actions — refunds, account changes, escalations. Thread persistence preserves the full conversation across bot-to-human handoffs.',
       },
       {
         library: 'Render',
-        pkg: '@cacheplane/render',
+        pkg: '@ngaf/render',
         role: 'The agent renders structured UI — order summaries, refund confirmations, knowledge base cards — instead of dumping text. Customers see clean, actionable information.',
       },
       {
         library: 'Chat',
-        pkg: '@cacheplane/chat',
+        pkg: '@ngaf/chat',
         role: 'Production-ready chat UI with streaming messages, tool call visibility, and interrupt panels. When the agent escalates, the human agent sees the full debug overlay with every step the AI took.',
       },
     ],

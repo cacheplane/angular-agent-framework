@@ -1,4 +1,4 @@
-# Computed Functions with @cacheplane/render
+# Computed Functions with @ngaf/render
 
 <Summary>
 Define custom functions for prop resolution and data transformation in
@@ -8,7 +8,7 @@ in spec prop expressions for dynamic computed values.
 
 <Prompt>
 Add computed functions to this Angular application using `provideRender()`
-from `@cacheplane/render`. Define custom functions for data formatting,
+from `@ngaf/render`. Define custom functions for data formatting,
 register them in the render config, and use them in spec props.
 </Prompt>
 

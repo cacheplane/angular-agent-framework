@@ -1,4 +1,4 @@
-# Chat Timeline with @cacheplane/chat
+# Chat Timeline with @ngaf/chat
 
 <Summary>
 Navigate conversation history using ChatTimelineSliderComponent.
@@ -8,7 +8,7 @@ enabling time-travel debugging and conversation branching.
 
 <Prompt>
 Add timeline navigation to your chat interface using
-`ChatTimelineSliderComponent` from `@cacheplane/chat`. Enable users
+`ChatTimelineSliderComponent` from `@ngaf/chat`. Enable users
 to navigate checkpoints and branch from previous conversation states.
 </Prompt>
 

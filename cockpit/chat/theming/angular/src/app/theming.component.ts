@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 import { Component, signal } from '@angular/core';
 import { TitleCasePipe } from '@angular/common';
-import { ChatComponent } from '@cacheplane/chat';
-import { ExampleChatLayoutComponent } from '@cacheplane/example-layouts';
-import { agent, toAgent } from '@cacheplane/langgraph';
+import { ChatComponent } from '@ngaf/chat';
+import { ExampleChatLayoutComponent } from '@ngaf/example-layouts';
+import { agent, toAgent } from '@ngaf/langgraph';
 import { environment } from '../environments/environment';
 
 const THEMES: Record<string, Record<string, string>> = {

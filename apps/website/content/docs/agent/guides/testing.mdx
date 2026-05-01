@@ -48,8 +48,8 @@ On the Angular side, MockAgentTransport replaces the real HTTP transport. Create
 
 ```typescript
 import { TestBed } from '@angular/core/testing';
-import { MockAgentTransport, agent } from '@cacheplane/langgraph';
-import type { BaseMessage } from '@cacheplane/langgraph';
+import { MockAgentTransport, agent } from '@ngaf/langgraph';
+import type { BaseMessage } from '@ngaf/langgraph';
 
 describe('ChatComponent', () => {
   it('should display agent messages', () => {
@@ -81,7 +81,7 @@ describe('ChatComponent', () => {
 
 ```typescript
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { agent } from '@cacheplane/langgraph';
+import { agent } from '@ngaf/langgraph';
 
 @Component({
   selector: 'app-chat',
@@ -140,7 +140,7 @@ The most common test pattern verifies the full submit-to-resolved lifecycle: sub
 
 ```typescript
 import { TestBed } from '@angular/core/testing';
-import { MockAgentTransport, agent } from '@cacheplane/langgraph';
+import { MockAgentTransport, agent } from '@ngaf/langgraph';
 
 describe('streaming lifecycle', () => {
   it('should transition through loading → values → resolved', () => {
@@ -187,7 +187,7 @@ describe('streaming lifecycle', () => {
 
 ```typescript
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { agent } from '@cacheplane/langgraph';
+import { agent } from '@ngaf/langgraph';
 
 @Component({
   selector: 'app-chat',
@@ -224,7 +224,7 @@ Script an interrupt event to test human-in-the-loop flows. Verify the interrupt 
 
 ```typescript
 import { TestBed } from '@angular/core/testing';
-import { MockAgentTransport, agent } from '@cacheplane/langgraph';
+import { MockAgentTransport, agent } from '@ngaf/langgraph';
 
 describe('interrupt handling', () => {
   it('should surface interrupt and resume on approval', () => {
@@ -272,7 +272,7 @@ describe('interrupt handling', () => {
 
 ```typescript
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { agent } from '@cacheplane/langgraph';
+import { agent } from '@ngaf/langgraph';
 
 @Component({
   selector: 'app-approval',
@@ -315,7 +315,7 @@ Inject errors with `emitError()` to verify your component handles failures grace
 
 ```typescript
 import { TestBed } from '@angular/core/testing';
-import { MockAgentTransport, agent } from '@cacheplane/langgraph';
+import { MockAgentTransport, agent } from '@ngaf/langgraph';
 
 describe('error handling', () => {
   it('should surface errors and set error status', () => {
@@ -374,7 +374,7 @@ describe('error handling', () => {
 
 ```typescript
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { agent } from '@cacheplane/langgraph';
+import { agent } from '@ngaf/langgraph';
 
 @Component({
   selector: 'app-chat',
@@ -478,7 +478,7 @@ describe('thread switching', () => {
 
 <Steps>
 <Step title="Install dependencies">
-Make sure `@cacheplane/langgraph` is available in your test environment. MockAgentTransport ships with the main package — no extra install needed.
+Make sure `@ngaf/langgraph` is available in your test environment. MockAgentTransport ships with the main package — no extra install needed.
 </Step>
 <Step title="Create the transport">
 Instantiate `MockAgentTransport` with optional pre-scripted batches for sequential playback, or leave it empty for imperative `emit()` calls.

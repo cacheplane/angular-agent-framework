@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { tokens } from '@cacheplane/design-tokens';
+import { tokens } from '@ngaf/design-tokens';
 
 function GitHubIcon() {
   return (
@@ -120,7 +120,7 @@ export function Footer() {
                 aria-label="GitHub">
                 <GitHubIcon />
               </a>
-              <a href="https://www.npmjs.com/package/@cacheplane/langgraph"
+              <a href="https://www.npmjs.com/package/@ngaf/langgraph"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="transition-colors"
@@ -213,7 +213,7 @@ export function Footer() {
               onMouseLeave={(e) => (e.currentTarget.style.color = tokens.colors.textSecondary)}>
               Getting Started
             </Link>
-            <a href="https://www.npmjs.com/package/@cacheplane/langgraph"
+            <a href="https://www.npmjs.com/package/@ngaf/langgraph"
               target="_blank" rel="noopener noreferrer"
               className="transition-colors" style={{ color: tokens.colors.textSecondary }}
               onMouseEnter={(e) => (e.currentTarget.style.color = tokens.colors.accent)}

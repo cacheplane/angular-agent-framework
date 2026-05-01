@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { cssVars } from '@cacheplane/ui-react';
+import { cssVars } from '@ngaf/ui-react';
 import './cockpit.css';
 
 export const metadata = {

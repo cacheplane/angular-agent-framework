@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import type { CockpitManifestEntry } from '@cacheplane/cockpit-registry';
+import type { CockpitManifestEntry } from '@ngaf/cockpit-registry';
 import type { NavigationProduct } from '../../lib/route-resolution';
 import { toCockpitPath } from '../../lib/route-resolution';
 import { PRODUCT_LABELS, stripProductPrefix } from '../../lib/navigation-labels';

@@ -1,13 +1,13 @@
 'use client';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-import { tokens } from '@cacheplane/design-tokens';
+import { tokens } from '@ngaf/design-tokens';
 
 const LIBRARIES = [
   {
     id: 'angular',
     tag: 'Agent',
-    pkg: '@cacheplane/langgraph',
+    pkg: '@ngaf/langgraph',
     color: tokens.colors.accent,
     rgb: '0,64,144',
     oneLiner: 'Signal-native streaming for LangGraph agents',
@@ -18,7 +18,7 @@ const LIBRARIES = [
   {
     id: 'render',
     tag: 'Gen UI',
-    pkg: '@cacheplane/render',
+    pkg: '@ngaf/render',
     color: tokens.colors.renderGreen,
     rgb: '26,122,64',
     oneLiner: 'Agents that render UI — without coupling to your frontend',
@@ -29,7 +29,7 @@ const LIBRARIES = [
   {
     id: 'chat',
     tag: 'Chat',
-    pkg: '@cacheplane/chat',
+    pkg: '@ngaf/chat',
     color: tokens.colors.chatPurple,
     rgb: '90,0,200',
     oneLiner: 'Batteries-included agent chat — fully featured from day one',

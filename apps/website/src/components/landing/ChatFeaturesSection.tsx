@@ -76,7 +76,7 @@ async function runGenUI(ctx: ScenarioCtx) {
   gui.innerHTML = `
     <div style="background:rgba(26,122,64,.09);border-bottom:1px solid rgba(26,122,64,.18);padding:4px 9px;display:flex;align-items:center;gap:5px;font-family:'JetBrains Mono',monospace;font-size:.57rem;color:#4caf50;font-weight:700;text-transform:uppercase;letter-spacing:.06em">
       <span style="width:4px;height:4px;border-radius:50%;background:#4caf50;display:inline-block;animation:sr-pulse .9s infinite"></span>
-      @cacheplane/render · DataTable
+      @ngaf/render · DataTable
     </div>
     <div id="_gui-body" style="padding:7px 9px"></div>`;
   bbl.appendChild(gui);
@@ -324,7 +324,7 @@ export function ChatFeaturesSection() {
       {/* Eyebrow + headline */}
       <div style={{ textAlign: 'center', marginBottom: 32 }}>
         <p style={{ fontFamily: 'var(--font-mono,"JetBrains Mono",monospace)', fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.12em', fontWeight: 700, color: '#5a00c8', marginBottom: 14 }}>
-          @cacheplane/chat
+          @ngaf/chat
         </p>
         <h2 style={{ fontFamily: 'var(--font-garamond,"EB Garamond",Georgia,serif)', fontSize: 'clamp(26px,3.5vw,46px)', fontWeight: 800, lineHeight: 1.1, color: tokens.colors.textPrimary, marginBottom: 10 }}>
           Every agent UI primitive,<br />

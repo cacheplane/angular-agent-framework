@@ -1,9 +1,9 @@
 {
-  "name": "@cacheplane/cockpit-langgraph-memory-angular",
+  "name": "@ngaf/cockpit-langgraph-memory-angular",
   "version": "0.0.1",
   "peerDependencies": {
-    "@cacheplane/chat": "^0.0.1",
-    "@cacheplane/langgraph": "^0.0.1",
+    "@ngaf/chat": "^0.0.1",
+    "@ngaf/langgraph": "^0.0.1",
     "@langchain/langgraph-sdk": "^0.0.36"
   },
   "license": "MIT",

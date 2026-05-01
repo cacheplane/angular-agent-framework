@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 import { Component } from '@angular/core';
-import { ChatComponent, ChatTimelineSliderComponent } from '@cacheplane/chat';
-import { ExampleChatLayoutComponent } from '@cacheplane/example-layouts';
-import { agent, toAgent } from '@cacheplane/langgraph';
+import { ChatComponent, ChatTimelineSliderComponent } from '@ngaf/chat';
+import { ExampleChatLayoutComponent } from '@ngaf/example-layouts';
+import { agent, toAgent } from '@ngaf/langgraph';
 import { environment } from '../environments/environment';
 
 /**

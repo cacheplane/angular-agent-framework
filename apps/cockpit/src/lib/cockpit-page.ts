@@ -1,4 +1,4 @@
-import { cockpitManifest, type CockpitProduct, type CockpitSection, type CockpitPageId, type CockpitLanguage } from '@cacheplane/cockpit-registry';
+import { cockpitManifest, type CockpitProduct, type CockpitSection, type CockpitPageId, type CockpitLanguage } from '@ngaf/cockpit-registry';
 import {
   buildNavigationTree,
   getCapabilityPresentation,

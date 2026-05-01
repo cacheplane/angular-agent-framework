@@ -1,5 +1,5 @@
 {
-  "name": "@cacheplane/cockpit-deep-agents-sandboxes-python",
+  "name": "@ngaf/cockpit-deep-agents-sandboxes-python",
   "version": "0.0.1",
   "license": "MIT",
   "sideEffects": false

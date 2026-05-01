@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { tokens } from '@cacheplane/design-tokens';
+import { tokens } from '@ngaf/design-tokens';
 import { getDocsSection, getLibraryConfig, type LibraryId } from '../../lib/docs-config';
 
 export function DocsBreadcrumb({ library, section, title }: { library: LibraryId; section: string; title: string }) {

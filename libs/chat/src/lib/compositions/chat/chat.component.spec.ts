@@ -9,7 +9,7 @@ import { ChatComponent } from './chat.component';
 import { messageContent } from '../shared/message-utils';
 import { createContentClassifier, type ContentClassifier } from '../../streaming/content-classifier';
 import { mockAgent } from '../../testing/mock-agent';
-import { signalStateStore } from '@cacheplane/render';
+import { signalStateStore } from '@ngaf/render';
 import type { AgentEvent } from '../../agent/agent-event';
 
 describe('ChatComponent', () => {

@@ -5,7 +5,7 @@ import type { AbstractAgent } from '@ag-ui/client';
 import type {
   Agent, Message, AgentStatus, ToolCall, AgentEvent,
   AgentSubmitInput, AgentSubmitOptions,
-} from '@cacheplane/chat';
+} from '@ngaf/chat';
 import { reduceEvent, type ReducerStore } from './reducer';
 
 /**

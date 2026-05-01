@@ -2,7 +2,7 @@ import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { buildNavigationTree } from '../../lib/route-resolution';
-import { cockpitManifest } from '@cacheplane/cockpit-registry';
+import { cockpitManifest } from '@ngaf/cockpit-registry';
 import { CockpitSidebar } from './cockpit-sidebar';
 
 describe('CockpitSidebar', () => {

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 import { Component, input, ChangeDetectionStrategy } from '@angular/core';
-import type { A2uiValidationResult } from '@cacheplane/a2ui';
+import type { A2uiValidationResult } from '@ngaf/a2ui';
 
 @Component({
   selector: 'a2ui-validation-errors',

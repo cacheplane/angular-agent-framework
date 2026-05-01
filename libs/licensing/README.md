@@ -1,12 +1,12 @@
-# @cacheplane/licensing
+# @ngaf/licensing
 
 Offline Ed25519 license verification + non-blocking telemetry for the Cacheplane
 Angular framework libraries.
 
 ## Status
 
-Private, pre-1.0. Consumed by `@cacheplane/langgraph`, `@cacheplane/render`, and
-`@cacheplane/chat`. Not intended as a standalone import.
+Private, pre-1.0. Consumed by `@ngaf/langgraph`, `@ngaf/render`, and
+`@ngaf/chat`. Not intended as a standalone import.
 
 ## Behavior
 

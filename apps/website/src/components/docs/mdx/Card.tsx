@@ -1,6 +1,6 @@
 'use client';
 import Link from 'next/link';
-import { tokens } from '@cacheplane/design-tokens';
+import { tokens } from '@ngaf/design-tokens';
 
 export function CardGroup({ cols = 2, children }: { cols?: number; children: React.ReactNode }) {
   return (

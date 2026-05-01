@@ -1,12 +1,12 @@
 'use client';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-import { tokens } from '@cacheplane/design-tokens';
+import { tokens } from '@ngaf/design-tokens';
 
 const SIBLINGS = [
   {
     tag: 'Agent',
-    pkg: '@cacheplane/langgraph',
+    pkg: '@ngaf/langgraph',
     color: tokens.colors.accent,
     rgb: '0,64,144',
     headline: 'The reactive bridge to LangGraph',
@@ -15,7 +15,7 @@ const SIBLINGS = [
   },
   {
     tag: 'Chat',
-    pkg: '@cacheplane/chat',
+    pkg: '@ngaf/chat',
     color: tokens.colors.chatPurple,
     rgb: '90,0,200',
     headline: 'Production chat UI in days, not sprints',

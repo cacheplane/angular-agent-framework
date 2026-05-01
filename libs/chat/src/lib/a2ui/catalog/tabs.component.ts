@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 import { Component, computed, effect, input, signal } from '@angular/core';
 import type { Spec } from '@json-render/core';
-import { RenderElementComponent } from '@cacheplane/render';
+import { RenderElementComponent } from '@ngaf/render';
 import { emitBinding } from './emit-binding';
 
 @Component({

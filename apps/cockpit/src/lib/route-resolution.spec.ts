@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { cockpitManifest } from '@cacheplane/cockpit-registry';
+import { cockpitManifest } from '@ngaf/cockpit-registry';
 import {
   buildNavigationTree,
   getCapabilityPresentation,

@@ -25,7 +25,7 @@ describe('createTelemetryClient', () => {
     });
 
     await client.send({
-      package: '@cacheplane/langgraph',
+      package: '@ngaf/langgraph',
       version: '1.0.0',
       licenseId: 'cus_123',
     });
@@ -35,7 +35,7 @@ describe('createTelemetryClient', () => {
     expect(url).toBe('https://telemetry.example.com/v1/ping');
     expect(init.method).toBe('POST');
     const body = JSON.parse(init.body as string);
-    expect(body.package).toBe('@cacheplane/langgraph');
+    expect(body.package).toBe('@ngaf/langgraph');
     expect(body.version).toBe('1.0.0');
     expect(body.license_id).toBe('cus_123');
     expect(typeof body.anon_instance_id).toBe('string');
@@ -48,8 +48,8 @@ describe('createTelemetryClient', () => {
       endpoint: 'https://telemetry.example.com/v1/ping',
       fetch: fetchMock,
     });
-    await client.send({ package: '@cacheplane/langgraph', version: '1.0.0' });
-    await client.send({ package: '@cacheplane/langgraph', version: '1.0.0' });
+    await client.send({ package: '@ngaf/langgraph', version: '1.0.0' });
+    await client.send({ package: '@ngaf/langgraph', version: '1.0.0' });
 
     const id1 = JSON.parse(fetchMock.mock.calls[0][1].body as string).anon_instance_id;
     const id2 = JSON.parse(fetchMock.mock.calls[1][1].body as string).anon_instance_id;
@@ -63,7 +63,7 @@ describe('createTelemetryClient', () => {
       endpoint: 'https://telemetry.example.com/v1/ping',
       fetch: fetchMock,
     });
-    await client.send({ package: '@cacheplane/langgraph', version: '1.0.0' });
+    await client.send({ package: '@ngaf/langgraph', version: '1.0.0' });
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
@@ -74,7 +74,7 @@ describe('createTelemetryClient', () => {
       endpoint: 'https://telemetry.example.com/v1/ping',
       fetch: fetchMock,
     });
-    await client.send({ package: '@cacheplane/langgraph', version: '1.0.0' });
+    await client.send({ package: '@ngaf/langgraph', version: '1.0.0' });
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
@@ -85,7 +85,7 @@ describe('createTelemetryClient', () => {
       fetch: fetchMock,
     });
     await expect(
-      client.send({ package: '@cacheplane/langgraph', version: '1.0.0' }),
+      client.send({ package: '@ngaf/langgraph', version: '1.0.0' }),
     ).resolves.toBeUndefined();
   });
 });

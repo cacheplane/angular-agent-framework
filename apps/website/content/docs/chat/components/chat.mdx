@@ -7,7 +7,7 @@
 **Import:**
 
 ```typescript
-import { ChatComponent } from '@cacheplane/chat';
+import { ChatComponent } from '@ngaf/chat';
 ```
 
 ## When to Use It
@@ -29,8 +29,8 @@ If you need to customize the message layout, add components between sections, or
 
 ```typescript
 import { Component, signal } from '@angular/core';
-import { agent } from '@cacheplane/langgraph';
-import { ChatComponent } from '@cacheplane/chat';
+import { agent } from '@ngaf/langgraph';
+import { ChatComponent } from '@ngaf/chat';
 import type { BaseMessage } from '@langchain/core/messages';
 
 @Component({
@@ -61,8 +61,8 @@ export class ChatPageComponent {
 
 | Input | Type | Default | Description |
 |-------|------|---------|-------------|
-| `ref` | `AgentRef<any, any>` | **Required** | The agent ref providing streaming state. Created by `agent()` from `@cacheplane/langgraph`. |
-| `views` | `ViewRegistry \| undefined` | `undefined` | View registry for generative UI. Maps spec type names to Angular components. Created with `views()` from `@cacheplane/chat`. |
+| `ref` | `AgentRef<any, any>` | **Required** | The agent ref providing streaming state. Created by `agent()` from `@ngaf/langgraph`. |
+| `views` | `ViewRegistry \| undefined` | `undefined` | View registry for generative UI. Maps spec type names to Angular components. Created with `views()` from `@ngaf/chat`. |
 | `store` | `StateStore \| undefined` | `undefined` | Optional state store for interactive generative UI specs. |
 | `handlers` | `Record<string, (params: Record<string, unknown>) => unknown \| Promise<unknown>>` | `{}` | Event handlers for generative UI specs and A2UI `functionCall` actions. Handlers run in Angular injection context — `inject()` is available inside handler functions. |
 | `threads` | `Thread[]` | `[]` | List of threads to display in the sidebar. Each thread must have an `id` property. |
@@ -136,7 +136,7 @@ When you pass a `[views]` registry, the component auto-detects JSON specs in AI 
 ```
 
 ```typescript
-import { views } from '@cacheplane/chat';
+import { views } from '@ngaf/chat';
 import { WeatherCardComponent } from './weather-card.component';
 
 const myViews = views({

@@ -1,6 +1,6 @@
 # Markdown Rendering
 
-AI messages in `@cacheplane/chat` can render full markdown -- headings, code blocks, tables, lists, blockquotes, and inline formatting. This is powered by the `renderMarkdown()` utility and styled with `CHAT_MARKDOWN_STYLES`.
+AI messages in `@ngaf/chat` can render full markdown -- headings, code blocks, tables, lists, blockquotes, and inline formatting. This is powered by the `renderMarkdown()` utility and styled with `CHAT_MARKDOWN_STYLES`.
 
 ## How It Works
 
@@ -12,7 +12,7 @@ The markdown pipeline has two stages:
 ## The renderMarkdown() Function
 
 ```typescript
-import { renderMarkdown } from '@cacheplane/chat';
+import { renderMarkdown } from '@ngaf/chat';
 import { DomSanitizer } from '@angular/platform-browser';
 
 // In a component:
@@ -49,7 +49,7 @@ The `marked` library is loaded via a dynamic `import('marked')` at module initia
 The `CHAT_MARKDOWN_STYLES` constant provides CSS rules for all standard markdown elements. It targets the `.chat-md` class using `::ng-deep` for view encapsulation compatibility.
 
 ```typescript
-import { CHAT_MARKDOWN_STYLES } from '@cacheplane/chat';
+import { CHAT_MARKDOWN_STYLES } from '@ngaf/chat';
 
 @Component({
   styles: [CHAT_MARKDOWN_STYLES],
@@ -94,7 +94,7 @@ import {
   MessageTemplateDirective,
   CHAT_MARKDOWN_STYLES,
   renderMarkdown,
-} from '@cacheplane/chat';
+} from '@ngaf/chat';
 
 @Component({
   selector: 'app-chat-view',

@@ -2,7 +2,7 @@
 'use client';
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { tokens } from '@cacheplane/design-tokens';
+import { tokens } from '@ngaf/design-tokens';
 
 type FormState = 'idle' | 'submitting' | 'done' | 'error';
 

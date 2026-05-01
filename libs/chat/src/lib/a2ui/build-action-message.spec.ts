@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 import { describe, it, expect } from 'vitest';
-import type { A2uiSurface, A2uiComponent } from '@cacheplane/a2ui';
+import type { A2uiSurface, A2uiComponent } from '@ngaf/a2ui';
 import { buildA2uiActionMessage } from './build-action-message';
 
 describe('buildA2uiActionMessage', () => {

@@ -7,7 +7,7 @@
 **Import:**
 
 ```typescript
-import { ChatInputComponent, submitMessage } from '@cacheplane/chat';
+import { ChatInputComponent, submitMessage } from '@ngaf/chat';
 ```
 
 ## Basic Usage
@@ -70,7 +70,7 @@ The textarea uses `field-sizing: content` CSS, which allows it to grow with its 
 The `submitMessage()` function is exported as a standalone utility for programmatic message submission:
 
 ```typescript
-import { submitMessage } from '@cacheplane/chat';
+import { submitMessage } from '@ngaf/chat';
 
 function sendGreeting(ref: AgentRef<any, any>) {
   const result = submitMessage(ref, 'Hello!');
@@ -123,9 +123,9 @@ The component includes accessibility attributes:
 
 ```typescript
 import { Component, signal, ChangeDetectionStrategy } from '@angular/core';
-import { agent } from '@cacheplane/langgraph';
+import { agent } from '@ngaf/langgraph';
 import type { BaseMessage } from '@langchain/core/messages';
-import { ChatInputComponent } from '@cacheplane/chat';
+import { ChatInputComponent } from '@ngaf/chat';
 
 @Component({
   selector: 'app-input-demo',

@@ -3,7 +3,7 @@
 Render a JSON spec as a live Angular component tree in 5 minutes.
 
 <Callout type="info" title="Prerequisites">
-Angular 20+ project with `@cacheplane/render` installed. See the [Installation](/docs/render/getting-started/installation) guide if you need setup help.
+Angular 20+ project with `@ngaf/render` installed. See the [Installation](/docs/render/getting-started/installation) guide if you need setup help.
 </Callout>
 
 <Steps>
@@ -35,7 +35,7 @@ Map element type names to Angular component classes using `defineAngularRegistry
 
 ```typescript
 // ui-registry.ts
-import { defineAngularRegistry } from '@cacheplane/render';
+import { defineAngularRegistry } from '@ngaf/render';
 import { TextComponent } from './text.component';
 
 export const uiRegistry = defineAngularRegistry({
@@ -51,7 +51,7 @@ A spec describes the UI tree as a flat map of elements. The `root` key points to
 ```typescript
 // app.component.ts
 import { Component, ChangeDetectionStrategy } from '@angular/core';
-import { RenderSpecComponent } from '@cacheplane/render';
+import { RenderSpecComponent } from '@ngaf/render';
 import type { Spec } from '@json-render/core';
 import { uiRegistry } from './ui-registry';
 
@@ -72,7 +72,7 @@ export class AppComponent {
     elements: {
       greeting: {
         type: 'Text',
-        props: { label: 'Hello from @cacheplane/render!' },
+        props: { label: 'Hello from @ngaf/render!' },
       },
     },
   };
@@ -86,7 +86,7 @@ export class AppComponent {
 ng serve
 ```
 
-Open `http://localhost:4200`. You should see "Hello from @cacheplane/render!" rendered by your `TextComponent`.
+Open `http://localhost:4200`. You should see "Hello from @ngaf/render!" rendered by your `TextComponent`.
 
 </Step>
 </Steps>
@@ -97,7 +97,7 @@ Specs become powerful when you connect them to a state store. Props with `$state
 
 ```typescript
 import { Component, ChangeDetectionStrategy } from '@angular/core';
-import { RenderSpecComponent, signalStateStore } from '@cacheplane/render';
+import { RenderSpecComponent, signalStateStore } from '@ngaf/render';
 import type { Spec } from '@json-render/core';
 import { uiRegistry } from './ui-registry';
 

@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { tokens } from '@cacheplane/design-tokens';
+import { tokens } from '@ngaf/design-tokens';
 import { getSolutionBySlug, getAllSolutionSlugs } from '../../../lib/solutions-data';
 import { SolutionHero } from '../../../components/landing/solutions/SolutionHero';
 import { SolutionProblem } from '../../../components/landing/solutions/SolutionProblem';

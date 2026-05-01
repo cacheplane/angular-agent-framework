@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 import { describe, it, expect } from 'vitest';
-import type { A2uiSurface, A2uiComponent } from '@cacheplane/a2ui';
+import type { A2uiSurface, A2uiComponent } from '@ngaf/a2ui';
 import { surfaceToSpec } from './surface-to-spec';
 
 function makeSurface(components: A2uiComponent[], dataModel: Record<string, unknown> = {}): A2uiSurface {

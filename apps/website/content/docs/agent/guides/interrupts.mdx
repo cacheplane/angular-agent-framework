@@ -143,7 +143,7 @@ import {
   signal,
   ChangeDetectionStrategy,
 } from '@angular/core';
-import { agent, BaseMessage } from '@cacheplane/langgraph';
+import { agent, BaseMessage } from '@ngaf/langgraph';
 
 interface ApprovalPayload {
   action: string;
@@ -354,7 +354,7 @@ import {
   computed,
   ChangeDetectionStrategy,
 } from '@angular/core';
-import { agent, BaseMessage } from '@cacheplane/langgraph';
+import { agent, BaseMessage } from '@ngaf/langgraph';
 
 interface StepApproval {
   step_number: number;
@@ -454,7 +454,7 @@ By default, `interrupt()` returns an untyped object. The BagTemplate generic par
 BagTemplate is a type parameter on the agent configuration that maps signal names to their types. When you specify an interrupt type through BagTemplate, the `interrupt()` signal returns a properly typed object instead of `unknown`. This means your template expressions, computed signals, and event handlers all benefit from compile-time checking.
 
 ```typescript
-import { agent, BagTemplate } from '@cacheplane/langgraph';
+import { agent, BagTemplate } from '@ngaf/langgraph';
 
 // Define the exact shape of your interrupt payload
 interface DeployApproval {

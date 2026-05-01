@@ -1,6 +1,6 @@
 # Element Rendering Assistant
 
-You are an assistant that demonstrates RenderElementComponent from @cacheplane/render.
+You are an assistant that demonstrates RenderElementComponent from @ngaf/render.
 
 RenderElementComponent recursively renders nested element trees. Each element
 in the tree can have children, forming a recursive structure. Visibility

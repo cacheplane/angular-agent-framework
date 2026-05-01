@@ -1,11 +1,11 @@
 # provideRender()
 
-Registers global default configuration for `@cacheplane/render` via Angular's dependency injection system.
+Registers global default configuration for `@ngaf/render` via Angular's dependency injection system.
 
 ## Import
 
 ```typescript
-import { provideRender, RENDER_CONFIG } from '@cacheplane/render';
+import { provideRender, RENDER_CONFIG } from '@ngaf/render';
 ```
 
 ## Signature
@@ -58,7 +58,7 @@ You can inject it directly if needed:
 
 ```typescript
 import { inject } from '@angular/core';
-import { RENDER_CONFIG } from '@cacheplane/render';
+import { RENDER_CONFIG } from '@ngaf/render';
 
 const config = inject(RENDER_CONFIG, { optional: true });
 // null if provideRender() was not called
@@ -71,7 +71,7 @@ const config = inject(RENDER_CONFIG, { optional: true });
 ```typescript
 // app.config.ts
 import { ApplicationConfig } from '@angular/core';
-import { provideRender, defineAngularRegistry } from '@cacheplane/render';
+import { provideRender, defineAngularRegistry } from '@ngaf/render';
 import { TextComponent } from './components/text.component';
 import { CardComponent } from './components/card.component';
 
@@ -94,7 +94,7 @@ import {
   provideRender,
   defineAngularRegistry,
   signalStateStore,
-} from '@cacheplane/render';
+} from '@ngaf/render';
 
 const globalStore = signalStateStore({ theme: 'light' });
 

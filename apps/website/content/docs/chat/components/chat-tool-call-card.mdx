@@ -7,8 +7,8 @@
 **Import:**
 
 ```typescript
-import { ChatToolCallCardComponent } from '@cacheplane/chat';
-import type { ToolCallInfo } from '@cacheplane/chat';
+import { ChatToolCallCardComponent } from '@ngaf/chat';
+import type { ToolCallInfo } from '@ngaf/chat';
 ```
 
 ## Basic Usage
@@ -89,7 +89,7 @@ The `ChatToolCallsComponent` primitive iterates over tool calls from an `AgentRe
 
 ```typescript
 import type { ToolCallWithResult } from '@langchain/langgraph-sdk';
-import type { ToolCallInfo } from '@cacheplane/chat';
+import type { ToolCallInfo } from '@ngaf/chat';
 
 asToolCallInfo(tc: ToolCallWithResult): ToolCallInfo {
   return {

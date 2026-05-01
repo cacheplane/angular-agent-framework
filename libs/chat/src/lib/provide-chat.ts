@@ -4,10 +4,10 @@ import {
   runLicenseCheck,
   LICENSE_PUBLIC_KEY,
   inferNoncommercial,
-} from '@cacheplane/licensing';
-import type { AngularRegistry } from '@cacheplane/render';
+} from '@ngaf/licensing';
+import type { AngularRegistry } from '@ngaf/render';
 
-const PACKAGE_NAME = '@cacheplane/chat';
+const PACKAGE_NAME = '@ngaf/chat';
 declare const __CACHEPLANE_CHAT_VERSION__: string | undefined;
 const PACKAGE_VERSION =
   typeof __CACHEPLANE_CHAT_VERSION__ !== 'undefined'

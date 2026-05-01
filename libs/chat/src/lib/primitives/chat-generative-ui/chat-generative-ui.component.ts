@@ -6,8 +6,8 @@ import {
   ChangeDetectionStrategy,
 } from '@angular/core';
 import type { Spec, StateStore } from '@json-render/core';
-import type { AngularRegistry, RenderEvent } from '@cacheplane/render';
-import { RenderSpecComponent } from '@cacheplane/render';
+import type { AngularRegistry, RenderEvent } from '@ngaf/render';
+import { RenderSpecComponent } from '@ngaf/render';
 
 @Component({
   selector: 'chat-generative-ui',

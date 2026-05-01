@@ -1,5 +1,5 @@
 import { codeToHtml } from 'shiki';
-import { tokens } from '@cacheplane/design-tokens';
+import { tokens } from '@ngaf/design-tokens';
 
 const EXAMPLE = `// app.config.ts
 provideAgent({ apiUrl: 'http://localhost:2024' })

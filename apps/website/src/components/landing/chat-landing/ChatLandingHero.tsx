@@ -2,7 +2,7 @@
 'use client';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-import { tokens } from '@cacheplane/design-tokens';
+import { tokens } from '@ngaf/design-tokens';
 
 const BADGES = ['Angular 20+', 'Vercel json-render', 'Google A2UI', 'WCAG accessible'];
 
@@ -35,7 +35,7 @@ export function ChatLandingHero() {
             fontFamily: "'JetBrains Mono', monospace", fontSize: 11, letterSpacing: '0.08em',
             color: tokens.colors.chatPurple, textTransform: 'uppercase', display: 'inline-block', marginBottom: '1.5rem',
           }}>
-            @cacheplane/chat
+            @ngaf/chat
           </span>
         </motion.div>
 

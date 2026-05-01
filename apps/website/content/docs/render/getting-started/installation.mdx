@@ -1,12 +1,12 @@
 # Installation
 
-Detailed setup guide for `@cacheplane/render` in your Angular application.
+Detailed setup guide for `@ngaf/render` in your Angular application.
 
 ## Requirements
 
 <Steps>
 <Step title="Angular 20+">
-`@cacheplane/render` uses Angular Signals, the `input()` function, and the `NgComponentOutlet` directive. Angular 20 or later is required.
+`@ngaf/render` uses Angular Signals, the `input()` function, and the `NgComponentOutlet` directive. Angular 20 or later is required.
 </Step>
 <Step title="Node.js 18+">
 Required for the build toolchain and package installation.
@@ -16,7 +16,7 @@ Required for the build toolchain and package installation.
 ## Install the Package
 
 ```bash
-npm install @cacheplane/render @json-render/core
+npm install @ngaf/render @json-render/core
 ```
 
 ### Peer Dependencies
@@ -40,7 +40,7 @@ Add `provideRender()` to your application configuration. This sets global defaul
 ```typescript
 // app.config.ts
 import { ApplicationConfig } from '@angular/core';
-import { provideRender, defineAngularRegistry } from '@cacheplane/render';
+import { provideRender, defineAngularRegistry } from '@ngaf/render';
 import { TextComponent } from './components/text.component';
 import { CardComponent } from './components/card.component';
 
@@ -69,7 +69,7 @@ Here is a complete minimal application setup:
 
 ```typescript
 import { ApplicationConfig } from '@angular/core';
-import { provideRender, defineAngularRegistry } from '@cacheplane/render';
+import { provideRender, defineAngularRegistry } from '@ngaf/render';
 import { TextComponent } from './text.component';
 
 export const appConfig: ApplicationConfig = {
@@ -107,7 +107,7 @@ export class TextComponent {
 
 ```typescript
 import { Component, ChangeDetectionStrategy } from '@angular/core';
-import { RenderSpecComponent } from '@cacheplane/render';
+import { RenderSpecComponent } from '@ngaf/render';
 import type { Spec } from '@json-render/core';
 
 @Component({

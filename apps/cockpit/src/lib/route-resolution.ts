@@ -2,7 +2,7 @@ import {
   resolveManifestLanguage,
   type CockpitLanguage,
   type CockpitManifestEntry,
-} from '@cacheplane/cockpit-registry';
+} from '@ngaf/cockpit-registry';
 import { langgraphStreamingPythonModule } from '../../../../cockpit/langgraph/streaming/python/src/index';
 import { langgraphPersistencePythonModule } from '../../../../cockpit/langgraph/persistence/python/src/index';
 import { langgraphInterruptsPythonModule } from '../../../../cockpit/langgraph/interrupts/python/src/index';

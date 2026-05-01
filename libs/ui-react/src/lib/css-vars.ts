@@ -1,4 +1,4 @@
-import { colors, glass, gradient, glow, typography } from '@cacheplane/design-tokens';
+import { colors, glass, gradient, glow, typography } from '@ngaf/design-tokens';
 
 /**
  * CSS custom properties derived from design tokens.

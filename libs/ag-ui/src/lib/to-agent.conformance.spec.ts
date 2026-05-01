@@ -2,7 +2,7 @@
 import { Observable } from 'rxjs';
 import type { AbstractAgent, BaseEvent } from '@ag-ui/client';
 import type { RunAgentInput } from '@ag-ui/core';
-import { runAgentConformance } from '@cacheplane/chat';
+import { runAgentConformance } from '@ngaf/chat';
 import { toAgent } from './to-agent';
 
 /**

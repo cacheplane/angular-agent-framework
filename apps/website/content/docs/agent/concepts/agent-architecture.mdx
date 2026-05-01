@@ -1,6 +1,6 @@
 # Agent Architecture
 
-How AI agents work — the planning, execution, and tool-calling lifecycle that agent() connects your Angular app to. This page shows you the Python patterns that power modern agents and exactly how each pattern surfaces in Angular through `@cacheplane/langgraph`.
+How AI agents work — the planning, execution, and tool-calling lifecycle that agent() connects your Angular app to. This page shows you the Python patterns that power modern agents and exactly how each pattern surfaces in Angular through `@ngaf/langgraph`.
 
 <Callout type="info" title="Python + Angular, both sides">
 Every section below shows the Python backend code first, then the Angular frontend code that consumes it. You need both halves to build a production agent application — LangGraph handles the intelligence, agent() handles the reactivity.
@@ -149,7 +149,7 @@ graph = builder.compile()
 
 ```typescript
 import { ChangeDetectionStrategy, Component, computed } from '@angular/core';
-import { agent } from '@cacheplane/langgraph';
+import { agent } from '@ngaf/langgraph';
 
 interface AgentState {
   messages: BaseMessage[];
@@ -401,7 +401,7 @@ graph = builder.compile()
 
 ```typescript
 import { ChangeDetectionStrategy, Component, computed } from '@angular/core';
-import { agent } from '@cacheplane/langgraph';
+import { agent } from '@ngaf/langgraph';
 
 interface OrchestratorState {
   messages: BaseMessage[];

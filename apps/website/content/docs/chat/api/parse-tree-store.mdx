@@ -1,12 +1,12 @@
 # createParseTreeStore()
 
-Factory function that creates a `ParseTreeStore` — a bridge between the `@cacheplane/partial-json` parser and Angular's signal-based `Spec` rendering. It materializes the parse tree into a `Spec` signal with structural sharing on each push.
+Factory function that creates a `ParseTreeStore` — a bridge between the `@ngaf/partial-json` parser and Angular's signal-based `Spec` rendering. It materializes the parse tree into a `Spec` signal with structural sharing on each push.
 
 **Import:**
 
 ```typescript
-import { createParseTreeStore } from '@cacheplane/chat';
-import type { ParseTreeStore, ElementAccumulationState } from '@cacheplane/chat';
+import { createParseTreeStore } from '@ngaf/chat';
+import type { ParseTreeStore, ElementAccumulationState } from '@ngaf/chat';
 ```
 
 ## Signature
@@ -17,7 +17,7 @@ function createParseTreeStore(parser: PartialJsonParser): ParseTreeStore
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `parser` | `PartialJsonParser` | A parser instance from `createPartialJsonParser()` in `@cacheplane/partial-json` |
+| `parser` | `PartialJsonParser` | A parser instance from `createPartialJsonParser()` in `@ngaf/partial-json` |
 
 **Returns:** `ParseTreeStore` — must be called within an Angular injection context.
 
@@ -50,8 +50,8 @@ interface ElementAccumulationState {
 ## Usage
 
 ```typescript
-import { createPartialJsonParser } from '@cacheplane/partial-json';
-import { createParseTreeStore } from '@cacheplane/chat';
+import { createPartialJsonParser } from '@ngaf/partial-json';
+import { createParseTreeStore } from '@ngaf/chat';
 
 const parser = createPartialJsonParser();
 const store = createParseTreeStore(parser);

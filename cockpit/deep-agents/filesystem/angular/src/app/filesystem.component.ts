@@ -1,8 +1,8 @@
 import { Component, computed } from '@angular/core';
-import { ChatComponent, views } from '@cacheplane/chat';
-import { ExampleChatLayoutComponent } from '@cacheplane/example-layouts';
-import { agent, toAgent } from '@cacheplane/langgraph';
-import { signalStateStore } from '@cacheplane/render';
+import { ChatComponent, views } from '@ngaf/chat';
+import { ExampleChatLayoutComponent } from '@ngaf/example-layouts';
+import { agent, toAgent } from '@ngaf/langgraph';
+import { signalStateStore } from '@ngaf/render';
 import { environment } from '../environments/environment';
 import { FilePreviewComponent } from './views/file-preview.component';
 

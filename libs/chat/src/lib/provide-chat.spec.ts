@@ -6,7 +6,7 @@ import type { ChatConfig } from './provide-chat';
 import {
   __resetRunLicenseCheckStateForTests,
   __resetNagStateForTests,
-} from '@cacheplane/licensing/testing';
+} from '@ngaf/licensing/testing';
 
 describe('provideChat', () => {
   beforeEach(() => {
@@ -60,7 +60,7 @@ describe('provideChat', () => {
     const warn = globalThis.console.warn as ReturnType<typeof vi.fn>;
     expect(
       warn.mock.calls.some((c) =>
-        String(c[0]).includes('[cacheplane] @cacheplane/chat'),
+        String(c[0]).includes('[cacheplane] @ngaf/chat'),
       ),
     ).toBe(true);
   });

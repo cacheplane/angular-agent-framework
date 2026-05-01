@@ -1,6 +1,6 @@
 # Release Process
 
-The eight publishable libraries (`@cacheplane/chat`, `@cacheplane/langgraph`, `@cacheplane/ag-ui`, `@cacheplane/render`, `@cacheplane/a2ui`, `@cacheplane/partial-json`, `@cacheplane/licensing`, `@cacheplane/langgraph-mcp`) ship together at a synchronized version via Nx Release. During the `0.0.x` exploratory phase, only patch bumps are used.
+The seven publishable libraries (`@ngaf/chat`, `@ngaf/langgraph`, `@ngaf/ag-ui`, `@ngaf/render`, `@ngaf/a2ui`, `@ngaf/partial-json`, `@ngaf/licensing`) ship together at a synchronized version via Nx Release. During the `0.0.x` exploratory phase, only patch bumps are used.
 
 ## One-shot release (recommended; second release onward)
 
@@ -15,7 +15,7 @@ npx nx release patch
 
 This runs Nx Release in interactive mode, which:
 
-1. Builds all eight publishable projects (preVersionCommand).
+1. Builds all seven publishable projects (preVersionCommand).
 2. Bumps every package.json version (e.g., `0.0.1` → `0.0.2`).
 3. Generates `CHANGELOG.md` from commits since the last tag.
 4. Creates a git commit `chore(release): publish v0.0.2`.
@@ -51,7 +51,7 @@ The very first publish ships the version currently on disk (`0.0.1`) — no vers
 
 ```bash
 # 1. Build everything
-npx nx run-many -t build --projects=chat,langgraph,ag-ui,render,a2ui,partial-json,licensing,mcp
+npx nx run-many -t build --projects=chat,langgraph,ag-ui,render,a2ui,partial-json,licensing
 
 # 2. Generate the initial CHANGELOG, commit, and tag v0.0.1
 npx nx release changelog 0.0.1 --first-release
@@ -85,6 +85,6 @@ While the API is still settling we bump only the patch component (`0.0.1` → `0
 
 When the API stabilizes enough to make compatibility promises, transition to `0.1.0` and start using minor/major bumps with conventional-commit-driven semver.
 
-## Why peerDeps use `*` between cacheplane libs
+## Why peerDeps use `*` between ngaf libs
 
-Caret-prefixed ranges (`^0.0.1`) in `0.0.x` don't include subsequent patches because npm semver treats `0.0.x` as breaking. Using `"*"` for inter-cacheplane peerDeps during this phase avoids the range-narrowing problem; the synchronized release group ensures all libs ship the same version anyway. Switch back to `^X.Y.Z` once we hit `0.1.0`.
+Caret-prefixed ranges (`^0.0.1`) in `0.0.x` don't include subsequent patches because npm semver treats `0.0.x` as breaking. Using `"*"` for inter-ngaf peerDeps during this phase avoids the range-narrowing problem; the synchronized release group ensures all libs ship the same version anyway. Switch back to `^X.Y.Z` once we hit `0.1.0`.

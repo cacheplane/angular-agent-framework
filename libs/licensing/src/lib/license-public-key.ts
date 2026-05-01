@@ -9,5 +9,5 @@ function hexToBytes(hex: string): Uint8Array {
   return out;
 }
 
-/** Ed25519 public key baked into this build of `@cacheplane/licensing`. */
+/** Ed25519 public key baked into this build of `@ngaf/licensing`. */
 export const LICENSE_PUBLIC_KEY: Uint8Array = hexToBytes(LICENSE_PUBLIC_KEY_HEX);

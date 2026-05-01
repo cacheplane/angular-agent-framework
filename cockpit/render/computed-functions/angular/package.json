@@ -1,8 +1,8 @@
 {
-  "name": "@cacheplane/cockpit-render-computed-functions-angular",
+  "name": "@ngaf/cockpit-render-computed-functions-angular",
   "version": "0.0.1",
   "peerDependencies": {
-    "@cacheplane/render": "^0.0.1"
+    "@ngaf/render": "^0.0.1"
   },
   "license": "MIT",
   "sideEffects": false

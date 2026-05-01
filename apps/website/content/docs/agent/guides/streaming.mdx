@@ -59,7 +59,7 @@ async for event in graph.astream_events(
 
 ```typescript
 import { Component, computed, ChangeDetectionStrategy } from '@angular/core';
-import { agent } from '@cacheplane/langgraph';
+import { agent } from '@ngaf/langgraph';
 import { BaseMessage } from '@langchain/core/messages';
 
 @Component({
@@ -174,7 +174,7 @@ If the SSE connection drops or the agent throws, `status()` transitions to `'err
 
 ```typescript
 import { Component, computed, ChangeDetectionStrategy } from '@angular/core';
-import { agent } from '@cacheplane/langgraph';
+import { agent } from '@ngaf/langgraph';
 import { BaseMessage } from '@langchain/core/messages';
 
 @Component({

@@ -1,9 +1,9 @@
 {
-  "name": "@cacheplane/cockpit-ag-ui-streaming-angular",
+  "name": "@ngaf/cockpit-ag-ui-streaming-angular",
   "version": "0.0.1",
   "peerDependencies": {
-    "@cacheplane/ag-ui": "^0.0.1",
-    "@cacheplane/chat": "^0.0.1"
+    "@ngaf/ag-ui": "^0.0.1",
+    "@ngaf/chat": "^0.0.1"
   },
   "license": "MIT",
   "sideEffects": false

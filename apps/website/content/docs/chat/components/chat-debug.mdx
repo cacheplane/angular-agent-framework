@@ -7,7 +7,7 @@
 **Import:**
 
 ```typescript
-import { ChatDebugComponent } from '@cacheplane/chat';
+import { ChatDebugComponent } from '@ngaf/chat';
 ```
 
 ## When to Use It
@@ -23,9 +23,9 @@ Use `ChatDebugComponent` during development to understand what your LangGraph ag
 
 ```typescript
 import { Component, signal, ChangeDetectionStrategy } from '@angular/core';
-import { agent } from '@cacheplane/langgraph';
+import { agent } from '@ngaf/langgraph';
 import type { BaseMessage } from '@langchain/core/messages';
-import { ChatDebugComponent } from '@cacheplane/chat';
+import { ChatDebugComponent } from '@ngaf/chat';
 
 @Component({
   selector: 'app-debug-page',
@@ -123,7 +123,7 @@ Each debug sub-component is exported individually for custom debug UIs:
 Converts a `ThreadState` entry to a `DebugCheckpoint`:
 
 ```typescript
-import { toDebugCheckpoint } from '@cacheplane/chat';
+import { toDebugCheckpoint } from '@ngaf/chat';
 
 const checkpoint = toDebugCheckpoint(threadState, index);
 // { node: 'agent', checkpointId: 'abc123' }
@@ -134,7 +134,7 @@ const checkpoint = toDebugCheckpoint(threadState, index);
 Extracts the state values from a `ThreadState`, returning `{}` if unavailable:
 
 ```typescript
-import { extractStateValues } from '@cacheplane/chat';
+import { extractStateValues } from '@ngaf/chat';
 
 const values = extractStateValues(threadState);
 // { messages: [...], someKey: 'value' }
@@ -145,8 +145,8 @@ const values = extractStateValues(threadState);
 Computes a recursive diff between two state objects:
 
 ```typescript
-import { computeStateDiff } from '@cacheplane/chat';
-import type { DiffEntry } from '@cacheplane/chat';
+import { computeStateDiff } from '@ngaf/chat';
+import type { DiffEntry } from '@ngaf/chat';
 
 const diff: DiffEntry[] = computeStateDiff(beforeState, afterState);
 ```
@@ -184,8 +184,8 @@ import {
   DebugDetailComponent,
   toDebugCheckpoint,
   extractStateValues,
-} from '@cacheplane/chat';
-import type { DebugCheckpoint } from '@cacheplane/chat';
+} from '@ngaf/chat';
+import type { DebugCheckpoint } from '@ngaf/chat';
 
 @Component({
   selector: 'app-custom-debug',

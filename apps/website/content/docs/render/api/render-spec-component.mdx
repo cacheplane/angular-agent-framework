@@ -5,7 +5,7 @@ The top-level entry point for rendering a `@json-render/core` spec as an Angular
 ## Import
 
 ```typescript
-import { RenderSpecComponent } from '@cacheplane/render';
+import { RenderSpecComponent } from '@ngaf/render';
 ```
 
 ## Selector
@@ -91,7 +91,7 @@ The context is a `computed` signal that updates when any input or config changes
 
 ```typescript
 import { inject } from '@angular/core';
-import { RENDER_CONTEXT } from '@cacheplane/render';
+import { RENDER_CONTEXT } from '@ngaf/render';
 
 const ctx = inject(RENDER_CONTEXT);
 ctx.store.get('/some/path');
@@ -142,7 +142,7 @@ import {
   RenderSpecComponent,
   defineAngularRegistry,
   signalStateStore,
-} from '@cacheplane/render';
+} from '@ngaf/render';
 import type { Spec } from '@json-render/core';
 import { TextComponent } from './text.component';
 import { ButtonComponent } from './button.component';

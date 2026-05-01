@@ -7,7 +7,7 @@
 **Import:**
 
 ```typescript
-import { ChatSubagentCardComponent } from '@cacheplane/chat';
+import { ChatSubagentCardComponent } from '@ngaf/chat';
 ```
 
 ## Basic Usage
@@ -26,7 +26,7 @@ import { ChatSubagentCardComponent } from '@cacheplane/chat';
 
 ## SubagentStreamRef
 
-The `SubagentStreamRef` type comes from `@cacheplane/langgraph`. It provides reactive state for a subagent:
+The `SubagentStreamRef` type comes from `@ngaf/langgraph`. It provides reactive state for a subagent:
 
 | Property | Type | Description |
 |----------|------|-------------|
@@ -77,13 +77,13 @@ The `ChatSubagentsComponent` primitive iterates over active subagent streams fro
 
 ```typescript
 import { Component, signal, ChangeDetectionStrategy } from '@angular/core';
-import { agent } from '@cacheplane/langgraph';
+import { agent } from '@ngaf/langgraph';
 import type { BaseMessage } from '@langchain/core/messages';
 import {
   ChatComponent,
   ChatSubagentsComponent,
   ChatSubagentCardComponent,
-} from '@cacheplane/chat';
+} from '@ngaf/chat';
 
 @Component({
   selector: 'app-subagent-demo',

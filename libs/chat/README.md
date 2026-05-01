@@ -6,8 +6,8 @@ This library was generated with [Nx](https://nx.dev).
 
 Chat primitives consume a runtime-neutral `Agent` contract. Two adapters ship today:
 
-- **`@cacheplane/langgraph`** — for LangGraph / LangGraph Platform backends.
-- **`@cacheplane/ag-ui`** — for any AG-UI-compatible backend (LangGraph, CrewAI, Mastra, Microsoft Agent Framework, AG2, Pydantic AI, AWS Strands, CopilotKit runtime).
+- **`@ngaf/langgraph`** — for LangGraph / LangGraph Platform backends.
+- **`@ngaf/ag-ui`** — for any AG-UI-compatible backend (LangGraph, CrewAI, Mastra, Microsoft Agent Framework, AG2, Pydantic AI, AWS Strands, CopilotKit runtime).
 
 Custom backends can implement `Agent` directly with no library dependency.
 

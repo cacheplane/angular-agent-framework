@@ -2,7 +2,7 @@
 'use client';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-import { tokens } from '@cacheplane/design-tokens';
+import { tokens } from '@ngaf/design-tokens';
 
 const BADGES = ['Angular 20+', 'LangGraph', 'LangChain', 'DeepAgent'];
 
@@ -35,7 +35,7 @@ export function AngularHero() {
             fontFamily: "'JetBrains Mono', monospace", fontSize: 11, letterSpacing: '0.08em',
             color: tokens.colors.accent, textTransform: 'uppercase', display: 'inline-block', marginBottom: '1.5rem',
           }}>
-            @cacheplane/langgraph
+            @ngaf/langgraph
           </span>
         </motion.div>
 

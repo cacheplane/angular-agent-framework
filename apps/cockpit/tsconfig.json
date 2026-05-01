@@ -12,9 +12,9 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
-      "@cacheplane/design-tokens": ["../../libs/design-tokens/src/index.ts"],
-      "@cacheplane/ui-react": ["../../libs/ui-react/src/index.ts"],
-      "@cacheplane/cockpit-registry": ["../../libs/cockpit-registry/src/index.ts"]
+      "@ngaf/design-tokens": ["../../libs/design-tokens/src/index.ts"],
+      "@ngaf/ui-react": ["../../libs/ui-react/src/index.ts"],
+      "@ngaf/cockpit-registry": ["../../libs/cockpit-registry/src/index.ts"]
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],

@@ -1,10 +1,10 @@
 # Introduction
 
-`@cacheplane/render` is the Angular rendering engine for [json-render](https://github.com/nicholasgriffintn/json-render) specs. It takes a declarative JSON specification and renders it into a live Angular component tree -- with reactive state, event handling, and conditional rendering built in.
+`@ngaf/render` is the Angular rendering engine for [json-render](https://github.com/nicholasgriffintn/json-render) specs. It takes a declarative JSON specification and renders it into a live Angular component tree -- with reactive state, event handling, and conditional rendering built in.
 
-## Why @cacheplane/render?
+## Why @ngaf/render?
 
-Building dynamic UIs from server-driven specifications is a common pattern in AI applications, form builders, and CMS-powered frontends. `@cacheplane/render` bridges the gap between `@json-render/core` (a framework-agnostic spec evaluation engine) and Angular's component model.
+Building dynamic UIs from server-driven specifications is a common pattern in AI applications, form builders, and CMS-powered frontends. `@ngaf/render` bridges the gap between `@json-render/core` (a framework-agnostic spec evaluation engine) and Angular's component model.
 
 Instead of writing imperative rendering logic, you describe your UI as a JSON spec and let the library handle the rest:
 
@@ -31,7 +31,7 @@ The library resolves `Text` from your component registry, evaluates the `$state`
 
 `@json-render/core` provides the spec format and the evaluation engine -- it resolves prop expressions (`$state`, `$item`, `$index`, `$bindState`, `$fn`), evaluates visibility conditions, and resolves bindings. It is framework-agnostic and has no Angular dependency.
 
-`@cacheplane/render` is the Angular adapter layer. It provides:
+`@ngaf/render` is the Angular adapter layer. It provides:
 
 - **Component registry** -- maps spec element types (like `"Text"` or `"Card"`) to Angular component classes
 - **Signal-based state store** -- an Angular Signals-backed implementation of the `StateStore` interface from `@json-render/core`

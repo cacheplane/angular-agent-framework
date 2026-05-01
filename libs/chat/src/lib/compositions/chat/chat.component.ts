@@ -15,8 +15,8 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import type { Agent } from '../../agent';
-import type { ViewRegistry, RenderEvent } from '@cacheplane/render';
-import type { A2uiActionMessage } from '@cacheplane/a2ui';
+import type { ViewRegistry, RenderEvent } from '@ngaf/render';
+import type { A2uiActionMessage } from '@ngaf/a2ui';
 import type { StateStore } from '@json-render/core';
 import { ChatMessagesComponent } from '../../primitives/chat-messages/chat-messages.component';
 import { MessageTemplateDirective } from '../../primitives/chat-messages/message-template.directive';
@@ -26,7 +26,7 @@ import { ChatErrorComponent } from '../../primitives/chat-error/chat-error.compo
 import { ChatInterruptComponent } from '../../primitives/chat-interrupt/chat-interrupt.component';
 import { ChatThreadListComponent, Thread } from '../../primitives/chat-thread-list/chat-thread-list.component';
 import { ChatGenerativeUiComponent } from '../../primitives/chat-generative-ui/chat-generative-ui.component';
-import { toRenderRegistry, signalStateStore } from '@cacheplane/render';
+import { toRenderRegistry, signalStateStore } from '@ngaf/render';
 import { createContentClassifier, type ContentClassifier } from '../../streaming/content-classifier';
 import { messageContent } from '../shared/message-utils';
 import { CHAT_THEME_STYLES } from '../../styles/chat-theme';
