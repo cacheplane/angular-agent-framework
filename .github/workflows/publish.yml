@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      id-token: write  # for npm provenance
+      id-token: write  # required for npm trusted publishing + provenance
     env:
       NPM_PUBLISHABLE_PROJECTS: chat,langgraph,ag-ui,render,a2ui,partial-json,licensing
     steps:
@@ -32,15 +32,17 @@ jobs:
       - name: Lint, test, build publishable projects
         run: npx nx run-many -t lint,test,build --projects=$NPM_PUBLISHABLE_PROJECTS --skip-nx-cache
 
+      # Trusted publishing is configured per-package on npm; no NPM_TOKEN needed.
+      # The OIDC token from id-token: write authenticates this workflow as a
+      # trusted publisher for each @ngaf/* package. Provenance attestations are
+      # generated automatically.
+
       - name: Publish to npm
         if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.dry-run == false)
         run: npx nx release publish --groups=publishable
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           NPM_CONFIG_PROVENANCE: 'true'
 
       - name: Publish to npm (dry run)
         if: github.event_name == 'workflow_dispatch' && inputs.dry-run == true
         run: npx nx release publish --groups=publishable --dry-run
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
