@@ -16,10 +16,10 @@ Required for the build toolchain and package installation.
 ## Install the package
 
 ```bash
-npm install @ngaf/chat
+npm install @ngaf/chat marked
 ```
 
-That's it. The chat components ship with their own design tokens and component-encapsulated styles. **No PostCSS config, no global stylesheet import, no Tailwind required.**
+`marked` is required for parsing assistant markdown. Beyond that: the chat components ship with their own design tokens and component-encapsulated styles. **No PostCSS config, no global stylesheet import, no Tailwind required.**
 
 ## Peer Dependencies
 
@@ -35,10 +35,10 @@ That's it. The chat components ship with their own design tokens and component-e
 | `@ngaf/partial-json` | `^0.0.1` | Yes |
 | `@json-render/core` | `^0.16.0` | Yes |
 | `@langchain/core` | `^1.1.33` | Yes |
-| `marked` | `^15.0.0 \|\| ^16.0.0` | Optional |
+| `marked` | `^15.0.0 \|\| ^16.0.0` | Yes |
 
-<Callout type="tip" title="Markdown rendering">
-The `marked` package is optional. When installed, AI messages render as full markdown (headings, code blocks, tables, lists). Without it, the library falls back to plain text with `<br>` newline conversion.
+<Callout type="info" title="Markdown rendering">
+`marked` parses AI message content into HTML (headings, code blocks, tables, lists). It is a required peer; the library ships a defensive plain-text fallback for resilience, but the rendered output is unusable without `marked` installed.
 </Callout>
 
 ## Configure provideChat() (optional)

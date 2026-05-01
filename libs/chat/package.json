@@ -1,6 +1,6 @@
 {
   "name": "@ngaf/chat",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "exports": {
     ".": {
       "types": "./index.d.ts",
@@ -25,11 +25,6 @@
     "@langchain/core": "^1.1.33",
     "rxjs": "~7.8.0",
     "marked": "^15.0.0 || ^16.0.0"
-  },
-  "peerDependenciesMeta": {
-    "marked": {
-      "optional": true
-    }
   },
   "license": "MIT",
   "repository": {

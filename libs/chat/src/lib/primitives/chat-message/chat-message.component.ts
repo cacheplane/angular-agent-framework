@@ -14,28 +14,17 @@ export type ChatMessageRole = 'user' | 'assistant' | 'system' | 'tool';
   host: {
     '[attr.data-role]': 'role()',
     '[attr.data-current]': 'currentStr()',
+    '[attr.data-streaming]': 'streamingStr()',
     '[attr.data-prev-role]': 'prevRole() ?? null',
   },
   template: `
-    @switch (role()) {
-      @case ('user') {
-        <div class="chat-message__bubble"><ng-content /></div>
-      }
-      @case ('assistant') {
-        <div class="chat-message__assistant-body">
-          <ng-content />
-          @if (streaming() && current()) {
-            <span class="chat-message__caret" aria-hidden="true">▍</span>
-          }
-        </div>
-        <div class="chat-message__controls">
-          <ng-content select="[chatMessageControls]" />
-        </div>
-      }
-      @default {
-        <div><ng-content /></div>
-      }
-    }
+    <div [class]="bodyClass()">
+      <ng-content />
+      <span class="chat-message__caret" aria-hidden="true">▍</span>
+    </div>
+    <div class="chat-message__controls">
+      <ng-content select="[chatMessageControls]" />
+    </div>
   `,
 })
 export class ChatMessageComponent {
@@ -45,4 +34,13 @@ export class ChatMessageComponent {
   readonly prevRole = input<ChatMessageRole | undefined>(undefined);
 
   readonly currentStr = computed(() => String(this.current()));
+  readonly streamingStr = computed(() => String(this.streaming()));
+
+  readonly bodyClass = computed(() => {
+    switch (this.role()) {
+      case 'user': return 'chat-message__bubble';
+      case 'assistant': return 'chat-message__assistant-body';
+      default: return 'chat-message__plain';
+    }
+  });
 }
