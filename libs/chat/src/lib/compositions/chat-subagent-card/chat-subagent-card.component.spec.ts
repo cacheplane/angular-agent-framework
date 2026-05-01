@@ -11,18 +11,18 @@ describe('ChatSubagentCardComponent', () => {
 
 describe('statusColor', () => {
   it('returns muted style for pending', () => {
-    expect(statusColor('pending')).toContain('var(--chat-text-muted)');
+    expect(statusColor('pending')).toContain('var(--ngaf-chat-text-muted)');
   });
 
   it('returns warning style for running', () => {
-    expect(statusColor('running')).toContain('var(--chat-warning-text)');
+    expect(statusColor('running')).toContain('var(--ngaf-chat-warning-text)');
   });
 
   it('returns success style for complete', () => {
-    expect(statusColor('complete')).toContain('var(--chat-success)');
+    expect(statusColor('complete')).toContain('var(--ngaf-chat-success)');
   });
 
   it('returns error style for error', () => {
-    expect(statusColor('error')).toContain('var(--chat-error-text)');
+    expect(statusColor('error')).toContain('var(--ngaf-chat-error-text)');
   });
 });
