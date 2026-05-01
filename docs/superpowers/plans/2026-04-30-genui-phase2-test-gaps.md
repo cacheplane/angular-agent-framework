@@ -4,7 +4,7 @@
 
 **Goal:** Add unit-test coverage for the two `cockpit/chat/generative-ui/angular/` view components shipped in PR #127 (`9b621521`) without specs — `ContainerComponent` and `DashboardGridComponent` — so all six dashboard views meet the example's testing convention.
 
-**Architecture:** Two new `*.spec.ts` files following the existing pattern in `views/stat-card.component.spec.ts` and `views/bar-chart.component.spec.ts`: `TestBed`-instantiated standalone component + `componentRef.setInput()` for input wiring + DOM assertions. No backend, no mocks beyond what `RenderElementComponent` requires; both target components have minimal logic.
+**Architecture:** Two new `*.spec.ts` files following the existing pattern in `views/stat-card.component.spec.ts` and `views/bar-chart.component.spec.ts`: `TestBed`-instantiated standalone component + `componentRef.setInput()` for input wiring + DOM assertions. Both target components import `RenderElementComponent`, which calls `inject(RENDER_CONTEXT)` and would throw NG0201 if instantiated by TestBed; the specs use `TestBed.overrideComponent(...).remove/add({ imports })` to swap in a local `StubRenderElementComponent` that matches `<render-element>`'s selector and public inputs. No backend, no service mocks.
 
 **Tech Stack:** Angular 21 standalone components, `@angular/build:unit-test` runner (already configured at `cockpit/chat/generative-ui/angular/project.json`), `@angular/core/testing` `TestBed`/`ComponentFixture`.
 
@@ -108,9 +108,24 @@ Create `cockpit/chat/generative-ui/angular/src/app/views/container.component.spe
 
 ```ts
 // SPDX-License-Identifier: MIT
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { Component, input } from '@angular/core';
 import type { Spec } from '@json-render/core';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { RenderElementComponent } from '@ngaf/render';
 import { ContainerComponent } from './container.component';
+
+// Stub matching <render-element>'s selector + public inputs. Swapped into
+// ContainerComponent's imports via overrideComponent so Angular doesn't
+// instantiate the real RenderElementComponent (which requires RENDER_CONTEXT).
+@Component({
+  selector: 'render-element',
+  standalone: true,
+  template: '',
+})
+class StubRenderElementComponent {
+  readonly elementKey = input<string>('');
+  readonly spec = input<Spec | undefined>(undefined);
+}
 
 describe('ContainerComponent', () => {
   let fixture: ComponentFixture<ContainerComponent>;
@@ -122,7 +137,12 @@ describe('ContainerComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [ContainerComponent],
-    }).compileComponents();
+    })
+      .overrideComponent(ContainerComponent, {
+        remove: { imports: [RenderElementComponent] },
+        add: { imports: [StubRenderElementComponent] },
+      })
+      .compileComponents();
     fixture = TestBed.createComponent(ContainerComponent);
   });
 
@@ -161,6 +181,8 @@ describe('ContainerComponent', () => {
 });
 ```
 
+> **Why the stub:** `RenderElementComponent` is a standalone component imported by `ContainerComponent`. When Angular sees `<render-element>` in the rendered template, it instantiates the real component, which calls `inject(RENDER_CONTEXT)` — a non-optional injection that throws `NG0201` in a TestBed without the full render pipeline wired up. `TestBed.overrideComponent(...).remove/add({ imports })` swaps in a stub matching the selector + inputs so DOM assertions on `<render-element>` count still work, but nothing tries to render real elements. This is the standard Angular pattern for testing layout wrappers in isolation.
+
 - [ ] **Step 2: Run the test to verify it passes**
 
 Run: `npx nx test cockpit-chat-generative-ui-angular --test-path-pattern=container.component.spec`
@@ -190,9 +212,23 @@ Create `cockpit/chat/generative-ui/angular/src/app/views/dashboard-grid.componen
 
 ```ts
 // SPDX-License-Identifier: MIT
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { Component, input } from '@angular/core';
 import type { Spec } from '@json-render/core';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { RenderElementComponent } from '@ngaf/render';
 import { DashboardGridComponent } from './dashboard-grid.component';
+
+// See ContainerComponent spec for rationale. Same stub pattern keeps Angular
+// from instantiating the real <render-element> (which needs RENDER_CONTEXT).
+@Component({
+  selector: 'render-element',
+  standalone: true,
+  template: '',
+})
+class StubRenderElementComponent {
+  readonly elementKey = input<string>('');
+  readonly spec = input<Spec | undefined>(undefined);
+}
 
 describe('DashboardGridComponent', () => {
   let fixture: ComponentFixture<DashboardGridComponent>;
@@ -202,7 +238,12 @@ describe('DashboardGridComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [DashboardGridComponent],
-    }).compileComponents();
+    })
+      .overrideComponent(DashboardGridComponent, {
+        remove: { imports: [RenderElementComponent] },
+        add: { imports: [StubRenderElementComponent] },
+      })
+      .compileComponents();
     fixture = TestBed.createComponent(DashboardGridComponent);
   });
 
@@ -275,8 +316,8 @@ Run before opening the PR:
 
 - [ ] Both new spec files exist at the paths above and import `Spec` from `@json-render/core`.
 - [ ] Test names describe behavior (layout class, child count), not implementation.
-- [ ] No `RenderElementComponent` is imported into the spec — assertions inspect the rendered `<render-element>` selector strings, not internals.
-- [ ] No mocks: `TestBed.configureTestingModule({ imports: [Component] })` is the entire setup, matching `stat-card.component.spec.ts`.
+- [ ] `RenderElementComponent` is imported only as the override target so a local `StubRenderElementComponent` (matching selector + public inputs) takes its place — assertions still inspect the rendered `<render-element>` selector strings.
+- [ ] No service mocks; the only test double is the local `StubRenderElementComponent` that shields TestBed from the real component's `RENDER_CONTEXT` injection.
 - [ ] License header `// SPDX-License-Identifier: MIT` is present on both files.
 - [ ] `npx nx test cockpit-chat-generative-ui-angular` passes with all view specs green.
 
