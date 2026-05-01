@@ -1,6 +1,6 @@
 # Installation
 
-Detailed setup guide for `@ngaf/chat` in your Angular application.
+Detailed setup guide for `@ngaf/chat`.
 
 ## Requirements
 
@@ -8,14 +8,8 @@ Detailed setup guide for `@ngaf/chat` in your Angular application.
 <Step title="Angular 20+">
 `@ngaf/chat` uses Angular Signals, the `input()` function, and `contentChildren()`. Angular 20 or later is required.
 </Step>
-<Step title="@ngaf/agent">
-The chat components read streaming state from `LangGraphAgent`, which is returned by `agent()` from `@ngaf/langgraph`. You must have `provideAgent()` configured before adding chat.
-</Step>
 <Step title="Node.js 18+">
 Required for the build toolchain and package installation.
-</Step>
-<Step title="Tailwind CSS v4 (for compositions)">
-The `ChatComponent` and `ChatDebugComponent` compositions use Tailwind utility classes for layout. Consumers must have Tailwind v4 configured in their project and `@source "../node_modules/@ngaf/chat"` declared in their stylesheet. See [Tailwind CSS](#tailwind-css) below. Primitives-only consumers can skip this.
 </Step>
 </Steps>
 
@@ -24,6 +18,8 @@ The `ChatComponent` and `ChatDebugComponent` compositions use Tailwind utility c
 ```bash
 npm install @ngaf/chat
 ```
+
+That's it. The chat components ship with their own design tokens and component-encapsulated styles. **No PostCSS config, no global stylesheet import, no Tailwind required.**
 
 ## Peer Dependencies
 
@@ -34,153 +30,77 @@ npm install @ngaf/chat
 | `@angular/core` | `^20.0.0 \|\| ^21.0.0` | Yes |
 | `@angular/common` | `^20.0.0 \|\| ^21.0.0` | Yes |
 | `@angular/forms` | `^20.0.0 \|\| ^21.0.0` | Yes |
-| `@ngaf/langgraph` | `^0.0.1` | Yes |
 | `@ngaf/render` | `^0.0.1` | Yes |
+| `@ngaf/a2ui` | `^0.0.1` | Yes |
+| `@ngaf/partial-json` | `^0.0.1` | Yes |
 | `@json-render/core` | `^0.16.0` | Yes |
 | `@langchain/core` | `^1.1.33` | Yes |
-| `@langchain/langgraph-sdk` | `^1.7.4` | Yes |
 | `marked` | `^15.0.0 \|\| ^16.0.0` | Optional |
 
 <Callout type="tip" title="Markdown rendering">
-The `marked` package is optional. When installed, AI messages are rendered as full markdown (headings, code blocks, tables, lists). Without it, the library falls back to plain text with `<br>` newline conversion.
+The `marked` package is optional. When installed, AI messages render as full markdown (headings, code blocks, tables, lists). Without it, the library falls back to plain text with `<br>` newline conversion.
 </Callout>
 
-To install everything at once:
+## Configure provideChat() (optional)
 
-```bash
-npm install @ngaf/chat @ngaf/langgraph @ngaf/render marked
-```
+Add `provideChat()` alongside your agent provider to register `CHAT_CONFIG` for global chat configuration:
 
-## Configure provideChat()
-
-Add `provideChat()` alongside `provideAgent()` in your application configuration. This registers the `CHAT_CONFIG` injection token used by composition components.
-
-```typescript
+```ts
 // app.config.ts
 import { ApplicationConfig } from '@angular/core';
-import { provideAgent } from '@ngaf/langgraph';
 import { provideChat } from '@ngaf/chat';
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideAgent({
-      apiUrl: 'http://localhost:2024',
-    }),
-    provideChat({
-      assistantName: 'Assistant',
-      avatarLabel: 'A',
-    }),
+    provideChat({ assistantName: 'Assistant' }),
   ],
 };
 ```
 
-<Callout type="info" title="provideChat() is optional">
-`provideChat()` is only needed if you want to set global configuration like `renderRegistry`, `avatarLabel`, or `assistantName`. All primitive and composition components work without it -- they use sensible defaults.
-</Callout>
+`provideChat()` is optional — chat components fall back to sensible defaults.
 
-## Tailwind CSS
+## Theming
 
-<Callout type="warning" title="Required for compositions">
-Compositions like `ChatComponent` and `ChatDebugComponent` use Tailwind CSS utility classes (`flex`, `gap-3`, `max-w-[75%]`, `md:flex`, ...) for layout. **The library does not ship a precompiled stylesheet**, so without Tailwind the chat renders as a column of full-width boxes with no spacing or alignment.
+The chat ships with a complete light/dark token system. Three ways to customize:
 
-The primitives layer (e.g. `ChatMessagesComponent`, `ChatInputComponent` used directly) does not depend on Tailwind — it uses inline styles and CSS custom properties only.
-</Callout>
+### 1. Override a single token at app root
 
-If your project already uses Tailwind v4, skip ahead to [Scan the chat package](#scan-the-ngafchat-package). Otherwise:
-
-<Steps>
-<Step title="Install Tailwind">
-
-```bash
-npm install -D tailwindcss @tailwindcss/postcss
-```
-
-</Step>
-<Step title="Add a PostCSS config">
-
-Create `.postcssrc.json` at the project root:
-
-```json
-{
-  "plugins": {
-    "@tailwindcss/postcss": {}
-  }
+```css
+/* src/styles.css */
+:root {
+  --ngaf-chat-primary: oklch(0.55 0.22 264);
 }
 ```
 
-</Step>
-<Step title="Import Tailwind in src/styles.css">
+### 2. Force a theme via attribute
 
-```css
-@import "tailwindcss";
-
-/* Tell Tailwind to scan @ngaf/chat for utility classes used in the
-   composition templates. Without this, layout classes from the
-   library are tree-shaken away. */
-@source "../node_modules/@ngaf/chat";
+```html
+<chat data-ngaf-chat-theme="dark" [agent]="agent" />
 ```
 
-</Step>
-</Steps>
-
-### Scan the @ngaf/chat package
-
-Tailwind v4 auto-discovers source files in your project but ignores `node_modules` by default. Because the chat compositions ship their utility classes inside the published bundle, you must opt those files in with `@source`:
+### 3. Deep override via the optional global stylesheet
 
 ```css
-@source "../node_modules/@ngaf/chat";
-```
+/* src/styles.css */
+@import '@ngaf/chat/chat.css';
 
-Without this directive, classes like `flex`, `w-10`, `gap-3`, and `max-w-[75%]` will not appear in your compiled CSS, and the chat will visibly collapse to an unstyled column. Restart `ng serve` after adding `.postcssrc.json` so the new PostCSS pipeline takes effect.
-
-## Verify the Setup
-
-Create a minimal component to verify everything is wired up:
-
-```typescript
-import { Component, signal } from '@angular/core';
-import { agent } from '@ngaf/langgraph';
-import { ChatComponent } from '@ngaf/chat';
-import type { BaseMessage } from '@langchain/core/messages';
-
-@Component({
-  selector: 'app-test-chat',
-  standalone: true,
-  imports: [ChatComponent],
-  template: `<div style="height: 400px;"><chat [ref]="ref" /></div>`,
-})
-export class TestChatComponent {
-  ref = agent<{ messages: BaseMessage[] }>({
-    assistantId: 'chat_agent',
-    threadId: signal(null),
-  });
+:root {
+  --ngaf-chat-primary: oklch(0.55 0.22 264);
 }
 ```
 
-If you see the empty state message and can type in the input, the installation is working.
+See [Theming](/docs/chat/guides/theming) for the full token reference.
 
 ## What's Next
 
 <CardGroup cols={3}>
-  <Card
-    title="Quick Start"
-    icon="rocket"
-    href="/docs/chat/getting-started/quickstart"
-  >
-    Build a working chat interface in 5 minutes.
+  <Card title="Quick Start" icon="rocket" href="/docs/chat/getting-started/quickstart">
+    Build a working chat in 5 minutes.
   </Card>
-  <Card
-    title="Configuration"
-    icon="settings"
-    href="/docs/chat/guides/configuration"
-  >
-    All provideChat() options explained.
+  <Card title="Layout Modes" icon="layout" href="/docs/chat/guides/layout-modes">
+    Embedded, popup, or sidebar?
   </Card>
-  <Card
-    title="Theming"
-    icon="palette"
-    href="/docs/chat/guides/theming"
-  >
-    Customize the visual design with CSS custom properties.
+  <Card title="Theming" icon="palette" href="/docs/chat/guides/theming">
+    Customize the visual design.
   </Card>
 </CardGroup>

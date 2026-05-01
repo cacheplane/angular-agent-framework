@@ -3,7 +3,7 @@
 Build a streaming chat UI with `@ngaf/chat` in 5 minutes.
 
 <Callout type="info" title="Prerequisites">
-Angular 20+ project with `@ngaf/agent` already configured. If you need setup help, see the [Agent Installation](/docs/agent/getting-started/installation) guide first.
+Angular 20+ project with an agent provider configured. See [Agent Installation](/docs/agent/getting-started/installation) if you need help.
 </Callout>
 
 <Steps>
@@ -14,39 +14,9 @@ npm install @ngaf/chat
 ```
 
 </Step>
-<Step title="Set up Tailwind CSS">
-
-`ChatComponent` ships its layout as Tailwind utility classes and does not include a precompiled stylesheet. If your project does not already use Tailwind v4, add it now:
-
-```bash
-npm install -D tailwindcss @tailwindcss/postcss
-```
-
-Create `.postcssrc.json` at the project root:
-
-```json
-{
-  "plugins": {
-    "@tailwindcss/postcss": {}
-  }
-}
-```
-
-Add the following to `src/styles.css`:
-
-```css
-@import "tailwindcss";
-@source "../node_modules/@ngaf/chat";
-```
-
-The `@source` directive opts the published `@ngaf/chat` bundle into Tailwind's class scan; without it the chat renders as a column of unstyled blocks. Restart `ng serve` after creating `.postcssrc.json`. See [Installation → Tailwind CSS](/docs/chat/getting-started/installation#tailwind-css) for details.
-
-</Step>
 <Step title="Configure providers">
 
-Add both `provideAgent()` and `provideChat()` to your application config.
-
-```typescript
+```ts
 // app.config.ts
 import { ApplicationConfig } from '@angular/core';
 import { provideAgent } from '@ngaf/langgraph';
@@ -54,27 +24,19 @@ import { provideChat } from '@ngaf/chat';
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideAgent({
-      apiUrl: 'http://localhost:2024',
-    }),
-    provideChat({
-      assistantName: 'My Assistant',
-      avatarLabel: 'AI',
-    }),
+    provideAgent({ apiUrl: 'http://localhost:2024' }),
+    provideChat({ assistantName: 'Assistant' }),
   ],
 };
 ```
 
 </Step>
-<Step title="Create a chat page">
+<Step title="Render the chat">
 
-Use `agent()` to create a streaming connection and pass the returned `LangGraphAgent` to `ChatComponent`.
-
-```typescript
+```ts
 // chat-page.component.ts
 import { Component, ChangeDetectionStrategy, signal } from '@angular/core';
 import { agent } from '@ngaf/langgraph';
-import type { BaseMessage } from '@langchain/core/messages';
 import { ChatComponent } from '@ngaf/chat';
 
 @Component({
@@ -82,148 +44,31 @@ import { ChatComponent } from '@ngaf/chat';
   standalone: true,
   imports: [ChatComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `
-    <div style="height: 100vh;">
-      <chat [ref]="chatRef" />
-    </div>
-  `,
+  template: `<div style="height: 100vh"><chat [agent]="chatAgent" /></div>`,
 })
 export class ChatPageComponent {
-  chatRef = agent<{ messages: BaseMessage[] }>({
+  protected readonly chatAgent = agent({
     assistantId: 'chat_agent',
     threadId: signal(null),
-    onThreadId: (id) => console.log('Thread created:', id),
   });
 }
 ```
-
-</Step>
-<Step title="Run it">
-
-Start your LangGraph agent and Angular dev server:
-
-<Tabs>
-<Tab label="LangGraph">
-
-```bash
-cd your-agent-directory
-langgraph dev
-```
-
-</Tab>
-<Tab label="Angular">
-
-```bash
-ng serve
-```
-
-</Tab>
-</Tabs>
-
-Navigate to your chat page. You should see an empty state with the message "Send a message to start a conversation." Type a message and press Enter -- the agent will stream its response in real time.
 
 </Step>
 </Steps>
 
-## What You Get Out of the Box
-
-The `ChatComponent` composition includes:
-
-- **Message rendering** with markdown support for AI messages (paragraphs, code blocks, lists, tables)
-- **Right-aligned user bubbles** and left-aligned AI messages with an avatar
-- **Auto-scroll** that follows new messages and streaming content
-- **Typing indicator** (animated dots) while the agent is processing
-- **Error display** when the agent encounters an error
-- **Interrupt banner** when the agent pauses for human input
-- **Thread sidebar** (optional) for multi-conversation support
-- **Keyboard handling** with Enter to send and Shift+Enter for newlines
-
-## Going Further: Custom Message Templates
-
-If you need more control over how messages render, drop down to the primitives layer. Here is the same chat with custom message templates:
-
-```typescript
-import { Component, ChangeDetectionStrategy, signal, inject } from '@angular/core';
-import { DomSanitizer } from '@angular/platform-browser';
-import { agent } from '@ngaf/langgraph';
-import type { BaseMessage } from '@langchain/core/messages';
-import {
-  ChatMessagesComponent,
-  MessageTemplateDirective,
-  ChatInputComponent,
-  ChatTypingIndicatorComponent,
-  renderMarkdown,
-} from '@ngaf/chat';
-
-@Component({
-  selector: 'app-custom-chat',
-  standalone: true,
-  imports: [
-    ChatMessagesComponent,
-    MessageTemplateDirective,
-    ChatInputComponent,
-    ChatTypingIndicatorComponent,
-  ],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `
-    <chat-messages [ref]="chatRef">
-      <ng-template chatMessageTemplate="human" let-message>
-        <div class="my-human-bubble">
-          {{ message.content }}
-        </div>
-      </ng-template>
-
-      <ng-template chatMessageTemplate="ai" let-message>
-        <div class="my-ai-message" [innerHTML]="renderMd(message.content)"></div>
-      </ng-template>
-    </chat-messages>
-
-    <chat-typing-indicator [ref]="chatRef" />
-
-    <chat-input
-      [ref]="chatRef"
-      [submitOnEnter]="true"
-      placeholder="Ask me anything..."
-    />
-  `,
-})
-export class CustomChatComponent {
-  private sanitizer = inject(DomSanitizer);
-
-  chatRef = agent<{ messages: BaseMessage[] }>({
-    assistantId: 'chat_agent',
-    threadId: signal(null),
-  });
-
-  renderMd(content: string) {
-    if (typeof content !== 'string') return '';
-    return renderMarkdown(content, this.sanitizer);
-  }
-}
-```
+That's it — no Tailwind setup, no PostCSS config, no global stylesheet import. The chat ships with its own design tokens and component-scoped styles.
 
 ## What's Next
 
 <CardGroup cols={3}>
-  <Card
-    title="Theming"
-    icon="palette"
-    href="/docs/chat/guides/theming"
-  >
-    Customize the look and feel with CSS variables.
+  <Card title="Layout Modes" icon="layout" href="/docs/chat/guides/layout-modes">
+    Embedded, popup, or sidebar.
   </Card>
-  <Card
-    title="Configuration"
-    icon="settings"
-    href="/docs/chat/guides/configuration"
-  >
-    Explore all provideChat() options.
+  <Card title="Theming" icon="palette" href="/docs/chat/guides/theming">
+    Customize colors, fonts, and shapes.
   </Card>
-  <Card
-    title="Components"
-    icon="layout"
-    href="/docs/chat/components/chat"
-  >
-    Deep dive into the ChatComponent API.
+  <Card title="Components" icon="components" href="/docs/chat/components/chat">
+    Full primitive and composition reference.
   </Card>
 </CardGroup>
