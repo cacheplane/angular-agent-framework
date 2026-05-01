@@ -12,7 +12,7 @@ The library is organized into two layers: **primitives** and **compositions**.
 
 ### Primitives
 
-Primitives are low-level, headless components that read from an `AgentRef` and expose their state through content projection (`ng-template`). They carry no opinion about layout or styling. Use them when you need full control over how chat elements render.
+Primitives are low-level, headless components that read from a `LangGraphAgent` and expose their state through content projection (`ng-template`). They carry no opinion about layout or styling. Use them when you need full control over how chat elements render.
 
 | Primitive | Selector | Purpose |
 |-----------|----------|---------|
@@ -58,13 +58,13 @@ Your App
 LangGraph Platform
 ```
 
-- **`@ngaf/agent`** provides the `agent()` function and the `AgentRef` type. Every chat component accepts an `AgentRef` as its primary input. The ref exposes reactive Signals for `messages()`, `isLoading()`, `error()`, `interrupt()`, `toolCalls()`, `history()`, and more.
+- **`@ngaf/agent`** provides the `agent()` function and the `LangGraphAgent` type. Every chat component accepts a `LangGraphAgent` as its primary input. It exposes reactive Signals for `messages()`, `isLoading()`, `error()`, `interrupt()`, `toolCalls()`, `history()`, and more.
 
 - **`@ngaf/render`** provides `RenderSpecComponent` and view registries for rendering JSON UI specs as Angular components. The `ChatComponent` auto-detects JSON specs in AI messages and renders them through `@ngaf/render` — pass a view registry via the `[views]` input. The `ChatComponent` also auto-detects A2UI v0.9 payloads and renders them using a built-in 12-component catalog.
 
 ## When to Use `ChatComponent` vs. Custom Assembly
 
-**Use `ChatComponent`** when you want a complete, styled chat interface with minimal setup. It includes message rendering (with markdown), a text input, typing indicator, error display, interrupt banner, and an optional thread sidebar. Drop it in, pass an `AgentRef`, and you have a working chat.
+**Use `ChatComponent`** when you want a complete, styled chat interface with minimal setup. It includes message rendering (with markdown), a text input, typing indicator, error display, interrupt banner, and an optional thread sidebar. Drop it in, pass a `LangGraphAgent`, and you have a working chat.
 
 ```html
 <chat [ref]="chatRef" />
