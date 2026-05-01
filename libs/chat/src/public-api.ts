@@ -32,9 +32,15 @@ export {
 } from './lib/agent';
 
 // Primitives
-export { ChatMessageListComponent } from './lib/primitives/chat-message-list/chat-message-list.component';
+export { ChatMessageListComponent, getMessageType } from './lib/primitives/chat-message-list/chat-message-list.component';
 export { MessageTemplateDirective } from './lib/primitives/chat-message-list/message-template.directive';
-export { getMessageType } from './lib/primitives/chat-message-list/chat-message-list.component';
+export { ChatMessageComponent } from './lib/primitives/chat-message/chat-message.component';
+export type { ChatMessageRole } from './lib/primitives/chat-message/chat-message.component';
+export { ChatWindowComponent } from './lib/primitives/chat-window/chat-window.component';
+export { ChatTraceComponent } from './lib/primitives/chat-trace/chat-trace.component';
+export type { TraceState } from './lib/primitives/chat-trace/chat-trace.component';
+export { ChatLauncherButtonComponent } from './lib/primitives/chat-launcher-button/chat-launcher-button.component';
+export { ChatSuggestionsComponent } from './lib/primitives/chat-suggestions/chat-suggestions.component';
 export { ChatInputComponent, submitMessage } from './lib/primitives/chat-input/chat-input.component';
 export { ChatTypingIndicatorComponent, isTyping } from './lib/primitives/chat-typing-indicator/chat-typing-indicator.component';
 export { ChatErrorComponent, extractErrorMessage } from './lib/primitives/chat-error/chat-error.component';
@@ -44,6 +50,7 @@ export { ChatSubagentsComponent } from './lib/primitives/chat-subagents/chat-sub
 export { ChatThreadListComponent } from './lib/primitives/chat-thread-list/chat-thread-list.component';
 export type { Thread } from './lib/primitives/chat-thread-list/chat-thread-list.component';
 export { ChatTimelineComponent } from './lib/primitives/chat-timeline/chat-timeline.component';
+export { ChatGenerativeUiComponent } from './lib/primitives/chat-generative-ui/chat-generative-ui.component';
 
 // DI provider
 export { provideChat, CHAT_CONFIG } from './lib/provide-chat';
@@ -51,13 +58,18 @@ export { provideChat, CHAT_CONFIG } from './lib/provide-chat';
 // Compositions
 export { ChatComponent } from './lib/compositions/chat/chat.component';
 export type { ChatRenderEvent } from './lib/compositions/chat/chat-render-event';
+export { ChatPopupComponent } from './lib/compositions/chat-popup/chat-popup.component';
+export { ChatSidebarComponent } from './lib/compositions/chat-sidebar/chat-sidebar.component';
+export { ChatDebugComponent } from './lib/compositions/chat-debug/chat-debug.component';
+export { ChatTimelineSliderComponent } from './lib/compositions/chat-timeline-slider/chat-timeline-slider.component';
 export { ChatInterruptPanelComponent } from './lib/compositions/chat-interrupt-panel/chat-interrupt-panel.component';
 export type { InterruptAction } from './lib/compositions/chat-interrupt-panel/chat-interrupt-panel.component';
 export { ChatToolCallCardComponent } from './lib/compositions/chat-tool-call-card/chat-tool-call-card.component';
 export type { ToolCallInfo } from './lib/compositions/chat-tool-call-card/chat-tool-call-card.component';
-export { ChatSubagentCardComponent } from './lib/compositions/chat-subagent-card/chat-subagent-card.component';
-export { ChatTimelineSliderComponent } from './lib/compositions/chat-timeline-slider/chat-timeline-slider.component';
-export { ChatDebugComponent } from './lib/compositions/chat-debug/chat-debug.component';
+export { ChatSubagentCardComponent, statusColor } from './lib/compositions/chat-subagent-card/chat-subagent-card.component';
+
+// Streaming
+export { ChatStreamingMdComponent } from './lib/streaming/streaming-markdown.component';
 
 // Shared styles & utilities
 export { CHAT_MARKDOWN_STYLES } from './lib/styles/chat-markdown.styles';
