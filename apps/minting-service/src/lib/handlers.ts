@@ -4,7 +4,7 @@ import type {
   Db,
   License,
   UpsertLicenseInput,
-} from '@cacheplane/db';
+} from '@ngaf/db';
 import type { MintInput } from './sign.js';
 import type { LicenseEmailVars } from './email.js';
 import { extractTier, computeSeats } from './tier.js';
