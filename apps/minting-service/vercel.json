@@ -1,5 +1,10 @@
 {
   "installCommand": "cd ../.. && npm ci",
   "buildCommand": "cd ../.. && npx nx build minting-service",
-  "framework": null
+  "framework": null,
+  "git": {
+    "deploymentEnabled": {
+      "main": true
+    }
+  }
 }
