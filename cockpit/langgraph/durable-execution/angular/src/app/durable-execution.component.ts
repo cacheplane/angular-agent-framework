@@ -1,6 +1,6 @@
 import { Component, computed } from '@angular/core';
 import { ChatComponent, views } from '@ngaf/chat';
-import { agent, toAgent } from '@ngaf/langgraph';
+import { agent } from '@ngaf/langgraph';
 import { signalStateStore } from '@ngaf/render';
 import { ExampleChatLayoutComponent } from '@ngaf/example-layouts';
 import { environment } from '../environments/environment';
@@ -40,7 +40,7 @@ const STEP_LABELS: Record<string, string> = {
   imports: [ChatComponent, ExampleChatLayoutComponent],
   template: `
     <example-chat-layout sidebarWidth="w-64">
-      <chat main [agent]="chatAgent" [views]="ui" [store]="uiStore" class="flex-1 min-w-0" />
+      <chat main [agent]="agent" [views]="ui" [store]="uiStore" class="flex-1 min-w-0" />
       <div sidebar class="p-4"
            style="background: var(--chat-bg, #171717); color: var(--chat-text, #e0e0e0);">
         <h3 class="text-xs font-semibold uppercase tracking-wide mb-6"
@@ -98,11 +98,10 @@ export class DurableExecutionComponent {
   readonly ui = views({ 'step-pipeline': StepPipelineComponent });
   readonly uiStore = signalStateStore({});
 
-  protected readonly stream = agent({
+  protected readonly agent = agent({
     apiUrl: environment.langGraphApiUrl,
     assistantId: environment.streamingAssistantId,
   });
-  protected readonly chatAgent = toAgent(this.stream);
 
   /**
    * Derives the 3-step pipeline status from the graph's `state.step` field.
@@ -111,7 +110,7 @@ export class DurableExecutionComponent {
    * active, and subsequent steps remain pending.
    */
   protected readonly steps = computed<PipelineStep[]>(() => {
-    const val = this.stream.value() as Record<string, unknown> | undefined;
+    const val = this.agent.value() as Record<string, unknown> | undefined;
     const currentStep = (val?.['step'] as string) ?? '';
     const activeIndex = STEP_ORDER.indexOf(currentStep as (typeof STEP_ORDER)[number]);
 

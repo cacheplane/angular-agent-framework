@@ -1,7 +1,8 @@
 import { tokens } from '@ngaf/design-tokens';
 import { HighlightedCode } from '../HighlightedCode';
 
-const SNIPPET_1 = `import { ChatComponent } from '@ngaf/chat';
+const SNIPPET_1 = `import { agent } from '@ngaf/langgraph';
+import { ChatComponent } from '@ngaf/chat';
 
 @Component({
   template: \`
@@ -12,7 +13,7 @@ const SNIPPET_1 = `import { ChatComponent } from '@ngaf/chat';
   \`,
 })
 export class MyChatPage {
-  agent = inject(AgentRef);
+  protected readonly agent = agent({ apiUrl: 'http://localhost:2024', assistantId: 'chat_agent' });
   registry = inject(RenderRegistry);
 }`;
 

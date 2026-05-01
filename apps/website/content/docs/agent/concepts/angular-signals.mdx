@@ -1,6 +1,6 @@
 # Angular Signals
 
-Angular Signals are the reactive primitive that powers agent(). If you're coming from a Python AI/agent background and wondering how Angular handles real-time streaming data, this page is your guide. Every property on a AgentRef is a Signal, which means your templates update automatically as tokens arrive — no manual subscriptions, no async pipes, no RxJS boilerplate.
+Angular Signals are the reactive primitive that powers agent(). If you're coming from a Python AI/agent background and wondering how Angular handles real-time streaming data, this page is your guide. Every property on a LangGraphAgent is a Signal, which means your templates update automatically as tokens arrive — no manual subscriptions, no async pipes, no RxJS boilerplate.
 
 <Callout type="info" title="For Python developers">
 Think of Signals like a Python property with built-in change notification. When the value changes, every consumer — templates, computed values, effects — re-evaluates automatically. If you've used Pydantic models with validators that react to field changes, Signals are the Angular equivalent but deeply integrated into the rendering engine.
@@ -548,7 +548,7 @@ Signals use referential equality (`===`) by default. agent() creates new array r
     Understand the Python agent patterns that produce the events Signals consume.
   </Card>
   <Card title="API Reference" href="/docs/api/angular">
-    Full reference for every Signal, method, and option on AgentRef.
+    Full reference for every Signal, method, and option on LangGraphAgent.
   </Card>
   <Card title="Interrupts" href="/docs/guides/interrupts">
     Build human-in-the-loop approval flows that pause and resume the agent.

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 import { Component, signal } from '@angular/core';
 import { ChatComponent, ChatThreadListComponent, type Thread } from '@ngaf/chat';
-import { agent, toAgent } from '@ngaf/langgraph';
+import { agent } from '@ngaf/langgraph';
 import { ExampleChatLayoutComponent } from '@ngaf/example-layouts';
 import { environment } from '../environments/environment';
 
@@ -15,7 +15,7 @@ import { environment } from '../environments/environment';
   imports: [ChatComponent, ChatThreadListComponent, ExampleChatLayoutComponent],
   template: `
     <example-chat-layout sidebarPosition="left" sidebarWidth="w-64">
-      <chat main [agent]="chatAgent" [threads]="threads()" [activeThreadId]="activeThreadId()" (threadSelected)="onThreadSelected($event)" class="flex-1 min-w-0" />
+      <chat main [agent]="agent" [threads]="threads()" [activeThreadId]="activeThreadId()" (threadSelected)="onThreadSelected($event)" class="flex-1 min-w-0" />
       <div sidebar class="p-4 space-y-4"
            style="background: var(--chat-bg, #171717); color: var(--chat-text, #e0e0e0);">
         <h3 class="text-xs font-semibold uppercase tracking-wide"
@@ -29,11 +29,10 @@ import { environment } from '../environments/environment';
   `,
 })
 export class ThreadsComponent {
-  protected readonly stream = agent({
+  protected readonly agent = agent({
     apiUrl: environment.langGraphApiUrl,
     assistantId: environment.streamingAssistantId,
   });
-  protected readonly chatAgent = toAgent(this.stream);
 
   protected readonly threads = signal<Thread[]>([
     { id: 'thread-1', title: 'First Conversation' },

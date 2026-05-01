@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 import {
-  inject, DestroyRef, computed,
+  inject, DestroyRef, computed, effect,
   isSignal, Signal,
 } from '@angular/core';
 import { AGENT_CONFIG } from './agent.provider';
@@ -10,32 +10,47 @@ import {
   throttleTime, asyncScheduler,
 } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
+import type { Observable } from 'rxjs';
 import type { BaseMessage } from '@langchain/core/messages';
-import type { Interrupt } from '@langchain/langgraph-sdk';
+import type { Interrupt, ToolCallWithResult } from '@langchain/langgraph-sdk';
 import type { BagTemplate, InferBag } from '@langchain/langgraph-sdk';
+import type {
+  AgentEvent,
+  AgentCheckpoint,
+  AgentInterrupt,
+  AgentStatus,
+  Message,
+  Role,
+  Subagent,
+  ToolCall,
+  ToolCallStatus,
+  AgentSubmitInput,
+  AgentSubmitOptions,
+} from '@ngaf/chat';
 
 import {
   AgentOptions,
-  AgentRef,
+  LangGraphAgent,
   CustomStreamEvent,
   StreamSubjects,
   SubagentStreamRef,
   ResourceStatus,
 } from './agent.types';
-import type { ThreadState, ToolProgress, ToolCallWithResult } from '@langchain/langgraph-sdk';
+import type { ThreadState, ToolProgress } from '@langchain/langgraph-sdk';
 import { createStreamManagerBridge } from './internals/stream-manager.bridge';
 
 /**
  * Creates a streaming resource connected to a LangGraph agent.
  *
  * Must be called within an Angular injection context (component constructor,
- * field initializer, or `runInInjectionContext`). Returns a ref object whose
- * properties are Angular Signals that update in real-time as the agent streams.
+ * field initializer, or `runInInjectionContext`). Returns a unified
+ * {@link LangGraphAgent} whose properties are Angular Signals that update
+ * in real-time as the agent streams.
  *
  * @typeParam T - The state shape returned by the agent (e.g., `{ messages: BaseMessage[] }`)
  * @typeParam Bag - Optional bag template for typed interrupts and submit payloads
  * @param options - Configuration for the streaming resource
- * @returns A {@link AgentRef} with reactive signals and action methods
+ * @returns A {@link LangGraphAgent} with reactive signals and action methods
  *
  * @example
  * ```typescript
@@ -56,7 +71,7 @@ export function agent<
   Bag extends BagTemplate = BagTemplate,
 >(
   options: AgentOptions<T, InferBag<T, Bag>>,
-): AgentRef<T, InferBag<T, Bag>> {
+): LangGraphAgent<T, InferBag<T, Bag>> {
   // Injection context required
   const destroyRef   = inject(DestroyRef);
   const globalConfig = inject(AGENT_CONFIG, { optional: true });
@@ -135,7 +150,7 @@ export function agent<
 
   // Convert to Angular Signals (must happen in injection context)
   const value        = toSignal(maybeThrottle(values$),   { initialValue: init });
-  const messages     = toSignal(maybeThrottle(messages$), { initialValue: [] as BaseMessage[] });
+  const rawMessages  = toSignal(maybeThrottle(messages$), { initialValue: [] as BaseMessage[] });
   const statusSig    = toSignal(status$,          { initialValue: ResourceStatus.Idle });
   const errorSig     = toSignal(error$,           { initialValue: undefined as unknown });
   const hasValueSig  = toSignal(hasValue$,        { initialValue: false });
@@ -145,7 +160,7 @@ export function agent<
   const historySig   = toSignal(history$,         { initialValue: [] });
   const threadLoadSig= toSignal(isThreadLoading$, { initialValue: false });
   const toolProgSig  = toSignal(toolProgress$,    { initialValue: [] });
-  const toolCallsSig = toSignal(toolCalls$,       { initialValue: [] });
+  const rawToolCalls = toSignal(toolCalls$,       { initialValue: [] });
   const subagentsSig = toSignal(subagents$,       { initialValue: new Map<string, SubagentStreamRef>() });
   const customSig    = toSignal(custom$,           { initialValue: [] as CustomStreamEvent[] });
 
@@ -154,49 +169,203 @@ export function agent<
     [...subagentsSig().values()].filter(s => s.status() === 'running')
   );
 
+  // ── Runtime-neutral projections ───────────────────────────────────────────
+
+  const messagesNeutral = computed<Message[]>(() => rawMessages().map(toMessage));
+
+  const toolCallsNeutral = computed<ToolCall[]>(() => rawToolCalls().map(toToolCall));
+
+  const statusNeutral = computed<AgentStatus>(() => mapStatus(statusSig()));
+
+  const stateNeutral = computed<Record<string, unknown>>(() => {
+    const v = value();
+    return v && typeof v === 'object' ? (v as Record<string, unknown>) : {};
+  });
+
+  const interruptNeutral = computed<AgentInterrupt | undefined>(() => {
+    const ix = interruptSig();
+    return ix ? toInterrupt(ix) : undefined;
+  });
+
+  const subagentsNeutral = computed<Map<string, Subagent>>(() => {
+    const out = new Map<string, Subagent>();
+    subagentsSig().forEach((sa, key) => out.set(key, toSubagent(sa)));
+    return out;
+  });
+
+  const historyNeutral = computed<AgentCheckpoint[]>(() =>
+    historySig().map(toCheckpoint),
+  );
+
+  const events$ = buildEvents$(customSig);
+
   return {
-    // ResourceRef compatible
-    value:    value as Signal<T>,
-    status:   statusSig,
+    // ── Runtime-neutral surface (AgentWithHistory) ────────────────────────
+    messages:  messagesNeutral,
+    status:    statusNeutral,
     isLoading,
-    error:    errorSig,
-    hasValue: hasValueSig,
-    reload:   () => manager.resubmitLast(),
-
-    // Streaming state
-    messages:        messages as Signal<BaseMessage[]>,
-    interrupt:       interruptSig,
-    interrupts:      interruptsSig,
-    toolProgress:    toolProgSig,
-    toolCalls:       toolCallsSig,
-
-    // Thread & history
-    branch:          branchSig,
-    history:         historySig,
-    isThreadLoading: threadLoadSig,
-
-    // Subagents
-    subagents:       subagentsSig,
-    activeSubagents,
-
-    // Custom events
-    customEvents:    customSig,
-
-    // Actions
-    // submit() fires the stream in the background and resolves immediately
-    submit: (vals, opts) => {
-      manager.submit(vals, opts);
+    error:     errorSig,
+    toolCalls: toolCallsNeutral,
+    state:     stateNeutral,
+    interrupt: interruptNeutral,
+    subagents: subagentsNeutral,
+    events$,
+    history:   historyNeutral,
+    submit: (input: AgentSubmitInput, opts?: AgentSubmitOptions) => {
+      manager.submit(buildSubmitPayload(input), opts ? { signal: opts.signal } as never : undefined);
       return Promise.resolve();
     },
-    stop:         ()           => manager.stop(),
-    switchThread: (id)         => {
+    stop: () => manager.stop(),
+
+    // ── Raw LangGraph signals ─────────────────────────────────────────────
+    langGraphMessages:   rawMessages as Signal<BaseMessage[]>,
+    langGraphInterrupts: interruptsSig,
+    langGraphToolCalls:  rawToolCalls,
+    langGraphHistory:    historySig,
+
+    // ── Other AgentRef fields preserved ──────────────────────────────────
+    value:           value as Signal<T>,
+    hasValue:        hasValueSig,
+    reload:          () => manager.resubmitLast(),
+    toolProgress:    toolProgSig,
+    activeSubagents,
+    customEvents:    customSig,
+    branch:          branchSig,
+    setBranch:       (b) => branch$.next(b),
+    isThreadLoading: threadLoadSig,
+    switchThread:    (id) => {
       resetDerivedThreadState();
       manager.switchThread(id);
     },
-    joinStream:   (id, last)   => manager.joinStream(id, last),
-    setBranch:    (b)          => branch$.next(b),
+    joinStream:          (id, last) => manager.joinStream(id, last),
     // V1 deferred: requires StreamManager's internal message registry
     getMessagesMetadata: (_msg, _idx) => undefined,
-    getToolCalls: (_msg) => [],
+    getToolCalls:        (_msg) => [],
   };
+}
+
+// ── Private translation helpers (moved from to-agent.ts) ─────────────────────
+
+/**
+ * Build an Observable<AgentEvent> that bridges LangGraph's
+ * `Signal<CustomStreamEvent[]>` (append-only array) into a stream of newly
+ * emitted events. Each effect firing compares against a cursor tracking the
+ * previously-seen length and emits only the tail slice.
+ */
+function buildEvents$(customSig: Signal<CustomStreamEvent[]>): Observable<AgentEvent> {
+  const subject = new Subject<AgentEvent>();
+  let seen = 0;
+  effect(() => {
+    const all = customSig();
+    if (all.length < seen) {
+      // Stream reset (new session, thread switch, etc.). Rewind cursor.
+      seen = 0;
+    }
+    for (let i = seen; i < all.length; i++) {
+      subject.next(toAgentEvent(all[i]));
+    }
+    seen = all.length;
+  });
+  return subject.asObservable();
+}
+
+function toAgentEvent(e: CustomStreamEvent): AgentEvent {
+  if (e.name === 'state_update' && isRecord(e.data)) {
+    return { type: 'state_update', data: e.data };
+  }
+  return { type: 'custom', name: e.name, data: e.data };
+}
+
+function mapStatus(s: ResourceStatus): AgentStatus {
+  switch (s) {
+    case ResourceStatus.Error: return 'error';
+    case ResourceStatus.Loading:
+    case ResourceStatus.Reloading:
+      return 'running';
+    default:
+      return 'idle';
+  }
+}
+
+function toMessage(m: BaseMessage): Message {
+  const raw = m as unknown as Record<string, unknown>;
+  const typeVal = typeof m._getType === 'function'
+    ? m._getType()
+    : (raw['type'] as string | undefined) ?? 'ai';
+  const role: Role =
+    typeVal === 'human' ? 'user' :
+    typeVal === 'tool'  ? 'tool' :
+    typeVal === 'system' ? 'system' :
+    'assistant';
+  return {
+    id: (m.id as string | undefined) ?? (raw['id'] as string | undefined) ?? randomId(),
+    role,
+    content: typeof m.content === 'string' ? m.content : JSON.stringify(m.content),
+    toolCallId: raw['tool_call_id'] as string | undefined,
+    name: raw['name'] as string | undefined,
+    extra: raw,
+  };
+}
+
+function toToolCall(tc: ToolCallWithResult): ToolCall {
+  const stateMap: Record<string, ToolCallStatus> = {
+    pending: 'pending',
+    completed: 'complete',
+    error: 'error',
+  };
+  const status: ToolCallStatus = stateMap[tc.state] ?? 'running';
+  const result = tc.result as (Record<string, unknown> | undefined);
+  return {
+    id: tc.id,
+    name: tc.call.name,
+    args: tc.call.args,
+    status,
+    result: result?.['content'],
+    error: tc.state === 'error' ? result?.['content'] : undefined,
+  };
+}
+
+function toInterrupt(ix: Interrupt<unknown>): AgentInterrupt {
+  const raw = ix as unknown as Record<string, unknown>;
+  return {
+    id: (raw['id'] as string | undefined) ?? randomId(),
+    value: raw['value'] ?? ix,
+    resumable: true,
+  };
+}
+
+function toSubagent(sa: SubagentStreamRef): Subagent {
+  return {
+    toolCallId: sa.toolCallId,
+    status: sa.status,
+    messages: computed(() => sa.messages().map(toMessage)) as Signal<Message[]>,
+    state: sa.values as Signal<Record<string, unknown>>,
+  };
+}
+
+function buildSubmitPayload(input: AgentSubmitInput): unknown {
+  if (input.resume !== undefined) return { __resume__: input.resume };
+  if (input.message !== undefined) {
+    const content = typeof input.message === 'string'
+      ? input.message
+      : input.message.map((b: any) => (b.type === 'text' ? b.text : JSON.stringify(b))).join('');
+    return { messages: [{ role: 'human', content }], ...(input.state ?? {}) };
+  }
+  return input.state ?? {};
+}
+
+function randomId(): string {
+  return Math.random().toString(36).slice(2);
+}
+
+function toCheckpoint(state: ThreadState<unknown>): AgentCheckpoint {
+  return {
+    id:    state.checkpoint?.checkpoint_id ?? undefined,
+    label: state.next?.[0] ?? undefined,
+    values: isRecord(state.values) ? state.values : {},
+  };
+}
+
+function isRecord(v: unknown): v is Record<string, unknown> {
+  return typeof v === 'object' && v !== null && !Array.isArray(v);
 }

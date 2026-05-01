@@ -13,7 +13,7 @@ import type { InterruptAction } from '@ngaf/chat';
 
 ## How It Works
 
-LangGraph agents can pause execution using interrupts -- checkpoints where the agent waits for human input before proceeding. The `ChatInterruptPanelComponent` reads the interrupt state from an `AgentRef` and renders a warning card with action buttons.
+LangGraph agents can pause execution using interrupts -- checkpoints where the agent waits for human input before proceeding. The `ChatInterruptPanelComponent` reads the interrupt state from a `LangGraphAgent` and renders a warning card with action buttons.
 
 When no interrupt is active, the component renders nothing.
 
@@ -53,7 +53,7 @@ handleInterrupt(action: InterruptAction) {
 
 | Input | Type | Default | Description |
 |-------|------|---------|-------------|
-| `ref` | `AgentRef<any, any>` | **Required** | The agent ref providing interrupt state |
+| `ref` | `LangGraphAgent<any, any>` | **Required** | The agent providing interrupt state |
 
 ### Outputs
 

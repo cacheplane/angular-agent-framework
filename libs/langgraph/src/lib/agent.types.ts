@@ -15,6 +15,7 @@ import type {
   SubmitOptions,
 } from '@langchain/langgraph-sdk/ui';
 import type { BaseMessage, AIMessage as CoreAIMessage } from '@langchain/core/messages';
+import type { AgentWithHistory } from '@ngaf/chat';
 
 // Re-export SDK types so consumers don't need to import from langgraph-sdk directly
 export type { BagTemplate, InferBag, Interrupt, ThreadState, SubmitOptions };
@@ -189,6 +190,75 @@ export interface AgentRef<T, ResolvedBag extends BagTemplate> {
   getMessagesMetadata: (msg: BaseMessage, idx?: number) => MessageMetadata<Record<string, unknown>> | undefined;
   /** Get tool call results associated with an AI message. */
   getToolCalls:        (msg: CoreAIMessage) => ToolCallWithResult[];
+}
+
+// ── LangGraphAgent ────────────────────────────────────────────────────────────
+
+/**
+ * Unified LangGraph agent surface returned by `agent({...})`.
+ *
+ * Extends the runtime-neutral `AgentWithHistory` contract (chat-consumable)
+ * with the full LangGraph-specific API. One object drives both `<chat>` and
+ * any LangGraph-specific demo. Raw LangGraph signals are prefixed with
+ * `langGraph` to avoid collision with the runtime-neutral names.
+ */
+export interface LangGraphAgent<T = unknown, ResolvedBag extends BagTemplate = BagTemplate>
+  extends AgentWithHistory {
+  // ── Raw LangGraph signals (preserve full AgentRef public surface) ─────────
+
+  /** Raw LangChain BaseMessage list. Use `messages` for chat rendering. */
+  langGraphMessages: Signal<BaseMessage[]>;
+
+  /** All interrupts received during the current run (raw LangGraph shape). */
+  langGraphInterrupts: Signal<Interrupt<ResolvedBag['InterruptType']>[]>;
+
+  /** Raw LangGraph tool calls (with run-state). Use `toolCalls` for chat rendering. */
+  langGraphToolCalls: Signal<ToolCallWithResult[]>;
+
+  /** Raw LangGraph history (ThreadState[]). Use `history` for AgentCheckpoint[]. */
+  langGraphHistory: Signal<ThreadState<T>[]>;
+
+  // ── AgentRef fields preserved on the unified surface ─────────────────────
+
+  /** Current agent state values (raw, typed per the type parameter T). */
+  value: Signal<T>;
+
+  /** True once at least one value or message has been received. */
+  hasValue: Signal<boolean>;
+
+  /** Re-submit the last input to restart the stream. */
+  reload: () => void;
+
+  /** Progress updates for currently executing tools. */
+  toolProgress: Signal<ToolProgress[]>;
+
+  /** Filtered list of subagents with status 'running'. */
+  activeSubagents: Signal<SubagentStreamRef[]>;
+
+  /** Raw custom events stream (signal of array). The runtime-neutral
+   *  `events$` Observable is derived from this. */
+  customEvents: Signal<CustomStreamEvent[]>;
+
+  /** Current branch identifier for time-travel navigation. */
+  branch: Signal<string>;
+
+  /** Set the active branch for time-travel navigation. */
+  setBranch: (branch: string) => void;
+
+  /** True while a thread switch is loading state from the server. */
+  isThreadLoading: Signal<boolean>;
+
+  /** Switch to a different thread, resetting derived state. */
+  switchThread: (threadId: string | null) => void;
+
+  /** Join an already-running stream by run ID. */
+  joinStream: (runId: string, lastEventId?: string) => Promise<void>;
+
+  /** Get metadata for a specific message by index. */
+  getMessagesMetadata: (msg: BaseMessage, idx?: number) => MessageMetadata<Record<string, unknown>> | undefined;
+
+  /** Get tool call results associated with an AI message (LangGraph types). */
+  getToolCalls: (msg: CoreAIMessage) => ToolCallWithResult[];
 }
 
 // ── Internal: StreamSubjects ─────────────────────────────────────────────────

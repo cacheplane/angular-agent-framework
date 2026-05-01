@@ -1,6 +1,6 @@
 # ChatMessagesComponent
 
-`ChatMessagesComponent` is the core primitive for rendering chat messages. It iterates over the messages from an `AgentRef` and renders each one using a matching `MessageTemplateDirective`. This gives you full control over how each message type is displayed.
+`ChatMessagesComponent` is the core primitive for rendering chat messages. It iterates over the messages from a `LangGraphAgent` and renders each one using a matching `MessageTemplateDirective`. This gives you full control over how each message type is displayed.
 
 **Selector:** `chat-messages`
 
@@ -49,7 +49,7 @@ import {
 
 | Input | Type | Default | Description |
 |-------|------|---------|-------------|
-| `ref` | `AgentRef<any, any>` | **Required** | The agent ref providing streaming state |
+| `ref` | `LangGraphAgent<any, any>` | **Required** | The agent providing streaming state |
 
 ### Content Children
 

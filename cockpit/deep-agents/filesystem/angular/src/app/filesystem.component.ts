@@ -1,7 +1,7 @@
 import { Component, computed } from '@angular/core';
 import { ChatComponent, views } from '@ngaf/chat';
 import { ExampleChatLayoutComponent } from '@ngaf/example-layouts';
-import { agent, toAgent } from '@ngaf/langgraph';
+import { agent } from '@ngaf/langgraph';
 import { signalStateStore } from '@ngaf/render';
 import { environment } from '../environments/environment';
 import { FilePreviewComponent } from './views/file-preview.component';
@@ -33,7 +33,7 @@ interface FileOperation {
   imports: [ChatComponent, ExampleChatLayoutComponent],
   template: `
     <example-chat-layout sidebarWidth="w-72">
-      <chat main [agent]="chatAgent" [views]="ui" [store]="uiStore" class="flex-1 min-w-0" />
+      <chat main [agent]="agent" [views]="ui" [store]="uiStore" class="flex-1 min-w-0" />
       <div sidebar class="p-4 space-y-2" style="background: var(--chat-bg, #171717); color: var(--chat-text, #e0e0e0);">
         <h3 class="text-xs font-semibold uppercase tracking-wide"
             style="color: var(--chat-text-muted, #777);">File Operations</h3>
@@ -70,11 +70,10 @@ export class FilesystemComponent {
    * The graph uses `read_file` and `write_file` tool calls that appear
    * in `stream.messages()`. We filter and display them in the sidebar.
    */
-  protected readonly stream = agent({
+  protected readonly agent = agent({
     apiUrl: environment.langGraphApiUrl,
     assistantId: environment.streamingAssistantId,
   });
-  protected readonly chatAgent = toAgent(this.stream);
 
   /**
    * Reactive list of file operations derived from the message history.
@@ -83,7 +82,7 @@ export class FilesystemComponent {
    * extracts the file path and a short result preview for sidebar display.
    */
   protected readonly fileOps = computed<FileOperation[]>(() => {
-    const msgs = this.stream.messages();
+    const msgs = this.agent.langGraphMessages();
     const ops: FileOperation[] = [];
     for (const msg of msgs) {
       const m = msg as unknown as Record<string, unknown>;
