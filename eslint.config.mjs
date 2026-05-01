@@ -10,8 +10,6 @@ export default [
       '**/out-tsc',
       '**/.next',
       '**/.next/**',
-      '**/public/demo',
-      '**/public/demo/**',
       '**/next-env.d.ts',
     ],
   },

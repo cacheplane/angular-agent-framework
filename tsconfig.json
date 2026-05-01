@@ -5,12 +5,6 @@
   "references": [
     {
       "path": "./apps/website"
-    },
-    {
-      "path": "./apps/demo"
-    },
-    {
-      "path": "./apps/demo-e2e"
     }
   ]
 }
