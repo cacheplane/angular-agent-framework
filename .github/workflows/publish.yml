@@ -29,6 +29,12 @@ jobs:
 
       - run: npm ci
 
+      # Trusted publishing requires npm CLI 11.5.1+. Node 22's bundled npm
+      # is 10.x which has partial OIDC support but doesn't fully implement
+      # the trusted-publishing flow against npm registry's OIDC endpoint.
+      - name: Upgrade npm to support trusted publishing
+        run: npm install -g npm@latest
+
       - name: Lint, test, build publishable projects
         run: npx nx run-many -t lint,test,build --projects=$NPM_PUBLISHABLE_PROJECTS --skip-nx-cache
 
