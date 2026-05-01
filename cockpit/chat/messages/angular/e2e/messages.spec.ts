@@ -7,7 +7,7 @@ test.describe('Chat Messages Example', () => {
   });
 
   test('renders the chat messages interface with primitives sidebar', async ({ page }) => {
-    await expect(page.locator('chat-messages')).toBeVisible();
+    await expect(page.locator('chat-message-list')).toBeVisible();
     await expect(page.locator('chat-input')).toBeVisible();
     await expect(page.locator('aside')).toBeVisible();
     await expect(page.locator('aside h3')).toHaveText('Primitives Used');

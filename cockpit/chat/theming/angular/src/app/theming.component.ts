@@ -8,43 +8,43 @@ import { environment } from '../environments/environment';
 
 const THEMES: Record<string, Record<string, string>> = {
   dark: {
-    '--chat-bg': '#171717',
-    '--chat-text': '#e0e0e0',
-    '--chat-accent': '#3b82f6',
-    '--chat-surface': '#222',
-    '--chat-border': '#333',
-    '--chat-text-muted': '#777',
+    '--ngaf-chat-bg': '#171717',
+    '--ngaf-chat-text': '#e0e0e0',
+    '--ngaf-chat-accent': '#3b82f6',
+    '--ngaf-chat-surface-alt': '#222',
+    '--ngaf-chat-separator': '#333',
+    '--ngaf-chat-text-muted': '#777',
   },
   light: {
-    '--chat-bg': '#ffffff',
-    '--chat-text': '#1a1a1a',
-    '--chat-accent': '#2563eb',
-    '--chat-surface': '#f3f4f6',
-    '--chat-border': '#d1d5db',
-    '--chat-text-muted': '#6b7280',
+    '--ngaf-chat-bg': '#ffffff',
+    '--ngaf-chat-text': '#1a1a1a',
+    '--ngaf-chat-accent': '#2563eb',
+    '--ngaf-chat-surface-alt': '#f3f4f6',
+    '--ngaf-chat-separator': '#d1d5db',
+    '--ngaf-chat-text-muted': '#6b7280',
   },
   ocean: {
-    '--chat-bg': '#0c1426',
-    '--chat-text': '#c8d6e5',
-    '--chat-accent': '#0abde3',
-    '--chat-surface': '#152238',
-    '--chat-border': '#1e3a5f',
-    '--chat-text-muted': '#576574',
+    '--ngaf-chat-bg': '#0c1426',
+    '--ngaf-chat-text': '#c8d6e5',
+    '--ngaf-chat-accent': '#0abde3',
+    '--ngaf-chat-surface-alt': '#152238',
+    '--ngaf-chat-separator': '#1e3a5f',
+    '--ngaf-chat-text-muted': '#576574',
   },
   forest: {
-    '--chat-bg': '#1a2e1a',
-    '--chat-text': '#d4e6d4',
-    '--chat-accent': '#4ade80',
-    '--chat-surface': '#243524',
-    '--chat-border': '#2d4a2d',
-    '--chat-text-muted': '#6b8f6b',
+    '--ngaf-chat-bg': '#1a2e1a',
+    '--ngaf-chat-text': '#d4e6d4',
+    '--ngaf-chat-accent': '#4ade80',
+    '--ngaf-chat-surface-alt': '#243524',
+    '--ngaf-chat-separator': '#2d4a2d',
+    '--ngaf-chat-text-muted': '#6b8f6b',
   },
 };
 
 /**
  * ThemingComponent demonstrates chat theming with CSS custom properties.
  * A sidebar with theme picker buttons swaps CSS variables at runtime,
- * showcasing CHAT_THEME_STYLES and custom theme presets.
+ * showcasing the --ngaf-chat-* token system and custom theme presets.
  */
 @Component({
   selector: 'app-theming',
@@ -53,15 +53,15 @@ const THEMES: Record<string, Record<string, string>> = {
   template: `
     <example-chat-layout sidebarWidth="w-72">
       <chat main [agent]="agent" class="flex-1 min-w-0" />
-      <div sidebar class="p-4 space-y-4" style="background: var(--chat-bg, #171717); color: var(--chat-text, #e0e0e0);">
+      <div sidebar class="p-4 space-y-4" style="background: var(--ngaf-chat-bg, #171717); color: var(--ngaf-chat-text, #e0e0e0);">
         <h3 class="text-xs font-semibold uppercase tracking-wide"
-            style="color: var(--chat-text-muted, #777);">Theme Picker</h3>
+            style="color: var(--ngaf-chat-text-muted, #777);">Theme Picker</h3>
         <div class="space-y-2">
           @for (name of themeNames; track name) {
             <button
               class="w-full px-3 py-2 rounded text-xs font-medium transition-colors"
-              [style.background]="activeTheme() === name ? 'var(--chat-accent, #3b82f6)' : 'var(--chat-surface, #222)'"
-              [style.color]="activeTheme() === name ? '#fff' : 'var(--chat-text, #e0e0e0)'"
+              [style.background]="activeTheme() === name ? 'var(--ngaf-chat-accent, #3b82f6)' : 'var(--ngaf-chat-surface-alt, #222)'"
+              [style.color]="activeTheme() === name ? '#fff' : 'var(--ngaf-chat-text, #e0e0e0)'"
               (click)="setTheme(name)">
               {{ name | titlecase }}
             </button>
@@ -69,14 +69,14 @@ const THEMES: Record<string, Record<string, string>> = {
         </div>
         <div class="mt-4">
           <h4 class="text-xs font-semibold uppercase tracking-wide mb-2"
-              style="color: var(--chat-text-muted, #777);">CSS Variables</h4>
-          <ul class="text-xs space-y-1 font-mono" style="color: var(--chat-text-muted, #777);">
-            <li>--chat-bg</li>
-            <li>--chat-text</li>
-            <li>--chat-accent</li>
-            <li>--chat-surface</li>
-            <li>--chat-border</li>
-            <li>--chat-text-muted</li>
+              style="color: var(--ngaf-chat-text-muted, #777);">CSS Variables</h4>
+          <ul class="text-xs space-y-1 font-mono" style="color: var(--ngaf-chat-text-muted, #777);">
+            <li>--ngaf-chat-bg</li>
+            <li>--ngaf-chat-text</li>
+            <li>--ngaf-chat-accent</li>
+            <li>--ngaf-chat-surface-alt</li>
+            <li>--ngaf-chat-separator</li>
+            <li>--ngaf-chat-text-muted</li>
           </ul>
         </div>
       </div>
