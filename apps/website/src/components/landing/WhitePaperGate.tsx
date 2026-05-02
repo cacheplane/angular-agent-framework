@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { tokens } from '../../../lib/design-tokens';
+import { analyticsEvents } from '../../lib/analytics/events';
+import { track } from '../../lib/analytics/client';
 
 type FormState = 'idle' | 'submitting' | 'done' | 'error';
 
@@ -71,6 +73,11 @@ export function WhitePaperGate() {
       ? `Role: ${role}${message ? '\n\n' + message : ''}`
       : message;
 
+    track(analyticsEvents.marketingLeadFormSubmit, {
+      surface: 'home',
+      source_section: 'whitepaper-gate',
+    });
+
     try {
       const res = await fetch('/api/leads', {
         method: 'POST',
@@ -89,8 +96,17 @@ export function WhitePaperGate() {
         throw new Error(data.error ?? 'Server error');
       }
 
+      track(analyticsEvents.marketingLeadFormSuccess, {
+        surface: 'home',
+        source_section: 'whitepaper-gate',
+      });
       setFormState('done');
     } catch {
+      track(analyticsEvents.marketingLeadFormFail, {
+        surface: 'home',
+        source_section: 'whitepaper-gate',
+        error_reason: 'api_error',
+      });
       setFormState('error');
     }
   };

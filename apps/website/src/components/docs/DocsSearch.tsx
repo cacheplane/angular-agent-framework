@@ -3,6 +3,8 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { docsConfig, type LibraryId } from '../../lib/docs-config';
 import { tokens } from '@ngaf/design-tokens';
+import { analyticsEvents } from '../../lib/analytics/events';
+import { track } from '../../lib/analytics/client';
 
 interface SearchablePage {
   title: string;
@@ -60,6 +62,13 @@ export function DocsSearch({ library }: { library?: LibraryId }) {
   }, [open]);
 
   const navigate = (page: SearchablePage) => {
+    track(analyticsEvents.docsSearchResultClick, {
+      surface: 'docs',
+      destination_url: `/docs/${page.library}/${page.section}/${page.slug}`,
+      library: page.library === 'agent' || page.library === 'render' || page.library === 'chat' ? page.library : 'unknown',
+      query_length: query.length,
+      result_count: results.length,
+    });
     router.push(`/docs/${page.library}/${page.section}/${page.slug}`);
     setOpen(false);
   };
@@ -95,7 +104,17 @@ export function DocsSearch({ library }: { library?: LibraryId }) {
           <input
             ref={inputRef}
             value={query}
-            onChange={(e) => { setQuery(e.target.value); setSelected(0); }}
+            onChange={(e) => {
+              const nextQuery = e.target.value;
+              setQuery(nextQuery);
+              setSelected(0);
+              if (nextQuery.length === 1) {
+                track(analyticsEvents.docsSearchSubmit, {
+                  surface: 'docs',
+                  library: library === 'agent' || library === 'render' || library === 'chat' ? library : 'unknown',
+                });
+              }
+            }}
             onKeyDown={handleInputKeyDown}
             placeholder="Search documentation..."
             style={{

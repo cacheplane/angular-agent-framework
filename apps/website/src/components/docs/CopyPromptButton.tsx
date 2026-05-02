@@ -1,6 +1,8 @@
 'use client';
 import { useState } from 'react';
 import { tokens } from '@ngaf/design-tokens';
+import { analyticsEvents } from '../../lib/analytics/events';
+import { track } from '../../lib/analytics/client';
 
 interface Props {
   prompt: string;
@@ -14,6 +16,10 @@ export function CopyPromptButton({ prompt, variant = 'docs', label }: Props) {
   const handleClick = async () => {
     try {
       await navigator.clipboard.writeText(prompt);
+      track(analyticsEvents.docsCopyPromptClick, {
+        surface: variant === 'hero' ? 'home' : 'docs',
+        cta_id: label ?? 'copy_prompt',
+      });
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {

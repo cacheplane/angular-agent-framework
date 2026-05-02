@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { tokens } from '@ngaf/design-tokens';
+import { analyticsEvents } from '../../../lib/analytics/events';
+import { track, trackWhitepaperDownloadClick } from '../../../lib/analytics/client';
 
 type FormState = 'idle' | 'submitting' | 'done' | 'error';
 
@@ -15,6 +17,12 @@ export function RenderWhitePaperGate() {
     e.preventDefault();
     if (!email) return;
     setFormState('submitting');
+    track(analyticsEvents.marketingWhitepaperSignupSubmit, {
+      surface: 'library_landing',
+      source_section: 'render-whitepaper-gate',
+      library: 'render',
+      paper: 'render',
+    });
     try {
       const res = await fetch('/api/whitepaper-signup', {
         method: 'POST',
@@ -22,8 +30,21 @@ export function RenderWhitePaperGate() {
         body: JSON.stringify({ name, email, paper: 'render' }),
       });
       if (!res.ok) throw new Error('Server error');
+      track(analyticsEvents.marketingWhitepaperSignupSuccess, {
+        surface: 'library_landing',
+        source_section: 'render-whitepaper-gate',
+        library: 'render',
+        paper: 'render',
+      });
       setFormState('done');
     } catch {
+      track(analyticsEvents.marketingWhitepaperSignupFail, {
+        surface: 'library_landing',
+        source_section: 'render-whitepaper-gate',
+        library: 'render',
+        paper: 'render',
+        error_reason: 'api_error',
+      });
       setFormState('error');
     }
   };
@@ -85,6 +106,12 @@ export function RenderWhitePaperGate() {
             Part of the Cacheplane Angular Agent Framework.
           </p>
           <a href="/whitepapers/render.pdf" download="cacheplane-render-enterprise-guide.pdf"
+            onClick={() => trackWhitepaperDownloadClick('render', {
+              surface: 'library_landing',
+              source_section: 'render-whitepaper-gate',
+              library: 'render',
+              cta_id: 'render_whitepaper_download',
+            })}
             style={{
               display: 'inline-flex', alignItems: 'center', gap: 8,
               background: tokens.colors.renderGreen, color: '#fff',

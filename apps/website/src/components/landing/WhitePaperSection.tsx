@@ -2,6 +2,8 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { tokens } from '../../../lib/design-tokens';
+import { analyticsEvents } from '../../lib/analytics/events';
+import { track, trackWhitepaperDownloadClick } from '../../lib/analytics/client';
 
 type FormState = 'idle' | 'submitting' | 'done' | 'error';
 
@@ -14,6 +16,11 @@ export function WhitePaperSection() {
     e.preventDefault();
     if (!email) return;
     setFormState('submitting');
+    track(analyticsEvents.marketingWhitepaperSignupSubmit, {
+      surface: 'home',
+      source_section: 'whitepaper-section',
+      paper: 'overview',
+    });
     try {
       const res = await fetch('/api/whitepaper-signup', {
         method: 'POST',
@@ -21,8 +28,19 @@ export function WhitePaperSection() {
         body: JSON.stringify({ name, email }),
       });
       if (!res.ok) throw new Error('Server error');
+      track(analyticsEvents.marketingWhitepaperSignupSuccess, {
+        surface: 'home',
+        source_section: 'whitepaper-section',
+        paper: 'overview',
+      });
       setFormState('done');
     } catch {
+      track(analyticsEvents.marketingWhitepaperSignupFail, {
+        surface: 'home',
+        source_section: 'whitepaper-section',
+        paper: 'overview',
+        error_reason: 'api_error',
+      });
       setFormState('error');
     }
   };
@@ -99,6 +117,11 @@ export function WhitePaperSection() {
               <a
                 href="/whitepaper.pdf"
                 download="streamresource-angular-agent-readiness-guide.pdf"
+                onClick={() => trackWhitepaperDownloadClick('overview', {
+                  surface: 'home',
+                  source_section: 'whitepaper-section',
+                  cta_id: 'whitepaper_section_direct_download',
+                })}
                 style={{
                   display: 'inline-block',
                   marginTop: 12,
@@ -162,6 +185,11 @@ export function WhitePaperSection() {
               <a
                 href="/whitepaper.pdf"
                 download="streamresource-angular-agent-readiness-guide.pdf"
+                onClick={() => trackWhitepaperDownloadClick('overview', {
+                  surface: 'home',
+                  source_section: 'whitepaper-section',
+                  cta_id: 'whitepaper_section_direct_download',
+                })}
                 style={{
                   display: 'inline-block',
                   marginTop: 12,
