@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      id-token: write  # required for npm trusted publishing + provenance
+      id-token: write # required for npm trusted publishing + provenance
     env:
       NPM_PUBLISHABLE_PROJECTS: chat,langgraph,ag-ui,render,a2ui,partial-json,licensing
     steps:
@@ -42,6 +42,11 @@ jobs:
 
       - name: Lint, test, build publishable projects
         run: npx nx run-many -t lint,test,build --projects=$NPM_PUBLISHABLE_PROJECTS --skip-nx-cache
+
+      - name: Verify atomic release versions
+        run: node scripts/verify-release-versions.mjs --tag "$RELEASE_TAG"
+        env:
+          RELEASE_TAG: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || '' }}
 
       # Trusted publishing is configured per-package on npm; no NPM_TOKEN needed.
       # The OIDC token from id-token: write authenticates this workflow as a
