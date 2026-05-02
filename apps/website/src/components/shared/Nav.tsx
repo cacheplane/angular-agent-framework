@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { tokens } from '@ngaf/design-tokens';
 import { docsConfig } from '../../lib/docs-config';
+import { trackCtaClick, trackExternalLinkClick } from '../../lib/analytics/client';
 
 const links = [
   { label: 'Pilot to Prod', href: '/pilot-to-prod', external: false },
@@ -89,6 +90,14 @@ export function Nav() {
   });
 
   const currentLib = docsConfig.find(lib => lib.id === mobileLibrary);
+  const trackNavLink = (label: string, href: string, external: boolean, surface: 'nav' | 'mobile_nav') => {
+    const ctaId = `${surface}_${label.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '')}`;
+    if (external) {
+      trackExternalLinkClick(href, { surface, cta_id: ctaId, cta_text: label });
+      return;
+    }
+    trackCtaClick({ surface, destination_url: href, cta_id: ctaId, cta_text: label });
+  };
 
   return (
     <>
@@ -112,6 +121,7 @@ export function Nav() {
             <a key={l.href} href={l.href}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={() => trackNavLink(l.label, l.href, true, 'nav')}
               className="text-sm font-mono transition-colors"
               style={{ color: tokens.colors.textSecondary }}
               onMouseEnter={(e) => (e.currentTarget.style.color = tokens.colors.accent)}
@@ -120,6 +130,7 @@ export function Nav() {
             </a>
           ) : (
             <Link key={l.href} href={l.href}
+              onClick={() => trackNavLink(l.label, l.href, false, 'nav')}
               className="text-sm font-mono transition-colors"
               style={{ color: tokens.colors.textSecondary }}
               onMouseEnter={(e) => (e.currentTarget.style.color = tokens.colors.accent)}
@@ -130,6 +141,11 @@ export function Nav() {
           <a href="https://github.com/cacheplane/angular-agent-framework"
             target="_blank"
             rel="noopener noreferrer"
+            onClick={() => trackExternalLinkClick('https://github.com/cacheplane/angular-agent-framework', {
+              surface: 'nav',
+              cta_id: 'nav_github',
+              cta_text: 'GitHub',
+            })}
             className="transition-colors"
             style={{ color: tokens.colors.textSecondary }}
             onMouseEnter={(e) => (e.currentTarget.style.color = tokens.colors.accent)}
@@ -139,6 +155,12 @@ export function Nav() {
           </a>
           <Link href="/pilot-to-prod#whitepaper-gate"
             className="px-4 py-2 text-sm font-mono rounded transition-all"
+            onClick={() => trackCtaClick({
+              surface: 'nav',
+              destination_url: '/pilot-to-prod#whitepaper-gate',
+              cta_id: 'nav_get_started',
+              cta_text: 'Get Started',
+            })}
             style={{ background: tokens.colors.accent, color: '#fff' }}
             onMouseEnter={(e) => (e.currentTarget.style.boxShadow = tokens.glow.button)}
             onMouseLeave={(e) => (e.currentTarget.style.boxShadow = 'none')}>
@@ -222,7 +244,16 @@ export function Nav() {
                               <Link
                                 key={`${currentLib.id}/${page.section}/${page.slug}`}
                                 href={`/docs/${currentLib.id}/${page.section}/${page.slug}`}
-                                onClick={() => setOpen(false)}
+                                onClick={() => {
+                                  trackCtaClick({
+                                    surface: 'mobile_nav',
+                                    destination_url: `/docs/${currentLib.id}/${page.section}/${page.slug}`,
+                                    cta_id: 'mobile_nav_docs_page',
+                                    cta_text: page.title,
+                                    library: currentLib.id === 'agent' || currentLib.id === 'render' || currentLib.id === 'chat' ? currentLib.id : 'unknown',
+                                  });
+                                  setOpen(false);
+                                }}
                                 style={{
                                   display: 'block', padding: '12px 14px', borderRadius: 8,
                                   fontSize: 16, lineHeight: '24px', minHeight: 44,
@@ -251,7 +282,10 @@ export function Nav() {
                   const extraProps = l.external ? { target: '_blank', rel: 'noopener noreferrer' } : {};
                   return (
                     <LinkEl key={l.href} href={l.href} {...extraProps}
-                      onClick={() => setOpen(false)}
+                      onClick={() => {
+                        trackNavLink(l.label, l.href, l.external, 'mobile_nav');
+                        setOpen(false);
+                      }}
                       style={{
                         display: 'block', padding: '14px 14px', borderRadius: 8,
                         fontSize: 16, lineHeight: '24px', minHeight: 48,
@@ -265,7 +299,14 @@ export function Nav() {
                 })}
                 <a href="https://github.com/cacheplane/angular-agent-framework"
                   target="_blank" rel="noopener noreferrer"
-                  onClick={() => setOpen(false)}
+                  onClick={() => {
+                    trackExternalLinkClick('https://github.com/cacheplane/angular-agent-framework', {
+                      surface: 'mobile_nav',
+                      cta_id: 'mobile_nav_github',
+                      cta_text: 'GitHub',
+                    });
+                    setOpen(false);
+                  }}
                   style={{
                     display: 'flex', alignItems: 'center', gap: 10,
                     padding: '14px 14px', borderRadius: 8, minHeight: 48,
@@ -276,7 +317,15 @@ export function Nav() {
                 </a>
                 <div style={{ marginTop: 8 }}>
                   <Link href="/pilot-to-prod#whitepaper-gate"
-                    onClick={() => setOpen(false)}
+                    onClick={() => {
+                      trackCtaClick({
+                        surface: 'mobile_nav',
+                        destination_url: '/pilot-to-prod#whitepaper-gate',
+                        cta_id: 'mobile_nav_get_started',
+                        cta_text: 'Get Started',
+                      });
+                      setOpen(false);
+                    }}
                     style={{
                       display: 'block', textAlign: 'center',
                       padding: '14px 24px', borderRadius: 8,

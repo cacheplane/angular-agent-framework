@@ -2,6 +2,8 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { tokens } from '@ngaf/design-tokens';
+import { analyticsEvents } from '../../lib/analytics/events';
+import { track, trackWhitepaperDownloadClick } from '../../lib/analytics/client';
 
 /**
  * Bump this date to re-show the toast for all users.
@@ -40,13 +42,30 @@ export function AnnouncementToast() {
     e.preventDefault();
     if (!email) return;
     setSubmitting(true);
+    track(analyticsEvents.marketingWhitepaperSignupSubmit, {
+      surface: 'toast',
+      source_section: 'announcement-toast',
+      paper: 'overview',
+    });
     try {
       await fetch('/api/whitepaper-signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email }),
       });
-    } catch { /* best-effort */ }
+      track(analyticsEvents.marketingWhitepaperSignupSuccess, {
+        surface: 'toast',
+        source_section: 'announcement-toast',
+        paper: 'overview',
+      });
+    } catch {
+      track(analyticsEvents.marketingWhitepaperSignupFail, {
+        surface: 'toast',
+        source_section: 'announcement-toast',
+        paper: 'overview',
+        error_reason: 'api_error',
+      });
+    }
     setStep('sent');
     setSubmitting(false);
     // Auto-dismiss after showing success
@@ -148,7 +167,14 @@ export function AnnouncementToast() {
               </p>
               <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
                 <button
-                  onClick={() => setStep('form')}
+                  onClick={() => {
+                    track(analyticsEvents.marketingCtaClick, {
+                      surface: 'toast',
+                      source_section: 'announcement-toast',
+                      cta_id: 'toast_get_guide',
+                    });
+                    setStep('form');
+                  }}
                   style={{
                     display: 'inline-flex',
                     alignItems: 'center',
@@ -234,7 +260,14 @@ export function AnnouncementToast() {
               <a
                 href="/whitepaper.pdf"
                 download="angular-agent-readiness-guide.pdf"
-                onClick={dismiss}
+                onClick={() => {
+                  trackWhitepaperDownloadClick('overview', {
+                    surface: 'toast',
+                    source_section: 'announcement-toast',
+                    cta_id: 'toast_direct_download',
+                  });
+                  dismiss();
+                }}
                 style={{
                   display: 'inline-block',
                   marginTop: 10,

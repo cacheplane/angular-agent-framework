@@ -3,6 +3,8 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { tokens } from '@ngaf/design-tokens';
+import { analyticsEvents } from '../../lib/analytics/events';
+import { track, trackCtaClick, trackExternalLinkClick } from '../../lib/analytics/client';
 
 function GitHubIcon() {
   return (
@@ -29,6 +31,10 @@ function NewsletterForm() {
     e.preventDefault();
     if (!email) return;
     setState('submitting');
+    track(analyticsEvents.marketingNewsletterSignupSubmit, {
+      surface: 'footer',
+      source_section: 'newsletter-form',
+    });
     try {
       const res = await fetch('/api/newsletter', {
         method: 'POST',
@@ -36,8 +42,17 @@ function NewsletterForm() {
         body: JSON.stringify({ email }),
       });
       if (!res.ok) throw new Error();
+      track(analyticsEvents.marketingNewsletterSignupSuccess, {
+        surface: 'footer',
+        source_section: 'newsletter-form',
+      });
       setState('done');
     } catch {
+      track(analyticsEvents.marketingNewsletterSignupFail, {
+        surface: 'footer',
+        source_section: 'newsletter-form',
+        error_reason: 'api_error',
+      });
       setState('error');
     }
   };
@@ -84,6 +99,15 @@ function NewsletterForm() {
 }
 
 export function Footer() {
+  const trackFooterCta = (label: string, href: string) => {
+    trackCtaClick({
+      surface: 'footer',
+      destination_url: href,
+      cta_id: `footer_${label.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '')}`,
+      cta_text: label,
+    });
+  };
+
   return (
     <footer className="px-6 md:px-8 py-16 mt-24"
       style={{
@@ -113,6 +137,11 @@ export function Footer() {
               <a href="https://github.com/cacheplane/angular-agent-framework"
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={() => trackExternalLinkClick('https://github.com/cacheplane/angular-agent-framework', {
+                  surface: 'footer',
+                  cta_id: 'footer_github_icon',
+                  cta_text: 'GitHub',
+                })}
                 className="transition-colors"
                 style={{ color: tokens.colors.textMuted, minWidth: 44, minHeight: 44, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
                 onMouseEnter={(e) => (e.currentTarget.style.color = tokens.colors.accent)}
@@ -123,6 +152,11 @@ export function Footer() {
               <a href="https://www.npmjs.com/package/@ngaf/langgraph"
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={() => trackExternalLinkClick('https://www.npmjs.com/package/@ngaf/langgraph', {
+                  surface: 'footer',
+                  cta_id: 'footer_npm_icon',
+                  cta_text: 'npm',
+                })}
                 className="transition-colors"
                 style={{ color: tokens.colors.textMuted, minWidth: 44, minHeight: 44, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
                 onMouseEnter={(e) => (e.currentTarget.style.color = tokens.colors.accent)}
@@ -137,21 +171,29 @@ export function Footer() {
           <div className="flex flex-col gap-2.5 text-sm">
             <span className="font-mono text-xs uppercase tracking-wider mb-1" style={{ color: tokens.colors.accent }}>Product</span>
             <Link href="/docs" className="transition-colors" style={{ color: tokens.colors.textSecondary }}
+              onClick={() => trackFooterCta('Documentation', '/docs')}
               onMouseEnter={(e) => (e.currentTarget.style.color = tokens.colors.accent)}
               onMouseLeave={(e) => (e.currentTarget.style.color = tokens.colors.textSecondary)}>
               Documentation
             </Link>
             <Link href="/docs/agent/api/agent" className="transition-colors" style={{ color: tokens.colors.textSecondary }}
+              onClick={() => trackFooterCta('API Reference', '/docs/agent/api/agent')}
               onMouseEnter={(e) => (e.currentTarget.style.color = tokens.colors.accent)}
               onMouseLeave={(e) => (e.currentTarget.style.color = tokens.colors.textSecondary)}>
               API Reference
             </Link>
             <a href="https://cockpit.cacheplane.ai" className="transition-colors" style={{ color: tokens.colors.textSecondary }}
+              onClick={() => trackExternalLinkClick('https://cockpit.cacheplane.ai', {
+                surface: 'footer',
+                cta_id: 'footer_examples',
+                cta_text: 'Examples',
+              })}
               onMouseEnter={(e) => (e.currentTarget.style.color = tokens.colors.accent)}
               onMouseLeave={(e) => (e.currentTarget.style.color = tokens.colors.textSecondary)}>
               Examples
             </a>
             <Link href="/pricing" className="transition-colors" style={{ color: tokens.colors.textSecondary }}
+              onClick={() => trackFooterCta('Pricing', '/pricing')}
               onMouseEnter={(e) => (e.currentTarget.style.color = tokens.colors.accent)}
               onMouseLeave={(e) => (e.currentTarget.style.color = tokens.colors.textSecondary)}>
               Pricing
@@ -159,6 +201,11 @@ export function Footer() {
             <a href="https://github.com/cacheplane/angular-agent-framework"
               target="_blank" rel="noopener noreferrer"
               className="transition-colors" style={{ color: tokens.colors.textSecondary }}
+              onClick={() => trackExternalLinkClick('https://github.com/cacheplane/angular-agent-framework', {
+                surface: 'footer',
+                cta_id: 'footer_github',
+                cta_text: 'GitHub',
+              })}
               onMouseEnter={(e) => (e.currentTarget.style.color = tokens.colors.accent)}
               onMouseLeave={(e) => (e.currentTarget.style.color = tokens.colors.textSecondary)}>
               GitHub
@@ -169,16 +216,19 @@ export function Footer() {
           <div className="flex flex-col gap-2.5 text-sm">
             <span className="font-mono text-xs uppercase tracking-wider mb-1" style={{ color: tokens.colors.accent }}>Libraries</span>
             <Link href="/angular" className="transition-colors" style={{ color: tokens.colors.textSecondary }}
+              onClick={() => trackFooterCta('Angular', '/angular')}
               onMouseEnter={(e) => (e.currentTarget.style.color = tokens.colors.accent)}
               onMouseLeave={(e) => (e.currentTarget.style.color = tokens.colors.textSecondary)}>
               Angular
             </Link>
             <Link href="/render" className="transition-colors" style={{ color: tokens.colors.textSecondary }}
+              onClick={() => trackFooterCta('Render', '/render')}
               onMouseEnter={(e) => (e.currentTarget.style.color = tokens.colors.accent)}
               onMouseLeave={(e) => (e.currentTarget.style.color = tokens.colors.textSecondary)}>
               Render
             </Link>
             <Link href="/chat" className="transition-colors" style={{ color: tokens.colors.textSecondary }}
+              onClick={() => trackFooterCta('Chat', '/chat')}
               onMouseEnter={(e) => (e.currentTarget.style.color = tokens.colors.accent)}
               onMouseLeave={(e) => (e.currentTarget.style.color = tokens.colors.textSecondary)}>
               Chat
@@ -189,16 +239,19 @@ export function Footer() {
           <div className="flex flex-col gap-2.5 text-sm">
             <span className="font-mono text-xs uppercase tracking-wider mb-1" style={{ color: tokens.colors.accent }}>Solutions</span>
             <Link href="/solutions/compliance" className="transition-colors" style={{ color: tokens.colors.textSecondary }}
+              onClick={() => trackFooterCta('Compliance', '/solutions/compliance')}
               onMouseEnter={(e) => (e.currentTarget.style.color = tokens.colors.accent)}
               onMouseLeave={(e) => (e.currentTarget.style.color = tokens.colors.textSecondary)}>
               Compliance
             </Link>
             <Link href="/solutions/analytics" className="transition-colors" style={{ color: tokens.colors.textSecondary }}
+              onClick={() => trackFooterCta('Analytics', '/solutions/analytics')}
               onMouseEnter={(e) => (e.currentTarget.style.color = tokens.colors.accent)}
               onMouseLeave={(e) => (e.currentTarget.style.color = tokens.colors.textSecondary)}>
               Analytics
             </Link>
             <Link href="/solutions/customer-support" className="transition-colors" style={{ color: tokens.colors.textSecondary }}
+              onClick={() => trackFooterCta('Customer Support', '/solutions/customer-support')}
               onMouseEnter={(e) => (e.currentTarget.style.color = tokens.colors.accent)}
               onMouseLeave={(e) => (e.currentTarget.style.color = tokens.colors.textSecondary)}>
               Customer Support
@@ -209,6 +262,7 @@ export function Footer() {
           <div className="flex flex-col gap-2.5 text-sm">
             <span className="font-mono text-xs uppercase tracking-wider mb-1" style={{ color: tokens.colors.accent }}>Resources</span>
             <Link href="/docs" className="transition-colors" style={{ color: tokens.colors.textSecondary }}
+              onClick={() => trackFooterCta('Getting Started', '/docs')}
               onMouseEnter={(e) => (e.currentTarget.style.color = tokens.colors.accent)}
               onMouseLeave={(e) => (e.currentTarget.style.color = tokens.colors.textSecondary)}>
               Getting Started
@@ -216,6 +270,11 @@ export function Footer() {
             <a href="https://www.npmjs.com/package/@ngaf/langgraph"
               target="_blank" rel="noopener noreferrer"
               className="transition-colors" style={{ color: tokens.colors.textSecondary }}
+              onClick={() => trackExternalLinkClick('https://www.npmjs.com/package/@ngaf/langgraph', {
+                surface: 'footer',
+                cta_id: 'footer_npm_package',
+                cta_text: 'npm Package',
+              })}
               onMouseEnter={(e) => (e.currentTarget.style.color = tokens.colors.accent)}
               onMouseLeave={(e) => (e.currentTarget.style.color = tokens.colors.textSecondary)}>
               npm Package
@@ -223,6 +282,11 @@ export function Footer() {
             <a href="https://github.com/cacheplane/angular-agent-framework/blob/main/LICENSE"
               target="_blank" rel="noopener noreferrer"
               className="transition-colors" style={{ color: tokens.colors.textSecondary }}
+              onClick={() => trackExternalLinkClick('https://github.com/cacheplane/angular-agent-framework/blob/main/LICENSE', {
+                surface: 'footer',
+                cta_id: 'footer_mit_license',
+                cta_text: 'MIT License',
+              })}
               onMouseEnter={(e) => (e.currentTarget.style.color = tokens.colors.accent)}
               onMouseLeave={(e) => (e.currentTarget.style.color = tokens.colors.textSecondary)}>
               MIT License
@@ -235,6 +299,7 @@ export function Footer() {
           style={{ borderTop: `1px solid ${tokens.glass.border}`, color: tokens.colors.textMuted }}>
           <span>&copy; {new Date().getFullYear()} Angular Agent Framework. All rights reserved.</span>
           <span>MIT License &middot; <Link href="/pricing" className="transition-colors"
+            onClick={() => trackFooterCta('Pricing Bottom', '/pricing')}
             onMouseEnter={(e) => (e.currentTarget.style.color = tokens.colors.accent)}
             onMouseLeave={(e) => (e.currentTarget.style.color = tokens.colors.textMuted)}>Pricing</Link></span>
         </div>

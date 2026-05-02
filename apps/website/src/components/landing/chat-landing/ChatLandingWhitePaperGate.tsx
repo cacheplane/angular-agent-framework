@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { tokens } from '@ngaf/design-tokens';
+import { analyticsEvents } from '../../../lib/analytics/events';
+import { track, trackWhitepaperDownloadClick } from '../../../lib/analytics/client';
 
 type FormState = 'idle' | 'submitting' | 'done' | 'error';
 
@@ -15,6 +17,12 @@ export function ChatLandingWhitePaperGate() {
     e.preventDefault();
     if (!email) return;
     setFormState('submitting');
+    track(analyticsEvents.marketingWhitepaperSignupSubmit, {
+      surface: 'library_landing',
+      source_section: 'chat-whitepaper-gate',
+      library: 'chat',
+      paper: 'chat',
+    });
     try {
       const res = await fetch('/api/whitepaper-signup', {
         method: 'POST',
@@ -22,8 +30,21 @@ export function ChatLandingWhitePaperGate() {
         body: JSON.stringify({ name, email, paper: 'chat' }),
       });
       if (!res.ok) throw new Error('Server error');
+      track(analyticsEvents.marketingWhitepaperSignupSuccess, {
+        surface: 'library_landing',
+        source_section: 'chat-whitepaper-gate',
+        library: 'chat',
+        paper: 'chat',
+      });
       setFormState('done');
     } catch {
+      track(analyticsEvents.marketingWhitepaperSignupFail, {
+        surface: 'library_landing',
+        source_section: 'chat-whitepaper-gate',
+        library: 'chat',
+        paper: 'chat',
+        error_reason: 'api_error',
+      });
       setFormState('error');
     }
   };
@@ -85,6 +106,12 @@ export function ChatLandingWhitePaperGate() {
             Part of the Cacheplane Angular Agent Framework.
           </p>
           <a href="/whitepapers/chat.pdf" download="cacheplane-chat-enterprise-guide.pdf"
+            onClick={() => trackWhitepaperDownloadClick('chat', {
+              surface: 'library_landing',
+              source_section: 'chat-whitepaper-gate',
+              library: 'chat',
+              cta_id: 'chat_whitepaper_download',
+            })}
             style={{
               display: 'inline-flex', alignItems: 'center', gap: 8,
               background: tokens.colors.chatPurple, color: '#fff',

@@ -1,5 +1,7 @@
 'use client';
 import { useRef, useState } from 'react';
+import { analyticsEvents } from '../../../lib/analytics/events';
+import { track } from '../../../lib/analytics/client';
 
 function CopyIcon() {
   return (
@@ -25,6 +27,10 @@ export function Pre({ children, ...props }: React.HTMLAttributes<HTMLPreElement>
   const copy = async () => {
     const text = ref.current?.textContent ?? '';
     await navigator.clipboard.writeText(text);
+    track(analyticsEvents.docsCopyCodeClick, {
+      surface: 'docs',
+      cta_id: 'copy_code',
+    });
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };

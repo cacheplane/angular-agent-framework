@@ -4,6 +4,8 @@ import path from 'path';
 import { sendEmail, FROM, NOTIFY_TO, addToAudience } from '../../../../lib/resend';
 import { loopsUpsertContact, loopsSendEvent } from '../../../../lib/loops';
 import { leadNotificationHtml } from '../../../../emails/lead-notification';
+import { captureLeadConversion } from '../../../lib/analytics/server';
+import { getSourcePage } from '../../../lib/analytics/properties';
 
 const LEADS_FILE = path.join(process.cwd(), 'data', 'leads.ndjson');
 
@@ -22,6 +24,7 @@ export async function POST(req: NextRequest) {
   }
 
   const ts = new Date().toISOString();
+  const sourcePage = getSourcePage(req.headers.get('referer'));
 
   // NDJSON backup (always writes, even if Resend fails)
   try {
@@ -56,6 +59,8 @@ export async function POST(req: NextRequest) {
   } catch (err) {
     console.error('[resend] lead notification failed:', err);
   }
+
+  await captureLeadConversion({ email, company, sourcePage });
 
   return NextResponse.json({ ok: true });
 }

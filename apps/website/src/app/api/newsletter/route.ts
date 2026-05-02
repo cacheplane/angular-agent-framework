@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { sendEmail, FROM, addToAudience } from '../../../../lib/resend';
 import { loopsUpsertContact, loopsSendEvent } from '../../../../lib/loops';
 import { newsletterWelcomeHtml } from '../../../../emails/newsletter-welcome';
+import { captureNewsletterConversion } from '../../../lib/analytics/server';
+import { getSourcePage } from '../../../lib/analytics/properties';
 
 export async function POST(req: NextRequest) {
   let body: { email?: string };
@@ -12,6 +14,7 @@ export async function POST(req: NextRequest) {
   }
 
   const email = (body.email || '').trim().slice(0, 320);
+  const sourcePage = getSourcePage(req.headers.get('referer'));
 
   if (!email || !email.includes('@')) {
     return NextResponse.json({ error: 'Valid email required' }, { status: 400 });
@@ -39,6 +42,8 @@ export async function POST(req: NextRequest) {
   } catch (err) {
     console.error('[resend] newsletter signup failed:', err);
   }
+
+  await captureNewsletterConversion({ email, sourcePage });
 
   return NextResponse.json({ ok: true });
 }

@@ -1,6 +1,8 @@
 'use client';
 import { useState } from 'react';
 import { tokens } from '@ngaf/design-tokens';
+import { analyticsEvents } from '../../lib/analytics/events';
+import { track } from '../../lib/analytics/client';
 
 export function LeadForm() {
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
@@ -10,14 +12,36 @@ export function LeadForm() {
     setStatus('sending');
     const form = e.currentTarget;
     const data = Object.fromEntries(new FormData(form));
+    track(analyticsEvents.marketingLeadFormSubmit, {
+      surface: 'pricing',
+      source_section: 'lead-form',
+    });
     try {
       const res = await fetch('/api/leads', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
       });
-      setStatus(res.ok ? 'sent' : 'error');
+      if (res.ok) {
+        track(analyticsEvents.marketingLeadFormSuccess, {
+          surface: 'pricing',
+          source_section: 'lead-form',
+        });
+        setStatus('sent');
+      } else {
+        track(analyticsEvents.marketingLeadFormFail, {
+          surface: 'pricing',
+          source_section: 'lead-form',
+          error_reason: 'api_error',
+        });
+        setStatus('error');
+      }
     } catch {
+      track(analyticsEvents.marketingLeadFormFail, {
+        surface: 'pricing',
+        source_section: 'lead-form',
+        error_reason: 'network_error',
+      });
       setStatus('error');
     }
   };

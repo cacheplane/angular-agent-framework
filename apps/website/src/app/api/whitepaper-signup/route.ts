@@ -8,6 +8,8 @@ import { whitepaperDownloadHtml } from '../../../../emails/whitepaper-download';
 import { angularDownloadHtml } from '../../../../emails/angular-download';
 import { renderDownloadHtml } from '../../../../emails/render-download';
 import { chatDownloadHtml } from '../../../../emails/chat-download';
+import { captureWhitepaperConversion } from '../../../lib/analytics/server';
+import { getSourcePage } from '../../../lib/analytics/properties';
 
 const SIGNUPS_FILE = path.join(process.cwd(), 'data', 'whitepaper-signups.ndjson');
 
@@ -38,6 +40,7 @@ export async function POST(req: NextRequest) {
   const name = (body.name || '').trim().slice(0, 200);
   const email = (body.email || '').trim().slice(0, 320);
   const paper = (VALID_PAPERS.includes(body.paper as PaperId) ? body.paper : 'overview') as PaperId;
+  const sourcePage = getSourcePage(req.headers.get('referer'));
 
   if (!email || !email.includes('@')) {
     return NextResponse.json({ error: 'Valid email required' }, { status: 400 });
@@ -70,6 +73,8 @@ export async function POST(req: NextRequest) {
   } catch (err) {
     console.error('[whitepaper-signup] email pipeline failed:', err);
   }
+
+  await captureWhitepaperConversion({ email, paper, sourcePage });
 
   return NextResponse.json({ ok: true });
 }
