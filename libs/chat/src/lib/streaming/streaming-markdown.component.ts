@@ -1,24 +1,26 @@
+// libs/chat/src/lib/streaming/streaming-markdown.component.ts
 // SPDX-License-Identifier: MIT
 import {
   Component,
-  input,
-  effect,
-  ElementRef,
-  inject,
   ChangeDetectionStrategy,
+  DestroyRef,
+  ElementRef,
+  effect,
+  inject,
+  input,
   untracked,
 } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
-import { createStreamingMarkdownRenderer, type StreamingMarkdownRenderer } from './streaming-markdown';
 import { renderMarkdownToString } from './markdown-render';
+import { isTraceEnabled, trace } from './trace';
 
 /**
- * Renders markdown content using a streaming append-only DOM renderer
- * during active streaming, then switches to a full marked.parse() render
- * once the content stabilises (no new content for a frame).
+ * Renders markdown content via marked.parse + sanitized innerHTML, coalesced
+ * to one render per animation frame. No incremental renderer state, no delta
+ * math — just write the latest content. Idempotent within a frame.
  *
- * This eliminates the jank caused by full innerHTML replacement on every
- * SSE token — the streaming renderer only appends new DOM nodes.
+ * The `streaming` input is informational (it can drive parent-level decisions
+ * like showing a caret), but doesn't change the render strategy here.
  */
 @Component({
   selector: 'chat-streaming-md',
@@ -28,55 +30,49 @@ import { renderMarkdownToString } from './markdown-render';
   styles: `:host { display: block; }`,
 })
 export class ChatStreamingMdComponent {
-  private readonly el = inject(ElementRef).nativeElement as HTMLElement;
-  private readonly sanitizer = inject(DomSanitizer);
-
-  /** Full markdown content (updated on every partial) */
   readonly content = input.required<string>();
-  /** Whether the parent stream is still loading */
   readonly streaming = input<boolean>(false);
 
-  private renderer: StreamingMarkdownRenderer | null = null;
-  private lastContent = '';
-  private finalised = false;
+  private readonly el = inject(ElementRef).nativeElement as HTMLElement;
+  private readonly sanitizer = inject(DomSanitizer);
+  private readonly destroyRef = inject(DestroyRef);
+
+  private rafHandle = 0;
+  private pendingContent = '';
 
   constructor() {
     effect(() => {
-      const content = this.content();
-      const isStreaming = this.streaming();
+      const next = this.content();
+      untracked(() => this.schedule(next));
+    });
 
-      untracked(() => this.render(content, isStreaming));
+    this.destroyRef.onDestroy(() => {
+      if (this.rafHandle) {
+        cancelAnimationFrame(this.rafHandle);
+        this.rafHandle = 0;
+      }
     });
   }
 
-  private render(content: string, isStreaming: boolean): void {
-    if (!content) return;
+  private schedule(content: string): void {
+    this.pendingContent = content;
+    if (this.rafHandle !== 0) return;
+    this.rafHandle = requestAnimationFrame(() => {
+      this.rafHandle = 0;
+      this.flush();
+    });
+  }
 
-    if (isStreaming) {
-      // Streaming mode: use append-only renderer with deltas
-      if (!this.renderer) {
-        this.renderer = createStreamingMarkdownRenderer();
-        this.el.textContent = '';
-        this.el.appendChild(this.renderer.container);
-        this.finalised = false;
-      }
-
-      // Compute delta from last known content
-      const delta = content.slice(this.lastContent.length);
-      this.lastContent = content;
-
-      if (delta) {
-        this.renderer.push(delta);
-      }
-    } else {
-      // Stream complete: do a single high-quality marked.parse() render
-      if (!this.finalised || content !== this.lastContent) {
-        this.lastContent = content;
-        this.finalised = true;
-        this.renderer = null;
-
-        this.el.innerHTML = renderMarkdownToString(content, this.sanitizer);
-      }
+  private flush(): void {
+    const content = this.pendingContent;
+    if (!content) {
+      this.el.innerHTML = '';
+      return;
+    }
+    const start = isTraceEnabled() ? performance.now() : 0;
+    this.el.innerHTML = renderMarkdownToString(content, this.sanitizer);
+    if (isTraceEnabled()) {
+      trace('streaming-md.flush', { contentLength: content.length, durationMs: performance.now() - start });
     }
   }
 }

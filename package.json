@@ -85,6 +85,7 @@
     "@angular/forms": "~21.1.0",
     "@angular/platform-browser": "~21.1.0",
     "@angular/router": "~21.1.0",
+    "@cacheplane/partial-json": "^0.1.1",
     "@langchain/core": "^1.1.33",
     "@langchain/langgraph-sdk": "^1.7.4",
     "@modelcontextprotocol/sdk": "^1.27.1",

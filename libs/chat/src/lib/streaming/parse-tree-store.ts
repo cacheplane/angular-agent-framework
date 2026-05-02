@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 import { signal, type Signal } from '@angular/core';
 import type { Spec } from '@json-render/core';
-import type { PartialJsonParser, JsonObjectNode } from '@ngaf/partial-json';
-import { materialize } from '@ngaf/partial-json';
+import type { PartialJsonParser, JsonObjectNode } from '@cacheplane/partial-json';
+import { materialize } from '@cacheplane/partial-json';
 
 export interface ElementAccumulationState {
   hasType: boolean;

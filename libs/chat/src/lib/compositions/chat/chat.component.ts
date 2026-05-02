@@ -115,7 +115,7 @@ import type { ChatRenderEvent } from './chat-render-event';
 
               <ng-template chatMessageTemplate="ai" let-message let-i="index">
                 @let content = messageContent(message);
-                @let classified = classifyMessage(content, i);
+                @let classified = classifyMessage(content, message);
                 <chat-message
                   [role]="'assistant'"
                   [prevRole]="prevRole(i)"
@@ -209,7 +209,7 @@ export class ChatComponent {
   });
 
   readonly messageContent = messageContent;
-  private readonly classifiers = new Map<number, ContentClassifier>();
+  private readonly classifiers = new Map<string, ContentClassifier>();
   private readonly destroyRef = inject(DestroyRef);
   private eventsSubscribed = false;
 
@@ -255,6 +255,24 @@ export class ChatComponent {
         el.scrollTop = el.scrollHeight;
       }
     });
+
+    effect(() => {
+      // janitor: drop classifiers for messages no longer in the agent's list
+      let liveIds: Set<string>;
+      try {
+        liveIds = new Set<string>();
+        for (const m of this.agent().messages()) {
+          const id = (m as unknown as { id?: string }).id;
+          if (id) liveIds.add(id);
+        }
+      } catch { return; }
+      for (const key of [...this.classifiers.keys()]) {
+        if (!liveIds.has(key)) {
+          this.classifiers.get(key)?.dispose();
+          this.classifiers.delete(key);
+        }
+      }
+    });
   }
 
   prevRole(index: number): ChatMessageRole | undefined {
@@ -269,9 +287,13 @@ export class ChatComponent {
     return undefined;
   }
 
-  classifyMessage(content: string, index: number): ContentClassifier {
-    let c = this.classifiers.get(index);
-    if (!c) { c = createContentClassifier(); this.classifiers.set(index, c); }
+  classifyMessage(content: string, message: { id?: string }): ContentClassifier {
+    const id = message.id ?? '';
+    let c = this.classifiers.get(id);
+    if (!c) {
+      c = createContentClassifier();
+      this.classifiers.set(id, c);
+    }
     c.update(content);
     return c;
   }

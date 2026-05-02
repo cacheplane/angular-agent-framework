@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 import { describe, it, expect } from 'vitest';
 import { TestBed } from '@angular/core/testing';
-import { createPartialJsonParser } from '@ngaf/partial-json';
+import { createPartialJsonParser } from '@cacheplane/partial-json';
 import type { Spec } from '@json-render/core';
 import { createParseTreeStore } from './parse-tree-store';
 

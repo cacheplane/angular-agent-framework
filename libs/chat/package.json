@@ -1,6 +1,6 @@
 {
   "name": "@ngaf/chat",
-  "version": "0.0.13",
+  "version": "0.0.14",
   "exports": {
     ".": {
       "types": "./index.d.ts",
@@ -12,6 +12,9 @@
     },
     "./chat.css": "./chat.css"
   },
+  "dependencies": {
+    "@cacheplane/partial-json": "^0.1.1"
+  },
   "peerDependencies": {
     "@angular/core": "^20.0.0 || ^21.0.0",
     "@angular/common": "^20.0.0 || ^21.0.0",
@@ -20,7 +23,6 @@
     "@ngaf/licensing": "*",
     "@ngaf/render": "*",
     "@ngaf/a2ui": "*",
-    "@ngaf/partial-json": "*",
     "@json-render/core": "^0.16.0",
     "@langchain/core": "^1.1.33",
     "rxjs": "~7.8.0",
