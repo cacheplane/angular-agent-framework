@@ -79,17 +79,17 @@ automatically on `submit()` calls.
 
 ---
 
-### Limitation: subagent tracking is deferred
+### Limitation: subagent helper methods are not exposed
 
-**Feature:** `subagents()` / `activeSubagents()` / `filterSubagentMessages` /
-`subagentToolNames`
+**Feature:** `getSubagent()` / `getSubagentsByType()` /
+`getSubagentsByMessage()`
 
-**React behavior:** `useStream()` can track Deep Agent subagent execution by
-combining subgraph stream events with tool-call registration.
+**React behavior:** `useStream()` exposes helper methods for looking up
+subagent streams by tool call ID, subagent type, or triggering message.
 
-**Angular behavior:** Tool calls, tool progress, message metadata, and
-per-message tool results are implemented. Subagent-specific stream routing is
-deferred to the next implementation phase.
+**Angular behavior:** `subagents()` and `activeSubagents()` are implemented.
+Use the `subagents()` map directly for lookups. Helper methods can be added
+later if Angular consumers need parity beyond the signal surface.
 
-**Workaround:** Use `toolCalls()` and `toolProgress()` for tool-level visibility
-until dedicated subagent tracking lands.
+**Workaround:** Read from `subagents().get(toolCallId)` or filter
+`[...subagents().values()]` in a computed signal.

@@ -58,6 +58,7 @@ export class FetchStreamTransport implements AgentTransport {
     const run = this.client.runs.stream(thread, assistantId, {
       input: payload as Record<string, unknown>,
       streamMode: streamMode as unknown as 'values',
+      streamSubgraphs: true,
       ...opts,
     });
 
@@ -86,23 +87,36 @@ export class FetchStreamTransport implements AgentTransport {
 }
 
 function normalizeSdkEvent(type: StreamEvent['type'], data: unknown): StreamEvent {
-  if (type === 'messages' && Array.isArray(data) && data.length === 2 && isRecord(data[1])) {
-    return { type, messages: [data[0]], messageMetadata: data[1], data };
+  const namespace = extractNamespace(type);
+  const baseType = getBaseEventType(type);
+
+  if (baseType === 'messages' && Array.isArray(data) && data.length === 2 && isRecord(data[1])) {
+    return { type, ...(namespace ? { namespace } : {}), messages: [data[0]], messageMetadata: data[1], data };
   }
 
   if (isMessagesEvent(type) && Array.isArray(data)) {
-    return { type, messages: data, data };
+    return { type, ...(namespace ? { namespace } : {}), messages: data, data };
   }
 
   if (isRecord(data)) {
-    return { type, ...data, data };
+    return { type, ...(namespace ? { namespace } : {}), ...data, data };
   }
 
-  return { type, data };
+  return { type, ...(namespace ? { namespace } : {}), data };
 }
 
 function isMessagesEvent(type: StreamEvent['type']): boolean {
-  return type === 'messages' || type.startsWith('messages/');
+  const baseType = getBaseEventType(type);
+  return baseType === 'messages' || baseType.startsWith('messages/');
+}
+
+function getBaseEventType(type: StreamEvent['type']): string {
+  return String(type).split('|')[0];
+}
+
+function extractNamespace(type: StreamEvent['type']): string[] | undefined {
+  const parts = String(type).split('|');
+  return parts.length > 1 ? parts.slice(1) : undefined;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

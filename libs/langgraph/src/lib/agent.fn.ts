@@ -348,6 +348,7 @@ function toInterrupt(ix: Interrupt<unknown>): AgentInterrupt {
 function toSubagent(sa: SubagentStreamRef): Subagent {
   return {
     toolCallId: sa.toolCallId,
+    name: sa.name,
     status: sa.status,
     messages: computed(() => sa.messages().map(toMessage)) as Signal<Message[]>,
     state: sa.values as Signal<Record<string, unknown>>,
