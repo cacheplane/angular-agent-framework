@@ -322,6 +322,10 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
       // so optimistic human messages and earlier tool messages are preserved.
       if (event.type === 'messages/partial' || event.messageMetadata) {
         subjects.messages$.next(mergeMessages(subjects.messages$.value, normalized));
+      } else if (normalized.length === 0) {
+        // Defensive: skip empty replacements during streaming. An empty
+        // batch shouldn't tear down the entire UI (causes message DOM
+        // teardown + streaming renderer reset = visible jank).
       } else {
         subjects.messages$.next(normalized);
       }
@@ -346,7 +350,9 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
           // Also sync messages$ from the values state so the full message
           // history (including human messages) is available to consumers.
           const stateMessages = (vals as Record<string, unknown>)['messages'];
-          if (Array.isArray(stateMessages)) {
+          if (Array.isArray(stateMessages) && stateMessages.length > 0) {
+            // Defensive: only sync when state carries messages. An empty
+            // values payload shouldn't wipe the UI mid-stream.
             if (options.toMessage) {
               subjects.messages$.next(stateMessages.map(options.toMessage));
             } else {
