@@ -68,9 +68,7 @@ const agent = agent<MemoryState>({
 // Memory persists across conversations
 // Agent recalls user preferences,
 // past decisions, and project context
-agent.submit({
-  messages: [{ role: 'user', content: query }],
-});`,
+agent.submit({ message: query });`,
     lang: 'typescript' as const,
   },
 ];

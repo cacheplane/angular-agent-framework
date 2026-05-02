@@ -233,6 +233,6 @@ agent.submit = submitSpy;
 
 // After triggering a submit in the component:
 expect(submitSpy).toHaveBeenCalledWith({
-  messages: [{ role: 'human', content: 'Hello' }],
+  message: 'Hello',
 });
 ```

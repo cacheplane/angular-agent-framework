@@ -85,7 +85,7 @@ export class HistoryViewerComponent {
     const checkpoint = this.rawCheckpoints()[index]?.checkpoint;
     if (!checkpoint) return;
     this.agent.submit(
-      { messages: [{ role: 'user', content: 'Try a different approach' }] },
+      { message: 'Try a different approach' },
       { checkpoint }
     );
   }
@@ -134,7 +134,7 @@ forkFromCheckpoint(index: number) {
   const checkpoint = this.agent.langGraphHistory()[index]?.checkpoint;
   if (!checkpoint) return;
   this.agent.submit(
-    { messages: [{ role: 'user', content: 'Try a different approach' }] },
+    { message: 'Try a different approach' },
     { checkpoint }
   );
 }
@@ -144,7 +144,7 @@ retryWithAlternative(index: number, newInput: string) {
   const checkpoint = this.agent.langGraphHistory()[index]?.checkpoint;
   if (!checkpoint) return;
   this.agent.submit(
-    { messages: [{ role: 'user', content: newInput }] },
+    { message: newInput },
     { checkpoint }
   );
 }
@@ -197,7 +197,7 @@ export class HistoryViewerComponent {
     const checkpoint = this.rawCheckpoints()[index]?.checkpoint;
     if (!checkpoint) return;
     this.agent.submit(
-      { messages: [{ role: 'user', content: 'Try a different approach' }] },
+      { message: 'Try a different approach' },
       { checkpoint }
     );
   }
@@ -283,7 +283,7 @@ export class ReplayComponent {
     const checkpoint = this.rawHistory()[index]?.checkpoint;
     if (!checkpoint) return;
     this.agent.submit(
-      { messages: [{ role: 'user', content: newMessage }] },
+      { message: newMessage },
       { checkpoint }
     );
   }

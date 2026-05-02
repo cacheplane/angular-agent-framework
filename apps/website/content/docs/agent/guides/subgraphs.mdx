@@ -92,9 +92,7 @@ export class OrchestratorComponent {
   readonly runningCount = computed(() => this.running().length);
 
   send(text: string) {
-    this.orchestrator.submit({
-      messages: [{ role: 'user', content: text }],
-    });
+    this.orchestrator.submit({ message: text });
   }
 }
 ```

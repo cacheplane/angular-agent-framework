@@ -45,7 +45,7 @@ When the user submits (via Enter key or clicking the send button):
 
 1. The message text is trimmed
 2. If empty after trimming, nothing happens
-3. `ref.submit()` is called with `{ messages: [{ role: 'human', content: trimmed }] }`
+3. `ref.submit()` is called with `{ message: trimmed }`
 4. The `submitted` output emits the trimmed text
 5. The input is cleared
 6. Focus is returned to the textarea
@@ -94,7 +94,7 @@ function submitMessage(
 
 **Returns:** The trimmed message string if submitted, or `null` if the trimmed text was empty.
 
-The function calls `ref.submit({ messages: [{ role: 'human', content: trimmed }] })` under the hood.
+The function calls `ref.submit({ message: trimmed })` under the hood.
 
 ## Styling
 

@@ -32,7 +32,7 @@ import { agent } from 'angular';
     @for (msg of chat.messages(); track $index) {
       <p>{{ msg.content }}</p>
     }
-    <button (click)="chat.submit({ messages: [{ role: 'human', content: 'Hello' }] })">
+    <button (click)="chat.submit({ message: 'Hello' })">
       Send
     </button>
   `,

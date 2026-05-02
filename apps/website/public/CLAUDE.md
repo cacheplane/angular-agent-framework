@@ -1,9 +1,9 @@
-# Angular Agent Framework v0.0.1
+# Angular Agent Framework v0.1.0
 
-Angular streaming library for LangChain/LangGraph. Provides `agent()` — full parity with React's `useStream()`.
+Angular agent framework for LangChain/LangGraph. Provides `agent()` — Signal-native streaming for Angular agents, built for LangGraph.
 
 ## Install
-npm install angular
+npm install @ngaf/langgraph
 
 ## Key requirement
 `agent()` MUST be called within an Angular injection context (component constructor or field initializer). Calling it in ngOnInit or any async context throws "NG0203: inject() must be called from an injection context".
@@ -11,13 +11,13 @@ npm install angular
 ## Basic usage
 ```typescript
 // app.config.ts
-import { provideAgent } from 'angular';
+import { provideAgent } from '@ngaf/langgraph';
 export const appConfig: ApplicationConfig = {
   providers: [provideAgent({ apiUrl: 'http://localhost:2024' })]
 };
 
 // chat.component.ts
-import { agent } from 'angular';
+import { agent } from '@ngaf/langgraph';
 import type { BaseMessage } from '@langchain/core/messages';
 
 @Component({ template: `
@@ -26,7 +26,7 @@ import type { BaseMessage } from '@langchain/core/messages';
 `})
 export class ChatComponent {
   chat = agent<{ messages: BaseMessage[] }>({ assistantId: 'chat_agent' });
-  send() { this.chat.submit({ messages: [{ role: 'human', content: 'Hello' }] }); }
+  send() { this.chat.submit({ message: 'Hello' }); }
 }
 ```
 
@@ -38,7 +38,7 @@ export class ChatComponent {
 
 ## MCP server (for tool access)
 Add to ~/.claude/settings.json:
-{"mcpServers":{"angular":{"command":"npx","args":["@angular/mcp"]}}}
+{"mcpServers":{"angular-agent":{"command":"npx","args":["@ngaf/langgraph-mcp"]}}}
 
 ## Version check
 If this file is stale, fetch the latest: https://cacheplane.ai/llms-full.txt

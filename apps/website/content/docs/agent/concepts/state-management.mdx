@@ -14,7 +14,7 @@ This inversion is intentional. Agent state can span multiple LLM calls, tool exe
 
 <Steps>
 <Step title="User submits input">
-Your Angular component calls `agent.submit({ messages: [userMsg] })`. No state is stored in the component.
+Your Angular component calls `agent.submit({ message: text })`. No state is stored in the component.
 </Step>
 <Step title="agent() sends the request">
 `@ngaf/langgraph` forwards the input to `FetchStreamTransport`, which opens an HTTP POST and SSE connection to LangGraph Platform.
@@ -308,7 +308,7 @@ export class ChatComponent {
   send() {
     const text = this.inputText();
     if (!text.trim()) return;
-    this.agent.submit({ messages: [{ role: 'user', content: text }] });
+    this.agent.submit({ message: text });
     this.inputText.set('');                          // UI state — clear the input
   }
 
@@ -492,9 +492,7 @@ export class ResearchComponent {
   });
 
   startResearch(query: string) {
-    this.agent.submit({
-      messages: [{ role: 'user', content: query }],
-    });
+    this.agent.submit({ message: query });
   }
 }
 ```
