@@ -90,7 +90,7 @@ export class ChatMessageActionsComponent {
   /** Emitted with 'up' or 'down' when the user rates the response. */
   readonly rate = output<'up' | 'down'>();
   /** Emitted with the copied content after a successful clipboard write. */
-  readonly copied$ = output<string>({ alias: 'copied' });
+  readonly contentCopied = output<string>();
 
   protected readonly copied = signal(false);
   protected readonly rating = signal<'up' | 'down' | null>(null);
@@ -114,7 +114,7 @@ export class ChatMessageActionsComponent {
         ta.remove();
       }
       this.copied.set(true);
-      this.copied$.emit(text);
+      this.contentCopied.emit(text);
       setTimeout(() => this.copied.set(false), 2000);
     } catch {
       // Silent fail — clipboard may be blocked by permissions.
