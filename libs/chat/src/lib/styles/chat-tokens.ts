@@ -86,6 +86,10 @@ const KEYFRAMES = `
     0%, 50% { opacity: 1; }
     50.01%, 100% { opacity: 0; }
   }
+  @keyframes ngaf-chat-caret-fade-in {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
 `;
 
 /**

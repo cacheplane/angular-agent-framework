@@ -41,13 +41,19 @@ export const CHAT_MESSAGE_STYLES = `
     margin-left: 2px;
     margin-top: 0.25rem;
     color: var(--ngaf-chat-text-muted);
-    /* Smooth pulse curve (copilotkit-style) — easier on the eyes than a
-       hard step-end blink, especially during long streams. */
-    animation: ngaf-chat-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
     vertical-align: text-bottom;
   }
   :host([data-role="assistant"][data-current="true"][data-streaming="true"]) .chat-message__caret {
     display: inline-block;
+    /* The caret is suppressed for the first 300ms of streaming so quick
+       responses (one-or-two-token "hello"-style replies) never flash the
+       cursor. Past 300ms the smooth pulse takes over (copilotkit-style)
+       — easier on the eyes than a hard blink during long streams.
+       Note: animations restart whenever the element is created/inserted,
+       so this delay re-applies on every new streaming message. */
+    opacity: 0;
+    animation: ngaf-chat-caret-fade-in 200ms ease-out 300ms forwards,
+               ngaf-chat-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) 500ms infinite;
   }
 
   .chat-message__plain { /* system / tool fallback */ }
