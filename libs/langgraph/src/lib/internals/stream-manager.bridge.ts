@@ -24,6 +24,22 @@ import {
 import type { BaseMessage } from '@langchain/core/messages';
 import type { Interrupt, Message as LangGraphMessage, ThreadState, ToolCallWithResult, ToolProgress } from '@langchain/langgraph-sdk';
 
+// Local copy of the trace harness — same gating as @ngaf/chat's trace.ts.
+// Duplicated here to avoid an @ngaf/chat dep on the langgraph internals path.
+function isLgTraceEnabled(): boolean {
+  if (typeof globalThis === 'undefined') return false;
+  const win = (globalThis as { window?: { __ngafChatTrace?: boolean; localStorage?: Storage } }).window;
+  if (!win) return false;
+  if (win.__ngafChatTrace === true) return true;
+  try { return win.localStorage?.getItem('NGAF_CHAT_STREAM_TRACE') === '1'; } catch { return false; }
+}
+function lgTrace(...args: unknown[]): void {
+  if (isLgTraceEnabled()) {
+    // eslint-disable-next-line no-console
+    console.debug('[ngaf-chat-stream]', ...args);
+  }
+}
+
 export interface StreamManagerBridgeOptions<T, ResolvedBag extends BagTemplate = BagTemplate> {
   options:   AgentOptions<T, ResolvedBag>;
   subjects:  StreamSubjects<T, ResolvedBag>;
@@ -332,6 +348,11 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
       // so optimistic human messages and earlier tool messages are preserved.
       if (event.type === 'messages/partial' || event.messageMetadata) {
         subjects.messages$.next(mergeMessages(subjects.messages$.value, normalized));
+        if (isLgTraceEnabled()) {
+          const msgs = subjects.messages$.value;
+          const last = msgs[msgs.length - 1];
+          lgTrace('bridge.messages-tuple', { id: (last as unknown as Record<string, unknown> | undefined)?.['id'], count: msgs.length });
+        }
       } else if (normalized.length === 0) {
         // Defensive: skip empty replacements during streaming. An empty
         // batch shouldn't tear down the entire UI (causes message DOM
@@ -378,6 +399,12 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
             // tear down their DOM mid-stream. Merge by id keeps both,
             // updates content where ids match, preserves the rest.
             subjects.messages$.next(mergeMessages(subjects.messages$.value, remapped));
+            if (isLgTraceEnabled()) {
+              lgTrace('bridge.values-sync', {
+                incomingLength: stateMessages.length,
+                mergedLength: subjects.messages$.value.length,
+              });
+            }
             syncSubagentsFromMessages(stateMessages as BaseMessage[]);
             subagentManager.reconstructFromMessages(
               stateMessages as BaseMessage[],
