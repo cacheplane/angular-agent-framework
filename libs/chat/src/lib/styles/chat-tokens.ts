@@ -89,24 +89,73 @@ const KEYFRAMES = `
 `;
 
 /**
- * Component-host design tokens. Import into every chat component's `styles`
- * array so CSS custom properties resolve on `:host` without consumer setup.
- * Light tokens are default; dark applies via prefers-color-scheme OR via the
- * `[data-ngaf-chat-theme="dark"]` attribute on the host. Consumers can force
- * light by setting `[data-ngaf-chat-theme="light"]`.
+ * Component-scoped styles. Imported into every chat component's `styles`
+ * array. Carries only:
+ *   - `:host` font-family + color (so the component inherits text styling)
+ *   - keyframes the components use
+ *
+ * Token *defaults* are NOT set on `:host` — they're set on `:root` via the
+ * shared style element below (`ensureChatRootStyles()`). That shift is what
+ * makes the documented `:root { --ngaf-chat-*: ... }` consumer override
+ * actually work, because direct-on-host token settings would shadow
+ * inheritance regardless of CSS specificity.
  */
 export const CHAT_HOST_TOKENS = `
   :host {
+    font-family: var(--ngaf-chat-font-family);
+    color: var(--ngaf-chat-text);
+  }
+  ${KEYFRAMES}
+`;
+
+/**
+ * Token defaults written to `<head>` once on first chat-component
+ * construction. Wrapped in `@layer ngaf-chat` so the consumer's unlayered
+ * `:root { --ngaf-chat-*: ... }` rule beats the lib's defaults regardless
+ * of source order — the standard CSS pattern for framework defaults.
+ *
+ * Theme switching:
+ *   - `prefers-color-scheme: dark` → dark by default.
+ *   - `[data-ngaf-chat-theme="dark"]` on `<html>` / `<body>` / any wrapper
+ *     forces dark.
+ *   - `[data-ngaf-chat-theme="light"]` forces light.
+ */
+const ROOT_TOKEN_STYLES = `
+@layer ngaf-chat {
+  :root {
     ${LIGHT_TOKENS}
     ${GEOMETRY_TOKENS}
     ${TYPOGRAPHY_TOKENS}
     ${SPACING_TOKENS}
-    font-family: var(--ngaf-chat-font-family);
-    color: var(--ngaf-chat-text);
   }
   @media (prefers-color-scheme: dark) {
-    :host:not([data-ngaf-chat-theme="light"]) { ${DARK_TOKENS} }
+    :root { ${DARK_TOKENS} }
   }
-  :host([data-ngaf-chat-theme="dark"]) { ${DARK_TOKENS} }
-  ${KEYFRAMES}
+  :root[data-ngaf-chat-theme="light"],
+  [data-ngaf-chat-theme="light"] { ${LIGHT_TOKENS} }
+  :root[data-ngaf-chat-theme="dark"],
+  [data-ngaf-chat-theme="dark"] { ${DARK_TOKENS} }
+}
 `;
+
+const STYLE_ELEMENT_ID = 'ngaf-chat-root-tokens';
+
+/**
+ * Idempotent: appends a `<style id="ngaf-chat-root-tokens">` to `<head>`
+ * the first time it's called. Subsequent calls are no-ops.
+ *
+ * No-op outside the browser (server-side rendering).
+ */
+export function ensureChatRootStyles(): void {
+  if (typeof document === 'undefined') return;
+  if (document.getElementById(STYLE_ELEMENT_ID)) return;
+  const style = document.createElement('style');
+  style.id = STYLE_ELEMENT_ID;
+  style.textContent = ROOT_TOKEN_STYLES;
+  document.head.appendChild(style);
+}
+
+// Auto-inject on module evaluation. Every chat component imports
+// `CHAT_HOST_TOKENS` from this file, so the first chat component to load
+// triggers this once. Safe to evaluate eagerly: idempotent + SSR-guarded.
+ensureChatRootStyles();
