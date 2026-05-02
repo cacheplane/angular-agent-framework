@@ -147,7 +147,11 @@ function buildRunPayload(
 }
 
 function defaultStreamMode(): StreamMode[] {
-  return ['values', 'messages-tuple', 'updates', 'tools', 'custom'];
+  // 'tools' is intentionally omitted: not supported by langgraph_api < 0.9.x
+  // Servers reject the entire request with HTTP 422 if any stream_mode in
+  // the array is unknown to them. Tool-call data is still derivable from
+  // the messages stream.
+  return ['values', 'messages-tuple', 'updates', 'custom'];
 }
 
 function normalizeSdkEvent(type: StreamEvent['type'], data: unknown): StreamEvent {
