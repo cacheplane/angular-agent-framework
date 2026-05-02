@@ -13,7 +13,7 @@ export const CHAT_MESSAGE_STYLES = `
     position: relative;
     margin-top: 1.5rem;
     color: var(--ngaf-chat-text);
-    line-height: var(--ngaf-chat-line-height);
+    line-height: 1.55;
     font-size: var(--ngaf-chat-font-size);
     max-width: 100%;
   }
@@ -32,6 +32,7 @@ export const CHAT_MESSAGE_STYLES = `
   }
 
   .chat-message__assistant-body {
+    padding: 0 12px 0 4px;
     overflow-wrap: break-word;
   }
 
