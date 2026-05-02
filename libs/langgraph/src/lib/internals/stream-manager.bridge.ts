@@ -13,14 +13,13 @@ import { FetchStreamTransport } from '../transport/fetch-stream.transport';
 import { BagTemplate } from '@langchain/langgraph-sdk';
 import { getToolCallsWithResults } from '@langchain/langgraph-sdk/utils';
 import {
-  SubagentManager,
+  SubagentTracker,
+  TrackedSubagent,
   extractToolCallIdFromNamespace,
   isSubagentNamespace,
-} from '@langchain/langgraph-sdk/ui';
+} from './subagent-tracker';
 import type { BaseMessage } from '@langchain/core/messages';
-import type { Message as SdkMessage } from '@langchain/langgraph-sdk';
 import type { Interrupt, Message as LangGraphMessage, ToolCallWithResult, ToolProgress } from '@langchain/langgraph-sdk';
-import type { SubagentStreamInterface } from '@langchain/langgraph-sdk/ui';
 
 export interface StreamManagerBridgeOptions<T, ResolvedBag extends BagTemplate = BagTemplate> {
   options:   AgentOptions<T, ResolvedBag>;
@@ -56,7 +55,7 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
   let abortController: AbortController | null = null;
   let hasSeenThreadId = false;
   const toolProgressMap = new Map<string, ToolProgress>();
-  const subagentManager = new SubagentManager({
+  const subagentManager = new SubagentTracker({
     subagentToolNames: options.subagentToolNames,
     onSubagentChange: publishSubagents,
   });
@@ -155,11 +154,7 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
         const namespaceId = namespace ? extractToolCallIdFromNamespace(namespace) : undefined;
         if (namespaceId) {
           for (const msg of normalized) {
-            subagentManager.addMessageToSubagent(
-              namespaceId,
-              msg as unknown as SdkMessage,
-              event.messageMetadata,
-            );
+            subagentManager.addMessageToSubagent(namespaceId, msg);
           }
           publishSubagents();
         }
@@ -205,7 +200,7 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
             }
             syncSubagentsFromMessages(stateMessages as BaseMessage[]);
             subagentManager.reconstructFromMessages(
-              stateMessages as unknown as SdkMessage[],
+              stateMessages as BaseMessage[],
               { skipIfPopulated: true },
             );
             publishSubagents();
@@ -508,13 +503,15 @@ function mergeMessages(existing: BaseMessage[], incoming: BaseMessage[]): BaseMe
 }
 
 function toSubagentRefs(
-  subagents: Map<string, SubagentStreamInterface>,
+  subagents: Map<string, TrackedSubagent>,
 ): Map<string, SubagentStreamRef> {
   const refs = new Map<string, SubagentStreamRef>();
   subagents.forEach((subagent, key) => {
     refs.set(key, {
       toolCallId: subagent.id,
-      name: subagent.toolCall.args.subagent_type,
+      name: typeof subagent.toolCall.args['subagent_type'] === 'string'
+        ? subagent.toolCall.args['subagent_type']
+        : undefined,
       status: signal(subagent.status),
       values: signal(subagent.values),
       messages: signal(subagent.messages as unknown as BaseMessage[]),
