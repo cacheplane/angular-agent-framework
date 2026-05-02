@@ -68,5 +68,11 @@ export const CHAT_INPUT_STYLES = `
     cursor: not-allowed;
     opacity: 0.7;
   }
+  .chat-input__send--stop {
+    /* Slightly subdued vs the active send so the user doesn't fear the button. */
+    background: var(--ngaf-chat-text);
+    color: var(--ngaf-chat-bg);
+  }
+  .chat-input__send--stop:hover { transform: scale(1.05); }
   .chat-input__send svg { width: 16px; height: 16px; }
 `;

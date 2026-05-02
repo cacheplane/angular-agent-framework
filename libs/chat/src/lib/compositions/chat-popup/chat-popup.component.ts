@@ -1,6 +1,6 @@
 // libs/chat/src/lib/compositions/chat-popup/chat-popup.component.ts
 // SPDX-License-Identifier: MIT
-import { Component, ChangeDetectionStrategy, input, model } from '@angular/core';
+import { Component, ChangeDetectionStrategy, input, model, DestroyRef, inject, DOCUMENT, effect } from '@angular/core';
 import type { Agent } from '../../agent';
 import { ChatComponent } from '../chat/chat.component';
 import { ChatLauncherButtonComponent } from '../../primitives/chat-launcher-button/chat-launcher-button.component';
@@ -72,6 +72,40 @@ import { CHAT_HOST_TOKENS } from '../../styles/chat-tokens';
 export class ChatPopupComponent {
   readonly agent = input.required<Agent>();
   readonly open = model(false);
+  /**
+   * Keyboard shortcut (single key) that toggles the popup with cmd (mac)
+   * or ctrl (other). Set to `null` to disable. Default: 'k' — matches the
+   * widely-used cmd/ctrl+K convention.
+   */
+  readonly shortcut = input<string | null>('k');
+  /** Close the popup on Escape (default true). */
+  readonly closeOnEscape = input<boolean>(true);
+
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly document = inject(DOCUMENT);
+
+  constructor() {
+    effect(() => {
+      // Re-bind whenever shortcut/closeOnEscape change.
+      const shortcut = this.shortcut();
+      const closeOnEscape = this.closeOnEscape();
+      const win = this.document.defaultView;
+      if (!win) return;
+      const isMac = /Mac|iPhone|iPad/i.test(win.navigator.platform || win.navigator.userAgent);
+      const handler = (e: KeyboardEvent): void => {
+        if (shortcut && e.key.toLowerCase() === shortcut.toLowerCase() && (isMac ? e.metaKey : e.ctrlKey)) {
+          e.preventDefault();
+          this.toggle();
+          return;
+        }
+        if (closeOnEscape && this.open() && e.key === 'Escape') {
+          this.closeWindow();
+        }
+      };
+      win.addEventListener('keydown', handler);
+      this.destroyRef.onDestroy(() => win.removeEventListener('keydown', handler));
+    });
+  }
 
   toggle(): void { this.open.update((v) => !v); }
   openWindow(): void { this.open.set(true); }
