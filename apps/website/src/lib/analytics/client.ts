@@ -11,12 +11,15 @@ function currentSourcePage(): string {
 
 export function track(event: AnalyticsEventName, properties: AnalyticsProperties = {}) {
   if (typeof window === 'undefined') return;
-  if (!posthog.__loaded) return;
 
-  posthog.capture(event, {
-    source_page: currentSourcePage(),
-    ...properties,
-  });
+  try {
+    posthog.capture(event, {
+      source_page: currentSourcePage(),
+      ...properties,
+    });
+  } catch (err) {
+    console.error('[posthog] client capture failed:', err);
+  }
 }
 
 export function trackCtaClick(properties: AnalyticsProperties) {
