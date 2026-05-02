@@ -9,7 +9,7 @@ interface LogEntry {
 }
 
 const SCENARIO: { delay: number; chatBubble?: { role: 'user' | 'assistant'; text: string; streaming?: boolean }; log: LogEntry }[] = [
-  { delay: 0, chatBubble: { role: 'user', text: 'How do Angular Signals work with streaming?' }, log: { time: '0.00s', source: 'angular', message: 'chat.submit({ messages: [userMsg] })' } },
+  { delay: 0, chatBubble: { role: 'user', text: 'How do Angular Signals work with streaming?' }, log: { time: '0.00s', source: 'angular', message: 'chat.submit({ message: userText })' } },
   { delay: 800, log: { time: '0.02s', source: 'transport', message: 'POST /threads/t_8f3a/runs/stream → 200' } },
   { delay: 1200, log: { time: '0.04s', source: 'langgraph', message: 'Executing node: call_model (gpt-5-mini)' } },
   { delay: 2200, log: { time: '0.82s', source: 'langgraph', message: 'SSE event: { type: "values", messages: [...] }' } },

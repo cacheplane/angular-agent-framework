@@ -105,7 +105,7 @@ console.log(chat.isLoading());  // false
 After calling `submit()`, the status transitions to `'loading'`. The SSE connection is open and the agent is processing.
 
 ```typescript
-chat.submit({ messages: [{ role: 'user', content: 'Explain quantum computing' }] });
+chat.submit({ message: 'Explain quantum computing' });
 
 console.log(chat.status());     // 'loading'
 console.log(chat.isLoading());  // true
@@ -361,16 +361,12 @@ export class ChatComponent {
     const content = input.value.trim();
     if (!content) return;
 
-    this.chat.submit({
-      messages: [{ role: 'user', content }],
-    });
+    this.chat.submit({ message: content });
     input.value = '';
   }
 
   retry() {
-    this.chat.submit({
-      messages: [{ role: 'user', content: 'Please try again.' }],
-    });
+    this.chat.submit({ message: 'Please try again.' });
   }
 }
 ```
@@ -502,9 +498,7 @@ export class ChatComponent {
   hasError = computed(() => this.chat.status() === 'error');
 
   sendMessage(content: string) {
-    this.chat.submit({
-      messages: [{ role: 'user', content }],
-    });
+    this.chat.submit({ message: content });
   }
 }
 ```

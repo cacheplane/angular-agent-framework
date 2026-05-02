@@ -186,9 +186,7 @@ export class ReactAgentComponent {
   completedTools = computed(() => this.agent.toolCalls());
 
   send(text: string) {
-    this.agent.submit({
-      messages: [{ role: 'human', content: text }],
-    });
+    this.agent.submit({ message: text });
   }
 }
 ```
@@ -450,9 +448,7 @@ export class MultiAgentComponent {
   completedTools = computed(() => this.orchestrator.toolCalls());
 
   send(text: string) {
-    this.orchestrator.submit({
-      messages: [{ role: 'human', content: text }],
-    });
+    this.orchestrator.submit({ message: text });
   }
 }
 ```

@@ -20,7 +20,7 @@ export class ChatComponent {
   chat = agent<{ messages: BaseMessage[] }>({ assistantId: 'chat_agent' });
   send(content: string) {
     if (!content.trim()) return;
-    this.chat.submit({ messages: [{ role: 'human', content }] } as any);
+    this.chat.submit({ message: content });
   }
 }`,
 

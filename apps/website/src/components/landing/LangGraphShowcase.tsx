@@ -58,10 +58,10 @@ agent.submit({ resume: { approved: true } });`,
 const history = agent.history();
 
 // Fork from a previous state
-agent.submit({
-  checkpoint: history[2].checkpoint,
-  messages: [{ role: 'user', content: 'Try again' }],
-});`,
+agent.submit(
+  { message: 'Try again' },
+  { checkpoint: history[2].checkpoint },
+);`,
     lang: 'typescript' as const,
   },
 ];

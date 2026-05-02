@@ -181,9 +181,7 @@ export class ChatComponent {
   send() {
     const msg = this.input();
     if (!msg.trim()) return;
-    this.chat.submit({
-      messages: [{ role: 'user', content: msg }],
-    });
+    this.chat.submit({ message: msg });
     this.input.set('');
   }
 }

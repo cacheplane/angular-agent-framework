@@ -65,7 +65,7 @@ export class ${componentName} {${persistenceFields}
     const content = input.value.trim();
     if (!content) return;
     input.value = '';
-    this.chat.submit({ messages: [{ role: 'human', content }] } as any);
+    this.chat.submit({ message: content });
   }
 }`;
 

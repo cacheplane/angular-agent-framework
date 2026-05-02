@@ -75,7 +75,7 @@ export class ChatComponent {
   readonly isStreaming = computed(() => this.chat.status() === 'loading');
 
   send(text: string) {
-    this.chat.submit({ messages: [{ role: 'user', content: text }] });
+    this.chat.submit({ message: text });
   }
 }
 ```

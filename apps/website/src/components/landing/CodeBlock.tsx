@@ -15,7 +15,7 @@ const TEMPLATE_EXAMPLE = `<!-- chat.component.html -->
 @for (msg of chat.messages(); track $index) {
   <p>{{ msg.content }}</p>
 }
-<button (click)="chat.submit({ messages: [input] })">Send</button>`;
+<button (click)="chat.submit({ message: input })">Send</button>`;
 
 export async function CodeBlock() {
   const tsHtml = await codeToHtml(EXAMPLE, {

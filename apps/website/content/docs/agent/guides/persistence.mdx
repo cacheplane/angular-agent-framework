@@ -128,7 +128,7 @@ export class ChatComponent {
   });
 
   send(text: string) {
-    this.chat.submit({ messages: [{ role: 'user', content: text }] });
+    this.chat.submit({ message: text });
   }
 }
 ```

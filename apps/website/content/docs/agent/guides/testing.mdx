@@ -94,7 +94,7 @@ export class ChatComponent {
   });
 
   send(text: string) {
-    this.chat.submit({ messages: [{ role: 'user', content: text }] });
+    this.chat.submit({ message: text });
   }
 }
 ```
@@ -120,7 +120,7 @@ TestBed.runInInjectionContext(() => {
     transport,
   });
 
-  chat.submit({ messages: [{ role: 'user', content: 'Explain signals' }] });
+  chat.submit({ message: 'Explain signals' });
 
   // Step through each batch
   transport.nextBatch();
@@ -160,7 +160,7 @@ describe('streaming lifecycle', () => {
       expect(chat.messages()).toEqual([]);
 
       // Submit triggers loading
-      chat.submit({ messages: [{ role: 'user', content: 'Hello' }] });
+      chat.submit({ message: 'Hello' });
       expect(chat.status()).toBe('loading');
       expect(chat.isLoading()).toBe(true);
 
@@ -207,7 +207,7 @@ export class ChatComponent {
   });
 
   send(text: string) {
-    this.chat.submit({ messages: [{ role: 'user', content: text }] });
+    this.chat.submit({ message: text });
   }
 }
 ```
@@ -327,7 +327,7 @@ describe('error handling', () => {
         transport,
       });
 
-      chat.submit({ messages: [{ role: 'user', content: 'Hello' }] });
+      chat.submit({ message: 'Hello' });
 
       // Simulate a connection failure
       transport.emitError(new Error('Connection lost'));
@@ -349,12 +349,12 @@ describe('error handling', () => {
       });
 
       // First attempt fails
-      chat.submit({ messages: [{ role: 'user', content: 'Hello' }] });
+      chat.submit({ message: 'Hello' });
       transport.emitError(new Error('Timeout'));
       expect(chat.status()).toBe('error');
 
       // Retry succeeds
-      chat.submit({ messages: [{ role: 'user', content: 'Hello' }] });
+      chat.submit({ message: 'Hello' });
       transport.emit([
         {
           type: 'values',
@@ -396,7 +396,7 @@ export class ChatComponent {
 
   send(text: string) {
     this.lastMessage = text;
-    this.chat.submit({ messages: [{ role: 'user', content: text }] });
+    this.chat.submit({ message: text });
   }
 
   retry() {
