@@ -96,6 +96,9 @@ import type { ChatRenderEvent } from './chat-render-event';
     @if (showWelcome()) {
       <chat-welcome>
         <chat-input chatWelcomeInput [agent]="agent()" [submitOnEnter]="true" placeholder="Type a message..." />
+        <ng-container ngProjectAs="[chatWelcomeSuggestions]">
+          <ng-content select="[chatWelcomeSuggestions]" />
+        </ng-container>
       </chat-welcome>
     } @else {
     <div class="chat-shell">
