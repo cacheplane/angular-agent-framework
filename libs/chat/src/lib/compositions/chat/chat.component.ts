@@ -108,7 +108,7 @@ import type { ChatRenderEvent } from './chat-render-event';
                 <chat-message
                   [role]="'assistant'"
                   [prevRole]="prevRole(i)"
-                  [streaming]="agent().isLoading()"
+                  [streaming]="agent().isLoading() && i === agent().messages().length - 1"
                   [current]="i === agent().messages().length - 1"
                 >
                   <chat-tool-calls [agent]="agent()" [message]="message" />

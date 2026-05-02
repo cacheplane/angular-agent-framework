@@ -764,7 +764,9 @@ describe('createStreamManagerBridge', () => {
     await new Promise(r => setTimeout(r, 10));
 
     expect(subjects.messages$.value).toEqual([
-      { type: 'human', content: 'hello' },
+      // Optimistic human is stamped with a stable id so chat-message-list
+      // track-by-id keeps the same DOM across streaming re-emissions.
+      expect.objectContaining({ type: 'human', content: 'hello', id: expect.stringMatching(/^optimistic-/) }),
       { id: 'ai-1', type: 'ai', content: 'hello' },
     ]);
     destroy$.next();
