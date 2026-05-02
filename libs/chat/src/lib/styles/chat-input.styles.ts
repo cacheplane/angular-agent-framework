@@ -62,6 +62,11 @@ export const CHAT_INPUT_STYLES = `
     transition: transform 200ms ease, background 200ms ease;
   }
   .chat-input__send:hover:not(:disabled) { transform: scale(1.05); }
-  .chat-input__send:disabled { background: var(--ngaf-chat-muted); color: var(--ngaf-chat-on-primary); cursor: not-allowed; }
+  .chat-input__send:disabled {
+    background: var(--ngaf-chat-surface-alt);
+    color: var(--ngaf-chat-muted);
+    cursor: not-allowed;
+    opacity: 0.7;
+  }
   .chat-input__send svg { width: 16px; height: 16px; }
 `;
