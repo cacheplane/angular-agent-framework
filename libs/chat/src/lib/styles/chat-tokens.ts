@@ -105,8 +105,13 @@ export const CHAT_HOST_TOKENS = `
     font-family: var(--ngaf-chat-font-family);
     color: var(--ngaf-chat-text);
   }
-  ${KEYFRAMES}
 `;
+// Note: @keyframes are NOT placed in CHAT_HOST_TOKENS. Angular's emulated
+// view encapsulation scopes @keyframes names per-component, which can
+// desynchronise from animation property references when styles are
+// concatenated across helper strings. They're injected globally via
+// ROOT_TOKEN_STYLES below so the names match what `animation: ngaf-chat-*`
+// references in component styles (which Angular leaves untouched).
 
 /**
  * Token defaults written to `<head>` once on first chat-component
@@ -136,6 +141,7 @@ const ROOT_TOKEN_STYLES = `
   :root[data-ngaf-chat-theme="dark"],
   [data-ngaf-chat-theme="dark"] { ${DARK_TOKENS} }
 }
+${KEYFRAMES}
 `;
 
 const STYLE_ELEMENT_ID = 'ngaf-chat-root-tokens';

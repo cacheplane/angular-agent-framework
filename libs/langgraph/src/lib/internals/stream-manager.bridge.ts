@@ -256,11 +256,21 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
     lastOptions = opts;
 
     // Optimistically inject human messages so they appear immediately
-    // without waiting for the server to echo them back.
+    // without waiting for the server to echo them back. Assign a stable id
+    // when missing — track-by-id in the chat-message-list relies on stable
+    // ids across re-emissions, otherwise the optimistic message gets torn
+    // down + recreated on every messages$.next() during streaming, which
+    // restarts caret/typing animations and causes visible flicker.
     const inputMessages = (payload as Record<string, unknown>)?.['messages'];
     if (Array.isArray(inputMessages) && inputMessages.length > 0) {
+      const stamped = (inputMessages as BaseMessage[]).map((m) => {
+        const raw = m as unknown as Record<string, unknown>;
+        if (typeof raw['id'] === 'string' && raw['id']) return m;
+        const id = `optimistic-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+        return { ...m, id } as BaseMessage;
+      });
       const existing = subjects.messages$.value;
-      subjects.messages$.next([...existing, ...inputMessages as BaseMessage[]]);
+      subjects.messages$.next([...existing, ...stamped]);
     }
 
     try {
