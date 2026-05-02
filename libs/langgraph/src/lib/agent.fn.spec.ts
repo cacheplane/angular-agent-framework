@@ -404,6 +404,62 @@ describe('agent', () => {
     expect(ref.subagents().get('call-1')?.status()).toBe('complete');
   });
 
+  it('exposes helper methods for looking up subagent streams', async () => {
+    const transport = new MockAgentTransport();
+    const ref = withInjectionContext(() =>
+      agent({
+        apiUrl: '',
+        assistantId: 'a',
+        transport,
+        throttle: false,
+        subagentToolNames: ['task'],
+      })
+    );
+
+    ref.submit({ message: 'hello' });
+    const triggeringMessage = {
+      id: 'ai-helpers',
+      type: 'ai',
+      content: '',
+      tool_calls: [
+        {
+          id: 'call-research',
+          name: 'task',
+          args: { subagent_type: 'researcher', description: 'Research Angular signals' },
+        },
+        {
+          id: 'call-review',
+          name: 'task',
+          args: { subagent_type: 'reviewer', description: 'Review the notes' },
+        },
+      ],
+    } as unknown as CoreAIMessage;
+    transport.emit([{
+      type: 'messages',
+      messages: [triggeringMessage],
+    } satisfies StreamEvent]);
+    transport.emit([{
+      type: 'messages|tools:call-research' as StreamEvent['type'],
+      namespace: ['tools:call-research'],
+      messages: [{ id: 'sub-ai-research', type: 'ai', content: 'Research note' }],
+    } satisfies StreamEvent]);
+    transport.emit([{
+      type: 'messages|tools:call-review' as StreamEvent['type'],
+      namespace: ['tools:call-review'],
+      messages: [{ id: 'sub-ai-review', type: 'ai', content: 'Review note' }],
+    } satisfies StreamEvent]);
+
+    await new Promise(r => setTimeout(r, 20));
+
+    expect(ref.getSubagent('call-research')?.name).toBe('researcher');
+    expect(ref.getSubagentsByType('reviewer').map(sa => sa.toolCallId)).toEqual(['call-review']);
+    expect(ref.getSubagentsByMessage(triggeringMessage).map(sa => sa.toolCallId)).toEqual([
+      'call-research',
+      'call-review',
+    ]);
+    expect(ref.getSubagent('missing')).toBeUndefined();
+  });
+
   it('events$ is an Observable-like with .subscribe', () => {
     const transport = new MockAgentTransport();
     const ref = withInjectionContext(() =>

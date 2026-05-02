@@ -129,6 +129,22 @@ export function mockLangGraphAgent(
     toolProgress: toolProgress$,
     queue: queue$,
     activeSubagents: activeSubagents$,
+    getSubagent: (toolCallId: string) =>
+      activeSubagents$().find(subagent => subagent.toolCallId === toolCallId),
+    getSubagentsByType: (type: string) =>
+      activeSubagents$().filter(subagent => subagent.name === type),
+    getSubagentsByMessage: (msg: CoreAIMessage) => {
+      const toolCalls = (msg as unknown as Record<string, unknown>)['tool_calls'];
+      if (!Array.isArray(toolCalls)) return [];
+      const ids = toolCalls
+        .map(toolCall => {
+          if (toolCall == null || typeof toolCall !== 'object' || Array.isArray(toolCall)) return undefined;
+          const id = (toolCall as Record<string, unknown>)['id'];
+          return typeof id === 'string' ? id : undefined;
+        })
+        .filter((id): id is string => id != null);
+      return activeSubagents$().filter(subagent => ids.includes(subagent.toolCallId));
+    },
     customEvents: customEvents$,
     branch: branch$,
     // eslint-disable-next-line @typescript-eslint/no-empty-function

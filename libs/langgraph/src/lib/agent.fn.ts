@@ -11,7 +11,7 @@ import {
 } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import type { Observable } from 'rxjs';
-import type { BaseMessage } from '@langchain/core/messages';
+import type { BaseMessage, AIMessage as CoreAIMessage } from '@langchain/core/messages';
 import type { Interrupt, ToolCallWithResult } from '@langchain/langgraph-sdk';
 import type { BagTemplate, InferBag } from '@langchain/langgraph-sdk';
 import type {
@@ -242,6 +242,16 @@ export function agent<
     toolProgress:    toolProgSig,
     queue:           queueSig,
     activeSubagents,
+    getSubagent:     (toolCallId) => subagentsSig().get(toolCallId),
+    getSubagentsByType: (type) =>
+      [...subagentsSig().values()].filter(sa => sa.name === type),
+    getSubagentsByMessage: (msg) => {
+      const ids = getToolCallIds(msg);
+      const subagents = subagentsSig();
+      return ids
+        .map(id => subagents.get(id))
+        .filter((subagent): subagent is SubagentStreamRef => subagent != null);
+    },
     customEvents:    customSig,
     branch:          branchSig,
     setBranch:       (b) => branch$.next(b),
@@ -363,6 +373,15 @@ function toSubagent(sa: SubagentStreamRef): Subagent {
     messages: computed(() => sa.messages().map(toMessage)) as Signal<Message[]>,
     state: sa.values as Signal<Record<string, unknown>>,
   };
+}
+
+function getToolCallIds(msg: CoreAIMessage): string[] {
+  const raw = msg as unknown as Record<string, unknown>;
+  const toolCalls = raw['tool_calls'];
+  if (!Array.isArray(toolCalls)) return [];
+  return toolCalls
+    .map(toolCall => isRecord(toolCall) && typeof toolCall['id'] === 'string' ? toolCall['id'] : undefined)
+    .filter((id): id is string => id != null);
 }
 
 function buildSubmitPayload(input: AgentSubmitInput): unknown {

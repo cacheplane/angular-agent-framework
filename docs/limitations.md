@@ -65,18 +65,3 @@ SDK and depends on internal tree-diffing utilities not exported from
 (Signal<ThreadState[]>) to reconstruct branch relationships manually.
 
 ---
-
-## 5. Subagent Helper Methods
-
-**Feature:** `getSubagent()` / `getSubagentsByType()` /
-`getSubagentsByMessage()`
-
-**React behavior:** `useStream()` exposes helper methods for looking up
-subagent streams by tool call ID, subagent type, or triggering message.
-
-**Angular behavior:** `subagents()` and `activeSubagents()` are implemented.
-Use the `subagents()` map directly for lookups. Helper methods can be added
-later if Angular consumers need parity beyond the signal surface.
-
-**Workaround:** Read from `subagents().get(toolCallId)` or filter
-`[...subagents().values()]` in a computed signal.

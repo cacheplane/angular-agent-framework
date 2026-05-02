@@ -95,7 +95,7 @@ That's it. `chat.messages()` is an Angular Signal. Bind it directly in your temp
 | Tool calls with results | `toolCalls()` | `toolCalls` |
 | Branch / history | `branch()` / `history()` | `branch` / `history` |
 | Pending run queue | `queue()` | `queue` |
-| Subagent streaming | `subagents()` / `activeSubagents()` | `subagents` / `activeSubagents` |
+| Subagent streaming and lookup helpers | `subagents()` / `activeSubagents()` / `getSubagent()` | `subagents` / `activeSubagents` / helper methods |
 | Reactive thread switching | `Signal<string \| null>` input | prop |
 | Submit | `submit(values, opts?)` | `submit(values, opts?)` |
 | Stop | `stop()` | `stop()` |

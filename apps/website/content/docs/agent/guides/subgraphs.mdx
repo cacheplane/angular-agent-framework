@@ -119,6 +119,10 @@ const subagents = computed(() => orchestrator.subagents());
 const running = computed(() => orchestrator.activeSubagents());
 const runningCount = computed(() => running().length);
 
+// Lookup helpers for common UI paths
+const specific = computed(() => orchestrator.getSubagent('research-tool-call-id'));
+const researchers = computed(() => orchestrator.getSubagentsByType('researcher'));
+
 // React to count changes
 effect(() => {
   console.log(`${runningCount()} subagents currently running`);
@@ -127,18 +131,23 @@ effect(() => {
 
 ## Subagent stream details
 
-Each `SubagentStreamRef` exposes its own reactive signals — status, messages, and errors — so you can surface granular progress in your UI.
+Each `SubagentStreamRef` exposes its own reactive signals — status, messages, and state — so you can surface granular progress in your UI.
 
 ```typescript
 // Access a specific subagent by its tool call ID
 const researchAgent = computed(() =>
-  orchestrator.subagents().get('research-tool-call-id')
+  orchestrator.getSubagent('research-tool-call-id')
 );
+
+// Or get the subagents spawned by a specific AI message with tool calls
+const messageAgents = computed(() => {
+  const message = selectedAiMessage();
+  return message ? orchestrator.getSubagentsByMessage(message) : [];
+});
 
 // Track its progress
 const researchStatus = computed(() => researchAgent()?.status());
 const researchMessages = computed(() => researchAgent()?.messages() ?? []);
-const researchError = computed(() => researchAgent()?.error());
 ```
 
 ## Orchestrator pattern

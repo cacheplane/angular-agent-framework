@@ -241,6 +241,15 @@ export interface LangGraphAgent<T = unknown, ResolvedBag extends BagTemplate = B
   /** Filtered list of subagents with status 'running'. */
   activeSubagents: Signal<SubagentStreamRef[]>;
 
+  /** Get a subagent stream by the tool call ID that spawned it. */
+  getSubagent: (toolCallId: string) => SubagentStreamRef | undefined;
+
+  /** Get subagent streams by their configured subagent type/name. */
+  getSubagentsByType: (type: string) => SubagentStreamRef[];
+
+  /** Get subagent streams spawned by the tool calls on a specific AI message. */
+  getSubagentsByMessage: (msg: CoreAIMessage) => SubagentStreamRef[];
+
   /** Raw custom events stream (signal of array). The runtime-neutral
    *  `events$` Observable is derived from this. */
   customEvents: Signal<CustomStreamEvent[]>;
