@@ -52,6 +52,8 @@ export { ChatThreadListComponent } from './lib/primitives/chat-thread-list/chat-
 export type { Thread } from './lib/primitives/chat-thread-list/chat-thread-list.component';
 export { ChatTimelineComponent } from './lib/primitives/chat-timeline/chat-timeline.component';
 export { ChatGenerativeUiComponent } from './lib/primitives/chat-generative-ui/chat-generative-ui.component';
+export { ChatWelcomeComponent } from './lib/primitives/chat-welcome/chat-welcome.component';
+export { ChatWelcomeSuggestionComponent } from './lib/primitives/chat-welcome/chat-welcome-suggestion.component';
 
 // DI provider
 export { provideChat, CHAT_CONFIG } from './lib/provide-chat';

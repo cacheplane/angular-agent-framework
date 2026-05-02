@@ -25,6 +25,7 @@ import { ChatStreamingMdComponent } from '../../streaming/streaming-markdown.com
 import { ChatToolCallsComponent } from '../../primitives/chat-tool-calls/chat-tool-calls.component';
 import { ChatSubagentsComponent } from '../../primitives/chat-subagents/chat-subagents.component';
 import { ChatMessageActionsComponent } from '../../primitives/chat-message-actions/chat-message-actions.component';
+import { ChatWelcomeComponent } from '../../primitives/chat-welcome/chat-welcome.component';
 import { A2uiSurfaceComponent } from '../../a2ui/surface.component';
 import { createContentClassifier, type ContentClassifier } from '../../streaming/content-classifier';
 import { messageContent } from '../shared/message-utils';
@@ -40,7 +41,7 @@ import type { ChatRenderEvent } from './chat-render-event';
     ChatInputComponent, ChatTypingIndicatorComponent, ChatErrorComponent, ChatInterruptComponent,
     ChatThreadListComponent, ChatGenerativeUiComponent,
     ChatStreamingMdComponent, ChatToolCallsComponent, ChatSubagentsComponent, A2uiSurfaceComponent,
-    ChatMessageActionsComponent,
+    ChatMessageActionsComponent, ChatWelcomeComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styles: [CHAT_HOST_TOKENS, `
@@ -53,6 +54,11 @@ import type { ChatRenderEvent } from './chat-render-event';
       max-height: 100%;
       overflow: hidden;
       background: var(--ngaf-chat-bg);
+    }
+    :host > chat-welcome {
+      display: flex;
+      flex: 1 1 auto;
+      width: 100%;
     }
     .chat-shell { display: flex; flex: 1; min-height: 0; overflow: hidden; }
     .chat-shell__sidebar {
@@ -87,6 +93,11 @@ import type { ChatRenderEvent } from './chat-render-event';
     .chat-scroll::-webkit-scrollbar-thumb { background: var(--ngaf-chat-separator); border-radius: 10px; }
   `],
   template: `
+    @if (showWelcome()) {
+      <chat-welcome>
+        <chat-input chatWelcomeInput [agent]="agent()" [submitOnEnter]="true" placeholder="Type a message..." />
+      </chat-welcome>
+    } @else {
     <div class="chat-shell">
       @if (threads().length > 0) {
         <aside class="chat-shell__sidebar">
@@ -101,13 +112,6 @@ import type { ChatRenderEvent } from './chat-render-event';
         <chat-window>
           <ng-content select="[chatHeader]" chatHeader />
           <div chatBody class="chat-scroll" #scrollContainer>
-            <div class="chat-empty" [hidden]="agent().messages().length !== 0 || agent().isLoading()">
-              <ng-content select="[chatEmptyState]">
-                <p class="chat-empty__title">How can I help?</p>
-                <p class="chat-empty__sub">Ask anything to get started.</p>
-              </ng-content>
-            </div>
-
             <chat-message-list [agent]="agent()">
               <ng-template chatMessageTemplate="human" let-message let-i="index">
                 <chat-message [role]="'user'" [prevRole]="prevRole(i)">{{ messageContent(message) }}</chat-message>
@@ -177,6 +181,7 @@ import type { ChatRenderEvent } from './chat-render-event';
         </chat-window>
       </div>
     </div>
+    }
   `,
 })
 export class ChatComponent {
@@ -186,6 +191,14 @@ export class ChatComponent {
   readonly handlers = input<Record<string, (params: Record<string, unknown>) => unknown | Promise<unknown>>>({});
   readonly threads = input<Thread[]>([]);
   readonly activeThreadId = input<string>('');
+  readonly welcomeDisabled = input<boolean>(false);
+
+  readonly showWelcome = computed(() => {
+    if (this.welcomeDisabled()) return false;
+    const a = this.agent() as unknown as { isThreadLoading?: () => boolean };
+    if (a.isThreadLoading?.()) return false;
+    return this.agent().messages().length === 0;
+  });
   readonly threadSelected = output<string>();
   readonly renderEvent = output<ChatRenderEvent>();
   /** Emitted when the user clicks the regenerate button on an assistant message. */
