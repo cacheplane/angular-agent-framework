@@ -48,8 +48,9 @@ export function submitMessage(
           (ngModelChange)="messageText.set($event)"
           name="messageText"
           [placeholder]="placeholder()"
-          [disabled]="isDisabled()"
           (keydown.enter)="onKeydown($any($event))"
+          (compositionstart)="composing.set(true)"
+          (compositionend)="composing.set(false)"
           (focus)="focused.set(true)"
           (blur)="focused.set(false)"
           rows="1"
@@ -57,18 +58,32 @@ export function submitMessage(
         ></textarea>
         <div class="chat-input__controls">
           <ng-content select="[chatInputTrailing]" />
-          <button
-            type="button"
-            class="chat-input__send"
-            [disabled]="!canSubmit()"
-            (click)="onSubmit()"
-            aria-label="Send message"
-          >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <line x1="12" y1="19" x2="12" y2="5"/>
-              <polyline points="5 12 12 5 19 12"/>
-            </svg>
-          </button>
+          @if (isLoading() && canStop()) {
+            <button
+              type="button"
+              class="chat-input__send chat-input__send--stop"
+              (click)="onStop()"
+              aria-label="Stop generating"
+              title="Stop generating"
+            >
+              <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <rect x="6" y="6" width="12" height="12" rx="2"/>
+              </svg>
+            </button>
+          } @else {
+            <button
+              type="button"
+              class="chat-input__send"
+              [disabled]="!canSubmit()"
+              (click)="onSubmit()"
+              aria-label="Send message"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <line x1="12" y1="19" x2="12" y2="5"/>
+                <polyline points="5 12 12 5 19 12"/>
+              </svg>
+            </button>
+          }
         </div>
       </div>
       <ng-content select="[chatInputFooter]" />
@@ -79,17 +94,24 @@ export class ChatInputComponent {
   readonly agent = input.required<Agent>();
   readonly submitOnEnter = input<boolean>(true);
   readonly placeholder = input<string>('');
+  /** When true (default), shows a stop button while the agent is streaming. */
+  readonly showStopButton = input<boolean>(true);
   readonly submitted = output<string>();
+  readonly stopped = output<void>();
   readonly messageText = signal<string>('');
-  readonly isDisabled = computed(() => this.agent().isLoading());
+  readonly isLoading = computed(() => this.agent().isLoading());
+  /** True while an IME composition (CJK input, accent, autocorrect) is active. */
+  protected readonly composing = signal(false);
   readonly focused = signal(false);
 
-
-
+  /** Submit is allowed only when not loading and there's non-whitespace text. */
   readonly canSubmit = computed(() => {
-    if (this.isDisabled()) return false;
+    if (this.isLoading()) return false;
     return this.messageText().trim().length > 0;
   });
+
+  /** The stop button only appears when the consumer opted in AND we're loading. */
+  readonly canStop = computed(() => this.showStopButton());
 
   private readonly textareaEl = viewChild<ElementRef<HTMLTextAreaElement>>('textareaEl');
 
@@ -106,10 +128,23 @@ export class ChatInputComponent {
     }
   }
 
-  onKeydown(event: KeyboardEvent): void {
-    if (this.submitOnEnter() && !event.shiftKey) {
-      event.preventDefault();
-      this.onSubmit();
+  /** Abort the current streaming response (if the adapter supports it). */
+  onStop(): void {
+    const a = this.agent() as unknown as { stop?: () => void | Promise<void> };
+    if (typeof a.stop === 'function') {
+      void a.stop();
     }
+    this.stopped.emit();
+  }
+
+  onKeydown(event: KeyboardEvent): void {
+    if (!this.submitOnEnter() || event.shiftKey) return;
+    // Don't submit while an IME composition is in progress (CJK input,
+    // dead-key accents, autocorrect popups). The composition's terminating
+    // Enter must reach the textarea so the candidate is committed; submitting
+    // here would discard the user's in-progress character.
+    if (this.composing() || event.isComposing || event.keyCode === 229) return;
+    event.preventDefault();
+    this.onSubmit();
   }
 }
