@@ -207,6 +207,12 @@ export class ChatComponent {
       });
     });
 
+    // Auto-scroll-to-bottom. Fires on every signal update during streaming
+    // (each token mutates the last message's content), so this MUST be cheap
+    // and idempotent. Earlier this used scrollTo({ behavior: 'smooth' }) per
+    // token, which queues overlapping smooth-scroll animations (~12/sec)
+    // and produces visibly jerky scroll. Direct `scrollTop = scrollHeight`
+    // is instant, free, and only repaints when the value actually changes.
     effect(() => {
       let count: number;
       let msgs: ReturnType<ReturnType<typeof this.agent>['messages']>;
@@ -217,11 +223,12 @@ export class ChatComponent {
       if (!el) return;
       const isNewMessage = count !== this.prevMessageCount;
       this.prevMessageCount = count;
+      // Tolerance: if the user has scrolled up more than 150px from the
+      // bottom, treat it as "parked reading" and don't auto-scroll. Once
+      // they scroll back near the bottom, streaming resumes pushing.
       const isNearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 150;
       if (isNewMessage || isNearBottom) {
-        requestAnimationFrame(() => {
-          el.scrollTo({ top: el.scrollHeight, behavior: isNewMessage ? 'instant' : 'smooth' });
-        });
+        el.scrollTop = el.scrollHeight;
       }
     });
   }
