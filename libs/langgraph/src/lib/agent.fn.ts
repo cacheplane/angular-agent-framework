@@ -184,7 +184,20 @@ export function agent<
 
   // ── Runtime-neutral projections ───────────────────────────────────────────
 
-  const messagesNeutral = computed<Message[]>(() => rawMessages().map(toMessage));
+  // Memoise BaseMessage → Message projections by raw-message identity. This
+  // keeps the projected `id` stable for the same logical message across
+  // recomputes (e.g. token-by-token streaming emits a fresh array but the
+  // BaseMessage reference is the same). Track-by-id in chat-message-list
+  // depends on this identity to avoid DOM teardown + animation restarts.
+  const messageProjections = new WeakMap<BaseMessage, Message>();
+  const projectMessage = (m: BaseMessage): Message => {
+    let cached = messageProjections.get(m);
+    if (cached) return cached;
+    cached = toMessage(m);
+    messageProjections.set(m, cached);
+    return cached;
+  };
+  const messagesNeutral = computed<Message[]>(() => rawMessages().map(projectMessage));
 
   const toolCallsNeutral = computed<ToolCall[]>(() => rawToolCalls().map(toToolCall));
 

@@ -57,7 +57,7 @@ export const CHAT_INPUT_STYLES = `
     border: 0;
     background: var(--ngaf-chat-primary);
     color: var(--ngaf-chat-on-primary);
-    border-radius: var(--ngaf-chat-radius-button);
+    border-radius: 9999px;
     cursor: pointer;
     transition: transform 200ms ease, background 200ms ease;
   }
