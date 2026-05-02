@@ -66,20 +66,7 @@ SDK and depends on internal tree-diffing utilities not exported from
 
 ---
 
-## 5. `queue` (QueueInterface)
-
-**React behavior:** `useStream()` exposes a `queue` property
-(`QueueInterface`) for inspecting and managing the pending submission queue.
-
-**Angular behavior:** Queue management is handled internally in the
-bridge but not exposed as a public signal in v1. The queue drains
-automatically on `submit()` calls.
-
-**Workaround:** None in v1. Use `isLoading()` to gate UI interactions.
-
----
-
-### Limitation: subagent helper methods are not exposed
+## 5. Subagent Helper Methods
 
 **Feature:** `getSubagent()` / `getSubagentsByType()` /
 `getSubagentsByMessage()`

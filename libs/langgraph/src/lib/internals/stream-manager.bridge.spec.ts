@@ -20,6 +20,12 @@ function makeSubjects(): StreamSubjects<Record<string, unknown>> {
     toolCalls$:       new BehaviorSubject([]),
     messageMetadata$: new BehaviorSubject(new Map()),
     subagents$:       new BehaviorSubject(new Map()),
+    queue$:           new BehaviorSubject({
+      entries: [],
+      size: 0,
+      cancel: async () => false,
+      clear: async () => undefined,
+    }),
     custom$:          new BehaviorSubject<CustomStreamEvent[]>([]),
   };
 }
@@ -52,6 +58,132 @@ describe('createStreamManagerBridge', () => {
     });
     bridge.submit({ messages: [] });
     expect(subjects.status$.value).toBe(ResourceStatus.Loading);
+    destroy$.next();
+  });
+
+  it('exposes enqueue submissions through queue$ without starting a second stream immediately', async () => {
+    const transport = new MockAgentTransport();
+    const subjects = makeSubjects();
+    const destroy$ = new Subject<void>();
+    const bridge = createStreamManagerBridge({
+      options: { apiUrl: '', assistantId: 'test', transport },
+      subjects,
+      threadId$: of('thread-1'),
+      destroy$: destroy$.asObservable(),
+    });
+
+    bridge.submit({ messages: [{ type: 'human', content: 'active' }] });
+    await bridge.submit(
+      { messages: [{ type: 'human', content: 'queued' }] },
+      { multitaskStrategy: 'enqueue' },
+    );
+
+    expect(subjects.queue$.value.size).toBe(1);
+    expect(subjects.queue$.value.entries[0]).toMatchObject({
+      values: { messages: [{ type: 'human', content: 'queued' }] },
+    });
+    expect(transport.createdQueuedRuns).toHaveLength(1);
+    expect(transport.isStreaming()).toBe(true);
+    destroy$.next();
+  });
+
+  it('can cancel a queued run through queue$', async () => {
+    const transport = new MockAgentTransport();
+    const subjects = makeSubjects();
+    const destroy$ = new Subject<void>();
+    const bridge = createStreamManagerBridge({
+      options: { apiUrl: '', assistantId: 'test', transport },
+      subjects,
+      threadId$: of('thread-1'),
+      destroy$: destroy$.asObservable(),
+    });
+
+    bridge.submit({ messages: [{ type: 'human', content: 'active' }] });
+    await bridge.submit(
+      { messages: [{ type: 'human', content: 'queued' }] },
+      { multitaskStrategy: 'enqueue' },
+    );
+
+    const queued = subjects.queue$.value.entries[0];
+    await subjects.queue$.value.cancel(queued.id);
+
+    expect(subjects.queue$.value.size).toBe(0);
+    expect(transport.cancelledRuns).toEqual([{ threadId: 'thread-1', runId: queued.id }]);
+    destroy$.next();
+  });
+
+  it('cancels queued runs when switching threads', async () => {
+    const transport = new MockAgentTransport();
+    const subjects = makeSubjects();
+    const destroy$ = new Subject<void>();
+    const bridge = createStreamManagerBridge({
+      options: { apiUrl: '', assistantId: 'test', transport },
+      subjects,
+      threadId$: of('thread-1'),
+      destroy$: destroy$.asObservable(),
+    });
+
+    bridge.submit({ messages: [{ type: 'human', content: 'active' }] });
+    await bridge.submit(
+      { messages: [{ type: 'human', content: 'queued' }] },
+      { multitaskStrategy: 'enqueue' },
+    );
+
+    bridge.switchThread('thread-2');
+    await Promise.resolve();
+
+    expect(subjects.queue$.value.size).toBe(0);
+    expect(transport.cancelledRuns).toEqual([{ threadId: 'thread-1', runId: 'queued-run-1' }]);
+    destroy$.next();
+  });
+
+  it('cancels queued runs when stopping the active stream', async () => {
+    const transport = new MockAgentTransport();
+    const subjects = makeSubjects();
+    const destroy$ = new Subject<void>();
+    const bridge = createStreamManagerBridge({
+      options: { apiUrl: '', assistantId: 'test', transport },
+      subjects,
+      threadId$: of('thread-1'),
+      destroy$: destroy$.asObservable(),
+    });
+
+    bridge.submit({ messages: [{ type: 'human', content: 'active' }] });
+    await bridge.submit(
+      { messages: [{ type: 'human', content: 'queued' }] },
+      { multitaskStrategy: 'enqueue' },
+    );
+
+    await bridge.stop();
+
+    expect(subjects.queue$.value.size).toBe(0);
+    expect(transport.cancelledRuns).toEqual([{ threadId: 'thread-1', runId: 'queued-run-1' }]);
+    destroy$.next();
+  });
+
+  it('joins queued runs in FIFO order after the active stream completes', async () => {
+    const transport = new MockAgentTransport();
+    const subjects = makeSubjects();
+    const destroy$ = new Subject<void>();
+    const bridge = createStreamManagerBridge({
+      options: { apiUrl: '', assistantId: 'test', transport },
+      subjects,
+      threadId$: of('thread-1'),
+      destroy$: destroy$.asObservable(),
+    });
+
+    bridge.submit({ messages: [{ type: 'human', content: 'active' }] });
+    await bridge.submit(
+      { messages: [{ type: 'human', content: 'queued' }] },
+      { multitaskStrategy: 'enqueue' },
+    );
+
+    transport.close();
+    await new Promise(r => setTimeout(r, 20));
+
+    expect(transport.joinedRuns).toEqual([{ threadId: 'thread-1', runId: 'queued-run-1' }]);
+    expect(subjects.queue$.value.size).toBe(0);
+    expect(subjects.values$.value).toMatchObject({ queued: true });
     destroy$.next();
   });
 

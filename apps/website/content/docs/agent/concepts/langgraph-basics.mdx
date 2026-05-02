@@ -324,6 +324,7 @@ agent.branch()         // Signal<string> — time-travel branch
 
 agent.toolCalls()      // Signal<ToolCallWithResult[]> — tool results
 agent.toolProgress()   // Signal<ToolProgress[]> — active tool execution
+agent.queue()          // Signal<AgentQueue> — pending enqueue runs
 agent.subagents()      // Signal<Map<string, Subagent>> — delegated agents
 agent.activeSubagents() // Signal<SubagentStreamRef[]> — running workers
 ```

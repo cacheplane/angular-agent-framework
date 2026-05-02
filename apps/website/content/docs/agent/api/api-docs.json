@@ -23,6 +23,62 @@
     "properties": [],
     "methods": [
       {
+        "name": "cancelRun",
+        "signature": "cancelRun(threadId: string, runId: string, signal: AbortSignal)",
+        "description": "Cancel a server-side run.",
+        "params": [
+          {
+            "name": "threadId",
+            "type": "string",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "runId",
+            "type": "string",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "signal",
+            "type": "AbortSignal",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
+        "name": "createQueuedRun",
+        "signature": "createQueuedRun(assistantId: string, threadId: string, payload: unknown, signal: AbortSignal)",
+        "description": "Create a pending server-side run using LangGraph's enqueue strategy.",
+        "params": [
+          {
+            "name": "assistantId",
+            "type": "string",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "threadId",
+            "type": "string",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "payload",
+            "type": "unknown",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "signal",
+            "type": "AbortSignal",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
         "name": "joinStream",
         "signature": "joinStream(threadId: string, runId: string, lastEventId: string | undefined, signal: AbortSignal)",
         "description": "Join an already-started run without creating a new thread.",
@@ -101,13 +157,88 @@
     "examples": [
       "```typescript\nconst transport = new MockAgentTransport([\n  [{ type: 'values', data: { messages: [aiMsg('Hello')] } }],\n  [{ type: 'values', data: { status: 'done' } }],\n]);\n```"
     ],
-    "properties": [],
+    "properties": [
+      {
+        "name": "cancelledRuns",
+        "type": "object[]",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "createdQueuedRuns",
+        "type": "AgentQueueEntry<unknown>[]",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "joinedRuns",
+        "type": "object[]",
+        "description": "",
+        "optional": false
+      }
+    ],
     "methods": [
+      {
+        "name": "cancelRun",
+        "signature": "cancelRun(threadId: string, runId: string, signal: AbortSignal)",
+        "description": "Optional: cancel a server-side run.",
+        "params": [
+          {
+            "name": "threadId",
+            "type": "string",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "runId",
+            "type": "string",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "signal",
+            "type": "AbortSignal",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
       {
         "name": "close",
         "signature": "close()",
         "description": "Close the stream. Remaining queued events are drained before completion.",
         "params": []
+      },
+      {
+        "name": "createQueuedRun",
+        "signature": "createQueuedRun(_assistantId: string, threadId: string, payload: unknown, signal: AbortSignal)",
+        "description": "Optional: create a server-side queued run without joining it immediately.",
+        "params": [
+          {
+            "name": "_assistantId",
+            "type": "string",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "threadId",
+            "type": "string",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "payload",
+            "type": "unknown",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "signal",
+            "type": "AbortSignal",
+            "description": "",
+            "optional": false
+          }
+        ]
       },
       {
         "name": "emit",
@@ -140,6 +271,37 @@
         "signature": "isStreaming()",
         "description": "Returns true if a stream is currently active.",
         "params": []
+      },
+      {
+        "name": "joinStream",
+        "signature": "joinStream(threadId: string, runId: string, lastEventId: string | undefined, signal: AbortSignal)",
+        "description": "Optional: join an already-started run without creating a new one.",
+        "params": [
+          {
+            "name": "threadId",
+            "type": "string",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "runId",
+            "type": "string",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "lastEventId",
+            "type": "string | undefined",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "signal",
+            "type": "AbortSignal",
+            "description": "",
+            "optional": false
+          }
+        ]
       },
       {
         "name": "nextBatch",
@@ -293,10 +455,92 @@
     "examples": []
   },
   {
+    "name": "AgentQueue",
+    "kind": "interface",
+    "description": "Public queue surface for pending server-side LangGraph runs.",
+    "properties": [
+      {
+        "name": "cancel",
+        "type": "object",
+        "description": "Cancel a specific pending run by server run ID.",
+        "optional": false
+      },
+      {
+        "name": "clear",
+        "type": "object",
+        "description": "Cancel all pending runs and clear the queue.",
+        "optional": false
+      },
+      {
+        "name": "entries",
+        "type": "readonly AgentQueueEntry<T>[]",
+        "description": "Read-only pending queue entries.",
+        "optional": false
+      },
+      {
+        "name": "size",
+        "type": "number",
+        "description": "Number of pending queue entries.",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "AgentQueueEntry",
+    "kind": "interface",
+    "description": "A queued server-side LangGraph run.",
+    "properties": [
+      {
+        "name": "createdAt",
+        "type": "Date",
+        "description": "Timestamp when the queued run was registered locally.",
+        "optional": false
+      },
+      {
+        "name": "id",
+        "type": "string",
+        "description": "Server-side run ID.",
+        "optional": false
+      },
+      {
+        "name": "options",
+        "type": "LangGraphSubmitOptions",
+        "description": "Submit options used when the queued run was created.",
+        "optional": true
+      },
+      {
+        "name": "threadId",
+        "type": "string",
+        "description": "Thread that owns the queued run.",
+        "optional": false
+      },
+      {
+        "name": "values",
+        "type": "T | null | undefined",
+        "description": "Values submitted for the queued run.",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
     "name": "AgentTransport",
     "kind": "interface",
     "description": "Transport interface for connecting to a LangGraph agent.",
     "properties": [
+      {
+        "name": "cancelRun",
+        "type": "unknown",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "createQueuedRun",
+        "type": "unknown",
+        "description": "",
+        "optional": true
+      },
       {
         "name": "joinStream",
         "type": "unknown",
@@ -484,6 +728,12 @@
         "optional": false
       },
       {
+        "name": "queue",
+        "type": "Signal<AgentQueue<unknown>>",
+        "description": "Pending server-side runs created via `multitaskStrategy: 'enqueue'`.",
+        "optional": false
+      },
+      {
         "name": "reload",
         "type": "object",
         "description": "Re-submit the last input to restart the stream.",
@@ -548,6 +798,26 @@
         "type": "Signal<T>",
         "description": "Current agent state values (raw, typed per the type parameter T).",
         "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "LangGraphSubmitOptions",
+    "kind": "interface",
+    "description": "Options accepted by LangGraph-backed submit calls.",
+    "properties": [
+      {
+        "name": "multitaskStrategy",
+        "type": "LangGraphMultitaskStrategy",
+        "description": "Strategy for handling concurrent runs on the same thread.",
+        "optional": true
+      },
+      {
+        "name": "signal",
+        "type": "AbortSignal",
+        "description": "",
+        "optional": true
       }
     ],
     "examples": []
@@ -666,6 +936,12 @@
         "optional": false
       },
       {
+        "name": "queue",
+        "type": "WritableSignal<AgentQueue<unknown>>",
+        "description": "Pending server-side runs created via `multitaskStrategy: 'enqueue'`.",
+        "optional": false
+      },
+      {
         "name": "reload",
         "type": "object",
         "description": "Re-submit the last input to restart the stream.",
@@ -759,7 +1035,7 @@
       },
       {
         "name": "type",
-        "type": "\"error\" | \"values\" | `values|${string}` | \"messages\" | `messages|${string}` | `messages/${string}` | `messages/${string}|${string}` | \"updates\" | `updates|${string}` | \"tools\" | `tools|${string}` | \"custom\" | `custom|${string}` | `error|${string}` | \"metadata\" | \"checkpoints\" | `checkpoints|${string}` | \"tasks\" | `tasks|${string}` | \"debug\" | `debug|${string}` | \"events\" | `events|${string}` | \"interrupt\" | \"interrupts\"",
+        "type": "\"error\" | \"interrupt\" | \"values\" | `values|${string}` | \"messages\" | `messages|${string}` | `messages/${string}` | `messages/${string}|${string}` | \"updates\" | `updates|${string}` | \"tools\" | `tools|${string}` | \"custom\" | `custom|${string}` | `error|${string}` | \"metadata\" | \"checkpoints\" | `checkpoints|${string}` | \"tasks\" | `tasks|${string}` | \"debug\" | `debug|${string}` | \"events\" | `events|${string}` | \"interrupts\"",
         "description": "Event type identifier (e.g., 'values', 'messages', 'error', 'interrupt').",
         "optional": false
       }
@@ -988,6 +1264,13 @@
     "kind": "type",
     "description": "Infer the Bag type from an agent, defaulting to the provided Bag.\n\nCurrently returns the provided Bag for all types.\nCan be extended in the future to extract Bag from agent types.",
     "signature": "T extends { ~agentTypes: unknown } ? BagTemplate : B",
+    "examples": []
+  },
+  {
+    "name": "LangGraphMultitaskStrategy",
+    "kind": "type",
+    "description": "Strategy for handling concurrent LangGraph runs on the same thread.",
+    "signature": "\"reject\" | \"interrupt\" | \"rollback\" | \"enqueue\"",
     "examples": []
   },
   {

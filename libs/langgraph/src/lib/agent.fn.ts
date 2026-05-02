@@ -36,6 +36,8 @@ import {
   StreamSubjects,
   SubagentStreamRef,
   ResourceStatus,
+  AgentQueue,
+  LangGraphSubmitOptions,
 } from './agent.types';
 import type { ThreadState, ToolProgress } from '@langchain/langgraph-sdk';
 import type { MessageMetadata } from '@langchain/langgraph-sdk/ui';
@@ -100,6 +102,12 @@ export function agent<
   const toolCalls$       = new BehaviorSubject<ToolCallWithResult[]>([]);
   const messageMetadata$ = new BehaviorSubject<Map<string, MessageMetadata<Record<string, unknown>>>>(new Map());
   const subagents$       = new BehaviorSubject<Map<string, SubagentStreamRef>>(new Map());
+  const queue$           = new BehaviorSubject<AgentQueue>({
+    entries: [],
+    size: 0,
+    cancel: async () => false,
+    clear: async () => undefined,
+  });
   const custom$          = new BehaviorSubject<CustomStreamEvent[]>([]);
   const hasValue$        = new BehaviorSubject<boolean>(false);
 
@@ -118,7 +126,7 @@ export function agent<
   const subjects: StreamSubjects<T, InferBag<T, Bag>> = {
     status$, values$, messages$, error$,
     interrupt$, interrupts$, branch$, history$,
-    isThreadLoading$, toolProgress$, toolCalls$, messageMetadata$, subagents$, custom$,
+    isThreadLoading$, toolProgress$, toolCalls$, messageMetadata$, subagents$, queue$, custom$,
   };
 
   // threadId$ — resolved before bridge creation (injection context required for toObservable)
@@ -165,6 +173,7 @@ export function agent<
   const toolProgSig  = toSignal(toolProgress$,    { initialValue: [] });
   const rawToolCalls = toSignal(toolCalls$,       { initialValue: [] });
   const subagentsSig = toSignal(subagents$,       { initialValue: new Map<string, SubagentStreamRef>() });
+  const queueSig     = toSignal(queue$,           { initialValue: queue$.value });
   const customSig    = toSignal(custom$,           { initialValue: [] as CustomStreamEvent[] });
 
   const isLoading    = computed(() => statusSig() === ResourceStatus.Loading);
@@ -214,8 +223,8 @@ export function agent<
     subagents: subagentsNeutral,
     events$,
     history:   historyNeutral,
-    submit: (input: AgentSubmitInput, opts?: AgentSubmitOptions) => {
-      manager.submit(buildSubmitPayload(input), opts ? { signal: opts.signal } as never : undefined);
+    submit: (input: AgentSubmitInput, opts?: AgentSubmitOptions & LangGraphSubmitOptions) => {
+      manager.submit(buildSubmitPayload(input), opts);
       return Promise.resolve();
     },
     stop: () => manager.stop(),
@@ -231,6 +240,7 @@ export function agent<
     hasValue:        hasValueSig,
     reload:          () => manager.resubmitLast(),
     toolProgress:    toolProgSig,
+    queue:           queueSig,
     activeSubagents,
     customEvents:    customSig,
     branch:          branchSig,

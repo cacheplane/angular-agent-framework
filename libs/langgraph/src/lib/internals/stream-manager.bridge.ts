@@ -8,6 +8,9 @@ import {
   StreamEvent,
   AgentTransport,
   SubagentStreamRef,
+  AgentQueue,
+  AgentQueueEntry,
+  LangGraphSubmitOptions,
 } from '../agent.types';
 import { FetchStreamTransport } from '../transport/fetch-stream.transport';
 import { BagTemplate } from '@langchain/langgraph-sdk';
@@ -29,7 +32,7 @@ export interface StreamManagerBridgeOptions<T, ResolvedBag extends BagTemplate =
 }
 
 export interface StreamManagerBridge {
-  submit:       (values: unknown, opts?: unknown) => Promise<void>;
+  submit:       (values: unknown, opts?: LangGraphSubmitOptions) => Promise<void>;
   stop:         () => Promise<void>;
   switchThread: (id: string | null) => void;
   joinStream:   (runId: string, lastEventId?: string) => Promise<void>;
@@ -55,6 +58,8 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
   let abortController: AbortController | null = null;
   let hasSeenThreadId = false;
   const toolProgressMap = new Map<string, ToolProgress>();
+  const queuedRuns: AgentQueueEntry[] = [];
+  let drainingQueue = false;
   const subagentManager = new SubagentTracker({
     subagentToolNames: options.subagentToolNames,
     onSubagentChange: publishSubagents,
@@ -70,6 +75,8 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
     subjects.toolCalls$.next([]);
     subjects.messageMetadata$.next(new Map());
     subjects.subagents$.next(new Map());
+    void cancelQueueEntries(takeQueuedRuns()).catch(err => subjects.error$.next(err));
+    publishQueue();
     subjects.custom$.next([]);
     subjects.isThreadLoading$.next(false);
     toolProgressMap.clear();
@@ -92,6 +99,111 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
     hasSeenThreadId = true;
     setThreadId(id, shouldReset);
   });
+
+  function publishQueue(): void {
+    subjects.queue$.next(createQueueSnapshot());
+  }
+
+  function createQueueSnapshot(): AgentQueue {
+    return {
+      entries: [...queuedRuns],
+      size: queuedRuns.length,
+      cancel: cancelQueuedRun,
+      clear: clearQueue,
+    };
+  }
+
+  async function enqueueRun(payload: unknown, opts?: LangGraphSubmitOptions): Promise<void> {
+    if (!currentThreadId) {
+      throw new Error('Cannot enqueue a run before a LangGraph thread exists.');
+    }
+    if (!transport.createQueuedRun) {
+      throw new Error('The configured LangGraph transport does not support server-side queueing.');
+    }
+
+    const controller = new AbortController();
+    const entry = await transport.createQueuedRun(
+      options.assistantId,
+      currentThreadId,
+      payload,
+      opts?.signal ?? controller.signal,
+    );
+    queuedRuns.push({
+      ...entry,
+      values: payload,
+      options: { ...opts, multitaskStrategy: 'enqueue' },
+      createdAt: entry.createdAt ?? new Date(),
+    });
+    publishQueue();
+  }
+
+  async function cancelQueuedRun(id: string): Promise<boolean> {
+    const index = queuedRuns.findIndex(entry => entry.id === id);
+    if (index === -1) return false;
+
+    const [entry] = queuedRuns.splice(index, 1);
+    publishQueue();
+    if (!entry || !transport.cancelRun) return false;
+    await cancelQueueEntries([entry]);
+    return true;
+  }
+
+  async function clearQueue(): Promise<void> {
+    const entries = takeQueuedRuns();
+    publishQueue();
+    await cancelQueueEntries(entries);
+  }
+
+  function takeQueuedRuns(): AgentQueueEntry[] {
+    return queuedRuns.splice(0, queuedRuns.length);
+  }
+
+  async function cancelQueueEntries(entries: AgentQueueEntry[]): Promise<void> {
+    const cancelRun = transport.cancelRun?.bind(transport);
+    if (!cancelRun) return;
+    await Promise.all(entries.map(entry =>
+      cancelRun(entry.threadId, entry.id, new AbortController().signal)
+    ));
+  }
+
+  async function drainQueue(): Promise<void> {
+    if (drainingQueue || queuedRuns.length === 0) return;
+    drainingQueue = true;
+    try {
+      while (queuedRuns.length > 0) {
+        const entry = queuedRuns.shift();
+        publishQueue();
+        if (!entry || !transport.joinStream) continue;
+        await joinQueuedRun(entry);
+      }
+    } finally {
+      drainingQueue = false;
+    }
+  }
+
+  async function joinQueuedRun(entry: AgentQueueEntry): Promise<void> {
+    abortController = new AbortController();
+    subjects.custom$.next([]);
+    subjects.toolProgress$.next([]);
+    toolProgressMap.clear();
+    subjects.status$.next(ResourceStatus.Loading);
+
+    try {
+      const iter = transport.joinStream
+        ? transport.joinStream(entry.threadId, entry.id, undefined, abortController.signal)
+        : [];
+      for await (const event of iter) {
+        if (abortController.signal.aborted) break;
+        processEvent(event);
+      }
+      if (!abortController.signal.aborted) {
+        subjects.status$.next(ResourceStatus.Resolved);
+      }
+    } catch (err) {
+      subjects.error$.next(err);
+      subjects.status$.next(ResourceStatus.Error);
+    }
+  }
 
   async function runStream(payload: unknown): Promise<void> {
     abortController?.abort();
@@ -127,6 +239,7 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
 
       if (!abortController.signal.aborted) {
         subjects.status$.next(ResourceStatus.Resolved);
+        await drainQueue();
       }
     } catch (err) {
       if ((err as Error)?.name === 'AbortError') {
@@ -373,10 +486,17 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
   }
 
   return {
-    submit: (payload) => runStream(payload),
+    submit: async (payload, opts) => {
+      if (opts?.multitaskStrategy === 'enqueue' && subjects.status$.value === ResourceStatus.Loading) {
+        await enqueueRun(payload, opts);
+        return;
+      }
+      await runStream(payload);
+    },
 
     stop: async () => {
       abortController?.abort();
+      await clearQueue();
       subjects.status$.next(ResourceStatus.Resolved);
     },
 

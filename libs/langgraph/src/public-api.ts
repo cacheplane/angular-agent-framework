@@ -9,7 +9,11 @@ export type { AgentConfig } from './lib/agent.provider';
 // Public types
 export type {
   AgentOptions,
+  AgentQueue,
+  AgentQueueEntry,
   LangGraphAgent,
+  LangGraphMultitaskStrategy,
+  LangGraphSubmitOptions,
   AgentTransport,
   CustomStreamEvent,
   StreamEvent,

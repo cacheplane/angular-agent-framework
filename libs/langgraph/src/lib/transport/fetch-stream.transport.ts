@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 import { Client } from '@langchain/langgraph-sdk';
 import type { StreamMode } from '@langchain/langgraph-sdk';
-import { AgentTransport, StreamEvent } from '../agent.types';
+import { AgentQueueEntry, AgentTransport, StreamEvent } from '../agent.types';
 
 /**
  * Production transport that connects to a LangGraph Platform API via HTTP and SSE.
@@ -83,6 +83,36 @@ export class FetchStreamTransport implements AgentTransport {
     for await (const event of run) {
       yield normalizeSdkEvent(event.event as StreamEvent['type'], event.data);
     }
+  }
+
+  /** Create a pending server-side run using LangGraph's enqueue strategy. */
+  async createQueuedRun(
+    assistantId: string,
+    threadId: string,
+    payload: unknown,
+    signal: AbortSignal,
+  ): Promise<AgentQueueEntry> {
+    const streamMode = ['values', 'messages-tuple', 'updates', 'tools', 'custom'] satisfies StreamMode[];
+    const run = await this.client.runs.create(threadId, assistantId, {
+      input: payload as Record<string, unknown>,
+      streamMode: streamMode as unknown as 'values',
+      streamSubgraphs: true,
+      multitaskStrategy: 'enqueue',
+      signal,
+    });
+
+    return {
+      id: run.run_id,
+      threadId: run.thread_id ?? threadId,
+      values: payload,
+      options: { multitaskStrategy: 'enqueue', signal },
+      createdAt: run.created_at ? new Date(run.created_at) : new Date(),
+    };
+  }
+
+  /** Cancel a server-side run. */
+  async cancelRun(threadId: string, runId: string, signal: AbortSignal): Promise<void> {
+    await this.client.runs.cancel(threadId, runId, false, 'interrupt', { signal });
   }
 }
 

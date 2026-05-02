@@ -73,6 +73,42 @@ export interface StreamEvent {
   [key: string]: unknown;
 }
 
+/** Strategy for handling concurrent LangGraph runs on the same thread. */
+export type LangGraphMultitaskStrategy = 'reject' | 'interrupt' | 'rollback' | 'enqueue';
+
+/** Options accepted by LangGraph-backed submit calls. */
+export interface LangGraphSubmitOptions {
+  signal?: AbortSignal;
+  /** Strategy for handling concurrent runs on the same thread. */
+  multitaskStrategy?: LangGraphMultitaskStrategy;
+}
+
+/** A queued server-side LangGraph run. */
+export interface AgentQueueEntry<T = unknown> {
+  /** Server-side run ID. */
+  id: string;
+  /** Thread that owns the queued run. */
+  threadId: string;
+  /** Values submitted for the queued run. */
+  values: T | null | undefined;
+  /** Submit options used when the queued run was created. */
+  options?: LangGraphSubmitOptions;
+  /** Timestamp when the queued run was registered locally. */
+  createdAt: Date;
+}
+
+/** Public queue surface for pending server-side LangGraph runs. */
+export interface AgentQueue<T = unknown> {
+  /** Read-only pending queue entries. */
+  readonly entries: ReadonlyArray<AgentQueueEntry<T>>;
+  /** Number of pending queue entries. */
+  readonly size: number;
+  /** Cancel a specific pending run by server run ID. */
+  cancel: (id: string) => Promise<boolean>;
+  /** Cancel all pending runs and clear the queue. */
+  clear: () => Promise<void>;
+}
+
 /** A custom event emitted by the LangGraph backend via adispatch_custom_event(). */
 export interface CustomStreamEvent {
   /** Event name set by the backend (e.g., 'state_update'). */
@@ -98,6 +134,21 @@ export interface AgentTransport {
     lastEventId: string | undefined,
     signal: AbortSignal,
   ): AsyncIterable<StreamEvent>;
+
+  /** Optional: create a server-side queued run without joining it immediately. */
+  createQueuedRun?(
+    assistantId: string,
+    threadId: string,
+    payload: unknown,
+    signal: AbortSignal,
+  ): Promise<AgentQueueEntry>;
+
+  /** Optional: cancel a server-side run. */
+  cancelRun?(
+    threadId: string,
+    runId: string,
+    signal: AbortSignal,
+  ): Promise<void>;
 }
 
 // ── Options ──────────────────────────────────────────────────────────────────
@@ -184,6 +235,9 @@ export interface LangGraphAgent<T = unknown, ResolvedBag extends BagTemplate = B
   /** Progress updates for currently executing tools. */
   toolProgress: Signal<ToolProgress[]>;
 
+  /** Pending server-side runs created via `multitaskStrategy: 'enqueue'`. */
+  queue: Signal<AgentQueue>;
+
   /** Filtered list of subagents with status 'running'. */
   activeSubagents: Signal<SubagentStreamRef[]>;
 
@@ -230,5 +284,6 @@ export interface StreamSubjects<T, ResolvedBag extends BagTemplate = BagTemplate
   toolCalls$:       BehaviorSubject<ToolCallWithResult[]>;
   messageMetadata$: BehaviorSubject<Map<string, MessageMetadata<Record<string, unknown>>>>;
   subagents$:       BehaviorSubject<Map<string, SubagentStreamRef>>;
+  queue$:           BehaviorSubject<AgentQueue>;
   custom$:          BehaviorSubject<CustomStreamEvent[]>;
 }

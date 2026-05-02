@@ -4,6 +4,7 @@ import { Subject } from 'rxjs';
 import type {
   LangGraphAgent,
   SubagentStreamRef,
+  AgentQueue,
   Interrupt,
   ThreadState,
   CustomStreamEvent,
@@ -41,6 +42,7 @@ export interface MockLangGraphAgent extends LangGraphAgent<any, any> {
   toolCalls: WritableSignal<ToolCall[]>;
   langGraphToolCalls: WritableSignal<ToolCallWithResult[]>;
   toolProgress: WritableSignal<ToolProgress[]>;
+  queue: WritableSignal<AgentQueue>;
   branch: WritableSignal<string>;
   history: WritableSignal<AgentCheckpoint[]>;
   langGraphHistory: WritableSignal<ThreadState<any>[]>;
@@ -77,6 +79,12 @@ export function mockLangGraphAgent(
   const toolCalls$ = signal<ToolCall[]>([]);
   const langGraphToolCalls$ = signal<ToolCallWithResult[]>([]);
   const toolProgress$ = signal<ToolProgress[]>([]);
+  const queue$ = signal<AgentQueue>({
+    entries: [],
+    size: 0,
+    cancel: async () => false,
+    clear: async () => undefined,
+  });
   const branch$ = signal<string>('');
   const history$ = signal<AgentCheckpoint[]>([]);
   const langGraphHistory$ = signal<ThreadState<any>[]>([]);
@@ -119,6 +127,7 @@ export function mockLangGraphAgent(
     // eslint-disable-next-line @typescript-eslint/no-empty-function
     reload: () => {},
     toolProgress: toolProgress$,
+    queue: queue$,
     activeSubagents: activeSubagents$,
     customEvents: customEvents$,
     branch: branch$,

@@ -48,6 +48,24 @@ describe('agent', () => {
     expect(ref.isLoading()).toBe(true);
   });
 
+  it('queue() exposes server-side enqueue submissions', async () => {
+    const transport = new MockAgentTransport();
+    const ref = withInjectionContext(() =>
+      agent({ apiUrl: '', assistantId: 'a', transport, threadId: 'thread-1' })
+    );
+
+    ref.submit({ message: 'active' });
+    await ref.submit({ message: 'queued' }, { multitaskStrategy: 'enqueue' });
+
+    expect(ref.queue().size).toBe(1);
+    expect(ref.queue().entries[0]).toMatchObject({
+      values: { messages: [{ role: 'human', content: 'queued' }] },
+    });
+
+    await ref.queue().clear();
+    expect(ref.queue().size).toBe(0);
+  });
+
   it('hasValue becomes true after values event', async () => {
     const transport = new MockAgentTransport();
     const ref = withInjectionContext(() =>

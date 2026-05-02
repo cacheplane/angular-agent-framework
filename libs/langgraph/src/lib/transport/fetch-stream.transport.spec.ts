@@ -4,6 +4,8 @@ import { FetchStreamTransport } from './fetch-stream.transport';
 const mocks = vi.hoisted(() => ({
   threadsCreate: vi.fn(),
   runsStream: vi.fn(),
+  runsCreate: vi.fn(),
+  runsCancel: vi.fn(),
   runsJoinStream: vi.fn(),
   clientCtor: vi.fn(function (_config: { apiUrl: string }) {
     return {
@@ -12,6 +14,8 @@ const mocks = vi.hoisted(() => ({
       },
       runs: {
         stream: mocks.runsStream,
+        create: mocks.runsCreate,
+        cancel: mocks.runsCancel,
         joinStream: mocks.runsJoinStream,
       },
     };
@@ -34,6 +38,8 @@ describe('FetchStreamTransport', () => {
   beforeEach(() => {
     mocks.threadsCreate.mockReset();
     mocks.runsStream.mockReset();
+    mocks.runsCreate.mockReset();
+    mocks.runsCancel.mockReset();
     mocks.runsJoinStream.mockReset();
     mocks.clientCtor.mockClear();
   });
@@ -198,5 +204,51 @@ describe('FetchStreamTransport', () => {
     expect(events).toEqual([
       { type: 'values', status: 'resumed', data: { status: 'resumed' } },
     ]);
+  });
+
+  it('creates a server-side queued run with enqueue multitask strategy', async () => {
+    mocks.runsCreate.mockResolvedValue({
+      run_id: 'run-queued',
+      thread_id: 'thread-1',
+      created_at: '2026-05-02T00:00:00.000Z',
+    });
+
+    const transport = new FetchStreamTransport('http://example.test');
+    const entry = await transport.createQueuedRun(
+      'assistant-1',
+      'thread-1',
+      { messages: [{ type: 'human', content: 'queued' }] },
+      new AbortController().signal,
+    );
+
+    expect(mocks.runsCreate).toHaveBeenCalledWith(
+      'thread-1',
+      'assistant-1',
+      expect.objectContaining({
+        input: { messages: [{ type: 'human', content: 'queued' }] },
+        multitaskStrategy: 'enqueue',
+        streamSubgraphs: true,
+      }),
+    );
+    expect(entry).toMatchObject({
+      id: 'run-queued',
+      threadId: 'thread-1',
+      values: { messages: [{ type: 'human', content: 'queued' }] },
+    });
+    expect(entry.createdAt).toBeInstanceOf(Date);
+  });
+
+  it('cancels a queued run by thread and run id', async () => {
+    const transport = new FetchStreamTransport('http://example.test');
+
+    await transport.cancelRun('thread-1', 'run-queued', new AbortController().signal);
+
+    expect(mocks.runsCancel).toHaveBeenCalledWith(
+      'thread-1',
+      'run-queued',
+      false,
+      'interrupt',
+      expect.objectContaining({ signal: expect.any(AbortSignal) }),
+    );
   });
 });

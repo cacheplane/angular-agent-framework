@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-import { AgentTransport, StreamEvent } from '../agent.types';
+import { AgentQueueEntry, AgentTransport, StreamEvent } from '../agent.types';
 
 /**
  * Test transport for deterministic agent testing without a real LangGraph server.
@@ -16,6 +16,9 @@ import { AgentTransport, StreamEvent } from '../agent.types';
  * ```
  */
 export class MockAgentTransport implements AgentTransport {
+  readonly createdQueuedRuns: AgentQueueEntry[] = [];
+  readonly cancelledRuns: Array<{ threadId: string; runId: string }> = [];
+  readonly joinedRuns: Array<{ threadId: string; runId: string }> = [];
   private script: StreamEvent[][];
   private scriptIndex = 0;
   private streaming = false;
@@ -70,7 +73,8 @@ export class MockAgentTransport implements AgentTransport {
       while (!this.closed && !signal.aborted) {
         if (this.pendingError) throw this.pendingError;
         if (this.eventQueue.length > 0) {
-          yield this.eventQueue.shift()!;
+          const event = this.eventQueue.shift();
+          if (event) yield event;
         } else {
           // Wait until flush() wakes us, then loop again to check state.
           await new Promise<void>((resolve) => {
@@ -81,10 +85,48 @@ export class MockAgentTransport implements AgentTransport {
       }
       if (signal.aborted) return;
       // Drain remaining events after close()
-      while (this.eventQueue.length > 0) yield this.eventQueue.shift()!;
+      while (this.eventQueue.length > 0) {
+        const event = this.eventQueue.shift();
+        if (event) yield event;
+      }
     } finally {
       this.streaming = false;
     }
+  }
+
+  async createQueuedRun(
+    _assistantId: string,
+    threadId: string,
+    payload: unknown,
+    signal: AbortSignal,
+  ): Promise<AgentQueueEntry> {
+    void signal;
+    const entry: AgentQueueEntry = {
+      id: `queued-run-${this.createdQueuedRuns.length + 1}`,
+      threadId,
+      values: payload,
+      options: { multitaskStrategy: 'enqueue' },
+      createdAt: new Date(),
+    };
+    this.createdQueuedRuns.push(entry);
+    return entry;
+  }
+
+  async cancelRun(threadId: string, runId: string, signal: AbortSignal): Promise<void> {
+    void signal;
+    this.cancelledRuns.push({ threadId, runId });
+  }
+
+  async *joinStream(
+    threadId: string,
+    runId: string,
+    lastEventId: string | undefined,
+    signal: AbortSignal,
+  ): AsyncIterable<StreamEvent> {
+    void lastEventId;
+    void signal;
+    this.joinedRuns.push({ threadId, runId });
+    yield { type: 'values', values: { queued: true } };
   }
 
   private flush(): void {

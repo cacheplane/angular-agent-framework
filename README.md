@@ -94,6 +94,7 @@ That's it. `chat.messages()` is an Angular Signal. Bind it directly in your temp
 | Tool call progress | `toolProgress()` | `toolProgress` |
 | Tool calls with results | `toolCalls()` | `toolCalls` |
 | Branch / history | `branch()` / `history()` | `branch` / `history` |
+| Pending run queue | `queue()` | `queue` |
 | Subagent streaming | `subagents()` / `activeSubagents()` | `subagents` / `activeSubagents` |
 | Reactive thread switching | `Signal<string \| null>` input | prop |
 | Submit | `submit(values, opts?)` | `submit(values, opts?)` |
@@ -116,7 +117,7 @@ That's it. `chat.messages()` is an Angular Signal. Bind it directly in your temp
   />
 </p>
 
-`agent()` creates 12 `BehaviorSubject`s at injection-context time — once, at component construction. The `StreamManager` bridge (the only file that touches `@langchain/langgraph-sdk` internals) pushes stream events into those subjects. `toSignal()` converts each subject to an Angular Signal, also at construction time. Dynamic actions (`submit`, `stop`, `switchThread`) push into the existing subjects — no new subjects are ever created after construction. This architecture is required because `toSignal()` must be called in an injection context and cannot be called again later.
+`agent()` creates its internal `BehaviorSubject`s at injection-context time — once, at component construction. The `StreamManager` bridge (the only file that touches `@langchain/langgraph-sdk` internals) pushes stream events into those subjects. `toSignal()` converts each subject to an Angular Signal, also at construction time. Dynamic actions (`submit`, `stop`, `switchThread`) push into the existing subjects — no new subjects are ever created after construction. This architecture is required because `toSignal()` must be called in an injection context and cannot be called again later.
 
 ---
 
