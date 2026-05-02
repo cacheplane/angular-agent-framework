@@ -69,7 +69,7 @@ describe('FetchStreamTransport', () => {
     ]);
   });
 
-  it('requests the stream modes required for values, messages, tools, and custom events', async () => {
+  it('requests the stream modes required for values, messages, and custom events', async () => {
     mocks.runsStream.mockReturnValue((async function* () {
       yield { event: 'metadata', data: { run_id: 'run-1', thread_id: 'thread-1' } };
     })());
@@ -87,7 +87,6 @@ describe('FetchStreamTransport', () => {
           'values',
           'messages-tuple',
           'updates',
-          'tools',
           'custom',
         ]),
       }),
