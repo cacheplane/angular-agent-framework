@@ -79,6 +79,25 @@
         ]
       },
       {
+        "name": "getHistory",
+        "signature": "getHistory(threadId: string, signal: AbortSignal)",
+        "description": "Load persisted checkpoint history for a thread.",
+        "params": [
+          {
+            "name": "threadId",
+            "type": "string",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "signal",
+            "type": "AbortSignal",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
         "name": "joinStream",
         "signature": "joinStream(threadId: string, runId: string, lastEventId: string | undefined, signal: AbortSignal)",
         "description": "Join an already-started run without creating a new thread.",
@@ -167,6 +186,18 @@
       {
         "name": "createdQueuedRuns",
         "type": "AgentQueueEntry<unknown>[]",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "history",
+        "type": "ThreadState<DefaultValues>[]",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "historyCalls",
+        "type": "string[]",
         "description": "",
         "optional": false
       },
@@ -267,6 +298,25 @@
         ]
       },
       {
+        "name": "getHistory",
+        "signature": "getHistory(threadId: string, signal: AbortSignal)",
+        "description": "Optional: load persisted checkpoint history for a thread.",
+        "params": [
+          {
+            "name": "threadId",
+            "type": "string",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "signal",
+            "type": "AbortSignal",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
         "name": "isStreaming",
         "signature": "isStreaming()",
         "description": "Returns true if a stream is currently active.",
@@ -341,6 +391,72 @@
         ]
       }
     ]
+  },
+  {
+    "name": "AgentBranchTree",
+    "kind": "interface",
+    "description": "Tree representation of LangGraph checkpoint history for time-travel UIs.",
+    "properties": [
+      {
+        "name": "items",
+        "type": "AgentBranchTreeNode<T> | AgentBranchTreeFork<T>[]",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "type",
+        "type": "\"sequence\"",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "AgentBranchTreeFork",
+    "kind": "interface",
+    "description": "A branch fork where each item is an alternate checkpoint sequence.",
+    "properties": [
+      {
+        "name": "items",
+        "type": "AgentBranchTree<T>[]",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "type",
+        "type": "\"fork\"",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "AgentBranchTreeNode",
+    "kind": "interface",
+    "description": "A checkpoint entry in the experimental branch tree.",
+    "properties": [
+      {
+        "name": "path",
+        "type": "string[]",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "type",
+        "type": "\"node\"",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "value",
+        "type": "ThreadState<T>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "examples": []
   },
   {
     "name": "AgentConfig",
@@ -542,6 +658,12 @@
         "optional": true
       },
       {
+        "name": "getHistory",
+        "type": "unknown",
+        "description": "",
+        "optional": true
+      },
+      {
         "name": "joinStream",
         "type": "unknown",
         "description": "",
@@ -647,6 +769,12 @@
         "name": "events$",
         "type": "Observable<AgentEvent>",
         "description": "",
+        "optional": false
+      },
+      {
+        "name": "experimentalBranchTree",
+        "type": "Signal<AgentBranchTree<T>>",
+        "description": "Experimental branch tree derived from LangGraph checkpoint history.",
         "optional": false
       },
       {
@@ -873,6 +1001,12 @@
         "name": "events$",
         "type": "Observable<AgentEvent>",
         "description": "",
+        "optional": false
+      },
+      {
+        "name": "experimentalBranchTree",
+        "type": "WritableSignal<AgentBranchTree<any>>",
+        "description": "Experimental branch tree derived from LangGraph checkpoint history.",
         "optional": false
       },
       {

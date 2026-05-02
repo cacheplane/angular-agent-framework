@@ -51,17 +51,3 @@ equivalent. `agent()` is called once. No behavioral impact.
 from ported test patterns.
 
 ---
-
-## 4. `experimental_branchTree`
-
-**React behavior:** `useStream()` exposes `experimental_branchTree` — a
-`Sequence<StateType>` for visualizing the full branch tree of a thread.
-
-**Angular behavior:** This feature is marked experimental in the React
-SDK and depends on internal tree-diffing utilities not exported from
-`@langchain/langgraph-sdk/ui`. It is not implemented in v1.
-
-**Workaround:** Use `branch` (Signal<string>) and `history`
-(Signal<ThreadState[]>) to reconstruct branch relationships manually.
-
----

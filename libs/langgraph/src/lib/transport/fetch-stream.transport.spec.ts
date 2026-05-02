@@ -3,6 +3,7 @@ import { FetchStreamTransport } from './fetch-stream.transport';
 
 const mocks = vi.hoisted(() => ({
   threadsCreate: vi.fn(),
+  threadsGetHistory: vi.fn(),
   runsStream: vi.fn(),
   runsCreate: vi.fn(),
   runsCancel: vi.fn(),
@@ -11,6 +12,7 @@ const mocks = vi.hoisted(() => ({
     return {
       threads: {
         create: mocks.threadsCreate,
+        getHistory: mocks.threadsGetHistory,
       },
       runs: {
         stream: mocks.runsStream,
@@ -37,6 +39,7 @@ async function collect<T>(iter: AsyncIterable<T>): Promise<T[]> {
 describe('FetchStreamTransport', () => {
   beforeEach(() => {
     mocks.threadsCreate.mockReset();
+    mocks.threadsGetHistory.mockReset();
     mocks.runsStream.mockReset();
     mocks.runsCreate.mockReset();
     mocks.runsCancel.mockReset();
@@ -250,5 +253,32 @@ describe('FetchStreamTransport', () => {
       'interrupt',
       expect.objectContaining({ signal: expect.any(AbortSignal) }),
     );
+  });
+
+  it('loads thread history through the LangGraph SDK client', async () => {
+    const history = [
+      {
+        values: { messages: [] },
+        next: [],
+        checkpoint: {
+          thread_id: 'thread-1',
+          checkpoint_ns: '',
+          checkpoint_id: 'checkpoint-1',
+          checkpoint_map: null,
+        },
+        metadata: null,
+        created_at: '2026-05-02T00:00:00.000Z',
+        parent_checkpoint: null,
+        tasks: [],
+      },
+    ];
+    mocks.threadsGetHistory.mockResolvedValue(history);
+    const signal = new AbortController().signal;
+
+    const transport = new FetchStreamTransport('http://example.test');
+    const result = await transport.getHistory('thread-1', signal);
+
+    expect(mocks.threadsGetHistory).toHaveBeenCalledWith('thread-1', { signal });
+    expect(result).toBe(history);
   });
 });

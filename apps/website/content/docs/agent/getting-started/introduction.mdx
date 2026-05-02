@@ -20,7 +20,8 @@ chat.messages()     // Signal<BaseMessage[]>
 chat.status()       // Signal<'idle' | 'loading' | 'resolved' | 'error'>
 chat.error()        // Signal<Error | null>
 chat.interrupt()    // Signal<Interrupt | undefined>
-chat.history()      // Signal<ThreadState[]>
+chat.history()      // Signal<AgentCheckpoint[]>
+chat.langGraphHistory() // Signal<ThreadState[]>
 ```
 
 No RxJS. No manual subscriptions. No async pipes. Just Signals that work with Angular's `OnPush` change detection out of the box.

@@ -8,6 +8,7 @@ import type {
   Interrupt,
   ThreadState,
   CustomStreamEvent,
+  AgentBranchTree,
 } from '../agent.types';
 import type { ToolProgress, ToolCallWithResult } from '@langchain/langgraph-sdk';
 import type { BaseMessage, AIMessage as CoreAIMessage } from '@langchain/core/messages';
@@ -46,6 +47,7 @@ export interface MockLangGraphAgent extends LangGraphAgent<any, any> {
   branch: WritableSignal<string>;
   history: WritableSignal<AgentCheckpoint[]>;
   langGraphHistory: WritableSignal<ThreadState<any>[]>;
+  experimentalBranchTree: WritableSignal<AgentBranchTree<any>>;
   isThreadLoading: WritableSignal<boolean>;
   subagents: WritableSignal<Map<string, Subagent>>;
   activeSubagents: WritableSignal<SubagentStreamRef[]>;
@@ -88,6 +90,7 @@ export function mockLangGraphAgent(
   const branch$ = signal<string>('');
   const history$ = signal<AgentCheckpoint[]>([]);
   const langGraphHistory$ = signal<ThreadState<any>[]>([]);
+  const experimentalBranchTree$ = signal<AgentBranchTree<any>>({ type: 'sequence', items: [] });
   const isThreadLoading$ = signal<boolean>(initial.isThreadLoading ?? false);
   const subagents$ = signal<Map<string, Subagent>>(new Map());
   const activeSubagents$ = signal<SubagentStreamRef[]>([]);
@@ -120,6 +123,7 @@ export function mockLangGraphAgent(
     langGraphInterrupts: langGraphInterrupts$,
     langGraphToolCalls: langGraphToolCalls$,
     langGraphHistory: langGraphHistory$,
+    experimentalBranchTree: experimentalBranchTree$,
 
     // ── Other AgentRef fields preserved ──────────────────────────────────
     value: value$,

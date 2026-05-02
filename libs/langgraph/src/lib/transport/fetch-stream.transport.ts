@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 import { Client } from '@langchain/langgraph-sdk';
-import type { StreamMode } from '@langchain/langgraph-sdk';
+import type { StreamMode, ThreadState } from '@langchain/langgraph-sdk';
 import { AgentQueueEntry, AgentTransport, StreamEvent } from '../agent.types';
 
 /**
@@ -113,6 +113,11 @@ export class FetchStreamTransport implements AgentTransport {
   /** Cancel a server-side run. */
   async cancelRun(threadId: string, runId: string, signal: AbortSignal): Promise<void> {
     await this.client.runs.cancel(threadId, runId, false, 'interrupt', { signal });
+  }
+
+  /** Load persisted checkpoint history for a thread. */
+  async getHistory(threadId: string, signal: AbortSignal): Promise<ThreadState[]> {
+    return this.client.threads.getHistory(threadId, { signal });
   }
 }
 

@@ -3,6 +3,7 @@ import { BehaviorSubject, Subject } from 'rxjs';
 import { createStreamManagerBridge } from './stream-manager.bridge';
 import { MockAgentTransport } from '../transport/mock-stream.transport';
 import { ResourceStatus, AgentTransport, StreamSubjects, CustomStreamEvent, StreamEvent } from '../agent.types';
+import type { ThreadState } from '@langchain/langgraph-sdk';
 import { of } from 'rxjs';
 
 function makeSubjects(): StreamSubjects<Record<string, unknown>> {
@@ -27,6 +28,33 @@ function makeSubjects(): StreamSubjects<Record<string, unknown>> {
       clear: async () => undefined,
     }),
     custom$:          new BehaviorSubject<CustomStreamEvent[]>([]),
+  };
+}
+
+function makeThreadState(
+  checkpointId: string,
+  parentCheckpointId: string | null = null,
+): ThreadState<Record<string, unknown>> {
+  return {
+    values: { checkpointId },
+    next: [],
+    checkpoint: {
+      thread_id: 'thread-1',
+      checkpoint_ns: '',
+      checkpoint_id: checkpointId,
+      checkpoint_map: null,
+    },
+    metadata: null,
+    created_at: `2026-05-02T00:00:0${checkpointId.length}.000Z`,
+    parent_checkpoint: parentCheckpointId
+      ? {
+          thread_id: 'thread-1',
+          checkpoint_ns: '',
+          checkpoint_id: parentCheckpointId,
+          checkpoint_map: null,
+        }
+      : null,
+    tasks: [],
   };
 }
 
@@ -58,6 +86,73 @@ describe('createStreamManagerBridge', () => {
     });
     bridge.submit({ messages: [] });
     expect(subjects.status$.value).toBe(ResourceStatus.Loading);
+    destroy$.next();
+  });
+
+  it('loads history when initialized with a thread id', async () => {
+    const history = [makeThreadState('checkpoint-1')];
+    const historyCalls: string[] = [];
+    const transport: AgentTransport & {
+      getHistory: (threadId: string, signal: AbortSignal) => Promise<ThreadState<Record<string, unknown>>[]>;
+    } = {
+      async *stream() {
+        yield* [];
+      },
+      async getHistory(threadId, signal) {
+        expect(signal.aborted).toBe(false);
+        historyCalls.push(threadId);
+        return history;
+      },
+    };
+    const subjects = makeSubjects();
+    const destroy$ = new Subject<void>();
+
+    createStreamManagerBridge({
+      options: { apiUrl: '', assistantId: 'test', transport },
+      subjects,
+      threadId$: of('thread-1'),
+      destroy$: destroy$.asObservable(),
+    });
+    await new Promise(r => setTimeout(r, 10));
+
+    expect(historyCalls).toEqual(['thread-1']);
+    expect(subjects.history$.value).toBe(history);
+    expect(subjects.isThreadLoading$.value).toBe(false);
+    destroy$.next();
+  });
+
+  it('refreshes history after a stream completes', async () => {
+    const firstHistory = [makeThreadState('checkpoint-1')];
+    const secondHistory = [
+      makeThreadState('checkpoint-1'),
+      makeThreadState('checkpoint-2', 'checkpoint-1'),
+    ];
+    let historyCalls = 0;
+    const transport: AgentTransport & {
+      getHistory: (threadId: string, signal: AbortSignal) => Promise<ThreadState<Record<string, unknown>>[]>;
+    } = {
+      async *stream() {
+        yield { type: 'values', values: { answer: 42 } };
+      },
+      async getHistory() {
+        historyCalls += 1;
+        return historyCalls === 1 ? firstHistory : secondHistory;
+      },
+    };
+    const subjects = makeSubjects();
+    const destroy$ = new Subject<void>();
+    const bridge = createStreamManagerBridge({
+      options: { apiUrl: '', assistantId: 'test', transport },
+      subjects,
+      threadId$: of('thread-1'),
+      destroy$: destroy$.asObservable(),
+    });
+    await new Promise(r => setTimeout(r, 10));
+
+    await bridge.submit({ messages: [] });
+
+    expect(historyCalls).toBe(2);
+    expect(subjects.history$.value).toBe(secondHistory);
     destroy$.next();
   });
 

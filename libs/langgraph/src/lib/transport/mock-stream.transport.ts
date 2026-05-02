@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 import { AgentQueueEntry, AgentTransport, StreamEvent } from '../agent.types';
+import type { ThreadState } from '@langchain/langgraph-sdk';
 
 /**
  * Test transport for deterministic agent testing without a real LangGraph server.
@@ -16,6 +17,8 @@ import { AgentQueueEntry, AgentTransport, StreamEvent } from '../agent.types';
  * ```
  */
 export class MockAgentTransport implements AgentTransport {
+  history: ThreadState[] = [];
+  readonly historyCalls: string[] = [];
   readonly createdQueuedRuns: AgentQueueEntry[] = [];
   readonly cancelledRuns: Array<{ threadId: string; runId: string }> = [];
   readonly joinedRuns: Array<{ threadId: string; runId: string }> = [];
@@ -115,6 +118,12 @@ export class MockAgentTransport implements AgentTransport {
   async cancelRun(threadId: string, runId: string, signal: AbortSignal): Promise<void> {
     void signal;
     this.cancelledRuns.push({ threadId, runId });
+  }
+
+  async getHistory(threadId: string, signal: AbortSignal): Promise<ThreadState[]> {
+    void signal;
+    this.historyCalls.push(threadId);
+    return this.history;
   }
 
   async *joinStream(

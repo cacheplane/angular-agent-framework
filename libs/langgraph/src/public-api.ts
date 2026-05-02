@@ -9,6 +9,9 @@ export type { AgentConfig } from './lib/agent.provider';
 // Public types
 export type {
   AgentOptions,
+  AgentBranchTree,
+  AgentBranchTreeFork,
+  AgentBranchTreeNode,
   AgentQueue,
   AgentQueueEntry,
   LangGraphAgent,

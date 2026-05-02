@@ -74,6 +74,7 @@ export class HistoryViewerComponent {
   readonly agent = this.agentService.agent;
 
   readonly checkpoints = computed(() => this.agent.history());
+  readonly rawCheckpoints = computed(() => this.agent.langGraphHistory());
   readonly checkpointCount = computed(() => this.agent.history().length);
 
   readonly activeIndex = computed(() =>
@@ -81,10 +82,11 @@ export class HistoryViewerComponent {
   );
 
   fork(index: number) {
-    const checkpoint = this.checkpoints()[index];
+    const checkpoint = this.rawCheckpoints()[index]?.checkpoint;
+    if (!checkpoint) return;
     this.agent.submit(
       { messages: [{ role: 'user', content: 'Try a different approach' }] },
-      { checkpoint: checkpoint.checkpoint }
+      { checkpoint }
     );
   }
 
@@ -99,7 +101,7 @@ export class HistoryViewerComponent {
 
 ## Browsing execution history
 
-The `history()` signal contains an array of `ThreadState` checkpoints ordered from oldest to newest. Each checkpoint captures the complete agent state at that point in execution, including messages, intermediate results, and any custom state fields.
+The `history()` signal contains runtime-neutral `AgentCheckpoint` entries for the thread. For LangGraph-specific checkpoint metadata, `langGraphHistory()` exposes the raw `ThreadState[]`. The framework loads this history with `threads.getHistory()` when a thread is selected and refreshes it after a run completes.
 
 ```typescript
 const agent = agent<AgentState>({
@@ -107,9 +109,12 @@ const agent = agent<AgentState>({
   threadId: signal(threadId),
 });
 
-// Full execution timeline
+// Runtime-neutral execution timeline
 const checkpoints = computed(() => agent.history());
 const checkpointCount = computed(() => agent.history().length);
+
+// Raw LangGraph checkpoints
+const rawCheckpoints = computed(() => agent.langGraphHistory());
 
 // Access a specific checkpoint
 const latestCheckpoint = computed(() => {
@@ -118,7 +123,7 @@ const latestCheckpoint = computed(() => {
 });
 ```
 
-Each `ThreadState` entry exposes `checkpoint`, `metadata`, `created_at`, and the full `values` snapshot, giving you complete visibility into every step of execution.
+Each runtime-neutral checkpoint exposes `id`, `label`, and `values`. Each raw `ThreadState` entry exposes `checkpoint`, `parent_checkpoint`, `metadata`, `created_at`, and the full `values` snapshot, giving you complete visibility into every step of execution.
 
 ## Forking from a checkpoint
 
@@ -126,36 +131,35 @@ Submit with a specific checkpoint to branch execution from an earlier state. Thi
 
 ```typescript
 forkFromCheckpoint(index: number) {
-  const checkpoint = this.agent.history()[index];
+  const checkpoint = this.agent.langGraphHistory()[index]?.checkpoint;
+  if (!checkpoint) return;
   this.agent.submit(
     { messages: [{ role: 'user', content: 'Try a different approach' }] },
-    { checkpoint: checkpoint.checkpoint }
+    { checkpoint }
   );
 }
 
 // Fork with a completely different input
 retryWithAlternative(index: number, newInput: string) {
-  const checkpoint = this.agent.history()[index];
+  const checkpoint = this.agent.langGraphHistory()[index]?.checkpoint;
+  if (!checkpoint) return;
   this.agent.submit(
     { messages: [{ role: 'user', content: newInput }] },
-    { checkpoint: checkpoint.checkpoint }
+    { checkpoint }
   );
 }
 ```
 
 ## Branch navigation
 
-Use `branch()` and `setBranch()` to navigate between execution branches. Branches are automatically created when you fork from a checkpoint.
+Use `branch()`, `setBranch()`, and `experimentalBranchTree()` to navigate between execution branches. Branches are automatically created when you fork from a checkpoint, and the branch tree is derived from raw `ThreadState.parent_checkpoint` relationships.
 
 ```typescript
 // Current branch identifier
 const activeBranch = computed(() => agent.branch());
 
-// All available branches (if exposed by your graph)
-const allBranches = computed(() => agent.history()
-  .map(s => s.metadata?.branch)
-  .filter(Boolean)
-);
+// Full branch tree for custom time-travel UIs
+const branchTree = computed(() => agent.experimentalBranchTree());
 
 // Switch to a different branch
 selectBranch(branchId: string) {
@@ -184,15 +188,17 @@ export class HistoryViewerComponent {
   readonly agent = this.agentService.agent;
 
   readonly checkpoints = computed(() => this.agent.history());
+  readonly rawCheckpoints = computed(() => this.agent.langGraphHistory());
   readonly activeIndex = computed(() =>
     this.checkpoints().length - 1
   );
 
   fork(index: number) {
-    const checkpoint = this.checkpoints()[index];
+    const checkpoint = this.rawCheckpoints()[index]?.checkpoint;
+    if (!checkpoint) return;
     this.agent.submit(
       { messages: [{ role: 'user', content: 'Try a different approach' }] },
-      { checkpoint: checkpoint.checkpoint }
+      { checkpoint }
     );
   }
 
@@ -205,10 +211,10 @@ export class HistoryViewerComponent {
 <Tab label="history-viewer.component.html">
 ```html
 <ul class="checkpoint-list">
-  @for (cp of checkpoints(); track cp.checkpoint.id; let i = $index) {
+  @for (cp of checkpoints(); track cp.id; let i = $index) {
     <li [class.active]="i === activeIndex()">
       <span class="step">Step {{ i + 1 }}</span>
-      <span class="time">{{ formatTime(cp.created_at) }}</span>
+      <span class="time">{{ cp.label ?? cp.id }}</span>
       <button (click)="fork(i)">Fork from here</button>
     </li>
   }
@@ -258,6 +264,7 @@ export class ReplayComponent {
   readonly agent = inject(AgentService).agent;
 
   readonly history = computed(() => this.agent.history());
+  readonly rawHistory = computed(() => this.agent.langGraphHistory());
   readonly canUndo = computed(() => this.history().length > 1);
 
   undo() {
@@ -265,17 +272,19 @@ export class ReplayComponent {
     if (history.length < 2) return;
 
     // Go back one step
-    const previousCheckpoint = history[history.length - 2];
+    const previousCheckpoint = this.rawHistory()[history.length - 2]?.checkpoint;
+    if (!previousCheckpoint) return;
     this.agent.submit(undefined, {
-      checkpoint: previousCheckpoint.checkpoint,
+      checkpoint: previousCheckpoint,
     });
   }
 
   replayWith(index: number, newMessage: string) {
-    const checkpoint = this.history()[index];
+    const checkpoint = this.rawHistory()[index]?.checkpoint;
+    if (!checkpoint) return;
     this.agent.submit(
       { messages: [{ role: 'user', content: newMessage }] },
-      { checkpoint: checkpoint.checkpoint }
+      { checkpoint }
     );
   }
 }

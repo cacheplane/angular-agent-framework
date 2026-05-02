@@ -42,6 +42,7 @@ import {
 import type { ThreadState, ToolProgress } from '@langchain/langgraph-sdk';
 import type { MessageMetadata } from '@langchain/langgraph-sdk/ui';
 import { createStreamManagerBridge } from './internals/stream-manager.bridge';
+import { buildBranchTree } from './internals/branch-tree';
 
 /**
  * Creates a streaming resource connected to a LangGraph agent.
@@ -208,6 +209,9 @@ export function agent<
   const historyNeutral = computed<AgentCheckpoint[]>(() =>
     historySig().map(toCheckpoint),
   );
+  const experimentalBranchTree = computed(() =>
+    buildBranchTree(historySig() as ThreadState<T>[]),
+  );
 
   const events$ = buildEvents$(customSig);
 
@@ -234,6 +238,7 @@ export function agent<
     langGraphInterrupts: interruptsSig,
     langGraphToolCalls:  rawToolCalls,
     langGraphHistory:    historySig,
+    experimentalBranchTree,
 
     // ── Other AgentRef fields preserved ──────────────────────────────────
     value:           value as Signal<T>,

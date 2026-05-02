@@ -22,7 +22,7 @@ import {
   isSubagentNamespace,
 } from './subagent-tracker';
 import type { BaseMessage } from '@langchain/core/messages';
-import type { Interrupt, Message as LangGraphMessage, ToolCallWithResult, ToolProgress } from '@langchain/langgraph-sdk';
+import type { Interrupt, Message as LangGraphMessage, ThreadState, ToolCallWithResult, ToolProgress } from '@langchain/langgraph-sdk';
 
 export interface StreamManagerBridgeOptions<T, ResolvedBag extends BagTemplate = BagTemplate> {
   options:   AgentOptions<T, ResolvedBag>;
@@ -56,6 +56,7 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
   let currentThreadId: string | null = null;
   let lastPayload: unknown = null;
   let abortController: AbortController | null = null;
+  let historyAbortController: AbortController | null = null;
   let hasSeenThreadId = false;
   const toolProgressMap = new Map<string, ToolProgress>();
   const queuedRuns: AgentQueueEntry[] = [];
@@ -66,6 +67,7 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
   });
 
   function resetThreadState(): void {
+    historyAbortController?.abort();
     subjects.values$.next({} as T);
     subjects.messages$.next([]);
     subjects.history$.next([]);
@@ -91,6 +93,7 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
     if (resetState) {
       resetThreadState();
     }
+    void refreshHistory();
   }
 
   // Track threadId changes
@@ -99,6 +102,38 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
     hasSeenThreadId = true;
     setThreadId(id, shouldReset);
   });
+
+  destroy$.subscribe(() => {
+    abortController?.abort();
+    historyAbortController?.abort();
+  });
+
+  async function refreshHistory(): Promise<void> {
+    const getHistory = transport.getHistory?.bind(transport);
+    if (!currentThreadId || !getHistory) return;
+
+    historyAbortController?.abort();
+    const controller = new AbortController();
+    historyAbortController = controller;
+    const threadId = currentThreadId;
+    subjects.isThreadLoading$.next(true);
+
+    try {
+      const history = await getHistory(threadId, controller.signal);
+      if (!controller.signal.aborted && currentThreadId === threadId) {
+        subjects.history$.next(history as ThreadState<T>[]);
+      }
+    } catch (err) {
+      if (!controller.signal.aborted && (err as Error)?.name !== 'AbortError') {
+        subjects.error$.next(err);
+      }
+    } finally {
+      if (historyAbortController === controller) {
+        historyAbortController = null;
+        subjects.isThreadLoading$.next(false);
+      }
+    }
+  }
 
   function publishQueue(): void {
     subjects.queue$.next(createQueueSnapshot());
@@ -198,6 +233,7 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
       }
       if (!abortController.signal.aborted) {
         subjects.status$.next(ResourceStatus.Resolved);
+        await refreshHistory();
       }
     } catch (err) {
       subjects.error$.next(err);
@@ -239,6 +275,7 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
 
       if (!abortController.signal.aborted) {
         subjects.status$.next(ResourceStatus.Resolved);
+        await refreshHistory();
         await drainQueue();
       }
     } catch (err) {
@@ -520,6 +557,7 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
           processEvent(event);
         }
         subjects.status$.next(ResourceStatus.Resolved);
+        await refreshHistory();
       } catch (err) {
         subjects.error$.next(err);
         subjects.status$.next(ResourceStatus.Error);

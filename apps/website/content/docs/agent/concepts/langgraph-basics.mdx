@@ -319,8 +319,10 @@ agent.isLoading()      // Signal<boolean> — is the agent running?
 agent.interrupt()      // Signal<Interrupt> — agent is paused
 
 // Debugging
-agent.history()        // Signal<ThreadState[]> — checkpoint timeline
+agent.history()        // Signal<AgentCheckpoint[]> — runtime-neutral timeline
+agent.langGraphHistory() // Signal<ThreadState[]> — raw LangGraph checkpoints
 agent.branch()         // Signal<string> — time-travel branch
+agent.experimentalBranchTree() // Signal<AgentBranchTree<T>> — branch tree
 
 agent.toolCalls()      // Signal<ToolCallWithResult[]> — tool results
 agent.toolProgress()   // Signal<ToolProgress[]> — active tool execution

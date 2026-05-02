@@ -5,11 +5,39 @@ import type { AIMessage as CoreAIMessage } from '@langchain/core/messages';
 import { agent } from './agent.fn';
 import { MockAgentTransport } from './transport/mock-stream.transport';
 import type { StreamEvent } from './agent.types';
+import type { ThreadState } from '@langchain/langgraph-sdk';
 
 function withInjectionContext<T>(fn: () => T): T {
   let result!: T;
   TestBed.runInInjectionContext(() => { result = fn(); });
   return result;
+}
+
+function threadState(
+  checkpointId: string,
+  parentCheckpointId: string | null = null,
+): ThreadState<Record<string, unknown>> {
+  return {
+    values: { messages: [checkpointId] },
+    next: [],
+    checkpoint: {
+      thread_id: 'thread-1',
+      checkpoint_ns: '',
+      checkpoint_id: checkpointId,
+      checkpoint_map: null,
+    },
+    metadata: null,
+    created_at: '2026-05-02T00:00:00.000Z',
+    parent_checkpoint: parentCheckpointId
+      ? {
+          thread_id: 'thread-1',
+          checkpoint_ns: '',
+          checkpoint_id: parentCheckpointId,
+          checkpoint_map: null,
+        }
+      : null,
+    tasks: [],
+  };
 }
 
 describe('agent', () => {
@@ -179,6 +207,32 @@ describe('agent', () => {
     // langGraphHistory() returns ThreadState-shaped objects
     const rawHist = ref.langGraphHistory();
     expect(Array.isArray(rawHist)).toBe(true);
+  });
+
+  it('experimentalBranchTree() exposes a branch tree derived from LangGraph history', async () => {
+    const root = threadState('root');
+    const left = threadState('left', 'root');
+    const right = threadState('right', 'root');
+    const transport = new MockAgentTransport();
+    transport.history = [root, left, right];
+
+    const ref = withInjectionContext(() =>
+      agent({ apiUrl: '', assistantId: 'a', transport, threadId: 'thread-1', throttle: false })
+    );
+    await new Promise(r => setTimeout(r, 20));
+
+    const tree = ref.experimentalBranchTree();
+    expect(tree.type).toBe('sequence');
+    expect(tree.items[0]).toEqual({ type: 'node', value: root, path: [] });
+    const fork = tree.items[1];
+    expect(fork?.type).toBe('fork');
+    if (fork?.type !== 'fork') throw new Error('Expected fork node');
+    expect(fork.items.map(sequence => sequence.items[0])).toEqual(
+      expect.arrayContaining([
+        { type: 'node', value: left, path: ['left'] },
+        { type: 'node', value: right, path: ['right'] },
+      ]),
+    );
   });
 
   it('messages() translates AIMessage role to "assistant"', async () => {
