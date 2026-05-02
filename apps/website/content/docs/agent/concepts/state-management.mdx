@@ -355,8 +355,10 @@ const agent = agent<ChatState>({
 });
 
 // Read checkpoint history for time-travel UI
-const history = agent.history();    // Signal<ThreadState[]>
-const branch = agent.branch();      // Signal<string> — active branch ID
+const history = agent.history();             // Signal<AgentCheckpoint[]>
+const rawHistory = agent.langGraphHistory(); // Signal<ThreadState[]>
+const branch = agent.branch();               // Signal<string> — active branch ID
+const branchTree = agent.experimentalBranchTree();
 ```
 
 For full checkpoint and time-travel patterns, see the [Persistence guide](/docs/guides/persistence) and [Time Travel guide](/docs/guides/time-travel).

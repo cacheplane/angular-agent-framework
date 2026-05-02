@@ -109,6 +109,25 @@ export interface AgentQueue<T = unknown> {
   clear: () => Promise<void>;
 }
 
+/** A checkpoint entry in the experimental branch tree. */
+export interface AgentBranchTreeNode<T = unknown> {
+  type: 'node';
+  value: ThreadState<T>;
+  path: string[];
+}
+
+/** A branch fork where each item is an alternate checkpoint sequence. */
+export interface AgentBranchTreeFork<T = unknown> {
+  type: 'fork';
+  items: AgentBranchTree<T>[];
+}
+
+/** Tree representation of LangGraph checkpoint history for time-travel UIs. */
+export interface AgentBranchTree<T = unknown> {
+  type: 'sequence';
+  items: Array<AgentBranchTreeNode<T> | AgentBranchTreeFork<T>>;
+}
+
 /** A custom event emitted by the LangGraph backend via adispatch_custom_event(). */
 export interface CustomStreamEvent {
   /** Event name set by the backend (e.g., 'state_update'). */
@@ -149,6 +168,12 @@ export interface AgentTransport {
     runId: string,
     signal: AbortSignal,
   ): Promise<void>;
+
+  /** Optional: load persisted checkpoint history for a thread. */
+  getHistory?(
+    threadId: string,
+    signal: AbortSignal,
+  ): Promise<ThreadState[]>;
 }
 
 // ── Options ──────────────────────────────────────────────────────────────────
@@ -220,6 +245,9 @@ export interface LangGraphAgent<T = unknown, ResolvedBag extends BagTemplate = B
 
   /** Raw LangGraph history (ThreadState[]). Use `history` for AgentCheckpoint[]. */
   langGraphHistory: Signal<ThreadState<T>[]>;
+
+  /** Experimental branch tree derived from LangGraph checkpoint history. */
+  experimentalBranchTree: Signal<AgentBranchTree<T>>;
 
   // ── AgentRef fields preserved on the unified surface ─────────────────────
 
