@@ -12,7 +12,7 @@ import {
 import { takeUntil } from 'rxjs/operators';
 import type { Observable } from 'rxjs';
 import type { BaseMessage, AIMessage as CoreAIMessage } from '@langchain/core/messages';
-import type { Interrupt, ToolCallWithResult } from '@langchain/langgraph-sdk';
+import type { Command, Interrupt, ToolCallWithResult } from '@langchain/langgraph-sdk';
 import type { BagTemplate, InferBag } from '@langchain/langgraph-sdk';
 import type {
   AgentEvent,
@@ -242,8 +242,7 @@ export function agent<
     history:   historyNeutral,
     submit: (input: AgentSubmitInput | null | undefined, opts?: AgentSubmitOptions & LangGraphSubmitOptions) => {
       const request = buildSubmitRequest(input, opts);
-      manager.submit(request.payload, request.options);
-      return Promise.resolve();
+      return manager.submit(request.payload, request.options);
     },
     stop: () => manager.stop(),
 
@@ -416,18 +415,7 @@ function buildSubmitRequest(
 function buildSubmitPayload(input: AgentSubmitInput | null | undefined): unknown {
   if (input == null) return null;
   if (input.resume !== undefined) return null;
-  if (input.message !== undefined) {
-    const content = typeof input.message === 'string'
-      ? input.message
-      : input.message.map((b: ContentBlock) => (b.type === 'text' ? b.text : JSON.stringify(b))).join('');
-    // `type: 'human'` is what `toMessage()` reads via `_getType` || raw['type'];
-    // `role: 'human'` is what the LangGraph server expects in submit payloads.
-    // Include both so the optimistic local copy projects as a 'user' bubble
-    // (otherwise toMessage falls through to the 'ai' default and renders the
-    // user's question as an assistant message).
-    return { messages: [{ type: 'human', role: 'human', content }], ...(input.state ?? {}) };
-  }
-  return input.state ?? {};
+  return buildSubmitUpdate(input) ?? {};
 }
 
 function normalizeSubmitOptions(
@@ -442,13 +430,43 @@ function normalizeSubmitOptions(
   const next = { ...(opts ?? {}) };
   delete next.resume;
   const command = next.command;
+  const update = buildSubmitUpdate(input);
+  const commandUpdate = mergeCommandUpdate(command?.update, update);
   return {
     ...next,
     command: {
       ...command,
       resume,
+      ...(commandUpdate === undefined ? {} : { update: commandUpdate }),
     },
   };
+}
+
+function buildSubmitUpdate(input: AgentSubmitInput | null | undefined): Record<string, unknown> | undefined {
+  if (input == null) return undefined;
+  if (input.message !== undefined) {
+    const content = typeof input.message === 'string'
+      ? input.message
+      : input.message.map((b: ContentBlock) => (b.type === 'text' ? b.text : JSON.stringify(b))).join('');
+    // `type: 'human'` is what `toMessage()` reads via `_getType` || raw['type'];
+    // `role: 'human'` is what the LangGraph server expects in submit payloads.
+    // Include both so the optimistic local copy projects as a 'user' bubble
+    // (otherwise toMessage falls through to the 'ai' default and renders the
+    // user's question as an assistant message).
+    return { messages: [{ type: 'human', role: 'human', content }], ...(input.state ?? {}) };
+  }
+  return input.state;
+}
+
+function mergeCommandUpdate(
+  existing: Command['update'] | undefined,
+  update: Record<string, unknown> | undefined,
+): Command['update'] | undefined {
+  if (update === undefined) return existing;
+  if (existing == null) return update;
+  if (isRecord(existing)) return { ...existing, ...update };
+  if (Array.isArray(existing)) return [...existing, ...Object.entries(update)];
+  return update;
 }
 
 function randomId(): string {

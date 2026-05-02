@@ -76,6 +76,25 @@ describe('agent', () => {
     expect(ref.isLoading()).toBe(true);
   });
 
+  it('submit() resolves after the active stream completes', async () => {
+    const transport = new MockAgentTransport();
+    const ref = withInjectionContext(() =>
+      agent({ apiUrl: '', assistantId: 'a', transport })
+    );
+
+    let settled = false;
+    const submitted = ref.submit({ message: 'hello' }).then(() => {
+      settled = true;
+    });
+
+    await Promise.resolve();
+    expect(settled).toBe(false);
+
+    transport.close();
+    await submitted;
+    expect(settled).toBe(true);
+  });
+
   it('queue() exposes server-side enqueue submissions', async () => {
     const transport = new MockAgentTransport();
     const ref = withInjectionContext(() =>
@@ -135,8 +154,9 @@ describe('agent', () => {
     const ref = withInjectionContext(() =>
       agent({ apiUrl: '', assistantId: 'a', transport })
     );
-    await ref.submit({ message: 'hello' });
+    const submitted = ref.submit({ message: 'hello' });
     transport.close();
+    await submitted;
     await new Promise(r => setTimeout(r, 10));
     ref.reload();
     expect(ref.isLoading()).toBe(true);
@@ -234,6 +254,130 @@ describe('agent', () => {
         payload: null,
         options: expect.objectContaining({
           command: { resume: { approved: true } },
+        }),
+      },
+    ]);
+  });
+
+  it('normalizes resume submit input state into a LangGraph command update', async () => {
+    const seen: Array<{ payload: unknown; options: unknown }> = [];
+    const transport = new MockAgentTransport();
+    transport.stream = async function* (
+      _assistantId: string,
+      _threadId: string | null,
+      payload: unknown,
+      _signal: AbortSignal,
+      options?: unknown,
+    ) {
+      seen.push({ payload, options });
+      yield* [];
+    };
+
+    const ref = withInjectionContext(() =>
+      agent({ apiUrl: '', assistantId: 'a', transport, threadId: 'thread-1', throttle: false })
+    );
+
+    await ref.submit({
+      resume: { approved: true },
+      state: { reviewNotes: 'ship it' },
+    });
+
+    expect(seen).toEqual([
+      {
+        payload: null,
+        options: expect.objectContaining({
+          command: {
+            resume: { approved: true },
+            update: { reviewNotes: 'ship it' },
+          },
+        }),
+      },
+    ]);
+  });
+
+  it('normalizes resume submit input messages into a LangGraph command update', async () => {
+    const seen: Array<{ payload: unknown; options: unknown }> = [];
+    const transport = new MockAgentTransport();
+    transport.stream = async function* (
+      _assistantId: string,
+      _threadId: string | null,
+      payload: unknown,
+      _signal: AbortSignal,
+      options?: unknown,
+    ) {
+      seen.push({ payload, options });
+      yield* [];
+    };
+
+    const ref = withInjectionContext(() =>
+      agent({ apiUrl: '', assistantId: 'a', transport, threadId: 'thread-1', throttle: false })
+    );
+
+    await ref.submit({
+      message: 'Approved, continue',
+      resume: { approved: true },
+      state: { reviewer: 'Ada' },
+    });
+
+    expect(seen).toEqual([
+      {
+        payload: null,
+        options: expect.objectContaining({
+          command: {
+            resume: { approved: true },
+            update: {
+              messages: [{ type: 'human', role: 'human', content: 'Approved, continue' }],
+              reviewer: 'Ada',
+            },
+          },
+        }),
+      },
+    ]);
+  });
+
+  it('merges resume submit updates with existing LangGraph command updates', async () => {
+    const seen: Array<{ payload: unknown; options: unknown }> = [];
+    const transport = new MockAgentTransport();
+    transport.stream = async function* (
+      _assistantId: string,
+      _threadId: string | null,
+      payload: unknown,
+      _signal: AbortSignal,
+      options?: unknown,
+    ) {
+      seen.push({ payload, options });
+      yield* [];
+    };
+
+    const ref = withInjectionContext(() =>
+      agent({ apiUrl: '', assistantId: 'a', transport, threadId: 'thread-1', throttle: false })
+    );
+
+    await ref.submit(
+      {
+        resume: { approved: true },
+        state: { reviewer: 'Ada' },
+      },
+      {
+        command: {
+          update: { workflow: 'release' },
+          goto: 'publish',
+        },
+      },
+    );
+
+    expect(seen).toEqual([
+      {
+        payload: null,
+        options: expect.objectContaining({
+          command: {
+            resume: { approved: true },
+            update: {
+              workflow: 'release',
+              reviewer: 'Ada',
+            },
+            goto: 'publish',
+          },
         }),
       },
     ]);
