@@ -417,21 +417,21 @@ interface OrchestratorState {
     <app-chat [messages]="messages()" />
 
     <aside class="agent-panel">
-      <h3>Active Agents</h3>
-      @for (sub of activeWorkers(); track sub.name) {
+      <h3>Active Delegated Work</h3>
+      @for (tool of activeTools(); track tool.toolCallId ?? tool.name) {
         <app-agent-card
-          [name]="sub.name"
-          [status]="sub.status"
-          [messages]="sub.messages" />
+          [name]="tool.name"
+          [status]="tool.state"
+          [input]="tool.input" />
       }
     </aside>
 
     <footer class="all-agents">
-      <h3>All Subagents</h3>
-      @for (entry of allSubagents(); track entry[0]) {
-        <app-subagent-summary
-          [name]="entry[0]"
-          [state]="entry[1]" />
+      <h3>Completed Tool Results</h3>
+      @for (tool of completedTools(); track tool.id) {
+        <app-tool-summary
+          [name]="tool.name"
+          [result]="tool.result" />
       }
     </footer>
   `,
@@ -439,18 +439,15 @@ interface OrchestratorState {
 export class MultiAgentComponent {
   orchestrator = agent<OrchestratorState>({
     assistantId: 'orchestrator',
-    subagentToolNames: ['researcher', 'analyst', 'writer'],
   });
 
   messages = this.orchestrator.messages;
 
-  // Currently running subagents with live status
-  activeWorkers = computed(() => this.orchestrator.activeSubagents());
+  // Currently running delegated work with live status
+  activeTools = computed(() => this.orchestrator.toolProgress());
 
-  // Full map of all subagents (active + completed)
-  allSubagents = computed(() =>
-    Array.from(this.orchestrator.subagents().entries())
-  );
+  // Completed tool calls with results
+  completedTools = computed(() => this.orchestrator.toolCalls());
 
   send(text: string) {
     this.orchestrator.submit({
@@ -463,8 +460,12 @@ export class MultiAgentComponent {
 </Tab>
 </Tabs>
 
+<Callout type="warning" title="Subagent signal status">
+Tool calls, tool progress, and tool results stream today. Dedicated `subagents()` and `activeSubagents()` tracking is planned for the next implementation phase; use `toolCalls()` and `toolProgress()` for current delegated-work visibility.
+</Callout>
+
 <Callout type="tip" title="subagentToolNames is the key">
-The `subagentToolNames` option tells agent() which graph nodes are subagents. Without it, subagent execution looks like regular tool calls. With it, `activeSubagents()` and `subagents()` provide dedicated tracking with isolated message histories.
+The `subagentToolNames` option will tell agent() which graph nodes are subagents. Until dedicated tracking lands, subagent execution appears through the regular tool-call and tool-progress signals.
 </Callout>
 
 ## Error Handling and Recovery
@@ -661,7 +662,7 @@ builder.add_node("analyst", analyst_subgraph)
 builder.add_conditional_edges("supervisor", route_to_agent)
 ```
 
-**Angular signals used:** `messages()`, `subagents()`, `activeSubagents()`, `toolCalls()`, `status()`
+**Angular signals used today:** `messages()`, `toolCalls()`, `toolProgress()`, `status()`; dedicated `subagents()` / `activeSubagents()` tracking is planned next.
 
 ### Decision Matrix
 

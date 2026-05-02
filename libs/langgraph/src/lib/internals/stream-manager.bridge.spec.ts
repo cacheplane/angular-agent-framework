@@ -1,8 +1,8 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { BehaviorSubject, Subject } from 'rxjs';
 import { createStreamManagerBridge } from './stream-manager.bridge';
 import { MockAgentTransport } from '../transport/mock-stream.transport';
-import { ResourceStatus, AgentTransport, StreamSubjects, CustomStreamEvent } from '../agent.types';
+import { ResourceStatus, AgentTransport, StreamSubjects, CustomStreamEvent, StreamEvent } from '../agent.types';
 import { of } from 'rxjs';
 
 function makeSubjects(): StreamSubjects<Record<string, unknown>> {
@@ -18,6 +18,7 @@ function makeSubjects(): StreamSubjects<Record<string, unknown>> {
     isThreadLoading$: new BehaviorSubject(false),
     toolProgress$:    new BehaviorSubject([]),
     toolCalls$:       new BehaviorSubject([]),
+    messageMetadata$: new BehaviorSubject(new Map()),
     subagents$:       new BehaviorSubject(new Map()),
     custom$:          new BehaviorSubject<CustomStreamEvent[]>([]),
   };
@@ -321,6 +322,180 @@ describe('createStreamManagerBridge', () => {
 
     expect(subjects.custom$.value).toHaveLength(1);
     expect(subjects.custom$.value[0]).toEqual({ name: 'state_update', data: { '/mrr/value': 42000 } });
+    destroy$.next();
+  });
+
+  it('updates toolProgress$ from tools stream events', async () => {
+    const transport = new MockAgentTransport();
+    const subjects = makeSubjects();
+    const destroy$ = new Subject<void>();
+    const bridge = createStreamManagerBridge({
+      options: { apiUrl: '', assistantId: 'test', transport },
+      subjects,
+      threadId$: of(null),
+      destroy$: destroy$.asObservable(),
+    });
+
+    bridge.submit({});
+    transport.emit([
+      { type: 'tools', data: { event: 'on_tool_start', toolCallId: 'call-1', name: 'search', input: { q: 'angular' } } },
+      { type: 'tools', data: { event: 'on_tool_event', toolCallId: 'call-1', name: 'search', data: { step: 1 } } },
+      { type: 'tools', data: { event: 'on_tool_end', toolCallId: 'call-1', name: 'search', output: 'done' } },
+    ] satisfies StreamEvent[]);
+    transport.close();
+
+    await new Promise(r => setTimeout(r, 10));
+
+    expect(subjects.toolProgress$.value).toEqual([
+      {
+        toolCallId: 'call-1',
+        name: 'search',
+        state: 'completed',
+        input: { q: 'angular' },
+        data: { step: 1 },
+        result: 'done',
+      },
+    ]);
+    destroy$.next();
+  });
+
+  it('marks tool progress as error when a tool error event is received', async () => {
+    const transport = new MockAgentTransport();
+    const subjects = makeSubjects();
+    const destroy$ = new Subject<void>();
+    const bridge = createStreamManagerBridge({
+      options: { apiUrl: '', assistantId: 'test', transport },
+      subjects,
+      threadId$: of(null),
+      destroy$: destroy$.asObservable(),
+    });
+
+    bridge.submit({});
+    transport.emit([
+      { type: 'tools', data: { event: 'on_tool_start', toolCallId: 'call-1', name: 'search', input: { q: 'angular' } } },
+      { type: 'tools', data: { event: 'on_tool_error', toolCallId: 'call-1', name: 'search', error: 'failed' } },
+    ] satisfies StreamEvent[]);
+    transport.close();
+
+    await new Promise(r => setTimeout(r, 10));
+
+    expect(subjects.toolProgress$.value).toEqual([
+      {
+        toolCallId: 'call-1',
+        name: 'search',
+        state: 'error',
+        input: { q: 'angular' },
+        error: 'failed',
+      },
+    ]);
+    destroy$.next();
+  });
+
+  it('derives toolCalls$ from AI tool calls and matching tool messages', async () => {
+    const transport = new MockAgentTransport();
+    const subjects = makeSubjects();
+    const destroy$ = new Subject<void>();
+    const bridge = createStreamManagerBridge({
+      options: { apiUrl: '', assistantId: 'test', transport },
+      subjects,
+      threadId$: of(null),
+      destroy$: destroy$.asObservable(),
+    });
+
+    bridge.submit({});
+    transport.emit([{
+      type: 'messages',
+      messages: [
+        {
+          id: 'ai-1',
+          type: 'ai',
+          content: '',
+          tool_calls: [{ id: 'call-1', name: 'search', args: { q: 'angular' } }],
+        },
+        {
+          id: 'tool-1',
+          type: 'tool',
+          tool_call_id: 'call-1',
+          content: 'result',
+          status: 'success',
+        },
+      ],
+    } satisfies StreamEvent]);
+    transport.close();
+
+    await new Promise(r => setTimeout(r, 10));
+
+    expect(subjects.toolCalls$.value).toHaveLength(1);
+    expect(subjects.toolCalls$.value[0]).toMatchObject({
+      id: 'call-1',
+      state: 'completed',
+      call: { name: 'search', args: { q: 'angular' } },
+      result: { content: 'result' },
+    });
+    destroy$.next();
+  });
+
+  it('stores message tuple metadata by message id', async () => {
+    const transport = new MockAgentTransport();
+    const subjects = makeSubjects();
+    const destroy$ = new Subject<void>();
+    const bridge = createStreamManagerBridge({
+      options: { apiUrl: '', assistantId: 'test', transport },
+      subjects,
+      threadId$: of(null),
+      destroy$: destroy$.asObservable(),
+    });
+
+    bridge.submit({});
+    transport.emit([{
+      type: 'messages',
+      messages: [{ id: 'ai-1', type: 'ai', content: 'hello' }],
+      messageMetadata: { langgraph_node: 'model', run_id: 'run-1' },
+    } satisfies StreamEvent]);
+    transport.close();
+
+    await new Promise(r => setTimeout(r, 10));
+
+    expect(subjects.messageMetadata$.value.get('ai-1')).toEqual({
+      messageId: 'ai-1',
+      firstSeenState: undefined,
+      branch: undefined,
+      branchOptions: undefined,
+      streamMetadata: { langgraph_node: 'model', run_id: 'run-1' },
+    });
+    destroy$.next();
+  });
+
+  it('merges message tuple events into the existing transcript', async () => {
+    const transport = new MockAgentTransport();
+    const subjects = makeSubjects();
+    const destroy$ = new Subject<void>();
+    const bridge = createStreamManagerBridge({
+      options: { apiUrl: '', assistantId: 'test', transport },
+      subjects,
+      threadId$: of(null),
+      destroy$: destroy$.asObservable(),
+    });
+
+    bridge.submit({ messages: [{ type: 'human', content: 'hello' }] });
+    transport.emit([{
+      type: 'messages',
+      messages: [{ id: 'ai-1', type: 'ai', content: 'hel' }],
+      messageMetadata: { langgraph_node: 'model' },
+    } satisfies StreamEvent]);
+    transport.emit([{
+      type: 'messages',
+      messages: [{ id: 'ai-1', type: 'ai', content: 'hello' }],
+      messageMetadata: { langgraph_node: 'model' },
+    } satisfies StreamEvent]);
+    transport.close();
+
+    await new Promise(r => setTimeout(r, 10));
+
+    expect(subjects.messages$.value).toEqual([
+      { type: 'human', content: 'hello' },
+      { id: 'ai-1', type: 'ai', content: 'hello' },
+    ]);
     destroy$.next();
   });
 

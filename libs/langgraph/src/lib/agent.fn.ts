@@ -24,6 +24,7 @@ import type {
   Subagent,
   ToolCall,
   ToolCallStatus,
+  ContentBlock,
   AgentSubmitInput,
   AgentSubmitOptions,
 } from '@ngaf/chat';
@@ -37,6 +38,7 @@ import {
   ResourceStatus,
 } from './agent.types';
 import type { ThreadState, ToolProgress } from '@langchain/langgraph-sdk';
+import type { MessageMetadata } from '@langchain/langgraph-sdk/ui';
 import { createStreamManagerBridge } from './internals/stream-manager.bridge';
 
 /**
@@ -96,6 +98,7 @@ export function agent<
   const isThreadLoading$ = new BehaviorSubject<boolean>(false);
   const toolProgress$    = new BehaviorSubject<ToolProgress[]>([]);
   const toolCalls$       = new BehaviorSubject<ToolCallWithResult[]>([]);
+  const messageMetadata$ = new BehaviorSubject<Map<string, MessageMetadata<Record<string, unknown>>>>(new Map());
   const subagents$       = new BehaviorSubject<Map<string, SubagentStreamRef>>(new Map());
   const custom$          = new BehaviorSubject<CustomStreamEvent[]>([]);
   const hasValue$        = new BehaviorSubject<boolean>(false);
@@ -115,7 +118,7 @@ export function agent<
   const subjects: StreamSubjects<T, InferBag<T, Bag>> = {
     status$, values$, messages$, error$,
     interrupt$, interrupts$, branch$, history$,
-    isThreadLoading$, toolProgress$, toolCalls$, subagents$, custom$,
+    isThreadLoading$, toolProgress$, toolCalls$, messageMetadata$, subagents$, custom$,
   };
 
   // threadId$ — resolved before bridge creation (injection context required for toObservable)
@@ -238,9 +241,17 @@ export function agent<
       manager.switchThread(id);
     },
     joinStream:          (id, last) => manager.joinStream(id, last),
-    // V1 deferred: requires StreamManager's internal message registry
-    getMessagesMetadata: (_msg, _idx) => undefined,
-    getToolCalls:        (_msg) => [],
+    getMessagesMetadata: (msg, idx) => {
+      const id = (msg as unknown as Record<string, unknown>)['id'];
+      const key = id != null ? String(id) : idx != null ? String(idx) : undefined;
+      return key ? messageMetadata$.value.get(key) : undefined;
+    },
+    getToolCalls: (msg) => {
+      const id = (msg as unknown as Record<string, unknown>)['id'];
+      return id == null
+        ? []
+        : toolCalls$.value.filter(tc => (tc.aiMessage as unknown as Record<string, unknown>)['id'] === id);
+    },
   };
 }
 
@@ -348,7 +359,7 @@ function buildSubmitPayload(input: AgentSubmitInput): unknown {
   if (input.message !== undefined) {
     const content = typeof input.message === 'string'
       ? input.message
-      : input.message.map((b: any) => (b.type === 'text' ? b.text : JSON.stringify(b))).join('');
+      : input.message.map((b: ContentBlock) => (b.type === 'text' ? b.text : JSON.stringify(b))).join('');
     return { messages: [{ role: 'human', content }], ...(input.state ?? {}) };
   }
   return input.state ?? {};

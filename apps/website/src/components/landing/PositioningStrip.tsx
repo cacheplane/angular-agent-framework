@@ -17,11 +17,10 @@ const CARDS: Card[] = [
   },
   {
     eyebrow: 'Streaming',
-    headline: 'Full-parity LangGraph streaming.',
+    headline: 'LangGraph streaming for Angular.',
     body: (
       <>
-        <code style={{ fontFamily: 'var(--font-mono)' }}>agent()</code> ships everything React&apos;s{' '}
-        <code style={{ fontFamily: 'var(--font-mono)' }}>useStream()</code> does — interrupt, subagents, branch and history, tool progress — plus{' '}
+        <code style={{ fontFamily: 'var(--font-mono)' }}>agent()</code> ships LangGraph streaming for interrupts, branch and history, tool progress, and tool results — plus{' '}
         <code style={{ fontFamily: 'var(--font-mono)' }}>error()</code>,{' '}
         <code style={{ fontFamily: 'var(--font-mono)' }}>status()</code>, and{' '}
         <code style={{ fontFamily: 'var(--font-mono)' }}>reload()</code>.

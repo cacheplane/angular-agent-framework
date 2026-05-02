@@ -9,8 +9,9 @@ import {
 } from '../agent.types';
 import { FetchStreamTransport } from '../transport/fetch-stream.transport';
 import { BagTemplate } from '@langchain/langgraph-sdk';
+import { getToolCallsWithResults } from '@langchain/langgraph-sdk/utils';
 import type { BaseMessage } from '@langchain/core/messages';
-import type { Interrupt } from '@langchain/langgraph-sdk';
+import type { Interrupt, Message as LangGraphMessage, ToolCallWithResult, ToolProgress } from '@langchain/langgraph-sdk';
 
 export interface StreamManagerBridgeOptions<T, ResolvedBag extends BagTemplate = BagTemplate> {
   options:   AgentOptions<T, ResolvedBag>;
@@ -45,6 +46,7 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
   let lastPayload: unknown = null;
   let abortController: AbortController | null = null;
   let hasSeenThreadId = false;
+  const toolProgressMap = new Map<string, ToolProgress>();
 
   function resetThreadState(): void {
     subjects.values$.next({} as T);
@@ -52,8 +54,12 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
     subjects.history$.next([]);
     subjects.interrupt$.next(undefined);
     subjects.interrupts$.next([]);
+    subjects.toolProgress$.next([]);
+    subjects.toolCalls$.next([]);
+    subjects.messageMetadata$.next(new Map());
     subjects.custom$.next([]);
     subjects.isThreadLoading$.next(false);
+    toolProgressMap.clear();
   }
 
   function setThreadId(id: string | null, resetState: boolean): void {
@@ -80,6 +86,8 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
     subjects.status$.next(ResourceStatus.Loading);
     subjects.error$.next(undefined);
     subjects.custom$.next([]);
+    subjects.toolProgress$.next([]);
+    toolProgressMap.clear();
     lastPayload = payload;
 
     // Optimistically inject human messages so they appear immediately
@@ -125,25 +133,15 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
         ? msgs.map(options.toMessage)
         : msgs as BaseMessage[];
 
-      // For partial streaming events (messages/partial), merge into existing
-      // messages by id instead of replacing — preserves earlier messages
-      // (e.g. human messages) that aren't in the partial update.
-      if (event.type === 'messages/partial') {
-        const existing = subjects.messages$.value;
-        const merged = [...existing];
-        for (const msg of normalized) {
-          const id = (msg as unknown as Record<string, unknown>)['id'];
-          const idx = id ? merged.findIndex(m => (m as unknown as Record<string, unknown>)['id'] === id) : -1;
-          if (idx >= 0) {
-            merged[idx] = msg;
-          } else {
-            merged.push(msg);
-          }
-        }
-        subjects.messages$.next(merged);
+      // Partial and message-tuple events are incremental. Merge them by id
+      // so optimistic human messages and earlier tool messages are preserved.
+      if (event.type === 'messages/partial' || event.messageMetadata) {
+        subjects.messages$.next(mergeMessages(subjects.messages$.value, normalized));
       } else {
         subjects.messages$.next(normalized);
       }
+      storeMessageMetadata(normalized, event);
+      syncToolCallsFromMessages();
       return;
     }
 
@@ -164,6 +162,7 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
             } else {
               subjects.messages$.next(stateMessages as BaseMessage[]);
             }
+            syncToolCallsFromMessages();
           }
         }
         break;
@@ -196,15 +195,93 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
         subjects.custom$.next([...current, { name, data }]);
         break;
       }
-      // TODO: 'tool_progress' → subjects.toolProgress$.next(...)
-      // TODO: 'tool_calls'    → subjects.toolCalls$.next(...)
-      // These require matching the LangGraph SDK's ToolProgressEvent/ToolCallEvent
-      // shapes. Implement once the SDK event types are confirmed.
+      case 'tools':
+        updateToolProgress(event);
+        break;
     }
   }
 
+  function syncToolCallsFromMessages(): void {
+    const toolCalls = getToolCallsWithResults(
+      subjects.messages$.value as unknown as LangGraphMessage[],
+    ) as ToolCallWithResult[];
+    subjects.toolCalls$.next(toolCalls);
+  }
+
+  function storeMessageMetadata(messages: BaseMessage[], event: StreamEvent): void {
+    if (!event.messageMetadata) return;
+    const next = new Map(subjects.messageMetadata$.value);
+    messages.forEach((message, index) => {
+      const id = (message as unknown as Record<string, unknown>)['id'];
+      const messageId = String(id ?? index);
+      next.set(messageId, {
+        messageId,
+        firstSeenState: undefined,
+        branch: undefined,
+        branchOptions: undefined,
+        streamMetadata: event.messageMetadata,
+      });
+    });
+    subjects.messageMetadata$.next(next);
+  }
+
+  function updateToolProgress(event: StreamEvent): void {
+    const data = extractEventData(event);
+    if (!isRecord(data)) return;
+
+    const toolEvent = data['event'];
+    const name = data['name'];
+    if (typeof toolEvent !== 'string' || typeof name !== 'string') return;
+
+    const toolCallId = typeof data['toolCallId'] === 'string' ? data['toolCallId'] : undefined;
+    const key = toolCallId ?? name;
+    const existing = toolProgressMap.get(key);
+
+    switch (toolEvent) {
+      case 'on_tool_start':
+        toolProgressMap.set(key, {
+          toolCallId,
+          name,
+          state: 'starting',
+          input: data['input'],
+        });
+        break;
+      case 'on_tool_event':
+        toolProgressMap.set(key, {
+          toolCallId,
+          name,
+          ...existing,
+          state: 'running',
+          data: data['data'],
+        });
+        break;
+      case 'on_tool_end':
+        toolProgressMap.set(key, {
+          toolCallId,
+          name,
+          ...existing,
+          state: 'completed',
+          result: data['output'],
+        });
+        break;
+      case 'on_tool_error':
+        toolProgressMap.set(key, {
+          toolCallId,
+          name,
+          ...existing,
+          state: 'error',
+          error: data['error'],
+        });
+        break;
+      default:
+        return;
+    }
+
+    subjects.toolProgress$.next([...toolProgressMap.values()]);
+  }
+
   return {
-    submit: (payload, _opts) => runStream(payload),
+    submit: (payload) => runStream(payload),
 
     stop: async () => {
       abortController?.abort();
@@ -220,12 +297,13 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
       abortController?.abort();
       abortController = new AbortController();
       subjects.custom$.next([]);
+      subjects.toolProgress$.next([]);
+      toolProgressMap.clear();
       subjects.status$.next(ResourceStatus.Loading);
       try {
         const iter = transport.joinStream
           ? transport.joinStream(currentThreadId, runId, lastEventId, abortController.signal)
-          // eslint-disable-next-line @typescript-eslint/no-empty-function, require-yield
-          : (async function*() {})();
+          : [];
         for await (const event of iter) {
           processEvent(event);
         }
@@ -263,7 +341,9 @@ function extractEventData(event: StreamEvent): unknown {
     return named;
   }
   // Fallback: reconstruct from remaining keys
-  const { type: _t, data: _d, ...rest } = event;
+  const rest = Object.fromEntries(
+    Object.entries(event).filter(([key]) => key !== 'type' && key !== 'data'),
+  );
   return Object.keys(rest).length > 0 ? rest : d;
 }
 
@@ -305,6 +385,20 @@ function normalizeMessages(event: StreamEvent): unknown[] | null {
   return null;
 }
 
+function mergeMessages(existing: BaseMessage[], incoming: BaseMessage[]): BaseMessage[] {
+  const merged = [...existing];
+  for (const msg of incoming) {
+    const id = (msg as unknown as Record<string, unknown>)['id'];
+    const idx = id ? merged.findIndex(m => (m as unknown as Record<string, unknown>)['id'] === id) : -1;
+    if (idx >= 0) {
+      merged[idx] = msg;
+    } else {
+      merged.push(msg);
+    }
+  }
+  return merged;
+}
+
 function isMessageLike(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object'
     && value !== null
@@ -313,4 +407,8 @@ function isMessageLike(value: unknown): value is Record<string, unknown> {
       || 'type' in value
       || 'id' in value
     );
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }

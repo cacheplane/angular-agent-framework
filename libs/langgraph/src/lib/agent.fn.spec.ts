@@ -1,10 +1,10 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
-import { HumanMessage, AIMessage } from '@langchain/core/messages';
+import type { AIMessage as CoreAIMessage } from '@langchain/core/messages';
 import { agent } from './agent.fn';
 import { MockAgentTransport } from './transport/mock-stream.transport';
-import { ResourceStatus } from './agent.types';
+import type { StreamEvent } from './agent.types';
 
 function withInjectionContext<T>(fn: () => T): T {
   let result!: T;
@@ -233,6 +233,101 @@ describe('agent', () => {
       agent({ apiUrl: '', assistantId: 'a', transport })
     );
     expect(Array.isArray(ref.langGraphToolCalls())).toBe(true);
+  });
+
+  it('toolProgress() reflects tools stream lifecycle events', async () => {
+    const transport = new MockAgentTransport();
+    const ref = withInjectionContext(() =>
+      agent({ apiUrl: '', assistantId: 'a', transport, throttle: false })
+    );
+
+    ref.submit({ message: 'hello' });
+    transport.emit([{
+      type: 'tools',
+      data: { event: 'on_tool_start', toolCallId: 'call-1', name: 'search', input: { q: 'angular' } },
+    } satisfies StreamEvent]);
+    transport.close();
+    await new Promise(r => setTimeout(r, 20));
+
+    expect(ref.toolProgress()).toEqual([
+      {
+        toolCallId: 'call-1',
+        name: 'search',
+        state: 'starting',
+        input: { q: 'angular' },
+      },
+    ]);
+  });
+
+  it('toolCalls() and getToolCalls() expose tool results derived from messages', async () => {
+    const transport = new MockAgentTransport();
+    const ref = withInjectionContext(() =>
+      agent({ apiUrl: '', assistantId: 'a', transport, throttle: false })
+    );
+
+    ref.submit({ message: 'hello' });
+    transport.emit([{
+      type: 'messages',
+      messages: [
+        {
+          id: 'ai-1',
+          type: 'ai',
+          content: '',
+          tool_calls: [{ id: 'call-1', name: 'search', args: { q: 'angular' } }],
+        },
+        {
+          id: 'tool-1',
+          type: 'tool',
+          tool_call_id: 'call-1',
+          content: 'result',
+          status: 'success',
+        },
+      ],
+    } satisfies StreamEvent]);
+    transport.close();
+    await new Promise(r => setTimeout(r, 20));
+
+    expect(ref.langGraphToolCalls()).toHaveLength(1);
+    expect(ref.toolCalls()).toEqual([
+      {
+        id: 'call-1',
+        name: 'search',
+        args: { q: 'angular' },
+        status: 'complete',
+        result: 'result',
+        error: undefined,
+      },
+    ]);
+    expect(ref.getToolCalls(ref.langGraphMessages()[0] as CoreAIMessage)).toHaveLength(1);
+  });
+
+  it('getMessagesMetadata() returns stream metadata captured from message tuples', async () => {
+    const transport = new MockAgentTransport();
+    const ref = withInjectionContext(() =>
+      agent({ apiUrl: '', assistantId: 'a', transport, throttle: false })
+    );
+
+    ref.submit({ message: 'hello' });
+    transport.emit([{
+      type: 'messages',
+      messages: [{ id: 'ai-1', type: 'ai', content: 'hello' }],
+      messageMetadata: { langgraph_node: 'model', run_id: 'run-1' },
+    } satisfies StreamEvent]);
+    transport.close();
+    await new Promise(r => setTimeout(r, 20));
+
+    const aiMessage = ref.langGraphMessages().find(
+      msg => (msg as unknown as Record<string, unknown>)['id'] === 'ai-1',
+    );
+    if (!aiMessage) throw new Error('Expected streamed AI message');
+
+    expect(ref.getMessagesMetadata(aiMessage, 0)).toEqual({
+      messageId: 'ai-1',
+      firstSeenState: undefined,
+      branch: undefined,
+      branchOptions: undefined,
+      streamMetadata: { langgraph_node: 'model', run_id: 'run-1' },
+    });
   });
 
   it('events$ is an Observable-like with .subscribe', () => {

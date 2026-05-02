@@ -56,6 +56,8 @@ export interface StreamEvent {
     | 'events'
     | 'interrupt'
     | 'interrupts';
+  messages?: unknown[];
+  messageMetadata?: Record<string, unknown>;
   [key: string]: unknown;
 }
 
@@ -212,6 +214,7 @@ export interface StreamSubjects<T, ResolvedBag extends BagTemplate = BagTemplate
   isThreadLoading$: BehaviorSubject<boolean>;
   toolProgress$:    BehaviorSubject<ToolProgress[]>;
   toolCalls$:       BehaviorSubject<ToolCallWithResult[]>;
+  messageMetadata$: BehaviorSubject<Map<string, MessageMetadata<Record<string, unknown>>>>;
   subagents$:       BehaviorSubject<Map<string, SubagentStreamRef>>;
   custom$:          BehaviorSubject<CustomStreamEvent[]>;
 }
