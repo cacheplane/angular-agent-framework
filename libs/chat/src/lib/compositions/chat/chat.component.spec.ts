@@ -2,7 +2,7 @@
 import { describe, it, expect } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { Subject } from 'rxjs';
-import { signal, effect, DestroyRef, inject } from '@angular/core';
+import { signal, effect, DestroyRef, inject, Injector, runInInjectionContext } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { HumanMessage, AIMessage } from '@langchain/core/messages';
 import { ChatComponent } from './chat.component';
@@ -140,6 +140,68 @@ describe('ChatComponent — prevRole', () => {
       expect(prevRole(0, [{ role: 'user' }])).toBeUndefined();
       expect(prevRole(1, [{ role: 'user' }, { role: 'assistant' }])).toBe('user');
       expect(prevRole(2, [{ role: 'user' }, { role: 'assistant' }, { role: 'user' }])).toBe('assistant');
+    });
+  });
+});
+
+// Helper: write into an InputSignal by reaching its underlying SIGNAL node.
+// (See streaming-markdown.component.spec.ts for the same pattern — vitest JIT
+// does not process signal-input metadata so componentRef.setInput throws
+// NG0303 for required signal inputs, and creating the fixture's full template
+// trips required-input checks on child primitives that are bound transitively.)
+function setSignalInput<T>(sig: unknown, value: T): void {
+  const obj = sig as Record<symbol, unknown>;
+  const signalSymbol = Object.getOwnPropertySymbols(obj).find(
+    (s) => s.description === 'SIGNAL',
+  );
+  if (!signalSymbol) throw new Error('Could not find SIGNAL symbol on input');
+  const node = obj[signalSymbol] as {
+    applyValueToInputSignal?: (n: unknown, v: T) => void;
+    value?: T;
+  };
+  if (typeof node.applyValueToInputSignal === 'function') {
+    node.applyValueToInputSignal(node, value);
+  } else {
+    node.value = value;
+  }
+}
+
+describe('ChatComponent welcome branch', () => {
+  // We construct the real ChatComponent inside an injection context and
+  // directly write its signal inputs using the SIGNAL writer (the same pattern
+  // as streaming-markdown.component.spec.ts).  This exercises the real
+  // showWelcome computed declared on the class — not a re-implementation —
+  // without invoking the template (which transitively requires inputs on
+  // child primitives that JIT cannot resolve).
+
+  it('shows welcome when messages are empty', () => {
+    TestBed.configureTestingModule({});
+    const injector = TestBed.inject(Injector);
+    runInInjectionContext(injector, () => {
+      const c = new ChatComponent();
+      setSignalInput(c.agent, mockAgent({ messages: [] }));
+      expect(c.showWelcome()).toBe(true);
+    });
+  });
+
+  it('hides welcome when messages exist', () => {
+    TestBed.configureTestingModule({});
+    const injector = TestBed.inject(Injector);
+    runInInjectionContext(injector, () => {
+      const c = new ChatComponent();
+      setSignalInput(c.agent, mockAgent({ messages: [new HumanMessage('hi')] }));
+      expect(c.showWelcome()).toBe(false);
+    });
+  });
+
+  it('hides welcome when welcomeDisabled=true', () => {
+    TestBed.configureTestingModule({});
+    const injector = TestBed.inject(Injector);
+    runInInjectionContext(injector, () => {
+      const c = new ChatComponent();
+      setSignalInput(c.agent, mockAgent({ messages: [] }));
+      setSignalInput(c.welcomeDisabled, true);
+      expect(c.showWelcome()).toBe(false);
     });
   });
 });
