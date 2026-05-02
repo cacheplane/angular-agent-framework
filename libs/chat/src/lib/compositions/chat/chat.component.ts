@@ -24,6 +24,7 @@ import { ChatGenerativeUiComponent } from '../../primitives/chat-generative-ui/c
 import { ChatStreamingMdComponent } from '../../streaming/streaming-markdown.component';
 import { ChatToolCallsComponent } from '../../primitives/chat-tool-calls/chat-tool-calls.component';
 import { ChatSubagentsComponent } from '../../primitives/chat-subagents/chat-subagents.component';
+import { ChatMessageActionsComponent } from '../../primitives/chat-message-actions/chat-message-actions.component';
 import { A2uiSurfaceComponent } from '../../a2ui/surface.component';
 import { createContentClassifier, type ContentClassifier } from '../../streaming/content-classifier';
 import { messageContent } from '../shared/message-utils';
@@ -39,6 +40,7 @@ import type { ChatRenderEvent } from './chat-render-event';
     ChatInputComponent, ChatTypingIndicatorComponent, ChatErrorComponent, ChatInterruptComponent,
     ChatThreadListComponent, ChatGenerativeUiComponent,
     ChatStreamingMdComponent, ChatToolCallsComponent, ChatSubagentsComponent, A2uiSurfaceComponent,
+    ChatMessageActionsComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styles: [CHAT_HOST_TOKENS, `
@@ -146,6 +148,13 @@ import type { ChatRenderEvent } from './chat-render-event';
                       />
                     }
                   }
+                  <chat-message-actions
+                    chatMessageControls
+                    [content]="content"
+                    (regenerate)="onRegenerate()"
+                    (rate)="onRate(message, $event)"
+                    (contentCopied)="onCopy(message, $event)"
+                  />
                 </chat-message>
               </ng-template>
 
@@ -179,6 +188,12 @@ export class ChatComponent {
   readonly activeThreadId = input<string>('');
   readonly threadSelected = output<string>();
   readonly renderEvent = output<ChatRenderEvent>();
+  /** Emitted when the user clicks the regenerate button on an assistant message. */
+  readonly regenerate = output<void>();
+  /** Emitted when the user rates an assistant message. */
+  readonly rate = output<{ messageIndex: number; rating: 'up' | 'down' }>();
+  /** Emitted when the user copies an assistant message. */
+  readonly messageCopy = output<{ messageIndex: number; content: string }>();
 
   private readonly _internalStore = signalStateStore({});
   readonly resolvedStore = computed(() => {
@@ -278,5 +293,24 @@ export class ChatComponent {
 
   onA2uiEvent(event: RenderEvent, messageIndex: number, surfaceId: string): void {
     this.renderEvent.emit({ messageIndex, surfaceId, event });
+  }
+
+  /** Regenerate the last assistant response by re-running the previous submit. */
+  onRegenerate(): void {
+    const a = this.agent();
+    if (typeof (a as { reload?: () => void }).reload === 'function') {
+      (a as unknown as { reload: () => void | Promise<void> }).reload();
+    }
+    this.regenerate.emit();
+  }
+
+  onRate(message: unknown, value: 'up' | 'down'): void {
+    const idx = this.agent().messages().indexOf(message as never);
+    this.rate.emit({ messageIndex: idx, rating: value });
+  }
+
+  onCopy(message: unknown, content: string): void {
+    const idx = this.agent().messages().indexOf(message as never);
+    this.messageCopy.emit({ messageIndex: idx, content });
   }
 }

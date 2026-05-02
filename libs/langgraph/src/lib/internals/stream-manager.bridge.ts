@@ -368,13 +368,16 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
             const projected = options.toMessage
               ? stateMessages.map(options.toMessage)
               : (stateMessages as BaseMessage[]);
-            // Preserve existing message ids when content matches. Server-
-            // echoed human messages and final AI messages often arrive with
-            // different ids than the optimistic / partial we already have —
-            // letting that id swap reach chat-message-list's track-by-id
-            // tears down DOM mid-stream. preserveIds maps new messages to
-            // existing-id-by-content where possible.
-            subjects.messages$.next(preserveIds(subjects.messages$.value, projected));
+            // Preserve existing ids by content match (server echo / final-id swap).
+            const remapped = preserveIds(subjects.messages$.value, projected);
+            // ALWAYS merge values-derived messages into existing rather
+            // than replacing. LangGraph emits intermediate values events
+            // during streaming where state.messages can lag behind what
+            // we've already seen via messages-tuple — replacing would
+            // drop the partial AI (or even the optimistic human) and
+            // tear down their DOM mid-stream. Merge by id keeps both,
+            // updates content where ids match, preserves the rest.
+            subjects.messages$.next(mergeMessages(subjects.messages$.value, remapped));
             syncSubagentsFromMessages(stateMessages as BaseMessage[]);
             subagentManager.reconstructFromMessages(
               stateMessages as BaseMessage[],

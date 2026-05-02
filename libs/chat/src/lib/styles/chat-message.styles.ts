@@ -39,9 +39,12 @@ export const CHAT_MESSAGE_STYLES = `
   .chat-message__caret {
     display: none;
     margin-left: 2px;
-    width: 0.6ch;
+    margin-top: 0.25rem;
     color: var(--ngaf-chat-text-muted);
-    animation: ngaf-chat-caret-blink 1.2s step-end infinite;
+    /* Smooth pulse curve (copilotkit-style) — easier on the eyes than a
+       hard step-end blink, especially during long streams. */
+    animation: ngaf-chat-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    vertical-align: text-bottom;
   }
   :host([data-role="assistant"][data-current="true"][data-streaming="true"]) .chat-message__caret {
     display: inline-block;

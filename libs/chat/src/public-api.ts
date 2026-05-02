@@ -36,6 +36,7 @@ export { ChatMessageListComponent, getMessageType } from './lib/primitives/chat-
 export { MessageTemplateDirective } from './lib/primitives/chat-message-list/message-template.directive';
 export { ChatMessageComponent } from './lib/primitives/chat-message/chat-message.component';
 export type { ChatMessageRole } from './lib/primitives/chat-message/chat-message.component';
+export { ChatMessageActionsComponent } from './lib/primitives/chat-message-actions/chat-message-actions.component';
 export { ChatWindowComponent } from './lib/primitives/chat-window/chat-window.component';
 export { ChatTraceComponent } from './lib/primitives/chat-trace/chat-trace.component';
 export type { TraceState } from './lib/primitives/chat-trace/chat-trace.component';

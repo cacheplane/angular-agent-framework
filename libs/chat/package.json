@@ -1,6 +1,6 @@
 {
   "name": "@ngaf/chat",
-  "version": "0.0.10",
+  "version": "0.0.11",
   "exports": {
     ".": {
       "types": "./index.d.ts",

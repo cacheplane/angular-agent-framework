@@ -420,7 +420,12 @@ function buildSubmitPayload(input: AgentSubmitInput | null | undefined): unknown
     const content = typeof input.message === 'string'
       ? input.message
       : input.message.map((b: ContentBlock) => (b.type === 'text' ? b.text : JSON.stringify(b))).join('');
-    return { messages: [{ role: 'human', content }], ...(input.state ?? {}) };
+    // `type: 'human'` is what `toMessage()` reads via `_getType` || raw['type'];
+    // `role: 'human'` is what the LangGraph server expects in submit payloads.
+    // Include both so the optimistic local copy projects as a 'user' bubble
+    // (otherwise toMessage falls through to the 'ai' default and renders the
+    // user's question as an assistant message).
+    return { messages: [{ type: 'human', role: 'human', content }], ...(input.state ?? {}) };
   }
   return input.state ?? {};
 }
