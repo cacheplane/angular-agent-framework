@@ -227,8 +227,9 @@ export function agent<
     subagents: subagentsNeutral,
     events$,
     history:   historyNeutral,
-    submit: (input: AgentSubmitInput, opts?: AgentSubmitOptions & LangGraphSubmitOptions) => {
-      manager.submit(buildSubmitPayload(input), opts);
+    submit: (input: AgentSubmitInput | null | undefined, opts?: AgentSubmitOptions & LangGraphSubmitOptions) => {
+      const request = buildSubmitRequest(input, opts);
+      manager.submit(request.payload, request.options);
       return Promise.resolve();
     },
     stop: () => manager.stop(),
@@ -389,8 +390,19 @@ function getToolCallIds(msg: CoreAIMessage): string[] {
     .filter((id): id is string => id != null);
 }
 
-function buildSubmitPayload(input: AgentSubmitInput): unknown {
-  if (input.resume !== undefined) return { __resume__: input.resume };
+function buildSubmitRequest(
+  input: AgentSubmitInput | null | undefined,
+  opts?: AgentSubmitOptions & LangGraphSubmitOptions,
+): { payload: unknown; options?: AgentSubmitOptions & LangGraphSubmitOptions } {
+  return {
+    payload: buildSubmitPayload(input),
+    options: normalizeSubmitOptions(input, opts),
+  };
+}
+
+function buildSubmitPayload(input: AgentSubmitInput | null | undefined): unknown {
+  if (input == null) return null;
+  if (input.resume !== undefined) return null;
   if (input.message !== undefined) {
     const content = typeof input.message === 'string'
       ? input.message
@@ -398,6 +410,27 @@ function buildSubmitPayload(input: AgentSubmitInput): unknown {
     return { messages: [{ role: 'human', content }], ...(input.state ?? {}) };
   }
   return input.state ?? {};
+}
+
+function normalizeSubmitOptions(
+  input: AgentSubmitInput | null | undefined,
+  opts?: AgentSubmitOptions & LangGraphSubmitOptions,
+): (AgentSubmitOptions & LangGraphSubmitOptions) | undefined {
+  const inputResume = input?.resume;
+  const optionResume = opts?.resume;
+  const resume = inputResume !== undefined ? inputResume : optionResume;
+  if (resume === undefined) return opts;
+
+  const next = { ...(opts ?? {}) };
+  delete next.resume;
+  const command = next.command;
+  return {
+    ...next,
+    command: {
+      ...command,
+      resume,
+    },
+  };
 }
 
 function randomId(): string {

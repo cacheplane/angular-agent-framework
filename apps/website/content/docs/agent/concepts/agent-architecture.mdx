@@ -593,12 +593,12 @@ export class DebugTimelineComponent {
 
   selectedState = computed(() => {
     const id = this.currentCheckpoint();
-    return this.history().find(c => c.id === id)?.state;
+    return this.history().find(c => c.id === id)?.values;
   });
 
   timeTravel(checkpointId: string) {
     this.currentCheckpoint.set(checkpointId);
-    this.agent.submit(null, { checkpoint: checkpointId });
+    this.agent.submit(null, { checkpointId });
   }
 }
 ```

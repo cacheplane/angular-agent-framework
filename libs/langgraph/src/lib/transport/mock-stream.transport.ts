@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-import { AgentQueueEntry, AgentTransport, StreamEvent } from '../agent.types';
+import type { AgentQueueEntry, AgentTransport, LangGraphSubmitOptions, StreamEvent } from '../agent.types';
 import type { ThreadState } from '@langchain/langgraph-sdk';
 
 /**
@@ -19,6 +19,7 @@ import type { ThreadState } from '@langchain/langgraph-sdk';
 export class MockAgentTransport implements AgentTransport {
   history: ThreadState[] = [];
   readonly historyCalls: string[] = [];
+  readonly streams: Array<{ threadId: string | null; payload: unknown; options?: LangGraphSubmitOptions }> = [];
   readonly createdQueuedRuns: AgentQueueEntry[] = [];
   readonly cancelledRuns: Array<{ threadId: string; runId: string }> = [];
   readonly joinedRuns: Array<{ threadId: string; runId: string }> = [];
@@ -70,7 +71,9 @@ export class MockAgentTransport implements AgentTransport {
     _threadId: string | null,
     _payload: unknown,
     signal: AbortSignal,
+    options?: LangGraphSubmitOptions,
   ): AsyncIterable<StreamEvent> {
+    this.streams.push({ threadId: _threadId, payload: _payload, options });
     this.streaming = true;
     try {
       while (!this.closed && !signal.aborted) {
@@ -102,13 +105,14 @@ export class MockAgentTransport implements AgentTransport {
     threadId: string,
     payload: unknown,
     signal: AbortSignal,
+    options?: LangGraphSubmitOptions,
   ): Promise<AgentQueueEntry> {
     void signal;
     const entry: AgentQueueEntry = {
       id: `queued-run-${this.createdQueuedRuns.length + 1}`,
       threadId,
       values: payload,
-      options: { multitaskStrategy: 'enqueue' },
+      options: { ...options, multitaskStrategy: 'enqueue' },
       createdAt: new Date(),
     };
     this.createdQueuedRuns.push(entry);

@@ -49,7 +49,7 @@
       },
       {
         "name": "createQueuedRun",
-        "signature": "createQueuedRun(assistantId: string, threadId: string, payload: unknown, signal: AbortSignal)",
+        "signature": "createQueuedRun(assistantId: string, threadId: string, payload: unknown, signal: AbortSignal, options: LangGraphSubmitOptions)",
         "description": "Create a pending server-side run using LangGraph's enqueue strategy.",
         "params": [
           {
@@ -75,6 +75,12 @@
             "type": "AbortSignal",
             "description": "",
             "optional": false
+          },
+          {
+            "name": "options",
+            "type": "LangGraphSubmitOptions",
+            "description": "",
+            "optional": true
           }
         ]
       },
@@ -130,7 +136,7 @@
       },
       {
         "name": "stream",
-        "signature": "stream(assistantId: string, threadId: string | null, payload: unknown, signal: AbortSignal)",
+        "signature": "stream(assistantId: string, threadId: string | null, payload: unknown, signal: AbortSignal, options: LangGraphSubmitOptions)",
         "description": "Open a streaming connection, creating a thread if needed.",
         "params": [
           {
@@ -156,6 +162,12 @@
             "type": "AbortSignal",
             "description": "",
             "optional": false
+          },
+          {
+            "name": "options",
+            "type": "LangGraphSubmitOptions",
+            "description": "",
+            "optional": true
           }
         ]
       }
@@ -206,6 +218,12 @@
         "type": "object[]",
         "description": "",
         "optional": false
+      },
+      {
+        "name": "streams",
+        "type": "object[]",
+        "description": "",
+        "optional": false
       }
     ],
     "methods": [
@@ -242,7 +260,7 @@
       },
       {
         "name": "createQueuedRun",
-        "signature": "createQueuedRun(_assistantId: string, threadId: string, payload: unknown, signal: AbortSignal)",
+        "signature": "createQueuedRun(_assistantId: string, threadId: string, payload: unknown, signal: AbortSignal, options: LangGraphSubmitOptions)",
         "description": "Optional: create a server-side queued run without joining it immediately.",
         "params": [
           {
@@ -268,6 +286,12 @@
             "type": "AbortSignal",
             "description": "",
             "optional": false
+          },
+          {
+            "name": "options",
+            "type": "LangGraphSubmitOptions",
+            "description": "",
+            "optional": true
           }
         ]
       },
@@ -361,7 +385,7 @@
       },
       {
         "name": "stream",
-        "signature": "stream(_assistantId: string, _threadId: string | null, _payload: unknown, signal: AbortSignal)",
+        "signature": "stream(_assistantId: string, _threadId: string | null, _payload: unknown, signal: AbortSignal, options: LangGraphSubmitOptions)",
         "description": "Open a streaming connection to an agent and yield events.",
         "params": [
           {
@@ -387,6 +411,12 @@
             "type": "AbortSignal",
             "description": "",
             "optional": false
+          },
+          {
+            "name": "options",
+            "type": "LangGraphSubmitOptions",
+            "description": "",
+            "optional": true
           }
         ]
       }
@@ -918,7 +948,7 @@
       {
         "name": "submit",
         "type": "object",
-        "description": "",
+        "description": "Submit input, resume commands, checkpoint forks, or other LangGraph run options.",
         "optional": false
       },
       {
@@ -954,14 +984,140 @@
     "description": "Options accepted by LangGraph-backed submit calls.",
     "properties": [
       {
+        "name": "afterSeconds",
+        "type": "number",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "checkpoint",
+        "type": "Omit<Checkpoint, \"thread_id\"> | null",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "checkpointDuring",
+        "type": "boolean",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "checkpointId",
+        "type": "string",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "command",
+        "type": "Command",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "config",
+        "type": "Config",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "context",
+        "type": "unknown",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "durability",
+        "type": "LangGraphDurability",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "feedbackKeys",
+        "type": "string[]",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "ifNotExists",
+        "type": "\"create\" | \"reject\"",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "interruptAfter",
+        "type": "string[] | \"*\"",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "interruptBefore",
+        "type": "string[] | \"*\"",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "metadata",
+        "type": "Metadata",
+        "description": "",
+        "optional": true
+      },
+      {
         "name": "multitaskStrategy",
         "type": "LangGraphMultitaskStrategy",
         "description": "Strategy for handling concurrent runs on the same thread.",
         "optional": true
       },
       {
+        "name": "onCompletion",
+        "type": "LangGraphOnCompletion",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "onDisconnect",
+        "type": "LangGraphOnDisconnect",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "onRunCreated",
+        "type": "object",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "resume",
+        "type": "unknown",
+        "description": "Convenience alias normalized to `command.resume` before invoking LangGraph.",
+        "optional": true
+      },
+      {
         "name": "signal",
         "type": "AbortSignal",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "streamMode",
+        "type": "StreamMode[]",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "streamResumable",
+        "type": "boolean",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "streamSubgraphs",
+        "type": "boolean",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "webhook",
+        "type": "string",
         "description": "",
         "optional": true
       }
@@ -1150,7 +1306,7 @@
       {
         "name": "submit",
         "type": "object",
-        "description": "",
+        "description": "Submit input, resume commands, checkpoint forks, or other LangGraph run options.",
         "optional": false
       },
       {
@@ -1205,7 +1361,7 @@
       },
       {
         "name": "type",
-        "type": "\"error\" | \"interrupt\" | \"values\" | `values|${string}` | \"messages\" | `messages|${string}` | `messages/${string}` | `messages/${string}|${string}` | \"updates\" | `updates|${string}` | \"tools\" | `tools|${string}` | \"custom\" | `custom|${string}` | `error|${string}` | \"metadata\" | \"checkpoints\" | `checkpoints|${string}` | \"tasks\" | `tasks|${string}` | \"debug\" | `debug|${string}` | \"events\" | `events|${string}` | \"interrupts\"",
+        "type": "\"error\" | \"values\" | \"messages\" | \"updates\" | \"events\" | \"debug\" | \"tasks\" | \"checkpoints\" | \"custom\" | \"tools\" | \"interrupt\" | `values|${string}` | `messages|${string}` | `messages/${string}` | `messages/${string}|${string}` | `updates|${string}` | `tools|${string}` | `custom|${string}` | `error|${string}` | \"metadata\" | `checkpoints|${string}` | `tasks|${string}` | `debug|${string}` | `events|${string}` | \"interrupts\"",
         "description": "Event type identifier (e.g., 'values', 'messages', 'error', 'interrupt').",
         "optional": false
       }
@@ -1231,7 +1387,7 @@
       },
       {
         "name": "status",
-        "type": "Signal<\"running\" | \"error\" | \"pending\" | \"complete\">",
+        "type": "Signal<\"running\" | \"error\" | \"complete\" | \"pending\">",
         "description": "Current execution status of the subagent.",
         "optional": false
       },

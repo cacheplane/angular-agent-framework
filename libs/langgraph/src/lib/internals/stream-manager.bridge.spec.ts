@@ -89,6 +89,50 @@ describe('createStreamManagerBridge', () => {
     destroy$.next();
   });
 
+  it('passes submit options through to the transport stream', async () => {
+    const seen: Array<{ payload: unknown; options: unknown }> = [];
+    const transport: AgentTransport = {
+      async *stream(_assistantId, _threadId, payload, _signal, options?: unknown) {
+        seen.push({ payload, options });
+        yield* [];
+      },
+    } as AgentTransport;
+    const subjects = makeSubjects();
+    const destroy$ = new Subject<void>();
+    const bridge = createStreamManagerBridge({
+      options: { apiUrl: '', assistantId: 'test', transport },
+      subjects,
+      threadId$: of('thread-1'),
+      destroy$: destroy$.asObservable(),
+    });
+
+    await bridge.submit(null, {
+      checkpoint: {
+        checkpoint_ns: '',
+        checkpoint_id: 'checkpoint-1',
+        checkpoint_map: null,
+      },
+      command: { resume: { approved: true } },
+      metadata: { source: 'ui' },
+    });
+
+    expect(seen).toEqual([
+      {
+        payload: null,
+        options: expect.objectContaining({
+          checkpoint: {
+            checkpoint_ns: '',
+            checkpoint_id: 'checkpoint-1',
+            checkpoint_map: null,
+          },
+          command: { resume: { approved: true } },
+          metadata: { source: 'ui' },
+        }),
+      },
+    ]);
+    destroy$.next();
+  });
+
   it('loads history when initialized with a thread id', async () => {
     const history = [makeThreadState('checkpoint-1')];
     const historyCalls: string[] = [];

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 import { Client } from '@langchain/langgraph-sdk';
 import type { StreamMode, ThreadState } from '@langchain/langgraph-sdk';
-import { AgentQueueEntry, AgentTransport, StreamEvent } from '../agent.types';
+import type { AgentQueueEntry, AgentTransport, LangGraphSubmitOptions, StreamEvent } from '../agent.types';
 
 /**
  * Production transport that connects to a LangGraph Platform API via HTTP and SSE.
@@ -44,10 +44,8 @@ export class FetchStreamTransport implements AgentTransport {
     threadId: string | null,
     payload: unknown,
     signal: AbortSignal,
+    options?: LangGraphSubmitOptions,
   ): AsyncIterable<StreamEvent> {
-    const streamMode = ['values', 'messages-tuple', 'updates', 'tools', 'custom'] satisfies StreamMode[];
-    const opts = { signal };
-
     let thread = threadId;
     if (!thread) {
       const t = await this.client.threads.create();
@@ -55,12 +53,11 @@ export class FetchStreamTransport implements AgentTransport {
       this.onThreadId?.(thread);
     }
 
-    const run = this.client.runs.stream(thread, assistantId, {
-      input: payload as Record<string, unknown>,
-      streamMode: streamMode as unknown as 'values',
-      streamSubgraphs: true,
-      ...opts,
-    });
+    const run = this.client.runs.stream(
+      thread,
+      assistantId,
+      buildRunPayload(payload, signal, options),
+    );
 
     for await (const event of run) {
       yield normalizeSdkEvent(event.event as StreamEvent['type'], event.data);
@@ -91,14 +88,11 @@ export class FetchStreamTransport implements AgentTransport {
     threadId: string,
     payload: unknown,
     signal: AbortSignal,
+    options?: LangGraphSubmitOptions,
   ): Promise<AgentQueueEntry> {
-    const streamMode = ['values', 'messages-tuple', 'updates', 'tools', 'custom'] satisfies StreamMode[];
     const run = await this.client.runs.create(threadId, assistantId, {
-      input: payload as Record<string, unknown>,
-      streamMode: streamMode as unknown as 'values',
-      streamSubgraphs: true,
+      ...buildRunPayload(payload, signal, options),
       multitaskStrategy: 'enqueue',
-      signal,
     });
 
     return {
@@ -119,6 +113,41 @@ export class FetchStreamTransport implements AgentTransport {
   async getHistory(threadId: string, signal: AbortSignal): Promise<ThreadState[]> {
     return this.client.threads.getHistory(threadId, { signal });
   }
+}
+
+function buildRunPayload(
+  input: unknown,
+  signal: AbortSignal,
+  options?: LangGraphSubmitOptions,
+): {
+  input: Record<string, unknown> | null;
+  streamMode: StreamMode[];
+  streamSubgraphs: boolean;
+  signal: AbortSignal;
+} & Omit<LangGraphSubmitOptions, 'signal' | 'resume' | 'checkpoint' | 'streamMode' | 'streamSubgraphs'> {
+  const runOptions = { ...(options ?? {}) };
+  const hasCheckpoint = Object.prototype.hasOwnProperty.call(runOptions, 'checkpoint');
+  const checkpoint = runOptions.checkpoint;
+  const streamMode = runOptions.streamMode;
+  const streamSubgraphs = runOptions.streamSubgraphs;
+  delete runOptions.signal;
+  delete runOptions.resume;
+  delete runOptions.checkpoint;
+  delete runOptions.streamMode;
+  delete runOptions.streamSubgraphs;
+
+  return {
+    ...runOptions,
+    ...(hasCheckpoint ? { checkpoint } : {}),
+    input: input as Record<string, unknown> | null,
+    streamMode: streamMode ?? defaultStreamMode(),
+    streamSubgraphs: streamSubgraphs ?? true,
+    signal,
+  };
+}
+
+function defaultStreamMode(): StreamMode[] {
+  return ['values', 'messages-tuple', 'updates', 'tools', 'custom'];
 }
 
 function normalizeSdkEvent(type: StreamEvent['type'], data: unknown): StreamEvent {

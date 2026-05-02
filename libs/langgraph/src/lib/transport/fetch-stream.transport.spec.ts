@@ -113,6 +113,83 @@ describe('FetchStreamTransport', () => {
     );
   });
 
+  it('forwards LangGraph submit options to streamed runs', async () => {
+    const checkpoint = {
+      checkpoint_ns: '',
+      checkpoint_id: 'checkpoint-1',
+      checkpoint_map: null,
+    };
+    const config = { configurable: { userId: 'user-1' } };
+    const metadata = { source: 'ui' };
+    const command = { resume: { approved: true } };
+    mocks.runsStream.mockReturnValue((async function* () {
+      yield { event: 'metadata', data: { run_id: 'run-1', thread_id: 'thread-1' } };
+    })());
+
+    const transport = new FetchStreamTransport('http://example.test');
+    await collect(
+      transport.stream(
+        'assistant-1',
+        'thread-1',
+        null,
+        new AbortController().signal,
+        {
+          checkpoint,
+          config,
+          metadata,
+          command,
+          durability: 'sync',
+          interruptBefore: ['review'],
+          onDisconnect: 'continue',
+          streamResumable: true,
+          feedbackKeys: ['quality'],
+        },
+      ),
+    );
+
+    expect(mocks.runsStream).toHaveBeenCalledWith(
+      'thread-1',
+      'assistant-1',
+      expect.objectContaining({
+        input: null,
+        checkpoint,
+        config,
+        metadata,
+        command,
+        durability: 'sync',
+        interruptBefore: ['review'],
+        onDisconnect: 'continue',
+        streamResumable: true,
+        feedbackKeys: ['quality'],
+      }),
+    );
+  });
+
+  it('preserves explicit null checkpoints on streamed runs', async () => {
+    mocks.runsStream.mockReturnValue((async function* () {
+      yield { event: 'metadata', data: { run_id: 'run-1', thread_id: 'thread-1' } };
+    })());
+
+    const transport = new FetchStreamTransport('http://example.test');
+    await collect(
+      transport.stream(
+        'assistant-1',
+        'thread-1',
+        null,
+        new AbortController().signal,
+        { checkpoint: null },
+      ),
+    );
+
+    expect(mocks.runsStream).toHaveBeenCalledWith(
+      'thread-1',
+      'assistant-1',
+      expect.objectContaining({
+        checkpoint: null,
+      }),
+    );
+  });
+
   it('preserves namespaced subgraph event types during normalization', async () => {
     const message = { id: 'sub-ai-1', type: 'ai', content: 'working' };
     const metadata = { checkpoint_ns: 'tools:call-1|model:abc' };
@@ -239,6 +316,42 @@ describe('FetchStreamTransport', () => {
       values: { messages: [{ type: 'human', content: 'queued' }] },
     });
     expect(entry.createdAt).toBeInstanceOf(Date);
+  });
+
+  it('forwards LangGraph submit options when creating queued runs', async () => {
+    const checkpoint = {
+      checkpoint_ns: '',
+      checkpoint_id: 'checkpoint-queued',
+      checkpoint_map: null,
+    };
+    mocks.runsCreate.mockResolvedValue({
+      run_id: 'run-queued',
+      thread_id: 'thread-1',
+      created_at: '2026-05-02T00:00:00.000Z',
+    });
+
+    const transport = new FetchStreamTransport('http://example.test');
+    await transport.createQueuedRun(
+      'assistant-1',
+      'thread-1',
+      { messages: [{ type: 'human', content: 'queued' }] },
+      new AbortController().signal,
+      {
+        checkpoint,
+        command: { resume: { ok: true } },
+        multitaskStrategy: 'interrupt',
+      },
+    );
+
+    expect(mocks.runsCreate).toHaveBeenCalledWith(
+      'thread-1',
+      'assistant-1',
+      expect.objectContaining({
+        checkpoint,
+        command: { resume: { ok: true } },
+        multitaskStrategy: 'enqueue',
+      }),
+    );
   });
 
   it('cancels a queued run by thread and run id', async () => {

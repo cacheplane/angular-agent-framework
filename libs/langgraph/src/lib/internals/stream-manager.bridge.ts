@@ -55,6 +55,7 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
 
   let currentThreadId: string | null = null;
   let lastPayload: unknown = null;
+  let lastOptions: LangGraphSubmitOptions | undefined;
   let abortController: AbortController | null = null;
   let historyAbortController: AbortController | null = null;
   let hasSeenThreadId = false;
@@ -162,6 +163,7 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
       currentThreadId,
       payload,
       opts?.signal ?? controller.signal,
+      opts,
     );
     queuedRuns.push({
       ...entry,
@@ -241,7 +243,7 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
     }
   }
 
-  async function runStream(payload: unknown): Promise<void> {
+  async function runStream(payload: unknown, opts?: LangGraphSubmitOptions): Promise<void> {
     abortController?.abort();
     abortController = new AbortController();
 
@@ -251,6 +253,7 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
     subjects.toolProgress$.next([]);
     toolProgressMap.clear();
     lastPayload = payload;
+    lastOptions = opts;
 
     // Optimistically inject human messages so they appear immediately
     // without waiting for the server to echo them back.
@@ -265,7 +268,8 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
         options.assistantId,
         currentThreadId,
         payload,
-        abortController.signal,
+        opts?.signal ?? abortController.signal,
+        opts,
       );
 
       for await (const event of iter) {
@@ -528,7 +532,7 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
         await enqueueRun(payload, opts);
         return;
       }
-      await runStream(payload);
+      await runStream(payload, opts);
     },
 
     stop: async () => {
@@ -566,7 +570,7 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
 
     resubmitLast: async () => {
       if (lastPayload !== null) {
-        await runStream(lastPayload);
+        await runStream(lastPayload, lastOptions);
       }
     },
   };

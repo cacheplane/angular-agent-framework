@@ -4,18 +4,23 @@ import type { ResourceStatus as NgResourceStatus } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 import type {
   BagTemplate,
+  Checkpoint,
+  Command,
+  Config,
   InferBag,
   Interrupt,
+  Metadata,
   ThreadState,
   ToolProgress,
   ToolCallWithResult,
+  StreamMode,
 } from '@langchain/langgraph-sdk';
 import type {
   MessageMetadata,
   SubmitOptions,
 } from '@langchain/langgraph-sdk/ui';
 import type { BaseMessage, AIMessage as CoreAIMessage } from '@langchain/core/messages';
-import type { AgentWithHistory } from '@ngaf/chat';
+import type { AgentSubmitInput, AgentSubmitOptions, AgentWithHistory } from '@ngaf/chat';
 
 // Re-export SDK types so consumers don't need to import from langgraph-sdk directly
 export type { BagTemplate, InferBag, Interrupt, ThreadState, SubmitOptions };
@@ -76,9 +81,35 @@ export interface StreamEvent {
 /** Strategy for handling concurrent LangGraph runs on the same thread. */
 export type LangGraphMultitaskStrategy = 'reject' | 'interrupt' | 'rollback' | 'enqueue';
 
+export type LangGraphDurability = 'exit' | 'async' | 'sync';
+export type LangGraphOnCompletion = 'complete' | 'continue';
+export type LangGraphOnDisconnect = 'cancel' | 'continue';
+
 /** Options accepted by LangGraph-backed submit calls. */
 export interface LangGraphSubmitOptions {
   signal?: AbortSignal;
+  config?: Config;
+  context?: unknown;
+  checkpoint?: Omit<Checkpoint, 'thread_id'> | null;
+  checkpointId?: string;
+  command?: Command;
+  metadata?: Metadata;
+  checkpointDuring?: boolean;
+  durability?: LangGraphDurability;
+  interruptBefore?: '*' | string[];
+  interruptAfter?: '*' | string[];
+  onCompletion?: LangGraphOnCompletion;
+  webhook?: string;
+  onDisconnect?: LangGraphOnDisconnect;
+  afterSeconds?: number;
+  ifNotExists?: 'create' | 'reject';
+  onRunCreated?: (params: { run_id: string; thread_id?: string }) => void;
+  streamMode?: StreamMode[];
+  streamSubgraphs?: boolean;
+  streamResumable?: boolean;
+  feedbackKeys?: string[];
+  /** Convenience alias normalized to `command.resume` before invoking LangGraph. */
+  resume?: unknown;
   /** Strategy for handling concurrent runs on the same thread. */
   multitaskStrategy?: LangGraphMultitaskStrategy;
 }
@@ -144,6 +175,7 @@ export interface AgentTransport {
     threadId: string | null,
     payload: unknown,
     signal: AbortSignal,
+    options?: LangGraphSubmitOptions,
   ): AsyncIterable<StreamEvent>;
 
   /** Optional: join an already-started run without creating a new one. */
@@ -160,6 +192,7 @@ export interface AgentTransport {
     threadId: string,
     payload: unknown,
     signal: AbortSignal,
+    options?: LangGraphSubmitOptions,
   ): Promise<AgentQueueEntry>;
 
   /** Optional: cancel a server-side run. */
@@ -248,6 +281,12 @@ export interface LangGraphAgent<T = unknown, ResolvedBag extends BagTemplate = B
 
   /** Experimental branch tree derived from LangGraph checkpoint history. */
   experimentalBranchTree: Signal<AgentBranchTree<T>>;
+
+  /** Submit input, resume commands, checkpoint forks, or other LangGraph run options. */
+  submit: (
+    input: AgentSubmitInput | null | undefined,
+    opts?: AgentSubmitOptions & LangGraphSubmitOptions,
+  ) => Promise<void>;
 
   // ── AgentRef fields preserved on the unified surface ─────────────────────
 

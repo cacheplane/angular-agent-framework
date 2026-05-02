@@ -209,6 +209,36 @@ describe('agent', () => {
     expect(Array.isArray(rawHist)).toBe(true);
   });
 
+  it('normalizes resume submit options into a LangGraph command', async () => {
+    const seen: Array<{ payload: unknown; options: unknown }> = [];
+    const transport = new MockAgentTransport();
+    transport.stream = async function* (
+      _assistantId: string,
+      _threadId: string | null,
+      payload: unknown,
+      _signal: AbortSignal,
+      options?: unknown,
+    ) {
+      seen.push({ payload, options });
+      yield* [];
+    };
+
+    const ref = withInjectionContext(() =>
+      agent({ apiUrl: '', assistantId: 'a', transport, threadId: 'thread-1', throttle: false })
+    );
+
+    await ref.submit(null, { resume: { approved: true } });
+
+    expect(seen).toEqual([
+      {
+        payload: null,
+        options: expect.objectContaining({
+          command: { resume: { approved: true } },
+        }),
+      },
+    ]);
+  });
+
   it('experimentalBranchTree() exposes a branch tree derived from LangGraph history', async () => {
     const root = threadState('root');
     const left = threadState('left', 'root');
