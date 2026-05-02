@@ -22,6 +22,7 @@ import { CHAT_HOST_TOKENS } from '../../styles/chat-tokens';
       height: 600px;
       max-height: calc(100vh - 6rem);
       background: var(--ngaf-chat-bg);
+      border: 1px solid var(--ngaf-chat-separator);
       border-radius: 0.75rem;
       box-shadow: 0 5px 40px rgba(0,0,0,.16);
       transform-origin: bottom right;
