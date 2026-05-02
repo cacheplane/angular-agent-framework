@@ -39,7 +39,7 @@ export function getMessageType(message: Message): MessageTemplateType {
   changeDetection: ChangeDetectionStrategy.OnPush,
   styles: [CHAT_HOST_TOKENS, CHAT_MESSAGE_LIST_STYLES],
   template: `
-    @for (message of messages(); track $index) {
+    @for (message of messages(); track message.id) {
       @let template = findTemplate(getMessageType(message));
       @if (template) {
         <ng-container
