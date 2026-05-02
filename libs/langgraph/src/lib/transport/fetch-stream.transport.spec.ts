@@ -60,6 +60,55 @@ describe('FetchStreamTransport', () => {
     ]);
   });
 
+  it('requests the stream modes required for values, messages, tools, and custom events', async () => {
+    mocks.runsStream.mockReturnValue((async function* () {
+      yield { event: 'metadata', data: { run_id: 'run-1', thread_id: 'thread-1' } };
+    })());
+
+    const transport = new FetchStreamTransport('http://example.test');
+    await collect(
+      transport.stream('assistant-1', 'thread-1', { input: 'hello' }, new AbortController().signal),
+    );
+
+    expect(mocks.runsStream).toHaveBeenCalledWith(
+      'thread-1',
+      'assistant-1',
+      expect.objectContaining({
+        streamMode: expect.arrayContaining([
+          'values',
+          'messages-tuple',
+          'updates',
+          'tools',
+          'custom',
+        ]),
+      }),
+    );
+  });
+
+  it('normalizes message tuple events without dropping metadata', async () => {
+    const message = { id: 'ai-1', type: 'ai', content: 'pong' };
+    const metadata = { langgraph_node: 'model', run_id: 'run-1' };
+    mocks.runsStream.mockReturnValue(
+      (async function* () {
+        yield { event: 'messages', data: [message, metadata] };
+      })(),
+    );
+
+    const transport = new FetchStreamTransport('http://example.test');
+    const events = await collect(
+      transport.stream('assistant-1', 'thread-1', { input: 'hello' }, new AbortController().signal),
+    );
+
+    expect(events).toEqual([
+      {
+        type: 'messages',
+        messages: [message],
+        messageMetadata: metadata,
+        data: [message, metadata],
+      },
+    ]);
+  });
+
   it('normalizes updates, interrupt, and interrupts payloads', async () => {
     mocks.runsStream.mockReturnValue(
       (async function* () {

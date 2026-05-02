@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 import { Client } from '@langchain/langgraph-sdk';
+import type { StreamMode } from '@langchain/langgraph-sdk';
 import { AgentTransport, StreamEvent } from '../agent.types';
 
 /**
@@ -44,7 +45,7 @@ export class FetchStreamTransport implements AgentTransport {
     payload: unknown,
     signal: AbortSignal,
   ): AsyncIterable<StreamEvent> {
-    const streamMode = ['values', 'messages', 'updates', 'events', 'debug'] as const;
+    const streamMode = ['values', 'messages-tuple', 'updates', 'tools', 'custom'] satisfies StreamMode[];
     const opts = { signal };
 
     let thread = threadId;
@@ -85,6 +86,10 @@ export class FetchStreamTransport implements AgentTransport {
 }
 
 function normalizeSdkEvent(type: StreamEvent['type'], data: unknown): StreamEvent {
+  if (type === 'messages' && Array.isArray(data) && data.length === 2 && isRecord(data[1])) {
+    return { type, messages: [data[0]], messageMetadata: data[1], data };
+  }
+
   if (isMessagesEvent(type) && Array.isArray(data)) {
     return { type, messages: data, data };
   }

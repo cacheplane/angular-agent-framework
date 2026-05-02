@@ -79,32 +79,17 @@ automatically on `submit()` calls.
 
 ---
 
-### Limitation: `getMessagesMetadata()` and `getToolCalls()` always return empty
+### Limitation: subagent tracking is deferred
 
-**Feature:** `getMessagesMetadata(msg, idx?)` / `getToolCalls(msg)`
+**Feature:** `subagents()` / `activeSubagents()` / `filterSubagentMessages` /
+`subagentToolNames`
 
-**React behavior:** `useStream()` derives per-message metadata (run ID, feedback
-keys, tool results) from an internal StreamManager message registry populated via
-the `onMessagesMetadata` callback.
+**React behavior:** `useStream()` can track Deep Agent subagent execution by
+combining subgraph stream events with tool-call registration.
 
-**Angular behavior:** v1 returns `undefined` / `[]` unconditionally. The
-`StreamManager` callback integration is deferred.
+**Angular behavior:** Tool calls, tool progress, message metadata, and
+per-message tool results are implemented. Subagent-specific stream routing is
+deferred to the next implementation phase.
 
-**Workaround:** None in v1. Tool call results are available via `toolCalls()`.
-
----
-
-### Limitation: `toolProgress()` and `toolCalls()` signals always return empty
-
-**Feature:** `toolProgress()` / `toolCalls()` reactive signals
-
-**React behavior:** `useStream()` populates these from `tool_progress` and
-`tool_calls` LangGraph SSE event types via StreamManager's internal dispatcher.
-
-**Angular behavior:** v1 leaves these unhandled in `processEvent` because the
-LangGraph SDK's `ToolProgressEvent` and `ToolCallEvent` shapes need to be
-confirmed against the published SDK types before implementation. Both signals
-return `[]` unconditionally.
-
-**Workaround:** None in v1. Subscribe to raw stream events via a custom transport
-if tool progress visibility is required.
+**Workaround:** Use `toolCalls()` and `toolProgress()` for tool-level visibility
+until dedicated subagent tracking lands.

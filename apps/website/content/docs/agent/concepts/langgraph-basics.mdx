@@ -227,16 +227,14 @@ builder.add_node("analyst", analyst_subgraph)
 builder.add_conditional_edges("supervisor", lambda s: s["next_agent"])
 ```
 
-**Angular connection:** Track each sub-agent independently:
+**Angular connection:** Dedicated subagent tracking is planned for the next implementation phase. Today, track delegated work through tool progress and tool results:
 ```typescript
 const orchestrator = agent<OrchestratorState>({
   assistantId: 'orchestrator',
-  subagentToolNames: ['researcher', 'analyst', 'writer'],
 });
 
-// See all active sub-agents
-const workers = computed(() => orchestrator.activeSubagents());
-const workerCount = computed(() => workers().length);
+const activeTools = computed(() => orchestrator.toolProgress());
+const completedTools = computed(() => orchestrator.toolCalls());
 ```
 
 ### Pattern 4: Persistent Conversations
@@ -322,10 +320,9 @@ agent.interrupt()      // Signal<Interrupt> — agent is paused
 agent.history()        // Signal<ThreadState[]> — checkpoint timeline
 agent.branch()         // Signal<string> — time-travel branch
 
-// Multi-agent
-agent.subagents()      // Signal<Map> — delegated agents
-agent.activeSubagents() // Signal<SubagentRef[]> — running workers
 agent.toolCalls()      // Signal<ToolCallWithResult[]> — tool results
+agent.toolProgress()   // Signal<ToolProgress[]> — active tool execution
+// Dedicated subagent signals are planned next.
 ```
 
 </Tab>

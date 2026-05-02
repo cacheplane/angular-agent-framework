@@ -27,7 +27,7 @@
 
 ---
 
-`agent()` is the Angular equivalent of LangGraph's React `useStream()` hook — a full-parity implementation built on Angular Signals and the Angular Resource API. It gives enterprise Angular teams the same production-grade streaming primitives available to React developers on LangChain, without compromises or workarounds. Drop it into any Angular 20+ component, point it at your LangGraph Platform endpoint, and get reactive, signal-driven access to streaming state, messages, tool calls, interrupts, and thread history.
+`agent()` is the Angular equivalent of LangGraph's React `useStream()` hook, built on Angular Signals and the Angular Resource API. It gives enterprise Angular teams production-grade streaming primitives for LangChain. Drop it into any Angular 20+ component, point it at your LangGraph Platform endpoint, and get reactive, signal-driven access to streaming state, messages, tool calls, interrupts, and thread history.
 
 ---
 
@@ -94,7 +94,7 @@ That's it. `chat.messages()` is an Angular Signal. Bind it directly in your temp
 | Tool call progress | `toolProgress()` | `toolProgress` |
 | Tool calls with results | `toolCalls()` | `toolCalls` |
 | Branch / history | `branch()` / `history()` | `branch` / `history` |
-| Subagent streaming | `subagents()` / `activeSubagents()` | `subagents` / `activeSubagents` |
+| Subagent streaming | Planned next | `subagents` / `activeSubagents` |
 | Reactive thread switching | `Signal<string \| null>` input | prop |
 | Submit | `submit(values, opts?)` | `submit(values, opts?)` |
 | Stop | `stop()` | `stop()` |

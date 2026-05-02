@@ -6,6 +6,10 @@ Subgraphs let you compose complex agents from smaller, focused units. agent() tr
 LangGraph calls them subgraphs (modular graph composition). Deep Agents calls them subagents (task delegation). agent() supports both patterns through the same API.
 </Callout>
 
+<Callout type="warning" title="Implementation status">
+Tool calls, tool progress, and tool results stream today. The `subagents()` / `activeSubagents()` examples below describe the planned Phase 2 API; until that lands, use `toolCalls()` and `toolProgress()` for visibility into delegated work.
+</Callout>
+
 ## How subgraph composition works
 
 Subgraph composition starts on the agent side. Each subgraph is a fully compiled `StateGraph` that can be added as a node in a parent graph.
