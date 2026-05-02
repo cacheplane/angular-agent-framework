@@ -330,6 +330,62 @@ describe('agent', () => {
     });
   });
 
+  it('subagents() and activeSubagents() expose delegated work as signals', async () => {
+    const transport = new MockAgentTransport();
+    const ref = withInjectionContext(() =>
+      agent({
+        apiUrl: '',
+        assistantId: 'a',
+        transport,
+        throttle: false,
+        subagentToolNames: ['task'],
+        filterSubagentMessages: true,
+      })
+    );
+
+    ref.submit({ message: 'hello' });
+    transport.emit([{
+      type: 'messages',
+      messages: [{
+        id: 'ai-1',
+        type: 'ai',
+        content: '',
+        tool_calls: [{
+          id: 'call-1',
+          name: 'task',
+          args: { subagent_type: 'researcher', description: 'Research Angular signals' },
+        }],
+      }],
+    } satisfies StreamEvent]);
+    transport.emit([{
+      type: 'messages|tools:call-1' as StreamEvent['type'],
+      namespace: ['tools:call-1'],
+      messages: [{ id: 'sub-ai-1', type: 'ai', content: 'Subagent note' }],
+      messageMetadata: { checkpoint_ns: 'tools:call-1|model:abc' },
+    } satisfies StreamEvent]);
+
+    await new Promise(r => setTimeout(r, 20));
+
+    expect(ref.activeSubagents()).toHaveLength(1);
+    expect(ref.activeSubagents()[0].status()).toBe('running');
+    expect(ref.subagents().get('call-1')?.name).toBe('researcher');
+    expect(ref.subagents().get('call-1')?.messages()).toEqual([
+      expect.objectContaining({ id: 'sub-ai-1', role: 'assistant', content: 'Subagent note' }),
+    ]);
+    expect(ref.messages()).toHaveLength(1);
+    expect(ref.messages()[0].id).toBe('ai-1');
+
+    transport.emit([{
+      type: 'messages',
+      messages: [{ id: 'tool-1', type: 'tool', tool_call_id: 'call-1', content: 'done', status: 'success' }],
+    } satisfies StreamEvent]);
+    transport.close();
+    await new Promise(r => setTimeout(r, 20));
+
+    expect(ref.activeSubagents()).toHaveLength(0);
+    expect(ref.subagents().get('call-1')?.status()).toBe('complete');
+  });
+
   it('events$ is an Observable-like with .subscribe', () => {
     const transport = new MockAgentTransport();
     const ref = withInjectionContext(() =>

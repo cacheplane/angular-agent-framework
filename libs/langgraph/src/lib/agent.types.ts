@@ -43,19 +43,31 @@ export interface StreamEvent {
   /** Event type identifier (e.g., 'values', 'messages', 'error', 'interrupt'). */
   type:
     | 'values'
+    | `values|${string}`
     | 'messages'
+    | `messages|${string}`
     | `messages/${string}`
+    | `messages/${string}|${string}`
     | 'updates'
+    | `updates|${string}`
     | 'tools'
+    | `tools|${string}`
     | 'custom'
+    | `custom|${string}`
     | 'error'
+    | `error|${string}`
     | 'metadata'
     | 'checkpoints'
+    | `checkpoints|${string}`
     | 'tasks'
+    | `tasks|${string}`
     | 'debug'
+    | `debug|${string}`
     | 'events'
+    | `events|${string}`
     | 'interrupt'
     | 'interrupts';
+  namespace?: string[];
   messages?: unknown[];
   messageMetadata?: Record<string, unknown>;
   [key: string]: unknown;
@@ -122,6 +134,8 @@ export interface AgentOptions<T, ResolvedBag extends BagTemplate> {
 export interface SubagentStreamRef {
   /** The tool call ID that spawned this subagent. */
   toolCallId: string;
+  /** Optional human-readable subagent type/name. */
+  name?: string;
   /** Current execution status of the subagent. */
   status: Signal<'pending' | 'running' | 'complete' | 'error'>;
   /** Current state values from the subagent. */

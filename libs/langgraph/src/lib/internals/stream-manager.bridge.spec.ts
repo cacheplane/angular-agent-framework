@@ -499,6 +499,156 @@ describe('createStreamManagerBridge', () => {
     destroy$.next();
   });
 
+  it('tracks configured subagent tool calls through running and completion states', async () => {
+    const transport = new MockAgentTransport();
+    const subjects = makeSubjects();
+    const destroy$ = new Subject<void>();
+    const bridge = createStreamManagerBridge({
+      options: {
+        apiUrl: '',
+        assistantId: 'test',
+        transport,
+        subagentToolNames: ['task'],
+      },
+      subjects,
+      threadId$: of(null),
+      destroy$: destroy$.asObservable(),
+    });
+
+    bridge.submit({});
+    transport.emit([{
+      type: 'messages',
+      messages: [{
+        id: 'ai-1',
+        type: 'ai',
+        content: '',
+        tool_calls: [{
+          id: 'call-1',
+          name: 'task',
+          args: { subagent_type: 'researcher', description: 'Research Angular signals' },
+        }],
+      }],
+    } satisfies StreamEvent]);
+    transport.emit([{
+      type: 'values|tools:call-1' as StreamEvent['type'],
+      namespace: ['tools:call-1'],
+      data: { messages: [{ type: 'human', content: 'Research Angular signals' }], notes: 'started' },
+    } satisfies StreamEvent]);
+
+    await new Promise(r => setTimeout(r, 10));
+
+    const running = subjects.subagents$.value.get('call-1');
+    expect(running?.toolCallId).toBe('call-1');
+    expect(running?.status()).toBe('running');
+    expect(running?.values()).toMatchObject({ notes: 'started' });
+
+    transport.emit([{
+      type: 'messages',
+      messages: [{ id: 'tool-1', type: 'tool', tool_call_id: 'call-1', content: 'done', status: 'success' }],
+    } satisfies StreamEvent]);
+    transport.close();
+
+    await new Promise(r => setTimeout(r, 10));
+
+    expect(subjects.subagents$.value.get('call-1')?.status()).toBe('complete');
+    destroy$.next();
+  });
+
+  it('routes subagent message tuples out of main messages when filtering is enabled', async () => {
+    const transport = new MockAgentTransport();
+    const subjects = makeSubjects();
+    const destroy$ = new Subject<void>();
+    const bridge = createStreamManagerBridge({
+      options: {
+        apiUrl: '',
+        assistantId: 'test',
+        transport,
+        subagentToolNames: ['task'],
+        filterSubagentMessages: true,
+      },
+      subjects,
+      threadId$: of(null),
+      destroy$: destroy$.asObservable(),
+    });
+
+    bridge.submit({});
+    transport.emit([{
+      type: 'messages',
+      messages: [{
+        id: 'ai-1',
+        type: 'ai',
+        content: '',
+        tool_calls: [{
+          id: 'call-1',
+          name: 'task',
+          args: { subagent_type: 'researcher', description: 'Research Angular signals' },
+        }],
+      }],
+    } satisfies StreamEvent]);
+    transport.emit([{
+      type: 'messages|tools:call-1' as StreamEvent['type'],
+      namespace: ['tools:call-1'],
+      messages: [{ id: 'sub-ai-1', type: 'ai', content: 'Subagent note' }],
+      messageMetadata: { checkpoint_ns: 'tools:call-1|model:abc' },
+    } satisfies StreamEvent]);
+    transport.close();
+
+    await new Promise(r => setTimeout(r, 10));
+
+    expect(subjects.messages$.value).toHaveLength(1);
+    expect(subjects.messages$.value[0]).toMatchObject({ id: 'ai-1' });
+    expect(subjects.subagents$.value.get('call-1')?.messages()).toEqual([
+      expect.objectContaining({ id: 'sub-ai-1', type: 'ai', content: 'Subagent note' }),
+    ]);
+    destroy$.next();
+  });
+
+  it('clears tracked subagents when the thread changes', async () => {
+    const transport = new MockAgentTransport();
+    const subjects = makeSubjects();
+    const destroy$ = new Subject<void>();
+    const threadId$ = new BehaviorSubject<string | null>('thread-1');
+    const bridge = createStreamManagerBridge({
+      options: {
+        apiUrl: '',
+        assistantId: 'test',
+        transport,
+        subagentToolNames: ['task'],
+      },
+      subjects,
+      threadId$: threadId$.asObservable(),
+      destroy$: destroy$.asObservable(),
+    });
+
+    bridge.submit({});
+    transport.emit([{
+      type: 'messages',
+      messages: [{
+        id: 'ai-1',
+        type: 'ai',
+        content: '',
+        tool_calls: [{
+          id: 'call-1',
+          name: 'task',
+          args: { subagent_type: 'researcher', description: 'Research Angular signals' },
+        }],
+      }],
+    } satisfies StreamEvent]);
+    transport.emit([{
+      type: 'values|tools:call-1' as StreamEvent['type'],
+      namespace: ['tools:call-1'],
+      data: { messages: [{ type: 'human', content: 'Research Angular signals' }] },
+    } satisfies StreamEvent]);
+    await new Promise(r => setTimeout(r, 10));
+    expect(subjects.subagents$.value.size).toBe(1);
+
+    threadId$.next('thread-2');
+    await new Promise(r => setTimeout(r, 10));
+
+    expect(subjects.subagents$.value.size).toBe(0);
+    destroy$.next();
+  });
+
   it('accumulates multiple custom events in order', async () => {
     const transport = new MockAgentTransport();
     const subjects = makeSubjects();

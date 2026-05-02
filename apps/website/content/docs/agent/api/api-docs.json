@@ -740,8 +740,26 @@
     "description": "An event emitted by a LangGraph stream.",
     "properties": [
       {
+        "name": "messageMetadata",
+        "type": "Record<string, unknown>",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "messages",
+        "type": "unknown[]",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "namespace",
+        "type": "string[]",
+        "description": "",
+        "optional": true
+      },
+      {
         "name": "type",
-        "type": "\"error\" | \"values\" | \"messages\" | `messages/${string}` | \"updates\" | \"tools\" | \"custom\" | \"metadata\" | \"checkpoints\" | \"tasks\" | \"debug\" | \"events\" | \"interrupt\" | \"interrupts\"",
+        "type": "\"error\" | \"values\" | `values|${string}` | \"messages\" | `messages|${string}` | `messages/${string}` | `messages/${string}|${string}` | \"updates\" | `updates|${string}` | \"tools\" | `tools|${string}` | \"custom\" | `custom|${string}` | `error|${string}` | \"metadata\" | \"checkpoints\" | `checkpoints|${string}` | \"tasks\" | `tasks|${string}` | \"debug\" | `debug|${string}` | \"events\" | `events|${string}` | \"interrupt\" | \"interrupts\"",
         "description": "Event type identifier (e.g., 'values', 'messages', 'error', 'interrupt').",
         "optional": false
       }
@@ -758,6 +776,12 @@
         "type": "Signal<BaseMessage<MessageStructure<MessageToolSet>, MessageType>[]>",
         "description": "Messages from the subagent conversation.",
         "optional": false
+      },
+      {
+        "name": "name",
+        "type": "string",
+        "description": "Optional human-readable subagent type/name.",
+        "optional": true
       },
       {
         "name": "status",

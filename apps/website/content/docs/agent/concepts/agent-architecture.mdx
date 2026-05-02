@@ -460,12 +460,8 @@ export class MultiAgentComponent {
 </Tab>
 </Tabs>
 
-<Callout type="warning" title="Subagent signal status">
-Tool calls, tool progress, and tool results stream today. Dedicated `subagents()` and `activeSubagents()` tracking is planned for the next implementation phase; use `toolCalls()` and `toolProgress()` for current delegated-work visibility.
-</Callout>
-
 <Callout type="tip" title="subagentToolNames is the key">
-The `subagentToolNames` option will tell agent() which graph nodes are subagents. Until dedicated tracking lands, subagent execution appears through the regular tool-call and tool-progress signals.
+The `subagentToolNames` option tells agent() which tool calls spawn subagents. The default Deep Agents tool name is `task`; set this option when your graph uses custom delegation tool names.
 </Callout>
 
 ## Error Handling and Recovery
@@ -662,7 +658,7 @@ builder.add_node("analyst", analyst_subgraph)
 builder.add_conditional_edges("supervisor", route_to_agent)
 ```
 
-**Angular signals used today:** `messages()`, `toolCalls()`, `toolProgress()`, `status()`; dedicated `subagents()` / `activeSubagents()` tracking is planned next.
+**Angular signals used:** `messages()`, `subagents()`, `activeSubagents()`, `toolCalls()`, `toolProgress()`, `status()`
 
 ### Decision Matrix
 

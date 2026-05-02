@@ -17,7 +17,7 @@ const CHIPS: ChipData[] = [
   { icon: '💾', title: 'Persistence', signal: 'threadId', href: '/docs/guides/persistence', gradient: 'linear-gradient(135deg, rgba(16,185,129,0.06), rgba(52,199,89,0.08))', border: 'rgba(16,185,129,0.1)' },
   { icon: '✋', title: 'Interrupts', signal: 'chat.interrupt()', href: '/docs/guides/interrupts', gradient: 'linear-gradient(135deg, rgba(232,147,12,0.06), rgba(245,180,60,0.08))', border: 'rgba(232,147,12,0.1)' },
   { icon: '⏪', title: 'Time Travel', signal: 'chat.history()', href: '/docs/guides/time-travel', gradient: 'linear-gradient(135deg, rgba(221,0,49,0.05), rgba(255,100,130,0.07))', border: 'rgba(221,0,49,0.08)' },
-  { icon: '🔀', title: 'Subagents', signal: 'Phase 2', href: '/docs/guides/subgraphs', gradient: 'linear-gradient(135deg, rgba(0,64,144,0.05), rgba(0,100,180,0.07))', border: 'rgba(0,64,144,0.08)' },
+  { icon: '🔀', title: 'Subagents', signal: 'chat.subagents()', href: '/docs/guides/subgraphs', gradient: 'linear-gradient(135deg, rgba(0,64,144,0.05), rgba(0,100,180,0.07))', border: 'rgba(0,64,144,0.08)' },
   { icon: '🔧', title: 'Tool Calls', signal: 'chat.toolCalls()', href: '/docs/guides/streaming', gradient: 'linear-gradient(135deg, rgba(100,80,200,0.05), rgba(120,100,210,0.07))', border: 'rgba(100,80,200,0.08)' },
   { icon: '🧪', title: 'Testing', signal: 'MockTransport', href: '/docs/guides/testing', gradient: 'linear-gradient(135deg, rgba(16,185,129,0.05), rgba(40,200,140,0.07))', border: 'rgba(16,185,129,0.08)' },
 ];
