@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 import {
   inject, DestroyRef, computed, effect,
-  isSignal, Signal, signal,
+  isSignal, Signal,
 } from '@angular/core';
 import { AGENT_CONFIG } from './agent.provider';
 import { toSignal, toObservable } from '@angular/core/rxjs-interop';
@@ -162,49 +162,13 @@ export function agent<
 
   // Convert to Angular Signals (must happen in injection context)
   const value        = toSignal(maybeThrottle(values$),   { initialValue: init });
-  // rawMessages is hand-rolled instead of `toSignal(maybeThrottle(messages$))`
-  // to avoid the leading/trailing throttle collapsing the optimistic-user
-  // injection into the same emission as the first AI partial. We bypass the
-  // throttle whenever the messages array grows in length (new message added)
-  // so user-visible message additions render in their own frame. Same-length
-  // updates (token-by-token AI streaming) still get throttled to ~60fps.
-  const rawMessagesSig = signal<BaseMessage[]>([]);
-  {
-    let lastLen = 0;
-    let throttleHandle: ReturnType<typeof setTimeout> | null = null;
-    let pending: BaseMessage[] | null = null;
-    const flushPending = () => {
-      throttleHandle = null;
-      if (pending) {
-        rawMessagesSig.set(pending);
-        pending = null;
-      }
-    };
-    messages$
-      .pipe(takeUntil(destroy$))
-      .subscribe((m) => {
-        if (m.length !== lastLen) {
-          // Length changed (add or remove): emit synchronously, cancel pending.
-          lastLen = m.length;
-          if (throttleHandle !== null) {
-            clearTimeout(throttleHandle);
-            throttleHandle = null;
-            pending = null;
-          }
-          rawMessagesSig.set(m);
-        } else if (ms > 0) {
-          // Same-length update (token streaming): coalesce within the throttle window.
-          pending = m;
-          if (throttleHandle === null) {
-            throttleHandle = setTimeout(flushPending, ms);
-          }
-        } else {
-          // No throttle configured: emit immediately.
-          rawMessagesSig.set(m);
-        }
-      });
-  }
-  const rawMessages = rawMessagesSig.asReadonly();
+  // No throttle on messages$: we need every token emission to propagate to
+  // Angular so streaming markdown actually streams. The bridge already
+  // batches per-tuple at the SDK level; further throttling at the signal
+  // boundary collapses tokens together and breaks visible token-by-token
+  // rendering. Same-frame multiple emissions are coalesced by Angular's
+  // CD anyway.
+  const rawMessages  = toSignal(messages$, { initialValue: [] as BaseMessage[] });
   const statusSig    = toSignal(status$,          { initialValue: ResourceStatus.Idle });
   const errorSig     = toSignal(error$,           { initialValue: undefined as unknown });
   const hasValueSig  = toSignal(hasValue$,        { initialValue: false });
@@ -226,20 +190,14 @@ export function agent<
 
   // ── Runtime-neutral projections ───────────────────────────────────────────
 
-  // Memoise BaseMessage → Message projections by raw-message identity. This
-  // keeps the projected `id` stable for the same logical message across
-  // recomputes (e.g. token-by-token streaming emits a fresh array but the
-  // BaseMessage reference is the same). Track-by-id in chat-message-list
-  // depends on this identity to avoid DOM teardown + animation restarts.
-  const messageProjections = new WeakMap<BaseMessage, Message>();
-  const projectMessage = (m: BaseMessage): Message => {
-    let cached = messageProjections.get(m);
-    if (cached) return cached;
-    cached = toMessage(m);
-    messageProjections.set(m, cached);
-    return cached;
-  };
-  const messagesNeutral = computed<Message[]>(() => rawMessages().map(projectMessage));
+  // Project BaseMessage → Message on every recompute. We deliberately do
+  // NOT cache: the LangGraph SDK mutates the same AIMessage instance in
+  // place during token streaming (appends content to the same object), so
+  // any identity-based cache returns stale projections and Angular's
+  // `@let content = messageContent(message)` short-circuits — DOM never
+  // updates per token. DOM stability is provided by `track message.id`
+  // in chat-message-list, not by Message identity.
+  const messagesNeutral = computed<Message[]>(() => rawMessages().map(toMessage));
 
   const toolCallsNeutral = computed<ToolCall[]>(() => rawToolCalls().map(toToolCall));
 
@@ -391,11 +349,42 @@ function toMessage(m: BaseMessage): Message {
   return {
     id: (m.id as string | undefined) ?? (raw['id'] as string | undefined) ?? randomId(),
     role,
-    content: typeof m.content === 'string' ? m.content : JSON.stringify(m.content),
+    content: extractTextContent(m.content),
     toolCallId: raw['tool_call_id'] as string | undefined,
     name: raw['name'] as string | undefined,
     extra: raw,
   };
+}
+
+/**
+ * Extract user-visible text from a `BaseMessage.content` value.
+ *
+ * LangChain's `BaseMessage.content` is `string | MessageContentComplex[]`.
+ * Reasoning-capable models (OpenAI gpt-5/o-series, Anthropic) emit complex
+ * arrays of typed blocks: `{type: 'text', text}`, `{type: 'reasoning', ...}`,
+ * tool-use blocks, etc. We render only the visible text portions and skip
+ * anything else. JSON-stringifying the whole array (the previous behaviour)
+ * would dump raw `[{"type":"text",...}]` into the chat bubble.
+ */
+function extractTextContent(content: unknown): string {
+  if (typeof content === 'string') return content;
+  if (!Array.isArray(content)) return '';
+  let out = '';
+  for (const block of content) {
+    if (typeof block === 'string') {
+      out += block;
+      continue;
+    }
+    if (!isRecord(block)) continue;
+    const t = block['type'];
+    // Common text-bearing block shapes across providers.
+    if (t === 'text' || t === 'output_text' || t === undefined) {
+      const text = block['text'];
+      if (typeof text === 'string') out += text;
+    }
+    // Skip reasoning, tool_use, image, etc. — not chat-bubble content.
+  }
+  return out;
 }
 
 function toToolCall(tc: ToolCallWithResult): ToolCall {
