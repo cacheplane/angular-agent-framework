@@ -95,7 +95,7 @@ from langgraph.graph import StateGraph, END
 from langchain_openai import ChatOpenAI
 
 def build_streaming_graph():
-    llm = ChatOpenAI(model="gpt-4o-mini", streaming=True)
+    llm = ChatOpenAI(model="gpt-5-mini", streaming=True)
 
     async def generate(state):
         response = await llm.ainvoke(state["messages"])

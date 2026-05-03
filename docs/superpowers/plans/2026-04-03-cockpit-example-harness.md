@@ -1077,7 +1077,7 @@ def build_streaming_graph() -> StateGraph:
     Returns:
         A compiled StateGraph ready for invocation
     """
-    llm = ChatOpenAI(model="gpt-4o-mini", streaming=True)
+    llm = ChatOpenAI(model="gpt-5-mini", streaming=True)
 
     async def generate(state: StreamingState) -> dict:
         """

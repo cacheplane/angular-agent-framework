@@ -176,7 +176,7 @@ PROMPTS_DIR = Path(__file__).parent.parent / "prompts"
 
 
 def build_generative_ui_graph():
-    llm = ChatOpenAI(model="gpt-4o-mini", streaming=True)
+    llm = ChatOpenAI(model="gpt-5-mini", streaming=True)
 
     async def generate(state: MessagesState) -> dict:
         system_prompt = (PROMPTS_DIR / "generative-ui.md").read_text()

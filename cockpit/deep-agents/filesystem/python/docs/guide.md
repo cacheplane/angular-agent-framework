@@ -139,7 +139,7 @@ def write_file(path: str, content: str) -> str:
     return f"Successfully wrote {len(content)} bytes to {path}"
 
 # Bind tools to the LLM
-llm = ChatOpenAI(model="gpt-4o-mini").bind_tools([read_file, write_file])
+llm = ChatOpenAI(model="gpt-5-mini").bind_tools([read_file, write_file])
 ```
 
 The agent node invokes the LLM, which may emit tool calls. A conditional edge routes to the `ToolNode` when tool calls are present, then loops back to the agent. The frontend sees each tool call in `stream.messages()`.

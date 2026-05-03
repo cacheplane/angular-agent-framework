@@ -19,7 +19,7 @@ from src.dashboard_tools import ALL_TOOLS
 
 _PROMPT = (Path(__file__).parent.parent / "prompts" / "dashboard.md").read_text()
 
-_llm = ChatOpenAI(model="gpt-4o-mini", temperature=0, streaming=True)
+_llm = ChatOpenAI(model="gpt-5-mini", temperature=0, streaming=True)
 _llm_with_tools = _llm.bind_tools(ALL_TOOLS)
 
 

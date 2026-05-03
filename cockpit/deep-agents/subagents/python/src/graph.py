@@ -23,12 +23,12 @@ class SubagentsState(TypedDict):
 
 
 def build_subagents_graph():
-    llm = ChatOpenAI(model="gpt-4o-mini", streaming=True)
+    llm = ChatOpenAI(model="gpt-5-mini", streaming=True)
 
     @tool
     async def research_agent(topic: str) -> str:
         """Spawn a research subagent to gather information on a topic."""
-        research_llm = ChatOpenAI(model="gpt-4o-mini", streaming=True)
+        research_llm = ChatOpenAI(model="gpt-5-mini", streaming=True)
         response = await research_llm.ainvoke([
             SystemMessage(content="You are a research specialist. Provide concise, factual information."),
             {"role": "human", "content": f"Research this topic and provide key facts: {topic}"},
@@ -38,7 +38,7 @@ def build_subagents_graph():
     @tool
     async def analysis_agent(content: str) -> str:
         """Spawn an analysis subagent to analyze and synthesize information."""
-        analysis_llm = ChatOpenAI(model="gpt-4o-mini", streaming=True)
+        analysis_llm = ChatOpenAI(model="gpt-5-mini", streaming=True)
         response = await analysis_llm.ainvoke([
             SystemMessage(content="You are an analysis specialist. Identify patterns, draw insights, and synthesize information clearly."),
             {"role": "human", "content": f"Analyze this content and provide key insights: {content}"},
@@ -48,7 +48,7 @@ def build_subagents_graph():
     @tool
     async def summary_agent(findings: str) -> str:
         """Spawn a summary subagent to produce a final coherent response."""
-        summary_llm = ChatOpenAI(model="gpt-4o-mini", streaming=True)
+        summary_llm = ChatOpenAI(model="gpt-5-mini", streaming=True)
         response = await summary_llm.ainvoke([
             SystemMessage(content="You are a summarization specialist. Produce clear, well-structured summaries."),
             {"role": "human", "content": f"Summarize these findings into a concise final answer: {findings}"},

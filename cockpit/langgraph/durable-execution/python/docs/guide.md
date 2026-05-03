@@ -124,7 +124,7 @@ class DurableState(TypedDict):
 checkpointer = MemorySaver()
 
 def build_durable_execution_graph():
-    llm = ChatOpenAI(model="gpt-4o-mini", streaming=True)
+    llm = ChatOpenAI(model="gpt-5-mini", streaming=True)
 
     async def analyze(state): ...   # Node 1
     async def plan(state):   ...   # Node 2

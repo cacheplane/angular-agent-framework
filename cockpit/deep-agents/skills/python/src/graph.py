@@ -65,7 +65,7 @@ def summarize(text: str) -> str:
 
 def build_skills_graph():
     tools = [calculator, word_count, summarize]
-    llm = ChatOpenAI(model="gpt-4o-mini", streaming=True).bind_tools(tools)
+    llm = ChatOpenAI(model="gpt-5-mini", streaming=True).bind_tools(tools)
     tool_node = ToolNode(tools)
 
     async def agent(state: SkillsState) -> dict:

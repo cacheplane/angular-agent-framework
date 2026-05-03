@@ -37,8 +37,8 @@ def build_memory_graph():
     This ensures every response is followed by a memory extraction pass,
     keeping the agent's knowledge up to date without blocking the reply.
     """
-    llm = ChatOpenAI(model="gpt-4o-mini", streaming=True)
-    extractor_llm = ChatOpenAI(model="gpt-4o-mini", streaming=False)
+    llm = ChatOpenAI(model="gpt-5-mini", streaming=True)
+    extractor_llm = ChatOpenAI(model="gpt-5-mini", streaming=False)
 
     async def generate(state: MemoryState) -> dict:
         """Generate a response using current messages and known memory."""

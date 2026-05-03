@@ -153,7 +153,7 @@ def run_code(code: str) -> str:
         "exit_status": 0,
     })
 
-llm = ChatOpenAI(model="gpt-4o-mini").bind_tools([run_code])
+llm = ChatOpenAI(model="gpt-5-mini").bind_tools([run_code])
 tool_node = ToolNode([run_code])
 ```
 

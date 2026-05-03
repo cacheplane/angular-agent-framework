@@ -25,7 +25,7 @@ def build_time_travel_graph():
     producing a history of ThreadState objects that the client can replay or
     branch from using checkpoint IDs.
     """
-    llm = ChatOpenAI(model="gpt-4o-mini", streaming=True)
+    llm = ChatOpenAI(model="gpt-5-mini", streaming=True)
 
     async def generate(state: MessagesState) -> dict:
         """Generate a response, checkpointed for time travel."""

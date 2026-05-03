@@ -24,7 +24,7 @@ class MemoryState(TypedDict):
 
 
 def build_memory_graph():
-    llm = ChatOpenAI(model="gpt-4o-mini", streaming=True)
+    llm = ChatOpenAI(model="gpt-5-mini", streaming=True)
 
     async def generate(state: MemoryState) -> dict:
         """Generate a response using remembered facts in the system prompt."""
