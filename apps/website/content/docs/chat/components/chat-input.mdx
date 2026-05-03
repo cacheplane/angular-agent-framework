@@ -96,6 +96,18 @@ function submitMessage(
 
 The function calls `ref.submit({ message: trimmed })` under the hood.
 
+## Slots
+
+### `[chatInputModelSelect]`
+
+Projects content into the controls row of the input pill, between `[chatInputTrailing]` and the send button. Designed for `<chat-select>` (a model picker), but accepts any element.
+
+```html
+<chat-input [agent]="agent">
+  <chat-select chatInputModelSelect [options]="opts" [(value)]="selected" />
+</chat-input>
+```
+
 ## Styling
 
 The component renders a `<form>` containing a `<textarea>` and a `<button>`. It uses the following CSS custom properties from the chat theme:
