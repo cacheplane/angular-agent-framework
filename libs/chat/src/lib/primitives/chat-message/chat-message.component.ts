@@ -20,7 +20,7 @@ export type ChatMessageRole = 'user' | 'assistant' | 'system' | 'tool';
   template: `
     <div [class]="bodyClass()">
       <ng-content />
-      <span class="chat-message__caret" aria-hidden="true">▍</span>
+      <span class="chat-message__caret" aria-hidden="true"></span>
     </div>
     <div class="chat-message__controls">
       <ng-content select="[chatMessageControls]" />

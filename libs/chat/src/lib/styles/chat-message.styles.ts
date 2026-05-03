@@ -38,22 +38,23 @@ export const CHAT_MESSAGE_STYLES = `
 
   .chat-message__caret {
     display: none;
-    margin-left: 2px;
-    margin-top: 0.25rem;
-    color: var(--ngaf-chat-text-muted);
-    vertical-align: text-bottom;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    vertical-align: middle;
+    margin-left: 4px;
+    margin-bottom: 2px;
+    background: radial-gradient(circle at 30% 30%,
+      var(--ngaf-chat-text) 0%,
+      var(--ngaf-chat-text-muted) 70%,
+      transparent 100%);
+    box-shadow: 0 0 6px var(--ngaf-chat-text-muted);
+    animation: ngaf-chat-caret-fade-in 200ms ease-out 300ms forwards,
+               ngaf-chat-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) 500ms infinite;
+    opacity: 0;
   }
   :host([data-role="assistant"][data-current="true"][data-streaming="true"]) .chat-message__caret {
     display: inline-block;
-    /* The caret is suppressed for the first 300ms of streaming so quick
-       responses (one-or-two-token "hello"-style replies) never flash the
-       cursor. Past 300ms the smooth pulse takes over (copilotkit-style)
-       — easier on the eyes than a hard blink during long streams.
-       Note: animations restart whenever the element is created/inserted,
-       so this delay re-applies on every new streaming message. */
-    opacity: 0;
-    animation: ngaf-chat-caret-fade-in 200ms ease-out 300ms forwards,
-               ngaf-chat-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) 500ms infinite;
   }
 
   .chat-message__plain { /* system / tool fallback */ }
