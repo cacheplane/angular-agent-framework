@@ -1,7 +1,7 @@
 // libs/chat/src/lib/compositions/chat/chat.component.ts
 // SPDX-License-Identifier: MIT
 import {
-  Component, ChangeDetectionStrategy, input, output, computed, effect, viewChild, ElementRef,
+  Component, ChangeDetectionStrategy, input, model, output, computed, effect, viewChild, ElementRef,
   DestroyRef, inject,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -26,6 +26,7 @@ import { ChatToolCallsComponent } from '../../primitives/chat-tool-calls/chat-to
 import { ChatSubagentsComponent } from '../../primitives/chat-subagents/chat-subagents.component';
 import { ChatMessageActionsComponent } from '../../primitives/chat-message-actions/chat-message-actions.component';
 import { ChatWelcomeComponent } from '../../primitives/chat-welcome/chat-welcome.component';
+import { ChatSelectComponent, type ChatSelectOption } from '../../primitives/chat-select/chat-select.component';
 import { A2uiSurfaceComponent } from '../../a2ui/surface.component';
 import { createContentClassifier, type ContentClassifier } from '../../streaming/content-classifier';
 import { messageContent } from '../shared/message-utils';
@@ -41,7 +42,7 @@ import type { ChatRenderEvent } from './chat-render-event';
     ChatInputComponent, ChatTypingIndicatorComponent, ChatErrorComponent, ChatInterruptComponent,
     ChatThreadListComponent, ChatGenerativeUiComponent,
     ChatStreamingMdComponent, ChatToolCallsComponent, ChatSubagentsComponent, A2uiSurfaceComponent,
-    ChatMessageActionsComponent, ChatWelcomeComponent,
+    ChatMessageActionsComponent, ChatWelcomeComponent, ChatSelectComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styles: [CHAT_HOST_TOKENS, `
@@ -98,7 +99,16 @@ import type { ChatRenderEvent } from './chat-render-event';
   template: `
     @if (showWelcome()) {
       <chat-welcome>
-        <chat-input chatWelcomeInput [agent]="agent()" [submitOnEnter]="true" placeholder="Type a message..." />
+        <chat-input chatWelcomeInput [agent]="agent()" [submitOnEnter]="true" placeholder="Type a message...">
+          @if (modelOptions().length > 0) {
+            <chat-select
+              chatInputModelSelect
+              [options]="modelOptions()"
+              [(value)]="selectedModel"
+              [placeholder]="modelPickerPlaceholder()"
+            />
+          }
+        </chat-input>
         <ng-container ngProjectAs="[chatWelcomeSuggestions]">
           <ng-content select="[chatWelcomeSuggestions]" />
         </ng-container>
@@ -182,7 +192,20 @@ import type { ChatRenderEvent } from './chat-render-event';
           <div chatFooter>
             <chat-error [agent]="agent()" />
             <chat-interrupt [agent]="agent()" />
-            <chat-input [agent]="agent()" [submitOnEnter]="true" placeholder="Type a message..." />
+            <chat-input [agent]="agent()" [submitOnEnter]="true" placeholder="Type a message...">
+              @if (modelOptions().length > 0) {
+                <chat-select
+                  chatInputModelSelect
+                  [options]="modelOptions()"
+                  [(value)]="selectedModel"
+                  [placeholder]="modelPickerPlaceholder()"
+                />
+              } @else {
+                <ng-container ngProjectAs="[chatInputModelSelect]">
+                  <ng-content select="[chatInputModelSelect]" />
+                </ng-container>
+              }
+            </chat-input>
           </div>
         </chat-window>
       </div>
@@ -198,6 +221,17 @@ export class ChatComponent {
   readonly threads = input<Thread[]>([]);
   readonly activeThreadId = input<string>('');
   readonly welcomeDisabled = input<boolean>(false);
+
+  /**
+   * High-level model-picker API. When `modelOptions` is non-empty, the chat
+   * composition renders a `<chat-select>` inside the input pill (in BOTH
+   * welcome and conversation modes), wired to the two-way `selectedModel`
+   * model. Consumers who want full control should leave `modelOptions`
+   * empty and project a `<chat-select chatInputModelSelect>` themselves.
+   */
+  readonly modelOptions = input<readonly ChatSelectOption[]>([]);
+  readonly selectedModel = model<string>('');
+  readonly modelPickerPlaceholder = input<string>('Choose a model');
 
   readonly showWelcome = computed(() => {
     if (this.welcomeDisabled()) return false;
