@@ -5,6 +5,7 @@ import {
   ChangeDetectionStrategy,
   DestroyRef,
   ElementRef,
+  ViewEncapsulation,
   effect,
   inject,
   input,
@@ -13,6 +14,7 @@ import {
 import { DomSanitizer } from '@angular/platform-browser';
 import { renderMarkdownToString } from './markdown-render';
 import { isTraceEnabled, trace } from './trace';
+import { CHAT_MARKDOWN_STYLES } from '../styles/chat-markdown.styles';
 
 /**
  * Renders markdown content via marked.parse + sanitized innerHTML, coalesced
@@ -26,8 +28,16 @@ import { isTraceEnabled, trace } from './trace';
   selector: 'chat-streaming-md',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
+  // Disable emulated view encapsulation. The component sets its content via
+  // `innerHTML` (Angular's sanitized markdown render), so the resulting DOM
+  // nodes never carry the `_ngcontent-xxx` attribute that emulated styles
+  // require to match descendants. Without this, `chat-streaming-md ul` and
+  // friends in CHAT_MARKDOWN_STYLES never apply, and bullets/headings/code
+  // blocks render unstyled. We scope every selector to `chat-streaming-md`
+  // in CHAT_MARKDOWN_STYLES so the rules don't leak globally.
+  encapsulation: ViewEncapsulation.None,
   template: '',
-  styles: `:host { display: block; }`,
+  styles: CHAT_MARKDOWN_STYLES,
 })
 export class ChatStreamingMdComponent {
   readonly content = input.required<string>();
