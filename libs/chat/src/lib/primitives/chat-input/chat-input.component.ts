@@ -57,6 +57,7 @@ export function submitMessage(
           aria-label="Type a message"
         ></textarea>
         <div class="chat-input__controls">
+          <ng-content select="[chatInputModelSelect]" />
           <ng-content select="[chatInputTrailing]" />
           @if (isLoading() && canStop()) {
             <button
