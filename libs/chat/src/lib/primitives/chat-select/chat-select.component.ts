@@ -58,6 +58,7 @@ export interface ChatSelectOption {
       <div
         class="chat-select__menu"
         role="listbox"
+        tabindex="-1"
         [attr.aria-label]="menuLabel() ?? placeholder()"
         (keydown)="onMenuKeydown($event)"
       >
