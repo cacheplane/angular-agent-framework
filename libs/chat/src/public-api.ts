@@ -54,6 +54,8 @@ export { ChatTimelineComponent } from './lib/primitives/chat-timeline/chat-timel
 export { ChatGenerativeUiComponent } from './lib/primitives/chat-generative-ui/chat-generative-ui.component';
 export { ChatWelcomeComponent } from './lib/primitives/chat-welcome/chat-welcome.component';
 export { ChatWelcomeSuggestionComponent } from './lib/primitives/chat-welcome/chat-welcome-suggestion.component';
+export { ChatSelectComponent } from './lib/primitives/chat-select/chat-select.component';
+export type { ChatSelectOption } from './lib/primitives/chat-select/chat-select.component';
 
 // DI provider
 export { provideChat, CHAT_CONFIG } from './lib/provide-chat';

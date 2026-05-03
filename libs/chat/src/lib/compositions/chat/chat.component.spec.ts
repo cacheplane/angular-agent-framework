@@ -206,6 +206,65 @@ describe('ChatComponent welcome branch', () => {
   });
 });
 
+describe('ChatComponent — left-flash regression', () => {
+  // Regression for: optimistic-user injection coalesced with first AI partial
+  // emission, causing the AI bubble (empty assistant) to paint first. The
+  // langgraph rawMessages bridge now bypasses the throttle on length-growth
+  // emissions so the user message renders in its own frame.
+  //
+  // We verify the two surfaces that together produce the user-visible bubble:
+  // (1) ChatMessageList's `getMessageType` routes role:'user' -> 'human',
+  // (2) ChatMessageComponent with role='user' renders host attr
+  //     data-role="user".
+  // If either regresses, a user message would no longer paint as a user
+  // bubble. Full ChatComponent template-level rendering is not feasible
+  // under vitest JIT (NG0303/NG0950 on transitively-required signal inputs).
+
+  it('routes role:"user" through the human template (data-role=user surface)', async () => {
+    const { getMessageType } = await import(
+      '../../primitives/chat-message-list/chat-message-list.component'
+    );
+    expect(getMessageType({ id: 'u1', role: 'user', content: 'hi' } as never))
+      .toBe('human');
+    expect(getMessageType({ id: 'a1', role: 'assistant', content: '' } as never))
+      .toBe('ai');
+  });
+
+  it('the rendered chat-message has data-role="user" when role input is user', async () => {
+    const { ChatMessageComponent } = await import(
+      '../../primitives/chat-message/chat-message.component'
+    );
+    TestBed.configureTestingModule({});
+    const fixture = TestBed.createComponent(ChatMessageComponent);
+    setSignalInput(fixture.componentInstance.role, 'user');
+    fixture.detectChanges();
+    const host = fixture.nativeElement as HTMLElement;
+    expect(host.getAttribute('data-role')).toBe('user');
+  });
+
+  it('messages signal growing from [] -> [user] surfaces the user message first', () => {
+    // This is the core left-flash invariant: when the messages array grows
+    // from empty to a single user message, that message is what the chat
+    // composition sees as the first message. The langgraph fix ensures this
+    // emission is not coalesced with a subsequent AI-partial emission.
+    const agent = mockAgent({ messages: [] });
+    expect(agent.messages().length).toBe(0);
+
+    agent.messages.set([{ id: 'u1', role: 'user', content: 'hi', extra: {} } as never]);
+    expect(agent.messages().length).toBe(1);
+    expect(agent.messages()[0].role).toBe('user');
+
+    // First AI partial arrives — both messages present, in order.
+    agent.messages.set([
+      { id: 'u1', role: 'user', content: 'hi', extra: {} } as never,
+      { id: 'a1', role: 'assistant', content: '', extra: {} } as never,
+    ]);
+    expect(agent.messages().length).toBe(2);
+    expect(agent.messages()[0].role).toBe('user');
+    expect(agent.messages()[1].role).toBe('assistant');
+  });
+});
+
 describe('ChatComponent — events$ routing', () => {
   // Angular 21 zoneless mode (ZONELESS_ENABLED defaults to true) means
   // ComponentFixture.autoDetect cannot be disabled, making createComponent

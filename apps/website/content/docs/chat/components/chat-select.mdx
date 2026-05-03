@@ -1,0 +1,122 @@
+# ChatSelectComponent
+
+`ChatSelectComponent` is a generic single-select dropdown. It renders a ghosted, fully rounded trigger and a popover menu. Designed to slot into the chat input pill (via `[chatInputModelSelect]`) for a model picker, but usable anywhere.
+
+**Selector:** `chat-select`
+
+**Import:**
+
+```typescript
+import { ChatSelectComponent, type ChatSelectOption } from '@ngaf/chat';
+```
+
+## Basic Usage
+
+Project into the chat input pill so the select appears between the trailing slot and the send button:
+
+```html
+<chat [agent]="agent">
+  <chat-select
+    chatInputModelSelect
+    [options]="models()"
+    [(value)]="selectedModel"
+    placeholder="Choose a model"
+  />
+</chat>
+```
+
+Standalone usage (anywhere):
+
+```html
+<chat-select
+  [options]="opts"
+  [(value)]="selected"
+  placeholder="Pick one"
+/>
+```
+
+## API
+
+### Inputs
+
+| Input         | Type                                 | Default      | Description |
+|---------------|--------------------------------------|--------------|-------------|
+| `options`     | `readonly ChatSelectOption[]`        | **Required** | Items to display in the menu. |
+| `value`       | `string` (two-way, `model()`)        | `''`         | The currently selected option's `value`. |
+| `placeholder` | `string`                             | `'Select'`   | Label rendered in the trigger when no option matches `value`. |
+| `disabled`    | `boolean`                            | `false`      | Disables the trigger. |
+| `menuLabel`   | `string \| undefined`                | placeholder  | aria-label for the popover. |
+
+### `ChatSelectOption`
+
+```typescript
+interface ChatSelectOption {
+  value: string;
+  label: string;
+  disabled?: boolean;
+}
+```
+
+### Two-way binding
+
+Use `[(value)]` to bind a writable signal:
+
+```html
+<chat-select [options]="opts" [(value)]="selected" />
+```
+
+Or bind one-way + listen for changes:
+
+```html
+<chat-select
+  [options]="opts"
+  [value]="selected()"
+  (valueChange)="selected.set($event)"
+/>
+```
+
+## Behavior
+
+### Open / Close
+
+- **Open**: click the trigger, or press `Enter`/`Space`/`↓` while it has focus.
+- **Close**: click an option, click outside, or press `Esc`.
+
+### Keyboard
+
+| Key            | Behavior                                        |
+|----------------|-------------------------------------------------|
+| `Enter`/`Space`/`↓` on trigger | Opens the menu, focuses first option |
+| `↑` / `↓` in menu              | Moves focus to prev/next non-disabled option |
+| `Enter` / `Space` on option    | Selects, closes, returns focus to trigger |
+| `Esc`                          | Closes, returns focus to trigger     |
+
+### Disabled options
+
+A `ChatSelectOption` with `disabled: true` is rendered, skipped during keyboard navigation, and not selectable by click.
+
+### Menu position
+
+The menu opens UP (anchored above the trigger) so it lands above the chat input when the select sits inside the input pill. For standalone usage at the top of a page the menu may overflow the viewport upward — wrap in a positioned container if needed.
+
+## Theming
+
+Inherits from chat tokens. Override on `:host` or any ancestor:
+
+```css
+chat-select {
+  --ngaf-chat-text-muted: hsl(0 0% 50%);
+  --ngaf-chat-surface-alt: hsl(0 0% 96%);
+  --ngaf-chat-shadow-lg: 0 8px 24px rgba(0,0,0,.12);
+}
+```
+
+## Public API
+
+```typescript
+import { ChatSelectComponent, type ChatSelectOption } from '@ngaf/chat';
+```
+
+## See also
+
+- `ChatInputComponent` — the chat input pill that hosts the `[chatInputModelSelect]` slot.

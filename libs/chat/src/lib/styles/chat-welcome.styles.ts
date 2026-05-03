@@ -16,7 +16,7 @@ export const CHAT_WELCOME_STYLES = `
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: var(--ngaf-chat-welcome-gap, 1.5rem);
+    gap: var(--ngaf-chat-welcome-gap, 1.25rem);
     width: 100%;
     max-width: var(--ngaf-chat-welcome-max-width, 36rem);
     text-align: center;
@@ -42,12 +42,6 @@ export const CHAT_WELCOME_STYLES = `
   }
   @media (min-width: 768px) {
     .chat-welcome__title { font-size: 1.5rem; }
-  }
-  .chat-welcome__subtitle {
-    margin: 0;
-    font-size: var(--ngaf-chat-font-size-sm);
-    color: var(--ngaf-chat-text-muted);
-    line-height: 1.5;
   }
   .chat-welcome__input {
     width: 100%;

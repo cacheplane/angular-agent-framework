@@ -88,9 +88,12 @@ import type { ChatRenderEvent } from './chat-render-event';
     .chat-empty__sub { margin: 0; font-size: var(--ngaf-chat-font-size-sm); }
     .chat-empty__title { font-size: 1.125rem; font-weight: 500; color: var(--ngaf-chat-text); margin: 0; }
     .chat-empty__sub { margin: 0; font-size: var(--ngaf-chat-font-size-sm); }
-    .chat-scroll { flex: 1; min-height: 0; overflow-y: auto; }
+    .chat-scroll { flex: 1; min-height: 0; overflow-y: auto; padding-top: var(--ngaf-chat-edge-pad); }
     .chat-scroll::-webkit-scrollbar { width: 6px; }
     .chat-scroll::-webkit-scrollbar-thumb { background: var(--ngaf-chat-separator); border-radius: 10px; }
+    [chatFooter] {
+      padding-bottom: var(--ngaf-chat-edge-pad);
+    }
   `],
   template: `
     @if (showWelcome()) {

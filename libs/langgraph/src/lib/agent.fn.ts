@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 import {
   inject, DestroyRef, computed, effect,
-  isSignal, Signal,
+  isSignal, Signal, signal,
 } from '@angular/core';
 import { AGENT_CONFIG } from './agent.provider';
 import { toSignal, toObservable } from '@angular/core/rxjs-interop';
@@ -162,7 +162,49 @@ export function agent<
 
   // Convert to Angular Signals (must happen in injection context)
   const value        = toSignal(maybeThrottle(values$),   { initialValue: init });
-  const rawMessages  = toSignal(maybeThrottle(messages$), { initialValue: [] as BaseMessage[] });
+  // rawMessages is hand-rolled instead of `toSignal(maybeThrottle(messages$))`
+  // to avoid the leading/trailing throttle collapsing the optimistic-user
+  // injection into the same emission as the first AI partial. We bypass the
+  // throttle whenever the messages array grows in length (new message added)
+  // so user-visible message additions render in their own frame. Same-length
+  // updates (token-by-token AI streaming) still get throttled to ~60fps.
+  const rawMessagesSig = signal<BaseMessage[]>([]);
+  {
+    let lastLen = 0;
+    let throttleHandle: ReturnType<typeof setTimeout> | null = null;
+    let pending: BaseMessage[] | null = null;
+    const flushPending = () => {
+      throttleHandle = null;
+      if (pending) {
+        rawMessagesSig.set(pending);
+        pending = null;
+      }
+    };
+    messages$
+      .pipe(takeUntil(destroy$))
+      .subscribe((m) => {
+        if (m.length !== lastLen) {
+          // Length changed (add or remove): emit synchronously, cancel pending.
+          lastLen = m.length;
+          if (throttleHandle !== null) {
+            clearTimeout(throttleHandle);
+            throttleHandle = null;
+            pending = null;
+          }
+          rawMessagesSig.set(m);
+        } else if (ms > 0) {
+          // Same-length update (token streaming): coalesce within the throttle window.
+          pending = m;
+          if (throttleHandle === null) {
+            throttleHandle = setTimeout(flushPending, ms);
+          }
+        } else {
+          // No throttle configured: emit immediately.
+          rawMessagesSig.set(m);
+        }
+      });
+  }
+  const rawMessages = rawMessagesSig.asReadonly();
   const statusSig    = toSignal(status$,          { initialValue: ResourceStatus.Idle });
   const errorSig     = toSignal(error$,           { initialValue: undefined as unknown });
   const hasValueSig  = toSignal(hasValue$,        { initialValue: false });

@@ -10,13 +10,12 @@ import { CHAT_WELCOME_STYLES } from '../../styles/chat-welcome.styles';
  *
  * Slots:
  *   [chatWelcomeTitle]       — replaces the default <h1> "How can I help?"
- *   [chatWelcomeSubtitle]    — replaces the default <p> "Ask anything to get started."
  *   [chatWelcomeInput]       — projects the chat input into the center column
  *   [chatWelcomeSuggestions] — projects suggestion rows below the input
  *
  * Host CSS variables (override on :host or any ancestor):
  *   --ngaf-chat-welcome-max-width  default 36rem
- *   --ngaf-chat-welcome-gap        default 1.5rem
+ *   --ngaf-chat-welcome-gap        default 1.25rem
  *   --ngaf-chat-welcome-padding    default 24px
  */
 @Component({
@@ -29,9 +28,6 @@ import { CHAT_WELCOME_STYLES } from '../../styles/chat-welcome.styles';
       <span class="chat-welcome__beacon" aria-hidden="true"></span>
       <ng-content select="[chatWelcomeTitle]">
         <h1 class="chat-welcome__title">How can I help?</h1>
-      </ng-content>
-      <ng-content select="[chatWelcomeSubtitle]">
-        <p class="chat-welcome__subtitle">Ask anything to get started.</p>
       </ng-content>
       <div class="chat-welcome__input"><ng-content select="[chatWelcomeInput]" /></div>
       <div class="chat-welcome__suggestions">

@@ -1,8 +1,26 @@
 // SPDX-License-Identifier: MIT
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { signal, computed } from '@angular/core';
-import { submitMessage } from './chat-input.component';
+import { TestBed, ComponentFixture } from '@angular/core/testing';
+import { ChatInputComponent, submitMessage } from './chat-input.component';
 import { mockAgent } from '../../testing/mock-agent';
+
+function setSignalInput<T>(sig: unknown, value: T): void {
+  const obj = sig as Record<symbol, unknown>;
+  const signalSymbol = Object.getOwnPropertySymbols(obj).find(
+    (s) => s.description === 'SIGNAL',
+  );
+  if (!signalSymbol) throw new Error('Could not find SIGNAL symbol on input');
+  const node = obj[signalSymbol] as {
+    applyValueToInputSignal?: (n: unknown, v: T) => void;
+    value?: T;
+  };
+  if (typeof node.applyValueToInputSignal === 'function') {
+    node.applyValueToInputSignal(node, value);
+  } else {
+    node.value = value;
+  }
+}
 
 describe('submitMessage()', () => {
   it('calls agent.submit with { message: trimmed text }', async () => {
@@ -72,5 +90,35 @@ describe('ChatInputComponent — isDisabled computed', () => {
     expect(isDisabled()).toBe(false);
     agent$.set(loadingAgent);
     expect(isDisabled()).toBe(true);
+  });
+});
+
+describe('ChatInputComponent', () => {
+  let fixture: ComponentFixture<ChatInputComponent>;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({});
+    fixture = TestBed.createComponent(ChatInputComponent);
+    setSignalInput(fixture.componentInstance.agent, mockAgent({ isLoading: false }));
+    fixture.detectChanges();
+  });
+
+  it('renders the pill with full border-radius', () => {
+    const pill = (fixture.nativeElement as HTMLElement).querySelector('.chat-input__pill') as HTMLElement;
+    expect(pill).not.toBeNull();
+    const cs = getComputedStyle(pill);
+    expect(cs.borderRadius).toBe('9999px');
+  });
+
+  it('renders the send button as a circle', () => {
+    const btn = (fixture.nativeElement as HTMLElement).querySelector('.chat-input__send') as HTMLElement;
+    expect(btn).not.toBeNull();
+    const cs = getComputedStyle(btn);
+    expect(cs.borderRadius).toBe('50%');
+  });
+
+  it('exposes [chatInputModelSelect] slot inside the controls row', () => {
+    const controls = (fixture.nativeElement as HTMLElement).querySelector('.chat-input__controls');
+    expect(controls).not.toBeNull();
   });
 });
