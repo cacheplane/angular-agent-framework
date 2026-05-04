@@ -10,6 +10,7 @@ import type {
 } from '@ngaf/chat';
 import type { BaseEvent } from '@ag-ui/client';
 import { applyPatch, type Operation } from 'fast-json-patch';
+import { bridgeCitationsState } from './bridge-citations-state';
 
 export interface ReducerStore {
   messages:  WritableSignal<Message[]>;
@@ -157,13 +158,16 @@ export function reduceEvent(event: BaseEvent, store: ReducerStore): void {
     }
     case 'STATE_SNAPSHOT': {
       const e = event as unknown as { snapshot: Record<string, unknown> };
-      store.state.set(e.snapshot ?? {});
+      const snapshot = e.snapshot ?? {};
+      store.state.set(snapshot);
+      store.messages.update(msgs => bridgeCitationsState({ state: snapshot }, msgs));
       return;
     }
     case 'STATE_DELTA': {
       const e = event as unknown as { delta: Operation[] };
       const next = applyPatch(deepClone(store.state()), e.delta).newDocument;
       store.state.set(next);
+      store.messages.update(msgs => bridgeCitationsState({ state: next }, msgs));
       return;
     }
     case 'MESSAGES_SNAPSHOT': {

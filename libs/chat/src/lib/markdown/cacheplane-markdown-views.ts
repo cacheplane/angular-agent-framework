@@ -19,6 +19,7 @@ import { MarkdownAutolinkComponent } from './views/markdown-autolink.component';
 import { MarkdownImageComponent } from './views/markdown-image.component';
 import { MarkdownSoftBreakComponent } from './views/markdown-soft-break.component';
 import { MarkdownHardBreakComponent } from './views/markdown-hard-break.component';
+import { MarkdownCitationReferenceComponent } from './views/markdown-citation-reference.component';
 
 /**
  * Default view registry consumed by <chat-streaming-md>. Maps every
@@ -46,4 +47,5 @@ export const cacheplaneMarkdownViews: ViewRegistry = views({
   'image':          MarkdownImageComponent,
   'soft-break':     MarkdownSoftBreakComponent,
   'hard-break':     MarkdownHardBreakComponent,
+  'citation-reference': MarkdownCitationReferenceComponent,
 });

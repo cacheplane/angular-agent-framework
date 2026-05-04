@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 import type { ContentBlock } from './content-block';
+import type { Citation } from './citation';
 
 export type Role = 'user' | 'assistant' | 'system' | 'tool';
 
@@ -30,6 +31,8 @@ export interface Message {
   reasoningDurationMs?: number;
   /** Runtime-specific extras; do not rely on shape in portable code. */
   extra?: Record<string, unknown>;
+  /** Provider-agnostic citation list. Populated by adapters. */
+  citations?: Citation[];
 }
 
 export function isUserMessage(m: Message): m is Message & { role: 'user' } {

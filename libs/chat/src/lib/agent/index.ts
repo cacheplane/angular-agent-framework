@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 export type { Agent } from './agent';
+export type { Citation } from './citation';
 export type { Message, Role } from './message';
 export { isUserMessage, isAssistantMessage, isToolMessage, isSystemMessage } from './message';
 export type { ContentBlock } from './content-block';

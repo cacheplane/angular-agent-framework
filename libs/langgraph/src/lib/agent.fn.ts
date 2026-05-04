@@ -43,6 +43,7 @@ import type { ThreadState, ToolProgress } from '@langchain/langgraph-sdk';
 import type { MessageMetadata } from '@langchain/langgraph-sdk/ui';
 import { createStreamManagerBridge } from './internals/stream-manager.bridge';
 import { buildBranchTree } from './internals/branch-tree';
+import { extractCitations } from './internals/extract-citations';
 
 /**
  * Creates a streaming resource connected to a LangGraph agent.
@@ -358,7 +359,7 @@ function toMessage(
   const reasoningDurationMs = reasoning && getReasoningDurationMs
     ? getReasoningDurationMs(id)
     : undefined;
-  return {
+  const result: Message = {
     id,
     role,
     content: extractTextContent(m.content),
@@ -368,6 +369,9 @@ function toMessage(
     reasoningDurationMs,
     extra: raw,
   };
+  const citations = extractCitations(raw as { additional_kwargs?: Record<string, unknown> });
+  if (citations) result.citations = citations;
+  return result;
 }
 
 /**

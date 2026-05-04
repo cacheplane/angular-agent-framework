@@ -5,6 +5,8 @@ import {
   ChangeDetectionStrategy,
   ViewEncapsulation,
   computed,
+  effect,
+  inject,
   input,
 } from '@angular/core';
 import {
@@ -18,6 +20,7 @@ import { CHAT_MARKDOWN_STYLES } from '../styles/chat-markdown.styles';
 import { MARKDOWN_VIEW_REGISTRY } from '../markdown/markdown-view-registry';
 import { MarkdownChildrenComponent } from '../markdown/markdown-children.component';
 import { cacheplaneMarkdownViews } from '../markdown/cacheplane-markdown-views';
+import { CitationsResolverService } from '../markdown/citations-resolver.service';
 
 /**
  * Renders streaming markdown by walking a @cacheplane/partial-markdown AST
@@ -64,6 +67,17 @@ export class ChatStreamingMdComponent {
   readonly resolvedRegistry = computed(
     () => this.viewRegistry() ?? cacheplaneMarkdownViews,
   );
+
+  private readonly resolver = inject(CitationsResolverService, { optional: true });
+
+  constructor() {
+    effect(() => {
+      const r = this.root();
+      if (this.resolver && r) {
+        this.resolver.markdownDefs.set(r.citations ?? new Map());
+      }
+    });
+  }
 
   // Parser instance is rebuilt only when content diverges from the prior
   // prefix (rare). For the common streaming case where content extends the

@@ -3,10 +3,11 @@
 import { describe, it, expect } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { ChatMessageComponent } from './chat-message.component';
+import { CitationsResolverService } from '../../markdown/citations-resolver.service';
 
 describe('ChatMessageComponent', () => {
   it('instantiates without error', () => {
-    TestBed.configureTestingModule({});
+    TestBed.configureTestingModule({ providers: [CitationsResolverService] });
     let component!: ChatMessageComponent;
     TestBed.runInInjectionContext(() => {
       component = new ChatMessageComponent();
