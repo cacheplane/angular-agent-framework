@@ -112,6 +112,10 @@ export { MarkdownImageComponent }          from './lib/markdown/views/markdown-i
 export { MarkdownSoftBreakComponent }      from './lib/markdown/views/markdown-soft-break.component';
 export { MarkdownHardBreakComponent }      from './lib/markdown/views/markdown-hard-break.component';
 export { MarkdownCitationReferenceComponent } from './lib/markdown/views/markdown-citation-reference.component';
+export { MarkdownTableComponent }             from './lib/markdown/views/markdown-table.component';
+export { MarkdownTableRowComponent }          from './lib/markdown/views/markdown-table-row.component';
+export { MarkdownTableCellComponent }         from './lib/markdown/views/markdown-table-cell.component';
+export { IS_HEADER_ROW }                      from './lib/markdown/markdown-table-row.token';
 
 // Shared styles & utilities
 export { CHAT_MARKDOWN_STYLES } from './lib/styles/chat-markdown.styles';

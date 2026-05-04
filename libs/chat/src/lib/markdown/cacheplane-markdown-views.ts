@@ -20,10 +20,13 @@ import { MarkdownImageComponent } from './views/markdown-image.component';
 import { MarkdownSoftBreakComponent } from './views/markdown-soft-break.component';
 import { MarkdownHardBreakComponent } from './views/markdown-hard-break.component';
 import { MarkdownCitationReferenceComponent } from './views/markdown-citation-reference.component';
+import { MarkdownTableComponent } from './views/markdown-table.component';
+import { MarkdownTableRowComponent } from './views/markdown-table-row.component';
+import { MarkdownTableCellComponent } from './views/markdown-table-cell.component';
 
 /**
  * Default view registry consumed by <chat-streaming-md>. Maps every
- * MarkdownNode.type emitted by @cacheplane/partial-markdown@0.1 to its
+ * MarkdownNode.type emitted by @cacheplane/partial-markdown@0.2 to its
  * corresponding Angular component.
  *
  * Override per-node-type via `withViews(cacheplaneMarkdownViews, { … })`.
@@ -48,4 +51,7 @@ export const cacheplaneMarkdownViews: ViewRegistry = views({
   'soft-break':     MarkdownSoftBreakComponent,
   'hard-break':     MarkdownHardBreakComponent,
   'citation-reference': MarkdownCitationReferenceComponent,
+  'table':          MarkdownTableComponent,
+  'table-row':      MarkdownTableRowComponent,
+  'table-cell':     MarkdownTableCellComponent,
 });
