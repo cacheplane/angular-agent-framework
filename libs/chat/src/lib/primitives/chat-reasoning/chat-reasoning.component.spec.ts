@@ -111,19 +111,47 @@ describe('ChatReasoningComponent', () => {
     expect(getEl(fixture).getAttribute('data-expanded')).toBe('false');
   });
 
-  it('preserves user choice across isStreaming transitions', () => {
+  it('does not force-collapse when streaming ends (user-open persists past true → false)', () => {
     const fixture = makeFixture();
-    // User opens manually
-    getHeader(fixture).click();
+    fixture.componentInstance.streaming.set(true);
     fixture.detectChanges();
     expect(getEl(fixture).getAttribute('data-expanded')).toBe('true');
-
-    // Streaming completes (isStreaming false → still true after transition because user opened)
-    fixture.componentInstance.streaming.set(true);
+    // User clicks to keep it open (already open, but the click captures intent)
+    getHeader(fixture).click();
+    getHeader(fixture).click(); // toggle back to expanded
     fixture.detectChanges();
     fixture.componentInstance.streaming.set(false);
     fixture.detectChanges();
+    expect(getEl(fixture).getAttribute('data-expanded')).toBe('true');
+  });
 
+  it('does not force-collapse on true → false when user explicitly collapsed before streaming ended', () => {
+    const fixture = makeFixture();
+    fixture.componentInstance.streaming.set(true);
+    fixture.detectChanges();
+    expect(getEl(fixture).getAttribute('data-expanded')).toBe('true');
+    getHeader(fixture).click(); // user collapses mid-stream
+    fixture.detectChanges();
+    expect(getEl(fixture).getAttribute('data-expanded')).toBe('false');
+    fixture.componentInstance.streaming.set(false);
+    fixture.detectChanges();
+    expect(getEl(fixture).getAttribute('data-expanded')).toBe('false');
+  });
+
+  it('auto-resets to expanded when streaming re-engages on a follow-up turn', () => {
+    const fixture = makeFixture();
+    // Round 1: streaming → user collapses → streaming ends
+    fixture.componentInstance.streaming.set(true);
+    fixture.detectChanges();
+    getHeader(fixture).click();
+    fixture.detectChanges();
+    expect(getEl(fixture).getAttribute('data-expanded')).toBe('false');
+    fixture.componentInstance.streaming.set(false);
+    fixture.detectChanges();
+    expect(getEl(fixture).getAttribute('data-expanded')).toBe('false');
+    // Round 2: streaming re-engages — should auto-expand again
+    fixture.componentInstance.streaming.set(true);
+    fixture.detectChanges();
     expect(getEl(fixture).getAttribute('data-expanded')).toBe('true');
   });
 

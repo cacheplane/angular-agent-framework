@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MIT
 import {
   Component, ChangeDetectionStrategy,
-  computed, input, signal,
+  computed, effect, input, signal,
 } from '@angular/core';
 import { CHAT_HOST_TOKENS } from '../../styles/chat-tokens';
 import { CHAT_REASONING_STYLES } from '../../styles/chat-reasoning.styles';
@@ -90,6 +90,20 @@ export class ChatReasoningComponent {
     if (typeof ms === 'number') return `Thought for ${formatDuration(ms)}`;
     return 'Show reasoning';
   });
+
+  constructor() {
+    // Reset the manual override when streaming re-engages from idle (e.g.
+    // follow-up turn that re-uses this instance) so the auto force-expand
+    // logic takes over again. Spec §3.3 bullet 3.
+    let prevStreaming = false;
+    effect(() => {
+      const streaming = this.isStreaming();
+      if (!prevStreaming && streaming) {
+        this._expandedOverride.set(null);
+      }
+      prevStreaming = streaming;
+    });
+  }
 
   toggle(): void {
     this._expandedOverride.set(!this.expanded());
