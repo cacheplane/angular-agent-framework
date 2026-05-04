@@ -871,6 +871,32 @@ function extractText(content: unknown): string {
   return out;
 }
 
+function extractReasoning(content: unknown): string {
+  if (typeof content === 'string') return '';
+  if (!Array.isArray(content)) return '';
+  let out = '';
+  for (const block of content) {
+    if (block == null || typeof block !== 'object') continue;
+    const rec = block as Record<string, unknown>;
+    const t = rec['type'];
+    if (t === 'reasoning' || t === 'thinking') {
+      const text = rec['text'];
+      if (typeof text === 'string') out += text;
+    }
+  }
+  return out;
+}
+
+function accumulateReasoning(existing: unknown, incoming: unknown): string {
+  const existingText = typeof existing === 'string' ? existing : extractReasoning(existing);
+  const incomingText = typeof incoming === 'string' ? incoming : extractReasoning(incoming);
+  if (existingText.length === 0) return incomingText;
+  if (incomingText.length === 0) return existingText;
+  if (incomingText.startsWith(existingText)) return incomingText;
+  if (existingText.startsWith(incomingText)) return existingText;
+  return existingText + incomingText;
+}
+
 /**
  * Replace the incoming messages' ids with the existing array's ids whenever
  * (role, content) matches positionally and the existing id differs. Keeps
@@ -1009,3 +1035,14 @@ function isMessageLike(value: unknown): value is Record<string, unknown> {
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
+
+export const _internalsForTesting = {
+  extractText,
+  extractReasoning,
+  accumulateContent,
+  accumulateReasoning,
+  collapseAdjacentAi,
+  mergeMessages,
+  preserveIds,
+  normalizeMessageType,
+};
