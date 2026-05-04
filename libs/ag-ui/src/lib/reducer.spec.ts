@@ -136,3 +136,54 @@ describe('reduceEvent', () => {
     expect(store.status()).toBe('idle');
   });
 });
+
+describe('reduceEvent — REASONING_MESSAGE_*', () => {
+  it('REASONING_MESSAGE_START creates an assistant slot with empty reasoning', () => {
+    const store = makeStore();
+    reduceEvent({ type: 'REASONING_MESSAGE_START', messageId: 'm1', role: 'assistant' } as any, store);
+    const msgs = store.messages();
+    expect(msgs).toHaveLength(1);
+    expect(msgs[0].id).toBe('m1');
+    expect(msgs[0].role).toBe('assistant');
+    expect(msgs[0].reasoning).toBe('');
+  });
+
+  it('REASONING_MESSAGE_CONTENT appends to the existing reasoning string', () => {
+    const store = makeStore();
+    reduceEvent({ type: 'REASONING_MESSAGE_START', messageId: 'm1', role: 'assistant' } as any, store);
+    reduceEvent({ type: 'REASONING_MESSAGE_CONTENT', messageId: 'm1', delta: 'first ' } as any, store);
+    reduceEvent({ type: 'REASONING_MESSAGE_CONTENT', messageId: 'm1', delta: 'then second' } as any, store);
+    expect(store.messages()[0].reasoning).toBe('first then second');
+  });
+
+  it('REASONING_MESSAGE_CHUNK is treated identically to CONTENT', () => {
+    const store = makeStore();
+    reduceEvent({ type: 'REASONING_MESSAGE_START', messageId: 'm1', role: 'assistant' } as any, store);
+    reduceEvent({ type: 'REASONING_MESSAGE_CHUNK', messageId: 'm1', delta: 'chunk1' } as any, store);
+    reduceEvent({ type: 'REASONING_MESSAGE_CHUNK', messageId: 'm1', delta: 'chunk2' } as any, store);
+    expect(store.messages()[0].reasoning).toBe('chunk1chunk2');
+  });
+
+  it('REASONING_MESSAGE_END writes a non-negative reasoningDurationMs', () => {
+    const store = makeStore();
+    reduceEvent({ type: 'REASONING_MESSAGE_START', messageId: 'm1', role: 'assistant' } as any, store);
+    reduceEvent({ type: 'REASONING_MESSAGE_CONTENT', messageId: 'm1', delta: 'reasoned.' } as any, store);
+    reduceEvent({ type: 'REASONING_MESSAGE_END', messageId: 'm1' } as any, store);
+    const m = store.messages()[0];
+    expect(typeof m.reasoningDurationMs).toBe('number');
+    expect(m.reasoningDurationMs).toBeGreaterThanOrEqual(0);
+  });
+
+  it('TEXT_MESSAGE_START after REASONING_MESSAGE_START reuses the same id', () => {
+    const store = makeStore();
+    reduceEvent({ type: 'REASONING_MESSAGE_START', messageId: 'm1', role: 'assistant' } as any, store);
+    reduceEvent({ type: 'REASONING_MESSAGE_CONTENT', messageId: 'm1', delta: 'thinking' } as any, store);
+    reduceEvent({ type: 'REASONING_MESSAGE_END', messageId: 'm1' } as any, store);
+    reduceEvent({ type: 'TEXT_MESSAGE_START', messageId: 'm1', role: 'assistant' } as any, store);
+    reduceEvent({ type: 'TEXT_MESSAGE_CONTENT', messageId: 'm1', delta: 'hello' } as any, store);
+    const msgs = store.messages();
+    expect(msgs).toHaveLength(1);
+    expect(msgs[0].reasoning).toBe('thinking');
+    expect(msgs[0].content).toBe('hello');
+  });
+});
