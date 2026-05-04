@@ -4,7 +4,7 @@ import { describe, it, expect } from 'vitest';
 import { cacheplaneMarkdownViews } from './cacheplane-markdown-views';
 
 describe('cacheplaneMarkdownViews', () => {
-  it('registers all 19 markdown node types (v0.2 adds citation-reference)', () => {
+  it('registers all 22 markdown node types (v0.2 adds table, table-row, table-cell)', () => {
     expect(Object.keys(cacheplaneMarkdownViews).sort()).toEqual([
       'autolink',
       'blockquote',
@@ -23,6 +23,9 @@ describe('cacheplaneMarkdownViews', () => {
       'soft-break',
       'strikethrough',
       'strong',
+      'table',
+      'table-cell',
+      'table-row',
       'text',
       'thematic-break',
     ]);

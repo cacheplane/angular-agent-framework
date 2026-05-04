@@ -110,6 +110,13 @@ export const CHAT_MARKDOWN_STYLES = `
     vertical-align: top;
   }
   chat-streaming-md th { font-weight: 600; }
+  /* Component-rendered table: make wrapper elements layout-transparent */
+  chat-streaming-md chat-md-table { display: contents; }
+  chat-streaming-md chat-md-table-row { display: contents; }
+  chat-streaming-md chat-md-table-cell { display: contents; }
+  /* Task-list items */
+  chat-streaming-md li.chat-md-list-item--task { list-style: none; margin-left: -1.25rem; }
+  chat-streaming-md li.chat-md-list-item--task > input[type="checkbox"] { margin-right: 0.5rem; vertical-align: middle; }
 
   /* Media */
   chat-streaming-md img { max-width: 100%; height: auto; border-radius: 6px; }

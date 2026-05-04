@@ -1,3 +1,15 @@
+## 0.0.22 — 2026-05-04
+
+### Added
+
+- **`@ngaf/chat`** — markdown view components for GFM tables (`chat-md-table`, `chat-md-table-row`, `chat-md-table-cell`) and task-list checkbox prefix on `MarkdownListItemComponent`. The view registry now exposes all 22 node types emitted by `@cacheplane/partial-markdown@0.2.0`.
+
+### Changed
+
+- All 16 @ngaf libraries synchronized to `0.0.22`.
+
+---
+
 ## 0.0.21 — 2026-05-04
 
 ### Added

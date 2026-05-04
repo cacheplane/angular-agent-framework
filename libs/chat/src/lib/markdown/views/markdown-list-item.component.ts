@@ -9,7 +9,14 @@ import { MarkdownChildrenComponent } from '../markdown-children.component';
   standalone: true,
   imports: [MarkdownChildrenComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `<li><chat-md-children [parent]="node()" /></li>`,
+  template: `
+    <li [class.chat-md-list-item--task]="node().task !== undefined">
+      @if (node().task !== undefined) {
+        <input type="checkbox" disabled [checked]="node().task!.checked" />
+      }
+      <chat-md-children [parent]="node()" />
+    </li>
+  `,
 })
 export class MarkdownListItemComponent {
   readonly node = input.required<MarkdownListItemNode>();
