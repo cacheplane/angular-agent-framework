@@ -28,7 +28,7 @@ def build_deployment_runtime_graph():
     LangGraph Cloud. The assistantId in the Angular component must match
     the graph key in langgraph.json.
     """
-    llm = ChatOpenAI(model="gpt-4o-mini", streaming=True)
+    llm = ChatOpenAI(model="gpt-5-mini", streaming=True)
 
     async def generate(state: MessagesState) -> dict:
         """Generate a response using the full message history."""

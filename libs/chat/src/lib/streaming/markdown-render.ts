@@ -10,7 +10,12 @@ function ensureMarkedLoaded(): void {
   // Eagerly kick off the dynamic import so it's ready for subsequent calls
   void import('marked')
     .then((m) => {
-      markedParse = (src: string) => (m as any).marked.parse(src, { async: false }) as string;
+      // GFM: enables tables, strikethrough, autolinks, task lists.
+      // breaks: single \n becomes <br>. LLM chat output frequently uses
+      // soft line breaks for visual structure where stricter markdown
+      // would treat them as continuation. Matching common chat UX.
+      const opts = { async: false, gfm: true, breaks: true } as const;
+      markedParse = (src: string) => (m as any).marked.parse(src, opts) as string;
     })
     .catch(() => {
       markedParse = null;

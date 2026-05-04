@@ -50,39 +50,40 @@ export const CHAT_WELCOME_STYLES = `
   .chat-welcome__suggestions {
     width: 100%;
     display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    gap: 0;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 4px;
   }
   .chat-welcome__suggestions:empty { display: none; }
 `;
 
 export const CHAT_WELCOME_SUGGESTION_STYLES = `
-  :host { display: block; width: 100%; }
+  :host { display: inline-block; }
   .chat-welcome-suggestion {
-    width: 100%;
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    gap: 0.75rem;
-    padding: 12px 14px;
-    background: transparent;
-    border: 0;
-    border-bottom: 1px solid var(--ngaf-chat-separator);
+    gap: 0.5rem;
+    padding: 10px 16px;
+    background: var(--ngaf-chat-surface);
+    border: 1px solid var(--ngaf-chat-separator);
+    border-radius: 9999px;
     color: var(--ngaf-chat-text);
     font-family: inherit;
     font-size: var(--ngaf-chat-font-size-sm);
-    text-align: left;
+    text-align: center;
     cursor: pointer;
-    transition: background 150ms ease;
+    transition: background 150ms ease, border-color 150ms ease, transform 120ms ease;
   }
-  .chat-welcome-suggestion:hover { background: var(--ngaf-chat-surface-alt); }
+  .chat-welcome-suggestion:hover {
+    background: var(--ngaf-chat-surface-alt);
+    border-color: var(--ngaf-chat-text-muted);
+  }
+  .chat-welcome-suggestion:active { transform: scale(0.98); }
   .chat-welcome-suggestion:focus-visible {
     outline: 2px solid var(--ngaf-chat-text-muted);
-    outline-offset: -2px;
+    outline-offset: 2px;
   }
-  .chat-welcome-suggestion__label { flex: 1 1 auto; }
-  .chat-welcome-suggestion__chevron {
-    color: var(--ngaf-chat-text-muted);
-    font-size: 1.1em;
-  }
+  .chat-welcome-suggestion__label { white-space: nowrap; }
+  .chat-welcome-suggestion__chevron { display: none; }
 `;

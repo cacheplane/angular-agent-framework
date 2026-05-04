@@ -35,7 +35,7 @@ class FilesystemState(TypedDict):
 
 def build_filesystem_graph():
     tools = [read_file, write_file]
-    llm = ChatOpenAI(model="gpt-4o-mini", streaming=True).bind_tools(tools)
+    llm = ChatOpenAI(model="gpt-5-mini", streaming=True).bind_tools(tools)
 
     async def agent(state: FilesystemState) -> dict:
         """Run the agent — may emit tool calls."""

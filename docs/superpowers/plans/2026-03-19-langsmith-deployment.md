@@ -20,7 +20,7 @@ Website (Vercel)
        └─ NEXT_PUBLIC_LANGGRAPH_URL
             └─ LangGraph Cloud (LangSmith)
                  └─ chat_agent graph (Python)
-                      └─ ChatOpenAI (gpt-4o-mini)
+                      └─ ChatOpenAI (gpt-5-mini)
 ```
 
 ---
@@ -141,7 +141,7 @@ From the LangSmith dashboard → Deployments → your deployment → Environment
 | Variable | Value |
 |---|---|
 | `OPENAI_API_KEY` | Your OpenAI key |
-| `OPENAI_MODEL` | `gpt-4o-mini` (default) or preferred model |
+| `OPENAI_MODEL` | `gpt-5-mini` (default) or preferred model |
 | `LANGSMITH_TRACING` | `true` (optional, for production tracing) |
 | `LANGSMITH_PROJECT` | `angular-example` |
 

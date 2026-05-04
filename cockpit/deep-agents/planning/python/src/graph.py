@@ -27,7 +27,7 @@ class PlanningState(TypedDict):
 
 
 def build_planning_graph():
-    llm = ChatOpenAI(model="gpt-4o-mini", streaming=True)
+    llm = ChatOpenAI(model="gpt-5-mini", streaming=True)
 
     async def create_plan(state: PlanningState) -> dict:
         """Decompose the task into ordered steps."""

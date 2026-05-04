@@ -32,7 +32,7 @@ def build_durable_execution_graph():
     and checkpoints state after each one. This means any node failure
     only requires replaying from the previous checkpoint, not the start.
     """
-    llm = ChatOpenAI(model="gpt-4o-mini", streaming=True)
+    llm = ChatOpenAI(model="gpt-5-mini", streaming=True)
     system_prompt = (PROMPTS_DIR / "durable-execution.md").read_text()
 
     async def analyze(state: DurableState) -> dict:

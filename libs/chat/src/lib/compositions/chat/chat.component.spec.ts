@@ -22,10 +22,20 @@ describe('ChatComponent', () => {
     expect(messageContent(msg)).toBe('hello world');
   });
 
-  it('messageContent serializes array content to JSON', () => {
+  it('messageContent extracts visible text from complex-content arrays', () => {
     const msg = new AIMessage({ content: [{ type: 'text', text: 'hi' }] });
-    const result = messageContent(msg);
-    expect(result).toContain('text');
+    expect(messageContent(msg)).toBe('hi');
+  });
+
+  it('messageContent concatenates multiple text blocks and skips reasoning blocks', () => {
+    const msg = new AIMessage({
+      content: [
+        { type: 'reasoning', text: 'thinking…' },
+        { type: 'text', text: 'Hello' },
+        { type: 'text', text: ' world' },
+      ],
+    });
+    expect(messageContent(msg)).toBe('Hello world');
   });
 
   it('has a template defined on the component metadata', () => {

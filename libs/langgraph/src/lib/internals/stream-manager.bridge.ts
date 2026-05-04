@@ -389,8 +389,24 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
             const projected = options.toMessage
               ? stateMessages.map(options.toMessage)
               : (stateMessages as BaseMessage[]);
+            // Drop empty-content AI placeholders before merging. LangGraph
+            // emits intermediate `values` events whose `state.messages`
+            // includes an unfilled assistant turn at the tail. Keeping it
+            // would create a phantom slot that competes with the chunk-
+            // streamed AIMessageChunk arriving via messages-tuple — they'd
+            // never merge (different ids; non-overlapping content fragments)
+            // and the user sees two assistant bubbles.
+            const filtered = projected.filter((m, i) => {
+              if (i !== projected.length - 1) return true;
+              const t = normalizeMessageType(
+                typeof m._getType === 'function' ? m._getType() : (m as unknown as Record<string, unknown>)['type'] as string | undefined,
+              );
+              if (t !== 'ai') return true;
+              const text = extractText(m.content);
+              return text.length > 0;
+            });
             // Preserve existing ids by content match (server echo / final-id swap).
-            const remapped = preserveIds(subjects.messages$.value, projected);
+            const remapped = preserveIds(subjects.messages$.value, filtered);
             // ALWAYS merge values-derived messages into existing rather
             // than replacing. LangGraph emits intermediate values events
             // during streaming where state.messages can lag behind what
@@ -703,10 +719,52 @@ function normalizeMessages(event: StreamEvent): unknown[] | null {
   return null;
 }
 
+/**
+ * Collapse adjacent AI messages where one's text is a prefix of the other.
+ *
+ * When complex-content streaming is in play, the same conceptual assistant
+ * message can land in two slots: the canonical AI from values-sync (id
+ * `resp_…` or run id) and the chunk-streamed AIMessageChunk from
+ * messages-tuple (id `lc_run--…`). Both slots fill in parallel; once both
+ * carry the full text we collapse them, keeping the older slot's id so
+ * track-by-id stays stable in the chat list.
+ */
+function collapseAdjacentAi(messages: BaseMessage[]): BaseMessage[] {
+  if (messages.length < 2) return messages;
+  const out: BaseMessage[] = [];
+  for (const msg of messages) {
+    const last = out[out.length - 1];
+    if (!last) { out.push(msg); continue; }
+    const lastType = normalizeMessageType(
+      typeof last._getType === 'function' ? last._getType() : (last as unknown as Record<string, unknown>)['type'] as string | undefined,
+    );
+    const msgType = normalizeMessageType(
+      typeof msg._getType === 'function' ? msg._getType() : (msg as unknown as Record<string, unknown>)['type'] as string | undefined,
+    );
+    if (lastType === 'ai' && msgType === 'ai') {
+      const lastText = extractText(last.content);
+      const msgText = extractText(msg.content);
+      if (lastText.length === 0
+          || msgText.length === 0
+          || lastText === msgText
+          || lastText.startsWith(msgText)
+          || msgText.startsWith(lastText)) {
+        // Keep the longer content; preserve last (older) id and metadata.
+        const longerText = msgText.length >= lastText.length ? msgText : lastText;
+        out[out.length - 1] = { ...(last as object), content: longerText } as BaseMessage;
+        continue;
+      }
+    }
+    out.push(msg);
+  }
+  return out;
+}
+
 function mergeMessages(existing: BaseMessage[], incoming: BaseMessage[]): BaseMessage[] {
   const merged = [...existing];
   for (const msg of incoming) {
-    const id = (msg as unknown as Record<string, unknown>)['id'];
+    const rawIn = msg as unknown as Record<string, unknown>;
+    const id = rawIn['id'];
     let idx = id ? merged.findIndex(m => (m as unknown as Record<string, unknown>)['id'] === id) : -1;
     // Fallback: match by (role, content) when ids differ. This is the path
     // that fires when the server echoes back our optimistic human message
@@ -717,18 +775,100 @@ function mergeMessages(existing: BaseMessage[], incoming: BaseMessage[]): BaseMe
     if (idx < 0) {
       idx = findContentMatch(merged, msg);
     }
+    // When an AIMessageChunk arrives without an id-match or content-prefix
+    // match, treat the trailing AI message as its accumulator. The
+    // OpenAI Responses API emits per-chunk events whose ids identify the
+    // *event*, not the message, so consecutive chunks land here. Without
+    // this we'd append every chunk as a separate bubble.
+    if (idx < 0) {
+      const inType = normalizeMessageType(rawIn['type'] as string | undefined);
+      if (inType === 'ai') {
+        for (let i = merged.length - 1; i >= 0; i--) {
+          const t = normalizeMessageType(
+            typeof (merged[i] as BaseMessage)._getType === 'function'
+              ? (merged[i] as BaseMessage)._getType()
+              : (merged[i] as unknown as Record<string, unknown>)['type'] as string | undefined,
+          );
+          if (t === 'ai') { idx = i; break; }
+          if (t === 'human' || t === 'tool' || t === 'system') break;
+        }
+      }
+    }
     if (idx >= 0) {
-      const existingId = (merged[idx] as unknown as Record<string, unknown>)['id'];
+      const existing = merged[idx];
+      const existingId = (existing as unknown as Record<string, unknown>)['id'];
       // Keep the *existing* id so downstream track-by-id sees stable identity.
-      // The replacement carries the latest content + metadata.
-      merged[idx] = existingId
-        ? ({ ...(msg as object), id: existingId } as BaseMessage)
-        : msg;
+      // For complex-content streaming (OpenAI gpt-5/o-series, Anthropic) the
+      // SDK emits per-chunk *delta* arrays — not accumulated arrays — so a
+      // straight replacement collapses the rendered bubble to just the
+      // latest token. Accumulate text-bearing content across chunks here
+      // and hand a string to consumers; downstream code already handles
+      // string content uniformly.
+      const accumulatedContent = accumulateContent(
+        existing.content as unknown,
+        (msg as unknown as Record<string, unknown>)['content'],
+      );
+      const next = { ...(msg as object), content: accumulatedContent } as BaseMessage;
+      if (existingId) {
+        (next as unknown as Record<string, unknown>)['id'] = existingId;
+      }
+      merged[idx] = next;
     } else {
       merged.push(msg);
     }
   }
-  return merged;
+  return collapseAdjacentAi(merged);
+}
+
+/**
+ * Merge an incoming chunk's content into prior accumulated content for the
+ * same message id.
+ *
+ * - string + string → concat (delta append)
+ * - array + array  → concat extracted text from existing + incoming blocks
+ * - array + string → use the string (server final-id swap)
+ * - empty existing → use incoming as-is
+ *
+ * We deliberately collapse complex content arrays to a string at this layer.
+ * The langgraph-sdk client does not accumulate complex-content arrays the
+ * way it accumulates strings, and per-chunk arrays carry only the latest
+ * delta. Concatenating extracted text gives consumers the same uniform
+ * string they get for non-reasoning models.
+ */
+function accumulateContent(existing: unknown, incoming: unknown): string {
+  const existingText = extractText(existing);
+  const incomingText = extractText(incoming);
+
+  // Always return a string. We never want array content escaping the bridge:
+  // (a) downstream consumers expect string content, and (b) findContentMatch
+  // stringifies arrays, which would prevent the canonical-message id-swap
+  // dedupe from matching the streamed-chunk message after a partial chunk.
+  if (existingText.length === 0) return incomingText;
+  if (incomingText.length === 0) return existingText;
+  // Incoming is a strict-superset of accumulated (final-id swap with full content).
+  if (incomingText.startsWith(existingText)) return incomingText;
+  // Existing already a strict-superset — chunk arrived after the canonical
+  // message merged in via values-sync. Keep what we have.
+  if (existingText.startsWith(incomingText)) return existingText;
+  // Otherwise treat incoming as a delta and append.
+  return existingText + incomingText;
+}
+
+function extractText(content: unknown): string {
+  if (typeof content === 'string') return content;
+  if (!Array.isArray(content)) return '';
+  let out = '';
+  for (const block of content) {
+    if (typeof block === 'string') { out += block; continue; }
+    if (block == null || typeof block !== 'object') continue;
+    const rec = block as Record<string, unknown>;
+    const t = rec['type'];
+    if (t === 'text' || t === 'output_text' || t === undefined) {
+      const text = rec['text'];
+      if (typeof text === 'string') out += text;
+    }
+  }
+  return out;
 }
 
 /**
@@ -737,9 +877,9 @@ function mergeMessages(existing: BaseMessage[], incoming: BaseMessage[]): BaseMe
  * track-by-id stable across server echoes and final-id swaps.
  */
 function preserveIds(existing: BaseMessage[], incoming: BaseMessage[]): BaseMessage[] {
-  if (existing.length === 0) return incoming;
+  if (existing.length === 0) return collapseAdjacentAi(incoming);
   const usedExisting = new Set<number>();
-  return incoming.map((msg, i) => {
+  const remapped = incoming.map((msg, i) => {
     const inRaw = msg as unknown as Record<string, unknown>;
     const inId = inRaw['id'];
     // First try same-position match (the dominant case).
@@ -756,11 +896,16 @@ function preserveIds(existing: BaseMessage[], incoming: BaseMessage[]): BaseMess
     if (!existingId || existingId === inId) return msg;
     return { ...(msg as object), id: existingId } as BaseMessage;
   });
+  return collapseAdjacentAi(remapped);
 }
 
 function sameRoleAndContent(a: BaseMessage, b: BaseMessage): boolean {
-  const aType = typeof a._getType === 'function' ? a._getType() : (a as unknown as Record<string, unknown>)['type'];
-  const bType = typeof b._getType === 'function' ? b._getType() : (b as unknown as Record<string, unknown>)['type'];
+  const aType = normalizeMessageType(
+    typeof a._getType === 'function' ? a._getType() : (a as unknown as Record<string, unknown>)['type'] as string | undefined,
+  );
+  const bType = normalizeMessageType(
+    typeof b._getType === 'function' ? b._getType() : (b as unknown as Record<string, unknown>)['type'] as string | undefined,
+  );
   if (aType !== bType) return false;
   const aContent = typeof a.content === 'string' ? a.content : JSON.stringify(a.content);
   const bContent = typeof b.content === 'string' ? b.content : JSON.stringify(b.content);
@@ -774,24 +919,54 @@ function sameRoleAndContent(a: BaseMessage, b: BaseMessage): boolean {
 
 function findContentMatch(merged: BaseMessage[], incoming: BaseMessage): number {
   const inRaw = incoming as unknown as Record<string, unknown>;
-  const inType = typeof incoming._getType === 'function' ? incoming._getType() : (inRaw['type'] as string | undefined);
+  const inType = normalizeMessageType(
+    typeof incoming._getType === 'function' ? incoming._getType() : (inRaw['type'] as string | undefined),
+  );
   const inContent = typeof incoming.content === 'string' ? incoming.content : JSON.stringify(incoming.content);
   // Only worth matching for human messages (where the optimistic→echo
   // mismatch happens) and for AI messages where content is a strict prefix
   // of the existing (token-streaming + final-id swap pattern).
   for (let i = merged.length - 1; i >= 0; i--) {
     const m = merged[i] as unknown as Record<string, unknown>;
-    const mType = typeof (merged[i] as BaseMessage)._getType === 'function'
-      ? (merged[i] as BaseMessage)._getType()
-      : (m['type'] as string | undefined);
+    const mType = normalizeMessageType(
+      typeof (merged[i] as BaseMessage)._getType === 'function'
+        ? (merged[i] as BaseMessage)._getType()
+        : (m['type'] as string | undefined),
+    );
     if (mType !== inType) continue;
     const mContent = typeof (merged[i] as BaseMessage).content === 'string'
       ? (merged[i] as BaseMessage).content as string
       : JSON.stringify((merged[i] as BaseMessage).content);
     if (inType === 'human' && mContent === inContent) return i;
-    if (inType === 'ai' && (mContent === inContent || (typeof mContent === 'string' && typeof inContent === 'string' && (inContent.startsWith(mContent) || mContent.startsWith(inContent))))) return i;
+    if (inType === 'ai') {
+      // Skip empty placeholders. We don't want a pre-existing empty AI
+      // (created by an early values-sync emission with `state.messages`
+      // including an unfilled assistant turn) to absorb the first chunk
+      // arriving via messages-tuple — that strands subsequent chunks in a
+      // separate slot whose content no longer prefix-matches the canonical.
+      const aSafe = typeof mContent === 'string' ? mContent : '';
+      const bSafe = typeof inContent === 'string' ? inContent : '';
+      if (aSafe.length === 0 || bSafe.length === 0) continue;
+      if (mContent === inContent || aSafe.startsWith(bSafe) || bSafe.startsWith(aSafe)) return i;
+    }
   }
   return -1;
+}
+
+/**
+ * Normalize message type so AIMessage and AIMessageChunk compare equal.
+ * The LangGraph SDK emits type='AIMessageChunk' on the messages-tuple
+ * streaming path and type='ai' on the values-sync path for the same
+ * canonical assistant message — distinguishing them prevents the
+ * content-prefix dedupe from collapsing the duplicate bubbles.
+ */
+function normalizeMessageType(t: string | undefined): string | undefined {
+  if (!t) return t;
+  if (t === 'AIMessageChunk' || t === 'AIMessage' || t === 'assistant') return 'ai';
+  if (t === 'HumanMessage' || t === 'HumanMessageChunk' || t === 'user') return 'human';
+  if (t === 'ToolMessage') return 'tool';
+  if (t === 'SystemMessage') return 'system';
+  return t;
 }
 
 function toSubagentRefs(

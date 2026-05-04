@@ -71,7 +71,7 @@ def run_code(code: str) -> str:
 
 def build_sandboxes_graph():
     tools = [run_code]
-    llm = ChatOpenAI(model="gpt-4o-mini", streaming=True).bind_tools(tools)
+    llm = ChatOpenAI(model="gpt-5-mini", streaming=True).bind_tools(tools)
     tool_node = ToolNode(tools)
 
     async def agent(state: SandboxesState) -> dict:

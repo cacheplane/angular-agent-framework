@@ -111,7 +111,7 @@ from langgraph.types import interrupt
 checkpointer = MemorySaver()
 
 def build_interrupts_graph():
-    llm = ChatOpenAI(model="gpt-4o-mini", streaming=True)
+    llm = ChatOpenAI(model="gpt-5-mini", streaming=True)
 
     async def generate(state: MessagesState) -> dict:
         response = await llm.ainvoke(state["messages"])

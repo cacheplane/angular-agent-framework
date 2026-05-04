@@ -121,7 +121,7 @@ const chat = agent<{ messages: BaseMessage[] }>({
 | Variable | Required | Description |
 |---|---|---|
 | `OPENAI_API_KEY` | Yes | OpenAI API key |
-| `OPENAI_MODEL` | No | Model name (default: `gpt-5-mini`). Change to `gpt-4o-mini` if `gpt-5-mini` is unavailable in your account |
+| `OPENAI_MODEL` | No | Model name (default: `gpt-5-mini`). |
 | `LANGSMITH_API_KEY` | Deploy only | Required for `langgraph deploy`. Not needed for local `langgraph dev` |
 | `LANGSMITH_TRACING` | No | Set to `true` to enable LangSmith trace logging during local dev |
 | `LANGSMITH_PROJECT` | No | Project name in LangSmith UI (default: `angular-example`) |

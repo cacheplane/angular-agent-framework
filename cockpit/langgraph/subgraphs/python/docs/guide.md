@@ -89,7 +89,7 @@ The backend uses a parent orchestrator that delegates to a compiled child subgra
 from langgraph.graph import StateGraph, MessagesState, END
 from langchain_openai import ChatOpenAI
 
-llm = ChatOpenAI(model="gpt-4o-mini", streaming=True)
+llm = ChatOpenAI(model="gpt-5-mini", streaming=True)
 
 # Child: research subgraph
 async def research_node(state: MessagesState) -> dict:

@@ -150,7 +150,7 @@ def summarize(text: str) -> str:
     return sentences[0] + "." if sentences else "No content."
 
 # Bind all tools to the LLM
-llm = ChatOpenAI(model="gpt-4o-mini").bind_tools([calculator, word_count, summarize])
+llm = ChatOpenAI(model="gpt-5-mini").bind_tools([calculator, word_count, summarize])
 ```
 
 The agent selects which skill to call based on the user's request. `ToolNode` dispatches the call and returns the result as a `ToolMessage`.

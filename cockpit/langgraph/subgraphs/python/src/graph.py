@@ -22,7 +22,7 @@ def build_subgraphs_graph():
     The parent orchestrator decides when to delegate to the research subgraph.
     The research subgraph runs independently and returns its results to the parent.
     """
-    llm = ChatOpenAI(model="gpt-4o-mini", streaming=True)
+    llm = ChatOpenAI(model="gpt-5-mini", streaming=True)
 
     # ── Child: research subgraph ──────────────────────────────────────────────
 
