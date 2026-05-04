@@ -4,7 +4,7 @@
   "lib": {
     "entryFile": "src/public-api.ts"
   },
-  "allowedNonPeerDependencies": ["@cacheplane/partial-json"],
+  "allowedNonPeerDependencies": ["@cacheplane/partial-json", "@cacheplane/partial-markdown"],
   "assets": [
     { "input": "src/lib/styles", "glob": "chat.css", "output": "." }
   ]

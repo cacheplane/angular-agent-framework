@@ -1,108 +1,76 @@
+// libs/chat/src/lib/streaming/streaming-markdown.component.spec.ts
 // SPDX-License-Identifier: MIT
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { ElementRef, Injector, runInInjectionContext } from '@angular/core';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { TestBed } from '@angular/core/testing';
+import { Component, signal } from '@angular/core';
 import { ChatStreamingMdComponent } from './streaming-markdown.component';
-import '../../test-setup';
 
-// Signal-input components can't be exercised via TestBed.createComponent +
-// componentRef.setInput() under vitest JIT (Angular's JIT compiler does not
-// process signal-input metadata, so setInput throws NG0303 — the same reason
-// chat-trace, chat-suggestions, and chat-typing-indicator specs in this
-// library avoid template-driven signal inputs). Instead we instantiate the
-// component inside an injection context with a real DOM host element and
-// drive its input by writing to the InputSignal's underlying signal node.
-
-function setSignalInput<T>(sig: unknown, value: T): void {
-  const obj = sig as Record<symbol, unknown>;
-  const signalSymbol = Object.getOwnPropertySymbols(obj).find(
-    (s) => s.description === 'SIGNAL',
-  );
-  if (!signalSymbol) throw new Error('Could not find SIGNAL symbol on input');
-  const node = obj[signalSymbol] as {
-    applyValueToInputSignal?: (n: unknown, v: T) => void;
-    value?: T;
-  };
-  if (typeof node.applyValueToInputSignal === 'function') {
-    node.applyValueToInputSignal(node, value);
-  } else {
-    node.value = value;
-  }
-}
-
-function flushRaf(): Promise<void> {
-  return new Promise((resolve) => {
-    requestAnimationFrame(() => resolve());
-  });
-}
-
-interface Fixture {
-  component: ChatStreamingMdComponent;
-  host: HTMLElement;
-  destroy: () => void;
-}
-
-function makeFixture(): Fixture {
-  const host = document.createElement('div');
-  document.body.appendChild(host);
-  TestBed.configureTestingModule({
-    providers: [{ provide: ElementRef, useValue: new ElementRef(host) }],
-  });
-  const injector = TestBed.inject(Injector);
-  let component!: ChatStreamingMdComponent;
-  runInInjectionContext(injector, () => {
-    component = new ChatStreamingMdComponent();
-  });
-  return {
-    component,
-    host,
-    destroy: () => {
-      TestBed.resetTestingModule();
-      host.remove();
-    },
-  };
+@Component({
+  standalone: true,
+  imports: [ChatStreamingMdComponent],
+  template: `<chat-streaming-md [content]="content()" [streaming]="streaming()" />`,
+})
+class HostComponent {
+  content = signal<string>('');
+  streaming = signal<boolean>(false);
 }
 
 describe('ChatStreamingMdComponent', () => {
-  let fixture: Fixture;
+  beforeEach(() => TestBed.configureTestingModule({ imports: [HostComponent] }));
 
-  beforeEach(() => {
-    fixture = makeFixture();
-    setSignalInput(fixture.component.content, '');
+  it('renders a heading from markdown', () => {
+    const fixture = TestBed.createComponent(HostComponent);
+    fixture.componentInstance.content.set('# Heading\n');
+    fixture.componentInstance.streaming.set(false);
+    fixture.detectChanges();
+    const h1 = fixture.nativeElement.querySelector('h1');
+    expect(h1).toBeTruthy();
+    expect(h1.textContent?.trim()).toBe('Heading');
   });
 
-  it('renders markdown into innerHTML on first content', async () => {
-    setSignalInput(fixture.component.content, '# Heading');
-    await flushRaf();
-    const el = fixture.host;
-    expect(el.innerHTML).toContain('<h1');
-    expect(el.innerHTML).toContain('Heading');
+  it('renders a paragraph from markdown', () => {
+    const fixture = TestBed.createComponent(HostComponent);
+    fixture.componentInstance.content.set('Hello world.\n');
+    fixture.componentInstance.streaming.set(false);
+    fixture.detectChanges();
+    const p = fixture.nativeElement.querySelector('p');
+    expect(p).toBeTruthy();
+    expect(p.textContent?.trim()).toBe('Hello world.');
   });
 
-  it('coalesces multiple updates into one render per frame', async () => {
-    setSignalInput(fixture.component.content, '# A');
-    setSignalInput(fixture.component.content, '# AB');
-    setSignalInput(fixture.component.content, '# ABC');
-    await flushRaf();
-    const el = fixture.host;
-    expect(el.innerHTML).toContain('ABC');
+  it('updates rendered output when content changes (shrink)', () => {
+    const fixture = TestBed.createComponent(HostComponent);
+    fixture.componentInstance.content.set('# Long heading\n');
+    fixture.componentInstance.streaming.set(false);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('h1')?.textContent?.trim()).toBe('Long heading');
+
+    // Content shrinks — component resets and re-parses from scratch
+    fixture.componentInstance.content.set('# Short\n');
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('h1')?.textContent?.trim()).toBe('Short');
   });
 
-  it('handles content shrinking without freezing (regression)', async () => {
-    setSignalInput(fixture.component.content, '# Long heading');
-    await flushRaf();
-    setSignalInput(fixture.component.content, '# Short');
-    await flushRaf();
-    const el = fixture.host;
-    expect(el.innerHTML).toContain('Short');
-    expect(el.innerHTML).not.toContain('Long heading');
+  it('renders multiple paragraphs when content extends the prior prefix', () => {
+    const fixture = TestBed.createComponent(HostComponent);
+    // Start with one paragraph (non-streaming — this is the common finalized state)
+    fixture.componentInstance.content.set('First.\n\nSecond.\n\n');
+    fixture.componentInstance.streaming.set(false);
+    fixture.detectChanges();
+
+    const ps = fixture.nativeElement.querySelectorAll('p');
+    expect(ps.length).toBe(2);
+    expect(ps[0].textContent?.trim()).toBe('First.');
+    expect(ps[1].textContent?.trim()).toBe('Second.');
   });
 
-  it('cleans up pending RAF on destroy', async () => {
-    const spy = vi.spyOn(globalThis, 'cancelAnimationFrame');
-    setSignalInput(fixture.component.content, '# X');
-    fixture.destroy();
-    expect(spy).toHaveBeenCalled();
-    spy.mockRestore();
+  it('renders nothing when content is empty', () => {
+    const fixture = TestBed.createComponent(HostComponent);
+    fixture.componentInstance.content.set('');
+    fixture.componentInstance.streaming.set(false);
+    fixture.detectChanges();
+    // No block-level elements should be present
+    expect(fixture.nativeElement.querySelector('p')).toBeNull();
+    expect(fixture.nativeElement.querySelector('h1')).toBeNull();
   });
 });

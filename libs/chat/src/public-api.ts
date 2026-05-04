@@ -79,6 +79,32 @@ export { ChatSubagentCardComponent, statusColor } from './lib/compositions/chat-
 // Streaming
 export { ChatStreamingMdComponent } from './lib/streaming/streaming-markdown.component';
 
+// Markdown rendering primitives + registry
+export { MARKDOWN_VIEW_REGISTRY } from './lib/markdown/markdown-view-registry';
+export { MarkdownChildrenComponent } from './lib/markdown/markdown-children.component';
+export { cacheplaneMarkdownViews } from './lib/markdown/cacheplane-markdown-views';
+
+// Per-node-type markdown view components (consumers use these to override
+// individual nodes via withViews(cacheplaneMarkdownViews, { … })).
+export { MarkdownDocumentComponent }       from './lib/markdown/views/markdown-document.component';
+export { MarkdownParagraphComponent }      from './lib/markdown/views/markdown-paragraph.component';
+export { MarkdownHeadingComponent }        from './lib/markdown/views/markdown-heading.component';
+export { MarkdownBlockquoteComponent }     from './lib/markdown/views/markdown-blockquote.component';
+export { MarkdownListComponent }           from './lib/markdown/views/markdown-list.component';
+export { MarkdownListItemComponent }       from './lib/markdown/views/markdown-list-item.component';
+export { MarkdownCodeBlockComponent }      from './lib/markdown/views/markdown-code-block.component';
+export { MarkdownThematicBreakComponent }  from './lib/markdown/views/markdown-thematic-break.component';
+export { MarkdownTextComponent }           from './lib/markdown/views/markdown-text.component';
+export { MarkdownEmphasisComponent }       from './lib/markdown/views/markdown-emphasis.component';
+export { MarkdownStrongComponent }         from './lib/markdown/views/markdown-strong.component';
+export { MarkdownStrikethroughComponent }  from './lib/markdown/views/markdown-strikethrough.component';
+export { MarkdownInlineCodeComponent }     from './lib/markdown/views/markdown-inline-code.component';
+export { MarkdownLinkComponent }           from './lib/markdown/views/markdown-link.component';
+export { MarkdownAutolinkComponent }       from './lib/markdown/views/markdown-autolink.component';
+export { MarkdownImageComponent }          from './lib/markdown/views/markdown-image.component';
+export { MarkdownSoftBreakComponent }      from './lib/markdown/views/markdown-soft-break.component';
+export { MarkdownHardBreakComponent }      from './lib/markdown/views/markdown-hard-break.component';
+
 // Shared styles & utilities
 export { CHAT_MARKDOWN_STYLES } from './lib/styles/chat-markdown.styles';
 export { renderMarkdown } from './lib/streaming/markdown-render';
