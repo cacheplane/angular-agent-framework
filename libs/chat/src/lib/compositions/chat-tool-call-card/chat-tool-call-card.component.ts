@@ -3,12 +3,15 @@
 import { Component, ChangeDetectionStrategy, input, computed } from '@angular/core';
 import { ChatTraceComponent, type TraceState } from '../../primitives/chat-trace/chat-trace.component';
 import { CHAT_HOST_TOKENS } from '../../styles/chat-tokens';
+import type { ToolCallStatus } from '../../agent';
 
 export interface ToolCallInfo {
   id: string;
   name: string;
   args: unknown;
   result?: unknown;
+  /** Optional — present when the parent provides it. Will drive the pill + default-collapsed logic in Phase 5. */
+  status?: ToolCallStatus;
 }
 
 @Component({
