@@ -60,6 +60,8 @@ export { ChatWelcomeComponent } from './lib/primitives/chat-welcome/chat-welcome
 export { ChatWelcomeSuggestionComponent } from './lib/primitives/chat-welcome/chat-welcome-suggestion.component';
 export { ChatSelectComponent } from './lib/primitives/chat-select/chat-select.component';
 export type { ChatSelectOption } from './lib/primitives/chat-select/chat-select.component';
+export { ChatCitationsComponent, ChatCitationCardTemplateDirective } from './lib/primitives/chat-citations/chat-citations.component';
+export { ChatCitationsCardComponent } from './lib/primitives/chat-citations/chat-citations-card.component';
 
 // DI provider
 export { provideChat, CHAT_CONFIG } from './lib/provide-chat';
