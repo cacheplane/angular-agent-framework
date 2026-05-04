@@ -40,6 +40,7 @@ export { ChatMessageActionsComponent } from './lib/primitives/chat-message-actio
 export { ChatWindowComponent } from './lib/primitives/chat-window/chat-window.component';
 export { ChatTraceComponent } from './lib/primitives/chat-trace/chat-trace.component';
 export type { TraceState } from './lib/primitives/chat-trace/chat-trace.component';
+export { ChatReasoningComponent } from './lib/primitives/chat-reasoning/chat-reasoning.component';
 export { ChatLauncherButtonComponent } from './lib/primitives/chat-launcher-button/chat-launcher-button.component';
 export { ChatSuggestionsComponent } from './lib/primitives/chat-suggestions/chat-suggestions.component';
 export { ChatInputComponent, submitMessage } from './lib/primitives/chat-input/chat-input.component';
@@ -80,6 +81,7 @@ export { ChatStreamingMdComponent } from './lib/streaming/streaming-markdown.com
 export { CHAT_MARKDOWN_STYLES } from './lib/styles/chat-markdown.styles';
 export { renderMarkdown } from './lib/streaming/markdown-render';
 export { messageContent } from './lib/compositions/shared/message-utils';
+export { formatDuration } from './lib/utils/format-duration';
 export {
   ICON_CHEVRON_DOWN, ICON_CHEVRON_UP, ICON_TOOL,
   ICON_WARNING, ICON_AGENT, ICON_CHECK, ICON_SEND,
