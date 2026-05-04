@@ -48,11 +48,12 @@ export interface StreamManagerBridgeOptions<T, ResolvedBag extends BagTemplate =
 }
 
 export interface StreamManagerBridge {
-  submit:       (values: unknown, opts?: LangGraphSubmitOptions) => Promise<void>;
-  stop:         () => Promise<void>;
-  switchThread: (id: string | null) => void;
-  joinStream:   (runId: string, lastEventId?: string) => Promise<void>;
-  resubmitLast: () => Promise<void>;
+  submit:                (values: unknown, opts?: LangGraphSubmitOptions) => Promise<void>;
+  stop:                  () => Promise<void>;
+  switchThread:          (id: string | null) => void;
+  joinStream:            (runId: string, lastEventId?: string) => Promise<void>;
+  resubmitLast:          () => Promise<void>;
+  getReasoningDurationMs:(id: string) => number | undefined;
 }
 
 export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = BagTemplate>(
@@ -83,6 +84,14 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
     onSubagentChange: publishSubagents,
   });
 
+  /**
+   * Tracks reasoning timing per message id. Keys are message ids; values
+   * record when reasoning content first arrived and when response text
+   * first appeared (or the canonical message arrived). Cleared on
+   * resetThreadState() and on bridge teardown.
+   */
+  const reasoningTimingMap = new Map<string, { startedAt: number; endedAt?: number }>();
+
   function resetThreadState(): void {
     historyAbortController?.abort();
     subjects.values$.next({} as T);
@@ -100,6 +109,7 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
     subjects.isThreadLoading$.next(false);
     toolProgressMap.clear();
     subagentManager.clear();
+    reasoningTimingMap.clear();
   }
 
   function setThreadId(id: string | null, resetState: boolean): void {
@@ -123,6 +133,7 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
   destroy$.subscribe(() => {
     abortController?.abort();
     historyAbortController?.abort();
+    reasoningTimingMap.clear();
   });
 
   async function refreshHistory(): Promise<void> {
@@ -347,7 +358,7 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
       // Partial and message-tuple events are incremental. Merge them by id
       // so optimistic human messages and earlier tool messages are preserved.
       if (event.type === 'messages/partial' || event.messageMetadata) {
-        subjects.messages$.next(mergeMessages(subjects.messages$.value, normalized));
+        subjects.messages$.next(mergeMessages(subjects.messages$.value, normalized, reasoningTimingMap));
         if (isLgTraceEnabled()) {
           const msgs = subjects.messages$.value;
           const last = msgs[msgs.length - 1];
@@ -414,7 +425,7 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
             // drop the partial AI (or even the optimistic human) and
             // tear down their DOM mid-stream. Merge by id keeps both,
             // updates content where ids match, preserves the rest.
-            subjects.messages$.next(mergeMessages(subjects.messages$.value, remapped));
+            subjects.messages$.next(mergeMessages(subjects.messages$.value, remapped, reasoningTimingMap));
             if (isLgTraceEnabled()) {
               lgTrace('bridge.values-sync', {
                 incomingLength: stateMessages.length,
@@ -642,6 +653,13 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
         await runStream(lastPayload, lastOptions);
       }
     },
+
+    getReasoningDurationMs: (id: string): number | undefined => {
+      const entry = reasoningTimingMap.get(id);
+      if (!entry) return undefined;
+      if (entry.endedAt === undefined) return undefined;
+      return entry.endedAt - entry.startedAt;
+    },
   };
 }
 
@@ -760,7 +778,11 @@ function collapseAdjacentAi(messages: BaseMessage[]): BaseMessage[] {
   return out;
 }
 
-function mergeMessages(existing: BaseMessage[], incoming: BaseMessage[]): BaseMessage[] {
+function mergeMessages(
+  existing: BaseMessage[],
+  incoming: BaseMessage[],
+  reasoningTimingMap?: Map<string, { startedAt: number; endedAt?: number }>,
+): BaseMessage[] {
   const merged = [...existing];
   for (const msg of incoming) {
     const rawIn = msg as unknown as Record<string, unknown>;
@@ -797,6 +819,7 @@ function mergeMessages(existing: BaseMessage[], incoming: BaseMessage[]): BaseMe
     if (idx >= 0) {
       const existing = merged[idx];
       const existingId = (existing as unknown as Record<string, unknown>)['id'];
+      const incomingRaw = msg as unknown as Record<string, unknown>;
       // Keep the *existing* id so downstream track-by-id sees stable identity.
       // For complex-content streaming (OpenAI gpt-5/o-series, Anthropic) the
       // SDK emits per-chunk *delta* arrays — not accumulated arrays — so a
@@ -806,15 +829,51 @@ function mergeMessages(existing: BaseMessage[], incoming: BaseMessage[]): BaseMe
       // string content uniformly.
       const accumulatedContent = accumulateContent(
         existing.content as unknown,
-        (msg as unknown as Record<string, unknown>)['content'],
+        incomingRaw['content'],
       );
+      // Only accumulate reasoning when the incoming message explicitly carries
+      // a `reasoning` field or complex-content array blocks with
+      // type='reasoning'/'thinking'. Never use a plain string content value
+      // as reasoning source — that would wrongly treat every assistant
+      // message text as reasoning content.
+      const incomingReasoningSource = 'reasoning' in incomingRaw
+        ? incomingRaw['reasoning']
+        : (Array.isArray(incomingRaw['content']) ? incomingRaw['content'] : undefined);
+      const accumulatedReasoning = accumulateReasoning(
+        (existing as unknown as Record<string, unknown>)['reasoning'],
+        incomingReasoningSource,
+      );
+      const idForTiming = (existingId as string | undefined) ?? (incomingRaw['id'] as string | undefined);
+      if (idForTiming && reasoningTimingMap) {
+        const hasReasoning = accumulatedReasoning.length > 0;
+        const hasText = (typeof accumulatedContent === 'string' ? accumulatedContent : '').length > 0;
+        if (hasReasoning) {
+          const entry = reasoningTimingMap.get(idForTiming) ?? { startedAt: Date.now() };
+          if (hasText && entry.endedAt === undefined) entry.endedAt = Date.now();
+          reasoningTimingMap.set(idForTiming, entry);
+        }
+      }
       const next = { ...(msg as object), content: accumulatedContent } as BaseMessage;
+      (next as unknown as Record<string, unknown>)['reasoning'] = accumulatedReasoning;
       if (existingId) {
         (next as unknown as Record<string, unknown>)['id'] = existingId;
       }
       merged[idx] = next;
     } else {
-      merged.push(msg);
+      const incomingRaw = msg as unknown as Record<string, unknown>;
+      const initialReasoningSource = 'reasoning' in incomingRaw
+        ? incomingRaw['reasoning']
+        : (Array.isArray(incomingRaw['content']) ? incomingRaw['content'] : undefined);
+      const initialReasoning = accumulateReasoning(undefined, initialReasoningSource);
+      if (initialReasoning.length > 0 && reasoningTimingMap) {
+        const msgId = incomingRaw['id'] as string | undefined;
+        if (msgId && !reasoningTimingMap.has(msgId)) {
+          reasoningTimingMap.set(msgId, { startedAt: Date.now() });
+        }
+      }
+      const next = { ...(msg as object) } as BaseMessage;
+      (next as unknown as Record<string, unknown>)['reasoning'] = initialReasoning;
+      merged.push(next);
     }
   }
   return collapseAdjacentAi(merged);

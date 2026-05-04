@@ -767,7 +767,7 @@ describe('createStreamManagerBridge', () => {
       // Optimistic human is stamped with a stable id so chat-message-list
       // track-by-id keeps the same DOM across streaming re-emissions.
       expect.objectContaining({ type: 'human', content: 'hello', id: expect.stringMatching(/^optimistic-/) }),
-      { id: 'ai-1', type: 'ai', content: 'hello' },
+      expect.objectContaining({ id: 'ai-1', type: 'ai', content: 'hello' }),
     ]);
     destroy$.next();
   });
