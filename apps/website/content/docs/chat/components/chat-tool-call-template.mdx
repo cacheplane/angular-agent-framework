@@ -1,0 +1,73 @@
+# ChatToolCallTemplateDirective
+
+`ChatToolCallTemplateDirective` registers a per-tool-name template inside `<chat-tool-calls>`. The primitive collects all directive instances and dispatches each tool call to the template matching its `name`. A literal `"*"` registers a wildcard catch-all for any unmapped name.
+
+**Selector:** `[chatToolCallTemplate]`
+
+**Import:**
+
+```typescript
+import { ChatToolCallTemplateDirective, type ChatToolCallTemplateContext } from '@ngaf/chat';
+```
+
+## Template context
+
+Each registered template receives:
+
+| Variable | Type | Description |
+|---|---|---|
+| `let-call` (`$implicit`) | `ToolCall` | The full tool call: `{id, name, args, status, result?, error?}` |
+| `let-status="status"` | `ToolCallStatus` | `'pending' \| 'running' \| 'complete' \| 'error'` |
+
+## Examples
+
+### Custom search-result card
+
+```html
+<chat-tool-calls [agent]="agent" [message]="msg">
+  <ng-template chatToolCallTemplate="search_web" let-call let-status="status">
+    <my-search-result-card
+      [query]="call.args.query"
+      [results]="call.result"
+      [status]="status"
+    />
+  </ng-template>
+</chat-tool-calls>
+```
+
+### Wildcard catch-all
+
+```html
+<chat-tool-calls [agent]="agent" [message]="msg">
+  <ng-template chatToolCallTemplate="search_web" let-call let-status="status">
+    <my-search-result-card [query]="call.args.query" [results]="call.result" />
+  </ng-template>
+
+  <!-- Anything not search_web falls through to here -->
+  <ng-template chatToolCallTemplate="*" let-call>
+    <chat-tool-call-card [toolCall]="call" />
+  </ng-template>
+</chat-tool-calls>
+```
+
+### Project through `<chat>` directly
+
+`<chat>` re-projects any `chatToolCallTemplate` directive inside it down to the inner `<chat-tool-calls>`:
+
+```html
+<chat [agent]="agent">
+  <ng-template chatToolCallTemplate="generate_image" let-call let-status="status">
+    <my-image-card
+      [prompt]="call.args.prompt"
+      [imageUrl]="call.result"
+      [status]="status"
+    />
+  </ng-template>
+</chat>
+```
+
+## Dispatch order
+
+1. Per-tool template whose `name` exactly matches `tc.name`.
+2. Wildcard template with `name === "*"`.
+3. Default `<chat-tool-call-card>` (no template registered for either).

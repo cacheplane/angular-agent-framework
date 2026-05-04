@@ -6,7 +6,8 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { KeyValuePipe } from '@angular/common';
-import type { Agent } from '../../agent';
+import type { Agent, Message } from '../../agent';
+import { ChatReasoningComponent } from '../../primitives/chat-reasoning/chat-reasoning.component';
 import type { ViewRegistry, RenderEvent } from '@ngaf/render';
 import type { A2uiActionMessage } from '@ngaf/a2ui';
 import type { StateStore } from '@json-render/core';
@@ -42,7 +43,7 @@ import type { ChatRenderEvent } from './chat-render-event';
     ChatInputComponent, ChatTypingIndicatorComponent, ChatErrorComponent, ChatInterruptComponent,
     ChatThreadListComponent, ChatGenerativeUiComponent,
     ChatStreamingMdComponent, ChatToolCallsComponent, ChatSubagentsComponent, A2uiSurfaceComponent,
-    ChatMessageActionsComponent, ChatWelcomeComponent, ChatSelectComponent,
+    ChatMessageActionsComponent, ChatWelcomeComponent, ChatSelectComponent, ChatReasoningComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styles: [CHAT_HOST_TOKENS, `
@@ -142,7 +143,18 @@ import type { ChatRenderEvent } from './chat-render-event';
                   [streaming]="agent().isLoading() && i === agent().messages().length - 1"
                   [current]="i === agent().messages().length - 1"
                 >
-                  <chat-tool-calls [agent]="agent()" [message]="message" />
+                  @if (message.reasoning) {
+                    <chat-reasoning
+                      [content]="message.reasoning"
+                      [isStreaming]="isReasoningStreaming(message, i)"
+                      [durationMs]="message.reasoningDurationMs"
+                    />
+                  }
+                  <chat-tool-calls [agent]="agent()" [message]="message">
+                    <ng-container ngProjectAs="[chatToolCallTemplate]">
+                      <ng-content select="[chatToolCallTemplate]" />
+                    </ng-container>
+                  </chat-tool-calls>
                   <chat-subagents [agent]="agent()" />
                   @if (classified.markdown(); as md) {
                     <chat-streaming-md [content]="md" [streaming]="agent().isLoading() && i === agent().messages().length - 1" />
@@ -262,6 +274,22 @@ export class ChatComponent {
   });
 
   readonly messageContent = messageContent;
+
+  /**
+   * True while a message's reasoning is mid-stream — i.e. it's the latest
+   * message, the agent is loading, the message has reasoning content, and
+   * no response text has arrived yet. Once the response text begins, the
+   * reasoning pill collapses (per its internal logic).
+   */
+  protected isReasoningStreaming(message: Message, index: number): boolean {
+    const agent = this.agent();
+    const isTail = index === agent.messages().length - 1;
+    if (!isTail || !agent.isLoading()) return false;
+    if (!message.reasoning || message.reasoning.length === 0) return false;
+    const text = typeof message.content === 'string' ? message.content : '';
+    return text.length === 0;
+  }
+
   private readonly classifiers = new Map<string, ContentClassifier>();
   private readonly destroyRef = inject(DestroyRef);
   private eventsSubscribed = false;

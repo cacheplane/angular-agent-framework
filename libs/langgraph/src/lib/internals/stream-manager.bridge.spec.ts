@@ -767,7 +767,7 @@ describe('createStreamManagerBridge', () => {
       // Optimistic human is stamped with a stable id so chat-message-list
       // track-by-id keeps the same DOM across streaming re-emissions.
       expect.objectContaining({ type: 'human', content: 'hello', id: expect.stringMatching(/^optimistic-/) }),
-      { id: 'ai-1', type: 'ai', content: 'hello' },
+      expect.objectContaining({ id: 'ai-1', type: 'ai', content: 'hello' }),
     ]);
     destroy$.next();
   });
@@ -993,5 +993,60 @@ describe('createStreamManagerBridge', () => {
     await new Promise(r => setTimeout(r, 10));
     destroy$.next();
     destroy2$.next();
+  });
+});
+
+import { _internalsForTesting } from './stream-manager.bridge';
+
+describe('stream-manager.bridge — reasoning extraction', () => {
+  const { extractReasoning, accumulateReasoning } = _internalsForTesting;
+
+  it('extractReasoning returns "" for plain text content', () => {
+    expect(extractReasoning('hello')).toBe('');
+    expect(extractReasoning([{ type: 'text', text: 'hi' }])).toBe('');
+  });
+
+  it('extractReasoning concatenates {type:"reasoning"} block text', () => {
+    expect(extractReasoning([
+      { type: 'reasoning', text: 'first I ' },
+      { type: 'reasoning', text: 'then ' },
+    ])).toBe('first I then ');
+  });
+
+  it('extractReasoning treats {type:"thinking"} the same as reasoning', () => {
+    expect(extractReasoning([
+      { type: 'thinking', text: 'Anthropic-shape ' },
+      { type: 'reasoning', text: 'OpenAI-shape' },
+    ])).toBe('Anthropic-shape OpenAI-shape');
+  });
+
+  it('extractReasoning skips text/output_text/tool_use/image blocks', () => {
+    expect(extractReasoning([
+      { type: 'text', text: 'visible' },
+      { type: 'reasoning', text: 'hidden' },
+      { type: 'tool_use', id: 'a', name: 'foo', args: {} },
+      { type: 'image', url: '…' },
+    ])).toBe('hidden');
+  });
+
+  it('accumulateReasoning returns "" for two empty inputs', () => {
+    expect(accumulateReasoning(undefined, undefined)).toBe('');
+    expect(accumulateReasoning('', '')).toBe('');
+  });
+
+  it('accumulateReasoning takes incoming when existing is empty', () => {
+    expect(accumulateReasoning('', 'first chunk')).toBe('first chunk');
+  });
+
+  it('accumulateReasoning prefers strict superset (final-id swap)', () => {
+    expect(accumulateReasoning('partial', 'partial-and-more')).toBe('partial-and-more');
+  });
+
+  it('accumulateReasoning keeps existing when it is the strict superset', () => {
+    expect(accumulateReasoning('partial-and-more', 'partial')).toBe('partial-and-more');
+  });
+
+  it('accumulateReasoning appends pure deltas', () => {
+    expect(accumulateReasoning('first ', 'second')).toBe('first second');
   });
 });

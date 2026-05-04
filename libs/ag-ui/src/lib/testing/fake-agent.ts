@@ -23,32 +23,51 @@ export class FakeAgent extends AbstractAgent {
    */
   private readonly tokens: string[];
 
+  /** Optional reasoning chunks emitted before the text reply. */
+  private readonly reasoningTokens: string[];
+
   /** Milliseconds between successive token emissions. */
   private readonly delayMs: number;
 
-  constructor(opts: { tokens?: string[]; delayMs?: number } = {}) {
+  constructor(opts: {
+    tokens?: string[];
+    /** Optional reasoning chunks emitted before the text reply. */
+    reasoningTokens?: string[];
+    delayMs?: number;
+  } = {}) {
     super();
     this.tokens = opts.tokens ?? [
       'Hello', ' from', ' the', ' fake', ' AG-UI', ' agent.',
       ' This', ' is', ' a', ' canned', ' streaming', ' reply.',
     ];
+    this.reasoningTokens = opts.reasoningTokens ?? [];
     this.delayMs = opts.delayMs ?? 60;
   }
 
   run(input: RunAgentInput): Observable<BaseEvent> {
     const tokens = this.tokens;
+    const reasoningTokens = this.reasoningTokens;
     const delayMs = this.delayMs;
     const messageId = `fake-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
     const sequence: BaseEvent[] = [
       { type: EventType.RUN_STARTED, threadId: input.threadId, runId: input.runId } as BaseEvent,
-      { type: EventType.TEXT_MESSAGE_START, messageId, role: 'assistant' } as BaseEvent,
-      ...tokens.map((delta) => (
-        { type: EventType.TEXT_MESSAGE_CONTENT, messageId, delta } as BaseEvent
-      )),
-      { type: EventType.TEXT_MESSAGE_END, messageId } as BaseEvent,
-      { type: EventType.RUN_FINISHED, threadId: input.threadId, runId: input.runId } as BaseEvent,
     ];
+
+    if (reasoningTokens.length > 0) {
+      sequence.push({ type: EventType.REASONING_MESSAGE_START, messageId, role: 'assistant' } as BaseEvent);
+      for (const delta of reasoningTokens) {
+        sequence.push({ type: EventType.REASONING_MESSAGE_CONTENT, messageId, delta } as BaseEvent);
+      }
+      sequence.push({ type: EventType.REASONING_MESSAGE_END, messageId } as BaseEvent);
+    }
+
+    sequence.push({ type: EventType.TEXT_MESSAGE_START, messageId, role: 'assistant' } as BaseEvent);
+    for (const delta of tokens) {
+      sequence.push({ type: EventType.TEXT_MESSAGE_CONTENT, messageId, delta } as BaseEvent);
+    }
+    sequence.push({ type: EventType.TEXT_MESSAGE_END, messageId } as BaseEvent);
+    sequence.push({ type: EventType.RUN_FINISHED, threadId: input.threadId, runId: input.runId } as BaseEvent);
 
     return new Observable<BaseEvent>((observer) => {
       let cancelled = false;

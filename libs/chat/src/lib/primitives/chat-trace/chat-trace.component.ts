@@ -38,14 +38,18 @@ export type TraceState = 'pending' | 'running' | 'done' | 'error';
 })
 export class ChatTraceComponent {
   readonly state = input<TraceState>('pending');
+  /** When state is not 'running' or 'error', honors this input as the default expansion. */
+  readonly defaultExpanded = input<boolean>(false);
 
-  /** null = follow auto state-driven logic; non-null = manual override */
+  /** null = follow auto state-driven logic; non-null = manual override (user click). */
   private readonly _expandedOverride = signal<boolean | null>(null);
 
   readonly expanded = computed(() => {
     const override = this._expandedOverride();
     if (override !== null) return override;
-    return this.state() === 'running';
+    const s = this.state();
+    if (s === 'running' || s === 'error') return true;
+    return this.defaultExpanded();
   });
 
   readonly expandedStr = computed(() => String(this.expanded()));
@@ -54,10 +58,10 @@ export class ChatTraceComponent {
     let prevState: TraceState | undefined;
     effect(() => {
       const s = this.state();
-      if (s === 'running') {
+      // Re-entering running/error from a terminal state: clear manual override
+      // so auto-expand kicks in. (Not on done → done, not on user-toggled state.)
+      if ((s === 'running' || s === 'error') && prevState && prevState !== s) {
         this._expandedOverride.set(null);
-      } else if (s === 'done' && prevState === 'running') {
-        setTimeout(() => this._expandedOverride.set(false), 200);
       }
       prevState = s;
     });

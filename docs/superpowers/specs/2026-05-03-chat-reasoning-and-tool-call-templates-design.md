@@ -63,18 +63,18 @@ Both fields are optional — existing code reading `Message` is unaffected.
 
 ### 3.1 Selector & API
 
+The `content` input defaults to `''` so the host attribute `data-has-content="false"` and the corresponding `:host { display: none }` rule cleanly hide the primitive when there's nothing to show.
+
 ```typescript
 @Component({ selector: 'chat-reasoning', standalone: true, changeDetection: OnPush })
 export class ChatReasoningComponent {
-  readonly content         = input.required<string>();
+  readonly content         = input<string>('');
   readonly isStreaming     = input<boolean>(false);
   readonly durationMs      = input<number | undefined>(undefined);
   readonly label           = input<string | undefined>(undefined);
   readonly defaultExpanded = input<boolean>(false);
 }
 ```
-
-Slot: `[chatReasoningLabel]` content-projection for fully custom labels (default rendering covers the common case).
 
 ### 3.2 Visual states
 
@@ -310,7 +310,7 @@ Per-component MDX files under `apps/website/content/docs/chat/components/`.
 
 ### 10.1 New docs
 
-- **`chat-reasoning.mdx`** — full primitive reference: API table for all inputs (`[content]`, `[isStreaming]`, `[durationMs]`, `[label]`, `[defaultExpanded]`), three visual states with code examples, the `formatDuration` helper, the `[chatReasoningLabel]` slot, integration example showing automatic rendering by `<chat>` plus a standalone usage example.
+- **`chat-reasoning.mdx`** — full primitive reference: API table for all inputs (`[content]`, `[isStreaming]`, `[durationMs]`, `[label]`, `[defaultExpanded]`), three visual states with code examples, the `formatDuration` helper, integration example showing automatic rendering by `<chat>` plus a standalone usage example.
 - **`chat-tool-call-template.mdx`** — directive reference. Selector + template context shape (`let-call`, `let-status`), worked examples (search results card, image generation card), interaction with `[grouping]`.
 
 ### 10.2 Updated docs

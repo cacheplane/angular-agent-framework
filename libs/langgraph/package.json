@@ -1,6 +1,6 @@
 {
   "name": "@ngaf/langgraph",
-  "version": "0.0.10",
+  "version": "0.0.11",
   "peerDependencies": {
     "@ngaf/chat": "*",
     "@ngaf/licensing": "*",

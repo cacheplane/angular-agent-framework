@@ -1,0 +1,16 @@
+# Changelog
+
+## 0.0.19
+
+### Reasoning
+
+- New `<chat-reasoning>` primitive renders model reasoning content as a "Thinking…" / "Thought for Ns" pill, default-collapsed once streaming completes. Auto-rendered by `<chat>` when `Message.reasoning` is populated.
+- New `Message.reasoning` and `Message.reasoningDurationMs` optional fields on the shared agent contract. Both adapters populate them: `@ngaf/langgraph` from `{type:'reasoning'}` / `{type:'thinking'}` content blocks, `@ngaf/ag-ui` from `REASONING_MESSAGE_*` events.
+
+### Tool-call templates
+
+- New `chatToolCallTemplate` directive registers per-tool-name templates inside `<chat-tool-calls>`. A literal `"*"` registers a wildcard catch-all.
+- `<chat-tool-calls>` `[grouping]="'auto'"` (the default) auto-collapses sequential same-name tool calls into a labeled strip ("Searched 5 sites"). Pass `[grouping]="'none'"` to opt out.
+- The legacy single-`<ng-template>` fallback inside `<chat-tool-calls>` is removed in favor of the named-template registry. Consumers wanting a catch-all use `chatToolCallTemplate="*"`.
+- `<chat-tool-call-card>` defaults to collapsed when `complete`. Pass `[defaultCollapsed]="false"` for always-expanded.
+- New status pill (running spinner / done check / error glyph) with consistent visual chrome.

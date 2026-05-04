@@ -8,6 +8,8 @@ import { FakeAgent } from './fake-agent';
 export interface FakeAgUiAgentConfig {
   /** Tokens streamed back as the assistant reply. */
   tokens?: string[];
+  /** Optional reasoning chunks emitted before the text reply. */
+  reasoningTokens?: string[];
   /** Milliseconds between successive token emissions. */
   delayMs?: number;
 }

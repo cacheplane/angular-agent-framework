@@ -12,14 +12,17 @@ import type { TraceState } from './chat-trace.component';
 // inside runInInjectionContext — the same pattern used by chat-typing-indicator
 // and chat-timeline specs in this library.
 
-function makeTrace(initialState: TraceState = 'pending') {
+function makeTrace(initialState: TraceState = 'pending', initialDefaultExpanded = false) {
   const state = signal<TraceState>(initialState);
+  const defaultExpanded = signal<boolean>(initialDefaultExpanded);
   const expandedOverride = signal<boolean | null>(null);
 
   const expanded = computed(() => {
     const override = expandedOverride();
     if (override !== null) return override;
-    return state() === 'running';
+    const s = state();
+    if (s === 'running' || s === 'error') return true;
+    return defaultExpanded();
   });
 
   const expandedStr = computed(() => String(expanded()));
@@ -30,15 +33,14 @@ function makeTrace(initialState: TraceState = 'pending') {
 
   function setState(s: TraceState) {
     const prev = state();
-    state.set(s);
-    if (s === 'running') {
+    // Mirror the effect logic: clear override when re-entering running/error from a different state
+    if ((s === 'running' || s === 'error') && prev && prev !== s) {
       expandedOverride.set(null);
-    } else if (s === 'done' && prev === 'running') {
-      setTimeout(() => expandedOverride.set(false), 200);
     }
+    state.set(s);
   }
 
-  return { state, expanded, expandedStr, toggle, setState };
+  return { state, defaultExpanded, expanded, expandedStr, toggle, setState, expandedOverride };
 }
 
 describe('ChatTraceComponent — expanded computed', () => {
@@ -66,10 +68,26 @@ describe('ChatTraceComponent — expanded computed', () => {
     });
   });
 
-  it('is false when state is error', () => {
+  it('auto-expands when state is error', () => {
     TestBed.configureTestingModule({});
     TestBed.runInInjectionContext(() => {
       const { expanded } = makeTrace('error');
+      expect(expanded()).toBe(true);
+    });
+  });
+
+  it('honors defaultExpanded=true when done', () => {
+    TestBed.configureTestingModule({});
+    TestBed.runInInjectionContext(() => {
+      const { expanded } = makeTrace('done', true);
+      expect(expanded()).toBe(true);
+    });
+  });
+
+  it('defaultExpanded=false keeps done collapsed', () => {
+    TestBed.configureTestingModule({});
+    TestBed.runInInjectionContext(() => {
+      const { expanded } = makeTrace('done', false);
       expect(expanded()).toBe(false);
     });
   });
@@ -109,6 +127,28 @@ describe('ChatTraceComponent — state transitions', () => {
       setState('pending');
       setState('running');
       expect(expanded()).toBe(true);
+    });
+  });
+
+  it('clears manual override and auto-expands when transitioning to error', () => {
+    TestBed.configureTestingModule({});
+    TestBed.runInInjectionContext(() => {
+      const { expanded, toggle, setState } = makeTrace('running');
+      toggle();
+      expect(expanded()).toBe(false);
+      setState('error');
+      expect(expanded()).toBe(true);
+    });
+  });
+
+  it('done state respects defaultExpanded without timeout', () => {
+    TestBed.configureTestingModule({});
+    TestBed.runInInjectionContext(() => {
+      // With defaultExpanded=false (default), done stays collapsed — no timeout needed
+      const { expanded, setState } = makeTrace('running');
+      expect(expanded()).toBe(true);
+      setState('done');
+      expect(expanded()).toBe(false);
     });
   });
 

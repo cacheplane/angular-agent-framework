@@ -193,3 +193,27 @@ Under the hood, `ChatComponent` composes these primitives:
 - `ChatErrorComponent` for error display
 - `ChatInterruptComponent` for the interrupt banner
 - `ChatThreadListComponent` for the sidebar
+
+## Reasoning
+
+When a model emits reasoning content (gpt-5 / o-series with `reasoning` blocks, Anthropic with `thinking` blocks, or any AG-UI agent emitting `REASONING_MESSAGE_*` events), the adapter populates `Message.reasoning` and `Message.reasoningDurationMs`. The `<chat>` composition automatically renders [`<chat-reasoning>`](./chat-reasoning) above the assistant response. No configuration required.
+
+While reasoning is streaming, the pill shows "Thinking…" with a pulse dot and the body auto-expands so the user sees content arrive in real time. Once response text begins, the pill collapses to "Thought for Ns" (e.g. "Thought for 4s").
+
+## Tool-call templates
+
+Project a `<ng-template chatToolCallTemplate="…">` directly into `<chat>` to replace the default card UX for a specific tool name. The composition forwards the template into the inner [`<chat-tool-calls>`](./chat-tool-calls).
+
+```html
+<chat [agent]="agent">
+  <ng-template chatToolCallTemplate="generate_image" let-call let-status="status">
+    <my-image-card
+      [prompt]="call.args.prompt"
+      [imageUrl]="call.result"
+      [status]="status"
+    />
+  </ng-template>
+</chat>
+```
+
+A `chatToolCallTemplate="*"` wildcard catches any unmapped tool name. See [chatToolCallTemplate](./chat-tool-call-template) for the directive reference.
