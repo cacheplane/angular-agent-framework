@@ -197,7 +197,9 @@ export function agent<
   // `@let content = messageContent(message)` short-circuits — DOM never
   // updates per token. DOM stability is provided by `track message.id`
   // in chat-message-list, not by Message identity.
-  const messagesNeutral = computed<Message[]>(() => rawMessages().map(toMessage));
+  const messagesNeutral = computed<Message[]>(() =>
+    rawMessages().map((m) => toMessage(m, manager.getReasoningDurationMs)),
+  );
 
   const toolCallsNeutral = computed<ToolCall[]>(() => rawToolCalls().map(toToolCall));
 
@@ -336,7 +338,10 @@ function mapStatus(s: ResourceStatus): AgentStatus {
   }
 }
 
-function toMessage(m: BaseMessage): Message {
+function toMessage(
+  m: BaseMessage,
+  getReasoningDurationMs?: (id: string) => number | undefined,
+): Message {
   const raw = m as unknown as Record<string, unknown>;
   const typeVal = typeof m._getType === 'function'
     ? m._getType()
@@ -346,12 +351,21 @@ function toMessage(m: BaseMessage): Message {
     typeVal === 'tool'  ? 'tool' :
     typeVal === 'system' ? 'system' :
     'assistant';
+  const id = (m.id as string | undefined) ?? (raw['id'] as string | undefined) ?? randomId();
+  const reasoning = typeof raw['reasoning'] === 'string' && (raw['reasoning'] as string).length > 0
+    ? (raw['reasoning'] as string)
+    : undefined;
+  const reasoningDurationMs = reasoning && getReasoningDurationMs
+    ? getReasoningDurationMs(id)
+    : undefined;
   return {
-    id: (m.id as string | undefined) ?? (raw['id'] as string | undefined) ?? randomId(),
+    id,
     role,
     content: extractTextContent(m.content),
     toolCallId: raw['tool_call_id'] as string | undefined,
     name: raw['name'] as string | undefined,
+    reasoning,
+    reasoningDurationMs,
     extra: raw,
   };
 }
