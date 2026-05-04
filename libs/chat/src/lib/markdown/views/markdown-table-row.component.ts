@@ -1,6 +1,6 @@
 // libs/chat/src/lib/markdown/views/markdown-table-row.component.ts
 // SPDX-License-Identifier: MIT
-import { Component, ChangeDetectionStrategy, input, computed } from '@angular/core';
+import { Component, ChangeDetectionStrategy, input, computed, inject } from '@angular/core';
 import type { MarkdownTableRowNode } from '@cacheplane/partial-markdown';
 import { MarkdownChildrenComponent } from '../markdown-children.component';
 import { IS_HEADER_ROW } from '../markdown-table-row.token';
