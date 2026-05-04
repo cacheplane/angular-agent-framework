@@ -433,7 +433,7 @@ function toSubagent(sa: SubagentStreamRef): Subagent {
     toolCallId: sa.toolCallId,
     name: sa.name,
     status: sa.status,
-    messages: computed(() => sa.messages().map(toMessage)) as Signal<Message[]>,
+    messages: computed(() => sa.messages().map((m) => toMessage(m))) as Signal<Message[]>,
     state: sa.values as Signal<Record<string, unknown>>,
   };
 }
