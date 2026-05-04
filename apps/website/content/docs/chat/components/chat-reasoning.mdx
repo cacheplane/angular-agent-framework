@@ -1,0 +1,57 @@
+# ChatReasoningComponent
+
+`ChatReasoningComponent` renders an assistant's reasoning content as a compact pill that expands to reveal the underlying text. The `<chat>` composition automatically renders this primitive above the assistant response when `Message.reasoning` is populated by the adapter — most consumers don't need to use it directly.
+
+**Selector:** `chat-reasoning`
+
+**Import:**
+
+```typescript
+import { ChatReasoningComponent, formatDuration } from '@ngaf/chat';
+```
+
+## Visual states
+
+| State | Pill label | Behavior |
+|---|---|---|
+| `[isStreaming]="true"` | "Thinking…" with pulsing dot | Auto-expanded; body streams in |
+| Idle, `[durationMs]` set | "Thought for Ns" | Collapsed by default; click to expand |
+| Idle, no `[durationMs]` | "Show reasoning" | Collapsed by default; click to expand |
+
+## Inputs
+
+| Input | Type | Default | Description |
+|---|---|---|---|
+| `[content]` | `string` | `''` | The reasoning text to render |
+| `[isStreaming]` | `boolean` | `false` | True while the model is mid-reasoning |
+| `[durationMs]` | `number \| undefined` | `undefined` | Wall-clock duration of the reasoning phase |
+| `[label]` | `string \| undefined` | `undefined` | Override the auto-derived label |
+| `[defaultExpanded]` | `boolean` | `false` | Open the panel by default when idle |
+
+## Standalone usage
+
+```html
+<chat-reasoning
+  [content]="reasoningText"
+  [isStreaming]="isStillThinking"
+  [durationMs]="thoughtFor"
+/>
+```
+
+## formatDuration utility
+
+Use `formatDuration(ms)` to render the duration string yourself (e.g. for a sidebar):
+
+```typescript
+formatDuration(0)      // "<1s"
+formatDuration(4_000)  // "4s"
+formatDuration(72_000) // "1m 12s"
+```
+
+## Behavior
+
+- The component hides itself entirely (`display: none`) when `[content]` is empty.
+- `[isStreaming]="true"` force-expands the panel so streaming content is visible.
+- A user click on the pill toggles the panel; the user choice persists across `[isStreaming]` transitions for the lifetime of the instance.
+- When `isStreaming` re-engages on a follow-up turn (a new reasoning phase begins after a prior idle period), the panel resets to expanded.
+- The body re-uses `<chat-streaming-md>` so reasoning content gets the same markdown rendering pipeline as the response (lists, code blocks, headings render).

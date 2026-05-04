@@ -1,0 +1,68 @@
+# ChatToolCallsComponent
+
+`ChatToolCallsComponent` renders all tool calls associated with an assistant message. By default sequential same-name calls auto-group into a labeled strip; consumers can register per-tool-name templates via the `chatToolCallTemplate` directive to fully replace the default card UX.
+
+**Selector:** `chat-tool-calls`
+
+**Import:**
+
+```typescript
+import { ChatToolCallsComponent } from '@ngaf/chat';
+```
+
+## Inputs
+
+| Input | Type | Default | Description |
+|---|---|---|---|
+| `[agent]` | `Agent` | — (required) | Source of `agent.toolCalls()` |
+| `[message]` | `Message \| undefined` | `undefined` | Filter to calls referenced by this message's `tool_use` content blocks |
+| `[grouping]` | `'auto' \| 'none'` | `'auto'` | Auto-collapse adjacent same-name calls into a strip |
+| `[groupSummary]` | `(name: string, count: number) => string` | built-in registry | Override the default strip label |
+
+## Default group summaries
+
+| Tool name shape | Default label |
+|---|---|
+| `search_*` | "Searched N sites" |
+| `generate_*` | "Generated N items" |
+| `read_*` | "Read N files" |
+| `write_*` | "Wrote N files" |
+| `list_*` | "Listed N items" |
+| Anything else | "Called {name} N times" |
+
+## Per-tool templates
+
+Register a template per tool name (or `"*"` as a wildcard) — see [chat-tool-call-template](./chat-tool-call-template).
+
+```html
+<chat-tool-calls [agent]="agent" [message]="msg">
+  <ng-template chatToolCallTemplate="search_web" let-call let-status="status">
+    <my-search-result-card [query]="call.args.query" [results]="call.result" />
+  </ng-template>
+</chat-tool-calls>
+```
+
+When a per-tool template is registered for a name, calls of that name skip grouping and are rendered each through the template (the consumer takes responsibility for visual density).
+
+## Custom group summary
+
+```html
+<chat-tool-calls
+  [agent]="agent"
+  [message]="msg"
+  [groupSummary]="myGroupSummary"
+/>
+```
+
+```typescript
+myGroupSummary = (name: string, count: number) =>
+  name === 'fetch_user' ? `Fetched ${count} profiles` : `${name} × ${count}`;
+```
+
+## Disabling grouping
+
+```html
+<chat-tool-calls [agent]="agent" [message]="msg" [grouping]="'none'" />
+```
+
+Each call renders independently regardless of name adjacency.

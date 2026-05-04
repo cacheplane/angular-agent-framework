@@ -1,139 +1,57 @@
 # ChatToolCallCardComponent
 
-`ChatToolCallCardComponent` is a composition that renders an expandable card for a single tool call. It displays the tool name in the header, shows a completion badge when done, and expands to reveal the tool's input arguments and output result.
+`ChatToolCallCardComponent` renders a single tool call as an expandable card with a status pill (running / complete / error), inputs, and output.
 
 **Selector:** `chat-tool-call-card`
 
 **Import:**
 
 ```typescript
-import { ChatToolCallCardComponent } from '@ngaf/chat';
-import type { ToolCallInfo } from '@ngaf/chat';
+import { ChatToolCallCardComponent, type ToolCallInfo } from '@ngaf/chat';
 ```
 
-## Basic Usage
+## Status pill
 
-```html
-<chat-tool-call-card [toolCall]="myToolCall" />
-```
+| Status | Visual | aria-label |
+|---|---|---|
+| `running` | spinner (animated) | "Running" |
+| `complete` | check (success color) | "Completed" |
+| `error` | exclamation (error color) | "Failed" |
 
-Where `myToolCall` is a `ToolCallInfo` object:
+## Default-collapsed behavior
 
-```typescript
-const myToolCall: ToolCallInfo = {
-  id: 'call_abc123',
-  name: 'search_documents',
-  args: { query: 'Angular signals tutorial' },
-  result: { documents: ['doc1', 'doc2'] },
-};
-```
+| Status | Default state |
+|---|---|
+| `running` | Expanded |
+| `error` | Expanded |
+| `complete` | Collapsed (when `[defaultCollapsed]="true"`, the default) |
 
-## API
+A user click on the header toggles open/closed. Once toggled, the user choice persists across status changes for the lifetime of the card.
 
-### Inputs
+## Inputs
 
 | Input | Type | Default | Description |
-|-------|------|---------|-------------|
-| `toolCall` | `ToolCallInfo` | **Required** | The tool call data to display |
+|---|---|---|---|
+| `[toolCall]` | `ToolCallInfo` | — (required) | `{id, name, args, status?, result?}` |
+| `[defaultCollapsed]` | `boolean` | `true` | Collapse on `complete`; pass `false` to keep cards always-expanded |
 
-## ToolCallInfo Type
+## ToolCallInfo
 
 ```typescript
 interface ToolCallInfo {
   id: string;
   name: string;
   args: unknown;
+  status?: 'pending' | 'running' | 'complete' | 'error';
   result?: unknown;
 }
 ```
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `id` | `string` | Unique identifier for the tool call |
-| `name` | `string` | The tool function name (displayed in the header) |
-| `args` | `unknown` | The arguments passed to the tool (displayed as formatted JSON) |
-| `result` | `unknown \| undefined` | The tool's return value. When present, a green checkmark badge appears. |
-
-## Card Behavior
-
-### Collapsed State (Default)
-
-The card header shows:
-- A gear icon on the left
-- The tool name in monospace font
-- A green checkmark with "done" text when `result` is defined
-- A chevron toggle on the right
-
-### Expanded State
-
-Clicking the header toggles expansion. The expanded area shows:
-- **Inputs** section: The `args` value formatted as indented JSON
-- **Output** section (when `result` is defined): The `result` value formatted as indented JSON
-
-The component uses a `formatJson()` method that:
-- Returns strings directly
-- Serializes objects with `JSON.stringify(value, null, 2)`
-- Falls back to `String(value)` if serialization fails
-
-## Using with ChatToolCallsComponent
-
-The `ChatToolCallsComponent` primitive iterates over tool calls from a `LangGraphAgent`. Combine it with `ChatToolCallCardComponent` to render a list of tool call cards:
+## Basic usage
 
 ```html
-<chat-tool-calls [ref]="chatRef">
-  <ng-template let-toolCall>
-    <chat-tool-call-card [toolCall]="asToolCallInfo(toolCall)" />
-  </ng-template>
-</chat-tool-calls>
+<chat-tool-call-card [toolCall]="tc" />
+
+<!-- Always-expanded -->
+<chat-tool-call-card [toolCall]="tc" [defaultCollapsed]="false" />
 ```
-
-```typescript
-import type { ToolCallWithResult } from '@langchain/langgraph-sdk';
-import type { ToolCallInfo } from '@ngaf/chat';
-
-asToolCallInfo(tc: ToolCallWithResult): ToolCallInfo {
-  return {
-    id: tc.id ?? '',
-    name: tc.name,
-    args: tc.args,
-    result: tc.result,
-  };
-}
-```
-
-## Using in Message Templates
-
-Display tool calls inline with AI messages:
-
-```html
-<chat-messages [ref]="chatRef">
-  <ng-template chatMessageTemplate="ai" let-message>
-    <div class="ai-message">{{ message.content }}</div>
-
-    <!-- Show tool calls attached to this AI message -->
-    <chat-tool-calls [ref]="chatRef" [message]="message">
-      <ng-template let-toolCall>
-        <chat-tool-call-card [toolCall]="asToolCallInfo(toolCall)" />
-      </ng-template>
-    </chat-tool-calls>
-  </ng-template>
-</chat-messages>
-```
-
-## Styling
-
-The card uses the following CSS custom properties:
-
-| Variable | Applied To |
-|----------|-----------|
-| `--ngaf-chat-surface-alt` | Card background |
-| `--ngaf-chat-separator` | Card border, section dividers |
-| `--ngaf-chat-radius-card` | Card border radius |
-| `--ngaf-chat-text` | Tool name and JSON content |
-| `--ngaf-chat-text-muted` | Gear icon, chevron, section labels |
-| `--ngaf-chat-success` | Checkmark and "done" badge |
-
-## ARIA
-
-- The header button has `aria-expanded` reflecting the current state
-- The button has `aria-label="Toggle tool call details"`
