@@ -1,6 +1,6 @@
 {
   "name": "@ngaf/chat",
-  "version": "0.0.20",
+  "version": "0.0.21",
   "exports": {
     ".": {
       "types": "./index.d.ts",
@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "@cacheplane/partial-json": "^0.1.1",
-    "@cacheplane/partial-markdown": "^0.1.0"
+    "@cacheplane/partial-markdown": "^0.2.0"
   },
   "peerDependencies": {
     "@angular/core": "^20.0.0 || ^21.0.0",

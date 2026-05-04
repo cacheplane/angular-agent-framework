@@ -1,3 +1,16 @@
+## 0.0.21 — 2026-05-04
+
+### Added
+
+- **`@ngaf/chat`** — `Citation` interface, `Message.citations` field, `<chat-citations>` primitive (sources panel), `MarkdownCitationReferenceComponent` registered in the markdown view registry, `CitationsResolverService` for message-first / markdown-fallback citation lookup.
+- **`@ngaf/langgraph`** — `extractCitations()` populates `Message.citations` from `additional_kwargs.citations` or `additional_kwargs.sources`.
+- **`@ngaf/ag-ui`** — `bridgeCitationsState()` populates `Message.citations` from STATE_DELTA at JSON Pointer `/citations/{messageId}`.
+- **`@cacheplane/partial-markdown`** peer in `@ngaf/chat` bumped to `^0.2.0`.
+
+### Changed
+
+- **All @ngaf libraries synchronized to `0.0.21`** per project policy (single version across the suite).
+
 ## 0.0.2 (2026-05-01)
 
 ### 🩹 Fixes

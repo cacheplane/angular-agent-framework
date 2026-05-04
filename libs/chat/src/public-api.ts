@@ -8,6 +8,7 @@ export type { MessageTemplateType } from './lib/chat.types';
 export type {
   Agent,
   AgentWithHistory,
+  Citation,
   Message,
   Role,
   ContentBlock,
@@ -59,6 +60,8 @@ export { ChatWelcomeComponent } from './lib/primitives/chat-welcome/chat-welcome
 export { ChatWelcomeSuggestionComponent } from './lib/primitives/chat-welcome/chat-welcome-suggestion.component';
 export { ChatSelectComponent } from './lib/primitives/chat-select/chat-select.component';
 export type { ChatSelectOption } from './lib/primitives/chat-select/chat-select.component';
+export { ChatCitationsComponent, ChatCitationCardTemplateDirective } from './lib/primitives/chat-citations/chat-citations.component';
+export { ChatCitationsCardComponent } from './lib/primitives/chat-citations/chat-citations-card.component';
 
 // DI provider
 export { provideChat, CHAT_CONFIG } from './lib/provide-chat';
@@ -75,6 +78,10 @@ export type { InterruptAction } from './lib/compositions/chat-interrupt-panel/ch
 export { ChatToolCallCardComponent } from './lib/compositions/chat-tool-call-card/chat-tool-call-card.component';
 export type { ToolCallInfo } from './lib/compositions/chat-tool-call-card/chat-tool-call-card.component';
 export { ChatSubagentCardComponent, statusColor } from './lib/compositions/chat-subagent-card/chat-subagent-card.component';
+
+// Citations resolver
+export { CitationsResolverService } from './lib/markdown/citations-resolver.service';
+export type { ResolvedCitation } from './lib/markdown/citations-resolver.service';
 
 // Streaming
 export { ChatStreamingMdComponent } from './lib/streaming/streaming-markdown.component';
@@ -104,6 +111,7 @@ export { MarkdownAutolinkComponent }       from './lib/markdown/views/markdown-a
 export { MarkdownImageComponent }          from './lib/markdown/views/markdown-image.component';
 export { MarkdownSoftBreakComponent }      from './lib/markdown/views/markdown-soft-break.component';
 export { MarkdownHardBreakComponent }      from './lib/markdown/views/markdown-hard-break.component';
+export { MarkdownCitationReferenceComponent } from './lib/markdown/views/markdown-citation-reference.component';
 
 // Shared styles & utilities
 export { CHAT_MARKDOWN_STYLES } from './lib/styles/chat-markdown.styles';

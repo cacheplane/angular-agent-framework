@@ -1,16 +1,21 @@
 // libs/chat/src/lib/primitives/chat-message/chat-message.component.ts
 // SPDX-License-Identifier: MIT
-import { Component, ChangeDetectionStrategy, input, computed } from '@angular/core';
+import { Component, ChangeDetectionStrategy, input, computed, effect, inject } from '@angular/core';
 import { CHAT_HOST_TOKENS } from '../../styles/chat-tokens';
 import { CHAT_MESSAGE_STYLES } from '../../styles/chat-message.styles';
+import { ChatCitationsComponent } from '../chat-citations/chat-citations.component';
+import { CitationsResolverService } from '../../markdown/citations-resolver.service';
+import type { Message } from '../../agent/message';
 
 export type ChatMessageRole = 'user' | 'assistant' | 'system' | 'tool';
 
 @Component({
   selector: 'chat-message',
   standalone: true,
+  imports: [ChatCitationsComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styles: [CHAT_HOST_TOKENS, CHAT_MESSAGE_STYLES],
+  providers: [CitationsResolverService],
   host: {
     '[attr.data-role]': 'role()',
     '[attr.data-current]': 'currentStr()',
@@ -22,6 +27,9 @@ export type ChatMessageRole = 'user' | 'assistant' | 'system' | 'tool';
       <ng-content />
       <span class="chat-message__caret" aria-hidden="true"></span>
     </div>
+    @if (message()?.role === 'assistant' && message(); as msg) {
+      <chat-citations [message]="msg" />
+    }
     <div class="chat-message__controls">
       <ng-content select="[chatMessageControls]" />
     </div>
@@ -32,6 +40,15 @@ export class ChatMessageComponent {
   readonly current = input(false);
   readonly streaming = input(false);
   readonly prevRole = input<ChatMessageRole | undefined>(undefined);
+  readonly message = input<Message | undefined>(undefined);
+
+  private readonly resolver = inject(CitationsResolverService);
+
+  constructor() {
+    effect(() => {
+      this.resolver.message.set(this.message() ?? null);
+    });
+  }
 
   readonly currentStr = computed(() => String(this.current()));
   readonly streamingStr = computed(() => String(this.streaming()));
