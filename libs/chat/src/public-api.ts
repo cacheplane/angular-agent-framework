@@ -111,6 +111,7 @@ export { MarkdownAutolinkComponent }       from './lib/markdown/views/markdown-a
 export { MarkdownImageComponent }          from './lib/markdown/views/markdown-image.component';
 export { MarkdownSoftBreakComponent }      from './lib/markdown/views/markdown-soft-break.component';
 export { MarkdownHardBreakComponent }      from './lib/markdown/views/markdown-hard-break.component';
+export { MarkdownCitationReferenceComponent } from './lib/markdown/views/markdown-citation-reference.component';
 
 // Shared styles & utilities
 export { CHAT_MARKDOWN_STYLES } from './lib/styles/chat-markdown.styles';
