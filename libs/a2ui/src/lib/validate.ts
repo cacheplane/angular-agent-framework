@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
-import type { A2uiCheckRule } from './types';
-import { resolveDynamic } from './resolve';
+import type { A2uiCheckRule } from './types.js';
+import { resolveDynamic } from './resolve.js';
 
 export interface A2uiValidationResult {
   valid: boolean;

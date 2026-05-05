@@ -37,3 +37,7 @@ export { FetchStreamTransport } from './lib/transport/fetch-stream.transport';
 // Mock test utility for LangGraph agent
 export { mockLangGraphAgent } from './lib/testing/mock-langgraph-agent';
 export type { MockLangGraphAgent } from './lib/testing/mock-langgraph-agent';
+
+// Citation normalizer — useful for advanced consumers building custom adapters
+// or bridging non-LangGraph message shapes into ngaf Citation[].
+export { extractCitations } from './lib/internals/extract-citations';

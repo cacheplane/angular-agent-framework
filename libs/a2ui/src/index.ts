@@ -8,13 +8,13 @@ export type {
   A2uiCreateSurface, A2uiUpdateComponents, A2uiUpdateDataModel, A2uiDeleteSurface,
   A2uiMessage, A2uiSurface,
   A2uiClientDataModel, A2uiActionMessage,
-} from './lib/types';
-export { getByPointer, setByPointer, deleteByPointer } from './lib/pointer';
-export { createA2uiMessageParser } from './lib/parser';
-export type { A2uiMessageParser } from './lib/parser';
-export { resolveDynamic } from './lib/resolve';
-export type { A2uiScope } from './lib/resolve';
-export { executeFunction } from './lib/functions';
-export { evaluateCheckRules } from './lib/validate';
-export type { A2uiValidationResult } from './lib/validate';
-export { isPathRef, isFunctionCall } from './lib/guards';
+} from './lib/types.js';
+export { getByPointer, setByPointer, deleteByPointer } from './lib/pointer.js';
+export { createA2uiMessageParser } from './lib/parser.js';
+export type { A2uiMessageParser } from './lib/parser.js';
+export { resolveDynamic } from './lib/resolve.js';
+export type { A2uiScope } from './lib/resolve.js';
+export { executeFunction } from './lib/functions.js';
+export { evaluateCheckRules } from './lib/validate.js';
+export type { A2uiValidationResult } from './lib/validate.js';
+export { isPathRef, isFunctionCall } from './lib/guards.js';

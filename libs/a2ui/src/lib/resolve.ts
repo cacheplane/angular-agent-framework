@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
-import type { A2uiPathRef, A2uiFunctionCall } from './types';
-import { getByPointer } from './pointer';
-import { executeFunction } from './functions';
+import type { A2uiPathRef, A2uiFunctionCall } from './types.js';
+import { getByPointer } from './pointer.js';
+import { executeFunction } from './functions.js';
 
 export interface A2uiScope {
   basePath: string;

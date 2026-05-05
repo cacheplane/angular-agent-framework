@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-import type { A2uiPathRef, A2uiFunctionCall } from './types';
+import type { A2uiPathRef, A2uiFunctionCall } from './types.js';
 
 /** Narrows an unknown value to A2uiPathRef — has `path` but not `call`. */
 export function isPathRef(value: unknown): value is A2uiPathRef {

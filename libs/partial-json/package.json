@@ -1,6 +1,6 @@
 {
   "name": "@ngaf/partial-json",
-  "version": "0.0.22",
+  "version": "0.0.23",
   "deprecated": "Replaced by @cacheplane/partial-json. No further versions will be published from this package.",
   "license": "MIT",
   "repository": {

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-import type { A2uiMessage } from './types';
+import type { A2uiMessage } from './types.js';
 
 const ENVELOPE_KEYS = ['createSurface', 'updateComponents', 'updateDataModel', 'deleteSurface'] as const;
 
