@@ -64,4 +64,62 @@ describe('ChatCitationsComponent', () => {
     expect(fixture.nativeElement.querySelector('.custom-card')?.textContent.trim()).toBe('Custom');
     expect(fixture.nativeElement.querySelector('.chat-citations-card')).toBeNull();
   });
+
+  it('merges markdown sidecar citations when resolver is available — bug #197 regression', async () => {
+    // Live Chrome smoke caught: when citations come from Pandoc-formatted
+    // [^id]: defs in content (no provider metadata), inline markers resolved
+    // correctly via the markdown sidecar but the sources panel never rendered.
+    const { CitationsResolverService } = await import('../../markdown/citations-resolver.service');
+    @Component({
+      standalone: true,
+      imports: [ChatCitationsComponent],
+      providers: [CitationsResolverService],
+      template: `<chat-citations [message]="message" />`,
+    })
+    class ResolverHost {
+      message: Message = msg(undefined); // no provider citations
+    }
+    const fixture = TestBed.createComponent(ResolverHost);
+    const resolver = fixture.debugElement.injector.get(CitationsResolverService);
+    resolver.markdownDefs.set(new Map([
+      ['src1', {
+        id: 'src1', index: 1, status: 'complete',
+        children: [
+          { id: 1, type: 'text', status: 'complete', parent: null, index: 0, text: 'Wikipedia ' },
+          { id: 2, type: 'autolink', status: 'complete', parent: null, index: 1,
+            url: 'https://en.wikipedia.org/wiki/Coral_reef',
+            text: 'https://en.wikipedia.org/wiki/Coral_reef' },
+        ],
+      } as never],
+    ]));
+    fixture.detectChanges();
+    const cards = fixture.nativeElement.querySelectorAll('.chat-citations-card');
+    expect(cards.length).toBe(1);
+    expect(fixture.nativeElement.textContent).toContain('Wikipedia');
+  });
+
+  it('Message.citations takes precedence over markdown sidecar when ids overlap', async () => {
+    const { CitationsResolverService } = await import('../../markdown/citations-resolver.service');
+    @Component({
+      standalone: true,
+      imports: [ChatCitationsComponent],
+      providers: [CitationsResolverService],
+      template: `<chat-citations [message]="message" />`,
+    })
+    class PrecedenceHost {
+      message: Message = msg([{ id: 'src1', index: 1, title: 'From message' }]);
+    }
+    const fixture = TestBed.createComponent(PrecedenceHost);
+    const resolver = fixture.debugElement.injector.get(CitationsResolverService);
+    resolver.markdownDefs.set(new Map([
+      ['src1', { id: 'src1', index: 1, status: 'complete',
+        children: [{ id: 1, type: 'text', status: 'complete', parent: null, index: 0, text: 'From markdown' }],
+      } as never],
+    ]));
+    fixture.detectChanges();
+    const cards = fixture.nativeElement.querySelectorAll('.chat-citations-card');
+    expect(cards.length).toBe(1);
+    expect(fixture.nativeElement.textContent).toContain('From message');
+    expect(fixture.nativeElement.textContent).not.toContain('From markdown');
+  });
 });

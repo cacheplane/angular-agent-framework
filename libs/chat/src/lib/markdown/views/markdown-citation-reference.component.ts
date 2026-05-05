@@ -10,12 +10,19 @@ import { CitationsResolverService } from '../citations-resolver.service';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (resolved(); as r) {
-      <a class="chat-citation-marker"
-         [href]="r.citation.url ?? null"
-         [attr.title]="r.citation.snippet ?? r.citation.url ?? null"
-         target="_blank" rel="noopener noreferrer">
-        <sup>[{{ node().index }}]</sup>
-      </a>
+      @if (r.citation.url; as href) {
+        <a class="chat-citation-marker"
+           [attr.href]="href"
+           [attr.title]="r.citation.snippet ?? href"
+           target="_blank" rel="noopener noreferrer">
+          <sup>[{{ node().index }}]</sup>
+        </a>
+      } @else {
+        <span class="chat-citation-marker chat-citation-marker--no-url"
+              [attr.title]="r.citation.snippet ?? r.citation.title ?? null">
+          <sup>[{{ node().index }}]</sup>
+        </span>
+      }
     } @else {
       <span class="chat-citation-marker chat-citation-marker--unresolved"
             [attr.title]="'No source available'">

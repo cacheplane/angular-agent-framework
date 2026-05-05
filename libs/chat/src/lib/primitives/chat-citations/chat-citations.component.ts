@@ -8,6 +8,7 @@ import { NgTemplateOutlet } from '@angular/common';
 import type { Message } from '../../agent/message';
 import type { Citation } from '../../agent/citation';
 import { ChatCitationsCardComponent } from './chat-citations-card.component';
+import { CitationsResolverService, mdDefToCitation } from '../../markdown/citations-resolver.service';
 
 /**
  * ContentChild template directive for custom citation card rendering.
@@ -48,8 +49,33 @@ export class ChatCitationsComponent {
 
   @ContentChild(ChatCitationCardTemplateDirective) cardTpl: ChatCitationCardTemplateDirective | null = null;
 
+  /**
+   * Optional resolver — present when chat-citations is rendered inside a
+   * chat-message that provides CitationsResolverService (the standard
+   * placement). When absent, the panel reads only Message.citations.
+   */
+  private readonly resolver = inject(CitationsResolverService, { optional: true });
+
+  /**
+   * Combined citation list:
+   *   1. Message.citations (provider-populated, takes precedence by id)
+   *   2. Markdown sidecar defs (Pandoc-formatted [^id]: lines), merged in
+   *      for any id not already present.
+   *
+   * Sorted by index ascending. This guarantees the sources panel surfaces
+   * citations whether they come from message metadata, content syntax, or
+   * both — matching the same precedence as inline-marker resolution.
+   */
   protected readonly citations = computed<Citation[]>(() => {
-    const list = this.message().citations ?? [];
-    return [...list].sort((a, b) => a.index - b.index);
+    const fromMessage = this.message().citations ?? [];
+    const seenIds = new Set(fromMessage.map(c => c.id));
+    const fromMarkdown: Citation[] = [];
+    const mdDefs = this.resolver?.markdownDefs();
+    if (mdDefs) {
+      for (const def of mdDefs.values()) {
+        if (!seenIds.has(def.id)) fromMarkdown.push(mdDefToCitation(def));
+      }
+    }
+    return [...fromMessage, ...fromMarkdown].sort((a, b) => a.index - b.index);
   });
 }

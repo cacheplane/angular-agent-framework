@@ -2,23 +2,23 @@
 // SPDX-License-Identifier: MIT
 import { Component, ChangeDetectionStrategy, input, computed } from '@angular/core';
 import type { MarkdownTableNode, MarkdownTableRowNode } from '@cacheplane/partial-markdown';
-import { MarkdownChildrenComponent } from '../markdown-children.component';
+import { MarkdownTableRowComponent } from './markdown-table-row.component';
 
 @Component({
   selector: 'chat-md-table',
   standalone: true,
-  imports: [MarkdownChildrenComponent],
+  imports: [MarkdownTableRowComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <table class="chat-md-table">
       <thead>
         @if (headerRow(); as row) {
-          <chat-md-children [parent]="row" />
+          <chat-md-table-row [node]="row" />
         }
       </thead>
       <tbody>
         @for (row of bodyRows(); track $any(row)) {
-          <chat-md-children [parent]="row" />
+          <chat-md-table-row [node]="row" />
         }
       </tbody>
     </table>

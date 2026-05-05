@@ -61,4 +61,29 @@ describe('MarkdownTableComponent', () => {
     expect(fixture.nativeElement.querySelector('thead')).toBeTruthy();
     expect(fixture.nativeElement.querySelector('tbody')).toBeTruthy();
   });
+
+  it('dispatches each row through chat-md-table-row component', () => {
+    // Regression: prior impl used <chat-md-children [parent]="row"> which
+    // walked row.children (cells) directly and skipped the row wrapper. Cells
+    // appeared bare under <thead>/<tbody>, no <chat-md-table-row> elements
+    // existed. Live browser smoke caught this; the test below pins the fix.
+    const fixture = TestBed.createComponent(HostComponent);
+    fixture.componentInstance.node.set(makeTableNode({
+      alignments: [null, null],
+      children: [
+        { id: 2, type: 'table-row', status: 'complete', parent: null, index: 0,
+          isHeader: true, children: [] } as never,
+        { id: 3, type: 'table-row', status: 'complete', parent: null, index: 1,
+          isHeader: false, children: [] } as never,
+        { id: 4, type: 'table-row', status: 'complete', parent: null, index: 2,
+          isHeader: false, children: [] } as never,
+      ],
+    }));
+    fixture.detectChanges();
+    const rows = fixture.nativeElement.querySelectorAll('chat-md-table-row');
+    expect(rows.length).toBe(3);
+    // Header row goes in <thead>; body rows in <tbody>.
+    expect(fixture.nativeElement.querySelectorAll('thead chat-md-table-row').length).toBe(1);
+    expect(fixture.nativeElement.querySelectorAll('tbody chat-md-table-row').length).toBe(2);
+  });
 });

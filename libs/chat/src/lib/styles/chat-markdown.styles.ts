@@ -114,9 +114,32 @@ export const CHAT_MARKDOWN_STYLES = `
   chat-streaming-md chat-md-table { display: contents; }
   chat-streaming-md chat-md-table-row { display: contents; }
   chat-streaming-md chat-md-table-cell { display: contents; }
-  /* Task-list items */
-  chat-streaming-md li.chat-md-list-item--task { list-style: none; margin-left: -1.25rem; }
-  chat-streaming-md li.chat-md-list-item--task > input[type="checkbox"] { margin-right: 0.5rem; vertical-align: middle; }
+  /* Task-list items: checkbox + first paragraph render inline; subsequent
+     blocks (sub-lists, multi-paragraph items) flow normally below. */
+  chat-streaming-md li.chat-md-list-item--task {
+    list-style: none;
+    margin-left: -1.25rem;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.5rem;
+  }
+  chat-streaming-md li.chat-md-list-item--task > input[type="checkbox"] {
+    margin: 0;
+    flex: 0 0 auto;
+    transform: translateY(2px);
+  }
+  /* The chat-md-children wrapper around list-item content takes remaining width */
+  chat-streaming-md li.chat-md-list-item--task > chat-md-children {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+  /* Tight task items: only the FIRST paragraph aligns inline with the
+     checkbox (margin collapsed). Subsequent paragraphs/blocks keep their
+     normal vertical spacing so multi-block items render readably. */
+  chat-streaming-md li.chat-md-list-item--task > chat-md-children > chat-md-paragraph:first-child > p {
+    margin: 0;
+  }
 
   /* Media */
   chat-streaming-md img { max-width: 100%; height: auto; border-radius: 6px; }

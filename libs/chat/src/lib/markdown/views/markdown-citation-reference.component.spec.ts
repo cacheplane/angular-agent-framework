@@ -47,4 +47,22 @@ describe('MarkdownCitationReferenceComponent', () => {
     expect(a.getAttribute('href')).toBe('https://example.com');
     expect(a.textContent).toContain('1');
   });
+
+  it('renders <span> (not <a>) when citation has no URL — bug #197 regression', () => {
+    // Live Chrome smoke caught: a Pandoc def with bare URL (no <autolink> brackets)
+    // produces a Citation with url === undefined. Prior template rendered <a href="">
+    // which is a broken link. Fix renders <span class="chat-citation-marker--no-url">.
+    const fixture = TestBed.createComponent(HostComponent);
+    const svc = fixture.debugElement.injector.get(CitationsResolverService);
+    svc.message.set({
+      id: 'm1', role: 'assistant', content: 'x',
+      citations: [{ id: 'src1', index: 1, title: 'Source title only, no URL' }],
+    });
+    fixture.componentInstance.node.set(makeNode('src1', 1, true));
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('a.chat-citation-marker')).toBeNull();
+    const span = fixture.nativeElement.querySelector('span.chat-citation-marker--no-url');
+    expect(span).toBeTruthy();
+    expect(span.textContent).toContain('1');
+  });
 });
