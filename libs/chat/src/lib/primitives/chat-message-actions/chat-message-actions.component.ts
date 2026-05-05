@@ -57,6 +57,7 @@ import { CHAT_MESSAGE_ACTIONS_STYLES } from '../../styles/chat-message-actions.s
       type="button"
       class="chat-message-actions__btn"
       [class.is-active]="rating() === 'up'"
+      [attr.aria-pressed]="rating() === 'up'"
       aria-label="Thumbs up"
       title="Good response"
       (click)="onRate('up')"
@@ -70,6 +71,7 @@ import { CHAT_MESSAGE_ACTIONS_STYLES } from '../../styles/chat-message-actions.s
       type="button"
       class="chat-message-actions__btn"
       [class.is-active]="rating() === 'down'"
+      [attr.aria-pressed]="rating() === 'down'"
       aria-label="Thumbs down"
       title="Poor response"
       (click)="onRate('down')"
@@ -99,25 +101,38 @@ export class ChatMessageActionsComponent {
   protected async onCopy(): Promise<void> {
     const text = this.content();
     if (!text) return;
-    try {
-      const win = this.document.defaultView;
-      if (win?.navigator?.clipboard?.writeText) {
+    let succeeded = false;
+    const win = this.document.defaultView;
+    // Prefer Async Clipboard API; fall back to execCommand if it rejects
+    // (e.g. permissions, non-secure context, document-not-focused). The
+    // prior impl gated the fallback only on API absence, so a rejecting
+    // API silently failed with no user feedback.
+    if (win?.navigator?.clipboard?.writeText) {
+      try {
         await win.navigator.clipboard.writeText(text);
-      } else {
+        succeeded = true;
+      } catch {
+        // Async API failed — fall through to legacy path below.
+      }
+    }
+    if (!succeeded) {
+      try {
         const ta = this.document.createElement('textarea');
         ta.value = text;
         ta.style.position = 'fixed';
         ta.style.opacity = '0';
         this.document.body.appendChild(ta);
         ta.select();
-        this.document.execCommand?.('copy');
+        succeeded = !!this.document.execCommand?.('copy');
         ta.remove();
+      } catch {
+        // Both paths failed — leave copied state unchanged.
       }
+    }
+    if (succeeded) {
       this.copied.set(true);
       this.contentCopied.emit(text);
       setTimeout(() => this.copied.set(false), 2000);
-    } catch {
-      // Silent fail — clipboard may be blocked by permissions.
     }
   }
 

@@ -121,4 +121,18 @@ describe('ChatInputComponent', () => {
     const controls = (fixture.nativeElement as HTMLElement).querySelector('.chat-input__controls');
     expect(controls).not.toBeNull();
   });
+
+  it('auto-resizes textarea height when messageText changes — bug #198 regression', () => {
+    // Live Chrome smoke caught: rows="1" textarea did not grow with
+    // multi-line input. clientHeight stayed at 24px while scrollHeight
+    // grew to 72px+, hiding lines past the first. Fix: an effect() sets
+    // el.style.height = scrollHeight (capped at 200px) on every change.
+    const textarea = (fixture.nativeElement as HTMLElement).querySelector('textarea') as HTMLTextAreaElement;
+    expect(textarea).not.toBeNull();
+    fixture.componentInstance.messageText.set('line one\nline two\nline three');
+    fixture.detectChanges();
+    // The effect sets el.style.height; jsdom layout produces a value (
+    // possibly '0px' due to no real layout, but the property is set).
+    expect(textarea.style.height).not.toBe('');
+  });
 });

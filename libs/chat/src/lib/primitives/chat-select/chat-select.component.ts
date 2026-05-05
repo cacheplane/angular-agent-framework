@@ -139,6 +139,15 @@ export class ChatSelectComponent {
 
   protected onTriggerKeydown(e: KeyboardEvent): void {
     if (this.disabled()) return;
+    // Escape closes an open menu when focus is still on the trigger
+    // (e.g. user clicked to open, then pressed Escape without arrowing
+    // into the menu). Caught by live browser smoke — without this, click
+    // + Escape leaves the menu open until the user clicks outside.
+    if (e.key === 'Escape' && this.open()) {
+      e.preventDefault();
+      this.open.set(false);
+      return;
+    }
     if (e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowDown') {
       e.preventDefault();
       this.open.set(true);

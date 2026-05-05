@@ -97,6 +97,21 @@ describe('ChatSelectComponent', () => {
     expect(host.querySelector('.chat-select__menu')).toBeNull();
   });
 
+  it('closes the menu on Escape when focus is still on the trigger — bug #198 regression', () => {
+    // Live Chrome smoke caught: clicking the trigger to open the menu leaves
+    // focus on the trigger (not the menu). Pressing Escape there used to be
+    // ignored — only Escape inside the menu was handled. Fix: handle Escape
+    // in onTriggerKeydown when the menu is open.
+    const trigger = host.querySelector<HTMLButtonElement>('.chat-select__trigger')!;
+    trigger.click();
+    fixture.detectChanges();
+    expect(host.querySelector('.chat-select__menu')).not.toBeNull();
+    const evt = new KeyboardEvent('keydown', { key: 'Escape', bubbles: true });
+    trigger.dispatchEvent(evt);
+    fixture.detectChanges();
+    expect(host.querySelector('.chat-select__menu')).toBeNull();
+  });
+
   it('disables the trigger when [disabled]=true', () => {
     setSignalInput(fixture, 'disabled', true);
     fixture.detectChanges();

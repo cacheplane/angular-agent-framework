@@ -110,10 +110,19 @@ export const CHAT_MARKDOWN_STYLES = `
     vertical-align: top;
   }
   chat-streaming-md th { font-weight: 600; }
-  /* Component-rendered table: make wrapper elements layout-transparent */
-  chat-streaming-md chat-md-table { display: contents; }
+  /* Component-rendered table: chat-md-table becomes a horizontally-scrollable
+     wrapper for the inner <table>; row/cell elements stay layout-transparent
+     so the browser's table layout takes over. Without this overflow wrapper,
+     wide tables push their parent container past the viewport horizontally. */
+  chat-streaming-md chat-md-table {
+    display: block;
+    overflow-x: auto;
+    max-width: 100%;
+    margin: 0 0 0.75rem;
+  }
   chat-streaming-md chat-md-table-row { display: contents; }
   chat-streaming-md chat-md-table-cell { display: contents; }
+  chat-streaming-md chat-md-table > table { margin: 0; }
   /* Task-list items: checkbox + first paragraph render inline; subsequent
      blocks (sub-lists, multi-paragraph items) flow normally below. */
   chat-streaming-md li.chat-md-list-item--task {
@@ -143,4 +152,21 @@ export const CHAT_MARKDOWN_STYLES = `
 
   /* Media */
   chat-streaming-md img { max-width: 100%; height: auto; border-radius: 6px; }
+  /* Broken-image fallback: muted pill showing alt text + icon. Triggered
+     when <img> fires (error). Caught by live browser smoke — prior impl
+     showed only the browser's broken-image icon with no readable alt. */
+  chat-streaming-md .chat-md-image--broken {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.25rem 0.5rem;
+    background: var(--ngaf-chat-surface-alt);
+    border: 1px dashed var(--ngaf-chat-separator);
+    border-radius: 6px;
+    font-size: 0.9em;
+    color: var(--ngaf-chat-text-muted, currentColor);
+    opacity: 0.85;
+  }
+  chat-streaming-md .chat-md-image__icon { font-size: 1em; line-height: 1; }
+  chat-streaming-md .chat-md-image__alt { font-style: italic; }
 `;

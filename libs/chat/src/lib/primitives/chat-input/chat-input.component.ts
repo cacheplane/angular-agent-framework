@@ -3,6 +3,7 @@
 import {
   Component,
   computed,
+  effect,
   input,
   output,
   signal,
@@ -115,6 +116,30 @@ export class ChatInputComponent {
   readonly canStop = computed(() => this.showStopButton());
 
   private readonly textareaEl = viewChild<ElementRef<HTMLTextAreaElement>>('textareaEl');
+
+  /** Maximum auto-grow height in pixels. Caps at ~8 lines; beyond that, scroll. */
+  private static readonly MAX_AUTO_HEIGHT_PX = 200;
+
+  /**
+   * Auto-resize the textarea to fit its content as the user types or pastes
+   * multi-line text. Caps at MAX_AUTO_HEIGHT_PX; beyond that the textarea
+   * scrolls. Without this, multi-line input is hidden behind the rows="1"
+   * fixed height (caught by live browser smoke).
+   */
+  constructor() {
+    effect(() => {
+      const text = this.messageText();
+      const el = this.textareaEl()?.nativeElement;
+      if (!el) return;
+      // Reset to allow scrollHeight to shrink when content shortens.
+      el.style.height = 'auto';
+      const next = Math.min(el.scrollHeight, ChatInputComponent.MAX_AUTO_HEIGHT_PX);
+      el.style.height = `${next}px`;
+      el.style.overflowY = el.scrollHeight > ChatInputComponent.MAX_AUTO_HEIGHT_PX ? 'auto' : 'hidden';
+      // Reference text so the effect re-runs on every change.
+      void text;
+    });
+  }
 
   focusTextarea(): void {
     this.textareaEl()?.nativeElement.focus();

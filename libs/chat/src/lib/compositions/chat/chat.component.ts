@@ -139,6 +139,7 @@ import type { ChatRenderEvent } from './chat-render-event';
                 @let classified = classifyMessage(content, message);
                 <chat-message
                   [role]="'assistant'"
+                  [message]="message"
                   [prevRole]="prevRole(i)"
                   [streaming]="agent().isLoading() && i === agent().messages().length - 1"
                   [current]="i === agent().messages().length - 1"
