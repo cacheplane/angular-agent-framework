@@ -12,6 +12,16 @@ import {
 import { takeUntil } from 'rxjs/operators';
 import type { Observable } from 'rxjs';
 import type { BaseMessage, AIMessage as CoreAIMessage } from '@langchain/core/messages';
+
+/**
+ * Wire-shape of a `RemoveMessage` instruction — LangGraph's `add_messages`
+ * reducer recognises this plain-object shape and removes the matching
+ * message id from server state. Used by `regenerate()`. We construct the
+ * shape directly instead of importing the `RemoveMessage` class from
+ * `@langchain/core/messages` because that pulls in the full BaseMessage
+ * class hierarchy (~30-50 kB) which Cockpit's bundle-size budget rejects.
+ */
+type RemoveMessageInstruction = { type: 'remove'; id: string };
 import type { Command, Interrupt, ToolCallWithResult } from '@langchain/langgraph-sdk';
 import type { BagTemplate, InferBag } from '@langchain/langgraph-sdk';
 import type {
@@ -259,30 +269,47 @@ export function agent<
         throw new Error(`Message at index ${assistantMessageIndex} is not an assistant message`);
       }
 
-      // Snapshot the user message that precedes the target assistant message
-      // before we truncate the buffer.
-      const preceding = msgs.slice(0, assistantMessageIndex);
-      const lastUserMsg = [...preceding].reverse().find(m => m.role === 'user');
-      if (!lastUserMsg) {
+      // Find the user message immediately preceding the target assistant message.
+      const userIdx = msgs
+        .slice(0, assistantMessageIndex)
+        .map((m, i) => ({ m, i }))
+        .reverse()
+        .find(({ m }) => m.role === 'user')?.i;
+      if (userIdx === undefined) {
         throw new Error('No user message found before the target assistant message');
       }
 
-      // Optimistically truncate local BaseMessage buffer to [0..index-1].
-      // The computed messagesNeutral signal will immediately reflect this,
-      // giving replace-semantics in the UI while the new response streams in.
-      const trimmedRaw = messages$.value.slice(0, assistantMessageIndex);
-      messages$.next(trimmedRaw);
+      // Snapshot the raw BaseMessages that will be REMOVED (everything after userIdx).
+      const rawToRemove = messages$.value.slice(userIdx + 1);
 
-      const content = typeof lastUserMsg.content === 'string'
-        ? lastUserMsg.content
-        : '<replay>';
+      // Truncate local buffer INCLUSIVE of the user message. The computed
+      // messagesNeutral signal immediately reflects this — user message is
+      // preserved in the UI while the new response streams in.
+      messages$.next(messages$.value.slice(0, userIdx + 1));
 
-      // Re-submit the user prompt. The LangGraph server appends the new AI
-      // response to its own thread state; the bridge merges it into messages$.
-      await manager.submit(
-        { messages: [{ type: 'human', role: 'human', content }] },
-        undefined,
-      );
+      // Build RemoveMessage wire-shape instructions for server-side rollback.
+      // LangGraph's add_messages reducer recognises `{ type: 'remove', id }`
+      // and removes those entries from the thread state — ensuring the
+      // runtime re-runs against the same trimmed state rather than appending
+      // new messages on top.
+      const removeList: RemoveMessageInstruction[] = rawToRemove
+        .map(m => {
+          const raw = m as unknown as Record<string, unknown>;
+          const id = typeof raw['id'] === 'string' ? raw['id'] : undefined;
+          return id ? { type: 'remove' as const, id } : null;
+        })
+        .filter((rm): rm is RemoveMessageInstruction => rm !== null);
+
+      if (removeList.length > 0) {
+        // updateState is a no-op when the transport doesn't support it
+        // (e.g. mock transport in unit tests) — safe to call unconditionally.
+        await manager.updateState({ messages: removeList });
+      }
+
+      // Re-run the graph with no new input so LangGraph executes from the
+      // current (trimmed) thread state. The trailing user message becomes the
+      // active prompt without being re-appended.
+      await manager.submit(null, undefined);
     },
 
     // ── Raw LangGraph signals ─────────────────────────────────────────────

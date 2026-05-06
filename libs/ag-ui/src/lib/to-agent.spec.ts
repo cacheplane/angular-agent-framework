@@ -54,6 +54,9 @@ class StubAgent {
   // addMessage: spy to verify user messages are synced to the source.
   addMessage = vi.fn();
 
+  // setMessages: spy to verify regenerate syncs trimmed list to the source.
+  setMessages = vi.fn();
+
   // run(): required abstract method. Not called directly in our adapter
   // since we mock runAgent(), but must be present for type satisfaction.
   run(_input: RunAgentInput): Observable<BaseEvent> {
@@ -144,7 +147,7 @@ describe('toAgent', () => {
   });
 
   describe('regenerate()', () => {
-    it('truncates messages to [0..index-1] and re-submits the user prompt', async () => {
+    it('truncates messages inclusive of user (userIdx+1) and re-runs without re-appending', async () => {
       const stub = new StubAgent();
       const a = toAgent(stub as unknown as AbstractAgent);
 
@@ -161,12 +164,20 @@ describe('toAgent', () => {
 
       await a.regenerate(1);
 
-      // After regenerate: user message preserved, assistant cleared,
-      // then user message re-appended before new run
+      // After regenerate: exactly 1 message — user preserved (inclusive truncation),
+      // assistant dropped. User must NOT be re-added (no duplicate).
+      expect(a.messages()).toHaveLength(1);
       expect(a.messages()[0].role).toBe('user');
       expect(a.messages()[0].content).toBe('hello');
-      // runAgent called again for the regenerate
+      // source.setMessages() called with the trimmed list (userIdx+1 = 1 message)
+      expect(stub.setMessages).toHaveBeenCalledWith(
+        expect.arrayContaining([expect.objectContaining({ role: 'user', content: 'hello' })]),
+      );
+      expect(stub.setMessages).toHaveBeenCalledTimes(1);
+      // source.runAgent() called again for the regenerate (no new addMessage call)
       expect(stub.runAgent).toHaveBeenCalledTimes(2);
+      // User message must NOT be re-added via addMessage during regenerate
+      expect(stub.addMessage).toHaveBeenCalledTimes(1); // only from the original submit
     });
 
     it('throws when target index is not an assistant message', async () => {

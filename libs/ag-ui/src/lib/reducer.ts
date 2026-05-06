@@ -9,7 +9,7 @@ import type {
   Message, AgentStatus, ToolCall, AgentEvent,
 } from '@ngaf/chat';
 import type { BaseEvent } from '@ag-ui/client';
-import { applyPatch, type Operation } from 'fast-json-patch';
+import { applyPatch, type JsonPatchOp } from './internal/apply-patch';
 import { bridgeCitationsState } from './bridge-citations-state';
 
 export interface ReducerStore {
@@ -164,8 +164,8 @@ export function reduceEvent(event: BaseEvent, store: ReducerStore): void {
       return;
     }
     case 'STATE_DELTA': {
-      const e = event as unknown as { delta: Operation[] };
-      const next = applyPatch(deepClone(store.state()), e.delta).newDocument;
+      const e = event as unknown as { delta: JsonPatchOp[] };
+      const next = applyPatch(deepClone(store.state()), e.delta);
       store.state.set(next);
       store.messages.update(msgs => bridgeCitationsState({ state: next }, msgs));
       return;

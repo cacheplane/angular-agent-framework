@@ -697,8 +697,21 @@ describe('agent', () => {
   });
 
   describe('agent.regenerate()', () => {
-    it('truncates messages [N..end] and re-submits from N-1', async () => {
+    it('truncates messages inclusive of user (userIdx+1) and re-runs with null input', async () => {
+      const seen: Array<{ payload: unknown; options: unknown }> = [];
       const transport = new MockAgentTransport();
+      const origStream = transport.stream.bind(transport);
+      transport.stream = async function* (
+        assistantId: string,
+        threadId: string | null,
+        payload: unknown,
+        signal: AbortSignal,
+        options?: unknown,
+      ) {
+        seen.push({ payload, options });
+        yield* origStream(assistantId, threadId, payload, signal, options as any);
+      };
+
       const ref = withInjectionContext(() =>
         agent({ apiUrl: '', assistantId: 'a', transport, throttle: false })
       );
@@ -723,9 +736,15 @@ describe('agent', () => {
       transport.close();
       await regeneratePromise;
 
-      // After truncation, the buffer should have at most 2 messages
-      // (the new re-submit will add the user message again via stream)
-      expect(ref.messages().length).toBeLessThanOrEqual(2);
+      // After regenerate: exactly 1 message — user preserved (inclusive truncation),
+      // assistant dropped. Buffer length === userIdx + 1 === 1.
+      expect(ref.messages()).toHaveLength(1);
+      expect(ref.messages()[0].role).toBe('user');
+      expect(ref.messages()[0].content).toBe('hello');
+
+      // The second submit call (for the re-run) must use null input (no new messages)
+      expect(seen).toHaveLength(2);
+      expect(seen[1]?.payload).toBeNull();
     });
 
     it('throws when target index is not an assistant message', async () => {

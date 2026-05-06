@@ -207,6 +207,17 @@ export interface AgentTransport {
     threadId: string,
     signal: AbortSignal,
   ): Promise<ThreadState[]>;
+
+  /**
+   * Optional: update server-side thread state (e.g. to emit RemoveMessage
+   * entries for regenerate rollback). Forwards to the LangGraph
+   * `threads.updateState` API.
+   */
+  updateState?(
+    threadId: string,
+    values: Record<string, unknown>,
+    signal: AbortSignal,
+  ): Promise<void>;
 }
 
 // ── Options ──────────────────────────────────────────────────────────────────

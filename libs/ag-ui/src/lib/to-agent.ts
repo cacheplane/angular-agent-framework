@@ -90,26 +90,28 @@ export function toAgent(source: AbstractAgent): Agent {
         throw new Error(`Message at index ${assistantMessageIndex} is not an assistant message`);
       }
 
-      // Snapshot the user message preceding the target before truncation.
-      const preceding = msgs.slice(0, assistantMessageIndex);
-      const lastUserMsg = [...preceding].reverse().find(m => m.role === 'user');
-      if (!lastUserMsg) {
+      // Find the user message immediately preceding the target assistant message.
+      const userIdx = msgs
+        .slice(0, assistantMessageIndex)
+        .map((m, i) => ({ m, i }))
+        .reverse()
+        .find(({ m }) => m.role === 'user')?.i;
+      if (userIdx === undefined) {
         throw new Error('No user message found before the target assistant message');
       }
 
-      // Truncate local message buffer — gives replace-semantics in the UI
-      // while the new response streams in.
-      store.messages.set(preceding);
+      // Truncate local message buffer INCLUSIVE of the user message. This
+      // preserves the user message in the UI (replace-semantics) while the
+      // new assistant response streams in. The trailing user message becomes
+      // the active prompt for the next run — we must NOT re-add it.
+      const trimmed = msgs.slice(0, userIdx + 1);
+      store.messages.set(trimmed);
 
-      const content = typeof lastUserMsg.content === 'string'
-        ? lastUserMsg.content
-        : '<replay>';
-
-      // Dispatch a new run with the user prompt. The ag-ui source agent will
-      // append the new assistant response via its event stream.
-      const replayMsg = { id: randomId(), role: 'user' as const, content };
-      store.messages.update((prev) => [...prev, replayMsg]);
-      source.addMessage(replayMsg as Parameters<typeof source.addMessage>[0]);
+      // Sync the trimmed list back to the source agent so its internal state
+      // matches what we're about to re-run. source.setMessages() replaces the
+      // agent's internal message list without appending — the trailing user
+      // message in `trimmed` becomes the active prompt for the next run.
+      source.setMessages(trimmed as Parameters<typeof source.setMessages>[0]);
 
       try {
         await source.runAgent();
