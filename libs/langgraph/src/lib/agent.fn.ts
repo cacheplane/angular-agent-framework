@@ -14,14 +14,21 @@ import type { Observable } from 'rxjs';
 import type { BaseMessage, AIMessage as CoreAIMessage } from '@langchain/core/messages';
 
 /**
- * Wire-shape of a `RemoveMessage` instruction — LangGraph's `add_messages`
- * reducer recognises this plain-object shape and removes the matching
- * message id from server state. Used by `regenerate()`. We construct the
- * shape directly instead of importing the `RemoveMessage` class from
- * `@langchain/core/messages` because that pulls in the full BaseMessage
- * class hierarchy (~30-50 kB) which Cockpit's bundle-size budget rejects.
+ * Wire-shape of a `RemoveMessage` instruction. LangGraph's `add_messages`
+ * reducer (Python side) coerces incoming dicts via a strict check that
+ * expects `role` + `content` keys; without them, the dict-to-Message
+ * conversion throws and the whole `updateState` request 400s. Construct
+ * the shape directly with the required keys so we get correct semantics
+ * without importing the `RemoveMessage` class from `@langchain/core/messages`
+ * (the class import pulls in the full BaseMessage hierarchy, ~30-50 kB,
+ * which Cockpit's example-app bundle budget rejects).
  */
-type RemoveMessageInstruction = { type: 'remove'; id: string };
+type RemoveMessageInstruction = {
+  type: 'remove';
+  role: 'remove';
+  id: string;
+  content: '';
+};
 import type { Command, Interrupt, ToolCallWithResult } from '@langchain/langgraph-sdk';
 import type { BagTemplate, InferBag } from '@langchain/langgraph-sdk';
 import type {
@@ -296,7 +303,9 @@ export function agent<
         .map(m => {
           const raw = m as unknown as Record<string, unknown>;
           const id = typeof raw['id'] === 'string' ? raw['id'] : undefined;
-          return id ? { type: 'remove' as const, id } : null;
+          return id
+            ? { type: 'remove' as const, role: 'remove' as const, id, content: '' as const }
+            : null;
         })
         .filter((rm): rm is RemoveMessageInstruction => rm !== null);
 
