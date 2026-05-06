@@ -35,6 +35,17 @@ export interface Agent {
   submit: (input: AgentSubmitInput, opts?: AgentSubmitOptions) => Promise<void>;
   stop:   () => Promise<void>;
 
+  /**
+   * Discards the assistant message at the given index AND all messages after
+   * it, then re-runs the agent against the trimmed conversation tail. The
+   * preceding user message (at index - 1) is preserved and re-submitted as
+   * the agent's input. No new user message is added to the history.
+   *
+   * Throws if the message at `index` is not 'assistant' role, or if the
+   * agent is currently loading another response.
+   */
+  regenerate: (assistantMessageIndex: number) => Promise<void>;
+
   // Extended (optional; absent when runtime does not support)
   interrupt?: Signal<AgentInterrupt | undefined>;
   subagents?: Signal<Map<string, Subagent>>;

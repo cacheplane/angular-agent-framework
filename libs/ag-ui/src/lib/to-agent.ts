@@ -79,6 +79,46 @@ export function toAgent(source: AbstractAgent): Agent {
     stop: async () => {
       source.abortRun();
     },
+
+    regenerate: async (assistantMessageIndex: number): Promise<void> => {
+      if (store.isLoading()) {
+        throw new Error('Cannot regenerate while agent is loading another response');
+      }
+      const msgs = store.messages();
+      const target = msgs[assistantMessageIndex];
+      if (!target || target.role !== 'assistant') {
+        throw new Error(`Message at index ${assistantMessageIndex} is not an assistant message`);
+      }
+
+      // Snapshot the user message preceding the target before truncation.
+      const preceding = msgs.slice(0, assistantMessageIndex);
+      const lastUserMsg = [...preceding].reverse().find(m => m.role === 'user');
+      if (!lastUserMsg) {
+        throw new Error('No user message found before the target assistant message');
+      }
+
+      // Truncate local message buffer — gives replace-semantics in the UI
+      // while the new response streams in.
+      store.messages.set(preceding);
+
+      const content = typeof lastUserMsg.content === 'string'
+        ? lastUserMsg.content
+        : '<replay>';
+
+      // Dispatch a new run with the user prompt. The ag-ui source agent will
+      // append the new assistant response via its event stream.
+      const replayMsg = { id: randomId(), role: 'user' as const, content };
+      store.messages.update((prev) => [...prev, replayMsg]);
+      source.addMessage(replayMsg as Parameters<typeof source.addMessage>[0]);
+
+      try {
+        await source.runAgent();
+      } catch (err) {
+        store.status.set('error');
+        store.isLoading.set(false);
+        store.error.set(err);
+      }
+    },
   };
 }
 

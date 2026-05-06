@@ -249,6 +249,42 @@ export function agent<
     },
     stop: () => manager.stop(),
 
+    regenerate: async (assistantMessageIndex: number): Promise<void> => {
+      if (isLoading()) {
+        throw new Error('Cannot regenerate while agent is loading another response');
+      }
+      const msgs = messagesNeutral();
+      const target = msgs[assistantMessageIndex];
+      if (!target || target.role !== 'assistant') {
+        throw new Error(`Message at index ${assistantMessageIndex} is not an assistant message`);
+      }
+
+      // Snapshot the user message that precedes the target assistant message
+      // before we truncate the buffer.
+      const preceding = msgs.slice(0, assistantMessageIndex);
+      const lastUserMsg = [...preceding].reverse().find(m => m.role === 'user');
+      if (!lastUserMsg) {
+        throw new Error('No user message found before the target assistant message');
+      }
+
+      // Optimistically truncate local BaseMessage buffer to [0..index-1].
+      // The computed messagesNeutral signal will immediately reflect this,
+      // giving replace-semantics in the UI while the new response streams in.
+      const trimmedRaw = messages$.value.slice(0, assistantMessageIndex);
+      messages$.next(trimmedRaw);
+
+      const content = typeof lastUserMsg.content === 'string'
+        ? lastUserMsg.content
+        : '<replay>';
+
+      // Re-submit the user prompt. The LangGraph server appends the new AI
+      // response to its own thread state; the bridge merges it into messages$.
+      await manager.submit(
+        { messages: [{ type: 'human', role: 'human', content }] },
+        undefined,
+      );
+    },
+
     // ── Raw LangGraph signals ─────────────────────────────────────────────
     langGraphMessages:   rawMessages as Signal<BaseMessage[]>,
     langGraphInterrupts: interruptsSig,

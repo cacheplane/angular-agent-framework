@@ -1,9 +1,8 @@
 // libs/chat/src/lib/styles/chat-message-actions.styles.ts
 // SPDX-License-Identifier: MIT
 //
-// Action-button row underneath assistant messages. Mirrors copilotkit's
-// AssistantMessage controls — hidden by default, fades in on hover/focus
-// of the parent chat-message, always visible on mobile.
+// Action-button row underneath assistant messages. Hidden by default, fades
+// in on hover/focus of the parent chat-message, always visible on mobile.
 export const CHAT_MESSAGE_ACTIONS_STYLES = `
   :host {
     display: flex;
@@ -20,7 +19,7 @@ export const CHAT_MESSAGE_ACTIONS_STYLES = `
     pointer-events: auto;
   }
   :host-context(chat-message[data-streaming="true"]) {
-    /* Hide while the message is actively streaming — copilotkit pattern. */
+    /* Hide while the message is actively streaming. */
     opacity: 0 !important;
     pointer-events: none !important;
   }

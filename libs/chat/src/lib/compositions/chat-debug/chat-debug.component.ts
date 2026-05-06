@@ -263,7 +263,7 @@ import { toDebugCheckpoint, extractStateValues } from './debug-utils';
                 </div>
               </ng-template>
 
-              <!-- AI messages: avatar inline with content (ChatGPT pattern) -->
+              <!-- AI messages: avatar inline with content -->
               <ng-template chatMessageTemplate="ai" let-message>
                 <div class="chat-debug__msg-ai">
                   <div class="chat-debug__msg-ai__avatar">A</div>

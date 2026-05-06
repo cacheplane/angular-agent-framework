@@ -117,6 +117,7 @@ export function mockLangGraphAgent(
     history: history$,
     submit: (_input: any, _opts?: any) => Promise.resolve(),
     stop: () => Promise.resolve(),
+    regenerate: (_assistantMessageIndex: number) => Promise.resolve(),
 
     // ── Raw LangGraph signals ─────────────────────────────────────────────
     langGraphMessages: langGraphMessages$,

@@ -184,7 +184,8 @@ import type { ChatRenderEvent } from './chat-render-event';
                   <chat-message-actions
                     chatMessageControls
                     [content]="content"
-                    (regenerate)="onRegenerate()"
+                    [disabled]="agent().isLoading()"
+                    (regenerate)="onRegenerate(i)"
                     (rate)="onRate(message, $event)"
                     (contentCopied)="onCopy(message, $event)"
                   />
@@ -399,12 +400,9 @@ export class ChatComponent {
     this.renderEvent.emit({ messageIndex, surfaceId, event });
   }
 
-  /** Regenerate the last assistant response by re-running the previous submit. */
-  onRegenerate(): void {
-    const a = this.agent();
-    if (typeof (a as { reload?: () => void }).reload === 'function') {
-      (a as unknown as { reload: () => void | Promise<void> }).reload();
-    }
+  /** Regenerate the assistant response at the given message index. */
+  onRegenerate(messageIndex: number): void {
+    void this.agent().regenerate(messageIndex);
     this.regenerate.emit();
   }
 

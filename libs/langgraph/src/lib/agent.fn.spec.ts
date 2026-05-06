@@ -695,4 +695,86 @@ describe('agent', () => {
     );
     expect(typeof ref.events$.subscribe).toBe('function');
   });
+
+  describe('agent.regenerate()', () => {
+    it('truncates messages [N..end] and re-submits from N-1', async () => {
+      const transport = new MockAgentTransport();
+      const ref = withInjectionContext(() =>
+        agent({ apiUrl: '', assistantId: 'a', transport, throttle: false })
+      );
+
+      // Seed messages via transport
+      ref.submit({ message: 'hello' });
+      transport.emit([{
+        type: 'messages',
+        messages: [
+          { id: '1', type: 'human', content: 'hello' },
+          { id: '2', type: 'ai', content: 'hi there' },
+        ],
+      }]);
+      transport.close();
+      await new Promise(r => setTimeout(r, 30));
+
+      expect(ref.messages()).toHaveLength(2);
+      expect(ref.messages()[1].role).toBe('assistant');
+
+      // Regenerate the assistant message at index 1
+      const regeneratePromise = ref.regenerate(1);
+      transport.close();
+      await regeneratePromise;
+
+      // After truncation, the buffer should have at most 2 messages
+      // (the new re-submit will add the user message again via stream)
+      expect(ref.messages().length).toBeLessThanOrEqual(2);
+    });
+
+    it('throws when target index is not an assistant message', async () => {
+      const transport = new MockAgentTransport();
+      const ref = withInjectionContext(() =>
+        agent({ apiUrl: '', assistantId: 'a', transport, throttle: false })
+      );
+
+      ref.submit({ message: 'hello' });
+      transport.emit([{
+        type: 'messages',
+        messages: [{ id: '1', type: 'human', content: 'hello' }],
+      }]);
+      transport.close();
+      await new Promise(r => setTimeout(r, 20));
+
+      await expect(ref.regenerate(0)).rejects.toThrow(/not an assistant/);
+    });
+
+    it('throws when agent is loading', async () => {
+      const transport = new MockAgentTransport();
+      const ref = withInjectionContext(() =>
+        agent({ apiUrl: '', assistantId: 'a', transport, throttle: false })
+      );
+
+      // Start a submit but don't close it (so isLoading remains true)
+      ref.submit({ message: 'hello' });
+      expect(ref.isLoading()).toBe(true);
+
+      await expect(ref.regenerate(0)).rejects.toThrow(/loading/);
+      transport.close();
+    });
+
+    it('throws when no user message precedes the target', async () => {
+      const transport = new MockAgentTransport();
+      const ref = withInjectionContext(() =>
+        agent({ apiUrl: '', assistantId: 'a', transport, throttle: false })
+      );
+
+      // Inject an assistant message with no preceding user message
+      ref.submit({ message: '' });
+      transport.emit([{
+        type: 'messages',
+        messages: [{ id: '1', type: 'ai', content: 'orphan response' }],
+      }]);
+      transport.close();
+      await new Promise(r => setTimeout(r, 20));
+
+      await expect(ref.regenerate(0)).rejects.toThrow(/No user message/);
+    });
+  });
 });

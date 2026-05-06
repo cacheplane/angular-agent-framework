@@ -73,6 +73,13 @@ export function mockAgent(opts: MockAgentOptions = {}): MockAgent {
     events$: opts.events$ ?? EMPTY,
     submit: async (input, submitOpts) => { submitCalls.push({ input, opts: submitOpts }); },
     stop: async () => { stopCount++; },
+    regenerate: async (assistantMessageIndex: number) => {
+      // Truncate messages [N..end] and record the call as a synthetic submit so
+      // tests can assert regenerate behavior via the same submitCalls log.
+      const current = messages();
+      messages.set(current.slice(0, assistantMessageIndex));
+      submitCalls.push({ input: { regenerate: { assistantMessageIndex } } as never, opts: undefined });
+    },
     submitCalls,
     get stopCount() { return stopCount; },
   };
