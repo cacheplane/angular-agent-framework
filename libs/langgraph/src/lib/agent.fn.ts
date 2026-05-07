@@ -63,16 +63,17 @@ import { buildBranchTree } from './internals/branch-tree';
 import { extractCitations } from './internals/extract-citations';
 
 /**
- * Creates a streaming resource connected to a LangGraph agent.
+ * Creates a LangGraph-backed Angular agent.
  *
  * Must be called within an Angular injection context (component constructor,
  * field initializer, or `runInInjectionContext`). Returns a unified
  * {@link LangGraphAgent} whose properties are Angular Signals that update
- * in real-time as the agent streams.
+ * in real time as LangGraph streams messages, values, tool calls, interrupts,
+ * subagent state, and checkpoint history.
  *
  * @typeParam T - The state shape returned by the agent (e.g., `{ messages: BaseMessage[] }`)
  * @typeParam Bag - Optional bag template for typed interrupts and submit payloads
- * @param options - Configuration for the streaming resource
+ * @param options - Configuration for the LangGraph agent
  * @returns A {@link LangGraphAgent} with reactive signals and action methods
  *
  * @example
@@ -328,7 +329,7 @@ export function agent<
     langGraphHistory:    historySig,
     experimentalBranchTree,
 
-    // ── Other AgentRef fields preserved ──────────────────────────────────
+    // ── Other LangGraph-specific fields ──────────────────────────────────
     value:           value as Signal<T>,
     hasValue:        hasValueSig,
     reload:          () => manager.resubmitLast(),

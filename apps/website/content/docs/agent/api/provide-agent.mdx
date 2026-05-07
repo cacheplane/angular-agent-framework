@@ -1,21 +1,25 @@
 # provideAgent()
 
-`provideAgent` is the provider factory that registers `angular` in Angular's dependency injection system. Call it once inside `bootstrapApplication` (or an `ApplicationConfig`) to configure the transport and any global defaults used by every `agent` in your app.
+`provideAgent()` registers global defaults for every `agent()` call in an Angular application. Call it once in `bootstrapApplication` or an `ApplicationConfig` when multiple agents share the same LangGraph API URL, transport, or license token.
 
-This is the single configuration point for the entire library. Rather than configuring each resource individually, you declare your transport here and every `agent` call throughout the app inherits it automatically.
+Per-call options still win over provider defaults, so you can configure the common case globally and override individual agents when needed.
 
 ```ts
 import { bootstrapApplication } from '@angular/platform-browser';
 import {
   provideAgent,
-  FetchStreamTransport,
+  MockAgentTransport,
 } from '@ngaf/langgraph';
 import { AppComponent } from './app/app.component';
 
 bootstrapApplication(AppComponent, {
   providers: [
     provideAgent({
-      transport: FetchStreamTransport,
+      apiUrl: 'http://localhost:2024',
+      license: environment.ngafLicense,
+      transport: environment.testMode
+        ? new MockAgentTransport()
+        : undefined,
     }),
   ],
 });
@@ -25,24 +29,48 @@ bootstrapApplication(AppComponent, {
 
 | Option | Type | Description |
 |--------|------|-------------|
-| `transport` | `Type<StreamTransport>` | The transport class to inject when resources request `StreamTransport`. Required. |
+| `apiUrl` | `string` | Default LangGraph Platform API base URL. Individual `agent()` calls may override it. |
+| `transport` | `AgentTransport` | Optional transport instance. Defaults to `FetchStreamTransport` when omitted. |
+| `license` | `string` | Optional signed license token. Development and noncommercial use can omit it. |
 
-## Swapping transports by environment
+## Defaults and overrides
 
-Because `provideAgent` accepts a class token, you can vary the transport based on your environment without touching any component code:
+Provider defaults are merged with call-site options. The call site takes precedence.
 
 ```ts
-// main.ts — production
-provideAgent({ transport: FetchStreamTransport })
+provideAgent({ apiUrl: 'https://api.example.com' });
 
-// main.spec.ts / TestBed — tests
-provideAgent({ transport: MockAgentTransport })
+const productionAgent = agent({
+  assistantId: 'support-agent',
+});
+
+const localAgent = agent({
+  apiUrl: 'http://localhost:2024',
+  assistantId: 'dev-agent',
+});
 ```
 
-<Callout type="info" title="One provider, any transport">
-  Swap `FetchStreamTransport` for `MockAgentTransport` (or any custom class
-  implementing the `StreamTransport` interface) to change the transport for all
-  resources at once — useful for testing or SSR.
+## Test transports
+
+`transport` is an object that implements `AgentTransport`, not an Angular class token. Create an instance before passing it to `provideAgent()` or to an individual `agent()` call.
+
+```ts
+const transport = new MockAgentTransport();
+
+TestBed.configureTestingModule({
+  providers: [
+    provideAgent({
+      apiUrl: '',
+      transport,
+    }),
+  ],
+});
+```
+
+<Callout type="info" title="Per-call override">
+  You do not need `provideAgent()` for one-off tests. Passing
+  `transport: new MockAgentTransport()` directly to `agent()` is often simpler
+  and keeps the test fixture explicit.
 </Callout>
 
 ## What's Next
@@ -65,7 +93,7 @@ provideAgent({ transport: MockAgentTransport })
   <Card
     title="agent() API"
     icon="code"
-    href="/docs/agent/api/angular"
+    href="/docs/agent/api/agent"
   >
     Full reference for the core primitive you configure here.
   </Card>

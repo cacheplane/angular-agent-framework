@@ -91,7 +91,7 @@ export class ChatMessageActionsComponent {
   /** When true, the regenerate button is disabled (e.g. while the agent is streaming). */
   readonly disabled = input<boolean>(false);
 
-  /** Emitted when the user clicks regenerate. Wire this to `agent.reload()`. */
+  /** Emitted when the user clicks regenerate. Wire this to `agent.regenerate(index)`. */
   readonly regenerate = output<void>();
   /** Emitted with 'up' or 'down' when the user rates the response. */
   readonly rate = output<'up' | 'down'>();

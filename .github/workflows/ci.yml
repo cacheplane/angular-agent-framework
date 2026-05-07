@@ -35,7 +35,8 @@ jobs:
       - run: npm ci
       - run: npx nx lint website
       - run: npm run generate-api-docs
-      # nx build website triggers demo:build first (dependsOn in project.json)
+      - name: Verify generated API docs are committed
+        run: git diff --exit-code -- apps/website/content/docs/*/api/api-docs.json
       - run: npx nx build website
 
   cockpit:
