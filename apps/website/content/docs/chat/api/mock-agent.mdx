@@ -1,0 +1,91 @@
+# mockAgent()
+
+`mockAgent()` creates a runtime-neutral `Agent` mock with writable signals for testing `@ngaf/chat` components. Use it when you are testing chat UI behavior and do not need LangGraph-specific fields.
+
+**Import:**
+
+```typescript
+import { mockAgent } from '@ngaf/chat';
+import type { MockAgent } from '@ngaf/chat';
+```
+
+## Signature
+
+```typescript
+function mockAgent(options?: MockAgentOptions): MockAgent
+```
+
+### Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `messages` | `Message[]` | `[]` | Initial runtime-neutral messages |
+| `status` | `AgentStatus` | `'idle'` | Initial agent status |
+| `isLoading` | `boolean` | `false` | Whether the agent is currently running |
+| `error` | `unknown` | `null` | Initial error value |
+| `toolCalls` | `ToolCall[]` | `[]` | Initial tool-call list |
+| `state` | `Record<string, unknown>` | `{}` | Initial agent state |
+| `withInterrupt` | `boolean` | `false` | Include a writable `interrupt` signal |
+| `withSubagents` | `boolean` | `false` | Include a writable `subagents` signal |
+| `history` | `AgentCheckpoint[]` | `undefined` | Include history and return an `AgentWithHistory`-compatible mock |
+
+## Basic Test Usage
+
+```typescript
+import { TestBed } from '@angular/core/testing';
+import { ChatComponent, mockAgent } from '@ngaf/chat';
+
+it('renders messages from an agent', async () => {
+  const agent = mockAgent({
+    messages: [
+      { id: 'm1', role: 'user', content: 'Hello' },
+      { id: 'm2', role: 'assistant', content: 'Hi there' },
+    ],
+  });
+
+  await TestBed.configureTestingModule({
+    imports: [ChatComponent],
+  }).compileComponents();
+
+  const fixture = TestBed.createComponent(ChatComponent);
+  fixture.componentRef.setInput('agent', agent);
+  fixture.detectChanges();
+
+  expect(fixture.nativeElement.textContent).toContain('Hello');
+  expect(fixture.nativeElement.textContent).toContain('Hi there');
+});
+```
+
+## Controlling State
+
+The returned mock exposes writable signals, so tests can update state directly:
+
+```typescript
+const agent = mockAgent();
+
+agent.isLoading.set(true);
+agent.error.set(new Error('Connection failed'));
+agent.messages.set([{ id: 'm1', role: 'assistant', content: 'Retry?' }]);
+```
+
+## Spying on Actions
+
+The mock records calls to core actions:
+
+```typescript
+const agent = mockAgent();
+
+await agent.submit({ message: 'Hello' });
+await agent.stop();
+await agent.regenerate(1);
+
+expect(agent.submitCalls[0]?.input).toEqual({ message: 'Hello' });
+expect(agent.stopCount).toBe(1);
+expect(agent.submitCalls[1]?.input).toEqual({
+  regenerate: { assistantMessageIndex: 1 },
+});
+```
+
+## LangGraph-Specific Tests
+
+Use `mockLangGraphAgent()` from `@ngaf/langgraph` only when the test needs LangGraph-specific signals such as raw LangGraph messages, checkpoint state, branches, queued runs, or transport metadata.

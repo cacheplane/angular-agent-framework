@@ -34,7 +34,7 @@ import { ChatDebugComponent } from '@ngaf/chat';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div style="height: 100vh;">
-      <chat-debug [ref]="chatRef" />
+      <chat-debug [agent]="chatRef" />
     </div>
   `,
 })
@@ -52,7 +52,7 @@ export class DebugPageComponent {
 
 | Input | Type | Default | Description |
 |-------|------|---------|-------------|
-| `ref` | `LangGraphAgent<any, any>` | **Required** | The agent providing streaming state and execution history |
+| `agent` | `AgentWithHistory` | **Required** | The agent providing streaming state and execution history |
 
 ## Layout
 

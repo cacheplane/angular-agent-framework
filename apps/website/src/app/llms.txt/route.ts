@@ -1,9 +1,20 @@
 import { NextResponse } from 'next/server';
+import fs from 'fs';
+import path from 'path';
 
-// Build compact LLMs summary at request time so version is always current
+function loadVersion(): string {
+  const candidates = [
+    path.join(process.cwd(), 'libs', 'langgraph', 'package.json'),
+    path.join(process.cwd(), '..', '..', 'libs', 'langgraph', 'package.json'),
+  ];
+  const packagePath = candidates.find((candidate) => fs.existsSync(candidate));
+  if (!packagePath) return '0.0.0';
+  const packageJson = JSON.parse(fs.readFileSync(packagePath, 'utf8')) as { version?: string };
+  return packageJson.version ?? '0.0.0';
+}
+
 function buildLlmsTxt(): string {
-  // Inline version — bump on each release
-  const version = '0.0.1';
+  const version = loadVersion();
   return [
     `# Angular Agent Framework v${version}`,
     '',
@@ -27,7 +38,7 @@ function buildLlmsTxt(): string {
     '## Key API',
     '- LangGraphAgent — unified type returned by agent(); exposes messages/status/isLoading/error/toolCalls/history signals + submit/stop methods',
     '- agent({ apiUrl, assistantId }) — single call that creates and returns a LangGraphAgent; no toAgent() step needed',
-    '- ChatComponent, ChatMessagesComponent, ChatInputComponent — composable Angular components consuming LangGraphAgent',
+    '- ChatComponent, ChatMessagesComponent, ChatInputComponent — composable Angular components consuming the runtime-neutral Agent contract',
     '- mockLangGraphAgent — testing utility with a writable signal-backed LangGraphAgent',
     '- runAgentConformance / runAgentWithHistoryConformance — conformance suites for adapter authors',
     '',
@@ -36,7 +47,7 @@ function buildLlmsTxt(): string {
     "import { ChatComponent } from '@ngaf/chat';",
     '// In a component:',
     "chat = agent({ apiUrl: 'http://localhost:2024', assistantId: 'chat_agent' });",
-    '// Template: <chat [ref]="chat" />',
+    '// Template: <chat [agent]="chat" />',
     '',
     '## Minimal AG-UI example',
     "import { provideAgUiAgent, AG_UI_AGENT } from '@ngaf/ag-ui';",

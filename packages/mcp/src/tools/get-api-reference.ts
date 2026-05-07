@@ -17,14 +17,16 @@ export function handleGetApiReference(args: Record<string, unknown>) {
   if (!entry) {
     return { content: [{ type: 'text', text: `Symbol not found: "${symbol}". Available: ${getAllSymbolNames().join(', ')}` }] };
   }
-  const summary = entry.comment?.summary?.map((s) => s.text).join('') ?? '';
-  const params = entry.signatures?.[0]?.parameters?.map((p) => {
+  const summary = entry.description ?? entry.comment?.summary?.map((s) => s.text).join('') ?? '';
+  const params = entry.params?.map((p) =>
+    `  ${p.name}: ${p.type ?? 'unknown'} — ${p.description ?? ''}`
+  ).join('\n') ?? entry.signatures?.[0]?.parameters?.map((p) => {
     const pSummary = p.comment?.summary?.map((s) => s.text).join('') ?? '';
     return `  ${p.name}: ${p.type?.name ?? 'unknown'} — ${pSummary}`;
   }).join('\n') ?? '';
   const text = [
     `## ${entry.name}`,
-    `Kind: ${entry.kindString ?? 'unknown'}`,
+    `Kind: ${entry.kind ?? entry.kindString ?? 'unknown'}`,
     summary,
     params ? `Parameters:\n${params}` : '',
   ].filter(Boolean).join('\n\n');

@@ -110,7 +110,7 @@ Pass `a2uiBasicCatalog()` to the `views` input to enable A2UI rendering:
 import { ChatComponent, a2uiBasicCatalog } from '@ngaf/chat';
 
 @Component({
-  template: `<chat [ref]="agentRef" [views]="catalog" />`,
+  template: `<chat [agent]="agentRef" [views]="catalog" />`,
   imports: [ChatComponent],
 })
 export class AppComponent {
@@ -152,7 +152,7 @@ import { ChatComponent, a2uiBasicCatalog } from '@ngaf/chat';
 import { agent } from '@ngaf/langgraph';
 
 @Component({
-  template: `<chat [ref]="agentRef" [views]="catalog" />`,
+  template: `<chat [agent]="agentRef" [views]="catalog" />`,
 })
 export class MyComponent {
   agentRef = agent({ apiUrl: '/api', assistantId: 'my-agent' });
@@ -166,7 +166,7 @@ When an A2UI button has a `functionCall` action, the `call` name is looked up in
 
 ```typescript
 @Component({
-  template: `<chat [ref]="agentRef" [views]="catalog" [handlers]="handlers" />`,
+  template: `<chat [agent]="agentRef" [views]="catalog" [handlers]="handlers" />`,
 })
 export class MyComponent {
   agentRef = agent({ apiUrl: '/api', assistantId: 'my-agent' });

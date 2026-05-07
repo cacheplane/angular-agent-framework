@@ -1,6 +1,6 @@
 # ChatMessageListComponent
 
-`ChatMessageListComponent` is the core primitive for rendering chat messages. It iterates over the messages from a `LangGraphAgent` and renders each one using a matching `MessageTemplateDirective`. This gives you full control over how each message type is displayed.
+`ChatMessageListComponent` is the core primitive for rendering chat messages. It iterates over the messages from an `Agent` and renders each one using a matching `MessageTemplateDirective`. This gives you full control over how each message type is displayed.
 
 **Selector:** `chat-message-list`
 
@@ -49,7 +49,7 @@ import {
 
 | Input | Type | Default | Description |
 |-------|------|---------|-------------|
-| `agent` | `LangGraphAgent<any, any>` | **Required** | The agent providing streaming state |
+| `agent` | `Agent` | **Required** | The agent providing streaming state |
 
 ### Content Children
 
@@ -61,7 +61,7 @@ Each template receives:
 
 | Variable | Type | Description |
 |----------|------|-------------|
-| `$implicit` (via `let-message`) | `BaseMessage` | The LangChain message object |
+| `$implicit` (via `let-message`) | `Message` | The runtime-neutral chat message |
 | `index` | `number` | The index of the message in the array |
 
 ```html
@@ -94,7 +94,7 @@ type MessageTemplateType = 'human' | 'ai' | 'tool' | 'system' | 'function';
 
 ## getMessageType()
 
-The `getMessageType()` function maps a LangChain `BaseMessage` to a `MessageTemplateType`. It handles both class instances (with `_getType()` method) and plain JSON objects (with a `type` property), since SSE stream events deliver plain JSON rather than hydrated class instances.
+The `getMessageType()` function maps a runtime-neutral `Message` role to a `MessageTemplateType`.
 
 ```typescript
 import { getMessageType } from '@ngaf/chat';

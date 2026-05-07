@@ -43,7 +43,7 @@ import type { BaseMessage } from '@langchain/core/messages';
   imports: [ChatComponent],
   template: `
     <div style="height: 100vh;">
-      <chat [ref]="chatRef" />
+      <chat [agent]="chatRef" />
     </div>
   `,
 })
@@ -65,7 +65,7 @@ export class ChatPageComponent {
 
 | Input | Type | Default | Description |
 |-------|------|---------|-------------|
-| `ref` | `LangGraphAgent<any, any>` | **Required** | The agent providing streaming state. Created by `agent()` from `@ngaf/langgraph`. |
+| `agent` | `Agent` | **Required** | The runtime-neutral agent providing streaming state. `agent()` from `@ngaf/langgraph` returns a compatible `LangGraphAgent`. |
 | `views` | `ViewRegistry \| undefined` | `undefined` | View registry for generative UI. Maps spec type names to Angular components. Created with `views()` from `@ngaf/chat`. |
 | `store` | `StateStore \| undefined` | `undefined` | Optional state store for interactive generative UI specs. |
 | `handlers` | `Record<string, (params: Record<string, unknown>) => unknown \| Promise<unknown>>` | `{}` | Event handlers for generative UI specs and A2UI `functionCall` actions. Handlers run in Angular injection context — `inject()` is available inside handler functions. |
@@ -92,7 +92,7 @@ When you pass a non-empty `threads` array, a sidebar appears on the left (hidden
 @Component({
   template: `
     <chat
-      [ref]="chatRef"
+      [agent]="chatRef"
       [threads]="threads()"
       [activeThreadId]="currentThreadId()"
       (threadSelected)="onThreadSelected($event)"
@@ -136,7 +136,7 @@ export class ChatWithThreadsComponent {
 When you pass a `[views]` registry, the component auto-detects JSON specs in AI messages and renders them as Angular components:
 
 ```html
-<chat [ref]="chatRef" [views]="myViews" />
+<chat [agent]="chatRef" [views]="myViews" />
 ```
 
 ```typescript

@@ -41,7 +41,7 @@ const myViews = views({
   imports: [ChatComponent],
   template: `
     <div style="height: 100vh;">
-      <chat [ref]="chatRef" [views]="myViews" />
+      <chat [agent]="chatRef" [views]="myViews" />
     </div>
   `,
 })
@@ -120,7 +120,7 @@ import { signalStateStore } from '@ngaf/render';
 
 @Component({
   template: `
-    <chat [ref]="chatRef" [views]="myViews" [store]="store" />
+    <chat [agent]="chatRef" [views]="myViews" [store]="store" />
   `,
 })
 export class InteractiveChatComponent {

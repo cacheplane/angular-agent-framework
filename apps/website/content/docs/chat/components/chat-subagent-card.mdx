@@ -22,17 +22,17 @@ import { ChatSubagentCardComponent } from '@ngaf/chat';
 
 | Input | Type | Default | Description |
 |-------|------|---------|-------------|
-| `subagent` | `SubagentStreamRef` | **Required** | The subagent stream reference to display |
+| `subagent` | `Subagent` | **Required** | The subagent to display |
 
-## SubagentStreamRef
+## Subagent
 
-The `SubagentStreamRef` type comes from `@ngaf/langgraph`. It provides reactive state for a subagent:
+The `Subagent` type comes from `@ngaf/chat`. It provides reactive state for a subagent:
 
 | Property | Type | Description |
 |----------|------|-------------|
 | `toolCallId` | `string` | The ID linking this subagent to its parent tool call |
 | `status()` | `Signal<'pending' \| 'running' \| 'complete' \| 'error'>` | Current execution status |
-| `messages()` | `Signal<BaseMessage[]>` | Messages produced by the subagent |
+| `messages()` | `Signal<Message[]>` | Messages produced by the subagent |
 
 ## Card Behavior
 
@@ -63,10 +63,10 @@ The status badge uses different chat theme variables based on the current status
 
 ## Using with ChatSubagentsComponent
 
-The `ChatSubagentsComponent` primitive iterates over active subagent streams from a `LangGraphAgent`. Combine it with `ChatSubagentCardComponent`:
+The `ChatSubagentsComponent` primitive iterates over active subagent streams from an `Agent`. Combine it with `ChatSubagentCardComponent`:
 
 ```html
-<chat-subagents [ref]="chatRef">
+<chat-subagents [agent]="chatRef">
   <ng-template let-subagent>
     <chat-subagent-card [subagent]="subagent" />
   </ng-template>
@@ -93,13 +93,13 @@ import {
   template: `
     <div style="height: 100vh; display: flex; flex-direction: column;">
       <div style="flex: 1;">
-        <chat [ref]="chatRef" />
+        <chat [agent]="chatRef" />
       </div>
 
       <div class="p-4">
         <h3 class="text-sm font-semibold mb-2">Active Subagents</h3>
         <div class="space-y-2">
-          <chat-subagents [ref]="chatRef">
+          <chat-subagents [agent]="chatRef">
             <ng-template let-subagent>
               <chat-subagent-card [subagent]="subagent" />
             </ng-template>

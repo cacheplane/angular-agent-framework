@@ -1,6 +1,6 @@
 # Introduction
 
-`@ngaf/chat` is the Angular UI component library for building chat interfaces on top of `@ngaf/agent`. It provides a complete set of composable, Signal-driven components that render messages, handle user input, display tool calls, manage interrupts, and support generative UI -- all styled with CSS custom properties and built for Angular 20+.
+`@ngaf/chat` is the Angular UI component library for building chat interfaces on top of a runtime-neutral `Agent` contract. It provides a complete set of composable, Signal-driven components that render messages, handle user input, display tool calls, manage interrupts, and support generative UI -- all styled with CSS custom properties and built for Angular 20+.
 
 <Callout type="info" title="What you'll learn">
 This guide explains the library's two-tier architecture, how it relates to the rest of the Cacheplane stack, and when to reach for the all-in-one composition versus assembling primitives yourself.
@@ -12,7 +12,7 @@ The library is organized into two layers: **primitives** and **compositions**.
 
 ### Primitives
 
-Primitives are low-level, headless components that read from a `LangGraphAgent` and expose their state through content projection (`ng-template`). They carry no opinion about layout or styling. Use them when you need full control over how chat elements render.
+Primitives are low-level, headless components that read from an `Agent` and expose their state through content projection (`ng-template`). They carry no opinion about layout or styling. Use them when you need full control over how chat elements render.
 
 | Primitive | Selector | Purpose |
 |-----------|----------|---------|
@@ -51,29 +51,29 @@ Your App
 @ngaf/chat       <-- UI components (this library)
   |         |
   v         v
-@ngaf/agent      @ngaf/render
+@ngaf/langgraph  @ngaf/render
   (streaming state)      (generative UI)
   |
   v
 LangGraph Platform
 ```
 
-- **`@ngaf/agent`** provides the `agent()` function and the `LangGraphAgent` type. Every chat component accepts a `LangGraphAgent` as its primary input. It exposes reactive Signals for `messages()`, `isLoading()`, `error()`, `interrupt()`, `toolCalls()`, `history()`, and more.
+- **`@ngaf/langgraph`** provides the `agent()` function and returns a `LangGraphAgent`, which satisfies the `Agent` contract consumed by `@ngaf/chat`. It exposes reactive Signals for `messages()`, `isLoading()`, `error()`, `interrupt()`, `toolCalls()`, `history()`, and more.
 
 - **`@ngaf/render`** provides `RenderSpecComponent` and view registries for rendering JSON UI specs as Angular components. The `ChatComponent` auto-detects JSON specs in AI messages and renders them through `@ngaf/render` — pass a view registry via the `[views]` input. The `ChatComponent` also auto-detects A2UI v0.9 payloads and renders them using a built-in 12-component catalog.
 
 ## When to Use `ChatComponent` vs. Custom Assembly
 
-**Use `ChatComponent`** when you want a complete, styled chat interface with minimal setup. It includes message rendering (with markdown), a text input, typing indicator, error display, interrupt banner, and an optional thread sidebar. Drop it in, pass a `LangGraphAgent`, and you have a working chat.
+**Use `ChatComponent`** when you want a complete, styled chat interface with minimal setup. It includes message rendering (with markdown), a text input, typing indicator, error display, interrupt banner, and an optional thread sidebar. Drop it in, pass an `Agent`, and you have a working chat.
 
 ```html
-<chat [ref]="chatRef" />
+<chat [agent]="chatRef" />
 ```
 
 **Assemble primitives** when you need to customize layout, add components between sections, change the message rendering logic, or integrate chat into a larger dashboard. Primitives give you building blocks without opinions.
 
 ```html
-<chat-messages [ref]="chatRef">
+<chat-messages [agent]="chatRef">
   <ng-template chatMessageTemplate="human" let-message>
     <!-- your custom human message layout -->
   </ng-template>
@@ -82,7 +82,7 @@ LangGraph Platform
   </ng-template>
 </chat-messages>
 
-<chat-input [ref]="chatRef" placeholder="Ask anything..." />
+<chat-input [agent]="chatRef" placeholder="Ask anything..." />
 ```
 
 ## What's Next
