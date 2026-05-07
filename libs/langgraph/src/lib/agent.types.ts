@@ -222,8 +222,11 @@ export interface AgentTransport {
 
 // ── Options ──────────────────────────────────────────────────────────────────
 
-/** Options for creating a streaming resource via {@link agent}. */
-export interface AgentOptions<T, ResolvedBag extends BagTemplate> {
+/** Options for creating a LangGraph-backed agent via {@link agent}. */
+// The second generic is retained for source compatibility with existing typed
+// AgentOptions references even though the options shape no longer depends on it.
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export interface AgentOptions<T, _ResolvedBag extends BagTemplate> {
   /** Base URL of the LangGraph Platform API. */
   apiUrl: string;
   /** Agent or graph identifier on the LangGraph platform. */
@@ -234,8 +237,6 @@ export interface AgentOptions<T, ResolvedBag extends BagTemplate> {
   onThreadId?: (id: string) => void;
   /** Initial state values before the first stream response arrives. */
   initialValues?: Partial<T>;
-  /** Key in the state object that contains the messages array. Defaults to `'messages'`. */
-  messagesKey?: string;
   /** Throttle signal updates in milliseconds. `false` to disable. */
   throttle?: number | false;
   /** Custom message deserializer for non-standard message formats. */
@@ -276,7 +277,7 @@ export interface SubagentStreamRef {
  */
 export interface LangGraphAgent<T = unknown, ResolvedBag extends BagTemplate = BagTemplate>
   extends AgentWithHistory {
-  // ── Raw LangGraph signals (preserve full AgentRef public surface) ─────────
+  // ── Raw LangGraph signals ────────────────────────────────────────────────
 
   /** Raw LangChain BaseMessage list. Use `messages` for chat rendering. */
   langGraphMessages: Signal<BaseMessage[]>;
@@ -299,7 +300,7 @@ export interface LangGraphAgent<T = unknown, ResolvedBag extends BagTemplate = B
     opts?: AgentSubmitOptions & LangGraphSubmitOptions,
   ) => Promise<void>;
 
-  // ── AgentRef fields preserved on the unified surface ─────────────────────
+  // ── LangGraph-specific fields preserved on the unified surface ───────────
 
   /** Current agent state values (raw, typed per the type parameter T). */
   value: Signal<T>;

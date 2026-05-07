@@ -1,13 +1,13 @@
 <p align="center">
   <img
     src="https://cacheplane.ai/assets/hero.svg"
-    alt="Angular Agent Framework — The Angular Agent Framework for LangChain"
+    alt="Angular Agent Framework — agent UI primitives for Angular"
     width="100%"
   />
 </p>
 
 <p align="center">
-  <em>The Angular Agent Framework for LangChain</em>
+  <em>Agent UI primitives and LangGraph streaming adapters for Angular</em>
 </p>
 
 <p align="center">
@@ -27,14 +27,14 @@
 
 ---
 
-`agent()` is the Angular equivalent of LangGraph's React `useStream()` hook, built on Angular Signals and the Angular Resource API. It gives enterprise Angular teams production-grade streaming primitives for LangChain. Drop it into any Angular 20+ component, point it at your LangGraph Platform endpoint, and get reactive, signal-driven access to streaming state, messages, tool calls, interrupts, and thread history.
+`agent()` is the Angular equivalent of LangGraph's React `useStream()` hook, projected into a runtime-neutral `Agent` contract consumed by `@ngaf/chat`. Drop it into any Angular 20+ component, point it at your LangGraph Platform endpoint, and get signal-driven access to messages, status, tool calls, interrupts, subagents, regenerate, and thread history.
 
 ---
 
 ## Install
 
 ```bash
-npm install @ngaf/langgraph
+npm install @ngaf/langgraph @ngaf/chat
 ```
 
 **Peer dependencies:** `@angular/core ^20.0.0 || ^21.0.0`, `@langchain/core ^1.1.0`, `@langchain/langgraph-sdk ^1.7.0`, `rxjs ~7.8.0`
@@ -45,17 +45,14 @@ npm install @ngaf/langgraph
 
 ```typescript
 import { Component } from '@angular/core';
+import { ChatComponent as NgafChatComponent } from '@ngaf/chat';
 import { agent } from '@ngaf/langgraph';
-import type { BaseMessage } from '@langchain/core/messages';
 
 @Component({
-  selector: 'app-chat',
+  selector: 'app-support-chat',
+  imports: [NgafChatComponent],
   template: `
-    <ul>
-      @for (msg of chat.messages(); track $index) {
-        <li>{{ msg.content }}</li>
-      }
-    </ul>
+    <chat [agent]="chat" />
 
     @if (chat.isLoading()) {
       <span>Streaming…</span>
@@ -64,20 +61,19 @@ import type { BaseMessage } from '@langchain/core/messages';
     <button (click)="send()">Send</button>
   `,
 })
-export class ChatComponent {
-  chat = agent<{ messages: BaseMessage[] }>({
+export class SupportChatComponent {
+  chat = agent({
     apiUrl: 'https://your-langgraph-platform.com',
     assistantId: 'my-agent',
-    messagesKey: 'messages',
   });
 
   send() {
-    this.chat.submit({ messages: [{ role: 'human', content: 'Hello' }] });
+    void this.chat.submit({ message: 'Hello' });
   }
 }
 ```
 
-That's it. `chat.messages()` is an Angular Signal. Bind it directly in your template — no subscriptions, no `async` pipe, no zone.js required.
+That's it. `chat.messages()` and `chat.status()` are Angular Signals. Bind them directly in your template — no subscriptions, no `async` pipe, no zone.js required.
 
 ---
 
@@ -89,7 +85,7 @@ That's it. `chat.messages()` is an Angular Signal. Bind it directly in your temp
 | Messages signal | `messages()` | `messages` |
 | Loading state | `isLoading()` | `isLoading` |
 | Error state | `error()` | — |
-| Resource status (idle/loading/resolved/error) | `status()` — full `ResourceStatus` | partial |
+| Runtime-neutral status | `status()` — `'idle' \| 'running' \| 'error'` | partial |
 | Interrupt / human-in-the-loop | `interrupt()` / `interrupts()` | `interrupt` / `interrupts` |
 | Tool call progress | `toolProgress()` | `toolProgress` |
 | Tool calls with results | `toolCalls()` | `toolCalls` |
@@ -99,8 +95,9 @@ That's it. `chat.messages()` is an Angular Signal. Bind it directly in your temp
 | Reactive thread switching | `Signal<string \| null>` input | prop |
 | Submit | `submit(values, opts?)` | `submit(values, opts?)` |
 | Stop | `stop()` | `stop()` |
+| Regenerate response | `regenerate(assistantMessageIndex)` | — |
 | Reload last submission | `reload()` | — |
-| Custom transport (for testing) | `MockStreamTransport` | mock fetch |
+| Custom transport (for testing) | `MockAgentTransport` | mock fetch |
 | Angular `ResourceRef<T>` compatibility | Full duck-type parity | N/A |
 | Angular 20+ Signals API | Native | N/A |
 | SSR / Server Components | Client-side only | React Server Components (React) |
@@ -123,11 +120,11 @@ That's it. `chat.messages()` is an Angular Signal. Bind it directly in your temp
 
 ## Documentation
 
-- [Getting Started](https://cacheplane.ai/docs/getting-started)
-- [API Reference](https://cacheplane.ai/api-reference)
-- [Testing with MockStreamTransport](https://cacheplane.ai/docs/testing)
-- [Human-in-the-Loop / Interrupts](https://cacheplane.ai/docs/interrupts)
-- [Subagent Streaming](https://cacheplane.ai/docs/subagents)
+- [Agent Quickstart](https://cacheplane.ai/docs/agent/getting-started/quickstart)
+- [agent() API](https://cacheplane.ai/docs/agent/api/agent)
+- [Chat Introduction](https://cacheplane.ai/docs/chat/getting-started/introduction)
+- [Human-in-the-Loop / Interrupts](https://cacheplane.ai/docs/agent/guides/interrupts)
+- [Subgraph and Subagent Streaming](https://cacheplane.ai/docs/agent/guides/subgraphs)
 
 ---
 

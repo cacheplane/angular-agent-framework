@@ -408,12 +408,43 @@
         "optional": true
       },
       {
+        "name": "reasoningTokens",
+        "type": "string[]",
+        "description": "Optional reasoning chunks emitted before the text reply.",
+        "optional": true
+      },
+      {
         "name": "tokens",
         "type": "string[]",
         "description": "Tokens streamed back as the assistant reply.",
         "optional": true
       }
     ],
+    "examples": []
+  },
+  {
+    "name": "bridgeCitationsState",
+    "kind": "function",
+    "description": "",
+    "signature": "bridgeCitationsState(thread: ThreadStateLike, messages: Message[]): Message[]",
+    "params": [
+      {
+        "name": "thread",
+        "type": "ThreadStateLike",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "messages",
+        "type": "Message[]",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "Message[]",
+      "description": ""
+    },
     "examples": []
   },
   {

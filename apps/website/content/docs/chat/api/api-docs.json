@@ -827,6 +827,72 @@
     "methods": []
   },
   {
+    "name": "ChatCitationCardTemplateDirective",
+    "kind": "class",
+    "description": "ContentChild template directive for custom citation card rendering.\nUsage: <ng-template chatCitationCard let-citation>...</ng-template>",
+    "params": [],
+    "examples": [],
+    "properties": [
+      {
+        "name": "tpl",
+        "type": "TemplateRef<object>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "methods": []
+  },
+  {
+    "name": "ChatCitationsCardComponent",
+    "kind": "class",
+    "description": "",
+    "params": [],
+    "examples": [],
+    "properties": [
+      {
+        "name": "citation",
+        "type": "InputSignal<Citation>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "methods": []
+  },
+  {
+    "name": "ChatCitationsComponent",
+    "kind": "class",
+    "description": "",
+    "params": [],
+    "examples": [],
+    "properties": [
+      {
+        "name": "cardTpl",
+        "type": "ChatCitationCardTemplateDirective<> | null",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "citations",
+        "type": "Signal<Citation[]>",
+        "description": "Combined citation list:\n  1. Message.citations (provider-populated, takes precedence by id)\n  2. Markdown sidecar defs (Pandoc-formatted [^id]: lines), merged in\n     for any id not already present.\n\nSorted by index ascending. This guarantees the sources panel surfaces\ncitations whether they come from message metadata, content syntax, or\nboth — matching the same precedence as inline-marker resolution.",
+        "optional": false
+      },
+      {
+        "name": "heading",
+        "type": "InputSignal<string>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "message",
+        "type": "InputSignal<Message>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "methods": []
+  },
+  {
     "name": "ChatComponent",
     "kind": "class",
     "description": "",
@@ -858,6 +924,36 @@
         "optional": false
       },
       {
+        "name": "messageCopy",
+        "type": "OutputEmitterRef<object>",
+        "description": "Emitted when the user copies an assistant message.",
+        "optional": false
+      },
+      {
+        "name": "modelOptions",
+        "type": "InputSignal<readonly ChatSelectOption[]>",
+        "description": "High-level model-picker API. When `modelOptions` is non-empty, the chat\ncomposition renders a `<chat-select>` inside the input pill (in BOTH\nwelcome and conversation modes), wired to the two-way `selectedModel`\nmodel. Consumers who want full control should leave `modelOptions`\nempty and project a `<chat-select chatInputModelSelect>` themselves.",
+        "optional": false
+      },
+      {
+        "name": "modelPickerPlaceholder",
+        "type": "InputSignal<string>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "rate",
+        "type": "OutputEmitterRef<object>",
+        "description": "Emitted when the user rates an assistant message.",
+        "optional": false
+      },
+      {
+        "name": "regenerate",
+        "type": "OutputEmitterRef<void>",
+        "description": "Emitted when the user clicks the regenerate button on an assistant message.",
+        "optional": false
+      },
+      {
         "name": "renderEvent",
         "type": "OutputEmitterRef<ChatRenderEvent>",
         "description": "",
@@ -866,18 +962,24 @@
       {
         "name": "renderRegistry",
         "type": "Signal<AngularRegistry | undefined>",
-        "description": "Convert ViewRegistry → AngularRegistry for ChatGenerativeUiComponent.",
+        "description": "",
         "optional": false
       },
       {
         "name": "resolvedStore",
         "type": "Signal<StateStore | undefined>",
-        "description": "Resolved store: use the explicitly provided store input, or fall back to\nan internal store when `views` are provided (generative-ui use case).",
+        "description": "",
         "optional": false
       },
       {
-        "name": "sidebarOpen",
-        "type": "WritableSignal<boolean>",
+        "name": "selectedModel",
+        "type": "ModelSignal<string>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "showWelcome",
+        "type": "Signal<boolean>",
         "description": "",
         "optional": false
       },
@@ -904,12 +1006,18 @@
         "type": "InputSignal<Readonly<Record<string, Type<unknown>>> | undefined>",
         "description": "",
         "optional": false
+      },
+      {
+        "name": "welcomeDisabled",
+        "type": "InputSignal<boolean>",
+        "description": "",
+        "optional": false
       }
     ],
     "methods": [
       {
         "name": "classifyMessage",
-        "signature": "classifyMessage(content: string, index: number)",
+        "signature": "classifyMessage(content: string, message: object)",
         "description": "",
         "params": [
           {
@@ -919,8 +1027,8 @@
             "optional": false
           },
           {
-            "name": "index",
-            "type": "number",
+            "name": "message",
+            "type": "object",
             "description": "",
             "optional": false
           }
@@ -931,6 +1039,25 @@
         "signature": "clearClassifiers()",
         "description": "",
         "params": []
+      },
+      {
+        "name": "isReasoningStreaming",
+        "signature": "isReasoningStreaming(message: Message, index: number)",
+        "description": "True while a message's reasoning is mid-stream — i.e. it's the latest\nmessage, the agent is loading, the message has reasoning content, and\nno response text has arrived yet. Once the response text begins, the\nreasoning pill collapses (per its internal logic).",
+        "params": [
+          {
+            "name": "message",
+            "type": "Message",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "index",
+            "type": "number",
+            "description": "",
+            "optional": false
+          }
+        ]
       },
       {
         "name": "onA2uiAction",
@@ -971,6 +1098,57 @@
         ]
       },
       {
+        "name": "onCopy",
+        "signature": "onCopy(message: unknown, content: string)",
+        "description": "",
+        "params": [
+          {
+            "name": "message",
+            "type": "unknown",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "content",
+            "type": "string",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
+        "name": "onRate",
+        "signature": "onRate(message: unknown, value: \"up\" | \"down\")",
+        "description": "",
+        "params": [
+          {
+            "name": "message",
+            "type": "unknown",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "value",
+            "type": "\"up\" | \"down\"",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
+        "name": "onRegenerate",
+        "signature": "onRegenerate(messageIndex: number)",
+        "description": "Regenerate the assistant response at the given message index.",
+        "params": [
+          {
+            "name": "messageIndex",
+            "type": "number",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
         "name": "onSpecEvent",
         "signature": "onSpecEvent(event: RenderEvent, messageIndex: number)",
         "description": "",
@@ -983,6 +1161,19 @@
           },
           {
             "name": "messageIndex",
+            "type": "number",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
+        "name": "prevRole",
+        "signature": "prevRole(index: number)",
+        "description": "",
+        "params": [
+          {
+            "name": "index",
             "type": "number",
             "description": "",
             "optional": false
@@ -1104,6 +1295,52 @@
     "methods": []
   },
   {
+    "name": "ChatGenerativeUiComponent",
+    "kind": "class",
+    "description": "",
+    "params": [],
+    "examples": [],
+    "properties": [
+      {
+        "name": "events",
+        "type": "OutputEmitterRef<RenderEvent>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "handlers",
+        "type": "InputSignal<Record<string, object> | undefined>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "loading",
+        "type": "InputSignal<boolean>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "registry",
+        "type": "InputSignal<AngularRegistry | undefined>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "spec",
+        "type": "InputSignal<Spec | null>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "store",
+        "type": "InputSignal<StateStore | undefined>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "methods": []
+  },
+  {
     "name": "ChatInputComponent",
     "kind": "class",
     "description": "",
@@ -1117,13 +1354,31 @@
         "optional": false
       },
       {
+        "name": "canStop",
+        "type": "Signal<boolean>",
+        "description": "The stop button only appears when the consumer opted in AND we're loading.",
+        "optional": false
+      },
+      {
+        "name": "canSubmit",
+        "type": "Signal<boolean>",
+        "description": "Submit is allowed only when not loading and there's non-whitespace text.",
+        "optional": false
+      },
+      {
+        "name": "composing",
+        "type": "WritableSignal<boolean>",
+        "description": "True while an IME composition (CJK input, accent, autocorrect) is active.",
+        "optional": false
+      },
+      {
         "name": "focused",
         "type": "WritableSignal<boolean>",
         "description": "",
         "optional": false
       },
       {
-        "name": "isDisabled",
+        "name": "isLoading",
         "type": "Signal<boolean>",
         "description": "",
         "optional": false
@@ -1137,6 +1392,18 @@
       {
         "name": "placeholder",
         "type": "InputSignal<string>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "showStopButton",
+        "type": "InputSignal<boolean>",
+        "description": "When true (default), shows a stop button while the agent is streaming.",
+        "optional": false
+      },
+      {
+        "name": "stopped",
+        "type": "OutputEmitterRef<void>",
         "description": "",
         "optional": false
       },
@@ -1155,6 +1422,12 @@
     ],
     "methods": [
       {
+        "name": "focusTextarea",
+        "signature": "focusTextarea()",
+        "description": "",
+        "params": []
+      },
+      {
         "name": "onKeydown",
         "signature": "onKeydown(event: KeyboardEvent)",
         "description": "",
@@ -1166,6 +1439,12 @@
             "optional": false
           }
         ]
+      },
+      {
+        "name": "onStop",
+        "signature": "onStop()",
+        "description": "Abort the current streaming response (if the adapter supports it).",
+        "params": []
       },
       {
         "name": "onSubmit",
@@ -1201,7 +1480,21 @@
         "optional": false
       }
     ],
-    "methods": []
+    "methods": [
+      {
+        "name": "defaultText",
+        "signature": "defaultText(i: AgentInterrupt)",
+        "description": "",
+        "params": [
+          {
+            "name": "i",
+            "type": "AgentInterrupt",
+            "description": "",
+            "optional": false
+          }
+        ]
+      }
+    ]
   },
   {
     "name": "ChatInterruptPanelComponent",
@@ -1238,7 +1531,146 @@
     "methods": []
   },
   {
-    "name": "ChatMessagesComponent",
+    "name": "ChatLauncherButtonComponent",
+    "kind": "class",
+    "description": "",
+    "params": [],
+    "examples": [],
+    "properties": [],
+    "methods": []
+  },
+  {
+    "name": "ChatMessageActionsComponent",
+    "kind": "class",
+    "description": "Default action buttons that appear under each assistant message:\nregenerate, copy-to-clipboard, thumbs up, thumbs down.\n\nHidden by default, fades in on `:hover`/`:focus-within` of the parent\n`chat-message`, and stays visible on the current/last assistant message\nand on mobile.",
+    "params": [],
+    "examples": [],
+    "properties": [
+      {
+        "name": "content",
+        "type": "InputSignal<string>",
+        "description": "Plain text content to copy. Required for the copy button to function.",
+        "optional": false
+      },
+      {
+        "name": "contentCopied",
+        "type": "OutputEmitterRef<string>",
+        "description": "Emitted with the copied content after a successful clipboard write.",
+        "optional": false
+      },
+      {
+        "name": "copied",
+        "type": "WritableSignal<boolean>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "disabled",
+        "type": "InputSignal<boolean>",
+        "description": "When true, the regenerate button is disabled (e.g. while the agent is streaming).",
+        "optional": false
+      },
+      {
+        "name": "rate",
+        "type": "OutputEmitterRef<\"up\" | \"down\">",
+        "description": "Emitted with 'up' or 'down' when the user rates the response.",
+        "optional": false
+      },
+      {
+        "name": "rating",
+        "type": "WritableSignal<\"up\" | \"down\" | null>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "regenerate",
+        "type": "OutputEmitterRef<void>",
+        "description": "Emitted when the user clicks regenerate. Wire this to `agent.regenerate(index)`.",
+        "optional": false
+      }
+    ],
+    "methods": [
+      {
+        "name": "onCopy",
+        "signature": "onCopy()",
+        "description": "",
+        "params": []
+      },
+      {
+        "name": "onRate",
+        "signature": "onRate(value: \"up\" | \"down\")",
+        "description": "",
+        "params": [
+          {
+            "name": "value",
+            "type": "\"up\" | \"down\"",
+            "description": "",
+            "optional": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "ChatMessageComponent",
+    "kind": "class",
+    "description": "",
+    "params": [],
+    "examples": [],
+    "properties": [
+      {
+        "name": "bodyClass",
+        "type": "Signal<\"chat-message__bubble\" | \"chat-message__assistant-body\" | \"chat-message__plain\">",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "current",
+        "type": "InputSignal<boolean>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "currentStr",
+        "type": "Signal<string>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "message",
+        "type": "InputSignal<Message | undefined>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "prevRole",
+        "type": "InputSignal<ChatMessageRole | undefined>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "role",
+        "type": "InputSignal<ChatMessageRole>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "streaming",
+        "type": "InputSignal<boolean>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "streamingStr",
+        "type": "Signal<string>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "methods": []
+  },
+  {
+    "name": "ChatMessageListComponent",
     "kind": "class",
     "description": "",
     "params": [],
@@ -1286,6 +1718,315 @@
     ]
   },
   {
+    "name": "ChatPopupComponent",
+    "kind": "class",
+    "description": "",
+    "params": [],
+    "examples": [],
+    "properties": [
+      {
+        "name": "agent",
+        "type": "InputSignal<Agent>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "closeOnEscape",
+        "type": "InputSignal<boolean>",
+        "description": "Close the popup on Escape (default true).",
+        "optional": false
+      },
+      {
+        "name": "open",
+        "type": "ModelSignal<boolean>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "shortcut",
+        "type": "InputSignal<string | null>",
+        "description": "Keyboard shortcut (single key) that toggles the popup with cmd (mac)\nor ctrl (other). Set to `null` to disable. Default: 'k' — matches the\nwidely-used cmd/ctrl+K convention.",
+        "optional": false
+      }
+    ],
+    "methods": [
+      {
+        "name": "closeWindow",
+        "signature": "closeWindow()",
+        "description": "",
+        "params": []
+      },
+      {
+        "name": "openWindow",
+        "signature": "openWindow()",
+        "description": "",
+        "params": []
+      },
+      {
+        "name": "toggle",
+        "signature": "toggle()",
+        "description": "",
+        "params": []
+      }
+    ]
+  },
+  {
+    "name": "ChatReasoningComponent",
+    "kind": "class",
+    "description": "Renders an assistant's reasoning content as a compact pill that\nexpands to reveal the underlying text. Three visual states:\n\n- Streaming: pill shows \"Thinking…\" with a pulsing dot; auto-expanded\n  so the user sees reasoning stream in real time.\n- Idle, with durationMs known: pill shows \"Thought for {duration}\";\n  collapsed by default, expand on click.\n- Idle, no duration: pill shows \"Show reasoning\"; collapsed by default.\n\nThe body re-uses chat-streaming-md so reasoning content gets the same\nmarkdown rendering pipeline as the visible response (lists, code,\nstep labels often appear in reasoning output).\n\nInternal state: a tristate \"expanded\" — null means follow auto state-\ndriven logic (force-expand on isStreaming, otherwise honor\ndefaultExpanded), boolean is a manual user choice that wins for the\nlifetime of the instance.",
+    "params": [],
+    "examples": [],
+    "properties": [
+      {
+        "name": "content",
+        "type": "InputSignal<string>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "defaultExpanded",
+        "type": "InputSignal<boolean>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "durationMs",
+        "type": "InputSignal<number | undefined>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "expanded",
+        "type": "Signal<boolean>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "expandedStr",
+        "type": "Signal<string>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "hasContent",
+        "type": "Signal<boolean>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "isStreaming",
+        "type": "InputSignal<boolean>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "label",
+        "type": "InputSignal<string | undefined>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "resolvedLabel",
+        "type": "Signal<string>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "methods": [
+      {
+        "name": "toggle",
+        "signature": "toggle()",
+        "description": "",
+        "params": []
+      }
+    ]
+  },
+  {
+    "name": "ChatSelectComponent",
+    "kind": "class",
+    "description": "Generic single-select dropdown. Designed to slot into the chat input pill\n(via [chatInputModelSelect]) but usable anywhere.\n\nInputs:\n  options      — array of { value, label, disabled? }; required\n  value        — currently selected value (two-way via model())\n  placeholder  — trigger label when no option matches; default 'Select'\n  disabled     — disables the trigger; default false\n  menuLabel    — aria-label for the popover; defaults to placeholder",
+    "params": [],
+    "examples": [],
+    "properties": [
+      {
+        "name": "currentLabel",
+        "type": "Signal<string>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "disabled",
+        "type": "InputSignal<boolean>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "menuLabel",
+        "type": "InputSignal<string | undefined>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "open",
+        "type": "WritableSignal<boolean>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "options",
+        "type": "InputSignal<readonly ChatSelectOption[]>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "placeholder",
+        "type": "InputSignal<string>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "value",
+        "type": "ModelSignal<string>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "methods": [
+      {
+        "name": "onMenuKeydown",
+        "signature": "onMenuKeydown(e: KeyboardEvent)",
+        "description": "",
+        "params": [
+          {
+            "name": "e",
+            "type": "KeyboardEvent",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
+        "name": "onTriggerKeydown",
+        "signature": "onTriggerKeydown(e: KeyboardEvent)",
+        "description": "",
+        "params": [
+          {
+            "name": "e",
+            "type": "KeyboardEvent",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
+        "name": "selectOption",
+        "signature": "selectOption(opt: ChatSelectOption)",
+        "description": "",
+        "params": [
+          {
+            "name": "opt",
+            "type": "ChatSelectOption",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
+        "name": "toggle",
+        "signature": "toggle()",
+        "description": "",
+        "params": []
+      }
+    ]
+  },
+  {
+    "name": "ChatSidebarComponent",
+    "kind": "class",
+    "description": "",
+    "params": [],
+    "examples": [],
+    "properties": [
+      {
+        "name": "agent",
+        "type": "InputSignal<Agent>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "open",
+        "type": "ModelSignal<boolean>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "pushContent",
+        "type": "InputSignal<boolean>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "methods": [
+      {
+        "name": "closeWindow",
+        "signature": "closeWindow()",
+        "description": "",
+        "params": []
+      },
+      {
+        "name": "openWindow",
+        "signature": "openWindow()",
+        "description": "",
+        "params": []
+      },
+      {
+        "name": "toggle",
+        "signature": "toggle()",
+        "description": "",
+        "params": []
+      }
+    ]
+  },
+  {
+    "name": "ChatStreamingMdComponent",
+    "kind": "class",
+    "description": "Renders streaming markdown by walking a @cacheplane/partial-markdown AST\nthrough @ngaf/render's view registry.\n\nReactivity model: the live `parser.root` keeps a stable JS reference\nacross pushes (partial-markdown's identity guarantee). To make Angular\nsignals propagate downstream when the underlying tree changes, we surface\na materialized snapshot via `materialize()`. The snapshot shares\nstructurally — unchanged subtrees keep the SAME reference, and any\ndescendant change yields a NEW root reference. This lets Angular's\n`Object.is` equality check both detect changes (root reference differs)\nand short-circuit unchanged subtrees (per-node references stable).\n\nOverride per-node-type renderers via the `[viewRegistry]` input or by\nsupplying a different `MARKDOWN_VIEW_REGISTRY` provider in the injector\ntree.",
+    "params": [],
+    "examples": [],
+    "properties": [
+      {
+        "name": "content",
+        "type": "InputSignal<string>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "resolvedRegistry",
+        "type": "Signal<Readonly<Record<string, Type<unknown>>>>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "root",
+        "type": "Signal<MarkdownDocumentNode | null>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "streaming",
+        "type": "InputSignal<boolean>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "viewRegistry",
+        "type": "InputSignal<Readonly<Record<string, Type<unknown>>> | undefined>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "methods": []
+  },
+  {
     "name": "ChatSubagentCardComponent",
     "kind": "class",
     "description": "",
@@ -1293,20 +2034,14 @@
     "examples": [],
     "properties": [
       {
-        "name": "expanded",
-        "type": "WritableSignal<boolean>",
-        "description": "",
-        "optional": false
-      },
-      {
         "name": "latestMessageContent",
         "type": "Signal<string>",
         "description": "",
         "optional": false
       },
       {
-        "name": "statusColor",
-        "type": "Signal<string>",
+        "name": "state",
+        "type": "Signal<TraceState>",
         "description": "",
         "optional": false
       },
@@ -1348,6 +2083,28 @@
     "methods": []
   },
   {
+    "name": "ChatSuggestionsComponent",
+    "kind": "class",
+    "description": "",
+    "params": [],
+    "examples": [],
+    "properties": [
+      {
+        "name": "selected",
+        "type": "OutputEmitterRef<string>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "suggestions",
+        "type": "InputSignal<string[]>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "methods": []
+  },
+  {
     "name": "ChatThreadListComponent",
     "kind": "class",
     "description": "",
@@ -1357,6 +2114,18 @@
       {
         "name": "activeThreadId",
         "type": "InputSignal<string>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "newThreadRequested",
+        "type": "OutputEmitterRef<void>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "showNewThreadButton",
+        "type": "InputSignal<boolean>",
         "description": "",
         "optional": false
       },
@@ -1388,6 +2157,19 @@
           {
             "name": "threadId",
             "type": "string",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
+        "name": "threadLabel",
+        "signature": "threadLabel(thread: Thread)",
+        "description": "",
+        "params": [
+          {
+            "name": "thread",
+            "type": "Thread",
             "description": "",
             "optional": false
           }
@@ -1524,8 +2306,32 @@
     "examples": [],
     "properties": [
       {
-        "name": "expanded",
-        "type": "WritableSignal<boolean>",
+        "name": "ariaLabel",
+        "type": "Signal<string>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "autoExpanded",
+        "type": "Signal<boolean>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "defaultCollapsed",
+        "type": "InputSignal<boolean>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "state",
+        "type": "Signal<TraceState>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "status",
+        "type": "Signal<ToolCallStatus>",
         "description": "",
         "optional": false
       },
@@ -1566,15 +2372,39 @@
         "optional": false
       },
       {
+        "name": "expandedGroups",
+        "type": "Signal<Set<number>>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "grouping",
+        "type": "InputSignal<\"auto\" | \"none\">",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "groups",
+        "type": "Signal<Group[]>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "groupSummary",
+        "type": "InputSignal<object | undefined>",
+        "description": "",
+        "optional": false
+      },
+      {
         "name": "message",
         "type": "InputSignal<Message | undefined>",
         "description": "",
         "optional": false
       },
       {
-        "name": "templateRef",
-        "type": "Signal<TemplateRef<any> | undefined>",
-        "description": "",
+        "name": "templates",
+        "type": "Signal<readonly ChatToolCallTemplateDirective[]>",
+        "description": "Per-tool-name + wildcard templates registered as content children.",
         "optional": false
       },
       {
@@ -1584,7 +2414,116 @@
         "optional": false
       }
     ],
+    "methods": [
+      {
+        "name": "summarize",
+        "signature": "summarize(name: string, count: number)",
+        "description": "",
+        "params": [
+          {
+            "name": "name",
+            "type": "string",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "count",
+            "type": "number",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
+        "name": "toggleGroup",
+        "signature": "toggleGroup(index: number)",
+        "description": "",
+        "params": [
+          {
+            "name": "index",
+            "type": "number",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
+        "name": "toToolCallInfo",
+        "signature": "toToolCallInfo(tc: ToolCall)",
+        "description": "",
+        "params": [
+          {
+            "name": "tc",
+            "type": "ToolCall",
+            "description": "",
+            "optional": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "ChatToolCallTemplateDirective",
+    "kind": "class",
+    "description": "Registers a per-tool-name template inside <chat-tool-calls>. The\nprimitive collects all directive instances via contentChildren() and\ndispatches incoming calls by their `name` field. A literal \"*\" name\nregisters a wildcard catch-all that handles any tool name without a\nspecific template registered.\n\nUsage:\n\n  <chat-tool-calls [agent]=\"agent\" [message]=\"msg\">\n    <ng-template chatToolCallTemplate=\"search_web\" let-call let-status=\"status\">\n      <my-search-result-card [query]=\"call.args.query\" [status]=\"status\"/>\n    </ng-template>\n    <ng-template chatToolCallTemplate=\"*\" let-call>\n      <chat-tool-call-card [toolCall]=\"call\"/>\n    </ng-template>\n  </chat-tool-calls>",
+    "params": [],
+    "examples": [],
+    "properties": [
+      {
+        "name": "name",
+        "type": "InputSignal<string>",
+        "description": "The tool name this template handles, or \"*\" for the wildcard catch-all.",
+        "optional": false
+      },
+      {
+        "name": "templateRef",
+        "type": "TemplateRef<any>",
+        "description": "",
+        "optional": false
+      }
+    ],
     "methods": []
+  },
+  {
+    "name": "ChatTraceComponent",
+    "kind": "class",
+    "description": "",
+    "params": [],
+    "examples": [],
+    "properties": [
+      {
+        "name": "defaultExpanded",
+        "type": "InputSignal<boolean>",
+        "description": "When state is not 'running' or 'error', honors this input as the default expansion.",
+        "optional": false
+      },
+      {
+        "name": "expanded",
+        "type": "Signal<boolean>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "expandedStr",
+        "type": "Signal<string>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "state",
+        "type": "InputSignal<TraceState>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "methods": [
+      {
+        "name": "toggle",
+        "signature": "toggle()",
+        "description": "",
+        "params": []
+      }
+    ]
   },
   {
     "name": "ChatTypingIndicatorComponent",
@@ -1602,6 +2541,518 @@
       {
         "name": "visible",
         "type": "Signal<boolean>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "methods": []
+  },
+  {
+    "name": "ChatWelcomeComponent",
+    "kind": "class",
+    "description": "Empty-state owner. Renders a centered greeting + slot-projected input +\noptional vertical suggestion rows. Mounted only when the parent chat has\nno messages and welcome is not disabled.\n\nSlots:\n  [chatWelcomeTitle]       — replaces the default <h1> \"How can I help?\"\n  [chatWelcomeInput]       — projects the chat input into the center column\n  [chatWelcomeSuggestions] — projects suggestion rows below the input\n\nHost CSS variables (override on :host or any ancestor):\n  --ngaf-chat-welcome-max-width  default 36rem\n  --ngaf-chat-welcome-gap        default 1.25rem\n  --ngaf-chat-welcome-padding    default 24px",
+    "params": [],
+    "examples": [],
+    "properties": [],
+    "methods": []
+  },
+  {
+    "name": "ChatWelcomeSuggestionComponent",
+    "kind": "class",
+    "description": "",
+    "params": [],
+    "examples": [],
+    "properties": [
+      {
+        "name": "label",
+        "type": "InputSignal<string>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "selected",
+        "type": "OutputEmitterRef<string>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "value",
+        "type": "InputSignal<string>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "methods": []
+  },
+  {
+    "name": "ChatWindowComponent",
+    "kind": "class",
+    "description": "",
+    "params": [],
+    "examples": [],
+    "properties": [],
+    "methods": []
+  },
+  {
+    "name": "CitationsResolverService",
+    "kind": "class",
+    "description": "",
+    "params": [],
+    "examples": [],
+    "properties": [
+      {
+        "name": "markdownDefs",
+        "type": "WritableSignal<Map<string, CitationDefinition>>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "message",
+        "type": "WritableSignal<Message | null>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "methods": [
+      {
+        "name": "lookup",
+        "signature": "lookup(refId: string)",
+        "description": "",
+        "params": [
+          {
+            "name": "refId",
+            "type": "string",
+            "description": "",
+            "optional": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "MarkdownAutolinkComponent",
+    "kind": "class",
+    "description": "",
+    "params": [],
+    "examples": [],
+    "properties": [
+      {
+        "name": "node",
+        "type": "InputSignal<MarkdownAutolinkNode>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "methods": []
+  },
+  {
+    "name": "MarkdownBlockquoteComponent",
+    "kind": "class",
+    "description": "",
+    "params": [],
+    "examples": [],
+    "properties": [
+      {
+        "name": "node",
+        "type": "InputSignal<MarkdownBlockquoteNode>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "methods": []
+  },
+  {
+    "name": "MarkdownChildrenComponent",
+    "kind": "class",
+    "description": "Recursively dispatches a parent node's children through the markdown view\nregistry. Each child's `type` is looked up in the registry; the resolved\ncomponent is rendered with `[node]` bound to that child.\n\nIdentity-preserving: `track $any(child)` keys on the JS reference of the\nchild node. Because @cacheplane/partial-markdown preserves node identity\nacross pushes, unchanged subtrees never re-render.",
+    "params": [],
+    "examples": [],
+    "properties": [
+      {
+        "name": "children",
+        "type": "Signal<readonly MarkdownNode[]>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "parent",
+        "type": "InputSignal<MarkdownNode>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "methods": [
+      {
+        "name": "resolve",
+        "signature": "resolve(child: MarkdownNode)",
+        "description": "",
+        "params": [
+          {
+            "name": "child",
+            "type": "MarkdownNode",
+            "description": "",
+            "optional": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "MarkdownCitationReferenceComponent",
+    "kind": "class",
+    "description": "",
+    "params": [],
+    "examples": [],
+    "properties": [
+      {
+        "name": "node",
+        "type": "InputSignal<MarkdownCitationReferenceNode>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "resolved",
+        "type": "Signal<ResolvedCitation | null>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "methods": []
+  },
+  {
+    "name": "MarkdownCodeBlockComponent",
+    "kind": "class",
+    "description": "",
+    "params": [],
+    "examples": [],
+    "properties": [
+      {
+        "name": "languageClass",
+        "type": "Signal<string>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "node",
+        "type": "InputSignal<MarkdownCodeBlockNode>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "methods": []
+  },
+  {
+    "name": "MarkdownDocumentComponent",
+    "kind": "class",
+    "description": "",
+    "params": [],
+    "examples": [],
+    "properties": [
+      {
+        "name": "node",
+        "type": "InputSignal<MarkdownDocumentNode>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "methods": []
+  },
+  {
+    "name": "MarkdownEmphasisComponent",
+    "kind": "class",
+    "description": "",
+    "params": [],
+    "examples": [],
+    "properties": [
+      {
+        "name": "node",
+        "type": "InputSignal<MarkdownEmphasisNode>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "methods": []
+  },
+  {
+    "name": "MarkdownHardBreakComponent",
+    "kind": "class",
+    "description": "",
+    "params": [],
+    "examples": [],
+    "properties": [
+      {
+        "name": "node",
+        "type": "InputSignal<MarkdownHardBreakNode>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "methods": []
+  },
+  {
+    "name": "MarkdownHeadingComponent",
+    "kind": "class",
+    "description": "",
+    "params": [],
+    "examples": [],
+    "properties": [
+      {
+        "name": "node",
+        "type": "InputSignal<MarkdownHeadingNode>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "methods": []
+  },
+  {
+    "name": "MarkdownImageComponent",
+    "kind": "class",
+    "description": "",
+    "params": [],
+    "examples": [],
+    "properties": [
+      {
+        "name": "failed",
+        "type": "WritableSignal<boolean>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "node",
+        "type": "InputSignal<MarkdownImageNode>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "methods": []
+  },
+  {
+    "name": "MarkdownInlineCodeComponent",
+    "kind": "class",
+    "description": "",
+    "params": [],
+    "examples": [],
+    "properties": [
+      {
+        "name": "node",
+        "type": "InputSignal<MarkdownInlineCodeNode>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "methods": []
+  },
+  {
+    "name": "MarkdownLinkComponent",
+    "kind": "class",
+    "description": "",
+    "params": [],
+    "examples": [],
+    "properties": [
+      {
+        "name": "node",
+        "type": "InputSignal<MarkdownLinkNode>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "methods": []
+  },
+  {
+    "name": "MarkdownListComponent",
+    "kind": "class",
+    "description": "",
+    "params": [],
+    "examples": [],
+    "properties": [
+      {
+        "name": "node",
+        "type": "InputSignal<MarkdownListNode>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "methods": []
+  },
+  {
+    "name": "MarkdownListItemComponent",
+    "kind": "class",
+    "description": "",
+    "params": [],
+    "examples": [],
+    "properties": [
+      {
+        "name": "node",
+        "type": "InputSignal<MarkdownListItemNode>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "methods": []
+  },
+  {
+    "name": "MarkdownParagraphComponent",
+    "kind": "class",
+    "description": "",
+    "params": [],
+    "examples": [],
+    "properties": [
+      {
+        "name": "node",
+        "type": "InputSignal<MarkdownParagraphNode>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "methods": []
+  },
+  {
+    "name": "MarkdownSoftBreakComponent",
+    "kind": "class",
+    "description": "",
+    "params": [],
+    "examples": [],
+    "properties": [
+      {
+        "name": "node",
+        "type": "InputSignal<MarkdownSoftBreakNode>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "methods": []
+  },
+  {
+    "name": "MarkdownStrikethroughComponent",
+    "kind": "class",
+    "description": "",
+    "params": [],
+    "examples": [],
+    "properties": [
+      {
+        "name": "node",
+        "type": "InputSignal<MarkdownStrikethroughNode>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "methods": []
+  },
+  {
+    "name": "MarkdownStrongComponent",
+    "kind": "class",
+    "description": "",
+    "params": [],
+    "examples": [],
+    "properties": [
+      {
+        "name": "node",
+        "type": "InputSignal<MarkdownStrongNode>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "methods": []
+  },
+  {
+    "name": "MarkdownTableCellComponent",
+    "kind": "class",
+    "description": "",
+    "params": [],
+    "examples": [],
+    "properties": [
+      {
+        "name": "alignment",
+        "type": "Signal<Alignment>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "isHeader",
+        "type": "Signal<boolean>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "node",
+        "type": "InputSignal<MarkdownTableCellNode>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "methods": []
+  },
+  {
+    "name": "MarkdownTableComponent",
+    "kind": "class",
+    "description": "",
+    "params": [],
+    "examples": [],
+    "properties": [
+      {
+        "name": "bodyRows",
+        "type": "Signal<MarkdownTableRowNode[]>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "headerRow",
+        "type": "Signal<MarkdownTableRowNode | null>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "node",
+        "type": "InputSignal<MarkdownTableNode>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "methods": []
+  },
+  {
+    "name": "MarkdownTableRowComponent",
+    "kind": "class",
+    "description": "",
+    "params": [],
+    "examples": [],
+    "properties": [
+      {
+        "name": "node",
+        "type": "InputSignal<MarkdownTableRowNode>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "methods": []
+  },
+  {
+    "name": "MarkdownTextComponent",
+    "kind": "class",
+    "description": "",
+    "params": [],
+    "examples": [],
+    "properties": [
+      {
+        "name": "node",
+        "type": "InputSignal<MarkdownTextNode>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "methods": []
+  },
+  {
+    "name": "MarkdownThematicBreakComponent",
+    "kind": "class",
+    "description": "",
+    "params": [],
+    "examples": [],
+    "properties": [
+      {
+        "name": "node",
+        "type": "InputSignal<MarkdownThematicBreakNode>",
         "description": "",
         "optional": false
       }
@@ -1926,6 +3377,12 @@
         "optional": false
       },
       {
+        "name": "regenerate",
+        "type": "object",
+        "description": "Discards the assistant message at the given index AND all messages after\nit, then re-runs the agent against the trimmed conversation tail. The\npreceding user message (at index - 1) is preserved and re-submitted as\nthe agent's input. No new user message is added to the history.\n\nThrows if the message at `index` is not 'assistant' role, or if the\nagent is currently loading another response.",
+        "optional": false
+      },
+      {
         "name": "state",
         "type": "Signal<Record<string, unknown>>",
         "description": "",
@@ -2144,6 +3601,12 @@
         "optional": false
       },
       {
+        "name": "regenerate",
+        "type": "object",
+        "description": "Discards the assistant message at the given index AND all messages after\nit, then re-runs the agent against the trimmed conversation tail. The\npreceding user message (at index - 1) is preserved and re-submitted as\nthe agent's input. No new user message is added to the history.\n\nThrows if the message at `index` is not 'assistant' role, or if the\nagent is currently loading another response.",
+        "optional": false
+      },
+      {
         "name": "state",
         "type": "Signal<Record<string, unknown>>",
         "description": "",
@@ -2253,6 +3716,96 @@
     "examples": []
   },
   {
+    "name": "ChatSelectOption",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "disabled",
+        "type": "boolean",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "label",
+        "type": "string",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "value",
+        "type": "string",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "ChatToolCallTemplateContext",
+    "kind": "interface",
+    "description": "Template-context surface available to a per-tool template. The first\nargument is the ToolCall itself (let-call); status is exposed as a\nnamed context property (let-status=\"status\").",
+    "properties": [
+      {
+        "name": "$implicit",
+        "type": "ToolCall",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "status",
+        "type": "ToolCallStatus",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "Citation",
+    "kind": "interface",
+    "description": "Provider-agnostic citation entry. Populated by adapters from message\nmetadata (LangGraph additional_kwargs.citations, ag-ui STATE_DELTA at\n/citations/{messageId}). Pandoc-formatted [^id]: ... defs in message\ncontent remain in the markdown AST sidecar and are merged via\nCitationsResolverService at render time.",
+    "properties": [
+      {
+        "name": "extra",
+        "type": "Record<string, unknown>",
+        "description": "Provider-specific extras (retrieval score, source type, etc.).",
+        "optional": true
+      },
+      {
+        "name": "id",
+        "type": "string",
+        "description": "Stable id used to match `[^id]` markers in Pandoc-formatted content.",
+        "optional": false
+      },
+      {
+        "name": "index",
+        "type": "number",
+        "description": "1-based display order. Stable per-message.",
+        "optional": false
+      },
+      {
+        "name": "snippet",
+        "type": "string",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "title",
+        "type": "string",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "url",
+        "type": "string",
+        "description": "",
+        "optional": true
+      }
+    ],
+    "examples": []
+  },
+  {
     "name": "ContentClassifier",
     "kind": "interface",
     "description": "",
@@ -2352,6 +3905,12 @@
     "description": "",
     "properties": [
       {
+        "name": "citations",
+        "type": "Citation[]",
+        "description": "Provider-agnostic citation list. Populated by adapters.",
+        "optional": true
+      },
+      {
         "name": "content",
         "type": "string | ContentBlock[]",
         "description": "Plain text, or a list of structured content blocks.",
@@ -2373,6 +3932,18 @@
         "name": "name",
         "type": "string",
         "description": "Optional display/author name.",
+        "optional": true
+      },
+      {
+        "name": "reasoning",
+        "type": "string",
+        "description": "Reasoning text emitted by the model before/alongside the visible\nresponse. Populated by adapters from {type:'reasoning'} or\n{type:'thinking'} content blocks (LangGraph) or REASONING_MESSAGE_*\nevents (AG-UI). Always a plain string — provider-specific shape\n(encrypted blocks, multi-step summaries) is absorbed by the adapter\nand not surfaced here.",
+        "optional": true
+      },
+      {
+        "name": "reasoningDurationMs",
+        "type": "number",
+        "description": "Wall-clock duration of the reasoning phase in milliseconds.\nPopulated by the adapter when both start (first reasoning chunk) and\nend (first response-text chunk, or final canonical message) are\nknown. Undefined when reasoning timing isn't available.",
         "optional": true
       },
       {
@@ -2429,6 +4000,12 @@
         "name": "messages",
         "type": "WritableSignal<Message[]>",
         "description": "",
+        "optional": false
+      },
+      {
+        "name": "regenerate",
+        "type": "object",
+        "description": "Discards the assistant message at the given index AND all messages after\nit, then re-runs the agent against the trimmed conversation tail. The\npreceding user message (at index - 1) is preserved and re-submitted as\nthe agent's input. No new user message is added to the history.\n\nThrows if the message at `index` is not 'assistant' role, or if the\nagent is currently loading another response.",
         "optional": false
       },
       {
@@ -2577,6 +4154,26 @@
     "examples": []
   },
   {
+    "name": "ResolvedCitation",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "citation",
+        "type": "Citation",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "source",
+        "type": "\"message\" | \"markdown\"",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
     "name": "Subagent",
     "kind": "interface",
     "description": "",
@@ -2686,6 +4283,12 @@
         "type": "unknown",
         "description": "",
         "optional": true
+      },
+      {
+        "name": "status",
+        "type": "ToolCallStatus",
+        "description": "Optional — present when the parent provides it. Drives the pill + default-collapsed logic.",
+        "optional": true
       }
     ],
     "examples": []
@@ -2702,6 +4305,13 @@
     "kind": "type",
     "description": "",
     "signature": "\"idle\" | \"running\" | \"error\"",
+    "examples": []
+  },
+  {
+    "name": "ChatMessageRole",
+    "kind": "type",
+    "description": "",
+    "signature": "\"user\" | \"assistant\" | \"system\" | \"tool\"",
     "examples": []
   },
   {
@@ -2786,6 +4396,13 @@
     "kind": "type",
     "description": "",
     "signature": "\"pending\" | \"running\" | \"complete\" | \"error\"",
+    "examples": []
+  },
+  {
+    "name": "TraceState",
+    "kind": "type",
+    "description": "",
+    "signature": "\"pending\" | \"running\" | \"done\" | \"error\"",
     "examples": []
   },
   {
@@ -2932,9 +4549,28 @@
     "examples": []
   },
   {
+    "name": "formatDuration",
+    "kind": "function",
+    "description": "Render a millisecond duration as a human-readable label suitable for\nthe chat-reasoning \"Thought for Ns\" pill.\n\n- <1 s         → \"<1s\"\n- 1–59 s       → \"Ns\"     (e.g. \"4s\")\n- ≥60 s        → \"Nm Ms\"  (e.g. \"1m 12s\", \"60m 0s\")\n\nNegative or non-finite inputs collapse to \"<1s\" so a corrupted timing\nmap never produces noisy output.",
+    "signature": "formatDuration(ms: number): string",
+    "params": [
+      {
+        "name": "ms",
+        "type": "number",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "string",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
     "name": "getInterrupt",
     "kind": "function",
-    "description": "Retrieves the current interrupt value from an Agent, or undefined when\nthe runtime does not expose interrupts.\nExported for unit testing without DOM rendering.",
+    "description": "",
     "signature": "getInterrupt(agent: Agent): AgentInterrupt | undefined",
     "params": [
       {
@@ -3105,7 +4741,7 @@
   {
     "name": "messageContent",
     "kind": "function",
-    "description": "Extracts a human-readable string from a message's content.\nHandles string content directly; serializes structured (array) content to JSON.",
+    "description": "Extracts a human-readable string from a message's content.\n\n`BaseMessage.content` is `string | MessageContentComplex[]`. Reasoning-\ncapable models (OpenAI gpt-5/o-series, Anthropic) emit complex arrays of\ntyped blocks: `{type:'text',text}`, `{type:'reasoning',...}`, tool-use\nblocks, etc. We render only the visible text portions and skip anything\nelse. Stringifying the whole array would dump raw JSON like\n`[{\"type\":\"text\",...}]` into the chat bubble.",
     "signature": "messageContent(message: BaseMessage<>): string",
     "params": [
       {
@@ -3204,51 +4840,20 @@
     "examples": []
   },
   {
-    "name": "runAgentConformance",
+    "name": "statusColor",
     "kind": "function",
-    "description": "Runs a suite of contract conformance assertions against a factory that\nproduces a fresh Agent. Adapter packages should call this in their\nown test suites to verify the contract is satisfied.",
-    "signature": "runAgentConformance(label: string, factory: object): void",
+    "description": "Returns a CSS style string for a subagent's status badge.\nKept exported for backward compatibility with existing consumers; the\npreferred way to style status visually is via the `data-status` attribute\n+ CSS selectors (see component styles below).",
+    "signature": "statusColor(status: SubagentStatus): string",
     "params": [
       {
-        "name": "label",
-        "type": "string",
-        "description": "",
-        "optional": false
-      },
-      {
-        "name": "factory",
-        "type": "object",
+        "name": "status",
+        "type": "SubagentStatus",
         "description": "",
         "optional": false
       }
     ],
     "returns": {
-      "type": "void",
-      "description": ""
-    },
-    "examples": []
-  },
-  {
-    "name": "runAgentWithHistoryConformance",
-    "kind": "function",
-    "description": "Conformance suite for AgentWithHistory implementations.\n\nRuns the base Agent conformance suite, then verifies the history\nsignal is present and returns an array of AgentCheckpoint-shaped entries.",
-    "signature": "runAgentWithHistoryConformance(label: string, factory: object): void",
-    "params": [
-      {
-        "name": "label",
-        "type": "string",
-        "description": "",
-        "optional": false
-      },
-      {
-        "name": "factory",
-        "type": "object",
-        "description": "",
-        "optional": false
-      }
-    ],
-    "returns": {
-      "type": "void",
+      "type": "string",
       "description": ""
     },
     "examples": []
@@ -3256,7 +4861,7 @@
   {
     "name": "submitMessage",
     "kind": "function",
-    "description": "",
+    "description": "Submits a trimmed message to the agent.\nReturns the trimmed string on success, or `null` if the input was empty.",
     "signature": "submitMessage(agent: Agent, text: string): string | null",
     "params": [
       {

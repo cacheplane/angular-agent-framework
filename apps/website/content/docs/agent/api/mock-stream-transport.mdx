@@ -1,13 +1,13 @@
 # MockAgentTransport
 
-`MockAgentTransport` is a test-friendly transport that replaces real network calls with an in-memory event emitter. Use it in unit and component tests to push values on demand and assert against your component's reactive state without a running server.
+`MockAgentTransport` is a deterministic `AgentTransport` implementation for tests. It records stream calls, lets tests emit LangGraph stream events manually, and avoids a running LangGraph server.
 
 ## Complete test example
 
-The pattern below covers the full lifecycle: configure the transport in `TestBed`, create the component, emit values, and assert signal state.
+The pattern below covers the full lifecycle: provide a transport instance, create the component, emit stream events, and assert signal state.
 
 ```ts
-import { Component, inject } from '@angular/core';
+import { Component } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import {
   provideAgent,
@@ -16,44 +16,59 @@ import {
 } from '@ngaf/langgraph';
 
 @Component({ template: '' })
-class RepoComponent {
-  readonly repo = agent<{ name: string }>({
-    url: () => '/api/repos/42',
+class ChatComponent {
+  readonly chat = agent({
+    apiUrl: '',
+    assistantId: 'test-agent',
+    threadId: 'thread-1',
   });
 }
 
-describe('RepoComponent', () => {
+describe('ChatComponent', () => {
   let transport: MockAgentTransport;
 
   beforeEach(() => {
+    transport = new MockAgentTransport();
     TestBed.configureTestingModule({
-      imports: [RepoComponent],
-      providers: [provideAgent({ transport: MockAgentTransport })],
+      imports: [ChatComponent],
+      providers: [provideAgent({ apiUrl: '', transport })],
     });
-    transport = TestBed.inject(MockAgentTransport);
   });
 
-  it('reflects the streamed value', () => {
-    const fixture = TestBed.createComponent(RepoComponent);
+  it('reflects streamed messages', async () => {
+    const fixture = TestBed.createComponent(ChatComponent);
     fixture.detectChanges();
 
-    // Push a value into the stream — synchronous, no fakeAsync needed
-    transport.emit('/api/repos/42', { name: 'my-repo' });
+    const stream = fixture.componentInstance.chat.submit({ message: 'Hello' });
+    transport.emit([
+      {
+        type: 'values',
+        values: {
+          messages: [{ type: 'ai', id: 'a1', content: 'Hi there' }],
+        },
+      },
+    ]);
+    transport.close();
+    await stream;
     fixture.detectChanges();
 
-    expect(fixture.componentInstance.repo.value()).toEqual({ name: 'my-repo' });
-    expect(fixture.componentInstance.repo.status()).toBe('streaming');
+    expect(fixture.componentInstance.chat.messages()).toEqual([
+      expect.objectContaining({ role: 'assistant', content: 'Hi there' }),
+    ]);
+    expect(fixture.componentInstance.chat.status()).toBe('idle');
   });
 
-  it('surfaces errors through the error signal', () => {
-    const fixture = TestBed.createComponent(RepoComponent);
+  it('surfaces errors through the error signal', async () => {
+    const fixture = TestBed.createComponent(ChatComponent);
     fixture.detectChanges();
 
-    transport.error('/api/repos/42', new Error('not found'));
+    const stream = fixture.componentInstance.chat.submit({ message: 'Hello' });
+    transport.emitError(new Error('not found'));
+    await expect(stream).rejects.toThrow('not found');
     fixture.detectChanges();
 
-    expect(fixture.componentInstance.repo.status()).toBe('error');
-    expect(fixture.componentInstance.repo.error()).toBeInstanceOf(Error);
+    expect(fixture.componentInstance.chat.status()).toBe('error');
+    expect(fixture.componentInstance.chat.error()).toBeInstanceOf(Error);
   });
 });
 ```
@@ -62,14 +77,18 @@ describe('RepoComponent', () => {
 
 | Method | Description |
 |--------|-------------|
-| `emit(url, value)` | Pushes a single value into the stream at the given URL path. |
-| `error(url, err)` | Triggers an error on the stream at the given URL path. |
-| `complete(url)` | Closes the stream cleanly, as if the server sent the final event. |
+| `constructor(script?)` | Optionally seeds scripted event batches for manual stepping. |
+| `nextBatch()` | Returns the next scripted event batch. |
+| `emit(events)` | Pushes one or more `StreamEvent` objects into the active stream. |
+| `emitError(err)` | Causes the active stream to reject with `err`. |
+| `close()` | Closes the active stream after queued events drain. |
+| `isStreaming()` | Returns whether a stream is currently active. |
+
+The transport also records calls in `streams`, `createdQueuedRuns`, `cancelledRuns`, `joinedRuns`, and `historyCalls`, which is useful for asserting payloads and options.
 
 <Callout type="tip" title="Deterministic tests">
-  Because `MockAgentTransport` is synchronous by default, you can emit values
-  and assert state changes in the same test tick — no `fakeAsync` or `tick`
-  required.
+  `MockAgentTransport` emits only when your test calls `emit()`, `emitError()`,
+  or `close()`. This makes stream state and payload assertions deterministic.
 </Callout>
 
 ## What's Next
@@ -92,7 +111,7 @@ describe('RepoComponent', () => {
   <Card
     title="agent() API"
     icon="code"
-    href="/docs/agent/api/angular"
+    href="/docs/agent/api/agent"
   >
     Full reference for the primitive you are testing against.
   </Card>

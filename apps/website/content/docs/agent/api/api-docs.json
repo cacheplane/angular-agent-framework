@@ -170,6 +170,31 @@
             "optional": true
           }
         ]
+      },
+      {
+        "name": "updateState",
+        "signature": "updateState(threadId: string, values: Record<string, unknown>, _signal: AbortSignal)",
+        "description": "Update server-side thread state, e.g. to remove messages for regenerate rollback.",
+        "params": [
+          {
+            "name": "threadId",
+            "type": "string",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "values",
+            "type": "Record<string, unknown>",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "_signal",
+            "type": "AbortSignal",
+            "description": "",
+            "optional": false
+          }
+        ]
       }
     ]
   },
@@ -529,7 +554,7 @@
   {
     "name": "AgentOptions",
     "kind": "interface",
-    "description": "Options for creating a streaming resource via agent.",
+    "description": "Options for creating a LangGraph-backed agent via agent.",
     "properties": [
       {
         "name": "apiUrl",
@@ -553,12 +578,6 @@
         "name": "initialValues",
         "type": "Partial<T>",
         "description": "Initial state values before the first stream response arrives.",
-        "optional": true
-      },
-      {
-        "name": "messagesKey",
-        "type": "string",
-        "description": "Key in the state object that contains the messages array. Defaults to `'messages'`.",
         "optional": true
       },
       {
@@ -704,6 +723,12 @@
         "type": "unknown",
         "description": "",
         "optional": false
+      },
+      {
+        "name": "updateState",
+        "type": "unknown",
+        "description": "",
+        "optional": true
       }
     ],
     "examples": []
@@ -907,6 +932,12 @@
         "name": "queue",
         "type": "Signal<AgentQueue<unknown>>",
         "description": "Pending server-side runs created via `multitaskStrategy: 'enqueue'`.",
+        "optional": false
+      },
+      {
+        "name": "regenerate",
+        "type": "object",
+        "description": "Discards the assistant message at the given index AND all messages after\nit, then re-runs the agent against the trimmed conversation tail. The\npreceding user message (at index - 1) is preserved and re-submitted as\nthe agent's input. No new user message is added to the history.\n\nThrows if the message at `index` is not 'assistant' role, or if the\nagent is currently loading another response.",
         "optional": false
       },
       {
@@ -1268,6 +1299,12 @@
         "optional": false
       },
       {
+        "name": "regenerate",
+        "type": "object",
+        "description": "Discards the assistant message at the given index AND all messages after\nit, then re-runs the agent against the trimmed conversation tail. The\npreceding user message (at index - 1) is preserved and re-submitted as\nthe agent's input. No new user message is added to the history.\n\nThrows if the message at `index` is not 'assistant' role, or if the\nagent is currently loading another response.",
+        "optional": false
+      },
+      {
         "name": "reload",
         "type": "object",
         "description": "Re-submit the last input to restart the stream.",
@@ -1609,13 +1646,13 @@
   {
     "name": "agent",
     "kind": "function",
-    "description": "Creates a streaming resource connected to a LangGraph agent.\n\nMust be called within an Angular injection context (component constructor,\nfield initializer, or `runInInjectionContext`). Returns a unified\nLangGraphAgent whose properties are Angular Signals that update\nin real-time as the agent streams.",
+    "description": "Creates a LangGraph-backed Angular agent.\n\nMust be called within an Angular injection context (component constructor,\nfield initializer, or `runInInjectionContext`). Returns a unified\nLangGraphAgent whose properties are Angular Signals that update\nin real time as LangGraph streams messages, values, tool calls, interrupts,\nsubagent state, and checkpoint history.",
     "signature": "agent(options: AgentOptions<T, InferBag<T, Bag>>): LangGraphAgent<T, InferBag<T, Bag>>",
     "params": [
       {
         "name": "options",
         "type": "AgentOptions<T, InferBag<T, Bag>>",
-        "description": "Configuration for the streaming resource",
+        "description": "Configuration for the LangGraph agent",
         "optional": false
       }
     ],
@@ -1626,6 +1663,25 @@
     "examples": [
       "```typescript\n// In a component field initializer\nconst chat = agent<{ messages: BaseMessage[] }>({\n  assistantId: 'chat_agent',\n  apiUrl: 'http://localhost:2024',\n  threadId: signal(this.savedThreadId),\n  onThreadId: (id) => localStorage.setItem('threadId', id),\n});\n\n// Access signals in template\n// chat.messages(), chat.status(), chat.error()\n```"
     ]
+  },
+  {
+    "name": "extractCitations",
+    "kind": "function",
+    "description": "",
+    "signature": "extractCitations(msg: KwargsLike): Citation[] | undefined",
+    "params": [
+      {
+        "name": "msg",
+        "type": "KwargsLike",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "Citation[] | undefined",
+      "description": ""
+    },
+    "examples": []
   },
   {
     "name": "mockLangGraphAgent",
