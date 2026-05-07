@@ -14,8 +14,8 @@ const chat = agent<ChatState>({
 });
 
 // Every property is a Signal
-const messages = chat.messages();   // Signal<BaseMessage[]>
-const status = chat.status();       // Signal<'idle' | 'streaming'>
+const messages = chat.messages();   // Signal<Message[]>
+const status = chat.status();       // Signal<'idle' | 'running' | 'error'>
 const error = chat.error();         // Signal<Error | null>
 
 // Reactive composition
@@ -53,20 +53,20 @@ const branches = agent.history();`,
     headline: 'Deterministic Agent Testing',
     description: 'MockAgentTransport lets you script exact event sequences and step through them in your specs. No flaky SSE connections, no timing issues, no running LangGraph server. Test agent behavior the same way you test any Angular service.',
     code: `// chat.component.spec.ts
-const transport = new MockAgentTransport();
-
-transport.script([
-  { type: 'values', data: { messages: [aiMsg('Hello')] } },
-  { type: 'values', data: { status: 'done' } },
+const transport = new MockAgentTransport([
+  [{ type: 'values', messages: [aiMsg('Hello')] }],
 ]);
 
-const chat = agent<ChatState>({
+const chat = agent({
   transport,
   assistantId: 'test_agent',
 });
 
+transport.emit(transport.nextBatch());
+transport.close();
+
 expect(chat.messages()).toEqual([aiMsg('Hello')]);
-expect(chat.status()).toBe('done');`,
+expect(chat.status()).toBe('idle');`,
     lang: 'typescript' as const,
   },
 ];

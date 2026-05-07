@@ -5,7 +5,7 @@ const EXAMPLE = `// app.config.ts
 provideAgent({ apiUrl: 'http://localhost:2024' })
 
 // chat.component.ts
-const chat = agent<{ messages: BaseMessage[] }>({
+const chat = agent({
   assistantId: 'chat_agent',
   threadId: signal(this.threadId),
   onThreadId: (id) => localStorage.setItem('threadId', id),

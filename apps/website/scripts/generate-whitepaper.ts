@@ -16,7 +16,7 @@ const CURRENT_API_CONTEXT = `You are writing public technical whitepapers for Ca
 Use only the current API surface:
 - Package names are @ngaf/langgraph, @ngaf/render, @ngaf/chat, and @ngaf/ag-ui.
 - @ngaf/langgraph exposes agent(), provideAgent(), LangGraphAgent, MockAgentTransport, FetchStreamTransport, and mockLangGraphAgent().
-- agent() returns a runtime-neutral chat surface with messages(), status(), isLoading(), error(), toolCalls(), state(), submit(), stop(), regenerate(), interrupt(), subagents(), and LangGraph-specific langGraph* signals. interrupt() is AgentInterrupt | undefined on the runtime-neutral surface.
+- agent() returns a runtime-neutral chat surface with messages(), status(), isLoading(), error(), toolCalls(), state(), submit(), stop(), regenerate(), interrupt(), subagents(), and LangGraph-specific langGraph* signals. status() returns only 'idle' | 'running' | 'error'. Use isLoading() for loading UI. interrupt() is AgentInterrupt | undefined on the runtime-neutral surface.
 - Configure LangGraph with assistantId and apiUrl. Do not use graphId or url as @ngaf/langgraph option names.
 - @ngaf/chat consumes the runtime-neutral Agent contract and exports ChatComponent, ChatMessageListComponent, ChatInputComponent, ChatToolCallsComponent, ChatToolCallCardComponent, ChatInterruptPanelComponent, and ChatDebugComponent. Selectors are <chat>, <chat-message-list>, <chat-input>, <chat-tool-calls>, <chat-tool-call-card>, <chat-interrupt-panel>, and <chat-debug>.
 - Chat messages use Message[] from @ngaf/chat for the runtime-neutral surface. Raw LangGraph messages, when needed, are exposed through langGraphMessages().

@@ -43,7 +43,6 @@ Use `agent()` in a component field initializer. Every property on the returned r
 // chat.component.ts
 import { Component, ChangeDetectionStrategy, signal, computed } from '@angular/core';
 import { agent } from '@ngaf/langgraph';
-import type { BaseMessage } from '@langchain/core/messages';
 
 @Component({
   selector: 'app-chat',
@@ -54,13 +53,13 @@ export class ChatComponent {
   input = signal('');
 
   // 'chat_agent' maps to the key in your langgraph.json "graphs" config
-  chat = agent<{ messages: BaseMessage[] }>({
+  chat = agent({
     assistantId: 'chat_agent',
     threadId: signal(localStorage.getItem('threadId')),
     onThreadId: (id) => localStorage.setItem('threadId', id),
   });
 
-  isStreaming = computed(() => this.chat.status() === 'loading');
+  isStreaming = computed(() => this.chat.isLoading());
 
   send() {
     const msg = this.input();

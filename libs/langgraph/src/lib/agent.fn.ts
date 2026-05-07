@@ -71,7 +71,7 @@ import { extractCitations } from './internals/extract-citations';
  * in real time as LangGraph streams messages, values, tool calls, interrupts,
  * subagent state, and checkpoint history.
  *
- * @typeParam T - The state shape returned by the agent (e.g., `{ messages: BaseMessage[] }`)
+ * @typeParam T - The state shape returned by the agent
  * @typeParam Bag - Optional bag template for typed interrupts and submit payloads
  * @param options - Configuration for the LangGraph agent
  * @returns A {@link LangGraphAgent} with reactive signals and action methods
@@ -79,7 +79,7 @@ import { extractCitations } from './internals/extract-citations';
  * @example
  * ```typescript
  * // In a component field initializer
- * const chat = agent<{ messages: BaseMessage[] }>({
+ * const chat = agent({
  *   assistantId: 'chat_agent',
  *   apiUrl: 'http://localhost:2024',
  *   threadId: signal(this.savedThreadId),

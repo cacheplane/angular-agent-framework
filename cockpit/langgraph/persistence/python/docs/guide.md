@@ -7,7 +7,7 @@ can be resumed using `stream.switchThread(id)`.
 </Summary>
 
 <Prompt>
-Add thread persistence to this Angular component using `agent()` from `@ngaf/langgraph`. Use the `onThreadId` callback to capture thread IDs, `stream.switchThread(id)` to resume conversations, and `stream.switchThread(null)` to start fresh. Bind `stream.messages()` in the template via the `<cp-chat>` component from `@ngaf/chat`.
+Add thread persistence to this Angular component using `agent()` from `@ngaf/langgraph`. Use the `onThreadId` callback to capture thread IDs, `stream.switchThread(id)` to resume conversations, and `stream.switchThread(null)` to start fresh. Bind `stream.messages()` in the template beside the `<chat>` component from `@ngaf/chat`.
 </Prompt>
 
 <Steps>
@@ -63,15 +63,12 @@ Store thread IDs in `localStorage` to survive full page reloads. On app init, re
 </Step>
 <Step title="Build the template with thread sidebar">
 
-Use the `<cp-chat>` component from `@ngaf/chat` and project a sidebar via `ng-template`:
+Use the `<chat>` component from `@ngaf/chat` and render a sibling sidebar:
 
 ```html
-<cp-chat
-  [messages]="stream.messages()"
-  [isLoading]="stream.isLoading()"
-  [error]="stream.error()"
-  (sendMessage)="send($event)">
-  <ng-template #sidebar>
+<chat [agent]="stream" />
+
+<aside>
     <h3>Threads</h3>
     @for (id of threadIds; track id) {
       <button (click)="selectThread(id)">
@@ -79,11 +76,10 @@ Use the `<cp-chat>` component from `@ngaf/chat` and project a sidebar via `ng-te
       </button>
     }
     <button (click)="newThread()">+ New Thread</button>
-  </ng-template>
-</cp-chat>
+</aside>
 ```
 
-The `#sidebar` template is projected into the chat layout, giving you a thread picker alongside the conversation.
+The sibling panel gives you a thread picker alongside the conversation.
 
 </Step>
 <Step title="Implement thread switching">
@@ -144,7 +140,7 @@ For production, replace `MemorySaver` with `PostgresCheckpointer` for durable pe
 </Steps>
 
 <Tip>
-The `<cp-chat>` component handles message rendering, input, loading states, and error display. Focus your component on thread management logic.
+The `<chat>` component handles message rendering, input, loading states, and error display. Focus your component on thread management logic.
 </Tip>
 
 <Warning>

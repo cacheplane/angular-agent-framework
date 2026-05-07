@@ -78,7 +78,6 @@ The `ChatSubagentsComponent` primitive iterates over active subagent streams fro
 ```typescript
 import { Component, signal, ChangeDetectionStrategy } from '@angular/core';
 import { agent } from '@ngaf/langgraph';
-import type { BaseMessage } from '@langchain/core/messages';
 import {
   ChatComponent,
   ChatSubagentsComponent,
@@ -110,7 +109,7 @@ import {
   `,
 })
 export class SubagentDemoComponent {
-  chatRef = agent<{ messages: BaseMessage[] }>({
+  chatRef = agent({
     assistantId: 'multi_agent',
     threadId: signal(null),
   });

@@ -199,8 +199,8 @@ const score = computed(() => agent.value().analysis?.score ?? 0);
 const fileCount = computed(() => agent.value().files.length);
 const isDone = computed(() => agent.value().progress === 100);
 
-// Direct messages access (shortcut for agent.value().messages)
-const messages = agent.messages();   // Signal<BaseMessage[]>
+// Runtime-neutral message projection for UI
+const messages = agent.messages();   // Signal<Message[]>
 ```
 
 ## State Updates During Streaming
@@ -294,9 +294,9 @@ export class ChatComponent {
   });
 
   // Convenience computed values from thread state
-  readonly messages = this.agent.messages;           // Signal<BaseMessage[]>
+  readonly messages = this.agent.messages;           // Signal<Message[]>
   readonly isLoading = this.agent.isLoading;         // Signal<boolean>
-  readonly interrupted = this.agent.interrupt;       // Signal<Interrupt | null>
+  readonly interrupted = this.agent.interrupt;       // Signal<AgentInterrupt | undefined>
 
   // --- Application state (your Angular signals) ---
   readonly sidebarOpen = signal(true);
@@ -313,7 +313,7 @@ export class ChatComponent {
   }
 
   approve() {
-    this.agent.submit(null, { resume: { approved: true } });
+    this.agent.submit({ resume: { approved: true } });
   }
 }
 ```

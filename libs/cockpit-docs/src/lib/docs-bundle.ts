@@ -3,7 +3,7 @@ import {
   type CockpitLanguage,
   type CockpitPageId,
   type CockpitProduct,
-} from '../../../cockpit-registry/src/index';
+} from '@ngaf/cockpit-registry';
 
 export interface DocsBundle {
   product: CockpitProduct;

@@ -98,30 +98,28 @@ The `getMessageType()` function maps a runtime-neutral `Message` role to a `Mess
 
 ```typescript
 import { getMessageType } from '@ngaf/chat';
-import type { BaseMessage } from '@langchain/core/messages';
 
 const type = getMessageType(message); // 'human' | 'ai' | 'tool' | 'system' | 'function'
 ```
 
 **Mapping logic:**
 
-| Message type string | Returns |
-|--------------------|---------|
-| `'human'` | `'human'` |
-| `'ai'` | `'ai'` |
+| Runtime-neutral role | Returns |
+|----------------------|---------|
+| `'user'` | `'human'` |
+| `'assistant'` | `'ai'` |
 | `'tool'` | `'tool'` |
 | `'system'` | `'system'` |
-| `'function'` | `'function'` |
 | Any other value | `'ai'` (default fallback) |
 
 ## Working with Message Content
 
-LangChain messages have a `content` property that can be either a `string` or a structured array. The library exports a `messageContent()` utility (used internally by compositions) that handles both cases:
+Runtime-neutral messages have a `content` property that can be either a `string` or a structured array. The library exports a `messageContent()` utility (used internally by compositions) that handles both cases:
 
 ```typescript
 // If content is a string, returns it directly
 // If content is structured, serializes to JSON
-function messageContent(message: BaseMessage): string
+function messageContent(message: Message): string
 ```
 
 For custom templates, you can access `message.content` directly and handle the type yourself:
@@ -142,7 +140,6 @@ For custom templates, you can access `message.content` directly and handle the t
 import { Component, inject, ChangeDetectionStrategy, signal } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
 import { agent } from '@ngaf/langgraph';
-import type { BaseMessage } from '@langchain/core/messages';
 import {
   ChatMessageListComponent,
   MessageTemplateDirective,
@@ -187,7 +184,7 @@ import {
 export class MessagesDemoComponent {
   private sanitizer = inject(DomSanitizer);
 
-  chatAgent = agent<{ messages: BaseMessage[] }>({
+  chatAgent = agent({
     assistantId: 'chat_agent',
     threadId: signal(null),
   });

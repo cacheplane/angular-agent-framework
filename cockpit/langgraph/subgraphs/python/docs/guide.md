@@ -7,7 +7,7 @@ subgraph, and the sidebar tracks each subagent's status in real time using `stre
 </Summary>
 
 <Prompt>
-Add a subgraph-powered orchestrator to this Angular component using `agent()` from `@ngaf/langgraph`. Use `stream.subagents()` to track active child subgraph executions, and derive a `subagentEntries` signal with `computed()` for template iteration. Bind `stream.messages()` via the `<cp-chat>` component from `@ngaf/chat`.
+Add a subgraph-powered orchestrator to this Angular component using `agent()` from `@ngaf/langgraph`. Use `stream.subagents()` to track active child subgraph executions, and derive a `subagentEntries` signal with `computed()` for template iteration. Bind `stream.messages()` beside the `<chat>` component from `@ngaf/chat`.
 </Prompt>
 
 <Steps>
@@ -53,15 +53,12 @@ export class SubgraphsComponent {
 </Step>
 <Step title="Build the template with subagent sidebar">
 
-Use `<cp-chat>` from `@ngaf/chat` and project a sidebar via `ng-template`:
+Use `<chat>` from `@ngaf/chat` and render a sibling sidebar:
 
 ```html
-<cp-chat
-  [messages]="stream.messages()"
-  [isLoading]="stream.isLoading()"
-  [error]="stream.error()"
-  (sendMessage)="send($event)">
-  <ng-template #sidebar>
+<chat [agent]="stream" />
+
+<aside>
     <h3>Subagents</h3>
     @for (entry of subagentEntries(); track entry[0]) {
       <div>{{ entry[0].substring(0, 8) }}: {{ entry[1].status() }}</div>
@@ -69,11 +66,10 @@ Use `<cp-chat>` from `@ngaf/chat` and project a sidebar via `ng-template`:
     @empty {
       <p>No active subagents</p>
     }
-  </ng-template>
-</cp-chat>
+</aside>
 ```
 
-The `@empty` block renders when no subagents are active. Each entry shows a truncated run ID and the current status (`'running'`, `'done'`, or `'error'`).
+The `@empty` block renders when no subagents are active. Each entry shows a truncated run ID and the current status (`'pending'`, `'running'`, `'complete'`, or `'error'`).
 
 <Tip>
 Use `computed()` to derive `subagentEntries` from the Map. This ensures Angular's change detection picks up updates when subagents are added or their status changes.
@@ -124,7 +120,7 @@ Child subgraphs can have their own state, checkpointers, and tools. This pattern
 </Steps>
 
 <Tip>
-The `<cp-chat>` component handles message rendering, input, loading states, and error display. Focus your component on subagent tracking logic.
+The `<chat>` component handles message rendering, input, loading states, and error display. Focus your component on subagent tracking logic.
 </Tip>
 
 <Warning>

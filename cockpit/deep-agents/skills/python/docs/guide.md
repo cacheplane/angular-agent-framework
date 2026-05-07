@@ -7,7 +7,7 @@ summarizer) based on the user's request, and the sidebar displays each skill inv
 </Summary>
 
 <Prompt>
-Add a skill invocation sidebar to this Angular component using `agent()` from `@ngaf/langgraph`. Use `stream.messages()` to access tool call data, derive `skillInvocations` with `computed()`, and bind them to the sidebar via the `<cp-chat>` component from `@ngaf/chat`.
+Add a skill invocation sidebar to this Angular component using `agent()` from `@ngaf/langgraph`. Use `stream.messages()` to access tool call data, derive `skillInvocations` with `computed()`, and bind them to the sidebar beside the `<chat>` component from `@ngaf/chat`.
 </Prompt>
 
 <Steps>
@@ -94,15 +94,12 @@ Each tool call in an AI message maps to a skill invocation card. The `result` fi
 </Step>
 <Step title="Build the template with skill invocation sidebar">
 
-Use the `<cp-chat>` component and project a sidebar via `ng-template`:
+Use the `<chat>` component from `@ngaf/chat` and render a sibling sidebar:
 
 ```html
-<cp-chat
-  [messages]="stream.messages()"
-  [isLoading]="stream.isLoading()"
-  [error]="stream.error()"
-  (sendMessage)="send($event)">
-  <ng-template #sidebar>
+<chat [agent]="stream" />
+
+<aside>
     <h3>Skill Invocations</h3>
     @for (inv of skillInvocations(); track $index) {
       <div>
@@ -117,8 +114,7 @@ Use the `<cp-chat>` component and project a sidebar via `ng-template`:
     @empty {
       <p>Ask the agent to calculate, count words, or summarize text.</p>
     }
-  </ng-template>
-</cp-chat>
+</aside>
 ```
 
 Each invocation card shows the skill name, input args, and result once available.

@@ -12,12 +12,12 @@ import { ApprovalCardComponent } from './views/approval-card.component';
  *
  * The LangGraph backend pauses execution when it needs human approval.
  * The `stream.interrupt()` signal provides the interrupt data, and
- * `stream.submit(null)` resumes execution with the human's decision.
+ * `stream.submit({ resume })` resumes execution with the human's decision.
  *
  * Key integration points:
  * - `stream.interrupt()` — current pause data (undefined when not interrupted)
  * - `ChatInterruptPanelComponent` — renders the approval UI with action buttons
- * - `stream.submit(null)` — resumes the graph (LangGraph convention)
+ * - `stream.submit({ resume })` — resumes the graph with a payload
  */
 @Component({
   selector: 'app-interrupts',
@@ -54,8 +54,7 @@ export class InterruptsComponent {
   /**
    * Handle an interrupt action from the panel.
    *
-   * Submitting null resumes the graph unconditionally — this is the
-   * LangGraph convention for "proceed without modification".
+   * Submitting a resume payload continues the graph.
    *
    * In a production app, 'edit' would let the user modify the response
    * before approval, and 'respond' would send a reply payload.
@@ -65,6 +64,6 @@ export class InterruptsComponent {
     // In a production app, 'edit' would let the user modify the response before approval.
     // For this demo, all actions simply resume the graph.
     void action; // Each branch intentionally does the same thing in this demo
-    void this.agent.submit({ resume: null });
+    void this.agent.submit({ resume: true });
   }
 }

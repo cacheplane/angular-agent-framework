@@ -87,11 +87,11 @@ That's it. `chat.messages()` and `chat.status()` are Angular Signals. Bind them 
 | Error state | `error()` | — |
 | Runtime-neutral status | `status()` — `'idle' \| 'running' \| 'error'` | partial |
 | Interrupt / human-in-the-loop | `interrupt()` / `interrupts()` | `interrupt` / `interrupts` |
-| Tool call progress | `toolProgress()` | `toolProgress` |
+| Tool call progress | `toolCalls()` | `toolCalls` |
 | Tool calls with results | `toolCalls()` | `toolCalls` |
 | Branch / history | `branch()` / `history()` / `experimentalBranchTree()` | `branch` / `history` / `experimental_branchTree` |
 | Pending run queue | `queue()` | `queue` |
-| Subagent streaming and lookup helpers | `subagents()` / `activeSubagents()` / `getSubagent()` | `subagents` / `activeSubagents` / helper methods |
+| Subagent streaming and lookup helpers | `subagents()` / `getSubagent()` | `subagents` / helper methods |
 | Reactive thread switching | `Signal<string \| null>` input | prop |
 | Submit | `submit(values, opts?)` | `submit(values, opts?)` |
 | Stop | `stop()` | `stop()` |

@@ -7,7 +7,7 @@ sidebar displays each operation as it happens.
 </Summary>
 
 <Prompt>
-Add a file operations sidebar to this Angular component using `agent()` from `@ngaf/langgraph`. Use `stream.messages()` to access tool call data, derive `toolCallEntries` with `computed()`, and bind them to the sidebar via the `<cp-chat>` component from `@ngaf/chat`.
+Add a file operations sidebar to this Angular component using `agent()` from `@ngaf/langgraph`. Use `stream.messages()` to access tool call data, derive `toolCallEntries` with `computed()`, and bind them to the sidebar beside the `<chat>` component from `@ngaf/chat`.
 </Prompt>
 
 <Steps>
@@ -90,15 +90,12 @@ Tool calls appear inside AI messages as `tool_calls`. Each entry has a `name` (e
 </Step>
 <Step title="Build the template with file operations sidebar">
 
-Use the `<cp-chat>` component and project a sidebar via `ng-template`:
+Use the `<chat>` component from `@ngaf/chat` and render a sibling sidebar:
 
 ```html
-<cp-chat
-  [messages]="stream.messages()"
-  [isLoading]="stream.isLoading()"
-  [error]="stream.error()"
-  (sendMessage)="send($event)">
-  <ng-template #sidebar>
+<chat [agent]="stream" />
+
+<aside>
     <h3>File Operations</h3>
     @for (entry of toolCallEntries(); track $index) {
       <div>
@@ -112,11 +109,10 @@ Use the `<cp-chat>` component and project a sidebar via `ng-template`:
     @empty {
       <p>Ask the agent to read or write a file.</p>
     }
-  </ng-template>
-</cp-chat>
+</aside>
 ```
 
-The `#sidebar` template is projected into the chat layout. Operations render reactively as the agent calls tools.
+The sibling panel renders operations reactively as the agent calls tools.
 
 </Step>
 <Step title="The LangGraph filesystem backend">

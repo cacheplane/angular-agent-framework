@@ -7,7 +7,7 @@ agents, and the sidebar displays each subagent's status and message count as the
 </Summary>
 
 <Prompt>
-Add a subagent activity sidebar to this Angular component using `agent()` from `@ngaf/langgraph`. Use `stream.subagents()` to access the live Map of child agent streams, derive `subagentEntries` with `computed()`, and render them in the `<cp-chat>` sidebar.
+Add a subagent activity sidebar to this Angular component using `agent()` from `@ngaf/langgraph`. Use `stream.subagents()` to access the live Map of child agent streams, derive `subagentEntries` with `computed()`, and render them beside the `<chat>` component.
 </Prompt>
 
 <Steps>
@@ -73,15 +73,12 @@ export class SubagentsComponent {
 </Step>
 <Step title="Build the template with subagent sidebar">
 
-Use the `<cp-chat>` component and project a sidebar via `ng-template`:
+Use the `<chat>` component from `@ngaf/chat` and render a sibling sidebar:
 
 ```html
-<cp-chat
-  [messages]="stream.messages()"
-  [isLoading]="stream.isLoading()"
-  [error]="stream.error()"
-  (sendMessage)="send($event)">
-  <ng-template #sidebar>
+<chat [agent]="stream" />
+
+<aside>
     <h3>Subagents</h3>
     @for (entry of subagentEntries(); track entry[0]) {
       <div>
@@ -93,8 +90,7 @@ Use the `<cp-chat>` component and project a sidebar via `ng-template`:
     @empty {
       <p>Ask a question to see subagent activity.</p>
     }
-  </ng-template>
-</cp-chat>
+</aside>
 ```
 
 Each `entry` is a `[toolCallId, SubagentStreamRef]` tuple. The tool call ID identifies which specialist was invoked; the ref's signals update in real time.

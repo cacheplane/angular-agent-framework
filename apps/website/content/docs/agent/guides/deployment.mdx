@@ -355,8 +355,8 @@ Key metrics to track in production:
 Track stream health from your Angular app:
 
 ```typescript
-const status = this.chat.status(); // 'idle' | 'streaming' | 'error'
-const isStreaming = this.chat.isStreaming();
+const status = this.chat.status(); // 'idle' | 'running' | 'error'
+const isStreaming = this.chat.isLoading();
 
 // Log stream lifecycle for your APM tool
 effect(() => {

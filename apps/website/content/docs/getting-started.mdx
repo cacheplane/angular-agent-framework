@@ -38,7 +38,7 @@ import { agent } from 'angular';
   `,
 })
 export class ChatComponent {
-  chat = agent<{ messages: BaseMessage[] }>({
+  chat = agent({
     assistantId: 'chat_agent',
   });
 }

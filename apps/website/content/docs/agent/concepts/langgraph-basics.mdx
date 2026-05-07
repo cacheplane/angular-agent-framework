@@ -112,12 +112,12 @@ graph = builder.compile()
 
 ```typescript
 // This is all you need on the Angular side
-const chat = agent<{ messages: BaseMessage[] }>({
+const chat = agent({
   assistantId: 'chat_agent',
 });
 
 // chat.messages() updates as the agent streams its response
-// chat.status() tells you if it's idle, loading, or done
+// chat.status() tells you if it's idle, running, or errored
 ```
 
 </Tab>
@@ -167,7 +167,7 @@ const agent = agent<AgentState>({
 });
 
 // Watch tools execute
-const activeTools = computed(() => agent.toolProgress());
+const activeTools = computed(() => agent.toolCalls());
 const completedTools = computed(() => agent.toolCalls());
 ```
 
@@ -204,7 +204,7 @@ const pendingAction = computed(() => agent.interrupt());
 
 // User clicks approve → resume the agent
 approve() {
-  agent.submit(null, { resume: { approved: true } });
+  agent.submit({ resume: { approved: true } });
 }
 ```
 
@@ -235,7 +235,7 @@ const orchestrator = agent<OrchestratorState>({
   filterSubagentMessages: true,
 });
 
-const workers = computed(() => orchestrator.activeSubagents());
+const workers = computed(() => [...orchestrator.subagents().values()]);
 const workerCount = computed(() => workers().length);
 ```
 
@@ -309,10 +309,10 @@ Templates re-render automatically via OnPush change detection
 agent.value()          // Signal<T> — full state object
 
 // Conversation
-agent.messages()       // Signal<BaseMessage[]> — message history
+agent.messages()       // Signal<Message[]> — runtime-neutral message history
 
 // Lifecycle
-agent.status()         // Signal<ResourceStatus> — idle/loading/done
+agent.status()         // Signal<AgentStatus> — idle/running/error
 agent.isLoading()      // Signal<boolean> — is the agent running?
 
 // Human-in-the-loop
@@ -324,11 +324,9 @@ agent.langGraphHistory() // Signal<ThreadState[]> — raw LangGraph checkpoints
 agent.branch()         // Signal<string> — time-travel branch
 agent.experimentalBranchTree() // Signal<AgentBranchTree<T>> — branch tree
 
-agent.toolCalls()      // Signal<ToolCallWithResult[]> — tool results
-agent.toolProgress()   // Signal<ToolProgress[]> — active tool execution
+agent.toolCalls()      // Signal<ToolCall[]> — tool call progress and results
 agent.queue()          // Signal<AgentQueue> — pending enqueue runs
 agent.subagents()      // Signal<Map<string, Subagent>> — delegated agents
-agent.activeSubagents() // Signal<SubagentStreamRef[]> — running workers
 ```
 
 </Tab>

@@ -88,7 +88,11 @@ export class OrchestratorComponent {
     subagentToolNames: ['research', 'analyze'],
   });
 
-  readonly running = computed(() => this.orchestrator.activeSubagents());
+  readonly running = computed(() =>
+    [...this.orchestrator.subagents().values()].filter((subagent) =>
+      subagent.status() === 'pending' || subagent.status() === 'running'
+    )
+  );
   readonly runningCount = computed(() => this.running().length);
 
   send(text: string) {
@@ -114,7 +118,11 @@ const orchestrator = agent<OrchestratorState>({
 const subagents = computed(() => orchestrator.subagents());
 
 // Only active ones
-const running = computed(() => orchestrator.activeSubagents());
+const running = computed(() =>
+  [...orchestrator.subagents().values()].filter((subagent) =>
+    subagent.status() === 'pending' || subagent.status() === 'running'
+  )
+);
 const runningCount = computed(() => running().length);
 
 // Lookup helpers for common UI paths
@@ -167,7 +175,7 @@ const pipelineStatus = computed(() => {
   return {
     total: entries.length,
     pending: entries.filter(([, a]) => a.status() === 'pending').length,
-    running: entries.filter(([, a]) => a.status() === 'loading').length,
+    running: entries.filter(([, a]) => a.status() === 'running').length,
     done: entries.filter(([, a]) => a.status() === 'complete').length,
     failed: entries.filter(([, a]) => a.status() === 'error').length,
   };
@@ -206,7 +214,7 @@ export class SubagentProgressComponent {
       {{ entry[1].status() }}
     </span>
 
-    @if (entry[1].status() === 'loading') {
+    @if (entry[1].status() === 'running') {
       <app-spinner />
     }
 

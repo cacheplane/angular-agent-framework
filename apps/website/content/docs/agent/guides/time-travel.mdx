@@ -274,7 +274,7 @@ export class ReplayComponent {
     // Go back one step
     const previousCheckpoint = this.rawHistory()[history.length - 2]?.checkpoint;
     if (!previousCheckpoint) return;
-    this.agent.submit(undefined, {
+    this.agent.submit({}, {
       checkpoint: previousCheckpoint,
     });
   }

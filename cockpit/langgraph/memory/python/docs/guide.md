@@ -8,7 +8,7 @@ and displays it in a live sidebar.
 </Summary>
 
 <Prompt>
-Add persistent agent memory to this Angular component using `agent()` from `@ngaf/langgraph`. Use `stream.value()` to access the `memory` field in graph state, derive a reactive `memoryEntries` signal with Angular's `computed()`, and render the facts in a sidebar panel via the `<cp-chat>` component from `@ngaf/chat`.
+Add persistent agent memory to this Angular component using `agent()` from `@ngaf/langgraph`. Use `stream.value()` to access the `memory` field in graph state, derive a reactive `memoryEntries` signal with Angular's `computed()`, and render the facts in a sidebar panel beside the `<chat>` component from `@ngaf/chat`.
 </Prompt>
 
 <Steps>
@@ -75,15 +75,12 @@ Cast the return type of `stream.value()` to your state shape to get proper type 
 </Step>
 <Step title="Build the template with memory sidebar">
 
-Use the `<cp-chat>` component and project the memory panel via `ng-template`:
+Use the `<chat>` component from `@ngaf/chat` and render a sibling memory panel:
 
 ```html
-<cp-chat
-  [messages]="stream.messages()"
-  [isLoading]="stream.isLoading()"
-  [error]="stream.error()"
-  (sendMessage)="send($event)">
-  <ng-template #sidebar>
+<chat [agent]="stream" />
+
+<aside>
     <h3>Agent Memory</h3>
     @if (memoryEntries().length === 0) {
       <p>No facts learned yet. Start chatting!</p>
@@ -94,8 +91,7 @@ Use the `<cp-chat>` component and project the memory panel via `ng-template`:
         <span>{{ entry.value }}</span>
       </div>
     }
-  </ng-template>
-</cp-chat>
+</aside>
 ```
 
 Facts appear in the sidebar in real time as the agent learns them.
