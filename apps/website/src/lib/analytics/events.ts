@@ -1,6 +1,7 @@
 export const analyticsEvents = {
   marketingCtaClick: 'marketing:cta_click',
   marketingExternalLinkClick: 'marketing:external_link_click',
+  marketingWhitepaperDownloadClick: 'marketing:whitepaper_download_click',
   marketingWhitepaperSignupSubmit: 'marketing:whitepaper_signup_submit',
   marketingWhitepaperSignupSuccess: 'marketing:whitepaper_signup_success',
   marketingWhitepaperSignupFail: 'marketing:whitepaper_signup_fail',

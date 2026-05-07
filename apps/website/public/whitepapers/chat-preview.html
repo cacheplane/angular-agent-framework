@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,700;1,400&family=Inter:wght@400;600&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Inter',sans-serif;color:#1a1a2e;background:#fff}
+  .chapter-body p{font-size:15px;line-height:1.75;color:#333;margin-bottom:18px}
+  .chapter-body h3{font-family:'EB Garamond',serif;font-size:22px;font-weight:700;color:#1a1a2e;margin:28px 0 12px}
+  .chapter-body ul{margin:0 0 18px 20px}
+  .chapter-body li{font-size:15px;line-height:1.7;color:#333;margin-bottom:6px}
+  .chapter-body pre{background:#1a1b26;color:#c8ccee;padding:20px 24px;border-radius:8px;font-size:13px;line-height:1.65;overflow-x:auto;margin:24px 0;white-space:pre-wrap}
+  .chapter-body code{font-family:'JetBrains Mono',monospace;font-size:13px}
+  .chapter-body strong{font-weight:600}
+</style>
+</head>
+<body>
+
+<!-- Cover -->
+<div style="height:100vh;display:flex;flex-direction:column;justify-content:flex-end;padding:80px 80px 100px;background:linear-gradient(135deg, #f3e8ff 0%, #f4f0ff 45%, #eaf3ff 70%, #e6f4ff 100%);page-break-after:always">
+  <div style="font-family:monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.12em;color:#004090;font-weight:700;margin-bottom:24px">@ngaf/chat · Enterprise Guide</div>
+  <h1 style="font-family:'EB Garamond',serif;font-size:52px;font-weight:800;line-height:1.1;color:#1a1a2e;margin-bottom:20px">The<br>Enterprise<br>Guide<br>to<br>Agent<br>Chat<br>Interfaces<br>in<br>Angular</h1>
+  <p style="font-family:'EB Garamond',serif;font-style:italic;font-size:20px;color:#555770;margin-bottom:40px">Production agent chat UI in days, not sprints</p>
+  <div style="font-size:13px;color:#888;font-family:monospace">cacheplane.ai · 2026</div>
+</div>
+
+<!-- TOC -->
+<div style="padding:80px;page-break-after:always">
+  <h2 style="font-family:'EB Garamond',serif;font-size:32px;font-weight:700;color:#1a1a2e;margin-bottom:32px">Contents</h2>
+  
+    <div style="display:flex;align-items:baseline;gap:8px;padding:10px 0;border-bottom:1px solid rgba(0,0,0,.06);font-size:15px;color:#444">
+      <span style="font-family:monospace;font-size:11px;color:#004090;font-weight:700;min-width:24px">01</span>
+      <span style="flex:1">The Sprint Tax</span>
+    </div>
+    <div style="display:flex;align-items:baseline;gap:8px;padding:10px 0;border-bottom:1px solid rgba(0,0,0,.06);font-size:15px;color:#444">
+      <span style="font-family:monospace;font-size:11px;color:#004090;font-weight:700;min-width:24px">02</span>
+      <span style="flex:1">Batteries-Included Components</span>
+    </div>
+    <div style="display:flex;align-items:baseline;gap:8px;padding:10px 0;border-bottom:1px solid rgba(0,0,0,.06);font-size:15px;color:#444">
+      <span style="font-family:monospace;font-size:11px;color:#004090;font-weight:700;min-width:24px">03</span>
+      <span style="flex:1">Theming & Design System Integration</span>
+    </div>
+    <div style="display:flex;align-items:baseline;gap:8px;padding:10px 0;border-bottom:1px solid rgba(0,0,0,.06);font-size:15px;color:#444">
+      <span style="font-family:monospace;font-size:11px;color:#004090;font-weight:700;min-width:24px">04</span>
+      <span style="flex:1">Generative UI in Chat</span>
+    </div>
+    <div style="display:flex;align-items:baseline;gap:8px;padding:10px 0;border-bottom:1px solid rgba(0,0,0,.06);font-size:15px;color:#444">
+      <span style="font-family:monospace;font-size:11px;color:#004090;font-weight:700;min-width:24px">05</span>
+      <span style="flex:1">Debug Tooling</span>
+    </div>
+</div>
+
+<!-- Chapters -->
+
+    <section style="padding:80px;page-break-before:always">
+      <div style="font-family:monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#004090;font-weight:700;margin-bottom:16px">Chapter 1</div>
+      <h2 style="font-family:'EB Garamond',serif;font-size:36px;font-weight:800;color:#1a1a2e;margin-bottom:28px;line-height:1.15">The Sprint Tax</h2>
+      <div class="chapter-body"><p># The Sprint Tax</p>
+<p>Every team building an Angular agent application eventually builds the same chat UI from scratch. Message list, input box, streaming token display, auto-scroll, loading states, error handling. It takes 4-6 weeks. Then they iterate on it for another 4-6 weeks. Meanwhile, the agent backend is ready and waiting.</p>
+<p>This isn't a skill gap. It's a structural inefficiency baked into how we approach agent interfaces.</p>
+<h3>The Inventory</h3>
+<p>Here's what every production chat UI actually needs:</p>
+<p><strong>Message rendering</strong>: Not just text. Markdown with code highlighting, tables, lists, inline formatting. Messages that stream in token-by-token. Messages that arrive complete. Messages from the user, from the agent, from tools. Each with different visual treatment.</p>
+<p><strong>Streaming display</strong>: Tokens arriving at variable rates. Buffering strategies that balance responsiveness against flicker. Cursor indicators. Graceful handling when the stream errors mid-message. Reconnection logic when it drops.</p>
+<p><strong>Tool call cards</strong>: Tools that are pending, executing, complete, or failed. Tools that return structured data you need to render contextually. Tools that run for 30 seconds and need progress indication. Tools that spawn sub-agents with their own message streams.</p>
+<p><strong>Interrupt panels</strong>: Human-in-the-loop flows where the agent needs input before proceeding. Multiple choice, free text, confirmation dialogs. State that persists if the user navigates away. Resume logic that picks up where it left off.</p>
+<p><strong>Auto-scroll</strong>: Sounds simple. Scroll to bottom as new content arrives. Except: don't scroll if the user scrolled up to read history. Do scroll if they scroll back down. Handle window resize. Handle virtual scrolling for conversations with thousands of messages. Handle images that load asynchronously and shift layout.</p>
+<p><strong>Accessibility</strong>: Screen reader announcements for new messages. Focus management that doesn't trap users. Keyboard navigation through the conversation. ARIA live regions that don't spam. High contrast support. Reduced motion support.</p>
+<p><strong>Mobile layout</strong>: Viewport that shifts when the keyboard appears. Touch targets that meet minimum sizes. Gesture handling that doesn't conflict with browser gestures.</p>
+<h3>The Hidden Costs</h3>
+<p>Accessibility is harder than it looks. Your first implementation will fail an audit. Your second implementation will annoy screen reader users. Your third implementation will work, but you'll have spent two weeks on it.</p>
+<p>Streaming token display has edge cases. What happens when you receive a partial UTF-8 sequence? What about markdown that's valid mid-stream but invalid once complete? What about code blocks that open but haven't closed yet?</p>
+<p>Tool call state machines are complex. A tool can be requested, approved, executing, streaming results, complete, or failed. It can timeout. It can be cancelled. The user can interrupt. The agent can retry. Each state transition needs UI treatment.</p>
+<h3>"Good Enough for Demo" vs. Production</h3>
+<p>Demo chat UI: Messages appear. Input works. It scrolls.</p>
+<p>Production chat UI: Messages stream smoothly. Tool calls show real-time progress. Errors recover gracefully. History loads incrementally. Mobile works. Accessibility audits pass. Performance stays stable at 10,000 messages.</p>
+<p>The gap between these isn't a weekend. It's eight weeks of senior engineer time, plus ongoing maintenance.</p>
+<h3>The Opportunity Cost</h3>
+<p>Here's the actual problem: you're paying senior Angular engineers to solve problems that have already been solved. Problems that have nothing to do with what makes your agent application valuable.</p>
+<p>While your team is debugging auto-scroll edge cases, your agent backend is ready and waiting. While they're implementing tool call state machines, your differentiating features aren't getting built. While they're fixing accessibility audit failures, your competitors are shipping.</p>
+<h3>The @ngaf/chat Thesis</h3>
+<p>`@ngaf/chat` ships the complete inventory: `<chat-message-list>`, `<chat-input>`, `<chat-tool-calls>`, `<chat-tool-call-card>`, `<chat-interrupt-panel>`. Production-grade. Accessible. Mobile-ready. Streaming-optimized.</p>
+<p>The thesis is simple: ship the chat UI on day one. Spend the sprints on what differentiates your product—the agent logic, the tool integrations, the domain-specific features that your competitors can't copy.</p>
+<p>The sprint tax is optional. Stop paying it.</p></div>
+    </section>
+    <section style="padding:80px;page-break-before:always">
+      <div style="font-family:monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#004090;font-weight:700;margin-bottom:16px">Chapter 2</div>
+      <h2 style="font-family:'EB Garamond',serif;font-size:36px;font-weight:800;color:#1a1a2e;margin-bottom:28px;line-height:1.15">Batteries-Included Components</h2>
+      <div class="chapter-body"><p># Batteries-Included Components</p>
+<p>@ngaf/chat ships two component tiers: headless primitives that encapsulate behavior without styling opinions, and prebuilt compositions that deliver production-ready interfaces with minimal configuration. The separation lets teams adopt complete solutions immediately while preserving escape hatches for custom requirements.</p>
+<h3>The Headless Tier</h3>
+<p>Headless components own behavior and state management but emit no styled markup. They expose content projection slots and structural directives for complete template control.</p>
+<p>`<chat-message-list>` manages scroll position, virtualization hints, and message grouping logic. It consumes `Message[]` from the agent surface and handles the complexity of streaming message updates—partial content, role transitions, and optimistic UI states. Your templates define how each message renders.</p>
+<p>`<chat-input>` handles submit semantics, keyboard shortcuts, disabled states during streaming, and multiline expansion. It exposes form control bindings without prescribing input styling.</p>
+<p>`<chat-tool-calls>` and `<chat-tool-call-card>` manage tool invocation display, including pending states, execution results, and error handling. `<chat-interrupt-panel>` surfaces human-in-the-loop decision points when the agent requires input to proceed.</p>
+<p>These primitives compose freely. Use them when your design system mandates specific markup structures or when accessibility requirements demand particular ARIA patterns.</p>
+<h3>The Prebuilt Composition Tier</h3>
+<p>The `<chat>` component assembles headless primitives with production styling and sensible defaults. It accepts an agent instance and renders a complete interface:</p>
+<pre><code>@Component({
+  selector: 'app-support',
+  template: `<chat [agent]="supportAgent" />`,
+})
+export class SupportComponent {
+  supportAgent = agent({
+    transport: new FetchStreamTransport(),
+    assistantId: 'support-assistant',
+    apiUrl: '/api/langgraph',
+  });
+}
+</code></pre>
+<p>Six lines deliver a functional chat interface with message history, streaming indicators, input handling, and tool call display. The component handles loading states, error presentation, and responsive layout without additional configuration.</p>
+<p>Companion components—`ChatMessageListComponent`, `ChatInputComponent`, `ChatToolCallsComponent`, `ChatInterruptPanelComponent`, `ChatDebugComponent`—can be used independently when you need prebuilt styling for specific sections while customizing others.</p>
+<h3>Composing Tiers</h3>
+<p>The practical pattern: use prebuilt components for standard sections, drop to headless for custom requirements. A typical enterprise implementation might use the prebuilt message list and input while providing a custom tool call renderer that integrates with internal component libraries.</p>
+<p>The `<chat>` component accepts content projection for this purpose. Override specific slots while retaining default behavior elsewhere. When projection proves insufficient, decompose to individual prebuilt components, then to headless primitives as customization needs escalate.</p>
+<h3>The Agent Contract</h3>
+<p>Both tiers consume the runtime-neutral `Agent` contract returned by `agent()` from @ngaf/langgraph. This contract exposes signals: `messages()` returns `Message[]` representing the conversation, `status()` indicates connection state, `isLoading()` reflects pending operations, `toolCalls()` surfaces invocations, and `state()` provides LangGraph checkpoint data.</p>
+<p>Components bind directly to these signals. When the agent streams a response, `messages()` updates reactively. Components re-render affected sections without manual change detection. The `Message` type from @ngaf/chat provides the runtime-neutral representation—role, content, metadata—that components consume regardless of the underlying LangGraph message format.</p>
+<h3>Choosing Your Tier</h3>
+<p>Start with `<chat>`. It covers the common case and establishes baseline functionality in minutes. Drop to prebuilt companions when you need to rearrange layout or inject custom sections between standard elements. Move to headless primitives when your design system requires specific DOM structures or when you're building novel interaction patterns.</p>
+<p>Migration between tiers is mechanical: prebuilt components are compositions of headless primitives with styling applied. Extracting customization points means identifying which primitive to expose and which styling to preserve. The agent contract remains constant across tiers—your backend integration stays unchanged regardless of which component tier renders the interface.</p></div>
+    </section>
+    <section style="padding:80px;page-break-before:always">
+      <div style="font-family:monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#004090;font-weight:700;margin-bottom:16px">Chapter 3</div>
+      <h2 style="font-family:'EB Garamond',serif;font-size:36px;font-weight:800;color:#1a1a2e;margin-bottom:28px;line-height:1.15">Theming & Design System Integration</h2>
+      <div class="chapter-body"><p># Theming & Design System Integration</p>
+<p>A chat interface that looks like a demo is a liability in production. Users notice when components don't match the rest of the application—inconsistent border radius, wrong font stack, off-brand colors. These details erode trust in the product and in the AI features you're shipping.</p>
+<p>@ngaf/chat exposes its visual design decisions through CSS custom properties, giving you control over appearance without touching component internals or maintaining forks.</p>
+<h3>The CSS Custom Property API</h3>
+<p>Every visual decision in @ngaf/chat maps to a custom property. The components read these values at runtime, so overriding them in your stylesheet changes the rendered output immediately.</p>
+<p>The naming convention follows a predictable pattern: `--chat-{component}-{property}`. Component-level tokens reference global tokens, which reference your design system tokens. This layering lets you override at whatever granularity makes sense—change one button's border radius or change every border radius in the chat interface with a single line.</p>
+<h3>Design Token Mapping</h3>
+<p>If your team already maintains design tokens, integration is direct assignment. Map your existing tokens to the chat component tokens in a single stylesheet:</p>
+<pre><code>:root {
+  /* Typography */
+  --chat-font-family: var(--ds-font-family-body);
+  --chat-font-size-base: var(--ds-font-size-md);
+  --chat-line-height: var(--ds-line-height-normal);
+<p>/* Colors */
+  --chat-surface-primary: var(--ds-color-surface-elevated);
+  --chat-surface-secondary: var(--ds-color-surface-sunken);
+  --chat-text-primary: var(--ds-color-text-primary);
+  --chat-text-secondary: var(--ds-color-text-muted);
+  --chat-accent: var(--ds-color-brand-primary);</p>
+<p>/* Shape */
+  --chat-border-radius: var(--ds-radius-md);
+  --chat-spacing-unit: var(--ds-spacing-base);</p>
+<p>/* State colors */
+  --chat-color-error: var(--ds-color-feedback-error);
+  --chat-color-success: var(--ds-color-feedback-success);
+}
+</code></pre></p>
+<p>This mapping becomes your single source of truth. When design updates the brand's border radius, the chat components update automatically because they reference your tokens, not hardcoded values.</p>
+<h3>Typography Integration</h3>
+<p>Chat interfaces are text-heavy. Typography consistency matters more here than in most UI contexts.</p>
+<p>@ngaf/chat exposes tokens for font family, size scale (base, small, large), line height, and font weight. Message content, timestamps, tool call labels, and input placeholders all reference these tokens. Set them once, and the entire typographic hierarchy follows your design system.</p>
+<h3>Color System Integration</h3>
+<p>Surface colors control backgrounds—the chat container, message bubbles, input field. Text colors handle primary content and secondary metadata. Accent colors drive interactive elements and visual emphasis. Semantic state colors handle error states, success confirmations, and loading indicators.</p>
+<p>The token structure assumes you have these categories in your design system. If you don't, use literal values.</p>
+<h3>Dark Mode Support</h3>
+<p>The token system supports dark mode without component changes. Override the custom properties inside a dark mode selector:</p>
+<pre><code>[data-theme="dark"] {
+  --chat-surface-primary: var(--ds-color-surface-elevated-dark);
+  --chat-text-primary: var(--ds-color-text-primary-dark);
+}
+</code></pre>
+<p>Components don't contain theme-switching logic. They read current token values. Your application controls when those values change.</p>
+<h3>Limitations of Token-Based Theming</h3>
+<p>CSS custom properties control visual properties—colors, spacing, typography, borders. They don't control structure.</p>
+<p>If you need different DOM layout, custom animations, or component composition that diverges from the default, tokens won't help. This is where the headless pattern applies: use `agent()` directly with your own components, keeping the streaming infrastructure while owning the entire render layer.</p>
+<p>Tokens handle 80% of enterprise theming needs. The headless tier handles the rest.</p></div>
+    </section>
+    <section style="padding:80px;page-break-before:always">
+      <div style="font-family:monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#004090;font-weight:700;margin-bottom:16px">Chapter 4</div>
+      <h2 style="font-family:'EB Garamond',serif;font-size:36px;font-weight:800;color:#1a1a2e;margin-bottom:28px;line-height:1.15">Generative UI in Chat</h2>
+      <div class="chapter-body"><p># Generative UI in Chat</p>
+<p>Text is a bottleneck. When a financial agent needs to present quarterly results, streaming prose about revenue figures wastes cognitive load. When a scheduling agent confirms a booking, a wall of text obscures the actionable details. The most capable agent interfaces solve this by rendering structured UI directly in the message stream—tables, forms, approval cards—alongside conversational text.</p>
+<h3>Structured UI in the Message Stream</h3>
+<p>@ngaf/chat treats generative UI as a first-class message type. When an agent emits a UI specification instead of text, the chat renders it inline using @ngaf/render. From the user's perspective, the conversation flows naturally: the agent explains context in prose, then presents a rendered component for interaction.</p>
+<p>This works because the Agent contract exposes messages as a heterogeneous stream. Text messages render as text. UI messages resolve to Angular components through a registry. The chat component handles both transparently.</p>
+<h3>The json-render Spec</h3>
+<p>The json-render specification defines a minimal contract for declarative UI. An agent emits a JSON object with a `type` field identifying the component and a `props` field containing its inputs:</p>
+<pre><code>{"type": "data-table", "props": {"columns": ["Quarter", "Revenue"], "rows": [...]}}
+</code></pre>
+<p>The renderer resolves `data-table` to an Angular component, binds `props` to its inputs, and inserts it into the DOM. No custom parsing, no message-type switches in templates. The specification stays minimal intentionally—agents describe *what* to render, not *how*.</p>
+<h3>A2UI: Agent-Specific Patterns</h3>
+<p>Google's A2UI specification extends json-render with patterns specific to agent interactions: approval workflows, structured actions, and rich data displays. Where json-render handles arbitrary components, A2UI codifies the common cases—confirmation dialogs, multi-step forms, action buttons with pending states.</p>
+<p>@ngaf/render supports both specifications. You can mix A2UI's structured patterns with custom json-render components in the same message stream.</p>
+<h3>Registry Integration</h3>
+<p>Component resolution flows through a registry. You define which component handles each type, then provide it to the chat context:</p>
+<pre><code>import { defineAngularRegistry, provideRender } from '@ngaf/render';
+import { DataTableComponent } from './data-table.component';
+import { BookingFormComponent } from './booking-form.component';
+import { ApprovalCardComponent } from './approval-card.component';
+<p>const registry = defineAngularRegistry({
+  'data-table': DataTableComponent,
+  'booking-form': BookingFormComponent,
+  'approval-card': ApprovalCardComponent,
+});</p>
+<p>// In your providers array
+provideRender({ registry })
+</code></pre></p>
+<p>The chat component picks up the registry through dependency injection. When a message contains a render spec, it resolves and instantiates the component automatically.</p>
+<h3>Streaming Patches</h3>
+<p>Agents rarely emit complete UI specifications in one shot. A data table streams rows as they arrive. A form populates fields progressively. @ngaf/render handles this through JSON Patch streaming—the agent emits an initial skeleton, then streams RFC 6902 patches that mutate the specification incrementally.</p>
+<p>In the chat context, this creates the live update effect users expect. A table appears with headers, then rows populate one by one. A summary card fills in as the agent processes. The render layer applies patches reactively; bound components update without re-instantiation.</p>
+<p>This matters for perceived latency. Users see structure immediately, then watch it fill in—progress feels continuous rather than blocked on complete responses.</p></div>
+    </section>
+    <section style="padding:80px;page-break-before:always">
+      <div style="font-family:monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#004090;font-weight:700;margin-bottom:16px">Chapter 5</div>
+      <h2 style="font-family:'EB Garamond',serif;font-size:36px;font-weight:800;color:#1a1a2e;margin-bottom:28px;line-height:1.15">Debug Tooling</h2>
+      <div class="chapter-body"><p># Debug Tooling</p>
+<p>Debugging agent chat is hard. The message stream is opaque, tool call state transitions happen in milliseconds, and interrupt flows have timing edge cases that only surface under load. You can't step through a streaming conversation the way you step through synchronous code.</p>
+<p>`<chat-debug>` is @ngaf/chat's built-in debug panel—a developer overlay that surfaces agent state, raw message events, tool call history, and interrupt state in real time. One component, zero configuration.</p>
+<h3>What chat-debug Shows</h3>
+<p>The debug panel exposes four primary views:</p>
+<p><strong>Message State.</strong> The current `Message[]` array, rendered as expandable JSON. You see every message the agent has processed—user inputs, assistant responses, tool results—with full metadata intact.</p>
+<p><strong>Streaming Event Log.</strong> A chronological log of every event received from the transport layer. This includes partial tokens during streaming, state updates, tool call initiations, and completion signals. The log timestamps each event to the millisecond.</p>
+<p><strong>Tool Call State Machine.</strong> Each tool call passes through distinct states: pending, executing, completed, or failed. The debug panel visualizes this state machine for every tool call in the current conversation, showing transitions as they happen.</p>
+<p><strong>Interrupt Payload.</strong> When the agent requests human intervention, the full interrupt payload appears in the panel—the interrupt type, the data the agent is requesting, and any context it provided. After user action, you see both the original payload and the response.</p>
+<h3>Adding chat-debug</h3>
+<p>Drop it into any chat interface:</p>
+<pre><code>import { ChatDebugComponent } from '@ngaf/chat';
+<p>@Component({
+  selector: 'app-support-chat',
+  imports: [ChatComponent, ChatDebugComponent],
+  template: `
+    <chat [agent]="agent" />
+    <chat-debug [agent]="agent" />
+  `
+})
+export class SupportChatComponent {
+  agent = agent({
+    transport: new FetchStreamTransport(),
+    assistantId: 'support-agent',
+    apiUrl: '/api/langgraph'
+  });
+}
+</code></pre></p>
+<p>No configuration required. The panel renders in the bottom-right corner with a toggle to expand and collapse.</p>
+<h3>Inspecting Individual Messages</h3>
+<p>Click any message in the Message State view to expand it. You'll see:</p>
+<ul><li><strong>Message type</strong>: user, assistant, tool, or system</li>
+<li><strong>Content</strong>: the full text or structured content</li>
+<li><strong>Metadata</strong>: timestamps, message IDs, and any custom properties your agent attaches</li>
+<li><strong>Token count</strong>: if your transport provides it, the token usage for that message</li>
+</ul>
+For assistant messages during active streaming, content updates live as tokens arrive.
+<h3>Tool Call Debugging</h3>
+<p>The tool call view shows each invocation with:</p>
+<ul><li><strong>Tool name</strong>: the function the agent called</li>
+<li><strong>Input payload</strong>: the exact JSON the agent passed to the tool</li>
+<li><strong>Output</strong>: the tool's response, once execution completes</li>
+<li><strong>Execution timing</strong>: start time, end time, and duration in milliseconds</li>
+</ul>
+When a tool call fails, the panel displays the error message and stack trace. This is where you'll catch malformed inputs, timeout issues, and permission errors.
+<h3>Interrupt State Inspection</h3>
+<p>Interrupts are the hardest flow to debug without tooling. The agent pauses, waits for user input, then resumes—but what exactly is it waiting for?</p>
+<p>The interrupt view shows the full payload the agent sent when requesting the interrupt. After the user responds, you see both sides: what was asked and what was provided. This catches mismatches between what your interrupt UI collects and what the agent expects.</p>
+<h3>Integration with Angular DevTools</h3>
+<p>Agent signals created by `agent()` appear in Angular DevTools like any other signal. In the component tree, you'll see `messages`, `status`, `isLoading`, `toolCalls`, and `state` as inspectable signals with their current values.</p>
+<p>This means standard Angular debugging workflows apply. Set a breakpoint, inspect signal values, trace reactivity—the agent surface behaves like any other signal-based state.</p>
+<h3>Production Safety</h3>
+<p>`<chat-debug>` uses Angular's `isDevMode()` check internally. In production builds, the component renders nothing—no DOM nodes, no event listeners, no performance overhead. Leave it in your templates; the build process handles the rest.</p>
+<p>For teams that need debug capabilities in staging environments, pass `[forceEnable]="true"` to override the dev mode check. Use this sparingly and gate it behind feature flags.</p></div>
+    </section>
+
+</body>
+</html>

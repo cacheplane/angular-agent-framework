@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,700;1,400&family=Inter:wght@400;600&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Inter',sans-serif;color:#1a1a2e;background:#fff}
+  .chapter-body p{font-size:15px;line-height:1.75;color:#333;margin-bottom:18px}
+  .chapter-body h3{font-family:'EB Garamond',serif;font-size:22px;font-weight:700;color:#1a1a2e;margin:28px 0 12px}
+  .chapter-body ul{margin:0 0 18px 20px}
+  .chapter-body li{font-size:15px;line-height:1.7;color:#333;margin-bottom:6px}
+  .chapter-body pre{background:#1a1b26;color:#c8ccee;padding:20px 24px;border-radius:8px;font-size:13px;line-height:1.65;overflow-x:auto;margin:24px 0;white-space:pre-wrap}
+  .chapter-body code{font-family:'JetBrains Mono',monospace;font-size:13px}
+  .chapter-body strong{font-weight:600}
+</style>
+</head>
+<body>
+
+<!-- Cover -->
+<div style="height:100vh;display:flex;flex-direction:column;justify-content:flex-end;padding:80px 80px 100px;background:linear-gradient(135deg, #e8f5e9 0%, #eaf3ff 45%, #f4f0ff 70%, #fef0f3 100%);page-break-after:always">
+  <div style="font-family:monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.12em;color:#004090;font-weight:700;margin-bottom:24px">@ngaf/render · Enterprise Guide</div>
+  <h1 style="font-family:'EB Garamond',serif;font-size:52px;font-weight:800;line-height:1.1;color:#1a1a2e;margin-bottom:20px">The<br>Enterprise<br>Guide<br>to<br>Generative<br>UI<br>in<br>Angular</h1>
+  <p style="font-family:'EB Garamond',serif;font-style:italic;font-size:20px;color:#555770;margin-bottom:40px">Agents that render UI — without coupling to your frontend</p>
+  <div style="font-size:13px;color:#888;font-family:monospace">cacheplane.ai · 2026</div>
+</div>
+
+<!-- TOC -->
+<div style="padding:80px;page-break-after:always">
+  <h2 style="font-family:'EB Garamond',serif;font-size:32px;font-weight:700;color:#1a1a2e;margin-bottom:32px">Contents</h2>
+  
+    <div style="display:flex;align-items:baseline;gap:8px;padding:10px 0;border-bottom:1px solid rgba(0,0,0,.06);font-size:15px;color:#444">
+      <span style="font-family:monospace;font-size:11px;color:#004090;font-weight:700;min-width:24px">01</span>
+      <span style="flex:1">The Coupling Problem</span>
+    </div>
+    <div style="display:flex;align-items:baseline;gap:8px;padding:10px 0;border-bottom:1px solid rgba(0,0,0,.06);font-size:15px;color:#444">
+      <span style="font-family:monospace;font-size:11px;color:#004090;font-weight:700;min-width:24px">02</span>
+      <span style="flex:1">Declarative UI Specs & the json-render Standard</span>
+    </div>
+    <div style="display:flex;align-items:baseline;gap:8px;padding:10px 0;border-bottom:1px solid rgba(0,0,0,.06);font-size:15px;color:#444">
+      <span style="font-family:monospace;font-size:11px;color:#004090;font-weight:700;min-width:24px">03</span>
+      <span style="flex:1">The Component Registry</span>
+    </div>
+    <div style="display:flex;align-items:baseline;gap:8px;padding:10px 0;border-bottom:1px solid rgba(0,0,0,.06);font-size:15px;color:#444">
+      <span style="font-family:monospace;font-size:11px;color:#004090;font-weight:700;min-width:24px">04</span>
+      <span style="flex:1">Streaming JSON Patches</span>
+    </div>
+    <div style="display:flex;align-items:baseline;gap:8px;padding:10px 0;border-bottom:1px solid rgba(0,0,0,.06);font-size:15px;color:#444">
+      <span style="font-family:monospace;font-size:11px;color:#004090;font-weight:700;min-width:24px">05</span>
+      <span style="flex:1">State Management & Computed Functions</span>
+    </div>
+</div>
+
+<!-- Chapters -->
+
+    <section style="padding:80px;page-break-before:always">
+      <div style="font-family:monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#004090;font-weight:700;margin-bottom:16px">Chapter 1</div>
+      <h2 style="font-family:'EB Garamond',serif;font-size:36px;font-weight:800;color:#1a1a2e;margin-bottom:28px;line-height:1.15">The Coupling Problem</h2>
+      <div class="chapter-body"><p># The Coupling Problem</p>
+<p>Every Angular developer who has integrated an LLM agent hits the same wall. The agent returns structured output—maybe a product recommendation, a data visualization, or a multi-step form. You need to render it. The obvious solution:</p>
+<pre><code>@Component({
+  template: `
+    @switch (output.type) {
+      @case ('product') { <product-card [data]="output" /> }
+      @case ('chart') { <data-viz [config]="output" /> }
+      @case ('form') { <dynamic-form [schema]="output" /> }
+    }
+  `
+})
+export class AgentResponseComponent {
+  @Input() output: AgentOutput;
+}
+</code></pre>
+<p>This works. Ship it. Demo goes well.</p>
+<p>Then the agent team adds a new capability. They want to render comparison tables. Your switch statement doesn't handle it. The agent emits valid output, the frontend shows nothing. Now you're in a deploy queue behind three other teams, waiting to add `@case ('table')`.</p>
+<p>You've created a bidirectional dependency that will strangle your velocity.</p>
+<h3>The Dependency Graph You Didn't Want</h3>
+<p>The coupling runs both directions. The agent's output schema is constrained by what the frontend can render. The frontend's component library is constrained by what the agent might emit. Change either side and you break the contract.</p>
+<p>This creates a coordination tax on every feature:</p>
+<p>1. Agent team proposes new output type
+2. Frontend team reviews, estimates component work
+3. Component gets built, tested, merged
+4. Agent team waits for frontend deploy
+5. Agent capability finally ships</p>
+<p>In practice, steps 2-4 take weeks. The agent team starts working around limitations. They emit markdown instead of structured data because at least markdown renders. You lose type safety, styling control, and interaction capabilities.</p>
+<h3>Scale Multiplies the Problem</h3>
+<p>One agent, one frontend, one team—manageable. Now consider reality:</p>
+<ul><li>Three agents sharing common UI patterns</li>
+<li>Two frontends (web app, internal dashboard)</li>
+<li>Separate teams for agent development and frontend platform</li>
+</ul>
+Your switch statements are now scattered across repositories. Each frontend has its own mapping logic. Agent teams don't know which frontends support which output types. Capability matrices live in Confluence pages that nobody updates.
+<p>When someone asks "can the agent render an approval workflow?"—the answer requires archaeology across four codebases.</p>
+<h3>Inverting the Dependency</h3>
+<p>The fix is architectural: agents emit UI specifications, not domain data. The frontend interprets specs through a registry, not a switch statement.</p>
+<pre><code>// Agent emits spec
+{
+  "component": "data-table",
+  "props": { "columns": [...], "rows": [...] }
+}
+<p>// Frontend interprets via registry
+const registry = defineAngularRegistry({
+  'data-table': DataTableComponent,
+  'product-card': ProductCardComponent,
+  // ...
+});
+</code></pre></p>
+<p>New capability? Agent emits it. If the registry has a mapping, it renders. If not, fallback behavior. No frontend deploy required for agent changes. No agent prompt changes required for component refactors.</p>
+<p>The registry becomes the contract. Version it. Document it. Let teams evolve independently.</p>
+<h3>The Standard Problem</h3>
+<p>A registry per frontend doesn't solve coordination—it moves it. You still need agreement on what `"component": "data-table"` means, what props it accepts, how deeply specs can nest.</p>
+<p>Without a shared specification, you'll build three proprietary formats. Your agents will need frontend-specific prompt branches. Your component libraries will drift.</p>
+<p>This is why the approach demands an open spec—a grammar for describing UI that agents can target and any frontend can interpret. Not a component library. Not a design system. A protocol.</p>
+<p>The next chapter introduces that protocol.</p></div>
+    </section>
+    <section style="padding:80px;page-break-before:always">
+      <div style="font-family:monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#004090;font-weight:700;margin-bottom:16px">Chapter 2</div>
+      <h2 style="font-family:'EB Garamond',serif;font-size:36px;font-weight:800;color:#1a1a2e;margin-bottom:28px;line-height:1.15">Declarative UI Specs & the json-render Standard</h2>
+      <div class="chapter-body"><p># Declarative UI Specs & the json-render Standard</p>
+<h3>The Problem with Ad-Hoc UI Generation</h3>
+<p>When LLMs generate UI, the output format matters as much as the content. Without a formal specification, teams end up with brittle prompt engineering, framework-specific JSON schemas, and UI descriptions that break when models update or requirements change. The json-render specification solves this by defining a framework-agnostic standard for describing component trees as structured JSON.</p>
+<h3>Anatomy of a json-render Document</h3>
+<p>A json-render document describes a component tree using three primitives: component name, props, and children.</p>
+<pre><code>{
+  "component": "card",
+  "props": {
+    "title": "Q3 Revenue",
+    "variant": "elevated"
+  },
+  "children": [
+    {
+      "component": "metric",
+      "props": {
+        "value": 2847000,
+        "format": "currency",
+        "trend": "up"
+      }
+    },
+    {
+      "component": "sparkline",
+      "props": {
+        "data": [12, 19, 15, 25, 22, 30, 28]
+      }
+    }
+  ]
+}
+</code></pre>
+<p>The structure is intentionally minimal. Component names are strings—the rendering framework resolves them to actual implementations. Props are arbitrary JSON objects validated at render time. Children form a recursive tree of the same structure.</p>
+<h3>Why an Open Standard Matters</h3>
+<p><strong>Framework Portability</strong>: A json-render document generated for Angular works identically in React, Vue, or any conforming renderer. Backend teams don't couple to frontend implementation choices. The same agent serves web, mobile, and embedded contexts.</p>
+<p><strong>LLM Prompt Stability</strong>: Models trained on consistent schemas produce more reliable output. When json-render becomes the canonical format across projects, prompt engineering compounds—patterns that work in one system transfer directly to others.</p>
+<p><strong>Community Tooling</strong>: Validators, visual editors, and testing utilities build against the spec rather than proprietary formats. Schema validation catches malformed output before it reaches the renderer.</p>
+<h3>Control Flow in the Spec</h3>
+<p>The specification handles dynamic rendering through reserved component types:</p>
+<pre><code>{
+  "component": "$if",
+  "props": { "condition": "{{ user.isAdmin }}" },
+  "children": [{ "component": "admin-panel", "props": {} }]
+}
+</code></pre>
+<p>Iteration uses `$for`:</p>
+<pre><code>{
+  "component": "$for",
+  "props": { "each": "{{ items }}", "as": "item" },
+  "children": [
+    {
+      "component": "list-item",
+      "props": { "label": "{{ item.name }}" }
+    }
+  ]
+}
+</code></pre>
+<p>Computed properties use template expressions. The renderer evaluates these against a provided context object, keeping the spec declarative while supporting dynamic data binding.</p>
+<h3>Google's A2UI Extension</h3>
+<p>Google's Agent-to-UI (A2UI) specification extends json-render with agent-specific patterns. It adds constructs for streaming updates, tool call visualization, and interrupt handling—concepts that don't exist in static UI rendering but are fundamental to agent interactions.</p>
+<p>A2UI defines how partial UI updates arrive during generation, how tool invocations surface to users, and how human-in-the-loop checkpoints integrate with component trees. The `@ngaf/render` package implements both specifications.</p>
+<h3>The @ngaf/render Implementation</h3>
+<p>The `<render-spec>` directive consumes json-render documents and instantiates Angular components:</p>
+<pre><code>import { Component, signal } from '@angular/core';
+import { RenderSpecComponent, defineAngularRegistry } from '@ngaf/render';
+import { CardComponent, MetricComponent, SparklineComponent } from './components';
+<p>const registry = defineAngularRegistry({
+  card: CardComponent,
+  metric: MetricComponent,
+  sparkline: SparklineComponent
+});</p>
+<p>@Component({
+  selector: 'app-dashboard',
+  imports: [RenderSpecComponent],
+  template: `<render-spec [spec]="uiSpec()" [registry]="registry" />`
+})
+export class DashboardComponent {
+  registry = registry;
+  uiSpec = signal<object | null>(null);
+}
+</code></pre></p>
+<p>The registry maps component names to Angular components. Unknown components throw at render time—fail fast rather than silent degradation.</p>
+<h3>Prompting for Valid Output</h3>
+<p>LLMs generate spec-compliant JSON when prompts include the schema and examples:</p>
+<pre><code>Generate a json-render document for a user profile card.
+<p>Schema: { component: string, props: object, children?: array }
+Available components: card, avatar, text, badge</p>
+<p>Example output:
+{"component": "card", "props": {"variant": "outlined"}, "children": [...]}
+</code></pre></p>
+<p>Structured output modes (JSON mode, function calling) enforce syntactic validity. Schema validation catches semantic errors—referencing undefined components or invalid prop types.</p>
+<p>The specification creates a stable contract. Agents emit it. Renderers consume it. Neither side knows how the other works.</p></div>
+    </section>
+    <section style="padding:80px;page-break-before:always">
+      <div style="font-family:monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#004090;font-weight:700;margin-bottom:16px">Chapter 3</div>
+      <h2 style="font-family:'EB Garamond',serif;font-size:36px;font-weight:800;color:#1a1a2e;margin-bottom:28px;line-height:1.15">The Component Registry</h2>
+      <div class="chapter-body"><p># The Component Registry</p>
+<p>A render-spec document references components by string name. The registry resolves those names to Angular component classes at render time. Without this mapping layer, the open standard would be theoretical—the registry makes it executable.</p>
+<h3>Defining the Registry</h3>
+<p>`defineAngularRegistry()` accepts a record of component names to Angular component classes:</p>
+<pre><code>import { defineAngularRegistry } from '@ngaf/render';
+import { CardComponent } from './card.component';
+import { ButtonComponent } from './button.component';
+import { DataTableComponent } from './data-table.component';
+import { AlertComponent } from './alert.component';
+<p>export const uiRegistry = defineAngularRegistry({
+  'Card': CardComponent,
+  'Button': ButtonComponent,
+  'DataTable': DataTableComponent,
+  'Alert': AlertComponent
+});
+</code></pre></p>
+<p>The keys are the exact strings that appear in your render-spec `component` fields. The values are the component classes themselves—not selectors, not factory functions. This directness means the registry is statically analyzable and tree-shakeable.</p>
+<h3>Providing the Registry</h3>
+<p>Two patterns, depending on your architecture.</p>
+<p><strong>Direct binding</strong> works for isolated cases where a single component owns the rendering context:</p>
+<pre><code>@Component({
+  template: `<render-spec [spec]="spec" [registry]="registry" />`
+})
+export class PreviewComponent {
+  registry = uiRegistry;
+  spec = input.required<RenderSpec>();
+}
+</code></pre>
+<p><strong>Dependency injection</strong> suits applications where multiple components render specs against a shared registry:</p>
+<pre><code>// app.config.ts
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideRender({ registry: uiRegistry })
+  ]
+};
+</code></pre>
+<p>When both are present, the direct `[registry]` binding takes precedence. This lets you override the global registry for specific rendering contexts—useful for sandboxed previews or A/B testing component implementations.</p>
+<h3>Resolution and Input Mapping</h3>
+<p>`<render-spec>` walks the spec tree, resolving each `component` string against the registry. For each node, it instantiates the corresponding Angular component and maps the spec's `props` object to `@Input()` bindings.</p>
+<p>The mapping is direct: a prop named `title` binds to an input named `title`. No transformation, no case conversion. If your component expects `@Input() headerText` but the spec sends `header_text`, the binding fails silently—Angular's standard behavior for unknown inputs.</p>
+<p>This is intentional. The registry defines *which* components exist; your component contracts define *what* they accept. Keep those contracts stable or version them explicitly.</p>
+<h3>Unknown Components</h3>
+<p>When a spec references a component name not present in the registry, `<render-spec>` renders nothing for that node by default. No error thrown, no console warning—just a gap in the output.</p>
+<p>For development, enable strict mode through `provideRender({ strict: true })`. This throws on unknown component names, surfacing mismatches immediately.</p>
+<p>For production, consider a fallback component:</p>
+<pre><code>export const uiRegistry = defineAngularRegistry({
+  // ... your components
+  '__fallback__': UnknownComponentPlaceholder
+});
+</code></pre>
+<p>The `__fallback__` key is a convention, not a framework feature. Your error boundary strategy depends on your domain—some applications should fail visibly, others should degrade gracefully.</p>
+<h3>Registry Versioning</h3>
+<p>Specs persist. Registries evolve. The mismatch creates a versioning problem.</p>
+<p>The cleanest solution: never remove component names from the registry. Deprecate by redirecting old names to new implementations:</p>
+<pre><code>export const uiRegistry = defineAngularRegistry({
+  'DataGrid': DataGridV2Component,      // current
+  'DataTable': DataGridV2Component,     // legacy alias
+});
+</code></pre>
+<p>For breaking changes in prop shape, version the component name itself (`CardV2`) or handle transformation inside the component. The registry stays stable; the component absorbs the complexity.</p></div>
+    </section>
+    <section style="padding:80px;page-break-before:always">
+      <div style="font-family:monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#004090;font-weight:700;margin-bottom:16px">Chapter 4</div>
+      <h2 style="font-family:'EB Garamond',serif;font-size:36px;font-weight:800;color:#1a1a2e;margin-bottom:28px;line-height:1.15">Streaming JSON Patches</h2>
+      <div class="chapter-body"><p># Streaming JSON Patches</p>
+<p>Generative UI collapses the moment you wait for complete responses. A data table with 50 rows, each containing nested product details, might produce 15KB of JSON. Sending the full document on every update—when a single cell changes—creates unnecessary latency and forces the UI to block until the entire payload arrives. Users stare at spinners while the agent has already produced usable content.</p>
+<p>@ngaf/render solves this with JSON Patch (RFC 6902), streaming incremental operations that mutate the UI spec in place as the agent generates it.</p>
+<h3>The Problem with Full-Document Streaming</h3>
+<p>Consider an agent building a dashboard. The initial render spec might be 8KB. Adding a chart adds 2KB. Traditional approaches either:</p>
+<p>1. Wait for the complete spec before rendering anything
+2. Re-transmit the entire document on each change</p>
+<p>Both approaches scale poorly. A spec that grows through 20 incremental updates would transmit 20 full copies—potentially hundreds of kilobytes for what amounts to a few patch operations.</p>
+<h3>JSON Patch RFC 6902</h3>
+<p>JSON Patch defines three core operations for mutating JSON documents:</p>
+<ul><li><strong>add</strong>: Insert a value at a path (`/dashboard/widgets/3`)</li>
+<li><strong>replace</strong>: Swap a value at an existing path</li>
+<li><strong>remove</strong>: Delete a value at a path</li>
+</ul>
+Each operation targets a specific JSON Pointer location. The patch `[{"op": "add", "path": "/rows/-", "value": {"id": 42, "name": "Widget"}}]` appends a single row without touching the rest of the document.
+<h3>Patch-Based Agent Output</h3>
+<p>Instead of emitting complete specs, the agent streams patch operations as it generates content:</p>
+<pre><code>{"op": "add", "path": "/rows/0", "value": {"id": 1, "status": "pending"}}
+{"op": "add", "path": "/rows/1", "value": {"id": 2, "status": "active"}}
+{"op": "replace", "path": "/rows/0/status", "value": "complete"}
+</code></pre>
+<p>Each line is independently parseable. The render layer applies patches immediately, updating only the affected portion of the component tree.</p>
+<h3>Partial-JSON Parsing and Skeleton States</h3>
+<p>Real streams don't arrive in neat lines. TCP chunks split mid-token. @ngaf/render handles incomplete JSON by maintaining parse state across chunks, rendering valid portions while buffering incomplete fragments.</p>
+<p>Skeleton states emerge naturally from this model. The agent can emit structural placeholders first—empty arrays, loading indicators—then fill them progressively:</p>
+<pre><code>@Component({
+  template: `<render-spec [spec]="spec()" [registry]="registry" />`,
+})
+export class DashboardComponent {
+  private store = signalStateStore<DashboardSpec>({ rows: [] });
+  spec = this.store.state;
+  registry = defineAngularRegistry({ DataTable, SkeletonRow });
+<p>constructor() {
+    this.streamPatches().subscribe(patch => this.store.applyPatch(patch));
+  }
+}
+</code></pre></p>
+<p>The `signalStateStore` from @ngaf/render manages immutable state updates. Each `applyPatch` call triggers fine-grained Angular signals, re-rendering only components bound to changed paths.</p>
+<h3>Performance Characteristics</h3>
+<p>Patch-based updates are O(change), not O(spec size). Appending one row to a 500-row table touches one array slot. The differ doesn't walk the entire spec; it applies the operation directly to the target path.</p>
+<p>This matters at scale. A real-time monitoring dashboard receiving 10 updates per second would choke on full-document replacement. With patches, each update carries only the delta—typically under 200 bytes—and applies in microseconds.</p>
+<p>The tradeoff is complexity at the agent layer. Your backend must track spec state and emit valid patches. But the rendering performance gains compound: faster time-to-first-paint, lower bandwidth, and UI that feels alive as the agent thinks.</p></div>
+    </section>
+    <section style="padding:80px;page-break-before:always">
+      <div style="font-family:monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#004090;font-weight:700;margin-bottom:16px">Chapter 5</div>
+      <h2 style="font-family:'EB Garamond',serif;font-size:36px;font-weight:800;color:#1a1a2e;margin-bottom:28px;line-height:1.15">State Management & Computed Functions</h2>
+      <div class="chapter-body"><p># State Management & Computed Functions</p>
+<p>Static UI specs hit a wall fast. The moment you need a total that updates when line items change, or a button that disables based on form state, you're beyond what static JSON can express. Production generative UI requires computed properties and collection rendering—capabilities that @ngaf/render delivers through `signalStateStore()` and spec-level computed functions.</p>
+<h3>Agent-Managed State with signalStateStore()</h3>
+<p>`signalStateStore()` creates a reactive state container that both agents and components can manipulate. The agent initializes state through the spec, components update it via user interaction, and computed properties derive new values automatically.</p>
+<pre><code>import { signalStateStore } from '@ngaf/render';
+<p>const store = signalStateStore({
+  items: [
+    { name: 'Widget', price: 25, quantity: 2 },
+    { name: 'Gadget', price: 40, quantity: 1 }
+  ],
+  taxRate: 0.08
+});</p>
+<p>const spec = {
+  type: 'invoice',
+  state: store,
+  subtotal: { $compute: 'items.reduce((sum, i) => sum + i.price * i.quantity, 0)' },
+  tax: { $compute: 'subtotal * taxRate' },
+  total: { $compute: 'subtotal + tax' },
+  lineItems: {
+    $repeat: 'items',
+    type: 'line-item',
+    name: { $compute: '$item.name' },
+    amount: { $compute: '$item.price * $item.quantity' }
+  }
+};
+</code></pre></p>
+<p>The store exposes signals. When `items` changes—whether from agent streaming or user input—`subtotal`, `tax`, and `total` recompute. No imperative wiring required.</p>
+<h3>Computed Properties: Declarative Derived State</h3>
+<p>Computed properties use the `$compute` key to define expressions evaluated at render time. These expressions access the state store's current values and can reference other computed properties, enabling dependency chains.</p>
+<p>The expression syntax is intentionally constrained JavaScript. It supports property access, arithmetic, array methods, and ternary operators—enough for UI logic, not enough to become a security liability. The renderer evaluates expressions in a sandboxed context with access only to the state store and iteration variables.</p>
+<h3>Repeat Loops for Collections</h3>
+<p>The `$repeat` directive iterates over arrays in state, rendering a component instance for each element. Within the repeated block, `$item` references the current element and `$index` provides the iteration index. This handles the common case of rendering lists, tables, and card grids without requiring the agent to enumerate every instance.</p>
+<h3>Drawing the Line: Spec Logic vs. Component Logic</h3>
+<p>Computed functions handle derived *data*. Components handle derived *behavior*. If you're calculating a display value—totals, formatted dates, conditional text—that belongs in the spec. If you're managing focus, coordinating animations, or handling complex validation workflows, that belongs in the component.</p>
+<p>The heuristic: if an agent could reasonably want to change the logic, put it in the spec. If the logic is intrinsic to how the component works, keep it in the component.</p>
+<h3>Testing Computed Behavior</h3>
+<p>Test computed properties by manipulating the state store and asserting against the rendered output:</p>
+<pre><code>it('should recompute total when items change', () => {
+  const store = signalStateStore({ items: [{ price: 10, quantity: 1 }], taxRate: 0.1 });
+  const spec = { type: 'invoice', state: store, total: { $compute: 'items[0].price * items[0].quantity * (1 + taxRate)' } };
+  
+  const fixture = TestBed.createComponent(TestHost);
+  fixture.componentInstance.spec = spec;
+  fixture.detectChanges();
+  
+  expect(fixture.nativeElement.textContent).toContain('11'); // 10 * 1.1
+  
+  store.update(s => ({ ...s, items: [{ price: 20, quantity: 2 }] }));
+  fixture.detectChanges();
+  
+  expect(fixture.nativeElement.textContent).toContain('44'); // 40 * 1.1
+});
+</code></pre>
+<p>Drive the store, trigger change detection, assert the DOM. The reactive graph handles the rest.</p></div>
+    </section>
+
+</body>
+</html>

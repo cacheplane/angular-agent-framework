@@ -32,3 +32,10 @@ export function trackExternalLinkClick(destinationUrl: string, properties: Analy
     ...properties,
   });
 }
+
+export function trackWhitepaperDownloadClick(paper: AnalyticsProperties['paper'], properties: AnalyticsProperties) {
+  track(analyticsEvents.marketingWhitepaperDownloadClick, {
+    paper,
+    ...properties,
+  });
+}

@@ -82,7 +82,8 @@ export function AngularFooterCTA() {
           </Link>
 
           <a
-            href="#angular-whitepaper-gate"
+            href="/whitepapers/angular.pdf"
+            download
             className="angular-footer-secondary-btn"
             style={{
               display: 'inline-block', padding: '0.875rem 2rem',
@@ -93,7 +94,7 @@ export function AngularFooterCTA() {
               transition: 'border-color 0.2s ease',
             }}
           >
-            Get Guide Updates
+            Download the Guide
           </a>
         </div>
 

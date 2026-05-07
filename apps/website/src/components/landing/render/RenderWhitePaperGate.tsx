@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { tokens } from '@ngaf/design-tokens';
 import { analyticsEvents } from '../../../lib/analytics/events';
-import { track } from '../../../lib/analytics/client';
+import { track, trackWhitepaperDownloadClick } from '../../../lib/analytics/client';
 
 type FormState = 'idle' | 'submitting' | 'done' | 'error';
 
@@ -97,7 +97,7 @@ export function RenderWhitePaperGate() {
             fontStyle: 'italic', fontSize: '1rem', color: tokens.colors.textSecondary,
             lineHeight: 1.55, marginBottom: 28,
           }}>
-            The guide is being refreshed to match the current @ngaf/render API. Join the update list, or use the live docs for the current json-render, A2UI, registry, patch streaming, and state management surfaces.
+            Five chapters covering the coupling problem, declarative UI specs with Vercel's json-render standard and Google's A2UI protocol, the component registry, streaming JSON patches, and signal-native state management.
           </p>
           <p style={{
             fontFamily: 'Inter, sans-serif', fontSize: '0.8rem',
@@ -105,7 +105,13 @@ export function RenderWhitePaperGate() {
           }}>
             Part of the Cacheplane Angular Agent Framework.
           </p>
-          <a href="/docs/render/getting-started/introduction"
+          <a href="/whitepapers/render.pdf" download="cacheplane-render-enterprise-guide.pdf"
+            onClick={() => trackWhitepaperDownloadClick('render', {
+              surface: 'library_landing',
+              source_section: 'render-whitepaper-gate',
+              library: 'render',
+              cta_id: 'render_whitepaper_download',
+            })}
             style={{
               display: 'inline-flex', alignItems: 'center', gap: 8,
               background: tokens.colors.renderGreen, color: '#fff',
@@ -114,7 +120,7 @@ export function RenderWhitePaperGate() {
               fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em',
               textDecoration: 'none', boxShadow: '0 4px 16px rgba(26,122,64,.28)',
             }}>
-            Read Current Docs
+            ↓ Download PDF
           </a>
         </div>
 
@@ -124,7 +130,7 @@ export function RenderWhitePaperGate() {
             fontSize: '0.62rem', textTransform: 'uppercase', letterSpacing: '0.1em',
             fontWeight: 700, color: tokens.colors.textMuted, marginBottom: 16,
           }}>
-            Get notified when the guide is refreshed
+            Optional — Get notified of updates
           </p>
           {formState === 'done' ? (
             <div style={{
@@ -132,7 +138,7 @@ export function RenderWhitePaperGate() {
               background: 'rgba(26,122,64,.07)', border: '1px solid rgba(26,122,64,.2)',
               fontSize: '0.88rem', color: tokens.colors.renderGreen, lineHeight: 1.55,
             }}>
-              ✓ Thanks! We'll reach out when the refreshed guide is ready.
+              ✓ Thanks! We'll reach out when the guide is updated.
             </div>
           ) : (
             <form onSubmit={handleSubmit}>

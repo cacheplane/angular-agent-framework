@@ -9,17 +9,23 @@ const chat = agent({
 });
 
 // Reactive signals — OnPush compatible
-chat.messages();  // Signal<Message[]>
-chat.isLoading(); // Signal<boolean>
-chat.interrupt(); // Signal<AgentInterrupt | undefined>`;
+chat.messages();    // Signal<Message[]>
+chat.isLoading();   // Signal<boolean>
+chat.interrupt();   // Signal<AgentInterrupt | undefined>`;
 
-const SNIPPET_2 = `import { provideAgent } from '@ngaf/langgraph';
+const SNIPPET_2 = `import { agent, provideAgent, MockAgentTransport, FetchStreamTransport } from '@ngaf/langgraph';
 
 provideAgent({
   apiUrl: environment.langgraphUrl,
   transport: isTest
     ? new MockAgentTransport(fixtures)
     : new FetchStreamTransport(),
+});
+
+const chat = agent({
+  assistantId: 'my-agent',
+  threadId: savedThreadId,
+  onThreadId: (id) => localStorage.setItem('threadId', id),
 });`;
 
 const SNIPPETS = [

@@ -82,7 +82,8 @@ export function ChatLandingFooterCTA() {
           </Link>
 
           <a
-            href="#chat-whitepaper-gate"
+            href="/whitepapers/chat.pdf"
+            download
             className="chat-footer-secondary-btn"
             style={{
               display: 'inline-block', padding: '0.875rem 2rem',
@@ -93,7 +94,7 @@ export function ChatLandingFooterCTA() {
               transition: 'border-color 0.2s ease',
             }}
           >
-            Get Guide Updates
+            Download the Guide
           </a>
         </div>
 

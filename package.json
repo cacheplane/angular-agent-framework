@@ -7,7 +7,8 @@
     "generate-agent-context": "npx tsx --tsconfig apps/website/tsconfig.json apps/website/scripts/generate-agent-context.ts",
     "generate-api-docs": "npx tsx apps/website/scripts/generate-api-docs.ts",
     "generate-narrative-docs": "npx tsx apps/website/scripts/generate-narrative-docs.ts",
-    "generate-docs": "npm run generate-api-docs && npm run generate-narrative-docs"
+    "generate-docs": "npm run generate-api-docs && npm run generate-narrative-docs",
+    "generate-whitepaper": "npx tsx apps/website/scripts/generate-whitepaper.ts"
   },
   "private": true,
   "overrides": {
