@@ -24,7 +24,6 @@ Use `ChatDebugComponent` during development to understand what your LangGraph ag
 ```typescript
 import { Component, signal, ChangeDetectionStrategy } from '@angular/core';
 import { agent } from '@ngaf/langgraph';
-import type { BaseMessage } from '@langchain/core/messages';
 import { ChatDebugComponent } from '@ngaf/chat';
 
 @Component({
@@ -39,7 +38,7 @@ import { ChatDebugComponent } from '@ngaf/chat';
   `,
 })
 export class DebugPageComponent {
-  chatRef = agent<{ messages: BaseMessage[] }>({
+  chatRef = agent({
     assistantId: 'chat_agent',
     threadId: signal(null),
   });

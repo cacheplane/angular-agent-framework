@@ -35,7 +35,6 @@ If you need to customize the message layout, add components between sections, or
 import { Component, signal } from '@angular/core';
 import { agent } from '@ngaf/langgraph';
 import { ChatComponent } from '@ngaf/chat';
-import type { BaseMessage } from '@langchain/core/messages';
 
 @Component({
   selector: 'app-chat-page',
@@ -48,7 +47,7 @@ import type { BaseMessage } from '@langchain/core/messages';
   `,
 })
 export class ChatPageComponent {
-  chatRef = agent<{ messages: BaseMessage[] }>({
+  chatRef = agent({
     assistantId: 'chat_agent',
     threadId: signal(null),
   });
@@ -100,7 +99,7 @@ When you pass a non-empty `threads` array, a sidebar appears on the left (hidden
   `,
 })
 export class ChatWithThreadsComponent {
-  chatRef = agent<{ messages: BaseMessage[] }>({
+  chatRef = agent({
     assistantId: 'chat_agent',
     threadId: signal(null),
   });

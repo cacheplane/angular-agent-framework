@@ -54,12 +54,9 @@ Use `stream.history()` to render checkpoints and `stream.branch()` to highlight
 the active one:
 
 ```html
-<cp-chat
-  [messages]="stream.messages()"
-  [isLoading]="stream.isLoading()"
-  [error]="stream.error()"
-  (sendMessage)="send($event)">
-  <ng-template #sidebar>
+<chat [agent]="stream" />
+
+<aside>
     <h3>History</h3>
     @for (state of stream.history(); track $index) {
       <button
@@ -68,8 +65,7 @@ the active one:
         {{ state.checkpoint_id?.substring(0, 8) }}...
       </button>
     }
-  </ng-template>
-</cp-chat>
+</aside>
 ```
 
 Each entry in `stream.history()` is a `ThreadState` snapshot with a

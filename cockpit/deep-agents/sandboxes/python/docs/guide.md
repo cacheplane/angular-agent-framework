@@ -7,7 +7,7 @@ sidebar displays each execution as a log entry with code input, stdout output, a
 </Summary>
 
 <Prompt>
-Add a code execution log sidebar to this Angular component using `agent()` from `@ngaf/langgraph`. Use `stream.messages()` to access tool call data from the `run_code` tool, derive `executionLogs` with `computed()`, and bind them to the sidebar via the `<cp-chat>` component from `@ngaf/chat`.
+Add a code execution log sidebar to this Angular component using `agent()` from `@ngaf/langgraph`. Use `stream.messages()` to access tool call data from the `run_code` tool, derive `executionLogs` with `computed()`, and bind them to the sidebar beside the `<chat>` component from `@ngaf/chat`.
 </Prompt>
 
 <Steps>
@@ -97,15 +97,12 @@ The tool result (`tc.output`) is populated after the tool finishes executing. Be
 </Step>
 <Step title="Build the template with execution log sidebar">
 
-Use the `<cp-chat>` component and project a sidebar via `ng-template`:
+Use the `<chat>` component from `@ngaf/chat` and render a sibling sidebar:
 
 ```html
-<cp-chat
-  [messages]="stream.messages()"
-  [isLoading]="stream.isLoading()"
-  [error]="stream.error()"
-  (sendMessage)="send($event)">
-  <ng-template #sidebar>
+<chat [agent]="stream" />
+
+<aside>
     <h3>Execution Logs</h3>
     @for (log of executionLogs(); track $index) {
       <div>
@@ -122,8 +119,7 @@ Use the `<cp-chat>` component and project a sidebar via `ng-template`:
     @empty {
       <p>Ask the agent to write and run Python code.</p>
     }
-  </ng-template>
-</cp-chat>
+</aside>
 ```
 
 Each log entry shows the code that was executed, the exit status badge, and the stdout output.

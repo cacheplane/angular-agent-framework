@@ -75,7 +75,8 @@ graph = builder.compile()
 
 ```typescript
 import { Component, computed, ChangeDetectionStrategy } from '@angular/core';
-import { agent, BaseMessage } from '@ngaf/langgraph';
+import { agent } from '@ngaf/langgraph';
+import type { BaseMessage } from '@langchain/core/messages';
 
 interface AgentState {
   messages: BaseMessage[];
@@ -265,7 +266,8 @@ graph = builder.compile()
 
 ```typescript
 import { Component, computed, signal, ChangeDetectionStrategy } from '@angular/core';
-import { agent, BaseMessage } from '@ngaf/langgraph';
+import { agent } from '@ngaf/langgraph';
+import type { BaseMessage } from '@langchain/core/messages';
 
 @Component({
   selector: 'app-longterm-chat',
@@ -275,7 +277,7 @@ import { agent, BaseMessage } from '@ngaf/langgraph';
 export class LongTermChatComponent {
   // Each conversation gets a new thread, but the agent
   // remembers the user across all of them via the Store.
-  agent = agent<{ messages: BaseMessage[] }>({
+  agent = agent({
     assistantId: 'memory_agent',
     config: { configurable: { user_id: 'user_42' } },
   });

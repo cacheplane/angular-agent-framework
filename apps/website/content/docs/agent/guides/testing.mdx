@@ -49,14 +49,13 @@ On the Angular side, MockAgentTransport replaces the real HTTP transport. Create
 ```typescript
 import { TestBed } from '@angular/core/testing';
 import { MockAgentTransport, agent } from '@ngaf/langgraph';
-import type { BaseMessage } from '@ngaf/langgraph';
 
 describe('ChatComponent', () => {
   it('should display agent messages', () => {
     const transport = new MockAgentTransport();
 
     TestBed.runInInjectionContext(() => {
-      const chat = agent<{ messages: BaseMessage[] }>({
+      const chat = agent({
         assistantId: 'test_agent',
         transport,
       });
@@ -89,7 +88,7 @@ import { agent } from '@ngaf/langgraph';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ChatComponent {
-  chat = agent<{ messages: BaseMessage[] }>({
+  chat = agent({
     assistantId: 'chat_agent',
   });
 
@@ -104,7 +103,7 @@ export class ChatComponent {
 
 ## Scripted Event Sequences
 
-Pass event batches to the constructor for sequential playback. Each call to `nextBatch()` advances one step — giving you frame-by-frame control over what the component sees.
+Pass event batches to the constructor for sequential playback. Each call to `nextBatch()` returns one batch; emit that batch to advance what the component sees.
 
 ```typescript
 const transport = new MockAgentTransport([
@@ -115,7 +114,7 @@ const transport = new MockAgentTransport([
 ]);
 
 TestBed.runInInjectionContext(() => {
-  const chat = agent<{ messages: BaseMessage[] }>({
+  const chat = agent({
     assistantId: 'test_agent',
     transport,
   });
@@ -123,17 +122,17 @@ TestBed.runInInjectionContext(() => {
   chat.submit({ message: 'Explain signals' });
 
   // Step through each batch
-  transport.nextBatch();
+  transport.emit(transport.nextBatch());
   expect(chat.messages()[0].content).toBe('Analyzing...');
 
-  transport.nextBatch();
+  transport.emit(transport.nextBatch());
   expect(chat.messages()[0].content).toBe('Here is your answer.');
 });
 ```
 
 ## Testing the Streaming Lifecycle
 
-The most common test pattern verifies the full submit-to-resolved lifecycle: submit triggers loading, values arrive, and the status settles to resolved.
+The most common test pattern verifies the full submit-to-idle lifecycle: submit sets the agent running, values arrive, and the status settles back to idle.
 
 <Tabs>
 <Tab label="lifecycle.spec.ts">
@@ -143,14 +142,14 @@ import { TestBed } from '@angular/core/testing';
 import { MockAgentTransport, agent } from '@ngaf/langgraph';
 
 describe('streaming lifecycle', () => {
-  it('should transition through loading → values → resolved', () => {
+  it('should transition through running → values → idle', () => {
     const transport = new MockAgentTransport([
       [{ type: 'values', messages: [{ role: 'assistant', content: 'Thinking...' }] }],
       [{ type: 'values', messages: [{ role: 'assistant', content: 'Done!' }] }],
     ]);
 
     TestBed.runInInjectionContext(() => {
-      const chat = agent<{ messages: BaseMessage[] }>({
+      const chat = agent({
         assistantId: 'test_agent',
         transport,
       });
@@ -159,23 +158,23 @@ describe('streaming lifecycle', () => {
       expect(chat.status()).toBe('idle');
       expect(chat.messages()).toEqual([]);
 
-      // Submit triggers loading
+      // Submit triggers running
       chat.submit({ message: 'Hello' });
-      expect(chat.status()).toBe('loading');
+      expect(chat.status()).toBe('running');
       expect(chat.isLoading()).toBe(true);
 
       // First batch — partial response
-      transport.nextBatch();
+      transport.emit(transport.nextBatch());
       expect(chat.messages()[0].content).toBe('Thinking...');
-      expect(chat.status()).toBe('loading');
+      expect(chat.status()).toBe('running');
 
       // Second batch — final response
-      transport.nextBatch();
+      transport.emit(transport.nextBatch());
       expect(chat.messages()[0].content).toBe('Done!');
 
       // Stream completes
-      transport.complete();
-      expect(chat.status()).toBe('resolved');
+      transport.close();
+      expect(chat.status()).toBe('idle');
       expect(chat.isLoading()).toBe(false);
     });
   });
@@ -202,7 +201,7 @@ import { agent } from '@ngaf/langgraph';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ChatComponent {
-  chat = agent<{ messages: BaseMessage[] }>({
+  chat = agent({
     assistantId: 'chat_agent',
   });
 
@@ -231,7 +230,7 @@ describe('interrupt handling', () => {
     const transport = new MockAgentTransport();
 
     TestBed.runInInjectionContext(() => {
-      const agent = agent<{ messages: BaseMessage[] }>({
+      const chat = agent({
         assistantId: 'approval_agent',
         transport,
       });
@@ -245,12 +244,12 @@ describe('interrupt handling', () => {
       ]);
 
       // Verify interrupt signal
-      expect(agent.interrupt()).toBeDefined();
-      expect(agent.interrupt()?.value.action).toBe('delete_account');
-      expect(agent.interrupt()?.value.risk).toBe('high');
+      expect(chat.interrupt()).toBeDefined();
+      expect(chat.interrupt()?.value.action).toBe('delete_account');
+      expect(chat.interrupt()?.value.risk).toBe('high');
 
       // User approves — resume the agent
-      agent.submit(null, { resume: { approved: true } });
+      chat.submit({ resume: { approved: true } });
 
       // Agent continues after approval
       transport.emit([
@@ -260,8 +259,8 @@ describe('interrupt handling', () => {
         },
       ]);
 
-      expect(agent.interrupt()).toBeNull();
-      expect(agent.messages()[0].content).toBe('Account deleted.');
+      expect(chat.interrupt()).toBeUndefined();
+      expect(chat.messages()[0].content).toBe('Account deleted.');
     });
   });
 });
@@ -289,16 +288,16 @@ import { agent } from '@ngaf/langgraph';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ApprovalComponent {
-  agent = agent<{ messages: BaseMessage[] }>({
+  agent = agent({
     assistantId: 'approval_agent',
   });
 
   approve() {
-    this.agent.submit(null, { resume: { approved: true } });
+    this.agent.submit({ resume: { approved: true } });
   }
 
   reject() {
-    this.agent.submit(null, { resume: { approved: false } });
+    this.agent.submit({ resume: { approved: false } });
   }
 }
 ```
@@ -322,7 +321,7 @@ describe('error handling', () => {
     const transport = new MockAgentTransport();
 
     TestBed.runInInjectionContext(() => {
-      const chat = agent<{ messages: BaseMessage[] }>({
+      const chat = agent({
         assistantId: 'test_agent',
         transport,
       });
@@ -343,7 +342,7 @@ describe('error handling', () => {
     const transport = new MockAgentTransport();
 
     TestBed.runInInjectionContext(() => {
-      const chat = agent<{ messages: BaseMessage[] }>({
+      const chat = agent({
         assistantId: 'test_agent',
         transport,
       });
@@ -389,7 +388,7 @@ import { agent } from '@ngaf/langgraph';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ChatComponent {
-  chat = agent<{ messages: BaseMessage[] }>({
+  chat = agent({
     assistantId: 'chat_agent',
   });
   private lastMessage = '';
@@ -420,7 +419,7 @@ describe('thread switching', () => {
     TestBed.runInInjectionContext(() => {
       const threadId = signal<string | null>('thread_A');
 
-      const chat = agent<{ messages: BaseMessage[] }>({
+      const chat = agent({
         assistantId: 'test_agent',
         threadId,
         transport,
@@ -453,7 +452,7 @@ describe('thread switching', () => {
     const transport = new MockAgentTransport();
 
     TestBed.runInInjectionContext(() => {
-      const chat = agent<{ messages: BaseMessage[] }>({
+      const chat = agent({
         assistantId: 'test_agent',
         transport,
       });

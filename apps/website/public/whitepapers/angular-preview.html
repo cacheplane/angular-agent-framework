@@ -92,7 +92,7 @@
 <li><strong>`isLoading()`</strong> — Boolean signal indicating active stream processing</li>
 <li><strong>`error()`</strong> — The current error state, or `undefined` when healthy</li>
 <li><strong>`interrupt()`</strong> — `AgentInterrupt | undefined`, populated when the agent yields control for human input</li>
-<li><strong>`status()`</strong> — Granular connection state: `'idle'` | `'connecting'` | `'streaming'` | `'interrupted'` | `'error'`</li>
+<li><strong>`status()`</strong> — Runtime lifecycle state: `'idle'` | `'running'` | `'error'`; use `isLoading()` for loading UI</li>
 <li><strong>`toolCalls()`</strong> — Active tool invocations extracted from the message stream</li>
 <li><strong>`state()`</strong> — The current agent state object from the LangGraph thread</li>
 </ul>

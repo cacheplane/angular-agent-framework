@@ -6,6 +6,7 @@
   "targets": {
     "build": {
       "executor": "@nx/js:tsc",
+      "dependsOn": ["^build"],
       "outputs": ["{workspaceRoot}/dist/libs/cockpit-docs"],
       "options": {
         "outputPath": "dist/libs/cockpit-docs",

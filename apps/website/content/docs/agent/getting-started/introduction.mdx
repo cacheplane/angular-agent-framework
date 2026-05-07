@@ -11,17 +11,18 @@ This guide walks you through the complete workflow: build a LangGraph agent in P
 `agent()` is an Angular function that creates a reactive, streaming connection to a LangGraph agent. It returns an object whose properties are Angular Signals — meaning your templates update automatically as the agent streams responses, token by token.
 
 ```typescript
-const chat = agent<{ messages: BaseMessage[] }>({
+const chat = agent({
   assistantId: 'chat_agent',
 });
 
 // Every property is a Signal — reactive, synchronous, no subscriptions
-chat.messages()     // Signal<BaseMessage[]>
-chat.status()       // Signal<'idle' | 'loading' | 'resolved' | 'error'>
-chat.error()        // Signal<Error | null>
-chat.interrupt()    // Signal<Interrupt | undefined>
-chat.history()      // Signal<AgentCheckpoint[]>
-chat.langGraphHistory() // Signal<ThreadState[]>
+chat.messages();         // Message[]
+chat.status();           // 'idle' | 'running' | 'error'
+chat.isLoading();        // boolean
+chat.error();            // unknown
+chat.interrupt?.();      // AgentInterrupt | undefined
+chat.history();          // AgentCheckpoint[]
+chat.langGraphHistory(); // ThreadState[]
 ```
 
 No RxJS. No manual subscriptions. No async pipes. Just Signals that work with Angular's `OnPush` change detection out of the box.
@@ -155,9 +156,8 @@ export const appConfig: ApplicationConfig = {
 
 ```typescript
 // chat.component.ts
-import { Component, signal, computed } from '@angular/core';
+import { ChangeDetectionStrategy, Component, signal, computed } from '@angular/core';
 import { agent } from '@ngaf/langgraph';
-import type { BaseMessage } from '@langchain/core/messages';
 
 @Component({
   selector: 'app-chat',
@@ -167,15 +167,14 @@ import type { BaseMessage } from '@langchain/core/messages';
 export class ChatComponent {
   input = signal('');
 
-  // Create the streaming resource — this is the core API
-  chat = agent<{ messages: BaseMessage[] }>({
+  chat = agent({
     assistantId: 'chat_agent',
     threadId: signal(localStorage.getItem('threadId')),
     onThreadId: (id) => localStorage.setItem('threadId', id),
   });
 
   // Derived signals — compose with computed()
-  isStreaming = computed(() => this.chat.status() === 'loading');
+  isStreaming = computed(() => this.chat.isLoading());
   messageCount = computed(() => this.chat.messages().length);
 
   send() {

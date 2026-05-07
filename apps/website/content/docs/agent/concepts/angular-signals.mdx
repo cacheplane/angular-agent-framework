@@ -41,7 +41,7 @@ Under the hood, agent() receives Server-Sent Events (SSE) over HTTP and feeds th
 // Simplified view of what agent does internally:
 
 // 1. SSE events arrive as an observable stream
-const messages$ = new BehaviorSubject<BaseMessage[]>([]);
+const messages$ = new BehaviorSubject<Message[]>([]);
 const status$ = new BehaviorSubject<ResourceStatus>('idle');
 
 // 2. Each SSE chunk updates the BehaviorSubject
@@ -68,8 +68,8 @@ const chat = agent<ChatState>({
   assistantId: 'chat_agent',
 });
 
-chat.messages();   // Signal<BaseMessage[]>
-chat.status();     // Signal<ResourceStatus>
+chat.messages();   // Signal<Message[]>
+chat.status();     // Signal<'idle' | 'running' | 'error'>
 chat.error();      // Signal<unknown>
 chat.isLoading();  // Signal<boolean>
 chat.value();      // Signal<ChatState>
@@ -84,7 +84,7 @@ The BehaviorSubject-to-Signal conversion means you get the best of both worlds: 
 
 ## The Streaming Lifecycle as Signals
 
-Every agent() instance moves through a lifecycle: **idle**, **loading**, tokens arriving, then **resolved** (or **error**). The `status()` Signal reflects each transition in real time.
+Every agent() instance moves through a lifecycle: **idle**, **running** while work is in flight, then back to **idle** when the stream completes (or **error** when it fails). The `status()` Signal reflects each transition in real time, while `isLoading()` is the convenience signal for loading UI.
 
 <Steps>
 <Step title="idle — Waiting for input">
@@ -101,39 +101,39 @@ console.log(chat.isLoading());  // false
 ```
 </Step>
 
-<Step title="loading — Request in flight">
-After calling `submit()`, the status transitions to `'loading'`. The SSE connection is open and the agent is processing.
+<Step title="running — Request in flight">
+After calling `submit()`, the status transitions to `'running'`. The SSE connection is open and the agent is processing.
 
 ```typescript
 chat.submit({ message: 'Explain quantum computing' });
 
-console.log(chat.status());     // 'loading'
+console.log(chat.status());     // 'running'
 console.log(chat.isLoading());  // true
 console.log(chat.messages());   // [] (no tokens yet)
 ```
 </Step>
 
-<Step title="loading — Tokens streaming">
-As the agent generates tokens, the `messages()` Signal updates with each chunk. The status remains `'loading'` throughout.
+<Step title="running — Tokens streaming">
+As the agent generates tokens, the `messages()` Signal updates with each chunk. The status remains `'running'` throughout.
 
 ```typescript
 // After first few tokens arrive:
-console.log(chat.status());     // 'loading' (still streaming)
-console.log(chat.messages());   // [AIMessageChunk("Quantum computing uses...")]
+console.log(chat.status());     // 'running' (still streaming)
+console.log(chat.messages());   // [{ role: 'assistant', content: 'Quantum computing uses...' }]
 
 // After more tokens:
-console.log(chat.messages());   // [AIMessageChunk("Quantum computing uses qubits...")]
+console.log(chat.messages());   // [{ role: 'assistant', content: 'Quantum computing uses qubits...' }]
 // The message content grows as tokens stream in
 ```
 </Step>
 
-<Step title="resolved — Stream complete">
-The agent has finished. All tokens have arrived. The status transitions to `'resolved'`.
+<Step title="idle — Stream complete">
+The agent has finished. All tokens have arrived. The status transitions back to `'idle'`.
 
 ```typescript
-console.log(chat.status());     // 'resolved'
+console.log(chat.status());     // 'idle'
 console.log(chat.isLoading());  // false
-console.log(chat.messages());   // [AIMessage("Quantum computing uses qubits to...")]
+console.log(chat.messages());   // [{ role: 'assistant', content: 'Quantum computing uses qubits to...' }]
 ```
 </Step>
 
@@ -168,16 +168,11 @@ const lastMessage = computed(() => chat.messages().at(-1));
 
 // Extract just the assistant's messages
 const assistantMessages = computed(() =>
-  chat.messages().filter(m => m._getType() === 'ai')
+  chat.messages().filter(m => m.role === 'assistant')
 );
 
 // Track which tools the agent is actively calling
-const activeTools = computed(() =>
-  chat.messages()
-    .filter(m => m._getType() === 'ai')
-    .flatMap(m => m.tool_calls ?? [])
-    .filter(tc => !tc.result)
-);
+const activeTools = computed(() => chat.toolCalls());
 
 // Build a user-facing error message
 const errorDisplay = computed(() => {
@@ -195,7 +190,7 @@ const errorDisplay = computed(() => {
 const viewModel = computed(() => ({
   messages: chat.messages(),
   isStreaming: chat.isLoading(),
-  canSend: chat.status() !== 'loading',
+  canSend: !chat.isLoading(),
   messageCount: messageCount(),
   error: errorDisplay(),
 }));
@@ -238,10 +233,10 @@ effect(() => {
 // Track streaming duration for performance monitoring
 effect(() => {
   const status = chat.status();
-  if (status === 'loading') {
+  if (status === 'running') {
     this.streamStart = performance.now();
   }
-  if (status === 'resolved' && this.streamStart) {
+  if (status === 'idle' && this.streamStart) {
     const duration = performance.now() - this.streamStart;
     this.analytics.track('stream_duration_ms', { duration });
     this.streamStart = null;
@@ -267,7 +262,7 @@ import { agent } from '@ngaf/langgraph';
   template: `
     <!-- Status bar -->
     @switch (chat.status()) {
-      @case ('loading') {
+      @case ('running') {
         <div class="status-bar streaming">
           Agent is responding...
         </div>
@@ -283,18 +278,18 @@ import { agent } from '@ngaf/langgraph';
     <!-- Message list -->
     <div class="messages" #chatContainer>
       @for (message of chat.messages(); track $index) {
-        @switch (message._getType()) {
-          @case ('human') {
+        @switch (message.role) {
+          @case ('user') {
             <div class="message user">
               {{ message.content }}
             </div>
           }
-          @case ('ai') {
+          @case ('assistant') {
             <div class="message assistant">
               {{ message.content }}
 
               <!-- Show tool calls if the assistant invoked any -->
-              @for (tool of message.tool_calls ?? []; track tool.id) {
+              @for (tool of chat.toolCalls(); track tool.id) {
                 <div class="tool-call">
                   Called: {{ tool.name }}
                 </div>
@@ -460,14 +455,14 @@ import { agent } from '@ngaf/langgraph';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @for (msg of chat.messages(); track $index) {
-      @switch (msg._getType()) {
-        @case ('human') {
+      @switch (msg.role) {
+        @case ('user') {
           <div class="user">{{ msg.content }}</div>
         }
-        @case ('ai') {
+        @case ('assistant') {
           <div class="assistant">
             {{ msg.content }}
-            @for (tc of msg.tool_calls ?? []; track tc.id) {
+            @for (tc of chat.toolCalls(); track tc.id) {
               <span class="tool-badge">{{ tc.name }}</span>
             }
           </div>
@@ -491,7 +486,7 @@ export class ChatComponent {
   // Derived state from the Python agent's output
   toolsUsed = computed(() =>
     this.chat.messages()
-      .filter(m => m._getType() === 'tool')
+      .filter(m => m.role === 'tool')
       .map(m => m.name)
   );
 

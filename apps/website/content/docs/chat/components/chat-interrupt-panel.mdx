@@ -123,7 +123,6 @@ const interrupt = getInterrupt(chatRef); // Interrupt<any> | undefined
 ```typescript
 import { Component, signal, ChangeDetectionStrategy } from '@angular/core';
 import { agent } from '@ngaf/langgraph';
-import type { BaseMessage } from '@langchain/core/messages';
 import { ChatComponent, ChatInterruptPanelComponent } from '@ngaf/chat';
 import type { InterruptAction } from '@ngaf/chat';
 
@@ -146,7 +145,7 @@ import type { InterruptAction } from '@ngaf/chat';
   `,
 })
 export class InterruptDemoComponent {
-  chatRef = agent<{ messages: BaseMessage[] }>({
+  chatRef = agent({
     assistantId: 'interrupt_agent',
     threadId: signal(null),
   });

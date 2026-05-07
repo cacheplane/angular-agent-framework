@@ -7,7 +7,7 @@ and the frontend resumes it with `stream.submit()`.
 </Summary>
 
 <Prompt>
-Add human-in-the-loop approval to this Angular component using `agent()` from `@ngaf/langgraph`. Use `stream.interrupt()` to display pending approvals, `stream.submit(null)` to approve and resume execution, and `stream.submit({ resume: false })` to reject. Bind `stream.messages()` in the template via the `<cp-chat>` component from `@ngaf/chat`.
+Add human-in-the-loop approval to this Angular component using `agent()` from `@ngaf/langgraph`. Use `stream.interrupt()` to display pending approvals, `stream.submit({ resume: true })` to approve and resume execution, and `stream.submit({ resume: false })` to reject. Bind `stream.messages()` in the template via the `<chat>` component from `@ngaf/chat`.
 </Prompt>
 
 <Steps>
@@ -55,23 +55,17 @@ The resource automatically handles streaming, interrupt detection, and state man
 Use `stream.interrupt()` to conditionally show a pending approval in the sidebar:
 
 ```html
-<cp-chat
-  [messages]="stream.messages()"
-  [isLoading]="stream.isLoading()"
-  [error]="stream.error()"
-  (sendMessage)="send($event)">
-  <ng-template #sidebar>
-    @if (stream.interrupt()) {
-      <div>
-        <p>{{ stream.interrupt() }}</p>
-        <button (click)="approve()">Approve</button>
-        <button (click)="reject()">Reject</button>
-      </div>
-    } @else {
-      <p>No pending approvals</p>
-    }
-  </ng-template>
-</cp-chat>
+<chat [agent]="stream" />
+
+@if (stream.interrupt(); as interrupt) {
+  <aside>
+    <p>{{ interrupt.value | json }}</p>
+    <button (click)="approve()">Approve</button>
+    <button (click)="reject()">Reject</button>
+  </aside>
+} @else {
+  <p>No pending approvals</p>
+}
 ```
 
 When the graph pauses, `stream.interrupt()` returns the interrupt payload. When no interrupt is active, it returns a falsy value.
@@ -83,7 +77,7 @@ Add methods that resume graph execution with the user's decision:
 
 ```typescript
 approve(): void {
-  this.stream.submit(null);
+  this.stream.submit({ resume: true });
 }
 
 reject(): void {
@@ -91,7 +85,7 @@ reject(): void {
 }
 ```
 
-Submitting `null` is the LangGraph convention for continuing past an interrupt. Submitting `{ resume: false }` signals rejection so the graph can handle it accordingly.
+Submitting a `resume` payload continues past an interrupt. Submitting `{ resume: false }` signals rejection so the graph can handle it accordingly.
 
 <Tip>
 You can extend this pattern to pass structured data back to the graph. For example, `stream.submit({ resume: true, edits: { ... } })` lets the user modify the response before approving.
@@ -141,7 +135,7 @@ A checkpointer is required for interrupts to work. Without it, the graph cannot 
 </Steps>
 
 <Tip>
-The `<cp-chat>` component handles message rendering, input, loading states, and error display. Focus your component on interrupt handling logic.
+The `<chat>` component handles message rendering, input, loading states, and error display. Focus your component on interrupt handling logic.
 </Tip>
 
 <Warning>

@@ -211,7 +211,7 @@
       }
     ],
     "examples": [
-      "```typescript\nconst transport = new MockAgentTransport([\n  [{ type: 'values', data: { messages: [aiMsg('Hello')] } }],\n  [{ type: 'values', data: { status: 'done' } }],\n]);\n```"
+      "```typescript\nconst transport = new MockAgentTransport([\n  [{ type: 'values', messages: [aiMsg('Hello')] }],\n  [{ type: 'values', messages: [aiMsg('Done')] }],\n]);\n```"
     ],
     "properties": [
       {
@@ -405,7 +405,7 @@
       {
         "name": "nextBatch",
         "signature": "nextBatch()",
-        "description": "Advance to the next scripted batch and return its events.",
+        "description": "Advance to the next scripted batch. Pass the returned events to `emit()`.",
         "params": []
       },
       {
@@ -1661,7 +1661,7 @@
       "description": ""
     },
     "examples": [
-      "```typescript\n// In a component field initializer\nconst chat = agent<{ messages: BaseMessage[] }>({\n  assistantId: 'chat_agent',\n  apiUrl: 'http://localhost:2024',\n  threadId: signal(this.savedThreadId),\n  onThreadId: (id) => localStorage.setItem('threadId', id),\n});\n\n// Access signals in template\n// chat.messages(), chat.status(), chat.error()\n```"
+      "```typescript\n// In a component field initializer\nconst chat = agent({\n  assistantId: 'chat_agent',\n  apiUrl: 'http://localhost:2024',\n  threadId: signal(this.savedThreadId),\n  onThreadId: (id) => localStorage.setItem('threadId', id),\n});\n\n// Access signals in template\n// chat.messages(), chat.status(), chat.error()\n```"
     ]
   },
   {

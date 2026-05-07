@@ -179,11 +179,13 @@ export class ReactAgentComponent {
 
   messages = this.agent.messages;
 
-  // Tools currently executing (spinner, progress bar)
-  activeTools = computed(() => this.agent.toolProgress());
-
-  // Tools that finished with results (expandable cards)
-  completedTools = computed(() => this.agent.toolCalls());
+  // Tool calls with status, args, and result data
+  activeTools = computed(() =>
+    this.agent.toolCalls().filter((tool) => tool.status === 'running')
+  );
+  completedTools = computed(() =>
+    this.agent.toolCalls().filter((tool) => tool.status === 'complete')
+  );
 
   send(text: string) {
     this.agent.submit({ message: text });
@@ -233,21 +235,23 @@ The LLM reads the docstring to decide when to call a tool. A vague docstring lik
 
 ### How Tools Surface in Angular
 
-When the agent calls a tool, agent() exposes the execution lifecycle through two signals:
+When the agent calls a tool, agent() exposes the execution lifecycle through `toolCalls()`:
 
 <Tabs>
-<Tab label="toolProgress()">
+<Tab label="toolCalls()">
 
 ```typescript
-// toolProgress() — tools currently executing
+// toolCalls() — tool calls with status, args, and results
 // Updates in real time as tools start and complete
 
 const agent = agent<AgentState>({
   assistantId: 'react_agent',
 });
 
-// Each entry has: name, args, status
-const activeTools = computed(() => agent.toolProgress());
+// Each entry has: id, name, args, status, and optional result
+const activeTools = computed(() =>
+  agent.toolCalls().filter((tool) => tool.status === 'running')
+);
 
 // Template usage
 @Component({
@@ -263,18 +267,19 @@ const activeTools = computed(() => agent.toolProgress());
   `,
 })
 export class ToolProgressComponent {
-  activeTools = computed(() => this.agent.toolProgress());
+  activeTools = computed(() =>
+    this.agent.toolCalls().filter((tool) => tool.status === 'running')
+  );
 }
 ```
 
 </Tab>
-<Tab label="toolCalls()">
+<Tab label="completed calls">
 
 ```typescript
-// toolCalls() — completed tool calls with results
-// Available after each tool finishes
-
-const completedTools = computed(() => agent.toolCalls());
+const completedTools = computed(() =>
+  agent.toolCalls().filter((tool) => tool.status === 'complete')
+);
 
 // Each entry has: name, args, result, duration
 @Component({
@@ -324,7 +329,7 @@ The `should_continue` conditional edge detects `tool_calls` and routes to the `t
 LangGraph Platform streams the tool call and result as SSE events to the Angular client.
 </Step>
 <Step title="agent() updates signals">
-`toolProgress()` updates during execution. `toolCalls()` updates when the tool completes. Both trigger OnPush change detection.
+`toolCalls()` updates as the tool moves through pending, running, complete, and error states. Each update triggers OnPush change detection.
 </Step>
 </Steps>
 
@@ -442,10 +447,14 @@ export class MultiAgentComponent {
   messages = this.orchestrator.messages;
 
   // Currently running delegated work with live status
-  activeTools = computed(() => this.orchestrator.toolProgress());
+  activeTools = computed(() =>
+    this.orchestrator.toolCalls().filter((tool) => tool.status === 'running')
+  );
 
   // Completed tool calls with results
-  completedTools = computed(() => this.orchestrator.toolCalls());
+  completedTools = computed(() =>
+    this.orchestrator.toolCalls().filter((tool) => tool.status === 'complete')
+  );
 
   send(text: string) {
     this.orchestrator.submit({ message: text });
@@ -518,7 +527,7 @@ export class AgentComponent {
 |---|---|---|
 | Tool throws `ToolException` | Error fed back to LLM, agent retries | `toolCalls()` shows error in result |
 | Tool throws unexpected error | LangGraph catches it, marks tool as failed | `error()` fires with details |
-| LLM returns invalid tool args | ToolNode validation fails, error fed to LLM | `toolProgress()` shows failed status |
+| LLM returns invalid tool args | ToolNode validation fails, error fed to LLM | `toolCalls()` shows failed status |
 | Transport error (network) | N/A | `error()` fires, `status()` becomes `'error'` |
 | Agent exceeds recursion limit | Graph raises `GraphRecursionError` | `error()` fires with recursion message |
 
@@ -594,7 +603,7 @@ export class DebugTimelineComponent {
 
   timeTravel(checkpointId: string) {
     this.currentCheckpoint.set(checkpointId);
-    this.agent.submit(null, { checkpointId });
+    this.agent.submit({}, { checkpointId });
   }
 }
 ```
@@ -622,7 +631,7 @@ builder.add_edge("tools", "model")
 graph = builder.compile()
 ```
 
-**Angular signals used:** `messages()`, `toolCalls()`, `toolProgress()`, `status()`
+**Angular signals used:** `messages()`, `toolCalls()`, `status()`
 
 ### Single Agent with Human-in-the-Loop
 
@@ -640,7 +649,7 @@ def execute_action(state: AgentState) -> dict:
     return perform_action(state["pending_action"])
 ```
 
-**Angular signals used:** `messages()`, `interrupt()`, `status()` plus `submit(null, { resume })` to approve
+**Angular signals used:** `messages()`, `interrupt()`, `status()` plus `submit({ resume })` to approve
 
 ### Multi-Agent Supervisor
 
@@ -654,7 +663,7 @@ builder.add_node("analyst", analyst_subgraph)
 builder.add_conditional_edges("supervisor", route_to_agent)
 ```
 
-**Angular signals used:** `messages()`, `subagents()`, `activeSubagents()`, `toolCalls()`, `toolProgress()`, `status()`
+**Angular signals used:** `messages()`, `subagents()`, `toolCalls()`, `status()`
 
 ### Decision Matrix
 

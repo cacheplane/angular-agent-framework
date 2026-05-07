@@ -57,7 +57,7 @@ Use Angular's control flow to render messages reactively:
 
 ```html
 @for (msg of stream.messages(); track $index) {
-  <div [class]="'message--' + msg.getType()">
+  <div [class]="'message--' + msg.role">
     {{ msg.content }}
   </div>
 }
@@ -125,4 +125,3 @@ Never expose your LangSmith API key in client-side code. Use server-side environ
 - [Chat Messages](/chat/core-capabilities/messages/overview/python) — Learn how ChatMessagesComponent renders messages
 - [Chat Input](/chat/core-capabilities/input/overview/python) — Explore ChatInputComponent for message submission
 </Related>
-

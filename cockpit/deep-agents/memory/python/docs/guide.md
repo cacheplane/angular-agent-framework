@@ -5,7 +5,7 @@ Build a chat interface where the agent remembers facts about the user across tur
 </Summary>
 
 <Prompt>
-Add a memory sidebar to this Angular component using `agent()` from `@ngaf/langgraph`. Use `stream.value()` to access the agent's `agent_memory` state, derive `memoryEntries` with `computed()`, and bind them to the sidebar via the `<cp-chat>` component from `@ngaf/chat`.
+Add a memory sidebar to this Angular component using `agent()` from `@ngaf/langgraph`. Use `stream.value()` to access the agent's `agent_memory` state, derive `memoryEntries` with `computed()`, and bind them to the sidebar beside the `<chat>` component from `@ngaf/chat`.
 </Prompt>
 
 <Steps>
@@ -74,15 +74,12 @@ export class MemoryComponent {
 </Step>
 <Step title="Build the template with memory sidebar">
 
-Use the `<cp-chat>` component and project a sidebar via `ng-template`:
+Use the `<chat>` component from `@ngaf/chat` and render a sibling sidebar:
 
 ```html
-<cp-chat
-  [messages]="stream.messages()"
-  [isLoading]="stream.isLoading()"
-  [error]="stream.error()"
-  (sendMessage)="send($event)">
-  <ng-template #sidebar>
+<chat [agent]="stream" />
+
+<aside>
     <h3>Learned Facts</h3>
     @for (entry of memoryEntries(); track entry[0]) {
       <div>
@@ -93,11 +90,10 @@ Use the `<cp-chat>` component and project a sidebar via `ng-template`:
     @empty {
       <p>Tell the agent something about yourself to see it remember.</p>
     }
-  </ng-template>
-</cp-chat>
+</aside>
 ```
 
-The `#sidebar` template is projected into the chat layout. Memory entries render reactively as the agent learns new facts.
+The sibling panel renders memory entries reactively as the agent learns new facts.
 
 </Step>
 <Step title="The LangGraph memory backend">

@@ -11,8 +11,8 @@ import type { ThreadState } from '@langchain/langgraph-sdk';
  * @example
  * ```typescript
  * const transport = new MockAgentTransport([
- *   [{ type: 'values', data: { messages: [aiMsg('Hello')] } }],
- *   [{ type: 'values', data: { status: 'done' } }],
+ *   [{ type: 'values', messages: [aiMsg('Hello')] }],
+ *   [{ type: 'values', messages: [aiMsg('Done')] }],
  * ]);
  * ```
  */
@@ -37,7 +37,7 @@ export class MockAgentTransport implements AgentTransport {
     this.script = script;
   }
 
-  /** Advance to the next scripted batch and return its events. */
+  /** Advance to the next scripted batch. Pass the returned events to `emit()`. */
   nextBatch(): StreamEvent[] {
     if (this.scriptIndex >= this.script.length) return [];
     return this.script[this.scriptIndex++];

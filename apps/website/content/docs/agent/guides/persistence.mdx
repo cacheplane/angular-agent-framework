@@ -119,7 +119,7 @@ import { agent } from '@ngaf/langgraph';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ChatComponent {
-  chat = agent<{ messages: BaseMessage[] }>({
+  chat = agent({
     assistantId: 'chat_agent',
     // Restore thread from localStorage on mount
     threadId: signal(localStorage.getItem('threadId')),
@@ -178,7 +178,7 @@ export class ThreadListComponent {
   threads = signal<Thread[]>(this.loadThreads());
   activeThreadId = signal<string | null>(null);
 
-  chat = agent<{ messages: BaseMessage[] }>({
+  chat = agent({
     assistantId: 'chat_agent',
     threadId: this.activeThreadId,
     onThreadId: (id) => {
@@ -257,7 +257,7 @@ When you pass a Signal as `threadId`, agent() reacts to every change. Set the si
 ```typescript
 activeThreadId = signal<string | null>(null);
 
-chat = agent<{ messages: BaseMessage[] }>({
+chat = agent({
   assistantId: 'chat_agent',
   threadId: this.activeThreadId,  // Signal — switches reactively
   onThreadId: (id) => this.activeThreadId.set(id),

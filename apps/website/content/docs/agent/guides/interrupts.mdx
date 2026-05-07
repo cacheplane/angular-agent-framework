@@ -143,7 +143,8 @@ import {
   signal,
   ChangeDetectionStrategy,
 } from '@angular/core';
-import { agent, BaseMessage } from '@ngaf/langgraph';
+import { agent } from '@ngaf/langgraph';
+import type { BaseMessage } from '@langchain/core/messages';
 
 interface ApprovalPayload {
   action: string;
@@ -186,13 +187,13 @@ export class ApprovalComponent {
   }
 
   approve() {
-    this.agent.submit(null, {
+    this.agent.submit({
       resume: { approved: true },
     });
   }
 
   reject() {
-    this.agent.submit(null, {
+    this.agent.submit({
       resume: {
         approved: false,
         reason: this.rejectionReason() || 'User rejected',
@@ -352,7 +353,8 @@ import {
   computed,
   ChangeDetectionStrategy,
 } from '@angular/core';
-import { agent, BaseMessage } from '@ngaf/langgraph';
+import { agent } from '@ngaf/langgraph';
+import type { BaseMessage } from '@langchain/core/messages';
 
 interface StepApproval {
   step_number: number;
@@ -391,11 +393,11 @@ export class DeployApprovalComponent {
   allInterrupts = computed(() => this.agent.interrupts());
 
   approveStep() {
-    this.agent.submit(null, { resume: { approved: true } });
+    this.agent.submit({ resume: { approved: true } });
   }
 
   abortDeploy() {
-    this.agent.submit(null, {
+    this.agent.submit({
       resume: { approved: false, reason: 'Deployment aborted by user' },
     });
   }
@@ -523,7 +525,7 @@ effect(() => {
   if (interrupt) {
     const sub = timer(5 * 60 * 1000).subscribe(() => {
       // Auto-reject after 5 minutes of inaction
-      this.agent.submit(null, {
+      this.agent.submit({
         resume: { approved: false, reason: 'Approval timeout' },
       });
     });

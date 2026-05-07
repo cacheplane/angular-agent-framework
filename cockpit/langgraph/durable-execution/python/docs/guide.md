@@ -8,7 +8,7 @@ status in real time and exposes a "Retry" button when errors occur.
 </Summary>
 
 <Prompt>
-Add a durable multi-step execution workflow to this Angular component using `agent()` from `@ngaf/langgraph`. Display `stream.status()` as a colour-coded badge, show a `stream.hasValue()` indicator, and render a "Retry" button that calls `stream.reload()` when `stream.error()` is set. Bind `stream.messages()` in the template via the `<cp-chat>` component from `@ngaf/chat`.
+Add a durable multi-step execution workflow to this Angular component using `agent()` from `@ngaf/langgraph`. Display `stream.status()` as a colour-coded badge, show a `stream.hasValue()` indicator, and render a "Retry" button that calls `stream.reload()` when `stream.error()` is set. Bind the conversation with `<chat [agent]="stream" />` from `@ngaf/chat`.
 </Prompt>
 
 <Steps>
@@ -55,7 +55,7 @@ export class DurableExecutionComponent {
 </Step>
 <Step title="Monitor status with a badge">
 
-Use `stream.status()` to display real-time execution state. The signal returns `'idle'`, `'loading'`, `'resolved'`, or `'error'`:
+Use `stream.status()` to display real-time execution state. The signal returns `'idle'`, `'running'`, or `'error'`:
 
 ```html
 <span [style.background]="statusBadgeColor()">
@@ -66,9 +66,8 @@ Use `stream.status()` to display real-time execution state. The signal returns `
 ```typescript
 statusBadgeColor(): string {
   switch (this.stream.status()) {
-    case 'loading':
-    case 'reloading': return '#2563eb';
-    case 'resolved':  return '#16a34a';
+    case 'running':   return '#2563eb';
+    case 'idle':      return '#16a34a';
     case 'error':     return '#dc2626';
     default:          return '#6b7280';
   }
@@ -151,7 +150,7 @@ For production, replace `MemorySaver` with `PostgresCheckpointer` for durable pe
 </Steps>
 
 <Tip>
-The `<cp-chat>` component handles message rendering, input, loading states, and error display. Keep your component focused on status monitoring and retry logic.
+The `<chat>` component handles message rendering, input, loading states, and error display. Keep your component focused on status monitoring and retry logic.
 </Tip>
 
 <Warning>

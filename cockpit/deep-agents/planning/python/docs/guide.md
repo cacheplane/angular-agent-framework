@@ -7,7 +7,7 @@ sidebar displays each step's status as the agent works through them.
 </Summary>
 
 <Prompt>
-Add a task planning sidebar to this Angular component using `agent()` from `@ngaf/langgraph`. Use `stream.value()` to access the agent's plan state, derive `planSteps` with `computed()`, and bind them to the sidebar via the `<cp-chat>` component from `@ngaf/chat`.
+Add a task planning sidebar to this Angular component using `agent()` from `@ngaf/langgraph`. Use `stream.value()` to access the agent's plan state, derive `planSteps` with `computed()`, and bind them to the sidebar beside the `<chat>` component from `@ngaf/chat`.
 </Prompt>
 
 <Steps>
@@ -81,15 +81,12 @@ export class PlanningComponent {
 </Step>
 <Step title="Build the template with plan sidebar">
 
-Use the `<cp-chat>` component and project a sidebar via `ng-template`:
+Use the `<chat>` component from `@ngaf/chat` and render a sibling sidebar:
 
 ```html
-<cp-chat
-  [messages]="stream.messages()"
-  [isLoading]="stream.isLoading()"
-  [error]="stream.error()"
-  (sendMessage)="send($event)">
-  <ng-template #sidebar>
+<chat [agent]="stream" />
+
+<aside>
     <h3>Task Plan</h3>
     @for (step of planSteps(); track $index) {
       <div>
@@ -102,11 +99,10 @@ Use the `<cp-chat>` component and project a sidebar via `ng-template`:
     @empty {
       <p>Ask a complex question to see the plan.</p>
     }
-  </ng-template>
-</cp-chat>
+</aside>
 ```
 
-The `#sidebar` template is projected into the chat layout. Steps render reactively as the agent updates the plan state.
+The sibling panel renders steps reactively as the agent updates the plan state.
 
 </Step>
 <Step title="The LangGraph planning backend">

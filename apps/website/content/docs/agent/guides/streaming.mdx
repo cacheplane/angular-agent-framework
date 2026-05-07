@@ -60,7 +60,6 @@ async for event in graph.astream_events(
 ```typescript
 import { Component, computed, ChangeDetectionStrategy } from '@angular/core';
 import { agent } from '@ngaf/langgraph';
-import { BaseMessage } from '@langchain/core/messages';
 
 @Component({
   selector: 'app-chat',
@@ -68,11 +67,11 @@ import { BaseMessage } from '@langchain/core/messages';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ChatComponent {
-  readonly chat = agent<{ messages: BaseMessage[] }>({
+  readonly chat = agent({
     assistantId: 'chat_agent',
   });
 
-  readonly isStreaming = computed(() => this.chat.status() === 'loading');
+  readonly isStreaming = computed(() => this.chat.isLoading());
 
   send(text: string) {
     this.chat.submit({ message: text });
@@ -108,7 +107,7 @@ The `status()` signal reports the current lifecycle state of the SSE connection:
 <Step title="idle">
 No active stream. The resource is ready to accept a new message.
 </Step>
-<Step title="loading">
+<Step title="running">
 Tokens are arriving over the SSE connection. Signal values update in real-time with each chunk.
 </Step>
 <Step title="error">
@@ -126,7 +125,7 @@ LangGraph supports three stream modes. Pass `streamMode` to control what each SS
 ```typescript
 // Receives the full agent state after every node execution.
 // Best for message-based chat interfaces.
-const chat = agent<{ messages: BaseMessage[] }>({
+const chat = agent({
   assistantId: 'chat_agent',
   streamMode: 'values',
 });
@@ -140,7 +139,7 @@ const chat = agent<{ messages: BaseMessage[] }>({
 ```typescript
 // Streams individual message tokens as they are generated.
 // Best for token-by-token rendering with lowest perceived latency.
-const chat = agent<{ messages: BaseMessage[] }>({
+const chat = agent({
   assistantId: 'chat_agent',
   streamMode: 'messages',
 });
@@ -152,7 +151,7 @@ const chat = agent<{ messages: BaseMessage[] }>({
 ```typescript
 // Emits raw LangGraph run events (on_chain_start, on_llm_stream, etc.).
 // Best for advanced observability or custom progress indicators.
-const chat = agent<{ messages: BaseMessage[] }>({
+const chat = agent({
   assistantId: 'chat_agent',
   streamMode: 'events',
 });
@@ -175,7 +174,6 @@ If the SSE connection drops or the agent throws, `status()` transitions to `'err
 ```typescript
 import { Component, computed, ChangeDetectionStrategy } from '@angular/core';
 import { agent } from '@ngaf/langgraph';
-import { BaseMessage } from '@langchain/core/messages';
 
 @Component({
   selector: 'app-chat',
@@ -183,7 +181,7 @@ import { BaseMessage } from '@langchain/core/messages';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ChatComponent {
-  readonly chat = agent<{ messages: BaseMessage[] }>({
+  readonly chat = agent({
     assistantId: 'chat_agent',
   });
 
@@ -220,7 +218,7 @@ export class ChatComponent {
 By default Agent emits a signal update for every incoming SSE chunk. On fast connections this can trigger hundreds of renders per second. Use the `throttle` option to coalesce updates.
 
 ```typescript
-const chat = agent<{ messages: BaseMessage[] }>({
+const chat = agent({
   assistantId: 'chat_agent',
   // Batch incoming chunks and flush at most once every 50 ms
   throttle: 50,
