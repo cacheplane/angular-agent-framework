@@ -173,7 +173,7 @@
       },
       {
         "name": "updateState",
-        "signature": "updateState(threadId: string, values: Record<string, unknown>, _signal: AbortSignal)",
+        "signature": "updateState(threadId: string, values: Record<string, unknown>, _signal: AbortSignal, options: object)",
         "description": "Update server-side thread state, e.g. to remove messages for regenerate rollback.",
         "params": [
           {
@@ -193,6 +193,12 @@
             "type": "AbortSignal",
             "description": "",
             "optional": false
+          },
+          {
+            "name": "options",
+            "type": "object",
+            "description": "",
+            "optional": true
           }
         ]
       }
@@ -937,7 +943,7 @@
       {
         "name": "regenerate",
         "type": "object",
-        "description": "Discards the assistant message at the given index AND all messages after\nit, then re-runs the agent against the trimmed conversation tail. The\npreceding user message (at index - 1) is preserved and re-submitted as\nthe agent's input. No new user message is added to the history.\n\nThrows if the message at `index` is not 'assistant' role, or if the\nagent is currently loading another response.",
+        "description": "Truncate the thread at the given assistant-message index and re-submit the\npreceding user message. Used by `<ngaf-chat>`'s regenerate action and any\ncustom UI that wants the same semantics. Rejects if the agent is currently\nloading, if the index does not point at an assistant message, or if no\npreceding user message exists.",
         "optional": false
       },
       {
@@ -1301,7 +1307,7 @@
       {
         "name": "regenerate",
         "type": "object",
-        "description": "Discards the assistant message at the given index AND all messages after\nit, then re-runs the agent against the trimmed conversation tail. The\npreceding user message (at index - 1) is preserved and re-submitted as\nthe agent's input. No new user message is added to the history.\n\nThrows if the message at `index` is not 'assistant' role, or if the\nagent is currently loading another response.",
+        "description": "Truncate the thread at the given assistant-message index and re-submit the\npreceding user message. Used by `<ngaf-chat>`'s regenerate action and any\ncustom UI that wants the same semantics. Rejects if the agent is currently\nloading, if the index does not point at an assistant message, or if no\npreceding user message exists.",
         "optional": false
       },
       {
