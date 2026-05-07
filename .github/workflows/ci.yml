@@ -281,7 +281,10 @@ jobs:
           if printf '%s\n' "$changed_files" | grep -E '^(vercel\.examples\.json|scripts/assemble-examples\.ts)$' >/dev/null; then
             examples_changed=true
           fi
-          if printf '%s\n' "$changed_files" | grep -E '^libs/(chat|langgraph|ag-ui|render|a2ui|partial-json|example-layouts)/' >/dev/null; then
+          # Any libs/ change retriggers examples deploy. Previous hand-maintained
+          # allow-list silently broke whenever a new lib was added; cost of a
+          # spurious example rebuild is far cheaper than a missed deploy.
+          if printf '%s\n' "$changed_files" | grep -E '^libs/' >/dev/null; then
             examples_changed=true
           fi
           echo "changed=$examples_changed" >> "$GITHUB_OUTPUT"
