@@ -312,11 +312,13 @@ export interface LangGraphAgent<T = unknown, ResolvedBag extends BagTemplate = B
   reload: () => void;
 
   /**
-   * Truncate the thread at the given assistant-message index and re-submit the
-   * preceding user message. Used by `<ngaf-chat>`'s regenerate action and any
-   * custom UI that wants the same semantics. Rejects if the agent is currently
-   * loading, if the index does not point at an assistant message, or if no
-   * preceding user message exists.
+   * Discards the assistant message at the given index AND all messages after
+   * it, then re-runs the agent against the trimmed conversation tail. The
+   * preceding user message (at index - 1) is preserved and re-submitted as
+   * the agent's input. No new user message is added to the history.
+   *
+   * Throws if the message at `index` is not 'assistant' role, or if the
+   * agent is currently loading another response.
    */
   regenerate: (assistantMessageIndex: number) => Promise<void>;
 
