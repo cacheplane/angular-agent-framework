@@ -182,7 +182,7 @@ const FEATURES: Record<FeatKey, FeatDef> = {
   stream: {
     label: 'Streaming', color: '#6C8EFF', rgb: '108,142,255', badgeText: 'chat-messages',
     left:  [{ tag: '<chat-messages>', body: 'Token-by-token rendering with live cursor. Signals-native, fully OnPush.', color: '#6C8EFF', rgb: '108,142,255' }],
-    right: [{ tag: 'isStreaming()', body: 'Reactive signal — true while tokens arrive. Drive spinners and disable inputs without polling.', color: '#6C8EFF', rgb: '108,142,255' }],
+    right: [{ tag: 'isLoading()', body: 'Reactive signal — true while tokens arrive. Drive spinners and disable inputs without polling.', color: '#6C8EFF', rgb: '108,142,255' }],
     question: 'Walk me through LangGraph state.', run: runStream,
   },
   genui: {

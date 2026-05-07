@@ -15,18 +15,18 @@ const SIGNUPS_FILE = path.join(process.cwd(), 'data', 'whitepaper-signups.ndjson
 
 const VALID_PAPERS: PaperId[] = ['overview', 'angular', 'render', 'chat'];
 
-const RESPONSE_EMAILS: Record<PaperId, (name?: string) => string> = {
+const DOWNLOAD_EMAILS: Record<PaperId, (name?: string) => string> = {
   overview: whitepaperDownloadHtml,
   angular: angularDownloadHtml,
   render: renderDownloadHtml,
   chat: chatDownloadHtml,
 };
 
-const RESPONSE_SUBJECTS: Record<PaperId, string> = {
-  overview: 'You are on the Angular Agent Readiness Guide update list',
-  angular: 'You are on the Agent Streaming Guide update list',
-  render: 'You are on the Generative UI Guide update list',
-  chat: 'You are on the Agent Chat Guide update list',
+const DOWNLOAD_SUBJECTS: Record<PaperId, string> = {
+  overview: 'Your Angular Agent Readiness Guide',
+  angular: 'Your Enterprise Guide to Agent Streaming',
+  render: 'Your Enterprise Guide to Generative UI',
+  chat: 'Your Enterprise Guide to Agent Chat Interfaces',
 };
 
 export async function POST(req: NextRequest) {
@@ -55,20 +55,20 @@ export async function POST(req: NextRequest) {
     console.error('Failed to write signup:', err);
   }
 
-  // Send confirmation + schedule drip + sync contacts (best-effort)
+  // Send download confirmation + schedule drip + sync contacts (best-effort)
   try {
-    const responseHtml = RESPONSE_EMAILS[paper](name || undefined);
+    const downloadHtml = DOWNLOAD_EMAILS[paper](name || undefined);
     await Promise.all([
       sendEmail({
         from: FROM,
         to: email,
-        subject: RESPONSE_SUBJECTS[paper],
-        html: responseHtml,
+        subject: DOWNLOAD_SUBJECTS[paper],
+        html: downloadHtml,
       }),
       scheduleWhitepaperDrip(email, paper),
       addToAudience(email, name || undefined),
       loopsUpsertContact({ email, firstName: name || undefined, source: `whitepaper-${paper}` }),
-      loopsSendEvent({ email, eventName: 'whitepaper_signup', properties: { paper } }),
+      loopsSendEvent({ email, eventName: 'whitepaper_downloaded', properties: { paper } }),
     ]);
   } catch (err) {
     console.error('[whitepaper-signup] email pipeline failed:', err);

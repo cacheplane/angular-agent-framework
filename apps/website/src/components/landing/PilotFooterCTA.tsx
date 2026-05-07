@@ -117,7 +117,8 @@ export function PilotFooterCTA() {
 
           {/* Secondary CTA */}
           <a
-            href="/docs"
+            href="/whitepaper.pdf"
+            download
             className="pilot-footer-secondary-btn"
             style={{
               display: 'inline-block',
@@ -133,7 +134,7 @@ export function PilotFooterCTA() {
               transition: 'border-color 0.2s ease',
             }}
           >
-            Read the Docs
+            Download the Guide
           </a>
         </div>
 

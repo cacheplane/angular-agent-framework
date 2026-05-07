@@ -101,7 +101,8 @@ export function SolutionFooterCTA({ color, headline, subtext }: SolutionFooterCT
             Start Your Pilot →
           </Link>
           <a
-            href="/docs"
+            href="/whitepaper.pdf"
+            download
             className="solution-footer-secondary"
             style={{
               display: 'inline-block',
@@ -117,7 +118,7 @@ export function SolutionFooterCTA({ color, headline, subtext }: SolutionFooterCT
               transition: 'border-color 0.2s ease',
             }}
           >
-            Read the Docs
+            Download the Guide
           </a>
         </div>
 

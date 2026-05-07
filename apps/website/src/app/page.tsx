@@ -26,7 +26,7 @@ export default async function HomePage() {
       <PilotSolution />
       {/* 5. Product — the three-library stack */}
       <TheStack />
-      {/* 6. Lead gen — guide update signup */}
+      {/* 6. Lead gen — whitepaper download */}
       <WhitePaperSection />
       {/* 7. Final CTA — "Ready to stop stalling?" */}
       <PilotFooterCTA />

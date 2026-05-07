@@ -64,12 +64,29 @@ test('/llms.txt returns plain text', async ({ page }) => {
   expect(response?.headers()['content-type']).toContain('text/plain');
 });
 
-test('marketing pages do not link to retired whitepaper PDFs', async ({ page }) => {
-  for (const route of ['/', '/angular', '/render', '/chat', '/pilot-to-prod', '/solutions']) {
+test('marketing pages link to downloadable whitepaper PDFs', async ({ page }) => {
+  const expectedDownloads: Record<string, string> = {
+    '/': '/whitepaper.pdf',
+    '/angular': '/whitepapers/angular.pdf',
+    '/render': '/whitepapers/render.pdf',
+    '/chat': '/whitepapers/chat.pdf',
+  };
+
+  for (const [route, href] of Object.entries(expectedDownloads)) {
     await page.goto(route);
-    const retiredLinks = await page.locator('a[href$=".pdf"]').evaluateAll(links =>
-      links.map(link => link.getAttribute('href')).filter(Boolean),
-    );
-    expect(retiredLinks, `${route} has retired PDF links`).toEqual([]);
+    await expect(page.locator(`a[href="${href}"]`).first(), `${route} links ${href}`).toBeVisible();
+  }
+});
+
+test('whitepaper PDFs are served as static downloads', async ({ request }) => {
+  for (const href of [
+    '/whitepaper.pdf',
+    '/whitepapers/angular.pdf',
+    '/whitepapers/render.pdf',
+    '/whitepapers/chat.pdf',
+  ]) {
+    const response = await request.get(href);
+    expect(response.ok(), `${href} responds successfully`).toBe(true);
+    expect(response.headers()['content-type'], `${href} content type`).toContain('application/pdf');
   }
 });

@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { tokens } from '../../../lib/design-tokens';
 import { analyticsEvents } from '../../lib/analytics/events';
-import { track } from '../../lib/analytics/client';
+import { track, trackWhitepaperDownloadClick } from '../../lib/analytics/client';
 
 type FormState = 'idle' | 'submitting' | 'done' | 'error';
 
@@ -112,10 +112,16 @@ export function WhitePaperSection() {
                 background: 'rgba(26,122,64,.07)', border: '1px solid rgba(26,122,64,.2)',
                 fontSize: '0.88rem', color: '#1a7a40', lineHeight: 1.55,
               }}>
-                ✓ Thanks! We'll send the refreshed guide when it is ready.
+                ✓ Check your inbox — the guide is on its way!
               </div>
               <a
-                href="/docs"
+                href="/whitepaper.pdf"
+                download="angular-agent-readiness-guide.pdf"
+                onClick={() => trackWhitepaperDownloadClick('overview', {
+                  surface: 'home',
+                  source_section: 'whitepaper-section',
+                  cta_id: 'whitepaper_section_direct_download',
+                })}
                 style={{
                   display: 'inline-block',
                   marginTop: 12,
@@ -125,7 +131,7 @@ export function WhitePaperSection() {
                   fontFamily: 'Inter, sans-serif',
                 }}
               >
-                Read the current docs
+                or download directly
               </a>
             </>
           ) : (
@@ -173,11 +179,17 @@ export function WhitePaperSection() {
                     transition: 'background .2s, border-color .2s',
                   }}
                 >
-                  {formState === 'submitting' ? 'Sending…' : 'Send me updates'}
+                  {formState === 'submitting' ? 'Sending…' : 'Send me the guide'}
                 </button>
               </form>
               <a
-                href="/docs"
+                href="/whitepaper.pdf"
+                download="angular-agent-readiness-guide.pdf"
+                onClick={() => trackWhitepaperDownloadClick('overview', {
+                  surface: 'home',
+                  source_section: 'whitepaper-section',
+                  cta_id: 'whitepaper_section_direct_download',
+                })}
                 style={{
                   display: 'inline-block',
                   marginTop: 12,
@@ -187,7 +199,7 @@ export function WhitePaperSection() {
                   fontFamily: 'Inter, sans-serif',
                 }}
               >
-                Read the current docs
+                or download directly
               </a>
             </>
           )}
@@ -214,8 +226,8 @@ export function WhitePaperSection() {
             fontStyle: 'italic', fontSize: '1rem', color: tokens.colors.textSecondary,
             lineHeight: 1.55, marginBottom: 28,
           }}>
-            The Angular Agent Readiness Guide is being refreshed to match the current framework.
-            Join the update list, or use the docs for the live API surface.
+            The Angular Agent Readiness Guide. Six chapters. Six production-readiness dimensions.
+            What separates demos from shipped products.
           </p>
         </div>
       </motion.div>
