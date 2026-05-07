@@ -1,6 +1,8 @@
 # LangGraph `agent()` Unification Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development.
+>
+> **⚠️ Path note (post-PR #203):** API docs are now generated per-library to `apps/website/content/docs/{lib}/api/api-docs.json` (script: `apps/website/scripts/generate-api-docs.ts`). The legacy `apps/website/public/api-docs.json` referenced below has been removed.
 
 **Goal:** Refactor `@ngaf/langgraph` so `agent({...})` returns a unified `LangGraphAgent` (extends `AgentWithHistory`) preserving all `AgentRef` public surface. Delete `toAgent(ref)`. Migrate ~23 cockpit components and ~20 website doc files.
 

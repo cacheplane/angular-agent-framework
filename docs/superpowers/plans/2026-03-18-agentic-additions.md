@@ -1,6 +1,8 @@
 # Angular Agent Framework — Agentic Additions Implementation Plan
 
 > **For agentic workers:** REQUIRED: Use superpowers:subagent-driven-development (if subagents available) or superpowers:executing-plans to implement this plan. Steps use checkbox (`- [ ]`) syntax for tracking. Set up an isolated workspace first using superpowers:using-git-worktrees.
+>
+> **⚠️ Path note (post-PR #203):** API docs are now generated per-library to `apps/website/content/docs/{lib}/api/api-docs.json`. References to `apps/website/public/api-docs.json` below are historical; the file no longer exists.
 
 **Goal:** Add the hero redesign, agentic docs infrastructure, and MCP server package described in the two approved specs, layered on top of the base website plan (`2026-03-18-website.md`).
 

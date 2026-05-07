@@ -1,3 +1,15 @@
+## 0.0.28 — 2026-05-07
+
+### Breaking
+
+- **`@ngaf/langgraph`** — removed the `messagesKey` option from `AgentOptions`. The messages slot is now fixed at the `messages` state key, matching the LangGraph Python/JS conventions. Consumers passing `messagesKey: 'customKey'` should rename the upstream graph state slot to `messages` instead. (Landed in #202; this entry backfills the release notes.)
+
+### Fixed
+
+- **`@ngaf/langgraph`** — `RemoveMessage` wire-shape now includes `role` + `content` so checkpoint rollback (used by `regenerate()`) round-trips correctly through the LangGraph SDK serializer.
+
+---
+
 ## 0.0.22 — 2026-05-04
 
 ### Added

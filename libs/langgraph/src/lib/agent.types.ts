@@ -311,6 +311,15 @@ export interface LangGraphAgent<T = unknown, ResolvedBag extends BagTemplate = B
   /** Re-submit the last input to restart the stream. */
   reload: () => void;
 
+  /**
+   * Truncate the thread at the given assistant-message index and re-submit the
+   * preceding user message. Used by `<ngaf-chat>`'s regenerate action and any
+   * custom UI that wants the same semantics. Rejects if the agent is currently
+   * loading, if the index does not point at an assistant message, or if no
+   * preceding user message exists.
+   */
+  regenerate: (assistantMessageIndex: number) => Promise<void>;
+
   /** Progress updates for currently executing tools. */
   toolProgress: Signal<ToolProgress[]>;
 
