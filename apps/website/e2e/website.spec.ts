@@ -63,3 +63,13 @@ test('/llms.txt returns plain text', async ({ page }) => {
   const response = await page.goto('/llms.txt');
   expect(response?.headers()['content-type']).toContain('text/plain');
 });
+
+test('marketing pages do not link to retired whitepaper PDFs', async ({ page }) => {
+  for (const route of ['/', '/angular', '/render', '/chat', '/pilot-to-prod', '/solutions']) {
+    await page.goto(route);
+    const retiredLinks = await page.locator('a[href$=".pdf"]').evaluateAll(links =>
+      links.map(link => link.getAttribute('href')).filter(Boolean),
+    );
+    expect(retiredLinks, `${route} has retired PDF links`).toEqual([]);
+  }
+});

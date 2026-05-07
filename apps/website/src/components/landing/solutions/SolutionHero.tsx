@@ -107,8 +107,7 @@ export function SolutionHero({ solution }: SolutionHeroProps) {
             Start a Pilot
           </Link>
           <a
-            href="/whitepaper.pdf"
-            download
+            href="/docs"
             style={{
               display: 'inline-flex',
               alignItems: 'center',
@@ -127,7 +126,7 @@ export function SolutionHero({ solution }: SolutionHeroProps) {
               minHeight: 44,
             }}
           >
-            Download the Guide
+            Read the Docs
           </a>
         </motion.div>
       </div>

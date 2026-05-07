@@ -82,8 +82,7 @@ export function RenderFooterCTA() {
           </Link>
 
           <a
-            href="/whitepapers/render.pdf"
-            download
+            href="#render-whitepaper-gate"
             className="render-footer-secondary-btn"
             style={{
               display: 'inline-block', padding: '0.875rem 2rem',
@@ -94,7 +93,7 @@ export function RenderFooterCTA() {
               transition: 'border-color 0.2s ease',
             }}
           >
-            Download the Guide
+            Get Guide Updates
           </a>
         </div>
 

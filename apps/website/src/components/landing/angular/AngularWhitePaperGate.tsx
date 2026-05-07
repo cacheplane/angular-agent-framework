@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { tokens } from '@ngaf/design-tokens';
 import { analyticsEvents } from '../../../lib/analytics/events';
-import { track, trackWhitepaperDownloadClick } from '../../../lib/analytics/client';
+import { track } from '../../../lib/analytics/client';
 
 type FormState = 'idle' | 'submitting' | 'done' | 'error';
 
@@ -97,7 +97,7 @@ export function AngularWhitePaperGate() {
             fontStyle: 'italic', fontSize: '1rem', color: tokens.colors.textSecondary,
             lineHeight: 1.55, marginBottom: 28,
           }}>
-            Six chapters covering the last-mile gap, the agent() API, thread persistence, interrupts, time-travel, and deterministic testing with MockAgentTransport.
+            The guide is being refreshed to match the current @ngaf/langgraph API. Join the update list, or use the live docs for the current agent(), thread persistence, interrupts, time-travel, and testing surfaces.
           </p>
           <p style={{
             fontFamily: 'Inter, sans-serif', fontSize: '0.8rem',
@@ -105,13 +105,7 @@ export function AngularWhitePaperGate() {
           }}>
             Part of the Cacheplane Angular Agent Framework.
           </p>
-          <a href="/whitepapers/angular.pdf" download="cacheplane-angular-enterprise-guide.pdf"
-            onClick={() => trackWhitepaperDownloadClick('angular', {
-              surface: 'library_landing',
-              source_section: 'angular-whitepaper-gate',
-              library: 'agent',
-              cta_id: 'angular_whitepaper_download',
-            })}
+          <a href="/docs/agent/api/agent"
             style={{
               display: 'inline-flex', alignItems: 'center', gap: 8,
               background: tokens.colors.accent, color: '#fff',
@@ -120,7 +114,7 @@ export function AngularWhitePaperGate() {
               fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em',
               textDecoration: 'none', boxShadow: '0 4px 16px rgba(0,64,144,.28)',
             }}>
-            ↓ Download PDF
+            Read Current Docs
           </a>
         </div>
 
@@ -130,7 +124,7 @@ export function AngularWhitePaperGate() {
             fontSize: '0.62rem', textTransform: 'uppercase', letterSpacing: '0.1em',
             fontWeight: 700, color: tokens.colors.textMuted, marginBottom: 16,
           }}>
-            Optional — Get notified of updates
+            Get notified when the guide is refreshed
           </p>
           {formState === 'done' ? (
             <div style={{
@@ -138,7 +132,7 @@ export function AngularWhitePaperGate() {
               background: 'rgba(26,122,64,.07)', border: '1px solid rgba(26,122,64,.2)',
               fontSize: '0.88rem', color: '#1a7a40', lineHeight: 1.55,
             }}>
-              ✓ Thanks! We'll reach out when the guide is updated.
+              ✓ Thanks! We'll reach out when the refreshed guide is ready.
             </div>
           ) : (
             <form onSubmit={handleSubmit}>

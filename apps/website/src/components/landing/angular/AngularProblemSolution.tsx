@@ -17,7 +17,7 @@ const SOLUTIONS = [
   'OnPush compatible from day one',
   'Built-in thread persistence and restore',
   'interrupt() signal for human approval flows',
-  'MockStreamTransport for offline, deterministic tests',
+  'MockAgentTransport for offline, deterministic tests',
 ];
 
 export function AngularProblemSolution() {

@@ -11,7 +11,7 @@ const LIBRARIES = [
     color: tokens.colors.accent,
     rgb: '0,64,144',
     oneLiner: 'Signal-native streaming for LangGraph agents',
-    chips: ['agent()', 'provideAgent()', 'interrupt()', 'MockStreamTransport'],
+    chips: ['agent()', 'provideAgent()', 'interrupt()', 'MockAgentTransport'],
     href: '/angular',
     ctaLabel: 'Explore Angular',
   },

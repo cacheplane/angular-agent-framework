@@ -4,24 +4,21 @@ import { HighlightedCode } from '../HighlightedCode';
 const SNIPPET_1 = `import { agent } from '@ngaf/langgraph';
 
 const chat = agent({
-  graphId: 'my-agent',
-  url: 'https://my-langgraph.cloud/api',
+  assistantId: 'my-agent',
+  apiUrl: 'https://my-langgraph.cloud',
 });
 
 // Reactive signals — OnPush compatible
-chat.messages();    // Signal<AIMessage[]>
-chat.isStreaming(); // Signal<boolean>
-chat.interrupt();   // Signal<Interrupt | null>`;
+chat.messages();  // Signal<Message[]>
+chat.isLoading(); // Signal<boolean>
+chat.interrupt(); // Signal<AgentInterrupt | undefined>`;
 
 const SNIPPET_2 = `import { provideAgent } from '@ngaf/langgraph';
 
 provideAgent({
-  graphId: 'my-agent',
-  url: environment.langgraphUrl,
-  threadId: savedThreadId,
-  onThreadId: (id) => localStorage.setItem('threadId', id),
+  apiUrl: environment.langgraphUrl,
   transport: isTest
-    ? new MockStreamTransport(fixtures)
+    ? new MockAgentTransport(fixtures)
     : new FetchStreamTransport(),
 });`;
 

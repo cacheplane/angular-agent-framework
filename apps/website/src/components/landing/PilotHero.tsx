@@ -156,8 +156,7 @@ export function PilotHero() {
 
           {/* Secondary CTA */}
           <a
-            href="/whitepaper.pdf"
-            download
+            href="/docs"
             style={{
               display: 'inline-flex',
               alignItems: 'center',
@@ -177,7 +176,7 @@ export function PilotHero() {
               minHeight: 44,
             }}
           >
-            Download the Guide
+            Read the Docs
           </a>
         </motion.div>
 

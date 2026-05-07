@@ -57,14 +57,14 @@ export function RenderHero() {
 
         <motion.div initial={{ y: 14 }} animate={{ y: 0 }} transition={{ duration: 0.6, delay: 0.15 }}
           style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center', flexWrap: 'wrap', marginBottom: '1.5rem' }}>
-          <a href="/whitepapers/render.pdf" download
+          <a href="#render-whitepaper-gate"
             style={{
               display: 'inline-flex', alignItems: 'center', gap: 6,
               background: tokens.colors.renderGreen, color: '#fff', fontFamily: 'Inter, sans-serif',
               fontSize: 15, fontWeight: 600, padding: '0.875rem 1.75rem', borderRadius: 8,
               textDecoration: 'none', boxShadow: tokens.glow.button, minHeight: 44,
             }}>
-            Download the Guide
+            Get Guide Updates
           </a>
           <Link href="/docs"
             style={{

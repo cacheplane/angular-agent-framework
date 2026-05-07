@@ -9,7 +9,7 @@ export function dripWhitepaperFollowupHtml(day: number): { subject: string; html
           <p style="font-size:11px;font-family:monospace;text-transform:uppercase;letter-spacing:0.08em;color:#004090;font-weight:700;margin:0 0 8px">Whitepaper Follow-up</p>
           <p style="font-size:20px;font-weight:700;color:#1a1a2e;margin:0 0 14px;line-height:1.3">Did you get a chance to read Chapter 3?</p>
           <p style="font-size:14px;color:#555770;line-height:1.7;margin:0 0 24px">Chapter 3 covers <strong>tool-call rendering</strong> — how to surface agent actions as real UI instead of raw JSON. It's the chapter most teams bookmark first.</p>
-          <a href="https://cacheplane.ai/whitepaper.pdf" style="display:inline-block;background-color:#004090;color:#fff;padding:12px 28px;border-radius:8px;font-size:14px;font-weight:700;text-decoration:none">Read the Guide →</a>
+          <a href="https://cacheplane.ai/docs" style="display:inline-block;background-color:#004090;color:#fff;padding:12px 28px;border-radius:8px;font-size:14px;font-weight:700;text-decoration:none">Read the Current Docs →</a>
         `,
         showUnsubscribe: true,
       }),
