@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { tokens } from '@ngaf/design-tokens';
 import { analyticsEvents } from '../../lib/analytics/events';
-import { track } from '../../lib/analytics/client';
+import { track, trackWhitepaperDownloadClick } from '../../lib/analytics/client';
 
 /**
  * Bump this date to re-show the toast for all users.
@@ -163,7 +163,7 @@ export function AnnouncementToast() {
                 lineHeight: 1.5,
                 marginBottom: 16,
               }}>
-                The Angular Agent Readiness Guide is being refreshed for the current framework API.
+                Six production-readiness dimensions for Angular agents. Get the guide.
               </p>
               <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
                 <button
@@ -254,18 +254,31 @@ export function AnnouncementToast() {
                     transition: 'box-shadow .2s, background .2s',
                   }}
                 >
-                  {submitting ? 'Sending...' : 'Send me updates'}
+                  {submitting ? 'Sending...' : '↓ Send me the guide'}
                 </button>
               </div>
-              <p style={{
-                marginTop: 10,
-                fontSize: '0.7rem',
-                color: tokens.colors.textMuted,
-                fontFamily: 'Inter, sans-serif',
-                lineHeight: 1.5,
-              }}>
-                The guide is being refreshed. We will send the updated version when it is ready.
-              </p>
+              <a
+                href="/whitepaper.pdf"
+                download="angular-agent-readiness-guide.pdf"
+                onClick={() => {
+                  trackWhitepaperDownloadClick('overview', {
+                    surface: 'toast',
+                    source_section: 'announcement-toast',
+                    cta_id: 'toast_direct_download',
+                  });
+                  dismiss();
+                }}
+                style={{
+                  display: 'inline-block',
+                  marginTop: 10,
+                  fontSize: '0.7rem',
+                  color: tokens.colors.textMuted,
+                  textDecoration: 'underline',
+                  fontFamily: 'Inter, sans-serif',
+                }}
+              >
+                or download directly
+              </a>
             </form>
           )}
 
@@ -276,7 +289,7 @@ export function AnnouncementToast() {
                 color: '#1a7a40',
                 lineHeight: 1.5,
               }}>
-                ✓ Thanks! We'll send the refreshed guide when it is ready.
+                ✓ Check your inbox — the guide is on its way!
               </p>
             </div>
           )}

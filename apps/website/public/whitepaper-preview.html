@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,700;1,400&family=Inter:wght@400;600&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Inter',sans-serif;color:#1a1a2e;background:#fff}
+  .chapter-body p{font-size:15px;line-height:1.75;color:#333;margin-bottom:18px}
+  .chapter-body h3{font-family:'EB Garamond',serif;font-size:22px;font-weight:700;color:#1a1a2e;margin:28px 0 12px}
+  .chapter-body ul{margin:0 0 18px 20px}
+  .chapter-body li{font-size:15px;line-height:1.7;color:#333;margin-bottom:6px}
+  .chapter-body pre{background:#1a1b26;color:#c8ccee;padding:20px 24px;border-radius:8px;font-size:13px;line-height:1.65;overflow-x:auto;margin:24px 0;white-space:pre-wrap}
+  .chapter-body code{font-family:'JetBrains Mono',monospace;font-size:13px}
+  .chapter-body strong{font-weight:600}
+</style>
+</head>
+<body>
+
+<!-- Cover -->
+<div style="height:100vh;display:flex;flex-direction:column;justify-content:flex-end;padding:80px 80px 100px;background:linear-gradient(135deg,#fef0f3 0%,#f4f0ff 45%,#eaf3ff 70%,#e6f4ff 100%);page-break-after:always">
+  <div style="font-family:monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.12em;color:#004090;font-weight:700;margin-bottom:24px">@ngaf/langgraph · Production Readiness Guide</div>
+  <h1 style="font-family:'EB Garamond',serif;font-size:52px;font-weight:800;line-height:1.1;color:#1a1a2e;margin-bottom:20px">From<br>Prototype<br>to<br>Production</h1>
+  <p style="font-family:'EB Garamond',serif;font-style:italic;font-size:20px;color:#555770;margin-bottom:40px">The Angular Agent Readiness Guide</p>
+  <div style="font-size:13px;color:#888;font-family:monospace">cacheplane.ai · 2026</div>
+</div>
+
+<!-- TOC -->
+<div style="padding:80px;page-break-after:always">
+  <h2 style="font-family:'EB Garamond',serif;font-size:32px;font-weight:700;color:#1a1a2e;margin-bottom:32px">Contents</h2>
+  
+    <div style="display:flex;align-items:baseline;gap:8px;padding:10px 0;border-bottom:1px solid rgba(0,0,0,.06);font-size:15px;color:#444">
+      <span style="font-family:monospace;font-size:11px;color:#004090;font-weight:700;min-width:24px">01</span>
+      <span style="flex:1">Streaming State Management</span>
+    </div>
+    <div style="display:flex;align-items:baseline;gap:8px;padding:10px 0;border-bottom:1px solid rgba(0,0,0,.06);font-size:15px;color:#444">
+      <span style="font-family:monospace;font-size:11px;color:#004090;font-weight:700;min-width:24px">02</span>
+      <span style="flex:1">Thread Persistence</span>
+    </div>
+    <div style="display:flex;align-items:baseline;gap:8px;padding:10px 0;border-bottom:1px solid rgba(0,0,0,.06);font-size:15px;color:#444">
+      <span style="font-family:monospace;font-size:11px;color:#004090;font-weight:700;min-width:24px">03</span>
+      <span style="flex:1">Tool-Call Rendering</span>
+    </div>
+    <div style="display:flex;align-items:baseline;gap:8px;padding:10px 0;border-bottom:1px solid rgba(0,0,0,.06);font-size:15px;color:#444">
+      <span style="font-family:monospace;font-size:11px;color:#004090;font-weight:700;min-width:24px">04</span>
+      <span style="flex:1">Human Approval Flows</span>
+    </div>
+    <div style="display:flex;align-items:baseline;gap:8px;padding:10px 0;border-bottom:1px solid rgba(0,0,0,.06);font-size:15px;color:#444">
+      <span style="font-family:monospace;font-size:11px;color:#004090;font-weight:700;min-width:24px">05</span>
+      <span style="flex:1">Generative UI</span>
+    </div>
+    <div style="display:flex;align-items:baseline;gap:8px;padding:10px 0;border-bottom:1px solid rgba(0,0,0,.06);font-size:15px;color:#444">
+      <span style="font-family:monospace;font-size:11px;color:#004090;font-weight:700;min-width:24px">06</span>
+      <span style="flex:1">Deterministic Testing</span>
+    </div>
+</div>
+
+<!-- Chapters -->
+
+    <section style="padding:80px;page-break-before:always">
+      <div style="font-family:monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#004090;font-weight:700;margin-bottom:16px">Chapter 1</div>
+      <h2 style="font-family:'EB Garamond',serif;font-size:36px;font-weight:800;color:#1a1a2e;margin-bottom:28px;line-height:1.15">Streaming State Management</h2>
+      <div class="chapter-body"><p># Streaming State Management</p>
+<p>Server-sent events don't play nicely with Angular's change detection. Zone.js patches `EventSource`, but the resulting microtask scheduling creates timing issues—tokens arrive faster than digest cycles complete, leading to dropped renders or, worse, accumulated state that suddenly flushes in a visual stutter. Teams typically respond by wrapping streams in `NgZone.run()`, manually calling `detectChanges()`, or building elaborate buffer-and-flush mechanisms. All of these approaches share a common failure mode: they work in development and break under production load.</p>
+<p>The root issue isn't Zone.js itself—it's the impedance mismatch between push-based streaming and Angular's pull-based change detection model. When your LangGraph agent streams 50 tokens per second, you need state primitives that coalesce updates intelligently while remaining reactive enough to drive smooth UI. Custom solutions invariably choose wrong: either they batch too aggressively (laggy typing effect) or too little (CPU saturation from excess renders).</p>
+<h3>Signals as the Synchronization Primitive</h3>
+<p>The `agent()` function returns a signals-native interface that sidesteps these problems entirely. Rather than exposing raw event streams that require manual subscription management, it provides computed signals that update atomically as tokens arrive:</p>
+<pre><code>@Component({
+  selector: 'app-chat',
+  template: `
+    <chat-message-list [messages]="chat.messages()" />
+    <chat-input (send)="chat.submit($event)" [disabled]="chat.isLoading()" />
+  `,
+  changeDetection: ChangeDetectionStrategy.OnPush
+})
+export class ChatComponent {
+  private readonly threadId = signal<string | undefined>(undefined);
+  
+  readonly chat = agent({
+    assistantId: 'support_agent',
+    threadId: this.threadId,
+    onThreadId: id => this.threadId.set(id)
+  });
+}
+</code></pre>
+<p>The `messages()` signal returns `Message[]`—a runtime-neutral representation that updates as the stream progresses. Internally, the framework handles token accumulation, message boundary detection, and state reconciliation. Your component simply reads the signal; Angular's signal-based reactivity handles the rest.</p>
+<p>The `isLoading()` signal deserves specific attention. It returns `true` from the moment you call `submit()` until the stream completes or errors. This eliminates the polling patterns teams often implement—checking message array lengths, tracking "last update" timestamps, or maintaining parallel loading flags that drift out of sync with actual stream state.</p>
+<h3>OnPush Compatibility</h3>
+<p>Signals and `OnPush` change detection are natural partners, but the pairing requires attention. When `messages()` updates, Angular marks the component dirty through signal dependencies, not through Zone.js event interception. This means your streaming UI actually predates OnPush—it *requires* it for correct behavior under load.</p>
+<p>The production checklist question—"Are your message signals OnPush-compatible?"—is really asking whether your component tree properly propagates signal reads. If a parent component reads `messages()` and passes the array to a child via `@Input()`, the child must also use `OnPush` or it won't re-render when the array reference changes. The fix is straightforward: either pass the signal itself (`[messages]="chat.messages"`) or ensure `OnPush` propagates down your component tree.</p>
+<p>Streaming state management in Angular isn't inherently difficult. It becomes difficult when you fight the framework's reactivity model instead of leveraging it. Signals provide the coalescing, the timing, and the change detection integration. Your job is to read them.</p></div>
+    </section>
+    <section style="padding:80px;page-break-before:always">
+      <div style="font-family:monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#004090;font-weight:700;margin-bottom:16px">Chapter 2</div>
+      <h2 style="font-family:'EB Garamond',serif;font-size:36px;font-weight:800;color:#1a1a2e;margin-bottom:28px;line-height:1.15">Thread Persistence</h2>
+      <div class="chapter-body"><p># Thread Persistence</p>
+<p>Demos work with ephemeral state. Production agents need conversation history that survives page refreshes, tab switches, and navigation—wired to LangGraph's MemorySaver backend.</p>
+<h3>Why Stateless Agent UIs Fail in Production</h3>
+<p>Every agent demo you've seen starts fresh on page load. That's fine for a conference talk. In production, users expect continuity. They start a conversation, close their laptop, resume tomorrow, and pick up where they left off. Without thread persistence, you're forcing users to re-explain context every session. Worse, you're wasting LLM tokens reconstructing state the backend already has.</p>
+<p>LangGraph's MemorySaver stores complete conversation history server-side, keyed by thread ID. Your frontend's job is simple: remember which thread the user was talking to and reconnect on mount.</p>
+<h3>The threadId Signal and onThreadId Callback</h3>
+<p>The `agent()` function accepts a reactive `threadId` signal and an `onThreadId` callback. When `threadId` is undefined, the backend creates a new thread and fires `onThreadId` with the generated ID. Your callback persists it. On subsequent loads, you initialize the signal from storage, and the agent resumes the existing conversation.</p>
+<p>This pattern keeps thread lifecycle management declarative. You don't manually coordinate thread creation with message sending. The agent handles it.</p>
+<h3>Persisting to localStorage</h3>
+<p>The implementation is straightforward:</p>
+<pre><code>@Component({
+  selector: 'app-chat',
+  template: `
+    <chat [agent]="chat">
+      <chat-message-list />
+      <chat-input />
+    </chat>
+  `
+})
+export class ChatComponent {
+  private readonly threadId = signal<string | undefined>(
+    localStorage.getItem('chat_thread') ?? undefined
+  );
+<p>readonly chat = agent({
+    assistantId: 'support_agent',
+    threadId: this.threadId,
+    onThreadId: id => {
+      this.threadId.set(id);
+      localStorage.setItem('chat_thread', id);
+    }
+  });
+}
+</code></pre></p>
+<p>On first visit, `threadId` is undefined. The backend creates a thread, `onThreadId` fires, and you persist. On refresh, you read from localStorage, pass the existing ID, and the agent loads history from MemorySaver.</p>
+<h3>Thread List UI and Conversation Switching</h3>
+<p>Production apps typically need multiple conversations. A sidebar shows thread history; clicking switches context. The pattern extends naturally:</p>
+<pre><code>readonly threads = signal<string[]>(
+  JSON.parse(localStorage.getItem('thread_list') ?? '[]')
+);
+<p>readonly activeThreadId = signal<string | undefined>(this.threads()[0]);</p>
+<p>readonly chat = agent({
+  assistantId: 'support_agent',
+  threadId: this.activeThreadId,
+  onThreadId: id => {
+    this.activeThreadId.set(id);
+    this.threads.update(list => [id, ...list]);
+    localStorage.setItem('thread_list', JSON.stringify(this.threads()));
+  }
+});</p>
+<p>newConversation() {
+  this.activeThreadId.set(undefined);
+}</p>
+<p>switchThread(id: string) {
+  this.activeThreadId.set(id);
+}
+</code></pre></p>
+<p>When `activeThreadId` changes, the agent reconnects to that thread and `messages()` reflects the restored history. No manual fetching. The reactive binding handles it.</p>
+<p>For production, you'll likely move thread metadata to an API—titles, timestamps, archival status. The pattern remains identical: reactive signal in, persistence callback out.</p>
+<h3>Production Checklist</h3>
+<p>Before shipping, verify thread persistence end-to-end:</p>
+<ul><li><strong>Does your agent UI resume threads correctly after a browser refresh?</strong> Open a conversation, send messages, refresh the page. History should load automatically without user action.</li>
+<li>Does creating a new conversation properly clear state and generate a fresh thread ID?</li>
+<li>Does switching between existing threads load the correct history?</li>
+<li>Are thread IDs persisted before the user can navigate away?</li>
+</ul>
+Thread persistence is table stakes for production agent UIs. The framework gives you the primitives. Wire them correctly, and users get the continuity they expect.</div>
+    </section>
+    <section style="padding:80px;page-break-before:always">
+      <div style="font-family:monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#004090;font-weight:700;margin-bottom:16px">Chapter 3</div>
+      <h2 style="font-family:'EB Garamond',serif;font-size:36px;font-weight:800;color:#1a1a2e;margin-bottom:28px;line-height:1.15">Tool-Call Rendering</h2>
+      <div class="chapter-body"><p># Tool-Call Rendering</p>
+<p>LangGraph agents don't just generate text—they invoke tools mid-stream, and your UI needs to reflect that execution state in real time. This means showing steps as they appear, displaying final results, and collapsing completed calls into browsable history. Getting this wrong creates a UI that feels broken during the most interesting parts of agent behavior.</p>
+<h3>The Raw Stream Problem</h3>
+<p>Tool call events arrive as discrete chunks in the SSE stream. A single tool invocation might produce five or six events: an initial call with arguments, multiple intermediate steps as the tool executes, and a final result. The raw payload includes nested metadata, partial JSON for arguments that stream incrementally, and status fields that change meaning depending on tool type.</p>
+<p>Hand-parsing these events is fragile. You end up maintaining state machines to track which call is active, handling out-of-order delivery, and writing defensive code for malformed chunks. Testing becomes painful because you need to simulate realistic streaming sequences. Every edge case—interrupted calls, parallel tool execution, retry logic—adds branching complexity.</p>
+<p>The framework solves this by exposing `toolCalls()` as a normalized signal on the agent surface. Each tool call object includes its current status, accumulated steps, and final result. The stream parsing happens once, correctly, inside the transport layer.</p>
+<h3>Headless and Prebuilt Options</h3>
+<p>`@ngaf/chat` provides two components for tool call rendering. `<chat-tool-calls>` is the headless primitive—it manages the structural rendering of multiple concurrent calls but leaves visual presentation to you. `<chat-tool-call-card>` is the prebuilt option that handles common patterns: status indicators, step lists, collapsible sections, and error states.</p>
+<p>For most production apps, start with the prebuilt card and customize from there:</p>
+<pre><code><chat-message-list [messages]="chat.messages()">
+  <ng-template #toolCalls let-calls>
+    @for (call of calls; track call.id) {
+      <chat-tool-call-card
+        [toolCall]="call"
+        [expandedByDefault]="call.status === 'running'"
+        (stepClick)="inspectStep($event)">
+      </chat-tool-call-card>
+    }
+  </ng-template>
+</chat-message-list>
+</code></pre>
+<p>The card component reads status from each tool call object and adjusts its presentation accordingly. Running calls show a live step feed. Completed calls collapse to a summary with expandable history. Failed calls surface error details without disrupting the message flow.</p>
+<h3>Progressive Disclosure</h3>
+<p>Real-time tool execution benefits from progressive disclosure. Users want to see that something is happening—steps appearing as the tool runs—but they don't want permanent visual clutter once the call completes.</p>
+<p>The `expandedByDefault` binding above handles this: calls expand while running, then collapse automatically on completion. Users can still click to expand history, but the default state keeps the conversation readable.</p>
+<p>This pattern matters more than it seems. Agents that invoke multiple tools per response can generate substantial step output. Without automatic collapsing, the chat becomes a wall of tool metadata instead of a conversation.</p>
+<h3>Production Checklist</h3>
+<p>Before shipping, verify this behavior:</p>
+<p><strong>Do your tool call cards handle partial step state during streaming?</strong></p>
+<p>Steps arrive incrementally. A step might appear with an initial status, then update moments later with results. Your rendering logic should handle these transitions without flicker or layout shift. Test with slow network simulation to catch timing-dependent bugs that don't surface on localhost.</p></div>
+    </section>
+    <section style="padding:80px;page-break-before:always">
+      <div style="font-family:monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#004090;font-weight:700;margin-bottom:16px">Chapter 4</div>
+      <h2 style="font-family:'EB Garamond',serif;font-size:36px;font-weight:800;color:#1a1a2e;margin-bottom:28px;line-height:1.15">Human Approval Flows</h2>
+      <div class="chapter-body"><p># Human Approval Flows (Interrupts)</p>
+<p>Production agents that modify external state—sending emails, initiating payments, deploying infrastructure—require human oversight before execution. LangGraph provides the `interrupt()` primitive for this purpose: a mechanism that pauses graph execution at designated checkpoints and waits for explicit human authorization before proceeding.</p>
+<h3>The LangGraph Interrupt Pattern</h3>
+<p>When a LangGraph node calls `interrupt()`, execution halts and the graph emits an interrupt event containing the pending action's metadata. The graph remains suspended until it receives a `Command.RESUME` with one of three directives: proceed with the original action, proceed with modified parameters, or abort entirely. This checkpoint-based approach ensures that no consequential action executes without explicit human consent.</p>
+<p>The challenge lies in surfacing this interrupt state to users and capturing their response without introducing fragile infrastructure. Polling-based solutions waste resources and introduce latency. Custom WebSocket implementations require maintaining connection state, handling reconnections, and synchronizing interrupt lifecycle across multiple browser tabs. Both approaches scatter interrupt logic across services, components, and connection handlers.</p>
+<h3>The `interrupt()` Signal</h3>
+<p>The `agent()` function exposes interrupt state through a dedicated signal:</p>
+<pre><code>readonly chat = agent({
+  assistantId: 'deployment_agent',
+  threadId: this.threadId,
+  onThreadId: id => this.threadId.set(id)
+});
+<p>// chat.interrupt() returns AgentInterrupt | undefined
+</code></pre></p>
+<p>When `interrupt()` returns a defined value, the agent is paused and awaiting human input. The `AgentInterrupt` object contains the action metadata emitted by the graph—typically a description of the pending operation and any parameters the user might modify. When `interrupt()` returns `undefined`, no approval is pending.</p>
+<p>This signal-based approach eliminates the need for manual subscription management or imperative state tracking. Angular's reactivity system propagates interrupt state changes automatically, and the signal remains consistent across component re-renders.</p>
+<h3>UI Components for Interrupt Handling</h3>
+<p>The `@ngaf/chat` package provides two components for rendering interrupt flows. `<chat-interrupt-panel>` offers a prebuilt approval interface with sensible defaults. For custom designs, the headless `<chat-interrupt>` component exposes the interrupt state and action handlers without imposing markup or styling.</p>
+<p>Both components support three user actions that map directly to resume commands:</p>
+<ul><li><strong>Approve</strong>: Resume execution with the original parameters</li>
+<li><strong>Edit</strong>: Resume execution with user-modified parameters</li>
+<li><strong>Cancel</strong>: Abort the pending action entirely</li>
+</ul>
+<pre><code>@Component({
+  template: `
+    @if (chat.interrupt(); as interrupt) {
+      <chat-interrupt-panel
+        [interrupt]="interrupt"
+        (approve)="chat.interrupt()?.approve()"
+        (edit)="chat.interrupt()?.approve($event)"
+        (cancel)="chat.interrupt()?.cancel()" />
+    }
+  `
+})
+export class DeploymentChatComponent {
+  readonly chat = agent({
+    assistantId: 'deployment_agent',
+    threadId: this.threadId,
+    onThreadId: id => this.threadId.set(id)
+  });
+}
+</code></pre>
+<p>The edit flow passes modified parameters through the `$event` payload, allowing users to adjust action details before approval. The cancel flow terminates the pending action and allows the conversation to continue without executing the interrupted operation.</p>
+<h3>Production Considerations</h3>
+<p>Interrupt flows introduce a class of edge cases that prototype implementations often ignore. Users close browser tabs. Sessions expire. Network connections drop mid-approval.</p>
+<p><strong>Production checklist item</strong>: *Can your agent UI recover gracefully if a user cancels an interrupt?*</p>
+<p>Cancellation should not leave the agent in an undefined state. The graph must handle abort commands cleanly, the UI must reflect the cancellation immediately, and subsequent user messages should resume normal conversation flow. Test this path explicitly—it executes more frequently in production than most teams anticipate.</p></div>
+    </section>
+    <section style="padding:80px;page-break-before:always">
+      <div style="font-family:monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#004090;font-weight:700;margin-bottom:16px">Chapter 5</div>
+      <h2 style="font-family:'EB Garamond',serif;font-size:36px;font-weight:800;color:#1a1a2e;margin-bottom:28px;line-height:1.15">Generative UI</h2>
+      <div class="chapter-body"><p># Generative UI</p>
+<p>Text responses hit a ceiling. When your data analysis agent returns a markdown table, users copy-paste into spreadsheets. When your booking agent describes available slots, users re-enter the same information into a form. The gap between agent output and user action creates friction that compounds across every interaction.</p>
+<p>Production agents close this gap by emitting structured UI specifications alongside their responses. The agent doesn't return "Here are your results in a table" — it returns a render spec that becomes a live, interactive table component.</p>
+<h3>The Custom Event Pattern</h3>
+<p>LangGraph agents emit structured data through custom events during stream execution. Your agent code decides when to emit UI specifications:</p>
+<pre><code># Agent-side: emit a render spec as a custom event
+await writer.write({
+    "type": "data_table",
+    "columns": ["date", "amount", "category"],
+    "rows": rows_so_far
+})
+</code></pre>
+<p>On the Angular side, `@ngaf/langgraph` surfaces these through the agent's event stream. The `@ngaf/render` package consumes these specs and resolves them to Angular components at runtime.</p>
+<h3>Registry-Based Resolution</h3>
+<p>The registry pattern decouples agent output from component implementation. Your agent emits a type identifier. Your frontend maps that identifier to a component. Neither side knows implementation details of the other.</p>
+<pre><code>import { defineAngularRegistry } from '@ngaf/render';
+import { DataTableComponent } from './components/data-table.component';
+import { ReservationFormComponent } from './components/reservation-form.component';
+import { ChartComponent } from './components/chart.component';
+<p>export const uiRegistry = defineAngularRegistry({
+  data_table: DataTableComponent,
+  reservation_form: ReservationFormComponent,
+  chart: ChartComponent,
+  // Add components without touching agent code
+});
+</code></pre></p>
+<p>Components receive the spec's data through a standardized input contract. Your `DataTableComponent` receives `columns` and `rows` — it doesn't know or care that a Python agent emitted them.</p>
+<p>Template usage is direct:</p>
+<pre><code><render-spec [spec]="currentSpec()" [registry]="uiRegistry" />
+</code></pre>
+<p>Or configure the registry at the provider level with `provideRender({ registry: uiRegistry })` and omit it from individual templates.</p>
+<h3>Progressive Updates Through JSON Patch</h3>
+<p>Static specs work for complete data. Streaming scenarios require progressive updates. When your agent processes a large dataset, users shouldn't wait for completion before seeing results.</p>
+<p>`@ngaf/render` supports JSON Patch streaming for incremental UI updates. The agent emits patches as data arrives:</p>
+<pre><code># Initial spec
+await writer.write({"type": "data_table", "columns": [...], "rows": []})
+<p># Patches as rows arrive
+for row in process_rows():
+    await writer.write({"op": "add", "path": "/rows/-", "value": row})
+</code></pre></p>
+<p>The frontend applies patches to the live spec. Rows appear as they're processed. Charts animate as data points arrive. Users see progress, not loading spinners.</p>
+<h3>The Decoupling Advantage</h3>
+<p>Tight coupling between agent and frontend creates deployment dependencies. Changing a table column requires coordinated releases. Adding a new visualization blocks on frontend implementation.</p>
+<p>The registry pattern inverts this. Agents emit specs against a stable contract. Frontend teams add components independently. You can ship a new `heatmap` type in your registry without redeploying agents — they'll use it when ready.</p>
+<p>This also enables A/B testing component implementations, graceful degradation for unknown types, and environment-specific registries (richer components in desktop, simplified in mobile).</p>
+<p>---</p>
+<p><strong>Production checkpoint:</strong> Can your agent emit UI components without tight coupling to the frontend codebase? If adding a new visualization requires changes to both agent and frontend in lockstep, the integration is too brittle for production iteration speed.</p></div>
+    </section>
+    <section style="padding:80px;page-break-before:always">
+      <div style="font-family:monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#004090;font-weight:700;margin-bottom:16px">Chapter 6</div>
+      <h2 style="font-family:'EB Garamond',serif;font-size:36px;font-weight:800;color:#1a1a2e;margin-bottom:28px;line-height:1.15">Deterministic Testing</h2>
+      <div class="chapter-body"><p># Deterministic Testing</p>
+<p>Agent UIs are notoriously difficult to test. Every call to a live LLM introduces variability—different token sequences, timing variations, occasional model updates that subtly change output format. The result is flaky tests, slow CI pipelines, and an inability to reproduce the exact edge case a user reported. Teams ship agent features with low confidence because their test suites can't verify behavior deterministically.</p>
+<h3>Why Live LLM Testing Fails</h3>
+<p>Testing against real LLM APIs introduces three fundamental problems. First, response content varies between runs. The same prompt might yield slightly different phrasing, breaking snapshot tests or exact-match assertions. Second, latency compounds. A single agent interaction might take 2-5 seconds; a test suite with 50 agent tests becomes a 4-minute bottleneck. Third, you can't manufacture edge cases on demand. How do you test interrupt handling if the model decides not to request human input? How do you verify your tool call UI when the model skips the tool entirely?</p>
+<p>Deterministic testing requires control over the event stream itself.</p>
+<h3>MockAgentTransport: Scripted Event Sequences</h3>
+<p>`MockAgentTransport` replaces the network layer entirely. You provide a scripted sequence of events, and the transport emits them on demand. No server, no network, no variability.</p>
+<p>This approach lets you test streaming behavior by controlling exactly when each token arrives. You can simulate interrupts at precise moments, inject tool calls with specific payloads, and verify error handling by emitting failure events. Your tests become reproducible scenarios rather than probabilistic hopes.</p>
+<h3>mockLangGraphAgent(): Writable Signal Control</h3>
+<p>For component-level testing, `mockLangGraphAgent()` provides an even more direct approach. It returns an agent surface where every signal is writable—you set the state, and your component reacts.</p>
+<pre><code>describe('ChatComponent', () => {
+  it('displays interrupt panel when interrupt is pending', () => {
+    const agent = mockLangGraphAgent();
+    const fixture = TestBed.createComponent(ChatComponent);
+    fixture.componentRef.setInput('agent', agent);
+    
+    agent.interrupt.set({
+      value: { question: 'Confirm deletion?' },
+      options: ['confirm', 'cancel']
+    });
+    fixture.detectChanges();
+    
+    expect(fixture.nativeElement.querySelector('chat-interrupt-panel')).toBeTruthy();
+    expect(fixture.nativeElement.textContent).toContain('Confirm deletion?');
+  });
+});
+</code></pre>
+<p>This pattern isolates component behavior from streaming mechanics. You're testing how your UI responds to state—not whether the transport correctly parses SSE frames.</p>
+<h3>Testing in Isolation</h3>
+<p>Each agent capability becomes independently testable. For streaming, set `isLoading` to true and progressively update `messages` to verify your typing indicators and incremental rendering. For tool calls, populate `toolCalls` with specific payloads and assert your `ChatToolCallCardComponent` renders the expected UI. For generative UI via render-spec, test your registered components against static specs without involving the agent layer at all.</p>
+<p>Interrupts deserve particular attention. Set `interrupt` to various payloads and verify your `ChatInterruptPanelComponent` handles each type—multiple choice, free text, confirmation dialogs. Call the resume function and assert `interrupt` clears correctly.</p>
+<h3>Production Checklist</h3>
+<p>Before shipping agent features, verify this: <strong>Do your agent component tests run offline and complete in under 100ms each?</strong></p>
+<p>If not, you're either hitting real APIs or your test setup carries unnecessary overhead. Deterministic agent testing should feel like testing any other Angular component—fast, reliable, and completely under your control.</p></div>
+    </section>
+
+</body>
+</html>
