@@ -8,7 +8,14 @@ export interface ApiDocsJson {
 
 export interface ApiSymbol {
   name: string;
+  kind?: string;
   kindString?: string;
+  description?: string;
+  params?: {
+    name: string;
+    type?: string;
+    description?: string;
+  }[];
   comment?: { summary?: { text: string }[] };
   signatures?: {
     parameters?: {
@@ -25,11 +32,12 @@ export function getApiDocs(): ApiDocsJson {
   if (cachedDocs) return cachedDocs;
   const candidates = [
     path.join(__dirname, '../../api-docs.json'),
-    path.join(__dirname, '../../../../apps/website/public/api-docs.json'),
+    path.join(__dirname, '../../../../apps/website/content/docs/agent/api/api-docs.json'),
   ];
   for (const p of candidates) {
     if (fs.existsSync(p)) {
-      cachedDocs = JSON.parse(fs.readFileSync(p, 'utf8')) as ApiDocsJson;
+      const parsed = JSON.parse(fs.readFileSync(p, 'utf8')) as ApiDocsJson | ApiSymbol[];
+      cachedDocs = Array.isArray(parsed) ? { children: parsed } : parsed;
       return cachedDocs;
     }
   }

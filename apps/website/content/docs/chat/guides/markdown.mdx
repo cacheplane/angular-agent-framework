@@ -102,7 +102,7 @@ import {
   imports: [ChatMessagesComponent, MessageTemplateDirective],
   styles: [CHAT_MARKDOWN_STYLES],
   template: `
-    <chat-messages [ref]="chatRef">
+    <chat-messages [agent]="chatRef">
       <ng-template chatMessageTemplate="ai" let-message>
         <div
           class="chat-md"

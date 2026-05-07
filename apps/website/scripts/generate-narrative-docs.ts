@@ -5,7 +5,7 @@ import path from 'path';
 const client = new Anthropic();
 const MODEL = process.env['ANTHROPIC_MODEL'] ?? 'claude-sonnet-4-6';
 const DOCS_DIR = 'apps/website/content/docs';
-const API_DOCS = 'apps/website/public/api-docs.json';
+const API_DOCS_ROOT = 'apps/website/content/docs';
 
 const TOPICS = [
   {
@@ -48,11 +48,29 @@ Write clean, developer-friendly MDX documentation. Use precise, no-fluff prose. 
   return content.text;
 }
 
-async function main() {
-  if (!fs.existsSync(API_DOCS)) {
+function loadApiDocs(): string {
+  if (!fs.existsSync(API_DOCS_ROOT)) {
     throw new Error('Run generate-api-docs first: npx tsx apps/website/scripts/generate-api-docs.ts');
   }
-  const apiDocsJson = fs.readFileSync(API_DOCS, 'utf8');
+
+  const sections = fs.readdirSync(API_DOCS_ROOT)
+    .sort()
+    .map((library) => {
+      const apiDocsPath = path.join(API_DOCS_ROOT, library, 'api', 'api-docs.json');
+      if (!fs.existsSync(apiDocsPath)) return null;
+      return `### ${library}\n\n${fs.readFileSync(apiDocsPath, 'utf8')}`;
+    })
+    .filter((section): section is string => section !== null);
+
+  if (sections.length === 0) {
+    throw new Error('Run generate-api-docs first: npx tsx apps/website/scripts/generate-api-docs.ts');
+  }
+
+  return sections.join('\n\n');
+}
+
+async function main() {
+  const apiDocsJson = loadApiDocs();
   fs.mkdirSync(DOCS_DIR, { recursive: true });
 
   for (const topic of TOPICS) {

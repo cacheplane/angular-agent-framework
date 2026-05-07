@@ -12,7 +12,7 @@ Both json-render specs and A2UI surfaces render through the same `ViewRegistry`.
 ```typescript
 import { a2uiBasicCatalog } from '@ngaf/chat';
 
-<chat [ref]="agentRef" [views]="a2uiBasicCatalog()" />
+<chat [agent]="agentRef" [views]="a2uiBasicCatalog()" />
 ```
 
 ## Adding Custom Components
@@ -26,7 +26,7 @@ const catalog = withViews(a2uiBasicCatalog(), {
   DataGrid: MyDataGridComponent,
 });
 
-<chat [ref]="agentRef" [views]="catalog" />
+<chat [agent]="agentRef" [views]="catalog" />
 ```
 
 ## Overriding Built-In Components
@@ -60,7 +60,7 @@ const catalog = views({
   Table: MyTableComponent,
 });
 
-<chat [ref]="agentRef" [views]="catalog" />
+<chat [agent]="agentRef" [views]="catalog" />
 ```
 
 ## No Generative UI
@@ -68,7 +68,7 @@ const catalog = views({
 If `views` is not provided, no generative UI renders. Specs and A2UI surfaces are silently skipped.
 
 ```html
-<chat [ref]="agentRef" />
+<chat [agent]="agentRef" />
 ```
 
 ## Writing a Custom Component

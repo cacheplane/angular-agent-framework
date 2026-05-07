@@ -178,7 +178,7 @@ export const docsConfig: DocsLibrary[] = [
         pages: [
           { title: 'provideChat()', slug: 'provide-chat', section: 'api' },
           { title: 'ChatConfig', slug: 'chat-config', section: 'api' },
-          { title: 'mockLangGraphAgent()', slug: 'mock-langgraph-agent', section: 'api' },
+          { title: 'mockAgent()', slug: 'mock-agent', section: 'api' },
           { title: 'createContentClassifier()', slug: 'content-classifier', section: 'api' },
           { title: 'createParseTreeStore()', slug: 'parse-tree-store', section: 'api' },
         ],

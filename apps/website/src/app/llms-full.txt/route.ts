@@ -3,13 +3,29 @@ import fs from 'fs';
 import path from 'path';
 
 function loadApiDocs(): string {
-  // process.cwd() = apps/website/ in Nx Next.js context
-  const p = path.join(process.cwd(), 'public', 'api-docs.json');
-  if (!fs.existsSync(p)) {
-    return '(API reference not yet generated — run npm run generate-docs)';
+  const roots = [
+    path.join(process.cwd(), 'apps', 'website', 'content', 'docs'),
+    path.join(process.cwd(), 'content', 'docs'),
+  ];
+
+  const docsRoot = roots.find((root) => fs.existsSync(root));
+  if (!docsRoot) {
+    return '(API reference not yet generated — run npm run generate-api-docs)';
   }
-  const raw = fs.readFileSync(p, 'utf8');
-  return raw;
+
+  const sections = fs.readdirSync(docsRoot)
+    .sort()
+    .map((library) => {
+      const apiDocsPath = path.join(docsRoot, library, 'api', 'api-docs.json');
+      if (!fs.existsSync(apiDocsPath)) return null;
+      const raw = fs.readFileSync(apiDocsPath, 'utf8');
+      return `### ${library}\n\n${raw}`;
+    })
+    .filter((section): section is string => section !== null);
+
+  return sections.length > 0
+    ? sections.join('\n\n')
+    : '(API reference not yet generated — run npm run generate-api-docs)';
 }
 
 function loadAllPrompts(): string {

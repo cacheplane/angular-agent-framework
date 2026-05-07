@@ -1,9 +1,9 @@
 # Angular Agent Framework v@VERSION@
 
-Angular agent framework for LangChain/LangGraph. Provides `agent()` — Signal-native streaming for Angular agents, built for LangGraph.
+Agent UI primitives and LangGraph streaming adapters for Angular.
 
 ## Install
-npm install @ngaf/langgraph
+npm install @ngaf/chat @ngaf/langgraph
 
 ## Key requirement
 `agent()` MUST be called within an Angular injection context (component constructor or field initializer). Calling it in ngOnInit or any async context throws "NG0203: inject() must be called from an injection context".
@@ -11,22 +11,25 @@ npm install @ngaf/langgraph
 ## Basic usage
 ```typescript
 // app.config.ts
+import type { ApplicationConfig } from '@angular/core';
 import { provideAgent } from '@ngaf/langgraph';
 export const appConfig: ApplicationConfig = {
   providers: [provideAgent({ apiUrl: 'http://localhost:2024' })]
 };
 
 // chat.component.ts
+import { Component } from '@angular/core';
 import { agent } from '@ngaf/langgraph';
-import type { BaseMessage } from '@langchain/core/messages';
+import { ChatComponent as NgafChatComponent } from '@ngaf/chat';
 
-@Component({ template: `
-  @for (msg of chat.messages(); track $index) { <p>{{ msg.content }}</p> }
-  <button (click)="send()">Send</button>
-`})
+@Component({
+  imports: [NgafChatComponent],
+  template: `
+    <chat [agent]="chat" />
+  `,
+})
 export class ChatComponent {
-  chat = agent<{ messages: BaseMessage[] }>({ assistantId: 'chat_agent' });
-  send() { this.chat.submit({ message: 'Hello' }); }
+  chat = agent({ assistantId: 'chat_agent' });
 }
 ```
 
@@ -35,10 +38,6 @@ export class ChatComponent {
 - Global config: `provideAgent({ apiUrl })` in app.config.ts
 - Per-call override: pass `apiUrl` directly to `agent()`
 - Testing: use `MockAgentTransport` — never mock `agent()` itself
-
-## MCP server (for tool access)
-Add to ~/.claude/settings.json:
-{"mcpServers":{"angular-agent":{"command":"npx","args":["@ngaf/langgraph-mcp"]}}}
 
 ## Version check
 If this file is stale, fetch the latest: https://cacheplane.ai/llms-full.txt

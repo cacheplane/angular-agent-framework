@@ -14,7 +14,7 @@ import { ChatInputComponent, submitMessage } from '@ngaf/chat';
 
 ```html
 <chat-input
-  [ref]="chatRef"
+  [agent]="chatRef"
   [submitOnEnter]="true"
   placeholder="Type a message..."
   (submitted)="onMessageSent($event)"
@@ -27,7 +27,7 @@ import { ChatInputComponent, submitMessage } from '@ngaf/chat';
 
 | Input | Type | Default | Description |
 |-------|------|---------|-------------|
-| `ref` | `LangGraphAgent<any, any>` | **Required** | The agent to submit messages to |
+| `agent` | `Agent` | **Required** | The agent to submit messages to |
 | `submitOnEnter` | `boolean` | `true` | When `true`, pressing Enter submits the message. Shift+Enter inserts a newline. When `false`, Enter always inserts a newline. |
 | `placeholder` | `string` | `''` | Placeholder text shown when the input is empty |
 
@@ -45,14 +45,14 @@ When the user submits (via Enter key or clicking the send button):
 
 1. The message text is trimmed
 2. If empty after trimming, nothing happens
-3. `ref.submit()` is called with `{ message: trimmed }`
+3. `agent.submit()` is called with `{ message: trimmed }`
 4. The `submitted` output emits the trimmed text
 5. The input is cleared
 6. Focus is returned to the textarea
 
 ### Disabled State
 
-The input is automatically disabled when `ref.isLoading()` returns `true`. This prevents sending messages while the agent is processing. Both the textarea and the send button reflect the disabled state.
+The input is automatically disabled when `agent.isLoading()` returns `true`. This prevents sending messages while the agent is processing. Both the textarea and the send button reflect the disabled state.
 
 ### Auto-Sizing
 
@@ -71,9 +71,10 @@ The `submitMessage()` function is exported as a standalone utility for programma
 
 ```typescript
 import { submitMessage } from '@ngaf/chat';
+import type { Agent } from '@ngaf/chat';
 
-function sendGreeting(ref: LangGraphAgent<any, any>) {
-  const result = submitMessage(ref, 'Hello!');
+function sendGreeting(agent: Agent) {
+  const result = submitMessage(agent, 'Hello!');
   // result is 'Hello!' or null if the text was empty
 }
 ```
@@ -82,19 +83,19 @@ function sendGreeting(ref: LangGraphAgent<any, any>) {
 
 ```typescript
 function submitMessage(
-  ref: LangGraphAgent<any, any>,
+  agent: Agent,
   text: string
 ): string | null
 ```
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `ref` | `LangGraphAgent<any, any>` | The agent to submit to |
+| `agent` | `Agent` | The agent to submit to |
 | `text` | `string` | The message text to send |
 
 **Returns:** The trimmed message string if submitted, or `null` if the trimmed text was empty.
 
-The function calls `ref.submit({ message: trimmed })` under the hood.
+The function calls `agent.submit({ message: trimmed })` under the hood.
 
 ## Slots
 
@@ -147,7 +148,7 @@ import { ChatInputComponent } from '@ngaf/chat';
   template: `
     <div class="border rounded-lg p-4">
       <chat-input
-        [ref]="chatRef"
+        [agent]="chatRef"
         [submitOnEnter]="true"
         placeholder="Ask a question..."
         (submitted)="lastMessage.set($event)"

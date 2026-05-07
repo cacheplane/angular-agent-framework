@@ -13,7 +13,7 @@
         "tsConfig": "packages/mcp/tsconfig.json",
         "assets": [
           {
-            "input": "apps/website/public",
+            "input": "apps/website/content/docs/agent/api",
             "glob": "api-docs.json",
             "output": "."
           }
