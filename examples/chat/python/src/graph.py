@@ -3,6 +3,10 @@
 State the client may send via the LangGraph ``submit``'s ``state`` field:
 
   - ``model`` — OpenAI model name. Default: ``gpt-5-mini``.
+  - ``reasoning_effort`` — 'minimal' | 'low' | 'medium' | 'high'.
+                           Default: 'minimal' so first-token latency
+                           stays low. Demos surface this as a palette
+                           dropdown so users can dial in visible reasoning.
 
 The graph is intentionally minimal: ``__start__ → generate → __end__``.
 This is the surface the demo's regenerate path exercises and the
@@ -35,16 +39,17 @@ def _is_reasoning_model(name: str) -> bool:
 class State(TypedDict):
     messages: Annotated[list, add_messages]
     model: Optional[str]
+    reasoning_effort: Optional[str]
 
 
 async def generate(state: State) -> dict:
     model_name = state.get("model") or "gpt-5-mini"
     kwargs = {"model": model_name, "streaming": True}
     if _is_reasoning_model(model_name):
-        # Force minimal effort so first-token latency stays low and
-        # streaming is visible out of the box. Reasoning-effort tuning
-        # is deferred to the reasoning-phase demo.
-        kwargs["reasoning"] = {"effort": "minimal"}
+        # Honor the client's effort selection when present; default to
+        # 'minimal' so first-token latency stays low for unconfigured callers.
+        effort = state.get("reasoning_effort") or "minimal"
+        kwargs["reasoning"] = {"effort": effort}
     llm = ChatOpenAI(**kwargs)
     messages = [SystemMessage(content=SYSTEM_PROMPT)] + state["messages"]
     response = await llm.ainvoke(messages)

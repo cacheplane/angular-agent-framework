@@ -48,8 +48,14 @@ export class DemoShell {
     { initialValue: modeFromUrl(this.router.url) },
   );
 
-  /** Source of truth for the model picker. Injected into submit() via the patched agent. */
+  /**
+   * Source of truth for the model picker. The shell owns it; the
+   * patched submit injects it into state on every send.
+   */
   readonly model = signal<string>(this.persistence.read('model') ?? 'gpt-5-mini');
+
+  /** Reasoning effort for the next submit. Persisted across reloads. */
+  readonly effort = signal<string>(this.persistence.read('effort') ?? 'minimal');
 
   protected readonly debugOpen = signal<boolean>(this.persistence.read('debug') ?? false);
 
@@ -57,6 +63,13 @@ export class DemoShell {
     { value: 'gpt-5', label: 'gpt-5' },
     { value: 'gpt-5-mini', label: 'gpt-5-mini' },
     { value: 'gpt-5-nano', label: 'gpt-5-nano' },
+  ]);
+
+  protected readonly effortOptions = signal<readonly { value: string; label: string }[]>([
+    { value: 'minimal', label: 'minimal (fast)' },
+    { value: 'low',     label: 'low' },
+    { value: 'medium',  label: 'medium' },
+    { value: 'high',    label: 'high (visible reasoning)' },
   ]);
 
   /** Persisted thread id (null on first run). Reactive so reload reconnects to the same thread. */
@@ -83,7 +96,14 @@ export class DemoShell {
       opts?: Parameters<typeof a.submit>[1],
     ) =>
       orig(
-        { ...(input ?? {}), state: { ...((input as { state?: Record<string, unknown> })?.state ?? {}), model: this.model() } },
+        {
+          ...(input ?? {}),
+          state: {
+            ...((input as { state?: Record<string, unknown> })?.state ?? {}),
+            model: this.model(),
+            reasoning_effort: this.effort(),
+          },
+        },
         opts,
       )) as typeof a.submit;
     return a;
@@ -96,6 +116,11 @@ export class DemoShell {
   protected onModelChange(next: string): void {
     this.model.set(next);
     this.persistence.write('model', next);
+  }
+
+  protected onEffortChange(next: string): void {
+    this.effort.set(next);
+    this.persistence.write('effort', next);
   }
 
   protected onDebugChange(next: boolean): void {

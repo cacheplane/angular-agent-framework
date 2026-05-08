@@ -5,9 +5,12 @@
     [mode]="mode()"
     [model]="model()"
     [modelOptions]="modelOptions()"
+    [effort]="effort()"
+    [effortOptions]="effortOptions()"
     [debugOpen]="debugOpen()"
     (modeChange)="onModeChange($event)"
     (modelChange)="onModelChange($event)"
+    (effortChange)="onEffortChange($event)"
     (debugOpenChange)="onDebugChange($event)"
     (newConversation)="onNewConversation()"
   />

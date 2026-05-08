@@ -24,4 +24,9 @@ export const WELCOME_SUGGESTIONS: readonly WelcomeSuggestion[] = [
     label: 'Explain promises with code',
     value: 'Explain JavaScript promises with a fenced code block in TypeScript.',
   },
+  {
+    label: 'Solve a multi-step puzzle (try Effort = high)',
+    value:
+      'Three friends start with 14 apples. They share them so each gets a different prime number of apples and one gets exactly twice as many as another. How many does each get? Walk through your reasoning step by step.',
+  },
 ];

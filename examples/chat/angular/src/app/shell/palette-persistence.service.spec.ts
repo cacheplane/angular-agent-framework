@@ -12,6 +12,7 @@ describe('PalettePersistence', () => {
   it('returns null when nothing is stored', () => {
     const svc = TestBed.runInInjectionContext(() => new PalettePersistence());
     expect(svc.read('model')).toBeNull();
+    expect(svc.read('effort')).toBeNull();
     expect(svc.read('debug')).toBeNull();
     expect(svc.read('threadId')).toBeNull();
     expect(svc.read('collapsed')).toBeNull();
@@ -21,6 +22,12 @@ describe('PalettePersistence', () => {
     const svc = TestBed.runInInjectionContext(() => new PalettePersistence());
     svc.write('model', 'gpt-5-mini');
     expect(svc.read('model')).toBe('gpt-5-mini');
+  });
+
+  it('round-trips effort', () => {
+    const svc = TestBed.runInInjectionContext(() => new PalettePersistence());
+    svc.write('effort', 'high');
+    expect(svc.read('effort')).toBe('high');
   });
 
   it('round-trips a boolean value', () => {

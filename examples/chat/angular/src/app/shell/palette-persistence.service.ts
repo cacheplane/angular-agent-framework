@@ -5,6 +5,7 @@ const KEY = 'ngaf-chat-demo:palette';
 
 interface PaletteState {
   model?: string | null;
+  effort?: string | null;
   debug?: boolean | null;
   threadId?: string | null;
   collapsed?: boolean | null;

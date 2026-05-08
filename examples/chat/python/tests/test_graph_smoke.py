@@ -15,8 +15,10 @@ def test_graph_imports():
 
 
 @pytest.mark.smoke
-def test_state_shape_includes_messages_and_model():
+def test_state_shape_includes_required_channels():
     from src.graph import State
     annotations = State.__annotations__
     assert "messages" in annotations, "State must have a `messages` channel"
     assert "model" in annotations, "State must have a `model` channel"
+    assert "reasoning_effort" in annotations, \
+        "State must have a `reasoning_effort` channel (Phase 2A)"

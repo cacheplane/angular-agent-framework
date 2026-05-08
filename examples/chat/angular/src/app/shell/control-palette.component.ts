@@ -24,10 +24,13 @@ export class ControlPalette {
   readonly mode = input.required<DemoMode>();
   readonly model = input.required<string>();
   readonly modelOptions = input.required<readonly { value: string; label: string }[]>();
+  readonly effort = input.required<string>();
+  readonly effortOptions = input.required<readonly { value: string; label: string }[]>();
   readonly debugOpen = input.required<boolean>();
 
   readonly modeChange = output<DemoMode>();
   readonly modelChange = output<string>();
+  readonly effortChange = output<string>();
   readonly debugOpenChange = output<boolean>();
   readonly newConversation = output<void>();
 
@@ -50,6 +53,11 @@ export class ControlPalette {
   protected pickModel(event: Event): void {
     const value = (event.target as HTMLSelectElement).value;
     this.modelChange.emit(value);
+  }
+
+  protected pickEffort(event: Event): void {
+    const value = (event.target as HTMLSelectElement).value;
+    this.effortChange.emit(value);
   }
 
   protected toggleDebug(): void {
