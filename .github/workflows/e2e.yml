@@ -43,11 +43,11 @@ jobs:
         run: npm ci
 
       - name: Install Python dependencies
-        working-directory: examples/chat-agent
+        working-directory: examples/chat/python
         run: uv sync
 
       - name: Start LangGraph dev server
-        working-directory: examples/chat-agent
+        working-directory: examples/chat/python
         run: uv run langgraph dev --no-browser &
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
