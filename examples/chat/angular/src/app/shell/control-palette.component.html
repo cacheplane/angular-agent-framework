@@ -42,6 +42,15 @@
       </select>
     </label>
 
+    <label class="palette__group palette__group--model">
+      <span class="palette__label">Effort</span>
+      <select [value]="effort()" (change)="pickEffort($event)">
+        @for (opt of effortOptions(); track opt.value) {
+          <option [value]="opt.value">{{ opt.label }}</option>
+        }
+      </select>
+    </label>
+
     <button
       type="button"
       class="palette__toggle"
