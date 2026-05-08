@@ -964,8 +964,22 @@ function extractReasoning(content: unknown): string {
     const rec = block as Record<string, unknown>;
     const t = rec['type'];
     if (t === 'reasoning' || t === 'thinking') {
+      // Direct text field — Anthropic-style "thinking" blocks and
+      // some LangChain-shaped reasoning blocks land here.
       const text = rec['text'];
       if (typeof text === 'string') out += text;
+      // OpenAI Responses API: when `reasoning.summary='auto'` was
+      // requested, reasoning blocks carry a `summary` array of
+      // `{type: 'summary_text', text: '...'}` items. Concatenate
+      // their texts in order.
+      const summary = rec['summary'];
+      if (Array.isArray(summary)) {
+        for (const item of summary) {
+          if (item == null || typeof item !== 'object') continue;
+          const itemText = (item as Record<string, unknown>)['text'];
+          if (typeof itemText === 'string') out += itemText;
+        }
+      }
     }
   }
   return out;

@@ -1029,6 +1029,35 @@ describe('stream-manager.bridge — reasoning extraction', () => {
     ])).toBe('hidden');
   });
 
+  it('extractReasoning pulls text from OpenAI Responses API summary items', () => {
+    const content = [
+      {
+        type: 'reasoning',
+        summary: [
+          { type: 'summary_text', text: 'First thought. ' },
+          { type: 'summary_text', text: 'Second thought.' },
+        ],
+      },
+      { type: 'text', text: 'Visible answer' },
+    ];
+    expect(extractReasoning(content)).toBe('First thought. Second thought.');
+  });
+
+  it('extractReasoning ignores summary items missing text', () => {
+    const content = [
+      {
+        type: 'reasoning',
+        summary: [
+          { type: 'summary_text', text: 'Kept. ' },
+          { type: 'summary_text' },
+          null,
+          { text: 'Also kept.' },
+        ],
+      },
+    ];
+    expect(extractReasoning(content)).toBe('Kept. Also kept.');
+  });
+
   it('accumulateReasoning returns "" for two empty inputs', () => {
     expect(accumulateReasoning(undefined, undefined)).toBe('');
     expect(accumulateReasoning('', '')).toBe('');
