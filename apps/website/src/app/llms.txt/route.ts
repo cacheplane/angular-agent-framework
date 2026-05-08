@@ -46,7 +46,7 @@ function buildLlmsTxt(): string {
     "import { agent } from '@ngaf/langgraph';",
     "import { ChatComponent } from '@ngaf/chat';",
     '// In a component:',
-    "chat = agent({ apiUrl: 'http://localhost:2024', assistantId: 'chat_agent' });",
+    "chat = agent({ apiUrl: 'http://localhost:2024', assistantId: 'chat' });",
     '// Template: <chat [agent]="chat" />',
     '',
     '## Minimal AG-UI example',
