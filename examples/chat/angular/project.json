@@ -1,0 +1,63 @@
+{
+  "name": "examples-chat-angular",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "examples/chat/angular/src",
+  "projectType": "application",
+  "prefix": "app",
+  "targets": {
+    "build": {
+      "executor": "@angular/build:application",
+      "outputs": ["{options.outputPath.base}"],
+      "options": {
+        "outputPath": {
+          "base": "dist/examples/chat/angular",
+          "browser": ""
+        },
+        "index": "examples/chat/angular/src/index.html",
+        "browser": "examples/chat/angular/src/main.ts",
+        "tsConfig": "examples/chat/angular/tsconfig.app.json",
+        "assets": [
+          { "glob": "**/*", "input": "examples/chat/angular/public" }
+        ],
+        "styles": ["examples/chat/angular/src/styles.css"]
+      },
+      "configurations": {
+        "production": {
+          "budgets": [
+            { "type": "initial", "maximumWarning": "500kb", "maximumError": "1.5mb" },
+            { "type": "anyComponentStyle", "maximumWarning": "4kb", "maximumError": "16kb" }
+          ],
+          "outputHashing": "all"
+        },
+        "development": {
+          "optimization": false,
+          "extractLicenses": false,
+          "sourceMap": true
+        }
+      },
+      "defaultConfiguration": "development"
+    },
+    "serve": {
+      "continuous": true,
+      "executor": "@angular/build:dev-server",
+      "options": {
+        "port": 4200
+      },
+      "configurations": {
+        "production": { "buildTarget": "examples-chat-angular:build:production" },
+        "development": { "buildTarget": "examples-chat-angular:build:development" }
+      },
+      "defaultConfiguration": "development"
+    },
+    "test": {
+      "executor": "@nx/vite:test",
+      "options": {
+        "config": "examples/chat/angular/vite.config.mts"
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  },
+  "tags": ["scope:examples", "type:app"]
+}

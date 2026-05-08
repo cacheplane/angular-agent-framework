@@ -1,0 +1,11 @@
+/* @ngaf/chat ships its own component styles via this stylesheet. */
+@import '@ngaf/chat/chat.css';
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: system-ui, -apple-system, sans-serif;
+  background: #0f1116;
+  color: #e6e9ef;
+}
