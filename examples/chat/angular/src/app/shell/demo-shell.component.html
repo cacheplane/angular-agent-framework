@@ -11,4 +11,10 @@
     (debugOpenChange)="onDebugChange($event)"
     (newConversation)="onNewConversation()"
   />
+
+  @if (debugOpen()) {
+    <div class="demo-shell__debug" role="region" aria-label="Debug overlay">
+      <chat-debug [agent]="agent" />
+    </div>
+  }
 </div>
