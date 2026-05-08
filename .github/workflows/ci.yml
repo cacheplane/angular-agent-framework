@@ -107,8 +107,8 @@ jobs:
       - run: npm ci
       - run: npx tsx apps/cockpit/scripts/deploy-smoke.ts --url https://cockpit.cacheplane.ai --dry-run
 
-  chat-agent-smoke:
-    name: Chat Agent — smoke
+  examples-chat-smoke:
+    name: examples/chat — python smoke
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6.0.2
@@ -121,9 +121,9 @@ jobs:
         with:
           python-version: '3.12'
       - run: npm ci
-      - working-directory: examples/chat-agent
+      - working-directory: examples/chat/python
         run: uv sync
-      - run: npx nx run chat-agent:smoke --skip-nx-cache
+      - run: npx nx run examples-chat-python:smoke --skip-nx-cache
 
   cockpit-e2e:
     name: Cockpit — e2e
@@ -162,7 +162,7 @@ jobs:
         cockpit-smoke,
         cockpit-secret-integration,
         cockpit-deploy-smoke,
-        chat-agent-smoke,
+        examples-chat-smoke,
         cockpit-e2e,
         website-e2e,
       ]
