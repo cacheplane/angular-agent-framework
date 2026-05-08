@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
-import { Component, ChangeDetectionStrategy, inject, signal } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject } from '@angular/core';
 import { ChatPopupComponent, ChatWelcomeSuggestionComponent } from '@ngaf/chat';
-import { DEMO_AGENT, DEMO_MODEL } from '../shell/shell-tokens';
+import { DEMO_AGENT } from '../shell/shell-tokens';
 import { WELCOME_SUGGESTIONS } from './welcome-suggestions';
 
 @Component({
@@ -15,7 +15,7 @@ import { WELCOME_SUGGESTIONS } from './welcome-suggestions';
         Click the launcher button (bottom-right) to open the chat.
       </p>
     </div>
-    <chat-popup [agent]="agent" [(selectedModel)]="model" [modelOptions]="modelOptions()">
+    <chat-popup [agent]="agent">
       <div chatWelcomeSuggestions>
         @for (s of suggestions; track s.value) {
           <chat-welcome-suggestion
@@ -40,13 +40,7 @@ import { WELCOME_SUGGESTIONS } from './welcome-suggestions';
 })
 export class PopupMode {
   protected readonly agent = inject(DEMO_AGENT);
-  protected readonly model = inject(DEMO_MODEL) as ReturnType<typeof signal<string>>;
   protected readonly suggestions = WELCOME_SUGGESTIONS;
-  protected readonly modelOptions = signal<readonly { value: string; label: string }[]>([
-    { value: 'gpt-5', label: 'gpt-5' },
-    { value: 'gpt-5-mini', label: 'gpt-5-mini' },
-    { value: 'gpt-5-nano', label: 'gpt-5-nano' },
-  ]);
 
   protected send(text: string): void {
     void this.agent.submit({ message: text });

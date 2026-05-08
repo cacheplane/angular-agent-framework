@@ -1,5 +1,5 @@
-/* @ngaf/chat ships its own component styles via this stylesheet. */
-@import '@ngaf/chat/chat.css';
+/* @ngaf/chat component design tokens and base styles */
+@import '../../../../libs/chat/src/lib/styles/chat.css';
 
 html, body {
   margin: 0;
