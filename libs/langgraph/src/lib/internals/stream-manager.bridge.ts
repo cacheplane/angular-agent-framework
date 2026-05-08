@@ -55,7 +55,7 @@ export interface StreamManagerBridge {
   resubmitLast:          () => Promise<void>;
   getReasoningDurationMs:(id: string) => number | undefined;
   /** Update server-side thread state (e.g. RemoveMessage for regenerate rollback). */
-  updateState:           (values: Record<string, unknown>) => Promise<void>;
+  updateState:           (values: Record<string, unknown>, opts?: { asNode?: string }) => Promise<void>;
   /** The current thread ID tracked by the bridge (null if not yet known). */
   readonly currentThreadId: string | null;
 }
@@ -665,13 +665,21 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
       return entry.endedAt - entry.startedAt;
     },
 
-    updateState: async (values: Record<string, unknown>): Promise<void> => {
+    updateState: async (
+      values: Record<string, unknown>,
+      opts?: { asNode?: string },
+    ): Promise<void> => {
       // No-op when there is no thread yet or the transport doesn't support
       // updateState (e.g. MockAgentTransport in unit tests without a threadId).
       if (!currentThreadId || !transport.updateState) {
         return;
       }
-      await transport.updateState(currentThreadId, values, new AbortController().signal);
+      await transport.updateState(
+        currentThreadId,
+        values,
+        new AbortController().signal,
+        opts,
+      );
     },
 
     get currentThreadId(): string | null {

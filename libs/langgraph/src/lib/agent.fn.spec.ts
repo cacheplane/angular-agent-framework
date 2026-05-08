@@ -747,6 +747,60 @@ describe('agent', () => {
       expect(seen[1]?.payload).toBeNull();
     });
 
+    it("forwards asNode: '__start__' to transport.updateState so the next submit(null) can resume", async () => {
+      // After the original run the LangGraph thread sits at __end__ with
+      // `next: []`. submit(null) is a no-op in that position. The regenerate
+      // flow has to reposition the thread via `as_node='__start__'` before
+      // re-running, so the transport must receive that option.
+      const updateCalls: Array<{
+        threadId: string;
+        values: Record<string, unknown>;
+        options?: { asNode?: string };
+      }> = [];
+      const transport = new MockAgentTransport();
+      // Augment the mock with an updateState capture.
+      (transport as unknown as {
+        updateState: (
+          threadId: string,
+          values: Record<string, unknown>,
+          signal: AbortSignal,
+          options?: { asNode?: string },
+        ) => Promise<void>;
+      }).updateState = async (threadId, values, _signal, options) => {
+        updateCalls.push({ threadId, values, options });
+      };
+
+      const ref = withInjectionContext(() =>
+        agent({ apiUrl: '', assistantId: 'a', threadId: 't-1', transport, throttle: false })
+      );
+
+      ref.submit({ message: 'hello' });
+      transport.emit([{
+        type: 'messages',
+        messages: [
+          { id: 'u-1', type: 'human', content: 'hello' },
+          { id: 'a-1', type: 'ai', content: 'hi there' },
+        ],
+      }]);
+      transport.close();
+      await new Promise(r => setTimeout(r, 30));
+
+      const regeneratePromise = ref.regenerate(1);
+      transport.close();
+      await regeneratePromise;
+
+      // updateState invoked exactly once — with the RemoveMessage payload
+      // AND asNode set to '__start__'. Without asNode, regenerate would
+      // submit(null) against a terminal thread and produce no new assistant.
+      expect(updateCalls).toHaveLength(1);
+      expect(updateCalls[0]?.threadId).toBe('t-1');
+      expect(updateCalls[0]?.options?.asNode).toBe('__start__');
+      const removeMessages = (updateCalls[0]?.values?.['messages'] as Array<Record<string, unknown>>) ?? [];
+      expect(removeMessages).toHaveLength(1);
+      expect(removeMessages[0]?.['type']).toBe('remove');
+      expect(removeMessages[0]?.['id']).toBe('a-1');
+    });
+
     it('throws when target index is not an assistant message', async () => {
       const transport = new MockAgentTransport();
       const ref = withInjectionContext(() =>

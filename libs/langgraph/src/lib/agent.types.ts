@@ -212,11 +212,18 @@ export interface AgentTransport {
    * Optional: update server-side thread state (e.g. to emit RemoveMessage
    * entries for regenerate rollback). Forwards to the LangGraph
    * `threads.updateState` API.
+   *
+   * `options.asNode` corresponds to LangGraph's `as_node` parameter — the
+   * server treats the update as if that node had just produced the values,
+   * which determines what the next pull resumes. `regenerate()` passes
+   * `asNode: '__start__'` so the next `submit(null)` resumes at the entry
+   * node and re-runs `generate` against the rolled-back state.
    */
   updateState?(
     threadId: string,
     values: Record<string, unknown>,
     signal: AbortSignal,
+    options?: { asNode?: string },
   ): Promise<void>;
 }
 

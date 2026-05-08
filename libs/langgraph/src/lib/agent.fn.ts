@@ -310,15 +310,26 @@ export function agent<
         })
         .filter((rm): rm is RemoveMessageInstruction => rm !== null);
 
-      if (removeList.length > 0) {
-        // updateState is a no-op when the transport doesn't support it
-        // (e.g. mock transport in unit tests) — safe to call unconditionally.
-        await manager.updateState({ messages: removeList });
-      }
+      // RemoveMessage rollback + reposition the graph to the entry node
+      // via `as_node: '__start__'`. After the original run, the thread is
+      // at `__end__` with `next: []` — submitting `null` would be a no-op
+      // because there is nothing pending to execute. Setting `asNode` to
+      // the start node tells LangGraph to treat the update as if `__start__`
+      // had just produced the values, so the next pull resumes at the entry
+      // node and runs `generate` against the rolled-back state.
+      //
+      // We always pass `asNode` even when removeList is empty (rare, but
+      // possible if the assistant message had no id) so the regenerate
+      // submit below still runs the graph.
+      await manager.updateState(
+        { messages: removeList },
+        { asNode: '__start__' },
+      );
 
-      // Re-run the graph with no new input so LangGraph executes from the
-      // current (trimmed) thread state. The trailing user message becomes the
-      // active prompt without being re-appended.
+      // Re-run the graph with no new input. With the thread now repositioned
+      // at `__start__`, this resumes at the entry node and produces a fresh
+      // assistant message — the trailing user message becomes the active
+      // prompt without being re-appended.
       await manager.submit(null, undefined);
     },
 

@@ -115,8 +115,17 @@ export class FetchStreamTransport implements AgentTransport {
   }
 
   /** Update server-side thread state, e.g. to remove messages for regenerate rollback. */
-  async updateState(threadId: string, values: Record<string, unknown>, _signal: AbortSignal): Promise<void> {
-    await this.client.threads.updateState(threadId, { values });
+  async updateState(
+    threadId: string,
+    values: Record<string, unknown>,
+    _signal: AbortSignal,
+    options?: { asNode?: string },
+  ): Promise<void> {
+    const body: { values: Record<string, unknown>; asNode?: string } = { values };
+    if (options?.asNode !== undefined) {
+      body.asNode = options.asNode;
+    }
+    await this.client.threads.updateState(threadId, body);
   }
 }
 
