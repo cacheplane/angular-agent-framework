@@ -37,7 +37,7 @@
       <span class="palette__label">Model</span>
       <select [value]="model()" (change)="pickModel($event)">
         @for (opt of modelOptions(); track opt.value) {
-          <option [value]="opt.value">{{ opt.label }}</option>
+          <option [value]="opt.value" [selected]="opt.value === model()">{{ opt.label }}</option>
         }
       </select>
     </label>
@@ -46,7 +46,7 @@
       <span class="palette__label">Effort</span>
       <select [value]="effort()" (change)="pickEffort($event)">
         @for (opt of effortOptions(); track opt.value) {
-          <option [value]="opt.value">{{ opt.label }}</option>
+          <option [value]="opt.value" [selected]="opt.value === effort()">{{ opt.label }}</option>
         }
       </select>
     </label>

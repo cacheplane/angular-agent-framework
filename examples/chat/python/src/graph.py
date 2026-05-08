@@ -49,7 +49,12 @@ async def generate(state: State) -> dict:
         # Honor the client's effort selection when present; default to
         # 'minimal' so first-token latency stays low for unconfigured callers.
         effort = state.get("reasoning_effort") or "minimal"
-        kwargs["reasoning"] = {"effort": effort}
+        # `summary='auto'` instructs the OpenAI Responses API to emit
+        # summary text inside the reasoning block (otherwise the block
+        # arrives with an empty `summary: []` and the chat UI has nothing
+        # to render). The adapter's `extractReasoning` reads either the
+        # legacy `block.text` field or the modern `block.summary[].text`.
+        kwargs["reasoning"] = {"effort": effort, "summary": "auto"}
     llm = ChatOpenAI(**kwargs)
     messages = [SystemMessage(content=SYSTEM_PROMPT)] + state["messages"]
     response = await llm.ainvoke(messages)
