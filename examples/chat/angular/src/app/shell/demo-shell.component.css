@@ -1,0 +1,10 @@
+:host {
+  display: block;
+  height: 100dvh;
+}
+
+.demo-shell {
+  position: relative;
+  display: block;
+  height: 100%;
+}

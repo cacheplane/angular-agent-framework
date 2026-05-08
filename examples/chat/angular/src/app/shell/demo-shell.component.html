@@ -1,0 +1,14 @@
+<div class="demo-shell">
+  <router-outlet />
+
+  <app-control-palette
+    [mode]="mode()"
+    [model]="model()"
+    [modelOptions]="modelOptions()"
+    [debugOpen]="debugOpen()"
+    (modeChange)="onModeChange($event)"
+    (modelChange)="onModelChange($event)"
+    (debugOpenChange)="onDebugChange($event)"
+    (newConversation)="onNewConversation()"
+  />
+</div>
