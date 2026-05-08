@@ -1,0 +1,15 @@
+/*
+ * Smoke consumer imports the published @ngaf/chat stylesheet directly.
+ * The workspace-linked demo (examples/chat/angular/) uses a relative
+ * path into the library source instead.
+ */
+@import '@ngaf/chat/chat.css';
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: system-ui, -apple-system, sans-serif;
+  background: #0f1116;
+  color: #e6e9ef;
+}

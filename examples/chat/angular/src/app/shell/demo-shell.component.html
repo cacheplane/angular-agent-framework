@@ -1,0 +1,20 @@
+<div class="demo-shell">
+  <router-outlet />
+
+  <app-control-palette
+    [mode]="mode()"
+    [model]="model()"
+    [modelOptions]="modelOptions()"
+    [debugOpen]="debugOpen()"
+    (modeChange)="onModeChange($event)"
+    (modelChange)="onModelChange($event)"
+    (debugOpenChange)="onDebugChange($event)"
+    (newConversation)="onNewConversation()"
+  />
+
+  @if (debugOpen()) {
+    <div class="demo-shell__debug" role="region" aria-label="Debug overlay">
+      <chat-debug [agent]="agent" />
+    </div>
+  }
+</div>

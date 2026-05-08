@@ -1,0 +1,16 @@
+/*
+ * Workspace-linked dev path into the @ngaf/chat library source.
+ * The published consumer (smoke template) imports `@ngaf/chat/chat.css`
+ * directly; here we point at the source CSS because the workspace
+ * doesn't pre-build the library to a dist folder during `nx serve`.
+ */
+@import '../../../../libs/chat/src/lib/styles/chat.css';
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: system-ui, -apple-system, sans-serif;
+  background: #0f1116;
+  color: #e6e9ef;
+}

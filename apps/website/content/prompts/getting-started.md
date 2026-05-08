@@ -4,7 +4,7 @@ Install: npm install @ngaf/langgraph@latest
 
 1. In app.config.ts, add provideAgent({ apiUrl: 'http://localhost:2024' }) to the providers array. Import it from '@ngaf/langgraph'.
 
-2. Create a ChatComponent that calls agent({ assistantId: 'chat_agent' }) in the constructor or as a field initializer. agent() MUST be called inside an Angular injection context — constructor or field initializer is correct; ngOnInit is not.
+2. Create a ChatComponent that calls agent({ assistantId: 'chat' }) in the constructor or as a field initializer. agent() MUST be called inside an Angular injection context — constructor or field initializer is correct; ngOnInit is not.
 
 3. The component template should loop over chat.messages() using @for and render each message's content. Add an input field and a button that calls chat.submit({ message: inputValue }).
 

@@ -1,0 +1,24 @@
+{
+  "name": "examples-chat",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "sourceRoot": "examples/chat",
+  "targets": {
+    "serve": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "npx nx run examples-chat-python:serve",
+          "npx nx run examples-chat-angular:serve"
+        ],
+        "parallel": true
+      }
+    },
+    "smoke": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx nx run examples-chat-smoke:run"
+      }
+    }
+  }
+}

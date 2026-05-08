@@ -1,0 +1,30 @@
+{
+  "name": "examples-chat-python",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "sourceRoot": "examples/chat/python/src",
+  "targets": {
+    "serve": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "examples/chat/python",
+        "command": "uv run langgraph dev --port 2024 --no-browser"
+      },
+      "continuous": true
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "examples/chat/python",
+        "command": "uv run pytest -q"
+      }
+    },
+    "smoke": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "examples/chat/python",
+        "command": "uv run pytest -q -m smoke"
+      }
+    }
+  }
+}
