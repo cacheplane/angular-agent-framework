@@ -27,6 +27,75 @@
 
 ---
 
+## 0.0.27 — 2026-05-06
+
+### Fixed
+
+- **`@ngaf/langgraph`** — `regenerate(N)` now performs proper server-side rollback: emits `RemoveMessage` instances for every raw `BaseMessage` at index > userIdx and calls `client.threads.updateState` to roll back LangGraph thread state. Local buffer truncated **inclusive** of the preceding user message; re-runs via `manager.submit(null)`. Fixes the 2u/2a duplication regression from 0.0.26. (#200)
+- **`@ngaf/ag-ui`** — `regenerate(N)` truncates inclusive of user, syncs source agent state via `source.setMessages(trimmed)`, then calls `source.runAgent()`. (#200)
+
+### Added
+
+- **`AgentTransport.updateState()`** — optional method on the transport interface; `FetchStreamTransport` implements it via `client.threads.updateState`. `StreamManagerBridge` exposes `updateState()` + `currentThreadId`. Safe no-op when unsupported. (#200)
+
+### Changed
+
+- **`@ngaf/ag-ui`** — replaced `fast-json-patch.applyPatch` with an inline ~50-line RFC-6902 helper (`apply-patch.ts`). Eliminates the CommonJS-in-ESM crash in Vite/vitest ESM contexts. (#200)
+
+---
+
+## 0.0.26 — 2026-05-05
+
+### Added
+
+- **`Agent.regenerate(index)`** — new method on the `Agent` interface implemented by both LangGraph and ag-ui adapters. Replace-semantics: discards the target assistant message and all subsequent messages, then re-runs against the prior user prompt. (#199)
+- **`<chat-message-actions>`** — regenerate button is disabled while `agent.isLoading()`. (#199)
+
+### Fixed
+
+- **Regenerate semantics** — clicking "Regenerate response" no longer duplicates the conversation; runs the agent on the prior user prompt and replaces. (#199)
+
+### Changed
+
+- **`@ngaf/chat`** — `@cacheplane/partial-markdown` peer bumped to `^0.3.0` (consumes nested-list parser fix and `StreamStatus` rename).
+- All 16 @ngaf libraries synchronized to `0.0.26`.
+
+---
+
+## 0.0.25 — 2026-05-04
+
+### Fixed (live-browser smoke)
+
+- **`<chat-input>`** — textarea now auto-resizes from `scrollHeight` (capped at 200px / ~8 lines) so multi-line input via Shift+Enter is visible. Previously stuck at the fixed 24px / `rows="1"` height. (#198)
+- **`<chat-select>`** — Escape now closes the menu when focus is on the trigger (previously only handled keydown inside the menu). (#198)
+- **`<chat-message-actions>`** — thumbs-up/down rating buttons gain `[attr.aria-pressed]` bound to the rating signal so screen readers can communicate toggle state. (#198)
+
+---
+
+## 0.0.24 — 2026-05-04
+
+### Fixed (live-browser smoke)
+
+- **Markdown table rendering** — `MarkdownTableComponent` now imports and dispatches `MarkdownTableRowComponent` directly instead of walking row children, so the `IS_HEADER_ROW` DI provider runs and `<thead>`/`<tbody>` cells render as proper `<th>`/`<td>`. (#197)
+- **Citation marker without URL** — splits resolved branch into "with URL" (`<a [attr.href]>`) and "without URL" (`<span class="chat-citation-marker--no-url">`); switched to `[attr.href]` for explicit attribute removal so we no longer emit `<a href="">`. (#197)
+- **Sources panel** — Pandoc-only citations (`[^id]:` defs in message content with no provider metadata) now render in `<chat-citations>`. Optionally injects `CitationsResolverService` and merges markdown-sidecar defs; `Message.citations` takes precedence by id. (#197)
+- **Task-list checkbox layout** — checkbox + text now flow on a single line via flexbox on `.chat-md-list-item--task` with collapsed inner `<p>` margin. Multi-paragraph task items still wrap correctly. (#197)
+
+---
+
+## 0.0.23 — 2026-05-04
+
+### Added
+
+- **`@ngaf/langgraph`** — public-API export of `extractCitations` (already wired internally in 0.0.21; advanced consumers building custom adapters can now reuse). (#196)
+- **`@ngaf/ag-ui`** — public-API export of `bridgeCitationsState`. (#196)
+
+### Changed
+
+- All 16 @ngaf libraries synchronized to `0.0.23`.
+
+---
+
 ## 0.0.22 — 2026-05-04
 
 ### Added
