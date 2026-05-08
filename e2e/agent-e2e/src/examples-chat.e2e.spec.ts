@@ -4,29 +4,29 @@ import { Client } from '@langchain/langgraph-sdk';
 const LANGGRAPH_URL = process.env['LANGGRAPH_URL'] ?? 'http://localhost:2024';
 
 /**
- * End-to-end tests for the chat_agent LangGraph server.
+ * End-to-end tests for the chat LangGraph server.
  *
  * Prerequisites:
- *   - `langgraph dev` must be running (examples/chat-agent/)
+ *   - `langgraph dev` must be running (examples/chat/python/)
  *   - Set LANGGRAPH_URL=http://localhost:2024 (or deployed URL)
  *
  * These tests are skipped when LANGGRAPH_URL is not set so they never
  * block standard `npx nx test` runs.
  */
-describe.skipIf(!process.env['LANGGRAPH_URL'])('chat-agent e2e', () => {
+describe.skipIf(!process.env['LANGGRAPH_URL'])('examples/chat e2e', () => {
   let client: Client;
 
   beforeAll(() => {
     client = new Client({ apiUrl: LANGGRAPH_URL });
   });
 
-  it('streams messages from the chat_agent graph', async () => {
+  it('streams messages from the chat graph', async () => {
     const thread = await client.threads.create();
     const chunks: unknown[] = [];
 
     for await (const chunk of client.runs.stream(
       thread.thread_id,
-      'chat_agent',
+      'chat',
       {
         input: { messages: [{ role: 'human', content: 'Say exactly: pong' }] },
         streamMode: 'messages',
@@ -48,7 +48,7 @@ describe.skipIf(!process.env['LANGGRAPH_URL'])('chat-agent e2e', () => {
     // First turn: plant the secret word
     for await (const _ of client.runs.stream(
       thread.thread_id,
-      'chat_agent',
+      'chat',
       {
         input: {
           messages: [{ role: 'human', content: 'My secret word is: PINEAPPLE.' }],
@@ -63,7 +63,7 @@ describe.skipIf(!process.env['LANGGRAPH_URL'])('chat-agent e2e', () => {
     const chunks: unknown[] = [];
     for await (const chunk of client.runs.stream(
       thread.thread_id,
-      'chat_agent',
+      'chat',
       {
         input: { messages: [{ role: 'human', content: 'What is my secret word?' }] },
         streamMode: 'values',
@@ -85,7 +85,7 @@ describe.skipIf(!process.env['LANGGRAPH_URL'])('chat-agent e2e', () => {
 
     for await (const chunk of client.runs.stream(
       thread.thread_id,
-      'chat_agent',
+      'chat',
       {
         input: { messages: [{ role: 'human', content: 'What are you?' }] },
         config: {
