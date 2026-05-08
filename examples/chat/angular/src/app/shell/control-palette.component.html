@@ -1,0 +1,69 @@
+@if (collapsed()) {
+  <button
+    type="button"
+    class="palette palette--collapsed"
+    aria-label="Expand control palette"
+    (click)="toggleCollapsed()"
+  >
+    ⚙
+  </button>
+} @else {
+  <div class="palette" role="region" aria-label="Demo control palette">
+    <div class="palette__group palette__group--mode" role="tablist" aria-label="Chat mode">
+      <button
+        type="button"
+        role="tab"
+        [attr.aria-selected]="mode() === 'embed'"
+        [class.is-active]="mode() === 'embed'"
+        (click)="pickMode('embed')"
+      >Embed</button>
+      <button
+        type="button"
+        role="tab"
+        [attr.aria-selected]="mode() === 'popup'"
+        [class.is-active]="mode() === 'popup'"
+        (click)="pickMode('popup')"
+      >Popup</button>
+      <button
+        type="button"
+        role="tab"
+        [attr.aria-selected]="mode() === 'sidebar'"
+        [class.is-active]="mode() === 'sidebar'"
+        (click)="pickMode('sidebar')"
+      >Sidebar</button>
+    </div>
+
+    <label class="palette__group palette__group--model">
+      <span class="palette__label">Model</span>
+      <select [value]="model()" (change)="pickModel($event)">
+        @for (opt of modelOptions(); track opt.value) {
+          <option [value]="opt.value">{{ opt.label }}</option>
+        }
+      </select>
+    </label>
+
+    <button
+      type="button"
+      class="palette__toggle"
+      [class.is-on]="debugOpen()"
+      [attr.aria-pressed]="debugOpen()"
+      (click)="toggleDebug()"
+    >
+      <span class="palette__toggle-dot"></span>
+      <span>Debug {{ debugOpen() ? 'on' : 'off' }}</span>
+    </button>
+
+    <button
+      type="button"
+      class="palette__action"
+      (click)="emitNewConversation()"
+    >↻ New conversation</button>
+
+    <button
+      type="button"
+      class="palette__collapse"
+      aria-label="Collapse control palette"
+      (click)="toggleCollapsed()"
+    >⌃</button>
+  </div>
+}
