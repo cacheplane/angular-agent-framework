@@ -1,3 +1,20 @@
+## 0.0.29 — 2026-05-08
+
+### Fixed
+
+- **`@ngaf/langgraph`** — `regenerate(index)` now repositions the LangGraph thread via `as_node: '__start__'` before re-submitting, so the next pull resumes at the entry node and re-runs `generate` against the rolled-back state. Previously the run could resume mid-graph and skip generation. (#209)
+
+### Added
+
+- **`@ngaf/langgraph`** — `regenerate(assistantMessageIndex)` is now declared on the public `LangGraphAgent` surface (previously implemented + tested but missing from `agent.types.ts`). JSDoc matches the canonical `Agent.regenerate` contract in `@ngaf/chat`. (#207, #208)
+- **`AgentTransport.updateState`** — optional `options.asNode` parameter mirrors LangGraph's `as_node`, used by `regenerate()` to anchor the rolled-back state at the entry node.
+
+### Changed
+
+- All 7 publishable @ngaf libraries synchronized to `0.0.29` per project policy (single version across the suite).
+
+---
+
 ## 0.0.28 — 2026-05-07
 
 ### Breaking
