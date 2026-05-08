@@ -187,6 +187,24 @@ renders correctly both during streaming and after completion.
 
 ## Reasoning blocks
 
+- [ ] Palette "Effort" dropdown lists 4 options
+      (minimal (fast) / low / medium / high (visible reasoning))
+- [ ] Default value is `minimal` on first load
+- [ ] Effort selection persists across reload
+- [ ] With model = gpt-5-mini and effort = high, send the puzzle prompt
+      ("Solve a multi-step puzzle (try Effort = high)" welcome suggestion):
+  - [ ] `<chat-reasoning>` pill appears with "Thinking…" + pulsing dot during streaming
+  - [ ] Reasoning body auto-expands during streaming (markdown rendered)
+  - [ ] After completion, pill collapses to "Thought for {duration}"
+  - [ ] Click pill — body expands; click again — collapses
+- [ ] With effort = minimal, same prompt — pill appears briefly or not at all
+      (first-token latency low)
+- [ ] Switch effort mid-conversation, send again — new message reflects new effort
+- [ ] Cross-mode: send in /embed with effort=high, navigate to /popup,
+      open popup — reasoning pill on the prior message still renders
+- [ ] Server state shows `values.reasoning_effort` matches palette selection
+      (`curl localhost:2024/threads/<id>/state`)
+
 ## Tool calls
 
 ## Interrupts / human-in-the-loop
