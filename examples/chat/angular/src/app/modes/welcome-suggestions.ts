@@ -29,4 +29,9 @@ export const WELCOME_SUGGESTIONS: readonly WelcomeSuggestion[] = [
     value:
       'Three friends start with 14 apples. They share them so each gets a different prime number of apples and one gets exactly twice as many as another. How many does each get? Walk through your reasoning step by step.',
   },
+  {
+    label: 'What are Angular signals? (search + cite sources)',
+    value:
+      'Use the search tool to find authoritative information about Angular signals, then explain what they are and when to use them. Cite your sources inline using [1], [2] etc.',
+  },
 ];

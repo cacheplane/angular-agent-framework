@@ -207,9 +207,21 @@ renders correctly both during streaming and after completion.
 
 ## Tool calls
 
+- [ ] Click "What are Angular signals? (search + cite sources)" welcome suggestion
+- [ ] During streaming: a tool-call card appears for `search_documents` with a running pill
+- [ ] After tool completes: card collapses to "complete" pill
+- [ ] Click the card — args + result panels expand
+- [ ] AI response references documents inline (e.g. "Signals are... [1]")
+
 ## Interrupts / human-in-the-loop
 
 ## Citations
+
+- [ ] Sources panel ("Sources") renders below the assistant message
+- [ ] 3-5 citations listed with title, url, snippet preview
+- [ ] Inline `[1]`, `[2]` markers in the message body link to the corresponding source
+- [ ] Click a source title — opens the URL in a new tab
+- [ ] Server-side: `curl localhost:2024/threads/<id>/state` shows the AI message has `additional_kwargs.citations` with the list
 
 ## Generative UI / A2UI surfaces
 
