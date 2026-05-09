@@ -58,10 +58,11 @@ SYSTEM_PROMPT = (
     "When the user asks for in-depth research on a focused topic (history, "
     "motivation, comparison, deep-dive on something they want explained), "
     "call the `research` tool to dispatch a subagent that focuses on that "
-    "topic. Pass the topic verbatim or as a concise rephrasing. Use the "
-    "subagent's returned summary to compose your final answer. Do not "
-    "call `research` for trivial chit-chat or simple lookups — those are "
-    "handled by `search_documents`."
+    "topic. Pass the topic verbatim or as a concise rephrasing, and pass "
+    "`subagent_type=\"research\"` so the UI surfaces a subagent card while "
+    "the child runs. Use the subagent's returned summary to compose your "
+    "final answer. Do not call `research` for trivial chit-chat or simple "
+    "lookups — those are handled by `search_documents`."
 )
 
 # Reasoning-capable model prefixes. We only attach the ``reasoning``
@@ -178,11 +179,20 @@ research_subgraph = _research_builder.compile()
 
 
 @tool
-async def research(topic: str) -> str:
+async def research(topic: str, subagent_type: str = "research") -> str:
     """Dispatch a research subagent to gather facts on a focused topic.
     The subagent returns a concise summary; pass that summary back to
     the user, citing it with the inline citation syntax if appropriate.
+
+    `subagent_type` is a free-form label the parent uses to identify the
+    subagent in the UI (the @ngaf/langgraph SubagentTracker keys on it
+    to populate `agent.subagents()` for the chat-subagents primitive).
+    Always pass a stable identifier like "research".
     """
+    # subagent_type is intentionally accepted but unused server-side —
+    # it travels in the tool call args so the SubagentTracker can
+    # register the dispatch and surface a card while the child graph runs.
+    del subagent_type
     result = await research_subgraph.ainvoke({"topic": topic, "messages": []})
     msgs = result.get("messages") if isinstance(result, dict) else None
     if not msgs:
