@@ -9,7 +9,7 @@ import { Router, RouterOutlet, NavigationEnd } from '@angular/router';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { filter, map, startWith } from 'rxjs/operators';
 import { agent } from '@ngaf/langgraph';
-import { ChatDebugComponent, ChatInterruptPanelComponent, type InterruptAction } from '@ngaf/chat';
+import { ChatDebugComponent, ChatInterruptPanelComponent, ChatSubagentsComponent, type InterruptAction } from '@ngaf/chat';
 import { ControlPalette } from './control-palette.component';
 import { PalettePersistence } from './palette-persistence.service';
 import { DEMO_AGENT } from './shell-tokens';
@@ -26,7 +26,7 @@ function modeFromUrl(url: string): DemoMode {
 @Component({
   selector: 'demo-shell',
   standalone: true,
-  imports: [RouterOutlet, ControlPalette, ChatDebugComponent, ChatInterruptPanelComponent],
+  imports: [RouterOutlet, ControlPalette, ChatDebugComponent, ChatInterruptPanelComponent, ChatSubagentsComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './demo-shell.component.html',
   styleUrl: './demo-shell.component.css',
@@ -89,6 +89,10 @@ export class DemoShell {
         this.threadIdSignal.set(id);
         this.persistence.write('threadId', id);
       },
+      // Phase 3B: tells SubagentTracker to treat `research` tool calls as
+      // subagent dispatches and to materialize agent.subagents() from the
+      // resulting tools:<id>-namespaced stream events.
+      subagentToolNames: ['research'],
     });
     const orig = a.submit.bind(a);
     (a as { submit: typeof a.submit }).submit = ((

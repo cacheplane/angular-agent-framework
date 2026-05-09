@@ -39,4 +39,9 @@ export const WELCOME_SUGGESTIONS: readonly WelcomeSuggestion[] = [
     value:
       'I want to clean up old database backups older than 90 days. Walk me through what you would delete, and call request_approval before doing anything destructive so I can review your plan.',
   },
+  {
+    label: 'Demo: dispatch a research subagent',
+    value:
+      'Use the research subagent to investigate the history and motivation behind Angular standalone components, then report back with a concise summary.',
+  },
 ];

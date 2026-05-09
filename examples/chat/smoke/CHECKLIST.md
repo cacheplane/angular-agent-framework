@@ -235,6 +235,14 @@ renders correctly both during streaming and after completion.
 
 ## Subagents
 
+- [ ] Click "Demo: dispatch a research subagent" welcome suggestion
+- [ ] Parent AI begins planning, then emits a tool_call to `research` — graph dispatches the subagent
+- [ ] `<chat-subagents>` panel appears above the chat input with one running subagent card
+- [ ] Card surfaces the subagent's status (running) and the tool-call args (topic) while the child runs
+- [ ] Once the subagent completes, the active filter hides its card; parent AI emits its final summary message in the chat
+- [ ] Server-side: `curl localhost:2024/threads/<id>/state` shows tool_calls included `{ "name": "research", ... }` and the subgraph's messages were emitted under a `tools:<id>` namespace
+- [ ] No console errors during the subagent run; no flicker of the subagents panel during streaming
+
 ## Time travel / timeline
 
 ## Multi-thread

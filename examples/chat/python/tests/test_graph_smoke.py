@@ -64,3 +64,26 @@ def test_state_graph_still_includes_attach_citations_node():
     nodes = set(graph.get_graph().nodes.keys())
     assert "tools" in nodes
     assert "attach_citations" in nodes
+
+
+@pytest.mark.smoke
+def test_research_tool_exists():
+    from src.graph import research, research_subgraph
+    assert research is not None
+    # @tool decorator gives the resulting object a `.name` attribute
+    assert research.name == "research"
+    # research_subgraph is the compiled child StateGraph
+    assert research_subgraph is not None
+    # A compiled LangGraph exposes get_graph() with at least one node
+    nodes = set(research_subgraph.get_graph().nodes.keys())
+    assert "research_node" in nodes
+
+
+@pytest.mark.smoke
+def test_state_graph_topology_unchanged_after_research():
+    # Regression check: Phase 3B must not break Phase 2B / 3A topology.
+    from src.graph import graph
+    nodes = set(graph.get_graph().nodes.keys())
+    assert "generate" in nodes
+    assert "tools" in nodes
+    assert "attach_citations" in nodes

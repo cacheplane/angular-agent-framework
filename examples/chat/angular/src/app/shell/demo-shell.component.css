@@ -34,3 +34,15 @@
   box-shadow: 0 6px 24px rgba(0, 0, 0, 0.45);
   padding: 12px 14px;
 }
+
+.demo-shell__subagents {
+  position: fixed;
+  left: 50%;
+  bottom: 96px;
+  transform: translateX(-50%);
+  z-index: 997;
+  width: min(640px, calc(100vw - 32px));
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}

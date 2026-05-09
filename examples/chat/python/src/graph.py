@@ -31,6 +31,7 @@ from langgraph.types import interrupt
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import (
     AIMessage,
+    HumanMessage,
     RemoveMessage,
     SystemMessage,
     ToolMessage,
@@ -53,7 +54,14 @@ SYSTEM_PROMPT = (
     "data, sending a customer email, modifying production state, etc.), "
     "call `request_approval` with a clear `reason` BEFORE doing the action. "
     "Do not assume permission. The human's response will tell you whether to "
-    "proceed, modify, or stop."
+    "proceed, modify, or stop. "
+    "When the user asks for in-depth research on a focused topic (history, "
+    "motivation, comparison, deep-dive on something they want explained), "
+    "call the `research` tool to dispatch a subagent that focuses on that "
+    "topic. Pass the topic verbatim or as a concise rephrasing. Use the "
+    "subagent's returned summary to compose your final answer. Do not "
+    "call `research` for trivial chit-chat or simple lookups — those are "
+    "handled by `search_documents`."
 )
 
 # Reasoning-capable model prefixes. We only attach the ``reasoning``
@@ -134,6 +142,65 @@ def request_approval(reason: str) -> str:
     return f"Human response: {response}"
 
 
+# Research subagent — a small compiled child graph the parent dispatches
+# via the `research` @tool. Running it as an actual subgraph (vs. inline
+# logic) is what causes LangGraph to emit stream events under namespace
+# prefix `tools:<id>` for the child run, which is what the @ngaf/langgraph
+# SubagentTracker keys on to populate `agent.subagents()`.
+class ResearchState(TypedDict):
+    messages: Annotated[list, add_messages]
+    topic: Optional[str]
+
+
+async def research_node(state: ResearchState) -> dict:
+    """Single-node child graph: focus on the topic, return a short brief.
+
+    Uses gpt-5-mini directly (the parent's model selection does not
+    propagate into the subagent — the subagent is a focused contractor).
+    """
+    topic = state.get("topic") or ""
+    llm = ChatOpenAI(model="gpt-5-mini", streaming=True)
+    system = SystemMessage(content=(
+        "You are a focused research subagent. Given a topic, return a "
+        "concise factual summary (3-6 bullets). Do not ask the user "
+        "questions; the parent agent already gathered the topic."
+    ))
+    user = HumanMessage(content=f"Topic: {topic}")
+    response = await llm.ainvoke([system, user])
+    return {"messages": [response]}
+
+
+_research_builder = StateGraph(ResearchState)
+_research_builder.add_node("research_node", research_node)
+_research_builder.set_entry_point("research_node")
+_research_builder.add_edge("research_node", END)
+research_subgraph = _research_builder.compile()
+
+
+@tool
+async def research(topic: str) -> str:
+    """Dispatch a research subagent to gather facts on a focused topic.
+    The subagent returns a concise summary; pass that summary back to
+    the user, citing it with the inline citation syntax if appropriate.
+    """
+    result = await research_subgraph.ainvoke({"topic": topic, "messages": []})
+    msgs = result.get("messages") if isinstance(result, dict) else None
+    if not msgs:
+        return "(no research returned)"
+    last = msgs[-1]
+    content = getattr(last, "content", None) if not isinstance(last, dict) else last.get("content")
+    if isinstance(content, str):
+        return content
+    if isinstance(content, list):
+        # ChatOpenAI may return content as list of blocks; collect text.
+        parts = []
+        for b in content:
+            if isinstance(b, dict) and b.get("type") == "text":
+                parts.append(b.get("text", ""))
+        return "\n".join(parts) if parts else "(no research returned)"
+    return "(no research returned)"
+
+
 class State(TypedDict):
     messages: Annotated[list, add_messages]
     model: Optional[str]
@@ -153,7 +220,7 @@ async def generate(state: State) -> dict:
         # to render). The adapter's `extractReasoning` reads either the
         # legacy `block.text` field or the modern `block.summary[].text`.
         kwargs["reasoning"] = {"effort": effort, "summary": "auto"}
-    llm = ChatOpenAI(**kwargs).bind_tools([search_documents, request_approval])
+    llm = ChatOpenAI(**kwargs).bind_tools([search_documents, request_approval, research])
     messages = [SystemMessage(content=SYSTEM_PROMPT)] + state["messages"]
     response = await llm.ainvoke(messages)
     return {"messages": [response]}
@@ -228,7 +295,7 @@ async def attach_citations(state: State) -> dict:
 
 _builder = StateGraph(State)
 _builder.add_node("generate", generate)
-_builder.add_node("tools", ToolNode([search_documents, request_approval]))
+_builder.add_node("tools", ToolNode([search_documents, request_approval, research]))
 _builder.add_node("attach_citations", attach_citations)
 _builder.set_entry_point("generate")
 _builder.add_conditional_edges(
