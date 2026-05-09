@@ -32,6 +32,6 @@ export const WELCOME_SUGGESTIONS: readonly WelcomeSuggestion[] = [
   {
     label: 'What are Angular signals? (search + cite sources)',
     value:
-      'Use the search tool to find authoritative information about Angular signals, then explain what they are and when to use them. Cite your sources inline using [1], [2] etc.',
+      'Use the search tool to find authoritative information about Angular signals, then explain what they are and when to use them. Cite each source inline as [^doc-id] using the document `id` field returned by the tool.',
   },
 ];
