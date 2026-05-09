@@ -233,6 +233,18 @@ renders correctly both during streaming and after completion.
 
 ## Generative UI / A2UI surfaces
 
+- [ ] Click "Demo: render an interactive A2UI surface" welcome suggestion
+- [ ] Parent AI emits a tool_call to `render_demo_form` (no plain markdown reply yet)
+- [ ] Final assistant bubble renders an `<a2ui-surface>` (a Card titled "Quick feedback") instead of plain markdown
+- [ ] Card contains: TextField labeled "Your name", ChoicePicker labeled "Rating" with options 1-5, Submit button labeled "Submit feedback"
+- [ ] Required-name validation: Submit button shows the inline error "Name is required" / "Enter your name before submitting" while the name field is empty
+- [ ] Type a name → validation error clears
+- [ ] Pick a rating → ChoicePicker updates the data model
+- [ ] Click Submit → `<a2ui-surface>` emits an `A2uiActionMessage` (event name `feedbackSubmit`); chat round-trips it as a new user submit
+- [ ] AI replies conversationally referencing the submitted form (acknowledges receipt; may quote the name/rating)
+- [ ] Server-side: `curl localhost:2024/threads/<id>/state` shows: AI message with `tool_calls=[{ "name": "render_demo_form", ... }]`, ToolMessage with `content="rendered"`, AI message whose `content` starts with `---a2ui_JSON---\n`
+- [ ] No console errors during the surface render or submit cycle
+
 ## Subagents
 
 - [ ] Click "Demo: dispatch a research subagent" welcome suggestion
