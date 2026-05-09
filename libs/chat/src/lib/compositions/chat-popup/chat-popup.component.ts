@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MIT
 import { Component, ChangeDetectionStrategy, input, model, DestroyRef, inject, DOCUMENT, effect } from '@angular/core';
 import type { Agent } from '../../agent';
+import type { ViewRegistry } from '@ngaf/render';
 import { ChatComponent } from '../chat/chat.component';
 import { ChatLauncherButtonComponent } from '../../primitives/chat-launcher-button/chat-launcher-button.component';
 import { CHAT_HOST_TOKENS } from '../../styles/chat-tokens';
@@ -63,7 +64,7 @@ import { CHAT_HOST_TOKENS } from '../../styles/chat-tokens';
       <button type="button" class="chat-popup__close" (click)="closeWindow()" aria-label="Close chat">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
-      <chat [agent]="agent()">
+      <chat [agent]="agent()" [views]="views()">
         <ng-content select="[chatHeader]" chatHeader />
       </chat>
     </div>
@@ -71,6 +72,10 @@ import { CHAT_HOST_TOKENS } from '../../styles/chat-tokens';
 })
 export class ChatPopupComponent {
   readonly agent = input.required<Agent>();
+  /** A2UI component catalog forwarded to the inner <chat>. Without it,
+   * messages classified as A2UI parse correctly but never mount a
+   * surface. Pass `a2uiBasicCatalog()` from `@ngaf/chat`. */
+  readonly views = input<ViewRegistry | undefined>(undefined);
   readonly open = model(false);
   /**
    * Keyboard shortcut (single key) that toggles the popup with cmd (mac)
