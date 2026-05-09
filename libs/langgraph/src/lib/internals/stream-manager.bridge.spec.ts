@@ -5,6 +5,22 @@ import { MockAgentTransport } from '../transport/mock-stream.transport';
 import { ResourceStatus, AgentTransport, StreamSubjects, CustomStreamEvent, StreamEvent } from '../agent.types';
 import type { ThreadState } from '@langchain/langgraph-sdk';
 import { of } from 'rxjs';
+import { readFileSync } from 'node:fs';
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const FIXTURE = JSON.parse(
+  readFileSync(
+    join(__dirname, '..', '..', '..', 'test', 'fixtures', 'streaming-reasoning-puzzle.json'),
+    'utf8',
+  ),
+) as {
+  thread_id: string;
+  canonical_text_length: number;
+  canonical_text: string;
+  events: Array<{ event: string; data: unknown }>;
+};
 
 function makeSubjects(): StreamSubjects<Record<string, unknown>> {
   return {
@@ -1077,5 +1093,41 @@ describe('stream-manager.bridge — reasoning extraction', () => {
 
   it('accumulateReasoning appends pure deltas', () => {
     expect(accumulateReasoning('first ', 'second')).toBe('first second');
+  });
+});
+
+describe('stream-manager.bridge — captured streaming replay (Finding C)', () => {
+  const { mergeMessages, extractText, normalizeMessageType } = _internalsForTesting;
+
+  it('replaying captured chunks does not duplicate visible answer text', () => {
+    let merged: unknown[] = [];
+    for (const ev of FIXTURE.events) {
+      if (ev.event === 'messages') {
+        const tuples = ev.data as unknown[];
+        const incoming = tuples
+          .map(t => (Array.isArray(t) ? t[0] : t))
+          .filter(m => m != null && typeof (m as Record<string, unknown>)['type'] === 'string') as unknown[];
+        if (incoming.length === 0) continue;
+        merged = mergeMessages(merged as never, incoming as never) as unknown[];
+      } else if (ev.event === 'values') {
+        // Mirror what the bridge does: also merge state.messages from values events.
+        const stateMessages = ((ev.data as Record<string, unknown>)['messages'] ?? []) as unknown[];
+        const incoming = stateMessages.filter(
+          m => m != null && typeof (m as Record<string, unknown>)['type'] === 'string',
+        ) as unknown[];
+        if (incoming.length === 0) continue;
+        merged = mergeMessages(merged as never, incoming as never) as unknown[];
+      }
+    }
+
+    const lastAi = (merged as Array<{ type?: string; content?: unknown }>)
+      .filter(m => normalizeMessageType(m.type) === 'ai')
+      .pop();
+    expect(lastAi).toBeTruthy();
+
+    const visible = extractText(lastAi!.content);
+    const expected = FIXTURE.canonical_text_length;
+    expect(visible.length).toBeGreaterThanOrEqual(expected - 20);
+    expect(visible.length).toBeLessThanOrEqual(expected + 20);
   });
 });

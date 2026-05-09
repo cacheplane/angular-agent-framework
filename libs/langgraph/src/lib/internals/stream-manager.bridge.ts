@@ -919,6 +919,27 @@ function mergeMessages(
  * delta. Concatenating extracted text gives consumers the same uniform
  * string they get for non-reasoning models.
  */
+/**
+ * Heuristic: does this content look like a "final canonical" array
+ * carrying both reasoning and visible text blocks? OpenAI's Responses
+ * API ships the final assistant message in this shape after the
+ * streaming token chunks complete. Detection is narrow (requires BOTH
+ * a reasoning-shape block AND a text-shape block in the same array)
+ * so it doesn't trip on routine streaming chunks.
+ */
+function isFinalCanonicalReasoningContent(content: unknown): boolean {
+  if (!Array.isArray(content)) return false;
+  let hasReasoning = false;
+  let hasText = false;
+  for (const block of content) {
+    if (block == null || typeof block !== 'object') continue;
+    const t = (block as Record<string, unknown>)['type'];
+    if (t === 'reasoning' || t === 'thinking') hasReasoning = true;
+    else if (t === 'text' || t === 'output_text') hasText = true;
+  }
+  return hasReasoning && hasText;
+}
+
 function accumulateContent(existing: unknown, incoming: unknown): string {
   const existingText = extractText(existing);
   const incomingText = extractText(incoming);
@@ -934,6 +955,14 @@ function accumulateContent(existing: unknown, incoming: unknown): string {
   // Existing already a strict-superset — chunk arrived after the canonical
   // message merged in via values-sync. Keep what we have.
   if (existingText.startsWith(incomingText)) return existingText;
+  // Final-canonical detection: when incoming is the "reasoning + text"
+  // array shape that ships the authoritative final message after a
+  // streaming run, replace the partial streamed accumulator with the
+  // canonical text instead of appending. Without this branch a small
+  // formatting difference between the streamed accumulator and the
+  // canonical text breaks the prefix checks above and visible content
+  // is duplicated (`existingText + incomingText`).
+  if (isFinalCanonicalReasoningContent(incoming)) return incomingText;
   // Otherwise treat incoming as a delta and append.
   return existingText + incomingText;
 }
@@ -1143,4 +1172,5 @@ export const _internalsForTesting = {
   mergeMessages,
   preserveIds,
   normalizeMessageType,
+  isFinalCanonicalReasoningContent,
 };
