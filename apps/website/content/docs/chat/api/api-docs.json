@@ -1747,6 +1747,12 @@
         "type": "InputSignal<string | null>",
         "description": "Keyboard shortcut (single key) that toggles the popup with cmd (mac)\nor ctrl (other). Set to `null` to disable. Default: 'k' — matches the\nwidely-used cmd/ctrl+K convention.",
         "optional": false
+      },
+      {
+        "name": "views",
+        "type": "InputSignal<Readonly<Record<string, Type<unknown>>> | undefined>",
+        "description": "A2UI component catalog forwarded to the inner <chat>. Without it,\nmessages classified as A2UI parse correctly but never mount a\nsurface. Pass `a2uiBasicCatalog()` from `@ngaf/chat`.",
+        "optional": false
       }
     ],
     "methods": [
@@ -1962,6 +1968,12 @@
         "name": "pushContent",
         "type": "InputSignal<boolean>",
         "description": "",
+        "optional": false
+      },
+      {
+        "name": "views",
+        "type": "InputSignal<Readonly<Record<string, Type<unknown>>> | undefined>",
+        "description": "A2UI component catalog forwarded to the inner <chat>. Without it,\nmessages classified as A2UI parse correctly but never mount a\nsurface. Pass `a2uiBasicCatalog()` from `@ngaf/chat`.",
         "optional": false
       }
     ],
