@@ -62,7 +62,15 @@ SYSTEM_PROMPT = (
     "`subagent_type=\"research\"` so the UI surfaces a subagent card while "
     "the child runs. Use the subagent's returned summary to compose your "
     "final answer. Do not call `research` for trivial chit-chat or simple "
-    "lookups — those are handled by `search_documents`."
+    "lookups — those are handled by `search_documents`. "
+    "When the user asks to see a form, render UI, or display an "
+    "interactive card (anything visually interactive — a feedback "
+    "form, a settings card, a poll), call the `render_demo_form` "
+    "tool with `form_type=\"feedback\"`. Do not describe the UI in "
+    "prose; the tool dispatches the actual rendering. Briefly "
+    "acknowledge in your conversational reply that you have rendered "
+    "the form, but keep the prose short — the user will see the form "
+    "directly."
 )
 
 # Reasoning-capable model prefixes. We only attach the ``reasoning``
@@ -141,6 +149,74 @@ def request_approval(reason: str) -> str:
     """
     response = interrupt({"type": "approval_request", "reason": reason})
     return f"Human response: {response}"
+
+
+# A2UI wire-format prefix recognized by the chat composition's content
+# classifier (libs/chat/src/lib/streaming/content-classifier.ts). When an
+# AI message content begins with this exact sentinel, the classifier
+# routes the message to <a2ui-surface> rendering instead of plain markdown.
+A2UI_PREFIX = "---a2ui_JSON---"
+
+# Hardcoded A2UI v0.9 surface spec for the feedback-card demo. Each line
+# is one envelope ({"<type>": {...}}) consumed by the parser at \n
+# boundaries. The surface defines: a Card titled "Quick feedback"
+# containing a TextField (Name) with a required check, a ChoicePicker
+# (Rating 1-5), and a Submit Button whose action emits a "feedbackSubmit"
+# event. Hardcoded because A2UI's schema-exact format is not a reliable
+# LLM capability today (see cockpit/chat/a2ui/python/src/graph.py).
+FEEDBACK_FORM_JSONL = "\n".join([
+    json.dumps({"createSurface": {
+        "surfaceId": "feedback",
+        "catalogId": "basic",
+        "sendDataModel": True,
+    }}),
+    json.dumps({"updateDataModel": {
+        "surfaceId": "feedback",
+        "value": {"name": "", "rating": "5"},
+    }}),
+    json.dumps({"updateComponents": {
+        "surfaceId": "feedback",
+        "components": [
+            {"id": "root", "component": "Column", "children": ["card"]},
+            {"id": "card", "component": "Card", "title": "Quick feedback",
+             "children": ["name_field", "rating_picker", "submit_btn"]},
+            {"id": "name_field", "component": "TextField",
+             "label": "Your name", "value": {"path": "/name"},
+             "placeholder": "Type your name",
+             "checks": [
+                 {"condition": {"call": "required",
+                                "args": {"value": {"path": "/name"}}},
+                  "message": "Name is required"},
+             ]},
+            {"id": "rating_picker", "component": "ChoicePicker",
+             "label": "Rating", "options": ["1", "2", "3", "4", "5"],
+             "selected": {"path": "/rating"}},
+            {"id": "submit_btn", "component": "Button",
+             "label": "Submit feedback",
+             "checks": [
+                 {"condition": {"call": "required",
+                                "args": {"value": {"path": "/name"}}},
+                  "message": "Enter your name before submitting"},
+             ],
+             "action": {"event": {"name": "feedbackSubmit",
+                                  "context": {"surface": "feedback"}}}},
+        ],
+    }}),
+]) + "\n"  # Trailing newline required — parser processes at \n boundaries
+
+
+@tool
+def render_demo_form(form_type: str = "feedback") -> str:
+    """Render an interactive A2UI surface in the chat. Use this when the
+    user asks to see a form, render UI, or display an interactive card.
+    `form_type` is a hint; the demo currently supports "feedback".
+
+    The tool body returns a stable marker; the actual surface rendering
+    happens in the `emit_a2ui_surface` post-process node, which detects
+    the tool_call and synthesizes the AIMessage carrying the A2UI prefix
+    and JSONL.
+    """
+    return f"a2ui:render:{form_type}"
 
 
 # Research subagent — a small compiled child graph the parent dispatches
@@ -230,20 +306,54 @@ async def generate(state: State) -> dict:
         # to render). The adapter's `extractReasoning` reads either the
         # legacy `block.text` field or the modern `block.summary[].text`.
         kwargs["reasoning"] = {"effort": effort, "summary": "auto"}
-    llm = ChatOpenAI(**kwargs).bind_tools([search_documents, request_approval, research])
+    llm = ChatOpenAI(**kwargs).bind_tools([search_documents, request_approval, research, render_demo_form])
     messages = [SystemMessage(content=SYSTEM_PROMPT)] + state["messages"]
     response = await llm.ainvoke(messages)
     return {"messages": [response]}
 
 
-def should_continue(state: State) -> Literal["tools", "attach_citations"]:
-    """Conditional edge: route from generate to either the tools node
-    (when the AI emitted tool_calls) or the terminal attach_citations
-    post-process."""
+def should_continue(state: State) -> Literal["tools", "emit_a2ui_surface", "attach_citations"]:
+    """Conditional edge: route from generate to:
+    - `emit_a2ui_surface` if any tool_call is `render_demo_form` (A2UI demo)
+    - `tools` for any other tool_call (search_documents, request_approval, research)
+    - `attach_citations` (terminal post-process) when there are no tool_calls
+    """
     last = state["messages"][-1]
     if isinstance(last, AIMessage) and last.tool_calls:
+        for tc in last.tool_calls:
+            if tc["name"] == "render_demo_form":
+                return "emit_a2ui_surface"
         return "tools"
     return "attach_citations"
+
+
+async def emit_a2ui_surface(state: State) -> dict:
+    """Deterministic post-process for `render_demo_form` tool calls.
+
+    Synthesizes (a) a ToolMessage satisfying the tool_call so the
+    conversation history is well-formed, and (b) a fresh AIMessage whose
+    content begins with `A2UI_PREFIX` followed by the hardcoded JSONL
+    surface spec. The chat composition's content classifier detects the
+    prefix and renders `<a2ui-surface>` instead of plain markdown.
+
+    Hardcoded JSONL because A2UI's schema-exact format is not a reliable
+    LLM capability today.
+    """
+    last = state["messages"][-1]
+    tool_calls = getattr(last, "tool_calls", []) or []
+    tc = next(
+        (t for t in tool_calls if t["name"] == "render_demo_form"),
+        None,
+    )
+    if tc is None:
+        # Defensive: should_continue routes here only when render_demo_form
+        # is in tool_calls. Returning {} keeps the graph well-formed if
+        # routing somehow misfires.
+        return {}
+    return {"messages": [
+        ToolMessage(content="rendered", tool_call_id=tc["id"]),
+        AIMessage(content=A2UI_PREFIX + "\n" + FEEDBACK_FORM_JSONL),
+    ]}
 
 
 async def attach_citations(state: State) -> dict:
@@ -305,15 +415,21 @@ async def attach_citations(state: State) -> dict:
 
 _builder = StateGraph(State)
 _builder.add_node("generate", generate)
-_builder.add_node("tools", ToolNode([search_documents, request_approval, research]))
+_builder.add_node("tools", ToolNode([search_documents, request_approval, research, render_demo_form]))
+_builder.add_node("emit_a2ui_surface", emit_a2ui_surface)
 _builder.add_node("attach_citations", attach_citations)
 _builder.set_entry_point("generate")
 _builder.add_conditional_edges(
     "generate",
     should_continue,
-    {"tools": "tools", "attach_citations": "attach_citations"},
+    {
+        "tools": "tools",
+        "emit_a2ui_surface": "emit_a2ui_surface",
+        "attach_citations": "attach_citations",
+    },
 )
 _builder.add_edge("tools", "generate")
+_builder.add_edge("emit_a2ui_surface", "attach_citations")
 _builder.add_edge("attach_citations", END)
 
 # LangGraph API manages persistence for the deployed graph; keep the
