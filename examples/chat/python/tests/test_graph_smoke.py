@@ -87,3 +87,36 @@ def test_state_graph_topology_unchanged_after_research():
     assert "generate" in nodes
     assert "tools" in nodes
     assert "attach_citations" in nodes
+
+
+@pytest.mark.smoke
+def test_render_demo_form_tool_exists():
+    from src.graph import render_demo_form
+    assert render_demo_form is not None
+    # @tool decorator gives the resulting object a `.name` attribute
+    assert render_demo_form.name == "render_demo_form"
+
+
+@pytest.mark.smoke
+def test_state_graph_includes_emit_a2ui_surface_node():
+    from src.graph import graph
+    nodes = set(graph.get_graph().nodes.keys())
+    assert "emit_a2ui_surface" in nodes
+    assert "attach_citations" in nodes
+    assert "tools" in nodes
+    assert "generate" in nodes
+
+
+@pytest.mark.smoke
+def test_a2ui_jsonl_starts_with_prefix_and_parses():
+    import json
+    from src.graph import A2UI_PREFIX, FEEDBACK_FORM_JSONL
+    assert A2UI_PREFIX == "---a2ui_JSON---", \
+        "Prefix must match the chat content-classifier sentinel"
+    full = A2UI_PREFIX + "\n" + FEEDBACK_FORM_JSONL
+    lines = [ln for ln in full.split("\n") if ln.strip() and ln != A2UI_PREFIX]
+    parsed = [json.loads(ln) for ln in lines]
+    assert any("createSurface" in m for m in parsed), \
+        "JSONL must include a createSurface envelope"
+    assert any("updateComponents" in m for m in parsed), \
+        "JSONL must include an updateComponents envelope"

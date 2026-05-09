@@ -44,4 +44,9 @@ export const WELCOME_SUGGESTIONS: readonly WelcomeSuggestion[] = [
     value:
       'Use the research subagent to investigate the history and motivation behind Angular standalone components, then report back with a concise summary.',
   },
+  {
+    label: 'Demo: render an interactive A2UI surface',
+    value:
+      'Use the render_demo_form tool to show me a feedback card with name and rating fields.',
+  },
 ];
