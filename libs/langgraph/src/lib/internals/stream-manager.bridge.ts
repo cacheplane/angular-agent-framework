@@ -154,6 +154,32 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
       const history = await getHistory(threadId, controller.signal);
       if (!controller.signal.aborted && currentThreadId === threadId) {
         subjects.history$.next(history as ThreadState<T>[]);
+
+        // Project the latest checkpoint into messages$ + values$ on first
+        // connect. The user expectation (per the canonical examples/chat
+        // demo spec) is that reloading mid-conversation reattaches to the
+        // existing thread and the history reappears in the chat UI. The
+        // chat composition reads messages$ (not history$), so this
+        // projection is the bridge between "we fetched the checkpoint"
+        // and "the user can see the conversation".
+        //
+        // Guard: only populate when messages$ is currently empty, so we
+        // don't overwrite optimistic local state if the user already
+        // submitted a message in the gap between threadId-set and
+        // history-fetched.
+        const latest = history[0] as
+          | { values?: { messages?: BaseMessage[] } & T }
+          | undefined;
+        if (latest?.values && subjects.messages$.value.length === 0) {
+          const restoredMessages = latest.values.messages ?? [];
+          const restoredValues = { ...(latest.values as T) };
+          // Strip the `messages` field from values — messages$ is the
+          // canonical surface for them; keeping a duplicate in values$
+          // would confuse downstream consumers reading both subjects.
+          delete (restoredValues as { messages?: unknown }).messages;
+          subjects.messages$.next(restoredMessages);
+          subjects.values$.next(restoredValues);
+        }
       }
     } catch (err) {
       if (!controller.signal.aborted && (err as Error)?.name !== 'AbortError') {
