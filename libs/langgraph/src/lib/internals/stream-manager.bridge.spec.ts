@@ -5,6 +5,22 @@ import { MockAgentTransport } from '../transport/mock-stream.transport';
 import { ResourceStatus, AgentTransport, StreamSubjects, CustomStreamEvent, StreamEvent } from '../agent.types';
 import type { ThreadState } from '@langchain/langgraph-sdk';
 import { of } from 'rxjs';
+import { readFileSync } from 'node:fs';
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const FIXTURE = JSON.parse(
+  readFileSync(
+    join(__dirname, '..', '..', '..', 'test', 'fixtures', 'streaming-reasoning-puzzle.json'),
+    'utf8',
+  ),
+) as {
+  thread_id: string;
+  canonical_text_length: number;
+  canonical_text: string;
+  events: Array<{ event: string; data: unknown }>;
+};
 
 function makeSubjects(): StreamSubjects<Record<string, unknown>> {
   return {
@@ -1077,5 +1093,132 @@ describe('stream-manager.bridge — reasoning extraction', () => {
 
   it('accumulateReasoning appends pure deltas', () => {
     expect(accumulateReasoning('first ', 'second')).toBe('first second');
+  });
+});
+
+describe('stream-manager.bridge — accumulateContent', () => {
+  const { accumulateContent, isFinalCanonicalReasoningContent } = _internalsForTesting;
+
+  it('returns incoming when existing is empty', () => {
+    expect(accumulateContent('', 'hello')).toBe('hello');
+    expect(accumulateContent(undefined, 'hello')).toBe('hello');
+  });
+
+  it('appends sequential string deltas (the legitimate delta path)', () => {
+    expect(accumulateContent('hello', 'world')).toBe('helloworld');
+  });
+
+  it('replaces partial accumulator when final canonical reasoning+text array arrives', () => {
+    const existing = 'partial answer';
+    const incoming = [
+      { type: 'reasoning', summary: [{ type: 'summary_text', text: 'I thought about it.' }] },
+      { type: 'text', text: 'CANONICAL ANSWER' },
+    ];
+    expect(accumulateContent(existing, incoming)).toBe('CANONICAL ANSWER');
+    expect(isFinalCanonicalReasoningContent(incoming)).toBe(true);
+  });
+
+  it('takes incoming when it is a strict superset of existing', () => {
+    expect(accumulateContent('Step 1', 'Step 1: define')).toBe('Step 1: define');
+  });
+});
+
+describe('stream-manager.bridge — mergeMessages', () => {
+  const { mergeMessages } = _internalsForTesting;
+
+  function aiMessage(opts: { id?: string; content: unknown }): unknown {
+    return { type: 'ai', id: opts.id, content: opts.content, _getType: () => 'ai' };
+  }
+
+  it('accumulates same-id chunks into a single AI message', () => {
+    const c1 = aiMessage({ id: 'run-1', content: 'Hello' });
+    const c2 = aiMessage({ id: 'run-1', content: 'Hello world' });
+    const merged = mergeMessages([] as never, [c1] as never);
+    const merged2 = mergeMessages(merged, [c2] as never);
+    expect(merged2.length).toBe(1);
+    expect((merged2[0] as { content?: unknown }).content).toBe('Hello world');
+  });
+
+  it('chunk without id falls into the trailing AI message', () => {
+    const initial = aiMessage({ id: 'run-1', content: 'Hello' });
+    const chunk = aiMessage({ content: ' world' });
+    const merged = mergeMessages([initial] as never, [chunk] as never);
+    expect(merged.length).toBe(1);
+    expect((merged[0] as { content?: unknown }).content).toBe('Hello world');
+  });
+
+  it('reasoning+text content array sets next.reasoning AND replaces partial content', () => {
+    const initial = aiMessage({ id: 'run-1', content: 'partial' });
+    const finalCanonical = aiMessage({
+      id: 'run-1',
+      content: [
+        { type: 'reasoning', summary: [{ type: 'summary_text', text: 'thinking…' }] },
+        { type: 'text', text: 'final answer' },
+      ],
+    });
+    const merged = mergeMessages([initial] as never, [finalCanonical] as never);
+    expect(merged.length).toBe(1);
+    const r = merged[0] as { content?: unknown; reasoning?: unknown };
+    expect(r.content).toBe('final answer');
+    expect(r.reasoning).toBe('thinking…');
+  });
+});
+
+describe('stream-manager.bridge — collapseAdjacentAi', () => {
+  const { collapseAdjacentAi } = _internalsForTesting;
+
+  function aiMessage(opts: { id?: string; content: unknown }): unknown {
+    return { type: 'ai', id: opts.id, content: opts.content, _getType: () => 'ai' };
+  }
+
+  it('collapses two adjacent AI messages with identical text into one', () => {
+    const a = aiMessage({ id: 'a', content: 'hello world' });
+    const b = aiMessage({ id: 'b', content: 'hello world' });
+    const out = collapseAdjacentAi([a, b] as never);
+    expect(out.length).toBe(1);
+    expect((out[0] as { content?: unknown }).content).toBe('hello world');
+  });
+
+  it('keeps two adjacent AI messages with non-prefix-related text', () => {
+    const a = aiMessage({ id: 'a', content: 'hello' });
+    const b = aiMessage({ id: 'b', content: 'goodbye' });
+    const out = collapseAdjacentAi([a, b] as never);
+    expect(out.length).toBe(2);
+  });
+});
+
+describe('stream-manager.bridge — captured streaming replay (Finding C)', () => {
+  const { mergeMessages, extractText, normalizeMessageType } = _internalsForTesting;
+
+  it('replaying captured chunks does not duplicate visible answer text', () => {
+    let merged: unknown[] = [];
+    for (const ev of FIXTURE.events) {
+      if (ev.event === 'messages') {
+        const tuples = ev.data as unknown[];
+        const incoming = tuples
+          .map(t => (Array.isArray(t) ? t[0] : t))
+          .filter(m => m != null && typeof (m as Record<string, unknown>)['type'] === 'string') as unknown[];
+        if (incoming.length === 0) continue;
+        merged = mergeMessages(merged as never, incoming as never) as unknown[];
+      } else if (ev.event === 'values') {
+        // Mirror what the bridge does: also merge state.messages from values events.
+        const stateMessages = ((ev.data as Record<string, unknown>)['messages'] ?? []) as unknown[];
+        const incoming = stateMessages.filter(
+          m => m != null && typeof (m as Record<string, unknown>)['type'] === 'string',
+        ) as unknown[];
+        if (incoming.length === 0) continue;
+        merged = mergeMessages(merged as never, incoming as never) as unknown[];
+      }
+    }
+
+    const lastAi = (merged as Array<{ type?: string; content?: unknown }>)
+      .filter(m => normalizeMessageType(m.type) === 'ai')
+      .pop();
+    expect(lastAi).toBeTruthy();
+
+    const visible = extractText(lastAi!.content);
+    const expected = FIXTURE.canonical_text_length;
+    expect(visible.length).toBeGreaterThanOrEqual(expected - 20);
+    expect(visible.length).toBeLessThanOrEqual(expected + 20);
   });
 });
