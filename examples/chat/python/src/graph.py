@@ -41,8 +41,13 @@ SYSTEM_PROMPT = (
     "You are a helpful, concise assistant. "
     "Format responses with markdown when useful (headings, lists, code blocks, tables). "
     "When the user asks about specific Angular topics or technical questions, "
-    "use the `search_documents` tool to find authoritative information before answering, "
-    "and cite the sources inline using [1], [2], etc."
+    "use the `search_documents` tool to find authoritative information before answering. "
+    "Cite sources inline using Pandoc-style citation references with the "
+    "document `id` field as the refId, e.g. `[^ng-signals-overview]` or "
+    "`[^ng-control-flow]`. Each first-use of a document gets an auto-numbered "
+    "marker; subsequent references to the same document share the number. "
+    "Do not write `[1]` or `[1, 2]` — those are plain text and won't link to "
+    "the sources panel."
 )
 
 # Reasoning-capable model prefixes. We only attach the ``reasoning``
