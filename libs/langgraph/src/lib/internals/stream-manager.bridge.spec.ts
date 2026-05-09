@@ -181,6 +181,57 @@ describe('createStreamManagerBridge', () => {
     destroy$.next();
   });
 
+  it('populates messages$ and values$ from the latest checkpoint on initial connect', async () => {
+    const transport = new MockAgentTransport();
+    transport.history = [
+      {
+        values: {
+          messages: [
+            { type: 'human', id: 'u-1', content: 'previous question', _getType: () => 'human' },
+            { type: 'ai',    id: 'a-1', content: 'previous answer',   _getType: () => 'ai' },
+          ],
+          model: 'gpt-5-mini',
+          reasoning_effort: 'medium',
+        },
+        next: [],
+        checkpoint: {
+          thread_id: 'persisted-thread-1',
+          checkpoint_ns: '',
+          checkpoint_id: 'cp-1',
+          checkpoint_map: null,
+        },
+        metadata: null,
+        created_at: '2026-05-08T12:00:00.000Z',
+        parent_checkpoint: null,
+        tasks: [],
+      } as never,
+    ];
+
+    const subjects = makeSubjects();
+    const destroy$ = new Subject<void>();
+
+    createStreamManagerBridge({
+      options: { apiUrl: '', assistantId: 'chat', transport },
+      subjects,
+      threadId$: of('persisted-thread-1'),
+      destroy$: destroy$.asObservable(),
+    });
+
+    // Wait for the refreshHistory promise chain to resolve.
+    await new Promise(r => setTimeout(r, 10));
+
+    expect(subjects.messages$.value.length).toBe(2);
+    expect((subjects.messages$.value[0] as { content: unknown }).content).toBe('previous question');
+    expect((subjects.messages$.value[1] as { content: unknown }).content).toBe('previous answer');
+
+    const values = subjects.values$.value as Record<string, unknown>;
+    expect(values['model']).toBe('gpt-5-mini');
+    expect(values['reasoning_effort']).toBe('medium');
+    expect(values).not.toHaveProperty('messages');
+
+    destroy$.next();
+  });
+
   it('refreshes history after a stream completes', async () => {
     const firstHistory = [makeThreadState('checkpoint-1')];
     const secondHistory = [
