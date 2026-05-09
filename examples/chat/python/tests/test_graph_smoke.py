@@ -49,3 +49,18 @@ def test_search_documents_tool_returns_json():
     assert "url" in parsed[0]
     assert "snippet" in parsed[0]
     assert "id" in parsed[0]
+
+
+@pytest.mark.smoke
+def test_request_approval_tool_exists():
+    from src.graph import request_approval
+    assert request_approval is not None
+    assert request_approval.name == "request_approval"
+
+
+@pytest.mark.smoke
+def test_state_graph_still_includes_attach_citations_node():
+    from src.graph import graph
+    nodes = set(graph.get_graph().nodes.keys())
+    assert "tools" in nodes
+    assert "attach_citations" in nodes

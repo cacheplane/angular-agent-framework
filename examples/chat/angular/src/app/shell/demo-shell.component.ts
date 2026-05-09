@@ -9,7 +9,7 @@ import { Router, RouterOutlet, NavigationEnd } from '@angular/router';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { filter, map, startWith } from 'rxjs/operators';
 import { agent } from '@ngaf/langgraph';
-import { ChatDebugComponent } from '@ngaf/chat';
+import { ChatDebugComponent, ChatInterruptPanelComponent, type InterruptAction } from '@ngaf/chat';
 import { ControlPalette } from './control-palette.component';
 import { PalettePersistence } from './palette-persistence.service';
 import { DEMO_AGENT } from './shell-tokens';
@@ -26,7 +26,7 @@ function modeFromUrl(url: string): DemoMode {
 @Component({
   selector: 'demo-shell',
   standalone: true,
-  imports: [RouterOutlet, ControlPalette, ChatDebugComponent],
+  imports: [RouterOutlet, ControlPalette, ChatDebugComponent, ChatInterruptPanelComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './demo-shell.component.html',
   styleUrl: './demo-shell.component.css',
@@ -136,5 +136,44 @@ export class DemoShell {
   protected onNewConversation(): void {
     this.persistence.write('threadId', null);
     this.threadIdSignal.set(null);
+  }
+
+  /**
+   * Translates the four-action vocabulary from chat-interrupt-panel
+   * into Command(resume=value) submissions. Phase 3A demo affordance:
+   * window.prompt() for `edit` and `respond`. A production app would
+   * inline a textarea editor.
+   */
+  protected async onInterruptAction(action: InterruptAction): Promise<void> {
+    const interrupt = this.agent.interrupt?.();
+    if (!interrupt) return;
+
+    let resume: unknown;
+    switch (action) {
+      case 'accept':
+        resume = 'approved';
+        break;
+      case 'edit': {
+        const reason = (interrupt.value as { reason?: string })?.reason ?? '';
+        const edited = window.prompt(
+          `Edit your response (current proposal: "${reason}"):`,
+          'approved',
+        );
+        if (edited == null) return;
+        resume = edited;
+        break;
+      }
+      case 'respond': {
+        const text = window.prompt('Respond to the agent:', '');
+        if (text == null) return;
+        resume = text;
+        break;
+      }
+      case 'ignore':
+        resume = 'denied';
+        break;
+    }
+
+    await this.agent.submit(null, { command: { resume } } as never);
   }
 }

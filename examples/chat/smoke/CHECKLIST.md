@@ -215,6 +215,14 @@ renders correctly both during streaming and after completion.
 
 ## Interrupts / human-in-the-loop
 
+- [ ] Click "Demo: ask for approval before a sensitive action" welcome suggestion
+- [ ] AI begins planning, then calls `request_approval` tool — graph pauses
+- [ ] Interrupt panel appears above the input with the AI's reason text
+- [ ] Click Accept — graph resumes with `'approved'`; AI proceeds with the plan
+- [ ] (New conversation, click suggestion again) — Click Edit, type a custom response in the prompt — graph resumes with the typed text
+- [ ] (New conversation, click suggestion again) — Click Ignore — graph resumes with `'denied'`; AI acknowledges and stops
+- [ ] During pause: server state shows the interrupt — `curl localhost:2024/threads/<id>/state` reports `next` includes the interrupted node and a pending interrupt value
+
 ## Citations
 
 - [ ] Sources panel ("Sources") renders below the assistant message

@@ -27,6 +27,7 @@ from typing_extensions import TypedDict
 from langgraph.graph import StateGraph, END
 from langgraph.graph.message import add_messages
 from langgraph.prebuilt import ToolNode
+from langgraph.types import interrupt
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import (
     AIMessage,
@@ -47,7 +48,12 @@ SYSTEM_PROMPT = (
     "`[^ng-control-flow]`. Each first-use of a document gets an auto-numbered "
     "marker; subsequent references to the same document share the number. "
     "Do not write `[1]` or `[1, 2]` — those are plain text and won't link to "
-    "the sources panel."
+    "the sources panel. "
+    "When the user describes a sensitive or destructive action (deleting "
+    "data, sending a customer email, modifying production state, etc.), "
+    "call `request_approval` with a clear `reason` BEFORE doing the action. "
+    "Do not assume permission. The human's response will tell you whether to "
+    "proceed, modify, or stop."
 )
 
 # Reasoning-capable model prefixes. We only attach the ``reasoning``
@@ -117,6 +123,17 @@ def search_documents(query: str) -> str:
     return json.dumps(hits[:4])
 
 
+@tool
+def request_approval(reason: str) -> str:
+    """Pause and request the human's approval before performing a sensitive
+    or destructive action. Provide a clear reason — the human will see it.
+    Returns the human's decision verbatim; incorporate it into your next
+    step.
+    """
+    response = interrupt({"type": "approval_request", "reason": reason})
+    return f"Human response: {response}"
+
+
 class State(TypedDict):
     messages: Annotated[list, add_messages]
     model: Optional[str]
@@ -136,7 +153,7 @@ async def generate(state: State) -> dict:
         # to render). The adapter's `extractReasoning` reads either the
         # legacy `block.text` field or the modern `block.summary[].text`.
         kwargs["reasoning"] = {"effort": effort, "summary": "auto"}
-    llm = ChatOpenAI(**kwargs).bind_tools([search_documents])
+    llm = ChatOpenAI(**kwargs).bind_tools([search_documents, request_approval])
     messages = [SystemMessage(content=SYSTEM_PROMPT)] + state["messages"]
     response = await llm.ainvoke(messages)
     return {"messages": [response]}
@@ -211,7 +228,7 @@ async def attach_citations(state: State) -> dict:
 
 _builder = StateGraph(State)
 _builder.add_node("generate", generate)
-_builder.add_node("tools", ToolNode([search_documents]))
+_builder.add_node("tools", ToolNode([search_documents, request_approval]))
 _builder.add_node("attach_citations", attach_citations)
 _builder.set_entry_point("generate")
 _builder.add_conditional_edges(
