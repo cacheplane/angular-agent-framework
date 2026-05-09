@@ -89,6 +89,10 @@ export class DemoShell {
         this.threadIdSignal.set(id);
         this.persistence.write('threadId', id);
       },
+      // Phase 3B: tells SubagentTracker to treat `research` tool calls as
+      // subagent dispatches and to materialize agent.subagents() from the
+      // resulting tools:<id>-namespaced stream events.
+      subagentToolNames: ['research'],
     });
     const orig = a.submit.bind(a);
     (a as { submit: typeof a.submit }).submit = ((
