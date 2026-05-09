@@ -21,6 +21,12 @@
     </div>
   }
 
+  @if (agent.subagents && agent.subagents().size > 0) {
+    <div class="demo-shell__subagents" role="region" aria-label="Active subagents">
+      <chat-subagents [agent]="agent" />
+    </div>
+  }
+
   @if (debugOpen()) {
     <div class="demo-shell__debug" role="region" aria-label="Debug overlay">
       <chat-debug [agent]="agent" />
