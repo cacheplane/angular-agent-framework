@@ -22,3 +22,30 @@ def test_state_shape_includes_required_channels():
     assert "model" in annotations, "State must have a `model` channel"
     assert "reasoning_effort" in annotations, \
         "State must have a `reasoning_effort` channel (Phase 2A)"
+
+
+@pytest.mark.smoke
+def test_state_graph_has_tools_and_attach_citations_nodes():
+    from src.graph import graph
+    nodes = set(graph.get_graph().nodes.keys())
+    assert "generate" in nodes, "State graph must keep the generate node"
+    assert "tools" in nodes, "State graph must add a tools node (Phase 2B)"
+    assert "attach_citations" in nodes, \
+        "State graph must add an attach_citations terminal node (Phase 2B)"
+
+
+@pytest.mark.smoke
+def test_search_documents_tool_returns_json():
+    import json
+    from src.graph import search_documents
+    result = search_documents.invoke({"query": "signals"})
+    assert isinstance(result, str), \
+        "search_documents must return a JSON string for ToolMessage compatibility"
+    parsed = json.loads(result)
+    assert isinstance(parsed, list)
+    assert len(parsed) > 0, \
+        "Hits list must be non-empty (fallback to first 3 docs when no match)"
+    assert "title" in parsed[0]
+    assert "url" in parsed[0]
+    assert "snippet" in parsed[0]
+    assert "id" in parsed[0]
