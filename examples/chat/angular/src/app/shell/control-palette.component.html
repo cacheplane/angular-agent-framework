@@ -60,6 +60,15 @@
       </select>
     </label>
 
+    <label class="palette__group palette__group--model">
+      <span class="palette__label">Theme</span>
+      <select [value]="theme()" (change)="pickTheme($event)">
+        @for (opt of themeOptions(); track opt.value) {
+          <option [value]="opt.value" [selected]="opt.value === theme()">{{ opt.label }}</option>
+        }
+      </select>
+    </label>
+
     <button
       type="button"
       class="palette__toggle"

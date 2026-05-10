@@ -2,6 +2,8 @@
 import {
   Component,
   ChangeDetectionStrategy,
+  DOCUMENT,
+  effect,
   signal,
   inject,
 } from '@angular/core';
@@ -37,6 +39,16 @@ function modeFromUrl(url: string): DemoMode {
 export class DemoShell {
   private readonly router = inject(Router);
   private readonly persistence = inject(PalettePersistence);
+  private readonly document = inject(DOCUMENT);
+
+  constructor() {
+    // Reflect the chosen theme onto <html data-theme="..."> so the
+    // global stylesheet's scoped --a2ui-* overrides activate. Runs on
+    // signal change including initial mount (read from persistence).
+    effect(() => {
+      this.document.documentElement.setAttribute('data-theme', this.theme());
+    });
+  }
 
   protected readonly mode = toSignal(
     this.router.events.pipe(
@@ -64,6 +76,13 @@ export class DemoShell {
    */
   readonly genUiMode = signal<string>(this.persistence.read('genUiMode') ?? 'a2ui');
 
+  /**
+   * A2UI theme preset for the rendered surface. Toggles a `data-theme`
+   * attribute on the document root which the global stylesheet keys
+   * scoped `--a2ui-*` overrides off. Persisted across reloads.
+   */
+  readonly theme = signal<string>(this.persistence.read('theme') ?? 'default-dark');
+
   protected readonly debugOpen = signal<boolean>(this.persistence.read('debug') ?? false);
 
   protected readonly modelOptions = signal<readonly { value: string; label: string }[]>([
@@ -82,6 +101,13 @@ export class DemoShell {
   protected readonly genUiOptions = signal<readonly { value: string; label: string }[]>([
     { value: 'a2ui',        label: 'A2UI v1' },
     { value: 'json-render', label: 'json-render' },
+  ]);
+
+  protected readonly themeOptions = signal<readonly { value: string; label: string }[]>([
+    { value: 'default-dark',   label: 'Default dark' },
+    { value: 'default-light',  label: 'Default light' },
+    { value: 'material-dark',  label: 'Material dark' },
+    { value: 'material-light', label: 'Material light' },
   ]);
 
   /** Persisted thread id (null on first run). Reactive so reload reconnects to the same thread. */
@@ -143,6 +169,11 @@ export class DemoShell {
   protected onGenUiModeChange(next: string): void {
     this.genUiMode.set(next);
     this.persistence.write('genUiMode', next);
+  }
+
+  protected onThemeChange(next: string): void {
+    this.theme.set(next);
+    this.persistence.write('theme', next);
   }
 
   protected onDebugChange(next: boolean): void {

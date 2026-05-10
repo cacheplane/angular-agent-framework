@@ -14,3 +14,73 @@ html, body {
   background: #0f1116;
   color: #e6e9ef;
 }
+
+/*
+ * A2UI theme presets — switched at runtime via the palette "Theme"
+ * dropdown by toggling `data-theme` on the document root. Mirrors the
+ * preset CSS files shipped from `@ngaf/chat/themes/*.css`; we inline
+ * them here to avoid the workspace-vs-published-path resolution
+ * complexity of importing them dynamically. Default ('default-dark')
+ * uses the lib's :host defaults, so no override block is needed.
+ */
+
+html[data-theme='default-light'] {
+  --a2ui-primary: #4f8df5;
+  --a2ui-on-primary: #ffffff;
+  --a2ui-primary-hover: #3b7be3;
+  --a2ui-secondary: #5b6275;
+  --a2ui-on-secondary: #ffffff;
+  --a2ui-surface: #fafafa;
+  --a2ui-on-surface: #1a1d23;
+  --a2ui-surface-variant: rgba(0, 0, 0, 0.04);
+  --a2ui-on-surface-variant: rgba(0, 0, 0, 0.6);
+  --a2ui-outline: rgba(0, 0, 0, 0.12);
+  --a2ui-outline-variant: rgba(0, 0, 0, 0.06);
+  --a2ui-error: #d33533;
+  --a2ui-on-error: #ffffff;
+  --a2ui-scrim: rgba(0, 0, 0, 0.4);
+  --a2ui-elevation-1: 0 1px 2px rgba(0, 0, 0, 0.08);
+  --a2ui-elevation-2: 0 2px 4px rgba(0, 0, 0, 0.10);
+  --a2ui-elevation-3: 0 4px 8px rgba(0, 0, 0, 0.12);
+  --a2ui-elevation-4: 0 8px 16px rgba(0, 0, 0, 0.14);
+  --a2ui-elevation-5: 0 16px 32px rgba(0, 0, 0, 0.16);
+}
+
+html[data-theme='material-dark'] {
+  --a2ui-primary: #D0BCFF;
+  --a2ui-on-primary: #381E72;
+  --a2ui-primary-hover: #B69DF8;
+  --a2ui-secondary: #CCC2DC;
+  --a2ui-on-secondary: #332D41;
+  --a2ui-surface: #1C1B1F;
+  --a2ui-on-surface: #E6E1E5;
+  --a2ui-surface-variant: #49454F;
+  --a2ui-on-surface-variant: #CAC4D0;
+  --a2ui-outline: #938F99;
+  --a2ui-outline-variant: #49454F;
+  --a2ui-error: #F2B8B5;
+  --a2ui-on-error: #601410;
+  --a2ui-scrim: rgba(0, 0, 0, 0.6);
+}
+
+html[data-theme='material-light'] {
+  --a2ui-primary: #6750A4;
+  --a2ui-on-primary: #FFFFFF;
+  --a2ui-primary-hover: #533F8E;
+  --a2ui-secondary: #625B71;
+  --a2ui-on-secondary: #FFFFFF;
+  --a2ui-surface: #FFFBFE;
+  --a2ui-on-surface: #1C1B1F;
+  --a2ui-surface-variant: #E7E0EC;
+  --a2ui-on-surface-variant: #49454F;
+  --a2ui-outline: #79747E;
+  --a2ui-outline-variant: #CAC4D0;
+  --a2ui-error: #B3261E;
+  --a2ui-on-error: #FFFFFF;
+  --a2ui-scrim: rgba(0, 0, 0, 0.4);
+  --a2ui-elevation-1: 0 1px 2px rgba(0, 0, 0, 0.08);
+  --a2ui-elevation-2: 0 2px 4px rgba(0, 0, 0, 0.10);
+  --a2ui-elevation-3: 0 4px 8px rgba(0, 0, 0, 0.12);
+  --a2ui-elevation-4: 0 8px 16px rgba(0, 0, 0, 0.14);
+  --a2ui-elevation-5: 0 16px 32px rgba(0, 0, 0, 0.16);
+}
