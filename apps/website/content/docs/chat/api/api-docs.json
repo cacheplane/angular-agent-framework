@@ -31,6 +31,12 @@
         "optional": false
       },
       {
+        "name": "description",
+        "type": "InputSignal<string>",
+        "description": "v1 canonical prop: short description / title rendered above the player.",
+        "optional": false
+      },
+      {
         "name": "emit",
         "type": "InputSignal<object>",
         "description": "",
@@ -178,12 +184,18 @@
       {
         "name": "checked",
         "type": "InputSignal<boolean>",
-        "description": "",
+        "description": "Pre-v1 alias retained for back-compat.",
         "optional": false
       },
       {
         "name": "childKeys",
         "type": "InputSignal<string[]>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "effectiveValue",
+        "type": "Signal<boolean>",
         "description": "",
         "optional": false
       },
@@ -209,6 +221,12 @@
         "name": "spec",
         "type": "InputSignal<Spec | undefined>",
         "description": "",
+        "optional": false
+      },
+      {
+        "name": "value",
+        "type": "InputSignal<boolean | undefined>",
+        "description": "v1 canonical prop: boolean checked state.",
         "optional": false
       }
     ],
@@ -472,6 +490,12 @@
         "optional": false
       },
       {
+        "name": "effectiveName",
+        "type": "Signal<string>",
+        "description": "",
+        "optional": false
+      },
+      {
         "name": "emit",
         "type": "InputSignal<object>",
         "description": "",
@@ -480,13 +504,19 @@
       {
         "name": "icon",
         "type": "InputSignal<string>",
-        "description": "v1 prop name: icon (resolved string, e.g. a Unicode symbol or ligature name).",
+        "description": "Pre-v1 alias retained for back-compat.",
         "optional": false
       },
       {
         "name": "loading",
         "type": "InputSignal<boolean>",
         "description": "",
+        "optional": false
+      },
+      {
+        "name": "name",
+        "type": "InputSignal<string | undefined>",
+        "description": "v1 canonical prop.",
         "optional": false
       },
       {
@@ -536,6 +566,12 @@
         "optional": false
       },
       {
+        "name": "fit",
+        "type": "InputSignal<ImageFit | undefined>",
+        "description": "v1 prop: CSS object-fit equivalent.",
+        "optional": false
+      },
+      {
         "name": "height",
         "type": "InputSignal<number | null>",
         "description": "",
@@ -560,13 +596,38 @@
         "optional": false
       },
       {
+        "name": "usageHint",
+        "type": "InputSignal<ImageUsageHint | undefined>",
+        "description": "v1 prop: sizing preset.",
+        "optional": false
+      },
+      {
         "name": "width",
         "type": "InputSignal<number | null>",
         "description": "",
         "optional": false
       }
     ],
-    "methods": []
+    "methods": [
+      {
+        "name": "explicitHeight",
+        "signature": "explicitHeight()",
+        "description": "",
+        "params": []
+      },
+      {
+        "name": "explicitWidth",
+        "signature": "explicitWidth()",
+        "description": "",
+        "params": []
+      },
+      {
+        "name": "hintStyle",
+        "signature": "hintStyle()",
+        "description": "",
+        "params": []
+      }
+    ]
   },
   {
     "name": "A2uiListComponent",
@@ -575,6 +636,18 @@
     "params": [],
     "examples": [],
     "properties": [
+      {
+        "name": "alignment",
+        "type": "InputSignal<\"center\" | \"start\" | \"end\" | \"stretch\" | undefined>",
+        "description": "v1 canonical prop: cross-axis alignment.",
+        "optional": false
+      },
+      {
+        "name": "alignmentCss",
+        "type": "Signal<string | null>",
+        "description": "",
+        "optional": false
+      },
       {
         "name": "bindings",
         "type": "InputSignal<Record<string, string>>",
