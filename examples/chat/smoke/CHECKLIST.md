@@ -266,6 +266,19 @@ renders correctly both during streaming and after completion.
 - [ ] In json-render mode: final AI message content is a bare JSON object starting with `{`
 - [ ] `curl localhost:2024/threads/<id>/state` confirms the above for both modes
 
+### A2UI catalog coverage
+
+The 18 catalog components must render correctly when the LLM-generated surface includes them. After clicking each demo suggestion below, verify the rendered surface contains the listed component types and that each looks visually correct (no overflow, alignment intact, text legible, interactive controls functional).
+
+- [ ] "Demo: render a feedback form" — `Card` + `Column` + `Text` + `TextField` + (`MultipleChoice` or `Slider`) + `Button`
+- [ ] "Demo: render a settings card" — `Card` + `Column` + `Text` + `MultipleChoice` + `CheckBox` + `Button`
+- [ ] "Demo: render a poll" — `Card` + `Column` + `Text` + `MultipleChoice` + `Button`
+- [ ] "Demo: render a contact form" — `Card` + `Column` + `Text` + `TextField` + `Button`
+- [ ] "Demo: render a media-rich product card" — `Image` + `Tabs` + `Row` + `Icon` + `List` + `Button`
+- [ ] "Demo: render a booking surface with modal" — `DateTimeInput` + `Divider` + `Row` + `Card` + `TextField` + `Modal`
+
+Components NOT yet exercised by the demo (deferred to future media-focused suggestions): `Video`, `AudioPlayer`.
+
 ## Subagents
 
 - [ ] Click "Demo: dispatch a research subagent" welcome suggestion
