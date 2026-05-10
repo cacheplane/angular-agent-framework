@@ -123,4 +123,47 @@ describe('A2uiSurfaceStore (v1, deferred-apply)', () => {
     expect(s()).toBeDefined();
     expect(s()!.surfaceId).toBe('s1');
   });
+
+  test('captures styles from beginRendering (v1 spec)', () => {
+    const store = setup();
+    store.apply({ surfaceUpdate: { surfaceId: 's1', components: [
+      { id: 'root', component: { Text: { text: { literalString: 'hi' } } } },
+    ] } });
+    store.apply({ beginRendering: {
+      surfaceId: 's1',
+      root: 'root',
+      styles: { font: 'Roboto', primaryColor: '#FF6633' },
+    } });
+    const s = store.surfaces().get('s1')!;
+    expect(s.styles).toEqual({ font: 'Roboto', primaryColor: '#FF6633' });
+  });
+
+  test('omits styles field when beginRendering does not include it', () => {
+    const store = setup();
+    store.apply({ surfaceUpdate: { surfaceId: 's1', components: [
+      { id: 'root', component: { Text: { text: { literalString: 'hi' } } } },
+    ] } });
+    store.apply({ beginRendering: { surfaceId: 's1', root: 'root' } });
+    const s = store.surfaces().get('s1')!;
+    expect(s.styles).toBeUndefined();
+  });
+
+  test('preserves existing styles on re-render when new beginRendering omits them', () => {
+    const store = setup();
+    store.apply({ surfaceUpdate: { surfaceId: 's1', components: [
+      { id: 'root', component: { Text: { text: { literalString: 'hi' } } } },
+    ] } });
+    store.apply({ beginRendering: {
+      surfaceId: 's1',
+      root: 'root',
+      styles: { primaryColor: '#0A84FF' },
+    } });
+    // Second beginRendering without styles — keep prior.
+    store.apply({ surfaceUpdate: { surfaceId: 's1', components: [
+      { id: 'root', component: { Text: { text: { literalString: 'hi' } } } },
+    ] } });
+    store.apply({ beginRendering: { surfaceId: 's1', root: 'root' } });
+    const s = store.surfaces().get('s1')!;
+    expect(s.styles).toEqual({ primaryColor: '#0A84FF' });
+  });
 });

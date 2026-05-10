@@ -95,11 +95,18 @@ export function createA2uiSurfaceStore(): A2uiSurfaceStore {
       if (existing) {
         dataModel = { ...existing.dataModel, ...dataModel };
       }
+      // Capture v1 styles (font, primaryColor) from beginRendering. A
+      // re-render keeps any prior styles unless the new beginRendering
+      // explicitly overrides them — this matches the agent's likely
+      // intent ("change the data, keep the look").
+      const nextStyles = begin.styles
+        ?? existing?.styles;
       const surface: A2uiSurface = {
         surfaceId: begin.surfaceId,
         catalogId: 'basic',
         components: b.components,
         dataModel,
+        ...(nextStyles ? { styles: nextStyles } : {}),
       };
       const next = new Map(surfacesSignal());
       next.set(begin.surfaceId, surface);
