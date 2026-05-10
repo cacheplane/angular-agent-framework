@@ -308,3 +308,14 @@ Components NOT yet exercised by the demo (deferred to future media-focused sugge
 - [ ] Timeline panel does not obscure the chat input or send button at any supported viewport width
 
 ## Multi-thread
+
+- [ ] **Panel toggle** — clicking "Threads off/on" in the control palette opens/closes the threads panel on the left side of the viewport
+- [ ] **Toggle persists** — closing and reopening the browser preserves the threads panel open/closed state
+- [ ] **Threads list visible** — when the panel is open, a list of threads is fetched from the backend and rendered in `<chat-thread-list>`; each item shows a "Thread XXXXXXXX" label (truncated thread ID) or a custom title if stored in metadata
+- [ ] **Active thread highlighted** — the currently active thread is visually distinguished (data-active attribute set) in the list
+- [ ] **Create new thread button** — a "+ New thread" button appears at the top of the thread list; clicking it calls `POST /threads`, creates a fresh thread, and switches the agent to it
+- [ ] **New thread starts in welcome state** — after clicking "+ New thread", the chat area resets to the welcome screen with no prior messages
+- [ ] **Switching threads loads history** — clicking a different thread in the list sets it as active, and the chat area reloads messages from that thread's server-side state
+- [ ] **Persist active thread across reload** — the last active thread ID is stored in localStorage; reloading the page reconnects to the same thread and restores its message history
+- [ ] **Thread list refreshes on switch** — after switching threads, the threads panel refreshes its list from the backend so any newly created threads appear
+- [ ] **No console errors** — opening/closing the panel, switching threads, and creating threads produce no `console.error` or uncaught promise rejections

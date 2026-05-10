@@ -32,6 +32,7 @@ export class ControlPalette {
   readonly themeOptions = input.required<readonly { value: string; label: string }[]>();
   readonly debugOpen = input.required<boolean>();
   readonly timelineOpen = input.required<boolean>();
+  readonly threadsOpen = input.required<boolean>();
 
   readonly modeChange = output<DemoMode>();
   readonly modelChange = output<string>();
@@ -40,6 +41,7 @@ export class ControlPalette {
   readonly themeChange = output<string>();
   readonly debugOpenChange = output<boolean>();
   readonly timelineOpenChange = output<boolean>();
+  readonly threadsOpenChange = output<boolean>();
   readonly newConversation = output<void>();
 
   protected readonly collapsed = signal<boolean>(this.persistence.read('collapsed') ?? false);
@@ -84,6 +86,10 @@ export class ControlPalette {
 
   protected toggleTimeline(): void {
     this.timelineOpenChange.emit(!this.timelineOpen());
+  }
+
+  protected toggleThreads(): void {
+    this.threadsOpenChange.emit(!this.threadsOpen());
   }
 
   protected emitNewConversation(): void {
