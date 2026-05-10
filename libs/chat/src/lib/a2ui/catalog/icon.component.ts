@@ -7,10 +7,18 @@ import type { Spec } from '@json-render/core';
   standalone: true,
   template: `
     <span
-      class="inline-flex items-center justify-center select-none"
+      class="a2ui-icon"
       [style.font-size]="size() ? size() + 'px' : '1.125rem'"
     >{{ icon() }}</span>
   `,
+  styles: [`
+    .a2ui-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      user-select: none;
+    }
+  `],
 })
 export class A2uiIconComponent {
   /** v1 prop name: icon (resolved string, e.g. a Unicode symbol or ligature name). */

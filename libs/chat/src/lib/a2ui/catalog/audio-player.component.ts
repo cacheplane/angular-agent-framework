@@ -7,12 +7,18 @@ import type { Spec } from '@json-render/core';
   standalone: true,
   template: `
     <audio
-      class="w-full"
+      class="a2ui-audio"
       [src]="url()"
       [autoplay]="autoPlay()"
       [controls]="controls()"
     ></audio>
   `,
+  styles: [`
+    .a2ui-audio {
+      display: block;
+      width: 100%;
+    }
+  `],
 })
 export class A2uiAudioPlayerComponent {
   readonly url = input<string>('');

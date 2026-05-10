@@ -236,6 +236,12 @@
     "examples": [],
     "properties": [
       {
+        "name": "alignItems",
+        "type": "Signal<string>",
+        "description": "",
+        "optional": false
+      },
+      {
         "name": "alignment",
         "type": "InputSignal<ColumnAlignment>",
         "description": "",
@@ -250,12 +256,6 @@
       {
         "name": "childKeys",
         "type": "InputSignal<string[]>",
-        "description": "",
-        "optional": false
-      },
-      {
-        "name": "colClass",
-        "type": "Signal<string>",
         "description": "",
         "optional": false
       },
@@ -275,6 +275,12 @@
         "name": "gap",
         "type": "InputSignal<number>",
         "description": "",
+        "optional": false
+      },
+      {
+        "name": "gapPx",
+        "type": "Signal<number>",
+        "description": "Convert the Tailwind gap unit (multiples of 4px) to pixels.",
         "optional": false
       },
       {
@@ -595,7 +601,7 @@
       },
       {
         "name": "listClass",
-        "type": "Signal<\"flex flex-row gap-1 overflow-x-auto\" | \"flex flex-col gap-1 overflow-y-auto max-h-96\">",
+        "type": "Signal<\"a2ui-list--horizontal\" | \"a2ui-list--vertical\">",
         "description": "",
         "optional": false
       },
@@ -814,6 +820,12 @@
     "examples": [],
     "properties": [
       {
+        "name": "alignItems",
+        "type": "Signal<string>",
+        "description": "",
+        "optional": false
+      },
+      {
         "name": "alignment",
         "type": "InputSignal<RowAlignment>",
         "description": "",
@@ -850,14 +862,20 @@
         "optional": false
       },
       {
-        "name": "loading",
-        "type": "InputSignal<boolean>",
+        "name": "gapPx",
+        "type": "Signal<number>",
+        "description": "Convert the gap unit (multiples of 4px) to pixels.",
+        "optional": false
+      },
+      {
+        "name": "justifyContent",
+        "type": "Signal<string>",
         "description": "",
         "optional": false
       },
       {
-        "name": "rowClass",
-        "type": "Signal<string>",
+        "name": "loading",
+        "type": "InputSignal<boolean>",
         "description": "",
         "optional": false
       },

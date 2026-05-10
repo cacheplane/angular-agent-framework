@@ -14,34 +14,28 @@ interface ResolvedOption {
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="flex flex-col gap-1">
+    <div class="a2ui-mc">
       @if (label()) {
-        <span class="text-xs" style="color: var(--a2ui-label, rgba(255,255,255,0.6));">{{ label() }}</span>
+        <span class="a2ui-mc__label">{{ label() }}</span>
       }
 
       @if (isSingleSelect()) {
         <!-- Single-select: HTML <select> -->
-        <select
-          class="rounded-lg px-3 py-2 text-sm"
-          [style.background]="'var(--a2ui-input-bg, rgba(255,255,255,0.05))'"
-          [style.color]="'var(--a2ui-input-text, white)'"
-          [style.border]="'1px solid var(--a2ui-border, rgba(255,255,255,0.1))'"
-          (change)="onSelectChange($event)"
-        >
+        <select class="a2ui-mc__select" (change)="onSelectChange($event)">
           @for (opt of options(); track opt.value) {
             <option [value]="opt.value" [selected]="isSelected(opt.value)">{{ opt.label }}</option>
           }
         </select>
       } @else {
         <!-- Multi-select: checkbox list -->
-        <div class="flex flex-col gap-2">
+        <div class="a2ui-mc__checks">
           @for (opt of options(); track opt.value) {
-            <label class="flex items-center gap-2 text-sm cursor-pointer">
+            <label class="a2ui-mc__check-row">
               <input
                 type="checkbox"
+                class="a2ui-mc__checkbox"
                 [checked]="isSelected(opt.value)"
                 (change)="onCheckChange(opt.value, $event)"
-                class="rounded"
               />
               {{ opt.label }}
             </label>
@@ -50,6 +44,36 @@ interface ResolvedOption {
       }
     </div>
   `,
+  styles: [`
+    .a2ui-mc { display: flex; flex-direction: column; gap: 4px; }
+    .a2ui-mc__label { font-size: 12px; color: var(--a2ui-label, rgba(255,255,255,0.6)); }
+    .a2ui-mc__select {
+      padding: 8px 12px;
+      font-size: 14px;
+      border-radius: 8px;
+      background: var(--a2ui-input-bg, rgba(255,255,255,0.05));
+      color: var(--a2ui-input-text, white);
+      border: 1px solid var(--a2ui-border, rgba(255,255,255,0.1));
+      outline: none;
+      transition: border-color 120ms;
+    }
+    .a2ui-mc__select:focus { border-color: var(--a2ui-primary, #4f8df5); }
+    .a2ui-mc__checks { display: flex; flex-direction: column; gap: 8px; }
+    .a2ui-mc__check-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    .a2ui-mc__checkbox {
+      width: 16px;
+      height: 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      accent-color: var(--a2ui-primary, #2563eb);
+    }
+  `],
 })
 export class A2uiMultipleChoiceComponent {
   readonly label = input<string>('');

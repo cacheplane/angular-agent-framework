@@ -19,12 +19,12 @@ import { RenderElementComponent } from '@ngaf/render';
     <!-- Modal overlay: shown when open. -->
     @if (open()) {
       <div
-        class="fixed inset-0 z-50 flex items-center justify-center"
+        class="a2ui-modal__overlay"
         role="dialog"
         aria-modal="true"
       >
         <div
-          class="absolute inset-0 bg-black/60 backdrop-blur-sm"
+          class="a2ui-modal__backdrop"
           role="button"
           tabindex="0"
           aria-label="Dismiss dialog"
@@ -32,9 +32,9 @@ import { RenderElementComponent } from '@ngaf/render';
           (keydown.enter)="open.set(false)"
           (keydown.space)="open.set(false)"
         ></div>
-        <div class="relative bg-gray-900 border border-white/10 rounded-xl p-6 max-w-lg w-full mx-4 shadow-2xl">
+        <div class="a2ui-modal__panel">
           @if (title()) {
-            <h2 class="text-lg font-semibold mb-4">{{ title() }}</h2>
+            <h2 class="a2ui-modal__title">{{ title() }}</h2>
           }
           @if (contentKey(); as cKey) {
             <render-element [elementKey]="cKey" [spec]="spec()" />
@@ -43,6 +43,38 @@ import { RenderElementComponent } from '@ngaf/render';
       </div>
     }
   `,
+  styles: [`
+    .a2ui-modal__overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .a2ui-modal__backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(4px);
+    }
+    .a2ui-modal__panel {
+      position: relative;
+      background: var(--a2ui-card-bg, #111827);
+      border: 1px solid var(--a2ui-border, rgba(255,255,255,0.1));
+      border-radius: 12px;
+      padding: 24px;
+      max-width: 512px;
+      width: 100%;
+      margin: 0 16px;
+      box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+    }
+    .a2ui-modal__title {
+      font-size: 18px;
+      font-weight: 600;
+      margin: 0 0 16px;
+    }
+  `],
 })
 export class A2uiModalComponent {
   /**
