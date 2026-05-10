@@ -8,15 +8,14 @@ import { Component, input } from '@angular/core';
     <video
       class="w-full rounded-lg"
       [src]="url()"
-      [poster]="poster()"
-      [autoplay]="autoplay()"
+      [autoplay]="autoPlay()"
       [controls]="controls()"
     ></video>
   `,
 })
 export class A2uiVideoComponent {
-  readonly url = input.required<string>();
-  readonly poster = input<string>('');
-  readonly autoplay = input<boolean>(false);
+  readonly url = input<string>('');
+  /** v1 prop name: autoPlay (camelCase). */
+  readonly autoPlay = input<boolean>(false);
   readonly controls = input<boolean>(true);
 }

@@ -8,13 +8,14 @@ import { Component, input } from '@angular/core';
     <audio
       class="w-full"
       [src]="url()"
-      [autoplay]="autoplay()"
+      [autoplay]="autoPlay()"
       [controls]="controls()"
     ></audio>
   `,
 })
 export class A2uiAudioPlayerComponent {
-  readonly url = input.required<string>();
-  readonly autoplay = input<boolean>(false);
+  readonly url = input<string>('');
+  /** v1 prop name: autoPlay (camelCase). */
+  readonly autoPlay = input<boolean>(false);
   readonly controls = input<boolean>(true);
 }

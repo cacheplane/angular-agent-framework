@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-import { Component, input } from '@angular/core';
+import { Component, computed, input } from '@angular/core';
 import type { Spec } from '@json-render/core';
 import { RenderElementComponent } from '@ngaf/render';
 
@@ -8,7 +8,7 @@ import { RenderElementComponent } from '@ngaf/render';
   standalone: true,
   imports: [RenderElementComponent],
   template: `
-    <div class="flex flex-col gap-1 overflow-y-auto max-h-96">
+    <div [class]="listClass()">
       @for (key of childKeys(); track key) {
         <render-element [elementKey]="key" [spec]="spec()" />
       }
@@ -18,4 +18,11 @@ import { RenderElementComponent } from '@ngaf/render';
 export class A2uiListComponent {
   readonly childKeys = input<string[]>([]);
   readonly spec = input.required<Spec>();
+  readonly direction = input<'vertical' | 'horizontal'>('vertical');
+
+  protected readonly listClass = computed(() => {
+    return this.direction() === 'horizontal'
+      ? 'flex flex-row gap-1 overflow-x-auto'
+      : 'flex flex-col gap-1 overflow-y-auto max-h-96';
+  });
 }
