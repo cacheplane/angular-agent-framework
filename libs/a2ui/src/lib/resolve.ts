@@ -1,42 +1,38 @@
 // SPDX-License-Identifier: MIT
-import type { A2uiPathRef, A2uiFunctionCall } from './types.js';
 import { getByPointer } from './pointer.js';
-import { executeFunction } from './functions.js';
 
 export interface A2uiScope {
   basePath: string;
   item: unknown;
 }
 
-function isPathRef(value: unknown): value is A2uiPathRef {
-  return typeof value === 'object' && value !== null && 'path' in value && typeof (value as A2uiPathRef).path === 'string' && !('call' in value);
+interface PathRef { path: string }
+interface LiteralString { literalString: string }
+interface LiteralNumber { literalNumber: number }
+interface LiteralBoolean { literalBoolean: boolean }
+interface LiteralArray { literalArray: unknown[] }
+
+function isPathRef(v: unknown): v is PathRef {
+  return typeof v === 'object' && v !== null && 'path' in v && typeof (v as PathRef).path === 'string';
+}
+function isLiteralString(v: unknown): v is LiteralString {
+  return typeof v === 'object' && v !== null && 'literalString' in v;
+}
+function isLiteralNumber(v: unknown): v is LiteralNumber {
+  return typeof v === 'object' && v !== null && 'literalNumber' in v;
+}
+function isLiteralBoolean(v: unknown): v is LiteralBoolean {
+  return typeof v === 'object' && v !== null && 'literalBoolean' in v;
+}
+function isLiteralArray(v: unknown): v is LiteralArray {
+  return typeof v === 'object' && v !== null && 'literalArray' in v;
 }
 
-function isFunctionCall(value: unknown): value is A2uiFunctionCall {
-  return typeof value === 'object' && value !== null && 'call' in value;
-}
-
-function resolvePathRef(ref: A2uiPathRef, model: Record<string, unknown>, scope?: A2uiScope): unknown {
+function resolvePathRef(ref: PathRef, model: Record<string, unknown>, scope?: A2uiScope): unknown {
   const path = ref.path;
-  // Absolute path starts with /
-  if (path.startsWith('/')) {
-    return getByPointer(model, path);
-  }
-  // Relative path — resolve against scope
-  if (scope) {
-    return getByPointer(model, `${scope.basePath}/${path}`);
-  }
+  if (path.startsWith('/')) return getByPointer(model, path);
+  if (scope) return getByPointer(model, `${scope.basePath}/${path}`);
   return getByPointer(model, '/' + path);
-}
-
-function interpolateTemplate(template: string, model: Record<string, unknown>, scope?: A2uiScope): string {
-  return template.replace(/\\(\$\{)|(?<!\\\$)\$\{([^}]+)\}/g, (match, escaped, path) => {
-    if (escaped) return '${';
-    const value = resolvePathRef({ path }, model, scope);
-    if (value == null) return '';
-    if (typeof value === 'object') return JSON.stringify(value);
-    return String(value);
-  });
 }
 
 export function resolveDynamic(
@@ -45,34 +41,17 @@ export function resolveDynamic(
   scope?: A2uiScope,
 ): unknown {
   if (value == null) return value;
+  if (Array.isArray(value)) return value.map(item => resolveDynamic(item, model, scope));
 
-  // Array — recurse into each element
-  if (Array.isArray(value)) {
-    return value.map(item => resolveDynamic(item, model, scope));
-  }
+  // Literal wrappers — unwrap. Order matters less than mutual exclusivity.
+  if (isLiteralString(value)) return value.literalString;
+  if (isLiteralNumber(value)) return value.literalNumber;
+  if (isLiteralBoolean(value)) return value.literalBoolean;
+  if (isLiteralArray(value)) return value.literalArray;
 
   // Path reference
-  if (isPathRef(value)) {
-    return resolvePathRef(value, model, scope);
-  }
+  if (isPathRef(value)) return resolvePathRef(value, model, scope);
 
-  // Function call — execute registered function
-  if (isFunctionCall(value)) {
-    const fc = value as A2uiFunctionCall;
-    // Resolve args that may themselves be dynamic
-    const resolvedArgs: Record<string, unknown> = {};
-    for (const [k, v] of Object.entries(fc.args)) {
-      resolvedArgs[k] = resolveDynamic(v, model, scope);
-    }
-    const result = executeFunction(fc.call, resolvedArgs, model);
-    return result ?? `[${fc.call}]`;
-  }
-
-  // Template string interpolation
-  if (typeof value === 'string' && value.includes('${')) {
-    return interpolateTemplate(value, model, scope);
-  }
-
-  // Literal passthrough
+  // Plain literal passthrough (string, number, boolean, plain object without wrappers)
   return value;
 }

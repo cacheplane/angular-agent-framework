@@ -1,84 +1,58 @@
 // SPDX-License-Identifier: MIT
-import { describe, it, expect } from 'vitest';
+import { describe, expect, test } from 'vitest';
 import { resolveDynamic } from './resolve';
 
-const model = { user: { name: 'Alice', age: 30 }, items: ['a', 'b'] };
+describe('resolveDynamic (v1)', () => {
+  const model = { name: 'Brian', count: 7, active: true, tags: ['a', 'b'] };
 
-describe('resolveDynamic', () => {
-  it('passes through string literals', () => {
+  test('passes through bare literals (e.g. plain strings without wrappers)', () => {
     expect(resolveDynamic('hello', model)).toBe('hello');
-  });
-
-  it('passes through number literals', () => {
     expect(resolveDynamic(42, model)).toBe(42);
+    expect(resolveDynamic(null, model)).toBe(null);
   });
 
-  it('passes through boolean literals', () => {
-    expect(resolveDynamic(true, model)).toBe(true);
+  test('unwraps literalString', () => {
+    expect(resolveDynamic({ literalString: 'hello' }, model)).toBe('hello');
   });
 
-  it('passes through null', () => {
-    expect(resolveDynamic(null, model)).toBeNull();
+  test('unwraps literalNumber', () => {
+    expect(resolveDynamic({ literalNumber: 7 }, model)).toBe(7);
   });
 
-  it('resolves absolute path references', () => {
-    expect(resolveDynamic({ path: '/user/name' }, model)).toBe('Alice');
+  test('unwraps literalBoolean', () => {
+    expect(resolveDynamic({ literalBoolean: true }, model)).toBe(true);
   });
 
-  it('resolves relative path in scope', () => {
-    const scope = { basePath: '/user', item: { name: 'Alice', age: 30 } };
-    expect(resolveDynamic({ path: 'name' }, model, scope)).toBe('Alice');
+  test('unwraps literalArray', () => {
+    expect(resolveDynamic({ literalArray: ['x', 'y'] }, model)).toEqual(['x', 'y']);
   });
 
-  it('interpolates template strings with ${/path}', () => {
-    expect(resolveDynamic('Hello ${/user/name}!', model)).toBe('Hello Alice!');
+  test('resolves path against model', () => {
+    expect(resolveDynamic({ path: '/name' }, model)).toBe('Brian');
+    expect(resolveDynamic({ path: '/count' }, model)).toBe(7);
+    expect(resolveDynamic({ path: '/missing' }, model)).toBe(undefined);
   });
 
-  it('interpolates multiple references', () => {
-    expect(resolveDynamic('${/user/name} has ${/user/age} years', model)).toBe('Alice has 30 years');
+  test('recurses into arrays', () => {
+    const out = resolveDynamic([{ literalString: 'a' }, { path: '/name' }], model);
+    expect(out).toEqual(['a', 'Brian']);
   });
 
-  it('handles escaped \\${ as literal', () => {
-    expect(resolveDynamic('Price: \\${100}', model)).toBe('Price: ${100}');
+  test('returns plain object passthrough for unrecognized shapes', () => {
+    const obj = { id: 'x', children: ['a'] };
+    expect(resolveDynamic(obj, model)).toEqual(obj);
   });
 
-  it('executes function calls', () => {
-    const fn = { call: 'pluralize', args: { count: 1, singular: 'item', plural: 'items' } };
-    expect(resolveDynamic(fn, model)).toBe('item');
+  test('relative path resolves against scope basePath', () => {
+    expect(resolveDynamic({ path: 'name' }, model, { basePath: '', item: undefined })).toBe('Brian');
   });
 
-  it('resolves dynamic args in function calls', () => {
-    const fn = { call: 'pluralize', args: { count: { path: '/user/age' }, singular: 'year', plural: 'years' } };
-    expect(resolveDynamic(fn, model)).toBe('years');
-  });
-
-  it('falls back to [name] for unknown functions', () => {
-    const fn = { call: 'unknownFn', args: {} };
-    expect(resolveDynamic(fn, model)).toBe('[unknownFn]');
-  });
-
-  it('resolves array elements', () => {
-    expect(resolveDynamic({ path: '/items/0' }, model)).toBe('a');
-  });
-
-  it('returns undefined for non-existent paths', () => {
+  test('returns undefined for non-existent paths', () => {
     expect(resolveDynamic({ path: '/missing' }, model)).toBeUndefined();
   });
 
-  it('resolves arrays by recursing into each element', () => {
-    const arr = [
-      { path: '/user/name' },
-      'literal',
-      42,
-    ];
-    expect(resolveDynamic(arr, model)).toEqual(['Alice', 'literal', 42]);
-  });
-
-  it('resolves nested function calls in arrays', () => {
-    const arr = [
-      { call: 'pluralize', args: { count: 1, singular: 'cat', plural: 'cats' } },
-      { call: 'pluralize', args: { count: 2, singular: 'dog', plural: 'dogs' } },
-    ];
-    expect(resolveDynamic(arr, model)).toEqual(['cat', 'dogs']);
+  test('resolves array index path', () => {
+    expect(resolveDynamic({ path: '/tags/0' }, model)).toBe('a');
+    expect(resolveDynamic({ path: '/tags/1' }, model)).toBe('b');
   });
 });

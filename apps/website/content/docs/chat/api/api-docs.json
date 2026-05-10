@@ -7,9 +7,9 @@
     "examples": [],
     "properties": [
       {
-        "name": "autoplay",
+        "name": "autoPlay",
         "type": "InputSignal<boolean>",
-        "description": "",
+        "description": "v1 prop name: autoPlay (camelCase).",
         "optional": false
       },
       {
@@ -35,6 +35,12 @@
     "examples": [],
     "properties": [
       {
+        "name": "childKeys",
+        "type": "InputSignal<string[]>",
+        "description": "v1: child Text component is rendered inside the button via childKeys.",
+        "optional": false
+      },
+      {
         "name": "disabled",
         "type": "InputSignal<boolean>",
         "description": "",
@@ -47,20 +53,14 @@
         "optional": false
       },
       {
-        "name": "label",
-        "type": "InputSignal<string>",
+        "name": "primary",
+        "type": "InputSignal<boolean>",
         "description": "",
         "optional": false
       },
       {
-        "name": "validationResult",
-        "type": "InputSignal<A2uiValidationResult>",
-        "description": "",
-        "optional": false
-      },
-      {
-        "name": "variant",
-        "type": "InputSignal<string>",
+        "name": "spec",
+        "type": "InputSignal<Spec>",
         "description": "",
         "optional": false
       }
@@ -84,18 +84,12 @@
       {
         "name": "childKeys",
         "type": "InputSignal<string[]>",
-        "description": "",
+        "description": "v1: a single child key, delivered via childKeys[0] from the render framework.",
         "optional": false
       },
       {
         "name": "spec",
         "type": "InputSignal<Spec>",
-        "description": "",
-        "optional": false
-      },
-      {
-        "name": "title",
-        "type": "InputSignal<string>",
         "description": "",
         "optional": false
       }
@@ -132,78 +126,6 @@
         "type": "InputSignal<string>",
         "description": "",
         "optional": false
-      },
-      {
-        "name": "validationResult",
-        "type": "InputSignal<A2uiValidationResult>",
-        "description": "",
-        "optional": false
-      }
-    ],
-    "methods": [
-      {
-        "name": "onChange",
-        "signature": "onChange(event: Event)",
-        "description": "",
-        "params": [
-          {
-            "name": "event",
-            "type": "Event",
-            "description": "",
-            "optional": false
-          }
-        ]
-      }
-    ]
-  },
-  {
-    "name": "A2uiChoicePickerComponent",
-    "kind": "class",
-    "description": "",
-    "params": [],
-    "examples": [],
-    "properties": [
-      {
-        "name": "_bindings",
-        "type": "InputSignal<Record<string, string>>",
-        "description": "",
-        "optional": false
-      },
-      {
-        "name": "_inputId",
-        "type": "string",
-        "description": "",
-        "optional": false
-      },
-      {
-        "name": "emit",
-        "type": "InputSignal<object>",
-        "description": "",
-        "optional": false
-      },
-      {
-        "name": "label",
-        "type": "InputSignal<string>",
-        "description": "",
-        "optional": false
-      },
-      {
-        "name": "options",
-        "type": "InputSignal<string[]>",
-        "description": "",
-        "optional": false
-      },
-      {
-        "name": "selected",
-        "type": "InputSignal<string>",
-        "description": "",
-        "optional": false
-      },
-      {
-        "name": "validationResult",
-        "type": "InputSignal<A2uiValidationResult>",
-        "description": "",
-        "optional": false
       }
     ],
     "methods": [
@@ -230,8 +152,26 @@
     "examples": [],
     "properties": [
       {
+        "name": "alignment",
+        "type": "InputSignal<ColumnAlignment>",
+        "description": "",
+        "optional": false
+      },
+      {
         "name": "childKeys",
         "type": "InputSignal<string[]>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "colClass",
+        "type": "Signal<string>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "gap",
+        "type": "InputSignal<number>",
         "description": "",
         "optional": false
       },
@@ -270,9 +210,21 @@
         "optional": false
       },
       {
-        "name": "inputType",
-        "type": "InputSignal<\"date\" | \"time\" | \"datetime-local\">",
-        "description": "",
+        "name": "enableDate",
+        "type": "InputSignal<boolean>",
+        "description": "v1 prop: enableDate — include date portion.",
+        "optional": false
+      },
+      {
+        "name": "enableTime",
+        "type": "InputSignal<boolean>",
+        "description": "v1 prop: enableTime — include time portion.",
+        "optional": false
+      },
+      {
+        "name": "htmlInputType",
+        "type": "Signal<string>",
+        "description": "Derives HTML input type from enableDate + enableTime.",
         "optional": false
       },
       {
@@ -282,27 +234,9 @@
         "optional": false
       },
       {
-        "name": "max",
-        "type": "InputSignal<string>",
-        "description": "",
-        "optional": false
-      },
-      {
-        "name": "min",
-        "type": "InputSignal<string>",
-        "description": "",
-        "optional": false
-      },
-      {
-        "name": "validationResult",
-        "type": "InputSignal<A2uiValidationResult>",
-        "description": "",
-        "optional": false
-      },
-      {
         "name": "value",
         "type": "InputSignal<string>",
-        "description": "",
+        "description": "v1 prop: value (resolved DynamicString).",
         "optional": false
       }
     ],
@@ -328,7 +262,14 @@
     "description": "",
     "params": [],
     "examples": [],
-    "properties": [],
+    "properties": [
+      {
+        "name": "direction",
+        "type": "InputSignal<\"horizontal\" | \"vertical\">",
+        "description": "",
+        "optional": false
+      }
+    ],
     "methods": []
   },
   {
@@ -339,8 +280,14 @@
     "examples": [],
     "properties": [
       {
-        "name": "name",
+        "name": "icon",
         "type": "InputSignal<string>",
+        "description": "v1 prop name: icon (resolved string, e.g. a Unicode symbol or ligature name).",
+        "optional": false
+      },
+      {
+        "name": "size",
+        "type": "InputSignal<number | null>",
         "description": "",
         "optional": false
       }
@@ -361,8 +308,20 @@
         "optional": false
       },
       {
+        "name": "height",
+        "type": "InputSignal<number | null>",
+        "description": "",
+        "optional": false
+      },
+      {
         "name": "url",
         "type": "InputSignal<string>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "width",
+        "type": "InputSignal<number | null>",
         "description": "",
         "optional": false
       }
@@ -383,6 +342,18 @@
         "optional": false
       },
       {
+        "name": "direction",
+        "type": "InputSignal<\"horizontal\" | \"vertical\">",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "listClass",
+        "type": "Signal<\"flex flex-row gap-1 overflow-x-auto\" | \"flex flex-col gap-1 overflow-y-auto max-h-96\">",
+        "description": "",
+        "optional": false
+      },
+      {
         "name": "spec",
         "type": "InputSignal<Spec>",
         "description": "",
@@ -399,32 +370,26 @@
     "examples": [],
     "properties": [
       {
-        "name": "_bindings",
-        "type": "InputSignal<Record<string, string>>",
-        "description": "",
-        "optional": false
-      },
-      {
         "name": "childKeys",
         "type": "InputSignal<string[]>",
+        "description": "v1: childKeys[0] = entryPointChild (inline trigger),\n    childKeys[1] = contentChild (modal body).",
+        "optional": false
+      },
+      {
+        "name": "contentKey",
+        "type": "Signal<string>",
         "description": "",
         "optional": false
       },
       {
-        "name": "dismissible",
-        "type": "InputSignal<boolean>",
-        "description": "",
-        "optional": false
-      },
-      {
-        "name": "emit",
-        "type": "InputSignal<object>",
+        "name": "entryPointKey",
+        "type": "Signal<string>",
         "description": "",
         "optional": false
       },
       {
         "name": "open",
-        "type": "InputSignal<boolean>",
+        "type": "WritableSignal<boolean>",
         "description": "",
         "optional": false
       },
@@ -437,16 +402,107 @@
       {
         "name": "title",
         "type": "InputSignal<string>",
+        "description": "Resolved title string (from optional title DynamicString).",
+        "optional": false
+      }
+    ],
+    "methods": []
+  },
+  {
+    "name": "A2uiMultipleChoiceComponent",
+    "kind": "class",
+    "description": "",
+    "params": [],
+    "examples": [],
+    "properties": [
+      {
+        "name": "_bindings",
+        "type": "InputSignal<Record<string, string>>",
         "description": "",
+        "optional": false
+      },
+      {
+        "name": "emit",
+        "type": "InputSignal<object>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "isSingleSelect",
+        "type": "Signal<boolean>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "label",
+        "type": "InputSignal<string>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "maxAllowedSelections",
+        "type": "InputSignal<number>",
+        "description": "When ≤ 1 — render as single-select <select>; otherwise multi-select checkboxes.",
+        "optional": false
+      },
+      {
+        "name": "options",
+        "type": "InputSignal<ResolvedOption[]>",
+        "description": "Resolved options with plain string labels (surface-to-spec resolves DynamicString).",
+        "optional": false
+      },
+      {
+        "name": "selections",
+        "type": "InputSignal<string[]>",
+        "description": "Resolved current selections (plain string array from surface-to-spec).",
         "optional": false
       }
     ],
     "methods": [
       {
-        "name": "onBackdropClick",
-        "signature": "onBackdropClick()",
+        "name": "isSelected",
+        "signature": "isSelected(value: string)",
         "description": "",
-        "params": []
+        "params": [
+          {
+            "name": "value",
+            "type": "string",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
+        "name": "onCheckChange",
+        "signature": "onCheckChange(value: string, event: Event)",
+        "description": "",
+        "params": [
+          {
+            "name": "value",
+            "type": "string",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "event",
+            "type": "Event",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
+        "name": "onSelectChange",
+        "signature": "onSelectChange(event: Event)",
+        "description": "",
+        "params": [
+          {
+            "name": "event",
+            "type": "Event",
+            "description": "",
+            "optional": false
+          }
+        ]
       }
     ]
   },
@@ -458,8 +514,32 @@
     "examples": [],
     "properties": [
       {
+        "name": "alignment",
+        "type": "InputSignal<RowAlignment>",
+        "description": "",
+        "optional": false
+      },
+      {
         "name": "childKeys",
         "type": "InputSignal<string[]>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "distribution",
+        "type": "InputSignal<RowDistribution>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "gap",
+        "type": "InputSignal<number>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "rowClass",
+        "type": "Signal<string>",
         "description": "",
         "optional": false
       },
@@ -504,15 +584,15 @@
         "optional": false
       },
       {
-        "name": "max",
+        "name": "maxValue",
         "type": "InputSignal<number>",
-        "description": "",
+        "description": "v1 prop: maxValue.",
         "optional": false
       },
       {
-        "name": "min",
+        "name": "minValue",
         "type": "InputSignal<number>",
-        "description": "",
+        "description": "v1 prop: minValue.",
         "optional": false
       },
       {
@@ -522,15 +602,9 @@
         "optional": false
       },
       {
-        "name": "validationResult",
-        "type": "InputSignal<A2uiValidationResult>",
-        "description": "",
-        "optional": false
-      },
-      {
         "name": "value",
         "type": "InputSignal<number>",
-        "description": "",
+        "description": "v1 prop: value (resolved DynamicNumber).",
         "optional": false
       }
     ],
@@ -630,14 +704,8 @@
     "examples": [],
     "properties": [
       {
-        "name": "_bindings",
-        "type": "InputSignal<Record<string, string>>",
-        "description": "",
-        "optional": false
-      },
-      {
-        "name": "activeChildKeys",
-        "type": "Signal<string[]>",
+        "name": "activeChildKey",
+        "type": "Signal<string | null>",
         "description": "",
         "optional": false
       },
@@ -650,19 +718,7 @@
       {
         "name": "childKeys",
         "type": "InputSignal<string[]>",
-        "description": "",
-        "optional": false
-      },
-      {
-        "name": "emit",
-        "type": "InputSignal<object>",
-        "description": "",
-        "optional": false
-      },
-      {
-        "name": "selected",
-        "type": "InputSignal<number>",
-        "description": "",
+        "description": "v1: each child key corresponds to a tab's contentChild (childKeys[i] ↔ tabTitles[i]).",
         "optional": false
       },
       {
@@ -672,9 +728,9 @@
         "optional": false
       },
       {
-        "name": "tabs",
-        "type": "InputSignal<object[]>",
-        "description": "",
+        "name": "tabTitles",
+        "type": "InputSignal<string[]>",
+        "description": "Resolved tab titles from tabItems[*].title — produced by surface-to-spec.",
         "optional": false
       }
     ],
@@ -706,9 +762,22 @@
         "type": "InputSignal<string>",
         "description": "",
         "optional": false
+      },
+      {
+        "name": "usageHint",
+        "type": "InputSignal<UsageHint>",
+        "description": "",
+        "optional": false
       }
     ],
-    "methods": []
+    "methods": [
+      {
+        "name": "cssClass",
+        "signature": "cssClass()",
+        "description": "",
+        "params": []
+      }
+    ]
   },
   {
     "name": "A2uiTextFieldComponent",
@@ -736,6 +805,12 @@
         "optional": false
       },
       {
+        "name": "htmlInputType",
+        "type": "Signal<string>",
+        "description": "",
+        "optional": false
+      },
+      {
         "name": "label",
         "type": "InputSignal<string>",
         "description": "",
@@ -748,15 +823,27 @@
         "optional": false
       },
       {
-        "name": "validationResult",
-        "type": "InputSignal<A2uiValidationResult>",
+        "name": "text",
+        "type": "InputSignal<string>",
+        "description": "v1 prop: text (resolved string value).",
+        "optional": false
+      },
+      {
+        "name": "textFieldType",
+        "type": "InputSignal<TextFieldType>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "validationRegexp",
+        "type": "InputSignal<string>",
         "description": "",
         "optional": false
       },
       {
         "name": "value",
-        "type": "InputSignal<string>",
-        "description": "",
+        "type": "Signal<string>",
+        "description": "Back-compat alias: value. surface-to-spec resolves DynamicString → plain string.",
         "optional": false
       }
     ],
@@ -777,22 +864,6 @@
     ]
   },
   {
-    "name": "A2uiValidationErrorsComponent",
-    "kind": "class",
-    "description": "",
-    "params": [],
-    "examples": [],
-    "properties": [
-      {
-        "name": "result",
-        "type": "InputSignal<A2uiValidationResult>",
-        "description": "",
-        "optional": false
-      }
-    ],
-    "methods": []
-  },
-  {
     "name": "A2uiVideoComponent",
     "kind": "class",
     "description": "",
@@ -800,20 +871,14 @@
     "examples": [],
     "properties": [
       {
-        "name": "autoplay",
+        "name": "autoPlay",
         "type": "InputSignal<boolean>",
-        "description": "",
+        "description": "v1 prop name: autoPlay (camelCase).",
         "optional": false
       },
       {
         "name": "controls",
         "type": "InputSignal<boolean>",
-        "description": "",
-        "optional": false
-      },
-      {
-        "name": "poster",
-        "type": "InputSignal<string>",
         "description": "",
         "optional": false
       },
@@ -3094,9 +3159,49 @@
     "methods": []
   },
   {
+    "name": "A2uiAction",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "context",
+        "type": "A2uiActionContextEntry[]",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "name",
+        "type": "string",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "A2uiActionContextEntry",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "key",
+        "type": "string",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "value",
+        "type": "DynamicString | DynamicNumber | DynamicBoolean",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
     "name": "A2uiActionMessage",
     "kind": "interface",
-    "description": "v0.9 outbound action message — sent when a component's event action fires.",
+    "description": "",
     "properties": [
       {
         "name": "action",
@@ -3120,29 +3225,9 @@
     "examples": []
   },
   {
-    "name": "A2uiCheckRule",
-    "kind": "interface",
-    "description": "",
-    "properties": [
-      {
-        "name": "condition",
-        "type": "DynamicBoolean",
-        "description": "",
-        "optional": false
-      },
-      {
-        "name": "message",
-        "type": "string",
-        "description": "",
-        "optional": false
-      }
-    ],
-    "examples": []
-  },
-  {
     "name": "A2uiClientDataModel",
     "kind": "interface",
-    "description": "v0.9 client data model envelope — attached when sendDataModel is true.",
+    "description": "",
     "properties": [
       {
         "name": "surfaces",
@@ -3165,26 +3250,8 @@
     "description": "",
     "properties": [
       {
-        "name": "action",
-        "type": "A2uiAction",
-        "description": "",
-        "optional": true
-      },
-      {
-        "name": "checks",
-        "type": "A2uiCheckRule[]",
-        "description": "",
-        "optional": true
-      },
-      {
-        "name": "children",
-        "type": "A2uiChildList",
-        "description": "",
-        "optional": true
-      },
-      {
         "name": "component",
-        "type": "string",
+        "type": "A2uiComponentDef",
         "description": "",
         "optional": false
       },
@@ -3193,46 +3260,12 @@
         "type": "string",
         "description": "",
         "optional": false
-      }
-    ],
-    "examples": []
-  },
-  {
-    "name": "A2uiFunctionCall",
-    "kind": "interface",
-    "description": "",
-    "properties": [
-      {
-        "name": "args",
-        "type": "Record<string, unknown>",
-        "description": "",
-        "optional": false
       },
       {
-        "name": "call",
-        "type": "string",
-        "description": "",
-        "optional": false
-      },
-      {
-        "name": "returnType",
-        "type": "string",
+        "name": "weight",
+        "type": "number",
         "description": "",
         "optional": true
-      }
-    ],
-    "examples": []
-  },
-  {
-    "name": "A2uiPathRef",
-    "kind": "interface",
-    "description": "",
-    "properties": [
-      {
-        "name": "path",
-        "type": "string",
-        "description": "",
-        "optional": false
       }
     ],
     "examples": []
@@ -3329,26 +3362,6 @@
         "type": "string",
         "description": "",
         "optional": true
-      }
-    ],
-    "examples": []
-  },
-  {
-    "name": "A2uiValidationResult",
-    "kind": "interface",
-    "description": "",
-    "properties": [
-      {
-        "name": "errors",
-        "type": "string[]",
-        "description": "",
-        "optional": false
-      },
-      {
-        "name": "valid",
-        "type": "boolean",
-        "description": "",
-        "optional": false
       }
     ],
     "examples": []
@@ -4306,6 +4319,20 @@
     "examples": []
   },
   {
+    "name": "A2uiChildren",
+    "kind": "type",
+    "description": "",
+    "signature": "object | object",
+    "examples": []
+  },
+  {
+    "name": "A2uiComponentDef",
+    "kind": "type",
+    "description": "",
+    "signature": "object | object | object | object | object | object | object | object | object | object | object | object | object | object | object | object | object | object",
+    "examples": []
+  },
+  {
     "name": "AgentEvent",
     "kind": "type",
     "description": "Discriminated union of events flowing on `Agent.events$`.\n\nInvariant: state lives on signals (`messages`, `status`, `toolCalls`,\n`state`, `interrupt`, `subagents`, `history`); events on `events$`\ncarry only things that are not derivable from signals. New variants\nare added purely additively when patterns prove necessary.",
@@ -4344,28 +4371,21 @@
     "name": "DynamicBoolean",
     "kind": "type",
     "description": "",
-    "signature": "DynamicValue<boolean>",
+    "signature": "object | object",
     "examples": []
   },
   {
     "name": "DynamicNumber",
     "kind": "type",
     "description": "",
-    "signature": "DynamicValue<number>",
+    "signature": "object | object",
     "examples": []
   },
   {
     "name": "DynamicString",
     "kind": "type",
     "description": "",
-    "signature": "DynamicValue<string>",
-    "examples": []
-  },
-  {
-    "name": "DynamicValue",
-    "kind": "type",
-    "description": "A value that can be a literal, a path reference, or a function call.",
-    "signature": "T | A2uiPathRef | A2uiFunctionCall",
+    "signature": "object | object",
     "examples": []
   },
   {
@@ -4439,7 +4459,7 @@
   {
     "name": "buildA2uiActionMessage",
     "kind": "function",
-    "description": "Builds a v0.9 A2uiActionMessage from handler params and the current surface.",
+    "description": "Builds an A2uiActionMessage from handler params and the current surface.\n The action.context is serialized as v1 DynamicValue-wrapped entries.",
     "signature": "buildA2uiActionMessage(params: Record<string, unknown>, surface: A2uiSurface): A2uiActionMessage",
     "params": [
       {
@@ -4637,10 +4657,10 @@
     "examples": []
   },
   {
-    "name": "isFunctionCall",
+    "name": "isLiteralBoolean",
     "kind": "function",
-    "description": "Narrows an unknown value to A2uiFunctionCall — has `call` and `args`.",
-    "signature": "isFunctionCall(value: unknown): value is A2uiFunctionCall",
+    "description": "",
+    "signature": "isLiteralBoolean(value: unknown): value is { literalBoolean: boolean }",
     "params": [
       {
         "name": "value",
@@ -4650,7 +4670,45 @@
       }
     ],
     "returns": {
-      "type": "value is A2uiFunctionCall",
+      "type": "value is { literalBoolean: boolean }",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "isLiteralNumber",
+    "kind": "function",
+    "description": "",
+    "signature": "isLiteralNumber(value: unknown): value is { literalNumber: number }",
+    "params": [
+      {
+        "name": "value",
+        "type": "unknown",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "value is { literalNumber: number }",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "isLiteralString",
+    "kind": "function",
+    "description": "",
+    "signature": "isLiteralString(value: unknown): value is { literalString: string }",
+    "params": [
+      {
+        "name": "value",
+        "type": "unknown",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "value is { literalString: string }",
       "description": ""
     },
     "examples": []
@@ -4658,8 +4716,8 @@
   {
     "name": "isPathRef",
     "kind": "function",
-    "description": "Narrows an unknown value to A2uiPathRef — has `path` but not `call`.",
-    "signature": "isPathRef(value: unknown): value is A2uiPathRef",
+    "description": "",
+    "signature": "isPathRef(value: unknown): value is { path: string }",
     "params": [
       {
         "name": "value",
@@ -4669,7 +4727,7 @@
       }
     ],
     "returns": {
-      "type": "value is A2uiPathRef",
+      "type": "value is { path: string }",
       "description": ""
     },
     "examples": []
@@ -4898,7 +4956,7 @@
   {
     "name": "surfaceToSpec",
     "kind": "function",
-    "description": "Converts an A2UI surface to a json-render Spec by:\n1. Walking the flat component map\n2. Resolving DynamicValue props against the data model\n3. Mapping A2UI children (string[] or template) to json-render children\n4. Producing a Spec with root + elements",
+    "description": "",
     "signature": "surfaceToSpec(surface: A2uiSurface): Spec | null",
     "params": [
       {

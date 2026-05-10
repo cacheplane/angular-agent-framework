@@ -1,21 +1,18 @@
 // SPDX-License-Identifier: MIT
-import type { A2uiPathRef, A2uiFunctionCall } from './types.js';
 
-/** Narrows an unknown value to A2uiPathRef — has `path` but not `call`. */
-export function isPathRef(value: unknown): value is A2uiPathRef {
-  return (
-    typeof value === 'object' &&
-    value !== null &&
-    'path' in value &&
-    !('call' in value)
-  );
+export function isPathRef(value: unknown): value is { path: string } {
+  return typeof value === 'object' && value !== null
+    && 'path' in value && typeof (value as { path: unknown }).path === 'string';
 }
 
-/** Narrows an unknown value to A2uiFunctionCall — has `call` and `args`. */
-export function isFunctionCall(value: unknown): value is A2uiFunctionCall {
-  return (
-    typeof value === 'object' &&
-    value !== null &&
-    'call' in value
-  );
+export function isLiteralString(value: unknown): value is { literalString: string } {
+  return typeof value === 'object' && value !== null && 'literalString' in value;
+}
+
+export function isLiteralNumber(value: unknown): value is { literalNumber: number } {
+  return typeof value === 'object' && value !== null && 'literalNumber' in value;
+}
+
+export function isLiteralBoolean(value: unknown): value is { literalBoolean: boolean } {
+  return typeof value === 'object' && value !== null && 'literalBoolean' in value;
 }

@@ -8,99 +8,221 @@ export interface A2uiTheme {
   agentDisplayName?: string;
 }
 
-// --- Dynamic value types ---
+// --- Dynamic value types (always wrapped in v1) ---
 
-export interface A2uiPathRef {
-  path: string;
-}
+export type DynamicString =
+  | { literalString: string }
+  | { path: string };
 
-export interface A2uiFunctionCall {
-  call: string;
-  args: Record<string, unknown>;
-  returnType?: string;
-}
+export type DynamicNumber =
+  | { literalNumber: number }
+  | { path: string };
 
-/** A value that can be a literal, a path reference, or a function call. */
-export type DynamicValue<T> = T | A2uiPathRef | A2uiFunctionCall;
-export type DynamicString = DynamicValue<string>;
-export type DynamicNumber = DynamicValue<number>;
-export type DynamicBoolean = DynamicValue<boolean>;
-export type DynamicStringList = DynamicValue<string[]>;
+export type DynamicBoolean =
+  | { literalBoolean: boolean }
+  | { path: string };
+
+export type DynamicStringList =
+  | { literalArray: string[] }
+  | { path: string };
 
 // --- Children ---
 
-export interface A2uiChildTemplate {
-  path: string;
-  componentId: string;
+export type A2uiChildren =
+  | { explicitList: string[] }
+  | { template: { componentId: string; dataBinding: string } };
+
+// --- Actions ---
+
+export interface A2uiActionContextEntry {
+  key: string;
+  value: DynamicString | DynamicNumber | DynamicBoolean;
 }
 
-export type A2uiChildList = string[] | A2uiChildTemplate;
-
-// --- Actions (Phase 2 — type definitions only) ---
-
-export interface A2uiEventAction {
-  event: { name: string; context?: Record<string, unknown> };
+export interface A2uiAction {
+  name: string;
+  context?: A2uiActionContextEntry[];
 }
 
-export interface A2uiLocalAction {
-  functionCall: A2uiFunctionCall;
+// --- Per-component property interfaces ---
+
+export interface A2uiText {
+  text: DynamicString;
+  usageHint?: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'caption' | 'body';
 }
 
-export type A2uiAction = A2uiEventAction | A2uiLocalAction;
-
-// --- Validation (v0.9 CheckRule) ---
-
-export interface A2uiCheckRule {
-  condition: DynamicBoolean;
-  message: string;
+export interface A2uiImage {
+  url: DynamicString;
+  alt?: DynamicString;
+  width?: number;
+  height?: number;
 }
 
-// --- Components ---
+export interface A2uiIcon {
+  icon: DynamicString;
+  size?: number;
+}
+
+export interface A2uiVideo {
+  url: DynamicString;
+  autoPlay?: boolean;
+  controls?: boolean;
+}
+
+export interface A2uiAudioPlayer {
+  url: DynamicString;
+  autoPlay?: boolean;
+  controls?: boolean;
+}
+
+export interface A2uiRow {
+  children: A2uiChildren;
+  gap?: number;
+  alignment?: 'start' | 'center' | 'end' | 'stretch';
+  distribution?: 'start' | 'center' | 'end' | 'space-between' | 'space-around';
+}
+
+export interface A2uiColumn {
+  children: A2uiChildren;
+  gap?: number;
+  alignment?: 'start' | 'center' | 'end' | 'stretch';
+}
+
+export interface A2uiList {
+  children: A2uiChildren;
+  direction?: 'vertical' | 'horizontal';
+}
+
+export interface A2uiCard {
+  child: string;
+}
+
+export interface A2uiTabItem {
+  title: DynamicString;
+  child: string;
+}
+
+export interface A2uiTabs {
+  tabItems: A2uiTabItem[];
+}
+
+export interface A2uiDivider {
+  direction?: 'horizontal' | 'vertical';
+}
+
+export interface A2uiModal {
+  entryPointChild: string;
+  contentChild: string;
+  title?: DynamicString;
+}
+
+export interface A2uiButton {
+  child: string;
+  primary?: boolean;
+  action: A2uiAction;
+}
+
+export interface A2uiCheckBox {
+  label: DynamicString;
+  checked: DynamicBoolean;
+  action?: A2uiAction;
+}
+
+export interface A2uiTextField {
+  label: DynamicString;
+  text?: DynamicString;
+  textFieldType?: 'date' | 'longText' | 'number' | 'shortText' | 'obscured';
+  validationRegexp?: string;
+}
+
+export interface A2uiDateTimeInput {
+  label: DynamicString;
+  value?: DynamicString;
+  enableDate?: boolean;
+  enableTime?: boolean;
+}
+
+export interface A2uiMultipleChoice {
+  selections: DynamicStringList;
+  options: { label: DynamicString; value: string }[];
+  maxAllowedSelections?: number;
+  label?: DynamicString;
+}
+
+export interface A2uiSlider {
+  value: DynamicNumber;
+  minValue?: number;
+  maxValue?: number;
+  step?: number;
+  label?: DynamicString;
+}
+
+// --- Component wrapper (type-keyed discriminated union) ---
+
+export type A2uiComponentDef =
+  | { Text: A2uiText }
+  | { Image: A2uiImage }
+  | { Icon: A2uiIcon }
+  | { Video: A2uiVideo }
+  | { AudioPlayer: A2uiAudioPlayer }
+  | { Row: A2uiRow }
+  | { Column: A2uiColumn }
+  | { List: A2uiList }
+  | { Card: A2uiCard }
+  | { Tabs: A2uiTabs }
+  | { Divider: A2uiDivider }
+  | { Modal: A2uiModal }
+  | { Button: A2uiButton }
+  | { CheckBox: A2uiCheckBox }
+  | { TextField: A2uiTextField }
+  | { DateTimeInput: A2uiDateTimeInput }
+  | { MultipleChoice: A2uiMultipleChoice }
+  | { Slider: A2uiSlider };
 
 export interface A2uiComponent {
   id: string;
-  component: string;
-  children?: A2uiChildList;
-  action?: A2uiAction;
-  checks?: A2uiCheckRule[];
-  [key: string]: unknown;
+  weight?: number;
+  component: A2uiComponentDef;
 }
 
-// --- Messages ---
+// --- Envelopes ---
 
-export interface A2uiCreateSurface {
-  type: 'createSurface';
-  surfaceId: string;
-  catalogId: string;
-  theme?: A2uiTheme;
-  sendDataModel?: boolean;
-}
-
-export interface A2uiUpdateComponents {
-  type: 'updateComponents';
+export interface A2uiSurfaceUpdate {
   surfaceId: string;
   components: A2uiComponent[];
 }
 
-export interface A2uiUpdateDataModel {
-  type: 'updateDataModel';
+export interface A2uiDataModelEntry {
+  key: string;
+  valueString?: string;
+  valueNumber?: number;
+  valueBoolean?: boolean;
+  valueMap?: A2uiDataModelEntry[];
+}
+
+export interface A2uiDataModelUpdate {
   surfaceId: string;
   path?: string;
-  value?: unknown;
+  contents: A2uiDataModelEntry[];
+}
+
+export interface A2uiBeginRendering {
+  surfaceId: string;
+  root: string;
+  styles?: { font?: string; primaryColor?: string };
 }
 
 export interface A2uiDeleteSurface {
-  type: 'deleteSurface';
   surfaceId: string;
 }
 
 export type A2uiMessage =
-  | A2uiCreateSurface
-  | A2uiUpdateComponents
-  | A2uiUpdateDataModel
-  | A2uiDeleteSurface;
+  | { surfaceUpdate: A2uiSurfaceUpdate }
+  | { dataModelUpdate: A2uiDataModelUpdate }
+  | { beginRendering: A2uiBeginRendering }
+  | { deleteSurface: A2uiDeleteSurface };
 
-// --- Surface ---
+// --- Surface (internal model, not constrained by wire format) ---
 
 export interface A2uiSurface {
   surfaceId: string;
@@ -111,15 +233,13 @@ export interface A2uiSurface {
   dataModel: Record<string, unknown>;
 }
 
-// --- v0.9 Outbound Action ---
+// --- Outbound shapes ---
 
-/** v0.9 client data model envelope — attached when sendDataModel is true. */
 export interface A2uiClientDataModel {
   version: 'v0.9';
   surfaces: Record<string, Record<string, unknown>>;
 }
 
-/** v0.9 outbound action message — sent when a component's event action fires. */
 export interface A2uiActionMessage {
   version: 'v0.9';
   action: {

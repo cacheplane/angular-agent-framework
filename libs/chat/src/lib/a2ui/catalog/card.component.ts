@@ -9,9 +9,6 @@ import { RenderElementComponent } from '@ngaf/render';
   imports: [RenderElementComponent],
   template: `
     <div class="rounded-xl border border-white/10 bg-white/5 p-4 backdrop-blur-sm">
-      @if (title()) {
-        <h3 class="text-sm font-semibold mb-2">{{ title() }}</h3>
-      }
       @for (key of childKeys(); track key) {
         <render-element [elementKey]="key" [spec]="spec()" />
       }
@@ -19,7 +16,7 @@ import { RenderElementComponent } from '@ngaf/render';
   `,
 })
 export class A2uiCardComponent {
-  readonly title = input<string>('');
+  /** v1: a single child key, delivered via childKeys[0] from the render framework. */
   readonly childKeys = input<string[]>([]);
   readonly spec = input.required<Spec>();
 }

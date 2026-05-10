@@ -9,64 +9,117 @@ function makeSurface(components: A2uiComponent[], dataModel: Record<string, unkn
   return { surfaceId: 's1', catalogId: 'basic', components: map, dataModel };
 }
 
-describe('A2uiSurfaceComponent — data flow', () => {
+describe('surfaceToSpec (v1)', () => {
   it('resolves root component from surface', () => {
     const surface = makeSurface([
-      { id: 'root', component: 'Column', children: ['t1'] },
-      { id: 't1', component: 'Text', text: 'Hello' },
+      { id: 'root', component: { Column: { children: { explicitList: ['t1'] } } } },
+      { id: 't1', component: { Text: { text: { literalString: 'Hello' } } } },
     ]);
-    expect(surface.components.get('root')!.component).toBe('Column');
-    expect((surface.components.get('root')!.children as string[])).toEqual(['t1']);
+    expect(surface.components.get('root')!.component).toMatchObject({ Column: {} });
   });
 
-  it('resolves data bindings in component props', () => {
+  it('resolves DynamicString literalString prop', () => {
+    const surface = makeSurface([
+      { id: 'root', component: { Text: { text: { literalString: 'Hi' } } } },
+    ]);
+    const spec = surfaceToSpec(surface)!;
+    expect(spec.elements['root'].props['text']).toBe('Hi');
+  });
+
+  it('resolves DynamicString path prop against dataModel', () => {
     const surface = makeSurface(
-      [{ id: 'root', component: 'Text', text: { path: '/greeting' } as any }],
+      [{ id: 'root', component: { Text: { text: { path: '/greeting' } } } }],
       { greeting: 'Hello World' },
     );
-    // The renderer will call resolveDynamic on each prop
-    expect(surface.dataModel).toEqual({ greeting: 'Hello World' });
+    const spec = surfaceToSpec(surface)!;
+    expect(spec.elements['root'].props['text']).toBe('Hello World');
   });
 
-  it('handles surfaces with no components', () => {
+  it('returns null when surface has no components', () => {
     const surface = makeSurface([]);
-    expect(surface.components.size).toBe(0);
+    expect(surfaceToSpec(surface)).toBeNull();
   });
 
-  it('expands template children over data model arrays', () => {
+  it('Card: single child rendered as length-1 children array', () => {
+    const surface = makeSurface([
+      { id: 'root', component: { Card: { child: 'inner' } } },
+      { id: 'inner', component: { Text: { text: { literalString: 'body' } } } },
+    ]);
+    const spec = surfaceToSpec(surface)!;
+    expect(spec.elements['root'].children).toEqual(['inner']);
+  });
+
+  it('Button: child rendered as length-1 children array', () => {
+    const surface = makeSurface([
+      { id: 'root', component: { Button: { child: 'lbl', action: { name: 'click' } } } },
+      { id: 'lbl', component: { Text: { text: { literalString: 'OK' } } } },
+    ]);
+    const spec = surfaceToSpec(surface)!;
+    expect(spec.elements['root'].children).toEqual(['lbl']);
+  });
+
+  it('Column: explicitList children', () => {
+    const surface = makeSurface([
+      { id: 'root', component: { Column: { children: { explicitList: ['a', 'b'] } } } },
+      { id: 'a', component: { Text: { text: { literalString: 'A' } } } },
+      { id: 'b', component: { Text: { text: { literalString: 'B' } } } },
+    ]);
+    const spec = surfaceToSpec(surface)!;
+    expect(spec.elements['root'].children).toEqual(['a', 'b']);
+  });
+
+  it('List: template expansion over dataModel array', () => {
     const surface = makeSurface(
       [
-        { id: 'root', component: 'Column', children: { path: '/items', componentId: 'item_card' } as any },
-        { id: 'item_card', component: 'Text', text: { path: 'name' } as any },
+        { id: 'root', component: { List: { children: { template: { componentId: 'item', dataBinding: '/items' } } } } },
+        // Relative path 'name' is resolved against each item's basePath (/items/0, /items/1)
+        { id: 'item', component: { Text: { text: { path: 'name' } } } },
       ],
       { items: [{ name: 'Alice' }, { name: 'Bob' }] },
     );
     const spec = surfaceToSpec(surface)!;
-    // Root should have expanded children referencing cloned IDs
-    expect(spec.elements['root'].children).toEqual(['item_card__0', 'item_card__1']);
-    // Expanded elements should have resolved props from their respective array items
-    expect(spec.elements['item_card__0'].props['text']).toBe('Alice');
-    expect(spec.elements['item_card__1'].props['text']).toBe('Bob');
+    expect(spec.elements['root'].children).toEqual(['item__0', 'item__1']);
+    expect(spec.elements['item__0'].props['text']).toBe('Alice');
+    expect(spec.elements['item__1'].props['text']).toBe('Bob');
   });
 
-  it('returns null when no root component exists', () => {
+  it('Modal: entryPointChild + contentChild as children array', () => {
     const surface = makeSurface([
-      { id: 'child', component: 'Text', text: 'No root' },
+      { id: 'root', component: { Modal: { entryPointChild: 'trigger', contentChild: 'body', title: { literalString: 'My Modal' } } } },
+      { id: 'trigger', component: { Button: { child: 'lbl', action: { name: 'open' } } } },
+      { id: 'body', component: { Text: { text: { literalString: 'content' } } } },
+      { id: 'lbl', component: { Text: { text: { literalString: 'Open' } } } },
     ]);
-    expect(surfaceToSpec(surface)).toBeNull();
+    const spec = surfaceToSpec(surface)!;
+    expect(spec.elements['root'].children).toEqual(['trigger', 'body']);
   });
-});
 
-describe('surfaceToSpec — action mapping', () => {
-  it('maps event action to spec on binding', () => {
+  it('Tabs: tabItems children', () => {
     const surface = makeSurface([
-      { id: 'root', component: 'Column', children: ['btn'] },
+      { id: 'root', component: { Tabs: { tabItems: [
+        { title: { literalString: 'Tab 1' }, child: 'panel1' },
+        { title: { literalString: 'Tab 2' }, child: 'panel2' },
+      ] } } },
+      { id: 'panel1', component: { Text: { text: { literalString: 'Panel 1' } } } },
+      { id: 'panel2', component: { Text: { text: { literalString: 'Panel 2' } } } },
+    ]);
+    const spec = surfaceToSpec(surface)!;
+    expect(spec.elements['root'].children).toEqual(['panel1', 'panel2']);
+  });
+
+  it('maps Button action to spec on.click binding', () => {
+    const surface = makeSurface([
+      { id: 'root', component: { Column: { children: { explicitList: ['btn'] } } } },
       {
         id: 'btn',
-        component: 'Button',
-        label: 'Submit',
-        action: { event: { name: 'formSubmit', context: { formId: 'signup' } } },
+        component: { Button: {
+          child: 'lbl',
+          action: { name: 'formSubmit', context: [
+            { key: 'formId', value: { literalString: 'signup' } },
+          ] },
+        } },
       },
+      { id: 'lbl', component: { Text: { text: { literalString: 'Submit' } } } },
     ]);
     const spec = surfaceToSpec(surface)!;
     const btnElement = spec.elements['btn'];
@@ -75,78 +128,22 @@ describe('surfaceToSpec — action mapping', () => {
       action: 'a2ui:event',
       params: { surfaceId: 's1', sourceComponentId: 'btn', name: 'formSubmit', context: { formId: 'signup' } },
     });
-    expect(btnElement.props['action']).toBeUndefined();
   });
 
-  it('maps local action to spec on binding', () => {
-    const surface = makeSurface([
-      { id: 'root', component: 'Column', children: ['btn'] },
-      {
-        id: 'btn',
-        component: 'Button',
-        label: 'Open',
-        action: { functionCall: { call: 'openUrl', args: { url: 'https://example.com' } } },
-      },
-    ]);
-    const spec = surfaceToSpec(surface)!;
-    const btnElement = spec.elements['btn'];
-    expect(btnElement.on!['click']).toEqual({
-      action: 'a2ui:localAction',
-      params: { call: 'openUrl', args: { url: 'https://example.com' } },
-    });
-  });
-
-  it('passes through elements without actions unchanged', () => {
-    const surface = makeSurface([
-      { id: 'root', component: 'Text', text: 'Hello' },
-    ]);
-    const spec = surfaceToSpec(surface)!;
-    expect(spec.elements['root'].on).toBeUndefined();
-  });
-});
-
-describe('surfaceToSpec — state initialization', () => {
-  it('initializes spec state from surface dataModel', () => {
-    const surface = makeSurface(
-      [{ id: 'root', component: 'Text', text: 'Hi' }],
-      { count: 0, name: 'test' },
-    );
-    const spec = surfaceToSpec(surface)!;
-    expect(spec.state).toEqual({ count: 0, name: 'test' });
-  });
-});
-
-describe('A2uiSurfaceComponent — consumer handlers', () => {
-  it('maps functionCall action call name to a2ui:localAction params', () => {
-    const surface = makeSurface([
-      { id: 'root', component: 'Column', children: ['btn'] },
-      {
-        id: 'btn',
-        component: 'Button',
-        label: 'Add',
-        action: { functionCall: { call: 'addToCart', args: { sku: 'ABC' } } },
-      },
-    ]);
-    const spec = surfaceToSpec(surface)!;
-    const btnElement = spec.elements['btn'];
-    expect(btnElement.on!['click']).toEqual({
-      action: 'a2ui:localAction',
-      params: { call: 'addToCart', args: { sku: 'ABC' } },
-    });
-  });
-});
-
-describe('surfaceToSpec — v0.9 event action', () => {
-  it('resolves context DynamicValue paths against data model', () => {
+  it('resolves action context DynamicValue path', () => {
     const surface = makeSurface(
       [
-        { id: 'root', component: 'Column', children: ['btn'] },
+        { id: 'root', component: { Column: { children: { explicitList: ['btn'] } } } },
         {
           id: 'btn',
-          component: 'Button',
-          label: 'Submit',
-          action: { event: { name: 'formSubmit', context: { email: { path: '/email' } } } },
+          component: { Button: {
+            child: 'lbl',
+            action: { name: 'submit', context: [
+              { key: 'email', value: { path: '/email' } },
+            ] },
+          } },
         },
+        { id: 'lbl', component: { Text: { text: { literalString: 'Go' } } } },
       ],
       { email: 'alice@example.com' },
     );
@@ -155,187 +152,46 @@ describe('surfaceToSpec — v0.9 event action', () => {
     expect(params['context']).toEqual({ email: 'alice@example.com' });
   });
 
-  it('resolves context FunctionCall values', () => {
-    const surface = makeSurface(
-      [
-        { id: 'root', component: 'Column', children: ['btn'] },
-        {
-          id: 'btn',
-          component: 'Button',
-          label: 'Format',
-          action: { event: { name: 'show', context: { price: { call: 'formatCurrency', args: { value: { path: '/amount' } } } } } },
-        },
-      ],
-      { amount: 42 },
-    );
-    const spec = surfaceToSpec(surface)!;
-    const params = spec.elements['btn'].on!['click'].params;
-    expect(params['context']).toEqual({ price: '$42.00' });
-  });
-
-  it('passes literal context values through unchanged', () => {
-    const surface = makeSurface(
-      [
-        { id: 'root', component: 'Column', children: ['btn'] },
-        {
-          id: 'btn',
-          component: 'Button',
-          label: 'Go',
-          action: { event: { name: 'navigate', context: { page: 'home' } } },
-        },
-      ],
-    );
-    const spec = surfaceToSpec(surface)!;
-    const params = spec.elements['btn'].on!['click'].params;
-    expect(params['context']).toEqual({ page: 'home' });
-  });
-
-  it('includes sourceComponentId in event action params', () => {
+  it('passes through elements without actions unchanged', () => {
     const surface = makeSurface([
-      { id: 'root', component: 'Column', children: ['submit-btn'] },
-      {
-        id: 'submit-btn',
-        component: 'Button',
-        label: 'Submit',
-        action: { event: { name: 'formSubmit' } },
-      },
+      { id: 'root', component: { Text: { text: { literalString: 'Hello' } } } },
     ]);
     const spec = surfaceToSpec(surface)!;
-    const params = spec.elements['submit-btn'].on!['click'].params;
-    expect(params['sourceComponentId']).toBe('submit-btn');
+    expect(spec.elements['root'].on).toBeUndefined();
   });
 
-  it('defaults context to empty object when not specified', () => {
-    const surface = makeSurface([
-      { id: 'root', component: 'Column', children: ['btn'] },
-      {
-        id: 'btn',
-        component: 'Button',
-        label: 'Click',
-        action: { event: { name: 'clicked' } },
-      },
-    ]);
-    const spec = surfaceToSpec(surface)!;
-    const params = spec.elements['btn'].on!['click'].params;
-    expect(params['context']).toEqual({});
-  });
-});
-
-describe('surfaceToSpec — validation', () => {
-  it('evaluates checks and attaches validationResult prop', () => {
+  it('initializes spec state from surface dataModel', () => {
     const surface = makeSurface(
-      [
-        {
-          id: 'root', component: 'TextField', label: 'Name',
-          value: { path: '/name' },
-          checks: [
-            { condition: { call: 'required', args: { value: { path: '/name' } } }, message: 'Name required' },
-          ],
-        },
-      ],
-      { name: 'Alice' },
+      [{ id: 'root', component: { Text: { text: { literalString: 'Hi' } } } }],
+      { count: 0, name: 'test' },
     );
     const spec = surfaceToSpec(surface)!;
-    expect(spec.elements['root'].props['validationResult']).toEqual({ valid: true, errors: [] });
+    expect(spec.state).toEqual({ count: 0, name: 'test' });
   });
 
-  it('attaches failing validationResult when check fails', () => {
-    const surface = makeSurface(
-      [
-        {
-          id: 'root', component: 'TextField', label: 'Name',
-          value: { path: '/name' },
-          checks: [
-            { condition: { call: 'required', args: { value: { path: '/name' } } }, message: 'Name required' },
-          ],
-        },
-      ],
-      { name: '' },
-    );
-    const spec = surfaceToSpec(surface)!;
-    expect(spec.elements['root'].props['validationResult']).toEqual({ valid: false, errors: ['Name required'] });
-  });
-
-  it('evaluates composite and condition', () => {
-    const surface = makeSurface(
-      [
-        {
-          id: 'root', component: 'Button', label: 'Submit',
-          checks: [
-            {
-              condition: {
-                call: 'and',
-                args: {
-                  values: [
-                    { call: 'required', args: { value: { path: '/name' } } },
-                    { call: 'email', args: { value: { path: '/email' } } },
-                  ],
-                },
-              },
-              message: 'All fields required',
-            },
-          ],
-        },
-      ],
-      { name: 'Alice', email: 'alice@example.com' },
-    );
-    const spec = surfaceToSpec(surface)!;
-    expect(spec.elements['root'].props['validationResult']).toEqual({ valid: true, errors: [] });
-  });
-
-  it('does not attach validationResult when no checks defined', () => {
-    const surface = makeSurface([
-      { id: 'root', component: 'Text', text: 'Hello' },
-    ]);
-    const spec = surfaceToSpec(surface)!;
-    expect(spec.elements['root'].props['validationResult']).toBeUndefined();
-  });
-
-  it('does not pass raw checks as props', () => {
-    const surface = makeSurface(
-      [
-        {
-          id: 'root', component: 'TextField', label: 'Name',
-          checks: [
-            { condition: { call: 'required', args: { value: { path: '/name' } } }, message: 'Required' },
-          ],
-        },
-      ],
-      { name: 'Alice' },
-    );
-    const spec = surfaceToSpec(surface)!;
-    expect(spec.elements['root'].props['checks']).toBeUndefined();
-  });
-});
-
-describe('surfaceToSpec — binding tracking', () => {
   it('attaches _bindings prop for path ref values', () => {
     const surface = makeSurface(
-      [{ id: 'root', component: 'TextField', label: 'Name', value: { path: '/name' } as any }],
+      [{ id: 'root', component: { TextField: { label: { literalString: 'Name' }, text: { path: '/name' } } } }],
       { name: 'Alice' },
     );
     const spec = surfaceToSpec(surface)!;
-    expect(spec.elements['root'].props['_bindings']).toEqual({ value: '/name' });
+    expect(spec.elements['root'].props['text']).toBe('Alice');
+    expect(spec.elements['root'].props['_bindings']).toEqual({ text: '/name' });
   });
 
   it('does not attach _bindings for literal values', () => {
     const surface = makeSurface([
-      { id: 'root', component: 'Text', text: 'Hello' },
+      { id: 'root', component: { Text: { text: { literalString: 'Hello' } } } },
     ]);
     const spec = surfaceToSpec(surface)!;
     expect(spec.elements['root'].props['_bindings']).toBeUndefined();
   });
 
-  it('filters out agent-authored _bindings and uses auto-detected bindings', () => {
-    const surface = makeSurface(
-      [{
-        id: 'root', component: 'TextField', label: 'Name',
-        value: { path: '/name' } as any,
-        _bindings: { value: '/name' },
-      } as any],
-      { name: 'Alice' },
-    );
+  it('uses first component as root when no root component exists', () => {
+    const surface = makeSurface([
+      { id: 'child', component: { Text: { text: { literalString: 'No root' } } } },
+    ]);
     const spec = surfaceToSpec(surface)!;
-    expect(spec.elements['root'].props['_bindings']).toEqual({ value: '/name' });
+    expect(spec.root).toBe('child');
   });
 });

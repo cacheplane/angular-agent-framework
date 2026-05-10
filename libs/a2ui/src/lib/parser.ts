@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 import type { A2uiMessage } from './types.js';
 
-const ENVELOPE_KEYS = ['createSurface', 'updateComponents', 'updateDataModel', 'deleteSurface'] as const;
+const ENVELOPE_KEYS = ['surfaceUpdate', 'dataModelUpdate', 'beginRendering', 'deleteSurface'] as const;
 
 export interface A2uiMessageParser {
   push(chunk: string): A2uiMessage[];
@@ -13,8 +13,8 @@ export function createA2uiMessageParser(): A2uiMessageParser {
   function parseEnvelope(json: Record<string, unknown>): A2uiMessage | null {
     for (const key of ENVELOPE_KEYS) {
       if (key in json && typeof json[key] === 'object' && json[key] !== null) {
-        const payload = json[key] as Record<string, unknown>;
-        return { type: key, ...payload } as unknown as A2uiMessage;
+        // A2uiMessage is a discriminated union of single-key envelope objects.
+        return { [key]: json[key] } as unknown as A2uiMessage;
       }
     }
     return null;
@@ -28,15 +28,16 @@ export function createA2uiMessageParser(): A2uiMessageParser {
     while ((newlineIndex = buffer.indexOf('\n')) !== -1) {
       const line = buffer.slice(0, newlineIndex).trim();
       buffer = buffer.slice(newlineIndex + 1);
-
       if (!line) continue;
 
       try {
         const json = JSON.parse(line);
-        const msg = parseEnvelope(json);
-        if (msg) messages.push(msg);
+        if (json && typeof json === 'object' && !Array.isArray(json)) {
+          const msg = parseEnvelope(json as Record<string, unknown>);
+          if (msg) messages.push(msg);
+        }
       } catch {
-        // Skip malformed lines
+        // Skip malformed lines silently — partial JSONL is normal mid-stream.
       }
     }
 

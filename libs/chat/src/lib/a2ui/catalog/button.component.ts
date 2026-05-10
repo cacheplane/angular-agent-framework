@@ -1,28 +1,34 @@
 // SPDX-License-Identifier: MIT
 import { Component, input, ChangeDetectionStrategy } from '@angular/core';
-import type { A2uiValidationResult } from '@ngaf/a2ui';
-import { A2uiValidationErrorsComponent } from './validation-errors.component';
+import type { Spec } from '@json-render/core';
+import { RenderElementComponent } from '@ngaf/render';
 
 @Component({
   selector: 'a2ui-button',
   standalone: true,
-  imports: [A2uiValidationErrorsComponent],
+  imports: [RenderElementComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <button
-      class="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-      [class]="variant() === 'borderless' ? 'bg-transparent hover:bg-white/10' : 'bg-blue-600 hover:bg-blue-700 text-white'"
-      [disabled]="disabled() || !validationResult().valid"
+      class="px-4 py-2 rounded-lg text-sm font-medium transition-colors inline-flex items-center justify-center"
+      [class]="primary()
+        ? 'bg-blue-600 hover:bg-blue-700 text-white'
+        : 'bg-transparent border border-white/20 hover:bg-white/10 text-white/80'"
+      [disabled]="disabled()"
       (click)="handleClick()"
-    >{{ label() }}</button>
-    <a2ui-validation-errors [result]="validationResult()" />
+    >
+      @for (key of childKeys(); track key) {
+        <render-element [elementKey]="key" [spec]="spec()" />
+      }
+    </button>
   `,
 })
 export class A2uiButtonComponent {
-  readonly label = input<string>('');
-  readonly variant = input<string>('primary');
+  /** v1: child Text component is rendered inside the button via childKeys. */
+  readonly childKeys = input<string[]>([]);
+  readonly spec = input.required<Spec>();
+  readonly primary = input<boolean>(true);
   readonly disabled = input<boolean>(false);
-  readonly validationResult = input<A2uiValidationResult>({ valid: true, errors: [] });
   readonly emit = input<(event: string) => void>(() => { /* noop */ });
 
   handleClick(): void {

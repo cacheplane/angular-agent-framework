@@ -1,57 +1,44 @@
 // SPDX-License-Identifier: MIT
-import { describe, it, expect, vi } from 'vitest';
-import { emitBinding } from './emit-binding';
+import { describe, it, expect } from 'vitest';
+import { A2uiTabsComponent } from './tabs.component';
 
 describe('A2uiTabsComponent', () => {
   // NOTE: Angular signal-based inputs can't be tested via TestBed without the
-  // angular() vite plugin (NG0303). These tests verify the behavioral contracts:
-  // - selectTab: sets active index and emits binding
-  // - activeChildKeys: returns childKeys for the active tab index
+  // angular() vite plugin (NG0303). These tests verify the v1 behavioral contract:
+  // - tabTitles drives the tab bar
+  // - childKeys[i] is the content key for the i-th tab
+  // - selectTab sets the active index
 
-  describe('selectTab logic', () => {
-    it('emits binding event with selected tab index', () => {
-      const emit = vi.fn();
-      const bindings = { selected: '/activeTab' };
-      // Mirrors selectTab: this.activeIndex.set(index); emitBinding(...)
-      emitBinding(emit, bindings, 'selected', 2);
-      expect(emit).toHaveBeenCalledWith('a2ui:datamodel:/activeTab:2');
-    });
-
-    it('emits index 0 when first tab is selected', () => {
-      const emit = vi.fn();
-      const bindings = { selected: '/activeTab' };
-      emitBinding(emit, bindings, 'selected', 0);
-      expect(emit).toHaveBeenCalledWith('a2ui:datamodel:/activeTab:0');
-    });
+  it('exports the component class', () => {
+    expect(A2uiTabsComponent).toBeDefined();
   });
 
-  describe('activeChildKeys computed logic', () => {
-    // Mirrors the computed signal: if (idx >= 0 && idx < allTabs.length) return allTabs[idx].childKeys; else return [];
-    const getActiveChildKeys = (tabs: { label: string; childKeys: string[] }[], index: number) =>
-      index >= 0 && index < tabs.length ? tabs[index].childKeys : [];
+  it('has selectTab method', () => {
+    expect(A2uiTabsComponent.prototype.selectTab).toBeInstanceOf(Function);
+  });
 
-    const tabs = [
-      { label: 'Overview', childKeys: ['overview-text', 'overview-chart'] },
-      { label: 'Details', childKeys: ['detail-list'] },
-      { label: 'Settings', childKeys: ['settings-form', 'settings-actions'] },
-    ];
+  describe('activeChildKey computed logic', () => {
+    const getActiveKey = (keys: string[], index: number) =>
+      index >= 0 && index < keys.length ? keys[index] : null;
 
-    it('returns childKeys for the selected tab', () => {
-      expect(getActiveChildKeys(tabs, 0)).toEqual(['overview-text', 'overview-chart']);
-      expect(getActiveChildKeys(tabs, 1)).toEqual(['detail-list']);
-      expect(getActiveChildKeys(tabs, 2)).toEqual(['settings-form', 'settings-actions']);
+    const keys = ['overview-child', 'detail-child', 'settings-child'];
+
+    it('returns the child key for the active tab', () => {
+      expect(getActiveKey(keys, 0)).toBe('overview-child');
+      expect(getActiveKey(keys, 1)).toBe('detail-child');
+      expect(getActiveKey(keys, 2)).toBe('settings-child');
     });
 
-    it('returns empty array for out-of-bounds positive index', () => {
-      expect(getActiveChildKeys(tabs, 5)).toEqual([]);
+    it('returns null for out-of-bounds index', () => {
+      expect(getActiveKey(keys, 5)).toBeNull();
     });
 
-    it('returns empty array for negative index', () => {
-      expect(getActiveChildKeys(tabs, -1)).toEqual([]);
+    it('returns null for negative index', () => {
+      expect(getActiveKey(keys, -1)).toBeNull();
     });
 
-    it('returns empty array when tabs list is empty', () => {
-      expect(getActiveChildKeys([], 0)).toEqual([]);
+    it('returns null when childKeys is empty', () => {
+      expect(getActiveKey([], 0)).toBeNull();
     });
   });
 });

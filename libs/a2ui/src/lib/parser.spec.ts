@@ -1,102 +1,79 @@
 // SPDX-License-Identifier: MIT
-import { describe, it, expect } from 'vitest';
+import { describe, expect, test } from 'vitest';
 import { createA2uiMessageParser } from './parser';
 
-describe('createA2uiMessageParser', () => {
-  it('parses a createSurface message', () => {
+describe('createA2uiMessageParser (v1)', () => {
+  test('parses surfaceUpdate envelope', () => {
     const parser = createA2uiMessageParser();
-    const msgs = parser.push('{"version":"v0.9","createSurface":{"surfaceId":"s1","catalogId":"basic"}}\n');
+    const msgs = parser.push(JSON.stringify({
+      surfaceUpdate: {
+        surfaceId: 's1',
+        components: [{ id: 'root', component: { Card: { child: 'inner' } } }],
+      },
+    }) + '\n');
     expect(msgs).toHaveLength(1);
-    expect(msgs[0]).toEqual({
-      type: 'createSurface',
-      surfaceId: 's1',
-      catalogId: 'basic',
-    });
+    expect('surfaceUpdate' in msgs[0]).toBe(true);
   });
 
-  it('parses an updateComponents message', () => {
+  test('parses dataModelUpdate envelope', () => {
     const parser = createA2uiMessageParser();
-    const msgs = parser.push('{"version":"v0.9","updateComponents":{"surfaceId":"s1","components":[{"id":"root","component":"Column","children":["c1"]}]}}\n');
+    const msgs = parser.push(JSON.stringify({
+      dataModelUpdate: {
+        surfaceId: 's1',
+        contents: [{ key: 'name', valueString: 'Brian' }],
+      },
+    }) + '\n');
     expect(msgs).toHaveLength(1);
-    expect(msgs[0].type).toBe('updateComponents');
-    expect((msgs[0] as any).components[0].id).toBe('root');
+    expect('dataModelUpdate' in msgs[0]).toBe(true);
   });
 
-  it('parses an updateDataModel message', () => {
+  test('parses beginRendering envelope', () => {
     const parser = createA2uiMessageParser();
-    const msgs = parser.push('{"version":"v0.9","updateDataModel":{"surfaceId":"s1","path":"/user/name","value":"Alice"}}\n');
+    const msgs = parser.push(JSON.stringify({
+      beginRendering: { surfaceId: 's1', root: 'root' },
+    }) + '\n');
     expect(msgs).toHaveLength(1);
-    expect(msgs[0]).toEqual({
-      type: 'updateDataModel',
-      surfaceId: 's1',
-      path: '/user/name',
-      value: 'Alice',
-    });
+    expect('beginRendering' in msgs[0]).toBe(true);
   });
 
-  it('parses a deleteSurface message', () => {
+  test('parses deleteSurface envelope', () => {
     const parser = createA2uiMessageParser();
-    const msgs = parser.push('{"version":"v0.9","deleteSurface":{"surfaceId":"s1"}}\n');
+    const msgs = parser.push(JSON.stringify({ deleteSurface: { surfaceId: 's1' } }) + '\n');
     expect(msgs).toHaveLength(1);
-    expect(msgs[0]).toEqual({ type: 'deleteSurface', surfaceId: 's1' });
+    expect('deleteSurface' in msgs[0]).toBe(true);
   });
 
-  it('parses multiple messages in one chunk', () => {
+  test('handles partial JSONL across pushes', () => {
     const parser = createA2uiMessageParser();
-    const msgs = parser.push(
-      '{"version":"v0.9","createSurface":{"surfaceId":"s1","catalogId":"basic"}}\n' +
-      '{"version":"v0.9","updateComponents":{"surfaceId":"s1","components":[]}}\n'
-    );
-    expect(msgs).toHaveLength(2);
-    expect(msgs[0].type).toBe('createSurface');
-    expect(msgs[1].type).toBe('updateComponents');
-  });
-
-  it('buffers incomplete lines across pushes', () => {
-    const parser = createA2uiMessageParser();
-    const msgs1 = parser.push('{"version":"v0.9","createSurface":{"surfaceI');
-    expect(msgs1).toHaveLength(0);
-
-    const msgs2 = parser.push('d":"s1","catalogId":"basic"}}\n');
-    expect(msgs2).toHaveLength(1);
-    expect(msgs2[0].type).toBe('createSurface');
-  });
-
-  it('ignores empty lines', () => {
-    const parser = createA2uiMessageParser();
-    const msgs = parser.push('\n\n{"version":"v0.9","deleteSurface":{"surfaceId":"s1"}}\n\n');
+    const json = JSON.stringify({ beginRendering: { surfaceId: 's1', root: 'root' } });
+    const half = Math.floor(json.length / 2);
+    expect(parser.push(json.slice(0, half))).toEqual([]);
+    const msgs = parser.push(json.slice(half) + '\n');
     expect(msgs).toHaveLength(1);
   });
 
-  it('skips unrecognized envelope keys', () => {
+  test('skips malformed lines silently', () => {
     const parser = createA2uiMessageParser();
-    const msgs = parser.push('{"version":"v0.9","unknownType":{"foo":"bar"}}\n');
+    const msgs = parser.push('{not valid json}\n' + JSON.stringify({
+      beginRendering: { surfaceId: 's1', root: 'root' },
+    }) + '\n');
+    expect(msgs).toHaveLength(1);
+  });
+
+  test('rejects unknown envelope keys', () => {
+    const parser = createA2uiMessageParser();
+    const msgs = parser.push(JSON.stringify({ unknownKey: { foo: 1 } }) + '\n');
     expect(msgs).toHaveLength(0);
   });
 
-  it('handles updateDataModel with no path (root replacement)', () => {
+  test('parses multiple messages in one chunk', () => {
     const parser = createA2uiMessageParser();
-    const msgs = parser.push('{"version":"v0.9","updateDataModel":{"surfaceId":"s1","value":{"key":"val"}}}\n');
-    expect(msgs[0]).toEqual({
-      type: 'updateDataModel',
-      surfaceId: 's1',
-      value: { key: 'val' },
-    });
-  });
-
-  it('handles updateDataModel with no value (delete)', () => {
-    const parser = createA2uiMessageParser();
-    const msgs = parser.push('{"version":"v0.9","updateDataModel":{"surfaceId":"s1","path":"/old"}}\n');
-    expect(msgs[0]).toEqual({
-      type: 'updateDataModel',
-      surfaceId: 's1',
-      path: '/old',
-    });
-  });
-
-  it('preserves createSurface theme', () => {
-    const parser = createA2uiMessageParser();
-    const msgs = parser.push('{"version":"v0.9","createSurface":{"surfaceId":"s1","catalogId":"basic","theme":{"primaryColor":"#00BFFF"}}}\n');
-    expect((msgs[0] as any).theme).toEqual({ primaryColor: '#00BFFF' });
+    const chunk = [
+      JSON.stringify({ surfaceUpdate: { surfaceId: 's1', components: [] } }),
+      JSON.stringify({ dataModelUpdate: { surfaceId: 's1', contents: [] } }),
+      JSON.stringify({ beginRendering: { surfaceId: 's1', root: 'root' } }),
+    ].join('\n') + '\n';
+    const msgs = parser.push(chunk);
+    expect(msgs).toHaveLength(3);
   });
 });

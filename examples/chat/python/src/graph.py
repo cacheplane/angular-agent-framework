@@ -157,50 +157,60 @@ def request_approval(reason: str) -> str:
 # routes the message to <a2ui-surface> rendering instead of plain markdown.
 A2UI_PREFIX = "---a2ui_JSON---"
 
-# Hardcoded A2UI v0.9 surface spec for the feedback-card demo. Each line
+# Hardcoded A2UI v1 surface spec for the feedback-card demo. Each line
 # is one envelope ({"<type>": {...}}) consumed by the parser at \n
-# boundaries. The surface defines: a Card titled "Quick feedback"
-# containing a TextField (Name) with a required check, a ChoicePicker
-# (Rating 1-5), and a Submit Button whose action emits a "feedbackSubmit"
-# event. Hardcoded because A2UI's schema-exact format is not a reliable
-# LLM capability today (see cockpit/chat/a2ui/python/src/graph.py).
+# boundaries. Three envelopes in order:
+#   1. surfaceUpdate  — declares all component definitions
+#   2. dataModelUpdate — seeds the initial data-model values
+#   3. beginRendering  — commits the buffer and names the root component
+# The surface defines: a Card (child = inner Column) containing a
+# TextField (Name), a MultipleChoice (Rating 1-5, single selection), and
+# a Button (Submit) whose Text child carries the label. Hardcoded because
+# A2UI's schema-exact format is not a reliable LLM capability today.
 FEEDBACK_FORM_JSONL = "\n".join([
-    json.dumps({"createSurface": {
-        "surfaceId": "feedback",
-        "catalogId": "basic",
-        "sendDataModel": True,
-    }}),
-    json.dumps({"updateDataModel": {
-        "surfaceId": "feedback",
-        "value": {"name": "", "rating": "5"},
-    }}),
-    json.dumps({"updateComponents": {
+    json.dumps({"surfaceUpdate": {
         "surfaceId": "feedback",
         "components": [
-            {"id": "root", "component": "Column", "children": ["card"]},
-            {"id": "card", "component": "Card", "title": "Quick feedback",
-             "children": ["name_field", "rating_picker", "submit_btn"]},
-            {"id": "name_field", "component": "TextField",
-             "label": "Your name", "value": {"path": "/name"},
-             "placeholder": "Type your name",
-             "checks": [
-                 {"condition": {"call": "required",
-                                "args": {"value": {"path": "/name"}}},
-                  "message": "Name is required"},
-             ]},
-            {"id": "rating_picker", "component": "ChoicePicker",
-             "label": "Rating", "options": ["1", "2", "3", "4", "5"],
-             "selected": {"path": "/rating"}},
-            {"id": "submit_btn", "component": "Button",
-             "label": "Submit feedback",
-             "checks": [
-                 {"condition": {"call": "required",
-                                "args": {"value": {"path": "/name"}}},
-                  "message": "Enter your name before submitting"},
-             ],
-             "action": {"event": {"name": "feedbackSubmit",
-                                  "context": {"surface": "feedback"}}}},
+            {"id": "card", "component": {"Card": {"child": "inner_col"}}},
+            {"id": "inner_col", "component": {"Column": {
+                "children": {"explicitList": ["name_field", "rating_picker", "submit_btn"]},
+            }}},
+            {"id": "name_field", "component": {"TextField": {
+                "label": {"literalString": "Your name"},
+                "text": {"path": "/name"},
+                "textFieldType": "shortText",
+            }}},
+            {"id": "rating_picker", "component": {"MultipleChoice": {
+                "label": {"literalString": "Rating"},
+                "selections": {"path": "/rating"},
+                "options": [
+                    {"label": {"literalString": "1"}, "value": "1"},
+                    {"label": {"literalString": "2"}, "value": "2"},
+                    {"label": {"literalString": "3"}, "value": "3"},
+                    {"label": {"literalString": "4"}, "value": "4"},
+                    {"label": {"literalString": "5"}, "value": "5"},
+                ],
+                "maxAllowedSelections": 1,
+            }}},
+            {"id": "submit_btn", "component": {"Button": {
+                "child": "submit_label",
+                "action": {"name": "feedbackSubmit"},
+            }}},
+            {"id": "submit_label", "component": {"Text": {
+                "text": {"literalString": "Submit feedback"},
+            }}},
         ],
+    }}),
+    json.dumps({"dataModelUpdate": {
+        "surfaceId": "feedback",
+        "contents": [
+            {"key": "name", "valueString": ""},
+            {"key": "rating", "valueString": "5"},
+        ],
+    }}),
+    json.dumps({"beginRendering": {
+        "surfaceId": "feedback",
+        "root": "card",
     }}),
 ]) + "\n"  # Trailing newline required — parser processes at \n boundaries
 

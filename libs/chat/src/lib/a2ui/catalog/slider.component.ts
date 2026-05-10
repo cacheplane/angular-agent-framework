@@ -1,13 +1,10 @@
 // SPDX-License-Identifier: MIT
 import { Component, input, ChangeDetectionStrategy } from '@angular/core';
-import type { A2uiValidationResult } from '@ngaf/a2ui';
-import { A2uiValidationErrorsComponent } from './validation-errors.component';
 import { emitBinding } from './emit-binding';
 
 @Component({
   selector: 'a2ui-slider',
   standalone: true,
-  imports: [A2uiValidationErrorsComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="flex flex-col gap-1">
@@ -17,14 +14,13 @@ import { emitBinding } from './emit-binding';
       <input
         [id]="_inputId"
         type="range"
-        [min]="min()"
-        [max]="max()"
+        [min]="minValue()"
+        [max]="maxValue()"
         [step]="step()"
         [value]="value()"
         class="w-full"
         (input)="onInput($event)"
       />
-      <a2ui-validation-errors [result]="validationResult()" />
     </div>
   `,
 })
@@ -33,11 +29,13 @@ export class A2uiSliderComponent {
   protected readonly _inputId = `a2ui-slider-${++A2uiSliderComponent._idCounter}`;
 
   readonly label = input<string>('');
+  /** v1 prop: value (resolved DynamicNumber). */
   readonly value = input<number>(0);
-  readonly min = input<number>(0);
-  readonly max = input<number>(100);
+  /** v1 prop: minValue. */
+  readonly minValue = input<number>(0);
+  /** v1 prop: maxValue. */
+  readonly maxValue = input<number>(100);
   readonly step = input<number>(1);
-  readonly validationResult = input<A2uiValidationResult>({ valid: true, errors: [] });
   readonly _bindings = input<Record<string, string>>({});
   readonly emit = input<(event: string) => void>(() => { /* noop */ });
 

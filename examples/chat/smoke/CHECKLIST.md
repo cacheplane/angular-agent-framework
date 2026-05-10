@@ -242,7 +242,7 @@ renders correctly both during streaming and after completion.
 - [ ] Pick a rating → ChoicePicker updates the data model
 - [ ] Click Submit → `<a2ui-surface>` emits an `A2uiActionMessage` (event name `feedbackSubmit`); chat round-trips it as a new user submit
 - [ ] AI replies conversationally referencing the submitted form (acknowledges receipt; may quote the name/rating)
-- [ ] Server-side: `curl localhost:2024/threads/<id>/state` shows: AI message with `tool_calls=[{ "name": "render_demo_form", ... }]`, ToolMessage with `content="rendered"`, AI message whose `content` starts with `---a2ui_JSON---\n`
+- [ ] Server-side: `curl localhost:2024/threads/<id>/state` shows: AI message with `tool_calls=[{ "name": "render_demo_form", ... }]`, ToolMessage with `content="rendered"`, AI message whose `content` starts with `---a2ui_JSON---\n` and contains `surfaceUpdate` + `beginRendering` envelopes (v1 wire format)
 - [ ] No console errors during the surface render or submit cycle
 
 ## Subagents

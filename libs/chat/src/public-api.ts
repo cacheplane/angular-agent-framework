@@ -145,14 +145,13 @@ export { A2uiSurfaceComponent } from './lib/a2ui/surface.component';
 export { surfaceToSpec } from './lib/a2ui/surface-to-spec';
 export { buildA2uiActionMessage } from './lib/a2ui/build-action-message';
 export { a2uiBasicCatalog } from './lib/a2ui/catalog/index';
-export { A2uiValidationErrorsComponent } from './lib/a2ui/catalog/validation-errors.component';
 export { emitBinding } from './lib/a2ui/catalog/emit-binding';
 
 // A2UI catalog components (for custom catalog composition via withViews)
 export { A2uiTextFieldComponent } from './lib/a2ui/catalog/text-field.component';
 export { A2uiCheckBoxComponent } from './lib/a2ui/catalog/check-box.component';
 export { A2uiButtonComponent } from './lib/a2ui/catalog/button.component';
-export { A2uiChoicePickerComponent } from './lib/a2ui/catalog/choice-picker.component';
+export { A2uiMultipleChoiceComponent } from './lib/a2ui/catalog/multiple-choice.component';
 export { A2uiSliderComponent } from './lib/a2ui/catalog/slider.component';
 export { A2uiDateTimeInputComponent } from './lib/a2ui/catalog/date-time-input.component';
 export { A2uiTextComponent } from './lib/a2ui/catalog/text.component';
@@ -172,11 +171,11 @@ export { A2uiVideoComponent } from './lib/a2ui/catalog/video.component';
 export type {
   A2uiActionMessage, A2uiClientDataModel,
   A2uiSurface, A2uiComponent, A2uiTheme,
-  DynamicValue, DynamicString, DynamicNumber, DynamicBoolean,
-  A2uiPathRef, A2uiFunctionCall,
-  A2uiCheckRule, A2uiValidationResult,
+  DynamicString, DynamicNumber, DynamicBoolean,
+  A2uiChildren, A2uiAction, A2uiActionContextEntry,
+  A2uiComponentDef,
 } from '@ngaf/a2ui';
-export { isPathRef, isFunctionCall } from '@ngaf/a2ui';
+export { isPathRef, isLiteralString, isLiteralNumber, isLiteralBoolean } from '@ngaf/a2ui';
 
 // Test utilities (no vitest dep — safe to ship in the main runtime bundle)
 export { mockAgent } from './lib/testing/mock-agent';

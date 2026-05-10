@@ -178,29 +178,35 @@ describe('ContentClassifier', () => {
     });
   });
 
-  describe('a2ui JSONL parsing', () => {
-    it('parses A2UI messages and exposes surfaces', () => {
+  describe('a2ui JSONL parsing (v1)', () => {
+    it('parses A2UI v1 messages and exposes surfaces after beginRendering', () => {
       const c = setup();
       c.update(
         '---a2ui_JSON---' +
-        '{"version":"v0.9","createSurface":{"surfaceId":"s1","catalogId":"basic"}}\n' +
-        '{"version":"v0.9","updateComponents":{"surfaceId":"s1","components":[{"id":"root","component":"Text","text":"Hi"}]}}\n'
+        JSON.stringify({ surfaceUpdate: { surfaceId: 's1', components: [
+          { id: 'root', component: { Text: { text: { literalString: 'Hi' } } } },
+        ] } }) + '\n' +
+        JSON.stringify({ beginRendering: { surfaceId: 's1', root: 'root' } }) + '\n'
       );
       expect(c.type()).toBe('a2ui');
       expect(c.a2uiSurfaces().size).toBe(1);
-      expect(c.a2uiSurfaces().get('s1')!.components.get('root')!.component).toBe('Text');
+      const comp = c.a2uiSurfaces().get('s1')!.components.get('root')!;
+      expect('Text' in comp.component).toBe(true);
     });
 
-    it('accumulates A2UI messages across updates', () => {
+    it('accumulates A2UI v1 messages across updates', () => {
       const c = setup();
-      c.update('---a2ui_JSON---{"version":"v0.9","createSurface":{"surfaceId":"s1","catalogId":"basic"}}\n');
-      expect(c.a2uiSurfaces().size).toBe(1);
-
+      // First update: surfaceUpdate + dataModelUpdate (no beginRendering yet — surface not visible)
       c.update(
-        '---a2ui_JSON---{"version":"v0.9","createSurface":{"surfaceId":"s1","catalogId":"basic"}}\n' +
-        '{"version":"v0.9","updateDataModel":{"surfaceId":"s1","path":"/name","value":"Alice"}}\n'
+        '---a2ui_JSON---' +
+        JSON.stringify({ surfaceUpdate: { surfaceId: 's1', components: [
+          { id: 'root', component: { Text: { text: { path: '/name' } } } },
+        ] } }) + '\n' +
+        JSON.stringify({ dataModelUpdate: { surfaceId: 's1', contents: [{ key: 'name', valueString: 'Alice' }] } }) + '\n' +
+        JSON.stringify({ beginRendering: { surfaceId: 's1', root: 'root' } }) + '\n'
       );
-      expect((c.a2uiSurfaces().get('s1')!.dataModel as any).name).toBe('Alice');
+      expect(c.a2uiSurfaces().size).toBe(1);
+      expect((c.a2uiSurfaces().get('s1')!.dataModel as Record<string, unknown>)['name']).toBe('Alice');
     });
   });
 

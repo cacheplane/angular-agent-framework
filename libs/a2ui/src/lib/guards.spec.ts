@@ -1,39 +1,33 @@
 // SPDX-License-Identifier: MIT
-import { describe, it, expect } from 'vitest';
-import { isPathRef, isFunctionCall } from './guards';
+import { describe, expect, test } from 'vitest';
+import { isPathRef, isLiteralString, isLiteralNumber, isLiteralBoolean } from './guards';
 
-describe('isPathRef', () => {
-  it('returns true for a path reference object', () => {
-    expect(isPathRef({ path: '/name' })).toBe(true);
-  });
-
-  it('returns false for a function call (has call property)', () => {
-    expect(isPathRef({ path: '/name', call: 'format', args: {} })).toBe(false);
-  });
-
-  it('returns false for null', () => {
+describe('a2ui v1 guards', () => {
+  test('isPathRef', () => {
+    expect(isPathRef({ path: '/x' })).toBe(true);
+    expect(isPathRef({ literalString: 'x' })).toBe(false);
     expect(isPathRef(null)).toBe(false);
-  });
-
-  it('returns false for a string', () => {
-    expect(isPathRef('hello')).toBe(false);
-  });
-
-  it('returns false for a number', () => {
+    expect(isPathRef('string')).toBe(false);
     expect(isPathRef(42)).toBe(false);
   });
-});
 
-describe('isFunctionCall', () => {
-  it('returns true for a function call object', () => {
-    expect(isFunctionCall({ call: 'format', args: { value: 1 } })).toBe(true);
+  test('isLiteralString', () => {
+    expect(isLiteralString({ literalString: 'x' })).toBe(true);
+    expect(isLiteralString({ path: '/x' })).toBe(false);
+    expect(isLiteralString(null)).toBe(false);
+    expect(isLiteralString('x')).toBe(false);
   });
 
-  it('returns false for a path reference', () => {
-    expect(isFunctionCall({ path: '/name' })).toBe(false);
+  test('isLiteralNumber', () => {
+    expect(isLiteralNumber({ literalNumber: 7 })).toBe(true);
+    expect(isLiteralNumber({ path: '/n' })).toBe(false);
+    expect(isLiteralNumber(null)).toBe(false);
   });
 
-  it('returns false for null', () => {
-    expect(isFunctionCall(null)).toBe(false);
+  test('isLiteralBoolean', () => {
+    expect(isLiteralBoolean({ literalBoolean: true })).toBe(true);
+    expect(isLiteralBoolean({ literalBoolean: false })).toBe(true);
+    expect(isLiteralBoolean({ path: '/b' })).toBe(false);
+    expect(isLiteralBoolean(null)).toBe(false);
   });
 });

@@ -1,7 +1,18 @@
 // SPDX-License-Identifier: MIT
 import { computed, signal, type Signal } from '@angular/core';
-import type { A2uiMessage, A2uiSurface } from '@ngaf/a2ui';
-import { setByPointer, deleteByPointer } from '@ngaf/a2ui';
+import type {
+  A2uiMessage, A2uiSurface, A2uiComponent,
+  A2uiSurfaceUpdate, A2uiDataModelUpdate, A2uiBeginRendering, A2uiDeleteSurface,
+  A2uiDataModelEntry,
+} from '@ngaf/a2ui';
+import { setByPointer } from '@ngaf/a2ui';
+
+interface SurfaceBuffer {
+  /** Pending component map (replaces on next beginRendering). */
+  components?: Map<string, A2uiComponent>;
+  /** Pending data model deltas accumulated since last beginRendering. */
+  dataModelDeltas: { path?: string; contents: A2uiDataModelEntry[] }[];
+}
 
 export interface A2uiSurfaceStore {
   apply(message: A2uiMessage): void;
@@ -9,60 +20,101 @@ export interface A2uiSurfaceStore {
   surface(surfaceId: string): Signal<A2uiSurface | undefined>;
 }
 
+function entriesToObject(entries: A2uiDataModelEntry[]): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  for (const e of entries) {
+    if ('valueString' in e && e.valueString !== undefined) out[e.key] = e.valueString;
+    else if ('valueNumber' in e && e.valueNumber !== undefined) out[e.key] = e.valueNumber;
+    else if ('valueBoolean' in e && e.valueBoolean !== undefined) out[e.key] = e.valueBoolean;
+    else if ('valueMap' in e && Array.isArray(e.valueMap)) out[e.key] = entriesToObject(e.valueMap);
+  }
+  return out;
+}
+
 export function createA2uiSurfaceStore(): A2uiSurfaceStore {
   const surfacesSignal = signal<Map<string, A2uiSurface>>(new Map());
+  const buffers = new Map<string, SurfaceBuffer>();
+
+  function bufferOf(surfaceId: string): SurfaceBuffer {
+    let b = buffers.get(surfaceId);
+    if (!b) { b = { dataModelDeltas: [] }; buffers.set(surfaceId, b); }
+    return b;
+  }
 
   function apply(message: A2uiMessage): void {
-    const current = surfacesSignal();
-
-    switch (message.type) {
-      case 'createSurface': {
-        const next = new Map(current);
-        next.set(message.surfaceId, {
-          surfaceId: message.surfaceId,
-          catalogId: message.catalogId,
-          theme: message.theme,
-          sendDataModel: message.sendDataModel,
-          components: new Map(),
-          dataModel: {},
-        });
-        surfacesSignal.set(next);
-        break;
-      }
-      case 'updateComponents': {
-        const surface = current.get(message.surfaceId);
-        if (!surface) return;
-        const components = new Map(surface.components);
-        for (const comp of message.components) {
-          components.set(comp.id, comp);
-        }
-        const next = new Map(current);
-        next.set(message.surfaceId, { ...surface, components });
-        surfacesSignal.set(next);
-        break;
-      }
-      case 'updateDataModel': {
-        const surface = current.get(message.surfaceId);
-        if (!surface) return;
-        let dataModel: Record<string, unknown>;
-        if (message.path === undefined || message.path === '/') {
-          dataModel = (message.value as Record<string, unknown>) ?? {};
-        } else if (message.value === undefined) {
-          dataModel = deleteByPointer(surface.dataModel, message.path);
+    if ('surfaceUpdate' in message) {
+      const upd = message.surfaceUpdate as A2uiSurfaceUpdate;
+      const b = bufferOf(upd.surfaceId);
+      const map = new Map<string, A2uiComponent>();
+      for (const c of upd.components) map.set(c.id, c);
+      b.components = map;
+      return;
+    }
+    if ('dataModelUpdate' in message) {
+      const upd = message.dataModelUpdate as A2uiDataModelUpdate;
+      const surface = surfacesSignal().get(upd.surfaceId);
+      if (surface) {
+        // Already-rendered surface: apply incrementally.
+        let dataModel = surface.dataModel;
+        const obj = entriesToObject(upd.contents);
+        if (upd.path && upd.path !== '/') {
+          for (const [k, v] of Object.entries(obj)) {
+            dataModel = setByPointer(dataModel, `${upd.path}/${k}`, v);
+          }
         } else {
-          dataModel = setByPointer(surface.dataModel, message.path, message.value);
+          dataModel = { ...dataModel, ...obj };
         }
-        const next = new Map(current);
-        next.set(message.surfaceId, { ...surface, dataModel });
+        const next = new Map(surfacesSignal());
+        next.set(upd.surfaceId, { ...surface, dataModel });
         surfacesSignal.set(next);
-        break;
+      } else {
+        // Pre-render: buffer the delta.
+        const b = bufferOf(upd.surfaceId);
+        b.dataModelDeltas.push({ path: upd.path, contents: upd.contents });
       }
-      case 'deleteSurface': {
-        const next = new Map(current);
-        next.delete(message.surfaceId);
-        surfacesSignal.set(next);
-        break;
+      return;
+    }
+    if ('beginRendering' in message) {
+      const begin = message.beginRendering as A2uiBeginRendering;
+      const b = buffers.get(begin.surfaceId);
+      if (!b || !b.components) return; // no surfaceUpdate yet — no-op
+      // Build initial data model from buffered deltas.
+      let dataModel: Record<string, unknown> = {};
+      for (const d of b.dataModelDeltas) {
+        const obj = entriesToObject(d.contents);
+        if (d.path && d.path !== '/') {
+          for (const [k, v] of Object.entries(obj)) {
+            dataModel = setByPointer(dataModel, `${d.path}/${k}`, v);
+          }
+        } else {
+          dataModel = { ...dataModel, ...obj };
+        }
       }
+      // Merge with any existing surface's dataModel if this is a re-render.
+      const existing = surfacesSignal().get(begin.surfaceId);
+      if (existing) {
+        dataModel = { ...existing.dataModel, ...dataModel };
+      }
+      const surface: A2uiSurface = {
+        surfaceId: begin.surfaceId,
+        catalogId: 'basic',
+        components: b.components,
+        dataModel,
+      };
+      const next = new Map(surfacesSignal());
+      next.set(begin.surfaceId, surface);
+      surfacesSignal.set(next);
+      // Reset buffer so subsequent surfaceUpdate is the next round.
+      buffers.set(begin.surfaceId, { dataModelDeltas: [] });
+      return;
+    }
+    if ('deleteSurface' in message) {
+      const del = message.deleteSurface as A2uiDeleteSurface;
+      buffers.delete(del.surfaceId);
+      const next = new Map(surfacesSignal());
+      next.delete(del.surfaceId);
+      surfacesSignal.set(next);
+      return;
     }
   }
 
@@ -70,9 +122,5 @@ export function createA2uiSurfaceStore(): A2uiSurfaceStore {
     return computed(() => surfacesSignal().get(surfaceId));
   }
 
-  return {
-    apply,
-    surfaces: surfacesSignal.asReadonly(),
-    surface,
-  };
+  return { apply, surfaces: surfacesSignal.asReadonly(), surface };
 }

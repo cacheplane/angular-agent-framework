@@ -2,15 +2,14 @@
 import { describe, it, expect, vi } from 'vitest';
 import { emitBinding } from './emit-binding';
 
-describe('A2uiSliderComponent — onInput logic', () => {
+describe('A2uiSliderComponent — v1 protocol', () => {
   // NOTE: Angular signal-based inputs can't be tested via TestBed without the
-  // angular() vite plugin (NG0303). These tests verify the behavioral contract
-  // of onInput: extract value from range input, coerce to Number, emit binding.
+  // angular() vite plugin (NG0303). v1: min/max renamed to minValue/maxValue;
+  // validationResult was removed.
 
   it('emits binding with numeric value from range input', () => {
     const emit = vi.fn();
     const bindings = { value: '/rating' };
-    // Mirrors onInput: const val = Number((event.target as HTMLInputElement).value);
     const event = { target: { value: '75' } } as unknown as Event;
     const val = Number((event.target as HTMLInputElement).value);
     emitBinding(emit, bindings, 'value', val);
@@ -18,7 +17,6 @@ describe('A2uiSliderComponent — onInput logic', () => {
   });
 
   it('coerces string range value to number', () => {
-    // Slider's onInput uses Number() to coerce — verify the coercion
     const event = { target: { value: '42.5' } } as unknown as Event;
     const val = Number((event.target as HTMLInputElement).value);
     expect(val).toBe(42.5);
