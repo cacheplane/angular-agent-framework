@@ -231,6 +231,15 @@ export interface A2uiSurface {
   sendDataModel?: boolean;
   components: Map<string, A2uiComponent>;
   dataModel: Record<string, unknown>;
+  /** Styles set by the agent via `beginRendering.styles`. The
+   * canonical v1 spec defines exactly two fields: `font` (primary
+   * font for the UI) and `primaryColor` (hex `#RRGGBB`). The renderer
+   * applies these as CSS custom properties on the surface root,
+   * overriding any consumer-set defaults for the duration of the
+   * surface's life. Anything richer (typography scale, spacing,
+   * elevation, etc.) is the renderer's private vocabulary and not
+   * communicated through this field. */
+  styles?: { font?: string; primaryColor?: string };
 }
 
 // --- Outbound shapes ---

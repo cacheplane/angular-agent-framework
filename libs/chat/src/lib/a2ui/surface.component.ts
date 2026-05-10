@@ -13,6 +13,14 @@ import { buildA2uiActionMessage } from './build-action-message';
   standalone: true,
   imports: [RenderSpecComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  // The host applies the agent-set v1 styles (`beginRendering.styles`)
+  // as inline CSS custom properties + font-family. Catalog components
+  // consume `--a2ui-primary` for accents (buttons, sliders, focus,
+  // etc.); `font-family` cascades naturally from the host.
+  host: {
+    '[style.--a2ui-primary]': 'primaryColor()',
+    '[style.font-family]': 'fontFamily()',
+  },
   template: `
     @if (spec(); as s) {
       <render-spec
@@ -30,6 +38,19 @@ export class A2uiSurfaceComponent {
   readonly handlers = input<Record<string, (params: Record<string, unknown>) => unknown | Promise<unknown>>>({});
   readonly events = output<RenderEvent>();
   readonly action = output<A2uiActionMessage>();
+
+  /** Agent-set primary color from `beginRendering.styles.primaryColor`.
+   * Returns null when unset so the host binding doesn't override the
+   * consumer's `:root`-level `--a2ui-primary` default. */
+  readonly primaryColor = computed<string | null>(() =>
+    this.surface().styles?.primaryColor ?? null
+  );
+
+  /** Agent-set font family from `beginRendering.styles.font`. Returns
+   * null when unset so the host doesn't override consumer fonts. */
+  readonly fontFamily = computed<string | null>(() =>
+    this.surface().styles?.font ?? null
+  );
 
   /** Convert the A2UI surface to a json-render Spec for rendering. */
   readonly spec = computed(() => surfaceToSpec(this.surface()));
