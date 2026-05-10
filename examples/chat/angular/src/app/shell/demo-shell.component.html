@@ -12,14 +12,28 @@
     [theme]="theme()"
     [themeOptions]="themeOptions()"
     [debugOpen]="debugOpen()"
+    [threadsOpen]="threadsOpen()"
     (modeChange)="onModeChange($event)"
     (modelChange)="onModelChange($event)"
     (effortChange)="onEffortChange($event)"
     (genUiModeChange)="onGenUiModeChange($event)"
     (themeChange)="onThemeChange($event)"
     (debugOpenChange)="onDebugChange($event)"
+    (threadsOpenChange)="onThreadsChange($event)"
     (newConversation)="onNewConversation()"
   />
+
+  @if (threadsOpen()) {
+    <div class="demo-shell__threads-panel" role="region" aria-label="Conversation threads">
+      <chat-thread-list
+        [threads]="threadsSvc.threads()"
+        [activeThreadId]="threadIdSignal() ?? ''"
+        [showNewThreadButton]="true"
+        (threadSelected)="onThreadSelected($event)"
+        (newThreadRequested)="onNewThread()"
+      />
+    </div>
+  }
 
   @if (agent.interrupt && agent.interrupt()) {
     <div class="demo-shell__interrupt-panel" role="region" aria-label="Approval required">

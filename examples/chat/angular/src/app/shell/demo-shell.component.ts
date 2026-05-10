@@ -11,9 +11,10 @@ import { Router, RouterOutlet, NavigationEnd } from '@angular/router';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { filter, map, startWith } from 'rxjs/operators';
 import { agent } from '@ngaf/langgraph';
-import { ChatDebugComponent, ChatInterruptPanelComponent, ChatSubagentsComponent, type InterruptAction } from '@ngaf/chat';
+import { ChatDebugComponent, ChatInterruptPanelComponent, ChatSubagentsComponent, ChatThreadListComponent, type InterruptAction } from '@ngaf/chat';
 import { ControlPalette } from './control-palette.component';
 import { PalettePersistence } from './palette-persistence.service';
+import { ThreadsService } from './threads.service';
 import { DEMO_AGENT } from './shell-tokens';
 
 export type DemoMode = 'embed' | 'popup' | 'sidebar';
@@ -28,7 +29,7 @@ function modeFromUrl(url: string): DemoMode {
 @Component({
   selector: 'demo-shell',
   standalone: true,
-  imports: [RouterOutlet, ControlPalette, ChatDebugComponent, ChatInterruptPanelComponent, ChatSubagentsComponent],
+  imports: [RouterOutlet, ControlPalette, ChatDebugComponent, ChatInterruptPanelComponent, ChatSubagentsComponent, ChatThreadListComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './demo-shell.component.html',
   styleUrl: './demo-shell.component.css',
@@ -40,6 +41,7 @@ export class DemoShell {
   private readonly router = inject(Router);
   private readonly persistence = inject(PalettePersistence);
   private readonly document = inject(DOCUMENT);
+  protected readonly threadsSvc = inject(ThreadsService);
 
   constructor() {
     // Reflect the chosen theme onto <html data-theme="..."> so the
@@ -47,6 +49,14 @@ export class DemoShell {
     // signal change including initial mount (read from persistence).
     effect(() => {
       this.document.documentElement.setAttribute('data-theme', this.theme());
+    });
+
+    // Refresh threads list whenever the active thread changes (e.g. after
+    // create or switch) so the panel stays up to date. The effect also
+    // covers the initial load (fires synchronously on first reactive read).
+    effect(() => {
+      void this.threadIdSignal();
+      void this.threadsSvc.refresh();
     });
   }
 
@@ -111,7 +121,10 @@ export class DemoShell {
   ]);
 
   /** Persisted thread id (null on first run). Reactive so reload reconnects to the same thread. */
-  private readonly threadIdSignal = signal<string | null>(this.persistence.read('threadId') ?? null);
+  protected readonly threadIdSignal = signal<string | null>(this.persistence.read('threadId') ?? null);
+
+  /** Whether the threads panel is open. Persisted across reloads. */
+  protected readonly threadsOpen = signal<boolean>(this.persistence.read('threads') ?? false);
 
   /**
    * Shared agent instance. Patched submit injects state.model on every
@@ -179,6 +192,26 @@ export class DemoShell {
   protected onDebugChange(next: boolean): void {
     this.debugOpen.set(next);
     this.persistence.write('debug', next);
+  }
+
+  protected onThreadsChange(next: boolean): void {
+    this.threadsOpen.set(next);
+    this.persistence.write('threads', next);
+  }
+
+  /** Switch to an existing thread selected from the threads panel. */
+  protected onThreadSelected(threadId: string): void {
+    this.threadIdSignal.set(threadId);
+    this.persistence.write('threadId', threadId);
+  }
+
+  /** Create a new thread via the backend and switch to it. */
+  protected async onNewThread(): Promise<void> {
+    const id = await this.threadsSvc.create();
+    if (id) {
+      this.threadIdSignal.set(id);
+      this.persistence.write('threadId', id);
+    }
   }
 
   /**
