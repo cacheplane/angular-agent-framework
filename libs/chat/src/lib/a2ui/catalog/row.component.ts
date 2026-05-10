@@ -24,6 +24,10 @@ export class A2uiRowComponent {
   readonly gap = input<number>(3);
   readonly alignment = input<RowAlignment>('start');
   readonly distribution = input<RowDistribution>('start');
+  // Framework inputs required by the render harness.
+  readonly bindings = input<Record<string, string>>({});
+  readonly emit = input<(event: string) => void>(() => { /* noop */ });
+  readonly loading = input<boolean>(false);
 
   protected readonly rowClass = computed(() => {
     const alignMap: Record<RowAlignment, string> = {

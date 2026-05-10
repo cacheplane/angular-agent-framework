@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 import { Component, computed, input, ChangeDetectionStrategy } from '@angular/core';
+import type { Spec } from '@json-render/core';
 import { emitBinding } from './emit-binding';
 
 /** v1 textFieldType values from A2uiTextField. */
@@ -66,6 +67,11 @@ export class A2uiTextFieldComponent {
   readonly validationRegexp = input<string>('');
   readonly _bindings = input<Record<string, string>>({});
   readonly emit = input<(event: string) => void>(() => { /* noop */ });
+  // Framework inputs required by the render harness.
+  readonly bindings = input<Record<string, string>>({});
+  readonly loading = input<boolean>(false);
+  readonly childKeys = input<string[]>([]);
+  readonly spec = input<Spec | undefined>(undefined);
 
   protected readonly htmlInputType = computed(() =>
     TYPE_MAP[this.textFieldType()] ?? 'text',

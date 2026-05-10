@@ -89,34 +89,39 @@ def test_state_graph_topology_unchanged_after_research():
     assert "attach_citations" in nodes
 
 
+
 @pytest.mark.smoke
-def test_render_demo_form_tool_exists():
-    from src.graph import render_demo_form
-    assert render_demo_form is not None
-    # @tool decorator gives the resulting object a `.name` attribute
-    assert render_demo_form.name == "render_demo_form"
+def test_genui_tools_exist():
+    from src.graph import generate_a2ui_schema, generate_json_render_spec
+    assert generate_a2ui_schema.name == "generate_a2ui_schema"
+    assert generate_json_render_spec.name == "generate_json_render_spec"
 
 
 @pytest.mark.smoke
-def test_state_graph_includes_emit_a2ui_surface_node():
+def test_state_graph_has_emit_generated_surface_node():
     from src.graph import graph
     nodes = set(graph.get_graph().nodes.keys())
-    assert "emit_a2ui_surface" in nodes
-    assert "attach_citations" in nodes
+    assert "emit_generated_surface" in nodes
     assert "tools" in nodes
-    assert "generate" in nodes
+    assert "attach_citations" in nodes
 
 
 @pytest.mark.smoke
-def test_a2ui_jsonl_starts_with_prefix_and_parses():
-    import json
-    from src.graph import A2UI_PREFIX, FEEDBACK_FORM_JSONL
-    assert A2UI_PREFIX == "---a2ui_JSON---", \
-        "Prefix must match the chat content-classifier sentinel"
-    full = A2UI_PREFIX + "\n" + FEEDBACK_FORM_JSONL
-    lines = [ln for ln in full.split("\n") if ln.strip() and ln != A2UI_PREFIX]
-    parsed = [json.loads(ln) for ln in lines]
-    assert any("surfaceUpdate" in m for m in parsed), \
-        "JSONL must include a surfaceUpdate envelope"
-    assert any("beginRendering" in m for m in parsed), \
-        "JSONL must include a beginRendering envelope"
+def test_state_includes_gen_ui_mode_channel():
+    from src.graph import State
+    annotations = State.__annotations__
+    assert "gen_ui_mode" in annotations, \
+        "State must have a gen_ui_mode channel (Phase 5)"
+
+
+@pytest.mark.smoke
+def test_phase4_artifacts_removed():
+    """Phase 5 removes Phase 4's hardcoded path entirely."""
+    import importlib
+    mod = importlib.import_module("src.graph")
+    assert not hasattr(mod, "render_demo_form"), \
+        "render_demo_form tool should be removed in Phase 5"
+    assert not hasattr(mod, "FEEDBACK_FORM_JSONL"), \
+        "FEEDBACK_FORM_JSONL constant should be removed in Phase 5"
+    assert not hasattr(mod, "emit_a2ui_surface"), \
+        "emit_a2ui_surface node should be replaced by emit_generated_surface"

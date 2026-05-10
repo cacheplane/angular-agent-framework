@@ -7,10 +7,13 @@
     [modelOptions]="modelOptions()"
     [effort]="effort()"
     [effortOptions]="effortOptions()"
+    [genUiMode]="genUiMode()"
+    [genUiOptions]="genUiOptions()"
     [debugOpen]="debugOpen()"
     (modeChange)="onModeChange($event)"
     (modelChange)="onModelChange($event)"
     (effortChange)="onEffortChange($event)"
+    (genUiModeChange)="onGenUiModeChange($event)"
     (debugOpenChange)="onDebugChange($event)"
     (newConversation)="onNewConversation()"
   />

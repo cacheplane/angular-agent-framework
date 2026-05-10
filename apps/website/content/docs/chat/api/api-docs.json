@@ -13,8 +13,38 @@
         "optional": false
       },
       {
+        "name": "bindings",
+        "type": "InputSignal<Record<string, string>>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "childKeys",
+        "type": "InputSignal<string[]>",
+        "description": "",
+        "optional": false
+      },
+      {
         "name": "controls",
         "type": "InputSignal<boolean>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "emit",
+        "type": "InputSignal<object>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "loading",
+        "type": "InputSignal<boolean>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "spec",
+        "type": "InputSignal<Spec | undefined>",
         "description": "",
         "optional": false
       },
@@ -35,6 +65,12 @@
     "examples": [],
     "properties": [
       {
+        "name": "bindings",
+        "type": "InputSignal<Record<string, string>>",
+        "description": "",
+        "optional": false
+      },
+      {
         "name": "childKeys",
         "type": "InputSignal<string[]>",
         "description": "v1: child Text component is rendered inside the button via childKeys.",
@@ -49,6 +85,12 @@
       {
         "name": "emit",
         "type": "InputSignal<object>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "loading",
+        "type": "InputSignal<boolean>",
         "description": "",
         "optional": false
       },
@@ -82,9 +124,27 @@
     "examples": [],
     "properties": [
       {
+        "name": "bindings",
+        "type": "InputSignal<Record<string, string>>",
+        "description": "",
+        "optional": false
+      },
+      {
         "name": "childKeys",
         "type": "InputSignal<string[]>",
         "description": "v1: a single child key, delivered via childKeys[0] from the render framework.",
+        "optional": false
+      },
+      {
+        "name": "emit",
+        "type": "InputSignal<object>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "loading",
+        "type": "InputSignal<boolean>",
+        "description": "",
         "optional": false
       },
       {
@@ -110,8 +170,20 @@
         "optional": false
       },
       {
+        "name": "bindings",
+        "type": "InputSignal<Record<string, string>>",
+        "description": "",
+        "optional": false
+      },
+      {
         "name": "checked",
         "type": "InputSignal<boolean>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "childKeys",
+        "type": "InputSignal<string[]>",
         "description": "",
         "optional": false
       },
@@ -124,6 +196,18 @@
       {
         "name": "label",
         "type": "InputSignal<string>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "loading",
+        "type": "InputSignal<boolean>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "spec",
+        "type": "InputSignal<Spec | undefined>",
         "description": "",
         "optional": false
       }
@@ -158,6 +242,12 @@
         "optional": false
       },
       {
+        "name": "bindings",
+        "type": "InputSignal<Record<string, string>>",
+        "description": "",
+        "optional": false
+      },
+      {
         "name": "childKeys",
         "type": "InputSignal<string[]>",
         "description": "",
@@ -170,8 +260,26 @@
         "optional": false
       },
       {
+        "name": "distribution",
+        "type": "InputSignal<\"center\" | \"start\" | \"end\" | \"spaceBetween\" | \"spaceAround\" | \"spaceEvenly\">",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "emit",
+        "type": "InputSignal<object>",
+        "description": "",
+        "optional": false
+      },
+      {
         "name": "gap",
         "type": "InputSignal<number>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "loading",
+        "type": "InputSignal<boolean>",
         "description": "",
         "optional": false
       },
@@ -200,6 +308,18 @@
       {
         "name": "_inputId",
         "type": "string",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "bindings",
+        "type": "InputSignal<Record<string, string>>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "childKeys",
+        "type": "InputSignal<string[]>",
         "description": "",
         "optional": false
       },
@@ -234,6 +354,18 @@
         "optional": false
       },
       {
+        "name": "loading",
+        "type": "InputSignal<boolean>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "spec",
+        "type": "InputSignal<Spec | undefined>",
+        "description": "",
+        "optional": false
+      },
+      {
         "name": "value",
         "type": "InputSignal<string>",
         "description": "v1 prop: value (resolved DynamicString).",
@@ -264,8 +396,50 @@
     "examples": [],
     "properties": [
       {
+        "name": "axis",
+        "type": "InputSignal<\"horizontal\" | \"vertical\" | undefined>",
+        "description": "Canonical v1 spec name. The LLM emits this.",
+        "optional": false
+      },
+      {
+        "name": "bindings",
+        "type": "InputSignal<Record<string, string>>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "childKeys",
+        "type": "InputSignal<string[]>",
+        "description": "",
+        "optional": false
+      },
+      {
         "name": "direction",
         "type": "InputSignal<\"horizontal\" | \"vertical\">",
+        "description": "Older alias retained for json-render usage and back-compat.",
+        "optional": false
+      },
+      {
+        "name": "emit",
+        "type": "InputSignal<object>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "loading",
+        "type": "InputSignal<boolean>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "orientation",
+        "type": "Signal<\"horizontal\" | \"vertical\">",
+        "description": "Effective axis — `axis` wins if provided, otherwise fall back to `direction`.",
+        "optional": false
+      },
+      {
+        "name": "spec",
+        "type": "InputSignal<Spec | undefined>",
         "description": "",
         "optional": false
       }
@@ -280,14 +454,44 @@
     "examples": [],
     "properties": [
       {
+        "name": "bindings",
+        "type": "InputSignal<Record<string, string>>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "childKeys",
+        "type": "InputSignal<string[]>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "emit",
+        "type": "InputSignal<object>",
+        "description": "",
+        "optional": false
+      },
+      {
         "name": "icon",
         "type": "InputSignal<string>",
         "description": "v1 prop name: icon (resolved string, e.g. a Unicode symbol or ligature name).",
         "optional": false
       },
       {
+        "name": "loading",
+        "type": "InputSignal<boolean>",
+        "description": "",
+        "optional": false
+      },
+      {
         "name": "size",
         "type": "InputSignal<number | null>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "spec",
+        "type": "InputSignal<Spec | undefined>",
         "description": "",
         "optional": false
       }
@@ -308,8 +512,38 @@
         "optional": false
       },
       {
+        "name": "bindings",
+        "type": "InputSignal<Record<string, string>>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "childKeys",
+        "type": "InputSignal<string[]>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "emit",
+        "type": "InputSignal<object>",
+        "description": "",
+        "optional": false
+      },
+      {
         "name": "height",
         "type": "InputSignal<number | null>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "loading",
+        "type": "InputSignal<boolean>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "spec",
+        "type": "InputSignal<Spec | undefined>",
         "description": "",
         "optional": false
       },
@@ -336,6 +570,12 @@
     "examples": [],
     "properties": [
       {
+        "name": "bindings",
+        "type": "InputSignal<Record<string, string>>",
+        "description": "",
+        "optional": false
+      },
+      {
         "name": "childKeys",
         "type": "InputSignal<string[]>",
         "description": "",
@@ -348,8 +588,20 @@
         "optional": false
       },
       {
+        "name": "emit",
+        "type": "InputSignal<object>",
+        "description": "",
+        "optional": false
+      },
+      {
         "name": "listClass",
         "type": "Signal<\"flex flex-row gap-1 overflow-x-auto\" | \"flex flex-col gap-1 overflow-y-auto max-h-96\">",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "loading",
+        "type": "InputSignal<boolean>",
         "description": "",
         "optional": false
       },
@@ -370,6 +622,12 @@
     "examples": [],
     "properties": [
       {
+        "name": "bindings",
+        "type": "InputSignal<Record<string, string>>",
+        "description": "",
+        "optional": false
+      },
+      {
         "name": "childKeys",
         "type": "InputSignal<string[]>",
         "description": "v1: childKeys[0] = entryPointChild (inline trigger),\n    childKeys[1] = contentChild (modal body).",
@@ -382,8 +640,20 @@
         "optional": false
       },
       {
+        "name": "emit",
+        "type": "InputSignal<object>",
+        "description": "",
+        "optional": false
+      },
+      {
         "name": "entryPointKey",
         "type": "Signal<string>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "loading",
+        "type": "InputSignal<boolean>",
         "description": "",
         "optional": false
       },
@@ -422,6 +692,18 @@
         "optional": false
       },
       {
+        "name": "bindings",
+        "type": "InputSignal<Record<string, string>>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "childKeys",
+        "type": "InputSignal<string[]>",
+        "description": "",
+        "optional": false
+      },
+      {
         "name": "emit",
         "type": "InputSignal<object>",
         "description": "",
@@ -440,6 +722,12 @@
         "optional": false
       },
       {
+        "name": "loading",
+        "type": "InputSignal<boolean>",
+        "description": "",
+        "optional": false
+      },
+      {
         "name": "maxAllowedSelections",
         "type": "InputSignal<number>",
         "description": "When ≤ 1 — render as single-select <select>; otherwise multi-select checkboxes.",
@@ -453,8 +741,20 @@
       },
       {
         "name": "selections",
-        "type": "InputSignal<string[]>",
-        "description": "Resolved current selections (plain string array from surface-to-spec).",
+        "type": "InputSignal<string | string[] | undefined>",
+        "description": "Resolved current selections from surface-to-spec. Normalized in\n`selectionsArray` because LLMs sometimes seed the data model with a\nscalar (e.g. `\"5\"`) instead of an array (`[\"5\"]`); we coerce so\n.includes() works either way.",
+        "optional": false
+      },
+      {
+        "name": "selectionsArray",
+        "type": "Signal<string[]>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "spec",
+        "type": "InputSignal<Spec | undefined>",
+        "description": "",
         "optional": false
       }
     ],
@@ -520,6 +820,12 @@
         "optional": false
       },
       {
+        "name": "bindings",
+        "type": "InputSignal<Record<string, string>>",
+        "description": "",
+        "optional": false
+      },
+      {
         "name": "childKeys",
         "type": "InputSignal<string[]>",
         "description": "",
@@ -532,8 +838,20 @@
         "optional": false
       },
       {
+        "name": "emit",
+        "type": "InputSignal<object>",
+        "description": "",
+        "optional": false
+      },
+      {
         "name": "gap",
         "type": "InputSignal<number>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "loading",
+        "type": "InputSignal<boolean>",
         "description": "",
         "optional": false
       },
@@ -572,6 +890,18 @@
         "optional": false
       },
       {
+        "name": "bindings",
+        "type": "InputSignal<Record<string, string>>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "childKeys",
+        "type": "InputSignal<string[]>",
+        "description": "",
+        "optional": false
+      },
+      {
         "name": "emit",
         "type": "InputSignal<object>",
         "description": "",
@@ -580,6 +910,12 @@
       {
         "name": "label",
         "type": "InputSignal<string>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "loading",
+        "type": "InputSignal<boolean>",
         "description": "",
         "optional": false
       },
@@ -593,6 +929,12 @@
         "name": "minValue",
         "type": "InputSignal<number>",
         "description": "v1 prop: minValue.",
+        "optional": false
+      },
+      {
+        "name": "spec",
+        "type": "InputSignal<Spec | undefined>",
+        "description": "",
         "optional": false
       },
       {
@@ -716,9 +1058,27 @@
         "optional": false
       },
       {
+        "name": "bindings",
+        "type": "InputSignal<Record<string, string>>",
+        "description": "",
+        "optional": false
+      },
+      {
         "name": "childKeys",
         "type": "InputSignal<string[]>",
         "description": "v1: each child key corresponds to a tab's contentChild (childKeys[i] ↔ tabTitles[i]).",
+        "optional": false
+      },
+      {
+        "name": "emit",
+        "type": "InputSignal<object>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "loading",
+        "type": "InputSignal<boolean>",
+        "description": "",
         "optional": false
       },
       {
@@ -757,6 +1117,36 @@
     "params": [],
     "examples": [],
     "properties": [
+      {
+        "name": "bindings",
+        "type": "InputSignal<Record<string, string>>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "childKeys",
+        "type": "InputSignal<string[]>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "emit",
+        "type": "InputSignal<object>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "loading",
+        "type": "InputSignal<boolean>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "spec",
+        "type": "InputSignal<Spec | undefined>",
+        "description": "",
+        "optional": false
+      },
       {
         "name": "text",
         "type": "InputSignal<string>",
@@ -799,6 +1189,18 @@
         "optional": false
       },
       {
+        "name": "bindings",
+        "type": "InputSignal<Record<string, string>>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "childKeys",
+        "type": "InputSignal<string[]>",
+        "description": "",
+        "optional": false
+      },
+      {
         "name": "emit",
         "type": "InputSignal<object>",
         "description": "",
@@ -817,8 +1219,20 @@
         "optional": false
       },
       {
+        "name": "loading",
+        "type": "InputSignal<boolean>",
+        "description": "",
+        "optional": false
+      },
+      {
         "name": "placeholder",
         "type": "InputSignal<string>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "spec",
+        "type": "InputSignal<Spec | undefined>",
         "description": "",
         "optional": false
       },
@@ -877,8 +1291,38 @@
         "optional": false
       },
       {
+        "name": "bindings",
+        "type": "InputSignal<Record<string, string>>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "childKeys",
+        "type": "InputSignal<string[]>",
+        "description": "",
+        "optional": false
+      },
+      {
         "name": "controls",
         "type": "InputSignal<boolean>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "emit",
+        "type": "InputSignal<object>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "loading",
+        "type": "InputSignal<boolean>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "spec",
+        "type": "InputSignal<Spec | undefined>",
         "description": "",
         "optional": false
       },

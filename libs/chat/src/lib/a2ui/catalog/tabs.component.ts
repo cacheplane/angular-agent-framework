@@ -34,6 +34,10 @@ export class A2uiTabsComponent {
   /** v1: each child key corresponds to a tab's contentChild (childKeys[i] ↔ tabTitles[i]). */
   readonly childKeys = input<string[]>([]);
   readonly spec = input.required<Spec>();
+  // Framework inputs required by the render harness.
+  readonly bindings = input<Record<string, string>>({});
+  readonly emit = input<(event: string) => void>(() => { /* noop */ });
+  readonly loading = input<boolean>(false);
 
   protected readonly activeIndex = signal(0);
 
