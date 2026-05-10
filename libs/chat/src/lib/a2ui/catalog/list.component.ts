@@ -19,6 +19,10 @@ export class A2uiListComponent {
   readonly childKeys = input<string[]>([]);
   readonly spec = input.required<Spec>();
   readonly direction = input<'vertical' | 'horizontal'>('vertical');
+  // Framework inputs required by the render harness.
+  readonly bindings = input<Record<string, string>>({});
+  readonly emit = input<(event: string) => void>(() => { /* noop */ });
+  readonly loading = input<boolean>(false);
 
   protected readonly listClass = computed(() => {
     return this.direction() === 'horizontal'

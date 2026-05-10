@@ -30,6 +30,9 @@ export class A2uiButtonComponent {
   readonly primary = input<boolean>(true);
   readonly disabled = input<boolean>(false);
   readonly emit = input<(event: string) => void>(() => { /* noop */ });
+  // Framework inputs required by the render harness.
+  readonly bindings = input<Record<string, string>>({});
+  readonly loading = input<boolean>(false);
 
   handleClick(): void {
     this.emit()('click');

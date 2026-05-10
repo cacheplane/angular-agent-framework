@@ -140,7 +140,7 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
     reasoningTimingMap.clear();
   });
 
-  async function refreshHistory(): Promise<void> {
+  async function refreshHistory(force = false): Promise<void> {
     const getHistory = transport.getHistory?.bind(transport);
     if (!currentThreadId || !getHistory) return;
 
@@ -155,23 +155,20 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
       if (!controller.signal.aborted && currentThreadId === threadId) {
         subjects.history$.next(history as ThreadState<T>[]);
 
-        // Project the latest checkpoint into messages$ + values$ on first
-        // connect. The user expectation (per the canonical examples/chat
-        // demo spec) is that reloading mid-conversation reattaches to the
-        // existing thread and the history reappears in the chat UI. The
-        // chat composition reads messages$ (not history$), so this
-        // projection is the bridge between "we fetched the checkpoint"
-        // and "the user can see the conversation".
-        //
-        // Guard: only populate when messages$ is currently empty, so we
-        // don't overwrite optimistic local state if the user already
-        // submitted a message in the gap between threadId-set and
-        // history-fetched.
+        // Project the latest checkpoint into messages$ + values$:
+        //  - On first connect (`force=false`): only when messages$ is
+        //    empty, so optimistic local state isn't clobbered.
+        //  - At run completion (`force=true`): always — server state is
+        //    authoritative for node-level mutations (e.g. RemoveMessage
+        //    or id-match content replacement performed by post-process
+        //    nodes), and the streaming SDK doesn't always restream those.
         const latest = history[0] as
           | { values?: { messages?: BaseMessage[] } & T }
           | undefined;
-        if (latest?.values && subjects.messages$.value.length === 0) {
-          const restoredMessages = latest.values.messages ?? [];
+        const shouldProject = latest?.values
+          && (force || subjects.messages$.value.length === 0);
+        if (shouldProject) {
+          const restoredMessages = latest.values?.messages ?? [];
           const restoredValues = { ...(latest.values as T) };
           // Strip the `messages` field from values — messages$ is the
           // canonical surface for them; keeping a duplicate in values$
@@ -179,6 +176,11 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
           delete (restoredValues as { messages?: unknown }).messages;
           subjects.messages$.next(restoredMessages);
           subjects.values$.next(restoredValues);
+          // Rebuild derived subjects from the new authoritative messages$.
+          // Tool-call results displayed by chat-tool-calls come from
+          // toolCalls$, which is built from messages$; without this, the
+          // panel keeps showing the streamed pre-mutation content.
+          syncToolCallsFromMessages();
         }
       }
     } catch (err) {
@@ -292,7 +294,10 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
       }
       if (!abortController.signal.aborted) {
         subjects.status$.next(ResourceStatus.Resolved);
-        await refreshHistory();
+        // force=true: rehydrate from server-authoritative state so any
+        // post-process node mutations (RemoveMessage, id-match content
+        // replacement) reflected on the server are picked up client-side.
+        await refreshHistory(true);
       }
     } catch (err) {
       subjects.error$.next(err);
@@ -346,7 +351,9 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
 
       if (!abortController.signal.aborted) {
         subjects.status$.next(ResourceStatus.Resolved);
-        await refreshHistory();
+        // force=true: see refreshHistory comment — server state is
+        // authoritative after run completion.
+        await refreshHistory(true);
         await drainQueue();
       }
     } catch (err) {

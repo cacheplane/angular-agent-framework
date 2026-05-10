@@ -53,6 +53,10 @@ export class A2uiModalComponent {
   readonly spec = input.required<Spec>();
   /** Resolved title string (from optional title DynamicString). */
   readonly title = input<string>('');
+  // Framework inputs required by the render harness.
+  readonly bindings = input<Record<string, string>>({});
+  readonly emit = input<(event: string) => void>(() => { /* noop */ });
+  readonly loading = input<boolean>(false);
 
   protected readonly open = signal(false);
 

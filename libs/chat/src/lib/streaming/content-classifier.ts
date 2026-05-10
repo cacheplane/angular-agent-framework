@@ -98,12 +98,36 @@ export function createContentClassifier(): ContentClassifier {
     return false;
   }
 
+  function resetState(): void {
+    typeSignal.set('undetermined');
+    markdownSignal.set('');
+    specSignal.set(null);
+    elementStatesSignal.set(new Map());
+    streamingSignal.set(false);
+    errorsSignal.set([]);
+    processedLength = 0;
+    store = null;
+    jsonStartIndex = 0;
+    a2uiParser = null;
+    a2uiStore = null;
+    a2uiSurfacesSignal.set(new Map());
+  }
+
   function update(content: string): void {
     // Wrap in untracked() because this is called during template rendering
     // (via classifyMessage in ChatComponent's AI message template). Angular's
     // NG0600 forbids writing signals during change detection; untracked()
     // opts out of the reactive graph for this imperative push-based update.
     untracked(() => {
+      // If content shrunk vs. last seen length, the underlying message was
+      // replaced (e.g. via langgraph RemoveMessage / id-match content
+      // replacement followed by force-refresh-from-server). Reset state so
+      // the new content is classified fresh — otherwise the classifier
+      // keeps the streamed (pre-mutation) markdown/json type and the UI
+      // never updates.
+      if (content.length < processedLength) {
+        resetState();
+      }
       const currentType = typeSignal();
 
       if (currentType === 'undetermined') {
