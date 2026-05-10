@@ -55,24 +55,24 @@ import { RenderElementComponent } from '@ngaf/render';
     .a2ui-modal__backdrop {
       position: absolute;
       inset: 0;
-      background: rgba(0,0,0,0.6);
+      background: var(--a2ui-scrim);
       backdrop-filter: blur(4px);
     }
     .a2ui-modal__panel {
       position: relative;
-      background: var(--a2ui-card-bg, #111827);
-      border: 1px solid var(--a2ui-border, rgba(255,255,255,0.1));
-      border-radius: 12px;
-      padding: 24px;
+      background: var(--a2ui-surface);
+      border: 1px solid var(--a2ui-outline);
+      border-radius: var(--a2ui-shape-medium);
+      padding: var(--a2ui-spacing-5);
       max-width: 512px;
       width: 100%;
-      margin: 0 16px;
-      box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+      margin: 0 var(--a2ui-spacing-4);
+      box-shadow: var(--a2ui-elevation-4);
     }
     .a2ui-modal__title {
-      font-size: 18px;
-      font-weight: 600;
-      margin: 0 0 16px;
+      font-size: var(--a2ui-typography-h4-size);
+      font-weight: var(--a2ui-typography-h4-weight);
+      margin: 0 0 var(--a2ui-spacing-4);
     }
   `],
 })

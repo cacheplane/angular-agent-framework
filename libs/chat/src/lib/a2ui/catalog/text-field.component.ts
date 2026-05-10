@@ -47,23 +47,28 @@ const TYPE_MAP: Record<TextFieldType, string> = {
     </div>
   `,
   styles: [`
-    .a2ui-tf { display: flex; flex-direction: column; gap: 4px; }
+    .a2ui-tf { display: flex; flex-direction: column; gap: var(--a2ui-spacing-1); }
     .a2ui-tf__label {
-      font-size: 12px;
-      color: var(--a2ui-label, rgba(255,255,255,0.6));
+      font-size: var(--a2ui-typography-label-size);
+      font-weight: var(--a2ui-typography-label-weight);
+      color: var(--a2ui-label);
     }
     .a2ui-tf__input {
-      padding: 8px 12px;
-      font-size: 14px;
-      border-radius: 8px;
-      background: var(--a2ui-input-bg, rgba(255,255,255,0.05));
-      color: var(--a2ui-input-text, white);
-      border: 1px solid var(--a2ui-border, rgba(255,255,255,0.1));
+      padding: var(--a2ui-spacing-2) var(--a2ui-spacing-3);
+      font-size: var(--a2ui-typography-body-size);
+      border-radius: var(--a2ui-shape-small);
+      background: var(--a2ui-input-bg);
+      color: var(--a2ui-on-surface);
+      border: 1px solid var(--a2ui-outline);
       outline: none;
-      transition: border-color 120ms;
+      transition: border-color var(--a2ui-motion-duration-short) var(--a2ui-motion-easing-standard);
       resize: vertical;
     }
-    .a2ui-tf__input:focus { border-color: var(--a2ui-primary, #4f8df5); }
+    .a2ui-tf__input:focus {
+      outline: var(--a2ui-focus-ring-width) solid var(--a2ui-focus-ring-color);
+      outline-offset: 2px;
+      border-color: var(--a2ui-primary);
+    }
   `],
 })
 export class A2uiTextFieldComponent {

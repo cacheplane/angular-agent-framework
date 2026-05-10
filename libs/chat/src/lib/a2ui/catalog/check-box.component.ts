@@ -17,16 +17,16 @@ import { emitBinding } from './emit-binding';
     .a2ui-cb {
       display: flex;
       align-items: center;
-      gap: 8px;
-      font-size: 14px;
+      gap: var(--a2ui-spacing-2);
+      font-size: var(--a2ui-typography-body-size);
       cursor: pointer;
     }
     .a2ui-cb__input {
       width: 16px;
       height: 16px;
-      border-radius: 4px;
+      border-radius: var(--a2ui-shape-extra-small);
       cursor: pointer;
-      accent-color: var(--a2ui-primary, #2563eb);
+      accent-color: var(--a2ui-primary);
     }
   `],
 })

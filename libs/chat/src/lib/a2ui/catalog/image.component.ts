@@ -18,7 +18,7 @@ import type { Spec } from '@json-render/core';
     .a2ui-img {
       display: block;
       max-width: 100%;
-      border-radius: 4px;
+      border-radius: var(--a2ui-shape-extra-small);
     }
   `],
 })

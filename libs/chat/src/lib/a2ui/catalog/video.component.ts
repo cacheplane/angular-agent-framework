@@ -17,7 +17,7 @@ import type { Spec } from '@json-render/core';
     .a2ui-video {
       display: block;
       width: 100%;
-      border-radius: 8px;
+      border-radius: var(--a2ui-shape-small);
     }
   `],
 })

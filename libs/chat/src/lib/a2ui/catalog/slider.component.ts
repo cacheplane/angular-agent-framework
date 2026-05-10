@@ -25,15 +25,16 @@ import { emitBinding } from './emit-binding';
     </div>
   `,
   styles: [`
-    .a2ui-slider { display: flex; flex-direction: column; gap: 4px; }
+    .a2ui-slider { display: flex; flex-direction: column; gap: var(--a2ui-spacing-1); }
     .a2ui-slider__label {
-      font-size: 12px;
-      color: var(--a2ui-label, rgba(255,255,255,0.6));
+      font-size: var(--a2ui-typography-label-size);
+      font-weight: var(--a2ui-typography-label-weight);
+      color: var(--a2ui-label);
     }
     .a2ui-slider__input {
       width: 100%;
       cursor: pointer;
-      accent-color: var(--a2ui-primary, #2563eb);
+      accent-color: var(--a2ui-primary);
     }
   `],
 })
