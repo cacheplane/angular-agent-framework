@@ -116,7 +116,7 @@ def test_a2ui_jsonl_starts_with_prefix_and_parses():
     full = A2UI_PREFIX + "\n" + FEEDBACK_FORM_JSONL
     lines = [ln for ln in full.split("\n") if ln.strip() and ln != A2UI_PREFIX]
     parsed = [json.loads(ln) for ln in lines]
-    assert any("createSurface" in m for m in parsed), \
-        "JSONL must include a createSurface envelope"
-    assert any("updateComponents" in m for m in parsed), \
-        "JSONL must include an updateComponents envelope"
+    assert any("surfaceUpdate" in m for m in parsed), \
+        "JSONL must include a surfaceUpdate envelope"
+    assert any("beginRendering" in m for m in parsed), \
+        "JSONL must include a beginRendering envelope"
