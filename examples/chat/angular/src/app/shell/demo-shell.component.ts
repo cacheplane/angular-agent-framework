@@ -57,6 +57,13 @@ export class DemoShell {
   /** Reasoning effort for the next submit. Persisted across reloads. */
   readonly effort = signal<string>(this.persistence.read('effort') ?? 'minimal');
 
+  /**
+   * GenUI dispatch mode for the next UI-render prompt. Controls which
+   * sub-LLM tool the graph calls (generate_a2ui_schema vs
+   * generate_json_render_spec). Persisted across reloads.
+   */
+  readonly genUiMode = signal<string>(this.persistence.read('genUiMode') ?? 'a2ui');
+
   protected readonly debugOpen = signal<boolean>(this.persistence.read('debug') ?? false);
 
   protected readonly modelOptions = signal<readonly { value: string; label: string }[]>([
@@ -70,6 +77,11 @@ export class DemoShell {
     { value: 'low',     label: 'low' },
     { value: 'medium',  label: 'medium' },
     { value: 'high',    label: 'high (visible reasoning)' },
+  ]);
+
+  protected readonly genUiOptions = signal<readonly { value: string; label: string }[]>([
+    { value: 'a2ui',        label: 'A2UI v1' },
+    { value: 'json-render', label: 'json-render' },
   ]);
 
   /** Persisted thread id (null on first run). Reactive so reload reconnects to the same thread. */
@@ -106,6 +118,7 @@ export class DemoShell {
             ...((input as { state?: Record<string, unknown> })?.state ?? {}),
             model: this.model(),
             reasoning_effort: this.effort(),
+            gen_ui_mode: this.genUiMode(),
           },
         },
         opts,
@@ -125,6 +138,11 @@ export class DemoShell {
   protected onEffortChange(next: string): void {
     this.effort.set(next);
     this.persistence.write('effort', next);
+  }
+
+  protected onGenUiModeChange(next: string): void {
+    this.genUiMode.set(next);
+    this.persistence.write('genUiMode', next);
   }
 
   protected onDebugChange(next: boolean): void {

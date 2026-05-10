@@ -51,6 +51,15 @@
       </select>
     </label>
 
+    <label class="palette__group palette__group--model">
+      <span class="palette__label">Gen UI</span>
+      <select [value]="genUiMode()" (change)="pickGenUiMode($event)">
+        @for (opt of genUiOptions(); track opt.value) {
+          <option [value]="opt.value" [selected]="opt.value === genUiMode()">{{ opt.label }}</option>
+        }
+      </select>
+    </label>
+
     <button
       type="button"
       class="palette__toggle"
