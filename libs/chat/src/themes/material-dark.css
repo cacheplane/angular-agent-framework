@@ -1,0 +1,38 @@
+/*
+ * @ngaf/chat — Material Design 3 dark theme
+ * SPDX-License-Identifier: MIT
+ *
+ * Maps Google's Material Design 3 dark color tokens (m3.material.io)
+ * into the @ngaf/chat token vocabulary. No `@angular/material` runtime
+ * dependency — pure CSS custom-property declarations.
+ *
+ * Color values from the Material Design 3 spec
+ * (https://m3.material.io/styles/color/the-color-system/tokens).
+ *
+ * Usage in your global stylesheet:
+ *   @import '@ngaf/chat/themes/material-dark.css';
+ */
+:root {
+  /* === Color (M3 dark) === */
+  --a2ui-primary: #D0BCFF;
+  --a2ui-on-primary: #381E72;
+  --a2ui-primary-hover: #B69DF8;
+  --a2ui-secondary: #CCC2DC;
+  --a2ui-on-secondary: #332D41;
+  --a2ui-surface: #1C1B1F;
+  --a2ui-on-surface: #E6E1E5;
+  --a2ui-surface-variant: #49454F;
+  --a2ui-on-surface-variant: #CAC4D0;
+  --a2ui-outline: #938F99;
+  --a2ui-outline-variant: #49454F;
+  --a2ui-error: #F2B8B5;
+  --a2ui-on-error: #601410;
+  --a2ui-scrim: rgba(0, 0, 0, 0.6);
+
+  /* === Shape (M3 favors slightly larger radii) === */
+  --a2ui-shape-extra-small: 4px;
+  --a2ui-shape-small: 8px;
+  --a2ui-shape-medium: 12px;
+  --a2ui-shape-large: 16px;
+  --a2ui-shape-extra-large: 28px;
+}
