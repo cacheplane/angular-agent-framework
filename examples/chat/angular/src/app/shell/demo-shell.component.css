@@ -46,3 +46,17 @@
   flex-direction: column;
   gap: 8px;
 }
+
+.demo-shell__timeline-panel {
+  position: fixed;
+  right: 16px;
+  top: 80px;
+  bottom: 96px;
+  width: 280px;
+  background: #1a1d23;
+  border: 1px solid #303540;
+  border-radius: 10px;
+  overflow-y: auto;
+  z-index: 996;
+  padding: 8px 0;
+}

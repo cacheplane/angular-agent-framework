@@ -82,6 +82,17 @@
 
     <button
       type="button"
+      class="palette__toggle"
+      [class.is-on]="timelineOpen()"
+      [attr.aria-pressed]="timelineOpen()"
+      (click)="toggleTimeline()"
+    >
+      <span class="palette__toggle-dot"></span>
+      <span>Timeline {{ timelineOpen() ? 'on' : 'off' }}</span>
+    </button>
+
+    <button
+      type="button"
       class="palette__action"
       (click)="emitNewConversation()"
     >↻ New conversation</button>

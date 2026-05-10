@@ -291,4 +291,20 @@ Components NOT yet exercised by the demo (deferred to future media-focused sugge
 
 ## Time travel / timeline
 
+- [ ] Palette shows "Timeline off" toggle button (next to "Debug off")
+- [ ] Click "Timeline off" — button label changes to "Timeline on"; timeline panel appears on the right side of the screen
+- [ ] Timeline panel shows `<chat-timeline-slider>` with a "Timeline" heading and checkpoint count
+- [ ] Click "Timeline on" — panel unmounts; no console errors; DOM has no `<chat-timeline-slider>` element
+- [ ] Timeline open/closed state persists across page reload (stored under `timeline` key in localStorage)
+- [ ] Send several messages — each creates a checkpoint listed in the slider (count increments)
+- [ ] Each checkpoint entry shows a numbered index pill, a label ("Step N" or step name), and the checkpoint id
+- [ ] Hovering a checkpoint entry highlights it (subtle background)
+- [ ] Click "Replay" on a checkpoint — agent re-runs from that point with no new input; message list reflects the replayed history
+- [ ] After replay: server-side `curl localhost:2024/threads/<id>/state` shows the correct checkpoint was used
+- [ ] Click "Fork" on a checkpoint — a new thread is created server-side; agent switches to the new thread and re-runs from that checkpoint
+- [ ] After fork: `threadId` in localStorage has changed to the new thread id
+- [ ] After fork: the conversation reflects the forked state, not the original thread's later messages
+- [ ] Timeline panel scrolls independently when the checkpoint list is taller than the panel
+- [ ] Timeline panel does not obscure the chat input or send button at any supported viewport width
+
 ## Multi-thread
