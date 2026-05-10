@@ -1,109 +1,141 @@
 // SPDX-License-Identifier: MIT
 import type { Spec, UIElement } from '@json-render/core';
-import type { A2uiSurface, A2uiChildTemplate } from '@ngaf/a2ui';
-import { resolveDynamic, getByPointer, evaluateCheckRules, isPathRef } from '@ngaf/a2ui';
+import type {
+  A2uiSurface, A2uiComponent, A2uiAction, A2uiChildren,
+  A2uiActionContextEntry,
+} from '@ngaf/a2ui';
+import { resolveDynamic, getByPointer, isPathRef } from '@ngaf/a2ui';
 
-const RESERVED_KEYS = new Set(['id', 'component', 'children', 'action', 'checks', '_bindings']);
+const RESERVED_PROP_KEYS = new Set(['child', 'children', 'action', 'tabItems', 'entryPointChild', 'contentChild']);
 
-/**
- * Converts an A2UI surface to a json-render Spec by:
- * 1. Walking the flat component map
- * 2. Resolving DynamicValue props against the data model
- * 3. Mapping A2UI children (string[] or template) to json-render children
- * 4. Producing a Spec with root + elements
- */
+type RenderedAction = Record<string, { action: string; params: Record<string, unknown> }>;
+
+/** Pull the (single) component-type key + its props from a v1 ComponentDef wrapper. */
+function unwrapComponentDef(def: A2uiComponent['component']): { type: string; props: Record<string, unknown> } {
+  const entries = Object.entries(def as Record<string, unknown>);
+  if (entries.length !== 1) {
+    return { type: 'Text', props: {} };
+  }
+  const [type, props] = entries[0];
+  return { type, props: (props ?? {}) as Record<string, unknown> };
+}
+
+function resolveAction(
+  action: A2uiAction | undefined,
+  surface: A2uiSurface,
+  sourceComponentId: string,
+): RenderedAction | undefined {
+  if (!action) return undefined;
+  const resolvedContext: Record<string, unknown> = {};
+  if (Array.isArray(action.context)) {
+    for (const entry of action.context as A2uiActionContextEntry[]) {
+      resolvedContext[entry.key] = resolveDynamic(entry.value, surface.dataModel);
+    }
+  }
+  return {
+    click: {
+      action: 'a2ui:event',
+      params: {
+        surfaceId: surface.surfaceId,
+        sourceComponentId,
+        name: action.name,
+        context: resolvedContext,
+      },
+    },
+  } as RenderedAction;
+}
+
+function childrenToList(
+  children: A2uiChildren | undefined,
+  surface: A2uiSurface,
+): { ids: string[]; templateExpand?: { componentId: string; arrPath: string; arr: unknown[] } } | undefined {
+  if (!children) return undefined;
+  if ('explicitList' in children) {
+    return { ids: children.explicitList };
+  }
+  if ('template' in children) {
+    const t = children.template;
+    const arr = getByPointer(surface.dataModel, t.dataBinding);
+    if (!Array.isArray(arr)) return { ids: [] };
+    const ids = arr.map((_, i) => `${t.componentId}__${i}`);
+    return { ids, templateExpand: { componentId: t.componentId, arrPath: t.dataBinding, arr } };
+  }
+  return undefined;
+}
+
 export function surfaceToSpec(surface: A2uiSurface): Spec | null {
-  if (!surface.components.has('root')) return null;
+  if (surface.components.size === 0) return null;
 
   const elements: Record<string, UIElement> = {};
 
   for (const [id, comp] of surface.components) {
-    const props: Record<string, unknown> = {};
+    const { type, props: rawProps } = unwrapComponentDef(comp.component);
 
-    // Resolve all props except reserved keys, tracking binding paths
+    const resolvedProps: Record<string, unknown> = {};
     const bindings: Record<string, string> = {};
-    for (const [key, value] of Object.entries(comp)) {
-      if (RESERVED_KEYS.has(key)) continue;
-      if (isPathRef(value)) {
-        bindings[key] = value.path;
-      }
-      props[key] = resolveDynamic(value, surface.dataModel);
+
+    for (const [key, value] of Object.entries(rawProps)) {
+      if (RESERVED_PROP_KEYS.has(key)) continue;
+      if (isPathRef(value)) bindings[key] = (value as { path: string }).path;
+      resolvedProps[key] = resolveDynamic(value, surface.dataModel);
     }
     if (Object.keys(bindings).length > 0) {
-      props['_bindings'] = bindings;
-    }
-    // Map action to spec `on` binding
-    let on: Record<string, { action: string; params: Record<string, unknown> }> | undefined;
-    if (comp.action) {
-      if ('event' in comp.action) {
-        const evt = comp.action.event;
-        const resolvedContext: Record<string, unknown> = {};
-        if (evt.context) {
-          for (const [key, value] of Object.entries(evt.context)) {
-            resolvedContext[key] = resolveDynamic(value, surface.dataModel);
-          }
-        }
-        on = {
-          click: {
-            action: 'a2ui:event',
-            params: {
-              surfaceId: surface.surfaceId,
-              sourceComponentId: id,
-              name: evt.name,
-              context: resolvedContext,
-            },
-          },
-        };
-      } else if ('functionCall' in comp.action) {
-        const fc = comp.action.functionCall;
-        on = {
-          click: {
-            action: 'a2ui:localAction',
-            params: { call: fc.call, args: fc.args },
-          },
-        };
-      }
-    }
-    // Evaluate checks and attach pre-computed validation result
-    if (comp.checks) {
-      props['validationResult'] = evaluateCheckRules(comp.checks, surface.dataModel);
+      resolvedProps['_bindings'] = bindings;
     }
 
-    // Map children
+    const action = (rawProps as { action?: A2uiAction }).action;
+    const on = resolveAction(action, surface, id);
+
+    // Map children — handle Card single child / Button single child / Modal entryPointChild+contentChild / Tabs tabItems
     let children: string[] | undefined;
-    if (Array.isArray(comp.children)) {
-      children = comp.children as string[];
-    } else if (comp.children && typeof comp.children === 'object' && 'path' in comp.children) {
-      // Template expansion — expand over data model array
-      const template = comp.children as A2uiChildTemplate;
-      const arr = getByPointer(surface.dataModel, template.path);
-      if (Array.isArray(arr)) {
-        children = arr.map((_, i) => `${template.componentId}__${i}`);
-        const templateComp = surface.components.get(template.componentId);
-        if (templateComp) {
-          for (let i = 0; i < arr.length; i++) {
-            const scope = { basePath: `${template.path}/${i}`, item: arr[i] };
-            const itemProps: Record<string, unknown> = {};
-            for (const [key, value] of Object.entries(templateComp)) {
-              if (RESERVED_KEYS.has(key)) continue;
-              itemProps[key] = resolveDynamic(value, surface.dataModel, scope);
+    if (type === 'Card' && typeof (rawProps as { child?: unknown }).child === 'string') {
+      children = [(rawProps as { child: string }).child];
+    } else if (type === 'Button' && typeof (rawProps as { child?: unknown }).child === 'string') {
+      children = [(rawProps as { child: string }).child];
+    } else if (type === 'Modal') {
+      const m = rawProps as { entryPointChild?: string; contentChild?: string };
+      const ids: string[] = [];
+      if (m.entryPointChild) ids.push(m.entryPointChild);
+      if (m.contentChild) ids.push(m.contentChild);
+      children = ids;
+    } else if (type === 'Tabs') {
+      const items = (rawProps as { tabItems?: { child: string }[] }).tabItems ?? [];
+      children = items.map(t => t.child);
+    } else {
+      const childInfo = childrenToList((rawProps as { children?: A2uiChildren }).children, surface);
+      if (childInfo) {
+        children = childInfo.ids;
+        if (childInfo.templateExpand) {
+          const t = childInfo.templateExpand;
+          const templateComp = surface.components.get(t.componentId);
+          if (templateComp) {
+            const { type: tType, props: tRaw } = unwrapComponentDef(templateComp.component);
+            for (let i = 0; i < t.arr.length; i++) {
+              const scope = { basePath: `${t.arrPath}/${i}`, item: t.arr[i] };
+              const itemProps: Record<string, unknown> = {};
+              for (const [k, v] of Object.entries(tRaw)) {
+                if (RESERVED_PROP_KEYS.has(k)) continue;
+                itemProps[k] = resolveDynamic(v, surface.dataModel, scope);
+              }
+              elements[`${t.componentId}__${i}`] = { type: tType, props: itemProps };
             }
-            elements[`${template.componentId}__${i}`] = {
-              type: templateComp.component,
-              props: itemProps,
-            };
           }
         }
       }
     }
 
     elements[id] = {
-      type: comp.component,
-      props,
+      type,
+      props: resolvedProps,
       ...(children ? { children } : {}),
       ...(on ? { on } : {}),
     };
   }
 
-  return { root: 'root', elements, state: surface.dataModel } as Spec;
+  // Use `root` if present in the components map; otherwise prefer first id.
+  const root = surface.components.has('root')
+    ? 'root'
+    : (surface.components.keys().next().value as string);
+
+  return { root, elements, state: surface.dataModel } as Spec;
 }
