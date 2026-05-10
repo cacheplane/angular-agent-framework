@@ -19,4 +19,8 @@ export class A2uiCardComponent {
   /** v1: a single child key, delivered via childKeys[0] from the render framework. */
   readonly childKeys = input<string[]>([]);
   readonly spec = input.required<Spec>();
+  // Framework inputs required by the render harness.
+  readonly bindings = input<Record<string, string>>({});
+  readonly emit = input<(event: string) => void>(() => { /* noop */ });
+  readonly loading = input<boolean>(false);
 }

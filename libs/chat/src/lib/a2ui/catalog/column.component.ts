@@ -22,6 +22,11 @@ export class A2uiColumnComponent {
   readonly spec = input.required<Spec>();
   readonly gap = input<number>(3);
   readonly alignment = input<ColumnAlignment>('start');
+  readonly distribution = input<'start' | 'center' | 'end' | 'spaceBetween' | 'spaceAround' | 'spaceEvenly'>('start');
+  // Framework inputs required by the render harness.
+  readonly bindings = input<Record<string, string>>({});
+  readonly emit = input<(event: string) => void>(() => { /* noop */ });
+  readonly loading = input<boolean>(false);
 
   protected readonly colClass = computed(() => {
     const alignMap: Record<ColumnAlignment, string> = {

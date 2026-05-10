@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 import { Component, computed, input, ChangeDetectionStrategy } from '@angular/core';
+import type { Spec } from '@json-render/core';
 import { emitBinding } from './emit-binding';
 
 /** Resolved option shape — label and value are plain strings after surface-to-spec resolves them. */
@@ -70,6 +71,11 @@ export class A2uiMultipleChoiceComponent {
   readonly maxAllowedSelections = input<number>(1);
   readonly _bindings = input<Record<string, string>>({});
   readonly emit = input<(event: string) => void>(() => { /* noop */ });
+  // Framework inputs required by the render harness.
+  readonly bindings = input<Record<string, string>>({});
+  readonly loading = input<boolean>(false);
+  readonly childKeys = input<string[]>([]);
+  readonly spec = input<Spec | undefined>(undefined);
 
   protected readonly isSingleSelect = computed(() => this.maxAllowedSelections() <= 1);
 
