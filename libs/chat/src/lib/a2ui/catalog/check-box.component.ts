@@ -8,11 +8,27 @@ import { emitBinding } from './emit-binding';
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <label class="flex items-center gap-2 text-sm cursor-pointer">
-      <input type="checkbox" [checked]="checked()" (change)="onChange($event)" class="rounded" />
+    <label class="a2ui-cb">
+      <input type="checkbox" [checked]="checked()" (change)="onChange($event)" class="a2ui-cb__input" />
       {{ label() }}
     </label>
   `,
+  styles: [`
+    .a2ui-cb {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    .a2ui-cb__input {
+      width: 16px;
+      height: 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      accent-color: var(--a2ui-primary, #2563eb);
+    }
+  `],
 })
 export class A2uiCheckBoxComponent {
   readonly label = input<string>('');

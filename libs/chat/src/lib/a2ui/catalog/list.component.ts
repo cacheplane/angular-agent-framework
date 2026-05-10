@@ -14,6 +14,21 @@ import { RenderElementComponent } from '@ngaf/render';
       }
     </div>
   `,
+  styles: [`
+    .a2ui-list--vertical {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      overflow-y: auto;
+      max-height: 384px;
+    }
+    .a2ui-list--horizontal {
+      display: flex;
+      flex-direction: row;
+      gap: 4px;
+      overflow-x: auto;
+    }
+  `],
 })
 export class A2uiListComponent {
   readonly childKeys = input<string[]>([]);
@@ -26,7 +41,7 @@ export class A2uiListComponent {
 
   protected readonly listClass = computed(() => {
     return this.direction() === 'horizontal'
-      ? 'flex flex-row gap-1 overflow-x-auto'
-      : 'flex flex-col gap-1 overflow-y-auto max-h-96';
+      ? 'a2ui-list--horizontal'
+      : 'a2ui-list--vertical';
   });
 }

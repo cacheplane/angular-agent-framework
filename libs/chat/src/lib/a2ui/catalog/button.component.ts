@@ -10,10 +10,7 @@ import { RenderElementComponent } from '@ngaf/render';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <button
-      class="px-4 py-2 rounded-lg text-sm font-medium transition-colors inline-flex items-center justify-center"
-      [class]="primary()
-        ? 'bg-blue-600 hover:bg-blue-700 text-white'
-        : 'bg-transparent border border-white/20 hover:bg-white/10 text-white/80'"
+      [class]="primary() ? 'a2ui-btn a2ui-btn--primary' : 'a2ui-btn a2ui-btn--secondary'"
       [disabled]="disabled()"
       (click)="handleClick()"
     >
@@ -22,6 +19,32 @@ import { RenderElementComponent } from '@ngaf/render';
       }
     </button>
   `,
+  styles: [`
+    .a2ui-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 120ms, opacity 120ms;
+      border: none;
+    }
+    .a2ui-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .a2ui-btn--primary {
+      background: var(--a2ui-primary, #2563eb);
+      color: #fff;
+    }
+    .a2ui-btn--primary:hover:not(:disabled) { background: var(--a2ui-primary-hover, #1d4ed8); }
+    .a2ui-btn--secondary {
+      background: transparent;
+      color: var(--a2ui-input-text, rgba(255,255,255,0.8));
+      border: 1px solid var(--a2ui-border, rgba(255,255,255,0.2));
+    }
+    .a2ui-btn--secondary:hover:not(:disabled) { background: rgba(255,255,255,0.08); }
+  `],
 })
 export class A2uiButtonComponent {
   /** v1: child Text component is rendered inside the button via childKeys. */

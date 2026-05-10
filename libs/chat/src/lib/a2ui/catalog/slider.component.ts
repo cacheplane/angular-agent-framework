@@ -8,22 +8,34 @@ import { emitBinding } from './emit-binding';
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="flex flex-col gap-1">
+    <div class="a2ui-slider">
       @if (label()) {
-        <label [htmlFor]="_inputId" class="text-xs" style="color: var(--a2ui-label, rgba(255,255,255,0.6));">{{ label() }}: {{ value() }}</label>
+        <label [htmlFor]="_inputId" class="a2ui-slider__label">{{ label() }}: {{ value() }}</label>
       }
       <input
         [id]="_inputId"
         type="range"
+        class="a2ui-slider__input"
         [min]="minValue()"
         [max]="maxValue()"
         [step]="step()"
         [value]="value()"
-        class="w-full"
         (input)="onInput($event)"
       />
     </div>
   `,
+  styles: [`
+    .a2ui-slider { display: flex; flex-direction: column; gap: 4px; }
+    .a2ui-slider__label {
+      font-size: 12px;
+      color: var(--a2ui-label, rgba(255,255,255,0.6));
+    }
+    .a2ui-slider__input {
+      width: 100%;
+      cursor: pointer;
+      accent-color: var(--a2ui-primary, #2563eb);
+    }
+  `],
 })
 export class A2uiSliderComponent {
   private static _idCounter = 0;

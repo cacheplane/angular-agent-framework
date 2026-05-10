@@ -20,9 +20,9 @@ const TYPE_MAP: Record<TextFieldType, string> = {
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="flex flex-col gap-1">
+    <div class="a2ui-tf">
       @if (label()) {
-        <label [htmlFor]="_inputId" class="text-xs" style="color: var(--a2ui-label, rgba(255,255,255,0.6));">{{ label() }}</label>
+        <label [htmlFor]="_inputId" class="a2ui-tf__label">{{ label() }}</label>
       }
       @if (textFieldType() === 'longText') {
         <textarea
@@ -30,10 +30,7 @@ const TYPE_MAP: Record<TextFieldType, string> = {
           [value]="value()"
           [placeholder]="placeholder()"
           rows="4"
-          class="rounded-lg px-3 py-2 text-sm resize-y"
-          [style.background]="'var(--a2ui-input-bg, rgba(255,255,255,0.05))'"
-          [style.color]="'var(--a2ui-input-text, white)'"
-          [style.border]="'1px solid var(--a2ui-border, rgba(255,255,255,0.1))'"
+          class="a2ui-tf__input"
           (input)="onInput($event)"
         ></textarea>
       } @else {
@@ -43,15 +40,31 @@ const TYPE_MAP: Record<TextFieldType, string> = {
           [value]="value()"
           [placeholder]="placeholder()"
           [pattern]="validationRegexp() || ''"
-          class="rounded-lg px-3 py-2 text-sm"
-          [style.background]="'var(--a2ui-input-bg, rgba(255,255,255,0.05))'"
-          [style.color]="'var(--a2ui-input-text, white)'"
-          [style.border]="'1px solid var(--a2ui-border, rgba(255,255,255,0.1))'"
+          class="a2ui-tf__input"
           (input)="onInput($event)"
         />
       }
     </div>
   `,
+  styles: [`
+    .a2ui-tf { display: flex; flex-direction: column; gap: 4px; }
+    .a2ui-tf__label {
+      font-size: 12px;
+      color: var(--a2ui-label, rgba(255,255,255,0.6));
+    }
+    .a2ui-tf__input {
+      padding: 8px 12px;
+      font-size: 14px;
+      border-radius: 8px;
+      background: var(--a2ui-input-bg, rgba(255,255,255,0.05));
+      color: var(--a2ui-input-text, white);
+      border: 1px solid var(--a2ui-border, rgba(255,255,255,0.1));
+      outline: none;
+      transition: border-color 120ms;
+      resize: vertical;
+    }
+    .a2ui-tf__input:focus { border-color: var(--a2ui-primary, #4f8df5); }
+  `],
 })
 export class A2uiTextFieldComponent {
   private static _idCounter = 0;

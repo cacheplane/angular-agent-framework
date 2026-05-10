@@ -4,20 +4,58 @@ import type { Spec } from '@json-render/core';
 
 type UsageHint = 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'caption' | 'body';
 
-const HINT_CLASS: Record<UsageHint, string> = {
-  h1: 'text-3xl font-bold',
-  h2: 'text-2xl font-semibold',
-  h3: 'text-xl font-semibold',
-  h4: 'text-lg font-medium',
-  h5: 'text-base font-medium',
-  caption: 'text-xs text-white/50',
-  body: 'text-sm text-current',
-};
-
 @Component({
   selector: 'a2ui-text',
   standalone: true,
   template: `<span [class]="cssClass()">{{ text() }}</span>`,
+  styles: [`
+    .a2ui-text-h1 {
+      display: block;
+      font-size: 2rem;
+      font-weight: 700;
+      line-height: 1.2;
+      margin: 0;
+    }
+    .a2ui-text-h2 {
+      display: block;
+      font-size: 1.5rem;
+      font-weight: 600;
+      line-height: 1.3;
+      margin: 0;
+    }
+    .a2ui-text-h3 {
+      display: block;
+      font-size: 1.25rem;
+      font-weight: 600;
+      line-height: 1.4;
+      margin: 0;
+    }
+    .a2ui-text-h4 {
+      display: block;
+      font-size: 1.125rem;
+      font-weight: 500;
+      line-height: 1.4;
+      margin: 0;
+    }
+    .a2ui-text-h5 {
+      display: block;
+      font-size: 1rem;
+      font-weight: 500;
+      line-height: 1.5;
+      margin: 0;
+    }
+    .a2ui-text-caption {
+      display: block;
+      font-size: 0.75rem;
+      color: var(--a2ui-caption, rgba(255,255,255,0.5));
+      line-height: 1.4;
+    }
+    .a2ui-text-body {
+      display: block;
+      font-size: 0.875rem;
+      line-height: 1.6;
+    }
+  `],
 })
 export class A2uiTextComponent {
   readonly text = input<string>('');
@@ -30,6 +68,6 @@ export class A2uiTextComponent {
   readonly spec = input<Spec | undefined>(undefined);
 
   protected cssClass(): string {
-    return HINT_CLASS[this.usageHint()] ?? HINT_CLASS.body;
+    return `a2ui-text-${this.usageHint()}`;
   }
 }

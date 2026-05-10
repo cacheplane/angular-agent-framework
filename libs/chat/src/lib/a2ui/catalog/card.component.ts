@@ -8,12 +8,23 @@ import { RenderElementComponent } from '@ngaf/render';
   standalone: true,
   imports: [RenderElementComponent],
   template: `
-    <div class="rounded-xl border border-white/10 bg-white/5 p-4 backdrop-blur-sm">
+    <div class="a2ui-card">
       @for (key of childKeys(); track key) {
         <render-element [elementKey]="key" [spec]="spec()" />
       }
     </div>
   `,
+  styles: [`
+    .a2ui-card {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      border-radius: 12px;
+      border: 1px solid var(--a2ui-border, rgba(255,255,255,0.1));
+      background: var(--a2ui-card-bg, rgba(255,255,255,0.05));
+      padding: 16px;
+    }
+  `],
 })
 export class A2uiCardComponent {
   /** v1: a single child key, delivered via childKeys[0] from the render framework. */
