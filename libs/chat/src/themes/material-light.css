@@ -1,0 +1,45 @@
+/*
+ * @ngaf/chat — Material Design 3 light theme
+ * SPDX-License-Identifier: MIT
+ *
+ * Maps Google's Material Design 3 light color tokens (m3.material.io)
+ * into the @ngaf/chat token vocabulary. No `@angular/material` runtime
+ * dependency — pure CSS custom-property declarations.
+ *
+ * Color values from the Material Design 3 spec
+ * (https://m3.material.io/styles/color/the-color-system/tokens).
+ *
+ * Usage in your global stylesheet:
+ *   @import '@ngaf/chat/themes/material-light.css';
+ */
+:root {
+  /* === Color (M3 light) === */
+  --a2ui-primary: #6750A4;
+  --a2ui-on-primary: #FFFFFF;
+  --a2ui-primary-hover: #533F8E;
+  --a2ui-secondary: #625B71;
+  --a2ui-on-secondary: #FFFFFF;
+  --a2ui-surface: #FFFBFE;
+  --a2ui-on-surface: #1C1B1F;
+  --a2ui-surface-variant: #E7E0EC;
+  --a2ui-on-surface-variant: #49454F;
+  --a2ui-outline: #79747E;
+  --a2ui-outline-variant: #CAC4D0;
+  --a2ui-error: #B3261E;
+  --a2ui-on-error: #FFFFFF;
+  --a2ui-scrim: rgba(0, 0, 0, 0.4);
+
+  /* === Shape (M3 favors slightly larger radii) === */
+  --a2ui-shape-extra-small: 4px;
+  --a2ui-shape-small: 8px;
+  --a2ui-shape-medium: 12px;
+  --a2ui-shape-large: 16px;
+  --a2ui-shape-extra-large: 28px;
+
+  /* === Elevation (softer shadows on light backgrounds) === */
+  --a2ui-elevation-1: 0 1px 2px rgba(0, 0, 0, 0.08);
+  --a2ui-elevation-2: 0 2px 4px rgba(0, 0, 0, 0.10);
+  --a2ui-elevation-3: 0 4px 8px rgba(0, 0, 0, 0.12);
+  --a2ui-elevation-4: 0 8px 16px rgba(0, 0, 0, 0.14);
+  --a2ui-elevation-5: 0 16px 32px rgba(0, 0, 0, 0.16);
+}

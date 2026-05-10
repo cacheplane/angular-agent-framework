@@ -1,0 +1,32 @@
+/*
+ * @ngaf/chat — default dark theme
+ * SPDX-License-Identifier: MIT
+ *
+ * The lib's `:host` defaults on `<a2ui-surface>` already declare these
+ * exact values — this preset is a no-op @import for symmetry/docs and
+ * for consumers who want their `:root` to make the choice explicit.
+ *
+ * Usage in your global stylesheet:
+ *   @import '@ngaf/chat/themes/default-dark.css';
+ *
+ * The agent's `beginRendering.styles.primaryColor` continues to override
+ * `--a2ui-primary` per surface (host inline-style binding, highest
+ * specificity).
+ */
+:root {
+  /* === Color (dark, blue accent) === */
+  --a2ui-primary: #4f8df5;
+  --a2ui-on-primary: #ffffff;
+  --a2ui-primary-hover: #6699f7;
+  --a2ui-secondary: #8a92a3;
+  --a2ui-on-secondary: #ffffff;
+  --a2ui-surface: #1a1d23;
+  --a2ui-on-surface: #ffffff;
+  --a2ui-surface-variant: rgba(255, 255, 255, 0.05);
+  --a2ui-on-surface-variant: rgba(255, 255, 255, 0.7);
+  --a2ui-outline: rgba(255, 255, 255, 0.1);
+  --a2ui-outline-variant: rgba(255, 255, 255, 0.05);
+  --a2ui-error: #f5524f;
+  --a2ui-on-error: #ffffff;
+  --a2ui-scrim: rgba(0, 0, 0, 0.6);
+}

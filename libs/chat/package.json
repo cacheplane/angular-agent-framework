@@ -10,7 +10,11 @@
       "types": "./testing.d.ts",
       "default": "./fesm2022/ngaf-chat-testing.mjs"
     },
-    "./chat.css": "./chat.css"
+    "./chat.css": "./chat.css",
+    "./themes/default-dark.css": "./themes/default-dark.css",
+    "./themes/default-light.css": "./themes/default-light.css",
+    "./themes/material-dark.css": "./themes/material-dark.css",
+    "./themes/material-light.css": "./themes/material-light.css"
   },
   "dependencies": {
     "@cacheplane/partial-json": ">=0.1.1 <0.3.0",

@@ -6,6 +6,7 @@
   },
   "allowedNonPeerDependencies": ["@cacheplane/partial-json", "@cacheplane/partial-markdown"],
   "assets": [
-    { "input": "src/lib/styles", "glob": "chat.css", "output": "." }
+    { "input": "src/lib/styles", "glob": "chat.css", "output": "." },
+    { "input": "src/themes", "glob": "*.css", "output": "themes" }
   ]
 }

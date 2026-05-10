@@ -61,3 +61,51 @@ Each runtime adapter extracts citations into the `Message.citations` array:
 - **AG-UI** — reads from STATE_DELTA at JSON Pointer `/citations/{messageId}`
 
 The `CitationsResolverService` is provided to query citations in message-first or markdown-fallback order.
+
+## A2UI surface theming
+
+`<a2ui-surface>` declares ~50 internal `--a2ui-*` tokens at `:host` with dark-theme defaults (spacing, typography, shape radius, focus ring, motion, elevation, color). Catalog components consume them via `var(--a2ui-*)`. Override at `:root` to retheme.
+
+### Agent-driven theming (v1 wire format)
+
+Agents control exactly two knobs per the canonical A2UI v1 spec, set via `beginRendering.styles`:
+
+- `font` — primary font family
+- `primaryColor` — hex `#RRGGBB`
+
+Both flow through to the rendered surface as inline styles on `<a2ui-surface>` (highest specificity), overriding any consumer `:root` defaults for the lifetime of that surface.
+
+### Built-in theme presets
+
+Four CSS files ship in the package, each declaring `:root` overrides for the relevant tokens:
+
+```css
+/* In your global stylesheet */
+@import '@ngaf/chat/themes/default-dark.css';     /* lib defaults, explicit */
+@import '@ngaf/chat/themes/default-light.css';    /* neutral light, blue accent */
+@import '@ngaf/chat/themes/material-dark.css';    /* Material Design 3 dark */
+@import '@ngaf/chat/themes/material-light.css';   /* Material Design 3 light */
+```
+
+Material presets map [Material Design 3 color tokens](https://m3.material.io/styles/color/the-color-system/tokens) to the `--a2ui-*` vocabulary — no `@angular/material` runtime dep, just CSS custom-property declarations.
+
+### Custom themes
+
+Override any subset of the ~50 tokens at `:root`:
+
+```css
+:root {
+  --a2ui-primary: #FF6B35;        /* brand orange */
+  --a2ui-shape-medium: 4px;       /* sharper corners */
+  --a2ui-spacing-3: 16px;         /* roomier layouts */
+}
+```
+
+The token surface:
+- **Color** — `--a2ui-primary`, `--a2ui-on-primary`, `--a2ui-secondary`, `--a2ui-surface`, `--a2ui-on-surface`, `--a2ui-surface-variant`, `--a2ui-on-surface-variant`, `--a2ui-outline`, `--a2ui-outline-variant`, `--a2ui-error`, `--a2ui-on-error`, `--a2ui-scrim`
+- **Spacing** — `--a2ui-spacing-1` (4px) through `--a2ui-spacing-7` (40px)
+- **Typography** — `--a2ui-typography-{h1..h5,body,caption,label}-{size,weight,line-height}`
+- **Shape** — `--a2ui-shape-{extra-small,small,medium,large,extra-large}`
+- **Focus ring** — `--a2ui-focus-ring-color`, `--a2ui-focus-ring-width`
+- **Motion** — `--a2ui-motion-duration-{short,medium,long}`, `--a2ui-motion-easing-{standard,emphasized}`
+- **Elevation** — `--a2ui-elevation-{0,1,2,3,4,5}` (box-shadow tokens)
