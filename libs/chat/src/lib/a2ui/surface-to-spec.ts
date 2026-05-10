@@ -105,6 +105,13 @@ export function surfaceToSpec(surface: A2uiSurface): Spec | null {
       resolvedProps['tabTitles'] = items.map(t =>
         t.title !== undefined ? String(resolveDynamic(t.title, surface.dataModel)) : '',
       );
+    } else if (type === 'MultipleChoice') {
+      // Resolve options[*].label (DynamicString) so the component receives plain strings.
+      const opts = (rawProps as { options?: { label?: unknown; value: string }[] }).options ?? [];
+      resolvedProps['options'] = opts.map(o => ({
+        label: o.label !== undefined ? String(resolveDynamic(o.label, surface.dataModel)) : '',
+        value: o.value,
+      }));
     } else {
       const childInfo = childrenToList((rawProps as { children?: A2uiChildren }).children, surface);
       if (childInfo) {
