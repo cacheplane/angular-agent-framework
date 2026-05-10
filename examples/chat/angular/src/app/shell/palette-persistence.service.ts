@@ -11,6 +11,7 @@ interface PaletteState {
   debug?: boolean | null;
   threadId?: string | null;
   collapsed?: boolean | null;
+  timeline?: boolean | null;
 }
 
 type PaletteKey = keyof PaletteState;
