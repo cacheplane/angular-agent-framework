@@ -8,7 +8,7 @@ import { RenderElementComponent } from '@ngaf/render';
   standalone: true,
   imports: [RenderElementComponent],
   template: `
-    <div [class]="listClass()">
+    <div [class]="listClass()" [style.align-items]="alignmentCss()">
       @for (key of childKeys(); track key) {
         <render-element [elementKey]="key" [spec]="spec()" />
       }
@@ -34,6 +34,8 @@ export class A2uiListComponent {
   readonly childKeys = input<string[]>([]);
   readonly spec = input.required<Spec>();
   readonly direction = input<'vertical' | 'horizontal'>('vertical');
+  /** v1 canonical prop: cross-axis alignment. */
+  readonly alignment = input<'start' | 'center' | 'end' | 'stretch' | undefined>(undefined);
   // Framework inputs required by the render harness.
   readonly bindings = input<Record<string, string>>({});
   readonly emit = input<(event: string) => void>(() => { /* noop */ });
@@ -43,5 +45,13 @@ export class A2uiListComponent {
     return this.direction() === 'horizontal'
       ? 'a2ui-list--horizontal'
       : 'a2ui-list--vertical';
+  });
+
+  protected readonly alignmentCss = computed<string | null>(() => {
+    const a = this.alignment();
+    if (!a) return null;
+    return a === 'start' ? 'flex-start'
+         : a === 'end' ? 'flex-end'
+         : a; // center / stretch are valid CSS values as-is
   });
 }

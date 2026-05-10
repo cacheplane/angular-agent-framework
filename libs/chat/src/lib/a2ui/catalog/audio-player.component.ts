@@ -6,14 +6,28 @@ import type { Spec } from '@json-render/core';
   selector: 'a2ui-audio-player',
   standalone: true,
   template: `
-    <audio
-      class="a2ui-audio"
-      [src]="url()"
-      [autoplay]="autoPlay()"
-      [controls]="controls()"
-    ></audio>
+    <div class="a2ui-audio-wrap">
+      @if (description()) {
+        <span class="a2ui-audio-description">{{ description() }}</span>
+      }
+      <audio
+        class="a2ui-audio"
+        [src]="url()"
+        [autoplay]="autoPlay()"
+        [controls]="controls()"
+      ></audio>
+    </div>
   `,
   styles: [`
+    .a2ui-audio-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: var(--a2ui-spacing-1);
+    }
+    .a2ui-audio-description {
+      font-size: var(--a2ui-typography-caption-size);
+      color: var(--a2ui-on-surface-variant);
+    }
     .a2ui-audio {
       display: block;
       width: 100%;
@@ -22,6 +36,8 @@ import type { Spec } from '@json-render/core';
 })
 export class A2uiAudioPlayerComponent {
   readonly url = input<string>('');
+  /** v1 canonical prop: short description / title rendered above the player. */
+  readonly description = input<string>('');
   /** v1 prop name: autoPlay (camelCase). */
   readonly autoPlay = input<boolean>(false);
   readonly controls = input<boolean>(true);

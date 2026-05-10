@@ -74,4 +74,14 @@ export const WELCOME_SUGGESTIONS: readonly WelcomeSuggestion[] = [
     value:
       'Render a booking surface: a heading "Book your trip", a DateTimeInput for travel date, a horizontal divider, then a Row containing two Cards (one for departure city, one for return city) each with a TextField. Below the Row add a primary "Continue" Button whose action opens a Modal containing a confirmation Column with a summary Text and Confirm / Cancel Buttons.',
   },
+  {
+    label: 'Smoke: media + layout kitchen sink',
+    value:
+      'Render a Card containing a Tabs component with two tabs labeled "Media" and "Layout". Under the Media tab show a Column containing: a header Image (use https://placehold.co/600x300/4f8df5/ffffff.png as the URL), an Icon (any icon name from the canonical set, e.g. star), a short Text caption, an AudioPlayer (use https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3 as the URL), and a Video (use https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4 as the URL). Under the Layout tab show: a Row containing two Text components separated by a vertical Divider, then a horizontal Divider, then a List of three Text bullet items, then a Column containing two Text components.',
+  },
+  {
+    label: 'Smoke: interactive form kitchen sink',
+    value:
+      'Render a Card titled "Profile setup" containing a Column with: a TextField for display name, a Slider for "experience years" (range 0-30), a CheckBox for "subscribe to newsletter", a DateTimeInput for birthday (date only), a MultipleChoice for "favorite frameworks" with options Angular, React, Vue, Svelte and maxAllowedSelections of 3 (multi-select), a horizontal Divider, a Row containing a primary "Save" Button and a secondary "Open details" Button whose action opens a Modal with a Column containing a Text summary and a Close Button.',
+  },
 ];
