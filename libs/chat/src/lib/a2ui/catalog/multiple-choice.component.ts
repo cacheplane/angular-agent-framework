@@ -52,8 +52,18 @@ interface ResolvedOption {
 })
 export class A2uiMultipleChoiceComponent {
   readonly label = input<string>('');
-  /** Resolved current selections (plain string array from surface-to-spec). */
-  readonly selections = input<string[]>([]);
+  /** Resolved current selections from surface-to-spec. Normalized in
+   * `selectionsArray` because LLMs sometimes seed the data model with a
+   * scalar (e.g. `"5"`) instead of an array (`["5"]`); we coerce so
+   * .includes() works either way. */
+  readonly selections = input<string | string[] | undefined>(undefined);
+
+  protected readonly selectionsArray = computed<string[]>(() => {
+    const v = this.selections();
+    if (Array.isArray(v)) return v;
+    if (v == null || v === '') return [];
+    return [String(v)];
+  });
   /** Resolved options with plain string labels (surface-to-spec resolves DynamicString). */
   readonly options = input<ResolvedOption[]>([]);
   /** When ≤ 1 — render as single-select <select>; otherwise multi-select checkboxes. */
@@ -64,7 +74,7 @@ export class A2uiMultipleChoiceComponent {
   protected readonly isSingleSelect = computed(() => this.maxAllowedSelections() <= 1);
 
   protected isSelected(value: string): boolean {
-    return this.selections().includes(value);
+    return this.selectionsArray().includes(value);
   }
 
   onSelectChange(event: Event): void {
@@ -74,7 +84,7 @@ export class A2uiMultipleChoiceComponent {
 
   onCheckChange(value: string, event: Event): void {
     const checked = (event.target as HTMLInputElement).checked;
-    const current = [...this.selections()];
+    const current = [...this.selectionsArray()];
     const idx = current.indexOf(value);
     if (checked && idx === -1) {
       current.push(value);
