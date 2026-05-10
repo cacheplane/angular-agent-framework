@@ -60,3 +60,19 @@
   z-index: 996;
   padding: 8px 0;
 }
+
+.demo-shell__threads-panel {
+  position: fixed;
+  left: 0;
+  top: 80px;
+  bottom: 96px;
+  width: 240px;
+  padding: 12px 8px;
+  background: #1a1d23;
+  border-right: 1px solid #303540;
+  overflow-y: auto;
+  z-index: 996;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}

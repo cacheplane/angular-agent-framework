@@ -93,6 +93,17 @@
 
     <button
       type="button"
+      class="palette__toggle"
+      [class.is-on]="threadsOpen()"
+      [attr.aria-pressed]="threadsOpen()"
+      (click)="toggleThreads()"
+    >
+      <span class="palette__toggle-dot"></span>
+      <span>Threads {{ threadsOpen() ? 'on' : 'off' }}</span>
+    </button>
+
+    <button
+      type="button"
       class="palette__action"
       (click)="emitNewConversation()"
     >↻ New conversation</button>
