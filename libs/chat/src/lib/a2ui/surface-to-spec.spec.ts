@@ -26,13 +26,21 @@ describe('surfaceToSpec (v1)', () => {
     expect(spec.elements['root'].props['text']).toBe('Hi');
   });
 
-  it('resolves DynamicString path prop against dataModel', () => {
+  it('leaves DynamicString path prop as $bindState marker for json-render', () => {
+    // Path refs preserve their dynamic resolution: surface-to-spec emits
+    // a `$bindState` marker so json-render reads the current value from
+    // its state store on every render. This is what enables user input
+    // (TextField, MultipleChoice, etc.) to write back through the
+    // a2ui:datamodel:<path>:<value> emit protocol and have the UI
+    // reflect those writes immediately.
     const surface = makeSurface(
       [{ id: 'root', component: { Text: { text: { path: '/greeting' } } } }],
       { greeting: 'Hello World' },
     );
     const spec = surfaceToSpec(surface)!;
-    expect(spec.elements['root'].props['text']).toBe('Hello World');
+    expect(spec.elements['root'].props['text']).toEqual({ $bindState: '/greeting' });
+    // Spec.state seeds the json-render store with the initial value.
+    expect(spec.state).toEqual({ greeting: 'Hello World' });
   });
 
   it('returns null when surface has no components', () => {
@@ -175,7 +183,11 @@ describe('surfaceToSpec (v1)', () => {
       { name: 'Alice' },
     );
     const spec = surfaceToSpec(surface)!;
-    expect(spec.elements['root'].props['text']).toBe('Alice');
+    // Path refs become $bindState markers (see "leaves DynamicString
+    // path prop" test above). _bindings still maps prop name → path so
+    // catalog components emit a2ui:datamodel:<path>:<value> on user
+    // input.
+    expect(spec.elements['root'].props['text']).toEqual({ $bindState: '/name' });
     expect(spec.elements['root'].props['_bindings']).toEqual({ text: '/name' });
   });
 
