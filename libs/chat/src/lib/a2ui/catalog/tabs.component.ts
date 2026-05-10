@@ -30,26 +30,27 @@ import { RenderElementComponent } from '@ngaf/render';
     .a2ui-tabs { display: flex; flex-direction: column; }
     .a2ui-tabs__tablist {
       display: flex;
-      border-bottom: 1px solid var(--a2ui-border, rgba(255,255,255,0.1));
+      border-bottom: 1px solid var(--a2ui-outline);
     }
     .a2ui-tabs__tab {
-      padding: 8px 16px;
-      font-size: 14px;
+      padding: var(--a2ui-spacing-2) var(--a2ui-spacing-4);
+      font-size: var(--a2ui-typography-body-size);
       font-weight: 500;
       cursor: pointer;
       background: transparent;
       border: none;
       border-bottom: 2px solid transparent;
-      color: var(--a2ui-label, rgba(255,255,255,0.5));
-      transition: color 120ms, border-color 120ms;
+      color: var(--a2ui-label);
+      transition: color var(--a2ui-motion-duration-short) var(--a2ui-motion-easing-standard),
+                  border-color var(--a2ui-motion-duration-short) var(--a2ui-motion-easing-standard);
       margin-bottom: -1px;
     }
-    .a2ui-tabs__tab:hover { color: var(--a2ui-input-text, rgba(255,255,255,0.8)); }
+    .a2ui-tabs__tab:hover { color: var(--a2ui-on-surface); }
     .a2ui-tabs__tab--active {
-      border-bottom-color: var(--a2ui-primary, #3b82f6);
-      color: var(--a2ui-input-text, white);
+      border-bottom-color: var(--a2ui-primary);
+      color: var(--a2ui-on-surface);
     }
-    .a2ui-tabs__panel { padding-top: 12px; }
+    .a2ui-tabs__panel { padding-top: var(--a2ui-spacing-3); }
   `],
 })
 export class A2uiTabsComponent {

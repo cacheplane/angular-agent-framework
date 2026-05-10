@@ -18,11 +18,12 @@ import { RenderElementComponent } from '@ngaf/render';
     .a2ui-card {
       display: flex;
       flex-direction: column;
-      gap: 8px;
-      border-radius: 12px;
-      border: 1px solid var(--a2ui-border, rgba(255,255,255,0.1));
-      background: var(--a2ui-card-bg, rgba(255,255,255,0.05));
-      padding: 16px;
+      gap: var(--a2ui-spacing-2);
+      border-radius: var(--a2ui-shape-medium);
+      border: 1px solid var(--a2ui-outline);
+      background: var(--a2ui-surface);
+      padding: var(--a2ui-spacing-4);
+      box-shadow: var(--a2ui-elevation-1);
     }
   `],
 })

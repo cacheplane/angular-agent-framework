@@ -11,49 +11,51 @@ type UsageHint = 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'caption' | 'body';
   styles: [`
     .a2ui-text-h1 {
       display: block;
-      font-size: 2rem;
-      font-weight: 700;
-      line-height: 1.2;
+      font-size: var(--a2ui-typography-h1-size);
+      font-weight: var(--a2ui-typography-h1-weight);
+      line-height: var(--a2ui-typography-h1-line-height);
       margin: 0;
     }
     .a2ui-text-h2 {
       display: block;
-      font-size: 1.5rem;
-      font-weight: 600;
-      line-height: 1.3;
+      font-size: var(--a2ui-typography-h2-size);
+      font-weight: var(--a2ui-typography-h2-weight);
+      line-height: var(--a2ui-typography-h2-line-height);
       margin: 0;
     }
     .a2ui-text-h3 {
       display: block;
-      font-size: 1.25rem;
-      font-weight: 600;
-      line-height: 1.4;
+      font-size: var(--a2ui-typography-h3-size);
+      font-weight: var(--a2ui-typography-h3-weight);
+      line-height: var(--a2ui-typography-h3-line-height);
       margin: 0;
     }
     .a2ui-text-h4 {
       display: block;
-      font-size: 1.125rem;
-      font-weight: 500;
-      line-height: 1.4;
+      font-size: var(--a2ui-typography-h4-size);
+      font-weight: var(--a2ui-typography-h4-weight);
+      line-height: var(--a2ui-typography-h4-line-height);
       margin: 0;
     }
     .a2ui-text-h5 {
       display: block;
-      font-size: 1rem;
-      font-weight: 500;
-      line-height: 1.5;
+      font-size: var(--a2ui-typography-h5-size);
+      font-weight: var(--a2ui-typography-h5-weight);
+      line-height: var(--a2ui-typography-h5-line-height);
       margin: 0;
     }
     .a2ui-text-caption {
       display: block;
-      font-size: 0.75rem;
-      color: var(--a2ui-caption, rgba(255,255,255,0.5));
-      line-height: 1.4;
+      font-size: var(--a2ui-typography-caption-size);
+      font-weight: var(--a2ui-typography-caption-weight);
+      color: var(--a2ui-caption);
+      line-height: var(--a2ui-typography-caption-line-height);
     }
     .a2ui-text-body {
       display: block;
-      font-size: 0.875rem;
-      line-height: 1.6;
+      font-size: var(--a2ui-typography-body-size);
+      font-weight: var(--a2ui-typography-body-weight);
+      line-height: var(--a2ui-typography-body-line-height);
     }
   `],
 })

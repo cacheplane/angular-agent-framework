@@ -24,26 +24,27 @@ import { RenderElementComponent } from '@ngaf/render';
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      padding: 8px 16px;
-      border-radius: 8px;
-      font-size: 14px;
+      padding: var(--a2ui-spacing-2) var(--a2ui-spacing-4);
+      border-radius: var(--a2ui-shape-small);
+      font-size: var(--a2ui-typography-body-size);
       font-weight: 500;
       cursor: pointer;
-      transition: background 120ms, opacity 120ms;
+      transition: background var(--a2ui-motion-duration-short) var(--a2ui-motion-easing-standard),
+                  opacity var(--a2ui-motion-duration-short) var(--a2ui-motion-easing-standard);
       border: none;
     }
     .a2ui-btn:disabled { opacity: 0.5; cursor: not-allowed; }
     .a2ui-btn--primary {
-      background: var(--a2ui-primary, #2563eb);
-      color: #fff;
+      background: var(--a2ui-primary);
+      color: var(--a2ui-on-primary);
     }
-    .a2ui-btn--primary:hover:not(:disabled) { background: var(--a2ui-primary-hover, #1d4ed8); }
+    .a2ui-btn--primary:hover:not(:disabled) { background: var(--a2ui-primary-hover); }
     .a2ui-btn--secondary {
-      background: transparent;
-      color: var(--a2ui-input-text, rgba(255,255,255,0.8));
-      border: 1px solid var(--a2ui-border, rgba(255,255,255,0.2));
+      background: var(--a2ui-surface-variant);
+      color: var(--a2ui-on-surface);
+      border: 1px solid var(--a2ui-outline);
     }
-    .a2ui-btn--secondary:hover:not(:disabled) { background: rgba(255,255,255,0.08); }
+    .a2ui-btn--secondary:hover:not(:disabled) { background: var(--a2ui-outline); }
   `],
 })
 export class A2uiButtonComponent {

@@ -18,14 +18,14 @@ import { RenderElementComponent } from '@ngaf/render';
     .a2ui-list--vertical {
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: var(--a2ui-spacing-1);
       overflow-y: auto;
       max-height: 384px;
     }
     .a2ui-list--horizontal {
       display: flex;
       flex-direction: row;
-      gap: 4px;
+      gap: var(--a2ui-spacing-1);
       overflow-x: auto;
     }
   `],
