@@ -1,11 +1,25 @@
 // SPDX-License-Identifier: MIT
 import type { A2uiSurface, A2uiActionMessage } from '@ngaf/a2ui';
 
-/** Builds a v0.9 A2uiActionMessage from handler params and the current surface. */
+function toDynamicValue(v: unknown): unknown {
+  if (typeof v === 'string') return { literalString: v };
+  if (typeof v === 'number') return { literalNumber: v };
+  if (typeof v === 'boolean') return { literalBoolean: v };
+  return { literalString: String(v) };
+}
+
+/** Builds an A2uiActionMessage from handler params and the current surface.
+ *  The action.context is serialized as v1 DynamicValue-wrapped entries. */
 export function buildA2uiActionMessage(
   params: Record<string, unknown>,
   surface: A2uiSurface,
 ): A2uiActionMessage {
+  const rawContext = (params['context'] as Record<string, unknown>) ?? {};
+  const wrappedContext: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(rawContext)) {
+    wrappedContext[k] = toDynamicValue(v);
+  }
+
   const message: A2uiActionMessage = {
     version: 'v0.9',
     action: {
@@ -13,7 +27,7 @@ export function buildA2uiActionMessage(
       surfaceId: surface.surfaceId,
       sourceComponentId: params['sourceComponentId'] as string,
       timestamp: new Date().toISOString(),
-      context: (params['context'] as Record<string, unknown>) ?? {},
+      context: wrappedContext,
     },
   };
   if (surface.sendDataModel) {
