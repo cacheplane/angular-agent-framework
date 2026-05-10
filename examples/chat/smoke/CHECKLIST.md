@@ -233,17 +233,38 @@ renders correctly both during streaming and after completion.
 
 ## Generative UI / A2UI surfaces
 
-- [ ] Click "Demo: render an interactive A2UI surface" welcome suggestion
-- [ ] Parent AI emits a tool_call to `render_demo_form` (no plain markdown reply yet)
-- [ ] Final assistant bubble renders an `<a2ui-surface>` (a Card titled "Quick feedback") instead of plain markdown
-- [ ] Card contains: TextField labeled "Your name", ChoicePicker labeled "Rating" with options 1-5, Submit button labeled "Submit feedback"
-- [ ] Required-name validation: Submit button shows the inline error "Name is required" / "Enter your name before submitting" while the name field is empty
-- [ ] Type a name → validation error clears
-- [ ] Pick a rating → ChoicePicker updates the data model
-- [ ] Click Submit → `<a2ui-surface>` emits an `A2uiActionMessage` (event name `feedbackSubmit`); chat round-trips it as a new user submit
-- [ ] AI replies conversationally referencing the submitted form (acknowledges receipt; may quote the name/rating)
-- [ ] Server-side: `curl localhost:2024/threads/<id>/state` shows: AI message with `tool_calls=[{ "name": "render_demo_form", ... }]`, ToolMessage with `content="rendered"`, AI message whose `content` starts with `---a2ui_JSON---\n` and contains `surfaceUpdate` + `beginRendering` envelopes (v1 wire format)
+### Gen UI mode dropdown
+
+- [ ] Palette "Gen UI" dropdown lists 2 options: `A2UI v1` and `json-render`
+- [ ] Default value is `A2UI v1` on first load
+- [ ] Selection persists across reload and mode switches
+- [ ] Server-side: `curl localhost:2024/threads/<id>/state` shows `values.gen_ui_mode` matches the palette selection
+
+### Dynamic dispatch — A2UI v1 mode
+
+- [ ] With Gen UI = `A2UI v1`, click any GenUI welcome suggestion (e.g. "Demo: render a feedback form")
+- [ ] Parent AI emits a tool_call to `generate_a2ui_schema` (not `render_demo_form`)
+- [ ] Sub-LLM generates a v1 A2UI envelope array; `emit_generated_surface` node wraps it with `---a2ui_JSON---\n`
+- [ ] Final assistant bubble renders an `<a2ui-surface>` matching the requested form
+- [ ] Surface is interactive: fields accept input, buttons are clickable
+- [ ] Click Submit (or equivalent action button) → chat round-trips the `A2uiActionMessage` as a new user submit
+- [ ] AI replies conversationally referencing the submitted data
 - [ ] No console errors during the surface render or submit cycle
+
+### Dynamic dispatch — json-render mode
+
+- [ ] Switch Gen UI dropdown to `json-render`
+- [ ] Click any GenUI welcome suggestion (e.g. "Demo: render a settings card")
+- [ ] Parent AI emits a tool_call to `generate_json_render_spec`
+- [ ] Sub-LLM generates a json-render Spec (`{root, elements, state}`); `emit_generated_surface` strips markdown fencing and emits a bare JSON AIMessage
+- [ ] Final assistant bubble renders the json-render surface
+- [ ] No console errors during the render cycle
+
+### Server-side wire format
+
+- [ ] In A2UI v1 mode: final AI message content starts with `---a2ui_JSON---\n` followed by JSONL (one envelope per line); must contain `surfaceUpdate` and `beginRendering` envelopes
+- [ ] In json-render mode: final AI message content is a bare JSON object starting with `{`
+- [ ] `curl localhost:2024/threads/<id>/state` confirms the above for both modes
 
 ## Subagents
 
