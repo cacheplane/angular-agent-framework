@@ -28,12 +28,15 @@ export class ControlPalette {
   readonly effortOptions = input.required<readonly { value: string; label: string }[]>();
   readonly genUiMode = input.required<string>();
   readonly genUiOptions = input.required<readonly { value: string; label: string }[]>();
+  readonly theme = input.required<string>();
+  readonly themeOptions = input.required<readonly { value: string; label: string }[]>();
   readonly debugOpen = input.required<boolean>();
 
   readonly modeChange = output<DemoMode>();
   readonly modelChange = output<string>();
   readonly effortChange = output<string>();
   readonly genUiModeChange = output<string>();
+  readonly themeChange = output<string>();
   readonly debugOpenChange = output<boolean>();
   readonly newConversation = output<void>();
 
@@ -66,6 +69,11 @@ export class ControlPalette {
   protected pickGenUiMode(event: Event): void {
     const value = (event.target as HTMLSelectElement).value;
     this.genUiModeChange.emit(value);
+  }
+
+  protected pickTheme(event: Event): void {
+    const value = (event.target as HTMLSelectElement).value;
+    this.themeChange.emit(value);
   }
 
   protected toggleDebug(): void {

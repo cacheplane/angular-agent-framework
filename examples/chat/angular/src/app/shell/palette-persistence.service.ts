@@ -7,6 +7,7 @@ interface PaletteState {
   model?: string | null;
   effort?: string | null;
   genUiMode?: string | null;
+  theme?: string | null;
   debug?: boolean | null;
   threadId?: string | null;
   collapsed?: boolean | null;
