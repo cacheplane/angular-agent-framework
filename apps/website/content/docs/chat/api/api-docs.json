@@ -1010,6 +1010,12 @@
         "optional": false
       },
       {
+        "name": "fontFamily",
+        "type": "Signal<string | null>",
+        "description": "Agent-set font family from `beginRendering.styles.font`. Returns\nnull when unset so the host doesn't override consumer fonts.",
+        "optional": false
+      },
+      {
         "name": "handlers",
         "type": "InputSignal<Record<string, object>>",
         "description": "",
@@ -1019,6 +1025,12 @@
         "name": "internalHandlers",
         "type": "Signal<object>",
         "description": "Merge built-in A2UI handlers with consumer-provided handlers.",
+        "optional": false
+      },
+      {
+        "name": "primaryColor",
+        "type": "Signal<string | null>",
+        "description": "Agent-set primary color from `beginRendering.styles.primaryColor`.\nReturns null when unset so the host binding doesn't override the\nconsumer's `:root`-level `--a2ui-primary` default.",
         "optional": false
       },
       {
@@ -3759,6 +3771,12 @@
         "name": "sendDataModel",
         "type": "boolean",
         "description": "",
+        "optional": true
+      },
+      {
+        "name": "styles",
+        "type": "object",
+        "description": "Styles set by the agent via `beginRendering.styles`. The\ncanonical v1 spec defines exactly two fields: `font` (primary\nfont for the UI) and `primaryColor` (hex `#RRGGBB`). The renderer\napplies these as CSS custom properties on the surface root,\noverriding any consumer-set defaults for the duration of the\nsurface's life. Anything richer (typography scale, spacing,\nelevation, etc.) is the renderer's private vocabulary and not\ncommunicated through this field.",
         "optional": true
       },
       {
