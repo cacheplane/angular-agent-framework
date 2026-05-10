@@ -64,4 +64,14 @@ export const WELCOME_SUGGESTIONS: readonly WelcomeSuggestion[] = [
     value:
       'Show me a contact form with fields for name, email address, subject, and a multi-line message, plus a Send button.',
   },
+  {
+    label: 'Demo: render a media-rich product card',
+    value:
+      'Render a product card with: a header image at the top, a tab strip with two tabs ("Overview" and "Specs"). Under Overview show a Row containing an icon and a short description Text. Under Specs show a List of feature bullets each prefixed with a small icon. Below the tabs add a primary "Add to cart" Button.',
+  },
+  {
+    label: 'Demo: render a booking surface with modal',
+    value:
+      'Render a booking surface: a heading "Book your trip", a DateTimeInput for travel date, a horizontal divider, then a Row containing two Cards (one for departure city, one for return city) each with a TextField. Below the Row add a primary "Continue" Button whose action opens a Modal containing a confirmation Column with a summary Text and Confirm / Cancel Buttons.',
+  },
 ];
