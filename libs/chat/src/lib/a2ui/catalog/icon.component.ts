@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-import { Component, input } from '@angular/core';
+import { Component, computed, input } from '@angular/core';
 import type { Spec } from '@json-render/core';
 
 @Component({
@@ -9,7 +9,8 @@ import type { Spec } from '@json-render/core';
     <span
       class="a2ui-icon"
       [style.font-size]="size() ? size() + 'px' : '1.125rem'"
-    >{{ icon() }}</span>
+      [attr.aria-label]="effectiveName()"
+    >{{ effectiveName() }}</span>
   `,
   styles: [`
     .a2ui-icon {
@@ -21,7 +22,9 @@ import type { Spec } from '@json-render/core';
   `],
 })
 export class A2uiIconComponent {
-  /** v1 prop name: icon (resolved string, e.g. a Unicode symbol or ligature name). */
+  /** v1 canonical prop. */
+  readonly name = input<string | undefined>(undefined);
+  /** Pre-v1 alias retained for back-compat. */
   readonly icon = input<string>('');
   readonly size = input<number | null>(null);
   // Framework inputs required by the render harness.
@@ -30,4 +33,6 @@ export class A2uiIconComponent {
   readonly loading = input<boolean>(false);
   readonly childKeys = input<string[]>([]);
   readonly spec = input<Spec | undefined>(undefined);
+
+  protected readonly effectiveName = computed(() => this.name() ?? this.icon());
 }
