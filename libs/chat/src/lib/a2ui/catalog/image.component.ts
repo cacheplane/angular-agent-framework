@@ -7,13 +7,20 @@ import type { Spec } from '@json-render/core';
   standalone: true,
   template: `
     <img
+      class="a2ui-img"
       [src]="url()"
       [alt]="alt()"
       [style.width]="width() ? width() + 'px' : null"
       [style.height]="height() ? height() + 'px' : null"
-      class="max-w-full rounded"
     />
   `,
+  styles: [`
+    .a2ui-img {
+      display: block;
+      max-width: 100%;
+      border-radius: 4px;
+    }
+  `],
 })
 export class A2uiImageComponent {
   readonly url = input<string>('');

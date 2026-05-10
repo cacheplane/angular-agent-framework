@@ -7,11 +7,27 @@ import type { Spec } from '@json-render/core';
   standalone: true,
   template: `
     @if (orientation() === 'vertical') {
-      <div class="inline-block self-stretch border-l border-white/10 mx-2"></div>
+      <div class="a2ui-divider a2ui-divider--vertical"></div>
     } @else {
-      <hr class="border-white/10 my-2" />
+      <hr class="a2ui-divider a2ui-divider--horizontal" />
     }
   `,
+  styles: [`
+    .a2ui-divider--horizontal {
+      display: block;
+      width: 100%;
+      border: none;
+      border-top: 1px solid var(--a2ui-border, rgba(255,255,255,0.1));
+      margin: 8px 0;
+    }
+    .a2ui-divider--vertical {
+      display: inline-block;
+      align-self: stretch;
+      width: 1px;
+      background: var(--a2ui-border, rgba(255,255,255,0.1));
+      margin: 0 8px;
+    }
+  `],
 })
 export class A2uiDividerComponent {
   /** Canonical v1 spec name. The LLM emits this. */

@@ -7,12 +7,19 @@ import type { Spec } from '@json-render/core';
   standalone: true,
   template: `
     <video
-      class="w-full rounded-lg"
+      class="a2ui-video"
       [src]="url()"
       [autoplay]="autoPlay()"
       [controls]="controls()"
     ></video>
   `,
+  styles: [`
+    .a2ui-video {
+      display: block;
+      width: 100%;
+      border-radius: 8px;
+    }
+  `],
 })
 export class A2uiVideoComponent {
   readonly url = input<string>('');
