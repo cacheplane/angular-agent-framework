@@ -17,15 +17,15 @@ import type { Spec } from '@json-render/core';
       display: block;
       width: 100%;
       border: none;
-      border-top: 1px solid var(--a2ui-border, rgba(255,255,255,0.1));
-      margin: 8px 0;
+      border-top: 1px solid var(--a2ui-outline);
+      margin: var(--a2ui-spacing-2) 0;
     }
     .a2ui-divider--vertical {
       display: inline-block;
       align-self: stretch;
       width: 1px;
-      background: var(--a2ui-border, rgba(255,255,255,0.1));
-      margin: 0 8px;
+      background: var(--a2ui-outline);
+      margin: 0 var(--a2ui-spacing-2);
     }
   `],
 })
