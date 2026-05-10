@@ -25,6 +25,33 @@ import type { RepeatScope } from './contexts/repeat-scope';
 import { buildPropResolutionContext } from './internals/prop-signal';
 import type { AngularComponentRenderer } from './render.types';
 
+/** Magic prefix on `emit()` strings that catalog components use to
+ * write back to the data model (binding `path` and the new value). The
+ * render-element's emitFn intercepts this and writes via the state
+ * store, sidestepping the normal `el.on[event]` handler binding which
+ * the catalog components have no way to declare for arbitrary paths. */
+const A2UI_DATAMODEL_PREFIX = 'a2ui:datamodel:';
+
+/** Best-effort string→typed coercion for datamodel writes. Catalog
+ * components emit raw string values; the underlying state may have
+ * been declared as number/boolean/array, and consumers reading the
+ * resolved props expect the correct type. */
+function coerceValue(raw: string): unknown {
+  if (raw === '') return '';
+  if (raw === 'true') return true;
+  if (raw === 'false') return false;
+  // JSON-array passthrough (MultipleChoice emits stringified arrays)
+  if (raw.startsWith('[') && raw.endsWith(']')) {
+    try { return JSON.parse(raw); } catch { /* fall through */ }
+  }
+  // Numeric — only if the entire string parses cleanly as a number
+  if (/^-?\d+(?:\.\d+)?$/.test(raw)) {
+    const n = Number(raw);
+    if (!Number.isNaN(n)) return n;
+  }
+  return raw;
+}
+
 /**
  * Recursive element renderer.
  *
@@ -126,8 +153,28 @@ export class RenderElementComponent implements OnInit {
     return evaluateVisibility(el.visible, this.propCtx());
   });
 
-  /** Emit function that delegates to context handlers. */
+  /** Emit function that delegates to context handlers AND handles the
+   * canonical `a2ui:datamodel:<path>:<value>` write-back protocol that
+   * input components (TextField, MultipleChoice, CheckBox, Slider,
+   * DateTimeInput) emit when the user changes their value. The render
+   * lib's state store is the single source of truth for in-surface UI
+   * state; writing through it triggers re-render with the new value
+   * and re-evaluates any path-bound props (validation, computed
+   * visibility, etc.).
+   *
+   * The string format is `a2ui:datamodel:<path>:<value>` where:
+   *   - `<path>` is a JSON-Pointer-style path (e.g. `/name`, `/form/email`)
+   *   - `<value>` is the raw value rendered as a string. We attempt to
+   *     coerce numeric and boolean literals back to their typed form
+   *     so downstream consumers see correct types; arrays come through
+   *     as JSON-stringified payloads (catalog components emit them via
+   *     `JSON.stringify`).
+   */
   private readonly emitFn = (event: string) => {
+    if (event.startsWith(A2UI_DATAMODEL_PREFIX)) {
+      this.applyDatamodelWrite(event);
+      return;
+    }
     const el = this.element();
     if (!el?.on) return;
     const binding = el.on[event];
@@ -142,6 +189,25 @@ export class RenderElementComponent implements OnInit {
       }
     }
   };
+
+  private applyDatamodelWrite(event: string): void {
+    // Strip the prefix, then split path and value at the last `:` —
+    // path may itself contain `:` characters (rare but legal in
+    // JSON-Pointer per RFC 6901), and values can certainly contain
+    // them (URLs, time strings). Catalog components emit
+    // `a2ui:datamodel:<path>:<value>` where path is the binding's
+    // path-ref (usually starts with `/`); split the LAST `:` because
+    // the value is the only field guaranteed to come last.
+    const rest = event.slice(A2UI_DATAMODEL_PREFIX.length);
+    const lastColon = rest.lastIndexOf(':');
+    if (lastColon === -1) return;
+    const path = rest.slice(0, lastColon);
+    const rawValue = rest.slice(lastColon + 1);
+    if (!path) return;
+    const store = this.ctx.store;
+    if (!store) return;
+    store.set(path, coerceValue(rawValue));
+  }
 
   /** Resolved inputs for non-repeat elements. */
   readonly resolvedInputs = computed(() => {
