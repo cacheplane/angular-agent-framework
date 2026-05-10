@@ -45,8 +45,23 @@ export const WELCOME_SUGGESTIONS: readonly WelcomeSuggestion[] = [
       'Use the research subagent to investigate the history and motivation behind Angular standalone components, then report back with a concise summary.',
   },
   {
-    label: 'Demo: render an interactive A2UI surface',
+    label: 'Demo: render a feedback form',
     value:
-      'Use the render_demo_form tool to show me a feedback card with name and rating fields.',
+      'Build me an interactive feedback form with a name field, a 1–5 rating picker, and a Submit button.',
+  },
+  {
+    label: 'Demo: render a settings card',
+    value:
+      'Render a settings card with a toggle for dark mode, a language dropdown (English / Spanish / French), and a Save button.',
+  },
+  {
+    label: 'Demo: render a poll',
+    value:
+      'Create a quick poll asking "Which front-end framework do you prefer?" with options Angular, React, Vue, and Svelte, plus a Vote button.',
+  },
+  {
+    label: 'Demo: render a contact form',
+    value:
+      'Show me a contact form with fields for name, email address, subject, and a multi-line message, plus a Send button.',
   },
 ];
