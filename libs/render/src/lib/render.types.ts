@@ -19,8 +19,27 @@ export interface AngularComponentInputs {
 
 export type AngularComponentRenderer = Type<unknown>;
 
+/**
+ * A view registry entry. Bare `Type` form is the legacy shape; the
+ * object form lets consumers attach a per-component fallback that
+ * mounts while any state-bound prop on the element is still
+ * unresolved. The fallback is monotonic per element instance: once
+ * the real component mounts, subsequent re-renders never revert to
+ * fallback even if a prop later resolves to undefined.
+ */
+export interface RenderViewEntry {
+  component: Type<unknown>;
+  fallback?: Type<unknown>;
+}
+
 export interface AngularRegistry {
   get(name: string): AngularComponentRenderer | undefined;
+  /**
+   * Returns the configured fallback for a registered name, OR the
+   * lib's default fallback if the entry omits one, OR undefined if
+   * the name is not registered.
+   */
+  getFallback(name: string): AngularComponentRenderer | undefined;
   names(): string[];
 }
 
