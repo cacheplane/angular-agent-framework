@@ -7,6 +7,8 @@ import {
   signal,
   inject,
   effect,
+  ElementRef,
+  HostListener,
 } from '@angular/core';
 import { PalettePersistence } from './palette-persistence.service';
 import type { DemoMode } from './demo-shell.component';
@@ -20,6 +22,7 @@ import type { DemoMode } from './demo-shell.component';
 })
 export class ControlPalette {
   private readonly persistence = inject(PalettePersistence);
+  private readonly elementRef = inject<ElementRef<HTMLElement>>(ElementRef);
 
   readonly mode = input.required<DemoMode>();
   readonly model = input.required<string>();
@@ -31,6 +34,8 @@ export class ControlPalette {
   readonly theme = input.required<string>();
   readonly themeOptions = input.required<readonly { value: string; label: string }[]>();
   readonly debugOpen = input.required<boolean>();
+  /** True while the agent is streaming. Drives the status-dot pulse. */
+  readonly streaming = input<boolean>(false);
 
   readonly modeChange = output<DemoMode>();
   readonly modelChange = output<string>();
@@ -40,7 +45,12 @@ export class ControlPalette {
   readonly debugOpenChange = output<boolean>();
   readonly newConversation = output<void>();
 
-  protected readonly collapsed = signal<boolean>(this.persistence.read('collapsed') ?? false);
+  /**
+   * Whether the palette is collapsed to its status-pill state. Defaults
+   * to true (pill = resting state, matching Next.js dev tools). Persisted
+   * across reloads via PalettePersistence.
+   */
+  protected readonly collapsed = signal<boolean>(this.persistence.read('collapsed') ?? true);
 
   constructor() {
     effect(() => {
@@ -48,8 +58,12 @@ export class ControlPalette {
     });
   }
 
-  protected toggleCollapsed(): void {
-    this.collapsed.update((c) => !c);
+  protected expand(): void {
+    this.collapsed.set(false);
+  }
+
+  protected close(): void {
+    this.collapsed.set(true);
   }
 
   protected pickMode(next: DemoMode): void {
@@ -82,5 +96,37 @@ export class ControlPalette {
 
   protected emitNewConversation(): void {
     this.newConversation.emit();
+  }
+
+  /**
+   * Close the panel on document-level clicks outside the palette.
+   * No-ops when already collapsed; checks event.target containment so
+   * inside-panel clicks don't close.
+   */
+  @HostListener('document:click', ['$event'])
+  protected onDocumentClick(event: MouseEvent): void {
+    if (this.collapsed()) return;
+    const target = event.target as Node | null;
+    if (target && this.elementRef.nativeElement.contains(target)) return;
+    this.close();
+  }
+
+  /** Close on Escape anywhere in the document while the panel is open. */
+  @HostListener('document:keydown.escape')
+  protected onEscape(): void {
+    if (!this.collapsed()) this.close();
+  }
+
+  /**
+   * Selected-option label for a value across an options list. Used by the
+   * styled select trigger to show the human-friendly label rather than
+   * the raw value.
+   */
+  protected labelFor(
+    value: string,
+    options: readonly { value: string; label: string }[],
+  ): string {
+    const match = options.find(o => o.value === value);
+    return match?.label ?? value;
   }
 }
