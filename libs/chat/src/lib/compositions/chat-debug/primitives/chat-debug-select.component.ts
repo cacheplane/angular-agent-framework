@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
-import { Component, ChangeDetectionStrategy, input, output } from '@angular/core';
-import { CHAT_HOST_TOKENS } from '../../../styles/chat-tokens';
+import { Component, ChangeDetectionStrategy, input, output, computed } from '@angular/core';
+import { CHAT_DEBUG_TOKENS } from '../chat-debug-tokens';
 
 export interface SelectOption {
   readonly value: string;
@@ -12,53 +12,70 @@ export interface SelectOption {
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   styles: [
-    CHAT_HOST_TOKENS,
+    CHAT_DEBUG_TOKENS,
     `
     :host { display: block; }
-    label {
+    .row {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: var(--ngaf-chat-space-3);
-      font-size: var(--ngaf-chat-font-size-sm);
-      color: var(--ngaf-chat-text);
+      gap: 12px;
+      font-size: 13px;
+      color: var(--ngaf-chat-debug-text);
     }
-    .select-wrap {
+    .select {
       position: relative;
-      flex: 1;
-      max-width: 60%;
-    }
-    select {
-      appearance: none;
-      -webkit-appearance: none;
-      width: 100%;
-      background: var(--ngaf-chat-bg);
-      color: var(--ngaf-chat-text);
-      border: 1px solid var(--ngaf-chat-separator);
-      border-radius: var(--ngaf-chat-radius-button);
-      padding: 5px 26px 5px 10px;
-      font: inherit;
-      font-size: var(--ngaf-chat-font-size-sm);
+      display: inline-flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      min-width: 140px;
+      background: var(--ngaf-chat-debug-bg-deep);
+      border: 1px solid var(--ngaf-chat-debug-border);
+      border-radius: 6px;
+      padding: 6px 10px;
+      font-size: 12px;
+      color: var(--ngaf-chat-debug-text);
       cursor: pointer;
-      transition: border-color 120ms ease, background 120ms ease;
     }
-    select:hover  { border-color: var(--ngaf-chat-text-muted); }
-    select:focus  { outline: none; border-color: var(--ngaf-chat-primary); }
-    .chevron {
+    .select:hover { background: #0f0f12; }
+    .select:focus-within {
+      border-color: var(--ngaf-chat-debug-accent);
+      outline: 2px solid color-mix(in srgb, var(--ngaf-chat-debug-accent) 30%, transparent);
+      outline-offset: 1px;
+    }
+    .select__value {
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .select__caret {
+      color: var(--ngaf-chat-debug-text-subtle);
+      font-size: 10px;
+      line-height: 1;
+    }
+    .select select {
       position: absolute;
-      right: 8px;
-      top: 50%;
-      transform: translateY(-50%);
-      pointer-events: none;
-      color: var(--ngaf-chat-text-muted);
-      display: flex;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      cursor: pointer;
+      border: 0;
+      background: transparent;
+      font: inherit;
+      color: inherit;
     }
     `,
   ],
   template: `
-    <label>
+    <label class="row">
       <span>{{ label() }}</span>
-      <span class="select-wrap">
+      <span class="select">
+        <span class="select__value">{{ currentLabel() }}</span>
+        <span class="select__caret" aria-hidden="true">▾</span>
         <select
           [value]="value()"
           (change)="onChange($event)"
@@ -68,9 +85,6 @@ export interface SelectOption {
             <option [value]="opt.value" [selected]="opt.value === value()">{{ opt.label }}</option>
           }
         </select>
-        <span class="chevron" aria-hidden="true">
-          <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4.5L6 7.5L9 4.5"/></svg>
-        </span>
       </span>
     </label>
   `,
@@ -80,6 +94,11 @@ export class ChatDebugSelectComponent {
   readonly options = input.required<readonly SelectOption[]>();
   readonly value = input.required<string>();
   readonly valueChange = output<string>();
+
+  protected readonly currentLabel = computed((): string => {
+    const v = this.value();
+    return this.options().find((o) => o.value === v)?.label ?? v;
+  });
 
   protected onChange(event: Event): void {
     this.valueChange.emit((event.target as HTMLSelectElement).value);

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 import { Component, ChangeDetectionStrategy, input, output } from '@angular/core';
-import { CHAT_HOST_TOKENS } from '../../../styles/chat-tokens';
+import { CHAT_DEBUG_TOKENS } from '../chat-debug-tokens';
 
 export interface SegmentedOption {
   readonly value: string;
@@ -12,38 +12,40 @@ export interface SegmentedOption {
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   styles: [
-    CHAT_HOST_TOKENS,
+    CHAT_DEBUG_TOKENS,
     `
     :host { display: block; }
     .segmented {
-      display: inline-flex;
-      gap: 0;
-      padding: 3px;
-      background: var(--ngaf-chat-surface-alt);
-      border: 1px solid var(--ngaf-chat-separator);
-      border-radius: var(--ngaf-chat-radius-button);
+      display: flex;
       width: 100%;
       box-sizing: border-box;
+      background: var(--ngaf-chat-debug-bg-deep);
+      border: 1px solid var(--ngaf-chat-debug-border);
+      border-radius: var(--ngaf-chat-debug-radius-input);
+      padding: 3px;
+      gap: 0;
     }
     .segmented__btn {
-      appearance: none;
-      border: 0;
-      background: transparent;
-      padding: 6px var(--ngaf-chat-space-3);
-      font: inherit;
-      font-size: var(--ngaf-chat-font-size-sm);
-      font-weight: 500;
-      color: var(--ngaf-chat-text-muted);
-      cursor: pointer;
-      border-radius: calc(var(--ngaf-chat-radius-button) - 3px);
       flex: 1;
-      transition: color 120ms ease, background 120ms ease;
+      appearance: none;
+      background: transparent;
+      border: 0;
+      color: var(--ngaf-chat-debug-text-muted);
+      padding: 6px 8px;
+      border-radius: 5px;
+      font: inherit;
+      font-size: 12px;
+      cursor: pointer;
+      transition: background 120ms ease, color 120ms ease;
     }
-    .segmented__btn:hover:not(.is-active) { color: var(--ngaf-chat-text); }
+    .segmented__btn:hover:not(.is-active) {
+      background: var(--ngaf-chat-debug-bg);
+      color: var(--ngaf-chat-debug-text);
+    }
     .segmented__btn.is-active {
-      background: var(--ngaf-chat-bg);
-      color: var(--ngaf-chat-text);
-      box-shadow: var(--ngaf-chat-shadow-sm), 0 0 0 1px var(--ngaf-chat-separator);
+      background: var(--ngaf-chat-debug-border);
+      color: var(--ngaf-chat-debug-text);
+      font-weight: 500;
     }
     `,
   ],

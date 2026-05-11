@@ -85,7 +85,7 @@ export { ChatDebugSegmentedComponent } from './lib/compositions/chat-debug/primi
 export type { SegmentedOption } from './lib/compositions/chat-debug/primitives/chat-debug-segmented.component';
 export { ChatDebugSelectComponent } from './lib/compositions/chat-debug/primitives/chat-debug-select.component';
 export type { SelectOption } from './lib/compositions/chat-debug/primitives/chat-debug-select.component';
-export { ChatDebugToggleComponent } from './lib/compositions/chat-debug/primitives/chat-debug-toggle.component';
+export { ChatDebugSwitchComponent } from './lib/compositions/chat-debug/primitives/chat-debug-switch.component';
 export { ChatDebugActionComponent } from './lib/compositions/chat-debug/primitives/chat-debug-action.component';
 export { ChatTimelineSliderComponent } from './lib/compositions/chat-timeline-slider/chat-timeline-slider.component';
 export { ChatThreadDrawerComponent } from './lib/compositions/chat-thread-drawer/chat-thread-drawer.component';
