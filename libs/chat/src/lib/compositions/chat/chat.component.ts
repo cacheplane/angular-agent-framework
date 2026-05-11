@@ -1,7 +1,7 @@
 // libs/chat/src/lib/compositions/chat/chat.component.ts
 // SPDX-License-Identifier: MIT
 import {
-  Component, ChangeDetectionStrategy, input, model, output, computed, effect, viewChild, ElementRef,
+  Component, ChangeDetectionStrategy, input, model, output, computed, effect, signal, untracked, viewChild, ElementRef,
   DestroyRef, inject,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -30,10 +30,24 @@ import { ChatWelcomeComponent } from '../../primitives/chat-welcome/chat-welcome
 import { ChatSelectComponent, type ChatSelectOption } from '../../primitives/chat-select/chat-select.component';
 import { A2uiSurfaceComponent } from '../../a2ui/surface.component';
 import { ChatGenuiSkeletonComponent } from '../../primitives/chat-genui-skeleton/chat-genui-skeleton.component';
+import { ChatScrollBubbleComponent } from '../../primitives/chat-scroll-bubble/chat-scroll-bubble.component';
 import { createContentClassifier, type ContentClassifier } from '../../streaming/content-classifier';
 import { messageContent } from '../shared/message-utils';
 import { CHAT_HOST_TOKENS } from '../../styles/chat-tokens';
 import type { ChatRenderEvent } from './chat-render-event';
+
+/**
+ * Returns true when the scroll position is within `tolerance` px of the bottom.
+ * Pure helper extracted for unit testing.
+ */
+export function isPinned(
+  scrollHeight: number,
+  scrollTop: number,
+  clientHeight: number,
+  tolerance = 150,
+): boolean {
+  return scrollHeight - scrollTop - clientHeight < tolerance;
+}
 
 @Component({
   selector: 'chat',
@@ -45,7 +59,7 @@ import type { ChatRenderEvent } from './chat-render-event';
     ChatThreadListComponent, ChatGenerativeUiComponent,
     ChatStreamingMdComponent, ChatToolCallsComponent, ChatSubagentsComponent, A2uiSurfaceComponent,
     ChatMessageActionsComponent, ChatWelcomeComponent, ChatSelectComponent, ChatReasoningComponent,
-    ChatGenuiSkeletonComponent,
+    ChatGenuiSkeletonComponent, ChatScrollBubbleComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styles: [CHAT_HOST_TOKENS, `
@@ -98,6 +112,7 @@ import type { ChatRenderEvent } from './chat-render-event';
     [chatFooter] {
       padding-bottom: var(--ngaf-chat-edge-pad);
     }
+    .chat-footer-wrap { position: relative; }
   `],
   template: `
     @if (showWelcome()) {
@@ -130,7 +145,7 @@ import type { ChatRenderEvent } from './chat-render-event';
       <div class="chat-shell__main">
         <chat-window>
           <ng-content select="[chatHeader]" chatHeader />
-          <div chatBody class="chat-scroll" #scrollContainer>
+          <div chatBody class="chat-scroll" #scrollContainer (scroll)="onScroll()">
             <chat-message-list [agent]="agent()">
               <ng-template chatMessageTemplate="human" let-message let-i="index">
                 <chat-message [role]="'user'" [prevRole]="prevRole(i)">{{ messageContent(message) }}</chat-message>
@@ -217,12 +232,20 @@ import type { ChatRenderEvent } from './chat-render-event';
               </ng-template>
             </chat-message-list>
 
-            <chat-typing-indicator [agent]="agent()" />
+            @if (pinned()) {
+              <chat-typing-indicator [agent]="agent()" />
+            }
           </div>
-          <div chatFooter>
+          <div chatFooter class="chat-footer-wrap">
+            @if (!pinned()) {
+              <chat-scroll-bubble
+                [mode]="agent().isLoading() ? 'streaming' : 'idle'"
+                (clicked)="onScrollBubbleClick()"
+              />
+            }
             <chat-error [agent]="agent()" />
             <chat-interrupt [agent]="agent()" />
-            <chat-input [agent]="agent()" [submitOnEnter]="true" placeholder="Type a message...">
+            <chat-input [agent]="agent()" [submitOnEnter]="true" placeholder="Type a message..." (submitted)="onUserSubmitted()">
               @if (modelOptions().length > 0) {
                 <chat-select
                   chatInputModelSelect
@@ -331,6 +354,10 @@ export class ChatComponent {
   private readonly scrollContainer = viewChild<ElementRef<HTMLElement>>('scrollContainer');
   private readonly messageCount = computed(() => this.agent().messages().length);
   private prevMessageCount = 0;
+  private wasLoading = false;
+  protected readonly pinned = signal<boolean>(true);
+  private programmaticScrollCount = 0;
+  private static readonly PIN_TOLERANCE_PX = 150;
 
   constructor() {
     effect(() => {
@@ -362,12 +389,35 @@ export class ChatComponent {
       if (!el) return;
       const isNewMessage = count !== this.prevMessageCount;
       this.prevMessageCount = count;
-      // Tolerance: if the user has scrolled up more than 150px from the
-      // bottom, treat it as "parked reading" and don't auto-scroll. Once
-      // they scroll back near the bottom, streaming resumes pushing.
-      const isNearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 150;
-      if (isNewMessage || isNearBottom) {
+      if (isNewMessage || this.pinned()) {
+        this.programmaticScrollCount++;
         el.scrollTop = el.scrollHeight;
+        requestAnimationFrame(() => { this.programmaticScrollCount--; });
+        if (isNewMessage) untracked(() => this.pinned.set(true));
+      }
+    });
+
+    // Final scroll when streaming completes. The content-mutation effect above
+    // fires on every token but stops when streaming ends; action buttons
+    // (reload, copy) render on idle and can land below the fold without this.
+    effect(() => {
+      let loading: boolean;
+      try { loading = this.agent().isLoading(); } catch { return; }
+      if (loading) {
+        this.wasLoading = true;
+        return;
+      }
+      if (!this.wasLoading) return;
+      this.wasLoading = false;
+      if (this.pinned()) {
+        // Defer one frame so message-actions have rendered.
+        requestAnimationFrame(() => {
+          const el2 = this.scrollContainer()?.nativeElement;
+          if (!el2) return;
+          this.programmaticScrollCount++;
+          el2.scrollTop = el2.scrollHeight;
+          requestAnimationFrame(() => { this.programmaticScrollCount--; });
+        });
       }
     });
 
@@ -400,6 +450,27 @@ export class ChatComponent {
     if (role === 'system') return 'system';
     if (role === 'tool') return 'tool';
     return undefined;
+  }
+
+  protected onScroll(): void {
+    if (this.programmaticScrollCount > 0) return;
+    const el = this.scrollContainer()?.nativeElement;
+    if (!el) return;
+    const nextPinned = isPinned(el.scrollHeight, el.scrollTop, el.clientHeight, ChatComponent.PIN_TOLERANCE_PX);
+    if (nextPinned !== this.pinned()) this.pinned.set(nextPinned);
+  }
+
+  protected onScrollBubbleClick(): void {
+    const el = this.scrollContainer()?.nativeElement;
+    if (!el) return;
+    this.programmaticScrollCount++;
+    el.scrollTop = el.scrollHeight;
+    requestAnimationFrame(() => { this.programmaticScrollCount--; });
+    this.pinned.set(true);
+  }
+
+  protected onUserSubmitted(): void {
+    this.pinned.set(true);
   }
 
   /**

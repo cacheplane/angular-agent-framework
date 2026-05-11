@@ -30,6 +30,7 @@ export const CHAT_WINDOW_STYLES = `
   }
   .chat-window__footer {
     flex-shrink: 0;
+    margin-top: var(--ngaf-chat-input-gap);
   }
   .chat-window__footer:empty { display: none; }
 `;

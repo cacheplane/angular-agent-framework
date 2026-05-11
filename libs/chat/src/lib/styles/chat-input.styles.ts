@@ -36,7 +36,6 @@ export const CHAT_INPUT_STYLES = `
   font: inherit;
   font-size: 1rem;
   line-height: 1.5;
-  max-height: 1.5em;
   padding: 0;
   field-sizing: content;
   overflow-y: auto;

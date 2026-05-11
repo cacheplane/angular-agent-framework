@@ -43,5 +43,5 @@
   "bugs": {
     "url": "https://github.com/cacheplane/angular-agent-framework/issues"
   },
-  "sideEffects": false
+  "sideEffects": ["**/chat-tokens.ts", "**/*.css"]
 }

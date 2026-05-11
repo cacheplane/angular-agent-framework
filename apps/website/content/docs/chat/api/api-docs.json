@@ -1600,6 +1600,12 @@
         "optional": false
       },
       {
+        "name": "pinned",
+        "type": "WritableSignal<boolean>",
+        "description": "",
+        "optional": false
+      },
+      {
         "name": "rate",
         "type": "OutputEmitterRef<object>",
         "description": "Emitted when the user rates an assistant message.",
@@ -1851,6 +1857,18 @@
         ]
       },
       {
+        "name": "onScroll",
+        "signature": "onScroll()",
+        "description": "",
+        "params": []
+      },
+      {
+        "name": "onScrollBubbleClick",
+        "signature": "onScrollBubbleClick()",
+        "description": "",
+        "params": []
+      },
+      {
         "name": "onSpecEvent",
         "signature": "onSpecEvent(event: RenderEvent, messageIndex: number)",
         "description": "",
@@ -1868,6 +1886,12 @@
             "optional": false
           }
         ]
+      },
+      {
+        "name": "onUserSubmitted",
+        "signature": "onUserSubmitted()",
+        "description": "",
+        "params": []
       },
       {
         "name": "prevMessage",
@@ -2861,6 +2885,34 @@
         "params": []
       }
     ]
+  },
+  {
+    "name": "ChatScrollBubbleComponent",
+    "kind": "class",
+    "description": "",
+    "params": [],
+    "examples": [],
+    "properties": [
+      {
+        "name": "ariaLabel",
+        "type": "Signal<\"Latest activity\" | \"Scroll to latest\">",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "clicked",
+        "type": "OutputEmitterRef<void>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "mode",
+        "type": "InputSignal<ChatScrollBubbleMode>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "methods": []
   },
   {
     "name": "ChatSelectComponent",
@@ -5412,6 +5464,13 @@
     "kind": "type",
     "description": "",
     "signature": "\"user\" | \"assistant\" | \"system\" | \"tool\"",
+    "examples": []
+  },
+  {
+    "name": "ChatScrollBubbleMode",
+    "kind": "type",
+    "description": "",
+    "signature": "\"streaming\" | \"idle\"",
     "examples": []
   },
   {
