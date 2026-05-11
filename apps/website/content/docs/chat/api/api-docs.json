@@ -2356,6 +2356,129 @@
     "methods": []
   },
   {
+    "name": "ChatHistorySearchPaletteComponent",
+    "kind": "class",
+    "description": "",
+    "params": [],
+    "examples": [],
+    "properties": [
+      {
+        "name": "activeIndex",
+        "type": "WritableSignal<number>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "close",
+        "type": "OutputEmitterRef<void>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "listId",
+        "type": "string",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "loading",
+        "type": "InputSignal<boolean>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "open",
+        "type": "ModelSignal<boolean>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "placeholder",
+        "type": "InputSignal<string>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "query",
+        "type": "ModelSignal<string>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "results",
+        "type": "InputSignal<ThreadMatch[]>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "threadSelected",
+        "type": "OutputEmitterRef<string>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "methods": [
+      {
+        "name": "activeRowId",
+        "signature": "activeRowId()",
+        "description": "",
+        "params": []
+      },
+      {
+        "name": "onInput",
+        "signature": "onInput(e: Event)",
+        "description": "",
+        "params": [
+          {
+            "name": "e",
+            "type": "Event",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
+        "name": "onInputKeydown",
+        "signature": "onInputKeydown(e: KeyboardEvent)",
+        "description": "",
+        "params": [
+          {
+            "name": "e",
+            "type": "KeyboardEvent",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
+        "name": "onRowClick",
+        "signature": "onRowClick(id: string)",
+        "description": "",
+        "params": [
+          {
+            "name": "id",
+            "type": "string",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
+        "name": "rowId",
+        "signature": "rowId(index: number)",
+        "description": "",
+        "params": [
+          {
+            "name": "index",
+            "type": "number",
+            "description": "",
+            "optional": false
+          }
+        ]
+      }
+    ]
+  },
+  {
     "name": "ChatInputComponent",
     "kind": "class",
     "description": "",
@@ -3090,6 +3213,71 @@
     ]
   },
   {
+    "name": "ChatSidenavComponent",
+    "kind": "class",
+    "description": "",
+    "params": [],
+    "examples": [],
+    "properties": [
+      {
+        "name": "activeThreadId",
+        "type": "InputSignal<string | null>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "mode",
+        "type": "InputSignal<ChatSidenavMode>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "newChat",
+        "type": "OutputEmitterRef<void>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "open",
+        "type": "InputSignal<boolean>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "openChange",
+        "type": "OutputEmitterRef<boolean>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "searchOpened",
+        "type": "OutputEmitterRef<void>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "threads",
+        "type": "InputSignal<Thread[] | null>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "threadSelected",
+        "type": "OutputEmitterRef<string>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "methods": [
+      {
+        "name": "onEscape",
+        "signature": "onEscape()",
+        "description": "",
+        "params": []
+      }
+    ]
+  },
+  {
     "name": "ChatStreamingMdComponent",
     "kind": "class",
     "description": "Renders streaming markdown by walking a @cacheplane/partial-markdown AST\nthrough @ngaf/render's view registry.\n\nReactivity model: the live `parser.root` keeps a stable JS reference\nacross pushes (partial-markdown's identity guarantee). To make Angular\nsignals propagate downstream when the underlying tree changes, we surface\na materialized snapshot via `materialize()`. The snapshot shares\nstructurally — unchanged subtrees keep the SAME reference, and any\ndescendant change yields a NEW root reference. This lets Angular's\n`Object.is` equality check both detect changes (root reference differs)\nand short-circuit unchanged subtrees (per-node references stable).\n\nOverride per-node-type renderers via the `[viewRegistry]` input or by\nsupplying a different `MARKDOWN_VIEW_REGISTRY` provider in the injector\ntree.",
@@ -3201,34 +3389,6 @@
       {
         "name": "suggestions",
         "type": "InputSignal<string[]>",
-        "description": "",
-        "optional": false
-      }
-    ],
-    "methods": []
-  },
-  {
-    "name": "ChatThreadDrawerComponent",
-    "kind": "class",
-    "description": "",
-    "params": [],
-    "examples": [],
-    "properties": [
-      {
-        "name": "mode",
-        "type": "InputSignal<ChatThreadDrawerMode>",
-        "description": "",
-        "optional": false
-      },
-      {
-        "name": "open",
-        "type": "InputSignal<boolean>",
-        "description": "",
-        "optional": false
-      },
-      {
-        "name": "openChange",
-        "type": "OutputEmitterRef<boolean>",
         "description": "",
         "optional": false
       }
@@ -5362,6 +5522,32 @@
     "examples": []
   },
   {
+    "name": "ThreadMatch",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "id",
+        "type": "string",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "subtitle",
+        "type": "string",
+        "description": "Optional secondary line, rendered muted under the title.",
+        "optional": true
+      },
+      {
+        "name": "title",
+        "type": "string",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
     "name": "ToolCall",
     "kind": "interface",
     "description": "",
@@ -5486,10 +5672,10 @@
     "examples": []
   },
   {
-    "name": "ChatThreadDrawerMode",
+    "name": "ChatSidenavMode",
     "kind": "type",
     "description": "",
-    "signature": "\"push\" | \"overlay\"",
+    "signature": "\"expanded\" | \"collapsed\" | \"drawer\"",
     "examples": []
   },
   {
