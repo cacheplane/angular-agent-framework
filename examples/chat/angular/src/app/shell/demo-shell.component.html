@@ -18,6 +18,7 @@
     [theme]="theme()"
     [themeOptions]="themeOptions()"
     [debugOpen]="debugOpen()"
+    [streaming]="agent.status() === 'running'"
     (modeChange)="onModeChange($event)"
     (modelChange)="onModelChange($event)"
     (effortChange)="onEffortChange($event)"
