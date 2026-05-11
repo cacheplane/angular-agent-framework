@@ -88,8 +88,8 @@ export type { SelectOption } from './lib/compositions/chat-debug/primitives/chat
 export { ChatDebugToggleComponent } from './lib/compositions/chat-debug/primitives/chat-debug-toggle.component';
 export { ChatDebugActionComponent } from './lib/compositions/chat-debug/primitives/chat-debug-action.component';
 export { ChatTimelineSliderComponent } from './lib/compositions/chat-timeline-slider/chat-timeline-slider.component';
-export { ChatThreadDrawerComponent } from './lib/compositions/chat-thread-drawer/chat-thread-drawer.component';
-export type { ChatThreadDrawerMode } from './lib/compositions/chat-thread-drawer/chat-thread-drawer.component';
+export { ChatSidenavComponent } from './lib/compositions/chat-sidenav/chat-sidenav.component';
+export type { ChatSidenavMode } from './lib/compositions/chat-sidenav/chat-sidenav.component';
 export { ChatInterruptPanelComponent } from './lib/compositions/chat-interrupt-panel/chat-interrupt-panel.component';
 export type { InterruptAction } from './lib/compositions/chat-interrupt-panel/chat-interrupt-panel.component';
 export { ChatToolCallCardComponent } from './lib/compositions/chat-tool-call-card/chat-tool-call-card.component';
