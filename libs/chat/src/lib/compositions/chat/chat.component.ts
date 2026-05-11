@@ -30,6 +30,7 @@ import { ChatWelcomeComponent } from '../../primitives/chat-welcome/chat-welcome
 import { ChatSelectComponent, type ChatSelectOption } from '../../primitives/chat-select/chat-select.component';
 import { A2uiSurfaceComponent } from '../../a2ui/surface.component';
 import { ChatGenuiSkeletonComponent } from '../../primitives/chat-genui-skeleton/chat-genui-skeleton.component';
+import { ChatScrollBubbleComponent } from '../../primitives/chat-scroll-bubble/chat-scroll-bubble.component';
 import { createContentClassifier, type ContentClassifier } from '../../streaming/content-classifier';
 import { messageContent } from '../shared/message-utils';
 import { CHAT_HOST_TOKENS } from '../../styles/chat-tokens';
@@ -45,7 +46,7 @@ import type { ChatRenderEvent } from './chat-render-event';
     ChatThreadListComponent, ChatGenerativeUiComponent,
     ChatStreamingMdComponent, ChatToolCallsComponent, ChatSubagentsComponent, A2uiSurfaceComponent,
     ChatMessageActionsComponent, ChatWelcomeComponent, ChatSelectComponent, ChatReasoningComponent,
-    ChatGenuiSkeletonComponent,
+    ChatGenuiSkeletonComponent, ChatScrollBubbleComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styles: [CHAT_HOST_TOKENS, `
@@ -98,6 +99,7 @@ import type { ChatRenderEvent } from './chat-render-event';
     [chatFooter] {
       padding-bottom: var(--ngaf-chat-edge-pad);
     }
+    .chat-footer-wrap { position: relative; }
   `],
   template: `
     @if (showWelcome()) {
@@ -217,12 +219,20 @@ import type { ChatRenderEvent } from './chat-render-event';
               </ng-template>
             </chat-message-list>
 
-            <chat-typing-indicator [agent]="agent()" />
+            @if (pinned()) {
+              <chat-typing-indicator [agent]="agent()" />
+            }
           </div>
-          <div chatFooter>
+          <div chatFooter class="chat-footer-wrap">
+            @if (!pinned()) {
+              <chat-scroll-bubble
+                [mode]="agent().isLoading() ? 'streaming' : 'idle'"
+                (clicked)="onScrollBubbleClick()"
+              />
+            }
             <chat-error [agent]="agent()" />
             <chat-interrupt [agent]="agent()" />
-            <chat-input [agent]="agent()" [submitOnEnter]="true" placeholder="Type a message...">
+            <chat-input [agent]="agent()" [submitOnEnter]="true" placeholder="Type a message..." (submitted)="onUserSubmitted()">
               @if (modelOptions().length > 0) {
                 <chat-select
                   chatInputModelSelect
@@ -436,6 +446,19 @@ export class ChatComponent {
     const distance = el.scrollHeight - el.scrollTop - el.clientHeight;
     const nextPinned = distance < ChatComponent.PIN_TOLERANCE_PX;
     if (nextPinned !== this.pinned()) this.pinned.set(nextPinned);
+  }
+
+  protected onScrollBubbleClick(): void {
+    const el = this.scrollContainer()?.nativeElement;
+    if (!el) return;
+    this.programmaticScroll = true;
+    el.scrollTop = el.scrollHeight;
+    requestAnimationFrame(() => { this.programmaticScroll = false; });
+    this.pinned.set(true);
+  }
+
+  protected onUserSubmitted(): void {
+    this.pinned.set(true);
   }
 
   /**
