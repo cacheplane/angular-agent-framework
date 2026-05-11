@@ -54,6 +54,7 @@ export type { ChatToolCallTemplateContext } from './lib/primitives/chat-tool-cal
 export { ChatSubagentsComponent } from './lib/primitives/chat-subagents/chat-subagents.component';
 export { ChatThreadListComponent } from './lib/primitives/chat-thread-list/chat-thread-list.component';
 export type { Thread } from './lib/primitives/chat-thread-list/chat-thread-list.component';
+export { ChatCheckpointMarkerComponent } from './lib/primitives/chat-checkpoint-marker/chat-checkpoint-marker.component';
 export { ChatTimelineComponent } from './lib/primitives/chat-timeline/chat-timeline.component';
 export { ChatGenerativeUiComponent } from './lib/primitives/chat-generative-ui/chat-generative-ui.component';
 export { ChatWelcomeComponent } from './lib/primitives/chat-welcome/chat-welcome.component';
@@ -73,6 +74,8 @@ export { ChatPopupComponent } from './lib/compositions/chat-popup/chat-popup.com
 export { ChatSidebarComponent } from './lib/compositions/chat-sidebar/chat-sidebar.component';
 export { ChatDebugComponent } from './lib/compositions/chat-debug/chat-debug.component';
 export { ChatTimelineSliderComponent } from './lib/compositions/chat-timeline-slider/chat-timeline-slider.component';
+export { ChatThreadDrawerComponent } from './lib/compositions/chat-thread-drawer/chat-thread-drawer.component';
+export type { ChatThreadDrawerMode } from './lib/compositions/chat-thread-drawer/chat-thread-drawer.component';
 export { ChatInterruptPanelComponent } from './lib/compositions/chat-interrupt-panel/chat-interrupt-panel.component';
 export type { InterruptAction } from './lib/compositions/chat-interrupt-panel/chat-interrupt-panel.component';
 export { ChatToolCallCardComponent } from './lib/compositions/chat-tool-call-card/chat-tool-call-card.component';
