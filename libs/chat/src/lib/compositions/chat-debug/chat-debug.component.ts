@@ -251,10 +251,8 @@ export class ChatDebugComponent {
   });
 
   constructor() {
-    // Restore once from storage on construction, seeded by inputs as the
-    // fallback. Reads of `storageKey`, `defaultOpen`, `dock` are intentional
-    // — the input signals are stable for the lifetime of an instance, so this
-    // runs effectively once.
+    // Restore once from storage on construction; inputs seed the fallback.
+    // `storageKey` is read-once: rebinding it at runtime is not supported.
     const restore = createPersistence(this.storageKey());
     const persistedOpen = restore.read<boolean>('open');
     this.open.set(persistedOpen ?? this.defaultOpen());
