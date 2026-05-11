@@ -140,7 +140,7 @@ import type { ChatRenderEvent } from './chat-render-event';
                 @let content = messageContent(message);
                 @let classified = classifyMessage(content, message);
                 @let pending = classified.type() === 'pending';
-                @let genuiTurn = isGenuiTurn(message, prevMessage(i));
+                @let genuiTurn = isGenuiTurn(message, prevMessage(i), i);
                 <chat-message
                   [role]="'assistant'"
                   [message]="message"
@@ -412,17 +412,29 @@ export class ChatComponent {
   }
 
   /**
-   * True when this assistant message is part of a GenUI render turn —
-   * either it has a tool_call to a GenUI tool, OR its content array
-   * contains a function_call block for one (live during streaming),
-   * OR the previous message was a tool result for a GenUI tool. Used
-   * to gate the building-UI skeleton.
+   * True when this assistant message is part of a GenUI render turn.
+   * Walks backward through messages from `index` until it finds either
+   * an assistant message with `tool_calls` referencing a GenUI tool
+   * (→ this turn produces a surface) or a human message (→ the
+   * preceding turn ended; this assistant message stands on its own).
+   *
+   * Also checks the message itself for:
+   *   - `extra.tool_calls[].name` matching a GenUI tool (post-streaming
+   *     state of the tool-call AI message), OR
+   *   - `extra.content[].type === 'function_call' && .name` matching
+   *     (live during the OpenAI Responses-API streaming chunks before
+   *     `tool_calls` populates).
+   *
+   * The walk-back approach is robust to LangGraph's in-place
+   * replacement of the ToolMessage (which strips the `name` field),
+   * unlike a single prev-message check.
    */
-  protected isGenuiTurn(message: unknown, prevMsg: unknown): boolean {
+  protected isGenuiTurn(message: unknown, _prevMsg: unknown, index?: number): boolean {
     const names = new Set(this.genuiToolNames());
     const m = message as { extra?: Record<string, unknown> } | null | undefined;
     if (!m) return false;
 
+    // Direct check on the message itself (covers the tool-call AI message).
     const calls = (m.extra?.['tool_calls'] as Array<{ name?: string }> | undefined) ?? [];
     if (calls.some(c => c.name != null && names.has(c.name))) return true;
 
@@ -439,10 +451,32 @@ export class ChatComponent {
       }
     }
 
-    const p = prevMsg as { role?: string; name?: string; extra?: Record<string, unknown> } | null | undefined;
-    if (p && p.role === 'tool') {
-      const toolName = (p.extra?.['name'] as string | undefined) ?? p.name;
-      if (typeof toolName === 'string' && names.has(toolName)) return true;
+    // Walk backward through messages for the emit-phase assistant
+    // message whose own structure has no GenUI hint. Bounded by the
+    // most recent human message (= start of the current turn).
+    if (typeof index === 'number' && index > 0) {
+      const msgs = this.agent().messages();
+      for (let i = index - 1; i >= 0; i--) {
+        const prev = msgs[i] as { role?: string; extra?: Record<string, unknown> };
+        if (!prev) break;
+        if (prev.role === 'user') break;  // crossed the turn boundary
+
+        const prevCalls = (prev.extra?.['tool_calls'] as Array<{ name?: string }> | undefined) ?? [];
+        if (prevCalls.some(c => c.name != null && names.has(c.name))) return true;
+
+        const prevRaw = prev.extra?.['content'];
+        if (Array.isArray(prevRaw)) {
+          for (const block of prevRaw) {
+            if (block != null
+                && typeof block === 'object'
+                && (block as { type?: unknown }).type === 'function_call'
+                && typeof (block as { name?: unknown }).name === 'string'
+                && names.has((block as { name: string }).name)) {
+              return true;
+            }
+          }
+        }
+      }
     }
 
     return false;
