@@ -46,6 +46,8 @@ export { ChatLauncherButtonComponent } from './lib/primitives/chat-launcher-butt
 export { ChatSuggestionsComponent } from './lib/primitives/chat-suggestions/chat-suggestions.component';
 export { ChatInputComponent, submitMessage } from './lib/primitives/chat-input/chat-input.component';
 export { ChatTypingIndicatorComponent, isTyping } from './lib/primitives/chat-typing-indicator/chat-typing-indicator.component';
+export { ChatScrollBubbleComponent } from './lib/primitives/chat-scroll-bubble/chat-scroll-bubble.component';
+export type { ChatScrollBubbleMode } from './lib/primitives/chat-scroll-bubble/chat-scroll-bubble.component';
 export { ChatErrorComponent, extractErrorMessage } from './lib/primitives/chat-error/chat-error.component';
 export { ChatInterruptComponent, getInterrupt } from './lib/primitives/chat-interrupt/chat-interrupt.component';
 export { ChatToolCallsComponent } from './lib/primitives/chat-tool-calls/chat-tool-calls.component';
