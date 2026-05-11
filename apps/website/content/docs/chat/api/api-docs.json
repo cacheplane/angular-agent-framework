@@ -2024,6 +2024,15 @@
     "methods": []
   },
   {
+    "name": "ChatGenuiSkeletonComponent",
+    "kind": "class",
+    "description": "",
+    "params": [],
+    "examples": [],
+    "properties": [],
+    "methods": []
+  },
+  {
     "name": "ChatInputComponent",
     "kind": "class",
     "description": "",
@@ -2335,6 +2344,18 @@
         "name": "forkRequested",
         "type": "OutputEmitterRef<string>",
         "description": "",
+        "optional": false
+      },
+      {
+        "name": "genuiToolNames",
+        "type": "InputSignal<readonly string[]>",
+        "description": "Tool names whose call/result messages should render a skeleton in\n place of the streaming body. Defaults to the A2UI / json-render\n pair; consumers can override or extend.",
+        "optional": false
+      },
+      {
+        "name": "isGenUiToolCall",
+        "type": "Signal<boolean>",
+        "description": "True when this message represents (or results from) a GenUI tool\n call whose body should be suppressed in favor of a skeleton.",
         "optional": false
       },
       {
