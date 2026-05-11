@@ -8,7 +8,7 @@ import type { A2uiSurface } from '@ngaf/a2ui';
 import { createA2uiSurfaceStore, type A2uiSurfaceStore } from '../a2ui/surface-store';
 import { isTraceEnabled, trace } from './trace';
 
-export type ContentType = 'undetermined' | 'markdown' | 'json-render' | 'a2ui' | 'mixed';
+export type ContentType = 'pending' | 'markdown' | 'json-render' | 'a2ui' | 'mixed';
 
 const A2UI_PREFIX = '---a2ui_JSON---';
 
@@ -25,7 +25,7 @@ export interface ContentClassifier {
 }
 
 export function createContentClassifier(): ContentClassifier {
-  const typeSignal = signal<ContentType>('undetermined');
+  const typeSignal = signal<ContentType>('pending');
   const markdownSignal = signal<string>('');
   const specSignal = signal<Spec | null>(null);
   const elementStatesSignal = signal<Map<string, ElementAccumulationState>>(new Map());
@@ -40,21 +40,43 @@ export function createContentClassifier(): ContentClassifier {
   let a2uiStore: A2uiSurfaceStore | null = null;
   const a2uiSurfacesSignal = signal<Map<string, A2uiSurface>>(new Map());
 
+  /**
+   * Decide the content type from the first non-whitespace character.
+   * Returns 'pending' when:
+   *  - content is empty or all whitespace, OR
+   *  - the first non-whitespace char is '-' AND content is too short to
+   *    confirm or disprove the full A2UI_PREFIX (the "patience" case).
+   * Once we have at least A2UI_PREFIX.length non-prefix chars after the
+   * first '-', we commit to either 'a2ui' (full match) or 'markdown'
+   * (definitively not the prefix).
+   */
   function detectType(content: string): ContentType {
-    // Find first non-whitespace character
     for (let i = 0; i < content.length; i++) {
       const ch = content[i];
       if (ch === ' ' || ch === '\t' || ch === '\n' || ch === '\r') continue;
 
-      if (content.startsWith(A2UI_PREFIX, i)) {
-        return 'a2ui';
-      }
       if (ch === '{') {
         return 'json-render';
       }
+
+      if (ch === '-') {
+        if (content.startsWith(A2UI_PREFIX, i)) {
+          return 'a2ui';
+        }
+        const remaining = content.length - i;
+        if (remaining < A2UI_PREFIX.length) {
+          const candidate = content.slice(i);
+          if (A2UI_PREFIX.startsWith(candidate)) {
+            return 'pending';
+          }
+          return 'markdown';
+        }
+        return 'markdown';
+      }
+
       return 'markdown';
     }
-    return 'undetermined';
+    return 'pending';
   }
 
   function initJsonStore(jsonContent: string): void {
@@ -71,13 +93,8 @@ export function createContentClassifier(): ContentClassifier {
     specSignal.set(store.spec());
     elementStatesSignal.set(store.elementStates());
 
-    // Determine streaming state from the parser root node status
     const spec = store.spec();
     if (spec) {
-      // Check if the root JSON object is complete by seeing if materialize produced a complete object
-      // We check by looking at the parse tree store's underlying parser root status
-      // A simpler heuristic: if the spec has both root and elements defined and the last char was }, it's likely complete
-      // But we can use the parser events approach. Let's check the element states for streaming.
       streamingSignal.set(isStillStreaming());
     } else {
       streamingSignal.set(true);
@@ -86,20 +103,17 @@ export function createContentClassifier(): ContentClassifier {
 
   function isStillStreaming(): boolean {
     if (!store) return false;
-    // If the store has a spec, check if any elements are still streaming
-    // or if the root object itself hasn't closed yet
     const states = store.elementStates();
     for (const state of states.values()) {
       if (state.streaming) return true;
     }
-    // Also check if the spec has basic completeness: root + elements
     const spec = store.spec();
     if (!spec || !spec.root || !spec.elements) return true;
     return false;
   }
 
   function resetState(): void {
-    typeSignal.set('undetermined');
+    typeSignal.set('pending');
     markdownSignal.set('');
     specSignal.set(null);
     elementStatesSignal.set(new Map());
@@ -130,9 +144,9 @@ export function createContentClassifier(): ContentClassifier {
       }
       const currentType = typeSignal();
 
-      if (currentType === 'undetermined') {
+      if (currentType === 'pending') {
         const detected = detectType(content);
-        if (detected === 'undetermined') return;
+        if (detected === 'pending') return;
 
         typeSignal.set(detected);
 
@@ -141,7 +155,6 @@ export function createContentClassifier(): ContentClassifier {
           processedLength = content.length;
         } else if (detected === 'json-render') {
           streamingSignal.set(true);
-          // Find where JSON starts (skip whitespace)
           jsonStartIndex = 0;
           for (let i = 0; i < content.length; i++) {
             if (content[i] !== ' ' && content[i] !== '\t' && content[i] !== '\n' && content[i] !== '\r') {
