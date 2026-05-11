@@ -356,7 +356,7 @@ export class ChatComponent {
   private prevMessageCount = 0;
   private wasLoading = false;
   protected readonly pinned = signal<boolean>(true);
-  private programmaticScrollCount: number = 0;
+  private programmaticScrollCount = 0;
   private static readonly PIN_TOLERANCE_PX = 150;
 
   constructor() {
