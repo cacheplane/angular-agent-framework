@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 import { Component, ChangeDetectionStrategy, inject } from '@angular/core';
 import { ChatPopupComponent, ChatWelcomeSuggestionComponent, a2uiBasicCatalog } from '@ngaf/chat';
+import { DemoShell } from '../shell/demo-shell.component';
 import { DEMO_AGENT } from '../shell/shell-tokens';
 import { WELCOME_SUGGESTIONS } from './welcome-suggestions';
 
@@ -15,7 +16,12 @@ import { WELCOME_SUGGESTIONS } from './welcome-suggestions';
         Click the launcher button (bottom-right) to open the chat.
       </p>
     </div>
-    <chat-popup [agent]="agent" [views]="catalog">
+    <chat-popup
+      [agent]="agent"
+      [views]="catalog"
+      (replayRequested)="shell.onTimelineReplay($event)"
+      (forkRequested)="shell.onTimelineFork($event)"
+    >
       <div chatWelcomeSuggestions>
         @for (s of suggestions; track s.value) {
           <chat-welcome-suggestion
@@ -40,6 +46,7 @@ import { WELCOME_SUGGESTIONS } from './welcome-suggestions';
 })
 export class PopupMode {
   protected readonly agent = inject(DEMO_AGENT);
+  protected readonly shell = inject(DemoShell);
   protected readonly suggestions = WELCOME_SUGGESTIONS;
   // Phase 4: A2UI component catalog forwarded to <chat-popup>.
   protected readonly catalog = a2uiBasicCatalog();

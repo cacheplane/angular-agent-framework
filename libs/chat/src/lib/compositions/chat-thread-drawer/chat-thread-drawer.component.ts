@@ -29,18 +29,15 @@ export type ChatThreadDrawerMode = 'push' | 'overlay';
       position: fixed;
       top: 0;
       bottom: 0;
-      left: 0;
       width: var(--chat-thread-drawer-width);
       background: var(--ngaf-chat-bg);
       border-right: 1px solid var(--ngaf-chat-separator);
       z-index: 1001;
-      transform: translateX(-100%);
-      transition: transform 200ms ease;
+      transition: left 200ms ease;
       overflow-y: auto;
       display: flex;
       flex-direction: column;
     }
-    .chat-thread-drawer[data-open="true"] { transform: translateX(0); }
     @media (max-width: 767px) {
       .chat-thread-drawer { width: 100%; }
     }
@@ -61,6 +58,7 @@ export type ChatThreadDrawerMode = 'push' | 'overlay';
       tabindex="-1"
       [attr.data-open]="open() ? 'true' : 'false'"
       [attr.data-mode]="mode()"
+      [style.left.px]="open() ? 0 : -320"
       (keydown.escape)="openChange.emit(false)"
     >
       <ng-content />

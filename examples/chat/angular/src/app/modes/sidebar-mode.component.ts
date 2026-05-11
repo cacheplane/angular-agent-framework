@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 import { Component, ChangeDetectionStrategy, inject } from '@angular/core';
 import { ChatSidebarComponent, ChatWelcomeSuggestionComponent, a2uiBasicCatalog } from '@ngaf/chat';
+import { DemoShell } from '../shell/demo-shell.component';
 import { DEMO_AGENT } from '../shell/shell-tokens';
 import { WELCOME_SUGGESTIONS } from './welcome-suggestions';
 
@@ -15,7 +16,12 @@ import { WELCOME_SUGGESTIONS } from './welcome-suggestions';
         Click the launcher button (right edge) to slide in the chat panel.
       </p>
     </div>
-    <chat-sidebar [agent]="agent" [views]="catalog">
+    <chat-sidebar
+      [agent]="agent"
+      [views]="catalog"
+      (replayRequested)="shell.onTimelineReplay($event)"
+      (forkRequested)="shell.onTimelineFork($event)"
+    >
       <div chatWelcomeSuggestions>
         @for (s of suggestions; track s.value) {
           <chat-welcome-suggestion
@@ -40,6 +46,7 @@ import { WELCOME_SUGGESTIONS } from './welcome-suggestions';
 })
 export class SidebarMode {
   protected readonly agent = inject(DEMO_AGENT);
+  protected readonly shell = inject(DemoShell);
   protected readonly suggestions = WELCOME_SUGGESTIONS;
   // Phase 4: A2UI component catalog forwarded to <chat-sidebar>.
   protected readonly catalog = a2uiBasicCatalog();

@@ -1558,6 +1558,12 @@
         "optional": false
       },
       {
+        "name": "forkRequested",
+        "type": "OutputEmitterRef<string>",
+        "description": "Bubbled from chat-message gutter markers when the user requests a checkpoint fork.",
+        "optional": false
+      },
+      {
         "name": "handlers",
         "type": "InputSignal<Record<string, object>>",
         "description": "",
@@ -1612,6 +1618,12 @@
         "optional": false
       },
       {
+        "name": "replayRequested",
+        "type": "OutputEmitterRef<string>",
+        "description": "Bubbled from chat-message gutter markers when the user requests a checkpoint replay.",
+        "optional": false
+      },
+      {
         "name": "resolvedStore",
         "type": "Signal<StateStore | undefined>",
         "description": "",
@@ -1661,6 +1673,19 @@
       }
     ],
     "methods": [
+      {
+        "name": "checkpointFor",
+        "signature": "checkpointFor(msg: Message)",
+        "description": "Returns the checkpoint id associated with an AI message, if the\n underlying agent exposes messageCheckpoints().",
+        "params": [
+          {
+            "name": "msg",
+            "type": "Message",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
       {
         "name": "classifyMessage",
         "signature": "classifyMessage(content: string, message: object)",
@@ -1854,6 +1879,12 @@
         "optional": false
       },
       {
+        "name": "forkRequested",
+        "type": "OutputEmitterRef<string>",
+        "description": "",
+        "optional": false
+      },
+      {
         "name": "messageContent",
         "type": "object",
         "description": "",
@@ -1862,6 +1893,12 @@
       {
         "name": "previousState",
         "type": "Signal<Record<string, unknown>>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "replayRequested",
+        "type": "OutputEmitterRef<string>",
         "description": "",
         "optional": false
       },
@@ -2407,8 +2444,20 @@
         "optional": false
       },
       {
+        "name": "forkRequested",
+        "type": "OutputEmitterRef<string>",
+        "description": "",
+        "optional": false
+      },
+      {
         "name": "open",
         "type": "ModelSignal<boolean>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "replayRequested",
+        "type": "OutputEmitterRef<string>",
         "description": "",
         "optional": false
       },
@@ -2629,6 +2678,12 @@
         "optional": false
       },
       {
+        "name": "forkRequested",
+        "type": "OutputEmitterRef<string>",
+        "description": "",
+        "optional": false
+      },
+      {
         "name": "open",
         "type": "ModelSignal<boolean>",
         "description": "",
@@ -2637,6 +2692,12 @@
       {
         "name": "pushContent",
         "type": "InputSignal<boolean>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "replayRequested",
+        "type": "OutputEmitterRef<string>",
         "description": "",
         "optional": false
       },
