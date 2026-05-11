@@ -7,13 +7,16 @@ import {
   contentChildren,
   effect,
   HostListener,
+  inject,
   input,
   output,
   signal,
 } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
+import { DomSanitizer, type SafeHtml } from '@angular/platform-browser';
 import type { AgentWithHistory } from '../../agent';
 import { CHAT_HOST_TOKENS } from '../../styles/chat-tokens';
+import { ICON_TOOL } from '../../styles/chat-icons';
 import { ChatDebugControlsDirective } from './chat-debug-controls.directive';
 import { ChatDebugInspectorDirective } from './chat-debug-inspector.directive';
 import { TimelineInspectorComponent } from './inspectors/timeline-inspector.component';
@@ -46,22 +49,28 @@ interface TabEntry {
     /* Floating launcher */
     .launcher {
       position: fixed;
-      bottom: 16px;
-      right: 16px;
-      width: 40px;
-      height: 40px;
+      bottom: 20px;
+      right: 20px;
+      width: 44px;
+      height: 44px;
       border-radius: var(--ngaf-chat-radius-launcher);
       background: var(--ngaf-chat-primary);
       color: var(--ngaf-chat-on-primary);
       border: 0;
       cursor: pointer;
       z-index: 990;
-      box-shadow: var(--ngaf-chat-shadow-md);
-      font-size: 18px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18), 0 2px 4px rgba(0, 0, 0, 0.10);
       display: flex;
       align-items: center;
       justify-content: center;
+      transition: transform 150ms ease, box-shadow 150ms ease;
     }
+    .launcher:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.22), 0 3px 6px rgba(0, 0, 0, 0.12);
+    }
+    .launcher:active { transform: translateY(0); }
+    .launcher svg { display: block; }
 
     /* Docked panel */
     .panel {
@@ -72,62 +81,124 @@ interface TabEntry {
       z-index: 991;
       display: flex;
       flex-direction: column;
-      box-shadow: var(--ngaf-chat-shadow-lg);
+      box-shadow: -8px 0 24px rgba(0, 0, 0, 0.08), -2px 0 8px rgba(0, 0, 0, 0.04);
     }
     .panel--right  { top: 0; right: 0; bottom: 0; width: var(--panel-size, 420px); border-right: 0; }
-    .panel--left   { top: 0; left: 0;  bottom: 0; width: var(--panel-size, 420px); border-left: 0; }
-    .panel--bottom { left: 0; right: 0; bottom: 0; height: var(--panel-size, 40vh); border-bottom: 0; }
+    .panel--left   { top: 0; left: 0;  bottom: 0; width: var(--panel-size, 420px); border-left: 0;
+                     box-shadow: 8px 0 24px rgba(0, 0, 0, 0.08), 2px 0 8px rgba(0, 0, 0, 0.04); }
+    .panel--bottom { left: 0; right: 0; bottom: 0; height: var(--panel-size, 40vh); border-bottom: 0;
+                     box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.08), 0 -2px 8px rgba(0, 0, 0, 0.04); }
 
     .panel__header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: var(--ngaf-chat-space-2) var(--ngaf-chat-space-4);
+      padding: 10px var(--ngaf-chat-space-4);
       border-bottom: 1px solid var(--ngaf-chat-separator);
+      background: linear-gradient(to bottom, var(--ngaf-chat-bg), var(--ngaf-chat-surface));
+      min-height: 44px;
+      box-sizing: border-box;
     }
     .panel__title {
       margin: 0;
       font-size: var(--ngaf-chat-font-size-sm);
       font-weight: 600;
+      letter-spacing: -0.01em;
+      display: flex;
+      align-items: center;
+      gap: var(--ngaf-chat-space-2);
     }
-    .panel__actions { display: flex; align-items: center; gap: var(--ngaf-chat-space-1); }
-    .panel__actions button {
-      background: transparent;
-      border: 1px solid transparent;
+    .panel__title-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--ngaf-chat-success);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--ngaf-chat-success) 22%, transparent);
+    }
+
+    .panel__dock-group {
+      display: inline-flex;
+      gap: 0;
+      padding: 2px;
+      background: var(--ngaf-chat-surface-alt);
+      border: 1px solid var(--ngaf-chat-separator);
       border-radius: var(--ngaf-chat-radius-button);
-      padding: 2px 6px;
-      color: var(--ngaf-chat-text-muted);
-      font: inherit;
-      font-size: var(--ngaf-chat-font-size-sm);
-      cursor: pointer;
     }
-    .panel__actions button:hover { color: var(--ngaf-chat-text); border-color: var(--ngaf-chat-separator); }
-    .panel__actions button.is-active { color: var(--ngaf-chat-text); }
+    .panel__dock-btn {
+      appearance: none;
+      background: transparent;
+      border: 0;
+      border-radius: calc(var(--ngaf-chat-radius-button) - 2px);
+      width: 24px;
+      height: 22px;
+      padding: 0;
+      color: var(--ngaf-chat-text-muted);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 120ms ease, color 120ms ease;
+    }
+    .panel__dock-btn:hover { color: var(--ngaf-chat-text); }
+    .panel__dock-btn.is-active {
+      background: var(--ngaf-chat-bg);
+      color: var(--ngaf-chat-text);
+      box-shadow: var(--ngaf-chat-shadow-sm);
+    }
+    .panel__dock-btn svg { display: block; }
+
+    .panel__close {
+      appearance: none;
+      background: transparent;
+      border: 0;
+      border-radius: var(--ngaf-chat-radius-button);
+      width: 26px;
+      height: 26px;
+      margin-left: var(--ngaf-chat-space-1);
+      color: var(--ngaf-chat-text-muted);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 120ms ease, color 120ms ease;
+    }
+    .panel__close:hover {
+      background: var(--ngaf-chat-surface-alt);
+      color: var(--ngaf-chat-text);
+    }
+
+    .panel__actions { display: flex; align-items: center; gap: 0; }
 
     .panel__controls {
       border-bottom: 1px solid var(--ngaf-chat-separator);
       overflow-y: auto;
-      max-height: 40%;
+      max-height: 50%;
+      background: color-mix(in srgb, var(--ngaf-chat-surface-alt) 50%, var(--ngaf-chat-bg));
     }
     .panel__controls:empty { display: none; }
 
     .panel__tabs {
       display: flex;
-      gap: 0;
+      gap: var(--ngaf-chat-space-1);
       border-bottom: 1px solid var(--ngaf-chat-separator);
-      padding: 0 var(--ngaf-chat-space-2);
+      padding: 0 var(--ngaf-chat-space-3);
+      background: var(--ngaf-chat-bg);
     }
     .panel__tab {
       appearance: none;
       background: transparent;
       border: 0;
       border-bottom: 2px solid transparent;
-      padding: var(--ngaf-chat-space-2) var(--ngaf-chat-space-3);
+      padding: 10px var(--ngaf-chat-space-2);
       font: inherit;
       font-size: var(--ngaf-chat-font-size-sm);
+      font-weight: 500;
       color: var(--ngaf-chat-text-muted);
       cursor: pointer;
+      transition: color 120ms ease, border-color 120ms ease;
+      margin-bottom: -1px;
     }
+    .panel__tab:hover { color: var(--ngaf-chat-text); }
     .panel__tab.is-active {
       color: var(--ngaf-chat-text);
       border-bottom-color: var(--ngaf-chat-primary);
@@ -144,7 +215,8 @@ interface TabEntry {
         title="Open chat debug"
         aria-label="Open chat debug"
         (click)="setOpen(true)"
-      >⚙</button>
+        [innerHTML]="launcherIcon"
+      ></button>
     } @else {
       <div
         class="panel"
@@ -155,12 +227,34 @@ interface TabEntry {
         aria-label="Chat debug"
       >
         <div class="panel__header">
-          <h3 class="panel__title">Chat Debug</h3>
+          <h3 class="panel__title">
+            <span class="panel__title-dot" aria-hidden="true"></span>
+            <span>Chat Debug</span>
+          </h3>
           <div class="panel__actions">
-            <button type="button" [class.is-active]="dockState() === 'left'"   (click)="setDock('left')"   aria-label="Dock left">◧</button>
-            <button type="button" [class.is-active]="dockState() === 'bottom'" (click)="setDock('bottom')" aria-label="Dock bottom">▭</button>
-            <button type="button" [class.is-active]="dockState() === 'right'"  (click)="setDock('right')"  aria-label="Dock right">◨</button>
-            <button type="button" (click)="setOpen(false)" aria-label="Close">×</button>
+            <div class="panel__dock-group" role="group" aria-label="Dock position">
+              <button type="button" class="panel__dock-btn"
+                [class.is-active]="dockState() === 'left'"
+                (click)="setDock('left')"
+                aria-label="Dock left">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1.5" y="2.5" width="11" height="9" rx="1.2"/><line x1="5.5" y1="2.5" x2="5.5" y2="11.5"/></svg>
+              </button>
+              <button type="button" class="panel__dock-btn"
+                [class.is-active]="dockState() === 'bottom'"
+                (click)="setDock('bottom')"
+                aria-label="Dock bottom">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1.5" y="2.5" width="11" height="9" rx="1.2"/><line x1="1.5" y1="8.5" x2="12.5" y2="8.5"/></svg>
+              </button>
+              <button type="button" class="panel__dock-btn"
+                [class.is-active]="dockState() === 'right'"
+                (click)="setDock('right')"
+                aria-label="Dock right">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1.5" y="2.5" width="11" height="9" rx="1.2"/><line x1="8.5" y1="2.5" x2="8.5" y2="11.5"/></svg>
+              </button>
+            </div>
+            <button type="button" class="panel__close" (click)="setOpen(false)" aria-label="Close">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="3" x2="11" y2="11"/><line x1="11" y1="3" x2="3" y2="11"/></svg>
+            </button>
           </div>
         </div>
 
@@ -209,6 +303,9 @@ interface TabEntry {
   `,
 })
 export class ChatDebugComponent {
+  private readonly sanitizer = inject(DomSanitizer);
+  protected readonly launcherIcon: SafeHtml = this.sanitizer.bypassSecurityTrustHtml(ICON_TOOL);
+
   readonly agent = input.required<AgentWithHistory>();
   readonly dock = input<DockPosition>('right');
   readonly defaultOpen = input<boolean>(false);

@@ -18,25 +18,32 @@ export interface SegmentedOption {
     .segmented {
       display: inline-flex;
       gap: 0;
-      padding: 2px;
+      padding: 3px;
       background: var(--ngaf-chat-surface-alt);
       border: 1px solid var(--ngaf-chat-separator);
       border-radius: var(--ngaf-chat-radius-button);
+      width: 100%;
+      box-sizing: border-box;
     }
     .segmented__btn {
       appearance: none;
       border: 0;
       background: transparent;
-      padding: 4px 10px;
+      padding: 6px var(--ngaf-chat-space-3);
+      font: inherit;
       font-size: var(--ngaf-chat-font-size-sm);
+      font-weight: 500;
       color: var(--ngaf-chat-text-muted);
       cursor: pointer;
-      border-radius: calc(var(--ngaf-chat-radius-button) - 2px);
+      border-radius: calc(var(--ngaf-chat-radius-button) - 3px);
+      flex: 1;
+      transition: color 120ms ease, background 120ms ease;
     }
+    .segmented__btn:hover:not(.is-active) { color: var(--ngaf-chat-text); }
     .segmented__btn.is-active {
       background: var(--ngaf-chat-bg);
       color: var(--ngaf-chat-text);
-      box-shadow: var(--ngaf-chat-shadow-sm);
+      box-shadow: var(--ngaf-chat-shadow-sm), 0 0 0 1px var(--ngaf-chat-separator);
     }
     `,
   ],

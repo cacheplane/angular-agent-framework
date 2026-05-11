@@ -43,26 +43,57 @@ export function stepSelection(dir: Direction, current: number, count: number): n
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: var(--ngaf-chat-space-2) var(--ngaf-chat-space-4);
+      padding: 10px var(--ngaf-chat-space-4);
       border-bottom: 1px solid var(--ngaf-chat-separator);
       font-size: var(--ngaf-chat-font-size-xs);
+      font-weight: 500;
       color: var(--ngaf-chat-text-muted);
+      background: color-mix(in srgb, var(--ngaf-chat-surface-alt) 40%, var(--ngaf-chat-bg));
+    }
+    .timeline__count { display: inline-flex; align-items: center; gap: 6px; }
+    .timeline__count-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 22px;
+      height: 18px;
+      padding: 0 6px;
+      border-radius: 9px;
+      background: var(--ngaf-chat-surface-alt);
+      border: 1px solid var(--ngaf-chat-separator);
+      color: var(--ngaf-chat-text);
+      font-size: 11px;
+      font-variant-numeric: tabular-nums;
     }
     .timeline__clear {
       background: transparent;
       border: 0;
       cursor: pointer;
       color: var(--ngaf-chat-text-muted);
+      font: inherit;
       font-size: var(--ngaf-chat-font-size-xs);
+      padding: 2px 6px;
+      border-radius: var(--ngaf-chat-radius-button);
+      transition: color 120ms ease, background 120ms ease;
     }
-    .timeline__clear:disabled { opacity: 0.5; cursor: default; }
+    .timeline__clear:hover:not(:disabled) {
+      color: var(--ngaf-chat-text);
+      background: var(--ngaf-chat-surface-alt);
+    }
+    .timeline__clear:disabled { opacity: 0.4; cursor: default; }
     .timeline__list {
       flex: 1;
       overflow-y: auto;
-      padding: var(--ngaf-chat-space-2) var(--ngaf-chat-space-4);
+      padding: var(--ngaf-chat-space-3) var(--ngaf-chat-space-4);
       display: flex;
       flex-direction: column;
       gap: var(--ngaf-chat-space-2);
+    }
+    .timeline__empty {
+      padding: var(--ngaf-chat-space-6) var(--ngaf-chat-space-4);
+      text-align: center;
+      color: var(--ngaf-chat-text-muted);
+      font-size: var(--ngaf-chat-font-size-sm);
     }
     .timeline__row { display: flex; flex-direction: column; gap: var(--ngaf-chat-space-2); }
     .timeline__row-actions {
@@ -72,25 +103,35 @@ export function stepSelection(dir: Direction, current: number, count: number): n
     }
     .timeline__row:hover .timeline__row-actions { display: flex; }
     .timeline__row button.row-action {
-      background: transparent;
+      background: var(--ngaf-chat-bg);
       border: 1px solid var(--ngaf-chat-separator);
       border-radius: var(--ngaf-chat-radius-button);
-      padding: 2px 8px;
+      padding: 3px var(--ngaf-chat-space-2);
+      font: inherit;
       font-size: var(--ngaf-chat-font-size-xs);
       color: var(--ngaf-chat-text-muted);
       cursor: pointer;
+      transition: color 120ms ease, border-color 120ms ease;
     }
-    .timeline__row button.row-action:hover { color: var(--ngaf-chat-text); }
+    .timeline__row button.row-action:hover {
+      color: var(--ngaf-chat-text);
+      border-color: var(--ngaf-chat-text-muted);
+    }
     .timeline__diff {
-      padding: var(--ngaf-chat-space-2);
+      padding: var(--ngaf-chat-space-3);
       background: var(--ngaf-chat-surface-alt);
+      border: 1px solid var(--ngaf-chat-separator);
       border-radius: var(--ngaf-chat-radius-card);
+      box-shadow: var(--ngaf-chat-shadow-sm);
     }
     `,
   ],
   template: `
     <div class="timeline__header">
-      <span>{{ checkpoints().length }} checkpoints</span>
+      <span class="timeline__count">
+        <span class="timeline__count-badge">{{ checkpoints().length }}</span>
+        <span>checkpoint{{ checkpoints().length === 1 ? '' : 's' }}</span>
+      </span>
       <button
         type="button"
         class="timeline__clear"
@@ -104,6 +145,9 @@ export function stepSelection(dir: Direction, current: number, count: number): n
       role="listbox"
       aria-label="Checkpoint timeline"
     >
+      @if (checkpoints().length === 0) {
+        <div class="timeline__empty">No checkpoints yet. Send a message to populate the timeline.</div>
+      }
       @for (cp of checkpoints(); let i = $index; track cp.checkpointId ?? i) {
         <div class="timeline__row">
           <chat-debug-checkpoint-card

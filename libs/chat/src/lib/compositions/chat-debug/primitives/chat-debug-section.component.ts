@@ -11,16 +11,17 @@ import { CHAT_HOST_TOKENS } from '../../../styles/chat-tokens';
     `
     :host {
       display: block;
-      padding: var(--ngaf-chat-space-3) var(--ngaf-chat-space-4);
-      border-bottom: 1px solid var(--ngaf-chat-separator);
+      padding: var(--ngaf-chat-space-4);
+      border-bottom: 1px solid color-mix(in srgb, var(--ngaf-chat-separator) 60%, transparent);
     }
     :host:last-child { border-bottom: 0; }
     .section__label {
-      font-size: var(--ngaf-chat-font-size-xs);
+      font-size: 10px;
+      font-weight: 600;
       text-transform: uppercase;
-      letter-spacing: 0.05em;
+      letter-spacing: 0.08em;
       color: var(--ngaf-chat-text-muted);
-      margin: 0 0 var(--ngaf-chat-space-2);
+      margin: 0 0 var(--ngaf-chat-space-3);
     }
     .section__body { display: flex; flex-direction: column; gap: var(--ngaf-chat-space-2); }
     `,

@@ -12,18 +12,24 @@ import { CHAT_HOST_TOKENS } from '../../../styles/chat-tokens';
     :host { display: block; }
     button {
       appearance: none;
-      background: var(--ngaf-chat-surface-alt);
+      background: var(--ngaf-chat-bg);
       color: var(--ngaf-chat-text);
       border: 1px solid var(--ngaf-chat-separator);
       border-radius: var(--ngaf-chat-radius-button);
-      padding: 6px 12px;
+      padding: 8px var(--ngaf-chat-space-3);
       font: inherit;
       font-size: var(--ngaf-chat-font-size-sm);
+      font-weight: 500;
       cursor: pointer;
       width: 100%;
-      text-align: left;
+      text-align: center;
+      transition: background 120ms ease, border-color 120ms ease, transform 80ms ease;
     }
-    button:hover { background: color-mix(in srgb, var(--ngaf-chat-text) 5%, var(--ngaf-chat-surface-alt)); }
+    button:hover {
+      background: var(--ngaf-chat-surface-alt);
+      border-color: var(--ngaf-chat-text-muted);
+    }
+    button:active { transform: translateY(1px); }
     `,
   ],
   template: `
