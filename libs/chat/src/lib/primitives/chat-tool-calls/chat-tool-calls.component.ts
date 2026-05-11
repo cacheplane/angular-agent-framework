@@ -92,6 +92,14 @@ export class ChatToolCallsComponent {
   readonly grouping = input<'auto' | 'none'>('auto');
   readonly groupSummary = input<((name: string, count: number) => string) | undefined>(undefined);
 
+  /**
+   * Tool names whose groups should be hidden. Used by chat compositions
+   * to filter out internal/orchestration tools (e.g. GenUI dispatchers)
+   * whose args streaming is not meaningful to surface in the chat.
+   * Default empty — preserves prior behavior for non-filtering consumers.
+   */
+  readonly excludeToolNames = input<readonly string[]>([]);
+
   /** Per-tool-name + wildcard templates registered as content children. */
   readonly templates = contentChildren(ChatToolCallTemplateDirective);
 
@@ -114,7 +122,8 @@ export class ChatToolCallsComponent {
   });
 
   readonly groups = computed((): Group[] => {
-    const calls = this.toolCalls();
+    const excludeSet = new Set(this.excludeToolNames());
+    const calls = this.toolCalls().filter(tc => !excludeSet.has(tc.name));
     const groupingMode = this.grouping();
     const registry = this.templateRegistry();
     const wildcard = registry.get('*');

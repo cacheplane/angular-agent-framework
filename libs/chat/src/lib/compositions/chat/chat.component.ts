@@ -29,6 +29,7 @@ import { ChatMessageActionsComponent } from '../../primitives/chat-message-actio
 import { ChatWelcomeComponent } from '../../primitives/chat-welcome/chat-welcome.component';
 import { ChatSelectComponent, type ChatSelectOption } from '../../primitives/chat-select/chat-select.component';
 import { A2uiSurfaceComponent } from '../../a2ui/surface.component';
+import { ChatGenuiSkeletonComponent } from '../../primitives/chat-genui-skeleton/chat-genui-skeleton.component';
 import { createContentClassifier, type ContentClassifier } from '../../streaming/content-classifier';
 import { messageContent } from '../shared/message-utils';
 import { CHAT_HOST_TOKENS } from '../../styles/chat-tokens';
@@ -44,6 +45,7 @@ import type { ChatRenderEvent } from './chat-render-event';
     ChatThreadListComponent, ChatGenerativeUiComponent,
     ChatStreamingMdComponent, ChatToolCallsComponent, ChatSubagentsComponent, A2uiSurfaceComponent,
     ChatMessageActionsComponent, ChatWelcomeComponent, ChatSelectComponent, ChatReasoningComponent,
+    ChatGenuiSkeletonComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styles: [CHAT_HOST_TOKENS, `
@@ -137,6 +139,8 @@ import type { ChatRenderEvent } from './chat-render-event';
               <ng-template chatMessageTemplate="ai" let-message let-i="index">
                 @let content = messageContent(message);
                 @let classified = classifyMessage(content, message);
+                @let pending = classified.type() === 'pending';
+                @let genuiTurn = isGenuiTurn(message, prevMessage(i));
                 <chat-message
                   [role]="'assistant'"
                   [message]="message"
@@ -154,12 +158,15 @@ import type { ChatRenderEvent } from './chat-render-event';
                       [durationMs]="message.reasoningDurationMs"
                     />
                   }
-                  <chat-tool-calls [agent]="agent()" [message]="message">
+                  <chat-tool-calls [agent]="agent()" [message]="message" [excludeToolNames]="genuiToolNames()">
                     <ng-container ngProjectAs="[chatToolCallTemplate]">
                       <ng-content select="[chatToolCallTemplate]" />
                     </ng-container>
                   </chat-tool-calls>
                   <chat-subagents [agent]="agent()" />
+                  @if ((pending || (classified.type() === 'a2ui' && classified.a2uiSurfaces().size === 0)) && genuiTurn) {
+                    <chat-genui-skeleton />
+                  }
                   @if (classified.markdown(); as md) {
                     <chat-streaming-md [content]="md" [streaming]="agent().isLoading() && i === agent().messages().length - 1" />
                   }
@@ -249,6 +256,18 @@ export class ChatComponent {
   readonly modelOptions = input<readonly ChatSelectOption[]>([]);
   readonly selectedModel = model<string>('');
   readonly modelPickerPlaceholder = input<string>('Choose a model');
+
+  /**
+   * Tool names whose calls produce a rendered GenUI surface rather than
+   * visible text. Used to (a) filter <chat-tool-calls> so internal
+   * dispatchers don't render args JSON as cards, and (b) detect
+   * "this is a GenUI turn" for the building-UI skeleton.
+   * Default covers the canonical A2UI + json-render schema tools.
+   */
+  readonly genuiToolNames = input<readonly string[]>([
+    'generate_a2ui_schema',
+    'generate_json_render_spec',
+  ]);
 
   readonly showWelcome = computed(() => {
     if (this.welcomeDisabled()) return false;
@@ -375,6 +394,52 @@ export class ChatComponent {
     if (role === 'system') return 'system';
     if (role === 'tool') return 'tool';
     return undefined;
+  }
+
+  /**
+   * Look up the previous message in the agent's messages list.
+   * Returns undefined for the first message.
+   */
+  protected prevMessage(index: number): unknown {
+    if (index === 0) return undefined;
+    return this.agent().messages()[index - 1];
+  }
+
+  /**
+   * True when this assistant message is part of a GenUI render turn —
+   * either it has a tool_call to a GenUI tool, OR its content array
+   * contains a function_call block for one (live during streaming),
+   * OR the previous message was a tool result for a GenUI tool. Used
+   * to gate the building-UI skeleton.
+   */
+  protected isGenuiTurn(message: unknown, prevMsg: unknown): boolean {
+    const names = new Set(this.genuiToolNames());
+    const m = message as { extra?: Record<string, unknown> } | null | undefined;
+    if (!m) return false;
+
+    const calls = (m.extra?.['tool_calls'] as Array<{ name?: string }> | undefined) ?? [];
+    if (calls.some(c => c.name != null && names.has(c.name))) return true;
+
+    const rawContent = m.extra?.['content'];
+    if (Array.isArray(rawContent)) {
+      for (const block of rawContent) {
+        if (block != null
+            && typeof block === 'object'
+            && (block as { type?: unknown }).type === 'function_call'
+            && typeof (block as { name?: unknown }).name === 'string'
+            && names.has((block as { name: string }).name)) {
+          return true;
+        }
+      }
+    }
+
+    const p = prevMsg as { role?: string; name?: string; extra?: Record<string, unknown> } | null | undefined;
+    if (p && p.role === 'tool') {
+      const toolName = (p.extra?.['name'] as string | undefined) ?? p.name;
+      if (typeof toolName === 'string' && names.has(toolName)) return true;
+    }
+
+    return false;
   }
 
   classifyMessage(content: string, message: { id?: string }): ContentClassifier {
