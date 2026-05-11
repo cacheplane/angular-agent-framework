@@ -9,7 +9,7 @@ import {
   HostListener,
 } from '@angular/core';
 import type { AgentWithHistory } from '../../../agent';
-import { CHAT_HOST_TOKENS } from '../../../styles/chat-tokens';
+import { CHAT_DEBUG_TOKENS } from '../chat-debug-tokens';
 import { DebugCheckpointCardComponent, type DebugCheckpoint } from '../debug-checkpoint-card.component';
 import { DebugStateDiffComponent } from '../debug-state-diff.component';
 import { toDebugCheckpoint, extractStateValues } from '../debug-utils';
@@ -36,19 +36,21 @@ export function stepSelection(dir: Direction, current: number, count: number): n
   imports: [DebugCheckpointCardComponent, DebugStateDiffComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styles: [
-    CHAT_HOST_TOKENS,
+    CHAT_DEBUG_TOKENS,
     `
     :host { display: flex; flex-direction: column; height: 100%; outline: none; }
     .timeline__header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 10px var(--ngaf-chat-space-4);
-      border-bottom: 1px solid var(--ngaf-chat-separator);
-      font-size: var(--ngaf-chat-font-size-xs);
-      font-weight: 500;
-      color: var(--ngaf-chat-text-muted);
-      background: color-mix(in srgb, var(--ngaf-chat-surface-alt) 40%, var(--ngaf-chat-bg));
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--ngaf-chat-debug-border);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--ngaf-chat-debug-text-subtle);
+      background: var(--ngaf-chat-debug-bg);
     }
     .timeline__count { display: inline-flex; align-items: center; gap: 6px; }
     .timeline__count-badge {
@@ -59,70 +61,76 @@ export function stepSelection(dir: Direction, current: number, count: number): n
       height: 18px;
       padding: 0 6px;
       border-radius: 9px;
-      background: var(--ngaf-chat-surface-alt);
-      border: 1px solid var(--ngaf-chat-separator);
-      color: var(--ngaf-chat-text);
+      background: var(--ngaf-chat-debug-surface);
+      border: 1px solid var(--ngaf-chat-debug-border);
+      color: var(--ngaf-chat-debug-text);
       font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0;
+      text-transform: none;
       font-variant-numeric: tabular-nums;
     }
     .timeline__clear {
       background: transparent;
       border: 0;
       cursor: pointer;
-      color: var(--ngaf-chat-text-muted);
+      color: var(--ngaf-chat-debug-text-subtle);
       font: inherit;
-      font-size: var(--ngaf-chat-font-size-xs);
+      font-size: 11px;
+      letter-spacing: 0;
+      text-transform: none;
       padding: 2px 6px;
-      border-radius: var(--ngaf-chat-radius-button);
+      border-radius: 6px;
       transition: color 120ms ease, background 120ms ease;
     }
     .timeline__clear:hover:not(:disabled) {
-      color: var(--ngaf-chat-text);
-      background: var(--ngaf-chat-surface-alt);
+      color: var(--ngaf-chat-debug-text);
+      background: var(--ngaf-chat-debug-surface);
     }
     .timeline__clear:disabled { opacity: 0.4; cursor: default; }
     .timeline__list {
       flex: 1;
       overflow-y: auto;
-      padding: var(--ngaf-chat-space-3) var(--ngaf-chat-space-4);
+      padding: 12px 16px;
       display: flex;
       flex-direction: column;
-      gap: var(--ngaf-chat-space-2);
+      gap: 8px;
+      background: var(--ngaf-chat-debug-bg);
     }
     .timeline__empty {
-      padding: var(--ngaf-chat-space-6) var(--ngaf-chat-space-4);
+      padding: 24px 16px;
       text-align: center;
-      color: var(--ngaf-chat-text-muted);
-      font-size: var(--ngaf-chat-font-size-sm);
+      color: var(--ngaf-chat-debug-text-subtle);
+      font-size: 13px;
     }
-    .timeline__row { display: flex; flex-direction: column; gap: var(--ngaf-chat-space-2); }
+    .timeline__row { display: flex; flex-direction: column; gap: 8px; }
     .timeline__row-actions {
       display: none;
-      gap: var(--ngaf-chat-space-2);
-      padding-left: var(--ngaf-chat-space-3);
+      gap: 8px;
+      padding-left: 12px;
     }
     .timeline__row:hover .timeline__row-actions { display: flex; }
     .timeline__row button.row-action {
-      background: var(--ngaf-chat-bg);
-      border: 1px solid var(--ngaf-chat-separator);
-      border-radius: var(--ngaf-chat-radius-button);
-      padding: 3px var(--ngaf-chat-space-2);
+      background: var(--ngaf-chat-debug-bg-deep);
+      border: 1px solid var(--ngaf-chat-debug-border);
+      border-radius: 6px;
+      padding: 3px 8px;
       font: inherit;
-      font-size: var(--ngaf-chat-font-size-xs);
-      color: var(--ngaf-chat-text-muted);
+      font-size: 11px;
+      color: var(--ngaf-chat-debug-text-muted);
       cursor: pointer;
       transition: color 120ms ease, border-color 120ms ease;
     }
     .timeline__row button.row-action:hover {
-      color: var(--ngaf-chat-text);
-      border-color: var(--ngaf-chat-text-muted);
+      color: var(--ngaf-chat-debug-text);
+      border-color: var(--ngaf-chat-debug-border-strong);
     }
     .timeline__diff {
-      padding: var(--ngaf-chat-space-3);
-      background: var(--ngaf-chat-surface-alt);
-      border: 1px solid var(--ngaf-chat-separator);
-      border-radius: var(--ngaf-chat-radius-card);
-      box-shadow: var(--ngaf-chat-shadow-sm);
+      padding: 12px;
+      background: var(--ngaf-chat-debug-bg-deep);
+      border: 1px solid var(--ngaf-chat-debug-border);
+      border-radius: var(--ngaf-chat-debug-radius-input);
+      color: var(--ngaf-chat-debug-text);
     }
     `,
   ],
