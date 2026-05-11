@@ -69,6 +69,9 @@ const SPACING_TOKENS = `
   --ngaf-chat-space-8: 32px;
   --ngaf-chat-edge-pad: 16px;
   --ngaf-chat-input-gap: 0.75rem;
+  --ngaf-chat-sidenav-width-expanded: 280px;
+  --ngaf-chat-sidenav-width-collapsed: 56px;
+  --ngaf-chat-sidenav-width-drawer: 280px;
 `;
 
 const KEYFRAMES = `

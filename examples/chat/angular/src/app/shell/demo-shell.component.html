@@ -4,26 +4,23 @@
     class="demo-shell__hamburger"
     aria-label="Open conversations"
     [attr.aria-expanded]="drawerOpen()"
-    (click)="toggleDrawer()"
+    (click)="toggleSidenav()"
   >☰</button>
 
-  <chat-thread-drawer
-    [open]="drawerOpen()"
-    [mode]="drawerMode()"
-    (openChange)="onDrawerOpenChange($event)"
-  >
-    <chat-thread-list
-      [threads]="threadsSvc.threads()"
-      [activeThreadId]="threadIdSignal() ?? ''"
-      [showNewThreadButton]="true"
-      (threadSelected)="onThreadSelected($event)"
-      (newThreadRequested)="onNewThread()"
-    />
-  </chat-thread-drawer>
+  <chat-sidenav
+    [threads]="threadsSvc.threads()"
+    [activeThreadId]="threadIdSignal() ?? ''"
+    [mode]="sidenavMode()"
+    [(open)]="drawerOpen"
+    (newChat)="onNewThread()"
+    (threadSelected)="onThreadSelected($event)"
+    (searchOpened)="paletteOpen.set(true)"
+    (openChange)="onSidenavOpenChange($event)"
+  />
 
   <div
     class="demo-shell__main"
-    [class.demo-shell__main--push]="drawerOpen() && drawerMode() === 'push'"
+    [class.demo-shell__main--push]="drawerOpen() && sidenavMode() === 'expanded'"
   >
     <router-outlet />
     @if (agent.interrupt && agent.interrupt()) {
@@ -37,6 +34,14 @@
       </div>
     }
   </div>
+
+  <chat-history-search-palette
+    [(open)]="paletteOpen"
+    [(query)]="searchQuery"
+    [results]="searchResults()"
+    (threadSelected)="onSearchSelect($event)"
+    (close)="paletteOpen.set(false)"
+  />
 
   <chat-debug
     [agent]="agent"

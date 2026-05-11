@@ -46,6 +46,8 @@ export { ChatLauncherButtonComponent } from './lib/primitives/chat-launcher-butt
 export { ChatSuggestionsComponent } from './lib/primitives/chat-suggestions/chat-suggestions.component';
 export { ChatInputComponent, submitMessage } from './lib/primitives/chat-input/chat-input.component';
 export { ChatTypingIndicatorComponent, isTyping } from './lib/primitives/chat-typing-indicator/chat-typing-indicator.component';
+export { ChatHistorySearchPaletteComponent } from './lib/primitives/chat-history-search-palette/chat-history-search-palette.component';
+export type { ThreadMatch } from './lib/primitives/chat-history-search-palette/chat-history-search-palette.component';
 export { ChatScrollBubbleComponent } from './lib/primitives/chat-scroll-bubble/chat-scroll-bubble.component';
 export type { ChatScrollBubbleMode } from './lib/primitives/chat-scroll-bubble/chat-scroll-bubble.component';
 export { ChatErrorComponent, extractErrorMessage } from './lib/primitives/chat-error/chat-error.component';
@@ -88,8 +90,8 @@ export type { SelectOption } from './lib/compositions/chat-debug/primitives/chat
 export { ChatDebugSwitchComponent } from './lib/compositions/chat-debug/primitives/chat-debug-switch.component';
 export { ChatDebugActionComponent } from './lib/compositions/chat-debug/primitives/chat-debug-action.component';
 export { ChatTimelineSliderComponent } from './lib/compositions/chat-timeline-slider/chat-timeline-slider.component';
-export { ChatThreadDrawerComponent } from './lib/compositions/chat-thread-drawer/chat-thread-drawer.component';
-export type { ChatThreadDrawerMode } from './lib/compositions/chat-thread-drawer/chat-thread-drawer.component';
+export { ChatSidenavComponent } from './lib/compositions/chat-sidenav/chat-sidenav.component';
+export type { ChatSidenavMode } from './lib/compositions/chat-sidenav/chat-sidenav.component';
 export { ChatInterruptPanelComponent } from './lib/compositions/chat-interrupt-panel/chat-interrupt-panel.component';
 export type { InterruptAction } from './lib/compositions/chat-interrupt-panel/chat-interrupt-panel.component';
 export { ChatToolCallCardComponent } from './lib/compositions/chat-tool-call-card/chat-tool-call-card.component';
