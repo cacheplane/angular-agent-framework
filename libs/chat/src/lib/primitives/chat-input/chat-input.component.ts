@@ -117,12 +117,9 @@ export class ChatInputComponent {
 
   private readonly textareaEl = viewChild<ElementRef<HTMLTextAreaElement>>('textareaEl');
 
-  /** Maximum auto-grow height in pixels. Caps at ~8 lines; beyond that, scroll. */
-  private static readonly MAX_AUTO_HEIGHT_PX = 200;
-
   /**
    * Auto-resize the textarea to fit its content as the user types or pastes
-   * multi-line text. Caps at MAX_AUTO_HEIGHT_PX; beyond that the textarea
+   * multi-line text. Caps at min(40vh, 320px); beyond that the textarea
    * scrolls. Without this, multi-line input is hidden behind the rows="1"
    * fixed height (caught by live browser smoke).
    */
@@ -131,12 +128,14 @@ export class ChatInputComponent {
       const text = this.messageText();
       const el = this.textareaEl()?.nativeElement;
       if (!el) return;
-      // Reset to allow scrollHeight to shrink when content shortens.
+      // Cap: min(40vh, 320px). Recomputed on each input so viewport resizes
+      // between keystrokes are picked up without a dedicated resize listener.
+      const viewportH = typeof window === 'undefined' ? 600 : window.innerHeight;
+      const cap = Math.min(viewportH * 0.4, 320);
       el.style.height = 'auto';
-      const next = Math.min(el.scrollHeight, ChatInputComponent.MAX_AUTO_HEIGHT_PX);
+      const next = Math.min(el.scrollHeight, cap);
       el.style.height = `${next}px`;
-      el.style.overflowY = el.scrollHeight > ChatInputComponent.MAX_AUTO_HEIGHT_PX ? 'auto' : 'hidden';
-      // Reference text so the effect re-runs on every change.
+      el.style.overflowY = el.scrollHeight > cap ? 'auto' : 'hidden';
       void text;
     });
   }
