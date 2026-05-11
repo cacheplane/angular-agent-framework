@@ -1072,7 +1072,7 @@
       },
       {
         "name": "catalog",
-        "type": "InputSignal<Readonly<Record<string, Type<unknown>>>>",
+        "type": "InputSignal<Readonly<Record<string, Type<unknown> | RenderViewEntry>>>",
         "description": "",
         "optional": false
       },
@@ -1673,7 +1673,7 @@
       },
       {
         "name": "views",
-        "type": "InputSignal<Readonly<Record<string, Type<unknown>>> | undefined>",
+        "type": "InputSignal<Readonly<Record<string, Type<unknown> | RenderViewEntry>> | undefined>",
         "description": "",
         "optional": false
       },
@@ -2801,7 +2801,7 @@
       },
       {
         "name": "views",
-        "type": "InputSignal<Readonly<Record<string, Type<unknown>>> | undefined>",
+        "type": "InputSignal<Readonly<Record<string, Type<unknown> | RenderViewEntry>> | undefined>",
         "description": "A2UI component catalog forwarded to the inner <chat>. Without it,\nmessages classified as A2UI parse correctly but never mount a\nsurface. Pass `a2uiBasicCatalog()` from `@ngaf/chat`.",
         "optional": false
       }
@@ -3063,7 +3063,7 @@
       },
       {
         "name": "views",
-        "type": "InputSignal<Readonly<Record<string, Type<unknown>>> | undefined>",
+        "type": "InputSignal<Readonly<Record<string, Type<unknown> | RenderViewEntry>> | undefined>",
         "description": "A2UI component catalog forwarded to the inner <chat>. Without it,\nmessages classified as A2UI parse correctly but never mount a\nsurface. Pass `a2uiBasicCatalog()` from `@ngaf/chat`.",
         "optional": false
       }
@@ -3104,7 +3104,7 @@
       },
       {
         "name": "resolvedRegistry",
-        "type": "Signal<Readonly<Record<string, Type<unknown>>>>",
+        "type": "Signal<Readonly<Record<string, Type<unknown> | RenderViewEntry>>>",
         "description": "",
         "optional": false
       },
@@ -3122,7 +3122,7 @@
       },
       {
         "name": "viewRegistry",
-        "type": "InputSignal<Readonly<Record<string, Type<unknown>>> | undefined>",
+        "type": "InputSignal<Readonly<Record<string, Type<unknown> | RenderViewEntry>> | undefined>",
         "description": "",
         "optional": false
       }
@@ -5586,8 +5586,8 @@
   {
     "name": "ViewRegistry",
     "kind": "type",
-    "description": "A registry of view components available for generative UI rendering.\nPlain frozen object mapping view names to Angular component types.\nCompose via object spread: `views({ ...base, ...more })`.",
-    "signature": "Readonly<Record<string, Type<unknown>>>",
+    "description": "A registry of view components available for generative UI rendering.\nEach entry is either a bare component Type (legacy shape) or a\n`RenderViewEntry` { component, fallback? }.",
+    "signature": "Readonly<Record<string, Type<unknown> | RenderViewEntry>>",
     "examples": []
   },
   {
@@ -6141,11 +6141,11 @@
     "name": "views",
     "kind": "function",
     "description": "Creates a view registry from a name → component map.",
-    "signature": "views(map: Record<string, Type<unknown>>): ViewRegistry",
+    "signature": "views(map: Record<string, Type<unknown> | RenderViewEntry>): ViewRegistry",
     "params": [
       {
         "name": "map",
-        "type": "Record<string, Type<unknown>>",
+        "type": "Record<string, Type<unknown> | RenderViewEntry>",
         "description": "",
         "optional": false
       }
@@ -6185,7 +6185,7 @@
     "name": "withViews",
     "kind": "function",
     "description": "Adds views to a registry without overwriting existing entries.\nNew keys are added; keys that already exist in `base` are preserved.",
-    "signature": "withViews(base: ViewRegistry, additions: Record<string, Type<unknown>>): ViewRegistry",
+    "signature": "withViews(base: ViewRegistry, additions: Record<string, Type<unknown> | RenderViewEntry>): ViewRegistry",
     "params": [
       {
         "name": "base",
@@ -6195,7 +6195,7 @@
       },
       {
         "name": "additions",
-        "type": "Record<string, Type<unknown>>",
+        "type": "Record<string, Type<unknown> | RenderViewEntry>",
         "description": "",
         "optional": false
       }
