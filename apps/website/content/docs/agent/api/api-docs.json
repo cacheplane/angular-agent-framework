@@ -929,6 +929,12 @@
         "optional": false
       },
       {
+        "name": "messageCheckpoints",
+        "type": "Signal<ReadonlyMap<string, string>>",
+        "description": "Optional reactive map of `messageId → checkpointId`, computed by\nwalking history once: for each checkpoint, find the most recent\nassistant message present in its `values.messages` and pair them.\nUIs use this to anchor inline checkpoint markers on each assistant\nturn. Missing on adapters that don't compute it.",
+        "optional": true
+      },
+      {
         "name": "messages",
         "type": "Signal<Message[]>",
         "description": "",
@@ -1291,6 +1297,12 @@
         "type": "WritableSignal<ToolCallWithResult<>[]>",
         "description": "Raw LangGraph tool calls (with run-state). Use `toolCalls` for chat rendering.",
         "optional": false
+      },
+      {
+        "name": "messageCheckpoints",
+        "type": "Signal<ReadonlyMap<string, string>>",
+        "description": "Optional reactive map of `messageId → checkpointId`, computed by\nwalking history once: for each checkpoint, find the most recent\nassistant message present in its `values.messages` and pair them.\nUIs use this to anchor inline checkpoint markers on each assistant\nturn. Missing on adapters that don't compute it.",
+        "optional": true
       },
       {
         "name": "messages",

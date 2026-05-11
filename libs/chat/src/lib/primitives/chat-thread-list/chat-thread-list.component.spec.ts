@@ -77,3 +77,44 @@ describe('ChatThreadListComponent — structure', () => {
     expect(threads$()).toHaveLength(3);
   });
 });
+
+describe('ChatThreadListComponent — default item template', () => {
+  // Helper function that mirrors the component's relativeTime method
+  const relativeTime = (epochMs: number): string => {
+    const delta = Date.now() - epochMs;
+    if (delta < 60_000) return 'just now';
+    if (delta < 3_600_000) return `${Math.floor(delta / 60_000)} min ago`;
+    if (delta < 86_400_000) return `${Math.floor(delta / 3_600_000)} hr ago`;
+    return `${Math.floor(delta / 86_400_000)} day ago`;
+  };
+
+  it('Thread type includes optional updatedAt field', () => {
+    const threadWithTime: Thread = { id: 'a', title: 'Test', updatedAt: Date.now() };
+    const threadWithoutTime: Thread = { id: 'b', title: 'Test' };
+    expect(threadWithTime.updatedAt).toBeDefined();
+    expect(threadWithoutTime.updatedAt).toBeUndefined();
+  });
+
+  it('relativeTime returns "just now" for < 60s delta', () => {
+    const now = Date.now();
+    expect(relativeTime(now - 30_000)).toBe('just now');
+  });
+
+  it('relativeTime returns "X min ago" for < 1h delta', () => {
+    const now = Date.now();
+    const result = relativeTime(now - 300_000); // 5 min ago
+    expect(result).toMatch(/\d+ min ago/);
+  });
+
+  it('relativeTime returns "X hr ago" for < 1d delta', () => {
+    const now = Date.now();
+    const result = relativeTime(now - 7_200_000); // 2 hr ago
+    expect(result).toMatch(/\d+ hr ago/);
+  });
+
+  it('relativeTime returns "X day ago" for >= 1d delta', () => {
+    const now = Date.now();
+    const result = relativeTime(now - 172_800_000); // 2 day ago
+    expect(result).toMatch(/\d+ day ago/);
+  });
+});

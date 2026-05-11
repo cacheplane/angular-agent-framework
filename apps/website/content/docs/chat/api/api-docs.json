@@ -1439,6 +1439,40 @@
     "methods": []
   },
   {
+    "name": "ChatCheckpointMarkerComponent",
+    "kind": "class",
+    "description": "",
+    "params": [],
+    "examples": [],
+    "properties": [
+      {
+        "name": "checkpointId",
+        "type": "InputSignal<string>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "forkRequested",
+        "type": "OutputEmitterRef<string>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "isActive",
+        "type": "InputSignal<boolean>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "replayRequested",
+        "type": "OutputEmitterRef<string>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "methods": []
+  },
+  {
     "name": "ChatCitationCardTemplateDirective",
     "kind": "class",
     "description": "ContentChild template directive for custom citation card rendering.\nUsage: <ng-template chatCitationCard let-citation>...</ng-template>",
@@ -2237,6 +2271,18 @@
         "optional": false
       },
       {
+        "name": "checkpointActive",
+        "type": "InputSignal<boolean>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "checkpointId",
+        "type": "InputSignal<string | undefined>",
+        "description": "Optional checkpoint id to anchor a gutter marker. When set, a\n chat-checkpoint-marker is rendered in the left gutter and emits\n bubble through this component's replayRequested / forkRequested outputs.",
+        "optional": false
+      },
+      {
         "name": "current",
         "type": "InputSignal<boolean>",
         "description": "",
@@ -2249,6 +2295,12 @@
         "optional": false
       },
       {
+        "name": "forkRequested",
+        "type": "OutputEmitterRef<string>",
+        "description": "",
+        "optional": false
+      },
+      {
         "name": "message",
         "type": "InputSignal<Message | undefined>",
         "description": "",
@@ -2257,6 +2309,12 @@
       {
         "name": "prevRole",
         "type": "InputSignal<ChatMessageRole | undefined>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "replayRequested",
+        "type": "OutputEmitterRef<string>",
         "description": "",
         "optional": false
       },
@@ -2729,6 +2787,34 @@
     "methods": []
   },
   {
+    "name": "ChatThreadDrawerComponent",
+    "kind": "class",
+    "description": "",
+    "params": [],
+    "examples": [],
+    "properties": [
+      {
+        "name": "mode",
+        "type": "InputSignal<ChatThreadDrawerMode>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "open",
+        "type": "InputSignal<boolean>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "openChange",
+        "type": "OutputEmitterRef<boolean>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "methods": []
+  },
+  {
     "name": "ChatThreadListComponent",
     "kind": "class",
     "description": "",
@@ -2773,6 +2859,19 @@
       }
     ],
     "methods": [
+      {
+        "name": "relativeTime",
+        "signature": "relativeTime(epochMs: number)",
+        "description": "",
+        "params": [
+          {
+            "name": "epochMs",
+            "type": "number",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
       {
         "name": "selectThread",
         "signature": "selectThread(threadId: string)",
@@ -4140,7 +4239,7 @@
   {
     "name": "AgentWithHistory",
     "kind": "interface",
-    "description": "Extends Agent with a required `history` signal.\n\nCompositions that need time-travel / checkpoint data (chat-timeline,\nchat-debug) take this richer contract. Adapters that cannot supply\nhistory should return plain Agent instead of stubbing an empty array.",
+    "description": "Extension of Agent that exposes checkpoint history for time-travel UIs.\n\nConcrete adapters that record per-node checkpoints (e.g. LangGraph) should\nimplement this. Pure request/response runtimes that don't have checkpoints\nshould implement plain Agent.",
     "properties": [
       {
         "name": "error",
@@ -4171,6 +4270,12 @@
         "type": "Signal<boolean>",
         "description": "",
         "optional": false
+      },
+      {
+        "name": "messageCheckpoints",
+        "type": "Signal<ReadonlyMap<string, string>>",
+        "description": "Optional reactive map of `messageId → checkpointId`, computed by\nwalking history once: for each checkpoint, find the most recent\nassistant message present in its `values.messages` and pair them.\nUIs use this to anchor inline checkpoint markers on each assistant\nturn. Missing on adapters that don't compute it.",
+        "optional": true
       },
       {
         "name": "messages",
@@ -4904,6 +5009,13 @@
     "kind": "type",
     "description": "",
     "signature": "\"user\" | \"assistant\" | \"system\" | \"tool\"",
+    "examples": []
+  },
+  {
+    "name": "ChatThreadDrawerMode",
+    "kind": "type",
+    "description": "",
+    "signature": "\"push\" | \"overlay\"",
     "examples": []
   },
   {
