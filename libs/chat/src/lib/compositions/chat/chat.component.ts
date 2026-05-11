@@ -331,6 +331,7 @@ export class ChatComponent {
   private readonly scrollContainer = viewChild<ElementRef<HTMLElement>>('scrollContainer');
   private readonly messageCount = computed(() => this.agent().messages().length);
   private prevMessageCount = 0;
+  private wasLoading = false;
 
   constructor() {
     effect(() => {
@@ -368,6 +369,29 @@ export class ChatComponent {
       const isNearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 150;
       if (isNewMessage || isNearBottom) {
         el.scrollTop = el.scrollHeight;
+      }
+    });
+
+    // Final scroll when streaming completes. The content-mutation effect above
+    // fires on every token but stops when streaming ends; action buttons
+    // (reload, copy) render on idle and can land below the fold without this.
+    effect(() => {
+      const loading = this.agent().isLoading();
+      if (loading) {
+        this.wasLoading = true;
+        return;
+      }
+      if (!this.wasLoading) return;
+      this.wasLoading = false;
+      const el = this.scrollContainer()?.nativeElement;
+      if (!el) return;
+      const isNearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 150;
+      if (isNearBottom) {
+        // Defer one frame so message-actions have rendered.
+        requestAnimationFrame(() => {
+          const el2 = this.scrollContainer()?.nativeElement;
+          if (el2) el2.scrollTop = el2.scrollHeight;
+        });
       }
     });
 
