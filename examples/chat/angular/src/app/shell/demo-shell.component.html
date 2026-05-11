@@ -7,26 +7,6 @@
     (click)="toggleDrawer()"
   >☰</button>
 
-  <app-control-palette
-    [mode]="mode()"
-    [model]="model()"
-    [modelOptions]="modelOptions()"
-    [effort]="effort()"
-    [effortOptions]="effortOptions()"
-    [genUiMode]="genUiMode()"
-    [genUiOptions]="genUiOptions()"
-    [theme]="theme()"
-    [themeOptions]="themeOptions()"
-    [debugOpen]="debugOpen()"
-    (modeChange)="onModeChange($event)"
-    (modelChange)="onModelChange($event)"
-    (effortChange)="onEffortChange($event)"
-    (genUiModeChange)="onGenUiModeChange($event)"
-    (themeChange)="onThemeChange($event)"
-    (debugOpenChange)="onDebugChange($event)"
-    (newConversation)="onNewConversation()"
-  />
-
   <chat-thread-drawer
     [open]="drawerOpen()"
     [mode]="drawerMode()"
@@ -56,10 +36,53 @@
         <chat-subagents [agent]="agent" />
       </div>
     }
-    @if (debugOpen()) {
-      <div class="demo-shell__debug" role="region" aria-label="Debug overlay">
-        <chat-debug [agent]="agent" (replayRequested)="onTimelineReplay($event)" (forkRequested)="onTimelineFork($event)" />
-      </div>
-    }
   </div>
+
+  <chat-debug
+    [agent]="agent"
+    dock="right"
+    (replayRequested)="onTimelineReplay($event)"
+    (forkRequested)="onTimelineFork($event)"
+  >
+    <ng-template chatDebugControls>
+      <chat-debug-section label="Mode">
+        <chat-debug-segmented
+          [options]="modeOptions"
+          [value]="mode()"
+          (valueChange)="onModeChange($event)"
+        />
+      </chat-debug-section>
+      <chat-debug-section label="Agent">
+        <chat-debug-select
+          label="Model"
+          [options]="modelOptions()"
+          [value]="model()"
+          (valueChange)="onModelChange($event)"
+        />
+        <chat-debug-select
+          label="Effort"
+          [options]="effortOptions()"
+          [value]="effort()"
+          (valueChange)="onEffortChange($event)"
+        />
+        <chat-debug-select
+          label="Gen UI"
+          [options]="genUiOptions()"
+          [value]="genUiMode()"
+          (valueChange)="onGenUiModeChange($event)"
+        />
+      </chat-debug-section>
+      <chat-debug-section label="Appearance">
+        <chat-debug-select
+          label="Theme"
+          [options]="themeOptions()"
+          [value]="theme()"
+          (valueChange)="onThemeChange($event)"
+        />
+      </chat-debug-section>
+      <chat-debug-section>
+        <chat-debug-action label="New conversation" (clicked)="onNewConversation()" />
+      </chat-debug-section>
+    </ng-template>
+  </chat-debug>
 </div>

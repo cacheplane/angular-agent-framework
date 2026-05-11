@@ -15,13 +15,17 @@ import { filter, map, startWith } from 'rxjs/operators';
 import { agent } from '@ngaf/langgraph';
 import {
   ChatDebugComponent,
+  ChatDebugControlsDirective,
+  ChatDebugSectionComponent,
+  ChatDebugSegmentedComponent,
+  ChatDebugSelectComponent,
+  ChatDebugActionComponent,
   ChatInterruptPanelComponent,
   ChatSubagentsComponent,
   ChatThreadDrawerComponent,
   ChatThreadListComponent,
   type InterruptAction,
 } from '@ngaf/chat';
-import { ControlPalette } from './control-palette.component';
 import { PalettePersistence } from './palette-persistence.service';
 import { ThreadsService } from './threads.service';
 import { DEMO_AGENT } from './shell-tokens';
@@ -40,8 +44,12 @@ function modeFromUrl(url: string): DemoMode {
   standalone: true,
   imports: [
     RouterOutlet,
-    ControlPalette,
     ChatDebugComponent,
+    ChatDebugControlsDirective,
+    ChatDebugSectionComponent,
+    ChatDebugSegmentedComponent,
+    ChatDebugSelectComponent,
+    ChatDebugActionComponent,
     ChatInterruptPanelComponent,
     ChatSubagentsComponent,
     ChatThreadDrawerComponent,
@@ -129,8 +137,6 @@ export class DemoShell {
    */
   readonly theme = signal<string>(this.persistence.read('theme') ?? 'default-dark');
 
-  protected readonly debugOpen = signal<boolean>(this.persistence.read('debug') ?? false);
-
   /** Whether the threads drawer is open. Persisted across reloads. */
   protected readonly drawerOpen = signal<boolean>(this.persistence.read('drawerOpen') ?? false);
 
@@ -143,6 +149,12 @@ export class DemoShell {
   protected readonly drawerMode = computed<'push' | 'overlay'>(() =>
     this.viewportWidth() >= 1024 ? 'push' : 'overlay',
   );
+
+  protected readonly modeOptions = [
+    { value: 'embed', label: 'Embed' },
+    { value: 'popup', label: 'Popup' },
+    { value: 'sidebar', label: 'Sidebar' },
+  ] as const;
 
   protected readonly modelOptions = signal<readonly { value: string; label: string }[]>([
     { value: 'gpt-5', label: 'gpt-5' },
@@ -211,7 +223,7 @@ export class DemoShell {
     return a;
   })();
 
-  protected onModeChange(next: DemoMode): void {
+  protected onModeChange(next: DemoMode | string): void {
     void this.router.navigate(['/' + next]);
   }
 
@@ -233,11 +245,6 @@ export class DemoShell {
   protected onThemeChange(next: string): void {
     this.theme.set(next);
     this.persistence.write('theme', next);
-  }
-
-  protected onDebugChange(next: boolean): void {
-    this.debugOpen.set(next);
-    this.persistence.write('debug', next);
   }
 
   protected onDrawerOpenChange(next: boolean): void {
