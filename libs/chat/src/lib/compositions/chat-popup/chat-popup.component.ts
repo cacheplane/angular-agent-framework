@@ -1,6 +1,6 @@
 // libs/chat/src/lib/compositions/chat-popup/chat-popup.component.ts
 // SPDX-License-Identifier: MIT
-import { Component, ChangeDetectionStrategy, input, model, DestroyRef, inject, DOCUMENT, effect } from '@angular/core';
+import { Component, ChangeDetectionStrategy, input, model, output, DestroyRef, inject, DOCUMENT, effect } from '@angular/core';
 import type { Agent } from '../../agent';
 import type { ViewRegistry } from '@ngaf/render';
 import { ChatComponent } from '../chat/chat.component';
@@ -64,7 +64,12 @@ import { CHAT_HOST_TOKENS } from '../../styles/chat-tokens';
       <button type="button" class="chat-popup__close" (click)="closeWindow()" aria-label="Close chat">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
-      <chat [agent]="agent()" [views]="views()">
+      <chat
+        [agent]="agent()"
+        [views]="views()"
+        (replayRequested)="replayRequested.emit($event)"
+        (forkRequested)="forkRequested.emit($event)"
+      >
         <ng-content select="[chatHeader]" chatHeader />
       </chat>
     </div>
@@ -77,6 +82,8 @@ export class ChatPopupComponent {
    * surface. Pass `a2uiBasicCatalog()` from `@ngaf/chat`. */
   readonly views = input<ViewRegistry | undefined>(undefined);
   readonly open = model(false);
+  readonly replayRequested = output<string>();
+  readonly forkRequested = output<string>();
   /**
    * Keyboard shortcut (single key) that toggles the popup with cmd (mac)
    * or ctrl (other). Set to `null` to disable. Default: 'k' — matches the
