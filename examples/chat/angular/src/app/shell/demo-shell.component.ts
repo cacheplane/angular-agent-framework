@@ -22,8 +22,8 @@ import {
   ChatDebugActionComponent,
   ChatInterruptPanelComponent,
   ChatSubagentsComponent,
-  ChatThreadDrawerComponent,
-  ChatThreadListComponent,
+  ChatSidenavComponent,
+  type ChatSidenavMode,
   type InterruptAction,
 } from '@ngaf/chat';
 import { PalettePersistence } from './palette-persistence.service';
@@ -52,8 +52,7 @@ function modeFromUrl(url: string): DemoMode {
     ChatDebugActionComponent,
     ChatInterruptPanelComponent,
     ChatSubagentsComponent,
-    ChatThreadDrawerComponent,
-    ChatThreadListComponent,
+    ChatSidenavComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './demo-shell.component.html',
@@ -145,9 +144,9 @@ export class DemoShell {
     typeof window !== 'undefined' ? window.innerWidth : 1440,
   );
 
-  /** Computed drawer mode based on viewport width. */
-  protected readonly drawerMode = computed<'push' | 'overlay'>(() =>
-    this.viewportWidth() >= 1024 ? 'push' : 'overlay',
+  /** Computed sidenav mode based on viewport width. */
+  protected readonly sidenavMode = computed<ChatSidenavMode>(() =>
+    this.viewportWidth() >= 1024 ? 'expanded' : 'drawer',
   );
 
   protected readonly modeOptions = [
@@ -247,13 +246,13 @@ export class DemoShell {
     this.persistence.write('theme', next);
   }
 
-  protected onDrawerOpenChange(next: boolean): void {
+  protected onSidenavOpenChange(next: boolean): void {
     this.drawerOpen.set(next);
     this.persistence.write('drawerOpen', next);
   }
 
-  protected toggleDrawer(): void {
-    this.onDrawerOpenChange(!this.drawerOpen());
+  protected toggleSidenav(): void {
+    this.onSidenavOpenChange(!this.drawerOpen());
   }
 
   onTimelineReplay(checkpointId: string): void {
