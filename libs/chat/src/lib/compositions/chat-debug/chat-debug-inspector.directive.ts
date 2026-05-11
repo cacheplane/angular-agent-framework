@@ -11,6 +11,6 @@ import { Directive, TemplateRef, inject, input } from '@angular/core';
   standalone: true,
 })
 export class ChatDebugInspectorDirective {
-  readonly label = input.required<string>({ alias: 'chatDebugInspectorLabel' });
+  readonly label = input.required<string>();
   readonly templateRef = inject(TemplateRef);
 }
