@@ -5,6 +5,7 @@ import {
   effect,
   input,
   inject,
+  output,
   signal,
   viewChild,
   ElementRef,
@@ -26,6 +27,7 @@ import { DebugControlsComponent } from './debug-controls.component';
 import { DebugSummaryComponent } from './debug-summary.component';
 import type { DebugCheckpoint } from './debug-checkpoint-card.component';
 import { toDebugCheckpoint, extractStateValues } from './debug-utils';
+import { ChatTimelineSliderComponent } from '../chat-timeline-slider/chat-timeline-slider.component';
 
 @Component({
   selector: 'chat-debug',
@@ -40,6 +42,7 @@ import { toDebugCheckpoint, extractStateValues } from './debug-utils';
     DebugDetailComponent,
     DebugControlsComponent,
     DebugSummaryComponent,
+    ChatTimelineSliderComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styles: [
@@ -206,6 +209,15 @@ import { toDebugCheckpoint, extractStateValues } from './debug-utils';
       overflow-y: auto;
     }
 
+    .chat-debug__section { padding: 8px 12px; border-top: 1px solid var(--ngaf-chat-separator); }
+    .chat-debug__section-title {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--ngaf-chat-text-muted);
+      margin: 0 0 6px;
+    }
+
     /* Markdown rendering */
     :host ::ng-deep .chat-md p { margin: 0 0 0.75em; }
     :host ::ng-deep .chat-md p:last-child { margin-bottom: 0; }
@@ -363,6 +375,16 @@ import { toDebugCheckpoint, extractStateValues } from './debug-utils';
               />
             </div>
           }
+
+          <!-- Legacy panel slider (reference pattern for library consumers) -->
+          <section class="chat-debug__section" aria-label="Timeline slider (legacy panel pattern)">
+            <h3 class="chat-debug__section-title">Legacy timeline slider</h3>
+            <chat-timeline-slider
+              [agent]="agent()"
+              (replayRequested)="replayRequested.emit($event)"
+              (forkRequested)="forkRequested.emit($event)"
+            />
+          </section>
         </div>
       }
     </div>
@@ -372,6 +394,9 @@ export class ChatDebugComponent {
   private readonly sanitizer = inject(DomSanitizer);
 
   readonly agent = input.required<AgentWithHistory>();
+
+  readonly replayRequested = output<string>();
+  readonly forkRequested = output<string>();
 
   readonly debugOpen = signal<boolean>(true);
   readonly selectedCheckpointIndex = signal<number>(-1);

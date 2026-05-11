@@ -9,6 +9,42 @@
   height: 100%;
 }
 
+.demo-shell__hamburger {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  z-index: 1100;
+  width: 36px;
+  height: 36px;
+  border: 1px solid #303540;
+  background: #1a1d23;
+  color: #e6e9ef;
+  border-radius: 6px;
+  font-size: 18px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.3);
+}
+.demo-shell__hamburger:hover { background: #232730; }
+
+@media (max-width: 767px) {
+  .demo-shell__hamburger { width: 44px; height: 44px; }
+}
+
+.demo-shell__main {
+  height: 100%;
+  transition: padding-left 200ms ease;
+  padding-left: 0;
+}
+.demo-shell__main--push {
+  padding-left: 280px;
+}
+@media (max-width: 1023px) {
+  .demo-shell__main--push { padding-left: 0; }
+}
+
 .demo-shell__debug {
   position: fixed;
   left: 0;
@@ -45,59 +81,4 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
-}
-
-.demo-shell__timeline-panel {
-  position: fixed;
-  right: 16px;
-  top: 80px;
-  bottom: 96px;
-  width: 280px;
-  background: #1a1d23;
-  border: 1px solid #303540;
-  border-radius: 10px;
-  overflow-y: auto;
-  z-index: 996;
-  padding: 8px 0;
-}
-
-.demo-shell__threads-panel {
-  position: fixed;
-  left: 0;
-  top: 80px;
-  bottom: 96px;
-  width: 240px;
-  padding: 12px 8px;
-  background: #1a1d23;
-  border-right: 1px solid #303540;
-  overflow-y: auto;
-  z-index: 996;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-/* Narrow the side panels at tablet widths so the chat column keeps a usable
-   minimum (~480px) when both panels are open. */
-@media (max-width: 1024px) {
-  .demo-shell__threads-panel { width: 200px; }
-  .demo-shell__timeline-panel { width: 240px; }
-}
-
-/* Below tablet the fixed side panels would steal too much of the chat
-   surface. Promote them to a centered overlay sheet — still toggle-driven,
-   but full-width modulo gutter, and they stack above the chat instead of
-   crowding it. */
-@media (max-width: 768px) {
-  .demo-shell__threads-panel,
-  .demo-shell__timeline-panel {
-    left: 16px;
-    right: 16px;
-    width: auto;
-    top: 72px;
-    bottom: 112px;
-    border: 1px solid #303540;
-    border-radius: 10px;
-    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.45);
-  }
 }
