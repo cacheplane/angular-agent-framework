@@ -1837,7 +1837,7 @@
     "properties": [
       {
         "name": "agent",
-        "type": "InputSignal<AgentWithHistory<unknown>>",
+        "type": "InputSignal<AgentWithHistory>",
         "description": "",
         "optional": false
       },
@@ -2909,7 +2909,7 @@
     "properties": [
       {
         "name": "agent",
-        "type": "InputSignal<AgentWithHistory<unknown>>",
+        "type": "InputSignal<AgentWithHistory>",
         "description": "",
         "optional": false
       },
@@ -2957,7 +2957,7 @@
     "properties": [
       {
         "name": "agent",
-        "type": "InputSignal<AgentWithHistory<unknown>>",
+        "type": "InputSignal<AgentWithHistory>",
         "description": "",
         "optional": false
       },
