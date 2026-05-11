@@ -29,7 +29,6 @@ import { ChatMessageActionsComponent } from '../../primitives/chat-message-actio
 import { ChatWelcomeComponent } from '../../primitives/chat-welcome/chat-welcome.component';
 import { ChatSelectComponent, type ChatSelectOption } from '../../primitives/chat-select/chat-select.component';
 import { A2uiSurfaceComponent } from '../../a2ui/surface.component';
-import { ChatGenuiSkeletonComponent } from '../../primitives/chat-genui-skeleton/chat-genui-skeleton.component';
 import { ChatScrollBubbleComponent } from '../../primitives/chat-scroll-bubble/chat-scroll-bubble.component';
 import { createContentClassifier, type ContentClassifier } from '../../streaming/content-classifier';
 import { messageContent } from '../shared/message-utils';
@@ -59,7 +58,7 @@ export function isPinned(
     ChatThreadListComponent, ChatGenerativeUiComponent,
     ChatStreamingMdComponent, ChatToolCallsComponent, ChatSubagentsComponent, A2uiSurfaceComponent,
     ChatMessageActionsComponent, ChatWelcomeComponent, ChatSelectComponent, ChatReasoningComponent,
-    ChatGenuiSkeletonComponent, ChatScrollBubbleComponent,
+    ChatScrollBubbleComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styles: [CHAT_HOST_TOKENS, `
@@ -155,7 +154,6 @@ export function isPinned(
                 @let content = messageContent(message);
                 @let classified = classifyMessage(content, message);
                 @let pending = classified.type() === 'pending';
-                @let genuiTurn = isGenuiTurn(message, prevMessage(i), i);
                 <chat-message
                   [role]="'assistant'"
                   [message]="message"
@@ -179,16 +177,7 @@ export function isPinned(
                     </ng-container>
                   </chat-tool-calls>
                   <chat-subagents [agent]="agent()" />
-                  @if (genuiTurn && classified.type() !== 'a2ui' && classified.type() !== 'json-render') {
-                    <!-- GenUI turn awaiting the rendered surface — skeleton suppresses
-                         any streaming markdown that may flow before the classifier
-                         resolves (e.g. raw sub-LLM JSON envelopes streaming before
-                         emit_generated_surface prepends its A2UI sentinel prefix). -->
-                    <chat-genui-skeleton />
-                  } @else if (classified.type() === 'a2ui' && classified.a2uiSurfaces().size === 0 && genuiTurn) {
-                    <!-- Surface event arrived but envelopes haven't yet parsed into surfaces. -->
-                    <chat-genui-skeleton />
-                  } @else if (classified.markdown(); as md) {
+                  @if (classified.markdown(); as md) {
                     <chat-streaming-md [content]="md" [streaming]="agent().isLoading() && i === agent().messages().length - 1" />
                   }
                   @if (classified.spec(); as spec) {
