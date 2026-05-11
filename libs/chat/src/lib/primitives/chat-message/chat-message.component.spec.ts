@@ -141,4 +141,69 @@ describe('ChatMessageComponent — GenUI tool-call suppression', () => {
     expect(fx.nativeElement.querySelector('chat-genui-skeleton')).toBeNull();
     expect(fx.nativeElement.querySelector('.chat-message__assistant-body')).toBeTruthy();
   });
+
+  it('detects function_call content block during streaming (before tool_calls populates)', () => {
+    TestBed.configureTestingModule({ imports: [GenuiHost] });
+    const fx = TestBed.createComponent(GenuiHost);
+    // Mid-stream OpenAI Responses-API shape: tool_calls is still empty but
+    // the content array carries the function_call block with the tool name.
+    fx.componentInstance.msg = {
+      id: 'm-1',
+      role: 'assistant',
+      content: '',
+      extra: {
+        tool_calls: [],
+        content: [
+          { type: 'reasoning', summary: [] },
+          { type: 'function_call', name: 'generate_a2ui_schema', arguments: '{"req' },
+        ],
+      },
+    };
+    fx.componentInstance.streaming = true;
+    fx.detectChanges();
+    expect(fx.nativeElement.querySelector('chat-genui-skeleton')).toBeTruthy();
+  });
+
+  it('detects A2UI sentinel prefix on the emit-phase message', () => {
+    TestBed.configureTestingModule({ imports: [GenuiHost] });
+    const fx = TestBed.createComponent(GenuiHost);
+    fx.componentInstance.msg = {
+      id: 'm-1',
+      role: 'assistant',
+      content: '---a2ui_JSON---\n{"surfaceUpdate":{"surfaceId":"main"}}',
+      extra: {},
+    };
+    fx.componentInstance.streaming = true;
+    fx.detectChanges();
+    expect(fx.nativeElement.querySelector('chat-genui-skeleton')).toBeTruthy();
+  });
+
+  it('detects PARTIAL A2UI sentinel during the first streaming chunks', () => {
+    TestBed.configureTestingModule({ imports: [GenuiHost] });
+    const fx = TestBed.createComponent(GenuiHost);
+    // After only a few tokens have arrived, content is a prefix of the sentinel.
+    fx.componentInstance.msg = {
+      id: 'm-1',
+      role: 'assistant',
+      content: '---a',
+      extra: {},
+    };
+    fx.componentInstance.streaming = true;
+    fx.detectChanges();
+    expect(fx.nativeElement.querySelector('chat-genui-skeleton')).toBeTruthy();
+  });
+
+  it('does not match an unrelated assistant message that happens to start with dashes', () => {
+    TestBed.configureTestingModule({ imports: [GenuiHost] });
+    const fx = TestBed.createComponent(GenuiHost);
+    fx.componentInstance.msg = {
+      id: 'm-1',
+      role: 'assistant',
+      content: '---some-other-marker---',
+      extra: {},
+    };
+    fx.componentInstance.streaming = false;
+    fx.detectChanges();
+    expect(fx.nativeElement.querySelector('chat-genui-skeleton')).toBeNull();
+  });
 });

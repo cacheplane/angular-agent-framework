@@ -108,20 +108,56 @@ export class ChatMessageComponent {
   });
 
   /** True when this message represents (or results from) a GenUI tool
-   *  call whose body should be suppressed in favor of a skeleton. */
+   *  call whose body should be suppressed in favor of a skeleton.
+   *
+   *  Detection layers — each catches a distinct phase of the streaming
+   *  pipeline so the skeleton replaces the body from the first token:
+   *
+   *  1a. Post-streaming AI message with `extra.tool_calls[].name`
+   *      referencing a GenUI tool.
+   *  1b. Live-streaming AI message whose OpenAI Responses-API content
+   *      array contains a `function_call` block with the tool name —
+   *      arrives on the first chunk, before `tool_calls` populates.
+   *  1c. Emit-phase AI message whose content starts with the A2UI
+   *      sentinel `---a2ui_JSON---` (or any prefix of it during the
+   *      first few stream tokens).
+   *  2.  Tool result message whose `name` matches a GenUI tool. */
   readonly isGenUiToolCall = computed<boolean>(() => {
     const m = this.message();
     if (!m) return false;
     const names = new Set(this.genuiToolNames());
 
-    // Case 1: assistant message with tool_calls referencing a GenUI tool.
     if (m.role === 'assistant') {
+      // 1a: tool_calls field (post-streaming).
       const calls = (m.extra?.['tool_calls'] as Array<{ name?: string }> | undefined) ?? [];
       if (calls.some(c => c.name != null && names.has(c.name))) return true;
+
+      // 1b: OpenAI Responses-API content-array `function_call` block —
+      //     available from the first streaming chunk.
+      const rawContent = m.extra?.['content'];
+      if (Array.isArray(rawContent)) {
+        for (const block of rawContent) {
+          if (block != null
+              && typeof block === 'object'
+              && (block as { type?: unknown }).type === 'function_call'
+              && typeof (block as { name?: unknown }).name === 'string'
+              && names.has((block as { name: string }).name)) {
+            return true;
+          }
+        }
+      }
+
+      // 1c: A2UI sentinel prefix on the emit-phase message. Matches
+      //     both the full prefix and any partial prefix that arrives
+      //     during the first few stream tokens (e.g. `--`, `---a`).
+      if (typeof m.content === 'string' && m.content.length > 0) {
+        const A2UI_SENTINEL = '---a2ui_JSON---';
+        if (m.content.startsWith(A2UI_SENTINEL)) return true;
+        if (A2UI_SENTINEL.startsWith(m.content)) return true;
+      }
     }
 
-    // Case 2: tool message whose `name` matches a GenUI tool. (The tool
-    // result message carries `name` set to the tool's name.)
+    // 2: tool result message tagged with the GenUI tool name.
     if (m.role === 'tool') {
       const name = (m.extra?.['name'] as string | undefined) ?? m.name;
       if (typeof name === 'string' && names.has(name)) return true;
