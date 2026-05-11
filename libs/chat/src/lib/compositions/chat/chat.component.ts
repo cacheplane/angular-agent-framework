@@ -472,6 +472,14 @@ export class ChatComponent {
       }
     }
 
+    // Direct prev-message check (fast path for the well-formed case
+    // where the immediately-preceding tool message still has its name).
+    const p = _prevMsg as { role?: string; name?: string; extra?: Record<string, unknown> } | null | undefined;
+    if (p && p.role === 'tool') {
+      const toolName = (p.extra?.['name'] as string | undefined) ?? p.name;
+      if (typeof toolName === 'string' && names.has(toolName)) return true;
+    }
+
     // Walk backward through messages for the emit-phase assistant
     // message whose own structure has no GenUI hint. Bounded by the
     // most recent human message (= start of the current turn).
