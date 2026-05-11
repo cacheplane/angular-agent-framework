@@ -164,10 +164,16 @@ import type { ChatRenderEvent } from './chat-render-event';
                     </ng-container>
                   </chat-tool-calls>
                   <chat-subagents [agent]="agent()" />
-                  @if ((pending || (classified.type() === 'a2ui' && classified.a2uiSurfaces().size === 0)) && genuiTurn) {
+                  @if (genuiTurn && classified.type() !== 'a2ui' && classified.type() !== 'json-render') {
+                    <!-- GenUI turn awaiting the rendered surface — skeleton suppresses
+                         any streaming markdown that may flow before the classifier
+                         resolves (e.g. raw sub-LLM JSON envelopes streaming before
+                         emit_generated_surface prepends its A2UI sentinel prefix). -->
                     <chat-genui-skeleton />
-                  }
-                  @if (classified.markdown(); as md) {
+                  } @else if (classified.type() === 'a2ui' && classified.a2uiSurfaces().size === 0 && genuiTurn) {
+                    <!-- Surface event arrived but envelopes haven't yet parsed into surfaces. -->
+                    <chat-genui-skeleton />
+                  } @else if (classified.markdown(); as md) {
                     <chat-streaming-md [content]="md" [streaming]="agent().isLoading() && i === agent().messages().length - 1" />
                   }
                   @if (classified.spec(); as spec) {
