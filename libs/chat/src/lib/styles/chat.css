@@ -46,6 +46,7 @@
   --ngaf-chat-font-size-xs: 0.75rem;
   --ngaf-chat-line-height: 1.6;
   --ngaf-chat-line-height-tight: 1.5;
+  --ngaf-chat-input-gap: 0.75rem;
 
   /*
    * === A2UI surface tokens — dark-theme defaults ===
