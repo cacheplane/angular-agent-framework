@@ -13,9 +13,8 @@ describe('PalettePersistence', () => {
     const svc = TestBed.runInInjectionContext(() => new PalettePersistence());
     expect(svc.read('model')).toBeNull();
     expect(svc.read('effort')).toBeNull();
-    expect(svc.read('debug')).toBeNull();
     expect(svc.read('threadId')).toBeNull();
-    expect(svc.read('collapsed')).toBeNull();
+    expect(svc.read('drawerOpen')).toBeNull();
   });
 
   it('round-trips a string value', () => {
@@ -32,10 +31,10 @@ describe('PalettePersistence', () => {
 
   it('round-trips a boolean value', () => {
     const svc = TestBed.runInInjectionContext(() => new PalettePersistence());
-    svc.write('debug', true);
-    expect(svc.read('debug')).toBe(true);
-    svc.write('debug', false);
-    expect(svc.read('debug')).toBe(false);
+    svc.write('drawerOpen', true);
+    expect(svc.read('drawerOpen')).toBe(true);
+    svc.write('drawerOpen', false);
+    expect(svc.read('drawerOpen')).toBe(false);
   });
 
   it('clearing a key with null removes it from storage', () => {

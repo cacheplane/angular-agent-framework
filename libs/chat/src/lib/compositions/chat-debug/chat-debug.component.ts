@@ -1,475 +1,391 @@
 // SPDX-License-Identifier: MIT
 import {
   Component,
+  ChangeDetectionStrategy,
   computed,
+  contentChild,
+  contentChildren,
   effect,
-  input,
+  HostListener,
   inject,
+  input,
   output,
   signal,
-  viewChild,
-  ElementRef,
-  ChangeDetectionStrategy,
 } from '@angular/core';
-import { DomSanitizer } from '@angular/platform-browser';
+import { NgTemplateOutlet } from '@angular/common';
+import { DomSanitizer, type SafeHtml } from '@angular/platform-browser';
 import type { AgentWithHistory } from '../../agent';
-import { ChatMessageListComponent } from '../../primitives/chat-message-list/chat-message-list.component';
-import { MessageTemplateDirective } from '../../primitives/chat-message-list/message-template.directive';
-import { ChatInputComponent } from '../../primitives/chat-input/chat-input.component';
-import { ChatTypingIndicatorComponent } from '../../primitives/chat-typing-indicator/chat-typing-indicator.component';
-import { ChatErrorComponent } from '../../primitives/chat-error/chat-error.component';
-import { messageContent } from '../shared/message-utils';
 import { CHAT_HOST_TOKENS } from '../../styles/chat-tokens';
-import { renderMarkdown } from '../../streaming/markdown-render';
-import { DebugTimelineComponent } from './debug-timeline.component';
-import { DebugDetailComponent } from './debug-detail.component';
-import { DebugControlsComponent } from './debug-controls.component';
-import { DebugSummaryComponent } from './debug-summary.component';
-import type { DebugCheckpoint } from './debug-checkpoint-card.component';
-import { toDebugCheckpoint, extractStateValues } from './debug-utils';
-import { ChatTimelineSliderComponent } from '../chat-timeline-slider/chat-timeline-slider.component';
+import { ICON_TOOL } from '../../styles/chat-icons';
+import { ChatDebugControlsDirective } from './chat-debug-controls.directive';
+import { ChatDebugInspectorDirective } from './chat-debug-inspector.directive';
+import { TimelineInspectorComponent } from './inspectors/timeline-inspector.component';
+import { StateInspectorComponent } from './inspectors/state-inspector.component';
+import { createPersistence } from './persistence';
+
+export type DockPosition = 'right' | 'bottom' | 'left';
+
+interface TabEntry {
+  readonly id: string;
+  readonly label: string;
+  readonly kind: 'builtin-timeline' | 'builtin-state' | 'host';
+  readonly hostIndex?: number;
+}
 
 @Component({
   selector: 'chat-debug',
   standalone: true,
   imports: [
-    ChatMessageListComponent,
-    MessageTemplateDirective,
-    ChatInputComponent,
-    ChatTypingIndicatorComponent,
-    ChatErrorComponent,
-    DebugTimelineComponent,
-    DebugDetailComponent,
-    DebugControlsComponent,
-    DebugSummaryComponent,
-    ChatTimelineSliderComponent,
+    NgTemplateOutlet,
+    TimelineInspectorComponent,
+    StateInspectorComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styles: [
     CHAT_HOST_TOKENS,
     `
-    :host {
-      display: flex;
-      flex-direction: column;
-      height: 100%;
-      overflow: hidden;
-      background: var(--ngaf-chat-bg);
-    }
+    :host { display: contents; }
 
-    /* Layout */
-    .chat-debug__layout { display: flex; height: 100%; }
-
-    /* Chat column */
-    .chat-debug__chat { display: flex; flex-direction: column; flex: 1; min-width: 0; }
-    .chat-debug__messages {
-      flex: 1;
-      overflow-y: auto;
-      padding: var(--ngaf-chat-space-6) var(--ngaf-chat-space-5);
-    }
-    .chat-debug__messages-inner {
-      max-width: var(--ngaf-chat-max-width);
-      margin: 0 auto;
-      display: flex;
-      flex-direction: column;
-      gap: var(--ngaf-chat-space-5);
-    }
-
-    /* Message templates */
-    .chat-debug__msg-human { display: flex; justify-content: flex-end; }
-    .chat-debug__msg-human__bubble {
-      max-width: 75%;
-      padding: 10px 16px;
-      font-size: var(--ngaf-chat-font-size);
-      line-height: var(--ngaf-chat-line-height);
-      word-break: break-words;
-      border-radius: var(--ngaf-chat-radius-bubble) var(--ngaf-chat-radius-bubble) 6px var(--ngaf-chat-radius-bubble);
-      background: var(--ngaf-chat-surface-alt);
-      color: var(--ngaf-chat-text);
-      border: 1px solid var(--ngaf-chat-separator);
-    }
-
-    .chat-debug__msg-ai { display: flex; gap: 12px; }
-    .chat-debug__msg-ai__avatar {
-      width: 28px;
-      height: 28px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: var(--ngaf-chat-font-size-xs);
-      font-weight: 600;
-      flex-shrink: 0;
-      margin-top: 2px;
-      border-radius: 8px;
-      background: var(--ngaf-chat-surface-alt);
-      color: var(--ngaf-chat-text-muted);
-    }
-    .chat-debug__msg-ai__content {
-      flex: 1;
-      min-width: 0;
-      word-break: break-words;
-      font-size: var(--ngaf-chat-font-size);
-      line-height: var(--ngaf-chat-line-height);
-      color: var(--ngaf-chat-text);
-    }
-
-    .chat-debug__msg-tool {
-      padding: 10px 14px;
-      font-family: var(--ngaf-chat-font-mono);
-      font-size: 13px;
-      word-break: break-words;
-      white-space: pre-wrap;
-      border-radius: var(--ngaf-chat-radius-card);
-      border: 1px solid var(--ngaf-chat-separator);
-      background: var(--ngaf-chat-surface-alt);
-      color: var(--ngaf-chat-text);
-    }
-
-    .chat-debug__msg-system { display: flex; justify-content: center; }
-    .chat-debug__msg-system__text {
-      font-size: var(--ngaf-chat-font-size-xs);
-      font-style: italic;
-      color: var(--ngaf-chat-text-muted);
-    }
-
-    /* Input bar */
-    .chat-debug__input-bar {
-      border-top: 1px solid var(--ngaf-chat-separator);
-      padding: var(--ngaf-chat-space-4) var(--ngaf-chat-space-5);
-    }
-    .chat-debug__input-inner {
-      max-width: var(--ngaf-chat-max-width);
-      margin: 0 auto;
-    }
-
-    /* Debug panel toggle */
-    .chat-debug__toggle-btn {
-      width: 32px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border: none;
-      border-left: 1px solid var(--ngaf-chat-separator);
+    /* Floating launcher */
+    .launcher {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 44px;
+      height: 44px;
+      border-radius: var(--ngaf-chat-radius-launcher);
+      background: var(--ngaf-chat-primary);
+      color: var(--ngaf-chat-on-primary);
+      border: 0;
       cursor: pointer;
-      transition: background 150ms ease;
-      background: var(--ngaf-chat-surface-alt);
-      color: var(--ngaf-chat-text-muted);
+      z-index: 990;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18), 0 2px 4px rgba(0, 0, 0, 0.10);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 150ms ease, box-shadow 150ms ease;
     }
-    .chat-debug__toggle-btn:hover {
-      background: color-mix(in srgb, var(--ngaf-chat-text) 5%, transparent);
+    .launcher:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.22), 0 3px 6px rgba(0, 0, 0, 0.12);
     }
+    .launcher:active { transform: translateY(0); }
+    .launcher svg { display: block; }
 
-    /* Debug panel */
-    .chat-debug__panel {
-      width: 320px;
-      border-left: 1px solid var(--ngaf-chat-separator);
+    /* Docked panel */
+    .panel {
+      position: fixed;
+      background: var(--ngaf-chat-bg);
+      color: var(--ngaf-chat-text);
+      border: 1px solid var(--ngaf-chat-separator);
+      z-index: 991;
       display: flex;
       flex-direction: column;
-      overflow: hidden;
-      flex-shrink: 0;
-      background: var(--ngaf-chat-bg);
+      box-shadow: -8px 0 24px rgba(0, 0, 0, 0.08), -2px 0 8px rgba(0, 0, 0, 0.04);
     }
-    .chat-debug__panel-header {
+    .panel--right  { top: 0; right: 0; bottom: 0; width: var(--panel-size, 420px); border-right: 0; }
+    .panel--left   { top: 0; left: 0;  bottom: 0; width: var(--panel-size, 420px); border-left: 0;
+                     box-shadow: 8px 0 24px rgba(0, 0, 0, 0.08), 2px 0 8px rgba(0, 0, 0, 0.04); }
+    .panel--bottom { left: 0; right: 0; bottom: 0; height: var(--panel-size, 40vh); border-bottom: 0;
+                     box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.08), 0 -2px 8px rgba(0, 0, 0, 0.04); }
+
+    .panel__header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 8px 12px;
+      padding: 10px var(--ngaf-chat-space-4);
       border-bottom: 1px solid var(--ngaf-chat-separator);
+      background: linear-gradient(to bottom, var(--ngaf-chat-bg), var(--ngaf-chat-surface));
+      min-height: 44px;
+      box-sizing: border-box;
     }
-    .chat-debug__panel-title {
-      font-size: 11px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
+    .panel__title {
       margin: 0;
-      color: var(--ngaf-chat-text-muted);
+      font-size: var(--ngaf-chat-font-size-sm);
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      display: flex;
+      align-items: center;
+      gap: var(--ngaf-chat-space-2);
     }
-    .chat-debug__panel-close {
-      font-size: var(--ngaf-chat-font-size-xs);
+    .panel__title-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--ngaf-chat-success);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--ngaf-chat-success) 22%, transparent);
+    }
+
+    .panel__dock-group {
+      display: inline-flex;
+      gap: 0;
+      padding: 2px;
+      background: var(--ngaf-chat-surface-alt);
+      border: 1px solid var(--ngaf-chat-separator);
+      border-radius: var(--ngaf-chat-radius-button);
+    }
+    .panel__dock-btn {
+      appearance: none;
       background: transparent;
       border: 0;
+      border-radius: calc(var(--ngaf-chat-radius-button) - 2px);
+      width: 24px;
+      height: 22px;
+      padding: 0;
+      color: var(--ngaf-chat-text-muted);
       cursor: pointer;
-      color: var(--ngaf-chat-text-muted);
-      transition: color 150ms ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 120ms ease, color 120ms ease;
     }
-    .chat-debug__panel-close:hover { color: var(--ngaf-chat-text); }
+    .panel__dock-btn:hover { color: var(--ngaf-chat-text); }
+    .panel__dock-btn.is-active {
+      background: var(--ngaf-chat-bg);
+      color: var(--ngaf-chat-text);
+      box-shadow: var(--ngaf-chat-shadow-sm);
+    }
+    .panel__dock-btn svg { display: block; }
 
-    .chat-debug__panel-section {
-      padding: 8px 12px;
+    .panel__close {
+      appearance: none;
+      background: transparent;
+      border: 0;
+      border-radius: var(--ngaf-chat-radius-button);
+      width: 26px;
+      height: 26px;
+      margin-left: var(--ngaf-chat-space-1);
+      color: var(--ngaf-chat-text-muted);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 120ms ease, color 120ms ease;
+    }
+    .panel__close:hover {
+      background: var(--ngaf-chat-surface-alt);
+      color: var(--ngaf-chat-text);
+    }
+
+    .panel__actions { display: flex; align-items: center; gap: 0; }
+
+    .panel__controls {
       border-bottom: 1px solid var(--ngaf-chat-separator);
-    }
-    .chat-debug__panel-timeline {
-      flex: 1;
       overflow-y: auto;
-      padding: 8px 12px;
+      max-height: 50%;
+      background: color-mix(in srgb, var(--ngaf-chat-surface-alt) 50%, var(--ngaf-chat-bg));
     }
-    .chat-debug__panel-detail {
-      border-top: 1px solid var(--ngaf-chat-separator);
-      padding: 8px 12px;
-      max-height: 256px;
-      overflow-y: auto;
+    .panel__controls:empty { display: none; }
+
+    .panel__tabs {
+      display: flex;
+      gap: var(--ngaf-chat-space-1);
+      border-bottom: 1px solid var(--ngaf-chat-separator);
+      padding: 0 var(--ngaf-chat-space-3);
+      background: var(--ngaf-chat-bg);
+    }
+    .panel__tab {
+      appearance: none;
+      background: transparent;
+      border: 0;
+      border-bottom: 2px solid transparent;
+      padding: 10px var(--ngaf-chat-space-2);
+      font: inherit;
+      font-size: var(--ngaf-chat-font-size-sm);
+      font-weight: 500;
+      color: var(--ngaf-chat-text-muted);
+      cursor: pointer;
+      transition: color 120ms ease, border-color 120ms ease;
+      margin-bottom: -1px;
+    }
+    .panel__tab:hover { color: var(--ngaf-chat-text); }
+    .panel__tab.is-active {
+      color: var(--ngaf-chat-text);
+      border-bottom-color: var(--ngaf-chat-primary);
     }
 
-    .chat-debug__section { padding: 8px 12px; border-top: 1px solid var(--ngaf-chat-separator); }
-    .chat-debug__section-title {
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      color: var(--ngaf-chat-text-muted);
-      margin: 0 0 6px;
-    }
-
-    /* Markdown rendering */
-    :host ::ng-deep .chat-md p { margin: 0 0 0.75em; }
-    :host ::ng-deep .chat-md p:last-child { margin-bottom: 0; }
-    :host ::ng-deep .chat-md code {
-      background: var(--ngaf-chat-surface-alt);
-      padding: 2px 6px;
-      border-radius: 4px;
-      font-size: 0.875em;
-      font-family: var(--ngaf-chat-font-mono);
-    }
-    :host ::ng-deep .chat-md pre {
-      background: var(--ngaf-chat-surface-alt);
-      padding: 12px 16px;
-      border-radius: var(--ngaf-chat-radius-card);
-      overflow-x: auto;
-      margin: 0.75em 0;
-    }
-    :host ::ng-deep .chat-md pre code { background: none; padding: 0; }
-    :host ::ng-deep .chat-md ul, :host ::ng-deep .chat-md ol { margin: 0.5em 0; padding-left: 1.5em; }
-    :host ::ng-deep .chat-md li { margin: 0.25em 0; }
-    :host ::ng-deep .chat-md a { color: var(--ngaf-chat-text); text-decoration: underline; }
-    :host ::ng-deep .chat-md strong { font-weight: 600; }
-    :host ::ng-deep .chat-md blockquote {
-      border-left: 3px solid var(--ngaf-chat-separator);
-      padding-left: 12px;
-      margin: 0.75em 0;
-      color: var(--ngaf-chat-text-muted);
-    }
-    :host ::ng-deep .chat-md h1, :host ::ng-deep .chat-md h2, :host ::ng-deep .chat-md h3, :host ::ng-deep .chat-md h4 { margin: 1em 0 0.5em; font-weight: 600; }
-    :host ::ng-deep .chat-md h1 { font-size: 1.25em; }
-    :host ::ng-deep .chat-md h2 { font-size: 1.125em; }
-    :host ::ng-deep .chat-md h3 { font-size: 1em; }
-    :host ::ng-deep .chat-md table { border-collapse: collapse; width: 100%; margin: 0.75em 0; }
-    :host ::ng-deep .chat-md th, :host ::ng-deep .chat-md td { border: 1px solid var(--ngaf-chat-separator); padding: 6px 12px; text-align: left; }
-    :host ::ng-deep .chat-md th { background: var(--ngaf-chat-surface-alt); font-weight: 600; font-size: 0.875em; }
+    .panel__body { flex: 1; min-height: 0; overflow: hidden; display: flex; flex-direction: column; }
     `,
   ],
   template: `
-    <div class="chat-debug__layout">
-      <!-- Chat area -->
-      <div class="chat-debug__chat">
-        <div
-          #scrollContainer
-          class="chat-debug__messages"
-          role="log"
-          aria-label="Chat messages"
-          aria-live="polite"
-        >
-          <div class="chat-debug__messages-inner">
-            <chat-message-list [agent]="agent()">
-              <!-- Human messages: right-aligned bubble -->
-              <ng-template chatMessageTemplate="human" let-message>
-                <div class="chat-debug__msg-human">
-                  <div class="chat-debug__msg-human__bubble">{{ messageContent(message) }}</div>
-                </div>
-              </ng-template>
-
-              <!-- AI messages: avatar inline with content -->
-              <ng-template chatMessageTemplate="ai" let-message>
-                <div class="chat-debug__msg-ai">
-                  <div class="chat-debug__msg-ai__avatar">A</div>
-                  <div
-                    class="chat-md chat-debug__msg-ai__content"
-                    [innerHTML]="renderMd(messageContent(message))"
-                  ></div>
-                </div>
-              </ng-template>
-
-              <!-- Tool messages: monospace card -->
-              <ng-template chatMessageTemplate="tool" let-message>
-                <div class="chat-debug__msg-tool">{{ messageContent(message) }}</div>
-              </ng-template>
-
-              <!-- System messages: centered italic -->
-              <ng-template chatMessageTemplate="system" let-message>
-                <div class="chat-debug__msg-system" role="status">
-                  <span class="chat-debug__msg-system__text">{{ messageContent(message) }}</span>
-                </div>
-              </ng-template>
-            </chat-message-list>
-
-            <chat-typing-indicator [agent]="agent()" />
+    @if (!open()) {
+      <button
+        type="button"
+        class="launcher"
+        title="Open chat debug"
+        aria-label="Open chat debug"
+        (click)="setOpen(true)"
+        [innerHTML]="launcherIcon"
+      ></button>
+    } @else {
+      <div
+        class="panel"
+        [class.panel--right]="dockState() === 'right'"
+        [class.panel--bottom]="dockState() === 'bottom'"
+        [class.panel--left]="dockState() === 'left'"
+        role="region"
+        aria-label="Chat debug"
+      >
+        <div class="panel__header">
+          <h3 class="panel__title">
+            <span class="panel__title-dot" aria-hidden="true"></span>
+            <span>Chat Debug</span>
+          </h3>
+          <div class="panel__actions">
+            <div class="panel__dock-group" role="group" aria-label="Dock position">
+              <button type="button" class="panel__dock-btn"
+                [class.is-active]="dockState() === 'left'"
+                (click)="setDock('left')"
+                aria-label="Dock left">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1.5" y="2.5" width="11" height="9" rx="1.2"/><line x1="5.5" y1="2.5" x2="5.5" y2="11.5"/></svg>
+              </button>
+              <button type="button" class="panel__dock-btn"
+                [class.is-active]="dockState() === 'bottom'"
+                (click)="setDock('bottom')"
+                aria-label="Dock bottom">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1.5" y="2.5" width="11" height="9" rx="1.2"/><line x1="1.5" y1="8.5" x2="12.5" y2="8.5"/></svg>
+              </button>
+              <button type="button" class="panel__dock-btn"
+                [class.is-active]="dockState() === 'right'"
+                (click)="setDock('right')"
+                aria-label="Dock right">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1.5" y="2.5" width="11" height="9" rx="1.2"/><line x1="8.5" y1="2.5" x2="8.5" y2="11.5"/></svg>
+              </button>
+            </div>
+            <button type="button" class="panel__close" (click)="setOpen(false)" aria-label="Close">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="3" x2="11" y2="11"/><line x1="11" y1="3" x2="3" y2="11"/></svg>
+            </button>
           </div>
         </div>
 
-        <chat-error [agent]="agent()" />
-
-        <!-- Input area -->
-        <div class="chat-debug__input-bar">
-          <div class="chat-debug__input-inner">
-            <chat-input
-              [agent]="agent()"
-              [submitOnEnter]="true"
-              placeholder="Type a message..."
-            />
+        @if (controls()) {
+          <div class="panel__controls">
+            <ng-container [ngTemplateOutlet]="controls()!.templateRef" />
           </div>
+        }
+
+        @if (tabs().length > 1) {
+          <div class="panel__tabs" role="tablist">
+            @for (tab of tabs(); track tab.id) {
+              <button
+                type="button"
+                role="tab"
+                class="panel__tab"
+                [class.is-active]="tab.id === activeTabId()"
+                [attr.aria-selected]="tab.id === activeTabId()"
+                (click)="setActiveTab(tab.id)"
+              >{{ tab.label }}</button>
+            }
+          </div>
+        }
+
+        <div class="panel__body">
+          @switch (activeTab()?.kind) {
+            @case ('builtin-timeline') {
+              <chat-debug-timeline-inspector
+                [agent]="agent()"
+                (replayRequested)="replayRequested.emit($event)"
+                (forkRequested)="forkRequested.emit($event)"
+              />
+            }
+            @case ('builtin-state') {
+              <chat-debug-state-tab [agent]="agent()" />
+            }
+            @case ('host') {
+              @if (activeHostInspector(); as host) {
+                <ng-container [ngTemplateOutlet]="host.templateRef" />
+              }
+            }
+          }
         </div>
       </div>
-
-      <!-- Debug panel toggle (when closed) -->
-      @if (!debugOpen()) {
-        <button
-          class="chat-debug__toggle-btn"
-          title="Open debug panel"
-          (click)="debugOpen.set(true)"
-        >
-          &laquo;
-        </button>
-      }
-
-      <!-- Debug panel -->
-      @if (debugOpen()) {
-        <div class="chat-debug__panel">
-          <!-- Header -->
-          <div class="chat-debug__panel-header">
-            <h3 class="chat-debug__panel-title">Debug</h3>
-            <button
-              class="chat-debug__panel-close"
-              (click)="debugOpen.set(false)"
-            >&raquo; Close</button>
-          </div>
-
-          <!-- Summary -->
-          <div class="chat-debug__panel-section">
-            <chat-debug-summary [checkpoints]="checkpoints()" />
-          </div>
-
-          <!-- Controls -->
-          <div class="chat-debug__panel-section">
-            <chat-debug-controls
-              [checkpointCount]="checkpoints().length"
-              [selectedIndex]="selectedCheckpointIndex()"
-              (stepForward)="stepForward()"
-              (stepBack)="stepBack()"
-              (jumpToStart)="jumpToStart()"
-              (jumpToEnd)="jumpToEnd()"
-            />
-          </div>
-
-          <!-- Timeline -->
-          <div class="chat-debug__panel-timeline">
-            <chat-debug-timeline
-              [checkpoints]="checkpoints()"
-              [selectedIndex]="selectedCheckpointIndex()"
-              (checkpointSelected)="selectedCheckpointIndex.set($event)"
-            />
-          </div>
-
-          <!-- Detail -->
-          @if (selectedCheckpointIndex() >= 0) {
-            <div class="chat-debug__panel-detail">
-              <chat-debug-detail
-                [currentState]="selectedState()"
-                [previousState]="previousState()"
-              />
-            </div>
-          }
-
-          <!-- Legacy panel slider (reference pattern for library consumers) -->
-          <section class="chat-debug__section" aria-label="Timeline slider (legacy panel pattern)">
-            <h3 class="chat-debug__section-title">Legacy timeline slider</h3>
-            <chat-timeline-slider
-              [agent]="agent()"
-              (replayRequested)="replayRequested.emit($event)"
-              (forkRequested)="forkRequested.emit($event)"
-            />
-          </section>
-        </div>
-      }
-    </div>
+    }
   `,
 })
 export class ChatDebugComponent {
   private readonly sanitizer = inject(DomSanitizer);
+  protected readonly launcherIcon: SafeHtml = this.sanitizer.bypassSecurityTrustHtml(ICON_TOOL);
 
   readonly agent = input.required<AgentWithHistory>();
+  readonly dock = input<DockPosition>('right');
+  readonly defaultOpen = input<boolean>(false);
+  readonly storageKey = input<string>('chat-debug');
 
   readonly replayRequested = output<string>();
   readonly forkRequested = output<string>();
+  readonly openChange = output<boolean>();
+  readonly dockChange = output<DockPosition>();
 
-  readonly debugOpen = signal<boolean>(true);
-  readonly selectedCheckpointIndex = signal<number>(-1);
+  protected readonly controls = contentChild(ChatDebugControlsDirective);
+  protected readonly hostInspectors = contentChildren(ChatDebugInspectorDirective);
 
-  readonly checkpoints = computed((): DebugCheckpoint[] =>
-    this.agent().history().map((cp, i) => toDebugCheckpoint(cp, i)),
+  protected readonly open = signal<boolean>(false);
+  protected readonly dockState = signal<DockPosition>('right');
+  protected readonly activeTabId = signal<string>('timeline');
+
+  protected readonly tabs = computed((): TabEntry[] => {
+    const host = this.hostInspectors().map((d, i): TabEntry => ({
+      id: `host-${i}`,
+      label: d.label(),
+      kind: 'host',
+      hostIndex: i,
+    }));
+    return [
+      { id: 'timeline', label: 'Timeline', kind: 'builtin-timeline' },
+      { id: 'state', label: 'State', kind: 'builtin-state' },
+      ...host,
+    ];
+  });
+
+  protected readonly activeTab = computed(() =>
+    this.tabs().find((t) => t.id === this.activeTabId()),
   );
 
-  readonly selectedState = computed((): Record<string, unknown> => {
-    const idx = this.selectedCheckpointIndex();
-    const history = this.agent().history();
-    return extractStateValues(history[idx]);
+  protected readonly activeHostInspector = computed(() => {
+    const t = this.activeTab();
+    if (!t || t.kind !== 'host' || t.hostIndex === undefined) return undefined;
+    return this.hostInspectors()[t.hostIndex];
   });
-
-  readonly previousState = computed((): Record<string, unknown> => {
-    const idx = this.selectedCheckpointIndex();
-    const history = this.agent().history();
-    if (idx <= 0) return {};
-    return extractStateValues(history[idx - 1]);
-  });
-
-  // Message templates are intentionally co-located (shadcn copy-paste model)
-  readonly messageContent = messageContent;
-
-  private readonly scrollContainer = viewChild<ElementRef<HTMLElement>>('scrollContainer');
-
-  /** Track message count to trigger auto-scroll */
-  private readonly messageCount = computed(() => this.agent().messages().length);
-
-  private prevMessageCount = 0;
 
   constructor() {
+    // Restore once from storage on construction; inputs seed the fallback.
+    // `storageKey` is read-once: rebinding it at runtime is not supported.
+    const restore = createPersistence(this.storageKey());
+    const persistedOpen = restore.read<boolean>('open');
+    this.open.set(persistedOpen ?? this.defaultOpen());
+    const persistedDock = restore.read<DockPosition>('dock');
+    this.dockState.set(persistedDock ?? this.dock());
+    const persistedTab = restore.read<string>('tab');
+    if (persistedTab) this.activeTabId.set(persistedTab);
+
+    // Write-through effect — reads each writable signal so subsequent
+    // changes trigger a fresh run that writes them all to storage.
     effect(() => {
-      const count = this.messageCount();
-      this.agent().isLoading(); // track
-      const el = this.scrollContainer()?.nativeElement;
-      if (!el) return;
-
-      const isNewMessage = count !== this.prevMessageCount;
-      this.prevMessageCount = count;
-
-      const isNearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 150;
-      if (isNewMessage || isNearBottom) {
-        requestAnimationFrame(() => {
-          el.scrollTo({ top: el.scrollHeight, behavior: isNewMessage ? 'instant' : 'smooth' });
-        });
-      }
+      const p = createPersistence(this.storageKey());
+      p.write('open', this.open());
+      p.write('dock', this.dockState());
+      p.write('tab', this.activeTabId());
     });
   }
 
-  renderMd(content: string) {
-    return renderMarkdown(content, this.sanitizer);
+  setOpen(value: boolean): void {
+    this.open.set(value);
+    this.openChange.emit(value);
   }
 
-  stepForward(): void {
-    const idx = this.selectedCheckpointIndex();
-    if (idx < this.checkpoints().length - 1) {
-      this.selectedCheckpointIndex.set(idx + 1);
+  setDock(next: DockPosition): void {
+    this.dockState.set(next);
+    this.dockChange.emit(next);
+  }
+
+  setActiveTab(id: string): void {
+    this.activeTabId.set(id);
+  }
+
+  @HostListener('document:keydown.escape', ['$event'])
+  protected onEsc(_ev: Event): void {
+    if (this.open()) {
+      this.setOpen(false);
     }
-  }
-
-  stepBack(): void {
-    const idx = this.selectedCheckpointIndex();
-    if (idx > 0) {
-      this.selectedCheckpointIndex.set(idx - 1);
-    }
-  }
-
-  jumpToStart(): void {
-    this.selectedCheckpointIndex.set(0);
-  }
-
-  jumpToEnd(): void {
-    this.selectedCheckpointIndex.set(this.checkpoints().length - 1);
   }
 }

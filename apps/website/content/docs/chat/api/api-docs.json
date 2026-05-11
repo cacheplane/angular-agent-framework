@@ -1898,6 +1898,28 @@
     ]
   },
   {
+    "name": "ChatDebugActionComponent",
+    "kind": "class",
+    "description": "",
+    "params": [],
+    "examples": [],
+    "properties": [
+      {
+        "name": "clicked",
+        "type": "OutputEmitterRef<void>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "label",
+        "type": "InputSignal<string>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "methods": []
+  },
+  {
     "name": "ChatDebugComponent",
     "kind": "class",
     "description": "",
@@ -1905,20 +1927,56 @@
     "examples": [],
     "properties": [
       {
+        "name": "activeHostInspector",
+        "type": "Signal<ChatDebugInspectorDirective<> | undefined>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "activeTab",
+        "type": "Signal<TabEntry | undefined>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "activeTabId",
+        "type": "WritableSignal<string>",
+        "description": "",
+        "optional": false
+      },
+      {
         "name": "agent",
         "type": "InputSignal<AgentWithHistory>",
         "description": "",
         "optional": false
       },
       {
-        "name": "checkpoints",
-        "type": "Signal<DebugCheckpoint[]>",
+        "name": "controls",
+        "type": "Signal<ChatDebugControlsDirective<> | undefined>",
         "description": "",
         "optional": false
       },
       {
-        "name": "debugOpen",
-        "type": "WritableSignal<boolean>",
+        "name": "defaultOpen",
+        "type": "InputSignal<boolean>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "dock",
+        "type": "InputSignal<DockPosition>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "dockChange",
+        "type": "OutputEmitterRef<DockPosition>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "dockState",
+        "type": "WritableSignal<DockPosition>",
         "description": "",
         "optional": false
       },
@@ -1929,14 +1987,26 @@
         "optional": false
       },
       {
-        "name": "messageContent",
-        "type": "object",
+        "name": "hostInspectors",
+        "type": "Signal<readonly ChatDebugInspectorDirective[]>",
         "description": "",
         "optional": false
       },
       {
-        "name": "previousState",
-        "type": "Signal<Record<string, unknown>>",
+        "name": "launcherIcon",
+        "type": "SafeHtml",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "open",
+        "type": "WritableSignal<boolean>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "openChange",
+        "type": "OutputEmitterRef<boolean>",
         "description": "",
         "optional": false
       },
@@ -1947,38 +2017,39 @@
         "optional": false
       },
       {
-        "name": "selectedCheckpointIndex",
-        "type": "WritableSignal<number>",
+        "name": "storageKey",
+        "type": "InputSignal<string>",
         "description": "",
         "optional": false
       },
       {
-        "name": "selectedState",
-        "type": "Signal<Record<string, unknown>>",
+        "name": "tabs",
+        "type": "Signal<TabEntry[]>",
         "description": "",
         "optional": false
       }
     ],
     "methods": [
       {
-        "name": "jumpToEnd",
-        "signature": "jumpToEnd()",
-        "description": "",
-        "params": []
-      },
-      {
-        "name": "jumpToStart",
-        "signature": "jumpToStart()",
-        "description": "",
-        "params": []
-      },
-      {
-        "name": "renderMd",
-        "signature": "renderMd(content: string)",
+        "name": "onEsc",
+        "signature": "onEsc(_ev: Event)",
         "description": "",
         "params": [
           {
-            "name": "content",
+            "name": "_ev",
+            "type": "Event",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
+        "name": "setActiveTab",
+        "signature": "setActiveTab(id: string)",
+        "description": "",
+        "params": [
+          {
+            "name": "id",
             "type": "string",
             "description": "",
             "optional": false
@@ -1986,18 +2057,190 @@
         ]
       },
       {
-        "name": "stepBack",
-        "signature": "stepBack()",
+        "name": "setDock",
+        "signature": "setDock(next: DockPosition)",
         "description": "",
-        "params": []
+        "params": [
+          {
+            "name": "next",
+            "type": "DockPosition",
+            "description": "",
+            "optional": false
+          }
+        ]
       },
       {
-        "name": "stepForward",
-        "signature": "stepForward()",
+        "name": "setOpen",
+        "signature": "setOpen(value: boolean)",
         "description": "",
-        "params": []
+        "params": [
+          {
+            "name": "value",
+            "type": "boolean",
+            "description": "",
+            "optional": false
+          }
+        ]
       }
     ]
+  },
+  {
+    "name": "ChatDebugControlsDirective",
+    "kind": "class",
+    "description": "Marks an `<ng-template>` as the controls slot of `<chat-debug>`. Rendered\npinned at the top of the docked panel. Host apps put their app-specific\ncontrols (mode picker, model select, etc.) inside this template.",
+    "params": [],
+    "examples": [],
+    "properties": [
+      {
+        "name": "templateRef",
+        "type": "TemplateRef<any>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "methods": []
+  },
+  {
+    "name": "ChatDebugInspectorDirective",
+    "kind": "class",
+    "description": "Marks an `<ng-template>` as a host-registered inspector tab. Each instance\nadds a tab in the docked panel's tab strip, appended after the built-in\nTimeline and State tabs.",
+    "params": [],
+    "examples": [],
+    "properties": [
+      {
+        "name": "label",
+        "type": "InputSignal<string>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "templateRef",
+        "type": "TemplateRef<any>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "methods": []
+  },
+  {
+    "name": "ChatDebugSectionComponent",
+    "kind": "class",
+    "description": "",
+    "params": [],
+    "examples": [],
+    "properties": [
+      {
+        "name": "label",
+        "type": "InputSignal<string>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "methods": []
+  },
+  {
+    "name": "ChatDebugSegmentedComponent",
+    "kind": "class",
+    "description": "",
+    "params": [],
+    "examples": [],
+    "properties": [
+      {
+        "name": "options",
+        "type": "InputSignal<readonly SegmentedOption[]>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "value",
+        "type": "InputSignal<string>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "valueChange",
+        "type": "OutputEmitterRef<string>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "methods": []
+  },
+  {
+    "name": "ChatDebugSelectComponent",
+    "kind": "class",
+    "description": "",
+    "params": [],
+    "examples": [],
+    "properties": [
+      {
+        "name": "label",
+        "type": "InputSignal<string>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "options",
+        "type": "InputSignal<readonly SelectOption[]>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "value",
+        "type": "InputSignal<string>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "valueChange",
+        "type": "OutputEmitterRef<string>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "methods": [
+      {
+        "name": "onChange",
+        "signature": "onChange(event: Event)",
+        "description": "",
+        "params": [
+          {
+            "name": "event",
+            "type": "Event",
+            "description": "",
+            "optional": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "ChatDebugToggleComponent",
+    "kind": "class",
+    "description": "",
+    "params": [],
+    "examples": [],
+    "properties": [
+      {
+        "name": "label",
+        "type": "InputSignal<string>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "value",
+        "type": "InputSignal<boolean>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "valueChange",
+        "type": "OutputEmitterRef<boolean>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "methods": []
   },
   {
     "name": "ChatErrorComponent",
@@ -4977,6 +5220,46 @@
     "examples": []
   },
   {
+    "name": "SegmentedOption",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "label",
+        "type": "string",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "value",
+        "type": "string",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "SelectOption",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "label",
+        "type": "string",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "value",
+        "type": "string",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
     "name": "Subagent",
     "kind": "interface",
     "description": "",
@@ -5150,6 +5433,13 @@
     "kind": "type",
     "description": "",
     "signature": "\"pending\" | \"markdown\" | \"json-render\" | \"a2ui\" | \"mixed\"",
+    "examples": []
+  },
+  {
+    "name": "DockPosition",
+    "kind": "type",
+    "description": "",
+    "signature": "\"right\" | \"bottom\" | \"left\"",
     "examples": []
   },
   {

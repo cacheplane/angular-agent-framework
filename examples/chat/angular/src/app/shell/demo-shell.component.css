@@ -45,18 +45,6 @@
   .demo-shell__main--push { padding-left: 0; }
 }
 
-.demo-shell__debug {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 30vh;
-  background: #0f1116;
-  border-top: 1px solid #303540;
-  overflow: auto;
-  z-index: 999;
-}
-
 .demo-shell__interrupt-panel {
   position: fixed;
   left: 50%;
