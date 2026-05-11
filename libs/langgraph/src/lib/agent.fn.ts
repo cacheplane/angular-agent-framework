@@ -63,6 +63,39 @@ import { buildBranchTree } from './internals/branch-tree';
 import { extractCitations } from './internals/extract-citations';
 
 /**
+ * Walk LangGraph history (newest-first) and pair each AIMessage id with
+ * the most recent checkpoint that contains it as the tail message in
+ * `values.messages`.
+ *
+ * Implementation: iterate oldest → newest (i.e. reverse the input array)
+ * so later writes overwrite earlier ones; the final map has each
+ * AIMessage paired with the newest containing checkpoint where it is
+ * still the tail. Checkpoints with no AIMessage in scope are skipped.
+ * Checkpoints with no checkpoint_id are skipped.
+ */
+export function computeMessageCheckpoints(
+  history: ReadonlyArray<ThreadState<unknown>>,
+): ReadonlyMap<string, string> {
+  const out = new Map<string, string>();
+  for (let i = history.length - 1; i >= 0; i--) {
+    const state = history[i];
+    const cpId = state.checkpoint?.checkpoint_id;
+    if (typeof cpId !== 'string' || cpId.length === 0) continue;
+    const values = state.values as { messages?: unknown[] } | undefined;
+    const msgs = Array.isArray(values?.messages) ? values.messages : [];
+    for (let j = msgs.length - 1; j >= 0; j--) {
+      const m = msgs[j] as { id?: string; _getType?: () => string; type?: string };
+      const type = typeof m._getType === 'function' ? m._getType() : m.type;
+      if (type === 'ai' && typeof m.id === 'string') {
+        out.set(m.id, cpId);
+        break;
+      }
+    }
+  }
+  return out;
+}
+
+/**
  * Creates a LangGraph-backed Angular agent.
  *
  * Must be called within an Angular injection context (component constructor,
@@ -243,6 +276,9 @@ export function agent<
   const historyNeutral = computed<AgentCheckpoint[]>(() =>
     historySig().map(toCheckpoint),
   );
+  const messageCheckpointsSig = computed<ReadonlyMap<string, string>>(() =>
+    computeMessageCheckpoints(historySig() as ThreadState<unknown>[]),
+  );
   const experimentalBranchTree = computed(() =>
     buildBranchTree(historySig() as ThreadState<T>[]),
   );
@@ -260,7 +296,8 @@ export function agent<
     interrupt: interruptNeutral,
     subagents: subagentsNeutral,
     events$,
-    history:   historyNeutral,
+    history:            historyNeutral,
+    messageCheckpoints: messageCheckpointsSig,
     submit: (input: AgentSubmitInput | null | undefined, opts?: AgentSubmitOptions & LangGraphSubmitOptions) => {
       const request = buildSubmitRequest(input, opts);
       return manager.submit(request.payload, request.options);

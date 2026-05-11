@@ -851,3 +851,63 @@ describe('agent', () => {
     });
   });
 });
+
+import { computeMessageCheckpoints } from './agent.fn';
+
+describe('computeMessageCheckpoints', () => {
+  it('returns an empty map when history is empty', () => {
+    expect(computeMessageCheckpoints([])).toEqual(new Map());
+  });
+
+  it('pairs each AIMessage with the most recent checkpoint containing it', () => {
+    const history = [
+      {
+        checkpoint: { checkpoint_id: 'cp-1' },
+        values: {
+          messages: [
+            { id: 'h-1', _getType: () => 'human' },
+            { id: 'a-1', _getType: () => 'ai' },
+          ],
+        },
+      },
+      {
+        checkpoint: { checkpoint_id: 'cp-2' },
+        values: {
+          messages: [
+            { id: 'h-1', _getType: () => 'human' },
+            { id: 'a-1', _getType: () => 'ai' },
+            { id: 'h-2', _getType: () => 'human' },
+            { id: 'a-2', _getType: () => 'ai' },
+          ],
+        },
+      },
+    ] as unknown as ThreadState<unknown>[];
+
+    const map = computeMessageCheckpoints(history);
+    expect(map.get('a-1')).toBe('cp-1');
+    expect(map.get('a-2')).toBe('cp-2');
+    expect(map.size).toBe(2);
+  });
+
+  it('skips checkpoints with no AIMessage in scope', () => {
+    const history = [
+      {
+        checkpoint: { checkpoint_id: 'cp-start' },
+        values: { messages: [{ id: 'h-1', _getType: () => 'human' }] },
+      },
+    ] as unknown as ThreadState<unknown>[];
+
+    expect(computeMessageCheckpoints(history).size).toBe(0);
+  });
+
+  it('skips checkpoints with no checkpoint_id', () => {
+    const history = [
+      {
+        checkpoint: {},
+        values: { messages: [{ id: 'a-1', _getType: () => 'ai' }] },
+      },
+    ] as unknown as ThreadState<unknown>[];
+
+    expect(computeMessageCheckpoints(history).size).toBe(0);
+  });
+});

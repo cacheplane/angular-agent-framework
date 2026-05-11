@@ -4,12 +4,20 @@ import type { Agent } from './agent';
 import type { AgentCheckpoint } from './agent-checkpoint';
 
 /**
- * Extends Agent with a required `history` signal.
+ * Extension of Agent that exposes checkpoint history for time-travel UIs.
  *
- * Compositions that need time-travel / checkpoint data (chat-timeline,
- * chat-debug) take this richer contract. Adapters that cannot supply
- * history should return plain Agent instead of stubbing an empty array.
+ * Concrete adapters that record per-node checkpoints (e.g. LangGraph) should
+ * implement this. Pure request/response runtimes that don't have checkpoints
+ * should implement plain Agent.
  */
-export interface AgentWithHistory extends Agent {
+export interface AgentWithHistory<S = unknown> extends Agent {
   history: Signal<AgentCheckpoint[]>;
+  /**
+   * Optional reactive map of `messageId → checkpointId`, computed by
+   * walking history once: for each checkpoint, find the most recent
+   * assistant message present in its `values.messages` and pair them.
+   * UIs use this to anchor inline checkpoint markers on each assistant
+   * turn. Missing on adapters that don't compute it.
+   */
+  messageCheckpoints?: Signal<ReadonlyMap<string, string>>;
 }
