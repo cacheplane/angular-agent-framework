@@ -14,9 +14,9 @@ describe('ContentClassifier', () => {
   }
 
   describe('initial state', () => {
-    it('type is undetermined', () => {
+    it('type is pending', () => {
       const c = setup();
-      expect(c.type()).toBe('undetermined');
+      expect(c.type()).toBe('pending');
     });
 
     it('markdown is empty', () => {
@@ -237,5 +237,55 @@ describe('ContentClassifier', () => {
       const c = setup();
       expect(() => c.dispose()).not.toThrow();
     });
+  });
+});
+
+describe('ContentClassifier — A2UI prefix patience', () => {
+  it('stays pending on a single dash (partial A2UI prefix)', () => {
+    const c = createContentClassifier();
+    c.update('-');
+    expect(c.type()).toBe('pending');
+  });
+
+  it('stays pending on partial A2UI prefix like --- or ---a or ---a2u', () => {
+    const c1 = createContentClassifier();
+    c1.update('---');
+    expect(c1.type()).toBe('pending');
+    const c2 = createContentClassifier();
+    c2.update('---a');
+    expect(c2.type()).toBe('pending');
+    const c3 = createContentClassifier();
+    c3.update('---a2u');
+    expect(c3.type()).toBe('pending');
+  });
+
+  it('transitions to a2ui when the full A2UI prefix arrives', () => {
+    const c = createContentClassifier();
+    c.update('-');
+    c.update('---a2ui_JSON---');
+    expect(c.type()).toBe('a2ui');
+  });
+
+  it('commits to markdown when content starting with - is disproven early', () => {
+    const c = createContentClassifier();
+    c.update('-x');
+    expect(c.type()).toBe('markdown');
+  });
+
+  it('commits to markdown once enough chars are seen without matching prefix', () => {
+    const c = createContentClassifier();
+    c.update('-this is just dashes leading text');
+    expect(c.type()).toBe('markdown');
+  });
+
+  it('commits to json-render on a single { with no patience needed', () => {
+    const c = createContentClassifier();
+    c.update('{');
+    expect(c.type()).toBe('json-render');
+  });
+
+  it('initial state is pending (renamed from undetermined)', () => {
+    const c = createContentClassifier();
+    expect(c.type()).toBe('pending');
   });
 });

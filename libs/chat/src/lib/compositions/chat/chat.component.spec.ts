@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { Subject } from 'rxjs';
 import { signal, effect, DestroyRef, inject, Injector, runInInjectionContext } from '@angular/core';
@@ -342,5 +342,65 @@ describe('ChatComponent — events$ routing', () => {
 
       expect(store.getSnapshot()).toEqual({ initial: true });
     });
+  });
+});
+
+describe('ChatComponent — isGenuiTurn', () => {
+  let comp: ChatComponent;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({ imports: [ChatComponent] });
+    TestBed.runInInjectionContext(() => {
+      comp = new ChatComponent();
+    });
+  });
+
+  const isGenuiTurn = (m: unknown, p: unknown): boolean =>
+    (comp as unknown as { isGenuiTurn: (a: unknown, b: unknown) => boolean }).isGenuiTurn(m, p);
+
+  it('returns true for an assistant message with tool_calls referencing a GenUI tool', () => {
+    const msg = { role: 'assistant', extra: { tool_calls: [{ name: 'generate_a2ui_schema' }] } };
+    expect(isGenuiTurn(msg, undefined)).toBe(true);
+  });
+
+  it('returns true for an assistant message with a function_call content block (live streaming)', () => {
+    const msg = {
+      role: 'assistant',
+      extra: {
+        content: [
+          { type: 'reasoning', summary: [] },
+          { type: 'function_call', name: 'generate_a2ui_schema', arguments: '{"req' },
+        ],
+        tool_calls: [],
+      },
+    };
+    expect(isGenuiTurn(msg, undefined)).toBe(true);
+  });
+
+  it('returns true for an assistant message whose previous message is a GenUI tool result', () => {
+    const prev = { role: 'tool', name: 'generate_a2ui_schema', extra: {} };
+    const msg = { role: 'assistant', content: '', extra: {} };
+    expect(isGenuiTurn(msg, prev)).toBe(true);
+  });
+
+  it('returns true when the previous tool message has the name nested under extra.name', () => {
+    const prev = { role: 'tool', extra: { name: 'generate_json_render_spec' } };
+    const msg = { role: 'assistant', content: '', extra: {} };
+    expect(isGenuiTurn(msg, prev)).toBe(true);
+  });
+
+  it('returns false for a non-GenUI tool call (e.g. search_documents)', () => {
+    const msg = { role: 'assistant', extra: { tool_calls: [{ name: 'search_documents' }] } };
+    expect(isGenuiTurn(msg, undefined)).toBe(false);
+  });
+
+  it('returns false for an assistant message with no tool_calls and no qualifying previous message', () => {
+    const msg = { role: 'assistant', content: 'hi', extra: {} };
+    const prev = { role: 'user', content: 'hello' };
+    expect(isGenuiTurn(msg, prev)).toBe(false);
+  });
+
+  it('returns false when called with null message', () => {
+    expect(isGenuiTurn(null, undefined)).toBe(false);
   });
 });

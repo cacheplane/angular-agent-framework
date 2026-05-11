@@ -233,3 +233,82 @@ describe('summarize-group label registry', () => {
     expect(summarize('foo', 4)).toBe('Called foo 4 times');
   });
 });
+
+import { TestBed } from '@angular/core/testing';
+import { Component, signal } from '@angular/core';
+import type { Agent, ToolCall } from '../../agent';
+import { ChatToolCallsComponent } from './chat-tool-calls.component';
+
+function makeStubAgent(toolCalls: ToolCall[]): Agent {
+  return {
+    messages: signal([]),
+    status: signal('idle'),
+    isLoading: signal(false),
+    error: signal(undefined),
+    toolCalls: signal(toolCalls),
+    state: signal({}),
+    interrupt: signal(undefined),
+    subagents: signal(new Map()),
+    events$: { subscribe: () => ({ unsubscribe: () => undefined }) },
+    submit: () => Promise.resolve(),
+    stop: () => undefined,
+  } as unknown as Agent;
+}
+
+const mkCall = (name: string, id: string): ToolCall => ({
+  id,
+  name,
+  args: {},
+  status: 'complete',
+});
+
+@Component({
+  standalone: true,
+  imports: [ChatToolCallsComponent],
+  template: `<chat-tool-calls [agent]="agent" [excludeToolNames]="excluded" />`,
+})
+class FilterHost {
+  agent = makeStubAgent([
+    mkCall('generate_a2ui_schema', 'tc-1'),
+    mkCall('search_documents', 'tc-2'),
+    mkCall('research', 'tc-3'),
+  ]);
+  excluded: readonly string[] = [];
+}
+
+describe('ChatToolCallsComponent — excludeToolNames filter', () => {
+  it('renders all groups when excludeToolNames is empty (default)', () => {
+    TestBed.configureTestingModule({ imports: [FilterHost] });
+    const fx = TestBed.createComponent(FilterHost);
+    fx.detectChanges();
+    const text = fx.nativeElement.textContent ?? '';
+    expect(text).toContain('search_documents');
+    expect(text).toContain('research');
+  });
+
+  it('omits a group whose name is in excludeToolNames', () => {
+    TestBed.configureTestingModule({ imports: [FilterHost] });
+    const fx = TestBed.createComponent(FilterHost);
+    fx.componentInstance.excluded = ['generate_a2ui_schema'];
+    fx.detectChanges();
+    const text = fx.nativeElement.textContent ?? '';
+    expect(text).not.toContain('generate_a2ui_schema');
+    expect(text).toContain('search_documents');
+    expect(text).toContain('research');
+  });
+
+  it('omits ALL groups when every tool name is excluded', () => {
+    TestBed.configureTestingModule({ imports: [FilterHost] });
+    const fx = TestBed.createComponent(FilterHost);
+    fx.componentInstance.excluded = [
+      'generate_a2ui_schema',
+      'search_documents',
+      'research',
+    ];
+    fx.detectChanges();
+    const text = fx.nativeElement.textContent?.trim() ?? '';
+    expect(text).not.toContain('generate_a2ui_schema');
+    expect(text).not.toContain('search_documents');
+    expect(text).not.toContain('research');
+  });
+});

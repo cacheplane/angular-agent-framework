@@ -55,6 +55,7 @@ export { ChatSubagentsComponent } from './lib/primitives/chat-subagents/chat-sub
 export { ChatThreadListComponent } from './lib/primitives/chat-thread-list/chat-thread-list.component';
 export type { Thread } from './lib/primitives/chat-thread-list/chat-thread-list.component';
 export { ChatCheckpointMarkerComponent } from './lib/primitives/chat-checkpoint-marker/chat-checkpoint-marker.component';
+export { ChatGenuiSkeletonComponent } from './lib/primitives/chat-genui-skeleton/chat-genui-skeleton.component';
 export { ChatTimelineComponent } from './lib/primitives/chat-timeline/chat-timeline.component';
 export { ChatGenerativeUiComponent } from './lib/primitives/chat-generative-ui/chat-generative-ui.component';
 export { ChatWelcomeComponent } from './lib/primitives/chat-welcome/chat-welcome.component';

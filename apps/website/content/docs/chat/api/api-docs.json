@@ -1564,6 +1564,12 @@
         "optional": false
       },
       {
+        "name": "genuiToolNames",
+        "type": "InputSignal<readonly string[]>",
+        "description": "Tool names whose calls produce a rendered GenUI surface rather than\nvisible text. Used to (a) filter <chat-tool-calls> so internal\ndispatchers don't render args JSON as cards, and (b) detect\n\"this is a GenUI turn\" for the building-UI skeleton.\nDefault covers the canonical A2UI + json-render schema tools.",
+        "optional": false
+      },
+      {
         "name": "handlers",
         "type": "InputSignal<Record<string, object>>",
         "description": "",
@@ -1712,6 +1718,31 @@
         "params": []
       },
       {
+        "name": "isGenuiTurn",
+        "signature": "isGenuiTurn(message: unknown, _prevMsg: unknown, index: number)",
+        "description": "True when this assistant message is part of a GenUI render turn.\nWalks backward through messages from `index` until it finds either\nan assistant message with `tool_calls` referencing a GenUI tool\n(→ this turn produces a surface) or a human message (→ the\npreceding turn ended; this assistant message stands on its own).\n\nAlso checks the message itself for:\n  - `extra.tool_calls[].name` matching a GenUI tool (post-streaming\n    state of the tool-call AI message), OR\n  - `extra.content[].type === 'function_call' && .name` matching\n    (live during the OpenAI Responses-API streaming chunks before\n    `tool_calls` populates).\n\nThe walk-back approach is robust to LangGraph's in-place\nreplacement of the ToolMessage (which strips the `name` field),\nunlike a single prev-message check.",
+        "params": [
+          {
+            "name": "message",
+            "type": "unknown",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "_prevMsg",
+            "type": "unknown",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "index",
+            "type": "number",
+            "description": "",
+            "optional": true
+          }
+        ]
+      },
+      {
         "name": "isReasoningStreaming",
         "signature": "isReasoningStreaming(message: Message, index: number)",
         "description": "True while a message's reasoning is mid-stream — i.e. it's the latest\nmessage, the agent is loading, the message has reasoning content, and\nno response text has arrived yet. Once the response text begins, the\nreasoning pill collapses (per its internal logic).",
@@ -1832,6 +1863,19 @@
           },
           {
             "name": "messageIndex",
+            "type": "number",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
+        "name": "prevMessage",
+        "signature": "prevMessage(index: number)",
+        "description": "Look up the previous message in the agent's messages list.\nReturns undefined for the first message.",
+        "params": [
+          {
+            "name": "index",
             "type": "number",
             "description": "",
             "optional": false
@@ -2021,6 +2065,15 @@
         "optional": false
       }
     ],
+    "methods": []
+  },
+  {
+    "name": "ChatGenuiSkeletonComponent",
+    "kind": "class",
+    "description": "",
+    "params": [],
+    "examples": [],
+    "properties": [],
     "methods": []
   },
   {
@@ -3153,6 +3206,12 @@
         "name": "agent",
         "type": "InputSignal<Agent>",
         "description": "",
+        "optional": false
+      },
+      {
+        "name": "excludeToolNames",
+        "type": "InputSignal<readonly string[]>",
+        "description": "Tool names whose groups should be hidden. Used by chat compositions\nto filter out internal/orchestration tools (e.g. GenUI dispatchers)\nwhose args streaming is not meaningful to surface in the chat.\nDefault empty — preserves prior behavior for non-filtering consumers.",
         "optional": false
       },
       {
@@ -5090,7 +5149,7 @@
     "name": "ContentType",
     "kind": "type",
     "description": "",
-    "signature": "\"undetermined\" | \"markdown\" | \"json-render\" | \"a2ui\" | \"mixed\"",
+    "signature": "\"pending\" | \"markdown\" | \"json-render\" | \"a2ui\" | \"mixed\"",
     "examples": []
   },
   {
