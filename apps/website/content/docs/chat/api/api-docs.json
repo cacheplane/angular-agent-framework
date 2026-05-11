@@ -2017,9 +2017,9 @@
         "optional": false
       },
       {
-        "name": "launcherIcon",
-        "type": "SafeHtml",
-        "description": "",
+        "name": "isStreaming",
+        "type": "Signal<boolean>",
+        "description": "Reads `agent.status()` reactively for the launcher dot.",
         "optional": false
       },
       {
@@ -2055,17 +2055,23 @@
     ],
     "methods": [
       {
-        "name": "onEsc",
-        "signature": "onEsc(_ev: Event)",
-        "description": "",
+        "name": "onDocumentClick",
+        "signature": "onDocumentClick(event: MouseEvent)",
+        "description": "Click-outside dismiss. When the panel is open, any click whose\ncomposed path doesn't include our host element closes the panel.",
         "params": [
           {
-            "name": "_ev",
-            "type": "Event",
+            "name": "event",
+            "type": "MouseEvent",
             "description": "",
             "optional": false
           }
         ]
+      },
+      {
+        "name": "onEsc",
+        "signature": "onEsc()",
+        "description": "",
+        "params": []
       },
       {
         "name": "setActiveTab",
@@ -2198,6 +2204,12 @@
     "examples": [],
     "properties": [
       {
+        "name": "currentLabel",
+        "type": "Signal<string>",
+        "description": "",
+        "optional": false
+      },
+      {
         "name": "label",
         "type": "InputSignal<string>",
         "description": "",
@@ -2239,7 +2251,7 @@
     ]
   },
   {
-    "name": "ChatDebugToggleComponent",
+    "name": "ChatDebugSwitchComponent",
     "kind": "class",
     "description": "",
     "params": [],
