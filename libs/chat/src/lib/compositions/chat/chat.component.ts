@@ -36,6 +36,19 @@ import { messageContent } from '../shared/message-utils';
 import { CHAT_HOST_TOKENS } from '../../styles/chat-tokens';
 import type { ChatRenderEvent } from './chat-render-event';
 
+/**
+ * Returns true when the scroll position is within `tolerance` px of the bottom.
+ * Pure helper extracted for unit testing.
+ */
+export function isPinned(
+  scrollHeight: number,
+  scrollTop: number,
+  clientHeight: number,
+  tolerance = 150,
+): boolean {
+  return scrollHeight - scrollTop - clientHeight < tolerance;
+}
+
 @Component({
   selector: 'chat',
   standalone: true,
@@ -443,8 +456,7 @@ export class ChatComponent {
     if (this.programmaticScroll) return;
     const el = this.scrollContainer()?.nativeElement;
     if (!el) return;
-    const distance = el.scrollHeight - el.scrollTop - el.clientHeight;
-    const nextPinned = distance < ChatComponent.PIN_TOLERANCE_PX;
+    const nextPinned = isPinned(el.scrollHeight, el.scrollTop, el.clientHeight, ChatComponent.PIN_TOLERANCE_PX);
     if (nextPinned !== this.pinned()) this.pinned.set(nextPinned);
   }
 
