@@ -2,23 +2,10 @@
 // SPDX-License-Identifier: MIT
 import { TestBed } from '@angular/core/testing';
 import { describe, expect, it } from 'vitest';
-import type { Agent } from '../../agent';
 import { ChatSidenavComponent } from './chat-sidenav.component';
-
-function fakeAgent(): Agent {
-  return {
-    messages: () => [],
-    isLoading: () => false,
-    status: () => 'idle',
-    submit: async () => undefined,
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
-    events$: { subscribe: () => ({ unsubscribe: () => {} }) },
-  } as unknown as Agent;
-}
 
 function render(opts: { mode?: 'expanded' | 'collapsed' | 'drawer'; open?: boolean; threads?: unknown[] | null } = {}) {
   const fixture = TestBed.createComponent(ChatSidenavComponent);
-  fixture.componentRef.setInput('agent', fakeAgent());
   if (opts.mode) fixture.componentRef.setInput('mode', opts.mode);
   if (opts.open !== undefined) fixture.componentRef.setInput('open', opts.open);
   if (opts.threads !== undefined) fixture.componentRef.setInput('threads', opts.threads);

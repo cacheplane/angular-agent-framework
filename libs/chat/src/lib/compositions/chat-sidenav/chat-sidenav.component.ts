@@ -10,7 +10,6 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { fromEvent } from 'rxjs';
-import type { Agent } from '../../agent';
 import { CHAT_HOST_TOKENS } from '../../styles/chat-tokens';
 import { CHAT_SIDENAV_STYLES } from '../../styles/chat-sidenav.styles';
 import { ChatThreadListComponent, type Thread } from '../../primitives/chat-thread-list/chat-thread-list.component';
@@ -101,7 +100,6 @@ export type ChatSidenavMode = 'expanded' | 'collapsed' | 'drawer';
   `,
 })
 export class ChatSidenavComponent {
-  readonly agent = input.required<Agent>();
   readonly mode = input<ChatSidenavMode>('expanded');
   readonly open = input<boolean>(false);
   readonly threads = input<Thread[] | null>(null);
