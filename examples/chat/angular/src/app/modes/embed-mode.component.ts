@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 import { Component, ChangeDetectionStrategy, inject } from '@angular/core';
 import { ChatComponent, ChatWelcomeSuggestionComponent, a2uiBasicCatalog } from '@ngaf/chat';
+import { DemoShell } from '../shell/demo-shell.component';
 import { DEMO_AGENT } from '../shell/shell-tokens';
 import { WELCOME_SUGGESTIONS } from './welcome-suggestions';
 
@@ -10,7 +11,12 @@ import { WELCOME_SUGGESTIONS } from './welcome-suggestions';
   imports: [ChatComponent, ChatWelcomeSuggestionComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <chat [agent]="agent" [views]="catalog">
+    <chat
+      [agent]="agent"
+      [views]="catalog"
+      (replayRequested)="shell.onTimelineReplay($event)"
+      (forkRequested)="shell.onTimelineFork($event)"
+    >
       <div chatWelcomeSuggestions>
         @for (s of suggestions; track s.value) {
           <chat-welcome-suggestion
@@ -28,6 +34,7 @@ import { WELCOME_SUGGESTIONS } from './welcome-suggestions';
 })
 export class EmbedMode {
   protected readonly agent = inject(DEMO_AGENT);
+  protected readonly shell = inject(DemoShell);
   protected readonly suggestions = WELCOME_SUGGESTIONS;
   // Phase 4: catalog of A2UI components the chat composition uses to
   // render <a2ui-surface> when an AI message content begins with the

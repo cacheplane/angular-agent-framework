@@ -3,6 +3,8 @@ import {
   Component,
   ChangeDetectionStrategy,
   DOCUMENT,
+  DestroyRef,
+  computed,
   effect,
   signal,
   inject,
@@ -15,6 +17,8 @@ import {
   ChatDebugComponent,
   ChatInterruptPanelComponent,
   ChatSubagentsComponent,
+  ChatThreadDrawerComponent,
+  ChatThreadListComponent,
   type InterruptAction,
 } from '@ngaf/chat';
 import { ControlPalette } from './control-palette.component';
@@ -40,6 +44,8 @@ function modeFromUrl(url: string): DemoMode {
     ChatDebugComponent,
     ChatInterruptPanelComponent,
     ChatSubagentsComponent,
+    ChatThreadDrawerComponent,
+    ChatThreadListComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './demo-shell.component.html',
@@ -69,6 +75,12 @@ export class DemoShell {
       void this.threadIdSignal();
       void this.threadsSvc.refresh();
     });
+
+    if (typeof window !== 'undefined') {
+      const onResize = () => this.viewportWidth.set(window.innerWidth);
+      window.addEventListener('resize', onResize);
+      inject(DestroyRef).onDestroy(() => window.removeEventListener('resize', onResize));
+    }
   }
 
   protected readonly mode = toSignal(
@@ -105,6 +117,19 @@ export class DemoShell {
   readonly theme = signal<string>(this.persistence.read('theme') ?? 'default-dark');
 
   protected readonly debugOpen = signal<boolean>(this.persistence.read('debug') ?? false);
+
+  /** Whether the threads drawer is open. Persisted across reloads. */
+  protected readonly drawerOpen = signal<boolean>(this.persistence.read('drawerOpen') ?? false);
+
+  /** Viewport width, refreshed on window resize. Drives drawer push/overlay decision. */
+  private readonly viewportWidth = signal<number>(
+    typeof window !== 'undefined' ? window.innerWidth : 1440,
+  );
+
+  /** Computed drawer mode based on viewport width. */
+  protected readonly drawerMode = computed<'push' | 'overlay'>(() =>
+    this.viewportWidth() >= 1024 ? 'push' : 'overlay',
+  );
 
   protected readonly modelOptions = signal<readonly { value: string; label: string }[]>([
     { value: 'gpt-5', label: 'gpt-5' },
@@ -202,11 +227,20 @@ export class DemoShell {
     this.persistence.write('debug', next);
   }
 
-  protected onTimelineReplay(checkpointId: string): void {
+  protected onDrawerOpenChange(next: boolean): void {
+    this.drawerOpen.set(next);
+    this.persistence.write('drawerOpen', next);
+  }
+
+  protected toggleDrawer(): void {
+    this.onDrawerOpenChange(!this.drawerOpen());
+  }
+
+  onTimelineReplay(checkpointId: string): void {
     void this.agent.submit(null as never, { checkpointId } as never);
   }
 
-  protected async onTimelineFork(checkpointId: string): Promise<void> {
+  async onTimelineFork(checkpointId: string): Promise<void> {
     await fetch('http://localhost:2024/threads', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

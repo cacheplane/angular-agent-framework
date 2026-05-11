@@ -11,6 +11,7 @@ interface PaletteState {
   debug?: boolean | null;
   threadId?: string | null;
   collapsed?: boolean | null;
+  drawerOpen?: boolean | null;
 }
 
 type PaletteKey = keyof PaletteState;

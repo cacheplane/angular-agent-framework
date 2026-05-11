@@ -1,42 +1,66 @@
 <div class="demo-shell">
-  <router-outlet />
+  <header class="demo-shell__header">
+    <button
+      type="button"
+      class="demo-shell__hamburger"
+      aria-label="Open conversations"
+      [attr.aria-expanded]="drawerOpen()"
+      (click)="toggleDrawer()"
+    >☰</button>
+    <app-control-palette
+      [mode]="mode()"
+      [model]="model()"
+      [modelOptions]="modelOptions()"
+      [effort]="effort()"
+      [effortOptions]="effortOptions()"
+      [genUiMode]="genUiMode()"
+      [genUiOptions]="genUiOptions()"
+      [theme]="theme()"
+      [themeOptions]="themeOptions()"
+      [debugOpen]="debugOpen()"
+      (modeChange)="onModeChange($event)"
+      (modelChange)="onModelChange($event)"
+      (effortChange)="onEffortChange($event)"
+      (genUiModeChange)="onGenUiModeChange($event)"
+      (themeChange)="onThemeChange($event)"
+      (debugOpenChange)="onDebugChange($event)"
+      (newConversation)="onNewConversation()"
+    />
+  </header>
 
-  <app-control-palette
-    [mode]="mode()"
-    [model]="model()"
-    [modelOptions]="modelOptions()"
-    [effort]="effort()"
-    [effortOptions]="effortOptions()"
-    [genUiMode]="genUiMode()"
-    [genUiOptions]="genUiOptions()"
-    [theme]="theme()"
-    [themeOptions]="themeOptions()"
-    [debugOpen]="debugOpen()"
-    (modeChange)="onModeChange($event)"
-    (modelChange)="onModelChange($event)"
-    (effortChange)="onEffortChange($event)"
-    (genUiModeChange)="onGenUiModeChange($event)"
-    (themeChange)="onThemeChange($event)"
-    (debugOpenChange)="onDebugChange($event)"
-    (newConversation)="onNewConversation()"
-  />
+  <chat-thread-drawer
+    [open]="drawerOpen()"
+    [mode]="drawerMode()"
+    (openChange)="onDrawerOpenChange($event)"
+  >
+    <chat-thread-list
+      [threads]="threadsSvc.threads()"
+      [activeThreadId]="threadIdSignal() ?? ''"
+      [showNewThreadButton]="true"
+      (threadSelected)="onThreadSelected($event)"
+      (newThreadRequested)="onNewThread()"
+    />
+  </chat-thread-drawer>
 
-  @if (agent.interrupt && agent.interrupt()) {
-    <div class="demo-shell__interrupt-panel" role="region" aria-label="Approval required">
-      <chat-interrupt-panel [agent]="agent" (action)="onInterruptAction($event)" />
-    </div>
-  }
-
-  @if (agent.subagents && agent.subagents().size > 0) {
-    <div class="demo-shell__subagents" role="region" aria-label="Active subagents">
-      <chat-subagents [agent]="agent" />
-    </div>
-  }
-
-  @if (debugOpen()) {
-    <div class="demo-shell__debug" role="region" aria-label="Debug overlay">
-      <chat-debug [agent]="agent" />
-    </div>
-  }
-
+  <div
+    class="demo-shell__main"
+    [class.demo-shell__main--push]="drawerOpen() && drawerMode() === 'push'"
+  >
+    <router-outlet />
+    @if (agent.interrupt && agent.interrupt()) {
+      <div class="demo-shell__interrupt-panel" role="region" aria-label="Approval required">
+        <chat-interrupt-panel [agent]="agent" (action)="onInterruptAction($event)" />
+      </div>
+    }
+    @if (agent.subagents && agent.subagents().size > 0) {
+      <div class="demo-shell__subagents" role="region" aria-label="Active subagents">
+        <chat-subagents [agent]="agent" />
+      </div>
+    }
+    @if (debugOpen()) {
+      <div class="demo-shell__debug" role="region" aria-label="Debug overlay">
+        <chat-debug [agent]="agent" (replayRequested)="onTimelineReplay($event)" (forkRequested)="onTimelineFork($event)" />
+      </div>
+    }
+  </div>
 </div>
