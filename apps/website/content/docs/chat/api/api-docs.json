@@ -1719,8 +1719,8 @@
       },
       {
         "name": "isGenuiTurn",
-        "signature": "isGenuiTurn(message: unknown, prevMsg: unknown)",
-        "description": "True when this assistant message is part of a GenUI render turn —\neither it has a tool_call to a GenUI tool, OR its content array\ncontains a function_call block for one (live during streaming),\nOR the previous message was a tool result for a GenUI tool. Used\nto gate the building-UI skeleton.",
+        "signature": "isGenuiTurn(message: unknown, _prevMsg: unknown, index: number)",
+        "description": "True when this assistant message is part of a GenUI render turn.\nWalks backward through messages from `index` until it finds either\nan assistant message with `tool_calls` referencing a GenUI tool\n(→ this turn produces a surface) or a human message (→ the\npreceding turn ended; this assistant message stands on its own).\n\nAlso checks the message itself for:\n  - `extra.tool_calls[].name` matching a GenUI tool (post-streaming\n    state of the tool-call AI message), OR\n  - `extra.content[].type === 'function_call' && .name` matching\n    (live during the OpenAI Responses-API streaming chunks before\n    `tool_calls` populates).\n\nThe walk-back approach is robust to LangGraph's in-place\nreplacement of the ToolMessage (which strips the `name` field),\nunlike a single prev-message check.",
         "params": [
           {
             "name": "message",
@@ -1729,10 +1729,16 @@
             "optional": false
           },
           {
-            "name": "prevMsg",
+            "name": "_prevMsg",
             "type": "unknown",
             "description": "",
             "optional": false
+          },
+          {
+            "name": "index",
+            "type": "number",
+            "description": "",
+            "optional": true
           }
         ]
       },
