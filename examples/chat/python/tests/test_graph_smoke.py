@@ -125,3 +125,37 @@ def test_phase4_artifacts_removed():
         "FEEDBACK_FORM_JSONL constant should be removed in Phase 5"
     assert not hasattr(mod, "emit_a2ui_surface"), \
         "emit_a2ui_surface node should be replaced by emit_generated_surface"
+
+
+from src.graph import _slice_title
+
+
+class TestSliceTitle:
+    def test_short_text_returned_as_is(self):
+        assert _slice_title("hello world") == "hello world"
+
+    def test_long_text_truncated_to_50(self):
+        text = "a" * 80
+        result = _slice_title(text)
+        assert len(result) == 50
+        assert result == "a" * 50
+
+    def test_newlines_replaced_with_spaces(self):
+        assert _slice_title("hello\nworld") == "hello world"
+
+    def test_emoji_not_split_mid_grapheme(self):
+        # The flag-USA emoji is a 2-codepoint regional-indicator sequence.
+        # A naive [:50] could land between the two indicators if the
+        # 50-char boundary falls there. Slice on grapheme boundary so
+        # the flag stays intact.
+        text = "x" * 49 + "🇺🇸"
+        result = _slice_title(text)
+        # At grapheme boundary 50, the flag is either fully present (51 cps)
+        # or fully absent (49 'x' chars + truncation). Never mid-flag.
+        assert "🇺🇸" in result or result == "x" * 49 or result == "x" * 50
+
+    def test_empty_string_returns_empty(self):
+        assert _slice_title("") == ""
+
+    def test_strips_leading_trailing_whitespace(self):
+        assert _slice_title("  hello  ") == "hello"

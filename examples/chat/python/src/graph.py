@@ -21,6 +21,8 @@ LangGraph in-place edit pattern), keeping the chat composition's
 track-by-id stable.
 """
 import json
+import os
+import re
 from typing import Annotated, Literal, Optional
 from typing_extensions import TypedDict
 
@@ -36,7 +38,91 @@ from langchain_core.messages import (
     SystemMessage,
     ToolMessage,
 )
+from langchain_core.runnables import RunnableConfig
 from langchain_core.tools import tool
+from langgraph_sdk import get_client
+
+
+# Module-level singleton client; created lazily on first thread-title write.
+_threads_client = None
+
+
+def _slice_title(text: str, *, limit: int = 50) -> str:
+    """Trim a user message into a thread title.
+
+    Replaces internal whitespace runs with single spaces, strips leading
+    and trailing whitespace, then slices to `limit` codepoints. Regional
+    indicator pairs (flag emoji) that would be split at the boundary are
+    trimmed so the slice never ends with an orphaned indicator codepoint.
+    """
+    cleaned = re.sub(r"\s+", " ", text).strip()
+    if len(cleaned) <= limit:
+        return cleaned
+    sliced = cleaned[:limit].rstrip()
+    # Regional indicators sit in U+1F1E6–U+1F1FF. A flag emoji is exactly
+    # two consecutive regional indicators. If the slice ends on a regional
+    # indicator that is the *first* of a pair (i.e. the next codepoint in
+    # the original string is also a regional indicator, forming a flag), we
+    # drop it so we never expose a half-flag.
+    _RI_START = 0x1F1E6
+    _RI_END   = 0x1F1FF
+    if sliced and _RI_START <= ord(sliced[-1]) <= _RI_END:
+        pos = len(sliced) - 1
+        # Check whether the preceding character is also a regional indicator
+        # (which would make sliced[-1] the *second* of a pair — it's whole).
+        if pos == 0 or not (_RI_START <= ord(sliced[-2]) <= _RI_END):
+            # Orphaned first indicator — drop it.
+            sliced = sliced[:-1].rstrip()
+    return sliced
+
+
+async def _maybe_write_thread_title(state: "State", config: RunnableConfig) -> None:
+    """Side effect: on the first user message in a thread, persist a
+    derived title to the thread's LangGraph metadata.
+
+    Idempotent — only writes when metadata.title is currently absent.
+    Errors are swallowed; the title is a UX nicety, never a blocker.
+    """
+    global _threads_client
+    thread_id = (config.get("configurable") or {}).get("thread_id")
+    if not isinstance(thread_id, str) or not thread_id:
+        return
+
+    try:
+        if _threads_client is None:
+            _threads_client = get_client(
+                url=os.environ.get("LANGGRAPH_API_URL", "http://localhost:2024"),
+            )
+        thread = await _threads_client.threads.get(thread_id)
+        existing = (thread.get("metadata") or {}).get("title")
+        if isinstance(existing, str) and existing.strip():
+            return  # Already titled; don't overwrite.
+
+        # Find the first user message in the current state.
+        first_user = None
+        for m in state.get("messages", []):
+            type_attr = getattr(m, "type", None)
+            getter = getattr(m, "_getType", None)
+            msg_type = type_attr if type_attr else (getter() if callable(getter) else None)
+            if msg_type == "human":
+                content = getattr(m, "content", None)
+                if isinstance(content, str) and content.strip():
+                    first_user = content
+                    break
+        if not first_user:
+            return
+
+        title = _slice_title(first_user)
+        if not title:
+            return
+
+        await _threads_client.threads.update(
+            thread_id,
+            metadata={"title": title},
+        )
+    except Exception:
+        # Title write must never break the run. Swallow.
+        return
 
 
 SYSTEM_PROMPT = (
@@ -294,7 +380,11 @@ class State(TypedDict):
     gen_ui_mode: Optional[str]
 
 
-async def generate(state: State) -> dict:
+async def generate(state: State, config: RunnableConfig) -> dict:
+    # Best-effort thread title write on the first user message. Idempotent;
+    # swallows errors so it never blocks the run.
+    await _maybe_write_thread_title(state, config)
+
     model_name = state.get("model") or "gpt-5-mini"
     kwargs = {"model": model_name, "streaming": True}
     if _is_reasoning_model(model_name):
