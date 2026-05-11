@@ -76,3 +76,28 @@
   flex-direction: column;
   gap: 8px;
 }
+
+/* Narrow the side panels at tablet widths so the chat column keeps a usable
+   minimum (~480px) when both panels are open. */
+@media (max-width: 1024px) {
+  .demo-shell__threads-panel { width: 200px; }
+  .demo-shell__timeline-panel { width: 240px; }
+}
+
+/* Below tablet the fixed side panels would steal too much of the chat
+   surface. Promote them to a centered overlay sheet — still toggle-driven,
+   but full-width modulo gutter, and they stack above the chat instead of
+   crowding it. */
+@media (max-width: 768px) {
+  .demo-shell__threads-panel,
+  .demo-shell__timeline-panel {
+    left: 16px;
+    right: 16px;
+    width: auto;
+    top: 72px;
+    bottom: 112px;
+    border: 1px solid #303540;
+    border-radius: 10px;
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.45);
+  }
+}
