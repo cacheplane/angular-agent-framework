@@ -250,24 +250,23 @@ export class ChatDebugComponent {
     return this.hostInspectors()[t.hostIndex];
   });
 
-  private restored = false;
-
   constructor() {
-    // First read of inputs/storage on view init seeds the writable signals,
-    // then write-through on every change. Untracked reads of the writable
-    // signals avoid feedback loops.
+    // Restore once from storage on construction, seeded by inputs as the
+    // fallback. Reads of `storageKey`, `defaultOpen`, `dock` are intentional
+    // — the input signals are stable for the lifetime of an instance, so this
+    // runs effectively once.
+    const restore = createPersistence(this.storageKey());
+    const persistedOpen = restore.read<boolean>('open');
+    this.open.set(persistedOpen ?? this.defaultOpen());
+    const persistedDock = restore.read<DockPosition>('dock');
+    this.dockState.set(persistedDock ?? this.dock());
+    const persistedTab = restore.read<string>('tab');
+    if (persistedTab) this.activeTabId.set(persistedTab);
+
+    // Write-through effect — reads each writable signal so subsequent
+    // changes trigger a fresh run that writes them all to storage.
     effect(() => {
       const p = createPersistence(this.storageKey());
-      if (!this.restored) {
-        const persistedOpen = p.read<boolean>('open');
-        this.open.set(persistedOpen ?? this.defaultOpen());
-        const persistedDock = p.read<DockPosition>('dock');
-        this.dockState.set(persistedDock ?? this.dock());
-        const persistedTab = p.read<string>('tab');
-        if (persistedTab) this.activeTabId.set(persistedTab);
-        this.restored = true;
-        return;
-      }
       p.write('open', this.open());
       p.write('dock', this.dockState());
       p.write('tab', this.activeTabId());
