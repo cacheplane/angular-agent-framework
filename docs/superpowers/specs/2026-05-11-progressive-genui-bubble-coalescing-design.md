@@ -109,54 +109,46 @@ export type A2uiViews = Record<string, Type<unknown> | A2uiViewEntry>;
 
 **Migration:** existing consumers passing `views = { button: ButtonCmp }` (bare type) continue to work. The surface normalizes bare entries into `{ component }` shape on lookup. New consumers can opt into `views = { button: { component: ButtonCmp, fallback: ButtonSkeletonCmp } }`.
 
-### Lib — surface store extensions
+### Lib — `@ngaf/render` (registry-level fallback)
 
-**`libs/chat/src/lib/a2ui/surface-store.ts`** — extend `A2uiSurfaceStore`:
+The per-component fallback lives in the renderer's view registry, not in the A2UI surface store. This puts the mechanism where rendering already happens — every consumer of `@ngaf/render` (A2UI surfaces, json-render specs) gets fallback support uniformly.
 
-- `A2uiSurface.components: ReadonlyMap<string, A2uiComponent>` — exposes per-component state where:
-  - `type: string` — the component type key (matches a `views` entry).
-  - `bindings: readonly string[]` — the data model paths this component references, extracted from its prop expressions on `surfaceUpdate` apply.
-  - `ready: boolean` — true when ALL bindings are populated in the accumulated data model.
-  - `props: Record<string, unknown>` — the resolved property values (only meaningful when `ready === true`).
+**Registry shape extension** (`libs/render/src/lib/views.ts`):
 
-- `A2uiSurfaceStore.dataModel: ReadonlyMap<string, unknown>` — the accumulated data model exposed for debug. Internal use only; the surface renderer reads `ready` + `props` directly, not the data model.
-
-**Per-component readiness rule** (monotonic):
-- `surfaceUpdate` apply: derives `bindings` per component from prop expressions, sets `ready: false` initially.
-- `dataModelUpdate` apply: recomputes `ready` per affected component. Once `ready` transitions `false → true`, it stays `true` — even if a later update sets a referenced path to `null`. Subsequent dataModelUpdates push new resolved `props` to the component without flipping `ready` back.
-
-The "stays true" rule means the rendered component, once mounted, receives a `null` binding as a reactive input change rather than reverting to fallback. Aligns with the design's monotonic swap rule (no flicker).
-
-### Lib — `<a2ui-surface>` internal rewrite
-
-**`libs/chat/src/lib/a2ui/surface.component.ts`** — template walks the surface's component tree depth-first via a new internal `a2uiSlot` structural directive.
-
-```html
-@if (surface().components.size === 0) {
-  <ng-container *ngComponentOutlet="surfaceFallback() ?? defaultFallback" />
-} @else {
-  @for (rootId of surface().rootIds; track rootId) {
-    <ng-container *a2uiSlot="surface().components.get(rootId)" />
-  }
+```typescript
+export interface RenderViewEntry {
+  /** The real component mounted once all bound props are resolved. */
+  component: Type<unknown>;
+  /** Optional skeleton rendered while any bound prop remains undefined. */
+  fallback?: Type<unknown>;
 }
+
+export type ViewRegistry = Record<string, Type<unknown> | RenderViewEntry>;
 ```
 
-**`a2uiSlot` directive** — internal, not exported:
+Existing consumers passing `views = { button: ButtonCmp }` continue to work — the registry lookup normalizes bare entries to `{ component }` shape.
 
-1. Resolves the component's `type` against the catalog → `A2uiViewEntry` (normalized).
-2. Reads `component.ready`:
-   - `false` → mounts `entry.fallback ?? DefaultFallbackComponent` via `NgComponentOutlet` with whatever partial props are available.
-   - `true` → mounts `entry.component` with the resolved `component.props`.
-3. Recursively renders the component's children — each child runs through the same slot logic.
-4. **Monotonic gate:** stores `private mountedReal = false` on the directive instance. Once `mountedReal` is true, subsequent template-binding ticks only push new input values via the cached `ComponentRef.setInput()` — no remount, no re-check of `ready`.
+**`<render-element>` per-component readiness gate** (`libs/render/src/lib/render-element.component.ts`):
 
-**`<a2ui-default-fallback>` primitive** — new internal component. Visually identical to the current `<chat-genui-skeleton>`: 1px border, 10px radius, three shimmer rows, "✨ Building UI…" label. Used as:
-- The top-level surface-fallback when `surface.components.size === 0`.
-- The per-component fallback for any view entry whose `fallback` is omitted.
+Today's flow: resolve component class → evaluate visibility → resolve props/bindings → mount via `NgComponentOutlet`. New flow adds a readiness check between prop resolution and mounting:
 
-The primitive is internal to `<a2ui-surface>` — not exported in the public API.
+1. Resolve the registry entry → normalize to `{ component, fallback }`.
+2. Resolve element props (existing).
+3. Compute `ready = !Object.values(resolvedProps).some(v => v === undefined)`. A prop with a state binding to an unset path resolves to `undefined`; null is a real value and counts as ready.
+4. If `!ready && fallback`: mount `fallback` via `NgComponentOutlet` with the partial props (undefined values dropped). Subsequent renders re-check.
+5. Once mounted real, the directive's internal `mountedReal` flag is set. Subsequent re-renders skip the readiness check and only push new input values via Angular's reactive system — monotonic, no flicker.
 
-**`surfaceFallback` input** on `<a2ui-surface>` — optional `Type<unknown>` for consumers who want a different top-level placeholder (defaults to `A2uiDefaultFallbackComponent`).
+**Default fallback** (`libs/render/src/lib/default-fallback.component.ts`) — new internal component. 1px border, 10px radius, three shimmer rows, "✨ Building UI…" label. Used as:
+- The fallback for any registry entry whose `fallback` is omitted.
+- The top-level surface-fallback when `<a2ui-surface>`'s spec has zero elements.
+
+### Lib — `@ngaf/chat` catalog (passthrough)
+
+**`A2uiViews` type aliases `ViewRegistry`** — same shape. The `<a2ui-surface>` already passes `views` through `toRenderRegistry()` to `@ngaf/render`; that path now carries the new entry shape transparently.
+
+**`surfaceToSpec`** unchanged. The spec's element `type` already references the registry key, which resolves to the new entry shape at render time.
+
+**`<a2ui-surface>` empty-surface fallback** — when `surface.components.size === 0`, the component renders `<render-spec>` with an empty `elements` map. The render-spec/render-element pipeline handles the empty case by rendering the default fallback (new behavior in `<render-spec>`: when `elements` is empty, mount the default fallback once).
 
 ### Lib — chat composition
 
@@ -227,12 +219,13 @@ T+~3.1s   beginRendering arrives next (reordered by emit_generated_surface).
           eventual UI (a header-shaped skeleton, a row of input-shaped
           skeletons, a button-shaped skeleton).
 
-T+~3.2s   First dataModelUpdate. Store applies; readiness recomputes.
-          Components whose bindings are now all populated flip
-          ready: false → true.
+T+~3.2s   First dataModelUpdate. Store applies; surface.dataModel updates.
+          render-element's prop resolution re-runs per element: props
+          that were undefined become resolved.
           
-          a2uiSlot directive sees the flip per-instance → unmounts the
-          fallback, mounts the real component with resolved props.
+          render-element's readiness gate sees ready: false → true per
+          element → unmounts fallback, mounts the real component with
+          resolved props.
           
           Visible: skeletons swap to real components in place, one or
           several at a time as data envelopes arrive.
@@ -271,6 +264,24 @@ No new responsive concerns. The `<a2ui-surface>` and its components handle their
   - Run a single `generate_a2ui_schema` turn.
   - Assert post-emit thread has exactly 3 messages: `human`, `ai` (with both `tool_calls` AND `---a2ui_JSON---` content), `tool` (with `rendered`).
   - Assert the AI message's `id` is unchanged across the emit.
+
+### `@ngaf/render` registry + render-element (`libs/render/src/lib/render-element.component.spec.ts`)
+
+- `bare-type registry entry still works (legacy shape)`.
+- `object-form registry entry renders real component when all props resolved`.
+- `object-form registry entry renders fallback when any state-bound prop is undefined`.
+- `default fallback used when registry entry omits fallback`.
+- `null binding counts as ready (not undefined)`.
+- `swap is monotonic: once real mounts, a later undefined prop does not remount fallback`.
+
+### Default fallback (`libs/render/src/lib/default-fallback.component.spec.ts`)
+
+- `renders 'Building UI…' label`.
+- `renders three shimmer rows`.
+
+### Skipped: surface store
+
+The surface store needs no changes for per-component fallback — render-element's auto-detection from prop resolution covers it. Surface store tests stay as-is.
 
 ### Surface store (`libs/chat/src/lib/a2ui/surface-store.spec.ts`)
 
