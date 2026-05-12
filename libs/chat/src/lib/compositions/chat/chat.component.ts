@@ -31,6 +31,8 @@ import { ChatSelectComponent, type ChatSelectOption } from '../../primitives/cha
 import { A2uiSurfaceComponent } from '../../a2ui/surface.component';
 import { ChatScrollBubbleComponent } from '../../primitives/chat-scroll-bubble/chat-scroll-bubble.component';
 import { createContentClassifier, type ContentClassifier } from '../../streaming/content-classifier';
+import { createPartialArgsBridge, type PartialArgsBridge } from '../../a2ui/partial-args-bridge';
+import { createA2uiSurfaceStore, type A2uiSurfaceStore } from '../../a2ui/surface-store';
 import { messageContent } from '../shared/message-utils';
 import { CHAT_HOST_TOKENS } from '../../styles/chat-tokens';
 import type { ChatRenderEvent } from './chat-render-event';
@@ -340,6 +342,15 @@ export class ChatComponent {
   private readonly destroyRef = inject(DestroyRef);
   private eventsSubscribed = false;
 
+  /**
+   * Shared A2UI surface store fed by the live partial-args bridge. The
+   * content-classifier path will share this store via tool_call_id
+   * short-circuit (skipping re-dispatch for live tool_call_ids).
+   */
+  protected readonly liveSurfaceStore: A2uiSurfaceStore = createA2uiSurfaceStore();
+  private readonly partialBridge: PartialArgsBridge = createPartialArgsBridge(this.liveSurfaceStore);
+  private partialEventsLastIndex = 0;
+
   private readonly scrollContainer = viewChild<ElementRef<HTMLElement>>('scrollContainer');
   private readonly messageCount = computed(() => this.agent().messages().length);
   private prevMessageCount = 0;
@@ -408,6 +419,31 @@ export class ChatComponent {
           requestAnimationFrame(() => { this.programmaticScrollCount--; });
         });
       }
+    });
+
+    // Subscribe to a2ui-partial custom events from the LangGraph backend.
+    // Each event delivers a cumulative args string keyed by tool_call_id;
+    // bridge.push() re-parses and dispatches new envelopes incrementally.
+    // The runtime-neutral Agent contract does not require a customEvents
+    // signal, so we feature-detect: adapters that expose it (e.g.
+    // LangGraphAgent's customEvents signal) light up live streaming;
+    // others continue to use the wrapped final-message classifier path.
+    effect(() => {
+      let agent: ReturnType<typeof this.agent>;
+      try { agent = this.agent(); } catch { return; }
+      const customSig = (agent as unknown as {
+        customEvents?: () => readonly { name: string; data: unknown }[];
+      }).customEvents;
+      if (typeof customSig !== 'function') return;
+      const events = customSig();
+      for (let i = this.partialEventsLastIndex; i < events.length; i++) {
+        const e = events[i];
+        if (e.name !== 'a2ui-partial') continue;
+        const d = e.data as { tool_call_id?: string; args_so_far?: string } | null;
+        if (!d || typeof d.tool_call_id !== 'string' || typeof d.args_so_far !== 'string') continue;
+        this.partialBridge.push(d.tool_call_id, d.args_so_far);
+      }
+      this.partialEventsLastIndex = events.length;
     });
 
     effect(() => {

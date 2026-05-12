@@ -16,6 +16,14 @@ interface SurfaceBuffer {
 
 export interface A2uiSurfaceStore {
   apply(message: A2uiMessage): void;
+  /**
+   * Live-stream entry point. Iterates envelopes and feeds each through
+   * `apply()`. Records the tool_call_id so the wrapped-content classifier
+   * can short-circuit duplicate dispatch when the final AIMessage arrives.
+   */
+  applyPartialArgs(toolCallId: string, envelopes: readonly A2uiMessage[]): void;
+  /** True if a tool_call_id has produced live envelopes via applyPartialArgs. */
+  isPartialLive(toolCallId: string): boolean;
   readonly surfaces: Signal<Map<string, A2uiSurface>>;
   surface(surfaceId: string): Signal<A2uiSurface | undefined>;
 }
@@ -129,5 +137,27 @@ export function createA2uiSurfaceStore(): A2uiSurfaceStore {
     return computed(() => surfacesSignal().get(surfaceId));
   }
 
-  return { apply, surfaces: surfacesSignal.asReadonly(), surface };
+  const liveTools = new Set<string>();
+
+  function applyPartialArgs(
+    toolCallId: string,
+    envelopes: readonly A2uiMessage[],
+  ): void {
+    liveTools.add(toolCallId);
+    for (const env of envelopes) {
+      apply(env);
+    }
+  }
+
+  function isPartialLive(toolCallId: string): boolean {
+    return liveTools.has(toolCallId);
+  }
+
+  return {
+    apply,
+    applyPartialArgs,
+    isPartialLive,
+    surfaces: surfacesSignal.asReadonly(),
+    surface,
+  };
 }

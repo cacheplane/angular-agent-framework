@@ -163,6 +163,9 @@ export type { ParseTreeStore, ElementAccumulationState } from './lib/streaming/p
 // A2UI
 export { createA2uiSurfaceStore } from './lib/a2ui/surface-store';
 export type { A2uiSurfaceStore } from './lib/a2ui/surface-store';
+export { createPartialArgsBridge } from './lib/a2ui/partial-args-bridge';
+export type { PartialArgsBridge } from './lib/a2ui/partial-args-bridge';
+export { normalizeEnvelopeArgs } from './lib/a2ui/envelope-normalizer';
 export { A2uiSurfaceComponent } from './lib/a2ui/surface.component';
 export { surfaceToSpec } from './lib/a2ui/surface-to-spec';
 export { buildA2uiActionMessage } from './lib/a2ui/build-action-message';
