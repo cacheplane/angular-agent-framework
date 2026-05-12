@@ -18,13 +18,18 @@ import {
   type Thread,
   type ThreadActionAdapter,
 } from '../../primitives/chat-thread-list/chat-thread-list.component';
+import {
+  ChatProjectListComponent,
+  type Project,
+  type ProjectActionAdapter,
+} from '../../primitives/chat-project-list/chat-project-list.component';
 
 export type ChatSidenavMode = 'expanded' | 'collapsed' | 'drawer';
 
 @Component({
   selector: 'chat-sidenav',
   standalone: true,
-  imports: [ChatThreadListComponent],
+  imports: [ChatThreadListComponent, ChatProjectListComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     '[attr.data-mode]': 'mode()',
@@ -103,6 +108,20 @@ export type ChatSidenavMode = 'expanded' | 'collapsed' | 'drawer';
         <ng-content select="[sidenavPrimary]" />
       </div>
 
+      @if (projects() !== null) {
+        <div class="chat-sidenav__projects">
+          <div class="chat-sidenav__threads-heading">Projects</div>
+          <chat-project-list
+            [projects]="projects()!"
+            [activeProjectId]="selectedProjectId()"
+            [showNewProjectButton]="!!projectActions()?.create"
+            [actions]="projectActions()"
+            (projectSelected)="projectSelected.emit($event)"
+            (newProjectRequested)="newProjectRequested.emit()"
+          />
+        </div>
+      }
+
       @if (threads() !== null) {
         <div class="chat-sidenav__threads">
           <div class="chat-sidenav__threads-heading">Recent</div>
@@ -110,6 +129,7 @@ export type ChatSidenavMode = 'expanded' | 'collapsed' | 'drawer';
             [threads]="threads()!"
             [activeThreadId]="activeThreadId() ?? ''"
             [actions]="actions()"
+            [projects]="projects()"
             (threadSelected)="threadSelected.emit($event)"
           />
         </div>
@@ -142,6 +162,7 @@ export type ChatSidenavMode = 'expanded' | 'collapsed' | 'drawer';
                   [threads]="archivedThreads()!"
                   [activeThreadId]="activeThreadId() ?? ''"
                   [actions]="actions()"
+                  [projects]="projects()"
                   (threadSelected)="threadSelected.emit($event)"
                 />
               }
@@ -167,12 +188,17 @@ export class ChatSidenavComponent {
   readonly activeThreadId = input<string | null>(null);
   readonly actions = input<ThreadActionAdapter | null>(null);
   readonly archivedThreads = input<Thread[] | null>(null);
+  readonly projects = input<Project[] | null>(null);
+  readonly selectedProjectId = input<string | null>(null);
+  readonly projectActions = input<ProjectActionAdapter | null>(null);
 
   readonly newChat = output<void>();
   readonly threadSelected = output<string>();
   readonly searchOpened = output<void>();
   readonly openChange = output<boolean>();
   readonly modeChange = output<ChatSidenavMode>();
+  readonly projectSelected = output<string>();
+  readonly newProjectRequested = output<void>();
 
   protected readonly archivedOpen = signal<boolean>(false);
 
