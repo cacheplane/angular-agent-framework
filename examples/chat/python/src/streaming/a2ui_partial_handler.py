@@ -17,22 +17,33 @@ which OpenAI API the model uses:
     `arguments` delta.
 
 The handler covers both shapes. For each delta belonging to our target
-tool name, it concatenates arguments per `tool_call_id` and dispatches
-an `a2ui-partial` custom event when the cumulative string grows. The
-frontend bridge (libs/chat partial-args-bridge) consumes these.
+tool name, it concatenates arguments per `tool_call_id` and writes an
+`a2ui-partial` event into LangGraph's custom stream via the writer
+returned by `langgraph.config.get_stream_writer()`. The writer's
+payload reaches the frontend under `stream_mode='custom'` as a
+`{type: 'custom', data: ...}` SSE event; the partial-args bridge
+consumes it.
+
+LangGraph's `custom` stream mode is decoupled from langchain_core's
+`adispatch_custom_event` — they're different layers. `adispatch_custom_event`
+emits callback events visible only via `stream_mode='events'`; the
+LangGraph writer is the canonical way to surface custom data on the
+SDK's `custom` channel.
 """
 from __future__ import annotations
 
 from typing import Any
 from uuid import UUID
 
-from langchain_core.callbacks import AsyncCallbackHandler, adispatch_custom_event
+from langchain_core.callbacks import AsyncCallbackHandler
 from langchain_core.outputs import ChatGenerationChunk, GenerationChunk
+from langgraph.config import get_stream_writer
 
 
 class A2uiPartialHandler(AsyncCallbackHandler):
-    """Track per-tool_call_id cumulative arguments; dispatch a2ui-partial
-    custom events when the cumulative string grows."""
+    """Track per-tool_call_id cumulative arguments; write a2ui-partial
+    custom events to the LangGraph stream when the cumulative string
+    grows."""
 
     def __init__(self, tool_name: str = "render_a2ui_surface") -> None:
         super().__init__()
@@ -63,16 +74,16 @@ class A2uiPartialHandler(AsyncCallbackHandler):
 
         # Path 1: Chat Completions API — classic tool_call_chunks list.
         for tc in getattr(message, "tool_call_chunks", None) or []:
-            await self._handle_classic_chunk(tc)
+            self._handle_classic_chunk(tc)
 
         # Path 2: Responses API — content blocks with type='function_call'.
         content = getattr(message, "content", None)
         if isinstance(content, list):
             for block in content:
                 if isinstance(block, dict) and block.get("type") == "function_call":
-                    await self._handle_responses_block(block)
+                    self._handle_responses_block(block)
 
-    async def _handle_classic_chunk(self, tc: dict) -> None:
+    def _handle_classic_chunk(self, tc: dict) -> None:
         """Chat Completions delta: {id, name?, args?, index}."""
         name = tc.get("name") or ""
         call_id = tc.get("id")
@@ -84,9 +95,9 @@ class A2uiPartialHandler(AsyncCallbackHandler):
         # on every chunk in this shape).
         if name and name != self._tool_name:
             return
-        await self._dispatch_delta(call_id, delta)
+        self._dispatch_delta(call_id, delta)
 
-    async def _handle_responses_block(self, block: dict) -> None:
+    def _handle_responses_block(self, block: dict) -> None:
         """Responses API delta: {type, name?, call_id?, arguments, index}.
 
         The first block for a call carries `name` and `call_id`. Subsequent
@@ -101,7 +112,7 @@ class A2uiPartialHandler(AsyncCallbackHandler):
         if call_id:
             # First block for this call. Validate target tool name.
             if name and name != self._tool_name:
-                # Not our target — still remember the mapping is "ignore".
+                # Not our target — drop any prior mapping for this index.
                 if isinstance(index, int):
                     self._index_to_call_id.pop(index, None)
                 return
@@ -117,15 +128,26 @@ class A2uiPartialHandler(AsyncCallbackHandler):
                 # was for a non-target tool. Skip.
                 return
 
-        await self._dispatch_delta(call_id, delta)
+        self._dispatch_delta(call_id, delta)
 
-    async def _dispatch_delta(self, call_id: str, delta: str) -> None:
+    def _dispatch_delta(self, call_id: str, delta: str) -> None:
         existing = self._buffers.get(call_id, "")
         updated = existing + delta
         if updated == existing:
             return  # No growth — suppress duplicate dispatch.
         self._buffers[call_id] = updated
-        await adispatch_custom_event(
-            "a2ui-partial",
-            {"tool_call_id": call_id, "args_so_far": updated},
-        )
+        # `get_stream_writer()` is contextvar-scoped to the currently
+        # executing LangGraph node. Even though this handler runs deep
+        # inside the LLM's callback chain, the contextvar is inherited
+        # so the writer reaches the parent node's `custom` stream.
+        try:
+            writer = get_stream_writer()
+        except RuntimeError:
+            # No stream writer in this context — handler is being invoked
+            # outside a LangGraph stream run (e.g. in unit tests). Silently
+            # skip; tests can mock get_stream_writer to assert behavior.
+            return
+        writer({
+            "name": "a2ui-partial",
+            "data": {"tool_call_id": call_id, "args_so_far": updated},
+        })
