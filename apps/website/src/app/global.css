@@ -17,6 +17,29 @@
   --font-garamond: "EB Garamond", Georgia, serif;
   --font-inter: Inter, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", monospace;
+
+  /* New surfaces — Phase 1 of Statusbrew refactor */
+  --color-canvas: #fafbfc;
+  --color-surface: #ffffff;
+  --color-surface-tinted: #f4f6fb;
+  --color-surface-dim: #eef1f7;
+  --color-border: #e6e8ee;
+  --color-border-strong: #d2d6e0;
+  --color-text-inverted: #ffffff;
+  --color-accent-hover: #003070;
+
+  /* Radii */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+  --radius-full: 999px;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(15, 23, 41, 0.04), 0 1px 1px rgba(15, 23, 41, 0.03);
+  --shadow-md: 0 4px 12px rgba(15, 23, 41, 0.06), 0 2px 4px rgba(15, 23, 41, 0.04);
+  --shadow-lg: 0 12px 32px rgba(15, 23, 41, 0.08), 0 4px 8px rgba(15, 23, 41, 0.05);
+  --shadow-focus: 0 0 0 3px rgba(0, 64, 144, 0.25);
 }
 
 :root {
