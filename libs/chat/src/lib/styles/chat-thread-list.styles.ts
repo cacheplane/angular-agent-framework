@@ -51,4 +51,55 @@ export const CHAT_THREAD_LIST_STYLES = `
     transition: background 150ms ease;
   }
   .chat-thread-list__new:hover { background: var(--ngaf-chat-surface-alt); }
+  .chat-thread-list__item-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .chat-thread-list__item-wrap .chat-thread-list__item {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+  .chat-thread-list__kebab {
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    border: 0;
+    background: transparent;
+    color: var(--ngaf-chat-text-muted);
+    border-radius: 4px;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 100ms ease;
+    padding: 0;
+    line-height: 1;
+    font-size: 18px;
+  }
+  .chat-thread-list__item-wrap:hover .chat-thread-list__kebab,
+  .chat-thread-list__item-wrap:focus-within .chat-thread-list__kebab {
+    opacity: 1;
+  }
+  .chat-thread-list__kebab:hover {
+    background: var(--ngaf-chat-surface-alt);
+    color: var(--ngaf-chat-text);
+  }
+  .chat-thread-list__kebab:focus-visible {
+    opacity: 1;
+    outline: 2px solid var(--ngaf-chat-primary);
+    outline-offset: 2px;
+  }
+  .chat-thread-list__edit {
+    flex: 1 1 auto;
+    border: 1px solid var(--ngaf-chat-primary);
+    border-radius: var(--ngaf-chat-radius-button);
+    background: var(--ngaf-chat-bg);
+    color: var(--ngaf-chat-text);
+    font: inherit;
+    font-size: var(--ngaf-chat-font-size-sm);
+    padding: 6px 10px;
+    min-height: 36px;
+    outline: none;
+    box-sizing: border-box;
+  }
 `;
