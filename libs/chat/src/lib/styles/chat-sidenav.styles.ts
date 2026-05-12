@@ -1,15 +1,36 @@
 // libs/chat/src/lib/styles/chat-sidenav.styles.ts
 // SPDX-License-Identifier: MIT
 export const CHAT_SIDENAV_STYLES = `
+  /*
+   * In expanded / collapsed modes the sidenav is "always visible" beside the
+   * main content — the consumer reserves space with padding-left on the
+   * layout container. The host must be position: fixed so it doesn't
+   * participate in document flow; otherwise its display: block stretches
+   * to the parent's full width and pushes siblings below the viewport.
+   */
   :host {
     display: block;
     height: 100%;
   }
-  :host([data-mode="expanded"]) .chat-sidenav {
+  :host([data-mode="expanded"]),
+  :host([data-mode="collapsed"]) {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    z-index: 100;
+  }
+  :host([data-mode="expanded"]) {
     width: var(--ngaf-chat-sidenav-width-expanded);
   }
-  :host([data-mode="collapsed"]) .chat-sidenav {
+  :host([data-mode="collapsed"]) {
     width: var(--ngaf-chat-sidenav-width-collapsed);
+  }
+  :host([data-mode="expanded"]) .chat-sidenav {
+    width: 100%;
+  }
+  :host([data-mode="collapsed"]) .chat-sidenav {
+    width: 100%;
   }
   :host([data-mode="drawer"]) {
     position: relative;
