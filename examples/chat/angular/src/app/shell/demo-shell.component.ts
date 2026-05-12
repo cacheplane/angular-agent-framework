@@ -27,6 +27,7 @@ import {
   type ChatSidenavMode,
   type InterruptAction,
   type ThreadMatch,
+  type ThreadActionAdapter,
 } from '@ngaf/chat';
 import { PalettePersistence } from './palette-persistence.service';
 import { ThreadsService } from './threads.service';
@@ -214,6 +215,17 @@ export class DemoShell {
 
   /** Persisted thread id (null on first run). Reactive so reload reconnects to the same thread. */
   protected readonly threadIdSignal = signal<string | null>(this.persistence.read('threadId') ?? null);
+
+  protected readonly threadActions: ThreadActionAdapter = {
+    delete: async (id) => {
+      await this.threadsSvc.delete(id);
+      if (this.threadIdSignal() === id) {
+        this.threadIdSignal.set(null);
+        this.persistence.write('threadId', null);
+      }
+    },
+    rename: (id, title) => this.threadsSvc.rename(id, title),
+  };
 
   /**
    * Shared agent instance. Patched submit injects state.model on every

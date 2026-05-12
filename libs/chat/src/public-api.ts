@@ -47,6 +47,9 @@ export { ChatSuggestionsComponent } from './lib/primitives/chat-suggestions/chat
 export { ChatInputComponent, submitMessage } from './lib/primitives/chat-input/chat-input.component';
 export { ChatTypingIndicatorComponent, isTyping } from './lib/primitives/chat-typing-indicator/chat-typing-indicator.component';
 export { ChatHistorySearchPaletteComponent } from './lib/primitives/chat-history-search-palette/chat-history-search-palette.component';
+export { ChatOverflowMenuComponent } from './lib/primitives/chat-overflow-menu/chat-overflow-menu.component';
+export type { OverflowMenuItem } from './lib/primitives/chat-overflow-menu/chat-overflow-menu.component';
+export { ChatConfirmDialogComponent } from './lib/primitives/chat-confirm-dialog/chat-confirm-dialog.component';
 export type { ThreadMatch } from './lib/primitives/chat-history-search-palette/chat-history-search-palette.component';
 export { ChatScrollBubbleComponent } from './lib/primitives/chat-scroll-bubble/chat-scroll-bubble.component';
 export type { ChatScrollBubbleMode } from './lib/primitives/chat-scroll-bubble/chat-scroll-bubble.component';
@@ -57,7 +60,7 @@ export { ChatToolCallTemplateDirective } from './lib/primitives/chat-tool-calls/
 export type { ChatToolCallTemplateContext } from './lib/primitives/chat-tool-calls/chat-tool-call-template.directive';
 export { ChatSubagentsComponent } from './lib/primitives/chat-subagents/chat-subagents.component';
 export { ChatThreadListComponent } from './lib/primitives/chat-thread-list/chat-thread-list.component';
-export type { Thread } from './lib/primitives/chat-thread-list/chat-thread-list.component';
+export type { Thread, ThreadActionAdapter } from './lib/primitives/chat-thread-list/chat-thread-list.component';
 export { ChatCheckpointMarkerComponent } from './lib/primitives/chat-checkpoint-marker/chat-checkpoint-marker.component';
 export { ChatGenuiSkeletonComponent } from './lib/primitives/chat-genui-skeleton/chat-genui-skeleton.component';
 export { ChatTimelineComponent } from './lib/primitives/chat-timeline/chat-timeline.component';

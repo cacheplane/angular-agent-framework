@@ -1,120 +1,204 @@
+// libs/chat/src/lib/primitives/chat-thread-list/chat-thread-list.component.spec.ts
 // SPDX-License-Identifier: MIT
-import { describe, it, expect } from 'vitest';
-import { signal, computed } from '@angular/core';
-import type { Thread } from './chat-thread-list.component';
+import { TestBed } from '@angular/core/testing';
+import { describe, expect, it, vi } from 'vitest';
+import {
+  ChatThreadListComponent,
+  type Thread,
+  type ThreadActionAdapter,
+} from './chat-thread-list.component';
 
-const threads: Thread[] = [
-  { id: 'thread-1', title: 'First Thread' },
-  { id: 'thread-2', title: 'Second Thread' },
-  { id: 'thread-3', title: 'Third Thread' },
-];
+const noop = vi.fn().mockResolvedValue(undefined);
 
-describe('ChatThreadListComponent — structure', () => {
-  it('threads input signal holds provided threads', () => {
-    const threads$ = signal<Thread[]>(threads);
-    expect(threads$()).toHaveLength(3);
-    expect(threads$()[0].id).toBe('thread-1');
-  });
+function render(opts: { threads?: Thread[]; actions?: ThreadActionAdapter | null; activeThreadId?: string } = {}) {
+  const fixture = TestBed.createComponent(ChatThreadListComponent);
+  fixture.componentRef.setInput('threads', opts.threads ?? [{ id: 't1', title: 'First' }, { id: 't2', title: 'Second' }]);
+  if (opts.actions !== undefined) fixture.componentRef.setInput('actions', opts.actions);
+  if (opts.activeThreadId !== undefined) fixture.componentRef.setInput('activeThreadId', opts.activeThreadId);
+  fixture.detectChanges();
+  return fixture;
+}
 
-  it('activeThreadId input defaults to empty string', () => {
-    const activeThreadId$ = signal<string>('');
-    expect(activeThreadId$()).toBe('');
-  });
-
-  it('isActive context is true when thread.id matches activeThreadId', () => {
-    const activeThreadId$ = signal<string>('thread-2');
-
-    const contextForThread = (thread: Thread) => ({
-      $implicit: thread,
-      isActive: thread.id === activeThreadId$(),
+describe('ChatThreadListComponent', () => {
+  describe('without adapter', () => {
+    it('renders the thread rows', () => {
+      const fixture = render();
+      const items = fixture.nativeElement.querySelectorAll('.chat-thread-list__item');
+      expect(items.length).toBe(2);
     });
 
-    expect(contextForThread(threads[0]).isActive).toBe(false);
-    expect(contextForThread(threads[1]).isActive).toBe(true);
-    expect(contextForThread(threads[2]).isActive).toBe(false);
+    it('clicking a row emits threadSelected', () => {
+      const fixture = render();
+      let received: string | undefined;
+      fixture.componentInstance.threadSelected.subscribe((id: string) => { received = id; });
+      const items = fixture.nativeElement.querySelectorAll('.chat-thread-list__item');
+      (items[1] as HTMLElement).click();
+      expect(received).toBe('t2');
+    });
+
+    it('renders no kebab when actions is null', () => {
+      const fixture = render({ actions: null });
+      expect(fixture.nativeElement.querySelector('.chat-thread-list__kebab')).toBeNull();
+    });
+
+    it('renders no kebab when actions is empty object', () => {
+      const fixture = render({ actions: {} });
+      expect(fixture.nativeElement.querySelector('.chat-thread-list__kebab')).toBeNull();
+    });
   });
 
-  it('isActive updates reactively when activeThreadId changes', () => {
-    const activeThreadId$ = signal<string>('thread-1');
+  describe('with adapter', () => {
+    it('renders a kebab per row when adapter has methods', () => {
+      const fixture = render({ actions: { delete: noop, rename: noop } });
+      const kebabs = fixture.nativeElement.querySelectorAll('.chat-thread-list__kebab');
+      expect(kebabs.length).toBe(2);
+    });
 
-    const isActive = (thread: Thread) =>
-      computed(() => thread.id === activeThreadId$());
+    it('clicking kebab opens menu with both items when both methods provided', () => {
+      const fixture = render({ actions: { delete: noop, rename: noop } });
+      const kebab = fixture.nativeElement.querySelector('.chat-thread-list__kebab') as HTMLElement;
+      kebab.click();
+      fixture.detectChanges();
+      const items = document.querySelectorAll('.chat-overflow-menu__item');
+      const labels = Array.from(items).map((el) => (el as HTMLElement).textContent?.trim());
+      expect(labels).toContain('Rename');
+      expect(labels).toContain('Delete');
+    });
 
-    const thread1Active = isActive(threads[0]);
-    const thread2Active = isActive(threads[1]);
+    it('clicking Rename enters edit mode and focuses the input', async () => {
+      const fixture = render({ actions: { rename: noop } });
+      const kebab = fixture.nativeElement.querySelector('.chat-thread-list__kebab') as HTMLElement;
+      kebab.click();
+      fixture.detectChanges();
+      const renameItem = Array.from(document.querySelectorAll('.chat-overflow-menu__item')).find((el) => (el as HTMLElement).textContent?.trim() === 'Rename') as HTMLElement;
+      renameItem.click();
+      fixture.detectChanges();
+      await new Promise((r) => queueMicrotask(() => r(undefined)));
+      fixture.detectChanges();
+      const input = fixture.nativeElement.querySelector('.chat-thread-list__edit') as HTMLInputElement;
+      expect(input).not.toBeNull();
+      expect(input.value).toBe('First');
+    });
 
-    expect(thread1Active()).toBe(true);
-    expect(thread2Active()).toBe(false);
+    it('Enter on rename input calls adapter.rename and shows new title optimistically', async () => {
+      const renameSpy = vi.fn().mockResolvedValue(undefined);
+      const fixture = render({ actions: { rename: renameSpy } });
+      (fixture.nativeElement.querySelector('.chat-thread-list__kebab') as HTMLElement).click();
+      fixture.detectChanges();
+      const renameItem = Array.from(document.querySelectorAll('.chat-overflow-menu__item')).find((el) => (el as HTMLElement).textContent?.trim() === 'Rename') as HTMLElement;
+      renameItem.click();
+      fixture.detectChanges();
+      await new Promise((r) => queueMicrotask(() => r(undefined)));
+      fixture.detectChanges();
+      const input = fixture.nativeElement.querySelector('.chat-thread-list__edit') as HTMLInputElement;
+      input.value = 'Renamed';
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+      input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+      await new Promise((r) => setTimeout(r, 0));
+      fixture.detectChanges();
+      expect(renameSpy).toHaveBeenCalledWith('t1', 'Renamed');
+    });
 
-    activeThreadId$.set('thread-2');
+    it('Esc cancels rename without calling adapter', () => {
+      const renameSpy = vi.fn().mockResolvedValue(undefined);
+      const fixture = render({ actions: { rename: renameSpy } });
+      (fixture.nativeElement.querySelector('.chat-thread-list__kebab') as HTMLElement).click();
+      fixture.detectChanges();
+      const renameItem = Array.from(document.querySelectorAll('.chat-overflow-menu__item')).find((el) => (el as HTMLElement).textContent?.trim() === 'Rename') as HTMLElement;
+      renameItem.click();
+      fixture.detectChanges();
+      const input = fixture.nativeElement.querySelector('.chat-thread-list__edit') as HTMLInputElement;
+      input.value = 'X';
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+      input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+      fixture.detectChanges();
+      expect(renameSpy).not.toHaveBeenCalled();
+    });
 
-    expect(thread1Active()).toBe(false);
-    expect(thread2Active()).toBe(true);
-  });
+    it('Delete menu item opens the confirm dialog', () => {
+      const fixture = render({ actions: { delete: noop } });
+      (fixture.nativeElement.querySelector('.chat-thread-list__kebab') as HTMLElement).click();
+      fixture.detectChanges();
+      const delItem = Array.from(document.querySelectorAll('.chat-overflow-menu__item')).find((el) => (el as HTMLElement).textContent?.trim() === 'Delete') as HTMLElement;
+      delItem.click();
+      fixture.detectChanges();
+      expect(document.querySelector('.chat-confirm-dialog')).not.toBeNull();
+    });
 
-  it('renders context with $implicit thread reference', () => {
-    const threads$ = signal<Thread[]>(threads);
-    const activeThreadId$ = signal<string>('thread-3');
+    it('Confirming delete calls adapter and hides the row optimistically', async () => {
+      let resolveDelete!: () => void;
+      const deleteSpy = vi.fn(() => new Promise<void>((r) => { resolveDelete = r; }));
+      const fixture = render({ actions: { delete: deleteSpy } });
+      (fixture.nativeElement.querySelector('.chat-thread-list__kebab') as HTMLElement).click();
+      fixture.detectChanges();
+      const delItem = Array.from(document.querySelectorAll('.chat-overflow-menu__item')).find((el) => (el as HTMLElement).textContent?.trim() === 'Delete') as HTMLElement;
+      delItem.click();
+      fixture.detectChanges();
+      (document.querySelector('.chat-confirm-dialog__confirm') as HTMLElement).click();
+      fixture.detectChanges();
+      const remaining = fixture.nativeElement.querySelectorAll('.chat-thread-list__item');
+      expect(remaining.length).toBe(1);
+      expect(deleteSpy).toHaveBeenCalledWith('t1');
+      resolveDelete();
+      await new Promise((r) => setTimeout(r, 0));
+    });
 
-    const contexts = computed(() =>
-      threads$().map(thread => ({
-        $implicit: thread,
-        isActive: thread.id === activeThreadId$(),
-      }))
-    );
+    it('Cancelling the confirm dialog does not call adapter', () => {
+      const deleteSpy = vi.fn().mockResolvedValue(undefined);
+      const fixture = render({ actions: { delete: deleteSpy } });
+      (fixture.nativeElement.querySelector('.chat-thread-list__kebab') as HTMLElement).click();
+      fixture.detectChanges();
+      const delItem = Array.from(document.querySelectorAll('.chat-overflow-menu__item')).find((el) => (el as HTMLElement).textContent?.trim() === 'Delete') as HTMLElement;
+      delItem.click();
+      fixture.detectChanges();
+      (document.querySelector('.chat-confirm-dialog__cancel') as HTMLElement).click();
+      fixture.detectChanges();
+      expect(deleteSpy).not.toHaveBeenCalled();
+    });
 
-    const result = contexts();
-    expect(result).toHaveLength(3);
-    expect(result[2].$implicit.id).toBe('thread-3');
-    expect(result[2].isActive).toBe(true);
-  });
+    it('Rename: when adapter rejects, the title reverts after settle', async () => {
+      const renameSpy = vi.fn(async () => { throw new Error('boom'); });
+      const fixture = render({ actions: { rename: renameSpy } });
+      (fixture.nativeElement.querySelector('.chat-thread-list__kebab') as HTMLElement).click();
+      fixture.detectChanges();
+      const renameItem = Array.from(document.querySelectorAll('.chat-overflow-menu__item'))
+        .find((el) => (el as HTMLElement).textContent?.trim() === 'Rename') as HTMLElement;
+      renameItem.click();
+      fixture.detectChanges();
+      await new Promise((r) => queueMicrotask(() => r(undefined)));
+      fixture.detectChanges();
+      const input = fixture.nativeElement.querySelector('.chat-thread-list__edit') as HTMLInputElement;
+      input.value = 'BadRename';
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+      input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+      // Wait for the rejection + finally clear to settle.
+      await new Promise((r) => setTimeout(r, 0));
+      await new Promise((r) => setTimeout(r, 0));
+      fixture.detectChanges();
+      // The visible title should be back to the original (the pending override has been cleared).
+      const firstItemTitle = fixture.nativeElement.querySelectorAll('.chat-thread-list__item-title')[0] as HTMLElement;
+      expect(firstItemTitle.textContent?.trim()).toBe('First');
+      expect(renameSpy).toHaveBeenCalledWith('t1', 'BadRename');
+    });
 
-  it('threads updates reactively when thread list changes', () => {
-    const threads$ = signal<Thread[]>(threads.slice(0, 2));
-    expect(threads$()).toHaveLength(2);
-
-    threads$.set(threads);
-    expect(threads$()).toHaveLength(3);
-  });
-});
-
-describe('ChatThreadListComponent — default item template', () => {
-  // Helper function that mirrors the component's relativeTime method
-  const relativeTime = (epochMs: number): string => {
-    const delta = Date.now() - epochMs;
-    if (delta < 60_000) return 'just now';
-    if (delta < 3_600_000) return `${Math.floor(delta / 60_000)} min ago`;
-    if (delta < 86_400_000) return `${Math.floor(delta / 3_600_000)} hr ago`;
-    return `${Math.floor(delta / 86_400_000)} day ago`;
-  };
-
-  it('Thread type includes optional updatedAt field', () => {
-    const threadWithTime: Thread = { id: 'a', title: 'Test', updatedAt: Date.now() };
-    const threadWithoutTime: Thread = { id: 'b', title: 'Test' };
-    expect(threadWithTime.updatedAt).toBeDefined();
-    expect(threadWithoutTime.updatedAt).toBeUndefined();
-  });
-
-  it('relativeTime returns "just now" for < 60s delta', () => {
-    const now = Date.now();
-    expect(relativeTime(now - 30_000)).toBe('just now');
-  });
-
-  it('relativeTime returns "X min ago" for < 1h delta', () => {
-    const now = Date.now();
-    const result = relativeTime(now - 300_000); // 5 min ago
-    expect(result).toMatch(/\d+ min ago/);
-  });
-
-  it('relativeTime returns "X hr ago" for < 1d delta', () => {
-    const now = Date.now();
-    const result = relativeTime(now - 7_200_000); // 2 hr ago
-    expect(result).toMatch(/\d+ hr ago/);
-  });
-
-  it('relativeTime returns "X day ago" for >= 1d delta', () => {
-    const now = Date.now();
-    const result = relativeTime(now - 172_800_000); // 2 day ago
-    expect(result).toMatch(/\d+ day ago/);
+    it('Delete: when adapter rejects, the hidden row reappears', async () => {
+      const deleteSpy = vi.fn(async () => { throw new Error('boom'); });
+      const fixture = render({ actions: { delete: deleteSpy } });
+      (fixture.nativeElement.querySelector('.chat-thread-list__kebab') as HTMLElement).click();
+      fixture.detectChanges();
+      const delItem = Array.from(document.querySelectorAll('.chat-overflow-menu__item'))
+        .find((el) => (el as HTMLElement).textContent?.trim() === 'Delete') as HTMLElement;
+      delItem.click();
+      fixture.detectChanges();
+      (document.querySelector('.chat-confirm-dialog__confirm') as HTMLElement).click();
+      fixture.detectChanges();
+      // Wait for the rejection + finally clear to settle.
+      await new Promise((r) => setTimeout(r, 0));
+      await new Promise((r) => setTimeout(r, 0));
+      fixture.detectChanges();
+      const remaining = fixture.nativeElement.querySelectorAll('.chat-thread-list__item');
+      expect(remaining.length).toBe(2);
+      expect(deleteSpy).toHaveBeenCalledWith('t1');
+    });
   });
 });
