@@ -102,3 +102,58 @@ class TestA2uiPartialHandler:
         with patch("src.streaming.a2ui_partial_handler.adispatch_custom_event", new=AsyncMock()) as mock:
             await handler.on_llm_new_token("some token", chunk=None, run_id=uuid4())
         mock.assert_not_awaited()
+
+    @pytest.mark.asyncio
+    async def test_responses_api_function_call_content_blocks(self):
+        """gpt-5 / Responses API streams tool-call deltas as content blocks
+        of type='function_call' rather than tool_call_chunks. The first
+        block for each call carries name + call_id; subsequent blocks for
+        the same index carry only the args delta."""
+        handler = A2uiPartialHandler(tool_name="render_a2ui_surface")
+        first = ChatGenerationChunk(
+            text="",
+            message=AIMessageChunk(content=[
+                {"type": "function_call", "name": "render_a2ui_surface",
+                 "call_id": "call_ABC", "id": "fc_1",
+                 "arguments": "", "index": 1},
+            ]),
+        )
+        next1 = ChatGenerationChunk(
+            text="",
+            message=AIMessageChunk(content=[
+                {"type": "function_call", "arguments": "{\"en", "index": 1},
+            ]),
+        )
+        next2 = ChatGenerationChunk(
+            text="",
+            message=AIMessageChunk(content=[
+                {"type": "function_call", "arguments": "velopes", "index": 1},
+            ]),
+        )
+        with patch("src.streaming.a2ui_partial_handler.adispatch_custom_event", new=AsyncMock()) as mock:
+            await handler.on_llm_new_token("", chunk=first, run_id=uuid4())
+            await handler.on_llm_new_token("", chunk=next1, run_id=uuid4())
+            await handler.on_llm_new_token("", chunk=next2, run_id=uuid4())
+        # First block has empty args — no dispatch. Two subsequent grow the buffer.
+        assert mock.await_count == 2
+        call1 = mock.await_args_list[0].args[1]
+        call2 = mock.await_args_list[1].args[1]
+        assert call1["tool_call_id"] == "call_ABC"
+        assert call1["args_so_far"] == "{\"en"
+        assert call2["tool_call_id"] == "call_ABC"
+        assert call2["args_so_far"] == "{\"envelopes"
+
+    @pytest.mark.asyncio
+    async def test_responses_api_ignores_non_target_tools(self):
+        """Responses-API content blocks for a different tool are ignored."""
+        handler = A2uiPartialHandler(tool_name="render_a2ui_surface")
+        chunk = ChatGenerationChunk(
+            text="",
+            message=AIMessageChunk(content=[
+                {"type": "function_call", "name": "search_documents",
+                 "call_id": "call_X", "arguments": "{}", "index": 0},
+            ]),
+        )
+        with patch("src.streaming.a2ui_partial_handler.adispatch_custom_event", new=AsyncMock()) as mock:
+            await handler.on_llm_new_token("", chunk=chunk, run_id=uuid4())
+        mock.assert_not_awaited()
