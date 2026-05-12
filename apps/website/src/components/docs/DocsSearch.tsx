@@ -84,8 +84,7 @@ export function DocsSearch({ library }: { library?: LibraryId }) {
   return (
     <div style={{
       position: 'fixed', inset: 0, zIndex: 100,
-      background: 'rgba(0,0,0,0.3)',
-      backdropFilter: 'blur(4px)',
+      background: 'rgba(0,0,0,0.4)',
       display: 'flex', alignItems: 'flex-start', justifyContent: 'center',
       paddingTop: '20vh',
     }} onClick={() => setOpen(false)}>
@@ -93,14 +92,13 @@ export function DocsSearch({ library }: { library?: LibraryId }) {
         onClick={(e) => e.stopPropagation()}
         style={{
           width: '100%', maxWidth: 520,
-          background: 'rgba(255,255,255,0.95)',
-          backdropFilter: `blur(${tokens.glass.blur})`,
-          border: `1px solid ${tokens.glass.border}`,
+          background: tokens.surfaces.surface,
+          border: `1px solid ${tokens.surfaces.border}`,
           borderRadius: 12,
-          boxShadow: '0 16px 64px rgba(0,0,0,0.15)',
+          boxShadow: tokens.shadows.lg,
           overflow: 'hidden',
         }}>
-        <div style={{ padding: '12px 16px', borderBottom: `1px solid ${tokens.glass.border}` }}>
+        <div style={{ padding: '12px 16px', borderBottom: `1px solid ${tokens.surfaces.border}` }}>
           <input
             ref={inputRef}
             value={query}

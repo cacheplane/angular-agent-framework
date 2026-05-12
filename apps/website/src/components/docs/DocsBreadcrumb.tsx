@@ -1,19 +1,54 @@
 import Link from 'next/link';
 import { tokens } from '@ngaf/design-tokens';
-import { getDocsSection, getLibraryConfig, type LibraryId } from '../../lib/docs-config';
+import { getLibraryConfig, type LibraryId } from '../../lib/docs-config';
 
-export function DocsBreadcrumb({ library, section, title }: { library: LibraryId; section: string; title: string }) {
+interface Props {
+  library: LibraryId;
+  section: string;
+  slug?: string;
+  title: string;
+}
+
+function humanize(s: string): string {
+  return s.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+export function DocsBreadcrumb({ library, section, slug: _slug, title }: Props) {
   const libConfig = getLibraryConfig(library);
-  const sectionData = getDocsSection(library, section);
+  const libraryTitle = libConfig?.title ?? library;
+  const sectionTitle = libConfig?.sections.find((s) => s.id === section)?.title ?? humanize(section);
+
+  const crumb: React.CSSProperties = {
+    fontFamily: tokens.typography.fontSans,
+    fontSize: 13,
+    lineHeight: 1.5,
+    color: tokens.colors.textMuted,
+    textDecoration: 'none',
+  };
+  const sep: React.CSSProperties = {
+    margin: '0 8px',
+    color: tokens.colors.textMuted,
+  };
+
   return (
-    <div className="flex items-center gap-2 mb-4" style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', color: tokens.colors.textMuted }}>
-      <Link href="/docs" style={{ color: tokens.colors.textMuted, textDecoration: 'none' }}>Docs</Link>
-      <span>&rsaquo;</span>
-      <Link href={`/docs/${library}/getting-started/introduction`} style={{ color: tokens.colors.textMuted, textDecoration: 'none' }}>{libConfig?.title ?? library}</Link>
-      <span>&rsaquo;</span>
-      <span>{sectionData?.title ?? section}</span>
-      <span>&rsaquo;</span>
-      <span style={{ color: tokens.colors.textSecondary }}>{title}</span>
-    </div>
+    <nav aria-label="Breadcrumb" style={{ marginBottom: 16 }}>
+      <ol style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexWrap: 'wrap' }}>
+        <li>
+          <Link href="/docs" style={crumb}>Docs</Link>
+          <span style={sep} aria-hidden="true">/</span>
+        </li>
+        <li>
+          <Link href={`/docs/${library}/getting-started/introduction`} style={crumb}>{libraryTitle}</Link>
+          <span style={sep} aria-hidden="true">/</span>
+        </li>
+        <li style={crumb}>
+          {sectionTitle}
+          <span style={sep} aria-hidden="true">/</span>
+        </li>
+        <li style={{ ...crumb, color: tokens.colors.textPrimary, fontWeight: 600 }} aria-current="page">
+          {title}
+        </li>
+      </ol>
+    </nav>
   );
 }

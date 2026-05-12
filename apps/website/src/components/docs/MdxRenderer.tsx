@@ -1,5 +1,5 @@
 import { MDXRemote } from 'next-mdx-remote/rsc';
-import { tokens } from '../../../lib/design-tokens';
+import { tokens } from '@ngaf/design-tokens';
 import { Callout } from './mdx/Callout';
 import { Steps, Step } from './mdx/Steps';
 import { Tabs, Tab } from './mdx/Tabs';
@@ -8,8 +8,6 @@ import { CodeGroup } from './mdx/CodeGroup';
 import { Pre } from './mdx/CodeBlock';
 import { FeatureChips } from './mdx/FeatureChips';
 import { ArchFlowDiagram } from './ArchFlowDiagram';
-import { DocsBreadcrumb } from './DocsBreadcrumb';
-import { DocsPrevNext } from './DocsPrevNext';
 import { type LibraryId } from '../../lib/docs-config';
 import rehypePrettyCode from 'rehype-pretty-code';
 import rehypeSlug from 'rehype-slug';
@@ -27,6 +25,18 @@ const mdxComponents = {
   ArchFlowDiagram,
   FeatureChips,
   pre: Pre,
+  h2: ({ id, children, ...rest }: React.HTMLAttributes<HTMLHeadingElement>) => (
+    <h2 id={id} {...rest}>
+      {id ? <a href={`#${id}`} aria-label={`Link to ${id}`} className="heading-anchor">#</a> : null}
+      {children}
+    </h2>
+  ),
+  h3: ({ id, children, ...rest }: React.HTMLAttributes<HTMLHeadingElement>) => (
+    <h3 id={id} {...rest}>
+      {id ? <a href={`#${id}`} aria-label={`Link to ${id}`} className="heading-anchor">#</a> : null}
+      {children}
+    </h3>
+  ),
 };
 
 const rehypeOptions = {
@@ -45,7 +55,6 @@ interface MdxRendererProps {
 export function MdxRenderer({ source, library, section, slug, title }: MdxRendererProps) {
   return (
     <div className="flex-1 py-8 px-4 sm:px-6 md:px-12 md:max-w-3xl overflow-x-hidden">
-      <DocsBreadcrumb library={library} section={section} title={title} />
       <article className="docs-prose prose prose-slate max-w-none"
         style={{
           '--tw-prose-body': tokens.colors.textSecondary,
@@ -65,7 +74,6 @@ export function MdxRenderer({ source, library, section, slug, title }: MdxRender
           }}
         />
       </article>
-      <DocsPrevNext library={library} section={section} slug={slug} />
     </div>
   );
 }

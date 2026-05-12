@@ -13,16 +13,18 @@ export function CodeGroup({ children }: { children: React.ReactNode }) {
 
   return (
     <div style={{
-      borderRadius: 12,
-      border: `1px solid ${tokens.glass.border}`,
-      boxShadow: tokens.glass.shadow,
+      borderRadius: tokens.radius.md,
       overflow: 'hidden',
       marginBottom: 16,
     }}>
+      {/* Tab bar — same treatment as Tabs */}
       <div style={{
-        display: 'flex', gap: 0,
-        background: 'rgba(26, 27, 38, 0.95)',
-        borderBottom: '1px solid rgba(255,255,255,0.06)',
+        display: 'flex',
+        gap: 0,
+        background: tokens.surfaces.surface,
+        border: `1px solid ${tokens.surfaces.border}`,
+        borderBottom: `1px solid ${tokens.surfaces.border}`,
+        borderRadius: `${tokens.radius.md} ${tokens.radius.md} 0 0`,
       }}>
         {titles.map((title, i) => (
           <button
@@ -30,18 +32,36 @@ export function CodeGroup({ children }: { children: React.ReactNode }) {
             onClick={() => setActive(i)}
             style={{
               padding: '8px 14px',
-              fontFamily: 'var(--font-mono)',
+              fontFamily: tokens.typography.fontMono,
               fontSize: '0.7rem',
-              color: active === i ? '#a9b1d6' : '#4A527A',
-              background: active === i ? 'rgba(255,255,255,0.05)' : 'transparent',
+              fontWeight: active === i ? 600 : 400,
+              color: active === i ? tokens.colors.accent : tokens.colors.textSecondary,
+              background: 'transparent',
               border: 'none',
+              borderBottom: active === i ? `2px solid ${tokens.colors.accent}` : '2px solid transparent',
               cursor: 'pointer',
-            }}>
+              transition: 'color 0.15s, border-color 0.15s',
+            }}
+            onMouseEnter={(e) => {
+              if (i !== active) e.currentTarget.style.color = tokens.colors.textPrimary;
+            }}
+            onMouseLeave={(e) => {
+              if (i !== active) e.currentTarget.style.color = tokens.colors.textSecondary;
+            }}
+          >
             {title}
           </button>
         ))}
       </div>
-      <div>{blocks[active]}</div>
+      {/* Active code block container — code body stays dark (tokyo-night) */}
+      <div style={{
+        border: `1px solid ${tokens.surfaces.border}`,
+        borderTop: 'none',
+        borderRadius: `0 0 ${tokens.radius.md} ${tokens.radius.md}`,
+        overflow: 'hidden',
+      }}>
+        {blocks[active]}
+      </div>
     </div>
   );
 }

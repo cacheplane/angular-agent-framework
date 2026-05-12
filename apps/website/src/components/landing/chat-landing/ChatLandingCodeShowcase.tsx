@@ -60,11 +60,11 @@ export async function ChatLandingCodeShowcase() {
         {SNIPPETS.map((s) => (
           <div
             key={s.title}
-            style={{ borderRadius: 14, overflow: 'hidden', border: `1px solid ${tokens.glass.border}` }}
+            style={{ borderRadius: 14, overflow: 'hidden', border: `1px solid ${tokens.surfaces.border}` }}
           >
             <div style={{
               padding: '10px 20px', background: 'rgba(90,0,200,0.04)',
-              borderBottom: `1px solid ${tokens.glass.border}`,
+              borderBottom: `1px solid ${tokens.surfaces.border}`,
             }}>
               <span style={{
                 fontFamily: "'JetBrains Mono', monospace", fontSize: '0.68rem',

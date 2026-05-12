@@ -20,9 +20,9 @@ function CodeFileContent({ path, content }: { path: string; content: string | un
 
   return (
     <div className="code-mode-block" style={{
-      borderRadius: 8,
-      border: '1px solid var(--ds-glass-border)',
-      boxShadow: 'var(--ds-glass-shadow)',
+      borderRadius: 'var(--ds-radius-md)',
+      border: '1px solid var(--ds-border)',
+      boxShadow: 'var(--ds-shadow-sm)',
       overflow: 'hidden',
     }}>
       <div style={{

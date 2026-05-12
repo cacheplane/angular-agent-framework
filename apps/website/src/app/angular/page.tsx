@@ -1,33 +1,144 @@
-// apps/website/src/app/angular/page.tsx
-import { AngularHero } from '../../components/landing/angular/AngularHero';
-import { AngularProblemSolution } from '../../components/landing/angular/AngularProblemSolution';
-import { AngularFeaturesGrid } from '../../components/landing/angular/AngularFeaturesGrid';
-import { AngularCodeShowcase } from '../../components/landing/angular/AngularCodeShowcase';
-import { AngularComparison } from '../../components/landing/angular/AngularComparison';
-import { AngularWhitePaperGate } from '../../components/landing/angular/AngularWhitePaperGate';
-import { AngularStackSiblings } from '../../components/landing/angular/AngularStackSiblings';
-import { AngularFooterCTA } from '../../components/landing/angular/AngularFooterCTA';
 import { tokens } from '@ngaf/design-tokens';
+import { Container } from '../../components/ui/Container';
+import { Section } from '../../components/ui/Section';
+import { Eyebrow } from '../../components/ui/Eyebrow';
+import { Button } from '../../components/ui/Button';
+import { Pill } from '../../components/ui/Pill';
+import { BrowserFrame } from '../../components/ui/BrowserFrame';
+import { FeatureBlock } from '../../components/landing/FeatureBlock';
+import { WhitePaperBlock } from '../../components/landing/WhitePaperBlock';
+import { FinalCTA } from '../../components/landing/FinalCTA';
+import { AngularCodeShowcase } from '../../components/landing/angular/AngularCodeShowcase';
 
 export const metadata = {
   title: '@ngaf/langgraph — Agent Streaming for Angular',
   description: 'Ship LangGraph agents in Angular. Signal-native streaming, thread persistence, interrupts, and deterministic testing.',
 };
 
-export default function AngularPage() {
+export default async function AngularPage() {
   return (
-    <div style={{ background: tokens.gradient.bgFlow, position: 'relative', overflow: 'hidden' }}>
-      <div style={{ position: 'absolute', width: 600, height: 600, borderRadius: '50%', background: 'radial-gradient(circle, rgba(0,64,144,0.08) 0%, transparent 70%)', top: -200, left: -150, filter: 'blur(80px)', pointerEvents: 'none' }} aria-hidden="true" />
-      <div style={{ position: 'absolute', width: 500, height: 500, borderRadius: '50%', background: tokens.gradient.cool, top: 800, right: -100, filter: 'blur(80px)', pointerEvents: 'none' }} aria-hidden="true" />
-      <div style={{ position: 'absolute', width: 400, height: 400, borderRadius: '50%', background: 'radial-gradient(circle, rgba(0,64,144,0.06) 0%, transparent 70%)', top: 2400, left: -100, filter: 'blur(80px)', pointerEvents: 'none' }} aria-hidden="true" />
-      <AngularHero />
-      <AngularProblemSolution />
-      <AngularFeaturesGrid />
-      <AngularCodeShowcase />
-      <AngularComparison />
-      <AngularWhitePaperGate />
-      <AngularStackSiblings />
-      <AngularFooterCTA />
-    </div>
+    <>
+      {/* Hero */}
+      <Section surface="canvas" ariaLabelledBy="angular-hero-heading">
+        <Container>
+          <div style={{ maxWidth: 820, margin: '0 auto', textAlign: 'center' }}>
+            <Eyebrow tone="angular" style={{ marginBottom: 16 }}>@ngaf/langgraph</Eyebrow>
+            <h1
+              id="angular-hero-heading"
+              style={{
+                fontFamily: tokens.typography.h1.family,
+                fontSize: tokens.typography.h1.size,
+                lineHeight: tokens.typography.h1.line,
+                fontWeight: 700,
+                color: tokens.colors.textPrimary,
+                margin: 0,
+                marginBottom: 24,
+                letterSpacing: '-0.02em',
+              }}
+            >
+              Signal-native streaming for Angular.
+            </h1>
+            <p
+              style={{
+                fontFamily: tokens.typography.bodyLg.family,
+                fontSize: tokens.typography.bodyLg.size,
+                lineHeight: tokens.typography.bodyLg.line,
+                color: tokens.colors.textSecondary,
+                margin: '0 auto 32px',
+                maxWidth: 640,
+              }}
+            >
+              Ship LangGraph agents inside your Angular 20+ app. Thread state, interrupts, branch/history, and tool progress — all surfaced as zoneless-safe signals.
+            </p>
+            <div style={{ display: 'flex', justifyContent: 'center', gap: 12, flexWrap: 'wrap', marginBottom: 20 }}>
+              <Button variant="primary" size="lg" href="/docs/agent/getting-started/introduction">Get started</Button>
+              <Button variant="secondary" size="lg" href="https://github.com/cacheplane/angular-agent-framework" target="_blank" rel="noopener noreferrer">View source</Button>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'center', gap: 8, flexWrap: 'wrap' }}>
+              <Pill variant="accent">MIT</Pill>
+              <Pill variant="angular">Angular 20+</Pill>
+              <Pill variant="neutral">Zoneless ready</Pill>
+              <Pill variant="neutral">LangGraph + AG-UI</Pill>
+            </div>
+          </div>
+        </Container>
+      </Section>
+
+      <FeatureBlock
+        id="providers"
+        eyebrow="Providers"
+        headline="Drop it into app.config.ts. Done."
+        body="provideAgent wires LangGraph (or AG-UI) into Angular's DI container. From any component, agent() returns a zoneless-safe handle with signals for messages, status, errors, and interrupts."
+        bullets={[
+          'provideAgent + provideAgUiAgent — pick your runtime',
+          'agent() returns a typed signal-based handle',
+          'OnPush + zoneless tested',
+          'Test transports for deterministic specs',
+        ]}
+        supportingCards={[
+          { title: 'provideAgent', description: 'LangGraph wiring.' },
+          { title: 'provideAgUiAgent', description: 'AG-UI wiring.' },
+          { title: 'MockAgentTransport', description: 'Deterministic tests.' },
+        ]}
+        cta={{ label: 'API reference', href: '/docs/agent/api/agent' }}
+        visual={
+          <BrowserFrame url="app.config.ts" elevation="md">
+            <pre style={{
+              margin: 0,
+              padding: '20px 22px',
+              background: '#1a1b26',
+              color: '#a9b1d6',
+              fontFamily: tokens.typography.fontMono,
+              fontSize: 13,
+              lineHeight: 1.6,
+              minHeight: 320,
+              overflow: 'auto',
+            }}>
+{`import { provideAgent } from '@ngaf/langgraph';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideAgent({
+      apiUrl: '/agent',
+      assistantId: 'my-agent',
+    }),
+  ],
+};
+
+// any component
+export class ChatComponent {
+  agent = agent();
+  messages = this.agent.messages;
+  status = this.agent.status;
+}`}
+            </pre>
+          </BrowserFrame>
+        }
+      />
+
+      <FeatureBlock
+        id="signals"
+        eyebrow="Signals"
+        headline="Reactive without RxJS gymnastics."
+        body="Every agent surface is exposed as a signal — message stream, tool progress, interrupts, errors, status. Compose with the rest of your Angular reactivity story. No subscriptions to leak."
+        bullets={[
+          'messages() / status() / error() / reload()',
+          'interrupt() for human-in-the-loop gates',
+          'Branch / history / time-travel built in',
+          'Computed signals integrate cleanly',
+        ]}
+        supportingCards={[
+          { title: 'messages()', description: 'Streaming message list.' },
+          { title: 'interrupt()', description: 'Approval-gate signal.' },
+          { title: 'reload()', description: 'Recover from errors.' },
+        ]}
+        cta={{ label: 'Read the streaming guide', href: '/docs/agent/api/agent' }}
+        visualLeft
+        visual={<AngularCodeShowcase />}
+      />
+
+      <WhitePaperBlock paper="angular" />
+      <FinalCTA />
+    </>
   );
 }

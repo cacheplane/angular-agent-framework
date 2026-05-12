@@ -5,6 +5,8 @@ import { usePathname } from 'next/navigation';
 import { tokens } from '@ngaf/design-tokens';
 import { docsConfig } from '../../lib/docs-config';
 import { trackCtaClick, trackExternalLinkClick } from '../../lib/analytics/client';
+import { LogoMark } from '../ui/LogoMark';
+import { Button } from '../ui/Button';
 
 const links = [
   { label: 'Pilot to Prod', href: '/pilot-to-prod', external: false },
@@ -101,18 +103,18 @@ export function Nav() {
 
   return (
     <>
-    <nav className="fixed top-0 left-0 right-0 z-50"
+    <nav
+      className="fixed top-0 left-0 right-0 z-50"
       style={{
-        borderBottom: `1px solid ${tokens.glass.border}`,
-        background: tokens.glass.bg,
-        backdropFilter: `blur(${tokens.glass.blur})`,
-        WebkitBackdropFilter: `blur(${tokens.glass.blur})`,
-        boxShadow: tokens.glass.shadow,
-      }}>
+        background: tokens.surfaces.surface,
+        borderBottom: `1px solid ${tokens.surfaces.border}`,
+        boxShadow: tokens.shadows.sm,
+      }}
+    >
       {/* Top bar */}
       <div className="flex items-center justify-between px-6 py-4 md:px-8 md:py-5">
-        <Link href="/" className="font-garamond text-xl font-bold" style={{ color: tokens.colors.textPrimary }}>
-          Angular Agent Framework
+        <Link href="/" style={{ textDecoration: 'none' }}>
+          <LogoMark size="md" />
         </Link>
 
         {/* Desktop links */}
@@ -153,19 +155,19 @@ export function Nav() {
             aria-label="GitHub repository">
             <GitHubIcon />
           </a>
-          <Link href="/pilot-to-prod#whitepaper-gate"
-            className="px-4 py-2 text-sm font-mono rounded transition-all"
+          <Button
+            variant="primary"
+            size="md"
+            href="/pilot-to-prod#whitepaper-gate"
             onClick={() => trackCtaClick({
               surface: 'nav',
               destination_url: '/pilot-to-prod#whitepaper-gate',
               cta_id: 'nav_get_started',
               cta_text: 'Get Started',
             })}
-            style={{ background: tokens.colors.accent, color: '#fff' }}
-            onMouseEnter={(e) => (e.currentTarget.style.boxShadow = tokens.glow.button)}
-            onMouseLeave={(e) => (e.currentTarget.style.boxShadow = 'none')}>
+          >
             Get Started
-          </Link>
+          </Button>
         </div>
 
         {/* Mobile hamburger */}
@@ -186,13 +188,12 @@ export function Nav() {
         style={{
           top: 57,
           zIndex: 9999,
-          background: 'rgba(255,255,255,0.98)',
-          borderTop: `1px solid ${tokens.glass.border}`,
-            backdropFilter: `blur(${tokens.glass.blur})`,
-            WebkitBackdropFilter: `blur(${tokens.glass.blur})`,
-            overflowY: 'auto',
-            WebkitOverflowScrolling: 'touch',
-          }}>
+          background: tokens.surfaces.surface,
+          borderTop: `1px solid ${tokens.surfaces.border}`,
+          boxShadow: tokens.shadows.lg,
+          overflowY: 'auto',
+          WebkitOverflowScrolling: 'touch',
+        }}>
           <div style={{ padding: '16px 24px', display: 'flex', flexDirection: 'column', gap: 16, minHeight: '100%' }}>
 
             {/* Primary tabs — only on docs pages */}
@@ -316,7 +317,10 @@ export function Nav() {
                   <GitHubIcon /> GitHub
                 </a>
                 <div style={{ marginTop: 8 }}>
-                  <Link href="/pilot-to-prod#whitepaper-gate"
+                  <Button
+                    variant="primary"
+                    size="lg"
+                    href="/pilot-to-prod#whitepaper-gate"
                     onClick={() => {
                       trackCtaClick({
                         surface: 'mobile_nav',
@@ -326,15 +330,10 @@ export function Nav() {
                       });
                       setOpen(false);
                     }}
-                    style={{
-                      display: 'block', textAlign: 'center',
-                      padding: '14px 24px', borderRadius: 8,
-                      background: tokens.colors.accent, color: '#fff',
-                      fontFamily: 'Inter, sans-serif', fontSize: 16, fontWeight: 600,
-                      textDecoration: 'none', minHeight: 48,
-                    }}>
+                    style={{ width: '100%', justifyContent: 'center' }}
+                  >
                     Get Started
-                  </Link>
+                  </Button>
                 </div>
               </div>
             )}

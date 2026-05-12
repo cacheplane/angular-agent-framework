@@ -19,10 +19,8 @@ export function CompareTable() {
   return (
     <section className="px-8 py-8 max-w-6xl mx-auto overflow-x-auto">
       <div style={{
-        background: tokens.glass.bg,
-        backdropFilter: `blur(${tokens.glass.blur})`,
-        WebkitBackdropFilter: `blur(${tokens.glass.blur})`,
-        border: `1px solid ${tokens.glass.border}`,
+        background: tokens.surfaces.surface,
+        border: `1px solid ${tokens.surfaces.border}`,
         borderRadius: 12,
         overflow: 'hidden',
       }}>

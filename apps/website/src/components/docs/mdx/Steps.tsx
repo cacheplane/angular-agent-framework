@@ -17,23 +17,40 @@ export function Step({ title, children, stepNumber }: { title: string; children:
   return (
     <div style={{ display: 'flex', gap: 12 }}>
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        {/* Number circle */}
         <div style={{
-          width: 24, height: 24, borderRadius: '50%',
-          background: tokens.colors.accent, color: '#fff',
-          fontSize: 12, fontWeight: 600,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          width: 32,
+          height: 32,
+          borderRadius: tokens.radius.full,
+          background: tokens.colors.accent,
+          color: tokens.colors.textInverted,
+          fontFamily: tokens.typography.fontMono,
+          fontSize: 14,
+          fontWeight: 700,
+          display: 'inline-flex',
+          alignItems: 'center',
+          justifyContent: 'center',
           flexShrink: 0,
         }}>{stepNumber ?? 1}</div>
-        <div style={{ width: 1, flex: 1, background: `${tokens.colors.accent}33`, marginTop: 4 }} />
+        {/* Vertical connector */}
+        <div style={{ width: 2, flex: 1, background: tokens.surfaces.border, marginTop: 4 }} />
       </div>
       <div style={{ flex: 1, paddingBottom: 8 }}>
+        {/* Step title */}
         <div style={{
+          fontFamily: tokens.typography.fontSans,
+          fontSize: 17,
           fontWeight: 600,
-          fontSize: '0.9rem',
           color: tokens.colors.textPrimary,
           marginBottom: 4,
         }}>{title}</div>
-        <div style={{ fontSize: '0.875rem', color: tokens.colors.textSecondary, lineHeight: 1.6 }}>
+        {/* Step body */}
+        <div style={{
+          fontFamily: tokens.typography.body.family,
+          fontSize: 16,
+          lineHeight: 1.6,
+          color: tokens.colors.textSecondary,
+        }}>
           {children}
         </div>
       </div>

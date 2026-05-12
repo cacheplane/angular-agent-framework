@@ -17,6 +17,29 @@
   --font-garamond: "EB Garamond", Georgia, serif;
   --font-inter: Inter, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", monospace;
+
+  /* New surfaces — Phase 1 of Statusbrew refactor */
+  --color-canvas: #fafbfc;
+  --color-surface: #ffffff;
+  --color-surface-tinted: #f4f6fb;
+  --color-surface-dim: #eef1f7;
+  --color-border: #e6e8ee;
+  --color-border-strong: #d2d6e0;
+  --color-text-inverted: #ffffff;
+  --color-accent-hover: #003070;
+
+  /* Radii */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+  --radius-full: 999px;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(15, 23, 41, 0.04), 0 1px 1px rgba(15, 23, 41, 0.03);
+  --shadow-md: 0 4px 12px rgba(15, 23, 41, 0.06), 0 2px 4px rgba(15, 23, 41, 0.04);
+  --shadow-lg: 0 12px 32px rgba(15, 23, 41, 0.08), 0 4px 8px rgba(15, 23, 41, 0.05);
+  --shadow-focus: 0 0 0 3px rgba(0, 64, 144, 0.25);
 }
 
 :root {
@@ -33,13 +56,6 @@
   --color-sidebar-bg: rgba(255, 255, 255, 0.45);
   --color-angular-red: #DD0031;
 
-  --glass-bg: rgba(255, 255, 255, 0.45);
-  --glass-bg-hover: rgba(255, 255, 255, 0.55);
-  --glass-blur: 16px;
-  --glass-border: rgba(255, 255, 255, 0.6);
-  --glass-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
-
-  --gradient-bg-flow: linear-gradient(135deg, #fef0f3 0%, #f4f0ff 45%, #eaf3ff 70%, #e6f4ff 100%);
 }
 
 * {
@@ -150,3 +166,79 @@ html {
 .docs-prose th { text-align: left; padding: 0.5rem 0.75rem; font-family: var(--font-mono); font-size: 0.75rem; text-transform: uppercase; color: #8b8fa3; border-bottom: 1px solid rgba(0, 64, 144, 0.15); }
 .docs-prose td { padding: 0.5rem 0.75rem; border-bottom: 1px solid rgba(0, 64, 144, 0.08); color: #555770; }
 .docs-prose td code { font-size: 0.8em; }
+
+/* UI primitive — Card hover */
+[data-ui="card"][data-hoverable] {
+  cursor: default;
+}
+[data-ui="card"][data-hoverable]:hover {
+  box-shadow: var(--shadow-md);
+  border-color: var(--color-border-strong);
+  transform: translateY(-1px);
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-ui="card"][data-hoverable]:hover {
+    transform: none;
+  }
+}
+
+/* UI primitive — FAQ */
+[data-ui="faq-item"] > summary::-webkit-details-marker {
+  display: none;
+}
+[data-ui="faq-item"][open] [data-ui="faq-chevron"] {
+  transform: rotate(180deg);
+}
+[data-ui="faq-item"] > summary:focus-visible {
+  outline: none;
+  box-shadow: var(--shadow-focus);
+  border-radius: var(--radius-sm);
+}
+
+/* Docs — readable column max-width */
+.docs-prose {
+  max-width: 70ch;
+}
+@media (max-width: 768px) {
+  .docs-prose {
+    max-width: 100%;
+  }
+}
+
+/* Docs — hash-anchor affordance on H2/H3 */
+.docs-prose h2,
+.docs-prose h3 {
+  position: relative;
+}
+.docs-prose h2 .heading-anchor,
+.docs-prose h3 .heading-anchor {
+  position: absolute;
+  left: -1.25em;
+  top: 0;
+  font-family: var(--font-mono);
+  font-weight: 400;
+  color: var(--color-text-muted);
+  opacity: 0;
+  text-decoration: none;
+  transition: opacity 120ms ease;
+}
+.docs-prose h2:hover .heading-anchor,
+.docs-prose h3:hover .heading-anchor,
+.docs-prose h2 .heading-anchor:focus-visible,
+.docs-prose h3 .heading-anchor:focus-visible {
+  opacity: 0.6;
+}
+.docs-prose h2 .heading-anchor:hover,
+.docs-prose h3 .heading-anchor:hover {
+  opacity: 1;
+  color: var(--color-accent);
+}
+@media (max-width: 768px) {
+  /* On narrow viewports, drop the absolute positioning so the hash doesn't overlap the page edge. */
+  .docs-prose h2 .heading-anchor,
+  .docs-prose h3 .heading-anchor {
+    position: static;
+    margin-right: 6px;
+    display: none;
+  }
+}

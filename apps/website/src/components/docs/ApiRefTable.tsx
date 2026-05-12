@@ -15,11 +15,9 @@ export function ApiRefTable({ entries }: { entries: ApiEntry[] }) {
           key={entry.name}
           className="p-6 rounded-lg"
           style={{
-            border: `1px solid ${tokens.glass.border}`,
-            background: tokens.glass.bg,
-            backdropFilter: `blur(${tokens.glass.blur})`,
-            WebkitBackdropFilter: `blur(${tokens.glass.blur})`,
-            boxShadow: tokens.glass.shadow,
+            border: `1px solid ${tokens.surfaces.border}`,
+            background: tokens.surfaces.surface,
+            boxShadow: tokens.shadows.sm,
           }}>
           <div className="flex items-baseline gap-3 mb-2">
             <code

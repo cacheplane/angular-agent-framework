@@ -1,10 +1,12 @@
 'use client';
 import { useState } from 'react';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
 import { tokens } from '@ngaf/design-tokens';
 import { analyticsEvents } from '../../lib/analytics/events';
 import { track, trackCtaClick, trackExternalLinkClick } from '../../lib/analytics/client';
+import { LogoMark } from '../ui/LogoMark';
+import { Button } from '../ui/Button';
+import { Eyebrow } from '../ui/Eyebrow';
 
 function GitHubIcon() {
   return (
@@ -74,26 +76,20 @@ function NewsletterForm() {
         disabled={state === 'submitting'}
         className="text-sm rounded-lg px-3 py-2 flex-1"
         style={{
-          background: 'rgba(255,255,255,0.7)',
-          border: `1px solid ${tokens.glass.border}`,
+          background: tokens.surfaces.surface,
+          border: `1px solid ${tokens.surfaces.border}`,
           color: tokens.colors.textPrimary,
           outline: 'none',
         }}
       />
-      <button
+      <Button
         type="submit"
+        variant="primary"
+        size="md"
         disabled={state === 'submitting' || !email}
-        className="text-xs font-mono font-bold uppercase tracking-wider rounded-lg px-4 py-2 whitespace-nowrap"
-        style={{
-          background: tokens.colors.accent,
-          color: '#fff',
-          border: 'none',
-          cursor: email ? 'pointer' : 'not-allowed',
-          opacity: email ? 1 : 0.5,
-        }}
       >
         {state === 'submitting' ? '...' : 'Subscribe'}
-      </button>
+      </Button>
     </form>
   );
 }
@@ -109,25 +105,22 @@ export function Footer() {
   };
 
   return (
-    <footer className="px-6 md:px-8 py-16 mt-24"
+    <footer
+      className="px-6 md:px-8 py-16 mt-24"
       style={{
-        borderTop: `1px solid ${tokens.glass.border}`,
-        background: 'rgba(255, 255, 255, 0.55)',
-        backdropFilter: `blur(${tokens.glass.blur})`,
-        WebkitBackdropFilter: `blur(${tokens.glass.blur})`,
-      }}>
-      <motion.div
-        className="max-w-6xl mx-auto"
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.5 }}>
+        background: tokens.surfaces.surface,
+        borderTop: `1px solid ${tokens.surfaces.border}`,
+      }}
+    >
+      <div className="max-w-6xl mx-auto">
 
         {/* Top section: brand + columns */}
         <div className="grid grid-cols-1 md:grid-cols-6 gap-10 md:gap-8">
           {/* Brand */}
           <div className="md:col-span-2">
-            <p className="font-garamond text-xl font-bold mb-2" style={{ color: tokens.colors.textPrimary }}>🛩️ Angular Agent Framework</p>
+            <div className="mb-2">
+              <LogoMark size="md" />
+            </div>
             <p className="text-sm mb-4" style={{ color: tokens.colors.textMuted, maxWidth: '36ch', lineHeight: 1.6 }}>
               The enterprise Angular agent framework for LangChain. Signal-native streaming built for production Angular 20+.
             </p>
@@ -169,7 +162,7 @@ export function Footer() {
 
           {/* Product column */}
           <div className="flex flex-col gap-2.5 text-sm">
-            <span className="font-mono text-xs uppercase tracking-wider mb-1" style={{ color: tokens.colors.accent }}>Product</span>
+            <Eyebrow tone="accent" style={{ marginBottom: 4 }}>Product</Eyebrow>
             <Link href="/docs" className="transition-colors" style={{ color: tokens.colors.textSecondary }}
               onClick={() => trackFooterCta('Documentation', '/docs')}
               onMouseEnter={(e) => (e.currentTarget.style.color = tokens.colors.accent)}
@@ -214,7 +207,7 @@ export function Footer() {
 
           {/* Libraries column */}
           <div className="flex flex-col gap-2.5 text-sm">
-            <span className="font-mono text-xs uppercase tracking-wider mb-1" style={{ color: tokens.colors.accent }}>Libraries</span>
+            <Eyebrow tone="accent" style={{ marginBottom: 4 }}>Libraries</Eyebrow>
             <Link href="/angular" className="transition-colors" style={{ color: tokens.colors.textSecondary }}
               onClick={() => trackFooterCta('Angular', '/angular')}
               onMouseEnter={(e) => (e.currentTarget.style.color = tokens.colors.accent)}
@@ -237,7 +230,7 @@ export function Footer() {
 
           {/* Solutions column */}
           <div className="flex flex-col gap-2.5 text-sm">
-            <span className="font-mono text-xs uppercase tracking-wider mb-1" style={{ color: tokens.colors.accent }}>Solutions</span>
+            <Eyebrow tone="accent" style={{ marginBottom: 4 }}>Solutions</Eyebrow>
             <Link href="/solutions/compliance" className="transition-colors" style={{ color: tokens.colors.textSecondary }}
               onClick={() => trackFooterCta('Compliance', '/solutions/compliance')}
               onMouseEnter={(e) => (e.currentTarget.style.color = tokens.colors.accent)}
@@ -260,7 +253,7 @@ export function Footer() {
 
           {/* Resources column */}
           <div className="flex flex-col gap-2.5 text-sm">
-            <span className="font-mono text-xs uppercase tracking-wider mb-1" style={{ color: tokens.colors.accent }}>Resources</span>
+            <Eyebrow tone="accent" style={{ marginBottom: 4 }}>Resources</Eyebrow>
             <Link href="/docs" className="transition-colors" style={{ color: tokens.colors.textSecondary }}
               onClick={() => trackFooterCta('Getting Started', '/docs')}
               onMouseEnter={(e) => (e.currentTarget.style.color = tokens.colors.accent)}
@@ -296,14 +289,14 @@ export function Footer() {
 
         {/* Bottom bar */}
         <div className="mt-12 pt-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs"
-          style={{ borderTop: `1px solid ${tokens.glass.border}`, color: tokens.colors.textMuted }}>
+          style={{ borderTop: `1px solid ${tokens.surfaces.border}`, color: tokens.colors.textMuted }}>
           <span>&copy; {new Date().getFullYear()} Angular Agent Framework. All rights reserved.</span>
           <span>MIT License &middot; <Link href="/pricing" className="transition-colors"
             onClick={() => trackFooterCta('Pricing Bottom', '/pricing')}
             onMouseEnter={(e) => (e.currentTarget.style.color = tokens.colors.accent)}
             onMouseLeave={(e) => (e.currentTarget.style.color = tokens.colors.textMuted)}>Pricing</Link></span>
         </div>
-      </motion.div>
+      </div>
     </footer>
   );
 }

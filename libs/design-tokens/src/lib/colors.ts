@@ -19,6 +19,10 @@ export const colors = Object.freeze({
   accentBorderHover: 'rgba(0, 64, 144, 0.3)',
   /** Accent surface — very light tint for selected/active states */
   accentSurface: 'rgba(0, 64, 144, 0.06)',
+  /** Hovered state of the primary accent */
+  accentHover: '#003070',
+  /** Inverted text — for use on dark/accent backgrounds */
+  textInverted: '#ffffff',
   /** Primary text — dark ink for headings and body */
   textPrimary: '#1a1a2e',
   /** Secondary text — warm gray for descriptions */

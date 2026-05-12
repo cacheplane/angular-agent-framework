@@ -20,8 +20,13 @@ export function CockpitSidebar({
   return (
     <aside
       aria-label="Cockpit sidebar"
-      className="grid gap-4 py-6 px-0 border-r border-[var(--ds-glass-border)] bg-[var(--ds-glass-bg)] backdrop-blur-[var(--ds-glass-blur)] content-start overflow-y-auto"
-      style={{ position: 'sticky', top: 0, minHeight: '100vh' }}
+      className="grid gap-4 py-6 px-0 border-r bg-[var(--ds-surface-tinted)] content-start overflow-y-auto"
+      style={{
+        position: 'sticky',
+        top: 0,
+        minHeight: '100vh',
+        borderRightColor: 'var(--ds-border-strong)',
+      }}
     >
       <header className="flex items-center justify-between px-4">
         <p className="text-[var(--ds-text-muted)] font-mono text-xs font-medium tracking-wide uppercase">Cockpit</p>

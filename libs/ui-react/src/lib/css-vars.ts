@@ -1,12 +1,21 @@
-import { colors, glass, gradient, glow, typography } from '@ngaf/design-tokens';
+import {
+  colors,
+  typography,
+  surfaces,
+  shadows,
+  radius,
+  space,
+} from '@ngaf/design-tokens';
 
 /**
  * CSS custom properties derived from design tokens.
  * Apply to :root or a container element so Tailwind can reference them.
  */
 export const cssVars = {
+  // Colors
   '--ds-bg': colors.bg,
   '--ds-accent': colors.accent,
+  '--ds-accent-hover': colors.accentHover,
   '--ds-accent-light': colors.accentLight,
   '--ds-accent-glow': colors.accentGlow,
   '--ds-accent-border': colors.accentBorder,
@@ -15,25 +24,41 @@ export const cssVars = {
   '--ds-text-primary': colors.textPrimary,
   '--ds-text-secondary': colors.textSecondary,
   '--ds-text-muted': colors.textMuted,
+  '--ds-text-inverted': colors.textInverted,
   '--ds-sidebar-bg': colors.sidebarBg,
   '--ds-angular-red': colors.angularRed,
-  '--ds-glass-bg': glass.bg,
-  '--ds-glass-bg-hover': glass.bgHover,
-  '--ds-glass-blur': glass.blur,
-  '--ds-glass-border': glass.border,
-  '--ds-glass-shadow': glass.shadow,
-  '--ds-gradient-warm': gradient.warm,
-  '--ds-gradient-cool': gradient.cool,
-  '--ds-gradient-cool-light': gradient.coolLight,
-  '--ds-gradient-bg-flow': gradient.bgFlow,
-  '--ds-glow-hero': glow.hero,
-  '--ds-glow-demo': glow.demo,
-  '--ds-glow-card': glow.card,
-  '--ds-glow-border': glow.border,
-  '--ds-glow-button': glow.button,
+
+  // Typography
   '--ds-font-serif': typography.fontSerif,
   '--ds-font-sans': typography.fontSans,
   '--ds-font-mono': typography.fontMono,
+
+  // Surfaces
+  '--ds-canvas': surfaces.canvas,
+  '--ds-surface': surfaces.surface,
+  '--ds-surface-tinted': surfaces.surfaceTinted,
+  '--ds-surface-dim': surfaces.surfaceDim,
+  '--ds-border': surfaces.border,
+  '--ds-border-strong': surfaces.borderStrong,
+
+  // Shadows
+  '--ds-shadow-sm': shadows.sm,
+  '--ds-shadow-md': shadows.md,
+  '--ds-shadow-lg': shadows.lg,
+  '--ds-shadow-focus': shadows.focus,
+
+  // Radii
+  '--ds-radius-sm': radius.sm,
+  '--ds-radius-md': radius.md,
+  '--ds-radius-lg': radius.lg,
+  '--ds-radius-xl': radius.xl,
+  '--ds-radius-full': radius.full,
+
+  // Space
+  '--ds-section-y': space.sectionY,
+  '--ds-section-y-tight': space.sectionYTight,
+  '--ds-container-x': space.containerX,
+  '--ds-container-max': space.containerMax,
 } as const;
 
 export type CssVars = typeof cssVars;

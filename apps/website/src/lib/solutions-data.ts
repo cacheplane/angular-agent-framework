@@ -9,6 +9,12 @@ export interface ArchitectureLayer {
   role: string;
 }
 
+/**
+ * Framework capability — paired short marker with a longer label.
+ * Used to be a numeric "proof point" with invented metrics; replaced
+ * with honest, defensible capability claims grounded in what the
+ * libraries actually do.
+ */
 export interface ProofPoint {
   metric: string;
   label: string;
@@ -38,11 +44,11 @@ export const SOLUTIONS: SolutionConfig[] = [
     rgb: '212,133,15',
     eyebrow: 'Compliance & Audit',
     title: 'AI agents your compliance\nteam will actually approve',
-    subtitle: 'Human-in-the-loop approvals, immutable audit trails, and deterministic testing — built into the framework, not bolted on.',
+    subtitle: 'Human-in-the-loop approvals, auditable thread history, and deterministic testing — built into the framework, not bolted on.',
     painPoints: [
       {
         title: 'Black-box AI decisions',
-        description: 'Regulators require explainability. Most agent frameworks stream opaque outputs with no audit trail.',
+        description: 'Regulators require explainability. Most agent frameworks stream opaque outputs with no tool-call history.',
       },
       {
         title: 'No human gate before action',
@@ -58,7 +64,7 @@ export const SOLUTIONS: SolutionConfig[] = [
       {
         library: 'Agent',
         pkg: '@ngaf/langgraph',
-        role: 'Signal-native streaming with first-class interrupt support. Every agent action can require human approval before execution. Thread persistence gives you a complete, immutable history of every decision.',
+        role: 'Signal-native streaming with first-class interrupt support. Every agent action can require human approval before execution. Thread persistence preserves the full record of every tool call and state transition.',
       },
       {
         library: 'Render',
@@ -72,14 +78,14 @@ export const SOLUTIONS: SolutionConfig[] = [
       },
     ],
     proofPoints: [
-      { metric: '100%', label: 'Audit trail coverage — every agent action logged' },
-      { metric: '0', label: 'Unapproved actions — interrupt gates block execution' },
-      { metric: '<5 min', label: 'Time to reproduce any agent decision for auditors' },
+      { metric: 'Every', label: 'Agent action recorded — tool calls, interrupts, and state transitions captured in the thread record' },
+      { metric: 'Required', label: 'Human approval before consequential actions — wired into LangGraph interrupts, not bolted on' },
+      { metric: 'Replayable', label: 'Thread persistence preserves the full decision path for review by auditors and your compliance team' },
     ],
     ctaHeadline: 'Ship compliant AI agents — without the compliance tax',
-    ctaSubtext: 'Download the guide or start a pilot. Your compliance team will thank you.',
+    ctaSubtext: 'Download the field report or start a pilot. Your compliance team will thank you.',
     metaTitle: 'Compliance & Audit — Angular Agent Framework Solutions',
-    metaDescription: 'Ship AI agents with human-in-the-loop approvals, audit trails, and deterministic testing. Built for SOX, HIPAA, and GDPR.',
+    metaDescription: 'Ship AI agents with human-in-the-loop approvals, auditable thread history, and deterministic testing. Built for SOX, HIPAA, and GDPR workflows.',
   },
   {
     slug: 'analytics',
@@ -102,7 +108,7 @@ export const SOLUTIONS: SolutionConfig[] = [
         description: 'Text answers aren\'t enough for data. Users need charts, tables, and interactive visualizations — streamed in real time.',
       },
     ],
-    architectureIntro: 'Three libraries turn your LangGraph agent into a conversational BI tool your business users will actually use.',
+    architectureIntro: 'Three libraries turn your LangGraph agent into a conversational BI surface your business users will actually use.',
     architectureLayers: [
       {
         library: 'Agent',
@@ -117,18 +123,18 @@ export const SOLUTIONS: SolutionConfig[] = [
       {
         library: 'Chat',
         pkg: '@ngaf/chat',
-        role: 'Pre-built generative UI panel renders charts and tables inline with the conversation. Users ask follow-up questions and see updated visualizations without leaving the chat.',
+        role: 'Generative UI surfaces render charts and tables inline with the conversation. Users ask follow-up questions and see updated visualizations without leaving the chat.',
       },
     ],
     proofPoints: [
-      { metric: '10x', label: 'Faster time-to-insight vs. traditional BI dashboards' },
-      { metric: '0', label: 'SQL required — business users query in plain English' },
-      { metric: '<2s', label: 'First visual streamed — no waiting for full query completion' },
+      { metric: 'Plain English', label: 'No SQL required — the agent generates queries from natural-language input' },
+      { metric: 'Streaming', label: 'Token-level updates as the agent reasons over your data — first results visible before completion' },
+      { metric: 'Inline', label: 'Charts, tables, and KPI cards rendered into the conversation as Angular components you already own' },
     ],
     ctaHeadline: 'Turn your data into conversations',
-    ctaSubtext: 'Download the guide or start a pilot. Ship a conversational BI experience in weeks, not quarters.',
+    ctaSubtext: 'Download the field report or start a pilot. Ship a conversational BI experience in weeks, not quarters.',
     metaTitle: 'Analytics & BI — Angular Agent Framework Solutions',
-    metaDescription: 'Build conversational BI with natural language queries, real-time streaming charts, and generative UI — all in Angular.',
+    metaDescription: 'Build conversational BI with natural language queries, streaming results, and generative UI — all in Angular.',
   },
   {
     slug: 'customer-support',
@@ -136,7 +142,7 @@ export const SOLUTIONS: SolutionConfig[] = [
     rgb: '91,79,207',
     eyebrow: 'Customer Support',
     title: 'AI agents that know when\nto escalate to a human',
-    subtitle: 'Resolve tickets autonomously, surface context instantly, and hand off to humans seamlessly — with full conversation history.',
+    subtitle: 'Resolve routine tickets autonomously, surface context instantly, and hand off to humans seamlessly — with full conversation history.',
     painPoints: [
       {
         title: 'Chatbots that frustrate customers',
@@ -170,12 +176,12 @@ export const SOLUTIONS: SolutionConfig[] = [
       },
     ],
     proofPoints: [
-      { metric: '70%', label: 'Tickets resolved autonomously — without human intervention' },
-      { metric: '0', label: 'Context lost on handoff — full thread history preserved' },
-      { metric: '3x', label: 'Faster resolution for escalated tickets with AI-prepared context' },
+      { metric: 'Preserved', label: 'Full conversation history across bot-to-human handoff — no repeating the question, no re-explaining the problem' },
+      { metric: 'Required', label: 'Human approval gates on sensitive actions (refunds, account changes, escalations) via LangGraph interrupts' },
+      { metric: 'Visible', label: 'Tool-call replay for human agents on escalation — see every step the AI took before the handoff' },
     ],
     ctaHeadline: 'Support agents that make your team better',
-    ctaSubtext: 'Download the guide or start a pilot. Resolve more tickets, escalate smarter, and keep your customers happy.',
+    ctaSubtext: 'Download the field report or start a pilot. Resolve routine tickets, escalate the rest with full context, keep your customers happy.',
     metaTitle: 'Customer Support — Angular Agent Framework Solutions',
     metaDescription: 'Build AI support agents with human escalation, full context handoff, and production-ready chat UI in Angular.',
   },

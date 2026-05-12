@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { docsConfig, getLibraryConfig, type DocsSection, type LibraryId } from '../../lib/docs-config';
 import { tokens } from '@ngaf/design-tokens';
+import { Pill } from '../ui/Pill';
 
 interface Props {
   activeLibrary: LibraryId;
@@ -32,23 +33,37 @@ function LibraryDropdown({ activeLibrary }: { activeLibrary: LibraryId }) {
         onClick={() => setOpen(!open)}
         className="w-full text-left px-3 py-2 rounded-lg text-sm flex items-center justify-between"
         style={{
-          background: 'rgba(255,255,255,0.5)',
-          border: `1px solid ${tokens.glass.border}`,
+          background: tokens.surfaces.surface,
+          border: `1px solid ${tokens.surfaces.border}`,
           color: tokens.colors.textPrimary,
           cursor: 'pointer',
           fontWeight: 600,
-        }}>
-        <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.8rem' }}>{currentLib?.title ?? activeLibrary}</span>
-        <span style={{ color: tokens.colors.textMuted, fontSize: 10, transition: 'transform 0.2s', transform: open ? 'rotate(180deg)' : 'rotate(0)' }}>&#9662;</span>
+        }}
+      >
+        <span style={{ fontFamily: tokens.typography.fontMono, fontSize: '0.8rem' }}>
+          {currentLib?.title ?? activeLibrary}
+        </span>
+        <span
+          style={{
+            color: tokens.colors.textMuted,
+            fontSize: 10,
+            transition: 'transform 0.2s',
+            transform: open ? 'rotate(180deg)' : 'rotate(0)',
+          }}
+        >
+          &#9662;
+        </span>
       </button>
 
       {open && (
-        <div className="absolute left-4 right-4 mt-1 rounded-lg overflow-hidden z-10"
+        <div
+          className="absolute left-4 right-4 mt-1 rounded-lg overflow-hidden z-10"
           style={{
-            background: 'rgba(255,255,255,0.98)',
-            border: `1px solid ${tokens.glass.border}`,
-            boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
-          }}>
+            background: tokens.surfaces.surface,
+            border: `1px solid ${tokens.surfaces.border}`,
+            boxShadow: tokens.shadows.md,
+          }}
+        >
           {docsConfig.map((lib) => (
             <button
               key={lib.id}
@@ -61,8 +76,16 @@ function LibraryDropdown({ activeLibrary }: { activeLibrary: LibraryId }) {
                 background: lib.id === activeLibrary ? tokens.colors.accentSurface : 'transparent',
                 border: 'none',
                 cursor: 'pointer',
-              }}>
-              <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 600, color: lib.id === activeLibrary ? tokens.colors.accent : tokens.colors.textPrimary, fontSize: '0.8rem' }}>
+              }}
+            >
+              <span
+                style={{
+                  fontFamily: tokens.typography.fontMono,
+                  fontWeight: 600,
+                  color: lib.id === activeLibrary ? tokens.colors.accent : tokens.colors.textPrimary,
+                  fontSize: '0.8rem',
+                }}
+              >
                 {lib.title}
               </span>
               <span style={{ fontSize: '0.7rem', color: tokens.colors.textMuted, marginTop: 2 }}>
@@ -76,7 +99,17 @@ function LibraryDropdown({ activeLibrary }: { activeLibrary: LibraryId }) {
   );
 }
 
-function SectionGroup({ section, activeLibrary, activeSection, activeSlug }: { section: DocsSection; activeLibrary: LibraryId; activeSection: string; activeSlug: string }) {
+function SectionGroup({
+  section,
+  activeLibrary,
+  activeSection,
+  activeSlug,
+}: {
+  section: DocsSection;
+  activeLibrary: LibraryId;
+  activeSection: string;
+  activeSlug: string;
+}) {
   const [open, setOpen] = useState(true);
   const headerColor = section.color === 'red' ? tokens.colors.angularRed : tokens.colors.accent;
 
@@ -85,11 +118,22 @@ function SectionGroup({ section, activeLibrary, activeSection, activeSlug }: { s
       <button
         onClick={() => setOpen(!open)}
         className="w-full text-left px-4 py-1.5 flex items-center justify-between"
-        style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
-        <span className="font-mono text-xs uppercase tracking-wider" style={{ color: headerColor, fontWeight: 600 }}>
+        style={{ background: 'none', border: 'none', cursor: 'pointer' }}
+      >
+        <span
+          className="font-mono text-xs uppercase tracking-wider"
+          style={{ color: headerColor, fontWeight: 600 }}
+        >
           {section.title}
         </span>
-        <span style={{ color: tokens.colors.textMuted, fontSize: 10, transition: 'transform 0.2s', transform: open ? 'rotate(0)' : 'rotate(-90deg)' }}>
+        <span
+          style={{
+            color: tokens.colors.textMuted,
+            fontSize: 10,
+            transition: 'transform 0.2s',
+            transform: open ? 'rotate(0)' : 'rotate(-90deg)',
+          }}
+        >
           &#9662;
         </span>
       </button>
@@ -107,7 +151,8 @@ function SectionGroup({ section, activeLibrary, activeSection, activeSlug }: { s
                   color: isActive ? tokens.colors.accent : tokens.colors.textSecondary,
                   background: isActive ? tokens.colors.accentSurface : 'transparent',
                   fontSize: '0.825rem',
-                }}>
+                }}
+              >
                 {page.title}
               </Link>
             );
@@ -125,41 +170,32 @@ export function DocsSidebar({ activeLibrary, activeSection, activeSlug }: Props)
     <aside
       className="w-64 shrink-0 py-6 overflow-y-auto hidden md:block"
       style={{
-        borderRight: `1px solid ${tokens.glass.border}`,
-        background: tokens.glass.bg,
-        backdropFilter: `blur(${tokens.glass.blur})`,
-        WebkitBackdropFilter: `blur(${tokens.glass.blur})`,
-        minHeight: 'calc(100vh - 4rem)',
+        borderRight: `1px solid ${tokens.surfaces.border}`,
+        background: tokens.surfaces.surface,
+        minHeight: 'calc(100vh - 5rem)',
         position: 'sticky',
-        top: '4rem',
-      }}>
+        top: '5rem',
+      }}
+    >
       {/* Search trigger */}
       <div className="px-4 mb-4">
         <button
           className="w-full text-left px-3 py-2 rounded-lg text-sm flex items-center justify-between"
           style={{
-            background: 'rgba(255,255,255,0.5)',
-            border: `1px solid ${tokens.glass.border}`,
+            background: tokens.surfaces.surface,
+            border: `1px solid ${tokens.surfaces.border}`,
             color: tokens.colors.textMuted,
             cursor: 'pointer',
           }}
-          onClick={() => document.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', metaKey: true }))}>
+          onClick={() => document.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', metaKey: true }))}
+        >
           <span style={{ fontSize: '0.8rem' }}>Search docs...</span>
-          <span style={{
-            background: tokens.colors.accentSurface,
-            padding: '1px 6px',
-            borderRadius: 4,
-            fontFamily: 'var(--font-mono)',
-            fontSize: '0.65rem',
-            color: tokens.colors.accent,
-          }}>&#8984;K</span>
+          <Pill variant="neutral" style={{ fontSize: '0.65rem', padding: '2px 8px' }}>⌘K</Pill>
         </button>
       </div>
 
-      {/* Library dropdown */}
       <LibraryDropdown activeLibrary={activeLibrary} />
 
-      {/* Section groups */}
       {libConfig?.sections.map((section) => (
         <SectionGroup
           key={section.id}

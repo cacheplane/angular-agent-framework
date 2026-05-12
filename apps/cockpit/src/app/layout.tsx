@@ -17,7 +17,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
       <body
         className="min-h-screen font-sans antialiased"
         style={{
-          background: 'var(--ds-gradient-bg-flow)',
+          background: 'var(--ds-surface)',
           color: 'var(--ds-text-primary)',
         }}
       >

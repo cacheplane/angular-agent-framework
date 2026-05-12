@@ -91,7 +91,6 @@
     "@langchain/langgraph-sdk": "^1.7.4",
     "@noble/ed25519": "^2.3.0",
     "drizzle-orm": "^0.45.2",
-    "framer-motion": "^12.38.0",
     "next": "~16.1.6",
     "next-mdx-remote": "^6.0.0",
     "postgres": "^3.4.9",

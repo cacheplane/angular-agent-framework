@@ -40,9 +40,8 @@ export function ModeSwitcher<T extends string>({
         gap: 0,
         padding: 3,
         borderRadius: 999,
-        background: 'var(--ds-glass-bg)',
-        border: '1px solid var(--ds-glass-border)',
-        boxShadow: 'var(--ds-glass-shadow)',
+        background: 'var(--ds-surface-tinted)',
+        border: '1px solid var(--ds-border)',
       }}
     >
       {/* Sliding indicator */}
@@ -75,7 +74,7 @@ export function ModeSwitcher<T extends string>({
               borderRadius: 999,
               border: 'none',
               background: 'transparent',
-              color: isActive ? '#fff' : 'var(--ds-text-secondary)',
+              color: isActive ? 'var(--ds-text-inverted)' : 'var(--ds-text-secondary)',
               fontFamily: 'var(--ds-font-mono)',
               fontSize: '0.8rem',
               fontWeight: isActive ? 500 : 400,

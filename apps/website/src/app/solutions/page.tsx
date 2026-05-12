@@ -1,7 +1,13 @@
+import Link from 'next/link';
 import { tokens } from '@ngaf/design-tokens';
-import { SolutionsGrid } from '../../components/landing/solutions/SolutionsGrid';
-import { WhitePaperSection } from '../../components/landing/WhitePaperSection';
-import { PilotFooterCTA } from '../../components/landing/PilotFooterCTA';
+import { Container } from '../../components/ui/Container';
+import { Section } from '../../components/ui/Section';
+import { Eyebrow } from '../../components/ui/Eyebrow';
+import { Card } from '../../components/ui/Card';
+import { Pill } from '../../components/ui/Pill';
+import { WhitePaperBlock } from '../../components/landing/WhitePaperBlock';
+import { FinalCTA } from '../../components/landing/FinalCTA';
+import { SOLUTIONS } from '../../lib/solutions-data';
 
 export const metadata = {
   title: 'Solutions — Angular Agent Framework',
@@ -10,91 +16,129 @@ export const metadata = {
 
 export default function SolutionsIndexPage() {
   return (
-    <div style={{ background: tokens.gradient.bgFlow, position: 'relative', overflow: 'hidden' }}>
-      {/* Ambient gradient blobs */}
-      <div
-        style={{
-          position: 'absolute',
-          width: 600,
-          height: 600,
-          borderRadius: '50%',
-          background: tokens.gradient.warm,
-          top: -200,
-          left: -150,
-          filter: 'blur(80px)',
-          pointerEvents: 'none',
-        }}
-        aria-hidden="true"
-      />
-      <div
-        style={{
-          position: 'absolute',
-          width: 500,
-          height: 500,
-          borderRadius: '50%',
-          background: tokens.gradient.cool,
-          top: 800,
-          right: -100,
-          filter: 'blur(80px)',
-          pointerEvents: 'none',
-        }}
-        aria-hidden="true"
-      />
-
+    <>
       {/* Hero */}
-      <section style={{ position: 'relative', overflow: 'hidden', padding: '0 2rem' }}>
-        <div
-          style={{
-            maxWidth: '56rem',
-            margin: '0 auto',
-            textAlign: 'center',
-            position: 'relative',
-            zIndex: 1,
-          }}
-          className="py-24 md:py-32"
-        >
-          <p
-            style={{
-              fontFamily: 'var(--font-mono, "JetBrains Mono", monospace)',
-              fontSize: 11,
-              letterSpacing: '0.08em',
-              color: tokens.colors.accent,
-              textTransform: 'uppercase',
-              marginBottom: '1.5rem',
-            }}
-          >
-            Solutions
-          </p>
-          <h1
-            style={{
-              fontFamily: 'var(--font-garamond, "EB Garamond", Georgia, serif)',
-              fontSize: 'clamp(36px, 5vw, 56px)',
-              fontWeight: 700,
-              lineHeight: 1.1,
-              color: tokens.colors.textPrimary,
-              marginBottom: '1.25rem',
-            }}
-          >
-            AI agents built for how enterprises actually work
-          </h1>
-          <p
-            style={{
-              fontFamily: 'Inter, sans-serif',
-              fontSize: 18,
-              color: tokens.colors.textSecondary,
-              maxWidth: '52ch',
-              margin: '0 auto',
-              lineHeight: 1.6,
-            }}
-          >
-            Angular Agent Framework gives your team the streaming, generative UI, and human-in-the-loop patterns that enterprise use cases demand.
-          </p>
-        </div>
-      </section>
+      <Section surface="canvas" ariaLabelledBy="solutions-hero-heading">
+        <Container>
+          <div style={{ maxWidth: 820, margin: '0 auto', textAlign: 'center' }}>
+            <Eyebrow tone="accent" style={{ marginBottom: 16 }}>Solutions</Eyebrow>
+            <h1
+              id="solutions-hero-heading"
+              style={{
+                fontFamily: tokens.typography.h1.family,
+                fontSize: tokens.typography.h1.size,
+                lineHeight: tokens.typography.h1.line,
+                fontWeight: 700,
+                color: tokens.colors.textPrimary,
+                margin: 0,
+                marginBottom: 24,
+                letterSpacing: '-0.02em',
+              }}
+            >
+              AI agents for how enterprises actually work.
+            </h1>
+            <p
+              style={{
+                fontFamily: tokens.typography.bodyLg.family,
+                fontSize: tokens.typography.bodyLg.size,
+                lineHeight: tokens.typography.bodyLg.line,
+                color: tokens.colors.textSecondary,
+                margin: '0 auto',
+                maxWidth: 640,
+              }}
+            >
+              Streaming, generative UI, and human-in-the-loop patterns that enterprise use cases demand — wired into Angular from day one.
+            </p>
+          </div>
+        </Container>
+      </Section>
 
-      <SolutionsGrid />
-      <WhitePaperSection />
-      <PilotFooterCTA />
-    </div>
+      {/* Solutions grid */}
+      <Section surface="canvas" ariaLabelledBy="solutions-grid-heading">
+        <Container>
+          <div style={{ textAlign: 'center', marginBottom: 48 }}>
+            <Eyebrow style={{ marginBottom: 12 }}>By use case</Eyebrow>
+            <h2
+              id="solutions-grid-heading"
+              style={{
+                fontFamily: tokens.typography.h2.family,
+                fontSize: tokens.typography.h2.size,
+                lineHeight: tokens.typography.h2.line,
+                fontWeight: 700,
+                color: tokens.colors.textPrimary,
+                margin: 0,
+                letterSpacing: '-0.015em',
+              }}
+            >
+              Where agents earn their keep.
+            </h2>
+          </div>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+              gap: 16,
+              maxWidth: 1100,
+              margin: '0 auto',
+            }}
+          >
+            {SOLUTIONS.map((s) => (
+              <Link key={s.slug} href={`/solutions/${s.slug}`} style={{ textDecoration: 'none' }}>
+                <Card padding="lg" hoverable style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+                  <Eyebrow tone="accent" style={{ marginBottom: 12 }}>{s.eyebrow}</Eyebrow>
+                  <h3
+                    style={{
+                      fontFamily: tokens.typography.h3.family,
+                      fontSize: 22,
+                      lineHeight: 1.25,
+                      fontWeight: 600,
+                      color: tokens.colors.textPrimary,
+                      margin: 0,
+                      marginBottom: 12,
+                      whiteSpace: 'pre-line',
+                    }}
+                  >
+                    {s.title.replace('\n', ' ')}
+                  </h3>
+                  <p
+                    style={{
+                      fontFamily: tokens.typography.body.family,
+                      fontSize: tokens.typography.body.size,
+                      lineHeight: tokens.typography.body.line,
+                      color: tokens.colors.textSecondary,
+                      margin: 0,
+                      marginBottom: 16,
+                      flex: 1,
+                    }}
+                  >
+                    {s.subtitle}
+                  </p>
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
+                    {s.proofPoints.slice(0, 2).map((p) => (
+                      <Pill key={p.label} variant="neutral">
+                        {p.metric} {p.label}
+                      </Pill>
+                    ))}
+                  </div>
+                  <span
+                    style={{
+                      fontFamily: tokens.typography.fontSans,
+                      fontSize: 14,
+                      fontWeight: 600,
+                      color: tokens.colors.accent,
+                    }}
+                  >
+                    See the solution →
+                  </span>
+                </Card>
+              </Link>
+            ))}
+          </div>
+        </Container>
+      </Section>
+
+      <WhitePaperBlock />
+      <FinalCTA />
+    </>
   );
 }

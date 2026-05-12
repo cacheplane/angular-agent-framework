@@ -2,19 +2,21 @@ import { test, expect } from '@playwright/test';
 
 test('landing page renders hero headline', async ({ page }) => {
   await page.goto('/');
-  await expect(page.locator('h1')).toBeVisible();
-  const headline = await page.locator('h1').textContent();
-  expect(headline).toContain('Angular');
+  await expect(page.locator('#hero-heading')).toBeVisible();
+  const headline = await page.locator('#hero-heading').textContent();
+  expect(headline?.toLowerCase()).toContain('angular');
 });
 
-test('landing page renders architecture section', async ({ page }) => {
+test('landing page renders differentiator section', async ({ page }) => {
   await page.goto('/');
-  await expect(page.getByText('Architecture').first()).toBeVisible();
+  await expect(page.getByText('Built for Angular, not retrofitted.').first()).toBeVisible();
 });
 
-test('landing page renders libraries section', async ({ page }) => {
+test('landing page renders feature blocks (Stream/Render/Ship)', async ({ page }) => {
   await page.goto('/');
-  await expect(page.getByText('Four libraries. One architecture.').first()).toBeVisible();
+  await expect(page.locator('#stream-heading')).toBeVisible();
+  await expect(page.locator('#render-heading')).toBeVisible();
+  await expect(page.locator('#ship-heading')).toBeVisible();
 });
 
 test('pricing page shows plan cards', async ({ page }) => {

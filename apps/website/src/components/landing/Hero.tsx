@@ -1,0 +1,172 @@
+import { tokens } from '@ngaf/design-tokens';
+import { Container } from '../ui/Container';
+import { Section } from '../ui/Section';
+import { Eyebrow } from '../ui/Eyebrow';
+import { Button } from '../ui/Button';
+import { BrowserFrame } from '../ui/BrowserFrame';
+import { Pill } from '../ui/Pill';
+
+export function Hero() {
+  return (
+    <Section surface="canvas" ariaLabelledBy="hero-heading">
+      <Container>
+        <div
+          className="hero-grid"
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)',
+            gap: 64,
+            alignItems: 'center',
+          }}
+        >
+          {/* Left column */}
+          <div>
+            <Eyebrow tone="accent" style={{ marginBottom: 16 }}>
+              Angular Agent Framework · MIT
+            </Eyebrow>
+            <h1
+              id="hero-heading"
+              style={{
+                fontFamily: tokens.typography.h1.family,
+                fontSize: tokens.typography.h1.size,
+                lineHeight: tokens.typography.h1.line,
+                fontWeight: 700,
+                color: tokens.colors.textPrimary,
+                margin: 0,
+                marginBottom: 24,
+                letterSpacing: '-0.02em',
+              }}
+            >
+              Ship agentic Angular apps without rewriting your frontend.
+            </h1>
+            <p
+              style={{
+                fontFamily: tokens.typography.bodyLg.family,
+                fontSize: tokens.typography.bodyLg.size,
+                lineHeight: tokens.typography.bodyLg.line,
+                color: tokens.colors.textSecondary,
+                margin: 0,
+                marginBottom: 32,
+                maxWidth: '52ch',
+              }}
+            >
+              Signal-native streaming for LangGraph and AG-UI. Headless primitives plus opinionated compositions, built for Angular 20+ teams shipping to production.
+            </p>
+            <div style={{ display: 'flex', gap: 12, marginBottom: 24, flexWrap: 'wrap' }}>
+              <Button variant="primary" size="lg" href="/docs">
+                Get started
+              </Button>
+              <Button
+                variant="ghost"
+                size="lg"
+                href="https://cockpit.cacheplane.ai"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                See it live →
+              </Button>
+            </div>
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+              <Pill variant="accent">MIT licensed</Pill>
+              <Pill variant="neutral">Works with LangGraph + AG-UI</Pill>
+              <Pill variant="angular">Angular 20+</Pill>
+            </div>
+          </div>
+
+          {/* Right column — layered collage */}
+          <div style={{ position: 'relative', minHeight: 420 }} aria-hidden="true">
+            <BrowserFrame
+              url="cockpit.cacheplane.ai/chat"
+              rotate={-3}
+              elevation="lg"
+              style={{ position: 'absolute', top: 0, left: 0, width: '92%' }}
+            >
+              <div
+                style={{
+                  padding: 32,
+                  background: 'linear-gradient(180deg, #fff 0%, #f4f6fb 100%)',
+                  minHeight: 220,
+                }}
+              >
+                <div
+                  style={{
+                    fontFamily: tokens.typography.fontMono,
+                    fontSize: 12,
+                    color: tokens.colors.textMuted,
+                    marginBottom: 8,
+                  }}
+                >
+                  AI · streaming
+                </div>
+                <div
+                  style={{
+                    fontFamily: tokens.typography.fontSans,
+                    fontSize: 14,
+                    color: tokens.colors.textPrimary,
+                    lineHeight: 1.5,
+                  }}
+                >
+                  Generating production-ready Angular components from your schema…
+                  <span
+                    style={{
+                      display: 'inline-block',
+                      width: 6,
+                      height: 14,
+                      background: tokens.colors.accent,
+                      marginLeft: 2,
+                      verticalAlign: 'middle',
+                      animation: 'blink 1s steps(2) infinite',
+                    }}
+                  />
+                </div>
+              </div>
+            </BrowserFrame>
+            <BrowserFrame
+              url="agent.signal()"
+              rotate={4}
+              elevation="md"
+              style={{
+                position: 'absolute',
+                top: 160,
+                right: 0,
+                width: '70%',
+                maxWidth: 320,
+              }}
+            >
+              <pre
+                style={{
+                  margin: 0,
+                  padding: '16px 18px',
+                  background: '#1a1b26',
+                  color: '#a9b1d6',
+                  fontFamily: tokens.typography.fontMono,
+                  fontSize: 12,
+                  lineHeight: 1.6,
+                  overflow: 'hidden',
+                }}
+              >
+{`provideAgent({
+  apiUrl: '/agent',
+});
+
+const a = agent();
+a.messages();
+a.status();`}
+              </pre>
+            </BrowserFrame>
+          </div>
+        </div>
+
+        <style>{`
+          @keyframes blink { to { visibility: hidden; } }
+          @media (max-width: 900px) {
+            .hero-grid {
+              grid-template-columns: 1fr !important;
+              gap: 40px !important;
+            }
+          }
+        `}</style>
+      </Container>
+    </Section>
+  );
+}

@@ -1,7 +1,10 @@
 import { notFound } from 'next/navigation';
+import { tokens } from '@ngaf/design-tokens';
 import { DocsSidebar } from '../../../../../components/docs/DocsSidebar';
 import { MdxRenderer } from '../../../../../components/docs/MdxRenderer';
 import { DocsSearch } from '../../../../../components/docs/DocsSearch';
+import { DocsBreadcrumb } from '../../../../../components/docs/DocsBreadcrumb';
+import { DocsPrevNext } from '../../../../../components/docs/DocsPrevNext';
 import { getDocBySlug, getAllDocSlugs } from '../../../../../lib/docs';
 import { ApiDocRenderer, type ApiDocEntry } from '../../../../../components/docs/ApiDocRenderer';
 import { DocsTOC } from '../../../../../components/docs/DocsTOC';
@@ -34,7 +37,11 @@ export function generateStaticParams() {
   return getAllDocSlugs().map(({ library, section, slug }) => ({ library, section, slug }));
 }
 
-export default async function DocsPage({ params }: { params: Promise<{ library: string; section: string; slug: string }> }) {
+export default async function DocsPage({
+  params,
+}: {
+  params: Promise<{ library: string; section: string; slug: string }>;
+}) {
   const { library, section, slug } = await params;
 
   const libConfig = getLibraryConfig(library);
@@ -44,12 +51,27 @@ export default async function DocsPage({ params }: { params: Promise<{ library: 
   if (!doc) notFound();
 
   return (
-    <div className="flex min-h-screen pt-16 overflow-x-hidden" style={{ background: 'var(--gradient-bg-flow)' }}>
+    <div
+      className="flex min-h-screen overflow-x-hidden"
+      style={{ background: tokens.surfaces.canvas, paddingTop: 80 }}
+    >
       <DocsSearch library={library as LibraryId} />
       <DocsSidebar activeLibrary={library as LibraryId} activeSection={section} activeSlug={slug} />
-      <div className="flex-1 flex min-w-0" style={{ background: 'rgba(255, 255, 255, 0.85)' }}>
+      <div
+        className="flex-1 flex min-w-0"
+        style={{ background: tokens.surfaces.surface }}
+      >
         <div className="flex-1 min-w-0">
-<MdxRenderer source={doc.content} library={library as LibraryId} section={section} slug={slug} title={doc.title} />
+          <div className="px-6 md:px-12 pt-6">
+            <DocsBreadcrumb library={library as LibraryId} section={section} slug={slug} title={doc.title} />
+          </div>
+          <MdxRenderer
+            source={doc.content}
+            library={library as LibraryId}
+            section={section}
+            slug={slug}
+            title={doc.title}
+          />
           {section === 'api' && (() => {
             const entries = loadApiDocs(library);
             const nameMap = API_NAME_MAP[library] ?? {};
@@ -61,6 +83,9 @@ export default async function DocsPage({ params }: { params: Promise<{ library: 
               </div>
             ) : null;
           })()}
+          <div className="px-6 md:px-12 max-w-3xl pb-8">
+            <DocsPrevNext library={library as LibraryId} section={section} slug={slug} />
+          </div>
         </div>
         <DocsTOC headings={extractHeadings(doc.content)} />
       </div>

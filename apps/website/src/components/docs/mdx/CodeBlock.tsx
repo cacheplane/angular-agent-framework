@@ -43,33 +43,22 @@ export function Pre({ children, ...props }: React.HTMLAttributes<HTMLPreElement>
         aria-label={copied ? 'Copied' : 'Copy code'}
         style={{
           position: 'absolute',
-          top: 10,
-          right: 10,
-          padding: '6px',
-          borderRadius: 6,
-          border: '1px solid rgba(255,255,255,0.12)',
-          background: copied ? 'rgba(52,199,89,0.15)' : 'rgba(255,255,255,0.08)',
-          color: copied ? '#34c759' : '#8b8fa3',
-          cursor: 'pointer',
-          transition: 'all 0.2s',
+          top: 8,
+          right: 8,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
+          width: 28,
+          height: 28,
+          padding: 0,
+          border: '1px solid rgba(255,255,255,0.15)',
+          borderRadius: 6,
+          background: copied ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.08)',
+          color: copied ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.55)',
+          cursor: 'pointer',
+          transition: 'background 0.15s, color 0.15s',
         }}
-        onMouseEnter={(e) => {
-          if (!copied) {
-            e.currentTarget.style.background = 'rgba(255,255,255,0.14)';
-            e.currentTarget.style.color = '#c8c8cc';
-            e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)';
-          }
-        }}
-        onMouseLeave={(e) => {
-          if (!copied) {
-            e.currentTarget.style.background = 'rgba(255,255,255,0.08)';
-            e.currentTarget.style.color = '#8b8fa3';
-            e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)';
-          }
-        }}>
+      >
         {copied ? <CheckIcon /> : <CopyIcon />}
       </button>
     </div>

@@ -64,9 +64,8 @@ export function MobileNavOverlay({
       data-state={state}
       className="fixed inset-0 z-50 md:hidden flex flex-col"
       style={{
-        background: 'var(--ds-glass-bg)',
-        backdropFilter: 'blur(var(--ds-glass-blur))',
-        WebkitBackdropFilter: 'blur(var(--ds-glass-blur))',
+        background: 'var(--ds-surface)',
+        boxShadow: 'var(--ds-shadow-lg)',
         opacity: state === 'open' ? 1 : 0,
         transform: state === 'open' ? 'translateY(0)' : 'translateY(8px)',
         transition: state === 'open'
@@ -77,7 +76,7 @@ export function MobileNavOverlay({
       {/* Header */}
       <header
         className="flex items-center justify-between px-4 py-3"
-        style={{ borderBottom: '1px solid var(--ds-glass-border)' }}
+        style={{ borderBottom: '1px solid var(--ds-border)' }}
       >
         <p
           className="font-mono text-xs font-semibold uppercase tracking-wide"
@@ -118,8 +117,8 @@ export function MobileNavOverlay({
             <div
               key={product.product}
               style={{
-                background: 'var(--ds-glass-bg)',
-                border: '1px solid var(--ds-glass-border)',
+                background: 'var(--ds-surface-tinted)',
+                border: '1px solid var(--ds-border)',
                 borderRadius: 10,
                 padding: 12,
               }}

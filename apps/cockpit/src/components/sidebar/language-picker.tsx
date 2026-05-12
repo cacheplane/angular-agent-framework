@@ -50,9 +50,8 @@ export function LanguagePicker({ manifest, entry }: LanguagePickerProps) {
         style={{
           padding: '4px 10px',
           borderRadius: 6,
-          border: '1px solid var(--ds-accent-border)',
-          background: 'rgba(255, 255, 255, 0.7)',
-          backdropFilter: 'blur(var(--ds-glass-blur))',
+          border: '1px solid var(--ds-border)',
+          background: 'var(--ds-surface)',
           color: 'var(--ds-text-secondary)',
           fontSize: '0.75rem',
           fontFamily: 'var(--ds-font-mono)',
@@ -73,11 +72,9 @@ export function LanguagePicker({ manifest, entry }: LanguagePickerProps) {
             minWidth: 120,
             padding: 4,
             borderRadius: 8,
-            border: '1px solid var(--ds-glass-border)',
-            background: 'rgba(255, 255, 255, 0.92)',
-            backdropFilter: 'blur(var(--ds-glass-blur))',
-            WebkitBackdropFilter: 'blur(var(--ds-glass-blur))',
-            boxShadow: 'var(--ds-glass-shadow)',
+            border: '1px solid var(--ds-border)',
+            background: 'var(--ds-surface)',
+            boxShadow: 'var(--ds-shadow-md)',
             zIndex: 50,
           }}
         >
