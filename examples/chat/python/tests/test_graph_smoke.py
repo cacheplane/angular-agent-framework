@@ -159,3 +159,96 @@ class TestSliceTitle:
 
     def test_strips_leading_trailing_whitespace(self):
         assert _slice_title("  hello  ") == "hello"
+
+
+import asyncio
+from langchain_core.messages import HumanMessage, AIMessage, ToolMessage
+
+
+class TestEmitGeneratedSurfaceCoalescing:
+    def test_replaces_tool_call_ai_in_place_same_id(self):
+        """emit_generated_surface returns an AIMessage with the same id
+        as the upstream tool-call AI so add_messages replaces in-place."""
+        from src.graph import emit_generated_surface
+
+        tool_call_ai = AIMessage(
+            id="ai-1",
+            content=[
+                {"type": "function_call", "name": "generate_a2ui_schema",
+                 "arguments": '{"request":"r"}'}
+            ],
+            tool_calls=[{
+                "id": "call_1",
+                "name": "generate_a2ui_schema",
+                "args": {"request": "r"},
+                "type": "tool_call",
+            }],
+        )
+        tool_msg = ToolMessage(
+            tool_call_id="call_1",
+            name="generate_a2ui_schema",
+            content='[{"surfaceUpdate":{"surfaceId":"s1","components":[]}},'
+                    '{"beginRendering":{"surfaceId":"s1","root":""}}]',
+        )
+        state = {
+            "messages": [HumanMessage(content="render a card"), tool_call_ai, tool_msg],
+            "gen_ui_mode": "a2ui",
+        }
+
+        result = asyncio.run(emit_generated_surface(state))
+
+        # Expect TWO message updates: the tool placeholder + a replacement
+        # AIMessage with the SAME id as the upstream tool-call AI.
+        msgs = result["messages"]
+        assert len(msgs) == 2
+        replacement_ai = next(m for m in msgs if isinstance(m, AIMessage))
+        assert replacement_ai.id == "ai-1", \
+            "Replacement AI must reuse the upstream tool-call AI id for in-place merge"
+        # Content carries the wrapped surface payload.
+        assert "---a2ui_JSON---" in replacement_ai.content
+        # tool_calls is preserved so detection (frontend isGenuiTurn) still fires.
+        assert any(tc.get("name") == "generate_a2ui_schema" for tc in replacement_ai.tool_calls)
+
+    def test_beginRendering_envelope_ordering(self):
+        """emit reorders the wrapped envelopes so beginRendering lands
+        before any dataModelUpdate envelopes."""
+        from src.graph import emit_generated_surface
+
+        tool_call_ai = AIMessage(
+            id="ai-2",
+            content=[],
+            tool_calls=[{
+                "id": "call_2",
+                "name": "generate_a2ui_schema",
+                "args": {"request": "r"},
+                "type": "tool_call",
+            }],
+        )
+        tool_msg = ToolMessage(
+            tool_call_id="call_2",
+            name="generate_a2ui_schema",
+            content='['
+                    '{"surfaceUpdate":{"surfaceId":"s","components":[]}},'
+                    '{"dataModelUpdate":{"surfaceId":"s","contents":[]}},'
+                    '{"dataModelUpdate":{"surfaceId":"s","contents":[]}},'
+                    '{"beginRendering":{"surfaceId":"s","root":""}}'
+                    ']',
+        )
+        state = {"messages": [HumanMessage(content="x"), tool_call_ai, tool_msg],
+                 "gen_ui_mode": "a2ui"}
+
+        result = asyncio.run(emit_generated_surface(state))
+        replacement_ai = next(m for m in result["messages"] if isinstance(m, AIMessage))
+
+        # Strip prefix + grab JSONL lines
+        body = replacement_ai.content.split("---a2ui_JSON---\n", 1)[1].rstrip("\n")
+        envelope_lines = body.split("\n")
+        # First envelope = surfaceUpdate, SECOND = beginRendering, then dataModelUpdates.
+        import json
+        parsed = [json.loads(line) for line in envelope_lines]
+        assert "surfaceUpdate" in parsed[0]
+        assert "beginRendering" in parsed[1], \
+            f"beginRendering should follow surfaceUpdate; got {list(parsed[1].keys())}"
+        # The remaining dataModelUpdate envelopes follow.
+        assert "dataModelUpdate" in parsed[2]
+        assert "dataModelUpdate" in parsed[3]

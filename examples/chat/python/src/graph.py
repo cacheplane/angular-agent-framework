@@ -500,7 +500,36 @@ async def emit_generated_surface(state: State) -> dict:
                 arr = json.loads(stripped)
                 jsonl = "\n".join(json.dumps(env) for env in arr) if isinstance(arr, list) else stripped
             except json.JSONDecodeError:
+                arr = None
                 jsonl = payload  # let the parser deal with malformed lines
+
+        # Reorder envelopes so beginRendering lands in position 2 (right
+        # after the first surfaceUpdate). The surface store gates surface
+        # materialization on beginRendering; emitting it early lets the
+        # frontend mount the (initially empty) surface and reveal per-
+        # component fallbacks while dataModelUpdate envelopes flow.
+        try:
+            if isinstance(arr, list):
+                surface_updates = [e for e in arr if isinstance(e, dict) and "surfaceUpdate" in e]
+                begin_renderings = [e for e in arr if isinstance(e, dict) and "beginRendering" in e]
+                data_updates = [e for e in arr if isinstance(e, dict) and "dataModelUpdate" in e]
+                others = [
+                    e for e in arr
+                    if isinstance(e, dict)
+                    and not ("surfaceUpdate" in e or "beginRendering" in e or "dataModelUpdate" in e)
+                ]
+                reordered = (
+                    surface_updates
+                    + (begin_renderings[:1] if begin_renderings else [])
+                    + data_updates
+                    + others
+                    + begin_renderings[1:]
+                )
+                jsonl = "\n".join(json.dumps(env) for env in reordered)
+        except (TypeError, AttributeError, NameError):
+            # arr may be unbound or unexpected shape — fall back to existing jsonl.
+            pass
+
         wrapped = A2UI_PREFIX + "\n" + jsonl + "\n"
     elif tool_name == "generate_json_render_spec":
         # json-render: classifier detects content starting with `{`, no
@@ -523,14 +552,29 @@ async def emit_generated_surface(state: State) -> dict:
     # AIMessage as the final message; the chat composition's content
     # classifier picks up the prefix and mounts <a2ui-surface> /
     # <chat-generative-ui>.
+    # In-place replacement: return an AIMessage with the SAME id as the
+    # upstream tool-call AI. LangGraph's add_messages reducer matches by
+    # id and replaces, so the thread carries ONE AI message per GenUI
+    # turn (with both tool_calls AND the wrapped surface content)
+    # instead of two — the user sees a single bubble that transforms
+    # from skeleton to surface, not a skeleton bubble followed by a
+    # separate surface bubble.
     out = []
+    placeholder_kwargs = {
+        "content": "rendered",
+        "tool_call_id": tool_msg.tool_call_id,
+    }
     if getattr(tool_msg, "id", None):
-        out.append(ToolMessage(
-            id=tool_msg.id,
-            content="rendered",
-            tool_call_id=tool_msg.tool_call_id,
-        ))
-    out.append(AIMessage(content=wrapped))
+        placeholder_kwargs["id"] = tool_msg.id
+    out.append(ToolMessage(**placeholder_kwargs))
+    replacement_kwargs = {"content": wrapped}
+    if ai_tool_call_msg is not None:
+        if getattr(ai_tool_call_msg, "id", None):
+            replacement_kwargs["id"] = ai_tool_call_msg.id
+        replacement_kwargs["tool_calls"] = ai_tool_call_msg.tool_calls
+        replacement_kwargs["additional_kwargs"] = ai_tool_call_msg.additional_kwargs or {}
+        replacement_kwargs["response_metadata"] = ai_tool_call_msg.response_metadata or {}
+    out.append(AIMessage(**replacement_kwargs))
     return {"messages": out}
 
 
