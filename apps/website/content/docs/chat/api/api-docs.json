@@ -1922,6 +1922,90 @@
     ]
   },
   {
+    "name": "ChatConfirmDialogComponent",
+    "kind": "class",
+    "description": "",
+    "params": [],
+    "examples": [],
+    "properties": [
+      {
+        "name": "body",
+        "type": "InputSignal<string>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "bodyId",
+        "type": "string",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "cancelLabel",
+        "type": "InputSignal<string>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "cancelled",
+        "type": "OutputEmitterRef<void>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "confirmed",
+        "type": "OutputEmitterRef<void>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "confirmLabel",
+        "type": "InputSignal<string>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "open",
+        "type": "InputSignal<boolean>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "title",
+        "type": "InputSignal<string>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "titleId",
+        "type": "string",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "tone",
+        "type": "InputSignal<\"normal\" | \"destructive\">",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "methods": [
+      {
+        "name": "onDialogKeydown",
+        "signature": "onDialogKeydown(e: KeyboardEvent)",
+        "description": "",
+        "params": [
+          {
+            "name": "e",
+            "type": "KeyboardEvent",
+            "description": "",
+            "optional": false
+          }
+        ]
+      }
+    ]
+  },
+  {
     "name": "ChatDebugActionComponent",
     "kind": "class",
     "description": "",
@@ -2880,6 +2964,79 @@
     ]
   },
   {
+    "name": "ChatOverflowMenuComponent",
+    "kind": "class",
+    "description": "",
+    "params": [],
+    "examples": [],
+    "properties": [
+      {
+        "name": "anchor",
+        "type": "InputSignal<HTMLElement | null>",
+        "description": "Element the menu anchors against (positions just below its bottom-right corner).",
+        "optional": false
+      },
+      {
+        "name": "closed",
+        "type": "OutputEmitterRef<void>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "items",
+        "type": "InputSignal<OverflowMenuItem[]>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "itemSelected",
+        "type": "OutputEmitterRef<string>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "open",
+        "type": "InputSignal<boolean>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "position",
+        "type": "Signal<object>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "methods": [
+      {
+        "name": "onItemClick",
+        "signature": "onItemClick(item: OverflowMenuItem)",
+        "description": "",
+        "params": [
+          {
+            "name": "item",
+            "type": "OverflowMenuItem",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
+        "name": "onMenuKeydown",
+        "signature": "onMenuKeydown(e: KeyboardEvent)",
+        "description": "",
+        "params": [
+          {
+            "name": "e",
+            "type": "KeyboardEvent",
+            "description": "",
+            "optional": false
+          }
+        ]
+      }
+    ]
+  },
+  {
     "name": "ChatPopupComponent",
     "kind": "class",
     "description": "",
@@ -3220,6 +3377,12 @@
     "examples": [],
     "properties": [
       {
+        "name": "actions",
+        "type": "InputSignal<ThreadActionAdapter | null>",
+        "description": "",
+        "optional": false
+      },
+      {
         "name": "activeThreadId",
         "type": "InputSignal<string | null>",
         "description": "",
@@ -3403,8 +3566,50 @@
     "examples": [],
     "properties": [
       {
+        "name": "actions",
+        "type": "InputSignal<ThreadActionAdapter | null>",
+        "description": "",
+        "optional": false
+      },
+      {
         "name": "activeThreadId",
         "type": "InputSignal<string>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "confirmDeleteId",
+        "type": "WritableSignal<string | null>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "currentMenuItems",
+        "type": "Signal<OverflowMenuItem[]>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "editingThreadId",
+        "type": "WritableSignal<string | null>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "editingValue",
+        "type": "WritableSignal<string>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "menuAnchor",
+        "type": "WritableSignal<HTMLElement | null>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "menuOpenForId",
+        "type": "WritableSignal<string | null>",
         "description": "",
         "optional": false
       },
@@ -3437,9 +3642,85 @@
         "type": "OutputEmitterRef<string>",
         "description": "",
         "optional": false
+      },
+      {
+        "name": "visibleThreads",
+        "type": "Signal<Thread[]>",
+        "description": "",
+        "optional": false
       }
     ],
     "methods": [
+      {
+        "name": "cancelRename",
+        "signature": "cancelRename()",
+        "description": "",
+        "params": []
+      },
+      {
+        "name": "commitRename",
+        "signature": "commitRename(threadId: string)",
+        "description": "",
+        "params": [
+          {
+            "name": "threadId",
+            "type": "string",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
+        "name": "onEditInput",
+        "signature": "onEditInput(e: Event)",
+        "description": "",
+        "params": [
+          {
+            "name": "e",
+            "type": "Event",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
+        "name": "onMenuAction",
+        "signature": "onMenuAction(id: string)",
+        "description": "",
+        "params": [
+          {
+            "name": "id",
+            "type": "string",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
+        "name": "openMenu",
+        "signature": "openMenu(threadId: string, anchor: HTMLElement)",
+        "description": "",
+        "params": [
+          {
+            "name": "threadId",
+            "type": "string",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "anchor",
+            "type": "HTMLElement",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
+        "name": "performDelete",
+        "signature": "performDelete()",
+        "description": "",
+        "params": []
+      },
       {
         "name": "relativeTime",
         "signature": "relativeTime(epochMs: number)",
@@ -3465,6 +3746,12 @@
             "optional": false
           }
         ]
+      },
+      {
+        "name": "showKebab",
+        "signature": "showKebab()",
+        "description": "",
+        "params": []
       },
       {
         "name": "threadLabel",
@@ -5398,6 +5685,38 @@
     "examples": []
   },
   {
+    "name": "OverflowMenuItem",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "disabled",
+        "type": "boolean",
+        "description": "Disabled items render muted and ignore clicks/keypresses.",
+        "optional": true
+      },
+      {
+        "name": "id",
+        "type": "string",
+        "description": "Stable id emitted via (itemSelected).",
+        "optional": false
+      },
+      {
+        "name": "label",
+        "type": "string",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "tone",
+        "type": "\"normal\" | \"destructive\"",
+        "description": "'destructive' renders the label in red. Default 'normal'.",
+        "optional": true
+      }
+    ],
+    "examples": []
+  },
+  {
     "name": "ParseTreeStore",
     "kind": "interface",
     "description": "",
@@ -5517,6 +5836,26 @@
         "type": "string",
         "description": "Tool call ID that spawned this subagent.",
         "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "ThreadActionAdapter",
+    "kind": "interface",
+    "description": "Per-thread row-action adapter. Consumer-provided. The framework calls\nthese methods after user confirmation (delete) or commit (rename) and\nmanages optimistic UI + rollback on rejection.\n\nConsumers MUST refresh their `threads` signal on success — the framework\nclears optimistic overrides in a `finally` block, so a successful adapter\ncall that leaves the input list unchanged would re-render the row.",
+    "properties": [
+      {
+        "name": "delete",
+        "type": "unknown",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "rename",
+        "type": "unknown",
+        "description": "",
+        "optional": true
       }
     ],
     "examples": []
