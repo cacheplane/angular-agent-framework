@@ -396,3 +396,96 @@ describe('RenderElementComponent — element-level memoization', () => {
     });
   });
 });
+
+// --- Fallback gate tests (Task 1.3) ---
+
+import { TestBed } from '@angular/core/testing';
+import { Component as Cmp2, Input } from '@angular/core';
+import { RenderElementComponent } from './render-element.component';
+import { RENDER_CONTEXT } from './contexts/render-context';
+
+@Cmp2({ standalone: true, template: '<span data-test="real">label={{ label }}</span>' })
+class FakeRealCmp {
+  @Input() label?: string;
+}
+
+@Cmp2({ standalone: true, template: '<span data-test="fallback">SKEL</span>' })
+class FakeFallbackCmp {}
+
+function specWithBinding(): Spec {
+  return {
+    root: 'btn1',
+    elements: {
+      btn1: { type: 'button', props: { label: { $state: '/label' } } },
+    },
+  } as Spec;
+}
+
+@Cmp2({
+  standalone: true,
+  imports: [RenderElementComponent],
+  template: `<render-element [elementKey]="'btn1'" [spec]="spec" />`,
+})
+class FallbackHost {
+  spec = specWithBinding();
+}
+
+describe('RenderElementComponent — fallback gate', () => {
+  let store: ReturnType<typeof signalStateStore>;
+  beforeEach(() => {
+    store = signalStateStore({ });
+    TestBed.configureTestingModule({
+      imports: [FallbackHost],
+      providers: [{
+        provide: RENDER_CONTEXT,
+        useValue: {
+          store,
+          registry: defineAngularRegistry({
+            button: { component: FakeRealCmp, fallback: FakeFallbackCmp },
+          }),
+          functions: {},
+          handlers: {},
+        },
+      }],
+    });
+  });
+
+  it('renders the fallback when a state-bound prop resolves to undefined', () => {
+    const fx = TestBed.createComponent(FallbackHost);
+    fx.detectChanges();
+    expect(fx.nativeElement.querySelector('[data-test="fallback"]')).toBeTruthy();
+    expect(fx.nativeElement.querySelector('[data-test="real"]')).toBeNull();
+  });
+
+  it('renders the real component once the state-bound prop is populated', () => {
+    store.set('/label', 'click me');
+    const fx = TestBed.createComponent(FallbackHost);
+    fx.detectChanges();
+    expect(fx.nativeElement.querySelector('[data-test="real"]')).toBeTruthy();
+    expect(fx.nativeElement.querySelector('[data-test="fallback"]')).toBeNull();
+  });
+
+  it('null counts as ready (not undefined)', () => {
+    store.set('/label', null);
+    const fx = TestBed.createComponent(FallbackHost);
+    fx.detectChanges();
+    expect(fx.nativeElement.querySelector('[data-test="real"]')).toBeTruthy();
+  });
+
+  it('monotonic: once real mounts, a later undefined does not revert to fallback', async () => {
+    store.set('/label', 'click me');
+    const fx = TestBed.createComponent(FallbackHost);
+    fx.detectChanges();
+    expect(fx.nativeElement.querySelector('[data-test="real"]')).toBeTruthy();
+
+    // Flush microtasks so the mountedReal latch flips.
+    await Promise.resolve();
+
+    // Now CLEAR the binding — undefined again.
+    store.set('/label', undefined);
+    fx.detectChanges();
+    // Still real, never reverts.
+    expect(fx.nativeElement.querySelector('[data-test="real"]')).toBeTruthy();
+    expect(fx.nativeElement.querySelector('[data-test="fallback"]')).toBeNull();
+  });
+});

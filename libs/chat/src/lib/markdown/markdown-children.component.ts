@@ -48,6 +48,9 @@ export class MarkdownChildrenComponent {
   });
 
   protected resolve(child: MarkdownNode): Type<unknown> | null {
-    return this.registry[child.type] ?? null;
+    const entry = this.registry[child.type];
+    if (!entry) return null;
+    // ViewRegistry entries are either a bare Type or { component, fallback? }.
+    return typeof entry === 'function' ? entry : entry.component;
   }
 }
