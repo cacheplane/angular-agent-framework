@@ -167,3 +167,30 @@ describe('A2uiSurfaceStore (v1, deferred-apply)', () => {
     expect(s.styles).toEqual({ primaryColor: '#0A84FF' });
   });
 });
+
+describe('createA2uiSurfaceStore — applyPartialArgs', () => {
+  test('dispatches each envelope via apply() in order', () => {
+    const store = setup();
+    const envelopes = [
+      { surfaceUpdate: { surfaceId: 's1', components: [{ id: 'c', type: 'text', props: {} }] } },
+      { beginRendering: { surfaceId: 's1', root: 'c' } },
+    ];
+    store.applyPartialArgs('tc-1', envelopes);
+    expect(store.surfaces().get('s1')?.components.has('c')).toBe(true);
+  });
+
+  test('records the tool_call_id as live (queryable)', () => {
+    const store = setup();
+    expect(store.isPartialLive('tc-1')).toBe(false);
+    store.applyPartialArgs('tc-1', [{ surfaceUpdate: { surfaceId: 's1', components: [] } }]);
+    expect(store.isPartialLive('tc-1')).toBe(true);
+  });
+
+  test('ignores invalid envelopes silently', () => {
+    const store = setup();
+    // missing required top-level key — apply() ignores
+    store.applyPartialArgs('tc-x', [{ junk: 1 } as never]);
+    expect(store.surfaces().size).toBe(0);
+    expect(store.isPartialLive('tc-x')).toBe(true);  // still tracked
+  });
+});

@@ -1576,6 +1576,12 @@
         "optional": false
       },
       {
+        "name": "liveSurfaceStore",
+        "type": "A2uiSurfaceStore",
+        "description": "Shared A2UI surface store fed by the live partial-args bridge. The\ncontent-classifier path will share this store via tool_call_id\nshort-circuit (skipping re-dispatch for live tool_call_ids).",
+        "optional": false
+      },
+      {
         "name": "messageContent",
         "type": "object",
         "description": "",
@@ -4902,6 +4908,18 @@
         "optional": false
       },
       {
+        "name": "applyPartialArgs",
+        "type": "unknown",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "isPartialLive",
+        "type": "unknown",
+        "description": "",
+        "optional": false
+      },
+      {
         "name": "surface",
         "type": "unknown",
         "description": "",
@@ -5787,6 +5805,26 @@
     "examples": []
   },
   {
+    "name": "PartialArgsBridge",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "isPoisoned",
+        "type": "unknown",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "push",
+        "type": "unknown",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
     "name": "ResolvedCitation",
     "kind": "interface",
     "description": "",
@@ -6252,6 +6290,25 @@
     "examples": []
   },
   {
+    "name": "createPartialArgsBridge",
+    "kind": "function",
+    "description": "Subscribes to LangGraph custom events of name 'a2ui-partial' and feeds\nthe surface store envelope-by-envelope as the parent LLM streams its\ntool_call.arguments JSON. Uses @cacheplane/partial-json to extract\nstructurally-complete envelope objects from the growing args string.\n\nSynthesis safety net: if the first complete surfaceUpdate arrives and\nno beginRendering has been extracted yet, the bridge synthesises one\ntargeted at the surfaceUpdate's first component (preferring id='root'\nif present). This makes the surface mount IMMEDIATELY after the first\nsurfaceUpdate parses — without waiting for the LLM to emit beginRendering\nat the end of its envelope list — so the render-element fallback gate\n(PR #252) actually fires while dataModelUpdates flow in.\n\nThe store's apply() already treats repeated beginRendering for the same\nsurfaceId as idempotent (just re-applies styles), so the LLM's eventual\nbeginRendering (if any) is a no-op rather than a conflict.",
+    "signature": "createPartialArgsBridge(store: A2uiSurfaceStore): PartialArgsBridge",
+    "params": [
+      {
+        "name": "store",
+        "type": "A2uiSurfaceStore",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "PartialArgsBridge",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
     "name": "emitBinding",
     "kind": "function",
     "description": "Emits a data model binding event if the prop has a binding path.",
@@ -6569,6 +6626,25 @@
     ],
     "returns": {
       "type": "MockAgent",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "normalizeEnvelopeArgs",
+    "kind": "function",
+    "description": "The parent LLM may emit envelope-tool arguments in four shapes (observed in\nthe spike across gpt-5-mini and gpt-5): the canonical {envelopes: [...]},\na singular typo {envelope: [...]}, positional keys {0: env, 1: env, ...}\nwhen the model treats the args as the array, or a flat single envelope.\nThis pure function maps all four into a canonical envelope list.\n\nStrict-mode tool binding (OpenAI) should eliminate the non-canonical\nshapes in production, but the normalizer is the safety net.",
+    "signature": "normalizeEnvelopeArgs(args: Record<string, unknown> | null | undefined): unknown[] | null",
+    "params": [
+      {
+        "name": "args",
+        "type": "Record<string, unknown> | null | undefined",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "unknown[] | null",
       "description": ""
     },
     "examples": []
