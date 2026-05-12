@@ -7,6 +7,7 @@ import {
   inject,
   input,
   output,
+  signal,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { fromEvent } from 'rxjs';
@@ -94,6 +95,41 @@ export type ChatSidenavMode = 'expanded' | 'collapsed' | 'drawer';
         </div>
       }
 
+      @if (archivedThreads() !== null) {
+        <div
+          class="chat-sidenav__archived"
+          [attr.data-open]="archivedOpen() ? 'true' : 'false'"
+        >
+          <button
+            type="button"
+            class="chat-sidenav__archived-heading"
+            [attr.aria-expanded]="archivedOpen() ? 'true' : 'false'"
+            aria-controls="chat-sidenav__archived-list"
+            (click)="archivedOpen.set(!archivedOpen())"
+          >
+            <svg class="chat-sidenav__archived-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polyline points="9 6 15 12 9 18"/>
+            </svg>
+            <span>Archived</span>
+          </button>
+          @if (archivedOpen()) {
+            <div id="chat-sidenav__archived-list">
+              @if (archivedThreads()!.length === 0) {
+                <div class="chat-sidenav__archived-empty">No archived conversations.</div>
+              } @else {
+                <chat-thread-list
+                  mode="archived"
+                  [threads]="archivedThreads()!"
+                  [activeThreadId]="activeThreadId() ?? ''"
+                  [actions]="actions()"
+                  (threadSelected)="threadSelected.emit($event)"
+                />
+              }
+            </div>
+          }
+        </div>
+      }
+
       <div class="chat-sidenav__sections">
         <ng-content select="[sidenavSections]" />
       </div>
@@ -110,11 +146,14 @@ export class ChatSidenavComponent {
   readonly threads = input<Thread[] | null>(null);
   readonly activeThreadId = input<string | null>(null);
   readonly actions = input<ThreadActionAdapter | null>(null);
+  readonly archivedThreads = input<Thread[] | null>(null);
 
   readonly newChat = output<void>();
   readonly threadSelected = output<string>();
   readonly searchOpened = output<void>();
   readonly openChange = output<boolean>();
+
+  protected readonly archivedOpen = signal<boolean>(false);
 
   private readonly destroyRef = inject(DestroyRef);
 

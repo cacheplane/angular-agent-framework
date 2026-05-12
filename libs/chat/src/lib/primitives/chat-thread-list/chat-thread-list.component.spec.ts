@@ -200,5 +200,131 @@ describe('ChatThreadListComponent', () => {
       expect(remaining.length).toBe(2);
       expect(deleteSpy).toHaveBeenCalledWith('t1');
     });
+
+    it('mode="active" with archive action shows Archive in menu', () => {
+      const fixture = render({ actions: { archive: vi.fn().mockResolvedValue(undefined) } });
+      (fixture.nativeElement.querySelector('.chat-thread-list__kebab') as HTMLElement).click();
+      fixture.detectChanges();
+      const labels = Array.from(document.querySelectorAll('.chat-overflow-menu__item'))
+        .map((el) => (el as HTMLElement).textContent?.trim());
+      expect(labels).toContain('Archive');
+      expect(labels).not.toContain('Unarchive');
+    });
+
+    it('mode="archived" with unarchive action shows Unarchive (and not Rename or Archive)', () => {
+      const fixture = TestBed.createComponent(ChatThreadListComponent);
+      fixture.componentRef.setInput('threads', [{ id: 't1', title: 'First', status: 'archived' as const }]);
+      fixture.componentRef.setInput('actions', { unarchive: vi.fn().mockResolvedValue(undefined), rename: vi.fn().mockResolvedValue(undefined), archive: vi.fn().mockResolvedValue(undefined) });
+      fixture.componentRef.setInput('mode', 'archived');
+      fixture.detectChanges();
+      (fixture.nativeElement.querySelector('.chat-thread-list__kebab') as HTMLElement).click();
+      fixture.detectChanges();
+      const labels = Array.from(document.querySelectorAll('.chat-overflow-menu__item'))
+        .map((el) => (el as HTMLElement).textContent?.trim());
+      expect(labels).toEqual(['Unarchive']);
+    });
+
+    it('mode="archived" with unarchive + delete shows Unarchive, Delete in that order', () => {
+      const fixture = TestBed.createComponent(ChatThreadListComponent);
+      fixture.componentRef.setInput('threads', [{ id: 't1', title: 'First', status: 'archived' as const }]);
+      fixture.componentRef.setInput('actions', { unarchive: vi.fn().mockResolvedValue(undefined), delete: vi.fn().mockResolvedValue(undefined) });
+      fixture.componentRef.setInput('mode', 'archived');
+      fixture.detectChanges();
+      (fixture.nativeElement.querySelector('.chat-thread-list__kebab') as HTMLElement).click();
+      fixture.detectChanges();
+      const items = document.querySelectorAll('.chat-overflow-menu__item');
+      expect(items.length).toBe(2);
+      expect((items[0] as HTMLElement).textContent?.trim()).toBe('Unarchive');
+      expect((items[1] as HTMLElement).textContent?.trim()).toBe('Delete');
+      expect(items[1].classList.contains('chat-overflow-menu__item--destructive')).toBe(true);
+    });
+
+    it('Click Archive calls adapter.archive, hides row optimistically, no confirm dialog opens', async () => {
+      let resolveArchive!: () => void;
+      const archiveSpy = vi.fn(() => new Promise<void>((r) => { resolveArchive = r; }));
+      const fixture = render({ actions: { archive: archiveSpy } });
+      (fixture.nativeElement.querySelector('.chat-thread-list__kebab') as HTMLElement).click();
+      fixture.detectChanges();
+      const item = Array.from(document.querySelectorAll('.chat-overflow-menu__item'))
+        .find((el) => (el as HTMLElement).textContent?.trim() === 'Archive') as HTMLElement;
+      item.click();
+      fixture.detectChanges();
+      expect(archiveSpy).toHaveBeenCalledWith('t1');
+      expect(document.querySelector('.chat-confirm-dialog')).toBeNull();
+      const remaining = fixture.nativeElement.querySelectorAll('.chat-thread-list__item');
+      expect(remaining.length).toBe(1);
+      resolveArchive();
+      await new Promise((r) => setTimeout(r, 0));
+    });
+
+    it('Click Unarchive calls adapter.unarchive and hides row optimistically', async () => {
+      let resolveUnarchive!: () => void;
+      const unarchiveSpy = vi.fn(() => new Promise<void>((r) => { resolveUnarchive = r; }));
+      const fixture = TestBed.createComponent(ChatThreadListComponent);
+      fixture.componentRef.setInput('threads', [
+        { id: 't1', title: 'First', status: 'archived' as const },
+        { id: 't2', title: 'Second', status: 'archived' as const },
+      ]);
+      fixture.componentRef.setInput('actions', { unarchive: unarchiveSpy });
+      fixture.componentRef.setInput('mode', 'archived');
+      fixture.detectChanges();
+      (fixture.nativeElement.querySelector('.chat-thread-list__kebab') as HTMLElement).click();
+      fixture.detectChanges();
+      const item = Array.from(document.querySelectorAll('.chat-overflow-menu__item'))
+        .find((el) => (el as HTMLElement).textContent?.trim() === 'Unarchive') as HTMLElement;
+      item.click();
+      fixture.detectChanges();
+      expect(unarchiveSpy).toHaveBeenCalledWith('t1');
+      const remaining = fixture.nativeElement.querySelectorAll('.chat-thread-list__item');
+      expect(remaining.length).toBe(1);
+      resolveUnarchive();
+      await new Promise((r) => setTimeout(r, 0));
+    });
+
+    it('Archive: when adapter rejects, the hidden row reappears', async () => {
+      const archiveSpy = vi.fn(async () => { throw new Error('boom'); });
+      const fixture = render({ actions: { archive: archiveSpy } });
+      (fixture.nativeElement.querySelector('.chat-thread-list__kebab') as HTMLElement).click();
+      fixture.detectChanges();
+      const item = Array.from(document.querySelectorAll('.chat-overflow-menu__item'))
+        .find((el) => (el as HTMLElement).textContent?.trim() === 'Archive') as HTMLElement;
+      item.click();
+      await new Promise((r) => setTimeout(r, 0));
+      await new Promise((r) => setTimeout(r, 0));
+      fixture.detectChanges();
+      const remaining = fixture.nativeElement.querySelectorAll('.chat-thread-list__item');
+      expect(remaining.length).toBe(2);
+    });
+
+    it('Unarchive: when adapter rejects, the hidden row reappears', async () => {
+      const unarchiveSpy = vi.fn(async () => { throw new Error('boom'); });
+      const fixture = TestBed.createComponent(ChatThreadListComponent);
+      fixture.componentRef.setInput('threads', [
+        { id: 't1', title: 'First', status: 'archived' as const },
+        { id: 't2', title: 'Second', status: 'archived' as const },
+      ]);
+      fixture.componentRef.setInput('actions', { unarchive: unarchiveSpy });
+      fixture.componentRef.setInput('mode', 'archived');
+      fixture.detectChanges();
+      (fixture.nativeElement.querySelector('.chat-thread-list__kebab') as HTMLElement).click();
+      fixture.detectChanges();
+      const item = Array.from(document.querySelectorAll('.chat-overflow-menu__item'))
+        .find((el) => (el as HTMLElement).textContent?.trim() === 'Unarchive') as HTMLElement;
+      item.click();
+      await new Promise((r) => setTimeout(r, 0));
+      await new Promise((r) => setTimeout(r, 0));
+      fixture.detectChanges();
+      const remaining = fixture.nativeElement.querySelectorAll('.chat-thread-list__item');
+      expect(remaining.length).toBe(2);
+    });
+
+    it('mode="archived" with only rename+archive (no unarchive/delete) hides the kebab', () => {
+      const fixture = TestBed.createComponent(ChatThreadListComponent);
+      fixture.componentRef.setInput('threads', [{ id: 't1', title: 'A', status: 'archived' as const }]);
+      fixture.componentRef.setInput('actions', { rename: vi.fn().mockResolvedValue(undefined), archive: vi.fn().mockResolvedValue(undefined) });
+      fixture.componentRef.setInput('mode', 'archived');
+      fixture.detectChanges();
+      expect(fixture.nativeElement.querySelector('.chat-thread-list__kebab')).toBeNull();
+    });
   });
 });

@@ -89,4 +89,48 @@ describe('ChatSidenavComponent', () => {
     const fixture = render({ mode: 'drawer', open: false });
     expect(fixture.nativeElement.querySelector('.chat-sidenav__scrim')).toBeNull();
   });
+
+  it('archivedThreads=null renders no archived heading', () => {
+    const fixture = render({ threads: [{ id: 't1' }] });
+    expect(fixture.nativeElement.querySelector('.chat-sidenav__archived')).toBeNull();
+  });
+
+  it('archivedThreads=[] renders the heading; clicking expands to show empty state', () => {
+    const fixture = render({ threads: [{ id: 't1' }] });
+    fixture.componentRef.setInput('archivedThreads', []);
+    fixture.detectChanges();
+    const heading = fixture.nativeElement.querySelector('.chat-sidenav__archived-heading') as HTMLButtonElement;
+    expect(heading).not.toBeNull();
+    expect(heading.getAttribute('aria-expanded')).toBe('false');
+    heading.click();
+    fixture.detectChanges();
+    expect(heading.getAttribute('aria-expanded')).toBe('true');
+    expect(fixture.nativeElement.querySelector('.chat-sidenav__archived-empty')).not.toBeNull();
+  });
+
+  it('archivedThreads=[t1,t2] renders the heading; expanding shows a chat-thread-list with mode="archived"', () => {
+    const fixture = render({ threads: [{ id: 't1' }] });
+    fixture.componentRef.setInput('archivedThreads', [{ id: 'a1', title: 'A1' }, { id: 'a2', title: 'A2' }]);
+    fixture.detectChanges();
+    const heading = fixture.nativeElement.querySelector('.chat-sidenav__archived-heading') as HTMLButtonElement;
+    heading.click();
+    fixture.detectChanges();
+    const lists = fixture.nativeElement.querySelectorAll('chat-thread-list');
+    expect(lists.length).toBe(2);
+    expect(lists[1].getAttribute('mode')).toBe('archived');
+  });
+
+  it('clicking the archived heading toggles aria-expanded', () => {
+    const fixture = render({ threads: [{ id: 't1' }] });
+    fixture.componentRef.setInput('archivedThreads', []);
+    fixture.detectChanges();
+    const heading = fixture.nativeElement.querySelector('.chat-sidenav__archived-heading') as HTMLButtonElement;
+    expect(heading.getAttribute('aria-expanded')).toBe('false');
+    heading.click();
+    fixture.detectChanges();
+    expect(heading.getAttribute('aria-expanded')).toBe('true');
+    heading.click();
+    fixture.detectChanges();
+    expect(heading.getAttribute('aria-expanded')).toBe('false');
+  });
 });

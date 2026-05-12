@@ -9,6 +9,7 @@
 
   <chat-sidenav
     [threads]="threadsSvc.threads()"
+    [archivedThreads]="threadsSvc.archivedThreads()"
     [activeThreadId]="threadIdSignal() ?? ''"
     [mode]="sidenavMode()"
     [(open)]="drawerOpen"

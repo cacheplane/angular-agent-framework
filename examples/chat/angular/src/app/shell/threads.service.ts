@@ -1,40 +1,31 @@
 // SPDX-License-Identifier: MIT
 import { Injectable, signal } from '@angular/core';
+import { Client, type Thread as SdkThread } from '@langchain/langgraph-sdk';
 import type { Thread } from '@ngaf/chat';
 
 const API_URL = 'http://localhost:2024';
 
 @Injectable({ providedIn: 'root' })
 export class ThreadsService {
+  private readonly client = new Client({ apiUrl: API_URL });
+
   readonly threads = signal<Thread[]>([]);
+  readonly archivedThreads = signal<Thread[]>([]);
 
   async refresh(): Promise<void> {
     try {
-      const res = await fetch(`${API_URL}/threads/search`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ limit: 50 }),
-      });
-      if (!res.ok) return;
-      const list = await res.json() as Array<{ thread_id: string; metadata?: Record<string, unknown> }>;
-      this.threads.set(list.map(t => ({
-        id: t.thread_id,
-        title: this.titleFor(t),
-      })));
+      const list = await this.client.threads.search({ limit: 50 });
+      const mapped = list.map((t) => this.toThread(t));
+      this.threads.set(mapped.filter((t) => t.status !== 'archived'));
+      this.archivedThreads.set(mapped.filter((t) => t.status === 'archived'));
     } catch {
-      // Backend may be down; leave threads as-is.
+      // Backend may be down; leave signals as-is.
     }
   }
 
   async create(): Promise<string | null> {
     try {
-      const res = await fetch(`${API_URL}/threads`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: '{}',
-      });
-      if (!res.ok) return null;
-      const t = await res.json() as { thread_id: string };
+      const t = await this.client.threads.create({ metadata: {} });
       await this.refresh();
       return t.thread_id;
     } catch {
@@ -43,27 +34,36 @@ export class ThreadsService {
   }
 
   async delete(threadId: string): Promise<void> {
-    const res = await fetch(`${API_URL}/threads/${threadId}`, { method: 'DELETE' });
-    if (!res.ok) throw new Error(`delete ${threadId} failed: ${res.status}`);
+    await this.client.threads.delete(threadId);
     await this.refresh();
   }
 
   async rename(threadId: string, newTitle: string): Promise<void> {
-    const res = await fetch(`${API_URL}/threads/${threadId}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ metadata: { title: newTitle } }),
-    });
-    if (!res.ok) throw new Error(`rename ${threadId} failed: ${res.status}`);
+    await this.client.threads.update(threadId, { metadata: { title: newTitle } });
     await this.refresh();
   }
 
-  /** Best-effort title: first user message from the thread's checkpoint
-   * if present in metadata, else a truncated thread id. */
-  private titleFor(t: { thread_id: string; metadata?: Record<string, unknown> }): string {
-    const meta = t.metadata ?? {};
-    const customTitle = (meta as { title?: string }).title;
-    if (typeof customTitle === 'string' && customTitle.length > 0) return customTitle;
-    return `Thread ${t.thread_id.slice(0, 8)}`;
+  async archive(threadId: string): Promise<void> {
+    await this.client.threads.update(threadId, { metadata: { archived: true } });
+    await this.refresh();
+  }
+
+  async unarchive(threadId: string): Promise<void> {
+    await this.client.threads.update(threadId, { metadata: { archived: false } });
+    await this.refresh();
+  }
+
+  /** Best-effort title from thread metadata; falls back to a truncated id. */
+  private toThread(t: SdkThread): Thread {
+    const meta = (t.metadata ?? {}) as { title?: unknown; archived?: unknown };
+    const customTitle = meta.title;
+    const archived = meta.archived === true;
+    return {
+      id: t.thread_id,
+      title: typeof customTitle === 'string' && customTitle.length > 0
+        ? customTitle
+        : `Thread ${t.thread_id.slice(0, 8)}`,
+      status: archived ? 'archived' : 'active',
+    };
   }
 }

@@ -3389,6 +3389,18 @@
         "optional": false
       },
       {
+        "name": "archivedOpen",
+        "type": "WritableSignal<boolean>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "archivedThreads",
+        "type": "InputSignal<Thread[] | null>",
+        "description": "",
+        "optional": false
+      },
+      {
         "name": "mode",
         "type": "InputSignal<ChatSidenavMode>",
         "description": "",
@@ -3614,6 +3626,12 @@
         "optional": false
       },
       {
+        "name": "mode",
+        "type": "InputSignal<\"active\" | \"archived\">",
+        "description": "",
+        "optional": false
+      },
+      {
         "name": "newThreadRequested",
         "type": "OutputEmitterRef<void>",
         "description": "",
@@ -3716,10 +3734,36 @@
         ]
       },
       {
+        "name": "performArchive",
+        "signature": "performArchive(threadId: string)",
+        "description": "",
+        "params": [
+          {
+            "name": "threadId",
+            "type": "string",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
         "name": "performDelete",
         "signature": "performDelete()",
         "description": "",
         "params": []
+      },
+      {
+        "name": "performUnarchive",
+        "signature": "performUnarchive(threadId: string)",
+        "description": "",
+        "params": [
+          {
+            "name": "threadId",
+            "type": "string",
+            "description": "",
+            "optional": false
+          }
+        ]
       },
       {
         "name": "relativeTime",
@@ -5846,6 +5890,12 @@
     "description": "Per-thread row-action adapter. Consumer-provided. The framework calls\nthese methods after user confirmation (delete) or commit (rename) and\nmanages optimistic UI + rollback on rejection.\n\nConsumers MUST refresh their `threads` signal on success — the framework\nclears optimistic overrides in a `finally` block, so a successful adapter\ncall that leaves the input list unchanged would re-render the row.",
     "properties": [
       {
+        "name": "archive",
+        "type": "unknown",
+        "description": "",
+        "optional": true
+      },
+      {
         "name": "delete",
         "type": "unknown",
         "description": "",
@@ -5853,6 +5903,12 @@
       },
       {
         "name": "rename",
+        "type": "unknown",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "unarchive",
         "type": "unknown",
         "description": "",
         "optional": true
