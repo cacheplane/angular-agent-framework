@@ -1,0 +1,5929 @@
+{
+  "gpt-5-mini": [
+    {
+      "prompt": "Render a sign-up card with email and password fields and a Submit button.",
+      "model": "gpt-5-mini",
+      "elapsed_s": 31.312567832996137,
+      "raised_tool_call": true,
+      "parsed_args": false,
+      "has_surface_update": false,
+      "has_begin_rendering": false,
+      "data_update_count": 0,
+      "component_count": 0,
+      "error": "envelopes not a list: type=NoneType",
+      "raw_tool_args": {
+        "envelope": [
+          {
+            "surfaceUpdate": {
+              "surfaceId": "signup-surface-1",
+              "components": [
+                {
+                  "id": "signup-card",
+                  "component": {
+                    "Card": {
+                      "child": "card-content"
+                    }
+                  }
+                },
+                {
+                  "id": "card-content",
+                  "component": {
+                    "Column": {
+                      "children": {
+                        "explicitList": [
+                          "title",
+                          "emailField",
+                          "passwordField",
+                          "submitBtn"
+                        ]
+                      },
+                      "alignment": "center",
+                      "distribution": "start"
+                    }
+                  }
+                },
+                {
+                  "id": "title",
+                  "component": {
+                    "Text": {
+                      "text": {
+                        "literalString": "Sign up"
+                      },
+                      "usageHint": "h3"
+                    }
+                  }
+                },
+                {
+                  "id": "emailField",
+                  "component": {
+                    "TextField": {
+                      "label": {
+                        "literalString": "Email"
+                      },
+                      "text": {
+                        "path": "/form/email"
+                      },
+                      "textFieldType": "shortText",
+                      "validationRegexp": "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$"
+                    }
+                  }
+                },
+                {
+                  "id": "passwordField",
+                  "component": {
+                    "TextField": {
+                      "label": {
+                        "literalString": "Password"
+                      },
+                      "text": {
+                        "path": "/form/password"
+                      },
+                      "textFieldType": "obscured"
+                    }
+                  }
+                },
+                {
+                  "id": "submitBtn",
+                  "component": {
+                    "Button": {
+                      "child": "submit-btn-text",
+                      "primary": true,
+                      "action": {
+                        "name": "submit_signup",
+                        "context": [
+                          {
+                            "key": "email",
+                            "value": {
+                              "path": "/form/email"
+                            }
+                          },
+                          {
+                            "key": "password",
+                            "value": {
+                              "path": "/form/password"
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  }
+                },
+                {
+                  "id": "submit-btn-text",
+                  "component": {
+                    "Text": {
+                      "text": {
+                        "literalString": "Submit"
+                      },
+                      "usageHint": "body"
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "dataModelUpdate": {
+              "surfaceId": "signup-surface-1",
+              "contents": [
+                {
+                  "key": "/form/email",
+                  "valueString": ""
+                },
+                {
+                  "key": "/form/password",
+                  "valueString": ""
+                }
+              ]
+            }
+          },
+          {
+            "beginRendering": {
+              "surfaceId": "signup-surface-1",
+              "root": "signup-card"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "prompt": "Show me a dashboard with 4 KPI cards: revenue $42k, users 1.2k, conversion 3.4%, churn 1.1%.",
+      "model": "gpt-5-mini",
+      "elapsed_s": 36.90605716599384,
+      "raised_tool_call": true,
+      "parsed_args": true,
+      "has_surface_update": true,
+      "has_begin_rendering": true,
+      "data_update_count": 0,
+      "component_count": 18,
+      "error": "",
+      "raw_tool_args": {
+        "envelopes": [
+          {
+            "surfaceUpdate": {
+              "surfaceId": "kpi-dashboard-1",
+              "components": [
+                {
+                  "id": "root",
+                  "component": {
+                    "Column": {
+                      "children": {
+                        "explicitList": [
+                          "dashboard-row"
+                        ]
+                      }
+                    }
+                  }
+                },
+                {
+                  "id": "dashboard-row",
+                  "component": {
+                    "Row": {
+                      "children": {
+                        "explicitList": [
+                          "card-revenue",
+                          "card-users",
+                          "card-conversion",
+                          "card-churn"
+                        ]
+                      },
+                      "distribution": "spaceBetween",
+                      "alignment": "center"
+                    }
+                  }
+                },
+                {
+                  "id": "card-revenue",
+                  "weight": 1,
+                  "component": {
+                    "Card": {
+                      "child": "card-revenue-col"
+                    }
+                  }
+                },
+                {
+                  "id": "card-revenue-col",
+                  "component": {
+                    "Column": {
+                      "children": {
+                        "explicitList": [
+                          "revenue-label",
+                          "revenue-value"
+                        ]
+                      },
+                      "alignment": "center"
+                    }
+                  }
+                },
+                {
+                  "id": "revenue-label",
+                  "component": {
+                    "Text": {
+                      "text": {
+                        "literalString": "Revenue"
+                      },
+                      "usageHint": "h5"
+                    }
+                  }
+                },
+                {
+                  "id": "revenue-value",
+                  "component": {
+                    "Text": {
+                      "text": {
+                        "literalString": "$42k"
+                      },
+                      "usageHint": "h2"
+                    }
+                  }
+                },
+                {
+                  "id": "card-users",
+                  "weight": 1,
+                  "component": {
+                    "Card": {
+                      "child": "card-users-col"
+                    }
+                  }
+                },
+                {
+                  "id": "card-users-col",
+                  "component": {
+                    "Column": {
+                      "children": {
+                        "explicitList": [
+                          "users-label",
+                          "users-value"
+                        ]
+                      },
+                      "alignment": "center"
+                    }
+                  }
+                },
+                {
+                  "id": "users-label",
+                  "component": {
+                    "Text": {
+                      "text": {
+                        "literalString": "Users"
+                      },
+                      "usageHint": "h5"
+                    }
+                  }
+                },
+                {
+                  "id": "users-value",
+                  "component": {
+                    "Text": {
+                      "text": {
+                        "literalString": "1.2k"
+                      },
+                      "usageHint": "h2"
+                    }
+                  }
+                },
+                {
+                  "id": "card-conversion",
+                  "weight": 1,
+                  "component": {
+                    "Card": {
+                      "child": "card-conversion-col"
+                    }
+                  }
+                },
+                {
+                  "id": "card-conversion-col",
+                  "component": {
+                    "Column": {
+                      "children": {
+                        "explicitList": [
+                          "conversion-label",
+                          "conversion-value"
+                        ]
+                      },
+                      "alignment": "center"
+                    }
+                  }
+                },
+                {
+                  "id": "conversion-label",
+                  "component": {
+                    "Text": {
+                      "text": {
+                        "literalString": "Conversion"
+                      },
+                      "usageHint": "h5"
+                    }
+                  }
+                },
+                {
+                  "id": "conversion-value",
+                  "component": {
+                    "Text": {
+                      "text": {
+                        "literalString": "3.4%"
+                      },
+                      "usageHint": "h2"
+                    }
+                  }
+                },
+                {
+                  "id": "card-churn",
+                  "weight": 1,
+                  "component": {
+                    "Card": {
+                      "child": "card-churn-col"
+                    }
+                  }
+                },
+                {
+                  "id": "card-churn-col",
+                  "component": {
+                    "Column": {
+                      "children": {
+                        "explicitList": [
+                          "churn-label",
+                          "churn-value"
+                        ]
+                      },
+                      "alignment": "center"
+                    }
+                  }
+                },
+                {
+                  "id": "churn-label",
+                  "component": {
+                    "Text": {
+                      "text": {
+                        "literalString": "Churn"
+                      },
+                      "usageHint": "h5"
+                    }
+                  }
+                },
+                {
+                  "id": "churn-value",
+                  "component": {
+                    "Text": {
+                      "text": {
+                        "literalString": "1.1%"
+                      },
+                      "usageHint": "h2"
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "beginRendering": {
+              "surfaceId": "kpi-dashboard-1",
+              "root": "root"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "prompt": "Make a product card for a blue ceramic mug, $24, with an Add to Cart button.",
+      "model": "gpt-5-mini",
+      "elapsed_s": 22.98540933302138,
+      "raised_tool_call": true,
+      "parsed_args": false,
+      "has_surface_update": false,
+      "has_begin_rendering": false,
+      "data_update_count": 0,
+      "component_count": 0,
+      "error": "envelopes not a list: type=NoneType",
+      "raw_tool_args": {
+        "envelope": [
+          {
+            "surfaceUpdate": {
+              "surfaceId": "product-card-1",
+              "components": [
+                {
+                  "id": "root",
+                  "component": {
+                    "Card": {
+                      "child": "card-content"
+                    }
+                  }
+                },
+                {
+                  "id": "card-content",
+                  "component": {
+                    "Column": {
+                      "children": {
+                        "explicitList": [
+                          "prod-image",
+                          "prod-title",
+                          "prod-price",
+                          "add-btn"
+                        ]
+                      }
+                    }
+                  }
+                },
+                {
+                  "id": "prod-image",
+                  "component": {
+                    "Image": {
+                      "url": {
+                        "literalString": "https://example.com/blue-ceramic-mug.png"
+                      },
+                      "fit": "contain",
+                      "usageHint": "mediumFeature"
+                    }
+                  }
+                },
+                {
+                  "id": "prod-title",
+                  "component": {
+                    "Text": {
+                      "text": {
+                        "literalString": "Blue Ceramic Mug"
+                      },
+                      "usageHint": "h3"
+                    }
+                  }
+                },
+                {
+                  "id": "prod-price",
+                  "component": {
+                    "Text": {
+                      "text": {
+                        "literalString": "$24"
+                      },
+                      "usageHint": "h2"
+                    }
+                  }
+                },
+                {
+                  "id": "add-btn",
+                  "component": {
+                    "Button": {
+                      "child": "add-btn-text",
+                      "primary": true,
+                      "action": {
+                        "name": "add_to_cart",
+                        "context": [
+                          {
+                            "key": "productId",
+                            "value": {
+                              "literalString": "mug-blue-ceramic"
+                            }
+                          },
+                          {
+                            "key": "productName",
+                            "value": {
+                              "literalString": "Blue Ceramic Mug"
+                            }
+                          },
+                          {
+                            "key": "price",
+                            "value": {
+                              "literalNumber": 24
+                            }
+                          },
+                          {
+                            "key": "currency",
+                            "value": {
+                              "literalString": "USD"
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  }
+                },
+                {
+                  "id": "add-btn-text",
+                  "component": {
+                    "Text": {
+                      "text": {
+                        "literalString": "Add to Cart"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "beginRendering": {
+              "surfaceId": "product-card-1",
+              "root": "root"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "prompt": "Render a settings panel with toggles for dark mode, notifications, and analytics.",
+      "model": "gpt-5-mini",
+      "elapsed_s": 13.001657333981711,
+      "raised_tool_call": true,
+      "parsed_args": false,
+      "has_surface_update": false,
+      "has_begin_rendering": false,
+      "data_update_count": 0,
+      "component_count": 0,
+      "error": "envelopes not a list: type=NoneType",
+      "raw_tool_args": {
+        "": ""
+      }
+    },
+    {
+      "prompt": "Show a contact form with name, email, message, and a Submit button.",
+      "model": "gpt-5-mini",
+      "elapsed_s": 16.960418958973605,
+      "raised_tool_call": true,
+      "parsed_args": false,
+      "has_surface_update": false,
+      "has_begin_rendering": false,
+      "data_update_count": 0,
+      "component_count": 0,
+      "error": "envelopes not a list: type=NoneType",
+      "raw_tool_args": {
+        "envelope": [
+          {
+            "surfaceUpdate": {
+              "surfaceId": "contact-form-surface-1",
+              "components": [
+                {
+                  "id": "root",
+                  "component": {
+                    "Column": {
+                      "children": {
+                        "explicitList": [
+                          "title",
+                          "nameField",
+                          "emailField",
+                          "messageField",
+                          "submitButton"
+                        ]
+                      },
+                      "alignment": "stretch",
+                      "distribution": "start"
+                    }
+                  }
+                },
+                {
+                  "id": "title",
+                  "component": {
+                    "Text": {
+                      "text": {
+                        "literalString": "Contact Us"
+                      },
+                      "usageHint": "h2"
+                    }
+                  }
+                },
+                {
+                  "id": "nameField",
+                  "component": {
+                    "TextField": {
+                      "label": {
+                        "literalString": "Name"
+                      },
+                      "text": {
+                        "path": "/form/name"
+                      },
+                      "textFieldType": "shortText"
+                    }
+                  }
+                },
+                {
+                  "id": "emailField",
+                  "component": {
+                    "TextField": {
+                      "label": {
+                        "literalString": "Email"
+                      },
+                      "text": {
+                        "path": "/form/email"
+                      },
+                      "textFieldType": "shortText",
+                      "validationRegexp": "^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$"
+                    }
+                  }
+                },
+                {
+                  "id": "messageField",
+                  "component": {
+                    "TextField": {
+                      "label": {
+                        "literalString": "Message"
+                      },
+                      "text": {
+                        "path": "/form/message"
+                      },
+                      "textFieldType": "longText"
+                    }
+                  }
+                },
+                {
+                  "id": "submitButton",
+                  "component": {
+                    "Button": {
+                      "child": "submitText",
+                      "primary": true,
+                      "action": {
+                        "name": "submit_contact",
+                        "context": [
+                          {
+                            "key": "name",
+                            "value": {
+                              "path": "/form/name"
+                            }
+                          },
+                          {
+                            "key": "email",
+                            "value": {
+                              "path": "/form/email"
+                            }
+                          },
+                          {
+                            "key": "message",
+                            "value": {
+                              "path": "/form/message"
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  }
+                },
+                {
+                  "id": "submitText",
+                  "component": {
+                    "Text": {
+                      "text": {
+                        "literalString": "Submit"
+                      },
+                      "usageHint": "body"
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "dataModelUpdate": {
+              "surfaceId": "contact-form-surface-1",
+              "contents": [
+                {
+                  "key": "/form",
+                  "valueMap": [
+                    {
+                      "key": "name",
+                      "valueString": ""
+                    },
+                    {
+                      "key": "email",
+                      "valueString": ""
+                    },
+                    {
+                      "key": "message",
+                      "valueString": ""
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "beginRendering": {
+              "surfaceId": "contact-form-surface-1",
+              "root": "root",
+              "styles": {
+                "font": "Roboto",
+                "primaryColor": "#0B6FFF"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "prompt": "Render a pricing table with three tiers: Basic $9, Pro $29, Enterprise $99.",
+      "model": "gpt-5-mini",
+      "elapsed_s": 25.533969833981246,
+      "raised_tool_call": true,
+      "parsed_args": true,
+      "has_surface_update": true,
+      "has_begin_rendering": true,
+      "data_update_count": 0,
+      "component_count": 24,
+      "error": "",
+      "raw_tool_args": {
+        "envelopes": [
+          {
+            "surfaceUpdate": {
+              "surfaceId": "pricing-surface-001",
+              "components": [
+                {
+                  "id": "root",
+                  "component": {
+                    "Column": {
+                      "children": {
+                        "explicitList": [
+                          "header",
+                          "tiers-row"
+                        ]
+                      },
+                      "alignment": "center",
+                      "distribution": "start"
+                    }
+                  }
+                },
+                {
+                  "id": "header",
+                  "component": {
+                    "Text": {
+                      "text": {
+                        "literalString": "Choose your plan"
+                      },
+                      "usageHint": "h1"
+                    }
+                  }
+                },
+                {
+                  "id": "tiers-row",
+                  "component": {
+                    "Row": {
+                      "children": {
+                        "explicitList": [
+                          "basic-card",
+                          "pro-card",
+                          "enterprise-card"
+                        ]
+                      },
+                      "distribution": "spaceEvenly",
+                      "alignment": "stretch"
+                    }
+                  }
+                },
+                {
+                  "id": "basic-card",
+                  "component": {
+                    "Card": {
+                      "child": "basic-card-content"
+                    }
+                  }
+                },
+                {
+                  "id": "basic-card-content",
+                  "component": {
+                    "Column": {
+                      "children": {
+                        "explicitList": [
+                          "basic-title",
+                          "basic-price",
+                          "basic-desc",
+                          "basic-choose-btn"
+                        ]
+                      },
+                      "alignment": "center",
+                      "distribution": "start"
+                    }
+                  }
+                },
+                {
+                  "id": "basic-title",
+                  "component": {
+                    "Text": {
+                      "text": {
+                        "literalString": "Basic"
+                      },
+                      "usageHint": "h3"
+                    }
+                  }
+                },
+                {
+                  "id": "basic-price",
+                  "component": {
+                    "Text": {
+                      "text": {
+                        "literalString": "$9 /mo"
+                      },
+                      "usageHint": "h2"
+                    }
+                  }
+                },
+                {
+                  "id": "basic-desc",
+                  "component": {
+                    "Text": {
+                      "text": {
+                        "literalString": "Essential features for personal use"
+                      },
+                      "usageHint": "body"
+                    }
+                  }
+                },
+                {
+                  "id": "basic-choose-btn",
+                  "component": {
+                    "Button": {
+                      "child": "basic-button-text",
+                      "action": {
+                        "name": "select_plan",
+                        "context": [
+                          {
+                            "key": "plan",
+                            "value": {
+                              "literalString": "Basic"
+                            }
+                          },
+                          {
+                            "key": "price",
+                            "value": {
+                              "literalString": "9"
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  }
+                },
+                {
+                  "id": "basic-button-text",
+                  "component": {
+                    "Text": {
+                      "text": {
+                        "literalString": "Choose Basic"
+                      }
+                    }
+                  }
+                },
+                {
+                  "id": "pro-card",
+                  "component": {
+                    "Card": {
+                      "child": "pro-card-content"
+                    }
+                  }
+                },
+                {
+                  "id": "pro-card-content",
+                  "component": {
+                    "Column": {
+                      "children": {
+                        "explicitList": [
+                          "pro-title",
+                          "pro-price",
+                          "pro-desc",
+                          "pro-choose-btn"
+                        ]
+                      },
+                      "alignment": "center",
+                      "distribution": "start"
+                    }
+                  }
+                },
+                {
+                  "id": "pro-title",
+                  "component": {
+                    "Text": {
+                      "text": {
+                        "literalString": "Pro"
+                      },
+                      "usageHint": "h3"
+                    }
+                  }
+                },
+                {
+                  "id": "pro-price",
+                  "component": {
+                    "Text": {
+                      "text": {
+                        "literalString": "$29 /mo"
+                      },
+                      "usageHint": "h2"
+                    }
+                  }
+                },
+                {
+                  "id": "pro-desc",
+                  "component": {
+                    "Text": {
+                      "text": {
+                        "literalString": "Advanced features for growing teams"
+                      },
+                      "usageHint": "body"
+                    }
+                  }
+                },
+                {
+                  "id": "pro-choose-btn",
+                  "component": {
+                    "Button": {
+                      "child": "pro-button-text",
+                      "primary": true,
+                      "action": {
+                        "name": "select_plan",
+                        "context": [
+                          {
+                            "key": "plan",
+                            "value": {
+                              "literalString": "Pro"
+                            }
+                          },
+                          {
+                            "key": "price",
+                            "value": {
+                              "literalString": "29"
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  }
+                },
+                {
+                  "id": "pro-button-text",
+                  "component": {
+                    "Text": {
+                      "text": {
+                        "literalString": "Choose Pro"
+                      }
+                    }
+                  }
+                },
+                {
+                  "id": "enterprise-card",
+                  "component": {
+                    "Card": {
+                      "child": "enterprise-card-content"
+                    }
+                  }
+                },
+                {
+                  "id": "enterprise-card-content",
+                  "component": {
+                    "Column": {
+                      "children": {
+                        "explicitList": [
+                          "enterprise-title",
+                          "enterprise-price",
+                          "enterprise-desc",
+                          "enterprise-choose-btn"
+                        ]
+                      },
+                      "alignment": "center",
+                      "distribution": "start"
+                    }
+                  }
+                },
+                {
+                  "id": "enterprise-title",
+                  "component": {
+                    "Text": {
+                      "text": {
+                        "literalString": "Enterprise"
+                      },
+                      "usageHint": "h3"
+                    }
+                  }
+                },
+                {
+                  "id": "enterprise-price",
+                  "component": {
+                    "Text": {
+                      "text": {
+                        "literalString": "$99 /mo"
+                      },
+                      "usageHint": "h2"
+                    }
+                  }
+                },
+                {
+                  "id": "enterprise-desc",
+                  "component": {
+                    "Text": {
+                      "text": {
+                        "literalString": "Full features and support for large organizations"
+                      },
+                      "usageHint": "body"
+                    }
+                  }
+                },
+                {
+                  "id": "enterprise-choose-btn",
+                  "component": {
+                    "Button": {
+                      "child": "enterprise-button-text",
+                      "action": {
+                        "name": "select_plan",
+                        "context": [
+                          {
+                            "key": "plan",
+                            "value": {
+                              "literalString": "Enterprise"
+                            }
+                          },
+                          {
+                            "key": "price",
+                            "value": {
+                              "literalString": "99"
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  }
+                },
+                {
+                  "id": "enterprise-button-text",
+                  "component": {
+                    "Text": {
+                      "text": {
+                        "literalString": "Contact Sales"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "beginRendering": {
+              "surfaceId": "pricing-surface-001",
+              "root": "root",
+              "styles": {
+                "font": "Roboto",
+                "primaryColor": "#007BFF"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "prompt": "Render a profile card for Alex Smith, role Senior Engineer, with an Edit button.",
+      "model": "gpt-5-mini",
+      "elapsed_s": 19.722272333980072,
+      "raised_tool_call": true,
+      "parsed_args": false,
+      "has_surface_update": false,
+      "has_begin_rendering": false,
+      "data_update_count": 0,
+      "component_count": 0,
+      "error": "envelopes not a list: type=NoneType",
+      "raw_tool_args": {
+        "envelope": [
+          {
+            "surfaceUpdate": {
+              "surfaceId": "profile-alexsmith-1",
+              "components": [
+                {
+                  "id": "root",
+                  "component": {
+                    "Card": {
+                      "child": "card-content"
+                    }
+                  }
+                },
+                {
+                  "id": "card-content",
+                  "component": {
+                    "Column": {
+                      "children": {
+                        "explicitList": [
+                          "header-row",
+                          "divider",
+                          "actions-row"
+                        ]
+                      },
+                      "alignment": "start",
+                      "distribution": "start"
+                    }
+                  }
+                },
+                {
+                  "id": "header-row",
+                  "component": {
+                    "Row": {
+                      "children": {
+                        "explicitList": [
+                          "avatar",
+                          "name-role-column"
+                        ]
+                      },
+                      "alignment": "center",
+                      "distribution": "start"
+                    }
+                  }
+                },
+                {
+                  "id": "avatar",
+                  "component": {
+                    "Image": {
+                      "url": {
+                        "literalString": "https://ui-avatars.com/api/?name=Alex+Smith&size=128"
+                      },
+                      "fit": "cover",
+                      "usageHint": "avatar"
+                    }
+                  }
+                },
+                {
+                  "id": "name-role-column",
+                  "component": {
+                    "Column": {
+                      "children": {
+                        "explicitList": [
+                          "name-text",
+                          "role-text"
+                        ]
+                      },
+                      "alignment": "start",
+                      "distribution": "start"
+                    }
+                  }
+                },
+                {
+                  "id": "name-text",
+                  "component": {
+                    "Text": {
+                      "text": {
+                        "literalString": "Alex Smith"
+                      },
+                      "usageHint": "h3"
+                    }
+                  }
+                },
+                {
+                  "id": "role-text",
+                  "component": {
+                    "Text": {
+                      "text": {
+                        "literalString": "Senior Engineer"
+                      },
+                      "usageHint": "body"
+                    }
+                  }
+                },
+                {
+                  "id": "divider",
+                  "component": {
+                    "Divider": {
+                      "axis": "horizontal"
+                    }
+                  }
+                },
+                {
+                  "id": "actions-row",
+                  "component": {
+                    "Row": {
+                      "children": {
+                        "explicitList": [
+                          "spacer",
+                          "edit-button"
+                        ]
+                      },
+                      "alignment": "center",
+                      "distribution": "end"
+                    }
+                  }
+                },
+                {
+                  "id": "spacer",
+                  "component": {
+                    "Text": {
+                      "text": {
+                        "literalString": ""
+                      },
+                      "usageHint": "body"
+                    }
+                  },
+                  "weight": 1
+                },
+                {
+                  "id": "edit-button",
+                  "component": {
+                    "Button": {
+                      "child": "edit-button-text",
+                      "primary": true,
+                      "action": {
+                        "name": "edit_profile",
+                        "context": [
+                          {
+                            "key": "userId",
+                            "value": {
+                              "literalString": "alex-smith"
+                            }
+                          },
+                          {
+                            "key": "name",
+                            "value": {
+                              "literalString": "Alex Smith"
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  }
+                },
+                {
+                  "id": "edit-button-text",
+                  "component": {
+                    "Text": {
+                      "text": {
+                        "literalString": "Edit"
+                      },
+                      "usageHint": "body"
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "beginRendering": {
+              "surfaceId": "profile-alexsmith-1",
+              "root": "root"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "prompt": "Build a checkout summary: 2 items totaling $48 plus $5 shipping.",
+      "model": "gpt-5-mini",
+      "elapsed_s": 23.70565424999222,
+      "raised_tool_call": true,
+      "parsed_args": true,
+      "has_surface_update": true,
+      "has_begin_rendering": true,
+      "data_update_count": 0,
+      "component_count": 19,
+      "error": "",
+      "raw_tool_args": {
+        "envelopes": [
+          {
+            "surfaceUpdate": {
+              "surfaceId": "checkout-summary-001",
+              "components": [
+                {
+                  "id": "root",
+                  "component": {
+                    "Column": {
+                      "children": {
+                        "explicitList": [
+                          "heading",
+                          "itemsList",
+                          "divider1",
+                          "shippingRow",
+                          "divider2",
+                          "totalRow",
+                          "placeOrderBtn"
+                        ]
+                      },
+                      "alignment": "start",
+                      "distribution": "start"
+                    }
+                  }
+                },
+                {
+                  "id": "heading",
+                  "component": {
+                    "Text": {
+                      "text": {
+                        "literalString": "Checkout Summary"
+                      },
+                      "usageHint": "h2"
+                    }
+                  }
+                },
+                {
+                  "id": "itemsList",
+                  "component": {
+                    "Column": {
+                      "children": {
+                        "explicitList": [
+                          "item1Row",
+                          "item2Row"
+                        ]
+                      },
+                      "alignment": "stretch",
+                      "distribution": "start"
+                    }
+                  }
+                },
+                {
+                  "id": "item1Row",
+                  "component": {
+                    "Row": {
+                      "children": {
+                        "explicitList": [
+                          "item1Name",
+                          "item1Price"
+                        ]
+                      },
+                      "distribution": "spaceBetween",
+                      "alignment": "center"
+                    }
+                  }
+                },
+                {
+                  "id": "item1Name",
+                  "component": {
+                    "Text": {
+                      "text": {
+                        "literalString": "Widget A"
+                      },
+                      "usageHint": "body"
+                    }
+                  }
+                },
+                {
+                  "id": "item1Price",
+                  "component": {
+                    "Text": {
+                      "text": {
+                        "literalString": "$24.00"
+                      },
+                      "usageHint": "body"
+                    }
+                  }
+                },
+                {
+                  "id": "item2Row",
+                  "component": {
+                    "Row": {
+                      "children": {
+                        "explicitList": [
+                          "item2Name",
+                          "item2Price"
+                        ]
+                      },
+                      "distribution": "spaceBetween",
+                      "alignment": "center"
+                    }
+                  }
+                },
+                {
+                  "id": "item2Name",
+                  "component": {
+                    "Text": {
+                      "text": {
+                        "literalString": "Gadget B"
+                      },
+                      "usageHint": "body"
+                    }
+                  }
+                },
+                {
+                  "id": "item2Price",
+                  "component": {
+                    "Text": {
+                      "text": {
+                        "literalString": "$24.00"
+                      },
+                      "usageHint": "body"
+                    }
+                  }
+                },
+                {
+                  "id": "divider1",
+                  "component": {
+                    "Divider": {
+                      "axis": "horizontal"
+                    }
+                  }
+                },
+                {
+                  "id": "shippingRow",
+                  "component": {
+                    "Row": {
+                      "children": {
+                        "explicitList": [
+                          "shippingLabel",
+                          "shippingPrice"
+                        ]
+                      },
+                      "distribution": "spaceBetween",
+                      "alignment": "center"
+                    }
+                  }
+                },
+                {
+                  "id": "shippingLabel",
+                  "component": {
+                    "Text": {
+                      "text": {
+                        "literalString": "Shipping"
+                      },
+                      "usageHint": "body"
+                    }
+                  }
+                },
+                {
+                  "id": "shippingPrice",
+                  "component": {
+                    "Text": {
+                      "text": {
+                        "literalString": "$5.00"
+                      },
+                      "usageHint": "body"
+                    }
+                  }
+                },
+                {
+                  "id": "divider2",
+                  "component": {
+                    "Divider": {
+                      "axis": "horizontal"
+                    }
+                  }
+                },
+                {
+                  "id": "totalRow",
+                  "component": {
+                    "Row": {
+                      "children": {
+                        "explicitList": [
+                          "totalLabel",
+                          "totalPrice"
+                        ]
+                      },
+                      "distribution": "spaceBetween",
+                      "alignment": "center"
+                    }
+                  }
+                },
+                {
+                  "id": "totalLabel",
+                  "component": {
+                    "Text": {
+                      "text": {
+                        "literalString": "Total"
+                      },
+                      "usageHint": "h3"
+                    }
+                  }
+                },
+                {
+                  "id": "totalPrice",
+                  "component": {
+                    "Text": {
+                      "text": {
+                        "literalString": "$53.00"
+                      },
+                      "usageHint": "h3"
+                    }
+                  }
+                },
+                {
+                  "id": "placeOrderBtn",
+                  "component": {
+                    "Button": {
+                      "child": "placeOrderText",
+                      "primary": true,
+                      "action": {
+                        "name": "place_order"
+                      }
+                    }
+                  }
+                },
+                {
+                  "id": "placeOrderText",
+                  "component": {
+                    "Text": {
+                      "text": {
+                        "literalString": "Place Order \u2014 $53.00"
+                      },
+                      "usageHint": "body"
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "beginRendering": {
+              "surfaceId": "checkout-summary-001",
+              "root": "root",
+              "styles": {
+                "font": "Roboto",
+                "primaryColor": "#00BFFF"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "prompt": "Display an error alert: 'Could not connect to server' with a Retry button.",
+      "model": "gpt-5-mini",
+      "elapsed_s": 14.526119207963347,
+      "raised_tool_call": true,
+      "parsed_args": false,
+      "has_surface_update": false,
+      "has_begin_rendering": false,
+      "data_update_count": 0,
+      "component_count": 0,
+      "error": "envelopes not a list: type=NoneType",
+      "raw_tool_args": {
+        "envelope": [
+          {
+            "surfaceUpdate": {
+              "surfaceId": "error-alert-surface-1",
+              "components": [
+                {
+                  "id": "root",
+                  "component": {
+                    "Column": {
+                      "children": {
+                        "explicitList": [
+                          "titleRow",
+                          "message",
+                          "retryButton"
+                        ]
+                      },
+                      "alignment": "center",
+                      "distribution": "center"
+                    }
+                  }
+                },
+                {
+                  "id": "titleRow",
+                  "component": {
+                    "Row": {
+                      "children": {
+                        "explicitList": [
+                          "errorIcon",
+                          "titleText"
+                        ]
+                      },
+                      "alignment": "center",
+                      "distribution": "start"
+                    }
+                  }
+                },
+                {
+                  "id": "errorIcon",
+                  "component": {
+                    "Icon": {
+                      "name": {
+                        "literalString": "error"
+                      }
+                    }
+                  }
+                },
+                {
+                  "id": "titleText",
+                  "component": {
+                    "Text": {
+                      "text": {
+                        "literalString": "Error"
+                      },
+                      "usageHint": "h3"
+                    }
+                  }
+                },
+                {
+                  "id": "message",
+                  "component": {
+                    "Text": {
+                      "text": {
+                        "literalString": "Could not connect to server"
+                      },
+                      "usageHint": "body"
+                    }
+                  }
+                },
+                {
+                  "id": "retryButton",
+                  "component": {
+                    "Button": {
+                      "child": "retryText",
+                      "primary": true,
+                      "action": {
+                        "name": "retry_connection"
+                      }
+                    }
+                  }
+                },
+                {
+                  "id": "retryText",
+                  "component": {
+                    "Text": {
+                      "text": {
+                        "literalString": "Retry"
+                      },
+                      "usageHint": "body"
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "beginRendering": {
+              "surfaceId": "error-alert-surface-1",
+              "root": "root"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "prompt": "Render a recipe card for 'Pasta Carbonara' with ingredient list and cook time 25 minutes.",
+      "model": "gpt-5-mini",
+      "elapsed_s": 22.70063045801362,
+      "raised_tool_call": true,
+      "parsed_args": false,
+      "has_surface_update": false,
+      "has_begin_rendering": false,
+      "data_update_count": 0,
+      "component_count": 0,
+      "error": "envelopes not a list: type=NoneType",
+      "raw_tool_args": {
+        "surfaceUpdate": {
+          "surfaceId": "recipe-pasta-carbonara-001",
+          "components": [
+            {
+              "id": "root",
+              "component": {
+                "Column": {
+                  "children": {
+                    "explicitList": [
+                      "title",
+                      "divider",
+                      "timeText",
+                      "ingredientsCard"
+                    ]
+                  },
+                  "alignment": "start",
+                  "distribution": "start"
+                }
+              }
+            },
+            {
+              "id": "title",
+              "component": {
+                "Text": {
+                  "text": {
+                    "literalString": "Pasta Carbonara"
+                  },
+                  "usageHint": "h2"
+                }
+              }
+            },
+            {
+              "id": "divider",
+              "component": {
+                "Divider": {
+                  "axis": "horizontal"
+                }
+              }
+            },
+            {
+              "id": "timeText",
+              "component": {
+                "Text": {
+                  "text": {
+                    "literalString": "Cook time: 25 minutes"
+                  },
+                  "usageHint": "body"
+                }
+              }
+            },
+            {
+              "id": "ingredientsCard",
+              "component": {
+                "Card": {
+                  "child": "ingredientsColumn"
+                }
+              }
+            },
+            {
+              "id": "ingredientsColumn",
+              "component": {
+                "Column": {
+                  "children": {
+                    "explicitList": [
+                      "ingredientsHeading",
+                      "ingredientsList"
+                    ]
+                  },
+                  "alignment": "start",
+                  "distribution": "start"
+                }
+              }
+            },
+            {
+              "id": "ingredientsHeading",
+              "component": {
+                "Text": {
+                  "text": {
+                    "literalString": "Ingredients"
+                  },
+                  "usageHint": "h3"
+                }
+              }
+            },
+            {
+              "id": "ingredientsList",
+              "component": {
+                "List": {
+                  "children": {
+                    "explicitList": [
+                      "ingredient1",
+                      "ingredient2",
+                      "ingredient3",
+                      "ingredient4",
+                      "ingredient5",
+                      "ingredient6",
+                      "ingredient7"
+                    ]
+                  },
+                  "direction": "vertical",
+                  "alignment": "start"
+                }
+              }
+            },
+            {
+              "id": "ingredient1",
+              "component": {
+                "Text": {
+                  "text": {
+                    "literalString": "400 g spaghetti"
+                  },
+                  "usageHint": "body"
+                }
+              }
+            },
+            {
+              "id": "ingredient2",
+              "component": {
+                "Text": {
+                  "text": {
+                    "literalString": "150 g pancetta or guanciale, diced"
+                  },
+                  "usageHint": "body"
+                }
+              }
+            },
+            {
+              "id": "ingredient3",
+              "component": {
+                "Text": {
+                  "text": {
+                    "literalString": "4 large eggs"
+                  },
+                  "usageHint": "body"
+                }
+              }
+            },
+            {
+              "id": "ingredient4",
+              "component": {
+                "Text": {
+                  "text": {
+                    "literalString": "100 g Pecorino Romano, grated"
+                  },
+                  "usageHint": "body"
+                }
+              }
+            },
+            {
+              "id": "ingredient5",
+              "component": {
+                "Text": {
+                  "text": {
+                    "literalString": "50 g Parmesan, grated (optional)"
+                  },
+                  "usageHint": "body"
+                }
+              }
+            },
+            {
+              "id": "ingredient6",
+              "component": {
+                "Text": {
+                  "text": {
+                    "literalString": "Freshly ground black pepper, to taste"
+                  },
+                  "usageHint": "body"
+                }
+              }
+            },
+            {
+              "id": "ingredient7",
+              "component": {
+                "Text": {
+                  "text": {
+                    "literalString": "Salt, for pasta water"
+                  },
+                  "usageHint": "body"
+                }
+              }
+            }
+          ]
+        },
+        "beginRendering": {
+          "surfaceId": "recipe-pasta-carbonara-001",
+          "root": "root"
+        }
+      }
+    },
+    {
+      "prompt": "Render a confirmation dialog asking 'Delete file?' with Cancel and Delete buttons.",
+      "model": "gpt-5-mini",
+      "elapsed_s": 14.367457957996521,
+      "raised_tool_call": true,
+      "parsed_args": false,
+      "has_surface_update": false,
+      "has_begin_rendering": false,
+      "data_update_count": 0,
+      "component_count": 0,
+      "error": "envelopes not a list: type=NoneType",
+      "raw_tool_args": {
+        "envelope": [
+          {
+            "surfaceUpdate": {
+              "surfaceId": "delete-confirmation-1",
+              "components": [
+                {
+                  "id": "dialog-card",
+                  "component": {
+                    "Card": {
+                      "child": "dialog-column"
+                    }
+                  }
+                },
+                {
+                  "id": "dialog-column",
+                  "component": {
+                    "Column": {
+                      "children": {
+                        "explicitList": [
+                          "title",
+                          "divider",
+                          "button-row"
+                        ]
+                      },
+                      "alignment": "center",
+                      "distribution": "center"
+                    }
+                  }
+                },
+                {
+                  "id": "title",
+                  "component": {
+                    "Text": {
+                      "text": {
+                        "literalString": "Delete file?"
+                      },
+                      "usageHint": "h2"
+                    }
+                  }
+                },
+                {
+                  "id": "divider",
+                  "component": {
+                    "Divider": {
+                      "axis": "horizontal"
+                    }
+                  }
+                },
+                {
+                  "id": "button-row",
+                  "component": {
+                    "Row": {
+                      "children": {
+                        "explicitList": [
+                          "cancel-btn",
+                          "delete-btn"
+                        ]
+                      },
+                      "distribution": "end",
+                      "alignment": "center"
+                    }
+                  }
+                },
+                {
+                  "id": "cancel-btn",
+                  "component": {
+                    "Button": {
+                      "child": "cancel-text",
+                      "action": {
+                        "name": "cancel"
+                      }
+                    }
+                  }
+                },
+                {
+                  "id": "cancel-text",
+                  "component": {
+                    "Text": {
+                      "text": {
+                        "literalString": "Cancel"
+                      },
+                      "usageHint": "body"
+                    }
+                  }
+                },
+                {
+                  "id": "delete-btn",
+                  "component": {
+                    "Button": {
+                      "child": "delete-text",
+                      "primary": true,
+                      "action": {
+                        "name": "delete"
+                      }
+                    }
+                  }
+                },
+                {
+                  "id": "delete-text",
+                  "component": {
+                    "Text": {
+                      "text": {
+                        "literalString": "Delete"
+                      },
+                      "usageHint": "body"
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "beginRendering": {
+              "surfaceId": "delete-confirmation-1",
+              "root": "dialog-card"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "prompt": "Show a survey with three rating questions and a Submit button.",
+      "model": "gpt-5-mini",
+      "elapsed_s": 23.12496404099511,
+      "raised_tool_call": true,
+      "parsed_args": true,
+      "has_surface_update": true,
+      "has_begin_rendering": true,
+      "data_update_count": 1,
+      "component_count": 18,
+      "error": "",
+      "raw_tool_args": {
+        "envelopes": [
+          {
+            "surfaceUpdate": {
+              "surfaceId": "survey-surface-v1",
+              "components": [
+                {
+                  "id": "root",
+                  "component": {
+                    "Column": {
+                      "children": {
+                        "explicitList": [
+                          "title",
+                          "q1_card",
+                          "q2_card",
+                          "q3_card",
+                          "divider",
+                          "submit_row"
+                        ]
+                      }
+                    }
+                  }
+                },
+                {
+                  "id": "title",
+                  "component": {
+                    "Text": {
+                      "text": {
+                        "literalString": "Customer Satisfaction Survey"
+                      },
+                      "usageHint": "h2"
+                    }
+                  }
+                },
+                {
+                  "id": "q1_card",
+                  "component": {
+                    "Card": {
+                      "child": "q1_col"
+                    }
+                  }
+                },
+                {
+                  "id": "q1_col",
+                  "component": {
+                    "Column": {
+                      "children": {
+                        "explicitList": [
+                          "q1_text",
+                          "q1_slider"
+                        ]
+                      }
+                    }
+                  }
+                },
+                {
+                  "id": "q1_text",
+                  "component": {
+                    "Text": {
+                      "text": {
+                        "literalString": "1. How satisfied are you with our service?"
+                      },
+                      "usageHint": "body"
+                    }
+                  }
+                },
+                {
+                  "id": "q1_slider",
+                  "component": {
+                    "Slider": {
+                      "value": {
+                        "path": "/ratings/q1"
+                      },
+                      "minValue": 1,
+                      "maxValue": 5
+                    }
+                  }
+                },
+                {
+                  "id": "q2_card",
+                  "component": {
+                    "Card": {
+                      "child": "q2_col"
+                    }
+                  }
+                },
+                {
+                  "id": "q2_col",
+                  "component": {
+                    "Column": {
+                      "children": {
+                        "explicitList": [
+                          "q2_text",
+                          "q2_slider"
+                        ]
+                      }
+                    }
+                  }
+                },
+                {
+                  "id": "q2_text",
+                  "component": {
+                    "Text": {
+                      "text": {
+                        "literalString": "2. How likely are you to recommend us to a friend?"
+                      },
+                      "usageHint": "body"
+                    }
+                  }
+                },
+                {
+                  "id": "q2_slider",
+                  "component": {
+                    "Slider": {
+                      "value": {
+                        "path": "/ratings/q2"
+                      },
+                      "minValue": 1,
+                      "maxValue": 5
+                    }
+                  }
+                },
+                {
+                  "id": "q3_card",
+                  "component": {
+                    "Card": {
+                      "child": "q3_col"
+                    }
+                  }
+                },
+                {
+                  "id": "q3_col",
+                  "component": {
+                    "Column": {
+                      "children": {
+                        "explicitList": [
+                          "q3_text",
+                          "q3_slider"
+                        ]
+                      }
+                    }
+                  }
+                },
+                {
+                  "id": "q3_text",
+                  "component": {
+                    "Text": {
+                      "text": {
+                        "literalString": "3. Rate the overall quality of our product."
+                      },
+                      "usageHint": "body"
+                    }
+                  }
+                },
+                {
+                  "id": "q3_slider",
+                  "component": {
+                    "Slider": {
+                      "value": {
+                        "path": "/ratings/q3"
+                      },
+                      "minValue": 1,
+                      "maxValue": 5
+                    }
+                  }
+                },
+                {
+                  "id": "divider",
+                  "component": {
+                    "Divider": {
+                      "axis": "horizontal"
+                    }
+                  }
+                },
+                {
+                  "id": "submit_row",
+                  "component": {
+                    "Row": {
+                      "children": {
+                        "explicitList": [
+                          "submit_btn"
+                        ]
+                      },
+                      "distribution": "center"
+                    }
+                  }
+                },
+                {
+                  "id": "submit_btn",
+                  "component": {
+                    "Button": {
+                      "child": "submit_text",
+                      "primary": true,
+                      "action": {
+                        "name": "submit_survey",
+                        "context": [
+                          {
+                            "key": "q1",
+                            "value": {
+                              "path": "/ratings/q1"
+                            }
+                          },
+                          {
+                            "key": "q2",
+                            "value": {
+                              "path": "/ratings/q2"
+                            }
+                          },
+                          {
+                            "key": "q3",
+                            "value": {
+                              "path": "/ratings/q3"
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  }
+                },
+                {
+                  "id": "submit_text",
+                  "component": {
+                    "Text": {
+                      "text": {
+                        "literalString": "Submit"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "dataModelUpdate": {
+              "surfaceId": "survey-surface-v1",
+              "path": "/",
+              "contents": [
+                {
+                  "key": "ratings",
+                  "valueMap": [
+                    {
+                      "key": "q1",
+                      "valueNumber": 3
+                    },
+                    {
+                      "key": "q2",
+                      "valueNumber": 3
+                    },
+                    {
+                      "key": "q3",
+                      "valueNumber": 3
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "beginRendering": {
+              "surfaceId": "survey-surface-v1",
+              "root": "root"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "prompt": "Render a flight status panel: AA127 from JFK to LAX, departing 9:15am, on time.",
+      "model": "gpt-5-mini",
+      "elapsed_s": 22.548296499997377,
+      "raised_tool_call": true,
+      "parsed_args": true,
+      "has_surface_update": true,
+      "has_begin_rendering": true,
+      "data_update_count": 0,
+      "component_count": 16,
+      "error": "",
+      "raw_tool_args": {
+        "envelopes": [
+          {
+            "surfaceUpdate": {
+              "surfaceId": "flight-status-aa127-001",
+              "components": [
+                {
+                  "id": "root",
+                  "component": {
+                    "Column": {
+                      "children": {
+                        "explicitList": [
+                          "card"
+                        ]
+                      }
+                    }
+                  }
+                },
+                {
+                  "id": "card",
+                  "component": {
+                    "Card": {
+                      "child": "card-content"
+                    }
+                  }
+                },
+                {
+                  "id": "card-content",
+                  "component": {
+                    "Column": {
+                      "children": {
+                        "explicitList": [
+                          "header-row",
+                          "divider",
+                          "details-row",
+                          "divider2",
+                          "actions-row"
+                        ]
+                      }
+                    }
+                  }
+                },
+                {
+                  "id": "header-row",
+                  "component": {
+                    "Row": {
+                      "children": {
+                        "explicitList": [
+                          "flight-info",
+                          "status-text"
+                        ]
+                      },
+                      "distribution": "spaceBetween",
+                      "alignment": "center"
+                    }
+                  }
+                },
+                {
+                  "id": "flight-info",
+                  "component": {
+                    "Column": {
+                      "children": {
+                        "explicitList": [
+                          "flight-number",
+                          "route"
+                        ]
+                      }
+                    }
+                  }
+                },
+                {
+                  "id": "flight-number",
+                  "component": {
+                    "Text": {
+                      "text": {
+                        "literalString": "AA127"
+                      },
+                      "usageHint": "h2"
+                    }
+                  }
+                },
+                {
+                  "id": "route",
+                  "component": {
+                    "Text": {
+                      "text": {
+                        "literalString": "JFK \u2192 LAX"
+                      },
+                      "usageHint": "body"
+                    }
+                  }
+                },
+                {
+                  "id": "status-text",
+                  "component": {
+                    "Text": {
+                      "text": {
+                        "literalString": "On time"
+                      },
+                      "usageHint": "h4"
+                    }
+                  }
+                },
+                {
+                  "id": "divider",
+                  "component": {
+                    "Divider": {
+                      "axis": "horizontal"
+                    }
+                  }
+                },
+                {
+                  "id": "details-row",
+                  "component": {
+                    "Row": {
+                      "children": {
+                        "explicitList": [
+                          "depart-label",
+                          "depart-time"
+                        ]
+                      },
+                      "distribution": "start",
+                      "alignment": "center"
+                    }
+                  }
+                },
+                {
+                  "id": "depart-label",
+                  "component": {
+                    "Text": {
+                      "text": {
+                        "literalString": "Departure"
+                      },
+                      "usageHint": "caption"
+                    }
+                  }
+                },
+                {
+                  "id": "depart-time",
+                  "component": {
+                    "Text": {
+                      "text": {
+                        "literalString": "9:15 AM"
+                      },
+                      "usageHint": "h5"
+                    }
+                  }
+                },
+                {
+                  "id": "divider2",
+                  "component": {
+                    "Divider": {
+                      "axis": "horizontal"
+                    }
+                  }
+                },
+                {
+                  "id": "actions-row",
+                  "component": {
+                    "Row": {
+                      "children": {
+                        "explicitList": [
+                          "refresh-button"
+                        ]
+                      },
+                      "distribution": "end"
+                    }
+                  }
+                },
+                {
+                  "id": "refresh-button",
+                  "component": {
+                    "Button": {
+                      "child": "btn-refresh-text",
+                      "primary": true,
+                      "action": {
+                        "name": "refresh_flight_status",
+                        "context": [
+                          {
+                            "key": "flightNumber",
+                            "value": {
+                              "literalString": "AA127"
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  }
+                },
+                {
+                  "id": "btn-refresh-text",
+                  "component": {
+                    "Text": {
+                      "text": {
+                        "literalString": "Refresh"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "beginRendering": {
+              "surfaceId": "flight-status-aa127-001",
+              "root": "root"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "prompt": "Show a task card for 'Write the spec' assigned to me, due tomorrow, with a Complete button.",
+      "model": "gpt-5-mini",
+      "elapsed_s": 29.384177916974295,
+      "raised_tool_call": true,
+      "parsed_args": true,
+      "has_surface_update": true,
+      "has_begin_rendering": true,
+      "data_update_count": 0,
+      "component_count": 12,
+      "error": "",
+      "raw_tool_args": {
+        "envelopes": [
+          {
+            "surfaceUpdate": {
+              "surfaceId": "task-card-1",
+              "components": [
+                {
+                  "id": "root",
+                  "component": {
+                    "Card": {
+                      "child": "card-column"
+                    }
+                  }
+                },
+                {
+                  "id": "card-column",
+                  "component": {
+                    "Column": {
+                      "children": {
+                        "explicitList": [
+                          "title-row",
+                          "meta-row",
+                          "actions-row"
+                        ]
+                      }
+                    }
+                  }
+                },
+                {
+                  "id": "title-row",
+                  "component": {
+                    "Row": {
+                      "children": {
+                        "explicitList": [
+                          "title-text"
+                        ]
+                      },
+                      "alignment": "center"
+                    }
+                  }
+                },
+                {
+                  "id": "title-text",
+                  "component": {
+                    "Text": {
+                      "text": {
+                        "literalString": "Write the spec"
+                      },
+                      "usageHint": "h3"
+                    }
+                  }
+                },
+                {
+                  "id": "meta-row",
+                  "component": {
+                    "Row": {
+                      "children": {
+                        "explicitList": [
+                          "assignee-icon",
+                          "assignee-text",
+                          "due-icon",
+                          "due-text"
+                        ]
+                      },
+                      "alignment": "center",
+                      "distribution": "start"
+                    }
+                  }
+                },
+                {
+                  "id": "assignee-icon",
+                  "component": {
+                    "Icon": {
+                      "name": {
+                        "literalString": "person"
+                      }
+                    }
+                  }
+                },
+                {
+                  "id": "assignee-text",
+                  "component": {
+                    "Text": {
+                      "text": {
+                        "literalString": "Assigned to: You"
+                      },
+                      "usageHint": "body"
+                    }
+                  }
+                },
+                {
+                  "id": "due-icon",
+                  "component": {
+                    "Icon": {
+                      "name": {
+                        "literalString": "calendarToday"
+                      }
+                    }
+                  }
+                },
+                {
+                  "id": "due-text",
+                  "component": {
+                    "Text": {
+                      "text": {
+                        "literalString": "Due: Tomorrow (2026-05-13)"
+                      },
+                      "usageHint": "body"
+                    }
+                  }
+                },
+                {
+                  "id": "actions-row",
+                  "component": {
+                    "Row": {
+                      "children": {
+                        "explicitList": [
+                          "complete-btn"
+                        ]
+                      },
+                      "distribution": "end"
+                    }
+                  }
+                },
+                {
+                  "id": "complete-btn",
+                  "component": {
+                    "Button": {
+                      "child": "complete-btn-text",
+                      "primary": true,
+                      "action": {
+                        "name": "complete_task",
+                        "context": [
+                          {
+                            "key": "taskId",
+                            "value": {
+                              "literalString": "task-1234"
+                            }
+                          },
+                          {
+                            "key": "title",
+                            "value": {
+                              "literalString": "Write the spec"
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  }
+                },
+                {
+                  "id": "complete-btn-text",
+                  "component": {
+                    "Text": {
+                      "text": {
+                        "literalString": "Complete"
+                      },
+                      "usageHint": "body"
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "beginRendering": {
+              "surfaceId": "task-card-1",
+              "root": "root"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "prompt": "Render a notification card with title 'New message' and body 'You have a meeting at 3pm'.",
+      "model": "gpt-5-mini",
+      "elapsed_s": 13.486663665971719,
+      "raised_tool_call": true,
+      "parsed_args": false,
+      "has_surface_update": false,
+      "has_begin_rendering": false,
+      "data_update_count": 0,
+      "component_count": 0,
+      "error": "envelopes not a list: type=NoneType",
+      "raw_tool_args": {
+        "envelope": [
+          {
+            "surfaceUpdate": {
+              "surfaceId": "notification-card-1",
+              "components": [
+                {
+                  "id": "root",
+                  "component": {
+                    "Card": {
+                      "child": "card-content"
+                    }
+                  }
+                },
+                {
+                  "id": "card-content",
+                  "component": {
+                    "Column": {
+                      "children": {
+                        "explicitList": [
+                          "title",
+                          "body"
+                        ]
+                      },
+                      "alignment": "start",
+                      "distribution": "start"
+                    }
+                  }
+                },
+                {
+                  "id": "title",
+                  "component": {
+                    "Text": {
+                      "text": {
+                        "literalString": "New message"
+                      },
+                      "usageHint": "h3"
+                    }
+                  }
+                },
+                {
+                  "id": "body",
+                  "component": {
+                    "Text": {
+                      "text": {
+                        "literalString": "You have a meeting at 3pm"
+                      },
+                      "usageHint": "body"
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "beginRendering": {
+              "surfaceId": "notification-card-1",
+              "root": "root"
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "gpt-5": [
+    {
+      "prompt": "Render a sign-up card with email and password fields and a Submit button.",
+      "model": "gpt-5",
+      "elapsed_s": 38.73624295904301,
+      "raised_tool_call": true,
+      "parsed_args": false,
+      "has_surface_update": false,
+      "has_begin_rendering": false,
+      "data_update_count": 0,
+      "component_count": 0,
+      "error": "envelopes not a list: type=NoneType",
+      "raw_tool_args": {
+        "0": {
+          "surfaceUpdate": {
+            "surfaceId": "signup-surface",
+            "components": [
+              {
+                "id": "root",
+                "component": {
+                  "Column": {
+                    "children": {
+                      "explicitList": [
+                        "signup-card"
+                      ]
+                    },
+                    "distribution": "center",
+                    "alignment": "center"
+                  }
+                }
+              },
+              {
+                "id": "signup-card",
+                "component": {
+                  "Card": {
+                    "child": "card-content"
+                  }
+                }
+              },
+              {
+                "id": "card-content",
+                "component": {
+                  "Column": {
+                    "children": {
+                      "explicitList": [
+                        "signup-title",
+                        "email-field",
+                        "password-field",
+                        "submit-button"
+                      ]
+                    },
+                    "distribution": "start",
+                    "alignment": "stretch"
+                  }
+                }
+              },
+              {
+                "id": "signup-title",
+                "component": {
+                  "Text": {
+                    "text": {
+                      "literalString": "Create your account"
+                    },
+                    "usageHint": "h3"
+                  }
+                }
+              },
+              {
+                "id": "email-field",
+                "component": {
+                  "TextField": {
+                    "label": {
+                      "literalString": "Email"
+                    },
+                    "text": {
+                      "path": "/form/email"
+                    },
+                    "textFieldType": "shortText",
+                    "validationRegexp": "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$"
+                  }
+                }
+              },
+              {
+                "id": "password-field",
+                "component": {
+                  "TextField": {
+                    "label": {
+                      "literalString": "Password"
+                    },
+                    "text": {
+                      "path": "/form/password"
+                    },
+                    "textFieldType": "obscured",
+                    "validationRegexp": "^(?=.{8,}).*$"
+                  }
+                }
+              },
+              {
+                "id": "submit-button",
+                "component": {
+                  "Button": {
+                    "child": "submit-label",
+                    "primary": true,
+                    "action": {
+                      "name": "submit_signup",
+                      "context": [
+                        {
+                          "key": "email",
+                          "value": {
+                            "path": "/form/email"
+                          }
+                        },
+                        {
+                          "key": "password",
+                          "value": {
+                            "path": "/form/password"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              },
+              {
+                "id": "submit-label",
+                "component": {
+                  "Text": {
+                    "text": {
+                      "literalString": "Submit"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "1": {
+          "dataModelUpdate": {
+            "surfaceId": "signup-surface",
+            "path": "/form",
+            "contents": [
+              {
+                "key": "email",
+                "valueString": ""
+              },
+              {
+                "key": "password",
+                "valueString": ""
+              }
+            ]
+          }
+        },
+        "2": {
+          "beginRendering": {
+            "surfaceId": "signup-surface",
+            "root": "root",
+            "styles": {
+              "font": "Inter, system-ui, sans-serif",
+              "primaryColor": "#2563EB"
+            }
+          }
+        }
+      }
+    },
+    {
+      "prompt": "Show me a dashboard with 4 KPI cards: revenue $42k, users 1.2k, conversion 3.4%, churn 1.1%.",
+      "model": "gpt-5",
+      "elapsed_s": 57.35241412499454,
+      "raised_tool_call": true,
+      "parsed_args": false,
+      "has_surface_update": false,
+      "has_begin_rendering": false,
+      "data_update_count": 0,
+      "component_count": 0,
+      "error": "envelopes not a list: type=NoneType",
+      "raw_tool_args": {
+        "0": {
+          "surfaceUpdate": {
+            "surfaceId": "kpi-dashboard-1",
+            "components": [
+              {
+                "id": "root",
+                "component": {
+                  "Column": {
+                    "children": {
+                      "explicitList": [
+                        "title",
+                        "cards-row"
+                      ]
+                    },
+                    "distribution": "start",
+                    "alignment": "stretch"
+                  }
+                }
+              },
+              {
+                "id": "title",
+                "component": {
+                  "Text": {
+                    "text": {
+                      "literalString": "Dashboard KPIs"
+                    },
+                    "usageHint": "h2"
+                  }
+                }
+              },
+              {
+                "id": "cards-row",
+                "component": {
+                  "Row": {
+                    "children": {
+                      "explicitList": [
+                        "card1",
+                        "card2",
+                        "card3",
+                        "card4"
+                      ]
+                    },
+                    "distribution": "spaceBetween",
+                    "alignment": "stretch"
+                  }
+                }
+              },
+              {
+                "id": "card1",
+                "weight": 1,
+                "component": {
+                  "Card": {
+                    "child": "card1-content"
+                  }
+                }
+              },
+              {
+                "id": "card1-content",
+                "component": {
+                  "Column": {
+                    "children": {
+                      "explicitList": [
+                        "card1-label",
+                        "card1-value"
+                      ]
+                    },
+                    "distribution": "start",
+                    "alignment": "start"
+                  }
+                }
+              },
+              {
+                "id": "card1-label",
+                "component": {
+                  "Text": {
+                    "text": {
+                      "literalString": "Revenue"
+                    },
+                    "usageHint": "caption"
+                  }
+                }
+              },
+              {
+                "id": "card1-value",
+                "component": {
+                  "Text": {
+                    "text": {
+                      "literalString": "$42k"
+                    },
+                    "usageHint": "h3"
+                  }
+                }
+              },
+              {
+                "id": "card2",
+                "weight": 1,
+                "component": {
+                  "Card": {
+                    "child": "card2-content"
+                  }
+                }
+              },
+              {
+                "id": "card2-content",
+                "component": {
+                  "Column": {
+                    "children": {
+                      "explicitList": [
+                        "card2-label",
+                        "card2-value"
+                      ]
+                    },
+                    "distribution": "start",
+                    "alignment": "start"
+                  }
+                }
+              },
+              {
+                "id": "card2-label",
+                "component": {
+                  "Text": {
+                    "text": {
+                      "literalString": "Users"
+                    },
+                    "usageHint": "caption"
+                  }
+                }
+              },
+              {
+                "id": "card2-value",
+                "component": {
+                  "Text": {
+                    "text": {
+                      "literalString": "1.2k"
+                    },
+                    "usageHint": "h3"
+                  }
+                }
+              },
+              {
+                "id": "card3",
+                "weight": 1,
+                "component": {
+                  "Card": {
+                    "child": "card3-content"
+                  }
+                }
+              },
+              {
+                "id": "card3-content",
+                "component": {
+                  "Column": {
+                    "children": {
+                      "explicitList": [
+                        "card3-label",
+                        "card3-value"
+                      ]
+                    },
+                    "distribution": "start",
+                    "alignment": "start"
+                  }
+                }
+              },
+              {
+                "id": "card3-label",
+                "component": {
+                  "Text": {
+                    "text": {
+                      "literalString": "Conversion"
+                    },
+                    "usageHint": "caption"
+                  }
+                }
+              },
+              {
+                "id": "card3-value",
+                "component": {
+                  "Text": {
+                    "text": {
+                      "literalString": "3.4%"
+                    },
+                    "usageHint": "h3"
+                  }
+                }
+              },
+              {
+                "id": "card4",
+                "weight": 1,
+                "component": {
+                  "Card": {
+                    "child": "card4-content"
+                  }
+                }
+              },
+              {
+                "id": "card4-content",
+                "component": {
+                  "Column": {
+                    "children": {
+                      "explicitList": [
+                        "card4-label",
+                        "card4-value"
+                      ]
+                    },
+                    "distribution": "start",
+                    "alignment": "start"
+                  }
+                }
+              },
+              {
+                "id": "card4-label",
+                "component": {
+                  "Text": {
+                    "text": {
+                      "literalString": "Churn"
+                    },
+                    "usageHint": "caption"
+                  }
+                }
+              },
+              {
+                "id": "card4-value",
+                "component": {
+                  "Text": {
+                    "text": {
+                      "literalString": "1.1%"
+                    },
+                    "usageHint": "h3"
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "1": {
+          "beginRendering": {
+            "surfaceId": "kpi-dashboard-1",
+            "root": "root",
+            "styles": {
+              "font": "Inter",
+              "primaryColor": "#2563EB"
+            }
+          }
+        }
+      }
+    },
+    {
+      "prompt": "Make a product card for a blue ceramic mug, $24, with an Add to Cart button.",
+      "model": "gpt-5",
+      "elapsed_s": 46.37770399998408,
+      "raised_tool_call": true,
+      "parsed_args": true,
+      "has_surface_update": true,
+      "has_begin_rendering": true,
+      "data_update_count": 0,
+      "component_count": 9,
+      "error": "",
+      "raw_tool_args": {
+        "envelopes": [
+          {
+            "surfaceUpdate": {
+              "surfaceId": "product-card-blue-mug-1",
+              "components": [
+                {
+                  "id": "root",
+                  "component": {
+                    "Card": {
+                      "child": "card-content"
+                    }
+                  }
+                },
+                {
+                  "id": "card-content",
+                  "component": {
+                    "Column": {
+                      "children": {
+                        "explicitList": [
+                          "product-image",
+                          "product-title",
+                          "product-price",
+                          "add-to-cart-btn"
+                        ]
+                      },
+                      "distribution": "start",
+                      "alignment": "stretch"
+                    }
+                  }
+                },
+                {
+                  "id": "product-image",
+                  "component": {
+                    "Image": {
+                      "url": {
+                        "literalString": "https://via.placeholder.com/800x500?text=Blue+Ceramic+Mug"
+                      },
+                      "fit": "cover",
+                      "usageHint": "mediumFeature"
+                    }
+                  }
+                },
+                {
+                  "id": "product-title",
+                  "component": {
+                    "Text": {
+                      "text": {
+                        "literalString": "Blue Ceramic Mug"
+                      },
+                      "usageHint": "h3"
+                    }
+                  }
+                },
+                {
+                  "id": "product-price",
+                  "component": {
+                    "Text": {
+                      "text": {
+                        "literalString": "$24"
+                      },
+                      "usageHint": "h4"
+                    }
+                  }
+                },
+                {
+                  "id": "add-to-cart-btn",
+                  "component": {
+                    "Button": {
+                      "child": "add-to-cart-row",
+                      "primary": true,
+                      "action": {
+                        "name": "add_to_cart",
+                        "context": [
+                          {
+                            "key": "productId",
+                            "value": {
+                              "literalString": "blue-ceramic-mug"
+                            }
+                          },
+                          {
+                            "key": "productName",
+                            "value": {
+                              "literalString": "Blue Ceramic Mug"
+                            }
+                          },
+                          {
+                            "key": "price",
+                            "value": {
+                              "literalNumber": 24
+                            }
+                          },
+                          {
+                            "key": "currency",
+                            "value": {
+                              "literalString": "USD"
+                            }
+                          },
+                          {
+                            "key": "quantity",
+                            "value": {
+                              "literalNumber": 1
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  }
+                },
+                {
+                  "id": "add-to-cart-row",
+                  "component": {
+                    "Row": {
+                      "children": {
+                        "explicitList": [
+                          "cart-icon",
+                          "add-to-cart-text"
+                        ]
+                      },
+                      "distribution": "center",
+                      "alignment": "center"
+                    }
+                  }
+                },
+                {
+                  "id": "cart-icon",
+                  "component": {
+                    "Icon": {
+                      "name": {
+                        "literalString": "shoppingCart"
+                      }
+                    }
+                  }
+                },
+                {
+                  "id": "add-to-cart-text",
+                  "component": {
+                    "Text": {
+                      "text": {
+                        "literalString": "Add to Cart"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "beginRendering": {
+              "surfaceId": "product-card-blue-mug-1",
+              "root": "root",
+              "styles": {
+                "primaryColor": "#1565C0"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "prompt": "Render a settings panel with toggles for dark mode, notifications, and analytics.",
+      "model": "gpt-5",
+      "elapsed_s": 74.65040429198416,
+      "raised_tool_call": true,
+      "parsed_args": false,
+      "has_surface_update": false,
+      "has_begin_rendering": false,
+      "data_update_count": 0,
+      "component_count": 0,
+      "error": "envelopes not a list: type=NoneType",
+      "raw_tool_args": {
+        "0": {
+          "surfaceUpdate": {
+            "surfaceId": "settings-panel",
+            "components": [
+              {
+                "id": "root",
+                "component": {
+                  "Card": {
+                    "child": "content"
+                  }
+                }
+              },
+              {
+                "id": "content",
+                "component": {
+                  "Column": {
+                    "children": {
+                      "explicitList": [
+                        "header",
+                        "checkboxes",
+                        "divider",
+                        "button-row"
+                      ]
+                    },
+                    "distribution": "start",
+                    "alignment": "stretch"
+                  }
+                }
+              },
+              {
+                "id": "header",
+                "component": {
+                  "Column": {
+                    "children": {
+                      "explicitList": [
+                        "title",
+                        "subtitle"
+                      ]
+                    },
+                    "distribution": "start",
+                    "alignment": "start"
+                  }
+                }
+              },
+              {
+                "id": "title",
+                "component": {
+                  "Text": {
+                    "text": {
+                      "literalString": "Settings"
+                    },
+                    "usageHint": "h2"
+                  }
+                }
+              },
+              {
+                "id": "subtitle",
+                "component": {
+                  "Text": {
+                    "text": {
+                      "literalString": "Manage your preferences"
+                    },
+                    "usageHint": "body"
+                  }
+                }
+              },
+              {
+                "id": "checkboxes",
+                "component": {
+                  "Column": {
+                    "children": {
+                      "explicitList": [
+                        "dark-checkbox",
+                        "notifications-checkbox",
+                        "analytics-checkbox"
+                      ]
+                    },
+                    "distribution": "start",
+                    "alignment": "start"
+                  }
+                }
+              },
+              {
+                "id": "dark-checkbox",
+                "component": {
+                  "CheckBox": {
+                    "label": {
+                      "literalString": "Dark mode"
+                    },
+                    "value": {
+                      "path": "/settings/darkMode"
+                    }
+                  }
+                }
+              },
+              {
+                "id": "notifications-checkbox",
+                "component": {
+                  "CheckBox": {
+                    "label": {
+                      "literalString": "Notifications"
+                    },
+                    "value": {
+                      "path": "/settings/notifications"
+                    }
+                  }
+                }
+              },
+              {
+                "id": "analytics-checkbox",
+                "component": {
+                  "CheckBox": {
+                    "label": {
+                      "literalString": "Share anonymous analytics"
+                    },
+                    "value": {
+                      "path": "/settings/analytics"
+                    }
+                  }
+                }
+              },
+              {
+                "id": "divider",
+                "component": {
+                  "Divider": {
+                    "axis": "horizontal"
+                  }
+                }
+              },
+              {
+                "id": "button-row",
+                "component": {
+                  "Row": {
+                    "children": {
+                      "explicitList": [
+                        "reset-button",
+                        "save-button"
+                      ]
+                    },
+                    "distribution": "end",
+                    "alignment": "center"
+                  }
+                }
+              },
+              {
+                "id": "reset-btn-text",
+                "component": {
+                  "Text": {
+                    "text": {
+                      "literalString": "Reset"
+                    }
+                  }
+                }
+              },
+              {
+                "id": "reset-button",
+                "component": {
+                  "Button": {
+                    "child": "reset-btn-text",
+                    "action": {
+                      "name": "reset_settings"
+                    }
+                  }
+                }
+              },
+              {
+                "id": "save-btn-text",
+                "component": {
+                  "Text": {
+                    "text": {
+                      "literalString": "Save"
+                    }
+                  }
+                }
+              },
+              {
+                "id": "save-button",
+                "component": {
+                  "Button": {
+                    "child": "save-btn-text",
+                    "primary": true,
+                    "action": {
+                      "name": "save_settings",
+                      "context": [
+                        {
+                          "key": "darkMode",
+                          "value": {
+                            "path": "/settings/darkMode"
+                          }
+                        },
+                        {
+                          "key": "notifications",
+                          "value": {
+                            "path": "/settings/notifications"
+                          }
+                        },
+                        {
+                          "key": "analytics",
+                          "value": {
+                            "path": "/settings/analytics"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "1": {
+          "dataModelUpdate": {
+            "surfaceId": "settings-panel",
+            "path": "/settings",
+            "contents": [
+              {
+                "key": "darkMode",
+                "valueBoolean": false
+              },
+              {
+                "key": "notifications",
+                "valueBoolean": true
+              },
+              {
+                "key": "analytics",
+                "valueBoolean": false
+              }
+            ]
+          }
+        },
+        "2": {
+          "beginRendering": {
+            "surfaceId": "settings-panel",
+            "root": "root",
+            "styles": {
+              "font": "Inter, system-ui, sans-serif",
+              "primaryColor": "#2563EB"
+            }
+          }
+        }
+      }
+    },
+    {
+      "prompt": "Show a contact form with name, email, message, and a Submit button.",
+      "model": "gpt-5",
+      "elapsed_s": 38.30215404200135,
+      "raised_tool_call": true,
+      "parsed_args": false,
+      "has_surface_update": false,
+      "has_begin_rendering": false,
+      "data_update_count": 0,
+      "component_count": 0,
+      "error": "envelopes not a list: type=NoneType",
+      "raw_tool_args": {
+        "0": {
+          "surfaceUpdate": {
+            "surfaceId": "contact-form-surface-1",
+            "components": [
+              {
+                "id": "root",
+                "component": {
+                  "Column": {
+                    "children": {
+                      "explicitList": [
+                        "heading",
+                        "form-card"
+                      ]
+                    },
+                    "distribution": "start",
+                    "alignment": "stretch"
+                  }
+                }
+              },
+              {
+                "id": "heading",
+                "component": {
+                  "Text": {
+                    "text": {
+                      "literalString": "Contact Us"
+                    },
+                    "usageHint": "h2"
+                  }
+                }
+              },
+              {
+                "id": "form-card",
+                "component": {
+                  "Card": {
+                    "child": "form-col"
+                  }
+                }
+              },
+              {
+                "id": "form-col",
+                "component": {
+                  "Column": {
+                    "children": {
+                      "explicitList": [
+                        "name-field",
+                        "email-field",
+                        "message-field",
+                        "submit-button"
+                      ]
+                    },
+                    "distribution": "start",
+                    "alignment": "stretch"
+                  }
+                }
+              },
+              {
+                "id": "name-field",
+                "component": {
+                  "TextField": {
+                    "label": {
+                      "literalString": "Name"
+                    },
+                    "text": {
+                      "path": "/form/name"
+                    },
+                    "textFieldType": "shortText"
+                  }
+                }
+              },
+              {
+                "id": "email-field",
+                "component": {
+                  "TextField": {
+                    "label": {
+                      "literalString": "Email"
+                    },
+                    "text": {
+                      "path": "/form/email"
+                    },
+                    "textFieldType": "shortText",
+                    "validationRegexp": "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$"
+                  }
+                }
+              },
+              {
+                "id": "message-field",
+                "component": {
+                  "TextField": {
+                    "label": {
+                      "literalString": "Message"
+                    },
+                    "text": {
+                      "path": "/form/message"
+                    },
+                    "textFieldType": "longText"
+                  }
+                }
+              },
+              {
+                "id": "submit-button",
+                "component": {
+                  "Button": {
+                    "child": "submit-text",
+                    "primary": true,
+                    "action": {
+                      "name": "submit_contact_form",
+                      "context": [
+                        {
+                          "key": "name",
+                          "value": {
+                            "path": "/form/name"
+                          }
+                        },
+                        {
+                          "key": "email",
+                          "value": {
+                            "path": "/form/email"
+                          }
+                        },
+                        {
+                          "key": "message",
+                          "value": {
+                            "path": "/form/message"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              },
+              {
+                "id": "submit-text",
+                "component": {
+                  "Text": {
+                    "text": {
+                      "literalString": "Submit"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "1": {
+          "dataModelUpdate": {
+            "surfaceId": "contact-form-surface-1",
+            "contents": [
+              {
+                "key": "form",
+                "valueMap": [
+                  {
+                    "key": "name",
+                    "valueString": ""
+                  },
+                  {
+                    "key": "email",
+                    "valueString": ""
+                  },
+                  {
+                    "key": "message",
+                    "valueString": ""
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "2": {
+          "beginRendering": {
+            "surfaceId": "contact-form-surface-1",
+            "root": "root",
+            "styles": {
+              "font": "Inter, system-ui, Arial",
+              "primaryColor": "#1E90FF"
+            }
+          }
+        }
+      }
+    },
+    {
+      "prompt": "Render a pricing table with three tiers: Basic $9, Pro $29, Enterprise $99.",
+      "model": "gpt-5",
+      "elapsed_s": 83.2197149170097,
+      "raised_tool_call": true,
+      "parsed_args": false,
+      "has_surface_update": false,
+      "has_begin_rendering": false,
+      "data_update_count": 0,
+      "component_count": 0,
+      "error": "envelopes not a list: type=NoneType",
+      "raw_tool_args": {
+        "0": {
+          "surfaceUpdate": {
+            "surfaceId": "pricing-surface",
+            "components": [
+              {
+                "id": "root",
+                "component": {
+                  "Column": {
+                    "children": {
+                      "explicitList": [
+                        "header",
+                        "pricing-row",
+                        "footnote-text"
+                      ]
+                    },
+                    "distribution": "start",
+                    "alignment": "stretch"
+                  }
+                }
+              },
+              {
+                "id": "header",
+                "component": {
+                  "Text": {
+                    "text": {
+                      "literalString": "Choose your plan"
+                    },
+                    "usageHint": "h2"
+                  }
+                }
+              },
+              {
+                "id": "pricing-row",
+                "component": {
+                  "Row": {
+                    "children": {
+                      "explicitList": [
+                        "basic-card",
+                        "pro-card",
+                        "enterprise-card"
+                      ]
+                    },
+                    "distribution": "spaceEvenly",
+                    "alignment": "stretch"
+                  }
+                }
+              },
+              {
+                "id": "basic-card",
+                "weight": 1,
+                "component": {
+                  "Card": {
+                    "child": "basic-card-content"
+                  }
+                }
+              },
+              {
+                "id": "pro-card",
+                "weight": 1,
+                "component": {
+                  "Card": {
+                    "child": "pro-card-content"
+                  }
+                }
+              },
+              {
+                "id": "enterprise-card",
+                "weight": 1,
+                "component": {
+                  "Card": {
+                    "child": "enterprise-card-content"
+                  }
+                }
+              },
+              {
+                "id": "basic-card-content",
+                "component": {
+                  "Column": {
+                    "children": {
+                      "explicitList": [
+                        "basic-icon",
+                        "basic-title",
+                        "basic-price",
+                        "basic-divider",
+                        "basic-features",
+                        "basic-choose-button"
+                      ]
+                    },
+                    "distribution": "start",
+                    "alignment": "center"
+                  }
+                }
+              },
+              {
+                "id": "pro-card-content",
+                "component": {
+                  "Column": {
+                    "children": {
+                      "explicitList": [
+                        "pro-icon",
+                        "pro-title",
+                        "pro-price",
+                        "pro-divider",
+                        "pro-features",
+                        "pro-choose-button"
+                      ]
+                    },
+                    "distribution": "start",
+                    "alignment": "center"
+                  }
+                }
+              },
+              {
+                "id": "enterprise-card-content",
+                "component": {
+                  "Column": {
+                    "children": {
+                      "explicitList": [
+                        "enterprise-icon",
+                        "enterprise-title",
+                        "enterprise-price",
+                        "enterprise-divider",
+                        "enterprise-features",
+                        "enterprise-choose-button"
+                      ]
+                    },
+                    "distribution": "start",
+                    "alignment": "center"
+                  }
+                }
+              },
+              {
+                "id": "basic-icon",
+                "component": {
+                  "Icon": {
+                    "name": {
+                      "literalString": "starOff"
+                    }
+                  }
+                }
+              },
+              {
+                "id": "pro-icon",
+                "component": {
+                  "Icon": {
+                    "name": {
+                      "literalString": "star"
+                    }
+                  }
+                }
+              },
+              {
+                "id": "enterprise-icon",
+                "component": {
+                  "Icon": {
+                    "name": {
+                      "literalString": "starHalf"
+                    }
+                  }
+                }
+              },
+              {
+                "id": "basic-title",
+                "component": {
+                  "Text": {
+                    "text": {
+                      "literalString": "Basic"
+                    },
+                    "usageHint": "h3"
+                  }
+                }
+              },
+              {
+                "id": "pro-title",
+                "component": {
+                  "Text": {
+                    "text": {
+                      "literalString": "Pro"
+                    },
+                    "usageHint": "h3"
+                  }
+                }
+              },
+              {
+                "id": "enterprise-title",
+                "component": {
+                  "Text": {
+                    "text": {
+                      "literalString": "Enterprise"
+                    },
+                    "usageHint": "h3"
+                  }
+                }
+              },
+              {
+                "id": "basic-price",
+                "component": {
+                  "Text": {
+                    "text": {
+                      "literalString": "$9/mo"
+                    },
+                    "usageHint": "h4"
+                  }
+                }
+              },
+              {
+                "id": "pro-price",
+                "component": {
+                  "Text": {
+                    "text": {
+                      "literalString": "$29/mo"
+                    },
+                    "usageHint": "h4"
+                  }
+                }
+              },
+              {
+                "id": "enterprise-price",
+                "component": {
+                  "Text": {
+                    "text": {
+                      "literalString": "$99/mo"
+                    },
+                    "usageHint": "h4"
+                  }
+                }
+              },
+              {
+                "id": "basic-divider",
+                "component": {
+                  "Divider": {
+                    "axis": "horizontal"
+                  }
+                }
+              },
+              {
+                "id": "pro-divider",
+                "component": {
+                  "Divider": {
+                    "axis": "horizontal"
+                  }
+                }
+              },
+              {
+                "id": "enterprise-divider",
+                "component": {
+                  "Divider": {
+                    "axis": "horizontal"
+                  }
+                }
+              },
+              {
+                "id": "basic-features",
+                "component": {
+                  "List": {
+                    "children": {
+                      "explicitList": [
+                        "basic-feature-1",
+                        "basic-feature-2",
+                        "basic-feature-3"
+                      ]
+                    },
+                    "direction": "vertical",
+                    "alignment": "start"
+                  }
+                }
+              },
+              {
+                "id": "pro-features",
+                "component": {
+                  "List": {
+                    "children": {
+                      "explicitList": [
+                        "pro-feature-1",
+                        "pro-feature-2",
+                        "pro-feature-3"
+                      ]
+                    },
+                    "direction": "vertical",
+                    "alignment": "start"
+                  }
+                }
+              },
+              {
+                "id": "enterprise-features",
+                "component": {
+                  "List": {
+                    "children": {
+                      "explicitList": [
+                        "enterprise-feature-1",
+                        "enterprise-feature-2",
+                        "enterprise-feature-3"
+                      ]
+                    },
+                    "direction": "vertical",
+                    "alignment": "start"
+                  }
+                }
+              },
+              {
+                "id": "basic-feature-1",
+                "component": {
+                  "Text": {
+                    "text": {
+                      "literalString": "Essential features"
+                    },
+                    "usageHint": "body"
+                  }
+                }
+              },
+              {
+                "id": "basic-feature-2",
+                "component": {
+                  "Text": {
+                    "text": {
+                      "literalString": "Email support"
+                    },
+                    "usageHint": "body"
+                  }
+                }
+              },
+              {
+                "id": "basic-feature-3",
+                "component": {
+                  "Text": {
+                    "text": {
+                      "literalString": "Single user"
+                    },
+                    "usageHint": "body"
+                  }
+                }
+              },
+              {
+                "id": "pro-feature-1",
+                "component": {
+                  "Text": {
+                    "text": {
+                      "literalString": "Advanced features"
+                    },
+                    "usageHint": "body"
+                  }
+                }
+              },
+              {
+                "id": "pro-feature-2",
+                "component": {
+                  "Text": {
+                    "text": {
+                      "literalString": "Priority support"
+                    },
+                    "usageHint": "body"
+                  }
+                }
+              },
+              {
+                "id": "pro-feature-3",
+                "component": {
+                  "Text": {
+                    "text": {
+                      "literalString": "Up to 5 users"
+                    },
+                    "usageHint": "body"
+                  }
+                }
+              },
+              {
+                "id": "enterprise-feature-1",
+                "component": {
+                  "Text": {
+                    "text": {
+                      "literalString": "All features"
+                    },
+                    "usageHint": "body"
+                  }
+                }
+              },
+              {
+                "id": "enterprise-feature-2",
+                "component": {
+                  "Text": {
+                    "text": {
+                      "literalString": "Dedicated support"
+                    },
+                    "usageHint": "body"
+                  }
+                }
+              },
+              {
+                "id": "enterprise-feature-3",
+                "component": {
+                  "Text": {
+                    "text": {
+                      "literalString": "Unlimited users"
+                    },
+                    "usageHint": "body"
+                  }
+                }
+              },
+              {
+                "id": "basic-choose-button",
+                "component": {
+                  "Button": {
+                    "child": "basic-choose-text",
+                    "primary": false,
+                    "action": {
+                      "name": "select_plan",
+                      "context": [
+                        {
+                          "key": "plan",
+                          "value": {
+                            "literalString": "basic"
+                          }
+                        },
+                        {
+                          "key": "price",
+                          "value": {
+                            "literalNumber": 9
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              },
+              {
+                "id": "basic-choose-text",
+                "component": {
+                  "Text": {
+                    "text": {
+                      "literalString": "Choose Basic"
+                    }
+                  }
+                }
+              },
+              {
+                "id": "pro-choose-button",
+                "component": {
+                  "Button": {
+                    "child": "pro-choose-text",
+                    "primary": true,
+                    "action": {
+                      "name": "select_plan",
+                      "context": [
+                        {
+                          "key": "plan",
+                          "value": {
+                            "literalString": "pro"
+                          }
+                        },
+                        {
+                          "key": "price",
+                          "value": {
+                            "literalNumber": 29
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              },
+              {
+                "id": "pro-choose-text",
+                "component": {
+                  "Text": {
+                    "text": {
+                      "literalString": "Choose Pro"
+                    }
+                  }
+                }
+              },
+              {
+                "id": "enterprise-choose-button",
+                "component": {
+                  "Button": {
+                    "child": "enterprise-choose-text",
+                    "primary": false,
+                    "action": {
+                      "name": "select_plan",
+                      "context": [
+                        {
+                          "key": "plan",
+                          "value": {
+                            "literalString": "enterprise"
+                          }
+                        },
+                        {
+                          "key": "price",
+                          "value": {
+                            "literalNumber": 99
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              },
+              {
+                "id": "enterprise-choose-text",
+                "component": {
+                  "Text": {
+                    "text": {
+                      "literalString": "Choose Enterprise"
+                    }
+                  }
+                }
+              },
+              {
+                "id": "footnote-text",
+                "component": {
+                  "Text": {
+                    "usageHint": "caption",
+                    "text": {
+                      "literalString": "Cancel anytime. 7-day free trial on Pro and Enterprise."
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "1": {
+          "beginRendering": {
+            "surfaceId": "pricing-surface",
+            "root": "root",
+            "styles": {
+              "font": "Inter, system-ui, sans-serif",
+              "primaryColor": "#4F46E5"
+            }
+          }
+        }
+      }
+    },
+    {
+      "prompt": "Render a profile card for Alex Smith, role Senior Engineer, with an Edit button.",
+      "model": "gpt-5",
+      "elapsed_s": 35.0396866670344,
+      "raised_tool_call": true,
+      "parsed_args": false,
+      "has_surface_update": false,
+      "has_begin_rendering": false,
+      "data_update_count": 0,
+      "component_count": 0,
+      "error": "envelopes not a list: type=NoneType",
+      "raw_tool_args": {
+        "messages": [
+          {
+            "surfaceUpdate": {
+              "surfaceId": "profile-card-alex-smith",
+              "components": [
+                {
+                  "id": "root",
+                  "component": {
+                    "Card": {
+                      "child": "card-content"
+                    }
+                  }
+                },
+                {
+                  "id": "card-content",
+                  "component": {
+                    "Column": {
+                      "children": {
+                        "explicitList": [
+                          "avatar-icon",
+                          "name-text",
+                          "role-text",
+                          "button-row"
+                        ]
+                      },
+                      "distribution": "start",
+                      "alignment": "start"
+                    }
+                  }
+                },
+                {
+                  "id": "avatar-icon",
+                  "component": {
+                    "Icon": {
+                      "name": {
+                        "literalString": "person"
+                      }
+                    }
+                  }
+                },
+                {
+                  "id": "name-text",
+                  "component": {
+                    "Text": {
+                      "text": {
+                        "literalString": "Alex Smith"
+                      },
+                      "usageHint": "h3"
+                    }
+                  }
+                },
+                {
+                  "id": "role-text",
+                  "component": {
+                    "Text": {
+                      "text": {
+                        "literalString": "Senior Engineer"
+                      },
+                      "usageHint": "caption"
+                    }
+                  }
+                },
+                {
+                  "id": "button-row",
+                  "component": {
+                    "Row": {
+                      "children": {
+                        "explicitList": [
+                          "edit-button"
+                        ]
+                      },
+                      "distribution": "start",
+                      "alignment": "center"
+                    }
+                  }
+                },
+                {
+                  "id": "edit-button",
+                  "component": {
+                    "Button": {
+                      "child": "edit-button-text",
+                      "action": {
+                        "name": "edit_profile",
+                        "context": [
+                          {
+                            "key": "userName",
+                            "value": {
+                              "literalString": "Alex Smith"
+                            }
+                          },
+                          {
+                            "key": "role",
+                            "value": {
+                              "literalString": "Senior Engineer"
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  }
+                },
+                {
+                  "id": "edit-button-text",
+                  "component": {
+                    "Text": {
+                      "text": {
+                        "literalString": "Edit"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "beginRendering": {
+              "surfaceId": "profile-card-alex-smith",
+              "root": "root"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "prompt": "Build a checkout summary: 2 items totaling $48 plus $5 shipping.",
+      "model": "gpt-5",
+      "elapsed_s": 36.066254124976695,
+      "raised_tool_call": true,
+      "parsed_args": false,
+      "has_surface_update": false,
+      "has_begin_rendering": false,
+      "data_update_count": 0,
+      "component_count": 0,
+      "error": "envelopes not a list: type=NoneType",
+      "raw_tool_args": {
+        "messages": [
+          {
+            "surfaceUpdate": {
+              "surfaceId": "checkout-summary-1",
+              "components": [
+                {
+                  "id": "root",
+                  "component": {
+                    "Card": {
+                      "child": "summary-content"
+                    }
+                  }
+                },
+                {
+                  "id": "summary-content",
+                  "component": {
+                    "Column": {
+                      "distribution": "start",
+                      "alignment": "stretch",
+                      "children": {
+                        "explicitList": [
+                          "title",
+                          "items-row",
+                          "shipping-row",
+                          "divider",
+                          "total-row",
+                          "actions-row"
+                        ]
+                      }
+                    }
+                  }
+                },
+                {
+                  "id": "title",
+                  "component": {
+                    "Text": {
+                      "usageHint": "h3",
+                      "text": {
+                        "literalString": "Order Summary"
+                      }
+                    }
+                  }
+                },
+                {
+                  "id": "items-row",
+                  "component": {
+                    "Row": {
+                      "distribution": "spaceBetween",
+                      "alignment": "center",
+                      "children": {
+                        "explicitList": [
+                          "items-label",
+                          "items-value"
+                        ]
+                      }
+                    }
+                  }
+                },
+                {
+                  "id": "items-label",
+                  "component": {
+                    "Text": {
+                      "text": {
+                        "path": "/itemsLabel"
+                      }
+                    }
+                  }
+                },
+                {
+                  "id": "items-value",
+                  "component": {
+                    "Text": {
+                      "usageHint": "body",
+                      "text": {
+                        "path": "/subtotalText"
+                      }
+                    }
+                  }
+                },
+                {
+                  "id": "shipping-row",
+                  "component": {
+                    "Row": {
+                      "distribution": "spaceBetween",
+                      "alignment": "center",
+                      "children": {
+                        "explicitList": [
+                          "shipping-label",
+                          "shipping-value"
+                        ]
+                      }
+                    }
+                  }
+                },
+                {
+                  "id": "shipping-label",
+                  "component": {
+                    "Text": {
+                      "text": {
+                        "literalString": "Shipping"
+                      }
+                    }
+                  }
+                },
+                {
+                  "id": "shipping-value",
+                  "component": {
+                    "Text": {
+                      "text": {
+                        "path": "/shippingText"
+                      }
+                    }
+                  }
+                },
+                {
+                  "id": "divider",
+                  "component": {
+                    "Divider": {
+                      "axis": "horizontal"
+                    }
+                  }
+                },
+                {
+                  "id": "total-row",
+                  "component": {
+                    "Row": {
+                      "distribution": "spaceBetween",
+                      "alignment": "center",
+                      "children": {
+                        "explicitList": [
+                          "total-label",
+                          "total-value"
+                        ]
+                      }
+                    }
+                  }
+                },
+                {
+                  "id": "total-label",
+                  "component": {
+                    "Text": {
+                      "usageHint": "h4",
+                      "text": {
+                        "literalString": "Total"
+                      }
+                    }
+                  }
+                },
+                {
+                  "id": "total-value",
+                  "component": {
+                    "Text": {
+                      "usageHint": "h4",
+                      "text": {
+                        "path": "/totalText"
+                      }
+                    }
+                  }
+                },
+                {
+                  "id": "actions-row",
+                  "component": {
+                    "Row": {
+                      "distribution": "end",
+                      "alignment": "center",
+                      "children": {
+                        "explicitList": [
+                          "back-btn",
+                          "place-btn"
+                        ]
+                      }
+                    }
+                  }
+                },
+                {
+                  "id": "back-btn",
+                  "component": {
+                    "Button": {
+                      "child": "back-text",
+                      "action": {
+                        "name": "go_to_cart",
+                        "context": [
+                          {
+                            "key": "itemsLabel",
+                            "value": {
+                              "path": "/itemsLabel"
+                            }
+                          },
+                          {
+                            "key": "subtotal",
+                            "value": {
+                              "path": "/subtotalText"
+                            }
+                          },
+                          {
+                            "key": "shipping",
+                            "value": {
+                              "path": "/shippingText"
+                            }
+                          },
+                          {
+                            "key": "total",
+                            "value": {
+                              "path": "/totalText"
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  }
+                },
+                {
+                  "id": "back-text",
+                  "component": {
+                    "Text": {
+                      "text": {
+                        "literalString": "Back to Cart"
+                      }
+                    }
+                  }
+                },
+                {
+                  "id": "place-btn",
+                  "component": {
+                    "Button": {
+                      "primary": true,
+                      "child": "place-text",
+                      "action": {
+                        "name": "place_order",
+                        "context": [
+                          {
+                            "key": "itemsLabel",
+                            "value": {
+                              "path": "/itemsLabel"
+                            }
+                          },
+                          {
+                            "key": "subtotal",
+                            "value": {
+                              "path": "/subtotalText"
+                            }
+                          },
+                          {
+                            "key": "shipping",
+                            "value": {
+                              "path": "/shippingText"
+                            }
+                          },
+                          {
+                            "key": "total",
+                            "value": {
+                              "path": "/totalText"
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  }
+                },
+                {
+                  "id": "place-text",
+                  "component": {
+                    "Text": {
+                      "text": {
+                        "literalString": "Place Order"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "dataModelUpdate": {
+              "surfaceId": "checkout-summary-1",
+              "contents": [
+                {
+                  "key": "itemsLabel",
+                  "valueString": "Items (2)"
+                },
+                {
+                  "key": "subtotalText",
+                  "valueString": "$48"
+                },
+                {
+                  "key": "shippingText",
+                  "valueString": "$5"
+                },
+                {
+                  "key": "totalText",
+                  "valueString": "$53"
+                }
+              ]
+            }
+          },
+          {
+            "beginRendering": {
+              "surfaceId": "checkout-summary-1",
+              "root": "root",
+              "styles": {
+                "primaryColor": "#0F62FE"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "prompt": "Display an error alert: 'Could not connect to server' with a Retry button.",
+      "model": "gpt-5",
+      "elapsed_s": 33.674559417006094,
+      "raised_tool_call": true,
+      "parsed_args": false,
+      "has_surface_update": false,
+      "has_begin_rendering": false,
+      "data_update_count": 0,
+      "component_count": 0,
+      "error": "envelopes not a list: type=NoneType",
+      "raw_tool_args": {
+        "0": {
+          "surfaceUpdate": {
+            "surfaceId": "error-alert-surface",
+            "components": [
+              {
+                "id": "root",
+                "component": {
+                  "Card": {
+                    "child": "alert-content"
+                  }
+                }
+              },
+              {
+                "id": "alert-content",
+                "component": {
+                  "Column": {
+                    "children": {
+                      "explicitList": [
+                        "alert-header-row",
+                        "alert-actions-row"
+                      ]
+                    },
+                    "distribution": "start",
+                    "alignment": "stretch"
+                  }
+                }
+              },
+              {
+                "id": "alert-header-row",
+                "component": {
+                  "Row": {
+                    "children": {
+                      "explicitList": [
+                        "alert-icon",
+                        "alert-message"
+                      ]
+                    },
+                    "distribution": "start",
+                    "alignment": "center"
+                  }
+                }
+              },
+              {
+                "id": "alert-icon",
+                "component": {
+                  "Icon": {
+                    "name": {
+                      "literalString": "error"
+                    }
+                  }
+                }
+              },
+              {
+                "id": "alert-message",
+                "component": {
+                  "Text": {
+                    "text": {
+                      "literalString": "Could not connect to server"
+                    },
+                    "usageHint": "body"
+                  }
+                }
+              },
+              {
+                "id": "alert-actions-row",
+                "component": {
+                  "Row": {
+                    "children": {
+                      "explicitList": [
+                        "retry-button"
+                      ]
+                    },
+                    "distribution": "end",
+                    "alignment": "center"
+                  }
+                }
+              },
+              {
+                "id": "retry-button",
+                "component": {
+                  "Button": {
+                    "child": "retry-button-text",
+                    "primary": true,
+                    "action": {
+                      "name": "retry"
+                    }
+                  }
+                }
+              },
+              {
+                "id": "retry-button-text",
+                "component": {
+                  "Text": {
+                    "text": {
+                      "literalString": "Retry"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "1": {
+          "beginRendering": {
+            "surfaceId": "error-alert-surface",
+            "root": "root",
+            "styles": {
+              "font": "Inter, system-ui, sans-serif",
+              "primaryColor": "#D32F2F"
+            }
+          }
+        }
+      }
+    },
+    {
+      "prompt": "Render a recipe card for 'Pasta Carbonara' with ingredient list and cook time 25 minutes.",
+      "model": "gpt-5",
+      "elapsed_s": 33.935996416024864,
+      "raised_tool_call": true,
+      "parsed_args": false,
+      "has_surface_update": false,
+      "has_begin_rendering": false,
+      "data_update_count": 0,
+      "component_count": 0,
+      "error": "envelopes not a list: type=NoneType",
+      "raw_tool_args": {
+        "0": {
+          "surfaceUpdate": {
+            "surfaceId": "recipe-pasta-carbonara",
+            "components": [
+              {
+                "id": "root",
+                "component": {
+                  "Card": {
+                    "child": "card-content"
+                  }
+                }
+              },
+              {
+                "id": "card-content",
+                "component": {
+                  "Column": {
+                    "children": {
+                      "explicitList": [
+                        "title",
+                        "divider1",
+                        "meta-row",
+                        "divider2",
+                        "ingredients-header",
+                        "ingredients-list"
+                      ]
+                    },
+                    "distribution": "start",
+                    "alignment": "start"
+                  }
+                }
+              },
+              {
+                "id": "title",
+                "component": {
+                  "Text": {
+                    "text": {
+                      "literalString": "Pasta Carbonara"
+                    },
+                    "usageHint": "h2"
+                  }
+                }
+              },
+              {
+                "id": "divider1",
+                "component": {
+                  "Divider": {
+                    "axis": "horizontal"
+                  }
+                }
+              },
+              {
+                "id": "meta-row",
+                "component": {
+                  "Row": {
+                    "children": {
+                      "explicitList": [
+                        "cook-icon",
+                        "cook-time-text"
+                      ]
+                    },
+                    "distribution": "start",
+                    "alignment": "center"
+                  }
+                }
+              },
+              {
+                "id": "cook-icon",
+                "component": {
+                  "Icon": {
+                    "name": {
+                      "literalString": "event"
+                    }
+                  }
+                }
+              },
+              {
+                "id": "cook-time-text",
+                "component": {
+                  "Text": {
+                    "text": {
+                      "literalString": "Cook time: 25 minutes"
+                    },
+                    "usageHint": "body"
+                  }
+                }
+              },
+              {
+                "id": "divider2",
+                "component": {
+                  "Divider": {
+                    "axis": "horizontal"
+                  }
+                }
+              },
+              {
+                "id": "ingredients-header",
+                "component": {
+                  "Text": {
+                    "text": {
+                      "literalString": "Ingredients"
+                    },
+                    "usageHint": "h3"
+                  }
+                }
+              },
+              {
+                "id": "ingredients-list",
+                "component": {
+                  "List": {
+                    "direction": "vertical",
+                    "alignment": "start",
+                    "children": {
+                      "explicitList": [
+                        "ing-1",
+                        "ing-2",
+                        "ing-3",
+                        "ing-4",
+                        "ing-5",
+                        "ing-6",
+                        "ing-7",
+                        "ing-8"
+                      ]
+                    }
+                  }
+                }
+              },
+              {
+                "id": "ing-1",
+                "component": {
+                  "Text": {
+                    "text": {
+                      "literalString": "\u2022 Spaghetti \u2014 12 oz (340 g)"
+                    },
+                    "usageHint": "body"
+                  }
+                }
+              },
+              {
+                "id": "ing-2",
+                "component": {
+                  "Text": {
+                    "text": {
+                      "literalString": "\u2022 Eggs \u2014 2 whole + 2 yolks"
+                    },
+                    "usageHint": "body"
+                  }
+                }
+              },
+              {
+                "id": "ing-3",
+                "component": {
+                  "Text": {
+                    "text": {
+                      "literalString": "\u2022 Pecorino Romano \u2014 1 cup, finely grated"
+                    },
+                    "usageHint": "body"
+                  }
+                }
+              },
+              {
+                "id": "ing-4",
+                "component": {
+                  "Text": {
+                    "text": {
+                      "literalString": "\u2022 Parmesan (optional) \u2014 1/2 cup, finely grated"
+                    },
+                    "usageHint": "body"
+                  }
+                }
+              },
+              {
+                "id": "ing-5",
+                "component": {
+                  "Text": {
+                    "text": {
+                      "literalString": "\u2022 Guanciale or pancetta \u2014 4 oz (115 g), diced"
+                    },
+                    "usageHint": "body"
+                  }
+                }
+              },
+              {
+                "id": "ing-6",
+                "component": {
+                  "Text": {
+                    "text": {
+                      "literalString": "\u2022 Freshly ground black pepper \u2014 to taste"
+                    },
+                    "usageHint": "body"
+                  }
+                }
+              },
+              {
+                "id": "ing-7",
+                "component": {
+                  "Text": {
+                    "text": {
+                      "literalString": "\u2022 Salt \u2014 for pasta water"
+                    },
+                    "usageHint": "body"
+                  }
+                }
+              },
+              {
+                "id": "ing-8",
+                "component": {
+                  "Text": {
+                    "text": {
+                      "literalString": "\u2022 Garlic clove (optional) \u2014 1, smashed"
+                    },
+                    "usageHint": "body"
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "1": {
+          "beginRendering": {
+            "surfaceId": "recipe-pasta-carbonara",
+            "root": "root",
+            "styles": {
+              "font": "Inter",
+              "primaryColor": "#00BFFF"
+            }
+          }
+        }
+      }
+    },
+    {
+      "prompt": "Render a confirmation dialog asking 'Delete file?' with Cancel and Delete buttons.",
+      "model": "gpt-5",
+      "elapsed_s": 55.794543500000145,
+      "raised_tool_call": true,
+      "parsed_args": false,
+      "has_surface_update": false,
+      "has_begin_rendering": false,
+      "data_update_count": 0,
+      "component_count": 0,
+      "error": "envelopes not a list: type=NoneType",
+      "raw_tool_args": {
+        "0": {
+          "surfaceUpdate": {
+            "surfaceId": "confirm-dialog-01",
+            "components": [
+              {
+                "id": "root",
+                "component": {
+                  "Column": {
+                    "children": {
+                      "explicitList": [
+                        "confirm-modal"
+                      ]
+                    },
+                    "distribution": "center",
+                    "alignment": "center"
+                  }
+                }
+              },
+              {
+                "id": "confirm-modal",
+                "component": {
+                  "Modal": {
+                    "entryPointChild": "trigger-btn",
+                    "contentChild": "confirm-card"
+                  }
+                }
+              },
+              {
+                "id": "trigger-btn",
+                "component": {
+                  "Button": {
+                    "child": "trigger-btn-text",
+                    "action": {
+                      "name": "open_delete_modal"
+                    }
+                  }
+                }
+              },
+              {
+                "id": "trigger-btn-text",
+                "component": {
+                  "Text": {
+                    "text": {
+                      "literalString": "Delete file"
+                    }
+                  }
+                }
+              },
+              {
+                "id": "confirm-card",
+                "component": {
+                  "Card": {
+                    "child": "confirm-content"
+                  }
+                }
+              },
+              {
+                "id": "confirm-content",
+                "component": {
+                  "Column": {
+                    "children": {
+                      "explicitList": [
+                        "confirm-title",
+                        "buttons-row"
+                      ]
+                    },
+                    "distribution": "start",
+                    "alignment": "stretch"
+                  }
+                }
+              },
+              {
+                "id": "confirm-title",
+                "component": {
+                  "Text": {
+                    "text": {
+                      "literalString": "Delete file?"
+                    },
+                    "usageHint": "h3"
+                  }
+                }
+              },
+              {
+                "id": "buttons-row",
+                "component": {
+                  "Row": {
+                    "children": {
+                      "explicitList": [
+                        "cancel-btn",
+                        "delete-btn"
+                      ]
+                    },
+                    "distribution": "end",
+                    "alignment": "center"
+                  }
+                }
+              },
+              {
+                "id": "cancel-btn",
+                "component": {
+                  "Button": {
+                    "child": "cancel-btn-text",
+                    "action": {
+                      "name": "cancel_delete"
+                    }
+                  }
+                }
+              },
+              {
+                "id": "cancel-btn-text",
+                "component": {
+                  "Text": {
+                    "text": {
+                      "literalString": "Cancel"
+                    }
+                  }
+                }
+              },
+              {
+                "id": "delete-btn",
+                "component": {
+                  "Button": {
+                    "child": "delete-btn-text",
+                    "primary": true,
+                    "action": {
+                      "name": "confirm_delete"
+                    }
+                  }
+                }
+              },
+              {
+                "id": "delete-btn-text",
+                "component": {
+                  "Text": {
+                    "text": {
+                      "literalString": "Delete"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "1": {
+          "beginRendering": {
+            "surfaceId": "confirm-dialog-01",
+            "root": "root"
+          }
+        }
+      }
+    },
+    {
+      "prompt": "Show a survey with three rating questions and a Submit button.",
+      "model": "gpt-5",
+      "elapsed_s": 39.34680854197359,
+      "raised_tool_call": true,
+      "parsed_args": false,
+      "has_surface_update": false,
+      "has_begin_rendering": false,
+      "data_update_count": 0,
+      "component_count": 0,
+      "error": "envelopes not a list: type=NoneType",
+      "raw_tool_args": {
+        "surfaceUpdate": {
+          "surfaceId": "survey-surface-1",
+          "components": [
+            {
+              "id": "root",
+              "component": {
+                "Column": {
+                  "children": {
+                    "explicitList": [
+                      "title",
+                      "q1-label",
+                      "q1-slider",
+                      "divider1",
+                      "q2-label",
+                      "q2-slider",
+                      "divider2",
+                      "q3-label",
+                      "q3-slider",
+                      "submit-btn"
+                    ]
+                  },
+                  "distribution": "start",
+                  "alignment": "stretch"
+                }
+              }
+            },
+            {
+              "id": "title",
+              "component": {
+                "Text": {
+                  "text": {
+                    "literalString": "Quick Survey"
+                  },
+                  "usageHint": "h2"
+                }
+              }
+            },
+            {
+              "id": "q1-label",
+              "component": {
+                "Text": {
+                  "text": {
+                    "literalString": "1) How satisfied are you with our product? (1 = Poor, 5 = Excellent)"
+                  },
+                  "usageHint": "h4"
+                }
+              }
+            },
+            {
+              "id": "q1-slider",
+              "component": {
+                "Slider": {
+                  "value": {
+                    "path": "/survey/q1"
+                  },
+                  "minValue": 1,
+                  "maxValue": 5
+                }
+              }
+            },
+            {
+              "id": "divider1",
+              "component": {
+                "Divider": {
+                  "axis": "horizontal"
+                }
+              }
+            },
+            {
+              "id": "q2-label",
+              "component": {
+                "Text": {
+                  "text": {
+                    "literalString": "2) How easy was it to use our product? (1 = Very hard, 5 = Very easy)"
+                  },
+                  "usageHint": "h4"
+                }
+              }
+            },
+            {
+              "id": "q2-slider",
+              "component": {
+                "Slider": {
+                  "value": {
+                    "path": "/survey/q2"
+                  },
+                  "minValue": 1,
+                  "maxValue": 5
+                }
+              }
+            },
+            {
+              "id": "divider2",
+              "component": {
+                "Divider": {
+                  "axis": "horizontal"
+                }
+              }
+            },
+            {
+              "id": "q3-label",
+              "component": {
+                "Text": {
+                  "text": {
+                    "literalString": "3) How likely are you to recommend us to a friend? (1 = Not likely, 5 = Very likely)"
+                  },
+                  "usageHint": "h4"
+                }
+              }
+            },
+            {
+              "id": "q3-slider",
+              "component": {
+                "Slider": {
+                  "value": {
+                    "path": "/survey/q3"
+                  },
+                  "minValue": 1,
+                  "maxValue": 5
+                }
+              }
+            },
+            {
+              "id": "submit-btn",
+              "component": {
+                "Button": {
+                  "child": "submit-text",
+                  "primary": true,
+                  "action": {
+                    "name": "submit_survey",
+                    "context": [
+                      {
+                        "key": "q1",
+                        "value": {
+                          "path": "/survey/q1"
+                        }
+                      },
+                      {
+                        "key": "q2",
+                        "value": {
+                          "path": "/survey/q2"
+                        }
+                      },
+                      {
+                        "key": "q3",
+                        "value": {
+                          "path": "/survey/q3"
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            {
+              "id": "submit-text",
+              "component": {
+                "Text": {
+                  "text": {
+                    "literalString": "Submit"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "prompt": "Render a flight status panel: AA127 from JFK to LAX, departing 9:15am, on time.",
+      "model": "gpt-5",
+      "elapsed_s": 40.38805412501097,
+      "raised_tool_call": true,
+      "parsed_args": false,
+      "has_surface_update": false,
+      "has_begin_rendering": false,
+      "data_update_count": 0,
+      "component_count": 0,
+      "error": "envelopes not a list: type=NoneType",
+      "raw_tool_args": {
+        "0": {
+          "surfaceUpdate": {
+            "surfaceId": "flight-status-aa127",
+            "components": [
+              {
+                "id": "root",
+                "component": {
+                  "Card": {
+                    "child": "panel"
+                  }
+                }
+              },
+              {
+                "id": "panel",
+                "component": {
+                  "Column": {
+                    "children": {
+                      "explicitList": [
+                        "title",
+                        "divider1",
+                        "route",
+                        "time",
+                        "status"
+                      ]
+                    },
+                    "distribution": "start",
+                    "alignment": "stretch"
+                  }
+                }
+              },
+              {
+                "id": "title",
+                "component": {
+                  "Text": {
+                    "text": {
+                      "path": "/title"
+                    },
+                    "usageHint": "h2"
+                  }
+                }
+              },
+              {
+                "id": "divider1",
+                "component": {
+                  "Divider": {
+                    "axis": "horizontal"
+                  }
+                }
+              },
+              {
+                "id": "route",
+                "component": {
+                  "Row": {
+                    "children": {
+                      "explicitList": [
+                        "origin",
+                        "arrow",
+                        "destination"
+                      ]
+                    },
+                    "distribution": "start",
+                    "alignment": "center"
+                  }
+                }
+              },
+              {
+                "id": "origin",
+                "component": {
+                  "Text": {
+                    "text": {
+                      "path": "/origin"
+                    },
+                    "usageHint": "h3"
+                  }
+                }
+              },
+              {
+                "id": "arrow",
+                "component": {
+                  "Icon": {
+                    "name": {
+                      "literalString": "arrowForward"
+                    }
+                  }
+                }
+              },
+              {
+                "id": "destination",
+                "component": {
+                  "Text": {
+                    "text": {
+                      "path": "/destination"
+                    },
+                    "usageHint": "h3"
+                  }
+                }
+              },
+              {
+                "id": "time",
+                "component": {
+                  "Row": {
+                    "children": {
+                      "explicitList": [
+                        "calendarIcon",
+                        "departureText"
+                      ]
+                    },
+                    "distribution": "start",
+                    "alignment": "center"
+                  }
+                }
+              },
+              {
+                "id": "calendarIcon",
+                "component": {
+                  "Icon": {
+                    "name": {
+                      "literalString": "calendarToday"
+                    }
+                  }
+                }
+              },
+              {
+                "id": "departureText",
+                "component": {
+                  "Text": {
+                    "text": {
+                      "path": "/departureTimeFormatted"
+                    },
+                    "usageHint": "body"
+                  }
+                }
+              },
+              {
+                "id": "status",
+                "component": {
+                  "Row": {
+                    "children": {
+                      "explicitList": [
+                        "statusIcon",
+                        "statusText"
+                      ]
+                    },
+                    "distribution": "start",
+                    "alignment": "center"
+                  }
+                }
+              },
+              {
+                "id": "statusIcon",
+                "component": {
+                  "Icon": {
+                    "name": {
+                      "path": "/statusIcon"
+                    }
+                  }
+                }
+              },
+              {
+                "id": "statusText",
+                "component": {
+                  "Text": {
+                    "text": {
+                      "path": "/statusText"
+                    },
+                    "usageHint": "h4"
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "1": {
+          "dataModelUpdate": {
+            "surfaceId": "flight-status-aa127",
+            "contents": [
+              {
+                "key": "title",
+                "valueString": "AA127 \u2013 JFK \u2192 LAX"
+              },
+              {
+                "key": "origin",
+                "valueString": "JFK"
+              },
+              {
+                "key": "destination",
+                "valueString": "LAX"
+              },
+              {
+                "key": "departureTimeFormatted",
+                "valueString": "Departs 9:15 AM"
+              },
+              {
+                "key": "statusText",
+                "valueString": "On Time"
+              },
+              {
+                "key": "statusIcon",
+                "valueString": "check"
+              }
+            ]
+          }
+        },
+        "2": {
+          "beginRendering": {
+            "surfaceId": "flight-status-aa127",
+            "root": "root",
+            "styles": {
+              "font": "Inter",
+              "primaryColor": "#0B5ED7"
+            }
+          }
+        }
+      }
+    },
+    {
+      "prompt": "Show a task card for 'Write the spec' assigned to me, due tomorrow, with a Complete button.",
+      "model": "gpt-5",
+      "elapsed_s": 26.892399458040018,
+      "raised_tool_call": true,
+      "parsed_args": false,
+      "has_surface_update": false,
+      "has_begin_rendering": false,
+      "data_update_count": 0,
+      "component_count": 0,
+      "error": "envelopes not a list: type=NoneType",
+      "raw_tool_args": {
+        "0": {
+          "surfaceUpdate": {
+            "surfaceId": "task-card-1",
+            "components": [
+              {
+                "id": "root-card",
+                "component": {
+                  "Card": {
+                    "child": "card-content"
+                  }
+                }
+              },
+              {
+                "id": "card-content",
+                "component": {
+                  "Column": {
+                    "children": {
+                      "explicitList": [
+                        "title-text",
+                        "meta-row",
+                        "divider-1",
+                        "button-row"
+                      ]
+                    },
+                    "distribution": "start",
+                    "alignment": "stretch"
+                  }
+                }
+              },
+              {
+                "id": "title-text",
+                "component": {
+                  "Text": {
+                    "text": {
+                      "literalString": "Write the spec"
+                    },
+                    "usageHint": "h3"
+                  }
+                }
+              },
+              {
+                "id": "meta-row",
+                "component": {
+                  "Row": {
+                    "children": {
+                      "explicitList": [
+                        "assigned-text",
+                        "due-text"
+                      ]
+                    },
+                    "distribution": "spaceBetween",
+                    "alignment": "center"
+                  }
+                }
+              },
+              {
+                "id": "assigned-text",
+                "component": {
+                  "Text": {
+                    "text": {
+                      "literalString": "Assigned to: You"
+                    },
+                    "usageHint": "body"
+                  }
+                }
+              },
+              {
+                "id": "due-text",
+                "component": {
+                  "Text": {
+                    "text": {
+                      "literalString": "Due: Tomorrow"
+                    },
+                    "usageHint": "body"
+                  }
+                }
+              },
+              {
+                "id": "divider-1",
+                "component": {
+                  "Divider": {
+                    "axis": "horizontal"
+                  }
+                }
+              },
+              {
+                "id": "button-row",
+                "component": {
+                  "Row": {
+                    "children": {
+                      "explicitList": [
+                        "complete-button"
+                      ]
+                    },
+                    "distribution": "end",
+                    "alignment": "center"
+                  }
+                }
+              },
+              {
+                "id": "complete-button",
+                "component": {
+                  "Button": {
+                    "child": "complete-button-text",
+                    "primary": true,
+                    "action": {
+                      "name": "task_complete",
+                      "context": [
+                        {
+                          "key": "taskTitle",
+                          "value": {
+                            "literalString": "Write the spec"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              },
+              {
+                "id": "complete-button-text",
+                "component": {
+                  "Text": {
+                    "text": {
+                      "literalString": "Complete"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "1": {
+          "beginRendering": {
+            "surfaceId": "task-card-1",
+            "root": "root-card",
+            "styles": {
+              "font": "Inter",
+              "primaryColor": "#2E7D32"
+            }
+          }
+        }
+      }
+    },
+    {
+      "prompt": "Render a notification card with title 'New message' and body 'You have a meeting at 3pm'.",
+      "model": "gpt-5",
+      "elapsed_s": 26.638072000001557,
+      "raised_tool_call": true,
+      "parsed_args": false,
+      "has_surface_update": false,
+      "has_begin_rendering": false,
+      "data_update_count": 0,
+      "component_count": 0,
+      "error": "envelopes not a list: type=NoneType",
+      "raw_tool_args": {
+        "0": {
+          "surfaceUpdate": {
+            "surfaceId": "notification-card-1",
+            "components": [
+              {
+                "id": "root",
+                "component": {
+                  "Card": {
+                    "child": "content"
+                  }
+                }
+              },
+              {
+                "id": "content",
+                "component": {
+                  "Column": {
+                    "children": {
+                      "explicitList": [
+                        "title",
+                        "body"
+                      ]
+                    },
+                    "distribution": "start",
+                    "alignment": "start"
+                  }
+                }
+              },
+              {
+                "id": "title",
+                "component": {
+                  "Text": {
+                    "text": {
+                      "literalString": "New message"
+                    },
+                    "usageHint": "h4"
+                  }
+                }
+              },
+              {
+                "id": "body",
+                "component": {
+                  "Text": {
+                    "text": {
+                      "literalString": "You have a meeting at 3pm"
+                    },
+                    "usageHint": "body"
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "1": {
+          "beginRendering": {
+            "surfaceId": "notification-card-1",
+            "root": "root",
+            "styles": {
+              "font": "Inter, system-ui, sans-serif",
+              "primaryColor": "#2563EB"
+            }
+          }
+        }
+      }
+    }
+  ]
+}
