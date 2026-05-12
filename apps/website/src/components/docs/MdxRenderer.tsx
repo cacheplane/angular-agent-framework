@@ -1,5 +1,5 @@
 import { MDXRemote } from 'next-mdx-remote/rsc';
-import { tokens } from '../../../lib/design-tokens';
+import { tokens } from '@ngaf/design-tokens';
 import { Callout } from './mdx/Callout';
 import { Steps, Step } from './mdx/Steps';
 import { Tabs, Tab } from './mdx/Tabs';
@@ -8,7 +8,6 @@ import { CodeGroup } from './mdx/CodeGroup';
 import { Pre } from './mdx/CodeBlock';
 import { FeatureChips } from './mdx/FeatureChips';
 import { ArchFlowDiagram } from './ArchFlowDiagram';
-import { DocsBreadcrumb } from './DocsBreadcrumb';
 import { type LibraryId } from '../../lib/docs-config';
 import rehypePrettyCode from 'rehype-pretty-code';
 import rehypeSlug from 'rehype-slug';
@@ -56,7 +55,6 @@ interface MdxRendererProps {
 export function MdxRenderer({ source, library, section, slug, title }: MdxRendererProps) {
   return (
     <div className="flex-1 py-8 px-4 sm:px-6 md:px-12 md:max-w-3xl overflow-x-hidden">
-      <DocsBreadcrumb library={library} section={section} title={title} />
       <article className="docs-prose prose prose-slate max-w-none"
         style={{
           '--tw-prose-body': tokens.colors.textSecondary,

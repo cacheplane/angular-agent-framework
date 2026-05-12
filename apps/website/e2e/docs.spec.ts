@@ -5,10 +5,11 @@ test.describe('Docs landing page', () => {
     await page.goto('/docs');
     // Header
     await expect(page.locator('#docs-heading')).toBeVisible();
-    // Library grid — at least one per library (agent always present)
+    // Library grid — all 4 libraries (agent, render, chat, ag-ui)
     await expect(page.locator('main a[href="/docs/agent/getting-started/introduction"]').first()).toBeVisible();
     await expect(page.locator('main a[href="/docs/render/getting-started/introduction"]').first()).toBeVisible();
     await expect(page.locator('main a[href="/docs/chat/getting-started/introduction"]').first()).toBeVisible();
+    await expect(page.locator('main a[href="/docs/ag-ui/getting-started/introduction"]').first()).toBeVisible();
     // Popular topics — 3 cards
     await expect(page.getByText('Streaming with signals').first()).toBeVisible();
     await expect(page.getByText('Generative UI fundamentals').first()).toBeVisible();
@@ -47,6 +48,11 @@ test.describe('Docs slug page', () => {
     const id = await h2.getAttribute('id');
     expect(id).toBeTruthy();
     expect(id?.length).toBeGreaterThan(0);
+  });
+
+  test('breadcrumb renders exactly once', async ({ page }) => {
+    await page.goto('/docs/agent/getting-started/introduction');
+    await expect(page.locator('nav[aria-label="Breadcrumb"]')).toHaveCount(1);
   });
 });
 
