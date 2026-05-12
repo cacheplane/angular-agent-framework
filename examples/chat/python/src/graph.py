@@ -394,12 +394,19 @@ async def generate(state: State, config: RunnableConfig) -> dict:
         render_a2ui_surface if gen_ui_mode == "a2ui"
         else generate_json_render_spec
     )
-    # Strict mode is enabled for the envelope-emission tool so OpenAI enforces
-    # the canonical {envelopes: [...]} argument shape; the JS bridge and Python
-    # normalizer treat the non-canonical shapes as safety nets.
+    # Note on strict mode: OpenAI strict tool binding requires every nested
+    # object schema in the parameters tree to declare additionalProperties:
+    # false. The envelope shape carries list[dict] for components/contents
+    # (untyped inner objects), which strict mode rejects with a 400
+    # ('additionalProperties is required to be supplied and to be false').
+    # Typing the inner shapes would over-couple this example to the A2UI v1
+    # spec; instead we leave strict OFF and rely on the envelope-args
+    # normalizer (Python: src/streaming/envelope_normalizer.py; TS:
+    # libs/chat/src/lib/a2ui/envelope-normalizer.ts) to canonicalize the
+    # four observed argument shapes (envelopes / envelope / positional /
+    # flat). The spike showed 80-93% canonical even without strict.
     llm = ChatOpenAI(**kwargs).bind_tools(
         [search_documents, request_approval, research, gen_ui_tool],
-        strict=True if gen_ui_mode == "a2ui" else False,
     )
     # Append A2UI v1 schema to system prompt when in a2ui mode, so the parent
     # LLM knows how to construct the envelopes directly.
