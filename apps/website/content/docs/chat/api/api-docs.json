@@ -3759,8 +3759,34 @@
         "params": []
       },
       {
+        "name": "performPin",
+        "signature": "performPin(threadId: string)",
+        "description": "",
+        "params": [
+          {
+            "name": "threadId",
+            "type": "string",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
         "name": "performUnarchive",
         "signature": "performUnarchive(threadId: string)",
+        "description": "",
+        "params": [
+          {
+            "name": "threadId",
+            "type": "string",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
+        "name": "performUnpin",
+        "signature": "performUnpin(threadId: string)",
         "description": "",
         "params": [
           {
@@ -5940,6 +5966,12 @@
         "optional": true
       },
       {
+        "name": "pin",
+        "type": "unknown",
+        "description": "",
+        "optional": true
+      },
+      {
         "name": "rename",
         "type": "unknown",
         "description": "",
@@ -5947,6 +5979,12 @@
       },
       {
         "name": "unarchive",
+        "type": "unknown",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "unpin",
         "type": "unknown",
         "description": "",
         "optional": true

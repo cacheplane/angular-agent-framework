@@ -34,6 +34,10 @@ export type Thread = {
    *  `threads` and `archivedThreads` inputs on chat-sidenav. The field is
    *  typed documentation of intent. */
   status?: 'active' | 'archived';
+  /** Optional flag indicating the thread is pinned (sticky-top). The framework
+   *  renders a pin icon when true but does NOT sort — the consumer pre-sorts
+   *  pinned threads to the top of the `threads` input. */
+  pinned?: boolean;
   [key: string]: unknown;
 };
 
@@ -54,6 +58,10 @@ export interface ThreadActionAdapter {
   archive?(threadId: string): Promise<void>;
   /** Restore an archived thread to the active list. */
   unarchive?(threadId: string): Promise<void>;
+  /** Mark the thread as pinned. */
+  pin?(threadId: string): Promise<void>;
+  /** Unpin a previously pinned thread. */
+  unpin?(threadId: string): Promise<void>;
 }
 
 @Component({
@@ -94,7 +102,14 @@ export interface ThreadActionAdapter {
               [attr.aria-current]="thread.id === activeThreadId() ? 'true' : null"
               (click)="selectThread(thread.id)"
             >
-              <span class="chat-thread-list__item-title">{{ threadLabel(thread) }}</span>
+              <span class="chat-thread-list__item-title">
+                @if (thread.pinned) {
+                  <svg class="chat-thread-list__item-pin" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5.2v6h1.6v-6H18v-2l-2-2z"/>
+                  </svg>
+                }
+                {{ threadLabel(thread) }}
+              </span>
               @if (thread.updatedAt !== undefined) {
                 <span class="chat-thread-list__item-time">{{ relativeTime(thread.updatedAt) }}</span>
               }
@@ -174,7 +189,11 @@ export class ChatThreadListComponent {
     if (!a) return [];
     const items: OverflowMenuItem[] = [];
     if (this.mode() === 'active') {
+      const thread = this.threads().find((t) => t.id === id);
+      const isPinned = thread?.pinned === true;
       if (a.rename) items.push({ id: 'rename', label: 'Rename' });
+      if (a.pin && !isPinned) items.push({ id: 'pin', label: 'Pin' });
+      if (a.unpin && isPinned) items.push({ id: 'unpin', label: 'Unpin' });
       if (a.archive) items.push({ id: 'archive', label: 'Archive' });
       if (a.delete) items.push({ id: 'delete', label: 'Delete', tone: 'destructive' });
     } else {
@@ -207,7 +226,7 @@ export class ChatThreadListComponent {
   protected showKebab(): boolean {
     const a = this.actions();
     if (!a) return false;
-    if (this.mode() === 'active') return Boolean(a.rename || a.archive || a.delete);
+    if (this.mode() === 'active') return Boolean(a.rename || a.pin || a.unpin || a.archive || a.delete);
     return Boolean(a.unarchive || a.delete);
   }
 
@@ -232,7 +251,23 @@ export class ChatThreadListComponent {
       void this.performArchive(threadId);
     } else if (id === 'unarchive') {
       void this.performUnarchive(threadId);
+    } else if (id === 'pin') {
+      void this.performPin(threadId);
+    } else if (id === 'unpin') {
+      void this.performUnpin(threadId);
     }
+  }
+
+  protected async performPin(threadId: string): Promise<void> {
+    const a = this.actions();
+    if (!a?.pin) return;
+    try { await a.pin(threadId); } catch { /* visual state remains until next successful refresh */ }
+  }
+
+  protected async performUnpin(threadId: string): Promise<void> {
+    const a = this.actions();
+    if (!a?.unpin) return;
+    try { await a.unpin(threadId); } catch { /* visual state remains until next successful refresh */ }
   }
 
   protected onEditInput(e: Event): void {
