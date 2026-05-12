@@ -312,17 +312,11 @@ export class DemoShell {
   }
 
   async onTimelineFork(checkpointId: string): Promise<void> {
-    await fetch('http://localhost:2024/threads', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: '{}',
-    })
-      .then((r) => r.json())
-      .then((t: { thread_id: string }) => {
-        this.threadIdSignal.set(t.thread_id);
-        this.persistence.write('threadId', t.thread_id);
-        void this.agent.submit(null as never, { checkpointId } as never);
-      });
+    const id = await this.threadsSvc.create();
+    if (!id) return;
+    this.threadIdSignal.set(id);
+    this.persistence.write('threadId', id);
+    void this.agent.submit(null as never, { checkpointId } as never);
   }
 
   /** Switch to an existing thread selected from the threads panel. */
