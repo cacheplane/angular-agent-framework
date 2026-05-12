@@ -2369,7 +2369,7 @@
         "optional": false
       },
       {
-        "name": "close",
+        "name": "closed",
         "type": "OutputEmitterRef<void>",
         "description": "",
         "optional": false

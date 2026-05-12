@@ -114,7 +114,7 @@ describe('ChatHistorySearchPaletteComponent', () => {
   it('Esc emits close', () => {
     const fixture = render();
     let emits = 0;
-    fixture.componentInstance.close.subscribe(() => emits++);
+    fixture.componentInstance.closed.subscribe(() => emits++);
     const input = fixture.nativeElement.querySelector('input') as HTMLInputElement;
     input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
     expect(emits).toBe(1);
@@ -123,7 +123,7 @@ describe('ChatHistorySearchPaletteComponent', () => {
   it('Scrim click emits close', () => {
     const fixture = render();
     let emits = 0;
-    fixture.componentInstance.close.subscribe(() => emits++);
+    fixture.componentInstance.closed.subscribe(() => emits++);
     const scrim = fixture.nativeElement.querySelector('.chat-history-search-palette__scrim') as HTMLButtonElement;
     scrim.click();
     expect(emits).toBe(1);

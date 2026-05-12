@@ -40,7 +40,7 @@
     [(query)]="searchQuery"
     [results]="searchResults()"
     (threadSelected)="onSearchSelect($event)"
-    (close)="paletteOpen.set(false)"
+    (closed)="paletteOpen.set(false)"
   />
 
   <chat-debug

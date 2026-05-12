@@ -35,10 +35,10 @@ export type ChatSidenavMode = 'expanded' | 'collapsed' | 'drawer';
         (click)="openChange.emit(false)"
       ></button>
     }
-    <aside
+    <nav
       class="chat-sidenav"
-      role="navigation"
       aria-label="Sidebar navigation"
+      tabindex="-1"
       (keydown.escape)="onEscape()"
     >
       <div class="chat-sidenav__header">
@@ -96,7 +96,7 @@ export type ChatSidenavMode = 'expanded' | 'collapsed' | 'drawer';
       <div class="chat-sidenav__account">
         <ng-content select="[sidenavAccount]" />
       </div>
-    </aside>
+    </nav>
   `,
 })
 export class ChatSidenavComponent {

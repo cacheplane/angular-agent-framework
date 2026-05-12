@@ -34,7 +34,7 @@ let paletteInstanceCounter = 0;
         type="button"
         class="chat-history-search-palette__scrim"
         aria-label="Close search"
-        (click)="close.emit()"
+        (click)="closed.emit()"
       ></button>
       <div
         class="chat-history-search-palette"
@@ -64,7 +64,7 @@ let paletteInstanceCounter = 0;
             type="button"
             class="chat-history-search-palette__close"
             aria-label="Close"
-            (click)="close.emit()"
+            (click)="closed.emit()"
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <line x1="18" y1="6" x2="6" y2="18"/>
@@ -116,8 +116,7 @@ export class ChatHistorySearchPaletteComponent {
   readonly placeholder = input<string>('Search conversations');
 
   readonly threadSelected = output<string>();
-  // eslint-disable-next-line @angular-eslint/no-output-native
-  readonly close = output<void>();
+  readonly closed = output<void>();
 
   protected readonly activeIndex = signal<number>(0);
   protected readonly listId = `chat-history-search-palette__results-${++paletteInstanceCounter}`;
@@ -155,7 +154,7 @@ export class ChatHistorySearchPaletteComponent {
   protected onInputKeydown(e: KeyboardEvent): void {
     if (e.key === 'Escape') {
       e.preventDefault();
-      this.close.emit();
+      this.closed.emit();
       return;
     }
     if (e.key === 'ArrowDown') {
