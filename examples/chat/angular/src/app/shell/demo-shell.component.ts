@@ -28,9 +28,12 @@ import {
   type InterruptAction,
   type ThreadMatch,
   type ThreadActionAdapter,
+  type Thread,
+  type ProjectActionAdapter,
 } from '@ngaf/chat';
 import { PalettePersistence } from './palette-persistence.service';
 import { ThreadsService } from './threads.service';
+import { ProjectsService } from './projects.service';
 import { DEMO_AGENT } from './shell-tokens';
 
 export type DemoMode = 'embed' | 'popup' | 'sidebar';
@@ -70,6 +73,7 @@ export class DemoShell {
   private readonly persistence = inject(PalettePersistence);
   private readonly document = inject(DOCUMENT);
   protected readonly threadsSvc = inject(ThreadsService);
+  protected readonly projectsSvc = inject(ProjectsService);
 
   constructor() {
     // Reflect the chosen theme onto <html data-theme="..."> so the
@@ -180,6 +184,13 @@ export class DemoShell {
     this.viewportWidth() >= 1024 ? this.storedDesktopMode() : 'drawer',
   );
 
+  /** Active threads filtered by the selected project (or all when none selected). */
+  protected readonly visibleThreads = computed<Thread[]>(() => {
+    const sel = this.selectedProjectId();
+    const all = this.threadsSvc.threads();
+    return sel === null ? all : all.filter((t) => t.projectId === sel);
+  });
+
   /** Client-side title filter over the loaded threads. */
   protected readonly searchResults = computed<ThreadMatch[]>(() => {
     const q = this.searchQueryDebounced().toLowerCase().trim();
@@ -227,6 +238,27 @@ export class DemoShell {
   /** Persisted thread id (null on first run). Reactive so reload reconnects to the same thread. */
   protected readonly threadIdSignal = signal<string | null>(this.persistence.read('threadId') ?? null);
 
+  protected readonly selectedProjectId = signal<string | null>(
+    this.persistence.read('selectedProjectId') ?? null,
+  );
+
+  protected readonly projectActions: ProjectActionAdapter = {
+    create: async (name) => {
+      const r = await this.projectsSvc.create(name);
+      this.selectedProjectId.set(r.id);
+      this.persistence.write('selectedProjectId', r.id);
+      return r;
+    },
+    rename: (id, name) => this.projectsSvc.rename(id, name),
+    delete: async (id) => {
+      await this.projectsSvc.delete(id);
+      if (this.selectedProjectId() === id) {
+        this.selectedProjectId.set(null);
+        this.persistence.write('selectedProjectId', null);
+      }
+    },
+  };
+
   protected readonly threadActions: ThreadActionAdapter = {
     delete: async (id) => {
       await this.threadsSvc.delete(id);
@@ -246,6 +278,9 @@ export class DemoShell {
     unarchive: (id) => this.threadsSvc.unarchive(id),
     pin: (id) => this.threadsSvc.pin(id),
     unpin: (id) => this.threadsSvc.unpin(id),
+    moveToProject: async (id, projectId) => {
+      await this.threadsSvc.moveToProject(id, projectId);
+    },
   };
 
   /**
@@ -345,6 +380,16 @@ export class DemoShell {
     this.persistence.write('threadId', threadId);
   }
 
+  protected onProjectSelected(projectId: string): void {
+    this.selectedProjectId.set(projectId);
+    this.persistence.write('selectedProjectId', projectId);
+  }
+
+  protected onNewProjectClicked(): void {
+    // Framework's chat-project-list owns the inline-create flow; this is an
+    // informational event for the consumer.
+  }
+
   protected onSearchSelect(threadId: string): void {
     this.onThreadSelected(threadId);
     this.paletteOpen.set(false);
@@ -353,7 +398,8 @@ export class DemoShell {
 
   /** Create a new thread via the backend and switch to it. */
   protected async onNewThread(): Promise<void> {
-    const id = await this.threadsSvc.create();
+    const sel = this.selectedProjectId();
+    const id = await this.threadsSvc.create(sel ?? undefined);
     if (id) {
       this.threadIdSignal.set(id);
       this.persistence.write('threadId', id);

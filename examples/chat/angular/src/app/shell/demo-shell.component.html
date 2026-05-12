@@ -10,14 +10,19 @@
   }
 
   <chat-sidenav
-    [threads]="threadsSvc.threads()"
+    [threads]="visibleThreads()"
     [archivedThreads]="threadsSvc.archivedThreads()"
+    [projects]="projectsSvc.projects()"
+    [selectedProjectId]="selectedProjectId()"
+    [projectActions]="projectActions"
     [activeThreadId]="threadIdSignal() ?? ''"
     [mode]="sidenavMode()"
     [(open)]="drawerOpen"
     [actions]="threadActions"
     (newChat)="onNewThread()"
     (threadSelected)="onThreadSelected($event)"
+    (projectSelected)="onProjectSelected($event)"
+    (newProjectRequested)="onNewProjectClicked()"
     (searchOpened)="paletteOpen.set(true)"
     (openChange)="onSidenavOpenChange($event)"
     (modeChange)="onSidenavModeChange($event)"
