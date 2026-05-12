@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { cssVars } from './css-vars';
 
 describe('cssVars', () => {
-  describe('Phase 1 token namespaces', () => {
+  describe('token namespaces', () => {
     it('exposes surfaces', () => {
       expect(cssVars['--ds-canvas']).toBe('#fafbfc');
       expect(cssVars['--ds-surface']).toBe('#ffffff');
@@ -38,26 +38,11 @@ describe('cssVars', () => {
       expect(cssVars['--ds-accent-hover']).toBe('#003070');
       expect(cssVars['--ds-text-inverted']).toBe('#ffffff');
     });
-  });
 
-  describe('Pre-Phase-1 token namespaces (still present until Phase 8.3 purge)', () => {
     it('exposes core colors', () => {
       expect(cssVars['--ds-bg']).toBe('#f8f9fc');
       expect(cssVars['--ds-accent']).toBe('#004090');
       expect(cssVars['--ds-text-primary']).toBe('#1a1a2e');
-    });
-
-    it('exposes glass tokens (legacy)', () => {
-      expect(cssVars['--ds-glass-bg']).toContain('rgba(255');
-      expect(cssVars['--ds-glass-blur']).toBe('16px');
-    });
-
-    it('exposes gradient tokens (legacy)', () => {
-      expect(cssVars['--ds-gradient-bg-flow']).toContain('linear-gradient');
-    });
-
-    it('exposes glow tokens (legacy)', () => {
-      expect(cssVars['--ds-glow-card']).toContain('rgba(0, 64, 144');
     });
 
     it('exposes typography', () => {

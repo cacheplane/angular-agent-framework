@@ -56,13 +56,6 @@
   --color-sidebar-bg: rgba(255, 255, 255, 0.45);
   --color-angular-red: #DD0031;
 
-  --glass-bg: rgba(255, 255, 255, 0.45);
-  --glass-bg-hover: rgba(255, 255, 255, 0.55);
-  --glass-blur: 16px;
-  --glass-border: rgba(255, 255, 255, 0.6);
-  --glass-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
-
-  --gradient-bg-flow: linear-gradient(135deg, #fef0f3 0%, #f4f0ff 45%, #eaf3ff 70%, #e6f4ff 100%);
 }
 
 * {

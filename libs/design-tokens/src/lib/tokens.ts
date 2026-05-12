@@ -1,7 +1,4 @@
 import { colors } from './colors';
-import { glass } from './glass';
-import { gradient } from './gradients';
-import { glow } from './glow';
 import { typography } from './typography';
 import { surfaces } from './surfaces';
 import { shadows } from './shadows';
@@ -15,9 +12,6 @@ import { space } from './space';
  */
 export const tokens = {
   colors,
-  glass,
-  gradient,
-  glow,
   typography,
   surfaces,
   shadows,

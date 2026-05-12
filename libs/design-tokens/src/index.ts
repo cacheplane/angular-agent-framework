@@ -1,7 +1,4 @@
 export { colors, type Colors } from './lib/colors';
-export { glass, type Glass } from './lib/glass';
-export { gradient, type Gradient } from './lib/gradients';
-export { glow, type Glow } from './lib/glow';
 export { typography, type Typography } from './lib/typography';
 export { surfaces, type Surfaces } from './lib/surfaces';
 export { shadows, type Shadows } from './lib/shadows';
