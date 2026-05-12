@@ -12,6 +12,7 @@
     [activeThreadId]="threadIdSignal() ?? ''"
     [mode]="sidenavMode()"
     [(open)]="drawerOpen"
+    [actions]="threadActions"
     (newChat)="onNewThread()"
     (threadSelected)="onThreadSelected($event)"
     (searchOpened)="paletteOpen.set(true)"
