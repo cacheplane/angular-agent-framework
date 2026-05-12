@@ -1,70 +1,66 @@
-import type { ReactNode } from 'react';
-import { tokens } from '@ngaf/design-tokens';
+'use client';
+import { useRef, useState } from 'react';
+import { analyticsEvents } from '../../../lib/analytics/events';
+import { track } from '../../../lib/analytics/client';
 
-interface Props {
-  filename?: string;
-  language?: string;
-  children: ReactNode;
+function CopyIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="5" y="5" width="9" height="9" rx="1.5" />
+      <path d="M11 5V3.5A1.5 1.5 0 009.5 2h-6A1.5 1.5 0 002 3.5v6A1.5 1.5 0 003.5 11H5" />
+    </svg>
+  );
 }
 
-/**
- * MDX <pre> wrapper. Renders BrowserFrame-style chrome around
- * a code body. The body itself (typically a <pre> rendered by shiki)
- * keeps its own dark tokyo-night background.
- *
- * The fenced-code-block code (rendered by rehype-pretty-code) does
- * not use this wrapper; it goes through the .shiki rules in
- * global.css.
- */
-export function Pre({ filename, language, children }: Props) {
+function CheckIcon() {
   return (
-    <div
-      data-mdx="code-block"
-      style={{
-        background: tokens.surfaces.surface,
-        border: `1px solid ${tokens.surfaces.border}`,
-        borderRadius: tokens.radius.lg,
-        overflow: 'hidden',
-        margin: '20px 0',
-        boxShadow: tokens.shadows.sm,
-      }}
-    >
-      {/* Title bar */}
-      <div
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 8.5l3.5 3.5L13 5" />
+    </svg>
+  );
+}
+
+export function Pre({ children, ...props }: React.HTMLAttributes<HTMLPreElement>) {
+  const ref = useRef<HTMLPreElement>(null);
+  const [copied, setCopied] = useState(false);
+
+  const copy = async () => {
+    const text = ref.current?.textContent ?? '';
+    await navigator.clipboard.writeText(text);
+    track(analyticsEvents.docsCopyCodeClick, {
+      surface: 'docs',
+      cta_id: 'copy_code',
+    });
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <div style={{ position: 'relative', maxWidth: '100%', overflow: 'hidden' }}>
+      <pre ref={ref} {...props} style={{ ...((props as Record<string, unknown>).style as React.CSSProperties), overflowX: 'auto' }}>{children}</pre>
+      <button
+        onClick={copy}
+        aria-label={copied ? 'Copied' : 'Copy code'}
         style={{
+          position: 'absolute',
+          top: 8,
+          right: 8,
           display: 'flex',
           alignItems: 'center',
-          gap: 10,
-          padding: '8px 14px',
-          background: tokens.surfaces.surfaceTinted,
-          borderBottom: `1px solid ${tokens.surfaces.border}`,
+          justifyContent: 'center',
+          width: 28,
+          height: 28,
+          padding: 0,
+          border: '1px solid rgba(255,255,255,0.15)',
+          borderRadius: 6,
+          background: copied ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.08)',
+          color: copied ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.55)',
+          cursor: 'pointer',
+          transition: 'background 0.15s, color 0.15s',
         }}
       >
-        <div style={{ display: 'flex', gap: 6 }} aria-hidden="true">
-          <span style={{ width: 10, height: 10, borderRadius: tokens.radius.full, background: '#FF5F57' }} />
-          <span style={{ width: 10, height: 10, borderRadius: tokens.radius.full, background: '#FEBC2E' }} />
-          <span style={{ width: 10, height: 10, borderRadius: tokens.radius.full, background: '#28C840' }} />
-        </div>
-        {filename ? (
-          <div
-            style={{
-              flex: 1,
-              fontFamily: tokens.typography.fontMono,
-              fontSize: 11,
-              color: tokens.colors.textMuted,
-              textAlign: 'center',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
-            }}
-          >
-            {filename}
-            {language ? <span style={{ marginLeft: 8, opacity: 0.6 }}>· {language}</span> : null}
-          </div>
-        ) : null}
-        <div style={{ width: 42 }} aria-hidden="true" />
-      </div>
-      <div data-mdx="code-block-body">{children}</div>
+        {copied ? <CheckIcon /> : <CopyIcon />}
+      </button>
     </div>
   );
 }
