@@ -147,4 +147,41 @@ export const CHAT_SIDENAV_STYLES = `
   :host([data-mode="collapsed"]) .chat-sidenav__account {
     padding: var(--ngaf-chat-space-2);
   }
+  .chat-sidenav__archived { flex-shrink: 0; }
+  .chat-sidenav__archived-heading {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+    padding: 8px 12px 4px;
+    border: 0;
+    background: transparent;
+    color: var(--ngaf-chat-text-muted);
+    font: inherit;
+    font-size: var(--ngaf-chat-font-size-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    text-align: left;
+    cursor: pointer;
+  }
+  .chat-sidenav__archived-heading:hover { color: var(--ngaf-chat-text); }
+  .chat-sidenav__archived-heading:focus-visible {
+    outline: 2px solid var(--ngaf-chat-primary);
+    outline-offset: 2px;
+  }
+  .chat-sidenav__archived-chevron {
+    width: 12px;
+    height: 12px;
+    transition: transform 150ms ease;
+    flex-shrink: 0;
+  }
+  .chat-sidenav__archived[data-open="true"] .chat-sidenav__archived-chevron {
+    transform: rotate(90deg);
+  }
+  .chat-sidenav__archived-empty {
+    padding: 8px 12px;
+    color: var(--ngaf-chat-text-muted);
+    font-size: var(--ngaf-chat-font-size-sm);
+  }
+  :host([data-mode="collapsed"]) .chat-sidenav__archived { display: none; }
 `;
