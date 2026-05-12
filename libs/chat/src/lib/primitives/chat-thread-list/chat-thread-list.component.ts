@@ -29,6 +29,11 @@ export type Thread = {
    *  render a relative-time line ("just now" / "5 min ago"). When absent
    *  the default template omits the second line. */
   updatedAt?: number;
+  /** Optional lifecycle status. Undefined treated as 'active'. The framework
+   *  does NOT auto-filter by this field — consumers pre-filter into separate
+   *  `threads` and `archivedThreads` inputs on chat-sidenav. The field is
+   *  typed documentation of intent. */
+  status?: 'active' | 'archived';
   [key: string]: unknown;
 };
 
@@ -44,6 +49,11 @@ export type Thread = {
 export interface ThreadActionAdapter {
   delete?(threadId: string): Promise<void>;
   rename?(threadId: string, newTitle: string): Promise<void>;
+  /** Archive a thread (reversible). No confirmation dialog — framework calls
+   *  this immediately on click. */
+  archive?(threadId: string): Promise<void>;
+  /** Restore an archived thread to the active list. */
+  unarchive?(threadId: string): Promise<void>;
 }
 
 @Component({
