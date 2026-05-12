@@ -20,8 +20,13 @@ interface BridgeState {
   parser: ReturnType<typeof createPartialJsonParser>;
   /** Number of envelopes already dispatched to the store. */
   dispatchedCount: number;
-  /** Have we synthesised a beginRendering for this turn yet? */
-  synthesised: boolean;
+  /**
+   * Have we dispatched the initial surfaceUpdate + synthesised beginRendering
+   * pair for this turn yet? Until true, dispatch is deferred — we wait for
+   * the first surfaceUpdate to have at least one component with an `id` so
+   * `pickRoot` can target a real root and the surface actually mounts.
+   */
+  surfacePairDispatched: boolean;
   /** surfaceId the synthesised beginRendering targets (to avoid double-mounting). */
   synthesisedSurfaceId: string | null;
   /** Once true, all subsequent pushes are ignored. */
@@ -183,7 +188,7 @@ export function createPartialArgsBridge(store: A2uiSurfaceStore): PartialArgsBri
       s = {
         parser: createPartialJsonParser(),
         dispatchedCount: 0,
-        synthesised: false,
+        surfacePairDispatched: false,
         synthesisedSurfaceId: null,
         poisoned: false,
       };
@@ -223,39 +228,54 @@ export function createPartialArgsBridge(store: A2uiSurfaceStore): PartialArgsBri
     const envelopes = normalizeEnvelopeArgs(materialised);
     if (!envelopes) return;
 
-    // Dispatch envelopes that haven't been dispatched yet. partial-json
-    // returns partially-built objects too; skip incomplete ones (those
-    // missing the discriminator top-level key).
-    const ready: A2uiMessage[] = [];
-    let realDispatched = 0;
-    for (let i = 0; i < envelopes.length; i++) {
+    // Phase 1: defer initial dispatch until the first envelope is a complete
+    // surfaceUpdate whose components include at least one entry with an `id`
+    // — otherwise pickRoot returns null and synthesis silently no-ops, leaving
+    // the surface unmounted forever. Once we have a pickable root, dispatch
+    // the surfaceUpdate AND a synthesised beginRendering as an atomic pair.
+    if (!state.surfacePairDispatched) {
+      const firstEnv = envelopes[0] as A2uiMessage | undefined;
+      if (!firstEnv || !('surfaceUpdate' in firstEnv)) return;
+      if (!isStructurallyComplete(firstEnv)) return;
+      const upd = (firstEnv as { surfaceUpdate: A2uiSurfaceUpdate }).surfaceUpdate;
+      if (upd.components.length === 0) return;
+      const root = pickRoot(upd.components);
+      if (!root) return;
+      state.surfacePairDispatched = true;
+      state.dispatchedCount = 1; // index 0 = the surfaceUpdate we just sent
+      state.synthesisedSurfaceId = upd.surfaceId;
+      store.applyPartialArgs(toolCallId, [
+        firstEnv,
+        { beginRendering: { surfaceId: upd.surfaceId, root } },
+      ]);
+    }
+
+    // Phase 2: dispatch any newly-complete envelopes beyond the initial pair.
+    const newEnvelopes: A2uiMessage[] = [];
+    for (let i = state.dispatchedCount; i < envelopes.length; i++) {
       const env = envelopes[i] as A2uiMessage;
-      if (!isStructurallyComplete(env)) continue;
-      // Only dispatch envelopes BEYOND those already sent.
-      if (i < state.dispatchedCount) {
-        // already dispatched; do not re-send.
+      if (!isStructurallyComplete(env)) {
+        // Stop at the first not-yet-complete envelope; later siblings can't
+        // exist before earlier ones complete (envelopes are an ordered list).
+        break;
+      }
+      // Skip a "real" beginRendering for the synthesised surface — the store
+      // already treats it as idempotent (just re-applies styles), but we
+      // advance past it so dispatchedCount stays in sync with the index.
+      if (
+        'beginRendering' in env &&
+        (env as { beginRendering: { surfaceId?: string } }).beginRendering.surfaceId ===
+          state.synthesisedSurfaceId
+      ) {
+        state.dispatchedCount = i + 1;
         continue;
       }
-      ready.push(env);
-      realDispatched++;
-      // Inject synthesised beginRendering immediately after first surfaceUpdate.
-      const synth = synthesisedBegin(env, state);
-      if (synth) ready.push(synth);
+      newEnvelopes.push(env);
+      state.dispatchedCount = i + 1;
     }
-    if (ready.length === 0) return;
-
-    state.dispatchedCount += realDispatched;
-    store.applyPartialArgs(toolCallId, ready);
-  }
-
-  function synthesisedBegin(env: A2uiMessage, state: BridgeState): A2uiMessage | null {
-    if (state.synthesised || !('surfaceUpdate' in env)) return null;
-    const upd = (env as { surfaceUpdate: A2uiSurfaceUpdate }).surfaceUpdate;
-    const root = pickRoot(upd.components);
-    if (!root) return null;
-    state.synthesised = true;
-    state.synthesisedSurfaceId = upd.surfaceId;
-    return { beginRendering: { surfaceId: upd.surfaceId, root } };
+    if (newEnvelopes.length > 0) {
+      store.applyPartialArgs(toolCallId, newEnvelopes);
+    }
   }
 
   function isPoisoned(toolCallId: string): boolean {

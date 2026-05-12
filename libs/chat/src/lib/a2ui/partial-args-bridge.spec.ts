@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MIT
 import { describe, it, expect, beforeEach } from 'vitest';
 import { TestBed } from '@angular/core/testing';
+import type { A2uiMessage } from '@ngaf/a2ui';
 import { createPartialArgsBridge } from './partial-args-bridge';
 import { createA2uiSurfaceStore, type A2uiSurfaceStore } from './surface-store';
 
@@ -61,9 +62,12 @@ describe('createPartialArgsBridge', () => {
     expect(store.surfaces().get('s')?.dataModel).toEqual({ msg: 'hi' });
   });
 
-  it('marks tool_call_id as live in the store', () => {
+  it('marks tool_call_id as live in the store once the initial surface pair dispatches', () => {
     const bridge = createPartialArgsBridge(store);
-    bridge.push('tc-5', '{"envelopes":[{"surfaceUpdate":{"surfaceId":"s","components":[]}}]}');
+    bridge.push(
+      'tc-5',
+      '{"envelopes":[{"surfaceUpdate":{"surfaceId":"s","components":[{"id":"root","type":"text","props":{}}]}}]}',
+    );
     expect(store.isPartialLive('tc-5')).toBe(true);
   });
 
@@ -90,5 +94,66 @@ describe('createPartialArgsBridge', () => {
     const bridge = createPartialArgsBridge(store);
     bridge.push('tc-8', '{"envelopes":[{"surfaceUpdate":{"surfaceId":"s","components":[{"id":"only","type":"text","props":{}}]}}]}');
     expect(store.surfaces().get('s')?.components.has('only')).toBe(true);
+  });
+
+  it('incremental push waits for a component id before mounting the surface', () => {
+    const bridge = createPartialArgsBridge(store);
+    // 1: object started, no id on first component yet.
+    bridge.push('tc-9', '{"envelopes":[{"surfaceUpdate":{"surfaceId":"s","components":[{');
+    expect(store.surfaces().has('s')).toBe(false);
+    // 2: started the "id" key but no value yet.
+    bridge.push('tc-9', '{"envelopes":[{"surfaceUpdate":{"surfaceId":"s","components":[{"');
+    expect(store.surfaces().has('s')).toBe(false);
+    // 3: id, type, props all present and component object is closed.
+    bridge.push(
+      'tc-9',
+      '{"envelopes":[{"surfaceUpdate":{"surfaceId":"s","components":[{"id":"root","type":"text","props":{}}]}}',
+    );
+    expect(store.surfaces().get('s')?.components.has('root')).toBe(true);
+  });
+
+  it('mounts the surface on first complete push and applies a dataModelUpdate on a later push', () => {
+    const bridge = createPartialArgsBridge(store);
+    const surfaceUpdate = JSON.stringify({
+      surfaceUpdate: { surfaceId: 's', components: [{ id: 'root', type: 'text', props: {} }] },
+    });
+    const dataModelUpdate = JSON.stringify({
+      dataModelUpdate: { surfaceId: 's', contents: [{ key: 'greeting', valueString: 'hello' }] },
+    });
+    bridge.push('tc-10', '{"envelopes":[' + surfaceUpdate + ']}');
+    expect(store.surfaces().get('s')?.components.has('root')).toBe(true);
+    expect(store.surfaces().get('s')?.dataModel).toEqual({});
+    bridge.push('tc-10', '{"envelopes":[' + surfaceUpdate + ',' + dataModelUpdate + ']}');
+    expect(store.surfaces().get('s')?.dataModel).toEqual({ greeting: 'hello' });
+  });
+
+  it('synthetic beginRendering targets the first component when multiple have ids and none is "root"', () => {
+    // Spy on applyPartialArgs to inspect the synthesised beginRendering envelope.
+    const captured: A2uiMessage[][] = [];
+    const orig = store.applyPartialArgs.bind(store);
+    (store as { applyPartialArgs: typeof store.applyPartialArgs }).applyPartialArgs = (
+      toolCallId: string,
+      envs: readonly A2uiMessage[],
+    ) => {
+      captured.push(envs.slice() as A2uiMessage[]);
+      orig(toolCallId, envs);
+    };
+    const bridge = createPartialArgsBridge(store);
+    bridge.push(
+      'tc-11',
+      '{"envelopes":[{"surfaceUpdate":{"surfaceId":"s","components":[{"id":"alpha","type":"text","props":{}},{"id":"beta","type":"text","props":{}}]}}]}',
+    );
+    const surface = store.surfaces().get('s');
+    expect(surface).toBeTruthy();
+    expect(surface!.components.has('alpha')).toBe(true);
+    expect(surface!.components.has('beta')).toBe(true);
+    // First dispatch should be [surfaceUpdate, synthesised beginRendering with root="alpha"].
+    expect(captured.length).toBeGreaterThan(0);
+    const firstBatch = captured[0];
+    const beginEnv = firstBatch.find((e) => 'beginRendering' in e) as
+      | { beginRendering: { surfaceId: string; root: string } }
+      | undefined;
+    expect(beginEnv).toBeTruthy();
+    expect(beginEnv!.beginRendering.root).toBe('alpha');
   });
 });
