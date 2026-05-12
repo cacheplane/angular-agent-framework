@@ -140,6 +140,7 @@ export class ChatThreadListComponent {
   readonly activeThreadId = input<string>('');
   readonly showNewThreadButton = input<boolean>(false);
   readonly actions = input<ThreadActionAdapter | null>(null);
+  readonly mode = input<'active' | 'archived'>('active');
 
   readonly threadSelected = output<string>();
   readonly newThreadRequested = output<void>();
@@ -152,11 +153,14 @@ export class ChatThreadListComponent {
   protected readonly menuAnchor = signal<HTMLElement | null>(null);
   protected readonly confirmDeleteId = signal<string | null>(null);
 
-  private readonly pendingDeletes = signal<ReadonlySet<string>>(new Set());
+  /** Ids hidden from the rendered list during pending delete, archive, or
+   *  unarchive. The framework doesn't distinguish — all three actions hide
+   *  the row from the current list until the adapter promise settles. */
+  private readonly pendingHidden = signal<ReadonlySet<string>>(new Set());
   private readonly pendingRenames = signal<ReadonlyMap<string, string>>(new Map());
 
   protected readonly visibleThreads = computed<Thread[]>(() => {
-    const hidden = this.pendingDeletes();
+    const hidden = this.pendingHidden();
     const renames = this.pendingRenames();
     return this.threads()
       .filter((t) => !hidden.has(t.id))
@@ -169,8 +173,14 @@ export class ChatThreadListComponent {
     const a = this.actions();
     if (!a) return [];
     const items: OverflowMenuItem[] = [];
-    if (a.rename) items.push({ id: 'rename', label: 'Rename' });
-    if (a.delete) items.push({ id: 'delete', label: 'Delete', tone: 'destructive' });
+    if (this.mode() === 'active') {
+      if (a.rename) items.push({ id: 'rename', label: 'Rename' });
+      if (a.archive) items.push({ id: 'archive', label: 'Archive' });
+      if (a.delete) items.push({ id: 'delete', label: 'Delete', tone: 'destructive' });
+    } else {
+      if (a.unarchive) items.push({ id: 'unarchive', label: 'Unarchive' });
+      if (a.delete) items.push({ id: 'delete', label: 'Delete', tone: 'destructive' });
+    }
     return items;
   });
 
@@ -197,7 +207,8 @@ export class ChatThreadListComponent {
   protected showKebab(): boolean {
     const a = this.actions();
     if (!a) return false;
-    return Boolean(a.rename || a.delete);
+    if (this.mode() === 'active') return Boolean(a.rename || a.archive || a.delete);
+    return Boolean(a.unarchive || a.delete);
   }
 
   protected openMenu(threadId: string, anchor: HTMLElement): void {
@@ -217,6 +228,10 @@ export class ChatThreadListComponent {
       queueMicrotask(() => this.editInput()?.nativeElement.focus());
     } else if (id === 'delete') {
       this.confirmDeleteId.set(threadId);
+    } else if (id === 'archive') {
+      void this.performArchive(threadId);
+    } else if (id === 'unarchive') {
+      void this.performUnarchive(threadId);
     }
   }
 
@@ -260,13 +275,47 @@ export class ChatThreadListComponent {
     const a = this.actions();
     if (!a?.delete) return;
 
-    this.pendingDeletes.update((s) => new Set([...s, threadId]));
+    this.pendingHidden.update((s) => new Set([...s, threadId]));
     try {
       await a.delete(threadId);
     } catch {
       // Rollback: clear override below so the row reappears.
     } finally {
-      this.pendingDeletes.update((s) => {
+      this.pendingHidden.update((s) => {
+        const n = new Set(s);
+        n.delete(threadId);
+        return n;
+      });
+    }
+  }
+
+  protected async performArchive(threadId: string): Promise<void> {
+    const a = this.actions();
+    if (!a?.archive) return;
+    this.pendingHidden.update((s) => new Set([...s, threadId]));
+    try {
+      await a.archive(threadId);
+    } catch {
+      // Rollback: clear override below so the row reappears.
+    } finally {
+      this.pendingHidden.update((s) => {
+        const n = new Set(s);
+        n.delete(threadId);
+        return n;
+      });
+    }
+  }
+
+  protected async performUnarchive(threadId: string): Promise<void> {
+    const a = this.actions();
+    if (!a?.unarchive) return;
+    this.pendingHidden.update((s) => new Set([...s, threadId]));
+    try {
+      await a.unarchive(threadId);
+    } catch {
+      // Rollback: clear override below so the row reappears.
+    } finally {
+      this.pendingHidden.update((s) => {
         const n = new Set(s);
         n.delete(threadId);
         return n;
