@@ -112,7 +112,7 @@ export function Button(props: ButtonProps) {
       className: _cn,
       style: _st,
       ...anchorAttrs
-    } = rest as AnchorButtonProps;
+    } = rest;
     return (
       <a
         href={href}
