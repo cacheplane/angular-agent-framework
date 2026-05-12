@@ -404,3 +404,19 @@ describe('ChatComponent — isGenuiTurn', () => {
     expect(isGenuiTurn(null, undefined)).toBe(false);
   });
 });
+
+describe('ChatComponent — no bubble-level GenUI skeleton', () => {
+  // Regression for the progressive-GenUI cleanup: the chat composition
+  // template must NOT render <chat-genui-skeleton> from within the
+  // assistant message bubble. The skeleton/coalescing belongs to a
+  // dedicated outer slot (chat-message-list / coalescer), not the bubble.
+  it('chat.component.ts source contains no <chat-genui-skeleton> tag', async () => {
+    const fs = await import('node:fs');
+    const path = await import('node:path');
+    const url = await import('node:url');
+    const here = path.dirname(url.fileURLToPath(import.meta.url));
+    const src = fs.readFileSync(path.join(here, 'chat.component.ts'), 'utf8');
+    expect(src.includes('chat-genui-skeleton')).toBe(false);
+    expect(src.includes('ChatGenuiSkeletonComponent')).toBe(false);
+  });
+});
