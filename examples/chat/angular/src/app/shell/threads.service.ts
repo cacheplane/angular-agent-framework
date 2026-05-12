@@ -42,6 +42,22 @@ export class ThreadsService {
     }
   }
 
+  async delete(threadId: string): Promise<void> {
+    const res = await fetch(`${API_URL}/threads/${threadId}`, { method: 'DELETE' });
+    if (!res.ok) throw new Error(`delete ${threadId} failed: ${res.status}`);
+    await this.refresh();
+  }
+
+  async rename(threadId: string, newTitle: string): Promise<void> {
+    const res = await fetch(`${API_URL}/threads/${threadId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ metadata: { title: newTitle } }),
+    });
+    if (!res.ok) throw new Error(`rename ${threadId} failed: ${res.status}`);
+    await this.refresh();
+  }
+
   /** Best-effort title: first user message from the thread's checkpoint
    * if present in metadata, else a truncated thread id. */
   private titleFor(t: { thread_id: string; metadata?: Record<string, unknown> }): string {
