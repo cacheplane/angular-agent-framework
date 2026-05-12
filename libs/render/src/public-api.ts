@@ -39,3 +39,7 @@ export type {
   RenderStateChangeEvent,
   RenderLifecycleEvent,
 } from './lib/render-event';
+
+// Fallback
+export { DefaultFallbackComponent } from './lib/default-fallback.component';
+export type { RenderViewEntry } from './lib/render.types';

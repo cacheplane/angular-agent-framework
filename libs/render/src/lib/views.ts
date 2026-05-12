@@ -1,19 +1,19 @@
 // SPDX-License-Identifier: MIT
 import { Type } from '@angular/core';
-import type { AngularRegistry } from './render.types';
+import type { AngularRegistry, RenderViewEntry } from './render.types';
 import { defineAngularRegistry } from './define-angular-registry';
 
 /**
  * A registry of view components available for generative UI rendering.
- * Plain frozen object mapping view names to Angular component types.
- * Compose via object spread: `views({ ...base, ...more })`.
+ * Each entry is either a bare component Type (legacy shape) or a
+ * `RenderViewEntry` { component, fallback? }.
  */
-export type ViewRegistry = Readonly<Record<string, Type<unknown>>>;
+export type ViewRegistry = Readonly<Record<string, Type<unknown> | RenderViewEntry>>;
 
 /**
  * Creates a view registry from a name → component map.
  */
-export function views(map: Record<string, Type<unknown>>): ViewRegistry {
+export function views(map: Record<string, Type<unknown> | RenderViewEntry>): ViewRegistry {
   return Object.freeze({ ...map });
 }
 
@@ -23,7 +23,7 @@ export function views(map: Record<string, Type<unknown>>): ViewRegistry {
  */
 export function withViews(
   base: ViewRegistry,
-  additions: Record<string, Type<unknown>>,
+  additions: Record<string, Type<unknown> | RenderViewEntry>,
 ): ViewRegistry {
   return Object.freeze({ ...additions, ...base });
 }
