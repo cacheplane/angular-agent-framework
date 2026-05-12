@@ -112,22 +112,29 @@ renders correctly both during streaming and after completion.
 - [ ] Selection persists across page reload
 - [ ] Selection persists across mode switches
 
-## Debug overlay
+## chat-debug devtools
 
-- [ ] Toggle Debug ON in palette
-- [ ] `<chat-debug>` overlay appears (bottom drawer)
-- [ ] Debug overlay shows current agent signals (status, message count, etc.)
-- [ ] Debug overlay updates live as messages stream
-- [ ] Toggle Debug OFF
-- [ ] Overlay unmounts; no console errors; DOM has no `<chat-debug>` element
+- [ ] Floating debug launcher button visible in the bottom-right corner
+- [ ] Launcher has `role="button"`, accessible name "Open chat devtools"
+- [ ] Click launcher — debug panel opens (zinc-dark chrome, shadcn-styled)
+- [ ] Panel header shows a status pill (idle / loading / streaming) that updates live
+- [ ] Panel has a switch toggle for verbose/quiet mode
+- [ ] Panel shows current agent signals — status, message count, thread id, model
+- [ ] Panel updates live as messages stream
+- [ ] Click the close affordance — panel unmounts; launcher remains
+- [ ] Open/closed state persists across page reload
+- [ ] No `console.error` while toggling
+- [ ] DOM has no `<chat-debug>` element when closed
 
-## Control palette UX
+## Control palette
 
-- [ ] Click collapse handle — palette shrinks to single icon
+- [ ] Palette renders top-right with the v2 shadcn-styled panel (rounded, zinc surface)
+- [ ] Status pill near the palette top reflects agent state (idle / loading / streaming)
+- [ ] Click collapse handle — palette shrinks to a single icon
 - [ ] Click icon — palette re-expands
 - [ ] Collapsed/expanded state persists across reload
-- [ ] Palette never overlaps the chat input (must remain accessible)
-- [ ] Palette is positioned above any popup/sidebar in z-order
+- [ ] Palette never overlaps the chat input
+- [ ] Palette stays above any popup/sidebar in z-order
 
 ## Keyboard & accessibility
 
@@ -243,13 +250,23 @@ renders correctly both during streaming and after completion.
 ### Dynamic dispatch — A2UI v1 mode
 
 - [ ] With Gen UI = `A2UI v1`, click any GenUI welcome suggestion (e.g. "Demo: render a feedback form")
-- [ ] Parent AI emits a tool_call to `generate_a2ui_schema` (not `render_demo_form`)
-- [ ] Sub-LLM generates a v1 A2UI envelope array; `emit_generated_surface` node wraps it with `---a2ui_JSON---\n`
-- [ ] Final assistant bubble renders an `<a2ui-surface>` matching the requested form
+- [ ] **Single bubble** — exactly ONE assistant bubble per GenUI turn (no skeleton bubble followed by a separate surface bubble)
+- [ ] Parent LLM emits a tool_call to `render_a2ui_surface` (parent emits envelopes directly as typed args — there is no sub-LLM hop)
+- [ ] Final assistant AI message carries BOTH `tool_calls` AND `---a2ui_JSON---\n`-prefixed content (in-place replacement of the tool-call AI)
+- [ ] `<a2ui-surface>` renders inside the assistant bubble matching the requested form
 - [ ] Surface is interactive: fields accept input, buttons are clickable
-- [ ] Click Submit (or equivalent action button) → chat round-trips the `A2uiActionMessage` as a new user submit
+- [ ] Click Submit → chat round-trips an `A2uiActionMessage` as a new user submit
 - [ ] AI replies conversationally referencing the submitted data
-- [ ] No console errors during the surface render or submit cycle
+- [ ] No `console.error` during render or submit cycle
+
+### Progressive A2UI streaming (per-component fallback transition)
+
+- [ ] DevTools Network → trigger any A2UI v1 GenUI prompt; the `/runs/stream` SSE response contains `event: custom` frames carrying `a2ui-partial` payloads (`{name: 'a2ui-partial', data: {tool_call_id, args_so_far}}`)
+- [ ] At least several `a2ui-partial` frames stream as the parent LLM emits tool-call argument tokens (not all-at-once)
+- [ ] During streaming: `<a2ui-surface>` mounts before all `dataModelUpdate` envelopes arrive — components show `<render-default-fallback>` (shimmer card with "Building UI…" label) until their bound state populates
+- [ ] As each `dataModelUpdate` envelope arrives, exactly one component flips from fallback → real
+- [ ] Monotonic latch: once a component renders real, a later prop becoming undefined does NOT revert it to fallback
+- [ ] After completion: zero `<render-default-fallback>` elements; all components rendered with their final props
 
 ### Dynamic dispatch — json-render mode
 
@@ -257,12 +274,13 @@ renders correctly both during streaming and after completion.
 - [ ] Click any GenUI welcome suggestion (e.g. "Demo: render a settings card")
 - [ ] Parent AI emits a tool_call to `generate_json_render_spec`
 - [ ] Sub-LLM generates a json-render Spec (`{root, elements, state}`); `emit_generated_surface` strips markdown fencing and emits a bare JSON AIMessage
-- [ ] Final assistant bubble renders the json-render surface
+- [ ] Final assistant bubble renders the json-render surface (this mode stays batch — no progressive streaming)
 - [ ] No console errors during the render cycle
 
 ### Server-side wire format
 
-- [ ] In A2UI v1 mode: final AI message content starts with `---a2ui_JSON---\n` followed by JSONL (one envelope per line); must contain `surfaceUpdate` and `beginRendering` envelopes
+- [ ] In A2UI v1 mode: the final AI message content starts with `---a2ui_JSON---\n` followed by JSONL (one envelope per line); contains at minimum `surfaceUpdate` and `beginRendering` envelopes; envelopes are reordered so `beginRendering` follows the first `surfaceUpdate` regardless of LLM emission order
+- [ ] The same AI message carries `tool_calls` set (single-bubble invariant)
 - [ ] In json-render mode: final AI message content is a bare JSON object starting with `{`
 - [ ] `curl localhost:2024/threads/<id>/state` confirms the above for both modes
 
@@ -307,15 +325,67 @@ Components NOT yet exercised by the demo (deferred to future media-focused sugge
 - [ ] Timeline panel scrolls independently when the checkpoint list is taller than the panel
 - [ ] Timeline panel does not obscure the chat input or send button at any supported viewport width
 
-## Multi-thread
+## Sidenav (thread management)
 
-- [ ] **Panel toggle** — clicking "Threads off/on" in the control palette opens/closes the threads panel on the left side of the viewport
-- [ ] **Toggle persists** — closing and reopening the browser preserves the threads panel open/closed state
-- [ ] **Threads list visible** — when the panel is open, a list of threads is fetched from the backend and rendered in `<chat-thread-list>`; each item shows a "Thread XXXXXXXX" label (truncated thread ID) or a custom title if stored in metadata
-- [ ] **Active thread highlighted** — the currently active thread is visually distinguished (data-active attribute set) in the list
-- [ ] **Create new thread button** — a "+ New thread" button appears at the top of the thread list; clicking it calls `POST /threads`, creates a fresh thread, and switches the agent to it
-- [ ] **New thread starts in welcome state** — after clicking "+ New thread", the chat area resets to the welcome screen with no prior messages
-- [ ] **Switching threads loads history** — clicking a different thread in the list sets it as active, and the chat area reloads messages from that thread's server-side state
-- [ ] **Persist active thread across reload** — the last active thread ID is stored in localStorage; reloading the page reconnects to the same thread and restores its message history
-- [ ] **Thread list refreshes on switch** — after switching threads, the threads panel refreshes its list from the backend so any newly created threads appear
-- [ ] **No console errors** — opening/closing the panel, switching threads, and creating threads produce no `console.error` or uncaught promise rejections
+- [ ] Left sidenav renders by default as a semantic `<nav>` with `position: fixed`
+- [ ] Sidenav has two sections: **Active** and **Archived**
+- [ ] Active section header may show a "+ New thread" button; Archived section collapses/expands
+- [ ] "+ New thread" calls `POST /threads`, switches the agent, resets the chat area to welcome state
+- [ ] Threads render with their server-derived title (set from the first user message) — NOT a "Thread XXXX" id placeholder
+- [ ] Active row that matches the current thread is visually distinguished (`data-active` attribute)
+- [ ] Click a different active row — chat area reloads the selected thread's messages
+- [ ] Last active thread id persists across reload (localStorage)
+- [ ] Sidenav refreshes from backend on thread switch so newly-created threads appear
+- [ ] Collapse handle shrinks the sidenav to icon strip; expand restores; state persists
+- [ ] No `console.error` on any sidenav interaction
+
+## Cmd+K history search
+
+- [ ] Press **Cmd+K** (Ctrl+K on Linux/Windows) — search palette overlays the viewport
+- [ ] Magnifier icon in the sidenav header also opens the palette
+- [ ] Empty-query state: helpful placeholder text, no result list
+- [ ] Type a query — fuzzy matches against active AND archived thread titles
+- [ ] Archived matches render with an "Archived" subtitle line
+- [ ] ↑/↓ arrows move focus through results; Enter activates the focused result
+- [ ] Selecting a result switches to that thread (uses `applyArchived` reactivation flow if archived)
+- [ ] **Esc** closes the palette; clicking outside closes the palette
+- [ ] No `console.error` on open/search/select/close
+
+## Per-row thread actions (kebab menu)
+
+- [ ] Hover an active-section row — kebab (⋯) fades in on the right
+- [ ] Active row kebab menu order: **Rename**, **Pin**, **Archive**, **Delete**
+- [ ] **Rename** opens an inline edit affordance; typing + Enter renames the thread; Escape cancels
+- [ ] Renamed title persists across reload (server-side `metadata.title` PATCH on `/threads/{id}`)
+- [ ] **Pin** — row jumps to the top of the active list on refresh; pin icon appears left of the title
+- [ ] Pinned row kebab menu order: **Rename**, **Unpin**, **Archive**, **Delete** (no "Pin")
+- [ ] **Unpin** — pin icon disappears; row returns to chronological order on refresh
+- [ ] Pinned state persists across reload (PATCH `metadata.pinned`)
+- [ ] **Archive** — row moves out of Active and into Archived; chat area switches to a fresh state if archived thread was active
+- [ ] **Delete** — confirmation prompt fires; on confirm, row removed from list and thread gone server-side (DELETE `/threads/{id}`); cancellation leaves thread intact
+- [ ] Archived row kebab menu order: **Unarchive**, **Delete** (no Pin/Unpin — pinning is active-mode only)
+- [ ] **Unarchive** — row returns to Active section
+- [ ] DevTools network: each action sends the expected PATCH/DELETE with proper payload; no console errors
+
+## Thread titles
+
+- [ ] First user message in a new thread triggers a server-side title write (derived from the message text, sliced to ~50 chars, emoji-safe boundary)
+- [ ] Title appears in the sidenav row label after the run completes (refresh-driven)
+- [ ] Title is idempotent — a second message into the same thread does NOT overwrite the title
+- [ ] Manually renamed titles (via kebab → Rename) take precedence and are not overwritten by subsequent messages
+- [ ] `curl localhost:2024/threads/<id>` shows the title under `metadata.title`
+
+## Inline checkpoint markers
+
+- [ ] During a multi-step run, checkpoint markers render inline within the chat between messages (small horizontal rule with a label)
+- [ ] Each marker shows the step label and checkpoint id (or a short identifier)
+- [ ] Hovering a marker highlights it consistently with the timeline-panel checkpoint entry
+- [ ] Markers do not break message spacing or autoscroll
+
+## Responsive sidenav
+
+- [ ] At viewport ≥ 1024px: sidenav stays in `position: fixed` expanded state by default
+- [ ] At viewport < 1024px: sidenav auto-collapses to icon strip (or overlay) so the chat area stays usable
+- [ ] At viewport ≤ 768px: chat input + send remain accessible; sidenav does not push the chat horizontally
+- [ ] No horizontal scrollbar at any tested viewport
+- [ ] Toggling collapse manually overrides the responsive default until the next breakpoint crossing
