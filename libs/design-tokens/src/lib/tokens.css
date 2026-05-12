@@ -46,4 +46,51 @@
   --ds-font-serif: 'EB Garamond', Georgia, serif;
   --ds-font-sans: Inter, system-ui, sans-serif;
   --ds-font-mono: 'JetBrains Mono', monospace;
+
+  /* Surfaces */
+  --ds-canvas: #fafbfc;
+  --ds-surface: #ffffff;
+  --ds-surface-tinted: #f4f6fb;
+  --ds-surface-dim: #eef1f7;
+  --ds-border: #e6e8ee;
+  --ds-border-strong: #d2d6e0;
+
+  /* Shadows */
+  --ds-shadow-sm: 0 1px 2px rgba(15, 23, 41, 0.04), 0 1px 1px rgba(15, 23, 41, 0.03);
+  --ds-shadow-md: 0 4px 12px rgba(15, 23, 41, 0.06), 0 2px 4px rgba(15, 23, 41, 0.04);
+  --ds-shadow-lg: 0 12px 32px rgba(15, 23, 41, 0.08), 0 4px 8px rgba(15, 23, 41, 0.05);
+  --ds-shadow-focus: 0 0 0 3px rgba(0, 64, 144, 0.25);
+
+  /* Radius */
+  --ds-radius-sm: 6px;
+  --ds-radius-md: 10px;
+  --ds-radius-lg: 14px;
+  --ds-radius-xl: 20px;
+  --ds-radius-full: 999px;
+
+  /* Space */
+  --ds-section-y: clamp(64px, 8vw, 120px);
+  --ds-section-y-tight: clamp(48px, 6vw, 80px);
+  --ds-container-x: clamp(20px, 4vw, 40px);
+  --ds-container-max: 1200px;
+
+  /* Colors — extensions */
+  --ds-accent-hover: #003070;
+  --ds-text-inverted: #ffffff;
+
+  /* Typography — type scale */
+  --ds-h1-size: clamp(48px, 6vw, 72px);
+  --ds-h1-line: 1.08;
+  --ds-h2-size: clamp(36px, 4.5vw, 56px);
+  --ds-h2-line: 1.12;
+  --ds-h3-size: 28px;
+  --ds-h3-line: 1.25;
+  --ds-h3-weight: 600;
+  --ds-eyebrow-size: 12px;
+  --ds-eyebrow-line: 1.4;
+  --ds-eyebrow-weight: 700;
+  --ds-eyebrow-spacing: 0.12em;
+  --ds-body-lg-size: 20px;
+  --ds-body-size: 16px;
+  --ds-caption-size: 14px;
 }

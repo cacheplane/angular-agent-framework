@@ -3,6 +3,10 @@ import { glass } from './glass';
 import { gradient } from './gradients';
 import { glow } from './glow';
 import { typography } from './typography';
+import { surfaces } from './surfaces';
+import { shadows } from './shadows';
+import { radius } from './radius';
+import { space } from './space';
 
 /**
  * Combined design tokens object.
@@ -15,6 +19,10 @@ export const tokens = {
   gradient,
   glow,
   typography,
+  surfaces,
+  shadows,
+  radius,
+  space,
 } as const;
 
 export type Tokens = typeof tokens;
