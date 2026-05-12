@@ -42,6 +42,7 @@ from langchain_core.runnables import RunnableConfig
 from langchain_core.tools import tool
 from langgraph_sdk import get_client
 
+from src.streaming.a2ui_partial_handler import A2uiPartialHandler
 from src.streaming.envelope_tool import render_a2ui_surface
 from src.streaming.envelope_normalizer import normalize_envelope_args
 from src.schemas.a2ui_v1 import A2UI_V1_SCHEMA_PROMPT
@@ -410,7 +411,14 @@ async def generate(state: State, config: RunnableConfig) -> dict:
             "entries. This lets the client mount the surface as early as possible."
         )
     messages = [SystemMessage(content=system)] + state["messages"]
-    response = await llm.ainvoke(messages)
+    # When in a2ui mode, attach the partial-envelope sideband handler so
+    # the parent LLM's tool_call_chunks for render_a2ui_surface are
+    # dispatched as a2ui-partial custom events (consumed by the frontend
+    # partial-args bridge).
+    callbacks = []
+    if gen_ui_mode == "a2ui":
+        callbacks.append(A2uiPartialHandler(tool_name="render_a2ui_surface"))
+    response = await llm.ainvoke(messages, config={"callbacks": callbacks})
     return {"messages": [response]}
 
 
