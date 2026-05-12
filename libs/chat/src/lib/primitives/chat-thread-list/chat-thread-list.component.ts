@@ -38,6 +38,9 @@ export type Thread = {
    *  renders a pin icon when true but does NOT sort — the consumer pre-sorts
    *  pinned threads to the top of the `threads` input. */
   pinned?: boolean;
+  /** Optional project association. Consumers pre-filter threads by project
+   *  before passing to the sidenav. Null/undefined means no project. */
+  projectId?: string | null;
   [key: string]: unknown;
 };
 
@@ -62,6 +65,10 @@ export interface ThreadActionAdapter {
   pin?(threadId: string): Promise<void>;
   /** Unpin a previously pinned thread. */
   unpin?(threadId: string): Promise<void>;
+  /** Move thread to a project (or pass null to remove from any project).
+   *  Optimistically hides the row from the current project's visible list;
+   *  consumer is expected to refresh the threads input. */
+  moveToProject?(threadId: string, projectId: string | null): Promise<void>;
 }
 
 @Component({
