@@ -10,7 +10,7 @@
 
 **Spec:** [docs/superpowers/specs/2026-05-12-chat-projects-design.md](../specs/2026-05-12-chat-projects-design.md)
 
-> **Important:** Phase 3d (pin) is a parallel spawned task at the time of writing. This plan does NOT touch any pin-related code. The chat-thread-list menu updates here only add the "Move to project" entry — they do NOT add pin/unpin. If pin lands first, the active-mode menu-items computed will need a follow-up merge that puts pin/unpin alongside move. If this lands first, pin's PR will do the merge instead.
+> **Important — pin landed first (PR #267).** The chat-thread-list active-mode menu already includes `pin`/`unpin` items and a `pinned?` field on Thread. This plan inserts "Move to project" alongside the existing pin/unpin entries, NOT in place of them. Tasks 1 and 6 use code blocks that reflect the post-pin baseline. The implementer should `git log --oneline -3` first to confirm pin's commit (`3d56792c`) is in the branch history.
 
 ---
 
@@ -786,11 +786,29 @@ protected readonly moveMenuItems = computed<OverflowMenuItem[]>(() => {
 
 - [ ] **Step 3: Add "Move to project" to active-mode `currentMenuItems`**
 
-Find the existing `currentMenuItems` computed (around line 170). Update the active-mode branch to include `Move to project`:
+Find the existing `currentMenuItems` computed (around line 185). The post-pin baseline looks like:
 
 ```typescript
 if (this.mode() === 'active') {
+  const thread = this.threads().find((t) => t.id === id);
+  const isPinned = thread?.pinned === true;
   if (a.rename) items.push({ id: 'rename', label: 'Rename' });
+  if (a.pin && !isPinned) items.push({ id: 'pin', label: 'Pin' });
+  if (a.unpin && isPinned) items.push({ id: 'unpin', label: 'Unpin' });
+  if (a.archive) items.push({ id: 'archive', label: 'Archive' });
+  if (a.delete) items.push({ id: 'delete', label: 'Delete', tone: 'destructive' });
+}
+```
+
+Insert ONE new line for "Move to project" between the `unpin` line and the `archive` line. The active-mode branch should become:
+
+```typescript
+if (this.mode() === 'active') {
+  const thread = this.threads().find((t) => t.id === id);
+  const isPinned = thread?.pinned === true;
+  if (a.rename) items.push({ id: 'rename', label: 'Rename' });
+  if (a.pin && !isPinned) items.push({ id: 'pin', label: 'Pin' });
+  if (a.unpin && isPinned) items.push({ id: 'unpin', label: 'Unpin' });
   if (a.moveToProject && this.projects() !== null) {
     items.push({ id: 'move', label: 'Move to project' });
   }
@@ -803,7 +821,18 @@ if (this.mode() === 'active') {
 
 - [ ] **Step 4: Update `showKebab`**
 
-Replace the existing `showKebab` body with:
+The post-pin baseline reads:
+
+```typescript
+protected showKebab(): boolean {
+  const a = this.actions();
+  if (!a) return false;
+  if (this.mode() === 'active') return Boolean(a.rename || a.pin || a.unpin || a.archive || a.delete);
+  return Boolean(a.unarchive || a.delete);
+}
+```
+
+Extend the active-mode condition to also consider `moveToProject` (when `projects` is provided):
 
 ```typescript
 protected showKebab(): boolean {
@@ -811,7 +840,7 @@ protected showKebab(): boolean {
   if (!a) return false;
   if (this.mode() === 'active') {
     return Boolean(
-      a.rename || a.archive || a.delete ||
+      a.rename || a.pin || a.unpin || a.archive || a.delete ||
       (a.moveToProject && this.projects() !== null)
     );
   }
@@ -821,7 +850,7 @@ protected showKebab(): boolean {
 
 - [ ] **Step 5: Route the 'move' menu id**
 
-In the existing `onMenuAction` method, add a branch for `'move'`:
+The post-pin `onMenuAction` chain has branches for: `rename`, `delete`, `archive`, `unarchive`, `pin`, `unpin`. Add a new branch for `'move'` at the END of the chain (just before the closing brace of the method):
 
 ```typescript
 } else if (id === 'move') {
@@ -829,7 +858,7 @@ In the existing `onMenuAction` method, add a branch for `'move'`:
 }
 ```
 
-(Insert this before the closing of the `if/else if` chain — after the existing `archive`/`unarchive` branches but as a peer of them.)
+The full chain should then end with `... pin → unpin → move` (in that order or interleaved; order within the if/else-if doesn't affect behavior since each branch is mutually exclusive).
 
 - [ ] **Step 6: Add `onMoveMenuAction` + `performMoveToProject`**
 
