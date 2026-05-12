@@ -225,6 +225,14 @@ export class DemoShell {
       }
     },
     rename: (id, title) => this.threadsSvc.rename(id, title),
+    archive: async (id) => {
+      await this.threadsSvc.archive(id);
+      if (this.threadIdSignal() === id) {
+        this.threadIdSignal.set(null);
+        this.persistence.write('threadId', null);
+      }
+    },
+    unarchive: (id) => this.threadsSvc.unarchive(id),
   };
 
   /**
