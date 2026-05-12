@@ -34,23 +34,27 @@ export function CopyPromptButton({ prompt, variant = 'docs', label }: Props) {
       onClick={handleClick}
       aria-label={copied ? 'Prompt copied' : 'Copy prompt'}
       style={{
-        background: isHero ? tokens.colors.accent : 'transparent',
-        border: isHero ? 'none' : `1px solid ${tokens.colors.accentBorderHover}`,
-        color: isHero ? '#fff' : tokens.colors.accent,
+        background: isHero ? tokens.colors.accent : tokens.surfaces.surface,
+        border: isHero ? 'none' : `1px solid ${tokens.surfaces.border}`,
+        color: isHero ? '#fff' : (copied ? tokens.colors.accent : tokens.colors.textSecondary),
         fontFamily: 'var(--font-mono)',
         fontSize: isHero ? '13px' : '12px',
         padding: isHero ? '12px 24px' : '8px 16px',
         borderRadius: isHero ? '8px' : '6px',
         cursor: 'pointer',
-        transition: 'box-shadow 0.2s',
+        transition: 'box-shadow 0.2s, border-color 0.2s, background 0.2s',
       }}
       onMouseEnter={(e) => {
-        e.currentTarget.style.boxShadow = isHero
-          ? tokens.glow.button
-          : tokens.glow.border;
+        if (!isHero) {
+          e.currentTarget.style.borderColor = tokens.surfaces.borderStrong;
+          e.currentTarget.style.background = tokens.colors.accentSurface;
+        }
       }}
       onMouseLeave={(e) => {
-        e.currentTarget.style.boxShadow = 'none';
+        if (!isHero) {
+          e.currentTarget.style.borderColor = tokens.surfaces.border;
+          e.currentTarget.style.background = tokens.surfaces.surface;
+        }
       }}>
       <span aria-hidden="true">{copied ? '\u2713' : '\u26A1'}</span>{' '}
       {copied ? 'Copied!' : (label ?? 'Copy prompt')}

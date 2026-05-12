@@ -44,7 +44,7 @@ function ParamTable({ params }: { params: ApiParam[] }) {
   return (
     <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem', marginTop: 8 }}>
       <thead>
-        <tr style={{ borderBottom: `1px solid ${tokens.colors.accentBorder}` }}>
+        <tr style={{ borderBottom: `1px solid ${tokens.surfaces.border}`, background: tokens.surfaces.surfaceTinted }}>
           {['Parameter', 'Type', 'Description'].map((h) => (
             <th key={h} style={{ textAlign: 'left', padding: '6px 0', fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: tokens.colors.textMuted, textTransform: 'uppercase' }}>{h}</th>
           ))}
@@ -52,7 +52,7 @@ function ParamTable({ params }: { params: ApiParam[] }) {
       </thead>
       <tbody>
         {params.map((p) => (
-          <tr key={p.name} style={{ borderBottom: `1px solid ${tokens.colors.accentBorder}` }}>
+          <tr key={p.name} style={{ borderBottom: `1px solid ${tokens.surfaces.border}` }}>
             <td style={{ padding: '6px 0', fontFamily: 'var(--font-mono)', color: tokens.colors.accent }}>{p.name}{p.optional ? '?' : ''}</td>
             <td style={{ padding: '6px 0', fontFamily: 'var(--font-mono)', color: tokens.colors.textSecondary, fontSize: '0.75rem' }}>{p.type}</td>
             <td style={{ padding: '6px 0', color: tokens.colors.textSecondary }}>{p.description}</td>
@@ -68,11 +68,9 @@ export function ApiDocRenderer({ entry }: { entry: ApiDocEntry }) {
     <div style={{
       padding: 24,
       borderRadius: 12,
-      border: `1px solid ${tokens.glass.border}`,
-      background: tokens.glass.bg,
-      backdropFilter: `blur(${tokens.glass.blur})`,
-      WebkitBackdropFilter: `blur(${tokens.glass.blur})`,
-      boxShadow: tokens.glass.shadow,
+      border: `1px solid ${tokens.surfaces.border}`,
+      background: tokens.surfaces.surface,
+      boxShadow: tokens.shadows.sm,
       marginBottom: 24,
     }}>
       <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 8 }}>

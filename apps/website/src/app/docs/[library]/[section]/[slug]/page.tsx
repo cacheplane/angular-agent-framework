@@ -4,6 +4,7 @@ import { DocsSidebar } from '../../../../../components/docs/DocsSidebar';
 import { MdxRenderer } from '../../../../../components/docs/MdxRenderer';
 import { DocsSearch } from '../../../../../components/docs/DocsSearch';
 import { DocsBreadcrumb } from '../../../../../components/docs/DocsBreadcrumb';
+import { DocsPrevNext } from '../../../../../components/docs/DocsPrevNext';
 import { getDocBySlug, getAllDocSlugs } from '../../../../../lib/docs';
 import { ApiDocRenderer, type ApiDocEntry } from '../../../../../components/docs/ApiDocRenderer';
 import { DocsTOC } from '../../../../../components/docs/DocsTOC';
@@ -82,6 +83,9 @@ export default async function DocsPage({
               </div>
             ) : null;
           })()}
+          <div className="px-6 md:px-12 max-w-3xl pb-8">
+            <DocsPrevNext library={library as LibraryId} section={section} slug={slug} />
+          </div>
         </div>
         <DocsTOC headings={extractHeadings(doc.content)} />
       </div>

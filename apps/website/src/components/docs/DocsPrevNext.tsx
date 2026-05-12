@@ -1,34 +1,98 @@
 import Link from 'next/link';
 import { tokens } from '@ngaf/design-tokens';
-import { getPrevNextPages, type LibraryId } from '../../lib/docs-config';
+import { Card } from '../ui/Card';
+import { Eyebrow } from '../ui/Eyebrow';
+import { getLibraryConfig, type LibraryId } from '../../lib/docs-config';
 
-export function DocsPrevNext({ library, section, slug }: { library: LibraryId; section: string; slug: string }) {
-  const { prev, next } = getPrevNextPages(library, section, slug);
+interface Props {
+  library: LibraryId;
+  section: string;
+  slug: string;
+}
+
+interface Sibling {
+  href: string;
+  section: string;
+  slug: string;
+  title: string;
+}
+
+function findSiblings(library: LibraryId, section: string, slug: string): { prev: Sibling | null; next: Sibling | null } {
+  const lib = getLibraryConfig(library);
+  if (!lib) return { prev: null, next: null };
+  // Flatten pages in declaration order.
+  const flat: Sibling[] = [];
+  for (const s of lib.sections) {
+    for (const p of s.pages) {
+      flat.push({
+        section: p.section,
+        slug: p.slug,
+        title: p.title,
+        href: `/docs/${library}/${p.section}/${p.slug}`,
+      });
+    }
+  }
+  const idx = flat.findIndex((p) => p.section === section && p.slug === slug);
+  if (idx === -1) return { prev: null, next: null };
+  return {
+    prev: idx > 0 ? flat[idx - 1] : null,
+    next: idx < flat.length - 1 ? flat[idx + 1] : null,
+  };
+}
+
+export function DocsPrevNext({ library, section, slug }: Props) {
+  const { prev, next } = findSiblings(library, section, slug);
+  if (!prev && !next) return null;
 
   return (
-    <div className="flex justify-between gap-4 mt-12 pt-8" style={{ borderTop: `1px solid ${tokens.glass.border}` }}>
+    <nav
+      aria-label="Previous and next page"
+      style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+        gap: 16,
+        marginTop: 48,
+        marginBottom: 16,
+      }}
+    >
       {prev ? (
-        <Link href={`/docs/${library}/${prev.section}/${prev.slug}`} style={{ textDecoration: 'none', flex: 1 }}>
-          <div className="p-4 rounded-lg transition-all" style={{
-            border: `1px solid ${tokens.glass.border}`,
-            background: tokens.glass.bg,
-          }}>
-            <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: tokens.colors.textMuted, marginBottom: 4 }}>&larr; Previous</div>
-            <div style={{ fontSize: '0.9rem', color: tokens.colors.textPrimary, fontWeight: 500 }}>{prev.title}</div>
-          </div>
+        <Link href={prev.href} style={{ textDecoration: 'none' }}>
+          <Card padding="md" hoverable style={{ height: '100%' }}>
+            <Eyebrow style={{ marginBottom: 8 }}>← Previous</Eyebrow>
+            <div
+              style={{
+                fontFamily: tokens.typography.fontSans,
+                fontSize: 16,
+                fontWeight: 600,
+                color: tokens.colors.textPrimary,
+              }}
+            >
+              {prev.title}
+            </div>
+          </Card>
         </Link>
-      ) : <div style={{ flex: 1 }} />}
+      ) : (
+        <div />
+      )}
       {next ? (
-        <Link href={`/docs/${library}/${next.section}/${next.slug}`} style={{ textDecoration: 'none', flex: 1, textAlign: 'right' }}>
-          <div className="p-4 rounded-lg transition-all" style={{
-            border: `1px solid ${tokens.glass.border}`,
-            background: tokens.glass.bg,
-          }}>
-            <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: tokens.colors.textMuted, marginBottom: 4 }}>Next &rarr;</div>
-            <div style={{ fontSize: '0.9rem', color: tokens.colors.textPrimary, fontWeight: 500 }}>{next.title}</div>
-          </div>
+        <Link href={next.href} style={{ textDecoration: 'none' }}>
+          <Card padding="md" hoverable style={{ height: '100%', textAlign: 'right' }}>
+            <Eyebrow style={{ marginBottom: 8 }}>Next →</Eyebrow>
+            <div
+              style={{
+                fontFamily: tokens.typography.fontSans,
+                fontSize: 16,
+                fontWeight: 600,
+                color: tokens.colors.textPrimary,
+              }}
+            >
+              {next.title}
+            </div>
+          </Card>
         </Link>
-      ) : <div style={{ flex: 1 }} />}
-    </div>
+      ) : (
+        <div />
+      )}
+    </nav>
   );
 }

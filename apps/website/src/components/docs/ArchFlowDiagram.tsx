@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
-import { tokens } from '../../../lib/design-tokens';
+import { tokens } from '@ngaf/design-tokens';
 
 interface LogEntry {
   time: string;
@@ -78,18 +78,16 @@ export function ArchFlowDiagram() {
       margin: '28px 0 36px',
       borderRadius: 14,
       overflow: 'hidden',
-      border: `1px solid ${tokens.glass.border}`,
-      boxShadow: tokens.glass.shadow,
-      background: 'rgba(255,255,255,0.5)',
-      backdropFilter: `blur(${tokens.glass.blur})`,
-      WebkitBackdropFilter: `blur(${tokens.glass.blur})`,
+      border: `1px solid ${tokens.surfaces.border}`,
+      boxShadow: tokens.shadows.sm,
+      background: tokens.surfaces.surface,
     }}>
       {/* Header bar */}
       <div style={{
         padding: '10px 16px',
-        borderBottom: `1px solid ${tokens.glass.border}`,
+        borderBottom: `1px solid ${tokens.surfaces.border}`,
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        background: 'rgba(255,255,255,0.6)',
+        background: tokens.surfaces.surfaceTinted,
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#FF5F57' }} />
@@ -102,7 +100,7 @@ export function ArchFlowDiagram() {
 
       <div style={{ display: 'flex', minHeight: 320 }}>
         {/* Left: Chat simulation */}
-        <div style={{ flex: 1, padding: 16, borderRight: `1px solid ${tokens.glass.border}`, display: 'flex', flexDirection: 'column' }}>
+        <div style={{ flex: 1, padding: 16, borderRight: `1px solid ${tokens.surfaces.border}`, display: 'flex', flexDirection: 'column' }}>
           <div style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: tokens.colors.textMuted, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 10, fontWeight: 600 }}>Chat Interface</div>
 
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8, overflow: 'hidden' }}>
