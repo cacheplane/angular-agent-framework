@@ -92,8 +92,8 @@ def test_state_graph_topology_unchanged_after_research():
 
 @pytest.mark.smoke
 def test_genui_tools_exist():
-    from src.graph import generate_a2ui_schema, generate_json_render_spec
-    assert generate_a2ui_schema.name == "generate_a2ui_schema"
+    from src.graph import render_a2ui_surface, generate_json_render_spec
+    assert render_a2ui_surface.name == "render_a2ui_surface"
     assert generate_json_render_spec.name == "generate_json_render_spec"
 
 
@@ -174,19 +174,19 @@ class TestEmitGeneratedSurfaceCoalescing:
         tool_call_ai = AIMessage(
             id="ai-1",
             content=[
-                {"type": "function_call", "name": "generate_a2ui_schema",
+                {"type": "function_call", "name": "render_a2ui_surface",
                  "arguments": '{"request":"r"}'}
             ],
             tool_calls=[{
                 "id": "call_1",
-                "name": "generate_a2ui_schema",
+                "name": "render_a2ui_surface",
                 "args": {"request": "r"},
                 "type": "tool_call",
             }],
         )
         tool_msg = ToolMessage(
             tool_call_id="call_1",
-            name="generate_a2ui_schema",
+            name="render_a2ui_surface",
             content='[{"surfaceUpdate":{"surfaceId":"s1","components":[]}},'
                     '{"beginRendering":{"surfaceId":"s1","root":""}}]',
         )
@@ -207,7 +207,7 @@ class TestEmitGeneratedSurfaceCoalescing:
         # Content carries the wrapped surface payload.
         assert "---a2ui_JSON---" in replacement_ai.content
         # tool_calls is preserved so detection (frontend isGenuiTurn) still fires.
-        assert any(tc.get("name") == "generate_a2ui_schema" for tc in replacement_ai.tool_calls)
+        assert any(tc.get("name") == "render_a2ui_surface" for tc in replacement_ai.tool_calls)
 
     def test_beginRendering_envelope_ordering(self):
         """emit reorders the wrapped envelopes so beginRendering lands
@@ -219,14 +219,14 @@ class TestEmitGeneratedSurfaceCoalescing:
             content=[],
             tool_calls=[{
                 "id": "call_2",
-                "name": "generate_a2ui_schema",
+                "name": "render_a2ui_surface",
                 "args": {"request": "r"},
                 "type": "tool_call",
             }],
         )
         tool_msg = ToolMessage(
             tool_call_id="call_2",
-            name="generate_a2ui_schema",
+            name="render_a2ui_surface",
             content='['
                     '{"surfaceUpdate":{"surfaceId":"s","components":[]}},'
                     '{"dataModelUpdate":{"surfaceId":"s","contents":[]}},'
@@ -252,3 +252,23 @@ class TestEmitGeneratedSurfaceCoalescing:
         # The remaining dataModelUpdate envelopes follow.
         assert "dataModelUpdate" in parsed[2]
         assert "dataModelUpdate" in parsed[3]
+
+
+class TestParentEmitsEnvelopes:
+    def test_render_a2ui_surface_is_bound_for_a2ui_mode(self):
+        """Sanity: the parent LLM's generate node binds render_a2ui_surface
+        when gen_ui_mode='a2ui'. We import the graph module and check the
+        tools registered on ToolNode."""
+        from src.graph import _builder
+
+        tool_node = _builder.nodes["tools"].runnable
+        # ToolNode keeps a `.tools_by_name` dict
+        tool_names = list(tool_node.tools_by_name.keys())
+        assert "render_a2ui_surface" in tool_names
+
+    def test_generate_a2ui_schema_tool_is_removed(self):
+        """The old sub-LLM-dispatching tool must be removed from the graph."""
+        from src.graph import _builder
+        tool_node = _builder.nodes["tools"].runnable
+        tool_names = list(tool_node.tools_by_name.keys())
+        assert "generate_a2ui_schema" not in tool_names

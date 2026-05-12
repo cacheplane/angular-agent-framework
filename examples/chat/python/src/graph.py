@@ -42,6 +42,10 @@ from langchain_core.runnables import RunnableConfig
 from langchain_core.tools import tool
 from langgraph_sdk import get_client
 
+from src.streaming.envelope_tool import render_a2ui_surface
+from src.streaming.envelope_normalizer import normalize_envelope_args
+from src.schemas.a2ui_v1 import A2UI_V1_SCHEMA_PROMPT
+
 
 # Module-level singleton client; created lazily on first thread-title write.
 _threads_client = None
@@ -156,7 +160,7 @@ SYSTEM_PROMPT = (
     "'render Y', 'show a Z', 'create a form for', 'make a card with' — "
     "you MUST IMMEDIATELY dispatch the schema-generation tool bound "
     "to the conversation. Exactly ONE such tool is bound per request: "
-    "either `generate_a2ui_schema` or `generate_json_render_spec`. "
+    "either `render_a2ui_surface` or `generate_json_render_spec`. "
     "Do NOT ask clarifying questions about platform, framework, fields, "
     "validation, styling, or anything else. Do NOT describe the UI in "
     "prose. Do NOT request more details from the user. The tool ITSELF "
@@ -327,23 +331,6 @@ A2UI_PREFIX = "---a2ui_JSON---"
 
 
 @tool
-async def generate_a2ui_schema(request: str) -> str:
-    """Dispatch the A2UI schema sub-agent to render a UI surface in A2UI
-    v1 wire format. Use this when the user asks for UI/forms/cards and
-    state.gen_ui_mode is 'a2ui'. Pass the user's request verbatim as the
-    `request` argument. The sub-agent returns a JSON array of v1
-    envelopes (surfaceUpdate, optional dataModelUpdate, beginRendering)
-    that the post-process node wraps for the chat composition."""
-    from src.schemas.a2ui_v1 import A2UI_V1_SCHEMA_PROMPT
-    llm = ChatOpenAI(model="gpt-5-mini", temperature=0)
-    response = await llm.ainvoke([
-        SystemMessage(content=A2UI_V1_SCHEMA_PROMPT),
-        HumanMessage(content=request),
-    ])
-    return _as_text(response.content).strip()
-
-
-@tool
 async def generate_json_render_spec(request: str) -> str:
     """Dispatch the json-render schema sub-agent to render a UI surface
     as a json-render Spec ({root, elements, state}). Use this when the
@@ -403,13 +390,26 @@ async def generate(state: State, config: RunnableConfig) -> dict:
     # side of the conditional resolves at execution time.
     gen_ui_mode = state.get("gen_ui_mode") or "a2ui"
     gen_ui_tool = (
-        generate_a2ui_schema if gen_ui_mode == "a2ui"
+        render_a2ui_surface if gen_ui_mode == "a2ui"
         else generate_json_render_spec
     )
-    llm = ChatOpenAI(**kwargs).bind_tools([
-        search_documents, request_approval, research, gen_ui_tool,
-    ])
-    messages = [SystemMessage(content=SYSTEM_PROMPT)] + state["messages"]
+    # Strict mode is enabled for the envelope-emission tool so OpenAI enforces
+    # the canonical {envelopes: [...]} argument shape; the JS bridge and Python
+    # normalizer treat the non-canonical shapes as safety nets.
+    llm = ChatOpenAI(**kwargs).bind_tools(
+        [search_documents, request_approval, research, gen_ui_tool],
+        strict=True if gen_ui_mode == "a2ui" else False,
+    )
+    # Append A2UI v1 schema to system prompt when in a2ui mode, so the parent
+    # LLM knows how to construct the envelopes directly.
+    system = SYSTEM_PROMPT
+    if gen_ui_mode == "a2ui":
+        system = SYSTEM_PROMPT + "\n\n--- A2UI v1 SCHEMA ---\n" + A2UI_V1_SCHEMA_PROMPT + (
+            "\n\nWhen rendering UI in a2ui mode, emit envelopes in this order: "
+            "surfaceUpdate FIRST, then beginRendering, then any dataModelUpdate "
+            "entries. This lets the client mount the surface as early as possible."
+        )
+    messages = [SystemMessage(content=system)] + state["messages"]
     response = await llm.ainvoke(messages)
     return {"messages": [response]}
 
@@ -437,7 +437,7 @@ def after_tools(state: State) -> Literal["emit_generated_surface", "generate"]:
                 if isinstance(prior, AIMessage) and prior.tool_calls:
                     for tc in prior.tool_calls:
                         if tc.get("id") == m.tool_call_id and tc.get("name") in (
-                            "generate_a2ui_schema", "generate_json_render_spec",
+                            "render_a2ui_surface", "generate_json_render_spec",
                         ):
                             return "emit_generated_surface"
                     break
@@ -480,7 +480,7 @@ async def emit_generated_surface(state: State) -> dict:
     if not payload:
         return {}
 
-    if tool_name == "generate_a2ui_schema":
+    if tool_name == "render_a2ui_surface":
         # Sub-LLM returns a JSON array of v1 envelopes. Convert to JSONL
         # (one envelope per line) and prepend the classifier sentinel.
         try:
@@ -645,7 +645,7 @@ _builder = StateGraph(State)
 _builder.add_node("generate", generate)
 _builder.add_node("tools", ToolNode([
     search_documents, request_approval, research,
-    generate_a2ui_schema, generate_json_render_spec,
+    render_a2ui_surface, generate_json_render_spec,
 ]))
 _builder.add_node("emit_generated_surface", emit_generated_surface)
 _builder.add_node("attach_citations", attach_citations)
