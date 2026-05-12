@@ -16,7 +16,11 @@ export class ThreadsService {
     try {
       const list = await this.client.threads.search({ limit: 50 });
       const mapped = list.map((t) => this.toThread(t));
-      this.threads.set(mapped.filter((t) => t.status !== 'archived'));
+      this.threads.set(
+        mapped
+          .filter((t) => t.status !== 'archived')
+          .sort((a, b) => Number(b.pinned ?? false) - Number(a.pinned ?? false)),
+      );
       this.archivedThreads.set(mapped.filter((t) => t.status === 'archived'));
     } catch {
       // Backend may be down; leave signals as-is.
@@ -53,17 +57,29 @@ export class ThreadsService {
     await this.refresh();
   }
 
+  async pin(threadId: string): Promise<void> {
+    await this.client.threads.update(threadId, { metadata: { pinned: true } });
+    await this.refresh();
+  }
+
+  async unpin(threadId: string): Promise<void> {
+    await this.client.threads.update(threadId, { metadata: { pinned: false } });
+    await this.refresh();
+  }
+
   /** Best-effort title from thread metadata; falls back to a truncated id. */
   private toThread(t: SdkThread): Thread {
-    const meta = (t.metadata ?? {}) as { title?: unknown; archived?: unknown };
+    const meta = (t.metadata ?? {}) as { title?: unknown; archived?: unknown; pinned?: unknown };
     const customTitle = meta.title;
     const archived = meta.archived === true;
+    const pinned = meta.pinned === true;
     return {
       id: t.thread_id,
       title: typeof customTitle === 'string' && customTitle.length > 0
         ? customTitle
         : `Thread ${t.thread_id.slice(0, 8)}`,
       status: archived ? 'archived' : 'active',
+      pinned,
     };
   }
 }

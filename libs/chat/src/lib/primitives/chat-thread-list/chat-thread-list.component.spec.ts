@@ -318,6 +318,77 @@ describe('ChatThreadListComponent', () => {
       expect(remaining.length).toBe(2);
     });
 
+    it('Pin: action provided + row not pinned → menu includes "Pin"', () => {
+      const fixture = render({ actions: { pin: noop } });
+      (fixture.nativeElement.querySelector('.chat-thread-list__kebab') as HTMLElement).click();
+      fixture.detectChanges();
+      const labels = Array.from(document.querySelectorAll('.chat-overflow-menu__item'))
+        .map((el) => (el as HTMLElement).textContent?.trim());
+      expect(labels).toContain('Pin');
+      expect(labels).not.toContain('Unpin');
+    });
+
+    it('Pin: action provided + row pinned → menu does NOT include "Pin" (and no Unpin since unpin not provided)', () => {
+      const fixture = render({
+        threads: [{ id: 't1', title: 'First', pinned: true }, { id: 't2', title: 'Second' }],
+        actions: { pin: noop },
+      });
+      (fixture.nativeElement.querySelector('.chat-thread-list__kebab') as HTMLElement).click();
+      fixture.detectChanges();
+      const labels = Array.from(document.querySelectorAll('.chat-overflow-menu__item'))
+        .map((el) => (el as HTMLElement).textContent?.trim());
+      expect(labels).not.toContain('Pin');
+      expect(labels).not.toContain('Unpin');
+    });
+
+    it('Unpin: action provided + row pinned → menu includes "Unpin"', () => {
+      const fixture = render({
+        threads: [{ id: 't1', title: 'First', pinned: true }, { id: 't2', title: 'Second' }],
+        actions: { unpin: noop },
+      });
+      (fixture.nativeElement.querySelector('.chat-thread-list__kebab') as HTMLElement).click();
+      fixture.detectChanges();
+      const labels = Array.from(document.querySelectorAll('.chat-overflow-menu__item'))
+        .map((el) => (el as HTMLElement).textContent?.trim());
+      expect(labels).toContain('Unpin');
+      expect(labels).not.toContain('Pin');
+    });
+
+    it('Pin+Unpin both provided, row not pinned → menu has "Pin" not "Unpin"', () => {
+      const fixture = render({ actions: { pin: noop, unpin: noop } });
+      (fixture.nativeElement.querySelector('.chat-thread-list__kebab') as HTMLElement).click();
+      fixture.detectChanges();
+      const labels = Array.from(document.querySelectorAll('.chat-overflow-menu__item'))
+        .map((el) => (el as HTMLElement).textContent?.trim());
+      expect(labels).toContain('Pin');
+      expect(labels).not.toContain('Unpin');
+    });
+
+    it('Pin+Unpin both provided, row pinned → menu has "Unpin" not "Pin"', () => {
+      const fixture = render({
+        threads: [{ id: 't1', title: 'First', pinned: true }, { id: 't2', title: 'Second' }],
+        actions: { pin: noop, unpin: noop },
+      });
+      (fixture.nativeElement.querySelector('.chat-thread-list__kebab') as HTMLElement).click();
+      fixture.detectChanges();
+      const labels = Array.from(document.querySelectorAll('.chat-overflow-menu__item'))
+        .map((el) => (el as HTMLElement).textContent?.trim());
+      expect(labels).toContain('Unpin');
+      expect(labels).not.toContain('Pin');
+    });
+
+    it('Pin icon SVG renders only when thread.pinned === true', () => {
+      const fixture = render({
+        threads: [{ id: 't1', title: 'First', pinned: true }, { id: 't2', title: 'Second' }],
+        actions: { pin: noop, unpin: noop },
+      });
+      const pins = fixture.nativeElement.querySelectorAll('.chat-thread-list__item-pin');
+      expect(pins.length).toBe(1);
+      const titles = fixture.nativeElement.querySelectorAll('.chat-thread-list__item-title');
+      expect(titles[0].querySelector('.chat-thread-list__item-pin')).not.toBeNull();
+      expect(titles[1].querySelector('.chat-thread-list__item-pin')).toBeNull();
+    });
+
     it('mode="archived" with only rename+archive (no unarchive/delete) hides the kebab', () => {
       const fixture = TestBed.createComponent(ChatThreadListComponent);
       fixture.componentRef.setInput('threads', [{ id: 't1', title: 'A', status: 'archived' as const }]);

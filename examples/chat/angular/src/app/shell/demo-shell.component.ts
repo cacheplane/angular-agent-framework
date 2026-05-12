@@ -176,10 +176,13 @@ export class DemoShell {
   protected readonly searchResults = computed<ThreadMatch[]>(() => {
     const q = this.searchQueryDebounced().toLowerCase().trim();
     if (!q) return [];
-    return this.threadsSvc.threads()
+    const active = this.threadsSvc.threads()
       .filter((t) => (t.title ?? '').toLowerCase().includes(q))
-      .slice(0, 50)
       .map((t) => ({ id: t.id, title: t.title ?? t.id }));
+    const archived = this.threadsSvc.archivedThreads()
+      .filter((t) => (t.title ?? '').toLowerCase().includes(q))
+      .map((t) => ({ id: t.id, title: t.title ?? t.id, subtitle: 'Archived' }));
+    return [...active, ...archived].slice(0, 50);
   });
 
   protected readonly modeOptions = [
@@ -233,6 +236,8 @@ export class DemoShell {
       }
     },
     unarchive: (id) => this.threadsSvc.unarchive(id),
+    pin: (id) => this.threadsSvc.pin(id),
+    unpin: (id) => this.threadsSvc.unpin(id),
   };
 
   /**
