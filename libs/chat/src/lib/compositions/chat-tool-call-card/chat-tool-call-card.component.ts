@@ -21,23 +21,27 @@ export interface ToolCallInfo {
   changeDetection: ChangeDetectionStrategy.OnPush,
   styles: [CHAT_HOST_TOKENS, `
     :host { display: block; }
-    .tcc__name { font-family: var(--ngaf-chat-font-mono); color: var(--ngaf-chat-text); }
+    .tcc__name {
+      font-family: var(--ngaf-chat-font-mono);
+      font-size: var(--ngaf-chat-font-size-sm, 13px);
+      color: var(--ngaf-chat-text-muted);
+      font-weight: 400;
+      padding-left: 2px;
+    }
     .tcc__pill {
       display: inline-flex;
       align-items: center;
-      gap: 4px;
-      padding: 1px 7px;
+      gap: 3px;
+      padding: 1px 6px;
       border-radius: 9999px;
       background: var(--ngaf-chat-surface-alt);
       color: var(--ngaf-chat-text-muted);
-      font-size: 11px;
-      font-weight: 600;
+      font-size: 10px;
+      font-weight: 500;
       margin-left: 6px;
       line-height: 1.4;
     }
-    .tcc__pill[data-status="complete"] { color: var(--ngaf-chat-success); }
-    .tcc__pill[data-status="error"]    { color: var(--ngaf-chat-error-text); }
-    .tcc__pill svg { width: 11px; height: 11px; }
+    .tcc__pill svg { width: 10px; height: 10px; }
     .tcc__pill[data-status="running"] svg { animation: tcc-spin 0.8s linear infinite; }
     @keyframes tcc-spin { to { transform: rotate(360deg); } }
     .tcc__section { padding: 8px 0; }
