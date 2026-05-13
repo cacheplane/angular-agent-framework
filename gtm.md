@@ -63,7 +63,7 @@ Four phases. Each phase = one or more workstream specs. Exit gates are blocking.
 
 | Phase | Goal                          | Specs                                                                   | Exit gate |
 |------:|-------------------------------|-------------------------------------------------------------------------|-----------|
-| 0     | Measurement foundation        | analytics-foundation                                                    | 5 dashboards live, 3 event namespaces emitting, `@ngaf/telemetry@0.0.1` published, weekly report runnable. |
+| 0     | Measurement foundation        | analytics-foundation-1a, 1b, 1c, 1d                                     | 5 dashboards live, 3 event namespaces emitting, `@ngaf/telemetry@0.0.1` published, weekly report runnable. |
 | 1     | Developer clarity in 30 sec   | positioning-and-risks, comparison-pages, cockpit-activation-recipes     | New hero shipped (incl. CTA fork), 4 comparison pages live, six-signal activation funnel non-zero, ≥1 qualified lead recorded. |
 | 2     | Ecosystem path (SEO + recipes)| content-pillar-pages                                                    | 6 pillar pages indexed, organic traffic baseline captured. |
 | 3     | Community launch              | community-launch                                                        | Launch executed, week-1 snapshot committed, post-mortem committed. |
@@ -78,7 +78,10 @@ Operational progress lives in agent runs and PostHog. The repo holds durable str
 | Phase | Workstream                 | Subagent                                  | Spec                                                                          | Dashboard                  |
 |------:|----------------------------|-------------------------------------------|-------------------------------------------------------------------------------|----------------------------|
 | 0     | gtm-meta                   | `cowork/gtm/SKILL.md`                     | [meta](docs/superpowers/specs/gtm/2026-05-13-gtm-meta-design.md)               | —                          |
-| 0     | analytics-foundation       | `cowork/gtm/SKILL.md`                     | (pending)                                                                      | all 5 (foundational)       |
+| 0     | analytics-foundation-1a    | `cowork/gtm/SKILL.md`                     | [spec](docs/superpowers/specs/gtm/2026-05-14-analytics-foundation-1a-dashboards-as-code-design.md) | `developer-funnel` (sample)  |
+| 0     | analytics-foundation-1b    | `cowork/gtm/SKILL.md`                     | (pending)                                                                      | `package-telemetry`        |
+| 0     | analytics-foundation-1c    | `cowork/gtm/SKILL.md`                     | (pending)                                                                      | `activation-six-signals`   |
+| 0     | analytics-foundation-1d    | `cowork/gtm/SKILL.md`                     | (pending)                                                                      | `enterprise-funnel`        |
 | 1     | positioning-and-risks      | `cowork/gtm/SKILL.md`                     | (pending)                                                                      | —                          |
 | 1     | comparison-pages           | `cowork/gtm/SKILL.md`                     | (pending)                                                                      | `content-intent`           |
 | 1     | cockpit-activation-recipes | `cowork/gtm/SKILL.md`                     | (pending)                                                                      | `activation-six-signals`   |

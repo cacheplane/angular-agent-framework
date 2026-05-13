@@ -120,7 +120,10 @@ Seven specs follow Spec 0. Dependencies form a DAG:
 
 | # | Spec | Phase | Depends on | Exit |
 |--:|------|------:|------------|------|
-| 1 | analytics-foundation       | 0 | — | 5 dashboards live, all 3 event namespaces emitting, `@ngaf/telemetry@0.0.1` published, weekly report runnable. |
+| 1a | analytics-foundation-1a — dashboards-as-code  | 0 | — | Sync CLI works locally; `developer-funnel` dashboard renders in PostHog after `--apply`; CI affected gate green. |
+| 1b | analytics-foundation-1b — `@ngaf/telemetry`    | 0 | — | `@ngaf/telemetry@0.0.1` on npm; Node opt-out + browser opt-in surfaces ship; trust-contract silence test stays green. |
+| 1c | analytics-foundation-1c — cockpit instrumentation | 0 | 1b | All six cockpit signals fire; `cockpit:six_signals_complete` aggregation works. |
+| 1d | analytics-foundation-1d — website reconciliation  | 0 | — | Audit of May-2 plan complete; `marketing:lead_qualified` server enrichment ships; `/api/ingest` proxy live. |
 | 2 | positioning-and-risks      | 1 | 1 | New hero shipped (incl. CTA fork), `/contact` route live, risk-cleanup copy deployed (Angular matrix, A2UI v0.9, telemetry footnote), both CTA tracks measurable. |
 | 3 | comparison-pages           | 1 | 2 | 4 comparison pages live (langchain-angular, copilotkit, hashbrown, a2ui-renderer), each with measurable CTA clicks on both tracks. |
 | 4 | cockpit-activation-recipes | 1 | 1, 3 | All 6 activation signals fire from cockpit; six-signal activation funnel non-zero; one comparison page successfully drives an activation. |
