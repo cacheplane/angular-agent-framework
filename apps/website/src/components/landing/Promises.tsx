@@ -6,24 +6,24 @@ import { Card } from '../ui/Card';
 
 const PROMISES = [
   {
-    title: "No closed core",
-    body: "MIT today, MIT tomorrow. Primitives and compositions both stay in the open repo. Pilot-to-Prod is the only paid thing.",
+    title: 'No closed core',
+    body: 'MIT today, MIT tomorrow. Primitives and compositions both stay in the open repo. Pilot-to-Prod is the only paid thing.',
   },
   {
-    title: "No abandoned majors",
-    body: "We follow Angular’s LTS. When Angular ships, we ship.",
+    title: 'No abandoned majors',
+    body: 'We follow Angular’s LTS. When Angular ships, we ship.',
   },
   {
-    title: "No required cloud",
-    body: "Self-host LangGraph + your Angular app. Run it all in your VPC.",
+    title: 'No required cloud',
+    body: 'Self-host LangGraph + your Angular app. Run it all in your VPC.',
   },
   {
-    title: "No telemetry",
-    body: "We don’t collect anything from your app. Not at install, not at runtime.",
+    title: 'No telemetry',
+    body: 'We don’t collect anything from your app. Not at install, not at runtime.',
   },
   {
-    title: "No model lock-in",
-    body: "Adapters work with any LLM your runtime supports. Swap providers without changing Angular code.",
+    title: 'No model lock-in',
+    body: 'Adapters work with any LLM your runtime supports. Swap providers without changing Angular code.',
   },
 ];
 
@@ -32,7 +32,9 @@ export function Promises() {
     <Section surface="canvas" ariaLabelledBy="promises-heading">
       <Container>
         <div style={{ textAlign: 'center', marginBottom: 56 }}>
-          <Eyebrow tone="accent" style={{ marginBottom: 16 }}>Built on principles</Eyebrow>
+          <Eyebrow tone="accent" style={{ marginBottom: 16 }}>
+            Built on principles
+          </Eyebrow>
           <h2
             id="promises-heading"
             style={{
