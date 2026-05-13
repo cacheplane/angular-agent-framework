@@ -7,7 +7,7 @@ import { Card } from '../ui/Card';
 const PROMISES = [
   { title: 'No vendor lock-in', body: 'MIT today, MIT tomorrow. Use without us.' },
   { title: 'No paid Angular tier', body: 'The libraries stay open. Pilot-to-Prod is the only paid offering.' },
-  { title: 'No abandoned majors', body: 'We follow Angular’s LTS. When Angular ships, we ship.' },
+  { title: 'No abandoned majors', body: 'We support Angular’s current and previous LTS versions.' },
   { title: 'No closed primitives', body: 'Headless primitives stay in the open repo.' },
   { title: 'No required cloud', body: 'Self-host LangGraph + your Angular app. No phone-home.' },
 ];

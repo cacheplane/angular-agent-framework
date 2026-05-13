@@ -12,7 +12,7 @@ interface Signal {
 
 const SIGNALS: Signal[] = [
   { label: 'MIT licensed', value: 'Open source', href: 'https://github.com/cacheplane/angular-agent-framework/blob/main/LICENSE' },
-  { label: 'Built for Angular 20+', value: 'Zoneless ready', href: null },
+  { label: 'Built for', value: 'Angular 20+', href: null },
   { label: 'LangGraph + AG-UI', value: 'Two adapters', href: null },
   { label: 'Reference app', value: 'cockpit.cacheplane.ai', href: 'https://cockpit.cacheplane.ai' },
   { label: 'On npm', value: '@ngaf/chat', href: 'https://www.npmjs.com/package/@ngaf/chat' },
