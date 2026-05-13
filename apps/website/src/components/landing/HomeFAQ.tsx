@@ -7,15 +7,11 @@ import { FAQ, type FAQItem } from '../ui/FAQ';
 const ITEMS: FAQItem[] = [
   {
     q: 'How is this different from CopilotKit or AG-UI directly?',
-    a: 'CopilotKit ports React patterns to Angular. AG-UI is a protocol — you still build the Angular side. Angular Agent Framework is Angular-native: signals, DI, zoneless support, and adapters that hide the protocol so you can swap LangGraph for AG-UI without rewriting your UI.',
+    a: 'CopilotKit ports React patterns to Angular. AG-UI is a protocol — you still build the Angular side. Angular Agent Framework is Angular-native: signals, DI, and adapters that hide the protocol so you can swap LangGraph for AG-UI without rewriting your UI.',
   },
   {
     q: 'Does it work with my existing Angular app?',
     a: 'Yes. Drop provideAgent (or provideAgUiAgent) into your app.config.ts. The headless primitives don’t impose any UI; the chat compositions are opt-in.',
-  },
-  {
-    q: 'Is it zoneless-compatible?',
-    a: 'Yes. All signal flows are zoneless-safe. We test against zoneless apps.',
   },
   {
     q: 'Can I use this without LangGraph?',
@@ -31,7 +27,7 @@ const ITEMS: FAQItem[] = [
   },
   {
     q: 'Is this production-ready today?',
-    a: 'Yes — the Cockpit reference app runs the full stack. We track Angular’s release cadence and ship against current and one previous major.',
+    a: 'Yes — the Cockpit reference app runs the full stack. We support Angular’s current and previous LTS versions.',
   },
   {
     q: 'Where do I report issues?',
