@@ -132,18 +132,15 @@ export default function PilotToProdPage() {
         cta={{ label: 'See @ngaf/chat', href: '/chat' }}
         visualLeft
         visual={
-          <BrowserFrame url="cockpit.cacheplane.ai/chat" elevation="md">
-            <div style={{ padding: 28, minHeight: 320, background: 'linear-gradient(180deg, #fff, #f8fafc)' }}>
-              <div style={{ fontFamily: tokens.typography.fontMono, fontSize: 11, color: tokens.colors.textMuted, marginBottom: 12 }}>
-                ASSISTANT · streaming · your data
-              </div>
-              <div style={{ fontFamily: tokens.typography.fontSans, fontSize: 14, color: tokens.colors.textPrimary, lineHeight: 1.6 }}>
-                Reviewing the Q3 expense reports flagged for compliance. Three line items need approval before processing — pulled the audit trail for each.
-              </div>
-              <div style={{ marginTop: 20, paddingTop: 16, borderTop: `1px solid ${tokens.surfaces.border}`, fontFamily: tokens.typography.fontMono, fontSize: 11, color: tokens.colors.textSecondary }}>
-                tools: query_expenses · fetch_audit · request_approval (interrupt)
-              </div>
-            </div>
+          <BrowserFrame url="cockpit.cacheplane.ai" elevation="md">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/screenshots/cockpit-run.webp"
+              alt="Cockpit reference app — live chat surface ready to receive a message"
+              style={{ display: 'block', width: '100%', height: 'auto' }}
+              loading="lazy"
+              decoding="async"
+            />
           </BrowserFrame>
         }
       />
