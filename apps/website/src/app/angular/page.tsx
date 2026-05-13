@@ -48,7 +48,7 @@ export default async function AngularPage() {
                 maxWidth: 640,
               }}
             >
-              Ship LangGraph agents inside your Angular 20+ app. Thread state, interrupts, branch/history, and tool progress — all surfaced as zoneless-safe signals.
+              Ship LangGraph agents inside your Angular 20+ app. Thread state, interrupts, branch/history, and tool progress — all surfaced as signals.
             </p>
             <div style={{ display: 'flex', justifyContent: 'center', gap: 12, flexWrap: 'wrap', marginBottom: 20 }}>
               <Button variant="primary" size="lg" href="/docs/agent/getting-started/introduction">Get started</Button>
@@ -57,7 +57,6 @@ export default async function AngularPage() {
             <div style={{ display: 'flex', justifyContent: 'center', gap: 8, flexWrap: 'wrap' }}>
               <Pill variant="accent">MIT</Pill>
               <Pill variant="angular">Angular 20+</Pill>
-              <Pill variant="neutral">Zoneless ready</Pill>
               <Pill variant="neutral">LangGraph + AG-UI</Pill>
             </div>
           </div>
@@ -68,11 +67,11 @@ export default async function AngularPage() {
         id="providers"
         eyebrow="Providers"
         headline="Drop it into app.config.ts. Done."
-        body="provideAgent wires LangGraph (or AG-UI) into Angular's DI container. From any component, agent() returns a zoneless-safe handle with signals for messages, status, errors, and interrupts."
+        body="provideAgent wires LangGraph (or AG-UI) into Angular's DI container. From any component, agent() returns a signal-based handle for messages, status, errors, and interrupts."
         bullets={[
           'provideAgent + provideAgUiAgent — pick your runtime',
           'agent() returns a typed signal-based handle',
-          'OnPush + zoneless tested',
+          'OnPush tested',
           'Test transports for deterministic specs',
         ]}
         supportingCards={[
