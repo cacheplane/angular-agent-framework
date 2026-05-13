@@ -11,11 +11,27 @@ interface Signal {
 }
 
 const SIGNALS: Signal[] = [
-  { label: 'MIT licensed', value: 'Open source', href: 'https://github.com/cacheplane/angular-agent-framework/blob/main/LICENSE' },
+  {
+    label: 'MIT licensed',
+    value: 'Open source',
+    href: 'https://github.com/cacheplane/angular-agent-framework/blob/main/LICENSE',
+  },
   { label: 'Built for', value: 'Angular 20+', href: null },
-  { label: 'LangGraph + AG-UI', value: 'Two adapters', href: null },
-  { label: 'Reference app', value: 'cockpit.cacheplane.ai', href: 'https://cockpit.cacheplane.ai' },
-  { label: 'On npm', value: '@ngaf/chat', href: 'https://www.npmjs.com/package/@ngaf/chat' },
+  {
+    label: 'Adapter contract',
+    value: 'LangGraph + AG-UI + your own',
+    href: null,
+  },
+  {
+    label: 'Reference app',
+    value: 'cockpit.cacheplane.ai',
+    href: 'https://cockpit.cacheplane.ai',
+  },
+  {
+    label: 'On npm',
+    value: '@ngaf/* — 7 packages',
+    href: 'https://www.npmjs.com/search?q=%40ngaf',
+  },
 ];
 
 function SignalCard({ s }: { s: Signal }) {
@@ -51,9 +67,23 @@ export function ProofStrip() {
   return (
     <Section surface="canvas" tight>
       <Container>
-        <Eyebrow style={{ textAlign: 'center', marginBottom: 20 }}>
+        <Eyebrow style={{ textAlign: 'center', marginBottom: 12 }}>
           Built in the open
         </Eyebrow>
+        <p
+          style={{
+            fontFamily: tokens.typography.bodyLg.family,
+            fontSize: tokens.typography.bodyLg.size,
+            lineHeight: tokens.typography.bodyLg.line,
+            fontWeight: 600,
+            color: tokens.colors.textPrimary,
+            textAlign: 'center',
+            margin: 0,
+            marginBottom: 20,
+          }}
+        >
+          Open code, open packages, a live reference app.
+        </p>
         <div
           style={{
             display: 'grid',
@@ -78,7 +108,7 @@ export function ProofStrip() {
               <div key={s.label}>
                 <SignalCard s={s} />
               </div>
-            ),
+            )
           )}
         </div>
       </Container>
