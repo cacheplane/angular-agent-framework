@@ -70,7 +70,7 @@ const WHITEPAPERS: Record<string, WhitepaperConfig> = {
     title: 'From Prototype to Production',
     subtitle: 'The Angular Agent Readiness Guide',
     eyebrow: '@ngaf/langgraph · Production Readiness Guide',
-    coverGradient: 'linear-gradient(135deg,#fef0f3 0%,#f4f0ff 45%,#eaf3ff 70%,#e6f4ff 100%)',
+    coverGradient: 'linear-gradient(135deg, #fafbfc 0%, #eaf3ff 100%)',
     outputPdf: 'apps/website/public/whitepaper.pdf',
     outputHtml: 'apps/website/public/whitepaper-preview.html',
     chapters: [
@@ -196,7 +196,7 @@ Tone: Direct, technical, peer-to-peer. No fluff. Audience is senior Angular engi
     title: 'The Enterprise Guide to Agent Streaming in Angular',
     subtitle: 'Ship LangGraph agents in Angular — without building the plumbing',
     eyebrow: '@ngaf/langgraph · Enterprise Guide',
-    coverGradient: 'linear-gradient(135deg, #eaf3ff 0%, #e6f4ff 45%, #f4f0ff 70%, #fef0f3 100%)',
+    coverGradient: 'linear-gradient(135deg, #fafbfc 0%, #eaf3ff 100%)',
     outputPdf: 'apps/website/public/whitepapers/angular.pdf',
     outputHtml: 'apps/website/public/whitepapers/angular-preview.html',
     chapters: [
@@ -323,7 +323,7 @@ Tone: Direct, technical, peer-to-peer. No fluff. Audience is senior Angular engi
     title: 'The Enterprise Guide to Generative UI in Angular',
     subtitle: 'Agents that render UI — without coupling to your frontend',
     eyebrow: '@ngaf/render · Enterprise Guide',
-    coverGradient: 'linear-gradient(135deg, #e8f5e9 0%, #eaf3ff 45%, #f4f0ff 70%, #fef0f3 100%)',
+    coverGradient: 'linear-gradient(135deg, #fafbfc 0%, #e8f5e9 100%)',
     outputPdf: 'apps/website/public/whitepapers/render.pdf',
     outputHtml: 'apps/website/public/whitepapers/render-preview.html',
     chapters: [
@@ -433,7 +433,7 @@ Tone: Direct, technical, peer-to-peer. No fluff. Audience is senior Angular engi
     title: 'The Enterprise Guide to Agent Chat Interfaces in Angular',
     subtitle: 'Production agent chat UI in days, not sprints',
     eyebrow: '@ngaf/chat · Enterprise Guide',
-    coverGradient: 'linear-gradient(135deg, #f3e8ff 0%, #f4f0ff 45%, #eaf3ff 70%, #e6f4ff 100%)',
+    coverGradient: 'linear-gradient(135deg, #fafbfc 0%, #f3e8ff 100%)',
     outputPdf: 'apps/website/public/whitepapers/chat.pdf',
     outputHtml: 'apps/website/public/whitepapers/chat-preview.html',
     chapters: [
@@ -564,7 +564,7 @@ function buildHTML(
   config: WhitepaperConfig,
 ): string {
   const tocHTML = chapters.map((ch, i) => `
-    <div style="display:flex;align-items:baseline;gap:8px;padding:10px 0;border-bottom:1px solid rgba(0,0,0,.06);font-size:15px;color:#444">
+    <div style="display:flex;align-items:baseline;gap:8px;padding:10px 0;border-bottom:1px solid #e6e8ee;font-size:15px;color:#555770">
       <span style="font-family:monospace;font-size:11px;color:#004090;font-weight:700;min-width:24px">${String(i + 1).padStart(2, '0')}</span>
       <span style="flex:1">${ch.title}</span>
     </div>`).join('');
@@ -601,7 +601,7 @@ function buildHTML(
   <div style="font-family:monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.12em;color:#004090;font-weight:700;margin-bottom:24px">${config.eyebrow}</div>
   <h1 style="font-family:'EB Garamond',serif;font-size:52px;font-weight:800;line-height:1.1;color:#1a1a2e;margin-bottom:20px">${config.title.replace(/ /g, '<br>')}</h1>
   <p style="font-family:'EB Garamond',serif;font-style:italic;font-size:20px;color:#555770;margin-bottom:40px">${config.subtitle}</p>
-  <div style="font-size:13px;color:#888;font-family:monospace">cacheplane.ai · ${new Date().getFullYear()}</div>
+  <div style="font-size:13px;color:#8b8fa3;font-family:monospace">cacheplane.ai · ${new Date().getFullYear()}</div>
 </div>
 
 <!-- TOC -->
