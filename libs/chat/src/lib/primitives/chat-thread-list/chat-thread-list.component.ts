@@ -119,14 +119,6 @@ export interface ThreadActionAdapter {
               aria-label="Rename conversation"
             />
           } @else {
-            @if (thread.pinned && actions()?.reorderPinned) {
-              <button
-                type="button"
-                class="chat-thread-list__grip"
-                aria-label="Drag to reorder"
-                draggable="false"
-              >⋮⋮</button>
-            }
             <button
               type="button"
               class="chat-thread-list__item"
@@ -138,9 +130,14 @@ export interface ThreadActionAdapter {
               <span class="chat-thread-list__initial" aria-hidden="true">{{ initialOf(threadLabel(thread)) }}</span>
               <span class="chat-thread-list__item-title">
                 @if (thread.pinned) {
-                  <svg class="chat-thread-list__item-pin" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                    <path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5.2v6h1.6v-6H18v-2l-2-2z"/>
-                  </svg>
+                  <span class="chat-thread-list__pin-slot" aria-hidden="true">
+                    <svg class="chat-thread-list__item-pin" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5.2v6h1.6v-6H18v-2l-2-2z"/>
+                    </svg>
+                    @if (actions()?.reorderPinned) {
+                      <span class="chat-thread-list__grip">⋮⋮</span>
+                    }
+                  </span>
                 }
                 {{ threadLabel(thread) }}
               </span>

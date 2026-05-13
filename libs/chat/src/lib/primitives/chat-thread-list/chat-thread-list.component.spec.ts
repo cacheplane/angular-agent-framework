@@ -510,6 +510,32 @@ describe('ChatThreadListComponent', () => {
       expect(fixture.nativeElement.querySelector('.chat-thread-list__grip')).toBeNull();
     });
 
+    it('pin slot wraps both pin SVG and grip glyph for reorderable pinned row', () => {
+      const fixture = TestBed.createComponent(ChatThreadListComponent);
+      fixture.componentRef.setInput('threads', [
+        { id: 'p1', title: 'P1', pinned: true },
+      ]);
+      fixture.componentRef.setInput('actions', { reorderPinned: vi.fn().mockResolvedValue(undefined) });
+      fixture.detectChanges();
+      const slot = fixture.nativeElement.querySelector('.chat-thread-list__pin-slot');
+      expect(slot).not.toBeNull();
+      expect(slot.querySelector('.chat-thread-list__item-pin')).not.toBeNull();
+      expect(slot.querySelector('.chat-thread-list__grip')).not.toBeNull();
+    });
+
+    it('pin slot renders without grip when reorderPinned absent', () => {
+      const fixture = TestBed.createComponent(ChatThreadListComponent);
+      fixture.componentRef.setInput('threads', [
+        { id: 'p1', title: 'P1', pinned: true },
+      ]);
+      fixture.componentRef.setInput('actions', {});
+      fixture.detectChanges();
+      const slot = fixture.nativeElement.querySelector('.chat-thread-list__pin-slot');
+      expect(slot).not.toBeNull();
+      expect(slot.querySelector('.chat-thread-list__item-pin')).not.toBeNull();
+      expect(slot.querySelector('.chat-thread-list__grip')).toBeNull();
+    });
+
     it('menu on pinned thread that is NOT first → includes "Move up"', () => {
       const fixture = TestBed.createComponent(ChatThreadListComponent);
       fixture.componentRef.setInput('threads', [

@@ -123,28 +123,50 @@ export const CHAT_THREAD_LIST_STYLES = `
     outline: none;
     box-sizing: border-box;
   }
-  .chat-thread-list__grip {
+  .chat-thread-list__pin-slot {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 13px;
+    height: 13px;
+    margin-right: 4px;
     flex-shrink: 0;
-    width: 16px;
-    height: 28px;
-    margin-right: 2px;
-    padding: 0;
-    border: 0;
-    background: transparent;
-    color: var(--ngaf-chat-text-muted);
-    cursor: grab;
-    opacity: 0;
+    vertical-align: -1px;
+  }
+  .chat-thread-list__pin-slot .chat-thread-list__item-pin {
+    position: absolute;
+    inset: 0;
+    width: 13px;
+    height: 13px;
+    opacity: 1;
     transition: opacity 100ms ease;
+  }
+  .chat-thread-list__pin-slot .chat-thread-list__grip {
+    position: absolute;
+    inset: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--ngaf-chat-text-muted);
     font-size: 11px;
     line-height: 1;
     letter-spacing: -1px;
+    opacity: 0;
+    transition: opacity 100ms ease;
     user-select: none;
+    pointer-events: none;
   }
-  .chat-thread-list__item-wrap:hover .chat-thread-list__grip,
-  .chat-thread-list__item-wrap:focus-within .chat-thread-list__grip {
+  .chat-thread-list__item-wrap:hover .chat-thread-list__pin-slot .chat-thread-list__item-pin,
+  .chat-thread-list__item-wrap:focus-within .chat-thread-list__pin-slot .chat-thread-list__item-pin {
+    opacity: 0;
+  }
+  .chat-thread-list__item-wrap:hover .chat-thread-list__pin-slot .chat-thread-list__grip,
+  .chat-thread-list__item-wrap:focus-within .chat-thread-list__pin-slot .chat-thread-list__grip {
     opacity: 1;
   }
-  .chat-thread-list__grip:active { cursor: grabbing; }
+  .chat-thread-list__item-wrap[draggable="true"] { cursor: grab; }
+  .chat-thread-list__item-wrap[draggable="true"]:active { cursor: grabbing; }
 
   .chat-thread-list__item-wrap[data-dragging="true"] {
     opacity: 0.4;
