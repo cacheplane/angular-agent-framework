@@ -70,6 +70,11 @@ export interface ThreadActionAdapter {
    *  Optimistically hides the row from the current project's visible list;
    *  consumer is expected to refresh the threads input. */
   moveToProject?(threadId: string, projectId: string | null): Promise<void>;
+  /** Reorder a pinned thread. `beforeId` is the id of the pinned thread it
+   *  should be placed before, or null to move to the end of the pinned list.
+   *  Framework optimistically reorders the visible list and awaits this
+   *  method; rejection rolls back. */
+  reorderPinned?(threadId: string, beforeId: string | null): Promise<void>;
 }
 
 @Component({
@@ -202,12 +207,45 @@ export class ChatThreadListComponent {
   private readonly pendingHidden = signal<ReadonlySet<string>>(new Set());
   private readonly pendingRenames = signal<ReadonlyMap<string, string>>(new Map());
 
+  /** Pending reorder overrides for pinned threads. Each entry: "move this id
+   *  to before that id (or to end if null)". Cleared in `finally` after the
+   *  adapter call settles. */
+  private readonly pendingOrder = signal<ReadonlyMap<string, string | null>>(new Map());
+
+  /** Id of the thread currently being dragged via HTML5 drag-and-drop. */
+  protected readonly draggingThreadId = signal<string | null>(null);
+
+  /** Drop target during a drag: which row, and whether the indicator shows
+   *  on the top edge ('before') or bottom edge ('after'). */
+  protected readonly dropTarget = signal<{ threadId: string; position: 'before' | 'after' } | null>(null);
+
   protected readonly visibleThreads = computed<Thread[]>(() => {
     const hidden = this.pendingHidden();
     const renames = this.pendingRenames();
-    return this.threads()
+    const pending = this.pendingOrder();
+
+    let result = this.threads()
       .filter((t) => !hidden.has(t.id))
       .map((t) => (renames.has(t.id) ? ({ ...t, title: renames.get(t.id) }) : t));
+
+    if (pending.size > 0) {
+      const pinned = result.filter((t) => t.pinned === true);
+      const unpinned = result.filter((t) => t.pinned !== true);
+      for (const [threadId, beforeId] of pending) {
+        const idx = pinned.findIndex((t) => t.id === threadId);
+        if (idx < 0) continue;
+        const [moved] = pinned.splice(idx, 1);
+        if (beforeId === null) {
+          pinned.push(moved);
+        } else {
+          const beforeIdx = pinned.findIndex((t) => t.id === beforeId);
+          if (beforeIdx < 0) pinned.push(moved);
+          else pinned.splice(beforeIdx, 0, moved);
+        }
+      }
+      result = [...pinned, ...unpinned];
+    }
+    return result;
   });
 
   protected readonly currentMenuItems = computed<OverflowMenuItem[]>(() => {
@@ -222,6 +260,14 @@ export class ChatThreadListComponent {
       if (a.rename) items.push({ id: 'rename', label: 'Rename' });
       if (a.pin && !isPinned) items.push({ id: 'pin', label: 'Pin' });
       if (a.unpin && isPinned) items.push({ id: 'unpin', label: 'Unpin' });
+
+      if (isPinned && a.reorderPinned) {
+        const pinned = this.threads().filter((t) => t.pinned === true);
+        const pinnedIdx = pinned.findIndex((t) => t.id === id);
+        if (pinnedIdx > 0) items.push({ id: 'move-up', label: 'Move up' });
+        if (pinnedIdx >= 0 && pinnedIdx < pinned.length - 1) items.push({ id: 'move-down', label: 'Move down' });
+      }
+
       if (a.moveToProject && this.projects() !== null) {
         items.push({ id: 'move', label: 'Move to project' });
       }
@@ -260,6 +306,7 @@ export class ChatThreadListComponent {
     if (this.mode() === 'active') {
       return Boolean(
         a.rename || a.pin || a.unpin || a.archive || a.delete ||
+        a.reorderPinned ||
         (a.moveToProject && this.projects() !== null)
       );
     }
@@ -293,6 +340,10 @@ export class ChatThreadListComponent {
       void this.performUnpin(threadId);
     } else if (id === 'move') {
       this.moveMenuOpenForId.set(threadId);
+    } else if (id === 'move-up') {
+      void this.performMoveUp(threadId);
+    } else if (id === 'move-down') {
+      void this.performMoveDown(threadId);
     }
   }
 
@@ -402,6 +453,107 @@ export class ChatThreadListComponent {
         return n;
       });
     }
+  }
+
+  protected async performReorderPinned(threadId: string, beforeId: string | null): Promise<void> {
+    const a = this.actions();
+    if (!a?.reorderPinned) return;
+    this.pendingOrder.update((m) => {
+      const n = new Map(m);
+      n.set(threadId, beforeId);
+      return n;
+    });
+    try {
+      await a.reorderPinned(threadId, beforeId);
+    } catch {
+      /* rollback via finally */
+    } finally {
+      this.pendingOrder.update((m) => {
+        const n = new Map(m);
+        n.delete(threadId);
+        return n;
+      });
+    }
+  }
+
+  protected async performMoveUp(threadId: string): Promise<void> {
+    const pinned = this.threads().filter((t) => t.pinned === true);
+    const idx = pinned.findIndex((t) => t.id === threadId);
+    if (idx <= 0) return;
+    const beforeId = pinned[idx - 1].id;
+    await this.performReorderPinned(threadId, beforeId);
+  }
+
+  protected async performMoveDown(threadId: string): Promise<void> {
+    const pinned = this.threads().filter((t) => t.pinned === true);
+    const idx = pinned.findIndex((t) => t.id === threadId);
+    if (idx < 0 || idx >= pinned.length - 1) return;
+    const beforeId = idx + 2 < pinned.length ? pinned[idx + 2].id : null;
+    await this.performReorderPinned(threadId, beforeId);
+  }
+
+  protected onDragStart(e: DragEvent, threadId: string): void {
+    const dt = e.dataTransfer;
+    if (!dt) return;
+    dt.setData('text/plain', threadId);
+    dt.effectAllowed = 'move';
+    this.draggingThreadId.set(threadId);
+  }
+
+  protected onDragOver(e: DragEvent, threadId: string): void {
+    const dragging = this.draggingThreadId();
+    if (!dragging || dragging === threadId) return;
+    const target = this.threads().find((t) => t.id === threadId);
+    if (target?.pinned !== true) return;
+    e.preventDefault();
+    if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    const offsetY = e.clientY - rect.top;
+    const position: 'before' | 'after' = offsetY < rect.height / 2 ? 'before' : 'after';
+    const cur = this.dropTarget();
+    if (!cur || cur.threadId !== threadId || cur.position !== position) {
+      this.dropTarget.set({ threadId, position });
+    }
+  }
+
+  protected onDragLeave(_e: DragEvent, threadId: string): void {
+    if (this.dropTarget()?.threadId === threadId) {
+      this.dropTarget.set(null);
+    }
+  }
+
+  protected onDrop(e: DragEvent, targetThreadId: string): void {
+    e.preventDefault();
+    const dragId = e.dataTransfer?.getData('text/plain') ?? this.draggingThreadId();
+    const target = this.dropTarget();
+    this.draggingThreadId.set(null);
+    this.dropTarget.set(null);
+    if (!dragId || dragId === targetThreadId || !target) return;
+
+    const pinned = this.threads().filter((t) => t.pinned === true);
+    const targetIdx = pinned.findIndex((t) => t.id === targetThreadId);
+    if (targetIdx < 0) return;
+    let beforeId: string | null;
+    if (target.position === 'before') {
+      beforeId = targetThreadId;
+    } else {
+      const filteredPinned = pinned.filter((t) => t.id !== dragId);
+      const filteredTargetIdx = filteredPinned.findIndex((t) => t.id === targetThreadId);
+      beforeId = filteredTargetIdx + 1 < filteredPinned.length
+        ? filteredPinned[filteredTargetIdx + 1].id
+        : null;
+    }
+    void this.performReorderPinned(dragId, beforeId);
+  }
+
+  protected onDragEnd(): void {
+    this.draggingThreadId.set(null);
+    this.dropTarget.set(null);
+  }
+
+  protected dropPositionFor(threadId: string): 'before' | 'after' | null {
+    const t = this.dropTarget();
+    return t?.threadId === threadId ? t.position : null;
   }
 
   protected async performUnarchive(threadId: string): Promise<void> {
