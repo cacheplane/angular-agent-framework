@@ -8,6 +8,8 @@ export { shadows } from './lib/shadows';
 export type { Shadows } from './lib/shadows';
 export { colors } from './lib/colors';
 export type { Colors } from './lib/colors';
+export { surfaces } from './lib/surfaces';
+export type { Surfaces } from './lib/surfaces';
 export { tokens } from './lib/tokens';
 export type { Tokens } from './lib/tokens';
 

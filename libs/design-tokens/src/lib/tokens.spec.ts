@@ -22,4 +22,12 @@ describe('tokens', () => {
     expect(baseTokens.brand.renderGreen).toBe('#1a7a40');
     expect(baseTokens.brand.chatPurple).toBe('#5a00c8');
   });
+
+  it('exposes backwards-compat colors and surfaces aliases for light-only consumers', () => {
+    expect(tokens.colors.textPrimary).toBe(lightOverrides.textPrimary);
+    expect(tokens.colors.bg).toBe(lightOverrides.bg);
+    expect(tokens.colors.angularRed).toBe(baseTokens.brand.angularRed);
+    expect(tokens.surfaces.canvas).toBe(lightOverrides.canvas);
+    expect(tokens.surfaces.border).toBe(lightOverrides.border);
+  });
 });
