@@ -5,11 +5,26 @@ import { Eyebrow } from '../ui/Eyebrow';
 import { Card } from '../ui/Card';
 
 const PROMISES = [
-  { title: 'No vendor lock-in', body: 'MIT today, MIT tomorrow. Use without us.' },
-  { title: 'No paid Angular tier', body: 'The libraries stay open. Pilot-to-Prod is the only paid offering.' },
-  { title: 'No abandoned majors', body: 'We follow Angular’s LTS. When Angular ships, we ship.' },
-  { title: 'No closed primitives', body: 'Headless primitives stay in the open repo.' },
-  { title: 'No required cloud', body: 'Self-host LangGraph + your Angular app. No phone-home.' },
+  {
+    title: "No closed core",
+    body: "MIT today, MIT tomorrow. Primitives and compositions both stay in the open repo. Pilot-to-Prod is the only paid thing.",
+  },
+  {
+    title: "No abandoned majors",
+    body: "We follow Angular’s LTS. When Angular ships, we ship.",
+  },
+  {
+    title: "No required cloud",
+    body: "Self-host LangGraph + your Angular app. Run it all in your VPC.",
+  },
+  {
+    title: "No telemetry",
+    body: "We don’t collect anything from your app. Not at install, not at runtime.",
+  },
+  {
+    title: "No model lock-in",
+    body: "Adapters work with any LLM your runtime supports. Swap providers without changing Angular code.",
+  },
 ];
 
 export function Promises() {
