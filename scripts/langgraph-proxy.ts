@@ -1,0 +1,130 @@
+// scripts/langgraph-proxy.ts
+// SPDX-License-Identifier: MIT
+/**
+ * Vercel Node serverless function factory for proxying to a LangGraph
+ * Cloud deployment. Injects `x-api-key` server-side from
+ * `LANGSMITH_API_KEY`, streams SSE responses chunk-by-chunk, and
+ * forwards all other content types verbatim.
+ *
+ * Shared between `scripts/examples-middleware.ts` (cockpit-examples
+ * deployment) and `scripts/demo-middleware.ts` (canonical demo
+ * deployment). Per-deployment specifics — like the examples'
+ * Referer-based backend routing — are passed in via `ProxyConfig`.
+ */
+
+// Types only - Vercel provides these at runtime.
+export interface VercelRequest {
+  method?: string;
+  headers: Record<string, string | undefined>;
+  body: unknown;
+  url?: string;
+  query: Record<string, string | string[]>;
+}
+
+export interface VercelResponse {
+  setHeader(k: string, v: string): void;
+  status(code: number): VercelResponse;
+  json(body: unknown): void;
+  write(chunk: string): void;
+  end(): void;
+  send(body: string): void;
+}
+
+export interface ProxyConfig {
+  /** Default upstream URL when `resolveBackend` is not provided or returns
+   *  the same value. Required if `resolveBackend` is omitted. */
+  readonly backendUrl?: string;
+  /** Optional dynamic backend resolver. Receives the request's `referer`
+   *  header. The default-export wrappers use this for examples (which has
+   *  a Referer-based fan-out) and the demo (which has a single backend). */
+  readonly resolveBackend?: (referer: string | undefined) => string;
+}
+
+const DEFAULT_BACKEND_URL = 'https://cockpit-dev-219a15942c545a00a03a9a41905d7fc2.us.langgraph.app';
+
+export function createProxyHandler(config: ProxyConfig = {}): (req: VercelRequest, res: VercelResponse) => Promise<void> {
+  const fallbackBackend = config.backendUrl ?? DEFAULT_BACKEND_URL;
+  const resolveBackend = config.resolveBackend ?? ((_referer) => fallbackBackend);
+
+  return async function handler(req, res) {
+    // CORS preflight (Phase 4 will tighten the origin allowlist).
+    res.setHeader('access-control-allow-origin', '*');
+    res.setHeader('access-control-allow-methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.setHeader('access-control-allow-headers', 'content-type, x-api-key, authorization');
+
+    if (req.method === 'OPTIONS') {
+      res.status(204).end();
+      return;
+    }
+
+    const apiKey = process.env['LANGSMITH_API_KEY'];
+    if (!apiKey) {
+      res.status(500).json({ error: 'LANGSMITH_API_KEY not configured' });
+      return;
+    }
+
+    const backendUrl = resolveBackend(req.headers.referer);
+
+    // Build target URL — strip /api prefix from req.url, drop the
+    // Vercel catch-all query param, keep real query params.
+    const parsedUrl = new URL(req.url ?? '', `https://${req.headers.host ?? 'localhost'}`);
+    const apiPath = parsedUrl.pathname.replace(/^\/api/, '') || '/';
+    parsedUrl.searchParams.delete('[...path]');
+    parsedUrl.searchParams.delete('[[...path]]');
+    const cleanSearch = parsedUrl.searchParams.toString() ? `?${parsedUrl.searchParams.toString()}` : '';
+    const targetUrl = `${backendUrl}${apiPath}${cleanSearch}`;
+
+    // Debug endpoint — confirms the proxy is wired without hitting the upstream.
+    if (apiPath === '/_proxy_debug') {
+      res.status(200).json({
+        method: req.method,
+        url: req.url,
+        apiPath,
+        targetUrl,
+        backendUrl,
+        referer: req.headers.referer,
+        query: req.query,
+        hasApiKey: !!apiKey,
+        apiKeyPrefix: apiKey.substring(0, 10),
+      });
+      return;
+    }
+
+    console.log(`[proxy] ${req.method} ${req.url} → ${targetUrl}`);
+
+    const headers: Record<string, string> = {
+      'x-api-key': apiKey,
+      'content-type': req.headers['content-type'] ?? 'application/json',
+    };
+
+    try {
+      const response = await fetch(targetUrl, {
+        method: req.method ?? 'GET',
+        headers,
+        body: req.method !== 'GET' && req.method !== 'HEAD' ? JSON.stringify(req.body) : undefined,
+      });
+
+      const contentType = response.headers.get('content-type') ?? 'application/json';
+      res.setHeader('content-type', contentType);
+      res.status(response.status);
+
+      if (contentType.includes('text/event-stream')) {
+        const reader = response.body?.getReader();
+        if (reader) {
+          const decoder = new TextDecoder();
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            res.write(decoder.decode(value, { stream: true }));
+          }
+        }
+        res.end();
+      } else {
+        const text = await response.text();
+        res.send(text);
+      }
+    } catch (err) {
+      res.status(502).json({ error: 'Proxy error', message: (err as Error).message });
+    }
+  };
+}

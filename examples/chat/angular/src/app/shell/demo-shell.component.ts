@@ -35,6 +35,7 @@ import { PalettePersistence } from './palette-persistence.service';
 import { ThreadsService } from './threads.service';
 import { ProjectsService } from './projects.service';
 import { DEMO_AGENT } from './shell-tokens';
+import { environment } from '../../environments/environment';
 
 export type DemoMode = 'embed' | 'popup' | 'sidebar';
 
@@ -327,8 +328,8 @@ export class DemoShell {
    */
   readonly agent = (() => {
     const a = agent({
-      apiUrl: 'http://localhost:2024',
-      assistantId: 'chat',
+      apiUrl: environment.langGraphApiUrl,
+      assistantId: environment.assistantId,
       threadId: this.threadIdSignal,
       onThreadId: (id: string) => {
         this.threadIdSignal.set(id);

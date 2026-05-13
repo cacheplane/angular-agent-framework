@@ -302,6 +302,41 @@ jobs:
           npx vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
           npx vercel deploy --prebuilt --prod --yes --token=${{ secrets.VERCEL_TOKEN }}
 
+      # ── Canonical demo deploy ────────────────────────────────────────────
+      - name: Check if demo changed
+        id: demo_changed
+        run: |
+          base_sha="${{ github.event.before }}"
+          head_sha="${{ github.sha }}"
+          if [ -z "$base_sha" ] || [ "$base_sha" = "0000000000000000000000000000000000000000" ]; then
+            base_sha="$(git rev-parse "$head_sha^")"
+          fi
+          changed_files="$(git diff --name-only "$base_sha" "$head_sha")"
+          demo_changed=false
+          if printf '%s\n' "$changed_files" | grep -E '^examples/chat/(angular|python)/' >/dev/null; then
+            demo_changed=true
+          fi
+          if printf '%s\n' "$changed_files" | grep -E '^(vercel\.demo\.json|scripts/(assemble-demo|demo-middleware|langgraph-proxy)\.ts)$' >/dev/null; then
+            demo_changed=true
+          fi
+          if printf '%s\n' "$changed_files" | grep -E '^libs/' >/dev/null; then
+            demo_changed=true
+          fi
+          echo "changed=$demo_changed" >> "$GITHUB_OUTPUT"
+      - name: Build and assemble canonical demo
+        if: steps.demo_changed.outputs.changed == 'true'
+        run: npx tsx scripts/assemble-demo.ts
+      - name: Deploy canonical demo to Vercel (production)
+        if: steps.demo_changed.outputs.changed == 'true'
+        working-directory: deploy/demo
+        run: |
+          mkdir -p .vercel
+          cat > .vercel/project.json <<EOF
+          {"projectId":"${{ secrets.VERCEL_DEMO_PROJECT_ID }}","orgId":"${{ secrets.VERCEL_ORG_ID }}","projectName":"demo"}
+          EOF
+          npx vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+          npx vercel deploy --prebuilt --prod --yes --token=${{ secrets.VERCEL_TOKEN }}
+
   production-smoke:
     name: Production smoke
     needs: [deploy]
@@ -324,4 +359,5 @@ jobs:
         env:
           BASE_URL: https://cockpit.cacheplane.ai
           EXAMPLES_URL: https://examples.cacheplane.ai
+          DEMO_URL: https://demo.cacheplane.ai
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
