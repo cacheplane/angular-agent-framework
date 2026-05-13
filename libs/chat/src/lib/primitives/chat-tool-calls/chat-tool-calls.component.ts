@@ -22,11 +22,11 @@ interface Group {
   imports: [NgTemplateOutlet, ChatToolCallCardComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styles: [`
-    :host { display: block; }
+    :host { display: block; margin-bottom: 20px; }
     .ctc__group {
       border: 1px solid var(--ngaf-chat-separator);
       border-radius: var(--ngaf-chat-radius-card);
-      margin: 0 0 8px;
+      margin: 0 0 4px;
     }
     .ctc__group-header {
       display: flex;

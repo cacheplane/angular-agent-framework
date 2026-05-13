@@ -312,3 +312,17 @@ describe('ChatToolCallsComponent — excludeToolNames filter', () => {
     expect(text).not.toContain('research');
   });
 });
+
+describe('ChatToolCallsComponent — breathing room before downstream content', () => {
+  it('host has bottom margin >= 16px so the next sibling gets clear separation', () => {
+    TestBed.configureTestingModule({ imports: [FilterHost] });
+    const fx = TestBed.createComponent(FilterHost);
+    fx.detectChanges();
+    const host = fx.nativeElement.querySelector('chat-tool-calls') as HTMLElement;
+    document.body.appendChild(host);
+    const computed = getComputedStyle(host);
+    const marginBottom = parseFloat(computed.marginBottom || '0');
+    expect(marginBottom).toBeGreaterThanOrEqual(16);
+    document.body.removeChild(host);
+  });
+});
