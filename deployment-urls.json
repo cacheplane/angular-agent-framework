@@ -12,5 +12,6 @@
   "subagents": "https://cockpit-dev-219a15942c545a00a03a9a41905d7fc2.us.langgraph.app",
   "da-memory": "https://cockpit-dev-219a15942c545a00a03a9a41905d7fc2.us.langgraph.app",
   "skills": "https://cockpit-dev-219a15942c545a00a03a9a41905d7fc2.us.langgraph.app",
-  "sandboxes": "https://cockpit-dev-219a15942c545a00a03a9a41905d7fc2.us.langgraph.app"
+  "sandboxes": "https://cockpit-dev-219a15942c545a00a03a9a41905d7fc2.us.langgraph.app",
+  "chat": "https://cockpit-dev-219a15942c545a00a03a9a41905d7fc2.us.langgraph.app"
 }

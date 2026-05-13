@@ -25,6 +25,7 @@ const SMOKE_ASSISTANT_IDS = [
   'filesystem',
   'c-generative-ui',
   'c-a2ui',
+  'chat',
 ] as const;
 
 const DEPLOYMENT_URLS_PATH = resolve(__dirname, '../deployment-urls.json');

@@ -6,6 +6,7 @@ on:
     paths:
       - 'cockpit/langgraph/**/python/**'
       - 'cockpit/deep-agents/**/python/**'
+      - 'examples/chat/python/**'
       - 'apps/cockpit/scripts/capability-registry.ts'
       - 'scripts/generate-shared-deployment-config.ts'
       - 'deployments/shared-dev/langgraph.json'
