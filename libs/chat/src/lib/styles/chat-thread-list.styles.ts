@@ -110,4 +110,44 @@ export const CHAT_THREAD_LIST_STYLES = `
     outline: none;
     box-sizing: border-box;
   }
+  .chat-thread-list__grip {
+    flex-shrink: 0;
+    width: 16px;
+    height: 28px;
+    margin-right: 2px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--ngaf-chat-text-muted);
+    cursor: grab;
+    opacity: 0;
+    transition: opacity 100ms ease;
+    font-size: 11px;
+    line-height: 1;
+    letter-spacing: -1px;
+    user-select: none;
+  }
+  .chat-thread-list__item-wrap:hover .chat-thread-list__grip,
+  .chat-thread-list__item-wrap:focus-within .chat-thread-list__grip {
+    opacity: 1;
+  }
+  .chat-thread-list__grip:active { cursor: grabbing; }
+
+  .chat-thread-list__item-wrap[data-dragging="true"] {
+    opacity: 0.4;
+  }
+
+  .chat-thread-list__item-wrap[data-drop-position="before"]::before,
+  .chat-thread-list__item-wrap[data-drop-position="after"]::after {
+    content: '';
+    position: absolute;
+    left: 4px;
+    right: 4px;
+    height: 2px;
+    background: var(--ngaf-chat-primary);
+    border-radius: 1px;
+    pointer-events: none;
+  }
+  .chat-thread-list__item-wrap[data-drop-position="before"]::before { top: -1px; }
+  .chat-thread-list__item-wrap[data-drop-position="after"]::after { bottom: -1px; }
 `;
