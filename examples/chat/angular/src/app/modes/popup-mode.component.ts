@@ -19,6 +19,9 @@ import { WELCOME_SUGGESTIONS } from './welcome-suggestions';
     <chat-popup
       [agent]="agent"
       [views]="catalog"
+      [modelOptions]="shell.modelOptions()"
+      [selectedModel]="shell.model()"
+      (selectedModelChange)="shell.onModelChange($event)"
       (replayRequested)="shell.onTimelineReplay($event)"
       (forkRequested)="shell.onTimelineFork($event)"
     >

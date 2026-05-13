@@ -241,7 +241,7 @@ export class DemoShell {
     { value: 'sidebar', label: 'Sidebar' },
   ] as const;
 
-  protected readonly modelOptions = signal<readonly { value: string; label: string }[]>([
+  readonly modelOptions = signal<readonly { value: string; label: string }[]>([
     { value: 'gpt-5', label: 'gpt-5' },
     { value: 'gpt-5-mini', label: 'gpt-5-mini' },
     { value: 'gpt-5-nano', label: 'gpt-5-nano' },
@@ -363,7 +363,7 @@ export class DemoShell {
     void this.router.navigate(['/' + next]);
   }
 
-  protected onModelChange(next: string): void {
+  onModelChange(next: string): void {
     this.model.set(next);
     this.persistence.write('model', next);
   }

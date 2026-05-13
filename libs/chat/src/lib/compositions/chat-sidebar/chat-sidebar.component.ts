@@ -4,6 +4,7 @@ import { Component, ChangeDetectionStrategy, input, model, output } from '@angul
 import type { Agent } from '../../agent';
 import type { ViewRegistry } from '@ngaf/render';
 import { ChatComponent } from '../chat/chat.component';
+import type { ChatSelectOption } from '../../primitives/chat-select/chat-select.component';
 import { CHAT_HOST_TOKENS } from '../../styles/chat-tokens';
 
 @Component({
@@ -60,6 +61,9 @@ import { CHAT_HOST_TOKENS } from '../../styles/chat-tokens';
       <chat
         [agent]="agent()"
         [views]="views()"
+        [modelOptions]="modelOptions()"
+        [selectedModel]="selectedModel()"
+        (selectedModelChange)="selectedModel.set($event)"
         (replayRequested)="replayRequested.emit($event)"
         (forkRequested)="forkRequested.emit($event)"
       >
@@ -74,6 +78,11 @@ export class ChatSidebarComponent {
    * messages classified as A2UI parse correctly but never mount a
    * surface. Pass `a2uiBasicCatalog()` from `@ngaf/chat`. */
   readonly views = input<ViewRegistry | undefined>(undefined);
+  /** Forwarded to the inner <chat>. When non-empty, a model picker pill
+   * renders in the chat-input chrome. */
+  readonly modelOptions = input<readonly ChatSelectOption[]>([]);
+  /** Two-way bound current model value. */
+  readonly selectedModel = model<string>('');
   readonly open = model(false);
   readonly pushContent = input<boolean>(false);
   readonly replayRequested = output<string>();
