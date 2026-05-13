@@ -3871,6 +3871,18 @@
         "optional": false
       },
       {
+        "name": "draggingThreadId",
+        "type": "WritableSignal<string | null>",
+        "description": "Id of the thread currently being dragged via HTML5 drag-and-drop.",
+        "optional": false
+      },
+      {
+        "name": "dropTarget",
+        "type": "WritableSignal<object | null>",
+        "description": "Drop target during a drag: which row, and whether the indicator shows\n on the top edge ('before') or bottom edge ('after').",
+        "optional": false
+      },
+      {
         "name": "editingThreadId",
         "type": "WritableSignal<string | null>",
         "description": "",
@@ -3976,6 +3988,101 @@
         ]
       },
       {
+        "name": "dropPositionFor",
+        "signature": "dropPositionFor(threadId: string)",
+        "description": "",
+        "params": [
+          {
+            "name": "threadId",
+            "type": "string",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
+        "name": "onDragEnd",
+        "signature": "onDragEnd()",
+        "description": "",
+        "params": []
+      },
+      {
+        "name": "onDragLeave",
+        "signature": "onDragLeave(_e: DragEvent, threadId: string)",
+        "description": "",
+        "params": [
+          {
+            "name": "_e",
+            "type": "DragEvent",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "threadId",
+            "type": "string",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
+        "name": "onDragOver",
+        "signature": "onDragOver(e: DragEvent, threadId: string)",
+        "description": "",
+        "params": [
+          {
+            "name": "e",
+            "type": "DragEvent",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "threadId",
+            "type": "string",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
+        "name": "onDragStart",
+        "signature": "onDragStart(e: DragEvent, threadId: string)",
+        "description": "",
+        "params": [
+          {
+            "name": "e",
+            "type": "DragEvent",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "threadId",
+            "type": "string",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
+        "name": "onDrop",
+        "signature": "onDrop(e: DragEvent, targetThreadId: string)",
+        "description": "",
+        "params": [
+          {
+            "name": "e",
+            "type": "DragEvent",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "targetThreadId",
+            "type": "string",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
         "name": "onEditInput",
         "signature": "onEditInput(e: Event)",
         "description": "",
@@ -4053,6 +4160,19 @@
         "params": []
       },
       {
+        "name": "performMoveDown",
+        "signature": "performMoveDown(threadId: string)",
+        "description": "",
+        "params": [
+          {
+            "name": "threadId",
+            "type": "string",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
         "name": "performMoveToProject",
         "signature": "performMoveToProject(threadId: string, projectId: string | null)",
         "description": "",
@@ -4072,6 +4192,19 @@
         ]
       },
       {
+        "name": "performMoveUp",
+        "signature": "performMoveUp(threadId: string)",
+        "description": "",
+        "params": [
+          {
+            "name": "threadId",
+            "type": "string",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
         "name": "performPin",
         "signature": "performPin(threadId: string)",
         "description": "",
@@ -4079,6 +4212,25 @@
           {
             "name": "threadId",
             "type": "string",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
+        "name": "performReorderPinned",
+        "signature": "performReorderPinned(threadId: string, beforeId: string | null)",
+        "description": "",
+        "params": [
+          {
+            "name": "threadId",
+            "type": "string",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "beforeId",
+            "type": "string | null",
             "description": "",
             "optional": false
           }
@@ -6318,6 +6470,12 @@
       },
       {
         "name": "rename",
+        "type": "unknown",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "reorderPinned",
         "type": "unknown",
         "description": "",
         "optional": true
