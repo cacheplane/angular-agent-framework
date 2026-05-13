@@ -157,3 +157,81 @@ describe('createPartialArgsBridge', () => {
     expect(beginEnv!.beginRendering.root).toBe('alpha');
   });
 });
+
+interface BridgeRow {
+  name: string;
+  /** Sequence of (toolCallId, argsSoFar) pushes. */
+  pushes: ReadonlyArray<readonly [string, string]>;
+  /** Assertion run after the final push. */
+  assert: (store: A2uiSurfaceStore, bridge: ReturnType<typeof createPartialArgsBridge>) => void;
+}
+
+const SURFACE_S_FULL =
+  '{"envelopes":[{"surfaceUpdate":{"surfaceId":"s","components":[{"id":"root","type":"text","props":{}}]}}]}';
+
+const bridgeRows: BridgeRow[] = [
+  {
+    name: 'open brace then closed brace stays unpoisoned',
+    pushes: [['tc-2', '{'], ['tc-2', '{}']],
+    assert: (store, bridge) => {
+      expect(store.surfaces().size).toBe(0);
+      expect(bridge.isPoisoned('tc-2')).toBe(false);
+    },
+  },
+  {
+    name: 'open envelopes array stays unpoisoned',
+    pushes: [['tc-3', '{"envelopes":[']],
+    assert: (store, bridge) => {
+      expect(store.surfaces().size).toBe(0);
+      expect(bridge.isPoisoned('tc-3')).toBe(false);
+    },
+  },
+  {
+    name: 'trailing whitespace after valid args',
+    pushes: [['tc-4', SURFACE_S_FULL + '   \n  ']],
+    assert: (store) => {
+      expect(store.surfaces().get('s')?.components.has('root')).toBe(true);
+    },
+  },
+  {
+    name: 'garbage prefix poisons',
+    pushes: [['tc-5', '{{{not_json']],
+    assert: (_store, bridge) => {
+      expect(bridge.isPoisoned('tc-5')).toBe(true);
+    },
+  },
+  {
+    name: 'valid prefix then garbage suffix poisons',
+    pushes: [['tc-6', SURFACE_S_FULL + ' garbage']],
+    assert: (_store, bridge) => {
+      expect(bridge.isPoisoned('tc-6')).toBe(true);
+    },
+  },
+  {
+    name: 'two tool_call_ids mount independent surfaces',
+    pushes: [
+      ['tc-7a', '{"envelopes":[{"surfaceUpdate":{"surfaceId":"a","components":[{"id":"root","type":"text","props":{}}]}}]}'],
+      ['tc-7b', '{"envelopes":[{"surfaceUpdate":{"surfaceId":"b","components":[{"id":"root","type":"text","props":{}}]}}]}'],
+    ],
+    assert: (store) => {
+      expect(store.surfaces().get('a')?.components.has('root')).toBe(true);
+      expect(store.surfaces().get('b')?.components.has('root')).toBe(true);
+    },
+  },
+  {
+    name: 'identical chunk pushed twice mounts exactly once',
+    pushes: [['tc-8', SURFACE_S_FULL], ['tc-8', SURFACE_S_FULL]],
+    assert: (store) => {
+      expect(store.surfaces().get('s')?.components.size).toBe(1);
+    },
+  },
+];
+
+describe('createPartialArgsBridge — input variance', () => {
+  it.each(bridgeRows)('$name', (row) => {
+    const store = makeStore();
+    const bridge = createPartialArgsBridge(store);
+    for (const [tc, args] of row.pushes) bridge.push(tc, args);
+    row.assert(store, bridge);
+  });
+});

@@ -77,3 +77,53 @@ describe('createA2uiMessageParser (v1)', () => {
     expect(msgs).toHaveLength(3);
   });
 });
+
+interface ParserRow {
+  name: string;
+  /** Sequence of chunks to push. */
+  chunks: readonly string[];
+  /** Expected envelope-key sequence across all push() calls combined. */
+  expectedKeys: readonly string[];
+}
+
+const BR = (root: string) =>
+  JSON.stringify({ beginRendering: { surfaceId: 's', root } });
+const SU = () =>
+  JSON.stringify({ surfaceUpdate: { surfaceId: 's', components: [] } });
+const DM = (key: string) =>
+  JSON.stringify({ dataModelUpdate: { surfaceId: 's', contents: [{ key, valueString: 'v' }] } });
+
+const parserRows: ParserRow[] = [
+  { name: 'envelope with CRLF', chunks: [BR('r') + '\r\n'], expectedKeys: ['beginRendering'] },
+  { name: 'envelope split mid-key', chunks: ['{"begin', 'Rendering":{"surfaceId":"s","root":"r"}}\n'], expectedKeys: ['beginRendering'] },
+  { name: 'envelope split mid-string-value', chunks: ['{"beginRendering":{"surfaceId":"s","root":"', 'r"}}\n'], expectedKeys: ['beginRendering'] },
+  { name: 'three envelopes one chunk', chunks: [[SU(), DM('k'), BR('r')].join('\n') + '\n'], expectedKeys: ['surfaceUpdate', 'dataModelUpdate', 'beginRendering'] },
+  {
+    name: 'three envelopes char-by-char',
+    chunks: ([SU(), DM('k'), BR('r')].join('\n') + '\n').split(''),
+    expectedKeys: ['surfaceUpdate', 'dataModelUpdate', 'beginRendering'],
+  },
+  { name: 'malformed line then valid line', chunks: ['{garbage}\n' + BR('r') + '\n'], expectedKeys: ['beginRendering'] },
+  { name: 'valid envelope no trailing newline waits', chunks: [BR('r')], expectedKeys: [] },
+  { name: 'valid envelope, then trailing newline later', chunks: [BR('r'), '\n'], expectedKeys: ['beginRendering'] },
+  { name: 'empty lines between envelopes', chunks: ['\n\n' + BR('r') + '\n\n' + BR('r2') + '\n'], expectedKeys: ['beginRendering', 'beginRendering'] },
+  { name: 'whitespace before brace', chunks: ['   ' + BR('r') + '\n'], expectedKeys: ['beginRendering'] },
+  { name: 'unrecognised envelope key', chunks: ['{"mysteryUpdate":{}}\n'], expectedKeys: [] },
+  {
+    name: 'mixed valid + unknown + valid',
+    chunks: [[BR('r'), '{"mysteryUpdate":{}}', BR('r2')].join('\n') + '\n'],
+    expectedKeys: ['beginRendering', 'beginRendering'],
+  },
+];
+
+describe('createA2uiMessageParser — input variance', () => {
+  test.each(parserRows)('$name', (row) => {
+    const parser = createA2uiMessageParser();
+    const keys: string[] = [];
+    for (const chunk of row.chunks) {
+      const msgs = parser.push(chunk);
+      for (const m of msgs) keys.push(Object.keys(m)[0]);
+    }
+    expect(keys).toEqual(row.expectedKeys);
+  });
+});
