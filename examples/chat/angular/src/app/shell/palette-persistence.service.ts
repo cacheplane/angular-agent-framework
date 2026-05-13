@@ -10,6 +10,7 @@ interface PaletteState {
   theme?: string | null;
   threadId?: string | null;
   drawerOpen?: boolean | null;
+  sidenavMode?: 'expanded' | 'collapsed' | null;
 }
 
 type PaletteKey = keyof PaletteState;

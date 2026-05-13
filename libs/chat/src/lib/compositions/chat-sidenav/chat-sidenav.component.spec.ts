@@ -120,6 +120,67 @@ describe('ChatSidenavComponent', () => {
     expect(lists[1].getAttribute('mode')).toBe('archived');
   });
 
+  it('renders the collapse chevron in expanded mode with "Collapse sidenav" label', () => {
+    const fixture = render({ mode: 'expanded' });
+    const btn = fixture.nativeElement.querySelector('.chat-sidenav__action--collapse') as HTMLButtonElement;
+    expect(btn).not.toBeNull();
+    expect(btn.getAttribute('aria-label')).toBe('Collapse sidenav');
+  });
+
+  it('renders the expand chevron in collapsed mode with "Expand sidenav" label', () => {
+    const fixture = render({ mode: 'collapsed' });
+    const btn = fixture.nativeElement.querySelector('.chat-sidenav__action--collapse') as HTMLButtonElement;
+    expect(btn).not.toBeNull();
+    expect(btn.getAttribute('aria-label')).toBe('Expand sidenav');
+  });
+
+  it('omits the collapse chevron in drawer mode', () => {
+    const fixture = render({ mode: 'drawer' });
+    expect(fixture.nativeElement.querySelector('.chat-sidenav__action--collapse')).toBeNull();
+  });
+
+  it('clicking the chevron in expanded mode emits modeChange="collapsed"', () => {
+    const fixture = render({ mode: 'expanded' });
+    let last: string | undefined;
+    fixture.componentInstance.modeChange.subscribe((m: string) => { last = m; });
+    const btn = fixture.nativeElement.querySelector('.chat-sidenav__action--collapse') as HTMLButtonElement;
+    btn.click();
+    expect(last).toBe('collapsed');
+  });
+
+  it('clicking the chevron in collapsed mode emits modeChange="expanded"', () => {
+    const fixture = render({ mode: 'collapsed' });
+    let last: string | undefined;
+    fixture.componentInstance.modeChange.subscribe((m: string) => { last = m; });
+    const btn = fixture.nativeElement.querySelector('.chat-sidenav__action--collapse') as HTMLButtonElement;
+    btn.click();
+    expect(last).toBe('expanded');
+  });
+
+  it('Cmd+B in expanded mode emits modeChange="collapsed"', () => {
+    const fixture = render({ mode: 'expanded' });
+    let last: string | undefined;
+    fixture.componentInstance.modeChange.subscribe((m: string) => { last = m; });
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'b', metaKey: true }));
+    expect(last).toBe('collapsed');
+  });
+
+  it('Cmd+B in collapsed mode emits modeChange="expanded"', () => {
+    const fixture = render({ mode: 'collapsed' });
+    let last: string | undefined;
+    fixture.componentInstance.modeChange.subscribe((m: string) => { last = m; });
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'b', metaKey: true }));
+    expect(last).toBe('expanded');
+  });
+
+  it('Cmd+B is a no-op in drawer mode', () => {
+    const fixture = render({ mode: 'drawer' });
+    let emits = 0;
+    fixture.componentInstance.modeChange.subscribe(() => { emits++; });
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'b', metaKey: true }));
+    expect(emits).toBe(0);
+  });
+
   it('clicking the archived heading toggles aria-expanded', () => {
     const fixture = render({ threads: [{ id: 't1' }] });
     fixture.componentRef.setInput('archivedThreads', []);

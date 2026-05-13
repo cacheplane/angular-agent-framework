@@ -38,11 +38,14 @@
   transition: padding-left 200ms ease;
   padding-left: 0;
 }
-.demo-shell__main--push {
-  padding-left: 280px;
+.demo-shell__main[data-sidenav-mode="expanded"] {
+  padding-left: var(--ngaf-chat-sidenav-width-expanded, 280px);
+}
+.demo-shell__main[data-sidenav-mode="collapsed"] {
+  padding-left: var(--ngaf-chat-sidenav-width-collapsed, 56px);
 }
 @media (max-width: 1023px) {
-  .demo-shell__main--push { padding-left: 0; }
+  .demo-shell__main[data-sidenav-mode] { padding-left: 0; }
 }
 
 .demo-shell__interrupt-panel {

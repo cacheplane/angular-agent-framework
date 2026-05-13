@@ -1,11 +1,13 @@
 <div class="demo-shell">
-  <button
-    type="button"
-    class="demo-shell__hamburger"
-    aria-label="Open conversations"
-    [attr.aria-expanded]="drawerOpen()"
-    (click)="toggleSidenav()"
-  >☰</button>
+  @if (sidenavMode() === 'drawer' && !drawerOpen()) {
+    <button
+      type="button"
+      class="demo-shell__hamburger"
+      aria-label="Open conversations"
+      [attr.aria-expanded]="drawerOpen()"
+      (click)="toggleSidenav()"
+    >☰</button>
+  }
 
   <chat-sidenav
     [threads]="threadsSvc.threads()"
@@ -18,11 +20,12 @@
     (threadSelected)="onThreadSelected($event)"
     (searchOpened)="paletteOpen.set(true)"
     (openChange)="onSidenavOpenChange($event)"
+    (modeChange)="onSidenavModeChange($event)"
   />
 
   <div
     class="demo-shell__main"
-    [class.demo-shell__main--push]="drawerOpen() && sidenavMode() === 'expanded'"
+    [attr.data-sidenav-mode]="sidenavMode() !== 'drawer' ? sidenavMode() : null"
   >
     <router-outlet />
     @if (agent.interrupt && agent.interrupt()) {

@@ -167,9 +167,17 @@ export class DemoShell {
     typeof window !== 'undefined' ? window.innerWidth : 1440,
   );
 
-  /** Computed sidenav mode based on viewport width. */
+  /**
+   * User's chosen desktop sidenav mode. Persisted across reloads.
+   * Below 1024px the shell ignores this and forces drawer mode.
+   */
+  private readonly storedDesktopMode = signal<'expanded' | 'collapsed'>(
+    (this.persistence.read('sidenavMode') as 'expanded' | 'collapsed' | null) ?? 'expanded',
+  );
+
+  /** Computed sidenav mode: viewport forces drawer below 1024px, else user preference. */
   protected readonly sidenavMode = computed<ChatSidenavMode>(() =>
-    this.viewportWidth() >= 1024 ? 'expanded' : 'drawer',
+    this.viewportWidth() >= 1024 ? this.storedDesktopMode() : 'drawer',
   );
 
   /** Client-side title filter over the loaded threads. */
@@ -310,6 +318,13 @@ export class DemoShell {
 
   protected toggleSidenav(): void {
     this.onSidenavOpenChange(!this.drawerOpen());
+  }
+
+  protected onSidenavModeChange(next: ChatSidenavMode): void {
+    // Drawer is viewport-driven; ignore user attempts to set it directly.
+    if (next === 'drawer') return;
+    this.storedDesktopMode.set(next);
+    this.persistence.write('sidenavMode', next);
   }
 
   onTimelineReplay(checkpointId: string): void {

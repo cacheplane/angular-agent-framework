@@ -3413,6 +3413,12 @@
         "optional": false
       },
       {
+        "name": "modeChange",
+        "type": "OutputEmitterRef<ChatSidenavMode>",
+        "description": "",
+        "optional": false
+      },
+      {
         "name": "newChat",
         "type": "OutputEmitterRef<void>",
         "description": "",
@@ -3450,6 +3456,12 @@
       }
     ],
     "methods": [
+      {
+        "name": "onCollapseToggle",
+        "signature": "onCollapseToggle()",
+        "description": "",
+        "params": []
+      },
       {
         "name": "onEscape",
         "signature": "onEscape()",
