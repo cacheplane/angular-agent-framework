@@ -1,6 +1,16 @@
 # @ngaf/ag-ui
 
-Adapter that wraps an [AG-UI](https://github.com/ag-ui-protocol/ag-ui) `AbstractAgent` into the runtime-neutral `Agent` contract from `@ngaf/chat`.
+Adapter that wraps an [AG-UI](https://github.com/ag-ui-protocol/ag-ui) `AbstractAgent` into the runtime-neutral `Agent` contract from `@ngaf/chat`. Works with any AG-UI-compatible backend — LangGraph, CrewAI, Mastra, Microsoft Agent Framework, AG2, Pydantic AI, AWS Strands, CopilotKit runtime.
+
+Part of the [Angular Agent Framework](https://github.com/cacheplane/angular-agent-framework). MIT licensed.
+
+## Install
+
+```bash
+npm install @ngaf/ag-ui @ngaf/chat @ag-ui/client
+```
+
+## Quick start
 
 ```ts
 import { provideAgUiAgent, AG_UI_AGENT } from '@ngaf/ag-ui';
@@ -46,3 +56,13 @@ The `bridgeCitationsState()` function populates `Message.citations` from AG-UI S
 ```
 
 Each citation object in the array supports `id`, `index`, `title`, `url`, `snippet`, and custom `extra` fields. The messageId key matches the corresponding message in the chat history.
+
+## Documentation
+
+- [Quickstart](https://cacheplane.ai/docs/agent/getting-started/quickstart)
+- [AG-UI adapter guide](https://cacheplane.ai/docs/chat/guides/writing-an-adapter)
+- [AG-UI protocol](https://github.com/ag-ui-protocol/ag-ui)
+
+## License
+
+MIT — free for any use. See [LICENSE](../../LICENSE).
