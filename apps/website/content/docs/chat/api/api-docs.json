@@ -2750,7 +2750,7 @@
         "optional": false
       },
       {
-        "name": "interruptPayload",
+        "name": "interruptReason",
         "type": "Signal<string>",
         "description": "",
         "optional": false

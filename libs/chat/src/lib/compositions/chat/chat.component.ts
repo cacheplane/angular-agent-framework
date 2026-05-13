@@ -19,7 +19,6 @@ import { ChatMessageComponent, type ChatMessageRole } from '../../primitives/cha
 import { ChatInputComponent } from '../../primitives/chat-input/chat-input.component';
 import { ChatTypingIndicatorComponent } from '../../primitives/chat-typing-indicator/chat-typing-indicator.component';
 import { ChatErrorComponent } from '../../primitives/chat-error/chat-error.component';
-import { ChatInterruptComponent } from '../../primitives/chat-interrupt/chat-interrupt.component';
 import { ChatThreadListComponent, type Thread } from '../../primitives/chat-thread-list/chat-thread-list.component';
 import { ChatGenerativeUiComponent } from '../../primitives/chat-generative-ui/chat-generative-ui.component';
 import { ChatStreamingMdComponent } from '../../streaming/streaming-markdown.component';
@@ -56,7 +55,7 @@ export function isPinned(
   imports: [
     KeyValuePipe,
     ChatWindowComponent, ChatMessageListComponent, MessageTemplateDirective, ChatMessageComponent,
-    ChatInputComponent, ChatTypingIndicatorComponent, ChatErrorComponent, ChatInterruptComponent,
+    ChatInputComponent, ChatTypingIndicatorComponent, ChatErrorComponent,
     ChatThreadListComponent, ChatGenerativeUiComponent,
     ChatStreamingMdComponent, ChatToolCallsComponent, ChatSubagentsComponent, A2uiSurfaceComponent,
     ChatMessageActionsComponent, ChatWelcomeComponent, ChatSelectComponent, ChatReasoningComponent,
@@ -235,7 +234,6 @@ export function isPinned(
               />
             }
             <chat-error [agent]="agent()" />
-            <chat-interrupt [agent]="agent()" />
             <chat-input [agent]="agent()" [submitOnEnter]="true" placeholder="Type a message..." (submitted)="onUserSubmitted()">
               @if (modelOptions().length > 0) {
                 <chat-select

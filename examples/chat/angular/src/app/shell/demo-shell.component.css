@@ -51,15 +51,13 @@
 .demo-shell__interrupt-panel {
   position: fixed;
   left: 50%;
-  bottom: 96px;
+  bottom: calc(80px + var(--demo-shell-interrupt-offset, 0px));
   transform: translateX(-50%);
-  z-index: 998;
+  z-index: 999;
   width: min(640px, calc(100vw - 32px));
-  background: #1a1d23;
-  border: 1px solid #4f8df5;
-  border-radius: 10px;
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.45);
-  padding: 12px 14px;
+  max-width: min(640px, calc(100vw - 32px));
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.2);
+  border-radius: var(--ngaf-chat-radius-card, 10px);
 }
 
 .demo-shell__subagents {
