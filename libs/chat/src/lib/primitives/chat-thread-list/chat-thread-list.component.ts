@@ -89,7 +89,17 @@ export interface ThreadActionAdapter {
     }
     <ul class="chat-thread-list">
       @for (thread of visibleThreads(); track thread.id) {
-        <li class="chat-thread-list__item-wrap">
+        <li
+          class="chat-thread-list__item-wrap"
+          [attr.draggable]="thread.pinned && actions()?.reorderPinned ? 'true' : null"
+          [attr.data-dragging]="draggingThreadId() === thread.id ? 'true' : null"
+          [attr.data-drop-position]="dropPositionFor(thread.id)"
+          (dragstart)="onDragStart($event, thread.id)"
+          (dragover)="onDragOver($event, thread.id)"
+          (dragleave)="onDragLeave($event, thread.id)"
+          (drop)="onDrop($event, thread.id)"
+          (dragend)="onDragEnd()"
+        >
           @if (templateRef()) {
             <ng-container
               [ngTemplateOutlet]="templateRef()!"
@@ -108,6 +118,14 @@ export interface ThreadActionAdapter {
               aria-label="Rename conversation"
             />
           } @else {
+            @if (thread.pinned && actions()?.reorderPinned) {
+              <button
+                type="button"
+                class="chat-thread-list__grip"
+                aria-label="Drag to reorder"
+                draggable="false"
+              >⋮⋮</button>
+            }
             <button
               type="button"
               class="chat-thread-list__item"
