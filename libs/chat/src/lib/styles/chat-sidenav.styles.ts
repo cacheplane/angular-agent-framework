@@ -184,4 +184,6 @@ export const CHAT_SIDENAV_STYLES = `
     font-size: var(--ngaf-chat-font-size-sm);
   }
   :host([data-mode="collapsed"]) .chat-sidenav__archived { display: none; }
+  .chat-sidenav__projects { flex-shrink: 0; }
+  :host([data-mode="collapsed"]) .chat-sidenav__projects { display: none; }
 `;

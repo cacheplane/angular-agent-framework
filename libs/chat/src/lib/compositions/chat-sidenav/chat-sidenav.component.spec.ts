@@ -194,4 +194,42 @@ describe('ChatSidenavComponent', () => {
     fixture.detectChanges();
     expect(heading.getAttribute('aria-expanded')).toBe('false');
   });
+
+  it('projects=null renders no Projects section', () => {
+    const fixture = render({ threads: [{ id: 't1' }] });
+    expect(fixture.nativeElement.querySelector('.chat-sidenav__projects')).toBeNull();
+  });
+
+  it('projects=[p1,p2] renders the Projects section with two rows', () => {
+    const fixture = render({ threads: [{ id: 't1' }] });
+    fixture.componentRef.setInput('projects', [{ id: 'p1', name: 'Work' }, { id: 'p2', name: 'Personal' }]);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.chat-sidenav__projects')).not.toBeNull();
+    const rows = fixture.nativeElement.querySelectorAll('.chat-project-list__item');
+    expect(rows.length).toBe(2);
+  });
+
+  it('selectedProjectId highlights the matching project row', () => {
+    const fixture = render({ threads: [{ id: 't1' }] });
+    fixture.componentRef.setInput('projects', [{ id: 'p1', name: 'Work' }, { id: 'p2', name: 'Personal' }]);
+    fixture.componentRef.setInput('selectedProjectId', 'p2');
+    fixture.detectChanges();
+    const rows = fixture.nativeElement.querySelectorAll('.chat-project-list__item');
+    expect(rows[0].getAttribute('data-active')).toBeNull();
+    expect(rows[1].getAttribute('data-active')).toBe('true');
+  });
+
+  it('projectActions.create shows "+ New project" and emits newProjectRequested on click', () => {
+    const fixture = render({ threads: [{ id: 't1' }] });
+    fixture.componentRef.setInput('projects', []);
+    fixture.componentRef.setInput('projectActions', { create: async () => ({ id: 'x' }) });
+    fixture.detectChanges();
+    let emits = 0;
+    fixture.componentInstance.newProjectRequested.subscribe(() => { emits++; });
+    const btn = fixture.nativeElement.querySelector('.chat-project-list__new') as HTMLButtonElement;
+    expect(btn).not.toBeNull();
+    btn.click();
+    fixture.detectChanges();
+    expect(emits).toBe(1);
+  });
 });

@@ -397,5 +397,89 @@ describe('ChatThreadListComponent', () => {
       fixture.detectChanges();
       expect(fixture.nativeElement.querySelector('.chat-thread-list__kebab')).toBeNull();
     });
+
+    it('moveToProject + projects=null → kebab hidden (no kebab means no "Move to project")', () => {
+      const fixture = render({ actions: { moveToProject: vi.fn().mockResolvedValue(undefined) } });
+      // When projects is null, moveToProject alone does not qualify a kebab.
+      const kebab = fixture.nativeElement.querySelector('.chat-thread-list__kebab');
+      if (kebab) {
+        (kebab as HTMLElement).click();
+        fixture.detectChanges();
+        const labels = Array.from(document.querySelectorAll('.chat-overflow-menu__item'))
+          .map((el) => (el as HTMLElement).textContent?.trim());
+        expect(labels).not.toContain('Move to project');
+      } else {
+        // No kebab → Move to project is definitely absent.
+        expect(kebab).toBeNull();
+      }
+    });
+
+    it('moveToProject + projects=[] → menu includes "Move to project"', () => {
+      const fixture = TestBed.createComponent(ChatThreadListComponent);
+      fixture.componentRef.setInput('threads', [{ id: 't1', title: 'First' }]);
+      fixture.componentRef.setInput('actions', { moveToProject: vi.fn().mockResolvedValue(undefined) });
+      fixture.componentRef.setInput('projects', []);
+      fixture.detectChanges();
+      (fixture.nativeElement.querySelector('.chat-thread-list__kebab') as HTMLElement).click();
+      fixture.detectChanges();
+      const labels = Array.from(document.querySelectorAll('.chat-overflow-menu__item'))
+        .map((el) => (el as HTMLElement).textContent?.trim());
+      expect(labels).toContain('Move to project');
+    });
+
+    it('Click "Move to project" closes the main menu and opens the move submenu', () => {
+      const fixture = TestBed.createComponent(ChatThreadListComponent);
+      fixture.componentRef.setInput('threads', [{ id: 't1', title: 'First' }]);
+      fixture.componentRef.setInput('actions', { moveToProject: vi.fn().mockResolvedValue(undefined) });
+      fixture.componentRef.setInput('projects', [{ id: 'p1', name: 'Work' }, { id: 'p2', name: 'Personal' }]);
+      fixture.detectChanges();
+      (fixture.nativeElement.querySelector('.chat-thread-list__kebab') as HTMLElement).click();
+      fixture.detectChanges();
+      const moveItem = Array.from(document.querySelectorAll('.chat-overflow-menu__item'))
+        .find((el) => (el as HTMLElement).textContent?.trim() === 'Move to project') as HTMLElement;
+      moveItem.click();
+      fixture.detectChanges();
+      const labels = Array.from(document.querySelectorAll('.chat-overflow-menu__item'))
+        .map((el) => (el as HTMLElement).textContent?.trim());
+      expect(labels).toEqual(['No project', 'Work', 'Personal']);
+    });
+
+    it('Clicking a project in the move submenu calls moveToProject with that id', async () => {
+      const moveSpy = vi.fn().mockResolvedValue(undefined);
+      const fixture = TestBed.createComponent(ChatThreadListComponent);
+      fixture.componentRef.setInput('threads', [{ id: 't1', title: 'First' }, { id: 't2', title: 'Second' }]);
+      fixture.componentRef.setInput('actions', { moveToProject: moveSpy });
+      fixture.componentRef.setInput('projects', [{ id: 'p1', name: 'Work' }]);
+      fixture.detectChanges();
+      (fixture.nativeElement.querySelector('.chat-thread-list__kebab') as HTMLElement).click();
+      fixture.detectChanges();
+      (Array.from(document.querySelectorAll('.chat-overflow-menu__item'))
+        .find((el) => (el as HTMLElement).textContent?.trim() === 'Move to project') as HTMLElement).click();
+      fixture.detectChanges();
+      (Array.from(document.querySelectorAll('.chat-overflow-menu__item'))
+        .find((el) => (el as HTMLElement).textContent?.trim() === 'Work') as HTMLElement).click();
+      fixture.detectChanges();
+      expect(moveSpy).toHaveBeenCalledWith('t1', 'p1');
+      const remaining = fixture.nativeElement.querySelectorAll('.chat-thread-list__item');
+      expect(remaining.length).toBe(1);
+    });
+
+    it('Clicking "No project" in the move submenu calls moveToProject(id, null)', () => {
+      const moveSpy = vi.fn().mockResolvedValue(undefined);
+      const fixture = TestBed.createComponent(ChatThreadListComponent);
+      fixture.componentRef.setInput('threads', [{ id: 't1', title: 'First' }]);
+      fixture.componentRef.setInput('actions', { moveToProject: moveSpy });
+      fixture.componentRef.setInput('projects', [{ id: 'p1', name: 'Work' }]);
+      fixture.detectChanges();
+      (fixture.nativeElement.querySelector('.chat-thread-list__kebab') as HTMLElement).click();
+      fixture.detectChanges();
+      (Array.from(document.querySelectorAll('.chat-overflow-menu__item'))
+        .find((el) => (el as HTMLElement).textContent?.trim() === 'Move to project') as HTMLElement).click();
+      fixture.detectChanges();
+      (Array.from(document.querySelectorAll('.chat-overflow-menu__item'))
+        .find((el) => (el as HTMLElement).textContent?.trim() === 'No project') as HTMLElement).click();
+      fixture.detectChanges();
+      expect(moveSpy).toHaveBeenCalledWith('t1', null);
+    });
   });
 });

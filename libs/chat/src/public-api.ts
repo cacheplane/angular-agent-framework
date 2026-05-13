@@ -61,6 +61,8 @@ export type { ChatToolCallTemplateContext } from './lib/primitives/chat-tool-cal
 export { ChatSubagentsComponent } from './lib/primitives/chat-subagents/chat-subagents.component';
 export { ChatThreadListComponent } from './lib/primitives/chat-thread-list/chat-thread-list.component';
 export type { Thread, ThreadActionAdapter } from './lib/primitives/chat-thread-list/chat-thread-list.component';
+export { ChatProjectListComponent } from './lib/primitives/chat-project-list/chat-project-list.component';
+export type { Project, ProjectActionAdapter } from './lib/primitives/chat-project-list/chat-project-list.component';
 export { ChatCheckpointMarkerComponent } from './lib/primitives/chat-checkpoint-marker/chat-checkpoint-marker.component';
 export { ChatGenuiSkeletonComponent } from './lib/primitives/chat-genui-skeleton/chat-genui-skeleton.component';
 export { ChatTimelineComponent } from './lib/primitives/chat-timeline/chat-timeline.component';

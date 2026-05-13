@@ -20,6 +20,7 @@ import {
   type OverflowMenuItem,
 } from '../chat-overflow-menu/chat-overflow-menu.component';
 import { ChatConfirmDialogComponent } from '../chat-confirm-dialog/chat-confirm-dialog.component';
+import type { Project } from '../chat-project-list/chat-project-list.component';
 
 export type Thread = {
   id: string;
@@ -38,6 +39,9 @@ export type Thread = {
    *  renders a pin icon when true but does NOT sort — the consumer pre-sorts
    *  pinned threads to the top of the `threads` input. */
   pinned?: boolean;
+  /** Optional project association. Consumers pre-filter threads by project
+   *  before passing to the sidenav. Null/undefined means no project. */
+  projectId?: string | null;
   [key: string]: unknown;
 };
 
@@ -62,6 +66,10 @@ export interface ThreadActionAdapter {
   pin?(threadId: string): Promise<void>;
   /** Unpin a previously pinned thread. */
   unpin?(threadId: string): Promise<void>;
+  /** Move thread to a project (or pass null to remove from any project).
+   *  Optimistically hides the row from the current project's visible list;
+   *  consumer is expected to refresh the threads input. */
+  moveToProject?(threadId: string, projectId: string | null): Promise<void>;
 }
 
 @Component({
@@ -139,6 +147,14 @@ export interface ThreadActionAdapter {
       (closed)="menuOpenForId.set(null)"
     />
 
+    <chat-overflow-menu
+      [open]="moveMenuOpenForId() !== null"
+      [items]="moveMenuItems()"
+      [anchor]="menuAnchor()"
+      (itemSelected)="onMoveMenuAction($event)"
+      (closed)="moveMenuOpenForId.set(null)"
+    />
+
     <chat-confirm-dialog
       [open]="confirmDeleteId() !== null"
       title="Delete conversation?"
@@ -156,6 +172,7 @@ export class ChatThreadListComponent {
   readonly showNewThreadButton = input<boolean>(false);
   readonly actions = input<ThreadActionAdapter | null>(null);
   readonly mode = input<'active' | 'archived'>('active');
+  readonly projects = input<Project[] | null>(null);
 
   readonly threadSelected = output<string>();
   readonly newThreadRequested = output<void>();
@@ -167,6 +184,17 @@ export class ChatThreadListComponent {
   protected readonly menuOpenForId = signal<string | null>(null);
   protected readonly menuAnchor = signal<HTMLElement | null>(null);
   protected readonly confirmDeleteId = signal<string | null>(null);
+
+  protected readonly moveMenuOpenForId = signal<string | null>(null);
+
+  protected readonly moveMenuItems = computed<OverflowMenuItem[]>(() => {
+    if (!this.moveMenuOpenForId()) return [];
+    const list: OverflowMenuItem[] = [{ id: '__none__', label: 'No project' }];
+    for (const p of this.projects() ?? []) {
+      list.push({ id: p.id, label: p.name });
+    }
+    return list;
+  });
 
   /** Ids hidden from the rendered list during pending delete, archive, or
    *  unarchive. The framework doesn't distinguish — all three actions hide
@@ -194,6 +222,9 @@ export class ChatThreadListComponent {
       if (a.rename) items.push({ id: 'rename', label: 'Rename' });
       if (a.pin && !isPinned) items.push({ id: 'pin', label: 'Pin' });
       if (a.unpin && isPinned) items.push({ id: 'unpin', label: 'Unpin' });
+      if (a.moveToProject && this.projects() !== null) {
+        items.push({ id: 'move', label: 'Move to project' });
+      }
       if (a.archive) items.push({ id: 'archive', label: 'Archive' });
       if (a.delete) items.push({ id: 'delete', label: 'Delete', tone: 'destructive' });
     } else {
@@ -226,7 +257,12 @@ export class ChatThreadListComponent {
   protected showKebab(): boolean {
     const a = this.actions();
     if (!a) return false;
-    if (this.mode() === 'active') return Boolean(a.rename || a.pin || a.unpin || a.archive || a.delete);
+    if (this.mode() === 'active') {
+      return Boolean(
+        a.rename || a.pin || a.unpin || a.archive || a.delete ||
+        (a.moveToProject && this.projects() !== null)
+      );
+    }
     return Boolean(a.unarchive || a.delete);
   }
 
@@ -255,6 +291,8 @@ export class ChatThreadListComponent {
       void this.performPin(threadId);
     } else if (id === 'unpin') {
       void this.performUnpin(threadId);
+    } else if (id === 'move') {
+      this.moveMenuOpenForId.set(threadId);
     }
   }
 
@@ -332,6 +370,31 @@ export class ChatThreadListComponent {
       await a.archive(threadId);
     } catch {
       // Rollback: clear override below so the row reappears.
+    } finally {
+      this.pendingHidden.update((s) => {
+        const n = new Set(s);
+        n.delete(threadId);
+        return n;
+      });
+    }
+  }
+
+  protected onMoveMenuAction(itemId: string): void {
+    const threadId = this.moveMenuOpenForId();
+    this.moveMenuOpenForId.set(null);
+    if (!threadId) return;
+    const projectId = itemId === '__none__' ? null : itemId;
+    void this.performMoveToProject(threadId, projectId);
+  }
+
+  protected async performMoveToProject(threadId: string, projectId: string | null): Promise<void> {
+    const a = this.actions();
+    if (!a?.moveToProject) return;
+    this.pendingHidden.update((s) => new Set([...s, threadId]));
+    try {
+      await a.moveToProject(threadId, projectId);
+    } catch {
+      /* rollback via finally */
     } finally {
       this.pendingHidden.update((s) => {
         const n = new Set(s);

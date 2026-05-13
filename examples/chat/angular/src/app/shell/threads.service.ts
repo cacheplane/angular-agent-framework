@@ -27,9 +27,11 @@ export class ThreadsService {
     }
   }
 
-  async create(): Promise<string | null> {
+  async create(projectId?: string): Promise<string | null> {
     try {
-      const t = await this.client.threads.create({ metadata: {} });
+      const t = await this.client.threads.create({
+        metadata: projectId !== undefined ? { projectId } : {},
+      });
       await this.refresh();
       return t.thread_id;
     } catch {
@@ -57,6 +59,11 @@ export class ThreadsService {
     await this.refresh();
   }
 
+  async moveToProject(threadId: string, projectId: string | null): Promise<void> {
+    await this.client.threads.update(threadId, { metadata: { projectId } });
+    await this.refresh();
+  }
+
   async pin(threadId: string): Promise<void> {
     await this.client.threads.update(threadId, { metadata: { pinned: true } });
     await this.refresh();
@@ -69,10 +76,13 @@ export class ThreadsService {
 
   /** Best-effort title from thread metadata; falls back to a truncated id. */
   private toThread(t: SdkThread): Thread {
-    const meta = (t.metadata ?? {}) as { title?: unknown; archived?: unknown; pinned?: unknown };
+    const meta = (t.metadata ?? {}) as { title?: unknown; archived?: unknown; pinned?: unknown; projectId?: unknown };
     const customTitle = meta.title;
     const archived = meta.archived === true;
     const pinned = meta.pinned === true;
+    const projectId = typeof meta.projectId === 'string' && meta.projectId.length > 0
+      ? meta.projectId
+      : null;
     return {
       id: t.thread_id,
       title: typeof customTitle === 'string' && customTitle.length > 0
@@ -80,6 +90,7 @@ export class ThreadsService {
         : `Thread ${t.thread_id.slice(0, 8)}`,
       status: archived ? 'archived' : 'active',
       pinned,
+      projectId,
     };
   }
 }
