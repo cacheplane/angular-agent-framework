@@ -195,6 +195,7 @@ export function isPinned(
                     @for (entry of classified.a2uiSurfaces() | keyvalue; track entry.key) {
                       <a2ui-surface
                         [surface]="entry.value"
+                        [state]="classified.a2uiSurfaceStates().get(entry.key)"
                         [catalog]="catalog"
                         [handlers]="handlers()"
                         (action)="onA2uiAction($event)"

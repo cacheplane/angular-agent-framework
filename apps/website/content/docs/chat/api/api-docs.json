@@ -1072,7 +1072,7 @@
       },
       {
         "name": "catalog",
-        "type": "InputSignal<Readonly<Record<string, Type<unknown> | RenderViewEntry>>>",
+        "type": "InputSignal<Readonly<Record<string, Type<unknown> | RenderViewEntry>> | Readonly<Record<string, Type<unknown> | RenderViewEntry>>>",
         "description": "",
         "optional": false
       },
@@ -1113,15 +1113,33 @@
         "optional": false
       },
       {
+        "name": "rootIds",
+        "type": "Signal<string[]>",
+        "description": "Roots from the surface state — components whose ids appear as\nchildren of no other component. The wire spec includes\n`beginRendering.root` as the single root; that path stays usable\nbut we keep the renderer permissive in case future surfaces emit\nmultiple top-level components.\n\nConservative: returns only the first key from componentViews\ninsertion order. The wire format's beginRendering.root carries the\ntrue root id; plumbing it through A2uiSurfaceState is a follow-up.",
+        "optional": false
+      },
+      {
         "name": "spec",
         "type": "Signal<Spec | null>",
         "description": "Convert the A2UI surface to a json-render Spec for rendering.",
         "optional": false
       },
       {
+        "name": "state",
+        "type": "InputSignal<A2uiSurfaceState | undefined>",
+        "description": "Chat-side surface state with per-component readiness. When set,\nthis takes priority and the progressive renderer is used.",
+        "optional": false
+      },
+      {
         "name": "surface",
-        "type": "InputSignal<A2uiSurface>",
-        "description": "",
+        "type": "InputSignal<A2uiSurface | undefined>",
+        "description": "Wire-format surface (legacy path — kept for backwards compat).",
+        "optional": false
+      },
+      {
+        "name": "surfaceFallback",
+        "type": "InputSignal<Type<unknown> | undefined>",
+        "description": "Optional top-level placeholder when the surface has no components\nyet. Defaults to A2uiDefaultFallbackComponent.",
         "optional": false
       }
     ],
@@ -6067,6 +6085,12 @@
       {
         "name": "a2uiSurfaces",
         "type": "Signal<Map<string, A2uiSurface>>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "a2uiSurfaceStates",
+        "type": "Signal<Map<string, A2uiSurfaceState>>",
         "description": "",
         "optional": false
       },

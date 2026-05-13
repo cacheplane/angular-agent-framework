@@ -5,7 +5,7 @@ import { createPartialJsonParser } from '@cacheplane/partial-json';
 import { createParseTreeStore, type ElementAccumulationState, type ParseTreeStore } from './parse-tree-store';
 import { createA2uiMessageParser, type A2uiMessageParser } from '@ngaf/a2ui';
 import type { A2uiSurface } from '@ngaf/a2ui';
-import { createA2uiSurfaceStore, type A2uiSurfaceStore } from '../a2ui/surface-store';
+import { createA2uiSurfaceStore, type A2uiSurfaceStore, type A2uiSurfaceState } from '../a2ui/surface-store';
 import { isTraceEnabled, trace } from './trace';
 
 export type ContentType = 'pending' | 'markdown' | 'json-render' | 'a2ui' | 'mixed';
@@ -19,6 +19,7 @@ export interface ContentClassifier {
   readonly spec: Signal<Spec | null>;
   readonly elementStates: Signal<Map<string, ElementAccumulationState>>;
   readonly a2uiSurfaces: Signal<Map<string, A2uiSurface>>;
+  readonly a2uiSurfaceStates: Signal<Map<string, A2uiSurfaceState>>;
   readonly streaming: Signal<boolean>;
   readonly errors: Signal<string[]>;
   dispose(): void;
@@ -39,6 +40,7 @@ export function createContentClassifier(): ContentClassifier {
   let a2uiParser: A2uiMessageParser | null = null;
   let a2uiStore: A2uiSurfaceStore | null = null;
   const a2uiSurfacesSignal = signal<Map<string, A2uiSurface>>(new Map());
+  const a2uiSurfaceStatesSignal = signal<Map<string, A2uiSurfaceState>>(new Map());
 
   /**
    * Decide the content type from the first non-whitespace character.
@@ -125,6 +127,7 @@ export function createContentClassifier(): ContentClassifier {
     a2uiParser = null;
     a2uiStore = null;
     a2uiSurfacesSignal.set(new Map());
+    a2uiSurfaceStatesSignal.set(new Map());
   }
 
   function update(content: string): void {
@@ -180,6 +183,7 @@ export function createContentClassifier(): ContentClassifier {
               const msgs = a2uiParser.push(a2uiContent);
               for (const msg of msgs) a2uiStore.apply(msg);
               a2uiSurfacesSignal.set(a2uiStore.surfaces());
+              a2uiSurfaceStatesSignal.set(a2uiStore.surfaceStates());
             } catch (err) {
               errorsSignal.update(prev => [...prev, err instanceof Error ? err.message : String(err)]);
             }
@@ -212,6 +216,7 @@ export function createContentClassifier(): ContentClassifier {
             const msgs = a2uiParser.push(delta);
             for (const msg of msgs) a2uiStore.apply(msg);
             a2uiSurfacesSignal.set(a2uiStore.surfaces());
+            a2uiSurfaceStatesSignal.set(a2uiStore.surfaceStates());
           } catch (err) {
             errorsSignal.update(prev => [...prev, err instanceof Error ? err.message : String(err)]);
           }
@@ -237,6 +242,7 @@ export function createContentClassifier(): ContentClassifier {
     spec: specSignal.asReadonly(),
     elementStates: elementStatesSignal.asReadonly(),
     a2uiSurfaces: a2uiSurfacesSignal.asReadonly(),
+    a2uiSurfaceStates: a2uiSurfaceStatesSignal.asReadonly(),
     streaming: streamingSignal.asReadonly(),
     errors: errorsSignal.asReadonly(),
     dispose,
