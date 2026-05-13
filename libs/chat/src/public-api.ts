@@ -165,6 +165,8 @@ export type { ParseTreeStore, ElementAccumulationState } from './lib/streaming/p
 // A2UI
 export { createA2uiSurfaceStore } from './lib/a2ui/surface-store';
 export type { A2uiSurfaceStore } from './lib/a2ui/surface-store';
+export { normalizeViewEntry } from './lib/a2ui/views';
+export type { A2uiViewEntry, A2uiViews } from './lib/a2ui/views';
 export { createPartialArgsBridge } from './lib/a2ui/partial-args-bridge';
 export type { PartialArgsBridge } from './lib/a2ui/partial-args-bridge';
 export { normalizeEnvelopeArgs } from './lib/a2ui/envelope-normalizer';
