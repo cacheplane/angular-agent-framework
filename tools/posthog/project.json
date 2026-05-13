@@ -1,0 +1,47 @@
+{
+  "name": "posthog-tools",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "tools/posthog",
+  "projectType": "library",
+  "tags": ["scope:gtm", "type:tool"],
+  "namedInputs": {
+    "taxonomy": ["{workspaceRoot}/docs/gtm/taxonomy.md"]
+  },
+  "targets": {
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx tsx --test tools/posthog/*.spec.ts"
+      }
+    },
+    "sync:plan": {
+      "executor": "nx:run-commands",
+      "inputs": ["default", "taxonomy"],
+      "options": {
+        "command": "npx tsx tools/posthog/sync.ts --plan"
+      }
+    },
+    "sync:apply": {
+      "executor": "nx:run-commands",
+      "inputs": ["default", "taxonomy"],
+      "options": {
+        "command": "npx tsx tools/posthog/sync.ts --apply"
+      }
+    },
+    "report": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx tsx tools/posthog/report.ts"
+      }
+    },
+    "generate-types": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx tsx tools/posthog/scripts/generate-types.ts"
+      }
+    }
+  }
+}
