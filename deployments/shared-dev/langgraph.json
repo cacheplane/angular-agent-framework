@@ -24,13 +24,15 @@
     "subagents": "./deps/da-subagents/src/graph.py:graph",
     "da-memory": "./deps/da-memory/src/graph.py:graph",
     "skills": "./deps/skills/src/graph.py:graph",
-    "sandboxes": "./deps/sandboxes/src/graph.py:graph"
+    "sandboxes": "./deps/sandboxes/src/graph.py:graph",
+    "chat": "./deps/examples-chat/src/graph.py:graph"
   },
   "dependencies": [
     "./deps/da-memory",
     "./deps/da-subagents",
     "./deps/deployment-runtime",
     "./deps/durable-execution",
+    "./deps/examples-chat",
     "./deps/filesystem",
     "./deps/interrupts",
     "./deps/memory",

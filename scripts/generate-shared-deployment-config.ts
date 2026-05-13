@@ -67,6 +67,25 @@ for (const capability of capabilities) {
   }
 }
 
+// Extra Python deployments NOT in the cockpit capability registry.
+// These have no Angular project / port — only a backend graph aggregated
+// into the shared cockpit-dev assistant.
+const extraPythonDeployments: ReadonlyArray<{ pythonDir: string; alias: string }> = [
+  { pythonDir: 'examples/chat/python', alias: 'examples-chat' },
+];
+
+for (const extra of extraPythonDeployments) {
+  const manifestPath = resolve(rootDir, extra.pythonDir, 'langgraph.json');
+  const extraManifest = readManifest(manifestPath);
+  if (!extraManifest.graphs) {
+    throw new Error(`Missing graphs in ${manifestPath}`);
+  }
+  const stagedDependencyRoot = stageDependency(extra.pythonDir, extra.alias);
+  for (const [graphName, entrypoint] of Object.entries(extraManifest.graphs)) {
+    addGraph(graphName, toDeploymentPath(stagedDependencyRoot, entrypoint));
+  }
+}
+
 const streamingManifestPath = resolve(rootDir, 'cockpit/langgraph/streaming/python/langgraph.json');
 const streamingManifest = readManifest(streamingManifestPath);
 if (!streamingManifest.graphs) {
