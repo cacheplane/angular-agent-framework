@@ -1,9 +1,7 @@
-import {
-  baseTokens,
-  lightOverrides,
-  darkOverrides,
-  type Theme,
-} from '@ngaf/design-tokens';
+import { baseTokens } from './base';
+import { lightOverrides } from './light';
+import { darkOverrides } from './dark';
+import type { Theme } from './theme';
 
 const overridesByTheme = {
   light: lightOverrides,
@@ -12,8 +10,9 @@ const overridesByTheme = {
 
 /**
  * Resolve design tokens to a flat map of `--ds-*` CSS custom properties
- * for the given theme. Apply to `<html>` (or any container) via the
- * React `style` prop so Tailwind utilities and `var()` lookups resolve.
+ * for the given theme. Apply to `<html>` (or any container) via inline
+ * style or by iterating the entries and calling
+ * `element.style.setProperty(key, value)`.
  */
 export function cssVars(theme: Theme) {
   const t = overridesByTheme[theme];

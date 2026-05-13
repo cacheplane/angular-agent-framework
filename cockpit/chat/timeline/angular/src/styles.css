@@ -1,1 +1,10 @@
-/* Global styles for the timeline capability demo */
+@import "../../../../../libs/example-layouts/src/theme.css";
+
+/* App-specific globals (none for now; add below this line if needed). */
+html, body {
+  height: 100%;
+  margin: 0;
+  background: var(--ds-canvas);
+  color: var(--ds-text-primary);
+  font-family: var(--ds-font-sans);
+}

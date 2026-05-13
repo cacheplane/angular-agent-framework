@@ -21,3 +21,6 @@ export type { LightOverrides } from './lib/light';
 export { darkOverrides } from './lib/dark';
 export type { DarkOverrides } from './lib/dark';
 export type { Theme } from './lib/theme';
+
+export { cssVars } from './lib/css-vars';
+export type { CssVars } from './lib/css-vars';
