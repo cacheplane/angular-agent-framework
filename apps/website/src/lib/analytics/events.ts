@@ -26,6 +26,7 @@ export type AnalyticsSurface =
   | 'mobile_nav'
   | 'footer'
   | 'home'
+  | 'home_whitepaper'
   | 'pricing'
   | 'docs'
   | 'library_landing'
