@@ -1,4 +1,5 @@
 import React from 'react';
+import { ThemeToggle } from '@ngaf/ui-react';
 import type {
   CockpitManifestEntry,
 } from '@ngaf/cockpit-registry';
@@ -20,7 +21,7 @@ export function CockpitSidebar({
   return (
     <aside
       aria-label="Cockpit sidebar"
-      className="grid gap-4 py-6 px-0 border-r bg-[var(--ds-surface-tinted)] content-start overflow-y-auto"
+      className="flex flex-col gap-4 py-6 px-0 border-r bg-[var(--ds-surface-tinted)] overflow-y-auto"
       style={{
         position: 'sticky',
         top: 0,
@@ -33,6 +34,10 @@ export function CockpitSidebar({
         <LanguagePicker manifest={manifest} entry={entry} />
       </header>
       <NavigationGroups tree={navigationTree} currentEntry={entry} />
+      <div className="mt-auto border-t border-[var(--ds-border)] px-4 py-3 flex items-center justify-between">
+        <span className="text-xs text-[var(--ds-text-muted)]">Theme</span>
+        <ThemeToggle className="rounded-md p-1.5 text-[var(--ds-text-secondary)] hover:bg-[var(--ds-surface-tinted)] hover:text-[var(--ds-text-primary)] transition-colors" />
+      </div>
     </aside>
   );
 }
