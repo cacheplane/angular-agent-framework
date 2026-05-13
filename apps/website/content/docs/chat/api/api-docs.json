@@ -3074,6 +3074,12 @@
         "optional": false
       },
       {
+        "name": "modelOptions",
+        "type": "InputSignal<readonly ChatSelectOption[]>",
+        "description": "Forwarded to the inner <chat>. When non-empty, a model picker pill\nrenders in the chat-input chrome.",
+        "optional": false
+      },
+      {
         "name": "open",
         "type": "ModelSignal<boolean>",
         "description": "",
@@ -3083,6 +3089,12 @@
         "name": "replayRequested",
         "type": "OutputEmitterRef<string>",
         "description": "",
+        "optional": false
+      },
+      {
+        "name": "selectedModel",
+        "type": "ModelSignal<string>",
+        "description": "Two-way bound current model value.",
         "optional": false
       },
       {
@@ -3557,6 +3569,12 @@
         "optional": false
       },
       {
+        "name": "modelOptions",
+        "type": "InputSignal<readonly ChatSelectOption[]>",
+        "description": "Forwarded to the inner <chat>. When non-empty, a model picker pill\nrenders in the chat-input chrome.",
+        "optional": false
+      },
+      {
         "name": "open",
         "type": "ModelSignal<boolean>",
         "description": "",
@@ -3572,6 +3590,12 @@
         "name": "replayRequested",
         "type": "OutputEmitterRef<string>",
         "description": "",
+        "optional": false
+      },
+      {
+        "name": "selectedModel",
+        "type": "ModelSignal<string>",
+        "description": "Two-way bound current model value.",
         "optional": false
       },
       {
