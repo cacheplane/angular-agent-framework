@@ -2,8 +2,9 @@
 import { Injectable, signal } from '@angular/core';
 import { Client, type Thread as SdkThread } from '@langchain/langgraph-sdk';
 import type { Thread } from '@ngaf/chat';
+import { environment } from '../../environments/environment';
 
-const API_URL = 'http://localhost:2024';
+const API_URL = environment.langGraphApiUrl;
 
 @Injectable({ providedIn: 'root' })
 export class ThreadsService {
