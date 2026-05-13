@@ -14,6 +14,7 @@ const LIGHT_TOKENS = `
   --ngaf-chat-error-bg: #fef2f2;
   --ngaf-chat-error-border: #fecaca;
   --ngaf-chat-error-text: #dc2626;
+  --ngaf-chat-destructive: #dc2626;
   --ngaf-chat-warning-bg: #fffbeb;
   --ngaf-chat-warning-text: #b45309;
   --ngaf-chat-success: #16a34a;
@@ -35,6 +36,7 @@ const DARK_TOKENS = `
   --ngaf-chat-error-bg: rgb(45, 21, 21);
   --ngaf-chat-error-border: #dc2626;
   --ngaf-chat-error-text: #fca5a5;
+  --ngaf-chat-destructive: #ef4444;
   --ngaf-chat-warning-bg: rgb(45, 35, 21);
   --ngaf-chat-warning-text: #fbbf24;
   --ngaf-chat-success: #4ade80;

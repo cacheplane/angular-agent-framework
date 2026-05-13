@@ -59,8 +59,12 @@ export const CHAT_CONFIRM_DIALOG_STYLES = `
     border-color: transparent;
   }
   .chat-confirm-dialog__confirm--destructive {
-    background: var(--ngaf-chat-error-text);
+    background: var(--ngaf-chat-destructive);
     color: #fff;
+    border-color: transparent;
+  }
+  .chat-confirm-dialog__confirm--destructive:hover {
+    filter: brightness(1.1);
   }
   .chat-confirm-dialog__cancel:focus-visible,
   .chat-confirm-dialog__confirm:focus-visible {

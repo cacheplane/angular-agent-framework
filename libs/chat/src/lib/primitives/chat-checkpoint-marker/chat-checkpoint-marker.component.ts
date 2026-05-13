@@ -16,6 +16,7 @@ import { CHAT_HOST_TOKENS } from '../../styles/chat-tokens';
       width: 14px;
       height: 100%;
       flex: 0 0 14px;
+      position: relative;
     }
     .chat-checkpoint-marker__dot {
       width: 10px;

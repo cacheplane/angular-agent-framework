@@ -55,4 +55,11 @@ describe('ChatCheckpointMarkerComponent', () => {
     (fx.nativeElement.querySelector('[data-action="fork"]') as HTMLButtonElement).click();
     expect(fx.componentInstance.forked).toEqual(['cp-1']);
   });
+
+  it('positions the host as a containing block so the hover pill anchors to the dot', () => {
+    const fx = TestBed.createComponent(HostComponent);
+    fx.detectChanges();
+    const host = fx.nativeElement.querySelector('chat-checkpoint-marker') as HTMLElement;
+    expect(getComputedStyle(host).position).toBe('relative');
+  });
 });

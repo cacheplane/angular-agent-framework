@@ -151,10 +151,10 @@ export const CHAT_SIDENAV_STYLES = `
   }
   .chat-sidenav__threads-heading {
     padding: 8px 12px 4px;
-    font-size: var(--ngaf-chat-font-size-xs);
+    font-size: 11px;
     color: var(--ngaf-chat-text-muted);
     text-transform: uppercase;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.4px;
   }
   :host([data-mode="collapsed"]) .chat-sidenav__threads-heading {
     display: none;
@@ -178,9 +178,9 @@ export const CHAT_SIDENAV_STYLES = `
     background: transparent;
     color: var(--ngaf-chat-text-muted);
     font: inherit;
-    font-size: var(--ngaf-chat-font-size-xs);
+    font-size: 11px;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.4px;
     text-align: left;
     cursor: pointer;
   }
