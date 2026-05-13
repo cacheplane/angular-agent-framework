@@ -708,4 +708,44 @@ describe('ChatThreadListComponent', () => {
       expect(spy).toHaveBeenCalledWith('p1', null);
     });
   });
+
+  describe('row context menu', () => {
+    it('right-click on a row opens the overflow menu and suppresses the native menu', () => {
+      const fixture = render({ actions: { rename: noop, delete: noop } });
+      const wrap = fixture.nativeElement.querySelector('.chat-thread-list__item-wrap') as HTMLElement;
+      const evt = new MouseEvent('contextmenu', { bubbles: true, cancelable: true, clientX: 120, clientY: 80 });
+      const dispatched = wrap.dispatchEvent(evt);
+      fixture.detectChanges();
+      // preventDefault was called → dispatchEvent returns false.
+      expect(dispatched).toBe(false);
+      const items = document.querySelectorAll('.chat-overflow-menu__item');
+      const labels = Array.from(items).map((el) => (el as HTMLElement).textContent?.trim());
+      expect(labels).toContain('Rename');
+      expect(labels).toContain('Delete');
+    });
+
+    it('right-click does nothing (but still preventDefaults) when there is no adapter', () => {
+      const fixture = render({ actions: null });
+      const wrap = fixture.nativeElement.querySelector('.chat-thread-list__item-wrap') as HTMLElement;
+      const evt = new MouseEvent('contextmenu', { bubbles: true, cancelable: true, clientX: 10, clientY: 10 });
+      const dispatched = wrap.dispatchEvent(evt);
+      fixture.detectChanges();
+      expect(dispatched).toBe(false);
+      expect(document.querySelector('.chat-overflow-menu')).toBeNull();
+    });
+
+    it('renders the per-thread initial circle', () => {
+      const fixture = render({ threads: [{ id: 't1', title: 'Hello world' }] });
+      const initial = fixture.nativeElement.querySelector('.chat-thread-list__initial') as HTMLElement;
+      expect(initial).not.toBeNull();
+      expect(initial.textContent?.trim()).toBe('H');
+    });
+
+    it('initialOf falls back to "?" for empty titles', () => {
+      const fixture = render({ threads: [{ id: 't1', title: '' }] });
+      // title falls back to id "t1" via threadLabel, so initial should be "T".
+      const initial = fixture.nativeElement.querySelector('.chat-thread-list__initial') as HTMLElement;
+      expect(initial.textContent?.trim()).toBe('T');
+    });
+  });
 });
