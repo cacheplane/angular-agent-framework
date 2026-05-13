@@ -74,7 +74,15 @@ export class ThreadsService {
     await this.refresh();
   }
 
-  /** Best-effort title from thread metadata; falls back to a truncated id. */
+  /** Best-effort title from thread metadata.
+   *
+   * The backend writes `metadata.title` from the first user message in a
+   * thread (see `_maybe_write_thread_title` in the Python graph). Threads
+   * created but never sent (e.g. via "+ New chat" then abandoned) have
+   * no title, so we fall back to "Untitled" — easier on the eye than
+   * the raw `Thread 019e1e98` id prefix, and consistent with how other
+   * chat apps surface drafts.
+   */
   private toThread(t: SdkThread): Thread {
     const meta = (t.metadata ?? {}) as { title?: unknown; archived?: unknown; pinned?: unknown; projectId?: unknown };
     const customTitle = meta.title;
@@ -87,7 +95,7 @@ export class ThreadsService {
       id: t.thread_id,
       title: typeof customTitle === 'string' && customTitle.length > 0
         ? customTitle
-        : `Thread ${t.thread_id.slice(0, 8)}`,
+        : 'Untitled',
       status: archived ? 'archived' : 'active',
       pinned,
       projectId,

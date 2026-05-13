@@ -13,7 +13,7 @@ import json
 from typing import Optional
 
 from langchain_core.tools import tool
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 
 class SurfaceUpdate(BaseModel):
@@ -42,10 +42,24 @@ class DataModelUpdate(BaseModel):
 
 class A2uiEnvelope(BaseModel):
     """Single A2UI v1 envelope. Exactly one of the three discriminators
-    is set per envelope."""
+    is set per envelope — the model_validator below enforces this so the
+    parent LLM cannot emit ambiguous or empty envelopes."""
     surfaceUpdate: Optional[SurfaceUpdate] = None
     beginRendering: Optional[BeginRendering] = None
     dataModelUpdate: Optional[DataModelUpdate] = None
+
+    @model_validator(mode="after")
+    def _exactly_one_discriminator(self) -> "A2uiEnvelope":
+        present = sum(
+            1 for v in (self.surfaceUpdate, self.beginRendering, self.dataModelUpdate)
+            if v is not None
+        )
+        if present != 1:
+            raise ValueError(
+                f"A2uiEnvelope requires exactly one of "
+                f"surfaceUpdate / beginRendering / dataModelUpdate; got {present}"
+            )
+        return self
 
 
 @tool

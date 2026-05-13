@@ -32,6 +32,19 @@ class TestPydanticEnvelopeModels:
         assert e.beginRendering is None
         assert e.dataModelUpdate is None
 
+    def test_a2ui_envelope_rejects_empty(self):
+        """An envelope with zero discriminators set is rejected."""
+        with pytest.raises(ValueError, match="exactly one"):
+            A2uiEnvelope()
+
+    def test_a2ui_envelope_rejects_multiple_discriminators(self):
+        """An envelope with two discriminators set is rejected."""
+        with pytest.raises(ValueError, match="exactly one"):
+            A2uiEnvelope(
+                surfaceUpdate={"surfaceId": "s", "components": []},
+                beginRendering={"surfaceId": "s", "root": "r"},
+            )
+
 
 class TestRenderA2uiSurfaceTool:
     def test_serializes_envelopes_to_json_string(self):

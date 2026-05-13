@@ -389,3 +389,32 @@ Components NOT yet exercised by the demo (deferred to future media-focused sugge
 - [ ] At viewport ≤ 768px: chat input + send remain accessible; sidenav does not push the chat horizontally
 - [ ] No horizontal scrollbar at any tested viewport
 - [ ] Toggling collapse manually overrides the responsive default until the next breakpoint crossing
+
+## Projects
+
+- [ ] Sidenav renders a **PROJECTS** section between Search and RECENT
+- [ ] "+ New project" affordance visible at the top of the section
+- [ ] Clicking "+ New project" replaces the affordance with an inline input ("New project name", autofocused)
+- [ ] Typing a name + Enter creates the project, persists to `localStorage` (`ngaf-chat-demo:projects`), and **auto-selects** it
+- [ ] Escape (or blur with empty value) cancels the inline create
+- [ ] Selecting a project filters the RECENT list to threads whose `metadata.projectId` matches
+- [ ] Selecting an empty project leaves RECENT empty; ARCHIVED section unaffected
+- [ ] Clicking the active project row again deselects it (RECENT returns to unfiltered)
+- [ ] Active project row is visually distinguished (`data-active`)
+- [ ] Hover a project row — kebab fades in
+- [ ] Kebab menu order: **Rename**, **Delete** (no Pin/Unpin/Archive — projects are a different surface)
+- [ ] **Rename** → inline edit input on the row; Enter commits, Escape cancels; persists across reload
+- [ ] **Delete** → confirmation dialog; on confirm, project removed; member threads remain (projectId becomes orphaned and threads fall back to default RECENT)
+- [ ] Project state (list + selected id) persists across reload
+
+## Move thread to project
+
+- [ ] With at least one project created, open a thread row's kebab in active mode
+- [ ] Menu order: **Rename**, **Pin/Unpin**, **Move to project**, **Archive**, **Delete**
+- [ ] Clicking "Move to project" opens a second overflow-menu (submenu) anchored to the same kebab
+- [ ] Submenu lists `[No project, ...projects]` with the thread's current projectId highlighted
+- [ ] Selecting a project moves the thread (PATCH `metadata.projectId`); the thread disappears from the current view (optimistic-hide)
+- [ ] After the next sidenav refresh, the thread appears under the new project's filtered list
+- [ ] Selecting "No project" clears the thread's projectId; thread returns to default RECENT
+- [ ] Move action is idempotent (selecting the current project is a no-op)
+- [ ] No `console.error` during project create / rename / delete / move
