@@ -41,58 +41,14 @@ export default async function HomePage() {
         ]}
         cta={{ label: 'Read the streaming guide', href: '/docs/agent/api/agent' }}
         visual={
-          <BrowserFrame url="cockpit.cacheplane.ai/chat" elevation="md">
-            <div
-              style={{
-                padding: 28,
-                background: 'linear-gradient(180deg, #fff 0%, #f8fafc 100%)',
-                minHeight: 320,
-              }}
-            >
-              <div
-                style={{
-                  fontFamily: tokens.typography.fontMono,
-                  fontSize: 11,
-                  color: tokens.colors.textMuted,
-                  marginBottom: 12,
-                }}
-              >
-                ASSISTANT · streaming
-              </div>
-              <div
-                style={{
-                  fontFamily: tokens.typography.fontSans,
-                  fontSize: 14,
-                  color: tokens.colors.textPrimary,
-                  lineHeight: 1.6,
-                }}
-              >
-                Building the Angular chat surface from your existing component library. Tool call results render as Angular components, not raw JSON.
-                <span
-                  style={{
-                    display: 'inline-block',
-                    width: 6,
-                    height: 14,
-                    background: tokens.colors.accent,
-                    marginLeft: 2,
-                    verticalAlign: 'middle',
-                    animation: 'blink 1s steps(2) infinite',
-                  }}
-                />
-              </div>
-              <div
-                style={{
-                  marginTop: 20,
-                  paddingTop: 16,
-                  borderTop: `1px solid ${tokens.surfaces.border}`,
-                  fontFamily: tokens.typography.fontMono,
-                  fontSize: 11,
-                  color: tokens.colors.textSecondary,
-                }}
-              >
-                tools: render_card · search_docs · stream complete
-              </div>
-            </div>
+          <BrowserFrame url="cockpit.cacheplane.ai/langgraph/streaming" elevation="md">
+            <img
+              src="/screenshots/cockpit-docs.webp"
+              alt="Cockpit reference app — Angular streaming guide with provideAgent setup"
+              style={{ display: 'block', width: '100%', height: 'auto' }}
+              loading="lazy"
+              decoding="async"
+            />
           </BrowserFrame>
         }
       />
@@ -117,69 +73,14 @@ export default async function HomePage() {
         cta={{ label: 'See @ngaf/render', href: '/render' }}
         visualLeft
         visual={
-          <BrowserFrame url="cockpit.cacheplane.ai/render" elevation="md">
-            <div
-              style={{
-                padding: 28,
-                background: tokens.surfaces.surface,
-                minHeight: 320,
-              }}
-            >
-              <div
-                style={{
-                  background: tokens.surfaces.surfaceTinted,
-                  border: `1px solid ${tokens.surfaces.border}`,
-                  borderRadius: tokens.radius.md,
-                  padding: 16,
-                  marginBottom: 12,
-                }}
-              >
-                <div
-                  style={{
-                    fontFamily: tokens.typography.fontMono,
-                    fontSize: 11,
-                    color: tokens.colors.accent,
-                    marginBottom: 8,
-                  }}
-                >
-                  AI-rendered · Angular component
-                </div>
-                <div
-                  style={{
-                    fontFamily: tokens.typography.fontSerif,
-                    fontSize: 18,
-                    fontWeight: 700,
-                    color: tokens.colors.textPrimary,
-                    marginBottom: 6,
-                  }}
-                >
-                  Q3 revenue: $4.2M
-                </div>
-                <div
-                  style={{
-                    fontFamily: tokens.typography.fontSans,
-                    fontSize: 13,
-                    color: tokens.colors.textSecondary,
-                    lineHeight: 1.5,
-                  }}
-                >
-                  +18% vs Q2. Driven by enterprise upsells in the EU.
-                </div>
-              </div>
-              <div
-                style={{
-                  background: tokens.colors.accentSurface,
-                  border: `1px dashed ${tokens.colors.accentBorder}`,
-                  borderRadius: tokens.radius.sm,
-                  padding: '8px 12px',
-                  fontFamily: tokens.typography.fontMono,
-                  fontSize: 11,
-                  color: tokens.colors.accent,
-                }}
-              >
-                fallback ready · readiness gate ✓
-              </div>
-            </div>
+          <BrowserFrame url="cockpit.cacheplane.ai/langgraph/api" elevation="md">
+            <img
+              src="/screenshots/cockpit-api.webp"
+              alt="Cockpit reference app — API reference rendered as structured cards"
+              style={{ display: 'block', width: '100%', height: 'auto' }}
+              loading="lazy"
+              decoding="async"
+            />
           </BrowserFrame>
         }
       />
