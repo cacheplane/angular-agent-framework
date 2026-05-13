@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 import {
-  Directive, Input, TemplateRef, ViewContainerRef, ComponentRef, Type,
+  Directive, Input, ViewContainerRef, ComponentRef, Type,
 } from '@angular/core';
 import type { A2uiComponentView } from './component-view';
 import type { A2uiViews } from './views';
@@ -21,10 +21,7 @@ export class A2uiSlotDirective {
   private mountedReal = false;
   private ref: ComponentRef<unknown> | null = null;
 
-  constructor(
-    private readonly _tpl: TemplateRef<unknown>,
-    private readonly vcr: ViewContainerRef,
-  ) {}
+  constructor(private readonly vcr: ViewContainerRef) {}
 
   @Input({ required: true }) set a2uiSlot(view: A2uiComponentView) {
     this.view = view;
