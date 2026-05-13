@@ -73,4 +73,32 @@ describe('ChatStreamingMdComponent', () => {
     expect(fixture.nativeElement.querySelector('p')).toBeNull();
     expect(fixture.nativeElement.querySelector('h1')).toBeNull();
   });
+
+  it('renders a paragraph for plain text WITHOUT a trailing newline (LLM-response shape)', () => {
+    // Regression: @cacheplane/partial-markdown@0.3 does not flush trailing
+    // text on finish() unless the buffer ends with '\n'. LLM responses
+    // typically omit the trailing newline. The component must push a
+    // sentinel newline before finish() so the message renders.
+    const fixture = TestBed.createComponent(HostComponent);
+    fixture.componentInstance.content.set('Hello — nice to meet you!');
+    fixture.componentInstance.streaming.set(false);
+    fixture.detectChanges();
+    const p = fixture.nativeElement.querySelector('p');
+    expect(p).toBeTruthy();
+    expect(p.textContent?.trim()).toBe('Hello — nice to meet you!');
+  });
+
+  it('renders plain text when streaming flips to false (mirrored else-branch)', () => {
+    // The else-if branch (no content change, streaming flipped to false)
+    // must also push a sentinel newline before finish().
+    const fixture = TestBed.createComponent(HostComponent);
+    fixture.componentInstance.content.set('Plain answer.');
+    fixture.componentInstance.streaming.set(true);
+    fixture.detectChanges();
+    fixture.componentInstance.streaming.set(false);
+    fixture.detectChanges();
+    const p = fixture.nativeElement.querySelector('p');
+    expect(p).toBeTruthy();
+    expect(p.textContent?.trim()).toBe('Plain answer.');
+  });
 });

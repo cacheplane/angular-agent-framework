@@ -99,12 +99,20 @@ export class ChatStreamingMdComponent {
         if (c.length > 0) this.parser.push(c);
       }
       if (!isStreaming && !this.finished) {
+        // @cacheplane/partial-markdown@0.3 does not flush trailing text on
+        // finish() unless the buffer ends with a newline. Plain LLM
+        // responses often omit the trailing newline, which causes the
+        // parser to emit a document with zero children — i.e. the message
+        // renders empty. Push a sentinel newline first to force the open
+        // paragraph closed before we finalize.
+        if (!c.endsWith('\n')) this.parser.push('\n');
         this.parser.finish();
         this.finished = true;
       }
       this.prior = c;
     } else if (!isStreaming && !this.finished) {
       // Streaming flipped to false without new content; ensure parser is finalized.
+      if (!this.prior.endsWith('\n')) this.parser.push('\n');
       this.parser.finish();
       this.finished = true;
     }
