@@ -10,6 +10,7 @@
  * don't need to bundle a serif TTF.
  */
 import { ImageResponse } from 'next/og';
+import { darkOverrides } from '@ngaf/design-tokens';
 
 export const runtime = 'edge';
 export const alt = 'Cockpit — the live reference app for the Angular Agent Framework';
@@ -50,11 +51,11 @@ export default async function OpenGraphImage() {
         style={{
           width: '100%',
           height: '100%',
-          background: '#f4f6fb',
+          background: darkOverrides.canvas,
           display: 'flex',
           flexDirection: 'column',
           padding: '64px 72px',
-          color: '#1a1a2e',
+          color: darkOverrides.textPrimary,
           fontFamily: 'Inter, sans-serif',
         }}
       >
@@ -64,7 +65,7 @@ export default async function OpenGraphImage() {
             fontFamily: 'JetBrains Mono, monospace',
             fontSize: 16,
             letterSpacing: '0.12em',
-            color: '#004090',
+            color: darkOverrides.accent,
             fontWeight: 700,
             textTransform: 'uppercase',
             marginBottom: 24,
@@ -80,7 +81,7 @@ export default async function OpenGraphImage() {
             lineHeight: 1.08,
             fontWeight: 700,
             letterSpacing: '-0.02em',
-            color: '#1a1a2e',
+            color: darkOverrides.textPrimary,
             marginBottom: 22,
             maxWidth: 1000,
           }}
@@ -93,7 +94,7 @@ export default async function OpenGraphImage() {
           style={{
             fontSize: 24,
             lineHeight: 1.5,
-            color: '#555770',
+            color: darkOverrides.textSecondary,
             maxWidth: 940,
             marginBottom: 'auto',
           }}
@@ -124,7 +125,7 @@ export default async function OpenGraphImage() {
               fontFamily: 'JetBrains Mono, monospace',
               fontSize: 18,
               fontWeight: 700,
-              color: '#1a1a2e',
+              color: darkOverrides.textPrimary,
             }}
           >
             <span style={{ fontSize: 26 }}>🛩️</span>
@@ -154,9 +155,9 @@ function ModePill({ active, children }: ModePillProps) {
         alignItems: 'center',
         padding: '8px 20px',
         borderRadius: 999,
-        background: active ? '#004090' : '#ffffff',
-        border: `1px solid ${active ? '#004090' : '#e6e8ee'}`,
-        color: active ? '#ffffff' : '#555770',
+        background: active ? darkOverrides.accent : darkOverrides.surface,
+        border: `1px solid ${active ? darkOverrides.accent : darkOverrides.border}`,
+        color: active ? darkOverrides.textInverted : darkOverrides.textSecondary,
         fontFamily: 'JetBrains Mono, monospace',
         fontSize: 15,
         fontWeight: 700,

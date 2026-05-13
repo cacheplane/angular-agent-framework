@@ -1,5 +1,7 @@
 import type { ReactNode } from 'react';
-import { cssVars } from '@ngaf/ui-react';
+import { cookies } from 'next/headers';
+import { cssVars, ThemeProvider } from '@ngaf/ui-react';
+import type { Theme } from '@ngaf/design-tokens';
 import './cockpit.css';
 
 export const metadata = {
@@ -22,9 +24,13 @@ interface RootLayoutProps {
   children: ReactNode;
 }
 
-export default function RootLayout({ children }: RootLayoutProps) {
+export default async function RootLayout({ children }: RootLayoutProps) {
+  const cookieStore = await cookies();
+  const cookieValue = cookieStore.get('theme')?.value;
+  const theme: Theme = cookieValue === 'light' ? 'light' : 'dark';
+
   return (
-    <html lang="en" style={cssVars as React.CSSProperties}>
+    <html lang="en" data-theme={theme} style={cssVars(theme) as React.CSSProperties}>
       <body
         className="min-h-screen font-sans antialiased"
         style={{
@@ -32,7 +38,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
           color: 'var(--ds-text-primary)',
         }}
       >
-        {children}
+        <ThemeProvider theme={theme}>{children}</ThemeProvider>
       </body>
     </html>
   );

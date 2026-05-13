@@ -1,54 +1,53 @@
-import { describe, expect, it } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { cssVars } from './css-vars';
 
-describe('cssVars', () => {
-  describe('token namespaces', () => {
-    it('exposes surfaces', () => {
-      expect(cssVars['--ds-canvas']).toBe('#fafbfc');
-      expect(cssVars['--ds-surface']).toBe('#ffffff');
-      expect(cssVars['--ds-surface-tinted']).toBe('#f4f6fb');
-      expect(cssVars['--ds-surface-dim']).toBe('#eef1f7');
-      expect(cssVars['--ds-border']).toBe('#e6e8ee');
-      expect(cssVars['--ds-border-strong']).toBe('#d2d6e0');
+describe('cssVars(theme)', () => {
+  describe('light', () => {
+    const vars = cssVars('light');
+
+    it('uses light canvas color', () => {
+      expect(vars['--ds-canvas']).toBe('#fafbfc');
     });
 
-    it('exposes shadows', () => {
-      expect(cssVars['--ds-shadow-sm']).toContain('rgba(15, 23, 41');
-      expect(cssVars['--ds-shadow-md']).toContain('rgba(15, 23, 41');
-      expect(cssVars['--ds-shadow-lg']).toContain('rgba(15, 23, 41');
-      expect(cssVars['--ds-shadow-focus']).toContain('rgba(0, 64, 144');
+    it('uses navy accent', () => {
+      expect(vars['--ds-accent']).toBe('#004090');
     });
 
-    it('exposes radii', () => {
-      expect(cssVars['--ds-radius-sm']).toBe('6px');
-      expect(cssVars['--ds-radius-md']).toBe('10px');
-      expect(cssVars['--ds-radius-lg']).toBe('14px');
-      expect(cssVars['--ds-radius-xl']).toBe('20px');
-      expect(cssVars['--ds-radius-full']).toBe('999px');
+    it('uses dark text on light surfaces', () => {
+      expect(vars['--ds-text-primary']).toBe('#1a1a2e');
+    });
+  });
+
+  describe('dark', () => {
+    const vars = cssVars('dark');
+
+    it('uses dark canvas color', () => {
+      expect(vars['--ds-canvas']).toBe('#0e1117');
     });
 
-    it('exposes space', () => {
-      expect(cssVars['--ds-section-y']).toBe('clamp(64px, 8vw, 120px)');
-      expect(cssVars['--ds-section-y-tight']).toBe('clamp(48px, 6vw, 80px)');
-      expect(cssVars['--ds-container-x']).toBe('clamp(20px, 4vw, 40px)');
-      expect(cssVars['--ds-container-max']).toBe('1200px');
+    it('uses bright-blue accent', () => {
+      expect(vars['--ds-accent']).toBe('#64C3FD');
     });
 
-    it('exposes extended colors', () => {
-      expect(cssVars['--ds-accent-hover']).toBe('#003070');
-      expect(cssVars['--ds-text-inverted']).toBe('#ffffff');
+    it('uses near-white text on dark surfaces', () => {
+      expect(vars['--ds-text-primary']).toBe('#e8e9eb');
     });
+  });
 
-    it('exposes core colors', () => {
-      expect(cssVars['--ds-bg']).toBe('#f8f9fc');
-      expect(cssVars['--ds-accent']).toBe('#004090');
-      expect(cssVars['--ds-text-primary']).toBe('#1a1a2e');
-    });
+  it('both themes expose the same custom-property keys', () => {
+    const lightKeys = Object.keys(cssVars('light')).sort();
+    const darkKeys = Object.keys(cssVars('dark')).sort();
+    expect(lightKeys).toEqual(darkKeys);
+  });
 
-    it('exposes typography', () => {
-      expect(cssVars['--ds-font-serif']).toContain('EB Garamond');
-      expect(cssVars['--ds-font-sans']).toContain('Inter');
-      expect(cssVars['--ds-font-mono']).toContain('JetBrains Mono');
-    });
+  it('brand colors are identical across themes', () => {
+    expect(cssVars('light')['--ds-angular-red']).toBe(cssVars('dark')['--ds-angular-red']);
+    expect(cssVars('light')['--ds-render-green']).toBe(cssVars('dark')['--ds-render-green']);
+    expect(cssVars('light')['--ds-chat-purple']).toBe(cssVars('dark')['--ds-chat-purple']);
+  });
+
+  it('typography tokens are identical across themes', () => {
+    expect(cssVars('light')['--ds-font-serif']).toBe(cssVars('dark')['--ds-font-serif']);
+    expect(cssVars('light')['--ds-font-sans']).toBe(cssVars('dark')['--ds-font-sans']);
   });
 });

@@ -1,64 +1,81 @@
 import {
-  colors,
-  typography,
-  surfaces,
-  shadows,
-  radius,
-  space,
+  baseTokens,
+  lightOverrides,
+  darkOverrides,
+  type Theme,
 } from '@ngaf/design-tokens';
 
-/**
- * CSS custom properties derived from design tokens.
- * Apply to :root or a container element so Tailwind can reference them.
- */
-export const cssVars = {
-  // Colors
-  '--ds-bg': colors.bg,
-  '--ds-accent': colors.accent,
-  '--ds-accent-hover': colors.accentHover,
-  '--ds-accent-light': colors.accentLight,
-  '--ds-accent-glow': colors.accentGlow,
-  '--ds-accent-border': colors.accentBorder,
-  '--ds-accent-border-hover': colors.accentBorderHover,
-  '--ds-accent-surface': colors.accentSurface,
-  '--ds-text-primary': colors.textPrimary,
-  '--ds-text-secondary': colors.textSecondary,
-  '--ds-text-muted': colors.textMuted,
-  '--ds-text-inverted': colors.textInverted,
-  '--ds-sidebar-bg': colors.sidebarBg,
-  '--ds-angular-red': colors.angularRed,
-
-  // Typography
-  '--ds-font-serif': typography.fontSerif,
-  '--ds-font-sans': typography.fontSans,
-  '--ds-font-mono': typography.fontMono,
-
-  // Surfaces
-  '--ds-canvas': surfaces.canvas,
-  '--ds-surface': surfaces.surface,
-  '--ds-surface-tinted': surfaces.surfaceTinted,
-  '--ds-surface-dim': surfaces.surfaceDim,
-  '--ds-border': surfaces.border,
-  '--ds-border-strong': surfaces.borderStrong,
-
-  // Shadows
-  '--ds-shadow-sm': shadows.sm,
-  '--ds-shadow-md': shadows.md,
-  '--ds-shadow-lg': shadows.lg,
-  '--ds-shadow-focus': shadows.focus,
-
-  // Radii
-  '--ds-radius-sm': radius.sm,
-  '--ds-radius-md': radius.md,
-  '--ds-radius-lg': radius.lg,
-  '--ds-radius-xl': radius.xl,
-  '--ds-radius-full': radius.full,
-
-  // Space
-  '--ds-section-y': space.sectionY,
-  '--ds-section-y-tight': space.sectionYTight,
-  '--ds-container-x': space.containerX,
-  '--ds-container-max': space.containerMax,
+const overridesByTheme = {
+  light: lightOverrides,
+  dark: darkOverrides,
 } as const;
 
-export type CssVars = typeof cssVars;
+/**
+ * Resolve design tokens to a flat map of `--ds-*` CSS custom properties
+ * for the given theme. Apply to `<html>` (or any container) via the
+ * React `style` prop so Tailwind utilities and `var()` lookups resolve.
+ */
+export function cssVars(theme: Theme) {
+  const t = overridesByTheme[theme];
+  const { brand, typography, space, radius, shadows } = baseTokens;
+
+  return {
+    // Surfaces (theme-variant)
+    '--ds-canvas': t.canvas,
+    '--ds-surface': t.surface,
+    '--ds-surface-tinted': t.surfaceTinted,
+    '--ds-surface-dim': t.surfaceDim,
+    '--ds-border': t.border,
+    '--ds-border-strong': t.borderStrong,
+
+    // Text (theme-variant)
+    '--ds-text-primary': t.textPrimary,
+    '--ds-text-secondary': t.textSecondary,
+    '--ds-text-muted': t.textMuted,
+    '--ds-text-inverted': t.textInverted,
+
+    // Legacy surface aliases
+    '--ds-bg': t.bg,
+    '--ds-sidebar-bg': t.sidebarBg,
+
+    // Accent family (theme-variant — semantic accent points to navy in light, bright-blue in dark)
+    '--ds-accent': t.accent,
+    '--ds-accent-hover': t.accentHover,
+    '--ds-accent-glow': t.accentGlow,
+    '--ds-accent-border': t.accentBorder,
+    '--ds-accent-border-hover': t.accentBorderHover,
+    '--ds-accent-surface': t.accentSurface,
+
+    // Raw brand colors (invariant)
+    '--ds-accent-light': brand.accentLight,
+    '--ds-angular-red': brand.angularRed,
+    '--ds-render-green': brand.renderGreen,
+    '--ds-chat-purple': brand.chatPurple,
+
+    // Typography (invariant)
+    '--ds-font-serif': typography.fontSerif,
+    '--ds-font-sans': typography.fontSans,
+    '--ds-font-mono': typography.fontMono,
+
+    // Shadows (invariant)
+    '--ds-shadow-sm': shadows.sm,
+    '--ds-shadow-md': shadows.md,
+    '--ds-shadow-lg': shadows.lg,
+    '--ds-shadow-focus': shadows.focus,
+
+    // Radii (invariant)
+    '--ds-radius-sm': radius.sm,
+    '--ds-radius-md': radius.md,
+    '--ds-radius-lg': radius.lg,
+    '--ds-radius-xl': radius.xl,
+    '--ds-radius-full': radius.full,
+
+    // Spacing (invariant)
+    '--ds-section-y': space.sectionY,
+    '--ds-section-y-tight': space.sectionYTight,
+    '--ds-container-x': space.containerX,
+    '--ds-container-max': space.containerMax,
+  } as const;
+}
+
+export type CssVars = ReturnType<typeof cssVars>;

@@ -1,4 +1,5 @@
 import React from 'react';
+import { ThemedFrame } from '@ngaf/ui-react';
 
 interface RunModeProps {
   entryTitle: string;
@@ -16,7 +17,7 @@ export function RunMode({ entryTitle, runtimeUrl }: RunModeProps) {
 
   return (
     <section aria-label="Run mode" className="h-full">
-      <iframe
+      <ThemedFrame
         src={runtimeUrl}
         title={`${entryTitle} live example`}
         allow="clipboard-write"
