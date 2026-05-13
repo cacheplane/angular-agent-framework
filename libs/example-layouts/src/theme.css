@@ -1,0 +1,31 @@
+/*
+ * @ngaf/example-layouts/theme.css
+ *
+ * Tailwind v4 entry point for embedded example apps. The host (cockpit)
+ * applies `--ds-*` variables to `<html>` via `installEmbeddedTheme()`;
+ * this file provides:
+ *
+ *   1. Tailwind v4 import — utility class generation.
+ *   2. `dark:` variant rule — `dark:bg-foo` lights up when
+ *      `<html data-theme="dark">`.
+ *   3. Namespace bridge — chat library and other internal namespaces
+ *      can be wired to the design-tokens palette here, in one place.
+ */
+@import "tailwindcss";
+
+@custom-variant dark (&:where([data-theme="dark"] *));
+
+/*
+ * Namespace bridge: legacy `--ngaf-chat-*` variables (used inside the
+ * chat library and existing example components) inherit from the
+ * design-tokens palette. Removing this bridge requires migrating the
+ * chat library internals to read `--ds-*` directly — out of scope.
+ */
+:root {
+  --ngaf-chat-bg: var(--ds-canvas);
+  --ngaf-chat-text: var(--ds-text-primary);
+  --ngaf-chat-text-muted: var(--ds-text-muted);
+  --ngaf-chat-surface-alt: var(--ds-surface-tinted);
+  --ngaf-chat-separator: var(--ds-border);
+  --ngaf-chat-font-family: var(--ds-font-sans);
+}
