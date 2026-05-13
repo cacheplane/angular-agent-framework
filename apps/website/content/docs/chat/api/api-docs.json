@@ -2983,6 +2983,12 @@
         "optional": false
       },
       {
+        "name": "anchorPos",
+        "type": "InputSignal<object | null>",
+        "description": "Alternative anchor: explicit viewport coordinates (e.g. cursor position\n from a right-click). Takes precedence over `anchor` when set.",
+        "optional": false
+      },
+      {
         "name": "closed",
         "type": "OutputEmitterRef<void>",
         "description": "",
@@ -3901,6 +3907,12 @@
         "optional": false
       },
       {
+        "name": "menuAnchorPos",
+        "type": "WritableSignal<object | null>",
+        "description": "Cursor-anchored position when the menu was opened via right-click.\n Mutually exclusive with `menuAnchor` — set one, null the other.",
+        "optional": false
+      },
+      {
         "name": "menuOpenForId",
         "type": "WritableSignal<string | null>",
         "description": "",
@@ -3994,6 +4006,19 @@
         "params": [
           {
             "name": "threadId",
+            "type": "string",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
+        "name": "initialOf",
+        "signature": "initialOf(title: string)",
+        "description": "First grapheme of a title rendered as an uppercase initial for the\n collapsed sidenav. Falls back to \"?\" for empty/whitespace titles.",
+        "params": [
+          {
+            "name": "title",
             "type": "string",
             "description": "",
             "optional": false
@@ -4116,6 +4141,25 @@
           {
             "name": "itemId",
             "type": "string",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
+        "name": "onRowContextMenu",
+        "signature": "onRowContextMenu(threadId: string, event: MouseEvent)",
+        "description": "Right-click on a row opens the same overflow menu anchored at the\n cursor. Always prevents the native context menu — including when the\n adapter exposes no row actions (in which case we open nothing rather\n than confusing the user with the OS menu on what looks like a custom\n list).",
+        "params": [
+          {
+            "name": "threadId",
+            "type": "string",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "event",
+            "type": "MouseEvent",
             "description": "",
             "optional": false
           }

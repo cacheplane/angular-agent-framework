@@ -99,6 +99,7 @@ export interface ThreadActionAdapter {
           (dragleave)="onDragLeave($event, thread.id)"
           (drop)="onDrop($event, thread.id)"
           (dragend)="onDragEnd()"
+          (contextmenu)="onRowContextMenu(thread.id, $event)"
         >
           @if (templateRef()) {
             <ng-container
@@ -129,10 +130,12 @@ export interface ThreadActionAdapter {
             <button
               type="button"
               class="chat-thread-list__item"
+              [attr.title]="threadLabel(thread)"
               [attr.data-active]="thread.id === activeThreadId() ? 'true' : null"
               [attr.aria-current]="thread.id === activeThreadId() ? 'true' : null"
               (click)="selectThread(thread.id)"
             >
+              <span class="chat-thread-list__initial" aria-hidden="true">{{ initialOf(threadLabel(thread)) }}</span>
               <span class="chat-thread-list__item-title">
                 @if (thread.pinned) {
                   <svg class="chat-thread-list__item-pin" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -166,6 +169,7 @@ export interface ThreadActionAdapter {
       [open]="menuOpenForId() !== null"
       [items]="currentMenuItems()"
       [anchor]="menuAnchor()"
+      [anchorPos]="menuAnchorPos()"
       (itemSelected)="onMenuAction($event)"
       (closed)="menuOpenForId.set(null)"
     />
@@ -174,6 +178,7 @@ export interface ThreadActionAdapter {
       [open]="moveMenuOpenForId() !== null"
       [items]="moveMenuItems()"
       [anchor]="menuAnchor()"
+      [anchorPos]="menuAnchorPos()"
       (itemSelected)="onMoveMenuAction($event)"
       (closed)="moveMenuOpenForId.set(null)"
     />
@@ -206,6 +211,9 @@ export class ChatThreadListComponent {
   protected readonly editingValue = signal<string>('');
   protected readonly menuOpenForId = signal<string | null>(null);
   protected readonly menuAnchor = signal<HTMLElement | null>(null);
+  /** Cursor-anchored position when the menu was opened via right-click.
+   *  Mutually exclusive with `menuAnchor` — set one, null the other. */
+  protected readonly menuAnchorPos = signal<{ x: number; y: number } | null>(null);
   protected readonly confirmDeleteId = signal<string | null>(null);
 
   protected readonly moveMenuOpenForId = signal<string | null>(null);
@@ -333,7 +341,31 @@ export class ChatThreadListComponent {
 
   protected openMenu(threadId: string, anchor: HTMLElement): void {
     this.menuAnchor.set(anchor);
+    this.menuAnchorPos.set(null);
     this.menuOpenForId.set(threadId);
+  }
+
+  /** Right-click on a row opens the same overflow menu anchored at the
+   *  cursor. Always prevents the native context menu — including when the
+   *  adapter exposes no row actions (in which case we open nothing rather
+   *  than confusing the user with the OS menu on what looks like a custom
+   *  list). */
+  protected onRowContextMenu(threadId: string, event: MouseEvent): void {
+    event.preventDefault();
+    if (!this.showKebab()) return;
+    if (this.editingThreadId() !== null) return;
+    this.menuAnchor.set(null);
+    this.menuAnchorPos.set({ x: event.clientX, y: event.clientY });
+    this.menuOpenForId.set(threadId);
+  }
+
+  /** First grapheme of a title rendered as an uppercase initial for the
+   *  collapsed sidenav. Falls back to "?" for empty/whitespace titles. */
+  protected initialOf(title: string): string {
+    const trimmed = (title ?? '').trim();
+    if (!trimmed) return '?';
+    const first = Array.from(trimmed)[0];
+    return first.toUpperCase ? first.toUpperCase() : first;
   }
 
   protected onMenuAction(id: string): void {

@@ -89,6 +89,19 @@ export const CHAT_THREAD_LIST_STYLES = `
     outline: 2px solid var(--ngaf-chat-primary);
     outline-offset: 2px;
   }
+  .chat-thread-list__initial {
+    display: none;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    align-items: center;
+    justify-content: center;
+    background: var(--ngaf-chat-surface-alt);
+    color: var(--ngaf-chat-text);
+    font-weight: 500;
+    font-size: 13px;
+    flex-shrink: 0;
+  }
   .chat-thread-list__item-pin {
     width: 11px;
     height: 11px;
