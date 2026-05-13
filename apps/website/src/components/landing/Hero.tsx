@@ -76,50 +76,18 @@ export function Hero() {
           {/* Right column — layered collage */}
           <div style={{ position: 'relative', minHeight: 420 }} aria-hidden="true">
             <BrowserFrame
-              url="cockpit.cacheplane.ai/chat"
+              url="cockpit.cacheplane.ai"
               rotate={-3}
               elevation="lg"
               style={{ position: 'absolute', top: 0, left: 0, width: '92%' }}
             >
-              <div
-                style={{
-                  padding: 32,
-                  background: 'linear-gradient(180deg, #fff 0%, #f4f6fb 100%)',
-                  minHeight: 220,
-                }}
-              >
-                <div
-                  style={{
-                    fontFamily: tokens.typography.fontMono,
-                    fontSize: 12,
-                    color: tokens.colors.textMuted,
-                    marginBottom: 8,
-                  }}
-                >
-                  AI · streaming
-                </div>
-                <div
-                  style={{
-                    fontFamily: tokens.typography.fontSans,
-                    fontSize: 14,
-                    color: tokens.colors.textPrimary,
-                    lineHeight: 1.5,
-                  }}
-                >
-                  Generating production-ready Angular components from your schema…
-                  <span
-                    style={{
-                      display: 'inline-block',
-                      width: 6,
-                      height: 14,
-                      background: tokens.colors.accent,
-                      marginLeft: 2,
-                      verticalAlign: 'middle',
-                      animation: 'blink 1s steps(2) infinite',
-                    }}
-                  />
-                </div>
-              </div>
+              <img
+                src="/screenshots/cockpit-code.webp"
+                alt="Cockpit reference app showing the Angular streaming component source"
+                style={{ display: 'block', width: '100%', height: 'auto' }}
+                loading="lazy"
+                decoding="async"
+              />
             </BrowserFrame>
             <BrowserFrame
               url="agent.signal()"
