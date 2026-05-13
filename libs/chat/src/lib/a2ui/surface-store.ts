@@ -6,12 +6,25 @@ import type {
   A2uiDataModelEntry,
 } from '@ngaf/a2ui';
 import { setByPointer } from '@ngaf/a2ui';
+import type { A2uiComponentView } from './component-view';
+import { extractBindings } from './extract-bindings';
 
 interface SurfaceBuffer {
   /** Pending component map (replaces on next beginRendering). */
   components?: Map<string, A2uiComponent>;
+  /** Pending per-component views (replaces on next beginRendering). */
+  componentViews?: Map<string, A2uiComponentView>;
   /** Pending data model deltas accumulated since last beginRendering. */
   dataModelDeltas: { path?: string; contents: A2uiDataModelEntry[] }[];
+}
+
+/** Chat-side state for a surface — wraps the wire-format `A2uiSurface`
+ * with the per-component projection the progressive renderer consumes.
+ * Both maps are kept in sync; the wire shape preserves existing
+ * `surfaceToSpec` semantics, the view shape carries readiness. */
+export interface A2uiSurfaceState {
+  readonly surface: A2uiSurface;
+  readonly componentViews: ReadonlyMap<string, A2uiComponentView>;
 }
 
 export interface A2uiSurfaceStore {
@@ -24,8 +37,12 @@ export interface A2uiSurfaceStore {
   applyPartialArgs(toolCallId: string, envelopes: readonly A2uiMessage[]): void;
   /** True if a tool_call_id has produced live envelopes via applyPartialArgs. */
   isPartialLive(toolCallId: string): boolean;
+  /** Wire-format surfaces, for downstream consumers (e.g. surfaceToSpec). */
   readonly surfaces: Signal<Map<string, A2uiSurface>>;
   surface(surfaceId: string): Signal<A2uiSurface | undefined>;
+  /** Chat-side projections with per-component readiness. */
+  readonly surfaceStates: Signal<Map<string, A2uiSurfaceState>>;
+  surfaceState(surfaceId: string): Signal<A2uiSurfaceState | undefined>;
 }
 
 function entriesToObject(entries: A2uiDataModelEntry[]): Record<string, unknown> {
@@ -39,8 +56,59 @@ function entriesToObject(entries: A2uiDataModelEntry[]): Record<string, unknown>
   return out;
 }
 
+/** Returns true if `path` (in `$.a.b.c` form) resolves to a defined,
+ * non-null value inside `dataModel`. Used to decide per-component
+ * readiness. */
+function isResolved(dataModel: Record<string, unknown>, path: string): boolean {
+  const segments = path.startsWith('$.') ? path.slice(2).split('.') : path.split('.');
+  let cur: unknown = dataModel;
+  for (const seg of segments) {
+    if (cur == null || typeof cur !== 'object') return false;
+    cur = (cur as Record<string, unknown>)[seg];
+  }
+  return cur !== undefined && cur !== null;
+}
+
+/** Resolve `{$.path}` references in a value against the data model.
+ * Strings that look like a single full reference are replaced with
+ * the resolved value; partial-reference strings get string-substituted;
+ * nested objects/arrays are recursed. */
+function resolveProps(value: unknown, dataModel: Record<string, unknown>): unknown {
+  if (typeof value === 'string') {
+    const full = value.match(/^\{(\$\.[^}]+)\}$/);
+    if (full) {
+      const segs = full[1].slice(2).split('.');
+      let cur: unknown = dataModel;
+      for (const s of segs) {
+        if (cur == null || typeof cur !== 'object') return undefined;
+        cur = (cur as Record<string, unknown>)[s];
+      }
+      return cur;
+    }
+    return value.replace(/\{(\$\.[^}]+)\}/g, (_, path: string) => {
+      const segs = path.slice(2).split('.');
+      let cur: unknown = dataModel;
+      for (const s of segs) {
+        if (cur == null || typeof cur !== 'object') return '';
+        cur = (cur as Record<string, unknown>)[s];
+      }
+      return cur == null ? '' : String(cur);
+    });
+  }
+  if (Array.isArray(value)) return value.map((v) => resolveProps(v, dataModel));
+  if (value && typeof value === 'object') {
+    const out: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
+      out[k] = resolveProps(v, dataModel);
+    }
+    return out;
+  }
+  return value;
+}
+
 export function createA2uiSurfaceStore(): A2uiSurfaceStore {
   const surfacesSignal = signal<Map<string, A2uiSurface>>(new Map());
+  const surfaceStatesSignal = signal<Map<string, A2uiSurfaceState>>(new Map());
   const buffers = new Map<string, SurfaceBuffer>();
 
   function bufferOf(surfaceId: string): SurfaceBuffer {
@@ -56,6 +124,24 @@ export function createA2uiSurfaceStore(): A2uiSurfaceStore {
       const map = new Map<string, A2uiComponent>();
       for (const c of upd.components) map.set(c.id, c);
       b.components = map;
+      // Project per-component views with bindings extracted from prop
+      // expressions. ready starts false; props starts empty.
+      const views = new Map<string, A2uiComponentView>();
+      for (const c of upd.components) {
+        const def = c.component;
+        const typeKey = (def && typeof def === 'object')
+          ? (Object.keys(def)[0] ?? 'Unknown')
+          : 'Unknown';
+        views.set(c.id, {
+          id: c.id,
+          type: typeKey,
+          bindings: extractBindings(def),
+          ready: false,
+          props: {},
+          def,
+        });
+      }
+      b.componentViews = views;
       return;
     }
     if ('dataModelUpdate' in message) {
@@ -73,8 +159,31 @@ export function createA2uiSurfaceStore(): A2uiSurfaceStore {
           dataModel = { ...dataModel, ...obj };
         }
         const next = new Map(surfacesSignal());
-        next.set(upd.surfaceId, { ...surface, dataModel });
+        const nextSurface = { ...surface, dataModel };
+        next.set(upd.surfaceId, nextSurface);
         surfacesSignal.set(next);
+
+        // Recompute per-component readiness with the monotonic rule.
+        const prevState = surfaceStatesSignal().get(upd.surfaceId);
+        if (prevState) {
+          const nextViews = new Map<string, A2uiComponentView>();
+          for (const [id, v] of prevState.componentViews) {
+            const allResolved = v.bindings.every((p) => isResolved(dataModel, p));
+            // Monotonic: once ready=true, stays true even if a later
+            // update clears a referenced path.
+            const nextReady = v.ready || allResolved;
+            nextViews.set(id, {
+              ...v,
+              ready: nextReady,
+              props: nextReady
+                ? (resolveProps(v.def, dataModel) as Record<string, unknown>)
+                : v.props,
+            });
+          }
+          const nextStatesMap = new Map(surfaceStatesSignal());
+          nextStatesMap.set(upd.surfaceId, { surface: nextSurface, componentViews: nextViews });
+          surfaceStatesSignal.set(nextStatesMap);
+        }
       } else {
         // Pre-render: buffer the delta.
         const b = bufferOf(upd.surfaceId);
@@ -119,6 +228,25 @@ export function createA2uiSurfaceStore(): A2uiSurfaceStore {
       const next = new Map(surfacesSignal());
       next.set(begin.surfaceId, surface);
       surfacesSignal.set(next);
+
+      // Project per-component views with initial readiness based on the
+      // accumulated data model.
+      const baseViews = b.componentViews ?? new Map<string, A2uiComponentView>();
+      const initialViews = new Map<string, A2uiComponentView>();
+      for (const [id, v] of baseViews) {
+        const allResolved = v.bindings.every((p) => isResolved(dataModel, p));
+        initialViews.set(id, {
+          ...v,
+          ready: allResolved,
+          props: allResolved
+            ? (resolveProps(v.def, dataModel) as Record<string, unknown>)
+            : {},
+        });
+      }
+      const nextStates = new Map(surfaceStatesSignal());
+      nextStates.set(begin.surfaceId, { surface, componentViews: initialViews });
+      surfaceStatesSignal.set(nextStates);
+
       // Reset buffer so subsequent surfaceUpdate is the next round.
       buffers.set(begin.surfaceId, { dataModelDeltas: [] });
       return;
@@ -129,12 +257,19 @@ export function createA2uiSurfaceStore(): A2uiSurfaceStore {
       const next = new Map(surfacesSignal());
       next.delete(del.surfaceId);
       surfacesSignal.set(next);
+      const nextStates = new Map(surfaceStatesSignal());
+      nextStates.delete(del.surfaceId);
+      surfaceStatesSignal.set(nextStates);
       return;
     }
   }
 
   function surface(surfaceId: string): Signal<A2uiSurface | undefined> {
     return computed(() => surfacesSignal().get(surfaceId));
+  }
+
+  function surfaceState(surfaceId: string): Signal<A2uiSurfaceState | undefined> {
+    return computed(() => surfaceStatesSignal().get(surfaceId));
   }
 
   const liveTools = new Set<string>();
@@ -159,5 +294,7 @@ export function createA2uiSurfaceStore(): A2uiSurfaceStore {
     isPartialLive,
     surfaces: surfacesSignal.asReadonly(),
     surface,
+    surfaceStates: surfaceStatesSignal.asReadonly(),
+    surfaceState,
   };
 }

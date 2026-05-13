@@ -194,3 +194,97 @@ describe('createA2uiSurfaceStore — applyPartialArgs', () => {
     expect(store.isPartialLive('tc-x')).toBe(true);  // still tracked
   });
 });
+
+describe('A2uiSurfaceStore — per-component readiness', () => {
+  const surfaceUpdate = (id: string, components: { id: string; def: unknown }[]) => ({
+    surfaceUpdate: {
+      surfaceId: id,
+      components: components.map((c) => ({ id: c.id, component: c.def })),
+    },
+  } as never);
+  const beginRendering = (id: string, root: string) => ({
+    beginRendering: { surfaceId: id, root },
+  } as never);
+  const dataModelUpdate = (id: string, contents: { key: string; valueString?: string }[]) => ({
+    dataModelUpdate: { surfaceId: id, contents },
+  } as never);
+
+  test('extracts bindings from a component on surfaceUpdate apply', () => {
+    const store = setup();
+    store.apply(surfaceUpdate('s1', [
+      { id: 'c1', def: { TextField: { value: '{$.form.name}' } } },
+    ]));
+    store.apply(beginRendering('s1', 'c1'));
+    const view = store.surfaceState('s1')()!.componentViews.get('c1')!;
+    expect(view.bindings).toEqual(['$.form.name']);
+  });
+
+  test('component.ready is false when bindings are unpopulated', () => {
+    const store = setup();
+    store.apply(surfaceUpdate('s1', [
+      { id: 'c1', def: { TextField: { value: '{$.form.name}' } } },
+    ]));
+    store.apply(beginRendering('s1', 'c1'));
+    expect(store.surfaceState('s1')()!.componentViews.get('c1')!.ready).toBe(false);
+  });
+
+  test('component.ready becomes true when all bindings are populated by dataModelUpdate', () => {
+    const store = setup();
+    store.apply(surfaceUpdate('s1', [
+      { id: 'c1', def: { TextField: { value: '{$.form.name}' } } },
+    ]));
+    store.apply(beginRendering('s1', 'c1'));
+    store.apply({
+      dataModelUpdate: {
+        surfaceId: 's1',
+        contents: [{ key: 'form', valueMap: [{ key: 'name', valueString: 'Ada' }] }],
+      },
+    } as never);
+    const view = store.surfaceState('s1')()!.componentViews.get('c1')!;
+    expect(view.ready).toBe(true);
+    const textFieldProps = view.props['TextField'] as Record<string, unknown>;
+    expect(textFieldProps['value']).toBe('Ada');
+  });
+
+  test('resolveProps substitutes partial references (mixed literal + {$.path}) in props', () => {
+    const store = setup();
+    store.apply(surfaceUpdate('s1', [
+      { id: 'c1', def: { Button: { label: 'Hello {$.name}!' } } },
+    ]));
+    store.apply(beginRendering('s1', 'c1'));
+    const initialView = store.surfaceState('s1')()!.componentViews.get('c1')!;
+    expect(initialView.bindings).toEqual(['$.name']);
+    expect(initialView.ready).toBe(false);
+
+    store.apply(dataModelUpdate('s1', [{ key: 'name', valueString: 'Ada' }]));
+    const view = store.surfaceState('s1')()!.componentViews.get('c1')!;
+    expect(view.ready).toBe(true);
+    const buttonProps = view.props['Button'] as Record<string, unknown>;
+    expect(buttonProps['label']).toBe('Hello Ada!');
+  });
+
+  test('component.ready stays true after a later dataModelUpdate clears a binding (monotonic)', () => {
+    const store = setup();
+    store.apply(surfaceUpdate('s1', [
+      { id: 'c1', def: { TextField: { value: '{$.name}' } } },
+    ]));
+    store.apply(beginRendering('s1', 'c1'));
+    store.apply(dataModelUpdate('s1', [{ key: 'name', valueString: 'Ada' }]));
+    expect(store.surfaceState('s1')()!.componentViews.get('c1')!.ready).toBe(true);
+    store.apply(dataModelUpdate('s1', [{ key: 'other', valueString: 'x' }]));
+    expect(store.surfaceState('s1')()!.componentViews.get('c1')!.ready).toBe(true);
+  });
+
+  test('multiple components have independent readiness', () => {
+    const store = setup();
+    store.apply(surfaceUpdate('s1', [
+      { id: 'a', def: { TextField: { value: '{$.x}' } } },
+      { id: 'b', def: { TextField: { value: '{$.y}' } } },
+    ]));
+    store.apply(beginRendering('s1', 'a'));
+    store.apply(dataModelUpdate('s1', [{ key: 'x', valueString: '1' }]));
+    const state = store.surfaceState('s1')()!;
+    expect(state.componentViews.get('a')!.ready).toBe(true);
+    expect(state.componentViews.get('b')!.ready).toBe(false);
+  });
+});

@@ -5400,6 +5400,50 @@
     "examples": []
   },
   {
+    "name": "A2uiComponentView",
+    "kind": "interface",
+    "description": "Chat-internal projection of an A2UI component, materialized by the\nsurface store. Distinct from the wire-format `A2uiComponent` in\n`@ngaf/a2ui` (which carries the raw `component: A2uiComponentDef`\npayload) — this type adds the per-component readiness fields the\nprogressive renderer consumes.",
+    "properties": [
+      {
+        "name": "bindings",
+        "type": "readonly string[]",
+        "description": "Data model paths this component references via its `{$.path}` prop\nexpressions. Extracted once on `surfaceUpdate` apply; immutable.",
+        "optional": false
+      },
+      {
+        "name": "def",
+        "type": "A2uiComponentDef",
+        "description": "The raw wire-format component def, retained so the slot directive\ncan look up the catalog entry by type and resolve nested children\non re-renders.",
+        "optional": false
+      },
+      {
+        "name": "id",
+        "type": "string",
+        "description": "The component's id (same as the wire-format `A2uiComponent.id`).",
+        "optional": false
+      },
+      {
+        "name": "props",
+        "type": "Readonly<Record<string, unknown>>",
+        "description": "Resolved property bag. Meaningful only when `ready === true`.",
+        "optional": false
+      },
+      {
+        "name": "ready",
+        "type": "boolean",
+        "description": "Monotonic: `false` until every binding has resolved at least once\nin the accumulated data model, then `true` forever. Once `true`,\nsubsequent `dataModelUpdate` envelopes push new prop values but do\nNOT flip this back to `false`.",
+        "optional": false
+      },
+      {
+        "name": "type",
+        "type": "string",
+        "description": "The component type key — e.g. `'Button'`, `'TextField'` — matched\nagainst catalog `views` entries.",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
     "name": "A2uiSurface",
     "kind": "interface",
     "description": "",
@@ -5450,6 +5494,26 @@
     "examples": []
   },
   {
+    "name": "A2uiSurfaceState",
+    "kind": "interface",
+    "description": "Chat-side state for a surface — wraps the wire-format `A2uiSurface`\nwith the per-component projection the progressive renderer consumes.\nBoth maps are kept in sync; the wire shape preserves existing\n`surfaceToSpec` semantics, the view shape carries readiness.",
+    "properties": [
+      {
+        "name": "componentViews",
+        "type": "ReadonlyMap<string, A2uiComponentView>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "surface",
+        "type": "A2uiSurface",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
     "name": "A2uiSurfaceStore",
     "kind": "interface",
     "description": "",
@@ -5457,7 +5521,13 @@
       {
         "name": "surfaces",
         "type": "Signal<Map<string, A2uiSurface>>",
-        "description": "",
+        "description": "Wire-format surfaces, for downstream consumers (e.g. surfaceToSpec).",
+        "optional": false
+      },
+      {
+        "name": "surfaceStates",
+        "type": "Signal<Map<string, A2uiSurfaceState>>",
+        "description": "Chat-side projections with per-component readiness.",
         "optional": false
       },
       {
@@ -5480,6 +5550,12 @@
       },
       {
         "name": "surface",
+        "type": "unknown",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "surfaceState",
         "type": "unknown",
         "description": "",
         "optional": false
@@ -6686,6 +6762,20 @@
     "examples": []
   },
   {
+    "name": "A2uiViewEntry",
+    "kind": "type",
+    "description": "Catalog entry for the A2UI surface renderer.\n\n`component` is mounted once all of the component's bindings (data\nmodel paths referenced in its prop expressions) have resolved. While\nany binding is unpopulated, the `fallback` is mounted instead. If\n`fallback` is omitted, the lib's default fallback\n(`A2uiDefaultFallbackComponent`) is mounted.\n\nThis is a chat-side alias for the shared `RenderViewEntry` shape so\nconsumers of `@ngaf/chat` don't have to import from `@ngaf/render`.",
+    "signature": "RenderViewEntry",
+    "examples": []
+  },
+  {
+    "name": "A2uiViews",
+    "kind": "type",
+    "description": "Catalog shape accepted by `<a2ui-surface>`. Each entry is either a\nbare `Type<unknown>` (legacy shape — no per-component fallback) or\nan `A2uiViewEntry`.",
+    "signature": "Readonly<Record<string, Type<unknown> | A2uiViewEntry>>",
+    "examples": []
+  },
+  {
     "name": "AgentEvent",
     "kind": "type",
     "description": "Discriminated union of events flowing on `Agent.events$`.\n\nInvariant: state lives on signals (`messages`, `status`, `toolCalls`,\n`state`, `interrupt`, `subagents`, `history`); events on `events$`\ncarry only things that are not derivable from signals. New variants\nare added purely additively when patterns prove necessary.",
@@ -7261,6 +7351,25 @@
     ],
     "returns": {
       "type": "unknown[] | null",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "normalizeViewEntry",
+    "kind": "function",
+    "description": "Normalize a catalog entry to the `A2uiViewEntry` shape. Bare\n`Type<unknown>` entries are wrapped as `{ component }`; entries\nalready in the discriminated shape are returned unchanged.",
+    "signature": "normalizeViewEntry(entry: Type<unknown> | RenderViewEntry): RenderViewEntry",
+    "params": [
+      {
+        "name": "entry",
+        "type": "Type<unknown> | RenderViewEntry",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "RenderViewEntry",
       "description": ""
     },
     "examples": []
