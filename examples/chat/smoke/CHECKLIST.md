@@ -241,11 +241,17 @@ renders correctly both during streaming and after completion.
 
 - [ ] Click "Demo: ask for approval before a sensitive action" welcome suggestion
 - [ ] AI begins planning, then calls `request_approval` tool — graph pauses
-- [ ] Interrupt panel appears above the input with the AI's reason text
+- [ ] Interrupt panel renders ONCE — no duplicate inline banner inside the message stream
+- [ ] Panel title reads "Agent paused"
+- [ ] Panel body shows the human-readable `reason` text (NOT the raw JSON envelope like `{"type":"approval_request",...}`)
+- [ ] Panel respects color scheme: in light mode the bg is light + text dark; in dark mode bg dark + text light
+- [ ] Button hierarchy is visible: Accept primary (filled), Edit/Respond secondary (bordered), Ignore tertiary (muted text only)
+- [ ] Panel docks above the chat input without overlapping it, even when the subagents strip is also present
 - [ ] Click Accept — graph resumes with `'approved'`; AI proceeds with the plan
 - [ ] (New conversation, click suggestion again) — Click Edit, type a custom response in the prompt — graph resumes with the typed text
 - [ ] (New conversation, click suggestion again) — Click Ignore — graph resumes with `'denied'`; AI acknowledges and stops
 - [ ] During pause: server state shows the interrupt — `curl localhost:2024/threads/<id>/state` reports `next` includes the interrupted node and a pending interrupt value
+- [ ] On thread reload while paused at an interrupt: reload the page — interrupt panel re-appears with the same reason text (hydrated from checkpoint history)
 
 ## Citations
 

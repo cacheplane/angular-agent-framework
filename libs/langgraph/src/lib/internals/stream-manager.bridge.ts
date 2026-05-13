@@ -182,6 +182,13 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
           // panel keeps showing the streamed pre-mutation content.
           syncToolCallsFromMessages();
         }
+
+        // Hydrate pending interrupts from the latest checkpoint. When a
+        // thread is reloaded mid-pause (paused at an interrupt), the
+        // streaming events won't replay — interrupts live on the
+        // checkpoint's tasks[i].interrupts and must be projected manually
+        // so the interrupt panel re-renders on page reload.
+        hydrateInterruptsFromHistory(history as ThreadState<T>[], subjects);
       }
     } catch (err) {
       if (!controller.signal.aborted && (err as Error)?.name !== 'AbortError') {
@@ -757,6 +764,43 @@ function extractInterrupts<T, B extends BagTemplate>(
   if (subjects.interrupt$.value !== undefined) {
     subjects.interrupt$.next(undefined);
     subjects.interrupts$.next([]);
+  }
+}
+
+/**
+ * Projects pending interrupts from the latest history checkpoint onto the
+ * interrupt$ / interrupts$ subjects. ThreadState exposes interrupts under
+ * `tasks[i].interrupts` (per the LangGraph SDK schema). When the latest
+ * checkpoint contains any pending interrupts, mirror them so consumers can
+ * react via `agent.interrupt()` on thread reload without needing a fresh
+ * stream event.
+ *
+ * If no interrupts are present, this is a no-op so existing streamed state
+ * (mid-run) isn't clobbered by a stale history refresh.
+ */
+function hydrateInterruptsFromHistory<T, B extends BagTemplate>(
+  history: ThreadState<T>[],
+  subjects: StreamSubjects<T, B>,
+): void {
+  const latest = history[0];
+  if (!latest || !Array.isArray(latest.tasks)) return;
+  const collected: Interrupt[] = [];
+  for (const task of latest.tasks) {
+    if (task && Array.isArray(task.interrupts) && task.interrupts.length > 0) {
+      for (const ix of task.interrupts as Interrupt[]) {
+        collected.push(ix);
+      }
+    }
+  }
+  if (collected.length > 0) {
+    subjects.interrupts$.next(
+      collected as unknown as Parameters<typeof subjects.interrupts$.next>[0],
+    );
+    subjects.interrupt$.next(
+      collected[collected.length - 1] as unknown as Parameters<
+        typeof subjects.interrupt$.next
+      >[0],
+    );
   }
 }
 
