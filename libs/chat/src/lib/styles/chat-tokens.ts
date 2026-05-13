@@ -129,6 +129,42 @@ export const CHAT_HOST_TOKENS = `
 // references in component styles (which Angular leaves untouched).
 
 /**
+ * WCAG 2.3.3 — honor the OS-level "Reduce Motion" preference. Collapses
+ * every transition/animation in the chat lib (and the a2ui catalog,
+ * which renders in the same document) to instant. The `!important`
+ * flag intentionally overrides any inline `style="transition: ..."`
+ * applied by future code — accessibility wins.
+ *
+ * Infinite-loop indicators (spinner, typing dots, caret, etc.) need
+ * explicit `animation: none` because `iteration-count: 1` alone would
+ * freeze them mid-loop, which reads as a bug.
+ */
+const REDUCED_MOTION_STYLES = `
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .tcc__pill[data-status="running"] svg,
+  .ngaf-chat-typing-dot,
+  .ngaf-chat-caret,
+  .ngaf-chat-welcome__pulse,
+  .chat-genui-skeleton,
+  .chat-debug__pill--active {
+    animation: none !important;
+    opacity: 1 !important;
+  }
+
+  .tcc__pill[data-status="running"] svg {
+    transform: none !important;
+  }
+}
+`;
+
+/**
  * Token defaults written to `<head>` once on first chat-component
  * construction. Wrapped in `@layer ngaf-chat` so the consumer's unlayered
  * `:root { --ngaf-chat-*: ... }` rule beats the lib's defaults regardless
@@ -140,7 +176,7 @@ export const CHAT_HOST_TOKENS = `
  *     forces dark.
  *   - `[data-ngaf-chat-theme="light"]` forces light.
  */
-const ROOT_TOKEN_STYLES = `
+export const ROOT_TOKEN_STYLES = `
 @layer ngaf-chat {
   :root {
     ${LIGHT_TOKENS}
@@ -157,6 +193,7 @@ const ROOT_TOKEN_STYLES = `
   [data-ngaf-chat-theme="dark"] { ${DARK_TOKENS} }
 }
 ${KEYFRAMES}
+${REDUCED_MOTION_STYLES}
 `;
 
 const STYLE_ELEMENT_ID = 'ngaf-chat-root-tokens';
