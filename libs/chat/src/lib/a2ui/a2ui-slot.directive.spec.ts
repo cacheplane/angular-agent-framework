@@ -7,13 +7,13 @@ import type { A2uiComponentView } from './component-view';
 import type { A2uiViews } from './views';
 
 @Component({
-  standalone: true, selector: 't-real', changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true, selector: 'a2ui-test-real', changeDetection: ChangeDetectionStrategy.OnPush,
   template: '<span data-role="real">REAL:{{ label() ?? "" }}</span>',
 })
 class RealCmp { readonly label = input<string>(); }
 
 @Component({
-  standalone: true, selector: 't-fb', changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true, selector: 'a2ui-test-fallback', changeDetection: ChangeDetectionStrategy.OnPush,
   template: '<span data-role="fallback">FB</span>',
 })
 class FallbackCmp {}

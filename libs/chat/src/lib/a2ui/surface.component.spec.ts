@@ -6,9 +6,9 @@ import { A2uiSurfaceComponent } from './surface.component';
 import type { A2uiSurfaceState } from './surface-store';
 import type { A2uiViews } from './views';
 
-@Component({ standalone: true, selector: 't-real', template: '<span data-role="real"></span>', changeDetection: ChangeDetectionStrategy.OnPush })
+@Component({ standalone: true, selector: 'a2ui-test-real', template: '<span data-role="real"></span>', changeDetection: ChangeDetectionStrategy.OnPush })
 class RealCmp {}
-@Component({ standalone: true, selector: 't-fb', template: '<span data-role="custom-fb"></span>', changeDetection: ChangeDetectionStrategy.OnPush })
+@Component({ standalone: true, selector: 'a2ui-test-custom-fb', template: '<span data-role="custom-fb"></span>', changeDetection: ChangeDetectionStrategy.OnPush })
 class CustomFallback {}
 
 function makeState(componentViews: Map<string, unknown>): A2uiSurfaceState {
