@@ -139,6 +139,39 @@ describe('ChatSidenavComponent', () => {
     expect(fixture.nativeElement.querySelector('.chat-sidenav__action--collapse')).toBeNull();
   });
 
+  it('renders a topbar containing the new-chat and collapse buttons in expanded mode', () => {
+    const fixture = render({ mode: 'expanded' });
+    const topbar = fixture.nativeElement.querySelector('.chat-sidenav__topbar') as HTMLElement;
+    expect(topbar).not.toBeNull();
+    expect(topbar.querySelector('.chat-sidenav__action--new')).not.toBeNull();
+    expect(topbar.querySelector('.chat-sidenav__action--collapse')).not.toBeNull();
+  });
+
+  it('search button is the only action in .chat-sidenav__actions row', () => {
+    const fixture = render({ mode: 'expanded' });
+    const actions = fixture.nativeElement.querySelector('.chat-sidenav__actions') as HTMLElement;
+    const buttons = actions.querySelectorAll('button');
+    expect(buttons.length).toBe(1);
+    expect(buttons[0].classList.contains('chat-sidenav__action--search')).toBe(true);
+  });
+
+  it('drawer mode: renders a close button in the topbar that emits openChange(false)', () => {
+    const fixture = render({ mode: 'drawer', open: true });
+    const topbar = fixture.nativeElement.querySelector('.chat-sidenav__topbar') as HTMLElement;
+    const close = topbar.querySelector('.chat-sidenav__action--close') as HTMLButtonElement;
+    expect(close).not.toBeNull();
+    expect(close.getAttribute('aria-label')).toBe('Close conversations');
+    let lastOpen: boolean | undefined;
+    fixture.componentInstance.openChange.subscribe((v: boolean) => { lastOpen = v; });
+    close.click();
+    expect(lastOpen).toBe(false);
+  });
+
+  it('non-drawer modes: no close button is rendered', () => {
+    expect(render({ mode: 'expanded' }).nativeElement.querySelector('.chat-sidenav__action--close')).toBeNull();
+    expect(render({ mode: 'collapsed' }).nativeElement.querySelector('.chat-sidenav__action--close')).toBeNull();
+  });
+
   it('clicking the chevron in expanded mode emits modeChange="collapsed"', () => {
     const fixture = render({ mode: 'expanded' });
     let last: string | undefined;

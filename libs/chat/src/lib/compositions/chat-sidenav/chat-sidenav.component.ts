@@ -55,7 +55,7 @@ export type ChatSidenavMode = 'expanded' | 'collapsed' | 'drawer';
         <ng-content select="[sidenavHeader]" />
       </div>
 
-      <div class="chat-sidenav__actions">
+      <div class="chat-sidenav__topbar">
         <button
           type="button"
           class="chat-sidenav__action chat-sidenav__action--new"
@@ -68,19 +68,6 @@ export type ChatSidenavMode = 'expanded' | 'collapsed' | 'drawer';
             <line x1="5" y1="12" x2="19" y2="12"/>
           </svg>
           <span class="chat-sidenav__action-label">New chat</span>
-        </button>
-        <button
-          type="button"
-          class="chat-sidenav__action chat-sidenav__action--search"
-          (click)="searchOpened.emit()"
-          aria-label="Search conversations"
-          title="Search conversations (⌘K)"
-        >
-          <svg class="chat-sidenav__action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <circle cx="11" cy="11" r="7"/>
-            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-          </svg>
-          <span class="chat-sidenav__action-label">Search</span>
         </button>
         @if (mode() !== 'drawer') {
           <button
@@ -102,6 +89,37 @@ export type ChatSidenavMode = 'expanded' | 'collapsed' | 'drawer';
             <span class="chat-sidenav__action-label">{{ mode() === 'collapsed' ? 'Expand' : 'Collapse' }}</span>
           </button>
         }
+        @if (mode() === 'drawer') {
+          <button
+            type="button"
+            class="chat-sidenav__action chat-sidenav__action--close"
+            (click)="openChange.emit(false)"
+            aria-label="Close conversations"
+            title="Close conversations"
+          >
+            <svg class="chat-sidenav__action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+            <span class="chat-sidenav__action-label">Close</span>
+          </button>
+        }
+      </div>
+
+      <div class="chat-sidenav__actions">
+        <button
+          type="button"
+          class="chat-sidenav__action chat-sidenav__action--search"
+          (click)="searchOpened.emit()"
+          aria-label="Search conversations"
+          title="Search conversations (⌘K)"
+        >
+          <svg class="chat-sidenav__action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="11" cy="11" r="7"/>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <span class="chat-sidenav__action-label">Search</span>
+        </button>
       </div>
 
       <div class="chat-sidenav__primary">
