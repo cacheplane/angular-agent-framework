@@ -651,6 +651,9 @@ describe('ChatThreadListComponent', () => {
       fixture.componentRef.setInput('actions', { reorderPinned: spy });
       fixture.detectChanges();
       const wraps = fixture.nativeElement.querySelectorAll('.chat-thread-list__item-wrap');
+      // jsdom doesn't layout; stub rects so before/after threshold works.
+      (wraps[0] as HTMLElement).getBoundingClientRect = () => ({ top: 0, bottom: 40, height: 40, left: 0, right: 100, width: 100, x: 0, y: 0, toJSON: () => ({}) }) as DOMRect;
+      (wraps[1] as HTMLElement).getBoundingClientRect = () => ({ top: 40, bottom: 80, height: 40, left: 0, right: 100, width: 100, x: 0, y: 40, toJSON: () => ({}) }) as DOMRect;
       // jsdom doesn't construct DragEvent with dataTransfer; stub it.
       const dt = { setData: vi.fn(), getData: vi.fn((k: string) => k === 'text/plain' ? 'p2' : ''), effectAllowed: 'move', dropEffect: 'move' } as unknown as DataTransfer;
       const dragStart = new Event('dragstart', { bubbles: true }) as DragEvent;
@@ -658,10 +661,9 @@ describe('ChatThreadListComponent', () => {
       wraps[1].dispatchEvent(dragStart);
       fixture.detectChanges();
 
-      const p1Rect = (wraps[0] as HTMLElement).getBoundingClientRect();
       const dragOver = new Event('dragover', { bubbles: true }) as DragEvent;
       Object.defineProperty(dragOver, 'dataTransfer', { value: dt });
-      Object.defineProperty(dragOver, 'clientY', { value: p1Rect.top + 2 });
+      Object.defineProperty(dragOver, 'clientY', { value: 2 });
       Object.defineProperty(dragOver, 'currentTarget', { value: wraps[0] });
       wraps[0].dispatchEvent(dragOver);
       fixture.detectChanges();
@@ -683,16 +685,18 @@ describe('ChatThreadListComponent', () => {
       fixture.componentRef.setInput('actions', { reorderPinned: spy });
       fixture.detectChanges();
       const wraps = fixture.nativeElement.querySelectorAll('.chat-thread-list__item-wrap');
+      // jsdom doesn't layout; stub rects so before/after threshold works.
+      (wraps[0] as HTMLElement).getBoundingClientRect = () => ({ top: 0, bottom: 40, height: 40, left: 0, right: 100, width: 100, x: 0, y: 0, toJSON: () => ({}) }) as DOMRect;
+      (wraps[1] as HTMLElement).getBoundingClientRect = () => ({ top: 40, bottom: 80, height: 40, left: 0, right: 100, width: 100, x: 0, y: 40, toJSON: () => ({}) }) as DOMRect;
       const dt = { setData: vi.fn(), getData: vi.fn((k: string) => k === 'text/plain' ? 'p1' : ''), effectAllowed: 'move', dropEffect: 'move' } as unknown as DataTransfer;
       const dragStart = new Event('dragstart', { bubbles: true }) as DragEvent;
       Object.defineProperty(dragStart, 'dataTransfer', { value: dt });
       wraps[0].dispatchEvent(dragStart);
       fixture.detectChanges();
 
-      const p2Rect = (wraps[1] as HTMLElement).getBoundingClientRect();
       const dragOver = new Event('dragover', { bubbles: true }) as DragEvent;
       Object.defineProperty(dragOver, 'dataTransfer', { value: dt });
-      Object.defineProperty(dragOver, 'clientY', { value: p2Rect.bottom - 2 });
+      Object.defineProperty(dragOver, 'clientY', { value: 78 });
       Object.defineProperty(dragOver, 'currentTarget', { value: wraps[1] });
       wraps[1].dispatchEvent(dragOver);
       fixture.detectChanges();
