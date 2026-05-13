@@ -136,6 +136,20 @@ renders correctly both during streaming and after completion.
 - [ ] Palette never overlaps the chat input
 - [ ] Palette stays above any popup/sidebar in z-order
 
+## Color scheme (Light / Dark)
+
+- [ ] Palette → APPEARANCE section shows a `Light` / `Dark` segmented control above the existing `Theme` dropdown
+- [ ] Default is `Dark` on first load
+- [ ] Toggle to `Light` — `<html>` flips to `data-color-scheme="light"` and `data-ngaf-chat-theme="light"`
+- [ ] Page background flips to white; chat composition + sidenav backgrounds flip to light
+- [ ] A2UI surface text colors invert correctly (no white-on-white or black-on-black)
+- [ ] Toggle back to `Dark` — all of the above restore
+- [ ] When A2UI theme dropdown is on `default-dark` or `default-light`, it auto-syncs with the color scheme toggle
+- [ ] When A2UI theme is on a `material-*` preset, color scheme toggle does NOT change the A2UI theme (user override wins)
+- [ ] Selection persists across reload (`localStorage.ngaf-chat-demo:palette.colorScheme`)
+- [ ] No FOUC on initial load — inline `<head>` script reads the persisted value before bootstrap
+- [ ] No `console.error` on toggle
+
 ## Keyboard & accessibility
 
 - [ ] Tab order reaches: input, send button, suggestions (when shown),
@@ -219,6 +233,9 @@ renders correctly both during streaming and after completion.
 - [ ] After tool completes: card collapses to "complete" pill
 - [ ] Click the card — args + result panels expand
 - [ ] AI response references documents inline (e.g. "Signals are... [1]")
+- [ ] Tool call card name (`.tcc__name`) is rendered in `--ngaf-chat-text-muted` color and `font-size-sm` (NOT full-brightness text)
+- [ ] Tool call status pill (`.tcc__pill`) uses muted monochrome (`--ngaf-chat-text-muted`) regardless of status — NO saturated green/red for complete/error states
+- [ ] `<chat-tool-calls>` host has `margin-bottom >= 16px` so the next sibling (A2UI surface or markdown) has clear breathing room
 
 ## Interrupts / human-in-the-loop
 
@@ -328,9 +345,11 @@ Components NOT yet exercised by the demo (deferred to future media-focused sugge
 ## Sidenav (thread management)
 
 - [ ] Left sidenav renders by default as a semantic `<nav>` with `position: fixed`
+- [ ] Sidenav is `position: fixed` at desktop widths (>= 1024px) — confirmed via `getComputedStyle`
+- [ ] Sidenav header has a topbar containing two icon-only buttons (Create on the left, Collapse/Expand chevron on the right). Search is a separate full-width row below the topbar.
 - [ ] Sidenav has two sections: **Active** and **Archived**
-- [ ] Active section header may show a "+ New thread" button; Archived section collapses/expands
-- [ ] "+ New thread" calls `POST /threads`, switches the agent, resets the chat area to welcome state
+- [ ] Archived section collapses/expands
+- [ ] Create (+) icon in topbar calls `POST /threads`, switches the agent, resets the chat area to welcome state
 - [ ] Threads render with their server-derived title (set from the first user message) — NOT a "Thread XXXX" id placeholder
 - [ ] Active row that matches the current thread is visually distinguished (`data-active` attribute)
 - [ ] Click a different active row — chat area reloads the selected thread's messages
@@ -361,6 +380,10 @@ Components NOT yet exercised by the demo (deferred to future media-focused sugge
 - [ ] Pinned row kebab menu order: **Rename**, **Unpin**, **Archive**, **Delete** (no "Pin")
 - [ ] **Unpin** — pin icon disappears; row returns to chronological order on refresh
 - [ ] Pinned state persists across reload (PATCH `metadata.pinned`)
+- [ ] Pinned rows show a drag-grip handle on the left edge on hover (`aria-label="Drag to reorder"`)
+- [ ] Drag a pinned thread — reorders within the pinned group; non-pinned threads unaffected
+- [ ] Pinned row kebab also includes **Move up** and **Move down** items (above Archive/Delete), enabled only when applicable (e.g. Move up disabled on the topmost pinned row)
+- [ ] Pin reorder persists across reload via `metadata.pinnedOrder` (verify backend key)
 - [ ] **Archive** — row moves out of Active and into Archived; chat area switches to a fresh state if archived thread was active
 - [ ] **Delete** — confirmation prompt fires; on confirm, row removed from list and thread gone server-side (DELETE `/threads/{id}`); cancellation leaves thread intact
 - [ ] Archived row kebab menu order: **Unarchive**, **Delete** (no Pin/Unpin — pinning is active-mode only)
@@ -381,6 +404,7 @@ Components NOT yet exercised by the demo (deferred to future media-focused sugge
 - [ ] Each marker shows the step label and checkpoint id (or a short identifier)
 - [ ] Hovering a marker highlights it consistently with the timeline-panel checkpoint entry
 - [ ] Markers do not break message spacing or autoscroll
+- [ ] Hovering a checkpoint marker dot shows the "Rewind / Fork" action pill **immediately adjacent** to the dot (not floating ~250px below) — confirms the marker host's `position: relative` regression has not returned
 
 ## Responsive sidenav
 
@@ -389,6 +413,19 @@ Components NOT yet exercised by the demo (deferred to future media-focused sugge
 - [ ] At viewport ≤ 768px: chat input + send remain accessible; sidenav does not push the chat horizontally
 - [ ] No horizontal scrollbar at any tested viewport
 - [ ] Toggling collapse manually overrides the responsive default until the next breakpoint crossing
+
+## Sidenav collapsed mode
+
+- [ ] Click the chevron in the sidenav topbar (or press Cmd+B) to collapse
+- [ ] Collapsed width is ~56px
+- [ ] Topbar icons stack vertically in collapsed mode: `+` (Create) on top, chevron (Expand) below
+- [ ] Search icon remains in its row below the topbar
+- [ ] Thread rows in collapsed mode show a circular initial avatar (first letter of title, uppercase, surrogate-pair-safe)
+- [ ] Thread row labels, kebab, grip handle, and timestamps are hidden in collapsed mode
+- [ ] Hovering a thread row in collapsed mode reveals the full title via native browser tooltip (`[title]` attribute)
+- [ ] Right-click any thread row (collapsed OR expanded) — opens the same overflow menu anchored to the cursor; OS native context menu is suppressed via `event.preventDefault()`
+- [ ] Click the chevron again (or Cmd+B) — restores expanded mode
+- [ ] Persists across reload (`localStorage.ngaf-chat-demo:palette.sidenavMode = 'collapsed'`)
 
 ## Projects
 
