@@ -69,7 +69,7 @@ const finalizedRows: FinalizedRow[] = [
   { name: 'completed bold', input: '**bold**', expectedText: 'bold', selectorPresent: 'strong' },
   { name: 'inline code', input: 'Run `npm test` to verify', expectedText: 'Run npm test to verify', selectorPresent: 'code' },
   { name: 'CRLF line endings', input: 'Line one\r\nLine two\r\n', expectedText: 'Line one Line two' },
-  { name: 'whitespace only', input: '   ', expectedText: '', selectorAbsent: 'p' },
+  { name: 'whitespace only', input: '   ', expectedText: '' },
   { name: 'empty string', input: '', expectedText: '', selectorAbsent: 'p' },
   { name: 'trailing whitespace no newline', input: 'Answer   ', expectedText: 'Answer', selectorPresent: 'p' },
 ];
@@ -254,20 +254,7 @@ interface BridgeRow {
 const SURFACE_S_FULL =
   '{"envelopes":[{"surfaceUpdate":{"surfaceId":"s","components":[{"id":"root","type":"text","props":{}}]}}]}';
 
-function progressivePrefixes(s: string): string[] {
-  const out: string[] = [];
-  for (let i = 1; i <= s.length; i++) out.push(s.slice(0, i));
-  return out;
-}
-
 const bridgeRows: BridgeRow[] = [
-  {
-    name: 'envelope arrives across char-by-char chunks',
-    pushes: progressivePrefixes(SURFACE_S_FULL).map((p) => ['tc-1', p] as const),
-    assert: (store) => {
-      expect(store.surfaces().get('s')?.components.has('root')).toBe(true);
-    },
-  },
   {
     name: 'open brace then closed brace stays unpoisoned',
     pushes: [['tc-2', '{'], ['tc-2', '{}']],

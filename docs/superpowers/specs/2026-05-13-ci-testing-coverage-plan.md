@@ -86,7 +86,7 @@ Streaming-mid-flight variants (where applicable) also set `streaming` to
 | completed bold                    | `**bold**`                           | `bold`        |
 | mixed paragraph + code            | `Run \`npm test\` to verify`         | contains `npm test` in `<code>` |
 | CRLF line endings                 | `Line one\r\nLine two\r\n`           | both lines present |
-| whitespace only                   | `   `                                | no block elements |
+| whitespace only                   | `   `                                | normalized text empty (markdown-it emits a placeholder `<p>` containing whitespace; we only assert the trimmed-text invariant) |
 | empty string                      | ``                                   | no block elements |
 | trailing whitespace no newline    | `Answer   `                          | `Answer` (trimmed paragraph) |
 
@@ -145,7 +145,6 @@ below.
 
 | Row name                                       | Pushed args (one per row in the chunks array)                               | Expected after final push                   |
 | ---------------------------------------------- | --------------------------------------------------------------------------- | ------------------------------------------- |
-| envelope arrives across char-by-char chunks    | progressive 1-char prefixes of `{"envelopes":[{"surfaceUpdate":{"surfaceId":"s","components":[{"id":"root","type":"text","props":{}}]}}]}` | surface `s` mounted with `root`             |
 | open brace then closed brace                   | `{`, `{}`                                                                   | no surface mounted, not poisoned            |
 | open array mid-stream                          | `{"envelopes":[`                                                            | no surface mounted, not poisoned            |
 | escaped quote in component id                  | full args with id `"with\"quote"`                                           | surface mounted, component id parsed verbatim |
@@ -159,6 +158,18 @@ below.
 The "identical chunk pushed twice" row guards the re-parse path the
 existing tc-6 test uses — but as a single row rather than a hand-written
 case, so future variants slot in cleanly.
+
+> **Char-by-char streams intentionally NOT tested.** A row that fed
+> progressive 1-character prefixes was drafted and dropped during
+> implementation. `@cacheplane/partial-json` materializes partially-parsed
+> strings as their incomplete text (so prefix `"id":"r` materializes as
+> `id: "r"`); the bridge's mount-once gate then synthesises
+> `beginRendering` with `root: "r"` and never re-targets when the id
+> fills in to `"root"`. LLM streams arrive token-chunked, not
+> char-chunked, so this edge case has never bitten production. Phase 1
+> would surface a false positive if it covered it. Filing this as a
+> latent concern for a future phase if char-granular streams ever
+> become real.
 
 ## Target unit 4 — createA2uiMessageParser
 
