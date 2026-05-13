@@ -67,11 +67,18 @@ export class ChatOverflowMenuComponent {
   readonly items = input<OverflowMenuItem[]>([]);
   /** Element the menu anchors against (positions just below its bottom-right corner). */
   readonly anchor = input<HTMLElement | null>(null);
+  /** Alternative anchor: explicit viewport coordinates (e.g. cursor position
+   *  from a right-click). Takes precedence over `anchor` when set. */
+  readonly anchorPos = input<{ x: number; y: number } | null>(null);
   readonly itemSelected = output<string>();
   readonly closed = output<void>();
 
   protected readonly position = computed<{ top: number; left: number }>(() => {
     if (!this.open()) return { top: 0, left: 0 };
+    const pos = this.anchorPos();
+    if (pos) {
+      return { top: pos.y + 4, left: Math.max(pos.x, 8) };
+    }
     const el = this.anchor();
     if (!el) {
       const vw = typeof window === 'undefined' ? 0 : window.innerWidth;

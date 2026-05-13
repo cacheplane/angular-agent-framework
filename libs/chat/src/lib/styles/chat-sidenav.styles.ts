@@ -83,8 +83,11 @@ export const CHAT_SIDENAV_STYLES = `
     border-bottom: 1px solid var(--ngaf-chat-separator);
   }
   :host([data-mode="collapsed"]) .chat-sidenav__topbar {
+    flex-direction: column;
+    align-items: center;
     justify-content: center;
-    padding: var(--ngaf-chat-space-2);
+    gap: 4px;
+    padding: var(--ngaf-chat-space-2) 0;
   }
   .chat-sidenav__topbar .chat-sidenav__action {
     width: 36px;
@@ -206,4 +209,25 @@ export const CHAT_SIDENAV_STYLES = `
   :host([data-mode="collapsed"]) .chat-sidenav__archived { display: none; }
   .chat-sidenav__projects { flex-shrink: 0; }
   :host([data-mode="collapsed"]) .chat-sidenav__projects { display: none; }
+
+  /* Collapsed-mode thread row presentation: hide labels, kebab and grip;
+   * surface the per-thread initial circle so the strip reads as a list of
+   * threads rather than an empty column. */
+  :host([data-mode="collapsed"]) .chat-thread-list__initial {
+    display: inline-flex;
+  }
+  :host([data-mode="collapsed"]) .chat-thread-list__item-title { display: none; }
+  :host([data-mode="collapsed"]) .chat-thread-list__item-time { display: none; }
+  :host([data-mode="collapsed"]) .chat-thread-list__kebab { display: none; }
+  :host([data-mode="collapsed"]) .chat-thread-list__grip { display: none; }
+  :host([data-mode="collapsed"]) .chat-thread-list__item-wrap {
+    justify-content: center;
+  }
+  :host([data-mode="collapsed"]) .chat-thread-list__item {
+    padding: 6px;
+    justify-content: center;
+    align-items: center;
+    flex-direction: row;
+  }
+  :host([data-mode="collapsed"]) .chat-thread-list__new { display: none; }
 `;
