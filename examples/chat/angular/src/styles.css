@@ -11,8 +11,24 @@ html, body {
   padding: 0;
   height: 100%;
   font-family: system-ui, -apple-system, sans-serif;
-  background: #0f1116;
-  color: #e6e9ef;
+  background: var(--demo-page-bg);
+  color: var(--demo-page-text);
+}
+
+/*
+ * Demo page color scheme — driven by `data-color-scheme` on <html>.
+ * The pre-bootstrap inline script in index.html sets the attribute
+ * from persisted state before any stylesheet applies; the runtime
+ * effect in DemoShell keeps it in sync afterwards. Default (no
+ * attribute) is dark to match prior behavior.
+ */
+html {
+  --demo-page-bg: #0f1116;
+  --demo-page-text: #e6e9ef;
+}
+html[data-color-scheme="light"] {
+  --demo-page-bg: #ffffff;
+  --demo-page-text: #1c1c1c;
 }
 
 /*

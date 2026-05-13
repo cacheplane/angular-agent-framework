@@ -88,6 +88,11 @@
         />
       </chat-debug-section>
       <chat-debug-section label="Appearance">
+        <chat-debug-segmented
+          [options]="colorSchemeOptions"
+          [value]="colorScheme()"
+          (valueChange)="onColorSchemeChange($event)"
+        />
         <chat-debug-select
           label="Theme"
           [options]="themeOptions()"

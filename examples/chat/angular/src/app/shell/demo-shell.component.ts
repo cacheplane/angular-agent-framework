@@ -83,6 +83,28 @@ export class DemoShell {
       this.document.documentElement.setAttribute('data-theme', this.theme());
     });
 
+    // App-wide color scheme: drives the demo page bg/text via
+    // `data-color-scheme` and the chat-lib internals via
+    // `data-ngaf-chat-theme`. The pre-bootstrap script in index.html
+    // applies the initial value before stylesheets load; this effect
+    // keeps both attrs synced after Angular takes over and also
+    // auto-syncs the A2UI theme dropdown when it sits on a default
+    // preset — material picks are left alone since the user opted in.
+    effect(() => {
+      const scheme = this.colorScheme();
+      const html = this.document.documentElement;
+      html.setAttribute('data-color-scheme', scheme);
+      html.setAttribute('data-ngaf-chat-theme', scheme);
+      const currentTheme = this.theme();
+      if (currentTheme === 'default-dark' || currentTheme === 'default-light') {
+        const next = scheme === 'light' ? 'default-light' : 'default-dark';
+        if (currentTheme !== next) {
+          this.theme.set(next);
+          this.persistence.write('theme', next);
+        }
+      }
+    });
+
     // Refresh threads list whenever the active thread changes (e.g. after
     // create or switch) so the panel stays up to date. The effect also
     // covers the initial load (fires synchronously on first reactive read).
@@ -151,6 +173,15 @@ export class DemoShell {
    * scoped `--a2ui-*` overrides off. Persisted across reloads.
    */
   readonly theme = signal<string>(this.persistence.read('theme') ?? 'default-dark');
+
+  /**
+   * App-wide color scheme. Single source of truth for the demo page bg,
+   * the chat lib's internal `data-ngaf-chat-theme`, and (when the A2UI
+   * theme is on a default preset) the base A2UI theme. Persisted.
+   */
+  readonly colorScheme = signal<'light' | 'dark'>(
+    (this.persistence.read('colorScheme') as 'light' | 'dark' | null) ?? 'dark',
+  );
 
   /** Whether the threads drawer is open. Persisted across reloads. */
   protected readonly drawerOpen = signal<boolean>(this.persistence.read('drawerOpen') ?? false);
@@ -227,6 +258,11 @@ export class DemoShell {
     { value: 'a2ui',        label: 'A2UI v1' },
     { value: 'json-render', label: 'json-render' },
   ]);
+
+  protected readonly colorSchemeOptions = [
+    { value: 'light', label: 'Light' },
+    { value: 'dark', label: 'Dark' },
+  ] as const;
 
   protected readonly themeOptions = signal<readonly { value: string; label: string }[]>([
     { value: 'default-dark',   label: 'Default dark' },
@@ -345,6 +381,12 @@ export class DemoShell {
   protected onThemeChange(next: string): void {
     this.theme.set(next);
     this.persistence.write('theme', next);
+  }
+
+  protected onColorSchemeChange(next: 'light' | 'dark' | string): void {
+    if (next !== 'light' && next !== 'dark') return;
+    this.colorScheme.set(next);
+    this.persistence.write('colorScheme', next);
   }
 
   protected onSidenavOpenChange(next: boolean): void {

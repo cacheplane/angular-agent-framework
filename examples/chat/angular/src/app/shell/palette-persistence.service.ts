@@ -12,6 +12,7 @@ interface PaletteState {
   drawerOpen?: boolean | null;
   sidenavMode?: 'expanded' | 'collapsed' | null;
   selectedProjectId?: string | null;
+  colorScheme?: 'light' | 'dark' | null;
 }
 
 type PaletteKey = keyof PaletteState;
