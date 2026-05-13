@@ -64,10 +64,10 @@ export async function GET(req: NextRequest) {
 
   // Wrap in a preview frame showing subject line
   const preview = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Preview: ${subject}</title></head>
-  <body style="margin:0;padding:0;background:#e4e4e7">
-    <div style="background:#fff;padding:12px 24px;border-bottom:1px solid #e4e4e7;font-family:Inter,Arial,sans-serif;display:flex;align-items:center;justify-content:space-between">
+  <body style="margin:0;padding:0;background:#f4f6fb">
+    <div style="background:#fff;padding:12px 24px;border-bottom:1px solid #e6e8ee;font-family:Inter,Arial,sans-serif;display:flex;align-items:center;justify-content:space-between">
       <div>
-        <span style="font-size:11px;color:#71717a;text-transform:uppercase;letter-spacing:0.06em">Subject:</span>
+        <span style="font-size:11px;color:#8b8fa3;text-transform:uppercase;letter-spacing:0.06em">Subject:</span>
         <span style="font-size:14px;font-weight:600;color:#1a1a2e;margin-left:8px">${subject}</span>
       </div>
       <a href="/api/email-preview" style="font-size:12px;color:#004090;text-decoration:none">← All templates</a>
