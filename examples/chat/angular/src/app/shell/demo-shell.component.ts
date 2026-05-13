@@ -281,6 +281,7 @@ export class DemoShell {
     moveToProject: async (id, projectId) => {
       await this.threadsSvc.moveToProject(id, projectId);
     },
+    reorderPinned: (id, beforeId) => this.threadsSvc.reorderPinned(id, beforeId),
   };
 
   /**
