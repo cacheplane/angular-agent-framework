@@ -481,5 +481,231 @@ describe('ChatThreadListComponent', () => {
       fixture.detectChanges();
       expect(moveSpy).toHaveBeenCalledWith('t1', null);
     });
+
+    it('grip handle renders for pinned rows when reorderPinned provided', () => {
+      const fixture = TestBed.createComponent(ChatThreadListComponent);
+      fixture.componentRef.setInput('threads', [
+        { id: 'p1', title: 'P1', pinned: true },
+        { id: 't1', title: 'T1' },
+      ]);
+      fixture.componentRef.setInput('actions', { reorderPinned: vi.fn().mockResolvedValue(undefined) });
+      fixture.detectChanges();
+      const grips = fixture.nativeElement.querySelectorAll('.chat-thread-list__grip');
+      expect(grips.length).toBe(1);
+    });
+
+    it('grip handle does NOT render for unpinned rows', () => {
+      const fixture = TestBed.createComponent(ChatThreadListComponent);
+      fixture.componentRef.setInput('threads', [{ id: 't1', title: 'T1' }]);
+      fixture.componentRef.setInput('actions', { reorderPinned: vi.fn().mockResolvedValue(undefined) });
+      fixture.detectChanges();
+      expect(fixture.nativeElement.querySelector('.chat-thread-list__grip')).toBeNull();
+    });
+
+    it('grip handle does NOT render when reorderPinned absent', () => {
+      const fixture = TestBed.createComponent(ChatThreadListComponent);
+      fixture.componentRef.setInput('threads', [{ id: 'p1', title: 'P1', pinned: true }]);
+      fixture.componentRef.setInput('actions', {});
+      fixture.detectChanges();
+      expect(fixture.nativeElement.querySelector('.chat-thread-list__grip')).toBeNull();
+    });
+
+    it('menu on pinned thread that is NOT first → includes "Move up"', () => {
+      const fixture = TestBed.createComponent(ChatThreadListComponent);
+      fixture.componentRef.setInput('threads', [
+        { id: 'p1', title: 'P1', pinned: true },
+        { id: 'p2', title: 'P2', pinned: true },
+      ]);
+      fixture.componentRef.setInput('actions', { reorderPinned: vi.fn().mockResolvedValue(undefined) });
+      fixture.detectChanges();
+      const kebabs = fixture.nativeElement.querySelectorAll('.chat-thread-list__kebab');
+      (kebabs[1] as HTMLElement).click();
+      fixture.detectChanges();
+      const labels = Array.from(document.querySelectorAll('.chat-overflow-menu__item'))
+        .map((el) => (el as HTMLElement).textContent?.trim());
+      expect(labels).toContain('Move up');
+      expect(labels).not.toContain('Move down');
+    });
+
+    it('menu on pinned thread that is NOT last → includes "Move down"', () => {
+      const fixture = TestBed.createComponent(ChatThreadListComponent);
+      fixture.componentRef.setInput('threads', [
+        { id: 'p1', title: 'P1', pinned: true },
+        { id: 'p2', title: 'P2', pinned: true },
+      ]);
+      fixture.componentRef.setInput('actions', { reorderPinned: vi.fn().mockResolvedValue(undefined) });
+      fixture.detectChanges();
+      const kebabs = fixture.nativeElement.querySelectorAll('.chat-thread-list__kebab');
+      (kebabs[0] as HTMLElement).click();
+      fixture.detectChanges();
+      const labels = Array.from(document.querySelectorAll('.chat-overflow-menu__item'))
+        .map((el) => (el as HTMLElement).textContent?.trim());
+      expect(labels).toContain('Move down');
+      expect(labels).not.toContain('Move up');
+    });
+
+    it('singleton pinned thread → menu has neither Move up nor Move down', () => {
+      const fixture = TestBed.createComponent(ChatThreadListComponent);
+      fixture.componentRef.setInput('threads', [{ id: 'p1', title: 'P1', pinned: true }]);
+      fixture.componentRef.setInput('actions', { reorderPinned: vi.fn().mockResolvedValue(undefined) });
+      fixture.detectChanges();
+      (fixture.nativeElement.querySelector('.chat-thread-list__kebab') as HTMLElement).click();
+      fixture.detectChanges();
+      const labels = Array.from(document.querySelectorAll('.chat-overflow-menu__item'))
+        .map((el) => (el as HTMLElement).textContent?.trim());
+      expect(labels).not.toContain('Move up');
+      expect(labels).not.toContain('Move down');
+    });
+
+    it('Click Move up → calls reorderPinned with previous-pinned id', async () => {
+      const spy = vi.fn().mockResolvedValue(undefined);
+      const fixture = TestBed.createComponent(ChatThreadListComponent);
+      fixture.componentRef.setInput('threads', [
+        { id: 'p1', title: 'P1', pinned: true },
+        { id: 'p2', title: 'P2', pinned: true },
+        { id: 'p3', title: 'P3', pinned: true },
+      ]);
+      fixture.componentRef.setInput('actions', { reorderPinned: spy });
+      fixture.detectChanges();
+      const kebabs = fixture.nativeElement.querySelectorAll('.chat-thread-list__kebab');
+      (kebabs[2] as HTMLElement).click();
+      fixture.detectChanges();
+      const moveUp = Array.from(document.querySelectorAll('.chat-overflow-menu__item'))
+        .find((el) => (el as HTMLElement).textContent?.trim() === 'Move up') as HTMLElement;
+      moveUp.click();
+      await new Promise((r) => setTimeout(r, 0));
+      expect(spy).toHaveBeenCalledWith('p3', 'p2');
+    });
+
+    it('Click Move down on last → calls reorderPinned with null', async () => {
+      const spy = vi.fn().mockResolvedValue(undefined);
+      const fixture = TestBed.createComponent(ChatThreadListComponent);
+      fixture.componentRef.setInput('threads', [
+        { id: 'p1', title: 'P1', pinned: true },
+        { id: 'p2', title: 'P2', pinned: true },
+      ]);
+      fixture.componentRef.setInput('actions', { reorderPinned: spy });
+      fixture.detectChanges();
+      const kebabs = fixture.nativeElement.querySelectorAll('.chat-thread-list__kebab');
+      (kebabs[0] as HTMLElement).click();
+      fixture.detectChanges();
+      const moveDown = Array.from(document.querySelectorAll('.chat-overflow-menu__item'))
+        .find((el) => (el as HTMLElement).textContent?.trim() === 'Move down') as HTMLElement;
+      moveDown.click();
+      await new Promise((r) => setTimeout(r, 0));
+      expect(spy).toHaveBeenCalledWith('p1', null);
+    });
+
+    it('Click Move down on second-of-three → calls reorderPinned with null (moves to end)', async () => {
+      const spy = vi.fn().mockResolvedValue(undefined);
+      const fixture = TestBed.createComponent(ChatThreadListComponent);
+      fixture.componentRef.setInput('threads', [
+        { id: 'p1', title: 'P1', pinned: true },
+        { id: 'p2', title: 'P2', pinned: true },
+        { id: 'p3', title: 'P3', pinned: true },
+      ]);
+      fixture.componentRef.setInput('actions', { reorderPinned: spy });
+      fixture.detectChanges();
+      const kebabs = fixture.nativeElement.querySelectorAll('.chat-thread-list__kebab');
+      (kebabs[1] as HTMLElement).click();
+      fixture.detectChanges();
+      const moveDown = Array.from(document.querySelectorAll('.chat-overflow-menu__item'))
+        .find((el) => (el as HTMLElement).textContent?.trim() === 'Move down') as HTMLElement;
+      moveDown.click();
+      await new Promise((r) => setTimeout(r, 0));
+      // p2 moves to after p3 — beforeId is whatever comes after p3, which is null (end).
+      expect(spy).toHaveBeenCalledWith('p2', null);
+    });
+
+    it('reorder adapter rejects → visible order falls back to input', async () => {
+      const spy = vi.fn(async () => { throw new Error('boom'); });
+      const fixture = TestBed.createComponent(ChatThreadListComponent);
+      fixture.componentRef.setInput('threads', [
+        { id: 'p1', title: 'P1', pinned: true },
+        { id: 'p2', title: 'P2', pinned: true },
+      ]);
+      fixture.componentRef.setInput('actions', { reorderPinned: spy });
+      fixture.detectChanges();
+      const kebabs = fixture.nativeElement.querySelectorAll('.chat-thread-list__kebab');
+      (kebabs[1] as HTMLElement).click();
+      fixture.detectChanges();
+      const moveUp = Array.from(document.querySelectorAll('.chat-overflow-menu__item'))
+        .find((el) => (el as HTMLElement).textContent?.trim() === 'Move up') as HTMLElement;
+      moveUp.click();
+      await new Promise((r) => setTimeout(r, 0));
+      await new Promise((r) => setTimeout(r, 0));
+      fixture.detectChanges();
+      const titles = Array.from(fixture.nativeElement.querySelectorAll('.chat-thread-list__item-title'))
+        .map((el) => (el as HTMLElement).textContent?.trim().replace(/\s+/g, ' '));
+      expect(titles[0]).toContain('P1');
+      expect(titles[1]).toContain('P2');
+    });
+
+    it('drag-and-drop: drop "before" target calls reorderPinned with target id', async () => {
+      const spy = vi.fn().mockResolvedValue(undefined);
+      const fixture = TestBed.createComponent(ChatThreadListComponent);
+      fixture.componentRef.setInput('threads', [
+        { id: 'p1', title: 'P1', pinned: true },
+        { id: 'p2', title: 'P2', pinned: true },
+      ]);
+      fixture.componentRef.setInput('actions', { reorderPinned: spy });
+      fixture.detectChanges();
+      const wraps = fixture.nativeElement.querySelectorAll('.chat-thread-list__item-wrap');
+      // jsdom doesn't layout; stub rects so before/after threshold works.
+      (wraps[0] as HTMLElement).getBoundingClientRect = () => ({ top: 0, bottom: 40, height: 40, left: 0, right: 100, width: 100, x: 0, y: 0, toJSON: () => ({}) }) as DOMRect;
+      (wraps[1] as HTMLElement).getBoundingClientRect = () => ({ top: 40, bottom: 80, height: 40, left: 0, right: 100, width: 100, x: 0, y: 40, toJSON: () => ({}) }) as DOMRect;
+      // jsdom doesn't construct DragEvent with dataTransfer; stub it.
+      const dt = { setData: vi.fn(), getData: vi.fn((k: string) => k === 'text/plain' ? 'p2' : ''), effectAllowed: 'move', dropEffect: 'move' } as unknown as DataTransfer;
+      const dragStart = new Event('dragstart', { bubbles: true }) as DragEvent;
+      Object.defineProperty(dragStart, 'dataTransfer', { value: dt });
+      wraps[1].dispatchEvent(dragStart);
+      fixture.detectChanges();
+
+      const dragOver = new Event('dragover', { bubbles: true }) as DragEvent;
+      Object.defineProperty(dragOver, 'dataTransfer', { value: dt });
+      Object.defineProperty(dragOver, 'clientY', { value: 2 });
+      Object.defineProperty(dragOver, 'currentTarget', { value: wraps[0] });
+      wraps[0].dispatchEvent(dragOver);
+      fixture.detectChanges();
+
+      const drop = new Event('drop', { bubbles: true }) as DragEvent;
+      Object.defineProperty(drop, 'dataTransfer', { value: dt });
+      wraps[0].dispatchEvent(drop);
+      await new Promise((r) => setTimeout(r, 0));
+      expect(spy).toHaveBeenCalledWith('p2', 'p1');
+    });
+
+    it('drag-and-drop: drop "after" last pinned calls reorderPinned with null', async () => {
+      const spy = vi.fn().mockResolvedValue(undefined);
+      const fixture = TestBed.createComponent(ChatThreadListComponent);
+      fixture.componentRef.setInput('threads', [
+        { id: 'p1', title: 'P1', pinned: true },
+        { id: 'p2', title: 'P2', pinned: true },
+      ]);
+      fixture.componentRef.setInput('actions', { reorderPinned: spy });
+      fixture.detectChanges();
+      const wraps = fixture.nativeElement.querySelectorAll('.chat-thread-list__item-wrap');
+      // jsdom doesn't layout; stub rects so before/after threshold works.
+      (wraps[0] as HTMLElement).getBoundingClientRect = () => ({ top: 0, bottom: 40, height: 40, left: 0, right: 100, width: 100, x: 0, y: 0, toJSON: () => ({}) }) as DOMRect;
+      (wraps[1] as HTMLElement).getBoundingClientRect = () => ({ top: 40, bottom: 80, height: 40, left: 0, right: 100, width: 100, x: 0, y: 40, toJSON: () => ({}) }) as DOMRect;
+      const dt = { setData: vi.fn(), getData: vi.fn((k: string) => k === 'text/plain' ? 'p1' : ''), effectAllowed: 'move', dropEffect: 'move' } as unknown as DataTransfer;
+      const dragStart = new Event('dragstart', { bubbles: true }) as DragEvent;
+      Object.defineProperty(dragStart, 'dataTransfer', { value: dt });
+      wraps[0].dispatchEvent(dragStart);
+      fixture.detectChanges();
+
+      const dragOver = new Event('dragover', { bubbles: true }) as DragEvent;
+      Object.defineProperty(dragOver, 'dataTransfer', { value: dt });
+      Object.defineProperty(dragOver, 'clientY', { value: 78 });
+      Object.defineProperty(dragOver, 'currentTarget', { value: wraps[1] });
+      wraps[1].dispatchEvent(dragOver);
+      fixture.detectChanges();
+
+      const drop = new Event('drop', { bubbles: true }) as DragEvent;
+      Object.defineProperty(drop, 'dataTransfer', { value: dt });
+      wraps[1].dispatchEvent(drop);
+      await new Promise((r) => setTimeout(r, 0));
+      expect(spy).toHaveBeenCalledWith('p1', null);
+    });
   });
 });
