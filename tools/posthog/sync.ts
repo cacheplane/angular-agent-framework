@@ -177,6 +177,69 @@ function stripTiles(local: any): any {
   return rest;
 }
 
+// Map our local InsightLocal shape (flat fields per zod schema) to PostHog's
+// nested filters.{events,breakdown,date_from,...} body shape. PostHog ignores
+// our top-level fields and stores blank filters if we don't do this mapping.
+//
+// Exported for unit testing.
+export function toPostHogInsight(local: any): any {
+  const base = {
+    name: local.name,
+    description: local.description ?? '',
+  };
+  const kind: string = local.kind;
+  if (kind === 'funnel') {
+    return {
+      ...base,
+      filters: {
+        insight: 'FUNNELS',
+        events: (local.steps ?? []).map((s: any, idx: number) => ({
+          id: s.event,
+          name: s.name ?? s.event,
+          order: idx,
+          type: 'events',
+        })),
+        funnel_window_interval: local.window_minutes ?? 60,
+        funnel_window_interval_unit: 'minute',
+        date_from: local.date_from ?? '-30d',
+      },
+    };
+  }
+  if (kind === 'trends') {
+    return {
+      ...base,
+      filters: {
+        insight: 'TRENDS',
+        events: (local.events ?? []).map((e: any, idx: number) => ({
+          id: e.event,
+          name: e.event,
+          order: idx,
+          type: 'events',
+          math: e.math ?? 'total',
+          properties: e.properties ?? [],
+        })),
+        breakdown: local.breakdown,
+        breakdown_limit: local.breakdown_limit,
+        breakdown_type: local.breakdown ? 'event' : undefined,
+        date_from: local.date_from ?? '-30d',
+        interval: local.interval ?? 'day',
+      },
+    };
+  }
+  // retention or other — passthrough with the kind set so PostHog accepts it.
+  return { ...base, filters: { insight: 'RETENTION', date_from: local.date_from ?? '-30d' } };
+}
+
+// Map DashboardLocal to PostHog's body shape. tiles is read-only on create/update;
+// stripped here. The wiring pass associates insights with dashboards instead.
+export function toPostHogDashboard(local: any): any {
+  return {
+    name: local.name,
+    description: local.description ?? '',
+    tags: local.tags ?? [],
+  };
+}
+
 export async function applyPlan(options: ApplyOptions): Promise<ApplyResult> {
   const { root, client, plan, dryRun = false, deleteOrphans = false } = options;
   const result: ApplyResult = { applied: 0, failed: 0, errors: [] };
@@ -212,8 +275,8 @@ export async function applyPlan(options: ApplyOptions): Promise<ApplyResult> {
       try {
         let created: any;
         if (item.kind === 'cohort') created = await client.createCohort(item.local);
-        else if (item.kind === 'insight') created = await client.createInsight(item.local);
-        else created = await client.createDashboard(stripTiles(item.local));
+        else if (item.kind === 'insight') created = await client.createInsight(toPostHogInsight(item.local));
+        else created = await client.createDashboard(toPostHogDashboard(item.local));
         if (item.kind === 'insight') insightSlugToId.set(item.local.slug, created.id);
         if (item.kind === 'dashboard') dashboardSlugToId.set(item.local.slug, created.id);
         // Writeback posthog_id into local JSON.
@@ -236,8 +299,8 @@ export async function applyPlan(options: ApplyOptions): Promise<ApplyResult> {
       if (item.kind === 'dashboard') resolveTiles(item.local, insightSlugToId);
       try {
         if (item.kind === 'cohort') await client.updateCohort(item.remoteId!, item.local);
-        else if (item.kind === 'insight') await client.updateInsight(item.remoteId!, item.local);
-        else await client.updateDashboard(item.remoteId!, stripTiles(item.local));
+        else if (item.kind === 'insight') await client.updateInsight(item.remoteId!, toPostHogInsight(item.local));
+        else await client.updateDashboard(item.remoteId!, toPostHogDashboard(item.local));
         result.applied += 1;
       } catch (err) {
         result.failed += 1;

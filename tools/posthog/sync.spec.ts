@@ -226,10 +226,10 @@ test('applyPlan: wiring pass PATCHes insights with dashboards: [<dashboard_id>]'
   assert.deepEqual(wiringCalls[0].body.dashboards, [6001]);
 });
 
-test('applyPlan: stripTiles — dashboard create body excludes tiles field', async () => {
+test('applyPlan: toPostHogDashboard — body excludes tiles and slug, keeps name/description/tags', async () => {
   const root = await fixtureRoot();
   await writeFile(join(root, 'dashboards/d.json'), JSON.stringify({
-    slug: 'd', posthog_id: null, name: 'D', description: '', tiles: [],
+    slug: 'd', posthog_id: null, name: 'D', description: 'desc', tags: ['gtm'], tiles: [],
   }));
   let createdBody: any = null;
   const client: SyncClient = {
@@ -239,5 +239,73 @@ test('applyPlan: stripTiles — dashboard create body excludes tiles field', asy
   const plan = await computePlan({ root, client });
   await applyPlan({ root, client, plan });
   assert.equal(createdBody !== null, true);
-  assert.equal('tiles' in createdBody, false, 'dashboard body must not include tiles field');
+  assert.equal('tiles' in createdBody, false);
+  assert.equal('slug' in createdBody, false);
+  assert.equal(createdBody.name, 'D');
+  assert.equal(createdBody.description, 'desc');
+  assert.deepEqual(createdBody.tags, ['gtm']);
+});
+
+import { toPostHogInsight, toPostHogDashboard } from './sync.js';
+
+test('toPostHogInsight: trends maps flat fields into filters', () => {
+  const out = toPostHogInsight({
+    slug: 'x',
+    posthog_id: null,
+    kind: 'trends',
+    name: 'X',
+    events: [{ event: '$pageview', math: 'total' }],
+    breakdown: '$pathname',
+    breakdown_limit: 15,
+    date_from: '-30d',
+    interval: 'day',
+  });
+  assert.equal(out.name, 'X');
+  assert.equal(out.filters.insight, 'TRENDS');
+  assert.equal(out.filters.events.length, 1);
+  assert.equal(out.filters.events[0].id, '$pageview');
+  assert.equal(out.filters.events[0].order, 0);
+  assert.equal(out.filters.events[0].type, 'events');
+  assert.equal(out.filters.events[0].math, 'total');
+  assert.equal(out.filters.breakdown, '$pathname');
+  assert.equal(out.filters.breakdown_limit, 15);
+  assert.equal(out.filters.breakdown_type, 'event');
+  assert.equal(out.filters.date_from, '-30d');
+  assert.equal(out.filters.interval, 'day');
+});
+
+test('toPostHogInsight: funnel maps steps and window into filters.FUNNELS', () => {
+  const out = toPostHogInsight({
+    slug: 'f',
+    posthog_id: null,
+    kind: 'funnel',
+    name: 'F',
+    window_minutes: 30,
+    steps: [{ event: 'cockpit:install_command_copied' }, { event: 'cockpit:transport_connected' }],
+    date_from: '-30d',
+  });
+  assert.equal(out.filters.insight, 'FUNNELS');
+  assert.equal(out.filters.events.length, 2);
+  assert.equal(out.filters.events[0].id, 'cockpit:install_command_copied');
+  assert.equal(out.filters.events[0].order, 0);
+  assert.equal(out.filters.events[1].order, 1);
+  assert.equal(out.filters.funnel_window_interval, 30);
+  assert.equal(out.filters.funnel_window_interval_unit, 'minute');
+});
+
+test('toPostHogDashboard: returns name/description/tags, drops slug/tiles/posthog_id', () => {
+  const out = toPostHogDashboard({
+    slug: 'developer-funnel',
+    posthog_id: 1234,
+    name: 'GTM · Developer funnel',
+    description: 'desc',
+    tags: ['gtm', 'developer-track'],
+    tiles: [{ insight: 'x' }],
+  });
+  assert.equal(out.name, 'GTM · Developer funnel');
+  assert.equal(out.description, 'desc');
+  assert.deepEqual(out.tags, ['gtm', 'developer-track']);
+  assert.equal('slug' in out, false);
+  assert.equal('tiles' in out, false);
+  assert.equal('posthog_id' in out, false);
 });
