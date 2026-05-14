@@ -44,12 +44,18 @@ if (!databaseUrl) {
 
 const ALLOW_PASSTHROUGH: RateLimitResult = { allowed: true, retryAfterSec: 0, count: 0 };
 
+// Pre-built `interval` literal. Splicing WINDOW_SECONDS via the tagged-template
+// parameter machinery would emit `interval '$1 seconds'`, which Postgres rejects
+// (parameters can't substitute inside string literals). The constant is hardcoded
+// at module load instead.
+const WINDOW_INTERVAL = `${WINDOW_SECONDS} seconds`;
+
 export async function checkRateLimit(ip: string): Promise<RateLimitResult> {
   if (!sql) return ALLOW_PASSTHROUGH;
   try {
-    await sql`DELETE FROM rate_limit_events WHERE ip = ${ip} AND ts < now() - interval '${WINDOW_SECONDS} seconds'`;
+    await sql`DELETE FROM rate_limit_events WHERE ip = ${ip} AND ts < now() - ${WINDOW_INTERVAL}::interval`;
     await sql`INSERT INTO rate_limit_events (ip, ts) VALUES (${ip}, now())`;
-    const rows = await sql`SELECT count(*)::int AS c FROM rate_limit_events WHERE ip = ${ip}`;
+    const rows = await sql`SELECT count(*)::int AS c FROM rate_limit_events WHERE ip = ${ip} AND ts > now() - ${WINDOW_INTERVAL}::interval`;
     const count = (rows[0] as { c?: number } | undefined)?.c ?? 0;
     return {
       allowed: count <= limit,
