@@ -1,0 +1,50 @@
+name: aimock fixture drift
+
+on:
+  schedule:
+    - cron: '0 7 * * *'
+  workflow_dispatch:
+
+jobs:
+  drift:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6.0.2
+      - uses: actions/setup-node@v6.3.0
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Run drift check
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: npx nx run examples-chat-aimock-e2e:drift --skip-nx-cache
+      - name: Open issue on drift
+        if: failure()
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const today = new Date().toISOString().slice(0, 10);
+            const title = `aimock fixture drift detected — ${today}`;
+            const body = [
+              'The scheduled fixture drift check failed.',
+              '',
+              `Workflow run: ${context.serverUrl}/${owner}/${repo}/actions/runs/${context.runId}`,
+              '',
+              'Investigate which fixture drifted and either refresh it intentionally',
+              'or open a PR fixing the regression on the LLM side.',
+            ].join('\n');
+            const existing = await github.rest.issues.listForRepo({
+              owner, repo, labels: 'aimock-drift', state: 'open',
+            });
+            if (existing.data.length === 0) {
+              await github.rest.issues.create({
+                owner, repo, title, body, labels: ['aimock-drift'],
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner, repo, issue_number: existing.data[0].number,
+                body: `Drift again on ${today}. ${context.serverUrl}/${owner}/${repo}/actions/runs/${context.runId}`,
+              });
+            }
