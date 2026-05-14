@@ -347,7 +347,9 @@ async function main(): Promise<number> {
   }
 
   // Helpful next-step hint after apply with writeback.
-  const writeback = plan.create.filter((p) => p.kind !== 'cohort' || p.path);
+  // A create item is "written back" only if it succeeded (not in result.errors).
+  const failedSlugs = new Set(result.errors.map((e) => e.slug));
+  const writeback = plan.create.filter((p) => !failedSlugs.has(p.local.slug));
   if (writeback.length > 0) {
     const slugs = writeback.map((p) => p.local.slug).join(', ');
     console.log(`\nWriteback complete. Commit with:`);
