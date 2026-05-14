@@ -49,7 +49,7 @@ interface TabEntry {
     .launcher {
       position: fixed;
       bottom: 20px;
-      right: 20px;
+      left: 20px;
       display: inline-flex;
       align-items: center;
       justify-content: center;

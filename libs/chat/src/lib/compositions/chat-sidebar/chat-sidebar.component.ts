@@ -4,13 +4,14 @@ import { Component, ChangeDetectionStrategy, input, model, output } from '@angul
 import type { Agent } from '../../agent';
 import type { ViewRegistry } from '@ngaf/render';
 import { ChatComponent } from '../chat/chat.component';
+import { ChatLauncherButtonComponent } from '../../primitives/chat-launcher-button/chat-launcher-button.component';
 import type { ChatSelectOption } from '../../primitives/chat-select/chat-select.component';
 import { CHAT_HOST_TOKENS } from '../../styles/chat-tokens';
 
 @Component({
   selector: 'chat-sidebar',
   standalone: true,
-  imports: [ChatComponent],
+  imports: [ChatComponent, ChatLauncherButtonComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     '[attr.data-push]': 'pushContent() ? "true" : "false"',
@@ -54,6 +55,7 @@ import { CHAT_HOST_TOKENS } from '../../styles/chat-tokens';
   `],
   template: `
     <div class="chat-sidebar__content"><ng-content /></div>
+    <chat-launcher-button (click)="toggle()" />
     <aside class="chat-sidebar__panel" [attr.data-open]="open() ? 'true' : 'false'" role="complementary" [attr.aria-hidden]="open() ? 'false' : 'true'">
       <button type="button" class="chat-sidebar__close" (click)="closeWindow()" aria-label="Close chat">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
