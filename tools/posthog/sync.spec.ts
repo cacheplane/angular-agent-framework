@@ -248,7 +248,7 @@ test('applyPlan: toPostHogDashboard — body excludes tiles and slug, keeps name
 
 import { toPostHogInsight, toPostHogDashboard } from './sync.js';
 
-test('toPostHogInsight: trends maps flat fields into filters', () => {
+test('toPostHogInsight: trends maps to InsightVizNode/TrendsQuery', () => {
   const out = toPostHogInsight({
     slug: 'x',
     posthog_id: null,
@@ -261,20 +261,20 @@ test('toPostHogInsight: trends maps flat fields into filters', () => {
     interval: 'day',
   });
   assert.equal(out.name, 'X');
-  assert.equal(out.filters.insight, 'TRENDS');
-  assert.equal(out.filters.events.length, 1);
-  assert.equal(out.filters.events[0].id, '$pageview');
-  assert.equal(out.filters.events[0].order, 0);
-  assert.equal(out.filters.events[0].type, 'events');
-  assert.equal(out.filters.events[0].math, 'total');
-  assert.equal(out.filters.breakdown, '$pathname');
-  assert.equal(out.filters.breakdown_limit, 15);
-  assert.equal(out.filters.breakdown_type, 'event');
-  assert.equal(out.filters.date_from, '-30d');
-  assert.equal(out.filters.interval, 'day');
+  assert.equal(out.query.kind, 'InsightVizNode');
+  assert.equal(out.query.source.kind, 'TrendsQuery');
+  assert.equal(out.query.source.series.length, 1);
+  assert.equal(out.query.source.series[0].kind, 'EventsNode');
+  assert.equal(out.query.source.series[0].event, '$pageview');
+  assert.equal(out.query.source.series[0].math, 'total');
+  assert.equal(out.query.source.interval, 'day');
+  assert.equal(out.query.source.dateRange.date_from, '-30d');
+  assert.equal(out.query.source.breakdownFilter.breakdown, '$pathname');
+  assert.equal(out.query.source.breakdownFilter.breakdown_type, 'event');
+  assert.equal(out.query.source.breakdownFilter.breakdown_limit, 15);
 });
 
-test('toPostHogInsight: funnel maps steps and window into filters.FUNNELS', () => {
+test('toPostHogInsight: funnel maps to InsightVizNode/FunnelsQuery', () => {
   const out = toPostHogInsight({
     slug: 'f',
     posthog_id: null,
@@ -284,13 +284,14 @@ test('toPostHogInsight: funnel maps steps and window into filters.FUNNELS', () =
     steps: [{ event: 'cockpit:install_command_copied' }, { event: 'cockpit:transport_connected' }],
     date_from: '-30d',
   });
-  assert.equal(out.filters.insight, 'FUNNELS');
-  assert.equal(out.filters.events.length, 2);
-  assert.equal(out.filters.events[0].id, 'cockpit:install_command_copied');
-  assert.equal(out.filters.events[0].order, 0);
-  assert.equal(out.filters.events[1].order, 1);
-  assert.equal(out.filters.funnel_window_interval, 30);
-  assert.equal(out.filters.funnel_window_interval_unit, 'minute');
+  assert.equal(out.query.kind, 'InsightVizNode');
+  assert.equal(out.query.source.kind, 'FunnelsQuery');
+  assert.equal(out.query.source.series.length, 2);
+  assert.equal(out.query.source.series[0].kind, 'EventsNode');
+  assert.equal(out.query.source.series[0].event, 'cockpit:install_command_copied');
+  assert.equal(out.query.source.funnelsFilter.funnelWindowInterval, 30);
+  assert.equal(out.query.source.funnelsFilter.funnelWindowIntervalUnit, 'minute');
+  assert.equal(out.query.source.dateRange.date_from, '-30d');
 });
 
 test('toPostHogDashboard: returns name/description/tags, drops slug/tiles/posthog_id', () => {

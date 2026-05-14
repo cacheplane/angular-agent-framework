@@ -178,8 +178,10 @@ function stripTiles(local: any): any {
 }
 
 // Map our local InsightLocal shape (flat fields per zod schema) to PostHog's
-// nested filters.{events,breakdown,date_from,...} body shape. PostHog ignores
-// our top-level fields and stores blank filters if we don't do this mapping.
+// modern query schema (HogQL-style InsightVizNode). The legacy `filters` shape
+// is rejected by modern PostHog projects.
+//
+// Schema reference: https://posthog.com/docs/api/queries
 //
 // Exported for unit testing.
 export function toPostHogInsight(local: any): any {
@@ -188,46 +190,73 @@ export function toPostHogInsight(local: any): any {
     description: local.description ?? '',
   };
   const kind: string = local.kind;
+
   if (kind === 'funnel') {
     return {
       ...base,
-      filters: {
-        insight: 'FUNNELS',
-        events: (local.steps ?? []).map((s: any, idx: number) => ({
-          id: s.event,
-          name: s.name ?? s.event,
-          order: idx,
-          type: 'events',
-        })),
-        funnel_window_interval: local.window_minutes ?? 60,
-        funnel_window_interval_unit: 'minute',
-        date_from: local.date_from ?? '-30d',
+      query: {
+        kind: 'InsightVizNode',
+        source: {
+          kind: 'FunnelsQuery',
+          series: (local.steps ?? []).map((s: any) => ({
+            kind: 'EventsNode',
+            event: s.event,
+            name: s.name ?? s.event,
+            math: 'total',
+          })),
+          dateRange: { date_from: local.date_from ?? '-30d' },
+          funnelsFilter: {
+            funnelWindowInterval: local.window_minutes ?? 60,
+            funnelWindowIntervalUnit: 'minute',
+          },
+        },
       },
     };
   }
+
   if (kind === 'trends') {
-    return {
-      ...base,
-      filters: {
-        insight: 'TRENDS',
-        events: (local.events ?? []).map((e: any, idx: number) => ({
-          id: e.event,
-          name: e.event,
-          order: idx,
-          type: 'events',
-          math: e.math ?? 'total',
-          properties: e.properties ?? [],
+    const source: any = {
+      kind: 'TrendsQuery',
+      series: (local.events ?? []).map((e: any) => ({
+        kind: 'EventsNode',
+        event: e.event,
+        name: e.event,
+        math: e.math === 'dau' ? 'dau' : e.math === 'unique_session' ? 'unique_session' : 'total',
+        properties: (e.properties ?? []).map((p: any) => ({
+          key: p.key,
+          value: p.value,
+          operator: p.operator ?? 'exact',
+          type: 'event',
         })),
+      })),
+      dateRange: { date_from: local.date_from ?? '-30d' },
+      interval: local.interval ?? 'day',
+      trendsFilter: {},
+    };
+    if (local.breakdown) {
+      source.breakdownFilter = {
+        breakdown_type: 'event',
         breakdown: local.breakdown,
         breakdown_limit: local.breakdown_limit,
-        breakdown_type: local.breakdown ? 'event' : undefined,
-        date_from: local.date_from ?? '-30d',
-        interval: local.interval ?? 'day',
-      },
+      };
+    }
+    return {
+      ...base,
+      query: { kind: 'InsightVizNode', source },
     };
   }
-  // retention or other — passthrough with the kind set so PostHog accepts it.
-  return { ...base, filters: { insight: 'RETENTION', date_from: local.date_from ?? '-30d' } };
+
+  // retention or other — minimal passthrough; not used in Spec 1A.
+  return {
+    ...base,
+    query: {
+      kind: 'InsightVizNode',
+      source: {
+        kind: 'RetentionQuery',
+        dateRange: { date_from: local.date_from ?? '-30d' },
+      },
+    },
+  };
 }
 
 // Map DashboardLocal to PostHog's body shape. tiles is read-only on create/update;
