@@ -18,7 +18,7 @@ declare global {
 const REPO_ROOT = resolve(__dirname, '../../..');
 const FIXTURE_PATH = process.env.AIMOCK_FIXTURE
   ? resolve(__dirname, process.env.AIMOCK_FIXTURE)
-  : resolve(__dirname, 'fixtures/hi.json');
+  : resolve(__dirname, 'fixtures');
 
 async function waitForPort(url: string, timeoutMs: number): Promise<void> {
   const start = Date.now();
