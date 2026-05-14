@@ -2,9 +2,14 @@
 // SPDX-License-Identifier: MIT
 /**
  * Vercel Serverless Function proxy for the canonical-demo deployment
- * (demo.cacheplane.ai). Five-line wrapper around the shared
- * scripts/langgraph-proxy.ts factory using defaults — single backend,
- * no Referer-based fan-out.
+ * (demo.cacheplane.ai). Wraps the shared langgraph-proxy factory with
+ * the rate-limit gate from scripts/rate-limit.ts.
+ *
+ * The rate-limit hook is wired here (not in the shared factory) so the
+ * cockpit-examples wrapper stays unaffected — its bundle does not pull
+ * in @neondatabase/serverless.
  */
 import { createProxyHandler } from './langgraph-proxy';
-module.exports = createProxyHandler({});
+import { checkRateLimit } from './rate-limit';
+
+module.exports = createProxyHandler({ checkRateLimit });
