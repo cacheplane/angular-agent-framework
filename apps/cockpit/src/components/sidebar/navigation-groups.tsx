@@ -76,15 +76,15 @@ function ProductGroup({
                   key={`${entry.product}-${entry.topic}`}
                   href={toCockpitPath(entry)}
                   aria-current={isActive ? 'page' : undefined}
+                  className={isActive ? 'border-l-2 border-[var(--ds-accent)]' : 'border-l-2 border-transparent'}
                   style={{
                     display: 'block',
-                    padding: isActive ? '5px 16px 5px 14px' : '5px 16px',
+                    padding: '5px 16px 5px 14px',
                     margin: '0 8px',
                     borderRadius: 6,
                     fontSize: '0.825rem',
                     color: isActive ? 'var(--ds-accent)' : 'var(--ds-text-secondary)',
                     background: isActive ? 'var(--ds-accent-surface)' : 'transparent',
-                    borderLeft: isActive ? '2px solid var(--ds-accent)' : 'none',
                     textDecoration: 'none',
                     transition: 'all 0.15s',
                   }}

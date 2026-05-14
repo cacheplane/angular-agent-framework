@@ -21,12 +21,11 @@ export function CockpitSidebar({
   return (
     <aside
       aria-label="Cockpit sidebar"
-      className="flex flex-col gap-4 py-6 px-0 border-r bg-[var(--ds-surface-tinted)] overflow-y-auto"
+      className="flex flex-col gap-4 py-6 px-0 border-r border-[var(--ds-border-strong)] bg-[var(--ds-surface-tinted)] overflow-y-auto"
       style={{
         position: 'sticky',
         top: 0,
         minHeight: '100vh',
-        borderRightColor: 'var(--ds-border-strong)',
       }}
     >
       <header className="flex items-center justify-between px-4">

@@ -5,8 +5,10 @@ import { cssVars, type Theme } from '@ngaf/design-tokens';
  * framework (Angular, Vue, etc.) bootstraps.
  *
  * Behavior:
- *   1. Applies the default theme synchronously (sets `data-theme` and
- *      every `--ds-*` CSS variable on `document.documentElement`).
+ *   1. Applies the default theme synchronously: sets `data-theme` on
+ *      `<html>` (which both `@ngaf/design-tokens`-aware code and
+ *      `@ngaf/chat` honor) plus every `--ds-*` CSS variable on the
+ *      same element.
  *   2. Posts `{ type: 'ngaf:theme-request' }` to `window.parent` so the
  *      host (cockpit's `<ThemedFrame>`) replies with the current theme
  *      even if its broadcast ran before this iframe mounted.

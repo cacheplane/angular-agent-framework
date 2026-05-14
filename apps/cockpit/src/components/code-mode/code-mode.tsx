@@ -25,13 +25,14 @@ function CodeFileContent({ path, content }: { path: string; content: string | un
       boxShadow: 'var(--ds-shadow-sm)',
       overflow: 'hidden',
     }}>
-      <div style={{
+      <div
+        className="border-b border-[var(--ds-border)]"
+        style={{
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
         padding: '6px 12px',
         background: 'rgba(26, 27, 38, 0.95)',
-        borderBottom: '1px solid rgba(255,255,255,0.06)',
       }}>
         <span style={{ fontFamily: 'var(--ds-font-mono)', fontSize: '0.7rem', color: '#a9b1d6' }}>{path}</span>
         <button

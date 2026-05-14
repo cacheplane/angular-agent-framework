@@ -1,34 +1,5 @@
 @import "tailwindcss";
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-primary: var(--primary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
-  --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-border: var(--border);
-  --color-input: var(--input);
-  --color-ring: var(--ring);
-}
-
-:root {
-  /* shadcn semantic vars — light palette */
-  --background: #f8f9fc;
-  --foreground: #1a1a2e;
-  --primary: #004090;
-  --primary-foreground: #ffffff;
-  --card: rgba(255, 255, 255, 0.45);
-  --card-foreground: #1a1a2e;
-  --muted: rgba(0, 64, 144, 0.06);
-  --muted-foreground: #555770;
-  --border: rgba(0, 64, 144, 0.15);
-  --input: rgba(0, 64, 144, 0.15);
-  --ring: #004090;
-}
-
 /* Shiki code blocks — preserve dark background from theme */
 pre.shiki {
   padding: 1rem;
@@ -41,8 +12,8 @@ pre.shiki {
 /* ── Doc components ────────────────────────────────────────── */
 
 .doc-summary {
-  background: rgba(0, 64, 144, 0.04);
-  border: 1px solid rgba(0, 64, 144, 0.12);
+  background: var(--ds-accent-surface);
+  border: 1px solid var(--ds-accent-border);
   border-radius: 0.5rem;
   padding: 0.75rem 1rem;
   margin-bottom: 1.5rem;
@@ -67,8 +38,8 @@ pre.shiki {
 }
 .doc-callout__content { color: var(--ds-text-secondary); }
 .doc-callout--tip {
-  background: rgba(0, 64, 144, 0.04);
-  border: 1px solid rgba(0, 64, 144, 0.12);
+  background: var(--ds-accent-surface);
+  border: 1px solid var(--ds-accent-border);
 }
 .doc-callout--tip .doc-callout__label { color: var(--ds-accent); }
 .doc-callout--note {
@@ -105,7 +76,7 @@ pre.shiki {
 .doc-step__line {
   width: 2px;
   flex: 1;
-  background: rgba(0, 64, 144, 0.15);
+  background: var(--ds-accent-border);
   margin: 0.375rem 0;
   min-height: 1rem;
 }
@@ -127,7 +98,7 @@ pre.shiki {
 .doc-step__content pre.shiki { margin: 0.5rem 0; border-radius: 0.5rem; }
 
 .doc-codeblock {
-  border: 1px solid rgba(0, 64, 144, 0.12);
+  border: 1px solid var(--ds-accent-border);
   border-radius: 0.5rem;
   overflow: hidden;
   margin: 0.75rem 0;
@@ -139,14 +110,14 @@ pre.shiki {
   gap: 0.5rem;
   padding: 0.4rem 0.75rem;
   border-bottom: 1px solid rgba(138, 170, 214, 0.12);
-  background: rgba(26, 27, 38, 0.95);
+  background: var(--ds-surface);
   font-size: 0.7rem;
 }
 .doc-codeblock__file { color: #a9b1d6; font-family: var(--font-mono); }
 .doc-codeblock__lang {
   padding: 0.1rem 0.35rem;
   border-radius: 0.2rem;
-  background: rgba(0, 64, 144, 0.15);
+  background: var(--ds-accent-border);
   color: var(--ds-accent-light);
   font-size: 0.6rem;
 }
@@ -220,11 +191,11 @@ pre.shiki {
   font-size: 0.65rem;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--ds-border);
 }
 .doc-api-table td {
   padding: 0.5rem 0.75rem;
-  border-bottom: 1px solid rgba(0, 64, 144, 0.08);
+  border-bottom: 1px solid var(--ds-accent-border);
   color: var(--ds-text-secondary);
 }
 .doc-api-table code {
