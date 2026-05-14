@@ -21,6 +21,28 @@ const LIGHT_TOKENS = `
   --ngaf-chat-shadow-sm: 0 1px 2px rgba(0,0,0,.05);
   --ngaf-chat-shadow-md: 0 4px 6px -1px rgba(0,0,0,.10), 0 2px 4px -1px rgba(0,0,0,.06);
   --ngaf-chat-shadow-lg: 0 10px 15px -3px rgba(0,0,0,.10), 0 4px 6px -2px rgba(0,0,0,.05);
+
+  /* --a2ui-* light variant */
+  --a2ui-primary: #4f8df5;
+  --a2ui-on-primary: #ffffff;
+  --a2ui-primary-hover: #3a78e0;
+  --a2ui-secondary: #5f6470;
+  --a2ui-on-secondary: #ffffff;
+  --a2ui-surface: #ffffff;
+  --a2ui-on-surface: #1a1d23;
+  --a2ui-surface-variant: rgba(0, 0, 0, 0.04);
+  --a2ui-on-surface-variant: rgba(0, 0, 0, 0.6);
+  --a2ui-outline: rgba(0, 0, 0, 0.12);
+  --a2ui-outline-variant: rgba(0, 0, 0, 0.06);
+  --a2ui-error: #dc2626;
+  --a2ui-on-error: #ffffff;
+  --a2ui-scrim: rgba(0, 0, 0, 0.4);
+  --a2ui-elevation-0: none;
+  --a2ui-elevation-1: 0 1px 2px rgba(0, 0, 0, 0.06);
+  --a2ui-elevation-2: 0 2px 4px rgba(0, 0, 0, 0.08);
+  --a2ui-elevation-3: 0 4px 8px rgba(0, 0, 0, 0.10);
+  --a2ui-elevation-4: 0 8px 16px rgba(0, 0, 0, 0.14);
+  --a2ui-elevation-5: 0 16px 32px rgba(0, 0, 0, 0.18);
 `;
 
 const DARK_TOKENS = `
@@ -40,6 +62,28 @@ const DARK_TOKENS = `
   --ngaf-chat-warning-bg: rgb(45, 35, 21);
   --ngaf-chat-warning-text: #fbbf24;
   --ngaf-chat-success: #4ade80;
+
+  /* --a2ui-* dark variant (preserves current chat.css values) */
+  --a2ui-primary: #4f8df5;
+  --a2ui-on-primary: #ffffff;
+  --a2ui-primary-hover: #6699f7;
+  --a2ui-secondary: #8a92a3;
+  --a2ui-on-secondary: #ffffff;
+  --a2ui-surface: #1a1d23;
+  --a2ui-on-surface: #ffffff;
+  --a2ui-surface-variant: rgba(255, 255, 255, 0.05);
+  --a2ui-on-surface-variant: rgba(255, 255, 255, 0.7);
+  --a2ui-outline: rgba(255, 255, 255, 0.1);
+  --a2ui-outline-variant: rgba(255, 255, 255, 0.05);
+  --a2ui-error: #f5524f;
+  --a2ui-on-error: #ffffff;
+  --a2ui-scrim: rgba(0, 0, 0, 0.6);
+  --a2ui-elevation-0: none;
+  --a2ui-elevation-1: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --a2ui-elevation-2: 0 2px 4px rgba(0, 0, 0, 0.35);
+  --a2ui-elevation-3: 0 4px 8px rgba(0, 0, 0, 0.4);
+  --a2ui-elevation-4: 0 8px 16px rgba(0, 0, 0, 0.45);
+  --a2ui-elevation-5: 0 16px 32px rgba(0, 0, 0, 0.5);
 `;
 
 const GEOMETRY_TOKENS = `
@@ -176,6 +220,70 @@ const REDUCED_MOTION_STYLES = `
  *     forces dark.
  *   - `[data-theme="light"]` forces light.
  */
+const A2UI_INVARIANT_TOKENS = `
+  /* --a2ui-* theme-invariant tokens (spacing, typography, shape, motion, focus, aliases) */
+
+  /* Spacing scale (4px base) */
+  --a2ui-spacing-1: 4px;
+  --a2ui-spacing-2: 8px;
+  --a2ui-spacing-3: 12px;
+  --a2ui-spacing-4: 16px;
+  --a2ui-spacing-5: 24px;
+  --a2ui-spacing-6: 32px;
+  --a2ui-spacing-7: 40px;
+
+  /* Typography (per Text usageHint) */
+  --a2ui-typography-h1-size: 32px;
+  --a2ui-typography-h1-weight: 700;
+  --a2ui-typography-h1-line-height: 1.2;
+  --a2ui-typography-h2-size: 24px;
+  --a2ui-typography-h2-weight: 600;
+  --a2ui-typography-h2-line-height: 1.3;
+  --a2ui-typography-h3-size: 20px;
+  --a2ui-typography-h3-weight: 600;
+  --a2ui-typography-h3-line-height: 1.3;
+  --a2ui-typography-h4-size: 18px;
+  --a2ui-typography-h4-weight: 500;
+  --a2ui-typography-h4-line-height: 1.4;
+  --a2ui-typography-h5-size: 16px;
+  --a2ui-typography-h5-weight: 500;
+  --a2ui-typography-h5-line-height: 1.4;
+  --a2ui-typography-body-size: 14px;
+  --a2ui-typography-body-weight: 400;
+  --a2ui-typography-body-line-height: 1.5;
+  --a2ui-typography-caption-size: 12px;
+  --a2ui-typography-caption-weight: 400;
+  --a2ui-typography-caption-line-height: 1.4;
+  --a2ui-typography-label-size: 12px;
+  --a2ui-typography-label-weight: 500;
+
+  /* Shape radius */
+  --a2ui-shape-extra-small: 4px;
+  --a2ui-shape-small: 8px;
+  --a2ui-shape-medium: 12px;
+  --a2ui-shape-large: 16px;
+  --a2ui-shape-extra-large: 28px;
+
+  /* Focus ring */
+  --a2ui-focus-ring-color: var(--a2ui-primary);
+  --a2ui-focus-ring-width: 2px;
+
+  /* Motion */
+  --a2ui-motion-duration-short: 100ms;
+  --a2ui-motion-duration-medium: 200ms;
+  --a2ui-motion-duration-long: 300ms;
+  --a2ui-motion-easing-standard: cubic-bezier(0.2, 0, 0, 1);
+  --a2ui-motion-easing-emphasized: cubic-bezier(0.2, 0, 0, 1.4);
+
+  /* Aliases (kept for back-compat) */
+  --a2ui-card-bg: var(--a2ui-surface);
+  --a2ui-input-bg: var(--a2ui-surface-variant);
+  --a2ui-input-text: var(--a2ui-on-surface);
+  --a2ui-label: var(--a2ui-on-surface-variant);
+  --a2ui-caption: var(--a2ui-on-surface-variant);
+  --a2ui-border: var(--a2ui-outline);
+`;
+
 export const ROOT_TOKEN_STYLES = `
 @layer ngaf-chat {
   :root {
@@ -183,6 +291,7 @@ export const ROOT_TOKEN_STYLES = `
     ${GEOMETRY_TOKENS}
     ${TYPOGRAPHY_TOKENS}
     ${SPACING_TOKENS}
+    ${A2UI_INVARIANT_TOKENS}
   }
   @media (prefers-color-scheme: dark) {
     :root { ${DARK_TOKENS} }
