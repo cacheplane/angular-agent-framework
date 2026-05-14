@@ -8,7 +8,11 @@
     "generate-api-docs": "npx tsx apps/website/scripts/generate-api-docs.ts",
     "generate-narrative-docs": "npx tsx apps/website/scripts/generate-narrative-docs.ts",
     "generate-docs": "npm run generate-api-docs && npm run generate-narrative-docs",
-    "generate-whitepaper": "npx tsx apps/website/scripts/generate-whitepaper.ts"
+    "generate-whitepaper": "npx tsx apps/website/scripts/generate-whitepaper.ts",
+    "posthog:sync": "nx run posthog-tools:sync:plan",
+    "posthog:apply": "nx run posthog-tools:sync:apply",
+    "posthog:report": "nx run posthog-tools:report",
+    "posthog:generate-types": "nx run posthog-tools:generate-types"
   },
   "private": true,
   "overrides": {
