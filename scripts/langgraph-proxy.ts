@@ -105,6 +105,13 @@ export function createProxyHandler(config: ProxyConfig = {}): (req: VercelReques
         query: req.query,
         hasApiKey: !!apiKey,
         apiKeyPrefix: apiKey.substring(0, 10),
+        hasDatabaseUrl: !!process.env['DATABASE_URL'],
+        rateLimitConfigured: !!config.checkRateLimit,
+        instanceId: (() => {
+          const g = globalThis as { __instanceId?: string };
+          if (!g.__instanceId) g.__instanceId = Math.random().toString(36).slice(2, 10);
+          return g.__instanceId;
+        })(),
       });
       return;
     }
