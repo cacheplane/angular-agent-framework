@@ -10,8 +10,15 @@ import { RenderElementComponent } from '@ngaf/render';
   template: `
     <!-- Entry point (trigger): always rendered inline, e.g. a button. -->
     @if (entryPointKey(); as epKey) {
-      <div (click)="open.set(true)" (keydown.enter)="open.set(true)" (keydown.space)="open.set(true)"
-        role="button" tabindex="0" style="display:contents">
+      <div
+        class="a2ui-modal__trigger"
+        role="button"
+        tabindex="0"
+        aria-label="Open modal"
+        (click)="open.set(true)"
+        (keydown.enter)="open.set(true)"
+        (keydown.space)="open.set(true)"
+      >
         <render-element [elementKey]="epKey" [spec]="spec()" />
       </div>
     }
@@ -44,6 +51,9 @@ import { RenderElementComponent } from '@ngaf/render';
     }
   `,
   styles: [`
+    .a2ui-modal__trigger {
+      display: contents;
+    }
     .a2ui-modal__overlay {
       position: fixed;
       inset: 0;

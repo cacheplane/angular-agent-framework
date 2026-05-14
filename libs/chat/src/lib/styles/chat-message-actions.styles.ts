@@ -66,6 +66,6 @@ export const CHAT_MESSAGE_ACTIONS_STYLES = `
     font-size: 14px;
     font-weight: 700;
     line-height: 1;
-    color: var(--ngaf-chat-success, #16a34a);
+    color: var(--ngaf-chat-success);
   }
 `;

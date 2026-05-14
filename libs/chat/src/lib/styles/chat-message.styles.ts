@@ -20,6 +20,7 @@ export const CHAT_MESSAGE_STYLES = `
   :host([data-role="assistant"]):first-child { margin-top: 0; }
 
   .chat-message__bubble {
+    width: fit-content;
     max-width: 80%;
     padding: 8px 12px;
     border-radius: var(--ngaf-chat-radius-bubble);
@@ -92,5 +93,10 @@ export const CHAT_MESSAGE_STYLES = `
     transition: transform 200ms ease;
   }
   .chat-message__control-btn:hover { transform: scale(1.05); }
+  .chat-message__control-btn:focus-visible {
+    outline: 2px solid var(--ngaf-chat-primary);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
   .chat-message__control-btn svg { width: 16px; height: 16px; pointer-events: none; }
 `;
