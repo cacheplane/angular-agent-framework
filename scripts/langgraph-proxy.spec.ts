@@ -119,4 +119,52 @@ describe('createProxyHandler', () => {
     expect(resolveBackend).toHaveBeenCalledWith('https://demo.cacheplane.ai/');
     expect(fetchMock.mock.calls[0]![0]).toBe('https://override.example.com/info');
   });
+
+  it('does not call checkRateLimit for non-gated requests', async () => {
+    const fetchMock = vi.spyOn(global, 'fetch').mockResolvedValue(
+      new Response('{}', { status: 200, headers: { 'content-type': 'application/json' } }),
+    );
+    const checkRateLimit = vi.fn();
+    const handler = createProxyHandler({ backendUrl: DEFAULT_BACKEND, checkRateLimit });
+    const res = makeRes();
+    await handler({ method: 'GET', headers: { host: 'demo.cacheplane.ai' }, body: undefined, url: '/api/info', query: {} } as never, res as never);
+    expect(checkRateLimit).not.toHaveBeenCalled();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('proceeds to fetch when gated request is under limit', async () => {
+    const fetchMock = vi.spyOn(global, 'fetch').mockResolvedValue(
+      new Response('data: ok\n\n', { status: 200, headers: { 'content-type': 'text/event-stream' } }),
+    );
+    const checkRateLimit = vi.fn().mockResolvedValue({ allowed: true, retryAfterSec: 0, count: 1 });
+    const handler = createProxyHandler({ backendUrl: DEFAULT_BACKEND, checkRateLimit });
+    const res = makeRes();
+    await handler({
+      method: 'POST',
+      headers: { host: 'demo.cacheplane.ai', 'x-forwarded-for': '203.0.113.5' },
+      body: { assistant_id: 'chat' },
+      url: '/api/threads/abc/runs/stream',
+      query: {},
+    } as never, res as never);
+    expect(checkRateLimit).toHaveBeenCalledWith('203.0.113.5');
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('returns 429 without calling fetch when gated request is denied', async () => {
+    const fetchMock = vi.spyOn(global, 'fetch');
+    const checkRateLimit = vi.fn().mockResolvedValue({ allowed: false, retryAfterSec: 60, count: 11 });
+    const handler = createProxyHandler({ backendUrl: DEFAULT_BACKEND, checkRateLimit });
+    const res = makeRes();
+    await handler({
+      method: 'POST',
+      headers: { host: 'demo.cacheplane.ai', 'x-forwarded-for': '203.0.113.5' },
+      body: { assistant_id: 'chat' },
+      url: '/api/threads/abc/runs/stream',
+      query: {},
+    } as never, res as never);
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(res._status).toBe(429);
+    expect(res.setHeader).toHaveBeenCalledWith('Retry-After', '60');
+    expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ error: 'rate_limit_exceeded', retryAfterSec: 60 }));
+  });
 });

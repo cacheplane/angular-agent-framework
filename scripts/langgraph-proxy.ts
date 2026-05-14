@@ -38,9 +38,28 @@ export interface ProxyConfig {
    *  header. The default-export wrappers use this for examples (which has
    *  a Referer-based fan-out) and the demo (which has a single backend). */
   readonly resolveBackend?: (referer: string | undefined) => string;
+  /** Optional rate-limit gate. When provided, the proxy calls this for
+   *  POST /api/threads/{id}/runs/stream requests before forwarding. If the
+   *  result has allowed=false, returns 429 with Retry-After. The demo
+   *  wraps `checkRateLimit` from scripts/rate-limit.ts; examples leaves
+   *  it unset. */
+  readonly checkRateLimit?: (ip: string) => Promise<{ allowed: boolean; retryAfterSec: number; count: number }>;
 }
 
 const DEFAULT_BACKEND_URL = 'https://cockpit-dev-219a15942c545a00a03a9a41905d7fc2.us.langgraph.app';
+
+const STREAM_RUN_PATH_RE = /^\/threads\/[^/]+\/runs\/stream$/;
+
+function extractIp(headers: Record<string, string | undefined>): string {
+  const fwd = headers['x-forwarded-for'];
+  if (fwd) {
+    const first = fwd.split(',')[0]?.trim();
+    if (first) return first;
+  }
+  const real = headers['x-real-ip'];
+  if (real) return real.trim();
+  return `unknown:${Math.random().toString(36).slice(2, 10)}`;
+}
 
 export function createProxyHandler(config: ProxyConfig = {}): (req: VercelRequest, res: VercelResponse) => Promise<void> {
   const fallbackBackend = config.backendUrl ?? DEFAULT_BACKEND_URL;
@@ -88,6 +107,25 @@ export function createProxyHandler(config: ProxyConfig = {}): (req: VercelReques
         apiKeyPrefix: apiKey.substring(0, 10),
       });
       return;
+    }
+
+    // Rate-limit gate: only POST /api/threads/{id}/runs/stream burns OpenAI tokens.
+    if (
+      config.checkRateLimit &&
+      req.method === 'POST' &&
+      STREAM_RUN_PATH_RE.test(apiPath)
+    ) {
+      const ip = extractIp(req.headers);
+      const { allowed, retryAfterSec } = await config.checkRateLimit(ip);
+      if (!allowed) {
+        res.setHeader('Retry-After', String(retryAfterSec));
+        res.status(429).json({
+          error: 'rate_limit_exceeded',
+          retryAfterSec,
+          message: `Demo is rate-limited per IP. Try again in ${retryAfterSec}s.`,
+        });
+        return;
+      }
     }
 
     console.log(`[proxy] ${req.method} ${req.url} → ${targetUrl}`);

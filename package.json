@@ -100,6 +100,7 @@
     "@cacheplane/partial-markdown": "^0.3.0",
     "@langchain/core": "^1.1.33",
     "@langchain/langgraph-sdk": "^1.7.4",
+    "@neondatabase/serverless": "^0.10.0",
     "@noble/ed25519": "^2.3.0",
     "drizzle-orm": "^0.45.2",
     "next": "~16.1.6",
