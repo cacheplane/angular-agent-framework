@@ -1,0 +1,8 @@
+{
+  "$schema": "../../node_modules/ng-packagr/ng-package.schema.json",
+  "dest": "../../dist/libs/telemetry/browser",
+  "lib": {
+    "entryFile": "src/browser/public-api.ts"
+  },
+  "allowedNonPeerDependencies": ["posthog-js", "posthog-node"]
+}

@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../../dist/out-tsc",
+    "declaration": true,
+    "emitDeclarationOnly": false
+  },
+  "include": ["src/index.ts", "src/shared/**/*.ts", "src/node/**/*.ts"],
+  "exclude": ["src/**/*.spec.ts", "src/browser/**"]
+}
