@@ -95,10 +95,20 @@ function extractWeeklyValues(insight: FetchedInsight): { thisWeek: number; lastW
   };
 }
 
+// Throws on PostHog HTTP errors instead of silently returning empty results.
+// A zero-row report is signal; a failed-auth empty report is misleading.
+function expectOk<T>(r: { data?: T; error?: unknown }, op: string): T {
+  if (r.error || r.data === undefined) {
+    throw new Error(`PostHog ${op} failed: ${JSON.stringify(r.error)}`);
+  }
+  return r.data;
+}
+
 export async function generateReport(): Promise<{ markdown: string; date: string }> {
   const c = ph();
   const dashRes = await c.GET('/dashboards/' as any, { params: { query: { limit: 200 } } } as any);
-  const dashboards = ((dashRes as any).data?.results ?? []) as FetchedDashboard[];
+  const dashData = expectOk(dashRes as any, 'list dashboards') as { results?: FetchedDashboard[] };
+  const dashboards = dashData.results ?? [];
   const gtmDashboards = dashboards.filter((d) => d.tags?.includes('gtm'));
 
   const sections: ReportSection[] = [];
@@ -110,7 +120,7 @@ export async function generateReport(): Promise<{ markdown: string; date: string
       const insightRes = await c.GET(`/insights/{id}/` as any, {
         params: { path: { id: tileId }, query: { refresh: 'force_cache' } },
       } as any);
-      const insight = ((insightRes as any).data ?? {}) as FetchedInsight;
+      const insight = expectOk(insightRes as any, `get insight ${tileId}`) as FetchedInsight;
       const { thisWeek, lastWeek, weeks } = extractWeeklyValues(insight);
       rows.push({ metric: insight.name, thisWeek, lastWeek, weeks });
     }

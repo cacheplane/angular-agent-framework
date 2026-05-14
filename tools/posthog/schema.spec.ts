@@ -1,7 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
-import { glob } from 'node:fs/promises';
+import { readFile, readdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { DashboardLocal, InsightLocal, CohortLocal } from './schema.js';
 
@@ -87,7 +86,15 @@ test('every committed JSON in dashboards/insights/cohorts parses', async () => {
     { dir: 'cohorts', schema: CohortLocal },
   ];
   for (const { dir, schema } of checks) {
-    for await (const path of glob(`${join(root, dir)}/*.json`)) {
+    // readdir + filter is Node 20 compatible; fs.glob requires Node 22+.
+    let files: string[];
+    try {
+      files = (await readdir(join(root, dir))).filter((f) => f.endsWith('.json'));
+    } catch {
+      continue;  // missing directory is fine
+    }
+    for (const f of files) {
+      const path = join(root, dir, f);
       const json = JSON.parse(await readFile(path, 'utf8'));
       const result = schema.safeParse(json);
       assert.equal(result.success, true, `${path}: ${result.success ? '' : JSON.stringify(result.error.issues)}`);
