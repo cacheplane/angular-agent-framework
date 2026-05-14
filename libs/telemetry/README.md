@@ -3,6 +3,25 @@
 > Skeleton. Implementation lands in Spec 1 (`analytics-foundation`).
 > This README is the **public trust contract**. It's linked from the homepage footer, package READMEs, and the postinstall opt-out notice. The contract is locked here so it doesn't drift.
 
+## Imports
+
+```typescript
+// Browser (Angular DI provider)
+import { provideNgafTelemetry } from '@ngaf/telemetry/browser';
+
+// Node (server adapters)
+import {
+  captureRuntimeInstanceCreated,
+  captureStreamStarted,
+  captureStreamEnded,
+  captureStreamErrored,
+  disableTelemetry,
+} from '@ngaf/telemetry/node';
+
+// Shared utilities (events, env detection, hashing)
+import { isTelemetryDisabled, sha256, getAnonId } from '@ngaf/telemetry';
+```
+
 ## What this package is
 
 The single telemetry surface for `@ngaf/*`. It exists so we can answer "how is Cacheplane being used?" without instrumenting browser packages that ship to end-users.
