@@ -1,12 +1,18 @@
 {
   "slug": "cockpit-recipe-completion",
-  "posthog_id": null,
+  "posthog_id": 8587348,
   "kind": "trends",
   "name": "Cockpit recipe completion",
   "events": [
-    { "event": "cockpit:recipe_start", "math": "total" },
-    { "event": "cockpit:chat_first_message", "math": "total" }
+    {
+      "event": "cockpit:recipe_start",
+      "math": "total"
+    },
+    {
+      "event": "cockpit:chat_first_message",
+      "math": "total"
+    }
   ],
-  "date_from": "-30d",
-  "interval": "day"
+  "interval": "day",
+  "date_from": "-30d"
 }

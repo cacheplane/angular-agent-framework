@@ -1,6 +1,6 @@
 {
   "slug": "install-command-clicks",
-  "posthog_id": null,
+  "posthog_id": 8587349,
   "kind": "trends",
   "name": "Install command clicks",
   "events": [
@@ -8,12 +8,16 @@
       "event": "marketing:cta_click",
       "math": "total",
       "properties": [
-        { "key": "track", "value": "developer", "operator": "exact" }
+        {
+          "key": "track",
+          "value": "developer",
+          "operator": "exact"
+        }
       ]
     }
   ],
   "breakdown": "cta_id",
   "breakdown_limit": 10,
-  "date_from": "-30d",
-  "interval": "day"
+  "interval": "day",
+  "date_from": "-30d"
 }
