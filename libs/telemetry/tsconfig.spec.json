@@ -1,0 +1,12 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../../dist/out-tsc",
+    "declaration": false,
+    "lib": ["es2022", "dom"],
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "types": ["vitest/globals", "node"]
+  },
+  "include": ["src/**/*.ts"]
+}
