@@ -34,10 +34,9 @@
       "options": { "command": "true" }
     },
     "test": {
-      "executor": "@nx/jest:jest",
+      "executor": "@nx/vitest:test",
       "options": {
-        "jestConfig": "libs/telemetry/jest.config.ts",
-        "passWithNoTests": false
+        "configFile": "libs/telemetry/vite.config.mts"
       }
     },
     "lint": { "executor": "@nx/eslint:lint" }
