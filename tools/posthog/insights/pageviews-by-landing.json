@@ -1,0 +1,11 @@
+{
+  "slug": "pageviews-by-landing",
+  "posthog_id": null,
+  "kind": "trends",
+  "name": "Pageviews by landing path",
+  "events": [{ "event": "$pageview", "math": "total" }],
+  "breakdown": "$pathname",
+  "breakdown_limit": 15,
+  "date_from": "-30d",
+  "interval": "day"
+}

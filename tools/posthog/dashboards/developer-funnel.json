@@ -1,0 +1,13 @@
+{
+  "slug": "developer-funnel",
+  "posthog_id": null,
+  "name": "GTM · Developer funnel",
+  "description": "Pageview → install → cockpit activation. Source: gtm.md §4.",
+  "tags": ["gtm", "developer-track", "phase-1"],
+  "tiles": [
+    { "insight": "pageviews-by-landing" },
+    { "insight": "install-command-clicks" },
+    { "insight": "cockpit-recipe-completion" },
+    { "insight": "six-signal-activation-funnel" }
+  ]
+}
