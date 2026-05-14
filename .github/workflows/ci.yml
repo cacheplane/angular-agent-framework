@@ -343,7 +343,7 @@ jobs:
           if printf '%s\n' "$changed_files" | grep -E '^examples/chat/(angular|python)/' >/dev/null; then
             demo_changed=true
           fi
-          if printf '%s\n' "$changed_files" | grep -E '^(vercel\.demo\.json|scripts/(assemble-demo|demo-middleware|langgraph-proxy)\.ts)$' >/dev/null; then
+          if printf '%s\n' "$changed_files" | grep -E '^(vercel\.demo\.json|scripts/(assemble-demo|demo-middleware|langgraph-proxy|rate-limit)\.ts)$' >/dev/null; then
             demo_changed=true
           fi
           if printf '%s\n' "$changed_files" | grep -E '^libs/' >/dev/null; then
