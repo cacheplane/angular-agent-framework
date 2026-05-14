@@ -1,0 +1,27 @@
+{
+  "name": "@ngaf/telemetry",
+  "version": "0.0.0",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cacheplane/angular-agent-framework.git",
+    "directory": "libs/telemetry"
+  },
+  "homepage": "https://github.com/cacheplane/angular-agent-framework#readme",
+  "bugs": { "url": "https://github.com/cacheplane/angular-agent-framework/issues" },
+  "sideEffects": false,
+  "type": "module",
+  "peerDependencies": {
+    "@angular/core": "^20.0.0 || ^21.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@angular/core": { "optional": true }
+  },
+  "dependencies": {
+    "posthog-js": "^1.372.0",
+    "posthog-node": "^5.20.0"
+  },
+  "scripts": {
+    "postinstall": "node ./node/postinstall.mjs || true"
+  }
+}

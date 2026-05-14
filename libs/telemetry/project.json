@@ -1,0 +1,45 @@
+{
+  "name": "telemetry",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/telemetry/src",
+  "projectType": "library",
+  "tags": ["scope:shared", "type:lib"],
+  "targets": {
+    "build:node": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{workspaceRoot}/dist/libs/telemetry"],
+      "options": {
+        "outputPath": "dist/libs/telemetry",
+        "main": "libs/telemetry/src/index.ts",
+        "additionalEntryPoints": [
+          "libs/telemetry/src/node/index.ts",
+          "libs/telemetry/src/node/postinstall.ts"
+        ],
+        "tsConfig": "libs/telemetry/tsconfig.lib.json",
+        "assets": ["libs/telemetry/README.md", "libs/telemetry/package.json"]
+      }
+    },
+    "build:browser": {
+      "executor": "@nx/angular:package",
+      "outputs": ["{workspaceRoot}/dist/libs/telemetry/browser"],
+      "options": {
+        "project": "libs/telemetry/ng-package.json",
+        "tsConfig": "libs/telemetry/tsconfig.lib.browser.json"
+      },
+      "dependsOn": ["build:node"]
+    },
+    "build": {
+      "dependsOn": ["build:node", "build:browser"],
+      "executor": "nx:run-commands",
+      "options": { "command": "true" }
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "options": {
+        "jestConfig": "libs/telemetry/jest.config.ts",
+        "passWithNoTests": false
+      }
+    },
+    "lint": { "executor": "@nx/eslint:lint" }
+  }
+}
