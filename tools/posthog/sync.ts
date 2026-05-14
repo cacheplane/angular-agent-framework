@@ -253,3 +253,112 @@ export async function applyPlan(options: ApplyOptions): Promise<ApplyResult> {
 
   return result;
 }
+
+import { fileURLToPath } from 'node:url';
+import { dirname, resolve as resolvePath } from 'node:path';
+import { ph } from './client.js';
+
+function makeRealClient(): SyncClient {
+  const c = ph();
+  const ok = <T>(r: { data?: T; error?: unknown }, op: string): T => {
+    if (r.error || r.data === undefined) {
+      throw new Error(`PostHog ${op} failed: ${JSON.stringify(r.error)}`);
+    }
+    return r.data;
+  };
+  return {
+    listDashboards: async () => {
+      const r = await c.GET('/dashboards/' as any, { params: { query: { limit: 200 } } } as any);
+      return ((ok(r as any, 'list dashboards') as any).results ?? []) as RemoteDashboard[];
+    },
+    listInsights: async () => {
+      const r = await c.GET('/insights/' as any, { params: { query: { limit: 200 } } } as any);
+      return ((ok(r as any, 'list insights') as any).results ?? []) as RemoteInsight[];
+    },
+    listCohorts: async () => {
+      const r = await c.GET('/cohorts/' as any, { params: { query: { limit: 200 } } } as any);
+      return ((ok(r as any, 'list cohorts') as any).results ?? []) as RemoteCohort[];
+    },
+    createDashboard: async (body) => ok(await c.POST('/dashboards/' as any, { body } as any), 'create dashboard') as RemoteDashboard,
+    createInsight: async (body) => ok(await c.POST('/insights/' as any, { body } as any), 'create insight') as RemoteInsight,
+    createCohort: async (body) => ok(await c.POST('/cohorts/' as any, { body } as any), 'create cohort') as RemoteCohort,
+    updateDashboard: async (id, body) => ok(await c.PATCH(`/dashboards/{id}/` as any, { params: { path: { id } }, body } as any), 'update dashboard') as RemoteDashboard,
+    updateInsight: async (id, body) => ok(await c.PATCH(`/insights/{id}/` as any, { params: { path: { id } }, body } as any), 'update insight') as RemoteInsight,
+    updateCohort: async (id, body) => ok(await c.PATCH(`/cohorts/{id}/` as any, { params: { path: { id } }, body } as any), 'update cohort') as RemoteCohort,
+    deleteDashboard: async (id) => { await c.DELETE(`/dashboards/{id}/` as any, { params: { path: { id } } } as any); },
+    deleteInsight: async (id) => { await c.DELETE(`/insights/{id}/` as any, { params: { path: { id } } } as any); },
+    deleteCohort: async (id) => { await c.DELETE(`/cohorts/{id}/` as any, { params: { path: { id } } } as any); },
+  };
+}
+
+function formatPlanSummary(plan: SyncPlan): string {
+  const lines: string[] = [];
+  for (const item of plan.create) lines.push(`[create]  ${item.kind} ${item.local.slug}`);
+  for (const item of plan.update) lines.push(`[update]  ${item.kind} ${item.local.slug}  (posthog_id=${item.remoteId})`);
+  for (const item of plan.orphan) lines.push(`[orphan]  ${item.kind} "${item.remote.name}" (posthog_id=${item.remote.id})`);
+  if (lines.length === 0) lines.push('(nothing to do)');
+  return lines.join('\n');
+}
+
+async function main(): Promise<number> {
+  const args = process.argv.slice(2);
+  const wantPlan = args.includes('--plan');
+  const wantApply = args.includes('--apply');
+  const deleteOrphans = args.includes('--delete-orphans');
+  if (!wantPlan && !wantApply) {
+    console.error('Usage: sync.ts (--plan | --apply [--delete-orphans])');
+    return 1;
+  }
+  if (wantPlan && wantApply) {
+    console.error('Cannot combine --plan and --apply');
+    return 1;
+  }
+
+  const here = dirname(fileURLToPath(import.meta.url));
+  const root = resolvePath(here);  // tools/posthog/
+
+  let client: SyncClient;
+  try {
+    client = makeRealClient();
+  } catch (err) {
+    console.error(`Failed to initialize PostHog client: ${err instanceof Error ? err.message : err}`);
+    return 1;
+  }
+
+  let plan: SyncPlan;
+  try {
+    plan = await computePlan({ root, client });
+  } catch (err) {
+    console.error(`Plan computation failed: ${err instanceof Error ? err.message : err}`);
+    return 1;
+  }
+
+  console.log(formatPlanSummary(plan));
+
+  if (wantPlan) return 0;
+
+  const result = await applyPlan({ root, client, plan, deleteOrphans });
+  console.log(`\napplied: ${result.applied}, failed: ${result.failed}`);
+  if (result.errors.length > 0) {
+    for (const e of result.errors) {
+      console.error(`  ${e.kind} ${e.slug}: ${e.error}`);
+    }
+    return 1;
+  }
+
+  // Helpful next-step hint after apply with writeback.
+  const writeback = plan.create.filter((p) => p.kind !== 'cohort' || p.path);
+  if (writeback.length > 0) {
+    const slugs = writeback.map((p) => p.local.slug).join(', ');
+    console.log(`\nWriteback complete. Commit with:`);
+    console.log(`  git add tools/posthog/{dashboards,insights,cohorts}/`);
+    console.log(`  git commit -m "chore(posthog): writeback ids for ${slugs}"`);
+  }
+  return 0;
+}
+
+// Only run main when executed directly (not when imported by tests).
+const isDirectRun = process.argv[1] && resolvePath(process.argv[1]) === fileURLToPath(import.meta.url);
+if (isDirectRun) {
+  main().then((code) => process.exit(code));
+}
