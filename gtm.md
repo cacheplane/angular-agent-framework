@@ -79,7 +79,7 @@ Operational progress lives in agent runs and PostHog. The repo holds durable str
 |------:|----------------------------|-------------------------------------------|-------------------------------------------------------------------------------|----------------------------|
 | 0     | gtm-meta                   | `cowork/gtm/SKILL.md`                     | [meta](docs/superpowers/specs/gtm/2026-05-13-gtm-meta-design.md)               | —                          |
 | 0     | analytics-foundation-1a    | `cowork/gtm/SKILL.md`                     | [spec](docs/superpowers/specs/gtm/2026-05-14-analytics-foundation-1a-dashboards-as-code-design.md) | `developer-funnel` (sample)  |
-| 0     | analytics-foundation-1b    | `cowork/gtm/SKILL.md`                     | (pending)                                                                      | `package-telemetry`        |
+| 0     | analytics-foundation-1b    | `cowork/gtm/SKILL.md`                     | [spec](docs/superpowers/specs/gtm/2026-05-15-analytics-foundation-1b-ngaf-telemetry-design.md) | `package-telemetry`        |
 | 0     | analytics-foundation-1c    | `cowork/gtm/SKILL.md`                     | (pending)                                                                      | `activation-six-signals`   |
 | 0     | analytics-foundation-1d    | `cowork/gtm/SKILL.md`                     | (pending)                                                                      | `enterprise-funnel`        |
 | 1     | positioning-and-risks      | `cowork/gtm/SKILL.md`                     | (pending)                                                                      | —                          |
