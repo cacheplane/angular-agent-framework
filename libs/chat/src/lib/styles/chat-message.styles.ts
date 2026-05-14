@@ -93,5 +93,10 @@ export const CHAT_MESSAGE_STYLES = `
     transition: transform 200ms ease;
   }
   .chat-message__control-btn:hover { transform: scale(1.05); }
+  .chat-message__control-btn:focus-visible {
+    outline: 2px solid var(--ngaf-chat-primary);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
   .chat-message__control-btn svg { width: 16px; height: 16px; pointer-events: none; }
 `;
