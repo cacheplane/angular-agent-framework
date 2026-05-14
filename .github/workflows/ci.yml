@@ -325,3 +325,40 @@ jobs:
           BASE_URL: https://cockpit.cacheplane.ai
           EXAMPLES_URL: https://examples.cacheplane.ai
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+
+  posthog-sync-plan:
+    name: PostHog — dashboards-as-code drift check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+      - name: Detect affected
+        id: affected
+        run: |
+          base_sha=$(git merge-base origin/main HEAD)
+          head_sha=$(git rev-parse HEAD)
+          affected="$(npx nx show projects --affected --base=$base_sha --head=$head_sha)"
+          if printf '%s\n' "$affected" | grep -Fx 'posthog-tools' >/dev/null; then
+            echo "is_affected=yes" >> "$GITHUB_OUTPUT"
+          else
+            echo "is_affected=no" >> "$GITHUB_OUTPUT"
+            echo "::notice::posthog-tools not in affected projects — skipping drift check."
+          fi
+      - name: posthog:sync --plan
+        if: steps.affected.outputs.is_affected == 'yes'
+        env:
+          POSTHOG_PERSONAL_API_KEY: ${{ secrets.POSTHOG_PERSONAL_API_KEY }}
+          POSTHOG_HOST: https://us.i.posthog.com
+          POSTHOG_PROJECT_ID: ${{ secrets.POSTHOG_PROJECT_ID }}
+        run: |
+          if [ -z "$POSTHOG_PERSONAL_API_KEY" ]; then
+            echo "::notice::POSTHOG_PERSONAL_API_KEY not set — soft skip for contributor PRs."
+            exit 0
+          fi
+          npx nx run posthog-tools:sync:plan
