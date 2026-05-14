@@ -105,3 +105,100 @@ test('computePlan: invalid local JSON throws with file path in message', async (
     /insights\/bad\.json/,
   );
 });
+
+import { applyPlan, type ApplyResult } from './sync.js';
+
+test('applyPlan: apply order — insights POSTed before dashboards', async () => {
+  const root = await fixtureRoot();
+  await writeFile(join(root, 'dashboards/d.json'), JSON.stringify({
+    slug: 'd', posthog_id: null, name: 'D', description: '', tiles: [{ insight: 'i' }],
+  }));
+  await writeFile(join(root, 'insights/i.json'), JSON.stringify({
+    slug: 'i', posthog_id: null, kind: 'trends', name: 'I', events: [{ event: '$pageview' }],
+  }));
+  const createCalls: string[] = [];
+  const client: SyncClient = {
+    ...fakeClient(),
+    createInsight: async (body) => { createCalls.push('insight'); return { ...body, id: 2001 }; },
+    createDashboard: async (body) => { createCalls.push('dashboard'); return { ...body, id: 1001 }; },
+  };
+  const plan = await computePlan({ root, client });
+  await applyPlan({ root, client, plan });
+  assert.deepEqual(createCalls, ['insight', 'dashboard']);
+});
+
+test('applyPlan: writeback updates posthog_id in source JSON', async () => {
+  const root = await fixtureRoot();
+  await writeFile(join(root, 'insights/i.json'), JSON.stringify({
+    slug: 'i', posthog_id: null, kind: 'trends', name: 'I', events: [{ event: '$pageview' }],
+  }, null, 2));
+  const client: SyncClient = { ...fakeClient(), createInsight: async (body) => ({ ...body, id: 7777 }) };
+  const plan = await computePlan({ root, client });
+  await applyPlan({ root, client, plan });
+  const updated = JSON.parse(await readFile(join(root, 'insights/i.json'), 'utf8'));
+  assert.equal(updated.posthog_id, 7777);
+});
+
+test('applyPlan: dashboard with unknown insight slug throws', async () => {
+  const root = await fixtureRoot();
+  await writeFile(join(root, 'dashboards/d.json'), JSON.stringify({
+    slug: 'd', posthog_id: null, name: 'D', description: '', tiles: [{ insight: 'missing-insight' }],
+  }));
+  const client = fakeClient();
+  const plan = await computePlan({ root, client });
+  await assert.rejects(
+    () => applyPlan({ root, client, plan }),
+    /missing-insight/,
+  );
+});
+
+test('applyPlan: partial success — failed insight does not block other creates', async () => {
+  const root = await fixtureRoot();
+  await writeFile(join(root, 'insights/a.json'), JSON.stringify({
+    slug: 'a', posthog_id: null, kind: 'trends', name: 'A', events: [{ event: '$pageview' }],
+  }));
+  await writeFile(join(root, 'insights/fail.json'), JSON.stringify({
+    slug: 'fail', posthog_id: null, kind: 'trends', name: 'Fail', events: [{ event: '$pageview' }],
+  }));
+  let calls = 0;
+  const client: SyncClient = {
+    ...fakeClient(),
+    createInsight: async (body) => {
+      calls += 1;
+      if (body.name === 'Fail') throw new Error('500');
+      return { ...body, id: 100 + calls };
+    },
+  };
+  const plan = await computePlan({ root, client });
+  const result: ApplyResult = await applyPlan({ root, client, plan });
+  assert.equal(result.applied, 1);
+  assert.equal(result.failed, 1);
+});
+
+test('applyPlan: --plan mode never writes to disk', async () => {
+  const root = await fixtureRoot();
+  await writeFile(join(root, 'insights/i.json'), JSON.stringify({
+    slug: 'i', posthog_id: null, kind: 'trends', name: 'I', events: [{ event: '$pageview' }],
+  }));
+  const before = await readFile(join(root, 'insights/i.json'), 'utf8');
+  const client = fakeClient();
+  const plan = await computePlan({ root, client });
+  // computePlan never writes; applyPlan({ dryRun: true }) also never writes
+  await applyPlan({ root, client, plan, dryRun: true });
+  const after = await readFile(join(root, 'insights/i.json'), 'utf8');
+  assert.equal(before, after);
+});
+
+test('applyPlan: orphans are never deleted unless deleteOrphans:true', async () => {
+  const root = await fixtureRoot();
+  const deleteCalls: number[] = [];
+  const client: SyncClient = {
+    ...fakeClient({ dashboards: [{ id: 999, name: 'Stray' }] }),
+    deleteDashboard: async (id) => { deleteCalls.push(id); },
+  };
+  const plan = await computePlan({ root, client });
+  await applyPlan({ root, client, plan });
+  assert.deepEqual(deleteCalls, []);
+  await applyPlan({ root, client, plan, deleteOrphans: true });
+  assert.deepEqual(deleteCalls, [999]);
+});

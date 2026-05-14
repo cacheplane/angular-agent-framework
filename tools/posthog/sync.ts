@@ -130,3 +130,126 @@ export async function computePlan({
 
   return plan;
 }
+
+import { writeFile, rename } from 'node:fs/promises';
+
+export interface ApplyResult {
+  applied: number;
+  failed: number;
+  errors: Array<{ kind: Kind; slug: string; error: string }>;
+}
+
+export interface ApplyOptions {
+  root: string;
+  client: SyncClient;
+  plan: SyncPlan;
+  dryRun?: boolean;
+  deleteOrphans?: boolean;
+}
+
+async function atomicWriteJson(path: string, data: unknown): Promise<void> {
+  const tmpPath = `${path}.tmp`;
+  await writeFile(tmpPath, JSON.stringify(data, null, 2) + '\n', 'utf8');
+  await rename(tmpPath, path);
+}
+
+function resolveTiles(
+  dashboard: any,
+  insightSlugToId: Map<string, number>,
+): Array<{ insight: number }> {
+  return (dashboard.tiles ?? []).map((t: { insight: string }) => {
+    const id = insightSlugToId.get(t.insight);
+    if (id === undefined) {
+      throw new Error(
+        `dashboards/${dashboard.slug}.json references unknown insight slug "${t.insight}"`,
+      );
+    }
+    return { insight: id };
+  });
+}
+
+export async function applyPlan(options: ApplyOptions): Promise<ApplyResult> {
+  const { root, client, plan, dryRun = false, deleteOrphans = false } = options;
+  const result: ApplyResult = { applied: 0, failed: 0, errors: [] };
+  const insightSlugToId = new Map<string, number>();
+
+  // Pre-populate insight slug→id map from existing posthog_ids (for dashboards referencing already-synced insights).
+  for (const item of plan.update.filter((p) => p.kind === 'insight')) {
+    insightSlugToId.set(item.local.slug, item.remoteId!);
+  }
+
+  // Apply order: cohorts → insights → dashboards. Creates within a tier before updates.
+  const tiers: Array<{ kind: Kind; create: PlanItem[]; update: PlanItem[] }> = [
+    { kind: 'cohort', create: plan.create.filter((p) => p.kind === 'cohort'), update: plan.update.filter((p) => p.kind === 'cohort') },
+    { kind: 'insight', create: plan.create.filter((p) => p.kind === 'insight'), update: plan.update.filter((p) => p.kind === 'insight') },
+    { kind: 'dashboard', create: plan.create.filter((p) => p.kind === 'dashboard'), update: plan.update.filter((p) => p.kind === 'dashboard') },
+  ];
+
+  for (const tier of tiers) {
+    for (const item of tier.create) {
+      if (dryRun) continue;
+      // Resolve tiles outside the try — unknown insight slug is a data error
+      // that must surface, not a per-item network failure.
+      const tiles = item.kind === 'dashboard' ? resolveTiles(item.local, insightSlugToId) : null;
+      try {
+        let created: any;
+        if (item.kind === 'cohort') created = await client.createCohort(item.local);
+        else if (item.kind === 'insight') created = await client.createInsight(item.local);
+        else {
+          created = await client.createDashboard({ ...item.local, tiles });
+        }
+        if (item.kind === 'insight') insightSlugToId.set(item.local.slug, created.id);
+        // Writeback posthog_id into local JSON.
+        if (item.path) {
+          const fullPath = join(root, item.path);
+          await atomicWriteJson(fullPath, { ...item.local, posthog_id: created.id });
+        }
+        result.applied += 1;
+      } catch (err) {
+        result.failed += 1;
+        result.errors.push({
+          kind: item.kind,
+          slug: item.local.slug,
+          error: err instanceof Error ? err.message : String(err),
+        });
+      }
+    }
+    for (const item of tier.update) {
+      if (dryRun) continue;
+      const tiles = item.kind === 'dashboard' ? resolveTiles(item.local, insightSlugToId) : null;
+      try {
+        if (item.kind === 'cohort') await client.updateCohort(item.remoteId!, item.local);
+        else if (item.kind === 'insight') await client.updateInsight(item.remoteId!, item.local);
+        else {
+          await client.updateDashboard(item.remoteId!, { ...item.local, tiles });
+        }
+        result.applied += 1;
+      } catch (err) {
+        result.failed += 1;
+        result.errors.push({
+          kind: item.kind,
+          slug: item.local.slug,
+          error: err instanceof Error ? err.message : String(err),
+        });
+      }
+    }
+  }
+
+  if (deleteOrphans && !dryRun) {
+    for (const item of plan.orphan) {
+      try {
+        if (item.kind === 'cohort') await client.deleteCohort(item.remote.id);
+        else if (item.kind === 'insight') await client.deleteInsight(item.remote.id);
+        else await client.deleteDashboard(item.remote.id);
+      } catch (err) {
+        result.errors.push({
+          kind: item.kind,
+          slug: `(orphan id=${item.remote.id})`,
+          error: err instanceof Error ? err.message : String(err),
+        });
+      }
+    }
+  }
+
+  return result;
+}
