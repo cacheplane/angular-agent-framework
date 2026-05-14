@@ -52,10 +52,21 @@ import { CHAT_HOST_TOKENS } from '../../styles/chat-tokens';
       justify-content: center;
     }
     .chat-sidebar__close:hover { background: var(--ngaf-chat-surface-alt); color: var(--ngaf-chat-text); }
+    .chat-sidebar__launcher {
+      position: fixed;
+      bottom: 1rem;
+      right: 1rem;
+      z-index: 30;
+    }
+    /* Hide the launcher when the sidebar is open — the close button on the
+       panel handles dismissal, and the panel covers the launcher anyway. */
+    :host([data-open="true"]) .chat-sidebar__launcher { display: none; }
   `],
   template: `
     <div class="chat-sidebar__content"><ng-content /></div>
-    <chat-launcher-button (click)="toggle()" />
+    <div class="chat-sidebar__launcher">
+      <chat-launcher-button (click)="toggle()" />
+    </div>
     <aside class="chat-sidebar__panel" [attr.data-open]="open() ? 'true' : 'false'" role="complementary" [attr.aria-hidden]="open() ? 'false' : 'true'">
       <button type="button" class="chat-sidebar__close" (click)="closeWindow()" aria-label="Close chat">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
