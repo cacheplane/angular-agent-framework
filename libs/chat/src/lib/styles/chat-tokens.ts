@@ -172,9 +172,9 @@ const REDUCED_MOTION_STYLES = `
  *
  * Theme switching:
  *   - `prefers-color-scheme: dark` → dark by default.
- *   - `[data-ngaf-chat-theme="dark"]` on `<html>` / `<body>` / any wrapper
+ *   - `[data-theme="dark"]` on `<html>` / `<body>` / any wrapper
  *     forces dark.
- *   - `[data-ngaf-chat-theme="light"]` forces light.
+ *   - `[data-theme="light"]` forces light.
  */
 export const ROOT_TOKEN_STYLES = `
 @layer ngaf-chat {
@@ -187,10 +187,10 @@ export const ROOT_TOKEN_STYLES = `
   @media (prefers-color-scheme: dark) {
     :root { ${DARK_TOKENS} }
   }
-  :root[data-ngaf-chat-theme="light"],
-  [data-ngaf-chat-theme="light"] { ${LIGHT_TOKENS} }
-  :root[data-ngaf-chat-theme="dark"],
-  [data-ngaf-chat-theme="dark"] { ${DARK_TOKENS} }
+  :root[data-theme="light"],
+  [data-theme="light"] { ${LIGHT_TOKENS} }
+  :root[data-theme="dark"],
+  [data-theme="dark"] { ${DARK_TOKENS} }
 }
 ${KEYFRAMES}
 ${REDUCED_MOTION_STYLES}

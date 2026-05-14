@@ -145,7 +145,7 @@
 }
 
 @media (prefers-color-scheme: dark) {
-  :root:not([data-ngaf-chat-theme="light"]) {
+  :root:not([data-theme="light"]) {
     --ngaf-chat-bg: rgb(17, 17, 17);
     --ngaf-chat-surface: rgb(28, 28, 28);
     --ngaf-chat-surface-alt: rgb(44, 44, 44);
@@ -165,7 +165,7 @@
   }
 }
 
-[data-ngaf-chat-theme="dark"] {
+[data-theme="dark"] {
   --ngaf-chat-bg: rgb(17, 17, 17);
   --ngaf-chat-surface: rgb(28, 28, 28);
   --ngaf-chat-surface-alt: rgb(44, 44, 44);

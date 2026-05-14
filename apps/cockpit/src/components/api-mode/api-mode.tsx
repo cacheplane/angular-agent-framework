@@ -37,10 +37,9 @@ function DocArticle({ section }: { section: DocSection }) {
       }}
     >
       <div
-        className="px-4 py-3 border-b"
+        className="px-4 py-3 border-b border-[var(--ds-accent-border)]"
         style={{
           background: 'var(--ds-accent-surface)',
-          borderBottomColor: 'var(--ds-accent-border)',
         }}
       >
         <div className="flex items-baseline gap-2">

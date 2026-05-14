@@ -79,10 +79,9 @@ export function CockpitShell({
         onClose={() => setIsSidebarOpen(false)}
       />
 
-      <section className="grid grid-rows-[auto_1fr] gap-2 p-4 overflow-hidden bg-[var(--ds-surface)]">
+      <section className="grid grid-rows-[auto_1fr] overflow-hidden bg-[var(--ds-surface)]">
         <header
-          className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between pb-3"
-          style={{ borderBottom: '1px solid var(--ds-border)' }}
+          className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between px-4 py-3 border-b border-[var(--ds-border)]"
         >
           <div className="flex items-center gap-3">
             <button
