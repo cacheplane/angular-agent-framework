@@ -202,3 +202,42 @@ test('applyPlan: orphans are never deleted unless deleteOrphans:true', async () 
   await applyPlan({ root, client, plan, deleteOrphans: true });
   assert.deepEqual(deleteCalls, [999]);
 });
+
+test('applyPlan: wiring pass PATCHes insights with dashboards: [<dashboard_id>]', async () => {
+  const root = await fixtureRoot();
+  await writeFile(join(root, 'dashboards/d.json'), JSON.stringify({
+    slug: 'd', posthog_id: null, name: 'D', description: '', tiles: [{ insight: 'i' }],
+  }));
+  await writeFile(join(root, 'insights/i.json'), JSON.stringify({
+    slug: 'i', posthog_id: null, kind: 'trends', name: 'I', events: [{ event: '$pageview' }],
+  }));
+  const updateCalls: Array<{ id: number; body: any }> = [];
+  const client: SyncClient = {
+    ...fakeClient(),
+    createInsight: async (body) => ({ ...body, id: 5001 }),
+    createDashboard: async (body) => ({ ...body, id: 6001 }),
+    updateInsight: async (id, body) => { updateCalls.push({ id, body }); return { ...body, id }; },
+  };
+  const plan = await computePlan({ root, client });
+  await applyPlan({ root, client, plan });
+  // The wiring pass should have PATCHed insight 5001 with dashboards: [6001].
+  const wiringCalls = updateCalls.filter((c) => c.id === 5001 && Array.isArray(c.body.dashboards));
+  assert.equal(wiringCalls.length, 1);
+  assert.deepEqual(wiringCalls[0].body.dashboards, [6001]);
+});
+
+test('applyPlan: stripTiles — dashboard create body excludes tiles field', async () => {
+  const root = await fixtureRoot();
+  await writeFile(join(root, 'dashboards/d.json'), JSON.stringify({
+    slug: 'd', posthog_id: null, name: 'D', description: '', tiles: [],
+  }));
+  let createdBody: any = null;
+  const client: SyncClient = {
+    ...fakeClient(),
+    createDashboard: async (body) => { createdBody = body; return { ...body, id: 6001 }; },
+  };
+  const plan = await computePlan({ root, client });
+  await applyPlan({ root, client, plan });
+  assert.equal(createdBody !== null, true);
+  assert.equal('tiles' in createdBody, false, 'dashboard body must not include tiles field');
+});

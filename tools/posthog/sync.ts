@@ -168,6 +168,15 @@ function resolveTiles(
   });
 }
 
+// PostHog rejects/ignores a `tiles` field on dashboard create/update.
+// We keep tiles in the local JSON as the source of truth, but strip them
+// from the body sent to PostHog. The wiring pass populates each insight's
+// `dashboards` field instead.
+function stripTiles(local: any): any {
+  const { tiles: _tiles, ...rest } = local;
+  return rest;
+}
+
 export async function applyPlan(options: ApplyOptions): Promise<ApplyResult> {
   const { root, client, plan, dryRun = false, deleteOrphans = false } = options;
   const result: ApplyResult = { applied: 0, failed: 0, errors: [] };
@@ -185,20 +194,28 @@ export async function applyPlan(options: ApplyOptions): Promise<ApplyResult> {
     { kind: 'dashboard', create: plan.create.filter((p) => p.kind === 'dashboard'), update: plan.update.filter((p) => p.kind === 'dashboard') },
   ];
 
+  const dashboardSlugToId = new Map<string, number>();
+  // Pre-populate dashboard slug→id map from existing posthog_ids (for wiring pass below).
+  for (const item of plan.update.filter((p) => p.kind === 'dashboard')) {
+    dashboardSlugToId.set(item.local.slug, item.remoteId!);
+  }
+
   for (const tier of tiers) {
     for (const item of tier.create) {
       if (dryRun) continue;
-      // Resolve tiles outside the try — unknown insight slug is a data error
-      // that must surface, not a per-item network failure.
-      const tiles = item.kind === 'dashboard' ? resolveTiles(item.local, insightSlugToId) : null;
+      // Resolve tile slugs outside the try — unknown insight slug is a data error
+      // that must surface, not a per-item network failure. We don't actually send
+      // the resolved tiles to PostHog (dashboards' tiles field is read-only on
+      // create/update; the wiring pass below sets each insight's `dashboards` field
+      // instead), but resolving here gives early validation.
+      if (item.kind === 'dashboard') resolveTiles(item.local, insightSlugToId);
       try {
         let created: any;
         if (item.kind === 'cohort') created = await client.createCohort(item.local);
         else if (item.kind === 'insight') created = await client.createInsight(item.local);
-        else {
-          created = await client.createDashboard({ ...item.local, tiles });
-        }
+        else created = await client.createDashboard(stripTiles(item.local));
         if (item.kind === 'insight') insightSlugToId.set(item.local.slug, created.id);
+        if (item.kind === 'dashboard') dashboardSlugToId.set(item.local.slug, created.id);
         // Writeback posthog_id into local JSON.
         if (item.path) {
           const fullPath = join(root, item.path);
@@ -216,19 +233,48 @@ export async function applyPlan(options: ApplyOptions): Promise<ApplyResult> {
     }
     for (const item of tier.update) {
       if (dryRun) continue;
-      const tiles = item.kind === 'dashboard' ? resolveTiles(item.local, insightSlugToId) : null;
+      if (item.kind === 'dashboard') resolveTiles(item.local, insightSlugToId);
       try {
         if (item.kind === 'cohort') await client.updateCohort(item.remoteId!, item.local);
         else if (item.kind === 'insight') await client.updateInsight(item.remoteId!, item.local);
-        else {
-          await client.updateDashboard(item.remoteId!, { ...item.local, tiles });
-        }
+        else await client.updateDashboard(item.remoteId!, stripTiles(item.local));
         result.applied += 1;
       } catch (err) {
         result.failed += 1;
         result.errors.push({
           kind: item.kind,
           slug: item.local.slug,
+          error: err instanceof Error ? err.message : String(err),
+        });
+      }
+    }
+  }
+
+  // Wiring pass: PostHog associates insights with dashboards via the insight's
+  // `dashboards: number[]` field. PATCH each insight that any local dashboard
+  // references with its full desired dashboards list (idempotent).
+  if (!dryRun) {
+    type LocalDashboard = { slug: string; posthog_id: number | null; tiles?: Array<{ insight: string }> };
+    const localDashboards = (await loadLocalDir(root, 'dashboards', DashboardLocal)) as Array<{ data: LocalDashboard; path: string }>;
+    const insightDesiredDashboards = new Map<string, number[]>();  // insight slug → dashboard ids
+    for (const { data: d } of localDashboards) {
+      const dashId = dashboardSlugToId.get(d.slug) ?? d.posthog_id;
+      if (typeof dashId !== 'number') continue;
+      for (const tile of d.tiles ?? []) {
+        const existing = insightDesiredDashboards.get(tile.insight) ?? [];
+        if (!existing.includes(dashId)) existing.push(dashId);
+        insightDesiredDashboards.set(tile.insight, existing);
+      }
+    }
+    for (const [insightSlug, dashboardIds] of insightDesiredDashboards) {
+      const insightId = insightSlugToId.get(insightSlug);
+      if (typeof insightId !== 'number') continue;
+      try {
+        await client.updateInsight(insightId, { dashboards: dashboardIds });
+      } catch (err) {
+        result.errors.push({
+          kind: 'insight',
+          slug: `${insightSlug} (wiring)`,
           error: err instanceof Error ? err.message : String(err),
         });
       }
