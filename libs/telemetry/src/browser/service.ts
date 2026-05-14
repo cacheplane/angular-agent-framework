@@ -1,6 +1,12 @@
 import { Injectable, inject } from '@angular/core';
-import { NGAF_TELEMETRY_CONFIG, type NgafTelemetryConfig } from './tokens.js';
-import type { NgafBrowserEvent } from '../shared/events.js';
+import { NGAF_TELEMETRY_CONFIG, type NgafTelemetryConfig } from './tokens';
+
+// Inlined from shared/events.ts: ng-packagr enforces rootDir at the entry-file
+// level (src/browser/), so the browser entry cannot import from ../shared/.
+// Keep this type in sync with shared/events.ts.
+export type NgafBrowserEvent =
+  | 'ngaf:browser_provided'
+  | 'ngaf:browser_chat_init';
 
 @Injectable({ providedIn: 'root' })
 export class NgafTelemetryService {

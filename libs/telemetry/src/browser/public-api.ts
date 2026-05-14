@@ -1,4 +1,4 @@
-export { provideNgafTelemetry } from './provide.js';
-export { NgafTelemetryService } from './service.js';
-export { NGAF_TELEMETRY_CONFIG } from './tokens.js';
-export type { NgafTelemetryConfig } from './tokens.js';
+export { provideNgafTelemetry } from './provide';
+export { NgafTelemetryService } from './service';
+export { NGAF_TELEMETRY_CONFIG } from './tokens';
+export type { NgafTelemetryConfig } from './tokens';

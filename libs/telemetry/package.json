@@ -11,6 +11,24 @@
   "bugs": { "url": "https://github.com/cacheplane/angular-agent-framework/issues" },
   "sideEffects": false,
   "type": "module",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "default": "./fesm2022/ngaf-telemetry.mjs"
+    },
+    "./node": {
+      "types": "./node/index.d.ts",
+      "default": "./node/index.mjs"
+    },
+    "./browser": {
+      "types": "./browser/index.d.ts",
+      "default": "./fesm2022/ngaf-telemetry-browser.mjs"
+    },
+    "./postinstall": {
+      "types": "./node/postinstall.d.ts",
+      "default": "./node/postinstall.mjs"
+    }
+  },
   "peerDependencies": {
     "@angular/core": "^20.0.0 || ^21.0.0"
   },
