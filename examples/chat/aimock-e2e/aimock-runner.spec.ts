@@ -46,4 +46,26 @@ describe('startAimock', () => {
     await handle.stop();
     expect(true).toBe(true);
   });
+
+  it('loads and merges all .json files in a directory', async () => {
+    workDir = mkdtempSync(join(tmpdir(), 'aimock-test-'));
+    writeFileSync(
+      join(workDir, 'a.json'),
+      JSON.stringify({
+        fixtures: [{ match: { userMessage: 'one' }, response: { content: 'A' } }],
+      }),
+    );
+    writeFileSync(
+      join(workDir, 'b.json'),
+      JSON.stringify({
+        fixtures: [{ match: { userMessage: 'two' }, response: { content: 'B' } }],
+      }),
+    );
+    // Non-JSON file in the dir should be ignored.
+    writeFileSync(join(workDir, 'README.md'), '# not a fixture');
+
+    handle = await startAimock({ mode: 'replay', fixturePath: workDir });
+    expect(handle.port).toBeGreaterThan(0);
+    expect(handle.baseUrl).toMatch(/^http:\/\/.+\/v1$/);
+  });
 });
