@@ -56,3 +56,104 @@ export function renderReport(sections: ReportSection[], date: string): string {
   lines.push('');
   return lines.join('\n');
 }
+
+import { writeFile, mkdir, access } from 'node:fs/promises';
+import { join, resolve as resolvePath, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { ph } from './client.js';
+
+interface FetchedInsight {
+  id: number;
+  name: string;
+  filters?: { insight?: string };
+  result?: any;
+}
+
+interface FetchedDashboard {
+  id: number;
+  name: string;
+  tags?: string[];
+  tiles?: Array<{ insight?: number | { id: number } }>;
+}
+
+function extractWeeklyValues(insight: FetchedInsight): { thisWeek: number; lastWeek: number; weeks: number[] } {
+  // PostHog trends return result[0].data as an array of daily counts.
+  // We fold into 7-day buckets, newest first.
+  const series = (Array.isArray(insight.result) ? insight.result[0]?.data : insight.result?.[0]?.data) ?? [];
+  const buckets: number[] = [];
+  for (let i = 0; i < 4; i++) {
+    const start = series.length - (i + 1) * 7;
+    const end = series.length - i * 7;
+    if (start < 0) break;
+    buckets.unshift(series.slice(start, end).reduce((a: number, b: number) => a + b, 0));
+  }
+  while (buckets.length < 4) buckets.unshift(0);
+  return {
+    thisWeek: buckets[buckets.length - 1] ?? 0,
+    lastWeek: buckets[buckets.length - 2] ?? 0,
+    weeks: buckets,
+  };
+}
+
+export async function generateReport(): Promise<{ markdown: string; date: string }> {
+  const c = ph();
+  const dashRes = await c.GET('/dashboards/' as any, { params: { query: { limit: 200 } } } as any);
+  const dashboards = ((dashRes as any).data?.results ?? []) as FetchedDashboard[];
+  const gtmDashboards = dashboards.filter((d) => d.tags?.includes('gtm'));
+
+  const sections: ReportSection[] = [];
+  for (const d of gtmDashboards) {
+    const rows: ReportRow[] = [];
+    for (const tile of d.tiles ?? []) {
+      const tileId = typeof tile.insight === 'number' ? tile.insight : tile.insight?.id;
+      if (typeof tileId !== 'number') continue;
+      const insightRes = await c.GET(`/insights/{id}/` as any, {
+        params: { path: { id: tileId }, query: { refresh: 'force_cache' } },
+      } as any);
+      const insight = ((insightRes as any).data ?? {}) as FetchedInsight;
+      const { thisWeek, lastWeek, weeks } = extractWeeklyValues(insight);
+      rows.push({ metric: insight.name, thisWeek, lastWeek, weeks });
+    }
+    sections.push({ name: d.name, rows });
+  }
+
+  const date = new Date().toISOString().slice(0, 10);
+  return { markdown: renderReport(sections, date), date };
+}
+
+async function nextOutputPath(reportsDir: string, date: string): Promise<string> {
+  const base = join(reportsDir, `${date}-weekly`);
+  let candidate = `${base}.md`;
+  let suffix = 2;
+  while (true) {
+    try {
+      await access(candidate);
+      candidate = `${base}-${suffix}.md`;
+      suffix += 1;
+    } catch {
+      return candidate;
+    }
+  }
+}
+
+async function main(): Promise<number> {
+  let report: { markdown: string; date: string };
+  try {
+    report = await generateReport();
+  } catch (err) {
+    console.error(`Report generation failed: ${err instanceof Error ? err.message : err}`);
+    return 1;
+  }
+  const here = dirname(fileURLToPath(import.meta.url));
+  const reportsDir = resolvePath(here, '..', '..', 'docs', 'gtm', 'reports');
+  await mkdir(reportsDir, { recursive: true });
+  const outPath = await nextOutputPath(reportsDir, report.date);
+  await writeFile(outPath, report.markdown, 'utf8');
+  console.log(`Wrote ${outPath}`);
+  return 0;
+}
+
+const isDirectRun = process.argv[1] && resolvePath(process.argv[1]) === fileURLToPath(import.meta.url);
+if (isDirectRun) {
+  main().then((code) => process.exit(code));
+}
