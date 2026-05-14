@@ -11,7 +11,7 @@ import {
   captureStreamEnded,
   captureStreamErrored,
 } from './adapter';
-import { sha256 } from '../shared/hash';
+
 
 describe('adapter helpers', () => {
   beforeEach(() => vi.mocked(captureEvent).mockClear());

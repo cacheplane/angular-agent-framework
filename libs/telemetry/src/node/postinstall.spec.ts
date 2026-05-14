@@ -49,7 +49,7 @@ describe('postinstall script', () => {
     await expect(
       capturePostinstallScript({
         readPackageJson: () => { throw new Error('not found'); },
-        write: () => {},
+        write: (_s: string) => undefined,
         env: { ...process.env },
       }),
     ).resolves.toBeUndefined();
