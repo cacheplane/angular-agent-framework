@@ -1,9 +1,11 @@
 name: aimock fixture drift
 
 on:
-  schedule:
-    - cron: '0 7 * * *'
   workflow_dispatch:
+  # NOTE: scheduled cron is intentionally omitted. The committed fixtures are
+  # handwritten seeds — drift detection only becomes meaningful once a phase
+  # lands recorded fixtures. Re-enable a `schedule:` trigger here at that
+  # point (weekly cron is a reasonable starting cadence).
 
 jobs:
   drift:
