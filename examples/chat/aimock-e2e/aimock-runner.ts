@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 import { LLMock } from '@copilotkit/aimock';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync, statSync } from 'node:fs';
+import { join } from 'node:path';
 
 export interface AimockHandle {
   /** Port the mock server is listening on. */
@@ -13,6 +14,7 @@ export interface AimockHandle {
 
 export interface AimockStartOptions {
   mode: 'replay';
+  /** Path to a single fixture file OR a directory of fixture files. */
   fixturePath: string;
 }
 
@@ -23,12 +25,30 @@ interface FixtureFile {
   }>;
 }
 
-export async function startAimock(opts: AimockStartOptions): Promise<AimockHandle> {
-  const raw = readFileSync(opts.fixturePath, 'utf-8');
+function loadFixtureEntries(fixturePath: string): FixtureFile['fixtures'] {
+  const stats = statSync(fixturePath);
+  if (stats.isDirectory()) {
+    const merged: FixtureFile['fixtures'][number][] = [];
+    const files = readdirSync(fixturePath)
+      .filter((f) => f.endsWith('.json'))
+      .sort();
+    for (const file of files) {
+      const raw = readFileSync(join(fixturePath, file), 'utf-8');
+      const parsed = JSON.parse(raw) as FixtureFile;
+      for (const fx of parsed.fixtures) merged.push(fx);
+    }
+    return merged;
+  }
+  const raw = readFileSync(fixturePath, 'utf-8');
   const parsed = JSON.parse(raw) as FixtureFile;
+  return parsed.fixtures;
+}
+
+export async function startAimock(opts: AimockStartOptions): Promise<AimockHandle> {
+  const entries = loadFixtureEntries(opts.fixturePath);
 
   const mock = new LLMock({ port: 0 });
-  for (const fx of parsed.fixtures) {
+  for (const fx of entries) {
     mock.onMessage(fx.match.userMessage, fx.response);
   }
   await mock.start();

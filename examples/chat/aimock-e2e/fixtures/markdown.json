@@ -1,0 +1,16 @@
+{
+  "fixtures": [
+    {
+      "match": { "userMessage": "respond with a heading" },
+      "response": { "content": "# Heading One\n\nA short paragraph below the heading." }
+    },
+    {
+      "match": { "userMessage": "respond with a code fence" },
+      "response": { "content": "Here's the snippet:\n\n```typescript\nconst answer = 42;\n```\n\nThat's it." }
+    },
+    {
+      "match": { "userMessage": "respond with a bullet list" },
+      "response": { "content": "Three things:\n\n- alpha\n- beta\n- gamma" }
+    }
+  ]
+}
