@@ -18,30 +18,30 @@ export interface AimockStartOptions {
   fixturePath: string;
 }
 
-interface FixtureFile {
-  fixtures: ReadonlyArray<{
-    match: { userMessage: string };
-    response: { content: string };
-  }>;
-}
+// Raw JSON entry shape passes through to aimock's FixtureFileEntry — the
+// `match` block can carry richer discriminators (toolName, hasToolResult,
+// turnIndex, etc.) that are needed to distinguish a parent LLM's first call
+// from its continuation after a tool round. We don't narrow the shape here;
+// aimock's `addFixturesFromJSON` validates structure at load time.
+type FixtureFileEntry = Record<string, unknown>;
 
-function loadFixtureEntries(fixturePath: string): FixtureFile['fixtures'] {
+function loadFixtureEntries(fixturePath: string): FixtureFileEntry[] {
   const stats = statSync(fixturePath);
+  const out: FixtureFileEntry[] = [];
+  const readFile = (full: string): void => {
+    const raw = readFileSync(full, 'utf-8');
+    const parsed = JSON.parse(raw) as { fixtures: FixtureFileEntry[] };
+    for (const fx of parsed.fixtures) out.push(fx);
+  };
   if (stats.isDirectory()) {
-    const merged: FixtureFile['fixtures'][number][] = [];
     const files = readdirSync(fixturePath)
       .filter((f) => f.endsWith('.json'))
       .sort();
-    for (const file of files) {
-      const raw = readFileSync(join(fixturePath, file), 'utf-8');
-      const parsed = JSON.parse(raw) as FixtureFile;
-      for (const fx of parsed.fixtures) merged.push(fx);
-    }
-    return merged;
+    for (const file of files) readFile(join(fixturePath, file));
+    return out;
   }
-  const raw = readFileSync(fixturePath, 'utf-8');
-  const parsed = JSON.parse(raw) as FixtureFile;
-  return parsed.fixtures;
+  readFile(fixturePath);
+  return out;
 }
 
 export async function startAimock(opts: AimockStartOptions): Promise<AimockHandle> {
@@ -57,8 +57,8 @@ export async function startAimock(opts: AimockStartOptions): Promise<AimockHandl
   // Phase 1 unit-variance tables; the e2e harness is for final-state
   // invariants and cross-stack integration.
   const mock = new LLMock({ port: 0, chunkSize: 4096 });
-  for (const fx of entries) {
-    mock.onMessage(fx.match.userMessage, fx.response);
+  if (entries.length > 0) {
+    mock.addFixturesFromJSON(entries as never);
   }
   await mock.start();
 
