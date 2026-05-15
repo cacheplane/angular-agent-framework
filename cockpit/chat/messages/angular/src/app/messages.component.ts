@@ -23,21 +23,21 @@ import { environment } from '../environments/environment';
   template: `
     <example-chat-layout sidebarWidth="w-72">
       <div main class="flex-1 flex flex-col min-w-0">
-        <header class="px-4 py-3 border-b" style="border-color: var(--ngaf-chat-separator, #333); background: var(--ngaf-chat-bg, #171717);">
-          <h1 class="text-sm font-semibold" style="color: var(--ngaf-chat-text, #e0e0e0);">Chat Messages Primitives</h1>
+        <header class="px-4 py-3 border-b" style="border-color: var(--ngaf-chat-separator); background: var(--ngaf-chat-bg);">
+          <h1 class="text-sm font-semibold" style="color: var(--ngaf-chat-text);">Chat Messages Primitives</h1>
         </header>
         <div class="flex-1 overflow-y-auto">
           <chat-message-list [agent]="agent" />
         </div>
-        <div class="px-4 py-2" style="background: var(--ngaf-chat-bg, #171717);">
+        <div class="px-4 py-2" style="background: var(--ngaf-chat-bg);">
           <chat-typing-indicator [agent]="agent" />
           <chat-input [agent]="agent" (send)="submitMessage($event)" />
         </div>
       </div>
-      <div sidebar class="p-4 space-y-4" style="background: var(--ngaf-chat-bg, #171717); color: var(--ngaf-chat-text, #e0e0e0);">
+      <div sidebar class="p-4 space-y-4" style="background: var(--ngaf-chat-bg); color: var(--ngaf-chat-text);">
         <h3 class="text-xs font-semibold uppercase tracking-wide"
-            style="color: var(--ngaf-chat-text-muted, #777);">Primitives Used</h3>
-        <ul class="text-xs space-y-2" style="color: var(--ngaf-chat-text-muted, #777);">
+            style="color: var(--ngaf-chat-text-muted);">Primitives Used</h3>
+        <ul class="text-xs space-y-2" style="color: var(--ngaf-chat-text-muted);">
           <li>ChatMessageListComponent</li>
           <li>ChatInputComponent</li>
           <li>ChatTypingIndicatorComponent</li>

@@ -53,15 +53,15 @@ const THEMES: Record<string, Record<string, string>> = {
   template: `
     <example-chat-layout sidebarWidth="w-72">
       <chat main [agent]="agent" class="flex-1 min-w-0" />
-      <div sidebar class="p-4 space-y-4" style="background: var(--ngaf-chat-bg, #171717); color: var(--ngaf-chat-text, #e0e0e0);">
+      <div sidebar class="p-4 space-y-4" style="background: var(--ngaf-chat-bg); color: var(--ngaf-chat-text);">
         <h3 class="text-xs font-semibold uppercase tracking-wide"
-            style="color: var(--ngaf-chat-text-muted, #777);">Theme Picker</h3>
+            style="color: var(--ngaf-chat-text-muted);">Theme Picker</h3>
         <div class="space-y-2">
           @for (name of themeNames; track name) {
             <button
               class="w-full px-3 py-2 rounded text-xs font-medium transition-colors"
-              [style.background]="activeTheme() === name ? 'var(--ngaf-chat-accent, #3b82f6)' : 'var(--ngaf-chat-surface-alt, #222)'"
-              [style.color]="activeTheme() === name ? '#fff' : 'var(--ngaf-chat-text, #e0e0e0)'"
+              [style.background]="activeTheme() === name ? 'var(--ngaf-chat-accent)' : 'var(--ngaf-chat-surface-alt)'"
+              [style.color]="activeTheme() === name ? '#fff' : 'var(--ngaf-chat-text)'"
               (click)="setTheme(name)">
               {{ name | titlecase }}
             </button>
@@ -69,8 +69,8 @@ const THEMES: Record<string, Record<string, string>> = {
         </div>
         <div class="mt-4">
           <h4 class="text-xs font-semibold uppercase tracking-wide mb-2"
-              style="color: var(--ngaf-chat-text-muted, #777);">CSS Variables</h4>
-          <ul class="text-xs space-y-1 font-mono" style="color: var(--ngaf-chat-text-muted, #777);">
+              style="color: var(--ngaf-chat-text-muted);">CSS Variables</h4>
+          <ul class="text-xs space-y-1 font-mono" style="color: var(--ngaf-chat-text-muted);">
             <li>--ngaf-chat-bg</li>
             <li>--ngaf-chat-text</li>
             <li>--ngaf-chat-accent</li>

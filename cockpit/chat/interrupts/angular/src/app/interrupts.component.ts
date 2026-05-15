@@ -19,14 +19,14 @@ import { environment } from '../environments/environment';
   template: `
     <example-chat-layout sidebarWidth="w-80">
       <chat main [agent]="agent" class="flex-1 min-w-0" />
-      <div sidebar class="p-4 space-y-4" style="background: var(--chat-bg, #171717); color: var(--chat-text, #e0e0e0);">
+      <div sidebar class="p-4 space-y-4" style="background: var(--ngaf-chat-bg); color: var(--ngaf-chat-text);">
         <h3 class="text-xs font-semibold uppercase tracking-wide"
-            style="color: var(--chat-text-muted, #777);">Interrupt Panel</h3>
+            style="color: var(--ngaf-chat-text-muted);">Interrupt Panel</h3>
         <chat-interrupt-panel [agent]="agent" />
         <div class="mt-4">
           <h4 class="text-xs font-semibold uppercase tracking-wide mb-2"
-              style="color: var(--chat-text-muted, #777);">Stream Status</h4>
-          <p class="text-xs font-mono" style="color: var(--chat-text-muted, #777);">{{ streamStatus() }}</p>
+              style="color: var(--ngaf-chat-text-muted);">Stream Status</h4>
+          <p class="text-xs font-mono" style="color: var(--ngaf-chat-text-muted);">{{ streamStatus() }}</p>
         </div>
       </div>
     </example-chat-layout>
