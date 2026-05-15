@@ -20,14 +20,14 @@ import { environment } from '../environments/environment';
   template: `
     <example-chat-layout sidebarWidth="w-80">
       <chat main [agent]="agent" class="flex-1 min-w-0" />
-      <div sidebar class="p-4 space-y-4" style="background: var(--chat-bg, #171717); color: var(--chat-text, #e0e0e0);">
+      <div sidebar class="p-4 space-y-4" style="background: var(--ngaf-chat-bg); color: var(--ngaf-chat-text);">
         <h3 class="text-xs font-semibold uppercase tracking-wide"
-            style="color: var(--chat-text-muted, #777);">Tool Calls</h3>
+            style="color: var(--ngaf-chat-text-muted);">Tool Calls</h3>
         <chat-tool-calls [agent]="agent" />
         <div class="mt-4 space-y-2">
           <h4 class="text-xs font-semibold uppercase tracking-wide"
-              style="color: var(--chat-text-muted, #777);">Available Tools</h4>
-          <ul class="text-xs space-y-1 list-disc list-inside" style="color: var(--chat-text-muted, #777);">
+              style="color: var(--ngaf-chat-text-muted);">Available Tools</h4>
+          <ul class="text-xs space-y-1 list-disc list-inside" style="color: var(--ngaf-chat-text-muted);">
             <li>search — Web search</li>
             <li>calculator — Math expressions</li>
             <li>weather — City weather</li>

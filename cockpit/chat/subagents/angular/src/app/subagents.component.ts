@@ -21,14 +21,14 @@ import { environment } from '../environments/environment';
   template: `
     <example-chat-layout sidebarWidth="w-80">
       <chat main [agent]="agent" class="flex-1 min-w-0" />
-      <div sidebar class="p-4 space-y-4" style="background: var(--chat-bg, #171717); color: var(--chat-text, #e0e0e0);">
+      <div sidebar class="p-4 space-y-4" style="background: var(--ngaf-chat-bg); color: var(--ngaf-chat-text);">
         <h3 class="text-xs font-semibold uppercase tracking-wide"
-            style="color: var(--chat-text-muted, #777);">Active Subagents</h3>
+            style="color: var(--ngaf-chat-text-muted);">Active Subagents</h3>
         <chat-subagents [agent]="agent" />
         <div class="mt-4">
           <h4 class="text-xs font-semibold uppercase tracking-wide mb-2"
-              style="color: var(--chat-text-muted, #777);">Agent Pipeline</h4>
-          <ol class="text-xs space-y-1 list-decimal list-inside" style="color: var(--chat-text-muted, #777);">
+              style="color: var(--ngaf-chat-text-muted);">Agent Pipeline</h4>
+          <ol class="text-xs space-y-1 list-decimal list-inside" style="color: var(--ngaf-chat-text-muted);">
             <li>Orchestrator</li>
             <li>Research Agent</li>
             <li>Analysis Agent</li>
