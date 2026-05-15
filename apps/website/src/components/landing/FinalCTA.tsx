@@ -8,16 +8,16 @@ interface FinalCTAProps {
   headline?: string;
   /** Sub-headline. Defaults to the homepage closer. */
   subtext?: string;
-  /** Primary CTA. Defaults to "Get started" → /docs. */
-  primary?: { label: string; href: string };
-  /** Optional secondary CTA. Defaults to "See it live →" → cockpit. */
+  /** Primary CTA. Defaults to "Try the demo →" → demo.cacheplane.ai. */
+  primary?: { label: string; href: string; external?: boolean };
+  /** Optional secondary CTA. Defaults to "See each feature in action →" → cockpit. */
   secondary?: { label: string; href: string; external?: boolean } | null;
   /** Optional trailing caption. Defaults to MIT line. Pass null to hide. */
   caption?: string | null;
 }
 
-const DEFAULT_PRIMARY = { label: 'Get started', href: '/docs' };
-const DEFAULT_SECONDARY = { label: 'See it live →', href: 'https://cockpit.cacheplane.ai', external: true };
+const DEFAULT_PRIMARY = { label: 'Try the demo →', href: 'https://demo.cacheplane.ai', external: true };
+const DEFAULT_SECONDARY = { label: 'See each feature in action →', href: 'https://cockpit.cacheplane.ai', external: true };
 
 export function FinalCTA({
   headline = 'Stop stalling on agentic Angular.',
@@ -67,7 +67,12 @@ export function FinalCTA({
               marginBottom: 16,
             }}
           >
-            <Button variant="primary" size="lg" href={primary.href}>
+            <Button
+              variant="primary"
+              size="lg"
+              href={primary.href}
+              {...((primary as { external?: boolean }).external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+            >
               {primary.label}
             </Button>
             {secondary ? (

@@ -59,11 +59,11 @@ export function Hero() {
               <Button
                 variant="ghost"
                 size="lg"
-                href="https://cockpit.cacheplane.ai"
+                href="https://demo.cacheplane.ai"
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                See it live →
+                Try the demo →
               </Button>
             </div>
             <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
@@ -76,14 +76,14 @@ export function Hero() {
           {/* Right column — layered collage */}
           <div style={{ position: 'relative', minHeight: 420 }} aria-hidden="true">
             <BrowserFrame
-              url="cockpit.cacheplane.ai"
+              url="demo.cacheplane.ai"
               rotate={-3}
               elevation="lg"
               style={{ position: 'absolute', top: 0, left: 0, width: '92%' }}
             >
               <img
-                src="/screenshots/cockpit-code.webp"
-                alt="Cockpit reference app showing the Angular streaming component source"
+                src="/screenshots/canonical-demo-conversation.webp"
+                alt="Canonical demo — streaming chat rendering a markdown response with code block and table"
                 style={{ display: 'block', width: '100%', height: 'auto' }}
                 loading="lazy"
                 decoding="async"
