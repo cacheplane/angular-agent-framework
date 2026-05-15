@@ -11,7 +11,7 @@ jobs:
     name: Library — lint / test / build
     runs-on: ubuntu-latest
     env:
-      LIBS: chat,langgraph,ag-ui,render,a2ui,partial-json,licensing
+      LIBS: chat,langgraph,ag-ui,render,a2ui,licensing,telemetry
     steps:
       - uses: actions/checkout@v6.0.2
       - uses: actions/setup-node@v6.3.0
@@ -22,6 +22,7 @@ jobs:
       - run: npx nx run-many -t lint --projects=$LIBS
       - run: npx nx run-many -t test --projects=$LIBS --coverage
       - run: npx nx run-many -t build --projects=$LIBS --configuration=production
+      - run: node scripts/verify-release-versions.mjs
 
   website:
     name: Website — lint / build
