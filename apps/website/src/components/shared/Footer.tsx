@@ -175,6 +175,16 @@ export function Footer() {
               onMouseLeave={(e) => (e.currentTarget.style.color = tokens.colors.textSecondary)}>
               API Reference
             </Link>
+            <a href="https://demo.cacheplane.ai" className="transition-colors" style={{ color: tokens.colors.textSecondary }}
+              onClick={() => trackExternalLinkClick('https://demo.cacheplane.ai', {
+                surface: 'footer',
+                cta_id: 'footer_demo',
+                cta_text: 'Demo',
+              })}
+              onMouseEnter={(e) => (e.currentTarget.style.color = tokens.colors.accent)}
+              onMouseLeave={(e) => (e.currentTarget.style.color = tokens.colors.textSecondary)}>
+              Demo
+            </a>
             <a href="https://cockpit.cacheplane.ai" className="transition-colors" style={{ color: tokens.colors.textSecondary }}
               onClick={() => trackExternalLinkClick('https://cockpit.cacheplane.ai', {
                 surface: 'footer',
