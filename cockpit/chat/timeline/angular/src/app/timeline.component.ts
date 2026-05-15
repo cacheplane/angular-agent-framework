@@ -17,14 +17,14 @@ import { environment } from '../environments/environment';
   template: `
     <example-chat-layout sidebarWidth="w-80">
       <chat main [agent]="agent" class="flex-1 min-w-0" />
-      <div sidebar class="p-4 space-y-4" style="background: var(--ds-canvas); color: var(--ds-text-primary);">
+      <div sidebar class="p-4 space-y-4" style="background: var(--ngaf-chat-bg); color: var(--ngaf-chat-text);">
         <h3 class="text-xs font-semibold uppercase tracking-wide"
-            style="color: var(--ds-text-muted);">Timeline</h3>
+            style="color: var(--ngaf-chat-text-muted);">Timeline</h3>
         <chat-timeline-slider [agent]="agent" />
         <div class="mt-4">
           <h4 class="text-xs font-semibold uppercase tracking-wide mb-2"
-              style="color: var(--ds-text-muted);">How It Works</h4>
-          <p class="text-xs" style="color: var(--ds-text-muted);">
+              style="color: var(--ngaf-chat-text-muted);">How It Works</h4>
+          <p class="text-xs" style="color: var(--ngaf-chat-text-muted);">
             Each message creates a checkpoint. Use the slider to navigate
             through conversation history and branch from any point.
           </p>
