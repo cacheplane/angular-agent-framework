@@ -5,15 +5,15 @@ import { Component, input } from '@angular/core';
   standalone: true,
   template: `
     <div class="inline-flex items-center gap-2 rounded-lg px-3 py-1.5 my-1"
-         style="background: var(--chat-bg-alt); border: 1px solid var(--chat-border);">
+         style="background: var(--ngaf-chat-surface-alt); border: 1px solid var(--ngaf-chat-separator);">
       <span class="rounded-full px-2 py-0.5 text-xs font-semibold"
-            style="background: rgba(251, 191, 36, 0.15); color: var(--chat-warning-text, #fbbf24);">
+            style="background: rgba(251, 191, 36, 0.15); color: var(--ngaf-chat-warning-text);">
         word_count
       </span>
-      <span class="text-sm font-semibold font-mono" style="color: var(--chat-text);">
+      <span class="text-sm font-semibold font-mono" style="color: var(--ngaf-chat-text);">
         {{ count() }}
       </span>
-      <span class="text-sm" style="color: var(--chat-text-muted);">
+      <span class="text-sm" style="color: var(--ngaf-chat-text-muted);">
         words
       </span>
     </div>
