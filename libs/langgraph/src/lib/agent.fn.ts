@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: MIT
 import {
   inject, DestroyRef, computed, effect,
-  isSignal, Signal,
+  isSignal, signal, Signal,
 } from '@angular/core';
 import { AGENT_CONFIG } from './agent.provider';
+import type { AgentLifecycle } from './lifecycle';
 import { toSignal, toObservable } from '@angular/core/rxjs-interop';
 import {
   BehaviorSubject, Subject, of,
@@ -197,6 +198,80 @@ export function agent<
     lastThreadId = id;
   });
 
+  // ── Lifecycle instrumentation ─────────────────────────────────────────────
+  // Eight signals tracking key transitions for telemetry/observability.
+  // All reset together via resetLifecycle(); see switchThread() below.
+  const lcStreamStartedAt      = signal<number | null>(null);
+  const lcStreamErrorAt        = signal<{ at: number; classification: string } | null>(null);
+  const lcInterruptReceivedAt  = signal<number | null>(null);
+  const lcInterruptResolvedAt  = signal<number | null>(null);
+  const lcThreadCreatedAt      = signal<number | null>(null);
+  const lcThreadPersistedAt    = signal<number | null>(null);
+  const lcToolCallStartedAt    = signal<number | null>(null);
+  const lcToolCallCompletedAt  = signal<number | null>(null);
+
+  const lifecycle: AgentLifecycle = {
+    streamStartedAt:     lcStreamStartedAt,
+    streamErrorAt:       lcStreamErrorAt,
+    interruptReceivedAt: lcInterruptReceivedAt,
+    interruptResolvedAt: lcInterruptResolvedAt,
+    threadCreatedAt:     lcThreadCreatedAt,
+    threadPersistedAt:   lcThreadPersistedAt,
+    toolCallStartedAt:   lcToolCallStartedAt,
+    toolCallCompletedAt: lcToolCallCompletedAt,
+  };
+
+  function resetLifecycle(): void {
+    lcStreamStartedAt.set(null);
+    lcStreamErrorAt.set(null);
+    lcInterruptReceivedAt.set(null);
+    lcInterruptResolvedAt.set(null);
+    lcThreadCreatedAt.set(null);
+    lcThreadPersistedAt.set(null);
+    lcToolCallStartedAt.set(null);
+    lcToolCallCompletedAt.set(null);
+  }
+
+  // First chunk: first values$ or messages$ emission with content.
+  values$.pipe(takeUntil(destroy$)).subscribe(v => {
+    if (lcStreamStartedAt() === null && v != null && Object.keys(v as object).length > 0) {
+      lcStreamStartedAt.set(Date.now());
+    }
+  });
+  messages$.pipe(takeUntil(destroy$)).subscribe(m => {
+    if (lcStreamStartedAt() === null && m.length > 0) lcStreamStartedAt.set(Date.now());
+  });
+  // Stream error: capture timestamp + classification (Error name or 'unknown').
+  error$.pipe(takeUntil(destroy$)).subscribe(e => {
+    if (e == null) return;
+    const classification = e instanceof Error ? e.name : typeof e === 'string' ? 'string' : 'unknown';
+    lcStreamErrorAt.set({ at: Date.now(), classification });
+  });
+  // First non-null interrupt within this thread.
+  interrupt$.pipe(takeUntil(destroy$)).subscribe(ix => {
+    if (ix != null && lcInterruptReceivedAt() === null) lcInterruptReceivedAt.set(Date.now());
+  });
+  // First tool call append; first completed/error result transition.
+  const seenToolCallStates = new Map<string, string>();
+  toolCalls$.pipe(takeUntil(destroy$)).subscribe(tcs => {
+    if (tcs.length > 0 && lcToolCallStartedAt() === null) lcToolCallStartedAt.set(Date.now());
+    if (lcToolCallCompletedAt() !== null) return;
+    for (const tc of tcs) {
+      const prev = seenToolCallStates.get(tc.id);
+      if (prev !== tc.state && (tc.state === 'completed' || tc.state === 'error')) {
+        lcToolCallCompletedAt.set(Date.now());
+        seenToolCallStates.set(tc.id, tc.state);
+        break;
+      }
+      seenToolCallStates.set(tc.id, tc.state);
+    }
+  });
+  // Thread restored from server: history$ populates with content for a
+  // pre-existing threadId.
+  history$.pipe(takeUntil(destroy$)).subscribe(h => {
+    if (h.length > 0 && lcThreadPersistedAt() === null) lcThreadPersistedAt.set(Date.now());
+  });
+
   const manager = createStreamManagerBridge({
     options: { ...options, apiUrl, transport },
     subjects,
@@ -299,6 +374,14 @@ export function agent<
     history:            historyNeutral,
     messageCheckpoints: messageCheckpointsSig,
     submit: (input: AgentSubmitInput | null | undefined, opts?: AgentSubmitOptions & LangGraphSubmitOptions) => {
+      // Lifecycle: first submit with no existing threadId → thread create.
+      if (lcThreadCreatedAt() === null && lastThreadId == null) {
+        lcThreadCreatedAt.set(Date.now());
+      }
+      // Lifecycle: any resume submit marks an interrupt resolution.
+      if (input?.resume !== undefined || opts?.resume !== undefined) {
+        lcInterruptResolvedAt.set(Date.now());
+      }
       const request = buildSubmitRequest(input, opts);
       return manager.submit(request.payload, request.options);
     },
@@ -400,8 +483,11 @@ export function agent<
     isThreadLoading: threadLoadSig,
     switchThread:    (id) => {
       resetDerivedThreadState();
+      resetLifecycle();
+      seenToolCallStates.clear();
       manager.switchThread(id);
     },
+    lifecycle,
     joinStream:          (id, last) => manager.joinStream(id, last),
     getMessagesMetadata: (msg, idx) => {
       const id = (msg as unknown as Record<string, unknown>)['id'];
