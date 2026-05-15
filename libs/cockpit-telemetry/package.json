@@ -1,0 +1,14 @@
+{
+  "name": "@ngaf/cockpit-telemetry",
+  "version": "0.0.0",
+  "license": "MIT",
+  "private": true,
+  "sideEffects": false,
+  "type": "module",
+  "peerDependencies": {
+    "@angular/core": "^20.0.0 || ^21.0.0"
+  },
+  "dependencies": {
+    "posthog-js": "^1.373.0"
+  }
+}
