@@ -58,9 +58,15 @@
       }
     },
     "version": {
-      "preVersionCommand": "npx nx run-many -t build --projects=chat,langgraph,ag-ui,render,a2ui,licensing,telemetry",
+      "preVersionCommand": "npx nx run-many -t build --projects=chat,langgraph,ag-ui,render,a2ui,licensing,telemetry && node libs/telemetry/scripts/apply-install-telemetry.mjs dist/libs/chat dist/libs/langgraph dist/libs/ag-ui dist/libs/render dist/libs/a2ui dist/libs/licensing",
       "updateDependents": "auto",
-      "preserveLocalDependencyProtocols": true
+      "preserveLocalDependencyProtocols": true,
+      "currentVersionResolver": "git-tag",
+      "fallbackCurrentVersionResolver": "disk",
+      "manifestRootsToUpdate": [
+        "{projectRoot}",
+        "dist/{projectRoot}"
+      ]
     },
     "changelog": {
       "workspaceChangelog": {

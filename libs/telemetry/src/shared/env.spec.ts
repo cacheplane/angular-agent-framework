@@ -5,6 +5,8 @@ describe('isTelemetryDisabled', () => {
   beforeEach(() => {
     delete process.env.DO_NOT_TRACK;
     delete process.env.NGAF_TELEMETRY_DISABLED;
+    delete process.env.npm_config_do_not_track;
+    delete process.env.NPM_CONFIG_DO_NOT_TRACK;
     delete process.env.CI;
     delete process.env.GITHUB_ACTIONS;
     delete process.env.CONTINUOUS_INTEGRATION;
@@ -31,6 +33,12 @@ describe('isTelemetryDisabled', () => {
     process.env.NGAF_TELEMETRY_DISABLED = '1';
     expect(isTelemetryDisabled()).toBe(true);
     expect(getDisableReason()).toBe('NGAF_TELEMETRY_DISABLED');
+  });
+
+  test('npm do-not-track config disables', () => {
+    process.env.npm_config_do_not_track = 'true';
+    expect(isTelemetryDisabled()).toBe(true);
+    expect(getDisableReason()).toBe('DO_NOT_TRACK');
   });
 
   test('CI=true disables (CI auto-detect)', () => {

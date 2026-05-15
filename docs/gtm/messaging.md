@@ -10,13 +10,13 @@
 
 **H1:** Ship production agent UIs in Angular.
 
-**Subhead:** Signal-native chat, threads, interrupts, tool progress, and generative UI for LangGraph, AG-UI, and A2UI. MIT-licensed, self-hostable, opt-in telemetry, no React rewrite.
+**Subhead:** Signal-native chat, threads, interrupts, tool progress, and generative UI for LangGraph, AG-UI, and A2UI. MIT-licensed, self-hostable, app telemetry off by default, no React rewrite.
 
 **Primary CTA:** `Install @ngaf/chat` (copy-to-clipboard, fires `marketing:cta_click` with `cta_id=hero_install`, `track=developer`).
 
 **Secondary CTA:** `Talk to our engineers` (routes to `/contact?source=home_hero&track=enterprise`, fires `marketing:cta_click` with `cta_id=hero_talk_to_engineers`, `track=enterprise`).
 
-**Proof row:** `MIT · Angular-native Signals · LangGraph + AG-UI · A2UI-compatible · Self-hostable · Opt-in telemetry`
+**Proof row:** `MIT · Angular-native Signals · LangGraph + AG-UI · A2UI-compatible · Self-hostable · App telemetry off by default`
 
 **Subline under proof row:** *Not another backend agent runtime. Keep LangGraph, Genkit, Mastra, CrewAI, or your own service. Cacheplane solves the Angular UI layer.*
 
@@ -27,12 +27,12 @@ Repeat across the site, comparison pages, and content.
 1. **Angular-native, not React-translated.** Signals, DI, OnPush, standalone components, Angular testing patterns, design-system ownership.
 2. **Complete agent UI, not just stream plumbing.** Messages, status, errors, tool progress, interrupts, branching/history, thread persistence, reload, fallbacks, tests.
 3. **Generative UI that respects the enterprise design system.** Approved components from your design system; no arbitrary code shipping.
-4. **Enterprise OSS posture.** MIT, no end-user telemetry, no required cloud, self-hosting, optional paid support/SLA.
+4. **Enterprise OSS posture.** MIT, no app/runtime content telemetry by default, no required cloud, self-hosting, optional paid support/SLA.
 5. **Production patterns, not demo candy.** Real auth, real backends, observability, error boundaries, fallback strategies, CI/CD, load/chaos patterns, runbooks.
 
 ## Risk-cleanup copy changes (Spec 2)
 
-- "No telemetry" → "**Opt-in telemetry**" with link to `libs/telemetry/README.md`.
+- "No telemetry" → "**App telemetry off by default**" with link to `libs/telemetry/README.md` for the minimal opt-out package install ping.
 - "All Angular versions" (pricing) → **real compatibility matrix** with supported/experimental/planned/unsupported.
 - "A2UI v1" → **"A2UI v0.9-compatible"** until v1 is verified.
 - "Angular Agent Framework" → **"Agent UI for Angular"** (category sweep, with care for substring overlap per existing memory note).

@@ -18,8 +18,8 @@ const PROMISES = [
     body: 'Self-host LangGraph + your Angular app. Run it all in your VPC.',
   },
   {
-    title: 'No telemetry',
-    body: 'We don’t collect anything from your app. Not at install, not at runtime.',
+    title: 'No app telemetry',
+    body: 'We don’t collect prompts, completions, tool data, or app runtime content by default. Package installs send a minimal opt-out ping.',
   },
   {
     title: 'No model lock-in',

@@ -1,4 +1,4 @@
-# Angular Agent Framework v0.0.28
+# Angular Agent Framework v0.0.29
 
 Agent UI primitives and LangGraph streaming adapters for Angular.
 
