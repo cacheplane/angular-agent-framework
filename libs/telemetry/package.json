@@ -2,6 +2,9 @@
   "name": "@ngaf/telemetry",
   "version": "0.0.30",
   "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/cacheplane/angular-agent-framework.git",
