@@ -1,0 +1,16 @@
+{
+  "slug": "package-installs-by-package-manager",
+  "posthog_id": null,
+  "kind": "trends",
+  "name": "Package installs by package manager",
+  "events": [
+    {
+      "event": "ngaf:postinstall",
+      "math": "total"
+    }
+  ],
+  "breakdown": "package_manager",
+  "breakdown_limit": 10,
+  "interval": "day",
+  "date_from": "-30d"
+}

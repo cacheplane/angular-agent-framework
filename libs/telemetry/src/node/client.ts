@@ -25,15 +25,41 @@ function getSampleRate(env: NodeJS.ProcessEnv = process.env): number {
   return Math.max(0, Math.min(1, parsed));
 }
 
-function getPackageManager(env: NodeJS.ProcessEnv = process.env): Record<string, string> {
+function readBooleanToken(value: string | undefined): boolean | undefined {
+  if (value === undefined) return undefined;
+  if (/^(1|true|yes)$/i.test(value)) return true;
+  if (/^(0|false|no)$/i.test(value)) return false;
+  return undefined;
+}
+
+function getPackageManager(env: NodeJS.ProcessEnv = process.env): Record<string, unknown> {
   const userAgent = env.npm_config_user_agent;
-  const firstToken = userAgent?.split(/\s+/)[0];
+  const tokens = userAgent?.split(/\s+/).filter(Boolean) ?? [];
+  const firstToken = tokens[0];
   const match = firstToken?.match(/^([^/\s]+)\/([^/\s]+)$/);
   if (!match) return {};
-  return {
+
+  const out: Record<string, unknown> = {
     package_manager: match[1],
     package_manager_version: match[2],
   };
+
+  const nodeTokenIndex = tokens.findIndex((token) => token.startsWith('node/'));
+  const nodeToken = nodeTokenIndex >= 0 ? tokens[nodeTokenIndex] : undefined;
+  const nodeVersion = nodeToken?.match(/^node\/([^/\s]+)$/)?.[1];
+  if (nodeVersion) out.package_manager_node_version = nodeVersion.replace(/^v/, '');
+
+  if (nodeTokenIndex >= 0) {
+    const platformTokens = tokens.slice(nodeTokenIndex + 1).filter((token) => !token.includes('/'));
+    if (platformTokens[0]) out.package_manager_os = platformTokens[0];
+    if (platformTokens[1]) out.package_manager_arch = platformTokens[1];
+  }
+
+  const workspacesValue = tokens.find((token) => token.startsWith('workspaces/'))?.split('/')[1];
+  const workspaces = readBooleanToken(workspacesValue);
+  if (workspaces !== undefined) out.package_manager_workspaces = workspaces;
+
+  return out;
 }
 
 // @internal
@@ -45,7 +71,11 @@ export function createPostinstallProperties(
     pkg: input.pkg,
     version: input.version,
     node: process.version,
+    node_version: process.version,
     os: process.platform,
+    arch: process.arch,
+    global_install:
+      readBooleanToken(env.npm_config_global) === true || env.npm_config_location === 'global',
     ...getPackageManager(env),
   };
 }

@@ -10,10 +10,6 @@ on:
         description: 'Dry run (no actual publish)'
         type: boolean
         default: true
-      projects:
-        description: 'Optional comma-separated project list to publish instead of the full release group'
-        type: string
-        default: ''
 
 jobs:
   publish:
@@ -62,29 +58,10 @@ jobs:
 
       - name: Publish to npm
         if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.dry-run == false)
-        run: |
-          if [ -n "${NPM_PUBLISH_PROJECTS}" ]; then
-            IFS=',' read -ra projects <<< "${NPM_PUBLISH_PROJECTS}"
-            for project in "${projects[@]}"; do
-              npx nx run "${project}:nx-release-publish"
-            done
-          else
-            npx nx release publish --groups=publishable
-          fi
+        run: npx nx release publish --groups=publishable
         env:
           NPM_CONFIG_PROVENANCE: 'true'
-          NPM_PUBLISH_PROJECTS: ${{ github.event_name == 'workflow_dispatch' && inputs.projects || '' }}
 
       - name: Publish to npm (dry run)
         if: github.event_name == 'workflow_dispatch' && inputs.dry-run == true
-        run: |
-          if [ -n "${NPM_PUBLISH_PROJECTS}" ]; then
-            IFS=',' read -ra projects <<< "${NPM_PUBLISH_PROJECTS}"
-            for project in "${projects[@]}"; do
-              npx nx run "${project}:nx-release-publish" --dryRun
-            done
-          else
-            npx nx release publish --groups=publishable --dry-run
-          fi
-        env:
-          NPM_PUBLISH_PROJECTS: ${{ inputs.projects }}
+        run: npx nx release publish --groups=publishable --dry-run

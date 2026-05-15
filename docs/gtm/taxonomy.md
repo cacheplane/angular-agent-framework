@@ -74,6 +74,25 @@ The standard PostHog `$pageview` event is used as-is across all three surfaces.
 
 Browser events never fire unless the consumer explicitly opts in. See `libs/telemetry/README.md` for the trust contract.
 
+### `ngaf:postinstall` properties
+
+| Property                         | Type   | Notes                                      |
+|----------------------------------|--------|--------------------------------------------|
+| `pkg`                            | string | Published `@ngaf/*` package name.          |
+| `version`                        | string | Published package version.                 |
+| `node`                           | string | Current `process.version`; kept for existing dashboards. |
+| `node_version`                   | string | Current `process.version`.                 |
+| `os`                             | string | Current `process.platform`.                |
+| `arch`                           | string | Current `process.arch`.                    |
+| `package_manager`                | string | Parsed from npm's package-manager user agent when available. |
+| `package_manager_version`        | string | Parsed from npm's package-manager user agent when available. |
+| `package_manager_node_version`   | string | Installer-reported Node version when available. |
+| `package_manager_os`             | string | Installer-reported OS token when available. |
+| `package_manager_arch`           | string | Installer-reported architecture token when available. |
+| `package_manager_workspaces`     | bool   | Installer-reported workspace flag when available. |
+| `global_install`                 | bool   | Whether npm reports a global install.      |
+| `sample_weight`                  | number | Inverse sample rate for weighted counts.   |
+
 ## Shared properties
 
 | Property         | Type   | Notes                                                       |

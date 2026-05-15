@@ -29,7 +29,7 @@ The single telemetry surface for `@ngaf/*`. It exists so we can answer "how is C
 ## What is and isn't telemetered
 
 **Telemetered by default (Node, opt-out):**
-- `ngaf:postinstall` — fires once per dependency/global install of a published `@ngaf/*` package. Properties: package name, package version, Node version, OS, package manager name/version when npm exposes it, sample weight. It uses a per-process anonymous id. No project path, no environment variables, no dependency tree, no installer IP address.
+- `ngaf:postinstall` — fires once per dependency/global install of a published `@ngaf/*` package. Properties: package name, package version, Node version, OS, CPU architecture, package manager name/version, installer-reported Node/OS/architecture, workspace/global install flags when npm exposes them, sample weight. It uses a per-process anonymous id. No project path, no raw environment variables, no dependency tree, no installer IP address.
 - `ngaf:runtime_instance_created` — server adapters (LangGraph, AG-UI) call this when they spin up. Properties: which transport, which model provider (string), Angular peer version. **No API keys**, no endpoint hostnames, no user data.
 - `ngaf:stream_started` / `ngaf:stream_ended` / `ngaf:stream_errored` — per-request lifecycle on server adapters. Properties: provider, model name, duration, error class. No prompts, no completions, no message content.
 

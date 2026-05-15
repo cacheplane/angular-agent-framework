@@ -1,0 +1,16 @@
+{
+  "slug": "package-installs-by-installer-os",
+  "posthog_id": null,
+  "kind": "trends",
+  "name": "Package installs by installer OS",
+  "events": [
+    {
+      "event": "ngaf:postinstall",
+      "math": "total"
+    }
+  ],
+  "breakdown": "package_manager_os",
+  "breakdown_limit": 10,
+  "interval": "day",
+  "date_from": "-30d"
+}
