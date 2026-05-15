@@ -47,7 +47,16 @@ function loadFixtureEntries(fixturePath: string): FixtureFile['fixtures'] {
 export async function startAimock(opts: AimockStartOptions): Promise<AimockHandle> {
   const entries = loadFixtureEntries(opts.fixturePath);
 
-  const mock = new LLMock({ port: 0 });
+  // Use a large chunkSize so each response arrives in 1-2 SSE deltas. This
+  // intentionally turns off the partial-markdown streaming path for harness
+  // tests: structural assertions (code fence, list) measure the FINAL rendered
+  // DOM, not the progressive render. With aggressive default chunking, the
+  // partial-markdown parser sometimes can't recover a triple-backtick fence
+  // that gets split mid-token, and the final state ends up as inline <code>
+  // instead of <pre><code>. Streaming-progressive behavior is covered by the
+  // Phase 1 unit-variance tables; the e2e harness is for final-state
+  // invariants and cross-stack integration.
+  const mock = new LLMock({ port: 0, chunkSize: 4096 });
   for (const fx of entries) {
     mock.onMessage(fx.match.userMessage, fx.response);
   }
