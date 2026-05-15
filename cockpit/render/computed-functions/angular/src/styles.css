@@ -1,4 +1,12 @@
-/* Global styles for the computed-functions capability demo */
+@import "@ngaf/example-layouts/theme.css";
+
+html, body {
+  height: 100%;
+  margin: 0;
+  background: var(--ngaf-chat-bg);
+  color: var(--ngaf-chat-text);
+  font-family: var(--ngaf-chat-font-family);
+}
 
 @keyframes shimmer {
   0% { background-position: -200% 0; }
@@ -6,7 +14,12 @@
 }
 
 .skeleton-shimmer {
-  background: linear-gradient(90deg, rgb(31 41 55 / 0) 0%, rgb(55 65 81 / 0.3) 50%, rgb(31 41 55 / 0) 100%);
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--ngaf-chat-surface-alt) 50%,
+    transparent 100%
+  );
   background-size: 200% 100%;
   animation: shimmer 1.5s ease-in-out infinite;
 }

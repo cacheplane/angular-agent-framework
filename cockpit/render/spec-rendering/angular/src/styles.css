@@ -1,4 +1,12 @@
-/* Global styles for the spec-rendering capability demo */
+@import "@ngaf/example-layouts/theme.css";
+
+html, body {
+  height: 100%;
+  margin: 0;
+  background: var(--ngaf-chat-bg);
+  color: var(--ngaf-chat-text);
+  font-family: var(--ngaf-chat-font-family);
+}
 
 @keyframes shimmer {
   0% { background-position: -200% 0; }
