@@ -167,4 +167,164 @@ describe('createProxyHandler', () => {
     expect(res.setHeader).toHaveBeenCalledWith('Retry-After', '60');
     expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ error: 'rate_limit_exceeded', retryAfterSec: 60 }));
   });
+
+  // === CORS allowlist ===
+
+  it('echoes matching Origin when allowedOrigins is configured', async () => {
+    const fetchMock = vi.spyOn(global, 'fetch').mockResolvedValue(
+      new Response('{}', { status: 200, headers: { 'content-type': 'application/json' } }),
+    );
+    const handler = createProxyHandler({
+      backendUrl: DEFAULT_BACKEND,
+      allowedOrigins: ['https://demo.cacheplane.ai'],
+    });
+    const res = makeRes();
+    await handler({
+      method: 'GET',
+      headers: { host: 'demo.cacheplane.ai', origin: 'https://demo.cacheplane.ai' },
+      body: undefined,
+      url: '/api/info',
+      query: {},
+    } as never, res as never);
+    expect(res.setHeader).toHaveBeenCalledWith('access-control-allow-origin', 'https://demo.cacheplane.ai');
+    expect(res.setHeader).toHaveBeenCalledWith('vary', 'origin');
+    expect(fetchMock).toHaveBeenCalled();
+  });
+
+  it('returns 403 when Origin is not in allowlist', async () => {
+    const fetchMock = vi.spyOn(global, 'fetch');
+    const handler = createProxyHandler({
+      backendUrl: DEFAULT_BACKEND,
+      allowedOrigins: ['https://demo.cacheplane.ai'],
+    });
+    const res = makeRes();
+    await handler({
+      method: 'GET',
+      headers: { host: 'demo.cacheplane.ai', origin: 'https://malicious.example' },
+      body: undefined,
+      url: '/api/info',
+      query: {},
+    } as never, res as never);
+    expect(res._status).toBe(403);
+    expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ error: 'origin_not_allowed' }));
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('allows requests without an Origin header when allowedOrigins is configured', async () => {
+    const fetchMock = vi.spyOn(global, 'fetch').mockResolvedValue(
+      new Response('{}', { status: 200, headers: { 'content-type': 'application/json' } }),
+    );
+    const handler = createProxyHandler({
+      backendUrl: DEFAULT_BACKEND,
+      allowedOrigins: ['https://demo.cacheplane.ai'],
+    });
+    const res = makeRes();
+    await handler({
+      method: 'GET',
+      headers: { host: 'demo.cacheplane.ai' },
+      body: undefined,
+      url: '/api/info',
+      query: {},
+    } as never, res as never);
+    expect(fetchMock).toHaveBeenCalled();
+    const calls = (res.setHeader as ReturnType<typeof vi.fn>).mock.calls;
+    const corsCall = calls.find(([k]) => k === 'access-control-allow-origin');
+    expect(corsCall).toBeUndefined();
+  });
+
+  it('OPTIONS preflight with allowed Origin returns 204 with echoed Origin', async () => {
+    const handler = createProxyHandler({
+      backendUrl: DEFAULT_BACKEND,
+      allowedOrigins: ['https://demo.cacheplane.ai'],
+    });
+    const res = makeRes();
+    await handler({
+      method: 'OPTIONS',
+      headers: { origin: 'https://demo.cacheplane.ai' },
+      body: undefined,
+      url: '/api/info',
+      query: {},
+    } as never, res as never);
+    expect(res._status).toBe(204);
+    expect(res.setHeader).toHaveBeenCalledWith('access-control-allow-origin', 'https://demo.cacheplane.ai');
+  });
+
+  it('preserves wildcard CORS when allowedOrigins is undefined (legacy examples behavior)', async () => {
+    vi.spyOn(global, 'fetch').mockResolvedValue(
+      new Response('{}', { status: 200, headers: { 'content-type': 'application/json' } }),
+    );
+    const handler = createProxyHandler({ backendUrl: DEFAULT_BACKEND });
+    const res = makeRes();
+    await handler({
+      method: 'GET',
+      headers: { host: 'demo.cacheplane.ai', origin: 'https://anywhere.example' },
+      body: undefined,
+      url: '/api/info',
+      query: {},
+    } as never, res as never);
+    expect(res.setHeader).toHaveBeenCalledWith('access-control-allow-origin', '*');
+  });
+
+  // === Body-size cap ===
+
+  it('returns 413 when body length exceeds maxBodyBytes (via JSON.stringify)', async () => {
+    const fetchMock = vi.spyOn(global, 'fetch');
+    const handler = createProxyHandler({ backendUrl: DEFAULT_BACKEND, maxBodyBytes: 100 });
+    const res = makeRes();
+    const bigBody = { content: 'x'.repeat(200) };
+    await handler({
+      method: 'POST',
+      headers: { host: 'demo.cacheplane.ai', 'content-type': 'application/json' },
+      body: bigBody,
+      url: '/api/threads',
+      query: {},
+    } as never, res as never);
+    expect(res._status).toBe(413);
+    expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
+      error: 'payload_too_large',
+      maxBytes: 100,
+    }));
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('returns 413 when Content-Length header exceeds maxBodyBytes (short-circuit)', async () => {
+    const fetchMock = vi.spyOn(global, 'fetch');
+    const handler = createProxyHandler({ backendUrl: DEFAULT_BACKEND, maxBodyBytes: 100 });
+    const res = makeRes();
+    await handler({
+      method: 'POST',
+      headers: {
+        host: 'demo.cacheplane.ai',
+        'content-type': 'application/json',
+        'content-length': '500',
+      },
+      body: { ok: true },
+      url: '/api/threads',
+      query: {},
+    } as never, res as never);
+    expect(res._status).toBe(413);
+    expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
+      error: 'payload_too_large',
+      maxBytes: 100,
+      actualBytes: 500,
+    }));
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('does not enforce cap when maxBodyBytes is undefined (legacy examples behavior)', async () => {
+    const fetchMock = vi.spyOn(global, 'fetch').mockResolvedValue(
+      new Response('{}', { status: 200, headers: { 'content-type': 'application/json' } }),
+    );
+    const handler = createProxyHandler({ backendUrl: DEFAULT_BACKEND });
+    const res = makeRes();
+    await handler({
+      method: 'POST',
+      headers: { host: 'demo.cacheplane.ai', 'content-type': 'application/json', 'content-length': '999999' },
+      body: { content: 'x'.repeat(50000) },
+      url: '/api/threads',
+      query: {},
+    } as never, res as never);
+    expect(fetchMock).toHaveBeenCalled();
+    expect(res._status).toBe(200);
+  });
 });

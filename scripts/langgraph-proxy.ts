@@ -44,6 +44,14 @@ export interface ProxyConfig {
    *  wraps `checkRateLimit` from scripts/rate-limit.ts; examples leaves
    *  it unset. */
   readonly checkRateLimit?: (ip: string) => Promise<{ allowed: boolean; retryAfterSec: number; count: number }>;
+  /** Origins to allow via CORS. If undefined, legacy wildcard `*` behavior
+   *  preserved (used by cockpit-examples). Each entry is a full origin
+   *  string, e.g. `https://demo.cacheplane.ai`. Match is exact-string. */
+  readonly allowedOrigins?: readonly string[];
+  /** Maximum request body size in bytes. If undefined, no cap (legacy
+   *  behavior). Checked against Content-Length first, falls back to
+   *  JSON.stringify(req.body).length. */
+  readonly maxBodyBytes?: number;
 }
 
 const DEFAULT_BACKEND_URL = 'https://cockpit-dev-219a15942c545a00a03a9a41905d7fc2.us.langgraph.app';
@@ -66,10 +74,26 @@ export function createProxyHandler(config: ProxyConfig = {}): (req: VercelReques
   const resolveBackend = config.resolveBackend ?? ((_referer) => fallbackBackend);
 
   return async function handler(req, res) {
-    // CORS preflight (Phase 4 will tighten the origin allowlist).
-    res.setHeader('access-control-allow-origin', '*');
+    // CORS — echo matching Origin when allowedOrigins is configured;
+    // otherwise legacy * behavior preserved for cockpit-examples.
     res.setHeader('access-control-allow-methods', 'GET, POST, PUT, DELETE, OPTIONS');
     res.setHeader('access-control-allow-headers', 'content-type, x-api-key, authorization');
+
+    const origin = req.headers.origin;
+    if (config.allowedOrigins) {
+      if (origin) {
+        if (config.allowedOrigins.includes(origin)) {
+          res.setHeader('access-control-allow-origin', origin);
+          res.setHeader('vary', 'origin');
+        } else {
+          res.status(403).json({ error: 'origin_not_allowed' });
+          return;
+        }
+      }
+      // No Origin header → server-to-server client, skip CORS headers.
+    } else {
+      res.setHeader('access-control-allow-origin', '*');
+    }
 
     if (req.method === 'OPTIONS') {
       res.status(204).end();
@@ -114,6 +138,26 @@ export function createProxyHandler(config: ProxyConfig = {}): (req: VercelReques
         })(),
       });
       return;
+    }
+
+    // Body-size cap. Fast-fail before rate-limit + upstream fetch.
+    if (config.maxBodyBytes !== undefined) {
+      const cl = req.headers['content-length'];
+      const clNum = cl !== undefined ? Number(cl) : NaN;
+      let actualBytes: number;
+      if (Number.isFinite(clNum) && clNum >= 0) {
+        actualBytes = clNum;
+      } else {
+        actualBytes = JSON.stringify(req.body ?? '').length;
+      }
+      if (actualBytes > config.maxBodyBytes) {
+        res.status(413).json({
+          error: 'payload_too_large',
+          maxBytes: config.maxBodyBytes,
+          actualBytes,
+        });
+        return;
+      }
     }
 
     // Rate-limit gate: only POST /api/threads/{id}/runs/stream burns OpenAI tokens.

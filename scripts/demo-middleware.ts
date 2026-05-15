@@ -2,12 +2,9 @@
 // SPDX-License-Identifier: MIT
 /**
  * Vercel Serverless Function proxy for the canonical-demo deployment
- * (demo.cacheplane.ai). Wraps the shared langgraph-proxy factory with
- * the rate-limit gate from scripts/rate-limit.ts.
- *
- * The rate-limit hook is wired here (not in the shared factory) so the
- * cockpit-examples wrapper stays unaffected — its bundle does not pull
- * in @neondatabase/serverless.
+ * (demo.cacheplane.ai). Wraps the shared langgraph-proxy factory with:
+ *   - the rate-limit gate from scripts/rate-limit.ts (Phase 3)
+ *   - CORS allowlist + body-byte cap from env (Phase 4)
  *
  * Note: changes to scripts/rate-limit.ts MUST trigger a redeploy of this
  * function. The ci.yml `Check if demo changed` step watches
@@ -17,4 +14,24 @@
 import { createProxyHandler } from './langgraph-proxy';
 import { checkRateLimit } from './rate-limit';
 
-module.exports = createProxyHandler({ checkRateLimit });
+const DEFAULT_ALLOWED_ORIGINS = ['https://demo.cacheplane.ai'];
+const DEFAULT_MAX_BODY_BYTES = 8192;
+
+const allowedOrigins = (() => {
+  const raw = process.env['ALLOWED_ORIGINS'];
+  if (!raw) return DEFAULT_ALLOWED_ORIGINS;
+  const parsed = raw.split(',').map((s) => s.trim()).filter(Boolean);
+  return parsed.length > 0 ? parsed : DEFAULT_ALLOWED_ORIGINS;
+})();
+
+const maxBodyBytes = (() => {
+  const raw = process.env['MAX_PROMPT_BYTES'];
+  const parsed = raw ? Number(raw) : DEFAULT_MAX_BODY_BYTES;
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : DEFAULT_MAX_BODY_BYTES;
+})();
+
+module.exports = createProxyHandler({
+  checkRateLimit,
+  allowedOrigins,
+  maxBodyBytes,
+});
