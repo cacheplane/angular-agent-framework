@@ -17,9 +17,9 @@ import { environment } from '../environments/environment';
     <example-chat-layout sidebarPosition="left" sidebarWidth="w-64">
       <chat main [agent]="agent" [threads]="threads()" [activeThreadId]="activeThreadId()" (threadSelected)="onThreadSelected($event)" class="flex-1 min-w-0" />
       <div sidebar class="p-4 space-y-4"
-           style="background: var(--chat-bg, #171717); color: var(--chat-text, #e0e0e0);">
+           style="background: var(--ngaf-chat-bg); color: var(--ngaf-chat-text);">
         <h3 class="text-xs font-semibold uppercase tracking-wide"
-            style="color: var(--chat-text-muted, #777);">Threads</h3>
+            style="color: var(--ngaf-chat-text-muted);">Threads</h3>
         <chat-thread-list
           [threads]="threads()"
           [activeThreadId]="activeThreadId()"
