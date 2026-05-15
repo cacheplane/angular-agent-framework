@@ -31,7 +31,10 @@
     "build": {
       "dependsOn": ["build:node", "build:browser"],
       "executor": "nx:run-commands",
-      "options": { "command": "true" }
+      "outputs": ["{workspaceRoot}/dist/libs/telemetry"],
+      "options": {
+        "command": "node libs/telemetry/scripts/assemble-dist.mjs"
+      }
     },
     "test": {
       "executor": "@nx/vitest:test",
