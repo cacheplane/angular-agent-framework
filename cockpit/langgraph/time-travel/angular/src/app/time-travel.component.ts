@@ -27,7 +27,7 @@ import { environment } from '../environments/environment';
       <!-- Checkpoint timeline sidebar -->
       <div sidebar
         class="flex flex-col overflow-hidden"
-        style="background: var(--chat-bg, #171717); color: var(--chat-text, #e0e0e0);"
+        style="background: var(--ngaf-chat-bg); color: var(--ngaf-chat-text);"
       >
         <div class="px-4 py-3 border-b border-[var(--chat-border)]">
           <h2 class="text-sm font-semibold text-[var(--chat-text)] uppercase tracking-wide">
