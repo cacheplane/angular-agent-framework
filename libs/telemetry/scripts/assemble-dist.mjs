@@ -96,6 +96,7 @@ async function writeCanonicalPackageJson() {
     bugs: srcPkg.bugs,
     sideEffects: false,
     type: 'module',
+    bin: srcPkg.bin,
     exports: {
       '.': {
         types: './index.d.ts',

@@ -1,7 +1,7 @@
 # @ngaf/telemetry
 
-> Skeleton. Implementation lands in Spec 1 (`analytics-foundation`).
-> This README is the **public trust contract**. It's linked from the homepage footer, package READMEs, and the postinstall opt-out notice. The contract is locked here so it doesn't drift.
+This README is the public trust contract for `@ngaf/*` telemetry. It is linked
+from package install notices and should stay aligned with implementation.
 
 ## Imports
 
@@ -29,8 +29,8 @@ The single telemetry surface for `@ngaf/*`. It exists so we can answer "how is C
 ## What is and isn't telemetered
 
 **Telemetered by default (Node, opt-out):**
-- `ngaf:postinstall` — fires once per `npm install` of an `@ngaf/*` package. Properties: package name, package version, Node version, OS. No identifiers, no project path, no environment variables.
-- `ngaf:runtime_instance_created` — server adapters (LangGraph, AG-UI) call this when they spin up. Properties: which transport, which model provider (string), Angular peer version. **No API keys**, no endpoint hostnames, no user data. Sensitive identifiers are hashed (SHA-256, one-way).
+- `ngaf:postinstall` — fires once per dependency/global install of a published `@ngaf/*` package. Properties: package name, package version, Node version, OS, package manager name/version when npm exposes it, sample weight. It uses a per-process anonymous id. No project path, no environment variables, no dependency tree, no installer IP address.
+- `ngaf:runtime_instance_created` — server adapters (LangGraph, AG-UI) call this when they spin up. Properties: which transport, which model provider (string), Angular peer version. **No API keys**, no endpoint hostnames, no user data.
 - `ngaf:stream_started` / `ngaf:stream_ended` / `ngaf:stream_errored` — per-request lifecycle on server adapters. Properties: provider, model name, duration, error class. No prompts, no completions, no message content.
 
 **Telemetered only on explicit opt-in (Browser):**
@@ -41,7 +41,6 @@ The single telemetry surface for `@ngaf/*`. It exists so we can answer "how is C
 - Message content (user prompts, model completions, tool call inputs/outputs).
 - Personally identifiable information beyond `email_domain` on explicit server conversion events on the website.
 - API keys, vendor credentials, project paths, environment variables.
-- Whatever you've told the SDK to ignore via the redaction config.
 
 ## Opt-out
 
@@ -50,16 +49,25 @@ Node telemetry is on by default. Three ways to opt out — any one turns it off.
 | Method | How |
 |--------|-----|
 | Cross-vendor env var | `DO_NOT_TRACK=1` or `DO_NOT_TRACK=true` |
+| npm config env var | `npm_config_do_not_track=true` |
 | Package env var | `NGAF_TELEMETRY_DISABLED=1` or `NGAF_TELEMETRY_DISABLED=true` |
 | Programmatic | `import { disableTelemetry } from '@ngaf/telemetry/node'; disableTelemetry();` before any other `@ngaf/*` import |
 
 CI environments (`CI=true`, `GITHUB_ACTIONS=true`, etc.) are auto-detected and treated as opt-out by default.
 
-The postinstall script prints a single line on stdout describing what was sent and how to disable. The line is suppressed in CI.
+Local top-level installs are skipped by default. Dependency installs and global installs are eligible unless opted out.
+
+The postinstall script prints a single line on stdout only when the install ping was actually accepted by the ingest endpoint. The line is suppressed in CI.
+
+To inspect the install payload locally, run with `DEBUG=ngaf:telemetry`.
 
 ## Opt-in (browser)
 
 Browser telemetry is **off by default** and never fires from the library itself. To enable in your Angular app:
+
+```bash
+npm install posthog-js
+```
 
 ```ts
 // app.config.ts (or wherever you bootstrap)
@@ -82,7 +90,7 @@ If you don't call `provideNgafTelemetry({ enabled: true })`, every telemetry hel
 ## Sampling
 
 - Default sample rate: **1.0** (100%) at current scale.
-- Configurable via `NGAF_TELEMETRY_SAMPLE_RATE` env var (Node) or the `sampleRate` option (Browser).
+- Configurable via `NGAF_TELEMETRY_SAMPLE_RATE` env var (Node).
 - Every event carries a `sample_weight` property so future de-sampling at query time works correctly.
 
 ## Anonymous id strategy
@@ -96,10 +104,10 @@ If you don't call `provideNgafTelemetry({ enabled: true })`, every telemetry hel
 Enterprise users can redirect Node telemetry to their own ingest:
 
 ```bash
-NGAF_TELEMETRY_INGEST_URL=https://posthog.acme-internal.example.com
+NGAF_TELEMETRY_INGEST_URL=https://telemetry.acme-internal.example.com/api/ingest
 ```
 
-Default ingest (when env var is unset) is a thin proxy on the Cacheplane website (`https://cacheplane.dev/api/ingest`) that forwards to our PostHog project. Source of the proxy lives in `apps/website/src/app/api/ingest/`.
+Default ingest (when env var is unset) is a thin proxy on the Cacheplane website (`https://cacheplane.dev/api/ingest`) that accepts the `@ngaf/telemetry` JSON payload and forwards `ngaf:*` events to our PostHog project without forwarding installer IP addresses. Source of the proxy lives in `apps/website/src/app/api/ingest/`.
 
 ## Verifying telemetry is silent
 
@@ -116,7 +124,7 @@ If this test ever fails, the trust contract has been violated and the build bloc
 - Session replay. (Not in Phase 0–1.)
 - Cross-session identity stitching.
 - Heuristic PII detection. (Redaction is explicit and config-driven only.)
-- Default writes to anyone's PostHog instance — including ours — without explicit configuration.
+- Default browser writes to anyone's PostHog instance — including ours — without explicit configuration.
 
 ## Reporting an issue
 

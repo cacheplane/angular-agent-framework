@@ -64,9 +64,8 @@ The standard PostHog `$pageview` event is used as-is across all three surfaces.
 
 | Event                                | When                                       | Surface         | Default      |
 |--------------------------------------|--------------------------------------------|-----------------|--------------|
-| `ngaf:postinstall`                   | `npm install` of an `@ngaf/*` package      | Node (script)   | **Opt-out**  |
+| `ngaf:postinstall`                   | Dependency/global install of a published `@ngaf/*` package | Node (script)   | **Opt-out**  |
 | `ngaf:runtime_instance_created`      | Server adapter init                         | Node            | **Opt-out**  |
-| `ngaf:runtime_request_created`       | Server adapter handles a request            | Node            | **Opt-out**  |
 | `ngaf:stream_started`                | Stream begins                              | Node            | **Opt-out**  |
 | `ngaf:stream_ended`                  | Stream ends normally                       | Node            | **Opt-out**  |
 | `ngaf:stream_errored`                | Stream errors                              | Node            | **Opt-out**  |

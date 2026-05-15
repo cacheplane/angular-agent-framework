@@ -1,12 +1,11 @@
 import { captureEvent } from './client.js';
-import { sha256 } from '../shared/hash.js';
 
 export interface RuntimeInstanceTelemetry {
   transport: string;                    // 'langgraph' | 'ag-ui' | 'custom'
   provider?: string;                    // 'openai' | 'anthropic' | ...
   model?: string;
   angularVersion?: string;
-  apiKey?: string;                      // hashed before sending
+  apiKey?: string;                      // stripped before sending
 }
 
 export interface StreamTelemetry {
@@ -15,16 +14,15 @@ export interface StreamTelemetry {
   durationMs?: number;
 }
 
-async function safe(fn: () => Promise<void>): Promise<void> {
+async function safe(fn: () => Promise<unknown>): Promise<void> {
   try { await fn(); } catch { /* silent fail */ }
 }
 
 export async function captureRuntimeInstanceCreated(input: RuntimeInstanceTelemetry): Promise<void> {
   await safe(async () => {
     const { apiKey, ...rest } = input;
-    const props: Record<string, unknown> = { ...rest };
-    if (apiKey) props.apiKey_sha256 = await sha256(apiKey);
-    await captureEvent('ngaf:runtime_instance_created', props);
+    void apiKey;
+    await captureEvent('ngaf:runtime_instance_created', { ...rest });
   });
 }
 

@@ -24,7 +24,7 @@ export function FinalCTA({
   subtext = 'Install the framework, read the docs, and have a streaming chat in your app this afternoon.',
   primary = DEFAULT_PRIMARY,
   secondary = DEFAULT_SECONDARY,
-  caption = 'MIT · No signup required · No telemetry',
+  caption = 'MIT · No signup required · App telemetry off by default',
 }: FinalCTAProps = {}) {
   return (
     <Section surface="tinted" ariaLabelledBy="final-cta-heading">

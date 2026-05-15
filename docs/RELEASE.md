@@ -15,7 +15,7 @@ npx nx release patch
 
 This runs Nx Release in interactive mode, which:
 
-1. Builds all seven publishable projects (preVersionCommand).
+1. Builds all seven publishable projects and patches install telemetry into the publishable package manifests (preVersionCommand).
 2. Bumps every package.json version (e.g., `0.0.1` → `0.0.2`).
 3. Generates `CHANGELOG.md` from commits since the last tag.
 4. Creates a git commit `chore(release): publish v0.0.2`.
@@ -50,8 +50,9 @@ npx nx release publish --groups=publishable
 The very first publish ships the version currently on disk (`0.0.1`) — no version bump. `--first-release` skips the "previous tag exists" check and the "package already on registry" check.
 
 ```bash
-# 1. Build everything
+# 1. Build everything and patch install telemetry into publishable manifests
 npx nx run-many -t build --projects=chat,langgraph,ag-ui,render,a2ui,licensing,telemetry
+node libs/telemetry/scripts/apply-install-telemetry.mjs dist/libs/chat dist/libs/langgraph dist/libs/ag-ui dist/libs/render dist/libs/a2ui dist/libs/licensing
 
 # 2. Generate the initial CHANGELOG, commit, and tag v0.0.1
 npx nx release changelog 0.0.1 --first-release
