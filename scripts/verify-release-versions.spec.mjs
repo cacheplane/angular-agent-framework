@@ -30,6 +30,13 @@ async function createWorkspace(projectVersions) {
     await mkdir(projectRoot, { recursive: true });
     await writeJson(join(projectRoot, 'project.json'), {
       name: projectName,
+      targets: {
+        'nx-release-publish': {
+          options: {
+            packageRoot: 'dist/{projectRoot}',
+          },
+        },
+      },
     });
     await writeJson(join(projectRoot, 'package.json'), {
       name: `@ngaf/${projectName}`,
@@ -108,6 +115,25 @@ describe('verifyReleaseVersions', () => {
 
     await expect(verifyReleaseVersions({ workspaceRoot })).rejects.toThrow(
       'Public package @ngaf/render is not included in release group "publishable".'
+    );
+  });
+
+  it('rejects release projects without an explicit dist publish root', async () => {
+    const workspaceRoot = await createWorkspace({
+      chat: '0.0.13',
+      telemetry: '0.0.13',
+    });
+    await writeJson(join(workspaceRoot, 'libs', 'telemetry', 'project.json'), {
+      name: 'telemetry',
+      targets: {
+        'nx-release-publish': {
+          options: {},
+        },
+      },
+    });
+
+    await expect(verifyReleaseVersions({ workspaceRoot })).rejects.toThrow(
+      'Release project "telemetry" must publish from dist/{projectRoot}.'
     );
   });
 });
