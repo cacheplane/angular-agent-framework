@@ -1,6 +1,6 @@
 {
   "slug": "package-installs-by-workspace-flag",
-  "posthog_id": null,
+  "posthog_id": 8634195,
   "kind": "trends",
   "name": "Package installs by workspace flag",
   "events": [

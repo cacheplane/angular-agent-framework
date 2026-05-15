@@ -1,6 +1,6 @@
 {
   "slug": "package-installs-by-installer-os",
-  "posthog_id": null,
+  "posthog_id": 8634191,
   "kind": "trends",
   "name": "Package installs by installer OS",
   "events": [
