@@ -1,0 +1,16 @@
+{
+  "slug": "package-installs-by-workspace-flag",
+  "posthog_id": null,
+  "kind": "trends",
+  "name": "Package installs by workspace flag",
+  "events": [
+    {
+      "event": "ngaf:postinstall",
+      "math": "total"
+    }
+  ],
+  "breakdown": "package_manager_workspaces",
+  "breakdown_limit": 5,
+  "interval": "day",
+  "date_from": "-30d"
+}

@@ -14,9 +14,8 @@
  *
  * Idempotent — re-running on an assembled dist is a no-op.
  */
-import { readFile, writeFile, rm, rename, mkdir, access, readdir, stat } from 'node:fs/promises';
-import { existsSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
+import { readFile, writeFile, rm, rename, mkdir, access, readdir } from 'node:fs/promises';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { dirname, join, relative } from 'node:path';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -84,13 +83,12 @@ async function writeBrowserIndexReexport() {
   console.log('[assemble-dist] wrote browser/index.d.ts re-exporting from fesm2022 types');
 }
 
-async function writeCanonicalPackageJson() {
-  const srcPkg = JSON.parse(await readFile(join(LIB_ROOT, 'package.json'), 'utf8'));
-  // Strip dev fields, lock to a clean publishable shape.
+export function createCanonicalPackageJson(srcPkg) {
   const out = {
     name: srcPkg.name,
     version: srcPkg.version,
     license: srcPkg.license,
+    publishConfig: srcPkg.publishConfig,
     repository: srcPkg.repository,
     homepage: srcPkg.homepage,
     bugs: srcPkg.bugs,
@@ -129,6 +127,13 @@ async function writeCanonicalPackageJson() {
   };
   // Strip undefined.
   for (const k of Object.keys(out)) if (out[k] === undefined) delete out[k];
+  return out;
+}
+
+async function writeCanonicalPackageJson() {
+  const srcPkg = JSON.parse(await readFile(join(LIB_ROOT, 'package.json'), 'utf8'));
+  // Strip dev fields, lock to a clean publishable shape.
+  const out = createCanonicalPackageJson(srcPkg);
   await writeFile(join(DIST, 'package.json'), JSON.stringify(out, null, 2) + '\n', 'utf8');
   console.log('[assemble-dist] wrote canonical dist/libs/telemetry/package.json with corrected exports map');
 }
@@ -163,7 +168,9 @@ async function main() {
   await verifyExports();
 }
 
-main().catch((err) => {
-  console.error('[assemble-dist] failed:', err);
-  process.exit(1);
-});
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  main().catch((err) => {
+    console.error('[assemble-dist] failed:', err);
+    process.exit(1);
+  });
+}

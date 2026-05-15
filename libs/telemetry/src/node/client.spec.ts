@@ -23,6 +23,8 @@ describe('node client', () => {
     delete process.env.CIRCLECI;
     delete process.env.NGAF_TELEMETRY_SAMPLE_RATE;
     delete process.env.npm_config_user_agent;
+    delete process.env.npm_config_global;
+    delete process.env.npm_config_location;
     process.env.NGAF_TELEMETRY_INGEST_URL = 'https://test.example/api/ingest';
   });
 
@@ -76,6 +78,28 @@ describe('node client', () => {
       package_manager: 'npm',
       package_manager_version: '10.9.2',
     }));
+  });
+
+  test('capturePostinstall includes runtime and installer context without paths', async () => {
+    process.env.npm_config_user_agent = 'npm/10.9.2 node/v22.14.0 darwin arm64 workspaces/true';
+    process.env.npm_config_global = 'true';
+    await capturePostinstall({ pkg: 'x', version: '1' });
+    const body = JSON.parse(String(fetchMock.mock.calls[0][1].body));
+    expect(body.properties).toEqual(expect.objectContaining({
+      node: process.version,
+      node_version: process.version,
+      os: process.platform,
+      arch: process.arch,
+      package_manager: 'npm',
+      package_manager_version: '10.9.2',
+      package_manager_node_version: '22.14.0',
+      package_manager_os: 'darwin',
+      package_manager_arch: 'arm64',
+      package_manager_workspaces: true,
+      global_install: true,
+    }));
+    expect(body.properties).not.toHaveProperty('cwd');
+    expect(body.properties).not.toHaveProperty('init_cwd');
   });
 
   test('capturePostinstall awaits fetch before resolving', async () => {
