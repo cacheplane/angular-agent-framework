@@ -18,8 +18,15 @@ describe('postinstall script', () => {
   beforeEach(() => {
     vi.mocked(capturePostinstall).mockClear();
     delete process.env.CI;
+    delete process.env.GITHUB_ACTIONS;
+    delete process.env.CONTINUOUS_INTEGRATION;
+    delete process.env.BUILDKITE;
+    delete process.env.CIRCLECI;
     delete process.env.DO_NOT_TRACK;
+    delete process.env.npm_config_do_not_track;
+    delete process.env.NPM_CONFIG_DO_NOT_TRACK;
     delete process.env.DEBUG;
+    delete process.env.NGAF_TELEMETRY_DISABLED;
   });
 
   test('calls capturePostinstall with the package name + version', async () => {

@@ -144,6 +144,14 @@ export async function verifyReleaseVersions({
     }
 
     const packageInfo = await getPackageForProject(workspaceRoot, project);
+    const publishRoot =
+      project.targets['nx-release-publish']?.options?.packageRoot;
+
+    if (publishRoot !== 'dist/{projectRoot}') {
+      throw new Error(
+        `Release project "${projectName}" must publish from dist/{projectRoot}.`
+      );
+    }
 
     if (packageInfo.packageJson.private === true) {
       throw new Error(

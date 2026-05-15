@@ -36,6 +36,11 @@
         "command": "node libs/telemetry/scripts/assemble-dist.mjs"
       }
     },
+    "nx-release-publish": {
+      "options": {
+        "packageRoot": "dist/{projectRoot}"
+      }
+    },
     "test": {
       "executor": "@nx/vitest:test",
       "options": {
