@@ -1,6 +1,6 @@
 {
   "name": "@ngaf/chat",
-  "version": "0.0.30",
+  "version": "0.0.31",
   "exports": {
     ".": {
       "types": "./index.d.ts",
@@ -43,5 +43,8 @@
   "bugs": {
     "url": "https://github.com/cacheplane/angular-agent-framework/issues"
   },
-  "sideEffects": ["**/chat-tokens.ts", "**/*.css"]
+  "sideEffects": [
+    "**/chat-tokens.ts",
+    "**/*.css"
+  ]
 }

@@ -1,3 +1,21 @@
+## 0.0.31 (2026-05-15)
+
+### 🚀 Features
+
+- **example-layouts:** PR-0 auto-install side effect + pilot cleanup ([#338](https://github.com/cacheplane/angular-agent-framework/pull/338))
+- **website:** Phase 5 — marketing rewire to canonical demo ([#335](https://github.com/cacheplane/angular-agent-framework/pull/335))
+
+### 🩹 Fixes
+
+- **telemetry:** preserve public publish packaging and add install reporting dashboards ([#340](https://github.com/cacheplane/angular-agent-framework/pull/340))
+- **telemetry:** publish package as public ([4f463f35](https://github.com/cacheplane/angular-agent-framework/commit/4f463f35))
+
+### ❤️ Thank You
+
+- Brian Love @blove
+- Claude Opus 4.7
+- Claude Opus 4.7 (1M context)
+
 ## 0.0.29 — 2026-05-08
 
 ### Fixed
