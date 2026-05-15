@@ -6,12 +6,12 @@
  */
 export const shadows = Object.freeze({
   /** Subtle — default card */
-  sm: '0 1px 2px rgba(15, 23, 41, 0.04), 0 1px 1px rgba(15, 23, 41, 0.03)',
+  sm: '0 1px 2px rgba(0, 0, 0, 0.05)',
   /** Moderate — hovered card, dropdown */
-  md: '0 4px 12px rgba(15, 23, 41, 0.06), 0 2px 4px rgba(15, 23, 41, 0.04)',
+  md: '0 4px 6px -1px rgba(0, 0, 0, 0.10), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
   /** Strong — floating elements, hero collage */
-  lg: '0 12px 32px rgba(15, 23, 41, 0.08), 0 4px 8px rgba(15, 23, 41, 0.05)',
-  /** Keyboard focus ring */
+  lg: '0 10px 15px -3px rgba(0, 0, 0, 0.10), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+  /** Keyboard focus ring (accent-tinted; unchanged) */
   focus: '0 0 0 3px rgba(0, 64, 144, 0.25)',
 } as const);
 

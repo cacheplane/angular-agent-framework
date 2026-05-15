@@ -1,7 +1,10 @@
 {
   "name": "@ngaf/design-tokens",
-  "version": "0.0.33",
+  "version": "0.0.34",
   "license": "MIT",
+  "exports": {
+    "./theme.css": "./src/lib/theme.css"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/cacheplane/angular-agent-framework.git",

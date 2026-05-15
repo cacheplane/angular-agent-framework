@@ -6,7 +6,7 @@ describe('cssVars(theme)', () => {
     const vars = cssVars('light');
 
     it('uses light canvas color', () => {
-      expect(vars['--ds-canvas']).toBe('#fafbfc');
+      expect(vars['--ds-canvas']).toBe('rgb(255, 255, 255)');
     });
 
     it('uses navy accent', () => {
@@ -14,7 +14,7 @@ describe('cssVars(theme)', () => {
     });
 
     it('uses dark text on light surfaces', () => {
-      expect(vars['--ds-text-primary']).toBe('#1a1a2e');
+      expect(vars['--ds-text-primary']).toBe('rgb(28, 28, 28)');
     });
   });
 
