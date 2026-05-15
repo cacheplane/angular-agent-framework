@@ -107,7 +107,7 @@ Enterprise users can redirect Node telemetry to their own ingest:
 NGAF_TELEMETRY_INGEST_URL=https://telemetry.acme-internal.example.com/api/ingest
 ```
 
-Default ingest (when env var is unset) is a thin proxy on the Cacheplane website (`https://cacheplane.dev/api/ingest`) that accepts the `@ngaf/telemetry` JSON payload and forwards `ngaf:*` events to our PostHog project without forwarding installer IP addresses. Source of the proxy lives in `apps/website/src/app/api/ingest/`.
+Default ingest (when env var is unset) is a thin proxy on the Cacheplane website (`https://cacheplane.ai/api/ingest`) that accepts the `@ngaf/telemetry` JSON payload and forwards `ngaf:*` events to our PostHog project without forwarding installer IP addresses. Source of the proxy lives in `apps/website/src/app/api/ingest/`.
 
 ## Verifying telemetry is silent
 

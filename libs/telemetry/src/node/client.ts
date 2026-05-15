@@ -4,7 +4,7 @@ import { shouldSample } from '../shared/sample.js';
 import type { NgafNodeEvent } from '../shared/events.js';
 import { isProgrammaticallyDisabled } from './disable.js';
 
-const DEFAULT_INGEST = 'https://cacheplane.dev/api/ingest';
+const DEFAULT_INGEST = 'https://cacheplane.ai/api/ingest';
 const REQUEST_TIMEOUT_MS = 3_000;
 // Public identifier accepted by the Cacheplane ingest proxy. The proxy re-keys
 // server-side with the private PostHog token.

@@ -56,6 +56,12 @@ describe('node client', () => {
     expect(fetchMock.mock.calls[0][0]).toBe('https://custom.example/api/ingest');
   });
 
+  test('capturePostinstall defaults to the live Cacheplane ingest proxy', async () => {
+    delete process.env.NGAF_TELEMETRY_INGEST_URL;
+    await capturePostinstall({ pkg: 'x', version: '1' });
+    expect(fetchMock.mock.calls[0][0]).toBe('https://cacheplane.ai/api/ingest');
+  });
+
   test('capturePostinstall sends sample_weight property', async () => {
     await capturePostinstall({ pkg: 'x', version: '1' });
     const body = JSON.parse(String(fetchMock.mock.calls[0][1].body));
