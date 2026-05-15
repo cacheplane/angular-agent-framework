@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax.
 
-**Goal:** Stand up a new Nx project `apps/cockpit/aimock-e2e/` that replaces the existing cockpit e2e surface, with one pilot spec exercising the `c-a2ui` example through aimock end-to-end.
+**Goal:** Replace the existing cockpit e2e surface at `apps/cockpit/e2e/` with an aimock-driven harness, with one pilot spec exercising the `c-a2ui` example through aimock end-to-end. Existing `cockpit` Nx project's `e2e` target is repointed at the new playwright config; no new Nx project is created.
 
-**Architecture:** Independent harness mirroring `examples/chat/aimock-e2e/`. Playwright globalSetup boots aimock + `cockpit/langgraph/streaming/python` (multi-graph langgraph) + the `cockpit-chat-a2ui-angular` dev server. Pilot spec captures real LLM tool-call response, asserts the A2UI surface mounts.
+**Architecture:** Harness mirroring `examples/chat/aimock-e2e/`, living at `apps/cockpit/e2e/`. Playwright globalSetup boots aimock + `cockpit/langgraph/streaming/python` (multi-graph langgraph) + the `cockpit-chat-a2ui-angular` dev server. Pilot spec captures real LLM tool-call response, asserts the A2UI surface mounts.
 
 **Tech Stack:** `@copilotkit/aimock`, Playwright, Nx, GitHub Actions. Python LangGraph dev server via `uv`.
 
@@ -165,39 +165,18 @@ If de-risk passes, proceed to Task 1. If it fails, STOP and escalate.
 
 ---
 
-## Task 1: Scaffold the Nx project
+## Task 1: Add per-directory configs at `apps/cockpit/e2e/`
 
 **Files:**
-- Create: `apps/cockpit/aimock-e2e/project.json`
-- Create: `apps/cockpit/aimock-e2e/tsconfig.json`
-- Create: `apps/cockpit/aimock-e2e/.gitignore`
-- Create: `apps/cockpit/aimock-e2e/README.md`
+- Create: `apps/cockpit/e2e/tsconfig.json`
+- Create: `apps/cockpit/e2e/.gitignore`
+- Create: `apps/cockpit/e2e/README.md`
 
-- [ ] **Step 1: Create project.json**
+No new Nx `project.json` — the existing `cockpit` project's `e2e` target is reused (its `config` path is updated in Task 6 once the new harness's playwright config exists).
 
-Write `apps/cockpit/aimock-e2e/project.json`:
+- [ ] **Step 1: Create tsconfig.json**
 
-```json
-{
-  "name": "cockpit-aimock-e2e",
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
-  "projectType": "application",
-  "sourceRoot": "apps/cockpit/aimock-e2e",
-  "targets": {
-    "test": {
-      "executor": "nx:run-commands",
-      "options": {
-        "cwd": "apps/cockpit/aimock-e2e",
-        "command": "playwright test"
-      }
-    }
-  }
-}
-```
-
-- [ ] **Step 2: Create tsconfig.json**
-
-Write `apps/cockpit/aimock-e2e/tsconfig.json`:
+Write `apps/cockpit/e2e/tsconfig.json`:
 
 ```json
 {
@@ -217,9 +196,9 @@ Write `apps/cockpit/aimock-e2e/tsconfig.json`:
 }
 ```
 
-- [ ] **Step 3: Create .gitignore**
+- [ ] **Step 2: Create .gitignore**
 
-Write `apps/cockpit/aimock-e2e/.gitignore`:
+Write `apps/cockpit/e2e/.gitignore`:
 
 ```
 test-results/
@@ -227,12 +206,12 @@ playwright-report/
 *.tmp
 ```
 
-- [ ] **Step 4: Create README.md**
+- [ ] **Step 3: Create README.md**
 
-Write `apps/cockpit/aimock-e2e/README.md`:
+Write `apps/cockpit/e2e/README.md`:
 
 ```markdown
-# cockpit-aimock-e2e
+# cockpit e2e
 
 Cross-stack E2E harness for cockpit example apps. Uses [`@copilotkit/aimock`](https://github.com/CopilotKit/aimock) as a deterministic mock for LLM API calls; the per-product Python LangGraph dev server is launched with `OPENAI_BASE_URL` pointed at it; Playwright drives the example Angular app in real Chromium.
 
@@ -241,7 +220,7 @@ Phase 1 covers `c-a2ui` only. Future phases each add one example (one fixture + 
 ## Run the suite
 
 ```
-npx nx run cockpit-aimock-e2e:test
+npx nx e2e cockpit
 ```
 
 Replay-only. No `OPENAI_API_KEY` needed. Reads committed fixtures from `fixtures/`.
@@ -252,7 +231,7 @@ Each captured fixture has a recipe script under `scripts/`. Example for the c-a2
 
 ```
 OPENAI_API_KEY=sk-... uv run --project cockpit/langgraph/streaming/python \
-  python apps/cockpit/aimock-e2e/scripts/record-c-a2ui.py
+  python apps/cockpit/e2e/scripts/record-c-a2ui.py
 ```
 
 Commit the updated `fixtures/c-a2ui.json`. Scripts are dev-only; CI never runs them.
@@ -267,25 +246,26 @@ Commit the updated `fixtures/c-a2ui.json`. Scripts are dev-only; CI never runs t
 - `c-a2ui.spec.ts` — Phase 1 pilot.
 ```
 
-- [ ] **Step 5: Commit Task 1**
+- [ ] **Step 4: Commit Task 1**
 
 ```bash
 cd /tmp/cockpit-aimock-spec
-git add apps/cockpit/aimock-e2e/project.json \
-        apps/cockpit/aimock-e2e/tsconfig.json \
-        apps/cockpit/aimock-e2e/.gitignore \
-        apps/cockpit/aimock-e2e/README.md
-git commit -m "feat(cockpit): scaffold cockpit-aimock-e2e Nx project"
+git add apps/cockpit/e2e/tsconfig.json \
+        apps/cockpit/e2e/.gitignore \
+        apps/cockpit/e2e/README.md
+git commit -m "feat(cockpit): scaffold e2e dir tsconfig + .gitignore + README"
 ```
+
+NOTE: this task may fail to apply cleanly if any of the four legacy specs in `apps/cockpit/e2e/` still exist (the `.gitignore` is fine; the tsconfig and README will live alongside them temporarily). That's expected — Task 6 deletes the legacy files. Until then, the new harness modules and the legacy specs coexist in the same directory.
 
 ---
 
 ## Task 2: Copy harness modules from the chat harness
 
 **Files:**
-- Create: `apps/cockpit/aimock-e2e/aimock-runner.ts`
-- Create: `apps/cockpit/aimock-e2e/aimock-runner.spec.ts`
-- Create: `apps/cockpit/aimock-e2e/test-helpers.ts`
+- Create: `apps/cockpit/e2e/aimock-runner.ts`
+- Create: `apps/cockpit/e2e/aimock-runner.spec.ts`
+- Create: `apps/cockpit/e2e/test-helpers.ts`
 
 These are byte-for-byte copies of the chat harness modules (acknowledged duplication per the spec). The runner is already battle-tested through Phase 2a–2e + the regenerate scenario.
 
@@ -293,25 +273,25 @@ These are byte-for-byte copies of the chat harness modules (acknowledged duplica
 
 ```bash
 cd /tmp/cockpit-aimock-spec
-cp examples/chat/aimock-e2e/aimock-runner.ts apps/cockpit/aimock-e2e/aimock-runner.ts
+cp examples/chat/aimock-e2e/aimock-runner.ts apps/cockpit/e2e/aimock-runner.ts
 ```
 
 - [ ] **Step 2: Copy aimock-runner.spec.ts**
 
 ```bash
-cp examples/chat/aimock-e2e/aimock-runner.spec.ts apps/cockpit/aimock-e2e/aimock-runner.spec.ts
+cp examples/chat/aimock-e2e/aimock-runner.spec.ts apps/cockpit/e2e/aimock-runner.spec.ts
 ```
 
 - [ ] **Step 3: Copy test-helpers.ts**
 
 ```bash
-cp examples/chat/aimock-e2e/test-helpers.ts apps/cockpit/aimock-e2e/test-helpers.ts
+cp examples/chat/aimock-e2e/test-helpers.ts apps/cockpit/e2e/test-helpers.ts
 ```
 
 - [ ] **Step 4: Run the runner unit tests**
 
 ```bash
-cd /tmp/cockpit-aimock-spec/apps/cockpit/aimock-e2e
+cd /tmp/cockpit-aimock-spec/apps/cockpit/e2e
 npx vitest run aimock-runner.spec.ts
 ```
 
@@ -325,9 +305,9 @@ If any test fails, STOP and report — the modules should be byte-identical to t
 
 ```bash
 cd /tmp/cockpit-aimock-spec
-git add apps/cockpit/aimock-e2e/aimock-runner.ts \
-        apps/cockpit/aimock-e2e/aimock-runner.spec.ts \
-        apps/cockpit/aimock-e2e/test-helpers.ts
+git add apps/cockpit/e2e/aimock-runner.ts \
+        apps/cockpit/e2e/aimock-runner.spec.ts \
+        apps/cockpit/e2e/test-helpers.ts
 git commit -m "feat(cockpit): copy aimock-runner and test-helpers from chat harness"
 ```
 
@@ -336,12 +316,12 @@ git commit -m "feat(cockpit): copy aimock-runner and test-helpers from chat harn
 ## Task 3: Capture the c-a2ui fixture
 
 **Files:**
-- Create: `apps/cockpit/aimock-e2e/scripts/record-c-a2ui.py`
-- Create: `apps/cockpit/aimock-e2e/fixtures/c-a2ui.json` (generated by script)
+- Create: `apps/cockpit/e2e/scripts/record-c-a2ui.py`
+- Create: `apps/cockpit/e2e/fixtures/c-a2ui.json` (generated by script)
 
 - [ ] **Step 1: Write the capture script**
 
-Write `apps/cockpit/aimock-e2e/scripts/record-c-a2ui.py`. The script mirrors `cockpit/langgraph/streaming/python/src/a2ui_graph.py`'s LLM setup. Task 0 confirmed the exact tool bindings and system prompt; adapt the imports below if they differ from `examples/chat/python`'s shape.
+Write `apps/cockpit/e2e/scripts/record-c-a2ui.py`. The script mirrors `cockpit/langgraph/streaming/python/src/a2ui_graph.py`'s LLM setup. Task 0 confirmed the exact tool bindings and system prompt; adapt the imports below if they differ from `examples/chat/python`'s shape.
 
 ```python
 """Capture the c-a2ui parent LLM's tool_call to render_a2ui_surface.
@@ -352,7 +332,7 @@ fixture aimock JSON file.
 
 Run from repo root:
   OPENAI_API_KEY=sk-... uv run --project cockpit/langgraph/streaming/python \\
-    python apps/cockpit/aimock-e2e/scripts/record-c-a2ui.py
+    python apps/cockpit/e2e/scripts/record-c-a2ui.py
 """
 import json
 import os
@@ -415,7 +395,7 @@ fixture = {
     ]
 }
 
-out_path = Path("apps/cockpit/aimock-e2e/fixtures/c-a2ui.json")
+out_path = Path("apps/cockpit/e2e/fixtures/c-a2ui.json")
 out_path.parent.mkdir(parents=True, exist_ok=True)
 out_path.write_text(json.dumps(fixture, indent=2) + "\n")
 print(f"\nWrote fixture to {out_path}")
@@ -429,10 +409,10 @@ print(f"\nWrote fixture to {out_path}")
 cd /tmp/cockpit-aimock-spec
 # .env should be present from Task 0; recreate if removed:
 cp /Users/blove/repos/angular-agent-framework/examples/chat/python/.env cockpit/langgraph/streaming/python/.env
-uv run --project cockpit/langgraph/streaming/python python apps/cockpit/aimock-e2e/scripts/record-c-a2ui.py
+uv run --project cockpit/langgraph/streaming/python python apps/cockpit/e2e/scripts/record-c-a2ui.py
 ```
 
-Expected: prints `tool=render_a2ui_surface envelopes=<N>` and writes `apps/cockpit/aimock-e2e/fixtures/c-a2ui.json`.
+Expected: prints `tool=render_a2ui_surface envelopes=<N>` and writes `apps/cockpit/e2e/fixtures/c-a2ui.json`.
 
 If `tool_calls` is empty (the LLM emitted text instead of a tool_call): STOP. The prompt may need tuning so the cockpit-a2ui-specific system prompt routes correctly to the tool. Try alternate prompts ("Render an A2UI feedback form with name, email, message fields, and a submit button"). Report the prompt that worked.
 
@@ -442,7 +422,7 @@ If imports fail: STOP. Report the exact ImportError and the file structure under
 
 ```bash
 cd /tmp/cockpit-aimock-spec
-head -30 apps/cockpit/aimock-e2e/fixtures/c-a2ui.json
+head -30 apps/cockpit/e2e/fixtures/c-a2ui.json
 ```
 
 Verify the file starts with `{"fixtures": [` and contains an `envelopes` array with at least one `surfaceUpdate` entry. Note a distinctive phrase from the surface content (e.g., a Text component's `literalString`) — Task 5's spec will assert on that phrase.
@@ -451,8 +431,8 @@ Verify the file starts with `{"fixtures": [` and contains an `envelopes` array w
 
 ```bash
 cd /tmp/cockpit-aimock-spec
-git add apps/cockpit/aimock-e2e/scripts/record-c-a2ui.py \
-        apps/cockpit/aimock-e2e/fixtures/c-a2ui.json
+git add apps/cockpit/e2e/scripts/record-c-a2ui.py \
+        apps/cockpit/e2e/fixtures/c-a2ui.json
 git commit -m "feat(cockpit): add c-a2ui fixture and capture script"
 ```
 
@@ -463,13 +443,13 @@ DO NOT commit the `.env` file at `cockpit/langgraph/streaming/python/.env` — i
 ## Task 4: Playwright config + globalSetup + globalTeardown
 
 **Files:**
-- Create: `apps/cockpit/aimock-e2e/playwright.config.ts`
-- Create: `apps/cockpit/aimock-e2e/global-setup.ts`
-- Create: `apps/cockpit/aimock-e2e/global-teardown.ts`
+- Create: `apps/cockpit/e2e/playwright.config.ts`
+- Create: `apps/cockpit/e2e/global-setup.ts`
+- Create: `apps/cockpit/e2e/global-teardown.ts`
 
 - [ ] **Step 1: Write playwright.config.ts**
 
-Write `apps/cockpit/aimock-e2e/playwright.config.ts`:
+Write `apps/cockpit/e2e/playwright.config.ts`:
 
 ```typescript
 // SPDX-License-Identifier: MIT
@@ -500,7 +480,7 @@ export default defineConfig({
 
 - [ ] **Step 2: Write global-setup.ts**
 
-Write `apps/cockpit/aimock-e2e/global-setup.ts`:
+Write `apps/cockpit/e2e/global-setup.ts`:
 
 ```typescript
 // SPDX-License-Identifier: MIT
@@ -542,7 +522,7 @@ async function waitForPort(url: string, timeoutMs: number): Promise<void> {
 export default async function globalSetup(): Promise<void> {
   const aimock = await startAimock({ mode: 'replay', fixturePath: FIXTURE_PATH });
   // eslint-disable-next-line no-console
-  console.log(`[cockpit-aimock-e2e] aimock listening at ${aimock.baseUrl}`);
+  console.log(`[cockpit] aimock listening at ${aimock.baseUrl}`);
 
   const langgraph = spawn(
     'uv',
@@ -562,7 +542,7 @@ export default async function globalSetup(): Promise<void> {
 
   await waitForPort('http://localhost:8123/ok', 90_000);
   // eslint-disable-next-line no-console
-  console.log('[cockpit-aimock-e2e] langgraph ready on :8123');
+  console.log('[cockpit] langgraph ready on :8123');
 
   const angular = spawn(
     'npx',
@@ -578,7 +558,7 @@ export default async function globalSetup(): Promise<void> {
 
   await waitForPort('http://localhost:4511/', 120_000);
   // eslint-disable-next-line no-console
-  console.log('[cockpit-aimock-e2e] angular ready on :4511');
+  console.log('[cockpit] angular ready on :4511');
 
   globalThis.__COCKPIT_AIMOCK_E2E_STATE__ = { aimock, langgraph, angular };
 }
@@ -586,7 +566,7 @@ export default async function globalSetup(): Promise<void> {
 
 - [ ] **Step 3: Write global-teardown.ts**
 
-Write `apps/cockpit/aimock-e2e/global-teardown.ts`:
+Write `apps/cockpit/e2e/global-teardown.ts`:
 
 ```typescript
 // SPDX-License-Identifier: MIT
@@ -603,7 +583,7 @@ export default async function globalTeardown(): Promise<void> {
 - [ ] **Step 4: Type-check the config**
 
 ```bash
-cd /tmp/cockpit-aimock-spec/apps/cockpit/aimock-e2e
+cd /tmp/cockpit-aimock-spec/apps/cockpit/e2e
 npx tsc --noEmit
 ```
 
@@ -613,9 +593,9 @@ Expected: no errors.
 
 ```bash
 cd /tmp/cockpit-aimock-spec
-git add apps/cockpit/aimock-e2e/playwright.config.ts \
-        apps/cockpit/aimock-e2e/global-setup.ts \
-        apps/cockpit/aimock-e2e/global-teardown.ts
+git add apps/cockpit/e2e/playwright.config.ts \
+        apps/cockpit/e2e/global-setup.ts \
+        apps/cockpit/e2e/global-teardown.ts
 git commit -m "feat(cockpit): add Playwright config with cockpit-streaming globalSetup"
 ```
 
@@ -624,17 +604,17 @@ git commit -m "feat(cockpit): add Playwright config with cockpit-streaming globa
 ## Task 5: Write the c-a2ui pilot spec
 
 **Files:**
-- Create: `apps/cockpit/aimock-e2e/c-a2ui.spec.ts`
+- Create: `apps/cockpit/e2e/c-a2ui.spec.ts`
 
 - [ ] **Step 1: Identify a phrase to assert on**
 
-Open `apps/cockpit/aimock-e2e/fixtures/c-a2ui.json` and find a distinctive text in the captured envelopes — usually a Text component's `literalString` or a Button's label. Examples that have appeared in past captures: "Submit", "Feedback", "Email", "Comments".
+Open `apps/cockpit/e2e/fixtures/c-a2ui.json` and find a distinctive text in the captured envelopes — usually a Text component's `literalString` or a Button's label. Examples that have appeared in past captures: "Submit", "Feedback", "Email", "Comments".
 
 Pick the FIRST literalString you see (the most-likely-rendered text in the surface root). Note it; Step 2 uses it.
 
 - [ ] **Step 2: Write the spec**
 
-Write `apps/cockpit/aimock-e2e/c-a2ui.spec.ts` (replace `<DISTINCTIVE_PHRASE>` with the phrase from Step 1):
+Write `apps/cockpit/e2e/c-a2ui.spec.ts` (replace `<DISTINCTIVE_PHRASE>` with the phrase from Step 1):
 
 ```typescript
 // SPDX-License-Identifier: MIT
@@ -662,7 +642,7 @@ test('c-a2ui: A2UI surface mounts inside the cockpit example shell', async ({ pa
 ```bash
 cd /tmp/cockpit-aimock-spec
 npx playwright install --with-deps chromium
-cd apps/cockpit/aimock-e2e
+cd apps/cockpit/e2e
 rm -rf test-results playwright-report
 npx playwright test c-a2ui.spec.ts
 ```
@@ -677,7 +657,7 @@ If the surface doesn't appear: capture Playwright trace from `test-results/`, ST
 - [ ] **Step 4: Run the suite three times for stability**
 
 ```bash
-cd /tmp/cockpit-aimock-spec/apps/cockpit/aimock-e2e
+cd /tmp/cockpit-aimock-spec/apps/cockpit/e2e
 for i in 1 2 3; do
   echo "=== Run $i ==="
   rm -rf test-results playwright-report ../../../../test-results
@@ -692,13 +672,13 @@ Expected: 3 consecutive clean runs (1 passed each). If any run fails, STOP and i
 
 ```bash
 cd /tmp/cockpit-aimock-spec
-git add apps/cockpit/aimock-e2e/c-a2ui.spec.ts
+git add apps/cockpit/e2e/c-a2ui.spec.ts
 git commit -m "test(cockpit): add c-a2ui aimock pilot spec"
 ```
 
 ---
 
-## Task 6: Delete old `apps/cockpit/e2e/` and its config
+## Task 6: Delete legacy specs and old playwright config, repoint cockpit e2e target
 
 **Files:**
 - Delete: `apps/cockpit/e2e/cockpit.spec.ts`
@@ -706,9 +686,9 @@ git commit -m "test(cockpit): add c-a2ui aimock pilot spec"
 - Delete: `apps/cockpit/e2e/all-examples-smoke.spec.ts`
 - Delete: `apps/cockpit/e2e/production-smoke.spec.ts`
 - Delete: `apps/cockpit/playwright.config.ts`
-- Modify: `apps/cockpit/project.json` (remove `e2e` target)
+- Modify: `apps/cockpit/project.json` (point `e2e` target's `config` at the new playwright config)
 
-- [ ] **Step 1: Delete the old e2e files**
+- [ ] **Step 1: Delete the legacy specs and old top-level playwright config**
 
 ```bash
 cd /tmp/cockpit-aimock-spec
@@ -719,13 +699,11 @@ git rm apps/cockpit/e2e/cockpit.spec.ts \
        apps/cockpit/playwright.config.ts
 ```
 
-If `apps/cockpit/e2e/` contains other files (e.g., helpers, fixtures), list them with `ls apps/cockpit/e2e/` and decide:
-- Helper files used only by the deleted specs → delete.
-- Helper files referenced from elsewhere → leave; report the reference for follow-up.
+If `apps/cockpit/e2e/` contains other unexpected files (helpers, fixtures from older work), list them with `ls apps/cockpit/e2e/` and report — Task 1–5 only added expected files.
 
-- [ ] **Step 2: Remove the e2e target from apps/cockpit/project.json**
+- [ ] **Step 2: Repoint the cockpit project's e2e target**
 
-Open `apps/cockpit/project.json` and locate the `"e2e"` target block:
+Open `apps/cockpit/project.json` and find the `"e2e"` target block. The `config` option currently reads `"apps/cockpit/playwright.config.ts"`:
 
 ```json
     "e2e": {
@@ -736,7 +714,16 @@ Open `apps/cockpit/project.json` and locate the `"e2e"` target block:
     },
 ```
 
-Delete the entire `"e2e": { ... }` entry (and the trailing comma on the preceding entry if it becomes the last one).
+Update the `config` value to point at the new harness's config:
+
+```json
+    "e2e": {
+      "executor": "@nx/playwright:playwright",
+      "options": {
+        "config": "apps/cockpit/e2e/playwright.config.ts"
+      }
+    },
+```
 
 Verify the file is still valid JSON:
 ```bash
@@ -746,39 +733,39 @@ python3 -c "import json; json.load(open('apps/cockpit/project.json'))" && echo "
 
 Expected: `OK`.
 
-- [ ] **Step 3: Verify nothing references the removed config**
+- [ ] **Step 3: Verify nothing else references the old config path**
 
 ```bash
 cd /tmp/cockpit-aimock-spec
-grep -rn "apps/cockpit/playwright.config\|apps/cockpit/e2e/" \
+grep -rn "apps/cockpit/playwright.config" \
   --include='*.ts' --include='*.json' --include='*.yml' --include='*.md' \
   | grep -v 'node_modules\|test-results\|playwright-report\|docs/superpowers/'
 ```
 
-Expected: zero matches (the spec/plan docs under `docs/superpowers/` are excluded because they document the deletion).
-
-If any matches remain, STOP and report — those references need to be cleaned up too.
+Expected: zero matches. If any reference to the old top-level `apps/cockpit/playwright.config.ts` remains, STOP and report.
 
 - [ ] **Step 4: Commit Task 6**
 
 ```bash
 cd /tmp/cockpit-aimock-spec
 git add apps/cockpit/project.json
-git commit -m "chore(cockpit): delete old e2e specs and Playwright config"
+git commit -m "chore(cockpit): drop legacy e2e specs; repoint e2e target to new harness config"
 ```
 
-The `git rm` from Step 1 staged the deletions; the `git add` here just stages the project.json modification.
+The `git rm` from Step 1 staged the deletions; the `git add` here stages the project.json modification.
 
 ---
 
-## Task 7: Update CI workflow
+## Task 7: Update existing CI cockpit-e2e job
 
 **Files:**
 - Modify: `.github/workflows/ci.yml`
 
-- [ ] **Step 1: Remove the old `cockpit-e2e` job**
+The existing `cockpit-e2e` job already invokes `npx nx e2e cockpit`, which after Task 6 drives the new harness. It just needs additional setup steps (uv install, python sync, trace upload).
 
-Open `.github/workflows/ci.yml` and find the `cockpit-e2e` job (named "Cockpit — e2e"). It looks like:
+- [ ] **Step 1: Locate and update the cockpit-e2e job**
+
+Open `.github/workflows/ci.yml` and find the `cockpit-e2e` job. Current shape:
 
 ```yaml
   cockpit-e2e:
@@ -795,15 +782,11 @@ Open `.github/workflows/ci.yml` and find the `cockpit-e2e` job (named "Cockpit �
       - run: npx nx e2e cockpit --skip-nx-cache
 ```
 
-Delete the entire block.
-
-- [ ] **Step 2: Add the new `cockpit-examples-aimock-e2e` job**
-
-Append (after the now-removed `cockpit-e2e` block, before the next job — typically `website-e2e` or `deploy`):
+Replace with:
 
 ```yaml
-  cockpit-examples-aimock-e2e:
-    name: cockpit — examples aimock e2e
+  cockpit-e2e:
+    name: Cockpit — e2e
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6.0.2
@@ -819,43 +802,25 @@ Append (after the now-removed `cockpit-e2e` block, before the next job — typic
       - working-directory: cockpit/langgraph/streaming/python
         run: uv sync
       - run: npx playwright install --with-deps chromium
-      - run: npx nx run cockpit-aimock-e2e:test --skip-nx-cache
+      - run: npx nx e2e cockpit --skip-nx-cache
       - name: Upload Playwright trace on failure
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: cockpit-aimock-e2e-trace
-          path: apps/cockpit/aimock-e2e/test-results/
+          name: cockpit-e2e-trace
+          path: apps/cockpit/e2e/test-results/
           retention-days: 7
 ```
 
-- [ ] **Step 3: Update deploy.needs**
+- [ ] **Step 2: Confirm deploy.needs is unchanged**
 
-Find the `deploy` job's `needs:` list. It currently contains `cockpit-e2e`. Replace it with `cockpit-examples-aimock-e2e`.
-
-Before:
-```yaml
-    needs:
-      [
-        library,
-        ...
-        cockpit-e2e,
-        ...
-      ]
+```bash
+grep -A20 "deploy:" /tmp/cockpit-aimock-spec/.github/workflows/ci.yml | grep cockpit
 ```
 
-After:
-```yaml
-    needs:
-      [
-        library,
-        ...
-        cockpit-examples-aimock-e2e,
-        ...
-      ]
-```
+Expected: includes `cockpit-e2e` (job name unchanged). No edit needed.
 
-- [ ] **Step 4: Verify the workflow YAML parses**
+- [ ] **Step 3: Verify the workflow YAML parses**
 
 ```bash
 cd /tmp/cockpit-aimock-spec
@@ -864,12 +829,12 @@ npx -y js-yaml .github/workflows/ci.yml > /dev/null && echo "OK"
 
 Expected: `OK`.
 
-- [ ] **Step 5: Commit Task 7**
+- [ ] **Step 4: Commit Task 7**
 
 ```bash
 cd /tmp/cockpit-aimock-spec
 git add .github/workflows/ci.yml
-git commit -m "ci(cockpit): replace Cockpit — e2e with cockpit examples aimock e2e job"
+git commit -m "ci(cockpit): wire cockpit-e2e job for aimock harness (uv + python + trace)"
 ```
 
 ---
@@ -882,7 +847,7 @@ Run the new project end-to-end one more time:
 
 ```bash
 cd /tmp/cockpit-aimock-spec
-npx nx run cockpit-aimock-e2e:test
+npx nx e2e cockpit
 ```
 
 Expected: 1 test passes.
@@ -890,7 +855,7 @@ Expected: 1 test passes.
 Then run the existing chat aimock harness to confirm nothing collateral broke:
 
 ```bash
-npx nx run examples-chat-aimock-e2e:test
+cd examples/chat/aimock-e2e && npx playwright test && cd -
 ```
 
 Expected: 9 tests pass (smoke + 3 markdown + a2ui-single-bubble + research-subagent + interrupt-approval + regenerate).
@@ -916,24 +881,25 @@ git push -u origin claude/cockpit-aimock-e2e-design
 - [ ] **Step 4: Open PR**
 
 ```bash
-gh pr create --title "feat(cockpit): aimock E2E harness — Phase 1 (c-a2ui pilot, replaces old cockpit-e2e)" --body "$(cat <<'EOF'
+gh pr create --title "feat(cockpit): aimock E2E harness — Phase 1 (c-a2ui pilot)" --body "$(cat <<'EOF'
 ## Summary
 
-New Nx project `apps/cockpit/aimock-e2e/` that replaces the existing `apps/cockpit/e2e/` entirely. Phase 1 lands the harness scaffolding + one pilot spec for the `c-a2ui` example end-to-end.
+Replaces the legacy cockpit e2e surface with an aimock-driven harness living at the existing `apps/cockpit/e2e/` location. Phase 1 lands the harness modules + one pilot spec for the `c-a2ui` example end-to-end. No new Nx project — the existing `cockpit` project's `e2e` target is repointed at the new playwright config.
 
 Sits on the chat aimock harness pattern ([#309](https://github.com/cacheplane/angular-agent-framework/pull/309) and onward). Cockpit-shell coverage is dropped — to be rebuilt separately if/when needed.
 
 ### What changed
-- New Nx project at `apps/cockpit/aimock-e2e/` with harness modules copied byte-for-byte from `examples/chat/aimock-e2e/` (acknowledged duplication).
-- Captured c-a2ui fixture + reusable capture script under `scripts/`.
-- Playwright `globalSetup` boots aimock + `cockpit/langgraph/streaming/python` (multi-graph langgraph serving 12 graphs including `c-a2ui`) + `cockpit-chat-a2ui-angular` dev server on :4511.
-- Deleted: `apps/cockpit/e2e/` (4 specs), `apps/cockpit/playwright.config.ts`, the `e2e` target in `apps/cockpit/project.json`.
-- CI: removed `Cockpit — e2e` job; added `cockpit — examples aimock e2e` job; updated `deploy.needs`.
+- Added harness modules at `apps/cockpit/e2e/` (aimock-runner, test-helpers, globalSetup/teardown, playwright config), copied byte-for-byte from `examples/chat/aimock-e2e/` where applicable.
+- Captured c-a2ui fixture + reusable capture script under `apps/cockpit/e2e/scripts/`.
+- Playwright globalSetup boots aimock + `cockpit/langgraph/streaming/python` (multi-graph langgraph serving 12 graphs including `c-a2ui`) + `cockpit-chat-a2ui-angular` dev server on :4511.
+- Deleted: 4 legacy specs in `apps/cockpit/e2e/` and the old `apps/cockpit/playwright.config.ts`.
+- `apps/cockpit/project.json`'s `e2e` target's `config` path updated to the new harness's playwright config.
+- CI: existing `Cockpit — e2e` job augmented with uv install + python sync + trace upload. Job name + position in `deploy.needs` unchanged.
 
 ### Test plan
 - [x] Local: pilot spec passes 3/3 consecutive runs
 - [x] Chat aimock harness still green (no shared-state regressions)
-- [x] No production code touched (only harness, fixtures, CI workflow, deletions)
+- [x] No production code touched (only harness, fixtures, CI workflow, deletions, one project.json config-path edit)
 - [ ] CI green on this PR
 
 ### Notes for reviewers

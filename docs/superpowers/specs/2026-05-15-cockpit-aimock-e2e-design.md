@@ -4,7 +4,7 @@
 
 ## Goal
 
-Build cross-stack E2E test coverage for cockpit example apps, modeled after the chat aimock harness ([`examples/chat/aimock-e2e/`](../../../examples/chat/aimock-e2e/)) but as a fully independent Nx project at `apps/cockpit/aimock-e2e/`. Phase 1 lands the harness scaffolding + one pilot example (`c-a2ui`). Phases 2+ add one example per PR.
+Build cross-stack E2E test coverage for cockpit example apps, modeled after the chat aimock harness ([`examples/chat/aimock-e2e/`](../../../examples/chat/aimock-e2e/)). The new harness lives at the existing `apps/cockpit/e2e/` location — it IS the cockpit e2e from here on. The cockpit Nx project's existing `e2e` target is rewired to drive the new harness. Phase 1 lands the harness scaffolding + one pilot example (`c-a2ui`). Phases 2+ add one example per PR.
 
 ## Library
 
@@ -24,10 +24,17 @@ Phase 1 deletes:
 - `apps/cockpit/e2e/dark-mode.spec.ts`
 - `apps/cockpit/e2e/all-examples-smoke.spec.ts`
 - `apps/cockpit/e2e/production-smoke.spec.ts` (orphaned — was opt-in for production checks)
-- `apps/cockpit/playwright.config.ts`
-- The `e2e` target in `apps/cockpit/project.json`
+- `apps/cockpit/playwright.config.ts` (moves into `apps/cockpit/e2e/playwright.config.ts`)
 
-The `Cockpit — e2e` CI job in `.github/workflows/ci.yml` is renamed and rewired to run the new Nx project.
+Phase 1 modifies:
+- `apps/cockpit/project.json`'s `e2e` target — points at the new `apps/cockpit/e2e/playwright.config.ts`, no other changes.
+
+Phase 1 adds (all under `apps/cockpit/e2e/`):
+- aimock harness modules (runner, helpers, globalSetup/teardown, playwright config)
+- One pilot fixture + spec for c-a2ui
+- One capture script
+
+The `Cockpit — e2e` CI job in `.github/workflows/ci.yml` is renamed/rewired (the existing `npx nx e2e cockpit` invocation now drives the new harness because the target's config path changed).
 
 The shell tests catch real regressions on Next.js routing + hydration, but cockpit-shell coverage isn't this phase's value. Per the user direction: "we can always have a cockpit web app e2e test in the future."
 
@@ -51,19 +58,22 @@ Phase 1 only covers `c-a2ui`, so only `streaming/python` is launched.
 ## File layout
 
 ```
-apps/cockpit/aimock-e2e/
+apps/cockpit/e2e/
 ├── aimock-runner.ts         # Copy of examples/chat/aimock-e2e/aimock-runner.ts.
 ├── fixtures/
 │   └── c-a2ui.json          # Captured A2UI tool-call + envelopes for the c-a2ui example.
 ├── global-setup.ts          # Boots aimock + streaming/python langgraph + c-a2ui Angular dev server.
 ├── global-teardown.ts       # Reverse order shutdown.
-├── playwright.config.ts     # Dedicated to cockpit aimock e2e.
-├── project.json             # Nx project: name "cockpit-aimock-e2e", `test` target.
+├── playwright.config.ts     # Cockpit aimock e2e Playwright config.
 ├── README.md
+├── scripts/
+│   └── record-c-a2ui.py     # Fixture-capture recipe (dev-only).
 ├── test-helpers.ts          # sendPromptAndWait helper (waiting on data-streaming="false").
 ├── tsconfig.json
 └── c-a2ui.spec.ts           # Phase 1 pilot.
 ```
+
+No new Nx project. The existing `cockpit` Nx project's `e2e` target is reused — only its `config` path changes from `apps/cockpit/playwright.config.ts` to `apps/cockpit/e2e/playwright.config.ts`. Build/serve/test targets are untouched.
 
 Module duplication from `examples/chat/aimock-e2e/`: `aimock-runner.ts` (~85 lines) and `test-helpers.ts` (~30 lines) are byte-for-byte copies. Acceptable cost for keeping the two harnesses fully independent (per user direction). Promotion to a shared library lands as a separate spec when a third harness wants the same code.
 
@@ -76,7 +86,7 @@ Identical to `examples/chat/aimock-e2e/aimock-runner.ts` as of [PR #330](https:/
 ### `global-setup.ts`
 
 Boots in order:
-1. **aimock** via the runner module, fixtures dir = `apps/cockpit/aimock-e2e/fixtures`.
+1. **aimock** via the runner module, fixtures dir = `apps/cockpit/e2e/fixtures`.
 2. **streaming/python langgraph** as a child process: `uv run langgraph dev --port 8123 --no-browser`, env `OPENAI_BASE_URL=<aimock.baseUrl>` + `OPENAI_API_KEY=test-not-used`. cwd = `cockpit/langgraph/streaming/python`.
 3. **c-a2ui Angular dev server** as a child process: `npx nx serve cockpit-chat-a2ui-angular --port 4511`. cwd = repo root.
 
@@ -121,16 +131,18 @@ Short doc covering: how to run locally, how to capture a new fixture (referencin
 
 ## CI integration
 
-### Replace the `Cockpit — e2e` job
+### Update the existing `Cockpit — e2e` job
 
 Edit `.github/workflows/ci.yml`:
 
-- **Remove** the existing `cockpit-e2e` job (which runs the now-deleted `apps/cockpit/e2e/` project).
-- **Add** a new `cockpit-examples-aimock-e2e` job, modeled on the `examples/chat — aimock e2e` job from [PR #309](https://github.com/cacheplane/angular-agent-framework/pull/309):
+- **Keep** the existing `cockpit-e2e` job (named "Cockpit — e2e"). It already invokes `npx nx e2e cockpit`, which after this phase drives the new harness because `apps/cockpit/project.json`'s `e2e` target points at the new playwright config.
+- **Add** the steps the new harness needs (uv install, python sync, fail-trace upload). The chromium install is already there.
+
+The updated job body:
 
 ```yaml
-cockpit-examples-aimock-e2e:
-  name: cockpit — examples aimock e2e
+cockpit-e2e:
+  name: Cockpit — e2e
   runs-on: ubuntu-latest
   steps:
     - uses: actions/checkout@v6.0.2
@@ -146,38 +158,38 @@ cockpit-examples-aimock-e2e:
     - working-directory: cockpit/langgraph/streaming/python
       run: uv sync
     - run: npx playwright install --with-deps chromium
-    - run: npx nx run cockpit-aimock-e2e:test --skip-nx-cache
+    - run: npx nx e2e cockpit --skip-nx-cache
     - name: Upload Playwright trace on failure
       if: failure()
       uses: actions/upload-artifact@v4
       with:
-        name: cockpit-aimock-e2e-trace
-        path: apps/cockpit/aimock-e2e/test-results/
+        name: cockpit-e2e-trace
+        path: apps/cockpit/e2e/test-results/
         retention-days: 7
 ```
 
-- **Update** the `deploy` job's `needs:` list: remove `cockpit-e2e`, add `cockpit-examples-aimock-e2e`.
+- **No `deploy.needs` change** — the job name stays `cockpit-e2e` so the existing entry in the `deploy` job's `needs:` list keeps working.
 
 ## Local dev workflow
 
 ```
 # Run the suite (replay only — no OPENAI_API_KEY needed)
-npx nx run cockpit-aimock-e2e:test
+npx nx e2e cockpit
 
 # Capture or refresh a fixture (needs OPENAI_API_KEY)
 OPENAI_API_KEY=sk-... uv run --project cockpit/langgraph/streaming/python \
-  python apps/cockpit/aimock-e2e/scripts/record-<example>.py
+  python apps/cockpit/e2e/scripts/record-<example>.py
 ```
 
-Each captured fixture's recipe script is committed to `apps/cockpit/aimock-e2e/scripts/` (different from the chat harness — these scripts are useful enough to keep around for refresh, unlike the truly-throwaway Phase 2c script). The script is dev-only; CI never runs it.
+Each captured fixture's recipe script is committed to `apps/cockpit/e2e/scripts/` (different from the chat harness — these scripts are useful enough to keep around for refresh, unlike the truly-throwaway Phase 2c script). The script is dev-only; CI never runs it.
 
 ## Coordination with open PR #339
 
-[PR #339](https://github.com/cacheplane/angular-agent-framework/pull/339) modifies `apps/cockpit/playwright.config.ts` and `apps/website/playwright.config.ts` to scope to chromium and drops two orphaned worktree gitlinks. This phase deletes `apps/cockpit/playwright.config.ts` outright, making the cockpit half of #339 moot.
+[PR #339](https://github.com/cacheplane/angular-agent-framework/pull/339) modifies `apps/cockpit/playwright.config.ts` and `apps/website/playwright.config.ts` to scope to chromium and drops two orphaned worktree gitlinks. This phase deletes `apps/cockpit/playwright.config.ts` (moves into `apps/cockpit/e2e/playwright.config.ts`), making the cockpit half of #339 moot.
 
 Coordination plan:
 - Merge #339 first (it's a clean small fix; reviewers expect it).
-- Then this phase deletes `apps/cockpit/e2e/` and `apps/cockpit/playwright.config.ts`, superseding the cockpit half of #339.
+- Then this phase deletes the old `apps/cockpit/playwright.config.ts` and replaces it with `apps/cockpit/e2e/playwright.config.ts`, superseding the cockpit half of #339.
 - The website half of #339 (`apps/website/playwright.config.ts` and the gitlink removal) is kept and continues to provide value.
 
 ## Risks and unknowns
@@ -190,15 +202,15 @@ Coordination plan:
 ## Acceptance criteria
 
 Phase 1 merges when:
-- `apps/cockpit/e2e/` directory and its 4 specs are deleted.
-- `apps/cockpit/playwright.config.ts` is deleted.
-- `apps/cockpit/project.json`'s `e2e` target is removed.
-- New Nx project at `apps/cockpit/aimock-e2e/` exists and `nx run cockpit-aimock-e2e:test` passes locally + in CI.
+- The four existing specs at `apps/cockpit/e2e/` (cockpit, dark-mode, all-examples-smoke, production-smoke) are deleted.
+- `apps/cockpit/playwright.config.ts` is deleted (moved to `apps/cockpit/e2e/playwright.config.ts`).
+- `apps/cockpit/project.json`'s `e2e` target's `config` path points to the new `apps/cockpit/e2e/playwright.config.ts`.
+- New harness modules + fixture + pilot spec live under `apps/cockpit/e2e/`.
+- `nx e2e cockpit` passes locally + in CI against the new harness.
 - One pilot spec (`c-a2ui.spec.ts`) passes 3/3 consecutive local runs with retry-free CI.
-- One committed fixture at `apps/cockpit/aimock-e2e/fixtures/c-a2ui.json`, captured from a real `gpt-5-mini` run.
-- One capture script at `apps/cockpit/aimock-e2e/scripts/record-c-a2ui.py` for fixture refresh.
-- The new `cockpit — examples aimock e2e` CI job runs in parallel with the existing `examples/chat — aimock e2e` job and is in the `deploy` job's `needs:` list.
-- The old `Cockpit — e2e` CI job is removed from `.github/workflows/ci.yml`.
+- One committed fixture at `apps/cockpit/e2e/fixtures/c-a2ui.json`, captured from a real `gpt-5-mini` run.
+- One capture script at `apps/cockpit/e2e/scripts/record-c-a2ui.py` for fixture refresh.
+- The existing `Cockpit — e2e` CI job is updated with the steps the new harness needs (uv install, python sync, fail-trace upload); job name + position in `deploy.needs` unchanged.
 
 ## What lands next (Phases 2+, NOT this phase)
 
