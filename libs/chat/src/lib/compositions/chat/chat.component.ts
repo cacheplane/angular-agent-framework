@@ -548,7 +548,10 @@ export class ChatComponent {
 
   /**
    * Clears local view state (classifiers, surface store, lifecycle counters)
-   * for a new thread. firstMessageSent is sticky and intentionally not reset.
+   * for a new thread.
+   *
+   * Resets messageCount to 0 and inputSubmittedAt to null. componentReady and
+   * firstMessageSent are NOT reset (sticky for the chat instance lifetime).
    */
   clearThread(): void {
     this.clearClassifiers();

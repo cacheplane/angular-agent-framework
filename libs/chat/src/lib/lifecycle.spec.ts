@@ -62,4 +62,12 @@ describe('ChatLifecycle integration', () => {
     chatRef.clearThread();
     expect(lifecycle.inputSubmittedAt()).toBe(null);
   });
+
+  test('onUserSubmitted increments messageCount and flips firstMessageSent to true', () => {
+    expect(lifecycle.messageCount()).toBe(0);
+    expect(lifecycle.firstMessageSent()).toBe(false);
+    chatRef.onUserSubmitted();
+    expect(lifecycle.messageCount()).toBe(1);
+    expect(lifecycle.firstMessageSent()).toBe(true);
+  });
 });
