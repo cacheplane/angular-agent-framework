@@ -1,6 +1,6 @@
 {
   "name": "@ngaf/ag-ui",
-  "version": "0.0.30",
+  "version": "0.0.31",
   "peerDependencies": {
     "@ngaf/chat": "*",
     "@ngaf/licensing": "*",
