@@ -28,7 +28,7 @@ import { ApprovalCardComponent } from './views/approval-card.component';
       <div main class="flex flex-col h-full">
         <chat [agent]="agent" [views]="ui" [store]="uiStore" class="flex-1 min-w-0" />
         @if (agent.interrupt()) {
-          <div class="p-4" style="border-top: 1px solid var(--chat-border, #333);">
+          <div class="p-4" style="border-top: 1px solid var(--ngaf-chat-separator);">
             <chat-interrupt-panel [agent]="agent" (action)="onInterruptAction($event)" />
           </div>
         }

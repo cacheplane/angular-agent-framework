@@ -30,11 +30,11 @@ interface Thread {
 
       <div sidebar
         class="flex flex-col"
-        style="background: var(--chat-bg-alt); color: var(--chat-text);"
+        style="background: var(--ngaf-chat-surface-alt); color: var(--ngaf-chat-text);"
       >
         <div
           class="px-3 py-2 text-xs font-semibold uppercase tracking-wide border-b"
-          style="border-color: var(--chat-border); color: var(--chat-text-muted)"
+          style="border-color: var(--ngaf-chat-separator); color: var(--ngaf-chat-text-muted)"
         >
           Threads
         </div>
@@ -44,9 +44,9 @@ interface Thread {
             <button
               class="w-full text-left px-3 py-2 text-sm truncate transition-colors"
               [class.font-semibold]="thread.id === activeThreadId()"
-              [style.background]="thread.id === activeThreadId() ? 'var(--chat-bg-hover)' : 'transparent'"
-              (mouseenter)="$event.currentTarget.style.background = 'var(--chat-bg-hover)'"
-              (mouseleave)="$event.currentTarget.style.background = thread.id === activeThreadId() ? 'var(--chat-bg-hover)' : 'transparent'"
+              [style.background]="thread.id === activeThreadId() ? 'var(--ngaf-chat-surface-alt)' : 'transparent'"
+              (mouseenter)="$event.currentTarget.style.background = 'var(--ngaf-chat-surface-alt)'"
+              (mouseleave)="$event.currentTarget.style.background = thread.id === activeThreadId() ? 'var(--ngaf-chat-surface-alt)' : 'transparent'"
               (click)="switchThread(thread.id)"
             >
               {{ thread.label }}
@@ -54,10 +54,10 @@ interface Thread {
           }
         </div>
 
-        <div class="p-2 border-t" style="border-color: var(--chat-border)">
+        <div class="p-2 border-t" style="border-color: var(--ngaf-chat-separator)">
           <button
             class="w-full rounded px-3 py-1.5 text-sm font-medium transition-colors"
-            style="background: var(--chat-bg-hover); color: var(--chat-text);"
+            style="background: var(--ngaf-chat-surface-alt); color: var(--ngaf-chat-text);"
             (mouseenter)="$event.currentTarget.style.opacity = '0.8'"
             (mouseleave)="$event.currentTarget.style.opacity = '1'"
             (click)="newThread()"
