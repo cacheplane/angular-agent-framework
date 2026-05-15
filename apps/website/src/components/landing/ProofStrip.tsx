@@ -23,9 +23,9 @@ const SIGNALS: Signal[] = [
     href: null,
   },
   {
-    label: 'Reference app',
-    value: 'cockpit.cacheplane.ai',
-    href: 'https://cockpit.cacheplane.ai',
+    label: 'Try it live',
+    value: 'demo.cacheplane.ai',
+    href: 'https://demo.cacheplane.ai',
   },
   {
     label: 'On npm',
