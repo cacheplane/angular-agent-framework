@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { tokens } from '@ngaf/design-tokens';
 import { BrowserFrame } from '../ui/BrowserFrame';
 
-export function LiveCockpitFrame() {
+export function LiveDemoFrame() {
   const ref = useRef<HTMLDivElement>(null);
   const [shouldLoad, setShouldLoad] = useState(false);
 
@@ -28,11 +28,11 @@ export function LiveCockpitFrame() {
 
   return (
     <div ref={ref}>
-      <BrowserFrame url="cockpit.cacheplane.ai" elevation="lg">
+      <BrowserFrame url="demo.cacheplane.ai" elevation="lg">
         {shouldLoad ? (
           <iframe
-            src="https://cockpit.cacheplane.ai"
-            title="Cockpit — Angular Agent Framework reference app"
+            src="https://demo.cacheplane.ai"
+            title="Canonical demo — @ngaf/chat running against the shared LangGraph backend"
             loading="lazy"
             style={{
               width: '100%',
@@ -54,7 +54,7 @@ export function LiveCockpitFrame() {
               fontSize: 13,
             }}
           >
-            Loading live demo…
+            Loading demo…
           </div>
         )}
       </BrowserFrame>
