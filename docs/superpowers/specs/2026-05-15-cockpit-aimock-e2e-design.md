@@ -1,0 +1,210 @@
+# Cockpit aimock E2E — design
+
+> **Place in the larger plan.** Cockpit examples (15+ Angular apps demonstrating different agent capabilities) have no automated agent-flow coverage today: the existing `apps/cockpit/e2e/all-examples-smoke.spec.ts` either checks UI shell only or skips when `OPENAI_API_KEY` is absent (so the send-message tests are dead in CI). This design proposes a new Nx project that replaces the existing cockpit e2e surface entirely with aimock-driven per-example coverage.
+
+## Goal
+
+Build cross-stack E2E test coverage for cockpit example apps, modeled after the chat aimock harness ([`examples/chat/aimock-e2e/`](../../../examples/chat/aimock-e2e/)) but as a fully independent Nx project at `apps/cockpit/aimock-e2e/`. Phase 1 lands the harness scaffolding + one pilot example (`c-a2ui`). Phases 2+ add one example per PR.
+
+## Library
+
+Same as the chat harness: [`@copilotkit/aimock`](https://github.com/CopilotKit/aimock). The runner uses the `addFixturesFromJSON` API (proven in Phase 2d) so fixture entries can carry richer match shapes (`toolName`, `hasToolResult`, `turnIndex`).
+
+## Non-goals
+
+- Cockpit web-app shell coverage (the `cockpit.spec.ts` and `dark-mode.spec.ts` flows in the existing `apps/cockpit/e2e/` project). The existing project is deleted. A separate effort can rebuild cockpit-shell coverage if needed.
+- Replacing the chat aimock harness at `examples/chat/aimock-e2e/`. Fully independent.
+- Multi-product coverage in Phase 1 (e.g., deep-agents, ag-ui, render). The pilot is langgraph-product-only; other products can be added later.
+- Production code changes outside of CI workflow files and the new Nx project (no proxy.conf changes, no app code changes).
+
+## What "replace the existing cockpit e2e" means concretely
+
+Phase 1 deletes:
+- `apps/cockpit/e2e/cockpit.spec.ts`
+- `apps/cockpit/e2e/dark-mode.spec.ts`
+- `apps/cockpit/e2e/all-examples-smoke.spec.ts`
+- `apps/cockpit/e2e/production-smoke.spec.ts` (orphaned — was opt-in for production checks)
+- `apps/cockpit/playwright.config.ts`
+- The `e2e` target in `apps/cockpit/project.json`
+
+The `Cockpit — e2e` CI job in `.github/workflows/ci.yml` is renamed and rewired to run the new Nx project.
+
+The shell tests catch real regressions on Next.js routing + hydration, but cockpit-shell coverage isn't this phase's value. Per the user direction: "we can always have a cockpit web app e2e test in the future."
+
+## Architecture
+
+```
+[Playwright test on CI/local]
+    ↓ drives real Chromium
+[Angular dev server :4511 (cockpit-chat-a2ui-angular)]
+    ↓ /api proxy → :8123
+[LangGraph dev server :8123 (cockpit/langgraph/streaming/python)]
+    ↓ OPENAI_BASE_URL=http://localhost:AIMOCK_PORT/v1
+[aimock node process]
+    ↑ reads fixtures/*.json
+```
+
+The langgraph deployment at `cockpit/langgraph/streaming/python/langgraph.json` already registers 12 graphs (streaming, c-a2ui, c-messages, c-generative-ui, etc.) from one process. The pilot uses graph `c-a2ui`. Future per-example specs that hit graphs in `streaming/python` reuse the same langgraph process; specs that need a graph from a different python project (e.g., `memory`, `interrupts`) get a second langgraph spawned by globalSetup on a different port + a per-example proxy override.
+
+Phase 1 only covers `c-a2ui`, so only `streaming/python` is launched.
+
+## File layout
+
+```
+apps/cockpit/aimock-e2e/
+├── aimock-runner.ts         # Copy of examples/chat/aimock-e2e/aimock-runner.ts.
+├── fixtures/
+│   └── c-a2ui.json          # Captured A2UI tool-call + envelopes for the c-a2ui example.
+├── global-setup.ts          # Boots aimock + streaming/python langgraph + c-a2ui Angular dev server.
+├── global-teardown.ts       # Reverse order shutdown.
+├── playwright.config.ts     # Dedicated to cockpit aimock e2e.
+├── project.json             # Nx project: name "cockpit-aimock-e2e", `test` target.
+├── README.md
+├── test-helpers.ts          # sendPromptAndWait helper (waiting on data-streaming="false").
+├── tsconfig.json
+└── c-a2ui.spec.ts           # Phase 1 pilot.
+```
+
+Module duplication from `examples/chat/aimock-e2e/`: `aimock-runner.ts` (~85 lines) and `test-helpers.ts` (~30 lines) are byte-for-byte copies. Acceptable cost for keeping the two harnesses fully independent (per user direction). Promotion to a shared library lands as a separate spec when a third harness wants the same code.
+
+## Components
+
+### `aimock-runner.ts`
+
+Identical to `examples/chat/aimock-e2e/aimock-runner.ts` as of [PR #330](https://github.com/cacheplane/angular-agent-framework/pull/330). Uses `LLMock({ port: 0, chunkSize: 4096 })` and `mock.addFixturesFromJSON(entries)` so fixture entries can carry the full match-discriminator surface aimock supports.
+
+### `global-setup.ts`
+
+Boots in order:
+1. **aimock** via the runner module, fixtures dir = `apps/cockpit/aimock-e2e/fixtures`.
+2. **streaming/python langgraph** as a child process: `uv run langgraph dev --port 8123 --no-browser`, env `OPENAI_BASE_URL=<aimock.baseUrl>` + `OPENAI_API_KEY=test-not-used`. cwd = `cockpit/langgraph/streaming/python`.
+3. **c-a2ui Angular dev server** as a child process: `npx nx serve cockpit-chat-a2ui-angular --port 4511`. cwd = repo root.
+
+Waits for each to be ready (HTTP GET `/ok` or `/`) with a 60–120s timeout before proceeding.
+
+When future phases add examples hitting a different python project (e.g., `cockpit/langgraph/memory/python`), the globalSetup grows to spawn the additional langgraph processes on different ports. The Angular env per-example already knows its langgraph URL via `environment.langGraphApiUrl`; for cross-port deployments, we either override that env at build time or use a thin per-example proxy config update. Deferred until needed.
+
+### `test-helpers.ts`
+
+`sendPromptAndWait(page, prompt)` — exact copy of the helper from [PR #327](https://github.com/cacheplane/angular-agent-framework/pull/327). Waits on `chat-message[data-role="assistant"][data-streaming="false"]` before returning the finalized bubble locator.
+
+### `playwright.config.ts`
+
+Standard Playwright config:
+- `testDir: '.'`
+- `testMatch: '**/*.spec.ts'`
+- `testIgnore: ['aimock-runner.spec.ts']` if a runner spec is added later (Phase 1 doesn't include one — runner is copy-pasted and already exercised by the chat harness).
+- `projects: [{ name: 'chromium', use: devices['Desktop Chrome'] }]` to suppress the webkit-deps warning being addressed in [PR #339](https://github.com/cacheplane/angular-agent-framework/pull/339).
+- `globalSetup`, `globalTeardown` wired.
+- `workers: 1`, `fullyParallel: false` for Phase 1 (single langgraph, single Angular dev server can't safely run parallel tests yet).
+- `retries: 2` in CI, `0` locally.
+
+### `c-a2ui.spec.ts` (Phase 1 pilot)
+
+Captures real A2UI tool-call response from `gpt-5-mini` for a fixed prompt (same capture-script pattern as Phase 2c). Asserts:
+
+1. `<a2ui-surface>` is attached within the conversation body.
+2. The assistant bubble carries `data-streaming="false"` after the surface mounts (durable streaming-finalized signal).
+3. A specific phrase from the captured fixture appears in the surface content — proves the envelopes flowed through the chat composition's content classifier and into the surface store.
+
+Matches the strictness level chosen during brainstorming ("B" — surface + streaming-finalized + content phrase, no per-component structural assertions).
+
+### `fixtures/c-a2ui.json`
+
+Captured from a real `gpt-5-mini` run via a one-shot python script that mirrors the c-a2ui graph's LLM setup (bound tools, system prompt). Same capture pattern as Phase 2c — the python script is throwaway, the JSON fixture is committed.
+
+The fixture's `match.userMessage` exact-matches the prompt the spec sends. The `response` carries `toolCalls[]` with the captured A2UI envelopes as `arguments`. No continuation entry needed for Phase 1 — the assertion is on the surface render, not on a follow-up final answer.
+
+### `README.md`
+
+Short doc covering: how to run locally, how to capture a new fixture (referencing the throwaway python script pattern), what each file is for, links to the chat harness for the analogous infrastructure.
+
+## CI integration
+
+### Replace the `Cockpit — e2e` job
+
+Edit `.github/workflows/ci.yml`:
+
+- **Remove** the existing `cockpit-e2e` job (which runs the now-deleted `apps/cockpit/e2e/` project).
+- **Add** a new `cockpit-examples-aimock-e2e` job, modeled on the `examples/chat — aimock e2e` job from [PR #309](https://github.com/cacheplane/angular-agent-framework/pull/309):
+
+```yaml
+cockpit-examples-aimock-e2e:
+  name: cockpit — examples aimock e2e
+  runs-on: ubuntu-latest
+  steps:
+    - uses: actions/checkout@v6.0.2
+    - uses: actions/setup-node@v6.3.0
+      with:
+        node-version: 22
+        cache: npm
+    - name: Install uv
+      uses: astral-sh/setup-uv@v8.0.0
+      with:
+        python-version: '3.12'
+    - run: npm ci
+    - working-directory: cockpit/langgraph/streaming/python
+      run: uv sync
+    - run: npx playwright install --with-deps chromium
+    - run: npx nx run cockpit-aimock-e2e:test --skip-nx-cache
+    - name: Upload Playwright trace on failure
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: cockpit-aimock-e2e-trace
+        path: apps/cockpit/aimock-e2e/test-results/
+        retention-days: 7
+```
+
+- **Update** the `deploy` job's `needs:` list: remove `cockpit-e2e`, add `cockpit-examples-aimock-e2e`.
+
+## Local dev workflow
+
+```
+# Run the suite (replay only — no OPENAI_API_KEY needed)
+npx nx run cockpit-aimock-e2e:test
+
+# Capture or refresh a fixture (needs OPENAI_API_KEY)
+OPENAI_API_KEY=sk-... uv run --project cockpit/langgraph/streaming/python \
+  python apps/cockpit/aimock-e2e/scripts/record-<example>.py
+```
+
+Each captured fixture's recipe script is committed to `apps/cockpit/aimock-e2e/scripts/` (different from the chat harness — these scripts are useful enough to keep around for refresh, unlike the truly-throwaway Phase 2c script). The script is dev-only; CI never runs it.
+
+## Coordination with open PR #339
+
+[PR #339](https://github.com/cacheplane/angular-agent-framework/pull/339) modifies `apps/cockpit/playwright.config.ts` and `apps/website/playwright.config.ts` to scope to chromium and drops two orphaned worktree gitlinks. This phase deletes `apps/cockpit/playwright.config.ts` outright, making the cockpit half of #339 moot.
+
+Coordination plan:
+- Merge #339 first (it's a clean small fix; reviewers expect it).
+- Then this phase deletes `apps/cockpit/e2e/` and `apps/cockpit/playwright.config.ts`, superseding the cockpit half of #339.
+- The website half of #339 (`apps/website/playwright.config.ts` and the gitlink removal) is kept and continues to provide value.
+
+## Risks and unknowns
+
+- **streaming/python boot time.** The c-a2ui graph is registered alongside 11 other graphs in `streaming/python/langgraph.json`. Cold start may be slower than the chat harness's `examples/chat/python` startup. Mitigation: `waitForPort` timeout = 90s (vs. 60s for chat). Real measurement happens during Task 0 de-risk.
+- **OPENAI_BASE_URL handoff for cockpit.** Phase 2a verified this works for `examples/chat/python`. The cockpit `streaming/python` agent code might construct OpenAI clients differently. Task 0 de-risk reads `cockpit/langgraph/streaming/python/src/` and confirms no hardcoded `base_url=` overrides.
+- **Angular nx serve startup time.** Each cockpit example uses `@angular/build:dev-server`. First serve may be ~30s including a cold build. Spec timeouts (`toBeAttached({ timeout: 45_000 })`) need to be generous enough.
+- **Future per-example proxy concerns.** When phases 2+ add examples hitting a python project other than `streaming/python`, the per-example proxy target (currently always `:8123`) needs a per-example mapping. This is a future-phase concern — Phase 1 doesn't need it.
+
+## Acceptance criteria
+
+Phase 1 merges when:
+- `apps/cockpit/e2e/` directory and its 4 specs are deleted.
+- `apps/cockpit/playwright.config.ts` is deleted.
+- `apps/cockpit/project.json`'s `e2e` target is removed.
+- New Nx project at `apps/cockpit/aimock-e2e/` exists and `nx run cockpit-aimock-e2e:test` passes locally + in CI.
+- One pilot spec (`c-a2ui.spec.ts`) passes 3/3 consecutive local runs with retry-free CI.
+- One committed fixture at `apps/cockpit/aimock-e2e/fixtures/c-a2ui.json`, captured from a real `gpt-5-mini` run.
+- One capture script at `apps/cockpit/aimock-e2e/scripts/record-c-a2ui.py` for fixture refresh.
+- The new `cockpit — examples aimock e2e` CI job runs in parallel with the existing `examples/chat — aimock e2e` job and is in the `deploy` job's `needs:` list.
+- The old `Cockpit — e2e` CI job is removed from `.github/workflows/ci.yml`.
+
+## What lands next (Phases 2+, NOT this phase)
+
+For sizing, the likely follow-up shape (one PR per phase):
+
+- **Phase 2** — second `c-*` example from the streaming/python langgraph (e.g., `c-tool-calls`, `c-interrupts`, `c-subagents`, `c-generative-ui`). Reuses the existing langgraph process; just adds a fixture + spec file.
+- **Phase 3** — first example from a different python project (e.g., `memory` from `cockpit/langgraph/memory/python`). Tests the multi-langgraph globalSetup pattern.
+- **Phase 4+** — one PR per remaining cockpit example, prioritized by which capabilities have shipped product regressions historically.
+- **Eventually** — promote the duplicated `aimock-runner.ts` + `test-helpers.ts` to a shared `libs/internal/aimock-harness/` library when a third harness is on the horizon.
