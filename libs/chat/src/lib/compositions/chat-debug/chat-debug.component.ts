@@ -48,8 +48,8 @@ interface TabEntry {
     /* ── Status pill launcher ─────────────────────────────────────── */
     .launcher {
       position: fixed;
-      bottom: 20px;
-      left: 20px;
+      top: 20px;
+      right: 20px;
       display: inline-flex;
       align-items: center;
       justify-content: center;
