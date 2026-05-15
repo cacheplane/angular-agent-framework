@@ -8,6 +8,27 @@ export const CHAT_MESSAGE_STYLES = `
     margin-top: 0.5rem;
   }
   :host([data-role="user"][data-prev-role="assistant"]) { margin-top: 1.5rem; }
+  /*
+   * For user-role messages, the bubble's containing column must size to
+   * content rather than collapse via the flex chain. Without this, the
+   * bubble's max-width: 80% (defined below) resolves against a collapsed
+   * parent (~58px instead of the full row), capping the bubble below
+   * intrinsic single-word width and forcing mid-word wraps like
+   * "hello" → "hel" / "lo". See PR #313 follow-up.
+   */
+  :host([data-role="user"]) .chat-message__main {
+    flex: none;
+    width: fit-content;
+    max-width: 80%;
+  }
+  /*
+   * Assistant bubbles aren't in the flex collapse path, so the 80% cap
+   * lives on the bubble itself for that role. (User bubbles get the cap
+   * on .chat-message__main above instead.)
+   */
+  :host([data-role="assistant"]) .chat-message__bubble {
+    max-width: 80%;
+  }
   :host([data-role="assistant"]) {
     display: block;
     position: relative;
@@ -20,8 +41,12 @@ export const CHAT_MESSAGE_STYLES = `
   :host([data-role="assistant"]):first-child { margin-top: 0; }
 
   .chat-message__bubble {
+    /*
+     * No max-width here for user-role bubbles — the cap is applied on
+     * .chat-message__main above. Assistant-role bubbles inherit the
+     * host's max-width: 100% so no per-bubble cap needed either.
+     */
     width: fit-content;
-    max-width: 80%;
     padding: 8px 12px;
     border-radius: var(--ngaf-chat-radius-bubble);
     background: var(--ngaf-chat-primary);
