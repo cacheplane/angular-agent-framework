@@ -22,7 +22,7 @@ describe('cssVars(theme)', () => {
     const vars = cssVars('dark');
 
     it('uses dark canvas color', () => {
-      expect(vars['--ds-canvas']).toBe('#0e1117');
+      expect(vars['--ds-canvas']).toBe('rgb(17, 17, 17)');
     });
 
     it('uses bright-blue accent', () => {
@@ -30,7 +30,7 @@ describe('cssVars(theme)', () => {
     });
 
     it('uses near-white text on dark surfaces', () => {
-      expect(vars['--ds-text-primary']).toBe('#e8e9eb');
+      expect(vars['--ds-text-primary']).toBe('rgb(245, 245, 245)');
     });
   });
 

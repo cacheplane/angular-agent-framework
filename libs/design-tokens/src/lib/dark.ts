@@ -2,26 +2,27 @@ import { baseTokens } from './base';
 
 /**
  * Theme-variant tokens resolved for the dark theme.
- * Brand-blue undertone palette: #0e1117 content, #161b25 sidebar, #23293a borders.
+ * Neutral-dark palette aligned to @ngaf/chat lib's dark aesthetic so embedded
+ * chat surfaces unify with cockpit chrome (no iframe color seam).
  */
 export const darkOverrides = Object.freeze({
   // Surfaces
-  canvas: '#0e1117',
-  surface: '#161b25',
-  surfaceTinted: '#1c2230',
-  surfaceDim: '#0b0e15',
-  border: '#23293a',
-  borderStrong: '#2f3648',
+  canvas: 'rgb(17, 17, 17)',
+  surface: 'rgb(28, 28, 28)',
+  surfaceTinted: 'rgb(44, 44, 44)',
+  surfaceDim: 'rgb(10, 10, 10)',
+  border: 'rgb(45, 45, 45)',
+  borderStrong: 'rgb(60, 60, 60)',
 
   // Text
-  textPrimary: '#e8e9eb',
-  textSecondary: '#a0a4ad',
-  textMuted: '#6b6f7a',
-  textInverted: '#0e1117',
+  textPrimary: 'rgb(245, 245, 245)',
+  textSecondary: 'rgb(200, 200, 200)',
+  textMuted: 'rgb(160, 160, 160)',
+  textInverted: 'rgb(17, 17, 17)',
 
   // Legacy surface aliases
-  bg: '#0e1117',
-  sidebarBg: 'rgba(22, 27, 37, 0.65)',
+  bg: 'rgb(17, 17, 17)',
+  sidebarBg: 'rgba(28, 28, 28, 0.65)',
 
   // Semantic accent maps to the bright-blue brand color (readable on dark surfaces)
   accent: baseTokens.brand.accentLight,

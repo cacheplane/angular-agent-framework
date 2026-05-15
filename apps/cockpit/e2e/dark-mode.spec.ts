@@ -10,7 +10,7 @@ test.describe('dark mode', () => {
     const canvas = await page
       .locator('html')
       .evaluate((el) => getComputedStyle(el).getPropertyValue('--ds-canvas').trim());
-    expect(canvas).toBe('#0e1117');
+    expect(canvas).toBe('rgb(17, 17, 17)');
   });
 
   test('honors theme=light cookie on server render', async ({ page, context }) => {

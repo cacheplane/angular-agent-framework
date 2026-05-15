@@ -12,13 +12,13 @@ describe('installEmbeddedTheme', () => {
     installEmbeddedTheme();
     expect(document.documentElement.dataset.theme).toBe('dark');
     // Verify a representative --ds-* var got set to the dark value
-    expect(document.documentElement.style.getPropertyValue('--ds-canvas').trim()).toBe('#0e1117');
+    expect(document.documentElement.style.getPropertyValue('--ds-canvas').trim()).toBe('rgb(17, 17, 17)');
   });
 
   it('accepts a non-default initial theme', () => {
     installEmbeddedTheme('light');
     expect(document.documentElement.dataset.theme).toBe('light');
-    expect(document.documentElement.style.getPropertyValue('--ds-canvas').trim()).toBe('#fafbfc');
+    expect(document.documentElement.style.getPropertyValue('--ds-canvas').trim()).toBe('rgb(255, 255, 255)');
   });
 
   it('posts ngaf:theme-request to window.parent on call', () => {
@@ -33,7 +33,7 @@ describe('installEmbeddedTheme', () => {
       new MessageEvent('message', { data: { type: 'ngaf:theme', theme: 'light' } })
     );
     expect(document.documentElement.dataset.theme).toBe('light');
-    expect(document.documentElement.style.getPropertyValue('--ds-canvas').trim()).toBe('#fafbfc');
+    expect(document.documentElement.style.getPropertyValue('--ds-canvas').trim()).toBe('rgb(255, 255, 255)');
   });
 
   it('ignores malformed messages', () => {
