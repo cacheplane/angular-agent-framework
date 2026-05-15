@@ -1,24 +1,14 @@
 // SPDX-License-Identifier: MIT
 import { test, expect } from '@playwright/test';
+import { sendPromptAndWait } from './test-helpers';
 
 test('a2ui single bubble: one assistant bubble carries the rendered surface', async ({ page }) => {
-  await page.goto('/embed');
+  await sendPromptAndWait(page, 'Demo: render a feedback form');
 
-  const input = page.getByRole('textbox', { name: /message|prompt/i });
-  await input.fill('Demo: render a feedback form');
-  await page.getByRole('button', { name: /send/i }).click();
-
-  // Surface element materializes in the DOM. Use toBeAttached rather than
-  // toBeVisible — the bubble container can have zero computed size during
-  // progressive mount and Playwright's strict visibility heuristic flags
-  // that even when the surface is rendering correctly.
+  // After the assistant turn finalizes, the surface element is in the DOM.
   const surface = page.locator('a2ui-surface');
-  await expect(surface).toBeAttached({ timeout: 45_000 });
-
-  // Surface has the rendered Column structure (from the captured fixture).
-  await expect.poll(async () => surface.locator('a2ui-column, [class*="column"]').count(), {
-    timeout: 30_000,
-  }).toBeGreaterThan(0);
+  await expect(surface).toBeAttached();
+  await expect(surface.locator('a2ui-column, [class*="column"]').first()).toBeAttached();
 
   // Single-bubble invariant (PR #297): exactly one <chat-message> carries the
   // assistant turn. Skeleton residue from progressive mount must not survive.
