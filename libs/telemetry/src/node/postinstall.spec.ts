@@ -35,7 +35,7 @@ describe('postinstall script', () => {
     expect(stdout.join('')).toMatch(/DO_NOT_TRACK=1/);
   });
 
-  test('suppresses stdout notice when CI=true', async () => {
+  test('CI=true is full opt-out: no event sent and no stdout notice', async () => {
     const stdout: string[] = [];
     await capturePostinstallScript({
       readPackageJson: () => ({ name: '@ngaf/telemetry', version: '0.0.31' }),
@@ -43,6 +43,18 @@ describe('postinstall script', () => {
       env: { ...process.env, CI: 'true' },
     });
     expect(stdout).toEqual([]);
+    expect(capturePostinstall).not.toHaveBeenCalled();
+  });
+
+  test('DO_NOT_TRACK=1 is full opt-out: no event sent and no stdout notice', async () => {
+    const stdout: string[] = [];
+    await capturePostinstallScript({
+      readPackageJson: () => ({ name: '@ngaf/telemetry', version: '0.0.31' }),
+      write: (s: string) => stdout.push(s),
+      env: { ...process.env, DO_NOT_TRACK: '1' },
+    });
+    expect(stdout).toEqual([]);
+    expect(capturePostinstall).not.toHaveBeenCalled();
   });
 
   test('swallows readPackageJson errors silently', async () => {
