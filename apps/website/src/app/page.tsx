@@ -3,7 +3,7 @@ import { ProofStrip } from '../components/landing/ProofStrip';
 import { Differentiator } from '../components/landing/Differentiator';
 import { FeatureBlock } from '../components/landing/FeatureBlock';
 import { BrowserFrame } from '../components/ui/BrowserFrame';
-import { LiveCockpitFrame } from '../components/landing/LiveCockpitFrame';
+import { LiveDemoFrame } from '../components/landing/LiveDemoFrame';
 import { PilotBlock } from '../components/landing/PilotBlock';
 import { WhitePaperBlock } from '../components/landing/WhitePaperBlock';
 import { Promises } from '../components/landing/Promises';
@@ -103,7 +103,7 @@ export default async function HomePage() {
           { title: 'thread persistence', description: 'Restore conversations across sessions.' },
         ]}
         cta={{ label: 'Production patterns', href: '/docs/agent/guides/production' }}
-        visual={<LiveCockpitFrame />}
+        visual={<LiveDemoFrame />}
       />
 
       <PilotBlock />

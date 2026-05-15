@@ -13,6 +13,7 @@ const links = [
   { label: 'Docs', href: '/docs', external: false },
   { label: 'Solutions', href: '/solutions', external: false },
   { label: 'API', href: '/docs/agent/api/agent', external: false },
+  { label: 'Demo', href: 'https://demo.cacheplane.ai', external: true },
   { label: 'Examples', href: 'https://cockpit.cacheplane.ai', external: true },
   { label: 'Pricing', href: '/pricing', external: false },
 ];
