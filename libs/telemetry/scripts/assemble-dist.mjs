@@ -1,0 +1,168 @@
+#!/usr/bin/env node
+/**
+ * Assembles the publishable @ngaf/telemetry package after `nx run telemetry:build`.
+ *
+ * The build produces two disjoint outputs:
+ *  - @nx/js:tsc        → dist/libs/telemetry/src/{index,shared,node}/*
+ *  - @nx/angular:package → dist/libs/telemetry/browser/{fesm2022,types}/*
+ *
+ * Neither shape matches what the exports map needs. This script:
+ *  1. Flattens dist/libs/telemetry/src/* → dist/libs/telemetry/*
+ *  2. Removes the conflicting browser/package.json from ng-packagr.
+ *  3. Re-emits a canonical package.json with the corrected exports map.
+ *  4. Adds a browser/index.d.ts that re-exports from fesm2022 types.
+ *
+ * Idempotent — re-running on an assembled dist is a no-op.
+ */
+import { readFile, writeFile, rm, rename, mkdir, access, readdir, stat } from 'node:fs/promises';
+import { existsSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { dirname, join, relative } from 'node:path';
+
+const HERE = dirname(fileURLToPath(import.meta.url));
+const LIB_ROOT = join(HERE, '..');
+const DIST = join(LIB_ROOT, '..', '..', 'dist', 'libs', 'telemetry');
+
+async function exists(p) {
+  try { await access(p); return true; } catch { return false; }
+}
+
+/**
+ * Recursively moves entries from src into dest, overwriting existing files.
+ * Avoids `rename` cross-device issues by copying via read+write when possible,
+ * but for same-filesystem moves a simple loop of renames is fastest.
+ */
+async function moveDirContentsUp(src, dest) {
+  if (!(await exists(src))) return;
+  await mkdir(dest, { recursive: true });
+  const entries = await readdir(src, { withFileTypes: true });
+  for (const entry of entries) {
+    const from = join(src, entry.name);
+    const to = join(dest, entry.name);
+    if (entry.isDirectory()) {
+      await moveDirContentsUp(from, to);
+      await rm(from, { recursive: true, force: true });
+    } else {
+      await rename(from, to);
+    }
+  }
+}
+
+async function flattenSrc() {
+  const srcDir = join(DIST, 'src');
+  if (!(await exists(srcDir))) {
+    console.log('[assemble-dist] dist/libs/telemetry/src not present — already assembled or build skipped');
+    return;
+  }
+  console.log('[assemble-dist] flattening dist/libs/telemetry/src/* → dist/libs/telemetry/*');
+  await moveDirContentsUp(srcDir, DIST);
+  await rm(srcDir, { recursive: true, force: true });
+}
+
+async function removeNgPackagrManifest() {
+  const ngPkg = join(DIST, 'browser', 'package.json');
+  if (await exists(ngPkg)) {
+    console.log('[assemble-dist] removing ng-packagr browser/package.json (replaced by canonical root manifest)');
+    await rm(ngPkg);
+  }
+  const ngIgnore = join(DIST, 'browser', '.npmignore');
+  if (await exists(ngIgnore)) await rm(ngIgnore);
+}
+
+async function writeBrowserIndexReexport() {
+  // Make `./browser` resolve a clean type entry path.
+  const fesmTypes = join(DIST, 'browser', 'types', 'ngaf-telemetry.d.ts');
+  const indexDts = join(DIST, 'browser', 'index.d.ts');
+  if (!(await exists(fesmTypes))) {
+    console.warn('[assemble-dist] no browser/types/ngaf-telemetry.d.ts — skipping browser/index.d.ts');
+    return;
+  }
+  if (await exists(indexDts)) return;  // idempotent
+  const rel = relative(dirname(indexDts), fesmTypes).replace(/\\/g, '/').replace(/\.d\.ts$/, '');
+  const content = `export * from '${rel.startsWith('.') ? rel : './' + rel}';\n`;
+  await writeFile(indexDts, content, 'utf8');
+  console.log('[assemble-dist] wrote browser/index.d.ts re-exporting from fesm2022 types');
+}
+
+async function writeCanonicalPackageJson() {
+  const srcPkg = JSON.parse(await readFile(join(LIB_ROOT, 'package.json'), 'utf8'));
+  // Strip dev fields, lock to a clean publishable shape.
+  const out = {
+    name: srcPkg.name,
+    version: srcPkg.version,
+    license: srcPkg.license,
+    repository: srcPkg.repository,
+    homepage: srcPkg.homepage,
+    bugs: srcPkg.bugs,
+    sideEffects: false,
+    type: 'module',
+    exports: {
+      '.': {
+        types: './index.d.ts',
+        default: './index.js',
+      },
+      './shared': {
+        types: './shared/events.d.ts',  // shared has no aggregating index; events is the only type-only public artifact
+        default: './shared/events.js',
+      },
+      './node': {
+        types: './node/index.d.ts',
+        default: './node/index.js',
+      },
+      './node/postinstall': {
+        types: './node/postinstall.d.ts',
+        default: './node/postinstall.js',
+      },
+      './browser': {
+        types: './browser/index.d.ts',
+        default: './browser/fesm2022/ngaf-telemetry.mjs',
+      },
+      './README.md': './README.md',
+    },
+    peerDependencies: srcPkg.peerDependencies,
+    peerDependenciesMeta: srcPkg.peerDependenciesMeta,
+    dependencies: srcPkg.dependencies,
+    scripts: {
+      postinstall: 'node ./node/postinstall.js || true',
+    },
+  };
+  // Strip undefined.
+  for (const k of Object.keys(out)) if (out[k] === undefined) delete out[k];
+  await writeFile(join(DIST, 'package.json'), JSON.stringify(out, null, 2) + '\n', 'utf8');
+  console.log('[assemble-dist] wrote canonical dist/libs/telemetry/package.json with corrected exports map');
+}
+
+async function verifyExports() {
+  const pkg = JSON.parse(await readFile(join(DIST, 'package.json'), 'utf8'));
+  const missing = [];
+  for (const [key, value] of Object.entries(pkg.exports ?? {})) {
+    const paths = typeof value === 'string' ? [value] : Object.values(value);
+    for (const p of paths) {
+      const abs = join(DIST, p);
+      if (!(await exists(abs))) missing.push(`${key} → ${p}`);
+    }
+  }
+  if (missing.length > 0) {
+    console.error('[assemble-dist] FAIL: exports map references missing files:');
+    for (const m of missing) console.error(`  - ${m}`);
+    process.exit(1);
+  }
+  console.log(`[assemble-dist] OK: all ${Object.keys(pkg.exports).length} exports map paths resolve`);
+}
+
+async function main() {
+  if (!(await exists(DIST))) {
+    console.error(`[assemble-dist] ${DIST} does not exist — run \`nx run telemetry:build\` first`);
+    process.exit(1);
+  }
+  await flattenSrc();
+  await removeNgPackagrManifest();
+  await writeBrowserIndexReexport();
+  await writeCanonicalPackageJson();
+  await verifyExports();
+}
+
+main().catch((err) => {
+  console.error('[assemble-dist] failed:', err);
+  process.exit(1);
+});

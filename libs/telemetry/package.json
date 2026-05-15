@@ -14,20 +14,25 @@
   "exports": {
     ".": {
       "types": "./index.d.ts",
-      "default": "./fesm2022/ngaf-telemetry.mjs"
+      "default": "./index.js"
+    },
+    "./shared": {
+      "types": "./shared/events.d.ts",
+      "default": "./shared/events.js"
     },
     "./node": {
       "types": "./node/index.d.ts",
-      "default": "./node/index.mjs"
+      "default": "./node/index.js"
+    },
+    "./node/postinstall": {
+      "types": "./node/postinstall.d.ts",
+      "default": "./node/postinstall.js"
     },
     "./browser": {
       "types": "./browser/index.d.ts",
-      "default": "./fesm2022/ngaf-telemetry-browser.mjs"
+      "default": "./browser/fesm2022/ngaf-telemetry.mjs"
     },
-    "./postinstall": {
-      "types": "./node/postinstall.d.ts",
-      "default": "./node/postinstall.mjs"
-    }
+    "./README.md": "./README.md"
   },
   "peerDependencies": {
     "@angular/core": "^20.0.0 || ^21.0.0"
@@ -40,6 +45,6 @@
     "posthog-node": "^5.20.0"
   },
   "scripts": {
-    "postinstall": "node ./node/postinstall.mjs || true"
+    "postinstall": "node ./node/postinstall.js || true"
   }
 }
