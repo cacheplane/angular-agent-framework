@@ -2,28 +2,31 @@ import { baseTokens } from './base';
 
 /**
  * Theme-variant tokens resolved for the light theme.
- * Preserves the current production light palette exactly.
+ * Aligned with @ngaf/chat library's polished consumer aesthetic
+ * (pure-white surfaces, near-black text, neutral grays) so embedded
+ * chat surfaces visually unify with cockpit chrome and the marketing
+ * website.
  */
 export const lightOverrides = Object.freeze({
-  // Surfaces (was libs/design-tokens/src/lib/surfaces.ts)
-  canvas: '#fafbfc',
-  surface: '#ffffff',
-  surfaceTinted: '#f4f6fb',
-  surfaceDim: '#eef1f7',
-  border: '#e6e8ee',
-  borderStrong: '#d2d6e0',
+  // Surfaces
+  canvas: 'rgb(255, 255, 255)',
+  surface: 'rgb(255, 255, 255)',
+  surfaceTinted: 'rgb(251, 251, 251)',
+  surfaceDim: 'rgb(245, 245, 245)',
+  border: 'rgb(229, 229, 229)',
+  borderStrong: 'rgb(200, 200, 200)',
 
   // Text
-  textPrimary: '#1a1a2e',
-  textSecondary: '#555770',
-  textMuted: '#8b8fa3',
-  textInverted: '#ffffff',
+  textPrimary: 'rgb(28, 28, 28)',
+  textSecondary: 'rgb(70, 70, 70)',
+  textMuted: 'rgb(115, 115, 115)',
+  textInverted: 'rgb(255, 255, 255)',
 
   // Legacy surface aliases
-  bg: '#f8f9fc',
+  bg: 'rgb(255, 255, 255)',
   sidebarBg: 'rgba(255, 255, 255, 0.45)',
 
-  // Semantic accent maps to the navy brand color
+  // Semantic accent maps to the navy brand color (unchanged — cockpit identity)
   accent: baseTokens.brand.accent,
   accentHover: '#003070',
   accentGlow: 'rgba(0, 64, 144, 0.2)',
