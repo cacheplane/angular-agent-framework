@@ -26,7 +26,6 @@ function buildLlmsTxt(): string {
     '- @ngaf/ag-ui — adapter for any AG-UI-compatible backend (CrewAI, Mastra, Microsoft AF, AG2, Pydantic AI, AWS Strands, CopilotKit runtime)',
     '- @ngaf/render — generative UI runtime (Vercel json-render + Google A2UI)',
     '- @ngaf/a2ui — A2UI catalog components',
-    '- @ngaf/partial-json — streaming JSON parser',
     '- @ngaf/licensing — license verification client',
     '',
     '## Install',

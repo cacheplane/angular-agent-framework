@@ -33,7 +33,6 @@
       "@ngaf/langgraph": ["libs/langgraph/src/public-api.ts"],
       "@ngaf/licensing": ["libs/licensing/src/index.ts"],
       "@ngaf/licensing/testing": ["libs/licensing/src/testing.ts"],
-      "@ngaf/partial-json": ["libs/partial-json/src/index.ts"],
       "@ngaf/render": ["libs/render/src/public-api.ts"]
     },
     "skipLibCheck": true,

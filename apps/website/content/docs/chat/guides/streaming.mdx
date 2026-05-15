@@ -8,7 +8,7 @@ Each AI message is processed by a `ContentClassifier` that examines the content 
 
 | Trigger | Content Type | What Happens |
 |---------|-------------|--------------|
-| First non-whitespace is `{` | `json-render` | Parsed as a JSON spec via `@ngaf/partial-json` |
+| First non-whitespace is `{` | `json-render` | Parsed as a JSON spec via `@cacheplane/partial-json` |
 | Any other text | `markdown` | Rendered as markdown prose |
 
 <Callout type="info" title="Per-message classification">
@@ -74,7 +74,7 @@ type ContentType = 'undetermined' | 'markdown' | 'json-render' | 'a2ui' | 'mixed
 For lower-level control over JSON-to-Spec materialization:
 
 ```typescript
-import { createPartialJsonParser } from '@ngaf/partial-json';
+import { createPartialJsonParser } from '@cacheplane/partial-json';
 import { createParseTreeStore } from '@ngaf/chat';
 
 const parser = createPartialJsonParser();

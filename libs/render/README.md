@@ -16,7 +16,7 @@ npm install @ngaf/render
 - **Two protocols supported** — Vercel `json-render` and Google A2UI v1
 - **Per-component fallback API** — when a spec node has no registered component, you control what renders (and surface it to your observability layer)
 - **Readiness gate** — holds renders until the surface is real, so users never see mystery partial UI
-- **Streaming partial renders** — works with `@ngaf/partial-json` to render progressive JSON as it streams
+- **Streaming partial renders** — works with `@cacheplane/partial-json` to render progressive JSON as it streams
 
 ## Documentation
 

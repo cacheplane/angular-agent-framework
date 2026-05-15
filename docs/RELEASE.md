@@ -1,6 +1,6 @@
 # Release Process
 
-The seven publishable libraries (`@ngaf/chat`, `@ngaf/langgraph`, `@ngaf/ag-ui`, `@ngaf/render`, `@ngaf/a2ui`, `@ngaf/partial-json`, `@ngaf/licensing`) ship together at a synchronized version via Nx Release. During the `0.0.x` exploratory phase, only patch bumps are used.
+The seven publishable libraries (`@ngaf/chat`, `@ngaf/langgraph`, `@ngaf/ag-ui`, `@ngaf/render`, `@ngaf/a2ui`, `@ngaf/licensing`, `@ngaf/telemetry`) ship together at a synchronized version via Nx Release. During the `0.0.x` exploratory phase, only patch bumps are used.
 
 ## One-shot release (recommended; second release onward)
 
@@ -51,7 +51,7 @@ The very first publish ships the version currently on disk (`0.0.1`) — no vers
 
 ```bash
 # 1. Build everything
-npx nx run-many -t build --projects=chat,langgraph,ag-ui,render,a2ui,partial-json,licensing
+npx nx run-many -t build --projects=chat,langgraph,ag-ui,render,a2ui,licensing,telemetry
 
 # 2. Generate the initial CHANGELOG, commit, and tag v0.0.1
 npx nx release changelog 0.0.1 --first-release
