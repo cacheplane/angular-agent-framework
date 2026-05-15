@@ -1,0 +1,66 @@
+/*
+ * @ngaf/design-tokens/theme.css
+ *
+ * GENERATED FILE — DO NOT EDIT BY HAND.
+ *
+ * Regenerate with:
+ *   pnpm nx run design-tokens:generate-theme-css
+ *
+ * Source of truth:
+ *   - libs/design-tokens/src/lib/light.ts
+ *   - libs/design-tokens/src/lib/base.ts
+ *
+ * Drift between this file and the TS sources is caught by
+ * generate-theme-css.spec.ts at test time.
+ */
+@theme {
+  /* Surfaces */
+  --color-canvas: rgb(255, 255, 255);
+  --color-surface: rgb(255, 255, 255);
+  --color-surface-tinted: rgb(251, 251, 251);
+  --color-surface-dim: rgb(245, 245, 245);
+  --color-border: rgb(229, 229, 229);
+  --color-border-strong: rgb(200, 200, 200);
+
+  /* Text */
+  --color-text-primary: rgb(28, 28, 28);
+  --color-text-secondary: rgb(70, 70, 70);
+  --color-text-muted: rgb(115, 115, 115);
+  --color-text-inverted: rgb(255, 255, 255);
+
+  /* Legacy surface aliases */
+  --color-bg: rgb(255, 255, 255);
+  --color-sidebar-bg: rgba(255, 255, 255, 0.45);
+
+  /* Accent family */
+  --color-accent: #004090;
+  --color-accent-hover: #003070;
+  --color-accent-glow: rgba(0, 64, 144, 0.2);
+  --color-accent-border: rgba(0, 64, 144, 0.15);
+  --color-accent-border-hover: rgba(0, 64, 144, 0.3);
+  --color-accent-surface: rgba(0, 64, 144, 0.06);
+
+  /* Brand */
+  --color-accent-light: #64C3FD;
+  --color-angular-red: #DD0031;
+  --color-render-green: #1a7a40;
+  --color-chat-purple: #5a00c8;
+
+  /* Fonts */
+  --font-garamond: "EB Garamond", Georgia, serif;
+  --font-inter: Inter, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+
+  /* Radii */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+  --radius-full: 999px;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.10), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.10), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-focus: 0 0 0 3px rgba(0, 64, 144, 0.25);
+}
