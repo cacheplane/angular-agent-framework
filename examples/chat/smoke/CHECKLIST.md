@@ -114,7 +114,7 @@ renders correctly both during streaming and after completion.
 
 ## chat-debug devtools
 
-- [ ] Floating debug launcher button visible in the bottom-right corner
+- [ ] Floating debug launcher button visible in the top-right corner
 - [ ] Launcher has `role="button"`, accessible name "Open chat devtools"
 - [ ] Click launcher — debug panel opens (zinc-dark chrome, shadcn-styled)
 - [ ] Panel header shows a status pill (idle / loading / streaming) that updates live

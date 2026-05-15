@@ -39,3 +39,17 @@ describe('ROOT_TOKEN_STYLES — prefers-reduced-motion', () => {
     expect(ROOT_TOKEN_STYLES).toContain(selector);
   });
 });
+
+describe('ROOT_TOKEN_STYLES — theme attribute selectors', () => {
+  it.each([
+    '[data-theme="light"]',
+    '[data-theme="dark"]',
+    '[data-ngaf-chat-theme="light"]',
+    '[data-ngaf-chat-theme="dark"]',
+  ])('honors %s as a theme override hook', (selector) => {
+    // Both `data-theme` (consumer-facing override) and `data-ngaf-chat-theme`
+    // (the chat-lib-internal attribute documented for app-shells that
+    // already use `data-theme` for their own picker) must flip tokens.
+    expect(ROOT_TOKEN_STYLES).toContain(selector);
+  });
+});

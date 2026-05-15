@@ -297,9 +297,13 @@ export const ROOT_TOKEN_STYLES = `
     :root { ${DARK_TOKENS} }
   }
   :root[data-theme="light"],
-  [data-theme="light"] { ${LIGHT_TOKENS} }
+  [data-theme="light"],
+  :root[data-ngaf-chat-theme="light"],
+  [data-ngaf-chat-theme="light"] { ${LIGHT_TOKENS} }
   :root[data-theme="dark"],
-  [data-theme="dark"] { ${DARK_TOKENS} }
+  [data-theme="dark"],
+  :root[data-ngaf-chat-theme="dark"],
+  [data-ngaf-chat-theme="dark"] { ${DARK_TOKENS} }
 }
 ${KEYFRAMES}
 ${REDUCED_MOTION_STYLES}
