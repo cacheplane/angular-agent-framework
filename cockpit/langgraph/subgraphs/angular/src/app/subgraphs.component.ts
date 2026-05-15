@@ -25,19 +25,19 @@ import { environment } from '../environments/environment';
     <example-chat-layout>
       <chat main [agent]="agent" class="flex-1 min-w-0" />
       <div sidebar class="p-4 space-y-2"
-           style="background: var(--chat-bg, #171717); color: var(--chat-text, #e0e0e0);">
+           style="background: var(--ngaf-chat-bg); color: var(--ngaf-chat-text);">
         <h3 class="text-xs font-semibold uppercase tracking-wide"
-            style="color: var(--chat-text-muted, #777);">Subagents</h3>
+            style="color: var(--ngaf-chat-text-muted);">Subagents</h3>
         @if (subagentEntries().length === 0) {
-          <p class="text-sm italic" style="color: var(--chat-text-muted, #777);">No subagents active</p>
+          <p class="text-sm italic" style="color: var(--ngaf-chat-text-muted);">No subagents active</p>
         }
         @for (entry of subagentEntries(); track entry.id) {
           <div class="flex items-center gap-2 text-sm py-1">
             <span class="w-2 h-2 rounded-full shrink-0"
-                  [style.background]="entry.status === 'complete' ? 'var(--chat-success, #4ade80)' : entry.status === 'error' ? 'var(--chat-error-text, #f87171)' : 'var(--chat-warning-text, #fbbf24)'">
+                  [style.background]="entry.status === 'complete' ? 'var(--ngaf-chat-success, #4ade80)' : entry.status === 'error' ? 'var(--ngaf-chat-error-text, #f87171)' : 'var(--ngaf-chat-warning-text, #fbbf24)'">
             </span>
-            <span class="font-mono text-xs truncate" style="color: var(--chat-text, #e0e0e0);">{{ entry.id }}</span>
-            <span class="text-xs ml-auto" style="color: var(--chat-text-muted, #777);">{{ entry.msgCount }} msgs</span>
+            <span class="font-mono text-xs truncate" style="color: var(--ngaf-chat-text);">{{ entry.id }}</span>
+            <span class="text-xs ml-auto" style="color: var(--ngaf-chat-text-muted);">{{ entry.msgCount }} msgs</span>
           </div>
         }
       </div>
