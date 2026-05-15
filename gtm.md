@@ -92,7 +92,7 @@ Operational progress lives in agent runs and PostHog. The repo holds durable str
 ## 8. Non-goals (current phase)
 
 - We do not compete as a general agent UI framework. We claim the Angular final mile.
-- We do not ship telemetry from `@ngaf/*` browser packages by default. Opt-in only. Node-side telemetry honors `DO_NOT_TRACK` and `NGAF_TELEMETRY_DISABLED`; see [libs/telemetry/README.md](libs/telemetry/README.md) for the full contract.
+- We do not ship telemetry from `@ngaf/*` browser packages by default. Opt-in only. Node-side package telemetry is minimal and honors `DO_NOT_TRACK`, `npm_config_do_not_track`, and `NGAF_TELEMETRY_DISABLED`; see [libs/telemetry/README.md](libs/telemetry/README.md) for the full contract.
 - We do not run paid acquisition until Phase 2 organic baselines exist.
 - We do not pursue stars as a vanity metric.
 - We do not run A/B positioning experiments in Phase 1. Ship one hero, measure, iterate.

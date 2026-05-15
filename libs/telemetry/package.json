@@ -11,6 +11,9 @@
   "bugs": { "url": "https://github.com/cacheplane/angular-agent-framework/issues" },
   "sideEffects": false,
   "type": "module",
+  "bin": {
+    "ngaf-telemetry-postinstall": "./node/postinstall.js"
+  },
   "exports": {
     ".": {
       "types": "./index.d.ts",
@@ -35,16 +38,11 @@
     "./README.md": "./README.md"
   },
   "peerDependencies": {
-    "@angular/core": "^20.0.0 || ^21.0.0"
+    "@angular/core": "^20.0.0 || ^21.0.0",
+    "posthog-js": "^1.372.0"
   },
   "peerDependenciesMeta": {
-    "@angular/core": { "optional": true }
-  },
-  "dependencies": {
-    "posthog-js": "^1.372.0",
-    "posthog-node": "^5.20.0"
-  },
-  "scripts": {
-    "postinstall": "node ./node/postinstall.js || true"
+    "@angular/core": { "optional": true },
+    "posthog-js": { "optional": true }
   }
 }

@@ -3,6 +3,5 @@
   "dest": "../../dist/libs/telemetry/browser",
   "lib": {
     "entryFile": "src/browser/public-api.ts"
-  },
-  "allowedNonPeerDependencies": ["posthog-js", "posthog-node"]
+  }
 }

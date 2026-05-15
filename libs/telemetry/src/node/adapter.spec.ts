@@ -16,7 +16,7 @@ import {
 describe('adapter helpers', () => {
   beforeEach(() => vi.mocked(captureEvent).mockClear());
 
-  test('captureRuntimeInstanceCreated hashes any apiKey property', async () => {
+  test('captureRuntimeInstanceCreated drops any apiKey property without sending a derivative', async () => {
     await captureRuntimeInstanceCreated({
       transport: 'langgraph',
       provider: 'openai',
@@ -25,7 +25,7 @@ describe('adapter helpers', () => {
     const call = vi.mocked(captureEvent).mock.calls[0];
     expect(call[0]).toBe('ngaf:runtime_instance_created');
     expect((call[1] as Record<string, unknown>).apiKey).toBeUndefined();  // raw key stripped
-    expect((call[1] as Record<string, unknown>).apiKey_sha256).toMatch(/^[a-f0-9]{64}$/);
+    expect((call[1] as Record<string, unknown>).apiKey_sha256).toBeUndefined();
   });
 
   test('captureStreamStarted records provider + model only', async () => {
