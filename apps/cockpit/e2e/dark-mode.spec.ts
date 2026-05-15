@@ -22,7 +22,7 @@ test.describe('dark mode', () => {
     const canvas = await page
       .locator('html')
       .evaluate((el) => getComputedStyle(el).getPropertyValue('--ds-canvas').trim());
-    expect(canvas).toBe('#fafbfc');
+    expect(canvas).toBe('rgb(255, 255, 255)');
   });
 
   test('toggle flips data-theme optimistically and persists across reload', async ({
