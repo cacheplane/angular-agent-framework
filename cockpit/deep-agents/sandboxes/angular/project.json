@@ -6,7 +6,9 @@
   "targets": {
     "build": {
       "executor": "@angular/build:application",
-      "outputs": ["{options.outputPath.base}"],
+      "outputs": [
+        "{options.outputPath.base}"
+      ],
       "options": {
         "outputPath": {
           "base": "dist/cockpit/deep-agents/sandboxes/angular",
@@ -14,13 +16,23 @@
         },
         "browser": "cockpit/deep-agents/sandboxes/angular/src/main.ts",
         "tsConfig": "cockpit/deep-agents/sandboxes/angular/tsconfig.app.json",
-        "styles": ["cockpit/deep-agents/sandboxes/angular/src/styles.css"]
+        "styles": [
+          "cockpit/deep-agents/sandboxes/angular/src/styles.css"
+        ]
       },
       "configurations": {
         "production": {
           "budgets": [
-            { "type": "initial", "maximumWarning": "500kb", "maximumError": "1mb" },
-            { "type": "anyComponentStyle", "maximumWarning": "4kb", "maximumError": "8kb" }
+            {
+              "type": "initial",
+              "maximumWarning": "500kb",
+              "maximumError": "1mb"
+            },
+            {
+              "type": "anyComponentStyle",
+              "maximumWarning": "4kb",
+              "maximumError": "8kb"
+            }
           ],
           "outputHashing": "none"
         },
@@ -36,11 +48,15 @@
           ]
         },
         "cockpit": {
-          "budgets": [
-            { "type": "initial", "maximumWarning": "500kb", "maximumError": "1mb" },
-            { "type": "anyComponentStyle", "maximumWarning": "4kb", "maximumError": "8kb" }
+          "optimization": false,
+          "extractLicenses": false,
+          "sourceMap": true,
+          "fileReplacements": [
+            {
+              "replace": "cockpit/deep-agents/sandboxes/angular/src/environments/environment.ts",
+              "with": "cockpit/deep-agents/sandboxes/angular/src/environments/environment.development.ts"
+            }
           ],
-          "outputHashing": "none",
           "browser": "cockpit/deep-agents/sandboxes/angular/src/main.cockpit.ts"
         }
       },
@@ -50,9 +66,15 @@
       "continuous": true,
       "executor": "@angular/build:dev-server",
       "configurations": {
-        "production": { "buildTarget": "cockpit-deep-agents-sandboxes-angular:build:production" },
-        "development": { "buildTarget": "cockpit-deep-agents-sandboxes-angular:build:development" },
-        "cockpit": { "buildTarget": "cockpit-deep-agents-sandboxes-angular:build:cockpit" }
+        "production": {
+          "buildTarget": "cockpit-deep-agents-sandboxes-angular:build:production"
+        },
+        "development": {
+          "buildTarget": "cockpit-deep-agents-sandboxes-angular:build:development"
+        },
+        "cockpit": {
+          "buildTarget": "cockpit-deep-agents-sandboxes-angular:build:cockpit"
+        }
       },
       "defaultConfiguration": "development",
       "options": {

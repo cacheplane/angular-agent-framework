@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: MIT
-import React from 'react';
+'use client';
+
+import React, { useEffect, useState } from 'react';
 import { ThemedFrame } from '@ngaf/ui-react';
 import { getCockpitSessionId } from '../../lib/analytics/distinct-id';
 
@@ -21,6 +23,20 @@ function buildIframeSrc(runtimeUrl: string, capabilitySlug: string): string {
 }
 
 export function RunMode({ entryTitle, runtimeUrl, capabilitySlug }: RunModeProps) {
+  // SSR-safe: render an empty iframe placeholder so HTML matches across server
+  // and client, then fill the src in via effect once the session id is available.
+  // `getCockpitSessionId()` returns a fresh UUID per process; on SSR that UUID
+  // would differ from the one generated client-side, breaking hydration.
+  const [src, setSrc] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (runtimeUrl) {
+      setSrc(buildIframeSrc(runtimeUrl, capabilitySlug));
+    } else {
+      setSrc(null);
+    }
+  }, [runtimeUrl, capabilitySlug]);
+
   if (!runtimeUrl) {
     return (
       <section aria-label="Run mode" className="grid place-items-center h-full text-[var(--ds-text-muted)] text-sm">
@@ -32,7 +48,7 @@ export function RunMode({ entryTitle, runtimeUrl, capabilitySlug }: RunModeProps
   return (
     <section aria-label="Run mode" className="h-full">
       <ThemedFrame
-        src={buildIframeSrc(runtimeUrl, capabilitySlug)}
+        src={src ?? 'about:blank'}
         title={`${entryTitle} live example`}
         allow="clipboard-write"
         className="w-full h-full border-0 rounded"

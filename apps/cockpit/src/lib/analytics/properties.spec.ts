@@ -9,18 +9,6 @@ describe('shouldCaptureAnalytics', () => {
         token: undefined,
         captureLocal: true,
         host: 'cockpit.example.com',
-        doNotTrack: false,
-      }),
-    ).toBe(false);
-  });
-
-  test('returns false when DO_NOT_TRACK', () => {
-    expect(
-      shouldCaptureAnalytics({
-        token: 'phc_x',
-        captureLocal: true,
-        host: 'cockpit.example.com',
-        doNotTrack: true,
       }),
     ).toBe(false);
   });
@@ -31,7 +19,6 @@ describe('shouldCaptureAnalytics', () => {
         token: 'phc_x',
         captureLocal: false,
         host: 'localhost:4201',
-        doNotTrack: false,
       }),
     ).toBe(false);
   });
@@ -42,7 +29,6 @@ describe('shouldCaptureAnalytics', () => {
         token: 'phc_x',
         captureLocal: true,
         host: 'localhost:4201',
-        doNotTrack: false,
       }),
     ).toBe(true);
   });
@@ -53,7 +39,6 @@ describe('shouldCaptureAnalytics', () => {
         token: 'phc_x',
         captureLocal: false,
         host: 'cockpit.example.com',
-        doNotTrack: false,
       }),
     ).toBe(true);
   });
