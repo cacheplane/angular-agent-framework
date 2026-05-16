@@ -49,17 +49,25 @@ The standard PostHog `$pageview` event is used as-is across all three surfaces.
 
 ## Cockpit (activation surface)
 
-| Event                                          | When                                                   |
-|------------------------------------------------|--------------------------------------------------------|
-| `cockpit:recipe_start`                         | Recipe page loaded with intent (`?source=` present)    |
-| `cockpit:transport_connected`                  | LangGraph/AG-UI/custom adapter wired in tour           |
-| `cockpit:chat_first_message`                   | First user message sent in cockpit chat                |
-| `cockpit:thread_persisted`                     | Thread saved (re-load demonstrated)                    |
-| `cockpit:interrupt_handled`                    | Human-approval interrupt completed                     |
-| `cockpit:generative_component_rendered`        | One generative Angular component rendered              |
+| Event                                          | When                                                            |
+|------------------------------------------------|-----------------------------------------------------------------|
+| `cockpit:recipe_opened`                        | Sidebar capability link clicked                                 |
+| `cockpit:mode_switched`                        | Run/Code/Docs/API tab change                                    |
+| `cockpit:code_copied`                          | Copy click in code mode, doc snippet, or agentic-prompt block   |
+| `cockpit:transport_connected`                  | LangGraph/AG-UI/custom adapter wired in iframe                  |
+| `cockpit:chat_first_message`                   | First user message sent in cockpit chat                         |
+| `cockpit:thread_persisted`                     | Thread saved (re-load demonstrated)                             |
+| `cockpit:interrupt_handled`                    | Human-approval interrupt completed                              |
+| `cockpit:generative_component_rendered`        | One generative Angular component rendered                       |
 | `cockpit:activation_complete`                  | All five activation signals fired within 30 min for one session |
 
-Activation funnel is 5 signals as of Spec 1C. `ngaf:postinstall` is a separate top-of-funnel chart — uncorrelated to cockpit sessions by design.
+The five activation signals (whose union fires `cockpit:activation_complete`) are
+`transport_connected`, `chat_first_message`, `thread_persisted`, `interrupt_handled`,
+and `generative_component_rendered`. The shell events (`recipe_opened`,
+`mode_switched`, `code_copied`) are context for the funnel — they fire before
+or alongside the activation signals but are not part of the five-step rollup.
+`ngaf:postinstall` is a separate top-of-funnel chart, uncorrelated to cockpit
+sessions by design.
 
 ## ngaf (library telemetry)
 
@@ -137,3 +145,4 @@ This file is human-edited. When events are added/renamed/removed, update the aff
 |------------|--------|
 | 2026-05-13 | Initial draft per Spec 0. |
 | 2026-05-15 | Drop cockpit:install_command_copied, rename cockpit:six_signals_complete → cockpit:activation_complete (Spec 1C). |
+| 2026-05-15 | Cockpit shell events: rename `recipe_start` → `recipe_opened`; add `mode_switched` and `code_copied` (Spec 1C implementation). |
