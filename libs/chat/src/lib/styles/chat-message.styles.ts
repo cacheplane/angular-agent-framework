@@ -3,19 +3,22 @@
 export const CHAT_MESSAGE_STYLES = `
   :host { display: block; }
   :host([data-role="user"]) {
-    display: flex;
-    justify-content: flex-end;
+    /*
+     * Block (not flex) so the layout child gets its width:100% (set in
+     * chat-message.component.ts inline styles). Right-alignment happens
+     * inside layout via justify-content:flex-end below, NOT here. The old
+     * "display:flex; justify-content:flex-end" on the host caused layout
+     * to shrink-wrap its content, which collapsed __main's 80% containing
+     * block — see chat-message.component.ts comment for the full story.
+     */
+    display: block;
     margin-top: 0.5rem;
   }
   :host([data-role="user"][data-prev-role="assistant"]) { margin-top: 1.5rem; }
-  /*
-   * For user-role messages, the bubble's containing column must size to
-   * content rather than collapse via the flex chain. Without this, the
-   * bubble's max-width: 80% (defined below) resolves against a collapsed
-   * parent (~58px instead of the full row), capping the bubble below
-   * intrinsic single-word width and forcing mid-word wraps like
-   * "hello" → "hel" / "lo". See PR #313 follow-up.
-   */
+  :host([data-role="user"]) .chat-message__layout {
+    /* Right-align the bubble column inside the full-width row. */
+    justify-content: flex-end;
+  }
   :host([data-role="user"]) .chat-message__main {
     flex: none;
     width: fit-content;
