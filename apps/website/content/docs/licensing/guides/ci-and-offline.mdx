@@ -26,10 +26,8 @@ If you call `runLicenseCheck()` directly, inject the current time only when you 
 ```ts
 await runLicenseCheck({
   package: '@ngaf/example',
-  version: '1.0.0',
   token,
   publicKey,
-  telemetryEndpoint,
   nowSec: 1_735_689_600,
 });
 ```
@@ -47,28 +45,7 @@ const result = evaluateLicense(verified, {
 });
 ```
 
-This does not emit warnings and does not send telemetry.
-
-## Telemetry in licensing checks
-
-`runLicenseCheck()` creates a telemetry client and calls `send()` without awaiting it. The telemetry body contains:
-
-- package name;
-- package version;
-- license id from `claims.sub`, when present;
-- an anonymous instance id;
-- epoch-second timestamp.
-
-The licensing telemetry helper opts out when either of these is set:
-
-```bash
-CACHEPLANE_TELEMETRY=0
-CACHEPLANE_TELEMETRY=false
-```
-
-It also checks `globalThis.CACHEPLANE_TELEMETRY` and treats `false`, `0`, or `"0"` as opt-out values.
-
-If `fetch` is not available, the telemetry send is a no-op. If the request fails, the error is swallowed.
+This does not emit warnings. The higher-level `runLicenseCheck()` helper can emit warnings, but it does not make network requests.
 
 ## Signing tokens
 

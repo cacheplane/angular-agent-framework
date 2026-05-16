@@ -8,12 +8,6 @@ import {
 import type { AngularRegistry } from '@ngaf/render';
 
 const PACKAGE_NAME = '@ngaf/chat';
-declare const __CACHEPLANE_CHAT_VERSION__: string | undefined;
-const PACKAGE_VERSION =
-  typeof __CACHEPLANE_CHAT_VERSION__ !== 'undefined'
-    ? __CACHEPLANE_CHAT_VERSION__
-    : '0.0.0-dev';
-const TELEMETRY_ENDPOINT = 'https://telemetry.cacheplane.dev/v1/ping';
 
 export interface ChatConfig {
   /** Default render registry for generative UI components. */
@@ -42,10 +36,8 @@ export const CHAT_CONFIG = new InjectionToken<ChatConfig>('CHAT_CONFIG');
 export function provideChat(config: ChatConfig) {
   void runLicenseCheck({
     package: PACKAGE_NAME,
-    version: PACKAGE_VERSION,
     token: config.license,
     publicKey: config.__licensePublicKey ?? LICENSE_PUBLIC_KEY,
-    telemetryEndpoint: TELEMETRY_ENDPOINT,
     isNoncommercial:
       config.__licenseEnvHint?.isNoncommercial ?? inferNoncommercial(),
   });

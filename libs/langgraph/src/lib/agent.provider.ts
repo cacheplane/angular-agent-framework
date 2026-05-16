@@ -8,15 +8,6 @@ import {
 import { AgentTransport } from './agent.types';
 
 const PACKAGE_NAME = '@ngaf/langgraph';
-// Wired up by the release pipeline — imported lazily to avoid a hard build-time
-// dependency on package.json.
-declare const __CACHEPLANE_AGENT_VERSION__: string | undefined;
-const PACKAGE_VERSION =
-  typeof __CACHEPLANE_AGENT_VERSION__ !== 'undefined'
-    ? __CACHEPLANE_AGENT_VERSION__
-    : '0.0.0-dev';
-const TELEMETRY_ENDPOINT =
-  'https://telemetry.cacheplane.dev/v1/ping';
 
 /**
  * Global configuration for agent instances.
@@ -52,10 +43,8 @@ export function provideAgent(config: AgentConfig): Provider {
   // Fire-and-forget license check. Never blocks DI resolution.
   void runLicenseCheck({
     package: PACKAGE_NAME,
-    version: PACKAGE_VERSION,
     token: config.license,
     publicKey: config.__licensePublicKey ?? LICENSE_PUBLIC_KEY,
-    telemetryEndpoint: TELEMETRY_ENDPOINT,
     isNoncommercial:
       config.__licenseEnvHint?.isNoncommercial ?? inferNoncommercial(),
   });

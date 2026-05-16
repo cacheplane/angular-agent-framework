@@ -1,6 +1,6 @@
 # Introduction
 
-`@ngaf/licensing` is the shared license-check helper used by the framework packages. It verifies compact Ed25519-signed tokens offline, evaluates the result into a small status set, emits non-blocking warnings, and sends non-blocking license telemetry when asked.
+`@ngaf/licensing` is the shared license-check helper used by the framework packages. It verifies compact Ed25519-signed tokens offline, evaluates the result into a small status set, and emits non-blocking warnings when appropriate.
 
 The package itself is MIT licensed. `COMMERCIAL.md` states that the libraries in this repository are free to use, modify, and distribute in commercial and noncommercial projects. The proprietary part called out there is the internal minting service, not this package.
 
@@ -12,11 +12,10 @@ The main entry point exports:
 |-----|---------|
 | `verifyLicense()` | verifies token signature against a public key |
 | `evaluateLicense()` | turns a verify result and current time into a status |
-| `runLicenseCheck()` | verifies, evaluates, warns once, and sends non-blocking telemetry |
+| `runLicenseCheck()` | verifies, evaluates, and warns once |
 | `emitNag()` | emits the warning for non-licensed statuses |
 | `signLicense()` | signs claims with an Ed25519 private key |
 | `inferNoncommercial()` | returns a default noncommercial hint from `NODE_ENV` |
-| `createTelemetryClient()` | sends a license telemetry POST |
 | `LICENSE_PUBLIC_KEY` | bundled public key |
 
 `@noble/ed25519` is the only peer dependency.
@@ -66,7 +65,6 @@ The higher-level check is designed not to block app startup:
 
 - signature verification is local;
 - warning output goes through `console.warn` unless a custom `warn` function is supplied;
-- telemetry is fire-and-forget;
-- telemetry send failures are swallowed by the telemetry client.
+- no network request is made by the licensing check.
 
 The code returns statuses instead of throwing for normal license states. Consumers can choose what to do with the status, but the framework packages use it as a warning and visibility mechanism, not as an app kill switch.
