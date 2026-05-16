@@ -1121,7 +1121,7 @@
       {
         "name": "spec",
         "type": "Signal<Spec | null>",
-        "description": "Convert the A2UI surface to a json-render Spec for rendering.",
+        "description": "Convert the A2UI surface to a json-render Spec for rendering.\n Prefers `state().surface` (the progressively-built wire surface)\n over the legacy `surface` input. surfaceToSpec handles\n children.explicitList → spec.children translation + reserved-key\n filtering + path-ref → $bindState rewriting; the rendered tree\n then uses render-element's standard input-mapping\n (`childKeys: el.children`) so catalog components receive the\n inputs they actually declare.\n\n This supersedes the earlier slot-based progressive renderer,\n which mounted root components but never populated their\n childKeys input — leaving Columns/Rows/etc. with no children.",
         "optional": false
       },
       {

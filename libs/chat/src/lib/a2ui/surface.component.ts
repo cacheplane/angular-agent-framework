@@ -32,27 +32,19 @@ import type { A2uiViews } from './views';
     '[style.font-family]': 'fontFamily()',
   },
   template: `
-    @if (state(); as st) {
-      @if (st.componentViews.size === 0) {
-        @if (surfaceFallback(); as fb) {
-          <ng-container *ngComponentOutlet="fb" />
-        } @else {
-          <a2ui-default-fallback />
-        }
-      } @else {
-        @for (id of rootIds(); track id) {
-          @if (st.componentViews.get(id); as view) {
-            <ng-container *a2uiSlot="view; views: catalog()" />
-          }
-        }
-      }
-    } @else if (spec(); as s) {
+    @if (spec(); as s) {
       <render-spec
         [spec]="s"
         [registry]="registry()"
         [handlers]="internalHandlers()"
         (events)="onRenderEvent($event)"
       />
+    } @else if (state(); as st) {
+      @if (surfaceFallback(); as fb) {
+        <ng-container *ngComponentOutlet="fb" />
+      } @else {
+        <a2ui-default-fallback />
+      }
     }
   `,
 })
@@ -109,11 +101,21 @@ export class A2uiSurfaceComponent {
     return [...st.componentViews.keys()].slice(0, 1);
   });
 
-  // ---- Legacy path (no state) ----
-  /** Convert the A2UI surface to a json-render Spec for rendering. */
+  /** Convert the A2UI surface to a json-render Spec for rendering.
+   *  Prefers `state().surface` (the progressively-built wire surface)
+   *  over the legacy `surface` input. surfaceToSpec handles
+   *  children.explicitList → spec.children translation + reserved-key
+   *  filtering + path-ref → $bindState rewriting; the rendered tree
+   *  then uses render-element's standard input-mapping
+   *  (`childKeys: el.children`) so catalog components receive the
+   *  inputs they actually declare.
+   *
+   *  This supersedes the earlier slot-based progressive renderer,
+   *  which mounted root components but never populated their
+   *  childKeys input — leaving Columns/Rows/etc. with no children. */
   readonly spec = computed(() => {
-    const surf = this.surface();
-    return surf ? surfaceToSpec(surf) : null;
+    const surf = this.state()?.surface ?? this.surface();
+    return surf && surf.components.size > 0 ? surfaceToSpec(surf) : null;
   });
 
   /** Convert ViewRegistry to AngularRegistry for RenderSpecComponent. */
