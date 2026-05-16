@@ -34,6 +34,33 @@ export type AnalyticsSurface =
   | 'solution'
   | 'toast';
 
+/**
+ * Stable identifiers for marketing CTAs. New CTAs must be added to this
+ * union so PostHog gets consistent slicing — misspellings then become
+ * a build-time error.
+ *
+ * Template-literal members (e.g. `nav_${string}`) cover callsites that
+ * derive cta_id dynamically from a human label.
+ */
+export type CtaId =
+  // Hero (Spec 2)
+  | 'hero_install'
+  | 'hero_talk_to_engineers'
+  // Whitepaper block on home
+  | 'home_whitepaper_direct'
+  | 'home_whitepaper_direct_inline'
+  // Announcement toast
+  | 'toast_get_guide'
+  | 'toast_direct_download'
+  // Docs surfaces — copy buttons take a dynamic label fallback
+  | 'copy_code'
+  | 'copy_prompt'
+  | `copy_${string}`
+  // Nav + footer derive ids from labels at runtime
+  | `nav_${string}`
+  | `mobile_nav_${string}`
+  | `footer_${string}`;
+
 export type AnalyticsLibrary = 'agent' | 'render' | 'chat' | 'unknown';
 
 export type WhitepaperId = 'overview' | 'angular' | 'render' | 'chat';
@@ -42,7 +69,7 @@ export type AnalyticsProperties = {
   source_page?: string;
   source_section?: string;
   destination_url?: string;
-  cta_id?: string;
+  cta_id?: CtaId;
   cta_text?: string;
   surface?: AnalyticsSurface;
   library?: AnalyticsLibrary;
