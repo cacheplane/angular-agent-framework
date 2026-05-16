@@ -1,0 +1,309 @@
+[
+  {
+    "name": "EmitNagOptions",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "package",
+        "type": "string",
+        "description": "Fully-qualified npm package name, e.g. \"@ngaf/langgraph\".",
+        "optional": false
+      },
+      {
+        "name": "warn",
+        "type": "object",
+        "description": "Injected warn channel; defaults to `console.warn`.",
+        "optional": true
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "EvaluateOptions",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "graceSec",
+        "type": "number",
+        "description": "Grace window in seconds after `exp`. Defaults to 14 days.",
+        "optional": true
+      },
+      {
+        "name": "isNoncommercial",
+        "type": "boolean",
+        "description": "If true, missing token resolves to `noncommercial` instead of `missing`.",
+        "optional": true
+      },
+      {
+        "name": "nowSec",
+        "type": "number",
+        "description": "Current time in epoch seconds. Injected for testability.",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "EvaluateResult",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "claims",
+        "type": "LicenseClaims",
+        "description": "Populated when the token was valid (licensed / grace / expired).",
+        "optional": true
+      },
+      {
+        "name": "status",
+        "type": "LicenseStatus",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "LicenseClaims",
+    "kind": "interface",
+    "description": "Claims carried inside a signed license token.",
+    "properties": [
+      {
+        "name": "exp",
+        "type": "number",
+        "description": "Expires-at, epoch seconds.",
+        "optional": false
+      },
+      {
+        "name": "iat",
+        "type": "number",
+        "description": "Issued-at, epoch seconds.",
+        "optional": false
+      },
+      {
+        "name": "seats",
+        "type": "number",
+        "description": "Seat count (>=1).",
+        "optional": false
+      },
+      {
+        "name": "sub",
+        "type": "string",
+        "description": "Customer id (Stripe customer).",
+        "optional": false
+      },
+      {
+        "name": "tier",
+        "type": "LicenseTier",
+        "description": "Tier the license grants.",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "RunLicenseCheckOptions",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "isNoncommercial",
+        "type": "boolean",
+        "description": "Hint that the environment is noncommercial (e.g. NODE_ENV !== 'production').",
+        "optional": true
+      },
+      {
+        "name": "nowSec",
+        "type": "number",
+        "description": "Current time in epoch seconds. Defaults to now. Injected for testability.",
+        "optional": true
+      },
+      {
+        "name": "package",
+        "type": "string",
+        "description": "Fully-qualified host package name.",
+        "optional": false
+      },
+      {
+        "name": "publicKey",
+        "type": "Uint8Array<>",
+        "description": "Ed25519 public key to verify against.",
+        "optional": false
+      },
+      {
+        "name": "token",
+        "type": "string",
+        "description": "User-supplied license token, or undefined.",
+        "optional": true
+      },
+      {
+        "name": "warn",
+        "type": "object",
+        "description": "Injected warn channel, defaults to console.warn.",
+        "optional": true
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "LicenseStatus",
+    "kind": "type",
+    "description": "",
+    "signature": "\"licensed\" | \"grace\" | \"expired\" | \"missing\" | \"tampered\" | \"noncommercial\"",
+    "examples": []
+  },
+  {
+    "name": "LicenseTier",
+    "kind": "type",
+    "description": "The tier a license grants.",
+    "signature": "\"developer-seat\" | \"app-deployment\" | \"enterprise\"",
+    "examples": []
+  },
+  {
+    "name": "VerifyReason",
+    "kind": "type",
+    "description": "",
+    "signature": "\"malformed\" | \"tampered\"",
+    "examples": []
+  },
+  {
+    "name": "VerifyResult",
+    "kind": "type",
+    "description": "",
+    "signature": "object | object",
+    "examples": []
+  },
+  {
+    "name": "emitNag",
+    "kind": "function",
+    "description": "",
+    "signature": "emitNag(result: Pick<EvaluateResult, \"status\">, options: EmitNagOptions): void",
+    "params": [
+      {
+        "name": "result",
+        "type": "Pick<EvaluateResult, \"status\">",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "options",
+        "type": "EmitNagOptions",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "void",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "evaluateLicense",
+    "kind": "function",
+    "description": "",
+    "signature": "evaluateLicense(verifyResult: VerifyResult | undefined, options: EvaluateOptions): EvaluateResult",
+    "params": [
+      {
+        "name": "verifyResult",
+        "type": "VerifyResult | undefined",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "options",
+        "type": "EvaluateOptions",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "EvaluateResult",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "inferNoncommercial",
+    "kind": "function",
+    "description": "Heuristic default for the `isNoncommercial` flag in `runLicenseCheck`.\n\nReturns `true` when `process.env.NODE_ENV` is anything other than\n`\"production\"` — treating dev/test/CI builds as noncommercial so the\nlicense nag stays quiet. Returns `false` when there is no `process`\nglobal (browser-like environments without a dev shim), which is the\nsafe default for production bundles.\n\nCallers can always override via the `isNoncommercial` option on\n`runLicenseCheck`; this is only the fallback.",
+    "signature": "inferNoncommercial(): boolean",
+    "params": [],
+    "returns": {
+      "type": "boolean",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "runLicenseCheck",
+    "kind": "function",
+    "description": "",
+    "signature": "runLicenseCheck(options: RunLicenseCheckOptions): Promise<LicenseStatus>",
+    "params": [
+      {
+        "name": "options",
+        "type": "RunLicenseCheckOptions",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "Promise<LicenseStatus>",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "signLicense",
+    "kind": "function",
+    "description": "Sign license claims with an Ed25519 private key.\nReturns a compact token of the form `<base64url(payload-json)>.<base64url(signature)>`,\ncompatible with parseLicenseToken and verifyLicense.",
+    "signature": "signLicense(claims: LicenseClaims, privateKey: Uint8Array<>): Promise<string>",
+    "params": [
+      {
+        "name": "claims",
+        "type": "LicenseClaims",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "privateKey",
+        "type": "Uint8Array<>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "Promise<string>",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "verifyLicense",
+    "kind": "function",
+    "description": "Offline-verify a license token against a raw Ed25519 public key.\nNo network calls, no time-based checks — see evaluateLicense\nfor grace-period / expiry logic.",
+    "signature": "verifyLicense(token: string, publicKey: Uint8Array<>): Promise<VerifyResult>",
+    "params": [
+      {
+        "name": "token",
+        "type": "string",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "publicKey",
+        "type": "Uint8Array<>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "Promise<VerifyResult>",
+      "description": ""
+    },
+    "examples": []
+  }
+]

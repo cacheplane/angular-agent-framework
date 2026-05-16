@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'vitest';
+import fs from 'fs';
+import path from 'path';
 import { getAllDocSlugs, getDocBySlug, getDocMetadata } from './docs';
 import { allDocsPages } from './docs-config';
 import { getCanonicalUrl, getSitemapRoutes } from './site-metadata';
@@ -8,6 +10,27 @@ const internalDocsLinkPattern = /(?:href=["']|\]\()(?<href>\/docs\/[^"')#\s]+)/g
 function findInternalDocsLinks(content: string): string[] {
   return Array.from(content.matchAll(internalDocsLinkPattern), (match) => match.groups?.href)
     .filter((href): href is string => Boolean(href));
+}
+
+const contentRoot = path.join(process.cwd(), 'apps', 'website', 'content', 'docs');
+
+function walkMdxFiles(dir: string): string[] {
+  return fs.readdirSync(dir).flatMap((entry) => {
+    const fullPath = path.join(dir, entry);
+    const stat = fs.statSync(fullPath);
+    if (stat.isDirectory()) return walkMdxFiles(fullPath);
+    return entry.endsWith('.mdx') ? [fullPath] : [];
+  });
+}
+
+function getConfiguredDocPath({ library, section, slug }: { library: string; section: string; slug: string }): string {
+  return path.join(contentRoot, library, section, `${slug}.mdx`);
+}
+
+function findPackageImports(content: string): string[] {
+  const imports = Array.from(content.matchAll(/from\s+['"](?<pkg>@ngaf\/[^'"]+)['"]/g), (match) => match.groups?.pkg);
+  const dynamicImports = Array.from(content.matchAll(/import\(\s*['"](?<pkg>@ngaf\/[^'"]+)['"]\s*\)/g), (match) => match.groups?.pkg);
+  return [...imports, ...dynamicImports].filter((pkg): pkg is string => Boolean(pkg));
 }
 
 describe('website docs bindings', () => {
@@ -28,6 +51,15 @@ describe('website docs bindings', () => {
     for (const { library, section, slug } of getAllDocSlugs()) {
       expect(getDocBySlug(library, section, slug)).not.toBeNull();
     }
+  });
+
+  it('does not leave tracked MDX docs outside the configured docs inventory', () => {
+    const configuredPaths = new Set(getAllDocSlugs().map((slug) => getConfiguredDocPath(slug)));
+    const unconfigured = walkMdxFiles(contentRoot)
+      .filter((filePath) => !configuredPaths.has(filePath))
+      .map((filePath) => path.relative(contentRoot, filePath));
+
+    expect(unconfigured).toEqual([]);
   });
 
   it('loads a doc by library, section and slug', () => {
@@ -96,6 +128,50 @@ describe('website docs bindings', () => {
     }
 
     expect(brokenLinks).toEqual([]);
+  });
+
+  it('uses package imports that match published package entry points', () => {
+    const validPackages = new Set([
+      '@ngaf/a2ui',
+      '@ngaf/ag-ui',
+      '@ngaf/chat',
+      '@ngaf/chat/testing',
+      '@ngaf/langgraph',
+      '@ngaf/licensing',
+      '@ngaf/render',
+      '@ngaf/telemetry',
+      '@ngaf/telemetry/browser',
+      '@ngaf/telemetry/node',
+      '@ngaf/telemetry/shared',
+    ]);
+
+    const invalidImports: string[] = [];
+
+    for (const { library, section, slug } of getAllDocSlugs()) {
+      const doc = getDocBySlug(library, section, slug);
+      if (!doc) continue;
+
+      for (const pkg of findPackageImports(doc.content)) {
+        if (!validPackages.has(pkg)) {
+          invalidImports.push(`${library}/${section}/${slug} -> ${pkg}`);
+        }
+      }
+    }
+
+    expect(invalidImports).toEqual([]);
+  });
+
+  it('has generated API docs for every documented package surface', () => {
+    const librariesWithApiDocs = ['agent', 'chat', 'render', 'ag-ui', 'a2ui', 'licensing', 'telemetry'];
+    const missingApiDocs = librariesWithApiDocs.filter((library) => {
+      const apiDocsPath = path.join(contentRoot, library, 'api', 'api-docs.json');
+      if (!fs.existsSync(apiDocsPath)) return true;
+
+      const entries = JSON.parse(fs.readFileSync(apiDocsPath, 'utf8')) as unknown[];
+      return entries.length === 0;
+    });
+
+    expect(missingApiDocs).toEqual([]);
   });
 
   it('returns null for non-existent doc', () => {

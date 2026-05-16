@@ -119,7 +119,7 @@ export function Nav() {
         </Link>
 
         {/* Desktop links */}
-        <div className="hidden md:flex items-center gap-8">
+        <div className="hidden lg:flex items-center gap-8">
           {links.map((l) => l.external ? (
             <a key={l.href} href={l.href}
               target="_blank"
@@ -173,7 +173,7 @@ export function Nav() {
 
         {/* Mobile hamburger */}
         <button
-          className="md:hidden"
+          className="lg:hidden"
           onClick={() => { setOpen(!open); if (!open) setMobileTab(isDocsPage ? 'docs' : 'site'); }}
           aria-label={open ? 'Close menu' : 'Open menu'}
           style={{ color: tokens.colors.textPrimary }}>
@@ -185,7 +185,7 @@ export function Nav() {
 
     {/* Mobile full-screen overlay — rendered outside nav to avoid stacking context issues */}
     {open && (
-      <div className="md:hidden fixed left-0 right-0 bottom-0"
+      <div className="lg:hidden fixed left-0 right-0 bottom-0"
         style={{
           top: 57,
           zIndex: 9999,

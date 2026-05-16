@@ -1,0 +1,1073 @@
+[
+  {
+    "name": "A2uiAction",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "context",
+        "type": "A2uiActionContextEntry[]",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "name",
+        "type": "string",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "A2uiActionContextEntry",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "key",
+        "type": "string",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "value",
+        "type": "DynamicString | DynamicNumber | DynamicBoolean",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "A2uiActionMessage",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "action",
+        "type": "object",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "metadata",
+        "type": "object",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "version",
+        "type": "\"v0.9\"",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "A2uiAudioPlayer",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "autoPlay",
+        "type": "boolean",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "controls",
+        "type": "boolean",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "url",
+        "type": "DynamicString",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "A2uiBeginRendering",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "root",
+        "type": "string",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "styles",
+        "type": "object",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "surfaceId",
+        "type": "string",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "A2uiButton",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "action",
+        "type": "A2uiAction",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "child",
+        "type": "string",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "primary",
+        "type": "boolean",
+        "description": "",
+        "optional": true
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "A2uiCard",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "child",
+        "type": "string",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "A2uiCheckBox",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "action",
+        "type": "A2uiAction",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "checked",
+        "type": "DynamicBoolean",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "label",
+        "type": "DynamicString",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "A2uiClientDataModel",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "surfaces",
+        "type": "Record<string, Record<string, unknown>>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "version",
+        "type": "\"v0.9\"",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "A2uiColumn",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "alignment",
+        "type": "\"start\" | \"center\" | \"end\" | \"stretch\"",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "children",
+        "type": "A2uiChildren",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "gap",
+        "type": "number",
+        "description": "",
+        "optional": true
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "A2uiComponent",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "component",
+        "type": "A2uiComponentDef",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "id",
+        "type": "string",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "weight",
+        "type": "number",
+        "description": "",
+        "optional": true
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "A2uiDataModelEntry",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "key",
+        "type": "string",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "valueBoolean",
+        "type": "boolean",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "valueMap",
+        "type": "A2uiDataModelEntry[]",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "valueNumber",
+        "type": "number",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "valueString",
+        "type": "string",
+        "description": "",
+        "optional": true
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "A2uiDataModelUpdate",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "contents",
+        "type": "A2uiDataModelEntry[]",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "path",
+        "type": "string",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "surfaceId",
+        "type": "string",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "A2uiDateTimeInput",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "enableDate",
+        "type": "boolean",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "enableTime",
+        "type": "boolean",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "label",
+        "type": "DynamicString",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "value",
+        "type": "DynamicString",
+        "description": "",
+        "optional": true
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "A2uiDeleteSurface",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "surfaceId",
+        "type": "string",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "A2uiDivider",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "direction",
+        "type": "\"vertical\" | \"horizontal\"",
+        "description": "",
+        "optional": true
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "A2uiIcon",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "icon",
+        "type": "DynamicString",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "size",
+        "type": "number",
+        "description": "",
+        "optional": true
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "A2uiImage",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "alt",
+        "type": "DynamicString",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "height",
+        "type": "number",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "url",
+        "type": "DynamicString",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "width",
+        "type": "number",
+        "description": "",
+        "optional": true
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "A2uiList",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "children",
+        "type": "A2uiChildren",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "direction",
+        "type": "\"vertical\" | \"horizontal\"",
+        "description": "",
+        "optional": true
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "A2uiMessageParser",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "push",
+        "type": "unknown",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "A2uiModal",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "contentChild",
+        "type": "string",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "entryPointChild",
+        "type": "string",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "title",
+        "type": "DynamicString",
+        "description": "",
+        "optional": true
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "A2uiMultipleChoice",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "label",
+        "type": "DynamicString",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "maxAllowedSelections",
+        "type": "number",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "options",
+        "type": "object[]",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "selections",
+        "type": "DynamicStringList",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "A2uiRow",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "alignment",
+        "type": "\"start\" | \"center\" | \"end\" | \"stretch\"",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "children",
+        "type": "A2uiChildren",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "distribution",
+        "type": "\"start\" | \"center\" | \"end\" | \"space-between\" | \"space-around\"",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "gap",
+        "type": "number",
+        "description": "",
+        "optional": true
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "A2uiScope",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "basePath",
+        "type": "string",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "item",
+        "type": "unknown",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "A2uiSlider",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "label",
+        "type": "DynamicString",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "maxValue",
+        "type": "number",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "minValue",
+        "type": "number",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "step",
+        "type": "number",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "value",
+        "type": "DynamicNumber",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "A2uiSurface",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "catalogId",
+        "type": "string",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "components",
+        "type": "Map<string, A2uiComponent>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "dataModel",
+        "type": "Record<string, unknown>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "sendDataModel",
+        "type": "boolean",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "styles",
+        "type": "object",
+        "description": "Styles set by the agent via `beginRendering.styles`. The\ncanonical v1 spec defines exactly two fields: `font` (primary\nfont for the UI) and `primaryColor` (hex `#RRGGBB`). The renderer\napplies these as CSS custom properties on the surface root,\noverriding any consumer-set defaults for the duration of the\nsurface's life. Anything richer (typography scale, spacing,\nelevation, etc.) is the renderer's private vocabulary and not\ncommunicated through this field.",
+        "optional": true
+      },
+      {
+        "name": "surfaceId",
+        "type": "string",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "theme",
+        "type": "A2uiTheme",
+        "description": "",
+        "optional": true
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "A2uiSurfaceUpdate",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "components",
+        "type": "A2uiComponent[]",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "surfaceId",
+        "type": "string",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "A2uiTabItem",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "child",
+        "type": "string",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "title",
+        "type": "DynamicString",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "A2uiTabs",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "tabItems",
+        "type": "A2uiTabItem[]",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "A2uiText",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "text",
+        "type": "DynamicString",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "usageHint",
+        "type": "\"h1\" | \"h2\" | \"h3\" | \"h4\" | \"h5\" | \"caption\" | \"body\"",
+        "description": "",
+        "optional": true
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "A2uiTextField",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "label",
+        "type": "DynamicString",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "text",
+        "type": "DynamicString",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "textFieldType",
+        "type": "\"number\" | \"date\" | \"longText\" | \"shortText\" | \"obscured\"",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "validationRegexp",
+        "type": "string",
+        "description": "",
+        "optional": true
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "A2uiTheme",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "agentDisplayName",
+        "type": "string",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "iconUrl",
+        "type": "string",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "primaryColor",
+        "type": "string",
+        "description": "",
+        "optional": true
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "A2uiVideo",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "autoPlay",
+        "type": "boolean",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "controls",
+        "type": "boolean",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "url",
+        "type": "DynamicString",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "A2uiChildren",
+    "kind": "type",
+    "description": "",
+    "signature": "object | object",
+    "examples": []
+  },
+  {
+    "name": "A2uiComponentDef",
+    "kind": "type",
+    "description": "",
+    "signature": "object | object | object | object | object | object | object | object | object | object | object | object | object | object | object | object | object | object",
+    "examples": []
+  },
+  {
+    "name": "A2uiMessage",
+    "kind": "type",
+    "description": "",
+    "signature": "object | object | object | object",
+    "examples": []
+  },
+  {
+    "name": "DynamicBoolean",
+    "kind": "type",
+    "description": "",
+    "signature": "object | object",
+    "examples": []
+  },
+  {
+    "name": "DynamicNumber",
+    "kind": "type",
+    "description": "",
+    "signature": "object | object",
+    "examples": []
+  },
+  {
+    "name": "DynamicString",
+    "kind": "type",
+    "description": "",
+    "signature": "object | object",
+    "examples": []
+  },
+  {
+    "name": "DynamicStringList",
+    "kind": "type",
+    "description": "",
+    "signature": "object | object",
+    "examples": []
+  },
+  {
+    "name": "createA2uiMessageParser",
+    "kind": "function",
+    "description": "",
+    "signature": "createA2uiMessageParser(): A2uiMessageParser",
+    "params": [],
+    "returns": {
+      "type": "A2uiMessageParser",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "deleteByPointer",
+    "kind": "function",
+    "description": "",
+    "signature": "deleteByPointer(model: Record<string, unknown>, pointer: string): Record<string, unknown>",
+    "params": [
+      {
+        "name": "model",
+        "type": "Record<string, unknown>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "pointer",
+        "type": "string",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "Record<string, unknown>",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "getByPointer",
+    "kind": "function",
+    "description": "",
+    "signature": "getByPointer(model: Record<string, unknown>, pointer: string): unknown",
+    "params": [
+      {
+        "name": "model",
+        "type": "Record<string, unknown>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "pointer",
+        "type": "string",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "unknown",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "isLiteralBoolean",
+    "kind": "function",
+    "description": "",
+    "signature": "isLiteralBoolean(value: unknown): value is { literalBoolean: boolean }",
+    "params": [
+      {
+        "name": "value",
+        "type": "unknown",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "value is { literalBoolean: boolean }",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "isLiteralNumber",
+    "kind": "function",
+    "description": "",
+    "signature": "isLiteralNumber(value: unknown): value is { literalNumber: number }",
+    "params": [
+      {
+        "name": "value",
+        "type": "unknown",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "value is { literalNumber: number }",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "isLiteralString",
+    "kind": "function",
+    "description": "",
+    "signature": "isLiteralString(value: unknown): value is { literalString: string }",
+    "params": [
+      {
+        "name": "value",
+        "type": "unknown",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "value is { literalString: string }",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "isPathRef",
+    "kind": "function",
+    "description": "",
+    "signature": "isPathRef(value: unknown): value is { path: string }",
+    "params": [
+      {
+        "name": "value",
+        "type": "unknown",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "value is { path: string }",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "resolveDynamic",
+    "kind": "function",
+    "description": "",
+    "signature": "resolveDynamic(value: unknown, model: Record<string, unknown>, scope: A2uiScope): unknown",
+    "params": [
+      {
+        "name": "value",
+        "type": "unknown",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "model",
+        "type": "Record<string, unknown>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "scope",
+        "type": "A2uiScope",
+        "description": "",
+        "optional": true
+      }
+    ],
+    "returns": {
+      "type": "unknown",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "setByPointer",
+    "kind": "function",
+    "description": "",
+    "signature": "setByPointer(model: Record<string, unknown>, pointer: string, value: unknown): Record<string, unknown>",
+    "params": [
+      {
+        "name": "model",
+        "type": "Record<string, unknown>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "pointer",
+        "type": "string",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "value",
+        "type": "unknown",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "Record<string, unknown>",
+      "description": ""
+    },
+    "examples": []
+  }
+]

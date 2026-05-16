@@ -137,6 +137,7 @@ export const docsConfig: DocsLibrary[] = [
         pages: [
           { title: 'RenderSpecComponent', slug: 'render-spec-component', section: 'api' },
           { title: 'defineAngularRegistry()', slug: 'define-angular-registry', section: 'api' },
+          { title: 'views()', slug: 'views', section: 'api' },
           { title: 'signalStateStore()', slug: 'signal-state-store', section: 'api' },
           { title: 'provideRender()', slug: 'provide-render', section: 'api' },
         ],
@@ -156,6 +157,7 @@ export const docsConfig: DocsLibrary[] = [
           { title: 'Introduction', slug: 'introduction', section: 'getting-started' },
           { title: 'Quick Start', slug: 'quickstart', section: 'getting-started' },
           { title: 'Installation', slug: 'installation', section: 'getting-started' },
+          { title: 'Changelog', slug: 'changelog', section: 'getting-started' },
         ],
       },
       {
@@ -167,6 +169,7 @@ export const docsConfig: DocsLibrary[] = [
           { title: 'Theming', slug: 'theming', section: 'guides' },
           { title: 'Markdown Rendering', slug: 'markdown', section: 'guides' },
           { title: 'Generative UI', slug: 'generative-ui', section: 'guides' },
+          { title: 'Custom A2UI Catalogs', slug: 'custom-catalogs', section: 'guides' },
           { title: 'Streaming', slug: 'streaming', section: 'guides' },
           { title: 'Configuration', slug: 'configuration', section: 'guides' },
           { title: 'Writing an Adapter', slug: 'writing-an-adapter', section: 'guides' },
@@ -193,10 +196,14 @@ export const docsConfig: DocsLibrary[] = [
           { title: 'ChatMessageList', slug: 'chat-message-list', section: 'components' },
           { title: 'ChatTrace', slug: 'chat-trace', section: 'components' },
           { title: 'ChatInput', slug: 'chat-input', section: 'components' },
+          { title: 'ChatReasoning', slug: 'chat-reasoning', section: 'components' },
           { title: 'ChatInterruptPanel', slug: 'chat-interrupt-panel', section: 'components' },
+          { title: 'ChatToolCalls', slug: 'chat-tool-calls', section: 'components' },
+          { title: 'chatToolCallTemplate', slug: 'chat-tool-call-template', section: 'components' },
           { title: 'ChatToolCallCard', slug: 'chat-tool-call-card', section: 'components' },
           { title: 'ChatSubagentCard', slug: 'chat-subagent-card', section: 'components' },
           { title: 'ChatDebug', slug: 'chat-debug', section: 'components' },
+          { title: 'ChatSelect', slug: 'chat-select', section: 'components' },
         ],
       },
       {
