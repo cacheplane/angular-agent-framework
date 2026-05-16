@@ -19,7 +19,7 @@
       "insight": "cockpit-recipe-completion"
     },
     {
-      "insight": "six-signal-activation-funnel"
+      "insight": "activation-funnel"
     }
   ]
 }
