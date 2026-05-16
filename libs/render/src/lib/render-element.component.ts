@@ -9,9 +9,11 @@ import {
   Injector,
   input,
   OnInit,
+  reflectComponentType,
   runInInjectionContext,
   signal,
   type Signal,
+  type Type,
 } from '@angular/core';
 import { NgComponentOutlet } from '@angular/common';
 import {
@@ -33,6 +35,38 @@ import type { AngularComponentRenderer } from './render.types';
  * store, sidestepping the normal `el.on[event]` handler binding which
  * the catalog components have no way to declare for arbitrary paths. */
 const A2UI_DATAMODEL_PREFIX = 'a2ui:datamodel:';
+
+/** Cache of declared input names per component class. NgComponentOutlet
+ * passes every key in its `inputs` prop to the target; Angular dev mode
+ * raises NG0303 for any input the component doesn't declare. We strip
+ * undeclared keys before mounting so simple view components (`StatCard`,
+ * `Container`, etc.) don't get spammed with framework-only inputs
+ * (`bindings`, `emit`, `loading`, `childKeys`, `spec`) they ignore. */
+/** `null` means reflection failed (likely uncompiled / non-component) — in
+ * that case we pass inputs through unmodified rather than swallow them.
+ * An empty Set means the component genuinely declares zero inputs (e.g. a
+ * pure presentational fallback) and ALL keys should be dropped. */
+const declaredInputsCache = new WeakMap<Type<unknown>, Set<string> | null>();
+function getDeclaredInputs(cls: Type<unknown>): Set<string> | null {
+  if (declaredInputsCache.has(cls)) return declaredInputsCache.get(cls)!;
+  const meta = reflectComponentType(cls);
+  const result = meta ? new Set<string>(meta.inputs.map(i => i.templateName)) : null;
+  declaredInputsCache.set(cls, result);
+  return result;
+}
+function filterInputsForClass(
+  cls: Type<unknown> | null,
+  inputs: Record<string, unknown>,
+): Record<string, unknown> {
+  if (!cls) return inputs;
+  const declared = getDeclaredInputs(cls);
+  if (declared === null) return inputs;
+  const out: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(inputs)) {
+    if (declared.has(k)) out[k] = v;
+  }
+  return out;
+}
 
 /** Best-effort string→typed coercion for datamodel writes. Catalog
  * components emit raw string values; the underlying state may have
@@ -76,13 +110,13 @@ function coerceValue(raw: string): unknown {
     @if (!element()?.repeat) {
       @if (visible()) {
         <ng-container
-          *ngComponentOutlet="mountClass(); inputs: resolvedInputs(); injector: parentInjector"
+          *ngComponentOutlet="mountClass(); inputs: filteredResolvedInputs(); injector: parentInjector"
         />
       }
     } @else {
       @for (repeatInjector of repeatInjectors(); track $index) {
         <ng-container
-          *ngComponentOutlet="mountClass(); inputs: repeatInputs()[$index]; injector: repeatInjector"
+          *ngComponentOutlet="mountClass(); inputs: filteredRepeatInputs()[$index]; injector: repeatInjector"
         />
       }
     }
@@ -274,6 +308,14 @@ export class RenderElementComponent implements OnInit {
     };
   });
 
+  /** `resolvedInputs` filtered down to keys the target component actually
+   * declares — silences NG0303 dev-mode warnings from framework-only
+   * inputs (bindings/emit/loading/childKeys/spec) passed to simple view
+   * components that don't declare them. */
+  readonly filteredResolvedInputs = computed(() =>
+    filterInputsForClass(this.mountClass() as Type<unknown> | null, this.resolvedInputs()),
+  );
+
   // --- Repeat support ---
 
   /** Items from the state array for repeat elements. */
@@ -326,5 +368,11 @@ export class RenderElementComponent implements OnInit {
         spec: this.spec(),
       };
     });
+  });
+
+  /** `repeatInputs` filtered per-item to declared component inputs. */
+  readonly filteredRepeatInputs = computed(() => {
+    const cls = this.mountClass() as Type<unknown> | null;
+    return this.repeatInputs().map(inputs => filterInputsForClass(cls, inputs));
   });
 }
