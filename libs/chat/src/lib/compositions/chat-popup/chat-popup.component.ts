@@ -59,7 +59,7 @@ import { CHAT_HOST_TOKENS } from '../../styles/chat-tokens';
   `],
   template: `
     <div class="chat-popup__launcher">
-      <chat-launcher-button (click)="toggle()" />
+      <chat-launcher-button (clicked)="toggle()" />
     </div>
     <div class="chat-popup__window" [attr.data-open]="open() ? 'true' : 'false'" role="dialog" aria-modal="false">
       <button type="button" class="chat-popup__close" (click)="closeWindow()" aria-label="Close chat">
