@@ -72,17 +72,17 @@ describe('website docs bindings', () => {
     const metadata = getDocMetadata('ag-ui', 'reference', 'event-mapping');
 
     expect(metadata).toMatchObject({
-      title: 'Event Mapping - AG-UI Docs - Angular Agent Framework',
+      title: 'Event Mapping - AG-UI Docs - Agent UI for Angular',
       alternates: {
         canonical: '/docs/ag-ui/reference/event-mapping',
       },
       openGraph: {
-        title: 'Event Mapping - AG-UI Docs - Angular Agent Framework',
+        title: 'Event Mapping - AG-UI Docs - Agent UI for Angular',
         url: '/docs/ag-ui/reference/event-mapping',
       },
       twitter: {
         card: 'summary_large_image',
-        title: 'Event Mapping - AG-UI Docs - Angular Agent Framework',
+        title: 'Event Mapping - AG-UI Docs - Agent UI for Angular',
       },
     });
     expect(metadata?.description).toContain('AG-UI protocol events');

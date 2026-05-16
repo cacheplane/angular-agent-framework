@@ -84,7 +84,7 @@ export const SOLUTIONS: SolutionConfig[] = [
     ],
     ctaHeadline: 'Ship compliant AI agents — without the compliance tax',
     ctaSubtext: 'Download the field report or start a pilot. Your compliance team will thank you.',
-    metaTitle: 'Compliance & Audit — Angular Agent Framework Solutions',
+    metaTitle: 'Compliance & Audit — Agent UI for Angular Solutions',
     metaDescription: 'Ship AI agents with human-in-the-loop approvals, auditable thread history, and deterministic testing. Built for SOX, HIPAA, and GDPR workflows.',
   },
   {
@@ -133,7 +133,7 @@ export const SOLUTIONS: SolutionConfig[] = [
     ],
     ctaHeadline: 'Turn your data into conversations',
     ctaSubtext: 'Download the field report or start a pilot. Ship a conversational BI experience in weeks, not quarters.',
-    metaTitle: 'Analytics & BI — Angular Agent Framework Solutions',
+    metaTitle: 'Analytics & BI — Agent UI for Angular Solutions',
     metaDescription: 'Build conversational BI with natural language queries, streaming results, and generative UI — all in Angular.',
   },
   {
@@ -182,7 +182,7 @@ export const SOLUTIONS: SolutionConfig[] = [
     ],
     ctaHeadline: 'Support agents that make your team better',
     ctaSubtext: 'Download the field report or start a pilot. Resolve routine tickets, escalate the rest with full context, keep your customers happy.',
-    metaTitle: 'Customer Support — Angular Agent Framework Solutions',
+    metaTitle: 'Customer Support — Agent UI for Angular Solutions',
     metaDescription: 'Build AI support agents with human escalation, full context handoff, and production-ready chat UI in Angular.',
   },
 ];

@@ -2,7 +2,7 @@
 
 Adapter that wraps a LangGraph agent into the runtime-neutral `Agent` contract from `@ngaf/chat`. The Angular equivalent of LangGraph's React `useStream()` hook — signal-driven access to messages, status, tool calls, interrupts, subagents, regenerate, and thread history.
 
-Part of the [Angular Agent Framework](https://github.com/cacheplane/angular-agent-framework). MIT licensed.
+Part of [Agent UI for Angular](https://github.com/cacheplane/angular-agent-framework). MIT licensed.
 
 ## Install
 

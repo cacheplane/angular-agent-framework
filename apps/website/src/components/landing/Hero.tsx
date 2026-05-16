@@ -1,3 +1,6 @@
+'use client';
+
+import React, { useCallback, useState } from 'react';
 import { tokens } from '@ngaf/design-tokens';
 import { Container } from '../ui/Container';
 import { Section } from '../ui/Section';
@@ -5,6 +8,57 @@ import { Eyebrow } from '../ui/Eyebrow';
 import { Button } from '../ui/Button';
 import { BrowserFrame } from '../ui/BrowserFrame';
 import { Pill } from '../ui/Pill';
+import { track } from '../../lib/analytics/client';
+import { analyticsEvents } from '../../lib/analytics/events';
+
+const INSTALL_COMMAND = 'npm install @ngaf/chat';
+const COPY_FEEDBACK_MS = 1500;
+
+function PrimaryInstallButton() {
+  const [copied, setCopied] = useState(false);
+
+  const onClick = useCallback(async () => {
+    track(analyticsEvents.marketingCtaClick, {
+      cta_id: 'hero_install',
+      track: 'developer',
+      surface: 'home',
+    });
+    try {
+      await navigator.clipboard?.writeText(INSTALL_COMMAND);
+      setCopied(true);
+      setTimeout(() => setCopied(false), COPY_FEEDBACK_MS);
+    } catch {
+      // Silent fail. Event still fires; users can copy from the docs page.
+    }
+  }, []);
+
+  return (
+    <Button variant="primary" size="lg" onClick={onClick}>
+      {copied ? 'Copied ✓' : 'Install @ngaf/chat'}
+    </Button>
+  );
+}
+
+function SecondaryTalkButton() {
+  const onClick = useCallback(() => {
+    track(analyticsEvents.marketingCtaClick, {
+      cta_id: 'hero_talk_to_engineers',
+      track: 'enterprise',
+      surface: 'home',
+    });
+  }, []);
+
+  return (
+    <Button
+      variant="ghost"
+      size="lg"
+      href="/contact?source=home_hero&track=enterprise"
+      onClick={onClick}
+    >
+      Talk to our engineers
+    </Button>
+  );
+}
 
 export function Hero() {
   return (
@@ -22,7 +76,7 @@ export function Hero() {
           {/* Left column */}
           <div>
             <Eyebrow tone="accent" style={{ marginBottom: 16 }}>
-              Angular Agent Framework · MIT
+              Agent UI for Angular · MIT
             </Eyebrow>
             <h1
               id="hero-heading"
@@ -37,7 +91,7 @@ export function Hero() {
                 letterSpacing: '-0.02em',
               }}
             >
-              Build fullstack agentic Angular apps.
+              Ship production agent UIs in Angular.
             </h1>
             <p
               style={{
@@ -47,33 +101,47 @@ export function Hero() {
                 color: tokens.colors.textSecondary,
                 margin: 0,
                 marginBottom: 32,
-                maxWidth: '52ch',
+                maxWidth: '54ch',
               }}
             >
-              Build fullstack agentic Angular apps with signal-native streaming, runtime adapters, generative UI, and production-ready primitives.
+              Signal-native chat, threads, interrupts, tool progress, and generative UI for LangGraph, AG-UI, and A2UI. MIT-licensed, self-hostable, app telemetry off by default, no React rewrite.
             </p>
             <div style={{ display: 'flex', gap: 12, marginBottom: 24, flexWrap: 'wrap' }}>
-              <Button variant="primary" size="lg" href="/docs">
-                Get started
-              </Button>
-              <Button
-                variant="ghost"
-                size="lg"
-                href="https://demo.cacheplane.ai"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Try the demo →
-              </Button>
+              <PrimaryInstallButton />
+              <SecondaryTalkButton />
             </div>
-            <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-              <Pill variant="accent">MIT licensed</Pill>
-              <Pill variant="neutral">Works with LangGraph + AG-UI</Pill>
-              <Pill variant="angular">Angular 20+</Pill>
+            <div
+              style={{
+                display: 'flex',
+                gap: 8,
+                alignItems: 'center',
+                flexWrap: 'wrap',
+                marginBottom: 12,
+              }}
+            >
+              <Pill variant="accent">MIT</Pill>
+              <Pill variant="neutral">Angular-native Signals</Pill>
+              <Pill variant="neutral">LangGraph + AG-UI</Pill>
+              <Pill variant="neutral">A2UI-compatible</Pill>
+              <Pill variant="neutral">Self-hostable</Pill>
+              <Pill variant="neutral">App telemetry off by default</Pill>
             </div>
+            <p
+              style={{
+                margin: 0,
+                fontFamily: tokens.typography.body.family,
+                fontSize: tokens.typography.body.size,
+                lineHeight: tokens.typography.body.line,
+                color: tokens.colors.textMuted,
+                fontStyle: 'italic',
+                maxWidth: '60ch',
+              }}
+            >
+              Not another backend agent runtime. Keep LangGraph, Genkit, Mastra, CrewAI, or your own service. Cacheplane solves the Angular UI layer.
+            </p>
           </div>
 
-          {/* Right column — layered collage */}
+          {/* Right column — layered collage (preserved verbatim from prior Hero.tsx) */}
           <div style={{ position: 'relative', minHeight: 420 }} aria-hidden="true">
             <BrowserFrame
               url="demo.cacheplane.ai"

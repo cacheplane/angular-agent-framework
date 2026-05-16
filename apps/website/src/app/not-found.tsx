@@ -5,7 +5,7 @@ import { Eyebrow } from '../components/ui/Eyebrow';
 import { Button } from '../components/ui/Button';
 
 export const metadata = {
-  title: 'Page not found — Angular Agent Framework',
+  title: 'Page not found — Agent UI for Angular',
   description: 'The page you were looking for doesn’t exist.',
 };
 

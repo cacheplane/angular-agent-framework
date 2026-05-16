@@ -49,7 +49,7 @@ Repeat across the site, comparison pages, and content.
 
 **Trust signal:** GitHub star count pill. No logo wall.
 
-**Fields:** email + free-text body. No stack dropdown, no company size, no "how did you hear."
+**Fields:** email (required) + name, company, message (all optional). No stack dropdown, no company size, no "how did you hear." Optional fields feed enterprise-qualification when present.
 
 Hidden attribution fields (populated by URL params + referrer): `source_page`, `track`, `cta_id`, `paper`, `referrer_host`.
 

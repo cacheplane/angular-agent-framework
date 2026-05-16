@@ -45,8 +45,8 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: DocsRouteProps): Promise<Metadata> {
   const { library, section, slug } = await params;
   return getDocMetadata(library, section, slug) ?? {
-    title: 'Docs - Angular Agent Framework',
-    description: 'Angular Agent Framework documentation',
+    title: 'Docs - Agent UI for Angular',
+    description: 'Agent UI for Angular documentation',
   };
 }
 

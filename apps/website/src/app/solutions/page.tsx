@@ -10,8 +10,8 @@ import { FinalCTA } from '../../components/landing/FinalCTA';
 import { SOLUTIONS } from '../../lib/solutions-data';
 
 export const metadata = {
-  title: 'Solutions — Angular Agent Framework',
-  description: 'See how Angular Agent Framework solves enterprise challenges — compliance, analytics, and customer support.',
+  title: 'Solutions — Agent UI for Angular',
+  description: 'See how Agent UI for Angular solves enterprise challenges — compliance, analytics, and customer support.',
 };
 
 export default function SolutionsIndexPage() {

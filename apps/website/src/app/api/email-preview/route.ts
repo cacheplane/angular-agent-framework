@@ -16,7 +16,7 @@ const TEMPLATES: Record<string, () => { subject: string; html: string }> = {
     html: whitepaperDownloadHtml('Brian'),
   }),
   'newsletter-welcome': () => ({
-    subject: 'Welcome to Angular Agent Framework updates',
+    subject: 'Welcome to Agent UI for Angular updates',
     html: newsletterWelcomeHtml(),
   }),
   'lead-notification': () => ({

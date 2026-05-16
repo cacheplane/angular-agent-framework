@@ -41,7 +41,7 @@ export function LogoMark({
       {...rest}
     >
       <span aria-hidden="true" style={{ fontSize: s.icon, lineHeight: 1 }}>🛩️</span>
-      {iconOnly ? null : <span>Angular Agent Framework</span>}
+      {iconOnly ? null : <span>Agent UI for Angular</span>}
     </span>
   );
 }

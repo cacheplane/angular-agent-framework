@@ -1,4 +1,4 @@
-# Angular Agent Framework — Limitations vs React useStream()
+# Agent UI for Angular — Limitations vs React useStream()
 
 Features that are technically impossible or behaviorally degraded when
  porting LangGraph's React `useStream()` hook to Angular.

@@ -16,9 +16,9 @@ function loadVersion(): string {
 function buildLlmsTxt(): string {
   const version = loadVersion();
   return [
-    `# Angular Agent Framework v${version}`,
+    `# Agent UI for Angular v${version}`,
     '',
-    "Angular Agent Framework is a runtime-neutral chat UI SDK for Angular. The @ngaf/chat library provides streaming chat primitives bound to a runtime-neutral 'Agent' contract; runtime adapters (@ngaf/langgraph, @ngaf/ag-ui) translate between the contract and the actual backend.",
+    "Agent UI for Angular is a runtime-neutral chat UI SDK for Angular. The @ngaf/chat library provides streaming chat primitives bound to a runtime-neutral 'Agent' contract; runtime adapters (@ngaf/langgraph, @ngaf/ag-ui) translate between the contract and the actual backend.",
     '',
     '## Packages',
     '- @ngaf/chat — chat UI primitives (messages, input, tool calls, interrupt, debug, etc.) consuming the Agent contract',

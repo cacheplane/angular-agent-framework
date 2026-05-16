@@ -11,7 +11,7 @@ function getResend(): Resend | null {
 }
 
 export const AUDIENCE_ID = process.env.RESEND_AUDIENCE_ID || '';
-export const FROM = process.env.RESEND_FROM || 'Angular Agent Framework <hello@cacheplane.io>';
+export const FROM = process.env.RESEND_FROM || 'Agent UI for Angular <hello@cacheplane.io>';
 export const NOTIFY_TO = process.env.RESEND_NOTIFY_TO || 'hello@cacheplane.io';
 
 /** Send an email via Resend. No-ops when API key is missing. */

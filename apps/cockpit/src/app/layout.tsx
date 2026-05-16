@@ -6,17 +6,17 @@ import { AnalyticsBootstrap } from '../components/analytics-bootstrap';
 import './cockpit.css';
 
 export const metadata = {
-  title: 'Cockpit — Angular Agent Framework',
-  description: 'The live reference app for the Angular Agent Framework. Real LangGraph + AG-UI agents through the Angular surface you’ll ship.',
+  title: 'Cockpit — Agent UI for Angular',
+  description: 'The live reference app for Agent UI for Angular. Real LangGraph + AG-UI agents through the Angular surface you’ll ship.',
   openGraph: {
-    title: 'Cockpit — Angular Agent Framework',
+    title: 'Cockpit — Agent UI for Angular',
     description: 'The live reference app for the framework. Real LangGraph + AG-UI agents through the same Angular surface you’ll ship.',
     type: 'website',
     siteName: 'Cockpit',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Cockpit — Angular Agent Framework',
+    title: 'Cockpit — Agent UI for Angular',
     description: 'The live reference app for the framework. Real LangGraph + AG-UI agents through the Angular surface you’ll ship.',
   },
 };

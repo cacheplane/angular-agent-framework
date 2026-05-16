@@ -117,7 +117,7 @@ test('docs pages render canonical and social metadata', async ({ page }) => {
   );
   await expect(page.locator('meta[property="og:title"]')).toHaveAttribute(
     'content',
-    'Streaming - Agent Docs - Angular Agent Framework',
+    'Streaming - Agent Docs - Agent UI for Angular',
   );
   await expect(page.locator('meta[property="og:url"]')).toHaveAttribute(
     'content',
@@ -125,7 +125,7 @@ test('docs pages render canonical and social metadata', async ({ page }) => {
   );
   await expect(page.locator('meta[name="twitter:title"]')).toHaveAttribute(
     'content',
-    'Streaming - Agent Docs - Angular Agent Framework',
+    'Streaming - Agent Docs - Agent UI for Angular',
   );
 });
 

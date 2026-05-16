@@ -399,7 +399,7 @@ async def generate(state: State, config: RunnableConfig) -> dict:
     # false. The envelope shape carries list[dict] for components/contents
     # (untyped inner objects), which strict mode rejects with a 400
     # ('additionalProperties is required to be supplied and to be false').
-    # Typing the inner shapes would over-couple this example to the A2UI v1
+    # Typing the inner shapes would over-couple this example to the A2UI v0.9
     # spec; instead we leave strict OFF and rely on the envelope-args
     # normalizer (Python: src/streaming/envelope_normalizer.py; TS:
     # libs/chat/src/lib/a2ui/envelope-normalizer.ts) to canonicalize the
@@ -408,11 +408,11 @@ async def generate(state: State, config: RunnableConfig) -> dict:
     llm = ChatOpenAI(**kwargs).bind_tools(
         [search_documents, request_approval, research, gen_ui_tool],
     )
-    # Append A2UI v1 schema to system prompt when in a2ui mode, so the parent
+    # Append A2UI v0.9 schema to system prompt when in a2ui mode, so the parent
     # LLM knows how to construct the envelopes directly.
     system = SYSTEM_PROMPT
     if gen_ui_mode == "a2ui":
-        system = SYSTEM_PROMPT + "\n\n--- A2UI v1 SCHEMA ---\n" + A2UI_V1_SCHEMA_PROMPT + (
+        system = SYSTEM_PROMPT + "\n\n--- A2UI v0.9 SCHEMA ---\n" + A2UI_V1_SCHEMA_PROMPT + (
             "\n\nWhen rendering UI in a2ui mode, emit envelopes in this order: "
             "surfaceUpdate FIRST, then beginRendering, then any dataModelUpdate "
             "entries. This lets the client mount the surface as early as possible."

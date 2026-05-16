@@ -7,5 +7,16 @@
     "emitDeclarationOnly": false
   },
   "files": ["src/main.ts"],
-  "include": ["src/**/*.ts"]
+  "include": ["src/**/*.ts"],
+  "references": [
+    {
+      "path": "../../../../libs/example-layouts"
+    },
+    {
+      "path": "../../../../libs/chat"
+    },
+    {
+      "path": "../../../../libs/ag-ui"
+    }
+  ]
 }

@@ -2,7 +2,7 @@
 
 Adapter that wraps an [AG-UI](https://github.com/ag-ui-protocol/ag-ui) `AbstractAgent` into the runtime-neutral `Agent` contract from `@ngaf/chat`. Works with any AG-UI-compatible backend — LangGraph, CrewAI, Mastra, Microsoft Agent Framework, AG2, Pydantic AI, AWS Strands, CopilotKit runtime.
 
-Part of the [Angular Agent Framework](https://github.com/cacheplane/angular-agent-framework). MIT licensed.
+Part of [Agent UI for Angular](https://github.com/cacheplane/angular-agent-framework). MIT licensed.
 
 ## Install
 

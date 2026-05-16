@@ -94,7 +94,9 @@ export function Nav() {
 
   const currentLib = docsConfig.find(lib => lib.id === mobileLibrary);
   const trackNavLink = (label: string, href: string, external: boolean, surface: 'nav' | 'mobile_nav') => {
-    const ctaId = `${surface}_${label.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '')}`;
+    const slug = label.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
+    const ctaId: `nav_${string}` | `mobile_nav_${string}` =
+      surface === 'nav' ? `nav_${slug}` : `mobile_nav_${slug}`;
     if (external) {
       trackExternalLinkClick(href, { surface, cta_id: ctaId, cta_text: label });
       return;

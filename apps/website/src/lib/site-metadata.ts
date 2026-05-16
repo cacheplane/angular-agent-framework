@@ -3,7 +3,7 @@ import { getAllSolutionSlugs } from './solutions-data';
 import { docsConfig } from './docs-config';
 
 export const SITE_ORIGIN = 'https://cacheplane.ai';
-export const SITE_NAME = 'Angular Agent Framework';
+export const SITE_NAME = 'Agent UI for Angular';
 export const DEFAULT_SOCIAL_IMAGE = '/opengraph-image';
 
 export function getCanonicalPath(pathname: string): string {
