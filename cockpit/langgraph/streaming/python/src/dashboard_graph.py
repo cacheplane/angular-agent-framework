@@ -47,11 +47,28 @@ async def generate_shell(state: DashboardState) -> DashboardState:
 
 
 async def plan_tools(state: DashboardState) -> DashboardState:
-    """On follow-up turns, let the LLM decide which tools to call."""
+    """On follow-up turns, pick the MINIMAL set of tools — usually one."""
     context = (
         f"The current dashboard spec is:\n{state['dashboard_spec']}\n\n"
-        "Based on the user's message, decide which tools to call to update the dashboard data. "
-        "If the user asks a question about the data that doesn't need fresh data, just respond conversationally."
+        "Classify the user's message and act ONCE — do not refetch everything.\n"
+        "\n"
+        "1) FILTER / SCOPE existing data (e.g. 'filter to cancelled flights only',\n"
+        "   'show last 6 months', 'limit to enterprise', 'sort by date',\n"
+        "   'only show delayed', 'top 3'): call EXACTLY ONE tool — the one that\n"
+        "   backs the affected component — with the new parameters. Do NOT call\n"
+        "   the other tools. Do NOT regenerate the spec.\n"
+        "\n"
+        "2) STRUCTURAL change (e.g. 'add a card for X', 'remove the table',\n"
+        "   'split this into two columns'): regenerate the spec, then call only\n"
+        "   the tools needed to populate NEW components.\n"
+        "\n"
+        "3) QUESTION about existing data (e.g. 'why', 'how', 'explain',\n"
+        "   'what does this mean'): respond conversationally in plain prose.\n"
+        "   Call NO tools. Output NO JSON.\n"
+        "\n"
+        "If none of these fit, call only the smallest set of tools you need.\n"
+        "Calling all four tools is reserved for an explicit 'refresh' /\n"
+        "'reload' / 'update everything' request."
     )
     messages = [SystemMessage(content=_PROMPT + "\n\n" + context)] + state["messages"]
     response = await _llm_with_tools.ainvoke(messages)
