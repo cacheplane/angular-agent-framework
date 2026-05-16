@@ -407,6 +407,25 @@
     "examples": []
   },
   {
+    "name": "isPersonalEmailDomain",
+    "kind": "function",
+    "description": "",
+    "signature": "isPersonalEmailDomain(domain: string | null | undefined): boolean",
+    "params": [
+      {
+        "name": "domain",
+        "type": "string | null | undefined",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "boolean",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
     "name": "normalizePostHogHost",
     "kind": "function",
     "description": "",
