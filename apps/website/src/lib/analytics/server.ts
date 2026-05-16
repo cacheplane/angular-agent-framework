@@ -1,7 +1,7 @@
 import { createHash } from 'crypto';
 import { PostHog } from 'posthog-node';
 import { analyticsEvents, type AnalyticsEventName, type AnalyticsProperties, type WhitepaperId } from './events';
-import { getEmailDomain, normalizePostHogHost, toSafeAnalyticsString } from '@ngaf/telemetry/shared';
+import { getEmailDomain, isPersonalEmailDomain, normalizePostHogHost, toSafeAnalyticsString } from '@ngaf/telemetry/shared';
 
 function getServerPostHogClient(): PostHog | null {
   const token = toSafeAnalyticsString(process.env.NEXT_PUBLIC_POSTHOG_TOKEN, 500);
@@ -69,6 +69,36 @@ export async function captureLeadConversion({
       email_domain: getEmailDomain(email) ?? undefined,
       company: toSafeAnalyticsString(company, 200),
       source_page: sourcePage,
+    },
+  });
+}
+
+export async function captureLeadQualified({
+  email,
+  company,
+  sourcePage,
+}: {
+  email: string;
+  company?: string;
+  sourcePage?: string;
+}) {
+  const domain = getEmailDomain(email);
+  if (!domain || isPersonalEmailDomain(domain)) return;
+
+  const safeCompany = toSafeAnalyticsString(company, 200);
+  if (!safeCompany) return;
+
+  const distinctId = getHashedEmailDistinctId(email);
+  if (!distinctId) return;
+
+  await captureServerEvent({
+    distinctId,
+    event: analyticsEvents.marketingLeadQualified,
+    properties: {
+      email_domain: domain,
+      company: safeCompany,
+      source_page: sourcePage,
+      track: 'enterprise',
     },
   });
 }

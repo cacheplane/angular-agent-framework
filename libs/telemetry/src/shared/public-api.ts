@@ -6,3 +6,4 @@ export {
   normalizePostHogHost,
   toSafeAnalyticsString,
 } from './properties';
+export { PERSONAL_EMAIL_DOMAINS, isPersonalEmailDomain } from './personal-email-domains';

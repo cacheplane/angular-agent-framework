@@ -8,6 +8,7 @@ export const analyticsEvents = {
   marketingLeadFormSubmit: 'marketing:lead_form_submit',
   marketingLeadFormSuccess: 'marketing:lead_form_success',
   marketingLeadFormFail: 'marketing:lead_form_fail',
+  marketingLeadQualified: 'marketing:lead_qualified',
   marketingNewsletterSignupSubmit: 'marketing:newsletter_signup_submit',
   marketingNewsletterSignupSuccess: 'marketing:newsletter_signup_success',
   marketingNewsletterSignupFail: 'marketing:newsletter_signup_fail',

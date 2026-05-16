@@ -4,7 +4,7 @@ import path from 'path';
 import { sendEmail, FROM, NOTIFY_TO, addToAudience } from '../../../../lib/resend';
 import { loopsUpsertContact, loopsSendEvent } from '../../../../lib/loops';
 import { leadNotificationHtml } from '../../../../emails/lead-notification';
-import { captureLeadConversion } from '../../../lib/analytics/server';
+import { captureLeadConversion, captureLeadQualified } from '../../../lib/analytics/server';
 import { getSourcePage } from '@ngaf/telemetry/shared';
 
 const LEADS_FILE = path.join(process.cwd(), 'data', 'leads.ndjson');
@@ -61,6 +61,7 @@ export async function POST(req: NextRequest) {
   }
 
   await captureLeadConversion({ email, company, sourcePage });
+  await captureLeadQualified({ email, company, sourcePage });
 
   return NextResponse.json({ ok: true });
 }
