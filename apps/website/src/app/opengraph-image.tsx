@@ -114,7 +114,7 @@ export default async function OpenGraphImage() {
             maxWidth: 980,
           }}
         >
-          Ship agentic Angular apps without rewriting your frontend.
+          Build fullstack agentic Angular apps.
         </div>
 
         {/* Subhead */}
@@ -127,8 +127,8 @@ export default async function OpenGraphImage() {
             marginBottom: 'auto',
           }}
         >
-          Signal-native streaming for LangGraph and AG-UI. Headless primitives plus
-          opinionated compositions for Angular 20+ teams shipping to production.
+          Build fullstack agentic Angular apps with signal-native streaming,
+          runtime adapters, generative UI, and production-ready primitives.
         </div>
 
         {/* Footer row — pill trust signals + wordmark */}

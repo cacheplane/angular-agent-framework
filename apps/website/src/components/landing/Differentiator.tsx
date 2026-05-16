@@ -65,7 +65,7 @@ export function Differentiator() {
               letterSpacing: '-0.015em',
             }}
           >
-            Built for Angular, not retrofitted.
+            The fullstack agentic library for Angular.
           </h2>
           <p
             style={{
@@ -77,7 +77,7 @@ export function Differentiator() {
               marginBottom: 16,
             }}
           >
-            Most agent UI work assumes React or a vanilla web component. Angular teams glue together ad-hoc streaming, lose interrupts, and re-implement thread state — every project, every time.
+            NGAF brings runtime adapters, signal-native streaming, tool events, generative UI, and production patterns into one Angular-first SDK.
           </p>
           <p
             style={{
@@ -88,7 +88,7 @@ export function Differentiator() {
               margin: 0,
             }}
           >
-            Signals and DI are <em>better</em> substrates for agent UI than hooks — when they&apos;re used directly, not behind a port. So we built it that way.
+            Built by people who have shipped agent UI systems and wanted something deeper than a framework adapter.
           </p>
         </div>
 

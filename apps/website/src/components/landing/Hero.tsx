@@ -37,7 +37,7 @@ export function Hero() {
                 letterSpacing: '-0.02em',
               }}
             >
-              Ship agentic Angular apps without rewriting your frontend.
+              Build fullstack agentic Angular apps.
             </h1>
             <p
               style={{
@@ -50,7 +50,7 @@ export function Hero() {
                 maxWidth: '52ch',
               }}
             >
-              Signal-native streaming for LangGraph and AG-UI. Headless primitives plus opinionated compositions, built for Angular 20+ teams shipping to production.
+              Build fullstack agentic Angular apps with signal-native streaming, runtime adapters, generative UI, and production-ready primitives.
             </p>
             <div style={{ display: 'flex', gap: 12, marginBottom: 24, flexWrap: 'wrap' }}>
               <Button variant="primary" size="lg" href="/docs">
