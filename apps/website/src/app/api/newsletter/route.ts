@@ -3,7 +3,7 @@ import { sendEmail, FROM, addToAudience } from '../../../../lib/resend';
 import { loopsUpsertContact, loopsSendEvent } from '../../../../lib/loops';
 import { newsletterWelcomeHtml } from '../../../../emails/newsletter-welcome';
 import { captureNewsletterConversion } from '../../../lib/analytics/server';
-import { getSourcePage } from '../../../lib/analytics/properties';
+import { getSourcePage } from '@ngaf/telemetry/shared';
 
 export async function POST(req: NextRequest) {
   let body: { email?: string };
