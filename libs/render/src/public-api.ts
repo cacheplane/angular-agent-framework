@@ -40,6 +40,10 @@ export type {
   RenderLifecycleEvent,
 } from './lib/render-event';
 
+// Lifecycle
+export { RENDER_LIFECYCLE } from './lib/lifecycle';
+export type { RenderLifecycle } from './lib/lifecycle';
+
 // Fallback
 export { DefaultFallbackComponent } from './lib/default-fallback.component';
 export type { RenderViewEntry } from './lib/render.types';

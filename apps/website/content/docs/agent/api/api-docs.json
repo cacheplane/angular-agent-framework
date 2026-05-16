@@ -1,5 +1,35 @@
 [
   {
+    "name": "AgentLifecycleRegistry",
+    "kind": "class",
+    "description": "Optional registry that collects per-instance agent lifecycles within\nan Angular injection context. External instrumentation packages\n(e.g. cockpit-telemetry) provide this token and read from it.\n\n`@ngaf/langgraph` does NOT provide this itself — `agent()` writes to\nthe registry only when an external consumer has provided it.",
+    "params": [],
+    "examples": [],
+    "properties": [
+      {
+        "name": "lifecycles",
+        "type": "Signal<readonly AgentLifecycle[]>",
+        "description": "Reactive list of registered lifecycles.",
+        "optional": false
+      }
+    ],
+    "methods": [
+      {
+        "name": "register",
+        "signature": "register(lifecycle: AgentLifecycle)",
+        "description": "",
+        "params": [
+          {
+            "name": "lifecycle",
+            "type": "AgentLifecycle",
+            "description": "",
+            "optional": false
+          }
+        ]
+      }
+    ]
+  },
+  {
     "name": "FetchStreamTransport",
     "kind": "class",
     "description": "Production transport that connects to a LangGraph Platform API via HTTP and SSE.\n\nCreates threads automatically if no threadId is provided, and streams events\nusing the LangGraph SDK client.",
@@ -558,6 +588,62 @@
     "examples": []
   },
   {
+    "name": "AgentLifecycle",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "interruptReceivedAt",
+        "type": "Signal<number | null>",
+        "description": "Epoch ms of the first interrupt$ non-null in this stream. Resets on clearThread.",
+        "optional": false
+      },
+      {
+        "name": "interruptResolvedAt",
+        "type": "Signal<number | null>",
+        "description": "Epoch ms of the most recent submit({ interrupt }) call. Resets on clearThread.",
+        "optional": false
+      },
+      {
+        "name": "streamErrorAt",
+        "type": "Signal<object | null>",
+        "description": "Epoch ms + classification of the most recent stream error. Resets on clearThread.",
+        "optional": false
+      },
+      {
+        "name": "streamStartedAt",
+        "type": "Signal<number | null>",
+        "description": "Epoch ms of the first stream chunk arrival. Resets on clearThread.",
+        "optional": false
+      },
+      {
+        "name": "threadCreatedAt",
+        "type": "Signal<number | null>",
+        "description": "Epoch ms when the agent's \"create new thread\" branch fired. Resets on clearThread.",
+        "optional": false
+      },
+      {
+        "name": "threadPersistedAt",
+        "type": "Signal<number | null>",
+        "description": "Epoch ms when an existing thread was restored from server (proves persistence). Resets on clearThread.",
+        "optional": false
+      },
+      {
+        "name": "toolCallCompletedAt",
+        "type": "Signal<number | null>",
+        "description": "Epoch ms of the first tool call result transition. Resets on clearThread.",
+        "optional": false
+      },
+      {
+        "name": "toolCallStartedAt",
+        "type": "Signal<number | null>",
+        "description": "Epoch ms of the first tool call append. Resets on clearThread.",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
     "name": "AgentOptions",
     "kind": "interface",
     "description": "Options for creating a LangGraph-backed agent via agent.",
@@ -929,6 +1015,12 @@
         "optional": false
       },
       {
+        "name": "lifecycle",
+        "type": "AgentLifecycle",
+        "description": "Lifecycle signals for observability/telemetry. Eight read-only signals\ncapture key transitions (first stream chunk, first interrupt, tool\ncall start/complete, thread create/persist, errors). All reset on\n`switchThread()`. See AgentLifecycle.",
+        "optional": false
+      },
+      {
         "name": "messageCheckpoints",
         "type": "Signal<ReadonlyMap<string, string>>",
         "description": "Optional reactive map of `messageId → checkpointId`, computed by\nwalking history once: for each checkpoint, find the most recent\nassistant message present in its `values.messages` and pair them.\nUIs use this to anchor inline checkpoint markers on each assistant\nturn. Missing on adapters that don't compute it.",
@@ -1296,6 +1388,12 @@
         "name": "langGraphToolCalls",
         "type": "WritableSignal<ToolCallWithResult<>[]>",
         "description": "Raw LangGraph tool calls (with run-state). Use `toolCalls` for chat rendering.",
+        "optional": false
+      },
+      {
+        "name": "lifecycle",
+        "type": "AgentLifecycle",
+        "description": "Lifecycle signals for observability/telemetry. Eight read-only signals\ncapture key transitions (first stream chunk, first interrupt, tool\ncall start/complete, thread create/persist, errors). All reset on\n`switchThread()`. See AgentLifecycle.",
         "optional": false
       },
       {

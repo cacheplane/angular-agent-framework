@@ -77,6 +77,10 @@ export { ChatCitationsCardComponent } from './lib/primitives/chat-citations/chat
 // DI provider
 export { provideChat, CHAT_CONFIG } from './lib/provide-chat';
 
+// Lifecycle
+export { CHAT_LIFECYCLE } from './lib/lifecycle';
+export type { ChatLifecycle } from './lib/lifecycle';
+
 // Compositions
 export { ChatComponent } from './lib/compositions/chat/chat.component';
 export type { ChatRenderEvent } from './lib/compositions/chat/chat-render-event';

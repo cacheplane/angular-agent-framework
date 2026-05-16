@@ -35,6 +35,35 @@ import { createA2uiSurfaceStore, type A2uiSurfaceStore } from '../../a2ui/surfac
 import { messageContent } from '../shared/message-utils';
 import { CHAT_HOST_TOKENS } from '../../styles/chat-tokens';
 import type { ChatRenderEvent } from './chat-render-event';
+import { CHAT_LIFECYCLE, type ChatLifecycle } from '../../lifecycle';
+
+/**
+ * Internal helper: WritableSignals backing the readonly ChatLifecycle surface
+ * exposed via CHAT_LIFECYCLE. ChatComponent populates these as the user
+ * interacts; consumers (e.g. cockpit-telemetry) only see the readonly view.
+ */
+interface ChatLifecycleInternal extends ChatLifecycle {
+  _internal: {
+    componentReady: ReturnType<typeof signal<boolean>>;
+    firstMessageSent: ReturnType<typeof signal<boolean>>;
+    messageCount: ReturnType<typeof signal<number>>;
+    inputSubmittedAt: ReturnType<typeof signal<number | null>>;
+  };
+}
+
+function createChatLifecycle(): ChatLifecycleInternal {
+  const componentReady = signal(false);
+  const firstMessageSent = signal(false);
+  const messageCount = signal(0);
+  const inputSubmittedAt = signal<number | null>(null);
+  return {
+    componentReady: componentReady.asReadonly(),
+    firstMessageSent: firstMessageSent.asReadonly(),
+    messageCount: messageCount.asReadonly(),
+    inputSubmittedAt: inputSubmittedAt.asReadonly(),
+    _internal: { componentReady, firstMessageSent, messageCount, inputSubmittedAt },
+  };
+}
 
 /**
  * Returns true when the scroll position is within `tolerance` px of the bottom.
@@ -62,6 +91,9 @@ export function isPinned(
     ChatScrollBubbleComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  providers: [
+    { provide: CHAT_LIFECYCLE, useFactory: createChatLifecycle },
+  ],
   styles: [CHAT_HOST_TOKENS, `
     :host {
       display: flex;
@@ -339,6 +371,10 @@ export class ChatComponent {
 
   private readonly classifiers = new Map<string, ContentClassifier>();
   private readonly destroyRef = inject(DestroyRef);
+  // Resolved against the component's own `providers` in normal use. The fallback
+  // is for tests that construct ChatComponent via `new` inside a bare injection
+  // context (no element injector, so component-level providers are skipped).
+  private readonly lifecycle = (inject(CHAT_LIFECYCLE, { optional: true }) ?? createChatLifecycle()) as ChatLifecycleInternal;
   private eventsSubscribed = false;
 
   /**
@@ -364,6 +400,7 @@ export class ChatComponent {
       let agent: ReturnType<typeof this.agent>;
       try { agent = this.agent(); } catch { return; }
       this.eventsSubscribed = true;
+      this.lifecycle._internal.componentReady.set(true);
       agent.events$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((event) => {
         if (event.type !== 'state_update') return;
         const store = this.resolvedStore();
@@ -495,6 +532,39 @@ export class ChatComponent {
 
   protected onUserSubmitted(): void {
     this.pinned.set(true);
+    this.recordSubmit();
+  }
+
+  /**
+   * Programmatic submit. Calls `agent.submit({ message: text })` and updates
+   * the CHAT_LIFECYCLE signals. Trimmed-empty text is a no-op.
+   */
+  submitMessage(text: string): void {
+    const trimmed = text.trim();
+    if (!trimmed) return;
+    void this.agent().submit({ message: trimmed });
+    this.recordSubmit();
+  }
+
+  /**
+   * Clears local view state (classifiers, surface store, lifecycle counters)
+   * for a new thread.
+   *
+   * Resets messageCount to 0 and inputSubmittedAt to null. componentReady and
+   * firstMessageSent are NOT reset (sticky for the chat instance lifetime).
+   */
+  clearThread(): void {
+    this.clearClassifiers();
+    this.lifecycle._internal.messageCount.set(0);
+    this.lifecycle._internal.inputSubmittedAt.set(null);
+  }
+
+  private recordSubmit(): void {
+    if (!this.lifecycle._internal.firstMessageSent()) {
+      this.lifecycle._internal.firstMessageSent.set(true);
+    }
+    this.lifecycle._internal.messageCount.update((c) => c + 1);
+    this.lifecycle._internal.inputSubmittedAt.set(Date.now());
   }
 
   /**

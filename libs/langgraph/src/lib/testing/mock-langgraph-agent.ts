@@ -160,6 +160,16 @@ export function mockLangGraphAgent(
     joinStream: (_runId: string, _lastEventId?: string) => Promise.resolve(),
     getMessagesMetadata: (_msg: BaseMessage, _idx?: number): MessageMetadata<Record<string, unknown>> | undefined => undefined,
     getToolCalls: (_msg: CoreAIMessage): ToolCallWithResult[] => [],
+    lifecycle: {
+      streamStartedAt:     signal<number | null>(null),
+      streamErrorAt:       signal<{ at: number; classification: string } | null>(null),
+      interruptReceivedAt: signal<number | null>(null),
+      interruptResolvedAt: signal<number | null>(null),
+      threadCreatedAt:     signal<number | null>(null),
+      threadPersistedAt:   signal<number | null>(null),
+      toolCallStartedAt:   signal<number | null>(null),
+      toolCallCompletedAt: signal<number | null>(null),
+    },
   };
 
   return mock;

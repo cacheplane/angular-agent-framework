@@ -34,6 +34,14 @@
               "with": "cockpit/chat/input/angular/src/environments/environment.development.ts"
             }
           ]
+        },
+        "cockpit": {
+          "budgets": [
+            { "type": "initial", "maximumWarning": "500kb", "maximumError": "1mb" },
+            { "type": "anyComponentStyle", "maximumWarning": "4kb", "maximumError": "8kb" }
+          ],
+          "outputHashing": "none",
+          "browser": "cockpit/chat/input/angular/src/main.cockpit.ts"
         }
       },
       "defaultConfiguration": "production"
@@ -43,7 +51,8 @@
       "executor": "@angular/build:dev-server",
       "configurations": {
         "production": { "buildTarget": "cockpit-chat-input-angular:build:production" },
-        "development": { "buildTarget": "cockpit-chat-input-angular:build:development" }
+        "development": { "buildTarget": "cockpit-chat-input-angular:build:development" },
+        "cockpit": { "buildTarget": "cockpit-chat-input-angular:build:cockpit" }
       },
       "defaultConfiguration": "development",
       "options": {

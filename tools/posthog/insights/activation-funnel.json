@@ -1,19 +1,16 @@
 {
-  "slug": "six-signal-activation-funnel",
-  "posthog_id": 8587351,
+  "slug": "activation-funnel",
+  "posthog_id": null,
   "kind": "funnel",
-  "name": "Six-signal activation (30-min window)",
+  "name": "Activation funnel (30-min window)",
   "interval": "day",
   "window_minutes": 30,
   "steps": [
     {
-      "event": "cockpit:install_command_copied"
+      "event": "cockpit:chat_first_message"
     },
     {
       "event": "cockpit:transport_connected"
-    },
-    {
-      "event": "cockpit:chat_first_message"
     },
     {
       "event": "cockpit:thread_persisted"

@@ -5,6 +5,7 @@ import type { CockpitManifestEntry } from '@ngaf/cockpit-registry';
 import type { NavigationProduct } from '../../lib/route-resolution';
 import { toCockpitPath } from '../../lib/route-resolution';
 import { PRODUCT_LABELS, stripProductPrefix } from '../../lib/navigation-labels';
+import { track } from '../../lib/analytics/client';
 
 interface NavigationGroupsProps {
   tree: NavigationProduct[];
@@ -75,6 +76,14 @@ function ProductGroup({
                 <a
                   key={`${entry.product}-${entry.topic}`}
                   href={toCockpitPath(entry)}
+                  data-capability-link
+                  onClick={() => {
+                    track('cockpit:recipe_opened', {
+                      capability: entry.topic,
+                      category: entry.product,
+                      from_capability: currentEntry.topic,
+                    });
+                  }}
                   aria-current={isActive ? 'page' : undefined}
                   className={isActive ? 'border-l-2 border-[var(--ds-accent)]' : 'border-l-2 border-transparent'}
                   style={{

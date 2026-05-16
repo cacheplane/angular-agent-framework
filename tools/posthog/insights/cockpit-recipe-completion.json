@@ -5,7 +5,7 @@
   "name": "Cockpit recipe completion",
   "events": [
     {
-      "event": "cockpit:recipe_start",
+      "event": "cockpit:recipe_opened",
       "math": "total"
     },
     {

@@ -1,17 +1,29 @@
 'use client';
 
 import React, { useRef, useEffect, useState } from 'react';
+import { track } from '../../lib/analytics/client';
+import type { CockpitShellProps } from '../../lib/analytics/events';
 
 interface ModeSwitcherProps<T extends string> {
   modes: readonly T[];
   activeMode: T;
   onChange: (mode: T) => void;
+  /** Optional capability slug — when provided, mode changes fire cockpit:mode_switched. */
+  capability?: string;
 }
+
+const MODE_MAP: Record<string, CockpitShellProps['from_mode']> = {
+  Run: 'run',
+  Code: 'code',
+  Docs: 'docs',
+  API: 'api',
+};
 
 export function ModeSwitcher<T extends string>({
   modes,
   activeMode,
   onChange,
+  capability,
 }: ModeSwitcherProps<T>) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [indicatorStyle, setIndicatorStyle] = useState<React.CSSProperties>({});
@@ -66,7 +78,18 @@ export function ModeSwitcher<T extends string>({
             key={mode}
             data-mode-btn
             type="button"
-            onClick={() => onChange(mode)}
+            onClick={() => {
+              if (mode !== activeMode) {
+                if (capability) {
+                  track('cockpit:mode_switched', {
+                    capability,
+                    from_mode: MODE_MAP[activeMode as string],
+                    to_mode: MODE_MAP[mode as string],
+                  });
+                }
+              }
+              onChange(mode);
+            }}
             style={{
               position: 'relative',
               zIndex: 1,

@@ -26,6 +26,7 @@
       ],
       "@ngaf/cockpit-registry": ["libs/cockpit-registry/src/index.ts"],
       "@ngaf/cockpit-shell": ["libs/cockpit-shell/src/index.ts"],
+      "@ngaf/cockpit-telemetry": ["libs/cockpit-telemetry/src/index.ts"],
       "@ngaf/cockpit-testing": ["libs/cockpit-testing/src/index.ts"],
       "@ngaf/cockpit-ui": ["libs/cockpit-ui/src/index.ts"],
       "@ngaf/db": ["libs/db/src/index.ts"],

@@ -34,6 +34,14 @@
               "with": "cockpit/deep-agents/skills/angular/src/environments/environment.development.ts"
             }
           ]
+        },
+        "cockpit": {
+          "budgets": [
+            { "type": "initial", "maximumWarning": "500kb", "maximumError": "1mb" },
+            { "type": "anyComponentStyle", "maximumWarning": "4kb", "maximumError": "8kb" }
+          ],
+          "outputHashing": "none",
+          "browser": "cockpit/deep-agents/skills/angular/src/main.cockpit.ts"
         }
       },
       "defaultConfiguration": "production"
@@ -43,7 +51,8 @@
       "executor": "@angular/build:dev-server",
       "configurations": {
         "production": { "buildTarget": "cockpit-deep-agents-skills-angular:build:production" },
-        "development": { "buildTarget": "cockpit-deep-agents-skills-angular:build:development" }
+        "development": { "buildTarget": "cockpit-deep-agents-skills-angular:build:development" },
+        "cockpit": { "buildTarget": "cockpit-deep-agents-skills-angular:build:cockpit" }
       },
       "defaultConfiguration": "development",
       "options": {

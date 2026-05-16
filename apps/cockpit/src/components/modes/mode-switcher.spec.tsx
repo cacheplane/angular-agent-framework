@@ -2,7 +2,11 @@
 import React, { useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { act } from 'react';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+
+vi.mock('../../lib/analytics/client', () => ({ track: vi.fn() }));
+
+import { track } from '../../lib/analytics/client';
 import { ModeSwitcher } from './mode-switcher';
 
 const MODES = ['Run', 'Code'] as const;
@@ -31,6 +35,7 @@ describe('ModeSwitcher', () => {
       root?.unmount();
     });
     container?.remove();
+    vi.clearAllMocks();
   });
 
   it('shows mode buttons with Run active by default', () => {
@@ -69,5 +74,41 @@ describe('ModeSwitcher', () => {
 
     expect(container.textContent).toContain('Code content');
     expect(container.textContent).not.toContain('Run content');
+  });
+
+  it('fires cockpit:mode_switched when capability prop is set and mode changes', () => {
+    container = document.createElement('div');
+    document.body.append(container);
+    root = createRoot(container);
+
+    function Harness() {
+      const [active, setActive] = useState<(typeof MODES)[number]>('Run');
+      return (
+        <ModeSwitcher
+          modes={MODES}
+          activeMode={active}
+          onChange={setActive}
+          capability="streaming"
+        />
+      );
+    }
+
+    act(() => {
+      root!.render(<Harness />);
+    });
+
+    const codeButton = Array.from(container.querySelectorAll('[data-mode-btn]')).find(
+      (b) => b.textContent === 'Code',
+    ) as HTMLElement;
+
+    act(() => {
+      codeButton.click();
+    });
+
+    expect(track).toHaveBeenCalledWith('cockpit:mode_switched', {
+      capability: 'streaming',
+      from_mode: 'run',
+      to_mode: 'code',
+    });
   });
 });
