@@ -105,8 +105,9 @@ html {
 .docs-prose ul, .docs-prose ol { margin-bottom: 1.25rem; }
 .docs-prose li { margin-bottom: 0.25rem; }
 
-.docs-prose table { width: 100%; border-collapse: collapse; font-size: 0.875rem; margin: 1.5rem 0; display: block; overflow-x: auto; }
-.docs-prose th { text-align: left; padding: 0.5rem 0.75rem; font-family: var(--font-mono); font-size: 0.75rem; text-transform: uppercase; color: #8b8fa3; border-bottom: 1px solid rgba(0, 64, 144, 0.15); }
+.docs-table-scroll { max-width: 100%; overflow-x: auto; margin: 1.5rem 0; }
+.docs-prose table { width: 100%; border-collapse: collapse; font-size: 0.875rem; margin: 0; }
+.docs-prose th { text-align: left; padding: 0.5rem 0.75rem; font-family: var(--font-mono); font-size: 0.75rem; text-transform: uppercase; color: #555770; border-bottom: 1px solid rgba(0, 64, 144, 0.15); }
 .docs-prose td { padding: 0.5rem 0.75rem; border-bottom: 1px solid rgba(0, 64, 144, 0.08); color: #555770; }
 .docs-prose td code { font-size: 0.8em; }
 

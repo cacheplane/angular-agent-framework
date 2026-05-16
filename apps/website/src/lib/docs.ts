@@ -1,6 +1,8 @@
 import fs from 'fs';
 import path from 'path';
+import type { Metadata } from 'next';
 import { docsConfig, type DocsPage, getLibraryConfig, getLibraryPages } from './docs-config';
+import { createPageMetadata } from './site-metadata';
 
 const resolveContentDir = (library: string): string => {
   const workspacePath = path.join(process.cwd(), 'apps', 'website', 'content', 'docs', library);
@@ -14,9 +16,46 @@ export interface ResolvedDoc {
   title: string;
 }
 
-export interface ResolvedDocMetadata {
-  title: string;
-  description: string;
+export type ResolvedDocMetadata = Metadata;
+
+const FRONTMATTER_DESCRIPTION_PATTERN = /^---\s*\n[\s\S]*?\ndescription:\s*['"]?(?<description>[^'"\n]+)['"]?\s*\n[\s\S]*?\n---/;
+
+function normalizeDescription(description: string): string {
+  return description
+    .replace(/`([^`]+)`/g, '$1')
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+    .replace(/<[^>]+>/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function extractFirstParagraph(content: string): string | null {
+  const withoutFrontmatter = content.replace(/^---\s*\n[\s\S]*?\n---\s*/, '');
+  const withoutImports = withoutFrontmatter.replace(/^import\s.+$/gm, '');
+  const paragraphs = withoutImports.split(/\n{2,}/);
+
+  for (const paragraph of paragraphs) {
+    const normalized = normalizeDescription(paragraph);
+    if (
+      normalized.length < 40 ||
+      normalized.startsWith('#') ||
+      normalized.startsWith('|') ||
+      normalized.startsWith('```') ||
+      normalized.startsWith('<')
+    ) {
+      continue;
+    }
+
+    return normalized.length > 180 ? `${normalized.slice(0, 177).trimEnd()}...` : normalized;
+  }
+
+  return null;
+}
+
+function getDocDescription(content: string, fallback: string): string {
+  const frontmatterDescription = content.match(FRONTMATTER_DESCRIPTION_PATTERN)?.groups?.description;
+  if (frontmatterDescription) return normalizeDescription(frontmatterDescription);
+  return extractFirstParagraph(content) ?? fallback;
 }
 
 export function getDocBySlug(library: string, section: string, slug: string): ResolvedDoc | null {
@@ -47,10 +86,11 @@ export function getDocMetadata(
 
   const lib = getLibraryConfig(library);
   const libraryTitle = lib?.title ?? 'Docs';
-  return {
-    title: `${doc.title} - ${libraryTitle} Docs - Angular Agent Framework`,
-    description: lib?.description ?? 'Angular Agent Framework documentation',
-  };
+  const title = `${doc.title} - ${libraryTitle} Docs - Angular Agent Framework`;
+  const description = getDocDescription(doc.content, lib?.description ?? 'Angular Agent Framework documentation');
+  const pathname = `/docs/${library}/${section}/${slug}`;
+
+  return createPageMetadata({ title, description, pathname });
 }
 
 export function getAllDocSlugs(): { library: string; section: string; slug: string }[] {

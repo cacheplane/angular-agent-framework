@@ -1,6 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { getAllDocSlugs, getDocBySlug, getDocMetadata } from './docs';
 import { allDocsPages } from './docs-config';
+import { getCanonicalUrl, getSitemapRoutes } from './site-metadata';
+
+const internalDocsLinkPattern = /(?:href=["']|\]\()(?<href>\/docs\/[^"')#\s]+)/g;
+
+function findInternalDocsLinks(content: string): string[] {
+  return Array.from(content.matchAll(internalDocsLinkPattern), (match) => match.groups?.href)
+    .filter((href): href is string => Boolean(href));
+}
 
 describe('website docs bindings', () => {
   it('lists all doc slugs from config', () => {
@@ -29,11 +37,65 @@ describe('website docs bindings', () => {
   });
 
   it('resolves page metadata for configured docs', () => {
-    expect(getDocMetadata('ag-ui', 'reference', 'event-mapping')).toEqual({
+    const metadata = getDocMetadata('ag-ui', 'reference', 'event-mapping');
+
+    expect(metadata).toMatchObject({
       title: 'Event Mapping - AG-UI Docs - Angular Agent Framework',
-      description:
-        'Adapter for any AG-UI-compatible backend (CrewAI, Mastra, Microsoft AF, AG2, Pydantic AI, AWS Strands, CopilotKit runtime)',
+      alternates: {
+        canonical: '/docs/ag-ui/reference/event-mapping',
+      },
+      openGraph: {
+        title: 'Event Mapping - AG-UI Docs - Angular Agent Framework',
+        url: '/docs/ag-ui/reference/event-mapping',
+      },
+      twitter: {
+        card: 'summary_large_image',
+        title: 'Event Mapping - AG-UI Docs - Angular Agent Framework',
+      },
     });
+    expect(metadata?.description).toContain('AG-UI protocol events');
+    expect(metadata?.description).not.toBe(
+      'Adapter for any AG-UI-compatible backend (CrewAI, Mastra, Microsoft AF, AG2, Pydantic AI, AWS Strands, CopilotKit runtime)',
+    );
+  });
+
+  it('derives mostly unique descriptions from page content', () => {
+    const descriptions = getAllDocSlugs()
+      .map(({ library, section, slug }) => getDocMetadata(library, section, slug)?.description)
+      .filter((description): description is string => Boolean(description));
+
+    const duplicateDescriptions = descriptions.filter((description, index) => descriptions.indexOf(description) !== index);
+    expect(duplicateDescriptions).toHaveLength(0);
+  });
+
+  it('includes every configured doc page in the sitemap routes', () => {
+    const sitemapRoutes = getSitemapRoutes();
+
+    for (const { library, section, slug } of getAllDocSlugs()) {
+      expect(sitemapRoutes).toContain(`/docs/${library}/${section}/${slug}`);
+    }
+  });
+
+  it('resolves canonical URLs against the production origin', () => {
+    expect(getCanonicalUrl('/docs/agent/guides/streaming')).toBe('https://cacheplane.ai/docs/agent/guides/streaming');
+  });
+
+  it('does not contain stale or broken internal docs links', () => {
+    const validDocsRoutes = new Set(['/docs', ...getSitemapRoutes().filter((route) => route.startsWith('/docs/'))]);
+    const brokenLinks: string[] = [];
+
+    for (const { library, section, slug } of getAllDocSlugs()) {
+      const doc = getDocBySlug(library, section, slug);
+      if (!doc) continue;
+
+      for (const href of findInternalDocsLinks(doc.content)) {
+        if (!validDocsRoutes.has(href)) {
+          brokenLinks.push(`${library}/${section}/${slug} -> ${href}`);
+        }
+      }
+    }
+
+    expect(brokenLinks).toEqual([]);
   });
 
   it('returns null for non-existent doc', () => {

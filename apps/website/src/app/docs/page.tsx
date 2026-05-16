@@ -6,11 +6,14 @@ import { Eyebrow } from '../../components/ui/Eyebrow';
 import { Card } from '../../components/ui/Card';
 import { Pill } from '../../components/ui/Pill';
 import { docsConfig } from '../../lib/docs-config';
+import { createPageMetadata } from '../../lib/site-metadata';
 
-export const metadata = {
+export const metadata = createPageMetadata({
   title: 'Documentation — Angular Agent Framework',
   description: 'Learn the framework. Library guides, API reference, and production patterns for Angular Agent Framework.',
-};
+  pathname: '/docs',
+  type: 'website',
+});
 
 interface PopularTopic {
   title: string;
@@ -78,7 +81,22 @@ export default function DocsLandingPage() {
       {/* Library grid */}
       <Section surface="canvas" tight ariaLabelledBy="library-grid-heading">
         <Container>
-          <Eyebrow id="library-grid-heading" style={{ marginBottom: 16 }}>Libraries</Eyebrow>
+          <h2
+            id="library-grid-heading"
+            style={{
+              fontFamily: tokens.typography.eyebrow.family,
+              fontSize: tokens.typography.eyebrow.size,
+              fontWeight: tokens.typography.eyebrow.weight,
+              letterSpacing: tokens.typography.eyebrow.letterSpacing,
+              textTransform: tokens.typography.eyebrow.transform,
+              lineHeight: tokens.typography.eyebrow.line,
+              color: tokens.colors.textMuted,
+              margin: 0,
+              marginBottom: 16,
+            }}
+          >
+            Libraries
+          </h2>
           <div
             style={{
               display: 'grid',
@@ -126,7 +144,22 @@ export default function DocsLandingPage() {
       {/* Popular topics */}
       <Section surface="canvas" tight ariaLabelledBy="popular-heading">
         <Container>
-          <Eyebrow id="popular-heading" style={{ marginBottom: 16 }}>Popular topics</Eyebrow>
+          <h2
+            id="popular-heading"
+            style={{
+              fontFamily: tokens.typography.eyebrow.family,
+              fontSize: tokens.typography.eyebrow.size,
+              fontWeight: tokens.typography.eyebrow.weight,
+              letterSpacing: tokens.typography.eyebrow.letterSpacing,
+              textTransform: tokens.typography.eyebrow.transform,
+              lineHeight: tokens.typography.eyebrow.line,
+              color: tokens.colors.textMuted,
+              margin: 0,
+              marginBottom: 16,
+            }}
+          >
+            Popular topics
+          </h2>
           <div
             style={{
               display: 'grid',
