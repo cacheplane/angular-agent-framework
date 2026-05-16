@@ -1,4 +1,4 @@
-"""Multi-node LangGraph graph for the SaaS metrics dashboard.
+"""Multi-node LangGraph graph for the airline operations KPI dashboard.
 
 Flow:
   router → generate_shell (first turn) or plan_tools (follow-up)
