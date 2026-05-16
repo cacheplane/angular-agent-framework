@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { cookies } from 'next/headers';
 import { cssVars, ThemeProvider } from '@ngaf/ui-react';
 import type { Theme } from '@ngaf/design-tokens';
+import { AnalyticsBootstrap } from '../components/analytics-bootstrap';
 import './cockpit.css';
 
 export const metadata = {
@@ -38,6 +39,7 @@ export default async function RootLayout({ children }: RootLayoutProps) {
           color: 'var(--ds-text-primary)',
         }}
       >
+        <AnalyticsBootstrap />
         <ThemeProvider theme={theme}>{children}</ThemeProvider>
       </body>
     </html>

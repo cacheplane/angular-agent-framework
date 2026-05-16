@@ -6,9 +6,8 @@ import { shouldCaptureAnalytics } from './src/lib/analytics/properties';
 const token = process.env.NEXT_PUBLIC_COCKPIT_POSTHOG_TOKEN;
 const captureLocal = process.env.NEXT_PUBLIC_COCKPIT_CAPTURE_LOCAL === 'true';
 const host = typeof window === 'undefined' ? undefined : window.location.host;
-const doNotTrack = typeof navigator !== 'undefined' && navigator.doNotTrack === '1';
 
-if (shouldCaptureAnalytics({ token, captureLocal, host, doNotTrack })) {
+if (shouldCaptureAnalytics({ token, captureLocal, host })) {
   posthog.init(token!, {
     api_host: process.env.NEXT_PUBLIC_COCKPIT_POSTHOG_HOST ?? 'https://us.i.posthog.com',
     persistence: 'memory',
