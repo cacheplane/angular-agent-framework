@@ -1,27 +1,22 @@
 import { NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
+import agentApiDocs from '../../../content/docs/agent/api/api-docs.json';
+import agUiApiDocs from '../../../content/docs/ag-ui/api/api-docs.json';
+import chatApiDocs from '../../../content/docs/chat/api/api-docs.json';
+import renderApiDocs from '../../../content/docs/render/api/api-docs.json';
+
+const API_DOCS: Record<string, unknown> = {
+  'ag-ui': agUiApiDocs,
+  agent: agentApiDocs,
+  chat: chatApiDocs,
+  render: renderApiDocs,
+};
 
 function loadApiDocs(): string {
-  const roots = [
-    path.join(process.cwd(), 'apps', 'website', 'content', 'docs'),
-    path.join(process.cwd(), 'content', 'docs'),
-  ];
-
-  const docsRoot = roots.find((root) => fs.existsSync(root));
-  if (!docsRoot) {
-    return '(API reference not yet generated — run npm run generate-api-docs)';
-  }
-
-  const sections = fs.readdirSync(docsRoot)
-    .sort()
-    .map((library) => {
-      const apiDocsPath = path.join(docsRoot, library, 'api', 'api-docs.json');
-      if (!fs.existsSync(apiDocsPath)) return null;
-      const raw = fs.readFileSync(apiDocsPath, 'utf8');
-      return `### ${library}\n\n${raw}`;
-    })
-    .filter((section): section is string => section !== null);
+  const sections = Object.entries(API_DOCS)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([library, docs]) => `### ${library}\n\n${JSON.stringify(docs, null, 2)}`);
 
   return sections.length > 0
     ? sections.join('\n\n')
@@ -29,8 +24,12 @@ function loadApiDocs(): string {
 }
 
 function loadAllPrompts(): string {
-  const dir = path.join(process.cwd(), 'content', 'prompts');
-  if (!fs.existsSync(dir)) return '(no prompt recipes found)';
+  const roots = [
+    path.join(process.cwd(), 'apps', 'website', 'content', 'prompts'),
+    path.join(process.cwd(), 'content', 'prompts'),
+  ];
+  const dir = roots.find((root) => fs.existsSync(root));
+  if (!dir) return '(no prompt recipes found)';
   return fs.readdirSync(dir)
     .filter((f) => f.endsWith('.md'))
     .map((f) => {

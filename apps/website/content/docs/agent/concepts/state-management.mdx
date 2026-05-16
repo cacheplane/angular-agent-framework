@@ -361,7 +361,7 @@ const branch = agent.branch();               // Signal<string> — active branch
 const branchTree = agent.experimentalBranchTree();
 ```
 
-For full checkpoint and time-travel patterns, see the [Persistence guide](/docs/guides/persistence) and [Time Travel guide](/docs/guides/time-travel).
+For full checkpoint and time-travel patterns, see the [Persistence guide](/docs/agent/guides/persistence) and [Time Travel guide](/docs/agent/guides/time-travel).
 
 ## Custom State Fields
 
@@ -520,22 +520,22 @@ readonly reportTitle = computed(() => this.agent.value().report?.title ?? '');
 ## What's Next
 
 <CardGroup cols={2}>
-  <Card title="Angular Signals" href="/docs/concepts/angular-signals">
+  <Card title="Angular Signals" href="/docs/agent/concepts/angular-signals">
     How agent() uses Angular Signals for zero-subscription reactive rendering.
   </Card>
-  <Card title="Streaming" href="/docs/guides/streaming">
+  <Card title="Streaming" href="/docs/agent/guides/streaming">
     Configure stream modes — values, messages, events — for different use cases.
   </Card>
-  <Card title="Persistence" href="/docs/guides/persistence">
+  <Card title="Persistence" href="/docs/agent/guides/persistence">
     Thread-based conversation persistence and checkpoint configuration.
   </Card>
-  <Card title="Time Travel" href="/docs/guides/time-travel">
+  <Card title="Time Travel" href="/docs/agent/guides/time-travel">
     Fork threads at any checkpoint and replay with different input.
   </Card>
-  <Card title="Interrupts" href="/docs/guides/interrupts">
+  <Card title="Interrupts" href="/docs/agent/guides/interrupts">
     Human-in-the-loop approval flows and how interrupt state surfaces in Angular.
   </Card>
-  <Card title="LangGraph Basics" href="/docs/concepts/langgraph-basics">
+  <Card title="LangGraph Basics" href="/docs/agent/concepts/langgraph-basics">
     Nodes, edges, and the graph execution model behind the state machine.
   </Card>
 </CardGroup>

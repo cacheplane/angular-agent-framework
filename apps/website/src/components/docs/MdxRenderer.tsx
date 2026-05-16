@@ -25,6 +25,11 @@ const mdxComponents = {
   ArchFlowDiagram,
   FeatureChips,
   pre: Pre,
+  table: ({ children, ...rest }: React.HTMLAttributes<HTMLTableElement>) => (
+    <div className="docs-table-scroll">
+      <table {...rest}>{children}</table>
+    </div>
+  ),
   h2: ({ id, children, ...rest }: React.HTMLAttributes<HTMLHeadingElement>) => (
     <h2 id={id} {...rest}>
       {id ? <a href={`#${id}`} aria-label={`Link to ${id}`} className="heading-anchor">#</a> : null}

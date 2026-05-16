@@ -68,6 +68,59 @@ test('/llms.txt returns plain text', async ({ page }) => {
   expect(response?.headers()['content-type']).toContain('text/plain');
 });
 
+test('/llms-full.txt includes generated API reference content', async ({ request }) => {
+  const response = await request.get('/llms-full.txt');
+  expect(response.ok()).toBe(true);
+  expect(response.headers()['content-type']).toContain('text/plain');
+
+  const body = await response.text();
+  expect(body).toContain('## API Reference (TypeDoc)');
+  expect(body).toContain('### agent');
+  expect(body).toContain('### chat');
+  expect(body).not.toContain('API reference not yet generated');
+});
+
+test('robots.txt allows crawling and points at the sitemap', async ({ request }) => {
+  const response = await request.get('/robots.txt');
+  expect(response.ok()).toBe(true);
+
+  const body = await response.text();
+  expect(body).toContain('User-Agent: *');
+  expect(body).toContain('Allow: /');
+  expect(body).toContain('Sitemap: https://cacheplane.ai/sitemap.xml');
+});
+
+test('sitemap.xml includes configured docs pages', async ({ request }) => {
+  const response = await request.get('/sitemap.xml');
+  expect(response.ok()).toBe(true);
+
+  const body = await response.text();
+  expect(body).toContain('https://cacheplane.ai/docs');
+  expect(body).toContain('https://cacheplane.ai/docs/agent/getting-started/introduction');
+  expect(body).toContain('https://cacheplane.ai/docs/render/a2ui/overview');
+});
+
+test('docs pages render canonical and social metadata', async ({ page }) => {
+  await page.goto('/docs/agent/guides/streaming');
+
+  await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
+    'href',
+    'https://cacheplane.ai/docs/agent/guides/streaming',
+  );
+  await expect(page.locator('meta[property="og:title"]')).toHaveAttribute(
+    'content',
+    'Streaming - Agent Docs - Angular Agent Framework',
+  );
+  await expect(page.locator('meta[property="og:url"]')).toHaveAttribute(
+    'content',
+    'https://cacheplane.ai/docs/agent/guides/streaming',
+  );
+  await expect(page.locator('meta[name="twitter:title"]')).toHaveAttribute(
+    'content',
+    'Streaming - Agent Docs - Angular Agent Framework',
+  );
+});
+
 test('marketing pages link to downloadable whitepaper PDFs', async ({ page }) => {
   const expectedDownloads: Record<string, string> = {
     '/': '/whitepaper.pdf',
