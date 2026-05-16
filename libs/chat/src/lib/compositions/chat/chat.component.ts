@@ -33,7 +33,7 @@ import { createContentClassifier, type ContentClassifier } from '../../streaming
 import { createPartialArgsBridge, type PartialArgsBridge } from '../../a2ui/partial-args-bridge';
 import { createA2uiSurfaceStore, type A2uiSurfaceStore } from '../../a2ui/surface-store';
 import { messageContent } from '../shared/message-utils';
-import { CHAT_HOST_TOKENS } from '../../styles/chat-tokens';
+import { CHAT_HOST_TOKENS, ensureChatRootStyles } from '../../styles/chat-tokens';
 import type { ChatRenderEvent } from './chat-render-event';
 import { CHAT_LIFECYCLE, type ChatLifecycle } from '../../lifecycle';
 
@@ -395,6 +395,19 @@ export class ChatComponent {
   private static readonly PIN_TOLERANCE_PX = 150;
 
   constructor() {
+    // Inject the chat lib's root CSS custom properties (--ngaf-chat-bg,
+    // --ngaf-chat-surface, --ngaf-chat-radius-input, etc.) the first
+    // time any chat composition is constructed. The module-eval side
+    // effect that previously handled this is unreliable under
+    // aggressive production tree-shaking — bundlers that don't see
+    // the source `chat-tokens.ts` path in the published artifact's
+    // `sideEffects` glob drop the call entirely, leaving consumers
+    // with zero token defaults (sidenav has no width, input has no
+    // border, chips have no chrome — everything renders as plain
+    // text on the page background). Calling from a constructor that
+    // is unconditionally reachable from user code defeats that
+    // tree-shaking and is idempotent. */
+    ensureChatRootStyles();
     effect(() => {
       if (this.eventsSubscribed) return;
       let agent: ReturnType<typeof this.agent>;

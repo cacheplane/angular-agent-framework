@@ -6,7 +6,7 @@ import type { ViewRegistry } from '@ngaf/render';
 import { ChatComponent } from '../chat/chat.component';
 import { ChatLauncherButtonComponent } from '../../primitives/chat-launcher-button/chat-launcher-button.component';
 import type { ChatSelectOption } from '../../primitives/chat-select/chat-select.component';
-import { CHAT_HOST_TOKENS } from '../../styles/chat-tokens';
+import { CHAT_HOST_TOKENS, ensureChatRootStyles } from '../../styles/chat-tokens';
 
 @Component({
   selector: 'chat-sidebar',
@@ -104,6 +104,9 @@ export class ChatSidebarComponent {
   readonly forkRequested = output<string>();
 
   constructor() {
+    // Inject chat lib root CSS custom properties — see ChatComponent
+    // for the full rationale. Idempotent + lifecycle-guaranteed.
+    ensureChatRootStyles();
     // Publish the right-edge claim while the panel is open. Peer panels
     // (e.g. chat-debug) read --ngaf-chat-occupy-right to leave room.
     effect(() => {

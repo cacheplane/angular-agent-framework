@@ -16,6 +16,7 @@ import {
 import { NgTemplateOutlet } from '@angular/common';
 import type { AgentWithHistory } from '../../agent';
 import { CHAT_DEBUG_TOKENS } from './chat-debug-tokens';
+import { ensureChatRootStyles } from '../../styles/chat-tokens';
 import { ChatDebugControlsDirective } from './chat-debug-controls.directive';
 import { ChatDebugInspectorDirective } from './chat-debug-inspector.directive';
 import { TimelineInspectorComponent } from './inspectors/timeline-inspector.component';
@@ -399,6 +400,10 @@ export class ChatDebugComponent {
   private readonly hostEl: ElementRef<HTMLElement> = inject(ElementRef);
 
   constructor() {
+    // Inject chat lib root CSS custom properties so the theme-attribute
+    // mappings + edge-claim primitive are in the document, even when
+    // chat-debug is mounted without a sibling chat composition.
+    ensureChatRootStyles();
     // Restore once from storage on construction; inputs seed the fallback.
     // `storageKey` is read-once: rebinding it at runtime is not supported.
     const restore = createPersistence(this.storageKey());

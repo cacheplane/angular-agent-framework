@@ -6,7 +6,7 @@ import type { ViewRegistry } from '@ngaf/render';
 import { ChatComponent } from '../chat/chat.component';
 import type { ChatSelectOption } from '../../primitives/chat-select/chat-select.component';
 import { ChatLauncherButtonComponent } from '../../primitives/chat-launcher-button/chat-launcher-button.component';
-import { CHAT_HOST_TOKENS } from '../../styles/chat-tokens';
+import { CHAT_HOST_TOKENS, ensureChatRootStyles } from '../../styles/chat-tokens';
 
 @Component({
   selector: 'chat-popup',
@@ -106,6 +106,9 @@ export class ChatPopupComponent {
   private readonly document = inject(DOCUMENT);
 
   constructor() {
+    // Inject chat lib root CSS custom properties — see ChatComponent
+    // for the full rationale. Idempotent + lifecycle-guaranteed.
+    ensureChatRootStyles();
     effect(() => {
       // Re-bind whenever shortcut/closeOnEscape change.
       const shortcut = this.shortcut();
