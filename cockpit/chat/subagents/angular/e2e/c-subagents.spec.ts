@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 import { test, expect } from '@playwright/test';
-import { sendPromptAndWait } from '../../../../../libs/internal/aimock-harness/src';
+import { sendPromptAndWait } from '../../../../../libs/e2e-harness/src';
 
 const PROMPT = 'Plan a trip from LAX to JFK';
 

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 import { resolve } from 'node:path';
-import { createGlobalSetup } from '../../../../../libs/internal/aimock-harness/src';
+import { createGlobalSetup } from '../../../../../libs/e2e-harness/src';
 
 export default createGlobalSetup({
   langgraphCwd: 'cockpit/langgraph/streaming/python',
