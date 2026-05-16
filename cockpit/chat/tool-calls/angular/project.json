@@ -56,6 +56,12 @@
         "cwd": "cockpit/chat/tool-calls/angular",
         "command": "npx tsx -e \"import { chatToolCallsAngularModule } from './src/index.ts'; const module = chatToolCallsAngularModule; if (module.id !== 'chat-tool-calls-angular' || module.title !== 'Chat Tool Calls (Angular)') { throw new Error('Unexpected module shape for ' + module.id); }\""
       }
+    },
+    "e2e": {
+      "executor": "@nx/playwright:playwright",
+      "options": {
+        "config": "cockpit/chat/tool-calls/angular/e2e/playwright.config.ts"
+      }
     }
   }
 }
