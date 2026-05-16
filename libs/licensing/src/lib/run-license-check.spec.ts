@@ -18,48 +18,40 @@ describe('runLicenseCheck', () => {
   let kp: DevKeyPair;
   let validToken: string;
   let warn: ReturnType<typeof vi.fn>;
-  let fetchMock: ReturnType<typeof vi.fn>;
 
   beforeEach(async () => {
     kp = await generateKeyPair();
     validToken = await signLicense(BASE, kp.privateKey);
     warn = vi.fn();
-    fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 204 }));
     __resetNagStateForTests();
     __resetRunLicenseCheckStateForTests();
   });
   afterEach(() => {
     __resetNagStateForTests();
     __resetRunLicenseCheckStateForTests();
+    vi.restoreAllMocks();
   });
 
-  it('does not warn with a valid token and still fires telemetry', async () => {
+  it('does not warn with a valid token and does not perform network I/O', async () => {
+    const fetchSpy = vi.spyOn(globalThis, 'fetch');
     const status = await runLicenseCheck({
       package: '@ngaf/langgraph',
-      version: '1.0.0',
       token: validToken,
       publicKey: kp.publicKey,
       nowSec: 1_900_000_000,
-      telemetryEndpoint: 'https://t.example.com/v1',
       warn,
-      fetch: fetchMock,
     });
     expect(status).toBe('licensed');
     expect(warn).not.toHaveBeenCalled();
-    expect(fetchMock).toHaveBeenCalledOnce();
-    const body = JSON.parse(fetchMock.mock.calls[0][1].body as string);
-    expect(body.license_id).toBe('cus_abc');
+    expect(fetchSpy).not.toHaveBeenCalled();
   });
 
   it('warns when token is missing', async () => {
     const status = await runLicenseCheck({
       package: '@ngaf/langgraph',
-      version: '1.0.0',
       publicKey: kp.publicKey,
       nowSec: 1_900_000_000,
-      telemetryEndpoint: 'https://t.example.com/v1',
       warn,
-      fetch: fetchMock,
     });
     expect(status).toBe('missing');
     expect(warn).toHaveBeenCalledOnce();
@@ -68,51 +60,40 @@ describe('runLicenseCheck', () => {
   it('is idempotent per (package, token) pair', async () => {
     await runLicenseCheck({
       package: '@ngaf/langgraph',
-      version: '1.0.0',
       token: validToken,
       publicKey: kp.publicKey,
       nowSec: 1_900_000_000,
-      telemetryEndpoint: 'https://t.example.com/v1',
       warn,
-      fetch: fetchMock,
     });
     await runLicenseCheck({
       package: '@ngaf/langgraph',
-      version: '1.0.0',
       token: validToken,
       publicKey: kp.publicKey,
       nowSec: 1_900_000_000,
-      telemetryEndpoint: 'https://t.example.com/v1',
       warn,
-      fetch: fetchMock,
     });
-    // Second call is a no-op: no extra warn (already guarded by nag dedupe anyway),
-    // and crucially no second telemetry POST.
-    expect(fetchMock).toHaveBeenCalledOnce();
+    // Second call is a no-op: no extra warn, already guarded by nag dedupe.
+    expect(warn).not.toHaveBeenCalled();
   });
 
   it('re-runs when token changes (e.g., after key rotation in the host)', async () => {
-    const otherToken = await signLicense({ ...BASE, sub: 'cus_xyz' }, kp.privateKey);
-    await runLicenseCheck({
+    const tamperedToken = `${validToken.slice(0, -1)}x`;
+    const first = await runLicenseCheck({
       package: '@ngaf/langgraph',
-      version: '1.0.0',
       token: validToken,
       publicKey: kp.publicKey,
       nowSec: 1_900_000_000,
-      telemetryEndpoint: 'https://t.example.com/v1',
       warn,
-      fetch: fetchMock,
     });
-    await runLicenseCheck({
+    const second = await runLicenseCheck({
       package: '@ngaf/langgraph',
-      version: '1.0.0',
-      token: otherToken,
+      token: tamperedToken,
       publicKey: kp.publicKey,
       nowSec: 1_900_000_000,
-      telemetryEndpoint: 'https://t.example.com/v1',
       warn,
-      fetch: fetchMock,
     });
-    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(first).toBe('licensed');
+    expect(second).toBe('tampered');
+    expect(warn).toHaveBeenCalledOnce();
   });
 });

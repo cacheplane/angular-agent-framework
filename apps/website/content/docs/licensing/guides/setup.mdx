@@ -26,10 +26,8 @@ import {
 
 const status = await runLicenseCheck({
   package: '@ngaf/example',
-  version: '1.0.0',
   token: process.env.NGAF_LICENSE,
   publicKey: LICENSE_PUBLIC_KEY,
-  telemetryEndpoint: 'https://telemetry.example.com/v1/ping',
   isNoncommercial: inferNoncommercial(),
 });
 ```
@@ -57,10 +55,8 @@ You can inject a custom warning sink:
 ```ts
 await runLicenseCheck({
   package: '@ngaf/example',
-  version: '1.0.0',
   token,
   publicKey,
-  telemetryEndpoint,
   warn: (message) => logger.warn(message),
 });
 ```

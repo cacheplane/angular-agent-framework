@@ -80,14 +80,11 @@ Turns a verify result into a `LicenseStatus`.
 ```ts
 interface RunLicenseCheckOptions {
   package: string;
-  version: string;
   token?: string;
   publicKey: Uint8Array;
-  telemetryEndpoint: string;
   nowSec?: number;
   isNoncommercial?: boolean;
   warn?: (message: string) => void;
-  fetch?: typeof fetch;
 }
 
 function runLicenseCheck(
@@ -99,8 +96,7 @@ Runs the full check:
 
 1. verifies the token when present;
 2. evaluates the license status;
-3. emits a warning when appropriate;
-4. sends non-blocking telemetry.
+3. emits a warning when appropriate.
 
 Repeated calls with the same package and token are treated as already handled and return `licensed`.
 
@@ -138,35 +134,3 @@ function signLicense(
 ```
 
 Signs claims with an Ed25519 private key and returns the compact token consumed by `verifyLicense()`.
-
-## createTelemetryClient()
-
-```ts
-interface TelemetryEvent {
-  package: string;
-  version: string;
-  licenseId?: string;
-}
-
-interface CreateTelemetryClientOptions {
-  endpoint: string;
-  fetch?: typeof fetch;
-  generateInstanceId?: () => string;
-}
-```
-
-`createTelemetryClient(options).send(event)` POSTs JSON to the configured endpoint unless telemetry is opted out or `fetch` is unavailable.
-
-The request body uses snake-case fields:
-
-```json
-{
-  "package": "@ngaf/example",
-  "version": "1.0.0",
-  "license_id": "cus_123",
-  "anon_instance_id": "generated-id",
-  "ts": 1735689600
-}
-```
-
-Send failures are swallowed.
