@@ -382,6 +382,12 @@
         "optional": true
       },
       {
+        "name": "telemetry",
+        "type": "false | AgentRuntimeTelemetrySink",
+        "description": "Optional app-owned telemetry sink. No telemetry is emitted unless this is provided.",
+        "optional": true
+      },
+      {
         "name": "threadId",
         "type": "string",
         "description": "",
@@ -417,6 +423,20 @@
         "name": "tokens",
         "type": "string[]",
         "description": "Tokens streamed back as the assistant reply.",
+        "optional": true
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "ToAgentOptions",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "telemetry",
+        "type": "false | AgentRuntimeTelemetrySink",
+        "description": "Optional app-owned telemetry sink. No telemetry is emitted unless this is provided.",
         "optional": true
       }
     ],
@@ -501,11 +521,17 @@
     "name": "toAgent",
     "kind": "function",
     "description": "Wraps an AG-UI AbstractAgent into the runtime-neutral Agent contract.\n\nThe adapter subscribes to source.subscribe({ onEvent }) and reduces every\nevent into the produced Agent's signals. submit() optimistically appends the\nuser message to both our signals and the source agent's internal message\nlist, then calls source.runAgent(). stop() calls source.abortRun().\n\nSubscription cleanup: the returned Agent does NOT manage its own lifetime.\nCallers using DI should rely on the provider's destroy hook; direct callers\nof toAgent() should treat the returned object's lifecycle as tied to the\nagent instance they constructed. The subscriber registered via\nsource.subscribe() will fire for the lifetime of source.",
-    "signature": "toAgent(source: AbstractAgent<>): Agent",
+    "signature": "toAgent(source: AbstractAgent<>, options: ToAgentOptions): Agent",
     "params": [
       {
         "name": "source",
         "type": "AbstractAgent<>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "options",
+        "type": "ToAgentOptions",
         "description": "",
         "optional": false
       }

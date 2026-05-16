@@ -685,6 +685,12 @@
         "optional": true
       },
       {
+        "name": "telemetry",
+        "type": "false | AgentRuntimeTelemetrySink",
+        "description": "Optional app-owned telemetry sink. No telemetry is emitted unless this is provided.",
+        "optional": true
+      },
+      {
         "name": "threadId",
         "type": "string | Signal<string | null> | null",
         "description": "Thread ID to connect to. Pass a Signal for reactive thread switching.",

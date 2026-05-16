@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { docsConfig, type DocsPage, getLibraryPages } from './docs-config';
+import { docsConfig, type DocsPage, getLibraryConfig, getLibraryPages } from './docs-config';
 
 const resolveContentDir = (library: string): string => {
   const workspacePath = path.join(process.cwd(), 'apps', 'website', 'content', 'docs', library);
@@ -12,6 +12,11 @@ export interface ResolvedDoc {
   page: DocsPage;
   content: string;
   title: string;
+}
+
+export interface ResolvedDocMetadata {
+  title: string;
+  description: string;
 }
 
 export function getDocBySlug(library: string, section: string, slug: string): ResolvedDoc | null {
@@ -29,6 +34,22 @@ export function getDocBySlug(library: string, section: string, slug: string): Re
     page,
     content,
     title: titleMatch?.[1] ?? page.title,
+  };
+}
+
+export function getDocMetadata(
+  library: string,
+  section: string,
+  slug: string
+): ResolvedDocMetadata | null {
+  const doc = getDocBySlug(library, section, slug);
+  if (!doc) return null;
+
+  const lib = getLibraryConfig(library);
+  const libraryTitle = lib?.title ?? 'Docs';
+  return {
+    title: `${doc.title} - ${libraryTitle} Docs - Angular Agent Framework`,
+    description: lib?.description ?? 'Angular Agent Framework documentation',
   };
 }
 

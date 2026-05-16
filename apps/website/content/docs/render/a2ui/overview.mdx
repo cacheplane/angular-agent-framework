@@ -38,13 +38,95 @@ That behavior is deliberate. Agent streams are partial. The parser should not cr
 
 ## Minimal Protocol Stream
 
-A surface usually needs three messages: components, data, and a root. This is the wire format accepted by the parser and surface store.
+A surface usually needs three messages: components, data, and a root. On the wire, each envelope is one newline-delimited JSON object after the sentinel:
 
 ```text
 ---a2ui_JSON---
-{"surfaceUpdate":{"surfaceId":"contact","components":[{"id":"root","component":{"Column":{"children":{"explicitList":["title","name","submit"]},"gap":12}}},{"id":"title","component":{"Text":{"text":{"literalString":"Contact us"},"usageHint":"h2"}}},{"id":"name","component":{"TextField":{"label":{"literalString":"Name"},"text":{"path":"/name"}}}},{"id":"submit_label","component":{"Text":{"text":{"literalString":"Send"}}}},{"id":"submit","component":{"Button":{"child":"submit_label","primary":true,"action":{"name":"formSubmit","context":[{"key":"name","value":{"path":"/name"}}]}}}}]}}
-{"dataModelUpdate":{"surfaceId":"contact","contents":[{"key":"name","valueString":""}]}}
-{"beginRendering":{"surfaceId":"contact","root":"root"}}
+{"surfaceUpdate":{...}}
+{"dataModelUpdate":{...}}
+{"beginRendering":{...}}
+```
+
+The same `surfaceUpdate` envelope, expanded for readability, looks like this:
+
+```json
+{
+  "surfaceUpdate": {
+    "surfaceId": "contact",
+    "components": [
+      {
+        "id": "root",
+        "component": {
+          "Column": {
+            "children": { "explicitList": ["title", "name", "submit"] },
+            "gap": 12
+          }
+        }
+      },
+      {
+        "id": "title",
+        "component": {
+          "Text": {
+            "text": { "literalString": "Contact us" },
+            "usageHint": "h2"
+          }
+        }
+      },
+      {
+        "id": "name",
+        "component": {
+          "TextField": {
+            "label": { "literalString": "Name" },
+            "text": { "path": "/name" }
+          }
+        }
+      },
+      {
+        "id": "submit_label",
+        "component": {
+          "Text": {
+            "text": { "literalString": "Send" }
+          }
+        }
+      },
+      {
+        "id": "submit",
+        "component": {
+          "Button": {
+            "child": "submit_label",
+            "primary": true,
+            "action": {
+              "name": "formSubmit",
+              "context": [
+                { "key": "name", "value": { "path": "/name" } }
+              ]
+            }
+          }
+        }
+      }
+    ]
+  }
+}
+```
+
+The data and root envelopes are smaller:
+
+```json
+{
+  "dataModelUpdate": {
+    "surfaceId": "contact",
+    "contents": [{ "key": "name", "valueString": "" }]
+  }
+}
+```
+
+```json
+{
+  "beginRendering": {
+    "surfaceId": "contact",
+    "root": "root"
+  }
+}
 ```
 
 Components use keyed union definitions:

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getAllDocSlugs, getDocBySlug } from './docs';
+import { getAllDocSlugs, getDocBySlug, getDocMetadata } from './docs';
 import { allDocsPages } from './docs-config';
 
 describe('website docs bindings', () => {
@@ -28,11 +28,23 @@ describe('website docs bindings', () => {
     expect(doc?.title).toBe('Introduction');
   });
 
+  it('resolves page metadata for configured docs', () => {
+    expect(getDocMetadata('ag-ui', 'reference', 'event-mapping')).toEqual({
+      title: 'Event Mapping - AG-UI Docs - Angular Agent Framework',
+      description:
+        'Adapter for any AG-UI-compatible backend (CrewAI, Mastra, Microsoft AF, AG2, Pydantic AI, AWS Strands, CopilotKit runtime)',
+    });
+  });
+
   it('returns null for non-existent doc', () => {
     expect(getDocBySlug('agent', 'guides', 'nonexistent')).toBeNull();
   });
 
   it('returns null for non-existent library', () => {
     expect(getDocBySlug('nonexistent', 'getting-started', 'introduction')).toBeNull();
+  });
+
+  it('returns null metadata for non-existent docs', () => {
+    expect(getDocMetadata('agent', 'guides', 'nonexistent')).toBeNull();
   });
 });

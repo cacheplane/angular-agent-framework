@@ -5792,6 +5792,76 @@
     "examples": []
   },
   {
+    "name": "AgentRuntimeTelemetryPayload",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "event",
+        "type": "AgentRuntimeTelemetryEvent",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "properties",
+        "type": "AgentRuntimeTelemetryProperties",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "AgentRuntimeTelemetryProperties",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "durationMs",
+        "type": "number",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "errorClass",
+        "type": "string",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "model",
+        "type": "string",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "provider",
+        "type": "string",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "requestType",
+        "type": "string",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "surface",
+        "type": "string",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "transport",
+        "type": "string",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
     "name": "AgentStateUpdateEvent",
     "kind": "interface",
     "description": "Render-state-store sync event. Adapters emit this when the runtime\npublishes a state-snapshot intended for the chat library's render store\n(used by generative UI and a2ui surfaces).",
@@ -6862,6 +6932,20 @@
     "kind": "type",
     "description": "Discriminated union of events flowing on `Agent.events$`.\n\nInvariant: state lives on signals (`messages`, `status`, `toolCalls`,\n`state`, `interrupt`, `subagents`, `history`); events on `events$`\ncarry only things that are not derivable from signals. New variants\nare added purely additively when patterns prove necessary.",
     "signature": "AgentStateUpdateEvent | AgentCustomEvent",
+    "examples": []
+  },
+  {
+    "name": "AgentRuntimeTelemetryEvent",
+    "kind": "type",
+    "description": "",
+    "signature": "\"ngaf:runtime_instance_created\" | \"ngaf:runtime_request_created\" | \"ngaf:stream_started\" | \"ngaf:stream_ended\" | \"ngaf:stream_errored\"",
+    "examples": []
+  },
+  {
+    "name": "AgentRuntimeTelemetrySink",
+    "kind": "type",
+    "description": "",
+    "signature": "object",
     "examples": []
   },
   {

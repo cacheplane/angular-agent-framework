@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { tokens } from '@ngaf/design-tokens';
 import { DocsSidebar } from '../../../../../components/docs/DocsSidebar';
@@ -5,7 +6,7 @@ import { MdxRenderer } from '../../../../../components/docs/MdxRenderer';
 import { DocsSearch } from '../../../../../components/docs/DocsSearch';
 import { DocsBreadcrumb } from '../../../../../components/docs/DocsBreadcrumb';
 import { DocsPrevNext } from '../../../../../components/docs/DocsPrevNext';
-import { getDocBySlug, getAllDocSlugs } from '../../../../../lib/docs';
+import { getDocBySlug, getAllDocSlugs, getDocMetadata } from '../../../../../lib/docs';
 import { ApiDocRenderer, type ApiDocEntry } from '../../../../../components/docs/ApiDocRenderer';
 import { DocsTOC } from '../../../../../components/docs/DocsTOC';
 import { extractHeadings } from '../../../../../lib/extract-headings';
@@ -33,15 +34,23 @@ const API_NAME_MAP: Record<string, Record<string, string>> = {
   },
 };
 
+interface DocsRouteProps {
+  params: Promise<{ library: string; section: string; slug: string }>;
+}
+
 export function generateStaticParams() {
   return getAllDocSlugs().map(({ library, section, slug }) => ({ library, section, slug }));
 }
 
-export default async function DocsPage({
-  params,
-}: {
-  params: Promise<{ library: string; section: string; slug: string }>;
-}) {
+export async function generateMetadata({ params }: DocsRouteProps): Promise<Metadata> {
+  const { library, section, slug } = await params;
+  return getDocMetadata(library, section, slug) ?? {
+    title: 'Docs - Angular Agent Framework',
+    description: 'Angular Agent Framework documentation',
+  };
+}
+
+export default async function DocsPage({ params }: DocsRouteProps) {
   const { library, section, slug } = await params;
 
   const libConfig = getLibraryConfig(library);
