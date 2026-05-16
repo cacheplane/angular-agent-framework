@@ -1,6 +1,6 @@
 // libs/chat/src/lib/compositions/chat-sidebar/chat-sidebar.component.ts
 // SPDX-License-Identifier: MIT
-import { Component, ChangeDetectionStrategy, input, model, output } from '@angular/core';
+import { Component, ChangeDetectionStrategy, effect, input, model, output } from '@angular/core';
 import type { Agent } from '../../agent';
 import type { ViewRegistry } from '@ngaf/render';
 import { ChatComponent } from '../chat/chat.component';
@@ -26,13 +26,14 @@ import { CHAT_HOST_TOKENS } from '../../styles/chat-tokens';
     }
     .chat-sidebar__panel {
       position: fixed;
-      top: 0; right: 0; bottom: 0;
+      top: 0; right: 0;
+      bottom: var(--ngaf-chat-occupy-bottom, 0);
       width: 28rem;
       background: var(--ngaf-chat-bg);
       border-left: 1px solid var(--ngaf-chat-separator);
       box-shadow: -8px 0 32px rgba(0,0,0,.08);
       transform: translateX(100%);
-      transition: transform 200ms ease-out;
+      transition: transform 200ms ease-out, bottom 200ms ease-out;
       z-index: 30;
       display: flex;
       flex-direction: column;
@@ -54,9 +55,10 @@ import { CHAT_HOST_TOKENS } from '../../styles/chat-tokens';
     .chat-sidebar__close:hover { background: var(--ngaf-chat-surface-alt); color: var(--ngaf-chat-text); }
     .chat-sidebar__launcher {
       position: fixed;
-      bottom: 1rem;
+      bottom: calc(1rem + var(--ngaf-chat-occupy-bottom, 0));
       right: 1rem;
       z-index: 30;
+      transition: bottom 200ms ease-out;
     }
     /* Hide the launcher when the sidebar is open — the close button on the
        panel handles dismissal, and the panel covers the launcher anyway. */
@@ -100,6 +102,20 @@ export class ChatSidebarComponent {
   readonly pushContent = input<boolean>(false);
   readonly replayRequested = output<string>();
   readonly forkRequested = output<string>();
+
+  constructor() {
+    // Publish the right-edge claim while the panel is open. Peer panels
+    // (e.g. chat-debug) read --ngaf-chat-occupy-right to leave room.
+    effect(() => {
+      if (typeof document === 'undefined') return;
+      const html = document.documentElement;
+      if (this.open()) {
+        html.dataset['ngafChatSidebar'] = 'open';
+      } else {
+        delete html.dataset['ngafChatSidebar'];
+      }
+    });
+  }
 
   toggle(): void { this.open.update((v) => !v); }
   openWindow(): void { this.open.set(true); }
