@@ -81,6 +81,12 @@
         "proxyConfig": "cockpit/chat/subagents/angular/proxy.conf.json"
       }
     },
+    "e2e": {
+      "executor": "@nx/playwright:playwright",
+      "options": {
+        "config": "cockpit/chat/subagents/angular/e2e/playwright.config.ts"
+      }
+    },
     "smoke": {
       "executor": "nx:run-commands",
       "options": {
