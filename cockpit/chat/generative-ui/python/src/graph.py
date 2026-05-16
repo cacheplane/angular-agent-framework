@@ -78,17 +78,17 @@ async def emit_state(state: DashboardState) -> DashboardState:
             except (json.JSONDecodeError, TypeError):
                 continue
 
-            if msg.name == "query_mrr":
+            if msg.name == "query_airline_kpis":
                 for section_key, section_val in data.items():
                     if isinstance(section_val, dict):
                         for k, v in section_val.items():
                             tool_results[f"/{section_key}/{k}"] = v
-            elif msg.name == "query_subscribers_by_plan":
-                tool_results["/subscribers_by_plan"] = data
-            elif msg.name == "query_mrr_trend":
-                tool_results["/mrr_trend"] = data
-            elif msg.name == "query_churned_accounts":
-                tool_results["/churned_accounts"] = data
+            elif msg.name == "query_on_time_trend":
+                tool_results["/on_time_trend"] = data
+            elif msg.name == "query_flights_by_airline":
+                tool_results["/flights_by_airline"] = data
+            elif msg.name == "query_recent_disruptions":
+                tool_results["/recent_disruptions"] = data
         elif msg.type == "ai":
             break
 
