@@ -4,7 +4,7 @@ import { tokens } from '@ngaf/design-tokens';
 const ROWS = [
   { feature: 'npm install', oss: true, seat: true, app: true, enterprise: true },
   { feature: 'Commercial use', oss: false, seat: true, app: true, enterprise: true },
-  { feature: 'All Angular versions', oss: true, seat: true, app: true, enterprise: true },
+  { feature: 'See compatibility matrix below', oss: true, seat: true, app: true, enterprise: true },
   { feature: 'Email support', oss: false, seat: true, app: true, enterprise: true },
   { feature: 'Source access', oss: true, seat: true, app: true, enterprise: true },
   { feature: 'Per-app deployment', oss: false, seat: false, app: true, enterprise: true },

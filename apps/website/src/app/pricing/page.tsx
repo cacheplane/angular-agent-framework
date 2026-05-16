@@ -4,6 +4,7 @@ import { Section } from '../../components/ui/Section';
 import { Eyebrow } from '../../components/ui/Eyebrow';
 import { PricingGrid } from '../../components/pricing/PricingGrid';
 import { CompareTable } from '../../components/pricing/CompareTable';
+import { CompatibilityMatrix } from '../../components/pricing/CompatibilityMatrix';
 import { LeadForm } from '../../components/pricing/LeadForm';
 import { FinalCTA } from '../../components/landing/FinalCTA';
 
@@ -50,6 +51,33 @@ export default function PricingPage() {
       </Section>
       <PricingGrid />
       <CompareTable />
+      <Section surface="canvas">
+        <Container>
+          <Eyebrow style={{ marginBottom: 12 }}>Compatibility</Eyebrow>
+          <h2
+            style={{
+              fontFamily: tokens.typography.h2.family,
+              fontSize: tokens.typography.h2.size,
+              margin: 0,
+              marginBottom: 16,
+              color: tokens.colors.textPrimary,
+            }}
+          >
+            Angular version support
+          </h2>
+          <p
+            style={{
+              margin: 0,
+              marginBottom: 24,
+              color: tokens.colors.textSecondary,
+              maxWidth: '60ch',
+            }}
+          >
+            We ship against the versions our CI tests. Other versions may work but aren&apos;t guaranteed.
+          </p>
+          <CompatibilityMatrix />
+        </Container>
+      </Section>
       <LeadForm />
       <FinalCTA />
     </>
