@@ -1,0 +1,79 @@
+# Agent Lifecycle Signals
+
+The `@ngaf/langgraph` library exposes per-agent lifecycle signals via the `AGENT_LIFECYCLE` injection token. These are timestamps and classifications derived from the existing stream — useful for debugging, custom dashboards, or telemetry integrations.
+
+## Interface
+
+```typescript
+import { InjectionToken, Signal } from '@angular/core';
+
+export interface AgentLifecycle {
+  /** Epoch ms of the first stream chunk arrival. Resets on clearThread. */
+  readonly streamStartedAt: Signal<number | null>;
+  /** Epoch ms + classification of the most recent stream error. Resets on clearThread. */
+  readonly streamErrorAt: Signal<{ at: number; classification: string } | null>;
+  /** Epoch ms of the first interrupt$ non-null in this stream. Resets on clearThread. */
+  readonly interruptReceivedAt: Signal<number | null>;
+  /** Epoch ms of the most recent submit({ interrupt }) call. Resets on clearThread. */
+  readonly interruptResolvedAt: Signal<number | null>;
+  /** Epoch ms when the agent's "create new thread" branch fired. Resets on clearThread. */
+  readonly threadCreatedAt: Signal<number | null>;
+  /** Epoch ms when an existing thread was restored from server (proves persistence). Resets on clearThread. */
+  readonly threadPersistedAt: Signal<number | null>;
+  /** Epoch ms of the first tool call append. Resets on clearThread. */
+  readonly toolCallStartedAt: Signal<number | null>;
+  /** Epoch ms of the first tool call result transition. Resets on clearThread. */
+  readonly toolCallCompletedAt: Signal<number | null>;
+}
+
+export const AGENT_LIFECYCLE = new InjectionToken<AgentLifecycle>('AGENT_LIFECYCLE');
+```
+
+## Derivation
+
+Five of the eight signals derive directly from existing stream subjects on the agent (`status$`, `error$`, `interrupt$`, `toolCalls$`, `history$`):
+
+| Signal | Source |
+|--------|--------|
+| `streamStartedAt` | first `status$` transition into a running state |
+| `streamErrorAt` | `error$` emission, classified |
+| `interruptReceivedAt` | first non-null `interrupt$` value |
+| `toolCallStartedAt` | first tool-call append in `toolCalls$` |
+| `toolCallCompletedAt` | first tool-call `result` transition in `toolCalls$` |
+
+Three signals require explicit hook points that the agent already invokes:
+
+| Signal | Hook |
+|--------|------|
+| `interruptResolvedAt` | `submit({ interrupt })` |
+| `threadCreatedAt` | the agent's "create new thread" branch |
+| `threadPersistedAt` | restore-from-server path |
+
+## Subscribing
+
+```typescript
+import { Component, inject, effect } from '@angular/core';
+import { AGENT_LIFECYCLE } from '@ngaf/langgraph';
+
+@Component({ /* ... */ })
+export class MyComponent {
+  private lifecycle = inject(AGENT_LIFECYCLE);
+
+  constructor() {
+    effect(() => {
+      const err = this.lifecycle.streamErrorAt();
+      if (err) {
+        console.log('Stream error at', err.at, 'classification:', err.classification);
+      }
+    });
+  }
+}
+```
+
+## Reset semantics
+
+All eight signals reset on `switchThread()` (and on `clearThread()`). This keeps lifecycle observations scoped to the current thread.
+
+## Privacy
+
+These signals contain no message content, no model output, no PII. They are timestamps, counts, and short classification strings only. The trust contract at [libs/telemetry/README.md](https://github.com/cacheplane/angular-agent-framework/blob/main/libs/telemetry/README.md) applies: **no app telemetry by default.** Subscribing to `AGENT_LIFECYCLE` in your code does not fire any telemetry; what you do with the signal values is your choice.

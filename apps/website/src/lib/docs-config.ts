@@ -49,6 +49,7 @@ export const docsConfig: DocsLibrary[] = [
           { title: 'Subgraphs', slug: 'subgraphs', section: 'guides' },
           { title: 'Testing', slug: 'testing', section: 'guides' },
           { title: 'Deployment', slug: 'deployment', section: 'guides' },
+          { title: 'Lifecycle Signals', slug: 'lifecycle', section: 'guides' },
         ],
       },
       {
