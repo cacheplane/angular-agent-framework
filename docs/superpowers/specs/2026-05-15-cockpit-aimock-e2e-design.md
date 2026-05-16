@@ -4,7 +4,7 @@
 
 ## Goal
 
-Build cross-stack E2E test coverage for cockpit example apps, modeled after the chat aimock harness ([`examples/chat/aimock-e2e/`](../../../examples/chat/aimock-e2e/)). The new harness lives at the existing `apps/cockpit/e2e/` location — it IS the cockpit e2e from here on. The cockpit Nx project's existing `e2e` target is rewired to drive the new harness. Phase 1 lands the harness scaffolding + one pilot example (`c-a2ui`). Phases 2+ add one example per PR.
+Build cross-stack E2E test coverage for cockpit example apps, modeled after the chat aimock harness ([`examples/chat/aimock-e2e/`](../../../examples/chat/aimock-e2e/)). The new harness lives at the existing `apps/cockpit/e2e/` location — it IS the cockpit e2e from here on. The cockpit Nx project's existing `e2e` target is rewired to drive the new harness. Phase 1 lands the harness scaffolding + one pilot example (`c-messages`). Phases 2+ add one example per PR.
 
 ## Library
 
@@ -31,7 +31,7 @@ Phase 1 modifies:
 
 Phase 1 adds (all under `apps/cockpit/e2e/`):
 - aimock harness modules (runner, helpers, globalSetup/teardown, playwright config)
-- One pilot fixture + spec for c-a2ui
+- One pilot fixture + spec for c-messages
 - One capture script
 
 The `Cockpit — e2e` CI job in `.github/workflows/ci.yml` is renamed/rewired (the existing `npx nx e2e cockpit` invocation now drives the new harness because the target's config path changed).
@@ -43,7 +43,7 @@ The shell tests catch real regressions on Next.js routing + hydration, but cockp
 ```
 [Playwright test on CI/local]
     ↓ drives real Chromium
-[Angular dev server :4511 (cockpit-chat-a2ui-angular)]
+[Angular dev server :4501 (cockpit-chat-messages-angular)]
     ↓ /api proxy → :8123
 [LangGraph dev server :8123 (cockpit/langgraph/streaming/python)]
     ↓ OPENAI_BASE_URL=http://localhost:AIMOCK_PORT/v1
@@ -51,9 +51,25 @@ The shell tests catch real regressions on Next.js routing + hydration, but cockp
     ↑ reads fixtures/*.json
 ```
 
-The langgraph deployment at `cockpit/langgraph/streaming/python/langgraph.json` already registers 12 graphs (streaming, c-a2ui, c-messages, c-generative-ui, etc.) from one process. The pilot uses graph `c-a2ui`. Future per-example specs that hit graphs in `streaming/python` reuse the same langgraph process; specs that need a graph from a different python project (e.g., `memory`, `interrupts`) get a second langgraph spawned by globalSetup on a different port + a per-example proxy override.
+The langgraph deployment at `cockpit/langgraph/streaming/python/langgraph.json` already registers 12 graphs (`streaming`, `c-messages`, `c-input`, `c-debug`, `c-interrupts`, `c-theming`, `c-threads`, `c-timeline`, `c-tool-calls`, `c-subagents`, `c-a2ui`, `c-generative-ui`) from one process. The pilot uses graph `c-messages`. Future per-example specs that hit graphs in `streaming/python` reuse the same langgraph process; specs that need a graph from a different python project (e.g., `memory`, `interrupts`) get a second langgraph spawned by globalSetup on a different port + a per-example proxy override.
 
-Phase 1 only covers `c-a2ui`, so only `streaming/python` is launched.
+Phase 1 only covers `c-messages`, so only `streaming/python` is launched.
+
+## Why `c-messages` is the pilot (not `c-a2ui` or `c-tool-calls`)
+
+The Phase 1 pilot targets the foundational invariant — "an LLM-driven response routes through the cockpit chat composition into rendered DOM." `c-messages` is the cleanest fit because:
+
+- It calls a real LLM (`ChatOpenAI.ainvoke()` via `_build_prompt_graph("messages.md")`), so aimock is meaningfully exercised.
+- It has no tool bindings, no interrupts, no subagents — the assertion is just "assistant text rendered." Matches Phase 2a/2b's `hi.json` smoke pattern.
+- It's the cockpit equivalent of the `examples/chat/aimock-e2e/` smoke spec.
+
+Other candidates were rejected during brainstorming:
+
+- **`c-a2ui`** — graph is fully hardcoded (returns a `CONTACT_FORM_JSONL` constant). No LLM call. Aimock would be a tree falling in the forest.
+- **`c-tool-calls`** — built from `_build_prompt_graph("tool-calls.md")`. The system prompt SAYS the LLM has tools, but the graph doesn't actually `bind_tools()`. The LLM emits prose mentioning tools, no real `tool_calls` reach the chat-tool-calls primitive.
+- **`c-generative-ui`** — uses `dashboard_graph.py` which IS a real multi-node LLM-driven flow with tool binding. Too complex for the pilot; Phase 2+ candidate.
+
+> **Sub-phase memo (out of scope here):** Most `c-*` graphs need to be refactored to actually exercise their named capability (real tools bound for `c-tool-calls`, real `interrupt({...})` for `c-interrupts`, real subagent dispatch for `c-subagents`, real `render_a2ui_surface` for `c-a2ui`). That refactor unblocks per-capability aimock test coverage in subsequent phases. Captured in the user's project memory under `project_cockpit_chat_examples_llm_driven_followup.md`.
 
 ## File layout
 
@@ -61,16 +77,16 @@ Phase 1 only covers `c-a2ui`, so only `streaming/python` is launched.
 apps/cockpit/e2e/
 ├── aimock-runner.ts         # Copy of examples/chat/aimock-e2e/aimock-runner.ts.
 ├── fixtures/
-│   └── c-a2ui.json          # Captured A2UI tool-call + envelopes for the c-a2ui example.
-├── global-setup.ts          # Boots aimock + streaming/python langgraph + c-a2ui Angular dev server.
+│   └── c-messages.json          # Captured assistant text response for the c-messages example.
+├── global-setup.ts          # Boots aimock + streaming/python langgraph + c-messages Angular dev server.
 ├── global-teardown.ts       # Reverse order shutdown.
 ├── playwright.config.ts     # Cockpit aimock e2e Playwright config.
 ├── README.md
 ├── scripts/
-│   └── record-c-a2ui.py     # Fixture-capture recipe (dev-only).
+│   └── record-c-messages.py     # Fixture-capture recipe (dev-only).
 ├── test-helpers.ts          # sendPromptAndWait helper (waiting on data-streaming="false").
 ├── tsconfig.json
-└── c-a2ui.spec.ts           # Phase 1 pilot.
+└── c-messages.spec.ts           # Phase 1 pilot.
 ```
 
 No new Nx project. The existing `cockpit` Nx project's `e2e` target is reused — only its `config` path changes from `apps/cockpit/playwright.config.ts` to `apps/cockpit/e2e/playwright.config.ts`. Build/serve/test targets are untouched.
@@ -88,7 +104,7 @@ Identical to `examples/chat/aimock-e2e/aimock-runner.ts` as of [PR #330](https:/
 Boots in order:
 1. **aimock** via the runner module, fixtures dir = `apps/cockpit/e2e/fixtures`.
 2. **streaming/python langgraph** as a child process: `uv run langgraph dev --port 8123 --no-browser`, env `OPENAI_BASE_URL=<aimock.baseUrl>` + `OPENAI_API_KEY=test-not-used`. cwd = `cockpit/langgraph/streaming/python`.
-3. **c-a2ui Angular dev server** as a child process: `npx nx serve cockpit-chat-a2ui-angular --port 4511`. cwd = repo root.
+3. **c-messages Angular dev server** as a child process: `npx nx serve cockpit-chat-messages-angular --port 4501`. cwd = repo root.
 
 Waits for each to be ready (HTTP GET `/ok` or `/`) with a 60–120s timeout before proceeding.
 
@@ -109,21 +125,19 @@ Standard Playwright config:
 - `workers: 1`, `fullyParallel: false` for Phase 1 (single langgraph, single Angular dev server can't safely run parallel tests yet).
 - `retries: 2` in CI, `0` locally.
 
-### `c-a2ui.spec.ts` (Phase 1 pilot)
+### `c-messages.spec.ts` (Phase 1 pilot)
 
-Captures real A2UI tool-call response from `gpt-5-mini` for a fixed prompt (same capture-script pattern as Phase 2c). Asserts:
+Captures a real text response from `gpt-5-mini` for a fixed prompt (same capture-script pattern as Phase 2a's `hi.json`). Asserts:
 
-1. `<a2ui-surface>` is attached within the conversation body.
-2. The assistant bubble carries `data-streaming="false"` after the surface mounts (durable streaming-finalized signal).
-3. A specific phrase from the captured fixture appears in the surface content — proves the envelopes flowed through the chat composition's content classifier and into the surface store.
+1. The finalized assistant bubble (`chat-message[data-role="assistant"][data-streaming="false"]`) is in the DOM.
+2. The bubble's text contains a distinctive phrase from the captured fixture — proves the LLM response routed through aimock + langgraph + the cockpit chat composition into rendered DOM.
+Matches the strictness level chosen during brainstorming ("B" — finalized streaming wait + content-phrase match, no per-component structural assertions).
 
-Matches the strictness level chosen during brainstorming ("B" — surface + streaming-finalized + content phrase, no per-component structural assertions).
+### `fixtures/c-messages.json`
 
-### `fixtures/c-a2ui.json`
+Captured from a real `gpt-5-mini` run via a python script that mirrors the c-messages graph's LLM setup (`_build_prompt_graph("messages.md")` with the `prompts/messages.md` system prompt). Same capture pattern as Phase 2a's `hi.json` — the python script is committed under `scripts/` for fixture refresh, the JSON fixture is committed.
 
-Captured from a real `gpt-5-mini` run via a one-shot python script that mirrors the c-a2ui graph's LLM setup (bound tools, system prompt). Same capture pattern as Phase 2c — the python script is throwaway, the JSON fixture is committed.
-
-The fixture's `match.userMessage` exact-matches the prompt the spec sends. The `response` carries `toolCalls[]` with the captured A2UI envelopes as `arguments`. No continuation entry needed for Phase 1 — the assertion is on the surface render, not on a follow-up final answer.
+The fixture's `match.userMessage` exact-matches the prompt the spec sends. The `response` carries `content` (the captured assistant text). No continuation entry needed for Phase 1 — the assertion is on the rendered text, not on a multi-turn flow.
 
 ### `README.md`
 
@@ -194,7 +208,7 @@ Coordination plan:
 
 ## Risks and unknowns
 
-- **streaming/python boot time.** The c-a2ui graph is registered alongside 11 other graphs in `streaming/python/langgraph.json`. Cold start may be slower than the chat harness's `examples/chat/python` startup. Mitigation: `waitForPort` timeout = 90s (vs. 60s for chat). Real measurement happens during Task 0 de-risk.
+- **streaming/python boot time.** The c-messages graph is registered alongside 11 other graphs in `streaming/python/langgraph.json`. Cold start may be slower than the chat harness's `examples/chat/python` startup. Mitigation: `waitForPort` timeout = 90s (vs. 60s for chat). Real measurement happens during Task 0 de-risk.
 - **OPENAI_BASE_URL handoff for cockpit.** Phase 2a verified this works for `examples/chat/python`. The cockpit `streaming/python` agent code might construct OpenAI clients differently. Task 0 de-risk reads `cockpit/langgraph/streaming/python/src/` and confirms no hardcoded `base_url=` overrides.
 - **Angular nx serve startup time.** Each cockpit example uses `@angular/build:dev-server`. First serve may be ~30s including a cold build. Spec timeouts (`toBeAttached({ timeout: 45_000 })`) need to be generous enough.
 - **Future per-example proxy concerns.** When phases 2+ add examples hitting a python project other than `streaming/python`, the per-example proxy target (currently always `:8123`) needs a per-example mapping. This is a future-phase concern — Phase 1 doesn't need it.
@@ -207,9 +221,9 @@ Phase 1 merges when:
 - `apps/cockpit/project.json`'s `e2e` target's `config` path points to the new `apps/cockpit/e2e/playwright.config.ts`.
 - New harness modules + fixture + pilot spec live under `apps/cockpit/e2e/`.
 - `nx e2e cockpit` passes locally + in CI against the new harness.
-- One pilot spec (`c-a2ui.spec.ts`) passes 3/3 consecutive local runs with retry-free CI.
-- One committed fixture at `apps/cockpit/e2e/fixtures/c-a2ui.json`, captured from a real `gpt-5-mini` run.
-- One capture script at `apps/cockpit/e2e/scripts/record-c-a2ui.py` for fixture refresh.
+- One pilot spec (`c-messages.spec.ts`) passes 3/3 consecutive local runs with retry-free CI.
+- One committed fixture at `apps/cockpit/e2e/fixtures/c-messages.json`, captured from a real `gpt-5-mini` run (text response — NOT envelopes/toolCalls).
+- One capture script at `apps/cockpit/e2e/scripts/record-c-messages.py` for fixture refresh.
 - The existing `Cockpit — e2e` CI job is updated with the steps the new harness needs (uv install, python sync, fail-trace upload); job name + position in `deploy.needs` unchanged.
 
 ## What lands next (Phases 2+, NOT this phase)
