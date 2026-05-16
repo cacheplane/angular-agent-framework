@@ -87,6 +87,12 @@
         "cwd": "cockpit/langgraph/streaming/angular",
         "command": "npx tsx -e \"import { langgraphStreamingAngularModule } from './src/index.ts'; const module = langgraphStreamingAngularModule; if (module.id !== 'langgraph-streaming-angular' || module.title !== 'LangGraph Streaming (Angular)') { throw new Error('Unexpected module shape for ' + module.id); }\""
       }
+    },
+    "e2e": {
+      "executor": "@nx/playwright:playwright",
+      "options": {
+        "config": "cockpit/langgraph/streaming/angular/e2e/playwright.config.ts"
+      }
     }
   }
 }

@@ -169,13 +169,32 @@ jobs:
       - working-directory: cockpit/langgraph/streaming/python
         run: uv sync
       - run: npx playwright install --with-deps chromium
-      - run: npx nx e2e cockpit --skip-nx-cache
+      # Explicit sequential loop (not `nx run-many --parallel=1`) so each
+      # per-example e2e gets a fresh Playwright process and a clean port
+      # state between invocations. nx run-many's scheduler doesn't insert
+      # a delay between target completions, which races OS-level port
+      # release on the second iteration (langgraph dev binds 8123 in
+      # every example). The 5s sleep between targets gives the OS time
+      # to fully release the port despite the harness's globalTeardown
+      # already process-group-killing the langgraph child tree.
+      #
+      # Each new cockpit example with an `e2e` target adds one line below.
+      - name: Run cockpit example aimock e2e suites
+        run: |
+          set -e
+          for proj in cockpit-langgraph-streaming-angular cockpit-chat-tool-calls-angular; do
+            echo "::group::nx e2e $proj"
+            npx nx e2e "$proj" --skip-nx-cache
+            echo "::endgroup::"
+            sleep 5
+          done
       - name: Upload Playwright trace on failure
         if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: cockpit-e2e-trace
-          path: apps/cockpit/e2e/test-results/
+          path: |
+            cockpit/**/angular/e2e/test-results/
           retention-days: 7
 
   website-e2e:
