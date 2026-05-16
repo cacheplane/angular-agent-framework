@@ -1,3 +1,20 @@
+## v0.0.32 (2026-05-16)
+
+### 🚀 Features
+
+- **c-examples:** aviation foundation + c-tool-calls + c-subagents (PR 1 of 4) ([#347](https://github.com/cacheplane/angular-agent-framework/pull/347))
+- **c-examples:** aviation prompts for 7 simple c-* graphs (PR 2 of 4) ([#350](https://github.com/cacheplane/angular-agent-framework/pull/350))
+- **chat:** move chat-debug launcher + fix Dark theme override ([#341](https://github.com/cacheplane/angular-agent-framework/pull/341))
+- **chat:** chat-debug × chat-sidebar coexistence (edge-claim primitive + auto-dock) ([#346](https://github.com/cacheplane/angular-agent-framework/pull/346))
+- **cockpit:** aimock E2E harness — Phase 1 (streaming pilot, replaces legacy cockpit e2e) ([#349](https://github.com/cacheplane/angular-agent-framework/pull/349))
+- **gtm:** Spec 1C — cockpit instrumentation (analytics-foundation 1c) ([#351](https://github.com/cacheplane/angular-agent-framework/pull/351), [#328](https://github.com/cacheplane/angular-agent-framework/issues/328))
+
+### ❤️ Thank You
+
+- Brian Love @blove
+- Claude Opus 4.7
+- Claude Opus 4.7 (1M context)
+
 ## 0.0.31 (2026-05-15)
 
 ### 🚀 Features
