@@ -1,3 +1,25 @@
+## 0.0.34 (2026-05-16)
+
+### 🚀 Features
+
+- validate telemetry install and dogfood runtime events ([#370](https://github.com/cacheplane/angular-agent-framework/pull/370))
+- **gtm:** Spec 1D — website reconciliation (analytics-foundation 1d) ([#365](https://github.com/cacheplane/angular-agent-framework/pull/365), [#1](https://github.com/cacheplane/angular-agent-framework/issues/1))
+
+### 🩹 Fixes
+
+- remove legacy licensing telemetry ([#367](https://github.com/cacheplane/angular-agent-framework/pull/367))
+- **c-generative-ui:** tighten plan_tools to call ONE tool for filter/scope ([#363](https://github.com/cacheplane/angular-agent-framework/pull/363))
+- **c-generative-ui:** use gpt-5 + minimal reasoning for planner LLM ([#372](https://github.com/cacheplane/angular-agent-framework/pull/372), [#363](https://github.com/cacheplane/angular-agent-framework/issues/363))
+- **chat:** user-bubble word-wrap — give .chat-message__layout width:100% ([#362](https://github.com/cacheplane/angular-agent-framework/pull/362), [#313](https://github.com/cacheplane/angular-agent-framework/issues/313), [#325](https://github.com/cacheplane/angular-agent-framework/issues/325))
+- **chat:** A2UI surface progressive renderer must route through render-spec ([#371](https://github.com/cacheplane/angular-agent-framework/pull/371))
+- **render:** strip undeclared inputs in NgComponentOutlet pass (NG0303) ([#368](https://github.com/cacheplane/angular-agent-framework/pull/368))
+
+### ❤️ Thank You
+
+- Brian Love @blove
+- Claude Opus 4.7
+- Claude Opus 4.7 (1M context)
+
 ## 0.0.33 (2026-05-16)
 
 ### 🚀 Features
