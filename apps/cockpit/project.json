@@ -49,7 +49,7 @@
     "e2e": {
       "executor": "@nx/playwright:playwright",
       "options": {
-        "config": "apps/cockpit/playwright.config.ts"
+        "config": "apps/cockpit/e2e/playwright.config.ts"
       }
     },
     "serve-streaming": {
