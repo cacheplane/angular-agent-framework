@@ -1,97 +1,78 @@
-"""Mock SaaS metrics data tools for the generative-ui dashboard example."""
+"""Aviation KPI tools for the c-generative-ui dashboard demo.
+
+Four tools mirror the SaaS shape they replaced (query_mrr et al):
+- query_airline_kpis      → 4 stat cards (snapshot dict)
+- query_on_time_trend     → line chart data
+- query_flights_by_airline→ bar chart data
+- query_recent_disruptions→ data grid rows
+
+Data comes from src.aviation_data; no external calls.
+"""
 
 from langchain_core.tools import tool
 
-# ── Hardcoded SaaS dataset ──────────────────────────────────────────────────
-
-_MRR_TREND = [
-    {"month": "2025-05", "mrr": 28000},
-    {"month": "2025-06", "mrr": 29500},
-    {"month": "2025-07", "mrr": 30200},
-    {"month": "2025-08", "mrr": 31800},
-    {"month": "2025-09", "mrr": 32500},
-    {"month": "2025-10", "mrr": 33000},
-    {"month": "2025-11", "mrr": 34200},
-    {"month": "2025-12", "mrr": 35800},
-    {"month": "2026-01", "mrr": 37000},
-    {"month": "2026-02", "mrr": 38500},
-    {"month": "2026-03", "mrr": 40200},
-    {"month": "2026-04", "mrr": 42000},
-]
-
-_SUBSCRIBERS_BY_PLAN = [
-    {"plan": "free", "count": 1200},
-    {"plan": "starter", "count": 850},
-    {"plan": "pro", "count": 420},
-    {"plan": "enterprise", "count": 95},
-]
-
-_CHURNED_ACCOUNTS = [
-    {"name": "Acme Corp", "plan": "pro", "mrr_lost": 450, "date": "2026-04-01"},
-    {"name": "Widgetly", "plan": "starter", "mrr_lost": 120, "date": "2026-03-28"},
-    {"name": "DataPipe Inc", "plan": "enterprise", "mrr_lost": 2400, "date": "2026-03-25"},
-    {"name": "NovaTech", "plan": "pro", "mrr_lost": 450, "date": "2026-03-20"},
-    {"name": "CloudSync", "plan": "starter", "mrr_lost": 120, "date": "2026-03-15"},
-    {"name": "ByteForge", "plan": "pro", "mrr_lost": 450, "date": "2026-03-10"},
-    {"name": "Quantum Labs", "plan": "enterprise", "mrr_lost": 2400, "date": "2026-03-05"},
-    {"name": "FlowState", "plan": "starter", "mrr_lost": 120, "date": "2026-02-28"},
-    {"name": "CipherNet", "plan": "pro", "mrr_lost": 450, "date": "2026-02-20"},
-    {"name": "Luminary AI", "plan": "starter", "mrr_lost": 120, "date": "2026-02-15"},
-]
+from src.aviation_data import (
+    KPI_SNAPSHOT,
+    ON_TIME_TREND,
+    FLIGHTS_BY_AIRLINE,
+    RECENT_DISRUPTIONS,
+)
 
 
 @tool
-def query_mrr() -> dict:
-    """Get current Monthly Recurring Revenue (MRR) with month-over-month delta."""
-    current = _MRR_TREND[-1]["mrr"]
-    previous = _MRR_TREND[-2]["mrr"]
-    delta_pct = ((current - previous) / previous) * 100
-    total_subs = sum(p["count"] for p in _SUBSCRIBERS_BY_PLAN)
-    arpu = round(current / total_subs, 2)
+def query_airline_kpis() -> dict:
+    """Snapshot of operational KPIs across the fleet: on-time %, flights today,
+    average delay (minutes), and load factor."""
+    snap = KPI_SNAPSHOT
     return {
-        "mrr": {"value": current, "delta": f"+{delta_pct:.1f}%", "period": "month"},
-        "subscribers": {"total": total_subs, "delta": "+42"},
-        "churn": {"rate": "3.2%", "delta": "-0.4%"},
-        "arpu": {"value": f"${arpu:.2f}", "delta": "+$1.20"},
+        "on_time":       {"value": f"{snap['on_time_pct']}%",      "delta": snap["on_time_delta"]},
+        "flights_today": {"value": snap["flights_today"],          "delta": snap["flights_today_delta"]},
+        "avg_delay":     {"value": f"{snap['avg_delay_min']} min", "delta": snap["avg_delay_delta"]},
+        "load_factor":   {"value": f"{snap['load_factor_pct']}%",  "delta": snap["load_factor_delta"]},
     }
 
 
 @tool
-def query_subscribers_by_plan(plans: list[str] | None = None) -> list[dict]:
-    """Get subscriber counts broken down by plan tier.
+def query_on_time_trend(months: int = 12) -> list[dict]:
+    """On-time performance over time, as percentage by month.
 
     Args:
-        plans: Optional list of plan names to filter by (e.g., ["pro", "enterprise"]).
-               Returns all plans if not specified.
+        months: Number of months to return (default 12). Valid: 3, 6, 12, 24.
     """
-    if plans:
-        return [p for p in _SUBSCRIBERS_BY_PLAN if p["plan"] in plans]
-    return _SUBSCRIBERS_BY_PLAN
+    months = min(months, len(ON_TIME_TREND))
+    return ON_TIME_TREND[-months:]
 
 
 @tool
-def query_mrr_trend(months: int = 12) -> list[dict]:
-    """Get MRR trend over time.
+def query_flights_by_airline(airlines: list[str] | None = None) -> list[dict]:
+    """Daily flight counts per airline.
 
     Args:
-        months: Number of months to return (default 12). Valid values: 3, 6, 12, 24.
+        airlines: Optional filter list, e.g. ["American", "United"]. All four
+                  returned if omitted.
     """
-    months = min(months, len(_MRR_TREND))
-    return _MRR_TREND[-months:]
+    if airlines:
+        return [a for a in FLIGHTS_BY_AIRLINE if a["airline"] in airlines]
+    return FLIGHTS_BY_AIRLINE
 
 
 @tool
-def query_churned_accounts(limit: int = 5, plan: str | None = None) -> list[dict]:
-    """Get recently churned accounts.
+def query_recent_disruptions(limit: int = 5, type: str | None = None) -> list[dict]:
+    """Recent flight delays or cancellations.
 
     Args:
-        limit: Maximum number of accounts to return (default 5).
-        plan: Optional plan name to filter by (e.g., "enterprise").
+        limit: Maximum entries to return (default 5).
+        type: Optional filter, "delayed" or "cancelled".
     """
-    filtered = _CHURNED_ACCOUNTS
-    if plan:
-        filtered = [a for a in filtered if a["plan"] == plan]
+    filtered = RECENT_DISRUPTIONS
+    if type:
+        filtered = [d for d in filtered if d["type"] == type]
     return filtered[:limit]
 
 
-ALL_TOOLS = [query_mrr, query_subscribers_by_plan, query_mrr_trend, query_churned_accounts]
+ALL_TOOLS = [
+    query_airline_kpis,
+    query_on_time_trend,
+    query_flights_by_airline,
+    query_recent_disruptions,
+]
