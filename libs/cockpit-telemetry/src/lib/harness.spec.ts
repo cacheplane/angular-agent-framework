@@ -13,7 +13,7 @@ vi.mock('@angular/platform-browser', () => ({
 
 import { bootstrapWithCockpitHarness } from './harness';
 
-@Component({ selector: 'app-test', standalone: true, template: '' })
+@Component({ selector: 'lib-test', standalone: true, template: '' })
 class TestComponent {}
 
 describe('bootstrapWithCockpitHarness', () => {

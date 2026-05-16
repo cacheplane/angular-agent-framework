@@ -6,7 +6,11 @@
   "sideEffects": false,
   "type": "module",
   "peerDependencies": {
-    "@angular/core": "^20.0.0 || ^21.0.0"
+    "@angular/core": "^20.0.0 || ^21.0.0",
+    "@angular/platform-browser": "^20.0.0 || ^21.0.0",
+    "@ngaf/chat": "*",
+    "@ngaf/langgraph": "*",
+    "@ngaf/render": "*"
   },
   "dependencies": {
     "posthog-js": "^1.373.0"
