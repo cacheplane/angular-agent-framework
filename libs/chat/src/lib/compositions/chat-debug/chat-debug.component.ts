@@ -100,7 +100,7 @@ interface TabEntry {
     }
     .panel--right {
       top: 0;
-      right: var(--ngaf-chat-occupy-right, 0);
+      right: var(--ngaf-chat-sidebar-claim-right, 0);
       bottom: 0;
       width: var(--panel-size, 420px);
       border-right: 0;
@@ -119,7 +119,7 @@ interface TabEntry {
     }
     .panel--bottom {
       left: 0;
-      right: var(--ngaf-chat-occupy-right, 0);
+      right: var(--ngaf-chat-sidebar-claim-right, 0);
       bottom: 0;
       height: var(--panel-size, 40vh);
       border-bottom: 0;
