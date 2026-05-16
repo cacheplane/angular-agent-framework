@@ -382,4 +382,15 @@ export function ensureChatRootStyles(): void {
 // Auto-inject on module evaluation. Every chat component imports
 // `CHAT_HOST_TOKENS` from this file, so the first chat component to load
 // triggers this once. Safe to evaluate eagerly: idempotent + SSR-guarded.
+//
+// Note: this side-effect call is the "fast path" — it normally fires
+// during the first chat-component import on the client. But production
+// bundlers with aggressive tree-shaking can drop it if they treat the
+// published artifact as side-effect-free (the published `sideEffects`
+// field doesn't match the bundled fesm filename, and TS-path consumers
+// route through the source where it does match). The top-level chat
+// compositions (`ChatComponent`, `ChatPopupComponent`,
+// `ChatSidebarComponent`, `ChatDebugComponent`) also call this from
+// their constructors so the injection is guaranteed even when the
+// module-eval call gets stripped. Both paths are idempotent.
 ensureChatRootStyles();
