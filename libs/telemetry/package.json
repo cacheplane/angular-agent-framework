@@ -25,8 +25,8 @@
       "default": "./index.js"
     },
     "./shared": {
-      "types": "./shared/events.d.ts",
-      "default": "./shared/events.js"
+      "types": "./shared/public-api.d.ts",
+      "default": "./shared/public-api.js"
     },
     "./node": {
       "types": "./node/index.d.ts",

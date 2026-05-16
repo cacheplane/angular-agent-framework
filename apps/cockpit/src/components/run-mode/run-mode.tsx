@@ -17,8 +17,10 @@ function buildIframeSrc(runtimeUrl: string, capabilitySlug: string): string {
   url.searchParams.set('cockpit_cap', capabilitySlug);
   const phk = process.env.NEXT_PUBLIC_COCKPIT_POSTHOG_TOKEN;
   if (phk) url.searchParams.set('cockpit_phk', phk);
-  const host = process.env.NEXT_PUBLIC_COCKPIT_POSTHOG_HOST;
-  if (host) url.searchParams.set('cockpit_host', host);
+  const ingestHost =
+    process.env.NEXT_PUBLIC_COCKPIT_INGEST_HOST
+      ?? (typeof window !== 'undefined' ? `${window.location.origin}/ingest` : undefined);
+  if (ingestHost) url.searchParams.set('cockpit_host', ingestHost);
   return url.toString();
 }
 
