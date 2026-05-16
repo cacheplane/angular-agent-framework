@@ -349,6 +349,44 @@
     "examples": []
   },
   {
+    "name": "RenderLifecycle",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "firstMountAt",
+        "type": "Signal<object | null>",
+        "description": "First mount event in this render context. Sticky — does not reset.",
+        "optional": false
+      },
+      {
+        "name": "lastHandlerInvokedAt",
+        "type": "Signal<object | null>",
+        "description": "Most recent handler invocation.",
+        "optional": false
+      },
+      {
+        "name": "lastMountAt",
+        "type": "Signal<number | null>",
+        "description": "Epoch ms of the most recent mount event.",
+        "optional": false
+      },
+      {
+        "name": "lastStateChangeAt",
+        "type": "Signal<number | null>",
+        "description": "Epoch ms of the most recent state-change event.",
+        "optional": false
+      },
+      {
+        "name": "mountCount",
+        "type": "Signal<number>",
+        "description": "Total mount count since render context started.",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
     "name": "RenderLifecycleEvent",
     "kind": "interface",
     "description": "",
