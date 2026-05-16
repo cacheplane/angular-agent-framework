@@ -24,7 +24,9 @@ export interface CreateGlobalSetupOpts {
 interface SharedState {
   aimock: AimockHandle;
   langgraph: ChildProcess;
+  langgraphPort: number;
   angular: ChildProcess;
+  angularPort: number;
 }
 
 declare global {
@@ -85,6 +87,11 @@ export function createGlobalSetup(opts: CreateGlobalSetupOpts): () => Promise<vo
           OPENAI_API_KEY: 'test-not-used',
         },
         stdio: 'pipe',
+        // detached:true puts the process in its own group so teardown can
+        // kill the whole tree (uv → python → langgraph dev) via process.kill(-pid).
+        // Without this, SIGTERM to `uv` doesn't propagate to the Python child
+        // and the langgraph server keeps holding the port through teardown.
+        detached: true,
       },
     );
     langgraph.stdout?.on('data', (b) => process.stdout.write(`[langgraph] ${b}`));
@@ -101,6 +108,9 @@ export function createGlobalSetup(opts: CreateGlobalSetupOpts): () => Promise<vo
         cwd: root,
         env: { ...process.env },
         stdio: 'pipe',
+        // Same rationale as langgraph: npx → nx → angular dev server is a
+        // process tree; detached so teardown can kill the whole group.
+        detached: true,
       },
     );
     angular.stdout?.on('data', (b) => process.stdout.write(`[angular] ${b}`));
@@ -113,6 +123,12 @@ export function createGlobalSetup(opts: CreateGlobalSetupOpts): () => Promise<vo
     if (!globalThis.__AIMOCK_HARNESS_STATE__) {
       globalThis.__AIMOCK_HARNESS_STATE__ = new Map();
     }
-    globalThis.__AIMOCK_HARNESS_STATE__.set(opts.angularProject, { aimock, langgraph, angular });
+    globalThis.__AIMOCK_HARNESS_STATE__.set(opts.angularProject, {
+      aimock,
+      langgraph,
+      langgraphPort,
+      angular,
+      angularPort: opts.angularPort,
+    });
   };
 }
