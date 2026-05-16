@@ -67,7 +67,7 @@ import { CHAT_HOST_TOKENS } from '../../styles/chat-tokens';
   template: `
     <div class="chat-sidebar__content"><ng-content /></div>
     <div class="chat-sidebar__launcher">
-      <chat-launcher-button (click)="toggle()" />
+      <chat-launcher-button (clicked)="toggle()" />
     </div>
     <aside class="chat-sidebar__panel" [attr.data-open]="open() ? 'true' : 'false'" role="complementary" [attr.aria-hidden]="open() ? 'false' : 'true'">
       <button type="button" class="chat-sidebar__close" (click)="closeWindow()" aria-label="Close chat">

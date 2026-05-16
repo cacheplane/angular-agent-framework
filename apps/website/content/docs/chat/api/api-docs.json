@@ -2801,7 +2801,14 @@
     "description": "",
     "params": [],
     "examples": [],
-    "properties": [],
+    "properties": [
+      {
+        "name": "clicked",
+        "type": "OutputEmitterRef<void>",
+        "description": "Fires when the inner <button> receives a click. Prefer this over\n binding `(click)` on the host element — explicit output gives\n consumers (and Playwright) an unambiguous click target that won't\n be intercepted by sibling overlays in higher stacking contexts.\n Native `(click)` on the host still works for back-compat: the\n click event bubbles through unchanged.",
+        "optional": false
+      }
+    ],
     "methods": []
   },
   {
