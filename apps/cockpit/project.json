@@ -68,7 +68,7 @@
       "options": {
         "commands": [
           "npx nx serve cockpit --port 4201",
-          "npx nx serve cockpit-langgraph-persistence-angular --port 4301",
+          "npx nx serve cockpit-langgraph-persistence-angular:serve:cockpit --port 4301",
           "cd cockpit/langgraph/persistence/python && source $HOME/.local/bin/env 2>/dev/null; uv sync && uv run langgraph dev --port 8123"
         ],
         "parallel": true
@@ -79,7 +79,7 @@
       "options": {
         "commands": [
           "npx nx serve cockpit --port 4201",
-          "npx nx serve cockpit-langgraph-interrupts-angular --port 4302",
+          "npx nx serve cockpit-langgraph-interrupts-angular:serve:cockpit --port 4302",
           "cd cockpit/langgraph/interrupts/python && source $HOME/.local/bin/env 2>/dev/null; uv sync && uv run langgraph dev --port 8123"
         ],
         "parallel": true
@@ -90,7 +90,7 @@
       "options": {
         "commands": [
           "npx nx serve cockpit --port 4201",
-          "npx nx serve cockpit-langgraph-memory-angular --port 4303",
+          "npx nx serve cockpit-langgraph-memory-angular:serve:cockpit --port 4303",
           "cd cockpit/langgraph/memory/python && source $HOME/.local/bin/env 2>/dev/null; uv sync && uv run langgraph dev --port 8123"
         ],
         "parallel": true
@@ -101,7 +101,7 @@
       "options": {
         "commands": [
           "npx nx serve cockpit --port 4201",
-          "npx nx serve cockpit-langgraph-durable-execution-angular --port 4304",
+          "npx nx serve cockpit-langgraph-durable-execution-angular:serve:cockpit --port 4304",
           "cd cockpit/langgraph/durable-execution/python && source $HOME/.local/bin/env 2>/dev/null; uv sync && uv run langgraph dev --port 8123"
         ],
         "parallel": true
@@ -112,7 +112,7 @@
       "options": {
         "commands": [
           "npx nx serve cockpit --port 4201",
-          "npx nx serve cockpit-langgraph-subgraphs-angular --port 4305",
+          "npx nx serve cockpit-langgraph-subgraphs-angular:serve:cockpit --port 4305",
           "cd cockpit/langgraph/subgraphs/python && source $HOME/.local/bin/env 2>/dev/null; uv sync && uv run langgraph dev --port 8123"
         ],
         "parallel": true
@@ -123,7 +123,7 @@
       "options": {
         "commands": [
           "npx nx serve cockpit --port 4201",
-          "npx nx serve cockpit-langgraph-time-travel-angular --port 4306",
+          "npx nx serve cockpit-langgraph-time-travel-angular:serve:cockpit --port 4306",
           "cd cockpit/langgraph/time-travel/python && source $HOME/.local/bin/env 2>/dev/null; uv sync && uv run langgraph dev --port 8123"
         ],
         "parallel": true
@@ -134,7 +134,7 @@
       "options": {
         "commands": [
           "npx nx serve cockpit --port 4201",
-          "npx nx serve cockpit-langgraph-deployment-runtime-angular --port 4307",
+          "npx nx serve cockpit-langgraph-deployment-runtime-angular:serve:cockpit --port 4307",
           "cd cockpit/langgraph/deployment-runtime/python && source $HOME/.local/bin/env 2>/dev/null; uv sync && uv run langgraph dev --port 8123"
         ],
         "parallel": true
