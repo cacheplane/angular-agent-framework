@@ -1,6 +1,6 @@
 {
   "slug": "package-installs-by-package-manager",
-  "posthog_id": null,
+  "posthog_id": 8634193,
   "kind": "trends",
   "name": "Package installs by package manager",
   "events": [

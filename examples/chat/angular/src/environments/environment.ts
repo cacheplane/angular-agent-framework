@@ -11,4 +11,9 @@ export const environment = {
   production: true,
   langGraphApiUrl: '/api',
   assistantId: 'chat',
+  telemetry: {
+    enabled: true,
+    endpoint: '/api/ingest',
+    sampleRate: 1,
+  },
 };

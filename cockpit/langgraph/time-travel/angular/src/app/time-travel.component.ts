@@ -27,20 +27,20 @@ import { environment } from '../environments/environment';
       <!-- Checkpoint timeline sidebar -->
       <div sidebar
         class="flex flex-col overflow-hidden"
-        style="background: var(--chat-bg, #171717); color: var(--chat-text, #e0e0e0);"
+        style="background: var(--ngaf-chat-bg); color: var(--ngaf-chat-text);"
       >
-        <div class="px-4 py-3 border-b border-[var(--chat-border)]">
-          <h2 class="text-sm font-semibold text-[var(--chat-text)] uppercase tracking-wide">
+        <div class="px-4 py-3 border-b border-[var(--ngaf-chat-separator)]">
+          <h2 class="text-sm font-semibold text-[var(--ngaf-chat-text)] uppercase tracking-wide">
             Timeline
           </h2>
-          <p class="text-xs text-[var(--chat-text-muted)] mt-0.5">
+          <p class="text-xs text-[var(--ngaf-chat-text-muted)] mt-0.5">
             {{ checkpoints().length }} checkpoint(s)
           </p>
         </div>
 
         <div class="flex-1 overflow-y-auto px-3 py-2 space-y-1.5">
           @if (checkpoints().length === 0) {
-            <p class="text-xs text-[var(--chat-text-muted)] text-center py-6">
+            <p class="text-xs text-[var(--ngaf-chat-text-muted)] text-center py-6">
               No checkpoints yet. Send a message to begin.
             </p>
           }
@@ -50,8 +50,8 @@ import { environment } from '../environments/environment';
               class="flex items-center gap-2 rounded-lg border px-3 py-2 transition-colors"
               [class]="
                 i === selectedIndex()
-                  ? 'border-[var(--chat-input-focus-border)] bg-[var(--chat-bg-hover)]'
-                  : 'border-[var(--chat-border)] bg-[var(--chat-bg)] hover:bg-[var(--chat-bg-hover)]'
+                  ? 'border-[var(--ngaf-chat-primary)] bg-[var(--ngaf-chat-surface-alt)]'
+                  : 'border-[var(--ngaf-chat-separator)] bg-[var(--ngaf-chat-bg)] hover:bg-[var(--ngaf-chat-surface-alt)]'
               "
             >
               <!-- Numbered badge -->
@@ -59,8 +59,8 @@ import { environment } from '../environments/environment';
                 class="w-6 h-6 flex items-center justify-center rounded-full text-xs font-bold shrink-0"
                 [class]="
                   i === selectedIndex()
-                    ? 'bg-[var(--chat-send-bg)] text-[var(--chat-send-text)]'
-                    : 'bg-[var(--chat-bg-alt)] text-[var(--chat-text-muted)]'
+                    ? 'bg-[var(--ngaf-chat-primary)] text-[var(--ngaf-chat-on-primary)]'
+                    : 'bg-[var(--ngaf-chat-surface-alt)] text-[var(--ngaf-chat-text-muted)]'
                 "
               >
                 {{ i + 1 }}
@@ -68,11 +68,11 @@ import { environment } from '../environments/environment';
 
               <!-- Checkpoint info -->
               <div class="flex-1 min-w-0">
-                <p class="text-xs font-medium text-[var(--chat-text)] truncate">
+                <p class="text-xs font-medium text-[var(--ngaf-chat-text)] truncate">
                   {{ checkpointLabel(state, i) }}
                 </p>
                 @if (state.checkpoint?.checkpoint_id) {
-                  <p class="text-xs text-[var(--chat-text-muted)] font-mono truncate">
+                  <p class="text-xs text-[var(--ngaf-chat-text-muted)] font-mono truncate">
                     {{ state.checkpoint.checkpoint_id }}
                   </p>
                 }
@@ -81,14 +81,14 @@ import { environment } from '../environments/environment';
               <!-- Action buttons -->
               <div class="flex gap-1 shrink-0">
                 <button
-                  class="px-2 py-1 text-xs rounded bg-[var(--chat-bg-alt)] text-[var(--chat-text)] hover:bg-[var(--chat-bg-hover)] transition-colors"
+                  class="px-2 py-1 text-xs rounded bg-[var(--ngaf-chat-surface-alt)] text-[var(--ngaf-chat-text)] hover:bg-[var(--ngaf-chat-surface-alt)] transition-colors"
                   title="Replay from this checkpoint"
                   (click)="replay(state, i)"
                 >
                   Replay
                 </button>
                 <button
-                  class="px-2 py-1 text-xs rounded bg-[var(--chat-bg-alt)] text-[var(--chat-text)] hover:bg-[var(--chat-bg-hover)] transition-colors"
+                  class="px-2 py-1 text-xs rounded bg-[var(--ngaf-chat-surface-alt)] text-[var(--ngaf-chat-text)] hover:bg-[var(--ngaf-chat-surface-alt)] transition-colors"
                   title="Fork from this checkpoint"
                   (click)="fork(state, i)"
                 >

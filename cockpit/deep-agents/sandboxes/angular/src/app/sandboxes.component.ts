@@ -32,27 +32,27 @@ interface CodeExecution {
   template: `
     <example-chat-layout sidebarWidth="w-80">
       <chat main [agent]="agent" [views]="ui" [store]="uiStore" class="flex-1 min-w-0" />
-      <div sidebar class="p-4 space-y-3" style="background: var(--chat-bg, #171717); color: var(--chat-text, #e0e0e0);">
+      <div sidebar class="p-4 space-y-3" style="background: var(--ngaf-chat-bg); color: var(--ngaf-chat-text);">
         <h3 class="text-xs font-semibold uppercase tracking-wide"
-            style="color: var(--chat-text-muted, #777);">Execution Output</h3>
+            style="color: var(--ngaf-chat-text-muted);">Execution Output</h3>
         @if (executions().length === 0) {
-          <p class="text-sm italic" style="color: var(--chat-text-muted, #777);">No code executed yet</p>
+          <p class="text-sm italic" style="color: var(--ngaf-chat-text-muted);">No code executed yet</p>
         }
         @for (exec of executions(); track exec.id) {
           <div class="rounded-lg p-3 space-y-2"
-               style="background: var(--chat-input-bg, #262626); border: 1px solid var(--chat-border, #333);">
-            <div class="text-xs font-semibold" style="color: var(--chat-text-muted, #777);">Code</div>
+               style="background: var(--ngaf-chat-surface-alt); border: 1px solid var(--ngaf-chat-separator);">
+            <div class="text-xs font-semibold" style="color: var(--ngaf-chat-text-muted);">Code</div>
             <pre class="whitespace-pre-wrap break-words font-mono text-xs leading-relaxed p-2 rounded overflow-x-auto"
-                 style="background: var(--chat-bg, #171717); color: var(--chat-text, #e0e0e0);">{{ exec.code }}</pre>
+                 style="background: var(--ngaf-chat-bg); color: var(--ngaf-chat-text);">{{ exec.code }}</pre>
             @if (exec.stdout) {
-              <div class="text-xs font-semibold" style="color: var(--chat-success, #4ade80);">stdout</div>
+              <div class="text-xs font-semibold" style="color: var(--ngaf-chat-success);">stdout</div>
               <pre class="whitespace-pre-wrap break-words font-mono text-xs leading-relaxed p-2 rounded"
-                   style="background: var(--chat-bg, #171717); color: var(--chat-success, #4ade80);">{{ exec.stdout }}</pre>
+                   style="background: var(--ngaf-chat-bg); color: var(--ngaf-chat-success);">{{ exec.stdout }}</pre>
             }
             @if (exec.stderr) {
-              <div class="text-xs font-semibold" style="color: var(--chat-error-text, #f87171);">stderr</div>
+              <div class="text-xs font-semibold" style="color: var(--ngaf-chat-error-text);">stderr</div>
               <pre class="whitespace-pre-wrap break-words font-mono text-xs leading-relaxed p-2 rounded"
-                   style="background: var(--chat-bg, #171717); color: var(--chat-error-text, #f87171);">{{ exec.stderr }}</pre>
+                   style="background: var(--ngaf-chat-bg); color: var(--ngaf-chat-error-text);">{{ exec.stderr }}</pre>
             }
           </div>
         }

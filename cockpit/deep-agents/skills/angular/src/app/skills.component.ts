@@ -34,31 +34,31 @@ interface SkillInvocation {
   template: `
     <example-chat-layout sidebarWidth="w-72">
       <chat main [agent]="agent" [views]="ui" [store]="uiStore" class="flex-1 min-w-0" />
-      <div sidebar class="p-4 space-y-3" style="background: var(--chat-bg, #171717); color: var(--chat-text, #e0e0e0);">
+      <div sidebar class="p-4 space-y-3" style="background: var(--ngaf-chat-bg); color: var(--ngaf-chat-text);">
         <h3 class="text-xs font-semibold uppercase tracking-wide"
-            style="color: var(--chat-text-muted, #777);">Skill Invocations</h3>
+            style="color: var(--ngaf-chat-text-muted);">Skill Invocations</h3>
         @if (invocations().length === 0) {
-          <p class="text-sm italic" style="color: var(--chat-text-muted, #777);">No skills invoked yet</p>
+          <p class="text-sm italic" style="color: var(--ngaf-chat-text-muted);">No skills invoked yet</p>
         }
         @for (inv of invocations(); track inv.id) {
           <div class="rounded-lg p-3 space-y-2"
-               style="background: var(--chat-input-bg, #262626); border: 1px solid var(--chat-border, #333);">
+               style="background: var(--ngaf-chat-surface-alt); border: 1px solid var(--ngaf-chat-separator);">
             <div class="flex items-center gap-2">
               <span class="inline-block rounded-full px-2 py-0.5 text-xs font-semibold"
-                    style="background: var(--chat-accent, #6d28d9); color: #fff;">
+                    style="background: var(--ngaf-chat-primary); color: var(--ngaf-chat-on-primary);">
                 {{ inv.name }}
               </span>
             </div>
-            <div class="text-xs space-y-1" style="color: var(--chat-text-muted, #777);">
-              <p class="font-semibold" style="color: var(--chat-text, #e0e0e0);">Input</p>
+            <div class="text-xs space-y-1" style="color: var(--ngaf-chat-text-muted);">
+              <p class="font-semibold" style="color: var(--ngaf-chat-text);">Input</p>
               <pre class="whitespace-pre-wrap break-words font-mono text-xs leading-relaxed p-1.5 rounded"
-                   style="background: var(--chat-bg, #171717);">{{ formatArgs(inv.args) }}</pre>
+                   style="background: var(--ngaf-chat-bg);">{{ formatArgs(inv.args) }}</pre>
             </div>
             @if (inv.result !== undefined) {
-              <div class="text-xs space-y-1" style="color: var(--chat-text-muted, #777);">
-                <p class="font-semibold" style="color: var(--chat-success, #4ade80);">Output</p>
+              <div class="text-xs space-y-1" style="color: var(--ngaf-chat-text-muted);">
+                <p class="font-semibold" style="color: var(--ngaf-chat-success);">Output</p>
                 <pre class="whitespace-pre-wrap break-words font-mono text-xs leading-relaxed p-1.5 rounded"
-                     style="background: var(--chat-bg, #171717);">{{ inv.result }}</pre>
+                     style="background: var(--ngaf-chat-bg);">{{ inv.result }}</pre>
               </div>
             }
           </div>

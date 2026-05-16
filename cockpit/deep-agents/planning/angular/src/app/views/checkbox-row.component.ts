@@ -4,7 +4,7 @@ import { Component, input } from '@angular/core';
   selector: 'checkbox-row',
   standalone: true,
   template: `
-    <label class="flex items-center gap-2 py-1 cursor-pointer text-sm" style="color: var(--chat-text);">
+    <label class="flex items-center gap-2 py-1 cursor-pointer text-sm" style="color: var(--ngaf-chat-text);">
       <input
         type="checkbox"
         [checked]="checked()"

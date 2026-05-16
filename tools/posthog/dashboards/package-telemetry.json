@@ -1,6 +1,6 @@
 {
   "slug": "package-telemetry",
-  "posthog_id": null,
+  "posthog_id": 1590768,
   "name": "GTM · Package telemetry",
   "description": "Published @ngaf/* install telemetry from ngaf:postinstall.",
   "tags": [
