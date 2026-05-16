@@ -67,8 +67,13 @@ def should_call_tools(state: DashboardState) -> Literal["call_tools", "respond"]
 
 
 async def emit_state(state: DashboardState) -> DashboardState:
-    """Emit state_update custom events from tool results."""
-    from langchain_core.callbacks import adispatch_custom_event
+    """Emit state_update custom events from tool results.
+
+    Uses LangGraph 1.x's `get_stream_writer()` — `adispatch_custom_event`
+    no longer flows into the `custom` stream channel. The chat-lib bridge
+    parses the payload as `{name: 'state_update', data: <patches>}`.
+    """
+    from langgraph.config import get_stream_writer
 
     tool_results = {}
     for msg in reversed(state["messages"]):
@@ -93,7 +98,12 @@ async def emit_state(state: DashboardState) -> DashboardState:
             break
 
     if tool_results:
-        await adispatch_custom_event("state_update", {"updates": tool_results})
+        # The chat-lib bridge (stream-manager.bridge.ts handles the 'custom'
+        # case) parses `eventData['name']` for routing and `eventData['data']`
+        # for payload; chat.component.ts then forwards data to
+        # signal-state-store.update() which expects flat Record<jsonPointer, value>.
+        writer = get_stream_writer()
+        writer({"name": "state_update", "data": tool_results})
 
     return state
 
