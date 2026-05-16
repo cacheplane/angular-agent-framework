@@ -113,6 +113,7 @@ export function CockpitShell({
             <RunMode
               entryTitle={entryTitle}
               runtimeUrl={contentBundle.runtimeUrl}
+              capabilitySlug={entry.topic}
             />
           </div>
           {activeMode === 'Code' ? (
