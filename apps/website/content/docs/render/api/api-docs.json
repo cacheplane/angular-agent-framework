@@ -34,6 +34,18 @@
         "optional": false
       },
       {
+        "name": "filteredRepeatInputs",
+        "type": "Signal<Record<string, unknown>[]>",
+        "description": "`repeatInputs` filtered per-item to declared component inputs.",
+        "optional": false
+      },
+      {
+        "name": "filteredResolvedInputs",
+        "type": "Signal<Record<string, unknown>>",
+        "description": "`resolvedInputs` filtered down to keys the target component actually\ndeclares — silences NG0303 dev-mode warnings from framework-only\ninputs (bindings/emit/loading/childKeys/spec) passed to simple view\ncomponents that don't declare them.",
+        "optional": false
+      },
+      {
         "name": "mountClass",
         "type": "Signal<AngularComponentRenderer | null>",
         "description": "Picks fallback or real based on notReady. The mountedReal latch is\n driven by a constructor effect (not this computed) — Angular forbids\n signal writes inside computed.",
