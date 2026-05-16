@@ -3,12 +3,10 @@ export interface CaptureGuardInput {
   token: string | undefined;
   captureLocal: boolean;
   host: string | undefined;
-  doNotTrack: boolean;
 }
 
 export function shouldCaptureAnalytics(input: CaptureGuardInput): boolean {
   if (!input.token) return false;
-  if (input.doNotTrack) return false;
   if (!input.captureLocal && isLocalhost(input.host)) return false;
   return true;
 }
