@@ -20,7 +20,7 @@ jobs:
       - name: Run drift check
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-        run: npx nx run examples-chat-aimock-e2e:drift --skip-nx-cache
+        run: npx nx run examples-chat-angular:drift --skip-nx-cache
       - name: Open issue on drift
         if: failure()
         uses: actions/github-script@v8

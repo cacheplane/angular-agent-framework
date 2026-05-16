@@ -63,6 +63,26 @@
     },
     "lint": {
       "executor": "@nx/eslint:lint"
+    },
+    "e2e": {
+      "executor": "@nx/playwright:playwright",
+      "options": {
+        "config": "examples/chat/angular/e2e/playwright.config.ts"
+      }
+    },
+    "record": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "examples/chat/angular/e2e",
+        "command": "tsx scripts/record.ts"
+      }
+    },
+    "drift": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "examples/chat/angular/e2e",
+        "command": "tsx scripts/drift.ts"
+      }
     }
   },
   "tags": ["scope:examples", "type:app"]

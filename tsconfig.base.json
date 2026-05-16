@@ -39,8 +39,8 @@
       "@ngaf/telemetry/browser": ["libs/telemetry/src/browser/public-api.ts"],
       "@ngaf/telemetry/node": ["libs/telemetry/src/node/index.ts"],
       "@ngaf/telemetry/shared": ["libs/telemetry/src/shared/public-api.ts"],
-      "@ngaf-internal/aimock-harness": ["libs/internal/aimock-harness/src/index.ts"],
-      "@ngaf-internal/aimock-harness/global-teardown": ["libs/internal/aimock-harness/src/global-teardown.ts"]
+      "@ngaf-internal/e2e-harness": ["libs/e2e-harness/src/index.ts"],
+      "@ngaf-internal/e2e-harness/global-teardown": ["libs/e2e-harness/src/global-teardown.ts"]
     },
     "skipLibCheck": true,
     "strict": true,

@@ -1,21 +1,21 @@
 {
-  "name": "internal-aimock-harness",
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "e2e-harness",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "projectType": "library",
-  "sourceRoot": "libs/internal/aimock-harness/src",
+  "sourceRoot": "libs/e2e-harness/src",
   "tags": ["scope:internal"],
   "targets": {
     "lint": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "libs/internal/aimock-harness",
+        "cwd": "libs/e2e-harness",
         "command": "tsc --noEmit"
       }
     },
     "test": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "libs/internal/aimock-harness",
+        "cwd": "libs/e2e-harness",
         "command": "vitest run"
       }
     }

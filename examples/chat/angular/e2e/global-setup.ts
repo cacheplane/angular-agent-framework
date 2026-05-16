@@ -15,7 +15,7 @@ declare global {
   var __AIMOCK_E2E_STATE__: SharedState | undefined;
 }
 
-const REPO_ROOT = resolve(__dirname, '../../..');
+const REPO_ROOT = resolve(__dirname, '../../../..');
 const FIXTURE_PATH = process.env.AIMOCK_FIXTURE
   ? resolve(__dirname, process.env.AIMOCK_FIXTURE)
   : resolve(__dirname, 'fixtures');

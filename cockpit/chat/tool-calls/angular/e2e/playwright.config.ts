@@ -14,5 +14,5 @@ export default defineConfig({
   },
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
   globalSetup: './global-setup-impl.ts',
-  globalTeardown: require.resolve('../../../../../libs/internal/aimock-harness/src/global-teardown'),
+  globalTeardown: require.resolve('../../../../../libs/e2e-harness/src/global-teardown'),
 });
