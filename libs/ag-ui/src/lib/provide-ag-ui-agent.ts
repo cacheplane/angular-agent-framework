@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 import { InjectionToken, inject, type Provider } from '@angular/core';
 import { HttpAgent } from '@ag-ui/client';
-import type { Agent } from '@ngaf/chat';
+import type { Agent, AgentRuntimeTelemetrySink } from '@ngaf/chat';
 import { toAgent } from './to-agent';
 
 /**
@@ -17,6 +17,8 @@ export interface AgUiAgentConfig {
   agentId?: string;
   threadId?: string;
   headers?: Record<string, string>;
+  /** Optional app-owned telemetry sink. No telemetry is emitted unless this is provided. */
+  telemetry?: AgentRuntimeTelemetrySink | false;
 }
 
 export const AG_UI_AGENT = new InjectionToken<Agent>('AG_UI_AGENT');
@@ -38,7 +40,7 @@ export function provideAgUiAgent(config: AgUiAgentConfig): Provider[] {
           ...(config.threadId !== undefined ? { threadId: config.threadId } : {}),
           ...(config.headers !== undefined ? { headers: config.headers } : {}),
         });
-        return toAgent(source);
+        return toAgent(source, { telemetry: config.telemetry });
       },
     },
   ];

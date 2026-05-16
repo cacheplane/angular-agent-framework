@@ -7,6 +7,7 @@ vi.mock('./client', () => ({
 import { captureEvent } from './client';
 import {
   captureRuntimeInstanceCreated,
+  captureRuntimeRequestCreated,
   captureStreamStarted,
   captureStreamEnded,
   captureStreamErrored,
@@ -33,6 +34,24 @@ describe('adapter helpers', () => {
     expect(captureEvent).toHaveBeenCalledWith(
       'ngaf:stream_started',
       expect.objectContaining({ provider: 'openai', model: 'gpt-4' }),
+    );
+  });
+
+  test('captureRuntimeRequestCreated records request type without content identifiers', async () => {
+    await captureRuntimeRequestCreated({
+      transport: 'langgraph',
+      requestType: 'run',
+      provider: 'openai',
+      model: 'gpt-4',
+    });
+    expect(captureEvent).toHaveBeenCalledWith(
+      'ngaf:runtime_request_created',
+      expect.objectContaining({
+        transport: 'langgraph',
+        requestType: 'run',
+        provider: 'openai',
+        model: 'gpt-4',
+      }),
     );
   });
 

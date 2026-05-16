@@ -1,0 +1,16 @@
+{
+  "slug": "runtime-requests-by-transport",
+  "posthog_id": null,
+  "kind": "trends",
+  "name": "Runtime requests by transport",
+  "events": [
+    {
+      "event": "ngaf:runtime_request_created",
+      "math": "total"
+    }
+  ],
+  "breakdown": "transport",
+  "breakdown_limit": 10,
+  "interval": "day",
+  "date_from": "-30d"
+}

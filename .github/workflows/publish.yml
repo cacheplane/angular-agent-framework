@@ -46,6 +46,9 @@ jobs:
       - name: Patch install telemetry into publishable manifests
         run: node libs/telemetry/scripts/apply-install-telemetry.mjs dist/libs/chat dist/libs/langgraph dist/libs/ag-ui dist/libs/render dist/libs/a2ui dist/libs/licensing
 
+      - name: Verify install telemetry in publishable manifests
+        run: node libs/telemetry/scripts/verify-install-telemetry.mjs dist/libs/chat dist/libs/langgraph dist/libs/ag-ui dist/libs/render dist/libs/a2ui dist/libs/licensing dist/libs/telemetry
+
       - name: Verify atomic release versions
         run: node scripts/verify-release-versions.mjs --tag "$RELEASE_TAG"
         env:
