@@ -182,7 +182,7 @@ jobs:
       - name: Run cockpit example aimock e2e suites
         run: |
           set -e
-          for proj in cockpit-langgraph-streaming-angular cockpit-chat-tool-calls-angular; do
+          for proj in cockpit-langgraph-streaming-angular cockpit-chat-tool-calls-angular cockpit-chat-subagents-angular; do
             echo "::group::nx e2e $proj"
             npx nx e2e "$proj" --skip-nx-cache
             echo "::endgroup::"
