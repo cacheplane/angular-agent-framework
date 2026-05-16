@@ -145,21 +145,44 @@ class FlightResultsSpec(_SurfaceSpec):
 
 # ── Envelope wrapping ───────────────────────────────────────────────────────
 
-def _wrap_envelopes(spec: _SurfaceSpec) -> str:
-    """Wrap a validated SurfaceSpec into A2UI JSONL with the three required envelopes."""
+# Chat-lib parser (libs/a2ui/src/lib/parser.ts) accepts exactly four envelope
+# keys: surfaceUpdate, dataModelUpdate, beginRendering, deleteSurface. Anything
+# else (e.g. createSurface, updateComponents) is silently dropped. Surface is
+# created implicitly on first surfaceUpdate; beginRendering is what actually
+# triggers mount and must include the root component id.
+
+def _to_data_model_contents(model: dict[str, Any]) -> list[dict[str, Any]]:
+    """Convert a flat {key:value} dict to the typed A2uiDataModelEntry list shape."""
+    contents: list[dict[str, Any]] = []
+    for k, v in model.items():
+        if isinstance(v, bool):
+            contents.append({"key": k, "valueBoolean": v})
+        elif isinstance(v, (int, float)):
+            contents.append({"key": k, "valueNumber": float(v)})
+        elif isinstance(v, str):
+            contents.append({"key": k, "valueString": v})
+        # dict/list nested values not supported in this demo
+    return contents
+
+
+def _wrap_envelopes(spec: _SurfaceSpec, root_id: str = "root") -> str:
+    """Wrap a validated SurfaceSpec into A2UI v0.9 JSONL.
+
+    Order matters: dataModelUpdate first (so bindings resolve), then
+    surfaceUpdate (components), then beginRendering (mount + root id).
+    """
     lines = [
-        json.dumps({"createSurface": {
+        json.dumps({"dataModelUpdate": {
             "surfaceId": spec.surface_id,
-            "catalogId": "basic",
-            "sendDataModel": True,
+            "contents": _to_data_model_contents(spec.data_model),
         }}),
-        json.dumps({"updateDataModel": {
-            "surfaceId": spec.surface_id,
-            "value": spec.data_model,
-        }}),
-        json.dumps({"updateComponents": {
+        json.dumps({"surfaceUpdate": {
             "surfaceId": spec.surface_id,
             "components": [c.model_dump(exclude_none=True) for c in spec.components],
+        }}),
+        json.dumps({"beginRendering": {
+            "surfaceId": spec.surface_id,
+            "root": root_id,
         }}),
     ]
     return A2UI_PREFIX + "\n" + "\n".join(lines) + "\n"
