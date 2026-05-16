@@ -16,7 +16,18 @@ export type ChatMessageRole = 'user' | 'assistant' | 'system' | 'tool';
   imports: [ChatCitationsComponent, ChatCheckpointMarkerComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styles: [CHAT_HOST_TOKENS, CHAT_MESSAGE_STYLES, `
-    .chat-message__layout { display: flex; gap: 8px; align-items: flex-start; }
+    /*
+     * Layout MUST be width:100% so user-role __main's max-width:80% (defined
+     * in chat-message.styles.ts) has a concrete containing block to resolve
+     * against. Without this, layout shrinks to __main's content, __main
+     * shrinks to its bubble's content, the bubble's fit-content is then
+     * capped by max-width:80% of layout (a circular dependency the browser
+     * breaks at the bubble's wrap-point intrinsic width — ~166px instead of
+     * the unwrapped ~199px), forcing short user phrases like "Show me the
+     * dashboard" to wrap mid-message. See PRs #313, #325, c0b9e88c — each
+     * shifted which element held the 80% cap but none gave it a stable base.
+     */
+    .chat-message__layout { display: flex; gap: 8px; align-items: flex-start; width: 100%; }
     .chat-message__gutter { flex: 0 0 14px; display: flex; align-items: flex-start; padding-top: 4px; }
     .chat-message__gutter:empty { flex-basis: 0; }
     .chat-message__main { flex: 1; min-width: 0; }
