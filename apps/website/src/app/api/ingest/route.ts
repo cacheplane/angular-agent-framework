@@ -32,7 +32,7 @@ function readPayload(value: unknown): {
 } | null {
   if (!isRecord(value)) return null;
   const payload = value as TelemetryIngestPayload;
-  if (payload.key !== PUBLIC_INGEST_KEY) return null;
+  if (payload.key !== undefined && payload.key !== PUBLIC_INGEST_KEY) return null;
 
   const distinctId = toSafeAnalyticsString(payload.distinctId, 200);
   const event = toSafeAnalyticsString(payload.event, 100);

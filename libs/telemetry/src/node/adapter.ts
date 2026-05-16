@@ -14,6 +14,13 @@ export interface StreamTelemetry {
   durationMs?: number;
 }
 
+export interface RuntimeRequestTelemetry {
+  transport: string;
+  requestType: string;
+  provider?: string;
+  model?: string;
+}
+
 async function safe(fn: () => Promise<unknown>): Promise<void> {
   try { await fn(); } catch { /* silent fail */ }
 }
@@ -24,6 +31,10 @@ export async function captureRuntimeInstanceCreated(input: RuntimeInstanceTeleme
     void apiKey;
     await captureEvent('ngaf:runtime_instance_created', { ...rest });
   });
+}
+
+export async function captureRuntimeRequestCreated(input: RuntimeRequestTelemetry): Promise<void> {
+  await safe(() => captureEvent('ngaf:runtime_request_created', { ...input }));
 }
 
 export async function captureStreamStarted(input: StreamTelemetry): Promise<void> {

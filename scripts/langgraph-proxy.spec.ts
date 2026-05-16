@@ -84,6 +84,47 @@ describe('createProxyHandler', () => {
     expect(res.send).toHaveBeenCalledWith('{"ok":true}');
   });
 
+  it('forwards canonical demo runtime request telemetry without content fields', async () => {
+    const fetchMock = vi.spyOn(global, 'fetch').mockResolvedValue(
+      new Response('{"ok":true}', { status: 202, headers: { 'content-type': 'application/json' } }),
+    );
+    const handler = createProxyHandler({
+      backendUrl: DEFAULT_BACKEND,
+      telemetryIngestUrl: 'https://cacheplane.ai/api/ingest',
+    });
+    const res = makeRes();
+
+    await handler({
+      method: 'POST',
+      headers: { host: 'demo.cacheplane.ai', 'content-type': 'application/json' },
+      body: {
+        event: 'ngaf:runtime_request_created',
+        distinctId: 'browser:test',
+        properties: {
+          transport: 'langgraph',
+          surface: 'canonical_demo',
+          requestType: 'submit',
+        },
+      },
+      url: '/api/ingest',
+      query: {},
+    } as never, res as never);
+
+    const forwarded = JSON.parse(String((fetchMock.mock.calls[0]![1] as RequestInit).body));
+    expect(forwarded).toEqual({
+      event: 'ngaf:runtime_request_created',
+      distinctId: 'browser:test',
+      properties: {
+        transport: 'langgraph',
+        surface: 'canonical_demo',
+        requestType: 'submit',
+      },
+      key: 'phc_public_cacheplane_telemetry',
+    });
+    expect(JSON.stringify(forwarded)).not.toMatch(/messages|threadId|assistantId|apiUrl/);
+  });
+
+
   it('responds 204 to OPTIONS preflight with CORS headers', async () => {
     const handler = createProxyHandler({ backendUrl: DEFAULT_BACKEND });
     const res = makeRes();

@@ -1,0 +1,16 @@
+{
+  "slug": "runtime-stream-starts-by-transport",
+  "posthog_id": null,
+  "kind": "trends",
+  "name": "Runtime stream starts by transport",
+  "events": [
+    {
+      "event": "ngaf:stream_started",
+      "math": "total"
+    }
+  ],
+  "breakdown": "transport",
+  "breakdown_limit": 10,
+  "interval": "day",
+  "date_from": "-30d"
+}

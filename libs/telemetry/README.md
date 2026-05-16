@@ -12,6 +12,7 @@ import { provideNgafTelemetry } from '@ngaf/telemetry/browser';
 // Node (server adapters)
 import {
   captureRuntimeInstanceCreated,
+  captureRuntimeRequestCreated,
   captureStreamStarted,
   captureStreamEnded,
   captureStreamErrored,
@@ -31,11 +32,12 @@ The single telemetry surface for `@ngaf/*`. It exists so we can answer "how is C
 **Telemetered by default (Node, opt-out):**
 - `ngaf:postinstall` — fires once per dependency/global install of a published `@ngaf/*` package. Properties: package name, package version, Node version, OS, CPU architecture, package manager name/version, installer-reported Node/OS/architecture, workspace/global install flags when npm exposes them, sample weight. It uses a per-process anonymous id. No project path, no raw environment variables, no dependency tree, no installer IP address.
 - `ngaf:runtime_instance_created` — server adapters (LangGraph, AG-UI) call this when they spin up. Properties: which transport, which model provider (string), Angular peer version. **No API keys**, no endpoint hostnames, no user data.
+- `ngaf:runtime_request_created` — server adapters call this when they create a transport request. Properties: transport, request type, provider, model. No prompts, thread IDs, assistant IDs, endpoint URLs, or headers.
 - `ngaf:stream_started` / `ngaf:stream_ended` / `ngaf:stream_errored` — per-request lifecycle on server adapters. Properties: provider, model name, duration, error class. No prompts, no completions, no message content.
 
 **Telemetered only on explicit opt-in (Browser):**
 - Nothing fires unless the consumer calls `provideNgafTelemetry({ enabled: true, sink })` or `provideNgafTelemetry({ enabled: true, endpoint })` in their root providers.
-- When opted in: `ngaf:browser_provided`, `ngaf:browser_chat_init`, and browser-side runtime lifecycle events explicitly captured by the app (`ngaf:runtime_instance_created`, `ngaf:stream_started`, `ngaf:stream_ended`, `ngaf:stream_errored`). Anonymous, no message content.
+- When opted in: `ngaf:browser_provided`, `ngaf:browser_chat_init`, and browser-side runtime lifecycle events explicitly captured by the app (`ngaf:runtime_instance_created`, `ngaf:runtime_request_created`, `ngaf:stream_started`, `ngaf:stream_ended`, `ngaf:stream_errored`). Anonymous, no message content.
 
 **Never telemetered (by anyone, at any time):**
 - Message content (user prompts, model completions, tool call inputs/outputs).

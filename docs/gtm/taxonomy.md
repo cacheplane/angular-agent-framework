@@ -75,6 +75,7 @@ sessions by design.
 |--------------------------------------|--------------------------------------------|-----------------|--------------|
 | `ngaf:postinstall`                   | Dependency/global install of a published `@ngaf/*` package | Node (script)   | **Opt-out**  |
 | `ngaf:runtime_instance_created`      | Runtime adapter init                        | Node / Browser  | **Opt-out** on Node, **Opt-in** in Browser |
+| `ngaf:runtime_request_created`       | Runtime adapter request created             | Node / Browser  | **Opt-out** on Node, **Opt-in** in Browser |
 | `ngaf:stream_started`                | Stream begins                              | Node / Browser  | **Opt-out** on Node, **Opt-in** in Browser |
 | `ngaf:stream_ended`                  | Stream ends normally                       | Node / Browser  | **Opt-out** on Node, **Opt-in** in Browser |
 | `ngaf:stream_errored`                | Stream errors                              | Node / Browser  | **Opt-out** on Node, **Opt-in** in Browser |
@@ -101,6 +102,19 @@ Browser events never fire unless the consumer explicitly opts in. See `libs/tele
 | `package_manager_workspaces`     | bool   | Installer-reported workspace flag when available. |
 | `global_install`                 | bool   | Whether npm reports a global install.      |
 | `sample_weight`                  | number | Inverse sample rate for weighted counts.   |
+
+### Runtime telemetry properties
+
+| Property      | Type   | Notes                                      |
+|---------------|--------|--------------------------------------------|
+| `transport`   | string | Runtime transport, e.g. `langgraph`, `ag-ui`, or `custom`. |
+| `surface`     | string | Adapter surface emitting the event.        |
+| `requestType` | string | Request shape, e.g. `submit`, `resubmit`, `regenerate`, `enqueue`, or `join`. |
+| `provider`    | string | Model provider when known.                 |
+| `model`       | string | Model name when known.                     |
+| `durationMs`  | number | Stream duration for end/error events.      |
+| `errorClass`  | string | Error class only. Never send error messages. |
+| `sample_weight` | number | Inverse sample rate for weighted counts. |
 
 ## Shared properties
 

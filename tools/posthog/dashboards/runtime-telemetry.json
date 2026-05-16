@@ -1,0 +1,28 @@
+{
+  "slug": "runtime-telemetry",
+  "posthog_id": null,
+  "name": "GTM · Runtime telemetry",
+  "description": "Opt-in browser and opt-out Node runtime telemetry for @ngaf/* adapters.",
+  "tags": [
+    "gtm",
+    "runtime-telemetry",
+    "phase-1"
+  ],
+  "tiles": [
+    {
+      "insight": "runtime-instances-by-transport"
+    },
+    {
+      "insight": "runtime-requests-by-transport"
+    },
+    {
+      "insight": "runtime-stream-starts-by-transport"
+    },
+    {
+      "insight": "runtime-stream-ends-by-transport"
+    },
+    {
+      "insight": "runtime-stream-errors-by-transport"
+    }
+  ]
+}

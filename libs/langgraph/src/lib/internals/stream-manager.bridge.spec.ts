@@ -3,6 +3,7 @@ import { BehaviorSubject, Subject } from 'rxjs';
 import { createStreamManagerBridge } from './stream-manager.bridge';
 import { MockAgentTransport } from '../transport/mock-stream.transport';
 import { ResourceStatus, AgentTransport, StreamSubjects, CustomStreamEvent, StreamEvent } from '../agent.types';
+import type { AgentRuntimeTelemetryPayload } from '@ngaf/chat';
 import type { ThreadState } from '@langchain/langgraph-sdk';
 import { of } from 'rxjs';
 import { readFileSync } from 'node:fs';
@@ -146,6 +147,81 @@ describe('createStreamManagerBridge', () => {
         }),
       },
     ]);
+    destroy$.next();
+  });
+
+  it('emits opt-in telemetry around completed LangGraph streams', async () => {
+    const seen: AgentRuntimeTelemetryPayload[] = [];
+    const transport: AgentTransport = {
+      async *stream() {
+        yield { type: 'values', values: { ok: true } };
+      },
+    };
+    const subjects = makeSubjects();
+    const destroy$ = new Subject<void>();
+    const bridge = createStreamManagerBridge({
+      options: {
+        apiUrl: '',
+        assistantId: 'test',
+        transport,
+        telemetry: (payload) => seen.push(payload),
+      },
+      subjects,
+      threadId$: of('thread-1'),
+      destroy$: destroy$.asObservable(),
+    });
+
+    await bridge.submit({ messages: [] });
+
+    expect(seen.map((payload) => payload.event)).toEqual([
+      'ngaf:runtime_instance_created',
+      'ngaf:runtime_request_created',
+      'ngaf:stream_started',
+      'ngaf:stream_ended',
+    ]);
+    expect(seen[0].properties).toEqual({ transport: 'langgraph', surface: 'agent' });
+    expect(seen[1].properties).toEqual({ transport: 'langgraph', surface: 'agent', requestType: 'submit' });
+    expect(seen[2].properties).toEqual({ transport: 'langgraph', surface: 'agent' });
+    expect(seen[3].properties).toEqual({
+      transport: 'langgraph',
+      surface: 'agent',
+      durationMs: expect.any(Number),
+    });
+    destroy$.next();
+  });
+
+  it('emits opt-in telemetry for LangGraph stream failures without error messages', async () => {
+    const seen: AgentRuntimeTelemetryPayload[] = [];
+    const transport: AgentTransport = {
+      async *stream() {
+        yield* [];
+        throw new TypeError('secret prompt fragment');
+      },
+    };
+    const subjects = makeSubjects();
+    const destroy$ = new Subject<void>();
+    const bridge = createStreamManagerBridge({
+      options: {
+        apiUrl: '',
+        assistantId: 'test',
+        transport,
+        telemetry: (payload) => seen.push(payload),
+      },
+      subjects,
+      threadId$: of('thread-1'),
+      destroy$: destroy$.asObservable(),
+    });
+
+    await bridge.submit({ messages: [] });
+
+    const errored = seen.find((payload) => payload.event === 'ngaf:stream_errored');
+    expect(errored?.properties).toEqual({
+      transport: 'langgraph',
+      surface: 'agent',
+      durationMs: expect.any(Number),
+      errorClass: 'TypeError',
+    });
+    expect(JSON.stringify(seen)).not.toContain('secret prompt fragment');
     destroy$.next();
   });
 

@@ -24,6 +24,10 @@ export type {
   AgentStateUpdateEvent,
   AgentCustomEvent,
   AgentCheckpoint,
+  AgentRuntimeTelemetryEvent,
+  AgentRuntimeTelemetryPayload,
+  AgentRuntimeTelemetryProperties,
+  AgentRuntimeTelemetrySink,
 } from './lib/agent';
 export {
   isUserMessage,

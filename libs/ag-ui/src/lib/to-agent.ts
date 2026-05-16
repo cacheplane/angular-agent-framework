@@ -4,9 +4,44 @@ import { Subject } from 'rxjs';
 import type { AbstractAgent } from '@ag-ui/client';
 import type {
   Agent, Message, AgentStatus, ToolCall, AgentEvent,
+  AgentRuntimeTelemetryEvent,
+  AgentRuntimeTelemetryProperties,
+  AgentRuntimeTelemetrySink,
   AgentSubmitInput, AgentSubmitOptions,
 } from '@ngaf/chat';
 import { reduceEvent, type ReducerStore } from './reducer';
+
+export interface ToAgentOptions {
+  /** Optional app-owned telemetry sink. No telemetry is emitted unless this is provided. */
+  telemetry?: AgentRuntimeTelemetrySink | false;
+}
+
+function captureAgentRuntimeTelemetry(
+  sink: AgentRuntimeTelemetrySink | false | undefined,
+  event: AgentRuntimeTelemetryEvent,
+  properties: AgentRuntimeTelemetryProperties,
+): void {
+  if (!sink) return;
+  try {
+    void Promise.resolve(sink({ event, properties })).catch(() => undefined);
+  } catch {
+    // Keep telemetry side effects isolated from adapter control flow.
+  }
+}
+
+function agentRuntimeTelemetryErrorClass(error: unknown): string {
+  if (error instanceof Error) return error.name || error.constructor.name || 'Error';
+  if (
+    error
+    && typeof error === 'object'
+    && 'name' in error
+    && typeof error.name === 'string'
+    && error.name.length > 0
+  ) {
+    return error.name;
+  }
+  return 'UnknownError';
+}
 
 /**
  * Wraps an AG-UI AbstractAgent into the runtime-neutral Agent contract.
@@ -22,7 +57,7 @@ import { reduceEvent, type ReducerStore } from './reducer';
  * agent instance they constructed. The subscriber registered via
  * source.subscribe() will fire for the lifetime of source.
  */
-export function toAgent(source: AbstractAgent): Agent {
+export function toAgent(source: AbstractAgent, options: ToAgentOptions = {}): Agent {
   const store: ReducerStore = {
     messages:  signal<Message[]>([]),
     status:    signal<AgentStatus>('idle'),
@@ -32,6 +67,45 @@ export function toAgent(source: AbstractAgent): Agent {
     state:     signal<Record<string, unknown>>({}),
     events$:   new Subject<AgentEvent>(),
   };
+  const telemetryProperties = { transport: 'ag-ui' as const, surface: 'to_agent' };
+  let activeRun: { startedAt: number; errored: boolean } | null = null;
+
+  captureAgentRuntimeTelemetry(
+    options.telemetry,
+    'ngaf:runtime_instance_created',
+    telemetryProperties,
+  );
+
+  function startRunTelemetry(requestType: string): { startedAt: number; errored: boolean } {
+    const run = { startedAt: Date.now(), errored: false };
+    activeRun = run;
+    captureAgentRuntimeTelemetry(options.telemetry, 'ngaf:runtime_request_created', {
+      ...telemetryProperties,
+      requestType,
+    });
+    captureAgentRuntimeTelemetry(options.telemetry, 'ngaf:stream_started', telemetryProperties);
+    return run;
+  }
+
+  function finishRunTelemetry(run: { startedAt: number; errored: boolean }): void {
+    if (run.errored) return;
+    captureAgentRuntimeTelemetry(options.telemetry, 'ngaf:stream_ended', {
+      ...telemetryProperties,
+      durationMs: Date.now() - run.startedAt,
+    });
+    if (activeRun === run) activeRun = null;
+  }
+
+  function failRunTelemetry(error: unknown, run = activeRun): void {
+    if (!run || run.errored) return;
+    run.errored = true;
+    captureAgentRuntimeTelemetry(options.telemetry, 'ngaf:stream_errored', {
+      ...telemetryProperties,
+      durationMs: Date.now() - run.startedAt,
+      errorClass: agentRuntimeTelemetryErrorClass(error),
+    });
+    if (activeRun === run) activeRun = null;
+  }
 
   // Tap all events from the source agent via the AgentSubscriber API.
   // This subscription lives for the lifetime of `source`.
@@ -43,6 +117,7 @@ export function toAgent(source: AbstractAgent): Agent {
       store.status.set('error');
       store.isLoading.set(false);
       store.error.set(error);
+      failRunTelemetry(error);
     },
   });
 
@@ -65,14 +140,17 @@ export function toAgent(source: AbstractAgent): Agent {
         source.addMessage(userMsg as Parameters<typeof source.addMessage>[0]);
       }
 
+      const run = startRunTelemetry('submit');
       try {
         await source.runAgent();
+        finishRunTelemetry(run);
       } catch (err) {
         // If the run was aborted via stop(), abortRun() resolves the promise
         // rather than rejecting — but catch any unexpected errors here.
         store.status.set('error');
         store.isLoading.set(false);
         store.error.set(err);
+        failRunTelemetry(err, run);
       }
     },
 
@@ -113,12 +191,15 @@ export function toAgent(source: AbstractAgent): Agent {
       // message in `trimmed` becomes the active prompt for the next run.
       source.setMessages(trimmed as Parameters<typeof source.setMessages>[0]);
 
+      const run = startRunTelemetry('regenerate');
       try {
         await source.runAgent();
+        finishRunTelemetry(run);
       } catch (err) {
         store.status.set('error');
         store.isLoading.set(false);
         store.error.set(err);
+        failRunTelemetry(err, run);
       }
     },
   };
