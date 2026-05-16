@@ -1,0 +1,95 @@
+# Node Telemetry
+
+Node telemetry lives under `@ngaf/telemetry/node`. It is intended for package lifecycle hooks and server-side adapters.
+
+```ts
+import {
+  captureRuntimeInstanceCreated,
+  captureStreamStarted,
+  captureStreamEnded,
+  captureStreamErrored,
+  disableTelemetry,
+} from '@ngaf/telemetry/node';
+```
+
+## Opt out programmatically
+
+Call `disableTelemetry()` before capture helpers run.
+
+```ts
+import { disableTelemetry } from '@ngaf/telemetry/node';
+
+disableTelemetry();
+```
+
+This sets an in-process flag. It does not mutate environment variables.
+
+## Capture runtime lifecycle
+
+```ts
+await captureRuntimeInstanceCreated({
+  transport: 'langgraph',
+  provider: 'openai',
+  model: 'gpt-4.1',
+  angularVersion: '21.1.0',
+});
+```
+
+The `RuntimeInstanceTelemetry` type includes `apiKey`, but the adapter strips it before sending. Do not pass secrets as telemetry properties anyway.
+
+## Capture streams
+
+```ts
+await captureStreamStarted({
+  provider: 'openai',
+  model: 'gpt-4.1',
+});
+
+await captureStreamEnded({
+  provider: 'openai',
+  model: 'gpt-4.1',
+  durationMs: 1200,
+});
+
+await captureStreamErrored({
+  provider: 'openai',
+  model: 'gpt-4.1',
+  error,
+});
+```
+
+`captureStreamErrored()` records an error class. It does not send the full error object.
+
+## Ingest and sampling
+
+`captureEvent()` sends to:
+
+```text
+https://cacheplane.ai/api/ingest
+```
+
+unless `NGAF_TELEMETRY_INGEST_URL` is set.
+
+Sampling uses `NGAF_TELEMETRY_SAMPLE_RATE`. Invalid values fall back to `1`. Values are clamped to the range `0` to `1`.
+
+Every sent event includes `sample_weight`.
+
+## Postinstall script
+
+The postinstall entry point reads package name and version from npm lifecycle environment variables or package.json, skips disabled environments, and sends `ngaf:postinstall`.
+
+It skips local top-level installs by default. Dependency installs under `node_modules` and global installs can be eligible unless disabled.
+
+When `DEBUG` includes `ngaf:telemetry`, `ngaf:*`, or `*`, the script prints the payload shape it attempted to send. It prints the normal install telemetry notice only when the ingest endpoint accepted the event.
+
+## Failure behavior
+
+The Node adapter helpers catch errors and return without throwing. `captureEvent()` returns:
+
+```ts
+type CaptureResult =
+  | { sent: true }
+  | { sent: false; reason: 'disabled' | 'sampled' | 'failed' };
+```
+
+Use the result in tests or diagnostics. Do not make application correctness depend on telemetry delivery.

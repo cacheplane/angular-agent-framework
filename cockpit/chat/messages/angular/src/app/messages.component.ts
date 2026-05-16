@@ -12,7 +12,7 @@ import { environment } from '../environments/environment';
 /**
  * MessagesComponent demonstrates the chat message primitives from @ngaf/chat.
  *
- * Uses ChatMessagesComponent, ChatInputComponent, and ChatTypingIndicatorComponent
+ * Uses ChatMessageListComponent, ChatInputComponent, and ChatTypingIndicatorComponent
  * individually rather than the composed ChatComponent, giving full control
  * over layout and message rendering.
  */
@@ -31,7 +31,7 @@ import { environment } from '../environments/environment';
         </div>
         <div class="px-4 py-2" style="background: var(--ngaf-chat-bg);">
           <chat-typing-indicator [agent]="agent" />
-          <chat-input [agent]="agent" (send)="submitMessage($event)" />
+          <chat-input [agent]="agent" (submitted)="submitMessage($event)" />
         </div>
       </div>
       <div sidebar class="p-4 space-y-4" style="background: var(--ngaf-chat-bg); color: var(--ngaf-chat-text);">

@@ -8,29 +8,24 @@ AG-UI is the open agent-to-UI protocol from the CopilotKit ecosystem. It standar
 
 ## How it fits
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│  @ngaf/chat  (UI primitives — runtime-neutral)              │
-│  <chat>, <chat-messages>, <chat-input>, <chat-debug>, …     │
-└─────────────────────────┬───────────────────────────────────┘
-                          │ Agent contract (signals + events$)
-                          │
-              ┌───────────┴───────────┐
-              ▼                       ▼
-   @ngaf/langgraph              @ngaf/ag-ui
-   (LangGraphAgent)             (toAgent: AbstractAgent→Agent)
-              │                       │
-              ▼                       ▼
-   LangGraph Platform           Any AG-UI backend
-                                (CrewAI, Mastra, MS AF,
-                                 CopilotKit runtime, …)
+```text
+@ngaf/chat
+  <chat>, <chat-message-list>, <chat-input>, <chat-debug>
+      |
+      | Agent contract (signals + events$)
+      |
+      +--> @ngaf/langgraph
+      |      LangGraphAgent -> LangGraph Platform
+      |
+      +--> @ngaf/ag-ui
+             toAgent(AbstractAgent) -> AG-UI backend
 ```
 
 ## What you get
 
-- **`toAgent(source: AbstractAgent): Agent`** — wraps any `AbstractAgent` subclass (custom transports, mocks) into the runtime-neutral `Agent` contract.
-- **`provideAgUiAgent({ url })`** — DI convenience that instantiates `HttpAgent` under the hood for the common SSE/HTTP case.
-- **`FakeAgent`** — in-process `AbstractAgent` subclass that emits canned streaming events for offline demos and tests.
+- **`toAgent(source: AbstractAgent): Agent`** - wraps any `AbstractAgent` subclass (custom transports, mocks) into the runtime-neutral `Agent` contract.
+- **`provideAgUiAgent({ url })`** - DI convenience that instantiates `HttpAgent` under the hood for the common SSE/HTTP case.
+- **`FakeAgent`** - in-process `AbstractAgent` subclass that emits canned streaming events for offline demos and tests.
 
 ## What's covered
 
@@ -48,5 +43,10 @@ Out of scope for now (use `@ngaf/langgraph` if you need these):
 
 ## Next steps
 
-- [Quick Start](/docs/ag-ui/getting-started/quickstart) — bind `<chat>` to an AG-UI backend in 5 minutes.
-- [Installation](/docs/ag-ui/getting-started/installation) — npm install + provider setup.
+- [Quick Start](/docs/ag-ui/getting-started/quickstart) - bind `<chat>` to an AG-UI backend in 5 minutes.
+- [Installation](/docs/ag-ui/getting-started/installation) - npm install + provider setup.
+- [Architecture](/docs/ag-ui/concepts/architecture) - understand the adapter boundary and provider choices.
+- [Event Mapping](/docs/ag-ui/reference/event-mapping) - see how AG-UI events update `Agent` fields.
+- [Fake Agent](/docs/ag-ui/guides/fake-agent) - build UI without a backend.
+- [Citations](/docs/ag-ui/guides/citations) - attach sources through `state.citations`.
+- [Troubleshooting](/docs/ag-ui/guides/troubleshooting) - debug provider, stream, state, and citation issues.

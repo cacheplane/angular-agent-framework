@@ -1,4 +1,4 @@
-# Angular Agent Framework v0.0.29
+# Angular Agent Framework v0.0.32
 
 Agent UI primitives and LangGraph streaming adapters for Angular.
 
@@ -37,7 +37,7 @@ export class ChatComponent {
 - Thread persistence: `threadId: signal(localStorage.getItem('t'))` + `onThreadId: (id) => localStorage.setItem('t', id)`
 - Global config: `provideAgent({ apiUrl })` in app.config.ts
 - Per-call override: pass `apiUrl` directly to `agent()`
-- Testing: use `MockAgentTransport` — never mock `agent()` itself
+- Testing: use `MockAgentTransport` - never mock `agent()` itself
 
 ## Version check
 If this file is stale, fetch the latest: https://cacheplane.ai/llms-full.txt

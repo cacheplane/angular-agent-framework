@@ -1,38 +1,25 @@
 # Chat Theming with @ngaf/chat
 
 <Summary>
-Customize chat appearance using CSS custom properties and
-CHAT_THEME_STYLES. Create theme presets and build a theme picker
-for runtime theme switching.
+Customize chat appearance using `--ngaf-chat-*` CSS custom properties. Create theme presets and build a theme picker for runtime theme switching.
 </Summary>
 
 <Prompt>
-Add theming to your chat interface using CSS custom properties and
-`CHAT_THEME_STYLES` from `@ngaf/chat`. Create theme presets
-and a theme picker for switching themes at runtime.
+Add theming to your chat interface using `--ngaf-chat-*` CSS custom properties. Create theme presets and a theme picker for switching themes at runtime.
 </Prompt>
 
 <Steps>
 <Step title="Understand theme variables">
 
-Chat components use CSS custom properties for all visual styling:
+Chat components use CSS custom properties for visual styling:
 
 ```css
---chat-bg: #171717;
---chat-text: #e0e0e0;
---chat-accent: #3b82f6;
---chat-surface: #222;
---chat-border: #333;
---chat-text-muted: #777;
-```
-
-</Step>
-<Step title="Apply CHAT_THEME_STYLES">
-
-Use `CHAT_THEME_STYLES` to apply a complete theme:
-
-```typescript
-import { CHAT_THEME_STYLES } from '@ngaf/chat';
+--ngaf-chat-bg: #171717;
+--ngaf-chat-text: #e0e0e0;
+--ngaf-chat-accent: #3b82f6;
+--ngaf-chat-surface-alt: #222;
+--ngaf-chat-separator: #333;
+--ngaf-chat-text-muted: #777;
 ```
 
 </Step>
@@ -42,16 +29,25 @@ Define theme presets as objects mapping CSS custom properties:
 
 ```typescript
 const themes = {
-  dark: { '--chat-bg': '#171717', '--chat-text': '#e0e0e0' },
-  light: { '--chat-bg': '#ffffff', '--chat-text': '#1a1a1a' },
-  ocean: { '--chat-bg': '#0c1426', '--chat-text': '#c8d6e5' },
+  dark: {
+    '--ngaf-chat-bg': '#171717',
+    '--ngaf-chat-text': '#e0e0e0',
+  },
+  light: {
+    '--ngaf-chat-bg': '#ffffff',
+    '--ngaf-chat-text': '#1a1a1a',
+  },
+  ocean: {
+    '--ngaf-chat-bg': '#0c1426',
+    '--ngaf-chat-text': '#c8d6e5',
+  },
 };
 ```
 
 </Step>
 <Step title="Build a theme picker">
 
-Create buttons that swap CSS variables on the host element:
+Create controls that swap CSS variables on the document root or a chat container:
 
 ```typescript
 setTheme(name: string) {
@@ -63,13 +59,13 @@ setTheme(name: string) {
 ```
 
 </Step>
-<Step title="Customize per-component">
+<Step title="Customize per component">
 
 Override specific component styles without affecting the global theme:
 
 ```css
 chat-input {
-  --chat-input-bg: #1a1a2e;
+  --ngaf-chat-input-bg: #1a1a2e;
 }
 ```
 
@@ -77,6 +73,5 @@ chat-input {
 </Steps>
 
 <Tip>
-CHAT_THEME_STYLES provides sensible defaults. Override only the
-properties you need to change for your brand.
+Chat components provide sensible defaults. Override only the `--ngaf-chat-*` properties you need to change for your brand.
 </Tip>

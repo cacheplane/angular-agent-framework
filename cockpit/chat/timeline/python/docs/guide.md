@@ -32,7 +32,7 @@ Use `ChatTimelineSliderComponent` to display a scrubber for
 navigating conversation checkpoints:
 
 ```html
-<chat-timeline-slider [ref]="stream" />
+<chat-timeline-slider [agent]="stream" />
 ```
 
 </Step>
@@ -48,7 +48,7 @@ Position the slider below the chat or in a sidebar for easy access:
 
 ```html
 <aside>
-  <chat-timeline-slider [ref]="stream" />
+  <chat-timeline-slider [agent]="stream" />
 </aside>
 ```
 

@@ -34,7 +34,7 @@ export const appConfig: ApplicationConfig = {
 <Step title="Create the streaming resource">
 
 In your component, call `agent()`. The history and branch signals are
-available automatically — no extra config needed:
+available automatically - no extra config needed:
 
 ```typescript
 // time-travel.component.ts
@@ -85,7 +85,7 @@ selectCheckpoint(state: { checkpoint_id?: string }): void {
 }
 
 send(text: string): void {
-  this.stream.submit({ messages: [{ role: 'human', content: text }] });
+  void this.stream.submit({ message: text });
 }
 ```
 
@@ -98,7 +98,7 @@ The original timeline remains accessible in the history sidebar.
 <Step title="The LangGraph backend with checkpointer">
 
 The backend uses `MemorySaver` to persist checkpoint history. Time travel is a
-client-side feature — the graph itself requires only the checkpointer:
+client-side feature - the graph itself requires only the checkpointer:
 
 ```python
 # graph.py
@@ -141,6 +141,6 @@ submitting does not modify the thread state.
 </Warning>
 
 <Related>
-- [Chat Timeline](/chat/core-capabilities/timeline/overview/python) — Explore ChatTimelineComponent for visualizing thread history
-- [Chat Debug](/chat/core-capabilities/debug/overview/python) — Learn how ChatDebugComponent aids in debugging agent behavior
+- [Chat Timeline](/chat/core-capabilities/timeline/overview/python) - Explore ChatTimelineComponent for visualizing thread history
+- [Chat Debug](/chat/core-capabilities/debug/overview/python) - Learn how ChatDebugComponent aids in debugging agent behavior
 </Related>

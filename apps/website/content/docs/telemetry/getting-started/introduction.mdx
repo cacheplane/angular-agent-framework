@@ -1,0 +1,50 @@
+# Introduction
+
+`@ngaf/telemetry` is the shared telemetry package for the framework. It has separate surfaces for browser applications, Node adapters, and shared utilities.
+
+The important boundary is simple:
+
+- browser telemetry is opt-in through Angular DI;
+- Node telemetry is opt-out and used by package lifecycle or server adapter code;
+- shared utilities expose event and environment helpers.
+
+Do not treat the browser and Node entry points as interchangeable. They have different runtime assumptions and different privacy defaults.
+
+## Entry points
+
+```ts
+// Shared utilities
+import { isTelemetryDisabled, getDisableReason } from '@ngaf/telemetry';
+
+// Browser Angular provider and service
+import { provideNgafTelemetry } from '@ngaf/telemetry/browser';
+
+// Node/server helpers
+import { disableTelemetry, capturePostinstall } from '@ngaf/telemetry/node';
+```
+
+The package also exports `@ngaf/telemetry/node/postinstall` for the package postinstall executable.
+
+## Browser posture
+
+The browser package does nothing unless the application explicitly provides telemetry config with `enabled: true`.
+
+When enabled, delivery is chosen in this order:
+
+1. `sink`;
+2. `endpoint`;
+3. `posthogKey`.
+
+`sink` and `endpoint` are the preferred app-owned paths. `posthogKey` and `posthogHost` still exist for older integrations and are marked deprecated in source comments.
+
+## Node posture
+
+Node helpers check opt-out environment variables before sending. They use a per-process anonymous ID and deterministic sampling based on that ID.
+
+Node capture failures return a failure result or are swallowed by adapter helpers. Telemetry should not break install, startup, or request handling.
+
+## What this package does not promise
+
+The source does not contain content capture for prompts, completions, tool inputs, or tool outputs. It also does not persist browser IDs to local storage or cookies.
+
+It does collect runtime metadata when the corresponding Node or browser capture APIs are called. Keep event properties short, operational, and free of application data.

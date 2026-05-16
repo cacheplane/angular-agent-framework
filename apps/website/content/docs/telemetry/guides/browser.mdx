@@ -1,0 +1,85 @@
+# Browser Telemetry
+
+Browser telemetry is opt-in. If your Angular app never calls `provideNgafTelemetry()`, the service has no enabled config and `capture()` returns without sending.
+
+## Configure
+
+```ts
+import type { ApplicationConfig } from '@angular/core';
+import { provideNgafTelemetry } from '@ngaf/telemetry/browser';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideNgafTelemetry({
+      enabled: true,
+      endpoint: '/api/telemetry',
+      sampleRate: 1,
+    }),
+  ],
+};
+```
+
+The endpoint receives:
+
+```json
+{
+  "event": "ngaf:stream_started",
+  "distinctId": "browser:<ephemeral-id>",
+  "properties": {
+    "transport": "langgraph",
+    "sample_weight": 1
+  }
+}
+```
+
+The browser distinct ID is generated per service instance. The source does not write it to storage.
+
+## Prefer a sink for app-owned analytics
+
+Use `sink` when your app already has an analytics boundary.
+
+```ts
+provideNgafTelemetry({
+  enabled: true,
+  sink: async ({ event, properties }) => {
+    await analytics.track(event, properties);
+  },
+});
+```
+
+When `sink` is present, the service does not use `endpoint` or PostHog.
+
+## Sampling
+
+`sampleRate` is normalized:
+
+- missing, invalid, or non-finite values become `1`;
+- values less than or equal to `0` disable capture;
+- values greater than or equal to `1` capture every event;
+- values between `0` and `1` use `Math.random()`.
+
+Captured events include `sample_weight`. When the sample rate is `0.25`, the default weight is `4`.
+
+## Events captured by the service
+
+The service exposes convenience methods:
+
+```ts
+telemetry.captureRuntimeInstanceCreated({
+  transport: 'langgraph',
+  provider: 'openai',
+  model: 'gpt-4.1',
+});
+
+telemetry.captureStreamStarted({ transport: 'langgraph', provider: 'openai', model: 'gpt-4.1' });
+telemetry.captureStreamEnded({ transport: 'langgraph', provider: 'openai', model: 'gpt-4.1', durationMs: 1200 });
+telemetry.captureStreamErrored({ transport: 'langgraph', provider: 'openai', model: 'gpt-4.1', error });
+```
+
+`captureStreamErrored()` sends `errorClass`, not the raw error object.
+
+## Delivery failures
+
+Browser capture is wrapped in a `try/catch`. A sink error, fetch failure, or dynamic import failure is swallowed.
+
+That keeps telemetry from becoming part of your application control flow.

@@ -16,7 +16,7 @@ Primitives are low-level, headless components that read from an `Agent` and expo
 
 | Primitive | Selector | Purpose |
 |-----------|----------|---------|
-| `ChatMessagesComponent` | `chat-messages` | Iterates messages and renders via template directives |
+| `ChatMessageListComponent` | `chat-message-list` | Iterates messages and renders via template directives |
 | `MessageTemplateDirective` | `ng-template[chatMessageTemplate]` | Declares a template for a specific message type |
 | `ChatInputComponent` | `chat-input` | Text input with submit handling and keyboard shortcuts |
 | `ChatTypingIndicatorComponent` | `chat-typing-indicator` | Animated dots shown while the agent is streaming |
@@ -29,7 +29,7 @@ Primitives are low-level, headless components that read from an `Agent` and expo
 
 ### Compositions
 
-Compositions are opinionated, styled components that combine primitives into ready-to-use UI blocks. They include `CHAT_THEME_STYLES` and `CHAT_MARKDOWN_STYLES` out of the box.
+Compositions are opinionated, styled components that combine primitives into ready-to-use UI blocks. They apply the `--ngaf-chat-*` token system automatically and include markdown styling where needed.
 
 | Composition | Selector | Purpose |
 |-------------|----------|---------|
@@ -60,7 +60,7 @@ LangGraph Platform
 
 - **`@ngaf/langgraph`** provides the `agent()` function and returns a `LangGraphAgent`, which satisfies the `Agent` contract consumed by `@ngaf/chat`. It exposes reactive Signals for `messages()`, `isLoading()`, `error()`, `interrupt()`, `toolCalls()`, `history()`, and more.
 
-- **`@ngaf/render`** provides `RenderSpecComponent` and view registries for rendering JSON UI specs as Angular components. The `ChatComponent` auto-detects JSON specs in AI messages and renders them through `@ngaf/render` — pass a view registry via the `[views]` input. The `ChatComponent` also auto-detects A2UI v0.9 payloads and renders them using a built-in 12-component catalog.
+- **`@ngaf/render`** provides `RenderSpecComponent` and view registries for rendering JSON UI specs as Angular components. The `ChatComponent` auto-detects JSON specs in AI messages and renders them through `@ngaf/render` - pass a view registry via the `[views]` input. The `ChatComponent` also auto-detects A2UI v0.9 payloads and renders them using a built-in 12-component catalog.
 
 ## When to Use `ChatComponent` vs. Custom Assembly
 
@@ -73,14 +73,14 @@ LangGraph Platform
 **Assemble primitives** when you need to customize layout, add components between sections, change the message rendering logic, or integrate chat into a larger dashboard. Primitives give you building blocks without opinions.
 
 ```html
-<chat-messages [agent]="chatRef">
+<chat-message-list [agent]="chatRef">
   <ng-template chatMessageTemplate="human" let-message>
-    <!-- your custom human message layout -->
+    <!-- your custom user message layout -->
   </ng-template>
   <ng-template chatMessageTemplate="ai" let-message>
-    <!-- your custom AI message layout -->
+    <!-- your custom assistant message layout -->
   </ng-template>
-</chat-messages>
+</chat-message-list>
 
 <chat-input [agent]="chatRef" placeholder="Ask anything..." />
 ```

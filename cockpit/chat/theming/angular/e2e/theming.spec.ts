@@ -21,7 +21,7 @@ test.describe('Chat Theming Example', () => {
   });
 
   test('displays CSS variable list', async ({ page }) => {
-    await expect(page.locator('aside')).toContainText('--chat-bg');
-    await expect(page.locator('aside')).toContainText('--chat-accent');
+    await expect(page.locator('aside')).toContainText('--ngaf-chat-bg');
+    await expect(page.locator('aside')).toContainText('--ngaf-chat-accent');
   });
 });

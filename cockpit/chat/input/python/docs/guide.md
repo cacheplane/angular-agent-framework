@@ -27,27 +27,27 @@ import { ChatInputComponent } from '@ngaf/chat';
 Set a custom placeholder via the component input:
 
 ```html
-<chat-input [ref]="stream" placeholder="Ask me anything..." />
+<chat-input [agent]="agent" placeholder="Ask me anything..." />
 ```
 
 </Step>
 <Step title="Handle keyboard events">
 
 ChatInputComponent supports Enter to send and Shift+Enter for newlines
-out of the box. Listen for the `send` event:
+out of the box. Listen for the `submitted` event:
 
 ```html
-<chat-input [ref]="stream" (send)="onSend($event)" />
+<chat-input [agent]="agent" (submitted)="onSubmitted($event)" />
 ```
 
 </Step>
 <Step title="Track loading state">
 
-The input automatically disables while the stream is active. Access
-loading state via the agent ref:
+The send action is disabled while the agent is loading. Access
+loading state from the agent:
 
 ```typescript
-protected readonly isLoading = computed(() => this.stream.status() === 'streaming');
+protected readonly isLoading = computed(() => this.agent.isLoading());
 ```
 
 </Step>
@@ -56,10 +56,11 @@ protected readonly isLoading = computed(() => this.stream.status() === 'streamin
 Customize input appearance using CSS custom properties:
 
 ```css
-chat-input {
-  --chat-input-bg: #1a1a2e;
-  --chat-input-border: #333;
-  --chat-input-text: #e0e0e0;
+:root {
+  --ngaf-chat-surface: #1a1a2e;
+  --ngaf-chat-separator: #333;
+  --ngaf-chat-text: #e0e0e0;
+  --ngaf-chat-text-muted: #9ca3af;
 }
 ```
 

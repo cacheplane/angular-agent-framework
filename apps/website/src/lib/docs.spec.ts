@@ -10,6 +10,16 @@ describe('website docs bindings', () => {
     expect(slugs).toContainEqual({ library: 'agent', section: 'guides', slug: 'streaming' });
     expect(slugs).toContainEqual({ library: 'render', section: 'getting-started', slug: 'introduction' });
     expect(slugs).toContainEqual({ library: 'chat', section: 'getting-started', slug: 'introduction' });
+    expect(slugs).toContainEqual({ library: 'ag-ui', section: 'concepts', slug: 'architecture' });
+    expect(slugs).toContainEqual({ library: 'a2ui', section: 'getting-started', slug: 'introduction' });
+    expect(slugs).toContainEqual({ library: 'licensing', section: 'guides', slug: 'setup' });
+    expect(slugs).toContainEqual({ library: 'telemetry', section: 'guides', slug: 'privacy-and-opt-out' });
+  });
+
+  it('loads every configured doc page', () => {
+    for (const { library, section, slug } of getAllDocSlugs()) {
+      expect(getDocBySlug(library, section, slug)).not.toBeNull();
+    }
   });
 
   it('loads a doc by library, section and slug', () => {

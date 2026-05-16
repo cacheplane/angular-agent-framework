@@ -10,7 +10,7 @@ Angular 20+ project with Node.js 22+. If you need setup help, see the [Installat
 <Step title="Install the packages">
 
 ```bash
-npm install @ngaf/chat @ngaf/ag-ui
+npm install @ngaf/chat @ngaf/ag-ui @ag-ui/client
 ```
 
 </Step>
@@ -30,7 +30,7 @@ export const appConfig: ApplicationConfig = {
 };
 ```
 
-For offline development without a backend, swap to `provideFakeAgUiAgent({})` — it serves canned streaming responses for UI work.
+For offline development without a backend, swap to `provideFakeAgUiAgent({})` - it serves canned streaming responses for UI work.
 
 </Step>
 <Step title="Use in a component">
@@ -51,14 +51,18 @@ export class StreamingComponent {
 }
 ```
 
-That's it. The `<chat>` composition handles streaming messages, tool calls, errors, and submit — all bound to the AG-UI backend through the `Agent` contract.
+That's it. The `<chat>` composition handles streaming messages, tool calls, errors, and submit - all bound to the AG-UI backend through the `Agent` contract.
 
 </Step>
 </Steps>
 
 ## What to read next
 
-- The [`@ngaf/chat` Components](/docs/chat/components/chat) reference covers the primitives the `<chat>` composition uses internally — handy if you want to compose your own layout.
+- [Architecture](/docs/ag-ui/concepts/architecture) explains how `toAgent()`, `provideAgUiAgent()`, `AG_UI_AGENT`, and `injectAgUiAgent()` fit together.
+- [Event Mapping](/docs/ag-ui/reference/event-mapping) is the backend compatibility checklist for emitted AG-UI events.
+- [Fake Agent](/docs/ag-ui/guides/fake-agent) covers offline demos and frontend tests.
+- [Troubleshooting](/docs/ag-ui/guides/troubleshooting) is the fastest place to start when a stream does not render.
+- The [`@ngaf/chat` Components](/docs/chat/components/chat) reference covers the primitives the `<chat>` composition uses internally - handy if you want to compose your own layout.
 - Looking for LangGraph instead of AG-UI? See [`@ngaf/langgraph`](/docs/agent/getting-started/quickstart).
 
 ## Switching backends without changing UI

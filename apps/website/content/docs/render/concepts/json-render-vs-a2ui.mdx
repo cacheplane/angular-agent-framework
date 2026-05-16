@@ -1,0 +1,202 @@
+# json-render vs A2UI
+
+`@ngaf/render` and `@ngaf/a2ui` both render structured UI, but they solve different problems.
+
+`@ngaf/render` renders a fixed json-render spec into Angular components.
+
+`@ngaf/a2ui` defines an agent-to-UI protocol: surfaces, components, dynamic values, data model updates, and actions. In `@ngaf/chat`, A2UI surfaces are rendered through the same render infrastructure where possible.
+
+This matters because the tradeoff is not "which renderer is better." The tradeoff is contract shape. A fixed spec is easier to validate and reason about. A2UI is better when the agent needs to update a UI over time or receive structured user actions back.
+
+## The Layers
+
+```text
+@ngaf/render
+  renders a Spec using an Angular registry, state store, functions, and handlers
+
+@ngaf/a2ui
+  defines A2UI v0.9 message and component types
+
+@ngaf/chat
+  detects assistant content, manages streaming state, and mounts render or A2UI surfaces
+```
+
+Use `@ngaf/render` directly when your application already has a spec.
+
+Use A2UI through `@ngaf/chat` when the agent is producing UI as part of a conversation.
+
+## json-render
+
+json-render takes a single spec with a root and an element map.
+
+```html
+<render-spec [spec]="spec" [registry]="registry" [handlers]="handlers" />
+```
+
+The registry maps element types to Angular components. Components receive resolved props, child keys, an `emit()` function, loading state, and the full spec.
+
+```ts
+import {
+  RenderSpecComponent,
+  defineAngularRegistry,
+  signalStateStore,
+} from '@ngaf/render';
+```
+
+Choose json-render when:
+
+- The UI can be represented as one spec.
+- You want a fixed contract that is easy to validate before rendering.
+- The application, not the agent protocol, owns event semantics.
+- You need custom Angular components with explicit inputs.
+- You are rendering structured results, cards, forms, or dashboards outside chat.
+
+The practical advantage is control. You decide the schema, registry, handlers, and state store.
+
+The practical cost is that streaming and progressive surface updates are not the protocol. Chat can parse a streaming JSON object incrementally, but the model is still "one spec becomes one component tree."
+
+## A2UI
+
+A2UI is a wire protocol for agent-built interfaces.
+
+The current exported message union is:
+
+```ts
+type A2uiMessage =
+  | { surfaceUpdate: A2uiSurfaceUpdate }
+  | { dataModelUpdate: A2uiDataModelUpdate }
+  | { beginRendering: A2uiBeginRendering }
+  | { deleteSurface: A2uiDeleteSurface };
+```
+
+A surface has an id, catalog id, component map, data model, optional theme, optional styles, and optional `sendDataModel` behavior.
+
+```ts
+interface A2uiSurface {
+  surfaceId: string;
+  catalogId: string;
+  components: Map<string, A2uiComponent>;
+  dataModel: Record<string, unknown>;
+  styles?: { font?: string; primaryColor?: string };
+}
+```
+
+Choose A2UI when:
+
+- The agent needs to build UI incrementally.
+- Data can arrive separately from component structure.
+- Components bind to live data model paths.
+- User actions should be sent back as structured action messages.
+- Fallbacks matter while some bound data is still unresolved.
+- The UI is part of a conversational agent response.
+
+The practical advantage is that A2UI models an ongoing surface, not just a rendered object.
+
+The practical cost is protocol discipline. The agent must emit valid envelopes in the right order, the catalog must support the component types, and action semantics must be designed.
+
+## Chat Detection
+
+`ChatComponent` classifies assistant message content as it streams.
+
+| Content | Rendering path |
+|---|---|
+| Normal text | Markdown |
+| First non-whitespace character is `{` | json-render |
+| Starts with `---a2ui_JSON---` | A2UI JSONL |
+
+For json-render, chat parses the JSON into a spec and renders it with the `views` registry.
+
+For A2UI, chat parses newline-delimited A2UI messages, applies them to an `A2uiSurfaceStore`, and renders each surface with `<a2ui-surface>`.
+
+```html
+<chat [agent]="agent" [views]="catalog" [handlers]="handlers" />
+```
+
+The same `views` input is used by both paths. For A2UI, `a2uiBasicCatalog()` provides the built-in catalog:
+
+```ts
+import { a2uiBasicCatalog } from '@ngaf/chat';
+
+catalog = a2uiBasicCatalog();
+```
+
+## Registries And Catalogs
+
+`@ngaf/render` uses a view registry:
+
+```ts
+import { views, withViews } from '@ngaf/render';
+
+const registry = views({
+  OrderSummary: OrderSummaryComponent,
+});
+```
+
+A2UI catalogs use the same underlying registry shape in chat. Component names such as `Text`, `Button`, `Card`, `Column`, `Row`, `TextField`, `CheckBox`, `MultipleChoice`, and `Slider` resolve to Angular components.
+
+You can compose registries with `withViews()` and pass the result to chat.
+
+This matters because the registry is the allowlist. If the agent emits a component name that is not registered, the renderer should fall back instead of executing unknown UI.
+
+## State And Validation
+
+json-render can use a `StateStore`, computed functions, and handlers:
+
+```html
+<render-spec
+  [spec]="spec"
+  [registry]="registry"
+  [store]="store"
+  [functions]="functions"
+  [handlers]="handlers"
+/>
+```
+
+That is application-owned state. You can validate the spec before rendering, restrict component names, and decide which handlers exist.
+
+A2UI carries a client data model in protocol messages. Components use dynamic values such as literal strings, numbers, booleans, arrays, or paths into the data model. The chat-side surface store applies data model updates and gates component readiness until bound values resolve.
+
+Validation in A2UI is part of the component/action protocol. It is not the same as validating a json-render spec before mount. Treat it as user-interaction validation, not as a substitute for protocol validation at the boundary.
+
+## Actions And Handlers
+
+json-render actions are local render events. A rendered component calls `emit()`, and `RenderSpecComponent` invokes the matching handler from `[handlers]`.
+
+A2UI actions produce `A2uiActionMessage` objects:
+
+```ts
+interface A2uiActionMessage {
+  version: 'v0.9';
+  action: {
+    name: string;
+    surfaceId: string;
+    sourceComponentId: string;
+    timestamp: string;
+    context: Record<string, unknown>;
+  };
+}
+```
+
+If a surface asks to send the client data model, the action message can include `metadata.a2uiClientDataModel`.
+
+In chat, standard A2UI action messages are routed back through the agent as structured user input. Local handlers still exist for client-side behavior, but executable behavior is explicit: only registered handlers run.
+
+This matters because rendering JSON should not mean executing arbitrary model instructions. The model can request an action by name. Your registry and handlers decide what that name can do.
+
+## Fallbacks
+
+`@ngaf/render` has a default fallback for registered views that are not ready and supports per-view fallback entries.
+
+A2UI uses the same idea at the catalog level. A catalog entry can be a component type or an object with a component and fallback. While data-bound props are unresolved, the fallback renders. Once the real component mounts, readiness is monotonic for that element.
+
+Fallbacks are not decoration. They are the safety behavior for streaming UI. Use them when a component needs required data that may arrive after structure.
+
+## Choosing
+
+Use json-render when you want a fixed, application-owned spec.
+
+Use A2UI when you want an agent-owned surface that changes over time and sends structured actions back.
+
+Use markdown when the best UI is text.
+
+A good rule: if you can validate the whole UI before showing it, start with json-render. If the UI is a live conversation artifact with partial data, actions, and updates, use A2UI.

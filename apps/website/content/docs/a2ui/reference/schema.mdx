@@ -1,0 +1,203 @@
+# A2UI Schema
+
+The `@ngaf/a2ui` schema is a TypeScript model of the protocol shapes used by the framework. It is useful as a contract for agent output and custom integrations, but it is not a runtime validator.
+
+## Dynamic values
+
+Dynamic values are wrapped objects. A value can be literal or resolved from the surface data model by path.
+
+```ts
+type DynamicString =
+  | { literalString: string }
+  | { path: string };
+
+type DynamicNumber =
+  | { literalNumber: number }
+  | { path: string };
+
+type DynamicBoolean =
+  | { literalBoolean: boolean }
+  | { path: string };
+
+type DynamicStringList =
+  | { literalArray: string[] }
+  | { path: string };
+```
+
+Absolute paths start with `/` and are resolved from the model root. Relative paths are resolved from an optional `A2uiScope`.
+
+## Children
+
+Layout components use either explicit child IDs or a template declaration.
+
+```ts
+type A2uiChildren =
+  | { explicitList: string[] }
+  | { template: { componentId: string; dataBinding: string } };
+```
+
+The protocol layer only types this shape. Template expansion is renderer behavior.
+
+## Actions
+
+An action has a name and optional context entries. Context values use the same dynamic wrappers as component props.
+
+```ts
+interface A2uiAction {
+  name: string;
+  context?: A2uiActionContextEntry[];
+}
+```
+
+`@ngaf/a2ui` does not execute actions. It only describes the payload that chat/render code can turn into an outbound `A2uiActionMessage`.
+
+## Components
+
+Every component has an `id`, optional `weight`, and a single-key `component` union.
+
+```ts
+interface A2uiComponent {
+  id: string;
+  weight?: number;
+  component: A2uiComponentDef;
+}
+```
+
+The exported component definitions are:
+
+| Definition | Main fields |
+|------------|-------------|
+| `Text` | `text`, `usageHint` |
+| `Image` | `url`, `alt`, `width`, `height` |
+| `Icon` | `icon`, `size` |
+| `Video` | `url`, `autoPlay`, `controls` |
+| `AudioPlayer` | `url`, `autoPlay`, `controls` |
+| `Row` | `children`, `gap`, `alignment`, `distribution` |
+| `Column` | `children`, `gap`, `alignment` |
+| `List` | `children`, `direction` |
+| `Card` | `child` |
+| `Tabs` | `tabItems` |
+| `Divider` | `direction` |
+| `Modal` | `entryPointChild`, `contentChild`, `title` |
+| `Button` | `child`, `primary`, `action` |
+| `CheckBox` | `label`, `checked`, `action` |
+| `TextField` | `label`, `text`, `textFieldType`, `validationRegexp` |
+| `DateTimeInput` | `label`, `value`, `enableDate`, `enableTime` |
+| `MultipleChoice` | `selections`, `options`, `maxAllowedSelections`, `label` |
+| `Slider` | `value`, `minValue`, `maxValue`, `step`, `label` |
+
+The schema exposes `validationRegexp` on `TextField`, but validation execution is not implemented in this package. Treat schema fields as protocol data until a renderer wires behavior.
+
+## Message envelopes
+
+The parser recognizes four top-level envelopes:
+
+```ts
+type A2uiMessage =
+  | { surfaceUpdate: A2uiSurfaceUpdate }
+  | { dataModelUpdate: A2uiDataModelUpdate }
+  | { beginRendering: A2uiBeginRendering }
+  | { deleteSurface: A2uiDeleteSurface };
+```
+
+### surfaceUpdate
+
+Adds or replaces components for a surface.
+
+```json
+{
+  "surfaceUpdate": {
+    "surfaceId": "checkout",
+    "components": [
+      { "id": "root", "component": { "Card": { "child": "title" } } },
+      { "id": "title", "component": { "Text": { "text": { "literalString": "Checkout" } } } }
+    ]
+  }
+}
+```
+
+### dataModelUpdate
+
+Carries nested data-model entries. `path` is optional.
+
+```json
+{
+  "dataModelUpdate": {
+    "surfaceId": "checkout",
+    "path": "/customer",
+    "contents": [
+      { "key": "name", "valueString": "Ada" },
+      { "key": "active", "valueBoolean": true }
+    ]
+  }
+}
+```
+
+Each `A2uiDataModelEntry` has a `key` plus one of `valueString`, `valueNumber`, `valueBoolean`, or `valueMap`.
+
+### beginRendering
+
+Identifies the root component to render for a surface.
+
+```json
+{
+  "beginRendering": {
+    "surfaceId": "checkout",
+    "root": "root",
+    "styles": {
+      "font": "Inter",
+      "primaryColor": "#2563eb"
+    }
+  }
+}
+```
+
+The source comments describe `styles.font` and `styles.primaryColor` as the canonical style fields.
+
+### deleteSurface
+
+Removes a surface by ID.
+
+```json
+{ "deleteSurface": { "surfaceId": "checkout" } }
+```
+
+## Internal surface model
+
+`A2uiSurface` is an internal model used after messages are applied:
+
+```ts
+interface A2uiSurface {
+  surfaceId: string;
+  catalogId: string;
+  theme?: A2uiTheme;
+  sendDataModel?: boolean;
+  components: Map<string, A2uiComponent>;
+  dataModel: Record<string, unknown>;
+  styles?: { font?: string; primaryColor?: string };
+}
+```
+
+This shape is not constrained to the wire format. Do not assume an agent sends it directly.
+
+## Outbound action messages
+
+When a rendered surface sends an action back to the agent, the typed outbound shape is:
+
+```ts
+interface A2uiActionMessage {
+  version: 'v0.9';
+  action: {
+    name: string;
+    surfaceId: string;
+    sourceComponentId: string;
+    timestamp: string;
+    context: Record<string, unknown>;
+  };
+  metadata?: {
+    a2uiClientDataModel: A2uiClientDataModel;
+  };
+}
+```
+
+The outbound action version is currently typed as `v0.9` in source.

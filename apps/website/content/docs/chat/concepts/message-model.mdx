@@ -1,0 +1,192 @@
+# Message Model
+
+`@ngaf/chat` renders a runtime-neutral message model. Adapters translate backend-specific messages into this shape, then components render from it.
+
+This matters because provider message formats are not stable enough to build customer UI against directly. LangGraph, AG-UI, OpenAI, Anthropic, and custom backends all have different event and content shapes. The chat layer needs one model.
+
+## Message Shape
+
+```ts
+interface Message {
+  id: string;
+  role: 'user' | 'assistant' | 'system' | 'tool';
+  content: string | ContentBlock[];
+  toolCallId?: string;
+  name?: string;
+  reasoning?: string;
+  reasoningDurationMs?: number;
+  extra?: Record<string, unknown>;
+  citations?: Citation[];
+}
+```
+
+The fields are intentionally small. Put portable UI state in known fields. Put runtime-specific data in `extra`.
+
+## Roles
+
+Runtime roles are:
+
+| Role | Meaning |
+|---|---|
+| `user` | Human input submitted through the UI or adapter. |
+| `assistant` | Model output. May include markdown, reasoning, tool calls, citations, or generated UI payloads. |
+| `tool` | Tool result associated with a tool call. |
+| `system` | System or runtime message shown as context. |
+
+You will also see the words `human`, `ai`, and `function` in template APIs:
+
+```html
+<ng-template chatMessageTemplate="human" let-message />
+<ng-template chatMessageTemplate="ai" let-message />
+<ng-template chatMessageTemplate="tool" let-message />
+<ng-template chatMessageTemplate="system" let-message />
+<ng-template chatMessageTemplate="function" let-message />
+```
+
+`chatMessageTemplate` names are UI template names, not runtime roles.
+
+`user` maps to `human`. `assistant` maps to `ai`. `tool` and `system` keep their names.
+
+`function` is present for compatibility with older function-call vocabulary. The current runtime-neutral `Role` type does not include `function`. New adapters should normalize function results into `tool` messages or carry backend-specific function details in `extra`.
+
+## Content
+
+`content` is either plain text or structured blocks.
+
+```ts
+type ContentBlock =
+  | { type: 'text'; text: string }
+  | { type: 'image'; url: string; alt?: string }
+  | { type: 'tool_use'; id: string; name: string; args: unknown }
+  | { type: 'tool_result'; toolCallId: string; result: unknown; isError?: boolean };
+```
+
+Plain text is the common case. `ChatComponent` treats assistant text as streamable content. Markdown, json-render specs, and A2UI payloads are detected from that text.
+
+Structured blocks are useful when the adapter can preserve more shape than a string. Custom templates should check whether `content` is a string before assuming it can be rendered directly.
+
+```ts
+function textOf(message: Message): string {
+  return typeof message.content === 'string'
+    ? message.content
+    : message.content
+        .filter((block) => block.type === 'text')
+        .map((block) => block.text)
+        .join('');
+}
+```
+
+## Markdown
+
+Assistant text is rendered as markdown by the `<chat>` composition. The markdown renderer also resolves citation references when citations are present.
+
+With primitives, markdown is your decision. You can use `ChatStreamingMdComponent`, `renderMarkdown()`, or your own renderer.
+
+This matters because markdown is presentation policy. A customer support chat, a code assistant, and an audit trail may need different rules for links, tables, code blocks, and images.
+
+## Reasoning
+
+Reasoning is separate from visible answer content.
+
+```ts
+message.reasoning;
+message.reasoningDurationMs;
+```
+
+Adapters populate `reasoning` from provider-specific reasoning or thinking blocks. AG-UI adapters can populate it from reasoning events. The surfaced value is always a plain string. Provider-specific encrypted blocks, summaries, and step metadata should not leak into portable UI code.
+
+`ChatComponent` renders reasoning with `<chat-reasoning>` above the assistant response. If you build from primitives, decide where reasoning belongs and whether it should be visible by default.
+
+## Tool Calls
+
+Tool calls have their own normalized signal:
+
+```ts
+interface ToolCall {
+  id: string;
+  name: string;
+  args: unknown;
+  status: 'pending' | 'running' | 'complete' | 'error';
+  result?: unknown;
+  error?: unknown;
+}
+```
+
+Tool result messages can also carry `toolCallId`.
+
+Use `toolCalls()` when rendering cross-message tool status. Use `tool` messages when rendering tool output inside the transcript.
+
+This matters because tool calls stream. Arguments may be partial while status is not `complete`. UI should treat `args` as unknown until the adapter marks the call complete or your tool template can handle partial data.
+
+## Citations
+
+Messages can carry provider-agnostic citations:
+
+```ts
+message.citations;
+```
+
+`@ngaf/langgraph` exports `extractCitations()` for advanced adapters that need to normalize nonstandard citation payloads. Chat markdown views can render citation markers against the message citation list.
+
+Keep citation data on the message that owns the content. Avoid a separate global citation store unless your product has a cross-message source panel.
+
+## Interrupts
+
+Interrupts are not messages. They are optional agent state:
+
+```ts
+agent.interrupt?.();
+```
+
+An interrupt means the runtime paused and needs human input. Resume it through `submit({ resume })`.
+
+```ts
+await agent.submit({ resume: { approved: true } });
+```
+
+This matters because an interrupt is lifecycle state, not transcript content. You can render it as a banner, dialog, or approval panel, but the canonical state should stay on `agent.interrupt`.
+
+## Subagents
+
+Subagents are also optional agent state:
+
+```ts
+agent.subagents?.(); // Map<string, Subagent>
+```
+
+Each `Subagent` has a tool-call id, optional name, status signal, message signal, and state signal.
+
+Use subagents when the backend delegates work to child graphs or specialized workers. Do not encode subagent progress as fake assistant messages if the runtime can expose structured subagent state. Structured state lets UI render progress, nested transcripts, and failure states without parsing prose.
+
+## A2UI And Generated Surfaces
+
+Generated UI can arrive through assistant content.
+
+`ChatComponent` classifies assistant text:
+
+- Markdown when the content is normal text.
+- json-render when the first non-whitespace character is `{`.
+- A2UI when the content starts with `---a2ui_JSON---`.
+
+json-render uses a single spec object. A2UI uses a stream of JSONL envelopes that update surfaces, data models, and rendering state.
+
+The message still remains an assistant message. The generated UI is a rendering interpretation of its content, not a new message role.
+
+## Practical Rules
+
+Normalize at the adapter boundary. Components should not inspect raw LangGraph SDK messages or AG-UI events unless they are adapter-specific tools.
+
+Treat `content` as `string | ContentBlock[]`. Do not assume every message can be interpolated directly.
+
+Use the exported type guards when role-specific code helps:
+
+```ts
+import {
+  isUserMessage,
+  isAssistantMessage,
+  isToolMessage,
+  isSystemMessage,
+} from '@ngaf/chat';
+```
+
+Put backend-specific fields in `extra`, and document them in your adapter. Portable UI should survive when `extra` is absent.

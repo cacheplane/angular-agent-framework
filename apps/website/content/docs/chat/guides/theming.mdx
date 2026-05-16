@@ -6,7 +6,7 @@
 
 Chat components define all design tokens using CSS custom properties on the `:host` element. The token system supports automatic light/dark switching via `prefers-color-scheme` and explicit override via a `[data-ngaf-chat-theme]` attribute.
 
-No imported stylesheet is needed — tokens are applied automatically by each component's encapsulated styles. An optional global stylesheet (`@ngaf/chat/chat.css`) is available if you want to customize tokens at the `:root` level.
+No imported stylesheet is needed - tokens are applied automatically by each component's encapsulated styles. An optional global stylesheet (`@ngaf/chat/chat.css`) is available if you want to customize tokens at the `:root` level.
 
 ## CSS Custom Properties Reference
 
@@ -33,24 +33,24 @@ No imported stylesheet is needed — tokens are applied automatically by each co
 
 | Token | Light | Dark | Purpose |
 |---|---|---|---|
-| `--ngaf-chat-radius-bubble` | `15px` | — | User message bubble radius |
-| `--ngaf-chat-radius-input` | `20px` | — | Input pill radius |
-| `--ngaf-chat-radius-card` | `8px` | — | Card / trace radius |
-| `--ngaf-chat-radius-button` | `8px` | — | Button radius |
-| `--ngaf-chat-radius-launcher` | `9999px` | — | Circular launcher button |
-| `--ngaf-chat-max-width` | `48rem` | — | Message column max width |
+| `--ngaf-chat-radius-bubble` | `15px` | - | User message bubble radius |
+| `--ngaf-chat-radius-input` | `20px` | - | Input pill radius |
+| `--ngaf-chat-radius-card` | `8px` | - | Card / trace radius |
+| `--ngaf-chat-radius-button` | `8px` | - | Button radius |
+| `--ngaf-chat-radius-launcher` | `9999px` | - | Circular launcher button |
+| `--ngaf-chat-max-width` | `48rem` | - | Message column max width |
 
 ### Typography
 
 | Token | Light | Dark | Purpose |
 |---|---|---|---|
-| `--ngaf-chat-font-family` | system stack | — | Default font |
-| `--ngaf-chat-font-mono` | mono stack | — | Code blocks |
-| `--ngaf-chat-font-size` | `1rem` | — | Message text |
-| `--ngaf-chat-font-size-sm` | `0.875rem` | — | UI controls |
-| `--ngaf-chat-font-size-xs` | `0.75rem` | — | Labels, metadata |
-| `--ngaf-chat-line-height` | `1.6` | — | Assistant text |
-| `--ngaf-chat-line-height-tight` | `1.5` | — | User bubble |
+| `--ngaf-chat-font-family` | system stack | - | Default font |
+| `--ngaf-chat-font-mono` | mono stack | - | Code blocks |
+| `--ngaf-chat-font-size` | `1rem` | - | Message text |
+| `--ngaf-chat-font-size-sm` | `0.875rem` | - | UI controls |
+| `--ngaf-chat-font-size-xs` | `0.75rem` | - | Labels, metadata |
+| `--ngaf-chat-line-height` | `1.6` | - | Assistant text |
+| `--ngaf-chat-line-height-tight` | `1.5` | - | User bubble |
 
 ## Light and Dark Mode
 
@@ -135,5 +135,5 @@ If you previously customized `--chat-*` tokens, rename them to `--ngaf-chat-*`. 
 | `--chat-success` | `--ngaf-chat-success` |
 
 <Callout type="warning" title="CHAT_THEME_STYLES removed">
-The `CHAT_THEME_STYLES` and `CHAT_MARKDOWN_STYLES` named exports no longer exist in `@ngaf/chat`. Remove any imports of those constants — theme tokens are now applied automatically by each component.
+The `CHAT_THEME_STYLES` named export no longer exists in `@ngaf/chat`. Remove imports of that constant - theme tokens are now applied automatically by each component. `CHAT_MARKDOWN_STYLES` remains available for custom markdown renderers.
 </Callout>

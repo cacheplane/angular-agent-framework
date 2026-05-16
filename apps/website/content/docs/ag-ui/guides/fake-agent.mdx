@@ -1,0 +1,103 @@
+# Fake Agent
+
+`FakeAgent` is an in-process AG-UI `AbstractAgent` for frontend work when a backend is not ready.
+
+It emits a canned stream:
+
+1. `RUN_STARTED`
+2. optional `REASONING_MESSAGE_*`
+3. `TEXT_MESSAGE_START`
+4. one `TEXT_MESSAGE_CONTENT` event per token
+5. `TEXT_MESSAGE_END`
+6. `RUN_FINISHED`
+
+It is for demos, story-like development, and tests. It is not a production transport.
+
+## Use the provider
+
+For Angular apps, use `provideFakeAgUiAgent()`.
+
+```ts
+import { ApplicationConfig } from '@angular/core';
+import { provideFakeAgUiAgent } from '@ngaf/ag-ui';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideFakeAgUiAgent({
+      tokens: ['Hello', ' from', ' a', ' fake', ' agent.'],
+      delayMs: 50,
+    }),
+  ],
+};
+```
+
+Your component stays the same as the real backend version:
+
+```ts
+import { Component } from '@angular/core';
+import { ChatComponent } from '@ngaf/chat';
+import { injectAgUiAgent } from '@ngaf/ag-ui';
+
+@Component({
+  standalone: true,
+  imports: [ChatComponent],
+  template: `<chat [agent]="agent" />`,
+})
+export class DemoChat {
+  protected readonly agent = injectAgUiAgent();
+}
+```
+
+Switching to a real backend is a provider change:
+
+```diff
+- provideFakeAgUiAgent({ tokens: ['Offline', ' response.'] })
++ provideAgUiAgent({ url: '/api/agent' })
+```
+
+## Add reasoning
+
+Pass `reasoningTokens` when you need to exercise reasoning UI.
+
+```ts
+provideFakeAgUiAgent({
+  reasoningTokens: ['Reading policy. ', 'Checking account status.'],
+  tokens: ['The account is eligible.'],
+  delayMs: 40,
+});
+```
+
+Reasoning events are emitted before text events and use the same message id, so the reducer stores reasoning and final content on one assistant message.
+
+## Use the class directly
+
+Use `FakeAgent` directly when a test needs an AG-UI source rather than Angular DI.
+
+```ts
+import { FakeAgent, toAgent } from '@ngaf/ag-ui';
+
+const source = new FakeAgent({
+  tokens: ['One', ' two', ' three.'],
+  delayMs: 1,
+});
+
+const agent = toAgent(source);
+```
+
+That gives you the same `Agent` contract as `provideFakeAgUiAgent()`.
+
+## Configuration
+
+| Option | Type | Default | Notes |
+| --- | --- | --- | --- |
+| `tokens` | `string[]` | A short canned greeting | Emitted as text deltas in order. |
+| `reasoningTokens` | `string[]` | `[]` | Emitted before text deltas. |
+| `delayMs` | `number` | `60` | Delay between events after the initial start delay. |
+
+## What it does not do
+
+`FakeAgent` does not call a model, execute tools, persist history, or simulate interrupts.
+
+It is deliberately small. Use it to keep UI work moving, not to validate backend behavior.
+
+For backend integration, test against your real AG-UI endpoint and the event map in [Event Mapping](/docs/ag-ui/reference/event-mapping).

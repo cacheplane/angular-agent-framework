@@ -1,22 +1,49 @@
 # Introduction
 
-Agent is the Angular streaming library for LangChain and LangGraph.
+Angular Agent Framework provides Angular-native agent UI primitives, LangGraph streaming adapters, and runtime-neutral contracts for building agent experiences in Angular apps.
 
-## Installation
+The core packages are:
+
+- `@ngaf/langgraph` for `agent()`, `provideAgent()`, and LangGraph Platform streaming.
+- `@ngaf/chat` for chat compositions, primitives, markdown rendering, tool calls, interrupts, thread UI, and generative UI surfaces.
+- `@ngaf/render` for rendering JSON Render specs with Angular components.
+- `@ngaf/ag-ui` for adapting AG-UI agents into the same runtime-neutral chat contract.
+
+## Install
 
 ```bash
-npm install angular
+npm install @ngaf/langgraph @ngaf/chat
 ```
 
-## Quick start
+## Minimal usage
 
 ```typescript
-import { agent } from 'angular';
+import type { ApplicationConfig } from '@angular/core';
+import { provideAgent } from '@ngaf/langgraph';
 
-const chat = agent({
-  assistantId: 'chat_agent',
-  apiUrl: 'http://localhost:2024',
-});
+export const appConfig: ApplicationConfig = {
+  providers: [provideAgent({ apiUrl: 'http://localhost:2024' })],
+};
 ```
 
-More documentation is generated automatically — run `npm run generate-docs` to populate this directory.
+```typescript
+import { Component, signal } from '@angular/core';
+import { agent } from '@ngaf/langgraph';
+import { ChatComponent as NgafChatComponent } from '@ngaf/chat';
+
+@Component({
+  selector: 'app-chat',
+  standalone: true,
+  imports: [NgafChatComponent],
+  template: `<chat [agent]="chat" />`,
+})
+export class ChatComponent {
+  chat = agent({
+    assistantId: 'chat_agent',
+    threadId: signal(localStorage.getItem('threadId')),
+    onThreadId: (id) => localStorage.setItem('threadId', id),
+  });
+}
+```
+
+`agent()` must run in an Angular injection context, such as a component field initializer or constructor.

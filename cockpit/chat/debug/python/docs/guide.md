@@ -28,7 +28,7 @@ import { ChatDebugComponent } from '@ngaf/chat';
 Place the debug component in your template:
 
 ```html
-<chat-debug [ref]="stream" />
+<chat-debug [agent]="stream" />
 ```
 
 This renders the full debug panel with timeline, state inspector,

@@ -47,7 +47,7 @@ export class DurableExecutionComponent {
   });
 
   send(text: string): void {
-    this.stream.submit({ messages: [{ role: 'human', content: text }] });
+    void this.stream.submit({ message: text });
   }
 }
 ```
@@ -106,7 +106,7 @@ Render a "Retry" button when `stream.error()` is set. Call `stream.reload()` to 
 </Warning>
 
 </Step>
-<Step title="The LangGraph backend — multi-node graph">
+<Step title="The LangGraph backend - multi-node graph">
 
 The backend uses a three-node graph with `MemorySaver` checkpointing:
 

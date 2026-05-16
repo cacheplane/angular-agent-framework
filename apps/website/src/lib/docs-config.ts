@@ -1,4 +1,11 @@
-export type LibraryId = 'agent' | 'render' | 'chat' | 'ag-ui';
+export type LibraryId =
+  | 'agent'
+  | 'render'
+  | 'chat'
+  | 'ag-ui'
+  | 'a2ui'
+  | 'licensing'
+  | 'telemetry';
 
 export interface DocsPage {
   title: string;
@@ -57,6 +64,7 @@ export const docsConfig: DocsLibrary[] = [
         id: 'concepts',
         color: 'red',
         pages: [
+          { title: 'Agent Contract', slug: 'agent-contract', section: 'concepts' },
           { title: 'Angular Signals', slug: 'angular-signals', section: 'concepts' },
           { title: 'LangGraph Basics', slug: 'langgraph-basics', section: 'concepts' },
           { title: 'Agent Architecture', slug: 'agent-architecture', section: 'concepts' },
@@ -101,6 +109,14 @@ export const docsConfig: DocsLibrary[] = [
           { title: 'Specs & Elements', slug: 'specs', section: 'guides' },
           { title: 'Events & Handlers', slug: 'events', section: 'guides' },
           { title: 'Lifecycle Signals', slug: 'lifecycle', section: 'guides' },
+        ],
+      },
+      {
+        title: 'Concepts',
+        id: 'concepts',
+        color: 'red',
+        pages: [
+          { title: 'JSON Render vs A2UI', slug: 'json-render-vs-a2ui', section: 'concepts' },
         ],
       },
       {
@@ -158,6 +174,15 @@ export const docsConfig: DocsLibrary[] = [
         ],
       },
       {
+        title: 'Concepts',
+        id: 'concepts',
+        color: 'red',
+        pages: [
+          { title: 'Primitives vs Compositions', slug: 'primitives-vs-compositions', section: 'concepts' },
+          { title: 'Message Model', slug: 'message-model', section: 'concepts' },
+        ],
+      },
+      {
         title: 'Components',
         id: 'components',
         color: 'red',
@@ -201,6 +226,121 @@ export const docsConfig: DocsLibrary[] = [
           { title: 'Introduction', slug: 'introduction', section: 'getting-started' },
           { title: 'Quick Start', slug: 'quickstart', section: 'getting-started' },
           { title: 'Installation', slug: 'installation', section: 'getting-started' },
+        ],
+      },
+      {
+        title: 'Concepts',
+        id: 'concepts',
+        color: 'red',
+        pages: [
+          { title: 'Architecture', slug: 'architecture', section: 'concepts' },
+        ],
+      },
+      {
+        title: 'Guides',
+        id: 'guides',
+        color: 'blue',
+        pages: [
+          { title: 'Fake Agent', slug: 'fake-agent', section: 'guides' },
+          { title: 'Citations', slug: 'citations', section: 'guides' },
+          { title: 'Troubleshooting', slug: 'troubleshooting', section: 'guides' },
+        ],
+      },
+      {
+        title: 'Reference',
+        id: 'reference',
+        color: 'blue',
+        pages: [
+          { title: 'Event Mapping', slug: 'event-mapping', section: 'reference' },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'a2ui',
+    title: 'A2UI',
+    description: 'Protocol types and helpers for agent-driven UI surfaces',
+    sections: [
+      {
+        title: 'Getting Started',
+        id: 'getting-started',
+        color: 'blue',
+        pages: [
+          { title: 'Introduction', slug: 'introduction', section: 'getting-started' },
+        ],
+      },
+      {
+        title: 'Reference',
+        id: 'reference',
+        color: 'blue',
+        pages: [
+          { title: 'Schema', slug: 'schema', section: 'reference' },
+          { title: 'Parser, Resolver, and Guards', slug: 'parser-resolver-guards', section: 'reference' },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'licensing',
+    title: 'Licensing',
+    description: 'License token verification and package check behavior',
+    sections: [
+      {
+        title: 'Getting Started',
+        id: 'getting-started',
+        color: 'blue',
+        pages: [
+          { title: 'Introduction', slug: 'introduction', section: 'getting-started' },
+        ],
+      },
+      {
+        title: 'Guides',
+        id: 'guides',
+        color: 'blue',
+        pages: [
+          { title: 'Setup', slug: 'setup', section: 'guides' },
+          { title: 'CI and Offline', slug: 'ci-and-offline', section: 'guides' },
+        ],
+      },
+      {
+        title: 'Reference',
+        id: 'reference',
+        color: 'blue',
+        pages: [
+          { title: 'API', slug: 'api', section: 'reference' },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'telemetry',
+    title: 'Telemetry',
+    description: 'Browser and Node telemetry setup, privacy controls, and events',
+    sections: [
+      {
+        title: 'Getting Started',
+        id: 'getting-started',
+        color: 'blue',
+        pages: [
+          { title: 'Introduction', slug: 'introduction', section: 'getting-started' },
+        ],
+      },
+      {
+        title: 'Guides',
+        id: 'guides',
+        color: 'blue',
+        pages: [
+          { title: 'Browser', slug: 'browser', section: 'guides' },
+          { title: 'Node', slug: 'node', section: 'guides' },
+          { title: 'Privacy and Opt-Out', slug: 'privacy-and-opt-out', section: 'guides' },
+        ],
+      },
+      {
+        title: 'Reference',
+        id: 'reference',
+        color: 'blue',
+        pages: [
+          { title: 'Events', slug: 'events', section: 'reference' },
         ],
       },
     ],

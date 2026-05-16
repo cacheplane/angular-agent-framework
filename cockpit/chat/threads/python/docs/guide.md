@@ -31,7 +31,7 @@ protected readonly stream = agent({
 Use `ChatThreadListComponent` in a sidebar to show all threads:
 
 ```html
-<chat-thread-list [ref]="stream" />
+<chat-thread-list [agent]="stream" />
 ```
 
 </Step>
@@ -68,6 +68,6 @@ restores the thread list and conversation history.
 </Steps>
 
 <Tip>
-Threads are ideal for keeping separate contexts — e.g., one thread
+Threads are ideal for keeping separate contexts - e.g., one thread
 for code review and another for brainstorming.
 </Tip>
