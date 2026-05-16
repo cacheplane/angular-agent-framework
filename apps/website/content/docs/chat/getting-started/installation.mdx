@@ -30,10 +30,13 @@ npm install @ngaf/chat marked
 | `@angular/core` | `^20.0.0 \|\| ^21.0.0` | Yes |
 | `@angular/common` | `^20.0.0 \|\| ^21.0.0` | Yes |
 | `@angular/forms` | `^20.0.0 \|\| ^21.0.0` | Yes |
-| `@ngaf/render` | `^0.0.1` | Yes |
-| `@ngaf/a2ui` | `^0.0.1` | Yes |
+| `@angular/platform-browser` | `^20.0.0 \|\| ^21.0.0` | Yes |
+| `@ngaf/licensing` | `*` | Yes |
+| `@ngaf/render` | `*` | Yes |
+| `@ngaf/a2ui` | `*` | Yes |
 | `@json-render/core` | `^0.16.0` | Yes |
 | `@langchain/core` | `^1.1.33` | Yes |
+| `rxjs` | `~7.8.0` | Yes |
 | `marked` | `^15.0.0 \|\| ^16.0.0` | Yes |
 
 `@cacheplane/partial-json` is installed by `@ngaf/chat` for streaming JSON parsing.
@@ -58,7 +61,7 @@ export const appConfig: ApplicationConfig = {
 };
 ```
 
-`provideChat()` is optional — chat components fall back to sensible defaults.
+`provideChat()` is optional - chat components fall back to sensible defaults.
 
 ## Theming
 

@@ -51,7 +51,7 @@ tool_node = ToolNode(tools)
 Use `ChatToolCallsComponent` to display active tool calls:
 
 ```html
-<chat-tool-calls [ref]="stream" />
+<chat-tool-calls [agent]="stream" />
 ```
 
 </Step>
@@ -61,13 +61,15 @@ Use `ChatToolCallCardComponent` for detailed tool call views
 showing the tool name, arguments, and result:
 
 ```html
-<chat-tool-call-card [ref]="stream" />
+@for (toolCall of stream.toolCalls(); track toolCall.id) {
+  <chat-tool-call-card [toolCall]="toolCall" />
+}
 ```
 
 </Step>
 </Steps>
 
 <Tip>
-Tool calls execute in a loop — the agent generates a tool call, the tool
+Tool calls execute in a loop - the agent generates a tool call, the tool
 node executes it, and the result feeds back into the agent for the next step.
 </Tip>

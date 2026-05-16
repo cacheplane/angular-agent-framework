@@ -1,0 +1,85 @@
+# CI and Offline Use
+
+License verification is offline. `verifyLicense(token, publicKey)` parses the compact token, checks the Ed25519 signature, and returns claims when the signature is valid.
+
+No network call is needed to know whether a token is signed correctly.
+
+## CI
+
+For CI builds, treat the license token like any other secret:
+
+```bash
+NGAF_LICENSE=... npm test
+```
+
+Then pass it through the framework provider that owns the package you use.
+
+```ts
+provideAgent({
+  apiUrl: process.env['LANGGRAPH_API_URL'],
+  license: process.env['NGAF_LICENSE'],
+});
+```
+
+If you call `runLicenseCheck()` directly, inject the current time only when you need deterministic tests:
+
+```ts
+await runLicenseCheck({
+  package: '@ngaf/example',
+  version: '1.0.0',
+  token,
+  publicKey,
+  telemetryEndpoint,
+  nowSec: 1_735_689_600,
+});
+```
+
+## Offline verification
+
+Use `verifyLicense()` and `evaluateLicense()` directly when network access is unavailable or unwanted.
+
+```ts
+import { evaluateLicense, verifyLicense } from '@ngaf/licensing';
+
+const verified = await verifyLicense(token, publicKey);
+const result = evaluateLicense(verified, {
+  nowSec: Math.floor(Date.now() / 1000),
+});
+```
+
+This does not emit warnings and does not send telemetry.
+
+## Telemetry in licensing checks
+
+`runLicenseCheck()` creates a telemetry client and calls `send()` without awaiting it. The telemetry body contains:
+
+- package name;
+- package version;
+- license id from `claims.sub`, when present;
+- an anonymous instance id;
+- epoch-second timestamp.
+
+The licensing telemetry helper opts out when either of these is set:
+
+```bash
+CACHEPLANE_TELEMETRY=0
+CACHEPLANE_TELEMETRY=false
+```
+
+It also checks `globalThis.CACHEPLANE_TELEMETRY` and treats `false`, `0`, or `"0"` as opt-out values.
+
+If `fetch` is not available, the telemetry send is a no-op. If the request fails, the error is swallowed.
+
+## Signing tokens
+
+`signLicense()` is exported for token minting and tests:
+
+```ts
+import { signLicense } from '@ngaf/licensing';
+
+const token = await signLicense(claims, privateKey);
+```
+
+It signs the UTF-8 JSON payload with Ed25519 and returns the compact token format expected by `verifyLicense()`.
+
+Do not ship private keys in application code. Verification needs only the public key.

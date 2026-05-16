@@ -1,0 +1,173 @@
+# Event Mapping
+
+`@ngaf/ag-ui` reduces AG-UI protocol events into the `Agent` contract from `@ngaf/chat`.
+
+This page is the compatibility map. If your backend emits these events with the expected fields, the chat UI can render the run without knowing which runtime produced it.
+
+## Summary
+
+| AG-UI event | Agent field | Behavior |
+| --- | --- | --- |
+| `RUN_STARTED` | `status`, `isLoading`, `error` | Sets `status` to `running`, `isLoading` to `true`, and clears `error`. |
+| `RUN_FINISHED` | `status`, `isLoading` | Sets `status` to `idle` and `isLoading` to `false`. |
+| `RUN_ERROR` | `status`, `isLoading`, `error` | Sets `status` to `error`, stops loading, and stores the event message when present. |
+| `TEXT_MESSAGE_START` | `messages` | Creates or reuses an assistant message slot. |
+| `TEXT_MESSAGE_CONTENT` | `messages` | Appends `delta` to the message content. |
+| `TEXT_MESSAGE_END` | `messages` | No-op today. Content is already accumulated from deltas. |
+| `REASONING_MESSAGE_START` | `messages` | Creates or reuses an assistant message slot with `reasoning`. |
+| `REASONING_MESSAGE_CONTENT` | `messages` | Appends `delta` to `message.reasoning`. |
+| `REASONING_MESSAGE_CHUNK` | `messages` | Treated the same as `REASONING_MESSAGE_CONTENT`. |
+| `REASONING_MESSAGE_END` | `messages` | Adds `reasoningDurationMs` when timing is available. |
+| `TOOL_CALL_START` | `toolCalls` | Adds a running tool call. |
+| `TOOL_CALL_ARGS` | `toolCalls` | Parses `delta` as JSON and replaces args on the matching tool call. |
+| `TOOL_CALL_RESULT` | `toolCalls` | Stores the tool result on the matching tool call. |
+| `TOOL_CALL_END` | `toolCalls` | Marks the matching tool call complete. |
+| `STATE_SNAPSHOT` | `state`, `messages` | Replaces state and merges citations from `state.citations`. |
+| `STATE_DELTA` | `state`, `messages` | Applies JSON Patch to state and merges citations from `state.citations`. |
+| `MESSAGES_SNAPSHOT` | `messages` | Replaces the full message list. |
+| `CUSTOM` | `events$` | Emits a runtime-neutral custom event. |
+| unknown event | none | Ignored. Future protocol events do not crash the adapter. |
+
+## Run lifecycle
+
+The adapter exposes lifecycle through `status`, `isLoading`, and `error`.
+
+```ts
+agent.status();    // 'idle' | 'running' | 'error'
+agent.isLoading(); // boolean
+agent.error();     // unknown
+```
+
+`RUN_STARTED` clears a previous error. `RUN_ERROR` and `onRunFailed` both put the agent into the `error` state.
+
+`onRunFailed` comes from the AG-UI subscriber API rather than a protocol event. The adapter treats it like a run failure: `status = 'error'`, `isLoading = false`, and `error` is the thrown value.
+
+## Messages
+
+Text messages are accumulated by `messageId`.
+
+```ts
+{ type: 'TEXT_MESSAGE_START', messageId: 'm1', role: 'assistant' }
+{ type: 'TEXT_MESSAGE_CONTENT', messageId: 'm1', delta: 'Hello' }
+{ type: 'TEXT_MESSAGE_CONTENT', messageId: 'm1', delta: ' there' }
+{ type: 'TEXT_MESSAGE_END', messageId: 'm1' }
+```
+
+The resulting message is:
+
+```ts
+{ id: 'm1', role: 'assistant', content: 'Hello there' }
+```
+
+`TEXT_MESSAGE_END` does not finalize anything separately. The content already lives in the signal.
+
+`MESSAGES_SNAPSHOT` replaces the full message array. Use it when the backend is authoritative for the whole conversation.
+
+## Reasoning
+
+Reasoning events write to the same assistant message when they share the same `messageId` as the final text response.
+
+```ts
+{ type: 'REASONING_MESSAGE_START', messageId: 'm1', role: 'assistant' }
+{ type: 'REASONING_MESSAGE_CONTENT', messageId: 'm1', delta: 'Checking policy.' }
+{ type: 'REASONING_MESSAGE_END', messageId: 'm1' }
+{ type: 'TEXT_MESSAGE_START', messageId: 'm1', role: 'assistant' }
+{ type: 'TEXT_MESSAGE_CONTENT', messageId: 'm1', delta: 'Approved.' }
+```
+
+The message keeps both fields:
+
+```ts
+{
+  id: 'm1',
+  role: 'assistant',
+  reasoning: 'Checking policy.',
+  reasoningDurationMs: 12,
+  content: 'Approved.',
+}
+```
+
+The duration is measured in the browser from start to end event. It is useful for display, not billing or tracing.
+
+## Tool calls
+
+Tool calls are stored independently from messages in `agent.toolCalls()`.
+
+```ts
+{ type: 'TOOL_CALL_START', toolCallId: 'search-1', toolCallName: 'search' }
+{ type: 'TOOL_CALL_ARGS', toolCallId: 'search-1', delta: '{"q":"Angular"}' }
+{ type: 'TOOL_CALL_RESULT', toolCallId: 'search-1', content: { hits: 3 } }
+{ type: 'TOOL_CALL_END', toolCallId: 'search-1' }
+```
+
+The resulting tool call is:
+
+```ts
+{
+  id: 'search-1',
+  name: 'search',
+  args: { q: 'Angular' },
+  result: { hits: 3 },
+  status: 'complete',
+}
+```
+
+`TOOL_CALL_ARGS` expects the `delta` value to be parseable JSON. If parsing fails, args become `{}`. The current reducer replaces args with each parsed payload; it does not merge partial JSON fragments.
+
+## State
+
+`STATE_SNAPSHOT` replaces the full state object:
+
+```ts
+{ type: 'STATE_SNAPSHOT', snapshot: { topic: 'billing' } }
+```
+
+`STATE_DELTA` applies JSON Patch operations to the current state:
+
+```ts
+{
+  type: 'STATE_DELTA',
+  delta: [
+    { op: 'replace', path: '/topic', value: 'support' },
+    { op: 'add', path: '/caseId', value: 'case-123' },
+  ],
+}
+```
+
+After either state event, the adapter also runs the citations bridge. If `state.citations` contains entries keyed by message id, those citations are copied onto the matching messages.
+
+See [Citations](/docs/ag-ui/guides/citations) for the expected shape.
+
+## Custom events
+
+`CUSTOM` events are exposed through `events$`.
+
+When the custom event name is `state_update` and the value is an object, the adapter emits:
+
+```ts
+{ type: 'state_update', data: value }
+```
+
+For every other custom event name, it emits:
+
+```ts
+{ type: 'custom', name, data: value }
+```
+
+Use `state` for durable UI state. Use `events$` for transient events, telemetry hooks, or UI side effects that should not be stored as conversation state.
+
+## Submit and stop
+
+`agent.submit({ message })` performs three steps:
+
+1. Builds a local user message.
+2. Appends it to `messages` and calls `source.addMessage()`.
+3. Calls `source.runAgent()`.
+
+If `message` is omitted, no user message is appended, but `runAgent()` still runs.
+
+`agent.stop()` calls `source.abortRun()`. Cancellation depends on the AG-UI source implementation.
+
+## Unsupported protocol areas
+
+The current adapter does not implement customer-facing flows for interrupts, subagents, history, or time-travel. Unknown protocol events are ignored rather than treated as errors.

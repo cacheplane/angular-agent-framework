@@ -1,0 +1,74 @@
+# Introduction
+
+`@ngaf/a2ui` is the protocol layer for A2UI messages. It gives the rest of the framework a shared TypeScript vocabulary for agent-built surfaces, streamed JSONL messages, dynamic values, and outbound action payloads.
+
+It does not render Angular components. It does not register handler functions. It does not decide how an agent should respond to a button click. Those jobs sit in `@ngaf/chat` and `@ngaf/render`.
+
+## What the package owns
+
+The public entry point exports four groups of tools:
+
+| Area | Exports |
+|------|---------|
+| Wire types | `A2uiMessage`, `A2uiComponent`, component prop interfaces, data-model update types, action message types |
+| Stream parsing | `createA2uiMessageParser()` |
+| Data access | `getByPointer()`, `setByPointer()`, `deleteByPointer()` |
+| Dynamic values | `resolveDynamic()`, `A2uiScope`, literal/path guards |
+
+Use this package when you are building an adapter, validating an agent stream, testing A2UI payloads, or integrating a custom renderer with the same protocol surface that `@ngaf/chat` uses.
+
+## Message flow
+
+The parser expects newline-delimited JSON. Each line is checked for one known envelope key:
+
+```text
+surfaceUpdate
+dataModelUpdate
+beginRendering
+deleteSurface
+```
+
+When a line parses and has one of those envelope keys, it is returned as an `A2uiMessage`. Unknown envelopes are ignored. Malformed lines are skipped. Incomplete JSON waits in the internal buffer until a newline arrives.
+
+```ts
+import { createA2uiMessageParser } from '@ngaf/a2ui';
+
+const parser = createA2uiMessageParser();
+
+const messages = parser.push(
+  '{"beginRendering":{"surfaceId":"checkout","root":"root"}}\n',
+);
+```
+
+That posture is intentional. Agent streams are partial by nature. The low-level parser favors safe continuation over throwing during render.
+
+## Relationship to chat and render
+
+`@ngaf/chat` detects A2UI content in assistant output, feeds the JSONL stream into `createA2uiMessageParser()`, applies messages to its surface store, and renders those surfaces through the A2UI render components.
+
+`@ngaf/render` owns Angular component resolution, event dispatch, state updates, and handler execution. The A2UI package only describes protocol shapes and helper behavior.
+
+That separation matters when debugging:
+
+- If JSONL chunks are not becoming messages, inspect `@ngaf/a2ui`.
+- If messages are not becoming surfaces, inspect the chat A2UI surface store.
+- If components render incorrectly or handlers do not run, inspect the render/chat integration.
+
+## Safe fallback posture
+
+The parser and resolver are deliberately conservative:
+
+- malformed JSONL lines are skipped;
+- unknown envelope keys are ignored;
+- missing data-model paths resolve to `undefined`;
+- unrecognized dynamic-value shapes pass through unchanged.
+
+This makes the protocol layer suitable for streaming, but it is not a full schema validator. If you accept untrusted agent output, validate the payload at your boundary before wiring it to privileged handlers.
+
+## Install
+
+```bash
+npm install @ngaf/a2ui
+```
+
+The package has no peer dependencies.

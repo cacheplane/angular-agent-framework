@@ -1,0 +1,86 @@
+# Setup
+
+Most applications do not import `@ngaf/licensing` directly. Framework packages call `runLicenseCheck()` from their providers when you pass a license token.
+
+For example, higher-level packages expose a `license` option:
+
+```ts
+provideAgent({
+  apiUrl: 'https://api.example.com',
+  license: environment.ngafLicense,
+});
+```
+
+When no token is supplied, the licensing helper can evaluate the environment as `noncommercial` when the package passes `isNoncommercial: true`.
+
+## Direct use
+
+Use the direct API when you are building a package inside the framework or a custom integration that needs the same behavior.
+
+```ts
+import {
+  LICENSE_PUBLIC_KEY,
+  inferNoncommercial,
+  runLicenseCheck,
+} from '@ngaf/licensing';
+
+const status = await runLicenseCheck({
+  package: '@ngaf/example',
+  version: '1.0.0',
+  token: process.env.NGAF_LICENSE,
+  publicKey: LICENSE_PUBLIC_KEY,
+  telemetryEndpoint: 'https://telemetry.example.com/v1/ping',
+  isNoncommercial: inferNoncommercial(),
+});
+```
+
+`runLicenseCheck()` returns the evaluated `LicenseStatus`.
+
+## Warnings
+
+`emitNag()` is silent for:
+
+- `licensed`;
+- `noncommercial`.
+
+It warns once per package and status for:
+
+- `missing`;
+- `grace`;
+- `expired`;
+- `tampered`.
+
+The warning prefix is `[cacheplane]`, and the package keeps running.
+
+You can inject a custom warning sink:
+
+```ts
+await runLicenseCheck({
+  package: '@ngaf/example',
+  version: '1.0.0',
+  token,
+  publicKey,
+  telemetryEndpoint,
+  warn: (message) => logger.warn(message),
+});
+```
+
+## Noncommercial hint
+
+`inferNoncommercial()` checks `globalThis.process?.env.NODE_ENV`.
+
+It returns:
+
+- `true` when `NODE_ENV` exists and is anything other than `"production"`;
+- `false` when `NODE_ENV` is `"production"`;
+- `false` when there is no `process` global.
+
+This is only a default hint. Callers can pass `isNoncommercial` explicitly.
+
+## Gotchas
+
+`runLicenseCheck()` is idempotent for identical `package` and `token` values. A repeated call with the same key returns `licensed` without re-running the check.
+
+That keeps repeated provider initialization quiet, but it means package authors should not use repeated calls with identical inputs as a status polling mechanism.
+
+`verifyLicense()` does not check time. Pair it with `evaluateLicense()` when you need expiration and grace behavior.

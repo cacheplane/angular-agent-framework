@@ -1,19 +1,22 @@
 # Getting Started
 
-Add angular to your Angular 20+ application.
+Add Angular Agent Framework to an Angular 20+ application with a LangGraph Platform endpoint.
 
 ## Installation
 
 ```bash
-npm install angular@latest
+npm install @ngaf/langgraph @ngaf/chat
 ```
+
+`@ngaf/langgraph` provides `agent()` and `provideAgent()`. `@ngaf/chat` provides the ready-to-use `<chat>` composition and lower-level primitives.
 
 ## Setup
 
-In `app.config.ts`, add `provideAgent` to your providers:
+In `app.config.ts`, add `provideAgent()` to your providers:
 
 ```typescript
-import { provideAgent } from 'angular';
+import type { ApplicationConfig } from '@angular/core';
+import { provideAgent } from '@ngaf/langgraph';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -25,23 +28,23 @@ export const appConfig: ApplicationConfig = {
 ## Your first component
 
 ```typescript
-import { agent } from 'angular';
+import { Component, signal } from '@angular/core';
+import { agent } from '@ngaf/langgraph';
+import { ChatComponent as NgafChatComponent } from '@ngaf/chat';
 
 @Component({
-  template: `
-    @for (msg of chat.messages(); track $index) {
-      <p>{{ msg.content }}</p>
-    }
-    <button (click)="chat.submit({ message: 'Hello' })">
-      Send
-    </button>
-  `,
+  selector: 'app-chat',
+  standalone: true,
+  imports: [NgafChatComponent],
+  template: `<chat [agent]="chat" />`,
 })
 export class ChatComponent {
   chat = agent({
     assistantId: 'chat_agent',
+    threadId: signal(localStorage.getItem('threadId')),
+    onThreadId: (id) => localStorage.setItem('threadId', id),
   });
 }
 ```
 
-`agent()` MUST be called in an Angular injection context (component field initializer or constructor). Never call it in `ngOnInit`.
+`agent()` must be called in an Angular injection context. Use a component field initializer or constructor; do not create it in `ngOnInit` or an async callback.

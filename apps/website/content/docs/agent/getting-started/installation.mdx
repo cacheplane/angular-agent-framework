@@ -19,10 +19,23 @@ A running LangGraph agent accessible via HTTP. Can be local (langgraph dev) or d
 ## Install the package
 
 ```bash
-npm install @ngaf/langgraph
+npm install @ngaf/langgraph @ngaf/chat
 ```
 
-This installs the library and its peer dependencies including `@langchain/langgraph-sdk`.
+`@ngaf/langgraph` provides `agent()` and `provideAgent()`. `@ngaf/chat` provides the runtime-neutral chat UI consumed by the LangGraph adapter.
+
+## Peer Dependencies
+
+`@ngaf/langgraph` declares the following peer dependencies:
+
+| Package | Version |
+|---------|---------|
+| `@ngaf/chat` | `*` |
+| `@ngaf/licensing` | `*` |
+| `@angular/core` | `^20.0.0 \|\| ^21.0.0` |
+| `@langchain/core` | `^1.1.33` |
+| `@langchain/langgraph-sdk` | `^1.7.4` |
+| `rxjs` | `~7.8.0` |
 
 ## Configure the provider
 
@@ -90,7 +103,7 @@ Create a minimal component to verify the setup works. `agent()` must be called i
 ```typescript
 // In a component field initializer (injection context)
 const test = agent({ assistantId: 'chat_agent' });
-console.log(test.status()); // 'idle' — setup is correct
+console.log(test.status()); // 'idle' - setup is correct
 ```
 
 ## Troubleshooting

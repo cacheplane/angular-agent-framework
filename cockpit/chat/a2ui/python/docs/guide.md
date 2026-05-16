@@ -3,7 +3,7 @@
 <Summary>
 Render agent-driven interactive UI using the A2UI (Agent-to-UI) protocol.
 The agent streams JSONL messages that build surfaces from the built-in
-18-component catalog — no custom view components needed.
+18-component catalog - no custom view components needed.
 </Summary>
 
 <Prompt>
@@ -25,7 +25,7 @@ import { agent } from '@ngaf/langgraph';
   selector: 'app-a2ui',
   standalone: true,
   imports: [ChatComponent],
-  template: `<chat [ref]="agentRef" [views]="catalog" class="block h-screen" />`,
+  template: `<chat [agent]="agentRef" [views]="catalog" class="block h-screen" />`,
 })
 export class A2uiComponent {
   protected readonly agentRef = agent({
@@ -36,7 +36,7 @@ export class A2uiComponent {
 }
 ```
 
-No event handler wiring needed — A2UI button events route back to the
+No event handler wiring needed - A2UI button events route back to the
 agent automatically.
 
 </Step>
@@ -53,9 +53,9 @@ newline-delimited JSON messages:
 ```
 
 Three message types build a surface:
-1. `createSurface` — initializes the surface
-2. `updateDataModel` — sets the initial data model state
-3. `updateComponents` — defines the component tree
+1. `createSurface` - initializes the surface
+2. `updateDataModel` - sets the initial data model state
+3. `updateComponents` - defines the component tree
 
 </Step>
 <Step title="Understand the rendering pipeline">
@@ -79,7 +79,7 @@ Components bind to the data model using path references:
 ```
 
 The `surfaceToSpec` function auto-detects path references and populates
-`_bindings` for each input component — agents do not write `_bindings`
+`_bindings` for each input component - agents do not write `_bindings`
 directly. When the user changes a bound input, the component emits a
 data model update event.
 

@@ -1,0 +1,119 @@
+# Parser, Resolver, and Guards
+
+`@ngaf/a2ui` exports small helpers that keep stream parsing and dynamic value resolution consistent across packages.
+
+## createA2uiMessageParser()
+
+```ts
+import { createA2uiMessageParser } from '@ngaf/a2ui';
+
+const parser = createA2uiMessageParser();
+const messages = parser.push(chunk);
+```
+
+`push(chunk)` appends the chunk to an internal buffer and returns every complete message found before the last newline.
+
+Important behavior from source:
+
+- the parser is JSONL-based;
+- a complete message requires a trailing newline;
+- CRLF works because each line is trimmed;
+- empty lines are ignored;
+- malformed lines are skipped silently;
+- unknown top-level envelopes are ignored;
+- multiple messages can be returned from one chunk.
+
+The parser checks only for the known envelope key and a non-null object value. It does not validate each nested field.
+
+## resolveDynamic()
+
+```ts
+import { resolveDynamic } from '@ngaf/a2ui';
+
+const model = {
+  customer: { name: 'Ada' },
+  count: 2,
+};
+
+resolveDynamic({ path: '/customer/name' }, model); // "Ada"
+resolveDynamic({ literalNumber: 2 }, model); // 2
+```
+
+`resolveDynamic(value, model, scope?)` handles:
+
+| Input shape | Result |
+|-------------|--------|
+| `{ literalString }` | the wrapped string |
+| `{ literalNumber }` | the wrapped number |
+| `{ literalBoolean }` | the wrapped boolean |
+| `{ literalArray }` | the wrapped array |
+| `{ path }` | the value at that model path |
+| arrays | recursively resolved array values |
+| `null` or `undefined` | returned as-is |
+| unrecognized shapes | returned as-is |
+
+Absolute paths start with `/`.
+
+Relative paths resolve against `scope.basePath` when a scope is supplied. Without a scope, a relative path is treated as root-relative by prefixing `/`.
+
+```ts
+resolveDynamic(
+  { path: 'name' },
+  { items: [{ name: 'Ada' }] },
+  { basePath: '/items/0', item: { name: 'Ada' } },
+); // "Ada"
+```
+
+`A2uiScope.item` is part of the public type, but the current resolver only uses `basePath`.
+
+## Pointer helpers
+
+```ts
+import { getByPointer, setByPointer, deleteByPointer } from '@ngaf/a2ui';
+```
+
+The pointer helpers use slash-separated paths:
+
+```ts
+const model = { customer: { name: 'Ada' } };
+
+getByPointer(model, '/customer/name'); // "Ada"
+setByPointer(model, '/customer/name', 'Grace');
+deleteByPointer(model, '/customer/name');
+```
+
+Current behavior is intentionally small:
+
+- empty pointer and `/` point at the root;
+- missing paths read as `undefined`;
+- `setByPointer()` returns a cloned object path rather than mutating the original root;
+- `deleteByPointer()` returns the original model when the parent path does not exist.
+
+These helpers do not implement full RFC 6901 escaping semantics. Avoid keys that require `~0` or `~1` escaping unless you normalize them before they enter A2UI state.
+
+## Guards
+
+The public guards are:
+
+```ts
+isLiteralString(value)
+isLiteralNumber(value)
+isLiteralBoolean(value)
+isPathRef(value)
+```
+
+They are shape checks for dynamic wrapper objects. The literal guards check for the presence of the wrapper key. `isPathRef()` also verifies that `path` is a string.
+
+Use them when you need to branch on protocol values without importing internal renderer code.
+
+## Validation vs handler wiring
+
+This package does not run validation rules, map actions to Angular handlers, or call user functions. It gives you typed values and parsing helpers.
+
+A practical boundary is:
+
+- use `@ngaf/a2ui` to parse and inspect the protocol stream;
+- use app or server validation to decide whether a message is trusted;
+- use `@ngaf/chat` and `@ngaf/render` to display surfaces and wire interactions.
+
+That split keeps protocol parsing deterministic and keeps privileged behavior in the host application.

@@ -9,10 +9,22 @@
 ## Install packages
 
 ```bash
-npm install @ngaf/chat @ngaf/ag-ui
+npm install @ngaf/chat @ngaf/ag-ui @ag-ui/client
 ```
 
 `@ngaf/chat` provides the chat UI primitives. `@ngaf/ag-ui` provides the adapter that wires an AG-UI backend into the `Agent` contract those primitives consume.
+
+## Peer Dependencies
+
+`@ngaf/ag-ui` declares the following peer dependencies:
+
+| Package | Version |
+|---|---|
+| `@ngaf/chat` | `*` |
+| `@ngaf/licensing` | `*` |
+| `@angular/core` | `^20.0.0 \|\| ^21.0.0` |
+| `@ag-ui/client` | `*` |
+| `rxjs` | `~7.8.0` |
 
 ## Configure the provider
 
@@ -75,7 +87,7 @@ export const appConfig: ApplicationConfig = {
 };
 ```
 
-`FakeAgent` extends `AbstractAgent` and emits a canned `RUN_STARTED → TEXT_MESSAGE_START → TEXT_MESSAGE_CONTENT × N → TEXT_MESSAGE_END → RUN_FINISHED` sequence. Drop-in replacement for `provideAgUiAgent({ url })` while you're prototyping.
+`FakeAgent` extends `AbstractAgent` and emits a canned `RUN_STARTED -> TEXT_MESSAGE_START -> TEXT_MESSAGE_CONTENT x N -> TEXT_MESSAGE_END -> RUN_FINISHED` sequence. Drop-in replacement for `provideAgUiAgent({ url })` while you're prototyping.
 
 ## Custom transport
 

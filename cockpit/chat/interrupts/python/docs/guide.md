@@ -43,7 +43,7 @@ protected readonly isInterrupted = computed(
 Use `ChatInterruptPanelComponent` to display the approval UI:
 
 ```html
-<chat-interrupt-panel [ref]="stream" />
+<chat-interrupt-panel [agent]="stream" />
 ```
 
 The panel shows the interrupt payload, draft content, and action buttons.
@@ -56,7 +56,7 @@ to resume or cancel the graph execution:
 
 ```html
 <chat-interrupt-panel
-  [ref]="stream"
+  [agent]="stream"
   (approve)="onApprove()"
   (reject)="onReject()" />
 ```

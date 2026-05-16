@@ -91,7 +91,7 @@ export class DeploymentRuntimeComponent {
   currentThreadId = '';
 
   send(text: string): void {
-    this.stream.submit({ messages: [{ role: 'human', content: text }] });
+    void this.stream.submit({ message: text });
   }
 }
 ```

@@ -18,7 +18,7 @@ def build_messages_graph():
     Constructs a conversational graph that demonstrates message rendering.
 
     The agent responds with various message styles to showcase
-    ChatMessagesComponent, ChatInputComponent, and ChatTypingIndicatorComponent.
+    ChatMessageListComponent, ChatInputComponent, and ChatTypingIndicatorComponent.
     """
     llm = ChatOpenAI(model="gpt-5-mini", streaming=True)
 

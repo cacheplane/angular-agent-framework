@@ -1,0 +1,128 @@
+# Citations
+
+`@ngaf/ag-ui` can copy citations from AG-UI state onto chat messages.
+
+The bridge is intentionally simple: put citations under `state.citations`, keyed by message id. When a `STATE_SNAPSHOT` or `STATE_DELTA` arrives, the adapter merges matching citations onto `messages`.
+
+## State shape
+
+Use this shape from your AG-UI backend:
+
+```ts
+{
+  citations: {
+    "assistant-message-id": [
+      {
+        id: "doc-1",
+        title: "Refund policy",
+        url: "https://example.com/refunds",
+        snippet: "Refunds are available within 30 days."
+      }
+    ]
+  }
+}
+```
+
+The key must match the assistant message id emitted by `TEXT_MESSAGE_START` or `REASONING_MESSAGE_START`.
+
+```ts
+{ type: 'TEXT_MESSAGE_START', messageId: 'm1', role: 'assistant' }
+{ type: 'TEXT_MESSAGE_CONTENT', messageId: 'm1', delta: 'Refunds are available.' }
+{
+  type: 'STATE_SNAPSHOT',
+  snapshot: {
+    citations: {
+      m1: [
+        {
+          id: 'refund-policy',
+          title: 'Refund policy',
+          url: 'https://example.com/refunds',
+          snippet: 'Refunds are available within 30 days.',
+        },
+      ],
+    },
+  },
+}
+```
+
+The message becomes:
+
+```ts
+{
+  id: 'm1',
+  role: 'assistant',
+  content: 'Refunds are available.',
+  citations: [
+    {
+      id: 'refund-policy',
+      index: 1,
+      title: 'Refund policy',
+      url: 'https://example.com/refunds',
+      snippet: 'Refunds are available within 30 days.',
+    },
+  ],
+}
+```
+
+## Accepted citation fields
+
+The bridge normalizes a few common field names:
+
+| Citation field | Accepted input |
+| --- | --- |
+| `id` | `id`, `refId`, or generated `c1`, `c2`, ... |
+| `index` | `index` or array position starting at 1 |
+| `title` | `title` or `name` |
+| `url` | `url`, `href`, or `source` |
+| `snippet` | `snippet`, `content`, or `excerpt` |
+| `extra` | `extra` object |
+
+String entries are also accepted:
+
+```ts
+{
+  citations: {
+    m1: ['https://example.com/refunds']
+  }
+}
+```
+
+That becomes:
+
+```ts
+{ id: 'c1', index: 1, url: 'https://example.com/refunds' }
+```
+
+## When citations update
+
+Citations are merged after:
+
+- `STATE_SNAPSHOT`
+- `STATE_DELTA`
+
+They are not merged after plain text events. If your backend streams the final answer first and citations later, send a state event after citation data is available.
+
+If your backend sends citations before the matching message exists, send another state event after the message is created or use `MESSAGES_SNAPSHOT` with messages that already include citations.
+
+## Manual bridge
+
+`bridgeCitationsState()` is exported for advanced adapters or custom reducers.
+
+```ts
+import { bridgeCitationsState } from '@ngaf/ag-ui';
+
+const nextMessages = bridgeCitationsState(
+  { state: threadState },
+  currentMessages,
+);
+```
+
+Most apps should not need this directly. The built-in AG-UI reducer already calls it for state snapshots and deltas.
+
+## Gotchas
+
+Citation matching is by message id, not by order. Stable message ids matter.
+
+The bridge returns messages unchanged when `state.citations` is missing, not an object, or the entry for a message is empty.
+
+The bridge normalizes citation shape; it does not fetch metadata, validate URLs, or deduplicate sources across messages.

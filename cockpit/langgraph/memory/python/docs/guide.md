@@ -100,7 +100,7 @@ Facts appear in the sidebar in real time as the agent learns them.
 <Step title="The LangGraph backend with extract_memory">
 
 Define a custom `MemoryState` that extends messages with a `memory` dict, then
-wire two nodes — `generate` and `extract_memory` — in sequence:
+wire two nodes - `generate` and `extract_memory` - in sequence:
 
 ```python
 # graph.py
@@ -151,7 +151,7 @@ survives server restarts and scales across workers.
 
 <Tip>
 The `memory` dict is part of graph state and is streamed back to the client on
-every state update. There is no separate API call needed — just read `stream.value()`.
+every state update. There is no separate API call needed - just read `stream.value()`.
 </Tip>
 
 <Warning>
@@ -160,6 +160,6 @@ variables or a proxy.
 </Warning>
 
 <Related>
-- [Chat Messages](/chat/core-capabilities/messages/overview/python) — Learn how ChatMessagesComponent renders messages
-- [Chat Threads](/chat/core-capabilities/threads/overview/python) — Learn how ChatThreadsComponent manages conversation threads
+- [Chat Messages](/chat/core-capabilities/messages/overview/python) - Learn how ChatMessageListComponent renders messages
+- [Chat Threads](/chat/core-capabilities/threads/overview/python) - Learn how ChatThreadsComponent manages conversation threads
 </Related>

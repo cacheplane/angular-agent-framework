@@ -1,6 +1,6 @@
 # ChatDebugComponent
 
-`ChatDebugComponent` is a full debug cockpit that combines a chat interface with a side panel for inspecting LangGraph execution state. It renders the same chat UI as `ChatComponent` alongside a debug panel with a timeline, state inspector, diff viewer, and navigation controls.
+`ChatDebugComponent` provides a docked development panel for inspecting an `AgentWithHistory`. It includes built-in Timeline and State tabs, emits replay/fork events from timeline checkpoints, and supports host-provided controls and inspector tabs.
 
 **Selector:** `chat-debug`
 
@@ -10,19 +10,10 @@
 import { ChatDebugComponent } from '@ngaf/chat';
 ```
 
-## When to Use It
-
-Use `ChatDebugComponent` during development to understand what your LangGraph agent is doing at each step. The debug panel shows:
-
-- A timeline of execution checkpoints
-- State values at each checkpoint
-- A diff between consecutive checkpoints
-- Navigation controls to step through the execution history
-
 ## Basic Usage
 
 ```typescript
-import { Component, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, ChangeDetectionStrategy, signal } from '@angular/core';
 import { agent } from '@ngaf/langgraph';
 import { ChatDebugComponent } from '@ngaf/chat';
 
@@ -32,199 +23,140 @@ import { ChatDebugComponent } from '@ngaf/chat';
   imports: [ChatDebugComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div style="height: 100vh;">
-      <chat-debug [agent]="chatRef" />
-    </div>
+    <chat-debug
+      [agent]="chat"
+      dock="right"
+      [defaultOpen]="true"
+      (replayRequested)="replay($event)"
+      (forkRequested)="fork($event)"
+    />
   `,
 })
 export class DebugPageComponent {
-  chatRef = agent({
+  protected readonly replayCheckpointId = signal<string | null>(null);
+  protected readonly forkSourceCheckpointId = signal<string | null>(null);
+
+  protected readonly chat = agent({
+    apiUrl: '/api/langgraph',
     assistantId: 'chat_agent',
-    threadId: signal(null),
+    threadId: signal(localStorage.getItem('threadId')),
+    onThreadId: (id) => localStorage.setItem('threadId', id),
   });
+
+  replay(checkpointId: string) {
+    this.replayCheckpointId.set(checkpointId);
+    // Route this into your app's replay workflow.
+  }
+
+  fork(checkpointId: string) {
+    this.forkSourceCheckpointId.set(checkpointId);
+    // Route this into your app's thread fork workflow.
+  }
 }
 ```
 
-## API
-
-### Inputs
+## Inputs
 
 | Input | Type | Default | Description |
-|-------|------|---------|-------------|
-| `agent` | `AgentWithHistory` | **Required** | The agent providing streaming state and execution history |
+| --- | --- | --- | --- |
+| `agent` | `AgentWithHistory` | **Required** | Agent state and checkpoint history. |
+| `dock` | `'right' \| 'bottom' \| 'left'` | `'right'` | Initial dock position. |
+| `defaultOpen` | `boolean` | `false` | Initial open state when no persisted state exists. |
+| `storageKey` | `string` | `'chat-debug'` | Local storage key prefix for persisted open/dock/tab state. |
 
-## Layout
+## Outputs
 
-The component renders a two-column layout:
+| Output | Type | Description |
+| --- | --- | --- |
+| `replayRequested` | `string` | Emits a checkpoint id when the built-in Timeline tab requests replay. |
+| `forkRequested` | `string` | Emits a checkpoint id when the built-in Timeline tab requests fork. |
+| `openChange` | `boolean` | Emits when the panel opens or closes. |
+| `dockChange` | `'right' \| 'bottom' \| 'left'` | Emits when the dock position changes. |
 
-- **Left**: The chat area (messages, typing indicator, error display, input)
-- **Right**: The collapsible debug panel (320px wide)
+`replayRequested` and `forkRequested` are integration hooks. The debug panel does not mutate the agent by itself; the host app decides whether a checkpoint opens a replay view, starts a forked thread, or maps to a backend-specific time travel operation.
 
-The debug panel can be toggled open/closed with a button on the divider.
+## Host Controls
 
-## Debug Panel Sections
-
-### Summary
-
-At the top, `DebugSummaryComponent` displays the total number of checkpoints and cumulative execution duration.
-
-### Controls
-
-`DebugControlsComponent` provides VCR-style navigation buttons:
-
-| Button | Action | Disabled When |
-|--------|--------|---------------|
-| `\|<` | Jump to start | Already at first checkpoint |
-| `<` | Step back | Already at first checkpoint |
-| `>` | Step forward | Already at last checkpoint |
-| `>\|` | Jump to end | Already at last checkpoint |
-
-### Timeline
-
-`DebugTimelineComponent` renders a vertical timeline rail with one `DebugCheckpointCardComponent` per checkpoint. Each card shows:
-
-- The node name (from `state.next[0]` or `"Step N"`)
-- Optional duration badge (milliseconds)
-- Optional token count badge
-- Visual selection state (highlighted dot and border)
-
-Click a checkpoint to select it and view its details below.
-
-### Detail
-
-When a checkpoint is selected, `DebugDetailComponent` renders two sections:
-
-1. **State Diff** (`DebugStateDiffComponent`): Shows what changed between the previous and current checkpoint as color-coded entries:
-   - Green (`+`): Added keys
-   - Red (`-`): Removed keys
-   - Yellow (`~`): Changed values (shows before and after)
-
-2. **Current State** (`DebugStateInspectorComponent`): Displays the full state values as formatted JSON.
-
-## Debug Sub-Components
-
-Each debug sub-component is exported individually for custom debug UIs:
-
-| Component | Selector | Purpose |
-|-----------|----------|---------|
-| `DebugTimelineComponent` | `chat-debug-timeline` | Vertical timeline of checkpoints |
-| `DebugCheckpointCardComponent` | `chat-debug-checkpoint-card` | Single checkpoint card in the timeline |
-| `DebugControlsComponent` | `chat-debug-controls` | VCR-style step navigation |
-| `DebugSummaryComponent` | `chat-debug-summary` | Step count and total duration |
-| `DebugDetailComponent` | `chat-debug-detail` | State diff + state inspector |
-| `DebugStateDiffComponent` | `chat-debug-state-diff` | Color-coded state diff |
-| `DebugStateInspectorComponent` | `chat-debug-state-inspector` | JSON state viewer |
-
-## Debug Utilities
-
-### toDebugCheckpoint()
-
-Converts a `ThreadState` entry to a `DebugCheckpoint`:
+Use `ChatDebugControlsDirective` to pin app-specific controls at the top of the debug panel.
 
 ```typescript
-import { toDebugCheckpoint } from '@ngaf/chat';
-
-const checkpoint = toDebugCheckpoint(threadState, index);
-// { node: 'agent', checkpointId: 'abc123' }
-```
-
-### extractStateValues()
-
-Extracts the state values from a `ThreadState`, returning `{}` if unavailable:
-
-```typescript
-import { extractStateValues } from '@ngaf/chat';
-
-const values = extractStateValues(threadState);
-// { messages: [...], someKey: 'value' }
-```
-
-### computeStateDiff()
-
-Computes a recursive diff between two state objects:
-
-```typescript
-import { computeStateDiff } from '@ngaf/chat';
-import type { DiffEntry } from '@ngaf/chat';
-
-const diff: DiffEntry[] = computeStateDiff(beforeState, afterState);
-```
-
-### DebugCheckpoint Type
-
-```typescript
-interface DebugCheckpoint {
-  node?: string;
-  duration?: number;
-  tokenCount?: number;
-  checkpointId?: string;
-}
-```
-
-### DiffEntry Type
-
-```typescript
-interface DiffEntry {
-  path: string;
-  type: 'added' | 'removed' | 'changed';
-  before?: unknown;
-  after?: unknown;
-}
-```
-
-## Building a Custom Debug Panel
-
-You can use the sub-components individually to build a custom debug layout:
-
-```typescript
-import { Component, signal, computed, ChangeDetectionStrategy } from '@angular/core';
 import {
-  DebugTimelineComponent,
-  DebugDetailComponent,
-  toDebugCheckpoint,
-  extractStateValues,
+  ChatDebugComponent,
+  ChatDebugControlsDirective,
+  ChatDebugActionComponent,
 } from '@ngaf/chat';
-import type { DebugCheckpoint } from '@ngaf/chat';
 
 @Component({
-  selector: 'app-custom-debug',
   standalone: true,
-  imports: [DebugTimelineComponent, DebugDetailComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [
+    ChatDebugComponent,
+    ChatDebugControlsDirective,
+    ChatDebugActionComponent,
+  ],
   template: `
-    <div class="flex gap-4">
-      <chat-debug-timeline
-        [checkpoints]="checkpoints()"
-        [selectedIndex]="selectedIndex()"
-        (checkpointSelected)="selectedIndex.set($event)"
-      />
-
-      @if (selectedIndex() >= 0) {
-        <chat-debug-detail
-          [currentState]="currentState()"
-          [previousState]="previousState()"
+    <chat-debug [agent]="chat">
+      <ng-template chatDebugControls>
+        <chat-debug-action
+          label="Reset thread"
+          (clicked)="resetThread()"
         />
-      }
-    </div>
+      </ng-template>
+    </chat-debug>
   `,
 })
-export class CustomDebugComponent {
-  // chatRef = agent(...)
+export class DebugControlsExample {
+  // chat = agent(...)
 
-  selectedIndex = signal(-1);
-
-  checkpoints = computed((): DebugCheckpoint[] =>
-    this.chatRef.history().map((state, i) => toDebugCheckpoint(state, i))
-  );
-
-  currentState = computed(() =>
-    extractStateValues(this.chatRef.history()[this.selectedIndex()])
-  );
-
-  previousState = computed(() => {
-    const idx = this.selectedIndex();
-    if (idx <= 0) return {};
-    return extractStateValues(this.chatRef.history()[idx - 1]);
-  });
+  resetThread() {
+    // App-specific reset behavior.
+  }
 }
 ```
+
+## Custom Inspector Tabs
+
+Use `ChatDebugInspectorDirective` to add tabs after the built-in Timeline and State tabs.
+
+```typescript
+import {
+  ChatDebugComponent,
+  ChatDebugInspectorDirective,
+  ChatDebugSectionComponent,
+} from '@ngaf/chat';
+
+@Component({
+  standalone: true,
+  imports: [
+    ChatDebugComponent,
+    ChatDebugInspectorDirective,
+    ChatDebugSectionComponent,
+  ],
+  template: `
+    <chat-debug [agent]="chat">
+      <ng-template chatDebugInspector label="Runtime">
+        <chat-debug-section label="Runtime">
+          <pre>Environment: {{ environment }}</pre>
+        </chat-debug-section>
+      </ng-template>
+    </chat-debug>
+  `,
+})
+export class RuntimeInspectorExample {
+  // chat = agent(...)
+  protected readonly environment = 'local';
+}
+```
+
+## Public Debug Primitives
+
+These debug primitives are exported for host-provided controls and inspectors:
+
+| Export | Selector | Purpose |
+| --- | --- | --- |
+| `ChatDebugControlsDirective` | `ng-template[chatDebugControls]` | Registers the pinned controls slot. |
+| `ChatDebugInspectorDirective` | `ng-template[chatDebugInspector]` | Registers a host inspector tab with a label. |
+| `ChatDebugSectionComponent` | `chat-debug-section` | Section container for custom inspector content. |
+| `ChatDebugSegmentedComponent` | `chat-debug-segmented` | Segmented control primitive. |
+| `ChatDebugSelectComponent` | `chat-debug-select` | Select primitive. |
+| `ChatDebugSwitchComponent` | `chat-debug-switch` | Switch primitive. |
+| `ChatDebugActionComponent` | `chat-debug-action` | Full-width action button primitive. |

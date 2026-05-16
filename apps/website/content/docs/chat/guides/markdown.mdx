@@ -65,8 +65,8 @@ The stylesheet covers the following markdown elements:
 | Element | Styling |
 |---------|---------|
 | `p` | Bottom margin of `0.75em`, last child has no bottom margin |
-| `code` (inline) | Background `var(--chat-bg-alt)`, padding, `4px` radius, monospace font |
-| `pre` | Background `var(--chat-bg-alt)`, `12px 16px` padding, horizontal scroll |
+| `code` (inline) | Background `var(--ngaf-chat-surface-alt)`, padding, `4px` radius, monospace font |
+| `pre` | Background `var(--ngaf-chat-surface-alt)`, `12px 16px` padding, horizontal scroll |
 | `pre code` | No extra background or padding (inherits from `pre`) |
 | `ul`, `ol` | `0.5em` vertical margin, `1.5em` left padding |
 | `li` | `0.25em` vertical margin |
@@ -80,7 +80,7 @@ The stylesheet covers the following markdown elements:
 | `th` | Alt background, bold, `0.875em` |
 | `td` | Standard border and padding |
 
-All colors reference CSS custom properties from `CHAT_THEME_STYLES`, so markdown elements automatically respect your theme.
+All colors reference `--ngaf-chat-*` CSS custom properties, so markdown elements automatically respect the active chat theme.
 
 ## Using Markdown in Custom Components
 
@@ -90,7 +90,7 @@ To render markdown in a custom message template, apply both the styles and the `
 import { Component, inject } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
 import {
-  ChatMessagesComponent,
+  ChatMessageListComponent,
   MessageTemplateDirective,
   CHAT_MARKDOWN_STYLES,
   renderMarkdown,
@@ -99,17 +99,17 @@ import {
 @Component({
   selector: 'app-chat-view',
   standalone: true,
-  imports: [ChatMessagesComponent, MessageTemplateDirective],
+  imports: [ChatMessageListComponent, MessageTemplateDirective],
   styles: [CHAT_MARKDOWN_STYLES],
   template: `
-    <chat-messages [agent]="chatRef">
+    <chat-message-list [agent]="chatRef">
       <ng-template chatMessageTemplate="ai" let-message>
         <div
           class="chat-md"
           [innerHTML]="renderMd(message.content)"
         ></div>
       </ng-template>
-    </chat-messages>
+    </chat-message-list>
   `,
 })
 export class ChatViewComponent {

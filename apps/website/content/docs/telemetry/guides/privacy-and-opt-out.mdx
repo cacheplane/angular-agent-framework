@@ -1,0 +1,77 @@
+# Privacy and Opt-Out
+
+The telemetry source has two different privacy postures.
+
+Browser telemetry is off unless the app opts in. Node telemetry can send from package lifecycle hooks or server adapters unless the environment or process disables it.
+
+## Node opt-out
+
+Any of these environment signals disables Node telemetry:
+
+```bash
+DO_NOT_TRACK=1
+npm_config_do_not_track=true
+NPM_CONFIG_DO_NOT_TRACK=true
+NGAF_TELEMETRY_DISABLED=1
+CI=true
+GITHUB_ACTIONS=true
+CONTINUOUS_INTEGRATION=true
+BUILDKITE=true
+CIRCLECI=true
+```
+
+The boolean parser treats `1`, `true`, `TRUE`, and `yes` as true values.
+
+You can also disable telemetry in process:
+
+```ts
+import { disableTelemetry } from '@ngaf/telemetry/node';
+
+disableTelemetry();
+```
+
+`getDisableReason()` reports one of:
+
+```ts
+'DO_NOT_TRACK' | 'NGAF_TELEMETRY_DISABLED' | 'CI' | null
+```
+
+## Browser opt-in
+
+Browser capture requires an enabled config:
+
+```ts
+provideNgafTelemetry({ enabled: true, sink });
+```
+
+With `enabled: false` or no provider, browser capture no-ops.
+
+The browser service sends only when application code or framework browser code calls its capture methods. It does not install a global listener.
+
+## Anonymous IDs
+
+Node uses `anon_<uuid>` from `node:crypto` and caches it for the current process.
+
+Browser endpoint delivery uses `browser:<uuid>` when `crypto.randomUUID()` is available, with a `Math.random()` fallback. The value is kept in the service instance.
+
+The source does not persist either ID across process restarts or browser sessions.
+
+## Data minimization from source
+
+The Node postinstall payload includes package/runtime installation metadata such as package name, version, Node version, OS, architecture, package manager details, and global/workspace flags when npm exposes them.
+
+Runtime lifecycle helpers send transport/provider/model style metadata. Stream error helpers send an error class, not the raw error object.
+
+The source strips `apiKey` in the Node runtime adapter before sending.
+
+There is no source path that sends prompts, completions, message content, tool call arguments, tool call outputs, or environment variable dumps.
+
+## Custom ingest
+
+Set a custom Node ingest URL with:
+
+```bash
+NGAF_TELEMETRY_INGEST_URL=https://telemetry.example.com/api/ingest
+```
+
+For browser apps, prefer `sink` or `endpoint` so telemetry remains inside your application's analytics boundary.

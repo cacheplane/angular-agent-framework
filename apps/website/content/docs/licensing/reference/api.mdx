@@ -1,0 +1,172 @@
+# Licensing API
+
+This page documents the public exports from `@ngaf/licensing`.
+
+## Types
+
+```ts
+type LicenseTier = 'developer-seat' | 'app-deployment' | 'enterprise';
+
+interface LicenseClaims {
+  sub: string;
+  tier: LicenseTier;
+  iat: number;
+  exp: number;
+  seats: number;
+}
+```
+
+```ts
+type VerifyReason = 'malformed' | 'tampered';
+
+type VerifyResult =
+  | { ok: true; claims: LicenseClaims }
+  | { ok: false; reason: VerifyReason };
+```
+
+```ts
+type LicenseStatus =
+  | 'licensed'
+  | 'grace'
+  | 'expired'
+  | 'missing'
+  | 'tampered'
+  | 'noncommercial';
+```
+
+## verifyLicense()
+
+```ts
+function verifyLicense(
+  token: string,
+  publicKey: Uint8Array,
+): Promise<VerifyResult>;
+```
+
+Parses and verifies the compact token against an Ed25519 public key.
+
+It does not check `iat`, `exp`, grace windows, or commercial context. It only answers whether the token shape and signature are valid.
+
+Failure reasons:
+
+| Reason | Meaning |
+|--------|---------|
+| `malformed` | token format, base64url payload, JSON, or claim shape failed |
+| `tampered` | signature verification failed or threw |
+
+## evaluateLicense()
+
+```ts
+interface EvaluateOptions {
+  nowSec: number;
+  graceSec?: number;
+  isNoncommercial?: boolean;
+}
+
+function evaluateLicense(
+  verifyResult: VerifyResult | undefined,
+  options: EvaluateOptions,
+): EvaluateResult;
+```
+
+Turns a verify result into a `LicenseStatus`.
+
+`verifyResult` can be `undefined` when no token exists. In that case the result is `noncommercial` only when `isNoncommercial` is true; otherwise it is `missing`.
+
+`graceSec` defaults to 14 days.
+
+## runLicenseCheck()
+
+```ts
+interface RunLicenseCheckOptions {
+  package: string;
+  version: string;
+  token?: string;
+  publicKey: Uint8Array;
+  telemetryEndpoint: string;
+  nowSec?: number;
+  isNoncommercial?: boolean;
+  warn?: (message: string) => void;
+  fetch?: typeof fetch;
+}
+
+function runLicenseCheck(
+  options: RunLicenseCheckOptions,
+): Promise<LicenseStatus>;
+```
+
+Runs the full check:
+
+1. verifies the token when present;
+2. evaluates the license status;
+3. emits a warning when appropriate;
+4. sends non-blocking telemetry.
+
+Repeated calls with the same package and token are treated as already handled and return `licensed`.
+
+## emitNag()
+
+```ts
+interface EmitNagOptions {
+  package: string;
+  warn?: (message: string) => void;
+}
+
+function emitNag(
+  result: Pick<EvaluateResult, 'status'>,
+  options: EmitNagOptions,
+): void;
+```
+
+Emits one warning per package/status pair. Silent statuses are `licensed` and `noncommercial`.
+
+## inferNoncommercial()
+
+```ts
+function inferNoncommercial(): boolean;
+```
+
+Returns `true` when `process.env.NODE_ENV` exists and is not `"production"`. Returns `false` for production and for browser-like environments without a `process` global.
+
+## signLicense()
+
+```ts
+function signLicense(
+  claims: LicenseClaims,
+  privateKey: Uint8Array,
+): Promise<string>;
+```
+
+Signs claims with an Ed25519 private key and returns the compact token consumed by `verifyLicense()`.
+
+## createTelemetryClient()
+
+```ts
+interface TelemetryEvent {
+  package: string;
+  version: string;
+  licenseId?: string;
+}
+
+interface CreateTelemetryClientOptions {
+  endpoint: string;
+  fetch?: typeof fetch;
+  generateInstanceId?: () => string;
+}
+```
+
+`createTelemetryClient(options).send(event)` POSTs JSON to the configured endpoint unless telemetry is opted out or `fetch` is unavailable.
+
+The request body uses snake-case fields:
+
+```json
+{
+  "package": "@ngaf/example",
+  "version": "1.0.0",
+  "license_id": "cus_123",
+  "anon_instance_id": "generated-id",
+  "ts": 1735689600
+}
+```
+
+Send failures are swallowed.

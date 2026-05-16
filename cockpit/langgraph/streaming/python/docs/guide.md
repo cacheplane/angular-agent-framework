@@ -6,7 +6,7 @@ Build a real-time streaming chat interface using `agent()` from
 </Summary>
 
 <Prompt>
-Add real-time LLM streaming to this Angular component using `agent()` from `@ngaf/langgraph`. Configure `provideAgent({ apiUrl })` in the app config, then call `stream.submit()` to send messages. Bind `stream.messages()` in the template using `@for` — all Signals, no subscriptions needed.
+Add real-time LLM streaming to this Angular component using `agent()` from `@ngaf/langgraph`. Configure `provideAgent({ apiUrl })` in the app config, then call `stream.submit()` to send messages. Bind `stream.messages()` in the template using `@for` - all Signals, no subscriptions needed.
 </Prompt>
 
 <Steps>
@@ -47,7 +47,7 @@ export class StreamingComponent {
 ```
 
 <Note>
-`agent()` must be called within an Angular injection context — a component field initializer or constructor body.
+`agent()` must be called within an Angular injection context - a component field initializer or constructor body.
 </Note>
 
 </Step>
@@ -63,7 +63,7 @@ Use Angular's control flow to render messages reactively:
 }
 ```
 
-The template re-renders automatically as tokens arrive — no manual subscriptions or change detection needed.
+The template re-renders automatically as tokens arrive - no manual subscriptions or change detection needed.
 
 </Step>
 <Step title="Submit messages">
@@ -76,9 +76,7 @@ send(): void {
   const text = this.prompt().trim();
   if (!text || this.stream.isLoading()) return;
   this.prompt.set('');
-  this.stream.submit({
-    messages: [{ role: 'human', content: text }],
-  });
+  void this.stream.submit({ message: text });
 }
 ```
 
@@ -114,7 +112,7 @@ Deploy with `langgraph deploy` from `langgraph-cli`. The `assistantId` in your A
 </Steps>
 
 <Tip>
-No service layer needed — `agent()` replaces wrapper services entirely. It handles connection lifecycle, state management, and error recovery.
+No service layer needed - `agent()` replaces wrapper services entirely. It handles connection lifecycle, state management, and error recovery.
 </Tip>
 
 <Warning>
@@ -122,6 +120,6 @@ Never expose your LangSmith API key in client-side code. Use server-side environ
 </Warning>
 
 <Related>
-- [Chat Messages](/chat/core-capabilities/messages/overview/python) — Learn how ChatMessagesComponent renders messages
-- [Chat Input](/chat/core-capabilities/input/overview/python) — Explore ChatInputComponent for message submission
+- [Chat Messages](/chat/core-capabilities/messages/overview/python) - Learn how ChatMessageListComponent renders messages
+- [Chat Input](/chat/core-capabilities/input/overview/python) - Explore ChatInputComponent for message submission
 </Related>

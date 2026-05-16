@@ -1,301 +1,113 @@
 # A2UI Overview
 
-A2UI is an open standard for agent-driven user interfaces. It lets an AI agent describe a structured UI — components, layout, and live data — using a simple JSON protocol, and have that UI rendered automatically inside a chat session.
+A2UI is the structured UI path for agent-built surfaces in chat.
 
-When an agent response begins with the `---a2ui_JSON---` sentinel, the chat switches to A2UI rendering mode automatically — provided you supply a component catalog via the `views` input.
+The important boundary is simple: the agent streams declarative messages, the client owns rendering, and Angular handlers stay inside your application. The model does not ship code. It emits a constrained surface description that `@ngaf/chat`, `@ngaf/a2ui`, and `@ngaf/render` turn into Angular UI.
 
-<Callout type="info" title="Spec version">
-The implementation follows the A2UI v0.9 specification. For the full protocol reference, see [a2ui.org](https://a2ui.org).
-</Callout>
+When an assistant message starts with `---a2ui_JSON---`, the chat streaming pipeline treats the rest of the content as newline-delimited A2UI JSON.
 
-## How It Works in ChatComponent
+## Runtime Flow
 
-When content arrives with the `---a2ui_JSON---` prefix, the streaming pipeline switches to JSONL mode. Each newline-delimited JSON object is parsed as an A2UI message and handed to the surface store.
-
-```
-AI response starts with ---a2ui_JSON---
-  → ContentClassifier sets type = 'a2ui'
-  → createA2uiMessageParser() parses JSONL line-by-line
-  → Each A2uiMessage is applied to A2uiSurfaceStore
-  → Surfaces signal updates reactively
-  → A2uiSurfaceComponent renders each surface via json-render
+```text
+assistant text starts with ---a2ui_JSON---
+  -> content classifier switches to A2UI mode
+  -> createA2uiMessageParser() parses JSONL messages
+  -> createA2uiSurfaceStore() applies those messages by surface id
+  -> ChatComponent passes surface + state into A2uiSurfaceComponent
+  -> A2uiSurfaceComponent renders progressive state through your catalog
 ```
 
-The surface store maintains a `Map<string, A2uiSurface>` keyed by surface ID. Each surface holds a flat component map, a data model, theme metadata, and the catalog ID used to resolve components.
+This is why A2UI sits between chat and render. Chat owns message streaming. A2UI owns the protocol shapes. The normal chat path uses progressive surface state and `a2uiSlot` so components can appear as their required data arrives.
 
-To render A2UI surfaces, pass a `ViewRegistry` to the `ChatComponent` via the `views` input. The `a2uiBasicCatalog()` function provides the 18 built-in components.
+There is also a compatibility path: when `A2uiSurfaceComponent` receives a `surface` without a `state`, it calls `surfaceToSpec()` and renders through `@ngaf/render`. That fallback is where render-spec handlers, render events, and json-render state bindings apply.
 
-## The Four Message Types
+## Message Envelopes
 
-The A2UI protocol is built on four message types. Agents compose entire interfaces by sending sequences of these messages.
+The parser recognizes four envelope keys:
 
-| Message | Purpose |
-|---------|---------|
-| `createSurface` | Creates a new named surface with a catalog ID and optional theme |
-| `updateComponents` | Adds or replaces components on a surface (merged by component ID) |
-| `updateDataModel` | Sets or patches a value in the surface data model via JSON Pointer |
-| `deleteSurface` | Removes a surface and all its components |
+| Envelope | Purpose |
+| --- | --- |
+| `surfaceUpdate` | Adds or replaces components on a surface. |
+| `dataModelUpdate` | Updates the surface data model. |
+| `beginRendering` | Marks the surface root and optional style hints. |
+| `deleteSurface` | Removes a surface. |
 
-### createSurface
+Unknown envelopes are ignored. Malformed JSONL lines are skipped. Incomplete JSON waits in the parser buffer until a newline arrives.
 
-Declares a new surface. Must be sent before any other message for that surface ID.
+That behavior is deliberate. Agent streams are partial. The parser should not crash the UI because one line is unfinished mid-token.
 
-```json
-{"createSurface": {"surfaceId": "order-status", "catalogId": "basic"}}
+## Minimal Protocol Stream
+
+A surface usually needs three messages: components, data, and a root. This is the wire format accepted by the parser and surface store.
+
+```text
+---a2ui_JSON---
+{"surfaceUpdate":{"surfaceId":"contact","components":[{"id":"root","component":{"Column":{"children":{"explicitList":["title","name","submit"]},"gap":12}}},{"id":"title","component":{"Text":{"text":{"literalString":"Contact us"},"usageHint":"h2"}}},{"id":"name","component":{"TextField":{"label":{"literalString":"Name"},"text":{"path":"/name"}}}},{"id":"submit_label","component":{"Text":{"text":{"literalString":"Send"}}}},{"id":"submit","component":{"Button":{"child":"submit_label","primary":true,"action":{"name":"formSubmit","context":[{"key":"name","value":{"path":"/name"}}]}}}}]}}
+{"dataModelUpdate":{"surfaceId":"contact","contents":[{"key":"name","valueString":""}]}}
+{"beginRendering":{"surfaceId":"contact","root":"root"}}
 ```
 
-### updateComponents
-
-Sends one or more component definitions. Each component has a unique `id`, a `component` type name, and any component-specific props.
-
-```json
-{"updateComponents": {
-  "surfaceId": "order-status",
-  "components": [
-    {"id": "root", "component": "Column", "children": ["title", "status"]},
-    {"id": "title", "component": "Text", "text": "Your Order"},
-    {"id": "status", "component": "Text", "text": {"path": "/state"}}
-  ]
-}}
-```
-
-### updateDataModel
-
-Sets values at a JSON Pointer path in the surface's data model. Components whose props reference these paths re-render automatically.
-
-```json
-{"updateDataModel": {"surfaceId": "order-status", "path": "/state", "value": "Shipped"}}
-```
-
-Omit `path` (or use `/`) to replace the entire data model at once.
-
-### deleteSurface
-
-Removes a surface from the store and dismisses its rendered output.
-
-```json
-{"deleteSurface": {"surfaceId": "order-status"}}
-```
-
-## Action-Event Bridge
-
-A2UI actions (button clicks, form events) now map directly to render-spec `on` bindings. When `surfaceToSpec()` converts a surface to a spec, each component's `action` prop is translated into an `on` binding on the corresponding spec element. This means A2UI actions flow through the render-lib event system rather than being handled ad-hoc by individual components.
-
-The bridge provides two default handlers:
-
-- `a2ui:event` -- dispatches named events (e.g., `submit`, `cancel`) back to the agent
-- `a2ui:localAction` -- executes local function calls (e.g., `openUrl`)
-
-This unified event flow means consumers can observe all A2UI interactions through the `RenderEvent` stream on `RenderSpecComponent`, including handler execution, state changes, and lifecycle signals. See the [Render Events](/docs/render/events) page for the full event type reference.
-
-## A2UI vs json-render
-
-Both A2UI and json-render produce rendered UIs inside chat messages, but they serve different purposes.
-
-| | A2UI | json-render |
-|-|------|-------------|
-| Protocol | Multi-message JSONL stream | Single JSON object |
-| State | Surfaces with live data models | Stateless spec |
-| Interactivity | Two-way bindings, button actions, validation | Read-only display |
-| Detection | `---a2ui_JSON---` prefix | First character is `{` |
-| Use case | Agent-driven dynamic UIs | Rich content cards |
-
-Use **A2UI** when the agent needs to build an interface incrementally, bind it to live data, or respond to user interactions. Use **json-render** for rich one-shot content cards — formatted results, structured data displays, and similar read-only output.
-
-## Quick Setup
-
-Pass `a2uiBasicCatalog()` to the `views` input to enable A2UI rendering:
-
-```typescript
-import { ChatComponent, a2uiBasicCatalog } from '@ngaf/chat';
-
-@Component({
-  template: `<chat [agent]="agentRef" [views]="catalog" />`,
-  imports: [ChatComponent],
-})
-export class AppComponent {
-  catalog = a2uiBasicCatalog();
-  agentRef = agent({ /* your agent options */ });
-}
-```
-
-When the AI response starts with `---a2ui_JSON---`, the chat renders the surfaces using the provided catalog.
-
-<Callout type="tip" title="Custom catalogs">
-To extend or replace the built-in components, compose catalogs with `withViews()` or `views()`. See the [Custom Catalogs guide](/docs/chat/guides/custom-catalogs) for details.
-</Callout>
-
-## Automatic Event Routing
-
-When an A2UI button fires an `a2ui:event` action, `ChatComponent` automatically
-routes it back to the agent as a human message. No manual `(renderEvent)` wiring
-is needed for standard A2UI event flows.
-
-The event is sent as a JSON-encoded human message:
+Components use keyed union definitions:
 
 ```json
 {
-  "type": "a2ui_event",
-  "surfaceId": "contact",
+  "id": "title",
+  "component": {
+    "Text": {
+      "text": { "literalString": "Contact us" },
+      "usageHint": "h2"
+    }
+  }
+}
+```
+
+This is different from a flat `component: "Text"` shape. The current source expects the keyed union form.
+
+This stream demonstrates the protocol boundary, not a guarantee that every built-in catalog component is fully wired in the progressive chat renderer. The current chat path renders surface state first and pushes resolved `A2uiComponentView.props` directly into Angular components. The richer projection work - unwrapping component definitions, mapping children, creating render state bindings, and turning actions into handlers - lives in the render-spec compatibility path.
+
+## Data Model
+
+A2UI component props can point at the surface data model.
+
+```json
+{
+  "id": "name",
+  "component": {
+    "TextField": {
+      "label": { "literalString": "Name" },
+      "text": { "path": "/name" }
+    }
+  }
+}
+```
+
+In the render-spec compatibility path, `surfaceToSpec()` converts path references into json-render state bindings. Catalog input components can use `emitBinding()` to write back through the render event pipeline.
+
+```ts
+import { emitBinding } from '@ngaf/chat';
+
+onInput(event: Event): void {
+  const value = (event.target as HTMLInputElement).value;
+  emitBinding(this.emit(), this._bindings(), 'text', value);
+}
+```
+
+The write-back protocol is client-side state. The current action-message builder does not re-read component state at click time. It serializes the action params it receives. If a caller provides an internal `A2uiSurface` with `sendDataModel: true`, the builder also includes the current surface data model snapshot under `metadata.a2uiClientDataModel`; the JSONL wire envelopes do not expose a `sendDataModel` field.
+
+## Actions
+
+Buttons carry an `A2uiAction`:
+
+```json
+{
   "name": "formSubmit",
-  "context": { "formId": "contact" }
-}
-```
-
-The `renderEvent` output still fires for all events, so consumers can observe
-or log events without intercepting the routing.
-
-### Minimal Consumer Setup
-
-```typescript
-import { ChatComponent, a2uiBasicCatalog } from '@ngaf/chat';
-import { agent } from '@ngaf/langgraph';
-
-@Component({
-  template: `<chat [agent]="agentRef" [views]="catalog" />`,
-})
-export class MyComponent {
-  agentRef = agent({ apiUrl: '/api', assistantId: 'my-agent' });
-  catalog = a2uiBasicCatalog();
-}
-```
-
-## Custom Function Call Handlers
-
-When an A2UI button has a `functionCall` action, the `call` name is looked up in the `[handlers]` map on `ChatComponent`. This lets you define client-side behavior triggered by agent-built UI:
-
-```typescript
-@Component({
-  template: `<chat [agent]="agentRef" [views]="catalog" [handlers]="handlers" />`,
-})
-export class MyComponent {
-  agentRef = agent({ apiUrl: '/api', assistantId: 'my-agent' });
-  catalog = a2uiBasicCatalog();
-
-  handlers = {
-    addToCart: async (args: Record<string, unknown>) => {
-      const cart = inject(CartService);
-      return cart.add(args['sku'] as string);
-    },
-  };
-}
-```
-
-The agent sends a button with `{"action": {"functionCall": {"call": "addToCart", "args": {"sku": "ABC"}}}}`. When clicked, the `addToCart` handler runs in Angular's injection context — `inject()` works for accessing services.
-
-If no consumer handler matches the `call` name, built-in handlers are used as fallbacks (e.g., `openUrl` opens a URL in a new tab).
-
-Handler return values are emitted on the `RenderHandlerEvent` — observe them via the `renderEvent` output on `ChatComponent`.
-
-## Validation
-
-A2UI v0.9 uses `CheckRule` objects for client-side validation. Input components and buttons can define a `checks` array — each check has a `condition` (a `DynamicBoolean`) and an error `message`.
-
-### CheckRule Shape
-
-```json
-{
-  "checks": [
-    {
-      "condition": { "call": "required", "args": { "value": { "path": "/name" } } },
-      "message": "Name is required"
-    }
+  "context": [
+    { "key": "name", "value": { "path": "/name" } }
   ]
 }
 ```
 
-The `condition` can be:
-- A **boolean literal**: `true` or `false`
-- A **path reference**: `{ "path": "/agreed" }` — resolves to a data model value
-- A **FunctionCall**: `{ "call": "required", "args": { ... } }` — invokes a named function
-- A **composite**: `{ "call": "and", "args": { "values": [...] } }` — combines multiple conditions
-
-### Built-in Functions
-
-| Category | Functions |
-|----------|-----------|
-| Validation | `required`, `regex`, `length`, `numeric`, `email` |
-| Logic | `and`, `or`, `not` |
-| Formatting | `formatString`, `formatNumber`, `formatCurrency`, `formatDate`, `pluralize` |
-| Navigation | `openUrl` |
-
-### Input Component Behavior
-
-Input components (`TextField`, `CheckBox`, `ChoicePicker`, `Slider`, `DateTimeInput`) validate continuously — errors display inline as the user interacts. The input border changes color to indicate validation state.
-
-### Button Behavior
-
-Per the v0.9 spec: if any check fails, the button is automatically disabled. Error messages display below the button.
-
-### Composite Conditions
-
-Use `and`, `or`, and `not` to compose complex validation rules:
-
-```json
-{
-  "condition": {
-    "call": "and",
-    "args": {
-      "values": [
-        { "call": "required", "args": { "value": { "path": "/name" } } },
-        { "call": "or", "args": { "values": [
-          { "call": "required", "args": { "value": { "path": "/email" } } },
-          { "call": "required", "args": { "value": { "path": "/phone" } } }
-        ]}}
-      ]
-    }
-  },
-  "message": "Name required, plus email or phone"
-}
-```
-
-### Custom Catalog Components
-
-Custom catalog components receive a pre-computed `validationResult` prop:
-
-```typescript
-interface A2uiValidationResult {
-  valid: boolean;
-  errors: string[];
-}
-```
-
-Use the shared `A2uiValidationErrorsComponent` for consistent error display:
-
-```typescript
-import { A2uiValidationErrorsComponent } from '@ngaf/chat';
-
-@Component({
-  imports: [A2uiValidationErrorsComponent],
-  template: `
-    <input [value]="value()" />
-    <a2ui-validation-errors [result]="validationResult()" />
-  `,
-})
-export class MyCustomInputComponent {
-  readonly value = input('');
-  readonly validationResult = input<A2uiValidationResult>({ valid: true, errors: [] });
-}
-```
-
-### Theming
-
-Validation styling uses CSS custom properties:
-
-| Property | Default | Usage |
-|----------|---------|-------|
-| `--a2ui-error` | `#ef4444` | Error text and invalid border color |
-| `--a2ui-border` | `rgba(255,255,255,0.1)` | Default input border |
-| `--a2ui-input-bg` | `rgba(255,255,255,0.05)` | Input background |
-| `--a2ui-label` | `rgba(255,255,255,0.6)` | Label text color |
-
-## Events & Data Model Transport
-
-When a user triggers an event action (e.g., clicking a button with `action.event`), the Angular renderer builds a v0.9-compliant action message and sends it back to the agent. Local actions (`action.functionCall`) execute client-side only — the agent never sees them.
-
-### Action Message Shape
-
-The outbound message follows the [v0.9 spec](https://a2ui.org):
+In the render-spec compatibility path, `surfaceToSpec()` turns this into a render `click` binding that calls the built-in `a2ui:event` handler. `A2uiSurfaceComponent` then emits an `A2uiActionMessage`.
 
 ```json
 {
@@ -303,132 +115,92 @@ The outbound message follows the [v0.9 spec](https://a2ui.org):
   "action": {
     "name": "formSubmit",
     "surfaceId": "contact",
-    "sourceComponentId": "submit-btn",
+    "sourceComponentId": "submit",
     "timestamp": "2026-04-10T14:30:00.000Z",
     "context": {
-      "name": "Alice",
-      "email": "alice@example.com"
+      "name": { "literalString": "Alice" }
     }
   }
 }
 ```
 
-| Field | Description |
-|-------|-------------|
-| `version` | Always `"v0.9"` |
-| `action.name` | The event name from the component's `action.event.name` |
-| `action.surfaceId` | The surface that owns this component |
-| `action.sourceComponentId` | The `id` of the component that triggered the event |
-| `action.timestamp` | ISO 8601 timestamp of when the action was dispatched |
-| `action.context` | Resolved values from `action.event.context` — path refs and function calls are evaluated against the current data model |
+If the internal surface object has `sendDataModel: true`, the emitted message also includes `metadata.a2uiClientDataModel` with the current surface data model snapshot. Streamed protocol surfaces created by the current surface store do not set that flag.
 
-### Context Resolution
+In the progressive chat path, `A2uiSurfaceComponent` renders the surface state first. Catalog components receive resolved props as Angular inputs. The current `a2uiSlot` implementation does not wire render-spec handlers, child spec context, or render events into those mounted components. Treat agent-bound action messages as a render-spec compatibility behavior unless your catalog explicitly handles its own event wiring.
 
-Context values in `action.event.context` are `DynamicValue`s — they can be literals, path references, or function calls. They are resolved at dispatch time against the current data model:
+## Local Handlers
 
-```json
-{
-  "action": {
-    "event": {
-      "name": "formSubmit",
-      "context": {
-        "name": {"path": "/name"},
-        "email": {"path": "/email"},
-        "total": {"call": "formatCurrency", "args": {"value": {"path": "/amount"}}}
-      }
-    }
-  }
-}
-```
+In the render-spec compatibility path, `A2uiSurfaceComponent` also registers an `a2ui:localAction` handler. Consumer handlers take priority, and the built-in fallback currently supports `openUrl`.
 
-When the user clicks the button, the renderer resolves `/name` and `/email` from the data model and calls `formatCurrency` on `/amount`, producing a flat `context` object with concrete values.
-
-### sendDataModel
-
-Set `sendDataModel: true` on `createSurface` to attach the full data model snapshot to every outbound action:
-
-```json
-{"type": "createSurface", "surfaceId": "contact", "catalogId": "basic", "sendDataModel": true}
-```
-
-When enabled, the action message includes a `metadata` field:
-
-```json
-{
-  "version": "v0.9",
-  "action": { "..." : "..." },
-  "metadata": {
-    "a2uiClientDataModel": {
-      "version": "v0.9",
-      "surfaces": {
-        "contact": {
-          "name": "Alice",
-          "email": "alice@example.com",
-          "department": "Engineering"
-        }
-      }
-    }
-  }
-}
-```
-
-The data model is only sent with event actions — there are no passive change notifications on input changes. This matches the v0.9 spec requirement that the data model piggybacks on outbound messages.
-
-### Angular Integration
-
-`A2uiSurfaceComponent` exposes two outputs:
-
-| Output | Type | Description |
-|--------|------|-------------|
-| `(action)` | `A2uiActionMessage` | Agent-bound action messages — the complete v0.9 envelope |
-| `(events)` | `RenderEvent` | All render events (state changes, handler calls, lifecycle) for observation |
-
-`ChatComponent` auto-routes `(action)` events to the agent as human messages. For standalone usage, bind `(action)` directly:
+Use local handlers for client-owned behavior. Use A2UI actions for agent-bound events.
 
 ```html
 <a2ui-surface
   [surface]="surface()"
   [catalog]="catalog"
+  [handlers]="handlers"
   (action)="sendToAgent($event)"
-  (events)="logEvent($event)"
+  (events)="logRenderEvent($event)"
 />
 ```
 
-## Data Model Bindings
+```ts
+handlers = {
+  openDetails: async (args: Record<string, unknown>) => {
+    await this.router.navigate(['/orders', args['orderId']]);
+  },
+};
+```
 
-When the agent sets component properties using path references (`{ "path": "/name" }`), the surface component
-tracks these as **bindings** — a mapping from prop name to JSON Pointer path. These bindings are passed to
-catalog components as the `_bindings` prop.
+## A2UI vs json-render
 
-### How Bindings Work
+Both paths render structured UI, but they optimize for different jobs.
 
-1. **Agent sends components** with path references: `{ "value": { "path": "/form/name" } }`
-2. **`surfaceToSpec`** resolves the path to a current value AND records the binding in `_bindings`
-3. **Catalog component** reads the resolved value normally. When the user changes the value, it emits an `a2ui:datamodel` event via the `emit` callback
-4. **The event format** is `a2ui:datamodel:{path}:{value}`
+| | A2UI | json-render |
+| --- | --- | --- |
+| Wire shape | JSONL message stream | Single JSON spec |
+| State | Surface data model | Spec state |
+| Best fit | Incremental agent-owned surfaces; protocol-level A2UI streams | One-shot rendered content |
+| Detection | `---a2ui_JSON---` prefix | JSON object content |
+| Rendering | Progressive surface state in chat; render-spec fallback when no state is supplied | json-render spec directly |
 
-### Using `emitBinding`
+Use A2UI when the agent needs to keep updating a surface and you are working at the protocol boundary. Use json-render when the agent needs a stable, directly rendered structured result. For production interaction that depends on component handlers, state bindings, and child projection, verify the exact A2UI rendering path you are using.
 
-Custom catalog components can use the `emitBinding` utility for consistent binding emission:
+## Setup
 
-```typescript
-import { emitBinding } from '@ngaf/chat';
+Pass the built-in A2UI catalog to chat:
 
-// In your component's change handler:
-onInput(event: Event): void {
-  const val = (event.target as HTMLInputElement).value;
-  emitBinding(this.emit(), this._bindings(), 'value', val);
+```ts
+import { Component } from '@angular/core';
+import { ChatComponent, a2uiBasicCatalog } from '@ngaf/chat';
+import { agent } from '@ngaf/langgraph';
+
+@Component({
+  standalone: true,
+  imports: [ChatComponent],
+  template: `<chat [agent]="chat" [views]="catalog" />`,
+})
+export class SupportChatComponent {
+  protected readonly chat = agent({
+    apiUrl: '/api/langgraph',
+    assistantId: 'support',
+  });
+
+  protected readonly catalog = a2uiBasicCatalog();
 }
 ```
 
-### Known Limitations
+For custom component sets, build a catalog with the same view registry tools used by `@ngaf/render`.
 
-The current binding mechanism is client-side only — the `a2ui:datamodel` events are emitted
-but do not yet flow through the render lib's `StateStore`. Data model updates from user input
-are not reflected back to other components in real time. Full `StateStore` integration is planned
-for a future release.
+## Gotchas
 
-Data model state is refreshed when the agent sends an `updateDataModel` message.
+The A2UI parser is not a full schema validator. It recognizes envelope keys and leaves deeper validation to typed code, tests, and your runtime boundary.
+
+Schema-valid messages are not enough to make UI executable. Your catalog must contain components for the emitted types, and your handlers must exist for the actions you expect users to take.
+
+Do not use old envelope names such as `createSurface`, `updateComponents`, or `updateDataModel` with the current parser. They are ignored because the source recognizes `surfaceUpdate`, `dataModelUpdate`, `beginRendering`, and `deleteSurface`.
+
+Do not assume the progressive chat renderer and the render-spec compatibility path have identical capabilities. The compatibility path projects a surface through `surfaceToSpec()`. The progressive path mounts catalog components from `A2uiComponentView` state and pushes Angular inputs directly.
 
 ## What's Next
 
@@ -438,27 +210,27 @@ Data model state is refreshed when the agent sends an `updateDataModel` message.
     icon="layers"
     href="/docs/render/a2ui/surface-component"
   >
-    API reference for A2uiSurfaceComponent — render a surface outside ChatComponent.
+    Render a surface outside the full ChatComponent composition.
   </Card>
   <Card
     title="Surface Store"
     icon="database"
     href="/docs/render/a2ui/surface-store"
   >
-    API reference for createA2uiSurfaceStore() and the apply/surfaces/surface interface.
+    Understand how messages update surfaces and data models.
   </Card>
   <Card
     title="Component Catalog"
     icon="grid"
     href="/docs/render/a2ui/catalog"
   >
-    Reference for all 18 built-in components and their props.
+    See the built-in catalog components and their props.
   </Card>
   <Card
-    title="Streaming"
-    icon="zap"
-    href="/docs/chat/guides/streaming"
+    title="A2UI Package"
+    icon="code"
+    href="/docs/a2ui/getting-started/introduction"
   >
-    How the streaming pipeline detects and routes A2UI content.
+    Read the protocol package docs for parser, schema, and pointer helpers.
   </Card>
 </CardGroup>

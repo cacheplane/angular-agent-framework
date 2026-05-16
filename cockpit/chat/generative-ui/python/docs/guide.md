@@ -40,14 +40,14 @@ const myViews = views({
 Pass the view map to `ChatComponent` via the `[views]` input:
 
 ```html
-<chat [ref]="agentRef" [views]="myViews" />
+<chat [agent]="agentRef" [views]="myViews" />
 ```
 
 </Step>
 <Step title="Configure the agent prompt">
 
 Instruct the LLM to respond with raw JSON following the Spec schema.
-No code fences or markdown — just valid JSON so the streaming pipeline
+No code fences or markdown - just valid JSON so the streaming pipeline
 can detect and parse it incrementally.
 
 </Step>
@@ -55,19 +55,19 @@ can detect and parse it incrementally.
 
 ## How Streaming Auto-Detection Works
 
-1. **Token streaming** — The LLM streams response tokens to the client.
-2. **ContentClassifier** — Inspects the incoming token buffer and detects
+1. **Token streaming** - The LLM streams response tokens to the client.
+2. **ContentClassifier** - Inspects the incoming token buffer and detects
    when the content is JSON rather than plain text or markdown.
-3. **Partial JSON parser** — As JSON tokens arrive, a partial parser
+3. **Partial JSON parser** - As JSON tokens arrive, a partial parser
    builds an incremental parse tree without waiting for the full payload.
-4. **ParseTreeStore** — Materializes the partial parse tree into a live
+4. **ParseTreeStore** - Materializes the partial parse tree into a live
    `Spec` object (elements map + root key) that updates on every chunk.
-5. **Component rendering** — The `[views]` registry resolves each element
+5. **Component rendering** - The `[views]` registry resolves each element
    type to an Angular component, which renders incrementally as the spec
    grows.
 
 <Tip>
 Because detection and parsing happen on every streamed chunk, the user
-sees UI components materialize progressively — cards appear and fill in
+sees UI components materialize progressively - cards appear and fill in
 as the LLM generates the JSON structure.
 </Tip>

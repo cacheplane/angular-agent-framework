@@ -1,0 +1,162 @@
+# Architecture
+
+`@ngaf/ag-ui` is an adapter. It does not replace `@ngaf/chat`, and it does not define a new chat runtime.
+
+The package takes an AG-UI `AbstractAgent`, listens to its protocol events, and exposes the runtime-neutral `Agent` contract that the chat components already understand.
+
+```text
+Angular component
+  |
+  v
+@ngaf/chat Agent contract
+  |  messages, status, isLoading, error, toolCalls, state, events$
+  |
+  v
+@ngaf/ag-ui toAgent()
+  |  reduces AG-UI events into Angular signals
+  |
+  v
+@ag-ui/client AbstractAgent
+  |
+  v
+AG-UI backend or in-process fake agent
+```
+
+## The boundary
+
+The important boundary is the `Agent` contract from `@ngaf/chat`.
+
+Your components should depend on `Agent`, not on AG-UI transport details. That keeps the UI portable across AG-UI, LangGraph, and custom adapters.
+
+`toAgent(source)` is the low-level boundary. It accepts any AG-UI `AbstractAgent` implementation:
+
+```ts
+import { toAgent } from '@ngaf/ag-ui';
+import { HttpAgent } from '@ag-ui/client';
+
+const source = new HttpAgent({ url: '/api/agent' });
+const agent = toAgent(source);
+```
+
+Most Angular apps should use DI instead:
+
+```ts
+import { ApplicationConfig } from '@angular/core';
+import { provideAgUiAgent } from '@ngaf/ag-ui';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideAgUiAgent({ url: '/api/agent' }),
+  ],
+};
+```
+
+`provideAgUiAgent()` creates an AG-UI `HttpAgent` and registers the wrapped `Agent` under `AG_UI_AGENT`.
+
+```ts
+import { Component } from '@angular/core';
+import { ChatComponent } from '@ngaf/chat';
+import { injectAgUiAgent } from '@ngaf/ag-ui';
+
+@Component({
+  standalone: true,
+  imports: [ChatComponent],
+  template: `<chat [agent]="agent" />`,
+})
+export class ChatPage {
+  protected readonly agent = injectAgUiAgent();
+}
+```
+
+You can also inject the token directly:
+
+```ts
+import { inject } from '@angular/core';
+import { AG_UI_AGENT } from '@ngaf/ag-ui';
+
+const agent = inject(AG_UI_AGENT);
+```
+
+## Runtime data flow
+
+`toAgent()` subscribes to `source.subscribe({ onEvent, onRunFailed })`.
+
+Every AG-UI event is passed through the reducer. The reducer updates Angular signals:
+
+- `messages` for user, assistant, and reasoning content.
+- `status`, `isLoading`, and `error` for run lifecycle.
+- `toolCalls` for tool call starts, arguments, results, and completion.
+- `state` for AG-UI state snapshots and JSON Patch deltas.
+- `events$` for custom events.
+
+When the user submits input, the adapter builds a user message, appends it locally, adds it to the AG-UI source with `source.addMessage()`, then calls `source.runAgent()`.
+
+This is optimistic on purpose. The user message appears immediately while the backend starts the run.
+
+## Provider choices
+
+Use `provideAgUiAgent()` when you have a real AG-UI HTTP endpoint.
+
+```ts
+provideAgUiAgent({
+  url: '/api/agent',
+  agentId: 'support-agent',
+  threadId: 'thread-123',
+  headers: { Authorization: `Bearer ${token}` },
+});
+```
+
+The config maps directly to the AG-UI `HttpAgent` options currently exposed by this package: `url`, `agentId`, `threadId`, and `headers`.
+
+Use `provideFakeAgUiAgent()` when you need the UI to run without a backend:
+
+```ts
+import { provideFakeAgUiAgent } from '@ngaf/ag-ui';
+
+providers: [
+  provideFakeAgUiAgent({
+    tokens: ['Offline', ' demo', ' response.'],
+    delayMs: 40,
+  }),
+];
+```
+
+Use `toAgent()` directly when you own a custom `AbstractAgent` subclass or need to test a specific event stream.
+
+## Lifecycle gotchas
+
+The wrapped `Agent` does not own the AG-UI source lifecycle. `toAgent()` subscribes to the source and expects the source instance to live for the same lifetime as the adapter.
+
+In Angular apps, prefer the provider API so the agent instance is scoped by DI. If you construct agents manually, create one adapter per source instance and keep that pairing stable.
+
+`stop()` calls `source.abortRun()`. The actual cancellation behavior depends on the AG-UI source. `HttpAgent` implements abort behavior; a custom source may treat it as a no-op unless you implement cancellation.
+
+`regenerate(index)` is supported by the shared `Agent` contract. It requires the target message to be an assistant message, finds the preceding user message, trims later messages, syncs the trimmed list back to the AG-UI source with `setMessages()`, and runs again. It throws if another run is loading.
+
+## Current scope
+
+The AG-UI adapter currently covers:
+
+- Streaming assistant messages from `TEXT_MESSAGE_*`.
+- Reasoning messages from `REASONING_MESSAGE_*`.
+- Run status and errors from `RUN_*`.
+- Tool calls from `TOOL_CALL_*`.
+- Shared state from `STATE_SNAPSHOT` and `STATE_DELTA`.
+- Message replacement from `MESSAGES_SNAPSHOT`.
+- Custom events from `CUSTOM`.
+- Citations stored under `state.citations`.
+
+These features are intentionally out of scope for the AG-UI adapter today:
+
+- Interrupt workflows.
+- Subagents.
+- History and time-travel.
+
+If those are central to your product, use the LangGraph adapter for that surface or build a custom adapter against the `@ngaf/chat` `Agent` contract.
+
+## Next steps
+
+- [Event Mapping](/docs/ag-ui/reference/event-mapping) shows exactly how AG-UI events map to `Agent` fields.
+- [Fake Agent](/docs/ag-ui/guides/fake-agent) covers offline demos and tests.
+- [Citations](/docs/ag-ui/guides/citations) explains the `state.citations` bridge.
+- [Troubleshooting](/docs/ag-ui/guides/troubleshooting) covers common integration failures.

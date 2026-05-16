@@ -1,14 +1,14 @@
 # Chat Messages with @ngaf/chat
 
 <Summary>
-Render chat messages using the primitive components ChatMessagesComponent,
+Render chat messages using the primitive components ChatMessageListComponent,
 ChatInputComponent, and ChatTypingIndicatorComponent. These building blocks
 give full control over message layout, input handling, and loading states.
 </Summary>
 
 <Prompt>
 Build a chat interface using the individual message primitives from
-`@ngaf/chat`. Import `ChatMessagesComponent`, `ChatInputComponent`,
+`@ngaf/chat`. Import `ChatMessageListComponent`, `ChatInputComponent`,
 and `ChatTypingIndicatorComponent` separately instead of the composed
 `ChatComponent`.
 </Prompt>
@@ -20,7 +20,7 @@ Import the individual chat primitives instead of the composed `ChatComponent`:
 
 ```typescript
 import {
-  ChatMessagesComponent,
+  ChatMessageListComponent,
   ChatInputComponent,
   ChatTypingIndicatorComponent,
 } from '@ngaf/chat';
@@ -29,10 +29,10 @@ import {
 </Step>
 <Step title="Render the messages list">
 
-Use `ChatMessagesComponent` to display the conversation history:
+Use `ChatMessageListComponent` to display the conversation history:
 
 ```html
-<chat-messages [ref]="stream" />
+<chat-message-list [agent]="agent" />
 ```
 
 The component renders human and AI messages with appropriate styling
@@ -45,8 +45,8 @@ Place `ChatInputComponent` and `ChatTypingIndicatorComponent` below
 the messages:
 
 ```html
-<chat-typing-indicator [ref]="stream" />
-<chat-input [ref]="stream" (send)="submitMessage($event)" />
+<chat-typing-indicator [agent]="agent" />
+<chat-input [agent]="agent" (submitted)="submitMessage($event)" />
 ```
 
 </Step>
@@ -56,7 +56,7 @@ Create a `submitMessage()` method that sends user input to the stream:
 
 ```typescript
 submitMessage(content: string) {
-  this.stream.submit([{ role: 'human', content }]);
+  this.agent.submit({ message: content });
 }
 ```
 

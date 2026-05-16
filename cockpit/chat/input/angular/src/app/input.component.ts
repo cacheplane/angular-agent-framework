@@ -25,7 +25,7 @@ import { environment } from '../environments/environment';
           <chat-message-list [agent]="agent" />
         </div>
         <div class="px-4 py-2" style="background: var(--ngaf-chat-bg);">
-          <chat-input [agent]="agent" placeholder="Try typing here..." (send)="submitMessage($event)" />
+          <chat-input [agent]="agent" placeholder="Try typing here..." (submitted)="submitMessage($event)" />
         </div>
       </div>
       <div sidebar class="p-4 space-y-4" style="background: var(--ngaf-chat-bg); color: var(--ngaf-chat-text);">

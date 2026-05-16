@@ -43,7 +43,7 @@ protected readonly stream = agent({
 Use `ChatSubagentsComponent` to display all active subagents:
 
 ```html
-<chat-subagents [ref]="stream" />
+<chat-subagents [agent]="stream" />
 ```
 
 </Step>
@@ -52,7 +52,9 @@ Use `ChatSubagentsComponent` to display all active subagents:
 Use `ChatSubagentCardComponent` for detailed views of each subagent:
 
 ```html
-<chat-subagent-card [ref]="stream" />
+@for (subagent of stream.subagents().values(); track subagent.toolCallId) {
+  <chat-subagent-card [subagent]="subagent" />
+}
 ```
 
 </Step>

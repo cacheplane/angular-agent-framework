@@ -1,21 +1,26 @@
 # ChatConfig
 
-`ChatConfig` is the configuration interface accepted by `provideChat()`. It defines global settings for chat composition components including the generative UI registry, avatar styling, and assistant naming.
+`ChatConfig` is the configuration interface accepted by `provideChat()`. It defines global settings for chat composition components including the generative UI registry, assistant labels, and license token.
 
 **Import:**
 
 ```typescript
 import type { ChatConfig } from '@ngaf/chat';
+import type { AngularRegistry } from '@ngaf/render';
 ```
 
 ## Interface Definition
 
 ```typescript
 interface ChatConfig {
+  /** Default render registry for generative UI components. */
+  renderRegistry?: AngularRegistry;
   /** Override the default AI avatar label (default: "A"). */
   avatarLabel?: string;
   /** Override the default assistant display name (default: "Assistant"). */
   assistantName?: string;
+  /** Signed license token from cacheplane.dev. Optional; omitted in dev. */
+  license?: string;
 }
 ```
 
@@ -37,7 +42,7 @@ A short string (typically one or two characters) displayed in the AI avatar badg
 provideChat({ avatarLabel: 'AI' });
 ```
 
-The avatar badge is a small square element styled with `--chat-avatar-bg` and `--chat-avatar-text` CSS variables.
+There is no avatar-specific CSS token. Use `avatarLabel` for the badge text, and use the shared `--ngaf-chat-*` tokens such as `--ngaf-chat-surface`, `--ngaf-chat-text`, and `--ngaf-chat-text-muted` to align surrounding chat surfaces with your app theme.
 
 ### assistantName
 
@@ -53,6 +58,34 @@ The display name for the AI assistant. Used in labels, ARIA attributes, and any 
 
 ```typescript
 provideChat({ assistantName: 'Code Copilot' });
+```
+
+### renderRegistry
+
+```typescript
+renderRegistry?: AngularRegistry
+```
+
+The default render registry for generative UI components.
+
+**Example:**
+
+```typescript
+provideChat({ renderRegistry });
+```
+
+### license
+
+```typescript
+license?: string
+```
+
+A signed license token from cacheplane.dev. It is optional in development and should be provided from your production configuration.
+
+**Example:**
+
+```typescript
+provideChat({ license: environment.ngafLicense });
 ```
 
 ## Accessing ChatConfig at Runtime
@@ -84,7 +117,7 @@ export class ChatHeaderComponent {
 The `ChatConfig` interface is defined in two files within the library:
 
 - `libs/chat/src/lib/provide-chat.ts` -- The canonical definition with JSDoc comments, alongside the `provideChat()` function and `CHAT_CONFIG` token
-- `libs/chat/src/lib/chat.types.ts` -- A simplified re-export for internal use
+- `libs/chat/src/lib/chat.types.ts` -- A separate internal type used by lower-level chat types
 
 The public API exports `ChatConfig` as a type-only export:
 
