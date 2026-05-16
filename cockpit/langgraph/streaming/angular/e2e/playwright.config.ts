@@ -4,7 +4,6 @@ import { defineConfig, devices } from '@playwright/test';
 export default defineConfig({
   testDir: '.',
   testMatch: '**/*.spec.ts',
-  testIgnore: ['aimock-runner.spec.ts'],
   fullyParallel: false,
   workers: 1,
   retries: process.env.CI ? 2 : 0,
@@ -13,12 +12,7 @@ export default defineConfig({
     baseURL: 'http://localhost:4300',
     trace: 'retain-on-failure',
   },
-  projects: [
-    {
-      name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
-    },
-  ],
-  globalSetup: './global-setup.ts',
-  globalTeardown: './global-teardown.ts',
+  projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
+  globalSetup: './global-setup-impl.ts',
+  globalTeardown: require.resolve('../../../../../libs/internal/aimock-harness/src/global-teardown'),
 });

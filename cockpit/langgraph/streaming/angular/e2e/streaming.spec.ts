@@ -1,31 +1,18 @@
-import { expect, test } from '@playwright/test';
+// SPDX-License-Identifier: MIT
+import { test, expect } from '@playwright/test';
+import { sendPromptAndWait } from '../../../../../libs/internal/aimock-harness/src';
 
-test.describe('LangGraph Streaming Example', () => {
-  test.beforeEach(async ({ page }) => {
-    await page.goto('http://localhost:4300');
-    await page.waitForSelector('app-streaming', { state: 'attached' });
-  });
+test('streaming: assistant text from the mocked LLM renders in the cockpit chat composition', async ({ page }) => {
+  const bubble = await sendPromptAndWait(
+    page,
+    'Tell me one quick fact about Angular signals in two sentences.',
+  );
 
-  test('renders the chat interface', async ({ page }) => {
-    await expect(page.locator('textarea[name="messageText"]')).toBeVisible();
-    await expect(page.locator('button[type="submit"]')).toBeVisible();
-    await expect(page.locator('button[type="submit"]')).toHaveText('Send');
-  });
-
-  test('sends a message and receives a streamed response', async ({ page }) => {
-    // Type a message
-    await page.fill('textarea[name="messageText"]', 'Say exactly: test response ok');
-
-    // Click send
-    await page.click('button[type="submit"]');
-
-    // Wait for the AI response to appear
-    await expect(page.locator('.chat-md').first()).toBeVisible({ timeout: 30000 });
-
-    // The AI response should have content
-    await expect(page.locator('.chat-md').first()).not.toBeEmpty({ timeout: 30000 });
-
-    // The button should show Send again (not Streaming...)
-    await expect(page.locator('button[type="submit"]')).toHaveText('Send', { timeout: 30000 });
-  });
+  // The captured fixture's content (Angular signals fact) must reach the
+  // rendered bubble. Proves: aimock served the streaming graph's LLM call,
+  // langgraph routed back the AI message, the cockpit-langgraph-streaming-angular
+  // app rendered it via the chat composition, and the streaming-finalized
+  // signal (data-streaming="false") settled.
+  const finalText = await bubble.innerText();
+  expect(finalText.toLowerCase()).toContain('signal');
 });

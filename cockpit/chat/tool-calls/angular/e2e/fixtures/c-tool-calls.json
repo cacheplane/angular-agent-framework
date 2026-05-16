@@ -1,0 +1,28 @@
+{
+  "fixtures": [
+    {
+      "match": {
+        "userMessage": "What's the status of UA123?",
+        "hasToolResult": true
+      },
+      "response": {
+        "content": "I looked up UA123 using lookup_flight. Status: on time.\n\nSummary:\n- Flight: UA123 (United Airlines)\n- Route: LAX \u2192 JFK\n- Departure (local): 08:00 from gate B14\n- Arrival (local): 16:30\n- Aircraft: Boeing 787\n- Scheduled duration: 5 hr 30 min\n\nWould you like me to monitor this flight for updates or find alternate flights?"
+      }
+    },
+    {
+      "match": {
+        "userMessage": "What's the status of UA123?"
+      },
+      "response": {
+        "toolCalls": [
+          {
+            "name": "lookup_flight",
+            "arguments": {
+              "flight_number": "UA123"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
