@@ -62,11 +62,19 @@ Captured from real `gpt-5-mini` via the recipe script. The orchestrator's behavi
 
 If the LLM dispatches subagents one-at-a-time across multiple LLM calls (rather than fanning out in a single response), the fixture needs intermediate entries. The capture script discovers the actual shape and writes whatever the LLM did. The spec's assertions stay loose enough to tolerate both shapes.
 
-### `scripts/record-c-subagents.py`
+### `scripts/record-c-subagents.sh`
 
-Mirrors `_build_subagents_graph()`'s LLM setup: `ChatOpenAI(gpt-5-mini, streaming=True).bind_tools([task])`. Same capture pattern as Phase 2 c-tool-calls: invoke once, get `tool_calls`, manually invoke each `task(...)` to get tool results, synthesize AIMessage + ToolMessage history, invoke continuation. If continuation also emits more tool_calls (multi-round orchestration), iterate until END.
+Direct-LLM-invocation capture (Phase 2 c-tool-calls pattern) does NOT work for c-subagents: the `task` tool dispatches to subagent functions that EACH run their own LLM-driven agent loop. Direct invocation captures only the orchestrator's calls; subagent LLM calls (with role-specific system prompts and possibly tool-driven sub-rounds) go uncaptured and aimock 404s on them at replay time.
 
-The `task` function lives in `cockpit/langgraph/streaming/python/src/chat_graphs.py` — import and call directly to get real subagent output.
+The right capture is at the HTTP boundary. The script orchestrates three subprocesses:
+
+1. **aimock** in `--record` mode (`npx aimock --record --provider-openai https://api.openai.com --fixtures <out>`). Proxies unmatched LLM requests to real OpenAI, saves every interaction as a fixture entry.
+2. **langgraph dev** for the cockpit-streaming python project, with `OPENAI_BASE_URL=http://aimock:port/v1`.
+3. **A LangGraph SDK HTTP call** that creates a thread, submits a run with the prompt against the `c-subagents` graph, polls until the run completes.
+
+After cleanup, the fixture file has entries for every LLM call in the full graph: orchestrator first call, each subagent role's calls, any sub-rounds within subagent agent loops, and the orchestrator continuation. Aimock's replay engine matches each call by its own discriminators (user/system message, tool result presence, etc.) — no manual entry hand-stitching needed.
+
+This is the canonical "capture multi-LLM flows" pattern and is reusable for future cockpit examples with similar shape (c-interrupts when refactored, c-generative-ui dashboard, etc.).
 
 ### `c-subagents.spec.ts`
 
