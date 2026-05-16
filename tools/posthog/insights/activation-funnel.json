@@ -1,6 +1,6 @@
 {
   "slug": "activation-funnel",
-  "posthog_id": null,
+  "posthog_id": 8638740,
   "kind": "funnel",
   "name": "Activation funnel (30-min window)",
   "interval": "day",
