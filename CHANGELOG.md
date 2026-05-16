@@ -1,3 +1,24 @@
+## 0.0.33 (2026-05-16)
+
+### 🚀 Features
+
+- **c-generative-ui:** airline operations KPI dashboard (PR 3 of 4) ([#355](https://github.com/cacheplane/angular-agent-framework/pull/355))
+- **chat:** chat-launcher-button emits (clicked) output ([#354](https://github.com/cacheplane/angular-agent-framework/pull/354))
+- **cockpit:** aimock harness library + per-example e2e (Phase 2) ([#356](https://github.com/cacheplane/angular-agent-framework/pull/356))
+
+### 🩹 Fixes
+
+- **c-generative-ui:** switch emit_state to get_stream_writer (LangGraph 1.x) ([#360](https://github.com/cacheplane/angular-agent-framework/pull/360))
+- **chat:** chat-debug right-dock self-feedback (peer-only claim reads) ([#359](https://github.com/cacheplane/angular-agent-framework/pull/359), [#346](https://github.com/cacheplane/angular-agent-framework/issues/346))
+- **cockpit:** Spec 1C smoke-test fixes (nx run, env, hydration, posthog) ([#357](https://github.com/cacheplane/angular-agent-framework/pull/357))
+- **website-e2e:** assert differentiator section by stable id, not stale heading copy ([#358](https://github.com/cacheplane/angular-agent-framework/pull/358))
+
+### ❤️ Thank You
+
+- Brian Love @blove
+- Claude Opus 4.7
+- Claude Opus 4.7 (1M context)
+
 ## v0.0.32 (2026-05-16)
 
 ### 🚀 Features
