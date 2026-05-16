@@ -1,104 +1,356 @@
 """
-A2UI Contact Form Graph
+A2UI Aviation Booking Form Graph
 
-Demonstrates the A2UI (Agent-to-UI) protocol by emitting hardcoded JSONL
-that builds an interactive contact form on the Angular frontend.
-Uses the v0.9 envelope format: {"createSurface": {...}}.
+LLM-authored A2UI surfaces:
+- build_form: emits a flight-booking form via gpt-5 with structured output
+- search_flights: post-submit, calls find_routes() and emits a results surface
 
-The graph does NOT use an LLM for UI generation — A2UI JSONL requires
-exact format adherence that LLMs cannot reliably provide. The LLM is
-only used for conversational responses to form submission events.
+Both surfaces are constrained by Pydantic schemas (A2uiComponent +
+BookingFormSpec / FlightResultsSpec) and validated; on ValidationError,
+the LLM is re-prompted with the error up to 2 retries. After 3 total
+attempts, a hardcoded sentinel form is emitted so the demo doesn't 500.
+
+This replaces the prior hardcoded contact-form implementation. The
+prior file's claim that "LLMs cannot reliably emit A2UI JSONL" is
+disproven by schema-constrained structured output — the LLM authors
+the components list, code wraps it in the deterministic envelope keys.
 """
 
 import json
+import logging
+from typing import Any, Literal
+
+from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
+from langchain_openai import ChatOpenAI
 from langgraph.graph import StateGraph, MessagesState, END
-from langchain_core.messages import AIMessage
+from langgraph.types import Command
+from pydantic import BaseModel, Field, ValidationError
+
+# Inlined flight fixtures — standalone has no aviation_data module.
+_FLIGHTS = [
+    {"flight_number": "UA123", "airline": "UA", "from": "LAX", "to": "JFK",
+     "depart_local": "08:00", "arrive_local": "16:30", "duration_min": 330,
+     "status": "on_time", "gate": "B14", "aircraft": "Boeing 787"},
+    {"flight_number": "AA456", "airline": "AA", "from": "JFK", "to": "LAX",
+     "depart_local": "10:00", "arrive_local": "13:30", "duration_min": 390,
+     "status": "on_time", "gate": "T5-22", "aircraft": "Boeing 777"},
+    {"flight_number": "DL789", "airline": "DL", "from": "ATL", "to": "ORD",
+     "depart_local": "07:15", "arrive_local": "08:45", "duration_min": 150,
+     "status": "delayed", "gate": "A12", "aircraft": "Airbus A320"},
+    {"flight_number": "B6101", "airline": "B6", "from": "BOS", "to": "MIA",
+     "depart_local": "06:30", "arrive_local": "10:15", "duration_min": 225,
+     "status": "on_time", "gate": "C8", "aircraft": "Airbus A321"},
+    {"flight_number": "UA204", "airline": "UA", "from": "SFO", "to": "SEA",
+     "depart_local": "09:00", "arrive_local": "11:00", "duration_min": 120,
+     "status": "on_time", "gate": "F11", "aircraft": "Boeing 737"},
+]
+
+
+class _AsyncFn:
+    """Tiny shim so we can call find_routes.ainvoke({...}) like the umbrella's
+    LangChain @tool decorator does."""
+    def __init__(self, fn):
+        self._fn = fn
+
+    async def ainvoke(self, args: dict[str, Any]) -> list[dict[str, Any]]:
+        return self._fn(**args)
+
+
+def _find_routes_impl(from_code: str, to_code: str, date_offset_days: int = 0) -> list[dict[str, Any]]:
+    return [f for f in _FLIGHTS if f["from"] == from_code and f["to"] == to_code]
+
+
+find_routes = _AsyncFn(_find_routes_impl)
+
+_logger = logging.getLogger(__name__)
 
 A2UI_PREFIX = "---a2ui_JSON---"
 
-# v0.9 envelope format: each message is {"<type>": {<payload>}}
-CONTACT_FORM_JSONL = A2UI_PREFIX + "\n" + "\n".join([
-    json.dumps({"createSurface": {
-        "surfaceId": "contact", "catalogId": "basic", "sendDataModel": True,
-    }}),
-    json.dumps({"updateDataModel": {
-        "surfaceId": "contact",
-        "value": {"name": "", "email": "", "department": "Engineering", "consent": False},
-    }}),
-    json.dumps({"updateComponents": {
-        "surfaceId": "contact",
-        "components": [
-            {"id": "root", "component": "Column", "children": ["card"]},
-            {"id": "card", "component": "Card", "title": "Contact Us", "children": [
-                "name_field", "email_field", "dept_picker", "consent_check", "divider", "submit_btn",
-            ]},
-            {"id": "name_field", "component": "TextField",
-             "label": "Name", "value": {"path": "/name"}, "placeholder": "Your full name",
-             "checks": [
-                 {"condition": {"call": "required", "args": {"value": {"path": "/name"}}},
-                  "message": "Name is required"},
-             ]},
-            {"id": "email_field", "component": "TextField",
-             "label": "Email", "value": {"path": "/email"}, "placeholder": "you@company.com",
-             "checks": [
-                 {"condition": {"call": "required", "args": {"value": {"path": "/email"}}},
-                  "message": "Email is required"},
-                 {"condition": {"call": "email", "args": {"value": {"path": "/email"}}},
-                  "message": "Must be a valid email address"},
-             ]},
-            {"id": "dept_picker", "component": "ChoicePicker",
-             "label": "Department",
-             "options": ["Engineering", "Sales", "Support", "Marketing"],
-             "selected": {"path": "/department"}},
-            {"id": "consent_check", "component": "CheckBox",
-             "label": "I agree to be contacted", "checked": {"path": "/consent"}},
-            {"id": "divider", "component": "Divider"},
-            {"id": "submit_btn", "component": "Button",
-             "label": "Submit",
-             "checks": [
-                 {"condition": {"call": "and", "args": {"values": [
-                     {"call": "required", "args": {"value": {"path": "/name"}}},
-                     {"call": "email", "args": {"value": {"path": "/email"}}},
-                     {"path": "/consent"},
-                 ]}},
-                  "message": "Complete all required fields and agree to be contacted"},
-             ],
-             "action": {"event": {"name": "formSubmit", "context": {"formId": "contact"}}}},
-        ],
-    }}),
-]) + "\n"  # Trailing newline required — parser processes at \n boundaries
+# 10 IATA airports from aviation_data.py
+AIRPORT_CODES = ["LAX", "JFK", "SFO", "ORD", "BOS", "ATL", "DFW", "SEA", "MIA", "DEN"]
+FARE_CLASSES = ["Economy", "Premium", "Business", "First"]
 
 
-def build_a2ui_graph():
+# ── Pydantic schemas ────────────────────────────────────────────────────────
+
+class A2uiComponent(BaseModel):
+    """Single A2UI updateComponents entry.
+
+    Literal[...] on `component` is the gate that keeps the LLM from
+    inventing component types not in the catalog. Pydantic raises
+    ValidationError if it does, triggering retry.
     """
-    Single-node graph:
-    - On first message: emits hardcoded A2UI JSONL for the contact form
-    - On a2ui_event messages: responds with a confirmation message
+    id: str
+    component: Literal[
+        "Column", "Row", "Card", "TextField", "ChoicePicker",
+        "NumberField", "DatePicker", "CheckBox", "Button", "Divider",
+    ]
+    label: str | None = None
+    title: str | None = None
+    placeholder: str | None = None
+    options: list[str] | None = None
+    value: dict[str, Any] | None = None
+    selected: dict[str, Any] | None = None
+    checked: dict[str, Any] | None = None
+    children: list[str] | None = None
+    checks: list[dict[str, Any]] | None = None
+    action: dict[str, Any] | None = None
+
+
+class _SurfaceSpec(BaseModel):
+    """Common shape — both booking and results surfaces produce the same
+    triple (surface_id, data_model, components)."""
+    surface_id: str = Field(description="Surface id. Use 'booking' for the form, 'results' for flights.")
+    data_model: dict[str, Any] = Field(description="Initial form/state values, e.g. prefills.")
+    components: list[A2uiComponent]
+
+
+class BookingFormSpec(_SurfaceSpec):
+    pass
+
+
+class FlightResultsSpec(_SurfaceSpec):
+    pass
+
+
+# ── Envelope wrapping ───────────────────────────────────────────────────────
+
+def _wrap_envelopes(spec: _SurfaceSpec) -> str:
+    """Wrap a validated SurfaceSpec into A2UI JSONL with the three required envelopes."""
+    lines = [
+        json.dumps({"createSurface": {
+            "surfaceId": spec.surface_id,
+            "catalogId": "basic",
+            "sendDataModel": True,
+        }}),
+        json.dumps({"updateDataModel": {
+            "surfaceId": spec.surface_id,
+            "value": spec.data_model,
+        }}),
+        json.dumps({"updateComponents": {
+            "surfaceId": spec.surface_id,
+            "components": [c.model_dump(exclude_none=True) for c in spec.components],
+        }}),
+    ]
+    return A2UI_PREFIX + "\n" + "\n".join(lines) + "\n"
+
+
+# ── LLM + retry ─────────────────────────────────────────────────────────────
+
+# gpt-5 with low reasoning effort: PR #372 established gpt-5 follows
+# directive precisely; "low" gives slightly more headroom than "minimal"
+# for schema compliance.
+_llm: ChatOpenAI | None = None
+
+
+def _get_llm() -> ChatOpenAI:
+    """Lazy-initialize the LLM so imports succeed without OPENAI_API_KEY set."""
+    global _llm
+    if _llm is None:
+        _llm = ChatOpenAI(
+            model="gpt-5",
+            streaming=True,
+            reasoning_effort="low",
+        )
+    return _llm
+
+
+async def _emit_with_retry(
+    spec_cls: type[_SurfaceSpec],
+    base_messages: list[Any],
+    max_attempts: int = 3,
+) -> _SurfaceSpec:
+    """Call the LLM with structured output, retrying on validation failure.
+
+    Each retry re-injects the error message so the model has a chance
+    to correct its output. After max_attempts, raises RuntimeError.
     """
-
-    async def create_form(state: MessagesState) -> dict:
-        last = state["messages"][-1]
-
-        # Check if this is a form submission event from the A2UI surface
+    llm = _get_llm().with_structured_output(spec_cls)
+    messages = list(base_messages)
+    last_err: Exception | None = None
+    for attempt in range(max_attempts):
         try:
-            payload = json.loads(last.content)
-            if isinstance(payload, dict) and payload.get("type") == "a2ui_event":
-                name = payload.get("context", {}).get("formId", "unknown")
-                return {"messages": [AIMessage(
-                    content=f"Thanks for submitting the **{name}** form! We'll be in touch soon.",
-                )]}
-        except (json.JSONDecodeError, AttributeError):
-            pass
+            return await llm.ainvoke(messages)
+        except ValidationError as err:
+            last_err = err
+            _logger.warning(
+                "A2UI structured-output validation failed (attempt %d/%d): %s",
+                attempt + 1, max_attempts, err,
+            )
+            messages = list(base_messages) + [
+                AIMessage(content=(
+                    f"Previous attempt failed schema validation: {err}. "
+                    "Try again, strictly matching the schema. "
+                    "Do not invent component types outside the Literal list."
+                )),
+            ]
+    raise RuntimeError(
+        f"LLM failed structured output after {max_attempts} attempts: {last_err}"
+    )
 
-        # Any other message — emit the contact form
-        return {"messages": [AIMessage(content=CONTACT_FORM_JSONL)]}
 
-    graph = StateGraph(MessagesState)
-    graph.add_node("create_form", create_form)
-    graph.set_entry_point("create_form")
-    graph.add_edge("create_form", END)
+# ── build_form node ─────────────────────────────────────────────────────────
 
-    return graph.compile()
+_BUILD_FORM_SYSTEM = f"""You are an aviation booking-form designer. Emit an A2UI booking form using the structured output schema.
+
+Required components (in this order, inside a single Card titled "Book a flight" inside a Column root):
+1. Origin airport ChoicePicker — options = {AIRPORT_CODES}, selected = {{"path": "/origin"}}
+2. Destination airport ChoicePicker — same options, selected = {{"path": "/dest"}}
+3. Departure date TextField — value = {{"path": "/date"}}, placeholder "YYYY-MM-DD"
+4. Passengers NumberField — value = {{"path": "/passengers"}}
+5. Fare class ChoicePicker — options = {FARE_CLASSES}, selected = {{"path": "/fare_class"}}
+6. Submit Button — label "Search flights", action = {{"event": {{"name": "bookingSubmit", "context": {{"formId": "booking"}}}}}}
+
+Submit button MUST be gated by `checks` that require:
+- /origin set (call: "required")
+- /dest set (call: "required")
+- /date set (call: "required")
+
+Default data_model: {{"origin": "", "dest": "", "date": "", "passengers": 1, "fare_class": "Economy"}}
+surface_id MUST be "booking".
+
+Use unique `id` values for every component (e.g. "root", "card", "origin_field", etc.)."""
 
 
-graph = build_a2ui_graph()
+_SENTINEL_BOOKING_FORM = BookingFormSpec(
+    surface_id="booking",
+    data_model={"origin": "", "dest": "", "date": "", "passengers": 1, "fare_class": "Economy"},
+    components=[
+        A2uiComponent(id="root", component="Column", children=["card"]),
+        A2uiComponent(id="card", component="Card", title="Book a flight (fallback)",
+                      children=["origin", "dest", "date", "passengers", "fare", "submit"]),
+        A2uiComponent(id="origin", component="ChoicePicker", label="Origin",
+                      options=AIRPORT_CODES, selected={"path": "/origin"}),
+        A2uiComponent(id="dest", component="ChoicePicker", label="Destination",
+                      options=AIRPORT_CODES, selected={"path": "/dest"}),
+        A2uiComponent(id="date", component="TextField", label="Date",
+                      value={"path": "/date"}, placeholder="YYYY-MM-DD"),
+        A2uiComponent(id="passengers", component="NumberField", label="Passengers",
+                      value={"path": "/passengers"}),
+        A2uiComponent(id="fare", component="ChoicePicker", label="Fare class",
+                      options=FARE_CLASSES, selected={"path": "/fare_class"}),
+        A2uiComponent(id="submit", component="Button", label="Search flights",
+                      action={"event": {"name": "bookingSubmit", "context": {"formId": "booking"}}}),
+    ],
+)
+
+
+async def build_form(state: MessagesState) -> dict:
+    """First-turn node: LLM authors the booking form."""
+    base_messages = [SystemMessage(content=_BUILD_FORM_SYSTEM)] + state["messages"]
+    try:
+        spec = await _emit_with_retry(BookingFormSpec, base_messages)
+    except RuntimeError as err:
+        _logger.error("Falling back to sentinel booking form: %s", err)
+        spec = _SENTINEL_BOOKING_FORM
+    return {"messages": [AIMessage(content=_wrap_envelopes(spec))]}
+
+
+# ── search_flights node ─────────────────────────────────────────────────────
+
+_SEARCH_FLIGHTS_SYSTEM = """You just received a booking submission. The find_routes() tool returned the following flights:
+
+{flights_json}
+
+Form data (for context): {form_json}
+
+Emit an A2UI results surface using the FlightResultsSpec schema.
+
+- surface_id MUST be "results"
+- data_model can be {{}} (no user input needed on this surface)
+- Root is a Column with children = list of flight Card ids (or a single Card "no_flights" if the list is empty)
+- For each flight: a Card with title "<airline> flight <flight_number>", containing TextField/Divider children showing route, depart/arrive times, duration, aircraft, gate, and a "Select" Button whose action emits {{"event": {{"name": "flightSelect", "context": {{"flightId": "<flight_number>"}}}}}}
+- For the empty case: a single Card with id "no_flights" titled "No flights found", containing a "Modify search" Button with action {{"event": {{"name": "modifySearch", "context": {{"formId": "booking"}}}}}}
+
+Use unique `id` values for every component."""
+
+
+_SENTINEL_RESULTS = FlightResultsSpec(
+    surface_id="results",
+    data_model={},
+    components=[
+        A2uiComponent(id="root", component="Column", children=["msg"]),
+        A2uiComponent(id="msg", component="Card", title="Results unavailable",
+                      children=["modify"]),
+        A2uiComponent(id="modify", component="Button", label="Modify search",
+                      action={"event": {"name": "modifySearch", "context": {"formId": "booking"}}}),
+    ],
+)
+
+
+def _parse_submit_payload(content: str) -> dict[str, Any] | None:
+    """Extract the form-data dict from an a2ui_event message content."""
+    try:
+        payload = json.loads(content)
+    except (json.JSONDecodeError, TypeError):
+        return None
+    if not isinstance(payload, dict) or payload.get("type") != "a2ui_event":
+        return None
+    # Accept either {"data": {...}} or {"value": {...}} or context-level fields
+    data = payload.get("data") or payload.get("value") or {}
+    if not isinstance(data, dict):
+        return None
+    return data
+
+
+async def search_flights(state: MessagesState) -> dict:
+    """Post-submit node: call find_routes, emit results A2UI surface."""
+    last = state["messages"][-1]
+    form_data = _parse_submit_payload(getattr(last, "content", "")) or {}
+    origin = (form_data.get("origin") or "").upper()
+    dest = (form_data.get("dest") or "").upper()
+    flights: list[dict[str, Any]] = []
+    if origin and dest and origin != dest:
+        try:
+            flights = await find_routes.ainvoke({"from_code": origin, "to_code": dest})
+        except Exception as err:  # noqa: BLE001 — demo robustness
+            _logger.warning("find_routes failed for %s→%s: %s", origin, dest, err)
+
+    base_messages = [
+        SystemMessage(content=_SEARCH_FLIGHTS_SYSTEM.format(
+            flights_json=json.dumps(flights, indent=2),
+            form_json=json.dumps(form_data, indent=2),
+        )),
+        HumanMessage(content=f"Emit the results surface for {origin}→{dest}."),
+    ]
+    try:
+        spec = await _emit_with_retry(FlightResultsSpec, base_messages)
+    except RuntimeError as err:
+        _logger.error("Falling back to sentinel results surface: %s", err)
+        spec = _SENTINEL_RESULTS
+    return {"messages": [AIMessage(content=_wrap_envelopes(spec))]}
+
+
+# ── Routing + compile ───────────────────────────────────────────────────────
+
+def _is_submit_event(content: str) -> bool:
+    """True iff the content is an a2ui_event whose formId is 'booking'."""
+    try:
+        payload = json.loads(content)
+    except (json.JSONDecodeError, TypeError):
+        return False
+    return (
+        isinstance(payload, dict)
+        and payload.get("type") == "a2ui_event"
+        and isinstance(payload.get("context"), dict)
+        and payload["context"].get("formId") == "booking"
+    )
+
+
+def route(state: MessagesState) -> Command[Literal["build_form", "search_flights"]]:
+    """Inspect the last message — submit event → search_flights, else build_form."""
+    last_content = getattr(state["messages"][-1], "content", "") if state["messages"] else ""
+    if _is_submit_event(last_content):
+        return Command(goto="search_flights")
+    return Command(goto="build_form")
+
+
+_builder = StateGraph(MessagesState)
+_builder.add_node("route", route)
+_builder.add_node("build_form", build_form)
+_builder.add_node("search_flights", search_flights)
+_builder.set_entry_point("route")
+_builder.add_edge("build_form", END)
+_builder.add_edge("search_flights", END)
+
+graph = _builder.compile()
