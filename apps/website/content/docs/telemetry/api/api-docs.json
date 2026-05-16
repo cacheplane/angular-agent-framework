@@ -1,0 +1,453 @@
+[
+  {
+    "name": "NgafBrowserEvent",
+    "kind": "type",
+    "description": "",
+    "signature": "\"ngaf:browser_provided\" | \"ngaf:browser_chat_init\"",
+    "examples": []
+  },
+  {
+    "name": "NgafEvent",
+    "kind": "type",
+    "description": "",
+    "signature": "NgafNodeEvent | NgafBrowserEvent",
+    "examples": []
+  },
+  {
+    "name": "NgafNodeEvent",
+    "kind": "type",
+    "description": "",
+    "signature": "\"ngaf:postinstall\" | \"ngaf:runtime_instance_created\" | \"ngaf:runtime_request_created\" | \"ngaf:stream_started\" | \"ngaf:stream_ended\" | \"ngaf:stream_errored\"",
+    "examples": []
+  },
+  {
+    "name": "getAnonId",
+    "kind": "function",
+    "description": "",
+    "signature": "getAnonId(): string",
+    "params": [],
+    "returns": {
+      "type": "string",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "getDisableReason",
+    "kind": "function",
+    "description": "",
+    "signature": "getDisableReason(env: ProcessEnv<>): DisableReason",
+    "params": [
+      {
+        "name": "env",
+        "type": "ProcessEnv<>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "DisableReason",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "isTelemetryDisabled",
+    "kind": "function",
+    "description": "",
+    "signature": "isTelemetryDisabled(env: ProcessEnv<>): boolean",
+    "params": [
+      {
+        "name": "env",
+        "type": "ProcessEnv<>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "boolean",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "sha256",
+    "kind": "function",
+    "description": "",
+    "signature": "sha256(input: string): Promise<string>",
+    "params": [
+      {
+        "name": "input",
+        "type": "string",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "Promise<string>",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "shouldSample",
+    "kind": "function",
+    "description": "",
+    "signature": "shouldSample(rate: number, anonId: string): boolean",
+    "params": [
+      {
+        "name": "rate",
+        "type": "number",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "anonId",
+        "type": "string",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "boolean",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "RuntimeInstanceTelemetry",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "angularVersion",
+        "type": "string",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "apiKey",
+        "type": "string",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "model",
+        "type": "string",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "provider",
+        "type": "string",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "transport",
+        "type": "string",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "RuntimeRequestTelemetry",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "model",
+        "type": "string",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "provider",
+        "type": "string",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "requestType",
+        "type": "string",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "transport",
+        "type": "string",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "StreamTelemetry",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "durationMs",
+        "type": "number",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "model",
+        "type": "string",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "provider",
+        "type": "string",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "CaptureResult",
+    "kind": "type",
+    "description": "",
+    "signature": "object | object",
+    "examples": []
+  },
+  {
+    "name": "captureEvent",
+    "kind": "function",
+    "description": "",
+    "signature": "captureEvent(event: NgafNodeEvent, properties: Record<string, unknown>): Promise<CaptureResult>",
+    "params": [
+      {
+        "name": "event",
+        "type": "NgafNodeEvent",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "properties",
+        "type": "Record<string, unknown>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "Promise<CaptureResult>",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "capturePostinstall",
+    "kind": "function",
+    "description": "",
+    "signature": "capturePostinstall(input: PostinstallInput): Promise<CaptureResult>",
+    "params": [
+      {
+        "name": "input",
+        "type": "PostinstallInput",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "Promise<CaptureResult>",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "captureRuntimeInstanceCreated",
+    "kind": "function",
+    "description": "",
+    "signature": "captureRuntimeInstanceCreated(input: RuntimeInstanceTelemetry): Promise<void>",
+    "params": [
+      {
+        "name": "input",
+        "type": "RuntimeInstanceTelemetry",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "Promise<void>",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "captureRuntimeRequestCreated",
+    "kind": "function",
+    "description": "",
+    "signature": "captureRuntimeRequestCreated(input: RuntimeRequestTelemetry): Promise<void>",
+    "params": [
+      {
+        "name": "input",
+        "type": "RuntimeRequestTelemetry",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "Promise<void>",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "captureStreamEnded",
+    "kind": "function",
+    "description": "",
+    "signature": "captureStreamEnded(input: StreamTelemetry): Promise<void>",
+    "params": [
+      {
+        "name": "input",
+        "type": "StreamTelemetry",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "Promise<void>",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "captureStreamErrored",
+    "kind": "function",
+    "description": "",
+    "signature": "captureStreamErrored(input: StreamTelemetry & { error: unknown }): Promise<void>",
+    "params": [
+      {
+        "name": "input",
+        "type": "StreamTelemetry & { error: unknown }",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "Promise<void>",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "captureStreamStarted",
+    "kind": "function",
+    "description": "",
+    "signature": "captureStreamStarted(input: StreamTelemetry): Promise<void>",
+    "params": [
+      {
+        "name": "input",
+        "type": "StreamTelemetry",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "Promise<void>",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "disableTelemetry",
+    "kind": "function",
+    "description": "",
+    "signature": "disableTelemetry(): void",
+    "params": [],
+    "returns": {
+      "type": "void",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "getEmailDomain",
+    "kind": "function",
+    "description": "",
+    "signature": "getEmailDomain(email: unknown): string | null",
+    "params": [
+      {
+        "name": "email",
+        "type": "unknown",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "string | null",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "getSourcePage",
+    "kind": "function",
+    "description": "",
+    "signature": "getSourcePage(value: unknown): string",
+    "params": [
+      {
+        "name": "value",
+        "type": "unknown",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "string",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "normalizePostHogHost",
+    "kind": "function",
+    "description": "",
+    "signature": "normalizePostHogHost(host: unknown): string",
+    "params": [
+      {
+        "name": "host",
+        "type": "unknown",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "string",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "toSafeAnalyticsString",
+    "kind": "function",
+    "description": "",
+    "signature": "toSafeAnalyticsString(value: unknown, maxLength: number): string | undefined",
+    "params": [
+      {
+        "name": "value",
+        "type": "unknown",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "maxLength",
+        "type": "number",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "string | undefined",
+      "description": ""
+    },
+    "examples": []
+  }
+]

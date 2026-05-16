@@ -64,7 +64,7 @@ function NewsletterForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex gap-2 mb-4 max-w-xs">
+    <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-2 mb-4 max-w-xs">
       <label htmlFor="footer-email" className="sr-only">Email address</label>
       <input
         id="footer-email"
@@ -74,7 +74,7 @@ function NewsletterForm() {
         onChange={e => setEmail(e.target.value)}
         required
         disabled={state === 'submitting'}
-        className="text-sm rounded-lg px-3 py-2 flex-1"
+        className="text-sm rounded-lg px-3 py-2 flex-1 min-w-0"
         style={{
           background: tokens.surfaces.surface,
           border: `1px solid ${tokens.surfaces.border}`,

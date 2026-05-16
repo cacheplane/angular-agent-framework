@@ -66,6 +66,11 @@ test('mobile viewport renders nav', async ({ page }) => {
 test('/llms.txt returns plain text', async ({ page }) => {
   const response = await page.goto('/llms.txt');
   expect(response?.headers()['content-type']).toContain('text/plain');
+  const body = await page.locator('body').textContent();
+  expect(body).toContain('@ngaf/a2ui');
+  expect(body).toContain('@ngaf/telemetry');
+  expect(body).toContain('ChatMessageListComponent');
+  expect(body).not.toContain('ChatMessagesComponent');
 });
 
 test('/llms-full.txt includes generated API reference content', async ({ request }) => {
@@ -75,8 +80,11 @@ test('/llms-full.txt includes generated API reference content', async ({ request
 
   const body = await response.text();
   expect(body).toContain('## API Reference (TypeDoc)');
+  expect(body).toContain('### a2ui');
   expect(body).toContain('### agent');
   expect(body).toContain('### chat');
+  expect(body).toContain('### licensing');
+  expect(body).toContain('### telemetry');
   expect(body).not.toContain('API reference not yet generated');
 });
 
@@ -119,6 +127,31 @@ test('docs pages render canonical and social metadata', async ({ page }) => {
     'content',
     'Streaming - Agent Docs - Angular Agent Framework',
   );
+});
+
+test('representative docs pages do not create page-level horizontal overflow', async ({ page }) => {
+  const routes = [
+    '/docs',
+    '/docs/agent/getting-started/introduction',
+    '/docs/agent/api/agent',
+    '/docs/chat/components/chat-tool-calls',
+    '/docs/render/a2ui/overview',
+    '/docs/telemetry/guides/browser',
+  ];
+  const widths = [320, 375, 768, 1280];
+
+  for (const width of widths) {
+    await page.setViewportSize({ width, height: 900 });
+
+    for (const route of routes) {
+      await page.goto(route);
+      const overflow = await page.evaluate(() => (
+        document.documentElement.scrollWidth - document.documentElement.clientWidth
+      ));
+
+      expect(overflow, `${route} at ${width}px`).toBeLessThanOrEqual(1);
+    }
+  }
 });
 
 test('marketing pages link to downloadable whitepaper PDFs', async ({ page }) => {

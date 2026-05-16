@@ -119,36 +119,56 @@ function reflectionToEntry(ref: any): ApiDocEntry | null {
   return null;
 }
 
+function collectApiEntries(reflections: any[]): ApiDocEntry[] {
+  return reflections.flatMap((ref) => {
+    const entry = reflectionToEntry(ref);
+    if (entry) return [entry];
+    return collectApiEntries(ref.children ?? []);
+  });
+}
+
 interface LibraryEntryConfig {
   /** Doc-site library slug (e.g. 'agent', 'chat') — used as the output folder under apps/website/content/docs/. */
   docSlug: string;
-  /** TypeDoc entry point — usually libs/<name>/src/public-api.ts. */
-  entryPoint: string;
+  /** TypeDoc entry points — usually libs/<name>/src/public-api.ts. */
+  entryPoints: string[];
 }
 
 const LIBRARIES: LibraryEntryConfig[] = [
-  { docSlug: 'agent',  entryPoint: 'libs/langgraph/src/public-api.ts' },
-  { docSlug: 'chat',   entryPoint: 'libs/chat/src/public-api.ts' },
-  { docSlug: 'render', entryPoint: 'libs/render/src/public-api.ts' },
-  { docSlug: 'ag-ui',  entryPoint: 'libs/ag-ui/src/public-api.ts' },
+  { docSlug: 'agent',     entryPoints: ['libs/langgraph/src/public-api.ts'] },
+  { docSlug: 'chat',      entryPoints: ['libs/chat/src/public-api.ts', 'libs/chat/testing/public-api.ts'] },
+  { docSlug: 'render',    entryPoints: ['libs/render/src/public-api.ts'] },
+  { docSlug: 'ag-ui',     entryPoints: ['libs/ag-ui/src/public-api.ts'] },
+  { docSlug: 'a2ui',      entryPoints: ['libs/a2ui/src/index.ts'] },
+  { docSlug: 'licensing', entryPoints: ['libs/licensing/src/index.ts'] },
+  {
+    docSlug: 'telemetry',
+    entryPoints: [
+      'libs/telemetry/src/index.ts',
+      'libs/telemetry/src/browser/public-api.ts',
+      'libs/telemetry/src/node/index.ts',
+      'libs/telemetry/src/shared/public-api.ts',
+    ],
+  },
 ];
 
 async function generateForLibrary(cfg: LibraryEntryConfig): Promise<void> {
   const outDir = `apps/website/content/docs/${cfg.docSlug}/api`;
-  if (!fs.existsSync(cfg.entryPoint)) {
-    console.warn(`Entry point not found for ${cfg.docSlug}: ${cfg.entryPoint} — writing empty api-docs.json`);
+  const missingEntryPoints = cfg.entryPoints.filter((entryPoint) => !fs.existsSync(entryPoint));
+  if (missingEntryPoints.length > 0) {
+    console.warn(`Entry point not found for ${cfg.docSlug}: ${missingEntryPoints.join(', ')} — writing empty api-docs.json`);
     fs.mkdirSync(outDir, { recursive: true });
     fs.writeFileSync(path.join(outDir, 'api-docs.json'), JSON.stringify([], null, 2));
     return;
   }
 
-  const libDir = path.dirname(path.dirname(cfg.entryPoint));
+  const libDir = path.dirname(path.dirname(cfg.entryPoints[0]));
   const libTsconfig = fs.existsSync(path.join(libDir, 'tsconfig.lib.json'))
     ? path.join(libDir, 'tsconfig.lib.json')
     : undefined;
 
   const app = await Application.bootstrapWithPlugins({
-    entryPoints: [cfg.entryPoint],
+    entryPoints: cfg.entryPoints,
     skipErrorChecking: true,
     ...(libTsconfig ? { tsconfig: libTsconfig } : {}),
   });
@@ -156,11 +176,7 @@ async function generateForLibrary(cfg: LibraryEntryConfig): Promise<void> {
   const project = await app.convert();
   if (!project) throw new Error(`TypeDoc failed to convert ${cfg.docSlug}`);
 
-  const entries: ApiDocEntry[] = [];
-  for (const child of project.children ?? []) {
-    const entry = reflectionToEntry(child);
-    if (entry) entries.push(entry);
-  }
+  const entries = collectApiEntries(project.children ?? []);
 
   fs.mkdirSync(outDir, { recursive: true });
   fs.writeFileSync(path.join(outDir, 'api-docs.json'), JSON.stringify(entries, null, 2));
