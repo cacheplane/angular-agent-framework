@@ -1,0 +1,29 @@
+{
+  "fixtures": [
+    {
+      "match": {
+        "userMessage": "Plan a trip from LAX to JFK",
+        "hasToolResult": true
+      },
+      "response": {
+        "content": "Thanks \u2014 I\u2019ve gathered research and a booking option, but I need to synthesize them into a final trip plan. Before I do that, could you confirm:\n\n- Do you want the United nonstop I noted (UA123, depart LAX 08:00 \u2192 arrive JFK 16:30 next Wednesday), or would you prefer evening options or 1\u2011stop flights instead?\n- Do you prefer general economy or specific fare class (basic/main/extra legroom)?\n- Any particular preferences (airline, alliances, seat type)?\n\nIf you confirm the UA123 nonstop in economy for next Wednesday, I\u2019ll finalize the itinerary now (arrival\u2011at\u2011airport recommendation, transport tips, baggage/check\u2011in reminders, and a 1\u2011line trip summary)."
+      }
+    },
+    {
+      "match": {
+        "userMessage": "Plan a trip from LAX to JFK"
+      },
+      "response": {
+        "toolCalls": [
+          {
+            "name": "task",
+            "arguments": {
+              "role": "research",
+              "task_description": "Gather destination intel for LAX (Los Angeles International) and JFK (John F. Kennedy International). Include: full airport names, main terminals and major airlines serving each, transport options to/from city centers, typical security/check-in recommendations, typical weather patterns (monthly averages) and any current or seasonal conditions travelers should know, and any local travel advisories or construction currently affecting operations."
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
