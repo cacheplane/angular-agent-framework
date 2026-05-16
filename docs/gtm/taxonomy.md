@@ -65,10 +65,10 @@ The standard PostHog `$pageview` event is used as-is across all three surfaces.
 | Event                                | When                                       | Surface         | Default      |
 |--------------------------------------|--------------------------------------------|-----------------|--------------|
 | `ngaf:postinstall`                   | Dependency/global install of a published `@ngaf/*` package | Node (script)   | **Opt-out**  |
-| `ngaf:runtime_instance_created`      | Server adapter init                         | Node            | **Opt-out**  |
-| `ngaf:stream_started`                | Stream begins                              | Node            | **Opt-out**  |
-| `ngaf:stream_ended`                  | Stream ends normally                       | Node            | **Opt-out**  |
-| `ngaf:stream_errored`                | Stream errors                              | Node            | **Opt-out**  |
+| `ngaf:runtime_instance_created`      | Runtime adapter init                        | Node / Browser  | **Opt-out** on Node, **Opt-in** in Browser |
+| `ngaf:stream_started`                | Stream begins                              | Node / Browser  | **Opt-out** on Node, **Opt-in** in Browser |
+| `ngaf:stream_ended`                  | Stream ends normally                       | Node / Browser  | **Opt-out** on Node, **Opt-in** in Browser |
+| `ngaf:stream_errored`                | Stream errors                              | Node / Browser  | **Opt-out** on Node, **Opt-in** in Browser |
 | `ngaf:browser_provided`              | `provideNgafTelemetry({enabled:true})`      | Browser         | **Opt-in**   |
 | `ngaf:browser_chat_init`             | Browser chat surface initialized           | Browser         | **Opt-in**   |
 

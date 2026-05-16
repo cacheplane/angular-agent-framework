@@ -34,8 +34,8 @@ The single telemetry surface for `@ngaf/*`. It exists so we can answer "how is C
 - `ngaf:stream_started` / `ngaf:stream_ended` / `ngaf:stream_errored` — per-request lifecycle on server adapters. Properties: provider, model name, duration, error class. No prompts, no completions, no message content.
 
 **Telemetered only on explicit opt-in (Browser):**
-- Nothing fires unless the consumer calls `provideNgafTelemetry({ enabled: true, posthogKey, posthogHost })` in their root providers.
-- When opted in: `ngaf:browser_provided`, `ngaf:browser_chat_init`. Anonymous, no message content.
+- Nothing fires unless the consumer calls `provideNgafTelemetry({ enabled: true, sink })` or `provideNgafTelemetry({ enabled: true, endpoint })` in their root providers.
+- When opted in: `ngaf:browser_provided`, `ngaf:browser_chat_init`, and browser-side runtime lifecycle events explicitly captured by the app (`ngaf:runtime_instance_created`, `ngaf:stream_started`, `ngaf:stream_ended`, `ngaf:stream_errored`). Anonymous, no message content.
 
 **Never telemetered (by anyone, at any time):**
 - Message content (user prompts, model completions, tool call inputs/outputs).
@@ -65,10 +65,6 @@ To inspect the install payload locally, run with `DEBUG=ngaf:telemetry`.
 
 Browser telemetry is **off by default** and never fires from the library itself. To enable in your Angular app:
 
-```bash
-npm install posthog-js
-```
-
 ```ts
 // app.config.ts (or wherever you bootstrap)
 import { provideNgafTelemetry } from '@ngaf/telemetry/browser';
@@ -78,12 +74,26 @@ export const appConfig: ApplicationConfig = {
     // ...
     provideNgafTelemetry({
       enabled: true,
-      posthogKey: 'phc_yourKey',     // your PostHog project key, never ours
-      posthogHost: 'https://us.i.posthog.com',
+      endpoint: '/api/telemetry',
     }),
   ],
 };
 ```
+
+The endpoint receives neutral JSON:
+
+```json
+{
+  "event": "ngaf:stream_started",
+  "distinctId": "browser:<ephemeral-id>",
+  "properties": {
+    "surface": "my_app",
+    "sample_weight": 1
+  }
+}
+```
+
+You can also pass `sink: async ({ event, properties }) => { ... }` and route events through your own analytics client. Legacy `posthogKey` / `posthogHost` options still work for existing adopters, but new app code should prefer `sink` or `endpoint` so the public API is vendor-neutral.
 
 If you don't call `provideNgafTelemetry({ enabled: true })`, every telemetry helper in `@ngaf/*` browser packages no-ops. No network calls, ever.
 
@@ -97,7 +107,7 @@ If you don't call `provideNgafTelemetry({ enabled: true })`, every telemetry hel
 
 - Per-process UUID (`anon_<uuid>`), regenerated every Node process boot.
 - No persistence across restarts. No persistent identifier.
-- Browser opt-in uses the consumer's PostHog `distinct_id` per their own configuration — Cacheplane does not manage browser identity.
+- Browser opt-in endpoint delivery uses an ephemeral per-service-instance id (`browser:<uuid>`). It is not written to localStorage or cookies.
 
 ## Self-hosting
 
