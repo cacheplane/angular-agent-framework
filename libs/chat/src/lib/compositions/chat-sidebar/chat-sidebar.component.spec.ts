@@ -56,15 +56,17 @@ describe('ChatSidebarComponent — edge-claim attribute', () => {
     });
   });
 
-  it('panel CSS includes bottom: var(--ngaf-chat-occupy-bottom)', () => {
-    // Styles array is the second member of the @Component decorator metadata.
-    // Easier path: stringify the styles and look for the declaration.
+  it('panel CSS reads PEER --ngaf-chat-debug-claim-bottom (not aggregate)', () => {
+    // Components must read PEER per-component claim vars, never the
+    // aggregate occupy-* (which they write to themselves). The aggregate
+    // is for external consumer convenience; internal panels read
+    // peer-specific to avoid self-feedback.
     const styles = (ChatSidebarComponent as unknown as { ɵcmp: { styles: string[] } }).ɵcmp.styles.join('\n');
-    expect(styles).toMatch(/\.chat-sidebar__panel[^{]*\{[^}]*bottom:\s*var\(--ngaf-chat-occupy-bottom/);
+    expect(styles).toMatch(/\.chat-sidebar__panel[^{]*\{[^}]*bottom:\s*var\(--ngaf-chat-debug-claim-bottom/);
   });
 
-  it('launcher CSS includes calc(1rem + var(--ngaf-chat-occupy-bottom))', () => {
+  it('launcher CSS reads PEER --ngaf-chat-debug-claim-bottom (not aggregate)', () => {
     const styles = (ChatSidebarComponent as unknown as { ɵcmp: { styles: string[] } }).ɵcmp.styles.join('\n');
-    expect(styles).toMatch(/\.chat-sidebar__launcher[^{]*\{[^}]*bottom:\s*calc\(1rem\s*\+\s*var\(--ngaf-chat-occupy-bottom/);
+    expect(styles).toMatch(/\.chat-sidebar__launcher[^{]*\{[^}]*bottom:\s*calc\(1rem\s*\+\s*var\(--ngaf-chat-debug-claim-bottom/);
   });
 });

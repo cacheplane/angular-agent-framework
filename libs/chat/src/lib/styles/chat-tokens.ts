@@ -125,11 +125,26 @@ const EDGE_CLAIM_TOKENS = `
      Each docked panel publishes the edge it occupies via a
      data-ngaf-chat-* attribute on <html>; other panels read these
      custom properties to leave room. Defaults to 0px so consumers
-     not using chat-sidebar/chat-debug see zero overhead. */
+     not using chat-sidebar/chat-debug see zero overhead.
+
+     TWO LAYERS:
+     1. Per-component claim vars (--ngaf-chat-<component>-claim-<edge>)
+        are read by PEERS only — never by the component that wrote
+        them. This eliminates self-feedback (where a right-docked
+        panel would offset itself by reading its own claim).
+     2. Aggregate occupy-* vars are convenience reads for external
+        consumers and for cases where any-panel-on-edge matters. */
   --ngaf-chat-occupy-top:    0px;
   --ngaf-chat-occupy-right:  0px;
   --ngaf-chat-occupy-bottom: 0px;
   --ngaf-chat-occupy-left:   0px;
+
+  /* Per-component claims (peer-only reads). */
+  --ngaf-chat-sidebar-claim-right:  0px;
+  --ngaf-chat-debug-claim-top:      0px;
+  --ngaf-chat-debug-claim-right:    0px;
+  --ngaf-chat-debug-claim-bottom:   0px;
+  --ngaf-chat-debug-claim-left:     0px;
 
   /* Sizes the chat-debug dock contributes when it claims an edge.
      Split by orientation so consumers can override independently. */
@@ -327,15 +342,19 @@ export const ROOT_TOKEN_STYLES = `
      chat-sidebar sets data-ngaf-chat-sidebar="open" while its panel is open.
      chat-debug sets data-ngaf-chat-debug to its current dock while open. */
   :root[data-ngaf-chat-sidebar="open"] {
+    --ngaf-chat-sidebar-claim-right: var(--ngaf-chat-sidebar-width-drawer, 28rem);
     --ngaf-chat-occupy-right: var(--ngaf-chat-sidebar-width-drawer, 28rem);
   }
   :root[data-ngaf-chat-debug="bottom"] {
+    --ngaf-chat-debug-claim-bottom: var(--ngaf-chat-debug-panel-size-h, 40vh);
     --ngaf-chat-occupy-bottom: var(--ngaf-chat-debug-panel-size-h, 40vh);
   }
   :root[data-ngaf-chat-debug="right"] {
+    --ngaf-chat-debug-claim-right: var(--ngaf-chat-debug-panel-size-w, 420px);
     --ngaf-chat-occupy-right: var(--ngaf-chat-debug-panel-size-w, 420px);
   }
   :root[data-ngaf-chat-debug="left"] {
+    --ngaf-chat-debug-claim-left: var(--ngaf-chat-debug-panel-size-w, 420px);
     --ngaf-chat-occupy-left: var(--ngaf-chat-debug-panel-size-w, 420px);
   }
 }

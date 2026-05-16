@@ -96,10 +96,14 @@ describe('ChatDebugComponent — edge-claim attribute', () => {
     document.documentElement.removeAttribute('data-ngaf-chat-debug');
   });
 
-  it('sets data-ngaf-chat-debug=dock on <html> while open', () => {
+  it('reads PEER --ngaf-chat-sidebar-claim-right (not aggregate occupy-right)', () => {
+    // Reading the aggregate occupy-right causes self-feedback: when
+    // chat-debug docks right, it WRITES occupy-right; if it also READS
+    // occupy-right, the panel offsets itself by its own width. Read the
+    // peer-specific sidebar-claim-right instead.
     const styles = (ChatDebugComponent as unknown as { ɵcmp: { styles: string[] } }).ɵcmp.styles.join('\n');
-    expect(styles).toMatch(/\.panel--bottom[^{]*\{[^}]*right:\s*var\(--ngaf-chat-occupy-right/);
-    expect(styles).toMatch(/\.panel--right[^{]*\{[^}]*right:\s*var\(--ngaf-chat-occupy-right/);
+    expect(styles).toMatch(/\.panel--bottom[^{]*\{[^}]*right:\s*var\(--ngaf-chat-sidebar-claim-right/);
+    expect(styles).toMatch(/\.panel--right[^{]*\{[^}]*right:\s*var\(--ngaf-chat-sidebar-claim-right/);
   });
 });
 

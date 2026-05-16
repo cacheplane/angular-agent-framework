@@ -27,7 +27,7 @@ import { CHAT_HOST_TOKENS } from '../../styles/chat-tokens';
     .chat-sidebar__panel {
       position: fixed;
       top: 0; right: 0;
-      bottom: var(--ngaf-chat-occupy-bottom, 0);
+      bottom: var(--ngaf-chat-debug-claim-bottom, 0);
       width: 28rem;
       background: var(--ngaf-chat-bg);
       border-left: 1px solid var(--ngaf-chat-separator);
@@ -55,7 +55,7 @@ import { CHAT_HOST_TOKENS } from '../../styles/chat-tokens';
     .chat-sidebar__close:hover { background: var(--ngaf-chat-surface-alt); color: var(--ngaf-chat-text); }
     .chat-sidebar__launcher {
       position: fixed;
-      bottom: calc(1rem + var(--ngaf-chat-occupy-bottom, 0));
+      bottom: calc(1rem + var(--ngaf-chat-debug-claim-bottom, 0));
       right: 1rem;
       z-index: 30;
       transition: bottom 200ms ease-out;
