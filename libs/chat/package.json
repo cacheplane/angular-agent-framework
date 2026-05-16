@@ -45,6 +45,7 @@
   },
   "sideEffects": [
     "**/chat-tokens.ts",
+    "./fesm2022/ngaf-chat.mjs",
     "**/*.css"
   ]
 }
