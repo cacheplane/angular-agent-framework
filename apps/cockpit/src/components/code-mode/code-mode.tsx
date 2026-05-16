@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { track } from '../../lib/analytics/client';
 
 interface CodeModeProps {
   entryTitle: string;
@@ -9,11 +10,20 @@ interface CodeModeProps {
   backendAssetPaths: readonly string[];
   codeFiles: Record<string, string>;
   promptFiles: Record<string, string>;
+  capability?: string;
 }
 
 const getTabLabel = (path: string): string => path.split('/').pop() ?? path;
 
-function CodeFileContent({ path, content }: { path: string; content: string | undefined }) {
+function CodeFileContent({
+  path,
+  content,
+  capability,
+}: {
+  path: string;
+  content: string | undefined;
+  capability?: string;
+}) {
   if (!content) {
     return <p className="text-sm text-[var(--ds-text-muted)]">No source available for {getTabLabel(path)}</p>;
   }
@@ -38,6 +48,11 @@ function CodeFileContent({ path, content }: { path: string; content: string | un
         <button
           aria-label={`Copy ${getTabLabel(path)}`}
           onClick={() => {
+            track('cockpit:code_copied', {
+              capability,
+              surface: 'code_mode',
+              file_path: path,
+            });
             const el = document.querySelector(`[data-code-path="${CSS.escape(path)}"] pre code`);
             if (el) navigator.clipboard.writeText(el.textContent ?? '');
           }}
@@ -57,7 +72,7 @@ function CodeFileContent({ path, content }: { path: string; content: string | un
   );
 }
 
-export function CodeMode({ entryTitle, codeAssetPaths, backendAssetPaths, codeFiles, promptFiles }: CodeModeProps) {
+export function CodeMode({ entryTitle, codeAssetPaths, backendAssetPaths, codeFiles, promptFiles, capability }: CodeModeProps) {
   const promptPaths = Object.keys(promptFiles);
   const allPaths = [...codeAssetPaths, ...backendAssetPaths, ...promptPaths];
 
@@ -94,7 +109,7 @@ export function CodeMode({ entryTitle, codeAssetPaths, backendAssetPaths, codeFi
 
         {[...codeAssetPaths, ...backendAssetPaths].map((path) => (
           <TabsContent key={path} value={path} className="flex-1 overflow-auto mt-4">
-            <CodeFileContent path={path} content={codeFiles[path]} />
+            <CodeFileContent path={path} content={codeFiles[path]} capability={capability} />
           </TabsContent>
         ))}
 

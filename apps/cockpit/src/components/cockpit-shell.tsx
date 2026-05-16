@@ -122,6 +122,7 @@ export function CockpitShell({
               backendAssetPaths={backendAssetPaths}
               codeFiles={contentBundle.codeFiles}
               promptFiles={contentBundle.promptFiles}
+              capability={entry.topic}
             />
           ) : null}
           {activeMode === 'Docs' ? (
