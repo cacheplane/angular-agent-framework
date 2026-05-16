@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
       sendEmail({
         from: FROM,
         to: email,
-        subject: 'Welcome to Angular Agent Framework updates',
+        subject: 'Welcome to Agent UI for Angular updates',
         html: newsletterWelcomeHtml(),
       }),
       addToAudience(email),

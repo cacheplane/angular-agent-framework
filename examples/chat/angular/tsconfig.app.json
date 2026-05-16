@@ -7,5 +7,16 @@
     "emitDeclarationOnly": false
   },
   "files": ["src/main.ts"],
-  "include": ["src/**/*.ts"]
+  "include": ["src/**/*.ts"],
+  "references": [
+    {
+      "path": "../../../libs/langgraph"
+    },
+    {
+      "path": "../../../libs/chat"
+    },
+    {
+      "path": "../../../libs/telemetry/tsconfig.lib.json"
+    }
+  ]
 }

@@ -7,7 +7,7 @@ import { track } from '../../lib/analytics/client';
 interface Props {
   prompt: string;
   variant?: 'hero' | 'docs';
-  label?: string;
+  label?: `copy_${string}`;
 }
 
 export function CopyPromptButton({ prompt, variant = 'docs', label }: Props) {

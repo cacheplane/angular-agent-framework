@@ -7,7 +7,7 @@ import { FAQ, type FAQItem } from '../ui/FAQ';
 const ITEMS: FAQItem[] = [
   {
     q: 'How is this different from CopilotKit or AG-UI directly?',
-    a: 'CopilotKit has an Angular SDK; ours is built around signals and DI as the substrate, not a port. AG-UI is a protocol, not a UI library — you still build the Angular side. Angular Agent Framework gives you signal-native primitives plus adapters that hide the protocol, so you can swap LangGraph for AG-UI without rewriting your UI.',
+    a: 'CopilotKit has an Angular SDK; ours is built around signals and DI as the substrate, not a port. AG-UI is a protocol, not a UI library — you still build the Angular side. Agent UI for Angular gives you signal-native primitives plus adapters that hide the protocol, so you can swap LangGraph for AG-UI without rewriting your UI.',
   },
   {
     q: 'Does it work with my existing Angular app?',

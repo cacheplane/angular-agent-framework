@@ -295,7 +295,7 @@ export function WhitePaperBlock({ paper = 'overview' }: WhitePaperBlockProps = {
                     letterSpacing: '0.1em',
                   }}
                 >
-                  Angular Agent Framework
+                  Agent UI for Angular
                 </div>
               </div>
             </BrowserFrame>

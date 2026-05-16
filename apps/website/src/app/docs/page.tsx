@@ -9,8 +9,8 @@ import { docsConfig } from '../../lib/docs-config';
 import { createPageMetadata } from '../../lib/site-metadata';
 
 export const metadata = createPageMetadata({
-  title: 'Documentation — Angular Agent Framework',
-  description: 'Learn the framework. Library guides, API reference, and production patterns for Angular Agent Framework.',
+  title: 'Documentation — Agent UI for Angular',
+  description: 'Learn the framework. Library guides, API reference, and production patterns for Agent UI for Angular.',
   pathname: '/docs',
   type: 'website',
 });
@@ -72,7 +72,7 @@ export default function DocsLandingPage() {
                 maxWidth: '52ch',
               }}
             >
-              Angular Agent Framework is a suite of MIT-licensed libraries for building AI agent interfaces. Pick a library to get started.
+              Agent UI for Angular is a suite of MIT-licensed libraries for building AI agent interfaces. Pick a library to get started.
             </p>
           </div>
         </Container>

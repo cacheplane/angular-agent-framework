@@ -2,7 +2,7 @@
 
 Drop-in agent chat UI for Angular 20+. Headless primitives that read from a runtime-neutral `Agent` contract, plus opinionated compositions (`<chat>`, `<chat-debug>`, GenUI surfaces) you can ship in days.
 
-Part of the [Angular Agent Framework](https://github.com/cacheplane/angular-agent-framework). MIT licensed.
+Part of [Agent UI for Angular](https://github.com/cacheplane/angular-agent-framework). MIT licensed.
 
 ## Runtime adapters
 
@@ -70,7 +70,7 @@ The `CitationsResolverService` is provided to query citations in message-first o
 
 ### Agent-driven theming (v1 wire format)
 
-Agents control exactly two knobs per the canonical A2UI v1 spec, set via `beginRendering.styles`:
+Agents control exactly two knobs per the canonical A2UI v0.9-compatible spec, set via `beginRendering.styles`:
 
 - `font` — primary font family
 - `primaryColor` — hex `#RRGGBB`

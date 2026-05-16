@@ -13,7 +13,7 @@ import { ImageResponse } from 'next/og';
 import { darkOverrides } from '@ngaf/design-tokens';
 
 export const runtime = 'edge';
-export const alt = 'Cockpit — the live reference app for the Angular Agent Framework';
+export const alt = 'Cockpit — the live reference app for Agent UI for Angular';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 
@@ -71,7 +71,7 @@ export default async function OpenGraphImage() {
             marginBottom: 24,
           }}
         >
-          Cockpit · Angular Agent Framework
+          Cockpit · Agent UI for Angular
         </div>
 
         {/* Headline — Inter Bold (cockpit chrome is sans-serif Linear-style) */}

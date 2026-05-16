@@ -5,6 +5,78 @@
   "references": [
     {
       "path": "./apps/website"
+    },
+    {
+      "path": "./cockpit/langgraph/deployment-runtime/python"
+    },
+    {
+      "path": "./cockpit/langgraph/durable-execution/python"
+    },
+    {
+      "path": "./cockpit/deep-agents/filesystem/python"
+    },
+    {
+      "path": "./cockpit/deep-agents/sandboxes/python"
+    },
+    {
+      "path": "./cockpit/deep-agents/subagents/python"
+    },
+    {
+      "path": "./cockpit/langgraph/persistence/python"
+    },
+    {
+      "path": "./cockpit/langgraph/time-travel/python"
+    },
+    {
+      "path": "./cockpit/deep-agents/planning/python"
+    },
+    {
+      "path": "./cockpit/langgraph/interrupts/python"
+    },
+    {
+      "path": "./cockpit/langgraph/streaming/python"
+    },
+    {
+      "path": "./cockpit/langgraph/subgraphs/python"
+    },
+    {
+      "path": "./cockpit/deep-agents/memory/python"
+    },
+    {
+      "path": "./cockpit/deep-agents/skills/python"
+    },
+    {
+      "path": "./cockpit/langgraph/memory/python"
+    },
+    {
+      "path": "./apps/minting-service"
+    },
+    {
+      "path": "./libs/design-tokens"
+    },
+    {
+      "path": "./libs/licensing"
+    },
+    {
+      "path": "./libs/telemetry"
+    },
+    {
+      "path": "./e2e/agent-e2e"
+    },
+    {
+      "path": "./tools/posthog"
+    },
+    {
+      "path": "./libs/ui-react"
+    },
+    {
+      "path": "./apps/cockpit"
+    },
+    {
+      "path": "./libs/a2ui"
+    },
+    {
+      "path": "./libs/db"
     }
   ]
 }

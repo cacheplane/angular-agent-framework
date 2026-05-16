@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: MIT
-"""A2UI v1 protocol schema documentation, used as the system prompt for
+"""A2UI v0.9 protocol schema documentation, used as the system prompt for
 the `generate_a2ui_schema` sub-LLM tool. Sourced verbatim from the
-L4 production reference (canonical Google A2UI v1 schema)."""
+L4 production reference (canonical Google A2UI v0.9 schema)."""
 
 A2UI_V1_SCHEMA_PROMPT = """
 Generate A2UI JSON.
