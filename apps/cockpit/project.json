@@ -57,7 +57,7 @@
       "options": {
         "commands": [
           "npx nx serve cockpit --port 4201",
-          "npx nx serve cockpit-langgraph-streaming-angular --port 4300",
+          "npx nx serve cockpit-langgraph-streaming-angular:serve:cockpit --port 4300",
           "cd cockpit/langgraph/streaming/python && source $HOME/.local/bin/env 2>/dev/null; uv sync && uv run langgraph dev --port 8123"
         ],
         "parallel": true
