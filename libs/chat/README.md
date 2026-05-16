@@ -70,7 +70,7 @@ The `CitationsResolverService` is provided to query citations in message-first o
 
 ### Agent-driven theming (v1 wire format)
 
-Agents control exactly two knobs per the canonical A2UI v1 spec, set via `beginRendering.styles`:
+Agents control exactly two knobs per the canonical A2UI v0.9-compatible spec, set via `beginRendering.styles`:
 
 - `font` — primary font family
 - `primaryColor` — hex `#RRGGBB`

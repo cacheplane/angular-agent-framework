@@ -179,7 +179,7 @@ describe('ContentClassifier', () => {
   });
 
   describe('a2ui JSONL parsing (v1)', () => {
-    it('parses A2UI v1 messages and exposes surfaces after beginRendering', () => {
+    it('parses A2UI v0.9 messages and exposes surfaces after beginRendering', () => {
       const c = setup();
       c.update(
         '---a2ui_JSON---' +
@@ -194,7 +194,7 @@ describe('ContentClassifier', () => {
       expect('Text' in comp.component).toBe(true);
     });
 
-    it('accumulates A2UI v1 messages across updates', () => {
+    it('accumulates A2UI v0.9 messages across updates', () => {
       const c = setup();
       // First update: surfaceUpdate + dataModelUpdate (no beginRendering yet — surface not visible)
       c.update(
