@@ -1,3 +1,19 @@
+## 0.0.35 (2026-05-16)
+
+### 🚀 Features
+
+- **gtm:** Spec 1E — qualified lead + drift guard (analytics-foundation 1e) ([#376](https://github.com/cacheplane/angular-agent-framework/pull/376))
+
+### 🩹 Fixes
+
+- **chat:** lifecycle-guaranteed root token injection (production regression) ([#375](https://github.com/cacheplane/angular-agent-framework/pull/375))
+
+### ❤️ Thank You
+
+- Brian Love @blove
+- Claude Opus 4.7
+- Claude Opus 4.7 (1M context)
+
 ## 0.0.34 (2026-05-16)
 
 ### 🚀 Features
