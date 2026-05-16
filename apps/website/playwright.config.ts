@@ -1,4 +1,4 @@
-import { defineConfig } from '@playwright/test';
+import { defineConfig, devices } from '@playwright/test';
 
 const localHost = '127.0.0.1';
 const localPort = process.env['WEBSITE_E2E_PORT'] ?? '4308';
@@ -13,6 +13,15 @@ export default defineConfig({
   use: {
     baseURL,
   },
+  // Declare chromium as the only browser project — see the matching comment
+  // in apps/cockpit/playwright.config.ts. Suppresses the misleading
+  // "missing system dependencies" warning for webkit/firefox.
+  projects: [
+    {
+      name: 'chromium',
+      use: { ...devices['Desktop Chrome'] },
+    },
+  ],
   webServer: shouldStartLocalServer
     ? {
         command: `npx next dev . --hostname ${localHost} --port ${localPort}`,
