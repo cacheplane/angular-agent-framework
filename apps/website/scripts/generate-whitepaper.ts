@@ -11,7 +11,7 @@ if (!process.env['ANTHROPIC_API_KEY'] && loadEnvFile && fs.existsSync('.env')) {
 const client = new Anthropic();
 const MODEL = process.env['ANTHROPIC_MODEL'] ?? 'claude-opus-4-5';
 
-const CURRENT_API_CONTEXT = `You are writing public technical whitepapers for Cacheplane Angular Agent Framework.
+const CURRENT_API_CONTEXT = `You are writing public technical whitepapers for Cacheplane Agent UI for Angular.
 
 Use only the current API surface:
 - Package names are @ngaf/langgraph, @ngaf/render, @ngaf/chat, and @ngaf/ag-ui.

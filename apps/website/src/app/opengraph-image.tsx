@@ -9,7 +9,7 @@ import { ImageResponse } from 'next/og';
 
 // Node runtime (not edge) so we can read the bundled Garamond TTF off disk.
 export const runtime = 'nodejs';
-export const alt = 'Angular Agent Framework — Signal-native streaming for Angular + LangGraph';
+export const alt = 'Agent UI for Angular — Signal-native streaming for Angular + LangGraph';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 
@@ -98,7 +98,7 @@ export default async function OpenGraphImage() {
             marginBottom: 28,
           }}
         >
-          Angular Agent Framework · MIT
+          Agent UI for Angular · MIT
         </div>
 
         {/* Headline — EB Garamond serif matches marketing-site h1 */}

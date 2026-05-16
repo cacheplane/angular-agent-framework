@@ -300,7 +300,7 @@ export function Footer() {
         {/* Bottom bar */}
         <div className="mt-12 pt-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs"
           style={{ borderTop: `1px solid ${tokens.surfaces.border}`, color: tokens.colors.textMuted }}>
-          <span>&copy; {new Date().getFullYear()} Angular Agent Framework. All rights reserved.</span>
+          <span>&copy; {new Date().getFullYear()} Agent UI for Angular. All rights reserved.</span>
           <span>MIT License &middot; <Link href="/pricing" className="transition-colors"
             onClick={() => trackFooterCta('Pricing Bottom', '/pricing')}
             onMouseEnter={(e) => (e.currentTarget.style.color = tokens.colors.accent)}

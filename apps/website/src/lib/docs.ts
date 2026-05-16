@@ -86,8 +86,8 @@ export function getDocMetadata(
 
   const lib = getLibraryConfig(library);
   const libraryTitle = lib?.title ?? 'Docs';
-  const title = `${doc.title} - ${libraryTitle} Docs - Angular Agent Framework`;
-  const description = getDocDescription(doc.content, lib?.description ?? 'Angular Agent Framework documentation');
+  const title = `${doc.title} - ${libraryTitle} Docs - Agent UI for Angular`;
+  const description = getDocDescription(doc.content, lib?.description ?? 'Agent UI for Angular documentation');
   const pathname = `/docs/${library}/${section}/${slug}`;
 
   return createPageMetadata({ title, description, pathname });

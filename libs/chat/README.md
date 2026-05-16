@@ -2,7 +2,7 @@
 
 Drop-in agent chat UI for Angular 20+. Headless primitives that read from a runtime-neutral `Agent` contract, plus opinionated compositions (`<chat>`, `<chat-debug>`, GenUI surfaces) you can ship in days.
 
-Part of the [Angular Agent Framework](https://github.com/cacheplane/angular-agent-framework). MIT licensed.
+Part of [Agent UI for Angular](https://github.com/cacheplane/angular-agent-framework). MIT licensed.
 
 ## Runtime adapters
 

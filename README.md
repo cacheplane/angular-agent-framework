@@ -1,7 +1,7 @@
 <p align="center">
   <img
     src="https://cacheplane.ai/assets/hero.svg"
-    alt="Angular Agent Framework — agent UI primitives for Angular"
+    alt="Agent UI for Angular — agent UI primitives for Angular"
     width="100%"
   />
 </p>
@@ -109,7 +109,7 @@ That's it. `chat.messages()` and `chat.status()` are Angular Signals. Bind them 
 <p align="center">
   <img
     src="https://cacheplane.ai/assets/arch-diagram.svg"
-    alt="Angular Agent Framework architecture: Angular Component → agent() → StreamManager Bridge → LangGraph Platform, with signals returned reactively"
+    alt="Agent UI for Angular architecture: Angular Component → agent() → StreamManager Bridge → LangGraph Platform, with signals returned reactively"
     width="100%"
   />
 </p>

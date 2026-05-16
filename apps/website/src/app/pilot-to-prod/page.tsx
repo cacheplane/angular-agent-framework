@@ -12,7 +12,7 @@ import { Promises } from '../../components/landing/Promises';
 import { FinalCTA } from '../../components/landing/FinalCTA';
 
 export const metadata = {
-  title: 'Pilot to Production — Angular Agent Framework',
+  title: 'Pilot to Production — Agent UI for Angular',
   description: 'Close the last-mile gap. The 3-month pilot engagement is included with every app deployment license. We work alongside your Angular team to ship your first agent to production.',
 };
 

@@ -25,13 +25,13 @@ const mono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_ORIGIN),
-  title: 'Angular Agent Framework — Signal-Native Streaming for Angular + LangGraph',
+  title: 'Agent UI for Angular — Signal-Native Streaming for Angular + LangGraph',
   description: 'The enterprise Angular agent framework for LangChain. Signal-native streaming, thread persistence, and production patterns for Angular 20+.',
   icons: {
     icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🛩️</text></svg>',
   },
   openGraph: {
-    title: 'Angular Agent Framework',
+    title: 'Agent UI for Angular',
     description: 'Signal-native streaming for LangGraph — production patterns your Angular team can own.',
     type: 'website',
     siteName: SITE_NAME,
@@ -40,7 +40,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Angular Agent Framework',
+    title: 'Agent UI for Angular',
     description: 'Signal-native streaming for LangGraph — production patterns your Angular team can own.',
     images: [DEFAULT_SOCIAL_IMAGE],
   },

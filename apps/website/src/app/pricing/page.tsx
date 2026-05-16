@@ -8,7 +8,7 @@ import { LeadForm } from '../../components/pricing/LeadForm';
 import { FinalCTA } from '../../components/landing/FinalCTA';
 
 export const metadata = {
-  title: 'Pricing — Angular Agent Framework',
+  title: 'Pricing — Agent UI for Angular',
   description: 'Simple, transparent pricing. MIT-licensed libraries are free forever. Enterprise contracts available.',
 };
 
