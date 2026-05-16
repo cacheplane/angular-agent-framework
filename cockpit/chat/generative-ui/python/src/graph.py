@@ -20,7 +20,21 @@ from src.dashboard_tools import ALL_TOOLS
 _PROMPT = (Path(__file__).parent.parent / "prompts" / "dashboard.md").read_text()
 
 _llm = ChatOpenAI(model="gpt-5-mini", temperature=0, streaming=True)
-_llm_with_tools = _llm.bind_tools(ALL_TOOLS)
+
+# Dedicated planner: full gpt-5 with minimal reasoning effort.
+# gpt-5-mini at default reasoning ignores the "EXACTLY ONE tool" directive
+# in plan_tools and reflexively calls all four data tools on every
+# follow-up — verified in chrome MCP after PR #363 tightened the prompt
+# but the model still over-called. Bumping the planner to gpt-5 sharpens
+# instruction-following, and reasoning_effort='minimal' suppresses the
+# "let me be thorough" deliberation that drives the fan-out.
+_planner_llm = ChatOpenAI(
+    model="gpt-5",
+    temperature=0,
+    streaming=True,
+    reasoning_effort="minimal",
+)
+_llm_with_tools = _planner_llm.bind_tools(ALL_TOOLS)
 
 
 class DashboardState(MessagesState):
