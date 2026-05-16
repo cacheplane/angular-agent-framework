@@ -6,7 +6,9 @@
   "targets": {
     "build": {
       "executor": "@angular/build:application",
-      "outputs": ["{options.outputPath.base}"],
+      "outputs": [
+        "{options.outputPath.base}"
+      ],
       "options": {
         "outputPath": {
           "base": "dist/cockpit/langgraph/memory/angular",
@@ -14,13 +16,23 @@
         },
         "browser": "cockpit/langgraph/memory/angular/src/main.ts",
         "tsConfig": "cockpit/langgraph/memory/angular/tsconfig.app.json",
-        "styles": ["cockpit/langgraph/memory/angular/src/styles.css"]
+        "styles": [
+          "cockpit/langgraph/memory/angular/src/styles.css"
+        ]
       },
       "configurations": {
         "production": {
           "budgets": [
-            { "type": "initial", "maximumWarning": "500kb", "maximumError": "1mb" },
-            { "type": "anyComponentStyle", "maximumWarning": "4kb", "maximumError": "8kb" }
+            {
+              "type": "initial",
+              "maximumWarning": "500kb",
+              "maximumError": "1mb"
+            },
+            {
+              "type": "anyComponentStyle",
+              "maximumWarning": "4kb",
+              "maximumError": "8kb"
+            }
           ],
           "outputHashing": "none"
         },
@@ -34,6 +46,18 @@
               "with": "cockpit/langgraph/memory/angular/src/environments/environment.development.ts"
             }
           ]
+        },
+        "cockpit": {
+          "optimization": false,
+          "extractLicenses": false,
+          "sourceMap": true,
+          "fileReplacements": [
+            {
+              "replace": "cockpit/langgraph/memory/angular/src/environments/environment.ts",
+              "with": "cockpit/langgraph/memory/angular/src/environments/environment.development.ts"
+            }
+          ],
+          "browser": "cockpit/langgraph/memory/angular/src/main.cockpit.ts"
         }
       },
       "defaultConfiguration": "production"
@@ -42,8 +66,15 @@
       "continuous": true,
       "executor": "@angular/build:dev-server",
       "configurations": {
-        "production": { "buildTarget": "cockpit-langgraph-memory-angular:build:production" },
-        "development": { "buildTarget": "cockpit-langgraph-memory-angular:build:development" }
+        "production": {
+          "buildTarget": "cockpit-langgraph-memory-angular:build:production"
+        },
+        "development": {
+          "buildTarget": "cockpit-langgraph-memory-angular:build:development"
+        },
+        "cockpit": {
+          "buildTarget": "cockpit-langgraph-memory-angular:build:cockpit"
+        }
       },
       "defaultConfiguration": "development",
       "options": {

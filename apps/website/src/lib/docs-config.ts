@@ -49,6 +49,7 @@ export const docsConfig: DocsLibrary[] = [
           { title: 'Subgraphs', slug: 'subgraphs', section: 'guides' },
           { title: 'Testing', slug: 'testing', section: 'guides' },
           { title: 'Deployment', slug: 'deployment', section: 'guides' },
+          { title: 'Lifecycle Signals', slug: 'lifecycle', section: 'guides' },
         ],
       },
       {
@@ -99,6 +100,7 @@ export const docsConfig: DocsLibrary[] = [
           { title: 'State Store', slug: 'state-store', section: 'guides' },
           { title: 'Specs & Elements', slug: 'specs', section: 'guides' },
           { title: 'Events & Handlers', slug: 'events', section: 'guides' },
+          { title: 'Lifecycle Signals', slug: 'lifecycle', section: 'guides' },
         ],
       },
       {
@@ -152,6 +154,7 @@ export const docsConfig: DocsLibrary[] = [
           { title: 'Streaming', slug: 'streaming', section: 'guides' },
           { title: 'Configuration', slug: 'configuration', section: 'guides' },
           { title: 'Writing an Adapter', slug: 'writing-an-adapter', section: 'guides' },
+          { title: 'Lifecycle Signals', slug: 'lifecycle', section: 'guides' },
         ],
       },
       {

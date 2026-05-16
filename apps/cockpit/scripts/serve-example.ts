@@ -30,12 +30,12 @@ process.on('SIGTERM', cleanup);
 run('cockpit', 'npx nx serve cockpit --port 4201', '36');
 
 if (allMode) {
-  capabilities.forEach((c) => run(c.id, `npx nx serve ${c.angularProject} --port ${c.port}`, '33'));
+  capabilities.forEach((c) => run(c.id, `npx nx run ${c.angularProject}:serve:cockpit --port ${c.port}`, '33'));
   console.log('\n🚀 Starting cockpit + all 14 examples\n');
 } else {
   const cap = findCapability(capabilityArg!);
   if (!cap) { console.error(`Unknown: ${capabilityArg}`); process.exit(1); }
-  run(cap.id, `npx nx serve ${cap.angularProject} --port ${cap.port}`, '33');
+  run(cap.id, `npx nx run ${cap.angularProject}:serve:cockpit --port ${cap.port}`, '33');
   run(`${cap.id}-py`, `cd ${cap.pythonDir} && source $HOME/.local/bin/env 2>/dev/null; uv sync && uv run langgraph dev --port 8123`, '35');
   console.log(`\n🚀 ${cap.id}: cockpit=4201 angular=${cap.port} langgraph=8123\n`);
 }

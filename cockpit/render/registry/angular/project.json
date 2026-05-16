@@ -6,7 +6,9 @@
   "targets": {
     "build": {
       "executor": "@angular/build:application",
-      "outputs": ["{options.outputPath.base}"],
+      "outputs": [
+        "{options.outputPath.base}"
+      ],
       "options": {
         "outputPath": {
           "base": "dist/cockpit/render/registry/angular",
@@ -14,13 +16,23 @@
         },
         "browser": "cockpit/render/registry/angular/src/main.ts",
         "tsConfig": "cockpit/render/registry/angular/tsconfig.app.json",
-        "styles": ["cockpit/render/registry/angular/src/styles.css"]
+        "styles": [
+          "cockpit/render/registry/angular/src/styles.css"
+        ]
       },
       "configurations": {
         "production": {
           "budgets": [
-            { "type": "initial", "maximumWarning": "500kb", "maximumError": "1mb" },
-            { "type": "anyComponentStyle", "maximumWarning": "4kb", "maximumError": "8kb" }
+            {
+              "type": "initial",
+              "maximumWarning": "500kb",
+              "maximumError": "1mb"
+            },
+            {
+              "type": "anyComponentStyle",
+              "maximumWarning": "4kb",
+              "maximumError": "8kb"
+            }
           ],
           "outputHashing": "none"
         },
@@ -34,6 +46,18 @@
               "with": "cockpit/render/registry/angular/src/environments/environment.development.ts"
             }
           ]
+        },
+        "cockpit": {
+          "optimization": false,
+          "extractLicenses": false,
+          "sourceMap": true,
+          "fileReplacements": [
+            {
+              "replace": "cockpit/render/registry/angular/src/environments/environment.ts",
+              "with": "cockpit/render/registry/angular/src/environments/environment.development.ts"
+            }
+          ],
+          "browser": "cockpit/render/registry/angular/src/main.cockpit.ts"
         }
       },
       "defaultConfiguration": "production"
@@ -42,8 +66,15 @@
       "continuous": true,
       "executor": "@angular/build:dev-server",
       "configurations": {
-        "production": { "buildTarget": "cockpit-render-registry-angular:build:production" },
-        "development": { "buildTarget": "cockpit-render-registry-angular:build:development" }
+        "production": {
+          "buildTarget": "cockpit-render-registry-angular:build:production"
+        },
+        "development": {
+          "buildTarget": "cockpit-render-registry-angular:build:development"
+        },
+        "cockpit": {
+          "buildTarget": "cockpit-render-registry-angular:build:cockpit"
+        }
       },
       "defaultConfiguration": "development",
       "options": {

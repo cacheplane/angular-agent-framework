@@ -13,16 +13,16 @@ interface PositionCard {
 
 const CARDS: PositionCard[] = [
   {
-    eyebrow: 'Runtime',
-    headline: 'One Angular UI. Any agent runtime.',
-    body: 'Same primitives drive LangGraph, AG-UI, CrewAI, Mastra, Pydantic AI, AWS Strands, and your own backend.',
+    eyebrow: 'Runtime layer',
+    headline: 'One Angular contract for every agent runtime.',
+    body: 'Wire LangGraph, AG-UI, CrewAI, Mastra, Pydantic AI, AWS Strands, or your own backend behind the same Angular primitives.',
   },
   {
-    eyebrow: 'Streaming',
-    headline: 'LangGraph streaming for Angular.',
+    eyebrow: 'Streaming state',
+    headline: 'Messages, status, errors, and tools as signals.',
     body: (
       <>
-        <code style={{ fontFamily: tokens.typography.fontMono }}>agent()</code> ships LangGraph streaming for interrupts, branch and history, tool progress, and tool results — plus{' '}
+        <code style={{ fontFamily: tokens.typography.fontMono }}>agent()</code> exposes token streams, interrupts, tool progress, branch history,{' '}
         <code style={{ fontFamily: tokens.typography.fontMono }}>error()</code>,{' '}
         <code style={{ fontFamily: tokens.typography.fontMono }}>status()</code>, and{' '}
         <code style={{ fontFamily: tokens.typography.fontMono }}>reload()</code>.
@@ -31,26 +31,32 @@ const CARDS: PositionCard[] = [
   },
   {
     eyebrow: 'Generative UI',
-    headline: 'Generative UI, built in.',
+    headline: 'Agent output renders into your component system.',
     body: (
       <>
-        Render Vercel <code style={{ fontFamily: tokens.typography.fontMono }}>json-render</code> and Google A2UI specs into Angular components. No second framework to bolt on.
+        Render Vercel <code style={{ fontFamily: tokens.typography.fontMono }}>json-render</code> and Google A2UI specs into Angular components you already own.
       </>
     ),
   },
   {
-    eyebrow: 'License',
-    headline: 'MIT. Headless primitives, drop-in compositions.',
-    body: 'No tier gates on Angular. Use the unstyled primitives, or the opinionated chat shell — your call.',
+    eyebrow: 'Production surface',
+    headline: 'The pieces that move a demo into production.',
+    body: 'Fallbacks, reloads, persistence patterns, observability hooks, and MIT-licensed primitives you can own long term.',
   },
 ];
 
 export function Differentiator() {
   return (
-    <Section surface="canvas" ariaLabelledBy="differentiator-heading">
+    <Section
+      surface="canvas"
+      ariaLabelledBy="differentiator-heading"
+      style={{
+        paddingTop: 72,
+      }}
+    >
       <Container>
         {/* Editorial top */}
-        <div style={{ maxWidth: 720, margin: '0 auto 56px', textAlign: 'center' }}>
+        <div style={{ maxWidth: 1020, margin: '0 auto 44px', textAlign: 'center' }}>
           <Eyebrow tone="accent" style={{ marginBottom: 16 }}>Why this exists</Eyebrow>
           <h2
             id="differentiator-heading"
@@ -61,11 +67,11 @@ export function Differentiator() {
               fontWeight: 700,
               color: tokens.colors.textPrimary,
               margin: 0,
-              marginBottom: 24,
+              marginBottom: 20,
               letterSpacing: '-0.015em',
             }}
           >
-            Built for Angular, not retrofitted.
+            The fullstack agentic library for Angular.
           </h2>
           <p
             style={{
@@ -73,22 +79,11 @@ export function Differentiator() {
               fontSize: tokens.typography.bodyLg.size,
               lineHeight: tokens.typography.bodyLg.line,
               color: tokens.colors.textSecondary,
-              margin: 0,
-              marginBottom: 16,
+              margin: '0 auto',
+              maxWidth: 760,
             }}
           >
-            Most agent UI work assumes React or a vanilla web component. Angular teams glue together ad-hoc streaming, lose interrupts, and re-implement thread state — every project, every time.
-          </p>
-          <p
-            style={{
-              fontFamily: tokens.typography.bodyLg.family,
-              fontSize: tokens.typography.bodyLg.size,
-              lineHeight: tokens.typography.bodyLg.line,
-              color: tokens.colors.textSecondary,
-              margin: 0,
-            }}
-          >
-            Signals and DI are <em>better</em> substrates for agent UI than hooks — when they&apos;re used directly, not behind a port. So we built it that way.
+            NGAF brings the pieces of an agentic product into one Angular-first SDK: runtime adapters, signal-native streaming, tool events, generative UI, and production patterns. It is built from real agent UI experience, not a thin integration layer.
           </p>
         </div>
 
@@ -97,7 +92,7 @@ export function Differentiator() {
           style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
-            gap: 16,
+            gap: 14,
           }}
         >
           {CARDS.map((c) => (

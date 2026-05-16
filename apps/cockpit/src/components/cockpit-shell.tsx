@@ -102,6 +102,7 @@ export function CockpitShell({
               modes={PRIMARY_MODES}
               activeMode={activeMode}
               onChange={setActiveMode}
+              capability={entry.topic}
             />
           </div>
         </header>
@@ -112,6 +113,7 @@ export function CockpitShell({
             <RunMode
               entryTitle={entryTitle}
               runtimeUrl={contentBundle.runtimeUrl}
+              capabilitySlug={entry.topic}
             />
           </div>
           {activeMode === 'Code' ? (
@@ -121,10 +123,11 @@ export function CockpitShell({
               backendAssetPaths={backendAssetPaths}
               codeFiles={contentBundle.codeFiles}
               promptFiles={contentBundle.promptFiles}
+              capability={entry.topic}
             />
           ) : null}
           {activeMode === 'Docs' ? (
-            <NarrativeDocs narrativeDocs={contentBundle.narrativeDocs} />
+            <NarrativeDocs narrativeDocs={contentBundle.narrativeDocs} capability={entry.topic} />
           ) : null}
           {activeMode === 'API' ? (
             <ApiMode docSections={contentBundle.docSections} />

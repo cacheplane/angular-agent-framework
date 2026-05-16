@@ -19,6 +19,7 @@ import type { RenderContext } from './contexts/render-context';
 import type { AngularRegistry } from './render.types';
 import { signalStateStore } from './signal-state-store';
 import type { RenderEvent } from './render-event';
+import { RenderLifecycleService } from './render-lifecycle.service';
 
 /**
  * Top-level entry point for rendering a json-render spec.
@@ -63,6 +64,7 @@ export class RenderSpecComponent implements OnInit {
 
   private readonly config = inject(RENDER_CONFIG, { optional: true });
   private readonly destroyRef = inject(DestroyRef);
+  private readonly lifecycle = inject(RenderLifecycleService, { optional: true });
 
   /** Internal store, lazily created once and reused across spec changes. */
   private _internalStore: StateStore | undefined;
@@ -104,14 +106,14 @@ export class RenderSpecComponent implements OnInit {
         if (result instanceof Promise) {
           result.then(
             (r) => {
-              this.events.emit({ type: 'handler', action: name, params, result: r });
+              this.emitTapped({ type: 'handler', action: name, params, result: r });
             },
             () => {
-              this.events.emit({ type: 'handler', action: name, params, result: undefined });
+              this.emitTapped({ type: 'handler', action: name, params, result: undefined });
             },
           );
         } else {
-          this.events.emit({ type: 'handler', action: name, params, result });
+          this.emitTapped({ type: 'handler', action: name, params, result });
         }
         return result;
       };
@@ -119,9 +121,31 @@ export class RenderSpecComponent implements OnInit {
     return wrapped;
   });
 
+  /** Emits a RenderEvent through the events output and notifies the
+   * lifecycle service (single tap point — all events flow through here). */
+  private readonly emitTapped = (event: RenderEvent): void => {
+    this.events.emit(event);
+    if (!this.lifecycle) return;
+    switch (event.type) {
+      case 'lifecycle':
+        this.lifecycle.notifyLifecycle({
+          kind: event.scope,
+          type: event.event,
+          elementType: event.elementType,
+        });
+        break;
+      case 'stateChange':
+        this.lifecycle.notifyStateChange();
+        break;
+      case 'handler':
+        this.lifecycle.notifyHandlerInvoked(event.action);
+        break;
+    }
+  };
+
   /** Emits a RenderEvent through the events output. */
   private readonly emitEvent = (event: RenderEvent) => {
-    this.events.emit(event);
+    this.emitTapped(event);
   };
 
   /** The RenderContext provided to children via viewProviders. */
@@ -140,7 +164,7 @@ export class RenderSpecComponent implements OnInit {
       const store = this.resolvedStore();
       const unsub = store.subscribe(() => {
         const snapshot = store.getSnapshot() as Record<string, unknown>;
-        this.events.emit({
+        this.emitTapped({
           type: 'stateChange',
           path: '/',
           value: snapshot,
@@ -151,11 +175,11 @@ export class RenderSpecComponent implements OnInit {
     });
 
     this.destroyRef.onDestroy(() => {
-      this.events.emit({ type: 'lifecycle', event: 'destroyed', scope: 'spec' });
+      this.emitTapped({ type: 'lifecycle', event: 'destroyed', scope: 'spec' });
     });
   }
 
   ngOnInit(): void {
-    this.events.emit({ type: 'lifecycle', event: 'mounted', scope: 'spec' });
+    this.emitTapped({ type: 'lifecycle', event: 'mounted', scope: 'spec' });
   }
 }

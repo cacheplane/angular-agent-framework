@@ -6,7 +6,9 @@
   "targets": {
     "build": {
       "executor": "@angular/build:application",
-      "outputs": ["{options.outputPath.base}"],
+      "outputs": [
+        "{options.outputPath.base}"
+      ],
       "options": {
         "outputPath": {
           "base": "dist/cockpit/chat/interrupts/angular",
@@ -14,13 +16,23 @@
         },
         "browser": "cockpit/chat/interrupts/angular/src/main.ts",
         "tsConfig": "cockpit/chat/interrupts/angular/tsconfig.app.json",
-        "styles": ["cockpit/chat/interrupts/angular/src/styles.css"]
+        "styles": [
+          "cockpit/chat/interrupts/angular/src/styles.css"
+        ]
       },
       "configurations": {
         "production": {
           "budgets": [
-            { "type": "initial", "maximumWarning": "500kb", "maximumError": "1mb" },
-            { "type": "anyComponentStyle", "maximumWarning": "4kb", "maximumError": "8kb" }
+            {
+              "type": "initial",
+              "maximumWarning": "500kb",
+              "maximumError": "1mb"
+            },
+            {
+              "type": "anyComponentStyle",
+              "maximumWarning": "4kb",
+              "maximumError": "8kb"
+            }
           ],
           "outputHashing": "none"
         },
@@ -34,6 +46,18 @@
               "with": "cockpit/chat/interrupts/angular/src/environments/environment.development.ts"
             }
           ]
+        },
+        "cockpit": {
+          "optimization": false,
+          "extractLicenses": false,
+          "sourceMap": true,
+          "fileReplacements": [
+            {
+              "replace": "cockpit/chat/interrupts/angular/src/environments/environment.ts",
+              "with": "cockpit/chat/interrupts/angular/src/environments/environment.development.ts"
+            }
+          ],
+          "browser": "cockpit/chat/interrupts/angular/src/main.cockpit.ts"
         }
       },
       "defaultConfiguration": "production"
@@ -42,8 +66,15 @@
       "continuous": true,
       "executor": "@angular/build:dev-server",
       "configurations": {
-        "production": { "buildTarget": "cockpit-chat-interrupts-angular:build:production" },
-        "development": { "buildTarget": "cockpit-chat-interrupts-angular:build:development" }
+        "production": {
+          "buildTarget": "cockpit-chat-interrupts-angular:build:production"
+        },
+        "development": {
+          "buildTarget": "cockpit-chat-interrupts-angular:build:development"
+        },
+        "cockpit": {
+          "buildTarget": "cockpit-chat-interrupts-angular:build:cockpit"
+        }
       },
       "defaultConfiguration": "development",
       "options": {

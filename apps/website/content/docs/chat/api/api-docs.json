@@ -1748,6 +1748,12 @@
         "params": []
       },
       {
+        "name": "clearThread",
+        "signature": "clearThread()",
+        "description": "Clears local view state (classifiers, surface store, lifecycle counters)\nfor a new thread.\n\nResets messageCount to 0 and inputSubmittedAt to null. componentReady and\nfirstMessageSent are NOT reset (sticky for the chat instance lifetime).",
+        "params": []
+      },
+      {
         "name": "isGenuiTurn",
         "signature": "isGenuiTurn(message: unknown, _prevMsg: unknown, index: number)",
         "description": "True when this assistant message is part of a GenUI render turn.\nWalks backward through messages from `index` until it finds either\nan assistant message with `tool_calls` referencing a GenUI tool\n(→ this turn produces a surface) or a human message (→ the\npreceding turn ended; this assistant message stands on its own).\n\nAlso checks the message itself for:\n  - `extra.tool_calls[].name` matching a GenUI tool (post-streaming\n    state of the tool-call AI message), OR\n  - `extra.content[].type === 'function_call' && .name` matching\n    (live during the OpenAI Responses-API streaming chunks before\n    `tool_calls` populates).\n\nThe walk-back approach is robust to LangGraph's in-place\nreplacement of the ToolMessage (which strips the `name` field),\nunlike a single prev-message check.",
@@ -1938,6 +1944,19 @@
           {
             "name": "index",
             "type": "number",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
+        "name": "submitMessage",
+        "signature": "submitMessage(text: string)",
+        "description": "Programmatic submit. Calls `agent.submit({ message: text })` and updates\nthe CHAT_LIFECYCLE signals. Trimmed-empty text is a no-op.",
+        "params": [
+          {
+            "name": "text",
+            "type": "string",
             "description": "",
             "optional": false
           }
@@ -5957,6 +5976,38 @@
         "type": "AngularRegistry",
         "description": "Default render registry for generative UI components.",
         "optional": true
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "ChatLifecycle",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "componentReady",
+        "type": "Signal<boolean>",
+        "description": "True after `<chat>` initializes with a non-null agent binding.",
+        "optional": false
+      },
+      {
+        "name": "firstMessageSent",
+        "type": "Signal<boolean>",
+        "description": "True after the first user submit. Sticky for the life of the chat instance — does NOT reset on clearThread.",
+        "optional": false
+      },
+      {
+        "name": "inputSubmittedAt",
+        "type": "Signal<number | null>",
+        "description": "Epoch ms of the most recent user submit. Resets on clearThread.",
+        "optional": false
+      },
+      {
+        "name": "messageCount",
+        "type": "Signal<number>",
+        "description": "Count of user submits. Resets on clearThread.",
+        "optional": false
       }
     ],
     "examples": []

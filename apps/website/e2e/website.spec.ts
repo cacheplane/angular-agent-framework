@@ -9,7 +9,9 @@ test('landing page renders hero headline', async ({ page }) => {
 
 test('landing page renders differentiator section', async ({ page }) => {
   await page.goto('/');
-  await expect(page.getByText('Built for Angular, not retrofitted.').first()).toBeVisible();
+  // Assert on the stable id, not the heading copy — landing-page text rewrites
+  // happen far more often than the section structure changes.
+  await expect(page.locator('#differentiator-heading')).toBeVisible();
 });
 
 test('landing page renders feature blocks (Stream/Render/Ship)', async ({ page }) => {

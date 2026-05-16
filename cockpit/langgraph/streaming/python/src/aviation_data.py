@@ -157,3 +157,51 @@ FLIGHTS = [
      "depart_local": "07:45", "arrive_local": "11:30", "duration_min": 405,
      "status": "on_time", "gate": "C40", "aircraft": "Airbus A321"},
 ]
+
+# ── Dashboard analytics (PR 3: c-generative-ui aviation KPIs) ───────────────
+
+KPI_SNAPSHOT = {
+    "on_time_pct": 84.2,
+    "on_time_delta": "+1.4%",
+    "flights_today": 312,
+    "flights_today_delta": "+8",
+    "avg_delay_min": 12,
+    "avg_delay_delta": "-2 min",
+    "load_factor_pct": 78.5,
+    "load_factor_delta": "+0.6%",
+}
+
+ON_TIME_TREND = [
+    {"month": "2025-05", "on_time_pct": 82.4},
+    {"month": "2025-06", "on_time_pct": 81.1},
+    {"month": "2025-07", "on_time_pct": 79.8},
+    {"month": "2025-08", "on_time_pct": 80.5},
+    {"month": "2025-09", "on_time_pct": 83.2},
+    {"month": "2025-10", "on_time_pct": 84.0},
+    {"month": "2025-11", "on_time_pct": 82.6},
+    {"month": "2025-12", "on_time_pct": 78.9},
+    {"month": "2026-01", "on_time_pct": 80.2},
+    {"month": "2026-02", "on_time_pct": 81.7},
+    {"month": "2026-03", "on_time_pct": 82.8},
+    {"month": "2026-04", "on_time_pct": 84.2},
+]
+
+FLIGHTS_BY_AIRLINE = [
+    {"airline": "American", "count": 87},
+    {"airline": "United",   "count": 92},
+    {"airline": "Delta",    "count": 78},
+    {"airline": "JetBlue",  "count": 55},
+]
+
+RECENT_DISRUPTIONS = [
+    {"flight_number": "UA123", "type": "delayed",   "minutes": 45, "route": "LAX→JFK", "date": "2026-05-14"},
+    {"flight_number": "AA456", "type": "cancelled", "minutes": 0,  "route": "JFK→LAX", "date": "2026-05-14"},
+    {"flight_number": "DL789", "type": "delayed",   "minutes": 22, "route": "ATL→ORD", "date": "2026-05-13"},
+    {"flight_number": "B6101", "type": "delayed",   "minutes": 68, "route": "BOS→MIA", "date": "2026-05-13"},
+    {"flight_number": "UA204", "type": "cancelled", "minutes": 0,  "route": "SFO→SEA", "date": "2026-05-12"},
+    {"flight_number": "AA318", "type": "delayed",   "minutes": 15, "route": "DFW→DEN", "date": "2026-05-12"},
+    {"flight_number": "DL552", "type": "delayed",   "minutes": 35, "route": "ATL→MIA", "date": "2026-05-11"},
+    {"flight_number": "B6217", "type": "delayed",   "minutes": 80, "route": "JFK→BOS", "date": "2026-05-11"},
+    {"flight_number": "UA640", "type": "cancelled", "minutes": 0,  "route": "ORD→DEN", "date": "2026-05-10"},
+    {"flight_number": "AA871", "type": "delayed",   "minutes": 25, "route": "LAX→DFW", "date": "2026-05-10"},
+]

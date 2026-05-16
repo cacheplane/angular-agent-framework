@@ -21,6 +21,7 @@ import type {
 } from '@langchain/langgraph-sdk/ui';
 import type { BaseMessage, AIMessage as CoreAIMessage } from '@langchain/core/messages';
 import type { AgentSubmitInput, AgentSubmitOptions, AgentWithHistory } from '@ngaf/chat';
+import type { AgentLifecycle } from './lifecycle';
 
 // Re-export SDK types so consumers don't need to import from langgraph-sdk directly
 export type { BagTemplate, InferBag, Interrupt, ThreadState, SubmitOptions };
@@ -371,6 +372,14 @@ export interface LangGraphAgent<T = unknown, ResolvedBag extends BagTemplate = B
 
   /** Get tool call results associated with an AI message (LangGraph types). */
   getToolCalls: (msg: CoreAIMessage) => ToolCallWithResult[];
+
+  /**
+   * Lifecycle signals for observability/telemetry. Eight read-only signals
+   * capture key transitions (first stream chunk, first interrupt, tool
+   * call start/complete, thread create/persist, errors). All reset on
+   * `switchThread()`. See {@link AgentLifecycle}.
+   */
+  lifecycle: AgentLifecycle;
 }
 
 // ── Internal: StreamSubjects ─────────────────────────────────────────────────
