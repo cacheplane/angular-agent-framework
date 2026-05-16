@@ -44,6 +44,46 @@ describe('createProxyHandler', () => {
     expect(res.json).toHaveBeenCalledWith({ error: 'LANGSMITH_API_KEY not configured' });
   });
 
+  it('forwards telemetry ingest without requiring LANGSMITH_API_KEY', async () => {
+    delete process.env['LANGSMITH_API_KEY'];
+    const fetchMock = vi.spyOn(global, 'fetch').mockResolvedValue(
+      new Response('{"ok":true}', { status: 202, headers: { 'content-type': 'application/json' } }),
+    );
+    const handler = createProxyHandler({
+      backendUrl: DEFAULT_BACKEND,
+      telemetryIngestUrl: 'https://cacheplane.ai/api/ingest',
+    });
+    const res = makeRes();
+    const body = {
+      event: 'ngaf:stream_started',
+      distinctId: 'browser:test',
+      properties: { surface: 'canonical_demo' },
+    };
+
+    await handler({
+      method: 'POST',
+      headers: { host: 'demo.cacheplane.ai', 'content-type': 'application/json' },
+      body,
+      url: '/api/ingest',
+      query: {},
+    } as never, res as never);
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const [url, init] = fetchMock.mock.calls[0]!;
+    expect(url).toBe('https://cacheplane.ai/api/ingest');
+    expect(init).toEqual(expect.objectContaining({
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+    }));
+    expect(JSON.parse(String((init as RequestInit).body))).toEqual({
+      ...body,
+      key: 'phc_public_cacheplane_telemetry',
+    });
+    expect(res._status).toBe(202);
+    expect(res.setHeader).toHaveBeenCalledWith('content-type', 'application/json');
+    expect(res.send).toHaveBeenCalledWith('{"ok":true}');
+  });
+
   it('responds 204 to OPTIONS preflight with CORS headers', async () => {
     const handler = createProxyHandler({ backendUrl: DEFAULT_BACKEND });
     const res = makeRes();

@@ -52,6 +52,11 @@ export interface ProxyConfig {
    *  behavior). Checked against Content-Length first, falls back to
    *  JSON.stringify(req.body).length. */
   readonly maxBodyBytes?: number;
+  /** Optional first-party ingest endpoint for browser telemetry. When set,
+   *  POST /api/ingest is forwarded here instead of the LangGraph backend.
+   *  This keeps the browser-facing telemetry API vendor-neutral while the
+   *  deployment owns its server-side analytics boundary. */
+  readonly telemetryIngestUrl?: string;
 }
 
 const DEFAULT_BACKEND_URL = 'https://cockpit-dev-219a15942c545a00a03a9a41905d7fc2.us.langgraph.app';
@@ -67,6 +72,12 @@ function extractIp(headers: Record<string, string | undefined>): string {
   const real = headers['x-real-ip'];
   if (real) return real.trim();
   return `unknown:${Math.random().toString(36).slice(2, 10)}`;
+}
+
+function objectBody(body: unknown): Record<string, unknown> {
+  return body && typeof body === 'object' && !Array.isArray(body)
+    ? body as Record<string, unknown>
+    : {};
 }
 
 export function createProxyHandler(config: ProxyConfig = {}): (req: VercelRequest, res: VercelResponse) => Promise<void> {
@@ -100,6 +111,38 @@ export function createProxyHandler(config: ProxyConfig = {}): (req: VercelReques
       return;
     }
 
+    // Build target URL metadata once — strip /api prefix from req.url, drop the
+    // Vercel catch-all query param, keep real query params.
+    const parsedUrl = new URL(req.url ?? '', `https://${req.headers.host ?? 'localhost'}`);
+    const apiPath = parsedUrl.pathname.replace(/^\/api/, '') || '/';
+    parsedUrl.searchParams.delete('[...path]');
+    parsedUrl.searchParams.delete('[[...path]]');
+    const cleanSearch = parsedUrl.searchParams.toString() ? `?${parsedUrl.searchParams.toString()}` : '';
+
+    if (config.telemetryIngestUrl && apiPath === '/ingest') {
+      if (req.method !== 'POST') {
+        res.status(405).json({ error: 'method_not_allowed' });
+        return;
+      }
+      try {
+        const response = await fetch(config.telemetryIngestUrl, {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            ...objectBody(req.body),
+            key: 'phc_public_cacheplane_telemetry',
+          }),
+        });
+        const contentType = response.headers.get('content-type') ?? 'application/json';
+        res.setHeader('content-type', contentType);
+        res.status(response.status);
+        res.send(await response.text());
+      } catch (err) {
+        res.status(502).json({ error: 'Telemetry ingest error', message: (err as Error).message });
+      }
+      return;
+    }
+
     const apiKey = process.env['LANGSMITH_API_KEY'];
     if (!apiKey) {
       res.status(500).json({ error: 'LANGSMITH_API_KEY not configured' });
@@ -107,14 +150,6 @@ export function createProxyHandler(config: ProxyConfig = {}): (req: VercelReques
     }
 
     const backendUrl = resolveBackend(req.headers.referer);
-
-    // Build target URL — strip /api prefix from req.url, drop the
-    // Vercel catch-all query param, keep real query params.
-    const parsedUrl = new URL(req.url ?? '', `https://${req.headers.host ?? 'localhost'}`);
-    const apiPath = parsedUrl.pathname.replace(/^\/api/, '') || '/';
-    parsedUrl.searchParams.delete('[...path]');
-    parsedUrl.searchParams.delete('[[...path]]');
-    const cleanSearch = parsedUrl.searchParams.toString() ? `?${parsedUrl.searchParams.toString()}` : '';
     const targetUrl = `${backendUrl}${apiPath}${cleanSearch}`;
 
     // Debug endpoint — confirms the proxy is wired without hitting the upstream.
