@@ -1,0 +1,16 @@
+{
+  "slug": "runtime-stream-errors-by-transport",
+  "posthog_id": null,
+  "kind": "trends",
+  "name": "Runtime stream errors by transport",
+  "events": [
+    {
+      "event": "ngaf:stream_errored",
+      "math": "total"
+    }
+  ],
+  "breakdown": "transport",
+  "breakdown_limit": 10,
+  "interval": "day",
+  "date_from": "-30d"
+}

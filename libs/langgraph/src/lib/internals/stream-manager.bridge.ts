@@ -15,6 +15,11 @@ import {
 import { FetchStreamTransport } from '../transport/fetch-stream.transport';
 import { BagTemplate } from '@langchain/langgraph-sdk';
 import { getToolCallsWithResults } from '@langchain/langgraph-sdk/utils';
+import type {
+  AgentRuntimeTelemetryEvent,
+  AgentRuntimeTelemetryProperties,
+  AgentRuntimeTelemetrySink,
+} from '@ngaf/chat';
 import {
   SubagentTracker,
   TrackedSubagent,
@@ -38,6 +43,33 @@ function lgTrace(...args: unknown[]): void {
     // eslint-disable-next-line no-console
     console.debug('[ngaf-chat-stream]', ...args);
   }
+}
+
+function captureAgentRuntimeTelemetry(
+  sink: AgentRuntimeTelemetrySink | false | undefined,
+  event: AgentRuntimeTelemetryEvent,
+  properties: AgentRuntimeTelemetryProperties,
+): void {
+  if (!sink) return;
+  try {
+    void Promise.resolve(sink({ event, properties })).catch(() => undefined);
+  } catch {
+    // Keep telemetry side effects isolated from stream control flow.
+  }
+}
+
+function agentRuntimeTelemetryErrorClass(error: unknown): string {
+  if (error instanceof Error) return error.name || error.constructor.name || 'Error';
+  if (
+    error
+    && typeof error === 'object'
+    && 'name' in error
+    && typeof error.name === 'string'
+    && error.name.length > 0
+  ) {
+    return error.name;
+  }
+  return 'UnknownError';
 }
 
 export interface StreamManagerBridgeOptions<T, ResolvedBag extends BagTemplate = BagTemplate> {
@@ -87,6 +119,19 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
     subagentToolNames: options.subagentToolNames,
     onSubagentChange: publishSubagents,
   });
+  const telemetryProperties = { transport: 'langgraph' as const, surface: 'agent' };
+  captureAgentRuntimeTelemetry(
+    options.telemetry,
+    'ngaf:runtime_instance_created',
+    telemetryProperties,
+  );
+
+  function captureRuntimeRequestTelemetry(requestType: string): void {
+    captureAgentRuntimeTelemetry(options.telemetry, 'ngaf:runtime_request_created', {
+      ...telemetryProperties,
+      requestType,
+    });
+  }
 
   /**
    * Tracks reasoning timing per message id. Keys are message ids; values
@@ -223,6 +268,7 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
       throw new Error('The configured LangGraph transport does not support server-side queueing.');
     }
 
+    captureRuntimeRequestTelemetry('enqueue');
     const controller = new AbortController();
     const entry = await transport.createQueuedRun(
       options.assistantId,
@@ -286,6 +332,9 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
 
   async function joinQueuedRun(entry: AgentQueueEntry): Promise<void> {
     abortController = new AbortController();
+    const startedAt = Date.now();
+    captureRuntimeRequestTelemetry('join_queued');
+    captureAgentRuntimeTelemetry(options.telemetry, 'ngaf:stream_started', telemetryProperties);
     subjects.custom$.next([]);
     subjects.toolProgress$.next([]);
     toolProgressMap.clear();
@@ -305,16 +354,32 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
         // post-process node mutations (RemoveMessage, id-match content
         // replacement) reflected on the server are picked up client-side.
         await refreshHistory(true);
+        captureAgentRuntimeTelemetry(options.telemetry, 'ngaf:stream_ended', {
+          ...telemetryProperties,
+          durationMs: Date.now() - startedAt,
+        });
       }
     } catch (err) {
       subjects.error$.next(err);
       subjects.status$.next(ResourceStatus.Error);
+      captureAgentRuntimeTelemetry(options.telemetry, 'ngaf:stream_errored', {
+        ...telemetryProperties,
+        durationMs: Date.now() - startedAt,
+        errorClass: agentRuntimeTelemetryErrorClass(err),
+      });
     }
   }
 
-  async function runStream(payload: unknown, opts?: LangGraphSubmitOptions): Promise<void> {
+  async function runStream(
+    payload: unknown,
+    opts?: LangGraphSubmitOptions,
+    requestType = 'submit',
+  ): Promise<void> {
     abortController?.abort();
     abortController = new AbortController();
+    const startedAt = Date.now();
+    captureRuntimeRequestTelemetry(requestType);
+    captureAgentRuntimeTelemetry(options.telemetry, 'ngaf:stream_started', telemetryProperties);
 
     subjects.status$.next(ResourceStatus.Loading);
     subjects.error$.next(undefined);
@@ -362,6 +427,10 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
         // authoritative after run completion.
         await refreshHistory(true);
         await drainQueue();
+        captureAgentRuntimeTelemetry(options.telemetry, 'ngaf:stream_ended', {
+          ...telemetryProperties,
+          durationMs: Date.now() - startedAt,
+        });
       }
     } catch (err) {
       if ((err as Error)?.name === 'AbortError') {
@@ -369,6 +438,11 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
       } else {
         subjects.error$.next(err);
         subjects.status$.next(ResourceStatus.Error);
+        captureAgentRuntimeTelemetry(options.telemetry, 'ngaf:stream_errored', {
+          ...telemetryProperties,
+          durationMs: Date.now() - startedAt,
+          errorClass: agentRuntimeTelemetryErrorClass(err),
+        });
       }
     }
   }
@@ -675,6 +749,9 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
       if (!currentThreadId) return;
       abortController?.abort();
       abortController = new AbortController();
+      const startedAt = Date.now();
+      captureRuntimeRequestTelemetry('join');
+      captureAgentRuntimeTelemetry(options.telemetry, 'ngaf:stream_started', telemetryProperties);
       subjects.custom$.next([]);
       subjects.toolProgress$.next([]);
       toolProgressMap.clear();
@@ -688,15 +765,24 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
         }
         subjects.status$.next(ResourceStatus.Resolved);
         await refreshHistory();
+        captureAgentRuntimeTelemetry(options.telemetry, 'ngaf:stream_ended', {
+          ...telemetryProperties,
+          durationMs: Date.now() - startedAt,
+        });
       } catch (err) {
         subjects.error$.next(err);
         subjects.status$.next(ResourceStatus.Error);
+        captureAgentRuntimeTelemetry(options.telemetry, 'ngaf:stream_errored', {
+          ...telemetryProperties,
+          durationMs: Date.now() - startedAt,
+          errorClass: agentRuntimeTelemetryErrorClass(err),
+        });
       }
     },
 
     resubmitLast: async () => {
       if (lastPayload !== null) {
-        await runStream(lastPayload, lastOptions);
+        await runStream(lastPayload, lastOptions, 'resubmit');
       }
     },
 

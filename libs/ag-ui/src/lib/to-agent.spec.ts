@@ -3,6 +3,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { Observable, Subject } from 'rxjs';
 import type { AbstractAgent, BaseEvent } from '@ag-ui/client';
 import type { RunAgentInput } from '@ag-ui/core';
+import type { AgentRuntimeTelemetryPayload } from '@ngaf/chat';
 import { toAgent } from './to-agent';
 
 /**
@@ -111,6 +112,51 @@ describe('toAgent', () => {
     const a = toAgent(stub as unknown as AbstractAgent);
     await a.submit({ message: 'hi' });
     expect(stub.runAgent).toHaveBeenCalledOnce();
+  });
+
+  it('emits opt-in telemetry around completed AG-UI runs', async () => {
+    const stub = new StubAgent();
+    const seen: AgentRuntimeTelemetryPayload[] = [];
+    const a = toAgent(stub as unknown as AbstractAgent, {
+      telemetry: (payload) => seen.push(payload),
+    });
+
+    await a.submit({ message: 'hi' });
+
+    expect(seen.map((payload) => payload.event)).toEqual([
+      'ngaf:runtime_instance_created',
+      'ngaf:runtime_request_created',
+      'ngaf:stream_started',
+      'ngaf:stream_ended',
+    ]);
+    expect(seen[0].properties).toEqual({ transport: 'ag-ui', surface: 'to_agent' });
+    expect(seen[1].properties).toEqual({ transport: 'ag-ui', surface: 'to_agent', requestType: 'submit' });
+    expect(seen[2].properties).toEqual({ transport: 'ag-ui', surface: 'to_agent' });
+    expect(seen[3].properties).toEqual({
+      transport: 'ag-ui',
+      surface: 'to_agent',
+      durationMs: expect.any(Number),
+    });
+  });
+
+  it('emits opt-in telemetry for AG-UI failures without error messages', async () => {
+    const stub = new StubAgent();
+    const seen: AgentRuntimeTelemetryPayload[] = [];
+    const a = toAgent(stub as unknown as AbstractAgent, {
+      telemetry: (payload) => seen.push(payload),
+    });
+    stub.runAgent.mockRejectedValueOnce(new SyntaxError('private app state'));
+
+    await a.submit({ message: 'hi' });
+
+    const errored = seen.find((payload) => payload.event === 'ngaf:stream_errored');
+    expect(errored?.properties).toEqual({
+      transport: 'ag-ui',
+      surface: 'to_agent',
+      durationMs: expect.any(Number),
+      errorClass: 'SyntaxError',
+    });
+    expect(JSON.stringify(seen)).not.toContain('private app state');
   });
 
   it('stop() calls source.abortRun()', async () => {

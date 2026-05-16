@@ -69,6 +69,34 @@ describe('NgafTelemetryService', () => {
     });
   });
 
+  test('captureRuntimeRequestCreated() records request type through the neutral sink', async () => {
+    const sink = vi.fn();
+    TestBed.configureTestingModule({
+      providers: [
+        { provide: NGAF_TELEMETRY_CONFIG, useValue: { enabled: true, sink } },
+        NgafTelemetryService,
+      ],
+    });
+    const svc = TestBed.inject(NgafTelemetryService);
+
+    await svc.captureRuntimeRequestCreated({
+      transport: 'langgraph',
+      surface: 'canonical_demo',
+      requestType: 'submit',
+    });
+
+    expect(sink).toHaveBeenCalledWith({
+      event: 'ngaf:runtime_request_created',
+      properties: {
+        transport: 'langgraph',
+        surface: 'canonical_demo',
+        requestType: 'submit',
+        sample_weight: 1,
+      },
+    });
+  });
+
+
   test('capture() posts neutral event payloads to a configured endpoint', async () => {
     const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response('{}', { status: 202 }));
     TestBed.configureTestingModule({

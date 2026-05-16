@@ -80,6 +80,10 @@ export class NgafTelemetryService {
     return this.capture('ngaf:runtime_instance_created', { ...input });
   }
 
+  captureRuntimeRequestCreated(input: NgafBrowserRuntimeTelemetry & { requestType: string }): Promise<void> {
+    return this.capture('ngaf:runtime_request_created', { ...input });
+  }
+
   captureStreamStarted(input: NgafBrowserStreamTelemetry): Promise<void> {
     return this.capture('ngaf:stream_started', { ...input });
   }

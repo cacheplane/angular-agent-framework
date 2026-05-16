@@ -20,7 +20,12 @@ import type {
   SubmitOptions,
 } from '@langchain/langgraph-sdk/ui';
 import type { BaseMessage, AIMessage as CoreAIMessage } from '@langchain/core/messages';
-import type { AgentSubmitInput, AgentSubmitOptions, AgentWithHistory } from '@ngaf/chat';
+import type {
+  AgentRuntimeTelemetrySink,
+  AgentSubmitInput,
+  AgentSubmitOptions,
+  AgentWithHistory,
+} from '@ngaf/chat';
 import type { AgentLifecycle } from './lifecycle';
 
 // Re-export SDK types so consumers don't need to import from langgraph-sdk directly
@@ -251,6 +256,8 @@ export interface AgentOptions<T, _ResolvedBag extends BagTemplate> {
   toMessage?: (msg: unknown) => BaseMessage;
   /** Custom transport. Defaults to FetchStreamTransport. */
   transport?: AgentTransport;
+  /** Optional app-owned telemetry sink. No telemetry is emitted unless this is provided. */
+  telemetry?: AgentRuntimeTelemetrySink | false;
   /** When true, subagent messages are filtered from the main messages signal. */
   filterSubagentMessages?: boolean;
   /** Tool names that indicate a subagent invocation. */
