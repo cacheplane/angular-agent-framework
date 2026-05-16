@@ -1,5 +1,5 @@
 import { Hero } from '../components/landing/Hero';
-import { ProofStrip } from '../components/landing/ProofStrip';
+import { EcosystemStrip } from '../components/landing/EcosystemStrip';
 import { Differentiator } from '../components/landing/Differentiator';
 import { FeatureBlock } from '../components/landing/FeatureBlock';
 import { BrowserFrame } from '../components/ui/BrowserFrame';
@@ -15,7 +15,7 @@ export default async function HomePage() {
   return (
     <>
       <Hero />
-      <ProofStrip />
+      <EcosystemStrip />
       <Differentiator />
 
       {/* Stream */}
