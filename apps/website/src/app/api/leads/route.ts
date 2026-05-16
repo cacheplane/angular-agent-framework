@@ -19,8 +19,8 @@ export async function POST(req: NextRequest) {
   const company = sanitize(body.company, 200);
   const message = sanitize(body.message, 2000);
 
-  if (!name || !email) {
-    return NextResponse.json({ error: 'name and email required' }, { status: 400 });
+  if (!email) {
+    return NextResponse.json({ error: 'email required' }, { status: 400 });
   }
 
   const ts = new Date().toISOString();
@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
       sendEmail({
         from: FROM,
         to: NOTIFY_TO,
-        subject: `New lead: ${name}${company ? ` at ${company}` : ''}`,
+        subject: `New lead: ${name || email}${company ? ` at ${company}` : ''}`,
         html: leadNotificationHtml({ name, email, company, message, ts }),
       }),
       addToAudience(email, name),
