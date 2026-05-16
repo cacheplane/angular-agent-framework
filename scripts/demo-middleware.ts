@@ -16,6 +16,7 @@ import { checkRateLimit } from './rate-limit';
 
 const DEFAULT_ALLOWED_ORIGINS = ['https://demo.cacheplane.ai'];
 const DEFAULT_MAX_BODY_BYTES = 8192;
+const DEFAULT_TELEMETRY_INGEST_URL = 'https://cacheplane.ai/api/ingest';
 
 const allowedOrigins = (() => {
   const raw = process.env['ALLOWED_ORIGINS'];
@@ -30,8 +31,11 @@ const maxBodyBytes = (() => {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : DEFAULT_MAX_BODY_BYTES;
 })();
 
+const telemetryIngestUrl = process.env['TELEMETRY_INGEST_URL'] ?? DEFAULT_TELEMETRY_INGEST_URL;
+
 module.exports = createProxyHandler({
   checkRateLimit,
   allowedOrigins,
   maxBodyBytes,
+  telemetryIngestUrl,
 });

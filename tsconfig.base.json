@@ -33,7 +33,10 @@
       "@ngaf/langgraph": ["libs/langgraph/src/public-api.ts"],
       "@ngaf/licensing": ["libs/licensing/src/index.ts"],
       "@ngaf/licensing/testing": ["libs/licensing/src/testing.ts"],
-      "@ngaf/render": ["libs/render/src/public-api.ts"]
+      "@ngaf/render": ["libs/render/src/public-api.ts"],
+      "@ngaf/telemetry": ["libs/telemetry/src/index.ts"],
+      "@ngaf/telemetry/browser": ["libs/telemetry/src/browser/public-api.ts"],
+      "@ngaf/telemetry/node": ["libs/telemetry/src/node/index.ts"]
     },
     "skipLibCheck": true,
     "strict": true,
