@@ -12,7 +12,8 @@
     "posthog:sync": "nx run posthog-tools:sync:plan",
     "posthog:apply": "nx run posthog-tools:sync:apply",
     "posthog:report": "nx run posthog-tools:report",
-    "posthog:generate-types": "nx run posthog-tools:generate-types"
+    "posthog:generate-types": "nx run posthog-tools:generate-types",
+    "telemetry:install-smoke": "node libs/telemetry/scripts/smoke-install-telemetry.mjs dist/libs/chat dist/libs/langgraph dist/libs/ag-ui dist/libs/render dist/libs/a2ui dist/libs/licensing dist/libs/telemetry"
   },
   "private": true,
   "overrides": {

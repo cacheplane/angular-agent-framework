@@ -1,6 +1,6 @@
 {
   "slug": "runtime-telemetry",
-  "posthog_id": null,
+  "posthog_id": 1592941,
   "name": "GTM · Runtime telemetry",
   "description": "Opt-in browser and opt-out Node runtime telemetry for @ngaf/* adapters.",
   "tags": [

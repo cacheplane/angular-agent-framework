@@ -36,6 +36,7 @@ import { PalettePersistence } from './palette-persistence.service';
 import { ThreadsService } from './threads.service';
 import { ProjectsService } from './projects.service';
 import { DEMO_AGENT } from './shell-tokens';
+import { createCanonicalDemoRuntimeTelemetrySink } from './runtime-telemetry';
 import { environment } from '../../environments/environment';
 
 export type DemoMode = 'embed' | 'popup' | 'sidebar';
@@ -46,10 +47,6 @@ const TELEMETRY_SURFACE = 'canonical_demo';
 function modeFromUrl(url: string): DemoMode {
   const seg = url.split('?')[0].split('/').filter(Boolean)[0];
   return (MODES as readonly string[]).includes(seg) ? (seg as DemoMode) : 'embed';
-}
-
-function nowMs(): number {
-  return globalThis.performance?.now?.() ?? Date.now();
 }
 
 @Component({
@@ -346,51 +343,29 @@ export class DemoShell {
       // subagent dispatches and to materialize agent.subagents() from the
       // resulting tools:<id>-namespaced stream events.
       subagentToolNames: ['research'],
+      telemetry: createCanonicalDemoRuntimeTelemetrySink(
+        this.telemetry,
+        () => this.model(),
+      ),
     });
     void this.telemetry.capture('ngaf:browser_chat_init', { surface: TELEMETRY_SURFACE });
-    void this.telemetry.captureRuntimeInstanceCreated({
-      transport: 'langgraph',
-      surface: TELEMETRY_SURFACE,
-      model: this.model(),
-    });
     const orig = a.submit.bind(a);
     (a as { submit: typeof a.submit }).submit = (async (
       input: Parameters<typeof a.submit>[0],
       opts?: Parameters<typeof a.submit>[1],
     ) => {
-      const start = nowMs();
-      const baseTelemetry = {
-        transport: 'langgraph',
-        surface: TELEMETRY_SURFACE,
-        model: this.model(),
-      };
-      void this.telemetry.captureStreamStarted(baseTelemetry);
-      try {
-        const result = await orig(
-          {
-            ...(input ?? {}),
-            state: {
-              ...((input as { state?: Record<string, unknown> })?.state ?? {}),
-              model: this.model(),
-              reasoning_effort: this.effort(),
-              gen_ui_mode: this.genUiMode(),
-            },
+      return orig(
+        {
+          ...(input ?? {}),
+          state: {
+            ...((input as { state?: Record<string, unknown> })?.state ?? {}),
+            model: this.model(),
+            reasoning_effort: this.effort(),
+            gen_ui_mode: this.genUiMode(),
           },
-          opts,
-        );
-        void this.telemetry.captureStreamEnded({
-          ...baseTelemetry,
-          durationMs: Math.round(nowMs() - start),
-        });
-        return result;
-      } catch (error) {
-        void this.telemetry.captureStreamErrored({
-          ...baseTelemetry,
-          durationMs: Math.round(nowMs() - start),
-          error,
-        });
-        throw error;
-      }
+        },
+        opts,
+      );
     }) as typeof a.submit;
     return a;
   })();
