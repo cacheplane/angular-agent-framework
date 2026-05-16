@@ -13,3 +13,5 @@ export type {
   NgafBrowserStreamErrorTelemetry,
   NgafBrowserStreamTelemetry,
 } from './service';
+export { isLocalAnalyticsHost, shouldCaptureAnalytics } from './properties';
+export type { CaptureConfig } from './properties';

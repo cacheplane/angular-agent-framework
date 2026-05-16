@@ -101,8 +101,8 @@ export function createCanonicalPackageJson(srcPkg) {
         default: './index.js',
       },
       './shared': {
-        types: './shared/events.d.ts',  // shared has no aggregating index; events is the only type-only public artifact
-        default: './shared/events.js',
+        types: './shared/public-api.d.ts',
+        default: './shared/public-api.js',
       },
       './node': {
         types: './node/index.d.ts',

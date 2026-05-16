@@ -1,10 +1,5 @@
+// SPDX-License-Identifier: MIT
 const DEFAULT_POSTHOG_HOST = 'https://us.i.posthog.com';
-
-export type CaptureConfig = {
-  token?: string;
-  captureLocal?: boolean;
-  host?: string;
-};
 
 export function toSafeAnalyticsString(value: unknown, maxLength = 200): string | undefined {
   if (typeof value !== 'string') return undefined;
@@ -36,20 +31,6 @@ export function getSourcePage(value: unknown): string {
   } catch {
     return '/';
   }
-}
-
-export function isLocalAnalyticsHost(host: unknown): boolean {
-  const value = toSafeAnalyticsString(host, 300)?.toLowerCase();
-  if (!value) return false;
-
-  const hostname = value.split(':')[0];
-  return hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1';
-}
-
-export function shouldCaptureAnalytics({ token, captureLocal = false, host }: CaptureConfig): boolean {
-  if (!toSafeAnalyticsString(token, 500)) return false;
-  if (isLocalAnalyticsHost(host) && !captureLocal) return false;
-  return true;
 }
 
 export function normalizePostHogHost(host: unknown): string {

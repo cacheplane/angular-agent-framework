@@ -4,7 +4,7 @@
 import { useEffect } from 'react';
 import posthog from 'posthog-js';
 import { getCockpitSessionId } from '../lib/analytics/distinct-id';
-import { shouldCaptureAnalytics } from '../lib/analytics/properties';
+import { shouldCaptureAnalytics } from '@ngaf/telemetry/browser';
 
 /**
  * Client-side analytics bootstrap. Initializes posthog-js once per
@@ -25,7 +25,8 @@ export function AnalyticsBootstrap(): null {
       return;
     }
     posthog.init(token as string, {
-      api_host: process.env.NEXT_PUBLIC_COCKPIT_POSTHOG_HOST ?? 'https://us.i.posthog.com',
+      api_host: '/ingest',
+      ui_host: 'https://us.posthog.com',
       persistence: 'memory',
       bootstrap: { distinctID: getCockpitSessionId() },
       autocapture: false,

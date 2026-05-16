@@ -5,7 +5,7 @@ import { sendEmail, FROM, NOTIFY_TO, addToAudience } from '../../../../lib/resen
 import { loopsUpsertContact, loopsSendEvent } from '../../../../lib/loops';
 import { leadNotificationHtml } from '../../../../emails/lead-notification';
 import { captureLeadConversion } from '../../../lib/analytics/server';
-import { getSourcePage } from '../../../lib/analytics/properties';
+import { getSourcePage } from '@ngaf/telemetry/shared';
 
 const LEADS_FILE = path.join(process.cwd(), 'data', 'leads.ndjson');
 
