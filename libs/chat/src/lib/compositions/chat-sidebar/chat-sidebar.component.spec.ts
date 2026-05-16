@@ -1,6 +1,6 @@
 // libs/chat/src/lib/compositions/chat-sidebar/chat-sidebar.component.spec.ts
 // SPDX-License-Identifier: MIT
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, afterEach } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { ChatSidebarComponent } from './chat-sidebar.component';
 
@@ -24,5 +24,47 @@ describe('ChatSidebarComponent', () => {
       sidebar.closeWindow();
       expect(sidebar.open()).toBe(false);
     });
+  });
+});
+
+describe('ChatSidebarComponent — edge-claim attribute', () => {
+  afterEach(() => {
+    document.documentElement.removeAttribute('data-ngaf-chat-sidebar');
+  });
+
+  it('sets data-ngaf-chat-sidebar="open" on <html> while open', () => {
+    TestBed.configureTestingModule({});
+    TestBed.runInInjectionContext(() => {
+      const sidebar = new ChatSidebarComponent();
+      // Trigger the open-tracking effect by setting open=true
+      sidebar.openWindow();
+      // Force a microtask flush so the effect runs
+      TestBed.flushEffects();
+      expect(document.documentElement.getAttribute('data-ngaf-chat-sidebar')).toBe('open');
+    });
+  });
+
+  it('removes data-ngaf-chat-sidebar from <html> when closed', () => {
+    TestBed.configureTestingModule({});
+    TestBed.runInInjectionContext(() => {
+      const sidebar = new ChatSidebarComponent();
+      sidebar.openWindow();
+      TestBed.flushEffects();
+      sidebar.closeWindow();
+      TestBed.flushEffects();
+      expect(document.documentElement.hasAttribute('data-ngaf-chat-sidebar')).toBe(false);
+    });
+  });
+
+  it('panel CSS includes bottom: var(--ngaf-chat-occupy-bottom)', () => {
+    // Styles array is the second member of the @Component decorator metadata.
+    // Easier path: stringify the styles and look for the declaration.
+    const styles = (ChatSidebarComponent as unknown as { ɵcmp: { styles: string[] } }).ɵcmp.styles.join('\n');
+    expect(styles).toMatch(/\.chat-sidebar__panel[^{]*\{[^}]*bottom:\s*var\(--ngaf-chat-occupy-bottom/);
+  });
+
+  it('launcher CSS includes calc(1rem + var(--ngaf-chat-occupy-bottom))', () => {
+    const styles = (ChatSidebarComponent as unknown as { ɵcmp: { styles: string[] } }).ɵcmp.styles.join('\n');
+    expect(styles).toMatch(/\.chat-sidebar__launcher[^{]*\{[^}]*bottom:\s*calc\(1rem\s*\+\s*var\(--ngaf-chat-occupy-bottom/);
   });
 });

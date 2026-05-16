@@ -40,6 +40,41 @@ describe('ROOT_TOKEN_STYLES — prefers-reduced-motion', () => {
   });
 });
 
+describe('ROOT_TOKEN_STYLES — edge-claim primitive', () => {
+  it.each([
+    '--ngaf-chat-occupy-top:    0px;',
+    '--ngaf-chat-occupy-right:  0px;',
+    '--ngaf-chat-occupy-bottom: 0px;',
+    '--ngaf-chat-occupy-left:   0px;',
+  ])('defines default %s on :root', (decl) => {
+    expect(ROOT_TOKEN_STYLES).toContain(decl);
+  });
+
+  it.each([
+    '--ngaf-chat-debug-panel-size-h: 40vh;',
+    '--ngaf-chat-debug-panel-size-w: 420px;',
+  ])('defines debug panel size token %s', (decl) => {
+    expect(ROOT_TOKEN_STYLES).toContain(decl);
+  });
+
+  it('maps data-ngaf-chat-sidebar="open" to occupy-right', () => {
+    expect(ROOT_TOKEN_STYLES).toMatch(
+      /:root\[data-ngaf-chat-sidebar="open"\]\s*\{\s*--ngaf-chat-occupy-right:\s*var\(--ngaf-chat-sidebar-width-drawer/,
+    );
+  });
+
+  it.each([
+    ['bottom', '--ngaf-chat-occupy-bottom', '--ngaf-chat-debug-panel-size-h'],
+    ['right',  '--ngaf-chat-occupy-right',  '--ngaf-chat-debug-panel-size-w'],
+    ['left',   '--ngaf-chat-occupy-left',   '--ngaf-chat-debug-panel-size-w'],
+  ])('maps data-ngaf-chat-debug=%s to %s via %s', (dock, occupyVar, sizeVar) => {
+    const pattern = new RegExp(
+      `:root\\[data-ngaf-chat-debug="${dock}"\\]\\s*\\{\\s*${occupyVar}:\\s*var\\(${sizeVar}`,
+    );
+    expect(ROOT_TOKEN_STYLES).toMatch(pattern);
+  });
+});
+
 describe('ROOT_TOKEN_STYLES — theme attribute selectors', () => {
   it.each([
     '[data-theme="light"]',

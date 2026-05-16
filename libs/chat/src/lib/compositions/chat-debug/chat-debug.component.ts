@@ -99,12 +99,15 @@ interface TabEntry {
       animation: chat-debug-panel-enter 120ms ease;
     }
     .panel--right {
-      top: 0; right: 0; bottom: 0;
+      top: 0;
+      right: var(--ngaf-chat-occupy-right, 0);
+      bottom: 0;
       width: var(--panel-size, 420px);
       border-right: 0;
       border-top-left-radius: var(--ngaf-chat-debug-radius-panel);
       border-bottom-left-radius: var(--ngaf-chat-debug-radius-panel);
       transform-origin: bottom right;
+      transition: right 200ms ease-out;
     }
     .panel--left {
       top: 0; left: 0; bottom: 0;
@@ -115,12 +118,22 @@ interface TabEntry {
       transform-origin: bottom left;
     }
     .panel--bottom {
-      left: 0; right: 0; bottom: 0;
+      left: 0;
+      right: var(--ngaf-chat-occupy-right, 0);
+      bottom: 0;
       height: var(--panel-size, 40vh);
       border-bottom: 0;
       border-top-left-radius: var(--ngaf-chat-debug-radius-panel);
       border-top-right-radius: var(--ngaf-chat-debug-radius-panel);
       transform-origin: bottom right;
+      transition: right 200ms ease-out;
+    }
+    /* Mobile breakpoint: when an edge-claimer occupies the right and
+       the device is narrow, the bottom strip's effective width is
+       ~zero. Explicitly hide it so it doesn't intercept pointer events
+       on the sidebar drawer. The chat-debug launcher remains visible. */
+    @media (max-width: 767px) {
+      .panel--bottom { display: none; }
     }
     @keyframes chat-debug-panel-enter {
       from { opacity: 0; transform: scale(0.96); }
@@ -347,6 +360,10 @@ export class ChatDebugComponent {
 
   protected readonly open = signal<boolean>(false);
   protected readonly dockState = signal<DockPosition>('right');
+  /** Set to `true` the first time the user explicitly clicks a dock button.
+   *  Auto-dock detection becomes a no-op after this flips. Not persisted —
+   *  fresh session = fresh chance for the smart default. */
+  private readonly userDockOverride = signal<boolean>(false);
   protected readonly activeTabId = signal<string>('timeline');
 
   /** Reads `agent.status()` reactively for the launcher dot. */
@@ -400,6 +417,33 @@ export class ChatDebugComponent {
       p.write('dock', this.dockState());
       p.write('tab', this.activeTabId());
     });
+
+    // Publish the dock the panel currently occupies. Peer panels
+    // (e.g. chat-sidebar) read --ngaf-chat-occupy-{right,bottom,left}
+    // to avoid overlap.
+    effect(() => {
+      if (typeof document === 'undefined') return;
+      const html = document.documentElement;
+      if (this.open()) {
+        html.dataset['ngafChatDebug'] = this.dockState();
+      } else {
+        delete html.dataset['ngafChatDebug'];
+      }
+    });
+
+    // Auto-dock: when the panel transitions from closed → open AND a
+    // sibling <chat-sidebar> exists on the page AND the user hasn't
+    // overridden the dock this session, prefer bottom-dock so the two
+    // panels coexist without stacking on the right edge.
+    effect(() => {
+      const isOpen = this.open();
+      if (!isOpen) return;
+      if (this.userDockOverride()) return;
+      if (typeof document === 'undefined') return;
+      if (!document.querySelector('chat-sidebar')) return;
+      // Untracked write so we don't re-trigger this effect via dockState.
+      queueMicrotask(() => this.dockState.set('bottom'));
+    });
   }
 
   setOpen(value: boolean): void {
@@ -408,6 +452,7 @@ export class ChatDebugComponent {
   }
 
   setDock(next: DockPosition): void {
+    this.userDockOverride.set(true);
     this.dockState.set(next);
     this.dockChange.emit(next);
   }
