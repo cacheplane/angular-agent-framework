@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useCallback } from 'react';
+import { track } from '../../lib/analytics/client';
 
 interface NarrativeDoc {
   title: string;
@@ -10,9 +11,10 @@ interface NarrativeDoc {
 
 interface NarrativeDocsProps {
   narrativeDocs: NarrativeDoc[];
+  capability?: string;
 }
 
-export function NarrativeDocs({ narrativeDocs }: NarrativeDocsProps) {
+export function NarrativeDocs({ narrativeDocs, capability }: NarrativeDocsProps) {
   const handleClick = useCallback((e: React.MouseEvent<HTMLElement>) => {
     const target = e.target as HTMLElement;
 
@@ -21,6 +23,7 @@ export function NarrativeDocs({ narrativeDocs }: NarrativeDocsProps) {
       const codeBlock = copyCodeBtn.closest('.doc-codeblock');
       const code = codeBlock?.querySelector('pre code')?.textContent ?? '';
       navigator.clipboard.writeText(code);
+      track('cockpit:code_copied', { capability, surface: 'docs_code_snippet' });
       copyCodeBtn.textContent = 'Copied!';
       setTimeout(() => { copyCodeBtn.textContent = 'Copy'; }, 1500);
       return;
@@ -31,11 +34,12 @@ export function NarrativeDocs({ narrativeDocs }: NarrativeDocsProps) {
       const promptBlock = copyPromptBtn.closest('.doc-prompt');
       const text = promptBlock?.querySelector('.doc-prompt__content')?.textContent ?? '';
       navigator.clipboard.writeText(text);
+      track('cockpit:code_copied', { capability, surface: 'agentic_prompt' });
       copyPromptBtn.textContent = 'Copied!';
       setTimeout(() => { copyPromptBtn.textContent = 'Copy prompt'; }, 1500);
       return;
     }
-  }, []);
+  }, [capability]);
 
   if (narrativeDocs.length === 0) {
     return (

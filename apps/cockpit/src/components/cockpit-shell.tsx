@@ -126,7 +126,7 @@ export function CockpitShell({
             />
           ) : null}
           {activeMode === 'Docs' ? (
-            <NarrativeDocs narrativeDocs={contentBundle.narrativeDocs} />
+            <NarrativeDocs narrativeDocs={contentBundle.narrativeDocs} capability={entry.topic} />
           ) : null}
           {activeMode === 'API' ? (
             <ApiMode docSections={contentBundle.docSections} />
