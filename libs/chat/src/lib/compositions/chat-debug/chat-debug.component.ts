@@ -128,6 +128,13 @@ interface TabEntry {
       transform-origin: bottom right;
       transition: right 200ms ease-out;
     }
+    /* Mobile breakpoint: when an edge-claimer occupies the right and
+       the device is narrow, the bottom strip's effective width is
+       ~zero. Explicitly hide it so it doesn't intercept pointer events
+       on the sidebar drawer. The chat-debug launcher remains visible. */
+    @media (max-width: 767px) {
+      .panel--bottom { display: none; }
+    }
     @keyframes chat-debug-panel-enter {
       from { opacity: 0; transform: scale(0.96); }
       to   { opacity: 1; transform: scale(1); }

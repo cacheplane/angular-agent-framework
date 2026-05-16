@@ -103,6 +103,13 @@ describe('ChatDebugComponent — edge-claim attribute', () => {
   });
 });
 
+describe('ChatDebugComponent — mobile coexistence', () => {
+  it('contains a mobile-breakpoint rule guarding the bottom panel', () => {
+    const styles = (ChatDebugComponent as unknown as { ɵcmp: { styles: string[] } }).ɵcmp.styles.join('\n');
+    expect(styles).toMatch(/@media[^{]*max-width:\s*767px[^{]*\{[^}]*\.panel--bottom[^}]*display:\s*none/);
+  });
+});
+
 describe('ChatDebugComponent — auto-dock', () => {
   afterEach(() => {
     document.documentElement.removeAttribute('data-ngaf-chat-debug');
