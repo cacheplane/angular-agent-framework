@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax.
 
-**Goal:** Replace the existing cockpit e2e surface at `apps/cockpit/e2e/` with an aimock-driven harness, with one pilot spec exercising the `c-messages` example through aimock end-to-end. Existing `cockpit` Nx project's `e2e` target is repointed at the new playwright config; no new Nx project is created.
+**Goal:** Replace the existing cockpit e2e surface at `apps/cockpit/e2e/` with an aimock-driven harness, with one pilot spec exercising the `streaming` example through aimock end-to-end. Existing `cockpit` Nx project's `e2e` target is repointed at the new playwright config; no new Nx project is created.
 
-**Architecture:** Harness mirroring `examples/chat/aimock-e2e/`, living at `apps/cockpit/e2e/`. Playwright globalSetup boots aimock + `cockpit/langgraph/streaming/python` (multi-graph langgraph) + the `cockpit-chat-messages-angular` dev server. Pilot spec captures a real LLM text response, asserts the finalized assistant bubble carries a distinctive phrase.
+**Architecture:** Harness mirroring `examples/chat/aimock-e2e/`, living at `apps/cockpit/e2e/`. Playwright globalSetup boots aimock + `cockpit/langgraph/streaming/python` (multi-graph langgraph) + the `cockpit-langgraph-streaming-angular` dev server. Pilot spec captures a real LLM text response, asserts the finalized assistant bubble carries a distinctive phrase.
 
 **Tech Stack:** `@copilotkit/aimock`, Playwright, Nx, GitHub Actions. Python LangGraph dev server via `uv`.
 
@@ -50,15 +50,15 @@ Expected: zero `base_url=` arguments. ChatOpenAI / OpenAI constructors should ac
 
 If any hardcoded `base_url=` is found that overrides `OPENAI_BASE_URL`: STOP, report. Spec may need a workaround.
 
-- [ ] **Step 2: Inspect the c-messages graph setup**
+- [ ] **Step 2: Inspect the streaming graph setup**
 
-Read `cockpit/langgraph/streaming/python/src/chat_graphs.py` — find `_build_prompt_graph` and confirm `c_messages = _build_prompt_graph("messages.md")` is registered. Read `cockpit/langgraph/streaming/python/prompts/messages.md` to see the system prompt the LLM is bottled with. Note both in your report.
+Read `cockpit/langgraph/streaming/python/src/graph.py` — find `build_streaming_graph()`. The compiled graph is registered as `"streaming"` in `langgraph.json`. The system prompt is loaded from `cockpit/langgraph/streaming/python/prompts/streaming.md`. Note the system prompt's first paragraph in your report.
 
 Expected: single-node graph that calls `ChatOpenAI(model="gpt-5-mini", streaming=True).ainvoke(messages)`. No tool bindings.
 
 - [ ] **Step 3: Smoke-test the aimock + streaming-python flow**
 
-Create scratch fixture at `/tmp/cockpit-tc-fixture.json` (text response — `c-messages` doesn't bind tools, so the mock returns plain content):
+Create scratch fixture at `/tmp/cockpit-tc-fixture.json` (text response — `streaming` doesn't bind tools, so the mock returns plain content):
 
 ```json
 {
@@ -111,16 +111,16 @@ curl -sf http://localhost:8123/ok
 
 Expected: `{"ok":true}`. If langgraph fails to start (port conflict, missing deps): STOP.
 
-Then dispatch a single run against the c-messages graph:
+Then dispatch a single run against the streaming graph:
 ```bash
 THREAD=$(curl -s -X POST http://localhost:8123/threads -H 'content-type: application/json' -d '{}' | python3 -c 'import sys,json; print(json.load(sys.stdin)["thread_id"])')
 echo "thread: $THREAD"
-curl -s -X POST http://localhost:8123/threads/$THREAD/runs -H 'content-type: application/json' -d "{\"assistant_id\":\"c-messages\",\"input\":{\"messages\":[{\"role\":\"user\",\"content\":\"say hi briefly\"}]}}" > /tmp/run.json
+curl -s -X POST http://localhost:8123/threads/$THREAD/runs -H 'content-type: application/json' -d "{\"assistant_id\":\"streaming\",\"input\":{\"messages\":[{\"role\":\"user\",\"content\":\"say hi briefly\"}]}}" > /tmp/run.json
 sleep 5
 curl -s http://localhost:8123/threads/$THREAD/state | python3 -c 'import sys,json; s=json.load(sys.stdin); print("message_count:", len(s["values"].get("messages",[]))); print("last_message_content:", str(s["values"]["messages"][-1].get("content",""))[:200])'
 ```
 
-Expected: at least 2 messages (user + AI), and the AI message `content` contains the mock's response text (`"Hello from cockpit-streaming!"`). Confirms aimock served the c-messages graph's LLM call. Report `last_message_content` verbatim so Task 5's assertion can use the actual phrase.
+Expected: at least 2 messages (user + AI), and the AI message `content` contains the mock's response text (`"Hello from cockpit-streaming!"`). Confirms aimock served the streaming graph's LLM call. Report `last_message_content` verbatim so Task 5's assertion can use the actual phrase.
 
 - [ ] **Step 5: Tear down**
 
@@ -138,8 +138,8 @@ Confirm: `git status` clean (the worktree node_modules is a symlink to the main 
 
 DE-RISK COMPLETE or DE-RISK FAILED. Include:
 - Hardcoded `base_url=` findings (should be none).
-- `c-messages` graph confirmation: built from `_build_prompt_graph("messages.md")`, no tool bindings.
-- The system prompt content from `prompts/messages.md` (just the first paragraph or so — informs the capture script).
+- `streaming` graph confirmation: built from `build_streaming_graph()` in `graph.py`, no tool bindings.
+- The system prompt content from `prompts/streaming.md` (just the first paragraph or so — informs the capture script).
 - Whether the curl-driven run produced an AI message with the mock's exact content text.
 - Any deviations from the spec's assumed shape.
 
@@ -197,7 +197,7 @@ Write `apps/cockpit/e2e/README.md`:
 
 Cross-stack E2E harness for cockpit example apps. Uses [`@copilotkit/aimock`](https://github.com/CopilotKit/aimock) as a deterministic mock for LLM API calls; the per-product Python LangGraph dev server is launched with `OPENAI_BASE_URL` pointed at it; Playwright drives the example Angular app in real Chromium.
 
-Phase 1 covers `c-messages` only. Future phases each add one example (one fixture + one spec file per PR).
+Phase 1 covers `streaming` only. Future phases each add one example (one fixture + one spec file per PR).
 
 ## Run the suite
 
@@ -209,14 +209,14 @@ Replay-only. No `OPENAI_API_KEY` needed. Reads committed fixtures from `fixtures
 
 ## Refresh a fixture
 
-Each captured fixture has a recipe script under `scripts/`. Example for the c-messages fixture:
+Each captured fixture has a recipe script under `scripts/`. Example for the streaming fixture:
 
 ```
 OPENAI_API_KEY=sk-... uv run --project cockpit/langgraph/streaming/python \
-  python apps/cockpit/e2e/scripts/record-c-messages.py
+  python apps/cockpit/e2e/scripts/record-streaming.py
 ```
 
-Commit the updated `fixtures/c-messages.json`. Scripts are dev-only; CI never runs them.
+Commit the updated `fixtures/streaming.json`. Scripts are dev-only; CI never runs them.
 
 ## Layout
 
@@ -225,7 +225,7 @@ Commit the updated `fixtures/c-messages.json`. Scripts are dev-only; CI never ru
 - `fixtures/` — committed JSON fixtures keyed by example.
 - `scripts/` — fixture-capture recipes (one per fixture).
 - `playwright.config.ts` — Playwright config with globalSetup that boots aimock + LangGraph + Angular dev server.
-- `c-messages.spec.ts` — Phase 1 pilot.
+- `streaming.spec.ts` — Phase 1 pilot.
 ```
 
 - [ ] **Step 4: Commit Task 1**
@@ -295,26 +295,26 @@ git commit -m "feat(cockpit): copy aimock-runner and test-helpers from chat harn
 
 ---
 
-## Task 3: Capture the c-messages fixture
+## Task 3: Capture the streaming fixture
 
 **Files:**
-- Create: `apps/cockpit/e2e/scripts/record-c-messages.py`
-- Create: `apps/cockpit/e2e/fixtures/c-messages.json` (generated by script)
+- Create: `apps/cockpit/e2e/scripts/record-streaming.py`
+- Create: `apps/cockpit/e2e/fixtures/streaming.json` (generated by script)
 
 - [ ] **Step 1: Write the capture script**
 
-Write `apps/cockpit/e2e/scripts/record-c-messages.py`. The script mirrors `cockpit/langgraph/streaming/python/src/chat_graphs.py`'s `_build_prompt_graph("messages.md")` LLM setup (same model, same system prompt source). Captures a text response — `c-messages` doesn't bind tools.
+Write `apps/cockpit/e2e/scripts/record-streaming.py`. The script mirrors `cockpit/langgraph/streaming/python/src/graph.py`'s `build_streaming_graph()` LLM setup (same model, same system prompt source `prompts/streaming.md`). Captures a text response — `streaming` doesn't bind tools.
 
 ```python
-"""Capture a real text response from the c-messages graph's LLM.
+"""Capture a real text response from the streaming graph's LLM.
 
-Mirrors cockpit/langgraph/streaming/python/src/chat_graphs.py's
-_build_prompt_graph("messages.md") setup: ChatOpenAI(gpt-5-mini, streaming=True)
-+ system prompt from prompts/messages.md.
+Mirrors cockpit/langgraph/streaming/python/src/graph.py's
+build_streaming_graph() setup: ChatOpenAI(gpt-5-mini, streaming=True)
++ system prompt from prompts/streaming.md.
 
 Run from repo root:
   OPENAI_API_KEY=sk-... uv run --project cockpit/langgraph/streaming/python \\
-    python apps/cockpit/e2e/scripts/record-c-messages.py
+    python apps/cockpit/e2e/scripts/record-streaming.py
 """
 import json
 import os
@@ -338,7 +338,7 @@ from langchain_openai import ChatOpenAI
 
 PROMPT = "Tell me one quick fact about Angular signals in two sentences."
 SYSTEM_PROMPT = (
-    Path("cockpit/langgraph/streaming/python/prompts/messages.md").read_text()
+    Path("cockpit/langgraph/streaming/python/prompts/streaming.md").read_text()
 )
 
 llm = ChatOpenAI(model="gpt-5-mini", temperature=0)
@@ -360,7 +360,7 @@ fixture = {
     ]
 }
 
-out_path = Path("apps/cockpit/e2e/fixtures/c-messages.json")
+out_path = Path("apps/cockpit/e2e/fixtures/streaming.json")
 out_path.parent.mkdir(parents=True, exist_ok=True)
 out_path.write_text(json.dumps(fixture, indent=2) + "\n")
 print(f"\nWrote fixture to {out_path}")
@@ -374,10 +374,10 @@ The PROMPT is intentionally specific ("Angular signals in two sentences") so the
 cd /tmp/cockpit-aimock-spec
 # .env should be present from Task 0; recreate if removed:
 cp /Users/blove/repos/angular-agent-framework/examples/chat/python/.env cockpit/langgraph/streaming/python/.env
-uv run --project cockpit/langgraph/streaming/python python apps/cockpit/e2e/scripts/record-c-messages.py
+uv run --project cockpit/langgraph/streaming/python python apps/cockpit/e2e/scripts/record-streaming.py
 ```
 
-Expected: prints `captured <N> chars; first 80: '<some text mentioning signals>'` and writes `apps/cockpit/e2e/fixtures/c-messages.json`.
+Expected: prints `captured <N> chars; first 80: '<some text mentioning signals>'` and writes `apps/cockpit/e2e/fixtures/streaming.json`.
 
 If `text.strip()` is empty: STOP. The LLM didn't respond — check `OPENAI_API_KEY` validity, check the messages.md file isn't empty.
 
@@ -385,7 +385,7 @@ If `text.strip()` is empty: STOP. The LLM didn't respond — check `OPENAI_API_K
 
 ```bash
 cd /tmp/cockpit-aimock-spec
-head -10 apps/cockpit/e2e/fixtures/c-messages.json
+head -10 apps/cockpit/e2e/fixtures/streaming.json
 ```
 
 Verify the file starts with `{"fixtures": [` and contains a `response.content` string mentioning "signal" (or close variant). Note a distinctive 1-2 word phrase from the response — Task 5's spec uses it as the assertion target. Common phrases: "signal", "Angular", "reactive".
@@ -394,9 +394,9 @@ Verify the file starts with `{"fixtures": [` and contains a `response.content` s
 
 ```bash
 cd /tmp/cockpit-aimock-spec
-git add apps/cockpit/e2e/scripts/record-c-messages.py \
-        apps/cockpit/e2e/fixtures/c-messages.json
-git commit -m "feat(cockpit): add c-messages fixture and capture script"
+git add apps/cockpit/e2e/scripts/record-streaming.py \
+        apps/cockpit/e2e/fixtures/streaming.json
+git commit -m "feat(cockpit): add streaming fixture and capture script"
 ```
 
 DO NOT commit the `.env` file at `cockpit/langgraph/streaming/python/.env` — it's gitignored, but verify with `git status`.
@@ -427,7 +427,7 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   reporter: process.env.CI ? [['list'], ['html', { open: 'never' }]] : 'list',
   use: {
-    baseURL: 'http://localhost:4501',
+    baseURL: 'http://localhost:4300',
     trace: 'retain-on-failure',
   },
   projects: [
@@ -509,7 +509,7 @@ export default async function globalSetup(): Promise<void> {
 
   const angular = spawn(
     'npx',
-    ['nx', 'serve', 'cockpit-chat-messages-angular', '--port', '4501'],
+    ['nx', 'serve', 'cockpit-langgraph-streaming-angular', '--port', '4300'],
     {
       cwd: REPO_ROOT,
       env: { ...process.env },
@@ -519,9 +519,9 @@ export default async function globalSetup(): Promise<void> {
   angular.stdout?.on('data', (b) => process.stdout.write(`[angular] ${b}`));
   angular.stderr?.on('data', (b) => process.stderr.write(`[angular] ${b}`));
 
-  await waitForPort('http://localhost:4501/', 120_000);
+  await waitForPort('http://localhost:4300/', 120_000);
   // eslint-disable-next-line no-console
-  console.log('[cockpit] angular ready on :4501');
+  console.log('[cockpit] angular ready on :4300');
 
   globalThis.__COCKPIT_AIMOCK_E2E_STATE__ = { aimock, langgraph, angular };
 }
@@ -564,33 +564,33 @@ git commit -m "feat(cockpit): add Playwright config with cockpit-streaming globa
 
 ---
 
-## Task 5: Write the c-messages pilot spec
+## Task 5: Write the streaming pilot spec
 
 **Files:**
-- Create: `apps/cockpit/e2e/c-messages.spec.ts`
+- Create: `apps/cockpit/e2e/streaming.spec.ts`
 
 - [ ] **Step 1: Identify a phrase to assert on**
 
-Open `apps/cockpit/e2e/fixtures/c-messages.json` and look at the `response.content` string. Pick a distinctive 1-2 word phrase that's likely to appear verbatim — the captured response was about Angular signals, so `signal`, `Angular`, or `reactive` are good candidates. Note it; Step 2 uses it.
+Open `apps/cockpit/e2e/fixtures/streaming.json` and look at the `response.content` string. Pick a distinctive 1-2 word phrase that's likely to appear verbatim — the captured response was about Angular signals, so `signal`, `Angular`, or `reactive` are good candidates. Note it; Step 2 uses it.
 
 - [ ] **Step 2: Write the spec**
 
-Write `apps/cockpit/e2e/c-messages.spec.ts` (replace `<DISTINCTIVE_PHRASE>` with the phrase from Step 1):
+Write `apps/cockpit/e2e/streaming.spec.ts` (replace `<DISTINCTIVE_PHRASE>` with the phrase from Step 1):
 
 ```typescript
 // SPDX-License-Identifier: MIT
 import { test, expect } from '@playwright/test';
 import { sendPromptAndWait } from './test-helpers';
 
-test('c-messages: assistant text from the mocked LLM renders in the cockpit chat composition', async ({ page }) => {
+test('streaming: assistant text from the mocked LLM renders in the cockpit chat composition', async ({ page }) => {
   const bubble = await sendPromptAndWait(
     page,
     'Tell me one quick fact about Angular signals in two sentences.',
   );
 
   // The captured fixture's content (Angular signals fact) must reach the
-  // rendered bubble. Proves: aimock served the c-messages graph's LLM call,
-  // langgraph routed back the AI message, the cockpit-chat-messages-angular
+  // rendered bubble. Proves: aimock served the streaming graph's LLM call,
+  // langgraph routed back the AI message, the cockpit-langgraph-streaming-angular
   // app rendered it via the chat composition, and the streaming-finalized
   // signal (data-streaming="false") settled.
   const finalText = await bubble.innerText();
@@ -605,14 +605,14 @@ cd /tmp/cockpit-aimock-spec
 npx playwright install --with-deps chromium
 cd apps/cockpit/e2e
 rm -rf test-results playwright-report
-npx playwright test c-messages.spec.ts
+npx playwright test streaming.spec.ts
 ```
 
 Expected: 1 test passes within ~60–120s wall-clock (includes Angular dev-server cold-start).
 
 If the spec fails: capture Playwright trace from `test-results/`, STOP, report. Likely causes:
-- The `cockpit-chat-messages-angular` app's `streamingAssistantId` doesn't match the `c-messages` graph_id — verify with `grep -n "AssistantId\|c-messages" cockpit/chat/messages/angular/src/environments/environment.ts`.
-- The Angular proxy.conf.json points elsewhere than 8123 — check `cockpit/chat/messages/angular/proxy.conf.json`.
+- The `cockpit-langgraph-streaming-angular` app's `streamingAssistantId` doesn't match the `streaming` graph_id — verify with `grep -n "AssistantId\|streaming" cockpit/langgraph/streaming/angular/src/environments/environment.ts`.
+- The Angular proxy.conf.json points elsewhere than 8123 — check `cockpit/langgraph/streaming/angular/proxy.conf.json`.
 - The fixture's prompt doesn't exact-match the spec's `sendPromptAndWait` argument — both must be byte-identical.
 
 - [ ] **Step 4: Run the suite three times for stability**
@@ -633,8 +633,8 @@ Expected: 3 consecutive clean runs (1 passed each). If any run fails, STOP and i
 
 ```bash
 cd /tmp/cockpit-aimock-spec
-git add apps/cockpit/e2e/c-messages.spec.ts
-git commit -m "test(cockpit): add c-messages aimock pilot spec"
+git add apps/cockpit/e2e/streaming.spec.ts
+git commit -m "test(cockpit): add streaming aimock pilot spec"
 ```
 
 ---
@@ -842,17 +842,17 @@ git push -u origin claude/cockpit-aimock-e2e-design
 - [ ] **Step 4: Open PR**
 
 ```bash
-gh pr create --title "feat(cockpit): aimock E2E harness — Phase 1 (c-messages pilot)" --body "$(cat <<'EOF'
+gh pr create --title "feat(cockpit): aimock E2E harness — Phase 1 (streaming pilot)" --body "$(cat <<'EOF'
 ## Summary
 
-Replaces the legacy cockpit e2e surface with an aimock-driven harness living at the existing `apps/cockpit/e2e/` location. Phase 1 lands the harness modules + one pilot spec for the `c-messages` example end-to-end. No new Nx project — the existing `cockpit` project's `e2e` target is repointed at the new playwright config.
+Replaces the legacy cockpit e2e surface with an aimock-driven harness living at the existing `apps/cockpit/e2e/` location. Phase 1 lands the harness modules + one pilot spec for the `streaming` example end-to-end. No new Nx project — the existing `cockpit` project's `e2e` target is repointed at the new playwright config.
 
 Sits on the chat aimock harness pattern ([#309](https://github.com/cacheplane/angular-agent-framework/pull/309) and onward). Cockpit-shell coverage is dropped — to be rebuilt separately if/when needed.
 
 ### What changed
 - Added harness modules at `apps/cockpit/e2e/` (aimock-runner, test-helpers, globalSetup/teardown, playwright config), copied byte-for-byte from `examples/chat/aimock-e2e/` where applicable.
-- Captured c-messages fixture + reusable capture script under `apps/cockpit/e2e/scripts/`.
-- Playwright globalSetup boots aimock + `cockpit/langgraph/streaming/python` (multi-graph langgraph serving 12 graphs including `c-messages`) + `cockpit-chat-messages-angular` dev server on :4501.
+- Captured streaming fixture + reusable capture script under `apps/cockpit/e2e/scripts/`.
+- Playwright globalSetup boots aimock + `cockpit/langgraph/streaming/python` (multi-graph langgraph serving 12 graphs including `streaming`) + `cockpit-langgraph-streaming-angular` dev server on :4300.
 - Deleted: 4 legacy specs in `apps/cockpit/e2e/` and the old `apps/cockpit/playwright.config.ts`.
 - `apps/cockpit/project.json`'s `e2e` target's `config` path updated to the new harness's playwright config.
 - CI: existing `Cockpit — e2e` job augmented with uv install + python sync + trace upload. Job name + position in `deploy.needs` unchanged.
