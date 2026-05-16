@@ -27,7 +27,7 @@ from langgraph.types import Command
 from pydantic import BaseModel, Field, ValidationError, field_validator
 
 
-# Inlined flight fixtures — standalone has no aviation_data module.
+# Inlined flight fixtures - standalone has no aviation_data module.
 _FLIGHTS = [
     {"flight_number": "UA123", "airline": "UA", "from": "LAX", "to": "JFK",
      "depart_local": "08:00", "arrive_local": "16:30", "duration_min": 330,
@@ -48,16 +48,14 @@ _FLIGHTS = [
 
 
 class _AsyncFn:
-    """Tiny shim so we can call find_routes.ainvoke({...}) like the umbrella's
-    LangChain @tool decorator does."""
     def __init__(self, fn):
         self._fn = fn
 
-    async def ainvoke(self, args: dict[str, Any]) -> list[dict[str, Any]]:
+    async def ainvoke(self, args):
         return self._fn(**args)
 
 
-def _find_routes_impl(from_code: str, to_code: str, date_offset_days: int = 0) -> list[dict[str, Any]]:
+def _find_routes_impl(from_code, to_code, date_offset_days=0):
     return [f for f in _FLIGHTS if f["from"] == from_code and f["to"] == to_code]
 
 
@@ -283,7 +281,14 @@ Required form composition for THIS task:
     date (TextField, label="Departure date (YYYY-MM-DD)", text={{"path":"/date"}}, textFieldType="date")
     passengers (TextField, label="Passengers", text={{"path":"/passengers"}}, textFieldType="number")
     fare (MultipleChoice, label="Fare class", options={_FARE_OPTIONS}, selections={{"path":"/fare_class"}}, maxAllowedSelections=1)
-    submit (Button, child=submit_label, primary=true, action={{"name":"bookingSubmit","context":[{{"key":"formId","value":"booking"}}]}})
+    submit (Button, child=submit_label, primary=true, action={{"name":"bookingSubmit","context":[
+                                                                  {{"key":"formId","value":"booking"}},
+                                                                  {{"key":"origin","value":{{"path":"/origin"}}}},
+                                                                  {{"key":"dest","value":{{"path":"/dest"}}}},
+                                                                  {{"key":"date","value":{{"path":"/date"}}}},
+                                                                  {{"key":"passengers","value":{{"path":"/passengers"}}}},
+                                                                  {{"key":"fare_class","value":{{"path":"/fare_class"}}}}
+                                                                ]}})
     submit_label (Text, text="Search flights")
 
 Use these exact ids."""
@@ -315,8 +320,14 @@ _SENTINEL_BOOKING_FORM = BookingFormSpec(
         _comp("fare", "MultipleChoice", {"label": "Fare class", "options": _FARE_OPTIONS,
                                           "selections": {"path": "/fare_class"}, "maxAllowedSelections": 1}),
         _comp("submit", "Button", {"child": "submit_label", "primary": True,
-                                    "action": {"name": "bookingSubmit",
-                                               "context": [{"key": "formId", "value": "booking"}]}}),
+                                    "action": {"name": "bookingSubmit", "context": [
+                                        {"key": "formId", "value": "booking"},
+                                        {"key": "origin", "value": {"path": "/origin"}},
+                                        {"key": "dest", "value": {"path": "/dest"}},
+                                        {"key": "date", "value": {"path": "/date"}},
+                                        {"key": "passengers", "value": {"path": "/passengers"}},
+                                        {"key": "fare_class", "value": {"path": "/fare_class"}},
+                                    ]}}),
         _comp("submit_label", "Text", {"text": "Search flights"}),
     ],
 )
@@ -397,19 +408,37 @@ _SENTINEL_RESULTS = FlightResultsSpec(
 )
 
 
+def _unwrap_literal(v: Any) -> Any:
+    """Unwrap a v0.9 literal wrapper ({literalString|literalNumber|literalBoolean: <v>})."""
+    if isinstance(v, dict):
+        for k in ("literalString", "literalNumber", "literalBoolean"):
+            if k in v:
+                return v[k]
+    return v
+
+
 def _parse_submit_payload(content: str) -> dict[str, Any] | None:
-    """Extract the form-data dict from an a2ui_event message content."""
+    """Extract the form-data dict from a v0.9 A2uiActionMessage content.
+
+    Chat-lib sends:
+      {"version":"v0.9","action":{"name":"...","surfaceId":"...",
+        "sourceComponentId":"...","timestamp":"...",
+        "context":{"formId":{"literalString":"booking"},
+                   "origin":{"literalString":"LAX"}, ...}}}
+    """
     try:
         payload = json.loads(content)
     except (json.JSONDecodeError, TypeError):
         return None
-    if not isinstance(payload, dict) or payload.get("type") != "a2ui_event":
+    if not isinstance(payload, dict):
         return None
-    # Accept either {"data": {...}} or {"value": {...}} or context-level fields
-    data = payload.get("data") or payload.get("value") or {}
-    if not isinstance(data, dict):
+    action = payload.get("action")
+    if not isinstance(action, dict):
         return None
-    return data
+    ctx = action.get("context", {})
+    if not isinstance(ctx, dict):
+        return None
+    return {k: _unwrap_literal(v) for k, v in ctx.items()}
 
 
 async def search_flights(state: MessagesState) -> dict:
@@ -443,16 +472,17 @@ async def search_flights(state: MessagesState) -> dict:
 # ── Routing + compile ───────────────────────────────────────────────────────
 
 def _is_submit_event(content: str) -> bool:
-    """True iff the content is an a2ui_event whose formId is 'booking'."""
+    """True iff the content is a v0.9 A2uiActionMessage named bookingSubmit."""
     try:
         payload = json.loads(content)
     except (json.JSONDecodeError, TypeError):
         return False
+    if not isinstance(payload, dict):
+        return False
+    action = payload.get("action")
     return (
-        isinstance(payload, dict)
-        and payload.get("type") == "a2ui_event"
-        and isinstance(payload.get("context"), dict)
-        and payload["context"].get("formId") == "booking"
+        isinstance(action, dict)
+        and action.get("name") == "bookingSubmit"
     )
 
 
