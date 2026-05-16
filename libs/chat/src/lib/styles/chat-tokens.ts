@@ -120,6 +120,23 @@ const SPACING_TOKENS = `
   --ngaf-chat-sidenav-width-drawer: 280px;
 `;
 
+const EDGE_CLAIM_TOKENS = `
+  /* Edge-claim primitive — peer-aware panel coexistence.
+     Each docked panel publishes the edge it occupies via a
+     data-ngaf-chat-* attribute on <html>; other panels read these
+     custom properties to leave room. Defaults to 0px so consumers
+     not using chat-sidebar/chat-debug see zero overhead. */
+  --ngaf-chat-occupy-top:    0px;
+  --ngaf-chat-occupy-right:  0px;
+  --ngaf-chat-occupy-bottom: 0px;
+  --ngaf-chat-occupy-left:   0px;
+
+  /* Sizes the chat-debug dock contributes when it claims an edge.
+     Split by orientation so consumers can override independently. */
+  --ngaf-chat-debug-panel-size-h: 40vh;
+  --ngaf-chat-debug-panel-size-w: 420px;
+`;
+
 const KEYFRAMES = `
   @keyframes ngaf-chat-spin {
     0% { transform: rotate(0deg); }
@@ -291,6 +308,7 @@ export const ROOT_TOKEN_STYLES = `
     ${GEOMETRY_TOKENS}
     ${TYPOGRAPHY_TOKENS}
     ${SPACING_TOKENS}
+    ${EDGE_CLAIM_TOKENS}
     ${A2UI_INVARIANT_TOKENS}
   }
   @media (prefers-color-scheme: dark) {
@@ -304,6 +322,22 @@ export const ROOT_TOKEN_STYLES = `
   [data-theme="dark"],
   :root[data-ngaf-chat-theme="dark"],
   [data-ngaf-chat-theme="dark"] { ${DARK_TOKENS} }
+
+  /* Edge-claim attribute mappings.
+     chat-sidebar sets data-ngaf-chat-sidebar="open" while its panel is open.
+     chat-debug sets data-ngaf-chat-debug to its current dock while open. */
+  :root[data-ngaf-chat-sidebar="open"] {
+    --ngaf-chat-occupy-right: var(--ngaf-chat-sidebar-width-drawer, 28rem);
+  }
+  :root[data-ngaf-chat-debug="bottom"] {
+    --ngaf-chat-occupy-bottom: var(--ngaf-chat-debug-panel-size-h, 40vh);
+  }
+  :root[data-ngaf-chat-debug="right"] {
+    --ngaf-chat-occupy-right: var(--ngaf-chat-debug-panel-size-w, 420px);
+  }
+  :root[data-ngaf-chat-debug="left"] {
+    --ngaf-chat-occupy-left: var(--ngaf-chat-debug-panel-size-w, 420px);
+  }
 }
 ${KEYFRAMES}
 ${REDUCED_MOTION_STYLES}

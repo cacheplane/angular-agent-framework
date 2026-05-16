@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: MIT
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, afterEach } from 'vitest';
+import { TestBed } from '@angular/core/testing';
+import { ElementRef } from '@angular/core';
 import { computeStateDiff } from './state-diff';
 import type { DiffEntry } from './state-diff';
 import { toDebugCheckpoint, extractStateValues } from './debug-utils';
@@ -86,5 +88,88 @@ describe('ChatDebugComponent', () => {
 describe('DebugCheckpointCardComponent', () => {
   it('is defined as a class', () => {
     expect(typeof DebugCheckpointCardComponent).toBe('function');
+  });
+});
+
+describe('ChatDebugComponent — edge-claim attribute', () => {
+  afterEach(() => {
+    document.documentElement.removeAttribute('data-ngaf-chat-debug');
+  });
+
+  it('sets data-ngaf-chat-debug=dock on <html> while open', () => {
+    const styles = (ChatDebugComponent as unknown as { ɵcmp: { styles: string[] } }).ɵcmp.styles.join('\n');
+    expect(styles).toMatch(/\.panel--bottom[^{]*\{[^}]*right:\s*var\(--ngaf-chat-occupy-right/);
+    expect(styles).toMatch(/\.panel--right[^{]*\{[^}]*right:\s*var\(--ngaf-chat-occupy-right/);
+  });
+});
+
+describe('ChatDebugComponent — mobile coexistence', () => {
+  it('contains a mobile-breakpoint rule guarding the bottom panel', () => {
+    const styles = (ChatDebugComponent as unknown as { ɵcmp: { styles: string[] } }).ɵcmp.styles.join('\n');
+    expect(styles).toMatch(/@media[^{]*max-width:\s*767px[^{]*\{[^}]*\.panel--bottom[^}]*display:\s*none/);
+  });
+});
+
+describe('ChatDebugComponent — auto-dock', () => {
+  afterEach(() => {
+    document.documentElement.removeAttribute('data-ngaf-chat-debug');
+    document.querySelectorAll('chat-sidebar').forEach((n) => n.remove());
+    if (typeof localStorage !== 'undefined') localStorage.clear();
+  });
+
+  it('auto-switches to bottom dock when a sibling chat-sidebar exists', async () => {
+    // Stage a chat-sidebar element on the page so the detector finds it.
+    const sidebarEl = document.createElement('chat-sidebar');
+    document.body.appendChild(sidebarEl);
+
+    TestBed.configureTestingModule({
+      providers: [
+        { provide: ElementRef, useValue: new ElementRef(document.createElement('div')) },
+      ],
+    });
+    const debug = TestBed.runInInjectionContext(() => {
+      const d = new ChatDebugComponent();
+      d.setOpen(true);
+      TestBed.flushEffects();
+      return d;
+    });
+    // Drain the microtask queued by the auto-dock effect.
+    await Promise.resolve();
+    TestBed.flushEffects();
+    // dockState was 'right' default, sidebar detection flips to 'bottom'.
+    expect((debug as unknown as { dockState: () => string }).dockState()).toBe('bottom');
+  });
+
+  it('does NOT auto-switch when no chat-sidebar is present', () => {
+    TestBed.configureTestingModule({
+      providers: [
+        { provide: ElementRef, useValue: new ElementRef(document.createElement('div')) },
+      ],
+    });
+    TestBed.runInInjectionContext(() => {
+      const debug = new ChatDebugComponent();
+      debug.setOpen(true);
+      TestBed.flushEffects();
+      expect((debug as unknown as { dockState: () => string }).dockState()).toBe('right');
+    });
+  });
+
+  it('user clicking a dock button prevents subsequent auto-switching', () => {
+    TestBed.configureTestingModule({
+      providers: [
+        { provide: ElementRef, useValue: new ElementRef(document.createElement('div')) },
+      ],
+    });
+    TestBed.runInInjectionContext(() => {
+      const debug = new ChatDebugComponent();
+      // User explicitly picks right
+      debug.setDock('right');
+      // Now stage a sidebar — should NOT override the user's choice
+      const sidebarEl = document.createElement('chat-sidebar');
+      document.body.appendChild(sidebarEl);
+      debug.setOpen(true);
+      TestBed.flushEffects();
+      expect((debug as unknown as { dockState: () => string }).dockState()).toBe('right');
+    });
   });
 });

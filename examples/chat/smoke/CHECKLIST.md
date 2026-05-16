@@ -122,6 +122,13 @@ renders correctly both during streaming and after completion.
 - [ ] Panel shows current agent signals — status, message count, thread id, model
 - [ ] Panel updates live as messages stream
 - [ ] Click the close affordance — panel unmounts; launcher remains
+
+### Coexistence with chat-sidebar
+
+- [ ] Switch to Sidebar mode via the palette — debug panel auto-redocks to the bottom (was: right)
+- [ ] Open the sidebar launcher (bottom-right) — slides in over the demo bg; debug bottom panel stays visible at the LEFT of the sidebar
+- [ ] Manually click the right-dock icon — debug moves to the right edge of the demo bg (NOT under the sidebar); user override sticks for the rest of the session
+
 - [ ] Open/closed state persists across page reload
 - [ ] No `console.error` while toggling
 - [ ] DOM has no `<chat-debug>` element when closed
