@@ -105,18 +105,28 @@ jobs:
     name: Cockpit — secret-gated integration
     runs-on: ubuntu-latest
     steps:
+      - name: Check integration secret
+        id: integration_secret
+        run: |
+          if [ -z "${COCKPIT_SECRET_TOKEN}" ]; then
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Skipping secret-gated integration: COCKPIT_SECRET_TOKEN is not configured"
+          else
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          fi
+        env:
+          COCKPIT_SECRET_TOKEN: ${{ secrets.COCKPIT_SECRET_TOKEN }}
       - uses: actions/checkout@v6.0.2
+        if: steps.integration_secret.outputs.enabled == 'true'
       - uses: actions/setup-node@v6.3.0
+        if: steps.integration_secret.outputs.enabled == 'true'
         with:
           node-version: 22
           cache: npm
-      - run: npm ci
-      - run: |
-          if [ -z "${COCKPIT_SECRET_TOKEN}" ]; then
-            echo "Skipping secret-gated integration: COCKPIT_SECRET_TOKEN is not configured"
-            exit 0
-          fi
-          npx nx run cockpit-langgraph-deployment-runtime-python:integration --skip-nx-cache
+      - if: steps.integration_secret.outputs.enabled == 'true'
+        run: npm ci
+      - if: steps.integration_secret.outputs.enabled == 'true'
+        run: npx nx run cockpit-langgraph-deployment-runtime-python:integration --skip-nx-cache
         env:
           COCKPIT_SECRET_TOKEN: ${{ secrets.COCKPIT_SECRET_TOKEN }}
 
@@ -257,7 +267,31 @@ jobs:
       - uses: actions/checkout@v6.0.2
         with:
           fetch-depth: 0
+      - name: Detect deploy-relevant changes
+        id: deploy_preflight
+        run: |
+          base_sha="${{ github.event.before }}"
+          head_sha="${{ github.sha }}"
+          if [ -z "$base_sha" ] || [ "$base_sha" = "0000000000000000000000000000000000000000" ]; then
+            base_sha="$(git rev-parse "$head_sha^")"
+          fi
+
+          if ! git cat-file -e "$base_sha^{commit}" 2>/dev/null; then
+            git fetch --no-tags origin "$base_sha"
+          fi
+
+          changed_files="$(git diff --name-only "$base_sha" "$head_sha")"
+          deploy_relevant=false
+          if printf '%s\n' "$changed_files" | grep -E '^(\.github/workflows/ci\.yml|vercel\.(json|cockpit\.json|examples\.json)|apps/(website|cockpit)/|cockpit/|examples/chat/|libs/|scripts/(assemble-examples|deploy-smoke|demo-middleware|langgraph-proxy|rate-limit)\.ts|scripts/assemble-demo\.ts)$' >/dev/null; then
+            deploy_relevant=true
+          fi
+
+          echo "relevant=$deploy_relevant" >> "$GITHUB_OUTPUT"
+          if [ "$deploy_relevant" != "true" ]; then
+            echo "::notice::No deploy-relevant files changed; skipping Vercel dependency setup."
+          fi
       - uses: actions/setup-node@v6.3.0
+        if: steps.deploy_preflight.outputs.relevant == 'true'
         with:
           node-version: 22
           cache: npm
@@ -267,9 +301,10 @@ jobs:
       #   VERCEL_WEBSITE_PROJECT_ID  — website project id
       #   VERCEL_COCKPIT_PROJECT_ID  — cockpit project id
       #   VERCEL_EXAMPLES_PROJECT_ID — examples project id
-      - run: npm ci
-      - run: npx playwright install --with-deps chromium
+      - if: steps.deploy_preflight.outputs.relevant == 'true'
+        run: npm ci
       - name: Resolve deploy targets
+        if: steps.deploy_preflight.outputs.relevant == 'true'
         id: affected
         run: |
           base_sha="${{ github.event.before }}"
@@ -306,6 +341,9 @@ jobs:
 
           echo "website=$website_changed" >> "$GITHUB_OUTPUT"
           echo "cockpit=$cockpit_changed" >> "$GITHUB_OUTPUT"
+      - name: Install Playwright browsers
+        if: steps.affected.outputs.website == 'true'
+        run: npx playwright install --with-deps chromium
       - name: Prepare website Vercel project
         if: steps.affected.outputs.website == 'true'
         run: |
@@ -494,16 +532,50 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      - name: Detect PostHog-relevant changes
+        id: posthog_preflight
+        run: |
+          if [ "${{ github.event_name }}" = "push" ]; then
+            base_sha="${{ github.event.before }}"
+            head_sha="${{ github.sha }}"
+            if [ -z "$base_sha" ] || [ "$base_sha" = "0000000000000000000000000000000000000000" ]; then
+              base_sha="$(git rev-parse "$head_sha^")"
+            fi
+          else
+            base_sha=$(git merge-base origin/main HEAD)
+            head_sha=$(git rev-parse HEAD)
+          fi
+          changed_files="$(git diff --name-only "$base_sha" "$head_sha")"
+          posthog_relevant=false
+          if printf '%s\n' "$changed_files" | grep -E '^(tools/posthog/|package(-lock)?\.json|nx\.json|tsconfig\.base\.json|\.github/workflows/ci\.yml)$' >/dev/null; then
+            posthog_relevant=true
+          fi
+
+          echo "relevant=$posthog_relevant" >> "$GITHUB_OUTPUT"
+          if [ "$posthog_relevant" != "true" ]; then
+            echo "::notice::No PostHog tooling files changed — skipping dependency setup and drift check."
+          fi
       - uses: actions/setup-node@v4
+        if: steps.posthog_preflight.outputs.relevant == 'true'
         with:
           node-version: '20'
           cache: 'npm'
-      - run: npm ci
+      - if: steps.posthog_preflight.outputs.relevant == 'true'
+        run: npm ci
       - name: Detect affected
+        if: steps.posthog_preflight.outputs.relevant == 'true'
         id: affected
         run: |
-          base_sha=$(git merge-base origin/main HEAD)
-          head_sha=$(git rev-parse HEAD)
+          if [ "${{ github.event_name }}" = "push" ]; then
+            base_sha="${{ github.event.before }}"
+            head_sha="${{ github.sha }}"
+            if [ -z "$base_sha" ] || [ "$base_sha" = "0000000000000000000000000000000000000000" ]; then
+              base_sha="$(git rev-parse "$head_sha^")"
+            fi
+          else
+            base_sha=$(git merge-base origin/main HEAD)
+            head_sha=$(git rev-parse HEAD)
+          fi
           affected="$(npx nx show projects --affected --base=$base_sha --head=$head_sha)"
           if printf '%s\n' "$affected" | grep -Fx 'posthog-tools' >/dev/null; then
             echo "is_affected=yes" >> "$GITHUB_OUTPUT"
