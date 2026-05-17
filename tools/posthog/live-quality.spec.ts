@@ -2,9 +2,11 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   analyzeTelemetryEvents,
+  analyzeTelemetryCoverage,
   fetchRecentContractEvents,
   formatLiveQualityReport,
   hasBlockingFindings,
+  type LiveCoverageRequirement,
   type LiveTelemetryEvent,
 } from './live-quality.js';
 import { TELEMETRY_EVENT_CONTRACT } from './telemetry-contract.js';
@@ -38,7 +40,7 @@ test('analyzeTelemetryEvents flags missing required and forbidden properties', (
         property: 'messages',
         kind: 'forbidden_property',
       },
-    ],
+    ]
   );
   assert.equal(hasBlockingFindings(findings), true);
 });
@@ -69,9 +71,27 @@ test('analyzeTelemetryEvents warns on non-contract properties but ignores PostHo
         property: 'accidental_extra',
         kind: 'unexpected_property',
       },
-    ],
+    ]
   );
   assert.equal(hasBlockingFindings(findings), false);
+});
+
+test('analyzeTelemetryEvents ignores PostHog attribution metadata', () => {
+  const findings = analyzeTelemetryEvents([
+    {
+      event: 'marketing:cta_click',
+      timestamp: '2026-05-17T00:00:00Z',
+      properties: {
+        cta_id: 'hero_docs',
+        gclid: 'click-id',
+        fbclid: 'click-id',
+        utm_source: 'newsletter',
+        utm_campaign: 'launch',
+      },
+    },
+  ]);
+
+  assert.deepEqual(findings, []);
 });
 
 test('formatLiveQualityReport summarizes clean coverage and warnings', () => {
@@ -96,6 +116,69 @@ test('formatLiveQualityReport summarizes clean coverage and warnings', () => {
   assert.match(report, /\| ngaf:stream_ended \| 0 \|/);
   assert.match(report, /Warnings/);
   assert.match(report, /unexpected/);
+});
+
+test('analyzeTelemetryCoverage flags required events with no recent samples', () => {
+  const requirements: LiveCoverageRequirement[] = [
+    { event: 'ngaf:runtime_request_created', minCount: 1 },
+    { event: 'ngaf:stream_started', minCount: 2 },
+  ];
+
+  const findings = analyzeTelemetryCoverage(
+    [
+      {
+        event: 'ngaf:stream_started',
+        timestamp: '2026-05-17T00:00:00Z',
+        properties: { transport: 'langgraph' },
+      },
+    ],
+    requirements
+  );
+
+  assert.deepEqual(
+    findings.map((finding) => ({
+      severity: finding.severity,
+      event: finding.event,
+      property: finding.property,
+      kind: finding.kind,
+      message: finding.message,
+    })),
+    [
+      {
+        severity: 'error',
+        event: 'ngaf:runtime_request_created',
+        property: 'event_count',
+        kind: 'insufficient_event_coverage',
+        message:
+          'ngaf:runtime_request_created has 0 recent events; expected at least 1',
+      },
+      {
+        severity: 'error',
+        event: 'ngaf:stream_started',
+        property: 'event_count',
+        kind: 'insufficient_event_coverage',
+        message: 'ngaf:stream_started has 1 recent event; expected at least 2',
+      },
+    ]
+  );
+  assert.equal(hasBlockingFindings(findings), true);
+});
+
+test('formatLiveQualityReport includes coverage requirements', () => {
+  const report = formatLiveQualityReport({
+    days: 7,
+    events: [],
+    findings: analyzeTelemetryCoverage(
+      [],
+      [{ event: 'ngaf:postinstall', minCount: 1 }]
+    ),
+    checkedEvents: ['ngaf:postinstall'],
+    coverageRequirements: [{ event: 'ngaf:postinstall', minCount: 1 }],
+  });
+
+  assert.match(report, /\| Event \| Sampled events \| Required minimum \|/);
+  assert.match(report, /\| ngaf:postinstall \| 0 \| 1 \|/);
+  assert.match(report, /insufficient_event_coverage/);
 });
 
 test('fetchRecentContractEvents requests each contract event with bounded limits', async () => {
@@ -161,9 +244,17 @@ test('every contracted event can be analyzed without a bespoke case', () => {
     event,
     timestamp: '2026-05-17T00:00:00Z',
     properties: Object.fromEntries(
-      TELEMETRY_EVENT_CONTRACT[event].requiredProperties.map((property) => [property, 'x']),
+      TELEMETRY_EVENT_CONTRACT[event].requiredProperties.map((property) => [
+        property,
+        'x',
+      ])
     ),
   }));
 
-  assert.equal(analyzeTelemetryEvents(events).some((finding) => finding.severity === 'error'), false);
+  assert.equal(
+    analyzeTelemetryEvents(events).some(
+      (finding) => finding.severity === 'error'
+    ),
+    false
+  );
 });
