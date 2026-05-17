@@ -49,6 +49,13 @@ const CHAT_PRIMITIVE_CAPABILITIES = [
   'chat/debug',
 ] as const;
 
+const CHAT_PRIMITIVE_READY_SELECTORS: Record<(typeof CHAT_PRIMITIVE_CAPABILITIES)[number], string> = {
+  'chat/messages': 'chat-message-list',
+  'chat/input': 'chat-input',
+  'chat/interrupts': 'chat-interrupt-panel',
+  'chat/debug': 'chat-debug',
+};
+
 const RENDER_CAPABILITIES = [
   'render/spec-rendering',
   'render/element-rendering',
@@ -73,7 +80,9 @@ test.describe('Production: Angular chat primitive apps load', () => {
     test(`${cap} loads at examples URL`, async ({ page }) => {
       const response = await page.goto(`${EXAMPLES_URL}/${cap}/`, { timeout: 15_000 });
       expect(response?.status()).toBe(200);
-      await expect(page.locator('body')).not.toBeEmpty({ timeout: 10_000 });
+      await expect(page.locator(CHAT_PRIMITIVE_READY_SELECTORS[cap])).toBeAttached({
+        timeout: 10_000,
+      });
     });
   }
 });
