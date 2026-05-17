@@ -12,7 +12,10 @@ import { CHAT_WINDOW_STYLES } from '../../styles/chat-window.styles';
   template: `
     <div class="chat-window__header"><ng-content select="[chatHeader]" /></div>
     <div class="chat-window__body"><ng-content select="[chatBody]" /></div>
-    <div class="chat-window__footer"><ng-content select="[chatFooter]" /></div>
+    <div class="chat-window__footer">
+      <div class="chat-window__scroll-fade" aria-hidden="true"></div>
+      <ng-content select="[chatFooter]" />
+    </div>
   `,
 })
 export class ChatWindowComponent {}

@@ -23,21 +23,21 @@ export interface WelcomeSuggestion {
 }
 
 export const FEATURED_SUGGESTIONS: readonly WelcomeSuggestion[] = [
-  // 1. Markdown / streaming showcase
-  { label: 'Tell me about coral reefs', value: 'Tell me about coral reefs' },
-
-  // 2. Tool use + citations
-  {
-    label: 'What are Angular signals? (search + cite sources)',
-    value:
-      'Use the search tool to find authoritative information about Angular signals, then explain what they are and when to use them. Cite each source inline as [^doc-id] using the document `id` field returned by the tool.',
-  },
-
-  // 3. GenUI surface render
+  // 1. GenUI surface render — the canonical demo's most differentiating capability
   {
     label: 'Demo: render a contact form',
     value:
       'Show me a contact form with fields for name, email address, subject, and a multi-line message, plus a Send button.',
+  },
+
+  // 2. Markdown / streaming showcase
+  { label: 'Tell me about coral reefs', value: 'Tell me about coral reefs' },
+
+  // 3. Tool use + citations
+  {
+    label: 'What are Angular signals? (search + cite sources)',
+    value:
+      'Use the search tool to find authoritative information about Angular signals, then explain what they are and when to use them. Cite each source inline as [^doc-id] using the document `id` field returned by the tool.',
   },
 ];
 
