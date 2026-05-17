@@ -245,12 +245,12 @@ export interface A2uiSurface {
 // --- Outbound shapes ---
 
 export interface A2uiClientDataModel {
-  version: 'v0.9';
+  version: 'v1';
   surfaces: Record<string, Record<string, unknown>>;
 }
 
 export interface A2uiActionMessage {
-  version: 'v0.9';
+  version: 'v1';
   action: {
     name: string;
     surfaceId: string;

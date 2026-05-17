@@ -272,14 +272,14 @@ renders correctly both during streaming and after completion.
 
 ### Gen UI mode dropdown
 
-- [ ] Palette "Gen UI" dropdown lists 2 options: `A2UI v0.9-compatible` and `json-render`
-- [ ] Default value is `A2UI v0.9-compatible` on first load
+- [ ] Palette "Gen UI" dropdown lists 2 options: `A2UI v1-compatible` and `json-render`
+- [ ] Default value is `A2UI v1-compatible` on first load
 - [ ] Selection persists across reload and mode switches
 - [ ] Server-side: `curl localhost:2024/threads/<id>/state` shows `values.gen_ui_mode` matches the palette selection
 
-### Dynamic dispatch — A2UI v0.9-compatible mode
+### Dynamic dispatch — A2UI v1-compatible mode
 
-- [ ] With Gen UI = `A2UI v0.9-compatible`, click any GenUI welcome suggestion (e.g. "Demo: render a feedback form")
+- [ ] With Gen UI = `A2UI v1-compatible`, click any GenUI welcome suggestion (e.g. "Demo: render a feedback form")
 - [ ] **Single bubble** — exactly ONE assistant bubble per GenUI turn (no skeleton bubble followed by a separate surface bubble)
 - [ ] Parent LLM emits a tool_call to `render_a2ui_surface` (parent emits envelopes directly as typed args — there is no sub-LLM hop)
 - [ ] Final assistant AI message carries BOTH `tool_calls` AND `---a2ui_JSON---\n`-prefixed content (in-place replacement of the tool-call AI)
@@ -291,7 +291,7 @@ renders correctly both during streaming and after completion.
 
 ### Progressive A2UI streaming (per-component fallback transition)
 
-- [ ] DevTools Network → trigger any A2UI v0.9-compatible GenUI prompt; the `/runs/stream` SSE response contains `event: custom` frames carrying `a2ui-partial` payloads (`{name: 'a2ui-partial', data: {tool_call_id, args_so_far}}`)
+- [ ] DevTools Network → trigger any A2UI v1-compatible GenUI prompt; the `/runs/stream` SSE response contains `event: custom` frames carrying `a2ui-partial` payloads (`{name: 'a2ui-partial', data: {tool_call_id, args_so_far}}`)
 - [ ] At least several `a2ui-partial` frames stream as the parent LLM emits tool-call argument tokens (not all-at-once)
 - [ ] During streaming: `<a2ui-surface>` mounts before all `dataModelUpdate` envelopes arrive — components show `<render-default-fallback>` (shimmer card with "Building UI…" label) until their bound state populates
 - [ ] As each `dataModelUpdate` envelope arrives, exactly one component flips from fallback → real
@@ -309,7 +309,7 @@ renders correctly both during streaming and after completion.
 
 ### Server-side wire format
 
-- [ ] In A2UI v0.9-compatible mode: the final AI message content starts with `---a2ui_JSON---\n` followed by JSONL (one envelope per line); contains at minimum `surfaceUpdate` and `beginRendering` envelopes; envelopes are reordered so `beginRendering` follows the first `surfaceUpdate` regardless of LLM emission order
+- [ ] In A2UI v1-compatible mode: the final AI message content starts with `---a2ui_JSON---\n` followed by JSONL (one envelope per line); contains at minimum `surfaceUpdate` and `beginRendering` envelopes; envelopes are reordered so `beginRendering` follows the first `surfaceUpdate` regardless of LLM emission order
 - [ ] The same AI message carries `tool_calls` set (single-bubble invariant)
 - [ ] In json-render mode: final AI message content is a bare JSON object starting with `{`
 - [ ] `curl localhost:2024/threads/<id>/state` confirms the above for both modes

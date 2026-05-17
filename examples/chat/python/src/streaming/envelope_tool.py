@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: MIT
-"""Parent-LLM-bound tool that emits A2UI v0.9 envelopes as structured tool
+"""Parent-LLM-bound tool that emits A2UI v1 envelopes as structured tool
 arguments. Replaces the old two-LLM `generate_a2ui_schema` flow (parent
 calls a sub-LLM that produces envelopes); the parent now emits envelopes
 directly so the natural token stream IS the surface-rendering stream.
@@ -41,7 +41,7 @@ class DataModelUpdate(BaseModel):
 
 
 class A2uiEnvelope(BaseModel):
-    """Single A2UI v0.9 envelope. Exactly one of the three discriminators
+    """Single A2UI v1 envelope. Exactly one of the three discriminators
     is set per envelope — the model_validator below enforces this so the
     parent LLM cannot emit ambiguous or empty envelopes."""
     surfaceUpdate: Optional[SurfaceUpdate] = None
@@ -64,7 +64,7 @@ class A2uiEnvelope(BaseModel):
 
 @tool
 def render_a2ui_surface(envelopes: list[A2uiEnvelope]) -> str:
-    """Render a UI surface using A2UI v0.9 envelopes. Emit:
+    """Render a UI surface using A2UI v1 envelopes. Emit:
       - exactly one `surfaceUpdate` (component tree),
       - exactly one `beginRendering` (root reference),
       - zero or more `dataModelUpdate` entries (initial state).
