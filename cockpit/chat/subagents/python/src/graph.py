@@ -1,25 +1,114 @@
-"""
-Chat Subagents Graph
+"""Chat Subagents Graph — orchestrator LLM with a single `task` tool that
+dispatches to specialized aviation subagents (research/booking/itinerary).
 
-A LangGraph StateGraph demonstrating an orchestrator pattern with
-subagent delegation. The orchestrator routes tasks to specialized
-subagent nodes that simulate domain-specific processing.
+Mirrors umbrella's c-subagents. Self-contained: aviation_tools + aviation_data
+copied into this module.
 """
 
 from pathlib import Path
-from langgraph.graph import StateGraph, MessagesState, END
+from typing import Literal
+
+from langchain_core.messages import SystemMessage, HumanMessage
+from langchain_core.tools import tool
 from langchain_openai import ChatOpenAI
-from langchain_core.messages import SystemMessage, AIMessage
+from langgraph.graph import StateGraph, MessagesState, END
+from langgraph.prebuilt import ToolNode
+
+from src.aviation_tools import (
+    get_airport_info,
+    find_routes,
+    lookup_flight,
+)
 
 PROMPTS_DIR = Path(__file__).parent.parent / "prompts"
 
 
-def build_subagents_graph():
-    """
-    Constructs an orchestrator graph that delegates to specialized subagents.
-    Demonstrates the subagent pattern with research, analysis, and summary nodes.
-    """
+_RESEARCH_PROMPT = """You are a Research Agent for trip planning. Your job is to gather
+destination intel about airports the traveler is considering. Use the
+get_airport_info tool to look up airport details (city, weather, terminals,
+runways) for any airport codes mentioned in the task description.
+
+Return a concise 2-4 sentence summary of what you found. If a code isn't
+recognized, say so."""
+
+_BOOKING_PROMPT = """You are a Booking Agent for trip planning. Your job is to find
+flight options between the origin and destination airports in the task
+description. Use find_routes to list available flights, and lookup_flight
+if the user mentioned a specific flight number.
+
+Return a concise summary listing 2-3 best flight options with airline,
+flight number, times, and price-or-aircraft info. If no flights are found,
+say so and suggest alternatives."""
+
+_ITINERARY_PROMPT = """You are an Itinerary Agent for trip planning. Your job is to
+synthesize a final trip plan from research + booking outputs you receive in
+the task description.
+
+Return a clean 3-5 sentence itinerary summarizing the recommended flight
+choice, what to expect on arrival (weather), and any practical tips
+(e.g., delays, terminal info). Be helpful and concise."""
+
+
+async def _run_subagent(role: str, task_description: str, system_prompt: str, tools: list):
+    """Run a single subagent: LLM bound with role-specific tools, single tool loop."""
     llm = ChatOpenAI(model="gpt-5-mini", streaming=True)
+    if tools:
+        llm = llm.bind_tools(tools)
+    messages = [
+        SystemMessage(content=system_prompt),
+        HumanMessage(content=task_description),
+    ]
+    # Allow up to 3 tool-loop iterations
+    for _ in range(3):
+        response = await llm.ainvoke(messages)
+        messages.append(response)
+        tool_calls = getattr(response, "tool_calls", None)
+        if not tool_calls:
+            return response.content
+        # Execute tool calls inline
+        for tc in tool_calls:
+            tool_name = tc["name"]
+            tool_args = tc["args"]
+            target = next((t for t in tools if t.name == tool_name), None)
+            if target is None:
+                tool_result = f"Tool {tool_name} not available"
+            else:
+                tool_result = await target.ainvoke(tool_args)
+            from langchain_core.messages import ToolMessage
+            messages.append(ToolMessage(content=str(tool_result), tool_call_id=tc["id"]))
+    return response.content
+
+
+@tool
+async def task(role: Literal["research", "booking", "itinerary"], task_description: str) -> str:
+    """Delegate a subtask to a specialized subagent.
+
+    Roles:
+      - research: gathers destination intel (airports, weather, conditions)
+      - booking: finds flight options between origin and destination
+      - itinerary: synthesizes a final trip plan combining research + bookings
+
+    Args:
+        role: One of "research", "booking", "itinerary".
+        task_description: Plain-English description of what the subagent
+            should do (e.g., "Gather info on LAX and JFK airports", or
+            "Find morning flights from LAX to JFK").
+
+    Returns:
+        The subagent's final answer as a string.
+    """
+    if role == "research":
+        return await _run_subagent(role, task_description, _RESEARCH_PROMPT, [get_airport_info])
+    if role == "booking":
+        return await _run_subagent(role, task_description, _BOOKING_PROMPT, [find_routes, lookup_flight])
+    if role == "itinerary":
+        return await _run_subagent(role, task_description, _ITINERARY_PROMPT, [])
+    return f"Unknown role: {role}"
+
+
+def build_subagents_graph():
+    """Orchestrator LLM with a single `task` tool that dispatches to subagent functions."""
+    llm = ChatOpenAI(model="gpt-5-mini", streaming=True).bind_tools([task])
 
     async def orchestrator(state: MessagesState) -> dict:
         system_prompt = (PROMPTS_DIR / "subagents.md").read_text()
@@ -27,36 +116,18 @@ def build_subagents_graph():
         response = await llm.ainvoke(messages)
         return {"messages": [response]}
 
-    async def research_agent(state: MessagesState) -> dict:
-        last = state["messages"][-1].content
-        response = AIMessage(
-            content=f"[Research Agent] Gathered background information on: {last[:100]}"
-        )
-        return {"messages": [response]}
-
-    async def analysis_agent(state: MessagesState) -> dict:
-        last = state["messages"][-1].content
-        response = AIMessage(
-            content=f"[Analysis Agent] Analyzed findings and identified key patterns."
-        )
-        return {"messages": [response]}
-
-    async def summary_agent(state: MessagesState) -> dict:
-        messages = [SystemMessage(content="Summarize the conversation so far in a concise paragraph.")] + state["messages"]
-        response = await llm.ainvoke(messages)
-        return {"messages": [response]}
+    def should_continue(state: MessagesState) -> str:
+        last = state["messages"][-1]
+        if hasattr(last, "tool_calls") and last.tool_calls:
+            return "tools"
+        return END
 
     graph = StateGraph(MessagesState)
     graph.add_node("orchestrator", orchestrator)
-    graph.add_node("research_agent", research_agent)
-    graph.add_node("analysis_agent", analysis_agent)
-    graph.add_node("summary_agent", summary_agent)
+    graph.add_node("tools", ToolNode([task]))
     graph.set_entry_point("orchestrator")
-    graph.add_edge("orchestrator", "research_agent")
-    graph.add_edge("research_agent", "analysis_agent")
-    graph.add_edge("analysis_agent", "summary_agent")
-    graph.add_edge("summary_agent", END)
-
+    graph.add_conditional_edges("orchestrator", should_continue, {"tools": "tools", END: END})
+    graph.add_edge("tools", "orchestrator")
     return graph.compile()
 
 
