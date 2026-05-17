@@ -1,0 +1,24 @@
+{
+  "name": "cockpit-chat-subagents-python",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "cockpit/chat/subagents/python/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{workspaceRoot}/dist/cockpit/chat/subagents/python"],
+      "options": {
+        "outputPath": "dist/cockpit/chat/subagents/python",
+        "main": "cockpit/chat/subagents/python/src/index.ts",
+        "tsConfig": "cockpit/chat/subagents/python/tsconfig.json"
+      }
+    },
+    "serve": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "cockpit/chat/subagents/python",
+        "command": "uv run langgraph dev --port 5505 --no-browser"
+      }
+    }
+  }
+}

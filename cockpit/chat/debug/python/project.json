@@ -1,0 +1,24 @@
+{
+  "name": "cockpit-chat-debug-python",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "cockpit/chat/debug/python/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{workspaceRoot}/dist/cockpit/chat/debug/python"],
+      "options": {
+        "outputPath": "dist/cockpit/chat/debug/python",
+        "main": "cockpit/chat/debug/python/src/index.ts",
+        "tsConfig": "cockpit/chat/debug/python/tsconfig.json"
+      }
+    },
+    "serve": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "cockpit/chat/debug/python",
+        "command": "uv run langgraph dev --port 5509 --no-browser"
+      }
+    }
+  }
+}

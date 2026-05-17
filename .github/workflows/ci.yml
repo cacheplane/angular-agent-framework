@@ -356,6 +356,13 @@ jobs:
       - run: npm ci
       - working-directory: cockpit/langgraph/streaming/python
         run: uv sync
+      # Per-cap cleanup PR: each chat cap's e2e now starts its OWN
+      # standalone backend (not the umbrella). Pre-sync deps for the two
+      # caps with e2e suites.
+      - working-directory: cockpit/chat/tool-calls/python
+        run: uv sync
+      - working-directory: cockpit/chat/subagents/python
+        run: uv sync
       - run: npx playwright install --with-deps chromium
       # Explicit sequential loop (not `nx run-many --parallel=1`) so each
       # per-example e2e gets a fresh Playwright process and a clean port

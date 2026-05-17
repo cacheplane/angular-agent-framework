@@ -1,0 +1,24 @@
+{
+  "name": "cockpit-chat-generative-ui-python",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "cockpit/chat/generative-ui/python/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{workspaceRoot}/dist/cockpit/chat/generative-ui/python"],
+      "options": {
+        "outputPath": "dist/cockpit/chat/generative-ui/python",
+        "main": "cockpit/chat/generative-ui/python/src/index.ts",
+        "tsConfig": "cockpit/chat/generative-ui/python/tsconfig.json"
+      }
+    },
+    "serve": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "cockpit/chat/generative-ui/python",
+        "command": "uv run langgraph dev --port 5508 --no-browser"
+      }
+    }
+  }
+}

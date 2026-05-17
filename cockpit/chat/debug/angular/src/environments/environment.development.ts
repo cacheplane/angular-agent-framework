@@ -1,5 +1,5 @@
 export const environment = {
   production: false,
-  langGraphApiUrl: 'http://localhost:4509/api',
+  langGraphApiUrl: '/api',
   streamingAssistantId: 'c-debug',
 };

@@ -1,0 +1,24 @@
+{
+  "name": "cockpit-chat-timeline-python",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "cockpit/chat/timeline/python/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{workspaceRoot}/dist/cockpit/chat/timeline/python"],
+      "options": {
+        "outputPath": "dist/cockpit/chat/timeline/python",
+        "main": "cockpit/chat/timeline/python/src/index.ts",
+        "tsConfig": "cockpit/chat/timeline/python/tsconfig.json"
+      }
+    },
+    "serve": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "cockpit/chat/timeline/python",
+        "command": "uv run langgraph dev --port 5507 --no-browser"
+      }
+    }
+  }
+}

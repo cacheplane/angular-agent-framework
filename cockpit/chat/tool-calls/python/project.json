@@ -1,0 +1,24 @@
+{
+  "name": "cockpit-chat-tool-calls-python",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "cockpit/chat/tool-calls/python/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{workspaceRoot}/dist/cockpit/chat/tool-calls/python"],
+      "options": {
+        "outputPath": "dist/cockpit/chat/tool-calls/python",
+        "main": "cockpit/chat/tool-calls/python/src/index.ts",
+        "tsConfig": "cockpit/chat/tool-calls/python/tsconfig.json"
+      }
+    },
+    "serve": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "cockpit/chat/tool-calls/python",
+        "command": "uv run langgraph dev --port 5504 --no-browser"
+      }
+    }
+  }
+}

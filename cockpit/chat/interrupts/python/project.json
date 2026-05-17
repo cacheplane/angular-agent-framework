@@ -1,0 +1,24 @@
+{
+  "name": "cockpit-chat-interrupts-python",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "cockpit/chat/interrupts/python/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{workspaceRoot}/dist/cockpit/chat/interrupts/python"],
+      "options": {
+        "outputPath": "dist/cockpit/chat/interrupts/python",
+        "main": "cockpit/chat/interrupts/python/src/index.ts",
+        "tsConfig": "cockpit/chat/interrupts/python/tsconfig.json"
+      }
+    },
+    "serve": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "cockpit/chat/interrupts/python",
+        "command": "uv run langgraph dev --port 5503 --no-browser"
+      }
+    }
+  }
+}

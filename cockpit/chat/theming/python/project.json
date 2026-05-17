@@ -1,0 +1,24 @@
+{
+  "name": "cockpit-chat-theming-python",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "cockpit/chat/theming/python/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{workspaceRoot}/dist/cockpit/chat/theming/python"],
+      "options": {
+        "outputPath": "dist/cockpit/chat/theming/python",
+        "main": "cockpit/chat/theming/python/src/index.ts",
+        "tsConfig": "cockpit/chat/theming/python/tsconfig.json"
+      }
+    },
+    "serve": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "cockpit/chat/theming/python",
+        "command": "uv run langgraph dev --port 5510 --no-browser"
+      }
+    }
+  }
+}

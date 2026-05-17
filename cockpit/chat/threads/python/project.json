@@ -1,0 +1,24 @@
+{
+  "name": "cockpit-chat-threads-python",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "cockpit/chat/threads/python/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{workspaceRoot}/dist/cockpit/chat/threads/python"],
+      "options": {
+        "outputPath": "dist/cockpit/chat/threads/python",
+        "main": "cockpit/chat/threads/python/src/index.ts",
+        "tsConfig": "cockpit/chat/threads/python/tsconfig.json"
+      }
+    },
+    "serve": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "cockpit/chat/threads/python",
+        "command": "uv run langgraph dev --port 5506 --no-browser"
+      }
+    }
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "extends": "../../../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "../../../../dist/cockpit/chat/input/python",
+    "module": "ESNext",
+    "moduleResolution": "Node",
+    "target": "ES2022",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "strict": true
+  },
+  "include": ["src/**/*"]
+}

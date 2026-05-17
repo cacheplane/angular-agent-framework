@@ -1,0 +1,24 @@
+{
+  "name": "cockpit-chat-messages-python",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "cockpit/chat/messages/python/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{workspaceRoot}/dist/cockpit/chat/messages/python"],
+      "options": {
+        "outputPath": "dist/cockpit/chat/messages/python",
+        "main": "cockpit/chat/messages/python/src/index.ts",
+        "tsConfig": "cockpit/chat/messages/python/tsconfig.json"
+      }
+    },
+    "serve": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "cockpit/chat/messages/python",
+        "command": "uv run langgraph dev --port 5501 --no-browser"
+      }
+    }
+  }
+}

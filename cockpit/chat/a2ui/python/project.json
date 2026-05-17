@@ -1,0 +1,24 @@
+{
+  "name": "cockpit-chat-a2ui-python",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "cockpit/chat/a2ui/python/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{workspaceRoot}/dist/cockpit/chat/a2ui/python"],
+      "options": {
+        "outputPath": "dist/cockpit/chat/a2ui/python",
+        "main": "cockpit/chat/a2ui/python/src/index.ts",
+        "tsConfig": "cockpit/chat/a2ui/python/tsconfig.json"
+      }
+    },
+    "serve": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "cockpit/chat/a2ui/python",
+        "command": "uv run langgraph dev --port 5511 --no-browser"
+      }
+    }
+  }
+}
