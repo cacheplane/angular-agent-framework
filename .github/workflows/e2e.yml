@@ -34,6 +34,14 @@ jobs:
         working-directory: cockpit/langgraph/streaming/python
         run: uv sync
 
+      - name: Install tool-calls Python dependencies
+        working-directory: cockpit/chat/tool-calls/python
+        run: uv sync
+
+      - name: Install subagents Python dependencies
+        working-directory: cockpit/chat/subagents/python
+        run: uv sync
+
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
 

@@ -1,14 +1,14 @@
 """Capture parent first-call (tool_call) + continuation (text) for c-tool-calls.
 
-Mirrors cockpit/langgraph/streaming/python/src/chat_graphs.py's
-_build_tool_calls_graph() LLM setup: ChatOpenAI(gpt-5-mini, streaming=True)
-bound with AVIATION_TOOLS, system prompt from prompts/tool-calls.md.
+Mirrors cockpit/chat/tool-calls/python/src/graph.py's c-tool-calls LLM setup:
+ChatOpenAI(gpt-5-mini, streaming=True) bound with AVIATION_TOOLS, system
+prompt from prompts/tool-calls.md.
 
 Two LLM calls captured, written into one fixture with the hasToolResult
 discriminator on the continuation entry.
 
 Run from repo root:
-  OPENAI_API_KEY=sk-... uv run --project cockpit/langgraph/streaming/python \
+  OPENAI_API_KEY=sk-... uv run --project cockpit/chat/tool-calls/python \
     python cockpit/chat/tool-calls/angular/e2e/scripts/record-c-tool-calls.py
 """
 import asyncio
@@ -18,7 +18,7 @@ import sys
 import uuid
 from pathlib import Path
 
-env_path = Path("cockpit/langgraph/streaming/python/.env")
+env_path = Path("cockpit/chat/tool-calls/python/.env")
 if env_path.exists():
     for line in env_path.read_text().splitlines():
         line = line.strip()
@@ -30,7 +30,7 @@ if not os.environ.get("OPENAI_API_KEY"):
     print("OPENAI_API_KEY not set", file=sys.stderr)
     sys.exit(1)
 
-sys.path.insert(0, str(Path("cockpit/langgraph/streaming/python/src").resolve()))
+sys.path.insert(0, str(Path("cockpit/chat/tool-calls/python/src").resolve()))
 
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage, ToolMessage
 from langchain_openai import ChatOpenAI
@@ -39,7 +39,7 @@ from src.aviation_tools import ALL_TOOLS as AVIATION_TOOLS, lookup_flight  # typ
 
 PROMPT = "What's the status of UA123?"
 SYSTEM_PROMPT = (
-    Path("cockpit/langgraph/streaming/python/prompts/tool-calls.md").read_text()
+    Path("cockpit/chat/tool-calls/python/prompts/tool-calls.md").read_text()
 )
 
 llm = ChatOpenAI(model="gpt-5-mini", temperature=0).bind_tools(AVIATION_TOOLS)
