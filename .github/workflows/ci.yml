@@ -14,8 +14,144 @@ permissions:
   contents: read
 
 jobs:
+  ci-scope:
+    name: CI scope
+    runs-on: ubuntu-latest
+    outputs:
+      library: ${{ steps.scope.outputs.library }}
+      website: ${{ steps.scope.outputs.website }}
+      cockpit: ${{ steps.scope.outputs.cockpit }}
+      cockpit_examples: ${{ steps.scope.outputs.cockpit_examples }}
+      cockpit_smoke: ${{ steps.scope.outputs.cockpit_smoke }}
+      cockpit_secret: ${{ steps.scope.outputs.cockpit_secret }}
+      cockpit_deploy_smoke: ${{ steps.scope.outputs.cockpit_deploy_smoke }}
+      examples_chat: ${{ steps.scope.outputs.examples_chat }}
+      cockpit_e2e: ${{ steps.scope.outputs.cockpit_e2e }}
+      website_e2e: ${{ steps.scope.outputs.website_e2e }}
+      posthog: ${{ steps.scope.outputs.posthog }}
+    steps:
+      - uses: actions/checkout@v6.0.2
+        with:
+          fetch-depth: 0
+      - name: Detect changed CI surfaces
+        id: scope
+        run: |
+          set -euo pipefail
+
+          keys="library website cockpit cockpit_examples cockpit_smoke cockpit_secret cockpit_deploy_smoke examples_chat cockpit_e2e website_e2e posthog"
+
+          mark_all() {
+            for key in $keys; do
+              printf '%s=true\n' "$key" >> "$GITHUB_OUTPUT"
+            done
+          }
+
+          if [ "${{ github.event_name }}" = "push" ]; then
+            mark_all
+            echo "::notice::Push to main runs the full CI suite."
+            exit 0
+          fi
+
+          base_sha="${{ github.event.pull_request.base.sha }}"
+          head_sha="${{ github.event.pull_request.head.sha }}"
+
+          if ! git cat-file -e "$base_sha^{commit}" 2>/dev/null || ! git cat-file -e "$head_sha^{commit}" 2>/dev/null; then
+            base_sha="$(git rev-parse HEAD^1)"
+            head_sha="$(git rev-parse HEAD^2)"
+          fi
+
+          changed_files="$(git diff --name-only "$base_sha" "$head_sha")"
+          printf '%s\n' "$changed_files"
+
+          library=false
+          website=false
+          cockpit=false
+          cockpit_examples=false
+          cockpit_smoke=false
+          cockpit_secret=false
+          cockpit_deploy_smoke=false
+          examples_chat=false
+          cockpit_e2e=false
+          website_e2e=false
+          posthog=false
+
+          if printf '%s\n' "$changed_files" | grep -E '^(\.github/workflows/ci\.yml|package(-lock)?\.json|nx\.json|tsconfig(\.base)?\.json|eslint\.config\.mjs)$' >/dev/null; then
+            library=true
+            website=true
+            cockpit=true
+            cockpit_examples=true
+            cockpit_smoke=true
+            cockpit_secret=true
+            cockpit_deploy_smoke=true
+            examples_chat=true
+            cockpit_e2e=true
+            website_e2e=true
+            posthog=true
+          fi
+
+          if printf '%s\n' "$changed_files" | grep -E '^libs/(chat|langgraph|ag-ui|render|a2ui|licensing|telemetry)/' >/dev/null; then
+            library=true
+            website=true
+            cockpit=true
+            cockpit_examples=true
+            cockpit_smoke=true
+            cockpit_secret=true
+            cockpit_deploy_smoke=true
+            examples_chat=true
+            cockpit_e2e=true
+            website_e2e=true
+          fi
+
+          if printf '%s\n' "$changed_files" | grep -E '^(apps/website/|vercel\.json$)' >/dev/null; then
+            website=true
+            website_e2e=true
+          fi
+
+          if printf '%s\n' "$changed_files" | grep -E '^(apps/cockpit/|vercel\.cockpit\.json$|libs/(cockpit-|design-tokens|ui-react|e2e-harness|example-layouts))' >/dev/null; then
+            cockpit=true
+            cockpit_examples=true
+            cockpit_deploy_smoke=true
+            cockpit_e2e=true
+          fi
+
+          if printf '%s\n' "$changed_files" | grep -E '^(cockpit/.*/angular/|scripts/assemble-examples\.ts$|vercel\.examples\.json$)' >/dev/null; then
+            cockpit_examples=true
+          fi
+
+          if printf '%s\n' "$changed_files" | grep -E '^cockpit/.*/python/' >/dev/null; then
+            cockpit_smoke=true
+          fi
+
+          if printf '%s\n' "$changed_files" | grep -E '^cockpit/langgraph/deployment-runtime/python/' >/dev/null; then
+            cockpit_secret=true
+          fi
+
+          if printf '%s\n' "$changed_files" | grep -E '^(apps/cockpit/scripts/deploy-smoke\.ts|scripts/deploy-smoke\.ts)$' >/dev/null; then
+            cockpit_deploy_smoke=true
+          fi
+
+          if printf '%s\n' "$changed_files" | grep -E '^(cockpit/langgraph/streaming/|cockpit/chat/(tool-calls|subagents)/|libs/(cockpit-testing|e2e-harness)/)' >/dev/null; then
+            cockpit_e2e=true
+          fi
+
+          if printf '%s\n' "$changed_files" | grep -E '^(examples/chat/|vercel\.demo\.json$|scripts/(assemble-demo|demo-middleware|langgraph-proxy|rate-limit)\.ts$)' >/dev/null; then
+            examples_chat=true
+          fi
+
+          if printf '%s\n' "$changed_files" | grep -E '^tools/posthog/' >/dev/null; then
+            posthog=true
+          fi
+
+          for key in $keys; do
+            value="$(eval "printf '%s' \"\$$key\"")"
+            printf '%s=%s\n' "$key" "$value" >> "$GITHUB_OUTPUT"
+            echo "$key=$value"
+          done
+
   library:
     name: Library — lint / test / build
+    needs: ci-scope
+    if: github.event_name == 'push' || needs.ci-scope.outputs.library == 'true'
     runs-on: ubuntu-latest
     env:
       LIBS: chat,langgraph,ag-ui,render,a2ui,licensing,telemetry
@@ -33,6 +169,8 @@ jobs:
 
   website:
     name: Website — lint / build
+    needs: ci-scope
+    if: github.event_name == 'push' || needs.ci-scope.outputs.website == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -66,6 +204,8 @@ jobs:
 
   cockpit:
     name: Cockpit — build / test
+    needs: ci-scope
+    if: github.event_name == 'push' || needs.ci-scope.outputs.cockpit == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6.0.2
@@ -79,6 +219,8 @@ jobs:
 
   cockpit-examples-build:
     name: Cockpit — build all examples
+    needs: ci-scope
+    if: github.event_name == 'push' || needs.ci-scope.outputs.cockpit_examples == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6.0.2
@@ -91,6 +233,8 @@ jobs:
 
   cockpit-smoke:
     name: Cockpit — representative capability smoke
+    needs: ci-scope
+    if: github.event_name == 'push' || needs.ci-scope.outputs.cockpit_smoke == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6.0.2
@@ -103,6 +247,8 @@ jobs:
 
   cockpit-secret-integration:
     name: Cockpit — secret-gated integration
+    needs: ci-scope
+    if: github.event_name == 'push' || needs.ci-scope.outputs.cockpit_secret == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Check integration secret
@@ -132,6 +278,8 @@ jobs:
 
   cockpit-deploy-smoke:
     name: Cockpit — deploy smoke dry-run
+    needs: ci-scope
+    if: github.event_name == 'push' || needs.ci-scope.outputs.cockpit_deploy_smoke == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6.0.2
@@ -144,6 +292,8 @@ jobs:
 
   examples-chat-smoke:
     name: examples/chat — python smoke
+    needs: ci-scope
+    if: github.event_name == 'push' || needs.ci-scope.outputs.examples_chat == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6.0.2
@@ -162,6 +312,8 @@ jobs:
 
   examples-chat-e2e:
     name: examples/chat — e2e
+    needs: ci-scope
+    if: github.event_name == 'push' || needs.ci-scope.outputs.examples_chat == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6.0.2
@@ -188,6 +340,8 @@ jobs:
 
   cockpit-e2e:
     name: Cockpit — e2e
+    needs: ci-scope
+    if: github.event_name == 'push' || needs.ci-scope.outputs.cockpit_e2e == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6.0.2
@@ -233,6 +387,8 @@ jobs:
 
   website-e2e:
     name: Website — e2e
+    needs: ci-scope
+    if: github.event_name == 'push' || needs.ci-scope.outputs.website_e2e == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6.0.2
@@ -527,6 +683,8 @@ jobs:
 
   posthog-sync-plan:
     name: PostHog — dashboards-as-code drift check
+    needs: ci-scope
+    if: github.event_name == 'push' || needs.ci-scope.outputs.posthog == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
