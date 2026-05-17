@@ -1,4 +1,4 @@
-# Durable Execution with angular
+# Durable Execution with Angular
 
 <Summary>
 Build a fault-tolerant chat interface using `agent()` from

@@ -1,4 +1,4 @@
-# Nested Agent Delegation with Subgraphs and angular
+# Nested Agent Delegation with Subgraphs and Angular
 
 <Summary>
 Build a chat interface that visualizes nested agent delegation using `agent()` from

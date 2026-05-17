@@ -1,4 +1,4 @@
-# Multi-Skill Agent with angular
+# Multi-Skill Agent with Angular
 
 <Summary>
 Build a chat interface that shows real-time skill invocations using `agent()` from

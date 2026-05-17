@@ -1,4 +1,4 @@
-# Time Travel with angular
+# Time Travel with Angular
 
 <Summary>
 Build a chat interface with time travel using `agent()` from

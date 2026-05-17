@@ -1,4 +1,4 @@
-# File Operations with angular
+# File Operations with Angular
 
 <Summary>
 Build a chat interface that shows real-time file operation logs using `agent()` from

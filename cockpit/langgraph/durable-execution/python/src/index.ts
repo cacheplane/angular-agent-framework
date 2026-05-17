@@ -2,7 +2,7 @@ export interface CockpitCapabilityModule {
   id: string;
   manifestIdentity: {
     product: 'langgraph';
-    section: 'fault-tolerance';
+    section: 'core-capabilities';
     topic: 'durable-execution';
     page: 'overview';
     language: 'python';
@@ -21,13 +21,13 @@ export const langgraphDurableExecutionPythonModule: CockpitCapabilityModule = {
   id: 'langgraph-durable-execution-python',
   manifestIdentity: {
     product: 'langgraph',
-    section: 'fault-tolerance',
+    section: 'core-capabilities',
     topic: 'durable-execution',
     page: 'overview',
     language: 'python',
   },
   title: 'LangGraph Durable Execution (Python)',
-  docsPath: '/docs/langgraph/fault-tolerance/durable-execution/overview/python',
+  docsPath: '/docs/langgraph/core-capabilities/durable-execution/overview/python',
   promptAssetPaths: ['cockpit/langgraph/durable-execution/python/prompts/durable-execution.md'],
   codeAssetPaths: [
     'cockpit/langgraph/durable-execution/angular/src/app/durable-execution.component.ts',

@@ -1,4 +1,4 @@
-# Code Execution Sandbox with angular
+# Code Execution Sandbox with Angular
 
 <Summary>
 Build a chat interface that shows real-time code execution logs using `agent()` from

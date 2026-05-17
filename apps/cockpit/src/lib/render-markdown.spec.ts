@@ -51,6 +51,13 @@ describe('renderMarkdown', () => {
     expect(result.html).toContain('Build a streaming chat.');
   });
 
+  it('parses inline markdown inside Summary blocks', async () => {
+    const md = '# Test\n\n<Summary>\nUse `agent()` from [`@ngaf/langgraph`](/docs/langgraph).\n</Summary>';
+    const result = await renderMarkdown(md);
+    expect(result.html).toContain('<code>agent()</code>');
+    expect(result.html).toContain('<a href="/docs/langgraph">');
+  });
+
   it('renders Tip callout blocks', async () => {
     const md = '# Test\n\n<Tip>\nNo service layer needed.\n</Tip>';
     const result = await renderMarkdown(md);
@@ -87,6 +94,15 @@ describe('renderMarkdown', () => {
     expect(result.html).toContain('doc-prompt');
     expect(result.html).toContain('Add streaming to this component.');
     expect(result.html).toContain('data-copy-prompt');
+  });
+
+  it('renders Related blocks as markdown link lists', async () => {
+    const md = '# Test\n\n<Related>\n- [Chat Messages](/chat/core-capabilities/messages/overview/python) - Learn how messages render\n</Related>';
+    const result = await renderMarkdown(md);
+    expect(result.html).toContain('doc-related');
+    expect(result.html).toContain('<ul>');
+    expect(result.html).toContain('<a href="/chat/core-capabilities/messages/overview/python">Chat Messages</a>');
+    expect(result.html).not.toContain('- [Chat Messages]');
   });
 
   it('renders ApiTable blocks as styled tables', async () => {
