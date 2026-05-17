@@ -5,14 +5,43 @@
  * one file so all three modes ship the same list — and so adding a
  * suggestion (e.g. one that exercises tables, code blocks, etc.) is a
  * single-file change.
+ *
+ * Two-tier surface:
+ *   - FEATURED_SUGGESTIONS — 3 curated prompts shown as chips above the
+ *     fold. Each picks a distinct capability path so a first-time
+ *     visitor sees breadth in one glance: markdown streaming, tool use
+ *     with citations, and a GenUI surface render.
+ *   - MORE_SUGGESTIONS — the remaining 14 prompts, surfaced behind a
+ *     "More prompts" dropdown rendered by WelcomeSuggestionsComponent.
+ *
+ * The flat WELCOME_SUGGESTIONS export remains for any consumer that
+ * imports it (none in-tree today; preserved for back-compat).
  */
 export interface WelcomeSuggestion {
   readonly label: string;
   readonly value: string;
 }
 
-export const WELCOME_SUGGESTIONS: readonly WelcomeSuggestion[] = [
+export const FEATURED_SUGGESTIONS: readonly WelcomeSuggestion[] = [
+  // 1. Markdown / streaming showcase
   { label: 'Tell me about coral reefs', value: 'Tell me about coral reefs' },
+
+  // 2. Tool use + citations
+  {
+    label: 'What are Angular signals? (search + cite sources)',
+    value:
+      'Use the search tool to find authoritative information about Angular signals, then explain what they are and when to use them. Cite each source inline as [^doc-id] using the document `id` field returned by the tool.',
+  },
+
+  // 3. GenUI surface render
+  {
+    label: 'Demo: render a contact form',
+    value:
+      'Show me a contact form with fields for name, email address, subject, and a multi-line message, plus a Send button.',
+  },
+];
+
+export const MORE_SUGGESTIONS: readonly WelcomeSuggestion[] = [
   { label: 'Write a haiku about Angular', value: 'Write a haiku about Angular' },
   { label: 'List 5 productivity tips', value: 'List 5 productivity tips, in markdown bullets.' },
   {
@@ -28,11 +57,6 @@ export const WELCOME_SUGGESTIONS: readonly WelcomeSuggestion[] = [
     label: 'Solve a multi-step puzzle (try Effort = high)',
     value:
       'Three friends start with 14 apples. They share them so each gets a different prime number of apples and one gets exactly twice as many as another. How many does each get? Walk through your reasoning step by step.',
-  },
-  {
-    label: 'What are Angular signals? (search + cite sources)',
-    value:
-      'Use the search tool to find authoritative information about Angular signals, then explain what they are and when to use them. Cite each source inline as [^doc-id] using the document `id` field returned by the tool.',
   },
   {
     label: 'Demo: ask for approval before a sensitive action',
@@ -60,11 +84,6 @@ export const WELCOME_SUGGESTIONS: readonly WelcomeSuggestion[] = [
       'Create a quick poll asking "Which front-end framework do you prefer?" with options Angular, React, Vue, and Svelte, plus a Vote button.',
   },
   {
-    label: 'Demo: render a contact form',
-    value:
-      'Show me a contact form with fields for name, email address, subject, and a multi-line message, plus a Send button.',
-  },
-  {
     label: 'Demo: render a media-rich product card',
     value:
       'Render a product card with: a header image at the top, a tab strip with two tabs ("Overview" and "Specs"). Under Overview show a Row containing an icon and a short description Text. Under Specs show a List of feature bullets each prefixed with a small icon. Below the tabs add a primary "Add to cart" Button.',
@@ -84,4 +103,14 @@ export const WELCOME_SUGGESTIONS: readonly WelcomeSuggestion[] = [
     value:
       'Render a Card titled "Profile setup" containing a Column with: a TextField for display name, a Slider for "experience years" (range 0-30), a CheckBox for "subscribe to newsletter", a DateTimeInput for birthday (date only), a MultipleChoice for "favorite frameworks" with options Angular, React, Vue, Svelte and maxAllowedSelections of 3 (multi-select), a horizontal Divider, a Row containing a primary "Save" Button and a secondary "Open details" Button whose action opens a Modal with a Column containing a Text summary and a Close Button.',
   },
+];
+
+/**
+ * Back-compat: unified array combining featured + more in the original
+ * order. Kept so existing imports don't break. Prefer FEATURED_SUGGESTIONS
+ * + MORE_SUGGESTIONS for the two-tier UI.
+ */
+export const WELCOME_SUGGESTIONS: readonly WelcomeSuggestion[] = [
+  ...FEATURED_SUGGESTIONS,
+  ...MORE_SUGGESTIONS,
 ];
