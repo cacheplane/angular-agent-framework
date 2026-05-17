@@ -70,4 +70,37 @@ describe('ChatLifecycle integration', () => {
     expect(lifecycle.messageCount()).toBe(1);
     expect(lifecycle.firstMessageSent()).toBe(true);
   });
+
+  test('firstMessageSent flips when agent.lifecycle.streamStartedAt transitions to non-null', () => {
+    const agent = mockAgent();
+    const f = TestBed.createComponent(ChatComponent);
+    f.componentRef.setInput('agent', agent);
+    f.detectChanges();
+    const lc = f.componentRef.injector.get(CHAT_LIFECYCLE);
+    expect(lc.firstMessageSent()).toBe(false);
+
+    agent._internal.streamStartedAt.set(Date.now());
+    f.detectChanges();
+    expect(lc.firstMessageSent()).toBe(true);
+  });
+
+  test('firstMessageSent stays sticky across multiple agent-driven transitions', () => {
+    const agent = mockAgent();
+    const f = TestBed.createComponent(ChatComponent);
+    f.componentRef.setInput('agent', agent);
+    f.detectChanges();
+    const lc = f.componentRef.injector.get(CHAT_LIFECYCLE);
+
+    agent._internal.streamStartedAt.set(Date.now());
+    f.detectChanges();
+    expect(lc.firstMessageSent()).toBe(true);
+
+    agent._internal.streamStartedAt.set(null);
+    f.detectChanges();
+    expect(lc.firstMessageSent()).toBe(true);
+
+    agent._internal.streamStartedAt.set(Date.now());
+    f.detectChanges();
+    expect(lc.firstMessageSent()).toBe(true);
+  });
 });

@@ -422,6 +422,21 @@ export class ChatComponent {
       });
     });
 
+    // Spec 4: flip CHAT_LIFECYCLE.firstMessageSent when the agent's stream
+    // starts, regardless of submit path (input-bound, programmatic, suggestion-
+    // click). Sticky — guarded so we never re-set a flag that's already true.
+    // `lifecycle` is not on the base Agent contract; adapters like @ngaf/langgraph
+    // attach it. Duck-type the read so non-lifecycle agents are a no-op.
+    effect(() => {
+      let agentRef: ReturnType<typeof this.agent>;
+      try { agentRef = this.agent(); } catch { return; }
+      const lc = (agentRef as unknown as { lifecycle?: { streamStartedAt?: () => number | null } }).lifecycle;
+      const streamStartedAt = lc?.streamStartedAt?.();
+      if (streamStartedAt != null && !this.lifecycle._internal.firstMessageSent()) {
+        this.lifecycle._internal.firstMessageSent.set(true);
+      }
+    });
+
     // Auto-scroll-to-bottom. Fires on every signal update during streaming
     // (each token mutates the last message's content), so this MUST be cheap
     // and idempotent. Earlier this used scrollTo({ behavior: 'smooth' }) per
