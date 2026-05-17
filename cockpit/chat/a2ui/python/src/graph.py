@@ -61,6 +61,14 @@ def _find_routes_impl(from_code, to_code, date_offset_days=0):
 
 find_routes = _AsyncFn(_find_routes_impl)
 
+
+def _lookup_flight_impl(flight_number: str) -> dict | None:
+    """Inline mirror of aviation_tools.lookup_flight for the standalone."""
+    return next((f for f in _FLIGHTS if f["flight_number"] == flight_number), None)
+
+
+lookup_flight = _AsyncFn(_lookup_flight_impl)
+
 _logger = logging.getLogger(__name__)
 
 A2UI_PREFIX = "---a2ui_JSON---"
@@ -138,6 +146,11 @@ class BookingFormSpec(_SurfaceSpec):
 
 
 class FlightResultsSpec(_SurfaceSpec):
+    pass
+
+
+class ConfirmationSpec(_SurfaceSpec):
+    """Booking confirmation surface — selected flight + prior party context."""
     pass
 
 
@@ -408,6 +421,104 @@ _SENTINEL_RESULTS = FlightResultsSpec(
 )
 
 
+# ── confirm_booking node ────────────────────────────────────────────────────
+
+_CONFIRM_BOOKING_SYSTEM = """You just received a Select event from the flight results surface. The user picked a flight; here are its details from lookup_flight():
+
+{flight_json}
+
+The user's prior search context (party_text, derived from passengers + fare_class on the original booking submission): {party_text}
+
+The selected flight number (from the Select button's action context, used in the fallback title if flight_json is null): {flight_id}
+
+Emit an A2UI v1 confirmation surface using the ConfirmationSpec schema.
+
+A2UI format (CRITICAL): every component is `{{"id": "...", "component": {{"<ComponentName>": {{<props>}}}}}}`. The component name is the SINGLE KEY of the inner dict.
+
+Allowed component names: Column, Card, Text, Button, Divider.
+
+Per-component shapes you'll need:
+  Column:        {{"children": {{"explicitList": ["id1","id2"]}}}}
+  Card:          {{"child": "<single-id>"}}
+  Text:          {{"text": "literal", "usageHint": "h2"}}  (h1/h2/h3/body/caption)
+  Button:        {{"child": "<text-id>", "primary": true, "action": {{"name": "<event>", "context": [{{"key":"formId","value":"booking"}}]}}}}
+  Divider:       {{}}
+
+Surface constraints:
+  surface_id MUST be "confirmation"
+  data_model = {{}}
+
+Build this component tree exactly (use these ids):
+  root         (Column, children = explicitList=[card])
+  card         (Card, child = card_col)
+  card_col     (Column, children = explicitList=[title, route_text, time_text, gate_text, divider, party_text, modify])
+  title        (Text, "<airline> flight <flight_number>", usageHint="h2")
+  route_text   (Text, "<from> → <to>  •  <duration_min> min  •  <aircraft>", usageHint="body")
+  time_text    (Text, "Depart <depart_local>  •  Arrive <arrive_local>", usageHint="caption")
+  gate_text    (Text, "Gate <gate>", usageHint="caption")
+  divider      (Divider, {{}})
+  party_text   (Text, "{party_text}", usageHint="body")  ← use the supplied string verbatim
+  modify       (Button, child=modify_label, primary=true,
+                action={{"name":"modifySearch","context":[{{"key":"formId","value":"booking"}}]}})
+  modify_label (Text, "Modify search")
+
+If flight_json is null, omit route_text, time_text, gate_text from card_col's children and set the title to "Flight {flight_id} selected" (or "Booking selected" if {flight_id} is empty). Always include party_text + modify."""
+
+
+def _build_sentinel_confirmation(flight_id: str, party_text: str) -> ConfirmationSpec:
+    """Hardcoded fallback used when retry exhausts."""
+    title = f"Flight {flight_id} selected" if flight_id else "Booking selected"
+    return ConfirmationSpec(
+        surface_id="confirmation",
+        data_model={},
+        components=[
+            _comp("root", "Column", {"children": {"explicitList": ["card"]}}),
+            _comp("card", "Card", {"child": "card_col"}),
+            _comp("card_col", "Column", {"children": {"explicitList": ["title", "party", "modify"]}}),
+            _comp("title", "Text", {"text": title, "usageHint": "h2"}),
+            _comp("party", "Text", {"text": party_text, "usageHint": "body"}),
+            _comp("modify", "Button", {"child": "modify_label",
+                                       "action": {"name": "modifySearch",
+                                                  "context": [{"key": "formId", "value": "booking"}]}}),
+            _comp("modify_label", "Text", {"text": "Modify search"}),
+        ],
+    )
+
+
+async def confirm_booking(state: MessagesState) -> dict:
+    """Post-Select node: look up the chosen flight, recover party context from
+    prior submit, emit confirmation surface."""
+    last = state["messages"][-1]
+    select_data = _parse_submit_payload(getattr(last, "content", "")) or {}
+    flight_id_raw = select_data.get("flightId") or select_data.get("flight_id") or ""
+    flight_id = flight_id_raw.upper() if isinstance(flight_id_raw, str) else ""
+
+    flight: dict[str, Any] | None = None
+    if flight_id:
+        try:
+            flight = await lookup_flight.ainvoke({"flight_number": flight_id})
+        except Exception as err:  # noqa: BLE001 — demo robustness
+            _logger.warning("lookup_flight failed for %s: %s", flight_id, err)
+
+    prior = _extract_prior_submit_context(state["messages"])
+    party_text = _format_party(prior)
+
+    base_messages = [
+        SystemMessage(content=_CONFIRM_BOOKING_SYSTEM.format(
+            flight_json=json.dumps(flight, indent=2) if flight else "null",
+            party_text=party_text,
+            flight_id=flight_id,
+        )),
+        HumanMessage(content=f"Emit the confirmation surface for flight {flight_id or '(unknown)'}."),
+    ]
+    try:
+        spec = await _emit_with_retry(ConfirmationSpec, base_messages)
+    except RuntimeError as err:
+        _logger.error("Falling back to sentinel confirmation surface: %s", err)
+        spec = _build_sentinel_confirmation(flight_id, party_text)
+    return {"messages": [AIMessage(content=_wrap_envelopes(spec))]}
+
+
 def _unwrap_literal(v: Any) -> Any:
     """Unwrap a v1 literal wrapper ({literalString|literalNumber|literalBoolean: <v>})."""
     if isinstance(v, dict):
@@ -486,11 +597,66 @@ def _is_submit_event(content: str) -> bool:
     )
 
 
-def route(state: MessagesState) -> Command[Literal["build_form", "search_flights"]]:
-    """Inspect the last message — submit event → search_flights, else build_form."""
+def _is_flight_select_event(content: str) -> bool:
+    """True iff the content is a v1 A2uiActionMessage named flightSelect."""
+    try:
+        payload = json.loads(content)
+    except (json.JSONDecodeError, TypeError):
+        return False
+    if not isinstance(payload, dict):
+        return False
+    action = payload.get("action")
+    return (
+        isinstance(action, dict)
+        and action.get("name") == "flightSelect"
+    )
+
+
+def _extract_prior_submit_context(messages: list[Any]) -> dict[str, Any]:
+    """Walk back, find the most recent bookingSubmit A2UI action message;
+    return its unwrapped context dict (origin/dest/date/passengers/fare_class).
+    Returns {} if not found."""
+    for msg in reversed(messages):
+        content = getattr(msg, "content", None)
+        if not isinstance(content, str):
+            continue
+        try:
+            payload = json.loads(content)
+        except (json.JSONDecodeError, TypeError):
+            continue
+        if (
+            isinstance(payload, dict)
+            and isinstance(payload.get("action"), dict)
+            and payload["action"].get("name") == "bookingSubmit"
+        ):
+            ctx = payload["action"].get("context", {})
+            if not isinstance(ctx, dict):
+                return {}
+            return {k: _unwrap_literal(v) for k, v in ctx.items()}
+    return {}
+
+
+def _format_party(prior: dict[str, Any]) -> str:
+    """Pretty-print passenger count + fare class for the confirmation text.
+    Tolerant of missing fields."""
+    parts: list[str] = []
+    n = prior.get("passengers")
+    if isinstance(n, (int, float)) and n > 0:
+        parts.append(f"{int(n)} passenger" + ("" if int(n) == 1 else "s"))
+    fare = prior.get("fare_class")
+    if isinstance(fare, str) and fare:
+        parts.append(fare)
+    return "  •  ".join(parts) if parts else "(party details unavailable)"
+
+
+def route(state: MessagesState) -> Command[Literal["build_form", "search_flights", "confirm_booking"]]:
+    """Inspect the last message — submit event → search_flights, flight-select
+    event → confirm_booking, else build_form."""
     last_content = getattr(state["messages"][-1], "content", "") if state["messages"] else ""
     if _is_submit_event(last_content):
         return Command(goto="search_flights")
+    if _is_flight_select_event(last_content):
+        return Command(goto="confirm_booking")
     return Command(goto="build_form")
 
 
@@ -498,8 +664,10 @@ _builder = StateGraph(MessagesState)
 _builder.add_node("route", route)
 _builder.add_node("build_form", build_form)
 _builder.add_node("search_flights", search_flights)
+_builder.add_node("confirm_booking", confirm_booking)
 _builder.set_entry_point("route")
 _builder.add_edge("build_form", END)
 _builder.add_edge("search_flights", END)
+_builder.add_edge("confirm_booking", END)
 
 graph = _builder.compile()
