@@ -1132,7 +1132,7 @@
       },
       {
         "name": "surface",
-        "type": "InputSignal<A2uiSurface | undefined>",
+        "type": "InputSignal<any>",
         "description": "Wire-format surface (legacy path — kept for backwards compat).",
         "optional": false
       },
@@ -5332,118 +5332,6 @@
     "methods": []
   },
   {
-    "name": "A2uiAction",
-    "kind": "interface",
-    "description": "",
-    "properties": [
-      {
-        "name": "context",
-        "type": "A2uiActionContextEntry[]",
-        "description": "",
-        "optional": true
-      },
-      {
-        "name": "name",
-        "type": "string",
-        "description": "",
-        "optional": false
-      }
-    ],
-    "examples": []
-  },
-  {
-    "name": "A2uiActionContextEntry",
-    "kind": "interface",
-    "description": "",
-    "properties": [
-      {
-        "name": "key",
-        "type": "string",
-        "description": "",
-        "optional": false
-      },
-      {
-        "name": "value",
-        "type": "DynamicString | DynamicNumber | DynamicBoolean",
-        "description": "",
-        "optional": false
-      }
-    ],
-    "examples": []
-  },
-  {
-    "name": "A2uiActionMessage",
-    "kind": "interface",
-    "description": "",
-    "properties": [
-      {
-        "name": "action",
-        "type": "object",
-        "description": "",
-        "optional": false
-      },
-      {
-        "name": "metadata",
-        "type": "object",
-        "description": "",
-        "optional": true
-      },
-      {
-        "name": "version",
-        "type": "\"v0.9\"",
-        "description": "",
-        "optional": false
-      }
-    ],
-    "examples": []
-  },
-  {
-    "name": "A2uiClientDataModel",
-    "kind": "interface",
-    "description": "",
-    "properties": [
-      {
-        "name": "surfaces",
-        "type": "Record<string, Record<string, unknown>>",
-        "description": "",
-        "optional": false
-      },
-      {
-        "name": "version",
-        "type": "\"v0.9\"",
-        "description": "",
-        "optional": false
-      }
-    ],
-    "examples": []
-  },
-  {
-    "name": "A2uiComponent",
-    "kind": "interface",
-    "description": "",
-    "properties": [
-      {
-        "name": "component",
-        "type": "A2uiComponentDef",
-        "description": "",
-        "optional": false
-      },
-      {
-        "name": "id",
-        "type": "string",
-        "description": "",
-        "optional": false
-      },
-      {
-        "name": "weight",
-        "type": "number",
-        "description": "",
-        "optional": true
-      }
-    ],
-    "examples": []
-  },
-  {
     "name": "A2uiComponentView",
     "kind": "interface",
     "description": "Chat-internal projection of an A2UI component, materialized by the\nsurface store. Distinct from the wire-format `A2uiComponent` in\n`@ngaf/a2ui` (which carries the raw `component: A2uiComponentDef`\npayload) — this type adds the per-component readiness fields the\nprogressive renderer consumes.",
@@ -5483,56 +5371,6 @@
         "type": "string",
         "description": "The component type key — e.g. `'Button'`, `'TextField'` — matched\nagainst catalog `views` entries.",
         "optional": false
-      }
-    ],
-    "examples": []
-  },
-  {
-    "name": "A2uiSurface",
-    "kind": "interface",
-    "description": "",
-    "properties": [
-      {
-        "name": "catalogId",
-        "type": "string",
-        "description": "",
-        "optional": false
-      },
-      {
-        "name": "components",
-        "type": "Map<string, A2uiComponent>",
-        "description": "",
-        "optional": false
-      },
-      {
-        "name": "dataModel",
-        "type": "Record<string, unknown>",
-        "description": "",
-        "optional": false
-      },
-      {
-        "name": "sendDataModel",
-        "type": "boolean",
-        "description": "",
-        "optional": true
-      },
-      {
-        "name": "styles",
-        "type": "object",
-        "description": "Styles set by the agent via `beginRendering.styles`. The\ncanonical v1 spec defines exactly two fields: `font` (primary\nfont for the UI) and `primaryColor` (hex `#RRGGBB`). The renderer\napplies these as CSS custom properties on the surface root,\noverriding any consumer-set defaults for the duration of the\nsurface's life. Anything richer (typography scale, spacing,\nelevation, etc.) is the renderer's private vocabulary and not\ncommunicated through this field.",
-        "optional": true
-      },
-      {
-        "name": "surfaceId",
-        "type": "string",
-        "description": "",
-        "optional": false
-      },
-      {
-        "name": "theme",
-        "type": "A2uiTheme",
-        "description": "",
-        "optional": true
       }
     ],
     "examples": []
@@ -5603,32 +5441,6 @@
         "type": "unknown",
         "description": "",
         "optional": false
-      }
-    ],
-    "examples": []
-  },
-  {
-    "name": "A2uiTheme",
-    "kind": "interface",
-    "description": "",
-    "properties": [
-      {
-        "name": "agentDisplayName",
-        "type": "string",
-        "description": "",
-        "optional": true
-      },
-      {
-        "name": "iconUrl",
-        "type": "string",
-        "description": "",
-        "optional": true
-      },
-      {
-        "name": "primaryColor",
-        "type": "string",
-        "description": "",
-        "optional": true
       }
     ],
     "examples": []
@@ -6900,17 +6712,10 @@
     "examples": []
   },
   {
-    "name": "A2uiChildren",
+    "name": "A2uiActionMessage",
     "kind": "type",
     "description": "",
-    "signature": "object | object",
-    "examples": []
-  },
-  {
-    "name": "A2uiComponentDef",
-    "kind": "type",
-    "description": "",
-    "signature": "object | object | object | object | object | object | object | object | object | object | object | object | object | object | object | object | object | object",
+    "signature": "any",
     "examples": []
   },
   {
@@ -6995,27 +6800,6 @@
     "kind": "type",
     "description": "",
     "signature": "\"right\" | \"bottom\" | \"left\"",
-    "examples": []
-  },
-  {
-    "name": "DynamicBoolean",
-    "kind": "type",
-    "description": "",
-    "signature": "object | object",
-    "examples": []
-  },
-  {
-    "name": "DynamicNumber",
-    "kind": "type",
-    "description": "",
-    "signature": "object | object",
-    "examples": []
-  },
-  {
-    "name": "DynamicString",
-    "kind": "type",
-    "description": "",
-    "signature": "object | object",
     "examples": []
   },
   {
@@ -7308,82 +7092,6 @@
     ],
     "returns": {
       "type": "m is Message & { role: \"assistant\" }",
-      "description": ""
-    },
-    "examples": []
-  },
-  {
-    "name": "isLiteralBoolean",
-    "kind": "function",
-    "description": "",
-    "signature": "isLiteralBoolean(value: unknown): value is { literalBoolean: boolean }",
-    "params": [
-      {
-        "name": "value",
-        "type": "unknown",
-        "description": "",
-        "optional": false
-      }
-    ],
-    "returns": {
-      "type": "value is { literalBoolean: boolean }",
-      "description": ""
-    },
-    "examples": []
-  },
-  {
-    "name": "isLiteralNumber",
-    "kind": "function",
-    "description": "",
-    "signature": "isLiteralNumber(value: unknown): value is { literalNumber: number }",
-    "params": [
-      {
-        "name": "value",
-        "type": "unknown",
-        "description": "",
-        "optional": false
-      }
-    ],
-    "returns": {
-      "type": "value is { literalNumber: number }",
-      "description": ""
-    },
-    "examples": []
-  },
-  {
-    "name": "isLiteralString",
-    "kind": "function",
-    "description": "",
-    "signature": "isLiteralString(value: unknown): value is { literalString: string }",
-    "params": [
-      {
-        "name": "value",
-        "type": "unknown",
-        "description": "",
-        "optional": false
-      }
-    ],
-    "returns": {
-      "type": "value is { literalString: string }",
-      "description": ""
-    },
-    "examples": []
-  },
-  {
-    "name": "isPathRef",
-    "kind": "function",
-    "description": "",
-    "signature": "isPathRef(value: unknown): value is { path: string }",
-    "params": [
-      {
-        "name": "value",
-        "type": "unknown",
-        "description": "",
-        "optional": false
-      }
-    ],
-    "returns": {
-      "type": "value is { path: string }",
       "description": ""
     },
     "examples": []
