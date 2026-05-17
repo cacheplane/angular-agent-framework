@@ -6185,6 +6185,12 @@
     "description": "Runtime-neutral contract chat primitives consume.\n\nImplementations are produced by runtime adapters (e.g. a LangGraph or\nAG-UI adapter) or by user code for custom backends.\n\n`interrupt` and `subagents` are optional: runtimes that do not support these\nconcepts should leave them undefined, and primitives that need them check\npresence and render a neutral fallback when absent.\n\nInvariant: state lives on signals; `events$` carries only things that are\nnot derivable from signals.",
     "properties": [
       {
+        "name": "_internal",
+        "type": "object",
+        "description": "Test-only escape hatch for driving lifecycle signals from a spec. Mirrors\nthe `_internal` pattern used by CHAT_LIFECYCLE so tests can flip the\nunderlying writable without going through a full submit/stream cycle.",
+        "optional": false
+      },
+      {
         "name": "error",
         "type": "WritableSignal<unknown>",
         "description": "",
@@ -6212,6 +6218,12 @@
         "name": "isLoading",
         "type": "WritableSignal<boolean>",
         "description": "",
+        "optional": false
+      },
+      {
+        "name": "lifecycle",
+        "type": "object",
+        "description": "Minimal lifecycle stub the chat lib's effects subscribe to. We only\nmodel the signals the chat composition currently reads; richer adapter\nlifecycles (langgraph, ag-ui) extend this contract on their own mocks.\nThe public `lifecycle` view is a readonly signal; tests drive the\nvalue via `_internal.streamStartedAt.set(...)` below.",
         "optional": false
       },
       {
