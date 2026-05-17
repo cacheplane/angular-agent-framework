@@ -28,4 +28,15 @@ describe('ChatWindowComponent', () => {
     expect(win.querySelector('.chat-window__body')!.textContent).toContain('messages here');
     expect(win.querySelector('.chat-window__footer')!.textContent).toContain('input here');
   });
+
+  it('renders a scroll-fade overlay as the first child of the footer', () => {
+    TestBed.configureTestingModule({});
+    const fx = TestBed.createComponent(Host);
+    fx.detectChanges();
+    const footer = fx.nativeElement.querySelector('.chat-window__footer') as HTMLElement;
+    const fade = footer.firstElementChild as HTMLElement;
+    expect(fade).toBeTruthy();
+    expect(fade.classList.contains('chat-window__scroll-fade')).toBe(true);
+    expect(fade.getAttribute('aria-hidden')).toBe('true');
+  });
 });

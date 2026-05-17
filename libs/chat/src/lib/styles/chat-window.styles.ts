@@ -29,8 +29,18 @@ export const CHAT_WINDOW_STYLES = `
     overflow: hidden;
   }
   .chat-window__footer {
+    position: relative;
     flex-shrink: 0;
     margin-top: var(--ngaf-chat-input-gap);
   }
   .chat-window__footer:empty { display: none; }
+  .chat-window__scroll-fade {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 100%;
+    height: 32px;
+    background: linear-gradient(180deg, transparent 0%, var(--ngaf-chat-bg) 100%);
+    pointer-events: none;
+  }
 `;
