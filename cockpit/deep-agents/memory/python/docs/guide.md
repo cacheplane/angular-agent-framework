@@ -1,4 +1,4 @@
-# Persistent Agent Memory with angular
+# Persistent Agent Memory with Angular
 
 <Summary>
 Build a chat interface where the agent remembers facts about the user across turns using `agent()` from `@ngaf/langgraph`. The agent stores learned facts in `agent_memory` state, and the sidebar displays them in real time.

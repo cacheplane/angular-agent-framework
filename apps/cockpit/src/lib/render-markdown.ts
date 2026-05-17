@@ -13,7 +13,7 @@ interface ExtractedBlock {
   attrs: Record<string, string>;
 }
 
-const COMPONENT_TAGS = ['Summary', 'Tip', 'Note', 'Warning', 'Prompt', 'ApiTable', 'Step', 'Steps'];
+const COMPONENT_TAGS = ['Summary', 'Tip', 'Note', 'Warning', 'Prompt', 'ApiTable', 'Related', 'Step', 'Steps'];
 
 function extractComponentTags(source: string): { cleaned: string; blocks: ExtractedBlock[] } {
   const blocks: ExtractedBlock[] = [];
@@ -41,14 +41,37 @@ function extractComponentTags(source: string): { cleaned: string; blocks: Extrac
   return { cleaned, blocks };
 }
 
-function renderSummary(content: string): string {
-  return `<div class="doc-summary">${content}</div>`;
+async function renderInlineMarkdown(content: string): Promise<string> {
+  return await marked.parseInline(content);
 }
 
-function renderCallout(type: 'tip' | 'note' | 'warning', content: string): string {
+async function renderSummary(content: string): Promise<string> {
+  const html = await renderInlineMarkdown(content);
+  return `<div class="doc-summary">${html}</div>`;
+}
+
+async function renderCallout(
+  type: 'tip' | 'note' | 'warning',
+  content: string,
+): Promise<string> {
+  const html = await renderInlineMarkdown(content);
   const icons = { tip: '💡', note: '⚠️', warning: '🚨' };
   const labels = { tip: 'Tip', note: 'Note', warning: 'Warning' };
-  return `<div class="doc-callout doc-callout--${type}"><div class="doc-callout__label">${icons[type]} ${labels[type]}</div><div class="doc-callout__content">${content}</div></div>`;
+  return `<div class="doc-callout doc-callout--${type}"><div class="doc-callout__label">${icons[type]} ${labels[type]}</div><div class="doc-callout__content">${html}</div></div>`;
+}
+
+async function renderPrompt(content: string): Promise<string> {
+  const html = await renderInlineMarkdown(content);
+  return `<div class="doc-prompt"><div class="doc-prompt__header"><span class="doc-prompt__label">🤖 Agentic Prompt</span><button class="doc-prompt__copy" data-copy-prompt>Copy prompt</button></div><div class="doc-prompt__content">${html}</div></div>`;
+}
+
+async function renderRelated(content: string): Promise<string> {
+  const html = await marked.parse(content);
+  return `<div class="doc-related">${html}</div>`;
+}
+
+function renderApiTable(content: string): string {
+  return `<div class="doc-api-table">${content}</div>`;
 }
 
 async function renderSteps(
@@ -98,14 +121,6 @@ async function parseStepContent(
   }
 
   return html;
-}
-
-function renderPrompt(content: string): string {
-  return `<div class="doc-prompt"><div class="doc-prompt__header"><span class="doc-prompt__label">🤖 Agentic Prompt</span><button class="doc-prompt__copy" data-copy-prompt>Copy prompt</button></div><div class="doc-prompt__content">${content}</div></div>`;
-}
-
-function renderApiTable(content: string): string {
-  return `<div class="doc-api-table">${content}</div>`;
 }
 
 function extractFilename(code: string): { filename: string | null; cleanedCode: string } {
@@ -166,13 +181,14 @@ export async function renderMarkdown(source: string): Promise<RenderedMarkdown> 
     if (!html.includes(block.placeholder)) continue;
     let rendered: string;
     switch (block.type) {
-      case 'Summary': rendered = renderSummary(block.content); break;
-      case 'Tip': rendered = renderCallout('tip', block.content); break;
-      case 'Note': rendered = renderCallout('note', block.content); break;
-      case 'Warning': rendered = renderCallout('warning', block.content); break;
+      case 'Summary': rendered = await renderSummary(block.content); break;
+      case 'Tip': rendered = await renderCallout('tip', block.content); break;
+      case 'Note': rendered = await renderCallout('note', block.content); break;
+      case 'Warning': rendered = await renderCallout('warning', block.content); break;
       case 'Steps': rendered = await renderSteps(block.content, blocks); break;
       case 'Step': rendered = ''; break;
-      case 'Prompt': rendered = renderPrompt(block.content); break;
+      case 'Prompt': rendered = await renderPrompt(block.content); break;
+      case 'Related': rendered = await renderRelated(block.content); break;
       case 'ApiTable': {
         const tableHtml = await marked.parse(block.content);
         rendered = renderApiTable(tableHtml);

@@ -1,4 +1,4 @@
-# Human-in-the-Loop Interrupts with angular
+# Human-in-the-Loop Interrupts with Angular
 
 <Summary>
 Build a chat interface with human-in-the-loop approval using `agent()` from

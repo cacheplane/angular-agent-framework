@@ -1,4 +1,4 @@
-# Thread Persistence with angular
+# Thread Persistence with Angular
 
 <Summary>
 Build a chat interface with thread persistence using `agent()` from

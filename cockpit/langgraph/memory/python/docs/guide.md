@@ -1,4 +1,4 @@
-# Cross-Thread Persistent Memory with angular
+# Cross-Thread Persistent Memory with Angular
 
 <Summary>
 Build a chat interface where the agent actively learns and remembers facts about the user.

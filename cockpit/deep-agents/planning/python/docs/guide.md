@@ -1,4 +1,4 @@
-# Task Decomposition with angular
+# Task Decomposition with Angular
 
 <Summary>
 Build a chat interface that shows real-time task decomposition using `agent()` from

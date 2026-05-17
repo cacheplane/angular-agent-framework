@@ -1,4 +1,4 @@
-# Child Agent Delegation with angular
+# Child Agent Delegation with Angular
 
 <Summary>
 Build a chat interface that shows real-time subagent activity using `agent()` from

@@ -132,6 +132,24 @@ describe('getCapabilityPresentation', () => {
     });
   });
 
+  it('includes durable execution docs assets from the capability module', () => {
+    const entry = resolveCockpitEntry({
+      manifest: cockpitManifest,
+      product: 'langgraph',
+      section: 'core-capabilities',
+      topic: 'durable-execution',
+      page: 'overview',
+      language: 'python',
+    });
+    const presentation = getCapabilityPresentation(entry);
+
+    expect(presentation).toMatchObject({
+      kind: 'capability',
+      docsPath: '/docs/langgraph/core-capabilities/durable-execution/overview/python',
+      docsAssetPaths: ['cockpit/langgraph/durable-execution/python/docs/guide.md'],
+    });
+  });
+
   it('presents render capabilities with module-backed metadata', () => {
     const entry = resolveCockpitEntry({
       manifest: cockpitManifest,

@@ -1,4 +1,4 @@
-# Streaming with angular
+# Streaming with Angular
 
 <Summary>
 Build a real-time streaming chat interface using `agent()` from
