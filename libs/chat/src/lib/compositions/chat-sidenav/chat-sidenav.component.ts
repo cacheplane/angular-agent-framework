@@ -69,26 +69,6 @@ export type ChatSidenavMode = 'expanded' | 'collapsed' | 'drawer';
           </svg>
           <span class="chat-sidenav__action-label">New chat</span>
         </button>
-        @if (mode() !== 'drawer') {
-          <button
-            type="button"
-            class="chat-sidenav__action chat-sidenav__action--collapse"
-            (click)="onCollapseToggle()"
-            [attr.aria-label]="mode() === 'collapsed' ? 'Expand sidenav' : 'Collapse sidenav'"
-            [attr.title]="(mode() === 'collapsed' ? 'Expand sidenav' : 'Collapse sidenav') + ' (⌘B)'"
-          >
-            @if (mode() === 'collapsed') {
-              <svg class="chat-sidenav__action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <polyline points="9 6 15 12 9 18"/>
-              </svg>
-            } @else {
-              <svg class="chat-sidenav__action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <polyline points="15 6 9 12 15 18"/>
-              </svg>
-            }
-            <span class="chat-sidenav__action-label">{{ mode() === 'collapsed' ? 'Expand' : 'Collapse' }}</span>
-          </button>
-        }
         @if (mode() === 'drawer') {
           <button
             type="button"
@@ -193,8 +173,36 @@ export type ChatSidenavMode = 'expanded' | 'collapsed' | 'drawer';
         <ng-content select="[sidenavSections]" />
       </div>
 
-      <div class="chat-sidenav__account">
-        <ng-content select="[sidenavAccount]" />
+      <div class="chat-sidenav__footer">
+        <div class="chat-sidenav__footer-left">
+          <ng-content select="[sidenavFooterLeft]" />
+        </div>
+        <div class="chat-sidenav__footer-right">
+          <ng-content select="[sidenavFooterRight]" />
+          @if (mode() !== 'drawer') {
+            <button
+              type="button"
+              class="chat-sidenav__toggle"
+              (click)="onCollapseToggle()"
+              [attr.aria-label]="mode() === 'collapsed' ? 'Expand sidenav' : 'Collapse sidenav'"
+              [attr.title]="(mode() === 'collapsed' ? 'Expand sidenav' : 'Collapse sidenav') + ' (⌘B)'"
+            >
+              @if (mode() === 'collapsed') {
+                <svg class="chat-sidenav__action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <polyline points="9 6 15 12 9 18"/>
+                </svg>
+              } @else {
+                <svg class="chat-sidenav__action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <polyline points="15 6 9 12 15 18"/>
+                </svg>
+              }
+            </button>
+          }
+        </div>
+        <!-- Legacy slot kept for back-compat — see chat-sidenav.styles.ts for visibility rules -->
+        <div class="chat-sidenav__account">
+          <ng-content select="[sidenavAccount]" />
+        </div>
       </div>
     </nav>
   `,

@@ -151,3 +151,12 @@ describe('ChatProjectListComponent', () => {
     expect(remaining.length).toBe(2);
   });
 });
+
+describe('ChatProjectListComponent — New project secondary pill', () => {
+  it('renders the new-project button with secondary-pill styling', () => {
+    const styles = (ChatProjectListComponent as unknown as { ɵcmp: { styles: string[] } }).ɵcmp.styles.join('\n');
+    expect(styles).toMatch(/\.chat-project-list__new[^{]*\{[^}]*background:\s*var\(--ngaf-chat-surface/);
+    expect(styles).toMatch(/\.chat-project-list__new[^{]*\{[^}]*border-radius:\s*9999px/);
+    expect(styles).toMatch(/\.chat-project-list__new[^{]*\{[^}]*border:\s*1px solid var\(--ngaf-chat-separator/);
+  });
+});

@@ -75,18 +75,20 @@ export const CHAT_PROJECT_LIST_STYLES = `
     box-sizing: border-box;
   }
   .chat-project-list__new {
-    display: block;
-    width: 100%;
-    height: 32px;
-    margin-bottom: var(--ngaf-chat-space-2);
-    border: 1px dashed var(--ngaf-chat-separator);
-    border-radius: var(--ngaf-chat-radius-button);
-    background: transparent;
-    color: var(--ngaf-chat-primary);
+    background: var(--ngaf-chat-surface);
+    color: var(--ngaf-chat-text-muted);
+    border: 1px solid var(--ngaf-chat-separator);
+    padding: 8px 14px;
+    border-radius: 9999px;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
     cursor: pointer;
-    font-size: var(--ngaf-chat-font-size-sm);
-    box-sizing: border-box;
-    transition: background 150ms ease;
+    width: 100%;
   }
-  .chat-project-list__new:hover { background: var(--ngaf-chat-surface-alt); }
+  .chat-project-list__new:hover {
+    background: var(--ngaf-chat-surface-alt);
+    color: var(--ngaf-chat-text);
+  }
 `;
