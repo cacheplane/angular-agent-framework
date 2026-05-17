@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: MIT
 import { Component, ChangeDetectionStrategy, inject } from '@angular/core';
-import { ChatPopupComponent, ChatWelcomeSuggestionComponent, a2uiBasicCatalog } from '@ngaf/chat';
+import { ChatPopupComponent, a2uiBasicCatalog } from '@ngaf/chat';
 import { DemoShell } from '../shell/demo-shell.component';
 import { DEMO_AGENT } from '../shell/shell-tokens';
-import { WELCOME_SUGGESTIONS } from './welcome-suggestions';
+import { WelcomeSuggestionsComponent } from './welcome-suggestions.component';
 
 @Component({
   selector: 'popup-mode',
   standalone: true,
-  imports: [ChatPopupComponent, ChatWelcomeSuggestionComponent],
+  imports: [ChatPopupComponent, WelcomeSuggestionsComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="popup-mode__background">
@@ -25,15 +25,7 @@ import { WELCOME_SUGGESTIONS } from './welcome-suggestions';
       (replayRequested)="shell.onTimelineReplay($event)"
       (forkRequested)="shell.onTimelineFork($event)"
     >
-      <div chatWelcomeSuggestions>
-        @for (s of suggestions; track s.value) {
-          <chat-welcome-suggestion
-            [label]="s.label"
-            [value]="s.value"
-            (selected)="send($event)"
-          />
-        }
-      </div>
+      <welcome-suggestions chatWelcomeSuggestions (selected)="send($event)" />
     </chat-popup>
   `,
   styles: [`
@@ -50,7 +42,6 @@ import { WELCOME_SUGGESTIONS } from './welcome-suggestions';
 export class PopupMode {
   protected readonly agent = inject(DEMO_AGENT);
   protected readonly shell = inject(DemoShell);
-  protected readonly suggestions = WELCOME_SUGGESTIONS;
   // Phase 4: A2UI component catalog forwarded to <chat-popup>.
   protected readonly catalog = a2uiBasicCatalog();
 

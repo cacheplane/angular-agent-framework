@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: MIT
 import { Component, ChangeDetectionStrategy, inject } from '@angular/core';
-import { ChatComponent, ChatWelcomeSuggestionComponent, a2uiBasicCatalog } from '@ngaf/chat';
+import { ChatComponent, a2uiBasicCatalog } from '@ngaf/chat';
 import { DemoShell } from '../shell/demo-shell.component';
 import { DEMO_AGENT } from '../shell/shell-tokens';
-import { WELCOME_SUGGESTIONS } from './welcome-suggestions';
+import { WelcomeSuggestionsComponent } from './welcome-suggestions.component';
 
 @Component({
   selector: 'embed-mode',
   standalone: true,
-  imports: [ChatComponent, ChatWelcomeSuggestionComponent],
+  imports: [ChatComponent, WelcomeSuggestionsComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <chat
@@ -20,15 +20,7 @@ import { WELCOME_SUGGESTIONS } from './welcome-suggestions';
       (replayRequested)="shell.onTimelineReplay($event)"
       (forkRequested)="shell.onTimelineFork($event)"
     >
-      <div chatWelcomeSuggestions>
-        @for (s of suggestions; track s.value) {
-          <chat-welcome-suggestion
-            [label]="s.label"
-            [value]="s.value"
-            (selected)="send($event)"
-          />
-        }
-      </div>
+      <welcome-suggestions chatWelcomeSuggestions (selected)="send($event)" />
     </chat>
   `,
   styles: [`
@@ -38,7 +30,6 @@ import { WELCOME_SUGGESTIONS } from './welcome-suggestions';
 export class EmbedMode {
   protected readonly agent = inject(DEMO_AGENT);
   protected readonly shell = inject(DemoShell);
-  protected readonly suggestions = WELCOME_SUGGESTIONS;
   // Phase 4: catalog of A2UI components the chat composition uses to
   // render <a2ui-surface> when an AI message content begins with the
   // ---a2ui_JSON--- wire-format prefix. Without this, the surface is

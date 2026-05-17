@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: MIT
 import { Component, ChangeDetectionStrategy, inject } from '@angular/core';
-import { ChatSidebarComponent, ChatWelcomeSuggestionComponent, a2uiBasicCatalog } from '@ngaf/chat';
+import { ChatSidebarComponent, a2uiBasicCatalog } from '@ngaf/chat';
 import { DemoShell } from '../shell/demo-shell.component';
 import { DEMO_AGENT } from '../shell/shell-tokens';
-import { WELCOME_SUGGESTIONS } from './welcome-suggestions';
+import { WelcomeSuggestionsComponent } from './welcome-suggestions.component';
 
 @Component({
   selector: 'sidebar-mode',
   standalone: true,
-  imports: [ChatSidebarComponent, ChatWelcomeSuggestionComponent],
+  imports: [ChatSidebarComponent, WelcomeSuggestionsComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="sidebar-mode__background">
@@ -25,15 +25,7 @@ import { WELCOME_SUGGESTIONS } from './welcome-suggestions';
       (replayRequested)="shell.onTimelineReplay($event)"
       (forkRequested)="shell.onTimelineFork($event)"
     >
-      <div chatWelcomeSuggestions>
-        @for (s of suggestions; track s.value) {
-          <chat-welcome-suggestion
-            [label]="s.label"
-            [value]="s.value"
-            (selected)="send($event)"
-          />
-        }
-      </div>
+      <welcome-suggestions chatWelcomeSuggestions (selected)="send($event)" />
     </chat-sidebar>
   `,
   styles: [`
@@ -50,7 +42,6 @@ import { WELCOME_SUGGESTIONS } from './welcome-suggestions';
 export class SidebarMode {
   protected readonly agent = inject(DEMO_AGENT);
   protected readonly shell = inject(DemoShell);
-  protected readonly suggestions = WELCOME_SUGGESTIONS;
   // Phase 4: A2UI component catalog forwarded to <chat-sidebar>.
   protected readonly catalog = a2uiBasicCatalog();
 
