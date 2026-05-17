@@ -75,10 +75,10 @@ export const CHAT_PROJECT_LIST_STYLES = `
     box-sizing: border-box;
   }
   .chat-project-list__new {
-    background: var(--ngaf-chat-surface);
-    color: var(--ngaf-chat-text-muted);
-    border: 1px solid var(--ngaf-chat-separator);
-    padding: 8px 14px;
+    background: var(--ngaf-chat-surface-alt);
+    color: var(--ngaf-chat-text);
+    border: 0;
+    padding: 10px 16px;
     border-radius: 9999px;
     font-size: 12px;
     display: flex;
@@ -88,7 +88,7 @@ export const CHAT_PROJECT_LIST_STYLES = `
     width: 100%;
   }
   .chat-project-list__new:hover {
-    background: var(--ngaf-chat-surface-alt);
+    background: color-mix(in srgb, var(--ngaf-chat-text) 8%, var(--ngaf-chat-surface-alt));
     color: var(--ngaf-chat-text);
   }
 `;

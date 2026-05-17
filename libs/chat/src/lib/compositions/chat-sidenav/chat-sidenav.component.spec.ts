@@ -329,11 +329,11 @@ describe('ChatSidenavComponent — footer slots', () => {
 });
 
 describe('ChatSidenavComponent — New chat primary CTA', () => {
-  it('renders the new-chat button with a primary-pill styling token', () => {
+  it('renders the new-chat button with a monochrome text-color CTA token', () => {
     // Styles array is the second member of @Component decorator metadata.
     const styles = (ChatSidenavComponent as unknown as { ɵcmp: { styles: string[] } }).ɵcmp.styles.join('\n');
-    // Primary pill family: matches chat-input send button.
-    expect(styles).toMatch(/\.chat-sidenav__action--new[^{]*\{[^}]*background:\s*var\(--ngaf-chat-primary/);
+    // Monochrome CTA: late-cascade block uses text/bg for contrast.
+    expect(styles).toMatch(/\.chat-sidenav__action\.chat-sidenav__action--new[^{]*\{[^}]*background:\s*var\(--ngaf-chat-text/);
     expect(styles).toMatch(/\.chat-sidenav__action--new[^{]*\{[^}]*border-radius:\s*9999px/);
   });
 });
