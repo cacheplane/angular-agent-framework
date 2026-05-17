@@ -14,6 +14,13 @@ const BASE: LicenseClaims = {
   seats: 1,
 };
 
+function mutateSignature(token: string): string {
+  const [payload, signature] = token.split('.');
+  if (!payload || !signature) throw new Error('expected compact license token');
+  const replacement = signature.startsWith('x') ? 'y' : 'x';
+  return `${payload}.${replacement}${signature.slice(1)}`;
+}
+
 describe('runLicenseCheck', () => {
   let kp: DevKeyPair;
   let validToken: string;
@@ -77,7 +84,8 @@ describe('runLicenseCheck', () => {
   });
 
   it('re-runs when token changes (e.g., after key rotation in the host)', async () => {
-    const tamperedToken = `${validToken.slice(0, -1)}x`;
+    const tamperedToken = mutateSignature(validToken);
+    expect(tamperedToken).not.toBe(validToken);
     const first = await runLicenseCheck({
       package: '@ngaf/langgraph',
       token: validToken,
