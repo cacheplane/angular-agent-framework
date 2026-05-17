@@ -11,3 +11,7 @@ The `cockpit/` tree is product-first by design.
 - docs-only entries stay in the shared manifest and website docs system
 
 Every capability module should make the mapping between its product-first directory and the canonical registry identity explicit.
+
+## E2E Coverage
+
+Runnable cockpit Playwright specs live under `cockpit/<product>/<capability>/angular/e2e/` only when the Angular project has an Nx `e2e` target with its own Playwright config, setup, and fixtures. Historical exploratory checks that are not wired into Nx live under `e2e/manual/` with a `.manual.ts` suffix until they are promoted to a configured target-backed suite.
