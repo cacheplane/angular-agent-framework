@@ -19,8 +19,8 @@ REPO_ROOT="$(cd "$(dirname "$0")/../../../../../.." && pwd)"
 cd "$REPO_ROOT"
 
 if [[ -z "${OPENAI_API_KEY:-}" ]]; then
-  # Try .env (examples first, then streaming as fallback for worktrees)
-  for env_path in examples/chat/python/.env cockpit/langgraph/streaming/python/.env; do
+  # Try .env (examples first, then the standalone backend as fallback for worktrees)
+  for env_path in examples/chat/python/.env cockpit/chat/subagents/python/.env; do
     if [[ -f "$env_path" ]]; then
       set -a; source "$env_path"; set +a
       break
@@ -28,12 +28,12 @@ if [[ -z "${OPENAI_API_KEY:-}" ]]; then
   done
 fi
 if [[ -z "${OPENAI_API_KEY:-}" ]]; then
-  echo "OPENAI_API_KEY not set (in env or examples/chat/python/.env)" >&2
+  echo "OPENAI_API_KEY not set (in env, examples/chat/python/.env, or cockpit/chat/subagents/python/.env)" >&2
   exit 1
 fi
 
 AIMOCK_PORT=19999
-LANGGRAPH_PORT=8125
+LANGGRAPH_PORT=5505
 FIXTURE_OUT="cockpit/chat/subagents/angular/e2e/fixtures/c-subagents.json"
 # Aimock --record writes per-request files into <fixtures-base>/recorded/.
 # We hand it a dedicated staging dir, then merge all recorded entries into the
@@ -44,12 +44,12 @@ mkdir -p "$RECORD_DIR"
 TMP_DIR="$(mktemp -d)"
 trap 'rm -rf "$TMP_DIR"' EXIT
 
-# Copy .env into the cockpit-streaming python project (gitignored).
-# Use examples/.env when present; otherwise the streaming/.env already exists
-# (worktree case where examples/.env hasn't been propagated).
-mkdir -p cockpit/langgraph/streaming/python
+# Copy .env into the standalone subagents python project (gitignored).
+# Use examples/.env when present; otherwise the project .env already exists
+# in worktrees where examples/.env hasn't been propagated.
+mkdir -p cockpit/chat/subagents/python
 if [[ -f "examples/chat/python/.env" ]]; then
-  cp examples/chat/python/.env cockpit/langgraph/streaming/python/.env
+  cp examples/chat/python/.env cockpit/chat/subagents/python/.env
 fi
 
 # 1. Start aimock in record mode
@@ -95,7 +95,7 @@ else
   RUN_PREFIX=""
 fi
 (
-  cd cockpit/langgraph/streaming/python
+  cd cockpit/chat/subagents/python
   OPENAI_BASE_URL="http://127.0.0.1:$AIMOCK_PORT/v1" OPENAI_API_KEY="test-record" \
     exec $RUN_PREFIX uv run langgraph dev --port "$LANGGRAPH_PORT" --no-browser
 ) > "$TMP_DIR/langgraph.log" 2>&1 &
