@@ -100,10 +100,10 @@ export const CHAT_SIDENAV_STYLES = `
     display: none;
   }
   .chat-sidenav__action--new {
-    background: var(--ngaf-chat-primary);
-    color: var(--ngaf-chat-on-primary);
+    /* Geometry only — fill/color set by the late-cascade
+       .chat-sidenav__action.chat-sidenav__action--new block. */
     border: 0;
-    padding: 10px 16px;
+    padding: 12px 18px;
     border-radius: 9999px;
     font-size: 13px;
     font-weight: 600;
@@ -112,9 +112,6 @@ export const CHAT_SIDENAV_STYLES = `
     gap: 8px;
     cursor: pointer;
     width: 100%;
-  }
-  .chat-sidenav__action--new:hover {
-    filter: brightness(1.1);
   }
   .chat-sidenav__action--new:focus-visible {
     outline: 2px solid var(--ngaf-chat-primary);
@@ -176,16 +173,16 @@ export const CHAT_SIDENAV_STYLES = `
      collapsed-mode overrides (which are :host-prefixed, higher
      specificity, so they still apply). */
   .chat-sidenav__action.chat-sidenav__action--new {
-    background: var(--ngaf-chat-primary);
-    color: var(--ngaf-chat-on-primary);
+    background: var(--ngaf-chat-text);
+    color: var(--ngaf-chat-bg);
     border-radius: 9999px;
-    padding: 10px 16px;
+    padding: 12px 18px;
     font-weight: 600;
     font-size: 13px;
   }
   .chat-sidenav__action.chat-sidenav__action--new:hover {
-    background: var(--ngaf-chat-primary);
-    filter: brightness(1.1);
+    background: var(--ngaf-chat-text);
+    filter: brightness(0.92);
   }
   .chat-sidenav__action-icon {
     width: 16px;

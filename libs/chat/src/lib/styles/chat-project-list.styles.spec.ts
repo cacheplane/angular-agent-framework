@@ -1,0 +1,37 @@
+// SPDX-License-Identifier: MIT
+import { describe, it, expect } from 'vitest';
+import { CHAT_PROJECT_LIST_STYLES } from './chat-project-list.styles';
+
+describe('CHAT_PROJECT_LIST_STYLES — New project button', () => {
+  const normalized = CHAT_PROJECT_LIST_STYLES.replace(/\s+/g, ' ');
+
+  it('uses --ngaf-chat-surface-alt fill (solid secondary, not outlined)', () => {
+    expect(normalized).toMatch(
+      /\.chat-project-list__new\s*\{[^}]*background:\s*var\(--ngaf-chat-surface-alt\)\s*;/,
+    );
+  });
+
+  it('uses --ngaf-chat-text color (full strength, not muted)', () => {
+    expect(normalized).toMatch(
+      /\.chat-project-list__new\s*\{[^}]*color:\s*var\(--ngaf-chat-text\)\s*;/,
+    );
+  });
+
+  it('removes the separator border', () => {
+    expect(normalized).toMatch(
+      /\.chat-project-list__new\s*\{[^}]*border:\s*0\s*;/,
+    );
+  });
+
+  it('uses 10px / 16px padding for more presence', () => {
+    expect(normalized).toMatch(
+      /\.chat-project-list__new\s*\{[^}]*padding:\s*10px\s+16px\s*;/,
+    );
+  });
+
+  it('lifts hover via color-mix on top of surface-alt', () => {
+    expect(normalized).toMatch(
+      /\.chat-project-list__new:hover\s*\{[^}]*background:\s*color-mix\(in srgb,\s*var\(--ngaf-chat-text\)\s*8%,\s*var\(--ngaf-chat-surface-alt\)\)\s*;/,
+    );
+  });
+});
