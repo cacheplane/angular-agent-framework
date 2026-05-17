@@ -1,11 +1,15 @@
 // SPDX-License-Identifier: MIT
 import { Component } from '@angular/core';
-import { ChatComponent, ChatInterruptPanelComponent, views, type InterruptAction } from '@ngaf/chat';
+import { ChatComponent, ChatInterruptPanelComponent, ChatWelcomeSuggestionComponent, views, type InterruptAction } from '@ngaf/chat';
 import { agent } from '@ngaf/langgraph';
 import { ExampleChatLayoutComponent } from '@ngaf/example-layouts';
 import { signalStateStore } from '@ngaf/render';
 import { environment } from '../environments/environment';
 import { ApprovalCardComponent } from './views/approval-card.component';
+
+const WELCOME_SUGGESTIONS = [
+  { label: 'Approve a tool call', value: 'Book a flight to Paris for next Tuesday.' },
+] as const;
 
 /**
  * InterruptsComponent demonstrates human-in-the-loop with `agent()`.
@@ -22,11 +26,21 @@ import { ApprovalCardComponent } from './views/approval-card.component';
 @Component({
   selector: 'app-interrupts',
   standalone: true,
-  imports: [ChatComponent, ChatInterruptPanelComponent, ExampleChatLayoutComponent],
+  imports: [ChatComponent, ChatInterruptPanelComponent, ChatWelcomeSuggestionComponent, ExampleChatLayoutComponent],
   template: `
     <example-chat-layout>
       <div main class="flex flex-col h-full">
-        <chat [agent]="agent" [views]="ui" [store]="uiStore" class="flex-1 min-w-0" />
+        <chat [agent]="agent" [views]="ui" [store]="uiStore" class="flex-1 min-w-0">
+          <div chatWelcomeSuggestions>
+            @for (s of suggestions; track s.value) {
+              <chat-welcome-suggestion
+                [label]="s.label"
+                [value]="s.value"
+                (selected)="send($event)"
+              />
+            }
+          </div>
+        </chat>
         @if (agent.interrupt()) {
           <div class="p-4" style="border-top: 1px solid var(--ngaf-chat-separator);">
             <chat-interrupt-panel [agent]="agent" (action)="onInterruptAction($event)" />
@@ -39,6 +53,11 @@ import { ApprovalCardComponent } from './views/approval-card.component';
 export class InterruptsComponent {
   readonly ui = views({ 'approval-card': ApprovalCardComponent });
   readonly uiStore = signalStateStore({});
+  protected readonly suggestions = WELCOME_SUGGESTIONS;
+
+  protected send(text: string): void {
+    void this.agent.submit({ message: text });
+  }
 
   /**
    * The streaming resource with interrupt support.
