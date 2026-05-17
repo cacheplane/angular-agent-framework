@@ -20,9 +20,6 @@
     },
     {
       "path": "../../../../libs/langgraph"
-    },
-    {
-      "path": "../../../../libs/internal/aimock-harness"
     }
   ]
 }
