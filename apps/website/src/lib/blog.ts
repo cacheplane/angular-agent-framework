@@ -37,18 +37,26 @@ function readPost(dir: string, filename: string): Post | null {
   if (!match) return null;
   const [, date, slug] = match;
   const full = path.join(dir, filename);
-  const raw = fs.readFileSync(full, 'utf8');
-  const { data, content } = matter(typeof raw === 'string' ? raw : raw.toString());
-  const fm = data as Partial<PostFrontmatter>;
+  const raw = fs.readFileSync(full, 'utf8') as unknown as string;
+  const { data, content } = matter(raw);
+  const fm = data as Partial<PostFrontmatter> & { date?: unknown };
   if (!fm.title || !fm.description || !fm.date || !fm.author) {
     throw new Error(
       `Blog post ${filename} missing required frontmatter (title, description, date, author).`,
     );
   }
+  // YAML parses unquoted ISO dates as Date objects; normalize to string.
+  const rawDate: unknown = fm.date;
+  const dateString =
+    rawDate instanceof Date ? rawDate.toISOString().slice(0, 10) : String(rawDate);
+  const normalized: PostFrontmatter = {
+    ...(fm as PostFrontmatter),
+    date: dateString,
+  };
   return {
     slug,
     date,
-    frontmatter: fm as PostFrontmatter,
+    frontmatter: normalized,
     content,
     filename,
   };
