@@ -44,6 +44,8 @@ The standard PostHog `$pageview` event is used as-is across all three surfaces.
 | `docs:search_result_click`                  | Result click                                      |
 | `docs:copy_prompt_click`                    | Prompt-copy button                                |
 | `docs:copy_code_click`                      | Code-copy button                                  |
+| `blog:cta_click`                            | Tracked CTA inside a blog post body. Props: `surface: 'blog'`, `cta_id?`, `destination_url?`. |
+| `blog:copy_code_click`                      | Copy-button click on a code block inside a blog post. Props: `surface: 'blog'`, `code_lang?`. |
 | `docs:tab_select`                           | MDX tab change                                    |
 | `docs:sidebar_section_toggle`               | Sidebar nav toggle                                |
 
@@ -122,7 +124,7 @@ Browser events never fire unless the consumer explicitly opts in. See `libs/tele
 |------------------|--------|-------------------------------------------------------------|
 | `source_page`    | string | Stable pathname or surface id (`home`, `compare_langchain_angular`, `pricing`). |
 | `source_section` | string | Stable section/component id where known.                    |
-| `surface`        | enum   | `nav` `mobile_nav` `footer` `home` `pricing` `docs` `library_landing` `solution` `toast` `cockpit` `contact` |
+| `surface`        | enum   | `nav` `mobile_nav` `footer` `home` `pricing` `docs` `blog` `library_landing` `solution` `toast` `cockpit` `contact` |
 | `destination_url`| string | Clicked URL where applicable.                               |
 | `cta_id`         | string | Stable CTA id (see below).                                  |
 | `cta_text`       | string | Visible label where stable.                                 |
@@ -179,3 +181,4 @@ This file is human-edited. When events are added/renamed/removed, update the aff
 | 2026-05-13 | Initial draft per Spec 0. |
 | 2026-05-15 | Drop cockpit:install_command_copied, rename cockpit:six_signals_complete → cockpit:activation_complete (Spec 1C). |
 | 2026-05-15 | Cockpit shell events: rename `recipe_start` → `recipe_opened`; add `mode_switched` and `code_copied` (Spec 1C implementation). |
+| 2026-05-17 | Add `blog:cta_click` + `blog:copy_code_click` events; add `'blog'` to `AnalyticsSurface` (Spec 5). |

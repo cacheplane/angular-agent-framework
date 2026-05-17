@@ -1,0 +1,100 @@
+// SPDX-License-Identifier: MIT
+import fs from 'fs';
+import path from 'path';
+import matter from 'gray-matter';
+
+const BLOG_DIR_WORKSPACE = path.join(process.cwd(), 'apps', 'website', 'content', 'blog');
+const BLOG_DIR_LOCAL = path.join(process.cwd(), 'content', 'blog');
+
+export interface PostFrontmatter {
+  title: string;
+  description: string;
+  date: string;
+  tags?: string[];
+  author: string;
+  featured?: boolean;
+  draft?: boolean;
+}
+
+export interface Post {
+  slug: string;
+  date: string;
+  frontmatter: PostFrontmatter;
+  content: string;
+  filename: string;
+}
+
+const FILENAME_RE = /^(\d{4}-\d{2}-\d{2})-(.+)\.mdx$/;
+
+function resolveBlogDir(): string {
+  if (fs.existsSync(BLOG_DIR_WORKSPACE)) return BLOG_DIR_WORKSPACE;
+  if (fs.existsSync(BLOG_DIR_LOCAL)) return BLOG_DIR_LOCAL;
+  return BLOG_DIR_WORKSPACE;
+}
+
+function readPost(dir: string, filename: string): Post | null {
+  const match = filename.match(FILENAME_RE);
+  if (!match) return null;
+  const [, date, slug] = match;
+  const full = path.join(dir, filename);
+  const raw = fs.readFileSync(full, 'utf8') as unknown as string;
+  const { data, content } = matter(raw);
+  const fm = data as Partial<PostFrontmatter> & { date?: unknown };
+  if (!fm.title || !fm.description || !fm.date || !fm.author) {
+    throw new Error(
+      `Blog post ${filename} missing required frontmatter (title, description, date, author).`,
+    );
+  }
+  // YAML parses unquoted ISO dates as Date objects; normalize to string.
+  const rawDate: unknown = fm.date;
+  const dateString =
+    rawDate instanceof Date ? rawDate.toISOString().slice(0, 10) : String(rawDate);
+  const normalized: PostFrontmatter = {
+    ...(fm as PostFrontmatter),
+    date: dateString,
+  };
+  return {
+    slug,
+    date,
+    frontmatter: normalized,
+    content,
+    filename,
+  };
+}
+
+export function getAllPosts(opts: { includeDrafts?: boolean } = {}): Post[] {
+  const dir = resolveBlogDir();
+  if (!fs.existsSync(dir)) return [];
+  const files = fs.readdirSync(dir).filter((f) => typeof f === 'string' && (f as string).endsWith('.mdx'));
+  const posts: Post[] = [];
+  for (const f of files) {
+    const post = readPost(dir, f as string);
+    if (!post) continue;
+    if (post.frontmatter.draft && !opts.includeDrafts) continue;
+    posts.push(post);
+  }
+  return posts.sort((a, b) => (a.date < b.date ? 1 : -1));
+}
+
+export function getPostBySlug(slug: string): Post | null {
+  return getAllPosts({ includeDrafts: true }).find((p) => p.slug === slug) ?? null;
+}
+
+export function getFeaturedPost(): Post | null {
+  const posts = getAllPosts();
+  return posts.find((p) => p.frontmatter.featured) ?? posts[0] ?? null;
+}
+
+export function getAllTags(): { tag: string; count: number }[] {
+  const tags = new Map<string, number>();
+  for (const p of getAllPosts()) {
+    for (const t of p.frontmatter.tags ?? []) {
+      tags.set(t, (tags.get(t) ?? 0) + 1);
+    }
+  }
+  return [...tags.entries()].map(([tag, count]) => ({ tag, count }));
+}
+
+export function getAllSlugs(): string[] {
+  return getAllPosts().map((p) => p.slug);
+}

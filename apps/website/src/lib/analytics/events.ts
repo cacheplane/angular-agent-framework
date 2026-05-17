@@ -18,6 +18,8 @@ export const analyticsEvents = {
   docsCopyCodeClick: 'docs:copy_code_click',
   docsTabSelect: 'docs:tab_select',
   docsSidebarSectionToggle: 'docs:sidebar_section_toggle',
+  blogCtaClick: 'blog:cta_click',
+  blogCopyCodeClick: 'blog:copy_code_click',
 } as const;
 
 export type AnalyticsEventName = (typeof analyticsEvents)[keyof typeof analyticsEvents];
@@ -30,6 +32,7 @@ export type AnalyticsSurface =
   | 'home_whitepaper'
   | 'pricing'
   | 'docs'
+  | 'blog'
   | 'library_landing'
   | 'solution'
   | 'toast'
