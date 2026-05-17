@@ -8,6 +8,7 @@
  */
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
+import { pathToFileURL } from 'url';
 
 type DeploymentUrls = Record<string, string>;
 
@@ -28,7 +29,23 @@ const SMOKE_ASSISTANT_IDS = [
   'chat',
 ] as const;
 
+type SmokeAssistantId = (typeof SMOKE_ASSISTANT_IDS)[number];
+
 const DEPLOYMENT_URLS_PATH = resolve(__dirname, '../deployment-urls.json');
+export const DEFAULT_SMOKE_ASSISTANT_STREAM_TIMEOUT_MS = 30000;
+
+const SMOKE_ASSISTANT_STREAM_TIMEOUT_MS: Partial<Record<SmokeAssistantId, number>> = {
+  // The planning graph intentionally performs two model calls: one to create
+  // structured plan state, then one to execute the plan and answer.
+  planning: 90000,
+};
+
+export function getSmokeAssistantStreamTimeoutMs(assistantId: SmokeAssistantId) {
+  return (
+    SMOKE_ASSISTANT_STREAM_TIMEOUT_MS[assistantId] ??
+    DEFAULT_SMOKE_ASSISTANT_STREAM_TIMEOUT_MS
+  );
+}
 
 function parseArgs(argv: string[]) {
   return {
@@ -128,8 +145,9 @@ async function createThread(url: string) {
   return threadId;
 }
 
-async function smokeAssistant(url: string, assistantId: string) {
+async function smokeAssistant(url: string, assistantId: SmokeAssistantId) {
   const threadId = await createThread(url);
+  const timeoutMs = getSmokeAssistantStreamTimeoutMs(assistantId);
   const runRes = await fetch(`${url}/threads/${threadId}/runs/stream`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...authHeaders() },
@@ -138,7 +156,7 @@ async function smokeAssistant(url: string, assistantId: string) {
       input: { messages: [{ role: 'human', content: 'hello' }] },
       stream_mode: ['values'],
     }),
-    signal: AbortSignal.timeout(30000),
+    signal: AbortSignal.timeout(timeoutMs),
   });
 
   const text = await runRes.text();
@@ -198,8 +216,10 @@ async function main() {
   }
 }
 
-main().catch((error) => {
-  const message = error instanceof Error ? error.message : String(error);
-  console.error(`❌ shared deployment verification failed — ${message}`);
-  process.exit(1);
-});
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  main().catch((error) => {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error(`❌ shared deployment verification failed — ${message}`);
+    process.exit(1);
+  });
+}
