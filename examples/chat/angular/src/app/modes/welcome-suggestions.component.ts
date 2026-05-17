@@ -9,9 +9,9 @@ import { FEATURED_SUGGESTIONS, MORE_SUGGESTIONS } from './welcome-suggestions';
 
 /**
  * Demo-side composition that renders the welcome-state suggestion surface
- * as 3 curated chips above + a "More prompts" dropdown below for the
- * remaining demo prompts. Reuses `<chat-welcome-suggestion>` (chip) and
- * `<chat-select>` (the same primitive backing the model picker pill).
+ * as a single featured chip + a "More prompts" dropdown for everything
+ * else. The featured chip is `FEATURED_SUGGESTIONS[0]` — consumer
+ * controls which prompt is featured by ordering the array.
  *
  * Output `(selected)` fires with the suggestion's `value` for BOTH chip
  * clicks and dropdown picks — consumers wire it directly to
@@ -23,16 +23,13 @@ import { FEATURED_SUGGESTIONS, MORE_SUGGESTIONS } from './welcome-suggestions';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [ChatWelcomeSuggestionComponent, ChatSelectComponent],
   template: `
-    <div class="welcome-suggestions__featured">
-      @for (s of featured; track s.value) {
-        <chat-welcome-suggestion
-          [label]="s.label"
-          [value]="s.value"
-          (selected)="selected.emit($event)"
-        />
-      }
-    </div>
-    <div class="welcome-suggestions__overflow">
+    <div class="welcome-suggestions__row">
+      <chat-welcome-suggestion
+        class="welcome-suggestions__featured"
+        [label]="featuredOne.label"
+        [value]="featuredOne.value"
+        (selected)="selected.emit($event)"
+      />
       <chat-select
         [options]="moreOptions"
         placeholder="More prompts"
@@ -45,23 +42,30 @@ import { FEATURED_SUGGESTIONS, MORE_SUGGESTIONS } from './welcome-suggestions';
     `
       :host {
         display: flex;
-        flex-direction: column;
+        justify-content: center;
+      }
+      .welcome-suggestions__row {
+        display: flex;
         align-items: center;
         gap: 12px;
       }
       .welcome-suggestions__featured {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: center;
-        gap: 8px;
+        max-width: 380px;
+        overflow: hidden;
+      }
+      .welcome-suggestions__featured ::ng-deep .chat-welcome-suggestion__label {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
     `,
   ],
 })
 export class WelcomeSuggestionsComponent {
   readonly selected = output<string>();
-  protected readonly featured = FEATURED_SUGGESTIONS;
-  protected readonly moreOptions: readonly ChatSelectOption[] = MORE_SUGGESTIONS.map(
-    (s) => ({ value: s.value, label: s.label }),
-  );
+  protected readonly featuredOne = FEATURED_SUGGESTIONS[0];
+  protected readonly moreOptions: readonly ChatSelectOption[] = [
+    ...FEATURED_SUGGESTIONS.slice(1),
+    ...MORE_SUGGESTIONS,
+  ].map((s) => ({ value: s.value, label: s.label }));
 }

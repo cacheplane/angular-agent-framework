@@ -7,7 +7,7 @@ export const CHAT_MESSAGE_ACTIONS_STYLES = `
   :host {
     display: flex;
     gap: 0.5rem;
-    padding: 4px 0 0 0;
+    padding: 16px 0 12px 0;
     opacity: 0;
     transition: opacity 200ms ease;
     pointer-events: none;

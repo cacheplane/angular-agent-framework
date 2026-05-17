@@ -13,17 +13,16 @@ describe('WelcomeSuggestionsComponent', () => {
     fx.detectChanges();
   });
 
-  it('renders one chip per FEATURED_SUGGESTIONS entry', () => {
+  it('renders exactly one featured chip', () => {
     const chips = fx.nativeElement.querySelectorAll('chat-welcome-suggestion');
-    expect(chips.length).toBe(FEATURED_SUGGESTIONS.length);
-    expect(FEATURED_SUGGESTIONS.length).toBe(3);
+    expect(chips.length).toBe(1);
   });
 
-  it('renders the chip labels in order', () => {
-    const labels = Array.from(
-      fx.nativeElement.querySelectorAll('chat-welcome-suggestion .chat-welcome-suggestion__label'),
-    ).map((el) => (el as HTMLElement).textContent?.trim());
-    expect(labels).toEqual(FEATURED_SUGGESTIONS.map((s) => s.label));
+  it('renders the first featured suggestion as the chip', () => {
+    const label = fx.nativeElement.querySelector(
+      'chat-welcome-suggestion .chat-welcome-suggestion__label',
+    ) as HTMLElement;
+    expect(label.textContent?.trim()).toBe(FEATURED_SUGGESTIONS[0].label);
   });
 
   it('renders the overflow chat-select with "More prompts" placeholder', () => {
@@ -33,19 +32,23 @@ describe('WelcomeSuggestionsComponent', () => {
     expect(trigger.textContent).toContain('More prompts');
   });
 
-  it('passes MORE_SUGGESTIONS through as chat-select options', () => {
+  it('merges FEATURED_SUGGESTIONS[1..] + MORE_SUGGESTIONS into dropdown options', () => {
     const opts = fx.componentInstance['moreOptions'] as { value: string; label: string }[];
-    expect(opts.length).toBe(MORE_SUGGESTIONS.length);
-    expect(opts.length).toBe(14);
-    expect(opts[0].label).toBe(MORE_SUGGESTIONS[0].label);
-    expect(opts[0].value).toBe(MORE_SUGGESTIONS[0].value);
+    const expectedLen = FEATURED_SUGGESTIONS.length - 1 + MORE_SUGGESTIONS.length;
+    expect(opts.length).toBe(expectedLen);
+    expect(opts[0].label).toBe(FEATURED_SUGGESTIONS[1].label);
+    expect(opts[0].value).toBe(FEATURED_SUGGESTIONS[1].value);
+    const moreStart = FEATURED_SUGGESTIONS.length - 1;
+    expect(opts[moreStart].label).toBe(MORE_SUGGESTIONS[0].label);
   });
 
-  it('emits (selected) when a chip is clicked', () => {
+  it('emits (selected) with the featured value when the chip is clicked', () => {
     let captured: string | null = null;
     fx.componentInstance.selected.subscribe((v) => (captured = v));
-    const firstChipBtn = fx.nativeElement.querySelector('chat-welcome-suggestion button') as HTMLButtonElement;
-    firstChipBtn.click();
+    const chipBtn = fx.nativeElement.querySelector(
+      'chat-welcome-suggestion button',
+    ) as HTMLButtonElement;
+    chipBtn.click();
     expect(captured).toBe(FEATURED_SUGGESTIONS[0].value);
   });
 });
