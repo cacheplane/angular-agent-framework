@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { getAllSolutionSlugs } from './solutions-data';
 import { docsConfig } from './docs-config';
+import { getAllPosts } from './blog';
 
 export const SITE_ORIGIN = 'https://cacheplane.ai';
 export const SITE_NAME = 'Agent UI for Angular';
@@ -52,13 +53,14 @@ export function createPageMetadata({
 }
 
 export function getSitemapRoutes(): string[] {
-  const staticRoutes = ['/', '/angular', '/render', '/chat', '/pricing', '/solutions', '/pilot-to-prod', '/docs'];
+  const staticRoutes = ['/', '/angular', '/render', '/chat', '/pricing', '/solutions', '/pilot-to-prod', '/docs', '/blog'];
   const solutionRoutes = getAllSolutionSlugs().map((slug) => `/solutions/${slug}`);
   const docsRoutes = docsConfig.flatMap((library) =>
     library.sections.flatMap((section) =>
       section.pages.map((page) => `/docs/${library.id}/${page.section}/${page.slug}`),
     ),
   );
+  const blogRoutes = getAllPosts().map((p) => `/blog/${p.slug}`);
 
-  return [...staticRoutes, ...solutionRoutes, ...docsRoutes];
+  return [...staticRoutes, ...solutionRoutes, ...docsRoutes, ...blogRoutes];
 }

@@ -1,0 +1,148 @@
+// @vitest-environment node
+import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
+import * as fs from 'fs';
+
+vi.mock('fs');
+const mockedFs = vi.mocked(fs);
+
+const post1 = `---
+title: "First Post"
+description: "First description"
+date: 2026-05-01
+author: brian
+tags: [tutorial, streaming]
+---
+Body one.`;
+
+const post2 = `---
+title: "Second Post"
+description: "Second description"
+date: 2026-05-10
+author: brian
+featured: true
+---
+Body two.`;
+
+const draft = `---
+title: "Draft Post"
+description: "Draft description"
+date: 2026-05-20
+author: brian
+draft: true
+---
+Body draft.`;
+
+const missingFields = `---
+title: "Missing"
+date: 2026-05-15
+---
+Body missing.`;
+
+function setupFs(files: Record<string, string>) {
+  mockedFs.existsSync.mockImplementation((p) => {
+    const str = String(p);
+    return str.endsWith('/content/blog') || Object.keys(files).some((k) => str.endsWith(k));
+  });
+  mockedFs.readdirSync.mockReturnValue(
+    Object.keys(files).map((k) => k.split('/').pop()!) as never,
+  );
+  mockedFs.readFileSync.mockImplementation((p) => {
+    const name = String(p).split('/').pop()!;
+    const match = Object.entries(files).find(([k]) => k.endsWith(name));
+    if (!match) throw new Error(`no fixture for ${p}`);
+    return match[1];
+  });
+}
+
+beforeEach(() => {
+  vi.resetAllMocks();
+  vi.resetModules();
+});
+
+afterEach(() => {
+  vi.restoreAllMocks();
+});
+
+describe('blog.ts', () => {
+  it('getAllPosts returns posts sorted desc by date', async () => {
+    setupFs({
+      '2026-05-01-first-post.mdx': post1,
+      '2026-05-10-second-post.mdx': post2,
+    });
+    const { getAllPosts } = await import('./blog');
+    const posts = getAllPosts();
+    expect(posts.map((p) => p.slug)).toEqual(['second-post', 'first-post']);
+  });
+
+  it('getPostBySlug returns a known post', async () => {
+    setupFs({
+      '2026-05-01-first-post.mdx': post1,
+      '2026-05-10-second-post.mdx': post2,
+    });
+    const { getPostBySlug } = await import('./blog');
+    const post = getPostBySlug('second-post');
+    expect(post?.frontmatter.title).toBe('Second Post');
+    expect(post?.date).toBe('2026-05-10');
+  });
+
+  it('getPostBySlug returns null for unknown slug', async () => {
+    setupFs({ '2026-05-01-first-post.mdx': post1 });
+    const { getPostBySlug } = await import('./blog');
+    expect(getPostBySlug('nope')).toBeNull();
+  });
+
+  it('throws when required frontmatter is missing', async () => {
+    setupFs({ '2026-05-15-missing.mdx': missingFields });
+    const { getAllPosts } = await import('./blog');
+    expect(() => getAllPosts()).toThrow(/missing required frontmatter/i);
+  });
+
+  it('drafts excluded by default, included with includeDrafts', async () => {
+    setupFs({
+      '2026-05-10-second-post.mdx': post2,
+      '2026-05-20-draft-post.mdx': draft,
+    });
+    const { getAllPosts } = await import('./blog');
+    expect(getAllPosts().map((p) => p.slug)).toEqual(['second-post']);
+    expect(getAllPosts({ includeDrafts: true }).map((p) => p.slug)).toEqual([
+      'draft-post',
+      'second-post',
+    ]);
+  });
+
+  it('getFeaturedPost returns the first featured post', async () => {
+    setupFs({
+      '2026-05-01-first-post.mdx': post1,
+      '2026-05-10-second-post.mdx': post2,
+    });
+    const { getFeaturedPost } = await import('./blog');
+    expect(getFeaturedPost()?.slug).toBe('second-post');
+  });
+
+  it('getFeaturedPost falls back to latest when none featured', async () => {
+    setupFs({ '2026-05-01-first-post.mdx': post1 });
+    const { getFeaturedPost } = await import('./blog');
+    expect(getFeaturedPost()?.slug).toBe('first-post');
+  });
+
+  it('getAllTags counts tags across posts', async () => {
+    setupFs({
+      '2026-05-01-first-post.mdx': post1,
+      '2026-05-10-second-post.mdx': post2,
+    });
+    const { getAllTags } = await import('./blog');
+    const tags = getAllTags();
+    expect(tags.find((t) => t.tag === 'tutorial')?.count).toBe(1);
+    expect(tags.find((t) => t.tag === 'streaming')?.count).toBe(1);
+  });
+
+  it('ignores files that do not match the date-prefix regex', async () => {
+    setupFs({
+      '2026-05-01-first-post.mdx': post1,
+      'not-a-post.mdx': post1,
+      'README.md': 'readme',
+    });
+    const { getAllPosts } = await import('./blog');
+    expect(getAllPosts().map((p) => p.slug)).toEqual(['first-post']);
+  });
+});
