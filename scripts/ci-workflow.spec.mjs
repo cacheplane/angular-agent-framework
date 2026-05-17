@@ -1,0 +1,34 @@
+import { readFile } from 'node:fs/promises';
+import { describe, it } from 'node:test';
+import assert from 'node:assert/strict';
+
+describe('CI workflow', () => {
+  async function readDeployJob() {
+    const workflow = await readFile('.github/workflows/ci.yml', 'utf8');
+    return workflow.slice(
+      workflow.indexOf('  deploy:'),
+      workflow.indexOf('  demo-deploy:')
+    );
+  }
+
+  it('treats nested library files as deploy-relevant changes', async () => {
+    const deployJob = await readDeployJob();
+
+    const pattern = deployJob.match(/grep -E '([^']+)' >\/dev\/null/);
+
+    assert.match('libs/chat/src/lib/styles/chat-sidenav.styles.ts', new RegExp(pattern?.[1] ?? ''));
+  });
+
+  it('installs dependencies before assembling changed Angular examples', async () => {
+    const deployJob = await readDeployJob();
+
+    const dependencyInstall = deployJob.match(
+      /-\s+if:\s*(.+)\n\s+run:\s+npm ci/
+    );
+
+    assert.match(
+      dependencyInstall?.[1] ?? '',
+      /steps\.examples_changed\.outputs\.changed == 'true'/
+    );
+  });
+});

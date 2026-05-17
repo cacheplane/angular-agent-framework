@@ -147,6 +147,8 @@ jobs:
             printf '%s=%s\n' "$key" "$value" >> "$GITHUB_OUTPUT"
             echo "$key=$value"
           done
+      - name: Validate CI workflow guards
+        run: node --test scripts/ci-workflow.spec.mjs
 
   library:
     name: Library — lint / test / build
@@ -445,7 +447,7 @@ jobs:
 
           changed_files="$(git diff --name-only "$base_sha" "$head_sha")"
           deploy_relevant=false
-          if printf '%s\n' "$changed_files" | grep -E '^(\.github/workflows/ci\.yml|vercel\.(json|cockpit\.json|examples\.json)|apps/(website|cockpit)/|cockpit/|examples/chat/|libs/|scripts/(assemble-examples|deploy-smoke|demo-middleware|langgraph-proxy|rate-limit)\.ts|scripts/assemble-demo\.ts)$' >/dev/null; then
+          if printf '%s\n' "$changed_files" | grep -E '^(\.github/workflows/ci\.yml|vercel\.(json|cockpit\.json|examples\.json)|apps/(website|cockpit)/.*|cockpit/.*|examples/chat/.*|libs/.*|scripts/(assemble-examples|deploy-smoke|demo-middleware|langgraph-proxy|rate-limit)\.ts|scripts/assemble-demo\.ts)$' >/dev/null; then
             deploy_relevant=true
           fi
 
@@ -453,8 +455,32 @@ jobs:
           if [ "$deploy_relevant" != "true" ]; then
             echo "::notice::No deploy-relevant files changed; skipping Vercel dependency setup."
           fi
+      # ── Angular examples deploy ──────────────────────────────────────────
+      - name: Check if examples changed
+        id: examples_changed
+        run: |
+          base_sha="${{ github.event.before }}"
+          head_sha="${{ github.sha }}"
+          if [ -z "$base_sha" ] || [ "$base_sha" = "0000000000000000000000000000000000000000" ]; then
+            base_sha="$(git rev-parse "$head_sha^")"
+          fi
+          changed_files="$(git diff --name-only "$base_sha" "$head_sha")"
+          examples_changed=false
+          if printf '%s\n' "$changed_files" | grep -E '^cockpit/.*/angular/' >/dev/null; then
+            examples_changed=true
+          fi
+          if printf '%s\n' "$changed_files" | grep -E '^(vercel\.examples\.json|scripts/assemble-examples\.ts)$' >/dev/null; then
+            examples_changed=true
+          fi
+          # Any libs/ change retriggers examples deploy. Previous hand-maintained
+          # allow-list silently broke whenever a new lib was added; cost of a
+          # spurious example rebuild is far cheaper than a missed deploy.
+          if printf '%s\n' "$changed_files" | grep -E '^libs/' >/dev/null; then
+            examples_changed=true
+          fi
+          echo "changed=$examples_changed" >> "$GITHUB_OUTPUT"
       - uses: actions/setup-node@v6.3.0
-        if: steps.deploy_preflight.outputs.relevant == 'true'
+        if: steps.deploy_preflight.outputs.relevant == 'true' || steps.examples_changed.outputs.changed == 'true'
         with:
           node-version: 22
           cache: npm
@@ -464,7 +490,7 @@ jobs:
       #   VERCEL_WEBSITE_PROJECT_ID  — website project id
       #   VERCEL_COCKPIT_PROJECT_ID  — cockpit project id
       #   VERCEL_EXAMPLES_PROJECT_ID — examples project id
-      - if: steps.deploy_preflight.outputs.relevant == 'true'
+      - if: steps.deploy_preflight.outputs.relevant == 'true' || steps.examples_changed.outputs.changed == 'true'
         run: npm ci
       - name: Resolve deploy targets
         if: steps.deploy_preflight.outputs.relevant == 'true'
@@ -549,30 +575,6 @@ jobs:
         run: |
           npx tsx apps/cockpit/scripts/deploy-smoke.ts --url https://cockpit.cacheplane.ai --retries 20 --retry-delay-ms 5000
 
-      # ── Angular examples deploy ──────────────────────────────────────────
-      - name: Check if examples changed
-        id: examples_changed
-        run: |
-          base_sha="${{ github.event.before }}"
-          head_sha="${{ github.sha }}"
-          if [ -z "$base_sha" ] || [ "$base_sha" = "0000000000000000000000000000000000000000" ]; then
-            base_sha="$(git rev-parse "$head_sha^")"
-          fi
-          changed_files="$(git diff --name-only "$base_sha" "$head_sha")"
-          examples_changed=false
-          if printf '%s\n' "$changed_files" | grep -E '^cockpit/.*/angular/' >/dev/null; then
-            examples_changed=true
-          fi
-          if printf '%s\n' "$changed_files" | grep -E '^(vercel\.examples\.json|scripts/assemble-examples\.ts)$' >/dev/null; then
-            examples_changed=true
-          fi
-          # Any libs/ change retriggers examples deploy. Previous hand-maintained
-          # allow-list silently broke whenever a new lib was added; cost of a
-          # spurious example rebuild is far cheaper than a missed deploy.
-          if printf '%s\n' "$changed_files" | grep -E '^libs/' >/dev/null; then
-            examples_changed=true
-          fi
-          echo "changed=$examples_changed" >> "$GITHUB_OUTPUT"
       - name: Build and assemble Angular examples
         if: steps.examples_changed.outputs.changed == 'true'
         run: npx tsx scripts/assemble-examples.ts
