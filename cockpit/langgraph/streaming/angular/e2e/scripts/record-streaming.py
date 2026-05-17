@@ -6,7 +6,7 @@ build_streaming_graph() setup: ChatOpenAI(gpt-5-mini, streaming=True)
 
 Run from repo root:
   OPENAI_API_KEY=sk-... uv run --project cockpit/langgraph/streaming/python \
-    python apps/cockpit/e2e/scripts/record-streaming.py
+    python cockpit/langgraph/streaming/angular/e2e/scripts/record-streaming.py
 """
 import json
 import os
@@ -52,7 +52,7 @@ fixture = {
     ]
 }
 
-out_path = Path("apps/cockpit/e2e/fixtures/streaming.json")
+out_path = Path("cockpit/langgraph/streaming/angular/e2e/fixtures/streaming.json")
 out_path.parent.mkdir(parents=True, exist_ok=True)
 out_path.write_text(json.dumps(fixture, indent=2) + "\n")
 print(f"\nWrote fixture to {out_path}")
