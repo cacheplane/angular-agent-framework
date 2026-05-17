@@ -52,11 +52,11 @@ Requires a **Personal API Key** with `dashboard:write`, `insight:write`, `cohort
 
 Env vars (see `.env.example` at repo root):
 
-| Variable | Purpose |
-|----------|---------|
-| `POSTHOG_PERSONAL_API_KEY` | Personal API Key (Bearer) |
-| `POSTHOG_HOST` | `https://us.i.posthog.com` (default) or your region |
-| `POSTHOG_PROJECT_ID` | Numeric project id (visible in PostHog URL) |
+| Variable                   | Purpose                                             |
+| -------------------------- | --------------------------------------------------- |
+| `POSTHOG_PERSONAL_API_KEY` | Personal API Key (Bearer)                           |
+| `POSTHOG_HOST`             | `https://us.i.posthog.com` (default) or your region |
+| `POSTHOG_PROJECT_ID`       | Numeric project id (visible in PostHog URL)         |
 
 **CI** uses the same key (write-scoped) for `--plan` only. **Production hardening TODO:** create a read-only Personal API Key for CI and add it as `POSTHOG_PERSONAL_API_KEY_READONLY` in GitHub Actions secrets. Local development continues using the write-scoped key for `--apply` and `--report`.
 
@@ -65,8 +65,8 @@ Env vars (see `.env.example` at repo root):
 ```jsonc
 // tools/posthog/dashboards/developer-funnel.json
 {
-  "slug": "developer-funnel",                  // local id, stable across syncs
-  "posthog_id": null,                           // assigned on first sync; do not edit
+  "slug": "developer-funnel", // local id, stable across syncs
+  "posthog_id": null, // assigned on first sync; do not edit
   "name": "GTM · Developer funnel",
   "description": "Pageview → install → cockpit activation.",
   "tags": ["gtm", "developer-track"],
@@ -99,6 +99,8 @@ Event names must match [`docs/gtm/taxonomy.md`](../../docs/gtm/taxonomy.md). The
 
 - `taxonomy.spec.ts` and `telemetry-contract.spec.ts` guard committed dashboard JSON against undocumented events, unsupported breakdowns, unsupported filters, runtime dashboard coverage drift, and forbidden sensitive runtime fields.
 - `npm run posthog:quality -- --days 7 --limit-per-event 25` samples recent live PostHog events and validates observed payloads against the same contract. It exits non-zero for missing required properties or forbidden sensitive properties, and prints warnings for non-contract fields.
+- `npm run posthog:quality -- --days 7 --limit-per-event 100 --require-critical-coverage` also requires recent samples for critical install and runtime events. The scheduled `PostHog telemetry quality` workflow runs this thresholded check daily and supports manual dispatch.
+- The live workflow requires Actions secrets named `POSTHOG_PERSONAL_API_KEY` and `POSTHOG_PROJECT_ID`.
 
 ## Sync semantics
 
