@@ -16,6 +16,7 @@ const links = [
   { label: 'Demo', href: 'https://demo.cacheplane.ai', external: true },
   { label: 'Examples', href: 'https://cockpit.cacheplane.ai', external: true },
   { label: 'Pricing', href: '/pricing', external: false },
+  { label: 'Blog', href: '/blog', external: false },
 ];
 
 function GitHubIcon() {
