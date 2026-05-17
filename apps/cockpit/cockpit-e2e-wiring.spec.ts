@@ -40,6 +40,25 @@ function listProjectJsonFiles(root: string): string[] {
   return out.sort();
 }
 
+function listFiles(root: string, predicate: (filePath: string) => boolean): string[] {
+  const out: string[] = [];
+  const stack = [root];
+
+  while (stack.length) {
+    const dir = stack.pop()!;
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      const fullPath = join(dir, entry.name);
+      if (entry.isDirectory()) {
+        stack.push(fullPath);
+      } else if (entry.isFile() && predicate(fullPath)) {
+        out.push(fullPath);
+      }
+    }
+  }
+
+  return out.sort();
+}
+
 function parseStringProperty(source: string, key: string): string | undefined {
   const match = source.match(new RegExp(`${key}:\\s*['"]([^'"]+)['"]`));
   return match?.[1];
@@ -90,6 +109,32 @@ function activeCockpitE2eWiring(): E2eWiring[] {
 }
 
 describe('cockpit e2e wiring', () => {
+  it('does not leave cockpit e2e spec files outside Nx e2e targets', () => {
+    const projects = new Map(
+      listProjectJsonFiles(join(repoRoot, 'cockpit')).map((projectJsonPath) => {
+        const project = JSON.parse(readFileSync(projectJsonPath, 'utf8')) as {
+          name?: string;
+          targets?: Record<string, unknown>;
+        };
+        return [dirname(projectJsonPath), project] as const;
+      }),
+    );
+    const orphanSpecs: string[] = [];
+
+    for (const specPath of listFiles(
+      join(repoRoot, 'cockpit'),
+      (filePath) => filePath.includes('/angular/e2e/') && filePath.endsWith('.spec.ts'),
+    )) {
+      const projectRoot = specPath.slice(0, specPath.indexOf('/e2e/'));
+      const project = projects.get(projectRoot);
+      if (!project?.targets?.['e2e']) {
+        orphanSpecs.push(relative(repoRoot, specPath));
+      }
+    }
+
+    expect(orphanSpecs).toEqual([]);
+  });
+
   it('keeps active cockpit e2e backends aligned across registry, proxy, recorders, and workflows', () => {
     const errors: string[] = [];
     const activeE2e = activeCockpitE2eWiring();
