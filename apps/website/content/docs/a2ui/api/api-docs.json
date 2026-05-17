@@ -58,7 +58,7 @@
       },
       {
         "name": "version",
-        "type": "\"v0.9\"",
+        "type": "\"v1\"",
         "description": "",
         "optional": false
       }
@@ -196,7 +196,7 @@
       },
       {
         "name": "version",
-        "type": "\"v0.9\"",
+        "type": "\"v1\"",
         "description": "",
         "optional": false
       }
