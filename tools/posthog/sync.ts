@@ -168,15 +168,6 @@ function resolveTiles(
   });
 }
 
-// PostHog rejects/ignores a `tiles` field on dashboard create/update.
-// We keep tiles in the local JSON as the source of truth, but strip them
-// from the body sent to PostHog. The wiring pass populates each insight's
-// `dashboards` field instead.
-function stripTiles(local: any): any {
-  const { tiles: _tiles, ...rest } = local;
-  return rest;
-}
-
 // Map our local InsightLocal shape (flat fields per zod schema) to PostHog's
 // modern query schema (HogQL-style InsightVizNode). The legacy `filters` shape
 // is rejected by modern PostHog projects.
