@@ -1,8 +1,13 @@
+// SPDX-License-Identifier: MIT
 import { Component, signal } from '@angular/core';
-import { ChatComponent } from '@ngaf/chat';
+import { ChatComponent, ChatWelcomeSuggestionComponent } from '@ngaf/chat';
 import { agent } from '@ngaf/langgraph';
 import { ExampleChatLayoutComponent } from '@ngaf/example-layouts';
 import { environment } from '../environments/environment';
+
+const WELCOME_SUGGESTIONS = [
+  { label: 'Save this thread for later', value: 'Help me draft a project brief I can revisit.' },
+] as const;
 
 interface Thread {
   id: string;
@@ -23,10 +28,20 @@ interface Thread {
 @Component({
   selector: 'app-persistence',
   standalone: true,
-  imports: [ChatComponent, ExampleChatLayoutComponent],
+  imports: [ChatComponent, ChatWelcomeSuggestionComponent, ExampleChatLayoutComponent],
   template: `
     <example-chat-layout sidebarWidth="w-56">
-      <chat main [agent]="agent" class="block flex-1 min-w-0" />
+      <chat main [agent]="agent" class="block flex-1 min-w-0">
+        <div chatWelcomeSuggestions>
+          @for (s of suggestions; track s.value) {
+            <chat-welcome-suggestion
+              [label]="s.label"
+              [value]="s.value"
+              (selected)="send($event)"
+            />
+          }
+        </div>
+      </chat>
 
       <div sidebar
         class="flex flex-col"
@@ -72,8 +87,13 @@ interface Thread {
 export class PersistenceComponent {
   protected readonly threads = signal<Thread[]>([]);
   protected readonly activeThreadId = signal<string | null>(null);
+  protected readonly suggestions = WELCOME_SUGGESTIONS;
 
   private threadCounter = 0;
+
+  protected send(text: string): void {
+    void this.agent.submit({ message: text });
+  }
 
   /**
    * The streaming resource with thread persistence.
