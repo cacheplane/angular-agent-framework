@@ -33,22 +33,17 @@ jobs:
       - uses: actions/checkout@v6.0.2
         with:
           fetch-depth: 0
+      - name: Test CI scope classifier
+        run: node --test scripts/ci-scope.spec.mjs
       - name: Detect changed CI surfaces
         id: scope
         run: |
           set -euo pipefail
 
-          keys="library website cockpit cockpit_examples cockpit_smoke cockpit_secret cockpit_deploy_smoke examples_chat cockpit_e2e website_e2e posthog"
-
-          mark_all() {
-            for key in $keys; do
-              printf '%s=true\n' "$key" >> "$GITHUB_OUTPUT"
-            done
-          }
-
           if [ "${{ github.event_name }}" = "push" ]; then
-            mark_all
-            echo "::notice::Push to main runs the full CI suite."
+            node scripts/ci-scope.mjs \
+              --event push \
+              --output "$GITHUB_OUTPUT"
             exit 0
           fi
 
@@ -60,93 +55,11 @@ jobs:
             head_sha="$(git rev-parse HEAD^2)"
           fi
 
-          changed_files="$(git diff --name-only "$base_sha" "$head_sha")"
-          printf '%s\n' "$changed_files"
-
-          library=false
-          website=false
-          cockpit=false
-          cockpit_examples=false
-          cockpit_smoke=false
-          cockpit_secret=false
-          cockpit_deploy_smoke=false
-          examples_chat=false
-          cockpit_e2e=false
-          website_e2e=false
-          posthog=false
-
-          if printf '%s\n' "$changed_files" | grep -E '^(\.github/workflows/ci\.yml|package(-lock)?\.json|nx\.json|tsconfig(\.base)?\.json|eslint\.config\.mjs)$' >/dev/null; then
-            library=true
-            website=true
-            cockpit=true
-            cockpit_examples=true
-            cockpit_smoke=true
-            cockpit_secret=true
-            cockpit_deploy_smoke=true
-            examples_chat=true
-            cockpit_e2e=true
-            website_e2e=true
-            posthog=true
-          fi
-
-          if printf '%s\n' "$changed_files" | grep -E '^libs/(chat|langgraph|ag-ui|render|a2ui|licensing|telemetry)/' >/dev/null; then
-            library=true
-            website=true
-            cockpit=true
-            cockpit_examples=true
-            cockpit_smoke=true
-            cockpit_secret=true
-            cockpit_deploy_smoke=true
-            examples_chat=true
-            cockpit_e2e=true
-            website_e2e=true
-          fi
-
-          if printf '%s\n' "$changed_files" | grep -E '^(apps/website/|vercel\.json$)' >/dev/null; then
-            website=true
-            website_e2e=true
-          fi
-
-          if printf '%s\n' "$changed_files" | grep -E '^(apps/cockpit/|vercel\.cockpit\.json$|libs/(cockpit-|design-tokens|ui-react|e2e-harness|example-layouts))' >/dev/null; then
-            cockpit=true
-            cockpit_examples=true
-            cockpit_deploy_smoke=true
-            cockpit_e2e=true
-          fi
-
-          if printf '%s\n' "$changed_files" | grep -E '^(cockpit/.*/angular/|scripts/assemble-examples\.ts$|vercel\.examples\.json$)' >/dev/null; then
-            cockpit_examples=true
-          fi
-
-          if printf '%s\n' "$changed_files" | grep -E '^cockpit/.*/python/' >/dev/null; then
-            cockpit_smoke=true
-          fi
-
-          if printf '%s\n' "$changed_files" | grep -E '^cockpit/langgraph/deployment-runtime/python/' >/dev/null; then
-            cockpit_secret=true
-          fi
-
-          if printf '%s\n' "$changed_files" | grep -E '^(apps/cockpit/scripts/deploy-smoke\.ts|scripts/deploy-smoke\.ts)$' >/dev/null; then
-            cockpit_deploy_smoke=true
-          fi
-
-          if printf '%s\n' "$changed_files" | grep -E '^(cockpit/langgraph/streaming/|cockpit/chat/(tool-calls|subagents)/|libs/(cockpit-testing|e2e-harness)/)' >/dev/null; then
-            cockpit_e2e=true
-          fi
-
-          if printf '%s\n' "$changed_files" | grep -E '^(examples/chat/|vercel\.demo\.json$|scripts/(assemble-demo|demo-middleware|langgraph-proxy|rate-limit)\.ts$)' >/dev/null; then
-            examples_chat=true
-          fi
-
-          if printf '%s\n' "$changed_files" | grep -E '^tools/posthog/' >/dev/null; then
-            posthog=true
-          fi
-
-          for key in $keys; do
-            value="$(eval "printf '%s' \"\$$key\"")"
-            printf '%s=%s\n' "$key" "$value" >> "$GITHUB_OUTPUT"
-            echo "$key=$value"
-          done
+          node scripts/ci-scope.mjs \
+            --event pull_request \
+            --base "$base_sha" \
+            --head "$head_sha" \
+            --output "$GITHUB_OUTPUT"
       - name: Validate CI workflow guards
         run: node --test scripts/ci-workflow.spec.mjs
 
