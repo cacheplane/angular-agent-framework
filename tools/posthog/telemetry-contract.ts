@@ -61,10 +61,20 @@ const ctaProperties = [
   'track',
 ] as const;
 
+const cockpitShellProperties = [
+  'capability',
+  'category',
+  'file_path',
+  'from_capability',
+  'from_mode',
+  'surface',
+  'to_mode',
+] as const;
+
 export const TELEMETRY_EVENT_CONTRACT: Record<string, TelemetryEventContract> = {
   '$pageview': {
     requiredProperties: [],
-    allowedProperties: ['$pathname'],
+    allowedProperties: ['$pathname', 'title'],
     allowedBreakdowns: ['$pathname'],
   },
   'cockpit:activation_complete': {
@@ -79,8 +89,8 @@ export const TELEMETRY_EVENT_CONTRACT: Record<string, TelemetryEventContract> = 
   },
   'cockpit:code_copied': {
     requiredProperties: ['capability'],
-    allowedProperties: ['capability'],
-    allowedBreakdowns: ['capability'],
+    allowedProperties: cockpitShellProperties,
+    allowedBreakdowns: ['capability', 'surface'],
   },
   'cockpit:generative_component_rendered': {
     requiredProperties: ['capability'],
@@ -94,13 +104,13 @@ export const TELEMETRY_EVENT_CONTRACT: Record<string, TelemetryEventContract> = 
   },
   'cockpit:mode_switched': {
     requiredProperties: ['capability'],
-    allowedProperties: ['capability'],
-    allowedBreakdowns: ['capability'],
+    allowedProperties: cockpitShellProperties,
+    allowedBreakdowns: ['capability', 'from_mode', 'to_mode'],
   },
   'cockpit:recipe_opened': {
     requiredProperties: ['capability'],
-    allowedProperties: ['capability'],
-    allowedBreakdowns: ['capability'],
+    allowedProperties: cockpitShellProperties,
+    allowedBreakdowns: ['capability', 'category', 'from_capability'],
   },
   'cockpit:thread_persisted': {
     requiredProperties: ['capability'],

@@ -37,6 +37,12 @@
         "command": "npx tsx tools/posthog/report.ts"
       }
     },
+    "quality:live": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx tsx tools/posthog/live-quality.ts"
+      }
+    },
     "generate-types": {
       "executor": "nx:run-commands",
       "options": {

@@ -14,6 +14,7 @@ tools/posthog/
 ├── schema.ts                       # zod schemas for local JSON
 ├── sync.ts                         # CLI: plan / apply / writeback
 ├── report.ts                       # CLI: pull insights → markdown
+├── live-quality.ts                 # CLI: sample recent events and validate payload quality
 ├── *.spec.ts                       # tests
 ├── types/posthog-api.gen.ts        # generated from PostHog OpenAPI spec
 ├── scripts/generate-types.ts       # regenerate the above
@@ -30,6 +31,7 @@ All commands wrap `nx run posthog-tools:*`. Root-package aliases:
 npm run posthog:sync       # → nx run posthog-tools:sync:plan
 npm run posthog:apply      # → nx run posthog-tools:sync:apply
 npm run posthog:report     # → nx run posthog-tools:report
+npm run posthog:quality    # → nx run posthog-tools:quality:live
 npm run posthog:generate-types  # → regenerate types/posthog-api.gen.ts
 ```
 
@@ -39,6 +41,7 @@ Direct Nx invocations work too:
 nx run posthog-tools:sync:plan
 nx run posthog-tools:sync:apply
 nx run posthog-tools:sync:apply --args="--delete-orphans"
+nx run posthog-tools:quality:live -- --days 7 --limit-per-event 25
 nx run posthog-tools:test
 nx run posthog-tools:lint
 ```
@@ -89,6 +92,13 @@ Env vars (see `.env.example` at repo root):
 ```
 
 Event names must match [`docs/gtm/taxonomy.md`](../../docs/gtm/taxonomy.md). The `taxonomy.spec.ts` test enforces this on every CI run.
+
+## Data quality checks
+
+`telemetry-contract.ts` is the machine-readable event/property contract used by tests and live checks.
+
+- `taxonomy.spec.ts` and `telemetry-contract.spec.ts` guard committed dashboard JSON against undocumented events, unsupported breakdowns, unsupported filters, runtime dashboard coverage drift, and forbidden sensitive runtime fields.
+- `npm run posthog:quality -- --days 7 --limit-per-event 25` samples recent live PostHog events and validates observed payloads against the same contract. It exits non-zero for missing required properties or forbidden sensitive properties, and prints warnings for non-contract fields.
 
 ## Sync semantics
 
