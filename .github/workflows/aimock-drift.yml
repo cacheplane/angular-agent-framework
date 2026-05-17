@@ -7,6 +7,14 @@ on:
   # lands recorded fixtures. Re-enable a `schedule:` trigger here at that
   # point (weekly cron is a reasonable starting cadence).
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  issues: write
+
 jobs:
   drift:
     runs-on: ubuntu-latest

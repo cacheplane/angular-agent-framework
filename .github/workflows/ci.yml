@@ -6,6 +6,13 @@ on:
   pull_request:
     branches: [main]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
 jobs:
   library:
     name: Library — lint / test / build
@@ -27,8 +34,12 @@ jobs:
   website:
     name: Website — lint / build
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v6.0.2
+        with:
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.head_ref || github.sha }}
       - uses: actions/setup-node@v6.3.0
         with:
           node-version: 22
@@ -36,6 +47,19 @@ jobs:
       - run: npm ci
       - run: npx nx lint website
       - run: npm run generate-api-docs
+      - name: Commit generated API docs to same-repo PR
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        run: |
+          if git diff --quiet -- apps/website/content/docs/*/api/api-docs.json; then
+            echo "Generated API docs are already committed."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add apps/website/content/docs/*/api/api-docs.json
+          git commit -m "chore(docs): regenerate api docs"
+          git push origin "HEAD:${{ github.head_ref }}"
       - name: Verify generated API docs are committed
         run: git diff --exit-code -- apps/website/content/docs/*/api/api-docs.json
       - run: npx nx build website
@@ -362,32 +386,31 @@ jobs:
           npx vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
           npx vercel deploy --prebuilt --prod --yes --token=${{ secrets.VERCEL_TOKEN }}
 
-      # ── Canonical demo deploy ────────────────────────────────────────────
-      - name: Check if demo changed
-        id: demo_changed
+  demo-deploy:
+    name: Canonical demo → Vercel
+    needs: [examples-chat-smoke, examples-chat-e2e]
+    runs-on: ubuntu-latest
+    if: ${{ always() && !cancelled() && github.ref == 'refs/heads/main' && github.event_name == 'push' }}
+    steps:
+      - name: Require demo prerequisite jobs
         run: |
-          base_sha="${{ github.event.before }}"
-          head_sha="${{ github.sha }}"
-          if [ -z "$base_sha" ] || [ "$base_sha" = "0000000000000000000000000000000000000000" ]; then
-            base_sha="$(git rev-parse "$head_sha^")"
+          if [ "${{ needs.examples-chat-smoke.result }}" != "success" ]; then
+            echo "::error::examples/chat — python smoke finished with ${{ needs.examples-chat-smoke.result }}; refusing to deploy the canonical demo."
+            exit 1
           fi
-          changed_files="$(git diff --name-only "$base_sha" "$head_sha")"
-          demo_changed=false
-          if printf '%s\n' "$changed_files" | grep -E '^examples/chat/(angular|python)/' >/dev/null; then
-            demo_changed=true
+          if [ "${{ needs.examples-chat-e2e.result }}" != "success" ]; then
+            echo "::error::examples/chat — e2e finished with ${{ needs.examples-chat-e2e.result }}; refusing to deploy the canonical demo."
+            exit 1
           fi
-          if printf '%s\n' "$changed_files" | grep -E '^(vercel\.demo\.json|scripts/(assemble-demo|demo-middleware|langgraph-proxy|rate-limit)\.ts)$' >/dev/null; then
-            demo_changed=true
-          fi
-          if printf '%s\n' "$changed_files" | grep -E '^libs/' >/dev/null; then
-            demo_changed=true
-          fi
-          echo "changed=$demo_changed" >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@v6.0.2
+      - uses: actions/setup-node@v6.3.0
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
       - name: Build and assemble canonical demo
-        if: steps.demo_changed.outputs.changed == 'true'
         run: npx tsx scripts/assemble-demo.ts
       - name: Deploy canonical demo to Vercel (production)
-        if: steps.demo_changed.outputs.changed == 'true'
         working-directory: deploy/demo
         run: |
           mkdir -p .vercel
@@ -396,6 +419,48 @@ jobs:
           EOF
           npx vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
           npx vercel deploy --prebuilt --prod --yes --token=${{ secrets.VERCEL_TOKEN }}
+      - name: Verify canonical demo build stamp
+        env:
+          DEMO_URL: https://demo.cacheplane.ai
+          EXPECTED_SHA: ${{ github.sha }}
+        run: |
+          node <<'NODE'
+          const { setTimeout: sleep } = require('node:timers/promises');
+
+          async function main() {
+            const demoUrl = process.env.DEMO_URL;
+            const expectedSha = process.env.EXPECTED_SHA;
+            let last = 'no response yet';
+
+            for (let attempt = 1; attempt <= 20; attempt += 1) {
+              try {
+                const response = await fetch(`${demoUrl}/__build.json?t=${Date.now()}`);
+                last = `HTTP ${response.status}`;
+
+                if (response.ok) {
+                  const metadata = await response.json();
+                  last = JSON.stringify(metadata);
+                  if (metadata.sha === expectedSha) {
+                    console.log(`Canonical demo is serving ${expectedSha}.`);
+                    return;
+                  }
+                }
+              } catch (error) {
+                last = error instanceof Error ? error.message : String(error);
+              }
+
+              console.log(`Waiting for canonical demo stamp ${expectedSha}; attempt ${attempt}/20. Last: ${last}`);
+              await sleep(5000);
+            }
+
+            throw new Error(`Canonical demo did not serve build stamp ${expectedSha}. Last: ${last}`);
+          }
+
+          main().catch((error) => {
+            console.error(`::error::${error instanceof Error ? error.message : String(error)}`);
+            process.exit(1);
+          });
+          NODE
 
   production-smoke:
     name: Production smoke

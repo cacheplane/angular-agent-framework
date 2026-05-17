@@ -26,6 +26,24 @@ const root = resolve(__dirname, '..');
 const deployDir = resolve(root, 'deploy/demo');
 const skipBuild = process.argv.includes('--skip-build');
 
+function resolveBuildSha(): string {
+  return process.env['GITHUB_SHA'] ?? execSync('git rev-parse HEAD', {
+    cwd: root,
+    encoding: 'utf8',
+  }).trim();
+}
+
+const buildMetadata = {
+  sha: resolveBuildSha(),
+  runId: process.env['GITHUB_RUN_ID'] ?? null,
+  runAttempt: process.env['GITHUB_RUN_ATTEMPT'] ?? null,
+  builtAt: new Date().toISOString(),
+};
+
+function writeBuildMetadata(outDir: string): void {
+  writeFileSync(resolve(outDir, '__build.json'), JSON.stringify(buildMetadata, null, 2) + '\n');
+}
+
 if (!skipBuild) {
   console.log('Building examples-chat-angular (production)...');
   execSync('npx nx build examples-chat-angular --configuration=production --skip-nx-cache', {
@@ -44,6 +62,7 @@ if (!existsSync(src)) {
 
 mkdirSync(deployDir, { recursive: true });
 cpSync(src, deployDir, { recursive: true });
+writeBuildMetadata(deployDir);
 console.log(`✅ Copied SPA to ${deployDir}`);
 
 const outputDir = resolve(deployDir, '.vercel/output');
@@ -54,6 +73,7 @@ mkdirSync(staticDir, { recursive: true });
 // Copy from the original dist (not deployDir) — Node's cpSync rejects
 // copying a directory to a subdirectory of itself, filter or no filter.
 cpSync(src, staticDir, { recursive: true });
+writeBuildMetadata(staticDir);
 
 mkdirSync(funcDir, { recursive: true });
 execSync(`npx esbuild scripts/demo-middleware.ts --bundle --format=cjs --platform=node --outfile=${funcDir}/index.js`, {

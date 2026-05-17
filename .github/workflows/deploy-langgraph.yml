@@ -17,6 +17,13 @@ on:
         required: false
         type: string
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
 jobs:
   deploy:
     name: Deploy shared cockpit-dev to LangGraph Cloud
