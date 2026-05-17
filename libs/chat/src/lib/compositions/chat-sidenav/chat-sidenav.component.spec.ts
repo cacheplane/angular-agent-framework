@@ -1,5 +1,6 @@
 // libs/chat/src/lib/compositions/chat-sidenav/chat-sidenav.component.spec.ts
 // SPDX-License-Identifier: MIT
+import { Component } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { describe, expect, it } from 'vitest';
 import { ChatSidenavComponent } from './chat-sidenav.component';
@@ -122,29 +123,28 @@ describe('ChatSidenavComponent', () => {
 
   it('renders the collapse chevron in expanded mode with "Collapse sidenav" label', () => {
     const fixture = render({ mode: 'expanded' });
-    const btn = fixture.nativeElement.querySelector('.chat-sidenav__action--collapse') as HTMLButtonElement;
+    const btn = fixture.nativeElement.querySelector('.chat-sidenav__toggle') as HTMLButtonElement;
     expect(btn).not.toBeNull();
     expect(btn.getAttribute('aria-label')).toBe('Collapse sidenav');
   });
 
   it('renders the expand chevron in collapsed mode with "Expand sidenav" label', () => {
     const fixture = render({ mode: 'collapsed' });
-    const btn = fixture.nativeElement.querySelector('.chat-sidenav__action--collapse') as HTMLButtonElement;
+    const btn = fixture.nativeElement.querySelector('.chat-sidenav__toggle') as HTMLButtonElement;
     expect(btn).not.toBeNull();
     expect(btn.getAttribute('aria-label')).toBe('Expand sidenav');
   });
 
   it('omits the collapse chevron in drawer mode', () => {
     const fixture = render({ mode: 'drawer' });
-    expect(fixture.nativeElement.querySelector('.chat-sidenav__action--collapse')).toBeNull();
+    expect(fixture.nativeElement.querySelector('.chat-sidenav__toggle')).toBeNull();
   });
 
-  it('renders a topbar containing the new-chat and collapse buttons in expanded mode', () => {
+  it('renders a topbar containing the new-chat button in expanded mode', () => {
     const fixture = render({ mode: 'expanded' });
     const topbar = fixture.nativeElement.querySelector('.chat-sidenav__topbar') as HTMLElement;
     expect(topbar).not.toBeNull();
     expect(topbar.querySelector('.chat-sidenav__action--new')).not.toBeNull();
-    expect(topbar.querySelector('.chat-sidenav__action--collapse')).not.toBeNull();
   });
 
   it('search button is the only action in .chat-sidenav__actions row', () => {
@@ -176,7 +176,7 @@ describe('ChatSidenavComponent', () => {
     const fixture = render({ mode: 'expanded' });
     let last: string | undefined;
     fixture.componentInstance.modeChange.subscribe((m: string) => { last = m; });
-    const btn = fixture.nativeElement.querySelector('.chat-sidenav__action--collapse') as HTMLButtonElement;
+    const btn = fixture.nativeElement.querySelector('.chat-sidenav__toggle') as HTMLButtonElement;
     btn.click();
     expect(last).toBe('collapsed');
   });
@@ -185,7 +185,7 @@ describe('ChatSidenavComponent', () => {
     const fixture = render({ mode: 'collapsed' });
     let last: string | undefined;
     fixture.componentInstance.modeChange.subscribe((m: string) => { last = m; });
-    const btn = fixture.nativeElement.querySelector('.chat-sidenav__action--collapse') as HTMLButtonElement;
+    const btn = fixture.nativeElement.querySelector('.chat-sidenav__toggle') as HTMLButtonElement;
     btn.click();
     expect(last).toBe('expanded');
   });
@@ -264,5 +264,76 @@ describe('ChatSidenavComponent', () => {
     btn.click();
     fixture.detectChanges();
     expect(emits).toBe(1);
+  });
+});
+
+describe('ChatSidenavComponent — footer slots', () => {
+  it('renders [sidenavFooterLeft] projected content in the left footer position', async () => {
+    @Component({
+      standalone: true,
+      imports: [ChatSidenavComponent],
+      template: `<chat-sidenav><span sidenavFooterLeft data-test="left-slot">L</span></chat-sidenav>`,
+    })
+    class HostLeft {}
+    TestBed.configureTestingModule({});
+    const fx = TestBed.createComponent(HostLeft);
+    fx.detectChanges();
+    const leftContainer = fx.nativeElement.querySelector('.chat-sidenav__footer-left');
+    expect(leftContainer).toBeTruthy();
+    expect(leftContainer.querySelector('[data-test="left-slot"]')?.textContent).toBe('L');
+  });
+
+  it('renders [sidenavFooterRight] projected content in the right footer position', () => {
+    @Component({
+      standalone: true,
+      imports: [ChatSidenavComponent],
+      template: `<chat-sidenav><span sidenavFooterRight data-test="right-slot">R</span></chat-sidenav>`,
+    })
+    class HostRight {}
+    TestBed.configureTestingModule({});
+    const fx = TestBed.createComponent(HostRight);
+    fx.detectChanges();
+    const rightContainer = fx.nativeElement.querySelector('.chat-sidenav__footer-right');
+    expect(rightContainer).toBeTruthy();
+    expect(rightContainer.querySelector('[data-test="right-slot"]')?.textContent).toBe('R');
+  });
+
+  it('renders the collapse toggle as the last child of the right footer container', () => {
+    TestBed.configureTestingModule({ imports: [ChatSidenavComponent] });
+    const fx = TestBed.createComponent(ChatSidenavComponent);
+    fx.detectChanges();
+    const rightContainer = fx.nativeElement.querySelector('.chat-sidenav__footer-right');
+    expect(rightContainer).toBeTruthy();
+    const lastChild = rightContainer.children[rightContainer.children.length - 1];
+    expect(lastChild?.classList?.contains('chat-sidenav__toggle')).toBe(true);
+  });
+
+  it('removes the legacy collapse button from the topbar', () => {
+    TestBed.configureTestingModule({ imports: [ChatSidenavComponent] });
+    const fx = TestBed.createComponent(ChatSidenavComponent);
+    fx.detectChanges();
+    const topbar = fx.nativeElement.querySelector('.chat-sidenav__topbar');
+    expect(topbar?.querySelector('.chat-sidenav__action--collapse')).toBeFalsy();
+  });
+
+  it('clicking the new footer toggle emits modeChange', () => {
+    TestBed.configureTestingModule({ imports: [ChatSidenavComponent] });
+    const fx = TestBed.createComponent(ChatSidenavComponent);
+    fx.detectChanges();
+    let captured: string | null = null;
+    fx.componentInstance.modeChange.subscribe((m) => (captured = m));
+    const toggle = fx.nativeElement.querySelector('.chat-sidenav__toggle') as HTMLButtonElement;
+    toggle.click();
+    expect(captured).toBe('collapsed');
+  });
+});
+
+describe('ChatSidenavComponent — New chat primary CTA', () => {
+  it('renders the new-chat button with a primary-pill styling token', () => {
+    // Styles array is the second member of @Component decorator metadata.
+    const styles = (ChatSidenavComponent as unknown as { ɵcmp: { styles: string[] } }).ɵcmp.styles.join('\n');
+    // Primary pill family: matches chat-input send button.
+    expect(styles).toMatch(/\.chat-sidenav__action--new[^{]*\{[^}]*background:\s*var\(--ngaf-chat-primary/);
+    expect(styles).toMatch(/\.chat-sidenav__action--new[^{]*\{[^}]*border-radius:\s*9999px/);
   });
 });

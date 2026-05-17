@@ -89,14 +89,46 @@ export const CHAT_SIDENAV_STYLES = `
     gap: 4px;
     padding: var(--ngaf-chat-space-2) 0;
   }
-  .chat-sidenav__topbar .chat-sidenav__action {
+  .chat-sidenav__topbar .chat-sidenav__action--close {
     width: 36px;
     height: 36px;
     padding: 0;
     justify-content: center;
     flex: 0 0 auto;
   }
-  .chat-sidenav__topbar .chat-sidenav__action-label {
+  .chat-sidenav__topbar .chat-sidenav__action--close .chat-sidenav__action-label {
+    display: none;
+  }
+  .chat-sidenav__action--new {
+    background: var(--ngaf-chat-primary);
+    color: var(--ngaf-chat-on-primary);
+    border: 0;
+    padding: 10px 16px;
+    border-radius: 9999px;
+    font-size: 13px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    width: 100%;
+  }
+  .chat-sidenav__action--new:hover {
+    filter: brightness(1.1);
+  }
+  .chat-sidenav__action--new:focus-visible {
+    outline: 2px solid var(--ngaf-chat-primary);
+    outline-offset: 2px;
+  }
+  /* Collapsed mode: shrink to 32×32 icon-only square. */
+  :host([data-mode="collapsed"]) .chat-sidenav__action--new {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border-radius: 10px;
+    justify-content: center;
+  }
+  :host([data-mode="collapsed"]) .chat-sidenav__action--new .chat-sidenav__action-label {
     display: none;
   }
   .chat-sidenav__actions {
@@ -138,6 +170,23 @@ export const CHAT_SIDENAV_STYLES = `
   :host([data-mode="collapsed"]) .chat-sidenav__action-label {
     display: none;
   }
+  /* Primary CTA pill — defined AFTER the generic .chat-sidenav__action
+     rule so its background/padding/radius win the cascade with equal
+     specificity. The earlier --new block above is kept for the
+     collapsed-mode overrides (which are :host-prefixed, higher
+     specificity, so they still apply). */
+  .chat-sidenav__action.chat-sidenav__action--new {
+    background: var(--ngaf-chat-primary);
+    color: var(--ngaf-chat-on-primary);
+    border-radius: 9999px;
+    padding: 10px 16px;
+    font-weight: 600;
+    font-size: 13px;
+  }
+  .chat-sidenav__action.chat-sidenav__action--new:hover {
+    background: var(--ngaf-chat-primary);
+    filter: brightness(1.1);
+  }
   .chat-sidenav__action-icon {
     width: 16px;
     height: 16px;
@@ -162,13 +211,66 @@ export const CHAT_SIDENAV_STYLES = `
   :host([data-mode="collapsed"]) .chat-sidenav__threads-heading {
     display: none;
   }
-  .chat-sidenav__account {
-    flex-shrink: 0;
+  .chat-sidenav__footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px;
     border-top: 1px solid var(--ngaf-chat-separator);
-    padding: var(--ngaf-chat-space-3);
+    gap: 8px;
+    flex-shrink: 0;
   }
-  :host([data-mode="collapsed"]) .chat-sidenav__account {
-    padding: var(--ngaf-chat-space-2);
+  .chat-sidenav__footer-left {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    min-height: 28px;
+  }
+  .chat-sidenav__footer-right {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    /* Push to the right edge even when the left container is empty. */
+    margin-left: auto;
+  }
+  .chat-sidenav__toggle {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    border: 0;
+    background: transparent;
+    color: var(--ngaf-chat-text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .chat-sidenav__toggle:hover {
+    background: var(--ngaf-chat-surface-alt);
+    color: var(--ngaf-chat-text);
+  }
+  /* Collapsed mode: footer becomes a vertical stack; left slot hides. */
+  :host([data-mode="collapsed"]) .chat-sidenav__footer {
+    flex-direction: column;
+    align-items: center;
+    padding: 10px 4px;
+  }
+  :host([data-mode="collapsed"]) .chat-sidenav__footer-left {
+    display: none;
+  }
+  :host([data-mode="collapsed"]) .chat-sidenav__footer-right {
+    flex-direction: column;
+  }
+  /* Legacy [sidenavAccount] slot: kept renderable but visually folded into
+     the new footer. Existing consumers' content still projects; the slot
+     just renders in the footer-right area visually. */
+  .chat-sidenav__account {
+    display: none;
+  }
+  .chat-sidenav__account:has(> *) {
+    display: flex;
+    align-items: center;
+    gap: 4px;
   }
   .chat-sidenav__archived { flex-shrink: 0; }
   .chat-sidenav__archived-heading {
@@ -230,4 +332,30 @@ export const CHAT_SIDENAV_STYLES = `
     flex-direction: row;
   }
   :host([data-mode="collapsed"]) .chat-thread-list__new { display: none; }
+  :host([data-mode="collapsed"]) .chat-sidenav__action--search {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border-radius: 10px;
+    justify-content: center;
+    background: transparent;
+  }
+  :host([data-mode="collapsed"]) .chat-sidenav__action--search .chat-sidenav__action-label {
+    display: none;
+  }
+  /* Collapsed: thread list, project list, archived block, sections — all hidden. */
+  :host([data-mode="collapsed"]) .chat-sidenav__threads,
+  :host([data-mode="collapsed"]) .chat-sidenav__projects,
+  :host([data-mode="collapsed"]) .chat-sidenav__archived,
+  :host([data-mode="collapsed"]) .chat-sidenav__sections,
+  :host([data-mode="collapsed"]) .chat-sidenav__primary {
+    display: none;
+  }
+  /* Collapsed: reduce horizontal padding so 32×32 buttons sit centered. */
+  :host([data-mode="collapsed"]) .chat-sidenav__topbar,
+  :host([data-mode="collapsed"]) .chat-sidenav__actions {
+    padding: 8px 4px;
+    align-items: center;
+    justify-content: center;
+  }
 `;
