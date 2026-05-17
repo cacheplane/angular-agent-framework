@@ -83,7 +83,7 @@ ALLOWED_COMPONENTS = frozenset({
 # ── Pydantic schemas ────────────────────────────────────────────────────────
 
 class A2uiComponent(BaseModel):
-    """Single A2UI v0.9 updateComponents entry.
+    """Single A2UI v1 updateComponents entry.
 
     Format (from libs/chat/src/lib/a2ui/surface-to-spec.ts):
         {id: "name_field",
@@ -164,7 +164,7 @@ def _to_data_model_contents(model: dict[str, Any]) -> list[dict[str, Any]]:
 
 
 def _wrap_envelopes(spec: _SurfaceSpec, root_id: str = "root") -> str:
-    """Wrap a validated SurfaceSpec into A2UI v0.9 JSONL.
+    """Wrap a validated SurfaceSpec into A2UI v1 JSONL.
 
     Order matters: dataModelUpdate first (so bindings resolve), then
     surfaceUpdate (components), then beginRendering (mount + root id).
@@ -252,7 +252,7 @@ async def _emit_with_retry(
 _AIRPORT_OPTIONS = [{"label": c, "value": c} for c in AIRPORT_CODES]
 _FARE_OPTIONS = [{"label": c, "value": c} for c in FARE_CLASSES]
 
-_BUILD_FORM_SYSTEM = f"""You are an aviation booking-form designer. Emit an A2UI v0.9 booking form using the structured output schema.
+_BUILD_FORM_SYSTEM = f"""You are an aviation booking-form designer. Emit an A2UI v1 booking form using the structured output schema.
 
 A2UI FORMAT (CRITICAL): each component is `{{"id": "...", "component": {{"<ComponentName>": {{<props>}}}}}}`. The component name is the SINGLE KEY of the inner dict. ComponentName must be one of:
   Column, Row, Card, Text, TextField, MultipleChoice, DateTimeInput, CheckBox, Button, Divider, List, Image, Icon, Modal, Slider, Tabs
@@ -352,7 +352,7 @@ _SEARCH_FLIGHTS_SYSTEM = """You just received a booking submission. The find_rou
 
 Form data (for context): {form_json}
 
-Emit an A2UI v0.9 results surface using the FlightResultsSpec schema.
+Emit an A2UI v1 results surface using the FlightResultsSpec schema.
 
 A2UI format (CRITICAL): every component is `{{"id": "...", "component": {{"<ComponentName>": {{<props>}}}}}}`. The component name is the SINGLE KEY of the inner dict.
 
@@ -409,7 +409,7 @@ _SENTINEL_RESULTS = FlightResultsSpec(
 
 
 def _unwrap_literal(v: Any) -> Any:
-    """Unwrap a v0.9 literal wrapper ({literalString|literalNumber|literalBoolean: <v>})."""
+    """Unwrap a v1 literal wrapper ({literalString|literalNumber|literalBoolean: <v>})."""
     if isinstance(v, dict):
         for k in ("literalString", "literalNumber", "literalBoolean"):
             if k in v:
@@ -418,10 +418,10 @@ def _unwrap_literal(v: Any) -> Any:
 
 
 def _parse_submit_payload(content: str) -> dict[str, Any] | None:
-    """Extract the form-data dict from a v0.9 A2uiActionMessage content.
+    """Extract the form-data dict from a v1 A2uiActionMessage content.
 
     Chat-lib sends:
-      {"version":"v0.9","action":{"name":"...","surfaceId":"...",
+      {"version":"v1","action":{"name":"...","surfaceId":"...",
         "sourceComponentId":"...","timestamp":"...",
         "context":{"formId":{"literalString":"booking"},
                    "origin":{"literalString":"LAX"}, ...}}}
@@ -472,7 +472,7 @@ async def search_flights(state: MessagesState) -> dict:
 # ── Routing + compile ───────────────────────────────────────────────────────
 
 def _is_submit_event(content: str) -> bool:
-    """True iff the content is a v0.9 A2uiActionMessage named bookingSubmit."""
+    """True iff the content is a v1 A2uiActionMessage named bookingSubmit."""
     try:
         payload = json.loads(content)
     except (json.JSONDecodeError, TypeError):
