@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 import { Component } from '@angular/core';
-import { ChatComponent, views } from '@ngaf/chat';
+import { ChatComponent, ChatWelcomeSuggestionComponent, views } from '@ngaf/chat';
 import { agent } from '@ngaf/langgraph';
 import { ExampleChatLayoutComponent } from '@ngaf/example-layouts';
 import { environment } from '../environments/environment';
@@ -21,13 +21,28 @@ const dashboardViews = views({
   data_grid: DataGridComponent,
 });
 
+const WELCOME_SUGGESTIONS = [
+  { label: 'Render a dashboard', value: 'Show me a Q3 sales dashboard with three metrics.' },
+  { label: 'Render a form',      value: 'Create a contact form with name, email, and message.' },
+] as const;
+
 @Component({
   selector: 'app-generative-ui',
   standalone: true,
-  imports: [ChatComponent, ExampleChatLayoutComponent],
+  imports: [ChatComponent, ChatWelcomeSuggestionComponent, ExampleChatLayoutComponent],
   template: `
     <example-chat-layout>
-      <chat main [agent]="agent" [views]="dashboardViews" class="flex-1 min-w-0" />
+      <chat main [agent]="agent" [views]="dashboardViews" class="flex-1 min-w-0">
+        <div chatWelcomeSuggestions>
+          @for (s of suggestions; track s.value) {
+            <chat-welcome-suggestion
+              [label]="s.label"
+              [value]="s.value"
+              (selected)="send($event)"
+            />
+          }
+        </div>
+      </chat>
     </example-chat-layout>
   `,
 })
@@ -37,4 +52,9 @@ export class GenerativeUiComponent {
     assistantId: environment.generativeUiAssistantId,
   });
   protected readonly dashboardViews = dashboardViews;
+  protected readonly suggestions = WELCOME_SUGGESTIONS;
+
+  protected send(text: string): void {
+    void this.agent.submit({ message: text });
+  }
 }
