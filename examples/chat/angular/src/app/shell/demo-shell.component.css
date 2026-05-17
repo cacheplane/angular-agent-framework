@@ -71,3 +71,20 @@
   flex-direction: column;
   gap: 8px;
 }
+
+.demo-shell__theme-toggle {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  border: 0;
+  background: transparent;
+  color: var(--ngaf-chat-text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.demo-shell__theme-toggle:hover {
+  background: var(--ngaf-chat-surface-alt);
+  color: var(--ngaf-chat-text);
+}
