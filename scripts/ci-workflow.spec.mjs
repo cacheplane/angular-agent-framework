@@ -48,4 +48,13 @@ describe('CI workflow', () => {
 
     assert.match(productionSmokeJob, /needs:\s*\[deploy,\s*demo-deploy\]/);
   });
+
+  it('verifies the shared backend before installing Playwright browsers', async () => {
+    const productionSmokeJob = await readProductionSmokeJob();
+
+    assert.ok(
+      productionSmokeJob.indexOf('Verify shared LangGraph backend') <
+        productionSmokeJob.indexOf('npx playwright install --with-deps chromium')
+    );
+  });
 });

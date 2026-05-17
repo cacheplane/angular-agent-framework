@@ -12,4 +12,9 @@ describe('verify-shared-deployment', () => {
       DEFAULT_SMOKE_ASSISTANT_STREAM_TIMEOUT_MS,
     );
   });
+
+  it('allows UI-heavy smoke assistants more time than single-response smoke assistants', () => {
+    expect(getSmokeAssistantStreamTimeoutMs('c-generative-ui')).toBe(90000);
+    expect(getSmokeAssistantStreamTimeoutMs('c-a2ui')).toBe(90000);
+  });
 });

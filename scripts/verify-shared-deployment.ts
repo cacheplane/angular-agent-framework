@@ -38,6 +38,10 @@ const SMOKE_ASSISTANT_STREAM_TIMEOUT_MS: Partial<Record<SmokeAssistantId, number
   // The planning graph intentionally performs two model calls: one to create
   // structured plan state, then one to execute the plan and answer.
   planning: 90000,
+  // UI graph assistants can include extra model/tool work before the first AI
+  // stream event, and CI has observed them occasionally crossing 30s.
+  'c-generative-ui': 90000,
+  'c-a2ui': 90000,
 };
 
 export function getSmokeAssistantStreamTimeoutMs(assistantId: SmokeAssistantId) {
