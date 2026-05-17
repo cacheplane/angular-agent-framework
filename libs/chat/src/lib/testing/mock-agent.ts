@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-import { signal, WritableSignal } from '@angular/core';
+import { signal, Signal, WritableSignal } from '@angular/core';
 import { EMPTY, type Observable } from 'rxjs';
 import type {
   Agent,
@@ -25,6 +25,24 @@ export interface MockAgent extends Agent {
   subagents?:    WritableSignal<Map<string, Subagent>>;
   history?:      WritableSignal<AgentCheckpoint[]>;
   events$:       Observable<AgentEvent>;
+  /**
+   * Minimal lifecycle stub the chat lib's effects subscribe to. We only
+   * model the signals the chat composition currently reads; richer adapter
+   * lifecycles (langgraph, ag-ui) extend this contract on their own mocks.
+   * The public `lifecycle` view is a readonly signal; tests drive the
+   * value via `_internal.streamStartedAt.set(...)` below.
+   */
+  lifecycle: {
+    streamStartedAt: Signal<number | null>;
+  };
+  /**
+   * Test-only escape hatch for driving lifecycle signals from a spec. Mirrors
+   * the `_internal` pattern used by CHAT_LIFECYCLE so tests can flip the
+   * underlying writable without going through a full submit/stream cycle.
+   */
+  _internal: {
+    streamStartedAt: WritableSignal<number | null>;
+  };
   /** Captured calls to submit() in order. */
   submitCalls: Array<{ input: AgentSubmitInput; opts?: AgentSubmitOptions }>;
   /** Count of stop() invocations. */
@@ -65,11 +83,15 @@ export function mockAgent(opts: MockAgentOptions = {}): MockAgent {
   const submitCalls: MockAgent['submitCalls'] = [];
   let stopCount = 0;
 
+  const streamStartedAt = signal<number | null>(null);
+
   const agent: MockAgent = {
     messages, status, isLoading, error, toolCalls, state,
     ...(interrupt ? { interrupt } : {}),
     ...(subagents ? { subagents } : {}),
     ...(history   ? { history }   : {}),
+    lifecycle: { streamStartedAt: streamStartedAt.asReadonly() },
+    _internal: { streamStartedAt },
     events$: opts.events$ ?? EMPTY,
     submit: async (input, submitOpts) => { submitCalls.push({ input, opts: submitOpts }); },
     stop: async () => { stopCount++; },
