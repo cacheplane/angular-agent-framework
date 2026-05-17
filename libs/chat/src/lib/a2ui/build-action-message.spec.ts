@@ -27,7 +27,7 @@ describe('buildA2uiActionMessage (v1)', () => {
       context: {},
     };
     const msg = buildA2uiActionMessage(params, surface);
-    expect(msg.version).toBe('v0.9');
+    expect(msg.version).toBe('v1');
     expect(msg.action.name).toBe('formSubmit');
     expect(msg.action.surfaceId).toBe('s1');
     expect(msg.action.sourceComponentId).toBe('submit-btn');
@@ -80,7 +80,7 @@ describe('buildA2uiActionMessage (v1)', () => {
     const params = { surfaceId: 's1', sourceComponentId: 'btn', name: 'submit', context: {} };
     const msg = buildA2uiActionMessage(params, surface);
     expect(msg.metadata).toBeDefined();
-    expect(msg.metadata!.a2uiClientDataModel.version).toBe('v0.9');
+    expect(msg.metadata!.a2uiClientDataModel.version).toBe('v1');
     expect(msg.metadata!.a2uiClientDataModel.surfaces['s1']).toEqual({ name: 'Alice', email: 'alice@co.com' });
   });
 

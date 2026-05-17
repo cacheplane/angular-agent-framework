@@ -21,7 +21,7 @@ export function buildA2uiActionMessage(
   }
 
   const message: A2uiActionMessage = {
-    version: 'v0.9',
+    version: 'v1',
     action: {
       name: params['name'] as string,
       surfaceId: surface.surfaceId,
@@ -33,7 +33,7 @@ export function buildA2uiActionMessage(
   if (surface.sendDataModel) {
     message.metadata = {
       a2uiClientDataModel: {
-        version: 'v0.9',
+        version: 'v1',
         surfaces: { [surface.surfaceId]: surface.dataModel },
       },
     };
