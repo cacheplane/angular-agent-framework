@@ -580,7 +580,7 @@ jobs:
 
   production-smoke:
     name: Production smoke
-    needs: [deploy]
+    needs: [deploy, demo-deploy]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     steps:
