@@ -21,6 +21,9 @@ concurrency:
 permissions:
   contents: read
 
+env:
+  DO_NOT_TRACK: '1'
+
 jobs:
   live-quality:
     name: Live telemetry contract and coverage

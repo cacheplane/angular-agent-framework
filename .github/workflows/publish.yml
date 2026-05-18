@@ -15,6 +15,9 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: false
 
+env:
+  DO_NOT_TRACK: '1'
+
 jobs:
   publish:
     runs-on: ubuntu-latest
