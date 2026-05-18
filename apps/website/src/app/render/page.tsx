@@ -130,15 +130,15 @@ export default async function RenderPage() {
         bullets={[
           'Per-component fallback API',
           'Readiness gate holds renders until safe',
-          'Telemetry hook for unknown specs',
+          'Telemetry hook for render events',
           'Streaming partial renders supported',
         ]}
         supportingCards={[
-          { title: 'fallback()', description: 'Per-component recovery.' },
+          { title: 'fallback views', description: 'Per-component recovery.' },
           { title: 'readiness gate', description: 'Hold until safe.' },
-          { title: 'unknown-spec hook', description: 'Telemetry surface.' },
+          { title: 'render events', description: 'Telemetry surface.' },
         ]}
-        cta={{ label: 'Fallback patterns', href: '/docs/render/guides/fallback' }}
+        cta={{ label: 'Fallback patterns', href: '/docs/render/guides/registry' }}
         visualLeft
         visual={<RenderCodeShowcase />}
       />

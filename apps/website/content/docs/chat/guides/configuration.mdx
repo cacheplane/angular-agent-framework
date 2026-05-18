@@ -1,10 +1,10 @@
 # Configuration
 
-`@ngaf/chat` uses Angular's dependency injection system for global configuration. The `provideChat()` function registers a `ChatConfig` object under the `CHAT_CONFIG` injection token.
+`@ngaf/chat` uses Angular's dependency injection system for shared configuration. The `provideChat()` function registers a `ChatConfig` object under the `CHAT_CONFIG` injection token and starts the package license check.
 
 ## provideChat()
 
-Call `provideChat()` in your application's provider array to set global configuration for chat components.
+Call `provideChat()` in your application's provider array when your application or wrappers need to inject shared chat configuration.
 
 ```typescript
 // app.config.ts
@@ -32,12 +32,20 @@ function provideChat(config: ChatConfig): EnvironmentProviders
 ## ChatConfig Interface
 
 ```typescript
+import type { AngularRegistry } from '@ngaf/render';
+
 interface ChatConfig {
+  /** Default render registry for consumers that read CHAT_CONFIG. */
+  renderRegistry?: AngularRegistry;
+
   /** Override the default AI avatar label (default: "A"). */
   avatarLabel?: string;
 
   /** Override the default assistant display name (default: "Assistant"). */
   assistantName?: string;
+
+  /** Signed license token from cacheplane.dev. Optional in development. */
+  license?: string;
 }
 ```
 
@@ -45,8 +53,10 @@ interface ChatConfig {
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `avatarLabel` | `string` | `"A"` | Single character or short string displayed in the AI avatar badge next to assistant messages. |
-| `assistantName` | `string` | `"Assistant"` | Display name for the AI assistant, used in labels and ARIA attributes. |
+| `renderRegistry` | `AngularRegistry` | `undefined` | Stored on `CHAT_CONFIG` for consumers that want a shared render registry. Pass `[views]` directly to `ChatComponent` for built-in generative UI rendering. |
+| `avatarLabel` | `string` | `"A"` | Single character or short string for consumers that inject `CHAT_CONFIG`. |
+| `assistantName` | `string` | `"Assistant"` | Display name for consumers that inject `CHAT_CONFIG`. |
+| `license` | `string` | `undefined` | Signed license token used by the package license check. |
 
 ## CHAT_CONFIG Injection Token
 
@@ -110,6 +120,6 @@ All composition components use sensible defaults. If you do not call `provideCha
 
 - Use `"A"` as the avatar label
 - Use `"Assistant"` as the assistant name
-- Have no render registry (generative UI will not render)
+- Have no injected `CHAT_CONFIG`
 
-This means you can use `ChatComponent`, `ChatInputComponent`, and all other components without any global configuration for basic chat functionality.
+This means you can use `ChatComponent`, `ChatInputComponent`, and all other components without global configuration for basic chat functionality. Generative UI is controlled by the `ChatComponent` `[views]`, `[store]`, and `[handlers]` inputs.

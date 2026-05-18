@@ -73,7 +73,7 @@ function agentRuntimeTelemetryErrorClass(error: unknown): string {
 }
 
 export interface StreamManagerBridgeOptions<T, ResolvedBag extends BagTemplate = BagTemplate> {
-  options:   AgentOptions<T, ResolvedBag>;
+  options:   AgentOptions<T, ResolvedBag> & { apiUrl: string };
   subjects:  StreamSubjects<T, ResolvedBag>;
   threadId$: Observable<string | null>;
   destroy$:  Observable<void>;

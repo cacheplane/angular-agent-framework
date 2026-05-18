@@ -240,8 +240,8 @@ export interface AgentTransport {
 // AgentOptions references even though the options shape no longer depends on it.
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export interface AgentOptions<T, _ResolvedBag extends BagTemplate> {
-  /** Base URL of the LangGraph Platform API. */
-  apiUrl: string;
+  /** Base URL of the LangGraph Platform API. Defaults to `provideAgent({ apiUrl })` when omitted. */
+  apiUrl?: string;
   /** Agent or graph identifier on the LangGraph platform. */
   assistantId: string;
   /** Thread ID to connect to. Pass a Signal for reactive thread switching. */

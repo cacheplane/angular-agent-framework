@@ -1,6 +1,6 @@
 # provideChat()
 
-`provideChat` is the provider factory that registers `@ngaf/chat` configuration in Angular's dependency injection system. Call it once in your `ApplicationConfig` (or at the route level) to set global defaults used by chat composition components.
+`provideChat` is the provider factory that registers `@ngaf/chat` configuration in Angular's dependency injection system and starts the package license check. Call it in your `ApplicationConfig` or at the route level when you need a shared `CHAT_CONFIG` value.
 
 ```typescript
 import { provideChat } from '@ngaf/chat';
@@ -23,7 +23,7 @@ function provideChat(config: ChatConfig): EnvironmentProviders
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `config` | `ChatConfig` | Configuration object with optional render registry, avatar label, and assistant name |
+| `config` | `ChatConfig` | Configuration object with optional render registry, avatar label, assistant name, and license token |
 
 **Returns:** `EnvironmentProviders` -- created via `makeEnvironmentProviders()`, compatible with `bootstrapApplication`, `ApplicationConfig`, and route-level `providers`.
 
@@ -35,7 +35,7 @@ function provideChat(config: ChatConfig): EnvironmentProviders
 { provide: CHAT_CONFIG, useValue: config }
 ```
 
-This makes the `ChatConfig` object available throughout the application via the `CHAT_CONFIG` injection token.
+This makes the `ChatConfig` object available throughout the application via the `CHAT_CONFIG` injection token. `provideChat()` does not automatically wire generative UI into `<chat>`; pass `[views]`, `[store]`, and `[handlers]` directly to `ChatComponent`.
 
 ## CHAT_CONFIG Injection Token
 
@@ -67,8 +67,10 @@ See the [ChatConfig API reference](/docs/chat/api/chat-config) for the full inte
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `avatarLabel` | `string` | `"A"` | AI avatar badge text |
-| `assistantName` | `string` | `"Assistant"` | AI assistant display name |
+| `renderRegistry` | `AngularRegistry` | `undefined` | Stored on `CHAT_CONFIG` for consumers that want a shared render registry. `<chat>` uses the `[views]` input directly. |
+| `avatarLabel` | `string` | `"A"` | Shared avatar label for consumers that inject `CHAT_CONFIG` |
+| `assistantName` | `string` | `"Assistant"` | Shared assistant display name for consumers that inject `CHAT_CONFIG` |
+| `license` | `string` | `undefined` | Signed license token used by the package license check |
 
 ## Usage Patterns
 
@@ -126,7 +128,7 @@ All chat components work without `provideChat()`. They use defaults:
 
 - Avatar label: `"A"`
 - Assistant name: `"Assistant"`
-- Generative UI requires `[views]` input on `ChatComponent`
+- Generative UI still requires the `[views]` input on `ChatComponent`
 
 ```typescript
 // This works fine without provideChat()
@@ -136,6 +138,7 @@ All chat components work without `provideChat()`. They use defaults:
 })
 export class SimpleChatComponent {
   chatRef = agent({
+    apiUrl: 'http://localhost:2024',
     assistantId: 'chat_agent',
     threadId: signal(null),
   });
