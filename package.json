@@ -88,7 +88,11 @@
   "workspaces": [
     "packages/*",
     "apps/*",
-    "libs/*"
+    "libs/*",
+    "marketing/assets",
+    "marketing/channels",
+    "marketing/agent",
+    "marketing/metrics"
   ],
   "dependencies": {
     "@ag-ui/client": "^0.0.52",

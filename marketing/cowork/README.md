@@ -7,26 +7,31 @@ The skill is **project-local**. It isn't published to a marketplace. Install ste
 ## What's in this directory
 
 ```
-cowork/
+marketing/cowork/
 ├── README.md           # This file.
-└── gtm/
-    └── SKILL.md        # The single Cowork skill. Edit here; install copies/symlinks elsewhere.
+├── gtm/
+│   └── SKILL.md        # The GTM Cowork skill.
+├── marketing/
+│   └── SKILL.md        # The marketing pipeline Cowork skill (stub; body in sub-spec 4).
+├── inbox/              # Drafts awaiting review.
+├── outbox/             # Approved + posted drafts.
+└── archive/            # Rejected or expired drafts.
 ```
 
 ## Install (one-time per machine)
 
-The skill ships as `cowork/gtm/SKILL.md`. To make it loadable by Cowork / Claude Code on your machine, register it as a user-level skill:
+The skill ships as `marketing/cowork/gtm/SKILL.md`. To make it loadable by Cowork / Claude Code on your machine, register it as a user-level skill:
 
 ```bash
 mkdir -p ~/.claude/skills/gtm
-cp cowork/gtm/SKILL.md ~/.claude/skills/gtm/SKILL.md
+cp marketing/cowork/gtm/SKILL.md ~/.claude/skills/gtm/SKILL.md
 ```
 
 Or symlink it so edits in this repo flow through immediately:
 
 ```bash
 mkdir -p ~/.claude/skills/gtm
-ln -sf "$(pwd)/cowork/gtm/SKILL.md" ~/.claude/skills/gtm/SKILL.md
+ln -sf "$(pwd)/marketing/cowork/gtm/SKILL.md" ~/.claude/skills/gtm/SKILL.md
 ```
 
 Verify: open a Claude Code session in this repo and type `/gtm`. The skill should load and announce its responsibilities.
@@ -51,7 +56,7 @@ The routine itself lives at the user/runtime layer; it is not committed to the r
 
 ## Update
 
-Edit `cowork/gtm/SKILL.md` in this repo. If you symlinked, the change is live immediately. If you copied, re-run the `cp` command after committing.
+Edit `marketing/cowork/gtm/SKILL.md` in this repo. If you symlinked, the change is live immediately. If you copied, re-run the `cp` command after committing.
 
 ## Why one skill, not a plugin
 

@@ -1,0 +1,21 @@
+{
+  "name": "marketing-metrics",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "marketing/metrics/src",
+  "projectType": "library",
+  "tags": ["scope:marketing", "type:lib"],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{workspaceRoot}/dist/marketing/metrics"],
+      "options": {
+        "outputPath": "dist/marketing/metrics",
+        "main": "marketing/metrics/src/index.ts",
+        "tsConfig": "marketing/metrics/tsconfig.lib.json"
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}

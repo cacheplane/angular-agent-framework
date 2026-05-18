@@ -1,0 +1,21 @@
+{
+  "name": "marketing-assets",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "marketing/assets/src",
+  "projectType": "library",
+  "tags": ["scope:marketing", "type:lib"],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{workspaceRoot}/dist/marketing/assets"],
+      "options": {
+        "outputPath": "dist/marketing/assets",
+        "main": "marketing/assets/src/index.ts",
+        "tsConfig": "marketing/assets/tsconfig.lib.json"
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}

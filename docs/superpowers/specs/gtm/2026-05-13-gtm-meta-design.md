@@ -131,6 +131,8 @@ Seven specs follow Spec 0. Dependencies form a DAG:
 | 6 | community-launch           | 3 | 2, 3, 4, 5 | Launch executed, week-1 dashboard snapshot committed, post-mortem doc written. |
 | 7 | enterprise-pipeline        | 4 | 1, 2 | 3 pilots tracked end-to-end in enterprise-funnel dashboard; ≥1 sanitized public artifact produced from a pilot. |
 
+> **Spec 6 superseded.** The one-shot `community-launch` workstream was replaced by the ongoing marketing pipeline. See `docs/superpowers/specs/marketing/2026-05-17-marketing-meta-design.md` and its sub-specs. The launch exit criterion (week-1 dashboard snapshot, post-mortem doc) moves into the metrics-ingest sub-spec.
+
 **Sequencing notes:**
 
 - Specs 5–7 can spin up in parallel as soon as their dependencies clear. The critical path is 0 → 1 → 2 → 3 → 4 (developer track end-to-end).
