@@ -35,4 +35,36 @@ test('regenerate: re-running keeps 1 user / 1 assistant in the conversation', as
   // (the assistant message is replaced in place, not appended).
   await expect(userMessages).toHaveCount(1);
   await expect(assistantMessages).toHaveCount(1);
+
+  const threadId = await page.evaluate(() => {
+    const raw = localStorage.getItem('ngaf-chat-demo:palette');
+    return raw ? (JSON.parse(raw) as { threadId?: string }).threadId : undefined;
+  });
+  expect(threadId).toBeTruthy();
+  const state = await fetch(`http://localhost:2024/threads/${threadId}/state`).then((r) =>
+    r.json() as Promise<{ values?: { messages?: unknown[] }; next?: unknown[] }>,
+  );
+  expect(state.values?.messages).toHaveLength(2);
+  expect(state.next ?? []).toEqual([]);
+});
+
+test('regenerate: repeated regenerate keeps the same 1 user / 1 assistant shape', async ({
+  page,
+}) => {
+  await sendPromptAndWait(page, 'say hi briefly');
+
+  for (let i = 0; i < 3; i++) {
+    await page.getByRole('button', { name: 'Regenerate response' }).first().click();
+    await expect
+      .poll(
+        async () =>
+          page
+            .locator('chat-message[data-role="assistant"][data-streaming="false"]')
+            .count(),
+        { timeout: 45_000 },
+      )
+      .toBeGreaterThan(0);
+    await expect(page.locator('chat-message[data-role="user"]')).toHaveCount(1);
+    await expect(page.locator('chat-message[data-role="assistant"]')).toHaveCount(1);
+  }
 });

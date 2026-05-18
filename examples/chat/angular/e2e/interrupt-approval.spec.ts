@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 import { test, expect } from '@playwright/test';
+import { openDemo } from './test-helpers';
 
 const PROMPT =
   'I want to clean up old database backups older than 90 days. Walk me through ' +
@@ -9,7 +10,7 @@ const PROMPT =
 test('interrupt approval: pause renders the interrupt panel with the captured reason', async ({
   page,
 }) => {
-  await page.goto('/embed');
+  await openDemo(page, '/embed');
 
   const input = page.getByRole('textbox', { name: /message|prompt/i });
   await input.fill(PROMPT);
@@ -33,4 +34,9 @@ test('interrupt approval: pause renders the interrupt panel with the captured re
     async () => (await panel.innerText()).toLowerCase(),
     { timeout: 30_000 },
   ).toMatch(/approval|delete|backup/i);
+
+  await expect(panel.getByRole('button', { name: /accept/i })).toBeVisible();
+  await expect(panel.getByRole('button', { name: /edit|respond/i }).first()).toBeVisible();
+  await expect(panel.getByRole('button', { name: /ignore/i })).toBeVisible();
+  await expect(page.locator('chat-message').filter({ has: panel })).toHaveCount(0);
 });

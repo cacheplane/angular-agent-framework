@@ -1,12 +1,14 @@
 <div class="demo-shell">
   @if (sidenavMode() === 'drawer' && !drawerOpen()) {
-    <button
-      type="button"
-      class="demo-shell__hamburger"
-      aria-label="Open conversations"
-      [attr.aria-expanded]="drawerOpen()"
-      (click)="toggleSidenav()"
-    >☰</button>
+  <button
+    type="button"
+    class="demo-shell__hamburger"
+    aria-label="Open conversations"
+    [attr.aria-expanded]="drawerOpen()"
+    (click)="toggleSidenav()"
+  >
+    ☰
+  </button>
   }
 
   <chat-sidenav
@@ -35,25 +37,49 @@
       sidenavFooterRight
       type="button"
       class="demo-shell__theme-toggle"
-      [attr.aria-label]="colorScheme() === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'"
+      [attr.aria-label]="
+        colorScheme() === 'dark'
+          ? 'Switch to light theme'
+          : 'Switch to dark theme'
+      "
       (click)="onColorSchemeChange(colorScheme() === 'dark' ? 'light' : 'dark')"
     >
       @if (colorScheme() === 'dark') {
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <circle cx="12" cy="12" r="5"/>
-          <line x1="12" y1="1" x2="12" y2="3"/>
-          <line x1="12" y1="21" x2="12" y2="23"/>
-          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
-          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
-          <line x1="1" y1="12" x2="3" y2="12"/>
-          <line x1="21" y1="12" x2="23" y2="12"/>
-          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
-          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
-        </svg>
+      <svg
+        width="16"
+        height="16"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        aria-hidden="true"
+      >
+        <circle cx="12" cy="12" r="5" />
+        <line x1="12" y1="1" x2="12" y2="3" />
+        <line x1="12" y1="21" x2="12" y2="23" />
+        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+        <line x1="1" y1="12" x2="3" y2="12" />
+        <line x1="21" y1="12" x2="23" y2="12" />
+        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+      </svg>
       } @else {
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
-        </svg>
+      <svg
+        width="16"
+        height="16"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        aria-hidden="true"
+      >
+        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+      </svg>
       }
     </button>
   </chat-sidenav>
@@ -65,67 +91,106 @@
     <div class="demo-shell__toolbar" role="toolbar" aria-label="Demo controls">
       <div class="demo-shell__segmented" aria-label="Mode">
         @for (option of modeOptions; track option.value) {
-          <button
-            type="button"
-            class="demo-shell__segmented-button"
-            [class.is-active]="mode() === option.value"
-            [attr.aria-pressed]="mode() === option.value"
-            (click)="onModeChange(option.value)"
-          >{{ option.label }}</button>
+        <button
+          type="button"
+          class="demo-shell__segmented-button"
+          [class.is-active]="mode() === option.value"
+          [attr.aria-pressed]="mode() === option.value"
+          (click)="onModeChange(option.value)"
+        >
+          {{ option.label }}
+        </button>
         }
       </div>
 
       <label class="demo-shell__field">
         <span>Model</span>
-        <select [value]="model()" (change)="onModelChange($any($event.target).value)">
+        <select
+          [value]="model()"
+          (change)="onModelChange($any($event.target).value)"
+        >
           @for (option of modelOptions(); track option.value) {
-            <option [value]="option.value">{{ option.label }}</option>
+          <option [value]="option.value" [selected]="model() === option.value">
+            {{ option.label }}
+          </option>
           }
         </select>
       </label>
 
       <label class="demo-shell__field">
         <span>Effort</span>
-        <select [value]="effort()" (change)="onEffortChange($any($event.target).value)">
+        <select
+          [value]="effort()"
+          (change)="onEffortChange($any($event.target).value)"
+        >
           @for (option of effortOptions(); track option.value) {
-            <option [value]="option.value">{{ option.label }}</option>
+          <option [value]="option.value" [selected]="effort() === option.value">
+            {{ option.label }}
+          </option>
           }
         </select>
       </label>
 
       <label class="demo-shell__field">
         <span>Gen UI</span>
-        <select [value]="genUiMode()" (change)="onGenUiModeChange($any($event.target).value)">
+        <select
+          [value]="genUiMode()"
+          (change)="onGenUiModeChange($any($event.target).value)"
+        >
           @for (option of genUiOptions(); track option.value) {
-            <option [value]="option.value">{{ option.label }}</option>
+          <option
+            [value]="option.value"
+            [selected]="genUiMode() === option.value"
+          >
+            {{ option.label }}
+          </option>
           }
         </select>
       </label>
 
       <label class="demo-shell__field">
         <span>Theme</span>
-        <select [value]="theme()" (change)="onThemeChange($any($event.target).value)">
+        <select
+          [value]="theme()"
+          (change)="onThemeChange($any($event.target).value)"
+        >
           @for (option of themeOptions(); track option.value) {
-            <option [value]="option.value">{{ option.label }}</option>
+          <option [value]="option.value" [selected]="theme() === option.value">
+            {{ option.label }}
+          </option>
           }
         </select>
       </label>
 
-      <button type="button" class="demo-shell__toolbar-action" (click)="onNewConversation()">
+      <button
+        type="button"
+        class="demo-shell__toolbar-action"
+        (click)="onNewConversation()"
+      >
         New conversation
       </button>
     </div>
 
     <router-outlet />
     @if (agent.interrupt && agent.interrupt()) {
-      <div class="demo-shell__interrupt-panel" role="region" aria-label="Approval required">
-        <chat-interrupt-panel [agent]="agent" (action)="onInterruptAction($event)" />
-      </div>
-    }
-    @if (agent.subagents && agent.subagents().size > 0) {
-      <div class="demo-shell__subagents" role="region" aria-label="Active subagents">
-        <chat-subagents [agent]="agent" />
-      </div>
+    <div
+      class="demo-shell__interrupt-panel"
+      role="region"
+      aria-label="Approval required"
+    >
+      <chat-interrupt-panel
+        [agent]="agent"
+        (action)="onInterruptAction($event)"
+      />
+    </div>
+    } @if (agent.subagents && agent.subagents().size > 0) {
+    <div
+      class="demo-shell__subagents"
+      role="region"
+      aria-label="Active subagents"
+    >
+      <chat-subagents [agent]="agent" />
+    </div>
     }
   </div>
 

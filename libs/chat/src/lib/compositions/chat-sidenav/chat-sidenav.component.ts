@@ -39,10 +39,18 @@ type ChatDebugDock = 'right' | 'bottom' | 'left';
 interface ChatDebugInstance {
   setOpen(value: boolean): void;
   setDock?(dock: ChatDebugDock): void;
-  replayRequested?: { subscribe(callback: (checkpointId: string) => void): OutputRefSubscription };
-  forkRequested?: { subscribe(callback: (checkpointId: string) => void): OutputRefSubscription };
-  openChange?: { subscribe(callback: (open: boolean) => void): OutputRefSubscription };
-  dockChange?: { subscribe(callback: (dock: ChatDebugDock) => void): OutputRefSubscription };
+  replayRequested?: {
+    subscribe(callback: (checkpointId: string) => void): OutputRefSubscription;
+  };
+  forkRequested?: {
+    subscribe(callback: (checkpointId: string) => void): OutputRefSubscription;
+  };
+  openChange?: {
+    subscribe(callback: (open: boolean) => void): OutputRefSubscription;
+  };
+  dockChange?: {
+    subscribe(callback: (dock: ChatDebugDock) => void): OutputRefSubscription;
+  };
 }
 
 @Component({
@@ -57,12 +65,12 @@ interface ChatDebugInstance {
   styles: [CHAT_HOST_TOKENS, CHAT_SIDENAV_STYLES],
   template: `
     @if (mode() === 'drawer' && open()) {
-      <button
-        type="button"
-        class="chat-sidenav__scrim"
-        aria-label="Close conversations"
-        (click)="openChange.emit(false)"
-      ></button>
+    <button
+      type="button"
+      class="chat-sidenav__scrim"
+      aria-label="Close conversations"
+      (click)="openChange.emit(false)"
+    ></button>
     }
     <nav
       class="chat-sidenav"
@@ -82,26 +90,44 @@ interface ChatDebugInstance {
           aria-label="New chat"
           title="New chat"
         >
-          <svg class="chat-sidenav__action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <line x1="12" y1="5" x2="12" y2="19"/>
-            <line x1="5" y1="12" x2="19" y2="12"/>
+          <svg
+            class="chat-sidenav__action-icon"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <line x1="12" y1="5" x2="12" y2="19" />
+            <line x1="5" y1="12" x2="19" y2="12" />
           </svg>
           <span class="chat-sidenav__action-label">New chat</span>
         </button>
         @if (mode() === 'drawer') {
-          <button
-            type="button"
-            class="chat-sidenav__action chat-sidenav__action--close"
-            (click)="openChange.emit(false)"
-            aria-label="Close conversations"
-            title="Close conversations"
+        <button
+          type="button"
+          class="chat-sidenav__action chat-sidenav__action--close"
+          (click)="openChange.emit(false)"
+          aria-label="Close conversations"
+          title="Close conversations"
+        >
+          <svg
+            class="chat-sidenav__action-icon"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
           >
-            <svg class="chat-sidenav__action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <line x1="18" y1="6" x2="6" y2="18"/>
-              <line x1="6" y1="6" x2="18" y2="18"/>
-            </svg>
-            <span class="chat-sidenav__action-label">Close</span>
-          </button>
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+          <span class="chat-sidenav__action-label">Close</span>
+        </button>
         }
       </div>
 
@@ -113,9 +139,18 @@ interface ChatDebugInstance {
           aria-label="Search conversations"
           title="Search conversations (⌘K)"
         >
-          <svg class="chat-sidenav__action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <circle cx="11" cy="11" r="7"/>
-            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          <svg
+            class="chat-sidenav__action-icon"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <circle cx="11" cy="11" r="7" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" />
           </svg>
           <span class="chat-sidenav__action-label">Search</span>
         </button>
@@ -126,66 +161,73 @@ interface ChatDebugInstance {
       </div>
 
       @if (projects() !== null) {
-        <div class="chat-sidenav__projects">
-          <div class="chat-sidenav__threads-heading">Projects</div>
-          <chat-project-list
-            [projects]="projects()!"
-            [activeProjectId]="selectedProjectId()"
-            [showNewProjectButton]="!!projectActions()?.create"
-            [actions]="projectActions()"
-            (projectSelected)="projectSelected.emit($event)"
-            (newProjectRequested)="newProjectRequested.emit()"
-          />
-        </div>
-      }
-
-      @if (threads() !== null) {
-        <div class="chat-sidenav__threads">
-          <div class="chat-sidenav__threads-heading">Recent</div>
+      <div class="chat-sidenav__projects">
+        <div class="chat-sidenav__threads-heading">Projects</div>
+        <chat-project-list
+          [projects]="projects()!"
+          [activeProjectId]="selectedProjectId()"
+          [showNewProjectButton]="!!projectActions()?.create"
+          [actions]="projectActions()"
+          (projectSelected)="projectSelected.emit($event)"
+          (newProjectRequested)="newProjectRequested.emit()"
+        />
+      </div>
+      } @if (threads() !== null) {
+      <div class="chat-sidenav__threads">
+        <div class="chat-sidenav__threads-heading">Recent</div>
+        <chat-thread-list
+          [threads]="threads()!"
+          [activeThreadId]="activeThreadId() ?? ''"
+          [actions]="actions()"
+          [projects]="projects()"
+          (threadSelected)="threadSelected.emit($event)"
+        />
+      </div>
+      } @if (archivedThreads() !== null) {
+      <div
+        class="chat-sidenav__archived"
+        [attr.data-open]="archivedOpen() ? 'true' : 'false'"
+      >
+        <button
+          type="button"
+          class="chat-sidenav__archived-heading"
+          [attr.aria-expanded]="archivedOpen() ? 'true' : 'false'"
+          aria-controls="chat-sidenav__archived-list"
+          (click)="archivedOpen.set(!archivedOpen())"
+        >
+          <svg
+            class="chat-sidenav__archived-chevron"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <polyline points="9 6 15 12 9 18" />
+          </svg>
+          <span>Archived</span>
+        </button>
+        @if (archivedOpen()) {
+        <div id="chat-sidenav__archived-list">
+          @if (archivedThreads()!.length === 0) {
+          <div class="chat-sidenav__archived-empty">
+            No archived conversations.
+          </div>
+          } @else {
           <chat-thread-list
-            [threads]="threads()!"
+            mode="archived"
+            [threads]="archivedThreads()!"
             [activeThreadId]="activeThreadId() ?? ''"
             [actions]="actions()"
             [projects]="projects()"
             (threadSelected)="threadSelected.emit($event)"
           />
-        </div>
-      }
-
-      @if (archivedThreads() !== null) {
-        <div
-          class="chat-sidenav__archived"
-          [attr.data-open]="archivedOpen() ? 'true' : 'false'"
-        >
-          <button
-            type="button"
-            class="chat-sidenav__archived-heading"
-            [attr.aria-expanded]="archivedOpen() ? 'true' : 'false'"
-            aria-controls="chat-sidenav__archived-list"
-            (click)="archivedOpen.set(!archivedOpen())"
-          >
-            <svg class="chat-sidenav__archived-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <polyline points="9 6 15 12 9 18"/>
-            </svg>
-            <span>Archived</span>
-          </button>
-          @if (archivedOpen()) {
-            <div id="chat-sidenav__archived-list">
-              @if (archivedThreads()!.length === 0) {
-                <div class="chat-sidenav__archived-empty">No archived conversations.</div>
-              } @else {
-                <chat-thread-list
-                  mode="archived"
-                  [threads]="archivedThreads()!"
-                  [activeThreadId]="activeThreadId() ?? ''"
-                  [actions]="actions()"
-                  [projects]="projects()"
-                  (threadSelected)="threadSelected.emit($event)"
-                />
-              }
-            </div>
           }
         </div>
+        }
+      </div>
       }
 
       <div class="chat-sidenav__sections">
@@ -195,45 +237,68 @@ interface ChatDebugInstance {
       <div class="chat-sidenav__footer">
         <div class="chat-sidenav__footer-left">
           @if (showDebugButton()) {
-            <button
-              type="button"
-              class="chat-sidenav__debug"
-              aria-label="Open chat debug"
-              title="Open chat debug"
-              (click)="openDebug($event)"
-            >
-              <span
-                class="chat-sidenav__debug-dot"
-                [class.chat-sidenav__debug-dot--streaming]="isDebugStreaming()"
-                aria-hidden="true"
-              ></span>
-              @if (mode() !== 'collapsed') {
-                <span class="chat-sidenav__debug-label">Debug</span>
-              }
-            </button>
+          <button
+            type="button"
+            class="chat-sidenav__debug"
+            aria-label="Open chat devtools"
+            title="Open chat devtools"
+            (click)="openDebug($event)"
+          >
+            <span
+              class="chat-sidenav__debug-dot"
+              [class.chat-sidenav__debug-dot--streaming]="isDebugStreaming()"
+              aria-hidden="true"
+            ></span>
+            @if (mode() !== 'collapsed') {
+            <span class="chat-sidenav__debug-label">Devtools</span>
+            }
+          </button>
           }
           <ng-content select="[sidenavFooterLeft]" />
         </div>
         <div class="chat-sidenav__footer-right">
           <ng-content select="[sidenavFooterRight]" />
           @if (mode() !== 'drawer') {
-            <button
-              type="button"
-              class="chat-sidenav__toggle"
-              (click)="onCollapseToggle()"
-              [attr.aria-label]="mode() === 'collapsed' ? 'Expand sidenav' : 'Collapse sidenav'"
-              [attr.title]="(mode() === 'collapsed' ? 'Expand sidenav' : 'Collapse sidenav') + ' (⌘B)'"
+          <button
+            type="button"
+            class="chat-sidenav__toggle"
+            (click)="onCollapseToggle()"
+            [attr.aria-label]="
+              mode() === 'collapsed' ? 'Expand sidenav' : 'Collapse sidenav'
+            "
+            [attr.title]="
+              (mode() === 'collapsed' ? 'Expand sidenav' : 'Collapse sidenav') +
+              ' (⌘B)'
+            "
+          >
+            @if (mode() === 'collapsed') {
+            <svg
+              class="chat-sidenav__action-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
             >
-              @if (mode() === 'collapsed') {
-                <svg class="chat-sidenav__action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                  <polyline points="9 6 15 12 9 18"/>
-                </svg>
-              } @else {
-                <svg class="chat-sidenav__action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                  <polyline points="15 6 9 12 15 18"/>
-                </svg>
-              }
-            </button>
+              <polyline points="9 6 15 12 9 18" />
+            </svg>
+            } @else {
+            <svg
+              class="chat-sidenav__action-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <polyline points="15 6 9 12 15 18" />
+            </svg>
+            }
+          </button>
           }
         </div>
         <!-- Legacy slot kept for back-compat — see chat-sidenav.styles.ts for visibility rules -->
@@ -269,16 +334,18 @@ export class ChatSidenavComponent {
   readonly forkRequested = output<string>();
 
   protected readonly archivedOpen = signal<boolean>(false);
-  protected readonly showDebugButton = computed(() =>
-    CHAT_DEBUG_INCLUDED && this.debug() && this.agent() !== null,
+  protected readonly showDebugButton = computed(
+    () => CHAT_DEBUG_INCLUDED && this.debug() && this.agent() !== null
   );
-  protected readonly isDebugStreaming = computed(() =>
-    this.agent()?.status?.() === 'running',
+  protected readonly isDebugStreaming = computed(
+    () => this.agent()?.status?.() === 'running'
   );
 
   private readonly destroyRef = inject(DestroyRef);
   private readonly injector = inject(Injector);
-  private readonly debugHost = viewChild('debugHost', { read: ViewContainerRef });
+  private readonly debugHost = viewChild('debugHost', {
+    read: ViewContainerRef,
+  });
   private debugRef: ComponentRef<ChatDebugInstance> | null = null;
   private debugOutputSubscriptions: OutputRefSubscription[] = [];
   private currentDebugDock: ChatDebugDock = 'right';
@@ -305,7 +372,8 @@ export class ChatSidenavComponent {
         const t = e.target as HTMLElement | null;
         if (t) {
           const tag = t.tagName;
-          if (tag === 'INPUT' || tag === 'TEXTAREA' || t.isContentEditable) return;
+          if (tag === 'INPUT' || tag === 'TEXTAREA' || t.isContentEditable)
+            return;
         }
         if (key === 'k') {
           e.preventDefault();
@@ -315,7 +383,9 @@ export class ChatSidenavComponent {
         // Cmd/Ctrl+B: toggle expanded ↔ collapsed (no-op in drawer mode).
         if (this.mode() === 'drawer') return;
         e.preventDefault();
-        this.modeChange.emit(this.mode() === 'collapsed' ? 'expanded' : 'collapsed');
+        this.modeChange.emit(
+          this.mode() === 'collapsed' ? 'expanded' : 'collapsed'
+        );
       });
   }
 
@@ -358,12 +428,16 @@ export class ChatSidenavComponent {
       this.debugRef.setInput('storageKey', 'chat-sidenav-debug');
       const initialDock = this.defaultDebugDock();
       this.debugRef.setInput('dock', initialDock);
-      const replaySub = this.debugRef.instance.replayRequested?.subscribe((checkpointId) => {
-        this.replayRequested.emit(checkpointId);
-      });
-      const forkSub = this.debugRef.instance.forkRequested?.subscribe((checkpointId) => {
-        this.forkRequested.emit(checkpointId);
-      });
+      const replaySub = this.debugRef.instance.replayRequested?.subscribe(
+        (checkpointId) => {
+          this.replayRequested.emit(checkpointId);
+        }
+      );
+      const forkSub = this.debugRef.instance.forkRequested?.subscribe(
+        (checkpointId) => {
+          this.forkRequested.emit(checkpointId);
+        }
+      );
       const openSub = this.debugRef.instance.openChange?.subscribe((open) => {
         if (open) {
           this.setDebugEdgeClaim(this.currentDebugDock);
@@ -375,7 +449,12 @@ export class ChatSidenavComponent {
         this.currentDebugDock = dock;
         this.setDebugEdgeClaim(dock);
       });
-      this.debugOutputSubscriptions = [replaySub, forkSub, openSub, dockSub].filter((sub): sub is OutputRefSubscription => !!sub);
+      this.debugOutputSubscriptions = [
+        replaySub,
+        forkSub,
+        openSub,
+        dockSub,
+      ].filter((sub): sub is OutputRefSubscription => !!sub);
       this.currentDebugDock = initialDock;
       this.setDebugEdgeClaim(initialDock);
     }
