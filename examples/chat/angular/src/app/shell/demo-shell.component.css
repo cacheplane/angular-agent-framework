@@ -107,18 +107,22 @@
 }
 
 .demo-shell__toolbar-action {
-  height: 30px;
-  border-radius: 7px;
-  border: 1px solid color-mix(in srgb, var(--ngaf-chat-text, #e6e9ef) 18%, transparent);
-  background: transparent;
-  padding: 0 10px;
+  border: 0;
+  background: var(--ngaf-chat-surface-alt);
+  color: var(--ngaf-chat-text);
+  border-radius: 8px;
+  padding: 8px 12px;
+  min-height: 32px;
   cursor: pointer;
   flex: 0 0 auto;
 }
 
-.demo-shell__toolbar-action:hover,
+.demo-shell__toolbar-action:hover {
+  background: color-mix(in srgb, var(--ngaf-chat-text) 8%, var(--ngaf-chat-surface-alt));
+}
+
 .demo-shell__segmented-button:hover:not(.is-active) {
-  background: color-mix(in srgb, var(--ngaf-chat-text, #e6e9ef) 8%, transparent);
+  background: color-mix(in srgb, var(--ngaf-chat-text) 8%, transparent);
 }
 
 @media (max-width: 767px) {
