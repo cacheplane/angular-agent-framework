@@ -37,21 +37,19 @@ describe('ContainerComponent', () => {
     fixture = TestBed.createComponent(ContainerComponent);
   });
 
-  it('applies column flex classes by default', () => {
+  it('sets column direction attribute by default', () => {
     fixture.componentRef.setInput('spec', emptySpec);
     fixture.detectChanges();
-    const wrapper = fixture.nativeElement.querySelector('div');
-    expect(wrapper?.className).toContain('flex-col');
-    expect(wrapper?.className).not.toContain('flex-row');
+    const wrapper = fixture.nativeElement.querySelector('div.container');
+    expect(wrapper?.getAttribute('data-direction')).toBe('column');
   });
 
-  it('applies row flex classes when direction is "row"', () => {
+  it('sets row direction attribute when direction is "row"', () => {
     fixture.componentRef.setInput('spec', emptySpec);
     fixture.componentRef.setInput('direction', 'row');
     fixture.detectChanges();
-    const wrapper = fixture.nativeElement.querySelector('div');
-    expect(wrapper?.className).toContain('flex-row');
-    expect(wrapper?.className).not.toContain('flex-col');
+    const wrapper = fixture.nativeElement.querySelector('div.container');
+    expect(wrapper?.getAttribute('data-direction')).toBe('row');
   });
 
   it('renders one render-element per childKey', () => {

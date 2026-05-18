@@ -31,21 +31,21 @@ describe('StatCardComponent', () => {
     expect(el.textContent).toContain('+8.2%');
   });
 
-  it('applies positive color to positive delta', () => {
+  it('marks positive delta with up trend', () => {
     fixture.componentRef.setInput('label', 'MRR');
     fixture.componentRef.setInput('value', 42000);
     fixture.componentRef.setInput('delta', '+8.2%');
     fixture.detectChanges();
     const deltaEl = fixture.nativeElement.querySelector('[data-testid="delta"]');
-    expect(deltaEl?.classList.contains('text-emerald-400')).toBe(true);
+    expect(deltaEl?.getAttribute('data-trend')).toBe('up');
   });
 
-  it('applies negative color to negative delta', () => {
+  it('marks negative delta with down trend', () => {
     fixture.componentRef.setInput('label', 'Churn');
     fixture.componentRef.setInput('value', '3.2%');
     fixture.componentRef.setInput('delta', '-0.4%');
     fixture.detectChanges();
     const deltaEl = fixture.nativeElement.querySelector('[data-testid="delta"]');
-    expect(deltaEl?.classList.contains('text-red-400')).toBe(true);
+    expect(deltaEl?.getAttribute('data-trend')).toBe('down');
   });
 });

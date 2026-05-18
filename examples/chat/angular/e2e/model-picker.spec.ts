@@ -18,8 +18,7 @@ test('model picker: configured models render, persist, and reach backend state',
   // Open the chat-select menu and assert the three model options are listed.
   await modelTrigger.click();
   const modelMenu = page
-    .locator('.demo-shell__field')
-    .filter({ hasText: 'Model' })
+    .locator('.demo-shell__field[data-field="model"]')
     .locator('chat-select .chat-select__menu');
   await expect(modelMenu.locator('.chat-select__option')).toHaveText([
     'gpt-5',

@@ -8,21 +8,41 @@ import { RenderElementComponent } from '@ngaf/render';
   standalone: true,
   imports: [RenderElementComponent],
   template: `
-    <div [class]="layoutClass()">
+    <div class="container" [attr.data-direction]="direction()" [style.--container-cols]="rowChildCount()">
       @for (key of childKeys(); track key) {
         <render-element [elementKey]="key" [spec]="spec()" />
       }
     </div>
   `,
+  styles: [`
+    .container {
+      display: grid;
+      gap: 12px;
+      min-width: 0;
+    }
+    .container[data-direction="column"] {
+      grid-template-columns: 1fr;
+    }
+    .container[data-direction="row"] {
+      grid-template-columns: repeat(var(--container-cols, 1), minmax(0, 1fr));
+    }
+    /* Responsive collapse: at narrow widths, row containers stack to single column */
+    @media (max-width: 720px) {
+      .container[data-direction="row"] {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+    @media (max-width: 480px) {
+      .container[data-direction="row"] {
+        grid-template-columns: 1fr;
+      }
+    }
+  `],
 })
 export class ContainerComponent {
   readonly childKeys = input<string[]>([]);
   readonly spec = input.required<Spec>();
   readonly direction = input<'row' | 'column'>('column');
 
-  readonly layoutClass = computed(() =>
-    this.direction() === 'row'
-      ? 'flex flex-row flex-wrap gap-3'
-      : 'flex flex-col gap-3'
-  );
+  readonly rowChildCount = computed(() => Math.max(1, this.childKeys().length));
 }

@@ -34,12 +34,11 @@ describe('DashboardGridComponent', () => {
     fixture = TestBed.createComponent(DashboardGridComponent);
   });
 
-  it('applies vertical flex layout with section spacing', () => {
+  it('applies the dashboard-grid layout class', () => {
     fixture.componentRef.setInput('spec', emptySpec);
     fixture.detectChanges();
-    const wrapper = fixture.nativeElement.querySelector('div');
-    expect(wrapper?.className).toContain('flex-col');
-    expect(wrapper?.className).toContain('gap-6');
+    const wrapper = fixture.nativeElement.querySelector('div.dashboard-grid');
+    expect(wrapper).toBeTruthy();
   });
 
   it('renders one render-element per childKey', () => {

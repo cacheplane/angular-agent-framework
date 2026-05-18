@@ -5,20 +5,57 @@ import { Component, computed, input } from '@angular/core';
   selector: 'app-stat-card',
   standalone: true,
   template: `
-    <div class="rounded-lg border border-white/10 bg-white/5 p-4 backdrop-blur-sm">
-      <div class="text-xs font-medium uppercase tracking-wider text-white/40 mb-1">{{ label() }}</div>
+    <div class="stat-card">
+      <div class="stat-card__label">{{ label() }}</div>
       @if (isSkeleton()) {
-        <div class="skeleton skeleton-value mt-2"></div>
-        <div class="skeleton skeleton-text mt-1" style="width: 30%"></div>
+        <div class="skeleton skeleton-value"></div>
+        <div class="skeleton skeleton-text" style="width: 30%"></div>
       } @else {
-        <div class="text-xl font-semibold text-white">{{ formattedValue() }}</div>
+        <div class="stat-card__value">{{ formattedValue() }}</div>
         @if (delta()) {
-          <div data-testid="delta" class="text-xs mt-1" [class]="deltaColor()">{{ delta() }}</div>
+          <div data-testid="delta" class="stat-card__delta" [attr.data-trend]="deltaTrend()">
+            {{ delta() }}
+          </div>
         }
       }
     </div>
   `,
   styleUrls: ['./skeleton.css'],
+  styles: [`
+    .stat-card {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      padding: 16px 18px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.03);
+      backdrop-filter: blur(4px);
+      min-width: 0;
+    }
+    .stat-card__label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.45);
+    }
+    .stat-card__value {
+      font-size: 24px;
+      font-weight: 600;
+      line-height: 1.1;
+      color: rgba(255, 255, 255, 0.95);
+      font-variant-numeric: tabular-nums;
+    }
+    .stat-card__delta {
+      font-size: 12px;
+      font-weight: 500;
+      font-variant-numeric: tabular-nums;
+      color: rgba(255, 255, 255, 0.55);
+    }
+    .stat-card__delta[data-trend="up"] { color: #5cd393; }
+    .stat-card__delta[data-trend="down"] { color: #f08585; }
+  `],
 })
 export class StatCardComponent {
   readonly label = input<string>('');
@@ -34,11 +71,11 @@ export class StatCardComponent {
     return String(v);
   });
 
-  readonly deltaColor = computed(() => {
+  readonly deltaTrend = computed((): 'up' | 'down' | 'flat' => {
     const d = this.delta();
-    if (!d) return '';
-    if (d.startsWith('+')) return 'text-emerald-400';
-    if (d.startsWith('-')) return 'text-red-400';
-    return 'text-white/60';
+    if (!d) return 'flat';
+    if (d.startsWith('+')) return 'up';
+    if (d.startsWith('-') || d.startsWith('−')) return 'down';
+    return 'flat';
   });
 }

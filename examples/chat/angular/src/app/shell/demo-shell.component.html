@@ -75,7 +75,7 @@
         }
       </div>
 
-      <div class="demo-shell__field demo-shell__field--first">
+      <div class="demo-shell__field demo-shell__field--first" data-field="model">
         <chat-select
           [options]="modelOptions()"
           [value]="model()"
@@ -84,7 +84,7 @@
         />
       </div>
 
-      <div class="demo-shell__field">
+      <div class="demo-shell__field" data-field="effort">
         <chat-select
           [options]="effortOptions()"
           [value]="effort()"
@@ -93,7 +93,7 @@
         />
       </div>
 
-      <div class="demo-shell__field">
+      <div class="demo-shell__field" data-field="genui">
         <chat-select
           [options]="genUiOptions()"
           [value]="genUiMode()"
@@ -102,7 +102,7 @@
         />
       </div>
 
-      <div class="demo-shell__field">
+      <div class="demo-shell__field" data-field="theme">
         <chat-select
           [options]="themeOptions()"
           [value]="theme()"

@@ -585,6 +585,10 @@ function toMessage(
   };
   const citations = extractCitations(raw as { additional_kwargs?: Record<string, unknown> });
   if (citations) result.citations = citations;
+  if (role === 'assistant') {
+    const tcIds = getToolCallIds(m as CoreAIMessage);
+    if (tcIds.length > 0) result.toolCallIds = tcIds;
+  }
   return result;
 }
 

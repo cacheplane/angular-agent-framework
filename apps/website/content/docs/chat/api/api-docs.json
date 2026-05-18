@@ -5873,6 +5873,12 @@
         "type": "string",
         "description": "Present when role === 'tool'.",
         "optional": true
+      },
+      {
+        "name": "toolCallIds",
+        "type": "string[]",
+        "description": "IDs of tool calls emitted BY this assistant message. Populated by\nadapters from provider-native fields (LangGraph: `tool_calls[].id`;\nAnthropic: `tool_use` content blocks). Used by `<chat-tool-calls>` to\nscope its rendering to a single message — otherwise it falls back to\nthe agent's global toolCalls list, which renders duplicates across\nevery AI message in a thread.",
+        "optional": true
       }
     ],
     "examples": []
