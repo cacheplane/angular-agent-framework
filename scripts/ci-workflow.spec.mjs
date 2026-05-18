@@ -85,6 +85,24 @@ describe('CI workflow', () => {
     );
   });
 
+  it('runs production smoke against ThreadPlane domains', async () => {
+    const productionSmokeJob = await readProductionSmokeJob();
+
+    assert.match(productionSmokeJob, /BASE_URL:\s*https:\/\/cockpit\.threadplane\.ai/);
+    assert.match(productionSmokeJob, /EXAMPLES_URL:\s*https:\/\/examples\.threadplane\.ai/);
+    assert.match(productionSmokeJob, /DEMO_URL:\s*https:\/\/demo\.threadplane\.ai/);
+  });
+
+  it('binds Vercel deploys to the renamed ThreadPlane projects', async () => {
+    const deployJob = await readDeployJob();
+    const workflow = await readWorkflow();
+
+    assert.match(deployJob, /"projectName":"threadplane"/);
+    assert.match(deployJob, /"projectName":"threadplane-cockpit"/);
+    assert.match(deployJob, /"projectName":"threadplane-examples"/);
+    assert.match(workflow, /"projectName":"threadplane-demo"/);
+  });
+
   it('uses the read-only PostHog key for CI drift checks', async () => {
     const postHogSyncPlanJob = await readPostHogSyncPlanJob();
 

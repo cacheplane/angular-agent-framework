@@ -52,7 +52,7 @@ export default async function ChatPage() {
             </p>
             <div style={{ display: 'flex', justifyContent: 'center', gap: 12, flexWrap: 'wrap', marginBottom: 20 }}>
               <Button variant="primary" size="lg" href="/docs/chat/getting-started/introduction">Get started</Button>
-              <Button variant="ghost" size="lg" href="https://cockpit.cacheplane.ai" target="_blank" rel="noopener noreferrer">
+              <Button variant="ghost" size="lg" href="https://cockpit.threadplane.ai" target="_blank" rel="noopener noreferrer">
                 See it live →
               </Button>
             </div>
@@ -83,7 +83,7 @@ export default async function ChatPage() {
         ]}
         cta={{ label: 'See @ngaf/chat docs', href: '/docs/chat/getting-started/introduction' }}
         visual={
-          <BrowserFrame url="cockpit.cacheplane.ai/chat-debug" elevation="md">
+          <BrowserFrame url="cockpit.threadplane.ai/chat-debug" elevation="md">
             <div style={{ padding: 24, minHeight: 320, background: 'linear-gradient(180deg, #fff, #f8fafc)' }}>
               <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
                 <Pill variant="accent">streaming</Pill>

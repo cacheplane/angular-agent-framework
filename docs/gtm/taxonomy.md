@@ -1,4 +1,4 @@
-# Event & Property Taxonomy — Cacheplane
+# Event & Property Taxonomy — ThreadPlane
 
 > Single source of truth for PostHog event names, properties, CTA ids, and surface ids. Implementation lands in `apps/website/src/lib/analytics/events.ts`, `apps/cockpit/src/lib/analytics/events.ts`, and `libs/telemetry/src/shared/events.ts`. Whenever those files change, this file changes.
 

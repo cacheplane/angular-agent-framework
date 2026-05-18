@@ -4,9 +4,9 @@ The libraries in this repository (`@ngaf/langgraph`, `@ngaf/chat`, and all relat
 
 ## Minting Service
 
-The cacheplane minting service (`apps/minting-service/`) is a proprietary internal service and is not covered by the MIT License. See `apps/minting-service/LICENSE` for its terms.
+The ThreadPlane minting service (`apps/minting-service/`) is a proprietary internal service and is not covered by the MIT License. See `apps/minting-service/LICENSE` for its terms.
 
 ## Questions
 
-- Website: https://cacheplane.ai
+- Website: https://threadplane.ai
 - Email: hello@cacheplane.ai

@@ -18,7 +18,7 @@ function baseDraft(): Draft {
     article: {
       title: 'Hello',
       tags: ['angular', 'tutorial'],
-      canonicalUrl: 'https://cacheplane.ai/blog/hello',
+      canonicalUrl: 'https://threadplane.ai/blog/hello',
       description: 'A hello article.',
     },
   };
@@ -44,14 +44,14 @@ describe('postDevTo', () => {
 
     expect(receivedHeaders?.get('api-key')).toBe(apiKey);
     expect(receivedHeaders?.get('content-type')).toMatch(/application\/json/);
-    expect(receivedHeaders?.get('user-agent')).toBe('cacheplane-marketing/1.0');
+    expect(receivedHeaders?.get('user-agent')).toBe('threadplane-marketing/1.0');
     expect(receivedBody).toEqual({
       article: {
         title: 'Hello',
         body_markdown: '# Hello\n\nBody',
         published: true,
         tags: ['angular', 'tutorial'],
-        canonical_url: 'https://cacheplane.ai/blog/hello',
+        canonical_url: 'https://threadplane.ai/blog/hello',
         description: 'A hello article.',
       },
     });

@@ -9,7 +9,7 @@ export function dripAngularFollowupHtml(day: number): { subject: string; html: s
           <p style="font-size:11px;font-family:monospace;text-transform:uppercase;letter-spacing:0.08em;color:#004090;font-weight:700;margin:0 0 8px">Angular Guide Follow-up</p>
           <p style="font-size:20px;font-weight:700;color:#1a1a2e;margin:0 0 14px;line-height:1.3">Did you read Chapter 2 on the agent() API?</p>
           <p style="font-size:14px;color:#555770;line-height:1.7;margin:0 0 24px">Chapter 2 dives into the <strong>agent() API</strong> — the signal-native primitive that connects your Angular component directly to a LangGraph streaming run. It's the chapter most teams bookmark first when they see how little boilerplate is required.</p>
-          <a href="https://cacheplane.ai/docs" style="display:inline-block;background-color:#004090;color:#fff;padding:12px 28px;border-radius:8px;font-size:14px;font-weight:700;text-decoration:none">Read the Docs →</a>
+          <a href="https://threadplane.ai/docs" style="display:inline-block;background-color:#004090;color:#fff;padding:12px 28px;border-radius:8px;font-size:14px;font-weight:700;text-decoration:none">Read the Docs →</a>
         `,
         showUnsubscribe: true,
       }),
@@ -24,7 +24,7 @@ export function dripAngularFollowupHtml(day: number): { subject: string; html: s
           <p style="font-size:11px;font-family:monospace;text-transform:uppercase;letter-spacing:0.08em;color:#004090;font-weight:700;margin:0 0 8px">Comparison</p>
           <p style="font-size:20px;font-weight:700;color:#1a1a2e;margin:0 0 14px;line-height:1.3">LangGraph Angular SDK vs @ngaf/langgraph</p>
           <p style="font-size:14px;color:#555770;line-height:1.7;margin:0 0 24px">The LangGraph JS SDK gives you a streaming client. <strong>@ngaf/langgraph</strong> gives you signal-native state, thread persistence, interrupt flows, and a full test harness — all wired together and optimized for Angular's change detection model. See the full comparison on our product page.</p>
-          <a href="https://cacheplane.ai/angular" style="display:inline-block;background-color:#004090;color:#fff;padding:12px 28px;border-radius:8px;font-size:14px;font-weight:700;text-decoration:none">See the Comparison →</a>
+          <a href="https://threadplane.ai/angular" style="display:inline-block;background-color:#004090;color:#fff;padding:12px 28px;border-radius:8px;font-size:14px;font-weight:700;text-decoration:none">See the Comparison →</a>
         `,
         showUnsubscribe: true,
       }),
@@ -44,7 +44,7 @@ export function dripAngularFollowupHtml(day: number): { subject: string; html: s
             <p style="font-size:13px;color:#555770;margin:0 0 4px;line-height:1.6"><strong style="color:#004090">Month 1</strong> · First agent in staging</p>
             <p style="font-size:13px;color:#555770;margin:0;line-height:1.6"><strong style="color:#004090">Month 3</strong> · Production deployment</p>
           </div>
-          <a href="https://cacheplane.ai/pilot-to-prod" style="display:inline-block;background-color:#004090;color:#fff;padding:12px 28px;border-radius:8px;font-size:14px;font-weight:700;text-decoration:none">Learn About the Pilot →</a>
+          <a href="https://threadplane.ai/pilot-to-prod" style="display:inline-block;background-color:#004090;color:#fff;padding:12px 28px;border-radius:8px;font-size:14px;font-weight:700;text-decoration:none">Learn About the Pilot →</a>
         `,
         showUnsubscribe: true,
       }),

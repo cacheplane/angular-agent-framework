@@ -28,10 +28,10 @@ export function LiveDemoFrame() {
 
   return (
     <div ref={ref}>
-      <BrowserFrame url="demo.cacheplane.ai" elevation="lg">
+      <BrowserFrame url="demo.threadplane.ai" elevation="lg">
         {shouldLoad ? (
           <iframe
-            src="https://demo.cacheplane.ai"
+            src="https://demo.threadplane.ai"
             title="Canonical demo — @ngaf/chat running against the shared LangGraph backend"
             loading="lazy"
             style={{

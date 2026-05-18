@@ -28,10 +28,10 @@ describe('resolveRuntimeUrl', () => {
   });
 
   it('uses NEXT_PUBLIC_COCKPIT_RUNTIME_BASE_URL when set', () => {
-    vi.stubEnv('NEXT_PUBLIC_COCKPIT_RUNTIME_BASE_URL', 'https://examples.cacheplane.ai');
+    vi.stubEnv('NEXT_PUBLIC_COCKPIT_RUNTIME_BASE_URL', 'https://examples.threadplane.ai');
     expect(
       resolveRuntimeUrl({ runtimeUrl: 'langgraph/streaming', devPort: 4300 })
-    ).toBe('https://examples.cacheplane.ai/langgraph/streaming');
+    ).toBe('https://examples.threadplane.ai/langgraph/streaming');
   });
 
   it('falls back to localhost with devPort when no env var is set', () => {
@@ -49,7 +49,7 @@ describe('resolveRuntimeUrl', () => {
   });
 
   it('returns null when runtimeUrl is undefined even with env var set', () => {
-    vi.stubEnv('NEXT_PUBLIC_COCKPIT_RUNTIME_BASE_URL', 'https://examples.cacheplane.ai');
+    vi.stubEnv('NEXT_PUBLIC_COCKPIT_RUNTIME_BASE_URL', 'https://examples.threadplane.ai');
     expect(
       resolveRuntimeUrl({ runtimeUrl: undefined, devPort: undefined })
     ).toBeNull();

@@ -22,7 +22,7 @@ describe('renderLicenseEmail', () => {
       token: 't.s',
       expiresAt: new Date('2027-04-20T00:00:00Z'),
     });
-    expect(out.subject).toBe('Your Cacheplane license — developer-seat (3 seats)');
+    expect(out.subject).toBe('Your ThreadPlane license — developer-seat (3 seats)');
   });
 
   it('subject uses singular seat for seats === 1', () => {
@@ -32,7 +32,7 @@ describe('renderLicenseEmail', () => {
       token: 't.s',
       expiresAt: new Date('2027-04-20T00:00:00Z'),
     });
-    expect(out.subject).toBe('Your Cacheplane license — app-deployment (1 seat)');
+    expect(out.subject).toBe('Your ThreadPlane license — app-deployment (1 seat)');
   });
 
   it('includes ISO 8601 UTC expiry in text body', () => {

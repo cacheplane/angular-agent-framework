@@ -34,7 +34,7 @@ beforeEach(() => {
   fetchMock.mockReset();
   vi.stubGlobal('fetch', fetchMock);
   Object.defineProperty(document, 'referrer', {
-    value: 'https://cacheplane.ai/pricing',
+    value: 'https://threadplane.ai/pricing',
     configurable: true,
   });
 });
@@ -55,7 +55,7 @@ describe('ContactForm', () => {
     expect(body.email).toBe('jane@acme.com');
     expect(body.source_page).toBe('home_hero');
     expect(body.track).toBe('enterprise');
-    expect(body.referrer_host).toBe('cacheplane.ai');
+    expect(body.referrer_host).toBe('threadplane.ai');
 
     expect(trackMock).toHaveBeenCalledWith(
       'marketing:lead_form_submit',

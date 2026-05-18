@@ -20,7 +20,7 @@ export async function fetchDevToMetrics(
       url: `https://dev.to/api/articles/${postId}`,
       headers: {
         'api-key': apiKey,
-        'User-Agent': 'cacheplane-marketing/1.0',
+        'User-Agent': 'threadplane-marketing/1.0',
       },
     });
   } catch (err) {

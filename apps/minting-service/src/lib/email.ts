@@ -20,10 +20,10 @@ export interface RenderedEmail {
  */
 export function renderLicenseEmail(vars: LicenseEmailVars): RenderedEmail {
   const seatWord = vars.seats === 1 ? 'seat' : 'seats';
-  const subject = `Your Cacheplane license — ${vars.tier} (${vars.seats} ${seatWord})`;
+  const subject = `Your ThreadPlane license — ${vars.tier} (${vars.seats} ${seatWord})`;
   const expiresIso = vars.expiresAt.toISOString();
 
-  const text = `Thanks for subscribing to Cacheplane.
+  const text = `Thanks for subscribing to ThreadPlane.
 
 Your license token is below. Set it as the CACHEPLANE_LICENSE
 environment variable in your application:
@@ -42,13 +42,13 @@ Installation:
 Or in a .env file:
   CACHEPLANE_LICENSE=<paste token above>
 
-Docs: https://cacheplane.dev/docs/licensing
+Docs: https://threadplane.ai/docs/licensing
 Questions: reply to this email.
 
--- The Cacheplane team
+-- The ThreadPlane team
 `;
 
-  const html = `<p>Thanks for subscribing to Cacheplane.</p>
+  const html = `<p>Thanks for subscribing to ThreadPlane.</p>
 <p>Your license token is below. Set it as the <code>CACHEPLANE_LICENSE</code> environment variable in your application:</p>
 <pre style="white-space:pre-wrap;word-break:break-all;font-family:monospace;font-size:12px;background:#f4f4f4;padding:12px;border-radius:4px">-----BEGIN CACHEPLANE LICENSE-----
 ${escapeHtml(vars.token)}
@@ -58,9 +58,9 @@ ${escapeHtml(vars.token)}
 <strong>Expires:</strong> ${escapeHtml(expiresIso)}</p>
 <p><strong>Installation:</strong></p>
 <pre style="font-family:monospace;font-size:12px;background:#f4f4f4;padding:12px;border-radius:4px">export CACHEPLANE_LICENSE="&lt;paste token above&gt;"</pre>
-<p>Docs: <a href="https://cacheplane.dev/docs/licensing">cacheplane.dev/docs/licensing</a><br>
+<p>Docs: <a href="https://threadplane.ai/docs/licensing">threadplane.ai/docs/licensing</a><br>
 Questions: reply to this email.</p>
-<p>-- The Cacheplane team</p>
+<p>-- The ThreadPlane team</p>
 `;
 
   return { subject, text, html };

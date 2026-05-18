@@ -11,11 +11,11 @@ import { SlaCard } from '../../components/contact/SlaCard';
 import { AltChannelRow } from '../../components/contact/AltChannelRow';
 
 export const metadata: Metadata = {
-  title: 'Talk to an engineer — Cacheplane',
+  title: 'Talk to an engineer — ThreadPlane',
   description:
     "Tell us what you're shipping. We'll reply within one business day — usually with code, not a calendar invite.",
   openGraph: {
-    title: 'Talk to an engineer — Cacheplane',
+    title: 'Talk to an engineer — ThreadPlane',
     description: "Tell us what you're shipping. We'll reply within one business day.",
     type: 'website',
   },

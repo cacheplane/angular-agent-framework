@@ -71,10 +71,10 @@ describe('node client', () => {
     );
   });
 
-  test('capturePostinstall defaults to the live Cacheplane ingest proxy', async () => {
+  test('capturePostinstall defaults to the live ThreadPlane ingest proxy', async () => {
     delete process.env.NGAF_TELEMETRY_INGEST_URL;
     await capturePostinstall({ pkg: 'x', version: '1' });
-    expect(fetchMock.mock.calls[0][0]).toBe('https://cacheplane.ai/api/ingest');
+    expect(fetchMock.mock.calls[0][0]).toBe('https://threadplane.ai/api/ingest');
   });
 
   test('capturePostinstall sends sample_weight property', async () => {

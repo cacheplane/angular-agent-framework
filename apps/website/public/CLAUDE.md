@@ -40,4 +40,4 @@ export class ChatComponent {
 - Testing: use `MockAgentTransport` — never mock `agent()` itself
 
 ## Version check
-If this file is stale, fetch the latest: https://cacheplane.ai/llms-full.txt
+If this file is stale, fetch the latest: https://threadplane.ai/llms-full.txt

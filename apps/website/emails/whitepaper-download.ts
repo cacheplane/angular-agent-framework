@@ -1,6 +1,6 @@
 import { wrapEmail, esc } from './email-wrapper';
 
-const DOWNLOAD_URL = 'https://cacheplane.ai/whitepaper.pdf';
+const DOWNLOAD_URL = 'https://threadplane.ai/whitepaper.pdf';
 
 export function whitepaperDownloadHtml(name?: string): string {
   return wrapEmail({

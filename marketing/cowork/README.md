@@ -1,6 +1,6 @@
-# Cacheplane GTM — Cowork skill
+# ThreadPlane GTM — Cowork skill
 
-A single Claude Cowork skill that operates Cacheplane's GTM motion: weekly PostHog snapshots, lead triage, workstream scaffolding, and "where are we?" status questions.
+A single Claude Cowork skill that operates ThreadPlane's GTM motion: weekly PostHog snapshots, lead triage, workstream scaffolding, and "where are we?" status questions.
 
 The skill is **project-local**. It isn't published to a marketplace. Install steps are manual and one-time per machine.
 

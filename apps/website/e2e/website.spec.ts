@@ -95,7 +95,7 @@ test('robots.txt allows crawling and points at the sitemap', async ({ request })
   const body = await response.text();
   expect(body).toContain('User-Agent: *');
   expect(body).toContain('Allow: /');
-  expect(body).toContain('Sitemap: https://cacheplane.ai/sitemap.xml');
+  expect(body).toContain('Sitemap: https://threadplane.ai/sitemap.xml');
 });
 
 test('sitemap.xml includes configured docs pages', async ({ request }) => {
@@ -103,9 +103,9 @@ test('sitemap.xml includes configured docs pages', async ({ request }) => {
   expect(response.ok()).toBe(true);
 
   const body = await response.text();
-  expect(body).toContain('https://cacheplane.ai/docs');
-  expect(body).toContain('https://cacheplane.ai/docs/agent/getting-started/introduction');
-  expect(body).toContain('https://cacheplane.ai/docs/render/a2ui/overview');
+  expect(body).toContain('https://threadplane.ai/docs');
+  expect(body).toContain('https://threadplane.ai/docs/agent/getting-started/introduction');
+  expect(body).toContain('https://threadplane.ai/docs/render/a2ui/overview');
 });
 
 test('docs pages render canonical and social metadata', async ({ page }) => {
@@ -113,7 +113,7 @@ test('docs pages render canonical and social metadata', async ({ page }) => {
 
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
     'href',
-    'https://cacheplane.ai/docs/agent/guides/streaming',
+    'https://threadplane.ai/docs/agent/guides/streaming',
   );
   await expect(page.locator('meta[property="og:title"]')).toHaveAttribute(
     'content',
@@ -121,7 +121,7 @@ test('docs pages render canonical and social metadata', async ({ page }) => {
   );
   await expect(page.locator('meta[property="og:url"]')).toHaveAttribute(
     'content',
-    'https://cacheplane.ai/docs/agent/guides/streaming',
+    'https://threadplane.ai/docs/agent/guides/streaming',
   );
   await expect(page.locator('meta[name="twitter:title"]')).toHaveAttribute(
     'content',

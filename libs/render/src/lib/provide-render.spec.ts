@@ -51,7 +51,7 @@ describe('provideRender', () => {
     const warn = globalThis.console.warn as ReturnType<typeof vi.fn>;
     expect(
       warn.mock.calls.some((c) =>
-        String(c[0]).includes('[cacheplane] @ngaf/render'),
+        String(c[0]).includes('[threadplane] @ngaf/render'),
       ),
     ).toBe(true);
   });

@@ -19,7 +19,7 @@ describe('personal email domains', () => {
 
   it('returns false for unknown domains and falsy inputs', () => {
     expect(isPersonalEmailDomain('acme.com')).toBe(false);
-    expect(isPersonalEmailDomain('cacheplane.ai')).toBe(false);
+    expect(isPersonalEmailDomain('threadplane.ai')).toBe(false);
     expect(isPersonalEmailDomain('')).toBe(false);
     expect(isPersonalEmailDomain(null)).toBe(false);
     expect(isPersonalEmailDomain(undefined)).toBe(false);

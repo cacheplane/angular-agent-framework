@@ -18,10 +18,10 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { slug } = await params;
   const post = getPostBySlug(slug);
   if (!post || post.frontmatter.draft) {
-    return { title: 'Post not found — Cacheplane' };
+    return { title: 'Post not found — ThreadPlane' };
   }
   return createPageMetadata({
-    title: `${post.frontmatter.title} — Cacheplane`,
+    title: `${post.frontmatter.title} — ThreadPlane`,
     description: post.frontmatter.description,
     pathname: `/blog/${post.slug}`,
     type: 'article',

@@ -20,10 +20,10 @@ npm install @ngaf/render
 
 ## Documentation
 
-- [Quickstart](https://cacheplane.ai/docs/render/getting-started/quickstart)
-- [Component registry](https://cacheplane.ai/docs/render/guides/registry)
-- [Fallback patterns](https://cacheplane.ai/docs/render/guides/fallback)
-- [A2UI v1-compatible protocol](https://cacheplane.ai/docs/render/a2ui/overview)
+- [Quickstart](https://threadplane.ai/docs/render/getting-started/quickstart)
+- [Component registry](https://threadplane.ai/docs/render/guides/registry)
+- [Fallback patterns](https://threadplane.ai/docs/render/guides/fallback)
+- [A2UI v1-compatible protocol](https://threadplane.ai/docs/render/a2ui/overview)
 
 ## License
 

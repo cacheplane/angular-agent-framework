@@ -20,7 +20,7 @@ describe('/api/ingest', () => {
 
   it('accepts neutral browser telemetry payloads without requiring the public ingest key', async () => {
     shutdown.mockResolvedValue(undefined);
-    const response = await POST(new Request('https://cacheplane.ai/api/ingest', {
+    const response = await POST(new Request('https://threadplane.ai/api/ingest', {
       method: 'POST',
       body: JSON.stringify({
         event: 'ngaf:browser_chat_init',

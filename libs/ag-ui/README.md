@@ -59,8 +59,8 @@ Each citation object in the array supports `id`, `index`, `title`, `url`, `snipp
 
 ## Documentation
 
-- [Quickstart](https://cacheplane.ai/docs/agent/getting-started/quickstart)
-- [AG-UI adapter guide](https://cacheplane.ai/docs/chat/guides/writing-an-adapter)
+- [Quickstart](https://threadplane.ai/docs/agent/getting-started/quickstart)
+- [AG-UI adapter guide](https://threadplane.ai/docs/chat/guides/writing-an-adapter)
 - [AG-UI protocol](https://github.com/ag-ui-protocol/ag-ui)
 
 ## License

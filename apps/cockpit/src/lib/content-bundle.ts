@@ -46,7 +46,7 @@ export function resolveRuntimeUrl(options: {
   }
 
   const baseUrl = process.env['NEXT_PUBLIC_COCKPIT_RUNTIME_BASE_URL']
-    ?? 'https://examples.cacheplane.ai';
+    ?? 'https://examples.threadplane.ai';
 
   if (baseUrl && runtimeUrl) {
     return `${baseUrl}/${runtimeUrl}`;

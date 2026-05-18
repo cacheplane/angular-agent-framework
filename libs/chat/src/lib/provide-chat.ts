@@ -16,7 +16,7 @@ export interface ChatConfig {
   avatarLabel?: string;
   /** Shared assistant display name for consumers that read CHAT_CONFIG (default: "Assistant"). */
   assistantName?: string;
-  /** Signed license token from cacheplane.dev. Optional; omitted in dev. */
+  /** Signed license token from threadplane.ai. Optional; omitted in dev. */
   license?: string;
   /**
    * @internal

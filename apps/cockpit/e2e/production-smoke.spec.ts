@@ -5,20 +5,20 @@ import { expect, test } from '@playwright/test';
  * example apps are reachable after production deploy.
  *
  * Requires:
- *   BASE_URL - e.g. https://cockpit.cacheplane.ai
- *   EXAMPLES_URL - e.g. https://examples.cacheplane.ai
+ *   BASE_URL - e.g. https://cockpit.threadplane.ai
+ *   EXAMPLES_URL - e.g. https://examples.threadplane.ai
  *   OPENAI_API_KEY - optional; enables the single live-provider canary
  *
  * Run:
- *   BASE_URL=https://cockpit.cacheplane.ai \
- *   EXAMPLES_URL=https://examples.cacheplane.ai \
+ *   BASE_URL=https://cockpit.threadplane.ai \
+ *   EXAMPLES_URL=https://examples.threadplane.ai \
  *   npx playwright test apps/cockpit/e2e/production-smoke.spec.ts
  */
 
-const COCKPIT_URL = process.env['BASE_URL'] ?? 'https://cockpit.cacheplane.ai';
+const COCKPIT_URL = process.env['BASE_URL'] ?? 'https://cockpit.threadplane.ai';
 const EXAMPLES_URL =
-  process.env['EXAMPLES_URL'] ?? 'https://examples.cacheplane.ai';
-const DEMO_URL = process.env['DEMO_URL'] ?? 'https://demo.cacheplane.ai';
+  process.env['EXAMPLES_URL'] ?? 'https://examples.threadplane.ai';
+const DEMO_URL = process.env['DEMO_URL'] ?? 'https://demo.threadplane.ai';
 
 const CHAT_CAPABILITIES = [
   'langgraph/streaming',

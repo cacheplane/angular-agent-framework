@@ -11,7 +11,7 @@ export interface Author {
 export const blogAuthors: Record<string, Author> = {
   brian: {
     name: 'Brian Love',
-    role: 'Founder, Cacheplane',
+    role: 'Founder, ThreadPlane',
     bio: 'Angular consultant and open-source maintainer. Building agent UI for Angular teams.',
     github: 'blove',
   },

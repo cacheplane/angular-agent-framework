@@ -206,7 +206,7 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npx tsx apps/cockpit/scripts/deploy-smoke.ts --url https://cockpit.cacheplane.ai --dry-run
+      - run: npx tsx apps/cockpit/scripts/deploy-smoke.ts --url https://cockpit.threadplane.ai --dry-run
 
   examples-chat-smoke:
     name: examples/chat — python smoke
@@ -456,7 +456,7 @@ jobs:
         run: |
           mkdir -p .vercel
           cat > .vercel/project.json <<EOF
-          {"projectId":"${{ secrets.VERCEL_WEBSITE_PROJECT_ID }}","orgId":"${{ secrets.VERCEL_ORG_ID }}","projectName":"angular"}
+          {"projectId":"${{ secrets.VERCEL_WEBSITE_PROJECT_ID }}","orgId":"${{ secrets.VERCEL_ORG_ID }}","projectName":"threadplane"}
           EOF
           npx vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
           rm -rf .vercel/output
@@ -471,13 +471,13 @@ jobs:
         if: steps.affected.outputs.website == 'true'
         run: npx nx e2e website --skip-nx-cache
         env:
-          BASE_URL: https://cacheplane.ai
+          BASE_URL: https://threadplane.ai
       - name: Prepare cockpit Vercel project
         if: steps.affected.outputs.cockpit == 'true'
         run: |
           mkdir -p .vercel
           cat > .vercel/project.json <<EOF
-          {"projectId":"${{ secrets.VERCEL_COCKPIT_PROJECT_ID }}","orgId":"${{ secrets.VERCEL_ORG_ID }}","projectName":"cockpit"}
+          {"projectId":"${{ secrets.VERCEL_COCKPIT_PROJECT_ID }}","orgId":"${{ secrets.VERCEL_ORG_ID }}","projectName":"threadplane-cockpit"}
           EOF
           npx vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
           rm -rf .vercel/output
@@ -491,7 +491,7 @@ jobs:
       - name: Verify deployed cockpit
         if: steps.affected.outputs.cockpit == 'true'
         run: |
-          npx tsx apps/cockpit/scripts/deploy-smoke.ts --url https://cockpit.cacheplane.ai --retries 20 --retry-delay-ms 5000
+          npx tsx apps/cockpit/scripts/deploy-smoke.ts --url https://cockpit.threadplane.ai --retries 20 --retry-delay-ms 5000
 
       - name: Build and assemble Angular examples
         if: steps.examples_changed.outputs.changed == 'true'
@@ -502,7 +502,7 @@ jobs:
         run: |
           mkdir -p .vercel
           cat > .vercel/project.json <<EOF
-          {"projectId":"${{ secrets.VERCEL_EXAMPLES_PROJECT_ID }}","orgId":"${{ secrets.VERCEL_ORG_ID }}","projectName":"cockpit-examples"}
+          {"projectId":"${{ secrets.VERCEL_EXAMPLES_PROJECT_ID }}","orgId":"${{ secrets.VERCEL_ORG_ID }}","projectName":"threadplane-examples"}
           EOF
           npx vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
           npx vercel deploy --prebuilt --prod --yes --token=${{ secrets.VERCEL_TOKEN }}
@@ -536,13 +536,13 @@ jobs:
         run: |
           mkdir -p .vercel
           cat > .vercel/project.json <<EOF
-          {"projectId":"${{ secrets.VERCEL_DEMO_PROJECT_ID }}","orgId":"${{ secrets.VERCEL_ORG_ID }}","projectName":"demo"}
+          {"projectId":"${{ secrets.VERCEL_DEMO_PROJECT_ID }}","orgId":"${{ secrets.VERCEL_ORG_ID }}","projectName":"threadplane-demo"}
           EOF
           npx vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
           npx vercel deploy --prebuilt --prod --yes --token=${{ secrets.VERCEL_TOKEN }}
       - name: Verify canonical demo build stamp
         env:
-          DEMO_URL: https://demo.cacheplane.ai
+          DEMO_URL: https://demo.threadplane.ai
           EXPECTED_SHA: ${{ github.sha }}
         run: |
           node <<'NODE'
@@ -603,9 +603,9 @@ jobs:
       - name: Run production smoke tests
         run: npx playwright test apps/cockpit/e2e/production-smoke.spec.ts --reporter=list
         env:
-          BASE_URL: https://cockpit.cacheplane.ai
-          EXAMPLES_URL: https://examples.cacheplane.ai
-          DEMO_URL: https://demo.cacheplane.ai
+          BASE_URL: https://cockpit.threadplane.ai
+          EXAMPLES_URL: https://examples.threadplane.ai
+          DEMO_URL: https://demo.threadplane.ai
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
   posthog-sync-plan:

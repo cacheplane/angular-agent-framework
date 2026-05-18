@@ -132,7 +132,7 @@ export default function PilotToProdPage() {
         cta={{ label: 'See @ngaf/chat', href: '/chat' }}
         visualLeft
         visual={
-          <BrowserFrame url="cockpit.cacheplane.ai" elevation="md">
+          <BrowserFrame url="cockpit.threadplane.ai" elevation="md">
             <img
               src="/screenshots/cockpit-run.webp"
               alt="Cockpit reference app — live chat surface ready to receive a message"
