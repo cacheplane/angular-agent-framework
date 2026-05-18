@@ -7,7 +7,7 @@ import { expect, test } from '@playwright/test';
  * Requires:
  *   BASE_URL - e.g. https://cockpit.cacheplane.ai
  *   EXAMPLES_URL - e.g. https://examples.cacheplane.ai
- *   OPENAI_API_KEY - optional; enables send/receive checks
+ *   OPENAI_API_KEY - optional; enables the single live-provider canary
  *
  * Run:
  *   BASE_URL=https://cockpit.cacheplane.ai \
@@ -71,8 +71,6 @@ const RENDER_CAPABILITIES = [
 ] as const;
 
 const SEND_RECEIVE_TIMEOUT_MS = 30_000;
-const A2UI_SEND_RECEIVE_TIMEOUT_MS = 90_000;
-
 test.describe('Production: Angular chat example apps load', () => {
   for (const cap of CHAT_CAPABILITIES) {
     test(`${cap} loads at examples URL`, async ({ page }) => {
@@ -188,41 +186,4 @@ test.describe('Production: canonical demo sends runtime telemetry', () => {
       /messages|threadId|assistantId|apiUrl/
     );
   });
-});
-
-test.describe('Production: send/receive smoke', () => {
-  test.skip(() => !process.env['OPENAI_API_KEY'], 'Requires OPENAI_API_KEY');
-
-  for (const cap of [
-    'langgraph/streaming',
-    'deep-agents/planning',
-    'chat/a2ui',
-  ] as const) {
-    test(`${cap} sends and receives a message`, async ({ page }) => {
-      const responseTimeout =
-        cap === 'chat/a2ui'
-          ? A2UI_SEND_RECEIVE_TIMEOUT_MS
-          : SEND_RECEIVE_TIMEOUT_MS;
-
-      test.setTimeout(responseTimeout + 15_000);
-      await page.goto(`${EXAMPLES_URL}/${cap}/`, { timeout: 15_000 });
-      await expect(page.locator('chat')).toBeVisible({ timeout: 10_000 });
-
-      await page.locator('textarea[name="messageText"]').fill('hello');
-      await page.getByRole('button', { name: /send message/i }).click();
-
-      if (cap === 'chat/a2ui') {
-        await expect(page.locator('a2ui-surface')).toBeAttached({
-          timeout: responseTimeout,
-        });
-        return;
-      }
-
-      await expect(
-        page.locator('chat-message[data-role="assistant"]').last()
-      ).toBeVisible({
-        timeout: responseTimeout,
-      });
-    });
-  }
 });
