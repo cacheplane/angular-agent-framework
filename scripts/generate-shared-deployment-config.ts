@@ -51,10 +51,6 @@ rmSync(stagedDependenciesDir, { recursive: true, force: true });
 mkdirSync(stagedDependenciesDir, { recursive: true });
 
 for (const capability of capabilities) {
-  if (capability.product !== 'langgraph' && capability.product !== 'deep-agents') {
-    continue;
-  }
-
   const manifestPath = resolve(rootDir, capability.pythonDir, 'langgraph.json');
   const manifest = readManifest(manifestPath);
   if (!manifest.graphs) {

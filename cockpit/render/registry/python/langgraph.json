@@ -1,6 +1,6 @@
 {
   "graphs": {
-    "registry": "./src/graph.py:graph"
+    "r-registry": "./src/graph.py:graph"
   },
   "dependencies": ["."],
   "python_version": "3.12",
