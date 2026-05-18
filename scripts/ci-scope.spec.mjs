@@ -83,12 +83,12 @@ test('cockpit angular project metadata drives examples and e2e scope', () => {
   assert.equal(scope.cockpit_smoke, false);
 });
 
-test('cockpit python project targets drive smoke and secret integration scope', () => {
+test('cockpit python project changes trigger smoke + secret + examples + e2e', () => {
   const scope = classifyChangedFiles(['cockpit/new/cap/python/src/index.ts'], workspace);
-
   assert.equal(scope.cockpit_smoke, true);
   assert.equal(scope.cockpit_secret, true);
-  assert.equal(scope.cockpit_examples, false);
+  assert.equal(scope.cockpit_examples, true);
+  assert.equal(scope.cockpit_e2e, true);
 });
 
 test('PostHog project metadata drives PostHog scope', () => {
@@ -118,4 +118,49 @@ test('unowned docs changes do not trigger heavy CI jobs', () => {
   const scope = classifyChangedFiles(['docs/notes.md'], workspace);
 
   assert.deepEqual(Object.values(scope), Object.values(scope).map(() => false));
+});
+
+test('per-cap chat python change triggers cockpit_e2e + cockpit_examples + cockpit_smoke', () => {
+  const scope = classifyChangedFiles(
+    ['cockpit/new/cap/python/langgraph.json'],
+    workspace,
+  );
+  assert.equal(scope.cockpit_examples, true);
+  assert.equal(scope.cockpit_e2e, true);
+  assert.equal(scope.cockpit_smoke, true); // existing path — preserved
+});
+
+test('per-cap python change without smoke target still triggers e2e + examples', () => {
+  // Project setup: an imagined render python with only `build` target.
+  const renderProjects = [
+    ...projects,
+    {
+      name: 'cockpit-render-fake-python',
+      root: 'cockpit/render/fake/python',
+      sourceRoot: 'cockpit/render/fake/python/src',
+      projectType: 'library',
+      tags: [],
+      targets: { build: {} },
+    },
+  ];
+  const scope = classifyChangedFiles(
+    ['cockpit/render/fake/python/langgraph.json'],
+    { projects: renderProjects, publishableProjects: ['chat'] },
+  );
+  assert.equal(scope.cockpit_examples, true);
+  assert.equal(scope.cockpit_e2e, true);
+  // No smoke target → cockpit_smoke stays false
+  assert.equal(scope.cockpit_smoke, false);
+});
+
+test('generate-shared-deployment-config.ts triggers full cockpit scope', () => {
+  const scope = classifyChangedFiles(
+    ['scripts/generate-shared-deployment-config.ts'],
+    workspace,
+  );
+  assert.equal(scope.cockpit, true);
+  assert.equal(scope.cockpit_examples, true);
+  assert.equal(scope.cockpit_smoke, true);
+  assert.equal(scope.cockpit_e2e, true);
+  assert.equal(scope.cockpit_deploy_smoke, true);
 });

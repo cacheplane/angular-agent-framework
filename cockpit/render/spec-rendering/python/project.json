@@ -1,0 +1,7 @@
+{
+  "name": "cockpit-render-spec-rendering-python",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "cockpit/render/spec-rendering/python/src",
+  "projectType": "library",
+  "targets": {}
+}

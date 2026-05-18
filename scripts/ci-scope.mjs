@@ -164,6 +164,14 @@ function applyProjectScope(scope, project, publishableProjects) {
     if (targets.e2e) {
       scope.cockpit_e2e = true;
     }
+
+    // Per-cap python changes affect the sibling angular's e2e + build.
+    // (Python project.jsons don't carry e2e/build-all targets; those live
+    // on the sibling angular project. This rule bridges that gap.)
+    if (root.includes('/python')) {
+      scope.cockpit_examples = true;
+      scope.cockpit_e2e = true;
+    }
   }
 
   if (
@@ -215,6 +223,17 @@ function applyFallbackPathScope(scope, changedFile) {
 
   if (changedFile.startsWith('tools/posthog/')) {
     scope.posthog = true;
+  }
+
+  if (
+    changedFile === 'scripts/generate-shared-deployment-config.ts' ||
+    changedFile === 'apps/cockpit/scripts/capability-registry.ts'
+  ) {
+    scope.cockpit = true;
+    scope.cockpit_examples = true;
+    scope.cockpit_smoke = true;
+    scope.cockpit_e2e = true;
+    scope.cockpit_deploy_smoke = true;
   }
 }
 

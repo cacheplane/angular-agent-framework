@@ -1,0 +1,7 @@
+{
+  "name": "cockpit-render-computed-functions-python",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "cockpit/render/computed-functions/python/src",
+  "projectType": "library",
+  "targets": {}
+}

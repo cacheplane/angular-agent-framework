@@ -1,0 +1,7 @@
+{
+  "name": "cockpit-render-state-management-python",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "cockpit/render/state-management/python/src",
+  "projectType": "library",
+  "targets": {}
+}

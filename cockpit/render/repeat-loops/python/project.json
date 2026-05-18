@@ -1,0 +1,7 @@
+{
+  "name": "cockpit-render-repeat-loops-python",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "cockpit/render/repeat-loops/python/src",
+  "projectType": "library",
+  "targets": {}
+}
