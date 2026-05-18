@@ -446,16 +446,6 @@ export class DemoShell {
   }
 
   /**
-   * Clear persisted thread id and drop the signal. The next submit
-   * causes the SDK to create a fresh thread server-side; onThreadId
-   * fires and re-persists it.
-   */
-  protected onNewConversation(): void {
-    this.persistence.write('threadId', null);
-    this.threadIdSignal.set(null);
-  }
-
-  /**
    * Translates the four-action vocabulary from chat-interrupt-panel
    * into Command(resume=value) submissions. Phase 3A demo affordance:
    * window.prompt() for `edit` and `respond`. A production app would

@@ -75,49 +75,41 @@
         }
       </div>
 
-      <label class="demo-shell__field">
-        <span>Model</span>
+      <div class="demo-shell__field demo-shell__field--first">
         <chat-select
           [options]="modelOptions()"
           [value]="model()"
           menuLabel="Model"
           (valueChange)="onModelChange($event)"
         />
-      </label>
+      </div>
 
-      <label class="demo-shell__field">
-        <span>Effort</span>
+      <div class="demo-shell__field">
         <chat-select
           [options]="effortOptions()"
           [value]="effort()"
           menuLabel="Effort"
           (valueChange)="onEffortChange($event)"
         />
-      </label>
+      </div>
 
-      <label class="demo-shell__field">
-        <span>Gen UI</span>
+      <div class="demo-shell__field">
         <chat-select
           [options]="genUiOptions()"
           [value]="genUiMode()"
           menuLabel="Gen UI"
           (valueChange)="onGenUiModeChange($event)"
         />
-      </label>
+      </div>
 
-      <label class="demo-shell__field">
-        <span>Theme</span>
+      <div class="demo-shell__field">
         <chat-select
           [options]="themeOptions()"
           [value]="theme()"
           menuLabel="Theme"
           (valueChange)="onThemeChange($event)"
         />
-      </label>
-
-      <button type="button" class="demo-shell__toolbar-action" (click)="onNewConversation()">
-        New conversation
-      </button>
+      </div>
     </div>
 
     <router-outlet />

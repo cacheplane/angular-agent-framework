@@ -64,7 +64,19 @@
   font-family: inherit;
   font-size: var(--ngaf-chat-font-size-sm);
   box-sizing: border-box;
-  overflow-x: auto;
+  /* Toolbar establishes its own stacking context so the chat-select
+   * dropdown menus (z-index 10 inside the primitive) render above the
+   * chat content's scroll/transform stacking contexts below. */
+  position: relative;
+  z-index: 50;
+  /* overflow-x: auto would clip absolutely-positioned dropdown menus.
+   * Skip it — the toolbar fits on reasonable viewports and the per-field
+   * dropdowns hold the long labels via the chat-select popover. */
+}
+
+/* Push every field after Mode to the right of the toolbar. */
+.demo-shell__field--first {
+  margin-left: auto;
 }
 
 .demo-shell__segmented {
@@ -78,8 +90,7 @@
   flex: 0 0 auto;
 }
 
-.demo-shell__segmented-button,
-.demo-shell__toolbar-action {
+.demo-shell__segmented-button {
   font: inherit;
   color: var(--ngaf-chat-text);
 }
@@ -104,21 +115,6 @@
   gap: 6px;
   color: var(--ngaf-chat-text-muted);
   flex: 0 0 auto;
-}
-
-.demo-shell__toolbar-action {
-  border: 0;
-  background: var(--ngaf-chat-surface-alt);
-  color: var(--ngaf-chat-text);
-  border-radius: 8px;
-  padding: 8px 12px;
-  min-height: 32px;
-  cursor: pointer;
-  flex: 0 0 auto;
-}
-
-.demo-shell__toolbar-action:hover {
-  background: color-mix(in srgb, var(--ngaf-chat-text) 8%, var(--ngaf-chat-surface-alt));
 }
 
 .demo-shell__segmented-button:hover:not(.is-active) {
