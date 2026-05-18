@@ -42,6 +42,28 @@ describe('CHAT_PROJECT_LIST_STYLES — New project button', () => {
   });
 });
 
+describe('CHAT_PROJECT_LIST_STYLES — New project button font', () => {
+  const normalized = CHAT_PROJECT_LIST_STYLES.replace(/\s+/g, ' ');
+
+  it('uses font-family: inherit (matches sidenav action buttons)', () => {
+    expect(normalized).toMatch(
+      /\.chat-project-list__new\s*\{[^}]*font-family:\s*inherit\s*;/,
+    );
+  });
+
+  it('uses font-size: var(--ngaf-chat-font-size-sm) (not hard-coded 12px)', () => {
+    expect(normalized).toMatch(
+      /\.chat-project-list__new\s*\{[^}]*font-size:\s*var\(--ngaf-chat-font-size-sm\)\s*;/,
+    );
+  });
+
+  it('does NOT use hard-coded 12px for font-size', () => {
+    expect(normalized).not.toMatch(
+      /\.chat-project-list__new\s*\{[^}]*font-size:\s*12px/,
+    );
+  });
+});
+
 describe('CHAT_PROJECT_LIST_STYLES — active item', () => {
   const normalized = CHAT_PROJECT_LIST_STYLES.replace(/\s+/g, ' ');
   it('does NOT use a left-accent box-shadow for the active item (symmetric bg-only indication)', () => {

@@ -70,7 +70,6 @@ export const CHAT_SIDENAV_STYLES = `
   .chat-sidenav__header {
     flex-shrink: 0;
     padding: var(--ngaf-chat-space-3);
-    border-bottom: 1px solid var(--ngaf-chat-separator);
   }
   .chat-sidenav__topbar {
     flex-shrink: 0;
@@ -105,7 +104,7 @@ export const CHAT_SIDENAV_STYLES = `
     border: 0;
     padding: 12px 18px;
     border-radius: 8px;
-    font-size: 13px;
+    font-size: var(--ngaf-chat-font-size-sm);
     font-weight: 600;
     display: flex;
     align-items: center;
@@ -150,7 +149,9 @@ export const CHAT_SIDENAV_STYLES = `
     color: var(--ngaf-chat-text);
     border-radius: 8px;
     cursor: pointer;
-    font: inherit;
+    font-family: inherit;
+    font-size: var(--ngaf-chat-font-size-sm);
+    font-weight: 400;
     text-align: left;
   }
   .chat-sidenav__action:hover { background: var(--ngaf-chat-surface-alt); }
@@ -178,7 +179,7 @@ export const CHAT_SIDENAV_STYLES = `
     border-radius: 8px;
     padding: 12px 18px;
     font-weight: 600;
-    font-size: 13px;
+    font-size: var(--ngaf-chat-font-size-sm);
   }
   .chat-sidenav__action.chat-sidenav__action--new:hover {
     background: var(--ngaf-chat-text);

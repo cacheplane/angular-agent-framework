@@ -90,9 +90,6 @@ export const CHAT_MESSAGE_STYLES = `
 
   .chat-message__controls {
     display: none;
-    position: absolute;
-    left: 0;
-    bottom: -28px;
     gap: 1rem;
     opacity: 0;
     transition: opacity 200ms ease;
