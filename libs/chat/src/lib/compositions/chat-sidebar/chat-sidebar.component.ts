@@ -1,6 +1,15 @@
 // libs/chat/src/lib/compositions/chat-sidebar/chat-sidebar.component.ts
 // SPDX-License-Identifier: MIT
-import { Component, ChangeDetectionStrategy, effect, input, model, output } from '@angular/core';
+import {
+  Component,
+  ChangeDetectionStrategy,
+  DOCUMENT,
+  effect,
+  inject,
+  input,
+  model,
+  output,
+} from '@angular/core';
 import type { Agent } from '../../agent';
 import type { ViewRegistry } from '@ngaf/render';
 import { ChatComponent } from '../chat/chat.component';
@@ -99,9 +108,13 @@ export class ChatSidebarComponent {
   /** Two-way bound current model value. */
   readonly selectedModel = model<string>('');
   readonly open = model(false);
+  /** Close the sidebar on Escape (default true). */
+  readonly closeOnEscape = input<boolean>(true);
   readonly pushContent = input<boolean>(false);
   readonly replayRequested = output<string>();
   readonly forkRequested = output<string>();
+
+  private readonly document = inject(DOCUMENT);
 
   constructor() {
     // Inject chat lib root CSS custom properties — see ChatComponent
@@ -117,6 +130,18 @@ export class ChatSidebarComponent {
       } else {
         delete html.dataset['ngafChatSidebar'];
       }
+    });
+    effect((onCleanup) => {
+      const closeOnEscape = this.closeOnEscape();
+      const win = this.document.defaultView;
+      if (!win) return;
+      const handler = (e: KeyboardEvent): void => {
+        if (closeOnEscape && this.open() && e.key === 'Escape') {
+          this.closeWindow();
+        }
+      };
+      win.addEventListener('keydown', handler);
+      onCleanup(() => win.removeEventListener('keydown', handler));
     });
   }
 

@@ -3250,6 +3250,12 @@
         "optional": false
       },
       {
+        "name": "closeOnEscape",
+        "type": "InputSignal<boolean>",
+        "description": "Close the sidebar on Escape (default true).",
+        "optional": false
+      },
+      {
         "name": "forkRequested",
         "type": "OutputEmitterRef<string>",
         "description": "",

@@ -30,6 +30,6 @@ describe('chat debug secondary entrypoint', () => {
 
     const fixture = TestBed.createComponent(Host);
     fixture.detectChanges();
-    expect(fixture.nativeElement.querySelector('[aria-label="Chat debug"]')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('[aria-label="Chat devtools"]')).not.toBeNull();
   });
 });
