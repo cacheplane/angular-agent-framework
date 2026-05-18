@@ -48,11 +48,15 @@ The remaining c-* rows (`c-tool-calls`, `c-subagents`, `c-interrupts`, `c-genera
 
 ## Verification
 
-### Production deploy is preserved
+### Production deploy is preserved (corrected — local-dev-only migration)
 
-`scripts/generate-shared-deployment-config.ts` walks the capability registry's `pythonDir` per cap to stage and register each graph. Before this PR, six `pythonDir` values pointed at the umbrella, so the script staged the umbrella once and registered six graphs from its `chat_graphs.py`. After this PR, the same script stages each per-cap backend separately and registers each graph from its own `graph.py`. The output manifest must have the **same 26 graph names** as before, just with different file paths.
+**Original assumption was wrong.** `scripts/generate-shared-deployment-config.ts` line 54 skips chat capabilities entirely (`if (capability.product !== 'langgraph' && capability.product !== 'deep-agents') continue;`). The c-* graphs reach production via the umbrella's own `langgraph.json` (which registers all 12 graphs and is staged as the `streaming` capability's dependency).
 
-Concrete check: diff the generated `deployments/shared-dev/langgraph.json` before/after the registry edit. Graph names + count must be identical; entrypoint paths for the six migrated caps change (`./deps/streaming/src/chat_graphs.py:c_<cap>` → `./deps/c-<cap>/src/graph.py:graph`).
+**Actual effect of this PR:** local-dev tooling (`nx serve cockpit-chat-<cap>-angular`) that reads `pythonDir` will now boot the per-cap backend. Production deploy is **unchanged** — c-messages etc. continue to be served from the umbrella's `chat_graphs.py` in LangSmith. This matches the user's stated model: "for production, single langsmith instance."
+
+Concrete check: diff the generated `deployments/shared-dev/langgraph.json` before/after the registry edit. The file must be **byte-identical** — every graph name, every entrypoint path, every order. If the diff is non-empty, something other than the local-dev `pythonDir` got swept up in the edit.
+
+**Accepted tech debt:** after this PR, the per-cap `graph.py` files and the umbrella's `chat_graphs.py` are two copies of the same graphs. A follow-up PR is needed to extend the generator to iterate chat caps + drop c-* entries from the umbrella manifest, after which the per-cap dir becomes the single source of truth for both local + prod. That follow-up is part of the umbrella-cleanup chain.
 
 ### Local dev for each cap
 

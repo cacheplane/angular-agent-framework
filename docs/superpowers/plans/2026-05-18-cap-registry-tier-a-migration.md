@@ -200,7 +200,7 @@ diff /tmp/cap-tier-a-before.txt /tmp/cap-tier-a-after.txt && echo "IDENTICAL"
 
 Expected: `IDENTICAL`. If the diff is non-empty, the per-cap manifests are registering a different graph id than the umbrella did — STOP and investigate which cap's `langgraph.json` differs.
 
-- [ ] **Step 4: Confirm the 6 caps' entrypoint paths DID change**
+- [ ] **Step 4: Confirm the 6 caps' entrypoint paths DID NOT change** (revised — see note below)
 
 ```bash
 python3 -c "
@@ -208,13 +208,16 @@ import json
 d = json.load(open('deployments/shared-dev/langgraph.json'))
 for cap in ['c-messages','c-input','c-debug','c-theming','c-threads','c-timeline']:
     path = d['graphs'].get(cap, '<missing>')
-    expected_prefix = f'./deps/{cap}/'
-    ok = path.startswith(expected_prefix)
-    print(f'{cap}: {path}  {\"OK\" if ok else \"WRONG\"}')
+    in_umbrella = path.startswith('./deps/streaming/src/chat_graphs.py')
+    print(f'{cap}: {path}  {\"OK (still umbrella — local-dev-only migration)\" if in_umbrella else \"UNEXPECTED\"}')
 "
 ```
 
-Expected: 6 lines, each ending in `OK`. Path should be `./deps/c-<cap>/src/graph.py:graph` (not `./deps/streaming/src/chat_graphs.py:c_<cap>`).
+Expected: 6 lines, each ending `OK (still umbrella — local-dev-only migration)`.
+
+**Why this is the correct expectation:** `scripts/generate-shared-deployment-config.ts` line 54 skips chat capabilities (`if (capability.product !== 'langgraph' && capability.product !== 'deep-agents') continue;`). The c-* graphs reach the shared-deployment manifest via the umbrella's `langgraph.json` (which registers all 12 graphs and is staged as the `streaming` langgraph capability's dep). This PR's registry edit only affects local-dev tooling that reads chat caps' `pythonDir`; production deploy is unchanged.
+
+**Follow-up needed:** a separate PR must (a) extend the generator to iterate chat capabilities and (b) drop c-* entries from the umbrella's `langgraph.json`. Until then, the per-cap `graph.py` files and the umbrella's `chat_graphs.py` are TWO COPIES of the same graphs — kept in sync manually. Acceptable tech debt for this PR; tracked as part of the umbrella-cleanup chain.
 
 - [ ] **Step 5: Cleanup**
 
