@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 import type { ChannelAdapter, ChannelId } from './types';
 import { XAdapter } from './x';
+import { DevToAdapter } from './devto';
 
 const KNOWN: ChannelId[] = ['x', 'linkedin', 'devto', 'reddit'];
 
@@ -10,11 +11,12 @@ function buildAdapter(id: ChannelId): ChannelAdapter {
   switch (id) {
     case 'x':
       return new XAdapter();
-    case 'linkedin':
     case 'devto':
+      return new DevToAdapter();
+    case 'linkedin':
     case 'reddit':
       throw new Error(
-        `Channel "${id}" adapter is not yet implemented. Known channels with implementations: x.`,
+        `Channel "${id}" adapter is not yet implemented. Known channels with implementations: x, devto.`,
       );
     default: {
       const _exhaustive: never = id;
