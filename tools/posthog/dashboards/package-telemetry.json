@@ -2,7 +2,7 @@
   "slug": "package-telemetry",
   "posthog_id": 1590768,
   "name": "GTM · Package telemetry",
-  "description": "Published @ngaf/* install telemetry from ngaf:postinstall. Package install insights exclude CI install context.",
+  "description": "Published @ngaf/* install telemetry from ngaf:postinstall.",
   "tags": ["gtm", "package-telemetry", "phase-1"],
   "tiles": [
     {

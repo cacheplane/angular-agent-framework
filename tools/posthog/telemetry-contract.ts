@@ -26,7 +26,6 @@ type TelemetryEventContract = {
 const installProperties = [
   'arch',
   'global_install',
-  'install_context',
   'node',
   'node_version',
   'os',
@@ -150,7 +149,6 @@ export const TELEMETRY_EVENT_CONTRACT: Record<string, TelemetryEventContract> =
       allowedProperties: installProperties,
       allowedBreakdowns: [
         'global_install',
-        'install_context',
         'os',
         'package_manager',
         'package_manager_os',
