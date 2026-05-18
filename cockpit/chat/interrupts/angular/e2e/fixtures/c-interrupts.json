@@ -1,0 +1,76 @@
+{
+  "fixtures": [
+    {
+      "match": {
+        "userMessage": "Book me on UA123.",
+        "model": "gpt-5-mini",
+        "turnIndex": 0,
+        "hasToolResult": false
+      },
+      "response": {
+        "toolCalls": [
+          {
+            "name": "book_flight",
+            "arguments": "{\"flight_number\":\"UA123\"}",
+            "id": "call_XNTULKfDAKbG1vzgeUHjB26s"
+          }
+        ]
+      },
+      "metadata": {
+        "systemHash": "18e3aede",
+        "toolsHash": "3644d4ff"
+      }
+    },
+    {
+      "match": {
+        "userMessage": "Book me on UA123.",
+        "model": "gpt-5-mini",
+        "turnIndex": 1,
+        "hasToolResult": true
+      },
+      "response": {
+        "content": "You're booked! I confirmed your reservation on UA123 (United) from LAX to JFK, departing at 08:00. Would you like the booking reference, seat assignment options, or help with airport transportation or baggage info?"
+      },
+      "metadata": {
+        "systemHash": "18e3aede",
+        "toolsHash": "3644d4ff"
+      }
+    },
+    {
+      "match": {
+        "userMessage": "Book me on AA404.",
+        "model": "gpt-5-mini",
+        "turnIndex": 0,
+        "hasToolResult": false
+      },
+      "response": {
+        "toolCalls": [
+          {
+            "name": "book_flight",
+            "arguments": "{\"flight_number\":\"AA404\"}",
+            "id": "call_e2iGlC8ss9AAwu4vJ4drEADo"
+          }
+        ]
+      },
+      "metadata": {
+        "systemHash": "18e3aede",
+        "toolsHash": "3644d4ff"
+      }
+    },
+    {
+      "match": {
+        "userMessage": "Book me on AA404.",
+        "model": "gpt-5-mini",
+        "turnIndex": 1,
+        "hasToolResult": true
+      },
+      "response": {
+        "content": "The booking attempt for AA404 was cancelled.\n\nWould you like me to:\n- Try booking AA404 again (I\u2019ll need your confirmation and any passenger/name/payment details you want me to include),  \n- Check the flight status/gate for AA404 first, or  \n- Search for alternative flights instead?\n\nTell me which and any details (passenger name, date, seat class, number of travelers) and I\u2019ll proceed."
+      },
+      "metadata": {
+        "systemHash": "18e3aede",
+        "toolsHash": "3644d4ff"
+      }
+    }
+  ]
+}

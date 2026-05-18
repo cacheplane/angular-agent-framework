@@ -87,6 +87,18 @@
         "cwd": "cockpit/chat/interrupts/angular",
         "command": "npx tsx -e \"import { chatInterruptsAngularModule } from './src/index.ts'; const module = chatInterruptsAngularModule; if (module.id !== 'chat-interrupts-angular' || module.title !== 'Chat Interrupts (Angular)') { throw new Error('Unexpected module shape for ' + module.id); }\""
       }
+    },
+    "e2e": {
+      "executor": "@nx/playwright:playwright",
+      "options": {
+        "config": "cockpit/chat/interrupts/angular/e2e/playwright.config.ts"
+      }
+    },
+    "record": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bash cockpit/chat/interrupts/angular/e2e/scripts/record-c-interrupts.sh"
+      }
     }
   }
 }
