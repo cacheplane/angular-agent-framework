@@ -9,7 +9,8 @@ import json
 from pathlib import Path
 from typing import Literal
 
-from langchain_core.messages import SystemMessage
+import uuid
+from langchain_core.messages import AIMessage, SystemMessage, ToolMessage
 from langchain_openai import ChatOpenAI
 from langgraph.graph import StateGraph, MessagesState, END
 from langgraph.prebuilt import ToolNode
@@ -49,44 +50,85 @@ def router(state: DashboardState) -> Command[Literal["generate_shell", "plan_too
     return Command(goto="plan_tools")
 
 
-async def generate_shell(state: DashboardState) -> DashboardState:
-    """Generate the dashboard shell spec on first turn."""
+async def generate_shell(state: DashboardState) -> Command[Literal["populate_initial_data"]]:
+    """Generate the dashboard shell spec on first turn, then dispatch to
+    deterministic data-population (skipping plan_tools, which has a
+    follow-up-only prompt)."""
     messages = [SystemMessage(content=_PROMPT)] + state["messages"]
     response = await _llm.ainvoke(messages)
     spec_text = response.content if isinstance(response.content, str) else ""
-    return {
-        "messages": [response],
-        "dashboard_spec": spec_text,
-    }
+    return Command(
+        goto="populate_initial_data",
+        update={"messages": [response], "dashboard_spec": spec_text},
+    )
 
 
 async def plan_tools(state: DashboardState) -> DashboardState:
     """On follow-up turns, pick the MINIMAL set of tools — usually one."""
     context = (
         f"The current dashboard spec is:\n{state['dashboard_spec']}\n\n"
-        "Classify the user's message and act ONCE — do not refetch everything.\n"
+        "The user has sent a follow-up. Classify and act ONCE — DO NOT ask\n"
+        "clarifying questions. Pick the smallest action that satisfies the\n"
+        "request and commit to it.\n"
         "\n"
-        "1) FILTER / SCOPE existing data (e.g. 'filter to cancelled flights only',\n"
-        "   'show last 6 months', 'limit to enterprise', 'sort by date',\n"
-        "   'only show delayed', 'top 3'): call EXACTLY ONE tool — the one that\n"
-        "   backs the affected component — with the new parameters. Do NOT call\n"
-        "   the other tools. Do NOT regenerate the spec.\n"
+        "1) FILTER / SCOPE (e.g. 'filter to cancelled flights only', 'last 6\n"
+        "   months', 'top 3'): call EXACTLY ONE tool — the one that backs the\n"
+        "   affected component — with the new parameters. Do NOT call the\n"
+        "   other tools. Do NOT regenerate the spec.\n"
         "\n"
-        "2) STRUCTURAL change (e.g. 'add a card for X', 'remove the table',\n"
-        "   'split this into two columns'): regenerate the spec, then call only\n"
-        "   the tools needed to populate NEW components.\n"
+        "2) STRUCTURAL change (e.g. 'add a card for X', 'remove the table'):\n"
+        "   regenerate the spec, then call only the tools needed to populate\n"
+        "   NEW components.\n"
         "\n"
-        "3) QUESTION about existing data (e.g. 'why', 'how', 'explain',\n"
-        "   'what does this mean'): respond conversationally in plain prose.\n"
-        "   Call NO tools. Output NO JSON.\n"
+        "3) INTERPRETIVE question that no tool could answer (e.g. 'why is\n"
+        "   on-time % low?', 'what does this mean?'): respond in plain prose,\n"
+        "   call NO tools. Use this ONLY when no tool fetch could resolve the\n"
+        "   question. If a tool could provide more data to help answer, pick\n"
+        "   case 1 or 2 instead.\n"
         "\n"
-        "If none of these fit, call only the smallest set of tools you need.\n"
-        "Calling all four tools is reserved for an explicit 'refresh' /\n"
-        "'reload' / 'update everything' request."
+        "Anti-patterns to avoid:\n"
+        "  - Asking 'would you also like…' or any clarifying question.\n"
+        "    Commit to the most reasonable interpretation and act.\n"
+        "  - Calling all four tools. That is reserved for an explicit\n"
+        "    'refresh' / 'reload everything' request.\n"
+        "  - Responding conversationally when the request mentions filtering,\n"
+        "    sorting, or scoping. Those are case 1, always."
     )
     messages = [SystemMessage(content=_PROMPT + "\n\n" + context)] + state["messages"]
     response = await _llm_with_tools.ainvoke(messages)
     return {"messages": [response]}
+
+
+async def populate_initial_data(state: DashboardState) -> dict:
+    """Deterministic first-turn data fetch: invoke all 4 data tools.
+
+    The dashboard prompt mandates 'call ALL four data tools to populate the
+    dashboard' on first turn. That's a fixed instruction, not a judgment
+    call — encode it as Python instead of paying an LLM round-trip + risking
+    the planner refusing to commit to tool calls.
+
+    Synthesizes one AIMessage with tool_calls for all 4 tools + one
+    ToolMessage per result. Matches ToolNode's output shape so emit_state
+    (which reads ToolMessages by name) needs no changes.
+    """
+    tool_calls = [
+        {
+            "name": t.name,
+            "args": {},
+            "id": f"init_{t.name}_{uuid.uuid4().hex[:8]}",
+            "type": "tool_call",
+        }
+        for t in ALL_TOOLS
+    ]
+    ai = AIMessage(content="", tool_calls=tool_calls)
+
+    tool_msgs: list[ToolMessage] = []
+    for t, tc in zip(ALL_TOOLS, tool_calls):
+        result = await t.ainvoke({})
+        content = json.dumps(result) if not isinstance(result, str) else result
+        tool_msgs.append(ToolMessage(content=content, tool_call_id=tc["id"], name=t.name))
+
+    return {"messages": [ai] + tool_msgs}
 
 
 def should_call_tools(state: DashboardState) -> Literal["call_tools", "respond"]:
@@ -140,13 +182,16 @@ async def emit_state(state: DashboardState) -> DashboardState:
 
 
 async def respond(state: DashboardState) -> DashboardState:
-    """Generate a brief conversational summary after tools have run."""
-    last = state["messages"][-1]
-    if last.type == "ai" and not (hasattr(last, "tool_calls") and last.tool_calls):
-        return state
-
+    """Generate a brief conversational summary of what just happened on this
+    turn. ALWAYS runs (no early-exit) so the user-visible summary is always
+    authored by this node, never inherited from plan_tools' chatter."""
     messages = [
-        SystemMessage(content="Provide a brief (1-2 sentence) conversational summary of what you just did. Do NOT output JSON.")
+        SystemMessage(content=(
+            "Provide a brief (1-2 sentence) conversational summary of what "
+            "you just did this turn. If you generated a dashboard, say so. "
+            "If you filtered data, say what you filtered. "
+            "Do NOT output JSON. Do NOT ask follow-up questions."
+        ))
     ] + state["messages"]
     response = await _llm.ainvoke(messages)
     return {"messages": [response]}
@@ -155,6 +200,7 @@ async def respond(state: DashboardState) -> DashboardState:
 _builder = StateGraph(DashboardState)
 _builder.add_node("router", router)
 _builder.add_node("generate_shell", generate_shell)
+_builder.add_node("populate_initial_data", populate_initial_data)
 _builder.add_node("plan_tools", plan_tools)
 _builder.add_node("call_tools", ToolNode(ALL_TOOLS))
 _builder.add_node("emit_state", emit_state)
@@ -162,13 +208,14 @@ _builder.add_node("respond", respond)
 
 _builder.set_entry_point("router")
 
-# After shell generation, go to plan_tools to call all data tools
-_builder.add_edge("generate_shell", "plan_tools")
+# First-turn deterministic path: generate_shell returns Command(goto=populate_initial_data),
+# so no explicit edge needed from generate_shell. populate_initial_data goes to emit_state.
+_builder.add_edge("populate_initial_data", "emit_state")
 
-# After plan_tools, check if we need to call tools
+# Follow-up path: plan_tools may call tools (→ call_tools) or commit to prose (→ respond)
 _builder.add_conditional_edges("plan_tools", should_call_tools)
 
-# Tool calling flow
+# Tool calling flow (follow-up path)
 _builder.add_edge("call_tools", "emit_state")
 _builder.add_edge("emit_state", "respond")
 _builder.add_edge("respond", END)
