@@ -5,25 +5,94 @@ import { Component, computed, input } from '@angular/core';
   selector: 'app-bar-chart',
   standalone: true,
   template: `
-    <div class="rounded-lg border border-white/10 bg-white/5 p-4 backdrop-blur-sm">
-      <div class="text-sm font-medium text-white/60 mb-3">{{ title() }}</div>
+    <div class="chart-card">
+      <div class="chart-card__title">{{ title() }}</div>
       @if (isSkeleton()) {
         <div class="skeleton skeleton-chart"></div>
       } @else {
-        <svg [attr.viewBox]="'0 0 ' + width + ' ' + height" class="w-full" preserveAspectRatio="xMidYMid meet">
+        <svg
+          [attr.viewBox]="'0 0 ' + width + ' ' + height"
+          class="chart-card__svg"
+          preserveAspectRatio="xMidYMid meet"
+          role="img"
+          [attr.aria-label]="title()"
+        >
+          <!-- Baseline -->
+          <line
+            [attr.x1]="padding.left"
+            [attr.x2]="width - padding.right"
+            [attr.y1]="height - padding.bottom"
+            [attr.y2]="height - padding.bottom"
+            stroke="rgba(255,255,255,0.08)"
+            stroke-width="1"
+          />
           @for (bar of bars(); track $index) {
-            <!-- Bar -->
-            <rect class="bar" [attr.x]="bar.x" [attr.y]="bar.y" [attr.width]="bar.w" [attr.height]="bar.h" fill="#d4aa6a" rx="2" />
-            <!-- Value above bar -->
-            <text [attr.x]="bar.x + bar.w / 2" [attr.y]="bar.y - 6" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="10">{{ bar.value }}</text>
-            <!-- Label below bar -->
-            <text [attr.x]="bar.x + bar.w / 2" [attr.y]="height - 4" text-anchor="middle" fill="rgba(255,255,255,0.3)" font-size="10">{{ bar.label }}</text>
+            <rect
+              class="bar"
+              [attr.x]="bar.x"
+              [attr.y]="bar.y"
+              [attr.width]="bar.w"
+              [attr.height]="bar.h"
+              [attr.rx]="3"
+              fill="url(#bar-gradient)"
+            />
+            <text
+              [attr.x]="bar.x + bar.w / 2"
+              [attr.y]="bar.y - 6"
+              text-anchor="middle"
+              fill="rgba(255,255,255,0.7)"
+              font-size="11"
+              font-weight="500"
+            >{{ bar.value }}</text>
+            <text
+              [attr.x]="bar.x + bar.w / 2"
+              [attr.y]="height - padding.bottom + 16"
+              text-anchor="middle"
+              fill="rgba(255,255,255,0.5)"
+              font-size="11"
+            >{{ bar.label }}</text>
           }
+          <defs>
+            <linearGradient id="bar-gradient" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#e0b87a" stop-opacity="1"/>
+              <stop offset="100%" stop-color="#d4aa6a" stop-opacity="0.75"/>
+            </linearGradient>
+          </defs>
         </svg>
       }
     </div>
   `,
   styleUrls: ['./skeleton.css'],
+  styles: [`
+    .chart-card {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding: 16px 18px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.03);
+      backdrop-filter: blur(4px);
+    }
+    .chart-card__title {
+      font-size: 13px;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.65);
+      letter-spacing: 0.01em;
+    }
+    .chart-card__svg {
+      width: 100%;
+      height: auto;
+      max-height: 280px;
+      display: block;
+    }
+    .bar {
+      transition: opacity 120ms ease;
+    }
+    .bar:hover {
+      opacity: 0.85;
+    }
+  `],
 })
 export class BarChartComponent {
   readonly title = input<string>('');
@@ -32,8 +101,8 @@ export class BarChartComponent {
   readonly valueKey = input<string>('');
 
   readonly width = 400;
-  readonly height = 200;
-  readonly padding = { top: 30, right: 20, bottom: 30, left: 20 };
+  readonly height = 220;
+  readonly padding = { top: 28, right: 16, bottom: 28, left: 16 };
 
   readonly isSkeleton = computed(() => this.data() == null);
 
@@ -46,7 +115,7 @@ export class BarChartComponent {
     const maxVal = Math.max(...values) || 1;
     const plotW = this.width - this.padding.left - this.padding.right;
     const plotH = this.height - this.padding.top - this.padding.bottom;
-    const gap = 8;
+    const gap = 12;
     const barW = (plotW - gap * (d.length - 1)) / d.length;
 
     return d.map((item, i) => {

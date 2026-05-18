@@ -8,12 +8,22 @@ import { RenderElementComponent } from '@ngaf/render';
   standalone: true,
   imports: [RenderElementComponent],
   template: `
-    <div class="flex flex-col gap-6 p-4">
+    <div class="dashboard-grid">
       @for (key of childKeys(); track key) {
         <render-element [elementKey]="key" [spec]="spec()" />
       }
     </div>
   `,
+  styles: [`
+    .dashboard-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      padding: 4px 0;
+      width: 100%;
+      min-width: 0;
+    }
+  `],
 })
 export class DashboardGridComponent {
   readonly childKeys = input<string[]>([]);

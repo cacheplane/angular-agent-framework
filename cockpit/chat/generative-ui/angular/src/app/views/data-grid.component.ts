@@ -5,35 +5,88 @@ import { Component, computed, input } from '@angular/core';
   selector: 'app-data-grid',
   standalone: true,
   template: `
-    <div class="rounded-lg border border-white/10 bg-white/5 p-4 backdrop-blur-sm">
-      <div class="text-sm font-medium text-white/60 mb-3">{{ title() }}</div>
+    <div class="data-grid">
+      <div class="data-grid__title">{{ title() }}</div>
       @if (isSkeleton()) {
         @for (i of skeletonRows; track i) {
           <div class="skeleton skeleton-row"></div>
         }
       } @else {
-        <table class="w-full text-sm">
-          <thead>
-            <tr class="border-b border-white/10">
-              @for (col of formattedColumns(); track col.key) {
-                <th class="text-left text-xs font-medium uppercase tracking-wider text-white/40 py-2 px-2">{{ col.label }}</th>
-              }
-            </tr>
-          </thead>
-          <tbody>
-            @for (row of rows(); track $index) {
-              <tr class="border-b border-white/5" [class.bg-white/5]="$index % 2 === 1">
+        <div class="data-grid__scroll">
+          <table class="data-grid__table">
+            <thead>
+              <tr>
                 @for (col of formattedColumns(); track col.key) {
-                  <td class="py-2 px-2 text-white/80">{{ row[col.key] }}</td>
+                  <th>{{ col.label }}</th>
                 }
               </tr>
-            }
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              @for (row of rows(); track $index) {
+                <tr>
+                  @for (col of formattedColumns(); track col.key) {
+                    <td>{{ row[col.key] }}</td>
+                  }
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
       }
     </div>
   `,
   styleUrls: ['./skeleton.css'],
+  styles: [`
+    .data-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding: 16px 18px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.03);
+      backdrop-filter: blur(4px);
+    }
+    .data-grid__title {
+      font-size: 13px;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.65);
+      letter-spacing: 0.01em;
+    }
+    .data-grid__scroll {
+      overflow-x: auto;
+      margin: 0 -4px;
+    }
+    .data-grid__table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      font-variant-numeric: tabular-nums;
+    }
+    .data-grid__table th {
+      text-align: left;
+      padding: 8px 10px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.45);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      white-space: nowrap;
+    }
+    .data-grid__table td {
+      padding: 10px;
+      color: rgba(255, 255, 255, 0.85);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      white-space: nowrap;
+    }
+    .data-grid__table tbody tr:nth-child(even) td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+    .data-grid__table tbody tr:last-child td {
+      border-bottom: none;
+    }
+  `],
 })
 export class DataGridComponent {
   readonly title = input<string>('');
