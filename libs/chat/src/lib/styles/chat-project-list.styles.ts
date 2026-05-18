@@ -31,7 +31,6 @@ export const CHAT_PROJECT_LIST_STYLES = `
   .chat-project-list__item[data-active="true"] {
     background: var(--ngaf-chat-surface-alt);
     font-weight: 500;
-    box-shadow: inset 2px 0 0 var(--a2ui-primary, var(--ngaf-chat-primary));
   }
   .chat-project-list__kebab {
     flex-shrink: 0;

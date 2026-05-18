@@ -273,20 +273,22 @@ export const CHAT_SIDENAV_STYLES = `
   .chat-sidenav__archived-heading {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
     width: 100%;
-    padding: 8px 12px 4px;
+    padding: 8px 12px;
     border: 0;
+    border-radius: 8px;
     background: transparent;
-    color: var(--ngaf-chat-text-muted);
+    color: var(--ngaf-chat-text);
     font: inherit;
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.4px;
+    font-size: var(--ngaf-chat-font-size-sm);
     text-align: left;
     cursor: pointer;
   }
-  .chat-sidenav__archived-heading:hover { color: var(--ngaf-chat-text); }
+  .chat-sidenav__archived-heading:hover {
+    background: var(--ngaf-chat-surface-alt);
+    color: var(--ngaf-chat-text);
+  }
   .chat-sidenav__archived-heading:focus-visible {
     outline: 2px solid var(--ngaf-chat-primary);
     outline-offset: 2px;

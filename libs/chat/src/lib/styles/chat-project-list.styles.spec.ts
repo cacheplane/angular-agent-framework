@@ -41,3 +41,12 @@ describe('CHAT_PROJECT_LIST_STYLES — New project button', () => {
     );
   });
 });
+
+describe('CHAT_PROJECT_LIST_STYLES — active item', () => {
+  const normalized = CHAT_PROJECT_LIST_STYLES.replace(/\s+/g, ' ');
+  it('does NOT use a left-accent box-shadow for the active item (symmetric bg-only indication)', () => {
+    expect(normalized).not.toMatch(
+      /\.chat-project-list__item\[data-active="true"\]\s*\{[^}]*box-shadow:\s*inset\s+2px\s+0\s+0/,
+    );
+  });
+});
