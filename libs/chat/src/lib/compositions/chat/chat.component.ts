@@ -318,6 +318,7 @@ export class ChatComponent {
   readonly genuiToolNames = input<readonly string[]>([
     'generate_a2ui_schema',
     'generate_json_render_spec',
+    'render_spec',
   ]);
 
   readonly showWelcome = computed(() => {
