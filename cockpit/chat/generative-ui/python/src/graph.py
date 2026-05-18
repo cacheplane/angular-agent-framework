@@ -200,6 +200,7 @@ async def respond(state: DashboardState) -> DashboardState:
 _builder = StateGraph(DashboardState)
 _builder.add_node("router", router)
 _builder.add_node("generate_shell", generate_shell)
+_builder.add_node("populate_initial_data", populate_initial_data)
 _builder.add_node("plan_tools", plan_tools)
 _builder.add_node("call_tools", ToolNode(ALL_TOOLS))
 _builder.add_node("emit_state", emit_state)
@@ -207,13 +208,14 @@ _builder.add_node("respond", respond)
 
 _builder.set_entry_point("router")
 
-# After shell generation, go to plan_tools to call all data tools
-_builder.add_edge("generate_shell", "plan_tools")
+# First-turn deterministic path: generate_shell returns Command(goto=populate_initial_data),
+# so no explicit edge needed from generate_shell. populate_initial_data goes to emit_state.
+_builder.add_edge("populate_initial_data", "emit_state")
 
-# After plan_tools, check if we need to call tools
+# Follow-up path: plan_tools may call tools (→ call_tools) or commit to prose (→ respond)
 _builder.add_conditional_edges("plan_tools", should_call_tools)
 
-# Tool calling flow
+# Tool calling flow (follow-up path)
 _builder.add_edge("call_tools", "emit_state")
 _builder.add_edge("emit_state", "respond")
 _builder.add_edge("respond", END)
