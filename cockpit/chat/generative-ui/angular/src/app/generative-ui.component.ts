@@ -22,8 +22,8 @@ const dashboardViews = views({
 });
 
 const WELCOME_SUGGESTIONS = [
-  { label: 'Render a dashboard', value: 'Show me a Q3 sales dashboard with three metrics.' },
-  { label: 'Render a form',      value: 'Create a contact form with name, email, and message.' },
+  { label: 'Airline operations dashboard', value: 'Show me a dashboard of airline operations.' },
+  { label: 'Filter to cancelled flights',  value: 'Filter to only the cancelled flights.' },
 ] as const;
 
 @Component({
