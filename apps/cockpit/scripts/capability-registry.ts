@@ -36,16 +36,16 @@ export const capabilities: readonly Capability[] = [
   { id: 'repeat-loops', product: 'render', topic: 'repeat-loops', angularProject: 'cockpit-render-repeat-loops-angular', port: 4405, pythonDir: 'cockpit/render/repeat-loops/python', graphName: 'repeat-loops' },
   { id: 'computed-functions', product: 'render', topic: 'computed-functions', angularProject: 'cockpit-render-computed-functions-angular', port: 4406, pythonDir: 'cockpit/render/computed-functions/python', graphName: 'computed-functions' },
   // Chat capabilities
-  { id: 'c-messages', product: 'chat', topic: 'messages', angularProject: 'cockpit-chat-messages-angular', port: 4501, pythonPort: 5501, pythonDir: 'cockpit/langgraph/streaming/python', graphName: 'c-messages' },
-  { id: 'c-input', product: 'chat', topic: 'input', angularProject: 'cockpit-chat-input-angular', port: 4502, pythonPort: 5502, pythonDir: 'cockpit/langgraph/streaming/python', graphName: 'c-input' },
+  { id: 'c-messages', product: 'chat', topic: 'messages', angularProject: 'cockpit-chat-messages-angular', port: 4501, pythonPort: 5501, pythonDir: 'cockpit/chat/messages/python', graphName: 'c-messages' },
+  { id: 'c-input', product: 'chat', topic: 'input', angularProject: 'cockpit-chat-input-angular', port: 4502, pythonPort: 5502, pythonDir: 'cockpit/chat/input/python', graphName: 'c-input' },
   { id: 'c-interrupts', product: 'chat', topic: 'interrupts', angularProject: 'cockpit-chat-interrupts-angular', port: 4503, pythonPort: 5503, pythonDir: 'cockpit/langgraph/streaming/python', graphName: 'c-interrupts' },
   { id: 'c-tool-calls', product: 'chat', topic: 'tool-calls', angularProject: 'cockpit-chat-tool-calls-angular', port: 4504, pythonPort: 5504, pythonDir: 'cockpit/chat/tool-calls/python', graphName: 'c-tool-calls' },
   { id: 'c-subagents', product: 'chat', topic: 'subagents', angularProject: 'cockpit-chat-subagents-angular', port: 4505, pythonPort: 5505, pythonDir: 'cockpit/chat/subagents/python', graphName: 'c-subagents' },
-  { id: 'c-threads', product: 'chat', topic: 'threads', angularProject: 'cockpit-chat-threads-angular', port: 4506, pythonPort: 5506, pythonDir: 'cockpit/langgraph/streaming/python', graphName: 'c-threads' },
-  { id: 'c-timeline', product: 'chat', topic: 'timeline', angularProject: 'cockpit-chat-timeline-angular', port: 4507, pythonPort: 5507, pythonDir: 'cockpit/langgraph/streaming/python', graphName: 'c-timeline' },
+  { id: 'c-threads', product: 'chat', topic: 'threads', angularProject: 'cockpit-chat-threads-angular', port: 4506, pythonPort: 5506, pythonDir: 'cockpit/chat/threads/python', graphName: 'c-threads' },
+  { id: 'c-timeline', product: 'chat', topic: 'timeline', angularProject: 'cockpit-chat-timeline-angular', port: 4507, pythonPort: 5507, pythonDir: 'cockpit/chat/timeline/python', graphName: 'c-timeline' },
   { id: 'c-generative-ui', product: 'chat', topic: 'generative-ui', angularProject: 'cockpit-chat-generative-ui-angular', port: 4508, pythonPort: 5508, pythonDir: 'cockpit/langgraph/streaming/python', graphName: 'c-generative-ui' },
-  { id: 'c-debug', product: 'chat', topic: 'debug', angularProject: 'cockpit-chat-debug-angular', port: 4509, pythonPort: 5509, pythonDir: 'cockpit/langgraph/streaming/python', graphName: 'c-debug' },
-  { id: 'c-theming', product: 'chat', topic: 'theming', angularProject: 'cockpit-chat-theming-angular', port: 4510, pythonPort: 5510, pythonDir: 'cockpit/langgraph/streaming/python', graphName: 'c-theming' },
+  { id: 'c-debug', product: 'chat', topic: 'debug', angularProject: 'cockpit-chat-debug-angular', port: 4509, pythonPort: 5509, pythonDir: 'cockpit/chat/debug/python', graphName: 'c-debug' },
+  { id: 'c-theming', product: 'chat', topic: 'theming', angularProject: 'cockpit-chat-theming-angular', port: 4510, pythonPort: 5510, pythonDir: 'cockpit/chat/theming/python', graphName: 'c-theming' },
   { id: 'c-a2ui', product: 'chat', topic: 'a2ui', angularProject: 'cockpit-chat-a2ui-angular', port: 4511, pythonPort: 5511, pythonDir: 'cockpit/langgraph/streaming/python', graphName: 'c-a2ui' },
 ] as const;
 
