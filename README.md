@@ -1,6 +1,6 @@
 <p align="center">
   <img
-    src="https://cacheplane.ai/assets/hero.svg"
+    src="https://threadplane.ai/assets/hero.svg"
     alt="Agent UI for Angular — agent UI primitives for Angular"
     width="100%"
   />
@@ -108,7 +108,7 @@ That's it. `chat.messages()` and `chat.status()` are Angular Signals. Bind them 
 
 <p align="center">
   <img
-    src="https://cacheplane.ai/assets/arch-diagram.svg"
+    src="https://threadplane.ai/assets/arch-diagram.svg"
     alt="Agent UI for Angular architecture: Angular Component → agent() → StreamManager Bridge → LangGraph Platform, with signals returned reactively"
     width="100%"
   />
@@ -120,11 +120,11 @@ That's it. `chat.messages()` and `chat.status()` are Angular Signals. Bind them 
 
 ## Documentation
 
-- [Agent Quickstart](https://cacheplane.ai/docs/agent/getting-started/quickstart)
-- [agent() API](https://cacheplane.ai/docs/agent/api/agent)
-- [Chat Introduction](https://cacheplane.ai/docs/chat/getting-started/introduction)
-- [Human-in-the-Loop / Interrupts](https://cacheplane.ai/docs/agent/guides/interrupts)
-- [Subgraph and Subagent Streaming](https://cacheplane.ai/docs/agent/guides/subgraphs)
+- [Agent Quickstart](https://threadplane.ai/docs/agent/getting-started/quickstart)
+- [agent() API](https://threadplane.ai/docs/agent/api/agent)
+- [Chat Introduction](https://threadplane.ai/docs/chat/getting-started/introduction)
+- [Human-in-the-Loop / Interrupts](https://threadplane.ai/docs/agent/guides/interrupts)
+- [Subgraph and Subagent Streaming](https://threadplane.ai/docs/agent/guides/subgraphs)
 
 ---
 

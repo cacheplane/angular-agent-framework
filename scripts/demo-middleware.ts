@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MIT
 /**
  * Vercel Serverless Function proxy for the canonical-demo deployment
- * (demo.cacheplane.ai). Wraps the shared langgraph-proxy factory with:
+ * (demo.threadplane.ai). Wraps the shared langgraph-proxy factory with:
  *   - the rate-limit gate from scripts/rate-limit.ts (Phase 3)
  *   - CORS allowlist + body-byte cap from env (Phase 4)
  *
@@ -14,9 +14,9 @@
 import { createProxyHandler } from './langgraph-proxy';
 import { checkRateLimit } from './rate-limit';
 
-const DEFAULT_ALLOWED_ORIGINS = ['https://demo.cacheplane.ai'];
+const DEFAULT_ALLOWED_ORIGINS = ['https://demo.threadplane.ai'];
 const DEFAULT_MAX_BODY_BYTES = 8192;
-const DEFAULT_TELEMETRY_INGEST_URL = 'https://cacheplane.ai/api/ingest';
+const DEFAULT_TELEMETRY_INGEST_URL = 'https://threadplane.ai/api/ingest';
 
 const allowedOrigins = (() => {
   const raw = process.env['ALLOWED_ORIGINS'];

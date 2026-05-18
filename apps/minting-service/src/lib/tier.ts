@@ -6,7 +6,7 @@ export type MintableTier = Extract<LicenseTier, 'developer-seat' | 'app-deployme
 const VALID_TIERS: readonly MintableTier[] = ['developer-seat', 'app-deployment'] as const;
 
 /**
- * Extract the Cacheplane tier from a Stripe price metadata bag.
+ * Extract the ThreadPlane tier from a Stripe price metadata bag.
  * Throws if the field is missing or holds an unknown value.
  */
 export function extractTier(metadata: Record<string, string> | null | undefined): MintableTier {

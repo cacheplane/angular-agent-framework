@@ -67,13 +67,13 @@ function buildDevToDraft(): Draft {
       '',
       '## Why this exists',
       '',
-      'The Cacheplane marketing pipeline syndicates blog content to Dev.to. This run verifies the live wire works end-to-end.',
+      'The ThreadPlane marketing pipeline syndicates blog content to Dev.to. This run verifies the live wire works end-to-end.',
     ].join('\n'),
     article: {
       title: `Marketing Pipeline Smoke Test — ${stamp}`,
       tags: ['test'],
-      canonicalUrl: 'https://cacheplane.ai',
-      description: 'Automated smoke test of the Cacheplane marketing pipeline Dev.to adapter.',
+      canonicalUrl: 'https://threadplane.ai',
+      description: 'Automated smoke test of the ThreadPlane marketing pipeline Dev.to adapter.',
     },
   };
 }

@@ -1,6 +1,6 @@
 # @ngaf/marketing-channels
 
-Channel adapters for the Cacheplane marketing pipeline. One adapter per channel, all behind a single `ChannelAdapter` interface.
+Channel adapters for the ThreadPlane marketing pipeline. One adapter per channel, all behind a single `ChannelAdapter` interface.
 
 ## Implemented
 
@@ -20,7 +20,7 @@ import { getAdapter } from '@ngaf/marketing-channels';
 const x = getAdapter('x');
 const result = await x.post({
   channel: 'x',
-  text: 'Hello from Cacheplane.',
+  text: 'Hello from ThreadPlane.',
 });
 console.log(result.url);
 ```
@@ -51,7 +51,7 @@ Dev.to uses a single static API key.
 
 1. Sign in to Dev.to.
 2. **Settings** → **Extensions** → **DEV Community API Keys** → **Generate API Key**.
-   Name it `cacheplane-marketing` (or anything you like).
+   Name it `threadplane-marketing` (or anything you like).
 3. Copy the key into `.env`:
 
    ```

@@ -75,6 +75,6 @@ describe('provideAgent', () => {
     TestBed.inject(AGENT_CONFIG);
     await new Promise((r) => setTimeout(r, 0));
     const calls = warn.mock.calls.map((c) => String(c[0]));
-    expect(calls.some((m) => m.includes('[cacheplane] @ngaf/langgraph'))).toBe(true);
+    expect(calls.some((m) => m.includes('[threadplane] @ngaf/langgraph'))).toBe(true);
   });
 });

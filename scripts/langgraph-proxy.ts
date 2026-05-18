@@ -46,7 +46,7 @@ export interface ProxyConfig {
   readonly checkRateLimit?: (ip: string) => Promise<{ allowed: boolean; retryAfterSec: number; count: number }>;
   /** Origins to allow via CORS. If undefined, legacy wildcard `*` behavior
    *  preserved (used by cockpit-examples). Each entry is a full origin
-   *  string, e.g. `https://demo.cacheplane.ai`. Match is exact-string. */
+   *  string, e.g. `https://demo.threadplane.ai`. Match is exact-string. */
   readonly allowedOrigins?: readonly string[];
   /** Maximum request body size in bytes. If undefined, no cap (legacy
    *  behavior). Checked against Content-Length first, falls back to

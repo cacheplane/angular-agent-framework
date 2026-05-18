@@ -5,7 +5,7 @@ import { PostCard } from '../../components/blog/PostCard';
 import { TagChips } from '../../components/blog/TagChips';
 
 export const metadata = createPageMetadata({
-  title: 'Blog — Cacheplane',
+  title: 'Blog — ThreadPlane',
   description:
     'Long-form writing on agent UI for Angular: streaming, generative UI, threads, interrupts, production patterns.',
   pathname: '/blog',
@@ -39,7 +39,7 @@ export default function BlogIndexPage() {
           marginBottom: 12,
         }}
       >
-        Notes from Cacheplane
+        Notes from ThreadPlane
       </h1>
       <p style={{ fontSize: 18, opacity: 0.8, marginBottom: 32, maxWidth: '60ch' }}>
         Writing on agent UI for Angular — production patterns, design choices,

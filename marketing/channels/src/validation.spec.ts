@@ -108,7 +108,7 @@ describe('validateDraft (Dev.to)', () => {
       article: {
         title: 'My Article',
         tags: ['angular', 'tutorial'],
-        canonicalUrl: 'https://cacheplane.ai/blog/my-article',
+        canonicalUrl: 'https://threadplane.ai/blog/my-article',
         description: 'A description.',
       },
     };

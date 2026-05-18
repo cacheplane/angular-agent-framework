@@ -81,11 +81,11 @@ return new AIMessage({
 
 ## Documentation
 
-- [Quickstart](https://cacheplane.ai/docs/agent/getting-started/quickstart)
-- [`agent()` API reference](https://cacheplane.ai/docs/agent/api/agent)
-- [Human-in-the-loop / interrupts](https://cacheplane.ai/docs/agent/guides/interrupts)
-- [Thread persistence](https://cacheplane.ai/docs/agent/guides/persistence)
-- [Testing with `MockAgentTransport`](https://cacheplane.ai/docs/agent/guides/testing)
+- [Quickstart](https://threadplane.ai/docs/agent/getting-started/quickstart)
+- [`agent()` API reference](https://threadplane.ai/docs/agent/api/agent)
+- [Human-in-the-loop / interrupts](https://threadplane.ai/docs/agent/guides/interrupts)
+- [Thread persistence](https://threadplane.ai/docs/agent/guides/persistence)
+- [Testing with `MockAgentTransport`](https://threadplane.ai/docs/agent/guides/testing)
 
 ## License
 

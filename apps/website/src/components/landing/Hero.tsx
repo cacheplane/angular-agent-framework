@@ -137,14 +137,14 @@ export function Hero() {
                 maxWidth: '60ch',
               }}
             >
-              Not another backend agent runtime. Keep LangGraph, Genkit, Mastra, CrewAI, or your own service. Cacheplane solves the Angular UI layer.
+              Not another backend agent runtime. Keep LangGraph, Genkit, Mastra, CrewAI, or your own service. ThreadPlane solves the Angular UI layer.
             </p>
           </div>
 
           {/* Right column — layered collage (preserved verbatim from prior Hero.tsx) */}
           <div style={{ position: 'relative', minHeight: 420 }} aria-hidden="true">
             <BrowserFrame
-              url="demo.cacheplane.ai"
+              url="demo.threadplane.ai"
               rotate={-3}
               elevation="lg"
               style={{ position: 'absolute', top: 0, left: 0, width: '92%' }}

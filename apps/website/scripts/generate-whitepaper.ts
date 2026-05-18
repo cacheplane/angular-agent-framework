@@ -11,7 +11,7 @@ if (!process.env['ANTHROPIC_API_KEY'] && loadEnvFile && fs.existsSync('.env')) {
 const client = new Anthropic();
 const MODEL = process.env['ANTHROPIC_MODEL'] ?? 'claude-opus-4-5';
 
-const CURRENT_API_CONTEXT = `You are writing public technical whitepapers for Cacheplane Agent UI for Angular.
+const CURRENT_API_CONTEXT = `You are writing public technical whitepapers for ThreadPlane Agent UI for Angular.
 
 Use only the current API surface:
 - Package names are @ngaf/langgraph, @ngaf/render, @ngaf/chat, and @ngaf/ag-ui.
@@ -601,7 +601,7 @@ function buildHTML(
   <div style="font-family:monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.12em;color:#004090;font-weight:700;margin-bottom:24px">${config.eyebrow}</div>
   <h1 style="font-family:'EB Garamond',serif;font-size:52px;font-weight:800;line-height:1.1;color:#1a1a2e;margin-bottom:20px">${config.title.replace(/ /g, '<br>')}</h1>
   <p style="font-family:'EB Garamond',serif;font-style:italic;font-size:20px;color:#555770;margin-bottom:40px">${config.subtitle}</p>
-  <div style="font-size:13px;color:#8b8fa3;font-family:monospace">cacheplane.ai · ${new Date().getFullYear()}</div>
+  <div style="font-size:13px;color:#8b8fa3;font-family:monospace">threadplane.ai · ${new Date().getFullYear()}</div>
 </div>
 
 <!-- TOC -->
@@ -681,7 +681,7 @@ async function generateWhitepaper(config: WhitepaperConfig): Promise<void> {
 
 // ── Main ─────────────────────────────────────────────────────────────────
 async function main() {
-  console.log('Cacheplane White Paper Generator\n');
+  console.log('ThreadPlane White Paper Generator\n');
   console.log(`Model: ${MODEL}`);
 
   const paperArg = process.argv.find(a => a.startsWith('--paper='))?.split('=')[1]

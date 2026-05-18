@@ -89,7 +89,7 @@ export default function PrimitivesDevPage() {
 
           <h2 style={{ marginTop: 32 }}>BrowserFrame</h2>
           <div style={{ marginTop: 12, maxWidth: 600 }}>
-            <BrowserFrame url="cockpit.cacheplane.ai" elevation="md">
+            <BrowserFrame url="cockpit.threadplane.ai" elevation="md">
               <div
                 style={{
                   padding: 60,

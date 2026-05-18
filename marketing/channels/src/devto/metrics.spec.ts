@@ -46,7 +46,7 @@ describe('fetchDevToMetrics', () => {
     );
     await fetchDevToMetrics(apiKey, '9');
     expect(receivedHeaders?.get('api-key')).toBe(apiKey);
-    expect(receivedHeaders?.get('user-agent')).toBe('cacheplane-marketing/1.0');
+    expect(receivedHeaders?.get('user-agent')).toBe('threadplane-marketing/1.0');
   });
 
   it('throws a clear error on 404', async () => {

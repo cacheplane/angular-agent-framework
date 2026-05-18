@@ -2,7 +2,7 @@
  * Capture product screenshots from the live cockpit demo
  * for use in the marketing site's BrowserFrame placeholders.
  *
- * Captures cockpit.cacheplane.ai in each of its 4 modes (Run, Code,
+ * Captures cockpit.threadplane.ai in each of its 4 modes (Run, Code,
  * Docs, API) at 2× DPR, then crops the cockpit content well, optimizes
  * to WebP, and writes to apps/website/public/screenshots/.
  *
@@ -10,7 +10,7 @@
  *   pnpm tsx apps/website/scripts/capture-screenshots.ts
  *
  * Optional flags:
- *   --url <url>    Override the cockpit URL (default cockpit.cacheplane.ai)
+ *   --url <url>    Override the cockpit URL (default cockpit.threadplane.ai)
  *   --keep-png     Keep the intermediate PNG files (for debugging)
  *
  * The script is idempotent — it overwrites existing files in
@@ -25,7 +25,7 @@ import { dirname, join } from 'node:path';
 import { existsSync } from 'node:fs';
 
 const DEFAULT_COCKPIT_URL =
-  'https://cockpit.cacheplane.ai/langgraph/core-capabilities/streaming/overview/python';
+  'https://cockpit.threadplane.ai/langgraph/core-capabilities/streaming/overview/python';
 
 interface CaptureTarget {
   /** Output filename (without extension). */

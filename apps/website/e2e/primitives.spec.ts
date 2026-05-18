@@ -46,7 +46,7 @@ test.describe('UI primitives showcase', () => {
   test('renders BrowserFrame with URL pill', async ({ page }) => {
     const frame = page.locator('[data-ui="browser-frame"]');
     await expect(frame).toBeVisible();
-    await expect(frame).toContainText('cockpit.cacheplane.ai');
+    await expect(frame).toContainText('cockpit.threadplane.ai');
   });
 
   test('renders Section with tinted surface variant', async ({ page }) => {

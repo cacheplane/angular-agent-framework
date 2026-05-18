@@ -27,9 +27,9 @@ describe('emitNag', () => {
     emitNag({ status: 'missing' }, { package: '@ngaf/langgraph', warn });
     expect(warn).toHaveBeenCalledTimes(1);
     const message = warn.mock.calls[0][0] as string;
-    expect(message).toContain('[cacheplane]');
+    expect(message).toContain('[threadplane]');
     expect(message).toContain('@ngaf/langgraph');
-    expect(message).toContain('cacheplane.dev/pricing');
+    expect(message).toContain('threadplane.ai/pricing');
   });
 
   it('warns differently for grace / expired / tampered', () => {

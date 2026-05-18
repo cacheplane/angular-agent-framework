@@ -20,7 +20,7 @@ const TEMPLATES: Record<string, () => { subject: string; html: string }> = {
     html: newsletterWelcomeHtml(),
   }),
   'lead-notification': () => ({
-    subject: 'New lead: Brian at Cacheplane',
+    subject: 'New lead: Brian at ThreadPlane',
     html: leadNotificationHtml({
       name: 'Sample Lead',
       email: 'demo@example.com',

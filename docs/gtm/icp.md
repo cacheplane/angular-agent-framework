@@ -1,4 +1,4 @@
-# ICP — Cacheplane
+# ICP — ThreadPlane
 
 > Operational doc. Edited by humans as we learn. The durable two-track ICP summary lives in [gtm.md §3](../../gtm.md).
 
@@ -16,7 +16,7 @@
 These are the signals to instrument first in Spec 1. Baseline rates between them populate this section quantitatively once `developer-funnel` ships.
 
 **Disqualifiers**
-- Greenfield app with no Angular constraint — Cacheplane is for teams that *must* stay on Angular.
+- Greenfield app with no Angular constraint — ThreadPlane is for teams that *must* stay on Angular.
 - Hobby/learning project — we welcome them, but they aren't the ICP for prioritization.
 
 **Where they hang out**

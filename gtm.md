@@ -1,4 +1,4 @@
-# Cacheplane GTM Strategy
+# ThreadPlane GTM Strategy
 
 > Durable strategy. Hand-edited. Operational details live in `docs/gtm/`.
 > Workstream plans live in `docs/superpowers/specs/gtm/`.
@@ -6,7 +6,7 @@
 
 ## 1. What we are
 
-Cacheplane is the production agent UI framework for Angular teams. It turns LangGraph, AG-UI, A2UI, and custom agent streams into real Angular experiences — chat, threads, tool progress, human approvals, generative UI, fallbacks, observability, tests — without rewriting in React or adopting a proprietary cloud.
+ThreadPlane is the production agent UI framework for Angular teams. It turns LangGraph, AG-UI, A2UI, and custom agent streams into real Angular experiences — chat, threads, tool progress, human approvals, generative UI, fallbacks, observability, tests — without rewriting in React or adopting a proprietary cloud.
 
 ## 2. Category
 
@@ -14,7 +14,7 @@ Cacheplane is the production agent UI framework for Angular teams. It turns Lang
 - **Secondary (only after "Agent UI"):** Angular Agent UI Framework
 - **Do not use:** "Angular Agent Framework" (ambiguous with backend runtimes and coding agents), "Enterprise Angular agent framework" (reads sales-first).
 
-The category claim is the **Angular final mile**: official streaming SDKs (LangChain, AG-UI, A2UI) get events into Angular; Cacheplane turns those events into production-ready Angular experiences. We do not compete as a general agent UI framework. We do not compete with backend runtimes.
+The category claim is the **Angular final mile**: official streaming SDKs (LangChain, AG-UI, A2UI) get events into Angular; ThreadPlane turns those events into production-ready Angular experiences. We do not compete as a general agent UI framework. We do not compete with backend runtimes.
 
 ## 3. ICP
 

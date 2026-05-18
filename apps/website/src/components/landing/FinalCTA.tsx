@@ -8,7 +8,7 @@ interface FinalCTAProps {
   headline?: string;
   /** Sub-headline. Defaults to the homepage closer. */
   subtext?: string;
-  /** Primary CTA. Defaults to "Try the demo →" → demo.cacheplane.ai. */
+  /** Primary CTA. Defaults to "Try the demo →" → demo.threadplane.ai. */
   primary?: { label: string; href: string; external?: boolean };
   /** Optional secondary CTA. Defaults to "See each feature in action →" → cockpit. */
   secondary?: { label: string; href: string; external?: boolean } | null;
@@ -16,8 +16,8 @@ interface FinalCTAProps {
   caption?: string | null;
 }
 
-const DEFAULT_PRIMARY = { label: 'Try the demo →', href: 'https://demo.cacheplane.ai', external: true };
-const DEFAULT_SECONDARY = { label: 'See each feature in action →', href: 'https://cockpit.cacheplane.ai', external: true };
+const DEFAULT_PRIMARY = { label: 'Try the demo →', href: 'https://demo.threadplane.ai', external: true };
+const DEFAULT_SECONDARY = { label: 'See each feature in action →', href: 'https://cockpit.threadplane.ai', external: true };
 
 export function FinalCTA({
   headline = 'Stop stalling on agentic Angular.',

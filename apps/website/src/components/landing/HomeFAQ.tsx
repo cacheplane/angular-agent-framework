@@ -27,7 +27,7 @@ const ITEMS: FAQItem[] = [
   },
   {
     q: 'Is this production-ready today?',
-    a: 'It runs the full stack in our reference deployment (cockpit.cacheplane.ai), and breaking changes are called out in release notes. We support Angular’s current and previous LTS versions.',
+    a: 'It runs the full stack in our reference deployment (cockpit.threadplane.ai), and breaking changes are called out in release notes. We support Angular’s current and previous LTS versions.',
   },
   {
     q: 'Where do I report issues?',

@@ -25,7 +25,7 @@ import { isTelemetryDisabled, sha256, getAnonId } from '@ngaf/telemetry';
 
 ## What this package is
 
-The single telemetry surface for `@ngaf/*`. It exists so we can answer "how is Cacheplane being used?" without instrumenting browser packages that ship to end-users.
+The single telemetry surface for `@ngaf/*`. It exists so we can answer "how is ThreadPlane being used?" without instrumenting browser packages that ship to end-users.
 
 ## What is and isn't telemetered
 
@@ -119,7 +119,7 @@ Enterprise users can redirect Node telemetry to their own ingest:
 NGAF_TELEMETRY_INGEST_URL=https://telemetry.acme-internal.example.com/api/ingest
 ```
 
-Default ingest (when env var is unset) is a thin proxy on the Cacheplane website (`https://cacheplane.ai/api/ingest`) that accepts the `@ngaf/telemetry` JSON payload and forwards `ngaf:*` events to our PostHog project without forwarding installer IP addresses. Source of the proxy lives in `apps/website/src/app/api/ingest/`.
+Default ingest (when env var is unset) is a thin proxy on the ThreadPlane website (`https://threadplane.ai/api/ingest`) that accepts the `@ngaf/telemetry` JSON payload and forwards `ngaf:*` events to our PostHog project without forwarding installer IP addresses. Source of the proxy lives in `apps/website/src/app/api/ingest/`.
 
 ## Verifying telemetry is silent
 

@@ -1,6 +1,6 @@
 # @cacheplane/minting-service
 
-License minting service for Cacheplane. Receives Stripe webhooks, signs
+License minting service for ThreadPlane. Receives Stripe webhooks, signs
 Ed25519 license tokens via `@cacheplane/licensing`, persists them to
 Postgres via `@cacheplane/db`, and emails them to customers via Resend.
 

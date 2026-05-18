@@ -31,7 +31,7 @@ export async function GET() {
   const xml = `<?xml version="1.0" encoding="UTF-8" ?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>${escapeXml('Cacheplane Blog')}</title>
+    <title>${escapeXml('ThreadPlane Blog')}</title>
     <link>${SITE_ORIGIN}/blog</link>
     <atom:link href="${SITE_ORIGIN}/blog/rss.xml" rel="self" type="application/rss+xml" />
     <description>${escapeXml('Writing on agent UI for Angular.')}</description>

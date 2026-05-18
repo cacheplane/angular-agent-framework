@@ -3,7 +3,7 @@ import { getPostBySlug } from '../../../lib/blog';
 import { getAuthor } from '../../../lib/blog-authors';
 
 export const runtime = 'nodejs';
-export const alt = 'Cacheplane blog post';
+export const alt = 'ThreadPlane blog post';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 
@@ -61,7 +61,7 @@ export default async function og({ params }: Params) {
             fontSize: 64,
           }}
         >
-          Cacheplane
+          ThreadPlane
         </div>
       ),
       size,
@@ -103,7 +103,7 @@ export default async function og({ params }: Params) {
             opacity: 0.6,
           }}
         >
-          Cacheplane Blog
+          ThreadPlane Blog
         </div>
         <div
           style={{

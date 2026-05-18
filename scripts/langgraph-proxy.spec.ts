@@ -51,7 +51,7 @@ describe('createProxyHandler', () => {
     );
     const handler = createProxyHandler({
       backendUrl: DEFAULT_BACKEND,
-      telemetryIngestUrl: 'https://cacheplane.ai/api/ingest',
+      telemetryIngestUrl: 'https://threadplane.ai/api/ingest',
     });
     const res = makeRes();
     const body = {
@@ -62,7 +62,7 @@ describe('createProxyHandler', () => {
 
     await handler({
       method: 'POST',
-      headers: { host: 'demo.cacheplane.ai', 'content-type': 'application/json' },
+      headers: { host: 'demo.threadplane.ai', 'content-type': 'application/json' },
       body,
       url: '/api/ingest',
       query: {},
@@ -70,7 +70,7 @@ describe('createProxyHandler', () => {
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
     const [url, init] = fetchMock.mock.calls[0]!;
-    expect(url).toBe('https://cacheplane.ai/api/ingest');
+    expect(url).toBe('https://threadplane.ai/api/ingest');
     expect(init).toEqual(expect.objectContaining({
       method: 'POST',
       headers: { 'content-type': 'application/json' },
@@ -90,13 +90,13 @@ describe('createProxyHandler', () => {
     );
     const handler = createProxyHandler({
       backendUrl: DEFAULT_BACKEND,
-      telemetryIngestUrl: 'https://cacheplane.ai/api/ingest',
+      telemetryIngestUrl: 'https://threadplane.ai/api/ingest',
     });
     const res = makeRes();
 
     await handler({
       method: 'POST',
-      headers: { host: 'demo.cacheplane.ai', 'content-type': 'application/json' },
+      headers: { host: 'demo.threadplane.ai', 'content-type': 'application/json' },
       body: {
         event: 'ngaf:runtime_request_created',
         distinctId: 'browser:test',
@@ -139,7 +139,7 @@ describe('createProxyHandler', () => {
     );
     const handler = createProxyHandler({ backendUrl: DEFAULT_BACKEND });
     const res = makeRes();
-    await handler({ method: 'POST', headers: { 'content-type': 'application/json', host: 'demo.cacheplane.ai' }, body: { hello: 'world' }, url: '/api/threads', query: {} } as never, res as never);
+    await handler({ method: 'POST', headers: { 'content-type': 'application/json', host: 'demo.threadplane.ai' }, body: { hello: 'world' }, url: '/api/threads', query: {} } as never, res as never);
     expect(fetchMock).toHaveBeenCalledTimes(1);
     const [calledUrl, init] = fetchMock.mock.calls[0]!;
     expect(calledUrl).toBe(`${DEFAULT_BACKEND}/threads`);
@@ -156,7 +156,7 @@ describe('createProxyHandler', () => {
     );
     const handler = createProxyHandler({ backendUrl: DEFAULT_BACKEND });
     const res = makeRes();
-    await handler({ method: 'GET', headers: { host: 'demo.cacheplane.ai' }, body: undefined, url: '/api/threads/abc?[...path]=threads/abc&limit=10', query: {} } as never, res as never);
+    await handler({ method: 'GET', headers: { host: 'demo.threadplane.ai' }, body: undefined, url: '/api/threads/abc?[...path]=threads/abc&limit=10', query: {} } as never, res as never);
     expect(fetchMock.mock.calls[0]![0]).toBe(`${DEFAULT_BACKEND}/threads/abc?limit=10`);
   });
 
@@ -174,7 +174,7 @@ describe('createProxyHandler', () => {
     );
     const handler = createProxyHandler({ backendUrl: DEFAULT_BACKEND });
     const res = makeRes();
-    await handler({ method: 'POST', headers: { host: 'demo.cacheplane.ai' }, body: {}, url: '/api/threads/abc/runs/stream', query: {} } as never, res as never);
+    await handler({ method: 'POST', headers: { host: 'demo.threadplane.ai' }, body: {}, url: '/api/threads/abc/runs/stream', query: {} } as never, res as never);
     expect(res.setHeader).toHaveBeenCalledWith('content-type', 'text/event-stream');
     expect(res.write).toHaveBeenCalledTimes(2);
     expect(res.end).toHaveBeenCalledTimes(1);
@@ -184,7 +184,7 @@ describe('createProxyHandler', () => {
     vi.spyOn(global, 'fetch').mockRejectedValue(new Error('network down'));
     const handler = createProxyHandler({ backendUrl: DEFAULT_BACKEND });
     const res = makeRes();
-    await handler({ method: 'POST', headers: { host: 'demo.cacheplane.ai' }, body: {}, url: '/api/threads', query: {} } as never, res as never);
+    await handler({ method: 'POST', headers: { host: 'demo.threadplane.ai' }, body: {}, url: '/api/threads', query: {} } as never, res as never);
     expect(res._status).toBe(502);
     expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ error: 'Proxy error' }));
   });
@@ -196,8 +196,8 @@ describe('createProxyHandler', () => {
     const resolveBackend = vi.fn(() => 'https://override.example.com');
     const handler = createProxyHandler({ resolveBackend });
     const res = makeRes();
-    await handler({ method: 'GET', headers: { host: 'demo.cacheplane.ai', referer: 'https://demo.cacheplane.ai/' }, body: undefined, url: '/api/info', query: {} } as never, res as never);
-    expect(resolveBackend).toHaveBeenCalledWith('https://demo.cacheplane.ai/');
+    await handler({ method: 'GET', headers: { host: 'demo.threadplane.ai', referer: 'https://demo.threadplane.ai/' }, body: undefined, url: '/api/info', query: {} } as never, res as never);
+    expect(resolveBackend).toHaveBeenCalledWith('https://demo.threadplane.ai/');
     expect(fetchMock.mock.calls[0]![0]).toBe('https://override.example.com/info');
   });
 
@@ -208,7 +208,7 @@ describe('createProxyHandler', () => {
     const checkRateLimit = vi.fn();
     const handler = createProxyHandler({ backendUrl: DEFAULT_BACKEND, checkRateLimit });
     const res = makeRes();
-    await handler({ method: 'GET', headers: { host: 'demo.cacheplane.ai' }, body: undefined, url: '/api/info', query: {} } as never, res as never);
+    await handler({ method: 'GET', headers: { host: 'demo.threadplane.ai' }, body: undefined, url: '/api/info', query: {} } as never, res as never);
     expect(checkRateLimit).not.toHaveBeenCalled();
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
@@ -222,7 +222,7 @@ describe('createProxyHandler', () => {
     const res = makeRes();
     await handler({
       method: 'POST',
-      headers: { host: 'demo.cacheplane.ai', 'x-forwarded-for': '203.0.113.5' },
+      headers: { host: 'demo.threadplane.ai', 'x-forwarded-for': '203.0.113.5' },
       body: { assistant_id: 'chat' },
       url: '/api/threads/abc/runs/stream',
       query: {},
@@ -238,7 +238,7 @@ describe('createProxyHandler', () => {
     const res = makeRes();
     await handler({
       method: 'POST',
-      headers: { host: 'demo.cacheplane.ai', 'x-forwarded-for': '203.0.113.5' },
+      headers: { host: 'demo.threadplane.ai', 'x-forwarded-for': '203.0.113.5' },
       body: { assistant_id: 'chat' },
       url: '/api/threads/abc/runs/stream',
       query: {},
@@ -257,17 +257,17 @@ describe('createProxyHandler', () => {
     );
     const handler = createProxyHandler({
       backendUrl: DEFAULT_BACKEND,
-      allowedOrigins: ['https://demo.cacheplane.ai'],
+      allowedOrigins: ['https://demo.threadplane.ai'],
     });
     const res = makeRes();
     await handler({
       method: 'GET',
-      headers: { host: 'demo.cacheplane.ai', origin: 'https://demo.cacheplane.ai' },
+      headers: { host: 'demo.threadplane.ai', origin: 'https://demo.threadplane.ai' },
       body: undefined,
       url: '/api/info',
       query: {},
     } as never, res as never);
-    expect(res.setHeader).toHaveBeenCalledWith('access-control-allow-origin', 'https://demo.cacheplane.ai');
+    expect(res.setHeader).toHaveBeenCalledWith('access-control-allow-origin', 'https://demo.threadplane.ai');
     expect(res.setHeader).toHaveBeenCalledWith('vary', 'origin');
     expect(fetchMock).toHaveBeenCalled();
   });
@@ -276,12 +276,12 @@ describe('createProxyHandler', () => {
     const fetchMock = vi.spyOn(global, 'fetch');
     const handler = createProxyHandler({
       backendUrl: DEFAULT_BACKEND,
-      allowedOrigins: ['https://demo.cacheplane.ai'],
+      allowedOrigins: ['https://demo.threadplane.ai'],
     });
     const res = makeRes();
     await handler({
       method: 'GET',
-      headers: { host: 'demo.cacheplane.ai', origin: 'https://malicious.example' },
+      headers: { host: 'demo.threadplane.ai', origin: 'https://malicious.example' },
       body: undefined,
       url: '/api/info',
       query: {},
@@ -297,12 +297,12 @@ describe('createProxyHandler', () => {
     );
     const handler = createProxyHandler({
       backendUrl: DEFAULT_BACKEND,
-      allowedOrigins: ['https://demo.cacheplane.ai'],
+      allowedOrigins: ['https://demo.threadplane.ai'],
     });
     const res = makeRes();
     await handler({
       method: 'GET',
-      headers: { host: 'demo.cacheplane.ai' },
+      headers: { host: 'demo.threadplane.ai' },
       body: undefined,
       url: '/api/info',
       query: {},
@@ -316,18 +316,18 @@ describe('createProxyHandler', () => {
   it('OPTIONS preflight with allowed Origin returns 204 with echoed Origin', async () => {
     const handler = createProxyHandler({
       backendUrl: DEFAULT_BACKEND,
-      allowedOrigins: ['https://demo.cacheplane.ai'],
+      allowedOrigins: ['https://demo.threadplane.ai'],
     });
     const res = makeRes();
     await handler({
       method: 'OPTIONS',
-      headers: { origin: 'https://demo.cacheplane.ai' },
+      headers: { origin: 'https://demo.threadplane.ai' },
       body: undefined,
       url: '/api/info',
       query: {},
     } as never, res as never);
     expect(res._status).toBe(204);
-    expect(res.setHeader).toHaveBeenCalledWith('access-control-allow-origin', 'https://demo.cacheplane.ai');
+    expect(res.setHeader).toHaveBeenCalledWith('access-control-allow-origin', 'https://demo.threadplane.ai');
   });
 
   it('preserves wildcard CORS when allowedOrigins is undefined (legacy examples behavior)', async () => {
@@ -338,7 +338,7 @@ describe('createProxyHandler', () => {
     const res = makeRes();
     await handler({
       method: 'GET',
-      headers: { host: 'demo.cacheplane.ai', origin: 'https://anywhere.example' },
+      headers: { host: 'demo.threadplane.ai', origin: 'https://anywhere.example' },
       body: undefined,
       url: '/api/info',
       query: {},
@@ -355,7 +355,7 @@ describe('createProxyHandler', () => {
     const bigBody = { content: 'x'.repeat(200) };
     await handler({
       method: 'POST',
-      headers: { host: 'demo.cacheplane.ai', 'content-type': 'application/json' },
+      headers: { host: 'demo.threadplane.ai', 'content-type': 'application/json' },
       body: bigBody,
       url: '/api/threads',
       query: {},
@@ -375,7 +375,7 @@ describe('createProxyHandler', () => {
     await handler({
       method: 'POST',
       headers: {
-        host: 'demo.cacheplane.ai',
+        host: 'demo.threadplane.ai',
         'content-type': 'application/json',
         'content-length': '500',
       },
@@ -400,7 +400,7 @@ describe('createProxyHandler', () => {
     const res = makeRes();
     await handler({
       method: 'POST',
-      headers: { host: 'demo.cacheplane.ai', 'content-type': 'application/json', 'content-length': '999999' },
+      headers: { host: 'demo.threadplane.ai', 'content-type': 'application/json', 'content-length': '999999' },
       body: { content: 'x'.repeat(50000) },
       url: '/api/threads',
       query: {},

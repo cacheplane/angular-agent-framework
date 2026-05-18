@@ -12,13 +12,13 @@ const seen = new Set<string>();
 
 const MESSAGES: Record<string, string> = {
   missing:
-    'no license key detected. The library will keep running, but please get a license at https://cacheplane.dev/pricing',
+    'no license key detected. The library will keep running, but please get a license at https://threadplane.ai/pricing',
   grace:
-    'license is expired and within the 14-day grace window. Renew at https://cacheplane.dev/pricing',
+    'license is expired and within the 14-day grace window. Renew at https://threadplane.ai/pricing',
   expired:
-    'license is expired. The library will keep running, but please renew at https://cacheplane.dev/pricing',
+    'license is expired. The library will keep running, but please renew at https://threadplane.ai/pricing',
   tampered:
-    'license signature is invalid or malformed. Download a fresh key from https://cacheplane.dev/pricing',
+    'license signature is invalid or malformed. Download a fresh key from https://threadplane.ai/pricing',
 };
 
 export function emitNag(
@@ -34,7 +34,7 @@ export function emitNag(
   seen.add(key);
 
   const body = MESSAGES[status] ?? 'license check failed.';
-  warn(`[cacheplane] ${options.package}: ${body}`);
+  warn(`[threadplane] ${options.package}: ${body}`);
 }
 
 /** @internal testing hook only. */

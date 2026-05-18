@@ -129,7 +129,7 @@ export default async function OpenGraphImage() {
             }}
           >
             <span style={{ fontSize: 26 }}>🛩️</span>
-            <span>cockpit.cacheplane.ai</span>
+            <span>cockpit.threadplane.ai</span>
           </div>
         </div>
       </div>

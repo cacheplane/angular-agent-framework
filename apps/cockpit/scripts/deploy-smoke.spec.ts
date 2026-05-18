@@ -6,7 +6,7 @@ describe('deploy smoke helper', () => {
     expect(
       parseDeploySmokeArgs([
         '--url',
-        'https://cockpit.cacheplane.ai',
+        'https://cockpit.threadplane.ai',
         '--dry-run',
         '--retries',
         '5',
@@ -14,7 +14,7 @@ describe('deploy smoke helper', () => {
         '1000',
       ])
     ).toEqual({
-      url: 'https://cockpit.cacheplane.ai',
+      url: 'https://cockpit.threadplane.ai',
       expectedTitle: 'Cockpit',
       dryRun: true,
       retries: 5,
@@ -25,11 +25,11 @@ describe('deploy smoke helper', () => {
   it('formats dry-run output without performing a network request', async () => {
     await expect(
       runDeploySmoke({
-        url: 'https://cockpit.cacheplane.ai',
+        url: 'https://cockpit.threadplane.ai',
         expectedTitle: 'Cockpit',
         dryRun: true,
       })
-    ).resolves.toBe('dry-run:https://cockpit.cacheplane.ai:Cockpit');
+    ).resolves.toBe('dry-run:https://cockpit.threadplane.ai:Cockpit');
   });
 
   it('retries until the deployment responds with the expected title', async () => {
@@ -46,13 +46,13 @@ describe('deploy smoke helper', () => {
 
     await expect(
       runDeploySmoke({
-        url: 'https://cockpit.cacheplane.ai',
+        url: 'https://cockpit.threadplane.ai',
         retries: 1,
         retryDelayMs: 1,
         fetchImpl,
         sleep,
       })
-    ).resolves.toBe('pass:https://cockpit.cacheplane.ai:Cockpit');
+    ).resolves.toBe('pass:https://cockpit.threadplane.ai:Cockpit');
 
     expect(fetchImpl).toHaveBeenCalledTimes(2);
     expect(sleep).toHaveBeenCalledTimes(1);

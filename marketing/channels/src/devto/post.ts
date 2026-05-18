@@ -42,7 +42,7 @@ export async function postDevTo(apiKey: string, draft: Draft): Promise<PostResul
       headers: {
         'api-key': apiKey,
         'Content-Type': 'application/json',
-        'User-Agent': 'cacheplane-marketing/1.0',
+        'User-Agent': 'threadplane-marketing/1.0',
       },
       body: JSON.stringify({ article }),
       retryOn5xx: true,

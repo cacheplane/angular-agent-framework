@@ -60,7 +60,7 @@ function buildLlmsTxt(): string {
     'MIT — free for any use, commercial or noncommercial.',
     '',
     '## Full reference',
-    'https://cacheplane.ai/llms-full.txt',
+    'https://threadplane.ai/llms-full.txt',
   ].join('\n');
 }
 

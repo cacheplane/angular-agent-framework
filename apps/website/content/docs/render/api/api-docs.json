@@ -266,7 +266,7 @@
       {
         "name": "license",
         "type": "string",
-        "description": "Signed license token from cacheplane.dev. Optional; omitted in dev.",
+        "description": "Signed license token from threadplane.ai. Optional; omitted in dev.",
         "optional": true
       },
       {

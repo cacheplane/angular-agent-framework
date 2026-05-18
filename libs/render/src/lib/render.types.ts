@@ -48,7 +48,7 @@ export interface RenderConfig {
   store?: StateStore;
   functions?: Record<string, ComputedFunction>;
   handlers?: Record<string, (params: Record<string, unknown>) => unknown | Promise<unknown>>;
-  /** Signed license token from cacheplane.dev. Optional; omitted in dev. */
+  /** Signed license token from threadplane.ai. Optional; omitted in dev. */
   license?: string;
   /**
    * @internal

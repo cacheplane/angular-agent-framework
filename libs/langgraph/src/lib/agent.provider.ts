@@ -18,7 +18,7 @@ export interface AgentConfig {
   apiUrl?:    string;
   /** Custom transport implementation. Defaults to {@link FetchStreamTransport}. */
   transport?: AgentTransport;
-  /** Signed license token from cacheplane.dev. Optional; omitted in dev. */
+  /** Signed license token from threadplane.ai. Optional; omitted in dev. */
   license?: string;
   /**
    * @internal

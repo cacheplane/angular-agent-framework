@@ -1,10 +1,10 @@
-# Messaging — Cacheplane
+# Messaging — ThreadPlane
 
 > Operational doc. Hero copy, proof rows, comparison framing, launch lines. Edited by humans as we iterate. The durable category claim lives in [gtm.md §2](../../gtm.md).
 
 ## Positioning statement (durable)
 
-> For Angular teams building AI agents on LangGraph, AG-UI, or custom backends, Cacheplane is the open-source agent UI framework that turns streaming agent events into production-grade Angular experiences: chat, tool progress, approvals, threads, generative UI, fallbacks, observability, and tests. Unlike React-first agent UI stacks or raw streaming SDKs, Cacheplane is signal-native, DI-friendly, design-system-first, self-hostable, and built for enterprise Angular apps.
+> For Angular teams building AI agents on LangGraph, AG-UI, or custom backends, ThreadPlane is the open-source agent UI framework that turns streaming agent events into production-grade Angular experiences: chat, tool progress, approvals, threads, generative UI, fallbacks, observability, and tests. Unlike React-first agent UI stacks or raw streaming SDKs, ThreadPlane is signal-native, DI-friendly, design-system-first, self-hostable, and built for enterprise Angular apps.
 
 ## Hero (locked for Spec 2 to implement)
 
@@ -18,7 +18,7 @@
 
 **Proof row:** `MIT · Angular-native Signals · LangGraph + AG-UI · A2UI-compatible · Self-hostable · App telemetry off by default`
 
-**Subline under proof row:** *Not another backend agent runtime. Keep LangGraph, Genkit, Mastra, CrewAI, or your own service. Cacheplane solves the Angular UI layer.*
+**Subline under proof row:** *Not another backend agent runtime. Keep LangGraph, Genkit, Mastra, CrewAI, or your own service. ThreadPlane solves the Angular UI layer.*
 
 ## The five durable differentiation points
 
@@ -55,16 +55,16 @@ Hidden attribution fields (populated by URL params + referrer): `source_page`, `
 
 ## Comparison page framing (Spec 3)
 
-| Alternative           | Cacheplane positioning vs. them |
+| Alternative           | ThreadPlane positioning vs. them |
 |-----------------------|---------------------------------|
-| `@langchain/angular`  | "Use it for the stream. Use Cacheplane for the production Angular UI, design-system rendering, fallbacks, thread UX, testing, and enterprise patterns." |
-| CopilotKit            | "Broad agent frontend stack; Cacheplane is deeply Angular-native, signal/DI/design-system-first, optimized for enterprise Angular teams that don't want a React-first mental model." |
-| Hashbrown             | "Hashbrown is great for browser-running agents and LLM-driven frontend tools; Cacheplane is for LangGraph/AG-UI/A2UI-backed enterprise agent workflows with production chat, approvals, threads, observability, and runtime adapters." |
-| A2UI renderer         | "A2UI renderer support is table stakes; Cacheplane adds Angular app integration, fallback behavior, design-system registry patterns, thread/chat UX, and enterprise hardening." |
+| `@langchain/angular`  | "Use it for the stream. Use ThreadPlane for the production Angular UI, design-system rendering, fallbacks, thread UX, testing, and enterprise patterns." |
+| CopilotKit            | "Broad agent frontend stack; ThreadPlane is deeply Angular-native, signal/DI/design-system-first, optimized for enterprise Angular teams that don't want a React-first mental model." |
+| Hashbrown             | "Hashbrown is great for browser-running agents and LLM-driven frontend tools; ThreadPlane is for LangGraph/AG-UI/A2UI-backed enterprise agent workflows with production chat, approvals, threads, observability, and runtime adapters." |
+| A2UI renderer         | "A2UI renderer support is table stakes; ThreadPlane adds Angular app integration, fallback behavior, design-system registry patterns, thread/chat UX, and enterprise hardening." |
 
 ## Launch narrative (Spec 6 spine)
 
-> Angular teams are building agents, but the last mile is still messy: streaming state, tool progress, interrupts, threads, generated UI, fallbacks, and tests. React has mature examples. Backend agent frameworks have protocols. Angular teams need something that speaks Signals, DI, templates, standalone components, and enterprise design systems. Cacheplane is an MIT-licensed agent UI framework for Angular that connects LangGraph, AG-UI, A2UI, and custom backends to production-ready Angular surfaces.
+> Angular teams are building agents, but the last mile is still messy: streaming state, tool progress, interrupts, threads, generated UI, fallbacks, and tests. React has mature examples. Backend agent frameworks have protocols. Angular teams need something that speaks Signals, DI, templates, standalone components, and enterprise design systems. ThreadPlane is an MIT-licensed agent UI framework for Angular that connects LangGraph, AG-UI, A2UI, and custom backends to production-ready Angular surfaces.
 
 ## Avoid
 
