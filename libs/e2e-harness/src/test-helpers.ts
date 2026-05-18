@@ -86,3 +86,39 @@ export async function sendPromptAndWaitForInterrupt(
   // Panel visible implies the run paused at an interrupt rather than completing.
   await expect(page.locator('chat-interrupt-panel')).toBeVisible({ timeout: 60_000 });
 }
+
+/**
+ * Click an action button on the visible chat-interrupt-panel and wait
+ * for the resume continuation to finalize.
+ *
+ * Returns the last finalized assistant bubble (same return shape as
+ * `sendPromptAndWait`), so callers can text-match the post-resume
+ * response.
+ *
+ * Label is matched exactly (anchored regex). The library composition
+ * emits 'accept' | 'edit' | 'respond' | 'ignore' as host outputs; the
+ * actual button text is 'Accept' / 'Edit' / 'Respond' / 'Ignore'.
+ */
+export async function clickInterruptActionAndWaitFinal(
+  page: Page,
+  label: 'Accept' | 'Edit' | 'Respond' | 'Ignore',
+): Promise<Locator> {
+  const button = page
+    .locator('chat-interrupt-panel')
+    .getByRole('button', { name: new RegExp(`^${label}$`) });
+  await button.click();
+
+  // Resume re-enters loading.
+  await expect(page.getByRole('button', { name: /stop generating/i })).toBeVisible({
+    timeout: 10_000,
+  });
+  await expect(page.getByRole('button', { name: /stop generating/i })).not.toBeAttached({
+    timeout: 60_000,
+  });
+
+  const finalizedAssistant = page
+    .locator('chat-message[data-role="assistant"][data-streaming="false"]')
+    .last();
+  await expect(finalizedAssistant).toBeAttached({ timeout: 5_000 });
+  return finalizedAssistant;
+}
