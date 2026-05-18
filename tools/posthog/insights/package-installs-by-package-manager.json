@@ -6,7 +6,14 @@
   "events": [
     {
       "event": "ngaf:postinstall",
-      "math": "total"
+      "math": "total",
+      "properties": [
+        {
+          "key": "install_context",
+          "value": "ci",
+          "operator": "is_not"
+        }
+      ]
     }
   ],
   "breakdown": "package_manager",

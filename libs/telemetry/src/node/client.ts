@@ -32,7 +32,19 @@ function readBooleanToken(value: string | undefined): boolean | undefined {
   return undefined;
 }
 
-function getPackageManager(env: NodeJS.ProcessEnv = process.env): Record<string, unknown> {
+function isCiEnv(env: NodeJS.ProcessEnv = process.env): boolean {
+  return [
+    env.CI,
+    env.GITHUB_ACTIONS,
+    env.CONTINUOUS_INTEGRATION,
+    env.BUILDKITE,
+    env.CIRCLECI,
+  ].some((value) => readBooleanToken(value) === true);
+}
+
+function getPackageManager(
+  env: NodeJS.ProcessEnv = process.env
+): Record<string, unknown> {
   const userAgent = env.npm_config_user_agent;
   const tokens = userAgent?.split(/\s+/).filter(Boolean) ?? [];
   const firstToken = tokens[0];
@@ -47,25 +59,45 @@ function getPackageManager(env: NodeJS.ProcessEnv = process.env): Record<string,
   const nodeTokenIndex = tokens.findIndex((token) => token.startsWith('node/'));
   const nodeToken = nodeTokenIndex >= 0 ? tokens[nodeTokenIndex] : undefined;
   const nodeVersion = nodeToken?.match(/^node\/([^/\s]+)$/)?.[1];
-  if (nodeVersion) out.package_manager_node_version = nodeVersion.replace(/^v/, '');
+  if (nodeVersion)
+    out.package_manager_node_version = nodeVersion.replace(/^v/, '');
 
   if (nodeTokenIndex >= 0) {
-    const platformTokens = tokens.slice(nodeTokenIndex + 1).filter((token) => !token.includes('/'));
+    const platformTokens = tokens
+      .slice(nodeTokenIndex + 1)
+      .filter((token) => !token.includes('/'));
     if (platformTokens[0]) out.package_manager_os = platformTokens[0];
     if (platformTokens[1]) out.package_manager_arch = platformTokens[1];
   }
 
-  const workspacesValue = tokens.find((token) => token.startsWith('workspaces/'))?.split('/')[1];
+  const workspacesValue = tokens
+    .find((token) => token.startsWith('workspaces/'))
+    ?.split('/')[1];
   const workspaces = readBooleanToken(workspacesValue);
   if (workspaces !== undefined) out.package_manager_workspaces = workspaces;
 
   return out;
 }
 
+function getInstallContext(
+  env: NodeJS.ProcessEnv = process.env
+): 'ci' | 'dependency' | 'global' | 'workspace' {
+  if (isCiEnv(env)) return 'ci';
+  if (
+    readBooleanToken(env.npm_config_global) === true ||
+    env.npm_config_location === 'global'
+  ) {
+    return 'global';
+  }
+  const packageManager = getPackageManager(env);
+  if (packageManager.package_manager_workspaces === true) return 'workspace';
+  return 'dependency';
+}
+
 // @internal
 export function createPostinstallProperties(
   input: PostinstallInput,
-  env: NodeJS.ProcessEnv = process.env,
+  env: NodeJS.ProcessEnv = process.env
 ): Record<string, unknown> {
   return {
     pkg: input.pkg,
@@ -75,7 +107,9 @@ export function createPostinstallProperties(
     os: process.platform,
     arch: process.arch,
     global_install:
-      readBooleanToken(env.npm_config_global) === true || env.npm_config_location === 'global',
+      readBooleanToken(env.npm_config_global) === true ||
+      env.npm_config_location === 'global',
+    install_context: getInstallContext(env),
     ...getPackageManager(env),
   };
 }
@@ -98,9 +132,10 @@ async function postJson(url: string, body: unknown): Promise<void> {
 
 export async function captureEvent(
   event: NgafNodeEvent,
-  properties: Record<string, unknown> = {},
+  properties: Record<string, unknown> = {}
 ): Promise<CaptureResult> {
-  if (isTelemetryDisabled() || isProgrammaticallyDisabled()) return { sent: false, reason: 'disabled' };
+  if (isTelemetryDisabled() || isProgrammaticallyDisabled())
+    return { sent: false, reason: 'disabled' };
   const rate = getSampleRate();
   const anonId = getAnonId();
   if (!shouldSample(rate, anonId)) return { sent: false, reason: 'sampled' };
@@ -109,7 +144,10 @@ export async function captureEvent(
       key: PUBLIC_INGEST_KEY,
       distinctId: anonId,
       event,
-      properties: { ...properties, sample_weight: rate > 0 ? 1 / Math.min(1, rate) : 1 },
+      properties: {
+        ...properties,
+        sample_weight: rate > 0 ? 1 / Math.min(1, rate) : 1,
+      },
     });
     return { sent: true };
   } catch {
@@ -117,7 +155,9 @@ export async function captureEvent(
   }
 }
 
-export async function capturePostinstall(input: PostinstallInput): Promise<CaptureResult> {
+export async function capturePostinstall(
+  input: PostinstallInput
+): Promise<CaptureResult> {
   return captureEvent('ngaf:postinstall', createPostinstallProperties(input));
 }
 
