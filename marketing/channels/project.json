@@ -1,0 +1,21 @@
+{
+  "name": "marketing-channels",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "marketing/channels/src",
+  "projectType": "library",
+  "tags": ["scope:marketing", "type:lib"],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{workspaceRoot}/dist/marketing/channels"],
+      "options": {
+        "outputPath": "dist/marketing/channels",
+        "main": "marketing/channels/src/index.ts",
+        "tsConfig": "marketing/channels/tsconfig.lib.json"
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}
