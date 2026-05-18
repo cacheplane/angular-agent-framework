@@ -22,7 +22,7 @@ export const capabilities: readonly Capability[] = [
   { id: 'subgraphs', product: 'langgraph', topic: 'subgraphs', angularProject: 'cockpit-langgraph-subgraphs-angular', port: 4305, pythonDir: 'cockpit/langgraph/subgraphs/python', graphName: 'subgraphs' },
   { id: 'time-travel', product: 'langgraph', topic: 'time-travel', angularProject: 'cockpit-langgraph-time-travel-angular', port: 4306, pythonDir: 'cockpit/langgraph/time-travel/python', graphName: 'time-travel' },
   { id: 'deployment-runtime', product: 'langgraph', topic: 'deployment-runtime', angularProject: 'cockpit-langgraph-deployment-runtime-angular', port: 4307, pythonDir: 'cockpit/langgraph/deployment-runtime/python', graphName: 'deployment-runtime' },
-  { id: 'planning', product: 'deep-agents', topic: 'planning', angularProject: 'cockpit-deep-agents-planning-angular', port: 4310, pythonDir: 'cockpit/deep-agents/planning/python', graphName: 'planning' },
+  { id: 'da-planning', product: 'deep-agents', topic: 'planning', angularProject: 'cockpit-deep-agents-planning-angular', port: 4310, pythonDir: 'cockpit/deep-agents/planning/python', graphName: 'da-planning' },
   { id: 'filesystem', product: 'deep-agents', topic: 'filesystem', angularProject: 'cockpit-deep-agents-filesystem-angular', port: 4311, pythonDir: 'cockpit/deep-agents/filesystem/python', graphName: 'filesystem' },
   { id: 'da-subagents', product: 'deep-agents', topic: 'subagents', angularProject: 'cockpit-deep-agents-subagents-angular', port: 4312, pythonDir: 'cockpit/deep-agents/subagents/python', graphName: 'subagents' },
   { id: 'da-memory', product: 'deep-agents', topic: 'memory', angularProject: 'cockpit-deep-agents-memory-angular', port: 4313, pythonDir: 'cockpit/deep-agents/memory/python', graphName: 'da-memory' },

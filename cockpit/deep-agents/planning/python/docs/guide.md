@@ -42,7 +42,7 @@ import { agent } from '@ngaf/langgraph';
 
 export class PlanningComponent {
   protected readonly stream = agent({
-    assistantId: 'planning',
+    assistantId: 'da-planning',
   });
 }
 ```
@@ -63,7 +63,7 @@ interface PlanStep {
 }
 
 export class PlanningComponent {
-  protected readonly stream = agent({ assistantId: 'planning' });
+  protected readonly stream = agent({ assistantId: 'da-planning' });
 
   planSteps = computed(() => {
     const val = this.stream.value() as { plan?: PlanStep[] } | undefined;
