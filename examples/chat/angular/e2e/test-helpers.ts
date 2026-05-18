@@ -45,16 +45,14 @@ export function sendButton(page: Page): Locator {
 }
 
 /**
- * Locate the chat-select trigger inside a toolbar field by its label.
- *
- * The toolbar's four dropdowns (Model, Effort, Gen UI, Theme) use the
- * @ngaf/chat `chat-select` primitive — not native <select>. The trigger
- * is the button users click to open the popover.
+ * Locate the chat-select trigger inside a toolbar field by its data-field
+ * identifier. The toolbar fields render WITHOUT visible labels (tightened
+ * in PR #444), so each field carries `data-field="Model"` etc. for
+ * structural identification.
  */
 export function toolbarSelect(page: Page, label: string): Locator {
   return page
-    .locator('.demo-shell__field')
-    .filter({ hasText: label })
+    .locator(`.demo-shell__field[data-field="${label}"]`)
     .locator('chat-select .chat-select__trigger');
 }
 
@@ -74,8 +72,7 @@ export async function selectToolbarOption(
   const trigger = toolbarSelect(page, label);
   await trigger.click();
   const menu = page
-    .locator('.demo-shell__field')
-    .filter({ hasText: label })
+    .locator(`.demo-shell__field[data-field="${label}"]`)
     .locator('chat-select .chat-select__menu');
   await menu.waitFor({ state: 'visible' });
   const optionButton = menu

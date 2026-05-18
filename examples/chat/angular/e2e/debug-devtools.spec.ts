@@ -27,6 +27,15 @@ test.describe('chat-debug × chat-sidebar coexistence', () => {
     await openDemo(page, '/sidebar');
     await expect(page.locator('chat-sidebar')).toBeAttached();
 
+    // The sidebar mode auto-opens its panel on entry; close it first so the
+    // launcher becomes the visible affordance under test.
+    const panelClose = page
+      .locator('.chat-sidebar__panel')
+      .getByRole('button', { name: /close/i });
+    if (await panelClose.isVisible().catch(() => false)) {
+      await panelClose.click();
+    }
+
     // Open chat-debug from the sidenav footer.
     await openChatDevtools(page);
 
