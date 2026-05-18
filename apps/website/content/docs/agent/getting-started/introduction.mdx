@@ -12,7 +12,7 @@ This guide walks you through the complete workflow: build a LangGraph agent in P
 
 ```typescript
 const chat = agent({
-  assistantId: 'chat_agent',
+  assistantId: 'chat',
 });
 
 // Every property is a Signal — reactive, synchronous, no subscriptions
@@ -41,7 +41,7 @@ LangGraph agents are Python programs defined as directed graphs. Here's a minima
 <Tab label="agent.py">
 
 ```python
-# examples/chat-agent/src/chat_agent/agent.py
+# examples/chat/python/src/graph.py
 from langchain_core.messages import SystemMessage
 from langchain_core.runnables import RunnableConfig
 from langgraph.graph import END, START, MessagesState, StateGraph
@@ -74,7 +74,7 @@ graph = builder.compile()
 {
   "dependencies": ["."],
   "graphs": {
-    "chat_agent": "./src/chat_agent/agent.py:graph"
+    "chat": "./src/graph.py:graph"
   },
   "env": ".env",
   "python_version": "3.12"
@@ -111,7 +111,7 @@ LANGSMITH_API_KEY=lsv2_...
 <Step title="Start the dev server">
 
 ```bash
-cd examples/chat-agent
+cd examples/chat/python
 langgraph dev
 ```
 
@@ -168,7 +168,7 @@ export class ChatComponent {
   input = signal('');
 
   chat = agent({
-    assistantId: 'chat_agent',
+    assistantId: 'chat',
     threadId: signal(localStorage.getItem('threadId')),
     onThreadId: (id) => localStorage.setItem('threadId', id),
   });

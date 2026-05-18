@@ -12,10 +12,7 @@ interface E2eWiring {
 }
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
-const workflows = [
-  '.github/workflows/ci.yml',
-  '.github/workflows/e2e.yml',
-] as const;
+const workflows = ['.github/workflows/ci.yml'] as const;
 
 function readRepoFile(path: string): string {
   return readFileSync(join(repoRoot, path), 'utf8');

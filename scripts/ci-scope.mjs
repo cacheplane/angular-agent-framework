@@ -221,6 +221,7 @@ function applyFallbackPathScope(scope, changedFile) {
 function isGlobalCiFile(changedFile) {
   return (
     changedFile === '.github/workflows/ci.yml' ||
+    changedFile === '.github/workflows/e2e.yml' ||
     changedFile === 'package.json' ||
     changedFile === 'package-lock.json' ||
     changedFile === 'nx.json' ||

@@ -3,16 +3,28 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 
 describe('CI workflow', () => {
+  async function readWorkflow() {
+    return readFile('.github/workflows/ci.yml', 'utf8');
+  }
+
   async function readDeployJob() {
-    const workflow = await readFile('.github/workflows/ci.yml', 'utf8');
+    const workflow = await readWorkflow();
     return workflow.slice(
       workflow.indexOf('  deploy:'),
       workflow.indexOf('  demo-deploy:')
     );
   }
 
+  async function readDemoDeployJob() {
+    const workflow = await readWorkflow();
+    return workflow.slice(
+      workflow.indexOf('  demo-deploy:'),
+      workflow.indexOf('  production-smoke:')
+    );
+  }
+
   async function readProductionSmokeJob() {
-    const workflow = await readFile('.github/workflows/ci.yml', 'utf8');
+    const workflow = await readWorkflow();
     return workflow.slice(
       workflow.indexOf('  production-smoke:'),
       workflow.indexOf('  posthog-sync-plan:')
@@ -55,6 +67,22 @@ describe('CI workflow', () => {
     assert.ok(
       productionSmokeJob.indexOf('Verify shared LangGraph backend') <
         productionSmokeJob.indexOf('npx playwright install --with-deps chromium')
+    );
+  });
+
+  it('runs examples chat protocol e2e before deploying the canonical demo', async () => {
+    const workflow = await readWorkflow();
+    const demoDeployJob = await readDemoDeployJob();
+
+    assert.match(workflow, /examples-chat-protocol-e2e:/);
+    assert.match(workflow, /npx nx e2e examples-chat-protocol-e2e --skip-nx-cache/);
+    assert.match(
+      demoDeployJob,
+      /needs:\s*\[examples-chat-smoke,\s*examples-chat-e2e,\s*examples-chat-protocol-e2e\]/
+    );
+    assert.match(
+      demoDeployJob,
+      /examples\/chat — protocol e2e finished with \$\{\{ needs\.examples-chat-protocol-e2e\.result \}\}/
     );
   });
 });

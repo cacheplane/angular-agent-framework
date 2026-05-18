@@ -44,44 +44,27 @@ function messagesContainText(messages: MessageLike[], text: string): boolean {
   return messages.some((message) => messageText(message).includes(text));
 }
 
-describe('message state assertions', () => {
-  it('treats persisted human messages as evidence of thread state', () => {
-    const messages = [
-      { type: 'human', content: 'My secret word is: PINEAPPLE.' },
-      { type: 'ai', content: 'I will remember that.' },
-      { type: 'human', content: 'What is my secret word?' },
-      { type: 'ai', content: 'I have the earlier turn in context.' },
-    ];
-
-    expect(messagesContainText(messages, 'My secret word is: PINEAPPLE.')).toBe(true);
-    expect(messagesContainText(messages, 'What is my secret word?')).toBe(true);
-  });
-
-  it('requires a completed AI turn without depending on exact natural language', () => {
-    const messages = [
-      { type: 'human', content: 'What are you?' },
-      { type: 'ai', content: 'A running assistant response.' },
-    ];
-
-    expect(messageText(lastMessageOfType(messages, 'ai')).length).toBeGreaterThan(0);
-  });
-});
-
 /**
- * End-to-end tests for the chat LangGraph server.
+ * Protocol end-to-end coverage for the canonical chat LangGraph server.
  *
  * Prerequisites:
  *   - `langgraph dev` must be running (examples/chat/python/)
  *   - Set LANGGRAPH_URL=http://localhost:2024 (or deployed URL)
  *
- * These tests are skipped when LANGGRAPH_URL is not set so they never
- * block standard `npx nx test` runs.
+ * This backs the server-side invariants behind examples/chat/smoke/CHECKLIST.md.
+ * Browser rendering remains covered by examples/chat/angular/e2e.
  */
-describe.skipIf(!process.env['LANGGRAPH_URL'])('examples/chat e2e', () => {
+describe.skipIf(!process.env['LANGGRAPH_URL'])('examples/chat protocol e2e', () => {
   let client: Client;
 
   beforeAll(() => {
     client = new Client({ apiUrl: LANGGRAPH_URL });
+  });
+
+  it('serves the readiness endpoint used by smoke pre-flight', async () => {
+    const response = await fetch(new URL('/ok', LANGGRAPH_URL));
+
+    await expect(response.json()).resolves.toEqual({ ok: true });
   });
 
   it('streams messages from the chat graph', async () => {

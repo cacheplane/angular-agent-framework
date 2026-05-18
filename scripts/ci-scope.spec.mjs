@@ -52,6 +52,14 @@ const projects = [
     tags: [],
     targets: { build: {} },
   },
+  {
+    name: 'examples-chat-protocol-e2e',
+    root: 'examples/chat/e2e',
+    sourceRoot: 'examples/chat/e2e/src',
+    projectType: 'application',
+    tags: [],
+    targets: { e2e: {} },
+  },
 ];
 
 const workspace = {
@@ -112,6 +120,18 @@ test('global CI config changes keep full PR coverage', () => {
   const scope = classifyChangedFiles(['.github/workflows/ci.yml'], workspace);
 
   assert.deepEqual(Object.values(scope), Object.values(scope).map(() => true));
+});
+
+test('standalone E2E workflow changes keep full PR coverage', () => {
+  const scope = classifyChangedFiles(['.github/workflows/e2e.yml'], workspace);
+
+  assert.deepEqual(Object.values(scope), Object.values(scope).map(() => true));
+});
+
+test('examples chat protocol e2e changes drive examples chat scope', () => {
+  const scope = classifyChangedFiles(['examples/chat/e2e/src/protocol.e2e.spec.ts'], workspace);
+
+  assert.equal(scope.examples_chat, true);
 });
 
 test('unowned docs changes do not trigger heavy CI jobs', () => {

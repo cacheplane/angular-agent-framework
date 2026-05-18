@@ -38,7 +38,7 @@ This file is for agents working in this repository. It is contributor-facing, no
 
 - `libs/langgraph`: main Angular library (`@ngaf/langgraph`).
 - `apps/website`: docs and marketing site.
-- `e2e/agent-e2e`: end-to-end coverage for the workspace.
+- `examples/chat/e2e`: protocol end-to-end coverage for the canonical chat example.
 
 ## Working in This Repo
 

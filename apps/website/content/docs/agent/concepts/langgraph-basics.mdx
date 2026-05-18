@@ -100,7 +100,7 @@ graph = builder.compile()
 {
   "dependencies": ["."],
   "graphs": {
-    "chat_agent": "./src/chat_agent/agent.py:graph"
+    "chat": "./src/graph.py:graph"
   },
   "env": ".env",
   "python_version": "3.12"
@@ -113,7 +113,7 @@ graph = builder.compile()
 ```typescript
 // This is all you need on the Angular side
 const chat = agent({
-  assistantId: 'chat_agent',
+  assistantId: 'chat',
 });
 
 // chat.messages() updates as the agent streams its response
