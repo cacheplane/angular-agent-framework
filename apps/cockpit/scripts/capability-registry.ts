@@ -43,7 +43,7 @@ export const capabilities: readonly Capability[] = [
   { id: 'c-subagents', product: 'chat', topic: 'subagents', angularProject: 'cockpit-chat-subagents-angular', port: 4505, pythonPort: 5505, pythonDir: 'cockpit/chat/subagents/python', graphName: 'c-subagents' },
   { id: 'c-threads', product: 'chat', topic: 'threads', angularProject: 'cockpit-chat-threads-angular', port: 4506, pythonPort: 5506, pythonDir: 'cockpit/chat/threads/python', graphName: 'c-threads' },
   { id: 'c-timeline', product: 'chat', topic: 'timeline', angularProject: 'cockpit-chat-timeline-angular', port: 4507, pythonPort: 5507, pythonDir: 'cockpit/chat/timeline/python', graphName: 'c-timeline' },
-  { id: 'c-generative-ui', product: 'chat', topic: 'generative-ui', angularProject: 'cockpit-chat-generative-ui-angular', port: 4508, pythonPort: 5508, pythonDir: 'cockpit/langgraph/streaming/python', graphName: 'c-generative-ui' },
+  { id: 'c-generative-ui', product: 'chat', topic: 'generative-ui', angularProject: 'cockpit-chat-generative-ui-angular', port: 4508, pythonPort: 5508, pythonDir: 'cockpit/chat/generative-ui/python', graphName: 'c-generative-ui' },
   { id: 'c-debug', product: 'chat', topic: 'debug', angularProject: 'cockpit-chat-debug-angular', port: 4509, pythonPort: 5509, pythonDir: 'cockpit/chat/debug/python', graphName: 'c-debug' },
   { id: 'c-theming', product: 'chat', topic: 'theming', angularProject: 'cockpit-chat-theming-angular', port: 4510, pythonPort: 5510, pythonDir: 'cockpit/chat/theming/python', graphName: 'c-theming' },
   { id: 'c-a2ui', product: 'chat', topic: 'a2ui', angularProject: 'cockpit-chat-a2ui-angular', port: 4511, pythonPort: 5511, pythonDir: 'cockpit/langgraph/streaming/python', graphName: 'c-a2ui' },
