@@ -38,27 +38,27 @@ class DashboardState(MessagesState):
 
 
 @tool
-async def render_spec(spec: dict) -> str:
-    """Render an interactive dashboard layout from a JSON spec.
+async def render_spec(elements: dict, root: str) -> str:
+    """Render an interactive dashboard layout.
 
-    Use this tool to author or update the dashboard layout. The spec is a
-    JSON object with `elements` (a dict keyed by component id) and `root`
-    (the id of the top-level component). See the system prompt for the full
-    schema and component catalog.
+    Use this tool to author or update the dashboard layout. See the system
+    prompt for the full component catalog and state binding conventions.
 
-    Call this tool FIRST on any turn where the layout needs to be created
-    or restructured. After calling render_spec, call the data tools needed
-    to populate the components you authored.
+    Call this tool AT MOST ONCE per turn — only when the layout needs to
+    be created (first turn) or restructured (follow-up structural change).
+    Do NOT call it again to refresh data; the data tools handle that.
 
     Args:
-        spec: The dashboard JSON render spec.
+        elements: Dict keyed by component id. Each value has `type`, optional
+            `props`, and optional `children` (list of component ids).
+        root: The id of the top-level component (must be a key in `elements`).
 
     Returns:
         The spec serialized as JSON. A post-process node (wrap_spec_into_ai)
         wraps this payload into the AI message content where the
         chat-lib's content-classifier picks it up.
     """
-    return json.dumps(spec)
+    return json.dumps({"elements": elements, "root": root})
 
 
 _ALL_TOOLS = [render_spec, *_DATA_TOOLS]
