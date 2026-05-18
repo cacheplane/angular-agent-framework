@@ -79,7 +79,7 @@ export const CHAT_PROJECT_LIST_STYLES = `
     color: var(--ngaf-chat-text);
     border: 0;
     padding: 10px 16px;
-    border-radius: 9999px;
+    border-radius: 8px;
     font-size: 12px;
     display: flex;
     align-items: center;

@@ -34,4 +34,10 @@ describe('CHAT_PROJECT_LIST_STYLES — New project button', () => {
       /\.chat-project-list__new:hover\s*\{[^}]*background:\s*color-mix\(in srgb,\s*var\(--ngaf-chat-text\)\s*8%,\s*var\(--ngaf-chat-surface-alt\)\)\s*;/,
     );
   });
+
+  it('uses 8px border-radius (consistent with thread items)', () => {
+    expect(normalized).toMatch(
+      /\.chat-project-list__new\s*\{[^}]*border-radius:\s*8px\s*;/,
+    );
+  });
 });
