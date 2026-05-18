@@ -38,7 +38,7 @@ export const capabilities: readonly Capability[] = [
   // Chat capabilities
   { id: 'c-messages', product: 'chat', topic: 'messages', angularProject: 'cockpit-chat-messages-angular', port: 4501, pythonPort: 5501, pythonDir: 'cockpit/chat/messages/python', graphName: 'c-messages' },
   { id: 'c-input', product: 'chat', topic: 'input', angularProject: 'cockpit-chat-input-angular', port: 4502, pythonPort: 5502, pythonDir: 'cockpit/chat/input/python', graphName: 'c-input' },
-  { id: 'c-interrupts', product: 'chat', topic: 'interrupts', angularProject: 'cockpit-chat-interrupts-angular', port: 4503, pythonPort: 5503, pythonDir: 'cockpit/langgraph/streaming/python', graphName: 'c-interrupts' },
+  { id: 'c-interrupts', product: 'chat', topic: 'interrupts', angularProject: 'cockpit-chat-interrupts-angular', port: 4503, pythonPort: 5503, pythonDir: 'cockpit/chat/interrupts/python', graphName: 'c-interrupts' },
   { id: 'c-tool-calls', product: 'chat', topic: 'tool-calls', angularProject: 'cockpit-chat-tool-calls-angular', port: 4504, pythonPort: 5504, pythonDir: 'cockpit/chat/tool-calls/python', graphName: 'c-tool-calls' },
   { id: 'c-subagents', product: 'chat', topic: 'subagents', angularProject: 'cockpit-chat-subagents-angular', port: 4505, pythonPort: 5505, pythonDir: 'cockpit/chat/subagents/python', graphName: 'c-subagents' },
   { id: 'c-threads', product: 'chat', topic: 'threads', angularProject: 'cockpit-chat-threads-angular', port: 4506, pythonPort: 5506, pythonDir: 'cockpit/chat/threads/python', graphName: 'c-threads' },
