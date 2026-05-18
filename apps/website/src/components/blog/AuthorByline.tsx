@@ -12,7 +12,6 @@ export function AuthorByline({ author }: { author: Author }) {
       }}
     >
       {author.avatar ? (
-        // eslint-disable-next-line @next/next/no-img-element
         <img
           src={author.avatar}
           alt={`${author.name} avatar`}
@@ -23,7 +22,9 @@ export function AuthorByline({ author }: { author: Author }) {
       ) : null}
       <div>
         <span style={{ fontWeight: 600 }}>{author.name}</span>
-        {author.role ? <span style={{ opacity: 0.7 }}> · {author.role}</span> : null}
+        {author.role ? (
+          <span style={{ opacity: 0.7 }}> · {author.role}</span>
+        ) : null}
       </div>
     </div>
   );
