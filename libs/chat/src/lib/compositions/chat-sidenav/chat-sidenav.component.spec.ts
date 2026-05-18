@@ -334,6 +334,6 @@ describe('ChatSidenavComponent — New chat primary CTA', () => {
     const styles = (ChatSidenavComponent as unknown as { ɵcmp: { styles: string[] } }).ɵcmp.styles.join('\n');
     // Monochrome CTA: late-cascade block uses text/bg for contrast.
     expect(styles).toMatch(/\.chat-sidenav__action\.chat-sidenav__action--new[^{]*\{[^}]*background:\s*var\(--ngaf-chat-text/);
-    expect(styles).toMatch(/\.chat-sidenav__action--new[^{]*\{[^}]*border-radius:\s*9999px/);
+    expect(styles).toMatch(/\.chat-sidenav__action--new[^{]*\{[^}]*border-radius:\s*8px/);
   });
 });

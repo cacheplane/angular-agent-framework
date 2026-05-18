@@ -156,7 +156,7 @@ describe('ChatProjectListComponent — New project secondary pill', () => {
   it('renders the new-project button with borderless surface-alt pill styling', () => {
     const styles = (ChatProjectListComponent as unknown as { ɵcmp: { styles: string[] } }).ɵcmp.styles.join('\n');
     expect(styles).toMatch(/\.chat-project-list__new[^{]*\{[^}]*background:\s*var\(--ngaf-chat-surface-alt/);
-    expect(styles).toMatch(/\.chat-project-list__new[^{]*\{[^}]*border-radius:\s*9999px/);
+    expect(styles).toMatch(/\.chat-project-list__new[^{]*\{[^}]*border-radius:\s*8px/);
     expect(styles).toMatch(/\.chat-project-list__new[^{]*\{[^}]*border:\s*0/);
   });
 });

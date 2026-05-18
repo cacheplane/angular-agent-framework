@@ -34,4 +34,10 @@ describe('CHAT_SIDENAV_STYLES — New chat button', () => {
       /\.chat-sidenav__action--new:focus-visible\s*\{[^}]*outline:\s*2px\s+solid\s+var\(--ngaf-chat-primary\)\s*;/,
     );
   });
+
+  it('uses 8px border-radius (consistent with Search button + thread items)', () => {
+    expect(normalized).toMatch(
+      /\.chat-sidenav__action\.chat-sidenav__action--new\s*\{[^}]*border-radius:\s*8px\s*;/,
+    );
+  });
 });

@@ -104,7 +104,7 @@ export const CHAT_SIDENAV_STYLES = `
        .chat-sidenav__action.chat-sidenav__action--new block. */
     border: 0;
     padding: 12px 18px;
-    border-radius: 9999px;
+    border-radius: 8px;
     font-size: 13px;
     font-weight: 600;
     display: flex;
@@ -175,7 +175,7 @@ export const CHAT_SIDENAV_STYLES = `
   .chat-sidenav__action.chat-sidenav__action--new {
     background: var(--ngaf-chat-text);
     color: var(--ngaf-chat-bg);
-    border-radius: 9999px;
+    border-radius: 8px;
     padding: 12px 18px;
     font-weight: 600;
     font-size: 13px;

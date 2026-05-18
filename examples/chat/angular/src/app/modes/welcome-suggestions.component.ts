@@ -58,6 +58,23 @@ import { FEATURED_SUGGESTIONS, MORE_SUGGESTIONS } from './welcome-suggestions';
         overflow: hidden;
         text-overflow: ellipsis;
       }
+      /* Make the "More prompts" dropdown match the featured chip visually.
+         Scoped to .welcome-suggestions__row so the model picker (also
+         chat-select, elsewhere) is untouched. */
+      .welcome-suggestions__row ::ng-deep chat-select .chat-select__trigger {
+        height: auto;
+        padding: 10px 16px;
+        background: var(--ngaf-chat-surface);
+        color: var(--ngaf-chat-text);
+        border: 1px solid var(--ngaf-chat-separator);
+        border-radius: 9999px;
+        font-size: var(--ngaf-chat-font-size-sm);
+      }
+      .welcome-suggestions__row ::ng-deep chat-select .chat-select__trigger:hover:not(:disabled) {
+        background: var(--ngaf-chat-surface-alt);
+        border-color: var(--ngaf-chat-text-muted);
+        color: var(--ngaf-chat-text);
+      }
     `,
   ],
 })

@@ -51,4 +51,28 @@ describe('WelcomeSuggestionsComponent', () => {
     chipBtn.click();
     expect(captured).toBe(FEATURED_SUGGESTIONS[0].value);
   });
+
+  it('overrides the More prompts trigger to match the featured chip styling', () => {
+    // The component's styles block must include ::ng-deep overrides for the
+    // chat-select trigger so it visually matches chat-welcome-suggestion.
+    // We assert by inspecting the component's stringified styles via the
+    // DOM: the trigger should compute to chip-equivalent padding/border.
+    const trigger = fx.nativeElement.querySelector(
+      '.welcome-suggestions__row chat-select .chat-select__trigger',
+    ) as HTMLElement;
+    expect(trigger).toBeTruthy();
+    const cs = getComputedStyle(trigger);
+    // 10px 16px padding (chip)
+    expect(cs.paddingTop).toBe('10px');
+    expect(cs.paddingBottom).toBe('10px');
+    expect(cs.paddingLeft).toBe('16px');
+    expect(cs.paddingRight).toBe('16px');
+    // 1px border (chip has a border; default trigger has none).
+    // JSDOM 29 does not cascade border-width from <style> tags so we assert
+    // the source instead of getComputedStyle — the CSS must declare a border.
+    const componentStyles = (fx.componentInstance.constructor as { ɵcmp?: { styles?: string[] } }).ɵcmp?.styles?.join(' ') ?? '';
+    expect(componentStyles).toMatch(/border:\s*1px\s+solid/);
+    // pill radius (chip)
+    expect(cs.borderRadius).toBe('9999px');
+  });
 });
