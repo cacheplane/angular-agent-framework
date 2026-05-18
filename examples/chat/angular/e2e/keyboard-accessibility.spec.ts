@@ -52,7 +52,9 @@ test('keyboard: Escape closes popup and sidebar panels', async ({ page }) => {
 
   await page.goto('/sidebar');
   await closeChatDevtools(page);
-  await page.locator('.chat-sidebar__launcher button.chat-launcher-button').click();
+  // Sidebar mode auto-opens the panel on entry (the launcher would be
+  // hidden in that state). Verify the panel is already open, then
+  // Escape closes it.
   await expect(page.getByRole('complementary')).toHaveAttribute('aria-hidden', 'false');
   await page.keyboard.press('Escape');
   await expect(page.locator('.chat-sidebar__panel')).toHaveAttribute('aria-hidden', 'true');

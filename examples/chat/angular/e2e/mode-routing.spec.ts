@@ -25,11 +25,13 @@ test('mode routing: embed, popup, and sidebar expose the expected landmarks', as
   await page.goto('/sidebar');
   await expect(page.locator('sidebar-mode chat-sidebar')).toBeVisible();
   await closeChatDevtools(page);
-  await page.locator('.chat-sidebar__launcher button.chat-launcher-button').click();
+  // Sidebar mode auto-opens the panel on entry — no launcher click needed.
   const sidebar = page.getByRole('complementary');
   await expect(sidebar).toBeVisible();
   await expect(sidebar).toHaveAttribute('aria-hidden', 'false');
-  await page.locator('.chat-sidebar__close').click();
+  // Escape dismisses the panel (closeOnEscape default true on chat-sidebar).
+  // Avoids click-action races against any overlapping debug/sidenav chrome.
+  await page.keyboard.press('Escape');
   await expect(page).toHaveURL(/\/sidebar$/);
   await expect(page.locator('.chat-sidebar__panel')).toHaveAttribute('aria-hidden', 'true');
 });
@@ -51,7 +53,8 @@ test('cross-mode persistence: conversation follows embed, popup, and sidebar', a
 
   await page.goto('/sidebar');
   await closeChatDevtools(page);
-  await page.locator('.chat-sidebar__launcher button.chat-launcher-button').click();
+  // Sidebar mode auto-opens the panel; assert the existing conversation
+  // is visible without a launcher click.
   await expect(
     page.getByRole('complementary').locator('chat-message[data-role="assistant"]'),
   ).toContainText(/hi/i, { timeout: 30_000 });

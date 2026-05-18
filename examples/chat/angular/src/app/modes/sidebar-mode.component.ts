@@ -13,7 +13,7 @@ import { WelcomeSuggestionsComponent } from './welcome-suggestions.component';
   template: `
     <div class="sidebar-mode__background">
       <p class="sidebar-mode__hint">
-        Click the launcher button (right edge) to slide in the chat panel.
+        Use the launcher (right edge) to dismiss or re-open the chat panel.
       </p>
     </div>
     <chat-sidebar
@@ -21,6 +21,7 @@ import { WelcomeSuggestionsComponent } from './welcome-suggestions.component';
       [views]="catalog"
       [modelOptions]="shell.modelOptions()"
       [selectedModel]="shell.model()"
+      [open]="true"
       (selectedModelChange)="shell.onModelChange($event)"
       (replayRequested)="shell.onTimelineReplay($event)"
       (forkRequested)="shell.onTimelineFork($event)"
@@ -29,7 +30,7 @@ import { WelcomeSuggestionsComponent } from './welcome-suggestions.component';
     </chat-sidebar>
   `,
   styles: [`
-    :host { display: block; height: 100%; }
+    :host { display: block; flex: 1; min-height: 0; }
     .sidebar-mode__background {
       display: grid;
       place-items: center;

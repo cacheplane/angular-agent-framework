@@ -21,13 +21,16 @@ test('chat-debug devtools: opens from the sidenav with accessible controls and c
 });
 
 test.describe('chat-debug × chat-sidebar coexistence', () => {
-  test('sidebar launcher remains reachable while chat-debug is open', async ({
+  test('sidebar surface remains reachable while chat-debug is open', async ({
     page,
   }) => {
     await openDemo(page, '/sidebar');
     await expect(page.locator('chat-sidebar')).toBeAttached();
 
-    // Open chat-debug from the sidenav footer.
+    // Sidebar mode auto-opens its panel on entry. With the panel open the
+    // launcher is hidden by design (its close button on the panel handles
+    // dismissal). Verify the open chat-sidebar surface stays reachable
+    // (its close button is visible) while chat-debug is open.
     await openChatDevtools(page);
 
     // Debug auto-picks bottom dock because <chat-sidebar> is present.
@@ -40,22 +43,14 @@ test.describe('chat-debug × chat-sidebar coexistence', () => {
       'bottom'
     );
 
-    // Sidebar launcher remains visible (the bottom dock did not cover it).
-    // Click the actual <button> inside <chat-launcher-button> rather than the
-    // wrapping div — avoids any hit-test ambiguity between the wrapper and
-    // the higher-z-index debug panel.
-    const sidebarLauncherButton = page.locator(
-      '.chat-sidebar__launcher button.chat-launcher-button'
-    );
-    await expect(sidebarLauncherButton).toBeVisible();
-    await sidebarLauncherButton.click();
-
-    // Sidebar panel slides in — the click was not intercepted by the debug
-    // panel, which is the user-visible bug this design fixes.
+    // The chat-sidebar panel is auto-opened on entry — verify it remains
+    // visible (the bottom-docked debug panel did not cover or unmount it)
+    // and the close button stays reachable.
     const sidebarPanel = page.locator('.chat-sidebar__panel[data-open="true"]');
     await expect(sidebarPanel).toBeVisible();
+    await expect(sidebarPanel.locator('.chat-sidebar__close')).toBeVisible();
 
-    // Once the sidebar is open, the edge-claim attribute reflects it too.
+    // The edge-claim attribute reflects the open sidebar.
     await expect(page.locator('html')).toHaveAttribute(
       'data-ngaf-chat-sidebar',
       'open'

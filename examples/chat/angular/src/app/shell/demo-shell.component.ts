@@ -250,7 +250,7 @@ export class DemoShell {
   ]);
 
   protected readonly genUiOptions = signal<readonly { value: string; label: string }[]>([
-    { value: 'a2ui',        label: 'A2UI v1-compatible' },
+    { value: 'a2ui',        label: 'A2UI' },
     { value: 'json-render', label: 'json-render' },
   ]);
 

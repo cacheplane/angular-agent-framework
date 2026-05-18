@@ -24,7 +24,7 @@ import { WelcomeSuggestionsComponent } from './welcome-suggestions.component';
     </chat>
   `,
   styles: [`
-    :host { display: block; height: 100%; }
+    :host { display: block; flex: 1; min-height: 0; }
   `],
 })
 export class EmbedMode {

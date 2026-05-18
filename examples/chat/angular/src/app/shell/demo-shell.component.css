@@ -56,6 +56,8 @@
   min-height: 48px;
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
+  row-gap: 6px;
   gap: 10px;
   padding: 8px 14px;
   border-bottom: 1px solid var(--ngaf-chat-separator);
@@ -69,9 +71,8 @@
    * chat content's scroll/transform stacking contexts below. */
   position: relative;
   z-index: 50;
-  /* overflow-x: auto would clip absolutely-positioned dropdown menus.
-   * Skip it — the toolbar fits on reasonable viewports and the per-field
-   * dropdowns hold the long labels via the chat-select popover. */
+  /* No overflow-x: that would clip absolutely-positioned dropdown menus.
+   * flex-wrap handles narrow viewports by wrapping fields to a new row. */
 }
 
 /* Push every field after Mode to the right of the toolbar. */

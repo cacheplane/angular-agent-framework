@@ -29,7 +29,7 @@ import { WelcomeSuggestionsComponent } from './welcome-suggestions.component';
     </chat-popup>
   `,
   styles: [`
-    :host { display: block; height: 100%; }
+    :host { display: block; flex: 1; min-height: 0; }
     .popup-mode__background {
       display: grid;
       place-items: center;

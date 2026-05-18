@@ -24,7 +24,7 @@ test('lifecycle: reload reconnects to the active conversation', async ({
   ).toContainText(/hi/i);
 });
 
-test('lifecycle: new conversation clears local thread and restores welcome state', async ({
+test('lifecycle: New chat (sidenav) starts a fresh thread and restores welcome state', async ({
   page,
 }) => {
   await openDemo(page, '/embed');
@@ -32,19 +32,30 @@ test('lifecycle: new conversation clears local thread and restores welcome state
   await sendButton(page).click();
   await waitForFinalAssistant(page);
 
-  await page.getByRole('button', { name: 'New conversation' }).click();
+  const threadIdBefore = await page.evaluate(() => {
+    const raw = localStorage.getItem('ngaf-chat-demo:palette');
+    return raw ? (JSON.parse(raw) as { threadId?: string | null }).threadId ?? null : null;
+  });
+
+  // The toolbar "New conversation" button was removed; the sidenav's
+  // "New chat" pill is now the only affordance for starting a fresh
+  // thread. It creates a new thread server-side (rather than clearing
+  // local state) and routes the UI back to the welcome surface.
+  await page.getByRole('button', { name: 'New chat' }).first().click();
 
   await expect(
     page.getByRole('heading', { name: 'How can I help?' })
   ).toBeVisible();
   await expect(page.locator('chat-message')).toHaveCount(0);
-  const threadId = await page.evaluate(() => {
+
+  const threadIdAfter = await page.evaluate(() => {
     const raw = localStorage.getItem('ngaf-chat-demo:palette');
-    return raw
-      ? (JSON.parse(raw) as { threadId?: string | null }).threadId
-      : undefined;
+    return raw ? (JSON.parse(raw) as { threadId?: string | null }).threadId ?? null : null;
   });
-  expect(threadId ?? null).toBeNull();
+  // A fresh thread id was persisted, and it's different from the one we
+  // had before clicking New chat.
+  expect(threadIdAfter).toBeTruthy();
+  expect(threadIdAfter).not.toBe(threadIdBefore);
 });
 
 test('lifecycle: selecting a welcome suggestion submits and clears welcome state', async ({
