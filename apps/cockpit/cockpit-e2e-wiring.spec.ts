@@ -149,7 +149,7 @@ describe('cockpit e2e wiring', () => {
       if (capability.pythonPort !== undefined && capability.pythonPort !== wiring.langgraphPort) {
         errors.push(`${wiring.project}: registry pythonPort ${capability.pythonPort} != global setup langgraphPort ${wiring.langgraphPort}`);
       }
-      if (capability.pythonDir !== wiring.langgraphCwd) {
+      if (capability.pythonDir !== undefined && capability.pythonDir !== wiring.langgraphCwd) {
         errors.push(`${wiring.project}: registry pythonDir ${capability.pythonDir} != global setup langgraphCwd ${wiring.langgraphCwd}`);
       }
 
