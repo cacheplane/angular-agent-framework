@@ -6,7 +6,7 @@ changes land in libs/chat, libs/langgraph, libs/render, libs/ag-ui.
 
 ## Pre-flight
 
-- [ ] `OPENAI_API_KEY` present in `examples/chat/python/.env`
+- [ ] `OPENAI_API_KEY` present in the repository root `.env`
 - [ ] `nx run examples-chat-python:serve` running on :2024 — `curl localhost:2024/ok` returns `{"ok":true}`
 - [ ] Smoke consumer started — page loads at :4200
 - [ ] No console errors on initial load (license warning OK, telemetry DNS failure OK)
