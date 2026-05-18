@@ -26,7 +26,7 @@ export const capabilities: readonly Capability[] = [
   { id: 'da-filesystem', product: 'deep-agents', topic: 'filesystem', angularProject: 'cockpit-deep-agents-filesystem-angular', port: 4311, pythonDir: 'cockpit/deep-agents/filesystem/python', graphName: 'da-filesystem' },
   { id: 'da-subagents', product: 'deep-agents', topic: 'subagents', angularProject: 'cockpit-deep-agents-subagents-angular', port: 4312, pythonDir: 'cockpit/deep-agents/subagents/python', graphName: 'subagents' },
   { id: 'da-memory', product: 'deep-agents', topic: 'memory', angularProject: 'cockpit-deep-agents-memory-angular', port: 4313, pythonDir: 'cockpit/deep-agents/memory/python', graphName: 'da-memory' },
-  { id: 'skills', product: 'deep-agents', topic: 'skills', angularProject: 'cockpit-deep-agents-skills-angular', port: 4314, pythonDir: 'cockpit/deep-agents/skills/python', graphName: 'skills' },
+  { id: 'da-skills', product: 'deep-agents', topic: 'skills', angularProject: 'cockpit-deep-agents-skills-angular', port: 4314, pythonDir: 'cockpit/deep-agents/skills/python', graphName: 'da-skills' },
   { id: 'sandboxes', product: 'deep-agents', topic: 'sandboxes', angularProject: 'cockpit-deep-agents-sandboxes-angular', port: 4315, pythonDir: 'cockpit/deep-agents/sandboxes/python', graphName: 'sandboxes' },
   // Render capabilities
   { id: 'r-spec-rendering', product: 'render', topic: 'spec-rendering', angularProject: 'cockpit-render-spec-rendering-angular', port: 4401, pythonDir: 'cockpit/render/spec-rendering/python', graphName: 'r-spec-rendering' },

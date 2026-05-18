@@ -42,7 +42,7 @@ import { agent } from '@ngaf/langgraph';
 
 export class SkillsComponent {
   protected readonly stream = agent({
-    assistantId: 'skills',
+    assistantId: 'da-skills',
   });
 }
 ```
@@ -64,7 +64,7 @@ interface SkillInvocation {
 }
 
 export class SkillsComponent {
-  protected readonly stream = agent({ assistantId: 'skills' });
+  protected readonly stream = agent({ assistantId: 'da-skills' });
 
   skillInvocations = computed(() => {
     const msgs = this.stream.messages();
