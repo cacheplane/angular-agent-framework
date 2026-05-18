@@ -73,6 +73,8 @@ test.describe('chat-debug × chat-sidebar coexistence', () => {
     await page
       .locator('.demo-shell__segmented-button', { hasText: 'Sidebar' })
       .click();
+    await openChatDevtools(page);
+
     // Debug stays right-docked despite chat-sidebar now being on the page.
     await expect(page.locator('.panel.panel--right')).toBeVisible();
     await expect(page.locator('.panel.panel--bottom')).not.toBeVisible();

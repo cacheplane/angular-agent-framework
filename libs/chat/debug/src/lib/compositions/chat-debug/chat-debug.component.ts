@@ -300,7 +300,7 @@ function hasHistory(
         aria-hidden="true"
       ></span>
     </button>
-    } @else if (agent(); as currentAgent) {
+    } @else if (open() && agent(); as currentAgent) {
     <div
       class="panel"
       [class.panel--right]="dockState() === 'right'"
