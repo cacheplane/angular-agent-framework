@@ -30,7 +30,8 @@ builder.add_edge("call_model", END)
 
 graph = builder.compile()
 
-# Stream modes control what SSE chunks contain:
+# Stream modes control what SSE chunks contain. LangGraph Platform accepts
+# one mode or a list of modes, depending on the API you call:
 
 # "values" — full state snapshot after each node
 async for chunk in graph.astream(
@@ -117,32 +118,42 @@ The connection was interrupted or the agent returned an error. Inspect `error()`
 
 ## Stream modes
 
-LangGraph supports three stream modes. Pass `streamMode` to control what each SSE chunk contains.
+By default, `agent()` asks LangGraph Platform for the stream modes it needs to populate its public signals: `values`, `messages-tuple`, `updates`, and `custom`. It also enables `streamSubgraphs` so namespaced subgraph events can reach the client.
+
+Override `streamMode` per run when you need a narrower stream. `streamMode` is a submit option, not an `agent()` option.
 
 <Tabs>
-<Tab label="values (default)">
+<Tab label="values only">
 
 ```typescript
 // Receives the full agent state after every node execution.
-// Best for message-based chat interfaces.
+// Best when you only need state snapshots.
 const chat = agent({
   assistantId: 'chat_agent',
-  streamMode: 'values',
 });
+
+await chat.submit(
+  { message: 'Summarize this thread.' },
+  { streamMode: ['values'] },
+);
 
 // chat.messages() always contains the complete message list
 ```
 
 </Tab>
-<Tab label="messages">
+<Tab label="messages-tuple only">
 
 ```typescript
 // Streams individual message tokens as they are generated.
 // Best for token-by-token rendering with lowest perceived latency.
 const chat = agent({
   assistantId: 'chat_agent',
-  streamMode: 'messages',
 });
+
+await chat.submit(
+  { message: 'Draft a reply.' },
+  { streamMode: ['messages-tuple'] },
+);
 ```
 
 </Tab>
@@ -153,15 +164,19 @@ const chat = agent({
 // Best for advanced observability or custom progress indicators.
 const chat = agent({
   assistantId: 'chat_agent',
-  streamMode: 'events',
 });
+
+await chat.submit(
+  { message: 'Trace this run.' },
+  { streamMode: ['events'] },
+);
 ```
 
 </Tab>
 </Tabs>
 
 <Callout type="info" title="Choosing a mode">
-Use `values` for most chat UIs — it gives you a consistent, complete state snapshot. Switch to `messages` only when you need sub-token latency or are rendering a live typing cursor.
+Use the default modes for most chat UIs. They keep `messages()`, `state()`, `toolCalls()`, `customEvents()`, and subagent streams populated from the same run. Narrow the mode list only when you know which signals your UI will read.
 </Callout>
 
 ## Error handling
@@ -215,7 +230,7 @@ export class ChatComponent {
 
 ## Throttle configuration
 
-By default Agent emits a signal update for every incoming SSE chunk. On fast connections this can trigger hundreds of renders per second. Use the `throttle` option to coalesce updates.
+By default Agent coalesces state-like signal updates every 16 ms. That is close to a 60 fps render cadence and prevents fast SSE streams from triggering hundreds of state renders per second.
 
 ```typescript
 const chat = agent({
@@ -225,12 +240,12 @@ const chat = agent({
 });
 ```
 
-The value is in milliseconds. A `throttle` of `0` (default) disables batching and passes every chunk through immediately. Good starting values:
+The value is in milliseconds. Pass `false` or `0` to disable batching and forward state updates immediately. Token message updates are not throttled, so live markdown and typing indicators still receive every token emission.
 
 | Use case | Recommended throttle |
 |---|---|
-| Token-by-token typing effect | 0 ms (disabled) |
-| Standard chat bubble | 50 ms |
+| Token-by-token typing effect | default 16 ms |
+| Standard chat bubble | default 16 ms or 50 ms |
 | Background summarisation | 150 ms |
 
 <Callout type="tip" title="SSE connection behavior">

@@ -1,9 +1,9 @@
 # Subgraphs
 
-Subgraphs let you compose complex agents from smaller, focused units. agent() tracks subagent execution through dedicated signals, giving you visibility into delegated work.
+Subgraphs let you compose complex agents from smaller, focused units. `agent()` streams their output through the same message, state, tool-call, and custom-event signals as the parent graph.
 
 <Callout type="info" title="Subgraphs vs subagents">
-LangGraph calls them subgraphs (modular graph composition). Deep Agents calls them subagents (task delegation). agent() supports both patterns through the same API.
+LangGraph subgraphs are graph nodes. Deep Agents-style subagents are delegated tool calls. `agent()` requests subgraph streams by default, but the `subagents()` signal is populated only for tool calls whose names match `subagentToolNames` and whose args include a `subagent_type`.
 </Callout>
 
 ## How subgraph composition works
@@ -85,15 +85,10 @@ import { agent } from '@ngaf/langgraph';
 export class OrchestratorComponent {
   readonly orchestrator = agent<OrchestratorState>({
     assistantId: 'orchestrator',
-    subagentToolNames: ['research', 'analyze'],
   });
 
-  readonly running = computed(() =>
-    [...this.orchestrator.subagents().values()].filter((subagent) =>
-      subagent.status() === 'pending' || subagent.status() === 'running'
-    )
-  );
-  readonly runningCount = computed(() => this.running().length);
+  readonly messages = computed(() => this.orchestrator.messages());
+  readonly isRunning = computed(() => this.orchestrator.isLoading());
 
   send(text: string) {
     this.orchestrator.submit({ message: text });
@@ -104,14 +99,14 @@ export class OrchestratorComponent {
 </Tab>
 </Tabs>
 
-## Tracking subagent execution
+## Tracking delegated subagent execution
 
-The `subagents()` signal contains a Map of active subagent streams. Use it to inspect the full set of delegated tasks and their current state.
+The `subagents()` signal contains a Map of active delegated subagent streams. Use it when your graph delegates through tool calls, such as Deep Agents' default `task` tool or your own delegation tools. Plain subgraph nodes do not appear in this map.
 
 ```typescript
 const orchestrator = agent<OrchestratorState>({
   assistantId: 'orchestrator',
-  subagentToolNames: ['research', 'analyze', 'summarize'],
+  subagentToolNames: ['task', 'delegate_to_researcher'],
 });
 
 // All subagent streams (active and completed)
@@ -127,7 +122,9 @@ const runningCount = computed(() => running().length);
 
 // Lookup helpers for common UI paths
 const specific = computed(() => orchestrator.getSubagent('research-tool-call-id'));
-const researchers = computed(() => orchestrator.getSubagentsByType('researcher'));
+const researchers = computed(() =>
+  orchestrator.getSubagentsByType('researcher')
+);
 
 // React to count changes
 effect(() => {
@@ -163,7 +160,7 @@ The orchestrator pattern delegates specialised work to subagents and merges thei
 ```typescript
 const pipeline = agent<PipelineState>({
   assistantId: 'pipeline-orchestrator',
-  subagentToolNames: ['fetch-data', 'transform', 'validate', 'publish'],
+  subagentToolNames: ['task'],
   filterSubagentMessages: true,
 });
 
@@ -219,7 +216,7 @@ export class SubagentProgressComponent {
     }
 
     @if (entry[1].status() === 'error') {
-      <p class="error-msg">{{ entry[1].error()?.message }}</p>
+      <p class="error-msg">Subagent failed</p>
     }
   </div>
 }
@@ -235,7 +232,7 @@ By default, subagent messages appear in the parent's `messages()` signal. Filter
 const orchestrator = agent<OrchestratorState>({
   assistantId: 'orchestrator',
   filterSubagentMessages: true,  // Hide subagent messages from parent
-  subagentToolNames: ['research', 'analyze'],
+  subagentToolNames: ['task'],
 });
 
 // Parent messages only (no subagent chatter)
@@ -243,21 +240,20 @@ const parentMessages = computed(() => orchestrator.messages());
 ```
 
 <Callout type="tip" title="Subagent tool names">
-Set `subagentToolNames` to the tool names that spawn subagents. agent() uses this to identify which tool calls create subagent streams.
+Set `subagentToolNames` to the tool names that spawn subagents. `agent()` uses this to identify tool calls that create subagent streams. Those tool calls must include a `subagent_type` argument for type-based lookup helpers such as `getSubagentsByType()`.
 </Callout>
 
 ## Error handling per subagent
 
-Each subagent exposes its own `error()` signal so failures are isolated — one subagent failing does not stop the others.
+Each subagent exposes its own `status()` signal. A failure changes that subagent's status to `'error'` without necessarily stopping sibling delegates.
 
 ```typescript
 const agents = orchestrator.subagents();
 
 for (const [id, agent] of agents) {
   effect(() => {
-    const err = agent.error();
-    if (err) {
-      console.error(`Subagent ${id} failed:`, err.message);
+    if (agent.status() === 'error') {
+      console.error(`Subagent ${id} failed`);
       // Retry, surface to user, or fall back gracefully
     }
   });

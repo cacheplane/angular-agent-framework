@@ -595,49 +595,49 @@
       {
         "name": "interruptReceivedAt",
         "type": "Signal<number | null>",
-        "description": "Epoch ms of the first interrupt$ non-null in this stream. Resets on clearThread.",
+        "description": "Epoch ms of the first interrupt$ non-null in this stream. Resets on switchThread().",
         "optional": false
       },
       {
         "name": "interruptResolvedAt",
         "type": "Signal<number | null>",
-        "description": "Epoch ms of the most recent submit({ interrupt }) call. Resets on clearThread.",
+        "description": "Epoch ms of the most recent submit({ resume }) call. Resets on switchThread().",
         "optional": false
       },
       {
         "name": "streamErrorAt",
         "type": "Signal<object | null>",
-        "description": "Epoch ms + classification of the most recent stream error. Resets on clearThread.",
+        "description": "Epoch ms + classification of the most recent stream error. Resets on switchThread().",
         "optional": false
       },
       {
         "name": "streamStartedAt",
         "type": "Signal<number | null>",
-        "description": "Epoch ms of the first stream chunk arrival. Resets on clearThread.",
+        "description": "Epoch ms of the first stream chunk arrival. Resets on switchThread().",
         "optional": false
       },
       {
         "name": "threadCreatedAt",
         "type": "Signal<number | null>",
-        "description": "Epoch ms when the agent's \"create new thread\" branch fired. Resets on clearThread.",
+        "description": "Epoch ms when the agent's \"create new thread\" branch fired. Resets on switchThread().",
         "optional": false
       },
       {
         "name": "threadPersistedAt",
         "type": "Signal<number | null>",
-        "description": "Epoch ms when an existing thread was restored from server (proves persistence). Resets on clearThread.",
+        "description": "Epoch ms when an existing thread was restored from server (proves persistence). Resets on switchThread().",
         "optional": false
       },
       {
         "name": "toolCallCompletedAt",
         "type": "Signal<number | null>",
-        "description": "Epoch ms of the first tool call result transition. Resets on clearThread.",
+        "description": "Epoch ms of the first tool call result transition. Resets on switchThread().",
         "optional": false
       },
       {
         "name": "toolCallStartedAt",
         "type": "Signal<number | null>",
-        "description": "Epoch ms of the first tool call append. Resets on clearThread.",
+        "description": "Epoch ms of the first tool call append. Resets on switchThread().",
         "optional": false
       }
     ],

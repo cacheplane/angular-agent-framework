@@ -466,7 +466,7 @@ export class MultiAgentComponent {
 </Tabs>
 
 <Callout type="tip" title="subagentToolNames is the key">
-The `subagentToolNames` option tells agent() which tool calls spawn subagents. The default Deep Agents tool name is `task`; set this option when your graph uses custom delegation tool names.
+The `subagentToolNames` option tells `agent()` which tool calls spawn subagents. The default Deep Agents tool name is `task`; set this option when your graph uses custom delegation tool names. Ordinary LangGraph subgraph nodes stream through the parent signals, but they do not appear in `subagents()` unless they are represented by matching delegation tool calls.
 </Callout>
 
 ## Error Handling and Recovery
@@ -638,14 +638,17 @@ graph = builder.compile()
 **Use when:** The agent takes high-stakes actions (sending emails, modifying data, making purchases) that need human approval.
 
 ```python
-from langgraph.types import Interrupt
+from langgraph.types import interrupt
 
 def propose_action(state: AgentState) -> dict:
     plan = llm.invoke(state["messages"])
-    raise Interrupt(value={"action": plan.content, "requires_approval": True})
+    approval = interrupt({"action": plan.content, "requires_approval": True})
+    return {"pending_action": plan.content, "approval": approval}
 
 def execute_action(state: AgentState) -> dict:
     # Only runs after human approves
+    if not state.get("approval", {}).get("approved"):
+        return {"messages": [{"role": "assistant", "content": "Action cancelled."}]}
     return perform_action(state["pending_action"])
 ```
 
@@ -663,7 +666,7 @@ builder.add_node("analyst", analyst_subgraph)
 builder.add_conditional_edges("supervisor", route_to_agent)
 ```
 
-**Angular signals used:** `messages()`, `subagents()`, `toolCalls()`, `status()`
+**Angular signals used:** `messages()`, `toolCalls()`, `status()`; `subagents()` only when delegation happens through tracked tool calls
 
 ### Decision Matrix
 

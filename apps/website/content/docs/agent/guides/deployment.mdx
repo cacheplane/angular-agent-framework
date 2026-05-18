@@ -87,7 +87,6 @@ Angular uses file-based environment replacement at build time rather than `proce
 export const environment = {
   production: false,
   langgraphUrl: 'http://localhost:2024',
-  langsmithApiKey: '', // not needed locally
 };
 ```
 
@@ -97,8 +96,7 @@ export const environment = {
 ```typescript
 export const environment = {
   production: true,
-  langgraphUrl: 'https://my-agent-abc123.langgraph.app',
-  langsmithApiKey: 'lsv2_pt_xxxxxxxx',
+  langgraphUrl: '/api/langgraph',
 };
 ```
 
@@ -124,36 +122,23 @@ Angular CLI replaces `environment.ts` with `environment.prod.ts` during `ng buil
 
 ## Authentication
 
-### API key for LangGraph Platform
+### Keep LangGraph credentials server-side
 
-LangGraph Cloud deployments require an API key on every request. The recommended approach is an Angular HTTP interceptor that attaches the key as a header.
+Do not ship LangSmith or LangGraph API keys in an Angular bundle. The default `FetchStreamTransport` uses the LangGraph SDK client directly, not Angular `HttpClient`, so Angular HTTP interceptors do not attach headers to `agent()` requests.
+
+For production, put a same-origin backend route, edge function, or API gateway in front of LangGraph. The browser calls your relative URL, and that server-side layer adds the deployment credentials.
 
 ```typescript
-import { HttpInterceptorFn } from '@angular/common/http';
-import { environment } from '../environments/environment';
-
-export const langGraphAuthInterceptor: HttpInterceptorFn = (req, next) => {
-  if (req.url.startsWith(environment.langgraphUrl)) {
-    const cloned = req.clone({
-      setHeaders: {
-        'x-api-key': environment.langsmithApiKey,
-      },
-    });
-    return next(cloned);
-  }
-  return next(req);
+// environment.prod.ts
+export const environment = {
+  production: true,
+  langgraphUrl: '/api/langgraph',
 };
 ```
 
-Register the interceptor in your application config:
-
 ```typescript
-import { provideHttpClient, withInterceptors } from '@angular/common/http';
-import { langGraphAuthInterceptor } from './auth.interceptor';
-
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideHttpClient(withInterceptors([langGraphAuthInterceptor])),
     provideAgent({
       apiUrl: environment.langgraphUrl,
     }),
@@ -161,13 +146,13 @@ export const appConfig: ApplicationConfig = {
 };
 ```
 
-<Callout type="warning" title="Never commit API keys">
-Add `environment.prod.ts` to `.gitignore`. In CI, generate it from environment variables or inject secrets at build time.
+<Callout type="warning" title="Never expose API keys">
+Environment files that are bundled into Angular are public. Store LangGraph deployment credentials in your server-side proxy, hosting provider secret store, or CI/CD environment, not in `environment.prod.ts`.
 </Callout>
 
 ### User-level authentication
 
-If your app has its own user authentication (JWT, session cookies), you can add a second interceptor or extend the one above to forward identity headers that your agent can use for per-user scoping.
+If your app has its own user authentication, authenticate the same-origin proxy with cookies or your usual app session. The proxy can forward user identity to LangGraph through safe, server-controlled metadata or headers.
 
 ## CORS configuration
 
@@ -185,7 +170,7 @@ In `langgraph.json`, add an `http` section:
     "cors": {
       "allow_origins": ["https://your-angular-app.com"],
       "allow_methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-      "allow_headers": ["Content-Type", "x-api-key", "Authorization"],
+      "allow_headers": ["Content-Type", "Authorization"],
       "allow_credentials": true
     }
   }
@@ -202,6 +187,7 @@ Production apps need graceful error handling. Build a reactive error boundary us
 
 ```typescript
 import { ChangeDetectionStrategy, Component, computed } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
 import { agent } from '@ngaf/langgraph';
 
 @Component({
@@ -254,7 +240,7 @@ export async function retrySubmit(
 ): Promise<void> {
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     try {
-      chat.submit(input);
+      await chat.submit(input);
       return;
     } catch {
       if (attempt === maxAttempts - 1) throw new Error('Max retries exceeded');
@@ -269,9 +255,16 @@ export async function retrySubmit(
 Use `joinStream()` to reconnect to a running agent execution after a network interruption, page refresh, or navigation event.
 
 ```typescript
-// Store the run ID when starting a stream
-const runId = this.chat.runId();
-localStorage.setItem('activeRunId', runId);
+// Store the run ID when LangGraph creates the run
+await this.chat.submit(
+  { message: input },
+  {
+    streamResumable: true,
+    onRunCreated: ({ run_id }) => {
+      localStorage.setItem('activeRunId', run_id);
+    },
+  },
+);
 
 // After reconnecting, resume from where the stream left off
 const savedRunId = localStorage.getItem('activeRunId');
@@ -323,7 +316,6 @@ jobs:
           export const environment = {
             production: true,
             langgraphUrl: '${{ secrets.LANGGRAPH_URL }}',
-            langsmithApiKey: '${{ secrets.LANGSMITH_API_KEY }}',
           };
           EOF
       - run: npx ng build --configuration production
@@ -371,10 +363,10 @@ effect(() => {
 
 <Steps>
 <Step title="Set production apiUrl">
-Point `provideAgent({ apiUrl })` to your LangGraph Cloud deployment URL via `environment.prod.ts`.
+Point `provideAgent({ apiUrl })` to your same-origin LangGraph proxy, or to a direct LangGraph URL only when that deployment is intentionally public.
 </Step>
 <Step title="Configure authentication">
-Add an HTTP interceptor to attach `x-api-key` headers to all LangGraph requests.
+Route browser traffic through a server-side proxy or gateway that adds LangGraph credentials outside the Angular bundle.
 </Step>
 <Step title="Set up CORS">
 Add your Angular app's origin to the `allow_origins` list in `langgraph.json`.

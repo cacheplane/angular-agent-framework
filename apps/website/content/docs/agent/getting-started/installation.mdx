@@ -39,7 +39,7 @@ npm install @ngaf/langgraph @ngaf/chat
 
 ## Configure the provider
 
-Add `provideAgent()` to your application configuration. This sets global defaults for all agent instances.
+Add `provideAgent()` to your application configuration. This sets global defaults for all agent instances. It is recommended when most agents share the same LangGraph URL, but it is not required if each `agent()` call passes its own `apiUrl`.
 
 ```typescript
 // app.config.ts
@@ -102,9 +102,14 @@ Create a minimal component to verify the setup works. `agent()` must be called i
 
 ```typescript
 // In a component field initializer (injection context)
-const test = agent({ assistantId: 'chat_agent' });
+const test = agent({
+  apiUrl: 'http://localhost:2024',
+  assistantId: 'chat_agent',
+});
 console.log(test.status()); // 'idle' - setup is correct
 ```
+
+If you already configured `provideAgent({ apiUrl })`, you can omit `apiUrl` from individual agents.
 
 ## Troubleshooting
 
@@ -116,7 +121,7 @@ console.log(test.status()); // 'idle' - setup is correct
 
 **Connection refused** -- If you see `ERR_CONNECTION_REFUSED`, verify your LangGraph server is running and that the `apiUrl` matches the correct host and port. Run `langgraph dev` and confirm the server starts at the expected address (default `http://localhost:2024`).
 
-**"NullInjectorError: No provider for AgentConfig"** -- You forgot to add `provideAgent()` to your `appConfig` providers array. See the [Configure the provider](#configure-the-provider) section above.
+**Missing or incorrect API URL** -- `provideAgent()` is optional, but the runtime still needs an API URL from either `provideAgent({ apiUrl })` or `agent({ apiUrl })`. If the URL is missing or points at the wrong origin, the SDK request will fail when you submit the first run.
 
 </Callout>
 

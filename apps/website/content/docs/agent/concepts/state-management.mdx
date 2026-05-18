@@ -209,14 +209,17 @@ The agent doesn't wait until it's finished to send state updates. It streams par
 
 ### How Partial Updates Arrive
 
-LangGraph streams in `values` mode by default — each SSE event contains the full state snapshot after a node completes. In `messages` mode, you get individual message tokens as they're generated.
+`agent()` requests the stream modes it needs to populate its public signals by default. Use `values` when you only need state snapshots, and `messages-tuple` when you only need individual message tokens.
 
 ```typescript
 const agent = agent<ProjectState>({
   assistantId: 'project_agent',
-  // Default: values mode — full state after each node
-  // streamMode: 'messages' — token-by-token for text fields
 });
+
+agent.submit(
+  { message: 'Update the project plan.' },
+  { streamMode: ['messages-tuple'] },
+);
 ```
 
 ### Signals Update Mid-Stream

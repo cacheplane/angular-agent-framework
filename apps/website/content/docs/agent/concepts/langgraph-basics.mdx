@@ -176,19 +176,25 @@ const completedTools = computed(() => agent.toolCalls());
 The agent proposes an action and pauses. Your Angular UI shows an approval dialog. The user decides, and the agent resumes.
 
 ```python
-from langgraph.types import Interrupt
+from langgraph.types import interrupt
 
 def propose_action(state: State) -> dict:
     action = llm.invoke(state["messages"])
     # Pause execution — Angular will show approval UI
-    raise Interrupt(value={
+    approval = interrupt({
         "action": "send_email",
         "to": "client@example.com",
         "body": action.content,
     })
+    return {
+        "pending_action": action.content,
+        "approval": approval,
+    }
 
 def execute_action(state: State) -> dict:
     # Only runs after human approves
+    if not state.get("approval", {}).get("approved"):
+        return {"messages": [{"role": "assistant", "content": "Email cancelled."}]}
     send_email(state["pending_action"])
     return {"messages": [{"role": "assistant", "content": "Email sent."}]}
 ```
@@ -227,7 +233,7 @@ builder.add_node("analyst", analyst_subgraph)
 builder.add_conditional_edges("supervisor", lambda s: s["next_agent"])
 ```
 
-**Angular connection:** Track delegated work through dedicated subagent signals:
+**Angular connection:** Track delegated work through dedicated subagent signals when delegation is exposed as tool calls:
 ```typescript
 const orchestrator = agent<OrchestratorState>({
   assistantId: 'orchestrator',

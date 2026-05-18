@@ -133,7 +133,7 @@ The UI lifecycle is intentionally boring.
 5. `stop()` aborts the active run when supported.
 6. `regenerate(index)` rolls back from an assistant message and reruns from the preceding user message.
 
-LangGraph adds deeper lifecycle and history surfaces. `@ngaf/langgraph` exports `AGENT_LIFECYCLE`, `AgentLifecycle`, and `AgentLifecycleRegistry`. Those are useful for telemetry, debugging, persistence, and time-travel UI. They are not required by `@ngaf/chat`.
+LangGraph adds deeper lifecycle and history surfaces. `@ngaf/langgraph` exposes `agent().lifecycle` and exports `AgentLifecycle`, `AgentLifecycleRegistry`, and the low-level `AGENT_LIFECYCLE` token. Those are useful for telemetry, debugging, persistence, and time-travel UI. They are not required by `@ngaf/chat`.
 
 ## Testing And Mocks
 

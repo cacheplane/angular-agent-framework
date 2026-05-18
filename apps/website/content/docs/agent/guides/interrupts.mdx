@@ -15,7 +15,7 @@ Before diving into code, understand the five-stage lifecycle that every interrup
 The agent reasons about the user's request and determines an action that requires human approval. It builds a structured payload describing what it wants to do.
 </Step>
 <Step title="Interrupt Fires">
-The agent node calls `raise Interrupt(value={...})`, which freezes the graph. The interrupt payload is persisted in the checkpoint and streamed to the client.
+The agent node calls `interrupt({...})`, which freezes the graph. The interrupt payload is persisted in the checkpoint and streamed to the client.
 </Step>
 <Step title="UI Shows Dialog">
 agent() updates the `interrupt()` signal. Your Angular template detects the change through OnPush change detection and renders an approval dialog with the interrupt payload.
@@ -28,16 +28,16 @@ LangGraph resumes the graph from the interrupted checkpoint. The next node recei
 </Step>
 </Steps>
 
-## Python: Raising an Interrupt
+## Python: Pausing With An Interrupt
 
-An interrupt is raised inside any graph node by calling `raise Interrupt(value={...})`. The value can be any JSON-serializable object — it becomes the payload your Angular component displays.
+An interrupt is created inside any graph node by calling `interrupt({...})`. The value can be any JSON-serializable object — it becomes the payload your Angular component displays. When the UI resumes the run, the resume payload becomes the return value of the `interrupt()` call.
 
 <Tabs>
 <Tab label="agent.py">
 
 ```python
 from langgraph.graph import END, START, StateGraph
-from langgraph.types import Interrupt, Command
+from langgraph.types import interrupt
 from langchain_openai import ChatOpenAI
 from typing_extensions import TypedDict, Annotated
 from operator import add
@@ -69,12 +69,13 @@ def plan_action(state: State) -> dict:
 def request_approval(state: State) -> dict:
     """Pause the graph and ask the human for approval."""
     action = state["proposed_action"]
-    raise Interrupt(value={
+    approval = interrupt({
         "action": action["action"],
         "target": action["target"],
         "description": action["description"],
         "risk_level": action.get("risk_level", "medium"),
     })
+    return {"approval_result": approval}
 
 def execute_action(state: State) -> dict:
     """Run the approved action or explain the rejection."""
@@ -126,7 +127,7 @@ graph = builder.compile()
 </Tabs>
 
 <Callout type="tip" title="Interrupt placement matters">
-Place the `raise Interrupt()` call in its own dedicated node. This gives you a clean three-node pattern (plan, approve, execute) where the interrupt sits between reasoning and action. If you raise an interrupt inside a node that also does work, the work before the interrupt runs twice on resume.
+Place the `interrupt()` call in its own dedicated node. This gives you a clean three-node pattern (plan, approve, execute) where the interrupt sits between reasoning and action. When a run resumes, LangGraph re-executes the node containing `interrupt()`, so any side effects before that call must be idempotent.
 </Callout>
 
 ## Angular: Building an Approval Component
@@ -284,7 +285,7 @@ Some workflows require multiple approvals in sequence. For example, an agent tha
 
 ```python
 from langgraph.graph import END, START, StateGraph
-from langgraph.types import Interrupt
+from langgraph.types import interrupt
 from typing_extensions import TypedDict, Annotated
 from operator import add
 
@@ -293,6 +294,7 @@ class DeployState(TypedDict):
     plan: list[dict]
     current_step: int
     completed_steps: list[str]
+    approval_result: dict
 
 def create_plan(state: DeployState) -> dict:
     """Generate a multi-step deployment plan."""
@@ -307,16 +309,24 @@ def approve_step(state: DeployState) -> dict:
     """Interrupt for each step that needs approval."""
     step_index = state["current_step"]
     step = state["plan"][step_index]
-    raise Interrupt(value={
+    decision = interrupt({
         "step_number": step_index + 1,
         "total_steps": len(state["plan"]),
         "step": step["step"],
         "description": step["description"],
         "completed": state.get("completed_steps", []),
     })
+    return {"approval_result": decision}
 
 def execute_step(state: DeployState) -> dict:
     """Execute the approved step and advance."""
+    decision = state.get("approval_result", {})
+    if not decision.get("approved"):
+        return {
+            "current_step": len(state["plan"]),
+            "messages": [{"role": "assistant", "content": "Deployment aborted."}],
+        }
+
     step = state["plan"][state["current_step"]]
     # ... perform the actual deployment step ...
     return {
@@ -375,6 +385,7 @@ export class DeployApprovalComponent {
     plan: { step: string; description: string }[];
     current_step: number;
     completed_steps: string[];
+    approval_result: { approved: boolean; reason?: string };
   }>({
     assistantId: 'deploy_agent',
   });
@@ -449,9 +460,9 @@ export class DeployApprovalComponent {
 
 ## Typed Interrupt Payloads with BagTemplate
 
-By default, `interrupt()` returns an untyped object. The BagTemplate generic parameter on agent() lets you define the exact shape of your interrupt payloads, giving you full TypeScript safety throughout your component.
+By default, `interrupt()` returns an untyped value. The `BagTemplate` generic parameter on `agent()` lets you define the exact shape of your interrupt payloads, giving you full TypeScript safety throughout your component.
 
-BagTemplate is a type parameter on the agent configuration that maps signal names to their types. When you specify an interrupt type through BagTemplate, the `interrupt()` signal returns a properly typed object instead of `unknown`. This means your template expressions, computed signals, and event handlers all benefit from compile-time checking.
+`BagTemplate` is an SDK type with an `InterruptType` slot. When you specify that slot, the raw `langGraphInterrupts()` signal is typed. The normalized runtime-neutral `interrupt()` signal still exposes `value` as `unknown`, so cast that payload at the UI boundary if you use the neutral signal.
 
 ```typescript
 import { agent, BagTemplate } from '@ngaf/langgraph';
@@ -465,21 +476,22 @@ interface DeployApproval {
   completed: string[];
 }
 
-// Pass the interrupt type via BagTemplate
-const agent = agent<
-  DeployState,
-  BagTemplate<{ interrupt: DeployApproval }>
->({
+type DeployBag = BagTemplate & {
+  InterruptType: DeployApproval;
+};
+
+const agent = agent<DeployState, DeployBag>({
   assistantId: 'deploy_agent',
 });
 
-// Now interrupt() is typed — no casting needed
-const step = agent.interrupt();
-//    ^? Signal<{ value: DeployApproval } | null>
+const raw = agent.langGraphInterrupts();
+//    ^? Interrupt<DeployApproval>[]
+
+const step = agent.interrupt()?.value as DeployApproval | undefined;
 
 // TypeScript catches errors at compile time
-const num = step?.value.step_number;    // number — correct
-const bad = step?.value.nonexistent;    // Error — property doesn't exist
+const num = step?.step_number;    // number — correct
+const bad = step?.nonexistent;    // Error — property doesn't exist
 ```
 
 <Callout type="tip" title="Type your interrupts early">
