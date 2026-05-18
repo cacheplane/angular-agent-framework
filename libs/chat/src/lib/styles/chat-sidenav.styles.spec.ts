@@ -42,6 +42,34 @@ describe('CHAT_SIDENAV_STYLES — New chat button', () => {
   });
 });
 
+describe('CHAT_SIDENAV_STYLES — action button font', () => {
+  const normalized = CHAT_SIDENAV_STYLES.replace(/\s+/g, ' ');
+
+  it('generic .chat-sidenav__action has font-family: inherit', () => {
+    expect(normalized).toMatch(
+      /\.chat-sidenav__action\s*\{[^}]*font-family:\s*inherit\s*;/,
+    );
+  });
+
+  it('generic .chat-sidenav__action has font-size: var(--ngaf-chat-font-size-sm)', () => {
+    expect(normalized).toMatch(
+      /\.chat-sidenav__action\s*\{[^}]*font-size:\s*var\(--ngaf-chat-font-size-sm\)\s*;/,
+    );
+  });
+
+  it('late-cascade New chat uses font-size: var(--ngaf-chat-font-size-sm) (not 13px)', () => {
+    expect(normalized).toMatch(
+      /\.chat-sidenav__action\.chat-sidenav__action--new\s*\{[^}]*font-size:\s*var\(--ngaf-chat-font-size-sm\)\s*;/,
+    );
+  });
+
+  it('does NOT use hard-coded 13px for New chat font-size', () => {
+    expect(normalized).not.toMatch(
+      /\.chat-sidenav__action\.chat-sidenav__action--new\s*\{[^}]*font-size:\s*13px/,
+    );
+  });
+});
+
 describe('CHAT_SIDENAV_STYLES — Archived disclosure', () => {
   const normalized = CHAT_SIDENAV_STYLES.replace(/\s+/g, ' ');
 

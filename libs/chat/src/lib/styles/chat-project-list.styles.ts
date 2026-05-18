@@ -79,7 +79,9 @@ export const CHAT_PROJECT_LIST_STYLES = `
     border: 0;
     padding: 10px 16px;
     border-radius: 8px;
-    font-size: 12px;
+    font-family: inherit;
+    font-size: var(--ngaf-chat-font-size-sm);
+    font-weight: 400;
     display: flex;
     align-items: center;
     gap: 8px;
