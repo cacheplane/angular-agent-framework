@@ -9,6 +9,56 @@
     >☰</button>
   }
 
+  <div class="demo-shell__toolbar" role="toolbar" aria-label="Demo controls">
+    <div class="demo-shell__segmented" aria-label="Mode">
+      @for (option of modeOptions; track option.value) {
+        <button
+          type="button"
+          class="demo-shell__segmented-button"
+          [class.is-active]="mode() === option.value"
+          [attr.aria-pressed]="mode() === option.value"
+          (click)="onModeChange(option.value)"
+        >{{ option.label }}</button>
+      }
+    </div>
+
+    <div class="demo-shell__field demo-shell__field--first" data-field="model">
+      <chat-select
+        [options]="modelOptions()"
+        [value]="model()"
+        menuLabel="Model"
+        (valueChange)="onModelChange($event)"
+      />
+    </div>
+
+    <div class="demo-shell__field" data-field="effort">
+      <chat-select
+        [options]="effortOptions()"
+        [value]="effort()"
+        menuLabel="Effort"
+        (valueChange)="onEffortChange($event)"
+      />
+    </div>
+
+    <div class="demo-shell__field" data-field="genui">
+      <chat-select
+        [options]="genUiOptions()"
+        [value]="genUiMode()"
+        menuLabel="Gen UI"
+        (valueChange)="onGenUiModeChange($event)"
+      />
+    </div>
+
+    <div class="demo-shell__field" data-field="theme">
+      <chat-select
+        [options]="themeOptions()"
+        [value]="theme()"
+        menuLabel="Theme"
+        (valueChange)="onThemeChange($event)"
+      />
+    </div>
+  </div>
+
   <chat-sidenav
     [threads]="visibleThreads()"
     [archivedThreads]="threadsSvc.archivedThreads()"
@@ -62,56 +112,6 @@
     class="demo-shell__main"
     [attr.data-sidenav-mode]="sidenavMode() !== 'drawer' ? sidenavMode() : null"
   >
-    <div class="demo-shell__toolbar" role="toolbar" aria-label="Demo controls">
-      <div class="demo-shell__segmented" aria-label="Mode">
-        @for (option of modeOptions; track option.value) {
-          <button
-            type="button"
-            class="demo-shell__segmented-button"
-            [class.is-active]="mode() === option.value"
-            [attr.aria-pressed]="mode() === option.value"
-            (click)="onModeChange(option.value)"
-          >{{ option.label }}</button>
-        }
-      </div>
-
-      <div class="demo-shell__field demo-shell__field--first" data-field="model">
-        <chat-select
-          [options]="modelOptions()"
-          [value]="model()"
-          menuLabel="Model"
-          (valueChange)="onModelChange($event)"
-        />
-      </div>
-
-      <div class="demo-shell__field" data-field="effort">
-        <chat-select
-          [options]="effortOptions()"
-          [value]="effort()"
-          menuLabel="Effort"
-          (valueChange)="onEffortChange($event)"
-        />
-      </div>
-
-      <div class="demo-shell__field" data-field="genui">
-        <chat-select
-          [options]="genUiOptions()"
-          [value]="genUiMode()"
-          menuLabel="Gen UI"
-          (valueChange)="onGenUiModeChange($event)"
-        />
-      </div>
-
-      <div class="demo-shell__field" data-field="theme">
-        <chat-select
-          [options]="themeOptions()"
-          [value]="theme()"
-          menuLabel="Theme"
-          (valueChange)="onThemeChange($event)"
-        />
-      </div>
-    </div>
-
     <router-outlet />
     @if (agent.interrupt && agent.interrupt()) {
       <div class="demo-shell__interrupt-panel" role="region" aria-label="Approval required">
