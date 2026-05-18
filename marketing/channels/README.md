@@ -5,10 +5,10 @@ Channel adapters for the Cacheplane marketing pipeline. One adapter per channel,
 ## Implemented
 
 - **X** (`getAdapter('x')`) — post single tweets, threads, and image media (PNG ≤ 5MB, alt text required). `metrics()` is a stub until the X tier upgrades to Basic+.
+- **Dev.to** (`getAdapter('devto')`) — post articles with title, tags, canonical URL, description. Real `metrics()` (Dev.to's read API is free).
 
 ## Planned (follow-up commits in this package — no separate spec)
 
-- Dev.to — next
 - LinkedIn
 - Reddit
 
@@ -44,6 +44,34 @@ X_USER_HANDLE=brian
 Prerequisites: create an X v2 app at <https://developer.x.com/en/portal/dashboard> and set the `X_CLIENT_ID` + `X_CLIENT_SECRET` env vars from the app's OAuth 2.0 section.
 
 When an access token expires, the adapter automatically calls `/2/oauth2/token` to refresh and prints the new refresh token to stderr (X rotates refresh tokens on use; update your `.env` for the next process start).
+
+## Auth (Dev.to)
+
+Dev.to uses a single static API key.
+
+1. Sign in to Dev.to.
+2. **Settings** → **Extensions** → **DEV Community API Keys** → **Generate API Key**.
+   Name it `cacheplane-marketing` (or anything you like).
+3. Copy the key into `.env`:
+
+   ```
+   DEVTO_API_KEY=<paste>
+   ```
+
+4. Verify with a dry-run:
+
+   ```bash
+   DRY_RUN=1 pnpm marketing:channels:devto:smoke
+   ```
+
+### Tag rules (Dev.to)
+
+Dev.to is strict about tags. The validator catches violations before the API call:
+
+- Maximum 4 tags per post.
+- Each tag: lowercase letters and digits only — `^[a-z0-9]+$`.
+- No hyphens (`lang-graph` ✗), underscores (`lang_graph` ✗), or uppercase (`Angular` ✗).
+- Each tag ≤ 30 chars.
 
 ## Dry-run
 

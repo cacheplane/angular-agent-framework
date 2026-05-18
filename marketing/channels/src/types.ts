@@ -9,6 +9,17 @@ export interface DraftMedia {
   alt: string;
 }
 
+export interface DraftArticle {
+  /** 1-128 chars. */
+  title: string;
+  /** Channel-specific limits. Dev.to: ^[a-z0-9]+$, ≤ 4 items, each ≤ 30 chars. */
+  tags?: string[];
+  /** Absolute https: URL — origin post location. Tells search engines where the canonical version lives. */
+  canonicalUrl?: string;
+  /** Meta description; falls through to the platform's SEO subtitle. */
+  description?: string;
+}
+
 export interface Draft {
   channel: ChannelId;
   text?: string;
@@ -16,6 +27,7 @@ export interface Draft {
   media?: DraftMedia[];
   link?: { url: string; previewTitle?: string };
   scheduledAt?: string;
+  article?: DraftArticle;
 }
 
 export interface PostResult {

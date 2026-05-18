@@ -17,8 +17,12 @@ const MAX_X_MEDIA = 4;
 const MAX_ALT = 1000;
 const MAX_PNG_BYTES = 5 * 1024 * 1024;
 
+const MAX_DEVTO_TITLE = 128;
+const MAX_DEVTO_TAGS = 4;
+const MAX_DEVTO_TAG_LEN = 30;
+const DEVTO_TAG_RE = /^[a-z0-9]+$/;
+
 function codePointLength(s: string): number {
-  // Counts Unicode code points (handles surrogate pairs correctly).
   return [...s].length;
 }
 
@@ -92,6 +96,74 @@ function validateX(draft: Draft): void {
   }
 }
 
+function validateDevTo(draft: Draft): void {
+  if (typeof draft.text !== 'string' || draft.text.length === 0) {
+    throw new ValidationError('Dev.to draft.text (body markdown) is required.', {
+      rule: 'devto-body-required',
+      field: 'text',
+    });
+  }
+  if (!draft.article) {
+    throw new ValidationError('Dev.to draft.article is required.', {
+      rule: 'devto-article-required',
+      field: 'article',
+    });
+  }
+  const t = draft.article.title;
+  if (typeof t !== 'string' || t.length === 0 || t.length > MAX_DEVTO_TITLE) {
+    throw new ValidationError(
+      `Dev.to article.title must be 1-128 characters (got ${t?.length ?? 0}).`,
+      { rule: 'devto-title-length', field: 'article.title' },
+    );
+  }
+  if (draft.article.tags) {
+    if (draft.article.tags.length > MAX_DEVTO_TAGS) {
+      throw new ValidationError(
+        `Dev.to accepts at most 4 tags (got ${draft.article.tags.length}).`,
+        { rule: 'devto-too-many-tags', field: 'article.tags' },
+      );
+    }
+    for (let i = 0; i < draft.article.tags.length; i++) {
+      const tag = draft.article.tags[i];
+      if (!DEVTO_TAG_RE.test(tag) || tag.length > MAX_DEVTO_TAG_LEN) {
+        throw new ValidationError(
+          `Dev.to tag "${tag}" must match ^[a-z0-9]+$ and be ≤ 30 chars.`,
+          { rule: 'devto-tag-format', field: `article.tags[${i}]` },
+        );
+      }
+    }
+  }
+  if (draft.article.canonicalUrl !== undefined) {
+    let parsed: URL;
+    try {
+      parsed = new URL(draft.article.canonicalUrl);
+    } catch {
+      throw new ValidationError(
+        `Dev.to article.canonicalUrl is not a valid URL: ${draft.article.canonicalUrl}.`,
+        { rule: 'devto-canonical-invalid', field: 'article.canonicalUrl' },
+      );
+    }
+    if (parsed.protocol !== 'https:') {
+      throw new ValidationError(
+        `Dev.to article.canonicalUrl must use https: (got ${parsed.protocol}).`,
+        { rule: 'devto-canonical-protocol', field: 'article.canonicalUrl' },
+      );
+    }
+  }
+  if (draft.threadParts) {
+    throw new ValidationError('Dev.to does not support threads. Use a single text body.', {
+      rule: 'devto-no-threads',
+      field: 'threadParts',
+    });
+  }
+  if (draft.media && draft.media.length > 0) {
+    throw new ValidationError(
+      'Dev.to does not accept media uploads. Inline image URLs in the markdown body instead.',
+      { rule: 'devto-no-media', field: 'media' },
+    );
+  }
+}
+
 export function validateDraft(
   draft: Draft,
   opts: { adapterId?: ChannelId } = {},
@@ -105,8 +177,9 @@ export function validateDraft(
   switch (draft.channel) {
     case 'x':
       return validateX(draft);
-    case 'linkedin':
     case 'devto':
+      return validateDevTo(draft);
+    case 'linkedin':
     case 'reddit':
       throw new ValidationError(
         `Channel "${draft.channel}" adapter is not yet implemented.`,

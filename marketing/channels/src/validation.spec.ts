@@ -92,10 +92,125 @@ describe('validateDraft (X)', () => {
 });
 
 describe('validateDraft (other channels)', () => {
-  it('throws not-yet-implemented for linkedin/devto/reddit', () => {
-    for (const channel of ['linkedin', 'devto', 'reddit'] as const) {
+  it('throws not-yet-implemented for linkedin/reddit', () => {
+    for (const channel of ['linkedin', 'reddit'] as const) {
       const d: Draft = { channel, text: 'hi' };
       expect(() => validateDraft(d)).toThrow(/not yet implemented/i);
     }
+  });
+});
+
+describe('validateDraft (Dev.to)', () => {
+  function baseDevTo(): Draft {
+    return {
+      channel: 'devto',
+      text: '# Title\n\nBody content here.',
+      article: {
+        title: 'My Article',
+        tags: ['angular', 'tutorial'],
+        canonicalUrl: 'https://cacheplane.ai/blog/my-article',
+        description: 'A description.',
+      },
+    };
+  }
+
+  it('accepts a minimal valid devto draft', () => {
+    expect(() => validateDraft(baseDevTo())).not.toThrow();
+  });
+
+  it('rejects missing text', () => {
+    const d = baseDevTo();
+    delete d.text;
+    expect(() => validateDraft(d)).toThrow(/body markdown.*is required/i);
+  });
+
+  it('rejects empty text', () => {
+    const d = baseDevTo();
+    d.text = '';
+    expect(() => validateDraft(d)).toThrow(/body markdown.*is required/i);
+  });
+
+  it('rejects missing article', () => {
+    const d = baseDevTo();
+    delete d.article;
+    expect(() => validateDraft(d)).toThrow(/article is required/i);
+  });
+
+  it('rejects missing title', () => {
+    const d = baseDevTo();
+    d.article!.title = '';
+    expect(() => validateDraft(d)).toThrow(/title must be 1-128/i);
+  });
+
+  it('rejects title > 128 chars', () => {
+    const d = baseDevTo();
+    d.article!.title = 'a'.repeat(129);
+    expect(() => validateDraft(d)).toThrow(/title must be 1-128/i);
+  });
+
+  it('rejects > 4 tags', () => {
+    const d = baseDevTo();
+    d.article!.tags = ['a', 'b', 'c', 'd', 'e'];
+    expect(() => validateDraft(d)).toThrow(/at most 4 tags/i);
+  });
+
+  it('rejects tag with hyphen', () => {
+    const d = baseDevTo();
+    d.article!.tags = ['lang-graph'];
+    expect(() => validateDraft(d)).toThrow(/tag "lang-graph"/);
+  });
+
+  it('rejects tag with uppercase', () => {
+    const d = baseDevTo();
+    d.article!.tags = ['Angular'];
+    expect(() => validateDraft(d)).toThrow(/tag "Angular"/);
+  });
+
+  it('rejects tag with underscore', () => {
+    const d = baseDevTo();
+    d.article!.tags = ['lang_graph'];
+    expect(() => validateDraft(d)).toThrow(/tag "lang_graph"/);
+  });
+
+  it('rejects tag > 30 chars', () => {
+    const d = baseDevTo();
+    d.article!.tags = ['a'.repeat(31)];
+    expect(() => validateDraft(d)).toThrow(/tag .* must match/);
+  });
+
+  it('rejects non-https canonical URL', () => {
+    const d = baseDevTo();
+    d.article!.canonicalUrl = 'http://insecure.example.com';
+    expect(() => validateDraft(d)).toThrow(/must use https:/);
+  });
+
+  it('rejects invalid canonical URL', () => {
+    const d = baseDevTo();
+    d.article!.canonicalUrl = 'not-a-url';
+    expect(() => validateDraft(d)).toThrow(/not a valid URL/);
+  });
+
+  it('rejects threadParts set on devto draft', () => {
+    const d = baseDevTo();
+    d.threadParts = ['part 1', 'part 2'];
+    expect(() => validateDraft(d)).toThrow(/does not support threads/i);
+  });
+
+  it('rejects media set on devto draft', () => {
+    const d = baseDevTo();
+    d.media = [{ png: Buffer.from('a'), alt: 'a' }];
+    expect(() => validateDraft(d)).toThrow(/does not accept media uploads/i);
+  });
+
+  it('accepts draft with no tags', () => {
+    const d = baseDevTo();
+    delete d.article!.tags;
+    expect(() => validateDraft(d)).not.toThrow();
+  });
+
+  it('accepts draft with no canonical URL', () => {
+    const d = baseDevTo();
+    delete d.article!.canonicalUrl;
+    expect(() => validateDraft(d)).not.toThrow();
   });
 });
