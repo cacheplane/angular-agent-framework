@@ -113,11 +113,26 @@ export class ChatToolCallsComponent {
 
   readonly toolCalls = computed((): ToolCall[] => {
     const msg = this.message();
-    if (msg && msg.role === 'assistant' && Array.isArray(msg.content)) {
-      const blocks = msg.content.filter((b) => b.type === 'tool_use');
+    if (msg && msg.role === 'assistant') {
       const all = this.agent().toolCalls();
-      return blocks.map(b => all.find(tc => tc.id === b.id)).filter((x): x is ToolCall => !!x);
+      // Prefer adapter-provided `toolCallIds` (LangGraph populates it from
+      // raw `tool_calls`). This is the per-message scope that prevents
+      // every AI bubble from re-rendering the entire thread's tool-call
+      // list when content is a flat string (the LangGraph adapter's
+      // default — extractTextContent reduces complex content to string).
+      if (msg.toolCallIds && msg.toolCallIds.length > 0) {
+        return msg.toolCallIds.map(id => all.find(tc => tc.id === id)).filter((x): x is ToolCall => !!x);
+      }
+      // Anthropic-style content-block path: extract tool_use IDs inline.
+      if (Array.isArray(msg.content)) {
+        const blocks = msg.content.filter((b) => b.type === 'tool_use');
+        return blocks.map(b => all.find(tc => tc.id === b.id)).filter((x): x is ToolCall => !!x);
+      }
+      // Assistant message provided but no tool-call linkage available:
+      // this message didn't emit any tool calls. Return empty.
+      return [];
     }
+    // No message context at all (e.g. agent-level pinning) → global list.
     return this.agent().toolCalls();
   });
 

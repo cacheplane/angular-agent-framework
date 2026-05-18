@@ -33,6 +33,15 @@ export interface Message {
   extra?: Record<string, unknown>;
   /** Provider-agnostic citation list. Populated by adapters. */
   citations?: Citation[];
+  /**
+   * IDs of tool calls emitted BY this assistant message. Populated by
+   * adapters from provider-native fields (LangGraph: `tool_calls[].id`;
+   * Anthropic: `tool_use` content blocks). Used by `<chat-tool-calls>` to
+   * scope its rendering to a single message — otherwise it falls back to
+   * the agent's global toolCalls list, which renders duplicates across
+   * every AI message in a thread.
+   */
+  toolCallIds?: string[];
 }
 
 export function isUserMessage(m: Message): m is Message & { role: 'user' } {
