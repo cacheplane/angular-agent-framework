@@ -41,3 +41,43 @@ describe('CHAT_SIDENAV_STYLES — New chat button', () => {
     );
   });
 });
+
+describe('CHAT_SIDENAV_STYLES — Archived disclosure', () => {
+  const normalized = CHAT_SIDENAV_STYLES.replace(/\s+/g, ' ');
+
+  it('uses sidenav-nav-item padding (8px 12px) — not the small 8px 12px 4px label padding', () => {
+    expect(normalized).toMatch(
+      /\.chat-sidenav__archived-heading\s*\{[^}]*padding:\s*8px\s+12px\s*;/,
+    );
+  });
+
+  it('uses 8px border-radius so it reads as a clickable nav item', () => {
+    expect(normalized).toMatch(
+      /\.chat-sidenav__archived-heading\s*\{[^}]*border-radius:\s*8px\s*;/,
+    );
+  });
+
+  it('uses --ngaf-chat-text color (full strength, not muted)', () => {
+    expect(normalized).toMatch(
+      /\.chat-sidenav__archived-heading\s*\{[^}]*color:\s*var\(--ngaf-chat-text\)\s*;/,
+    );
+  });
+
+  it('uses sm font-size — not the 11px label size', () => {
+    expect(normalized).toMatch(
+      /\.chat-sidenav__archived-heading\s*\{[^}]*font-size:\s*var\(--ngaf-chat-font-size-sm\)\s*;/,
+    );
+  });
+
+  it('no longer uppercases the label', () => {
+    expect(normalized).not.toMatch(
+      /\.chat-sidenav__archived-heading\s*\{[^}]*text-transform:\s*uppercase/,
+    );
+  });
+
+  it('hovers to surface-alt (matching .chat-sidenav__action)', () => {
+    expect(normalized).toMatch(
+      /\.chat-sidenav__archived-heading:hover\s*\{[^}]*background:\s*var\(--ngaf-chat-surface-alt\)/,
+    );
+  });
+});
