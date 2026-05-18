@@ -48,6 +48,7 @@ import { ChatComponent } from '@ngaf/chat';
 })
 export class ChatPageComponent {
   chatRef = agent({
+    apiUrl: 'http://localhost:2024',
     assistantId: 'chat_agent',
     threadId: signal(null),
   });
@@ -100,6 +101,7 @@ When you pass a non-empty `threads` array, a sidebar appears on the left (hidden
 })
 export class ChatWithThreadsComponent {
   chatRef = agent({
+    apiUrl: 'http://localhost:2024',
     assistantId: 'chat_agent',
     threadId: signal(null),
   });
@@ -151,7 +153,19 @@ AI messages containing JSON are parsed character-by-character as tokens stream. 
 
 ## A2UI Rendering
 
-When AI messages contain A2UI content (prefixed with `---a2ui_JSON---`), the component auto-detects and renders surfaces using the built-in `a2uiBasicCatalog()`. This includes 12 components from the A2UI v0.9 basic catalog: Text, Image, Icon, Divider, Row, Column, Card, List, Button, TextField, CheckBox, and ChoicePicker.
+When AI messages contain A2UI content (prefixed with `---a2ui_JSON---`), the component auto-detects A2UI mode. Pass `a2uiBasicCatalog()` to `[views]` to render the built-in catalog:
+
+```typescript
+import { ChatComponent, a2uiBasicCatalog } from '@ngaf/chat';
+
+views = a2uiBasicCatalog();
+```
+
+```html
+<chat [agent]="chatRef" [views]="views" />
+```
+
+The catalog currently maps 18 component types: Text, Image, Icon, Divider, Row, Column, Card, List, Button, TextField, CheckBox, MultipleChoice, DateTimeInput, Slider, Tabs, Modal, Video, and AudioPlayer.
 
 A2UI surfaces support two-way data binding, button actions, template expansion over collections, and validation. See the [A2UI guide](/docs/render/a2ui/overview) for details.
 

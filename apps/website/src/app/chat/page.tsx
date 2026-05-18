@@ -128,7 +128,7 @@ export default async function ChatPage() {
           { title: 'tool primitives', description: 'Tool-call lifecycle.' },
           { title: 'interrupt primitive', description: 'Approval gate.' },
         ]}
-        cta={{ label: 'Headless API', href: '/docs/chat/api' }}
+        cta={{ label: 'Headless API', href: '/docs/chat/api/provide-chat' }}
         visualLeft
         visual={<ChatLandingCodeShowcase />}
       />

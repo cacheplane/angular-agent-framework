@@ -162,7 +162,7 @@ export default function PilotToProdPage() {
           { title: 'Fallback API', description: 'Per-component readiness.' },
           { title: 'Runbook', description: 'Yours forever.' },
         ]}
-        cta={{ label: 'Production patterns', href: '/docs/agent/guides/production' }}
+        cta={{ label: 'Production patterns', href: '/docs/agent/guides/deployment' }}
         visual={
           <BrowserFrame url="grafana · agent dashboard" elevation="md">
             <div style={{ padding: 28, minHeight: 320, background: tokens.surfaces.surface }}>

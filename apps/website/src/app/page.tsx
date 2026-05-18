@@ -102,7 +102,7 @@ export default async function HomePage() {
           { title: 'readiness gate', description: 'Hold renders until the surface is real.' },
           { title: 'thread persistence', description: 'Restore conversations across sessions.' },
         ]}
-        cta={{ label: 'Production patterns', href: '/docs/agent/guides/production' }}
+        cta={{ label: 'Production patterns', href: '/docs/agent/guides/deployment' }}
         visual={<LiveDemoFrame />}
       />
 

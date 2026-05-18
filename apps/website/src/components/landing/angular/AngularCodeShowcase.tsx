@@ -23,6 +23,7 @@ provideAgent({
 });
 
 const chat = agent({
+  apiUrl: environment.langgraphUrl,
   assistantId: 'my-agent',
   threadId: savedThreadId,
   onThreadId: (id) => localStorage.setItem('threadId', id),

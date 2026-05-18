@@ -10,11 +10,11 @@ import type { AngularRegistry } from '@ngaf/render';
 const PACKAGE_NAME = '@ngaf/chat';
 
 export interface ChatConfig {
-  /** Default render registry for generative UI components. */
+  /** Shared render registry for consumers that read CHAT_CONFIG. */
   renderRegistry?: AngularRegistry;
-  /** Override the default AI avatar label (default: "A"). */
+  /** Shared AI avatar label for consumers that read CHAT_CONFIG (default: "A"). */
   avatarLabel?: string;
-  /** Override the default assistant display name (default: "Assistant"). */
+  /** Shared assistant display name for consumers that read CHAT_CONFIG (default: "Assistant"). */
   assistantName?: string;
   /** Signed license token from cacheplane.dev. Optional; omitted in dev. */
   license?: string;

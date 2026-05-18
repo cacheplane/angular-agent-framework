@@ -5543,13 +5543,13 @@
       {
         "name": "assistantName",
         "type": "string",
-        "description": "Override the default assistant display name (default: \"Assistant\").",
+        "description": "Shared assistant display name for consumers that read CHAT_CONFIG (default: \"Assistant\").",
         "optional": true
       },
       {
         "name": "avatarLabel",
         "type": "string",
-        "description": "Override the default AI avatar label (default: \"A\").",
+        "description": "Shared AI avatar label for consumers that read CHAT_CONFIG (default: \"A\").",
         "optional": true
       },
       {
@@ -5561,7 +5561,7 @@
       {
         "name": "renderRegistry",
         "type": "AngularRegistry",
-        "description": "Default render registry for generative UI components.",
+        "description": "Shared render registry for consumers that read CHAT_CONFIG.",
         "optional": true
       }
     ],

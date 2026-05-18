@@ -14,7 +14,7 @@ const registry = defineAngularRegistry({
 const SNIPPET_2 = `<render-spec
   [spec]="agentOutput()"
   [registry]="registry"
-  [state]="stateStore"
+  [store]="stateStore"
 />`;
 
 const SNIPPETS = [

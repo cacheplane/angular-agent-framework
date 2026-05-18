@@ -1,4 +1,4 @@
-# Agent UI for Angular v0.0.37
+# Agent UI for Angular v0.0.40
 
 Agent UI primitives and LangGraph streaming adapters for Angular.
 
@@ -29,7 +29,7 @@ import { ChatComponent as NgafChatComponent } from '@ngaf/chat';
   `,
 })
 export class ChatComponent {
-  chat = agent({ assistantId: 'chat_agent' });
+  chat = agent({ apiUrl: 'http://localhost:2024', assistantId: 'chat_agent' });
 }
 ```
 

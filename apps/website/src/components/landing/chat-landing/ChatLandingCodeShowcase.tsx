@@ -2,19 +2,19 @@ import { tokens } from '@ngaf/design-tokens';
 import { HighlightedCode } from '../HighlightedCode';
 
 const SNIPPET_1 = `import { agent } from '@ngaf/langgraph';
-import { ChatComponent } from '@ngaf/chat';
+import { ChatComponent, a2uiBasicCatalog } from '@ngaf/chat';
 
 @Component({
   template: \`
     <chat
       [agent]="agent"
-      [registry]="registry"
+      [views]="views"
     />
   \`,
 })
 export class MyChatPage {
   protected readonly agent = agent({ apiUrl: 'http://localhost:2024', assistantId: 'chat_agent' });
-  registry = inject(RenderRegistry);
+  protected readonly views = a2uiBasicCatalog();
 }`;
 
 const SNIPPET_2 = `chat {
