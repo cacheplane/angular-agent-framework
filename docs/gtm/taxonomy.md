@@ -88,23 +88,22 @@ Browser events never fire unless the consumer explicitly opts in. See `libs/tele
 
 ### `ngaf:postinstall` properties
 
-| Property                       | Type   | Notes                                                                              |
-| ------------------------------ | ------ | ---------------------------------------------------------------------------------- |
-| `pkg`                          | string | Published `@ngaf/*` package name.                                                  |
-| `version`                      | string | Published package version.                                                         |
-| `node`                         | string | Current `process.version`; kept for existing dashboards.                           |
-| `node_version`                 | string | Current `process.version`.                                                         |
-| `os`                           | string | Current `process.platform`.                                                        |
-| `arch`                         | string | Current `process.arch`.                                                            |
-| `install_context`              | enum   | `ci`, `dependency`, `global`, or `workspace`; dashboards exclude `ci` defensively. |
-| `package_manager`              | string | Parsed from npm's package-manager user agent when available.                       |
-| `package_manager_version`      | string | Parsed from npm's package-manager user agent when available.                       |
-| `package_manager_node_version` | string | Installer-reported Node version when available.                                    |
-| `package_manager_os`           | string | Installer-reported OS token when available.                                        |
-| `package_manager_arch`         | string | Installer-reported architecture token when available.                              |
-| `package_manager_workspaces`   | bool   | Installer-reported workspace flag when available.                                  |
-| `global_install`               | bool   | Whether npm reports a global install.                                              |
-| `sample_weight`                | number | Inverse sample rate for weighted counts.                                           |
+| Property                       | Type   | Notes                                                        |
+| ------------------------------ | ------ | ------------------------------------------------------------ |
+| `pkg`                          | string | Published `@ngaf/*` package name.                            |
+| `version`                      | string | Published package version.                                   |
+| `node`                         | string | Current `process.version`; kept for existing dashboards.     |
+| `node_version`                 | string | Current `process.version`.                                   |
+| `os`                           | string | Current `process.platform`.                                  |
+| `arch`                         | string | Current `process.arch`.                                      |
+| `package_manager`              | string | Parsed from npm's package-manager user agent when available. |
+| `package_manager_version`      | string | Parsed from npm's package-manager user agent when available. |
+| `package_manager_node_version` | string | Installer-reported Node version when available.              |
+| `package_manager_os`           | string | Installer-reported OS token when available.                  |
+| `package_manager_arch`         | string | Installer-reported architecture token when available.        |
+| `package_manager_workspaces`   | bool   | Installer-reported workspace flag when available.            |
+| `global_install`               | bool   | Whether npm reports a global install.                        |
+| `sample_weight`                | number | Inverse sample rate for weighted counts.                     |
 
 ### Runtime telemetry properties
 
@@ -189,4 +188,3 @@ This file is human-edited. When events are added/renamed/removed, update the aff
 | 2026-05-15 | Drop cockpit:install_command_copied, rename cockpit:six_signals_complete → cockpit:activation_complete (Spec 1C).              |
 | 2026-05-15 | Cockpit shell events: rename `recipe_start` → `recipe_opened`; add `mode_switched` and `code_copied` (Spec 1C implementation). |
 | 2026-05-17 | Add `blog:cta_click` + `blog:copy_code_click` events; add `'blog'` to `AnalyticsSurface` (Spec 5).                             |
-| 2026-05-18 | Add `install_context` to `ngaf:postinstall` and filter package telemetry dashboard insights away from `ci` context.            |

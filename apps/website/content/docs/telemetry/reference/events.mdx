@@ -17,13 +17,13 @@ type NgafNodeEvent =
   | 'ngaf:stream_errored';
 ```
 
-| Event                           | Source                     | Properties from source                                                                                                                    |
-| ------------------------------- | -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| `ngaf:postinstall`              | package postinstall script | `pkg`, `version`, `node`, `node_version`, `os`, `arch`, `global_install`, `install_context`, package-manager fields when npm exposes them |
-| `ngaf:runtime_instance_created` | Node adapter helper        | `transport`, `provider`, `model`, `angularVersion`; `apiKey` is removed                                                                   |
-| `ngaf:stream_started`           | Node adapter helper        | `provider`, `model`, optional fields in the input object                                                                                  |
-| `ngaf:stream_ended`             | Node adapter helper        | `provider`, `model`, `durationMs` when supplied                                                                                           |
-| `ngaf:stream_errored`           | Node adapter helper        | stream properties plus `errorClass`                                                                                                       |
+| Event                           | Source                     | Properties from source                                                                                                 |
+| ------------------------------- | -------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `ngaf:postinstall`              | package postinstall script | `pkg`, `version`, `node`, `node_version`, `os`, `arch`, `global_install`, package-manager fields when npm exposes them |
+| `ngaf:runtime_instance_created` | Node adapter helper        | `transport`, `provider`, `model`, `angularVersion`; `apiKey` is removed                                                |
+| `ngaf:stream_started`           | Node adapter helper        | `provider`, `model`, optional fields in the input object                                                               |
+| `ngaf:stream_ended`             | Node adapter helper        | `provider`, `model`, `durationMs` when supplied                                                                        |
+| `ngaf:stream_errored`           | Node adapter helper        | stream properties plus `errorClass`                                                                                    |
 
 `captureEvent()` also adds `sample_weight` to sent event properties.
 

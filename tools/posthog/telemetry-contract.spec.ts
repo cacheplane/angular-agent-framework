@@ -108,7 +108,13 @@ test('insight property filters are allowed by the event contract', async () => {
   );
 });
 
-test('package telemetry dashboard filters install insights away from CI context', async () => {
+test('postinstall telemetry contract does not expose derived install context', () => {
+  const contract = TELEMETRY_EVENT_CONTRACT['ngaf:postinstall'];
+  assert(!contract.allowedProperties.includes('install_context'));
+  assert(!contract.allowedBreakdowns.includes('install_context'));
+});
+
+test('package telemetry dashboard does not filter by derived install context', async () => {
   const dashboard = await readJson<{ tiles: Array<{ insight: string }> }>(
     join(HERE, 'dashboards', 'package-telemetry.json')
   );
@@ -129,20 +135,17 @@ test('package telemetry dashboard filters install insights away from CI context'
 
     for (const item of insight.events ?? []) {
       if (item.event !== 'ngaf:postinstall') continue;
-      const excludesCiContext = (item.properties ?? []).some(
-        (property) =>
-          property.key === 'install_context' &&
-          property.value === 'ci' &&
-          property.operator === 'is_not'
+      const usesInstallContext = (item.properties ?? []).some(
+        (property) => property.key === 'install_context'
       );
-      if (!excludesCiContext) violations.push(insight.slug);
+      if (usesInstallContext) violations.push(insight.slug);
     }
   }
 
   assert.deepEqual(
     violations,
     [],
-    `Package telemetry insights must exclude install_context=ci:\n${violations.join(
+    `Package telemetry insights must not filter by install_context:\n${violations.join(
       '\n'
     )}`
   );
