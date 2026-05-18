@@ -80,8 +80,6 @@ The postinstall entry point reads package name and version from npm lifecycle en
 
 It skips local top-level installs by default. Dependency installs under `node_modules` and global installs can be eligible unless disabled.
 
-Postinstall payloads include `install_context` with one of `ci`, `dependency`, `global`, or `workspace`. CI environments are disabled before sending; the `ci` value exists as a defensive classification if a CI install is intentionally forced through for diagnostics.
-
 When `DEBUG` includes `ngaf:telemetry`, `ngaf:*`, or `*`, the script prints the payload shape it attempted to send. It prints the normal install telemetry notice only when the ingest endpoint accepted the event.
 
 ## Failure behavior

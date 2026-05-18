@@ -32,16 +32,6 @@ function readBooleanToken(value: string | undefined): boolean | undefined {
   return undefined;
 }
 
-function isCiEnv(env: NodeJS.ProcessEnv = process.env): boolean {
-  return [
-    env.CI,
-    env.GITHUB_ACTIONS,
-    env.CONTINUOUS_INTEGRATION,
-    env.BUILDKITE,
-    env.CIRCLECI,
-  ].some((value) => readBooleanToken(value) === true);
-}
-
 function getPackageManager(
   env: NodeJS.ProcessEnv = process.env
 ): Record<string, unknown> {
@@ -79,21 +69,6 @@ function getPackageManager(
   return out;
 }
 
-function getInstallContext(
-  env: NodeJS.ProcessEnv = process.env
-): 'ci' | 'dependency' | 'global' | 'workspace' {
-  if (isCiEnv(env)) return 'ci';
-  if (
-    readBooleanToken(env.npm_config_global) === true ||
-    env.npm_config_location === 'global'
-  ) {
-    return 'global';
-  }
-  const packageManager = getPackageManager(env);
-  if (packageManager.package_manager_workspaces === true) return 'workspace';
-  return 'dependency';
-}
-
 // @internal
 export function createPostinstallProperties(
   input: PostinstallInput,
@@ -109,7 +84,6 @@ export function createPostinstallProperties(
     global_install:
       readBooleanToken(env.npm_config_global) === true ||
       env.npm_config_location === 'global',
-    install_context: getInstallContext(env),
     ...getPackageManager(env),
   };
 }

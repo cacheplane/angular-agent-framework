@@ -123,23 +123,18 @@ describe('node client', () => {
     expect(body.properties).not.toHaveProperty('init_cwd');
   });
 
-  test('createPostinstallProperties classifies CI installs for dashboard filtering', () => {
-    expect(
-      createPostinstallProperties(
-        { pkg: '@ngaf/chat', version: '0.0.31' },
-        { CI: 'true' }
-      )
-    ).toEqual(expect.objectContaining({ install_context: 'ci' }));
-
+  test('createPostinstallProperties does not include derived install context', () => {
     expect(
       createPostinstallProperties(
         { pkg: '@ngaf/chat', version: '0.0.31' },
         {
+          CI: 'true',
+          npm_config_global: 'true',
           npm_config_user_agent:
-            'npm/10.9.2 node/v22.14.0 darwin arm64 workspaces/false',
+            'npm/10.9.2 node/v22.14.0 darwin arm64 workspaces/true',
         }
       )
-    ).toEqual(expect.objectContaining({ install_context: 'dependency' }));
+    ).not.toHaveProperty('install_context');
   });
 
   test('capturePostinstall awaits fetch before resolving', async () => {
