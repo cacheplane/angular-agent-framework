@@ -24,6 +24,9 @@ concurrency:
 permissions:
   contents: read
 
+env:
+  DO_NOT_TRACK: '1'
+
 jobs:
   deploy:
     name: Deploy shared cockpit-dev to LangGraph Cloud

@@ -1,4 +1,4 @@
-import { readFile } from 'node:fs/promises';
+import { readdir, readFile } from 'node:fs/promises';
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 
@@ -30,6 +30,18 @@ describe('CI workflow', () => {
 
   async function readPostHogQualityWorkflow() {
     return readFile('.github/workflows/posthog-quality.yml', 'utf8');
+  }
+
+  async function readWorkflowFiles() {
+    const names = await readdir('.github/workflows');
+    return Promise.all(
+      names
+        .filter((name) => name.endsWith('.yml'))
+        .map(async (name) => ({
+          name,
+          text: await readFile(`.github/workflows/${name}`, 'utf8'),
+        }))
+    );
   }
 
   it('treats nested library files as deploy-relevant changes', async () => {
@@ -89,5 +101,21 @@ describe('CI workflow', () => {
       postHogQualityWorkflow,
       /POSTHOG_PERSONAL_API_KEY:\s*\$\{\{\s*secrets\.POSTHOG_PERSONAL_API_KEY_READONLY\s*\}\}/
     );
+  });
+
+  it('explicitly disables install telemetry in workflows that install npm dependencies', async () => {
+    const workflowsWithNpmInstall = (await readWorkflowFiles()).filter(
+      ({ text }) => /\brun:\s*npm (?:ci|install)\b/.test(text)
+    );
+
+    assert.notEqual(workflowsWithNpmInstall.length, 0);
+
+    for (const { name, text } of workflowsWithNpmInstall) {
+      assert.match(
+        text,
+        /\nenv:\n(?:  [A-Z0-9_]+: .+\n)*  DO_NOT_TRACK: ['"]1['"]/,
+        `${name} should set top-level DO_NOT_TRACK=1`
+      );
+    }
   });
 });
