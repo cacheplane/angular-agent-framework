@@ -75,6 +75,11 @@ import { FEATURED_SUGGESTIONS, MORE_SUGGESTIONS } from './welcome-suggestions';
         border-color: var(--ngaf-chat-text-muted);
         color: var(--ngaf-chat-text);
       }
+      .welcome-suggestions__row ::ng-deep chat-select .chat-select__menu {
+        min-width: 320px;
+        max-width: 480px;
+        width: max-content;
+      }
     `,
   ],
 })

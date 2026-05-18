@@ -52,6 +52,16 @@ describe('WelcomeSuggestionsComponent', () => {
     expect(captured).toBe(FEATURED_SUGGESTIONS[0].value);
   });
 
+  // JSDOM does not cascade ::ng-deep overrides from Angular component <style>
+  // tags, so we assert against the component's compiled styles string instead
+  // of relying on getComputedStyle — same approach used for border-width above.
+  it('widens the More prompts dropdown menu in the component styles', () => {
+    const cls: any = WelcomeSuggestionsComponent;
+    const styles = ((cls['ɵcmp'] as { styles?: string[] })?.styles ?? []).join(' ');
+    expect(styles).toMatch(/chat-select__menu[^}]*min-width:\s*320px/);
+    expect(styles).toMatch(/chat-select__menu[^}]*max-width:\s*480px/);
+  });
+
   it('overrides the More prompts trigger to match the featured chip styling', () => {
     // The component's styles block must include ::ng-deep overrides for the
     // chat-select trigger so it visually matches chat-welcome-suggestion.
