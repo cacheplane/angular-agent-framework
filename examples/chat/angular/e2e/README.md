@@ -33,7 +33,32 @@ Re-records each committed fixture against real OpenAI and reports byte-level dif
 - `scripts/record.ts` — dev-only fixture-capture CLI.
 - `scripts/drift.ts` — CI fixture-drift comparison.
 - `playwright.config.ts` — Playwright config with globalSetup that boots aimock + LangGraph + Angular dev server.
-- `smoke.spec.ts` — Phase 2a smoke test (one scenario: "hi").
+- `initial-render.spec.ts` — checklist pre-flight browser hygiene and welcome-state render.
+- `send-receive.spec.ts` — basic deterministic send/receive and stream completion.
+- `stop-streaming.spec.ts` — skipped harness pilot for stop-button abort behavior.
+- `markdown-surfaces.spec.ts` — final-state markdown matrix.
+- `regenerate.spec.ts` — regenerate replacement and server-state invariants.
+- `mode-routing.spec.ts` — embed/popup/sidebar routing and cross-mode persistence.
+- `model-picker.spec.ts` — model picker persistence and backend state.
+- `debug-devtools.spec.ts` — chat-debug accessibility plus sidebar coexistence.
+- `control-palette.spec.ts` — palette default/collapsed state and route controls.
+- `color-scheme.spec.ts` — light/dark persistence and A2UI theme sync.
+- `keyboard-accessibility.spec.ts` — keyboard send/newline, Escape, and core button names.
+- `error-handling.spec.ts` — network-failure alert and recovery.
+- `lifecycle.spec.ts` — reload reconnect, new conversation, welcome suggestion submit.
+- `browser-hygiene.spec.ts` — pilot automation for repeated mode-switch hygiene.
+- `visual-polish.spec.ts` — responsive overflow checks at checklist widths.
+- `a2ui-single-bubble.spec.ts`, `interrupt-approval.spec.ts`, `research-subagent.spec.ts` — capability smoke coverage for GenUI, HITL, and subagents.
+
+## Checklist coverage
+
+The suite mirrors `examples/chat/smoke/CHECKLIST.md` by section. Items that
+need live-model semantics or visual judgment stay represented by deterministic
+proxies here and by the smoke checklist for manual release validation. The
+browser-hygiene coverage has graduated into CI-grade assertions using Chromium
+performance metrics and repeated route churn. The remaining skipped pilot is
+stop-streaming, which needs the harness to expose an in-flight stream state
+reliably enough for deterministic abort assertions.
 
 ## Env vars
 

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 import { test, expect } from '@playwright/test';
+import { openDemo } from './test-helpers';
 
 const PROMPT =
   'Use the research subagent to investigate the history and motivation behind ' +
@@ -8,7 +9,7 @@ const PROMPT =
 test('research subagent: parent dispatches research, subagent content surfaces in the bubble', async ({
   page,
 }) => {
-  await page.goto('/embed');
+  await openDemo(page, '/embed');
 
   const input = page.getByRole('textbox', { name: /message|prompt/i });
   await input.fill(PROMPT);

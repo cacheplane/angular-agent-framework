@@ -11,6 +11,12 @@
     {
       "match": { "userMessage": "respond with a bullet list" },
       "response": { "content": "Three things:\n\n- alpha\n- beta\n- gamma" }
+    },
+    {
+      "match": { "userMessage": "respond with the markdown checklist kitchen sink" },
+      "response": {
+        "content": "# Heading One\n\n## Heading Two\n\n### Heading Three\n\nA paragraph with **bold text**, *italic text*, and `inline code`.\n\n- parent item\n  - nested child\n- second parent\n\n1. first ordered\n2. second ordered\n\n- [ ] unchecked task\n- [x] checked task\n\n```typescript\nconst answer = 42;\n```\n\n| Name | Mental model | When to use |\n| --- | --- | --- |\n| Signals | value graph | local state |\n| RxJS | event stream | async events |\n\n> This is a blockquote.\n\n[Angular](https://angular.dev)\n\n---\n\n<script>alert('xss')</script>"
+      }
     }
   ]
 }
