@@ -666,12 +666,12 @@ jobs:
       - name: posthog:sync --plan
         if: steps.affected.outputs.is_affected == 'yes'
         env:
-          POSTHOG_PERSONAL_API_KEY: ${{ secrets.POSTHOG_PERSONAL_API_KEY }}
+          POSTHOG_PERSONAL_API_KEY: ${{ secrets.POSTHOG_PERSONAL_API_KEY_READONLY }}
           POSTHOG_HOST: https://us.i.posthog.com
           POSTHOG_PROJECT_ID: ${{ secrets.POSTHOG_PROJECT_ID }}
         run: |
           if [ -z "$POSTHOG_PERSONAL_API_KEY" ]; then
-            echo "::notice::POSTHOG_PERSONAL_API_KEY not set — soft skip for contributor PRs."
+            echo "::notice::POSTHOG_PERSONAL_API_KEY_READONLY not set — soft skip for contributor PRs."
             exit 0
           fi
           npx nx run posthog-tools:sync:plan

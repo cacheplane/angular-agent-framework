@@ -52,13 +52,14 @@ Requires a **Personal API Key** with `dashboard:write`, `insight:write`, `cohort
 
 Env vars (see `.env.example` at repo root):
 
-| Variable                   | Purpose                                             |
-| -------------------------- | --------------------------------------------------- |
-| `POSTHOG_PERSONAL_API_KEY` | Personal API Key (Bearer)                           |
-| `POSTHOG_HOST`             | `https://us.i.posthog.com` (default) or your region |
-| `POSTHOG_PROJECT_ID`       | Numeric project id (visible in PostHog URL)         |
+| Variable                            | Purpose                                                            |
+| ----------------------------------- | ------------------------------------------------------------------ |
+| `POSTHOG_PERSONAL_API_KEY`          | Write-scoped Personal API Key for local `--apply` and `--report`   |
+| `POSTHOG_PERSONAL_API_KEY_READONLY` | Read-only Personal API Key for CI `--plan` and live quality checks |
+| `POSTHOG_HOST`                      | `https://us.i.posthog.com` (default) or your region                |
+| `POSTHOG_PROJECT_ID`                | Numeric project id (visible in PostHog URL)                        |
 
-**CI** uses the same key (write-scoped) for `--plan` only. **Production hardening TODO:** create a read-only Personal API Key for CI and add it as `POSTHOG_PERSONAL_API_KEY_READONLY` in GitHub Actions secrets. Local development continues using the write-scoped key for `--apply` and `--report`.
+**CI** maps `POSTHOG_PERSONAL_API_KEY_READONLY` into the tool's `POSTHOG_PERSONAL_API_KEY` environment variable for read-only `--plan` and live quality checks. Local development continues using the write-scoped `POSTHOG_PERSONAL_API_KEY` for `--apply` and `--report`.
 
 ## JSON contract
 

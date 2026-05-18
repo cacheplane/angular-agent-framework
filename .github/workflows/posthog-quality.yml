@@ -34,7 +34,7 @@ jobs:
       - run: npm ci
       - name: Run live telemetry quality check
         env:
-          POSTHOG_PERSONAL_API_KEY: ${{ secrets.POSTHOG_PERSONAL_API_KEY }}
+          POSTHOG_PERSONAL_API_KEY: ${{ secrets.POSTHOG_PERSONAL_API_KEY_READONLY }}
           POSTHOG_HOST: https://us.i.posthog.com
           POSTHOG_PROJECT_ID: ${{ secrets.POSTHOG_PROJECT_ID }}
           QUALITY_DAYS: ${{ github.event.inputs.days || '7' }}
@@ -42,7 +42,7 @@ jobs:
         run: |
           set -euo pipefail
           if [ -z "${POSTHOG_PERSONAL_API_KEY:-}" ] || [ -z "${POSTHOG_PROJECT_ID:-}" ]; then
-            echo "::error::POSTHOG_PERSONAL_API_KEY and POSTHOG_PROJECT_ID Actions secrets are required."
+            echo "::error::POSTHOG_PERSONAL_API_KEY_READONLY and POSTHOG_PROJECT_ID Actions secrets are required."
             exit 1
           fi
           npx nx run posthog-tools:quality:live -- --days "$QUALITY_DAYS" --limit-per-event "$QUALITY_LIMIT_PER_EVENT" --require-critical-coverage

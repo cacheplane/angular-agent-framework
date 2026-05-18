@@ -23,6 +23,15 @@ describe('CI workflow', () => {
     );
   }
 
+  async function readPostHogSyncPlanJob() {
+    const workflow = await readWorkflow();
+    return workflow.slice(workflow.indexOf('  posthog-sync-plan:'));
+  }
+
+  async function readPostHogQualityWorkflow() {
+    return readFile('.github/workflows/posthog-quality.yml', 'utf8');
+  }
+
   it('treats nested library files as deploy-relevant changes', async () => {
     const deployJob = await readDeployJob();
 
@@ -58,8 +67,27 @@ describe('CI workflow', () => {
 
     assert.ok(
       productionSmokeJob.indexOf('Verify shared LangGraph backend') <
-        productionSmokeJob.indexOf('npx playwright install --with-deps chromium')
+        productionSmokeJob.indexOf(
+          'npx playwright install --with-deps chromium'
+        )
     );
   });
 
+  it('uses the read-only PostHog key for CI drift checks', async () => {
+    const postHogSyncPlanJob = await readPostHogSyncPlanJob();
+
+    assert.match(
+      postHogSyncPlanJob,
+      /POSTHOG_PERSONAL_API_KEY:\s*\$\{\{\s*secrets\.POSTHOG_PERSONAL_API_KEY_READONLY\s*\}\}/
+    );
+  });
+
+  it('uses the read-only PostHog key for scheduled live quality checks', async () => {
+    const postHogQualityWorkflow = await readPostHogQualityWorkflow();
+
+    assert.match(
+      postHogQualityWorkflow,
+      /POSTHOG_PERSONAL_API_KEY:\s*\$\{\{\s*secrets\.POSTHOG_PERSONAL_API_KEY_READONLY\s*\}\}/
+    );
+  });
 });
