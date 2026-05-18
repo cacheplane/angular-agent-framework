@@ -1,0 +1,21 @@
+{
+  "name": "marketing-agent",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "marketing/agent/src",
+  "projectType": "library",
+  "tags": ["scope:marketing", "type:lib"],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{workspaceRoot}/dist/marketing/agent"],
+      "options": {
+        "outputPath": "dist/marketing/agent",
+        "main": "marketing/agent/src/index.ts",
+        "tsConfig": "marketing/agent/tsconfig.lib.json"
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}
