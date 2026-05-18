@@ -1,8 +1,10 @@
 {
   "graphs": {
-    "element-rendering": "./src/graph.py:graph"
+    "r-element-rendering": "./src/graph.py:graph"
   },
-  "dependencies": ["."],
+  "dependencies": [
+    "."
+  ],
   "python_version": "3.12",
   "env": ".env"
 }

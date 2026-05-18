@@ -1,6 +1,6 @@
 {
   "graphs": {
-    "planning": "./src/graph.py:graph"
+    "da-planning": "./src/graph.py:graph"
   },
   "dependencies": [
     "."

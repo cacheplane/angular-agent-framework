@@ -7,5 +7,5 @@
 export const environment = {
   production: false,
   langGraphApiUrl: 'http://localhost:4310/api',
-  streamingAssistantId: 'planning',
+  streamingAssistantId: 'da-planning',
 };

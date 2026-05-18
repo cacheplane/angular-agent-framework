@@ -7,5 +7,5 @@
 export const environment = {
   production: true,
   langGraphApiUrl: '/api',
-  streamingAssistantId: 'skills',
+  streamingAssistantId: 'da-skills',
 };

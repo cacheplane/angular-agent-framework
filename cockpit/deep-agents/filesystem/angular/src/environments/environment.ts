@@ -7,5 +7,5 @@
 export const environment = {
   production: true,
   langGraphApiUrl: '/api',
-  streamingAssistantId: 'filesystem',
+  streamingAssistantId: 'da-filesystem',
 };
