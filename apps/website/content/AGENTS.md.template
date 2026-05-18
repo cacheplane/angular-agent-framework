@@ -29,7 +29,7 @@ import { ChatComponent as NgafChatComponent } from '@ngaf/chat';
   `,
 })
 export class ChatComponent {
-  chat = agent({ assistantId: 'chat_agent' });
+  chat = agent({ apiUrl: 'http://localhost:2024', assistantId: 'chat_agent' });
 }
 ```
 

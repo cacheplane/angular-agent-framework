@@ -216,20 +216,20 @@ A labeled checkbox with two-way binding for its checked state.
 | `_bindings` | `Record<string, string>` | Auto-populated by `surfaceToSpec()` from path references |
 | `emit` | injected | Event emitter provided by the render engine |
 
-### ChoicePicker
+### MultipleChoice
 
-A dropdown select control with a list of string options.
+A single-select dropdown or multi-select checkbox list. Set `maxAllowedSelections` to `1` or less for a dropdown; set it above `1` for a checkbox list.
 
 | A2UI type | Angular component | Selector |
 |-----------|-------------------|----------|
-| `ChoicePicker` | `A2uiChoicePickerComponent` | `a2ui-choice-picker` |
+| `MultipleChoice` | `A2uiMultipleChoiceComponent` | `a2ui-multiple-choice` |
 
 | Prop | Type | Description |
 |------|------|-------------|
-| `label` | `string` | Select label |
-| `options` | `string[]` | List of available options |
-| `selected` | `string` | Currently selected value (resolved from path reference) |
-| `validationResult` | `A2uiValidationResult` | Validation state — shows errors below dropdown when invalid |
+| `label` | `string` | Field label |
+| `options` | `{ label: string; value: string }[]` | Resolved option labels and values |
+| `selections` | `string \| string[]` | Current selected value or values (resolved from path reference) |
+| `maxAllowedSelections` | `number` | `1` or less renders a dropdown; higher values render checkboxes |
 | `_bindings` | `Record<string, string>` | Auto-populated by `surfaceToSpec()` from path references |
 | `emit` | injected | Event emitter provided by the render engine |
 
@@ -432,7 +432,7 @@ Props that use `A2uiFunctionCall` can reference these built-in functions:
 | `Button` | `A2uiButtonComponent` | Interactive |
 | `TextField` | `A2uiTextFieldComponent` | Interactive |
 | `CheckBox` | `A2uiCheckBoxComponent` | Interactive |
-| `ChoicePicker` | `A2uiChoicePickerComponent` | Interactive |
+| `MultipleChoice` | `A2uiMultipleChoiceComponent` | Interactive |
 | `Tabs` | `A2uiTabsComponent` | Layout |
 | `Modal` | `A2uiModalComponent` | Layout |
 | `Video` | `A2uiVideoComponent` | Media |

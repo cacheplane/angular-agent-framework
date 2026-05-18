@@ -30,7 +30,6 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideAgent({
       apiUrl: 'https://your-langgraph-platform.com',
-      assistantId: 'my-agent',
     }),
   ],
 };
@@ -47,7 +46,10 @@ import { ChatComponent } from '@ngaf/chat';
   template: `<chat [agent]="chat" />`,
 })
 export class ChatComponentHost {
-  chat = agent({ assistantId: 'my-agent' });
+  chat = agent({
+    apiUrl: 'https://your-langgraph-platform.com',
+    assistantId: 'my-agent',
+  });
 }
 ```
 

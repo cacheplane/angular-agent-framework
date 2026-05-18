@@ -46,6 +46,7 @@ const myViews = views({
 })
 export class ChatPageComponent {
   chatRef = agent({
+    apiUrl: 'http://localhost:2024',
     assistantId: 'gen_ui_agent',
     threadId: signal(null),
   });
@@ -132,7 +133,7 @@ The store enables two-way data binding between generative UI components and your
 
 ## A2UI Protocol
 
-For agents that implement Google's A2UI v0.9 protocol, `ChatComponent` auto-detects A2UI payloads (prefixed with `---a2ui_JSON---`) and renders them using the built-in A2UI catalog. See the [A2UI guide](/docs/render/a2ui/overview) for details.
+For agents that emit A2UI JSONL payloads, `ChatComponent` auto-detects content prefixed with `---a2ui_JSON---`. Pass `a2uiBasicCatalog()` to `[views]` when you want those surfaces rendered with the built-in components. See the [A2UI guide](/docs/render/a2ui/overview) for details.
 
 ## What's Next
 
@@ -152,6 +153,6 @@ For agents that implement Google's A2UI v0.9 protocol, `ChatComponent` auto-dete
     Full reference for the JSON spec format, prop expressions, and element types.
   </Card>
   <Card title="A2UI Protocol" icon="layers" href="/docs/render/a2ui/overview">
-    Render A2UI v0.9 surfaces with the built-in 12-component catalog.
+    Render A2UI surfaces with the built-in 18-component catalog.
   </Card>
 </CardGroup>

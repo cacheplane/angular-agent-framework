@@ -162,10 +162,10 @@ export function Nav() {
           <Button
             variant="primary"
             size="md"
-            href="/pilot-to-prod#whitepaper-gate"
+            href="/pilot-to-prod#whitepaper-block"
             onClick={() => trackCtaClick({
               surface: 'nav',
-              destination_url: '/pilot-to-prod#whitepaper-gate',
+              destination_url: '/pilot-to-prod#whitepaper-block',
               cta_id: 'nav_get_started',
               cta_text: 'Get Started',
             })}
@@ -324,11 +324,11 @@ export function Nav() {
                   <Button
                     variant="primary"
                     size="lg"
-                    href="/pilot-to-prod#whitepaper-gate"
+                    href="/pilot-to-prod#whitepaper-block"
                     onClick={() => {
                       trackCtaClick({
                         surface: 'mobile_nav',
-                        destination_url: '/pilot-to-prod#whitepaper-gate',
+                        destination_url: '/pilot-to-prod#whitepaper-block',
                         cta_id: 'mobile_nav_get_started',
                         cta_text: 'Get Started',
                       });

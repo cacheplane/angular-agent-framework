@@ -651,8 +651,8 @@
       {
         "name": "apiUrl",
         "type": "string",
-        "description": "Base URL of the LangGraph Platform API.",
-        "optional": false
+        "description": "Base URL of the LangGraph Platform API. Defaults to `provideAgent({ apiUrl })` when omitted.",
+        "optional": true
       },
       {
         "name": "assistantId",

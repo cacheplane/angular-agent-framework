@@ -1,6 +1,6 @@
 # ChatConfig
 
-`ChatConfig` is the configuration interface accepted by `provideChat()`. It defines global settings for chat composition components including the generative UI registry, assistant labels, and license token.
+`ChatConfig` is the configuration interface accepted by `provideChat()`. The object is stored under `CHAT_CONFIG` for application code that wants shared chat defaults, and `provideChat()` uses the license token to start the package license check.
 
 **Import:**
 
@@ -13,11 +13,11 @@ import type { AngularRegistry } from '@ngaf/render';
 
 ```typescript
 interface ChatConfig {
-  /** Default render registry for generative UI components. */
+  /** Shared render registry for consumers that read CHAT_CONFIG. */
   renderRegistry?: AngularRegistry;
-  /** Override the default AI avatar label (default: "A"). */
+  /** Shared AI avatar label for consumers that read CHAT_CONFIG (default: "A"). */
   avatarLabel?: string;
-  /** Override the default assistant display name (default: "Assistant"). */
+  /** Shared assistant display name for consumers that read CHAT_CONFIG (default: "Assistant"). */
   assistantName?: string;
   /** Signed license token from cacheplane.dev. Optional; omitted in dev. */
   license?: string;
@@ -32,7 +32,7 @@ interface ChatConfig {
 avatarLabel?: string
 ```
 
-A short string (typically one or two characters) displayed in the AI avatar badge that appears next to assistant messages in composition components.
+A short string (typically one or two characters) for wrappers or components that choose to read `CHAT_CONFIG`.
 
 **Default:** `"A"`
 
@@ -42,7 +42,7 @@ A short string (typically one or two characters) displayed in the AI avatar badg
 provideChat({ avatarLabel: 'AI' });
 ```
 
-There is no avatar-specific CSS token. Use `avatarLabel` for the badge text, and use the shared `--ngaf-chat-*` tokens such as `--ngaf-chat-surface`, `--ngaf-chat-text`, and `--ngaf-chat-text-muted` to align surrounding chat surfaces with your app theme.
+There is no avatar-specific CSS token. Use the shared `--ngaf-chat-*` tokens such as `--ngaf-chat-surface`, `--ngaf-chat-text`, and `--ngaf-chat-text-muted` to align chat surfaces with your app theme.
 
 ### assistantName
 
@@ -50,7 +50,7 @@ There is no avatar-specific CSS token. Use `avatarLabel` for the badge text, and
 assistantName?: string
 ```
 
-The display name for the AI assistant. Used in labels, ARIA attributes, and any place where the assistant needs a human-readable name.
+The display name for wrappers or components that choose to read `CHAT_CONFIG`.
 
 **Default:** `"Assistant"`
 
@@ -66,7 +66,7 @@ provideChat({ assistantName: 'Code Copilot' });
 renderRegistry?: AngularRegistry
 ```
 
-The default render registry for generative UI components.
+A shared render registry value for consumers that inject `CHAT_CONFIG`. `ChatComponent` does not read this value directly; pass a `ViewRegistry` to the `<chat [views]="...">` input for built-in generative UI rendering.
 
 **Example:**
 
@@ -112,12 +112,21 @@ export class ChatHeaderComponent {
 }
 ```
 
+## Gotcha: Inputs Still Win
+
+`provideChat()` is not a replacement for component inputs. For generative UI, configure the chat surface directly:
+
+```html
+<chat [agent]="agentRef" [views]="views" [store]="store" [handlers]="handlers" />
+```
+
+Use `CHAT_CONFIG` when you are building your own wrappers or want route-level defaults that your code reads explicitly.
+
 ## Type Location
 
-The `ChatConfig` interface is defined in two files within the library:
+The canonical `ChatConfig` interface is defined alongside `provideChat()`:
 
 - `libs/chat/src/lib/provide-chat.ts` -- The canonical definition with JSDoc comments, alongside the `provideChat()` function and `CHAT_CONFIG` token
-- `libs/chat/src/lib/chat.types.ts` -- A separate internal type used by lower-level chat types
 
 The public API exports `ChatConfig` as a type-only export:
 
