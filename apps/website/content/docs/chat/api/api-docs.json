@@ -3182,6 +3182,12 @@
         "optional": false
       },
       {
+        "name": "triggerLabel",
+        "type": "Signal<string>",
+        "description": "",
+        "optional": false
+      },
+      {
         "name": "value",
         "type": "ModelSignal<string>",
         "description": "",
