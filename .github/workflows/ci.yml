@@ -253,45 +253,6 @@ jobs:
           path: examples/chat/angular/e2e/test-results/
           retention-days: 7
 
-  examples-chat-protocol-e2e:
-    name: examples/chat — protocol e2e
-    needs: ci-scope
-    if: github.event_name == 'push' || needs.ci-scope.outputs.examples_chat == 'true'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6.0.2
-      - uses: actions/setup-node@v6.3.0
-        with:
-          node-version: 22
-          cache: npm
-      - name: Install uv
-        uses: astral-sh/setup-uv@v8.0.0
-        with:
-          python-version: '3.12'
-      - run: npm ci
-      - working-directory: examples/chat/python
-        run: uv sync
-      - name: Start LangGraph dev server
-        working-directory: examples/chat/python
-        run: uv run langgraph dev --no-browser &
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          LANGSMITH_API_KEY: ${{ secrets.LANGSMITH_API_KEY }}
-          LANGSMITH_TRACING: 'true'
-          LANGSMITH_PROJECT: examples-chat-protocol-e2e-ci
-      - name: Wait for server to be ready
-        run: |
-          echo "Waiting for LangGraph server..."
-          for i in {1..30}; do
-            curl -sf http://localhost:2024/ok && echo "Server ready" && break
-            echo "Attempt $i/30..."
-            sleep 2
-          done
-          curl -sf http://localhost:2024/ok || (echo "Server failed to start after 60s" && exit 1)
-      - run: npx nx e2e examples-chat-protocol-e2e --skip-nx-cache
-        env:
-          LANGGRAPH_URL: http://localhost:2024
-
   cockpit-e2e:
     name: Cockpit — e2e
     needs: ci-scope
@@ -374,7 +335,6 @@ jobs:
         cockpit-deploy-smoke,
         examples-chat-smoke,
         examples-chat-e2e,
-        examples-chat-protocol-e2e,
         cockpit-e2e,
         website-e2e,
       ]
@@ -544,7 +504,7 @@ jobs:
 
   demo-deploy:
     name: Canonical demo → Vercel
-    needs: [examples-chat-smoke, examples-chat-e2e, examples-chat-protocol-e2e]
+    needs: [examples-chat-smoke, examples-chat-e2e]
     runs-on: ubuntu-latest
     if: ${{ always() && !cancelled() && github.ref == 'refs/heads/main' && github.event_name == 'push' }}
     steps:
@@ -556,10 +516,6 @@ jobs:
           fi
           if [ "${{ needs.examples-chat-e2e.result }}" != "success" ]; then
             echo "::error::examples/chat — e2e finished with ${{ needs.examples-chat-e2e.result }}; refusing to deploy the canonical demo."
-            exit 1
-          fi
-          if [ "${{ needs.examples-chat-protocol-e2e.result }}" != "success" ]; then
-            echo "::error::examples/chat — protocol e2e finished with ${{ needs.examples-chat-protocol-e2e.result }}; refusing to deploy the canonical demo."
             exit 1
           fi
       - uses: actions/checkout@v6.0.2

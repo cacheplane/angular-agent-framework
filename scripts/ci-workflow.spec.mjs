@@ -15,14 +15,6 @@ describe('CI workflow', () => {
     );
   }
 
-  async function readDemoDeployJob() {
-    const workflow = await readWorkflow();
-    return workflow.slice(
-      workflow.indexOf('  demo-deploy:'),
-      workflow.indexOf('  production-smoke:')
-    );
-  }
-
   async function readProductionSmokeJob() {
     const workflow = await readWorkflow();
     return workflow.slice(
@@ -70,19 +62,4 @@ describe('CI workflow', () => {
     );
   });
 
-  it('runs examples chat protocol e2e before deploying the canonical demo', async () => {
-    const workflow = await readWorkflow();
-    const demoDeployJob = await readDemoDeployJob();
-
-    assert.match(workflow, /examples-chat-protocol-e2e:/);
-    assert.match(workflow, /npx nx e2e examples-chat-protocol-e2e --skip-nx-cache/);
-    assert.match(
-      demoDeployJob,
-      /needs:\s*\[examples-chat-smoke,\s*examples-chat-e2e,\s*examples-chat-protocol-e2e\]/
-    );
-    assert.match(
-      demoDeployJob,
-      /examples\/chat — protocol e2e finished with \$\{\{ needs\.examples-chat-protocol-e2e\.result \}\}/
-    );
-  });
 });

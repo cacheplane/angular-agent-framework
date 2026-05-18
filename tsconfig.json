@@ -61,9 +61,6 @@
       "path": "./libs/telemetry"
     },
     {
-      "path": "./examples/chat/e2e"
-    },
-    {
       "path": "./tools/posthog"
     },
     {
