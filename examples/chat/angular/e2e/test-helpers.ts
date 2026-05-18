@@ -44,19 +44,50 @@ export function sendButton(page: Page): Locator {
   return page.getByRole('button', { name: 'Send message' });
 }
 
+/**
+ * Locate the chat-select trigger inside a toolbar field by its label.
+ *
+ * The toolbar's four dropdowns (Model, Effort, Gen UI, Theme) use the
+ * @ngaf/chat `chat-select` primitive — not native <select>. The trigger
+ * is the button users click to open the popover.
+ */
 export function toolbarSelect(page: Page, label: string): Locator {
   return page
     .locator('.demo-shell__field')
     .filter({ hasText: label })
-    .locator('select');
+    .locator('chat-select .chat-select__trigger');
 }
 
+/**
+ * Open the named chat-select dropdown in the toolbar and click the option
+ * whose visible label matches `option`. Replaces the previous
+ * `selectOption({ label })` call against native <select> elements.
+ *
+ * Waits for the menu to be visible before clicking the option so the
+ * click doesn't race the menu mount.
+ */
 export async function selectToolbarOption(
   page: Page,
   label: string,
   option: string
 ): Promise<void> {
-  await toolbarSelect(page, label).selectOption({ label: option });
+  const trigger = toolbarSelect(page, label);
+  await trigger.click();
+  const menu = page
+    .locator('.demo-shell__field')
+    .filter({ hasText: label })
+    .locator('chat-select .chat-select__menu');
+  await menu.waitFor({ state: 'visible' });
+  const optionButton = menu
+    .locator('.chat-select__option')
+    .filter({ hasText: new RegExp(`^\\s*${escapeRegExp(option)}\\s*$`) });
+  await optionButton.click();
+  // Menu closes on selection; wait for that to avoid racing the next open.
+  await menu.waitFor({ state: 'hidden' });
+}
+
+function escapeRegExp(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
 async function isVisible(locator: Locator): Promise<boolean> {

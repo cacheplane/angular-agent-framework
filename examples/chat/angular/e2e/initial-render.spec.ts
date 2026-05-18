@@ -32,7 +32,7 @@ test('initial render: root route redirects to welcome-state embed mode', async (
       hasText: 'Embed',
     })
   ).toBeVisible();
-  await expect(toolbarSelect(page, 'Model')).toHaveValue('gpt-5-mini');
+  await expect(toolbarSelect(page, 'Model')).toHaveText(/gpt-5-mini/);
   await expect(
     page.getByRole('button', { name: 'Open chat devtools' })
   ).toBeVisible();

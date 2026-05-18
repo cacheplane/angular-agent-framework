@@ -14,24 +14,32 @@ test('model picker: configured models render, persist, and reach backend state',
 }) => {
   await openDemo(page, '/embed');
 
-  const modelSelect = toolbarSelect(page, 'Model');
-  await expect(modelSelect.locator('option')).toHaveText([
+  const modelTrigger = toolbarSelect(page, 'Model');
+  // Open the chat-select menu and assert the three model options are listed.
+  await modelTrigger.click();
+  const modelMenu = page
+    .locator('.demo-shell__field')
+    .filter({ hasText: 'Model' })
+    .locator('chat-select .chat-select__menu');
+  await expect(modelMenu.locator('.chat-select__option')).toHaveText([
     'gpt-5',
     'gpt-5-mini',
     'gpt-5-nano',
   ]);
+  // Close the menu (click trigger again) before continuing.
+  await modelTrigger.click();
 
   await selectToolbarOption(page, 'Model', 'gpt-5-nano');
-  await expect(modelSelect).toHaveValue('gpt-5-nano');
+  await expect(modelTrigger).toHaveText(/gpt-5-nano/);
 
   await page.reload();
-  await expect(toolbarSelect(page, 'Model')).toHaveValue('gpt-5-nano');
+  await expect(toolbarSelect(page, 'Model')).toHaveText(/gpt-5-nano/);
 
   await page
     .locator('.demo-shell__segmented-button', { hasText: 'Popup' })
     .click();
   await expect(page).toHaveURL(/\/popup$/);
-  await expect(toolbarSelect(page, 'Model')).toHaveValue('gpt-5-nano');
+  await expect(toolbarSelect(page, 'Model')).toHaveText(/gpt-5-nano/);
 
   await page.goto('/embed');
   await messageInput(page).fill('say hi briefly');

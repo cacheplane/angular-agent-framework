@@ -20,10 +20,11 @@ test('control palette: toolbar renders defaults and persists selected controls',
       hasText: 'Embed',
     })
   ).toBeVisible();
-  await expect(toolbarSelect(page, 'Model')).toHaveValue('gpt-5-mini');
-  await expect(toolbarSelect(page, 'Effort')).toHaveValue('minimal');
-  await expect(toolbarSelect(page, 'Gen UI')).toHaveValue('a2ui');
-  await expect(toolbarSelect(page, 'Theme')).toHaveValue('default-dark');
+  // chat-select trigger displays the option's label as text, not the value.
+  await expect(toolbarSelect(page, 'Model')).toHaveText(/gpt-5-mini/);
+  await expect(toolbarSelect(page, 'Effort')).toHaveText(/minimal \(fast\)/);
+  await expect(toolbarSelect(page, 'Gen UI')).toHaveText(/A2UI v1-compatible/);
+  await expect(toolbarSelect(page, 'Theme')).toHaveText(/Default dark/);
 
   await selectToolbarOption(page, 'Model', 'gpt-5-nano');
   await selectToolbarOption(page, 'Effort', 'low');
@@ -31,10 +32,11 @@ test('control palette: toolbar renders defaults and persists selected controls',
   await selectToolbarOption(page, 'Theme', 'Material dark');
 
   await page.reload();
-  await expect(toolbarSelect(page, 'Model')).toHaveValue('gpt-5-nano');
-  await expect(toolbarSelect(page, 'Effort')).toHaveValue('low');
-  await expect(toolbarSelect(page, 'Gen UI')).toHaveValue('json-render');
-  await expect(toolbarSelect(page, 'Theme')).toHaveValue('material-dark');
+  await expect(toolbarSelect(page, 'Model')).toHaveText(/gpt-5-nano/);
+  // 'low' could substring-match 'gpt-5-mini' etc., so anchor the trigger text.
+  await expect(toolbarSelect(page, 'Effort')).toContainText('low');
+  await expect(toolbarSelect(page, 'Gen UI')).toHaveText(/json-render/);
+  await expect(toolbarSelect(page, 'Theme')).toHaveText(/Material dark/);
 });
 
 test('control palette: devtools opens on demand and closes back to launcher', async ({

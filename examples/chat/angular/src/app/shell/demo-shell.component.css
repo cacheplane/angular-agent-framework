@@ -27,37 +27,28 @@
   justify-content: center;
   box-shadow: 0 6px 24px rgba(0, 0, 0, 0.3);
 }
-.demo-shell__hamburger:hover {
-  background: #232730;
-}
+.demo-shell__hamburger:hover { background: #232730; }
 
 @media (max-width: 767px) {
-  .demo-shell__hamburger {
-    width: 44px;
-    height: 44px;
-  }
+  .demo-shell__hamburger { width: 44px; height: 44px; }
 }
 
 .demo-shell__main {
   height: 100%;
-  transition: padding-left 200ms ease, padding-right 200ms ease;
+  transition: padding-left 200ms ease;
   padding-left: 0;
-  padding-right: var(--ngaf-chat-debug-claim-right, 0px);
-  padding-bottom: var(--ngaf-chat-debug-claim-bottom, 0px);
   display: flex;
   flex-direction: column;
   min-width: 0;
 }
-.demo-shell__main[data-sidenav-mode='expanded'] {
+.demo-shell__main[data-sidenav-mode="expanded"] {
   padding-left: var(--ngaf-chat-sidenav-width-expanded, 280px);
 }
-.demo-shell__main[data-sidenav-mode='collapsed'] {
+.demo-shell__main[data-sidenav-mode="collapsed"] {
   padding-left: var(--ngaf-chat-sidenav-width-collapsed, 56px);
 }
 @media (max-width: 1023px) {
-  .demo-shell__main[data-sidenav-mode] {
-    padding-left: 0;
-  }
+  .demo-shell__main[data-sidenav-mode] { padding-left: 0; }
 }
 
 .demo-shell__toolbar {
@@ -67,10 +58,11 @@
   align-items: center;
   gap: 10px;
   padding: 8px 14px;
-  border-bottom: 1px solid
-    color-mix(in srgb, var(--ngaf-chat-text, #e6e9ef) 12%, transparent);
-  background: color-mix(in srgb, var(--ngaf-chat-bg, #0f1115) 94%, transparent);
-  color: var(--ngaf-chat-text, #e6e9ef);
+  border-bottom: 1px solid var(--ngaf-chat-separator);
+  background: color-mix(in srgb, var(--ngaf-chat-bg) 94%, transparent);
+  color: var(--ngaf-chat-text);
+  font-family: inherit;
+  font-size: var(--ngaf-chat-font-size-sm);
   box-sizing: border-box;
   overflow-x: auto;
 }
@@ -81,22 +73,15 @@
   gap: 2px;
   padding: 2px;
   border-radius: 8px;
-  border: 1px solid
-    color-mix(in srgb, var(--ngaf-chat-text, #e6e9ef) 14%, transparent);
-  background: color-mix(
-    in srgb,
-    var(--ngaf-chat-text, #e6e9ef) 4%,
-    transparent
-  );
+  border: 1px solid color-mix(in srgb, var(--ngaf-chat-text) 14%, transparent);
+  background: color-mix(in srgb, var(--ngaf-chat-text) 4%, transparent);
   flex: 0 0 auto;
 }
 
 .demo-shell__segmented-button,
-.demo-shell__toolbar-action,
-.demo-shell__field select {
+.demo-shell__toolbar-action {
   font: inherit;
-  font-size: 12px;
-  color: var(--ngaf-chat-text, #e6e9ef);
+  color: var(--ngaf-chat-text);
 }
 
 .demo-shell__segmented-button {
@@ -109,46 +94,44 @@
 }
 
 .demo-shell__segmented-button.is-active {
-  background: var(--ngaf-chat-text, #e6e9ef);
-  color: var(--ngaf-chat-bg, #0f1115);
+  background: var(--ngaf-chat-text);
+  color: var(--ngaf-chat-bg);
 }
 
 .demo-shell__field {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  color: var(--ngaf-chat-text-muted, #9aa3b2);
-  font-size: 12px;
+  color: var(--ngaf-chat-text-muted);
   flex: 0 0 auto;
 }
 
-.demo-shell__field select {
-  height: 30px;
-  border-radius: 7px;
-  border: 1px solid
-    color-mix(in srgb, var(--ngaf-chat-text, #e6e9ef) 14%, transparent);
-  background: var(--ngaf-chat-bg, #0f1115);
-  padding: 0 26px 0 8px;
-}
-
 .demo-shell__toolbar-action {
-  height: 30px;
-  border-radius: 7px;
-  border: 1px solid
-    color-mix(in srgb, var(--ngaf-chat-text, #e6e9ef) 18%, transparent);
-  background: transparent;
-  padding: 0 10px;
+  border: 0;
+  background: var(--ngaf-chat-surface-alt);
+  color: var(--ngaf-chat-text);
+  border-radius: 8px;
+  padding: 8px 12px;
+  min-height: 32px;
   cursor: pointer;
   flex: 0 0 auto;
 }
 
-.demo-shell__toolbar-action:hover,
+.demo-shell__toolbar-action:hover {
+  background: color-mix(in srgb, var(--ngaf-chat-text) 8%, var(--ngaf-chat-surface-alt));
+}
+
 .demo-shell__segmented-button:hover:not(.is-active) {
-  background: color-mix(
-    in srgb,
-    var(--ngaf-chat-text, #e6e9ef) 8%,
-    transparent
-  );
+  background: color-mix(in srgb, var(--ngaf-chat-text) 8%, transparent);
+}
+
+/* The toolbar lives at the top of the page; chat-select's default upward
+ * popover (bottom: calc(100% + 8px)) renders offscreen here. Flip the
+ * menus to open downward — scoped to the toolbar so the chat-input model
+ * picker (which IS at the bottom) keeps its upward default. */
+.demo-shell__field ::ng-deep chat-select .chat-select__menu {
+  top: calc(100% + 8px);
+  bottom: auto;
 }
 
 @media (max-width: 767px) {
