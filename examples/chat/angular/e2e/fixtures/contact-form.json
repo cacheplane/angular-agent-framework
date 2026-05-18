@@ -1,0 +1,119 @@
+{
+  "fixtures": [
+    {
+      "match": {
+        "userMessage": "contact form"
+      },
+      "response": {
+        "toolCalls": [
+          {
+            "name": "render_a2ui_surface",
+            "arguments": {
+              "envelopes": [
+                {
+                  "surfaceUpdate": {
+                    "surfaceId": "contact-form",
+                    "components": [
+                      {
+                        "id": "root",
+                        "component": {
+                          "Column": {
+                            "children": {
+                              "explicitList": [
+                                "form-title",
+                                "name-field",
+                                "email-field",
+                                "subject-field",
+                                "message-field",
+                                "send-button"
+                              ]
+                            },
+                            "alignment": "start"
+                          }
+                        }
+                      },
+                      {
+                        "id": "form-title",
+                        "component": {
+                          "Text": {
+                            "text": { "literalString": "Contact Us" },
+                            "usageHint": "h1"
+                          }
+                        }
+                      },
+                      {
+                        "id": "name-field",
+                        "component": {
+                          "TextField": {
+                            "label": { "literalString": "Name" },
+                            "text": { "literalString": "" },
+                            "textFieldType": "shortText"
+                          }
+                        }
+                      },
+                      {
+                        "id": "email-field",
+                        "component": {
+                          "TextField": {
+                            "label": { "literalString": "Email address" },
+                            "text": { "literalString": "" },
+                            "textFieldType": "shortText"
+                          }
+                        }
+                      },
+                      {
+                        "id": "subject-field",
+                        "component": {
+                          "TextField": {
+                            "label": { "literalString": "Subject" },
+                            "text": { "literalString": "" },
+                            "textFieldType": "shortText"
+                          }
+                        }
+                      },
+                      {
+                        "id": "message-field",
+                        "component": {
+                          "TextField": {
+                            "label": { "literalString": "Message" },
+                            "text": { "literalString": "" },
+                            "textFieldType": "longText"
+                          }
+                        }
+                      },
+                      {
+                        "id": "send-button",
+                        "component": {
+                          "Button": {
+                            "child": "send-text",
+                            "action": {
+                              "name": "submit_contact"
+                            }
+                          }
+                        }
+                      },
+                      {
+                        "id": "send-text",
+                        "component": {
+                          "Text": {
+                            "text": { "literalString": "Send" }
+                          }
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  "beginRendering": {
+                    "surfaceId": "contact-form",
+                    "root": "root"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
