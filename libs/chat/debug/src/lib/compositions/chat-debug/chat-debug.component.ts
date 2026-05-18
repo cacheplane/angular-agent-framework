@@ -3,22 +3,18 @@ import {
   Component,
   ChangeDetectionStrategy,
   computed,
-  contentChild,
-  contentChildren,
   effect,
   ElementRef,
   HostListener,
   inject,
   input,
+  OnInit,
   output,
   signal,
 } from '@angular/core';
-import { NgTemplateOutlet } from '@angular/common';
-import type { AgentWithHistory } from '../../agent';
 import { CHAT_DEBUG_TOKENS } from './chat-debug-tokens';
-import { ensureChatRootStyles } from '../../styles/chat-tokens';
-import { ChatDebugControlsDirective } from './chat-debug-controls.directive';
-import { ChatDebugInspectorDirective } from './chat-debug-inspector.directive';
+import { ensureChatDebugRootStyles } from './chat-debug-root-styles';
+import type { DebugAgent, DebugAgentWithHistory } from './debug-agent';
 import { TimelineInspectorComponent } from './inspectors/timeline-inspector.component';
 import { StateInspectorComponent } from './inspectors/state-inspector.component';
 import { createPersistence } from './persistence';
@@ -28,18 +24,17 @@ export type DockPosition = 'right' | 'bottom' | 'left';
 interface TabEntry {
   readonly id: string;
   readonly label: string;
-  readonly kind: 'builtin-timeline' | 'builtin-state' | 'host';
-  readonly hostIndex?: number;
+  readonly kind: 'builtin-timeline' | 'builtin-state';
+}
+
+function hasHistory(agent: DebugAgent | DebugAgentWithHistory): agent is DebugAgentWithHistory {
+  return typeof (agent as DebugAgentWithHistory).history === 'function';
 }
 
 @Component({
   selector: 'chat-debug',
   standalone: true,
-  imports: [
-    NgTemplateOutlet,
-    TimelineInspectorComponent,
-    StateInspectorComponent,
-  ],
+  imports: [TimelineInspectorComponent, StateInspectorComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styles: [
     CHAT_DEBUG_TOKENS,
@@ -248,7 +243,7 @@ interface TabEntry {
     `,
   ],
   template: `
-    @if (!open()) {
+    @if (!open() && launcher() === 'floating') {
       <button
         type="button"
         class="launcher"
@@ -263,7 +258,7 @@ interface TabEntry {
           aria-hidden="true"
         ></span>
       </button>
-    } @else {
+    } @else if (agent(); as currentAgent) {
       <div
         class="panel"
         [class.panel--right]="dockState() === 'right'"
@@ -301,12 +296,6 @@ interface TabEntry {
           </div>
         </div>
 
-        @if (controls()) {
-          <div class="panel__controls">
-            <ng-container [ngTemplateOutlet]="controls()!.templateRef" />
-          </div>
-        }
-
         @if (tabs().length > 1) {
           <div class="panel__tabs" role="tablist">
             @for (tab of tabs(); track tab.id) {
@@ -325,19 +314,16 @@ interface TabEntry {
         <div class="panel__body">
           @switch (activeTab()?.kind) {
             @case ('builtin-timeline') {
-              <chat-debug-timeline-inspector
-                [agent]="agent()"
-                (replayRequested)="replayRequested.emit($event)"
-                (forkRequested)="forkRequested.emit($event)"
-              />
+              @if (historyAgent(); as history) {
+                <chat-debug-timeline-inspector
+                  [agent]="history"
+                  (replayRequested)="replayRequested.emit($event)"
+                  (forkRequested)="forkRequested.emit($event)"
+                />
+              }
             }
             @case ('builtin-state') {
-              <chat-debug-state-tab [agent]="agent()" />
-            }
-            @case ('host') {
-              @if (activeHostInspector(); as host) {
-                <ng-container [ngTemplateOutlet]="host.templateRef" />
-              }
+              <chat-debug-state-tab [agent]="currentAgent" />
             }
           }
         </div>
@@ -345,19 +331,17 @@ interface TabEntry {
     }
   `,
 })
-export class ChatDebugComponent {
-  readonly agent = input.required<AgentWithHistory>();
+export class ChatDebugComponent implements OnInit {
+  readonly agent = input<DebugAgent | DebugAgentWithHistory | null>(null);
   readonly dock = input<DockPosition>('right');
   readonly defaultOpen = input<boolean>(false);
+  readonly launcher = input<'floating' | 'none'>('floating');
   readonly storageKey = input<string>('chat-debug');
 
   readonly replayRequested = output<string>();
   readonly forkRequested = output<string>();
   readonly openChange = output<boolean>();
   readonly dockChange = output<DockPosition>();
-
-  protected readonly controls = contentChild(ChatDebugControlsDirective);
-  protected readonly hostInspectors = contentChildren(ChatDebugInspectorDirective);
 
   protected readonly open = signal<boolean>(false);
   protected readonly dockState = signal<DockPosition>('right');
@@ -366,24 +350,24 @@ export class ChatDebugComponent {
    *  fresh session = fresh chance for the smart default. */
   private readonly userDockOverride = signal<boolean>(false);
   protected readonly activeTabId = signal<string>('timeline');
+  protected readonly historyAgent = computed(() => {
+    const agent = this.agent();
+    return agent && hasHistory(agent) ? agent : null;
+  });
 
   /** Reads `agent.status()` reactively for the launcher dot. */
   protected readonly isStreaming = computed(() => {
-    const status = this.agent().status?.();
+    const status = this.agent()?.status?.();
     return status === 'running';
   });
 
   protected readonly tabs = computed((): TabEntry[] => {
-    const host = this.hostInspectors().map((d, i): TabEntry => ({
-      id: `host-${i}`,
-      label: d.label(),
-      kind: 'host',
-      hostIndex: i,
-    }));
+    if (!this.agent()) return [];
     return [
-      { id: 'timeline', label: 'Timeline', kind: 'builtin-timeline' },
+      ...(this.historyAgent()
+        ? [{ id: 'timeline', label: 'Timeline', kind: 'builtin-timeline' } satisfies TabEntry]
+        : []),
       { id: 'state', label: 'State', kind: 'builtin-state' },
-      ...host,
     ];
   });
 
@@ -391,28 +375,20 @@ export class ChatDebugComponent {
     this.tabs().find((t) => t.id === this.activeTabId()),
   );
 
-  protected readonly activeHostInspector = computed(() => {
-    const t = this.activeTab();
-    if (!t || t.kind !== 'host' || t.hostIndex === undefined) return undefined;
-    return this.hostInspectors()[t.hostIndex];
-  });
-
   private readonly hostEl: ElementRef<HTMLElement> = inject(ElementRef);
 
   constructor() {
     // Inject chat lib root CSS custom properties so the theme-attribute
     // mappings + edge-claim primitive are in the document, even when
     // chat-debug is mounted without a sibling chat composition.
-    ensureChatRootStyles();
-    // Restore once from storage on construction; inputs seed the fallback.
-    // `storageKey` is read-once: rebinding it at runtime is not supported.
-    const restore = createPersistence(this.storageKey());
-    const persistedOpen = restore.read<boolean>('open');
-    this.open.set(persistedOpen ?? this.defaultOpen());
-    const persistedDock = restore.read<DockPosition>('dock');
-    this.dockState.set(persistedDock ?? this.dock());
-    const persistedTab = restore.read<string>('tab');
-    if (persistedTab) this.activeTabId.set(persistedTab);
+    ensureChatDebugRootStyles();
+
+    effect(() => {
+      const tabs = this.tabs();
+      if (tabs.length === 0) return;
+      if (tabs.some((tab) => tab.id === this.activeTabId())) return;
+      this.activeTabId.set(tabs[0].id);
+    });
 
     // Write-through effect — reads each writable signal so subsequent
     // changes trigger a fresh run that writes them all to storage.
@@ -446,9 +422,20 @@ export class ChatDebugComponent {
       if (this.userDockOverride()) return;
       if (typeof document === 'undefined') return;
       if (!document.querySelector('chat-sidebar')) return;
-      // Untracked write so we don't re-trigger this effect via dockState.
-      queueMicrotask(() => this.dockState.set('bottom'));
+      this.dockState.set('bottom');
     });
+  }
+
+  ngOnInit(): void {
+    // Restore once after inputs are initialized; rebinding storageKey/defaults
+    // later is intentionally not supported.
+    const restore = createPersistence(this.storageKey());
+    const persistedOpen = restore.read<boolean>('open');
+    this.open.set(persistedOpen ?? this.defaultOpen());
+    const persistedDock = restore.read<DockPosition>('dock');
+    this.dockState.set(persistedDock ?? this.dock());
+    const persistedTab = restore.read<string>('tab');
+    if (persistedTab) this.activeTabId.set(persistedTab);
   }
 
   setOpen(value: boolean): void {

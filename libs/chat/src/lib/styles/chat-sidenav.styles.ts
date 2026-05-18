@@ -224,6 +224,46 @@ export const CHAT_SIDENAV_STYLES = `
     gap: 4px;
     min-height: 28px;
   }
+  .chat-sidenav__debug {
+    height: 28px;
+    min-width: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    padding: 0 9px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--ngaf-chat-text-muted);
+    cursor: pointer;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 500;
+  }
+  .chat-sidenav__debug:hover {
+    background: var(--ngaf-chat-surface-alt);
+    color: var(--ngaf-chat-text);
+  }
+  .chat-sidenav__debug:focus-visible {
+    outline: 2px solid var(--ngaf-chat-primary);
+    outline-offset: 2px;
+  }
+  .chat-sidenav__debug-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #22c55e;
+    box-shadow: 0 0 8px color-mix(in srgb, #22c55e 60%, transparent);
+    flex: 0 0 auto;
+  }
+  .chat-sidenav__debug-dot--streaming {
+    animation: chat-sidenav-debug-pulse 1.2s ease-in-out infinite;
+  }
+  @keyframes chat-sidenav-debug-pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.6; transform: scale(0.85); }
+  }
   .chat-sidenav__footer-right {
     display: flex;
     align-items: center;
@@ -247,13 +287,24 @@ export const CHAT_SIDENAV_STYLES = `
     background: var(--ngaf-chat-surface-alt);
     color: var(--ngaf-chat-text);
   }
-  /* Collapsed mode: footer becomes a vertical stack; left slot hides. */
+  /* Collapsed mode: footer becomes a vertical stack; debug stays visible. */
   :host([data-mode="collapsed"]) .chat-sidenav__footer {
     flex-direction: column;
     align-items: center;
     padding: 10px 4px;
   }
   :host([data-mode="collapsed"]) .chat-sidenav__footer-left {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 28px;
+  }
+  :host([data-mode="collapsed"]) .chat-sidenav__debug {
+    width: 28px;
+    padding: 0;
+  }
+  :host([data-mode="collapsed"]) .chat-sidenav__debug-label,
+  :host([data-mode="collapsed"]) .chat-sidenav__footer-left > :not(.chat-sidenav__debug) {
     display: none;
   }
   :host([data-mode="collapsed"]) .chat-sidenav__footer-right {

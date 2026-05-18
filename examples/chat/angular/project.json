@@ -23,13 +23,24 @@
       },
       "configurations": {
         "production": {
+          "define": { "NGAF_CHAT_DEBUG": "false" },
+          "externalDependencies": ["@ngaf/chat/debug"],
           "budgets": [
             { "type": "initial", "maximumWarning": "500kb", "maximumError": "1.5mb" },
-            { "type": "anyComponentStyle", "maximumWarning": "4kb", "maximumError": "16kb" }
+            { "type": "anyComponentStyle", "maximumWarning": "10kb", "maximumError": "16kb" }
+          ],
+          "outputHashing": "all"
+        },
+        "production-debug": {
+          "define": { "NGAF_CHAT_DEBUG": "true" },
+          "budgets": [
+            { "type": "initial", "maximumWarning": "500kb", "maximumError": "1.5mb" },
+            { "type": "anyComponentStyle", "maximumWarning": "10kb", "maximumError": "16kb" }
           ],
           "outputHashing": "all"
         },
         "development": {
+          "define": { "NGAF_CHAT_DEBUG": "false" },
           "optimization": false,
           "extractLicenses": false,
           "sourceMap": true,

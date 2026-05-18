@@ -90,18 +90,6 @@ export { ChatComponent } from './lib/compositions/chat/chat.component';
 export type { ChatRenderEvent } from './lib/compositions/chat/chat-render-event';
 export { ChatPopupComponent } from './lib/compositions/chat-popup/chat-popup.component';
 export { ChatSidebarComponent } from './lib/compositions/chat-sidebar/chat-sidebar.component';
-// chat-debug devtools
-export { ChatDebugComponent } from './lib/compositions/chat-debug/chat-debug.component';
-export type { DockPosition } from './lib/compositions/chat-debug/chat-debug.component';
-export { ChatDebugControlsDirective } from './lib/compositions/chat-debug/chat-debug-controls.directive';
-export { ChatDebugInspectorDirective } from './lib/compositions/chat-debug/chat-debug-inspector.directive';
-export { ChatDebugSectionComponent } from './lib/compositions/chat-debug/primitives/chat-debug-section.component';
-export { ChatDebugSegmentedComponent } from './lib/compositions/chat-debug/primitives/chat-debug-segmented.component';
-export type { SegmentedOption } from './lib/compositions/chat-debug/primitives/chat-debug-segmented.component';
-export { ChatDebugSelectComponent } from './lib/compositions/chat-debug/primitives/chat-debug-select.component';
-export type { SelectOption } from './lib/compositions/chat-debug/primitives/chat-debug-select.component';
-export { ChatDebugSwitchComponent } from './lib/compositions/chat-debug/primitives/chat-debug-switch.component';
-export { ChatDebugActionComponent } from './lib/compositions/chat-debug/primitives/chat-debug-action.component';
 export { ChatTimelineSliderComponent } from './lib/compositions/chat-timeline-slider/chat-timeline-slider.component';
 export { ChatSidenavComponent } from './lib/compositions/chat-sidenav/chat-sidenav.component';
 export type { ChatSidenavMode } from './lib/compositions/chat-sidenav/chat-sidenav.component';

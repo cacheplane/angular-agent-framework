@@ -5,7 +5,7 @@ import {
   ChangeDetectionStrategy,
 } from '@angular/core';
 import { JsonPipe } from '@angular/common';
-import { CHAT_HOST_TOKENS } from '../../styles/chat-tokens';
+import { CHAT_DEBUG_TOKENS } from './chat-debug-tokens';
 
 @Component({
   selector: 'chat-debug-state-inspector',
@@ -13,7 +13,7 @@ import { CHAT_HOST_TOKENS } from '../../styles/chat-tokens';
   imports: [JsonPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styles: [
-    CHAT_HOST_TOKENS,
+    CHAT_DEBUG_TOKENS,
     `
     .debug-state-inspector {
       overflow: auto;

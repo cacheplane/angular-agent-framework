@@ -35,7 +35,7 @@ export function getMessageType(message: Message): MessageTemplateType {
 @Component({
   selector: 'chat-message-list',
   standalone: true,
-  imports: [NgTemplateOutlet, MessageTemplateDirective],
+  imports: [NgTemplateOutlet],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styles: [CHAT_HOST_TOKENS, CHAT_MESSAGE_LIST_STYLES],
   template: `

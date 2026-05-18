@@ -8,7 +8,7 @@ import {
   signal,
   HostListener,
 } from '@angular/core';
-import type { AgentWithHistory } from '../../../agent';
+import type { DebugAgentWithHistory } from '../debug-agent';
 import { CHAT_DEBUG_TOKENS } from '../chat-debug-tokens';
 import { DebugCheckpointCardComponent, type DebugCheckpoint } from '../debug-checkpoint-card.component';
 import { DebugStateDiffComponent } from '../debug-state-diff.component';
@@ -183,7 +183,7 @@ export function stepSelection(dir: Direction, current: number, count: number): n
   `,
 })
 export class TimelineInspectorComponent {
-  readonly agent = input.required<AgentWithHistory>();
+  readonly agent = input.required<DebugAgentWithHistory>();
   readonly replayRequested = output<string>();
   readonly forkRequested = output<string>();
 

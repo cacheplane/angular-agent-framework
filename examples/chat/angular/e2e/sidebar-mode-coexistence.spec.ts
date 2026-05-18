@@ -4,10 +4,10 @@ import { test, expect } from '@playwright/test';
 test.describe('chat-debug × chat-sidebar coexistence', () => {
   test('sidebar launcher remains reachable while chat-debug is open', async ({ page }) => {
     await page.goto('/sidebar');
+    await expect(page.locator('chat-sidebar')).toBeAttached();
 
-    // Open chat-debug via its floating top-right launcher (class `.launcher`
-    // on the chat-debug host — sidebar's launcher uses a different class).
-    await page.locator('.launcher').click();
+    // Open chat-debug from the sidenav footer.
+    await page.locator('.chat-sidenav__debug').click();
 
     // Debug auto-picks bottom dock because <chat-sidebar> is present.
     const debugPanel = page.locator('.panel.panel--bottom');
@@ -35,11 +35,11 @@ test.describe('chat-debug × chat-sidebar coexistence', () => {
 
   test('user override survives mode switch: explicit right-dock stays right', async ({ page }) => {
     await page.goto('/embed');
-    await page.locator('.launcher').click();
+    await page.locator('.chat-sidenav__debug').click();
     // Click right-dock explicitly — sets userDockOverride.
     await page.locator('.panel__dock-btn').nth(2).click(); // 0=left, 1=bottom, 2=right
-    // Switch to sidebar mode via the debug palette's Mode segmented control.
-    await page.locator('.segmented__btn', { hasText: 'Sidebar' }).click();
+    // Switch to sidebar mode via the demo-owned top toolbar.
+    await page.locator('.demo-shell__segmented-button', { hasText: 'Sidebar' }).click();
     // Debug stays right-docked despite chat-sidebar now being on the page.
     await expect(page.locator('.panel.panel--right')).toBeVisible();
     await expect(page.locator('.panel.panel--bottom')).not.toBeVisible();

@@ -8,7 +8,6 @@ import { RenderSpecComponent, toRenderRegistry } from '@ngaf/render';
 import type { ViewRegistry, RenderEvent } from '@ngaf/render';
 import { surfaceToSpec } from './surface-to-spec';
 import { buildA2uiActionMessage } from './build-action-message';
-import { A2uiSlotDirective } from './a2ui-slot.directive';
 import { A2uiDefaultFallbackComponent } from './a2ui-default-fallback.component';
 import type { A2uiSurfaceState } from './surface-store';
 import type { A2uiViews } from './views';
@@ -18,7 +17,6 @@ import type { A2uiViews } from './views';
   standalone: true,
   imports: [
     RenderSpecComponent,
-    A2uiSlotDirective,
     A2uiDefaultFallbackComponent,
     NgComponentOutlet,
   ],

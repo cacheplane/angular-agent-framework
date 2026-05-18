@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 import { Component } from '@angular/core';
-import { ChatDebugComponent } from '@ngaf/chat';
+import { ChatDebugComponent } from '@ngaf/chat/debug';
 import { agent } from '@ngaf/langgraph';
 import { ExampleChatLayoutComponent } from '@ngaf/example-layouts';
 import { environment } from '../environments/environment';

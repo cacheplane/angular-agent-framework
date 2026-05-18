@@ -5,7 +5,7 @@ import {
   output,
   ChangeDetectionStrategy,
 } from '@angular/core';
-import { CHAT_HOST_TOKENS } from '../../styles/chat-tokens';
+import { CHAT_DEBUG_TOKENS } from './chat-debug-tokens';
 
 export interface DebugCheckpoint {
   node?: string;
@@ -19,7 +19,7 @@ export interface DebugCheckpoint {
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   styles: [
-    CHAT_HOST_TOKENS,
+    CHAT_DEBUG_TOKENS,
     `
     .debug-checkpoint-card {
       width: 100%;

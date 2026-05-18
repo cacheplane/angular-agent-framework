@@ -43,10 +43,10 @@ Use `<chat>` when you want the library to own the chat shell.
 />
 ```
 
-`<chat-debug>` is also a composition. It is built for development and inspection, not end-user chat layout.
+`<chat-debug>` is also a composition. It is built for development and inspection, not end-user chat layout, and ships from the debug-only secondary entry point.
 
 ```ts
-import { ChatDebugComponent } from '@ngaf/chat';
+import { ChatDebugComponent } from '@ngaf/chat/debug';
 ```
 
 ```html
@@ -55,6 +55,8 @@ import { ChatDebugComponent } from '@ngaf/chat';
 ```
 
 Use `chat-debug` when you need timeline and state inspection while building. Do not treat it as a customer-facing control surface unless you intentionally design around that.
+
+If you use `<chat-sidenav>`, pass `[agent]="agent"` and `[debug]="true"` to get the built-in footer launcher instead of adding a separate floating debug button.
 
 ## Primitives
 

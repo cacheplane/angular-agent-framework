@@ -8,7 +8,7 @@
     "lib": ["es2022", "dom"],
     "types": []
   },
-  "include": ["src/**/*.ts"],
+  "files": ["src/public-api.ts", "debug/public-api.ts", "testing/public-api.ts"],
   "exclude": ["src/**/*.spec.ts", "src/**/*.test.ts"],
   "references": [
     {

@@ -17,6 +17,8 @@
     [projectActions]="projectActions"
     [activeThreadId]="threadIdSignal() ?? ''"
     [mode]="sidenavMode()"
+    [agent]="agent"
+    [debug]="true"
     [(open)]="drawerOpen"
     [actions]="threadActions"
     (newChat)="onNewThread()"
@@ -26,6 +28,8 @@
     (searchOpened)="paletteOpen.set(true)"
     (openChange)="onSidenavOpenChange($event)"
     (modeChange)="onSidenavModeChange($event)"
+    (replayRequested)="onTimelineReplay($event)"
+    (forkRequested)="onTimelineFork($event)"
   >
     <button
       sidenavFooterRight
@@ -58,6 +62,60 @@
     class="demo-shell__main"
     [attr.data-sidenav-mode]="sidenavMode() !== 'drawer' ? sidenavMode() : null"
   >
+    <div class="demo-shell__toolbar" role="toolbar" aria-label="Demo controls">
+      <div class="demo-shell__segmented" aria-label="Mode">
+        @for (option of modeOptions; track option.value) {
+          <button
+            type="button"
+            class="demo-shell__segmented-button"
+            [class.is-active]="mode() === option.value"
+            [attr.aria-pressed]="mode() === option.value"
+            (click)="onModeChange(option.value)"
+          >{{ option.label }}</button>
+        }
+      </div>
+
+      <label class="demo-shell__field">
+        <span>Model</span>
+        <select [value]="model()" (change)="onModelChange($any($event.target).value)">
+          @for (option of modelOptions(); track option.value) {
+            <option [value]="option.value">{{ option.label }}</option>
+          }
+        </select>
+      </label>
+
+      <label class="demo-shell__field">
+        <span>Effort</span>
+        <select [value]="effort()" (change)="onEffortChange($any($event.target).value)">
+          @for (option of effortOptions(); track option.value) {
+            <option [value]="option.value">{{ option.label }}</option>
+          }
+        </select>
+      </label>
+
+      <label class="demo-shell__field">
+        <span>Gen UI</span>
+        <select [value]="genUiMode()" (change)="onGenUiModeChange($any($event.target).value)">
+          @for (option of genUiOptions(); track option.value) {
+            <option [value]="option.value">{{ option.label }}</option>
+          }
+        </select>
+      </label>
+
+      <label class="demo-shell__field">
+        <span>Theme</span>
+        <select [value]="theme()" (change)="onThemeChange($any($event.target).value)">
+          @for (option of themeOptions(); track option.value) {
+            <option [value]="option.value">{{ option.label }}</option>
+          }
+        </select>
+      </label>
+
+      <button type="button" class="demo-shell__toolbar-action" (click)="onNewConversation()">
+        New conversation
+      </button>
+    </div>
+
     <router-outlet />
     @if (agent.interrupt && agent.interrupt()) {
       <div class="demo-shell__interrupt-panel" role="region" aria-label="Approval required">
@@ -78,57 +136,4 @@
     (threadSelected)="onSearchSelect($event)"
     (closed)="paletteOpen.set(false)"
   />
-
-  <chat-debug
-    [agent]="agent"
-    dock="right"
-    (replayRequested)="onTimelineReplay($event)"
-    (forkRequested)="onTimelineFork($event)"
-  >
-    <ng-template chatDebugControls>
-      <chat-debug-section label="Mode">
-        <chat-debug-segmented
-          [options]="modeOptions"
-          [value]="mode()"
-          (valueChange)="onModeChange($event)"
-        />
-      </chat-debug-section>
-      <chat-debug-section label="Agent">
-        <chat-debug-select
-          label="Model"
-          [options]="modelOptions()"
-          [value]="model()"
-          (valueChange)="onModelChange($event)"
-        />
-        <chat-debug-select
-          label="Effort"
-          [options]="effortOptions()"
-          [value]="effort()"
-          (valueChange)="onEffortChange($event)"
-        />
-        <chat-debug-select
-          label="Gen UI"
-          [options]="genUiOptions()"
-          [value]="genUiMode()"
-          (valueChange)="onGenUiModeChange($event)"
-        />
-      </chat-debug-section>
-      <chat-debug-section label="Appearance">
-        <chat-debug-segmented
-          [options]="colorSchemeOptions"
-          [value]="colorScheme()"
-          (valueChange)="onColorSchemeChange($event)"
-        />
-        <chat-debug-select
-          label="Theme"
-          [options]="themeOptions()"
-          [value]="theme()"
-          (valueChange)="onThemeChange($event)"
-        />
-      </chat-debug-section>
-      <chat-debug-section>
-        <chat-debug-action label="New conversation" (clicked)="onNewConversation()" />
-      </chat-debug-section>
-    </ng-template>
-  </chat-debug>
 </div>

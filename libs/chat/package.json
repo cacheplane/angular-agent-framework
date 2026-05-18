@@ -2,14 +2,6 @@
   "name": "@ngaf/chat",
   "version": "0.0.40",
   "exports": {
-    ".": {
-      "types": "./index.d.ts",
-      "default": "./fesm2022/ngaf-chat.mjs"
-    },
-    "./testing": {
-      "types": "./testing.d.ts",
-      "default": "./fesm2022/ngaf-chat-testing.mjs"
-    },
     "./chat.css": "./chat.css",
     "./themes/default-dark.css": "./themes/default-dark.css",
     "./themes/default-light.css": "./themes/default-light.css",

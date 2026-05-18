@@ -4,12 +4,21 @@ import { Component } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { describe, expect, it } from 'vitest';
 import { ChatSidenavComponent } from './chat-sidenav.component';
+import { mockAgent } from '../../testing/mock-agent';
 
-function render(opts: { mode?: 'expanded' | 'collapsed' | 'drawer'; open?: boolean; threads?: unknown[] | null } = {}) {
+function render(opts: {
+  mode?: 'expanded' | 'collapsed' | 'drawer';
+  open?: boolean;
+  threads?: unknown[] | null;
+  agent?: ReturnType<typeof mockAgent> | null;
+  debug?: boolean;
+} = {}) {
   const fixture = TestBed.createComponent(ChatSidenavComponent);
   if (opts.mode) fixture.componentRef.setInput('mode', opts.mode);
   if (opts.open !== undefined) fixture.componentRef.setInput('open', opts.open);
   if (opts.threads !== undefined) fixture.componentRef.setInput('threads', opts.threads);
+  if (opts.agent !== undefined) fixture.componentRef.setInput('agent', opts.agent);
+  if (opts.debug !== undefined) fixture.componentRef.setInput('debug', opts.debug);
   fixture.detectChanges();
   return fixture;
 }
@@ -325,6 +334,39 @@ describe('ChatSidenavComponent — footer slots', () => {
     const toggle = fx.nativeElement.querySelector('.chat-sidenav__toggle') as HTMLButtonElement;
     toggle.click();
     expect(captured).toBe('collapsed');
+  });
+});
+
+describe('ChatSidenavComponent — debug footer affordance', () => {
+  it('omits the debug footer button when no agent is provided', () => {
+    const fixture = render();
+    expect(fixture.nativeElement.querySelector('.chat-sidenav__debug')).toBeNull();
+  });
+
+  it('omits the debug footer button when debug is disabled', () => {
+    const fixture = render({ agent: mockAgent(), debug: false });
+    expect(fixture.nativeElement.querySelector('.chat-sidenav__debug')).toBeNull();
+  });
+
+  it('renders a labeled debug button in expanded mode when an agent is provided', () => {
+    const fixture = render({ mode: 'expanded', agent: mockAgent() });
+    const button = fixture.nativeElement.querySelector('.chat-sidenav__debug') as HTMLButtonElement | null;
+    expect(button).not.toBeNull();
+    expect(button?.getAttribute('aria-label')).toBe('Open chat debug');
+    expect(button?.textContent?.trim()).toBe('Debug');
+  });
+
+  it('renders the debug button without visible label in collapsed mode', () => {
+    const fixture = render({ mode: 'collapsed', agent: mockAgent() });
+    const button = fixture.nativeElement.querySelector('.chat-sidenav__debug') as HTMLButtonElement | null;
+    expect(button).not.toBeNull();
+    expect(button?.textContent?.trim()).toBe('');
+  });
+
+  it('marks the debug status dot as streaming while the agent is running', () => {
+    const agent = mockAgent({ status: 'running' });
+    const fixture = render({ agent });
+    expect(fixture.nativeElement.querySelector('.chat-sidenav__debug-dot--streaming')).not.toBeNull();
   });
 });
 

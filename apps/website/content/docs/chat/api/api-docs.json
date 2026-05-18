@@ -2049,363 +2049,6 @@
     ]
   },
   {
-    "name": "ChatDebugActionComponent",
-    "kind": "class",
-    "description": "",
-    "params": [],
-    "examples": [],
-    "properties": [
-      {
-        "name": "clicked",
-        "type": "OutputEmitterRef<void>",
-        "description": "",
-        "optional": false
-      },
-      {
-        "name": "label",
-        "type": "InputSignal<string>",
-        "description": "",
-        "optional": false
-      }
-    ],
-    "methods": []
-  },
-  {
-    "name": "ChatDebugComponent",
-    "kind": "class",
-    "description": "",
-    "params": [],
-    "examples": [],
-    "properties": [
-      {
-        "name": "activeHostInspector",
-        "type": "Signal<ChatDebugInspectorDirective<> | undefined>",
-        "description": "",
-        "optional": false
-      },
-      {
-        "name": "activeTab",
-        "type": "Signal<TabEntry | undefined>",
-        "description": "",
-        "optional": false
-      },
-      {
-        "name": "activeTabId",
-        "type": "WritableSignal<string>",
-        "description": "",
-        "optional": false
-      },
-      {
-        "name": "agent",
-        "type": "InputSignal<AgentWithHistory>",
-        "description": "",
-        "optional": false
-      },
-      {
-        "name": "controls",
-        "type": "Signal<ChatDebugControlsDirective<> | undefined>",
-        "description": "",
-        "optional": false
-      },
-      {
-        "name": "defaultOpen",
-        "type": "InputSignal<boolean>",
-        "description": "",
-        "optional": false
-      },
-      {
-        "name": "dock",
-        "type": "InputSignal<DockPosition>",
-        "description": "",
-        "optional": false
-      },
-      {
-        "name": "dockChange",
-        "type": "OutputEmitterRef<DockPosition>",
-        "description": "",
-        "optional": false
-      },
-      {
-        "name": "dockState",
-        "type": "WritableSignal<DockPosition>",
-        "description": "",
-        "optional": false
-      },
-      {
-        "name": "forkRequested",
-        "type": "OutputEmitterRef<string>",
-        "description": "",
-        "optional": false
-      },
-      {
-        "name": "hostInspectors",
-        "type": "Signal<readonly ChatDebugInspectorDirective[]>",
-        "description": "",
-        "optional": false
-      },
-      {
-        "name": "isStreaming",
-        "type": "Signal<boolean>",
-        "description": "Reads `agent.status()` reactively for the launcher dot.",
-        "optional": false
-      },
-      {
-        "name": "open",
-        "type": "WritableSignal<boolean>",
-        "description": "",
-        "optional": false
-      },
-      {
-        "name": "openChange",
-        "type": "OutputEmitterRef<boolean>",
-        "description": "",
-        "optional": false
-      },
-      {
-        "name": "replayRequested",
-        "type": "OutputEmitterRef<string>",
-        "description": "",
-        "optional": false
-      },
-      {
-        "name": "storageKey",
-        "type": "InputSignal<string>",
-        "description": "",
-        "optional": false
-      },
-      {
-        "name": "tabs",
-        "type": "Signal<TabEntry[]>",
-        "description": "",
-        "optional": false
-      }
-    ],
-    "methods": [
-      {
-        "name": "onDocumentClick",
-        "signature": "onDocumentClick(event: MouseEvent)",
-        "description": "Click-outside dismiss. When the panel is open, any click whose\ncomposed path doesn't include our host element closes the panel.",
-        "params": [
-          {
-            "name": "event",
-            "type": "MouseEvent",
-            "description": "",
-            "optional": false
-          }
-        ]
-      },
-      {
-        "name": "onEsc",
-        "signature": "onEsc()",
-        "description": "",
-        "params": []
-      },
-      {
-        "name": "setActiveTab",
-        "signature": "setActiveTab(id: string)",
-        "description": "",
-        "params": [
-          {
-            "name": "id",
-            "type": "string",
-            "description": "",
-            "optional": false
-          }
-        ]
-      },
-      {
-        "name": "setDock",
-        "signature": "setDock(next: DockPosition)",
-        "description": "",
-        "params": [
-          {
-            "name": "next",
-            "type": "DockPosition",
-            "description": "",
-            "optional": false
-          }
-        ]
-      },
-      {
-        "name": "setOpen",
-        "signature": "setOpen(value: boolean)",
-        "description": "",
-        "params": [
-          {
-            "name": "value",
-            "type": "boolean",
-            "description": "",
-            "optional": false
-          }
-        ]
-      }
-    ]
-  },
-  {
-    "name": "ChatDebugControlsDirective",
-    "kind": "class",
-    "description": "Marks an `<ng-template>` as the controls slot of `<chat-debug>`. Rendered\npinned at the top of the docked panel. Host apps put their app-specific\ncontrols (mode picker, model select, etc.) inside this template.",
-    "params": [],
-    "examples": [],
-    "properties": [
-      {
-        "name": "templateRef",
-        "type": "TemplateRef<any>",
-        "description": "",
-        "optional": false
-      }
-    ],
-    "methods": []
-  },
-  {
-    "name": "ChatDebugInspectorDirective",
-    "kind": "class",
-    "description": "Marks an `<ng-template>` as a host-registered inspector tab. Each instance\nadds a tab in the docked panel's tab strip, appended after the built-in\nTimeline and State tabs.",
-    "params": [],
-    "examples": [],
-    "properties": [
-      {
-        "name": "label",
-        "type": "InputSignal<string>",
-        "description": "",
-        "optional": false
-      },
-      {
-        "name": "templateRef",
-        "type": "TemplateRef<any>",
-        "description": "",
-        "optional": false
-      }
-    ],
-    "methods": []
-  },
-  {
-    "name": "ChatDebugSectionComponent",
-    "kind": "class",
-    "description": "",
-    "params": [],
-    "examples": [],
-    "properties": [
-      {
-        "name": "label",
-        "type": "InputSignal<string>",
-        "description": "",
-        "optional": false
-      }
-    ],
-    "methods": []
-  },
-  {
-    "name": "ChatDebugSegmentedComponent",
-    "kind": "class",
-    "description": "",
-    "params": [],
-    "examples": [],
-    "properties": [
-      {
-        "name": "options",
-        "type": "InputSignal<readonly SegmentedOption[]>",
-        "description": "",
-        "optional": false
-      },
-      {
-        "name": "value",
-        "type": "InputSignal<string>",
-        "description": "",
-        "optional": false
-      },
-      {
-        "name": "valueChange",
-        "type": "OutputEmitterRef<string>",
-        "description": "",
-        "optional": false
-      }
-    ],
-    "methods": []
-  },
-  {
-    "name": "ChatDebugSelectComponent",
-    "kind": "class",
-    "description": "",
-    "params": [],
-    "examples": [],
-    "properties": [
-      {
-        "name": "currentLabel",
-        "type": "Signal<string>",
-        "description": "",
-        "optional": false
-      },
-      {
-        "name": "label",
-        "type": "InputSignal<string>",
-        "description": "",
-        "optional": false
-      },
-      {
-        "name": "options",
-        "type": "InputSignal<readonly SelectOption[]>",
-        "description": "",
-        "optional": false
-      },
-      {
-        "name": "value",
-        "type": "InputSignal<string>",
-        "description": "",
-        "optional": false
-      },
-      {
-        "name": "valueChange",
-        "type": "OutputEmitterRef<string>",
-        "description": "",
-        "optional": false
-      }
-    ],
-    "methods": [
-      {
-        "name": "onChange",
-        "signature": "onChange(event: Event)",
-        "description": "",
-        "params": [
-          {
-            "name": "event",
-            "type": "Event",
-            "description": "",
-            "optional": false
-          }
-        ]
-      }
-    ]
-  },
-  {
-    "name": "ChatDebugSwitchComponent",
-    "kind": "class",
-    "description": "",
-    "params": [],
-    "examples": [],
-    "properties": [
-      {
-        "name": "label",
-        "type": "InputSignal<string>",
-        "description": "",
-        "optional": false
-      },
-      {
-        "name": "value",
-        "type": "InputSignal<boolean>",
-        "description": "",
-        "optional": false
-      },
-      {
-        "name": "valueChange",
-        "type": "OutputEmitterRef<boolean>",
-        "description": "",
-        "optional": false
-      }
-    ],
-    "methods": []
-  },
-  {
     "name": "ChatErrorComponent",
     "kind": "class",
     "description": "",
@@ -3690,6 +3333,12 @@
         "optional": false
       },
       {
+        "name": "agent",
+        "type": "InputSignal<Agent | AgentWithHistory | null>",
+        "description": "",
+        "optional": false
+      },
+      {
         "name": "archivedOpen",
         "type": "WritableSignal<boolean>",
         "description": "",
@@ -3698,6 +3347,24 @@
       {
         "name": "archivedThreads",
         "type": "InputSignal<Thread[] | null>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "debug",
+        "type": "InputSignal<boolean>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "forkRequested",
+        "type": "OutputEmitterRef<string>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "isDebugStreaming",
+        "type": "Signal<boolean>",
         "description": "",
         "optional": false
       },
@@ -3756,6 +3423,12 @@
         "optional": false
       },
       {
+        "name": "replayRequested",
+        "type": "OutputEmitterRef<string>",
+        "description": "",
+        "optional": false
+      },
+      {
         "name": "searchOpened",
         "type": "OutputEmitterRef<void>",
         "description": "",
@@ -3764,6 +3437,12 @@
       {
         "name": "selectedProjectId",
         "type": "InputSignal<string | null>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "showDebugButton",
+        "type": "Signal<boolean>",
         "description": "",
         "optional": false
       },
@@ -3792,6 +3471,19 @@
         "signature": "onEscape()",
         "description": "",
         "params": []
+      },
+      {
+        "name": "openDebug",
+        "signature": "openDebug(event: MouseEvent)",
+        "description": "",
+        "params": [
+          {
+            "name": "event",
+            "type": "MouseEvent",
+            "description": "",
+            "optional": false
+          }
+        ]
       }
     ]
   },
@@ -6482,46 +6174,6 @@
     "examples": []
   },
   {
-    "name": "SegmentedOption",
-    "kind": "interface",
-    "description": "",
-    "properties": [
-      {
-        "name": "label",
-        "type": "string",
-        "description": "",
-        "optional": false
-      },
-      {
-        "name": "value",
-        "type": "string",
-        "description": "",
-        "optional": false
-      }
-    ],
-    "examples": []
-  },
-  {
-    "name": "SelectOption",
-    "kind": "interface",
-    "description": "",
-    "properties": [
-      {
-        "name": "label",
-        "type": "string",
-        "description": "",
-        "optional": false
-      },
-      {
-        "name": "value",
-        "type": "string",
-        "description": "",
-        "optional": false
-      }
-    ],
-    "examples": []
-  },
-  {
     "name": "Subagent",
     "kind": "interface",
     "description": "",
@@ -6805,13 +6457,6 @@
     "kind": "type",
     "description": "",
     "signature": "\"pending\" | \"markdown\" | \"json-render\" | \"a2ui\" | \"mixed\"",
-    "examples": []
-  },
-  {
-    "name": "DockPosition",
-    "kind": "type",
-    "description": "",
-    "signature": "\"right\" | \"bottom\" | \"left\"",
     "examples": []
   },
   {
@@ -7470,6 +7115,95 @@
     ],
     "returns": {
       "type": "ViewRegistry",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "AbstractEvent",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "delta",
+        "type": "string",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "kind",
+        "type": "\"reasoning-start\" | \"reasoning-chunk\" | \"reasoning-end\" | \"text-start\" | \"text-chunk\" | \"text-end\"",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "assertReasoningFixtureMessages",
+    "kind": "function",
+    "description": "Assertion — common to both adapters. Throws if the produced messages\ndon't match the shared expectation.",
+    "signature": "assertReasoningFixtureMessages(messages: readonly Message[]): void",
+    "params": [
+      {
+        "name": "messages",
+        "type": "readonly Message[]",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "void",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "runAgentConformance",
+    "kind": "function",
+    "description": "Runs a suite of contract conformance assertions against a factory that\nproduces a fresh Agent. Adapter packages should call this in their\nown test suites to verify the contract is satisfied.",
+    "signature": "runAgentConformance(label: string, factory: object): void",
+    "params": [
+      {
+        "name": "label",
+        "type": "string",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "factory",
+        "type": "object",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "void",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "runAgentWithHistoryConformance",
+    "kind": "function",
+    "description": "Conformance suite for AgentWithHistory implementations.\n\nRuns the base Agent conformance suite, then verifies the history\nsignal is present and returns an array of AgentCheckpoint-shaped entries.",
+    "signature": "runAgentWithHistoryConformance(label: string, factory: object): void",
+    "params": [
+      {
+        "name": "label",
+        "type": "string",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "factory",
+        "type": "object",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "void",
       "description": ""
     },
     "examples": []

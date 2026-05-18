@@ -37,6 +37,9 @@
   height: 100%;
   transition: padding-left 200ms ease;
   padding-left: 0;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
 }
 .demo-shell__main[data-sidenav-mode="expanded"] {
   padding-left: var(--ngaf-chat-sidenav-width-expanded, 280px);
@@ -46,6 +49,91 @@
 }
 @media (max-width: 1023px) {
   .demo-shell__main[data-sidenav-mode] { padding-left: 0; }
+}
+
+.demo-shell__toolbar {
+  flex: 0 0 auto;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+  border-bottom: 1px solid color-mix(in srgb, var(--ngaf-chat-text, #e6e9ef) 12%, transparent);
+  background: color-mix(in srgb, var(--ngaf-chat-bg, #0f1115) 94%, transparent);
+  color: var(--ngaf-chat-text, #e6e9ef);
+  box-sizing: border-box;
+  overflow-x: auto;
+}
+
+.demo-shell__segmented {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px;
+  border-radius: 8px;
+  border: 1px solid color-mix(in srgb, var(--ngaf-chat-text, #e6e9ef) 14%, transparent);
+  background: color-mix(in srgb, var(--ngaf-chat-text, #e6e9ef) 4%, transparent);
+  flex: 0 0 auto;
+}
+
+.demo-shell__segmented-button,
+.demo-shell__toolbar-action,
+.demo-shell__field select {
+  font: inherit;
+  font-size: 12px;
+  color: var(--ngaf-chat-text, #e6e9ef);
+}
+
+.demo-shell__segmented-button {
+  border: 0;
+  background: transparent;
+  border-radius: 6px;
+  min-height: 28px;
+  padding: 0 10px;
+  cursor: pointer;
+}
+
+.demo-shell__segmented-button.is-active {
+  background: var(--ngaf-chat-text, #e6e9ef);
+  color: var(--ngaf-chat-bg, #0f1115);
+}
+
+.demo-shell__field {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--ngaf-chat-text-muted, #9aa3b2);
+  font-size: 12px;
+  flex: 0 0 auto;
+}
+
+.demo-shell__field select {
+  height: 30px;
+  border-radius: 7px;
+  border: 1px solid color-mix(in srgb, var(--ngaf-chat-text, #e6e9ef) 14%, transparent);
+  background: var(--ngaf-chat-bg, #0f1115);
+  padding: 0 26px 0 8px;
+}
+
+.demo-shell__toolbar-action {
+  height: 30px;
+  border-radius: 7px;
+  border: 1px solid color-mix(in srgb, var(--ngaf-chat-text, #e6e9ef) 18%, transparent);
+  background: transparent;
+  padding: 0 10px;
+  cursor: pointer;
+  flex: 0 0 auto;
+}
+
+.demo-shell__toolbar-action:hover,
+.demo-shell__segmented-button:hover:not(.is-active) {
+  background: color-mix(in srgb, var(--ngaf-chat-text, #e6e9ef) 8%, transparent);
+}
+
+@media (max-width: 767px) {
+  .demo-shell__toolbar {
+    padding-left: 60px;
+  }
 }
 
 .demo-shell__interrupt-panel {

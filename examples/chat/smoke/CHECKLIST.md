@@ -114,18 +114,17 @@ renders correctly both during streaming and after completion.
 
 ## chat-debug devtools
 
-- [ ] Floating debug launcher button visible in the top-right corner
-- [ ] Launcher has `role="button"`, accessible name "Open chat devtools"
-- [ ] Click launcher — debug panel opens (zinc-dark chrome, shadcn-styled)
-- [ ] Panel header shows a status pill (idle / loading / streaming) that updates live
-- [ ] Panel has a switch toggle for verbose/quiet mode
-- [ ] Panel shows current agent signals — status, message count, thread id, model
+- [ ] Sidenav footer shows a labelled `Debug` button in expanded/drawer mode
+- [ ] Collapsed sidenav shows the debug status dot without the text label
+- [ ] Debug dot pulses while the agent is streaming
+- [ ] Click the footer debug button — debug panel opens
+- [ ] Panel shows current agent state and timeline when checkpoint history is available
 - [ ] Panel updates live as messages stream
 - [ ] Click the close affordance — panel unmounts; launcher remains
 
 ### Coexistence with chat-sidebar
 
-- [ ] Switch to Sidebar mode via the palette — debug panel auto-redocks to the bottom (was: right)
+- [ ] Switch to Sidebar mode via the demo toolbar — debug panel auto-redocks to the bottom (was: right)
 - [ ] Open the sidebar launcher (bottom-right) — slides in over the demo bg; debug bottom panel stays visible at the LEFT of the sidebar
 - [ ] Manually click the right-dock icon — debug moves to the right edge of the demo bg (NOT under the sidebar); user override sticks for the rest of the session
 
@@ -133,15 +132,11 @@ renders correctly both during streaming and after completion.
 - [ ] No `console.error` while toggling
 - [ ] DOM has no `<chat-debug>` element when closed
 
-## Control palette
+## Demo toolbar
 
-- [ ] Palette renders top-right with the v2 shadcn-styled panel (rounded, zinc surface)
-- [ ] Status pill near the palette top reflects agent state (idle / loading / streaming)
-- [ ] Click collapse handle — palette shrinks to a single icon
-- [ ] Click icon — palette re-expands
-- [ ] Collapsed/expanded state persists across reload
-- [ ] Palette never overlaps the chat input
-- [ ] Palette stays above any popup/sidebar in z-order
+- [ ] Top toolbar controls mode, model, effort, Gen UI mode, theme, and new conversation
+- [ ] Toolbar remains demo-owned and does not appear inside the debug panel
+- [ ] Toolbar stays reachable in embed, popup, and sidebar modes
 
 ## Color scheme (Light / Dark)
 

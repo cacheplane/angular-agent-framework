@@ -3,11 +3,18 @@
 import {
   Component,
   ChangeDetectionStrategy,
+  ComponentRef,
   DestroyRef,
+  effect,
+  Injector,
+  computed,
   inject,
   input,
   output,
   signal,
+  viewChild,
+  ViewContainerRef,
+  type OutputRefSubscription,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { fromEvent } from 'rxjs';
@@ -23,8 +30,20 @@ import {
   type Project,
   type ProjectActionAdapter,
 } from '../../primitives/chat-project-list/chat-project-list.component';
+import type { Agent, AgentWithHistory } from '../../agent';
+import { CHAT_DEBUG_INCLUDED } from './chat-debug-gate';
 
 export type ChatSidenavMode = 'expanded' | 'collapsed' | 'drawer';
+type ChatDebugDock = 'right' | 'bottom' | 'left';
+
+interface ChatDebugInstance {
+  setOpen(value: boolean): void;
+  setDock?(dock: ChatDebugDock): void;
+  replayRequested?: { subscribe(callback: (checkpointId: string) => void): OutputRefSubscription };
+  forkRequested?: { subscribe(callback: (checkpointId: string) => void): OutputRefSubscription };
+  openChange?: { subscribe(callback: (open: boolean) => void): OutputRefSubscription };
+  dockChange?: { subscribe(callback: (dock: ChatDebugDock) => void): OutputRefSubscription };
+}
 
 @Component({
   selector: 'chat-sidenav',
@@ -175,6 +194,24 @@ export type ChatSidenavMode = 'expanded' | 'collapsed' | 'drawer';
 
       <div class="chat-sidenav__footer">
         <div class="chat-sidenav__footer-left">
+          @if (showDebugButton()) {
+            <button
+              type="button"
+              class="chat-sidenav__debug"
+              aria-label="Open chat debug"
+              title="Open chat debug"
+              (click)="openDebug($event)"
+            >
+              <span
+                class="chat-sidenav__debug-dot"
+                [class.chat-sidenav__debug-dot--streaming]="isDebugStreaming()"
+                aria-hidden="true"
+              ></span>
+              @if (mode() !== 'collapsed') {
+                <span class="chat-sidenav__debug-label">Debug</span>
+              }
+            </button>
+          }
           <ng-content select="[sidenavFooterLeft]" />
         </div>
         <div class="chat-sidenav__footer-right">
@@ -205,6 +242,7 @@ export type ChatSidenavMode = 'expanded' | 'collapsed' | 'drawer';
         </div>
       </div>
     </nav>
+    <ng-container #debugHost />
   `,
 })
 export class ChatSidenavComponent {
@@ -217,6 +255,8 @@ export class ChatSidenavComponent {
   readonly projects = input<Project[] | null>(null);
   readonly selectedProjectId = input<string | null>(null);
   readonly projectActions = input<ProjectActionAdapter | null>(null);
+  readonly agent = input<Agent | AgentWithHistory | null>(null);
+  readonly debug = input<boolean>(true);
 
   readonly newChat = output<void>();
   readonly threadSelected = output<string>();
@@ -225,12 +265,37 @@ export class ChatSidenavComponent {
   readonly modeChange = output<ChatSidenavMode>();
   readonly projectSelected = output<string>();
   readonly newProjectRequested = output<void>();
+  readonly replayRequested = output<string>();
+  readonly forkRequested = output<string>();
 
   protected readonly archivedOpen = signal<boolean>(false);
+  protected readonly showDebugButton = computed(() =>
+    CHAT_DEBUG_INCLUDED && this.debug() && this.agent() !== null,
+  );
+  protected readonly isDebugStreaming = computed(() =>
+    this.agent()?.status?.() === 'running',
+  );
 
   private readonly destroyRef = inject(DestroyRef);
+  private readonly injector = inject(Injector);
+  private readonly debugHost = viewChild('debugHost', { read: ViewContainerRef });
+  private debugRef: ComponentRef<ChatDebugInstance> | null = null;
+  private debugOutputSubscriptions: OutputRefSubscription[] = [];
+  private currentDebugDock: ChatDebugDock = 'right';
 
   constructor() {
+    this.destroyRef.onDestroy(() => this.destroyDebug());
+
+    effect(() => {
+      const showDebug = this.showDebugButton();
+      const agent = this.agent();
+      if (!showDebug || !agent) {
+        this.destroyDebug();
+        return;
+      }
+      this.debugRef?.setInput('agent', agent);
+    });
+
     fromEvent<KeyboardEvent>(window, 'keydown')
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((e) => {
@@ -254,6 +319,11 @@ export class ChatSidenavComponent {
       });
   }
 
+  protected openDebug(event: MouseEvent): void {
+    event.stopPropagation();
+    void this.ensureDebugPanel();
+  }
+
   protected onEscape(): void {
     if (this.mode() === 'drawer' && this.open()) {
       this.openChange.emit(false);
@@ -264,5 +334,84 @@ export class ChatSidenavComponent {
     const m = this.mode();
     if (m === 'drawer') return;
     this.modeChange.emit(m === 'collapsed' ? 'expanded' : 'collapsed');
+  }
+
+  private async ensureDebugPanel(): Promise<void> {
+    if (!CHAT_DEBUG_INCLUDED) {
+      return;
+    }
+    if (!this.showDebugButton()) {
+      this.destroyDebug();
+      return;
+    }
+    const host = this.debugHost();
+    const agent = this.agent();
+    if (!host || !agent) return;
+
+    if (!this.debugRef) {
+      const { ChatDebugComponent } = await import('@ngaf/chat/debug');
+      if (!this.showDebugButton()) return;
+      this.debugRef = host.createComponent(ChatDebugComponent, {
+        injector: this.injector,
+      });
+      this.debugRef.setInput('launcher', 'none');
+      this.debugRef.setInput('storageKey', 'chat-sidenav-debug');
+      const initialDock = this.defaultDebugDock();
+      this.debugRef.setInput('dock', initialDock);
+      const replaySub = this.debugRef.instance.replayRequested?.subscribe((checkpointId) => {
+        this.replayRequested.emit(checkpointId);
+      });
+      const forkSub = this.debugRef.instance.forkRequested?.subscribe((checkpointId) => {
+        this.forkRequested.emit(checkpointId);
+      });
+      const openSub = this.debugRef.instance.openChange?.subscribe((open) => {
+        if (open) {
+          this.setDebugEdgeClaim(this.currentDebugDock);
+        } else {
+          this.clearDebugEdgeClaim();
+        }
+      });
+      const dockSub = this.debugRef.instance.dockChange?.subscribe((dock) => {
+        this.currentDebugDock = dock;
+        this.setDebugEdgeClaim(dock);
+      });
+      this.debugOutputSubscriptions = [replaySub, forkSub, openSub, dockSub].filter((sub): sub is OutputRefSubscription => !!sub);
+      this.currentDebugDock = initialDock;
+      this.setDebugEdgeClaim(initialDock);
+    }
+
+    this.debugRef.setInput('agent', agent);
+    this.debugRef.instance.setOpen(true);
+    this.debugRef.changeDetectorRef.detectChanges();
+    if (this.currentDebugDock === 'bottom') {
+      this.debugRef.instance.setDock?.('bottom');
+      this.debugRef.changeDetectorRef.detectChanges();
+    }
+    this.setDebugEdgeClaim(this.currentDebugDock);
+  }
+
+  private destroyDebug(): void {
+    for (const subscription of this.debugOutputSubscriptions) {
+      subscription.unsubscribe();
+    }
+    this.debugOutputSubscriptions = [];
+    this.debugRef?.destroy();
+    this.debugRef = null;
+    this.clearDebugEdgeClaim();
+  }
+
+  private defaultDebugDock(): ChatDebugDock {
+    if (typeof document === 'undefined') return 'right';
+    return document.querySelector('chat-sidebar') ? 'bottom' : 'right';
+  }
+
+  private setDebugEdgeClaim(dock: ChatDebugDock): void {
+    if (typeof document === 'undefined') return;
+    document.documentElement.dataset['ngafChatDebug'] = dock;
+  }
+
+  private clearDebugEdgeClaim(): void {
+    if (typeof document === 'undefined') return;
+    delete document.documentElement.dataset['ngafChatDebug'];
   }
 }

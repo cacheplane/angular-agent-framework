@@ -18,7 +18,7 @@ Use only the current API surface:
 - @ngaf/langgraph exposes agent(), provideAgent(), LangGraphAgent, MockAgentTransport, FetchStreamTransport, and mockLangGraphAgent().
 - agent() returns a runtime-neutral chat surface with messages(), status(), isLoading(), error(), toolCalls(), state(), submit(), stop(), regenerate(), interrupt(), subagents(), and LangGraph-specific langGraph* signals. status() returns only 'idle' | 'running' | 'error'. Use isLoading() for loading UI. interrupt() is AgentInterrupt | undefined on the runtime-neutral surface.
 - Configure LangGraph with assistantId and apiUrl. Do not use graphId or url as @ngaf/langgraph option names.
-- @ngaf/chat consumes the runtime-neutral Agent contract and exports ChatComponent, ChatMessageListComponent, ChatInputComponent, ChatToolCallsComponent, ChatToolCallCardComponent, ChatInterruptPanelComponent, and ChatDebugComponent. Selectors are <chat>, <chat-message-list>, <chat-input>, <chat-tool-calls>, <chat-tool-call-card>, <chat-interrupt-panel>, and <chat-debug>.
+- @ngaf/chat consumes the runtime-neutral Agent contract and exports ChatComponent, ChatMessageListComponent, ChatInputComponent, ChatToolCallsComponent, ChatToolCallCardComponent, and ChatInterruptPanelComponent. The debug-only secondary entry point @ngaf/chat/debug exports ChatDebugComponent. Selectors are <chat>, <chat-message-list>, <chat-input>, <chat-tool-calls>, <chat-tool-call-card>, <chat-interrupt-panel>, and <chat-debug>.
 - Chat messages use Message[] from @ngaf/chat for the runtime-neutral surface. Raw LangGraph messages, when needed, are exposed through langGraphMessages().
 - Angular examples should call agent() directly in a component field initializer, for example: readonly chat = agent({ assistantId: 'chat', threadId: this.threadId, onThreadId: id => this.threadId.set(id) }). Do not inject LangGraphAgent as a service. Do not invent a wrapper service around LangGraphAgent.
 - @ngaf/render exposes render-spec, defineAngularRegistry(), provideRender(), signalStateStore(), JSON Patch streaming, and A2UI support. Registry examples may pass [registry] directly to <render-spec> or configure provideRender({ registry }).
@@ -523,7 +523,7 @@ Tone: Direct, technical, peer-to-peer. No fluff. Audience is senior Angular engi
 
 Chapter topic: Debug Tooling
 
-Context: Debugging agent chat is hard. The message stream is opaque, tool call state transitions are fast, and interrupt flows have timing edge cases. chat-debug is @ngaf/chat's built-in debug panel — a developer overlay that surfaces agent state, raw message events, tool call history, and interrupt state in real time.
+Context: Debugging agent chat is hard. The message stream is opaque, tool call state transitions are fast, and interrupt flows have timing edge cases. chat-debug is @ngaf/chat/debug's built-in debug panel — a developer overlay that surfaces agent state, raw message events, tool call history, and interrupt state in real time.
 
 Cover:
 - What chat-debug shows: Message[] state, streaming event log, tool call state machine, interrupt payload

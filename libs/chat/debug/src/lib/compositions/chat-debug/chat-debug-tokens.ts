@@ -48,5 +48,13 @@ export const CHAT_DEBUG_TOKENS = `
     --ngaf-chat-text-muted: var(--ngaf-chat-debug-text-muted);
     --ngaf-chat-separator: var(--ngaf-chat-debug-border);
     --ngaf-chat-surface-alt: var(--ngaf-chat-debug-bg-deep);
+    --ngaf-chat-font-size-xs: 12px;
+    --ngaf-chat-font-mono: var(--ngaf-chat-debug-font-mono);
+    --ngaf-chat-radius-card: 8px;
+    --ngaf-chat-success: var(--ngaf-chat-debug-success);
+    --ngaf-chat-error-bg: color-mix(in srgb, #ef4444 18%, transparent);
+    --ngaf-chat-error-text: #fca5a5;
+    --ngaf-chat-warning-bg: color-mix(in srgb, #f59e0b 18%, transparent);
+    --ngaf-chat-warning-text: #fcd34d;
   }
 `;

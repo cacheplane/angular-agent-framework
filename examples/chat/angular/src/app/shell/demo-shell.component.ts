@@ -15,12 +15,6 @@ import { filter, map, startWith } from 'rxjs/operators';
 import { agent } from '@ngaf/langgraph';
 import { NgafTelemetryService } from '@ngaf/telemetry/browser';
 import {
-  ChatDebugComponent,
-  ChatDebugControlsDirective,
-  ChatDebugSectionComponent,
-  ChatDebugSegmentedComponent,
-  ChatDebugSelectComponent,
-  ChatDebugActionComponent,
   ChatInterruptPanelComponent,
   ChatSubagentsComponent,
   ChatSidenavComponent,
@@ -54,12 +48,6 @@ function modeFromUrl(url: string): DemoMode {
   standalone: true,
   imports: [
     RouterOutlet,
-    ChatDebugComponent,
-    ChatDebugControlsDirective,
-    ChatDebugSectionComponent,
-    ChatDebugSegmentedComponent,
-    ChatDebugSelectComponent,
-    ChatDebugActionComponent,
     ChatInterruptPanelComponent,
     ChatSubagentsComponent,
     ChatSidenavComponent,
@@ -263,11 +251,6 @@ export class DemoShell {
     { value: 'a2ui',        label: 'A2UI v1-compatible' },
     { value: 'json-render', label: 'json-render' },
   ]);
-
-  protected readonly colorSchemeOptions = [
-    { value: 'light', label: 'Light' },
-    { value: 'dark', label: 'Dark' },
-  ] as const;
 
   protected readonly themeOptions = signal<readonly { value: string; label: string }[]>([
     { value: 'default-dark',   label: 'Default dark' },

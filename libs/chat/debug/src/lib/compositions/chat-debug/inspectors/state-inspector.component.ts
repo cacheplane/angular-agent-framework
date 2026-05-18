@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: MIT
 import { Component, ChangeDetectionStrategy, input, computed, signal } from '@angular/core';
-import type { AgentWithHistory } from '../../../agent';
+import type { DebugAgent, DebugAgentWithHistory } from '../debug-agent';
 import { CHAT_DEBUG_TOKENS } from '../chat-debug-tokens';
 import { DebugStateInspectorComponent } from '../debug-state-inspector.component';
-import { extractStateValues } from '../debug-utils';
 
 @Component({
   selector: 'chat-debug-state-tab',
@@ -79,12 +78,10 @@ import { extractStateValues } from '../debug-utils';
   `,
 })
 export class StateInspectorComponent {
-  readonly agent = input.required<AgentWithHistory>();
+  readonly agent = input.required<DebugAgent | DebugAgentWithHistory>();
 
   readonly state = computed((): Record<string, unknown> => {
-    const history = this.agent().history();
-    const last = history[history.length - 1];
-    return extractStateValues(last);
+    return this.agent().state();
   });
 
   protected readonly justCopied = signal<boolean>(false);

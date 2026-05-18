@@ -8,7 +8,7 @@ import {
 import { JsonPipe } from '@angular/common';
 import { computeStateDiff } from './state-diff';
 import type { DiffEntry } from './state-diff';
-import { CHAT_HOST_TOKENS } from '../../styles/chat-tokens';
+import { CHAT_DEBUG_TOKENS } from './chat-debug-tokens';
 
 @Component({
   selector: 'chat-debug-state-diff',
@@ -16,7 +16,7 @@ import { CHAT_HOST_TOKENS } from '../../styles/chat-tokens';
   imports: [JsonPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styles: [
-    CHAT_HOST_TOKENS,
+    CHAT_DEBUG_TOKENS,
     `
     .debug-state-diff__empty {
       font-size: var(--ngaf-chat-font-size-xs);

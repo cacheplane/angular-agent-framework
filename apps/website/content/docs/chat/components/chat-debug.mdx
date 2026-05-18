@@ -1,13 +1,13 @@
 # ChatDebugComponent
 
-`ChatDebugComponent` provides a docked development panel for inspecting an `AgentWithHistory`. It includes built-in Timeline and State tabs, emits replay/fork events from timeline checkpoints, and supports host-provided controls and inspector tabs.
+`ChatDebugComponent` provides a docked development panel for inspecting an `Agent` or `AgentWithHistory`. It ships from the debug-only secondary entry point so applications can keep debug implementation code out of production bundles unless they explicitly opt in.
 
 **Selector:** `chat-debug`
 
 **Import:**
 
 ```typescript
-import { ChatDebugComponent } from '@ngaf/chat';
+import { ChatDebugComponent } from '@ngaf/chat/debug';
 ```
 
 ## Basic Usage
@@ -15,7 +15,7 @@ import { ChatDebugComponent } from '@ngaf/chat';
 ```typescript
 import { Component, ChangeDetectionStrategy, signal } from '@angular/core';
 import { agent } from '@ngaf/langgraph';
-import { ChatDebugComponent } from '@ngaf/chat';
+import { ChatDebugComponent } from '@ngaf/chat/debug';
 
 @Component({
   selector: 'app-debug-page',
@@ -59,9 +59,10 @@ export class DebugPageComponent {
 
 | Input | Type | Default | Description |
 | --- | --- | --- | --- |
-| `agent` | `AgentWithHistory` | **Required** | Agent state and checkpoint history. |
+| `agent` | `Agent \| AgentWithHistory` | **Required** | Agent state. Agents with `history()` also enable the Timeline tab. |
 | `dock` | `'right' \| 'bottom' \| 'left'` | `'right'` | Initial dock position. |
 | `defaultOpen` | `boolean` | `false` | Initial open state when no persisted state exists. |
+| `launcher` | `'floating' \| 'none'` | `'floating'` | Shows the built-in floating launcher, or hides it when another surface opens the panel. |
 | `storageKey` | `string` | `'chat-debug'` | Local storage key prefix for persisted open/dock/tab state. |
 
 ## Outputs
@@ -75,88 +76,23 @@ export class DebugPageComponent {
 
 `replayRequested` and `forkRequested` are integration hooks. The debug panel does not mutate the agent by itself; the host app decides whether a checkpoint opens a replay view, starts a forked thread, or maps to a backend-specific time travel operation.
 
-## Host Controls
+## Sidenav Integration
 
-Use `ChatDebugControlsDirective` to pin app-specific controls at the top of the debug panel.
+`ChatSidenavComponent` can own the launcher for apps that already use the sidenav footer. Pass the same agent and keep `[debug]` enabled:
 
-```typescript
-import {
-  ChatDebugComponent,
-  ChatDebugControlsDirective,
-  ChatDebugActionComponent,
-} from '@ngaf/chat';
-
-@Component({
-  standalone: true,
-  imports: [
-    ChatDebugComponent,
-    ChatDebugControlsDirective,
-    ChatDebugActionComponent,
-  ],
-  template: `
-    <chat-debug [agent]="chat">
-      <ng-template chatDebugControls>
-        <chat-debug-action
-          label="Reset thread"
-          (clicked)="resetThread()"
-        />
-      </ng-template>
-    </chat-debug>
-  `,
-})
-export class DebugControlsExample {
-  // chat = agent(...)
-
-  resetThread() {
-    // App-specific reset behavior.
-  }
-}
+```html
+<chat-sidenav
+  [agent]="chat"
+  [debug]="true"
+  (replayRequested)="replay($event)"
+  (forkRequested)="fork($event)"
+/>
 ```
 
-## Custom Inspector Tabs
+The footer button is labelled in expanded and drawer modes. In collapsed mode it uses the status dot only. The dot pulses while `agent.status()` is `running`.
 
-Use `ChatDebugInspectorDirective` to add tabs after the built-in Timeline and State tabs.
+## Production Bundles
 
-```typescript
-import {
-  ChatDebugComponent,
-  ChatDebugInspectorDirective,
-  ChatDebugSectionComponent,
-} from '@ngaf/chat';
+The debug implementation lives under `@ngaf/chat/debug`; the main `@ngaf/chat` entry point no longer exports it. In the canonical Angular demo, normal production builds set `NGAF_CHAT_DEBUG=false` and externalize `@ngaf/chat/debug`, so the debug implementation is absent from the emitted bundle. The `production-debug` build opts back in with `NGAF_CHAT_DEBUG=true`.
 
-@Component({
-  standalone: true,
-  imports: [
-    ChatDebugComponent,
-    ChatDebugInspectorDirective,
-    ChatDebugSectionComponent,
-  ],
-  template: `
-    <chat-debug [agent]="chat">
-      <ng-template chatDebugInspector label="Runtime">
-        <chat-debug-section label="Runtime">
-          <pre>Environment: {{ environment }}</pre>
-        </chat-debug-section>
-      </ng-template>
-    </chat-debug>
-  `,
-})
-export class RuntimeInspectorExample {
-  // chat = agent(...)
-  protected readonly environment = 'local';
-}
-```
-
-## Public Debug Primitives
-
-These debug primitives are exported for host-provided controls and inspectors:
-
-| Export | Selector | Purpose |
-| --- | --- | --- |
-| `ChatDebugControlsDirective` | `ng-template[chatDebugControls]` | Registers the pinned controls slot. |
-| `ChatDebugInspectorDirective` | `ng-template[chatDebugInspector]` | Registers a host inspector tab with a label. |
-| `ChatDebugSectionComponent` | `chat-debug-section` | Section container for custom inspector content. |
-| `ChatDebugSegmentedComponent` | `chat-debug-segmented` | Segmented control primitive. |
-| `ChatDebugSelectComponent` | `chat-debug-select` | Select primitive. |
-| `ChatDebugSwitchComponent` | `chat-debug-switch` | Switch primitive. |
-| `ChatDebugActionComponent` | `chat-debug-action` | Full-width action button primitive. |
+Keep debug controls for your app outside the debug panel. The debug panel intentionally exposes a small fixed surface so consumers do not expect demo-specific controls to appear in their own applications.
