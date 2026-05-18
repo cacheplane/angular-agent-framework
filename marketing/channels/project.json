@@ -14,6 +14,12 @@
         "tsConfig": "marketing/channels/tsconfig.lib.json"
       }
     },
+    "test": {
+      "executor": "@nx/vitest:test",
+      "options": {
+        "configFile": "marketing/channels/vite.config.mts"
+      }
+    },
     "lint": {
       "executor": "@nx/eslint:lint"
     }
