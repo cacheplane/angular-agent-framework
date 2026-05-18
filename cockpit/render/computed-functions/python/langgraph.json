@@ -1,8 +1,10 @@
 {
   "graphs": {
-    "computed-functions": "./src/graph.py:graph"
+    "r-computed-functions": "./src/graph.py:graph"
   },
-  "dependencies": ["."],
+  "dependencies": [
+    "."
+  ],
   "python_version": "3.12",
   "env": ".env"
 }

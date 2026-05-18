@@ -1,6 +1,6 @@
 {
   "graphs": {
-    "filesystem": "./src/graph.py:graph"
+    "da-filesystem": "./src/graph.py:graph"
   },
   "dependencies": [
     "."

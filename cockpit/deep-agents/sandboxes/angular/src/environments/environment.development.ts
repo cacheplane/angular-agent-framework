@@ -7,5 +7,5 @@
 export const environment = {
   production: false,
   langGraphApiUrl: 'http://localhost:4315/api',
-  streamingAssistantId: 'sandboxes',
+  streamingAssistantId: 'da-sandboxes',
 };

@@ -1,6 +1,6 @@
 {
   "graphs": {
-    "skills": "./src/graph.py:graph"
+    "da-skills": "./src/graph.py:graph"
   },
   "dependencies": [
     "."

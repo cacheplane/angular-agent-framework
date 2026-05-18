@@ -42,7 +42,7 @@ import { agent } from '@ngaf/langgraph';
 
 export class FilesystemComponent {
   protected readonly stream = agent({
-    assistantId: 'filesystem',
+    assistantId: 'da-filesystem',
   });
 }
 ```
@@ -64,7 +64,7 @@ interface ToolCallEntry {
 }
 
 export class FilesystemComponent {
-  protected readonly stream = agent({ assistantId: 'filesystem' });
+  protected readonly stream = agent({ assistantId: 'da-filesystem' });
 
   toolCallEntries = computed(() => {
     const msg = this.stream.messages();

@@ -42,7 +42,7 @@ import { agent } from '@ngaf/langgraph';
 
 export class SandboxesComponent {
   protected readonly stream = agent({
-    assistantId: 'sandboxes',
+    assistantId: 'da-sandboxes',
   });
 }
 ```
@@ -64,7 +64,7 @@ interface ExecutionLog {
 }
 
 export class SandboxesComponent {
-  protected readonly stream = agent({ assistantId: 'sandboxes' });
+  protected readonly stream = agent({ assistantId: 'da-sandboxes' });
 
   executionLogs = computed(() => {
     const msgs = this.stream.messages();

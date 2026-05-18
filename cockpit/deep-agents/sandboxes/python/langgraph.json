@@ -1,6 +1,6 @@
 {
   "graphs": {
-    "sandboxes": "./src/graph.py:graph"
+    "da-sandboxes": "./src/graph.py:graph"
   },
   "dependencies": [
     "."
