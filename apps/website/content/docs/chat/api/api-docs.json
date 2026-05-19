@@ -1678,6 +1678,12 @@
         "optional": false
       },
       {
+        "name": "showModelPicker",
+        "type": "InputSignal<boolean>",
+        "description": "When `false`, hide the auto-rendered model picker even when\n`modelOptions` is non-empty. Useful in cramped surfaces (popup,\nsidebar) where the picker crowds the input. Defaults to `true`.\nHas no effect when consumers project their own\n`<chat-select chatInputModelSelect>` via content projection.",
+        "optional": false
+      },
+      {
         "name": "showWelcome",
         "type": "Signal<boolean>",
         "description": "",
@@ -2797,6 +2803,12 @@
         "optional": false
       },
       {
+        "name": "showModelPicker",
+        "type": "InputSignal<boolean>",
+        "description": "Forwarded to the inner `<chat>`. When `false`, hides the\nauto-rendered model picker even with non-empty `modelOptions`.\nUse this in narrow surfaces (the chat-sidebar panel is 28rem\nwide; chat-popup is 24rem) where the picker crowds the input.\nDefaults to `true`.",
+        "optional": false
+      },
+      {
         "name": "views",
         "type": "InputSignal<Readonly<Record<string, Type<unknown> | RenderViewEntry>> | undefined>",
         "description": "A2UI component catalog forwarded to the inner <chat>. Without it,\nmessages classified as A2UI parse correctly but never mount a\nsurface. Pass `a2uiBasicCatalog()` from `@ngaf/chat`.",
@@ -3295,6 +3307,12 @@
         "name": "selectedModel",
         "type": "ModelSignal<string>",
         "description": "Two-way bound current model value.",
+        "optional": false
+      },
+      {
+        "name": "showModelPicker",
+        "type": "InputSignal<boolean>",
+        "description": "Forwarded to the inner `<chat>`. When `false`, hides the\nauto-rendered model picker even with non-empty `modelOptions`.\nUse this in narrow surfaces (the chat-sidebar panel is 28rem\nwide; chat-popup is 24rem) where the picker crowds the input.\nDefaults to `true`.",
         "optional": false
       },
       {
