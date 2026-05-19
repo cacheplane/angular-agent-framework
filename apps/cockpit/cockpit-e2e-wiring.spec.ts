@@ -184,7 +184,13 @@ describe('cockpit e2e wiring', () => {
         if (!workflow.includes(wiring.project)) {
           errors.push(`${wiring.project}: ${workflowPath} does not run the e2e target`);
         }
-        if (!workflow.includes(`working-directory: ${wiring.langgraphCwd}`)) {
+        // Matrix-migrated jobs (cockpit-e2e) template the working-directory via
+        // `${{ matrix.cap.python }}`; the python path appears in the matrix
+        // entry (e.g. `python: cockpit/chat/foo/python`) instead. Accept either
+        // form so matrix and non-matrix jobs both pass.
+        const literalUvSync = workflow.includes(`working-directory: ${wiring.langgraphCwd}`);
+        const matrixEntry = workflow.includes(`python: ${wiring.langgraphCwd}`);
+        if (!literalUvSync && !matrixEntry) {
           errors.push(`${wiring.project}: ${workflowPath} does not pre-sync ${wiring.langgraphCwd}`);
         }
       }
