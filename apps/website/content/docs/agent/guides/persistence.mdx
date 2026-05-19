@@ -6,6 +6,10 @@ Thread persistence keeps conversations alive across page refreshes, browser rest
 LangGraph checkpoints agent state at every super-step. Each checkpoint is keyed by a thread ID. agent() connects to these checkpoints automatically, so your users resume exactly where they left off — even if your server restarted between sessions.
 </Callout>
 
+<Callout type="info" title="Adapter-defined behavior">
+"Restore a prior thread's messages when the user switches to it" is a behavior the `@ngaf/langgraph` adapter implements because the LangGraph protocol exposes per-thread checkpoint history. The runtime-neutral `Agent` contract in `@ngaf/chat` doesn't require this — adapters built on event-stream protocols (like `@ngaf/ag-ui`) typically can't offer it. If you're writing your own adapter, the [Writing an Adapter guide](/docs/chat/guides/writing-an-adapter#hydrating-from-a-server-stored-thread) covers the design choice.
+</Callout>
+
 ## Python: Checkpointer Setup
 
 Every LangGraph agent needs a checkpointer to persist state between invocations. The checkpointer you choose depends on your environment.
