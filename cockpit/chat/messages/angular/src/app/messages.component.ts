@@ -4,6 +4,10 @@ import {
   ChatMessageListComponent,
   ChatInputComponent,
   ChatTypingIndicatorComponent,
+  ChatMessageComponent,
+  ChatStreamingMdComponent,
+  MessageTemplateDirective,
+  messageContent,
 } from '@ngaf/chat';
 import { ExampleChatLayoutComponent } from '@ngaf/example-layouts';
 import { agent } from '@ngaf/langgraph';
@@ -15,11 +19,25 @@ import { environment } from '../environments/environment';
  * Uses ChatMessageListComponent, ChatInputComponent, and ChatTypingIndicatorComponent
  * individually rather than the composed ChatComponent, giving full control
  * over layout and message rendering.
+ *
+ * ChatMessageListComponent renders nothing on its own — it discovers
+ * projected `<ng-template chatMessageTemplate="...">` blocks via
+ * contentChildren and uses them per message type. The composed `<chat>`
+ * component provides default templates internally; primitive consumers
+ * must project them explicitly.
  */
 @Component({
   selector: 'app-messages',
   standalone: true,
-  imports: [ChatMessageListComponent, ChatInputComponent, ChatTypingIndicatorComponent, ExampleChatLayoutComponent],
+  imports: [
+    ChatMessageListComponent,
+    ChatInputComponent,
+    ChatTypingIndicatorComponent,
+    ChatMessageComponent,
+    ChatStreamingMdComponent,
+    MessageTemplateDirective,
+    ExampleChatLayoutComponent,
+  ],
   template: `
     <example-chat-layout sidebarWidth="w-72">
       <div main class="flex-1 flex flex-col min-w-0">
@@ -27,7 +45,27 @@ import { environment } from '../environments/environment';
           <h1 class="text-sm font-semibold" style="color: var(--ngaf-chat-text);">Chat Messages Primitives</h1>
         </header>
         <div class="flex-1 overflow-y-auto">
-          <chat-message-list [agent]="agent" />
+          <chat-message-list [agent]="agent">
+            <ng-template chatMessageTemplate="human" let-message>
+              <chat-message [role]="'user'">{{ messageContent(message) }}</chat-message>
+            </ng-template>
+            <ng-template chatMessageTemplate="ai" let-message let-i="index">
+              <chat-message
+                [role]="'assistant'"
+                [streaming]="agent.isLoading() && i === agent.messages().length - 1"
+                [current]="i === agent.messages().length - 1"
+              >
+                <chat-streaming-md
+                  [content]="messageContent(message)"
+                  [streaming]="agent.isLoading() && i === agent.messages().length - 1"
+                />
+              </chat-message>
+            </ng-template>
+            <ng-template chatMessageTemplate="tool" let-message><!-- hidden --></ng-template>
+            <ng-template chatMessageTemplate="system" let-message>
+              <chat-message [role]="'system'">{{ messageContent(message) }}</chat-message>
+            </ng-template>
+          </chat-message-list>
         </div>
         <div class="px-4 py-2" style="background: var(--ngaf-chat-bg);">
           <chat-typing-indicator [agent]="agent" />
@@ -51,6 +89,8 @@ export class MessagesComponent {
     apiUrl: environment.langGraphApiUrl,
     assistantId: environment.streamingAssistantId,
   });
+
+  protected readonly messageContent = messageContent;
 
   submitMessage(content: string) {
     this.agent.submit({ message: content });
