@@ -221,6 +221,27 @@ export function Hero() {
               gap: 40px !important;
             }
           }
+          .hero-proof-pill {
+            transition: transform 160ms ease, background 160ms ease, border-color 160ms ease, color 160ms ease, box-shadow 160ms ease;
+            will-change: transform;
+          }
+          a:hover > .hero-proof-pill,
+          a:focus-visible > .hero-proof-pill {
+            transform: translateY(-1px);
+            background: ${tokens.colors.accentSurface} !important;
+            border-color: ${tokens.colors.accentBorder} !important;
+            color: ${tokens.colors.accent} !important;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+          }
+          a:active > .hero-proof-pill {
+            transform: translateY(0);
+            box-shadow: none;
+          }
+          @media (prefers-reduced-motion: reduce) {
+            .hero-proof-pill { transition: none; }
+            a:hover > .hero-proof-pill,
+            a:focus-visible > .hero-proof-pill { transform: none; }
+          }
         `}</style>
       </Container>
     </Section>
