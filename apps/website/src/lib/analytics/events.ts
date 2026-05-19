@@ -50,6 +50,9 @@ export type CtaId =
   // Hero (Spec 2)
   | 'hero_install'
   | 'hero_talk_to_engineers'
+  | 'hero_demo_open_cockpit'
+  | 'hero_demo_open_cockpit_caption'
+  | 'hero_proof_pill'
   // Whitepaper block on home
   | 'home_whitepaper_direct'
   | 'home_whitepaper_direct_inline'
