@@ -141,13 +141,13 @@ export function Hero() {
             </p>
           </div>
 
-          {/* Right column — layered collage (preserved verbatim from prior Hero.tsx) */}
-          <div style={{ position: 'relative', minHeight: 420 }} aria-hidden="true">
+          {/* Right column — generative UI dashboard */}
+          <div aria-hidden="true">
             <BrowserFrame
               url="demo.threadplane.ai"
               rotate={-3}
               elevation="lg"
-              style={{ position: 'absolute', top: 0, left: 0, width: '92%' }}
+              style={{ width: '100%' }}
             >
               <img
                 src="/screenshots/canonical-demo-generative-ui.webp"
@@ -156,39 +156,6 @@ export function Hero() {
                 loading="lazy"
                 decoding="async"
               />
-            </BrowserFrame>
-            <BrowserFrame
-              url="agent.signal()"
-              rotate={4}
-              elevation="md"
-              style={{
-                position: 'absolute',
-                top: 160,
-                right: 0,
-                width: '70%',
-                maxWidth: 320,
-              }}
-            >
-              <pre
-                style={{
-                  margin: 0,
-                  padding: '16px 18px',
-                  background: '#1a1b26',
-                  color: '#a9b1d6',
-                  fontFamily: tokens.typography.fontMono,
-                  fontSize: 12,
-                  lineHeight: 1.6,
-                  overflow: 'hidden',
-                }}
-              >
-{`provideAgent({
-  apiUrl: '/agent',
-});
-
-const a = agent();
-a.messages();
-a.status();`}
-              </pre>
             </BrowserFrame>
           </div>
         </div>
