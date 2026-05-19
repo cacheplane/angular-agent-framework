@@ -10,11 +10,13 @@ NOT published. This lib is tightly coupled to repo-specific orchestration (langg
 
 ```typescript
 // Cockpit consumers import via repo-root-relative path (no published package):
-import { createGlobalSetup, sendPromptAndWait } from '../../../../../libs/e2e-harness/src';
+import { createGlobalSetup, submitAndWaitForResponse } from '../../../../../libs/e2e-harness/src';
 ```
 
 - `createGlobalSetup(opts)` — returns a Playwright globalSetup function that boots aimock + langgraph + the named Angular dev server.
-- `sendPromptAndWait(page, prompt, opts?)` — Playwright helper. Goes to a path (default `/`), sends the prompt, waits for `chat-message[data-role="assistant"][data-streaming="false"]`, returns the bubble locator.
+- `submitAndWaitForResponse(page, prompt, opts?)` — Playwright helper. Goes to a path (default `/`), sends the prompt, waits for `chat-message[data-role="assistant"][data-streaming="false"]` to attach, returns the bubble locator. Preferred over polling the "Stop generating" button for aimock-backed e2es where SSE chunks arrive in <100ms.
+- `sendPromptAndWaitForInterrupt(page, prompt, opts?)` — Playwright helper for interrupt-flow specs. Sends the prompt and waits for `chat-interrupt-panel` to appear rather than waiting for the agent to go fully idle.
+- `clickInterruptActionAndWaitFinal(page, label)` — Clicks an action button on the visible interrupt panel and waits for the resume continuation to finalize.
 
 ## Per-example consumer shape
 

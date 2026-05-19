@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 import { test, expect } from '@playwright/test';
-import { sendPromptAndWait } from '../../../../../libs/e2e-harness/src';
+import { submitAndWaitForResponse } from '../../../../../libs/e2e-harness/src';
 
 const PROMPT = "What's the status of UA123?";
 
 test('c-tool-calls: parent dispatches lookup_flight tool, continuation surfaces flight data', async ({ page }) => {
-  const bubble = await sendPromptAndWait(page, PROMPT);
+  const bubble = await submitAndWaitForResponse(page, PROMPT);
 
   // The chat-tool-calls primitive renders a card per tool call. Card label
   // includes the tool name. Asserting it's in the DOM proves the parent's
