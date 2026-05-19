@@ -6467,7 +6467,7 @@
   {
     "name": "buildA2uiActionMessage",
     "kind": "function",
-    "description": "Builds an A2uiActionMessage from handler params and the current surface.\n The action.context is serialized as v1 DynamicValue-wrapped entries.",
+    "description": "Builds an A2uiActionMessage from handler params and the current surface.\n The action.context is serialized as v1 DynamicValue-wrapped entries.\n Sets action.label when the source component is a Button with a Text\n child whose literalString is non-empty.",
     "signature": "buildA2uiActionMessage(params: Record<string, unknown>, surface: A2uiSurface): A2uiActionMessage",
     "params": [
       {

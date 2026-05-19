@@ -10,8 +10,23 @@
  * Google's "A2UI in Practice" article and the Stream Chat reference
  * both warn against modeling actions as chat-history user turns.
  *
- * This helper returns null for any content that isn't a v1 A2UI action
- * message; callers should fall back to the original content in that case.
+ * Label source priority:
+ *   1. `action.label` if present — populated by `buildA2uiActionMessage`
+ *      from the source component's authored visible text (e.g. a
+ *      Button's child Text literalString). This is the LLM-authored
+ *      label and the preferred source.
+ *   2. CamelCase humanization of `action.name` (`bookingSubmit` →
+ *      "Booking submit"). Used when no label was stamped — typically
+ *      because the source component isn't a Button-with-Text-child.
+ *
+ * Returns null for any content that isn't a v1 A2UI action message;
+ * callers should fall back to the original content in that case.
+ *
+ * Design context: a previous iteration shipped a hardcoded
+ * `KNOWN_LABELS` map (bookingSubmit → 'Search flights') that embedded
+ * app-specific knowledge in the chat-lib primitive. That map was
+ * removed in favor of derivation from the authored UI; see spec
+ * 2026-05-19-llm-generated-labels-design.md.
  *
  * Sources:
  *   - https://a2ui.org/specification/v0.9-a2ui/
@@ -19,20 +34,8 @@
  *   - https://getstream.io/blog/a2ui-chat-integration/
  */
 
-/** Known action names that have a curated label. The default for any
- *  other action name is a camelCase → "Camel Case" humanization. */
-const KNOWN_LABELS: Record<string, (ctx: unknown) => string> = {
-  bookingSubmit: () => 'Search flights',
-  flightSelect: (ctx) => {
-    const id = unwrapContextString(ctx, 'flightId') ?? unwrapContextString(ctx, 'flight_id');
-    return id ? `Selected flight ${id}` : 'Selected flight';
-  },
-  modifySearch: () => 'Modify search',
-};
-
 export function a2uiActionLabel(content: string): string | null {
   if (typeof content !== 'string' || content.length === 0) return null;
-  // Cheap pre-check to skip parsing non-JSON content (markdown, prose, etc).
   const trimmed = content.trimStart();
   if (!trimmed.startsWith('{')) return null;
   let parsed: unknown;
@@ -48,8 +51,14 @@ export function a2uiActionLabel(content: string): string | null {
   const name = action['name'];
   if (typeof name !== 'string' || name.length === 0) return null;
 
-  const known = KNOWN_LABELS[name];
-  if (known) return known(action['context']);
+  // Preferred: label stamped at emit time by buildA2uiActionMessage from
+  // the source component's authored visible text.
+  const authoredLabel = action['label'];
+  if (typeof authoredLabel === 'string' && authoredLabel.length > 0) {
+    return authoredLabel;
+  }
+
+  // Fallback: humanize the camelCase action name.
   return humanizeCamelCase(name);
 }
 
@@ -62,37 +71,4 @@ function humanizeCamelCase(name: string): string {
   const spaced = name.replace(/([a-z])([A-Z])/g, '$1 $2');
   const lower = spaced.toLowerCase();
   return lower.charAt(0).toUpperCase() + lower.slice(1);
-}
-
-/**
- * Extract a string-typed value from an A2UI context structure. The v1
- * wire shape carries each value as a DynamicValue (`{literalString: ...}`,
- * `{literalNumber: ...}`, `{path: ...}`); we want the literal string only.
- *
- * Context can be either:
- *  - a dict: `{ key1: {literalString: "..."}, key2: ... }` (compact form)
- *  - an array of entries: `[{key, value: {literalString: "..."}}, ...]`
- *    (the spec's canonical wire shape for A2uiActionContextEntry[])
- */
-function unwrapContextString(context: unknown, key: string): string | null {
-  if (Array.isArray(context)) {
-    const entry = context.find(
-      (e): e is { key: unknown; value: unknown } =>
-        isRecord(e) && (e as Record<string, unknown>)['key'] === key,
-    );
-    if (!entry) return null;
-    return readLiteralString(entry.value);
-  }
-  if (isRecord(context)) {
-    return readLiteralString(context[key]);
-  }
-  return null;
-}
-
-function readLiteralString(value: unknown): string | null {
-  if (typeof value === 'string') return value;
-  if (isRecord(value) && typeof value['literalString'] === 'string') {
-    return value['literalString'] as string;
-  }
-  return null;
 }
