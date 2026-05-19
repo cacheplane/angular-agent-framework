@@ -122,3 +122,39 @@ export async function clickInterruptActionAndWaitFinal(
   await expect(finalizedAssistant).toBeAttached({ timeout: 5_000 });
   return finalizedAssistant;
 }
+
+/**
+ * Send a user prompt and wait for the final assistant bubble to render.
+ *
+ * Unlike `sendPromptAndWait` (which polls for the "Stop generating" button
+ * visibility), this waits directly on the durable end-state:
+ * `chat-message[data-role="assistant"][data-streaming="false"]`.
+ *
+ * Use this helper for caps where the streaming pass is too fast for Playwright
+ * to observe an intermediate loading state — typically aimock-backed e2es
+ * where the SSE chunks arrive in <100ms. The "Stop generating" button is
+ * conditionally rendered (`@if (isLoading() && canStop())`), and signal-
+ * batched updates can collapse the visible state below Playwright's polling
+ * resolution.
+ *
+ * Compatible with all cap shapes — composed `<chat>` AND raw primitive
+ * components — because the assertion is on the rendered `chat-message`
+ * element's data attributes, not on input/button affordances.
+ */
+export async function submitAndWaitForResponse(
+  page: Page,
+  prompt: string,
+  opts?: { path?: string; timeoutMs?: number },
+): Promise<Locator> {
+  const path = opts?.path ?? '/';
+  const timeoutMs = opts?.timeoutMs ?? 30_000;
+  await page.goto(path);
+  const input = page.getByRole('textbox', { name: /message|prompt/i });
+  await input.fill(prompt);
+  await page.getByRole('button', { name: /send message/i }).click();
+  const finalAssistant = page
+    .locator('chat-message[data-role="assistant"][data-streaming="false"]')
+    .last();
+  await expect(finalAssistant).toBeAttached({ timeout: timeoutMs });
+  return finalAssistant;
+}

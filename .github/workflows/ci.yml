@@ -257,10 +257,19 @@ jobs:
           retention-days: 7
 
   cockpit-e2e:
-    name: Cockpit — e2e
+    name: "Cockpit — e2e (${{ matrix.cap.angular }})"
     needs: ci-scope
     if: github.event_name == 'push' || needs.ci-scope.outputs.cockpit_e2e == 'true'
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      max-parallel: 5
+      matrix:
+        cap:
+          - { angular: cockpit-langgraph-streaming-angular, python: cockpit/langgraph/streaming/python }
+          - { angular: cockpit-chat-tool-calls-angular,     python: cockpit/chat/tool-calls/python }
+          - { angular: cockpit-chat-subagents-angular,      python: cockpit/chat/subagents/python }
+          - { angular: cockpit-chat-interrupts-angular,     python: cockpit/chat/interrupts/python }
     steps:
       - uses: actions/checkout@v6.0.2
       - uses: actions/setup-node@v6.3.0
@@ -272,45 +281,34 @@ jobs:
         with:
           python-version: '3.12'
       - run: npm ci
-      - working-directory: cockpit/langgraph/streaming/python
-        run: uv sync
-      # Per-cap cleanup PR: each chat cap's e2e now starts its OWN
-      # standalone backend (not the umbrella). Pre-sync deps for the two
-      # caps with e2e suites.
-      - working-directory: cockpit/chat/tool-calls/python
-        run: uv sync
-      - working-directory: cockpit/chat/subagents/python
-        run: uv sync
-      - working-directory: cockpit/chat/interrupts/python
+      - name: uv sync per-cap python
+        working-directory: ${{ matrix.cap.python }}
         run: uv sync
       - run: npx playwright install --with-deps chromium
-      # Explicit sequential loop (not `nx run-many --parallel=1`) so each
-      # per-example e2e gets a fresh Playwright process and a clean port
-      # state between invocations. nx run-many's scheduler doesn't insert
-      # a delay between target completions, which races OS-level port
-      # release on the second iteration (langgraph dev binds 8123 in
-      # every example). The 5s sleep between targets gives the OS time
-      # to fully release the port despite the harness's globalTeardown
-      # already process-group-killing the langgraph child tree.
-      #
-      # Each new cockpit example with an `e2e` target adds one line below.
-      - name: Run cockpit example aimock e2e suites
-        run: |
-          set -e
-          for proj in cockpit-langgraph-streaming-angular cockpit-chat-tool-calls-angular cockpit-chat-subagents-angular cockpit-chat-interrupts-angular; do
-            echo "::group::nx e2e $proj"
-            npx nx e2e "$proj" --skip-nx-cache
-            echo "::endgroup::"
-            sleep 5
-          done
+      - name: nx e2e ${{ matrix.cap.angular }}
+        run: npx nx e2e "${{ matrix.cap.angular }}" --skip-nx-cache
       - name: Upload Playwright trace on failure
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: cockpit-e2e-trace
+          name: cockpit-e2e-trace-${{ matrix.cap.angular }}
           path: |
             cockpit/**/angular/e2e/test-results/
           retention-days: 7
+
+  cockpit-e2e-summary:
+    name: "Cockpit — e2e"
+    needs: cockpit-e2e
+    if: always() && (github.event_name == 'push' || needs.ci-scope.outputs.cockpit_e2e == 'true')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Aggregate matrix outcome
+        run: |
+          if [[ "${{ needs.cockpit-e2e.result }}" != "success" ]]; then
+            echo "Matrix outcome: ${{ needs.cockpit-e2e.result }}"
+            exit 1
+          fi
+          echo "All cockpit-e2e matrix expansions passed."
 
   website-e2e:
     name: Website — e2e

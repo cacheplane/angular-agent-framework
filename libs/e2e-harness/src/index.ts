@@ -4,6 +4,7 @@ export {
   sendPromptAndWait,
   sendPromptAndWaitForInterrupt,
   clickInterruptActionAndWaitFinal,
+  submitAndWaitForResponse,
   type SendPromptAndWaitOptions,
 } from './test-helpers';
 export { createGlobalSetup, type CreateGlobalSetupOpts } from './global-setup-factory';
