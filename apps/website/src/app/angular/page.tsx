@@ -9,11 +9,14 @@ import { FeatureBlock } from '../../components/landing/FeatureBlock';
 import { WhitePaperBlock } from '../../components/landing/WhitePaperBlock';
 import { FinalCTA } from '../../components/landing/FinalCTA';
 import { AngularCodeShowcase } from '../../components/landing/angular/AngularCodeShowcase';
+import { createPageMetadata } from '../../lib/site-metadata';
 
-export const metadata = {
+export const metadata = createPageMetadata({
   title: '@ngaf/langgraph — Agent Streaming for Angular',
   description: 'Ship LangGraph agents in Angular. Signal-native streaming, thread persistence, interrupts, and deterministic testing.',
-};
+  pathname: '/angular',
+  type: 'website',
+});
 
 export default async function AngularPage() {
   return (

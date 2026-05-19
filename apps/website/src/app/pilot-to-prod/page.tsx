@@ -10,11 +10,14 @@ import { BrowserFrame } from '../../components/ui/BrowserFrame';
 import { WhitePaperBlock } from '../../components/landing/WhitePaperBlock';
 import { Promises } from '../../components/landing/Promises';
 import { FinalCTA } from '../../components/landing/FinalCTA';
+import { createPageMetadata } from '../../lib/site-metadata';
 
-export const metadata = {
+export const metadata = createPageMetadata({
   title: 'Pilot to Production — Agent UI for Angular',
   description: 'Close the last-mile gap. The 3-month pilot engagement is included with every app deployment license. We work alongside your Angular team to ship your first agent to production.',
-};
+  pathname: '/pilot-to-prod',
+  type: 'website',
+});
 
 export default function PilotToProdPage() {
   return (

@@ -8,11 +8,14 @@ import { Pill } from '../../components/ui/Pill';
 import { WhitePaperBlock } from '../../components/landing/WhitePaperBlock';
 import { FinalCTA } from '../../components/landing/FinalCTA';
 import { SOLUTIONS } from '../../lib/solutions-data';
+import { createPageMetadata } from '../../lib/site-metadata';
 
-export const metadata = {
+export const metadata = createPageMetadata({
   title: 'Solutions — Agent UI for Angular',
   description: 'See how Agent UI for Angular solves enterprise challenges — compliance, analytics, and customer support.',
-};
+  pathname: '/solutions',
+  type: 'website',
+});
 
 export default function SolutionsIndexPage() {
   return (

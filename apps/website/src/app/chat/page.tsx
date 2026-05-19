@@ -9,11 +9,14 @@ import { FeatureBlock } from '../../components/landing/FeatureBlock';
 import { WhitePaperBlock } from '../../components/landing/WhitePaperBlock';
 import { FinalCTA } from '../../components/landing/FinalCTA';
 import { ChatLandingCodeShowcase } from '../../components/landing/chat-landing/ChatLandingCodeShowcase';
+import { createPageMetadata } from '../../lib/site-metadata';
 
-export const metadata = {
+export const metadata = createPageMetadata({
   title: '@ngaf/chat — Batteries-Included Agent Chat for Angular',
   description: 'Production agent chat UI in days, not sprints. Built on Vercel json-render and Google A2UI specs.',
-};
+  pathname: '/chat',
+  type: 'website',
+});
 
 export default async function ChatPage() {
   return (
