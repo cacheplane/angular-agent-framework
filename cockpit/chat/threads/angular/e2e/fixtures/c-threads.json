@@ -1,0 +1,10 @@
+{
+  "fixtures": [
+    {
+      "match": { "userMessage": "Hello" },
+      "response": {
+        "content": "Hi! I'm the chat-threads demo. Switch between threads using the sidebar list to see independent conversation contexts."
+      }
+    }
+  ]
+}

@@ -271,6 +271,10 @@ jobs:
           - { angular: cockpit-chat-subagents-angular,      python: cockpit/chat/subagents/python }
           - { angular: cockpit-chat-interrupts-angular,     python: cockpit/chat/interrupts/python }
           - { angular: cockpit-chat-messages-angular,          python: cockpit/chat/messages/python }
+          - { angular: cockpit-chat-input-angular,             python: cockpit/chat/input/python }
+          - { angular: cockpit-chat-threads-angular,           python: cockpit/chat/threads/python }
+          - { angular: cockpit-chat-timeline-angular,          python: cockpit/chat/timeline/python }
+          - { angular: cockpit-chat-theming-angular,           python: cockpit/chat/theming/python }
     steps:
       - uses: actions/checkout@v6.0.2
       - uses: actions/setup-node@v6.3.0
