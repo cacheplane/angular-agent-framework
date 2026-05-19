@@ -18,6 +18,7 @@ the components list, code wraps it in the deterministic envelope keys.
 
 import json
 import logging
+import re
 from typing import Any, Literal
 
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
@@ -388,6 +389,17 @@ async def build_form(state: MessagesState) -> dict:
     """
     prior = _extract_prior_submit_context(state["messages"])
     defaults = _form_defaults_from_prior(prior)
+    # If there's no prior bookingSubmit (true first turn), try to seed
+    # origin/dest from the most recent human prompt — e.g. the welcome chip
+    # "I want to fly LAX to JFK" should land on a form where Origin=LAX and
+    # Destination=JFK are already selected. Without this seed, the LLM is
+    # told to use the blank `data_model` verbatim and the user lands on a
+    # form whose default values find no flights (Origin=Destination=LAX is
+    # a common failure we've seen). Prior-context path skips this seed
+    # because it already carries the user's last-known values.
+    if not prior:
+        seed = _seed_airports_from_messages(state["messages"])
+        defaults.update(seed)
     system_prompt = _BUILD_FORM_SYSTEM_TMPL.replace(
         "__DATA_MODEL_DEFAULTS__", json.dumps(defaults)
     )
@@ -653,6 +665,48 @@ def _is_flight_select_event(content: str) -> bool:
         isinstance(action, dict)
         and action.get("name") == "flightSelect"
     )
+
+
+# Match "<ORIGIN> to <DEST>" / "<ORIGIN> -> <DEST>" / "<ORIGIN> → <DEST>"
+# where both are 3-letter IATA codes from AIRPORT_CODES. Anchored to word
+# boundaries so we don't false-match "BOSTON" or arbitrary capitals.
+_AIRPORT_CODES_RE = "|".join(re.escape(code) for code in AIRPORT_CODES)
+_AIRPORT_PAIR_PATTERN = re.compile(
+    rf"\b({_AIRPORT_CODES_RE})\b\s*(?:to|->|→|-)\s*\b({_AIRPORT_CODES_RE})\b",
+    re.IGNORECASE,
+)
+
+
+def _seed_airports_from_messages(messages: list[Any]) -> dict[str, str]:
+    """Extract an (origin, dest) airport pair from the most recent human
+    message. Used by build_form on a fresh first turn to pre-fill the form
+    when the user's prompt explicitly mentions a route (e.g. the welcome
+    chip "I want to fly LAX to JFK").
+
+    Returns {"origin": <CODE>, "dest": <CODE>} on a hit; {} when no
+    recognized pair appears. Both codes must be in AIRPORT_CODES; we
+    never seed an airport the form's dropdown can't render."""
+    for msg in reversed(messages):
+        # Only inspect human messages — AI surfaces and action JSON shouldn't
+        # be parsed for seed values.
+        if getattr(msg, "type", None) != "human":
+            continue
+        content = getattr(msg, "content", None)
+        if not isinstance(content, str):
+            continue
+        # Action messages also flow through as human-role; their content
+        # is JSON. Cheap filter: real prompts don't start with '{'.
+        if content.lstrip().startswith("{"):
+            continue
+        match = _AIRPORT_PAIR_PATTERN.search(content)
+        if match:
+            origin = match.group(1).upper()
+            dest = match.group(2).upper()
+            if origin == dest:
+                # Same-airport "route" can't possibly find flights; skip.
+                continue
+            return {"origin": origin, "dest": dest}
+    return {}
 
 
 def _extract_prior_submit_context(messages: list[Any]) -> dict[str, Any]:
