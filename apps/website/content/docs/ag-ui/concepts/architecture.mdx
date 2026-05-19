@@ -108,6 +108,11 @@ provideAgUiAgent({
 
 The config maps directly to the AG-UI `HttpAgent` options currently exposed by this package: `url`, `agentId`, `threadId`, and `headers`.
 
+`threadId` here is a plain string consumed once at construction — the provider does not accept an Angular Signal, and the adapter does not observe changes to it at runtime. The AG-UI protocol carries events, not snapshots, and defines no server-side endpoint for "fetch the messages of thread X". To move a user between threads with their prior conversation restored, you have two options:
+
+- **Recreate the provider.** Inject `provideAgUiAgent({ ..., threadId: newId })` from a fresh injector when the active thread changes. Any prior message history must come from your own host service — pre-populate `setMessages()` on the source before the adapter boots, or render a "loading…" surface while you fetch it.
+- **Use the LangGraph adapter instead.** `@ngaf/langgraph` accepts `threadId: Signal<string | null>` and hydrates messages from the latest checkpoint on every change. See its [Persistence guide](/docs/agent/guides/persistence). Use AG-UI when your runtime publishes events without checkpoint storage; use LangGraph when the server owns durable thread state.
+
 Use `provideFakeAgUiAgent()` when you need the UI to run without a backend:
 
 ```ts
@@ -150,9 +155,9 @@ These features are intentionally out of scope for the AG-UI adapter today:
 
 - Interrupt workflows.
 - Subagents.
-- History and time-travel.
+- **History and time-travel.** AG-UI is an event-stream protocol — it doesn't define a server-side "fetch state of thread X" endpoint, so the adapter can't hydrate prior messages on a `threadId` change the way a checkpoint-aware runtime can. The [Provider choices](#provider-choices) section above describes the two patterns AG-UI consumers use to work around this.
 
-If those are central to your product, use the LangGraph adapter for that surface or build a custom adapter against the `@ngaf/chat` `Agent` contract.
+If those are central to your product, use the LangGraph adapter for that surface or build a custom adapter against the `@ngaf/chat` `Agent` contract. The [Writing an Adapter guide](/docs/chat/guides/writing-an-adapter#hydrating-from-a-server-stored-thread) walks through the thread-loading design choice in detail.
 
 ## Next steps
 
