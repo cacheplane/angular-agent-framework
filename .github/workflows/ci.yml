@@ -275,6 +275,8 @@ jobs:
           - { angular: cockpit-chat-threads-angular,           python: cockpit/chat/threads/python }
           - { angular: cockpit-chat-timeline-angular,          python: cockpit/chat/timeline/python }
           - { angular: cockpit-chat-theming-angular,           python: cockpit/chat/theming/python }
+          - { angular: cockpit-chat-generative-ui-angular,     python: cockpit/chat/generative-ui/python }
+          - { angular: cockpit-chat-a2ui-angular,              python: cockpit/chat/a2ui/python }
     steps:
       - uses: actions/checkout@v6.0.2
       - uses: actions/setup-node@v6.3.0

@@ -93,6 +93,12 @@
         "cwd": "cockpit/chat/generative-ui/angular",
         "command": "npx tsx -e \"import { chatGenerativeUiAngularModule } from './src/index.ts'; const module = chatGenerativeUiAngularModule; if (module.id !== 'chat-generative-ui-angular' || module.title !== 'Chat Generative UI (Angular)') { throw new Error('Unexpected module shape for ' + module.id); }\""
       }
+    },
+    "e2e": {
+      "executor": "@nx/playwright:playwright",
+      "options": {
+        "config": "cockpit/chat/generative-ui/angular/e2e/playwright.config.ts"
+      }
     }
   }
 }
