@@ -265,7 +265,20 @@ async def _emit_with_retry(
 _AIRPORT_OPTIONS = [{"label": c, "value": c} for c in AIRPORT_CODES]
 _FARE_OPTIONS = [{"label": c, "value": c} for c in FARE_CLASSES]
 
-_BUILD_FORM_SYSTEM = f"""You are an aviation booking-form designer. Emit an A2UI v1 booking form using the structured output schema.
+# The form's data_model carries the field default values. On first turn this
+# is blank; on a "Modify search" turn (after Select → confirmation surface →
+# Modify search) the user expects to see their prior origin/dest/date/
+# passengers/fare_class already populated. `build_form` walks message history
+# via `_extract_prior_submit_context` and substitutes those values into
+# {data_model_json} below.
+_BLANK_FORM_DEFAULTS: dict[str, Any] = {
+    "origin": "", "dest": "", "date": "", "passengers": 1, "fare_class": "Economy",
+}
+
+# `__DATA_MODEL_DEFAULTS__` is a non-brace sentinel substituted at call-time
+# by `build_form()` via `str.replace()` — using `.format()` would conflict
+# with the many literal-brace JSON examples below.
+_BUILD_FORM_SYSTEM_TMPL = f"""You are an aviation booking-form designer. Emit an A2UI v1 booking form using the structured output schema.
 
 A2UI FORMAT (CRITICAL): each component is `{{"id": "...", "component": {{"<ComponentName>": {{<props>}}}}}}`. The component name is the SINGLE KEY of the inner dict. ComponentName must be one of:
   Column, Row, Card, Text, TextField, MultipleChoice, DateTimeInput, CheckBox, Button, Divider, List, Image, Icon, Modal, Slider, Tabs
@@ -282,7 +295,7 @@ Per-component shapes:
 
 Required form composition for THIS task:
   surface_id MUST be "booking"
-  data_model MUST be {{"origin": "", "dest": "", "date": "", "passengers": 1, "fare_class": "Economy"}}
+  data_model MUST be __DATA_MODEL_DEFAULTS__  ← use these values verbatim as the field defaults
 
   Build this component tree:
     root (Column, children=[card])
@@ -312,48 +325,78 @@ def _comp(id_: str, name: str, props: dict[str, Any]) -> A2uiComponent:
     return A2uiComponent(id=id_, component={name: props})
 
 
-_SENTINEL_BOOKING_FORM = BookingFormSpec(
-    surface_id="booking",
-    data_model={"origin": "", "dest": "", "date": "", "passengers": 1, "fare_class": "Economy"},
-    components=[
-        _comp("root", "Column", {"children": {"explicitList": ["card"]}}),
-        _comp("card", "Card", {"child": "card_col"}),
-        _comp("card_col", "Column", {"children": {"explicitList": [
-            "title", "origin", "dest", "date", "passengers", "fare", "submit",
-        ]}}),
-        _comp("title", "Text", {"text": "Book a flight (fallback)", "usageHint": "h2"}),
-        _comp("origin", "MultipleChoice", {"label": "Origin", "options": _AIRPORT_OPTIONS,
-                                            "selections": {"path": "/origin"}, "maxAllowedSelections": 1}),
-        _comp("dest", "MultipleChoice", {"label": "Destination", "options": _AIRPORT_OPTIONS,
-                                          "selections": {"path": "/dest"}, "maxAllowedSelections": 1}),
-        _comp("date", "TextField", {"label": "Departure date (YYYY-MM-DD)",
-                                     "text": {"path": "/date"}, "textFieldType": "date"}),
-        _comp("passengers", "TextField", {"label": "Passengers",
-                                           "text": {"path": "/passengers"}, "textFieldType": "number"}),
-        _comp("fare", "MultipleChoice", {"label": "Fare class", "options": _FARE_OPTIONS,
-                                          "selections": {"path": "/fare_class"}, "maxAllowedSelections": 1}),
-        _comp("submit", "Button", {"child": "submit_label", "primary": True,
-                                    "action": {"name": "bookingSubmit", "context": [
-                                        {"key": "formId", "value": "booking"},
-                                        {"key": "origin", "value": {"path": "/origin"}},
-                                        {"key": "dest", "value": {"path": "/dest"}},
-                                        {"key": "date", "value": {"path": "/date"}},
-                                        {"key": "passengers", "value": {"path": "/passengers"}},
-                                        {"key": "fare_class", "value": {"path": "/fare_class"}},
-                                    ]}}),
-        _comp("submit_label", "Text", {"text": "Search flights"}),
-    ],
-)
+def _form_defaults_from_prior(prior: dict[str, Any]) -> dict[str, Any]:
+    """Project prior bookingSubmit context onto the form's data_model schema.
+    Falls back to blanks for any missing key so the returned dict always has
+    the full {origin, dest, date, passengers, fare_class} shape."""
+    defaults = dict(_BLANK_FORM_DEFAULTS)
+    for key in defaults:
+        if key in prior and prior[key] not in (None, ""):
+            defaults[key] = prior[key]
+    # Normalize passengers to an int (prior context may carry it as float).
+    p = defaults.get("passengers")
+    if isinstance(p, (int, float)):
+        defaults["passengers"] = int(p)
+    return defaults
+
+
+def _build_sentinel_booking_form(defaults: dict[str, Any]) -> BookingFormSpec:
+    """Hardcoded fallback form when LLM emit retry exhausts. Accepts the same
+    `defaults` dict that the LLM-prompt path uses, so the sentinel respects
+    Modify-search prefill too."""
+    return BookingFormSpec(
+        surface_id="booking",
+        data_model=defaults,
+        components=[
+            _comp("root", "Column", {"children": {"explicitList": ["card"]}}),
+            _comp("card", "Card", {"child": "card_col"}),
+            _comp("card_col", "Column", {"children": {"explicitList": [
+                "title", "origin", "dest", "date", "passengers", "fare", "submit",
+            ]}}),
+            _comp("title", "Text", {"text": "Book a flight (fallback)", "usageHint": "h2"}),
+            _comp("origin", "MultipleChoice", {"label": "Origin", "options": _AIRPORT_OPTIONS,
+                                                "selections": {"path": "/origin"}, "maxAllowedSelections": 1}),
+            _comp("dest", "MultipleChoice", {"label": "Destination", "options": _AIRPORT_OPTIONS,
+                                              "selections": {"path": "/dest"}, "maxAllowedSelections": 1}),
+            _comp("date", "TextField", {"label": "Departure date (YYYY-MM-DD)",
+                                         "text": {"path": "/date"}, "textFieldType": "date"}),
+            _comp("passengers", "TextField", {"label": "Passengers",
+                                               "text": {"path": "/passengers"}, "textFieldType": "number"}),
+            _comp("fare", "MultipleChoice", {"label": "Fare class", "options": _FARE_OPTIONS,
+                                              "selections": {"path": "/fare_class"}, "maxAllowedSelections": 1}),
+            _comp("submit", "Button", {"child": "submit_label", "primary": True,
+                                        "action": {"name": "bookingSubmit", "context": [
+                                            {"key": "formId", "value": "booking"},
+                                            {"key": "origin", "value": {"path": "/origin"}},
+                                            {"key": "dest", "value": {"path": "/dest"}},
+                                            {"key": "date", "value": {"path": "/date"}},
+                                            {"key": "passengers", "value": {"path": "/passengers"}},
+                                            {"key": "fare_class", "value": {"path": "/fare_class"}},
+                                        ]}}),
+            _comp("submit_label", "Text", {"text": "Search flights"}),
+        ],
+    )
 
 
 async def build_form(state: MessagesState) -> dict:
-    """First-turn node: LLM authors the booking form."""
-    base_messages = [SystemMessage(content=_BUILD_FORM_SYSTEM)] + state["messages"]
+    """First-turn AND Modify-search node: LLM authors the booking form.
+
+    On a Modify-search turn (last action.name == 'modifySearch'), walks
+    message history to recover the user's prior bookingSubmit context and
+    pre-fills the form's data_model with those values. On a true first turn
+    (no prior submit in history), uses blank defaults.
+    """
+    prior = _extract_prior_submit_context(state["messages"])
+    defaults = _form_defaults_from_prior(prior)
+    system_prompt = _BUILD_FORM_SYSTEM_TMPL.replace(
+        "__DATA_MODEL_DEFAULTS__", json.dumps(defaults)
+    )
+    base_messages = [SystemMessage(content=system_prompt)] + state["messages"]
     try:
         spec = await _emit_with_retry(BookingFormSpec, base_messages)
     except RuntimeError as err:
         _logger.error("Falling back to sentinel booking form: %s", err)
-        spec = _SENTINEL_BOOKING_FORM
+        spec = _build_sentinel_booking_form(defaults)
     return {"messages": [AIMessage(content=_wrap_envelopes(spec))]}
 
 
