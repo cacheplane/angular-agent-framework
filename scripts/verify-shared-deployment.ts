@@ -22,8 +22,8 @@ const REQUIRED_URL_KEYS = [
 const SMOKE_ASSISTANT_IDS = [
   'streaming',
   'deployment-runtime',
-  'planning',
-  'filesystem',
+  'da-planning',
+  'da-filesystem',
   'c-generative-ui',
   'c-a2ui',
   'chat',
@@ -37,7 +37,7 @@ export const DEFAULT_SMOKE_ASSISTANT_STREAM_TIMEOUT_MS = 30000;
 const SMOKE_ASSISTANT_STREAM_TIMEOUT_MS: Partial<Record<SmokeAssistantId, number>> = {
   // The planning graph intentionally performs two model calls: one to create
   // structured plan state, then one to execute the plan and answer.
-  planning: 90000,
+  'da-planning': 90000,
   // UI graph assistants can include extra model/tool work before the first AI
   // stream event, and CI has observed them occasionally crossing 30s.
   'c-generative-ui': 90000,

@@ -7,7 +7,7 @@ import {
 
 describe('verify-shared-deployment', () => {
   it('allows the two-pass planning graph more time than single-response smoke assistants', () => {
-    expect(getSmokeAssistantStreamTimeoutMs('planning')).toBe(90000);
+    expect(getSmokeAssistantStreamTimeoutMs('da-planning')).toBe(90000);
     expect(getSmokeAssistantStreamTimeoutMs('streaming')).toBe(
       DEFAULT_SMOKE_ASSISTANT_STREAM_TIMEOUT_MS,
     );
