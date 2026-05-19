@@ -51,12 +51,32 @@ import { CHAT_HOST_TOKENS, ensureChatRootStyles } from '../../styles/chat-tokens
     @media (max-width: 640px) {
       .chat-sidebar__panel { width: 100vw; }
     }
+    .chat-sidebar__panel-header {
+      flex: 0 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--ngaf-chat-separator);
+      min-height: 48px;
+    }
+    .chat-sidebar__panel-title {
+      min-width: 0;
+      flex: 1 1 auto;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      color: var(--ngaf-chat-text);
+      font-weight: 500;
+      font-size: var(--ngaf-chat-font-size-sm);
+    }
     .chat-sidebar__close {
-      position: absolute; top: 8px; right: 8px;
+      flex: 0 0 auto;
       width: 32px; height: 32px;
       background: transparent; border: 0; cursor: pointer;
       color: var(--ngaf-chat-text-muted);
-      border-radius: 50%; z-index: 1;
+      border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -79,13 +99,19 @@ import { CHAT_HOST_TOKENS, ensureChatRootStyles } from '../../styles/chat-tokens
       <chat-launcher-button (clicked)="toggle()" />
     </div>
     <aside class="chat-sidebar__panel" [attr.data-open]="open() ? 'true' : 'false'" role="complementary" [attr.aria-hidden]="open() ? 'false' : 'true'">
-      <button type="button" class="chat-sidebar__close" (click)="closeWindow()" aria-label="Close chat">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-      </button>
+      <div class="chat-sidebar__panel-header">
+        <div class="chat-sidebar__panel-title">
+          <ng-content select="[chatSidebarPanelTitle]" />
+        </div>
+        <button type="button" class="chat-sidebar__close" (click)="closeWindow()" aria-label="Close chat">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
       <chat
         [agent]="agent()"
         [views]="views()"
         [modelOptions]="modelOptions()"
+        [showModelPicker]="showModelPicker()"
         [selectedModel]="selectedModel()"
         (selectedModelChange)="selectedModel.set($event)"
         (replayRequested)="replayRequested.emit($event)"
@@ -106,6 +132,14 @@ export class ChatSidebarComponent {
   /** Forwarded to the inner <chat>. When non-empty, a model picker pill
    * renders in the chat-input chrome. */
   readonly modelOptions = input<readonly ChatSelectOption[]>([]);
+  /**
+   * Forwarded to the inner `<chat>`. When `false`, hides the
+   * auto-rendered model picker even with non-empty `modelOptions`.
+   * Use this in narrow surfaces (the chat-sidebar panel is 28rem
+   * wide; chat-popup is 24rem) where the picker crowds the input.
+   * Defaults to `true`.
+   */
+  readonly showModelPicker = input<boolean>(true);
   /** Two-way bound current model value. */
   readonly selectedModel = model<string>('');
   readonly open = model(false);

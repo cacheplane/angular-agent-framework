@@ -16,12 +16,14 @@ import { WelcomeSuggestionsComponent } from './welcome-suggestions.component';
       [views]="catalog"
       [modelOptions]="shell.modelOptions()"
       [selectedModel]="shell.model()"
+      [showModelPicker]="false"
       [open]="true"
       [pushContent]="true"
       (selectedModelChange)="shell.onModelChange($event)"
       (replayRequested)="shell.onTimelineReplay($event)"
       (forkRequested)="shell.onTimelineFork($event)"
     >
+      <span chatSidebarPanelTitle>{{ shell.currentThreadTitle() }}</span>
       <div class="sidebar-mode__background">
         <p class="sidebar-mode__hint">
           Use the launcher (right edge) to dismiss or re-open the chat panel.

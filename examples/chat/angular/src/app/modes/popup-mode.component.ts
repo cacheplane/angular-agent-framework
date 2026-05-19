@@ -21,6 +21,7 @@ import { WelcomeSuggestionsComponent } from './welcome-suggestions.component';
       [views]="catalog"
       [modelOptions]="shell.modelOptions()"
       [selectedModel]="shell.model()"
+      [showModelPicker]="false"
       (selectedModelChange)="shell.onModelChange($event)"
       (replayRequested)="shell.onTimelineReplay($event)"
       (forkRequested)="shell.onTimelineFork($event)"

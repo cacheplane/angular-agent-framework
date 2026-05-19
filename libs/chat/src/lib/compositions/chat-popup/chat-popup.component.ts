@@ -69,6 +69,7 @@ import { CHAT_HOST_TOKENS, ensureChatRootStyles } from '../../styles/chat-tokens
         [agent]="agent()"
         [views]="views()"
         [modelOptions]="modelOptions()"
+        [showModelPicker]="showModelPicker()"
         [selectedModel]="selectedModel()"
         (selectedModelChange)="selectedModel.set($event)"
         (replayRequested)="replayRequested.emit($event)"
@@ -89,6 +90,14 @@ export class ChatPopupComponent {
   /** Forwarded to the inner <chat>. When non-empty, a model picker pill
    * renders in the chat-input chrome. */
   readonly modelOptions = input<readonly ChatSelectOption[]>([]);
+  /**
+   * Forwarded to the inner `<chat>`. When `false`, hides the
+   * auto-rendered model picker even with non-empty `modelOptions`.
+   * Use this in narrow surfaces (the chat-sidebar panel is 28rem
+   * wide; chat-popup is 24rem) where the picker crowds the input.
+   * Defaults to `true`.
+   */
+  readonly showModelPicker = input<boolean>(true);
   /** Two-way bound current model value. */
   readonly selectedModel = model<string>('');
   readonly open = model(false);

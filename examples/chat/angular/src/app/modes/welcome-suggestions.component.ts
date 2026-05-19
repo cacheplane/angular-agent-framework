@@ -50,6 +50,8 @@ import { FEATURED_SUGGESTIONS, MORE_SUGGESTIONS } from './welcome-suggestions';
         gap: 12px;
       }
       .welcome-suggestions__featured {
+        flex: 1 1 0;
+        min-width: 0;
         max-width: 380px;
         overflow: hidden;
       }
@@ -79,6 +81,9 @@ import { FEATURED_SUGGESTIONS, MORE_SUGGESTIONS } from './welcome-suggestions';
         min-width: 320px;
         max-width: 480px;
         width: max-content;
+      }
+      .welcome-suggestions__row > chat-select {
+        flex: 0 0 auto;
       }
     `,
   ],

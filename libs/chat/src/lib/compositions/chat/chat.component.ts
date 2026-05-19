@@ -150,7 +150,7 @@ export function isPinned(
     @if (showWelcome()) {
       <chat-welcome>
         <chat-input chatWelcomeInput [agent]="agent()" [submitOnEnter]="true" placeholder="Type a message...">
-          @if (modelOptions().length > 0) {
+          @if (showModelPicker() && modelOptions().length > 0) {
             <chat-select
               chatInputModelSelect
               [options]="modelOptions()"
@@ -273,7 +273,7 @@ export function isPinned(
             }
             <chat-error [agent]="agent()" />
             <chat-input [agent]="agent()" [submitOnEnter]="true" placeholder="Type a message..." (submitted)="onUserSubmitted()">
-              @if (modelOptions().length > 0) {
+              @if (showModelPicker() && modelOptions().length > 0) {
                 <chat-select
                   chatInputModelSelect
                   [options]="modelOptions()"
@@ -310,6 +310,14 @@ export class ChatComponent {
    * empty and project a `<chat-select chatInputModelSelect>` themselves.
    */
   readonly modelOptions = input<readonly ChatSelectOption[]>([]);
+  /**
+   * When `false`, hide the auto-rendered model picker even when
+   * `modelOptions` is non-empty. Useful in cramped surfaces (popup,
+   * sidebar) where the picker crowds the input. Defaults to `true`.
+   * Has no effect when consumers project their own
+   * `<chat-select chatInputModelSelect>` via content projection.
+   */
+  readonly showModelPicker = input<boolean>(true);
   readonly selectedModel = model<string>('');
   readonly modelPickerPlaceholder = input<string>('Choose a model');
 

@@ -264,6 +264,16 @@ export class DemoShell {
   /** Persisted thread id (null on first run). Reactive so reload reconnects to the same thread. */
   protected readonly threadIdSignal = signal<string | null>(this.persistence.read('threadId') ?? null);
 
+  /** Title of the currently-selected thread, or 'New chat' if none. The
+   *  Python graph writes thread.metadata.title from the first user message
+   *  via _maybe_write_thread_title; threadsSvc surfaces it via threads(). */
+  readonly currentThreadTitle = computed(() => {
+    const id = this.threadIdSignal();
+    if (!id) return 'New chat';
+    const thread = this.threadsSvc.threads().find((t) => t.id === id);
+    return thread?.title ?? 'New chat';
+  });
+
   protected readonly selectedProjectId = signal<string | null>(
     this.persistence.read('selectedProjectId') ?? null,
   );
