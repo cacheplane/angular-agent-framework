@@ -39,12 +39,6 @@ type ChatDebugDock = 'right' | 'bottom' | 'left';
 interface ChatDebugInstance {
   setOpen(value: boolean): void;
   setDock?(dock: ChatDebugDock): void;
-  replayRequested?: {
-    subscribe(callback: (checkpointId: string) => void): OutputRefSubscription;
-  };
-  forkRequested?: {
-    subscribe(callback: (checkpointId: string) => void): OutputRefSubscription;
-  };
   openChange?: {
     subscribe(callback: (open: boolean) => void): OutputRefSubscription;
   };
@@ -330,8 +324,6 @@ export class ChatSidenavComponent {
   readonly modeChange = output<ChatSidenavMode>();
   readonly projectSelected = output<string>();
   readonly newProjectRequested = output<void>();
-  readonly replayRequested = output<string>();
-  readonly forkRequested = output<string>();
 
   protected readonly archivedOpen = signal<boolean>(false);
   protected readonly showDebugButton = computed(
@@ -428,16 +420,6 @@ export class ChatSidenavComponent {
       this.debugRef.setInput('storageKey', 'chat-sidenav-debug');
       const initialDock = this.defaultDebugDock();
       this.debugRef.setInput('dock', initialDock);
-      const replaySub = this.debugRef.instance.replayRequested?.subscribe(
-        (checkpointId) => {
-          this.replayRequested.emit(checkpointId);
-        }
-      );
-      const forkSub = this.debugRef.instance.forkRequested?.subscribe(
-        (checkpointId) => {
-          this.forkRequested.emit(checkpointId);
-        }
-      );
       const openSub = this.debugRef.instance.openChange?.subscribe((open) => {
         if (open) {
           this.setDebugEdgeClaim(this.currentDebugDock);
@@ -450,8 +432,6 @@ export class ChatSidenavComponent {
         this.setDebugEdgeClaim(dock);
       });
       this.debugOutputSubscriptions = [
-        replaySub,
-        forkSub,
         openSub,
         dockSub,
       ].filter((sub): sub is OutputRefSubscription => !!sub);

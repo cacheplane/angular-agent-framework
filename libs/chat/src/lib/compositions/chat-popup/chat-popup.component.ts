@@ -1,6 +1,6 @@
 // libs/chat/src/lib/compositions/chat-popup/chat-popup.component.ts
 // SPDX-License-Identifier: MIT
-import { Component, ChangeDetectionStrategy, input, model, output, DestroyRef, inject, DOCUMENT, effect } from '@angular/core';
+import { Component, ChangeDetectionStrategy, input, model, DestroyRef, inject, DOCUMENT, effect } from '@angular/core';
 import type { Agent } from '../../agent';
 import type { ViewRegistry } from '@ngaf/render';
 import { ChatComponent } from '../chat/chat.component';
@@ -72,8 +72,6 @@ import { CHAT_HOST_TOKENS, ensureChatRootStyles } from '../../styles/chat-tokens
         [showModelPicker]="showModelPicker()"
         [selectedModel]="selectedModel()"
         (selectedModelChange)="selectedModel.set($event)"
-        (replayRequested)="replayRequested.emit($event)"
-        (forkRequested)="forkRequested.emit($event)"
       >
         <ng-content select="[chatHeader]" chatHeader />
         <ng-content select="[chatWelcomeSuggestions]" chatWelcomeSuggestions />
@@ -101,8 +99,6 @@ export class ChatPopupComponent {
   /** Two-way bound current model value. */
   readonly selectedModel = model<string>('');
   readonly open = model(false);
-  readonly replayRequested = output<string>();
-  readonly forkRequested = output<string>();
   /**
    * Keyboard shortcut (single key) that toggles the popup with cmd (mac)
    * or ctrl (other). Set to `null` to disable. Default: 'k' — matches the

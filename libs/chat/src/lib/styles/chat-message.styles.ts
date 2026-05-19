@@ -3,31 +3,17 @@
 export const CHAT_MESSAGE_STYLES = `
   :host { display: block; }
   :host([data-role="user"]) {
-    /*
-     * Block (not flex) so the layout child gets its width:100% (set in
-     * chat-message.component.ts inline styles). Right-alignment happens
-     * inside layout via justify-content:flex-end below, NOT here. The old
-     * "display:flex; justify-content:flex-end" on the host caused layout
-     * to shrink-wrap its content, which collapsed __main's 80% containing
-     * block — see chat-message.component.ts comment for the full story.
-     */
     display: block;
     margin-top: 0.5rem;
   }
   :host([data-role="user"][data-prev-role="assistant"]) { margin-top: 1.5rem; }
-  :host([data-role="user"]) .chat-message__layout {
-    /* Right-align the bubble column inside the full-width row. */
-    justify-content: flex-end;
-  }
-  :host([data-role="user"]) .chat-message__main {
-    flex: none;
-    width: fit-content;
+  :host([data-role="user"]) .chat-message__bubble {
+    /* Right-align the user bubble. */
+    margin-left: auto;
     max-width: 80%;
   }
   /*
-   * Assistant bubbles aren't in the flex collapse path, so the 80% cap
-   * lives on the bubble itself for that role. (User bubbles get the cap
-   * on .chat-message__main above instead.)
+   * Assistant bubbles get the 80% cap on the bubble itself.
    */
   :host([data-role="assistant"]) .chat-message__bubble {
     max-width: 80%;
@@ -44,11 +30,6 @@ export const CHAT_MESSAGE_STYLES = `
   :host([data-role="assistant"]):first-child { margin-top: 0; }
 
   .chat-message__bubble {
-    /*
-     * No max-width here for user-role bubbles — the cap is applied on
-     * .chat-message__main above. Assistant-role bubbles inherit the
-     * host's max-width: 100% so no per-bubble cap needed either.
-     */
     width: fit-content;
     padding: 8px 12px;
     border-radius: var(--ngaf-chat-radius-bubble);

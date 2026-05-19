@@ -411,18 +411,6 @@ export class DemoShell {
     this.persistence.write('sidenavMode', next);
   }
 
-  onTimelineReplay(checkpointId: string): void {
-    void this.agent.submit(null as never, { checkpointId } as never);
-  }
-
-  async onTimelineFork(checkpointId: string): Promise<void> {
-    const id = await this.threadsSvc.create();
-    if (!id) return;
-    this.threadIdSignal.set(id);
-    this.persistence.write('threadId', id);
-    void this.agent.submit(null as never, { checkpointId } as never);
-  }
-
   /** Switch to an existing thread selected from the threads panel. */
   protected onThreadSelected(threadId: string): void {
     this.threadIdSignal.set(threadId);

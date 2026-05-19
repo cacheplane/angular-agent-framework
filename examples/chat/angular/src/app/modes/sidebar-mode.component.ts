@@ -20,8 +20,6 @@ import { WelcomeSuggestionsComponent } from './welcome-suggestions.component';
       [open]="true"
       [pushContent]="true"
       (selectedModelChange)="shell.onModelChange($event)"
-      (replayRequested)="shell.onTimelineReplay($event)"
-      (forkRequested)="shell.onTimelineFork($event)"
     >
       <span chatSidebarPanelTitle>{{ shell.currentThreadTitle() }}</span>
       <div class="sidebar-mode__background">

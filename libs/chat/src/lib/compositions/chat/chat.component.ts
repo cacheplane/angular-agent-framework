@@ -194,9 +194,6 @@ export function isPinned(
                   [prevRole]="prevRole(i)"
                   [streaming]="agent().isLoading() && i === agent().messages().length - 1"
                   [current]="i === agent().messages().length - 1"
-                  [checkpointId]="checkpointFor(message)"
-                  (replayRequested)="replayRequested.emit($event)"
-                  (forkRequested)="forkRequested.emit($event)"
                 >
                   @if (message.reasoning) {
                     <chat-reasoning
@@ -349,11 +346,6 @@ export class ChatComponent {
   readonly rate = output<{ messageIndex: number; rating: 'up' | 'down' }>();
   /** Emitted when the user copies an assistant message. */
   readonly messageCopy = output<{ messageIndex: number; content: string }>();
-  /** Bubbled from chat-message gutter markers when the user requests a checkpoint replay. */
-  readonly replayRequested = output<string>();
-  /** Bubbled from chat-message gutter markers when the user requests a checkpoint fork. */
-  readonly forkRequested = output<string>();
-
   private readonly _internalStore = signalStateStore({});
   readonly resolvedStore = computed(() => {
     const explicit = this.store();
@@ -811,13 +803,4 @@ export class ChatComponent {
     this.messageCopy.emit({ messageIndex: idx, content });
   }
 
-  /** Returns the checkpoint id associated with an AI message, if the
-   *  underlying agent exposes messageCheckpoints(). */
-  protected checkpointFor(msg: Message): string | undefined {
-    const id = (msg as unknown as { id?: string }).id;
-    if (typeof id !== 'string') return undefined;
-    const map = (this.agent() as unknown as { messageCheckpoints?: () => ReadonlyMap<string, string> })
-      .messageCheckpoints?.();
-    return map?.get(id);
-  }
 }
