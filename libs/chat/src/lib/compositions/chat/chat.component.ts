@@ -255,7 +255,12 @@ export function isPinned(
               </ng-template>
             </chat-message-list>
 
-            @if (pinned()) {
+            <!-- Suppress the floor typing-indicator while the current
+                 assistant bubble is streaming: its own caret is already
+                 the loading affordance. Showing both reads as visual
+                 noise rather than richer feedback. See
+                 currentAssistantStreaming() on the component class. -->
+            @if (pinned() && !currentAssistantStreaming()) {
               <chat-typing-indicator [agent]="agent()" />
             }
           </div>
@@ -394,6 +399,29 @@ export class ChatComponent {
   protected readonly pinned = signal<boolean>(true);
   private programmaticScrollCount = 0;
   private static readonly PIN_TOLERANCE_PX = 150;
+
+  /**
+   * True iff there's a current (last-index) assistant message that's
+   * still streaming. The bubble's own caret already signals loading;
+   * we suppress the floor typing-indicator in that case so the user
+   * doesn't see two loading affordances at once.
+   *
+   * Matches the same `streaming + current` condition the bubble uses
+   * to enable `.chat-message__caret`:
+   *   `agent().isLoading() && i === agent().messages().length - 1`
+   *   `i === agent().messages().length - 1`
+   *
+   * Restricted to assistant role because the caret only renders on
+   * assistant bubbles (`:host([data-role="assistant"][data-current=...
+   *  ][data-streaming=...])`).
+   */
+  protected readonly currentAssistantStreaming = computed(() => {
+    if (!this.agent().isLoading()) return false;
+    const msgs = this.agent().messages();
+    if (msgs.length === 0) return false;
+    const last = msgs[msgs.length - 1];
+    return last?.role === 'assistant';
+  });
 
   constructor() {
     // Inject the chat lib's root CSS custom properties (--ngaf-chat-bg,

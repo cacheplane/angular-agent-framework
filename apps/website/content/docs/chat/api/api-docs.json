@@ -1576,6 +1576,12 @@
         "optional": false
       },
       {
+        "name": "currentAssistantStreaming",
+        "type": "Signal<boolean>",
+        "description": "True iff there's a current (last-index) assistant message that's\nstill streaming. The bubble's own caret already signals loading;\nwe suppress the floor typing-indicator in that case so the user\ndoesn't see two loading affordances at once.\n\nMatches the same `streaming + current` condition the bubble uses\nto enable `.chat-message__caret`:\n  `agent().isLoading() && i === agent().messages().length - 1`\n  `i === agent().messages().length - 1`\n\nRestricted to assistant role because the caret only renders on\nassistant bubbles (`:host([data-role=\"assistant\"][data-current=...\n ][data-streaming=...])`).",
+        "optional": false
+      },
+      {
         "name": "forkRequested",
         "type": "OutputEmitterRef<string>",
         "description": "Bubbled from chat-message gutter markers when the user requests a checkpoint fork.",
