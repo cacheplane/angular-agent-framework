@@ -33,6 +33,102 @@ test('pricing page lead form validates required fields', async ({ page }) => {
   await expect(page.locator('form').first()).toBeVisible();
 });
 
+test('contact page submits a lead payload and renders success state', async ({ page }) => {
+  let leadPayload: Record<string, unknown> | undefined;
+  await page.route('**/api/leads', async (route) => {
+    leadPayload = route.request().postDataJSON();
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ ok: true }),
+    });
+  });
+
+  await page.goto('/contact?source=e2e_contact&track=enterprise');
+  const contactForm = page.locator('main form').first();
+  await contactForm.getByRole('textbox', { name: 'Email', exact: true }).fill('jane@acme.com');
+  await contactForm.getByRole('textbox', { name: 'Name' }).fill('Jane Smith');
+  await contactForm.getByRole('textbox', { name: 'Company' }).fill('Acme');
+  await contactForm.getByRole('textbox', { name: 'Message' }).fill('We are evaluating Agent UI for Angular.');
+  await contactForm.getByRole('button', { name: 'Send' }).click();
+
+  await expect(page.getByText("Thanks. We'll be in touch within one business day.")).toBeVisible();
+  expect(leadPayload).toMatchObject({
+    email: 'jane@acme.com',
+    name: 'Jane Smith',
+    company: 'Acme',
+    message: 'We are evaluating Agent UI for Angular.',
+    source_page: 'e2e_contact',
+    track: 'enterprise',
+  });
+});
+
+test('pricing lead form posts to /api/leads and renders success state', async ({ page }) => {
+  let leadPayload: Record<string, unknown> | undefined;
+  await page.route('**/api/leads', async (route) => {
+    leadPayload = route.request().postDataJSON();
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ ok: true }),
+    });
+  });
+
+  await page.goto('/pricing#lead-form');
+  await page.getByLabel('Name').fill('Jane Smith');
+  await page.getByLabel('Work email').fill('jane@acme.com');
+  await page.getByLabel('Company').fill('Acme');
+  await page.getByLabel('Tell us about your use case').fill('Volume seats and security review.');
+  await page.getByRole('button', { name: 'Get in touch' }).click();
+
+  await expect(page.getByText(/we'll be in touch within one business day/i)).toBeVisible();
+  expect(leadPayload).toMatchObject({
+    email: 'jane@acme.com',
+    name: 'Jane Smith',
+    company: 'Acme',
+    message: 'Volume seats and security review.',
+  });
+});
+
+test('footer newsletter form posts to /api/newsletter and renders success state', async ({ page }) => {
+  let payload: Record<string, unknown> | undefined;
+  await page.route('**/api/newsletter', async (route) => {
+    payload = route.request().postDataJSON();
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ ok: true }),
+    });
+  });
+
+  await page.goto('/');
+  const footer = page.locator('footer');
+  await footer.getByLabel('Email address').fill('reader@acme.com');
+  await footer.getByRole('button', { name: 'Subscribe' }).click();
+
+  await expect(page.getByText("✓ You're subscribed!")).toBeVisible();
+  expect(payload).toEqual({ email: 'reader@acme.com' });
+});
+
+test('whitepaper signup form posts to /api/whitepaper-signup and renders success state', async ({ page }) => {
+  let payload: Record<string, unknown> | undefined;
+  await page.route('**/api/whitepaper-signup', async (route) => {
+    payload = route.request().postDataJSON();
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ ok: true }),
+    });
+  });
+
+  await page.goto('/chat');
+  await page.locator('#whitepaper-block').getByLabel('Email address').fill('reader@acme.com');
+  await page.locator('#whitepaper-block').getByRole('button', { name: 'Download (free)' }).click();
+
+  await expect(page.getByText(/check your inbox/i)).toBeVisible();
+  expect(payload).toEqual({ email: 'reader@acme.com', paper: 'chat' });
+});
+
 test('docs page renders sidebar and content', async ({ page }) => {
   await page.goto('/docs/agent/getting-started/introduction');
   await expect(page.locator('aside').first()).toBeVisible();

@@ -61,10 +61,9 @@ const LEGACY_GRADIENT_RE =
 function refreshHtml(html: string, paper: Paper): string {
   let out = html;
 
-  if (!LEGACY_GRADIENT_RE.test(out)) {
-    throw new Error(`No legacy gradient found in ${paper.htmlPath}`);
+  if (LEGACY_GRADIENT_RE.test(out)) {
+    out = out.replace(LEGACY_GRADIENT_RE, `background:${paper.newGradient}`);
   }
-  out = out.replace(LEGACY_GRADIENT_RE, `background:${paper.newGradient}`);
 
   // Cover footer: #888 → #8b8fa3 (textMuted)
   out = out.replace(/font-size:13px;color:#888/g, 'font-size:13px;color:#8b8fa3');
