@@ -6,10 +6,13 @@ test('c-generative-ui: dashboard prompt renders chat-generative-ui surface', asy
   await submitAndWaitForResponse(page, 'Show me a dashboard of airline operations.');
 
   // The render_spec tool call returns a dashboard JSON spec which the
-  // content-classifier in @ngaf/chat mounts as a <chat-generative-ui>
-  // primitive inside the assistant bubble. Presence of this element
-  // proves the spec parsed and the GenUI host wired up.
-  await expect(page.locator('chat-generative-ui')).toBeVisible();
+  // content-classifier in @ngaf/chat mounts as a tree of
+  // <chat-generative-ui> hosts (one per node in the dashboard view).
+  // Multiple matches expected (≥5 for the standard dashboard layout);
+  // assert the count proves the GenUI tree wired up. .first() unblocks
+  // toBeVisible's strict-mode requirement.
+  await expect(page.locator('chat-generative-ui').first()).toBeVisible();
+  await expect(page.locator('chat-generative-ui')).not.toHaveCount(0);
 });
 
 test('c-generative-ui: filter prompt produces assistant turn', async ({ page }) => {
