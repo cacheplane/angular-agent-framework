@@ -270,6 +270,7 @@ jobs:
           - { angular: cockpit-chat-tool-calls-angular,     python: cockpit/chat/tool-calls/python }
           - { angular: cockpit-chat-subagents-angular,      python: cockpit/chat/subagents/python }
           - { angular: cockpit-chat-interrupts-angular,     python: cockpit/chat/interrupts/python }
+          - { angular: cockpit-chat-messages-angular,          python: cockpit/chat/messages/python }
     steps:
       - uses: actions/checkout@v6.0.2
       - uses: actions/setup-node@v6.3.0
