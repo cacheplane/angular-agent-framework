@@ -1760,6 +1760,19 @@
         "params": []
       },
       {
+        "name": "humanContent",
+        "signature": "humanContent(message: unknown)",
+        "description": "Renderable content for a human-role message bubble. Most human\nmessages are typed prompts and pass through `messageContent`\nunchanged. A2UI action messages (e.g. form submits, button clicks\non a rendered surface) flow through the same submit channel and\nland in the message stream as a HumanMessage whose content is a\nJSON-serialized `A2uiActionMessage`. Showing the raw JSON as if\nthe user typed it leaks the protocol; per the A2UI v0.9 spec\nthose events resemble tool calls more than user utterances.\n\n`a2uiActionLabel` returns a short human-readable label for\nrecognized action shapes (\"Search flights\", \"Selected flight UA123\",\netc.) — or null for any non-action content, in which case we fall\nback to the original text.",
+        "params": [
+          {
+            "name": "message",
+            "type": "unknown",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
         "name": "isGenuiTurn",
         "signature": "isGenuiTurn(message: unknown, _prevMsg: unknown, index: number)",
         "description": "True when this assistant message is part of a GenUI render turn.\nWalks backward through messages from `index` until it finds either\nan assistant message with `tool_calls` referencing a GenUI tool\n(→ this turn produces a surface) or a human message (→ the\npreceding turn ended; this assistant message stands on its own).\n\nAlso checks the message itself for:\n  - `extra.tool_calls[].name` matching a GenUI tool (post-streaming\n    state of the tool-call AI message), OR\n  - `extra.content[].type === 'function_call' && .name` matching\n    (live during the OpenAI Responses-API streaming chunks before\n    `tool_calls` populates).\n\nThe walk-back approach is robust to LangGraph's in-place\nreplacement of the ToolMessage (which strips the `name` field),\nunlike a single prev-message check.",
