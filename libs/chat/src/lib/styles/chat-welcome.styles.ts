@@ -55,6 +55,17 @@ export const CHAT_WELCOME_STYLES = `
     gap: 8px;
     margin-top: 4px;
   }
+  /* Consumers commonly project chips wrapped in a single <div
+     chatWelcomeSuggestions> element. In that case the slot's flex gap
+     applies between divs (one of them) — not between the chips inside.
+     Apply the same flex layout one level down so the chips actually
+     get spacing. Safe no-op when chips are projected directly. */
+  .chat-welcome__suggestions > div {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+  }
   .chat-welcome__suggestions:empty { display: none; }
 `;
 
