@@ -53,6 +53,8 @@ export type CtaId =
   // Whitepaper block on home
   | 'home_whitepaper_direct'
   | 'home_whitepaper_direct_inline'
+  // Why this exists section
+  | 'home_why_pilot_to_prod'
   // Announcement toast
   | 'toast_get_guide'
   | 'toast_direct_download'
