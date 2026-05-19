@@ -46,7 +46,7 @@
 .demo-shell__main[data-sidenav-mode="collapsed"] {
   padding-left: var(--ngaf-chat-sidenav-width-collapsed, 56px);
 }
-@media (max-width: 1023px) {
+@media (max-width: 767px) {
   .demo-shell__main[data-sidenav-mode] { padding-left: 0; }
 }
 

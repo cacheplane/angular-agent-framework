@@ -201,15 +201,15 @@ export class DemoShell {
 
   /**
    * User's chosen desktop sidenav mode. Persisted across reloads.
-   * Below 1024px the shell ignores this and forces drawer mode.
+   * Below 768px the shell ignores this and forces drawer mode.
    */
   private readonly storedDesktopMode = signal<'expanded' | 'collapsed'>(
     (this.persistence.read('sidenavMode') as 'expanded' | 'collapsed' | null) ?? 'expanded',
   );
 
-  /** Computed sidenav mode: viewport forces drawer below 1024px, else user preference. */
+  /** Computed sidenav mode: viewport forces drawer below 768px, else user preference. */
   protected readonly sidenavMode = computed<ChatSidenavMode>(() =>
-    this.viewportWidth() >= 1024 ? this.storedDesktopMode() : 'drawer',
+    this.viewportWidth() >= 768 ? this.storedDesktopMode() : 'drawer',
   );
 
   /** Active threads filtered by the selected project (or all when none selected). */
