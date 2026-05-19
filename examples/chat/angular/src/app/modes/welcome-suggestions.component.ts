@@ -43,11 +43,15 @@ import { FEATURED_SUGGESTIONS, MORE_SUGGESTIONS } from './welcome-suggestions';
       :host {
         display: flex;
         justify-content: center;
+        width: 100%;
+        padding: 0 12px;
+        box-sizing: border-box;
       }
       .welcome-suggestions__row {
         display: flex;
         align-items: center;
         gap: 12px;
+        max-width: 100%;
       }
       .welcome-suggestions__featured {
         flex: 1 1 0;
@@ -55,10 +59,25 @@ import { FEATURED_SUGGESTIONS, MORE_SUGGESTIONS } from './welcome-suggestions';
         max-width: 380px;
         overflow: hidden;
       }
+      /* chat-welcome-suggestion host is display: inline-block by default
+       * (sizes to content). At narrow viewports this lets the inner
+       * button overflow the wrapper and get clipped at the wrapper's
+       * right edge ("hard right border"). Force block sizing here so
+       * the host follows the wrapper's flex-shrunk width and the
+       * label inside ellipsizes. */
+      .welcome-suggestions__featured ::ng-deep chat-welcome-suggestion {
+        display: block;
+        width: 100%;
+      }
+      .welcome-suggestions__featured ::ng-deep .chat-welcome-suggestion {
+        width: 100%;
+      }
       .welcome-suggestions__featured ::ng-deep .chat-welcome-suggestion__label {
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
+        min-width: 0;
+        flex: 1 1 auto;
       }
       /* Make the "More prompts" dropdown match the featured chip visually.
          Scoped to .welcome-suggestions__row so the model picker (also
