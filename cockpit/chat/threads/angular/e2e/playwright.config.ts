@@ -1,0 +1,18 @@
+// SPDX-License-Identifier: MIT
+import { defineConfig, devices } from '@playwright/test';
+
+export default defineConfig({
+  testDir: '.',
+  testMatch: '**/*.spec.ts',
+  fullyParallel: false,
+  workers: 1,
+  retries: process.env.CI ? 2 : 0,
+  reporter: process.env.CI ? [['list'], ['html', { open: 'never' }]] : 'list',
+  use: {
+    baseURL: 'http://localhost:4506',
+    trace: 'retain-on-failure',
+  },
+  projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
+  globalSetup: './global-setup-impl.ts',
+  globalTeardown: require.resolve('../../../../../libs/e2e-harness/src/global-teardown'),
+});

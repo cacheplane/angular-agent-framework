@@ -87,6 +87,12 @@
         "cwd": "cockpit/chat/input/angular",
         "command": "npx tsx -e \"import { chatInputAngularModule } from './src/index.ts'; const module = chatInputAngularModule; if (module.id !== 'chat-input-angular' || module.title !== 'Chat Input (Angular)') { throw new Error('Unexpected module shape for ' + module.id); }\""
       }
+    },
+    "e2e": {
+      "executor": "@nx/playwright:playwright",
+      "options": {
+        "config": "cockpit/chat/input/angular/e2e/playwright.config.ts"
+      }
     }
   }
 }

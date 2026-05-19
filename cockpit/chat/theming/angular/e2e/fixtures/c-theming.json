@@ -1,0 +1,10 @@
+{
+  "fixtures": [
+    {
+      "match": { "userMessage": "Hello" },
+      "response": {
+        "content": "Hi! I'm the chat-theming demo. Try the theme picker buttons in the sidebar to switch between dark, light, ocean, and forest schemes."
+      }
+    }
+  ]
+}

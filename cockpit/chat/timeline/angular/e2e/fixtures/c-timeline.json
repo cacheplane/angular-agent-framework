@@ -1,0 +1,10 @@
+{
+  "fixtures": [
+    {
+      "match": { "userMessage": "Hello" },
+      "response": {
+        "content": "Hi! I'm the chat-timeline demo. Each message creates a checkpoint you can scrub with the timeline slider in the sidebar."
+      }
+    }
+  ]
+}

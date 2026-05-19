@@ -87,6 +87,12 @@
         "cwd": "cockpit/chat/timeline/angular",
         "command": "npx tsx -e \"import { chatTimelineAngularModule } from './src/index.ts'; const module = chatTimelineAngularModule; if (module.id !== 'chat-timeline-angular' || module.title !== 'Chat Timeline (Angular)') { throw new Error('Unexpected module shape for ' + module.id); }\""
       }
+    },
+    "e2e": {
+      "executor": "@nx/playwright:playwright",
+      "options": {
+        "config": "cockpit/chat/timeline/angular/e2e/playwright.config.ts"
+      }
     }
   }
 }

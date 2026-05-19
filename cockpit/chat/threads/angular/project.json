@@ -87,6 +87,12 @@
         "cwd": "cockpit/chat/threads/angular",
         "command": "npx tsx -e \"import { chatThreadsAngularModule } from './src/index.ts'; const module = chatThreadsAngularModule; if (module.id !== 'chat-threads-angular' || module.title !== 'Chat Threads (Angular)') { throw new Error('Unexpected module shape for ' + module.id); }\""
       }
+    },
+    "e2e": {
+      "executor": "@nx/playwright:playwright",
+      "options": {
+        "config": "cockpit/chat/threads/angular/e2e/playwright.config.ts"
+      }
     }
   }
 }

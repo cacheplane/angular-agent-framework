@@ -1,0 +1,10 @@
+{
+  "fixtures": [
+    {
+      "match": { "userMessage": "Hello" },
+      "response": {
+        "content": "Hi! I'm the chat-input demo. Try Enter to send, Shift+Enter for newline, and watch the sidebar reflect the streaming status."
+      }
+    }
+  ]
+}
