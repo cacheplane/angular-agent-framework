@@ -10,7 +10,13 @@ import { getSourcePage } from '@ngaf/telemetry/shared';
 const LEADS_FILE = path.join(process.cwd(), 'data', 'leads.ndjson');
 
 export async function POST(req: NextRequest) {
-  const body = await req.json() as { name?: unknown; email?: unknown; company?: unknown; message?: unknown };
+  let body: { name?: unknown; email?: unknown; company?: unknown; message?: unknown };
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
+  }
+
   const sanitize = (v: unknown, max = 500): string =>
     typeof v === 'string' ? v.slice(0, max).trim() : '';
 
@@ -19,8 +25,8 @@ export async function POST(req: NextRequest) {
   const company = sanitize(body.company, 200);
   const message = sanitize(body.message, 2000);
 
-  if (!email) {
-    return NextResponse.json({ error: 'email required' }, { status: 400 });
+  if (!email || !email.includes('@')) {
+    return NextResponse.json({ error: 'Valid email required' }, { status: 400 });
   }
 
   const ts = new Date().toISOString();
