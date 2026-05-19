@@ -23,8 +23,6 @@ import { WelcomeSuggestionsComponent } from './welcome-suggestions.component';
       [selectedModel]="shell.model()"
       [showModelPicker]="false"
       (selectedModelChange)="shell.onModelChange($event)"
-      (replayRequested)="shell.onTimelineReplay($event)"
-      (forkRequested)="shell.onTimelineFork($event)"
     >
       <welcome-suggestions chatWelcomeSuggestions (selected)="send($event)" />
     </chat-popup>

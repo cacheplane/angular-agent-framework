@@ -8,7 +8,6 @@ import {
   inject,
   input,
   model,
-  output,
 } from '@angular/core';
 import type { Agent } from '../../agent';
 import type { ViewRegistry } from '@ngaf/render';
@@ -114,8 +113,6 @@ import { CHAT_HOST_TOKENS, ensureChatRootStyles } from '../../styles/chat-tokens
         [showModelPicker]="showModelPicker()"
         [selectedModel]="selectedModel()"
         (selectedModelChange)="selectedModel.set($event)"
-        (replayRequested)="replayRequested.emit($event)"
-        (forkRequested)="forkRequested.emit($event)"
       >
         <ng-content select="[chatHeader]" chatHeader />
         <ng-content select="[chatWelcomeSuggestions]" chatWelcomeSuggestions />
@@ -146,8 +143,6 @@ export class ChatSidebarComponent {
   /** Close the sidebar on Escape (default true). */
   readonly closeOnEscape = input<boolean>(true);
   readonly pushContent = input<boolean>(false);
-  readonly replayRequested = output<string>();
-  readonly forkRequested = output<string>();
 
   private readonly document = inject(DOCUMENT);
 

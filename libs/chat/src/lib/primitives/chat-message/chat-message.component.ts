@@ -1,10 +1,9 @@
 // libs/chat/src/lib/primitives/chat-message/chat-message.component.ts
 // SPDX-License-Identifier: MIT
-import { Component, ChangeDetectionStrategy, input, output, computed, effect, inject } from '@angular/core';
+import { Component, ChangeDetectionStrategy, input, computed, effect, inject } from '@angular/core';
 import { CHAT_HOST_TOKENS } from '../../styles/chat-tokens';
 import { CHAT_MESSAGE_STYLES } from '../../styles/chat-message.styles';
 import { ChatCitationsComponent } from '../chat-citations/chat-citations.component';
-import { ChatCheckpointMarkerComponent } from '../chat-checkpoint-marker/chat-checkpoint-marker.component';
 import { CitationsResolverService } from '../../markdown/citations-resolver.service';
 import type { Message } from '../../agent/message';
 
@@ -13,25 +12,9 @@ export type ChatMessageRole = 'user' | 'assistant' | 'system' | 'tool';
 @Component({
   selector: 'chat-message',
   standalone: true,
-  imports: [ChatCitationsComponent, ChatCheckpointMarkerComponent],
+  imports: [ChatCitationsComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  styles: [CHAT_HOST_TOKENS, CHAT_MESSAGE_STYLES, `
-    /*
-     * Layout MUST be width:100% so user-role __main's max-width:80% (defined
-     * in chat-message.styles.ts) has a concrete containing block to resolve
-     * against. Without this, layout shrinks to __main's content, __main
-     * shrinks to its bubble's content, the bubble's fit-content is then
-     * capped by max-width:80% of layout (a circular dependency the browser
-     * breaks at the bubble's wrap-point intrinsic width — ~166px instead of
-     * the unwrapped ~199px), forcing short user phrases like "Show me the
-     * dashboard" to wrap mid-message. See PRs #313, #325, c0b9e88c — each
-     * shifted which element held the 80% cap but none gave it a stable base.
-     */
-    .chat-message__layout { display: flex; gap: 8px; align-items: flex-start; width: 100%; }
-    .chat-message__gutter { flex: 0 0 14px; display: flex; align-items: flex-start; padding-top: 4px; }
-    .chat-message__gutter:empty { flex-basis: 0; }
-    .chat-message__main { flex: 1; min-width: 0; }
-  `],
+  styles: [CHAT_HOST_TOKENS, CHAT_MESSAGE_STYLES],
   providers: [CitationsResolverService],
   host: {
     '[attr.data-role]': 'role()',
@@ -40,29 +23,15 @@ export type ChatMessageRole = 'user' | 'assistant' | 'system' | 'tool';
     '[attr.data-prev-role]': 'prevRole() ?? null',
   },
   template: `
-    <div class="chat-message__layout">
-      <div class="chat-message__gutter">
-        @if (checkpointId(); as cpId) {
-          <chat-checkpoint-marker
-            [checkpointId]="cpId"
-            [isActive]="checkpointActive()"
-            (replayRequested)="replayRequested.emit($event)"
-            (forkRequested)="forkRequested.emit($event)"
-          />
-        }
-      </div>
-      <div class="chat-message__main">
-        <div [class]="bodyClass()">
-          <ng-content />
-          <span class="chat-message__caret" aria-hidden="true"></span>
-        </div>
-        @if (message()?.role === 'assistant' && message(); as msg) {
-          <chat-citations [message]="msg" />
-        }
-        <div class="chat-message__controls">
-          <ng-content select="[chatMessageControls]" />
-        </div>
-      </div>
+    <div [class]="bodyClass()">
+      <ng-content />
+      <span class="chat-message__caret" aria-hidden="true"></span>
+    </div>
+    @if (message()?.role === 'assistant' && message(); as msg) {
+      <chat-citations [message]="msg" />
+    }
+    <div class="chat-message__controls">
+      <ng-content select="[chatMessageControls]" />
     </div>
   `,
 })
@@ -72,15 +41,6 @@ export class ChatMessageComponent {
   readonly streaming = input(false);
   readonly prevRole = input<ChatMessageRole | undefined>(undefined);
   readonly message = input<Message | undefined>(undefined);
-
-  /** Optional checkpoint id to anchor a gutter marker. When set, a
-   *  chat-checkpoint-marker is rendered in the left gutter and emits
-   *  bubble through this component's replayRequested / forkRequested outputs. */
-  readonly checkpointId = input<string | undefined>(undefined);
-  readonly checkpointActive = input<boolean>(false);
-
-  readonly replayRequested = output<string>();
-  readonly forkRequested = output<string>();
 
   private readonly resolver = inject(CitationsResolverService);
 
