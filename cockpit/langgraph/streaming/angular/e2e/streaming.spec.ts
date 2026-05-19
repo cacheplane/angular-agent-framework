@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 import { test, expect } from '@playwright/test';
-import { sendPromptAndWait } from '../../../../../libs/e2e-harness/src';
+import { submitAndWaitForResponse } from '../../../../../libs/e2e-harness/src';
 
 test('streaming: assistant text from the mocked LLM renders in the cockpit chat composition', async ({ page }) => {
-  const bubble = await sendPromptAndWait(
+  const bubble = await submitAndWaitForResponse(
     page,
     'Tell me one quick fact about Angular signals in two sentences.',
   );
