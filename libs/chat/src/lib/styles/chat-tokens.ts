@@ -120,6 +120,14 @@ const SPACING_TOKENS = `
   --ngaf-chat-sidenav-width-drawer: 280px;
 `;
 
+const LAYER_TOKENS = `
+  /* Z-index layers — documented for consumers + future primitives.
+   * Default values listed; overridable per-app via :root or :host. */
+  --ngaf-chat-z-overlay-content: 30;   /* chat-sidebar panel, chat-popup window */
+  --ngaf-chat-z-drawer-scrim: 1000;    /* chat-sidenav-scrim backdrop */
+  --ngaf-chat-z-drawer: 1001;          /* chat-sidenav drawer mode host */
+`;
+
 const EDGE_CLAIM_TOKENS = `
   /* Edge-claim primitive — peer-aware panel coexistence.
      Each docked panel publishes the edge it occupies via a
@@ -323,6 +331,7 @@ export const ROOT_TOKEN_STYLES = `
     ${GEOMETRY_TOKENS}
     ${TYPOGRAPHY_TOKENS}
     ${SPACING_TOKENS}
+    ${LAYER_TOKENS}
     ${EDGE_CLAIM_TOKENS}
     ${A2UI_INVARIANT_TOKENS}
   }
