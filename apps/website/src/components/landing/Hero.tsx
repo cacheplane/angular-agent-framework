@@ -121,9 +121,22 @@ export function Hero() {
               }}
             >
               {POSITIONING_PROOF_POINTS.map((proofPoint, index) => (
-                <Pill key={proofPoint} variant={index === 0 ? 'accent' : 'neutral'}>
-                  {proofPoint}
-                </Pill>
+                <a
+                  key={proofPoint.label}
+                  href={proofPoint.href}
+                  onClick={() =>
+                    track(analyticsEvents.marketingCtaClick, {
+                      cta_id: 'hero_proof_pill',
+                      track: 'developer',
+                      surface: 'home',
+                    })
+                  }
+                  style={{ textDecoration: 'none' }}
+                >
+                  <Pill variant={index === 0 ? 'accent' : 'neutral'} className="hero-proof-pill">
+                    {proofPoint.label}
+                  </Pill>
+                </a>
               ))}
             </div>
             <p
@@ -141,55 +154,62 @@ export function Hero() {
             </p>
           </div>
 
-          {/* Right column — layered collage (preserved verbatim from prior Hero.tsx) */}
-          <div style={{ position: 'relative', minHeight: 420 }} aria-hidden="true">
-            <BrowserFrame
-              url="demo.threadplane.ai"
-              rotate={-3}
-              elevation="lg"
-              style={{ position: 'absolute', top: 0, left: 0, width: '92%' }}
+          {/* Right column — generative UI dashboard */}
+          <div>
+            <a
+              href="https://cockpit.threadplane.ai/chat/generative-ui"
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() =>
+                track(analyticsEvents.marketingCtaClick, {
+                  cta_id: 'hero_demo_open_cockpit',
+                  track: 'developer',
+                  surface: 'home',
+                })
+              }
+              style={{ display: 'block', textDecoration: 'none' }}
+              aria-label="Open the generative UI example running in cockpit"
             >
-              <img
-                src="/screenshots/canonical-demo-conversation.webp"
-                alt="Canonical demo — streaming chat rendering a markdown response with code block and table"
-                style={{ display: 'block', width: '100%', height: 'auto' }}
-                loading="lazy"
-                decoding="async"
-              />
-            </BrowserFrame>
-            <BrowserFrame
-              url="agent.signal()"
-              rotate={4}
-              elevation="md"
+              <BrowserFrame
+                url="demo.threadplane.ai"
+                rotate={-1}
+                elevation="lg"
+                style={{ width: '100%' }}
+              >
+                <img
+                  src="/screenshots/canonical-demo-generative-ui.webp"
+                  alt="Canonical demo — agent renders a live airline operations dashboard with KPI cards, charts, and a disruptions table"
+                  style={{ display: 'block', width: '100%', height: 'auto' }}
+                  loading="lazy"
+                  decoding="async"
+                />
+              </BrowserFrame>
+            </a>
+            <p
               style={{
-                position: 'absolute',
-                top: 160,
-                right: 0,
-                width: '70%',
-                maxWidth: 320,
+                margin: '12px 0 0',
+                textAlign: 'center',
+                fontFamily: tokens.typography.body.family,
+                fontSize: 13,
+                color: tokens.colors.textMuted,
               }}
             >
-              <pre
-                style={{
-                  margin: 0,
-                  padding: '16px 18px',
-                  background: '#1a1b26',
-                  color: '#a9b1d6',
-                  fontFamily: tokens.typography.fontMono,
-                  fontSize: 12,
-                  lineHeight: 1.6,
-                  overflow: 'hidden',
-                }}
+              <a
+                href="https://cockpit.threadplane.ai/chat/generative-ui"
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() =>
+                  track(analyticsEvents.marketingCtaClick, {
+                    cta_id: 'hero_demo_open_cockpit_caption',
+                    track: 'developer',
+                    surface: 'home',
+                  })
+                }
+                style={{ color: tokens.colors.accent, textDecoration: 'none', fontWeight: 600 }}
               >
-{`provideAgent({
-  apiUrl: '/agent',
-});
-
-const a = agent();
-a.messages();
-a.status();`}
-              </pre>
-            </BrowserFrame>
+                Open in cockpit →
+              </a>
+            </p>
           </div>
         </div>
 
@@ -200,6 +220,27 @@ a.status();`}
               grid-template-columns: 1fr !important;
               gap: 40px !important;
             }
+          }
+          .hero-proof-pill {
+            transition: transform 160ms ease, background 160ms ease, border-color 160ms ease, color 160ms ease, box-shadow 160ms ease;
+            will-change: transform;
+          }
+          a:hover > .hero-proof-pill,
+          a:focus-visible > .hero-proof-pill {
+            transform: translateY(-1px);
+            background: ${tokens.colors.accentSurface} !important;
+            border-color: ${tokens.colors.accentBorder} !important;
+            color: ${tokens.colors.accent} !important;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+          }
+          a:active > .hero-proof-pill {
+            transform: translateY(0);
+            box-shadow: none;
+          }
+          @media (prefers-reduced-motion: reduce) {
+            .hero-proof-pill { transition: none; }
+            a:hover > .hero-proof-pill,
+            a:focus-visible > .hero-proof-pill { transform: none; }
           }
         `}</style>
       </Container>

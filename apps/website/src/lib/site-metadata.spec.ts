@@ -11,18 +11,26 @@ import {
 
 describe('site positioning copy', () => {
   it('exports the approved primary tagline and supporting copy', () => {
-    expect(PRIMARY_TAGLINE).toBe('Agent UI for Angular — Production-ready chat, threads, and generative UI for AI agents.');
-    expect(LONG_SUBHEAD).toContain('enterprise-grade Angular UI framework');
+    expect(PRIMARY_TAGLINE).toBe('Agent UI for Angular. Durable threads, interrupts, subagents, planning, memory, and generative UI.');
+    expect(LONG_SUBHEAD).toContain('fullstack agentic Angular framework');
     expect(LONG_SUBHEAD).toContain('LangGraph and AG-UI-compatible agents');
-    expect(LONG_SUBHEAD).toContain('json-render and A2UI-compatible specs');
-    expect(HERO_SUBHEAD).toContain('headless chat, durable threads, interrupts, subagents, planning, memory');
-    expect(POSITIONING_PROOF_POINTS).toEqual([
+    expect(LONG_SUBHEAD).toContain('Vercel json-render and Google A2UI');
+    expect(HERO_SUBHEAD).toContain('durable threads, interrupts, subagents, planning, memory, and generative UI');
+    expect(POSITIONING_PROOF_POINTS.map((p) => p.label)).toEqual([
       'LangGraph + AG-UI',
       'Durable threads',
       'Interrupts',
       'Subagents',
       'Planning + memory',
       'json-render + A2UI',
+    ]);
+    expect(POSITIONING_PROOF_POINTS.map((p) => p.href)).toEqual([
+      '/docs/agent/concepts/langgraph-basics',
+      '/docs/agent/guides/persistence',
+      '/docs/agent/guides/interrupts',
+      '/docs/agent/guides/subgraphs',
+      '/docs/agent/guides/memory',
+      '/docs/render/concepts/json-render-vs-a2ui',
     ]);
     expect(DEFAULT_META_DESCRIPTION).toBe(SHORT_POSITIONING_DESCRIPTION);
   });

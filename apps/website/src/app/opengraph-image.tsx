@@ -142,8 +142,8 @@ export default async function OpenGraphImage() {
         >
           <div style={{ display: 'flex', gap: 12 }}>
             {POSITIONING_PROOF_POINTS.slice(0, 3).map((proofPoint, index) => (
-              <PillBadge key={proofPoint} tone={index === 0 ? 'accent' : 'neutral'}>
-                {proofPoint}
+              <PillBadge key={proofPoint.label} tone={index === 0 ? 'accent' : 'neutral'}>
+                {proofPoint.label}
               </PillBadge>
             ))}
           </div>

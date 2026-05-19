@@ -1,61 +1,97 @@
-import type { ReactNode } from 'react';
+'use client';
+
 import { tokens } from '@ngaf/design-tokens';
 import { Container } from '../ui/Container';
 import { Section } from '../ui/Section';
 import { Eyebrow } from '../ui/Eyebrow';
-import { Card } from '../ui/Card';
+import { trackCtaClick } from '../../lib/analytics/client';
 
-interface PositionCard {
-  eyebrow: string;
-  headline: string;
-  body: ReactNode;
+interface ProductionRow {
+  need: string;
+  description: string;
+  primitive: string;
 }
 
-const CARDS: PositionCard[] = [
+const PRODUCTION_ROWS: ProductionRow[] = [
   {
-    eyebrow: 'Runtime layer',
-    headline: 'One Angular contract for every agent runtime.',
-    body: 'Wire LangGraph, AG-UI, CrewAI, Mastra, Pydantic AI, AWS Strands, or your own backend behind the same Angular primitives.',
+    need: 'Durable threads',
+    description: 'Persist across reloads, resume, branch, replay.',
+    primitive: 'threadId signal + durable transports',
   },
   {
-    eyebrow: 'Streaming state',
-    headline: 'Messages, status, errors, and tools as signals.',
-    body: (
-      <>
-        <code style={{ fontFamily: tokens.typography.fontMono }}>agent()</code> exposes token streams, interrupts, tool progress, branch history,{' '}
-        <code style={{ fontFamily: tokens.typography.fontMono }}>error()</code>,{' '}
-        <code style={{ fontFamily: tokens.typography.fontMono }}>status()</code>, and{' '}
-        <code style={{ fontFamily: tokens.typography.fontMono }}>reload()</code>.
-      </>
-    ),
+    need: 'Resumable interrupts',
+    description: 'Human-in-the-loop pause, resume token, retry, cancel.',
+    primitive: 'interrupt(), resume()',
   },
   {
-    eyebrow: 'Generative UI',
-    headline: 'Agent output renders into your component system.',
-    body: (
-      <>
-        Render Vercel <code style={{ fontFamily: tokens.typography.fontMono }}>json-render</code> and Google A2UI specs into Angular components you already own.
-      </>
-    ),
+    need: 'Tool calls as events',
+    description: 'Stream progress, structured args, surfaced errors.',
+    primitive: 'tool events on agent()',
   },
   {
-    eyebrow: 'Production surface',
-    headline: 'The pieces that move a demo into production.',
-    body: 'Fallbacks, reloads, persistence patterns, observability hooks, and MIT-licensed primitives you can own long term.',
+    need: 'Streaming state as signals',
+    description: 'messages(), status(), error() — not promises.',
+    primitive: 'signal-native agent()',
+  },
+  {
+    need: 'Generative UI on your design system',
+    description: 'Vercel json-render + Google A2UI rendered into your Angular components.',
+    primitive: '@ngaf/render',
+  },
+  {
+    need: 'Recoverable errors',
+    description: 'Retry, reload, error boundaries, fallback content.',
+    primitive: 'error(), reload()',
+  },
+  {
+    need: 'Backend portability',
+    description: 'LangGraph today; AG-UI / Mastra / CrewAI / your own tomorrow — same UI.',
+    primitive: 'runtime adapters behind one contract',
+  },
+  {
+    need: 'Angular-native',
+    description: 'DI, signals, RxJS interop — no React rewrite.',
+    primitive: 'built on Angular primitives, not ported',
+  },
+  {
+    need: 'Observability hooks',
+    description: 'Tracing seams; app telemetry off by default.',
+    primitive: 'event hooks, opt-in only',
+  },
+  {
+    need: 'MIT + self-hosted',
+    description: 'Own the primitives long-term, no vendor lock-in.',
+    primitive: 'MIT-licensed, no runtime SaaS dependency',
   },
 ];
+
+function CheckIcon() {
+  return (
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 16 16"
+      fill="none"
+      stroke={tokens.colors.accent}
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      style={{ flexShrink: 0, marginTop: 4 }}
+    >
+      <path d="M3 8.5l3.5 3.5L13 5" />
+    </svg>
+  );
+}
 
 export function Differentiator() {
   return (
     <Section
       surface="canvas"
       ariaLabelledBy="differentiator-heading"
-      style={{
-        paddingTop: 72,
-      }}
+      style={{ paddingTop: 72 }}
     >
       <Container>
-        {/* Editorial top */}
         <div style={{ maxWidth: 1020, margin: '0 auto 44px', textAlign: 'center' }}>
           <Eyebrow tone="accent" style={{ marginBottom: 16 }}>Why this exists</Eyebrow>
           <h2
@@ -71,7 +107,7 @@ export function Differentiator() {
               letterSpacing: '-0.015em',
             }}
           >
-            The fullstack agentic library for Angular.
+            Everything an Angular agent needs once the demo works.
           </h2>
           <p
             style={{
@@ -83,48 +119,120 @@ export function Differentiator() {
               maxWidth: 760,
             }}
           >
-            NGAF brings the pieces of an agentic product into one Angular-first SDK: runtime adapters, signal-native streaming, tool events, generative UI, and production patterns. It is built from real agent UI experience, not a thin integration layer.
+            A streaming chat tutorial takes an hour. Shipping a real agent — durable, interruptible, observable, on your design system — takes most teams six months. NGAF gives the Angular surface that the rest of the stack assumes you&apos;ve already built.
           </p>
         </div>
 
-        {/* 4-card sub-grid */}
-        <div
+        <ul
           style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
-            gap: 14,
+            listStyle: 'none',
+            padding: 0,
+            margin: '0 auto',
+            maxWidth: 980,
+            borderTop: `1px solid ${tokens.surfaces.border}`,
           }}
         >
-          {CARDS.map((c) => (
-            <Card key={c.eyebrow} padding="lg" hoverable>
-              <Eyebrow tone="accent" style={{ marginBottom: 12 }}>{c.eyebrow}</Eyebrow>
-              <h3
+          {PRODUCTION_ROWS.map((row) => (
+            <li
+              key={row.need}
+              className="why-row"
+              style={{
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: 16,
+                padding: '18px 8px',
+                borderBottom: `1px solid ${tokens.surfaces.border}`,
+              }}
+            >
+              <CheckIcon />
+              <div
+                className="why-row__body"
                 style={{
-                  fontFamily: tokens.typography.h3.family,
-                  fontSize: 20,
-                  lineHeight: 1.3,
-                  fontWeight: tokens.typography.h3.weight,
-                  color: tokens.colors.textPrimary,
-                  margin: 0,
-                  marginBottom: 8,
+                  flex: 1,
+                  display: 'flex',
+                  gap: 16,
+                  alignItems: 'baseline',
+                  flexWrap: 'wrap',
                 }}
               >
-                {c.headline}
-              </h3>
-              <p
-                style={{
-                  fontFamily: tokens.typography.body.family,
-                  fontSize: tokens.typography.body.size,
-                  lineHeight: tokens.typography.body.line,
-                  color: tokens.colors.textSecondary,
-                  margin: 0,
-                }}
-              >
-                {c.body}
-              </p>
-            </Card>
+                <div style={{ flex: '1 1 360px', minWidth: 0 }}>
+                  <span
+                    style={{
+                      fontFamily: tokens.typography.body.family,
+                      fontSize: tokens.typography.body.size,
+                      lineHeight: tokens.typography.body.line,
+                      fontWeight: 600,
+                      color: tokens.colors.textPrimary,
+                      marginRight: 8,
+                    }}
+                  >
+                    {row.need}
+                  </span>
+                  <span
+                    style={{
+                      fontFamily: tokens.typography.body.family,
+                      fontSize: tokens.typography.body.size,
+                      lineHeight: tokens.typography.body.line,
+                      color: tokens.colors.textSecondary,
+                    }}
+                  >
+                    {row.description}
+                  </span>
+                </div>
+                <code
+                  style={{
+                    fontFamily: tokens.typography.fontMono,
+                    fontSize: 13,
+                    color: tokens.colors.textMuted,
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    maxWidth: '100%',
+                  }}
+                >
+                  {row.primitive}
+                </code>
+              </div>
+            </li>
           ))}
-        </div>
+        </ul>
+
+        <p
+          style={{
+            margin: '24px auto 0',
+            maxWidth: 980,
+            textAlign: 'center',
+            fontFamily: tokens.typography.body.family,
+            fontSize: tokens.typography.body.size,
+            lineHeight: tokens.typography.body.line,
+            color: tokens.colors.textMuted,
+          }}
+        >
+          Want help walking these on your codebase?{' '}
+          <a
+            href="/pilot-to-prod"
+            onClick={() =>
+              trackCtaClick({
+                surface: 'home',
+                destination_url: '/pilot-to-prod',
+                cta_id: 'home_why_pilot_to_prod',
+                cta_text: 'Pilot to Prod',
+              })
+            }
+            style={{ color: tokens.colors.accent, textDecoration: 'none', fontWeight: 600 }}
+          >
+            Pilot to Prod →
+          </a>
+        </p>
+
+        <style>{`
+          @media (max-width: 640px) {
+            .why-row__body {
+              flex-direction: column !important;
+              gap: 6px !important;
+            }
+          }
+        `}</style>
       </Container>
     </Section>
   );

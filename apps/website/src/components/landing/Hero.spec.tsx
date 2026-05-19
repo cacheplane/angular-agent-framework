@@ -53,7 +53,7 @@ describe('Hero', () => {
       .toMatch(/Ship production agent UIs in Angular\./);
     expect(screen.getByText(HERO_SUBHEAD)).toBeTruthy();
     for (const proofPoint of POSITIONING_PROOF_POINTS) {
-      expect(screen.getByText(proofPoint)).toBeTruthy();
+      expect(screen.getByText(proofPoint.label)).toBeTruthy();
     }
   });
 

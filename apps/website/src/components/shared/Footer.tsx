@@ -260,6 +260,12 @@ export function Footer() {
               onMouseLeave={(e) => (e.currentTarget.style.color = tokens.colors.textSecondary)}>
               Customer Support
             </Link>
+            <Link href="/solutions" className="transition-colors" style={{ color: tokens.colors.textSecondary }}
+              onClick={() => trackFooterCta('All Solutions', '/solutions')}
+              onMouseEnter={(e) => (e.currentTarget.style.color = tokens.colors.accent)}
+              onMouseLeave={(e) => (e.currentTarget.style.color = tokens.colors.textSecondary)}>
+              All solutions
+            </Link>
           </div>
 
           {/* Resources column */}
@@ -270,6 +276,12 @@ export function Footer() {
               onMouseEnter={(e) => (e.currentTarget.style.color = tokens.colors.accent)}
               onMouseLeave={(e) => (e.currentTarget.style.color = tokens.colors.textSecondary)}>
               Getting Started
+            </Link>
+            <Link href="/blog" className="transition-colors" style={{ color: tokens.colors.textSecondary }}
+              onClick={() => trackFooterCta('Blog', '/blog')}
+              onMouseEnter={(e) => (e.currentTarget.style.color = tokens.colors.accent)}
+              onMouseLeave={(e) => (e.currentTarget.style.color = tokens.colors.textSecondary)}>
+              Blog
             </Link>
             <a href="https://www.npmjs.com/package/@ngaf/langgraph"
               target="_blank" rel="noopener noreferrer"
