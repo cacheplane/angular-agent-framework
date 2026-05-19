@@ -225,6 +225,16 @@ test('docs pages render canonical and social metadata', async ({ page }) => {
   );
 });
 
+test('marketing pages render canonical and page-specific social URLs', async ({ page }) => {
+  for (const route of ['/', '/angular', '/render', '/chat', '/pricing', '/contact', '/pilot-to-prod', '/solutions']) {
+    await page.goto(route);
+    const expectedUrl = route === '/' ? 'https://threadplane.ai' : `https://threadplane.ai${route}`;
+
+    await expect(page.locator('link[rel="canonical"]'), `${route} canonical`).toHaveAttribute('href', expectedUrl);
+    await expect(page.locator('meta[property="og:url"]'), `${route} og:url`).toHaveAttribute('content', expectedUrl);
+  }
+});
+
 test('representative docs pages do not create page-level horizontal overflow', async ({ page }) => {
   const routes = [
     '/docs',

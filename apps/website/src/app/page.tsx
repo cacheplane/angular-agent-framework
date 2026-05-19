@@ -10,6 +10,14 @@ import { Promises } from '../components/landing/Promises';
 import { HomeFAQ } from '../components/landing/HomeFAQ';
 import { FinalCTA } from '../components/landing/FinalCTA';
 import { tokens } from '@ngaf/design-tokens';
+import { createPageMetadata } from '../lib/site-metadata';
+
+export const metadata = createPageMetadata({
+  title: 'Agent UI for Angular — Signal-Native Streaming for Angular + LangGraph',
+  description: 'The enterprise Angular agent framework for LangChain. Signal-native streaming, thread persistence, and production patterns for Angular 20+.',
+  pathname: '/',
+  type: 'website',
+});
 
 export default async function HomePage() {
   return (

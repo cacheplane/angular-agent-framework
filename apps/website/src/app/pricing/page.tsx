@@ -7,11 +7,14 @@ import { CompareTable } from '../../components/pricing/CompareTable';
 import { CompatibilityMatrix } from '../../components/pricing/CompatibilityMatrix';
 import { LeadForm } from '../../components/pricing/LeadForm';
 import { FinalCTA } from '../../components/landing/FinalCTA';
+import { createPageMetadata } from '../../lib/site-metadata';
 
-export const metadata = {
+export const metadata = createPageMetadata({
   title: 'Pricing — Agent UI for Angular',
   description: 'Simple, transparent pricing. MIT-licensed libraries are free forever. Enterprise contracts available.',
-};
+  pathname: '/pricing',
+  type: 'website',
+});
 
 export default function PricingPage() {
   return (

@@ -9,11 +9,14 @@ import { FeatureBlock } from '../../components/landing/FeatureBlock';
 import { WhitePaperBlock } from '../../components/landing/WhitePaperBlock';
 import { FinalCTA } from '../../components/landing/FinalCTA';
 import { RenderCodeShowcase } from '../../components/landing/render/RenderCodeShowcase';
+import { createPageMetadata } from '../../lib/site-metadata';
 
-export const metadata = {
+export const metadata = createPageMetadata({
   title: '@ngaf/render — Generative UI for Angular',
   description: 'Agents that render UI without coupling to your frontend. Built on Vercel json-render spec.',
-};
+  pathname: '/render',
+  type: 'website',
+});
 
 export default async function RenderPage() {
   return (
