@@ -91,6 +91,7 @@ export { ChatPopupComponent } from './lib/compositions/chat-popup/chat-popup.com
 export { ChatSidebarComponent } from './lib/compositions/chat-sidebar/chat-sidebar.component';
 export { ChatTimelineSliderComponent } from './lib/compositions/chat-timeline-slider/chat-timeline-slider.component';
 export { ChatSidenavComponent } from './lib/compositions/chat-sidenav/chat-sidenav.component';
+export { ChatSidenavScrimComponent } from './lib/primitives/chat-sidenav-scrim/chat-sidenav-scrim.component';
 export type { ChatSidenavMode } from './lib/compositions/chat-sidenav/chat-sidenav.component';
 export { ChatInterruptPanelComponent } from './lib/compositions/chat-interrupt-panel/chat-interrupt-panel.component';
 export type { InterruptAction } from './lib/compositions/chat-interrupt-panel/chat-interrupt-panel.component';

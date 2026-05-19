@@ -3412,6 +3412,28 @@
     ]
   },
   {
+    "name": "ChatSidenavScrimComponent",
+    "kind": "class",
+    "description": "Backdrop scrim for chat-sidenav's drawer mode, rendered as a sibling of\n<chat-sidenav> so its z-index sits cleanly between the page content\nand the drawer host (escapes the drawer host's stacking context).\n\nUsage:\n  <chat-sidenav-scrim [open]=\"drawerOpen()\" (close)=\"drawerOpen.set(false)\" />\n  <chat-sidenav [(open)]=\"drawerOpen\" ...></chat-sidenav>",
+    "params": [],
+    "examples": [],
+    "properties": [
+      {
+        "name": "close",
+        "type": "OutputEmitterRef<void>",
+        "description": "Fires when the user clicks the backdrop.",
+        "optional": false
+      },
+      {
+        "name": "open",
+        "type": "InputSignal<boolean>",
+        "description": "When true, render the backdrop button covering the viewport.",
+        "optional": false
+      }
+    ],
+    "methods": []
+  },
+  {
     "name": "ChatStreamingMdComponent",
     "kind": "class",
     "description": "Renders streaming markdown by walking a @cacheplane/partial-markdown AST\nthrough @ngaf/render's view registry.\n\nReactivity model: the live `parser.root` keeps a stable JS reference\nacross pushes (partial-markdown's identity guarantee). To make Angular\nsignals propagate downstream when the underlying tree changes, we surface\na materialized snapshot via `materialize()`. The snapshot shares\nstructurally — unchanged subtrees keep the SAME reference, and any\ndescendant change yields a NEW root reference. This lets Angular's\n`Object.is` equality check both detect changes (root reference differs)\nand short-circuit unchanged subtrees (per-node references stable).\n\nOverride per-node-type renderers via the `[viewRegistry]` input or by\nsupplying a different `MARKDOWN_VIEW_REGISTRY` provider in the injector\ntree.",

@@ -14,7 +14,7 @@ import { CHAT_HOST_TOKENS, ensureChatRootStyles } from '../../styles/chat-tokens
   imports: [ChatComponent, ChatLauncherButtonComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styles: [CHAT_HOST_TOKENS, `
-    :host { position: fixed; bottom: 1rem; right: 1rem; z-index: 30; }
+    :host { position: fixed; bottom: 1rem; right: 1rem; z-index: var(--ngaf-chat-z-overlay-content, 30); }
     .chat-popup__launcher { position: relative; }
     .chat-popup__window {
       position: fixed;

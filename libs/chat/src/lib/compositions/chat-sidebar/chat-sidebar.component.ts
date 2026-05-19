@@ -42,7 +42,7 @@ import { CHAT_HOST_TOKENS, ensureChatRootStyles } from '../../styles/chat-tokens
       box-shadow: -8px 0 32px rgba(0,0,0,.08);
       transform: translateX(100%);
       transition: transform 200ms ease-out, bottom 200ms ease-out;
-      z-index: 30;
+      z-index: var(--ngaf-chat-z-overlay-content, 30);
       display: flex;
       flex-direction: column;
     }
@@ -85,7 +85,7 @@ import { CHAT_HOST_TOKENS, ensureChatRootStyles } from '../../styles/chat-tokens
       position: fixed;
       bottom: calc(1rem + var(--ngaf-chat-debug-claim-bottom, 0));
       right: 1rem;
-      z-index: 30;
+      z-index: var(--ngaf-chat-z-overlay-content, 30);
       transition: bottom 200ms ease-out;
     }
     /* Hide the launcher when the sidebar is open — the close button on the

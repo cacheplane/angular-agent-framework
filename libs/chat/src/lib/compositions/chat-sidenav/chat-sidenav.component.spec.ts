@@ -109,24 +109,12 @@ describe('ChatSidenavComponent', () => {
     expect(fixture.nativeElement.querySelector('chat-thread-list')).toBeNull();
   });
 
-  it('drawer mode: scrim click emits openChange(false)', () => {
-    const fixture = render({ mode: 'drawer', open: true });
-    let lastOpen: boolean | undefined;
-    fixture.componentInstance.openChange.subscribe((v: boolean) => {
-      lastOpen = v;
-    });
-    const scrim = fixture.nativeElement.querySelector(
-      '.chat-sidenav__scrim'
-    ) as HTMLButtonElement;
-    scrim.click();
-    expect(lastOpen).toBe(false);
-  });
-
-  it('drawer mode: scrim NOT rendered when open is false', () => {
-    const fixture = render({ mode: 'drawer', open: false });
-    expect(
-      fixture.nativeElement.querySelector('.chat-sidenav__scrim')
-    ).toBeNull();
+  it('does NOT render an internal .chat-sidenav__scrim — scrim is owned by chat-sidenav-scrim primitive', () => {
+    const fx = TestBed.createComponent(ChatSidenavComponent);
+    fx.componentRef.setInput('mode', 'drawer');
+    fx.componentRef.setInput('open', true);
+    fx.detectChanges();
+    expect(fx.nativeElement.querySelector('.chat-sidenav__scrim')).toBeNull();
   });
 
   it('archivedThreads=null renders no archived heading', () => {

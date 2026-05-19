@@ -1,15 +1,14 @@
 <div class="demo-shell">
-  @if (sidenavMode() === 'drawer' && !drawerOpen()) {
-    <button
-      type="button"
-      class="demo-shell__hamburger"
-      aria-label="Open conversations"
-      [attr.aria-expanded]="drawerOpen()"
-      (click)="toggleSidenav()"
-    >☰</button>
-  }
-
   <div class="demo-shell__toolbar" role="toolbar" aria-label="Demo controls">
+    @if (sidenavMode() === 'drawer' && !drawerOpen()) {
+      <button
+        type="button"
+        class="demo-shell__hamburger"
+        aria-label="Open conversations"
+        [attr.aria-expanded]="drawerOpen()"
+        (click)="toggleSidenav()"
+      >☰</button>
+    }
     <div class="demo-shell__segmented" aria-label="Mode">
       @for (option of modeOptions; track option.value) {
         <button
@@ -59,6 +58,10 @@
     </div>
   </div>
 
+  <chat-sidenav-scrim
+    [open]="sidenavMode() === 'drawer' && drawerOpen()"
+    (close)="drawerOpen.set(false)"
+  />
   <chat-sidenav
     [threads]="visibleThreads()"
     [archivedThreads]="threadsSvc.archivedThreads()"
