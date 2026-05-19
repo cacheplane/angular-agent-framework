@@ -58,14 +58,6 @@ interface ChatDebugInstance {
   },
   styles: [CHAT_HOST_TOKENS, CHAT_SIDENAV_STYLES],
   template: `
-    @if (mode() === 'drawer' && open()) {
-    <button
-      type="button"
-      class="chat-sidenav__scrim"
-      aria-label="Close conversations"
-      (click)="openChange.emit(false)"
-    ></button>
-    }
     <nav
       class="chat-sidenav"
       aria-label="Sidebar navigation"

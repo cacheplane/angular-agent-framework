@@ -38,7 +38,10 @@ export const CHAT_SIDENAV_STYLES = `
     left: 0;
     bottom: 0;
     width: var(--ngaf-chat-sidenav-width-drawer);
-    z-index: 1001;
+    z-index: var(--ngaf-chat-z-drawer, 1001);
+  }
+  :host([data-mode="drawer"][data-open="true"]) {
+    box-shadow: 8px 0 32px rgba(0, 0, 0, 0.18);
   }
   .chat-sidenav {
     display: flex;
@@ -48,15 +51,6 @@ export const CHAT_SIDENAV_STYLES = `
     border-right: 1px solid var(--ngaf-chat-separator);
     box-sizing: border-box;
     overflow: hidden;
-  }
-  .chat-sidenav__scrim {
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.4);
-    z-index: 1000;
-    border: 0;
-    padding: 0;
-    cursor: pointer;
   }
   :host([data-mode="drawer"]) .chat-sidenav {
     width: 100%;
