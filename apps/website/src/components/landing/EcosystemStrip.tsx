@@ -144,7 +144,7 @@ export function EcosystemStrip() {
               margin: 0,
             }}
           >
-            NGAF gives Angular teams signal-native primitives for LangGraph, AG-UI, chat, and generative UI without locking the backend to one provider.
+            NGAF gives Angular teams production-ready chat, durable threads, interrupts, subagents, planning, memory, and generative UI without locking the backend to one provider.
           </p>
         </div>
 

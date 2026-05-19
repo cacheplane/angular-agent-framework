@@ -10,6 +10,7 @@ import { BrowserFrame } from '../ui/BrowserFrame';
 import { Pill } from '../ui/Pill';
 import { track } from '../../lib/analytics/client';
 import { analyticsEvents } from '../../lib/analytics/events';
+import { HERO_SUBHEAD, POSITIONING_PROOF_POINTS } from '../../lib/positioning';
 
 const INSTALL_COMMAND = 'npm install @ngaf/chat';
 const COPY_FEEDBACK_MS = 1500;
@@ -104,7 +105,7 @@ export function Hero() {
                 maxWidth: '54ch',
               }}
             >
-              Signal-native chat, threads, interrupts, tool progress, and generative UI for LangGraph, AG-UI, and A2UI. MIT-licensed, self-hostable, app telemetry off by default, no React rewrite.
+              {HERO_SUBHEAD}
             </p>
             <div style={{ display: 'flex', gap: 12, marginBottom: 24, flexWrap: 'wrap' }}>
               <PrimaryInstallButton />
@@ -119,12 +120,11 @@ export function Hero() {
                 marginBottom: 12,
               }}
             >
-              <Pill variant="accent">MIT</Pill>
-              <Pill variant="neutral">Angular-native Signals</Pill>
-              <Pill variant="neutral">LangGraph + AG-UI</Pill>
-              <Pill variant="neutral">A2UI-compatible</Pill>
-              <Pill variant="neutral">Self-hostable</Pill>
-              <Pill variant="neutral">App telemetry off by default</Pill>
+              {POSITIONING_PROOF_POINTS.map((proofPoint, index) => (
+                <Pill key={proofPoint} variant={index === 0 ? 'accent' : 'neutral'}>
+                  {proofPoint}
+                </Pill>
+              ))}
             </div>
             <p
               style={{

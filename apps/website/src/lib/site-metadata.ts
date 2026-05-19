@@ -6,6 +6,14 @@ import { getAllPosts } from './blog';
 export const SITE_ORIGIN = 'https://threadplane.ai';
 export const SITE_NAME = 'Agent UI for Angular';
 export const DEFAULT_SOCIAL_IMAGE = '/opengraph-image';
+export {
+  DEFAULT_META_DESCRIPTION,
+  HERO_SUBHEAD,
+  LONG_SUBHEAD,
+  POSITIONING_PROOF_POINTS,
+  PRIMARY_TAGLINE,
+  SHORT_POSITIONING_DESCRIPTION,
+} from './positioning';
 
 export function getCanonicalPath(pathname: string): string {
   if (pathname === '/') return '/';

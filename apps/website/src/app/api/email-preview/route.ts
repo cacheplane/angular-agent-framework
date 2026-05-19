@@ -12,7 +12,7 @@ import { dripWhitepaperFollowupHtml } from '../../../../emails/drip-whitepaper-f
 
 const TEMPLATES: Record<string, () => { subject: string; html: string }> = {
   'whitepaper-download': () => ({
-    subject: 'Your Angular Agent Readiness Guide',
+    subject: 'Your Enterprise Agent UI Guide for Angular',
     html: whitepaperDownloadHtml('Brian'),
   }),
   'newsletter-welcome': () => ({

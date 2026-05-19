@@ -20,9 +20,9 @@
 
 <!-- Cover -->
 <div style="height:100vh;display:flex;flex-direction:column;justify-content:flex-end;padding:80px 80px 100px;background:linear-gradient(135deg, #fafbfc 0%, #eaf3ff 100%);page-break-after:always">
-  <div style="font-family:monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.12em;color:#004090;font-weight:700;margin-bottom:24px">@ngaf/langgraph · Production Readiness Guide</div>
-  <h1 style="font-family:'EB Garamond',serif;font-size:52px;font-weight:800;line-height:1.1;color:#1a1a2e;margin-bottom:20px">From<br>Prototype<br>to<br>Production</h1>
-  <p style="font-family:'EB Garamond',serif;font-style:italic;font-size:20px;color:#555770;margin-bottom:40px">The Angular Agent Readiness Guide</p>
+  <div style="font-family:monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.12em;color:#004090;font-weight:700;margin-bottom:24px">ThreadPlane · Enterprise Angular Agent UI</div>
+  <h1 style="font-family:'EB Garamond',serif;font-size:52px;font-weight:800;line-height:1.1;color:#1a1a2e;margin-bottom:20px">Agent<br>UI<br>for<br>Angular</h1>
+  <p style="font-family:'EB Garamond',serif;font-style:italic;font-size:20px;color:#555770;margin-bottom:40px">Production-ready chat, threads, and generative UI for AI agents</p>
   <div style="font-size:13px;color:#8b8fa3;font-family:monospace">threadplane.ai · 2026</div>
 </div>
 
@@ -65,7 +65,7 @@
 <p>Server-sent events don't play nicely with Angular's change detection. Zone.js patches `EventSource`, but the resulting microtask scheduling creates timing issues—tokens arrive faster than digest cycles complete, leading to dropped renders or, worse, accumulated state that suddenly flushes in a visual stutter. Teams typically respond by wrapping streams in `NgZone.run()`, manually calling `detectChanges()`, or building elaborate buffer-and-flush mechanisms. All of these approaches share a common failure mode: they work in development and break under production load.</p>
 <p>The root issue isn't Zone.js itself—it's the impedance mismatch between push-based streaming and Angular's pull-based change detection model. When your LangGraph agent streams 50 tokens per second, you need state primitives that coalesce updates intelligently while remaining reactive enough to drive smooth UI. Custom solutions invariably choose wrong: either they batch too aggressively (laggy typing effect) or too little (CPU saturation from excess renders).</p>
 <h3>Signals as the Synchronization Primitive</h3>
-<p>The `agent()` function returns a signals-native interface that sidesteps these problems entirely. Rather than exposing raw event streams that require manual subscription management, it provides computed signals that update atomically as tokens arrive:</p>
+<p>The `agent()` function returns an Angular signals-based interface that sidesteps these problems entirely. Rather than exposing raw event streams that require manual subscription management, it provides computed signals that update atomically as tokens arrive:</p>
 <pre><code>@Component({
   selector: 'app-chat',
   template: `

@@ -6,10 +6,11 @@
  * file in any route folder.
  */
 import { ImageResponse } from 'next/og';
+import { POSITIONING_PROOF_POINTS, PRIMARY_TAGLINE, SHORT_POSITIONING_DESCRIPTION } from '../lib/positioning';
 
 // Node runtime (not edge) so we can read the bundled Garamond TTF off disk.
 export const runtime = 'nodejs';
-export const alt = 'Agent UI for Angular — Signal-native streaming for Angular + LangGraph';
+export const alt = PRIMARY_TAGLINE;
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 
@@ -127,8 +128,7 @@ export default async function OpenGraphImage() {
             marginBottom: 'auto',
           }}
         >
-          Build fullstack agentic Angular apps with signal-native streaming,
-          runtime adapters, generative UI, and production-ready primitives.
+          {SHORT_POSITIONING_DESCRIPTION}
         </div>
 
         {/* Footer row — pill trust signals + wordmark */}
@@ -141,9 +141,11 @@ export default async function OpenGraphImage() {
           }}
         >
           <div style={{ display: 'flex', gap: 12 }}>
-            <PillBadge tone="accent">MIT</PillBadge>
-            <PillBadge tone="neutral">LangGraph + AG-UI</PillBadge>
-            <PillBadge tone="angular">Angular 20+</PillBadge>
+            {POSITIONING_PROOF_POINTS.slice(0, 3).map((proofPoint, index) => (
+              <PillBadge key={proofPoint} tone={index === 0 ? 'accent' : 'neutral'}>
+                {proofPoint}
+              </PillBadge>
+            ))}
           </div>
           <div
             style={{
@@ -170,7 +172,7 @@ export default async function OpenGraphImage() {
 }
 
 interface PillBadgeProps {
-  tone: 'accent' | 'neutral' | 'angular';
+  tone: 'accent' | 'neutral';
   children: React.ReactNode;
 }
 
@@ -185,11 +187,6 @@ function PillBadge({ tone, children }: PillBadgeProps) {
       bg: '#ffffff',
       border: '#e6e8ee',
       color: '#555770',
-    },
-    angular: {
-      bg: 'rgba(221, 0, 49, 0.06)',
-      border: 'rgba(221, 0, 49, 0.18)',
-      color: '#DD0031',
     },
   }[tone];
 

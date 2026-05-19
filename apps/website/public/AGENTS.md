@@ -1,6 +1,6 @@
 # Agent UI for Angular v0.0.40
 
-Agent UI primitives and LangGraph streaming adapters for Angular.
+Production-ready chat, durable threads, interrupts, subagents, planning, memory, and generative UI for Angular agent apps.
 
 ## Install
 npm install @ngaf/chat @ngaf/langgraph

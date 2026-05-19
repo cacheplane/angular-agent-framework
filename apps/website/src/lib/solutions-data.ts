@@ -64,7 +64,7 @@ export const SOLUTIONS: SolutionConfig[] = [
       {
         library: 'Agent',
         pkg: '@ngaf/langgraph',
-        role: 'Signal-native streaming with first-class interrupt support. Every agent action can require human approval before execution. Thread persistence preserves the full record of every tool call and state transition.',
+        role: 'Production agent state with first-class interrupt support. Every agent action can require human approval before execution. Durable thread persistence preserves the full record of every tool call and state transition.',
       },
       {
         library: 'Render',

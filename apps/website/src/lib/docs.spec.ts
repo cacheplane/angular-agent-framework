@@ -135,6 +135,7 @@ describe('website docs bindings', () => {
       '@ngaf/a2ui',
       '@ngaf/ag-ui',
       '@ngaf/chat',
+      '@ngaf/chat/debug',
       '@ngaf/chat/testing',
       '@ngaf/langgraph',
       '@ngaf/licensing',

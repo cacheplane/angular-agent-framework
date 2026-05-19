@@ -33,7 +33,7 @@
     font-size="15" font-weight="700" fill="#6C8EFF">agent()</text>
   <text x="447" y="158" text-anchor="middle"
     font-family="'Courier New', monospace"
-    font-size="11" fill="#4A527A">Signal-native state</text>
+    font-size="11" fill="#4A527A">Agent UI state</text>
   <text x="447" y="175" text-anchor="middle"
     font-family="'Courier New', monospace"
     font-size="11" fill="#4A527A">@ngaf/langgraph</text>

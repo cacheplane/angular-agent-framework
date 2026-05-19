@@ -67,9 +67,9 @@ interface WhitepaperConfig {
 const WHITEPAPERS: Record<string, WhitepaperConfig> = {
   overview: {
     id: 'overview',
-    title: 'From Prototype to Production',
-    subtitle: 'The Angular Agent Readiness Guide',
-    eyebrow: '@ngaf/langgraph · Production Readiness Guide',
+    title: 'Agent UI for Angular',
+    subtitle: 'Production-ready chat, threads, and generative UI for AI agents',
+    eyebrow: 'ThreadPlane · Enterprise Angular Agent UI',
     coverGradient: 'linear-gradient(135deg, #fafbfc 0%, #eaf3ff 100%)',
     outputPdf: 'apps/website/public/whitepaper.pdf',
     outputHtml: 'apps/website/public/whitepaper-preview.html',
@@ -77,15 +77,15 @@ const WHITEPAPERS: Record<string, WhitepaperConfig> = {
       {
         id: 'streaming-state',
         title: 'Streaming State Management',
-        prompt: `Write a 400-600 word chapter for an engineering white paper titled "From Prototype to Production: The Angular Agent Readiness Guide".
+        prompt: `Write a 400-600 word chapter for an engineering white paper titled "Agent UI for Angular: Production-ready chat, threads, and generative UI for AI agents".
 
 Chapter topic: Streaming State Management
 
-Context: Angular teams building LangGraph-powered agents must wire SSE event streams into reactive UI. Without the right primitives, they end up with custom zone-patching, manual subscription management, and brittle token accumulation logic that breaks under load.
+Context: Angular teams building AI agent applications must wire streaming transports into reactive chat, thread, approval, and generative UI surfaces. Without the right primitives, they end up with custom zone-patching, manual subscription management, and brittle token accumulation logic that breaks under load.
 
 Cover:
 - Why streaming state is hard in Angular (zone.js, change detection, timing)
-- The signals-native approach: how agent() exposes messages() as Signal<Message[]>
+- The Angular signals approach: how agent() exposes messages() as Signal<Message[]>
 - How isLoading() lets developers drive loading UI without polling
 - Code example: minimal agent() setup (TypeScript snippet, 8-12 lines)
 - Production checklist item: "Are your message signals OnPush-compatible?"
@@ -95,7 +95,7 @@ Tone: Direct, technical, peer-to-peer. No fluff. Audience is senior Angular engi
       {
         id: 'thread-persistence',
         title: 'Thread Persistence',
-        prompt: `Write a 400-600 word chapter for an engineering white paper titled "From Prototype to Production: The Angular Agent Readiness Guide".
+        prompt: `Write a 400-600 word chapter for an engineering white paper titled "Agent UI for Angular: Production-ready chat, threads, and generative UI for AI agents".
 
 Chapter topic: Thread Persistence
 
@@ -114,7 +114,7 @@ Tone: Direct, technical, peer-to-peer. No fluff. Audience is senior Angular engi
       {
         id: 'tool-call-rendering',
         title: 'Tool-Call Rendering',
-        prompt: `Write a 400-600 word chapter for an engineering white paper titled "From Prototype to Production: The Angular Agent Readiness Guide".
+        prompt: `Write a 400-600 word chapter for an engineering white paper titled "Agent UI for Angular: Production-ready chat, threads, and generative UI for AI agents".
 
 Chapter topic: Tool-Call Rendering
 
@@ -133,7 +133,7 @@ Tone: Direct, technical, peer-to-peer. No fluff. Audience is senior Angular engi
       {
         id: 'human-approval-flows',
         title: 'Human Approval Flows',
-        prompt: `Write a 400-600 word chapter for an engineering white paper titled "From Prototype to Production: The Angular Agent Readiness Guide".
+        prompt: `Write a 400-600 word chapter for an engineering white paper titled "Agent UI for Angular: Production-ready chat, threads, and generative UI for AI agents".
 
 Chapter topic: Human Approval Flows (Interrupts)
 
@@ -153,7 +153,7 @@ Tone: Direct, technical, peer-to-peer. No fluff. Audience is senior Angular engi
       {
         id: 'generative-ui',
         title: 'Generative UI',
-        prompt: `Write a 400-600 word chapter for an engineering white paper titled "From Prototype to Production: The Angular Agent Readiness Guide".
+        prompt: `Write a 400-600 word chapter for an engineering white paper titled "Agent UI for Angular: Production-ready chat, threads, and generative UI for AI agents".
 
 Chapter topic: Generative UI
 
@@ -172,7 +172,7 @@ Tone: Direct, technical, peer-to-peer. No fluff. Audience is senior Angular engi
       {
         id: 'deterministic-testing',
         title: 'Deterministic Testing',
-        prompt: `Write a 400-600 word chapter for an engineering white paper titled "From Prototype to Production: The Angular Agent Readiness Guide".
+        prompt: `Write a 400-600 word chapter for an engineering white paper titled "Agent UI for Angular: Production-ready chat, threads, and generative UI for AI agents".
 
 Chapter topic: Deterministic Testing
 
@@ -193,9 +193,9 @@ Tone: Direct, technical, peer-to-peer. No fluff. Audience is senior Angular engi
 
   angular: {
     id: 'angular',
-    title: 'The Enterprise Guide to Agent Streaming in Angular',
-    subtitle: 'Ship LangGraph agents in Angular — without building the plumbing',
-    eyebrow: '@ngaf/langgraph · Enterprise Guide',
+    title: 'The Enterprise Guide to Agent UI in Angular',
+    subtitle: 'Ship LangGraph and AG-UI-compatible agents without building the plumbing',
+    eyebrow: 'ThreadPlane · Angular Agent UI Guide',
     coverGradient: 'linear-gradient(135deg, #fafbfc 0%, #eaf3ff 100%)',
     outputPdf: 'apps/website/public/whitepapers/angular.pdf',
     outputHtml: 'apps/website/public/whitepapers/angular-preview.html',
@@ -203,11 +203,11 @@ Tone: Direct, technical, peer-to-peer. No fluff. Audience is senior Angular engi
       {
         id: 'last-mile-problem',
         title: 'The Last-Mile Problem',
-        prompt: `Write a 400-600 word chapter for an engineering white paper titled "The Enterprise Guide to Agent Streaming in Angular".
+        prompt: `Write a 400-600 word chapter for an engineering white paper titled "The Enterprise Guide to Agent UI in Angular".
 
 Chapter topic: The Last-Mile Problem
 
-Context: Teams have built powerful LangGraph backends with sophisticated agent graphs, tool calling, and memory. Then they hit Angular. SSE streams don't integrate cleanly with zone.js. Signals and change detection are at odds with streaming event sequences. The backend works — the frontend gap is real and expensive.
+Context: Teams have built powerful agent backends with sophisticated graphs, tool calling, memory, and AG-UI-compatible interaction patterns. Then they hit Angular. SSE streams don't integrate cleanly with zone.js. Signals and change detection are at odds with streaming event sequences. The backend works — the frontend gap is real and expensive.
 
 Cover:
 - Why SSE + Angular zones is a zone pollution problem, not a configuration problem
@@ -222,16 +222,16 @@ Tone: Direct, technical, peer-to-peer. No fluff. Audience is senior Angular engi
       {
         id: 'agent-api',
         title: 'The agent() API',
-        prompt: `Write a 400-600 word chapter for an engineering white paper titled "The Enterprise Guide to Agent Streaming in Angular".
+        prompt: `Write a 400-600 word chapter for an engineering white paper titled "The Enterprise Guide to Agent UI in Angular".
 
 Chapter topic: The agent() API
 
-Context: @ngaf/langgraph exposes a signal-native API for streaming LangGraph agents into Angular components. The core primitive is agent() — a function that returns reactive signals wired directly to the agent stream, with no manual subscription management, no zone-patching, and no token accumulation logic.
+Context: @ngaf/langgraph exposes an Angular signals-based API for connecting LangGraph agents to Angular components. The core primitive is agent() — a function that returns reactive signals wired directly to the agent stream, with no manual subscription management, no zone-patching, and no token accumulation logic.
 
 Cover:
 - How agent() returns a LangGraphAgent with typed signals: messages(), isLoading(), error(), interrupt(), and langGraph* raw signals
 - The provideAgent() provider and how it configures the agent endpoint and stream transport
-- Why the signal-native design works with OnPush change detection out of the box
+- Why the Angular signals design works with OnPush change detection out of the box
 - How to bind agent state directly in Angular templates without async pipe or manual subscriptions
 - Code example: minimal agent() setup with template binding (10-14 lines)
 - The contrast: what the equivalent hand-rolled code looks like vs. agent() in 3 lines
@@ -241,7 +241,7 @@ Tone: Direct, technical, peer-to-peer. No fluff. Audience is senior Angular engi
       {
         id: 'thread-persistence-memory',
         title: 'Thread Persistence & Memory',
-        prompt: `Write a 400-600 word chapter for an engineering white paper titled "The Enterprise Guide to Agent Streaming in Angular".
+        prompt: `Write a 400-600 word chapter for an engineering white paper titled "The Enterprise Guide to Agent UI in Angular".
 
 Chapter topic: Thread Persistence & Memory
 
@@ -261,7 +261,7 @@ Tone: Direct, technical, peer-to-peer. No fluff. Audience is senior Angular engi
       {
         id: 'interrupt-approval-flows',
         title: 'Interrupt & Approval Flows',
-        prompt: `Write a 400-600 word chapter for an engineering white paper titled "The Enterprise Guide to Agent Streaming in Angular".
+        prompt: `Write a 400-600 word chapter for an engineering white paper titled "The Enterprise Guide to Agent UI in Angular".
 
 Chapter topic: Interrupt & Approval Flows
 
@@ -280,7 +280,7 @@ Tone: Direct, technical, peer-to-peer. No fluff. Audience is senior Angular engi
       {
         id: 'full-langgraph-coverage',
         title: 'Full LangGraph Feature Coverage',
-        prompt: `Write a 400-600 word chapter for an engineering white paper titled "The Enterprise Guide to Agent Streaming in Angular".
+        prompt: `Write a 400-600 word chapter for an engineering white paper titled "The Enterprise Guide to Agent UI in Angular".
 
 Chapter topic: Full LangGraph Feature Coverage
 
@@ -299,7 +299,7 @@ Tone: Direct, technical, peer-to-peer. No fluff. Audience is senior Angular engi
       {
         id: 'deterministic-testing-angular',
         title: 'Deterministic Testing',
-        prompt: `Write a 400-600 word chapter for an engineering white paper titled "The Enterprise Guide to Agent Streaming in Angular".
+        prompt: `Write a 400-600 word chapter for an engineering white paper titled "The Enterprise Guide to Agent UI in Angular".
 
 Chapter topic: Deterministic Testing
 

@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { tokens } from '@ngaf/design-tokens';
 import { analyticsEvents } from '../../lib/analytics/events';
 import { track, trackCtaClick, trackExternalLinkClick } from '../../lib/analytics/client';
+import { SHORT_POSITIONING_DESCRIPTION } from '../../lib/positioning';
 import { LogoMark } from '../ui/LogoMark';
 import { Button } from '../ui/Button';
 import { Eyebrow } from '../ui/Eyebrow';
@@ -122,7 +123,7 @@ export function Footer() {
               <LogoMark size="md" />
             </div>
             <p className="text-sm mb-4" style={{ color: tokens.colors.textMuted, maxWidth: '36ch', lineHeight: 1.6 }}>
-              The enterprise Angular agent framework for LangChain. Signal-native streaming built for production Angular 20+.
+              {SHORT_POSITIONING_DESCRIPTION}
             </p>
             <NewsletterForm />
             {/* Social links */}

@@ -7,7 +7,7 @@
 </p>
 
 <p align="center">
-  <em>Agent UI primitives and LangGraph streaming adapters for Angular</em>
+  <em>Agent UI for Angular — Production-ready chat, threads, and generative UI for AI agents.</em>
 </p>
 
 <p align="center">
@@ -27,7 +27,9 @@
 
 ---
 
-`agent()` is the Angular equivalent of LangGraph's React `useStream()` hook, projected into a runtime-neutral `Agent` contract consumed by `@ngaf/chat`. Drop it into any Angular 20+ component, point it at your LangGraph Platform endpoint, and get signal-driven access to messages, status, tool calls, interrupts, subagents, regenerate, and thread history.
+ThreadPlane is a production-ready agent UI framework for Angular. Use `@ngaf/chat` for chat surfaces, `@ngaf/langgraph` for LangGraph-backed agents, `@ngaf/ag-ui` for AG-UI event streams, and `@ngaf/render` for generative UI that stays inside your Angular design system.
+
+When you are building on LangGraph, `agent()` is the Angular equivalent of LangGraph's React `useStream()` hook, projected into a runtime-neutral `Agent` contract consumed by `@ngaf/chat`. Drop it into any Angular 20+ component, point it at your LangGraph Platform endpoint, and get signal-driven access to messages, status, tool calls, interrupts, subagents, regenerate, and thread history.
 
 ---
 

@@ -4,7 +4,14 @@ import './global.css';
 import { Nav } from '../components/shared/Nav';
 import { Footer } from '../components/shared/Footer';
 import { AnnouncementToast } from '../components/shared/AnnouncementToast';
-import { DEFAULT_SOCIAL_IMAGE, SITE_NAME, SITE_ORIGIN } from '../lib/site-metadata';
+import {
+  DEFAULT_META_DESCRIPTION,
+  DEFAULT_SOCIAL_IMAGE,
+  LONG_SUBHEAD,
+  PRIMARY_TAGLINE,
+  SITE_NAME,
+  SITE_ORIGIN,
+} from '../lib/site-metadata';
 
 const garamond = EB_Garamond({
   subsets: ['latin'],
@@ -25,14 +32,14 @@ const mono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_ORIGIN),
-  title: 'Agent UI for Angular — Signal-Native Streaming for Angular + LangGraph',
-  description: 'The enterprise Angular agent framework for LangChain. Signal-native streaming, thread persistence, and production patterns for Angular 20+.',
+  title: PRIMARY_TAGLINE,
+  description: DEFAULT_META_DESCRIPTION,
   icons: {
     icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🛩️</text></svg>',
   },
   openGraph: {
     title: 'Agent UI for Angular',
-    description: 'Signal-native streaming for LangGraph — production patterns your Angular team can own.',
+    description: LONG_SUBHEAD,
     type: 'website',
     siteName: SITE_NAME,
     url: '/',
@@ -41,7 +48,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'Agent UI for Angular',
-    description: 'Signal-native streaming for LangGraph — production patterns your Angular team can own.',
+    description: LONG_SUBHEAD,
     images: [DEFAULT_SOCIAL_IMAGE],
   },
 };

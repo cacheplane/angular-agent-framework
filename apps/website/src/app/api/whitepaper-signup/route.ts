@@ -23,8 +23,8 @@ const DOWNLOAD_EMAILS: Record<PaperId, (name?: string) => string> = {
 };
 
 const DOWNLOAD_SUBJECTS: Record<PaperId, string> = {
-  overview: 'Your Angular Agent Readiness Guide',
-  angular: 'Your Enterprise Guide to Agent Streaming',
+  overview: 'Your Enterprise Agent UI Guide for Angular',
+  angular: 'Your Enterprise Guide to Agent UI in Angular',
   render: 'Your Enterprise Guide to Generative UI',
   chat: 'Your Enterprise Guide to Agent Chat Interfaces',
 };

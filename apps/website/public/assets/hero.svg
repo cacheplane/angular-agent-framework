@@ -24,7 +24,7 @@
     font-style="italic"
     fill="#8B96C8"
     opacity="0.9"
-  >Agent UI for Angular — for LangGraph</text>
+  >Agent UI for Angular — Production-ready agent UI</text>
 
   <!-- Bottom horizontal rule -->
   <line x1="60" y1="252" x2="1140" y2="252" stroke="#6C8EFF" stroke-width="1" stroke-opacity="0.18"/>

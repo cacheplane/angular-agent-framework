@@ -23,7 +23,8 @@ These are the signals to instrument first in Spec 1. Baseline rates between them
 - Angular Reddit, ng-conf community, Angular Discord/Slack equivalents, LangChain forum, AG-UI / A2UI communities, dev.to/medium.
 
 **What they need to see in 30 seconds**
-- "Not another agent runtime. The Angular UI layer for LangGraph/AG-UI/A2UI."
+- "Agent UI for Angular — Production-ready chat, threads, and generative UI for AI agents."
+- `LangGraph + AG-UI · Durable threads · Interrupts · Subagents · Planning + memory · json-render + A2UI`
 - One install command.
 - A working demo they can clone.
 
