@@ -277,6 +277,13 @@ jobs:
           - { angular: cockpit-chat-theming-angular,           python: cockpit/chat/theming/python }
           - { angular: cockpit-chat-generative-ui-angular,     python: cockpit/chat/generative-ui/python }
           - { angular: cockpit-chat-a2ui-angular,              python: cockpit/chat/a2ui/python }
+          - { angular: cockpit-langgraph-persistence-angular,  python: cockpit/langgraph/persistence/python }
+          - { angular: cockpit-langgraph-interrupts-angular,   python: cockpit/langgraph/interrupts/python }
+          - { angular: cockpit-langgraph-memory-angular,       python: cockpit/langgraph/memory/python }
+          - { angular: cockpit-langgraph-durable-execution-angular, python: cockpit/langgraph/durable-execution/python }
+          - { angular: cockpit-langgraph-subgraphs-angular,    python: cockpit/langgraph/subgraphs/python }
+          - { angular: cockpit-langgraph-time-travel-angular,  python: cockpit/langgraph/time-travel/python }
+          - { angular: cockpit-langgraph-deployment-runtime-angular, python: cockpit/langgraph/deployment-runtime/python }
     steps:
       - uses: actions/checkout@v6.0.2
       - uses: actions/setup-node@v6.3.0

@@ -1,0 +1,12 @@
+{
+  "fixtures": [
+    {
+      "match": {
+        "userMessage": "Hello"
+      },
+      "response": {
+        "content": "Hello \u2014 nice to meet you. What would you like help with today?\n\nTell me the specific question or topic and any preferences (depth: quick summary vs deep dive, date range, types of sources, format: bullet list, tutorial, pros/cons, citations). Example: \u201cCompare CRISPR vs base editors for somatic therapy, include clinical trials since 2020 and cite sources.\u201d\n\nOnce you reply I\u2019ll prepare and run a focused research query and return the findings."
+      }
+    }
+  ]
+}

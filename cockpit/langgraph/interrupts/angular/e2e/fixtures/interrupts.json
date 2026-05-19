@@ -1,0 +1,12 @@
+{
+  "fixtures": [
+    {
+      "match": {
+        "userMessage": "Hello"
+      },
+      "response": {
+        "content": "Hello! How can I help you today? Please approve this response to continue."
+      }
+    }
+  ]
+}
