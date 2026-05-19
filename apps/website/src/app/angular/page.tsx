@@ -9,11 +9,11 @@ import { FeatureBlock } from '../../components/landing/FeatureBlock';
 import { WhitePaperBlock } from '../../components/landing/WhitePaperBlock';
 import { FinalCTA } from '../../components/landing/FinalCTA';
 import { AngularCodeShowcase } from '../../components/landing/angular/AngularCodeShowcase';
-import { createPageMetadata } from '../../lib/site-metadata';
+import { createPageMetadata, SHORT_POSITIONING_DESCRIPTION } from '../../lib/site-metadata';
 
 export const metadata = createPageMetadata({
-  title: '@ngaf/langgraph — Agent Streaming for Angular',
-  description: 'Ship LangGraph agents in Angular. Signal-native streaming, thread persistence, interrupts, and deterministic testing.',
+  title: '@ngaf/langgraph — Agent UI for Angular',
+  description: SHORT_POSITIONING_DESCRIPTION,
   pathname: '/angular',
   type: 'website',
 });
@@ -39,7 +39,7 @@ export default async function AngularPage() {
                 letterSpacing: '-0.02em',
               }}
             >
-              Signal-native streaming for Angular.
+              LangGraph agent UI for Angular.
             </h1>
             <p
               style={{
@@ -51,7 +51,7 @@ export default async function AngularPage() {
                 maxWidth: 640,
               }}
             >
-              Ship LangGraph agents inside your Angular 20+ app. Thread state, interrupts, branch/history, and tool progress — all surfaced as signals.
+              Ship LangGraph agents inside your Angular 20+ app with headless chat, durable threads, interrupts, branch/history, tool progress, and generative UI.
             </p>
             <div style={{ display: 'flex', justifyContent: 'center', gap: 12, flexWrap: 'wrap', marginBottom: 20 }}>
               <Button variant="primary" size="lg" href="/docs/agent/getting-started/introduction">Get started</Button>

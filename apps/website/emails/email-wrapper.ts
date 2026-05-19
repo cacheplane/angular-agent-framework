@@ -18,7 +18,7 @@ export function wrapEmail(opts: {
   <div style="padding:32px">
     ${opts.body}
     <div style="border-top:1px solid #e6e8ee;margin-top:28px;padding-top:16px">
-      <p style="font-size:11px;color:#8b8fa3;line-height:1.5;margin:0">Agent UI for Angular — Signal-native streaming for LangGraph.</p>
+      <p style="font-size:11px;color:#8b8fa3;line-height:1.5;margin:0">Agent UI for Angular — Production-ready chat, threads, and generative UI for AI agents.</p>
       ${opts.showUnsubscribe ? '<p style="font-size:10px;color:#8b8fa3;margin:6px 0 0"><a href="https://threadplane.ai/api/unsubscribe?email=RECIPIENT" style="color:#8b8fa3;text-decoration:underline">Unsubscribe</a></p>' : ''}
     </div>
   </div>

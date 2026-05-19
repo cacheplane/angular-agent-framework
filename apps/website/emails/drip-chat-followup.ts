@@ -8,7 +8,7 @@ export function dripChatFollowupHtml(day: number): { subject: string; html: stri
         body: `
           <p style="font-size:11px;font-family:monospace;text-transform:uppercase;letter-spacing:0.08em;color:#5a00c8;font-weight:700;margin:0 0 8px">Chat Guide Follow-up</p>
           <p style="font-size:20px;font-weight:700;color:#1a1a2e;margin:0 0 14px;line-height:1.3">Did you read Chapter 2 on batteries-included components?</p>
-          <p style="font-size:14px;color:#555770;line-height:1.7;margin:0 0 24px">Chapter 2 covers the <strong>batteries-included component library</strong> — message bubbles, streaming indicators, thread lists, and input controls that are pre-wired to LangGraph state. Drop them in and your chat UI works on day one.</p>
+          <p style="font-size:14px;color:#555770;line-height:1.7;margin:0 0 24px">Chapter 2 covers the <strong>batteries-included component library</strong> — message bubbles, streaming indicators, thread lists, and input controls that are pre-wired to agent state. Drop them in and your chat UI works on day one.</p>
           <a href="https://threadplane.ai/docs" style="display:inline-block;background-color:#5a00c8;color:#fff;padding:12px 28px;border-radius:8px;font-size:14px;font-weight:700;text-decoration:none">Read the Docs →</a>
         `,
         showUnsubscribe: true,

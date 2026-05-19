@@ -31,7 +31,7 @@ export const docsConfig: DocsLibrary[] = [
   {
     id: 'agent',
     title: 'Agent',
-    description: 'Streaming state management for LangGraph agents',
+    description: 'Production agent state for Angular UI',
     sections: [
       {
         title: 'Getting Started',

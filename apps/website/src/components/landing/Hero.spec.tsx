@@ -3,6 +3,7 @@
 import React from 'react';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
+import { HERO_SUBHEAD, POSITIONING_PROOF_POINTS } from '../../lib/positioning';
 
 const trackMock = vi.hoisted(() => vi.fn());
 const writeTextMock = vi.hoisted(() => vi.fn().mockResolvedValue(undefined));
@@ -50,7 +51,10 @@ describe('Hero', () => {
     render(<Hero />);
     expect(screen.getByRole('heading', { level: 1 }).textContent)
       .toMatch(/Ship production agent UIs in Angular\./);
-    expect(screen.getByText(/Signal-native chat, threads, interrupts/)).toBeTruthy();
+    expect(screen.getByText(HERO_SUBHEAD)).toBeTruthy();
+    for (const proofPoint of POSITIONING_PROOF_POINTS) {
+      expect(screen.getByText(proofPoint)).toBeTruthy();
+    }
   });
 
   it('primary CTA copies the install command and fires cta_id=hero_install', async () => {

@@ -4,21 +4,21 @@
 
 ## Positioning statement (durable)
 
-> For Angular teams building AI agents on LangGraph, AG-UI, or custom backends, ThreadPlane is the open-source agent UI framework that turns streaming agent events into production-grade Angular experiences: chat, tool progress, approvals, threads, generative UI, fallbacks, observability, and tests. Unlike React-first agent UI stacks or raw streaming SDKs, ThreadPlane is signal-native, DI-friendly, design-system-first, self-hostable, and built for enterprise Angular apps.
+> For Angular teams building AI agents on LangGraph, AG-UI, or custom backends, ThreadPlane is the open-source agent UI framework that turns streaming agent events into production-ready Angular experiences: chat, durable threads, interrupts, subagents, planning, memory, generative UI, fallbacks, observability, and tests. Unlike React-first agent UI stacks or raw streaming SDKs, ThreadPlane is Angular-native, DI-friendly, design-system-first, self-hostable, and built for enterprise Angular apps.
 
 ## Hero (locked for Spec 2 to implement)
 
 **H1:** Ship production agent UIs in Angular.
 
-**Subhead:** Signal-native chat, threads, interrupts, tool progress, and generative UI for LangGraph, AG-UI, and A2UI. MIT-licensed, self-hostable, app telemetry off by default, no React rewrite.
+**Subhead:** Build enterprise-grade agent experiences in Angular: headless chat, durable threads, interrupts, subagents, planning, memory, and generative UI for LangGraph, AG-UI, json-render, and A2UI-compatible backends.
 
 **Primary CTA:** `Install @ngaf/chat` (copy-to-clipboard, fires `marketing:cta_click` with `cta_id=hero_install`, `track=developer`).
 
 **Secondary CTA:** `Talk to our engineers` (routes to `/contact?source=home_hero&track=enterprise`, fires `marketing:cta_click` with `cta_id=hero_talk_to_engineers`, `track=enterprise`).
 
-**Proof row:** `MIT · Angular-native Signals · LangGraph + AG-UI · A2UI-compatible · Self-hostable · App telemetry off by default`
+**Proof row:** `LangGraph + AG-UI · Durable threads · Interrupts · Subagents · Planning + memory · json-render + A2UI`
 
-**Subline under proof row:** *Not another backend agent runtime. Keep LangGraph, Genkit, Mastra, CrewAI, or your own service. ThreadPlane solves the Angular UI layer.*
+**Subline under proof row:** *Not another backend agent runtime. Keep LangGraph, Genkit, Mastra, CrewAI, or your own service. ThreadPlane solves the production Angular UI layer.*
 
 ## The five durable differentiation points
 
@@ -64,7 +64,7 @@ Hidden attribution fields (populated by URL params + referrer): `source_page`, `
 
 ## Launch narrative (Spec 6 spine)
 
-> Angular teams are building agents, but the last mile is still messy: streaming state, tool progress, interrupts, threads, generated UI, fallbacks, and tests. React has mature examples. Backend agent frameworks have protocols. Angular teams need something that speaks Signals, DI, templates, standalone components, and enterprise design systems. ThreadPlane is an MIT-licensed agent UI framework for Angular that connects LangGraph, AG-UI, A2UI, and custom backends to production-ready Angular surfaces.
+> Angular teams are building agents, but the last mile is still messy: streaming state, tool progress, interrupts, durable threads, subagents, planning, memory, generated UI, fallbacks, and tests. React has mature examples. Backend agent frameworks have protocols. Angular teams need something that speaks Signals, DI, templates, standalone components, and enterprise design systems. ThreadPlane is an MIT-licensed agent UI framework for Angular that connects LangGraph, AG-UI, A2UI, and custom backends to production-ready Angular surfaces.
 
 ## Avoid
 

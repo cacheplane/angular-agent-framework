@@ -10,11 +10,11 @@ import { Promises } from '../components/landing/Promises';
 import { HomeFAQ } from '../components/landing/HomeFAQ';
 import { FinalCTA } from '../components/landing/FinalCTA';
 import { tokens } from '@ngaf/design-tokens';
-import { createPageMetadata } from '../lib/site-metadata';
+import { createPageMetadata, LONG_SUBHEAD, PRIMARY_TAGLINE } from '../lib/site-metadata';
 
 export const metadata = createPageMetadata({
-  title: 'Agent UI for Angular — Signal-Native Streaming for Angular + LangGraph',
-  description: 'The enterprise Angular agent framework for LangChain. Signal-native streaming, thread persistence, and production patterns for Angular 20+.',
+  title: PRIMARY_TAGLINE,
+  description: LONG_SUBHEAD,
   pathname: '/',
   type: 'website',
 });
@@ -30,17 +30,17 @@ export default async function HomePage() {
       <FeatureBlock
         id="stream"
         eyebrow="Stream"
-        headline="Stream tokens to Angular signals — no glue code."
+        headline="Build the Angular UI layer for production agents."
         body={
           <>
-            <code style={{ fontFamily: tokens.typography.fontMono }}>provideAgent</code> + <code style={{ fontFamily: tokens.typography.fontMono }}>agent()</code> give you signals for messages, status, errors, and interrupts. LangGraph and AG-UI adapters share the contract — swap runtimes without rewriting the UI.
+            <code style={{ fontFamily: tokens.typography.fontMono }}>provideAgent</code> + <code style={{ fontFamily: tokens.typography.fontMono }}>agent()</code> give you headless chat, durable threads, interrupts, tool progress, and generative UI. LangGraph and AG-UI adapters share the contract, so teams can swap runtimes without rewriting the Angular surface.
           </>
         }
         bullets={[
-          'Token-level streaming straight into Angular signals',
-          'Thread state, interrupts, tool progress, branch/history',
+          'Headless chat and durable thread state',
+          'Interrupts, tool progress, branch/history',
           'Adapters: LangGraph (@ngaf/langgraph), AG-UI (@ngaf/ag-ui)',
-          'One contract, swappable runtimes',
+          'One Angular UI layer, swappable runtimes',
         ]}
         supportingCards={[
           { title: 'provideAgent', description: 'Wire the agent into your app.config.ts.' },
