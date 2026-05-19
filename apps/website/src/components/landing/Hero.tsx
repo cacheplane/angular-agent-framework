@@ -150,8 +150,8 @@ export function Hero() {
               style={{ position: 'absolute', top: 0, left: 0, width: '92%' }}
             >
               <img
-                src="/screenshots/canonical-demo-conversation.webp"
-                alt="Canonical demo — streaming chat rendering a markdown response with code block and table"
+                src="/screenshots/canonical-demo-generative-ui.webp"
+                alt="Canonical demo — agent renders a live airline operations dashboard with KPI cards, charts, and a disruptions table"
                 style={{ display: 'block', width: '100%', height: 'auto' }}
                 loading="lazy"
                 decoding="async"

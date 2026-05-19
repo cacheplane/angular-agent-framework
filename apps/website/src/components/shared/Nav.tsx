@@ -11,12 +11,8 @@ import { Button } from '../ui/Button';
 const links = [
   { label: 'Pilot to Prod', href: '/pilot-to-prod', external: false },
   { label: 'Docs', href: '/docs', external: false },
-  { label: 'Solutions', href: '/solutions', external: false },
-  { label: 'API', href: '/docs/agent/api/agent', external: false },
   { label: 'Demo', href: 'https://demo.threadplane.ai', external: true },
   { label: 'Examples', href: 'https://cockpit.threadplane.ai', external: true },
-  { label: 'Pricing', href: '/pricing', external: false },
-  { label: 'Blog', href: '/blog', external: false },
 ];
 
 function GitHubIcon() {
@@ -162,15 +158,15 @@ export function Nav() {
           <Button
             variant="primary"
             size="md"
-            href="/pilot-to-prod#whitepaper-block"
+            href="/contact"
             onClick={() => trackCtaClick({
               surface: 'nav',
-              destination_url: '/pilot-to-prod#whitepaper-block',
-              cta_id: 'nav_get_started',
-              cta_text: 'Get Started',
+              destination_url: '/contact',
+              cta_id: 'nav_talk_to_us',
+              cta_text: 'Talk to Us',
             })}
           >
-            Get Started
+            Talk to Us
           </Button>
         </div>
 
@@ -324,19 +320,19 @@ export function Nav() {
                   <Button
                     variant="primary"
                     size="lg"
-                    href="/pilot-to-prod#whitepaper-block"
+                    href="/contact"
                     onClick={() => {
                       trackCtaClick({
                         surface: 'mobile_nav',
-                        destination_url: '/pilot-to-prod#whitepaper-block',
-                        cta_id: 'mobile_nav_get_started',
-                        cta_text: 'Get Started',
+                        destination_url: '/contact',
+                        cta_id: 'mobile_nav_talk_to_us',
+                        cta_text: 'Talk to Us',
                       });
                       setOpen(false);
                     }}
                     style={{ width: '100%', justifyContent: 'center' }}
                   >
-                    Get Started
+                    Talk to Us
                   </Button>
                 </div>
               </div>

@@ -25,6 +25,18 @@
       "runtimeExecutable": "/bin/bash",
       "runtimeArgs": ["-c", "export PATH=/Users/blove/.nvm/versions/node/v22.14.0/bin:$PATH && npx nx serve examples-chat-angular --port 4400"],
       "port": 4400
+    },
+    {
+      "name": "genui-python",
+      "runtimeExecutable": "/bin/bash",
+      "runtimeArgs": ["-c", "set -a && source /Users/blove/repos/angular-agent-framework/.env && set +a && cd cockpit/chat/generative-ui/python && uv run langgraph dev --port 5508 --no-browser"],
+      "port": 5508
+    },
+    {
+      "name": "genui-angular",
+      "runtimeExecutable": "/bin/bash",
+      "runtimeArgs": ["-c", "export PATH=/Users/blove/.nvm/versions/node/v22.14.0/bin:$PATH && npx nx serve cockpit-chat-generative-ui-angular --port 4500"],
+      "port": 4500
     }
   ]
 }
