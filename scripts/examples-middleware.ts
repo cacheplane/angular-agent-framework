@@ -1,5 +1,5 @@
 /**
- * Vercel Serverless Function proxy for the cockpit-examples deployment.
+ * Vercel Serverless Function proxy for the threadplane-examples deployment.
  *
  * Thin wrapper around scripts/langgraph-proxy.ts that adds the
  * examples-specific Referer-based backend resolution. Today there's

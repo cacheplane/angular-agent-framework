@@ -6,7 +6,7 @@
  * `LANGSMITH_API_KEY`, streams SSE responses chunk-by-chunk, and
  * forwards all other content types verbatim.
  *
- * Shared between `scripts/examples-middleware.ts` (cockpit-examples
+ * Shared between `scripts/examples-middleware.ts` (threadplane-examples
  * deployment) and `scripts/demo-middleware.ts` (canonical demo
  * deployment). Per-deployment specifics — like the examples'
  * Referer-based backend routing — are passed in via `ProxyConfig`.
@@ -45,7 +45,7 @@ export interface ProxyConfig {
    *  it unset. */
   readonly checkRateLimit?: (ip: string) => Promise<{ allowed: boolean; retryAfterSec: number; count: number }>;
   /** Origins to allow via CORS. If undefined, legacy wildcard `*` behavior
-   *  preserved (used by cockpit-examples). Each entry is a full origin
+   *  preserved (used by threadplane-examples). Each entry is a full origin
    *  string, e.g. `https://demo.threadplane.ai`. Match is exact-string. */
   readonly allowedOrigins?: readonly string[];
   /** Maximum request body size in bytes. If undefined, no cap (legacy
@@ -86,7 +86,7 @@ export function createProxyHandler(config: ProxyConfig = {}): (req: VercelReques
 
   return async function handler(req, res) {
     // CORS — echo matching Origin when allowedOrigins is configured;
-    // otherwise legacy * behavior preserved for cockpit-examples.
+    // otherwise legacy * behavior preserved for threadplane-examples.
     res.setHeader('access-control-allow-methods', 'GET, POST, PUT, DELETE, OPTIONS');
     res.setHeader('access-control-allow-headers', 'content-type, x-api-key, authorization');
 

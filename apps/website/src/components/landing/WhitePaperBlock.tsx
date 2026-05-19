@@ -44,11 +44,12 @@ export function WhitePaperBlock({ paper = 'overview' }: WhitePaperBlockProps = {
       paper,
     });
     try {
-      await fetch('/api/whitepaper-signup', {
+      const res = await fetch('/api/whitepaper-signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email, paper }),
       });
+      if (!res.ok) throw new Error('whitepaper_signup_failed');
       track(analyticsEvents.marketingWhitepaperSignupSuccess, {
         surface: 'home_whitepaper',
         source_section: 'whitepaper-block',
