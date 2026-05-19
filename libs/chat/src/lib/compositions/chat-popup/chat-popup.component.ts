@@ -75,6 +75,7 @@ import { CHAT_HOST_TOKENS, ensureChatRootStyles } from '../../styles/chat-tokens
         (forkRequested)="forkRequested.emit($event)"
       >
         <ng-content select="[chatHeader]" chatHeader />
+        <ng-content select="[chatWelcomeSuggestions]" chatWelcomeSuggestions />
       </chat>
     </div>
   `,
