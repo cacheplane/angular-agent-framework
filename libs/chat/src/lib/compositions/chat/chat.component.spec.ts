@@ -216,6 +216,25 @@ describe('ChatComponent welcome branch', () => {
       expect(c.showWelcome()).toBe(false);
     });
   });
+
+  it('hides the auto-rendered model picker when [showModelPicker] is false', () => {
+    TestBed.configureTestingModule({});
+    const injector = TestBed.inject(Injector);
+    runInInjectionContext(injector, () => {
+      const c = new ChatComponent();
+      setSignalInput(c.agent, mockAgent({ messages: [] }));
+      setSignalInput(c.modelOptions, [{ value: 'gpt-5', label: 'gpt-5' }]);
+      // Default: showModelPicker is true, so the auto-picker guard passes
+      expect(c.showModelPicker()).toBe(true);
+      expect(c.modelOptions().length).toBeGreaterThan(0);
+      // When showModelPicker is false, the guard suppresses the picker
+      setSignalInput(c.showModelPicker, false);
+      expect(c.showModelPicker()).toBe(false);
+      // The template guard `showModelPicker() && modelOptions().length > 0`
+      // evaluates to false, so the auto-rendered picker is hidden.
+      expect(c.showModelPicker() && c.modelOptions().length > 0).toBe(false);
+    });
+  });
 });
 
 describe('ChatComponent — left-flash regression', () => {
