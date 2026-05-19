@@ -51,6 +51,9 @@ rmSync(stagedDependenciesDir, { recursive: true, force: true });
 mkdirSync(stagedDependenciesDir, { recursive: true });
 
 for (const capability of capabilities) {
+  if (!capability.pythonDir) {
+    continue; // ag-ui (in-process) and other no-Python caps
+  }
   const manifestPath = resolve(rootDir, capability.pythonDir, 'langgraph.json');
   const manifest = readManifest(manifestPath);
   if (!manifest.graphs) {

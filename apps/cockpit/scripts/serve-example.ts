@@ -36,6 +36,11 @@ if (allMode) {
   const cap = findCapability(capabilityArg!);
   if (!cap) { console.error(`Unknown: ${capabilityArg}`); process.exit(1); }
   run(cap.id, `npx nx run ${cap.angularProject}:serve:cockpit --port ${cap.port}`, '33');
-  run(`${cap.id}-py`, `cd ${cap.pythonDir} && source $HOME/.local/bin/env 2>/dev/null; uv sync && uv run langgraph dev --port 8123`, '35');
-  console.log(`\n🚀 ${cap.id}: cockpit=4201 angular=${cap.port} langgraph=8123\n`);
+  if (cap.pythonDir) {
+    run(`${cap.id}-py`, `cd ${cap.pythonDir} && source $HOME/.local/bin/env 2>/dev/null; uv sync && uv run langgraph dev --port 8123`, '35');
+    console.log(`\n🚀 ${cap.id}: cockpit=4201 angular=${cap.port} langgraph=8123\n`);
+  } else {
+    // ag-ui (in-process) and other no-Python caps have no langgraph backend.
+    console.log(`\n🚀 ${cap.id}: cockpit=4201 angular=${cap.port} (no langgraph backend)\n`);
+  }
 }

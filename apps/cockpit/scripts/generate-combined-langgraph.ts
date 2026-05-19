@@ -39,6 +39,9 @@ function normalizeEntrypoint(pythonDir: string, graphName: string): string {
 const graphs: Record<string, string> = {};
 const dependencies = new Set<string>();
 for (const c of capabilities) {
+  if (!c.pythonDir || !c.graphName) {
+    continue; // ag-ui (in-process) and other no-Python caps
+  }
   graphs[c.graphName] = `./${c.pythonDir}/${normalizeEntrypoint(c.pythonDir, c.graphName)}`;
   dependencies.add(`./${c.pythonDir}`);
 }
