@@ -257,6 +257,16 @@ export interface A2uiActionMessage {
     sourceComponentId: string;
     timestamp: string;
     context: Record<string, unknown>;
+    /**
+     * Optional human-friendly label for the action — typically derived
+     * from the source component's authored text (e.g. a Button's child
+     * Text literalString). Set by `buildA2uiActionMessage` when the
+     * source is a Button-with-Text-child; left undefined otherwise.
+     * Used by the chat-lib's transcript renderer to label the user
+     * bubble; backends may ignore. See spec
+     * 2026-05-19-llm-generated-labels-design.md.
+     */
+    label?: string;
   };
   metadata?: {
     a2uiClientDataModel: A2uiClientDataModel;
