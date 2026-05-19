@@ -30,7 +30,11 @@ import { WelcomeSuggestionsComponent } from './welcome-suggestions.component';
     </chat-sidebar>
   `,
   styles: [`
-    :host { display: block; flex: 1; min-height: 0; }
+    /* chat-sidebar's visible chrome is position: fixed (panel + launcher),
+     * so its host element doesn't need to take layout space. Use
+     * display: contents on the host to drop it from the flow, and let
+     * the sibling .sidebar-mode__background fill the visible area. */
+    :host { display: block; flex: 1; min-height: 0; position: relative; }
     .sidebar-mode__background {
       display: grid;
       place-items: center;
@@ -38,6 +42,13 @@ import { WelcomeSuggestionsComponent } from './welcome-suggestions.component';
       color: #8a92a3;
       font-size: 14px;
     }
+    :host ::ng-deep > chat-sidebar { display: contents; }
+    /* The chat-sidebar default content slot (.chat-sidebar__content) is
+     * meant for the consumer's page content when chat-sidebar is in
+     * push mode. The demo uses .sidebar-mode__background instead, so
+     * hide the default content slot — its min-height: 100vh would
+     * otherwise stack below the background and overflow the page. */
+    :host ::ng-deep .chat-sidebar__content { display: none; }
   `],
 })
 export class SidebarMode {

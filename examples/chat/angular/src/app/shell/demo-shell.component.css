@@ -5,8 +5,12 @@
 
 .demo-shell {
   position: relative;
-  display: block;
+  display: flex;
+  flex-direction: column;
   height: 100%;
+  /* Publish the toolbar height as a CSS var so fixed-position overlays
+   * (chat-sidenav, chat-sidebar panel) can clear it. */
+  --demo-toolbar-height: 51px;
 }
 
 .demo-shell__hamburger {
@@ -34,7 +38,8 @@
 }
 
 .demo-shell__main {
-  height: 100%;
+  flex: 1;
+  min-height: 0;
   transition: padding-left 200ms ease;
   padding-left: 0;
   display: flex;
@@ -176,4 +181,21 @@
 .demo-shell__theme-toggle:hover {
   background: var(--ngaf-chat-surface-alt);
   color: var(--ngaf-chat-text);
+}
+
+/* The toolbar is full-width at the top of the page. Fixed-position
+ * chrome (chat-sidenav, chat-sidebar panel) lives at top:0 by default
+ * — push them down by the toolbar height so they don't render
+ * underneath. Scoped to .demo-shell so the chat library's own
+ * positioning is unchanged for consumers without a top toolbar. */
+.demo-shell ::ng-deep chat-sidenav {
+  top: var(--demo-toolbar-height);
+  /* chat-sidenav has `height: 100%` on :host plus position: fixed + bottom: 0.
+   * With our top override the explicit height "wins" and the sidenav extends
+   * past the viewport (top + 100% > 100vh). Constrain the height to the
+   * viewport minus the toolbar. */
+  height: calc(100% - var(--demo-toolbar-height));
+}
+.demo-shell ::ng-deep .chat-sidebar__panel {
+  top: var(--demo-toolbar-height);
 }

@@ -1,6 +1,6 @@
 {
   "name": "@ngaf/chat",
-  "version": "0.0.40",
+  "version": "0.0.41",
   "exports": {
     "./chat.css": "./chat.css",
     "./themes/default-dark.css": "./themes/default-dark.css",
