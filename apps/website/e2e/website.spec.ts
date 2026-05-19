@@ -148,9 +148,9 @@ test('api reference renders in docs', async ({ page }) => {
   await expect(page.locator('article').first()).toBeVisible();
 });
 
-test('nav has pricing link', async ({ page }) => {
+test('footer has pricing link', async ({ page }) => {
   await page.goto('/');
-  await expect(page.locator('nav a[href="/pricing"]').first()).toBeVisible();
+  await expect(page.locator('footer a[href="/pricing"]').first()).toBeVisible();
 });
 
 test('mobile viewport renders nav', async ({ page }) => {
