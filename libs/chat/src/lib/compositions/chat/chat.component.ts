@@ -32,6 +32,7 @@ import { ChatScrollBubbleComponent } from '../../primitives/chat-scroll-bubble/c
 import { createContentClassifier, type ContentClassifier } from '../../streaming/content-classifier';
 import { createPartialArgsBridge, type PartialArgsBridge } from '../../a2ui/partial-args-bridge';
 import { createA2uiSurfaceStore, type A2uiSurfaceStore } from '../../a2ui/surface-store';
+import { a2uiActionLabel } from '../../a2ui/action-label';
 import { messageContent } from '../shared/message-utils';
 import { CHAT_HOST_TOKENS, ensureChatRootStyles } from '../../styles/chat-tokens';
 import type { ChatRenderEvent } from './chat-render-event';
@@ -180,7 +181,7 @@ export function isPinned(
           <div chatBody class="chat-scroll" #scrollContainer (scroll)="onScroll()">
             <chat-message-list [agent]="agent()">
               <ng-template chatMessageTemplate="human" let-message let-i="index">
-                <chat-message [role]="'user'" [prevRole]="prevRole(i)">{{ messageContent(message) }}</chat-message>
+                <chat-message [role]="'user'" [prevRole]="prevRole(i)">{{ humanContent(message) }}</chat-message>
               </ng-template>
 
               <ng-template chatMessageTemplate="ai" let-message let-i="index">
@@ -367,6 +368,29 @@ export class ChatComponent {
   });
 
   readonly messageContent = messageContent;
+
+  /**
+   * Renderable content for a human-role message bubble. Most human
+   * messages are typed prompts and pass through `messageContent`
+   * unchanged. A2UI action messages (e.g. form submits, button clicks
+   * on a rendered surface) flow through the same submit channel and
+   * land in the message stream as a HumanMessage whose content is a
+   * JSON-serialized `A2uiActionMessage`. Showing the raw JSON as if
+   * the user typed it leaks the protocol; per the A2UI v0.9 spec
+   * those events resemble tool calls more than user utterances.
+   *
+   * `a2uiActionLabel` returns a short human-readable label for
+   * recognized action shapes ("Search flights", "Selected flight UA123",
+   * etc.) — or null for any non-action content, in which case we fall
+   * back to the original text.
+   */
+  protected humanContent(message: unknown): string {
+    // Cast: `messageContent` is typed against LangChain's BaseMessage, but
+    // templates iterate the chat-lib's looser `Message` shape. Either type
+    // is fine at runtime (`extractText` only reads `.content`).
+    const raw = messageContent(message as Parameters<typeof messageContent>[0]);
+    return a2uiActionLabel(raw) ?? raw;
+  }
 
   /**
    * True while a message's reasoning is mid-stream — i.e. it's the latest
