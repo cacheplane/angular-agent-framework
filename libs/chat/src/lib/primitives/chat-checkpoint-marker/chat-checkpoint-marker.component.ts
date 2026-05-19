@@ -52,6 +52,20 @@ import { CHAT_HOST_TOKENS } from '../../styles/chat-tokens';
       font-size: 11px;
       z-index: 5;
     }
+    /* Invisible hover-bridge: a 10px-wide pseudo-element bridges the visual
+       gap between the 10px dot and the pill (which sits at left:18px). Without
+       it, the user's cursor crosses 8px of dead space while moving toward the
+       pill — neither dot nor pill is hovered during that traversal, and the
+       pill flickers off before the cursor reaches it. The bridge is created
+       on the pill itself so the same :hover chain keeps the pill open. */
+    .chat-checkpoint-marker__pill::before {
+      content: '';
+      position: absolute;
+      left: -10px;
+      top: 0;
+      bottom: 0;
+      width: 10px;
+    }
     .chat-checkpoint-marker__dot:hover + .chat-checkpoint-marker__pill,
     .chat-checkpoint-marker__dot:focus-visible + .chat-checkpoint-marker__pill,
     .chat-checkpoint-marker__pill:hover {
