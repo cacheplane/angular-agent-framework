@@ -78,10 +78,19 @@ export class LangGraphThreadsAdapter {
 
   /** Fetch the latest thread list from the server. Failures are
    *  logged via `console.error` (not swallowed silently — silent
-   *  catches have masked prod issues in the past). */
+   *  catches have masked prod issues in the past).
+   *
+   *  Invocation and resolution are logged at `console.debug` so prod
+   *  inspection can distinguish "never called" from "called but
+   *  resolved empty" from "called and threw." This was prompted by a
+   *  demo.threadplane.ai cold-load bug where the sidenav stayed empty
+   *  with no visible signal. Tighten the log volume if it becomes
+   *  noisy. */
   async refresh(): Promise<void> {
+    console.debug('[LangGraphThreadsAdapter.refresh] invoked');
     try {
       const list = await this.client.threads.search({ limit: 50 });
+      console.debug('[LangGraphThreadsAdapter.refresh] resolved', list.length);
       const mapped = list.map((t) => this.toThread(t));
       this._threads.set(
         mapped

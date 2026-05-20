@@ -331,7 +331,7 @@
       {
         "name": "refresh",
         "signature": "refresh()",
-        "description": "Fetch the latest thread list from the server. Failures are\n logged via `console.error` (not swallowed silently — silent\n catches have masked prod issues in the past).",
+        "description": "Fetch the latest thread list from the server. Failures are\n logged via `console.error` (not swallowed silently — silent\n catches have masked prod issues in the past).\n\n Invocation and resolution are logged at `console.debug` so prod\n inspection can distinguish \"never called\" from \"called but\n resolved empty\" from \"called and threw.\" This was prompted by a\n demo.threadplane.ai cold-load bug where the sidenav stayed empty\n with no visible signal. Tighten the log volume if it becomes\n noisy.",
         "params": []
       },
       {
