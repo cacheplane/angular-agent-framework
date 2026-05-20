@@ -1,0 +1,12 @@
+{
+  "fixtures": [
+    {
+      "match": {
+        "userMessage": "Hello"
+      },
+      "response": {
+        "content": "The user sent a simple greeting (\"Hello\"), so the immediate goal is to acknowledge the greeting and invite them to continue (e.g., ask how I can help or what they'd like to discuss)."
+      }
+    }
+  ]
+}

@@ -87,6 +87,12 @@
         "cwd": "cockpit/langgraph/persistence/angular",
         "command": "npx tsx -e \"import { langgraphPersistenceAngularModule } from './src/index.ts'; const module = langgraphPersistenceAngularModule; if (module.id !== 'langgraph-persistence-angular' || module.title !== 'LangGraph Persistence (Angular)') { throw new Error('Unexpected module shape for ' + module.id); }\""
       }
+    },
+    "e2e": {
+      "executor": "@nx/playwright:playwright",
+      "options": {
+        "config": "cockpit/langgraph/persistence/angular/e2e/playwright.config.ts"
+      }
     }
   }
 }
