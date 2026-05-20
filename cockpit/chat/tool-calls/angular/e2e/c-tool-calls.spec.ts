@@ -7,14 +7,20 @@ const PROMPT = "What's the status of UA123?";
 test('c-tool-calls: parent dispatches lookup_flight tool, continuation surfaces flight data', async ({ page }) => {
   const bubble = await submitAndWaitForResponse(page, PROMPT);
 
-  // The chat-tool-calls primitive renders a card per tool call. Card label
-  // includes the tool name. Asserting it's in the DOM proves the parent's
-  // tool_call routed through the chat-tool-calls UI primitive.
-  const toolCallChip = page.getByRole('button', { name: /lookup_flight|tool/i }).first();
-  await expect(toolCallChip).toBeVisible({ timeout: 30_000 });
+  // The chat-tool-calls primitive mounts as the wrapper for tool-call UI.
+  // Tightened from a generic getByRole('button') (which would match any
+  // unrelated button on the page) to the specific custom-element selectors
+  // — proves the parent's tool_call routed through the actual @ngaf/chat
+  // primitive, not just any DOM button that happens to mention the tool.
+  await expect(page.locator('chat-tool-calls').first()).toBeVisible({ timeout: 30_000 });
+
+  // Inside the wrapper, the per-call card is rendered as <chat-tool-call-card>.
+  // For a single lookup_flight call (no grouping), there's exactly one card.
+  const card = page.locator('chat-tool-call-card').first();
+  await expect(card).toBeVisible();
+  await expect(card).toContainText('lookup_flight');
 
   // The continuation's text mentions a distinctive phrase from the captured
   // response — proves the tool-result-then-text loop completed end-to-end.
-  const finalText = await bubble.innerText();
-  expect(finalText.toLowerCase()).toContain('ua123');
+  await expect(bubble).toContainText('UA123', { ignoreCase: true });
 });
