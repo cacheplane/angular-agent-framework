@@ -6,6 +6,20 @@
 # flows in sequence so the recorded fixture covers both confirm and cancel
 # resume paths.
 #
+# WHY THIS IS A SPECIAL-CASE SCRIPT (not using the generic
+# scripts/record-aimock-cap.sh):
+#
+# Most caps' flows are normal LLM-call → tool_call → continuation cycles
+# that complete in a single run; the generic recorder handles those by
+# polling for terminal status (success/error/timeout/interrupted) and then
+# merging the captured fixture files. c-interrupts is different: the graph
+# calls langgraph's interrupt() inside a ToolNode, which pauses the run
+# (status=interrupted) and requires the client to POST a `command.resume`
+# value back to continue. The recorded fixture has to capture BOTH the
+# pre-interrupt LLM call AND the post-resume continuation, which means
+# driving the resume API call from the recorder script. The drive_flow
+# helper below handles that two-phase dance.
+#
 # Run from repo root:
 #   OPENAI_API_KEY=sk-... bash cockpit/chat/interrupts/angular/e2e/scripts/record-c-interrupts.sh
 set -euo pipefail
