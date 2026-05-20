@@ -14,12 +14,27 @@ export const routes: Routes = [
           import('./modes/embed-mode.component').then((m) => m.EmbedMode),
       },
       {
+        path: 'embed/:threadId',
+        loadComponent: () =>
+          import('./modes/embed-mode.component').then((m) => m.EmbedMode),
+      },
+      {
         path: 'popup',
         loadComponent: () =>
           import('./modes/popup-mode.component').then((m) => m.PopupMode),
       },
       {
+        path: 'popup/:threadId',
+        loadComponent: () =>
+          import('./modes/popup-mode.component').then((m) => m.PopupMode),
+      },
+      {
         path: 'sidebar',
+        loadComponent: () =>
+          import('./modes/sidebar-mode.component').then((m) => m.SidebarMode),
+      },
+      {
+        path: 'sidebar/:threadId',
         loadComponent: () =>
           import('./modes/sidebar-mode.component').then((m) => m.SidebarMode),
       },
