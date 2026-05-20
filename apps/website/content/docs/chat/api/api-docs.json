@@ -3414,12 +3414,12 @@
   {
     "name": "ChatSidenavScrimComponent",
     "kind": "class",
-    "description": "Backdrop scrim for chat-sidenav's drawer mode, rendered as a sibling of\n<chat-sidenav> so its z-index sits cleanly between the page content\nand the drawer host (escapes the drawer host's stacking context).\n\nUsage:\n  <chat-sidenav-scrim [open]=\"drawerOpen()\" (close)=\"drawerOpen.set(false)\" />\n  <chat-sidenav [(open)]=\"drawerOpen\" ...></chat-sidenav>",
+    "description": "Backdrop scrim for chat-sidenav's drawer mode, rendered as a sibling of\n<chat-sidenav> so its z-index sits cleanly between the page content\nand the drawer host (escapes the drawer host's stacking context).\n\nUsage:\n  <chat-sidenav-scrim [open]=\"drawerOpen()\" (dismiss)=\"drawerOpen.set(false)\" />\n  <chat-sidenav [(open)]=\"drawerOpen\" ...></chat-sidenav>",
     "params": [],
     "examples": [],
     "properties": [
       {
-        "name": "close",
+        "name": "dismiss",
         "type": "OutputEmitterRef<void>",
         "description": "Fires when the user clicks the backdrop.",
         "optional": false
