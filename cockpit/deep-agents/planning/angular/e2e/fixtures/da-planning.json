@@ -1,0 +1,18 @@
+{
+  "fixtures": [
+    {
+      "match": {
+        "userMessage": "Hello"
+      },
+      "response": {
+        "content": "[{\"title\":\"Respond with a friendly greeting\",\"status\":\"pending\"},{\"title\":\"Ask how I can help\",\"status\":\"pending\"},{\"title\":\"Give examples of what I can do\",\"status\":\"pending\"},{\"title\":\"Suggest next steps/questions\",\"status\":\"pending\"}]\n\nStep 1 \u2014 Respond with a friendly greeting (completed):\nHello! Nice to meet you.\n\nStep 2 \u2014 Ask how I can help (completed):\nHow can I help you today?\n\nStep 3 \u2014 Give examples of what I can do (completed):\n- Answer questions or explain concepts\n- Help write or edit email, essays, or code\n- Brainstorm ideas or outline plans\n- Summarize articles or long text\n- Translate or proofread text\n- Solve math problems or debug code\n\nStep 4 \u2014 Suggest next steps/questions (completed):\nYou can tell me what you need right now (a question, a task, or a topic). If you prefer, pick one of the examples above and I\u2019ll get started."
+      }
+    },
+    {
+      "match": {},
+      "response": {
+        "content": "Plan (4 steps)\n1. Ask what you need.\n2. Clarify scope, format, and any constraints (deadline, length, tone, audience).\n3. Offer examples of how I can help and suggest a concrete first deliverable.\n4. Confirm and begin work.\n\nExecution\nStep 1 \u2014 Ask what you need:\nWhat would you like me to do right now?\n\nStep 2 \u2014 Clarify scope and constraints:\nIf you already have something specific, tell me: the goal, desired format (email, essay, code, plan, summary, slides, etc.), length, tone (formal/casual), audience, and any deadline. If you don\u2019t have constraints, say so.\n\nStep 3 \u2014 Examples and a suggested first deliverable:\nHere are quick examples of tasks I can do \u2014 pick one or describe your own:\n- Write or edit an email (provide recipient/context and key points).\n- Draft an essay or article (topic, thesis, word count).\n- Create a project plan or roadmap (objective, timeline).\n- Summarize an article or document (paste text or upload).\n- Debug or write code (language, repo/files, expected behavior).\n- Brainstorm ideas (product names, marketing angles, meeting agendas).\n\nSuggested first deliverable: I can produce a short sample (e.g., a 150\u2013300 word draft, a 5-item plan, or a 1-paragraph summary) so you can confirm style before I expand.\n\nStep 4 \u2014 Confirm and begin:\nTell me which task you want and any constraints, or choose one of the examples above. I\u2019ll start immediately."
+      }
+    }
+  ]
+}

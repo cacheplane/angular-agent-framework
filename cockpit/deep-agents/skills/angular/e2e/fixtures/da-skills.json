@@ -1,0 +1,12 @@
+{
+  "fixtures": [
+    {
+      "match": {
+        "userMessage": "Hello"
+      },
+      "response": {
+        "content": "Hello! How can I help you today? I can evaluate math expressions, count words in a text, or summarize content \u2014 which would you like?"
+      }
+    }
+  ]
+}

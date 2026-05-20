@@ -86,6 +86,12 @@
       "options": {
         "command": "npx tsx -e \"import { deepAgentsSubagentsAngularModule } from './cockpit/deep-agents/subagents/angular/src/index.ts'; const mod = deepAgentsSubagentsAngularModule; if (mod.id !== 'deep-agents-subagents-angular') throw new Error('Unexpected id: ' + mod.id); if (mod.title !== 'Deep Agents Subagents (Angular)') throw new Error('Unexpected title: ' + mod.title); console.log(JSON.stringify({ id: mod.id, title: mod.title }));\""
       }
+    },
+    "e2e": {
+      "executor": "@nx/playwright:playwright",
+      "options": {
+        "config": "cockpit/deep-agents/subagents/angular/e2e/playwright.config.ts"
+      }
     }
   }
 }
