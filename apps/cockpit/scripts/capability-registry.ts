@@ -31,12 +31,12 @@ export const capabilities: readonly Capability[] = [
   { id: 'da-skills', product: 'deep-agents', topic: 'skills', angularProject: 'cockpit-deep-agents-skills-angular', port: 4314, pythonDir: 'cockpit/deep-agents/skills/python', graphName: 'da-skills' },
   { id: 'da-sandboxes', product: 'deep-agents', topic: 'sandboxes', angularProject: 'cockpit-deep-agents-sandboxes-angular', port: 4315, pythonDir: 'cockpit/deep-agents/sandboxes/python', graphName: 'da-sandboxes' },
   // Render capabilities
-  { id: 'r-spec-rendering', product: 'render', topic: 'spec-rendering', angularProject: 'cockpit-render-spec-rendering-angular', port: 4401, pythonDir: 'cockpit/render/spec-rendering/python', graphName: 'r-spec-rendering' },
-  { id: 'r-element-rendering', product: 'render', topic: 'element-rendering', angularProject: 'cockpit-render-element-rendering-angular', port: 4402, pythonDir: 'cockpit/render/element-rendering/python', graphName: 'r-element-rendering' },
-  { id: 'r-state-management', product: 'render', topic: 'state-management', angularProject: 'cockpit-render-state-management-angular', port: 4403, pythonDir: 'cockpit/render/state-management/python', graphName: 'r-state-management' },
-  { id: 'r-registry', product: 'render', topic: 'registry', angularProject: 'cockpit-render-registry-angular', port: 4404, pythonDir: 'cockpit/render/registry/python', graphName: 'r-registry' },
-  { id: 'r-repeat-loops', product: 'render', topic: 'repeat-loops', angularProject: 'cockpit-render-repeat-loops-angular', port: 4405, pythonDir: 'cockpit/render/repeat-loops/python', graphName: 'r-repeat-loops' },
-  { id: 'r-computed-functions', product: 'render', topic: 'computed-functions', angularProject: 'cockpit-render-computed-functions-angular', port: 4406, pythonDir: 'cockpit/render/computed-functions/python', graphName: 'r-computed-functions' },
+  { id: 'r-spec-rendering', product: 'render', topic: 'spec-rendering', angularProject: 'cockpit-render-spec-rendering-angular', port: 4401, pythonPort: 5401, pythonDir: 'cockpit/render/spec-rendering/python', graphName: 'r-spec-rendering' },
+  { id: 'r-element-rendering', product: 'render', topic: 'element-rendering', angularProject: 'cockpit-render-element-rendering-angular', port: 4402, pythonPort: 5402, pythonDir: 'cockpit/render/element-rendering/python', graphName: 'r-element-rendering' },
+  { id: 'r-state-management', product: 'render', topic: 'state-management', angularProject: 'cockpit-render-state-management-angular', port: 4403, pythonPort: 5403, pythonDir: 'cockpit/render/state-management/python', graphName: 'r-state-management' },
+  { id: 'r-registry', product: 'render', topic: 'registry', angularProject: 'cockpit-render-registry-angular', port: 4404, pythonPort: 5404, pythonDir: 'cockpit/render/registry/python', graphName: 'r-registry' },
+  { id: 'r-repeat-loops', product: 'render', topic: 'repeat-loops', angularProject: 'cockpit-render-repeat-loops-angular', port: 4405, pythonPort: 5405, pythonDir: 'cockpit/render/repeat-loops/python', graphName: 'r-repeat-loops' },
+  { id: 'r-computed-functions', product: 'render', topic: 'computed-functions', angularProject: 'cockpit-render-computed-functions-angular', port: 4406, pythonPort: 5406, pythonDir: 'cockpit/render/computed-functions/python', graphName: 'r-computed-functions' },
   // Chat capabilities
   { id: 'c-messages', product: 'chat', topic: 'messages', angularProject: 'cockpit-chat-messages-angular', port: 4501, pythonPort: 5501, pythonDir: 'cockpit/chat/messages/python', graphName: 'c-messages' },
   { id: 'c-input', product: 'chat', topic: 'input', angularProject: 'cockpit-chat-input-angular', port: 4502, pythonPort: 5502, pythonDir: 'cockpit/chat/input/python', graphName: 'c-input' },
