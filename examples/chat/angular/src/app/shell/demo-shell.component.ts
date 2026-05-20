@@ -12,7 +12,7 @@ import {
 import { Router, RouterOutlet, NavigationEnd } from '@angular/router';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { filter, map, startWith } from 'rxjs/operators';
-import { agent } from '@ngaf/langgraph';
+import { agent, LangGraphThreadsAdapter, refreshOnRunEnd } from '@ngaf/langgraph';
 import { NgafTelemetryService } from '@ngaf/telemetry/browser';
 import {
   ChatInterruptPanelComponent,
@@ -29,7 +29,6 @@ import {
   type ProjectActionAdapter,
 } from '@ngaf/chat';
 import { PalettePersistence } from './palette-persistence.service';
-import { ThreadsService } from './threads.service';
 import { ProjectsService } from './projects.service';
 import { DEMO_AGENT } from './shell-tokens';
 import { createCanonicalDemoRuntimeTelemetrySink } from './runtime-telemetry';
@@ -68,7 +67,7 @@ export class DemoShell {
   private readonly router = inject(Router);
   private readonly persistence = inject(PalettePersistence);
   private readonly document = inject(DOCUMENT);
-  protected readonly threadsSvc = inject(ThreadsService);
+  protected readonly threadsSvc = inject(LangGraphThreadsAdapter);
   protected readonly projectsSvc = inject(ProjectsService);
   private readonly telemetry = inject(NgafTelemetryService);
 
@@ -114,14 +113,7 @@ export class DemoShell {
     // metadata.title on the first user message via _maybe_write_thread_title;
     // a refresh after run-end picks up the new title in the drawer without
     // needing a manual thread switch or reload.
-    let lastStatus = this.agent.status();
-    effect(() => {
-      const status = this.agent.status();
-      if (lastStatus === 'running' && status !== 'running') {
-        void this.threadsSvc.refresh();
-      }
-      lastStatus = status;
-    });
+    refreshOnRunEnd(this.agent, () => this.threadsSvc.refresh());
 
     if (typeof window !== 'undefined') {
       const onResize = () => this.viewportWidth.set(window.innerWidth);
@@ -438,7 +430,7 @@ export class DemoShell {
   /** Create a new thread via the backend and switch to it. */
   protected async onNewThread(): Promise<void> {
     const sel = this.selectedProjectId();
-    const id = await this.threadsSvc.create(sel ?? undefined);
+    const id = await this.threadsSvc.create(sel ? { projectId: sel } : {});
     if (id) {
       this.threadIdSignal.set(id);
       this.persistence.write('threadId', id);
