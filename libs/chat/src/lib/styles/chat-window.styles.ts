@@ -21,6 +21,11 @@ export const CHAT_WINDOW_STYLES = `
     color: var(--ngaf-chat-primary);
   }
   .chat-window__header:empty { display: none; }
+  /* When the consumer doesn't project a header, balance the chat content
+   * with breathing room at the top equivalent to the input gap at the bottom. */
+  .chat-window__header:empty + .chat-window__body {
+    padding-top: var(--ngaf-chat-input-gap);
+  }
   .chat-window__body {
     flex: 1;
     min-height: 0;

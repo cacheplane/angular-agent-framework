@@ -46,7 +46,7 @@
 .demo-shell__main[data-sidenav-mode="collapsed"] {
   padding-left: var(--ngaf-chat-sidenav-width-collapsed, 56px);
 }
-@media (max-width: 1023px) {
+@media (max-width: 767px) {
   .demo-shell__main[data-sidenav-mode] { padding-left: 0; }
 }
 
@@ -185,6 +185,11 @@
    * viewport minus the toolbar. */
   height: calc(100% - var(--demo-toolbar-height));
 }
+/* chat-sidebar panel renders top-aligned with the page, NOT under the
+ * toolbar — so the panel's close button sits at the same viewport-y as
+ * the hamburger inside the toolbar (both at surface-top + 8 padding).
+ * The panel's z-index is below the toolbar's so the toolbar still
+ * renders above it where they overlap on the right edge. */
 .demo-shell ::ng-deep .chat-sidebar__panel {
-  top: var(--demo-toolbar-height);
+  top: 0;
 }

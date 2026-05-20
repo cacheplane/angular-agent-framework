@@ -172,8 +172,9 @@ export class DemoShell {
     (this.persistence.read('colorScheme') as 'light' | 'dark' | null) ?? 'dark',
   );
 
-  /** Whether the threads drawer is open. Persisted across reloads. */
-  protected readonly drawerOpen = signal<boolean>(this.persistence.read('drawerOpen') ?? false);
+  /** Whether the threads drawer is open. Always starts closed on a fresh
+   *  load — drawer mode is a transient UI state, not a persisted preference. */
+  protected readonly drawerOpen = signal<boolean>(false);
 
   /** Whether the Cmd+K search palette is open. */
   protected readonly paletteOpen = signal<boolean>(false);
@@ -193,15 +194,15 @@ export class DemoShell {
 
   /**
    * User's chosen desktop sidenav mode. Persisted across reloads.
-   * Below 1024px the shell ignores this and forces drawer mode.
+   * Below 768px the shell ignores this and forces drawer mode.
    */
   private readonly storedDesktopMode = signal<'expanded' | 'collapsed'>(
     (this.persistence.read('sidenavMode') as 'expanded' | 'collapsed' | null) ?? 'expanded',
   );
 
-  /** Computed sidenav mode: viewport forces drawer below 1024px, else user preference. */
+  /** Computed sidenav mode: viewport forces drawer below 768px, else user preference. */
   protected readonly sidenavMode = computed<ChatSidenavMode>(() =>
-    this.viewportWidth() >= 1024 ? this.storedDesktopMode() : 'drawer',
+    this.viewportWidth() >= 768 ? this.storedDesktopMode() : 'drawer',
   );
 
   /** Active threads filtered by the selected project (or all when none selected). */
@@ -391,7 +392,6 @@ export class DemoShell {
 
   protected onSidenavOpenChange(next: boolean): void {
     this.drawerOpen.set(next);
-    this.persistence.write('drawerOpen', next);
   }
 
   protected toggleSidenav(): void {

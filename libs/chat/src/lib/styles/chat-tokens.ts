@@ -122,10 +122,14 @@ const SPACING_TOKENS = `
 
 const LAYER_TOKENS = `
   /* Z-index layers — documented for consumers + future primitives.
-   * Default values listed; overridable per-app via :root or :host. */
+   * Default values listed; overridable per-app via :root or :host.
+   * Modal layers sit above drawer so palettes/dialogs stay reachable
+   * when the drawer is open. */
   --ngaf-chat-z-overlay-content: 30;   /* chat-sidebar panel, chat-popup window */
   --ngaf-chat-z-drawer-scrim: 1000;    /* chat-sidenav-scrim backdrop */
   --ngaf-chat-z-drawer: 1001;          /* chat-sidenav drawer mode host */
+  --ngaf-chat-z-modal-scrim: 1100;     /* chat-history-search-palette backdrop */
+  --ngaf-chat-z-modal: 1101;           /* chat-history-search-palette dialog */
 `;
 
 const EDGE_CLAIM_TOKENS = `

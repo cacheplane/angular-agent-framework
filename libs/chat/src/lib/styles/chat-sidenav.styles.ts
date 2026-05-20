@@ -65,6 +65,10 @@ export const CHAT_SIDENAV_STYLES = `
     flex-shrink: 0;
     padding: var(--ngaf-chat-space-3);
   }
+  /* Collapse the header slot when the consumer doesn't project content
+   * — matches the chat-window pattern. Avoids 24px of dead space above
+   * the New chat button. */
+  .chat-sidenav__header:empty { display: none; }
   .chat-sidenav__topbar {
     flex-shrink: 0;
     display: flex;

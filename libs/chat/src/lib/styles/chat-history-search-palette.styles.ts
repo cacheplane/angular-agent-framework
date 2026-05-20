@@ -6,7 +6,7 @@ export const CHAT_HISTORY_SEARCH_PALETTE_STYLES = `
     position: fixed;
     inset: 0;
     background: rgba(0, 0, 0, 0.4);
-    z-index: 50;
+    z-index: var(--ngaf-chat-z-modal-scrim, 1100);
     border: 0;
     padding: 0;
     cursor: pointer;
@@ -22,7 +22,7 @@ export const CHAT_HISTORY_SEARCH_PALETTE_STYLES = `
     border: 1px solid var(--ngaf-chat-separator);
     border-radius: 12px;
     box-shadow: 0 16px 48px rgba(0, 0, 0, 0.25);
-    z-index: 51;
+    z-index: var(--ngaf-chat-z-modal, 1101);
     display: flex;
     flex-direction: column;
     overflow: hidden;
