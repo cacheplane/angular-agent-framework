@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
 import { getAllDocSlugs, getDocBySlug, getDocMetadata } from './docs';
 import { allDocsPages } from './docs-config';
 import { getCanonicalUrl, getSitemapRoutes } from './site-metadata';
@@ -12,7 +13,9 @@ function findInternalDocsLinks(content: string): string[] {
     .filter((href): href is string => Boolean(href));
 }
 
-const contentRoot = path.join(process.cwd(), 'apps', 'website', 'content', 'docs');
+// Resolved relative to this spec file so the path stays correct regardless of
+// the runner's cwd (apps/website/ vs workspace root).
+const contentRoot = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '..', 'content', 'docs');
 
 function walkMdxFiles(dir: string): string[] {
   return fs.readdirSync(dir).flatMap((entry) => {
