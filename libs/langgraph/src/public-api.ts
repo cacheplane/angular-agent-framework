@@ -46,3 +46,19 @@ export type { MockLangGraphAgent } from './lib/testing/mock-langgraph-agent';
 // Citation normalizer — useful for advanced consumers building custom adapters
 // or bridging non-LangGraph message shapes into ngaf Citation[].
 export { extractCitations } from './lib/internals/extract-citations';
+
+// SDK Client helper — handles the SDK's absolute-URL requirement so
+// `/api`-style relative paths work in browser contexts.
+export { createLangGraphClient, toAbsoluteApiUrl } from './lib/client/create-langgraph-client';
+
+// SDK-backed thread store — drop-in replacement for the
+// hand-rolled ThreadsService that consumers used to duplicate.
+export {
+  LangGraphThreadsAdapter,
+  LANGGRAPH_THREADS_CONFIG,
+  LANGGRAPH_CLIENT,
+} from './lib/threads/threads-adapter';
+export type { LangGraphThreadsConfig } from './lib/threads/threads-adapter';
+
+// Lifecycle helper for hooking refreshes onto agent state transitions.
+export { refreshOnRunEnd, refreshOnTransition } from './lib/threads/refresh-on';

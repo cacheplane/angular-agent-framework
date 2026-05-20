@@ -235,6 +235,172 @@
     ]
   },
   {
+    "name": "LangGraphThreadsAdapter",
+    "kind": "class",
+    "description": "SDK-backed thread store. Wraps `client.threads.*` and maps SDK\nthreads to the framework's Thread type for direct use with\n`<chat-thread-list>` / `<chat-sidenav>`.\n\nConsumers wire the framework's `ThreadActionAdapter` to instance\nmethods (rename/delete/archive/pin/...) so the right-click menu\nround-trips through the LangGraph SDK without per-app boilerplate.",
+    "params": [],
+    "examples": [
+      "```ts\nconst svc = inject(LangGraphThreadsAdapter);\nconst actions: ThreadActionAdapter = {\n  rename: (id, t) => svc.rename(id, t),\n  delete: (id) => svc.delete(id),\n};\n```"
+    ],
+    "properties": [
+      {
+        "name": "archivedThreads",
+        "type": "Signal<Thread[]>",
+        "description": "Threads whose `metadata.archived === true`.",
+        "optional": false
+      },
+      {
+        "name": "threads",
+        "type": "Signal<Thread[]>",
+        "description": "Active (non-archived) threads, sorted with pinned first.",
+        "optional": false
+      }
+    ],
+    "methods": [
+      {
+        "name": "archive",
+        "signature": "archive(threadId: string)",
+        "description": "",
+        "params": [
+          {
+            "name": "threadId",
+            "type": "string",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
+        "name": "create",
+        "signature": "create(metadata: Record<string, unknown>)",
+        "description": "",
+        "params": [
+          {
+            "name": "metadata",
+            "type": "Record<string, unknown>",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
+        "name": "delete",
+        "signature": "delete(threadId: string)",
+        "description": "",
+        "params": [
+          {
+            "name": "threadId",
+            "type": "string",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
+        "name": "moveToProject",
+        "signature": "moveToProject(threadId: string, projectId: string | null)",
+        "description": "",
+        "params": [
+          {
+            "name": "threadId",
+            "type": "string",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "projectId",
+            "type": "string | null",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
+        "name": "pin",
+        "signature": "pin(threadId: string)",
+        "description": "",
+        "params": [
+          {
+            "name": "threadId",
+            "type": "string",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
+        "name": "refresh",
+        "signature": "refresh()",
+        "description": "Fetch the latest thread list from the server. Failures are\n logged via `console.error` (not swallowed silently — silent\n catches have masked prod issues in the past).",
+        "params": []
+      },
+      {
+        "name": "rename",
+        "signature": "rename(threadId: string, newTitle: string)",
+        "description": "",
+        "params": [
+          {
+            "name": "threadId",
+            "type": "string",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "newTitle",
+            "type": "string",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
+        "name": "reorderPinned",
+        "signature": "reorderPinned(threadId: string, beforeId: string | null)",
+        "description": "Re-stamp `metadata.pinnedOrder = 0,1,2,...` for the pinned slice\n to reflect the new ordering.",
+        "params": [
+          {
+            "name": "threadId",
+            "type": "string",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "beforeId",
+            "type": "string | null",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
+        "name": "unarchive",
+        "signature": "unarchive(threadId: string)",
+        "description": "",
+        "params": [
+          {
+            "name": "threadId",
+            "type": "string",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
+        "name": "unpin",
+        "signature": "unpin(threadId: string)",
+        "description": "",
+        "params": [
+          {
+            "name": "threadId",
+            "type": "string",
+            "description": "",
+            "optional": false
+          }
+        ]
+      }
+    ]
+  },
+  {
     "name": "MockAgentTransport",
     "kind": "class",
     "description": "Test transport for deterministic agent testing without a real LangGraph server.\n\nScript event batches upfront, then emit them manually or step through them\nin your test specs. Supports error injection and close control.",
@@ -1266,6 +1432,32 @@
     "examples": []
   },
   {
+    "name": "LangGraphThreadsConfig",
+    "kind": "interface",
+    "description": "Configuration consumed by LangGraphThreadsAdapter. Provide\nvia LANGGRAPH_THREADS_CONFIG (typically in app.config.ts):\n\n```ts\nproviders: [\n  { provide: LANGGRAPH_THREADS_CONFIG, useValue: {\n      apiUrl: environment.langGraphApiUrl,\n      titleMetadataKey: 'thread_title',\n  }},\n],\n```",
+    "properties": [
+      {
+        "name": "apiUrl",
+        "type": "string",
+        "description": "Base URL for the LangGraph Platform API. Accepts both absolute\n URLs and relative `/api`-style paths.",
+        "optional": false
+      },
+      {
+        "name": "titleFallback",
+        "type": "string",
+        "description": "Fallback label for threads whose title hasn't been written yet\n (e.g. created but never sent). Defaults to `'Untitled'`.",
+        "optional": true
+      },
+      {
+        "name": "titleMetadataKey",
+        "type": "string",
+        "description": "Metadata key the backend writes the thread title to. Two\n conventions exist in the wild:\n - `'title'` — legacy / canonical demo\n - `'thread_title'` — spec 2026-05-19-llm-generated-labels-design\n Defaults to `'thread_title'`.",
+        "optional": true
+      }
+    ],
+    "examples": []
+  },
+  {
     "name": "MockLangGraphAgent",
     "kind": "interface",
     "description": "A LangGraphAgent mock with writable signals for easy test control.\n\nCast the result of `mockLangGraphAgent()` to this type to access\nwritable signals without unsafe casts in test files.",
@@ -1787,6 +1979,27 @@
     ]
   },
   {
+    "name": "createLangGraphClient",
+    "kind": "function",
+    "description": "Construct a LangGraph SDK Client that accepts both absolute URLs\n(`http://localhost:2024`) and relative `/api`-style paths that get\nproxied by middleware in production. The SDK itself rejects\nrelative URLs, so this helper rewrites them against\n`window.location.origin` when running in the browser.\n\nSingle source of truth for the absolute-URL rewrite — the streaming\ntransport (`fetch-stream.transport.ts`) and the threads adapter\n(`LangGraphThreadsAdapter`) both go through here.",
+    "signature": "createLangGraphClient(apiUrl: string): Client<>",
+    "params": [
+      {
+        "name": "apiUrl",
+        "type": "string",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "Client<>",
+      "description": ""
+    },
+    "examples": [
+      "```ts\nconst client = createLangGraphClient(environment.langGraphApiUrl);\nconst threads = await client.threads.search({ limit: 50 });\n```"
+    ]
+  },
+  {
     "name": "extractCitations",
     "kind": "function",
     "description": "",
@@ -1839,6 +2052,83 @@
     ],
     "returns": {
       "type": "Provider",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "refreshOnRunEnd",
+    "kind": "function",
+    "description": "Call `fn` whenever the agent's status transitions out of `'running'`\n(i.e. when a run completes — success, error, or interrupt). Useful\nfor refreshing thread lists, telemetry, or any other state that\nlags the agent.\n\nMust be called within an injection context (constructor or\n`runInInjectionContext`) — uses Angular's `effect` under the hood.",
+    "signature": "refreshOnRunEnd(agent: LangGraphAgent<>, fn: object): void",
+    "params": [
+      {
+        "name": "agent",
+        "type": "LangGraphAgent<>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "fn",
+        "type": "object",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "void",
+      "description": ""
+    },
+    "examples": [
+      "```ts\nconstructor() {\n  refreshOnRunEnd(this.agent, () => this.threads.refresh());\n}\n```"
+    ]
+  },
+  {
+    "name": "refreshOnTransition",
+    "kind": "function",
+    "description": "Call `fn` whenever any of the watched signals transitions from a\ntruthy \"active\" value to a non-active value. Generic version of\nrefreshOnRunEnd for callers tracking custom state machines.\n\nMust be called within an injection context.",
+    "signature": "refreshOnTransition(watch: Signal<T>, isActive: object, fn: object): void",
+    "params": [
+      {
+        "name": "watch",
+        "type": "Signal<T>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "isActive",
+        "type": "object",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "fn",
+        "type": "object",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "void",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "toAbsoluteApiUrl",
+    "kind": "function",
+    "description": "Exported separately so non-Client callers (e.g. raw fetch) can\n share the same normalization logic.",
+    "signature": "toAbsoluteApiUrl(apiUrl: string): string",
+    "params": [
+      {
+        "name": "apiUrl",
+        "type": "string",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "string",
       "description": ""
     },
     "examples": []

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
-import { Client } from '@langchain/langgraph-sdk';
-import type { StreamMode, ThreadState } from '@langchain/langgraph-sdk';
+import type { Client, StreamMode, ThreadState } from '@langchain/langgraph-sdk';
 import type { AgentQueueEntry, AgentTransport, LangGraphSubmitOptions, StreamEvent } from '../agent.types';
+import { createLangGraphClient } from '../client/create-langgraph-client';
 
 /**
  * Production transport that connects to a LangGraph Platform API via HTTP and SSE.
@@ -26,15 +26,10 @@ export class FetchStreamTransport implements AgentTransport {
    * @param onThreadId - Optional callback invoked when a new thread is created
    */
   constructor(apiUrl: string, onThreadId?: (id: string) => void) {
-    // Normalize relative paths (e.g. '/api') to absolute URLs.
-    // The LangGraph SDK Client requires an absolute URL, but production
-    // environments use relative paths that are proxied by Vercel middleware.
-    const absoluteUrl = apiUrl.startsWith('http://') || apiUrl.startsWith('https://')
-      ? apiUrl
-      : typeof window !== 'undefined'
-        ? `${window.location.origin}${apiUrl}`
-        : apiUrl;
-    this.client = new Client({ apiUrl: absoluteUrl });
+    // createLangGraphClient handles the absolute-URL normalization
+    // required by the SDK when `apiUrl` is a relative `/api`-style
+    // path proxied by middleware in production.
+    this.client = createLangGraphClient(apiUrl);
     this.onThreadId = onThreadId;
   }
 

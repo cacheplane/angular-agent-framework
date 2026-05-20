@@ -1,22 +1,22 @@
 // SPDX-License-Identifier: MIT
-import { Component, effect, inject, signal } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import {
   ChatComponent,
   ChatThreadListComponent,
   type ThreadActionAdapter,
 } from '@ngaf/chat';
-import { agent } from '@ngaf/langgraph';
+import { agent, LangGraphThreadsAdapter, refreshOnRunEnd } from '@ngaf/langgraph';
 import { ExampleChatLayoutComponent } from '@ngaf/example-layouts';
 import { environment } from '../environments/environment';
-import { ThreadsService } from './threads.service';
 
 /**
  * ThreadsComponent demonstrates multi-thread conversation management
- * backed by the real LangGraph SDK — mirrors the canonical demo's
- * shell/threads.service.ts wiring pattern (rename / delete / archive
- * action adapter + run-status refresh trigger). LLM-generated titles
- * surface via `metadata.thread_title`, written by the cap's
- * `generate_title` graph node on each thread's first turn.
+ * backed by the real LangGraph SDK. Consumes the shared
+ * LangGraphThreadsAdapter from `@ngaf/langgraph` — same service the
+ * canonical demo uses — configured for the `metadata.thread_title`
+ * key that this cap's `generate_title` graph node writes (spec
+ * 2026-05-19-llm-generated-labels-design). See app.config.ts for the
+ * LANGGRAPH_THREADS_CONFIG provider.
  */
 @Component({
   selector: 'app-threads',
@@ -50,7 +50,7 @@ import { ThreadsService } from './threads.service';
   `,
 })
 export class ThreadsComponent {
-  protected readonly threadsSvc = inject(ThreadsService);
+  protected readonly threadsSvc = inject(LangGraphThreadsAdapter);
 
   /** Writable signal the agent watches — assigning to it switches the
    *  active thread without forcing a full agent rebuild. */
@@ -67,7 +67,7 @@ export class ThreadsComponent {
   });
 
   /** Action adapter: framework calls these on rename / delete / archive
-   *  after confirmation. Service handles SDK round-trip + refresh. */
+   *  after confirmation. Adapter handles SDK round-trip + refresh. */
   protected readonly threadActions: ThreadActionAdapter = {
     delete: async (id) => {
       await this.threadsSvc.delete(id);
@@ -89,14 +89,7 @@ export class ThreadsComponent {
     // node writes metadata.thread_title on the first turn; refreshing
     // on the running→idle transition surfaces it in the sidenav
     // without a manual reload.
-    let lastStatus = this.agent.status();
-    effect(() => {
-      const status = this.agent.status();
-      if (lastStatus === 'running' && status !== 'running') {
-        void this.threadsSvc.refresh();
-      }
-      lastStatus = status;
-    });
+    refreshOnRunEnd(this.agent, () => this.threadsSvc.refresh());
   }
 
   protected onThreadSelected(threadId: string): void {
