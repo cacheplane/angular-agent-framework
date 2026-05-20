@@ -1,12 +1,19 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
+import { LANGGRAPH_THREADS_CONFIG } from '@ngaf/langgraph';
 import { DemoShell } from './demo-shell.component';
+
+const THREADS_CONFIG = {
+  provide: LANGGRAPH_THREADS_CONFIG,
+  useValue: { apiUrl: 'http://localhost:2024', titleMetadataKey: 'title' },
+};
 
 describe('DemoShell — mode signal', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
       providers: [
+        THREADS_CONFIG,
         provideRouter([
           { path: 'embed', component: DemoShell },
           { path: 'popup', component: DemoShell },
@@ -48,6 +55,7 @@ describe('DemoShell — toolbar layout', () => {
   it('no longer renders the "New conversation" button (removed for tightness)', () => {
     TestBed.configureTestingModule({
       providers: [
+        THREADS_CONFIG,
         provideRouter([
           { path: 'embed', component: DemoShell },
           { path: '', pathMatch: 'full', redirectTo: 'embed' },
@@ -63,6 +71,7 @@ describe('DemoShell — toolbar layout', () => {
   it('renders fields without visible per-field labels (tighter toolbar)', () => {
     TestBed.configureTestingModule({
       providers: [
+        THREADS_CONFIG,
         provideRouter([
           { path: 'embed', component: DemoShell },
           { path: '', pathMatch: 'full', redirectTo: 'embed' },
@@ -85,6 +94,7 @@ describe('DemoShell — toolbar dropdowns use chat-select', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
       providers: [
+        THREADS_CONFIG,
         provideRouter([
           { path: 'embed', component: DemoShell },
           { path: '', pathMatch: 'full', redirectTo: 'embed' },
@@ -103,5 +113,39 @@ describe('DemoShell — toolbar dropdowns use chat-select', () => {
       expect(field.querySelector('chat-select')).toBeTruthy();
       expect(field.querySelector('select')).toBeNull();
     }
+  });
+});
+
+describe('DemoShell — threadId hydration', () => {
+  beforeEach(() => {
+    TestBed.configureTestingModule({
+      providers: [
+        THREADS_CONFIG,
+        provideRouter([
+          { path: 'embed', component: DemoShell },
+          { path: 'embed/:threadId', component: DemoShell },
+          { path: '', pathMatch: 'full', redirectTo: 'embed' },
+          { path: '**', redirectTo: 'embed' },
+        ]),
+      ],
+    });
+  });
+
+  it('hydrates threadIdSignal from /embed/:threadId', async () => {
+    const router = TestBed.inject(Router);
+    await router.navigateByUrl('/embed/abc123');
+    const fx = TestBed.createComponent(DemoShell);
+    fx.detectChanges();
+    const cmp = fx.componentInstance as unknown as { threadIdSignal: () => string | null };
+    expect(cmp.threadIdSignal()).toBe('abc123');
+  });
+
+  it('leaves threadIdSignal null when route has no :threadId', async () => {
+    const router = TestBed.inject(Router);
+    await router.navigateByUrl('/embed');
+    const fx = TestBed.createComponent(DemoShell);
+    fx.detectChanges();
+    const cmp = fx.componentInstance as unknown as { threadIdSignal: () => string | null };
+    expect(cmp.threadIdSignal()).toBeNull();
   });
 });

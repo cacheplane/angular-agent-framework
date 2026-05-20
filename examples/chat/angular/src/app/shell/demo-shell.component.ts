@@ -128,6 +128,14 @@ export class DemoShell {
         this.searchQueryDebounced.set(q);
       }, 150);
     });
+
+    this.readUrlState();
+    this.router.events
+      .pipe(
+        filter((e): e is NavigationEnd => e instanceof NavigationEnd),
+        takeUntilDestroyed(),
+      )
+      .subscribe(() => this.readUrlState());
   }
 
   protected readonly mode = toSignal(
@@ -256,8 +264,8 @@ export class DemoShell {
     { value: 'material-light', label: 'Material light' },
   ]);
 
-  /** Persisted thread id (null on first run). Reactive so reload reconnects to the same thread. */
-  protected readonly threadIdSignal = signal<string | null>(this.persistence.read('threadId') ?? null);
+  /** URL-driven thread id (null when no :threadId param in route). */
+  protected readonly threadIdSignal = signal<string | null>(null);
 
   /** Title of the currently-selected thread, or 'New chat' if none. The
    *  Python graph writes thread.metadata.title from the first user message
@@ -435,6 +443,13 @@ export class DemoShell {
       this.threadIdSignal.set(id);
       this.persistence.write('threadId', id);
     }
+  }
+
+  private readUrlState(): void {
+    let route = this.router.routerState.root;
+    while (route.firstChild) route = route.firstChild;
+    const threadId = route.snapshot.paramMap.get('threadId');
+    this.threadIdSignal.set(threadId);
   }
 
   /**
