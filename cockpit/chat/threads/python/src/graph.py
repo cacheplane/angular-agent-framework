@@ -44,7 +44,12 @@ async def generate_title(state: MessagesState, config) -> dict:
     thread_id = (config.get("configurable") or {}).get("thread_id")
     if not thread_id:
         return {}
-    sdk_url = os.environ.get("LANGGRAPH_API_URL", "http://localhost:2024")
+    # url=None lets the SDK use its in-process ASGI transport when the
+    # call originates from inside a LangGraph server graph (always the
+    # case here). The old fallback to localhost:2024 forced an HTTP
+    # round-trip that fails on the prod runtime container. See PR #492
+    # for the diagnosis trail.
+    sdk_url = os.environ.get("LANGGRAPH_API_URL")
     try:
         client = get_client(url=sdk_url)
         thread = await client.threads.get(thread_id)
