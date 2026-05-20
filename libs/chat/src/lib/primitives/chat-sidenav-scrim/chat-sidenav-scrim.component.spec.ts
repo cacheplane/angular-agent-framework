@@ -24,13 +24,13 @@ describe('ChatSidenavScrimComponent', () => {
     expect(btn.getAttribute('aria-label')).toBe('Close conversations');
   });
 
-  it('emits (close) on click', () => {
+  it('emits (dismiss) on click', () => {
     fx.componentRef.setInput('open', true);
     fx.detectChanges();
-    let closed = false;
-    fx.componentInstance.close.subscribe(() => { closed = true; });
+    let dismissed = false;
+    fx.componentInstance.dismiss.subscribe(() => { dismissed = true; });
     const btn = fx.nativeElement.querySelector('button.chat-sidenav-scrim__button') as HTMLButtonElement;
     btn.click();
-    expect(closed).toBe(true);
+    expect(dismissed).toBe(true);
   });
 });
