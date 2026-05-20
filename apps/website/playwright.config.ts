@@ -10,6 +10,9 @@ const reuseExistingServer = process.env['PLAYWRIGHT_REUSE_EXISTING_SERVER'] === 
 export default defineConfig({
   testDir: './e2e',
   fullyParallel: true,
+  // Match the cockpit configs: 2 retries on CI to absorb transient Next.js
+  // dev-server startup flake; 0 locally for fast feedback.
+  retries: process.env['CI'] ? 2 : 0,
   use: {
     baseURL,
   },
