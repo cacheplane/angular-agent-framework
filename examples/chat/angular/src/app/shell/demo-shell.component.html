@@ -60,7 +60,7 @@
 
   <chat-sidenav-scrim
     [open]="sidenavMode() === 'drawer' && drawerOpen()"
-    (close)="drawerOpen.set(false)"
+    (closed)="drawerOpen.set(false)"
   />
   <chat-sidenav
     [threads]="visibleThreads()"

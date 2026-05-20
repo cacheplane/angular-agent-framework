@@ -8,7 +8,7 @@ import { ChangeDetectionStrategy, Component, input, output } from '@angular/core
  * and the drawer host (escapes the drawer host's stacking context).
  *
  * Usage:
- *   <chat-sidenav-scrim [open]="drawerOpen()" (close)="drawerOpen.set(false)" />
+ *   <chat-sidenav-scrim [open]="drawerOpen()" (closed)="drawerOpen.set(false)" />
  *   <chat-sidenav [(open)]="drawerOpen" ...></chat-sidenav>
  */
 @Component({
@@ -43,6 +43,8 @@ import { ChangeDetectionStrategy, Component, input, output } from '@angular/core
 export class ChatSidenavScrimComponent {
   /** When true, render the backdrop button covering the viewport. */
   readonly open = input<boolean>(false);
-  /** Fires when the user clicks the backdrop. */
-  readonly close = output<void>();
+  /** Fires when the user clicks the backdrop. Past-tense to avoid
+   *  collision with the native DOM `close` event (per
+   *  `@angular-eslint/no-output-native`). */
+  readonly closed = output<void>();
 }
