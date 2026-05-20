@@ -125,8 +125,17 @@ async def _maybe_write_thread_title(state: "State", config: RunnableConfig) -> N
             thread_id,
             metadata={"title": title},
         )
-    except Exception:
-        # Title write must never break the run. Swallow.
+    except Exception as e:  # noqa: BLE001 — title is a UX nicety; never block
+        # Don't break the run, but DO log. A bare swallow has hidden a prod
+        # bug where the title write was failing silently on every thread
+        # (LANGGRAPH_API_URL fallback to localhost:2024 inside the runtime
+        # container). Print to stdout so it surfaces in LangGraph Platform
+        # logs without needing a logger to be configured.
+        print(
+            f"[_maybe_write_thread_title] failed for thread {thread_id}: "
+            f"{type(e).__name__}: {e}",
+            flush=True,
+        )
         return
 
 
