@@ -41,6 +41,7 @@ from langchain_core.messages import (
 from langchain_core.runnables import RunnableConfig
 from langchain_core.tools import tool
 from langgraph_sdk import get_client
+from langsmith import traceable
 
 from src.streaming.a2ui_partial_handler import A2uiPartialHandler
 from src.streaming.envelope_tool import render_a2ui_surface
@@ -81,27 +82,32 @@ def _slice_title(text: str, *, limit: int = 50) -> str:
     return sliced
 
 
-async def _maybe_write_thread_title(state: "State", config: RunnableConfig) -> None:
+@traceable(name="_maybe_write_thread_title", run_type="tool")
+async def _maybe_write_thread_title(state: "State", config: RunnableConfig) -> dict:
     """Side effect: on the first user message in a thread, persist a
     derived title to the thread's LangGraph metadata.
 
     Idempotent — only writes when metadata.title is currently absent.
-    Errors are swallowed; the title is a UX nicety, never a blocker.
+    Errors are NOT raised (title is a UX nicety, never a blocker) but
+    ARE returned in the run output so LangSmith captures them — the
+    bare `except Exception: return` previously hid a prod failure
+    where every title write was throwing silently. The @traceable
+    decorator creates a LangSmith child run with these outputs
+    visible in the trace UI / runs API.
     """
     global _threads_client
     thread_id = (config.get("configurable") or {}).get("thread_id")
+    sdk_url = os.environ.get("LANGGRAPH_API_URL", "http://localhost:2024")
     if not isinstance(thread_id, str) or not thread_id:
-        return
+        return {"skipped": "no thread_id in config"}
 
     try:
         if _threads_client is None:
-            _threads_client = get_client(
-                url=os.environ.get("LANGGRAPH_API_URL", "http://localhost:2024"),
-            )
+            _threads_client = get_client(url=sdk_url)
         thread = await _threads_client.threads.get(thread_id)
         existing = (thread.get("metadata") or {}).get("title")
         if isinstance(existing, str) and existing.strip():
-            return  # Already titled; don't overwrite.
+            return {"skipped": "already titled", "title": existing}
 
         # Find the first user message in the current state.
         first_user = None
@@ -115,28 +121,29 @@ async def _maybe_write_thread_title(state: "State", config: RunnableConfig) -> N
                     first_user = content
                     break
         if not first_user:
-            return
+            return {"skipped": "no human message in state"}
 
         title = _slice_title(first_user)
         if not title:
-            return
+            return {"skipped": "title slice empty"}
 
         await _threads_client.threads.update(
             thread_id,
             metadata={"title": title},
         )
+        return {"wrote_title": title, "sdk_url": sdk_url}
     except Exception as e:  # noqa: BLE001 — title is a UX nicety; never block
-        # Don't break the run, but DO log. A bare swallow has hidden a prod
-        # bug where the title write was failing silently on every thread
-        # (LANGGRAPH_API_URL fallback to localhost:2024 inside the runtime
-        # container). Print to stdout so it surfaces in LangGraph Platform
-        # logs without needing a logger to be configured.
-        print(
-            f"[_maybe_write_thread_title] failed for thread {thread_id}: "
-            f"{type(e).__name__}: {e}",
-            flush=True,
-        )
-        return
+        # Don't break the run, but DO surface the failure. A bare swallow
+        # has hidden a prod bug where every title write was throwing
+        # silently. The @traceable decorator captures this return dict in
+        # the LangSmith run output (visible via /api/v1/runs/query) so we
+        # can diagnose without needing platform stdout access.
+        return {
+            "error_type": type(e).__name__,
+            "error_message": str(e),
+            "sdk_url": sdk_url,
+            "thread_id": thread_id,
+        }
 
 
 SYSTEM_PROMPT = (
