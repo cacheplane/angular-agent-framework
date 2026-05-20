@@ -97,7 +97,15 @@ async def _maybe_write_thread_title(state: "State", config: RunnableConfig) -> d
     """
     global _threads_client
     thread_id = (config.get("configurable") or {}).get("thread_id")
-    sdk_url = os.environ.get("LANGGRAPH_API_URL", "http://localhost:2024")
+    # url=None lets the SDK use its in-process ASGI transport when the
+    # call originates from inside a LangGraph server graph (which is
+    # always the case here). The old fallback to http://localhost:2024
+    # PREVENTED that path: it always forced an HTTP round-trip to a
+    # port that doesn't exist on the prod runtime container (it does
+    # locally because `langgraph dev` listens on 2024 — which is why
+    # this only broke in prod). LANGGRAPH_API_URL is only honoured
+    # when explicitly set, e.g. for cross-process callbacks.
+    sdk_url = os.environ.get("LANGGRAPH_API_URL")
     if not isinstance(thread_id, str) or not thread_id:
         return {"skipped": "no thread_id in config"}
 
