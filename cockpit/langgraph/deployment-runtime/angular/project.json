@@ -87,6 +87,12 @@
         "cwd": "cockpit/langgraph/deployment-runtime/angular",
         "command": "npx tsx -e \"import { langgraphDeploymentRuntimeAngularModule } from './src/index.ts'; const module = langgraphDeploymentRuntimeAngularModule; if (module.id !== 'langgraph-deployment-runtime-angular' || module.title !== 'LangGraph Deployment & Runtime (Angular)') { throw new Error('Unexpected module shape for ' + module.id); }\""
       }
+    },
+    "e2e": {
+      "executor": "@nx/playwright:playwright",
+      "options": {
+        "config": "cockpit/langgraph/deployment-runtime/angular/e2e/playwright.config.ts"
+      }
     }
   }
 }

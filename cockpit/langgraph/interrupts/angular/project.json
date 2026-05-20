@@ -87,6 +87,12 @@
         "cwd": "cockpit/langgraph/interrupts/angular",
         "command": "npx tsx -e \"import { langgraphInterruptsAngularModule } from './src/index.ts'; const module = langgraphInterruptsAngularModule; if (module.id !== 'langgraph-interrupts-angular' || module.title !== 'LangGraph Interrupts (Angular)') { throw new Error('Unexpected module shape for ' + module.id); }\""
       }
+    },
+    "e2e": {
+      "executor": "@nx/playwright:playwright",
+      "options": {
+        "config": "cockpit/langgraph/interrupts/angular/e2e/playwright.config.ts"
+      }
     }
   }
 }

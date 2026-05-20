@@ -16,14 +16,14 @@ export interface Capability {
 }
 
 export const capabilities: readonly Capability[] = [
-  { id: 'streaming', product: 'langgraph', topic: 'streaming', angularProject: 'cockpit-langgraph-streaming-angular', port: 4300, pythonDir: 'cockpit/langgraph/streaming/python', graphName: 'streaming' },
-  { id: 'persistence', product: 'langgraph', topic: 'persistence', angularProject: 'cockpit-langgraph-persistence-angular', port: 4301, pythonDir: 'cockpit/langgraph/persistence/python', graphName: 'persistence' },
-  { id: 'interrupts', product: 'langgraph', topic: 'interrupts', angularProject: 'cockpit-langgraph-interrupts-angular', port: 4302, pythonDir: 'cockpit/langgraph/interrupts/python', graphName: 'interrupts' },
-  { id: 'memory', product: 'langgraph', topic: 'memory', angularProject: 'cockpit-langgraph-memory-angular', port: 4303, pythonDir: 'cockpit/langgraph/memory/python', graphName: 'memory' },
-  { id: 'durable-execution', product: 'langgraph', topic: 'durable-execution', angularProject: 'cockpit-langgraph-durable-execution-angular', port: 4304, pythonDir: 'cockpit/langgraph/durable-execution/python', graphName: 'durable-execution' },
-  { id: 'subgraphs', product: 'langgraph', topic: 'subgraphs', angularProject: 'cockpit-langgraph-subgraphs-angular', port: 4305, pythonDir: 'cockpit/langgraph/subgraphs/python', graphName: 'subgraphs' },
-  { id: 'time-travel', product: 'langgraph', topic: 'time-travel', angularProject: 'cockpit-langgraph-time-travel-angular', port: 4306, pythonDir: 'cockpit/langgraph/time-travel/python', graphName: 'time-travel' },
-  { id: 'deployment-runtime', product: 'langgraph', topic: 'deployment-runtime', angularProject: 'cockpit-langgraph-deployment-runtime-angular', port: 4307, pythonDir: 'cockpit/langgraph/deployment-runtime/python', graphName: 'deployment-runtime' },
+  { id: 'streaming', product: 'langgraph', topic: 'streaming', angularProject: 'cockpit-langgraph-streaming-angular', port: 4300, pythonPort: 5300, pythonDir: 'cockpit/langgraph/streaming/python', graphName: 'streaming' },
+  { id: 'persistence', product: 'langgraph', topic: 'persistence', angularProject: 'cockpit-langgraph-persistence-angular', port: 4301, pythonPort: 5301, pythonDir: 'cockpit/langgraph/persistence/python', graphName: 'persistence' },
+  { id: 'interrupts', product: 'langgraph', topic: 'interrupts', angularProject: 'cockpit-langgraph-interrupts-angular', port: 4302, pythonPort: 5302, pythonDir: 'cockpit/langgraph/interrupts/python', graphName: 'interrupts' },
+  { id: 'memory', product: 'langgraph', topic: 'memory', angularProject: 'cockpit-langgraph-memory-angular', port: 4303, pythonPort: 5303, pythonDir: 'cockpit/langgraph/memory/python', graphName: 'memory' },
+  { id: 'durable-execution', product: 'langgraph', topic: 'durable-execution', angularProject: 'cockpit-langgraph-durable-execution-angular', port: 4304, pythonPort: 5304, pythonDir: 'cockpit/langgraph/durable-execution/python', graphName: 'durable-execution' },
+  { id: 'subgraphs', product: 'langgraph', topic: 'subgraphs', angularProject: 'cockpit-langgraph-subgraphs-angular', port: 4305, pythonPort: 5305, pythonDir: 'cockpit/langgraph/subgraphs/python', graphName: 'subgraphs' },
+  { id: 'time-travel', product: 'langgraph', topic: 'time-travel', angularProject: 'cockpit-langgraph-time-travel-angular', port: 4306, pythonPort: 5306, pythonDir: 'cockpit/langgraph/time-travel/python', graphName: 'time-travel' },
+  { id: 'deployment-runtime', product: 'langgraph', topic: 'deployment-runtime', angularProject: 'cockpit-langgraph-deployment-runtime-angular', port: 4307, pythonPort: 5307, pythonDir: 'cockpit/langgraph/deployment-runtime/python', graphName: 'deployment-runtime' },
   { id: 'da-planning', product: 'deep-agents', topic: 'planning', angularProject: 'cockpit-deep-agents-planning-angular', port: 4310, pythonDir: 'cockpit/deep-agents/planning/python', graphName: 'da-planning' },
   { id: 'da-filesystem', product: 'deep-agents', topic: 'filesystem', angularProject: 'cockpit-deep-agents-filesystem-angular', port: 4311, pythonDir: 'cockpit/deep-agents/filesystem/python', graphName: 'da-filesystem' },
   { id: 'da-subagents', product: 'deep-agents', topic: 'subagents', angularProject: 'cockpit-deep-agents-subagents-angular', port: 4312, pythonDir: 'cockpit/deep-agents/subagents/python', graphName: 'subagents' },

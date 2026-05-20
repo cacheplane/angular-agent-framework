@@ -3,9 +3,9 @@ import { resolve } from 'node:path';
 import { createGlobalSetup } from '../../../../../libs/e2e-harness/src';
 
 export default createGlobalSetup({
-  langgraphCwd: 'cockpit/langgraph/streaming/python',
-  langgraphPort: 5300,
-  angularProject: 'cockpit-langgraph-streaming-angular',
-  angularPort: 4300,
+  langgraphCwd: 'cockpit/langgraph/time-travel/python',
+  langgraphPort: 5306,
+  angularProject: 'cockpit-langgraph-time-travel-angular',
+  angularPort: 4306,
   fixturesDir: resolve(__dirname, 'fixtures'),
 });

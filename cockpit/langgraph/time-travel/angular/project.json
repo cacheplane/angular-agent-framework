@@ -87,6 +87,12 @@
         "cwd": "cockpit/langgraph/time-travel/angular",
         "command": "npx tsx -e \"import { langgraphTimeTravelAngularModule } from './src/index.ts'; const module = langgraphTimeTravelAngularModule; if (module.id !== 'langgraph-time-travel-angular' || module.title !== 'LangGraph Time Travel (Angular)') { throw new Error('Unexpected module shape for ' + module.id); }\""
       }
+    },
+    "e2e": {
+      "executor": "@nx/playwright:playwright",
+      "options": {
+        "config": "cockpit/langgraph/time-travel/angular/e2e/playwright.config.ts"
+      }
     }
   }
 }
