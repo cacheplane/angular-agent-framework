@@ -1,0 +1,18 @@
+{
+  "fixtures": [
+    {
+      "match": {
+        "userMessage": "Hello"
+      },
+      "response": {
+        "toolCalls": [
+          {
+            "name": "research_agent",
+            "arguments": "{\"topic\":\"How to respond to a simple greeting like 'Hello' in a friendly, concise way; suggested phrasing, tone, and follow-up questions to engage user\"}",
+            "id": "call_JAuyEoJ5ILdin2rB6kRACMpw"
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -284,6 +284,12 @@ jobs:
           - { angular: cockpit-langgraph-subgraphs-angular,    python: cockpit/langgraph/subgraphs/python }
           - { angular: cockpit-langgraph-time-travel-angular,  python: cockpit/langgraph/time-travel/python }
           - { angular: cockpit-langgraph-deployment-runtime-angular, python: cockpit/langgraph/deployment-runtime/python }
+          - { angular: cockpit-deep-agents-planning-angular,   python: cockpit/deep-agents/planning/python }
+          - { angular: cockpit-deep-agents-filesystem-angular, python: cockpit/deep-agents/filesystem/python }
+          - { angular: cockpit-deep-agents-subagents-angular,  python: cockpit/deep-agents/subagents/python }
+          - { angular: cockpit-deep-agents-memory-angular,     python: cockpit/deep-agents/memory/python }
+          - { angular: cockpit-deep-agents-skills-angular,     python: cockpit/deep-agents/skills/python }
+          - { angular: cockpit-deep-agents-sandboxes-angular,  python: cockpit/deep-agents/sandboxes/python }
     steps:
       - uses: actions/checkout@v6.0.2
       - uses: actions/setup-node@v6.3.0

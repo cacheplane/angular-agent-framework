@@ -1,0 +1,12 @@
+{
+  "fixtures": [
+    {
+      "match": {
+        "userMessage": "Hello"
+      },
+      "response": {
+        "content": "Hello! How can I help you today? I can read or write files in the workspace\u2014tell me what you'd like to do (e.g., \"read file /path/to/file\" or \"write file /path/to/file with content ...\")."
+      }
+    }
+  ]
+}
