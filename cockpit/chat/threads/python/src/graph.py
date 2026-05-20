@@ -67,8 +67,17 @@ async def generate_title(state: MessagesState, config) -> dict:
         title = (response.content or "").strip().strip('"').strip("'")[:80]
         if title:
             await client.threads.update(thread_id, metadata={"thread_title": title})
-    except Exception:  # noqa: BLE001 — title is a UX nicety; never block
-        pass
+    except Exception as e:  # noqa: BLE001 — title is a UX nicety; never block
+        # Don't break the run, but DO log. A bare pass has hidden a prod
+        # bug in the sibling examples/chat graph where the title write was
+        # failing silently on every thread (LANGGRAPH_API_URL fallback to
+        # localhost:2024 inside the runtime container). Surface here to
+        # catch the same class of failure early.
+        print(
+            f"[generate_title] failed for thread {thread_id}: "
+            f"{type(e).__name__}: {e}",
+            flush=True,
+        )
     return {}
 
 
