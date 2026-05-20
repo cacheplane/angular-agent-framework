@@ -19,25 +19,6 @@ vi.mock('../ui/Section', () => ({
 vi.mock('../ui/Eyebrow', () => ({
   Eyebrow: ({ children }: { children: React.ReactNode }) => <span>{children}</span>,
 }));
-vi.mock('@ngaf/design-tokens', () => ({
-  tokens: {
-    colors: {
-      accent: '#7c3aed',
-      textPrimary: '#111827',
-      textSecondary: '#6b7280',
-      textMuted: '#9ca3af',
-    },
-    surfaces: {
-      border: '#e5e7eb',
-    },
-    typography: {
-      h2: { family: 'sans-serif', size: '2rem', line: '1.2' },
-      bodyLg: { family: 'sans-serif', size: '1.125rem', line: '1.6' },
-      body: { family: 'sans-serif', size: '1rem', line: '1.5' },
-      fontMono: 'monospace',
-    },
-  },
-}));
 
 import { trackCtaClick } from '../../lib/analytics/client';
 
