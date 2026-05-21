@@ -1,4 +1,20 @@
 // SPDX-License-Identifier: MIT
+//
+// Testing strategy for the helpers in this file:
+//
+// These helpers orchestrate Playwright `Page` APIs — `goto`, `getByRole`,
+// `locator`, `click`, `expect.toBeAttached/toBeVisible`. Unit-testing them
+// with a mock Page would mostly verify our wiring of Playwright's API, not
+// real behavior.
+//
+// Authoritative behavioral coverage lives in the cockpit cap aimock e2es
+// (24 specs across cockpit/{chat,langgraph,deep-agents}/*/angular/e2e/),
+// each of which exercises one of these helpers against a real Playwright
+// page driving the cap's UI through aimock-replayed responses. If any of
+// these helpers regress, the matrix lights up red across many caps.
+//
+// `aimock-runner.spec.ts` (in this same directory) covers `startAimock`
+// directly — it's the only helper testable without a real Page.
 import { expect, type Locator, type Page } from '@playwright/test';
 
 /**
