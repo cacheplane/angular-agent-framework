@@ -297,19 +297,6 @@
         ]
       },
       {
-        "name": "getThread",
-        "signature": "getThread(threadId: string)",
-        "description": "Fetch a single thread by id. Returns `null` when the server\n returns 404 (thread doesn't exist) so callers can distinguish\n \"missing\" from \"couldn't reach the server\" — genuine network\n errors rethrow. Used by URL-based thread routing to validate a\n pasted/shared thread id before activating it.",
-        "params": [
-          {
-            "name": "threadId",
-            "type": "string",
-            "description": "",
-            "optional": false
-          }
-        ]
-      },
-      {
         "name": "moveToProject",
         "signature": "moveToProject(threadId: string, projectId: string | null)",
         "description": "",
