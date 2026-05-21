@@ -155,7 +155,7 @@ export class DemoShell {
     });
 
     // Refresh threads list when an agent run completes. The backend writes
-    // metadata.title on the first user message via _maybe_write_thread_title;
+    // metadata.title on the first user message via generate_title;
     // a refresh after run-end picks up the new title in the drawer without
     // needing a manual thread switch or reload.
     refreshOnRunEnd(this.agent, () => this.threadsSvc.refresh());
@@ -315,7 +315,7 @@ export class DemoShell {
 
   /** Title of the currently-selected thread, or 'New chat' if none. The
    *  Python graph writes thread.metadata.title from the first user message
-   *  via _maybe_write_thread_title; threadsSvc surfaces it via threads(). */
+   *  via generate_title; threadsSvc surfaces it via threads(). */
   readonly currentThreadTitle = computed(() => {
     const id = this.threadIdSignal();
     if (!id) return 'New chat';

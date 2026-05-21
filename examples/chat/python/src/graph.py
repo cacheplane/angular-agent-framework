@@ -11,7 +11,7 @@ State the client may send via the LangGraph ``submit``'s ``state`` field:
 Topology:
 
   __start__ → generate ─┬─ [has tool_calls] ─→ tools ─→ generate (loop)
-                        └─ [no tool_calls]  ─→ attach_citations ─→ __end__
+                        └─ [no tool_calls]  ─→ attach_citations ─→ generate_title ─→ __end__
 
 The terminal ``attach_citations`` node walks back from the final AI
 message to the most recent ToolMessage, parses its JSON content, and
@@ -22,7 +22,6 @@ track-by-id stable.
 """
 import json
 import os
-import re
 from typing import Annotated, Literal, Optional
 from typing_extensions import TypedDict
 
@@ -49,43 +48,16 @@ from src.streaming.envelope_normalizer import normalize_envelope_args
 from src.schemas.a2ui_v1 import A2UI_V1_SCHEMA_PROMPT
 
 
-# Module-level singleton client; created lazily on first thread-title write.
-_threads_client = None
+_TITLE_PROMPT = (
+    "In 3-5 words, summarize what the user is asking about. "
+    "Output ONLY the title — no quotes, no period, no prefix."
+)
+_TITLE_MODEL = "gpt-5-mini"
 
 
-def _slice_title(text: str, *, limit: int = 50) -> str:
-    """Trim a user message into a thread title.
-
-    Replaces internal whitespace runs with single spaces, strips leading
-    and trailing whitespace, then slices to `limit` codepoints. Regional
-    indicator pairs (flag emoji) that would be split at the boundary are
-    trimmed so the slice never ends with an orphaned indicator codepoint.
-    """
-    cleaned = re.sub(r"\s+", " ", text).strip()
-    if len(cleaned) <= limit:
-        return cleaned
-    sliced = cleaned[:limit].rstrip()
-    # Regional indicators sit in U+1F1E6–U+1F1FF. A flag emoji is exactly
-    # two consecutive regional indicators. If the slice ends on a regional
-    # indicator that is the *first* of a pair (i.e. the next codepoint in
-    # the original string is also a regional indicator, forming a flag), we
-    # drop it so we never expose a half-flag.
-    _RI_START = 0x1F1E6
-    _RI_END   = 0x1F1FF
-    if sliced and _RI_START <= ord(sliced[-1]) <= _RI_END:
-        pos = len(sliced) - 1
-        # Check whether the preceding character is also a regional indicator
-        # (which would make sliced[-1] the *second* of a pair — it's whole).
-        if pos == 0 or not (_RI_START <= ord(sliced[-2]) <= _RI_END):
-            # Orphaned first indicator — drop it.
-            sliced = sliced[:-1].rstrip()
-    return sliced
-
-
-@traceable(name="_maybe_write_thread_title", run_type="tool")
-async def _maybe_write_thread_title(state: "State", config: RunnableConfig) -> dict:
-    """Side effect: on the first user message in a thread, persist a
-    derived title to the thread's LangGraph metadata.
+@traceable(name="generate_title", run_type="tool")
+async def generate_title(state: "State", config: RunnableConfig) -> dict:
+    """Terminal side effect: generate and persist a short thread title.
 
     Idempotent — only writes when metadata.title is currently absent.
     Errors are NOT raised (title is a UX nicety, never a blocker) but
@@ -95,7 +67,6 @@ async def _maybe_write_thread_title(state: "State", config: RunnableConfig) -> d
     decorator creates a LangSmith child run with these outputs
     visible in the trace UI / runs API.
     """
-    global _threads_client
     thread_id = (config.get("configurable") or {}).get("thread_id")
     # url=None lets the SDK use its in-process ASGI transport when the
     # call originates from inside a LangGraph server graph (which is
@@ -107,15 +78,14 @@ async def _maybe_write_thread_title(state: "State", config: RunnableConfig) -> d
     # when explicitly set, e.g. for cross-process callbacks.
     sdk_url = os.environ.get("LANGGRAPH_API_URL")
     if not isinstance(thread_id, str) or not thread_id:
-        return {"skipped": "no thread_id in config"}
+        return {}
 
     try:
-        if _threads_client is None:
-            _threads_client = get_client(url=sdk_url)
-        thread = await _threads_client.threads.get(thread_id)
+        client = get_client(url=sdk_url)
+        thread = await client.threads.get(thread_id)
         existing = (thread.get("metadata") or {}).get("title")
         if isinstance(existing, str) and existing.strip():
-            return {"skipped": "already titled", "title": existing}
+            return {}
 
         # Find the first user message in the current state.
         first_user = None
@@ -129,17 +99,24 @@ async def _maybe_write_thread_title(state: "State", config: RunnableConfig) -> d
                     first_user = content
                     break
         if not first_user:
-            return {"skipped": "no human message in state"}
+            return {}
+        if first_user.lstrip().startswith("{"):
+            return {}
 
-        title = _slice_title(first_user)
+        llm = ChatOpenAI(model=_TITLE_MODEL, temperature=0)
+        response = await llm.ainvoke([
+            SystemMessage(content=_TITLE_PROMPT),
+            HumanMessage(content=first_user),
+        ])
+        title = (response.content or "").strip().strip('"').strip("'")[:80]
         if not title:
-            return {"skipped": "title slice empty"}
+            return {}
 
-        await _threads_client.threads.update(
+        await client.threads.update(
             thread_id,
             metadata={"title": title},
         )
-        return {"wrote_title": title, "sdk_url": sdk_url}
+        return {}
     except Exception as e:  # noqa: BLE001 — title is a UX nicety; never block
         # Don't break the run, but DO surface the failure. A bare swallow
         # has hidden a prod bug where every title write was throwing
@@ -393,10 +370,6 @@ class State(TypedDict):
 
 
 async def generate(state: State, config: RunnableConfig) -> dict:
-    # Best-effort thread title write on the first user message. Idempotent;
-    # swallows errors so it never blocks the run.
-    await _maybe_write_thread_title(state, config)
-
     model_name = state.get("model") or "gpt-5-mini"
     kwargs = {"model": model_name, "streaming": True}
     if _is_reasoning_model(model_name):
@@ -688,6 +661,7 @@ _builder.add_node("tools", ToolNode([
 ]))
 _builder.add_node("emit_generated_surface", emit_generated_surface)
 _builder.add_node("attach_citations", attach_citations)
+_builder.add_node("generate_title", generate_title)
 _builder.set_entry_point("generate")
 _builder.add_conditional_edges(
     "generate",
@@ -705,8 +679,9 @@ _builder.add_conditional_edges(
         "generate": "generate",
     },
 )
-_builder.add_edge("emit_generated_surface", END)
-_builder.add_edge("attach_citations", END)
+_builder.add_edge("emit_generated_surface", "generate_title")
+_builder.add_edge("attach_citations", "generate_title")
+_builder.add_edge("generate_title", END)
 
 # LangGraph API manages persistence for the deployed graph; keep the
 # exported graph free of a custom checkpointer.

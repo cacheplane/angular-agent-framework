@@ -32,6 +32,8 @@ def test_state_graph_has_tools_and_attach_citations_nodes():
     assert "tools" in nodes, "State graph must add a tools node (Phase 2B)"
     assert "attach_citations" in nodes, \
         "State graph must add an attach_citations terminal node (Phase 2B)"
+    assert "generate_title" in nodes, \
+        "State graph must add a generate_title terminal node"
 
 
 @pytest.mark.smoke
@@ -127,42 +129,85 @@ def test_phase4_artifacts_removed():
         "emit_a2ui_surface node should be replaced by emit_generated_surface"
 
 
-from src.graph import _slice_title
-
-
-class TestSliceTitle:
-    def test_short_text_returned_as_is(self):
-        assert _slice_title("hello world") == "hello world"
-
-    def test_long_text_truncated_to_50(self):
-        text = "a" * 80
-        result = _slice_title(text)
-        assert len(result) == 50
-        assert result == "a" * 50
-
-    def test_newlines_replaced_with_spaces(self):
-        assert _slice_title("hello\nworld") == "hello world"
-
-    def test_emoji_not_split_mid_grapheme(self):
-        # The flag-USA emoji is a 2-codepoint regional-indicator sequence.
-        # A naive [:50] could land between the two indicators if the
-        # 50-char boundary falls there. Slice on grapheme boundary so
-        # the flag stays intact.
-        text = "x" * 49 + "🇺🇸"
-        result = _slice_title(text)
-        # At grapheme boundary 50, the flag is either fully present (51 cps)
-        # or fully absent (49 'x' chars + truncation). Never mid-flag.
-        assert "🇺🇸" in result or result == "x" * 49 or result == "x" * 50
-
-    def test_empty_string_returns_empty(self):
-        assert _slice_title("") == ""
-
-    def test_strips_leading_trailing_whitespace(self):
-        assert _slice_title("  hello  ") == "hello"
-
-
 import asyncio
 from langchain_core.messages import HumanMessage, AIMessage, ToolMessage
+
+
+class TestGenerateTitle:
+    def test_calls_llm_and_writes_metadata_title(self, monkeypatch):
+        import src.graph as graph_mod
+
+        updates = []
+        title_messages = []
+        title_model_kwargs = []
+
+        class FakeThreads:
+            async def get(self, thread_id):
+                assert thread_id == "thread-1"
+                return {"metadata": {}}
+
+            async def update(self, thread_id, metadata):
+                updates.append((thread_id, metadata))
+
+        class FakeClient:
+            threads = FakeThreads()
+
+        class FakeChatOpenAI:
+            def __init__(self, **kwargs):
+                title_model_kwargs.append(kwargs)
+
+            async def ainvoke(self, messages):
+                title_messages.extend(messages)
+                return AIMessage(content='"Plan Kyoto Trip."')
+
+        monkeypatch.setattr(graph_mod, "get_client", lambda url=None: FakeClient())
+        monkeypatch.setattr(graph_mod, "ChatOpenAI", FakeChatOpenAI)
+
+        result = asyncio.run(
+            graph_mod.generate_title(
+                {"messages": [HumanMessage(content="Help me plan a Kyoto trip in April")]},
+                {"configurable": {"thread_id": "thread-1"}},
+            )
+        )
+
+        assert result == {}
+        assert updates == [("thread-1", {"title": "Plan Kyoto Trip."})]
+        assert title_model_kwargs == [{"model": "gpt-5-mini", "temperature": 0}]
+        assert title_messages[-1].content == "Help me plan a Kyoto trip in April"
+
+    def test_skips_when_metadata_title_already_exists(self, monkeypatch):
+        import src.graph as graph_mod
+
+        updates = []
+        llm_calls = []
+
+        class FakeThreads:
+            async def get(self, thread_id):
+                return {"metadata": {"title": "Existing title"}}
+
+            async def update(self, thread_id, metadata):
+                updates.append((thread_id, metadata))
+
+        class FakeClient:
+            threads = FakeThreads()
+
+        class FakeChatOpenAI:
+            def __init__(self, **kwargs):
+                llm_calls.append(kwargs)
+
+        monkeypatch.setattr(graph_mod, "get_client", lambda url=None: FakeClient())
+        monkeypatch.setattr(graph_mod, "ChatOpenAI", FakeChatOpenAI)
+
+        result = asyncio.run(
+            graph_mod.generate_title(
+                {"messages": [HumanMessage(content="Plan a trip")]},
+                {"configurable": {"thread_id": "thread-1"}},
+            )
+        )
+
+        assert result == {}
+        assert updates == []
+        assert llm_calls == []
 
 
 class TestEmitGeneratedSurfaceCoalescing:
