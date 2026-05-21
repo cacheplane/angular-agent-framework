@@ -58,6 +58,15 @@ export type CtaId =
   | 'home_whitepaper_direct_inline'
   // Why this exists section
   | 'home_why_pilot_to_prod'
+  // Pricing tier CTAs
+  | 'pricing_tier_community'
+  | 'pricing_tier_indie'
+  | 'pricing_tier_developer_seat'
+  | 'pricing_tier_app_deployment'
+  | 'pricing_tier_enterprise'
+  // Footer licensing links
+  | 'footer_licensing'
+  | 'footer_licensing_bottom'
   // Announcement toast
   | 'toast_get_guide'
   | 'toast_direct_download'

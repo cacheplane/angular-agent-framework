@@ -295,18 +295,12 @@ export function Footer() {
               onMouseLeave={(e) => (e.currentTarget.style.color = tokens.colors.textSecondary)}>
               npm Package
             </a>
-            <a href="https://github.com/cacheplane/angular-agent-framework/blob/main/LICENSE"
-              target="_blank" rel="noopener noreferrer"
-              className="transition-colors" style={{ color: tokens.colors.textSecondary }}
-              onClick={() => trackExternalLinkClick('https://github.com/cacheplane/angular-agent-framework/blob/main/LICENSE', {
-                surface: 'footer',
-                cta_id: 'footer_mit_license',
-                cta_text: 'MIT License',
-              })}
+            <Link href="/pricing#faq" className="transition-colors" style={{ color: tokens.colors.textSecondary }}
+              onClick={() => trackFooterCta('Licensing', '/pricing#faq')}
               onMouseEnter={(e) => (e.currentTarget.style.color = tokens.colors.accent)}
               onMouseLeave={(e) => (e.currentTarget.style.color = tokens.colors.textSecondary)}>
-              MIT License
-            </a>
+              Licensing
+            </Link>
           </div>
         </div>
 
@@ -314,10 +308,27 @@ export function Footer() {
         <div className="mt-12 pt-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs"
           style={{ borderTop: `1px solid ${tokens.surfaces.border}`, color: tokens.colors.textMuted }}>
           <span>&copy; {new Date().getFullYear()} Agent UI for Angular. All rights reserved.</span>
-          <span>MIT License &middot; <Link href="/pricing" className="transition-colors"
-            onClick={() => trackFooterCta('Pricing Bottom', '/pricing')}
-            onMouseEnter={(e) => (e.currentTarget.style.color = tokens.colors.accent)}
-            onMouseLeave={(e) => (e.currentTarget.style.color = tokens.colors.textMuted)}>Pricing</Link></span>
+          <span>
+            <Link
+              href="/pricing#faq"
+              className="transition-colors"
+              onClick={() => trackFooterCta('Licensing Bottom', '/pricing#faq')}
+              onMouseEnter={(e) => (e.currentTarget.style.color = tokens.colors.accent)}
+              onMouseLeave={(e) => (e.currentTarget.style.color = tokens.colors.textMuted)}
+            >
+              Licensing
+            </Link>
+            &nbsp;&middot;&nbsp;
+            <Link
+              href="/pricing"
+              className="transition-colors"
+              onClick={() => trackFooterCta('Pricing Bottom', '/pricing')}
+              onMouseEnter={(e) => (e.currentTarget.style.color = tokens.colors.accent)}
+              onMouseLeave={(e) => (e.currentTarget.style.color = tokens.colors.textMuted)}
+            >
+              Pricing
+            </Link>
+          </span>
         </div>
       </div>
     </footer>
