@@ -97,7 +97,7 @@ async function main(): Promise<void> {
   if (!key || !key.startsWith('sk_')) {
     throw new Error('STRIPE_SECRET_KEY must be set and begin with sk_');
   }
-  const stripe = new Stripe(key, { apiVersion: '2026-04-22.dahlia' });
+  const stripe = new Stripe(key);
   const ids = await syncProducts(stripe);
   const outPath = path.join(process.cwd(), 'pricing', 'tiers.generated.ts');
   fs.writeFileSync(outPath, renderGeneratedFile(ids));

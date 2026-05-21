@@ -17,5 +17,8 @@ export function getStripe(): Stripe {
   if (!key.startsWith('sk_')) {
     throw new Error('STRIPE_SECRET_KEY does not look like a Stripe secret key (must begin with "sk_")');
   }
-  return new Stripe(key, { apiVersion: '2026-04-22.dahlia' });
+  // apiVersion omitted so the bundled lib version's default is used.
+  // Pinning a literal breaks across stripe@22.0.x ↔ 22.1.x where the
+  // type narrows to different LatestApiVersion strings.
+  return new Stripe(key);
 }
