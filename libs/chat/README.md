@@ -2,7 +2,23 @@
 
 Drop-in agent chat UI for Angular 20+. Headless primitives that read from a runtime-neutral `Agent` contract, plus opinionated compositions (`<chat>`, `<chat-debug>`, GenUI surfaces) you can ship in days.
 
-Part of [Agent UI for Angular](https://github.com/cacheplane/angular-agent-framework). MIT licensed.
+Part of [Agent UI for Angular](https://github.com/cacheplane/angular-agent-framework).
+
+`@ngaf/chat` is source-available and free for noncommercial use under the PolyForm Noncommercial License 1.0.0. Commercial production use requires a Threadplane commercial license.
+
+This package is not licensed as OSI open source because commercial use requires a license. Threadplane uses a source-available model for `@ngaf/chat` while keeping protocol and ecosystem packages permissively licensed where appropriate.
+
+## Commercial use
+
+Building a commercial product, SaaS application, internal business tool, agency deliverable, or paid client project with `@ngaf/chat` requires a commercial license.
+
+Free under PolyForm Noncommercial:
+
+- Personal, hobby, student, academic, nonprofit, public-demo use
+- Open-source applications released under an OSI-approved license
+- Evaluation and prototyping (commercial evaluation is free for 30 days)
+
+See [COMMERCIAL-USE.md](./COMMERCIAL-USE.md) for the definition of commercial use, [LICENSE-COMMERCIAL.md](./LICENSE-COMMERCIAL.md) for the commercial license summary, and the [Threadplane pricing page](https://threadplane.ai/pricing) for plans.
 
 ## Runtime adapters
 
