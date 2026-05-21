@@ -1,12 +1,34 @@
 // SPDX-License-Identifier: MIT
-import { Routes } from '@angular/router';
+import { Routes, UrlMatcher, UrlSegment } from '@angular/router';
 
-// Each mode gets two route entries: a stateless `<mode>` and a
-// thread-scoped `<mode>/:threadId`. Angular Router doesn't support
-// `?`-style optional params, hence the duplication. DemoShell's
-// URL ↔ signal sync (see spec 2026-05-20-url-thread-routing-design.md)
-// reads `route.firstChild.paramMap.threadId` so both shapes feed the
-// same handler.
+/** Matcher factory: collapses `<mode>` and `<mode>/<threadId>` into a
+ *  single route entry. Two separate route entries (`embed` + `embed/:threadId`)
+ *  cause Angular to tear down + remount the mode component when navigating
+ *  from one to the other — which, post-PR-#500, was killing the in-flight
+ *  stream when the agent auto-created a thread mid-send and our
+ *  signal→URL effect navigated `/embed` → `/embed/<new-id>`.
+ *
+ *  This matcher recognises both URL shapes as the same route, so the
+ *  component instance survives the navigation.
+ *
+ *  Exported `posParams.threadId` is consumable via ActivatedRoute /
+ *  router.firstChild.paramMap if a consumer ever needs it; DemoShell
+ *  itself reads from `router.url` via `parseUrl()` and doesn't depend
+ *  on the param being plumbed through ActivatedRoute. */
+function modeMatcher(modeName: string): UrlMatcher {
+  return (segments: UrlSegment[]) => {
+    if (segments.length === 0) return null;
+    if (segments[0].path !== modeName) return null;
+    if (segments.length === 1) {
+      return { consumed: segments, posParams: {} };
+    }
+    if (segments.length === 2) {
+      return { consumed: segments, posParams: { threadId: segments[1] } };
+    }
+    return null;
+  };
+}
+
 export const routes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'embed' },
   {
@@ -15,32 +37,17 @@ export const routes: Routes = [
       import('./shell/demo-shell.component').then((m) => m.DemoShell),
     children: [
       {
-        path: 'embed',
+        matcher: modeMatcher('embed'),
         loadComponent: () =>
           import('./modes/embed-mode.component').then((m) => m.EmbedMode),
       },
       {
-        path: 'embed/:threadId',
-        loadComponent: () =>
-          import('./modes/embed-mode.component').then((m) => m.EmbedMode),
-      },
-      {
-        path: 'popup',
+        matcher: modeMatcher('popup'),
         loadComponent: () =>
           import('./modes/popup-mode.component').then((m) => m.PopupMode),
       },
       {
-        path: 'popup/:threadId',
-        loadComponent: () =>
-          import('./modes/popup-mode.component').then((m) => m.PopupMode),
-      },
-      {
-        path: 'sidebar',
-        loadComponent: () =>
-          import('./modes/sidebar-mode.component').then((m) => m.SidebarMode),
-      },
-      {
-        path: 'sidebar/:threadId',
+        matcher: modeMatcher('sidebar'),
         loadComponent: () =>
           import('./modes/sidebar-mode.component').then((m) => m.SidebarMode),
       },
