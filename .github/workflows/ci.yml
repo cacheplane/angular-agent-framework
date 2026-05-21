@@ -332,7 +332,7 @@ jobs:
 
   cockpit-e2e-summary:
     name: "Cockpit — e2e"
-    needs: cockpit-e2e
+    needs: [ci-scope, cockpit-e2e]
     if: always() && (github.event_name == 'push' || needs.ci-scope.outputs.cockpit_e2e == 'true')
     runs-on: ubuntu-latest
     steps:
@@ -359,6 +359,106 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - run: npx nx e2e website --skip-nx-cache
 
+  required-pr-checks:
+    name: CI — required
+    needs:
+      - ci-scope
+      - library
+      - website
+      - cockpit
+      - cockpit-examples-build
+      - cockpit-smoke
+      - cockpit-secret-integration
+      - cockpit-deploy-smoke
+      - examples-chat-smoke
+      - examples-chat-e2e
+      - cockpit-e2e-summary
+      - website-e2e
+      - posthog-sync-plan
+    if: ${{ always() && github.event_name == 'pull_request' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify scoped CI jobs
+        env:
+          RESULT_CI_SCOPE: ${{ needs.ci-scope.result }}
+          RESULT_LIBRARY: ${{ needs.library.result }}
+          RESULT_WEBSITE: ${{ needs.website.result }}
+          RESULT_COCKPIT: ${{ needs.cockpit.result }}
+          RESULT_COCKPIT_EXAMPLES: ${{ needs.cockpit-examples-build.result }}
+          RESULT_COCKPIT_SMOKE: ${{ needs.cockpit-smoke.result }}
+          RESULT_COCKPIT_SECRET: ${{ needs.cockpit-secret-integration.result }}
+          RESULT_COCKPIT_DEPLOY_SMOKE: ${{ needs.cockpit-deploy-smoke.result }}
+          RESULT_EXAMPLES_CHAT_SMOKE: ${{ needs.examples-chat-smoke.result }}
+          RESULT_EXAMPLES_CHAT_E2E: ${{ needs.examples-chat-e2e.result }}
+          RESULT_COCKPIT_E2E: ${{ needs.cockpit-e2e-summary.result }}
+          RESULT_WEBSITE_E2E: ${{ needs.website-e2e.result }}
+          RESULT_POSTHOG: ${{ needs.posthog-sync-plan.result }}
+          SCOPE_LIBRARY: ${{ needs.ci-scope.outputs.library }}
+          SCOPE_WEBSITE: ${{ needs.ci-scope.outputs.website }}
+          SCOPE_COCKPIT: ${{ needs.ci-scope.outputs.cockpit }}
+          SCOPE_COCKPIT_EXAMPLES: ${{ needs.ci-scope.outputs.cockpit_examples }}
+          SCOPE_COCKPIT_SMOKE: ${{ needs.ci-scope.outputs.cockpit_smoke }}
+          SCOPE_COCKPIT_SECRET: ${{ needs.ci-scope.outputs.cockpit_secret }}
+          SCOPE_COCKPIT_DEPLOY_SMOKE: ${{ needs.ci-scope.outputs.cockpit_deploy_smoke }}
+          SCOPE_EXAMPLES_CHAT: ${{ needs.ci-scope.outputs.examples_chat }}
+          SCOPE_COCKPIT_E2E: ${{ needs.ci-scope.outputs.cockpit_e2e }}
+          SCOPE_WEBSITE_E2E: ${{ needs.ci-scope.outputs.website_e2e }}
+          SCOPE_POSTHOG: ${{ needs.ci-scope.outputs.posthog }}
+        run: |
+          set -euo pipefail
+
+          failed=0
+
+          require_always() {
+            local label="$1"
+            local result="$2"
+
+            if [[ "$result" != "success" ]]; then
+              echo "::error::${label} finished with ${result}; refusing to report CI green."
+              failed=1
+            fi
+          }
+
+          require_scoped() {
+            local scope_key="$1"
+            local label="$2"
+            local result="$3"
+            local scoped="$4"
+
+            if [[ "$scoped" == "true" ]]; then
+              if [[ "$result" != "success" ]]; then
+                echo "::error::${label} is required by scope ${scope_key} but finished with ${result}."
+                failed=1
+              fi
+              return
+            fi
+
+            if [[ "$result" == "failure" || "$result" == "cancelled" ]]; then
+              echo "::error::${label} was not selected by scope ${scope_key} but finished with ${result}."
+              failed=1
+            fi
+          }
+
+          require_always "CI scope" "$RESULT_CI_SCOPE"
+          require_scoped "library" "Library — lint / test / build" "$RESULT_LIBRARY" "$SCOPE_LIBRARY"
+          require_scoped "website" "Website — lint / build" "$RESULT_WEBSITE" "$SCOPE_WEBSITE"
+          require_scoped "cockpit" "Cockpit — build / test" "$RESULT_COCKPIT" "$SCOPE_COCKPIT"
+          require_scoped "cockpit_examples" "Cockpit — build all examples" "$RESULT_COCKPIT_EXAMPLES" "$SCOPE_COCKPIT_EXAMPLES"
+          require_scoped "cockpit_smoke" "Cockpit — representative capability smoke" "$RESULT_COCKPIT_SMOKE" "$SCOPE_COCKPIT_SMOKE"
+          require_scoped "cockpit_secret" "Cockpit — secret-gated integration" "$RESULT_COCKPIT_SECRET" "$SCOPE_COCKPIT_SECRET"
+          require_scoped "cockpit_deploy_smoke" "Cockpit — deploy smoke dry-run" "$RESULT_COCKPIT_DEPLOY_SMOKE" "$SCOPE_COCKPIT_DEPLOY_SMOKE"
+          require_scoped "examples_chat" "examples/chat — python smoke" "$RESULT_EXAMPLES_CHAT_SMOKE" "$SCOPE_EXAMPLES_CHAT"
+          require_scoped "examples_chat" "examples/chat — e2e" "$RESULT_EXAMPLES_CHAT_E2E" "$SCOPE_EXAMPLES_CHAT"
+          require_scoped "cockpit_e2e" "Cockpit — e2e" "$RESULT_COCKPIT_E2E" "$SCOPE_COCKPIT_E2E"
+          require_scoped "website_e2e" "Website — e2e" "$RESULT_WEBSITE_E2E" "$SCOPE_WEBSITE_E2E"
+          require_scoped "posthog" "PostHog — dashboards-as-code drift check" "$RESULT_POSTHOG" "$SCOPE_POSTHOG"
+
+          if [[ "$failed" -ne 0 ]]; then
+            exit 1
+          fi
+
+          echo "All scoped PR checks passed."
+
   deploy:
     name: Deploy → Vercel
     needs:
@@ -372,7 +472,7 @@ jobs:
         cockpit-deploy-smoke,
         examples-chat-smoke,
         examples-chat-e2e,
-        cockpit-e2e,
+        cockpit-e2e-summary,
         website-e2e,
       ]
     runs-on: ubuntu-latest
