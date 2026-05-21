@@ -400,7 +400,7 @@ Components NOT yet exercised by the demo (deferred to future media-focused sugge
 
 ## Thread titles
 
-- [ ] First user message in a new thread triggers a server-side title write (derived from the message text, sliced to ~50 chars, emoji-safe boundary)
+- [ ] First user message in a new thread triggers a server-side title write (LLM-generated 3-5 word summary from the message text)
 - [ ] Title appears in the sidenav row label after the run completes (refresh-driven)
 - [ ] Title is idempotent — a second message into the same thread does NOT overwrite the title
 - [ ] Manually renamed titles (via kebab → Rename) take precedence and are not overwritten by subsequent messages

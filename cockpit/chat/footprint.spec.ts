@@ -52,4 +52,16 @@ describe('Chat footprint', () => {
       }
     }
   });
+
+  it('wires inline thread-title generation into every python graph', () => {
+    for (const topic of topicNames) {
+      const graphPath = path.join(chatRoot, topic, 'python', 'src', 'graph.py');
+      const graphSource = fs.readFileSync(graphPath, 'utf8');
+
+      expect(graphSource).toContain('async def generate_title');
+      expect(graphSource).toContain('metadata={"title": title}');
+      expect(graphSource).toContain('add_node("generate_title", generate_title)');
+      expect(graphSource).toContain('add_edge("generate_title", END)');
+    }
+  });
 });

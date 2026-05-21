@@ -1447,7 +1447,7 @@
   {
     "name": "LangGraphThreadsConfig",
     "kind": "interface",
-    "description": "Configuration consumed by LangGraphThreadsAdapter. Provide\nvia LANGGRAPH_THREADS_CONFIG (typically in app.config.ts):\n\n```ts\nproviders: [\n  { provide: LANGGRAPH_THREADS_CONFIG, useValue: {\n      apiUrl: environment.langGraphApiUrl,\n      titleMetadataKey: 'thread_title',\n  }},\n],\n```",
+    "description": "Configuration consumed by LangGraphThreadsAdapter. Provide\nvia LANGGRAPH_THREADS_CONFIG (typically in app.config.ts):\n\n```ts\nproviders: [\n  { provide: LANGGRAPH_THREADS_CONFIG, useValue: {\n      apiUrl: environment.langGraphApiUrl,\n  }},\n],\n```\n\nThe adapter expects backends to write the thread title to\n`metadata.title`. Spec 2026-05-19-llm-generated-labels-design.md\noriginally proposed `metadata.thread_title` for cockpit caps but\nwe converged on `title` to match the canonical demo and avoid a\nper-cap configuration knob.",
     "properties": [
       {
         "name": "apiUrl",
@@ -1459,12 +1459,6 @@
         "name": "titleFallback",
         "type": "string",
         "description": "Fallback label for threads whose title hasn't been written yet\n (e.g. created but never sent). Defaults to `'Untitled'`.",
-        "optional": true
-      },
-      {
-        "name": "titleMetadataKey",
-        "type": "string",
-        "description": "Metadata key the backend writes the thread title to. Two\n conventions exist in the wild:\n - `'title'` — legacy / canonical demo\n - `'thread_title'` — spec 2026-05-19-llm-generated-labels-design\n Defaults to `'thread_title'`.",
         "optional": true
       }
     ],
