@@ -40,8 +40,8 @@ test('lifecycle: New chat (sidenav) starts a fresh thread and restores welcome s
 
   // The toolbar "New conversation" button was removed; the sidenav's
   // "New chat" pill is now the only affordance for starting a fresh
-  // thread. It routes the UI back to bare /embed (welcome state); the
-  // next send allocates a fresh thread id.
+  // thread. It creates a new thread server-side and navigates to
+  // /embed/<new-thread-id>; the empty thread renders the welcome state.
   await page.getByRole('button', { name: 'New chat' }).first().click();
 
   await expect(
@@ -49,14 +49,7 @@ test('lifecycle: New chat (sidenav) starts a fresh thread and restores welcome s
   ).toBeVisible();
   await expect(page.locator('chat-message')).toHaveCount(0);
 
-  // URL should be back to bare /embed (no thread id) on welcome state.
-  await expect(page).toHaveURL(/\/embed$/);
-
-  // Send again to allocate a new thread id, then verify URL holds a
-  // different id than before.
-  await messageInput(page).fill('say hi briefly');
-  await sendButton(page).click();
-  await waitForFinalAssistant(page);
+  // URL holds a fresh thread id, different from the one we had before.
   await expect(page).toHaveURL(/\/embed\/[A-Za-z0-9-]+$/);
   const threadIdAfter = await activeThreadIdFromUrl(page);
   expect(threadIdAfter).toBeTruthy();
