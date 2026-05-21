@@ -774,10 +774,11 @@ async def generate_title(state: MessagesState, config) -> dict:
     intent into 3-5 words and persist to LangGraph thread metadata so the
     sidenav shows something meaningful instead of a UUID slice.
 
-    Idempotent — skips when metadata.thread_title already exists. Errors
-    are swallowed (title is a UX nicety, never a blocker). Runs after the
+    Idempotent — skips when metadata.title already exists. Errors are
+    swallowed (title is a UX nicety, never a blocker). Runs after the
     user-visible terminal node so it never blocks the response. See spec
-    2026-05-19-llm-generated-labels-design.md.
+    2026-05-19-llm-generated-labels-design.md (originally `thread_title`,
+    converged to `title` for parity with the canonical demo + adapter).
     """
     thread_id = (config.get("configurable") or {}).get("thread_id")
     if not thread_id:
@@ -790,7 +791,7 @@ async def generate_title(state: MessagesState, config) -> dict:
     try:
         client = get_client(url=sdk_url)
         thread = await client.threads.get(thread_id)
-        if (thread.get("metadata") or {}).get("thread_title"):
+        if (thread.get("metadata") or {}).get("title"):
             return {}
         first_user = next(
             (m for m in state["messages"] if getattr(m, "type", None) == "human"),
@@ -808,7 +809,7 @@ async def generate_title(state: MessagesState, config) -> dict:
         ])
         title = (response.content or "").strip().strip('"').strip("'")[:80]
         if title:
-            await client.threads.update(thread_id, metadata={"thread_title": title})
+            await client.threads.update(thread_id, metadata={"title": title})
     except Exception as err:  # noqa: BLE001 — title is a UX nicety; never block
         _logger.warning("Thread title generation failed: %s", err)
     return {}

@@ -27,10 +27,10 @@ function mockClient(searchReturn: unknown[] = []): {
   };
 }
 
-function configure(client: Client, titleKey = 'thread_title'): LangGraphThreadsAdapter {
+function configure(client: Client): LangGraphThreadsAdapter {
   TestBed.configureTestingModule({
     providers: [
-      { provide: LANGGRAPH_THREADS_CONFIG, useValue: { apiUrl: 'http://x', titleMetadataKey: titleKey } },
+      { provide: LANGGRAPH_THREADS_CONFIG, useValue: { apiUrl: 'http://x' } },
       { provide: LANGGRAPH_CLIENT, useValue: client },
     ],
   });
@@ -40,12 +40,12 @@ function configure(client: Client, titleKey = 'thread_title'): LangGraphThreadsA
 describe('LangGraphThreadsAdapter', () => {
   beforeEach(() => TestBed.resetTestingModule());
 
-  it('maps SDK threads through the configured title metadata key', async () => {
+  it('maps SDK threads via metadata.title', async () => {
     const { client } = mockClient([
       {
         thread_id: 't1',
         updated_at: '2026-05-20T00:00:00Z',
-        metadata: { thread_title: 'Capital of Japan' },
+        metadata: { title: 'Capital of Japan' },
       },
     ]);
     const svc = configure(client);
@@ -53,15 +53,6 @@ describe('LangGraphThreadsAdapter', () => {
     expect(svc.threads()).toEqual([
       expect.objectContaining({ id: 't1', title: 'Capital of Japan', status: 'active', pinned: false }),
     ]);
-  });
-
-  it('honours an alternate title key (demo writes metadata.title)', async () => {
-    const { client } = mockClient([
-      { thread_id: 't1', metadata: { title: 'Hello' } },
-    ]);
-    const svc = configure(client, 'title');
-    await svc.refresh();
-    expect(svc.threads()[0].title).toBe('Hello');
   });
 
   it('falls back to "Untitled" when title metadata is missing', async () => {
@@ -93,11 +84,11 @@ describe('LangGraphThreadsAdapter', () => {
     expect(svc.threads().map(t => t.id)).toEqual(['p1', 'p2', 'unp']);
   });
 
-  it('rename() writes the configured title key', async () => {
+  it('rename() writes metadata.title', async () => {
     const m = mockClient();
-    const svc = configure(m.client, 'thread_title');
+    const svc = configure(m.client);
     await svc.rename('t1', 'New title');
-    expect(m.update).toHaveBeenCalledWith('t1', { metadata: { thread_title: 'New title' } });
+    expect(m.update).toHaveBeenCalledWith('t1', { metadata: { title: 'New title' } });
   });
 
   it('getThread() returns a mapped Thread when the SDK resolves', async () => {
@@ -105,7 +96,7 @@ describe('LangGraphThreadsAdapter', () => {
     m.get.mockResolvedValue({
       thread_id: 'tx',
       updated_at: '2026-05-20T00:00:00Z',
-      metadata: { thread_title: 'hello' },
+      metadata: { title: 'hello' },
     });
     const svc = configure(m.client);
     const result = await svc.getThread('tx');

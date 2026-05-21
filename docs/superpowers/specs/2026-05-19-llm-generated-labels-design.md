@@ -320,3 +320,21 @@ export function a2uiActionLabel(content: string): string | null {
 - `_builder.add_edge("respond", "generate_title")` — both are node names registered earlier in the file. Consistent.
 
 **Anti-pattern check:** zero hardcoded label tables. Zero topology magic. Zero cross-cap python imports. Each cap stays self-contained.
+
+---
+
+## Addendum 2026-05-21 — converged on `metadata.title`
+
+This spec proposed `metadata.thread_title` for the new cockpit-cap title nodes (c-threads, c-a2ui). After landing #481, #488, #491, #492, #493 the per-cap key created friction:
+
+- `LangGraphThreadsAdapter` carried a `titleMetadataKey` config knob to bridge the two conventions
+- Each consumer had to remember which spelling its backend used
+- The canonical demo (`examples/chat/python`) writes `metadata.title` and predates this spec
+
+Resolved by converging on `metadata.title` across all consumers:
+
+- `cockpit/chat/threads/python` + `cockpit/chat/a2ui/python` graphs now write `metadata.title`
+- `LangGraphThreadsAdapter` reads `metadata.title` unconditionally; the `titleMetadataKey` config knob is gone
+- Pre-existing prod threads written with the old `thread_title` spelling would lose their title; the existing prod backlog was cleared separately (see /tmp/delete-prod-threads.sh)
+
+Pattern D (inline node per cap, no shared helper) stays intact — only the metadata key name changes.
