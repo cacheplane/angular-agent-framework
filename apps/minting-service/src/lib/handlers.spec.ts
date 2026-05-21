@@ -38,7 +38,7 @@ function paymentSession(overrides: Partial<Stripe.Checkout.Session> = {}): Strip
         {
           quantity: 1,
           price: {
-            metadata: { cacheplane_tier: 'developer-seat' },
+            metadata: { ngaf_tier_slug: 'indie' },
           } as Stripe.Price,
         } as Stripe.LineItem,
       ],
@@ -109,7 +109,7 @@ describe('handleCheckoutCompleted', () => {
     expect(deps.mintToken).toHaveBeenCalledWith(
       expect.objectContaining({
         stripeCustomerId: 'cus_test_123',
-        tier: 'developer-seat',
+        tier: 'indie',
         seats: 1,
         expiresAt: expect.any(Date),
       }),
@@ -121,7 +121,7 @@ describe('handleCheckoutCompleted', () => {
         stripeCustomerId: 'cus_test_123',
         stripePaymentId: 'pi_test_123',
         customerEmail: 'buyer@example.com',
-        tier: 'developer-seat',
+        tier: 'indie',
         seats: 1,
         lastToken: 'mock.token',
       }),
@@ -130,7 +130,7 @@ describe('handleCheckoutCompleted', () => {
       expect.objectContaining({
         from: 'noreply@example.com',
         to: 'buyer@example.com',
-        vars: expect.objectContaining({ tier: 'developer-seat', seats: 1, token: 'mock.token' }),
+        vars: expect.objectContaining({ tier: 'indie', seats: 1, token: 'mock.token' }),
       }),
     );
   });

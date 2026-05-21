@@ -19,7 +19,7 @@ describe('mintToken', () => {
     const token = await mintToken(
       {
         stripeCustomerId: 'cus_abc',
-        tier: 'developer-seat',
+        tier: 'developer_seat',
         seats: 3,
         expiresAt: new Date('2027-01-01T00:00:00Z'),
       },
@@ -30,7 +30,7 @@ describe('mintToken', () => {
     expect(result.ok).toBe(true);
     if (result.ok) {
       expect(result.claims.sub).toBe('cus_abc');
-      expect(result.claims.tier).toBe('developer-seat');
+      expect(result.claims.tier).toBe('developer_seat');
       expect(result.claims.seats).toBe(3);
       expect(result.claims.exp).toBe(Math.floor(new Date('2027-01-01T00:00:00Z').getTime() / 1000));
       expect(result.claims.iat).toBeGreaterThan(0);
@@ -42,7 +42,7 @@ describe('mintToken', () => {
       mintToken(
         {
           stripeCustomerId: 'cus_x',
-          tier: 'app-deployment',
+          tier: 'app_deployment',
           seats: 1,
           expiresAt: new Date('2027-01-01T00:00:00Z'),
         },

@@ -4,7 +4,7 @@ import { parseLicenseToken } from './license-token';
 
 const CLAIMS = {
   sub: 'cus_123',
-  tier: 'developer-seat',
+  tier: 'developer_seat',
   iat: 1_700_000_000,
   exp: 1_800_000_000,
   seats: 5,

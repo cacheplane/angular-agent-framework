@@ -16,7 +16,7 @@ export async function buildFixturePack(): Promise<FixturePack> {
   const kp = await generateKeyPair();
   const baseClaims: LicenseClaims = {
     sub: 'cus_fixture',
-    tier: 'developer-seat',
+    tier: 'developer_seat',
     iat: 1_700_000_000,
     exp: 2_000_000_000,
     seats: 1,
