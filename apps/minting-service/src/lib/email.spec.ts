@@ -4,7 +4,7 @@ import { renderLicenseEmail } from './email.js';
 describe('renderLicenseEmail', () => {
   it('includes the token wrapped in BEGIN/END delimiters in the text body', () => {
     const out = renderLicenseEmail({
-      tier: 'developer-seat',
+      tier: 'developer_seat',
       seats: 3,
       token: 'PAYLOAD.SIG',
       expiresAt: new Date('2027-04-20T00:00:00Z'),
@@ -17,27 +17,27 @@ describe('renderLicenseEmail', () => {
 
   it('subject includes tier and seat count with plural s for seats > 1', () => {
     const out = renderLicenseEmail({
-      tier: 'developer-seat',
+      tier: 'developer_seat',
       seats: 3,
       token: 't.s',
       expiresAt: new Date('2027-04-20T00:00:00Z'),
     });
-    expect(out.subject).toBe('Your ThreadPlane license — developer-seat (3 seats)');
+    expect(out.subject).toBe('Your ThreadPlane license — developer_seat (3 seats)');
   });
 
   it('subject uses singular seat for seats === 1', () => {
     const out = renderLicenseEmail({
-      tier: 'app-deployment',
+      tier: 'app_deployment',
       seats: 1,
       token: 't.s',
       expiresAt: new Date('2027-04-20T00:00:00Z'),
     });
-    expect(out.subject).toBe('Your ThreadPlane license — app-deployment (1 seat)');
+    expect(out.subject).toBe('Your ThreadPlane license — app_deployment (1 seat)');
   });
 
   it('includes ISO 8601 UTC expiry in text body', () => {
     const out = renderLicenseEmail({
-      tier: 'developer-seat',
+      tier: 'developer_seat',
       seats: 1,
       token: 't.s',
       expiresAt: new Date('2027-04-20T00:00:00Z'),
@@ -47,7 +47,7 @@ describe('renderLicenseEmail', () => {
 
   it('html body wraps the token in a monospace pre block', () => {
     const out = renderLicenseEmail({
-      tier: 'developer-seat',
+      tier: 'developer_seat',
       seats: 1,
       token: 'PAYLOAD.SIG',
       expiresAt: new Date('2027-04-20T00:00:00Z'),

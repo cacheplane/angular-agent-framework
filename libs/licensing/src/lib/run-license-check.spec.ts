@@ -8,7 +8,7 @@ import type { LicenseClaims } from './license-token';
 
 const BASE: LicenseClaims = {
   sub: 'cus_abc',
-  tier: 'developer-seat',
+  tier: 'developer_seat',
   iat: 1_700_000_000,
   exp: 2_000_000_000,
   seats: 1,

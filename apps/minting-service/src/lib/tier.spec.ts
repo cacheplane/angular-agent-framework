@@ -2,20 +2,24 @@
 import { extractTier, computeSeats } from './tier.js';
 
 describe('extractTier', () => {
-  it('returns developer-seat from price metadata', () => {
-    expect(extractTier({ cacheplane_tier: 'developer-seat' })).toBe('developer-seat');
+  it('returns indie from price metadata', () => {
+    expect(extractTier({ ngaf_tier_slug: 'indie' })).toBe('indie');
   });
 
-  it('returns app-deployment from price metadata', () => {
-    expect(extractTier({ cacheplane_tier: 'app-deployment' })).toBe('app-deployment');
+  it('returns developer_seat from price metadata', () => {
+    expect(extractTier({ ngaf_tier_slug: 'developer_seat' })).toBe('developer_seat');
   });
 
-  it('throws when cacheplane_tier is missing', () => {
-    expect(() => extractTier({})).toThrow(/cacheplane_tier/);
+  it('returns app_deployment from price metadata', () => {
+    expect(extractTier({ ngaf_tier_slug: 'app_deployment' })).toBe('app_deployment');
   });
 
-  it('throws when cacheplane_tier is an unknown value', () => {
-    expect(() => extractTier({ cacheplane_tier: 'bogus' })).toThrow(/bogus/);
+  it('throws when ngaf_tier_slug is missing', () => {
+    expect(() => extractTier({})).toThrow(/ngaf_tier_slug/);
+  });
+
+  it('throws when ngaf_tier_slug is an unknown value', () => {
+    expect(() => extractTier({ ngaf_tier_slug: 'bogus' })).toThrow(/bogus/);
   });
 
   it('throws when metadata is null', () => {
@@ -24,15 +28,19 @@ describe('extractTier', () => {
 });
 
 describe('computeSeats', () => {
-  it('returns the Stripe quantity for developer-seat', () => {
-    expect(computeSeats('developer-seat', 5)).toBe(5);
+  it('returns the Stripe quantity for developer_seat', () => {
+    expect(computeSeats('developer_seat', 5)).toBe(5);
   });
 
-  it('returns 1 for app-deployment regardless of quantity', () => {
-    expect(computeSeats('app-deployment', 10)).toBe(1);
+  it('returns 1 for app_deployment regardless of quantity', () => {
+    expect(computeSeats('app_deployment', 10)).toBe(1);
   });
 
-  it('defaults developer-seat to 1 when quantity is null', () => {
-    expect(computeSeats('developer-seat', null)).toBe(1);
+  it('returns 1 for indie regardless of quantity', () => {
+    expect(computeSeats('indie', 10)).toBe(1);
+  });
+
+  it('defaults developer_seat to 1 when quantity is null', () => {
+    expect(computeSeats('developer_seat', null)).toBe(1);
   });
 });

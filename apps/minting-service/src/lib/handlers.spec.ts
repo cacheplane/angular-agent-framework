@@ -1,22 +1,22 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+import { describe, it, expect, vi } from 'vitest';
 import type Stripe from 'stripe';
-import type { License } from '@ngaf/db';
-import { handleEvent, type HandlerDeps } from './handlers.js';
+import { handleEvent, handleCheckoutCompleted, type HandlerDeps } from './handlers.js';
 
 function makeDeps(overrides: Partial<HandlerDeps> = {}): HandlerDeps {
   return {
-    db: {} as any,
-    stripe: {} as any,
+    db: {} as never,
+    stripe: {} as never,
     markEventProcessed: vi.fn().mockResolvedValue(true),
     deleteProcessedEvent: vi.fn().mockResolvedValue(undefined),
     upsertLicense: vi.fn(),
     getLicense: vi.fn(),
     revokeLicense: vi.fn(),
-    mintToken: vi.fn(),
-    sendLicenseEmail: vi.fn(),
+    mintToken: vi.fn().mockResolvedValue('mock.token'),
+    sendLicenseEmail: vi.fn().mockResolvedValue({ resendId: 're_mock' }),
     privateKeyHex: 'a'.repeat(64),
     resendApiKey: 're_test',
-    emailFrom: 'a@b.c',
+    emailFrom: 'noreply@example.com',
     defaultTtlDays: 365,
     ...overrides,
   };
@@ -26,243 +26,161 @@ function evt(type: string, obj: unknown = {}): Stripe.Event {
   return { id: `evt_${type}`, type, data: { object: obj } } as Stripe.Event;
 }
 
+function paymentSession(overrides: Partial<Stripe.Checkout.Session> = {}): Stripe.Checkout.Session {
+  return {
+    id: 'cs_test_123',
+    mode: 'payment',
+    payment_intent: 'pi_test_123',
+    customer: 'cus_test_123',
+    customer_details: { email: 'buyer@example.com' } as Stripe.Checkout.Session.CustomerDetails,
+    line_items: {
+      data: [
+        {
+          quantity: 1,
+          price: {
+            metadata: { ngaf_tier_slug: 'indie' },
+          } as Stripe.Price,
+        } as Stripe.LineItem,
+      ],
+    } as Stripe.ApiList<Stripe.LineItem>,
+    ...overrides,
+  } as Stripe.Checkout.Session;
+}
+
 describe('handleEvent', () => {
   it('returns early if markEventProcessed returns false (duplicate)', async () => {
     const deps = makeDeps({
       markEventProcessed: vi.fn().mockResolvedValue(false),
     });
-    await handleEvent(evt('customer.subscription.deleted', { id: 'sub_x' }), deps);
-    expect(deps.revokeLicense).not.toHaveBeenCalled();
+    await handleEvent(evt('checkout.session.completed', { id: 'cs_x' }), deps);
+    expect(deps.upsertLicense).not.toHaveBeenCalled();
+    expect(deps.sendLicenseEmail).not.toHaveBeenCalled();
   });
 
-  it('no-ops on unknown event types', async () => {
+  it('no-ops on unknown event types (including subscription events)', async () => {
     const deps = makeDeps();
+    await handleEvent(evt('customer.subscription.updated'), deps);
+    await handleEvent(evt('customer.subscription.deleted'), deps);
     await handleEvent(evt('invoice.payment_succeeded'), deps);
-    expect(deps.revokeLicense).not.toHaveBeenCalled();
     expect(deps.upsertLicense).not.toHaveBeenCalled();
+    expect(deps.sendLicenseEmail).not.toHaveBeenCalled();
+  });
+
+  it('dispatches checkout.session.completed to handleCheckoutCompleted', async () => {
+    const session = paymentSession();
+    const stripe = {
+      checkout: {
+        sessions: { retrieve: vi.fn().mockResolvedValue(session) },
+      },
+    } as unknown as Stripe;
+    const deps = makeDeps({ stripe });
+    await handleEvent(evt('checkout.session.completed', session), deps);
+    expect(stripe.checkout.sessions.retrieve).toHaveBeenCalledWith('cs_test_123', expect.any(Object));
+    expect(deps.upsertLicense).toHaveBeenCalledTimes(1);
+    expect(deps.sendLicenseEmail).toHaveBeenCalledTimes(1);
   });
 
   it('compensating-deletes the processed-event marker when handler throws', async () => {
-    const boom = new Error('boom');
-    const deps = makeDeps({
-      revokeLicense: vi.fn().mockRejectedValue(boom),
-    });
+    const session = paymentSession({ payment_intent: null });
+    const stripe = {
+      checkout: {
+        sessions: { retrieve: vi.fn().mockResolvedValue(session) },
+      },
+    } as unknown as Stripe;
+    const deps = makeDeps({ stripe });
     await expect(
-      handleEvent(evt('customer.subscription.deleted', { id: 'sub_boom' }), deps),
-    ).rejects.toBe(boom);
-    expect(deps.deleteProcessedEvent).toHaveBeenCalledWith(deps.db, 'evt_customer.subscription.deleted');
+      handleEvent(evt('checkout.session.completed', session), deps),
+    ).rejects.toThrow(/no payment_intent/);
+    expect(deps.deleteProcessedEvent).toHaveBeenCalledTimes(1);
   });
 });
 
 describe('handleCheckoutCompleted', () => {
-  function baseSession(overrides: any = {}): Stripe.Checkout.Session {
-    return {
-      id: 'cs_test',
-      customer: 'cus_x',
-      subscription: 'sub_x',
-      customer_details: { email: 'a@b.c' },
-      ...overrides,
-    } as Stripe.Checkout.Session;
-  }
-
-  function baseDeps(): HandlerDeps {
-    const lineItem = {
-      data: [
-        {
-          quantity: 2,
-          price: { metadata: { cacheplane_tier: 'developer-seat' } },
-        },
-      ],
-    };
-    const sub = { current_period_end: 1_800_000_000, id: 'sub_x' };
-    const expandedSession = baseSession({ line_items: lineItem });
-
-    return makeDeps({
-      stripe: {
-        checkout: {
-          sessions: {
-            retrieve: vi.fn().mockResolvedValue(expandedSession),
-          },
-        },
-        subscriptions: {
-          retrieve: vi.fn().mockResolvedValue(sub),
-        },
-      } as any,
-      mintToken: vi.fn().mockResolvedValue('TOKEN.SIG'),
-      upsertLicense: vi.fn().mockImplementation((_db, input) =>
-        Promise.resolve({ ...input, id: 'lic_1', createdAt: new Date(), updatedAt: new Date(), issuedAt: new Date(), revokedAt: null }),
-      ),
-      sendLicenseEmail: vi.fn().mockResolvedValue({ resendId: 're_1' }),
-    });
-  }
-
-  it('upserts a license row and sends an email', async () => {
-    const deps = baseDeps();
-    await handleEvent(
-      { id: 'evt_co', type: 'checkout.session.completed', data: { object: baseSession() } } as Stripe.Event,
-      deps,
-    );
-    expect(deps.upsertLicense).toHaveBeenCalledTimes(1);
-    const upsertArg = (deps.upsertLicense as unknown as { mock: { calls: any[][] } }).mock.calls[0][1];
-    expect(upsertArg.stripeSubscriptionId).toBe('sub_x');
-    expect(upsertArg.tier).toBe('developer-seat');
-    expect(upsertArg.seats).toBe(2);
-    expect(upsertArg.customerEmail).toBe('a@b.c');
-    expect(upsertArg.lastToken).toBe('TOKEN.SIG');
-    expect(deps.sendLicenseEmail).toHaveBeenCalledTimes(1);
-  });
-
-  it('throws when cacheplane_tier is missing from price metadata', async () => {
-    const deps = baseDeps();
-    (deps.stripe.checkout.sessions.retrieve as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(
-      baseSession({ line_items: { data: [{ quantity: 1, price: { metadata: {} } }] } }),
-    );
-    await expect(
-      handleEvent(
-        { id: 'evt_co2', type: 'checkout.session.completed', data: { object: baseSession() } } as Stripe.Event,
-        deps,
-      ),
-    ).rejects.toThrow(/cacheplane_tier/);
-    expect(deps.deleteProcessedEvent).toHaveBeenCalledWith(deps.db, 'evt_co2');
-  });
-});
-
-describe('handleSubscriptionUpdated', () => {
-  function sub(overrides: any = {}): Stripe.Subscription {
-    return {
-      id: 'sub_u',
-      customer: 'cus_u',
-      current_period_end: 1_800_000_000,
-      items: {
-        data: [
-          {
-            quantity: 3,
-            price: { metadata: { cacheplane_tier: 'developer-seat' } },
-          },
-        ],
+  it('mints, upserts, and emails on a complete one-time payment session', async () => {
+    const session = paymentSession();
+    const stripe = {
+      checkout: {
+        sessions: { retrieve: vi.fn().mockResolvedValue(session) },
       },
-      ...overrides,
-    } as Stripe.Subscription;
-  }
+    } as unknown as Stripe;
+    const deps = makeDeps({ stripe });
+    await handleCheckoutCompleted(session, deps);
 
-  function existingLicense(overrides: Partial<License> = {}): License {
-    return {
-      id: 'lic_u',
-      stripeCustomerId: 'cus_u',
-      stripeSubscriptionId: 'sub_u',
-      customerEmail: 'u@example.com',
-      tier: 'developer-seat',
-      seats: 3,
-      expiresAt: new Date(1_800_000_000 * 1000),
-      revokedAt: null,
-      lastToken: 'OLD.TOKEN',
-      issuedAt: new Date(),
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      ...overrides,
-    } as License;
-  }
+    expect(deps.mintToken).toHaveBeenCalledWith(
+      expect.objectContaining({
+        stripeCustomerId: 'cus_test_123',
+        tier: 'indie',
+        seats: 1,
+        expiresAt: expect.any(Date),
+      }),
+      'a'.repeat(64),
+    );
+    expect(deps.upsertLicense).toHaveBeenCalledWith(
+      {} as never,
+      expect.objectContaining({
+        stripeCustomerId: 'cus_test_123',
+        stripePaymentId: 'pi_test_123',
+        customerEmail: 'buyer@example.com',
+        tier: 'indie',
+        seats: 1,
+        lastToken: 'mock.token',
+      }),
+    );
+    expect(deps.sendLicenseEmail).toHaveBeenCalledWith(
+      expect.objectContaining({
+        from: 'noreply@example.com',
+        to: 'buyer@example.com',
+        vars: expect.objectContaining({ tier: 'indie', seats: 1, token: 'mock.token' }),
+      }),
+    );
+  });
 
-  function deps(license: License | null): HandlerDeps {
-    return makeDeps({
-      getLicense: vi.fn().mockResolvedValue(license),
-      upsertLicense: vi.fn().mockImplementation((_db, input) =>
-        Promise.resolve({ ...(license ?? {}), ...input, id: 'lic_u', createdAt: new Date(), updatedAt: new Date(), issuedAt: new Date(), revokedAt: null }),
-      ),
-      mintToken: vi.fn().mockResolvedValue('NEW.TOKEN'),
-      sendLicenseEmail: vi.fn().mockResolvedValue({ resendId: 're_u' }),
-      stripe: {
-        checkout: { sessions: { retrieve: vi.fn() } },
-        subscriptions: { retrieve: vi.fn() },
-      } as any,
+  it('skips subscription-mode sessions without minting', async () => {
+    const session = paymentSession({ mode: 'subscription' });
+    const stripe = {
+      checkout: {
+        sessions: { retrieve: vi.fn().mockResolvedValue(session) },
+      },
+    } as unknown as Stripe;
+    const deps = makeDeps({ stripe });
+    await handleCheckoutCompleted(session, deps);
+    expect(deps.mintToken).not.toHaveBeenCalled();
+    expect(deps.upsertLicense).not.toHaveBeenCalled();
+    expect(deps.sendLicenseEmail).not.toHaveBeenCalled();
+  });
+
+  it('throws when the session has no payment_intent', async () => {
+    const session = paymentSession({ payment_intent: null });
+    const stripe = {
+      checkout: {
+        sessions: { retrieve: vi.fn().mockResolvedValue(session) },
+      },
+    } as unknown as Stripe;
+    const deps = makeDeps({ stripe });
+    await expect(handleCheckoutCompleted(session, deps)).rejects.toThrow(/no payment_intent/);
+  });
+
+  it('throws when the session has no customer', async () => {
+    const session = paymentSession({ customer: null });
+    const stripe = {
+      checkout: {
+        sessions: { retrieve: vi.fn().mockResolvedValue(session) },
+      },
+    } as unknown as Stripe;
+    const deps = makeDeps({ stripe });
+    await expect(handleCheckoutCompleted(session, deps)).rejects.toThrow(/customer_creation/);
+  });
+
+  it('throws when the session has no customer email', async () => {
+    const session = paymentSession({
+      customer_details: { email: null } as Stripe.Checkout.Session.CustomerDetails,
     });
-  }
-
-  it('upserts without minting or emailing when claims are unchanged', async () => {
-    const d = deps(existingLicense());
-    await handleEvent(
-      { id: 'evt_u_noop', type: 'customer.subscription.updated', data: { object: sub() } } as Stripe.Event,
-      d,
-    );
-    expect(d.mintToken).not.toHaveBeenCalled();
-    expect(d.sendLicenseEmail).not.toHaveBeenCalled();
-    expect(d.upsertLicense).toHaveBeenCalledTimes(1);
-    const arg = (d.upsertLicense as unknown as { mock: { calls: any[][] } }).mock.calls[0][1];
-    expect(arg.lastToken).toBe('OLD.TOKEN');
-  });
-
-  it('mints and emails when seats change', async () => {
-    const d = deps(existingLicense({ seats: 2 }));
-    await handleEvent(
-      { id: 'evt_u_seats', type: 'customer.subscription.updated', data: { object: sub() } } as Stripe.Event,
-      d,
-    );
-    expect(d.mintToken).toHaveBeenCalledTimes(1);
-    expect(d.sendLicenseEmail).toHaveBeenCalledTimes(1);
-    const arg = (d.upsertLicense as unknown as { mock: { calls: any[][] } }).mock.calls[0][1];
-    expect(arg.lastToken).toBe('NEW.TOKEN');
-    expect(arg.seats).toBe(3);
-  });
-
-  it('mints and emails when tier changes', async () => {
-    const d = deps(existingLicense({ tier: 'app-deployment', seats: 1 }));
-    await handleEvent(
-      { id: 'evt_u_tier', type: 'customer.subscription.updated', data: { object: sub() } } as Stripe.Event,
-      d,
-    );
-    expect(d.mintToken).toHaveBeenCalledTimes(1);
-    expect(d.sendLicenseEmail).toHaveBeenCalledTimes(1);
-  });
-
-  it('mints and emails when expires_at changes', async () => {
-    const d = deps(existingLicense({ expiresAt: new Date(1_700_000_000 * 1000) }));
-    await handleEvent(
-      { id: 'evt_u_exp', type: 'customer.subscription.updated', data: { object: sub() } } as Stripe.Event,
-      d,
-    );
-    expect(d.mintToken).toHaveBeenCalledTimes(1);
-    expect(d.sendLicenseEmail).toHaveBeenCalledTimes(1);
-  });
-
-  it('mints and emails when no existing license is found (first time)', async () => {
-    const d = deps(null);
-    (d.stripe as any).customers = {
-      retrieve: vi.fn().mockResolvedValue({ email: 'new@example.com' }),
-    };
-    await handleEvent(
-      { id: 'evt_u_new', type: 'customer.subscription.updated', data: { object: sub() } } as Stripe.Event,
-      d,
-    );
-    expect(d.mintToken).toHaveBeenCalledTimes(1);
-    expect(d.sendLicenseEmail).toHaveBeenCalledTimes(1);
-    const sendArg = (d.sendLicenseEmail as unknown as { mock: { calls: any[][] } }).mock.calls[0][0];
-    expect(sendArg.to).toBe('new@example.com');
-  });
-});
-
-describe('handleSubscriptionDeleted', () => {
-  it('calls revokeLicense and does not email or mint', async () => {
-    const d = makeDeps({
-      revokeLicense: vi.fn().mockResolvedValue({ id: 'lic_d' }),
-    });
-    await handleEvent(
-      { id: 'evt_del', type: 'customer.subscription.deleted', data: { object: { id: 'sub_d' } } } as Stripe.Event,
-      d,
-    );
-    expect(d.revokeLicense).toHaveBeenCalledWith(d.db, 'sub_d');
-    expect(d.mintToken).not.toHaveBeenCalled();
-    expect(d.sendLicenseEmail).not.toHaveBeenCalled();
-  });
-
-  it('is idempotent — no throw if license is already absent', async () => {
-    const d = makeDeps({
-      revokeLicense: vi.fn().mockResolvedValue(null),
-    });
-    await expect(
-      handleEvent(
-        { id: 'evt_del2', type: 'customer.subscription.deleted', data: { object: { id: 'sub_nope' } } } as Stripe.Event,
-        d,
-      ),
-    ).resolves.toBeUndefined();
+    const stripe = {
+      checkout: {
+        sessions: { retrieve: vi.fn().mockResolvedValue(session) },
+      },
+    } as unknown as Stripe;
+    const deps = makeDeps({ stripe });
+    await expect(handleCheckoutCompleted(session, deps)).rejects.toThrow(/no customer email/);
   });
 });
