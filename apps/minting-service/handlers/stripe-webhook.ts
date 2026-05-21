@@ -71,12 +71,23 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     await handleEvent(event, deps);
     res.status(200).json({ received: true });
   } catch (err) {
-    const msg = err instanceof Error ? `${err.name}: ${err.message}` : String(err);
-    const stack = err instanceof Error ? (err.stack ?? '').split('\n').slice(0, 5).join(' | ') : '';
+    const describe = (e: unknown): string => {
+      if (!(e instanceof Error)) return String(e);
+      const props = ['code', 'severity', 'detail', 'hint', 'where', 'schema_name', 'table_name', 'constraint_name', 'routine']
+        .map((k) => {
+          const v = (e as unknown as Record<string, unknown>)[k];
+          return v === undefined ? null : `${k}=${String(v)}`;
+        })
+        .filter((s): s is string => s !== null)
+        .join(' ');
+      const stack = (e.stack ?? '').split('\n').slice(0, 8).join(' | ');
+      return `${e.name}: ${e.message}${props ? ` [${props}]` : ''}\n  ${stack}`;
+    };
+    const top = describe(err);
+    const cause = err instanceof Error && err.cause ? `\nCAUSE: ${describe(err.cause)}` : '';
     console.error('webhook handler error', { eventId: event.id, type: event.type, err });
-    // TEMP smoke diagnostic — surface error class + message + first stack frames so
-    // we can read it via curl/Stripe Dashboard delivery body. Revert after smoke.
-    res.status(500).send(`internal error: ${msg}\n${stack}`);
+    // TEMP smoke diagnostic — surface error class + message + cause chain + PG fields.
+    res.status(500).send(`internal error: ${top}${cause}`);
   } finally {
     await db.close();
   }
