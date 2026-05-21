@@ -6,7 +6,9 @@
   "targets": {
     "build": {
       "executor": "@nx/js:tsc",
-      "outputs": ["{workspaceRoot}/dist/cockpit/langgraph/persistence/python"],
+      "outputs": [
+        "{workspaceRoot}/dist/cockpit/langgraph/persistence/python"
+      ],
       "options": {
         "outputPath": "dist/cockpit/langgraph/persistence/python",
         "main": "cockpit/langgraph/persistence/python/src/index.ts",
@@ -20,5 +22,10 @@
         "command": "npx tsx -e \"import { langgraphPersistencePythonModule } from './src/index.ts'; const module = langgraphPersistencePythonModule; if (module.id !== 'langgraph-persistence-python' || module.title !== 'LangGraph Persistence (Python)') { throw new Error('Unexpected module shape for ' + module.id); }\""
       }
     }
-  }
+  },
+  "tags": [
+    "scope:cockpit-e2e",
+    "scope:cockpit-examples",
+    "scope:cockpit-smoke"
+  ]
 }

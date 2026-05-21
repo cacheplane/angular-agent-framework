@@ -6,7 +6,9 @@
   "targets": {
     "build": {
       "executor": "@nx/js:tsc",
-      "outputs": ["{workspaceRoot}/dist/cockpit/langgraph/time-travel/python"],
+      "outputs": [
+        "{workspaceRoot}/dist/cockpit/langgraph/time-travel/python"
+      ],
       "options": {
         "outputPath": "dist/cockpit/langgraph/time-travel/python",
         "main": "cockpit/langgraph/time-travel/python/src/index.ts",
@@ -20,5 +22,10 @@
         "command": "npx tsx -e \"import { langgraphTimeTravelPythonModule } from './src/index.ts'; const module = langgraphTimeTravelPythonModule; if (module.id !== 'langgraph-time-travel-python' || module.title !== 'LangGraph Time Travel (Python)') { throw new Error('Unexpected module shape for ' + module.id); }\""
       }
     }
-  }
+  },
+  "tags": [
+    "scope:cockpit-e2e",
+    "scope:cockpit-examples",
+    "scope:cockpit-smoke"
+  ]
 }

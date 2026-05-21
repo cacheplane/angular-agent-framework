@@ -3,11 +3,20 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "libs/ui-react/src",
   "projectType": "library",
-  "tags": ["scope:shared", "type:lib"],
+  "tags": [
+    "scope:cockpit",
+    "scope:cockpit-deploy-smoke",
+    "scope:cockpit-e2e",
+    "scope:cockpit-examples",
+    "scope:shared",
+    "type:lib"
+  ],
   "targets": {
     "build": {
       "executor": "@nx/js:tsc",
-      "outputs": ["{workspaceRoot}/dist/libs/ui-react"],
+      "outputs": [
+        "{workspaceRoot}/dist/libs/ui-react"
+      ],
       "options": {
         "outputPath": "dist/libs/ui-react",
         "main": "libs/ui-react/src/index.ts",

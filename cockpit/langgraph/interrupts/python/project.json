@@ -6,7 +6,9 @@
   "targets": {
     "build": {
       "executor": "@nx/js:tsc",
-      "outputs": ["{workspaceRoot}/dist/cockpit/langgraph/interrupts/python"],
+      "outputs": [
+        "{workspaceRoot}/dist/cockpit/langgraph/interrupts/python"
+      ],
       "options": {
         "outputPath": "dist/cockpit/langgraph/interrupts/python",
         "main": "cockpit/langgraph/interrupts/python/src/index.ts",
@@ -20,5 +22,10 @@
         "command": "npx tsx -e \"import { langgraphInterruptsPythonModule } from './src/index.ts'; const module = langgraphInterruptsPythonModule; if (module.id !== 'langgraph-interrupts-python' || module.title !== 'LangGraph Interrupts (Python)') { throw new Error('Unexpected module shape for ' + module.id); }\""
       }
     }
-  }
+  },
+  "tags": [
+    "scope:cockpit-e2e",
+    "scope:cockpit-examples",
+    "scope:cockpit-smoke"
+  ]
 }

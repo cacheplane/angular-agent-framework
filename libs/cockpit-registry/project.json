@@ -3,11 +3,18 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "libs/cockpit-registry/src",
   "projectType": "library",
-  "tags": [],
+  "tags": [
+    "scope:cockpit",
+    "scope:cockpit-deploy-smoke",
+    "scope:cockpit-e2e",
+    "scope:cockpit-examples"
+  ],
   "targets": {
     "build": {
       "executor": "@nx/js:tsc",
-      "outputs": ["{workspaceRoot}/dist/libs/cockpit-registry"],
+      "outputs": [
+        "{workspaceRoot}/dist/libs/cockpit-registry"
+      ],
       "options": {
         "outputPath": "dist/libs/cockpit-registry",
         "main": "libs/cockpit-registry/src/index.ts",

@@ -4,7 +4,18 @@
   "sourceRoot": "libs/langgraph/src",
   "prefix": "lib",
   "projectType": "library",
-  "tags": [],
+  "tags": [
+    "scope:cockpit",
+    "scope:cockpit-deploy-smoke",
+    "scope:cockpit-e2e",
+    "scope:cockpit-examples",
+    "scope:cockpit-secret",
+    "scope:cockpit-smoke",
+    "scope:examples-chat",
+    "scope:library",
+    "scope:website",
+    "scope:website-e2e"
+  ],
   "targets": {
     "build": {
       "executor": "@nx/angular:package",

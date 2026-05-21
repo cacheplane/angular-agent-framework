@@ -6,7 +6,9 @@
   "targets": {
     "build": {
       "executor": "@nx/js:tsc",
-      "outputs": ["{workspaceRoot}/dist/cockpit/langgraph/subgraphs/python"],
+      "outputs": [
+        "{workspaceRoot}/dist/cockpit/langgraph/subgraphs/python"
+      ],
       "options": {
         "outputPath": "dist/cockpit/langgraph/subgraphs/python",
         "main": "cockpit/langgraph/subgraphs/python/src/index.ts",
@@ -20,5 +22,10 @@
         "command": "npx tsx -e \"import { langgraphSubgraphsPythonModule } from './src/index.ts'; const module = langgraphSubgraphsPythonModule; if (module.id !== 'langgraph-subgraphs-python' || module.title !== 'LangGraph Subgraphs (Python)') { throw new Error('Unexpected module shape for ' + module.id); }\""
       }
     }
-  }
+  },
+  "tags": [
+    "scope:cockpit-e2e",
+    "scope:cockpit-examples",
+    "scope:cockpit-smoke"
+  ]
 }

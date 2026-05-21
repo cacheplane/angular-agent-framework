@@ -100,5 +100,9 @@
         "command": "bash cockpit/chat/interrupts/angular/e2e/scripts/record-c-interrupts.sh"
       }
     }
-  }
+  },
+  "tags": [
+    "scope:cockpit-e2e",
+    "scope:cockpit-examples"
+  ]
 }

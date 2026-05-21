@@ -88,5 +88,9 @@
         "command": "npx tsx -e \"import { renderComputedFunctionsAngularModule } from './src/index.ts'; const module = renderComputedFunctionsAngularModule; if (module.id !== 'render-computed-functions-angular' || module.title !== 'Render Computed Functions (Angular)') { throw new Error('Unexpected module shape for ' + module.id); }\""
       }
     }
-  }
+  },
+  "tags": [
+    "scope:cockpit-e2e",
+    "scope:cockpit-examples"
+  ]
 }

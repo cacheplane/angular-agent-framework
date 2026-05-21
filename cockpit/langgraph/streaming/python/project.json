@@ -6,7 +6,9 @@
   "targets": {
     "build": {
       "executor": "@nx/js:tsc",
-      "outputs": ["{workspaceRoot}/dist/cockpit/langgraph/streaming/python"],
+      "outputs": [
+        "{workspaceRoot}/dist/cockpit/langgraph/streaming/python"
+      ],
       "options": {
         "outputPath": "dist/cockpit/langgraph/streaming/python",
         "main": "cockpit/langgraph/streaming/python/src/index.ts",
@@ -20,5 +22,10 @@
         "command": "npx tsx -e \"import { langgraphStreamingPythonModule } from './src/index.ts'; const module = langgraphStreamingPythonModule; if (module.id !== 'langgraph-streaming-python' || module.title !== 'LangGraph Streaming (Python)') { throw new Error('Unexpected module shape for ' + module.id); }\""
       }
     }
-  }
+  },
+  "tags": [
+    "scope:cockpit-e2e",
+    "scope:cockpit-examples",
+    "scope:cockpit-smoke"
+  ]
 }

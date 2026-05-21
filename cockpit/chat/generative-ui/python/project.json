@@ -6,7 +6,9 @@
   "targets": {
     "build": {
       "executor": "@nx/js:tsc",
-      "outputs": ["{workspaceRoot}/dist/cockpit/chat/generative-ui/python"],
+      "outputs": [
+        "{workspaceRoot}/dist/cockpit/chat/generative-ui/python"
+      ],
       "options": {
         "outputPath": "dist/cockpit/chat/generative-ui/python",
         "main": "cockpit/chat/generative-ui/python/src/index.ts",
@@ -20,5 +22,9 @@
         "command": "uv run langgraph dev --port 5508 --no-browser"
       }
     }
-  }
+  },
+  "tags": [
+    "scope:cockpit-e2e",
+    "scope:cockpit-examples"
+  ]
 }

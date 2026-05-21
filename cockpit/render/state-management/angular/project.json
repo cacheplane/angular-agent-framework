@@ -88,5 +88,9 @@
         "command": "npx tsx -e \"import { renderStateManagementAngularModule } from './src/index.ts'; const module = renderStateManagementAngularModule; if (module.id !== 'render-state-management-angular' || module.title !== 'Render State Management (Angular)') { throw new Error('Unexpected module shape for ' + module.id); }\""
       }
     }
-  }
+  },
+  "tags": [
+    "scope:cockpit-e2e",
+    "scope:cockpit-examples"
+  ]
 }

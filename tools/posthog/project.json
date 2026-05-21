@@ -3,9 +3,15 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "tools/posthog",
   "projectType": "library",
-  "tags": ["scope:gtm", "type:tool"],
+  "tags": [
+    "scope:gtm",
+    "scope:posthog",
+    "type:tool"
+  ],
   "namedInputs": {
-    "taxonomy": ["{workspaceRoot}/docs/gtm/taxonomy.md"]
+    "taxonomy": [
+      "{workspaceRoot}/docs/gtm/taxonomy.md"
+    ]
   },
   "targets": {
     "lint": {
@@ -19,14 +25,20 @@
     },
     "sync:plan": {
       "executor": "nx:run-commands",
-      "inputs": ["default", "taxonomy"],
+      "inputs": [
+        "default",
+        "taxonomy"
+      ],
       "options": {
         "command": "npx tsx tools/posthog/sync.ts --plan"
       }
     },
     "sync:apply": {
       "executor": "nx:run-commands",
-      "inputs": ["default", "taxonomy"],
+      "inputs": [
+        "default",
+        "taxonomy"
+      ],
       "options": {
         "command": "npx tsx tools/posthog/sync.ts --apply"
       }

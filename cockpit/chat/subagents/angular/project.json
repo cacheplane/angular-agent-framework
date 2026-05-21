@@ -94,5 +94,9 @@
         "command": "npx tsx -e \"import { chatSubagentsAngularModule } from './src/index.ts'; const module = chatSubagentsAngularModule; if (module.id !== 'chat-subagents-angular' || module.title !== 'Chat Subagents (Angular)') { throw new Error('Unexpected module shape for ' + module.id); }\""
       }
     }
-  }
+  },
+  "tags": [
+    "scope:cockpit-e2e",
+    "scope:cockpit-examples"
+  ]
 }

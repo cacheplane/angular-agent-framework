@@ -6,7 +6,9 @@
   "targets": {
     "build": {
       "executor": "@nx/js:tsc",
-      "outputs": ["{workspaceRoot}/dist/cockpit/chat/a2ui/python"],
+      "outputs": [
+        "{workspaceRoot}/dist/cockpit/chat/a2ui/python"
+      ],
       "options": {
         "outputPath": "dist/cockpit/chat/a2ui/python",
         "main": "cockpit/chat/a2ui/python/src/index.ts",
@@ -20,5 +22,9 @@
         "command": "uv run langgraph dev --port 5511 --no-browser"
       }
     }
-  }
+  },
+  "tags": [
+    "scope:cockpit-e2e",
+    "scope:cockpit-examples"
+  ]
 }

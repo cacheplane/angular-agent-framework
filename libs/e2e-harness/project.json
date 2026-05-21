@@ -3,7 +3,13 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "projectType": "library",
   "sourceRoot": "libs/e2e-harness/src",
-  "tags": ["scope:internal"],
+  "tags": [
+    "scope:cockpit",
+    "scope:cockpit-deploy-smoke",
+    "scope:cockpit-e2e",
+    "scope:cockpit-examples",
+    "scope:internal"
+  ],
   "targets": {
     "lint": {
       "executor": "nx:run-commands",

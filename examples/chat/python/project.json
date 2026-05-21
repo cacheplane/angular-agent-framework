@@ -26,5 +26,8 @@
         "command": "uv run pytest -q -m smoke"
       }
     }
-  }
+  },
+  "tags": [
+    "scope:examples-chat"
+  ]
 }
