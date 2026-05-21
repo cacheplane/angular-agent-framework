@@ -5,17 +5,11 @@ import { TestBed } from '@angular/core/testing';
 import { RenderLifecycleService } from './render-lifecycle.service';
 import { RENDER_LIFECYCLE } from './lifecycle';
 import { provideRender } from './provide-render';
-import {
-  __resetRunLicenseCheckStateForTests,
-  __resetNagStateForTests,
-} from '@ngaf/licensing/testing';
 
 describe('RenderLifecycle', () => {
   let service: RenderLifecycleService;
 
   beforeEach(() => {
-    __resetRunLicenseCheckStateForTests();
-    __resetNagStateForTests();
     globalThis.console.warn = vi.fn();
     TestBed.configureTestingModule({
       providers: [provideRender({})],

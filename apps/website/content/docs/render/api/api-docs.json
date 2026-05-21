@@ -240,18 +240,6 @@
     "description": "",
     "properties": [
       {
-        "name": "__licenseEnvHint",
-        "type": "object",
-        "description": "Test-only env hint override. Not part of the stable API.",
-        "optional": true
-      },
-      {
-        "name": "__licensePublicKey",
-        "type": "Uint8Array<ArrayBufferLike>",
-        "description": "Test-only public-key override. Defaults to the compile-time embedded\n`LICENSE_PUBLIC_KEY`. Not part of the stable API.",
-        "optional": true
-      },
-      {
         "name": "functions",
         "type": "Record<string, ComputedFunction>",
         "description": "",
@@ -261,12 +249,6 @@
         "name": "handlers",
         "type": "Record<string, object>",
         "description": "",
-        "optional": true
-      },
-      {
-        "name": "license",
-        "type": "string",
-        "description": "Signed license token from threadplane.ai. Optional; omitted in dev.",
         "optional": true
       },
       {

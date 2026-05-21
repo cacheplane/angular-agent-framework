@@ -734,27 +734,9 @@
     "description": "Global configuration for agent instances.\nProperties set here serve as defaults that can be overridden per-call.",
     "properties": [
       {
-        "name": "__licenseEnvHint",
-        "type": "object",
-        "description": "Test-only env hint override. Not part of the stable API.",
-        "optional": true
-      },
-      {
-        "name": "__licensePublicKey",
-        "type": "Uint8Array<ArrayBufferLike>",
-        "description": "Test-only public-key override. Defaults to the compile-time embedded\n`LICENSE_PUBLIC_KEY`. Not part of the stable API.",
-        "optional": true
-      },
-      {
         "name": "apiUrl",
         "type": "string",
         "description": "Base URL of the LangGraph Platform API (e.g., `'http://localhost:2024'`).",
-        "optional": true
-      },
-      {
-        "name": "license",
-        "type": "string",
-        "description": "Signed license token from threadplane.ai. Optional; omitted in dev.",
         "optional": true
       },
       {
