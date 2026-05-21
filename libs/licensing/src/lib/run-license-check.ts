@@ -18,17 +18,18 @@ export interface RunLicenseCheckOptions {
   warn?: (message: string) => void;
 }
 
-const done = new Set<string>();
+const done = new Map<string, LicenseStatus>();
 
 export async function runLicenseCheck(
   options: RunLicenseCheckOptions,
 ): Promise<LicenseStatus> {
   const key = `${options.package}|${options.token ?? ''}`;
-  if (done.has(key)) {
-    // Idempotent: re-running with identical inputs is a no-op.
-    return 'licensed';
+  const cached = done.get(key);
+  if (cached !== undefined) {
+    // Idempotent: re-running with identical inputs returns the same status
+    // that was computed on the first call (not a hard-coded 'licensed').
+    return cached;
   }
-  done.add(key);
 
   const nowSec = options.nowSec ?? Math.floor(Date.now() / 1000);
   const verify = options.token
@@ -41,6 +42,7 @@ export async function runLicenseCheck(
 
   emitNag(evaluated, { package: options.package, warn: options.warn });
 
+  done.set(key, evaluated.status);
   return evaluated.status;
 }
 
