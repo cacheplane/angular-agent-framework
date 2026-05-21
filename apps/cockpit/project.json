@@ -27,7 +27,12 @@
         "production": {
           "outputPath": "dist/apps/cockpit"
         }
-      }
+      },
+      "inputs": [
+        "default",
+        "deploymentConfig",
+        "^default"
+      ]
     },
     "serve": {
       "executor": "@nx/next:server",
@@ -215,5 +220,20 @@
         "cwd": "."
       }
     }
+  },
+  "namedInputs": {
+    "deploymentConfig": [
+      "{workspaceRoot}/vercel.cockpit.json",
+      "{workspaceRoot}/vercel.examples.json",
+      "{workspaceRoot}/vercel.demo.json",
+      "{workspaceRoot}/scripts/assemble-demo.ts",
+      "{workspaceRoot}/scripts/assemble-examples.ts",
+      "{workspaceRoot}/scripts/demo-middleware.ts",
+      "{workspaceRoot}/scripts/langgraph-proxy.ts",
+      "{workspaceRoot}/scripts/rate-limit.ts",
+      "{workspaceRoot}/apps/cockpit/scripts/deploy-smoke.ts",
+      "{workspaceRoot}/scripts/generate-shared-deployment-config.ts",
+      "{workspaceRoot}/apps/cockpit/scripts/capability-registry.ts"
+    ]
   }
 }

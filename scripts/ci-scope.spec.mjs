@@ -1,166 +1,146 @@
-import assert from 'node:assert/strict';
-import test from 'node:test';
+// SPDX-License-Identifier: MIT
+import { describe, it, expect } from 'vitest';
+import {
+  classifyFromAffected,
+  emptyScope,
+  fullScope,
+  SCOPE_KEYS,
+} from './ci-scope.mjs';
 
-import { classifyChangedFiles } from './ci-scope.mjs';
-
-const projects = [
-  {
-    name: 'chat',
-    root: 'libs/chat',
-    sourceRoot: 'libs/chat/src',
-    projectType: 'library',
-    tags: [],
-    targets: { build: {}, lint: {}, test: {} },
-  },
-  {
-    name: 'website',
-    root: 'apps/website',
-    sourceRoot: 'apps/website/src',
-    projectType: 'application',
-    tags: ['scope:website', 'type:app'],
-    targets: { build: {}, e2e: {}, lint: {} },
-  },
-  {
-    name: 'cockpit-new-cap-angular',
-    root: 'cockpit/new/cap/angular',
-    sourceRoot: 'cockpit/new/cap/angular/src',
-    projectType: 'application',
-    tags: [],
-    targets: { build: {}, e2e: {}, smoke: {} },
-  },
-  {
-    name: 'cockpit-new-cap-python',
-    root: 'cockpit/new/cap/python',
-    sourceRoot: 'cockpit/new/cap/python/src',
-    projectType: 'library',
-    tags: [],
-    targets: { build: {}, smoke: {}, integration: {} },
-  },
-  {
-    name: 'posthog-tools',
-    root: 'tools/posthog',
-    sourceRoot: 'tools/posthog',
-    projectType: 'library',
-    tags: ['scope:gtm', 'type:tool'],
-    targets: { 'sync:plan': {}, 'quality:live': {} },
-  },
-  {
-    name: 'e2e-harness',
-    root: 'libs/e2e-harness',
-    sourceRoot: 'libs/e2e-harness/src',
-    projectType: 'library',
-    tags: [],
-    targets: { build: {} },
-  },
+const PUBLISHABLE_LIB_TAGS = [
+  'scope:library', 'scope:website', 'scope:website-e2e',
+  'scope:cockpit', 'scope:cockpit-examples', 'scope:cockpit-smoke',
+  'scope:cockpit-secret', 'scope:cockpit-deploy-smoke',
+  'scope:cockpit-e2e', 'scope:examples-chat',
 ];
+const COCKPIT_CAP_ANGULAR_TAGS = ['scope:cockpit-examples', 'scope:cockpit-e2e'];
+const COCKPIT_CAP_PYTHON_TAGS = ['scope:cockpit-examples', 'scope:cockpit-e2e', 'scope:cockpit-smoke'];
+const WEBSITE_TAGS = ['scope:website', 'scope:website-e2e'];
+const COCKPIT_APP_TAGS = ['scope:cockpit', 'scope:cockpit-examples', 'scope:cockpit-deploy-smoke', 'scope:cockpit-e2e'];
+const EXAMPLES_CHAT_TAGS = ['scope:examples-chat'];
+const POSTHOG_TAGS = ['scope:posthog'];
 
-const workspace = {
-  projects,
-  publishableProjects: ['chat'],
-};
+describe('classifyFromAffected — short-circuit', () => {
+  it('returns full scope when a global CI file changes', () => {
+    const scope = classifyFromAffected(['.github/workflows/ci.yml'], []);
+    expect(scope).toEqual(fullScope());
+  });
 
-test('publishable library changes fan out to dependent product checks', () => {
-  const scope = classifyChangedFiles(['libs/chat/src/public-api.ts'], workspace);
+  it('full scope on package.json change', () => {
+    expect(classifyFromAffected(['package.json'], [])).toEqual(fullScope());
+  });
 
-  assert.equal(scope.library, true);
-  assert.equal(scope.website, true);
-  assert.equal(scope.website_e2e, true);
-  assert.equal(scope.cockpit, true);
-  assert.equal(scope.cockpit_examples, true);
-  assert.equal(scope.cockpit_smoke, true);
-  assert.equal(scope.cockpit_secret, true);
-  assert.equal(scope.cockpit_deploy_smoke, true);
-  assert.equal(scope.examples_chat, true);
-  assert.equal(scope.cockpit_e2e, true);
-  assert.equal(scope.posthog, false);
+  it('empty scope when no global file + no affected projects', () => {
+    expect(classifyFromAffected(['docs/some-readme.md'], [])).toEqual(emptyScope());
+  });
 });
 
-test('cockpit angular project metadata drives examples and e2e scope', () => {
-  const scope = classifyChangedFiles(['cockpit/new/cap/angular/src/app/app.ts'], workspace);
-
-  assert.equal(scope.cockpit_examples, true);
-  assert.equal(scope.cockpit_e2e, true);
-  assert.equal(scope.cockpit_smoke, false);
+describe('classifyFromAffected — publishable lib broadcast', () => {
+  it('publishable lib triggers library + website + website_e2e + cockpit_* + examples_chat', () => {
+    const scope = classifyFromAffected(['libs/chat/src/foo.ts'], [
+      { name: 'chat', tags: PUBLISHABLE_LIB_TAGS },
+    ]);
+    expect(scope.library).toBe(true);
+    expect(scope.website).toBe(true);
+    expect(scope.website_e2e).toBe(true);
+    expect(scope.cockpit).toBe(true);
+    expect(scope.cockpit_examples).toBe(true);
+    expect(scope.cockpit_smoke).toBe(true);
+    expect(scope.cockpit_secret).toBe(true);
+    expect(scope.cockpit_deploy_smoke).toBe(true);
+    expect(scope.cockpit_e2e).toBe(true);
+    expect(scope.examples_chat).toBe(true);
+    expect(scope.posthog).toBe(false);
+  });
 });
 
-test('cockpit python project changes trigger smoke + secret + examples + e2e', () => {
-  const scope = classifyChangedFiles(['cockpit/new/cap/python/src/index.ts'], workspace);
-  assert.equal(scope.cockpit_smoke, true);
-  assert.equal(scope.cockpit_secret, true);
-  assert.equal(scope.cockpit_examples, true);
-  assert.equal(scope.cockpit_e2e, true);
+describe('classifyFromAffected — cockpit cap projects', () => {
+  it('cockpit cap python triggers cockpit_e2e + cockpit_examples + cockpit_smoke', () => {
+    const scope = classifyFromAffected(
+      ['cockpit/chat/messages/python/src/graph.py'],
+      [{ name: 'cockpit-chat-messages-python', tags: COCKPIT_CAP_PYTHON_TAGS }],
+    );
+    expect(scope.cockpit_e2e).toBe(true);
+    expect(scope.cockpit_examples).toBe(true);
+    expect(scope.cockpit_smoke).toBe(true);
+    expect(scope.cockpit).toBe(false);
+    expect(scope.library).toBe(false);
+  });
+
+  it('cockpit cap angular triggers cockpit_e2e + cockpit_examples only', () => {
+    const scope = classifyFromAffected(
+      ['cockpit/chat/messages/angular/src/main.ts'],
+      [{ name: 'cockpit-chat-messages-angular', tags: COCKPIT_CAP_ANGULAR_TAGS }],
+    );
+    expect(scope.cockpit_e2e).toBe(true);
+    expect(scope.cockpit_examples).toBe(true);
+    expect(scope.cockpit_smoke).toBe(false);
+  });
 });
 
-test('PostHog project metadata drives PostHog scope', () => {
-  const scope = classifyChangedFiles(['tools/posthog/live-quality.ts'], workspace);
+describe('classifyFromAffected — apps + fallback paths via namedInputs', () => {
+  it('vercel.json change marks apps/website affected → website + website_e2e', () => {
+    const scope = classifyFromAffected(['vercel.json'], [
+      { name: 'website', tags: WEBSITE_TAGS },
+    ]);
+    expect(scope.website).toBe(true);
+    expect(scope.website_e2e).toBe(true);
+    expect(scope.cockpit).toBe(false);
+  });
 
-  assert.equal(scope.posthog, true);
-  assert.equal(scope.library, false);
-  assert.equal(scope.website, false);
+  it('capability-registry.ts change marks apps/cockpit affected → all cockpit_*', () => {
+    const scope = classifyFromAffected(
+      ['apps/cockpit/scripts/capability-registry.ts'],
+      [{ name: 'cockpit', tags: COCKPIT_APP_TAGS }],
+    );
+    expect(scope.cockpit).toBe(true);
+    expect(scope.cockpit_examples).toBe(true);
+    expect(scope.cockpit_deploy_smoke).toBe(true);
+    expect(scope.cockpit_e2e).toBe(true);
+  });
+
+  it('examples/chat change → examples_chat only', () => {
+    const scope = classifyFromAffected(
+      ['examples/chat/angular/src/main.ts'],
+      [{ name: 'examples-chat-angular', tags: EXAMPLES_CHAT_TAGS }],
+    );
+    expect(scope.examples_chat).toBe(true);
+    expect(scope.cockpit).toBe(false);
+  });
+
+  it('tools/posthog change → posthog only', () => {
+    const scope = classifyFromAffected(
+      ['tools/posthog/src/dashboards.ts'],
+      [{ name: 'posthog-tools', tags: POSTHOG_TAGS }],
+    );
+    expect(scope.posthog).toBe(true);
+    expect(scope.library).toBe(false);
+  });
 });
 
-test('shared cockpit support libraries preserve conservative cockpit coverage', () => {
-  const scope = classifyChangedFiles(['libs/e2e-harness/src/index.ts'], workspace);
+describe('classifyFromAffected — tag isolation', () => {
+  it('tags not prefixed with "scope:" are ignored', () => {
+    const scope = classifyFromAffected(['some.ts'], [
+      { name: 'x', tags: ['type:app', 'rotation:weekly'] },
+    ]);
+    expect(scope).toEqual(emptyScope());
+  });
 
-  assert.equal(scope.cockpit, true);
-  assert.equal(scope.cockpit_examples, true);
-  assert.equal(scope.cockpit_deploy_smoke, true);
-  assert.equal(scope.cockpit_e2e, true);
+  it('unknown scope tags are ignored (no key collision)', () => {
+    const scope = classifyFromAffected(['some.ts'], [
+      { name: 'x', tags: ['scope:not-a-real-scope'] },
+    ]);
+    expect(scope).toEqual(emptyScope());
+  });
 });
 
-test('global CI config changes keep full PR coverage', () => {
-  const scope = classifyChangedFiles(['.github/workflows/ci.yml'], workspace);
-
-  assert.deepEqual(Object.values(scope), Object.values(scope).map(() => true));
-});
-
-test('unowned docs changes do not trigger heavy CI jobs', () => {
-  const scope = classifyChangedFiles(['docs/notes.md'], workspace);
-
-  assert.deepEqual(Object.values(scope), Object.values(scope).map(() => false));
-});
-
-test('per-cap chat python change triggers cockpit_e2e + cockpit_examples + cockpit_smoke', () => {
-  const scope = classifyChangedFiles(
-    ['cockpit/new/cap/python/langgraph.json'],
-    workspace,
-  );
-  assert.equal(scope.cockpit_examples, true);
-  assert.equal(scope.cockpit_e2e, true);
-  assert.equal(scope.cockpit_smoke, true); // existing path — preserved
-});
-
-test('per-cap python change without smoke target still triggers e2e + examples', () => {
-  // Project setup: an imagined render python with only `build` target.
-  const renderProjects = [
-    ...projects,
-    {
-      name: 'cockpit-render-fake-python',
-      root: 'cockpit/render/fake/python',
-      sourceRoot: 'cockpit/render/fake/python/src',
-      projectType: 'library',
-      tags: [],
-      targets: { build: {} },
-    },
-  ];
-  const scope = classifyChangedFiles(
-    ['cockpit/render/fake/python/langgraph.json'],
-    { projects: renderProjects, publishableProjects: ['chat'] },
-  );
-  assert.equal(scope.cockpit_examples, true);
-  assert.equal(scope.cockpit_e2e, true);
-  // No smoke target → cockpit_smoke stays false
-  assert.equal(scope.cockpit_smoke, false);
-});
-
-test('generate-shared-deployment-config.ts triggers full cockpit scope', () => {
-  const scope = classifyChangedFiles(
-    ['scripts/generate-shared-deployment-config.ts'],
-    workspace,
-  );
-  assert.equal(scope.cockpit, true);
-  assert.equal(scope.cockpit_examples, true);
-  assert.equal(scope.cockpit_smoke, true);
-  assert.equal(scope.cockpit_e2e, true);
-  assert.equal(scope.cockpit_deploy_smoke, true);
+describe('SCOPE_KEYS export', () => {
+  it('contains the 11 documented scope keys', () => {
+    expect(SCOPE_KEYS).toEqual([
+      'library', 'website', 'website_e2e',
+      'cockpit', 'cockpit_examples', 'cockpit_smoke',
+      'cockpit_secret', 'cockpit_deploy_smoke', 'cockpit_e2e',
+      'examples_chat', 'posthog',
+    ]);
+  });
 });

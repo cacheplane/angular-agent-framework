@@ -25,7 +25,12 @@
         "production": {
           "outputPath": "dist/apps/website"
         }
-      }
+      },
+      "inputs": [
+        "default",
+        "deploymentConfig",
+        "^default"
+      ]
     },
     "serve": {
       "executor": "@nx/next:server",
@@ -64,5 +69,10 @@
         "config": "apps/website/playwright.config.ts"
       }
     }
+  },
+  "namedInputs": {
+    "deploymentConfig": [
+      "{workspaceRoot}/vercel.json"
+    ]
   }
 }
