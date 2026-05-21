@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 import { test, expect } from '@playwright/test';
 import {
+  activeThreadIdFromUrl,
   messageInput,
   openDemo,
   sendButton,
@@ -32,15 +33,15 @@ test('lifecycle: New chat (sidenav) starts a fresh thread and restores welcome s
   await sendButton(page).click();
   await waitForFinalAssistant(page);
 
-  const threadIdBefore = await page.evaluate(() => {
-    const raw = localStorage.getItem('ngaf-chat-demo:palette');
-    return raw ? (JSON.parse(raw) as { threadId?: string | null }).threadId ?? null : null;
-  });
+  // After the first send the agent allocates a thread id and stamps
+  // it into the URL via the signal→URL effect: /embed/<thread-id>.
+  await expect(page).toHaveURL(/\/embed\/[A-Za-z0-9-]+$/);
+  const threadIdBefore = await activeThreadIdFromUrl(page);
 
   // The toolbar "New conversation" button was removed; the sidenav's
   // "New chat" pill is now the only affordance for starting a fresh
-  // thread. It creates a new thread server-side (rather than clearing
-  // local state) and routes the UI back to the welcome surface.
+  // thread. It creates a new thread server-side and navigates to
+  // /embed/<new-thread-id>; the empty thread renders the welcome state.
   await page.getByRole('button', { name: 'New chat' }).first().click();
 
   await expect(
@@ -48,12 +49,9 @@ test('lifecycle: New chat (sidenav) starts a fresh thread and restores welcome s
   ).toBeVisible();
   await expect(page.locator('chat-message')).toHaveCount(0);
 
-  const threadIdAfter = await page.evaluate(() => {
-    const raw = localStorage.getItem('ngaf-chat-demo:palette');
-    return raw ? (JSON.parse(raw) as { threadId?: string | null }).threadId ?? null : null;
-  });
-  // A fresh thread id was persisted, and it's different from the one we
-  // had before clicking New chat.
+  // URL holds a fresh thread id, different from the one we had before.
+  await expect(page).toHaveURL(/\/embed\/[A-Za-z0-9-]+$/);
+  const threadIdAfter = await activeThreadIdFromUrl(page);
   expect(threadIdAfter).toBeTruthy();
   expect(threadIdAfter).not.toBe(threadIdBefore);
 });

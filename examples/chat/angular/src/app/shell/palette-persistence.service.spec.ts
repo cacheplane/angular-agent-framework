@@ -13,7 +13,6 @@ describe('PalettePersistence', () => {
     const svc = TestBed.runInInjectionContext(() => new PalettePersistence());
     expect(svc.read('model')).toBeNull();
     expect(svc.read('effort')).toBeNull();
-    expect(svc.read('threadId')).toBeNull();
     expect(svc.read('drawerOpen')).toBeNull();
   });
 
@@ -39,10 +38,10 @@ describe('PalettePersistence', () => {
 
   it('clearing a key with null removes it from storage', () => {
     const svc = TestBed.runInInjectionContext(() => new PalettePersistence());
-    svc.write('threadId', 'abc');
-    expect(svc.read('threadId')).toBe('abc');
-    svc.write('threadId', null);
-    expect(svc.read('threadId')).toBeNull();
+    svc.write('selectedProjectId', 'abc');
+    expect(svc.read('selectedProjectId')).toBe('abc');
+    svc.write('selectedProjectId', null);
+    expect(svc.read('selectedProjectId')).toBeNull();
   });
 
   it('survives malformed storage (returns null and does not throw)', () => {
