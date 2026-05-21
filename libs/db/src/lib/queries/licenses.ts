@@ -17,7 +17,7 @@ export async function upsertLicense(db: Db, input: UpsertLicenseInput): Promise<
     .insert(licenses)
     .values({ ...input, issuedAt: now, updatedAt: now })
     .onConflictDoUpdate({
-      target: licenses.stripeSubscriptionId,
+      target: licenses.stripePaymentId,
       set: {
         customerEmail: input.customerEmail,
         tier: input.tier,
@@ -32,11 +32,11 @@ export async function upsertLicense(db: Db, input: UpsertLicenseInput): Promise<
   return rows[0];
 }
 
-export async function getLicense(db: Db, stripeSubscriptionId: string): Promise<License | null> {
+export async function getLicense(db: Db, stripePaymentId: string): Promise<License | null> {
   const rows = await db
     .select()
     .from(licenses)
-    .where(eq(licenses.stripeSubscriptionId, stripeSubscriptionId))
+    .where(eq(licenses.stripePaymentId, stripePaymentId))
     .limit(1);
   return rows[0] ?? null;
 }
@@ -45,11 +45,11 @@ export async function getLicensesByCustomerEmail(db: Db, email: string): Promise
   return db.select().from(licenses).where(eq(licenses.customerEmail, email));
 }
 
-export async function revokeLicense(db: Db, stripeSubscriptionId: string): Promise<License | null> {
+export async function revokeLicense(db: Db, stripePaymentId: string): Promise<License | null> {
   const rows = await db
     .update(licenses)
     .set({ revokedAt: sql`now()`, updatedAt: sql`now()` })
-    .where(eq(licenses.stripeSubscriptionId, stripeSubscriptionId))
+    .where(eq(licenses.stripePaymentId, stripePaymentId))
     .returning();
   return rows[0] ?? null;
 }
