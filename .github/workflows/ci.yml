@@ -244,6 +244,7 @@ jobs:
     needs: ci-scope
     if: github.event_name == 'push' || needs.ci-scope.outputs.examples_chat == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 35
     steps:
       - uses: actions/checkout@v6.0.2
       - uses: actions/setup-node@v6.3.0
@@ -264,7 +265,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: examples-chat-e2e-trace
-          path: examples/chat/angular/e2e/test-results/
+          path: |
+            test-results/
+            examples/chat/angular/e2e/test-results/
           retention-days: 7
 
   cockpit-e2e:

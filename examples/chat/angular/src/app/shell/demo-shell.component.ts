@@ -8,6 +8,7 @@ import {
   effect,
   signal,
   inject,
+  untracked,
 } from '@angular/core';
 import { Router, RouterOutlet, NavigationEnd } from '@angular/router';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
@@ -106,24 +107,27 @@ export class DemoShell {
       }
     });
 
-    // Refresh threads list whenever the active thread changes (e.g. after
-    // create or switch) so the panel stays up to date. The effect also
-    // covers the initial load (fires synchronously on first reactive read).
+    // Persist and refresh whenever the active thread changes (e.g. after
+    // create or switch) so bare mode routes can restore the current thread
+    // and the panel stays up to date.
     effect(() => {
-      void this.threadIdSignal();
+      const id = this.threadIdSignal();
+      this.persistence.write('threadId', id);
       void this.threadsSvc.refresh();
     });
 
-    // URL → signal. When the URL's threadId changes (paste link, back/
-    // forward, programmatic navigation), reflect it into threadIdSignal.
+    // URL → signal. Explicit URL thread ids win (paste link, back/forward,
+    // programmatic navigation). Bare mode URLs fall back to the persisted
+    // active thread, which keeps conversations attached across mode routes.
     // The compare-and-set guard breaks the obvious URL→signal→URL loop:
     // by the time the signal→URL effect below fires, both values match
     // and `router.navigate` is skipped.
-    // URL → signal sync.
     effect(() => {
       const urlId = this.urlThreadId();
-      if (urlId !== this.threadIdSignal()) {
-        this.threadIdSignal.set(urlId);
+      const nextId = urlId ?? untracked(() => this.persistence.read('threadId') ?? null);
+      const currentId = untracked(() => this.threadIdSignal());
+      if (nextId !== currentId) {
+        this.threadIdSignal.set(nextId);
       }
     });
 
@@ -307,11 +311,12 @@ export class DemoShell {
     { value: 'material-light', label: 'Material light' },
   ]);
 
-  /** Active thread id. URL is the source of truth (see urlState above);
-   *  this signal initialises from the URL on construction and is kept in
-   *  sync by the bidirectional effects in the constructor. The agent
-   *  watches this signal directly. */
-  protected readonly threadIdSignal = signal<string | null>(parseUrl(this.router.url).threadId);
+  /** Active thread id. URL is the source of truth when it contains an
+   *  explicit thread id; bare mode URLs fall back to the last active
+   *  thread so mode switches like `/embed` -> `/popup` preserve context. */
+  protected readonly threadIdSignal = signal<string | null>(
+    parseUrl(this.router.url).threadId ?? this.persistence.read('threadId') ?? null,
+  );
 
   /** Title of the currently-selected thread, or 'New chat' if none. The
    *  Python graph writes thread.metadata.title from the first user message
@@ -425,6 +430,10 @@ export class DemoShell {
   private async validateUrlThreadId(threadId: string): Promise<void> {
     const thread = await this.threadsSvc.getThread(threadId);
     if (thread) return;
+    if (this.threadIdSignal() === threadId) {
+      this.threadIdSignal.set(null);
+      this.persistence.write('threadId', null);
+    }
     await this.router.navigate(['/', this.mode()], { replaceUrl: true });
   }
 
