@@ -5,7 +5,7 @@ import type { LicenseClaims } from './license-token';
 
 const CLAIMS: LicenseClaims = {
   sub: 'cus_123',
-  tier: 'developer-seat',
+  tier: 'developer_seat',
   iat: 1_700_000_000,
   exp: 2_000_000_000, // far future
   seats: 5,

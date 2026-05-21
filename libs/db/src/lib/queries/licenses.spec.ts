@@ -10,7 +10,7 @@ import { startTestDb, type TestDb } from './test-helpers.js';
 
 const base = {
   stripeCustomerId: 'cus_1',
-  stripeSubscriptionId: 'sub_1',
+  stripePaymentId: 'pi_1',
   customerEmail: 'a@example.com',
   tier: 'developer-seat' as const,
   seats: 3,
@@ -31,17 +31,17 @@ describe('licenses queries', () => {
 
   describe('upsertLicense', () => {
     it('inserts a new row keyed on stripe_subscription_id', async () => {
-      const row = await upsertLicense(testDb.db, { ...base, stripeSubscriptionId: 'sub_insert' });
-      expect(row.stripeSubscriptionId).toBe('sub_insert');
+      const row = await upsertLicense(testDb.db, { ...base, stripePaymentId: 'pi_insert' });
+      expect(row.stripePaymentId).toBe('pi_insert');
       expect(row.seats).toBe(3);
       expect(row.id).toBeDefined();
     });
 
     it('updates an existing row on repeat sub id', async () => {
-      await upsertLicense(testDb.db, { ...base, stripeSubscriptionId: 'sub_update', seats: 2 });
+      await upsertLicense(testDb.db, { ...base, stripePaymentId: 'pi_update', seats: 2 });
       const updated = await upsertLicense(testDb.db, {
         ...base,
-        stripeSubscriptionId: 'sub_update',
+        stripePaymentId: 'pi_update',
         seats: 7,
         lastToken: 'token-v2',
       });
@@ -52,21 +52,21 @@ describe('licenses queries', () => {
 
   describe('getLicense', () => {
     it('returns the row when present', async () => {
-      await upsertLicense(testDb.db, { ...base, stripeSubscriptionId: 'sub_get' });
-      const found = await getLicense(testDb.db, 'sub_get');
-      expect(found?.stripeSubscriptionId).toBe('sub_get');
+      await upsertLicense(testDb.db, { ...base, stripePaymentId: 'pi_get' });
+      const found = await getLicense(testDb.db, 'pi_get');
+      expect(found?.stripePaymentId).toBe('pi_get');
     });
 
     it('returns null when not found', async () => {
-      const found = await getLicense(testDb.db, 'sub_missing');
+      const found = await getLicense(testDb.db, 'pi_missing');
       expect(found).toBeNull();
     });
   });
 
   describe('getLicensesByCustomerEmail', () => {
     it('returns all rows matching the email', async () => {
-      await upsertLicense(testDb.db, { ...base, stripeSubscriptionId: 'sub_e1', customerEmail: 'multi@example.com' });
-      await upsertLicense(testDb.db, { ...base, stripeSubscriptionId: 'sub_e2', customerEmail: 'multi@example.com' });
+      await upsertLicense(testDb.db, { ...base, stripePaymentId: 'pi_e1', customerEmail: 'multi@example.com' });
+      await upsertLicense(testDb.db, { ...base, stripePaymentId: 'pi_e2', customerEmail: 'multi@example.com' });
       const rows = await getLicensesByCustomerEmail(testDb.db, 'multi@example.com');
       expect(rows.length).toBeGreaterThanOrEqual(2);
     });
@@ -74,20 +74,20 @@ describe('licenses queries', () => {
 
   describe('revokeLicense', () => {
     it('sets revoked_at to now', async () => {
-      await upsertLicense(testDb.db, { ...base, stripeSubscriptionId: 'sub_revoke' });
-      const revoked = await revokeLicense(testDb.db, 'sub_revoke');
+      await upsertLicense(testDb.db, { ...base, stripePaymentId: 'pi_revoke' });
+      const revoked = await revokeLicense(testDb.db, 'pi_revoke');
       expect(revoked?.revokedAt).toBeInstanceOf(Date);
     });
 
     it('returns null for unknown subscription', async () => {
-      const result = await revokeLicense(testDb.db, 'sub_missing_revoke');
+      const result = await revokeLicense(testDb.db, 'pi_missing_revoke');
       expect(result).toBeNull();
     });
   });
 
   describe('updateLicenseToken', () => {
     it('replaces last_token and bumps issued_at', async () => {
-      const inserted = await upsertLicense(testDb.db, { ...base, stripeSubscriptionId: 'sub_token' });
+      const inserted = await upsertLicense(testDb.db, { ...base, stripePaymentId: 'pi_token' });
       const before = inserted.issuedAt;
       await new Promise((r) => setTimeout(r, 10));
       const updated = await updateLicenseToken(testDb.db, inserted.id, 'token-v99');

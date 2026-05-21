@@ -57,7 +57,7 @@ export async function runRemint(args: RemintArgs, deps: RemintDeps): Promise<Rem
     token = await deps.mintToken(
       {
         stripeCustomerId: license.stripeCustomerId,
-        tier: license.tier as 'developer-seat' | 'app-deployment',
+        tier: license.tier as 'indie' | 'developer_seat' | 'app_deployment',
         seats: license.seats,
         expiresAt: license.expiresAt,
       },
@@ -68,7 +68,7 @@ export async function runRemint(args: RemintArgs, deps: RemintDeps): Promise<Rem
 
   const to = args.to ?? license.customerEmail;
   const vars = {
-    tier: license.tier as 'developer-seat' | 'app-deployment',
+    tier: license.tier as 'indie' | 'developer_seat' | 'app_deployment',
     seats: license.seats,
     token,
     expiresAt: license.expiresAt,

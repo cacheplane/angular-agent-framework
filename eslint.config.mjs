@@ -10,6 +10,8 @@ export default [
       '**/out-tsc',
       '**/.next',
       '**/.next/**',
+      '**/.vercel',
+      '**/.vercel/**',
       '**/next-env.d.ts',
     ],
   },

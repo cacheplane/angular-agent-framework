@@ -10,7 +10,7 @@ describe('signLicense', () => {
     const publicKey = await ed.getPublicKeyAsync(privateKey);
     const claims: LicenseClaims = {
       sub: 'cus_test_123',
-      tier: 'developer-seat',
+      tier: 'developer_seat',
       iat: 1_700_000_000,
       exp: 1_800_000_000,
       seats: 5,
@@ -29,7 +29,7 @@ describe('signLicense', () => {
     const privateKey = ed.utils.randomPrivateKey();
     const claims: LicenseClaims = {
       sub: 'cus_abc',
-      tier: 'app-deployment',
+      tier: 'app_deployment',
       iat: 1_700_000_000,
       exp: 1_800_000_000,
       seats: 1,
@@ -49,7 +49,7 @@ describe('signLicense', () => {
     const pk2 = await ed.getPublicKeyAsync(sk2);
     const claims: LicenseClaims = {
       sub: 'cus_x',
-      tier: 'developer-seat',
+      tier: 'developer_seat',
       iat: 1_700_000_000,
       exp: 1_800_000_000,
       seats: 1,

@@ -8,7 +8,7 @@ function makeLicense(overrides: Partial<License> = {}): License {
     stripeCustomerId: 'cus_1',
     stripeSubscriptionId: 'sub_1',
     customerEmail: 'a@example.com',
-    tier: 'developer-seat',
+    tier: 'developer_seat',
     seats: 3,
     expiresAt: new Date('2027-01-01T00:00:00Z'),
     revokedAt: null,
