@@ -162,12 +162,13 @@ export class DemoShell {
     // signal → URL. When the agent auto-creates a thread, the sidenav
     // switches threads, or onNewThread fires, push the new id into the
     // URL. Skips when the URL already matches (also breaks the loop).
+    // Preserves query params so knob state survives the thread hop.
     effect(() => {
       const sigId = this.threadIdSignal();
       const { mode, threadId: urlId } = this.urlState();
       if (sigId === urlId) return;
       const cmds: unknown[] = sigId ? ['/', mode, sigId] : ['/', mode];
-      void this.router.navigate(cmds as string[]);
+      void this.router.navigate(cmds as string[], { queryParamsHandling: 'preserve' });
     });
 
     // Refresh threads list when an agent run completes. The backend writes
@@ -434,8 +435,12 @@ export class DemoShell {
   protected onModeChange(next: DemoMode | string): void {
     // Preserve the active thread across mode switches: /embed/abc →
     // /popup/abc keeps the conversation visible in the new chrome.
+    // Preserve query params so knob state survives the mode hop.
     const id = this.threadIdSignal();
-    void this.router.navigate(id ? ['/', next, id] : ['/', next]);
+    void this.router.navigate(
+      id ? ['/', next, id] : ['/', next],
+      { queryParamsHandling: 'preserve' },
+    );
   }
 
   /** Build the full knob → URL-value mapping. Default values become

@@ -306,4 +306,37 @@ describe('DemoShell — URL knob hydration', () => {
     const stored = raw ? JSON.parse(raw) : {};
     expect(stored.theme).toBe('material-dark');
   });
+
+  it('preserves query params on mode change', async () => {
+    const router = TestBed.inject(Router);
+    await router.navigateByUrl('/embed?model=gpt-5-nano');
+    const fx = TestBed.createComponent(DemoShell);
+    fx.detectChanges();
+
+    const cmp = fx.componentInstance as unknown as {
+      onModeChange(next: string): void;
+    };
+    cmp.onModeChange('popup');
+    fx.detectChanges();
+    await new Promise<void>((resolve) => setTimeout(resolve, 0));
+
+    expect(router.url).toContain('model=gpt-5-nano');
+  });
+
+  it('preserves query params on thread switch (signal→URL effect)', async () => {
+    const router = TestBed.inject(Router);
+    await router.navigateByUrl('/embed?model=gpt-5-nano');
+    const fx = TestBed.createComponent(DemoShell);
+    fx.detectChanges();
+
+    const cmp = fx.componentInstance as unknown as {
+      threadIdSignal: { set(v: string | null): void };
+    };
+    cmp.threadIdSignal.set('xyz123');
+    fx.detectChanges();
+    await new Promise<void>((resolve) => setTimeout(resolve, 0));
+
+    expect(router.url).toContain('/embed/xyz123');
+    expect(router.url).toContain('model=gpt-5-nano');
+  });
 });
