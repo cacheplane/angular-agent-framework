@@ -636,7 +636,7 @@ jobs:
           npx vercel deploy --prebuilt --prod --yes --token=${{ secrets.VERCEL_TOKEN }}
       - name: Verify minting service health
         env:
-          MINTING_URL: https://minting.threadplane.ai
+          MINTING_URL: https://mint.threadplane.ai
         run: |
           for i in 1 2 3 4 5; do
             if curl -sf -o /dev/null "$MINTING_URL/api/health"; then
