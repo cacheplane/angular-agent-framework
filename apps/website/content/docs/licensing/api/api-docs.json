@@ -158,7 +158,7 @@
     "name": "LicenseTier",
     "kind": "type",
     "description": "The tier a license grants.",
-    "signature": "\"developer-seat\" | \"app-deployment\" | \"enterprise\"",
+    "signature": "\"indie\" | \"developer_seat\" | \"app_deployment\" | \"enterprise\"",
     "examples": []
   },
   {
