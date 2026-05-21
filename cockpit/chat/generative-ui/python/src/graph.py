@@ -15,14 +15,16 @@ adapted for a continuation loop instead of terminal dispatch.
 """
 
 import json
+import os
 from pathlib import Path
 from typing import Literal
 
-from langchain_core.messages import AIMessage, SystemMessage, ToolMessage
+from langchain_core.messages import AIMessage, HumanMessage, SystemMessage, ToolMessage
 from langchain_core.tools import tool
 from langchain_openai import ChatOpenAI
 from langgraph.graph import StateGraph, MessagesState, END
 from langgraph.prebuilt import ToolNode
+from langgraph_sdk import get_client
 
 from src.dashboard_tools import ALL_TOOLS as _DATA_TOOLS
 
@@ -71,6 +73,56 @@ _llm_with_tools = ChatOpenAI(
 ).bind_tools(_ALL_TOOLS)
 
 _respond_llm = ChatOpenAI(model="gpt-5-mini", temperature=0, streaming=True)
+
+# ── generate_title node (inline; matches Pattern D from spec
+#     2026-05-19-llm-generated-labels-design.md) ──────────────────────────────
+
+_TITLE_PROMPT = (
+    "In 3-5 words, summarize what the user is asking about. "
+    "Output ONLY the title — no quotes, no period, no prefix."
+)
+_TITLE_MODEL = "gpt-5-mini"
+
+
+async def generate_title(state: DashboardState, config) -> dict:
+    """Background title generation: on the first turn, summarize the user's
+    intent into 3-5 words and persist to LangGraph thread metadata.
+
+    Idempotent — skips when metadata.title already exists. Errors are
+    swallowed because the title is a UX nicety, never a blocker.
+    """
+    thread_id = (config.get("configurable") or {}).get("thread_id")
+    if not thread_id:
+        return {}
+    sdk_url = os.environ.get("LANGGRAPH_API_URL")
+    try:
+        client = get_client(url=sdk_url)
+        thread = await client.threads.get(thread_id)
+        if (thread.get("metadata") or {}).get("title"):
+            return {}
+        first_user = next(
+            (m for m in state["messages"] if getattr(m, "type", None) == "human"),
+            None,
+        )
+        if not first_user or not isinstance(first_user.content, str):
+            return {}
+        if first_user.content.lstrip().startswith("{"):
+            return {}
+        llm = ChatOpenAI(model=_TITLE_MODEL, temperature=0)
+        response = await llm.ainvoke([
+            SystemMessage(content=_TITLE_PROMPT),
+            HumanMessage(content=first_user.content),
+        ])
+        title = (response.content or "").strip().strip('"').strip("'")[:80]
+        if title:
+            await client.threads.update(thread_id, metadata={"title": title})
+    except Exception as e:  # noqa: BLE001 — title is a UX nicety; never block
+        print(
+            f"[generate_title] failed for thread {thread_id}: "
+            f"{type(e).__name__}: {e}",
+            flush=True,
+        )
+    return {}
 
 
 async def agent(state: DashboardState) -> dict:
@@ -250,6 +302,7 @@ _builder.add_node("wrap_spec_into_ai", wrap_spec_into_ai)
 _builder.add_node("finalize", finalize)
 _builder.add_node("emit_state", emit_state)
 _builder.add_node("respond", respond)
+_builder.add_node("generate_title", generate_title)
 
 _builder.set_entry_point("agent")
 _builder.add_conditional_edges("agent", should_continue)
@@ -257,6 +310,7 @@ _builder.add_edge("tools", "wrap_spec_into_ai")
 _builder.add_edge("wrap_spec_into_ai", "agent")
 _builder.add_edge("finalize", "emit_state")
 _builder.add_edge("emit_state", "respond")
-_builder.add_edge("respond", END)
+_builder.add_edge("respond", "generate_title")
+_builder.add_edge("generate_title", END)
 
 graph = _builder.compile()
