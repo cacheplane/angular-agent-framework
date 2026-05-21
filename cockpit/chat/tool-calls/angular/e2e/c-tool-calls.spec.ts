@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 import { test, expect } from '@playwright/test';
-import { submitAndWaitForResponse } from '../../../../../libs/e2e-harness/src';
+import { submitAndWaitForResponse } from '@ngaf-internal/e2e-harness';
 
 const PROMPT = "What's the status of UA123?";
 
