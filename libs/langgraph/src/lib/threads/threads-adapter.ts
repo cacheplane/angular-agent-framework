@@ -113,6 +113,29 @@ export class LangGraphThreadsAdapter {
     }
   }
 
+  /** Fetch a single thread by id. Returns `null` when the server
+   *  returns 404 (thread doesn't exist) so callers can distinguish
+   *  "missing" from "couldn't reach the server" — genuine network
+   *  errors rethrow. Used by URL-based thread routing to validate a
+   *  pasted/shared thread id before activating it. */
+  async getThread(threadId: string): Promise<Thread | null> {
+    try {
+      const t = await this.client.threads.get(threadId);
+      return this.toThread(t);
+    } catch (e) {
+      // SDK throws HTTPError-like objects without a typed error class;
+      // sniff status on the error or its nested response. Treat both
+      // 404 (server says "no such thread") and 422 (server says "id
+      // isn't even a valid UUID") as "missing" — both warrant the
+      // same caller behavior (redirect to a fresh chat).
+      const status =
+        (e as { status?: number }).status ??
+        (e as { response?: { status?: number } }).response?.status;
+      if (status === 404 || status === 422) return null;
+      throw e;
+    }
+  }
+
   async create(metadata: Record<string, unknown> = {}): Promise<string | null> {
     try {
       const t = await this.client.threads.create({ metadata });
