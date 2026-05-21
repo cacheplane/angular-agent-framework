@@ -45,6 +45,20 @@ export function sendButton(page: Page): Locator {
 }
 
 /**
+ * Read the active thread id from the URL. URL is the source of truth
+ * for the active thread post-URL-as-truth migration; bare-mode paths
+ * (`/embed`, `/popup`, `/sidebar`) return `null`.
+ *
+ * Use this in place of `JSON.parse(localStorage.getItem(...)).threadId`,
+ * which no longer exists.
+ */
+export async function activeThreadIdFromUrl(page: Page): Promise<string | null> {
+  const url = new URL(page.url());
+  const segments = url.pathname.split('/').filter(Boolean);
+  return segments.length >= 2 ? segments[1] : null;
+}
+
+/**
  * Locate the chat-select trigger inside a toolbar field by its label.
  *
  * The toolbar's four dropdowns (Model, Effort, Gen UI, Theme) use the

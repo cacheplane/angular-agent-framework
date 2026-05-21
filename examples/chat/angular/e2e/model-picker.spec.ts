@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 import { test, expect } from '@playwright/test';
 import {
+  activeThreadIdFromUrl,
   messageInput,
   openDemo,
   sendButton,
@@ -45,12 +46,7 @@ test('model picker: configured models render, persist, and reach backend state',
   await sendButton(page).click();
   await waitForFinalAssistant(page);
 
-  const threadId = await page.evaluate(() => {
-    const raw = localStorage.getItem('ngaf-chat-demo:palette');
-    return raw
-      ? (JSON.parse(raw) as { threadId?: string }).threadId
-      : undefined;
-  });
+  const threadId = await activeThreadIdFromUrl(page);
   expect(threadId).toBeTruthy();
   const state = await fetch(
     `http://localhost:2024/threads/${threadId}/state`

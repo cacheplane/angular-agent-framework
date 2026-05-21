@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 import { test, expect } from '@playwright/test';
-import { sendPromptAndWait } from './test-helpers';
+import { activeThreadIdFromUrl, sendPromptAndWait } from './test-helpers';
 
 test('regenerate: re-running keeps 1 user / 1 assistant in the conversation', async ({
   page,
@@ -36,10 +36,7 @@ test('regenerate: re-running keeps 1 user / 1 assistant in the conversation', as
   await expect(userMessages).toHaveCount(1);
   await expect(assistantMessages).toHaveCount(1);
 
-  const threadId = await page.evaluate(() => {
-    const raw = localStorage.getItem('ngaf-chat-demo:palette');
-    return raw ? (JSON.parse(raw) as { threadId?: string }).threadId : undefined;
-  });
+  const threadId = await activeThreadIdFromUrl(page);
   expect(threadId).toBeTruthy();
   const state = await fetch(`http://localhost:2024/threads/${threadId}/state`).then((r) =>
     r.json() as Promise<{ values?: { messages?: unknown[] }; next?: unknown[] }>,
