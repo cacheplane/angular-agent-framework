@@ -23,6 +23,10 @@ export default [
           allow: [
             '^.*/eslint(\\.base)?\\.config\\.[cm]?[jt]s$',
             '^.*/libs/cockpit-(docs|registry|shell|testing|ui)/src/index$',
+            // Repo-root pricing/ config files are shared between
+            // apps/website and scripts/stripe; they live outside any
+            // Nx project on purpose.
+            '^.*/pricing/tiers\\.(config|generated)$',
           ],
           depConstraints: [
             {
