@@ -71,8 +71,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     await handleEvent(event, deps);
     res.status(200).json({ received: true });
   } catch (err) {
+    const msg = err instanceof Error ? `${err.name}: ${err.message}` : String(err);
+    const stack = err instanceof Error ? (err.stack ?? '').split('\n').slice(0, 5).join(' | ') : '';
     console.error('webhook handler error', { eventId: event.id, type: event.type, err });
-    res.status(500).send('internal error');
+    // TEMP smoke diagnostic — surface error class + message + first stack frames so
+    // we can read it via curl/Stripe Dashboard delivery body. Revert after smoke.
+    res.status(500).send(`internal error: ${msg}\n${stack}`);
   } finally {
     await db.close();
   }
