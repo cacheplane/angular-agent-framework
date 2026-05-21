@@ -4,8 +4,9 @@ Chat Threads Graph
 Conversational agent with inline thread-title generation. Each new
 thread gets an LLM-generated 3-5 word title written to LangGraph
 thread metadata on the first turn (idempotent — subsequent turns skip
-the write). The chat-threads frontend reads `metadata.thread_title`
-from `client.threads.search()` and displays it in the sidenav.
+the write). The chat-threads frontend reads `metadata.title` from
+`client.threads.search()` via LangGraphThreadsAdapter and displays
+it in the sidenav.
 
 Pattern D from spec 2026-05-19-llm-generated-labels-design.md: the
 generate_title node lives inline in this file (not extracted to a
@@ -37,9 +38,14 @@ async def generate_title(state: MessagesState, config) -> dict:
     intent into 3-5 words and persist to LangGraph thread metadata so the
     sidenav shows something meaningful instead of a UUID slice.
 
-    Idempotent — skips when metadata.thread_title already exists. Errors
-    are swallowed (title is a UX nicety, never a blocker). Runs after the
+    Idempotent — skips when metadata.title already exists. Errors are
+    swallowed (title is a UX nicety, never a blocker). Runs after the
     user-visible turn so it never blocks the response.
+
+    Writes to `metadata.title` (matches the legacy examples/chat
+    convention and the LangGraphThreadsAdapter default). Spec
+    2026-05-19 originally chose `thread_title`; we converged on
+    `title` to drop the per-cap `titleMetadataKey` config knob.
     """
     thread_id = (config.get("configurable") or {}).get("thread_id")
     if not thread_id:
@@ -53,7 +59,7 @@ async def generate_title(state: MessagesState, config) -> dict:
     try:
         client = get_client(url=sdk_url)
         thread = await client.threads.get(thread_id)
-        if (thread.get("metadata") or {}).get("thread_title"):
+        if (thread.get("metadata") or {}).get("title"):
             return {}
         first_user = next(
             (m for m in state["messages"] if getattr(m, "type", None) == "human"),
@@ -71,7 +77,7 @@ async def generate_title(state: MessagesState, config) -> dict:
         ])
         title = (response.content or "").strip().strip('"').strip("'")[:80]
         if title:
-            await client.threads.update(thread_id, metadata={"thread_title": title})
+            await client.threads.update(thread_id, metadata={"title": title})
     except Exception as e:  # noqa: BLE001 — title is a UX nicety; never block
         # Don't break the run, but DO log. A bare pass has hidden a prod
         # bug in the sibling examples/chat graph where the title write was

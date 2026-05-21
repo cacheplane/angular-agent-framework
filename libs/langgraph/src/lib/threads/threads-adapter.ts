@@ -12,21 +12,20 @@ import { createLangGraphClient } from '../client/create-langgraph-client';
  * providers: [
  *   { provide: LANGGRAPH_THREADS_CONFIG, useValue: {
  *       apiUrl: environment.langGraphApiUrl,
- *       titleMetadataKey: 'thread_title',
  *   }},
  * ],
  * ```
+ *
+ * The adapter expects backends to write the thread title to
+ * `metadata.title`. Spec 2026-05-19-llm-generated-labels-design.md
+ * originally proposed `metadata.thread_title` for cockpit caps but
+ * we converged on `title` to match the canonical demo and avoid a
+ * per-cap configuration knob.
  */
 export interface LangGraphThreadsConfig {
   /** Base URL for the LangGraph Platform API. Accepts both absolute
    *  URLs and relative `/api`-style paths. */
   apiUrl: string;
-  /** Metadata key the backend writes the thread title to. Two
-   *  conventions exist in the wild:
-   *  - `'title'` — legacy / canonical demo
-   *  - `'thread_title'` — spec 2026-05-19-llm-generated-labels-design
-   *  Defaults to `'thread_title'`. */
-  titleMetadataKey?: string;
   /** Fallback label for threads whose title hasn't been written yet
    *  (e.g. created but never sent). Defaults to `'Untitled'`. */
   titleFallback?: string;
@@ -65,7 +64,6 @@ export class LangGraphThreadsAdapter {
   private readonly client: Client = inject(LANGGRAPH_CLIENT, { optional: true })
     ?? createLangGraphClient(this.config.apiUrl);
 
-  private readonly titleKey: string = this.config.titleMetadataKey ?? 'thread_title';
   private readonly fallback: string = this.config.titleFallback ?? 'Untitled';
 
   private readonly _threads: WritableSignal<Thread[]> = signal<Thread[]>([]);
@@ -153,7 +151,7 @@ export class LangGraphThreadsAdapter {
   }
 
   async rename(threadId: string, newTitle: string): Promise<void> {
-    await this.client.threads.update(threadId, { metadata: { [this.titleKey]: newTitle } });
+    await this.client.threads.update(threadId, { metadata: { title: newTitle } });
     await this.refresh();
   }
 
@@ -206,7 +204,7 @@ export class LangGraphThreadsAdapter {
 
   private toThread(t: SdkThread): Thread {
     const meta = (t.metadata ?? {}) as Record<string, unknown>;
-    const rawTitle = meta[this.titleKey];
+    const rawTitle = meta['title'];
     const archived = meta['archived'] === true;
     const pinned = meta['pinned'] === true;
     const projectId = typeof meta['projectId'] === 'string' && (meta['projectId'] as string).length > 0

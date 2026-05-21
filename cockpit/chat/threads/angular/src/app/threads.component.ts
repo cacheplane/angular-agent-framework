@@ -13,10 +13,11 @@ import { environment } from '../environments/environment';
  * ThreadsComponent demonstrates multi-thread conversation management
  * backed by the real LangGraph SDK. Consumes the shared
  * LangGraphThreadsAdapter from `@ngaf/langgraph` — same service the
- * canonical demo uses — configured for the `metadata.thread_title`
- * key that this cap's `generate_title` graph node writes (spec
- * 2026-05-19-llm-generated-labels-design). See app.config.ts for the
- * LANGGRAPH_THREADS_CONFIG provider.
+ * canonical demo uses. Reads `metadata.title` written by this cap's
+ * `generate_title` graph node (spec
+ * 2026-05-19-llm-generated-labels-design.md, converged on `title`
+ * after the original `thread_title` choice). See app.config.ts for
+ * the LANGGRAPH_THREADS_CONFIG provider.
  */
 @Component({
   selector: 'app-threads',
@@ -86,7 +87,7 @@ export class ThreadsComponent {
     void this.threadsSvc.refresh();
 
     // Re-fetch when an agent run completes. The graph's generate_title
-    // node writes metadata.thread_title on the first turn; refreshing
+    // node writes metadata.title on the first turn; refreshing
     // on the running→idle transition surfaces it in the sidenav
     // without a manual reload.
     refreshOnRunEnd(this.agent, () => this.threadsSvc.refresh());

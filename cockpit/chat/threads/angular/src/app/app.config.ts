@@ -8,14 +8,11 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideAgent({ apiUrl: environment.langGraphApiUrl }),
     provideChat({}),
-    // c-threads' Python graph writes the LLM-generated title to
-    // metadata.thread_title (per spec 2026-05-19-llm-generated-labels-design).
+    // The adapter expects metadata.title; the cap's generate_title
+    // graph node writes there. No per-cap key override needed.
     {
       provide: LANGGRAPH_THREADS_CONFIG,
-      useValue: {
-        apiUrl: environment.langGraphApiUrl,
-        titleMetadataKey: 'thread_title',
-      },
+      useValue: { apiUrl: environment.langGraphApiUrl },
     },
   ],
 };
