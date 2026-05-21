@@ -14,16 +14,14 @@ function mockClient(searchReturn: unknown[] = []): {
   update: ReturnType<typeof vi.fn>;
   del: ReturnType<typeof vi.fn>;
   create: ReturnType<typeof vi.fn>;
-  get: ReturnType<typeof vi.fn>;
 } {
   const search = vi.fn().mockResolvedValue(searchReturn);
   const update = vi.fn().mockResolvedValue(undefined);
   const del = vi.fn().mockResolvedValue(undefined);
   const create = vi.fn().mockResolvedValue({ thread_id: 'new-thread' });
-  const get = vi.fn();
   return {
-    client: { threads: { search, update, delete: del, create, get } } as unknown as Client,
-    search, update, del, create, get,
+    client: { threads: { search, update, delete: del, create } } as unknown as Client,
+    search, update, del, create,
   };
 }
 
@@ -98,43 +96,6 @@ describe('LangGraphThreadsAdapter', () => {
     const svc = configure(m.client, 'thread_title');
     await svc.rename('t1', 'New title');
     expect(m.update).toHaveBeenCalledWith('t1', { metadata: { thread_title: 'New title' } });
-  });
-
-  it('getThread() returns a mapped Thread when the SDK resolves', async () => {
-    const m = mockClient();
-    m.get.mockResolvedValue({
-      thread_id: 'tx',
-      updated_at: '2026-05-20T00:00:00Z',
-      metadata: { thread_title: 'hello' },
-    });
-    const svc = configure(m.client);
-    const result = await svc.getThread('tx');
-    expect(m.get).toHaveBeenCalledWith('tx');
-    expect(result).toEqual(expect.objectContaining({ id: 'tx', title: 'hello' }));
-  });
-
-  it('getThread() returns null when the SDK throws a 404', async () => {
-    const m = mockClient();
-    const err = Object.assign(new Error('not found'), { status: 404 });
-    m.get.mockRejectedValue(err);
-    const svc = configure(m.client);
-    expect(await svc.getThread('missing')).toBeNull();
-  });
-
-  it('getThread() returns null when 404 lives on response.status', async () => {
-    const m = mockClient();
-    const err = Object.assign(new Error('not found'), { response: { status: 404 } });
-    m.get.mockRejectedValue(err);
-    const svc = configure(m.client);
-    expect(await svc.getThread('missing')).toBeNull();
-  });
-
-  it('getThread() rethrows non-404 errors so transport failures are visible', async () => {
-    const m = mockClient();
-    const err = Object.assign(new Error('server exploded'), { status: 500 });
-    m.get.mockRejectedValue(err);
-    const svc = configure(m.client);
-    await expect(svc.getThread('any')).rejects.toThrow('server exploded');
   });
 
   it('logs but does not throw when refresh() fails', async () => {

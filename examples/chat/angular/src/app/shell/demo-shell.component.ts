@@ -39,14 +39,9 @@ export type DemoMode = 'embed' | 'popup' | 'sidebar';
 const MODES: readonly DemoMode[] = ['embed', 'popup', 'sidebar'] as const;
 const TELEMETRY_SURFACE = 'canonical_demo';
 
-/** Parse `/embed`, `/embed/<threadId>`, `/popup/<threadId>` etc. into
- *  `{mode, threadId}`. Source of truth for URL ↔ signal sync — see
- *  spec 2026-05-20-url-thread-routing-design.md. */
-function parseUrl(url: string): { mode: DemoMode; threadId: string | null } {
-  const segs = url.split('?')[0].split('#')[0].split('/').filter(Boolean);
-  const mode = (MODES as readonly string[]).includes(segs[0]) ? (segs[0] as DemoMode) : 'embed';
-  const threadId = segs[1] && segs[1].length > 0 ? segs[1] : null;
-  return { mode, threadId };
+function modeFromUrl(url: string): DemoMode {
+  const seg = url.split('?')[0].split('/').filter(Boolean)[0];
+  return (MODES as readonly string[]).includes(seg) ? (seg as DemoMode) : 'embed';
 }
 
 @Component({
@@ -114,46 +109,6 @@ export class DemoShell {
       void this.threadsSvc.refresh();
     });
 
-    // URL → signal. When the URL's threadId changes (paste link, back/
-    // forward, programmatic navigation), reflect it into threadIdSignal.
-    // The compare-and-set guard breaks the obvious URL→signal→URL loop:
-    // by the time the signal→URL effect below fires, both values match
-    // and `router.navigate` is skipped.
-    // URL → signal sync.
-    effect(() => {
-      const urlId = this.urlThreadId();
-      if (urlId !== this.threadIdSignal()) {
-        this.threadIdSignal.set(urlId);
-      }
-    });
-
-    // Validate URL thread ids whenever they appear. Decoupled from the
-    // sync effect above: on initial load the signal is hydrated from
-    // the URL synchronously (field initializer), so the sync guard
-    // would skip validation. This effect runs once per distinct id,
-    // including the initial one. Cache last-validated to avoid
-    // re-hitting the server on signal flips that round-trip the same
-    // id back through.
-    let lastValidated: string | null = null;
-    effect(() => {
-      const urlId = this.urlThreadId();
-      if (urlId && urlId !== lastValidated) {
-        lastValidated = urlId;
-        void this.validateUrlThreadId(urlId);
-      }
-    });
-
-    // signal → URL. When the agent auto-creates a thread, the sidenav
-    // switches threads, or onNewThread fires, push the new id into the
-    // URL. Skips when the URL already matches (also breaks the loop).
-    effect(() => {
-      const sigId = this.threadIdSignal();
-      const { mode, threadId: urlId } = this.urlState();
-      if (sigId === urlId) return;
-      const cmds: unknown[] = sigId ? ['/', mode, sigId] : ['/', mode];
-      void this.router.navigate(cmds as string[]);
-    });
-
     // Refresh threads list when an agent run completes. The backend writes
     // metadata.title on the first user message via _maybe_write_thread_title;
     // a refresh after run-end picks up the new title in the drawer without
@@ -175,21 +130,15 @@ export class DemoShell {
     });
   }
 
-  /** Parsed URL — single source for both the active mode AND the URL's
-   *  thread id. Refreshes on every NavigationEnd so back/forward and
-   *  programmatic navigations both feed downstream effects. */
-  private readonly urlState = toSignal(
+  protected readonly mode = toSignal(
     this.router.events.pipe(
       filter((e): e is NavigationEnd => e instanceof NavigationEnd),
-      map((e) => parseUrl(e.urlAfterRedirects)),
-      startWith(parseUrl(this.router.url)),
+      map((e) => modeFromUrl(e.urlAfterRedirects)),
+      startWith(modeFromUrl(this.router.url)),
       takeUntilDestroyed(),
     ),
-    { initialValue: parseUrl(this.router.url) },
+    { initialValue: modeFromUrl(this.router.url) },
   );
-
-  protected readonly mode = computed<DemoMode>(() => this.urlState().mode);
-  private readonly urlThreadId = computed<string | null>(() => this.urlState().threadId);
 
   /**
    * Source of truth for the model picker. The shell owns it; the
@@ -307,11 +256,8 @@ export class DemoShell {
     { value: 'material-light', label: 'Material light' },
   ]);
 
-  /** Active thread id. URL is the source of truth (see urlState above);
-   *  this signal initialises from the URL on construction and is kept in
-   *  sync by the bidirectional effects in the constructor. The agent
-   *  watches this signal directly. */
-  protected readonly threadIdSignal = signal<string | null>(parseUrl(this.router.url).threadId);
+  /** Persisted thread id (null on first run). Reactive so reload reconnects to the same thread. */
+  protected readonly threadIdSignal = signal<string | null>(this.persistence.read('threadId') ?? null);
 
   /** Title of the currently-selected thread, or 'New chat' if none. The
    *  Python graph writes thread.metadata.title from the first user message
@@ -347,12 +293,18 @@ export class DemoShell {
   protected readonly threadActions: ThreadActionAdapter = {
     delete: async (id) => {
       await this.threadsSvc.delete(id);
-      if (this.threadIdSignal() === id) this.threadIdSignal.set(null);
+      if (this.threadIdSignal() === id) {
+        this.threadIdSignal.set(null);
+        this.persistence.write('threadId', null);
+      }
     },
     rename: (id, title) => this.threadsSvc.rename(id, title),
     archive: async (id) => {
       await this.threadsSvc.archive(id);
-      if (this.threadIdSignal() === id) this.threadIdSignal.set(null);
+      if (this.threadIdSignal() === id) {
+        this.threadIdSignal.set(null);
+        this.persistence.write('threadId', null);
+      }
     },
     unarchive: (id) => this.threadsSvc.unarchive(id),
     pin: (id) => this.threadsSvc.pin(id),
@@ -374,10 +326,8 @@ export class DemoShell {
       assistantId: environment.assistantId,
       threadId: this.threadIdSignal,
       onThreadId: (id: string) => {
-        // The signal→URL effect picks this up and stamps the new id
-        // into the URL — no persistence write needed any more, URL is
-        // the source of truth.
         this.threadIdSignal.set(id);
+        this.persistence.write('threadId', id);
       },
       // Phase 3B: tells SubagentTracker to treat `research` tool calls as
       // subagent dispatches and to materialize agent.subagents() from the
@@ -411,21 +361,7 @@ export class DemoShell {
   })();
 
   protected onModeChange(next: DemoMode | string): void {
-    // Preserve the active thread across mode switches: /embed/abc →
-    // /popup/abc keeps the conversation visible in the new chrome.
-    const id = this.threadIdSignal();
-    void this.router.navigate(id ? ['/', next, id] : ['/', next]);
-  }
-
-  /** Silently redirect to the bare mode path when the URL's threadId
-   *  resolves to a 404. Uses `replaceUrl: true` so the back button
-   *  doesn't reload the broken link. Non-404 errors propagate from
-   *  the adapter as-is (genuine transport failures shouldn't be
-   *  swallowed). */
-  private async validateUrlThreadId(threadId: string): Promise<void> {
-    const thread = await this.threadsSvc.getThread(threadId);
-    if (thread) return;
-    await this.router.navigate(['/', this.mode()], { replaceUrl: true });
+    void this.router.navigate(['/' + next]);
   }
 
   onModelChange(next: string): void {
@@ -472,6 +408,7 @@ export class DemoShell {
   /** Switch to an existing thread selected from the threads panel. */
   protected onThreadSelected(threadId: string): void {
     this.threadIdSignal.set(threadId);
+    this.persistence.write('threadId', threadId);
   }
 
   protected onProjectSelected(projectId: string): void {
@@ -494,7 +431,10 @@ export class DemoShell {
   protected async onNewThread(): Promise<void> {
     const sel = this.selectedProjectId();
     const id = await this.threadsSvc.create(sel ? { projectId: sel } : {});
-    if (id) this.threadIdSignal.set(id);
+    if (id) {
+      this.threadIdSignal.set(id);
+      this.persistence.write('threadId', id);
+    }
   }
 
   /**
