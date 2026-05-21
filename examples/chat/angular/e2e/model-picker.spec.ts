@@ -38,7 +38,9 @@ test('model picker: configured models render, persist, and reach backend state',
   await page
     .locator('.demo-shell__segmented-button', { hasText: 'Popup' })
     .click();
-  await expect(page).toHaveURL(/\/popup$/);
+  // Mode switch now preserves the non-default model knob in the URL
+  // via queryParamsHandling: 'preserve' (knob round-trip work).
+  await expect(page).toHaveURL(/\/popup\?.*model=gpt-5-nano/);
   await expect(toolbarSelect(page, 'Model')).toHaveText(/gpt-5-nano/);
 
   await page.goto('/embed');

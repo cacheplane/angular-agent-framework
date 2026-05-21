@@ -216,3 +216,127 @@ describe('DemoShell — URL thread sync', () => {
     expect(cmp.threadIdSignal()).toBe('url-thread');
   });
 });
+
+describe('DemoShell — URL knob hydration', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    TestBed.configureTestingModule({
+      providers: [
+        threadsAdapterProvider,
+        provideRouter([
+          { path: 'embed', component: DemoShell },
+          { path: 'embed/:threadId', component: DemoShell },
+          { path: '', pathMatch: 'full', redirectTo: 'embed' },
+          { path: '**', redirectTo: 'embed' },
+        ]),
+      ],
+    });
+  });
+
+  it('hydrates knob signals from URL query params', async () => {
+    const router = TestBed.inject(Router);
+    await router.navigateByUrl('/embed?model=gpt-5-nano&effort=high&theme=material-dark');
+    const fx = TestBed.createComponent(DemoShell);
+    fx.detectChanges();
+
+    const cmp = fx.componentInstance as unknown as {
+      model: () => string;
+      effort: () => string;
+      theme: () => string;
+    };
+    expect(cmp.model()).toBe('gpt-5-nano');
+    expect(cmp.effort()).toBe('high');
+    expect(cmp.theme()).toBe('material-dark');
+  });
+
+  it('does NOT write to localStorage when hydrating from URL (ephemeral semantics)', async () => {
+    const router = TestBed.inject(Router);
+    await router.navigateByUrl('/embed?theme=material-dark');
+    const fx = TestBed.createComponent(DemoShell);
+    fx.detectChanges();
+
+    const raw = localStorage.getItem('ngaf-chat-demo:palette');
+    const stored = raw ? JSON.parse(raw) : {};
+    expect(stored.theme).toBeUndefined();
+  });
+
+  it('drops default knob values from URL on change-to-default', async () => {
+    const router = TestBed.inject(Router);
+    await router.navigateByUrl('/embed?model=gpt-5-nano');
+    const fx = TestBed.createComponent(DemoShell);
+    fx.detectChanges();
+
+    const cmp = fx.componentInstance as unknown as {
+      onModelChange(v: string): void;
+    };
+    cmp.onModelChange('gpt-5-mini'); // default
+    fx.detectChanges();
+    await new Promise<void>((resolve) => setTimeout(resolve, 0));
+
+    expect(router.url).not.toContain('model=');
+  });
+
+  it('writes non-default knob values to URL on change', async () => {
+    const router = TestBed.inject(Router);
+    await router.navigateByUrl('/embed');
+    const fx = TestBed.createComponent(DemoShell);
+    fx.detectChanges();
+
+    const cmp = fx.componentInstance as unknown as {
+      onModelChange(v: string): void;
+    };
+    cmp.onModelChange('gpt-5-nano');
+    fx.detectChanges();
+    await new Promise<void>((resolve) => setTimeout(resolve, 0));
+
+    expect(router.url).toContain('model=gpt-5-nano');
+  });
+
+  it('user knob action persists to localStorage (regression guard)', async () => {
+    const router = TestBed.inject(Router);
+    await router.navigateByUrl('/embed');
+    const fx = TestBed.createComponent(DemoShell);
+    fx.detectChanges();
+
+    const cmp = fx.componentInstance as unknown as {
+      onThemeChange(v: string): void;
+    };
+    cmp.onThemeChange('material-dark');
+    const raw = localStorage.getItem('ngaf-chat-demo:palette');
+    const stored = raw ? JSON.parse(raw) : {};
+    expect(stored.theme).toBe('material-dark');
+  });
+
+  it('preserves query params on mode change', async () => {
+    const router = TestBed.inject(Router);
+    await router.navigateByUrl('/embed?model=gpt-5-nano');
+    const fx = TestBed.createComponent(DemoShell);
+    fx.detectChanges();
+
+    const cmp = fx.componentInstance as unknown as {
+      onModeChange(next: string): void;
+    };
+    cmp.onModeChange('popup');
+    fx.detectChanges();
+    await new Promise<void>((resolve) => setTimeout(resolve, 0));
+
+    expect(router.url).toContain('model=gpt-5-nano');
+  });
+
+  it('preserves query params on thread switch (signal→URL effect)', async () => {
+    const router = TestBed.inject(Router);
+    await router.navigateByUrl('/embed?model=gpt-5-nano');
+    const fx = TestBed.createComponent(DemoShell);
+    fx.detectChanges();
+
+    const cmp = fx.componentInstance as unknown as {
+      threadIdSignal: { set(v: string | null): void };
+    };
+    cmp.threadIdSignal.set('xyz123');
+    fx.detectChanges();
+    await new Promise<void>((resolve) => setTimeout(resolve, 0));
+
+    expect(router.url).toContain('/embed/xyz123');
+    expect(router.url).toContain('model=gpt-5-nano');
+  });
+});
