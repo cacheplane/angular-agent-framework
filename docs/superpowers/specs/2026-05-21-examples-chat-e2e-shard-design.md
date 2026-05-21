@@ -15,19 +15,21 @@ By contrast, the cockpit fleet runs 24 caps as a 24-way matrix with `max-paralle
 
 ## Approach: Playwright `--shard=N/M`
 
-A single change to `.github/workflows/ci.yml`: add a 4-way matrix to the `examples/chat — e2e` job and forward `--shard=${{ matrix.shard }}` to Playwright.
+A single change to `.github/workflows/ci.yml`: add a 4-way matrix to the `examples/chat — e2e` job and forward `--shard=N/4` to Playwright. Matrix uses a numeric `shard` index (1-4) rather than a `'N/M'` string, because GitHub Actions artifact names cannot contain `/`.
 
 ```yaml
 strategy:
   fail-fast: false
   matrix:
-    shard: ['1/4', '2/4', '3/4', '4/4']
+    shard: [1, 2, 3, 4]
 steps:
   # ... existing setup steps ...
-  - run: npx nx e2e examples-chat-angular -- --shard=${{ matrix.shard }}
+  - run: npx nx e2e examples-chat-angular --skip-nx-cache -- --shard=${{ matrix.shard }}/4
 ```
 
-Job display name templated as `examples/chat — e2e (${{ matrix.shard }})` so each shard appears as a distinct required check.
+Job display name templated as `examples/chat — e2e (${{ matrix.shard }}/4)` so each shard appears as a distinct required check (e.g. `examples/chat — e2e (1/4)`, `examples/chat — e2e (2/4)`, …).
+
+The `--skip-nx-cache` flag from the current command is preserved; the `--` separator passes everything after it through to Playwright.
 
 No application code, no test code, no harness changes. The bespoke `global-setup.ts`/`aimock-runner.ts` and the local `test-helpers.ts` stay as-is.
 
@@ -56,7 +58,7 @@ If the first run shows uneven distribution (one shard much slower than the other
 |---|---|
 | `.github/workflows/ci.yml` | Add `strategy.matrix.shard` + `--shard` flag to the `examples/chat — e2e` job; update `name:` template |
 | `examples/chat/angular/e2e/README.md` (if present) | Note the matrix shape |
-| Branch protection rules (manual / out-of-PR) | Required-checks list must include `examples/chat — e2e (1/4)` … `(4/4)` instead of the singular old name |
+| Branch protection rules (manual / out-of-PR) | Required-checks list must include `examples/chat — e2e (1/4)`, `examples/chat — e2e (2/4)`, `examples/chat — e2e (3/4)`, `examples/chat — e2e (4/4)` instead of the singular old name |
 
 `examples/chat/angular/e2e/playwright.config.ts` — **no change**. `--shard` is a CLI flag; no config-side opt-in is needed.
 
@@ -77,7 +79,7 @@ Each shard is fully self-contained — no shared state, no inter-shard communica
 
 - `fail-fast: false` — one shard's failure doesn't cancel siblings (so we see the full failure picture)
 - Per-shard `retries: 2` — same semantics as today, just applied per shard
-- Per-shard Playwright HTML report is uploaded as a separate artifact (artifact name templated `examples-chat-e2e-report-${{ matrix.shard }}` to avoid collision)
+- Per-shard Playwright trace artifact name templated as `examples-chat-e2e-trace-shard-${{ matrix.shard }}` to avoid collision (`actions/upload-artifact@v4` does not merge same-named uploads across matrix jobs and would error on identical names)
 
 ## Required-checks update (post-merge action item)
 
