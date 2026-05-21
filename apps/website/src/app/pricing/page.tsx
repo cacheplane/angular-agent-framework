@@ -100,16 +100,23 @@ export default function PricingPage() {
             style={{
               fontFamily: tokens.typography.h2.family,
               fontSize: tokens.typography.h2.size,
-              lineHeight: tokens.typography.h2.line,
-              fontWeight: 700,
-              color: tokens.colors.textPrimary,
               margin: 0,
-              marginBottom: 24,
-              letterSpacing: '-0.015em',
+              marginBottom: 16,
+              color: tokens.colors.textPrimary,
             }}
           >
-            Works with your agent stack
+            Angular version support
           </h2>
+          <p
+            style={{
+              margin: 0,
+              marginBottom: 24,
+              color: tokens.colors.textSecondary,
+              maxWidth: '60ch',
+            }}
+          >
+            We ship against the versions our CI tests. Other versions may work but aren&apos;t guaranteed.
+          </p>
           <CompatibilityMatrix />
         </Container>
       </Section>
