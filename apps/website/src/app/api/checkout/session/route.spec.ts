@@ -54,6 +54,7 @@ describe('POST /api/checkout/session', () => {
     expect(stripeCreate).toHaveBeenCalledTimes(1);
     const args = stripeCreate.mock.calls[0]?.[0];
     expect(args.mode).toBe('payment');
+    expect(args.customer_creation).toBe('always');
     expect(args.line_items[0].price).toBe('price_test_indie');
     expect(args.line_items[0].quantity).toBe(1);
     expect(args.metadata.ngaf_tier_slug).toBe('indie');
