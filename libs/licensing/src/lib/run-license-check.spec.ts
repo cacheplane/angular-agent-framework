@@ -104,4 +104,28 @@ describe('runLicenseCheck', () => {
     expect(second).toBe('tampered');
     expect(warn).toHaveBeenCalledOnce();
   });
+
+  it('returns the cached actual status on repeat calls, not a constant', async () => {
+    // No-token first call: status should be 'missing' (production) or
+    // 'noncommercial' (dev). Force the production posture so we get 'missing'.
+    const result1 = await runLicenseCheck({
+      package: '@ngaf/chat',
+      token: undefined,
+      publicKey: kp.publicKey,
+      isNoncommercial: false,
+      warn,
+    });
+    expect(result1).toBe('missing');
+
+    // Second call with the same (package, token) tuple: must return the
+    // same status that was computed, not the literal 'licensed'.
+    const result2 = await runLicenseCheck({
+      package: '@ngaf/chat',
+      token: undefined,
+      publicKey: kp.publicKey,
+      isNoncommercial: false,
+      warn,
+    });
+    expect(result2).toBe('missing');
+  });
 });

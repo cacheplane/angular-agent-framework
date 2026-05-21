@@ -16,4 +16,5 @@ export const environment = {
     endpoint: '/api/ingest',
     sampleRate: 1,
   },
+  license: undefined as string | undefined,
 };
