@@ -36,6 +36,17 @@ jobs:
       - uses: actions/checkout@v6.0.2
         with:
           fetch-depth: 0
+      - uses: actions/setup-node@v6.3.0
+        with:
+          node-version: 22
+          cache: npm
+      # ci-scope.mjs delegates project ownership to `nx show projects --affected`
+      # (introduced in PR 2 of the ci-scope thin-shim migration), which requires
+      # nx + the workspace's plugins to be installed. npm ci needs ~15-30s with
+      # the npm cache warm; ~60s cold. This is the one-time-per-PR cost of using
+      # nx's project graph as the source of truth instead of a hand-maintained
+      # classifier walk.
+      - run: npm ci
       - name: Test CI scope classifier
         run: node --test scripts/ci-scope.spec.mjs
       - name: Detect changed CI surfaces
