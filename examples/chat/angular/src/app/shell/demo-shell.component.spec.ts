@@ -145,7 +145,9 @@ describe('DemoShell — URL thread sync', () => {
         threadsAdapterProvider,
         provideRouter([
           { path: 'embed', component: DemoShell },
+          { path: 'embed/:threadId', component: DemoShell },
           { path: 'popup', component: DemoShell },
+          { path: 'popup/:threadId', component: DemoShell },
           { path: '', pathMatch: 'full', redirectTo: 'embed' },
           { path: '**', redirectTo: 'embed' },
         ]),
@@ -168,7 +170,7 @@ describe('DemoShell — URL thread sync', () => {
     expect(cmp.threadIdSignal()).toBe('thread-created-by-agent');
   });
 
-  it('persists an agent-created thread id for bare mode route fallback', () => {
+  it('does not write the active thread id to localStorage (URL is the source of truth)', () => {
     const fx = TestBed.createComponent(DemoShell);
     fx.detectChanges();
 
@@ -180,13 +182,14 @@ describe('DemoShell — URL thread sync', () => {
     fx.detectChanges();
 
     const raw = localStorage.getItem('ngaf-chat-demo:palette');
-    expect(raw ? JSON.parse(raw).threadId : null).toBe('thread-created-by-agent');
+    const stored = raw ? JSON.parse(raw) : {};
+    expect(stored.threadId).toBeUndefined();
   });
 
-  it('falls back to the persisted active thread on bare mode routes', async () => {
+  it('ignores any legacy persisted threadId — bare mode URLs start fresh', async () => {
     localStorage.setItem(
       'ngaf-chat-demo:palette',
-      JSON.stringify({ threadId: 'persisted-thread' }),
+      JSON.stringify({ threadId: 'legacy-persisted-thread' }),
     );
     const router = TestBed.inject(Router);
     await router.navigateByUrl('/popup');
@@ -197,6 +200,19 @@ describe('DemoShell — URL thread sync', () => {
     const cmp = fx.componentInstance as unknown as {
       threadIdSignal: { (): string | null };
     };
-    expect(cmp.threadIdSignal()).toBe('persisted-thread');
+    expect(cmp.threadIdSignal()).toBeNull();
+  });
+
+  it('hydrates the active thread id from /<mode>/<threadId> URLs', async () => {
+    const router = TestBed.inject(Router);
+    await router.navigateByUrl('/embed/url-thread');
+
+    const fx = TestBed.createComponent(DemoShell);
+    fx.detectChanges();
+
+    const cmp = fx.componentInstance as unknown as {
+      threadIdSignal: { (): string | null };
+    };
+    expect(cmp.threadIdSignal()).toBe('url-thread');
   });
 });

@@ -107,27 +107,29 @@ export class DemoShell {
       }
     });
 
-    // Persist and refresh whenever the active thread changes (e.g. after
-    // create or switch) so bare mode routes can restore the current thread
-    // and the panel stays up to date.
+    // Refresh threads list whenever the active thread changes (e.g. after
+    // create or switch) so the panel stays up to date. The effect also
+    // covers the initial load (fires synchronously on first reactive read).
     effect(() => {
-      const id = this.threadIdSignal();
-      this.persistence.write('threadId', id);
+      void this.threadIdSignal();
       void this.threadsSvc.refresh();
     });
 
-    // URL → signal. Explicit URL thread ids win (paste link, back/forward,
-    // programmatic navigation). Bare mode URLs fall back to the persisted
-    // active thread, which keeps conversations attached across mode routes.
-    // The compare-and-set guard breaks the obvious URL→signal→URL loop:
-    // by the time the signal→URL effect below fires, both values match
-    // and `router.navigate` is skipped.
+    // URL → signal. When the URL's threadId changes (paste link, back/
+    // forward, programmatic navigation), reflect it into threadIdSignal.
+    // Tracks ONLY the URL — the signal read is untracked so this effect
+    // does not re-fire when the signal is set imperatively (e.g. by the
+    // agent's onThreadId callback during the stamp-in-progress async gap
+    // before the URL catches up).
+    //
+    // No localStorage fallback: URL is the source of truth. Bare-mode URLs
+    // (`/embed`, `/popup`, `/sidebar`) explicitly mean "no active thread"
+    // — the welcome state. Mode-switch UI uses `onModeChange` to preserve
+    // the active thread across mode boundaries via URL navigation.
     effect(() => {
       const urlId = this.urlThreadId();
-      const nextId = urlId ?? untracked(() => this.persistence.read('threadId') ?? null);
-      const currentId = untracked(() => this.threadIdSignal());
-      if (nextId !== currentId) {
-        this.threadIdSignal.set(nextId);
+      if (urlId !== untracked(() => this.threadIdSignal())) {
+        this.threadIdSignal.set(urlId);
       }
     });
 
@@ -311,11 +313,15 @@ export class DemoShell {
     { value: 'material-light', label: 'Material light' },
   ]);
 
-  /** Active thread id. URL is the source of truth when it contains an
-   *  explicit thread id; bare mode URLs fall back to the last active
-   *  thread so mode switches like `/embed` -> `/popup` preserve context. */
+  /** Active thread id. URL is the sole source of truth (see urlState
+   *  above); this signal initialises from the URL on construction and is
+   *  kept in sync by the bidirectional effects in the constructor. The
+   *  agent watches this signal directly.
+   *
+   *  Mode switches that should preserve the active thread go through
+   *  `onModeChange`, which navigates to `/<next-mode>/<id>` directly. */
   protected readonly threadIdSignal = signal<string | null>(
-    parseUrl(this.router.url).threadId ?? this.persistence.read('threadId') ?? null,
+    parseUrl(this.router.url).threadId,
   );
 
   /** Title of the currently-selected thread, or 'New chat' if none. The
@@ -432,7 +438,6 @@ export class DemoShell {
     if (thread) return;
     if (this.threadIdSignal() === threadId) {
       this.threadIdSignal.set(null);
-      this.persistence.write('threadId', null);
     }
     await this.router.navigate(['/', this.mode()], { replaceUrl: true });
   }

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 import { test, expect } from '@playwright/test';
 import {
+  activeThreadIdFromUrl,
   closeChatDevtools,
   messageInput,
   openDemo,
@@ -44,14 +45,23 @@ test('cross-mode persistence: conversation follows embed, popup, and sidebar', a
   await sendButton(page).click();
   await waitForFinalAssistant(page);
 
-  await page.goto('/popup');
+  // Capture the active thread id from the URL — post-URL-as-truth the
+  // path is /embed/<thread-id>. Cross-mode persistence works by
+  // navigating to /<other-mode>/<thread-id> directly (bare-mode URLs
+  // intentionally do NOT restore the last thread — that would conflate
+  // user intent with browser-local state).
+  await expect(page).toHaveURL(/\/embed\/[A-Za-z0-9-]+$/);
+  const threadId = await activeThreadIdFromUrl(page);
+  expect(threadId).toBeTruthy();
+
+  await page.goto(`/popup/${threadId}`);
   await closeChatDevtools(page);
   await page.locator('.chat-popup__launcher button.chat-launcher-button').click();
   await expect(
     page.getByRole('dialog').locator('chat-message[data-role="assistant"]'),
   ).toContainText(/hi/i, { timeout: 30_000 });
 
-  await page.goto('/sidebar');
+  await page.goto(`/sidebar/${threadId}`);
   await closeChatDevtools(page);
   // Sidebar mode auto-opens the panel; assert the existing conversation
   // is visible without a launcher click.
@@ -59,7 +69,7 @@ test('cross-mode persistence: conversation follows embed, popup, and sidebar', a
     page.getByRole('complementary').locator('chat-message[data-role="assistant"]'),
   ).toContainText(/hi/i, { timeout: 30_000 });
 
-  await page.goto('/embed');
+  await page.goto(`/embed/${threadId}`);
   await expect(page.locator('embed-mode chat-message[data-role="assistant"]')).toContainText(/hi/i, {
     timeout: 30_000,
   });

@@ -8,7 +8,6 @@ interface PaletteState {
   effort?: string | null;
   genUiMode?: string | null;
   theme?: string | null;
-  threadId?: string | null;
   drawerOpen?: boolean | null;
   sidenavMode?: 'expanded' | 'collapsed' | null;
   selectedProjectId?: string | null;
