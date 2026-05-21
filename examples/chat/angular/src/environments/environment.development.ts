@@ -13,4 +13,5 @@ export const environment = {
     enabled: false,
     sampleRate: 1,
   },
+  license: undefined as string | undefined,
 };

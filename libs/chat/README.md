@@ -20,6 +20,40 @@ Free under PolyForm Noncommercial:
 
 See [COMMERCIAL-USE.md](./COMMERCIAL-USE.md) for the definition of commercial use, [LICENSE-COMMERCIAL.md](./LICENSE-COMMERCIAL.md) for the commercial license summary, and the [Threadplane pricing page](https://threadplane.ai/pricing) for plans.
 
+## Using a commercial license
+
+After purchase, Threadplane emails a signed license token to the address on your receipt. Paste it into your app's `provideChat()` configuration:
+
+```typescript
+// app.config.ts
+import { ApplicationConfig } from '@angular/core';
+import { provideChat } from '@ngaf/chat';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideChat({
+      license: 'eyJ…',  // The token from your purchase email.
+    }),
+  ],
+};
+```
+
+The library verifies the token's signature on boot. A missing, expired, or tampered token logs a `console.warn` advisory but does not block rendering — chat continues to work either way. Tokens are validated offline; no calls to Threadplane are made at runtime.
+
+The license string is safe to commit to source control if your repository is private, or to read from a build-time env var for public repositories:
+
+```typescript
+declare const NGAF_LICENSE_TOKEN: string | undefined;
+
+providers: [
+  provideChat({
+    license: typeof NGAF_LICENSE_TOKEN === 'string' ? NGAF_LICENSE_TOKEN : undefined,
+  }),
+],
+```
+
+(See `examples/chat/angular/` in the framework repo for a working example.)
+
 ## Runtime adapters
 
 Chat primitives consume a runtime-neutral `Agent` contract. Two adapters ship today:

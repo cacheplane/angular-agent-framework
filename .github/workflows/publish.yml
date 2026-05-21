@@ -48,6 +48,8 @@ jobs:
         run: npm install -g npm@latest
 
       - name: Lint, test, build publishable projects
+        env:
+          CACHEPLANE_LICENSE_PUBLIC_KEY: ${{ secrets.CACHEPLANE_LICENSE_PUBLIC_KEY }}
         run: npx nx run-many -t lint,test,build --projects=$NPM_PUBLISHABLE_PROJECTS --skip-nx-cache
 
       - name: Patch install telemetry into publishable manifests
