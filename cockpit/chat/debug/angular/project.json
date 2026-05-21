@@ -88,5 +88,9 @@
         "command": "npx tsx -e \"import { chatDebugAngularModule } from './src/index.ts'; const module = chatDebugAngularModule; if (module.id !== 'chat-debug-angular' || module.title !== 'Chat Debug (Angular)') { throw new Error('Unexpected module shape for ' + module.id); }\""
       }
     }
-  }
+  },
+  "tags": [
+    "scope:cockpit-e2e",
+    "scope:cockpit-examples"
+  ]
 }

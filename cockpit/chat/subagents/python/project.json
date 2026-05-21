@@ -6,7 +6,9 @@
   "targets": {
     "build": {
       "executor": "@nx/js:tsc",
-      "outputs": ["{workspaceRoot}/dist/cockpit/chat/subagents/python"],
+      "outputs": [
+        "{workspaceRoot}/dist/cockpit/chat/subagents/python"
+      ],
       "options": {
         "outputPath": "dist/cockpit/chat/subagents/python",
         "main": "cockpit/chat/subagents/python/src/index.ts",
@@ -20,5 +22,9 @@
         "command": "uv run langgraph dev --port 5505 --no-browser"
       }
     }
-  }
+  },
+  "tags": [
+    "scope:cockpit-e2e",
+    "scope:cockpit-examples"
+  ]
 }

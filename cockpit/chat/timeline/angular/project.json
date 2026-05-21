@@ -94,5 +94,9 @@
         "config": "cockpit/chat/timeline/angular/e2e/playwright.config.ts"
       }
     }
-  }
+  },
+  "tags": [
+    "scope:cockpit-e2e",
+    "scope:cockpit-examples"
+  ]
 }

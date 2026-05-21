@@ -20,5 +20,8 @@
         "command": "npx nx run examples-chat-smoke:run"
       }
     }
-  }
+  },
+  "tags": [
+    "scope:examples-chat"
+  ]
 }

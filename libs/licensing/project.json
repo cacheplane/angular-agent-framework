@@ -4,7 +4,17 @@
   "sourceRoot": "libs/licensing/src",
   "projectType": "library",
   "tags": [
+    "scope:cockpit",
+    "scope:cockpit-deploy-smoke",
+    "scope:cockpit-e2e",
+    "scope:cockpit-examples",
+    "scope:cockpit-secret",
+    "scope:cockpit-smoke",
+    "scope:examples-chat",
+    "scope:library",
     "scope:shared",
+    "scope:website",
+    "scope:website-e2e",
     "type:lib"
   ],
   "targets": {

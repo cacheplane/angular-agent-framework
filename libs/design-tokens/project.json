@@ -3,11 +3,20 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "libs/design-tokens/src",
   "projectType": "library",
-  "tags": ["scope:shared", "type:lib"],
+  "tags": [
+    "scope:cockpit",
+    "scope:cockpit-deploy-smoke",
+    "scope:cockpit-e2e",
+    "scope:cockpit-examples",
+    "scope:shared",
+    "type:lib"
+  ],
   "targets": {
     "build": {
       "executor": "@nx/js:tsc",
-      "outputs": ["{workspaceRoot}/dist/libs/design-tokens"],
+      "outputs": [
+        "{workspaceRoot}/dist/libs/design-tokens"
+      ],
       "options": {
         "outputPath": "dist/libs/design-tokens",
         "main": "libs/design-tokens/src/index.ts",

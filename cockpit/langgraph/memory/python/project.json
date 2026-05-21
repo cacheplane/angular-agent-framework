@@ -6,7 +6,9 @@
   "targets": {
     "build": {
       "executor": "@nx/js:tsc",
-      "outputs": ["{workspaceRoot}/dist/cockpit/langgraph/memory/python"],
+      "outputs": [
+        "{workspaceRoot}/dist/cockpit/langgraph/memory/python"
+      ],
       "options": {
         "outputPath": "dist/cockpit/langgraph/memory/python",
         "main": "cockpit/langgraph/memory/python/src/index.ts",
@@ -20,5 +22,10 @@
         "command": "npx tsx -e \"import { langgraphMemoryPythonModule } from './src/index.ts'; const module = langgraphMemoryPythonModule; if (module.id !== 'langgraph-memory-python' || module.title !== 'LangGraph Memory (Python)') { throw new Error('Unexpected module shape for ' + module.id); }\""
       }
     }
-  }
+  },
+  "tags": [
+    "scope:cockpit-e2e",
+    "scope:cockpit-examples",
+    "scope:cockpit-smoke"
+  ]
 }

@@ -6,7 +6,9 @@
   "targets": {
     "build": {
       "executor": "@nx/js:tsc",
-      "outputs": ["{workspaceRoot}/dist/cockpit/langgraph/deployment-runtime/python"],
+      "outputs": [
+        "{workspaceRoot}/dist/cockpit/langgraph/deployment-runtime/python"
+      ],
       "options": {
         "outputPath": "dist/cockpit/langgraph/deployment-runtime/python",
         "main": "cockpit/langgraph/deployment-runtime/python/src/index.ts",
@@ -27,5 +29,10 @@
         "command": "npx tsx -e \"const token = process.env.COCKPIT_SECRET_TOKEN; if (!token) { throw new Error('Missing COCKPIT_SECRET_TOKEN'); } console.log('secret-gated integration ready');\""
       }
     }
-  }
+  },
+  "tags": [
+    "scope:cockpit-e2e",
+    "scope:cockpit-examples",
+    "scope:cockpit-smoke"
+  ]
 }

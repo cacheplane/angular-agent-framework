@@ -3,11 +3,17 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "apps/website/src",
   "projectType": "application",
-  "tags": ["scope:website", "type:app"],
+  "tags": [
+    "scope:website",
+    "scope:website-e2e",
+    "type:app"
+  ],
   "targets": {
     "build": {
       "executor": "@nx/next:build",
-      "outputs": ["{options.outputPath}"],
+      "outputs": [
+        "{options.outputPath}"
+      ],
       "defaultConfiguration": "production",
       "options": {
         "outputPath": "dist/apps/website"
@@ -48,7 +54,9 @@
     },
     "lint": {
       "executor": "@nx/eslint:lint",
-      "outputs": ["{options.outputFile}"]
+      "outputs": [
+        "{options.outputFile}"
+      ]
     },
     "e2e": {
       "executor": "@nx/playwright:playwright",
@@ -56,5 +64,8 @@
         "config": "apps/website/playwright.config.ts"
       }
     }
-  }
+  },
+  "implicitDependencies": [
+    "//vercel.json"
+  ]
 }

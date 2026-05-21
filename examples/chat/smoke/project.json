@@ -11,5 +11,8 @@
         "command": "node cli.mjs"
       }
     }
-  }
+  },
+  "tags": [
+    "scope:examples-chat"
+  ]
 }

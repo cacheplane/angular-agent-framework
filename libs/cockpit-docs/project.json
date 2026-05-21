@@ -6,13 +6,23 @@
   "targets": {
     "build": {
       "executor": "@nx/js:tsc",
-      "dependsOn": ["^build"],
-      "outputs": ["{workspaceRoot}/dist/libs/cockpit-docs"],
+      "dependsOn": [
+        "^build"
+      ],
+      "outputs": [
+        "{workspaceRoot}/dist/libs/cockpit-docs"
+      ],
       "options": {
         "outputPath": "dist/libs/cockpit-docs",
         "main": "libs/cockpit-docs/src/index.ts",
         "tsConfig": "libs/cockpit-docs/tsconfig.lib.json"
       }
     }
-  }
+  },
+  "tags": [
+    "scope:cockpit",
+    "scope:cockpit-deploy-smoke",
+    "scope:cockpit-e2e",
+    "scope:cockpit-examples"
+  ]
 }

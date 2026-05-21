@@ -6,7 +6,9 @@
   "targets": {
     "build": {
       "executor": "@nx/js:tsc",
-      "outputs": ["{workspaceRoot}/dist/cockpit/deep-agents/sandboxes/python"],
+      "outputs": [
+        "{workspaceRoot}/dist/cockpit/deep-agents/sandboxes/python"
+      ],
       "options": {
         "outputPath": "dist/cockpit/deep-agents/sandboxes/python",
         "main": "cockpit/deep-agents/sandboxes/python/src/index.ts",
@@ -19,5 +21,10 @@
         "command": "npx tsx -e \"import { deepAgentsSandboxesPythonModule } from './cockpit/deep-agents/sandboxes/python/src/index.ts'; const mod = deepAgentsSandboxesPythonModule; if (mod.id !== 'deep-agents-sandboxes-python') throw new Error('Unexpected id: ' + mod.id); if (mod.title !== 'Deep Agents Sandboxes (Python)') throw new Error('Unexpected title: ' + mod.title); console.log(JSON.stringify({ id: mod.id, title: mod.title }));\""
       }
     }
-  }
+  },
+  "tags": [
+    "scope:cockpit-e2e",
+    "scope:cockpit-examples",
+    "scope:cockpit-smoke"
+  ]
 }

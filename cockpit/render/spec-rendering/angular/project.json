@@ -88,5 +88,9 @@
         "command": "npx tsx -e \"import { renderSpecRenderingAngularModule } from './src/index.ts'; const module = renderSpecRenderingAngularModule; if (module.id !== 'render-spec-rendering-angular' || module.title !== 'Render Spec Rendering (Angular)') { throw new Error('Unexpected module shape for ' + module.id); }\""
       }
     }
-  }
+  },
+  "tags": [
+    "scope:cockpit-e2e",
+    "scope:cockpit-examples"
+  ]
 }
