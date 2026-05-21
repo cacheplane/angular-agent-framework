@@ -12,15 +12,10 @@ export const appConfig: ApplicationConfig = {
     provideZonelessChangeDetection(),
     provideRouter(routes, withComponentInputBinding()),
     provideNgafTelemetry(environment.telemetry),
-    // Configure the shared LangGraphThreadsAdapter. The canonical
-    // demo's Python graph writes the title to `metadata.title` (the
-    // legacy spelling — c-threads writes `metadata.thread_title`).
+    // Configure the shared LangGraphThreadsAdapter.
     {
       provide: LANGGRAPH_THREADS_CONFIG,
-      useValue: {
-        apiUrl: environment.langGraphApiUrl,
-        titleMetadataKey: 'title',
-      },
+      useValue: { apiUrl: environment.langGraphApiUrl },
     },
   ],
 };
