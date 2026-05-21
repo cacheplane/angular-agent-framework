@@ -77,7 +77,7 @@ export function Hero() {
           {/* Left column */}
           <div>
             <Eyebrow tone="accent" style={{ marginBottom: 16 }}>
-              Agent UI for Angular · MIT
+              Agent UI for Angular · MIT framework
             </Eyebrow>
             <h1
               id="hero-heading"

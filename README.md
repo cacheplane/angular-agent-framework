@@ -14,9 +14,6 @@
   <a href="https://www.npmjs.com/package/@ngaf/langgraph">
     <img alt="npm version" src="https://img.shields.io/npm/v/@ngaf%2Flanggraph?color=6C8EFF&labelColor=080B14&style=flat-square" />
   </a>
-  <a href="./LICENSE">
-    <img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-6C8EFF?labelColor=080B14&style=flat-square" />
-  </a>
   <a href="https://angular.dev">
     <img alt="Angular 20+" src="https://img.shields.io/badge/Angular-20%2B-6C8EFF?labelColor=080B14&style=flat-square" />
   </a>
@@ -132,6 +129,6 @@ That's it. `chat.messages()` and `chat.status()` are Angular Signals. Bind them 
 
 ## License
 
-**MIT** — free for any use. See [`LICENSE`](./LICENSE).
+Most libraries in this repository (`@ngaf/render`, `@ngaf/agent`, `@ngaf/langgraph`, `@ngaf/ag-ui`, `@ngaf/a2ui`, `@ngaf/licensing`, `@ngaf/telemetry`, `@ngaf/design-tokens`) are released under the **MIT License** — free for any use, including commercial, with attribution.
 
-`@ngaf/langgraph` and all libraries in this repository are released under the [MIT License](./LICENSE). You are free to use, modify, and distribute them in both commercial and noncommercial projects without restriction.
+**`@ngaf/chat`** is the exception. Future versions are licensed under **PolyForm Noncommercial 1.0.0 OR a Threadplane commercial license**. Historical npm releases remain MIT. See [`libs/chat/LICENSE.md`](./libs/chat/LICENSE.md), [`libs/chat/COMMERCIAL-USE.md`](./libs/chat/COMMERCIAL-USE.md), and [`COMMERCIAL.md`](./COMMERCIAL.md) for details.
