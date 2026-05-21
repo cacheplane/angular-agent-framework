@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
-import { describe, it, expect } from 'vitest';
+import { describe, it } from 'node:test';
+import assert from 'node:assert/strict';
 import {
   classifyFromAffected,
   emptyScope,
@@ -23,15 +24,15 @@ const POSTHOG_TAGS = ['scope:posthog'];
 describe('classifyFromAffected — short-circuit', () => {
   it('returns full scope when a global CI file changes', () => {
     const scope = classifyFromAffected(['.github/workflows/ci.yml'], []);
-    expect(scope).toEqual(fullScope());
+    assert.deepEqual(scope, fullScope());
   });
 
   it('full scope on package.json change', () => {
-    expect(classifyFromAffected(['package.json'], [])).toEqual(fullScope());
+    assert.deepEqual(classifyFromAffected(['package.json'], []), fullScope());
   });
 
   it('empty scope when no global file + no affected projects', () => {
-    expect(classifyFromAffected(['docs/some-readme.md'], [])).toEqual(emptyScope());
+    assert.deepEqual(classifyFromAffected(['docs/some-readme.md'], []), emptyScope());
   });
 });
 
@@ -40,17 +41,17 @@ describe('classifyFromAffected — publishable lib broadcast', () => {
     const scope = classifyFromAffected(['libs/chat/src/foo.ts'], [
       { name: 'chat', tags: PUBLISHABLE_LIB_TAGS },
     ]);
-    expect(scope.library).toBe(true);
-    expect(scope.website).toBe(true);
-    expect(scope.website_e2e).toBe(true);
-    expect(scope.cockpit).toBe(true);
-    expect(scope.cockpit_examples).toBe(true);
-    expect(scope.cockpit_smoke).toBe(true);
-    expect(scope.cockpit_secret).toBe(true);
-    expect(scope.cockpit_deploy_smoke).toBe(true);
-    expect(scope.cockpit_e2e).toBe(true);
-    expect(scope.examples_chat).toBe(true);
-    expect(scope.posthog).toBe(false);
+    assert.equal(scope.library, true);
+    assert.equal(scope.website, true);
+    assert.equal(scope.website_e2e, true);
+    assert.equal(scope.cockpit, true);
+    assert.equal(scope.cockpit_examples, true);
+    assert.equal(scope.cockpit_smoke, true);
+    assert.equal(scope.cockpit_secret, true);
+    assert.equal(scope.cockpit_deploy_smoke, true);
+    assert.equal(scope.cockpit_e2e, true);
+    assert.equal(scope.examples_chat, true);
+    assert.equal(scope.posthog, false);
   });
 });
 
@@ -60,11 +61,11 @@ describe('classifyFromAffected — cockpit cap projects', () => {
       ['cockpit/chat/messages/python/src/graph.py'],
       [{ name: 'cockpit-chat-messages-python', tags: COCKPIT_CAP_PYTHON_TAGS }],
     );
-    expect(scope.cockpit_e2e).toBe(true);
-    expect(scope.cockpit_examples).toBe(true);
-    expect(scope.cockpit_smoke).toBe(true);
-    expect(scope.cockpit).toBe(false);
-    expect(scope.library).toBe(false);
+    assert.equal(scope.cockpit_e2e, true);
+    assert.equal(scope.cockpit_examples, true);
+    assert.equal(scope.cockpit_smoke, true);
+    assert.equal(scope.cockpit, false);
+    assert.equal(scope.library, false);
   });
 
   it('cockpit cap angular triggers cockpit_e2e + cockpit_examples only', () => {
@@ -72,9 +73,9 @@ describe('classifyFromAffected — cockpit cap projects', () => {
       ['cockpit/chat/messages/angular/src/main.ts'],
       [{ name: 'cockpit-chat-messages-angular', tags: COCKPIT_CAP_ANGULAR_TAGS }],
     );
-    expect(scope.cockpit_e2e).toBe(true);
-    expect(scope.cockpit_examples).toBe(true);
-    expect(scope.cockpit_smoke).toBe(false);
+    assert.equal(scope.cockpit_e2e, true);
+    assert.equal(scope.cockpit_examples, true);
+    assert.equal(scope.cockpit_smoke, false);
   });
 });
 
@@ -83,9 +84,9 @@ describe('classifyFromAffected — apps + fallback paths via namedInputs', () =>
     const scope = classifyFromAffected(['vercel.json'], [
       { name: 'website', tags: WEBSITE_TAGS },
     ]);
-    expect(scope.website).toBe(true);
-    expect(scope.website_e2e).toBe(true);
-    expect(scope.cockpit).toBe(false);
+    assert.equal(scope.website, true);
+    assert.equal(scope.website_e2e, true);
+    assert.equal(scope.cockpit, false);
   });
 
   it('capability-registry.ts change marks apps/cockpit affected → all cockpit_*', () => {
@@ -93,10 +94,10 @@ describe('classifyFromAffected — apps + fallback paths via namedInputs', () =>
       ['apps/cockpit/scripts/capability-registry.ts'],
       [{ name: 'cockpit', tags: COCKPIT_APP_TAGS }],
     );
-    expect(scope.cockpit).toBe(true);
-    expect(scope.cockpit_examples).toBe(true);
-    expect(scope.cockpit_deploy_smoke).toBe(true);
-    expect(scope.cockpit_e2e).toBe(true);
+    assert.equal(scope.cockpit, true);
+    assert.equal(scope.cockpit_examples, true);
+    assert.equal(scope.cockpit_deploy_smoke, true);
+    assert.equal(scope.cockpit_e2e, true);
   });
 
   it('examples/chat change → examples_chat only', () => {
@@ -104,8 +105,8 @@ describe('classifyFromAffected — apps + fallback paths via namedInputs', () =>
       ['examples/chat/angular/src/main.ts'],
       [{ name: 'examples-chat-angular', tags: EXAMPLES_CHAT_TAGS }],
     );
-    expect(scope.examples_chat).toBe(true);
-    expect(scope.cockpit).toBe(false);
+    assert.equal(scope.examples_chat, true);
+    assert.equal(scope.cockpit, false);
   });
 
   it('tools/posthog change → posthog only', () => {
@@ -113,8 +114,8 @@ describe('classifyFromAffected — apps + fallback paths via namedInputs', () =>
       ['tools/posthog/src/dashboards.ts'],
       [{ name: 'posthog-tools', tags: POSTHOG_TAGS }],
     );
-    expect(scope.posthog).toBe(true);
-    expect(scope.library).toBe(false);
+    assert.equal(scope.posthog, true);
+    assert.equal(scope.library, false);
   });
 });
 
@@ -123,20 +124,20 @@ describe('classifyFromAffected — tag isolation', () => {
     const scope = classifyFromAffected(['some.ts'], [
       { name: 'x', tags: ['type:app', 'rotation:weekly'] },
     ]);
-    expect(scope).toEqual(emptyScope());
+    assert.deepEqual(scope, emptyScope());
   });
 
   it('unknown scope tags are ignored (no key collision)', () => {
     const scope = classifyFromAffected(['some.ts'], [
       { name: 'x', tags: ['scope:not-a-real-scope'] },
     ]);
-    expect(scope).toEqual(emptyScope());
+    assert.deepEqual(scope, emptyScope());
   });
 });
 
 describe('SCOPE_KEYS export', () => {
   it('contains the 11 documented scope keys', () => {
-    expect(SCOPE_KEYS).toEqual([
+    assert.deepEqual(SCOPE_KEYS, [
       'library', 'website', 'website_e2e',
       'cockpit', 'cockpit_examples', 'cockpit_smoke',
       'cockpit_secret', 'cockpit_deploy_smoke', 'cockpit_e2e',
