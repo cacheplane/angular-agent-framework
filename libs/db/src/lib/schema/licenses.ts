@@ -7,7 +7,7 @@ export const licenses = pgTable(
   {
     id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
     stripeCustomerId: text('stripe_customer_id').notNull(),
-    stripeSubscriptionId: text('stripe_subscription_id').notNull().unique(),
+    stripePaymentId: text('stripe_payment_id').notNull().unique(),
     customerEmail: text('customer_email').notNull(),
     tier: text('tier').notNull(),
     seats: integer('seats').notNull(),
