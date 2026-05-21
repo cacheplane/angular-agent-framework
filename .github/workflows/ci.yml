@@ -274,6 +274,20 @@ jobs:
             examples/chat/angular/e2e/test-results/
           retention-days: 7
 
+  examples-chat-e2e-summary:
+    name: "examples/chat — e2e"
+    needs: [ci-scope, examples-chat-e2e]
+    if: always() && (github.event_name == 'push' || needs.ci-scope.outputs.examples_chat == 'true')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Aggregate matrix outcome
+        run: |
+          if [[ "${{ needs.examples-chat-e2e.result }}" != "success" ]]; then
+            echo "Matrix outcome: ${{ needs.examples-chat-e2e.result }}"
+            exit 1
+          fi
+          echo "All examples-chat-e2e matrix expansions passed."
+
   cockpit-e2e:
     name: "Cockpit — e2e (${{ matrix.cap.angular }})"
     needs: ci-scope
