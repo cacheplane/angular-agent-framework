@@ -133,6 +133,16 @@ export class DemoShell {
       }
     });
 
+    // URL → knob signals. Tracks urlState() so it re-fires on every
+    // NavigationEnd (mode changes, query-param-only navigations both
+    // emit). hydrateFromQuery is untracked-called because it reads
+    // every knob signal and we don't want this effect to retrigger
+    // itself when it writes them.
+    effect(() => {
+      void this.urlState();
+      untracked(() => this.hydrateFromQuery());
+    });
+
     // Validate URL thread ids whenever they appear. Decoupled from the
     // sync effect above: on initial load the signal is hydrated from
     // the URL synchronously (field initializer), so the sync guard
@@ -152,12 +162,13 @@ export class DemoShell {
     // signal → URL. When the agent auto-creates a thread, the sidenav
     // switches threads, or onNewThread fires, push the new id into the
     // URL. Skips when the URL already matches (also breaks the loop).
+    // Preserves query params so knob state survives the thread hop.
     effect(() => {
       const sigId = this.threadIdSignal();
       const { mode, threadId: urlId } = this.urlState();
       if (sigId === urlId) return;
       const cmds: unknown[] = sigId ? ['/', mode, sigId] : ['/', mode];
-      void this.router.navigate(cmds as string[]);
+      void this.router.navigate(cmds as string[], { queryParamsHandling: 'preserve' });
     });
 
     // Refresh threads list when an agent run completes. The backend writes
@@ -424,8 +435,73 @@ export class DemoShell {
   protected onModeChange(next: DemoMode | string): void {
     // Preserve the active thread across mode switches: /embed/abc →
     // /popup/abc keeps the conversation visible in the new chrome.
+    // Preserve query params so knob state survives the mode hop.
     const id = this.threadIdSignal();
-    void this.router.navigate(id ? ['/', next, id] : ['/', next]);
+    void this.router.navigate(
+      id ? ['/', next, id] : ['/', next],
+      { queryParamsHandling: 'preserve' },
+    );
+  }
+
+  /** Build the full knob → URL-value mapping. Default values become
+   *  null so Angular's router drops them from the resulting URL when
+   *  used with queryParamsHandling: 'merge'. */
+  private buildQueryParams(): Record<string, string | null> {
+    return {
+      model:   this.model()             === 'gpt-5-mini'    ? null : this.model(),
+      effort:  this.effort()            === 'minimal'       ? null : this.effort(),
+      genui:   this.genUiMode()         === 'a2ui'          ? null : this.genUiMode(),
+      theme:   this.theme()             === 'default-dark'  ? null : this.theme(),
+      color:   this.colorScheme()       === 'dark'          ? null : this.colorScheme(),
+      project: this.selectedProjectId() ?? null,
+    };
+  }
+
+  /** Signal → URL bridge for agent knobs. Called by each knob handler
+   *  after it sets its signal + persistence. Uses queryParamsHandling:
+   *  'merge' + replaceUrl so dropdown clicks don't pollute history. */
+  private writeKnobsToUrl(): void {
+    void this.router.navigate([], {
+      queryParams: this.buildQueryParams(),
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
+  }
+
+  /** URL → signal bridge for agent knobs. Fires on every NavigationEnd
+   *  via the constructor effect. Sets each knob signal to its URL value
+   *  iff present and different. NEVER writes to persistence — that's
+   *  the "ephemeral hydration" contract: shared links override signals
+   *  but don't clobber a recipient's localStorage. Explicit user
+   *  actions (onModelChange etc.) still persist via persistence.write.
+   *
+   *  Explicit per-knob blocks (not a typed loop) because `colorScheme`
+   *  is constrained to `'light' | 'dark'` — a generic loop would need
+   *  ugly casts or runtime any. */
+  private hydrateFromQuery(): void {
+    const params = new URL(this.router.url, 'http://x').searchParams;
+
+    const model = params.get('model');
+    if (model !== null && model !== this.model()) this.model.set(model);
+
+    const effort = params.get('effort');
+    if (effort !== null && effort !== this.effort()) this.effort.set(effort);
+
+    const genui = params.get('genui');
+    if (genui !== null && genui !== this.genUiMode()) this.genUiMode.set(genui);
+
+    const theme = params.get('theme');
+    if (theme !== null && theme !== this.theme()) this.theme.set(theme);
+
+    const color = params.get('color');
+    if ((color === 'light' || color === 'dark') && color !== this.colorScheme()) {
+      this.colorScheme.set(color);
+    }
+
+    const project = params.get('project');
+    if (project !== null && project !== this.selectedProjectId()) {
+      this.selectedProjectId.set(project);
+    }
   }
 
   /** Silently redirect to the bare mode path when the URL's threadId
@@ -445,27 +521,32 @@ export class DemoShell {
   onModelChange(next: string): void {
     this.model.set(next);
     this.persistence.write('model', next);
+    this.writeKnobsToUrl();
   }
 
   protected onEffortChange(next: string): void {
     this.effort.set(next);
     this.persistence.write('effort', next);
+    this.writeKnobsToUrl();
   }
 
   protected onGenUiModeChange(next: string): void {
     this.genUiMode.set(next);
     this.persistence.write('genUiMode', next);
+    this.writeKnobsToUrl();
   }
 
   protected onThemeChange(next: string): void {
     this.theme.set(next);
     this.persistence.write('theme', next);
+    this.writeKnobsToUrl();
   }
 
   protected onColorSchemeChange(next: 'light' | 'dark' | string): void {
     if (next !== 'light' && next !== 'dark') return;
     this.colorScheme.set(next);
     this.persistence.write('colorScheme', next);
+    this.writeKnobsToUrl();
   }
 
   protected onSidenavOpenChange(next: boolean): void {
@@ -491,6 +572,7 @@ export class DemoShell {
   protected onProjectSelected(projectId: string): void {
     this.selectedProjectId.set(projectId);
     this.persistence.write('selectedProjectId', projectId);
+    this.writeKnobsToUrl();
   }
 
   protected onNewProjectClicked(): void {
