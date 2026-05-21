@@ -7,8 +7,25 @@
     "strict": true,
     "skipLibCheck": true,
     "noEmit": true,
-    "types": ["node"]
+    "types": [
+      "node"
+    ],
+    "baseUrl": "../../../../..",
+    "paths": {
+      "@ngaf-internal/e2e-harness": [
+        "libs/e2e-harness/src/index.ts"
+      ],
+      "@ngaf-internal/e2e-harness/global-teardown": [
+        "libs/e2e-harness/src/global-teardown.ts"
+      ]
+    }
   },
-  "include": ["**/*.ts"],
-  "exclude": ["node_modules", "test-results", "playwright-report"]
+  "include": [
+    "**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "test-results",
+    "playwright-report"
+  ]
 }

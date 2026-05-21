@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test';
 import {
   sendPromptAndWaitForInterrupt,
   clickInterruptActionAndWaitFinal,
-} from '../../../../../libs/e2e-harness/src';
+} from '@ngaf-internal/e2e-harness';
 
 test('c-interrupts: confirm path books the flight via book_flight + resume("confirm")', async ({ page }) => {
   await sendPromptAndWaitForInterrupt(page, 'Book me on UA123.');
