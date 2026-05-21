@@ -1,10 +1,12 @@
-# ci-scope thin shim + implicitDependencies — Implementation Plan
+# ci-scope thin shim + namedInputs — Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Replace the 340-LOC `scripts/ci-scope.mjs` classifier with a ~50-LOC thin shim that delegates to `nx affected` for project ownership and reads `scope:*` tags off each project to decide scope booleans. Move non-project fallback path rules into project.json `implicitDependencies`.
+> **PR 1 shipped:** [#503](https://github.com/cacheplane/angular-agent-framework/pull/503) added `scope:*` tags to 87 project.json files. The original spec planned to also add `implicitDependencies: ["//path"]` for fallback files; Nx 22.5.1 rejected that syntax (it validates implicitDependencies as project names, not file paths). The implicitDependencies portion was reverted within PR #503; only tags remain on main. PR 2 (below) takes the Nx-native `namedInputs` approach instead. See the spec's header revision note for full context.
 
-**Architecture:** Sequenced as 3 PRs. PR 1 adds metadata (tags + implicitDependencies) inertly — no behavior change. PR 2 replaces ci-scope.mjs + migrates tests. PR 3 adds a drift-guard assertion. Each PR ships independently; PR 2 must be merged + verified before PR 3. PR 1 is reversible (pure metadata add).
+**Goal:** Replace the 340-LOC `scripts/ci-scope.mjs` classifier with a ~50-LOC thin shim that delegates to `nx affected` for project ownership and reads `scope:*` tags off each project to decide scope booleans. Move non-project fallback path rules into per-project `namedInputs` referenced by target `inputs`.
+
+**Architecture:** Sequenced as 3 PRs. **PR 1 (tags) is SHIPPED.** PR 2 adds `namedInputs` + replaces ci-scope.mjs + migrates tests. PR 3 adds a drift-guard assertion. Each PR ships independently; PR 2 must be merged + verified before PR 3.
 
 **Tech Stack:** Node ESM, `nx show projects --affected --json`, vitest (test runner for ci-scope.spec.mjs).
 
@@ -14,298 +16,39 @@
 
 **Modified across all 3 PRs:**
 
-- **PR 1**: `scripts/add-scope-tags.mjs` (throwaway helper script), ~93 `project.json` files (tag/implicitDeps add only).
-- **PR 2**: `scripts/ci-scope.mjs` (rewrite ~340 → ~80 LOC), `scripts/ci-scope.spec.mjs` (test fixture migration).
+- **PR 1 (shipped)**: `scripts/add-scope-tags.mjs` (throwaway helper, deleted before merge), 87 `project.json` files (tags only — implicitDependencies reverted).
+- **PR 2**: `apps/cockpit/project.json` + `apps/website/project.json` (add `namedInputs.deploymentConfig` + reference in target `inputs`), `scripts/ci-scope.mjs` (rewrite ~340 → ~80 LOC), `scripts/ci-scope.spec.mjs` (test fixture migration).
 - **PR 3**: `apps/cockpit/cockpit-e2e-wiring.spec.ts` (extend with tag drift-guard).
-
-No new long-lived files. The throwaway `scripts/add-scope-tags.mjs` is deleted at the end of PR 1.
 
 ---
 
-# PR 1 — metadata add (no behavior change)
+# PR 1 — tags only ✅ SHIPPED ([#503](https://github.com/cacheplane/angular-agent-framework/pull/503))
 
-### Task 1: Categorize projects + write a one-shot tag/implicit-deps script
+### Task 1: ✅ Shipped
 
-**Files:**
-- Create: `scripts/add-scope-tags.mjs` (throwaway — deleted in Step 5 of this task)
+What landed:
+- Added `scope:*` tags to 87 project.json files via a throwaway `scripts/add-scope-tags.mjs` (deleted before merge).
+- Original spec also added `implicitDependencies: ["//path"]` for fallback files. **This broke 29 CI jobs** because Nx 22.5.1 rejected the `//path` syntax (error: "implicitDependencies point to non-existent project(s)").
+- The implicitDependencies portion was reverted within PR #503; only tags remain on main.
 
-- [ ] **Step 1: Write the tag-application script**
+PR 2 (below) takes the Nx-native `namedInputs` approach to handle file-level affecting-deps.
 
-Create `/tmp/ci-scope-hybrid/scripts/add-scope-tags.mjs`:
+<details><summary>Original Task 1 script (for archival reference)</summary>
 
-```javascript
-#!/usr/bin/env node
-// SPDX-License-Identifier: MIT
-// Throwaway: one-shot tag/implicitDependencies populator for PR 1
-// of the ci-scope thin-shim migration. Delete after PR 1 merges.
+The throwaway `scripts/add-scope-tags.mjs` had a `tagsFor()` function that mapped projects to tags based on root path + targets, and an `implicitDepsFor()` function that returned `//path`-style entries. The `tagsFor` portion was correct and shipped; `implicitDepsFor` was abandoned.
 
-import { readFileSync, writeFileSync, readdirSync, existsSync } from 'node:fs';
-import path from 'node:path';
+If you need to re-apply the tag-categorization logic to a new project, the rules are:
+- **Publishable libs** (chat, langgraph, ag-ui, render, a2ui, licensing, telemetry): broadcast to library + website + website-e2e + cockpit + cockpit-examples + cockpit-smoke + cockpit-secret + cockpit-deploy-smoke + cockpit-e2e + examples-chat.
+- **Cockpit cap python**: cockpit-examples + cockpit-e2e + (cockpit-smoke if `targets.smoke` exists).
+- **Cockpit cap angular**: cockpit-examples + cockpit-e2e + (cockpit-secret if `targets.integration` exists).
+- **Cockpit internal libs** (`libs/cockpit-*`, `libs/design-tokens`, `libs/ui-react`, `libs/example-layouts`, `libs/e2e-harness`): cockpit + cockpit-examples + cockpit-deploy-smoke + cockpit-e2e.
+- **`apps/website`**: website + website-e2e.
+- **`apps/cockpit`**: cockpit + cockpit-examples + cockpit-deploy-smoke + cockpit-e2e.
+- **`examples/chat/*`**: examples-chat.
+- **`tools/posthog`**: posthog.
 
-const REPO_ROOT = path.resolve(process.cwd());
-const PROJECT_SKIP = new Set(['.git', '.next', '.nx', 'coverage', 'dist', 'node_modules']);
+</details>
 
-const PUBLISHABLE_LIB_BROADCAST = [
-  'scope:library', 'scope:website', 'scope:website-e2e',
-  'scope:cockpit', 'scope:cockpit-examples', 'scope:cockpit-smoke',
-  'scope:cockpit-secret', 'scope:cockpit-deploy-smoke',
-  'scope:cockpit-e2e', 'scope:examples-chat',
-];
-const COCKPIT_INTERNAL_LIB = [
-  'scope:cockpit', 'scope:cockpit-examples',
-  'scope:cockpit-deploy-smoke', 'scope:cockpit-e2e',
-];
-
-function loadPublishable() {
-  const nx = JSON.parse(readFileSync('nx.json', 'utf8'));
-  return new Set(nx.release?.groups?.publishable?.projects ?? []);
-}
-
-function walk(dir, out = []) {
-  for (const entry of readdirSync(dir, { withFileTypes: true })) {
-    if (PROJECT_SKIP.has(entry.name)) continue;
-    const p = path.join(dir, entry.name);
-    if (entry.isDirectory()) walk(p, out);
-    else if (entry.name === 'project.json') out.push(p);
-  }
-  return out;
-}
-
-function tagsFor(project, projectRoot, publishable) {
-  const name = project.name ?? '';
-  const root = projectRoot.replaceAll(path.sep, '/');
-  const targets = project.targets ?? {};
-
-  // Publishable libs broadcast to everything (matches today's
-  // `if (publishableProjects.has(name))` block in ci-scope.mjs).
-  if (publishable.has(name)) return PUBLISHABLE_LIB_BROADCAST;
-
-  // Cockpit cap python projects: trigger smoke + cap angular's e2e/examples
-  if (root.startsWith('cockpit/') && root.endsWith('/python')) {
-    const tags = ['scope:cockpit-examples', 'scope:cockpit-e2e'];
-    if (targets.smoke) tags.push('scope:cockpit-smoke');
-    return tags;
-  }
-
-  // Cockpit cap angular projects: trigger examples + e2e
-  if (root.startsWith('cockpit/') && root.endsWith('/angular')) {
-    const tags = ['scope:cockpit-examples', 'scope:cockpit-e2e'];
-    if (targets.integration) tags.push('scope:cockpit-secret');
-    return tags;
-  }
-
-  // Cockpit internal libs (non-publishable)
-  if (
-    root.startsWith('libs/cockpit-') ||
-    root === 'libs/design-tokens' ||
-    root === 'libs/ui-react' ||
-    root === 'libs/example-layouts' ||
-    root === 'libs/e2e-harness'
-  ) return COCKPIT_INTERNAL_LIB;
-
-  // Website app
-  if (name === 'website' || root === 'apps/website') return ['scope:website', 'scope:website-e2e'];
-
-  // Cockpit app
-  if (name === 'cockpit' || root === 'apps/cockpit') {
-    return ['scope:cockpit', 'scope:cockpit-examples', 'scope:cockpit-deploy-smoke', 'scope:cockpit-e2e'];
-  }
-
-  // Examples chat
-  if (root === 'examples/chat' || root.startsWith('examples/chat/')) return ['scope:examples-chat'];
-
-  // PostHog tools
-  if (name === 'posthog-tools' || root === 'tools/posthog') return ['scope:posthog'];
-
-  // No CI gating for: marketing/*, minting-service, db, etc.
-  return null;
-}
-
-function implicitDepsFor(name) {
-  // Map each non-project fallback file to the project that should be
-  // considered affected when it changes. Mirrors applyFallbackPathScope.
-  switch (name) {
-    case 'website':
-      return ['//vercel.json'];
-    case 'cockpit':
-      return [
-        '//vercel.cockpit.json', '//vercel.examples.json', '//vercel.demo.json',
-        '//scripts/assemble-demo.ts', '//scripts/assemble-examples.ts',
-        '//scripts/demo-middleware.ts', '//scripts/langgraph-proxy.ts',
-        '//scripts/rate-limit.ts', '//scripts/deploy-smoke.ts',
-        '//apps/cockpit/scripts/deploy-smoke.ts',
-        '//scripts/generate-shared-deployment-config.ts',
-        '//apps/cockpit/scripts/capability-registry.ts',
-      ];
-    default:
-      return null;
-  }
-}
-
-function uniqueSorted(arr) {
-  return [...new Set(arr)].sort();
-}
-
-function main() {
-  const publishable = loadPublishable();
-  const projectJsonPaths = walk(REPO_ROOT)
-    .filter((p) => !p.includes('/node_modules/'))
-    .map((p) => path.relative(REPO_ROOT, p));
-
-  let modified = 0;
-  for (const relPath of projectJsonPaths) {
-    const projectRoot = path.dirname(relPath);
-    if (projectRoot === '.') continue; // skip top-level project.json
-    const text = readFileSync(relPath, 'utf8');
-    const project = JSON.parse(text);
-
-    const newTags = tagsFor(project, projectRoot, publishable);
-    const newImplicitDeps = implicitDepsFor(project.name);
-
-    let changed = false;
-
-    if (newTags) {
-      const existing = project.tags ?? [];
-      const merged = uniqueSorted([...existing, ...newTags]);
-      if (JSON.stringify(merged) !== JSON.stringify(existing)) {
-        project.tags = merged;
-        changed = true;
-      }
-    }
-
-    if (newImplicitDeps) {
-      const existing = project.implicitDependencies ?? [];
-      const merged = uniqueSorted([...existing, ...newImplicitDeps]);
-      if (JSON.stringify(merged) !== JSON.stringify(existing)) {
-        project.implicitDependencies = merged;
-        changed = true;
-      }
-    }
-
-    if (changed) {
-      writeFileSync(relPath, JSON.stringify(project, null, 2) + '\n');
-      console.log(`updated ${relPath}`);
-      modified++;
-    }
-  }
-  console.log(`\n${modified} project.json files modified.`);
-}
-
-main();
-```
-
-- [ ] **Step 2: Run the script + inspect a representative diff**
-
-```bash
-cd /tmp/ci-scope-hybrid && node scripts/add-scope-tags.mjs 2>&1 | tail -10
-```
-
-Expected: `~50 project.json files modified.` (cockpit caps, libs, apps, examples-chat). Marketing/minting-service/db are skipped (no CI gating).
-
-Spot-check three files for correctness:
-
-```bash
-cd /tmp/ci-scope-hybrid && \
-  echo "=== libs/chat (publishable, broadcast) ===" && \
-  grep -A3 '"tags"' libs/chat/project.json | head -15 && \
-  echo "=== cockpit/chat/messages/angular (cap angular) ===" && \
-  grep -A3 '"tags"' cockpit/chat/messages/angular/project.json | head -10 && \
-  echo "=== apps/cockpit (implicitDependencies) ===" && \
-  grep -A20 '"implicitDependencies"' apps/cockpit/project.json | head -25
-```
-
-Expected: `libs/chat` has all 10 broadcast scope tags; `cockpit/chat/messages/angular` has `scope:cockpit-e2e` + `scope:cockpit-examples`; `apps/cockpit` has the 12-entry implicit-deps list.
-
-- [ ] **Step 3: Verify nx graph still loads**
-
-```bash
-cd /tmp/ci-scope-hybrid && npx nx graph --file=/tmp/nx-graph-check.json 2>&1 | tail -5
-```
-
-Expected: writes the graph file without errors. Validates all `implicitDependencies: ["//path"]` strings reference files nx can resolve.
-
-If nx errors on a missing file: fix the implicit-deps entry (probably a typo or moved file).
-
-- [ ] **Step 4: Verify implicit-dep files actually exist**
-
-```bash
-cd /tmp/ci-scope-hybrid && python3 -c "
-import json
-deps = json.load(open('apps/cockpit/project.json')).get('implicitDependencies', [])
-import os
-missing = [d for d in deps if d.startswith('//') and not os.path.exists(d[2:])]
-print('MISSING:', missing) if missing else print('all implicit-dep files exist')
-"
-```
-
-Expected: `all implicit-dep files exist`. If any missing, remove from project.json (the spec may reference a file that was deleted/moved since PR-#432 era).
-
-- [ ] **Step 5: Delete the throwaway script + commit**
-
-```bash
-cd /tmp/ci-scope-hybrid && git rm scripts/add-scope-tags.mjs && git add -A
-git diff --cached --stat | tail -5
-```
-
-Expected stat: ~50 files changed (only the tag/implicit-deps additions). No source code.
-
-```bash
-cd /tmp/ci-scope-hybrid && git commit -m "$(cat <<'EOF'
-chore(ci-scope): add scope:* tags + implicitDependencies (no behavior change)
-
-PR 1 of 3 for the ci-scope thin-shim migration. Adds metadata only:
-
-1. scope:* tags on every CI-participating project, replacing the
-   hand-maintained applyProjectScope rules in scripts/ci-scope.mjs
-   with data declarations next to each project.
-
-2. implicitDependencies on apps/cockpit and apps/website pointing at
-   the non-project files (vercel.*.json, scripts/*.ts, capability-
-   registry.ts) that currently live in applyFallbackPathScope.
-
-ci-scope.mjs unchanged in this PR — still drives gating via the old
-rules. The new metadata is inert. PR 2 will rewrite the shim to read
-from this metadata; PR 3 will add a drift-guard assertion.
-
-See docs/superpowers/specs/2026-05-21-ci-scope-thin-shim-design.md.
-
-Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>
-EOF
-)"
-```
-
-- [ ] **Step 6: Push + open PR 1**
-
-```bash
-cd /tmp/ci-scope-hybrid && git push -u origin claude/ci-scope-hybrid 2>&1 | tail -3
-```
-
-```bash
-gh pr create --title "chore(ci-scope): add scope:* tags + implicitDependencies (PR 1/3)" --body "$(cat <<'EOF'
-## Summary
-PR 1 of 3 in the ci-scope thin-shim migration. **Metadata only — no behavior change.**
-
-- Adds \`scope:*\` tags to every CI-participating project.
-- Adds \`implicitDependencies\` to \`apps/cockpit\` and \`apps/website\` for non-project fallback files (vercel.*.json, deploy scripts, capability-registry.ts).
-
-\`scripts/ci-scope.mjs\` is untouched; it still drives gating via the old \`applyProjectScope\`/\`applyFallbackPathScope\` rules. The new metadata is inert until PR 2 rewrites the shim to read from it.
-
-## Verification
-- [ ] CI passes (no scope booleans should emit differently).
-- [ ] \`npx nx graph\` succeeds (validates implicit-dep file references).
-
-## Follow-ups
-- PR 2: rewrite ci-scope.mjs as a thin shim + migrate tests.
-- PR 3: drift-guard assertion + cleanup.
-
-See spec: \`docs/superpowers/specs/2026-05-21-ci-scope-thin-shim-design.md\`.
-
-🤖 Generated with [Claude Code](https://claude.com/claude-code)
-EOF
-)" 2>&1 | tail -3
-```
-
-**STOP after PR 1 opens. Wait for it to be reviewed + merged before continuing.** Subsequent tasks branch from PR 1's merge commit.
 
 ---
 
@@ -328,6 +71,112 @@ cd /tmp/ci-scope-shim-rewrite && grep -c '"scope:' libs/chat/project.json
 ```
 
 Expected: `10` (the 10 broadcast tags). If 0, PR 1 wasn't merged yet — stop.
+
+---
+
+### Task 2.5: Add namedInputs for fallback paths
+
+**Files:**
+- Modify: `apps/cockpit/project.json`
+- Modify: `apps/website/project.json`
+
+This task gives Nx affected the project graph edges it needs so changes to vercel.*.json, deploy scripts, capability-registry.ts, etc. correctly mark `apps/cockpit` and `apps/website` as affected. Without this, ci-scope's new shim would underfire on those file changes.
+
+- [ ] **Step 1: Read current `apps/cockpit/project.json`**
+
+```bash
+cd /tmp/ci-scope-shim-rewrite && cat apps/cockpit/project.json | python3 -m json.tool | head -40
+```
+
+Note whether `namedInputs` or target `inputs` already exist (most likely not on `apps/cockpit`).
+
+- [ ] **Step 2: Add `namedInputs.deploymentConfig` to `apps/cockpit/project.json`**
+
+Run:
+
+```bash
+cd /tmp/ci-scope-shim-rewrite && python3 -c "
+import json
+p = 'apps/cockpit/project.json'
+d = json.load(open(p))
+d.setdefault('namedInputs', {})['deploymentConfig'] = [
+    '{workspaceRoot}/vercel.cockpit.json',
+    '{workspaceRoot}/vercel.examples.json',
+    '{workspaceRoot}/vercel.demo.json',
+    '{workspaceRoot}/scripts/assemble-demo.ts',
+    '{workspaceRoot}/scripts/assemble-examples.ts',
+    '{workspaceRoot}/scripts/demo-middleware.ts',
+    '{workspaceRoot}/scripts/langgraph-proxy.ts',
+    '{workspaceRoot}/scripts/rate-limit.ts',
+    '{workspaceRoot}/apps/cockpit/scripts/deploy-smoke.ts',
+    '{workspaceRoot}/scripts/generate-shared-deployment-config.ts',
+    '{workspaceRoot}/apps/cockpit/scripts/capability-registry.ts',
+]
+# Reference in build target inputs
+build = d.setdefault('targets', {}).setdefault('build', {})
+inputs = build.get('inputs', ['default', '^default'])
+if 'deploymentConfig' not in inputs:
+    inputs.insert(1, 'deploymentConfig')
+build['inputs'] = inputs
+with open(p, 'w') as f: json.dump(d, f, indent=2, ensure_ascii=False); f.write('\n')
+print('apps/cockpit/project.json updated')
+"
+```
+
+- [ ] **Step 3: Add `namedInputs.deploymentConfig` to `apps/website/project.json`**
+
+```bash
+cd /tmp/ci-scope-shim-rewrite && python3 -c "
+import json
+p = 'apps/website/project.json'
+d = json.load(open(p))
+d.setdefault('namedInputs', {})['deploymentConfig'] = [
+    '{workspaceRoot}/vercel.json',
+]
+build = d.setdefault('targets', {}).setdefault('build', {})
+inputs = build.get('inputs', ['default', '^default'])
+if 'deploymentConfig' not in inputs:
+    inputs.insert(1, 'deploymentConfig')
+build['inputs'] = inputs
+with open(p, 'w') as f: json.dump(d, f, indent=2, ensure_ascii=False); f.write('\n')
+print('apps/website/project.json updated')
+"
+```
+
+- [ ] **Step 4: Verify nx accepts the namedInputs (no parse errors)**
+
+```bash
+cd /tmp/ci-scope-shim-rewrite && npx nx show project cockpit --json 2>&1 | python3 -c "
+import json, sys
+d = json.load(sys.stdin)
+ni = d.get('namedInputs', {})
+print('deploymentConfig entries:', len(ni.get('deploymentConfig', [])))
+print('build inputs:', d.get('targets', {}).get('build', {}).get('inputs'))
+"
+```
+
+Expected: `deploymentConfig entries: 11`, `build inputs: ['default', 'deploymentConfig', '^default']`.
+
+If nx errors here, the namedInputs syntax is wrong — STOP and surface to the orchestrator.
+
+- [ ] **Step 5: Smoke-test that `nx show projects --affected` picks up vercel.cockpit.json changes**
+
+```bash
+cd /tmp/ci-scope-shim-rewrite && \
+  echo '{}' > vercel.cockpit.json.bak && cp vercel.cockpit.json vercel.cockpit.json.bak && \
+  echo '{"version": 2, "test-edit": true}' >> vercel.cockpit.json && \
+  git add vercel.cockpit.json && \
+  npx nx show projects --affected --base origin/main --head HEAD --json 2>&1 | head -5
+```
+
+Expected: output is a JSON array containing `"cockpit"` (the apps/cockpit project name).
+
+Cleanup:
+```bash
+cd /tmp/ci-scope-shim-rewrite && git checkout vercel.cockpit.json && rm vercel.cockpit.json.bak
+```
+
+If `cockpit` does NOT appear in the affected list, the namedInputs aren't taking effect — investigate before proceeding to Task 3.
 
 ---
 
