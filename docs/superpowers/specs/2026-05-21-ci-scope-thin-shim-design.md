@@ -1,13 +1,15 @@
-# ci-scope thin shim + implicitDependencies — design
+# ci-scope thin shim + namedInputs — design
 
 > **Place in the larger plan.** Task #16 in the post-Task-#4 cleanup arc. Final item from the e2e audit. Replaces the hand-maintained 340-LOC `scripts/ci-scope.mjs` classifier with a ~50-LOC shim that delegates to `nx affected` for project ownership and reads `scope:*` tags off each project to decide which CI scopes to emit.
+>
+> **Revision (post-PR-#503):** The original spec used `implicitDependencies: ["//path"]` for file-level deps. PR #503 surfaced that Nx 22.5.1 rejects this syntax — `implicitDependencies` entries are validated strictly as project names, with error: "The following implicitDependencies point to non-existent project(s)". The correct Nx-native mechanism is per-project `namedInputs` referenced by target `inputs`. Spec updated below.
 
 ## Goal
 
 Shrink `scripts/ci-scope.mjs` from 340 LOC to ~50 LOC by replacing two pieces of hand-maintained logic with data:
 
-1. **`applyProjectScope` rules** (~80 LOC) → become `tags: ["scope:*"]` on each `project.json`. The shim reads tags off projects nx reports as affected and unions them into scope booleans.
-2. **`applyFallbackPathScope` rules** (~50 LOC) → become `implicitDependencies` entries on the projects that should be affected when non-project files (vercel.json, deploy scripts, capability-registry.ts, etc.) change. Nx then considers those projects affected via the implicit dep edge.
+1. **`applyProjectScope` rules** (~80 LOC) → become `tags: ["scope:*"]` on each `project.json`. The shim reads tags off projects nx reports as affected and unions them into scope booleans. **Shipped in PR #503.**
+2. **`applyFallbackPathScope` rules** (~50 LOC) → become per-project `namedInputs` referenced by target `inputs`. When any file in the named input changes, nx considers the project affected. The shim picks up the project as affected via `nx show projects --affected` + reads its `scope:*` tags.
 
 Preserve all existing CI gate semantics: every scope boolean still emits correctly for the same set of file changes; jobs still skip cleanly (no "fast pass" cost regression).
 
@@ -215,64 +217,88 @@ Every project that participates in CI gating gets one or more `scope:*` tags. Th
 
 Each project's tags array is the **single declaration** of which workflow gates its changes trigger. Reviewers grep `scope:*` to audit.
 
-## implicitDependencies — fallback paths become first-class
+## namedInputs — fallback paths become first-class
 
-The current `applyFallbackPathScope` has ~12 file-specific rules. Each becomes an entry in the relevant project's `implicitDependencies`:
+The current `applyFallbackPathScope` has ~12 file-specific rules. Each fallback file becomes part of a per-project `namedInputs` entry, referenced by that project's target `inputs` array. When any file in the named input changes, nx considers the project affected — and the shim picks it up via `nx show projects --affected`.
 
-| File | Owner project | Rationale |
+**Why `namedInputs` instead of `implicitDependencies`:** Nx 22.5.1's `implicitDependencies` is validated strictly as a list of project names; file paths produce "implicitDependencies point to non-existent project(s)" at graph-load time. The `namedInputs` + target `inputs` pattern is the Nx-native mechanism for declaring file-level affecting-deps. (Surfaced by PR #503's first attempt; details in the spec header revision note.)
+
+### Per-project namedInputs
+
+| File | Owner project | Added to namedInput |
 |---|---|---|
-| `vercel.json` | `apps/website` | Site-level Vercel config; affects website deploy. |
-| `vercel.cockpit.json` | `apps/cockpit` | Cockpit deploy config. |
-| `vercel.examples.json` | `apps/cockpit` | Examples assembly affects cockpit. |
-| `vercel.demo.json` | `apps/cockpit` | Demo-mode wrapper config. |
-| `scripts/assemble-demo.ts` | `apps/cockpit` | Builds cockpit demo bundle. |
-| `scripts/assemble-examples.ts` | `apps/cockpit` | Assembles per-cap examples. |
-| `scripts/demo-middleware.ts` | `apps/cockpit` | Demo runtime middleware. |
-| `scripts/langgraph-proxy.ts` | `apps/cockpit` | Demo LangGraph proxy. |
-| `scripts/rate-limit.ts` | `apps/cockpit` | Demo rate limiter. |
-| `scripts/deploy-smoke.ts` | `apps/cockpit` | Cockpit deploy-smoke driver. |
-| `apps/cockpit/scripts/deploy-smoke.ts` | `apps/cockpit` | Same; in-cockpit path. |
-| `scripts/generate-shared-deployment-config.ts` | `apps/cockpit` | Drives LangSmith deployment manifest. |
-| `apps/cockpit/scripts/capability-registry.ts` | `apps/cockpit` | Source of truth for all cap metadata. |
-| `tools/posthog/**` | `tools/posthog` (already a project) | Auto-owned via project root match. |
+| `vercel.json` | `apps/website` | `deploymentConfig` |
+| `vercel.cockpit.json` | `apps/cockpit` | `deploymentConfig` |
+| `vercel.examples.json` | `apps/cockpit` | `deploymentConfig` |
+| `vercel.demo.json` | `apps/cockpit` | `deploymentConfig` |
+| `scripts/assemble-demo.ts` | `apps/cockpit` | `deploymentConfig` |
+| `scripts/assemble-examples.ts` | `apps/cockpit` | `deploymentConfig` |
+| `scripts/demo-middleware.ts` | `apps/cockpit` | `deploymentConfig` |
+| `scripts/langgraph-proxy.ts` | `apps/cockpit` | `deploymentConfig` |
+| `scripts/rate-limit.ts` | `apps/cockpit` | `deploymentConfig` |
+| `apps/cockpit/scripts/deploy-smoke.ts` | `apps/cockpit` | `deploymentConfig` |
+| `scripts/generate-shared-deployment-config.ts` | `apps/cockpit` | `deploymentConfig` |
+| `apps/cockpit/scripts/capability-registry.ts` | `apps/cockpit` | `deploymentConfig` |
+| `tools/posthog/**` | `tools/posthog` (already a project) | (auto-owned via project root match) |
 
-After this migration, `applyFallbackPathScope` and `isGlobalCiFile`'s file-list disappear (except for the `GLOBAL_CI_FILES` short-circuit set, which stays in the shim because some workflow-config changes need to trigger every gate).
+After this migration, `applyFallbackPathScope` disappears entirely. `isGlobalCiFile`'s short-circuit set stays in the shim (workflow-config changes correctly trigger every gate via the full-scope return).
 
-Project.json edit example:
+### Project.json edit example
 
 ```json
-// apps/website/project.json
+// apps/cockpit/project.json
 {
-  "name": "website",
-  "tags": ["scope:website", "scope:website-e2e"],
-  "implicitDependencies": ["//vercel.json"],
-  ...
+  "name": "cockpit",
+  "tags": [
+    "scope:cockpit", "scope:cockpit-deploy-smoke",
+    "scope:cockpit-e2e", "scope:cockpit-examples"
+  ],
+  "namedInputs": {
+    "deploymentConfig": [
+      "{workspaceRoot}/vercel.cockpit.json",
+      "{workspaceRoot}/vercel.examples.json",
+      "{workspaceRoot}/vercel.demo.json",
+      "{workspaceRoot}/scripts/assemble-demo.ts",
+      "{workspaceRoot}/scripts/assemble-examples.ts",
+      "{workspaceRoot}/scripts/demo-middleware.ts",
+      "{workspaceRoot}/scripts/langgraph-proxy.ts",
+      "{workspaceRoot}/scripts/rate-limit.ts",
+      "{workspaceRoot}/apps/cockpit/scripts/deploy-smoke.ts",
+      "{workspaceRoot}/scripts/generate-shared-deployment-config.ts",
+      "{workspaceRoot}/apps/cockpit/scripts/capability-registry.ts"
+    ]
+  },
+  "targets": {
+    "build": {
+      "inputs": ["default", "deploymentConfig", "^default"]
+    }
+  }
 }
 ```
 
-The `//` prefix tells nx these are workspace file paths, not project names.
+The `{workspaceRoot}/...` syntax is the Nx-native token for repo-relative paths. The `inputs` reference in the `build` target tells nx that any change to `deploymentConfig` files invalidates the build's cache AND marks this project as affected.
+
+For `apps/cockpit`, the `inputs` need to land on whichever target nx affected uses to determine project affectedness — typically `build` (and any other long-running targets like `test`). The plan covers exact target placement during implementation.
 
 ## Migration sequencing
 
 Split into **3 PRs** for safe rollout:
 
-### PR 1 — metadata add (no behavior change)
+### PR 1 — tags only (no behavior change) — **SHIPPED in PR #503**
 
-- Add `tags: ["scope:*"]` to every project that should participate in CI gating (~50 project.json files).
-- Add `implicitDependencies` for the ~13 fallback files to their target projects (~5-10 project.json files; some overlap).
-- ci-scope.mjs unchanged. The old `applyProjectScope`/`applyFallbackPathScope` still drive gating. Tags + implicitDependencies are inert.
-- **Verification**: `npx nx show projects --affected --base origin/main --head HEAD` returns expected projects when test files are touched (manual spot-check).
+- Added `tags: ["scope:*"]` to 87 project.json files.
+- Original spec also added `implicitDependencies: ["//path"]` for fallback files; this broke 29 CI jobs because Nx 22.5.1 rejects file-path syntax in implicitDependencies. Reverted within PR #503.
+- ci-scope.mjs unchanged. Tags inert until PR 2.
 
-### PR 2 — shim rewrite + test migration
+### PR 2 — namedInputs + shim rewrite + test migration
 
-- Replace `scripts/ci-scope.mjs` with the ~50-LOC shim above.
+- Add `namedInputs.deploymentConfig` to `apps/cockpit` and `apps/website` project.json. Reference it in target `inputs` (typically `build`, `test`).
+- Replace `scripts/ci-scope.mjs` with the ~50-LOC shim above (reads tags from `nx show projects --affected --json`).
 - Migrate `scripts/ci-scope.spec.mjs`: tests now inject synthetic `affectedProjects` arrays (with `tags`) and assert scope output. Old `workspace` fixtures go away.
-- Run dual-mode in CI: keep the old code as `ci-scope-legacy.mjs`; run both, assert outputs match in a smoke test. (Optional safety net; the migration is the whole point so dual-mode is short-lived.)
-- **Verification**: CI on PR 2 itself must classify correctly — the PR's own gates must fire as expected.
+- **Verification**: CI on PR 2 itself must classify correctly — the PR's own gates fire as expected. The namedInputs change is the critical part — must confirm via `nx show projects --affected` that changing `vercel.cockpit.json` correctly marks `apps/cockpit` as affected.
 
-### PR 3 — cleanup
+### PR 3 — drift guard
 
-- Remove dual-mode + legacy script.
 - Add a `cockpit-e2e-wiring.spec.ts`-style assertion: every cap project has the expected `scope:cockpit-e2e` + `scope:cockpit-examples` tags (drift guard).
 
 ## Test strategy
@@ -307,19 +333,19 @@ The `loadAffectedProjects` and `changedFilesBetween` Nx-shell-out helpers don't 
 
 - **Tag drift**: a contributor adds a new project but forgets `scope:*` tags → that project's changes silently don't trigger CI. Mitigation: PR 3 adds an assertion that every project in `cockpit/` has at least `scope:cockpit-examples` + `scope:cockpit-e2e`.
 - **Nx version coupling**: `npx nx show projects --affected --json` output format could change across Nx major versions. Mitigation: pin Nx version (already pinned via package-lock); fail fast if output isn't a JSON array of strings.
-- **`implicitDependencies` for files that don't exist**: nx will warn but not fail. Mitigation: in PR 1, validate every implicit-dep file path exists at write time.
-- **PR 2's own gating**: the shim rewrite runs against the PR's own changes. If something's wrong, PR 2's gates fire wrong, and we may merge incorrectly. Mitigation: optional dual-mode parallel-run in PR 2 (assert old & new agree before cutting over).
+- **namedInputs target-binding fragility**: the named input must be referenced by a target's `inputs` array for nx to consider it affecting. If a contributor adds a new target without that reference, file changes in the named input won't mark the project affected through that target. Mitigation: bind `deploymentConfig` to a stable target (`build`) that exists on every relevant project; document the pattern in the project.json comment.
+- **PR 2's own gating**: the shim rewrite runs against the PR's own changes. If something's wrong, PR 2's gates fire wrong, and we may merge incorrectly. Mitigation: pre-flight verification — run `nx show projects --affected` locally against a fixture change in `vercel.cockpit.json` BEFORE pushing PR 2; verify `apps/cockpit` appears.
 - **`nx affected` cold startup**: 2-5s overhead on every CI run. Already analyzed; acceptable trade-off for the simpler classifier + dependency-graph correctness.
 
 ## Acceptance criteria
 
 - `scripts/ci-scope.mjs` is ≤80 LOC (down from 340).
-- Every CI-participating project has `scope:*` tags declaring its scope membership.
-- Every fallback file (vercel.*.json, scripts/*.ts, apps/cockpit/scripts/capability-registry.ts) is reachable via `implicitDependencies` on the correct project.
+- Every CI-participating project has `scope:*` tags declaring its scope membership. **(Shipped in PR #503.)**
+- Every fallback file (vercel.*.json, scripts/*.ts, apps/cockpit/scripts/capability-registry.ts) is reachable via per-project `namedInputs` referenced by a target's `inputs` on the correct project.
 - All existing `scripts/ci-scope.spec.mjs` scenarios pass under the new shape (with synthetic-affected-project test fixtures).
 - A PR that changes `vercel.json` triggers `website` + `website_e2e` gates (no other gates). (Smoke test on PR 2.)
 - A PR that changes `cockpit/chat/messages/python/src/graph.py` triggers `cockpit_e2e` + `cockpit_smoke` + `cockpit_examples` gates. (Smoke test on PR 2.)
 - A PR that changes `.github/workflows/ci.yml` triggers all gates (full scope short-circuit). (Smoke test on PR 2.)
 - No regression: every gate that fires for a file today fires the same way after migration.
 
-**End state**: ci-scope.mjs is a ~50-LOC shim; project.json files declare their CI participation via `scope:*` tags; fallback paths live as `implicitDependencies` next to the project they affect. New contributors discover scope membership by reading the project they're touching, not a centralized 340-LOC classifier.
+**End state**: ci-scope.mjs is a ~50-LOC shim; project.json files declare their CI participation via `scope:*` tags; fallback paths live as per-project `namedInputs` referenced by target `inputs` — Nx-native, not a centralized 340-LOC classifier.
