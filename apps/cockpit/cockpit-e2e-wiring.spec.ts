@@ -198,4 +198,47 @@ describe('cockpit e2e wiring', () => {
 
     expect(errors).toEqual([]);
   });
+
+  it('every cockpit cap project declares the expected scope:* tags', () => {
+    // Drift guard for the ci-scope thin-shim migration (PR #503/#507).
+    // The shim reads scope:* tags off projects nx considers affected to
+    // decide which CI gates to fire. A future contributor adding a new
+    // cap could silently forget the tags — their changes would
+    // underfire CI. This test catches that at build/test time.
+    const errors: string[] = [];
+
+    const capProjects = listProjectJsonFiles(join(repoRoot, 'cockpit'))
+      .filter((p) => !p.includes('/ag-ui/'))   // ag-ui has no python; out of scope
+      .filter((p) => p.includes('/angular/') || p.includes('/python/'))
+      .map((p) => ({
+        path: p,
+        project: JSON.parse(readFileSync(p, 'utf8')) as {
+          name?: string;
+          tags?: string[];
+          targets?: Record<string, unknown>;
+        },
+      }));
+
+    for (const { path: p, project } of capProjects) {
+      const tags = new Set(project.tags ?? []);
+      const relPath = relative(repoRoot, p);
+
+      // Every cap project (angular or python) must trigger cockpit_e2e
+      // + cockpit_examples.
+      for (const required of ['scope:cockpit-e2e', 'scope:cockpit-examples']) {
+        if (!tags.has(required)) {
+          errors.push(`${relPath}: missing required tag ${required}`);
+        }
+      }
+
+      // Python caps with a smoke target must also trigger cockpit_smoke.
+      if (p.includes('/python/') && project.targets?.['smoke']) {
+        if (!tags.has('scope:cockpit-smoke')) {
+          errors.push(`${relPath}: has smoke target but missing scope:cockpit-smoke`);
+        }
+      }
+    }
+
+    expect(errors).toEqual([]);
+  });
 });
