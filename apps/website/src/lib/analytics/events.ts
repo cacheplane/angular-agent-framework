@@ -20,6 +20,8 @@ export const analyticsEvents = {
   docsSidebarSectionToggle: 'docs:sidebar_section_toggle',
   blogCtaClick: 'blog:cta_click',
   blogCopyCodeClick: 'blog:copy_code_click',
+  marketingCheckoutStarted: 'marketing:checkout_started',
+  marketingCheckoutSucceeded: 'marketing:checkout_succeeded',
 } as const;
 
 export type AnalyticsEventName = (typeof analyticsEvents)[keyof typeof analyticsEvents];
