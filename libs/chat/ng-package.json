@@ -7,6 +7,11 @@
   "allowedNonPeerDependencies": ["@cacheplane/partial-json", "@cacheplane/partial-markdown"],
   "assets": [
     { "input": "src/lib/styles", "glob": "chat.css", "output": "." },
-    { "input": "src/themes", "glob": "*.css", "output": "themes" }
+    { "input": "src/themes", "glob": "*.css", "output": "themes" },
+    { "input": ".", "glob": "LICENSE.md", "output": "." },
+    { "input": ".", "glob": "LICENSE-COMMERCIAL.md", "output": "." },
+    { "input": ".", "glob": "COMMERCIAL-USE.md", "output": "." },
+    { "input": ".", "glob": "NOTICE.md", "output": "." },
+    { "input": ".", "glob": "CHANGELOG.md", "output": "." }
   ]
 }

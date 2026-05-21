@@ -25,7 +25,7 @@
     "rxjs": "~7.8.0",
     "marked": "^15.0.0 || ^16.0.0"
   },
-  "license": "MIT",
+  "license": "PolyForm-Noncommercial-1.0.0 OR LicenseRef-Threadplane-Commercial",
   "repository": {
     "type": "git",
     "url": "https://github.com/cacheplane/angular-agent-framework.git",
