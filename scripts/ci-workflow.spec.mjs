@@ -28,6 +28,22 @@ describe('CI workflow', () => {
     return workflow.slice(workflow.indexOf('  posthog-sync-plan:'));
   }
 
+  async function readCockpitE2eSummaryJob() {
+    const workflow = await readWorkflow();
+    return workflow.slice(
+      workflow.indexOf('  cockpit-e2e-summary:'),
+      workflow.indexOf('  website-e2e:')
+    );
+  }
+
+  async function readRequiredPrChecksJob() {
+    const workflow = await readWorkflow();
+    return workflow.slice(
+      workflow.indexOf('  required-pr-checks:'),
+      workflow.indexOf('  deploy:')
+    );
+  }
+
   async function readPostHogQualityWorkflow() {
     return readFile('.github/workflows/posthog-quality.yml', 'utf8');
   }
@@ -135,5 +151,61 @@ describe('CI workflow', () => {
         `${name} should set top-level DO_NOT_TRACK=1`
       );
     }
+  });
+
+  it('lets the cockpit e2e summary inspect CI scope outputs', async () => {
+    const cockpitE2eSummaryJob = await readCockpitE2eSummaryJob();
+
+    assert.match(cockpitE2eSummaryJob, /needs:\s*\[ci-scope,\s*cockpit-e2e\]/);
+    assert.match(cockpitE2eSummaryJob, /needs\.ci-scope\.outputs\.cockpit_e2e/);
+  });
+
+  it('provides one stable required PR check that waits for scoped CI jobs', async () => {
+    const requiredPrChecksJob = await readRequiredPrChecksJob();
+
+    assert.match(requiredPrChecksJob, /name:\s*CI — required/);
+    assert.match(
+      requiredPrChecksJob,
+      /if:\s*\$\{\{\s*always\(\)\s*&&\s*github\.event_name == 'pull_request'\s*\}\}/
+    );
+
+    for (const job of [
+      'ci-scope',
+      'library',
+      'website',
+      'cockpit',
+      'cockpit-examples-build',
+      'cockpit-smoke',
+      'cockpit-secret-integration',
+      'cockpit-deploy-smoke',
+      'examples-chat-smoke',
+      'examples-chat-e2e',
+      'cockpit-e2e-summary',
+      'website-e2e',
+      'posthog-sync-plan',
+    ]) {
+      assert.match(requiredPrChecksJob, new RegExp(`\\b${job}\\b`));
+    }
+
+    assert.match(
+      requiredPrChecksJob,
+      /RESULT_EXAMPLES_CHAT_E2E:\s*\$\{\{\s*needs\.examples-chat-e2e\.result\s*\}\}/
+    );
+    assert.match(
+      requiredPrChecksJob,
+      /SCOPE_EXAMPLES_CHAT:\s*\$\{\{\s*needs\.ci-scope\.outputs\.examples_chat\s*\}\}/
+    );
+    assert.match(
+      requiredPrChecksJob,
+      /require_scoped "examples_chat" "examples\/chat — e2e"/
+    );
+    assert.match(
+      requiredPrChecksJob,
+      /require_scoped "website_e2e" "Website — e2e"/
+    );
+    assert.match(
+      requiredPrChecksJob,
+      /require_scoped "cockpit_e2e" "Cockpit — e2e"/
+    );
   });
 });
