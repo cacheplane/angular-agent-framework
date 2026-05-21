@@ -259,4 +259,51 @@ describe('DemoShell — URL knob hydration', () => {
     const stored = raw ? JSON.parse(raw) : {};
     expect(stored.theme).toBeUndefined();
   });
+
+  it('drops default knob values from URL on change-to-default', async () => {
+    const router = TestBed.inject(Router);
+    await router.navigateByUrl('/embed?model=gpt-5-nano');
+    const fx = TestBed.createComponent(DemoShell);
+    fx.detectChanges();
+
+    const cmp = fx.componentInstance as unknown as {
+      onModelChange(v: string): void;
+    };
+    cmp.onModelChange('gpt-5-mini'); // default
+    fx.detectChanges();
+    await new Promise<void>((resolve) => setTimeout(resolve, 0));
+
+    expect(router.url).not.toContain('model=');
+  });
+
+  it('writes non-default knob values to URL on change', async () => {
+    const router = TestBed.inject(Router);
+    await router.navigateByUrl('/embed');
+    const fx = TestBed.createComponent(DemoShell);
+    fx.detectChanges();
+
+    const cmp = fx.componentInstance as unknown as {
+      onModelChange(v: string): void;
+    };
+    cmp.onModelChange('gpt-5-nano');
+    fx.detectChanges();
+    await new Promise<void>((resolve) => setTimeout(resolve, 0));
+
+    expect(router.url).toContain('model=gpt-5-nano');
+  });
+
+  it('user knob action persists to localStorage (regression guard)', async () => {
+    const router = TestBed.inject(Router);
+    await router.navigateByUrl('/embed');
+    const fx = TestBed.createComponent(DemoShell);
+    fx.detectChanges();
+
+    const cmp = fx.componentInstance as unknown as {
+      onThemeChange(v: string): void;
+    };
+    cmp.onThemeChange('material-dark');
+    const raw = localStorage.getItem('ngaf-chat-demo:palette');
+    const stored = raw ? JSON.parse(raw) : {};
+    expect(stored.theme).toBe('material-dark');
+  });
 });

@@ -438,6 +438,31 @@ export class DemoShell {
     void this.router.navigate(id ? ['/', next, id] : ['/', next]);
   }
 
+  /** Build the full knob → URL-value mapping. Default values become
+   *  null so Angular's router drops them from the resulting URL when
+   *  used with queryParamsHandling: 'merge'. */
+  private buildQueryParams(): Record<string, string | null> {
+    return {
+      model:   this.model()             === 'gpt-5-mini'    ? null : this.model(),
+      effort:  this.effort()            === 'minimal'       ? null : this.effort(),
+      genui:   this.genUiMode()         === 'a2ui'          ? null : this.genUiMode(),
+      theme:   this.theme()             === 'default-dark'  ? null : this.theme(),
+      color:   this.colorScheme()       === 'dark'          ? null : this.colorScheme(),
+      project: this.selectedProjectId() ?? null,
+    };
+  }
+
+  /** Signal → URL bridge for agent knobs. Called by each knob handler
+   *  after it sets its signal + persistence. Uses queryParamsHandling:
+   *  'merge' + replaceUrl so dropdown clicks don't pollute history. */
+  private writeKnobsToUrl(): void {
+    void this.router.navigate([], {
+      queryParams: this.buildQueryParams(),
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
+  }
+
   /** URL → signal bridge for agent knobs. Fires on every NavigationEnd
    *  via the constructor effect. Sets each knob signal to its URL value
    *  iff present and different. NEVER writes to persistence — that's
@@ -491,27 +516,32 @@ export class DemoShell {
   onModelChange(next: string): void {
     this.model.set(next);
     this.persistence.write('model', next);
+    this.writeKnobsToUrl();
   }
 
   protected onEffortChange(next: string): void {
     this.effort.set(next);
     this.persistence.write('effort', next);
+    this.writeKnobsToUrl();
   }
 
   protected onGenUiModeChange(next: string): void {
     this.genUiMode.set(next);
     this.persistence.write('genUiMode', next);
+    this.writeKnobsToUrl();
   }
 
   protected onThemeChange(next: string): void {
     this.theme.set(next);
     this.persistence.write('theme', next);
+    this.writeKnobsToUrl();
   }
 
   protected onColorSchemeChange(next: 'light' | 'dark' | string): void {
     if (next !== 'light' && next !== 'dark') return;
     this.colorScheme.set(next);
     this.persistence.write('colorScheme', next);
+    this.writeKnobsToUrl();
   }
 
   protected onSidenavOpenChange(next: boolean): void {
@@ -537,6 +567,7 @@ export class DemoShell {
   protected onProjectSelected(projectId: string): void {
     this.selectedProjectId.set(projectId);
     this.persistence.write('selectedProjectId', projectId);
+    this.writeKnobsToUrl();
   }
 
   protected onNewProjectClicked(): void {
