@@ -187,6 +187,26 @@ No library changes. No app.routes.ts changes. No palette-persistence.service.ts 
 3. **Mode switch preserves both thread + knobs** — From `/embed/<id>?model=gpt-5-nano`, click the Popup mode button → URL is `/popup/<id>?model=gpt-5-nano`.
 4. **Ephemeral hydration** — Open `/embed?theme=material-dark` in fresh context → close → reopen `/embed` (no query) → theme is back to default (NOT material-dark from a stale localStorage write).
 
+### Local Chrome MCP verification (manual, pre-merge)
+
+Before opening the PR, drive the running dev server with the `mcp__Claude_in_Chrome__*` tools to confirm the behavior in a real browser against a live LangGraph backend (not aimock). Catches regressions that pure-Playwright + aimock can miss (e.g. real `localStorage` write ordering, real router back/forward stacks, real theme repaint).
+
+Setup:
+```
+npx nx serve examples-chat-angular  # boots :4200 against shared-dev LangGraph
+```
+
+Verification steps (each uses `mcp__Claude_in_Chrome__navigate` + `mcp__Claude_in_Chrome__javascript_tool` for assertions):
+
+1. **Default URL stays clean.** Navigate to `http://localhost:4200/embed`. Assert `window.location.search === ''` (no spurious knob params on a default load).
+2. **Knob change writes to URL.** Open the Model dropdown, select `gpt-5-nano`. Assert URL becomes `/embed?model=gpt-5-nano`. Then select `gpt-5-mini` (default) → assert URL drops the `model=` param.
+3. **Deep-link sets the picker.** Navigate to `/embed?model=gpt-5-nano&theme=material-dark`. Read the model picker's selected option and the document's `data-theme` attribute; both should reflect the URL values.
+4. **Ephemeral hydration.** Clear localStorage. Navigate to `/embed?theme=material-dark`. Assert `JSON.parse(localStorage.getItem('ngaf-chat-demo:palette'))` does NOT contain `theme: 'material-dark'` — the URL hydrated the signal but did not write to storage.
+5. **User action persists.** With localStorage still clear, click the theme dropdown and select `material-dark` via the UI. Assert `JSON.parse(localStorage.getItem('ngaf-chat-demo:palette')).theme === 'material-dark'`.
+6. **Mode + knob preservation.** Navigate to `/embed/<seeded-thread-id>?model=gpt-5-nano`. Click the Popup mode segmented control. Assert URL is `/popup/<seeded-thread-id>?model=gpt-5-nano` (thread + knob both preserved). Use browser back; URL returns to `/embed/<id>?model=gpt-5-nano`.
+
+Each step is verified inline with `mcp__Claude_in_Chrome__javascript_tool` running a small assertion expression; failures stop the verification flow and feed back into the implementation loop.
+
 ## Out of scope
 
 - A visible "Copy link" UI button — the URL is the link, copy from address bar.
