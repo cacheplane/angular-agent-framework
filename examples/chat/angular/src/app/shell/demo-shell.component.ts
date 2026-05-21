@@ -133,6 +133,16 @@ export class DemoShell {
       }
     });
 
+    // URL → knob signals. Tracks urlState() so it re-fires on every
+    // NavigationEnd (mode changes, query-param-only navigations both
+    // emit). hydrateFromQuery is untracked-called because it reads
+    // every knob signal and we don't want this effect to retrigger
+    // itself when it writes them.
+    effect(() => {
+      void this.urlState();
+      untracked(() => this.hydrateFromQuery());
+    });
+
     // Validate URL thread ids whenever they appear. Decoupled from the
     // sync effect above: on initial load the signal is hydrated from
     // the URL synchronously (field initializer), so the sync guard
@@ -426,6 +436,42 @@ export class DemoShell {
     // /popup/abc keeps the conversation visible in the new chrome.
     const id = this.threadIdSignal();
     void this.router.navigate(id ? ['/', next, id] : ['/', next]);
+  }
+
+  /** URL → signal bridge for agent knobs. Fires on every NavigationEnd
+   *  via the constructor effect. Sets each knob signal to its URL value
+   *  iff present and different. NEVER writes to persistence — that's
+   *  the "ephemeral hydration" contract: shared links override signals
+   *  but don't clobber a recipient's localStorage. Explicit user
+   *  actions (onModelChange etc.) still persist via persistence.write.
+   *
+   *  Explicit per-knob blocks (not a typed loop) because `colorScheme`
+   *  is constrained to `'light' | 'dark'` — a generic loop would need
+   *  ugly casts or runtime any. */
+  private hydrateFromQuery(): void {
+    const params = new URL(this.router.url, 'http://x').searchParams;
+
+    const model = params.get('model');
+    if (model !== null && model !== this.model()) this.model.set(model);
+
+    const effort = params.get('effort');
+    if (effort !== null && effort !== this.effort()) this.effort.set(effort);
+
+    const genui = params.get('genui');
+    if (genui !== null && genui !== this.genUiMode()) this.genUiMode.set(genui);
+
+    const theme = params.get('theme');
+    if (theme !== null && theme !== this.theme()) this.theme.set(theme);
+
+    const color = params.get('color');
+    if ((color === 'light' || color === 'dark') && color !== this.colorScheme()) {
+      this.colorScheme.set(color);
+    }
+
+    const project = params.get('project');
+    if (project !== null && project !== this.selectedProjectId()) {
+      this.selectedProjectId.set(project);
+    }
   }
 
   /** Silently redirect to the bare mode path when the URL's threadId
