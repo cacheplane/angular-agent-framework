@@ -222,7 +222,6 @@
     "//scripts/assemble-demo.ts",
     "//scripts/assemble-examples.ts",
     "//scripts/demo-middleware.ts",
-    "//scripts/deploy-smoke.ts",
     "//scripts/generate-shared-deployment-config.ts",
     "//scripts/langgraph-proxy.ts",
     "//scripts/rate-limit.ts",
