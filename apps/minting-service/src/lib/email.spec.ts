@@ -10,9 +10,9 @@ describe('renderLicenseEmail', () => {
       expiresAt: new Date('2027-04-20T00:00:00Z'),
     });
 
-    expect(out.text).toContain('-----BEGIN CACHEPLANE LICENSE-----');
+    expect(out.text).toContain('-----BEGIN THREADPLANE LICENSE-----');
     expect(out.text).toContain('PAYLOAD.SIG');
-    expect(out.text).toContain('-----END CACHEPLANE LICENSE-----');
+    expect(out.text).toContain('-----END THREADPLANE LICENSE-----');
   });
 
   it('subject includes tier and seat count with plural s for seats > 1', () => {
@@ -54,6 +54,6 @@ describe('renderLicenseEmail', () => {
     });
     expect(out.html).toContain('<pre');
     expect(out.html).toContain('PAYLOAD.SIG');
-    expect(out.html).toContain('BEGIN CACHEPLANE LICENSE');
+    expect(out.html).toContain('BEGIN THREADPLANE LICENSE');
   });
 });

@@ -19,7 +19,7 @@ Free under the PolyForm Noncommercial 1.0.0 license:
 
 ## Evaluation
 
-Commercial evaluation is free for 30 days. Commercial production deployment requires a paid Threadplane license.
+You may use `@ngaf/chat` commercially for 30 calendar days from your first commercial use as a good-faith evaluation. There is no telemetry or tracking — we trust you to count the days. After 30 days you must either purchase a ThreadPlane Commercial license or stop the commercial use. Continued commercial deployment beyond the evaluation window requires a paid ThreadPlane Commercial license.
 
 ## Learn more
 

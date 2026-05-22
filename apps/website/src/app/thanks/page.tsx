@@ -7,7 +7,7 @@ import { Button } from '../../components/ui/Button';
 import { createPageMetadata } from '../../lib/site-metadata';
 
 export const metadata = createPageMetadata({
-  title: 'Payment received — Threadplane',
+  title: 'Payment received — ThreadPlane',
   description: 'Your @ngaf/chat license token will be emailed shortly.',
   pathname: '/thanks',
   type: 'website',
@@ -57,8 +57,8 @@ export default function ThanksPage() {
             If you don't see the email within 10 minutes, check spam or contact us.
           </p>
           <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
-            <Button variant="primary" size="md" href="/docs/chat/getting-started/installation">
-              Installation docs
+            <Button variant="primary" size="md" href="/docs/licensing">
+              Installation & licensing
             </Button>
             <Button variant="ghost" size="md" href="/contact">
               Contact support

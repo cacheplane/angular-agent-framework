@@ -19,7 +19,7 @@ const ITEMS: readonly QA[] = [
   },
   {
     q: 'Can I use it at work?',
-    a: 'You can evaluate it at work for 30 days. Production use in a commercial product, internal tool, SaaS app, or client deliverable requires a commercial license.',
+    a: 'You can evaluate it at work for 30 calendar days from your first commercial use. After that, production use in a commercial product, internal tool, SaaS app, or client deliverable requires a ThreadPlane Commercial license. The eval window is good-faith — no telemetry, no registration.',
   },
   {
     q: 'Do my end users need licenses?',
@@ -27,7 +27,7 @@ const ITEMS: readonly QA[] = [
   },
   {
     q: 'Can I modify the source?',
-    a: 'Yes, for permitted noncommercial use under the PolyForm Noncommercial license, or for commercial production use under a paid Threadplane license.',
+    a: 'Yes, for permitted noncommercial use under the PolyForm Noncommercial license, or for commercial production use under a paid ThreadPlane Commercial license.',
   },
   {
     q: 'Can I redistribute it?',

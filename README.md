@@ -131,4 +131,4 @@ That's it. `chat.messages()` and `chat.status()` are Angular Signals. Bind them 
 
 Most libraries in this repository (`@ngaf/render`, `@ngaf/agent`, `@ngaf/langgraph`, `@ngaf/ag-ui`, `@ngaf/a2ui`, `@ngaf/licensing`, `@ngaf/telemetry`, `@ngaf/design-tokens`) are released under the **MIT License** — free for any use, including commercial, with attribution.
 
-**`@ngaf/chat`** is the exception. Future versions are licensed under **PolyForm Noncommercial 1.0.0 OR a Threadplane commercial license**. Historical npm releases remain MIT. See [`libs/chat/LICENSE.md`](./libs/chat/LICENSE.md), [`libs/chat/COMMERCIAL-USE.md`](./libs/chat/COMMERCIAL-USE.md), and [`COMMERCIAL.md`](./COMMERCIAL.md) for details.
+**`@ngaf/chat`** is the exception. It is dual-licensed under **PolyForm Noncommercial 1.0.0** for free noncommercial use, or a **ThreadPlane Commercial license** for production use inside a for-profit context. See [`libs/chat/LICENSE.md`](./libs/chat/LICENSE.md), [`libs/chat/COMMERCIAL-USE.md`](./libs/chat/COMMERCIAL-USE.md), [`COMMERCIAL.md`](./COMMERCIAL.md), and [threadplane.ai/docs/licensing](https://threadplane.ai/docs/licensing) for details.

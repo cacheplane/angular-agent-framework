@@ -13,7 +13,7 @@ import { createPageMetadata } from '../../lib/site-metadata';
 export const metadata = createPageMetadata({
   title: 'Pricing — Agent UI for Angular',
   description:
-    '@ngaf/chat is free for noncommercial use under PolyForm Noncommercial 1.0.0. Commercial production use requires a Threadplane license. Other libraries remain MIT.',
+    '@ngaf/chat is free for noncommercial use under PolyForm Noncommercial 1.0.0. Commercial production use requires a ThreadPlane Commercial license. Other libraries remain MIT.',
   pathname: '/pricing',
   type: 'website',
 });
@@ -67,7 +67,7 @@ export default function PricingPage() {
                 margin: 0,
               }}
             >
-              <code style={{ fontFamily: tokens.typography.fontMono }}>@ngaf/chat</code> is free for noncommercial use. Commercial production use requires a Threadplane license. Other libraries in the framework remain MIT.
+              <code style={{ fontFamily: tokens.typography.fontMono }}>@ngaf/chat</code> is free for noncommercial use. Commercial production use requires a ThreadPlane Commercial license. Other libraries in the framework remain MIT.
             </p>
           </div>
         </Container>
@@ -126,7 +126,7 @@ export default function PricingPage() {
       <Section surface="canvas">
         <Container>
           <SmallNote>
-            Because commercial use requires a license, <code style={{ fontFamily: tokens.typography.fontMono }}>@ngaf/chat</code> is source-available rather than OSI open source. Threadplane keeps ecosystem packages (<code style={{ fontFamily: tokens.typography.fontMono }}>@ngaf/render</code>, <code style={{ fontFamily: tokens.typography.fontMono }}>@ngaf/agent</code>, <code style={{ fontFamily: tokens.typography.fontMono }}>@ngaf/langgraph</code>, <code style={{ fontFamily: tokens.typography.fontMono }}>@ngaf/ag-ui</code>, <code style={{ fontFamily: tokens.typography.fontMono }}>@ngaf/a2ui</code>, <code style={{ fontFamily: tokens.typography.fontMono }}>@ngaf/licensing</code>, <code style={{ fontFamily: tokens.typography.fontMono }}>@ngaf/telemetry</code>, <code style={{ fontFamily: tokens.typography.fontMono }}>@ngaf/design-tokens</code>) permissively MIT-licensed.
+            Because commercial use requires a license, <code style={{ fontFamily: tokens.typography.fontMono }}>@ngaf/chat</code> is source-available rather than OSI open source. ThreadPlane keeps ecosystem packages (<code style={{ fontFamily: tokens.typography.fontMono }}>@ngaf/render</code>, <code style={{ fontFamily: tokens.typography.fontMono }}>@ngaf/agent</code>, <code style={{ fontFamily: tokens.typography.fontMono }}>@ngaf/langgraph</code>, <code style={{ fontFamily: tokens.typography.fontMono }}>@ngaf/ag-ui</code>, <code style={{ fontFamily: tokens.typography.fontMono }}>@ngaf/a2ui</code>, <code style={{ fontFamily: tokens.typography.fontMono }}>@ngaf/licensing</code>, <code style={{ fontFamily: tokens.typography.fontMono }}>@ngaf/telemetry</code>, <code style={{ fontFamily: tokens.typography.fontMono }}>@ngaf/design-tokens</code>) permissively MIT-licensed.
           </SmallNote>
         </Container>
       </Section>

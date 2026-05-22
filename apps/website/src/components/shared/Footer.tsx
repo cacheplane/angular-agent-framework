@@ -295,8 +295,8 @@ export function Footer() {
               onMouseLeave={(e) => (e.currentTarget.style.color = tokens.colors.textSecondary)}>
               npm Package
             </a>
-            <Link href="/pricing#faq" className="transition-colors" style={{ color: tokens.colors.textSecondary }}
-              onClick={() => trackFooterCta('Licensing', '/pricing#faq')}
+            <Link href="/docs/licensing" className="transition-colors" style={{ color: tokens.colors.textSecondary }}
+              onClick={() => trackFooterCta('Licensing', '/docs/licensing')}
               onMouseEnter={(e) => (e.currentTarget.style.color = tokens.colors.accent)}
               onMouseLeave={(e) => (e.currentTarget.style.color = tokens.colors.textSecondary)}>
               Licensing
@@ -310,9 +310,9 @@ export function Footer() {
           <span>&copy; {new Date().getFullYear()} Agent UI for Angular. All rights reserved.</span>
           <span>
             <Link
-              href="/pricing#faq"
+              href="/docs/licensing"
               className="transition-colors"
-              onClick={() => trackFooterCta('Licensing Bottom', '/pricing#faq')}
+              onClick={() => trackFooterCta('Licensing Bottom', '/docs/licensing')}
               onMouseEnter={(e) => (e.currentTarget.style.color = tokens.colors.accent)}
               onMouseLeave={(e) => (e.currentTarget.style.color = tokens.colors.textMuted)}
             >
