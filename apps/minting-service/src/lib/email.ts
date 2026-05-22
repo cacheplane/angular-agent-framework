@@ -101,3 +101,54 @@ export async function sendLicenseEmail(args: {
   }
   return { resendId: result.data.id };
 }
+
+export interface RevocationEmailVars {
+  tier: MintableTier;
+}
+
+export function renderRevocationEmail(vars: RevocationEmailVars): RenderedEmail {
+  const subject = `Your ThreadPlane license has been revoked`;
+
+  const text = `Your ThreadPlane ${vars.tier} license has been revoked because the
+underlying payment was refunded.
+
+The token previously delivered will fail signature checks at boot and
+@ngaf/chat will fall back to a noncommercial-use warning.
+
+If you believe this is in error, reply to this email.
+
+-- The ThreadPlane team
+`;
+
+  const html = `<p>Your ThreadPlane <strong>${escapeHtml(vars.tier)}</strong> license has been revoked because the underlying payment was refunded.</p>
+<p>The token previously delivered will fail signature checks at boot and <code>@ngaf/chat</code> will fall back to a noncommercial-use warning.</p>
+<p>If you believe this is in error, reply to this email.</p>
+<p>-- The ThreadPlane team</p>
+`;
+
+  return { subject, text, html };
+}
+
+export async function sendRevocationEmail(args: {
+  resendApiKey: string;
+  from: string;
+  to: string;
+  vars: RevocationEmailVars;
+}): Promise<{ resendId: string }> {
+  const resend = new Resend(args.resendApiKey);
+  const rendered = renderRevocationEmail(args.vars);
+  const result = await resend.emails.send({
+    from: args.from,
+    to: args.to,
+    subject: rendered.subject,
+    text: rendered.text,
+    html: rendered.html,
+  });
+  if (result.error) {
+    throw new Error(`Resend send failed: ${result.error.message}`);
+  }
+  if (!result.data?.id) {
+    throw new Error('Resend send returned no id');
+  }
+  return { resendId: result.data.id };
+}
