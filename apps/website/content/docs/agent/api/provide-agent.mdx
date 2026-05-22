@@ -1,6 +1,6 @@
 # provideAgent()
 
-`provideAgent()` registers global defaults for every `agent()` call in an Angular application. Call it once in `bootstrapApplication` or an `ApplicationConfig` when multiple agents share the same LangGraph API URL, transport, or license token.
+`provideAgent()` registers global defaults for every `agent()` call in an Angular application. Call it once in `bootstrapApplication` or an `ApplicationConfig` when multiple agents share the same LangGraph API URL or transport.
 
 Per-call options still win over provider defaults, so you can configure the common case globally and override individual agents when needed.
 
@@ -16,7 +16,6 @@ bootstrapApplication(AppComponent, {
   providers: [
     provideAgent({
       apiUrl: 'http://localhost:2024',
-      license: environment.ngafLicense,
       transport: environment.testMode
         ? new MockAgentTransport()
         : undefined,
@@ -31,7 +30,6 @@ bootstrapApplication(AppComponent, {
 |--------|------|-------------|
 | `apiUrl` | `string` | Default LangGraph Platform API base URL. Individual `agent()` calls may override it. |
 | `transport` | `AgentTransport` | Optional transport instance. Defaults to `FetchStreamTransport` when omitted. |
-| `license` | `string` | Optional signed license token. Development and noncommercial use can omit it. |
 
 ## Defaults and overrides
 

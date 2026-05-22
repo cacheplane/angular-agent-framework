@@ -1,17 +1,14 @@
 # Setup
 
-Most applications do not import `@ngaf/licensing` directly. Framework packages call `runLicenseCheck()` from their providers when you pass a license token.
+Most applications do not import `@ngaf/licensing` directly. `@ngaf/chat` calls `runLicenseCheck()` from `provideChat()` when you pass a license token.
 
-For example, higher-level packages expose a `license` option:
+For example, chat exposes a `license` option:
 
 ```ts
-provideAgent({
-  apiUrl: 'https://api.example.com',
-  license: environment.ngafLicense,
-});
+provideChat({ license: environment.ngafLicense });
 ```
 
-When no token is supplied, the licensing helper can evaluate the environment as `noncommercial` when the package passes `isNoncommercial: true`.
+When no token is supplied, the licensing helper can evaluate the environment as `noncommercial` when the caller passes `isNoncommercial: true`.
 
 ## Direct use
 

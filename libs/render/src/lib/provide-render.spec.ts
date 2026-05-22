@@ -5,18 +5,12 @@ import { Component } from '@angular/core';
 import { provideRender, RENDER_CONFIG } from './provide-render';
 import { defineAngularRegistry } from './define-angular-registry';
 import type { RenderConfig } from './render.types';
-import {
-  __resetRunLicenseCheckStateForTests,
-  __resetNagStateForTests,
-} from '@ngaf/licensing/testing';
 
 @Component({ selector: 'render-test-card', standalone: true, template: '<div>card</div>' })
 class TestCardComponent {}
 
 describe('provideRender', () => {
   beforeEach(() => {
-    __resetRunLicenseCheckStateForTests();
-    __resetNagStateForTests();
     globalThis.console.warn = vi.fn();
   });
 
@@ -40,19 +34,18 @@ describe('provideRender', () => {
     expect(config).toBeDefined();
   });
 
-  it('warns when license is missing in a production-like env', async () => {
+  it('does not perform license checks because @ngaf/render is MIT-licensed', async () => {
+    const legacyLicenseConfig = {
+      license: 'invalid-token',
+      __licenseEnvHint: { isNoncommercial: false },
+    } as unknown as RenderConfig;
+
     TestBed.configureTestingModule({
-      providers: [
-        provideRender({ __licenseEnvHint: { isNoncommercial: false } }),
-      ],
+      providers: [provideRender(legacyLicenseConfig)],
     });
     TestBed.inject(RENDER_CONFIG);
     await new Promise((r) => setTimeout(r, 0));
     const warn = globalThis.console.warn as ReturnType<typeof vi.fn>;
-    expect(
-      warn.mock.calls.some((c) =>
-        String(c[0]).includes('[threadplane] @ngaf/render'),
-      ),
-    ).toBe(true);
+    expect(warn).not.toHaveBeenCalled();
   });
 });
