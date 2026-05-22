@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import { describe, it, expect, vi } from 'vitest';
 import type Stripe from 'stripe';
-import { handleEvent, handleCheckoutCompleted, type HandlerDeps } from './handlers.js';
+import { handleEvent, handleCheckoutCompleted, handleChargeRefunded, type HandlerDeps } from './handlers.js';
 
 function makeDeps(overrides: Partial<HandlerDeps> = {}): HandlerDeps {
   return {
@@ -14,6 +14,7 @@ function makeDeps(overrides: Partial<HandlerDeps> = {}): HandlerDeps {
     revokeLicense: vi.fn(),
     mintToken: vi.fn().mockResolvedValue('mock.token'),
     sendLicenseEmail: vi.fn().mockResolvedValue({ resendId: 're_mock' }),
+    sendRevocationEmail: vi.fn().mockResolvedValue({ resendId: 're_revoke' }),
     privateKeyHex: 'a'.repeat(64),
     resendApiKey: 're_test',
     emailFrom: 'noreply@example.com',
@@ -171,6 +172,25 @@ describe('handleCheckoutCompleted', () => {
     await expect(handleCheckoutCompleted(session, deps)).rejects.toThrow(/customer_creation/);
   });
 
+  it('dispatches charge.refunded to handleChargeRefunded', async () => {
+    const charge = { id: 'ch_x', payment_intent: 'pi_test_123' } as Stripe.Charge;
+    const deps = makeDeps({
+      getLicense: vi.fn().mockResolvedValue({
+        customerEmail: 'buyer@example.com',
+        tier: 'indie',
+      }),
+      revokeLicense: vi.fn().mockResolvedValue({}),
+    });
+    await handleEvent(evt('charge.refunded', charge), deps);
+    expect(deps.revokeLicense).toHaveBeenCalledWith({} as never, 'pi_test_123');
+    expect(deps.sendRevocationEmail).toHaveBeenCalledWith(
+      expect.objectContaining({
+        to: 'buyer@example.com',
+        vars: { tier: 'indie' },
+      }),
+    );
+  });
+
   it('throws when the session has no customer email', async () => {
     const session = paymentSession({
       customer_details: { email: null } as Stripe.Checkout.Session.CustomerDetails,
@@ -182,5 +202,43 @@ describe('handleCheckoutCompleted', () => {
     } as unknown as Stripe;
     const deps = makeDeps({ stripe });
     await expect(handleCheckoutCompleted(session, deps)).rejects.toThrow(/no customer email/);
+  });
+});
+
+describe('handleChargeRefunded', () => {
+  const charge = (overrides: Partial<Stripe.Charge> = {}): Stripe.Charge =>
+    ({ id: 'ch_test', payment_intent: 'pi_test_123', ...overrides }) as Stripe.Charge;
+
+  it('revokes and emails when a license exists for the charge', async () => {
+    const deps = makeDeps({
+      getLicense: vi.fn().mockResolvedValue({
+        customerEmail: 'buyer@example.com',
+        tier: 'developer_seat',
+      }),
+      revokeLicense: vi.fn().mockResolvedValue({}),
+    });
+    await handleChargeRefunded(charge(), deps);
+    expect(deps.revokeLicense).toHaveBeenCalledWith({} as never, 'pi_test_123');
+    expect(deps.sendRevocationEmail).toHaveBeenCalledWith(
+      expect.objectContaining({
+        to: 'buyer@example.com',
+        vars: { tier: 'developer_seat' },
+      }),
+    );
+  });
+
+  it('no-ops when no license exists for the payment_intent', async () => {
+    const deps = makeDeps({
+      getLicense: vi.fn().mockResolvedValue(null),
+    });
+    await handleChargeRefunded(charge(), deps);
+    expect(deps.revokeLicense).not.toHaveBeenCalled();
+    expect(deps.sendRevocationEmail).not.toHaveBeenCalled();
+  });
+
+  it('no-ops when charge has no payment_intent', async () => {
+    const deps = makeDeps();
+    await handleChargeRefunded(charge({ payment_intent: null }), deps);
+    expect(deps.getLicense).not.toHaveBeenCalled();
   });
 });

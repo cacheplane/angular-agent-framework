@@ -6,7 +6,7 @@ import type {
   UpsertLicenseInput,
 } from '@ngaf/db';
 import type { MintInput } from './sign.js';
-import type { LicenseEmailVars } from './email.js';
+import type { LicenseEmailVars, RevocationEmailVars } from './email.js';
 import { extractTier, computeSeats } from './tier.js';
 
 /**
@@ -27,6 +27,12 @@ export interface HandlerDeps {
     to: string;
     vars: LicenseEmailVars;
   }) => Promise<{ resendId: string }>;
+  sendRevocationEmail: (args: {
+    resendApiKey: string;
+    from: string;
+    to: string;
+    vars: RevocationEmailVars;
+  }) => Promise<{ resendId: string }>;
   privateKeyHex: string;
   resendApiKey: string;
   emailFrom: string;
@@ -41,6 +47,9 @@ export async function handleEvent(event: Stripe.Event, deps: HandlerDeps): Promi
     switch (event.type) {
       case 'checkout.session.completed':
         await handleCheckoutCompleted(event.data.object as Stripe.Checkout.Session, deps);
+        break;
+      case 'charge.refunded':
+        await handleChargeRefunded(event.data.object as Stripe.Charge, deps);
         break;
       default:
         return;
@@ -119,5 +128,46 @@ export async function handleCheckoutCompleted(
     from: deps.emailFrom,
     to: email,
     vars: { tier, seats, token, expiresAt },
+  });
+}
+
+/**
+ * Handles a Stripe charge.refunded event by revoking the matching license
+ * and notifying the customer. Both partial and full refunds revoke; the
+ * heuristic is that any refund signals the customer wants out, and they
+ * can re-purchase if needed.
+ *
+ * Idempotent: re-runs on a refunded charge whose license is already
+ * revoked simply re-send the email; the DB row stays revoked.
+ */
+export async function handleChargeRefunded(
+  charge: Stripe.Charge,
+  deps: HandlerDeps,
+): Promise<void> {
+  const paymentId = typeof charge.payment_intent === 'string'
+    ? charge.payment_intent
+    : charge.payment_intent?.id;
+  if (!paymentId) {
+    console.log(`handleChargeRefunded: charge ${charge.id} has no payment_intent`);
+    return;
+  }
+
+  const existing = await deps.getLicense(deps.db, paymentId);
+  if (!existing) {
+    console.log(`handleChargeRefunded: no license for payment_intent ${paymentId}`);
+    return;
+  }
+
+  const revoked = await deps.revokeLicense(deps.db, paymentId);
+  if (!revoked) {
+    console.log(`handleChargeRefunded: revokeLicense returned null for ${paymentId}`);
+    return;
+  }
+
+  await deps.sendRevocationEmail({
+    resendApiKey: deps.resendApiKey,
+    from: deps.emailFrom,
+    to: existing.customerEmail,
+    vars: { tier: existing.tier as 'indie' | 'developer_seat' | 'app_deployment' },
   });
 }
