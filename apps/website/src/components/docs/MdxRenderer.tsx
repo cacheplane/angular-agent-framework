@@ -8,6 +8,7 @@ import { CodeGroup } from './mdx/CodeGroup';
 import { Pre } from './mdx/CodeBlock';
 import { FeatureChips } from './mdx/FeatureChips';
 import { ArchFlowDiagram } from './ArchFlowDiagram';
+import { AgUiArchDiagram } from './AgUiArchDiagram';
 import { type LibraryId } from '../../lib/docs-config';
 import rehypePrettyCode from 'rehype-pretty-code';
 import rehypeSlug from 'rehype-slug';
@@ -23,6 +24,7 @@ const mdxComponents = {
   CardGroup,
   CodeGroup,
   ArchFlowDiagram,
+  AgUiArchDiagram,
   FeatureChips,
   pre: Pre,
   table: ({ children, ...rest }: React.HTMLAttributes<HTMLTableElement>) => (
@@ -59,26 +61,24 @@ interface MdxRendererProps {
 
 export function MdxRenderer({ source, library, section, slug, title }: MdxRendererProps) {
   return (
-    <div className="flex-1 py-8 px-4 sm:px-6 md:px-12 md:max-w-3xl overflow-x-hidden">
-      <article className="docs-prose prose prose-slate max-w-none"
-        style={{
-          '--tw-prose-body': tokens.colors.textSecondary,
-          '--tw-prose-headings': tokens.colors.textPrimary,
-          '--tw-prose-code': tokens.colors.accent,
-          '--tw-prose-links': tokens.colors.accent,
-        } as React.CSSProperties}>
-        <MDXRemote
-          source={source}
-          components={mdxComponents}
-          options={{
-            mdxOptions: {
-              remarkPlugins: [remarkGfm],
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          rehypePlugins: [rehypeSlug, [rehypePrettyCode, rehypeOptions] as any],
-            },
-          }}
-        />
-      </article>
+    <div className="docs-prose prose prose-slate max-w-none"
+      style={{
+        '--tw-prose-body': tokens.colors.textSecondary,
+        '--tw-prose-headings': tokens.colors.textPrimary,
+        '--tw-prose-code': tokens.colors.accent,
+        '--tw-prose-links': tokens.colors.accent,
+      } as React.CSSProperties}>
+      <MDXRemote
+        source={source}
+        components={mdxComponents}
+        options={{
+          mdxOptions: {
+            remarkPlugins: [remarkGfm],
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        rehypePlugins: [rehypeSlug, [rehypePrettyCode, rehypeOptions] as any],
+          },
+        }}
+      />
     </div>
   );
 }

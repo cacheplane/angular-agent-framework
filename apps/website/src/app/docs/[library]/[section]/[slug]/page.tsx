@@ -74,13 +74,15 @@ export default async function DocsPage({ params }: DocsRouteProps) {
           <div className="px-6 md:px-12 pt-6">
             <DocsBreadcrumb library={library as LibraryId} section={section} slug={slug} title={doc.title} />
           </div>
-          <MdxRenderer
-            source={doc.content}
-            library={library as LibraryId}
-            section={section}
-            slug={slug}
-            title={doc.title}
-          />
+          <div className="flex-1 py-8 px-4 sm:px-6 md:px-12 md:max-w-3xl overflow-x-hidden">
+            <MdxRenderer
+              source={doc.content}
+              library={library as LibraryId}
+              section={section}
+              slug={slug}
+              title={doc.title}
+            />
+          </div>
           {section === 'api' && (() => {
             const entries = loadApiDocs(library);
             const nameMap = API_NAME_MAP[library] ?? {};
