@@ -235,6 +235,11 @@ jobs:
         with:
           python-version: '3.12'
       - run: npm ci
+      - name: Cache examples-chat python venv
+        uses: actions/cache@v4
+        with:
+          path: examples/chat/python/.venv
+          key: uv-venv-${{ runner.os }}-py3.12-${{ hashFiles('examples/chat/python/uv.lock') }}
       - working-directory: examples/chat/python
         run: uv sync
       - run: npx nx run examples-chat-python:smoke --skip-nx-cache
@@ -260,8 +265,20 @@ jobs:
         with:
           python-version: '3.12'
       - run: npm ci
+      - name: Cache examples-chat python venv
+        uses: actions/cache@v4
+        with:
+          path: examples/chat/python/.venv
+          key: uv-venv-${{ runner.os }}-py3.12-${{ hashFiles('examples/chat/python/uv.lock') }}
       - working-directory: examples/chat/python
         run: uv sync
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            playwright-${{ runner.os }}-
       - run: npx playwright install --with-deps chromium
       - run: npx nx e2e examples-chat-angular --skip-nx-cache -- --shard=${{ matrix.shard }}/4
       - name: Upload Playwright trace on failure
@@ -333,9 +350,21 @@ jobs:
         with:
           python-version: '3.12'
       - run: npm ci
+      - name: Cache cap python venv
+        uses: actions/cache@v4
+        with:
+          path: ${{ matrix.cap.python }}/.venv
+          key: uv-venv-${{ runner.os }}-py3.12-${{ matrix.cap.python }}-${{ hashFiles(format('{0}/uv.lock', matrix.cap.python)) }}
       - name: uv sync per-cap python
         working-directory: ${{ matrix.cap.python }}
         run: uv sync
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            playwright-${{ runner.os }}-
       - run: npx playwright install --with-deps chromium
       - name: nx e2e ${{ matrix.cap.angular }}
         run: npx nx e2e "${{ matrix.cap.angular }}" --skip-nx-cache
@@ -374,6 +403,13 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            playwright-${{ runner.os }}-
       - run: npx playwright install --with-deps chromium
       - run: npx nx e2e website --skip-nx-cache
 
@@ -598,6 +634,14 @@ jobs:
 
           echo "website=$website_changed" >> "$GITHUB_OUTPUT"
           echo "cockpit=$cockpit_changed" >> "$GITHUB_OUTPUT"
+      - name: Cache Playwright browsers
+        if: steps.affected.outputs.website == 'true'
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            playwright-${{ runner.os }}-
       - name: Install Playwright browsers
         if: steps.affected.outputs.website == 'true'
         run: npx playwright install --with-deps chromium
@@ -786,6 +830,13 @@ jobs:
         run: npx tsx scripts/verify-shared-deployment.ts
         env:
           LANGSMITH_API_KEY: ${{ secrets.LANGSMITH_API_KEY }}
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            playwright-${{ runner.os }}-
       - run: npx playwright install --with-deps chromium
       - name: Run production smoke tests
         run: npx playwright test apps/cockpit/e2e/production-smoke.spec.ts --reporter=list

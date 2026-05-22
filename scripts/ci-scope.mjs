@@ -18,8 +18,20 @@ const GLOBAL_CI_FILES = new Set([
   'nx.json',
   'tsconfig.json',
   'tsconfig.base.json',
+]);
+
+/** Files whose changes only affect linting (not builds, not e2e tests).
+ *  These flip the scopes that actually run `nx lint` (library, cockpit,
+ *  website, examples_chat) but do NOT trigger e2e/smoke/deploy jobs.
+ *  Avoids the ~50 CI-minute spike from a one-line lint-config tweak
+ *  re-running the 24-cap cockpit-e2e matrix. */
+const LINT_ONLY_FILES = new Set([
   'eslint.config.mjs',
 ]);
+
+/** Subset of SCOPE_KEYS that own jobs running `nx lint`. Flipped true
+ *  when a LINT_ONLY_FILES entry changes. */
+const LINT_SCOPE_KEYS = ['library', 'cockpit', 'website', 'examples_chat'];
 
 export function emptyScope() {
   return Object.fromEntries(SCOPE_KEYS.map((k) => [k, false]));
@@ -57,6 +69,9 @@ export function classifyFromAffected(changedFiles, affectedProjects) {
       const key = tagToScopeKey(tag);
       if (SCOPE_KEYS.includes(key)) scope[key] = true;
     }
+  }
+  if (changedFiles.some((f) => LINT_ONLY_FILES.has(f))) {
+    for (const key of LINT_SCOPE_KEYS) scope[key] = true;
   }
   return scope;
 }
