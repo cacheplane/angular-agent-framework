@@ -36,6 +36,36 @@ describe('classifyFromAffected — short-circuit', () => {
   });
 });
 
+describe('classifyFromAffected — lint-only files', () => {
+  it('eslint.config.mjs flips only lint-running scopes, NOT e2e/smoke/deploy', () => {
+    const scope = classifyFromAffected(['eslint.config.mjs'], []);
+    // Lint-running scopes: true
+    assert.equal(scope.library, true);
+    assert.equal(scope.cockpit, true);
+    assert.equal(scope.website, true);
+    assert.equal(scope.examples_chat, true);
+    // E2e / smoke / deploy / secret / posthog scopes: false
+    assert.equal(scope.website_e2e, false);
+    assert.equal(scope.cockpit_e2e, false);
+    assert.equal(scope.cockpit_smoke, false);
+    assert.equal(scope.cockpit_examples, false);
+    assert.equal(scope.cockpit_secret, false);
+    assert.equal(scope.cockpit_deploy_smoke, false);
+    assert.equal(scope.posthog, false);
+  });
+
+  it('eslint.config.mjs alongside an affected project still ORs in the project scopes', () => {
+    const scope = classifyFromAffected(
+      ['eslint.config.mjs', 'cockpit/chat/messages/python/src/graph.py'],
+      [{ name: 'cockpit-chat-messages-python', tags: ['scope:cockpit-e2e', 'scope:cockpit-examples', 'scope:cockpit-smoke'] }],
+    );
+    assert.equal(scope.library, true);
+    assert.equal(scope.cockpit_e2e, true);
+    assert.equal(scope.cockpit_examples, true);
+    assert.equal(scope.cockpit_smoke, true);
+  });
+});
+
 describe('classifyFromAffected — publishable lib broadcast', () => {
   it('publishable lib triggers library + website + website_e2e + cockpit_* + examples_chat', () => {
     const scope = classifyFromAffected(['libs/chat/src/foo.ts'], [
