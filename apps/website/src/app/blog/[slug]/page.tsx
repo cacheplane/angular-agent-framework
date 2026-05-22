@@ -48,7 +48,7 @@ function formatDate(iso: string): string {
 function readingTimeMin(markdown: string): number {
   const words = markdown
     .replace(/```[\s\S]*?```/g, '') // strip code fences (not real reading)
-    .replace(/[#*_`>\-]/g, ' ')
+    .replace(/[#*_`>-]/g, ' ')
     .split(/\s+/)
     .filter(Boolean).length;
   return Math.max(1, Math.round(words / 220));
