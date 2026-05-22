@@ -29,8 +29,16 @@ test('pricing page shows plan cards', async ({ page }) => {
 
 test('pricing page lead form validates required fields', async ({ page }) => {
   await page.goto('/pricing');
-  await page.click('button[type="submit"]');
-  await expect(page.locator('form').first()).toBeVisible();
+  // The pricing page also has Stripe-checkout submit buttons in
+  // PricingGrid; scope to the LeadForm's "Get in touch" button so this
+  // test exercises the lead form (not the checkout flow which would
+  // POST to /api/checkout/session and require Stripe to be configured).
+  const leadForm = page
+    .locator('form')
+    .filter({ has: page.getByRole('button', { name: /get in touch/i }) })
+    .first();
+  await leadForm.getByRole('button', { name: /get in touch/i }).click();
+  await expect(leadForm).toBeVisible();
 });
 
 test('contact page submits a lead payload and renders success state', async ({ page }) => {

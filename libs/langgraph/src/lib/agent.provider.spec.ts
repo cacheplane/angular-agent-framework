@@ -40,7 +40,7 @@ describe('provideAgent', () => {
     const token = await signLicense(
       {
         sub: 'cus_test',
-        tier: 'developer-seat',
+        tier: 'developer_seat',
         iat: 1_700_000_000,
         exp: 2_000_000_000,
         seats: 1,
