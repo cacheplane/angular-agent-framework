@@ -12,7 +12,7 @@ import {
 import { loadEnv } from '../src/lib/env.js';
 import { getStripe } from '../src/lib/stripe.js';
 import { mintToken } from '../src/lib/sign.js';
-import { sendLicenseEmail } from '../src/lib/email.js';
+import { sendLicenseEmail, sendRevocationEmail } from '../src/lib/email.js';
 import { handleEvent, type HandlerDeps } from '../src/lib/handlers.js';
 
 export const config = { api: { bodyParser: false } };
@@ -61,6 +61,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     revokeLicense,
     mintToken,
     sendLicenseEmail,
+    sendRevocationEmail,
     privateKeyHex: env.LICENSE_SIGNING_PRIVATE_KEY_HEX,
     resendApiKey: env.RESEND_API_KEY,
     emailFrom: env.EMAIL_FROM,
