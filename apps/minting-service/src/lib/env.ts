@@ -2,7 +2,7 @@
 const REQUIRED_VARS = [
   'STRIPE_SECRET_KEY',
   'STRIPE_WEBHOOK_SECRET',
-  'DATABASE_URL',
+  'MINTING_DATABASE_URL',
   'RESEND_API_KEY',
   'EMAIL_FROM',
   'LICENSE_SIGNING_PRIVATE_KEY_HEX',
@@ -32,7 +32,7 @@ export function loadEnv(): Env {
   return {
     STRIPE_SECRET_KEY: process.env['STRIPE_SECRET_KEY']!,
     STRIPE_WEBHOOK_SECRET: process.env['STRIPE_WEBHOOK_SECRET']!,
-    DATABASE_URL: process.env['DATABASE_URL']!,
+    DATABASE_URL: process.env['MINTING_DATABASE_URL']!,
     RESEND_API_KEY: process.env['RESEND_API_KEY']!,
     EMAIL_FROM: process.env['EMAIL_FROM']!,
     LICENSE_SIGNING_PRIVATE_KEY_HEX: keyHex,

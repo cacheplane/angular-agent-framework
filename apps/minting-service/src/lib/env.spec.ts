@@ -2,7 +2,7 @@
 const REQUIRED = {
   STRIPE_SECRET_KEY: 'sk_test_xxx',
   STRIPE_WEBHOOK_SECRET: 'whsec_xxx',
-  DATABASE_URL: 'postgres://u:p@h:5432/d',
+  MINTING_DATABASE_URL: 'postgres://u:p@h:5432/d',
   RESEND_API_KEY: 're_xxx',
   EMAIL_FROM: 'a@b.c',
   LICENSE_SIGNING_PRIVATE_KEY_HEX: 'a'.repeat(64),
@@ -31,9 +31,9 @@ describe('loadEnv', () => {
   });
 
   it('throws with a list of all missing vars', async () => {
-    setEnv({ ...REQUIRED, STRIPE_SECRET_KEY: undefined, DATABASE_URL: undefined });
+    setEnv({ ...REQUIRED, STRIPE_SECRET_KEY: undefined, MINTING_DATABASE_URL: undefined });
     const { loadEnv } = await import('./env.js');
-    expect(() => loadEnv()).toThrow(/STRIPE_SECRET_KEY.*DATABASE_URL|DATABASE_URL.*STRIPE_SECRET_KEY/);
+    expect(() => loadEnv()).toThrow(/STRIPE_SECRET_KEY.*MINTING_DATABASE_URL|MINTING_DATABASE_URL.*STRIPE_SECRET_KEY/);
   });
 
   it('throws when private key hex is the wrong length', async () => {
