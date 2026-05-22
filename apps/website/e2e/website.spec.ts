@@ -28,9 +28,19 @@ test('pricing page shows plan cards', async ({ page }) => {
 });
 
 test('pricing page lead form validates required fields', async ({ page }) => {
+  let checkoutCalled = false;
+  await page.route('**/api/checkout/session', async (route) => {
+    checkoutCalled = true;
+    await route.abort();
+  });
+
   await page.goto('/pricing');
-  await page.click('button[type="submit"]');
-  await expect(page.locator('form').first()).toBeVisible();
+  const leadForm = page.locator('#lead-form form');
+  await expect(leadForm).toBeVisible();
+  await leadForm.getByRole('button', { name: 'Get in touch' }).click();
+  await expect(leadForm).toBeVisible();
+  expect(checkoutCalled).toBe(false);
+  expect(await leadForm.evaluate((form) => (form as HTMLFormElement).checkValidity())).toBe(false);
 });
 
 test('contact page submits a lead payload and renders success state', async ({ page }) => {

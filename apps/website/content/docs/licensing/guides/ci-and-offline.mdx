@@ -12,13 +12,10 @@ For CI builds, treat the license token like any other secret:
 NGAF_LICENSE=... npm test
 ```
 
-Then pass it through the framework provider that owns the package you use.
+Then pass it through `provideChat()`.
 
 ```ts
-provideAgent({
-  apiUrl: process.env['LANGGRAPH_API_URL'],
-  license: process.env['NGAF_LICENSE'],
-});
+provideChat({ license: process.env['NGAF_LICENSE'] });
 ```
 
 If you call `runLicenseCheck()` directly, inject the current time only when you need deterministic tests:

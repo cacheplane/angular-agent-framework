@@ -1,13 +1,6 @@
 // SPDX-License-Identifier: MIT
 import { InjectionToken, Provider } from '@angular/core';
-import {
-  runLicenseCheck,
-  LICENSE_PUBLIC_KEY,
-  inferNoncommercial,
-} from '@ngaf/licensing';
 import { AgentTransport } from './agent.types';
-
-const PACKAGE_NAME = '@ngaf/langgraph';
 
 /**
  * Global configuration for agent instances.
@@ -18,19 +11,6 @@ export interface AgentConfig {
   apiUrl?:    string;
   /** Custom transport implementation. Defaults to {@link FetchStreamTransport}. */
   transport?: AgentTransport;
-  /** Signed license token from threadplane.ai. Optional; omitted in dev. */
-  license?: string;
-  /**
-   * @internal
-   * Test-only env hint override. Not part of the stable API.
-   */
-  __licenseEnvHint?: { isNoncommercial: boolean };
-  /**
-   * @internal
-   * Test-only public-key override. Defaults to the compile-time embedded
-   * `LICENSE_PUBLIC_KEY`. Not part of the stable API.
-   */
-  __licensePublicKey?: Uint8Array;
 }
 
 export const AGENT_CONFIG = new InjectionToken<AgentConfig>('AGENT_CONFIG');
@@ -40,14 +20,5 @@ export const AGENT_CONFIG = new InjectionToken<AgentConfig>('AGENT_CONFIG');
  * agent instances in the application.
  */
 export function provideAgent(config: AgentConfig): Provider {
-  // Fire-and-forget license check. Never blocks DI resolution.
-  void runLicenseCheck({
-    package: PACKAGE_NAME,
-    token: config.license,
-    publicKey: config.__licensePublicKey ?? LICENSE_PUBLIC_KEY,
-    isNoncommercial:
-      config.__licenseEnvHint?.isNoncommercial ?? inferNoncommercial(),
-  });
-
   return { provide: AGENT_CONFIG, useValue: config };
 }
