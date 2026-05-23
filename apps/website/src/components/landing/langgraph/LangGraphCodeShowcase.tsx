@@ -34,7 +34,7 @@ const SNIPPETS = [
   { title: 'Full Configuration', code: SNIPPET_2, lang: 'typescript' },
 ];
 
-export async function AngularCodeShowcase() {
+export async function LangGraphCodeShowcase() {
   return (
     <section className="angular-code" style={{ padding: '80px 32px' }}>
       <style>{`@media (max-width: 767px) { .angular-code { padding: 60px 20px !important; } }`}</style>

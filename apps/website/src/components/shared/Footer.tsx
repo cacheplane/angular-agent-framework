@@ -225,6 +225,12 @@ export function Footer() {
               onMouseLeave={(e) => (e.currentTarget.style.color = tokens.colors.textSecondary)}>
               LangGraph
             </Link>
+            <Link href="/ag-ui" className="transition-colors" style={{ color: tokens.colors.textSecondary }}
+              onClick={() => trackFooterCta('AG-UI', '/ag-ui')}
+              onMouseEnter={(e) => (e.currentTarget.style.color = tokens.colors.accent)}
+              onMouseLeave={(e) => (e.currentTarget.style.color = tokens.colors.textSecondary)}>
+              AG-UI
+            </Link>
             <Link href="/render" className="transition-colors" style={{ color: tokens.colors.textSecondary }}
               onClick={() => trackFooterCta('Render', '/render')}
               onMouseEnter={(e) => (e.currentTarget.style.color = tokens.colors.accent)}
@@ -271,11 +277,11 @@ export function Footer() {
           {/* Resources column */}
           <div className="flex flex-col gap-2.5 text-sm">
             <Eyebrow tone="accent" style={{ marginBottom: 4 }}>Resources</Eyebrow>
-            <Link href="/docs" className="transition-colors" style={{ color: tokens.colors.textSecondary }}
-              onClick={() => trackFooterCta('Getting Started', '/docs')}
+            <Link href="/pilot-to-prod" className="transition-colors" style={{ color: tokens.colors.textSecondary }}
+              onClick={() => trackFooterCta('Pilot to Prod', '/pilot-to-prod')}
               onMouseEnter={(e) => (e.currentTarget.style.color = tokens.colors.accent)}
               onMouseLeave={(e) => (e.currentTarget.style.color = tokens.colors.textSecondary)}>
-              Getting Started
+              Pilot to Prod
             </Link>
             <Link href="/blog" className="transition-colors" style={{ color: tokens.colors.textSecondary }}
               onClick={() => trackFooterCta('Blog', '/blog')}

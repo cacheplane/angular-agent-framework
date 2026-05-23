@@ -8,7 +8,7 @@ import { BrowserFrame } from '../../components/ui/BrowserFrame';
 import { FeatureBlock } from '../../components/landing/FeatureBlock';
 import { WhitePaperBlock } from '../../components/landing/WhitePaperBlock';
 import { FinalCTA } from '../../components/landing/FinalCTA';
-import { AngularCodeShowcase } from '../../components/landing/angular/AngularCodeShowcase';
+import { LangGraphCodeShowcase } from '../../components/landing/langgraph/LangGraphCodeShowcase';
 import { createPageMetadata, SHORT_POSITIONING_DESCRIPTION } from '../../lib/site-metadata';
 
 export const metadata = createPageMetadata({
@@ -18,7 +18,7 @@ export const metadata = createPageMetadata({
   type: 'website',
 });
 
-export default async function AngularPage() {
+export default async function LangGraphPage() {
   return (
     <>
       {/* Hero */}
@@ -136,7 +136,7 @@ export class ChatComponent {
         ]}
         cta={{ label: 'Read the streaming guide', href: '/docs/agent/api/agent' }}
         visualLeft
-        visual={<AngularCodeShowcase />}
+        visual={<LangGraphCodeShowcase />}
       />
 
       <WhitePaperBlock paper="angular" />

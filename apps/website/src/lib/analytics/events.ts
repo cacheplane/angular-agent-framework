@@ -68,6 +68,8 @@ export type CtaId =
   // Footer licensing links
   | 'footer_licensing'
   | 'footer_licensing_bottom'
+  | 'footer_pilot_to_prod'
+  | 'footer_ag_ui'
   // Announcement toast
   | 'toast_get_guide'
   | 'toast_direct_download'
