@@ -45,26 +45,25 @@ const CTAS: Record<TierConfig['slug'], PlanCta> = {
 
 type CellValue = boolean | string;
 interface FeatureRow {
+  kind: 'feature';
   feature: string;
   cells: Record<TierConfig['slug'], CellValue>;
 }
+interface SectionHeader {
+  kind: 'section';
+  label: string;
+}
+type Row = FeatureRow | SectionHeader;
 
-const FEATURES: FeatureRow[] = [
+const FEATURES: Row[] = [
+  { kind: 'section', label: 'Licensing' },
   {
-    feature: 'License',
-    cells: {
-      community: 'PolyForm Noncommercial 1.0.0',
-      indie: 'ThreadPlane Commercial',
-      developer_seat: 'ThreadPlane Commercial',
-      app_deployment: 'ThreadPlane Commercial',
-      enterprise: 'ThreadPlane Commercial + custom',
-    },
-  },
-  {
-    feature: 'Commercial production use',
+    kind: 'feature',
+    feature: 'Commercial',
     cells: { community: false, indie: true, developer_seat: true, app_deployment: true, enterprise: true },
   },
   {
+    kind: 'feature',
     feature: 'Developers',
     cells: {
       community: 'Unlimited (noncommercial)',
@@ -75,6 +74,7 @@ const FEATURES: FeatureRow[] = [
     },
   },
   {
+    kind: 'feature',
     feature: 'Commercial apps',
     cells: {
       community: '—',
@@ -85,32 +85,81 @@ const FEATURES: FeatureRow[] = [
     },
   },
   {
+    kind: 'feature',
     feature: 'End users',
     cells: { community: 'Unlimited', indie: 'Unlimited', developer_seat: 'Unlimited', app_deployment: 'Unlimited', enterprise: 'Unlimited' },
   },
   {
-    feature: 'Dev · staging · prod',
-    cells: { community: false, indie: true, developer_seat: true, app_deployment: true, enterprise: true },
-  },
-  {
+    kind: 'feature',
     feature: '30-day commercial eval',
     cells: { community: true, indie: false, developer_seat: false, app_deployment: false, enterprise: false },
   },
   {
+    kind: 'feature',
     feature: 'Support',
-    cells: { community: 'Community', indie: 'Email', developer_seat: 'Email', app_deployment: 'Email', enterprise: 'Priority + private channel' },
+    cells: { community: 'Community', indie: 'Email', developer_seat: 'Email', app_deployment: 'Email', enterprise: 'Slack Connect' },
   },
   {
+    kind: 'feature',
     feature: 'SLA',
     cells: { community: false, indie: false, developer_seat: false, app_deployment: false, enterprise: true },
   },
   {
-    feature: 'Security review',
-    cells: { community: false, indie: false, developer_seat: false, app_deployment: false, enterprise: true },
+    kind: 'feature',
+    feature: 'Pilot-to-Prod',
+    cells: { community: false, indie: false, developer_seat: false, app_deployment: false, enterprise: 'Weekly 30-min check-in' },
+  },
+
+  { kind: 'section', label: 'What’s in the box' },
+  {
+    kind: 'feature',
+    feature: 'Headless chat primitives',
+    cells: { community: true, indie: true, developer_seat: true, app_deployment: true, enterprise: true },
   },
   {
-    feature: 'Pilot-to-Prod engagement',
-    cells: { community: false, indie: false, developer_seat: false, app_deployment: false, enterprise: 'Optional' },
+    kind: 'feature',
+    feature: 'Durable threads',
+    cells: { community: true, indie: true, developer_seat: true, app_deployment: true, enterprise: true },
+  },
+  {
+    kind: 'feature',
+    feature: 'Interrupts (human-in-the-loop)',
+    cells: { community: true, indie: true, developer_seat: true, app_deployment: true, enterprise: true },
+  },
+  {
+    kind: 'feature',
+    feature: 'Subagents + delegation',
+    cells: { community: true, indie: true, developer_seat: true, app_deployment: true, enterprise: true },
+  },
+  {
+    kind: 'feature',
+    feature: 'Planning + memory',
+    cells: { community: true, indie: true, developer_seat: true, app_deployment: true, enterprise: true },
+  },
+  {
+    kind: 'feature',
+    feature: 'Generative UI (json-render + A2UI)',
+    cells: { community: true, indie: true, developer_seat: true, app_deployment: true, enterprise: true },
+  },
+  {
+    kind: 'feature',
+    feature: 'Signal-based streaming',
+    cells: { community: true, indie: true, developer_seat: true, app_deployment: true, enterprise: true },
+  },
+  {
+    kind: 'feature',
+    feature: 'Citations + sources panel',
+    cells: { community: true, indie: true, developer_seat: true, app_deployment: true, enterprise: true },
+  },
+  {
+    kind: 'feature',
+    feature: 'LangGraph + AG-UI adapters',
+    cells: { community: true, indie: true, developer_seat: true, app_deployment: true, enterprise: true },
+  },
+  {
+    kind: 'feature',
+    feature: 'Theme presets (light/dark, Material 3)',
+    cells: { community: true, indie: true, developer_seat: true, app_deployment: true, enterprise: true },
   },
 ];
 
@@ -277,13 +326,12 @@ export function CompareTable() {
                   scope="row"
                   style={{
                     textAlign: 'left',
-                    padding: '0 18px 20px',
+                    padding: '0 18px 16px',
                     color: tokens.colors.textPrimary,
                     fontFamily: tokens.typography.fontSans,
                     fontSize: 13,
                     fontWeight: 600,
                     background: tokens.surfaces.surface,
-                    borderBottom: `1px solid ${tokens.surfaces.border}`,
                   }}
                 >
                   Price
@@ -293,9 +341,8 @@ export function CompareTable() {
                     key={tier.slug}
                     style={{
                       textAlign: 'center',
-                      padding: '0 14px 20px',
+                      padding: '0 14px 16px',
                       background: tier.highlight ? tokens.surfaces.surfaceTinted : tokens.surfaces.surface,
-                      borderBottom: `1px solid ${tokens.surfaces.border}`,
                     }}
                   >
                     <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: 4 }}>
@@ -325,42 +372,83 @@ export function CompareTable() {
                   </th>
                 ))}
               </tr>
-            </thead>
-            <tbody>
-              {FEATURES.map((row, i) => (
-                <tr
-                  key={row.feature}
-                  style={{
-                    borderBottom: i === FEATURES.length - 1 ? 'none' : `1px solid ${tokens.surfaces.border}`,
-                  }}
-                >
-                  <td
+              <tr>
+                <th style={{ padding: '0 18px 20px', background: tokens.surfaces.surface, borderBottom: `1px solid ${tokens.surfaces.border}` }} />
+                {TIERS.map((tier) => (
+                  <th
+                    key={tier.slug}
                     style={{
-                      padding: '14px 18px',
-                      color: tokens.colors.textPrimary,
-                      fontFamily: tokens.typography.fontSans,
-                      fontSize: 13,
-                      fontWeight: 500,
+                      padding: '0 14px 20px',
+                      textAlign: 'center',
+                      background: tier.highlight ? tokens.surfaces.surfaceTinted : tokens.surfaces.surface,
+                      borderBottom: `1px solid ${tokens.surfaces.border}`,
                     }}
                   >
-                    {row.feature}
-                  </td>
-                  {TIERS.map((tier) => (
+                    <PlanButton tier={tier} />
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {FEATURES.map((row, i) => {
+                if (row.kind === 'section') {
+                  return (
+                    <tr key={`section-${i}`}>
+                      <td
+                        colSpan={TIERS.length + 1}
+                        style={{
+                          padding: '20px 18px 8px',
+                          color: tokens.colors.textMuted,
+                          fontFamily: tokens.typography.fontMono,
+                          fontSize: 11,
+                          fontWeight: 700,
+                          letterSpacing: '0.08em',
+                          textTransform: 'uppercase',
+                          background: tokens.surfaces.surfaceTinted,
+                          borderTop: `1px solid ${tokens.surfaces.border}`,
+                          borderBottom: `1px solid ${tokens.surfaces.border}`,
+                        }}
+                      >
+                        {row.label}
+                      </td>
+                    </tr>
+                  );
+                }
+                return (
+                  <tr
+                    key={row.feature}
+                    style={{
+                      borderBottom: `1px solid ${tokens.surfaces.border}`,
+                    }}
+                  >
                     <td
-                      key={tier.slug}
                       style={{
-                        padding: '14px 14px',
-                        textAlign: 'center',
+                        padding: '14px 18px',
+                        color: tokens.colors.textPrimary,
                         fontFamily: tokens.typography.fontSans,
                         fontSize: 13,
-                        background: tier.highlight ? tokens.surfaces.surfaceTinted : 'transparent',
+                        fontWeight: 500,
                       }}
                     >
-                      {renderCell(row.cells[tier.slug])}
+                      {row.feature}
                     </td>
-                  ))}
-                </tr>
-              ))}
+                    {TIERS.map((tier) => (
+                      <td
+                        key={tier.slug}
+                        style={{
+                          padding: '14px 14px',
+                          textAlign: 'center',
+                          fontFamily: tokens.typography.fontSans,
+                          fontSize: 13,
+                          background: tier.highlight ? tokens.surfaces.surfaceTinted : 'transparent',
+                        }}
+                      >
+                        {renderCell(row.cells[tier.slug])}
+                      </td>
+                    ))}
+                  </tr>
+                );
+              })}
             </tbody>
             <tfoot>
               <tr>
