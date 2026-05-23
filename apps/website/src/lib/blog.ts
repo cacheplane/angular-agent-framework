@@ -98,3 +98,35 @@ export function getAllTags(): { tag: string; count: number }[] {
 export function getAllSlugs(): string[] {
   return getAllPosts().map((p) => p.slug);
 }
+
+/**
+ * Format an ISO date string (YYYY-MM-DD from frontmatter) as a human date.
+ *
+ * Parses as UTC midnight and formats with timeZone: 'UTC' so a date like
+ * '2026-05-21' never renders as 'May 20' for readers west of UTC.
+ */
+export function formatPostDate(iso: string): string {
+  const d = new Date(`${iso}T00:00:00Z`);
+  return d.toLocaleDateString('en-US', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+    timeZone: 'UTC',
+  });
+}
+
+/**
+ * Estimate reading time in minutes from a markdown source.
+ *
+ * Strips fenced code blocks (not real reading), normalizes markdown
+ * punctuation, counts whitespace-separated tokens, and divides by 220 wpm.
+ * Returns at least 1.
+ */
+export function readingTimeMin(markdown: string): number {
+  const words = markdown
+    .replace(/```[\s\S]*?```/g, '')
+    .replace(/[#*_`>-]/g, ' ')
+    .split(/\s+/)
+    .filter(Boolean).length;
+  return Math.max(1, Math.round(words / 220));
+}

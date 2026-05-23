@@ -6,7 +6,7 @@ import { DocsTOC } from '../../../components/docs/DocsTOC';
 import { AuthorByline } from '../../../components/blog/AuthorByline';
 import { TagChips } from '../../../components/blog/TagChips';
 import { Eyebrow } from '../../../components/ui/Eyebrow';
-import { getAllPosts, getPostBySlug } from '../../../lib/blog';
+import { getAllPosts, getPostBySlug, formatPostDate, readingTimeMin } from '../../../lib/blog';
 import { getAuthor } from '../../../lib/blog-authors';
 import { extractHeadings } from '../../../lib/extract-headings';
 import { createPageMetadata } from '../../../lib/site-metadata';
@@ -33,26 +33,6 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   });
 }
 
-function formatDate(iso: string): string {
-  // Parse YYYY-MM-DD as a date in UTC, then format using UTC parts to avoid
-  // timezone shifts (e.g. "2026-05-21" rendering as "May 20" west of UTC).
-  const d = new Date(`${iso}T00:00:00Z`);
-  return d.toLocaleDateString('en-US', {
-    month: 'long',
-    day: 'numeric',
-    year: 'numeric',
-    timeZone: 'UTC',
-  });
-}
-
-function readingTimeMin(markdown: string): number {
-  const words = markdown
-    .replace(/```[\s\S]*?```/g, '') // strip code fences (not real reading)
-    .replace(/[#*_`>-]/g, ' ')
-    .split(/\s+/)
-    .filter(Boolean).length;
-  return Math.max(1, Math.round(words / 220));
-}
 
 export default async function BlogPostPage({ params }: Params) {
   const { slug } = await params;
@@ -80,7 +60,7 @@ export default async function BlogPostPage({ params }: Params) {
       <article style={{ width: '100%', maxWidth: 768, padding: '64px 24px', flexShrink: 0 }}>
         <header style={{ marginBottom: 48 }}>
           <Eyebrow tone="accent" style={{ marginBottom: 24 }}>
-            {primaryTag} · {formatDate(post.frontmatter.date)} · {minutes} min read
+            {primaryTag} · {formatPostDate(post.frontmatter.date)} · {minutes} min read
           </Eyebrow>
           <h1
             style={{
