@@ -17,24 +17,6 @@ export const metadata = createPageMetadata({
   type: 'website',
 });
 
-function SmallNote({ children }: { children: React.ReactNode }) {
-  return (
-    <p
-      style={{
-        fontFamily: tokens.typography.body.family,
-        fontSize: 13,
-        lineHeight: 1.6,
-        color: tokens.colors.textMuted,
-        textAlign: 'center',
-        margin: '0 auto',
-        maxWidth: 720,
-      }}
-    >
-      {children}
-    </p>
-  );
-}
-
 export default function PricingPage() {
   return (
     <>
@@ -91,14 +73,6 @@ export default function PricingPage() {
       </Section>
 
       <PricingFAQ />
-
-      <Section surface="canvas">
-        <Container>
-          <SmallNote>
-            Because commercial use requires a license, <code style={{ fontFamily: tokens.typography.fontMono }}>@ngaf/chat</code> is source-available rather than OSI open source. ThreadPlane keeps ecosystem packages (<code style={{ fontFamily: tokens.typography.fontMono }}>@ngaf/render</code>, <code style={{ fontFamily: tokens.typography.fontMono }}>@ngaf/agent</code>, <code style={{ fontFamily: tokens.typography.fontMono }}>@ngaf/langgraph</code>, <code style={{ fontFamily: tokens.typography.fontMono }}>@ngaf/ag-ui</code>, <code style={{ fontFamily: tokens.typography.fontMono }}>@ngaf/a2ui</code>, <code style={{ fontFamily: tokens.typography.fontMono }}>@ngaf/licensing</code>, <code style={{ fontFamily: tokens.typography.fontMono }}>@ngaf/telemetry</code>, <code style={{ fontFamily: tokens.typography.fontMono }}>@ngaf/design-tokens</code>) permissively MIT-licensed.
-          </SmallNote>
-        </Container>
-      </Section>
 
       <LeadForm />
       <FinalCTA />

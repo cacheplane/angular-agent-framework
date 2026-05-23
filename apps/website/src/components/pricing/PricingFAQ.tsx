@@ -29,10 +29,6 @@ const ITEMS: FAQItem[] = [
     q: 'Can I redistribute it?',
     a: 'You may bundle it inside a larger licensed application. You may not redistribute it as a standalone package or as part of a competing component library, SDK, template kit, app builder, or design system.',
   },
-  {
-    q: 'What happens to older MIT versions?',
-    a: 'Versions previously released under MIT remain available under their original license terms. The new license applies only to future versions where the license change is introduced.',
-  },
 ];
 
 export function PricingFAQ() {
