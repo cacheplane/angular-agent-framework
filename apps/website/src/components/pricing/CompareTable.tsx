@@ -40,25 +40,16 @@ const CTAS: Record<TierConfig['slug'], PlanCta> = {
 
 type CellValue = boolean | string;
 interface FeatureRow {
-  kind: 'feature';
   feature: string;
   cells: Record<TierConfig['slug'], CellValue>;
 }
-interface SectionHeader {
-  kind: 'section';
-  label: string;
-}
-type Row = FeatureRow | SectionHeader;
 
-const FEATURES: Row[] = [
-  { kind: 'section', label: 'Licensing' },
+const LICENSING_ROWS: FeatureRow[] = [
   {
-    kind: 'feature',
     feature: 'Commercial',
     cells: { community: false, developer_seat: true, team: true, enterprise: true },
   },
   {
-    kind: 'feature',
     feature: 'Developers',
     cells: {
       community: 'Unlimited (noncommercial)',
@@ -68,79 +59,61 @@ const FEATURES: Row[] = [
     },
   },
   {
-    kind: 'feature',
-    feature: 'End users',
-    cells: { community: 'Unlimited', developer_seat: 'Unlimited', team: 'Unlimited', enterprise: 'Unlimited' },
-  },
-  {
-    kind: 'feature',
     feature: '30-day commercial eval',
     cells: { community: true, developer_seat: false, team: false, enterprise: false },
   },
   {
-    kind: 'feature',
     feature: 'Support',
-    cells: { community: 'Community', developer_seat: 'Email', team: 'Email', enterprise: 'Slack Connect' },
+    cells: { community: 'GitHub', developer_seat: 'GitHub', team: 'Email', enterprise: 'Slack Connect' },
   },
   {
-    kind: 'feature',
     feature: 'SLA',
     cells: { community: false, developer_seat: false, team: false, enterprise: true },
   },
   {
-    kind: 'feature',
     feature: 'Pilot-to-Prod',
     cells: { community: false, developer_seat: false, team: false, enterprise: 'Weekly 30-min check-in' },
   },
+];
 
-  { kind: 'section', label: 'What’s in the box' },
+const FEATURE_ROWS: FeatureRow[] = [
   {
-    kind: 'feature',
     feature: 'Headless chat primitives',
     cells: { community: true, developer_seat: true, team: true, enterprise: true },
   },
   {
-    kind: 'feature',
     feature: 'Durable threads',
     cells: { community: true, developer_seat: true, team: true, enterprise: true },
   },
   {
-    kind: 'feature',
     feature: 'Interrupts (human-in-the-loop)',
     cells: { community: true, developer_seat: true, team: true, enterprise: true },
   },
   {
-    kind: 'feature',
     feature: 'Subagents + delegation',
     cells: { community: true, developer_seat: true, team: true, enterprise: true },
   },
   {
-    kind: 'feature',
     feature: 'Planning + memory',
     cells: { community: true, developer_seat: true, team: true, enterprise: true },
   },
   {
-    kind: 'feature',
     feature: 'Generative UI (json-render + A2UI)',
     cells: { community: true, developer_seat: true, team: true, enterprise: true },
   },
   {
-    kind: 'feature',
     feature: 'Signal-based streaming',
     cells: { community: true, developer_seat: true, team: true, enterprise: true },
   },
   {
-    kind: 'feature',
     feature: 'Citations + sources panel',
     cells: { community: true, developer_seat: true, team: true, enterprise: true },
   },
   {
-    kind: 'feature',
     feature: 'LangGraph + AG-UI adapters',
     cells: { community: true, developer_seat: true, team: true, enterprise: true },
   },
   {
-    kind: 'feature',
     feature: 'Theme presets (light/dark, Material 3)',
     cells: { community: true, developer_seat: true, team: true, enterprise: true },
   },
@@ -207,114 +180,106 @@ function PlanButton({ tier }: { tier: TierConfig }) {
   );
 }
 
-export function CompareTable() {
+const LABEL_COL_WIDTH = '22%';
+
+function SectionTable({ title, rows, showPrice }: { title: string; rows: FeatureRow[]; showPrice: boolean }) {
   return (
-    <section
-      style={{
-        maxWidth: 1280,
-        margin: '0 auto',
-        padding: '32px 24px',
-      }}
-      aria-label="Pricing comparison"
-    >
-      <div style={{ overflowX: 'auto' }}>
-        <div
+    <div style={{ overflowX: 'auto' }}>
+      <div
+        style={{
+          background: tokens.surfaces.surface,
+          border: `1px solid ${tokens.surfaces.border}`,
+          borderRadius: tokens.radius.lg,
+          overflow: 'hidden',
+          minWidth: 960,
+        }}
+      >
+        <table
           style={{
-            background: tokens.surfaces.surface,
-            border: `1px solid ${tokens.surfaces.border}`,
-            borderRadius: tokens.radius.lg,
-            overflow: 'hidden',
-            minWidth: 960,
+            width: '100%',
+            borderCollapse: 'collapse',
+            fontFamily: tokens.typography.fontSans,
+            fontSize: 14,
           }}
         >
-          <table
-            style={{
-              width: '100%',
-              borderCollapse: 'collapse',
-              fontFamily: tokens.typography.fontSans,
-              fontSize: 14,
-            }}
-          >
-            <thead>
-              <tr>
+          <thead>
+            <tr>
+              <th
+                style={{
+                  textAlign: 'left',
+                  padding: '20px 18px 14px',
+                  color: tokens.colors.textMuted,
+                  fontFamily: tokens.typography.fontMono,
+                  fontSize: 11,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.08em',
+                  fontWeight: 600,
+                  width: LABEL_COL_WIDTH,
+                  background: tokens.surfaces.surface,
+                }}
+              >
+                {title}
+              </th>
+              {TIERS.map((tier) => (
                 <th
+                  key={tier.slug}
                   style={{
-                    textAlign: 'left',
-                    padding: '20px 18px 14px',
-                    color: tokens.colors.textMuted,
-                    fontFamily: tokens.typography.fontMono,
-                    fontSize: 11,
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.08em',
-                    fontWeight: 600,
-                    width: '22%',
-                    background: tokens.surfaces.surface,
+                    textAlign: 'center',
+                    padding: '20px 14px 14px',
+                    background: tier.highlight ? tokens.surfaces.surfaceTinted : tokens.surfaces.surface,
+                    position: 'relative',
                   }}
                 >
-                  Plan
-                </th>
-                {TIERS.map((tier) => {
-                  const isHighlight = tier.highlight;
-                  return (
-                    <th
-                      key={tier.slug}
+                  {tier.highlight && (
+                    <div
                       style={{
-                        textAlign: 'center',
-                        padding: '20px 14px 14px',
-                        background: isHighlight ? tokens.surfaces.surfaceTinted : tokens.surfaces.surface,
-                        borderBottom: 'none',
-                        position: 'relative',
+                        position: 'absolute',
+                        top: 6,
+                        left: '50%',
+                        transform: 'translateX(-50%)',
+                        background: tokens.colors.accent,
+                        color: '#fff',
+                        fontFamily: tokens.typography.fontSans,
+                        fontSize: 9,
+                        fontWeight: 700,
+                        letterSpacing: '0.08em',
+                        padding: '2px 8px',
+                        borderRadius: 999,
+                        whiteSpace: 'nowrap',
                       }}
                     >
-                      {isHighlight && (
-                        <div
-                          style={{
-                            position: 'absolute',
-                            top: 6,
-                            left: '50%',
-                            transform: 'translateX(-50%)',
-                            background: tokens.colors.accent,
-                            color: '#fff',
-                            fontFamily: tokens.typography.fontSans,
-                            fontSize: 9,
-                            fontWeight: 700,
-                            letterSpacing: '0.08em',
-                            padding: '2px 8px',
-                            borderRadius: 999,
-                            whiteSpace: 'nowrap',
-                          }}
-                        >
-                          MOST POPULAR
-                        </div>
-                      )}
-                      <div
-                        style={{
-                          fontFamily: tokens.typography.fontSans,
-                          color: tokens.colors.accent,
-                          fontSize: 11,
-                          fontWeight: 700,
-                          letterSpacing: '0.08em',
-                          textTransform: 'uppercase',
-                          marginTop: isHighlight ? 12 : 0,
-                        }}
-                      >
-                        {tier.name}
-                      </div>
-                    </th>
-                  );
-                })}
-              </tr>
+                      MOST POPULAR
+                    </div>
+                  )}
+                  <div
+                    style={{
+                      fontFamily: tokens.typography.fontSans,
+                      color: tokens.colors.accent,
+                      fontSize: 11,
+                      fontWeight: 700,
+                      letterSpacing: '0.08em',
+                      textTransform: 'uppercase',
+                      marginTop: tier.highlight ? 12 : 0,
+                    }}
+                  >
+                    {tier.name}
+                  </div>
+                </th>
+              ))}
+            </tr>
+            {showPrice && (
               <tr>
                 <th
                   scope="row"
                   style={{
                     textAlign: 'left',
-                    padding: '0 18px 16px',
+                    padding: '0 18px 20px',
                     color: tokens.colors.textPrimary,
                     fontFamily: tokens.typography.fontSans,
                     fontSize: 13,
                     fontWeight: 600,
                     background: tokens.surfaces.surface,
+                    borderBottom: `1px solid ${tokens.surfaces.border}`,
                   }}
                 >
                   Price
@@ -324,8 +289,9 @@ export function CompareTable() {
                     key={tier.slug}
                     style={{
                       textAlign: 'center',
-                      padding: '0 14px 16px',
+                      padding: '0 14px 20px',
                       background: tier.highlight ? tokens.surfaces.surfaceTinted : tokens.surfaces.surface,
+                      borderBottom: `1px solid ${tokens.surfaces.border}`,
                     }}
                   >
                     <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: 4 }}>
@@ -355,117 +321,123 @@ export function CompareTable() {
                   </th>
                 ))}
               </tr>
+            )}
+            {!showPrice && (
               <tr>
-                <th style={{ padding: '0 18px 20px', background: tokens.surfaces.surface, borderBottom: `1px solid ${tokens.surfaces.border}` }} />
+                <th
+                  style={{
+                    padding: '0 18px 12px',
+                    background: tokens.surfaces.surface,
+                    borderBottom: `1px solid ${tokens.surfaces.border}`,
+                  }}
+                />
                 {TIERS.map((tier) => (
                   <th
                     key={tier.slug}
                     style={{
-                      padding: '0 14px 20px',
-                      textAlign: 'center',
+                      padding: '0 14px 12px',
                       background: tier.highlight ? tokens.surfaces.surfaceTinted : tokens.surfaces.surface,
                       borderBottom: `1px solid ${tokens.surfaces.border}`,
                     }}
-                  >
-                    <PlanButton tier={tier} />
-                  </th>
+                  />
                 ))}
               </tr>
-            </thead>
-            <tbody>
-              {FEATURES.map((row, i) => {
-                if (row.kind === 'section') {
-                  return (
-                    <tr key={`section-${i}`}>
-                      <td
-                        colSpan={TIERS.length + 1}
-                        style={{
-                          padding: '20px 18px 8px',
-                          color: tokens.colors.textMuted,
-                          fontFamily: tokens.typography.fontMono,
-                          fontSize: 11,
-                          fontWeight: 700,
-                          letterSpacing: '0.08em',
-                          textTransform: 'uppercase',
-                          background: tokens.surfaces.surfaceTinted,
-                          borderTop: `1px solid ${tokens.surfaces.border}`,
-                          borderBottom: `1px solid ${tokens.surfaces.border}`,
-                        }}
-                      >
-                        {row.label}
-                      </td>
-                    </tr>
-                  );
-                }
-                return (
-                  <tr
-                    key={row.feature}
-                    style={{
-                      borderBottom: `1px solid ${tokens.surfaces.border}`,
-                    }}
-                  >
-                    <td
-                      style={{
-                        padding: '14px 18px',
-                        color: tokens.colors.textPrimary,
-                        fontFamily: tokens.typography.fontSans,
-                        fontSize: 13,
-                        fontWeight: 500,
-                      }}
-                    >
-                      {row.feature}
-                    </td>
-                    {TIERS.map((tier) => (
-                      <td
-                        key={tier.slug}
-                        style={{
-                          padding: '14px 14px',
-                          textAlign: 'center',
-                          fontFamily: tokens.typography.fontSans,
-                          fontSize: 13,
-                          background: tier.highlight ? tokens.surfaces.surfaceTinted : 'transparent',
-                        }}
-                      >
-                        {renderCell(row.cells[tier.slug])}
-                      </td>
-                    ))}
-                  </tr>
-                );
-              })}
-            </tbody>
-            <tfoot>
-              <tr>
-                <td style={{ padding: '20px 18px', background: tokens.surfaces.surface }} />
+            )}
+          </thead>
+          <tbody>
+            {rows.map((row, i) => (
+              <tr
+                key={row.feature}
+                style={{
+                  borderBottom: i === rows.length - 1 ? 'none' : `1px solid ${tokens.surfaces.border}`,
+                }}
+              >
+                <td
+                  style={{
+                    padding: '14px 18px',
+                    color: tokens.colors.textPrimary,
+                    fontFamily: tokens.typography.fontSans,
+                    fontSize: 13,
+                    fontWeight: 500,
+                  }}
+                >
+                  {row.feature}
+                </td>
                 {TIERS.map((tier) => (
                   <td
                     key={tier.slug}
                     style={{
-                      padding: '20px 14px',
+                      padding: '14px 14px',
                       textAlign: 'center',
-                      background: tier.highlight ? tokens.surfaces.surfaceTinted : tokens.surfaces.surface,
-                      borderTop: `1px solid ${tokens.surfaces.border}`,
+                      fontFamily: tokens.typography.fontSans,
+                      fontSize: 13,
+                      background: tier.highlight ? tokens.surfaces.surfaceTinted : 'transparent',
                     }}
                   >
-                    <PlanButton tier={tier} />
+                    {renderCell(row.cells[tier.slug])}
                   </td>
                 ))}
               </tr>
-            </tfoot>
-          </table>
-        </div>
+            ))}
+          </tbody>
+        </table>
       </div>
-      <p
-        style={{
-          textAlign: 'center',
-          fontFamily: tokens.typography.fontSans,
-          fontSize: 12,
-          color: tokens.colors.textMuted,
-          marginTop: 24,
-          marginBottom: 0,
-        }}
-      >
-        All paid tiers include the ThreadPlane Commercial license · One-time annual payment · 12-month validity
-      </p>
+    </div>
+  );
+}
+
+function CtaStrip() {
+  return (
+    <div
+      style={{
+        minWidth: 960,
+        margin: '24px 0 0',
+        display: 'grid',
+        gridTemplateColumns: `${LABEL_COL_WIDTH} repeat(${TIERS.length}, 1fr)`,
+        gap: 0,
+        alignItems: 'start',
+      }}
+    >
+      <div />
+      {TIERS.map((tier) => (
+        <div
+          key={tier.slug}
+          style={{
+            padding: '0 14px',
+            display: 'flex',
+            justifyContent: 'center',
+          }}
+        >
+          <div style={{ width: '100%', maxWidth: 220 }}>
+            <PlanButton tier={tier} />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export function CompareTable() {
+  return (
+    <section
+      style={{
+        maxWidth: 1280,
+        margin: '0 auto',
+        padding: '32px 24px',
+      }}
+      aria-label="Pricing comparison"
+    >
+      <SectionTable title="Licensing" rows={LICENSING_ROWS} showPrice />
+      <div style={{ overflowX: 'auto' }}>
+        <CtaStrip />
+      </div>
+
+      <div style={{ height: 56 }} />
+
+      <SectionTable title="What's in the box" rows={FEATURE_ROWS} showPrice={false} />
+      <div style={{ overflowX: 'auto' }}>
+        <CtaStrip />
+      </div>
     </section>
   );
 }
