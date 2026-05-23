@@ -1,17 +1,22 @@
 import Link from 'next/link';
 import { tokens } from '@ngaf/design-tokens';
 import type { Post } from '../../lib/blog';
+import { formatPostDate, readingTimeMin } from '../../lib/blog';
 
 export function PostCard({ post }: { post: Post }) {
-  const { slug, frontmatter } = post;
+  const { slug, frontmatter, content } = post;
+  const minutes = readingTimeMin(content);
+
   return (
     <Link
       href={`/blog/${slug}`}
+      data-ui="card"
+      data-hoverable
       style={{
         display: 'flex',
         flexDirection: 'column',
-        gap: 8,
-        padding: 20,
+        gap: 12,
+        padding: 24,
         borderRadius: 12,
         background: tokens.surfaces.surfaceTinted,
         border: `1px solid ${tokens.surfaces.border}`,
@@ -19,20 +24,42 @@ export function PostCard({ post }: { post: Post }) {
         textDecoration: 'none',
       }}
     >
-      <time
-        dateTime={frontmatter.date}
-        style={{ fontSize: 13, color: tokens.colors.textMuted }}
+      <span
+        style={{
+          fontFamily: tokens.typography.eyebrow.family,
+          fontSize: tokens.typography.eyebrow.size,
+          fontWeight: tokens.typography.eyebrow.weight,
+          letterSpacing: tokens.typography.eyebrow.letterSpacing,
+          textTransform: tokens.typography.eyebrow.transform,
+          color: tokens.colors.textMuted,
+        }}
       >
-        {frontmatter.date}
-      </time>
-      <h3 style={{ fontSize: 20, fontWeight: 600, margin: 0 }}>
+        {formatPostDate(frontmatter.date)} · {minutes} min read
+      </span>
+      <h3
+        style={{
+          fontFamily: tokens.typography.h3.family,
+          fontSize: tokens.typography.h3.size,
+          lineHeight: tokens.typography.h3.line,
+          fontWeight: tokens.typography.h3.weight,
+          letterSpacing: '-0.01em',
+          margin: 0,
+        }}
+      >
         {frontmatter.title}
       </h3>
-      <p style={{ fontSize: 14, color: tokens.colors.textSecondary, margin: 0 }}>
+      <p
+        style={{
+          fontSize: 15,
+          lineHeight: 1.55,
+          color: tokens.colors.textSecondary,
+          margin: 0,
+        }}
+      >
         {frontmatter.description}
       </p>
       {frontmatter.tags && frontmatter.tags.length > 0 ? (
-        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 8 }}>
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 4 }}>
           {frontmatter.tags.map((tag) => (
             <span
               key={tag}
