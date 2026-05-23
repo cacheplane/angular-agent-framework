@@ -21,6 +21,13 @@
       "port": 4300
     },
     {
+      "name": "ag-ui-streaming",
+      "runtimeExecutable": "/bin/bash",
+      "runtimeArgs": ["-c", "export PATH=/Users/blove/.nvm/versions/node/v22.14.0/bin:$PATH && npx nx serve cockpit-ag-ui-streaming-angular --port $PORT"],
+      "port": 4350,
+      "autoPort": true
+    },
+    {
       "name": "examples-chat",
       "runtimeExecutable": "/bin/bash",
       "runtimeArgs": ["-c", "export PATH=/Users/blove/.nvm/versions/node/v22.14.0/bin:$PATH && npx nx serve examples-chat-angular --port 4400"],
