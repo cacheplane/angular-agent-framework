@@ -108,6 +108,10 @@ const FEATURES: FeatureRow[] = [
     feature: 'Security review',
     cells: { community: false, indie: false, developer_seat: false, app_deployment: false, enterprise: true },
   },
+  {
+    feature: 'Pilot-to-Prod engagement',
+    cells: { community: false, indie: false, developer_seat: false, app_deployment: false, enterprise: 'Optional' },
+  },
 ];
 
 const Check = () => (
