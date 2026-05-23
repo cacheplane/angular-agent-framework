@@ -21,19 +21,14 @@ const CTAS: Record<TierConfig['slug'], PlanCta> = {
     ctaHref: 'https://www.npmjs.com/package/@ngaf/chat',
     ctaExternal: true,
   },
-  indie: {
-    cta: 'Buy Indie',
-    ctaId: 'pricing_tier_indie',
-    stripeBuyable: true,
-  },
   developer_seat: {
     cta: 'Get Developer Seat',
     ctaId: 'pricing_tier_developer_seat',
     stripeBuyable: true,
   },
-  app_deployment: {
-    cta: 'License an App',
-    ctaId: 'pricing_tier_app_deployment',
+  team: {
+    cta: 'Get Team',
+    ctaId: 'pricing_tier_team',
     stripeBuyable: true,
   },
   enterprise: {
@@ -60,106 +55,94 @@ const FEATURES: Row[] = [
   {
     kind: 'feature',
     feature: 'Commercial',
-    cells: { community: false, indie: true, developer_seat: true, app_deployment: true, enterprise: true },
+    cells: { community: false, developer_seat: true, team: true, enterprise: true },
   },
   {
     kind: 'feature',
     feature: 'Developers',
     cells: {
       community: 'Unlimited (noncommercial)',
-      indie: '1',
       developer_seat: 'Per seat',
-      app_deployment: 'Unlimited',
+      team: '5 included',
       enterprise: 'Unlimited',
     },
   },
   {
     kind: 'feature',
-    feature: 'Commercial apps',
-    cells: {
-      community: '—',
-      indie: '1',
-      developer_seat: 'Unlimited (org-owned)',
-      app_deployment: '1',
-      enterprise: 'Multi-app',
-    },
-  },
-  {
-    kind: 'feature',
     feature: 'End users',
-    cells: { community: 'Unlimited', indie: 'Unlimited', developer_seat: 'Unlimited', app_deployment: 'Unlimited', enterprise: 'Unlimited' },
+    cells: { community: 'Unlimited', developer_seat: 'Unlimited', team: 'Unlimited', enterprise: 'Unlimited' },
   },
   {
     kind: 'feature',
     feature: '30-day commercial eval',
-    cells: { community: true, indie: false, developer_seat: false, app_deployment: false, enterprise: false },
+    cells: { community: true, developer_seat: false, team: false, enterprise: false },
   },
   {
     kind: 'feature',
     feature: 'Support',
-    cells: { community: 'Community', indie: 'Email', developer_seat: 'Email', app_deployment: 'Email', enterprise: 'Slack Connect' },
+    cells: { community: 'Community', developer_seat: 'Email', team: 'Email', enterprise: 'Slack Connect' },
   },
   {
     kind: 'feature',
     feature: 'SLA',
-    cells: { community: false, indie: false, developer_seat: false, app_deployment: false, enterprise: true },
+    cells: { community: false, developer_seat: false, team: false, enterprise: true },
   },
   {
     kind: 'feature',
     feature: 'Pilot-to-Prod',
-    cells: { community: false, indie: false, developer_seat: false, app_deployment: false, enterprise: 'Weekly 30-min check-in' },
+    cells: { community: false, developer_seat: false, team: false, enterprise: 'Weekly 30-min check-in' },
   },
 
   { kind: 'section', label: 'What’s in the box' },
   {
     kind: 'feature',
     feature: 'Headless chat primitives',
-    cells: { community: true, indie: true, developer_seat: true, app_deployment: true, enterprise: true },
+    cells: { community: true, developer_seat: true, team: true, enterprise: true },
   },
   {
     kind: 'feature',
     feature: 'Durable threads',
-    cells: { community: true, indie: true, developer_seat: true, app_deployment: true, enterprise: true },
+    cells: { community: true, developer_seat: true, team: true, enterprise: true },
   },
   {
     kind: 'feature',
     feature: 'Interrupts (human-in-the-loop)',
-    cells: { community: true, indie: true, developer_seat: true, app_deployment: true, enterprise: true },
+    cells: { community: true, developer_seat: true, team: true, enterprise: true },
   },
   {
     kind: 'feature',
     feature: 'Subagents + delegation',
-    cells: { community: true, indie: true, developer_seat: true, app_deployment: true, enterprise: true },
+    cells: { community: true, developer_seat: true, team: true, enterprise: true },
   },
   {
     kind: 'feature',
     feature: 'Planning + memory',
-    cells: { community: true, indie: true, developer_seat: true, app_deployment: true, enterprise: true },
+    cells: { community: true, developer_seat: true, team: true, enterprise: true },
   },
   {
     kind: 'feature',
     feature: 'Generative UI (json-render + A2UI)',
-    cells: { community: true, indie: true, developer_seat: true, app_deployment: true, enterprise: true },
+    cells: { community: true, developer_seat: true, team: true, enterprise: true },
   },
   {
     kind: 'feature',
     feature: 'Signal-based streaming',
-    cells: { community: true, indie: true, developer_seat: true, app_deployment: true, enterprise: true },
+    cells: { community: true, developer_seat: true, team: true, enterprise: true },
   },
   {
     kind: 'feature',
     feature: 'Citations + sources panel',
-    cells: { community: true, indie: true, developer_seat: true, app_deployment: true, enterprise: true },
+    cells: { community: true, developer_seat: true, team: true, enterprise: true },
   },
   {
     kind: 'feature',
     feature: 'LangGraph + AG-UI adapters',
-    cells: { community: true, indie: true, developer_seat: true, app_deployment: true, enterprise: true },
+    cells: { community: true, developer_seat: true, team: true, enterprise: true },
   },
   {
     kind: 'feature',
     feature: 'Theme presets (light/dark, Material 3)',
-    cells: { community: true, indie: true, developer_seat: true, app_deployment: true, enterprise: true },
+    cells: { community: true, developer_seat: true, team: true, enterprise: true },
   },
 ];
 

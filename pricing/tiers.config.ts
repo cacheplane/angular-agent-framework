@@ -2,7 +2,7 @@
 /**
  * Single source of truth for /pricing tier display and Stripe product sync.
  * Read by:
- *   - apps/website/src/components/pricing/PricingGrid.tsx (display)
+ *   - apps/website/src/components/pricing/CompareTable.tsx (display)
  *   - scripts/stripe/sync-products.ts (Stripe-side products + prices)
  *
  * Stripe products are identified by `metadata.ngaf_tier_slug = slug`. Never
@@ -10,9 +10,8 @@
  */
 export type TierSlug =
   | 'community'
-  | 'indie'
   | 'developer_seat'
-  | 'app_deployment'
+  | 'team'
   | 'enterprise';
 
 export interface TierConfig {
@@ -56,22 +55,6 @@ export const TIERS: readonly TierConfig[] = [
     highlight: false,
   },
   {
-    slug: 'indie',
-    name: 'Indie',
-    priceCents: 14900,
-    displayPrice: '$149',
-    displayPeriod: '/yr',
-    subtitle: 'one app · one dev',
-    features: [
-      '1 developer',
-      '1 commercial app',
-      'Unlimited end users',
-    ],
-    bestFor: 'Solo founders, indie SaaS',
-    stripeBuyable: true,
-    highlight: false,
-  },
-  {
     slug: 'developer_seat',
     name: 'Developer Seat',
     priceCents: 29900,
@@ -81,41 +64,41 @@ export const TIERS: readonly TierConfig[] = [
     features: [
       'Per developer seat',
       'Unlimited apps',
-      'Dev · staging · prod',
+      'Email support',
     ],
-    bestFor: 'Startups, in-house teams',
+    bestFor: 'Solo devs, growing teams',
     stripeBuyable: true,
-    highlight: true,
+    highlight: false,
     adjustableQuantity: true,
     defaultQuantity: 1,
   },
   {
-    slug: 'app_deployment',
-    name: 'App Deployment',
-    priceCents: 149900,
-    displayPrice: '$1,499',
-    displayPeriod: '/app/yr',
-    subtitle: 'per production app',
+    slug: 'team',
+    name: 'Team',
+    priceCents: 149500,
+    displayPrice: '$1,495',
+    displayPeriod: '/yr',
+    subtitle: '5 developer seats',
     features: [
-      'Unlimited developers',
-      '1 production app',
-      'Procurement-friendly',
+      '5 developer seats included',
+      'Unlimited apps',
+      'Single SKU, single renewal',
     ],
-    bestFor: 'Agencies, CI/CD-heavy teams',
+    bestFor: 'Procurement-friendly small teams',
     stripeBuyable: true,
-    highlight: false,
+    highlight: true,
   },
   {
     slug: 'enterprise',
     name: 'Enterprise',
     priceCents: null,
-    displayPrice: 'Custom',
-    displayPeriod: '',
+    displayPrice: 'From $4,000',
+    displayPeriod: '/mo',
     subtitle: 'annual contract',
     features: [
-      'Multi-app licensing',
-      'SLA + security review',
-      'Private support channel',
+      'Pilot-to-Prod engagement',
+      'Slack Connect support',
+      'SLA + private channel',
     ],
     bestFor: 'Procurement-led orgs',
     stripeBuyable: false,

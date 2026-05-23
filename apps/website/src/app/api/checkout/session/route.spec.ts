@@ -10,9 +10,8 @@ vi.mock('../../../../lib/stripe', () => ({
 
 vi.mock('../../../../../../../pricing/tiers.generated', () => ({
   STRIPE_PRICE_IDS: {
-    indie: 'price_test_indie',
     developer_seat: 'price_test_seat',
-    app_deployment: 'price_test_app',
+    team: 'price_test_team',
   },
 }));
 
@@ -47,17 +46,17 @@ describe('POST /api/checkout/session', () => {
     expect(res.status).toBe(400);
   });
 
-  it('returns 303 redirect to Stripe for indie', async () => {
-    const res = await POST(makeReq({ tier: 'indie' }));
+  it('returns 303 redirect to Stripe for developer_seat', async () => {
+    const res = await POST(makeReq({ tier: 'developer_seat' }));
     expect(res.status).toBe(303);
     expect(res.headers.get('location')).toBe('https://checkout.stripe.com/c/pay/cs_test_abc');
     expect(stripeCreate).toHaveBeenCalledTimes(1);
     const args = stripeCreate.mock.calls[0]?.[0];
     expect(args.mode).toBe('payment');
     expect(args.customer_creation).toBe('always');
-    expect(args.line_items[0].price).toBe('price_test_indie');
+    expect(args.line_items[0].price).toBe('price_test_seat');
     expect(args.line_items[0].quantity).toBe(1);
-    expect(args.metadata.ngaf_tier_slug).toBe('indie');
+    expect(args.metadata.ngaf_tier_slug).toBe('developer_seat');
   });
 
   it('enables adjustable_quantity only for developer_seat', async () => {
@@ -78,7 +77,7 @@ describe('POST /api/checkout/session', () => {
 
   it('returns 502 if Stripe returns no URL', async () => {
     stripeCreate.mockResolvedValueOnce({ url: null });
-    const res = await POST(makeReq({ tier: 'indie' }));
+    const res = await POST(makeReq({ tier: 'developer_seat' }));
     expect(res.status).toBe(502);
   });
 });

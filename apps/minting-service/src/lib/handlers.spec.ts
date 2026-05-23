@@ -39,7 +39,7 @@ function paymentSession(overrides: Partial<Stripe.Checkout.Session> = {}): Strip
         {
           quantity: 1,
           price: {
-            metadata: { ngaf_tier_slug: 'indie' },
+            metadata: { ngaf_tier_slug: 'developer_seat' },
           } as Stripe.Price,
         } as Stripe.LineItem,
       ],
@@ -110,7 +110,7 @@ describe('handleCheckoutCompleted', () => {
     expect(deps.mintToken).toHaveBeenCalledWith(
       expect.objectContaining({
         stripeCustomerId: 'cus_test_123',
-        tier: 'indie',
+        tier: 'developer_seat',
         seats: 1,
         expiresAt: expect.any(Date),
       }),
@@ -122,7 +122,7 @@ describe('handleCheckoutCompleted', () => {
         stripeCustomerId: 'cus_test_123',
         stripePaymentId: 'pi_test_123',
         customerEmail: 'buyer@example.com',
-        tier: 'indie',
+        tier: 'developer_seat',
         seats: 1,
         lastToken: 'mock.token',
       }),
@@ -131,7 +131,7 @@ describe('handleCheckoutCompleted', () => {
       expect.objectContaining({
         from: 'noreply@example.com',
         to: 'buyer@example.com',
-        vars: expect.objectContaining({ tier: 'indie', seats: 1, token: 'mock.token' }),
+        vars: expect.objectContaining({ tier: 'developer_seat', seats: 1, token: 'mock.token' }),
       }),
     );
   });
@@ -177,7 +177,7 @@ describe('handleCheckoutCompleted', () => {
     const deps = makeDeps({
       getLicense: vi.fn().mockResolvedValue({
         customerEmail: 'buyer@example.com',
-        tier: 'indie',
+        tier: 'developer_seat',
       }),
       revokeLicense: vi.fn().mockResolvedValue({}),
     });
@@ -186,7 +186,7 @@ describe('handleCheckoutCompleted', () => {
     expect(deps.sendRevocationEmail).toHaveBeenCalledWith(
       expect.objectContaining({
         to: 'buyer@example.com',
-        vars: { tier: 'indie' },
+        vars: { tier: 'developer_seat' },
       }),
     );
   });

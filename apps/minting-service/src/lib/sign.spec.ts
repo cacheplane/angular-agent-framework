@@ -42,7 +42,7 @@ describe('mintToken', () => {
       mintToken(
         {
           stripeCustomerId: 'cus_x',
-          tier: 'app_deployment',
+          tier: 'team',
           seats: 1,
           expiresAt: new Date('2027-01-01T00:00:00Z'),
         },

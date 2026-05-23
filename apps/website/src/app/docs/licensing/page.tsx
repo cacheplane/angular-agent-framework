@@ -208,34 +208,24 @@ export const appConfig: ApplicationConfig = {
                   <tr>
                     <th style={headerCellStyle}>Tier</th>
                     <th style={headerCellStyle}>Developers</th>
-                    <th style={headerCellStyle}>Commercial apps</th>
                     <th style={headerCellStyle}>Best for</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr>
-                    <td style={cellStyle}><strong style={{ color: tokens.colors.textPrimary }}>Indie</strong> — $149/yr</td>
-                    <td style={cellStyle}>1</td>
-                    <td style={cellStyle}>1</td>
-                    <td style={cellStyle}>Solo devs, single indie product</td>
-                  </tr>
-                  <tr>
                     <td style={cellStyle}><strong style={{ color: tokens.colors.textPrimary }}>Developer Seat</strong> — $299/dev/yr</td>
                     <td style={cellStyle}>Per seat</td>
-                    <td style={cellStyle}>Unlimited apps owned by your org</td>
-                    <td style={cellStyle}>Startups, growing teams</td>
+                    <td style={cellStyle}>Solo devs, growing teams</td>
                   </tr>
                   <tr>
-                    <td style={cellStyle}><strong style={{ color: tokens.colors.textPrimary }}>App Deployment</strong> — $1,499/app/yr</td>
-                    <td style={cellStyle}>Unlimited</td>
-                    <td style={cellStyle}>1 production app per license</td>
-                    <td style={cellStyle}>Agencies, CI/CD-heavy teams</td>
+                    <td style={cellStyle}><strong style={{ color: tokens.colors.textPrimary }}>Team</strong> — $1,495/yr</td>
+                    <td style={cellStyle}>5 seats included</td>
+                    <td style={cellStyle}>Small teams that want a single SKU and renewal</td>
                   </tr>
                   <tr>
-                    <td style={cellStyle}><strong style={{ color: tokens.colors.textPrimary }}>Enterprise</strong> — custom</td>
+                    <td style={cellStyle}><strong style={{ color: tokens.colors.textPrimary }}>Enterprise</strong> — from $4,000/mo</td>
                     <td style={cellStyle}>Custom</td>
-                    <td style={cellStyle}>Multi-app, custom terms</td>
-                    <td style={cellStyle}>Procurement, SLA, security review</td>
+                    <td style={cellStyle}>SLA, security review, Pilot-to-Prod engagement, Slack Connect</td>
                   </tr>
                 </tbody>
               </table>

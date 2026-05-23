@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 
 /** The tier a license grants. */
-export type LicenseTier = 'indie' | 'developer_seat' | 'app_deployment' | 'enterprise';
+export type LicenseTier = 'developer_seat' | 'team' | 'enterprise';
 
 /** Claims carried inside a signed license token. */
 export interface LicenseClaims {
@@ -52,9 +52,8 @@ function isLicenseClaims(value: unknown): value is LicenseClaims {
   const seats = v['seats'];
   return (
     typeof v['sub'] === 'string' &&
-    (tier === 'indie' ||
-      tier === 'developer_seat' ||
-      tier === 'app_deployment' ||
+    (tier === 'developer_seat' ||
+      tier === 'team' ||
       tier === 'enterprise') &&
     typeof v['iat'] === 'number' &&
     typeof v['exp'] === 'number' &&

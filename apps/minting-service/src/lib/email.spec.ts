@@ -27,12 +27,12 @@ describe('renderLicenseEmail', () => {
 
   it('subject uses singular seat for seats === 1', () => {
     const out = renderLicenseEmail({
-      tier: 'app_deployment',
+      tier: 'team',
       seats: 1,
       token: 't.s',
       expiresAt: new Date('2027-04-20T00:00:00Z'),
     });
-    expect(out.subject).toBe('Your ThreadPlane license — app_deployment (1 seat)');
+    expect(out.subject).toBe('Your ThreadPlane license — team (1 seat)');
   });
 
   it('includes ISO 8601 UTC expiry in text body', () => {

@@ -4,7 +4,7 @@ import { getStripe } from '../../../../lib/stripe';
 import { TIERS, type TierSlug } from '../../../../../../../pricing/tiers.config';
 import { STRIPE_PRICE_IDS } from '../../../../../../../pricing/tiers.generated';
 
-const BUYABLE_SLUGS = new Set<TierSlug>(['indie', 'developer_seat', 'app_deployment']);
+const BUYABLE_SLUGS = new Set<TierSlug>(['developer_seat', 'team']);
 
 interface RequestBody {
   tier?: string;

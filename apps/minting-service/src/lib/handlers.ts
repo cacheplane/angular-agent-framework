@@ -168,6 +168,6 @@ export async function handleChargeRefunded(
     resendApiKey: deps.resendApiKey,
     from: deps.emailFrom,
     to: existing.customerEmail,
-    vars: { tier: existing.tier as 'indie' | 'developer_seat' | 'app_deployment' },
+    vars: { tier: existing.tier as 'developer_seat' | 'team' },
   });
 }
