@@ -22,7 +22,7 @@ interface PageProps {
 }
 
 const LIBRARY_HREF: Record<string, string> = {
-  Agent: '/angular',
+  Agent: '/langgraph',
   Render: '/render',
   Chat: '/chat',
 };

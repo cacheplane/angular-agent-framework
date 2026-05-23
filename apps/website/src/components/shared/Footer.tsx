@@ -219,11 +219,11 @@ export function Footer() {
           {/* Libraries column */}
           <div className="flex flex-col gap-2.5 text-sm">
             <Eyebrow tone="accent" style={{ marginBottom: 4 }}>Libraries</Eyebrow>
-            <Link href="/angular" className="transition-colors" style={{ color: tokens.colors.textSecondary }}
-              onClick={() => trackFooterCta('Angular', '/angular')}
+            <Link href="/langgraph" className="transition-colors" style={{ color: tokens.colors.textSecondary }}
+              onClick={() => trackFooterCta('LangGraph', '/langgraph')}
               onMouseEnter={(e) => (e.currentTarget.style.color = tokens.colors.accent)}
               onMouseLeave={(e) => (e.currentTarget.style.color = tokens.colors.textSecondary)}>
-              Angular
+              LangGraph
             </Link>
             <Link href="/render" className="transition-colors" style={{ color: tokens.colors.textSecondary }}
               onClick={() => trackFooterCta('Render', '/render')}

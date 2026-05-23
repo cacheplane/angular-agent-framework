@@ -14,7 +14,7 @@ import { createPageMetadata, SHORT_POSITIONING_DESCRIPTION } from '../../lib/sit
 export const metadata = createPageMetadata({
   title: '@ngaf/langgraph — Agent UI for Angular',
   description: SHORT_POSITIONING_DESCRIPTION,
-  pathname: '/angular',
+  pathname: '/langgraph',
   type: 'website',
 });
 
