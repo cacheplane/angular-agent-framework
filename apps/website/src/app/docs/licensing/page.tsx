@@ -213,12 +213,12 @@ export const appConfig: ApplicationConfig = {
                 </thead>
                 <tbody>
                   <tr>
-                    <td style={cellStyle}><strong style={{ color: tokens.colors.textPrimary }}>Developer Seat</strong> — $299/dev/yr</td>
+                    <td style={cellStyle}><strong style={{ color: tokens.colors.textPrimary }}>Developer Seat</strong> — $29/dev/mo or $299/dev/yr</td>
                     <td style={cellStyle}>Per seat</td>
                     <td style={cellStyle}>Solo devs, growing teams</td>
                   </tr>
                   <tr>
-                    <td style={cellStyle}><strong style={{ color: tokens.colors.textPrimary }}>Team</strong> — $1,495/yr</td>
+                    <td style={cellStyle}><strong style={{ color: tokens.colors.textPrimary }}>Team</strong> — $149/mo or $1,495/yr</td>
                     <td style={cellStyle}>5 seats included</td>
                     <td style={cellStyle}>Small teams that want a single SKU and renewal</td>
                   </tr>
@@ -231,8 +231,8 @@ export const appConfig: ApplicationConfig = {
               </table>
             </div>
             <p style={{ ...bodyStyle, fontSize: 13, color: tokens.colors.textMuted }}>
-              Every license is valid for 12 months from the date of purchase. Renewal is a fresh annual purchase —
-              we don't auto-charge.
+              Paid tiers are recurring subscriptions. Annual saves ~15% vs monthly. Cancel anytime — the license
+              stays valid through the end of the current paid period.
             </p>
           </div>
         </Container>

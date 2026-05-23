@@ -1,10 +1,16 @@
 'use client';
 
+import { useState } from 'react';
 import { tokens } from '@ngaf/design-tokens';
 import { Button } from '../ui/Button';
 import { trackCtaClick } from '../../lib/analytics/client';
 import type { CtaId } from '../../lib/analytics/events';
-import { TIERS, type TierConfig } from '../../../../../pricing/tiers.config';
+import {
+  TIERS,
+  type TierConfig,
+  type BillingCycle,
+  annualDiscountPercent,
+} from '../../../../../pricing/tiers.config';
 
 interface PlanCta {
   readonly cta: string;
@@ -77,47 +83,21 @@ const LICENSING_ROWS: FeatureRow[] = [
 ];
 
 const FEATURE_ROWS: FeatureRow[] = [
-  {
-    feature: 'Headless chat primitives',
-    cells: { community: true, developer_seat: true, team: true, enterprise: true },
-  },
-  {
-    feature: 'Durable threads',
-    cells: { community: true, developer_seat: true, team: true, enterprise: true },
-  },
-  {
-    feature: 'Interrupts (human-in-the-loop)',
-    cells: { community: true, developer_seat: true, team: true, enterprise: true },
-  },
-  {
-    feature: 'Subagents + delegation',
-    cells: { community: true, developer_seat: true, team: true, enterprise: true },
-  },
-  {
-    feature: 'Planning + memory',
-    cells: { community: true, developer_seat: true, team: true, enterprise: true },
-  },
-  {
-    feature: 'Generative UI (json-render + A2UI)',
-    cells: { community: true, developer_seat: true, team: true, enterprise: true },
-  },
-  {
-    feature: 'Signal-based streaming',
-    cells: { community: true, developer_seat: true, team: true, enterprise: true },
-  },
-  {
-    feature: 'Citations + sources panel',
-    cells: { community: true, developer_seat: true, team: true, enterprise: true },
-  },
-  {
-    feature: 'LangGraph + AG-UI adapters',
-    cells: { community: true, developer_seat: true, team: true, enterprise: true },
-  },
-  {
-    feature: 'Theme presets (light/dark, Material 3)',
-    cells: { community: true, developer_seat: true, team: true, enterprise: true },
-  },
+  { feature: 'Headless chat primitives', cells: allInclusive() },
+  { feature: 'Durable threads', cells: allInclusive() },
+  { feature: 'Interrupts (human-in-the-loop)', cells: allInclusive() },
+  { feature: 'Subagents + delegation', cells: allInclusive() },
+  { feature: 'Planning + memory', cells: allInclusive() },
+  { feature: 'Generative UI (json-render + A2UI)', cells: allInclusive() },
+  { feature: 'Signal-based streaming', cells: allInclusive() },
+  { feature: 'Citations + sources panel', cells: allInclusive() },
+  { feature: 'LangGraph + AG-UI adapters', cells: allInclusive() },
+  { feature: 'Theme presets (light/dark, Material 3)', cells: allInclusive() },
 ];
+
+function allInclusive(): Record<TierConfig['slug'], CellValue> {
+  return { community: true, developer_seat: true, team: true, enterprise: true };
+}
 
 const Check = () => (
   <span style={{ color: tokens.colors.accent, fontWeight: 700 }} aria-label="included">✓</span>
@@ -132,7 +112,7 @@ function renderCell(value: CellValue): React.ReactNode {
   return <span style={{ color: tokens.colors.textSecondary }}>{value}</span>;
 }
 
-function PlanButton({ tier }: { tier: TierConfig }) {
+function PlanButton({ tier, cycle }: { tier: TierConfig; cycle: BillingCycle }) {
   const cta = CTAS[tier.slug];
   const variant = tier.highlight ? 'primary' : 'secondary';
   const common = {
@@ -144,6 +124,7 @@ function PlanButton({ tier }: { tier: TierConfig }) {
     return (
       <form action="/api/checkout/session" method="post">
         <input type="hidden" name="tier" value={tier.slug} />
+        <input type="hidden" name="billing_cycle" value={cycle} />
         <Button
           {...common}
           type="submit"
@@ -182,7 +163,78 @@ function PlanButton({ tier }: { tier: TierConfig }) {
 
 const LABEL_COL_WIDTH = '22%';
 
-function SectionTable({ title, rows, showPrice }: { title: string; rows: FeatureRow[]; showPrice: boolean }) {
+function BillingToggle({
+  cycle,
+  setCycle,
+  discountPct,
+}: {
+  cycle: BillingCycle;
+  setCycle: (c: BillingCycle) => void;
+  discountPct: number;
+}) {
+  const baseBtn = {
+    fontFamily: tokens.typography.fontSans,
+    fontSize: 13,
+    fontWeight: 600,
+    padding: '8px 16px',
+    border: 'none',
+    cursor: 'pointer',
+    transition: 'background 150ms ease, color 150ms ease',
+    background: 'transparent',
+    color: tokens.colors.textSecondary,
+    borderRadius: 999,
+  } as const;
+  const activeBtn = {
+    ...baseBtn,
+    background: tokens.colors.accent,
+    color: '#fff',
+  } as const;
+  return (
+    <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 32 }}>
+      <div
+        role="tablist"
+        aria-label="Billing cycle"
+        style={{
+          display: 'inline-flex',
+          padding: 4,
+          background: tokens.surfaces.surfaceTinted,
+          border: `1px solid ${tokens.surfaces.border}`,
+          borderRadius: 999,
+          gap: 4,
+        }}
+      >
+        <button
+          role="tab"
+          aria-selected={cycle === 'monthly'}
+          onClick={() => setCycle('monthly')}
+          style={cycle === 'monthly' ? activeBtn : baseBtn}
+        >
+          Monthly
+        </button>
+        <button
+          role="tab"
+          aria-selected={cycle === 'annual'}
+          onClick={() => setCycle('annual')}
+          style={cycle === 'annual' ? activeBtn : baseBtn}
+        >
+          Annual{discountPct > 0 ? ` — save ${discountPct}%` : ''}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function SectionTable({
+  title,
+  rows,
+  cycle,
+  showPrice,
+}: {
+  title: string;
+  rows: FeatureRow[];
+  cycle: BillingCycle;
+  showPrice: boolean;
+}) {
   return (
     <div style={{ overflowX: 'auto' }}>
       <div
@@ -267,7 +319,7 @@ function SectionTable({ title, rows, showPrice }: { title: string; rows: Feature
                 </th>
               ))}
             </tr>
-            {showPrice && (
+            {showPrice ? (
               <tr>
                 <th
                   scope="row"
@@ -284,45 +336,47 @@ function SectionTable({ title, rows, showPrice }: { title: string; rows: Feature
                 >
                   Price
                 </th>
-                {TIERS.map((tier) => (
-                  <th
-                    key={tier.slug}
-                    style={{
-                      textAlign: 'center',
-                      padding: '0 14px 20px',
-                      background: tier.highlight ? tokens.surfaces.surfaceTinted : tokens.surfaces.surface,
-                      borderBottom: `1px solid ${tokens.surfaces.border}`,
-                    }}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: 4 }}>
-                      <span
-                        style={{
-                          fontFamily: tokens.typography.fontSerif,
-                          fontWeight: 700,
-                          fontSize: 28,
-                          color: tokens.colors.textPrimary,
-                          lineHeight: 1,
-                        }}
-                      >
-                        {tier.displayPrice}
-                      </span>
-                      {tier.displayPeriod && (
+                {TIERS.map((tier) => {
+                  const p = tier.prices[cycle];
+                  return (
+                    <th
+                      key={tier.slug}
+                      style={{
+                        textAlign: 'center',
+                        padding: '0 14px 20px',
+                        background: tier.highlight ? tokens.surfaces.surfaceTinted : tokens.surfaces.surface,
+                        borderBottom: `1px solid ${tokens.surfaces.border}`,
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: 4 }}>
                         <span
                           style={{
-                            fontFamily: tokens.typography.fontSans,
-                            fontSize: 12,
-                            color: tokens.colors.textMuted,
+                            fontFamily: tokens.typography.fontSerif,
+                            fontWeight: 700,
+                            fontSize: 28,
+                            color: tokens.colors.textPrimary,
+                            lineHeight: 1,
                           }}
                         >
-                          {tier.displayPeriod}
+                          {p.display}
                         </span>
-                      )}
-                    </div>
-                  </th>
-                ))}
+                        {p.period && (
+                          <span
+                            style={{
+                              fontFamily: tokens.typography.fontSans,
+                              fontSize: 12,
+                              color: tokens.colors.textMuted,
+                            }}
+                          >
+                            {p.period}
+                          </span>
+                        )}
+                      </div>
+                    </th>
+                  );
+                })}
               </tr>
-            )}
-            {!showPrice && (
+            ) : (
               <tr>
                 <th
                   style={{
@@ -386,7 +440,7 @@ function SectionTable({ title, rows, showPrice }: { title: string; rows: Feature
   );
 }
 
-function CtaStrip() {
+function CtaStrip({ cycle }: { cycle: BillingCycle }) {
   return (
     <div
       style={{
@@ -409,7 +463,7 @@ function CtaStrip() {
           }}
         >
           <div style={{ width: '100%', maxWidth: 220 }}>
-            <PlanButton tier={tier} />
+            <PlanButton tier={tier} cycle={cycle} />
           </div>
         </div>
       ))}
@@ -418,6 +472,9 @@ function CtaStrip() {
 }
 
 export function CompareTable() {
+  const [cycle, setCycle] = useState<BillingCycle>('annual');
+  const discountPct = annualDiscountPercent();
+
   return (
     <section
       style={{
@@ -427,16 +484,18 @@ export function CompareTable() {
       }}
       aria-label="Pricing comparison"
     >
-      <SectionTable title="Licensing" rows={LICENSING_ROWS} showPrice />
+      <BillingToggle cycle={cycle} setCycle={setCycle} discountPct={discountPct} />
+
+      <SectionTable title="Licensing" rows={LICENSING_ROWS} cycle={cycle} showPrice />
       <div style={{ overflowX: 'auto' }}>
-        <CtaStrip />
+        <CtaStrip cycle={cycle} />
       </div>
 
       <div style={{ height: 56 }} />
 
-      <SectionTable title="What's in the box" rows={FEATURE_ROWS} showPrice={false} />
+      <SectionTable title="What's in the box" rows={FEATURE_ROWS} cycle={cycle} showPrice={false} />
       <div style={{ overflowX: 'auto' }}>
-        <CtaStrip />
+        <CtaStrip cycle={cycle} />
       </div>
     </section>
   );
