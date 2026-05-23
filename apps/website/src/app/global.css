@@ -53,7 +53,7 @@ html {
   padding: 1.25rem 1.5rem;
   border-radius: 0.75rem;
   border: 1px solid rgba(0, 0, 0, 0.1);
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
   overflow-x: auto;
   font-size: 0.8rem;
   line-height: 1.7;
@@ -102,8 +102,11 @@ html {
 .docs-prose h2 { font-size: 1.5rem; font-weight: 600; margin-top: 2.5rem; margin-bottom: 1rem; font-family: var(--font-garamond); }
 .docs-prose h3 { font-size: 1.25rem; font-weight: 600; margin-top: 2rem; margin-bottom: 0.75rem; font-family: var(--font-garamond); }
 .docs-prose p { line-height: 1.75; margin-bottom: 1.25rem; }
-.docs-prose ul, .docs-prose ol { margin-bottom: 1.25rem; }
+.docs-prose ul, .docs-prose ol { margin-bottom: 1.25rem; padding-left: 1.5rem; }
+.docs-prose ul { list-style: disc; }
+.docs-prose ol { list-style: decimal; }
 .docs-prose li { margin-bottom: 0.25rem; }
+.docs-prose li::marker { color: var(--color-text-muted, #555770); }
 
 .docs-table-scroll { max-width: 100%; overflow-x: auto; margin: 1.5rem 0; }
 .docs-prose table { width: 100%; border-collapse: collapse; font-size: 0.875rem; margin: 0; }
@@ -137,6 +140,24 @@ html {
   outline: none;
   box-shadow: var(--shadow-focus);
   border-radius: var(--radius-sm);
+}
+
+/* AG-UI architecture diagram */
+.ag-ui-arch-grid {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr auto 1fr;
+  align-items: stretch;
+  gap: 0;
+}
+@media (max-width: 720px) {
+  .ag-ui-arch-grid {
+    grid-template-columns: 1fr;
+  }
+  .ag-ui-arch-arrow {
+    transform: rotate(90deg);
+    padding: 12px 0;
+    margin: 4px auto;
+  }
 }
 
 /* Docs — readable column max-width */

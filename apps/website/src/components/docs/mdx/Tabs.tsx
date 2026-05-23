@@ -56,13 +56,8 @@ export function Tabs({ items, children }: { items?: string[]; children: React.Re
           </button>
         ))}
       </div>
-      {/* Tab body */}
-      <div style={{
-        background: tokens.surfaces.surface,
-        border: `1px solid ${tokens.surfaces.border}`,
-        borderTop: 'none',
-        borderRadius: `0 0 ${tokens.radius.md} ${tokens.radius.md}`,
-      }}>
+      {/* Tab body — no wrapper border/background; the inner code block owns its surface */}
+      <div>
         {tabs[active]}
       </div>
     </div>
