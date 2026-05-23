@@ -7,6 +7,7 @@ import {
   deleteProcessedEvent,
   upsertLicense,
   getLicense,
+  getLicensesByCustomerId,
   revokeLicense,
 } from '@ngaf/db';
 import { loadEnv } from '../src/lib/env.js';
@@ -58,6 +59,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     deleteProcessedEvent,
     upsertLicense,
     getLicense,
+    getLicensesByCustomerId,
     revokeLicense,
     mintToken,
     sendLicenseEmail,
