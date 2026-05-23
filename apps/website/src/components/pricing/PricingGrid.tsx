@@ -3,9 +3,7 @@
 import { tokens } from '@ngaf/design-tokens';
 import { Container } from '../ui/Container';
 import { Section } from '../ui/Section';
-import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
-import { Eyebrow } from '../ui/Eyebrow';
 import { trackCtaClick } from '../../lib/analytics/client';
 import type { CtaId } from '../../lib/analytics/events';
 import { TIERS, type TierConfig } from '../../../../../pricing/tiers.config';
@@ -28,22 +26,22 @@ const CTAS: Record<TierConfig['slug'], PlanCta> = {
     ctaExternal: true,
   },
   indie: {
-    cta: 'Buy indie license',
+    cta: 'Buy Indie',
     ctaId: 'pricing_tier_indie',
     stripeBuyable: true,
   },
   developer_seat: {
-    cta: 'Buy developer seat',
+    cta: 'Get Developer Seat',
     ctaId: 'pricing_tier_developer_seat',
     stripeBuyable: true,
   },
   app_deployment: {
-    cta: 'License an app',
+    cta: 'License an App',
     ctaId: 'pricing_tier_app_deployment',
     stripeBuyable: true,
   },
   enterprise: {
-    cta: 'Contact sales',
+    cta: 'Talk to Sales',
     ctaId: 'pricing_tier_enterprise',
     ctaHref: '/contact?source=pricing_tier_enterprise',
   },
@@ -56,57 +54,116 @@ export function PricingGrid() {
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
             gap: 16,
-            maxWidth: 1200,
+            maxWidth: 1280,
             margin: '0 auto',
+            alignItems: 'stretch',
           }}
         >
           {TIERS.map((tier) => {
             const cta = CTAS[tier.slug];
             return (
-              <Card
+              <article
                 key={tier.slug}
-                padding="lg"
-                surface={tier.highlight ? 'dim' : 'white'}
                 style={{
+                  position: 'relative',
                   display: 'flex',
                   flexDirection: 'column',
+                  background: tier.highlight ? tokens.surfaces.surfaceTinted : tokens.surfaces.surface,
                   border: tier.highlight
                     ? `2px solid ${tokens.colors.accent}`
                     : `1px solid ${tokens.surfaces.border}`,
+                  borderRadius: tokens.radius.lg,
+                  padding: '20px 18px 18px',
+                  boxShadow: tier.highlight
+                    ? '0 8px 24px rgba(37, 99, 235, 0.12)'
+                    : 'none',
                 }}
               >
-                <Eyebrow tone="accent" style={{ marginBottom: 12 }}>{tier.name}</Eyebrow>
-                <p
+                {tier.highlight && (
+                  <div
+                    style={{
+                      position: 'absolute',
+                      top: -12,
+                      left: '50%',
+                      transform: 'translateX(-50%)',
+                      background: tokens.colors.accent,
+                      color: '#fff',
+                      fontFamily: tokens.typography.fontSans,
+                      fontSize: 10,
+                      fontWeight: 700,
+                      letterSpacing: '0.08em',
+                      padding: '4px 12px',
+                      borderRadius: 999,
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    MOST POPULAR
+                  </div>
+                )}
+
+                <div
                   style={{
-                    fontFamily: tokens.typography.fontSerif,
+                    fontFamily: tokens.typography.fontSans,
+                    color: tokens.colors.accent,
+                    fontSize: 11,
                     fontWeight: 700,
-                    fontSize: 40,
-                    color: tokens.colors.textPrimary,
-                    lineHeight: 1,
-                    marginBottom: 4,
-                    marginTop: 0,
+                    letterSpacing: '0.08em',
+                    textTransform: 'uppercase',
                   }}
                 >
-                  {tier.displayPrice}
-                </p>
-                <p
+                  {tier.name}
+                </div>
+
+                <div
                   style={{
-                    fontFamily: tokens.typography.body.family,
-                    fontSize: 13,
-                    color: tokens.colors.textMuted,
-                    marginBottom: 16,
-                    marginTop: 0,
+                    display: 'flex',
+                    alignItems: 'baseline',
+                    gap: 4,
+                    marginTop: 10,
                   }}
                 >
-                  {tier.displayPeriod}
-                </p>
+                  <span
+                    style={{
+                      fontFamily: tokens.typography.fontSerif,
+                      fontWeight: 700,
+                      fontSize: 32,
+                      color: tokens.colors.textPrimary,
+                      lineHeight: 1,
+                    }}
+                  >
+                    {tier.displayPrice}
+                  </span>
+                  {tier.displayPeriod && (
+                    <span
+                      style={{
+                        fontFamily: tokens.typography.fontSans,
+                        fontSize: 13,
+                        color: tokens.colors.textMuted,
+                      }}
+                    >
+                      {tier.displayPeriod}
+                    </span>
+                  )}
+                </div>
+
+                <div
+                  style={{
+                    fontFamily: tokens.typography.fontSans,
+                    fontSize: 12,
+                    color: tokens.colors.textMuted,
+                    marginTop: 4,
+                  }}
+                >
+                  {tier.subtitle}
+                </div>
+
                 <ul
                   style={{
                     listStyle: 'none',
                     padding: 0,
-                    margin: '0 0 20px 0',
+                    margin: '16px 0 14px',
                     display: 'flex',
                     flexDirection: 'column',
                     gap: 8,
@@ -117,11 +174,11 @@ export function PricingGrid() {
                     <li
                       key={feature}
                       style={{
-                        fontFamily: tokens.typography.body.family,
-                        fontSize: 14,
+                        fontFamily: tokens.typography.fontSans,
+                        fontSize: 13,
                         lineHeight: 1.5,
                         color: tokens.colors.textSecondary,
-                        paddingLeft: 16,
+                        paddingLeft: 18,
                         position: 'relative',
                       }}
                     >
@@ -131,6 +188,7 @@ export function PricingGrid() {
                           position: 'absolute',
                           left: 0,
                           color: tokens.colors.accent,
+                          fontWeight: 700,
                         }}
                       >
                         ✓
@@ -139,6 +197,20 @@ export function PricingGrid() {
                     </li>
                   ))}
                 </ul>
+
+                <div
+                  style={{
+                    fontFamily: tokens.typography.fontSans,
+                    fontSize: 11,
+                    color: tokens.colors.textMuted,
+                    paddingTop: 12,
+                    marginBottom: 14,
+                    borderTop: `1px solid ${tokens.surfaces.border}`,
+                  }}
+                >
+                  Best for: {tier.bestFor}
+                </div>
+
                 {cta.stripeBuyable ? (
                   <form action="/api/checkout/session" method="post">
                     <input type="hidden" name="tier" value={tier.slug} />
@@ -173,14 +245,28 @@ export function PricingGrid() {
                         cta_text: cta.cta,
                       })
                     }
+                    style={{ width: '100%' }}
                   >
                     {cta.cta}
                   </Button>
                 )}
-              </Card>
+              </article>
             );
           })}
         </div>
+
+        <p
+          style={{
+            textAlign: 'center',
+            fontFamily: tokens.typography.fontSans,
+            fontSize: 12,
+            color: tokens.colors.textMuted,
+            marginTop: 24,
+            marginBottom: 0,
+          }}
+        >
+          All paid tiers include the ThreadPlane Commercial license · One-time annual payment · 12-month validity
+        </p>
       </Container>
     </Section>
   );

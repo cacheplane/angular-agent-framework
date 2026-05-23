@@ -21,8 +21,13 @@ export interface TierConfig {
   /** USD cents. null for free / custom. */
   readonly priceCents: number | null;
   readonly displayPrice: string;
+  /** Short suffix rendered inline after the price, e.g. "/dev/yr". */
   readonly displayPeriod: string;
+  /** Subtitle under the price; replaces the standalone period gray subline. */
+  readonly subtitle: string;
   readonly features: readonly string[];
+  /** Short one-liner shown in its own row below the features. */
+  readonly bestFor: string;
   /** false → community (npm), enterprise (sales). true → real Stripe product + price. */
   readonly stripeBuyable: boolean;
   /** Highlighted card in the PricingGrid. */
@@ -36,17 +41,17 @@ export interface TierConfig {
 export const TIERS: readonly TierConfig[] = [
   {
     slug: 'community',
-    name: 'Community / Noncommercial',
+    name: 'Community',
     priceCents: null,
     displayPrice: 'Free',
-    displayPeriod: 'forever',
+    displayPeriod: '',
+    subtitle: 'forever',
     features: [
-      'Personal, student, academic, nonprofit, demo',
+      'Personal, OSS, demos',
       'Source access',
-      'Noncommercial use',
-      'Commercial evaluation (30 days)',
-      'License: PolyForm Noncommercial 1.0.0',
+      '30-day commercial eval',
     ],
+    bestFor: 'Tinkering, OSS projects, students',
     stripeBuyable: false,
     highlight: false,
   },
@@ -55,14 +60,14 @@ export const TIERS: readonly TierConfig[] = [
     name: 'Indie',
     priceCents: 14900,
     displayPrice: '$149',
-    displayPeriod: '/year',
+    displayPeriod: '/yr',
+    subtitle: 'one app · one dev',
     features: [
       '1 developer',
       '1 commercial app',
       'Unlimited end users',
-      'ThreadPlane Commercial license',
-      'Best for: solo devs, indie products, consultants with one app',
     ],
+    bestFor: 'Solo founders, indie SaaS',
     stripeBuyable: true,
     highlight: false,
   },
@@ -71,14 +76,14 @@ export const TIERS: readonly TierConfig[] = [
     name: 'Developer Seat',
     priceCents: 29900,
     displayPrice: '$299',
-    displayPeriod: '/developer/year',
+    displayPeriod: '/dev/yr',
+    subtitle: 'per developer',
     features: [
-      'Unlimited apps owned by your org',
-      'Unlimited end users',
-      'Dev / staging / production',
-      'ThreadPlane Commercial license',
-      'Best for: startups & growing teams',
+      'Per developer seat',
+      'Unlimited apps',
+      'Dev · staging · prod',
     ],
+    bestFor: 'Startups, in-house teams',
     stripeBuyable: true,
     highlight: true,
     adjustableQuantity: true,
@@ -89,14 +94,14 @@ export const TIERS: readonly TierConfig[] = [
     name: 'App Deployment',
     priceCents: 149900,
     displayPrice: '$1,499',
-    displayPeriod: '/app/year',
+    displayPeriod: '/app/yr',
+    subtitle: 'per production app',
     features: [
       'Unlimited developers',
       '1 production app',
-      'Unlimited end users',
-      'ThreadPlane Commercial license',
-      'Best for: agencies, CI/CD-heavy teams',
+      'Procurement-friendly',
     ],
+    bestFor: 'Agencies, CI/CD-heavy teams',
     stripeBuyable: true,
     highlight: false,
   },
@@ -105,14 +110,14 @@ export const TIERS: readonly TierConfig[] = [
     name: 'Enterprise',
     priceCents: null,
     displayPrice: 'Custom',
-    displayPeriod: 'annual',
+    displayPeriod: '',
+    subtitle: 'annual contract',
     features: [
-      'Custom contract & SLA',
-      'Procurement support',
-      'Security review',
       'Multi-app licensing',
-      'Priority + private support channel',
+      'SLA + security review',
+      'Private support channel',
     ],
+    bestFor: 'Procurement-led orgs',
     stripeBuyable: false,
     highlight: false,
   },
