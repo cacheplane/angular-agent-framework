@@ -23,24 +23,27 @@ export function renderLicenseEmail(vars: LicenseEmailVars): RenderedEmail {
   const subject = `Your ThreadPlane license — ${vars.tier} (${vars.seats} ${seatWord})`;
   const expiresIso = vars.expiresAt.toISOString();
 
-  const text = `Thanks for subscribing to ThreadPlane.
+  const text = `Thanks for your ThreadPlane license purchase.
 
-Your license token is below. Set it as the CACHEPLANE_LICENSE
-environment variable in your application:
+Your license is valid for 12 months from today. Paste the token below
+into your @ngaf/chat configuration:
 
------BEGIN CACHEPLANE LICENSE-----
+-----BEGIN THREADPLANE LICENSE-----
 ${vars.token}
------END CACHEPLANE LICENSE-----
+-----END THREADPLANE LICENSE-----
 
 Tier: ${vars.tier}
 Seats: ${vars.seats}
 Expires: ${expiresIso}
 
 Installation:
-  export CACHEPLANE_LICENSE="<paste token above>"
+  // application bootstrap
+  provideChat({
+    license: process.env['THREADPLANE_LICENSE'],
+  });
 
-Or in a .env file:
-  CACHEPLANE_LICENSE=<paste token above>
+  // .env
+  THREADPLANE_LICENSE=<paste token above>
 
 Docs: https://threadplane.ai/docs/licensing
 Questions: reply to this email.
@@ -48,16 +51,21 @@ Questions: reply to this email.
 -- The ThreadPlane team
 `;
 
-  const html = `<p>Thanks for subscribing to ThreadPlane.</p>
-<p>Your license token is below. Set it as the <code>CACHEPLANE_LICENSE</code> environment variable in your application:</p>
-<pre style="white-space:pre-wrap;word-break:break-all;font-family:monospace;font-size:12px;background:#f4f4f4;padding:12px;border-radius:4px">-----BEGIN CACHEPLANE LICENSE-----
+  const html = `<p>Thanks for your ThreadPlane license purchase.</p>
+<p>Your license is valid for 12 months from today. Paste the token below into your <code>@ngaf/chat</code> configuration:</p>
+<pre style="white-space:pre-wrap;word-break:break-all;font-family:monospace;font-size:12px;background:#f4f4f4;padding:12px;border-radius:4px">-----BEGIN THREADPLANE LICENSE-----
 ${escapeHtml(vars.token)}
------END CACHEPLANE LICENSE-----</pre>
+-----END THREADPLANE LICENSE-----</pre>
 <p><strong>Tier:</strong> ${escapeHtml(vars.tier)}<br>
 <strong>Seats:</strong> ${vars.seats}<br>
 <strong>Expires:</strong> ${escapeHtml(expiresIso)}</p>
 <p><strong>Installation:</strong></p>
-<pre style="font-family:monospace;font-size:12px;background:#f4f4f4;padding:12px;border-radius:4px">export CACHEPLANE_LICENSE="&lt;paste token above&gt;"</pre>
+<pre style="font-family:monospace;font-size:12px;background:#f4f4f4;padding:12px;border-radius:4px">provideChat({
+  license: process.env['THREADPLANE_LICENSE'],
+});
+
+// .env
+THREADPLANE_LICENSE=&lt;paste token above&gt;</pre>
 <p>Docs: <a href="https://threadplane.ai/docs/licensing">threadplane.ai/docs/licensing</a><br>
 Questions: reply to this email.</p>
 <p>-- The ThreadPlane team</p>

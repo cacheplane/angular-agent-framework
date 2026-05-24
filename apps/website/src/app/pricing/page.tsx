@@ -2,7 +2,6 @@ import { tokens } from '@ngaf/design-tokens';
 import { Container } from '../../components/ui/Container';
 import { Section } from '../../components/ui/Section';
 import { Eyebrow } from '../../components/ui/Eyebrow';
-import { PricingGrid } from '../../components/pricing/PricingGrid';
 import { CompareTable } from '../../components/pricing/CompareTable';
 import { CompatibilityMatrix } from '../../components/pricing/CompatibilityMatrix';
 import { PricingFAQ } from '../../components/pricing/PricingFAQ';
@@ -13,33 +12,15 @@ import { createPageMetadata } from '../../lib/site-metadata';
 export const metadata = createPageMetadata({
   title: 'Pricing — Agent UI for Angular',
   description:
-    '@ngaf/chat is free for noncommercial use under PolyForm Noncommercial 1.0.0. Commercial production use requires a Threadplane license. Other libraries remain MIT.',
+    '@ngaf/chat is free for noncommercial use under PolyForm Noncommercial 1.0.0. Commercial production use requires a ThreadPlane Commercial license. Other libraries remain MIT.',
   pathname: '/pricing',
   type: 'website',
 });
 
-function SmallNote({ children }: { children: React.ReactNode }) {
-  return (
-    <p
-      style={{
-        fontFamily: tokens.typography.body.family,
-        fontSize: 13,
-        lineHeight: 1.6,
-        color: tokens.colors.textMuted,
-        textAlign: 'center',
-        margin: '0 auto',
-        maxWidth: 720,
-      }}
-    >
-      {children}
-    </p>
-  );
-}
-
 export default function PricingPage() {
   return (
     <>
-      <Section surface="canvas" ariaLabelledBy="pricing-heading">
+      <Section surface="canvas" tight ariaLabelledBy="pricing-heading">
         <Container>
           <div style={{ textAlign: 'center', maxWidth: 760, margin: '0 auto' }}>
             <Eyebrow tone="accent" style={{ marginBottom: 16 }}>Pricing</Eyebrow>
@@ -52,46 +33,16 @@ export default function PricingPage() {
                 lineHeight: tokens.typography.h1.line,
                 color: tokens.colors.textPrimary,
                 margin: 0,
-                marginBottom: 16,
                 letterSpacing: '-0.02em',
               }}
             >
-              Pricing for production AI chat interfaces
+              Simple, transparent pricing
             </h1>
-            <p
-              style={{
-                fontFamily: tokens.typography.bodyLg.family,
-                fontSize: tokens.typography.bodyLg.size,
-                lineHeight: tokens.typography.bodyLg.line,
-                color: tokens.colors.textSecondary,
-                margin: 0,
-              }}
-            >
-              <code style={{ fontFamily: tokens.typography.fontMono }}>@ngaf/chat</code> is free for noncommercial use. Commercial production use requires a Threadplane license. Other libraries in the framework remain MIT.
-            </p>
           </div>
         </Container>
       </Section>
 
-      <PricingGrid />
-
-      <Section surface="canvas">
-        <Container>
-          <SmallNote>
-            A license is required when <code style={{ fontFamily: tokens.typography.fontMono }}>@ngaf/chat</code> is used in a commercial product, SaaS app, internal business tool, paid client project, or production application operated by or for a for-profit entity.
-          </SmallNote>
-        </Container>
-      </Section>
-
       <CompareTable />
-
-      <Section surface="canvas">
-        <Container>
-          <SmallNote>
-            Commercial evaluation is free for 30 days. A paid license is required before production deployment.
-          </SmallNote>
-        </Container>
-      </Section>
 
       <Section surface="canvas">
         <Container>
@@ -122,14 +73,6 @@ export default function PricingPage() {
       </Section>
 
       <PricingFAQ />
-
-      <Section surface="canvas">
-        <Container>
-          <SmallNote>
-            Because commercial use requires a license, <code style={{ fontFamily: tokens.typography.fontMono }}>@ngaf/chat</code> is source-available rather than OSI open source. Threadplane keeps ecosystem packages (<code style={{ fontFamily: tokens.typography.fontMono }}>@ngaf/render</code>, <code style={{ fontFamily: tokens.typography.fontMono }}>@ngaf/agent</code>, <code style={{ fontFamily: tokens.typography.fontMono }}>@ngaf/langgraph</code>, <code style={{ fontFamily: tokens.typography.fontMono }}>@ngaf/ag-ui</code>, <code style={{ fontFamily: tokens.typography.fontMono }}>@ngaf/a2ui</code>, <code style={{ fontFamily: tokens.typography.fontMono }}>@ngaf/licensing</code>, <code style={{ fontFamily: tokens.typography.fontMono }}>@ngaf/telemetry</code>, <code style={{ fontFamily: tokens.typography.fontMono }}>@ngaf/design-tokens</code>) permissively MIT-licensed.
-          </SmallNote>
-        </Container>
-      </Section>
 
       <LeadForm />
       <FinalCTA />

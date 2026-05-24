@@ -4,25 +4,25 @@ Drop-in agent chat UI for Angular 20+. Headless primitives that read from a runt
 
 Part of [Agent UI for Angular](https://github.com/cacheplane/angular-agent-framework).
 
-`@ngaf/chat` is source-available and free for noncommercial use under the PolyForm Noncommercial License 1.0.0. Commercial production use requires a Threadplane commercial license.
+`@ngaf/chat` is source-available and free for noncommercial use under PolyForm Noncommercial License 1.0.0. Commercial production use requires a ThreadPlane Commercial license.
 
-This package is not licensed as OSI open source because commercial use requires a license. Threadplane uses a source-available model for `@ngaf/chat` while keeping protocol and ecosystem packages permissively licensed where appropriate.
+This package is not licensed as OSI open source because commercial use requires a license. ThreadPlane uses a source-available model for `@ngaf/chat` while keeping protocol and ecosystem packages permissively licensed where appropriate.
 
 ## Commercial use
 
-Building a commercial product, SaaS application, internal business tool, agency deliverable, or paid client project with `@ngaf/chat` requires a commercial license.
+Building a commercial product, SaaS application, internal business tool, agency deliverable, or paid client project with `@ngaf/chat` requires a ThreadPlane Commercial license.
 
 Free under PolyForm Noncommercial:
 
 - Personal, hobby, student, academic, nonprofit, public-demo use
 - Open-source applications released under an OSI-approved license
-- Evaluation and prototyping (commercial evaluation is free for 30 days)
+- 30 calendar days of commercial evaluation from your first commercial use (good-faith — no tracking, no email required)
 
-See [COMMERCIAL-USE.md](./COMMERCIAL-USE.md) for the definition of commercial use, [LICENSE-COMMERCIAL.md](./LICENSE-COMMERCIAL.md) for the commercial license summary, and the [Threadplane pricing page](https://threadplane.ai/pricing) for plans.
+See [COMMERCIAL-USE.md](./COMMERCIAL-USE.md) for the definition of commercial use, [LICENSE-COMMERCIAL.md](./LICENSE-COMMERCIAL.md) for the commercial license summary, and the [ThreadPlane pricing page](https://threadplane.ai/pricing) for plans.
 
 ## Using a commercial license
 
-After purchase, Threadplane emails a signed license token to the address on your receipt. Paste it into your app's `provideChat()` configuration:
+After purchase, ThreadPlane emails a signed license token to the address on your receipt. The license is valid for 12 months and the same email contains the token to paste into your app's `provideChat()` configuration:
 
 ```typescript
 // app.config.ts
@@ -38,16 +38,16 @@ export const appConfig: ApplicationConfig = {
 };
 ```
 
-The library verifies the token's signature on boot. A missing, expired, or tampered token logs a `console.warn` advisory but does not block rendering — chat continues to work either way. Tokens are validated offline; no calls to Threadplane are made at runtime.
+The library verifies the token's signature on boot. A missing, expired, or tampered token logs a `console.warn` advisory but does not block rendering — chat continues to work either way. Tokens are validated offline; no calls to ThreadPlane are made at runtime.
 
 The license string is safe to commit to source control if your repository is private, or to read from a build-time env var for public repositories:
 
 ```typescript
-declare const NGAF_LICENSE_TOKEN: string | undefined;
+declare const THREADPLANE_LICENSE: string | undefined;
 
 providers: [
   provideChat({
-    license: typeof NGAF_LICENSE_TOKEN === 'string' ? NGAF_LICENSE_TOKEN : undefined,
+    license: typeof THREADPLANE_LICENSE === 'string' ? THREADPLANE_LICENSE : undefined,
   }),
 ],
 ```

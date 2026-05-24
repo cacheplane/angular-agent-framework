@@ -4,12 +4,10 @@ Most libraries in this repository — `@ngaf/render`, `@ngaf/agent`, `@ngaf/lang
 
 ## `@ngaf/chat`
 
-Starting with the next published version, `@ngaf/chat` is dual-licensed:
+`@ngaf/chat` is dual-licensed:
 
-- **PolyForm Noncommercial 1.0.0** for free noncommercial use (personal, hobby, student, academic, nonprofit, public demos, OSI-licensed open source, 30-day commercial evaluation).
-- **Threadplane commercial license** for commercial production use.
-
-Historical MIT releases of `@ngaf/chat` remain under their original terms.
+- **PolyForm Noncommercial 1.0.0** for free noncommercial use (personal, hobby, student, academic, nonprofit, public demos, OSI-licensed open source, 30 calendar days of commercial evaluation from first commercial use).
+- **ThreadPlane Commercial license** for commercial production use. Sold via [threadplane.ai/pricing](https://threadplane.ai/pricing); see [/docs/licensing](https://threadplane.ai/docs/licensing) for installation.
 
 See [`libs/chat/LICENSE.md`](./libs/chat/LICENSE.md), [`libs/chat/LICENSE-COMMERCIAL.md`](./libs/chat/LICENSE-COMMERCIAL.md), and [`libs/chat/COMMERCIAL-USE.md`](./libs/chat/COMMERCIAL-USE.md) for the full terms.
 
