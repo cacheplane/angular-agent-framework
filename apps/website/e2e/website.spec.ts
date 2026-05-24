@@ -23,7 +23,9 @@ test('landing page renders feature blocks (Stream/Render/Ship)', async ({ page }
 
 test('pricing page shows plan cards', async ({ page }) => {
   await page.goto('/pricing');
-  await expect(page.getByText('Open Source').first()).toBeVisible();
+  await expect(page.getByText('Community').first()).toBeVisible();
+  await expect(page.getByText('Developer Seat').first()).toBeVisible();
+  await expect(page.getByText('Team').first()).toBeVisible();
   await expect(page.getByText('Enterprise').first()).toBeVisible();
 });
 
@@ -37,7 +39,7 @@ test('pricing page lead form validates required fields', async ({ page }) => {
   await page.goto('/pricing');
   const leadForm = page.locator('#lead-form form');
   await expect(leadForm).toBeVisible();
-  await leadForm.getByRole('button', { name: 'Get in touch' }).click();
+  await leadForm.getByRole('button', { name: 'Request enterprise quote' }).click();
   await expect(leadForm).toBeVisible();
   expect(checkoutCalled).toBe(false);
   expect(await leadForm.evaluate((form) => (form as HTMLFormElement).checkValidity())).toBe(false);
@@ -85,11 +87,12 @@ test('pricing lead form posts to /api/leads and renders success state', async ({
   });
 
   await page.goto('/pricing#lead-form');
-  await page.getByLabel('Name').fill('Jane Smith');
-  await page.getByLabel('Work email').fill('jane@acme.com');
-  await page.getByLabel('Company').fill('Acme');
-  await page.getByLabel('Tell us about your use case').fill('Volume seats and security review.');
-  await page.getByRole('button', { name: 'Get in touch' }).click();
+  const leadForm = page.locator('#lead-form form');
+  await leadForm.getByLabel('Name').fill('Jane Smith');
+  await leadForm.getByLabel('Work email').fill('jane@acme.com');
+  await leadForm.getByLabel('Company').fill('Acme');
+  await leadForm.getByLabel('Tell us about your use case').fill('Volume seats and security review.');
+  await leadForm.getByRole('button', { name: 'Request enterprise quote' }).click();
 
   await expect(page.getByText(/we'll be in touch within one business day/i)).toBeVisible();
   expect(leadPayload).toMatchObject({
