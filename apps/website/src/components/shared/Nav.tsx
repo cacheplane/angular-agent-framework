@@ -11,6 +11,7 @@ import { Button } from '../ui/Button';
 const links = [
   { label: 'Pilot to Prod', href: '/pilot-to-prod', external: false },
   { label: 'Docs', href: '/docs', external: false },
+  { label: 'Pricing', href: '/pricing', external: false },
   { label: 'Demo', href: 'https://demo.threadplane.ai', external: true },
   { label: 'Examples', href: 'https://cockpit.threadplane.ai', external: true },
 ];

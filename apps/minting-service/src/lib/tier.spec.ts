@@ -2,16 +2,12 @@
 import { extractTier, computeSeats } from './tier.js';
 
 describe('extractTier', () => {
-  it('returns indie from price metadata', () => {
-    expect(extractTier({ ngaf_tier_slug: 'indie' })).toBe('indie');
-  });
-
   it('returns developer_seat from price metadata', () => {
     expect(extractTier({ ngaf_tier_slug: 'developer_seat' })).toBe('developer_seat');
   });
 
-  it('returns app_deployment from price metadata', () => {
-    expect(extractTier({ ngaf_tier_slug: 'app_deployment' })).toBe('app_deployment');
+  it('returns team from price metadata', () => {
+    expect(extractTier({ ngaf_tier_slug: 'team' })).toBe('team');
   });
 
   it('throws when ngaf_tier_slug is missing', () => {
@@ -32,12 +28,9 @@ describe('computeSeats', () => {
     expect(computeSeats('developer_seat', 5)).toBe(5);
   });
 
-  it('returns 1 for app_deployment regardless of quantity', () => {
-    expect(computeSeats('app_deployment', 10)).toBe(1);
-  });
-
-  it('returns 1 for indie regardless of quantity', () => {
-    expect(computeSeats('indie', 10)).toBe(1);
+  it('returns 5 for team regardless of quantity', () => {
+    expect(computeSeats('team', 1)).toBe(5);
+    expect(computeSeats('team', 10)).toBe(5);
   });
 
   it('defaults developer_seat to 1 when quantity is null', () => {

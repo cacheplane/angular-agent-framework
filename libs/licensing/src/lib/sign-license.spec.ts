@@ -29,7 +29,7 @@ describe('signLicense', () => {
     const privateKey = ed.utils.randomPrivateKey();
     const claims: LicenseClaims = {
       sub: 'cus_abc',
-      tier: 'app_deployment',
+      tier: 'team',
       iat: 1_700_000_000,
       exp: 1_800_000_000,
       seats: 1,
