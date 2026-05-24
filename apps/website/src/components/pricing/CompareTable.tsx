@@ -114,7 +114,7 @@ function renderCell(value: CellValue): React.ReactNode {
 
 function PlanButton({ tier, cycle }: { tier: TierConfig; cycle: BillingCycle }) {
   const cta = CTAS[tier.slug];
-  const variant = tier.highlight ? 'primary' : 'secondary';
+  const variant: 'primary' | 'secondary' = tier.highlight ? 'primary' : 'secondary';
   const common = {
     variant,
     size: 'md' as const,

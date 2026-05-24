@@ -236,7 +236,7 @@ test('docs pages render canonical and social metadata', async ({ page }) => {
 });
 
 test('marketing pages render canonical and page-specific social URLs', async ({ page }) => {
-  for (const route of ['/', '/angular', '/render', '/chat', '/pricing', '/contact', '/pilot-to-prod', '/solutions']) {
+  for (const route of ['/', '/langgraph', '/ag-ui', '/render', '/chat', '/pricing', '/contact', '/pilot-to-prod', '/solutions']) {
     await page.goto(route);
     const expectedUrl = route === '/' ? 'https://threadplane.ai' : `https://threadplane.ai${route}`;
 
@@ -273,7 +273,7 @@ test('representative docs pages do not create page-level horizontal overflow', a
 test('marketing pages link to downloadable whitepaper PDFs', async ({ page }) => {
   const expectedDownloads: Record<string, string> = {
     '/': '/whitepaper.pdf',
-    '/angular': '/whitepapers/angular.pdf',
+    '/langgraph': '/whitepapers/angular.pdf',
     '/render': '/whitepapers/render.pdf',
     '/chat': '/whitepapers/chat.pdf',
   };
