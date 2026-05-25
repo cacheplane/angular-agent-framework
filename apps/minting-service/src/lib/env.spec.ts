@@ -27,7 +27,7 @@ describe('loadEnv', () => {
     const { loadEnv } = await import('./env.js');
     const env = loadEnv();
     expect(env.STRIPE_SECRET_KEY).toBe('sk_test_xxx');
-    expect(env.LICENSE_DEFAULT_TTL_DAYS).toBe(365);
+    expect(env.LICENSE_SIGNING_PRIVATE_KEY_HEX).toHaveLength(64);
   });
 
   it('throws with a list of all missing vars', async () => {
@@ -48,10 +48,4 @@ describe('loadEnv', () => {
     expect(() => loadEnv()).toThrow(/64 hex chars/);
   });
 
-  it('accepts a custom LICENSE_DEFAULT_TTL_DAYS', async () => {
-    setEnv({ ...REQUIRED, LICENSE_DEFAULT_TTL_DAYS: '30' });
-    const { loadEnv } = await import('./env.js');
-    const env = loadEnv();
-    expect(env.LICENSE_DEFAULT_TTL_DAYS).toBe(30);
-  });
 });

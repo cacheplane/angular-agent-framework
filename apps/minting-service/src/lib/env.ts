@@ -15,7 +15,6 @@ export interface Env {
   RESEND_API_KEY: string;
   EMAIL_FROM: string;
   LICENSE_SIGNING_PRIVATE_KEY_HEX: string;
-  LICENSE_DEFAULT_TTL_DAYS: number;
 }
 
 export function loadEnv(): Env {
@@ -36,6 +35,5 @@ export function loadEnv(): Env {
     RESEND_API_KEY: process.env['RESEND_API_KEY']!,
     EMAIL_FROM: process.env['EMAIL_FROM']!,
     LICENSE_SIGNING_PRIVATE_KEY_HEX: keyHex,
-    LICENSE_DEFAULT_TTL_DAYS: Number(process.env['LICENSE_DEFAULT_TTL_DAYS'] ?? 365),
   };
 }
