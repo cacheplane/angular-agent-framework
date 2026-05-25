@@ -13,7 +13,16 @@ export const metadata = createPageMetadata({
   type: 'website',
 });
 
-export default function ThanksPage() {
+interface PageProps {
+  searchParams: Promise<{ session_id?: string }>;
+}
+
+export default async function ThanksPage({ searchParams }: PageProps) {
+  const { session_id: sessionId } = await searchParams;
+  const portalHref =
+    sessionId && /^cs_(test|live)_[A-Za-z0-9]+$/.test(sessionId)
+      ? `/api/portal/session?session_id=${encodeURIComponent(sessionId)}`
+      : null;
   return (
     <Section surface="canvas" ariaLabelledBy="thanks-heading">
       <Container>
@@ -60,6 +69,11 @@ export default function ThanksPage() {
             <Button variant="primary" size="md" href="/docs/licensing">
               Installation & licensing
             </Button>
+            {portalHref && (
+              <Button variant="secondary" size="md" href={portalHref}>
+                Manage subscription
+              </Button>
+            )}
             <Button variant="ghost" size="md" href="/contact">
               Contact support
             </Button>

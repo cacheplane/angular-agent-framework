@@ -8,6 +8,7 @@ describe('renderLicenseEmail', () => {
       seats: 3,
       token: 'PAYLOAD.SIG',
       expiresAt: new Date('2027-04-20T00:00:00Z'),
+      stripeCustomerId: 'cus_test',
     });
 
     expect(out.text).toContain('-----BEGIN THREADPLANE LICENSE-----');
@@ -21,6 +22,7 @@ describe('renderLicenseEmail', () => {
       seats: 3,
       token: 't.s',
       expiresAt: new Date('2027-04-20T00:00:00Z'),
+      stripeCustomerId: 'cus_test',
     });
     expect(out.subject).toBe('Your ThreadPlane license — developer_seat (3 seats)');
   });
@@ -31,6 +33,7 @@ describe('renderLicenseEmail', () => {
       seats: 1,
       token: 't.s',
       expiresAt: new Date('2027-04-20T00:00:00Z'),
+      stripeCustomerId: 'cus_test',
     });
     expect(out.subject).toBe('Your ThreadPlane license — team (1 seat)');
   });
@@ -41,6 +44,7 @@ describe('renderLicenseEmail', () => {
       seats: 1,
       token: 't.s',
       expiresAt: new Date('2027-04-20T00:00:00Z'),
+      stripeCustomerId: 'cus_test',
     });
     expect(out.text).toContain('Expires: 2027-04-20T00:00:00.000Z');
   });
@@ -51,6 +55,7 @@ describe('renderLicenseEmail', () => {
       seats: 1,
       token: 'PAYLOAD.SIG',
       expiresAt: new Date('2027-04-20T00:00:00Z'),
+      stripeCustomerId: 'cus_test',
     });
     expect(out.html).toContain('<pre');
     expect(out.html).toContain('PAYLOAD.SIG');
