@@ -150,3 +150,19 @@ export function readingTimeMin(markdown: string): number {
   return Math.max(1, Math.round(words / 220));
 }
 
+/**
+ * Recent posts excluding the one currently surfaced as featured on /blog.
+ *
+ * Used by the home page "Recent articles" section so visitors don't see the
+ * same headline post twice (once in the featured slot at /blog and again on
+ * the home page). `getAllPosts()` already sorts newest-first and excludes
+ * drafts, so this is a thin filter on top.
+ *
+ * @param limit Maximum number of posts to return. Defaults to 3.
+ */
+export function getRecentNonFeatured(limit = 3): Post[] {
+  const featured = getFeaturedPost();
+  return getAllPosts()
+    .filter((p) => p.slug !== featured?.slug)
+    .slice(0, limit);
+}

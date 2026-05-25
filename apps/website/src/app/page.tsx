@@ -9,6 +9,7 @@ import { WhitePaperBlock } from '../components/landing/WhitePaperBlock';
 import { Promises } from '../components/landing/Promises';
 import { HomeFAQ } from '../components/landing/HomeFAQ';
 import { FinalCTA } from '../components/landing/FinalCTA';
+import { RecentArticles } from '../components/landing/RecentArticles';
 import { tokens } from '@ngaf/design-tokens';
 import { createPageMetadata, LONG_SUBHEAD, PRIMARY_TAGLINE } from '../lib/site-metadata';
 
@@ -119,6 +120,7 @@ export default async function HomePage() {
       <Promises />
       <HomeFAQ />
       <FinalCTA />
+      <RecentArticles />
     </>
   );
 }
