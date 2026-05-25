@@ -102,11 +102,63 @@ html {
 .docs-prose h2 { font-size: 1.5rem; font-weight: 600; margin-top: 2.5rem; margin-bottom: 1rem; font-family: var(--font-garamond); }
 .docs-prose h3 { font-size: 1.25rem; font-weight: 600; margin-top: 2rem; margin-bottom: 0.75rem; font-family: var(--font-garamond); }
 .docs-prose p { line-height: 1.75; margin-bottom: 1.25rem; }
-.docs-prose ul, .docs-prose ol { margin-bottom: 1.25rem; padding-left: 1.5rem; }
-.docs-prose ul { list-style: disc; }
-.docs-prose ol { list-style: decimal; }
-.docs-prose li { margin-bottom: 0.25rem; }
+.docs-prose ul, .docs-prose ol {
+  margin-bottom: 1.25rem;
+  padding-left: 1.5rem;
+  list-style-position: outside;
+}
+/* Use longhand `list-style-type` to dodge Lightning CSS shorthand rewriting
+   `list-style: disc` to `list-style: outside` (which drops the bullet type
+   and lets Tailwind's `ol, ul, menu { list-style: none }` preflight win). */
+.docs-prose ul { list-style-type: disc; }
+.docs-prose ol { list-style-type: decimal; }
+.docs-prose li { margin-bottom: 0.5rem; line-height: 1.6; }
+.docs-prose li > p { margin-bottom: 0.5rem; }
 .docs-prose li::marker { color: var(--color-text-muted, #555770); }
+.docs-prose ul ul, .docs-prose ol ol, .docs-prose ul ol, .docs-prose ol ul {
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+/* Figures (screenshots + caption).
+ * Goal: lift the screenshot off the page so it reads as a distinct artifact
+ * rather than an inline asset. Tinted backdrop + soft shadow + clean caption.
+ * Scoped to image figures via :has(> img) so it doesn't collide with the
+ * code-block figures from rehype-pretty-code or component figures (e.g.
+ * AgUiArchDiagram). */
+.docs-prose figure:has(> img) {
+  margin: 2.5rem 0;
+  padding: 0.75rem 0.75rem 0;
+  background: rgba(0, 64, 144, 0.035);
+  border: 1px solid rgba(0, 64, 144, 0.1);
+  border-radius: 0.75rem;
+}
+.docs-prose figure:has(> img) > img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 16px rgba(0, 32, 72, 0.1);
+}
+.docs-prose figure:has(> img) > figcaption {
+  margin: 0;
+  padding: 0.875rem 0.5rem 0.625rem;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--color-text-muted, #555770);
+  text-align: center;
+  font-style: italic;
+}
+/* Bare images (no figure wrapper) — give them the same lift treatment. */
+.docs-prose > p > img,
+.docs-prose > img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 2rem auto;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 16px rgba(0, 32, 72, 0.08);
+}
 
 .docs-table-scroll { max-width: 100%; overflow-x: auto; margin: 1.5rem 0; }
 .docs-prose table { width: 100%; border-collapse: collapse; font-size: 0.875rem; margin: 0; }
@@ -114,9 +166,11 @@ html {
 .docs-prose td { padding: 0.5rem 0.75rem; border-bottom: 1px solid rgba(0, 64, 144, 0.08); color: #555770; }
 .docs-prose td code { font-size: 0.8em; }
 
-/* UI primitive — Card hover */
+/* UI primitive — Card hover.
+ * Hoverable cards are virtually always links; pointer is the right default.
+ * If a non-link gets `data-hoverable`, override inline. */
 [data-ui="card"][data-hoverable] {
-  cursor: default;
+  cursor: pointer;
 }
 [data-ui="card"][data-hoverable]:hover {
   box-shadow: var(--shadow-md);

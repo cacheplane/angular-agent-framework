@@ -67,7 +67,7 @@ Three boxes. Two seams.
 
 **The wire.** Server-Sent Events. Plain HTTP, no WebSocket gymnastics, no custom binary framing. Your firewall, load balancer, and reverse proxy already know what to do with it.
 
-**The Angular side.** This is what Threadplane provides. `@threadplane/ag-ui` is the adapter. It consumes the AG-UI event stream and exposes a runtime-neutral `Agent` contract built from signals. `@threadplane/chat` is the UI. It reads from that contract and renders. The two are decoupled on purpose. We'll get to why.
+**The Angular side.** This is what ThreadPlane provides. `@threadplane/ag-ui` is the adapter. It consumes the AG-UI event stream and exposes a runtime-neutral `Agent` contract built from signals. `@threadplane/chat` is the UI. It reads from that contract and renders. The two are decoupled on purpose. We'll get to why.
 
 ## Let's wire it up
 
@@ -150,7 +150,7 @@ That's it. Three files, maybe twenty lines of code, and you have a working strea
 <figure>
   <img
     src="/blog/2026-05-21-build-fullstack-agentic-angular-apps-using-ag-ui/hero.png"
-    alt="The AG-UI streaming demo running in the browser. A user message reads 'What is Threadplane?' and the assistant has streamed back a multi-sentence response with regenerate, copy, and feedback controls underneath."
+    alt="The AG-UI streaming demo running in the browser. A user message reads 'What is Angular Agent Framework?' and the assistant has streamed back a multi-sentence response with regenerate, copy, and feedback controls underneath."
     width="1280"
     height="800"
     style={{ width: '100%', height: 'auto', borderRadius: '0.5rem' }}
@@ -176,7 +176,7 @@ The AG-UI protocol has seventeen event types, grouped into five families:
 
 Having worked on the protocol from the inside, I'll tell you the families are doing real work. They're not arbitrary. Lifecycle is for "is something happening?" Text messages are the streaming triad you already know from chat UIs. Tool calls are deliberately incremental so you can render the *intent* before the arguments are fully formed. State sync uses RFC 6902 JSON Patch so the wire stays small even when the agent's state is large. Every event earns its keep.
 
-Threadplane's `@threadplane/ag-ui` runs each event through a small reducer that updates a handful of signals on the `Agent` contract:
+ThreadPlane's `@threadplane/ag-ui` runs each event through a small reducer that updates a handful of signals on the `Agent` contract:
 
 - `messages()`: `Message[]`, the chat history. `TEXT_MESSAGE_CONTENT` appends a delta to the in-flight assistant message.
 - `status()`: `'idle' | 'running' | 'error' | 'paused'`. Driven by the `RUN_*` events.
@@ -318,7 +318,7 @@ Each of those is its own post. The point here is just that the protocol-to-signa
 
 AG-UI is the protocol Angular devs have been quietly waiting for, whether they knew it or not. It standardizes the wire between the agent and the UI, it's small enough to hold in your head, and the event model maps onto Angular signals so cleanly that the runtime almost writes itself. Markus and the CopilotKit crew deserve real credit for that. *Thank you* for designing something Angular could meet on its own terms.
 
-With Threadplane (`@threadplane/ag-ui` and `@threadplane/chat` on npm), the wiring is three lines: a provider, an inject, and a `<chat>`. The interesting work (your tool cards, your interrupt flows, your generative UI surfaces, your design system) is where you actually want to spend the day.
+With ThreadPlane (`@threadplane/ag-ui` and `@threadplane/chat` on npm), the wiring is three lines: a provider, an inject, and a `<chat>`. The interesting work (your tool cards, your interrupt flows, your generative UI surfaces, your design system) is where you actually want to spend the day.
 
 If you've been building agents in Angular by hand-rolling SSE parsing and gluing together React components in iframes, *stop*. The whole stack is here, it's open source (the adapters are MIT; `@threadplane/chat` is source-available with a free non-commercial tier), and the protocol underneath has real momentum from the community building it.
 

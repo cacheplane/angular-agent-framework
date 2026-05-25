@@ -98,3 +98,71 @@ export function getAllTags(): { tag: string; count: number }[] {
 export function getAllSlugs(): string[] {
   return getAllPosts().map((p) => p.slug);
 }
+
+/**
+ * Format an ISO date string (YYYY-MM-DD from frontmatter) as a human date.
+ *
+ * Parses as UTC midnight and formats with timeZone: 'UTC' so a date like
+ * '2026-05-21' never renders as 'May 20' for readers west of UTC.
+ */
+export function formatPostDate(iso: string): string {
+  const d = new Date(`${iso}T00:00:00Z`);
+  return d.toLocaleDateString('en-US', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+    timeZone: 'UTC',
+  });
+}
+
+/**
+ * Compact card date: "May 17" when the post is in the current year,
+ * "May 17, 2025" otherwise. Matches the article-page tone but shaves
+ * visual noise on landing cards where the year is redundant.
+ *
+ * Parses as UTC midnight and uses timeZone: 'UTC' for stability across
+ * reader locales.
+ */
+export function formatCardDate(iso: string, now: Date = new Date()): string {
+  const d = new Date(`${iso}T00:00:00Z`);
+  const sameYear = d.getUTCFullYear() === now.getUTCFullYear();
+  return d.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    ...(sameYear ? {} : { year: 'numeric' }),
+    timeZone: 'UTC',
+  });
+}
+
+/**
+ * Estimate reading time in minutes from a markdown source.
+ *
+ * Strips fenced code blocks (not real reading), normalizes markdown
+ * punctuation, counts whitespace-separated tokens, and divides by 220 wpm.
+ * Returns at least 1.
+ */
+export function readingTimeMin(markdown: string): number {
+  const words = markdown
+    .replace(/```[\s\S]*?```/g, '')
+    .replace(/[#*_`>-]/g, ' ')
+    .split(/\s+/)
+    .filter(Boolean).length;
+  return Math.max(1, Math.round(words / 220));
+}
+
+/**
+ * Recent posts excluding the one currently surfaced as featured on /blog.
+ *
+ * Used by the home page "Recent articles" section so visitors don't see the
+ * same headline post twice (once in the featured slot at /blog and again on
+ * the home page). `getAllPosts()` already sorts newest-first and excludes
+ * drafts, so this is a thin filter on top.
+ *
+ * @param limit Maximum number of posts to return. Defaults to 3.
+ */
+export function getRecentNonFeatured(limit = 3): Post[] {
+  const featured = getFeaturedPost();
+  return getAllPosts()
+    .filter((p) => p.slug !== featured?.slug)
+    .slice(0, limit);
+}
