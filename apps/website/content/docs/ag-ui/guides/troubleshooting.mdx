@@ -15,8 +15,8 @@ providers: [
 Then make sure the component uses the provided agent:
 
 ```ts
-import { ChatComponent } from '@ngaf/chat';
-import { injectAgUiAgent } from '@ngaf/ag-ui';
+import { ChatComponent } from '@threadplane/chat';
+import { injectAgUiAgent } from '@threadplane/ag-ui';
 
 @Component({
   standalone: true,
@@ -138,14 +138,14 @@ Those flows are not implemented by the AG-UI adapter today.
 
 Current scope is messages, status/loading/error, tool calls, state/custom events, reasoning messages, message snapshots, and citations from state.
 
-Use `@ngaf/langgraph` for the richer LangGraph-specific surface, or write a custom adapter against the `@ngaf/chat` `Agent` contract if you need AG-UI plus product-specific behavior.
+Use `@threadplane/langgraph` for the richer LangGraph-specific surface, or write a custom adapter against the `@threadplane/chat` `Agent` contract if you need AG-UI plus product-specific behavior.
 
 ## Isolate with FakeAgent
 
 When you are unsure whether the issue is UI wiring or backend events, swap in the fake provider:
 
 ```ts
-import { provideFakeAgUiAgent } from '@ngaf/ag-ui';
+import { provideFakeAgUiAgent } from '@threadplane/ag-ui';
 
 providers: [
   provideFakeAgUiAgent({

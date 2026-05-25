@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
-import type { A2uiComponentDef } from '@ngaf/a2ui';
+import type { A2uiComponentDef } from '@threadplane/a2ui';
 
 /** Chat-internal projection of an A2UI component, materialized by the
  * surface store. Distinct from the wire-format `A2uiComponent` in
- * `@ngaf/a2ui` (which carries the raw `component: A2uiComponentDef`
+ * `@threadplane/a2ui` (which carries the raw `component: A2uiComponentDef`
  * payload) — this type adds the per-component readiness fields the
  * progressive renderer consumes. */
 export interface A2uiComponentView {

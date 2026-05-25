@@ -1,4 +1,4 @@
-# ICP — ThreadPlane
+# ICP — Threadplane
 
 > Operational doc. Edited by humans as we learn. The durable two-track ICP summary lives in [gtm.md §3](../../gtm.md).
 
@@ -16,14 +16,14 @@
 These are the signals to instrument first in Spec 1. Baseline rates between them populate this section quantitatively once `developer-funnel` ships.
 
 **Disqualifiers**
-- Greenfield app with no Angular constraint — ThreadPlane is for teams that *must* stay on Angular.
+- Greenfield app with no Angular constraint — Threadplane is for teams that *must* stay on Angular.
 - Hobby/learning project — we welcome them, but they aren't the ICP for prioritization.
 
 **Where they hang out**
 - Angular Reddit, ng-conf community, Angular Discord/Slack equivalents, LangChain forum, AG-UI / A2UI communities, dev.to/medium.
 
 **What they need to see in 30 seconds**
-- "Agent UI for Angular — Production-ready chat, threads, and generative UI for AI agents."
+- "Threadplane — Production-ready chat, threads, and generative UI for AI agents."
 - `LangGraph + AG-UI · Durable threads · Interrupts · Subagents · Planning + memory · json-render + A2UI`
 - One install command.
 - A working demo they can clone.

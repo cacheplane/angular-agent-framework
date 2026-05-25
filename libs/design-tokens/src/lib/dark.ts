@@ -2,7 +2,7 @@ import { baseTokens } from './base';
 
 /**
  * Theme-variant tokens resolved for the dark theme.
- * Neutral-dark palette aligned to @ngaf/chat lib's dark aesthetic so embedded
+ * Neutral-dark palette aligned to @threadplane/chat lib's dark aesthetic so embedded
  * chat surfaces unify with cockpit chrome (no iframe color seam).
  */
 export const darkOverrides = Object.freeze({

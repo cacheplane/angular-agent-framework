@@ -1,4 +1,4 @@
-import { tokens } from '@ngaf/design-tokens';
+import { tokens } from '@threadplane/design-tokens';
 import { Container } from '../../components/ui/Container';
 import { Section } from '../../components/ui/Section';
 import { Eyebrow } from '../../components/ui/Eyebrow';
@@ -13,7 +13,7 @@ import { FinalCTA } from '../../components/landing/FinalCTA';
 import { createPageMetadata } from '../../lib/site-metadata';
 
 export const metadata = createPageMetadata({
-  title: 'Pilot to Production — Agent UI for Angular',
+  title: 'Pilot to Production — Threadplane',
   description: 'Close the last-mile gap. The 3-month pilot engagement is included with every app deployment license. We work alongside your Angular team to ship your first agent to production.',
   pathname: '/pilot-to-prod',
   type: 'website',
@@ -123,7 +123,7 @@ export default function PilotToProdPage() {
         body="Working code, not slideware. We integrate against your real backend, your real auth, and your real Angular app — paired with your engineers, not behind a curtain."
         bullets={[
           'Real LangGraph or AG-UI backend (yours or ours, your call)',
-          'Streaming chat surface using @ngaf/chat compositions',
+          'Streaming chat surface using @threadplane/chat compositions',
           'Generative UI for the workflows that benefit from it',
           'Daily syncs · weekly demo to stakeholders',
         ]}
@@ -132,7 +132,7 @@ export default function PilotToProdPage() {
           { title: 'Open repo', description: 'You own the source from day one.' },
           { title: 'Weekly demo', description: 'Stakeholder transparency throughout.' },
         ]}
-        cta={{ label: 'See @ngaf/chat', href: '/chat' }}
+        cta={{ label: 'See @threadplane/chat', href: '/chat' }}
         visualLeft
         visual={
           <BrowserFrame url="cockpit.threadplane.ai" elevation="md">

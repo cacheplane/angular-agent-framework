@@ -1,27 +1,27 @@
 import { Injectable, inject } from '@angular/core';
 import {
-  NGAF_TELEMETRY_CONFIG,
-  type NgafTelemetryConfig,
-  type NgafTelemetryEvent,
+  THREADPLANE_TELEMETRY_CONFIG,
+  type ThreadplaneTelemetryConfig,
+  type ThreadplaneTelemetryEvent,
 } from './tokens';
 
 // Inlined from shared/events.ts: ng-packagr enforces rootDir at the entry-file
 // level (src/browser/), so the browser entry cannot import from ../shared/.
 // Keep this type in sync with shared/events.ts.
-export type NgafBrowserEvent = NgafTelemetryEvent;
+export type ThreadplaneBrowserEvent = ThreadplaneTelemetryEvent;
 
-export interface NgafBrowserRuntimeTelemetry {
+export interface ThreadplaneBrowserRuntimeTelemetry {
   transport: string;
   surface?: string;
   provider?: string;
   model?: string;
 }
 
-export interface NgafBrowserStreamTelemetry extends NgafBrowserRuntimeTelemetry {
+export interface ThreadplaneBrowserStreamTelemetry extends ThreadplaneBrowserRuntimeTelemetry {
   durationMs?: number;
 }
 
-export interface NgafBrowserStreamErrorTelemetry extends NgafBrowserStreamTelemetry {
+export interface ThreadplaneBrowserStreamErrorTelemetry extends ThreadplaneBrowserStreamTelemetry {
   error?: unknown;
 }
 
@@ -42,12 +42,12 @@ function errorClass(error: unknown): string {
 }
 
 @Injectable({ providedIn: 'root' })
-export class NgafTelemetryService {
-  private config: NgafTelemetryConfig | null = inject(NGAF_TELEMETRY_CONFIG, { optional: true });
+export class ThreadplaneTelemetryService {
+  private config: ThreadplaneTelemetryConfig | null = inject(THREADPLANE_TELEMETRY_CONFIG, { optional: true });
   private postHogPromise: Promise<typeof import('posthog-js')['default'] | null> | null = null;
   private distinctId: string | null = null;
 
-  async capture(event: NgafTelemetryEvent, properties?: Record<string, unknown>): Promise<void> {
+  async capture(event: ThreadplaneTelemetryEvent, properties?: Record<string, unknown>): Promise<void> {
     if (!this.config?.enabled) return;
     const sampleRate = normalizeSampleRate(this.config.sampleRate);
     if (sampleRate === 0) return;
@@ -76,23 +76,23 @@ export class NgafTelemetryService {
     }
   }
 
-  captureRuntimeInstanceCreated(input: NgafBrowserRuntimeTelemetry): Promise<void> {
+  captureRuntimeInstanceCreated(input: ThreadplaneBrowserRuntimeTelemetry): Promise<void> {
     return this.capture('ngaf:runtime_instance_created', { ...input });
   }
 
-  captureRuntimeRequestCreated(input: NgafBrowserRuntimeTelemetry & { requestType: string }): Promise<void> {
+  captureRuntimeRequestCreated(input: ThreadplaneBrowserRuntimeTelemetry & { requestType: string }): Promise<void> {
     return this.capture('ngaf:runtime_request_created', { ...input });
   }
 
-  captureStreamStarted(input: NgafBrowserStreamTelemetry): Promise<void> {
+  captureStreamStarted(input: ThreadplaneBrowserStreamTelemetry): Promise<void> {
     return this.capture('ngaf:stream_started', { ...input });
   }
 
-  captureStreamEnded(input: NgafBrowserStreamTelemetry): Promise<void> {
+  captureStreamEnded(input: ThreadplaneBrowserStreamTelemetry): Promise<void> {
     return this.capture('ngaf:stream_ended', { ...input });
   }
 
-  captureStreamErrored(input: NgafBrowserStreamErrorTelemetry): Promise<void> {
+  captureStreamErrored(input: ThreadplaneBrowserStreamErrorTelemetry): Promise<void> {
     const { error, ...rest } = input;
     return this.capture('ngaf:stream_errored', {
       ...rest,
@@ -100,7 +100,7 @@ export class NgafTelemetryService {
     });
   }
 
-  private async captureEndpoint(event: NgafTelemetryEvent, properties: Record<string, unknown>): Promise<void> {
+  private async captureEndpoint(event: ThreadplaneTelemetryEvent, properties: Record<string, unknown>): Promise<void> {
     if (typeof fetch !== 'function' || !this.config?.endpoint) return;
     await fetch(this.config.endpoint, {
       method: 'POST',

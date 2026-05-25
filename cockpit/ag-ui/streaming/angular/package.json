@@ -1,9 +1,10 @@
 {
-  "name": "@ngaf/cockpit-ag-ui-streaming-angular",
+  "name": "@threadplane/cockpit-ag-ui-streaming-angular",
+  "private": true,
   "version": "0.0.1",
   "peerDependencies": {
-    "@ngaf/ag-ui": "^0.0.1",
-    "@ngaf/chat": "^0.0.1"
+    "@threadplane/ag-ui": "*",
+    "@threadplane/chat": "*"
   },
   "license": "MIT",
   "sideEffects": false

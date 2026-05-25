@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { tokens } from '@ngaf/design-tokens';
+import { tokens } from '@threadplane/design-tokens';
 import { Container } from '../../components/ui/Container';
 import { Section } from '../../components/ui/Section';
 import { Eyebrow } from '../../components/ui/Eyebrow';
@@ -12,7 +12,7 @@ import { BackendsGrid } from '../../components/landing/ag-ui/BackendsGrid';
 import { createPageMetadata, SHORT_POSITIONING_DESCRIPTION } from '../../lib/site-metadata';
 
 export const metadata = createPageMetadata({
-  title: '@ngaf/ag-ui — Agent UI for Angular',
+  title: '@threadplane/ag-ui — Threadplane',
   description: SHORT_POSITIONING_DESCRIPTION,
   pathname: '/ag-ui',
   type: 'website',
@@ -25,7 +25,7 @@ export default async function AgUiPage() {
       <Section surface="canvas" ariaLabelledBy="ag-ui-hero-heading">
         <Container>
           <div style={{ maxWidth: 820, margin: '0 auto', textAlign: 'center' }}>
-            <Eyebrow tone="accent" style={{ marginBottom: 16 }}>@ngaf/ag-ui</Eyebrow>
+            <Eyebrow tone="accent" style={{ marginBottom: 16 }}>@threadplane/ag-ui</Eyebrow>
             <h1
               id="ag-ui-hero-heading"
               style={{
@@ -76,7 +76,7 @@ export default async function AgUiPage() {
                 href="/langgraph"
                 style={{ color: tokens.colors.accent, textDecoration: 'none', fontWeight: 600 }}
               >
-                See @ngaf/langgraph
+                See @threadplane/langgraph
               </Link>{' '}
               for native streaming, checkpoints, and the typed LangGraph SDK path.
             </p>
@@ -88,7 +88,7 @@ export default async function AgUiPage() {
         id="backends"
         eyebrow="Runtime choice"
         headline="Pick a backend. Keep the UI."
-        body="The AG-UI protocol decouples your agent runtime from your front-end. @ngaf/ag-ui wraps any AG-UI AbstractAgent into the runtime-neutral Agent contract that @ngaf/chat consumes — so the same Angular components ship against eight different runtimes."
+        body="The AG-UI protocol decouples your agent runtime from your front-end. @threadplane/ag-ui wraps any AG-UI AbstractAgent into the runtime-neutral Agent contract that @threadplane/chat consumes — so the same Angular components ship against eight different runtimes."
         bullets={[
           'Stream from Python, .NET, or TypeScript backends — same chat primitives',
           'Swap runtimes without rewriting the UI layer',
@@ -107,8 +107,8 @@ export default async function AgUiPage() {
       <FeatureBlock
         id="primitives"
         eyebrow="Same primitives"
-        headline="Drop-in for everything @ngaf/chat ships."
-        body="provideAgUiAgent registers an AG-UI client and exposes the same Agent contract that @ngaf/langgraph provides. Every chat primitive — durable threads, interrupts, subagents, generative UI, citations — works against any AG-UI runtime."
+        headline="Drop-in for everything @threadplane/chat ships."
+        body="provideAgUiAgent registers an AG-UI client and exposes the same Agent contract that @threadplane/langgraph provides. Every chat primitive — durable threads, interrupts, subagents, generative UI, citations — works against any AG-UI runtime."
         bullets={[
           'provideAgUiAgent + AG_UI_AGENT injection token',
           'Identical Agent contract: messages() / status() / interrupt() / reload()',
@@ -118,7 +118,7 @@ export default async function AgUiPage() {
         supportingCards={[
           { title: 'provideAgUiAgent', description: 'AG-UI wiring.' },
           { title: 'AG_UI_AGENT', description: 'Injection token.' },
-          { title: '@ngaf/chat', description: 'Same components.' },
+          { title: '@threadplane/chat', description: 'Same components.' },
         ]}
         cta={{ label: 'API reference', href: '/docs/agent/api/agent' }}
         visualLeft
@@ -135,8 +135,8 @@ export default async function AgUiPage() {
               minHeight: 320,
               overflow: 'auto',
             }}>
-{`import { provideAgUiAgent, AG_UI_AGENT } from '@ngaf/ag-ui';
-import { ChatComponent } from '@ngaf/chat';
+{`import { provideAgUiAgent, AG_UI_AGENT } from '@threadplane/ag-ui';
+import { ChatComponent } from '@threadplane/chat';
 
 // app.config.ts
 export const appConfig: ApplicationConfig = {

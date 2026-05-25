@@ -1,7 +1,7 @@
 ---
 name: marketing
 description: |
-  ThreadPlane marketing pipeline operator. Reads `marketing/cowork/inbox/*.json`
+  Threadplane marketing pipeline operator. Reads `marketing/cowork/inbox/*.json`
   draft bundles, presents them for review in conversation, supports
   edit/approve/reject decisions, and dispatches approved drafts to channel
   adapters. Invoke when "drafts are waiting" or when the user wants to

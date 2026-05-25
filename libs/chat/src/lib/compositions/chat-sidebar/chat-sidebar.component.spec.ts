@@ -29,10 +29,10 @@ describe('ChatSidebarComponent', () => {
 
 describe('ChatSidebarComponent — edge-claim attribute', () => {
   afterEach(() => {
-    document.documentElement.removeAttribute('data-ngaf-chat-sidebar');
+    document.documentElement.removeAttribute('data-threadplane-chat-sidebar');
   });
 
-  it('sets data-ngaf-chat-sidebar="open" on <html> while open', () => {
+  it('sets data-threadplane-chat-sidebar="open" on <html> while open', () => {
     TestBed.configureTestingModule({});
     TestBed.runInInjectionContext(() => {
       const sidebar = new ChatSidebarComponent();
@@ -40,11 +40,11 @@ describe('ChatSidebarComponent — edge-claim attribute', () => {
       sidebar.openWindow();
       // Force a microtask flush so the effect runs
       TestBed.flushEffects();
-      expect(document.documentElement.getAttribute('data-ngaf-chat-sidebar')).toBe('open');
+      expect(document.documentElement.getAttribute('data-threadplane-chat-sidebar')).toBe('open');
     });
   });
 
-  it('removes data-ngaf-chat-sidebar from <html> when closed', () => {
+  it('removes data-threadplane-chat-sidebar from <html> when closed', () => {
     TestBed.configureTestingModule({});
     TestBed.runInInjectionContext(() => {
       const sidebar = new ChatSidebarComponent();
@@ -52,7 +52,7 @@ describe('ChatSidebarComponent — edge-claim attribute', () => {
       TestBed.flushEffects();
       sidebar.closeWindow();
       TestBed.flushEffects();
-      expect(document.documentElement.hasAttribute('data-ngaf-chat-sidebar')).toBe(false);
+      expect(document.documentElement.hasAttribute('data-threadplane-chat-sidebar')).toBe(false);
     });
   });
 

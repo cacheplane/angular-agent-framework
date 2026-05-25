@@ -2,7 +2,7 @@
 
 import posthog from 'posthog-js';
 import { analyticsEvents, type AnalyticsEventName, type AnalyticsProperties } from './events';
-import { getSourcePage, toSafeAnalyticsString } from '@ngaf/telemetry/shared';
+import { getSourcePage, toSafeAnalyticsString } from '@threadplane/telemetry/shared';
 
 function currentSourcePage(): string {
   if (typeof window === 'undefined') return '/';

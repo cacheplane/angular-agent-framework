@@ -5,8 +5,8 @@ Factory function that creates a `ParseTreeStore` — a bridge between the `@cach
 **Import:**
 
 ```typescript
-import { createParseTreeStore } from '@ngaf/chat';
-import type { ParseTreeStore, ElementAccumulationState } from '@ngaf/chat';
+import { createParseTreeStore } from '@threadplane/chat';
+import type { ParseTreeStore, ElementAccumulationState } from '@threadplane/chat';
 ```
 
 ## Signature
@@ -51,7 +51,7 @@ interface ElementAccumulationState {
 
 ```typescript
 import { createPartialJsonParser } from '@cacheplane/partial-json';
-import { createParseTreeStore } from '@ngaf/chat';
+import { createParseTreeStore } from '@threadplane/chat';
 
 const parser = createPartialJsonParser();
 const store = createParseTreeStore(parser);

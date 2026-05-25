@@ -1,5 +1,6 @@
 {
-  "name": "@ngaf/cockpit-langgraph-streaming-python",
+  "name": "@threadplane/cockpit-langgraph-streaming-python",
+  "private": true,
   "version": "0.0.1",
   "license": "MIT",
   "sideEffects": false

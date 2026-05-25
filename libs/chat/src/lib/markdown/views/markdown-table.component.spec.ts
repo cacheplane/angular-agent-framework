@@ -3,7 +3,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { Component, signal } from '@angular/core';
-import { views } from '@ngaf/render';
+import { views } from '@threadplane/render';
 import type { MarkdownTableNode } from '@cacheplane/partial-markdown';
 import { MarkdownTableComponent } from './markdown-table.component';
 import { MarkdownTableRowComponent } from './markdown-table-row.component';

@@ -7,7 +7,7 @@ import { surfaces } from './surfaces';
 /**
  * Combined token shape. Consumers that need theme resolution should
  * import baseTokens + lightOverrides/darkOverrides directly, or use
- * `cssVars(theme)` from @ngaf/ui-react.
+ * `cssVars(theme)` from @threadplane/ui-react.
  *
  * `tokens.colors` and `tokens.surfaces` are backwards-compat aliases for
  * the light-theme resolved values — existing website consumers (light-only)

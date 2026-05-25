@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 import { test, expect } from '@playwright/test';
-import { submitAndWaitForResponse } from '@ngaf-internal/e2e-harness';
+import { submitAndWaitForResponse } from '@threadplane-internal/e2e-harness';
 
 test('c-a2ui: LAX-JFK prompt renders a2ui-surface with form spec', async ({ page }) => {
   await submitAndWaitForResponse(page, 'I want to fly LAX to JFK');

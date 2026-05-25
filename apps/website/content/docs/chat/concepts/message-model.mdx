@@ -1,6 +1,6 @@
 # Message Model
 
-`@ngaf/chat` renders a runtime-neutral message model. Adapters translate backend-specific messages into this shape, then components render from it.
+`@threadplane/chat` renders a runtime-neutral message model. Adapters translate backend-specific messages into this shape, then components render from it.
 
 This matters because provider message formats are not stable enough to build customer UI against directly. LangGraph, AG-UI, OpenAI, Anthropic, and custom backends all have different event and content shapes. The chat layer needs one model.
 
@@ -126,7 +126,7 @@ Messages can carry provider-agnostic citations:
 message.citations;
 ```
 
-`@ngaf/langgraph` exports `extractCitations()` for advanced adapters that need to normalize nonstandard citation payloads. Chat markdown views can render citation markers against the message citation list.
+`@threadplane/langgraph` exports `extractCitations()` for advanced adapters that need to normalize nonstandard citation payloads. Chat markdown views can render citation markers against the message citation list.
 
 Keep citation data on the message that owns the content. Avoid a separate global citation store unless your product has a cross-message source panel.
 
@@ -186,7 +186,7 @@ import {
   isAssistantMessage,
   isToolMessage,
   isSystemMessage,
-} from '@ngaf/chat';
+} from '@threadplane/chat';
 ```
 
 Put backend-specific fields in `extra`, and document them in your adapter. Portable UI should survive when `extra` is absent.

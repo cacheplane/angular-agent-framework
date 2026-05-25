@@ -1,13 +1,13 @@
-# @ngaf/render
+# @threadplane/render
 
 Generative UI for Angular. Agents emit structured JSON specs; this library renders them into Angular components you already own. Supports the Vercel `json-render` and Google A2UI v1-compatible protocols out of the box.
 
-Part of [Agent UI for Angular](https://github.com/cacheplane/angular-agent-framework). MIT licensed.
+Part of [Threadplane](https://github.com/cacheplane/angular-agent-framework). MIT licensed.
 
 ## Install
 
 ```bash
-npm install @ngaf/render
+npm install @threadplane/render
 ```
 
 ## What it does

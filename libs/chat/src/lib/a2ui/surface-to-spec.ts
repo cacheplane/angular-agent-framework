@@ -3,8 +3,8 @@ import type { Spec, UIElement } from '@json-render/core';
 import type {
   A2uiSurface, A2uiComponent, A2uiAction, A2uiChildren,
   A2uiActionContextEntry,
-} from '@ngaf/a2ui';
-import { resolveDynamic, getByPointer, isPathRef } from '@ngaf/a2ui';
+} from '@threadplane/a2ui';
+import { resolveDynamic, getByPointer, isPathRef } from '@threadplane/a2ui';
 
 const RESERVED_PROP_KEYS = new Set(['child', 'children', 'action', 'tabItems', 'entryPointChild', 'contentChild']);
 

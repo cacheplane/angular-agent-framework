@@ -9,7 +9,7 @@ In most apps you never instantiate `FetchStreamTransport` directly. When no cust
 You reach for it explicitly when you want to share a transport instance, inspect behavior in tests, or implement a custom transport by matching the same `AgentTransport` interface.
 
 ```ts
-import { agent, FetchStreamTransport } from '@ngaf/langgraph';
+import { agent, FetchStreamTransport } from '@threadplane/langgraph';
 
 const transport = new FetchStreamTransport(
   'http://localhost:2024',

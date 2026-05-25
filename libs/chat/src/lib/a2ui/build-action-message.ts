@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-import type { A2uiSurface, A2uiActionMessage } from '@ngaf/a2ui';
+import type { A2uiSurface, A2uiActionMessage } from '@threadplane/a2ui';
 
 function toDynamicValue(v: unknown): unknown {
   if (typeof v === 'string') return { literalString: v };

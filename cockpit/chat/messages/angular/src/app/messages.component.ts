@@ -8,13 +8,13 @@ import {
   ChatStreamingMdComponent,
   MessageTemplateDirective,
   messageContent,
-} from '@ngaf/chat';
-import { ExampleChatLayoutComponent } from '@ngaf/example-layouts';
-import { agent } from '@ngaf/langgraph';
+} from '@threadplane/chat';
+import { ExampleChatLayoutComponent } from '@threadplane/example-layouts';
+import { agent } from '@threadplane/langgraph';
 import { environment } from '../environments/environment';
 
 /**
- * MessagesComponent demonstrates the chat message primitives from @ngaf/chat.
+ * MessagesComponent demonstrates the chat message primitives from @threadplane/chat.
  *
  * Uses ChatMessageListComponent, ChatInputComponent, and ChatTypingIndicatorComponent
  * individually rather than the composed ChatComponent, giving full control

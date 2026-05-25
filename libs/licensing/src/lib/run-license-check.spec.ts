@@ -42,7 +42,7 @@ describe('runLicenseCheck', () => {
   it('does not warn with a valid token and does not perform network I/O', async () => {
     const fetchSpy = vi.spyOn(globalThis, 'fetch');
     const status = await runLicenseCheck({
-      package: '@ngaf/langgraph',
+      package: '@threadplane/langgraph',
       token: validToken,
       publicKey: kp.publicKey,
       nowSec: 1_900_000_000,
@@ -55,7 +55,7 @@ describe('runLicenseCheck', () => {
 
   it('warns when token is missing', async () => {
     const status = await runLicenseCheck({
-      package: '@ngaf/langgraph',
+      package: '@threadplane/langgraph',
       publicKey: kp.publicKey,
       nowSec: 1_900_000_000,
       warn,
@@ -66,14 +66,14 @@ describe('runLicenseCheck', () => {
 
   it('is idempotent per (package, token) pair', async () => {
     await runLicenseCheck({
-      package: '@ngaf/langgraph',
+      package: '@threadplane/langgraph',
       token: validToken,
       publicKey: kp.publicKey,
       nowSec: 1_900_000_000,
       warn,
     });
     await runLicenseCheck({
-      package: '@ngaf/langgraph',
+      package: '@threadplane/langgraph',
       token: validToken,
       publicKey: kp.publicKey,
       nowSec: 1_900_000_000,
@@ -87,14 +87,14 @@ describe('runLicenseCheck', () => {
     const tamperedToken = mutateSignature(validToken);
     expect(tamperedToken).not.toBe(validToken);
     const first = await runLicenseCheck({
-      package: '@ngaf/langgraph',
+      package: '@threadplane/langgraph',
       token: validToken,
       publicKey: kp.publicKey,
       nowSec: 1_900_000_000,
       warn,
     });
     const second = await runLicenseCheck({
-      package: '@ngaf/langgraph',
+      package: '@threadplane/langgraph',
       token: tamperedToken,
       publicKey: kp.publicKey,
       nowSec: 1_900_000_000,
@@ -109,7 +109,7 @@ describe('runLicenseCheck', () => {
     // No-token first call: status should be 'missing' (production) or
     // 'noncommercial' (dev). Force the production posture so we get 'missing'.
     const result1 = await runLicenseCheck({
-      package: '@ngaf/chat',
+      package: '@threadplane/chat',
       token: undefined,
       publicKey: kp.publicKey,
       isNoncommercial: false,
@@ -120,7 +120,7 @@ describe('runLicenseCheck', () => {
     // Second call with the same (package, token) tuple: must return the
     // same status that was computed, not the literal 'licensed'.
     const result2 = await runLicenseCheck({
-      package: '@ngaf/chat',
+      package: '@threadplane/chat',
       token: undefined,
       publicKey: kp.publicKey,
       isNoncommercial: false,

@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { tokens } from '@ngaf/design-tokens';
+import { tokens } from '@threadplane/design-tokens';
 import { getLibraryConfig, type LibraryId } from '../../lib/docs-config';
 
 interface Props {

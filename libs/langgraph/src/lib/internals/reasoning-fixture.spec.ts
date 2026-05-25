@@ -5,9 +5,9 @@ import {
   REASONING_FIXTURE_MESSAGE_ID,
   assertReasoningFixtureMessages,
   type AbstractEvent,
-} from '@ngaf/chat/testing';
+} from '@threadplane/chat/testing';
 import type { BaseMessage } from '@langchain/core/messages';
-import type { Message } from '@ngaf/chat';
+import type { Message } from '@threadplane/chat';
 import { _internalsForTesting } from './stream-manager.bridge';
 
 const { mergeMessages } = _internalsForTesting;

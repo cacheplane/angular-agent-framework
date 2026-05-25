@@ -57,9 +57,9 @@ describe('ROOT_TOKEN_STYLES — edge-claim primitive', () => {
     expect(ROOT_TOKEN_STYLES).toContain(decl);
   });
 
-  it('maps data-ngaf-chat-sidebar="open" to occupy-right', () => {
+  it('maps data-threadplane-chat-sidebar="open" to occupy-right', () => {
     expect(ROOT_TOKEN_STYLES).toMatch(
-      /:root\[data-ngaf-chat-sidebar="open"\]\s*\{[^}]*--ngaf-chat-occupy-right:\s*var\(--ngaf-chat-sidebar-width-drawer/,
+      /:root\[data-threadplane-chat-sidebar="open"\]\s*\{[^}]*--ngaf-chat-occupy-right:\s*var\(--ngaf-chat-sidebar-width-drawer/,
     );
   });
 
@@ -67,9 +67,9 @@ describe('ROOT_TOKEN_STYLES — edge-claim primitive', () => {
     ['bottom', '--ngaf-chat-occupy-bottom', '--ngaf-chat-debug-panel-size-h'],
     ['right',  '--ngaf-chat-occupy-right',  '--ngaf-chat-debug-panel-size-w'],
     ['left',   '--ngaf-chat-occupy-left',   '--ngaf-chat-debug-panel-size-w'],
-  ])('maps data-ngaf-chat-debug=%s to %s via %s', (dock, occupyVar, sizeVar) => {
+  ])('maps data-threadplane-chat-debug=%s to %s via %s', (dock, occupyVar, sizeVar) => {
     const pattern = new RegExp(
-      `:root\\[data-ngaf-chat-debug="${dock}"\\]\\s*\\{[^}]*${occupyVar}:\\s*var\\(${sizeVar}`,
+      `:root\\[data-threadplane-chat-debug="${dock}"\\]\\s*\\{[^}]*${occupyVar}:\\s*var\\(${sizeVar}`,
     );
     expect(ROOT_TOKEN_STYLES).toMatch(pattern);
   });
@@ -89,7 +89,7 @@ describe('ROOT_TOKEN_STYLES — edge-claim primitive', () => {
 
   it('sidebar attribute mapping also sets per-component claim var', () => {
     expect(ROOT_TOKEN_STYLES).toMatch(
-      /:root\[data-ngaf-chat-sidebar="open"\]\s*\{[^}]*--ngaf-chat-sidebar-claim-right:\s*var\(--ngaf-chat-sidebar-width-drawer/,
+      /:root\[data-threadplane-chat-sidebar="open"\]\s*\{[^}]*--ngaf-chat-sidebar-claim-right:\s*var\(--ngaf-chat-sidebar-width-drawer/,
     );
   });
 
@@ -99,7 +99,7 @@ describe('ROOT_TOKEN_STYLES — edge-claim primitive', () => {
     ['left',   '--ngaf-chat-debug-claim-left',   '--ngaf-chat-debug-panel-size-w'],
   ])('debug attribute mapping for %s also sets %s', (dock, claimVar, sizeVar) => {
     const pattern = new RegExp(
-      `:root\\[data-ngaf-chat-debug="${dock}"\\]\\s*\\{[^}]*${claimVar}:\\s*var\\(${sizeVar}`,
+      `:root\\[data-threadplane-chat-debug="${dock}"\\]\\s*\\{[^}]*${claimVar}:\\s*var\\(${sizeVar}`,
     );
     expect(ROOT_TOKEN_STYLES).toMatch(pattern);
   });
@@ -109,10 +109,10 @@ describe('ROOT_TOKEN_STYLES — theme attribute selectors', () => {
   it.each([
     '[data-theme="light"]',
     '[data-theme="dark"]',
-    '[data-ngaf-chat-theme="light"]',
-    '[data-ngaf-chat-theme="dark"]',
+    '[data-threadplane-chat-theme="light"]',
+    '[data-threadplane-chat-theme="dark"]',
   ])('honors %s as a theme override hook', (selector) => {
-    // Both `data-theme` (consumer-facing override) and `data-ngaf-chat-theme`
+    // Both `data-theme` (consumer-facing override) and `data-threadplane-chat-theme`
     // (the chat-lib-internal attribute documented for app-shells that
     // already use `data-theme` for their own picker) must flip tokens.
     expect(ROOT_TOKEN_STYLES).toContain(selector);

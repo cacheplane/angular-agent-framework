@@ -1,4 +1,4 @@
-export type NgafNodeEvent =
+export type ThreadplaneNodeEvent =
   | 'ngaf:postinstall'
   | 'ngaf:runtime_instance_created'
   | 'ngaf:runtime_request_created'
@@ -6,8 +6,8 @@ export type NgafNodeEvent =
   | 'ngaf:stream_ended'
   | 'ngaf:stream_errored';
 
-export type NgafBrowserEvent =
+export type ThreadplaneBrowserEvent =
   | 'ngaf:browser_provided'
   | 'ngaf:browser_chat_init';
 
-export type NgafEvent = NgafNodeEvent | NgafBrowserEvent;
+export type ThreadplaneEvent = ThreadplaneNodeEvent | ThreadplaneBrowserEvent;

@@ -19,18 +19,18 @@ A running LangGraph agent accessible via HTTP. Can be local (langgraph dev) or d
 ## Install the package
 
 ```bash
-npm install @ngaf/langgraph @ngaf/chat
+npm install @threadplane/langgraph @threadplane/chat
 ```
 
-`@ngaf/langgraph` provides `agent()` and `provideAgent()`. `@ngaf/chat` provides the runtime-neutral chat UI consumed by the LangGraph adapter.
+`@threadplane/langgraph` provides `agent()` and `provideAgent()`. `@threadplane/chat` provides the runtime-neutral chat UI consumed by the LangGraph adapter.
 
 ## Peer Dependencies
 
-`@ngaf/langgraph` declares the following peer dependencies:
+`@threadplane/langgraph` declares the following peer dependencies:
 
 | Package | Version |
 |---------|---------|
-| `@ngaf/chat` | `*` |
+| `@threadplane/chat` | `*` |
 | `@angular/core` | `^20.0.0 \|\| ^21.0.0` |
 | `@langchain/core` | `^1.1.33` |
 | `@langchain/langgraph-sdk` | `^1.7.4` |
@@ -43,7 +43,7 @@ Add `provideAgent()` to your application configuration. This sets global default
 ```typescript
 // app.config.ts
 import { ApplicationConfig } from '@angular/core';
-import { provideAgent } from '@ngaf/langgraph';
+import { provideAgent } from '@threadplane/langgraph';
 import { environment } from '../environments/environment';
 
 export const appConfig: ApplicationConfig = {

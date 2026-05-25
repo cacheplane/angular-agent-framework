@@ -1,13 +1,13 @@
-# @ngaf/telemetry
+# @threadplane/telemetry
 
-This README is the public trust contract for `@ngaf/*` telemetry. It is linked
+This README is the public trust contract for `@threadplane/*` telemetry. It is linked
 from package install notices and should stay aligned with implementation.
 
 ## Imports
 
 ```typescript
 // Browser (Angular DI provider)
-import { provideNgafTelemetry } from '@ngaf/telemetry/browser';
+import { provideThreadplaneTelemetry } from '@threadplane/telemetry/browser';
 
 // Node (server adapters)
 import {
@@ -17,26 +17,26 @@ import {
   captureStreamEnded,
   captureStreamErrored,
   disableTelemetry,
-} from '@ngaf/telemetry/node';
+} from '@threadplane/telemetry/node';
 
 // Shared utilities (events, env detection, hashing)
-import { isTelemetryDisabled, sha256, getAnonId } from '@ngaf/telemetry';
+import { isTelemetryDisabled, sha256, getAnonId } from '@threadplane/telemetry';
 ```
 
 ## What this package is
 
-The single telemetry surface for `@ngaf/*`. It exists so we can answer "how is ThreadPlane being used?" without instrumenting browser packages that ship to end-users.
+The single telemetry surface for `@threadplane/*`. It exists so we can answer "how is Threadplane being used?" without instrumenting browser packages that ship to end-users.
 
 ## What is and isn't telemetered
 
 **Telemetered by default (Node, opt-out):**
-- `ngaf:postinstall` — fires once per dependency/global install of a published `@ngaf/*` package. Properties: package name, package version, Node version, OS, CPU architecture, package manager name/version, installer-reported Node/OS/architecture, workspace/global install flags when npm exposes them, sample weight. It uses a per-process anonymous id. No project path, no raw environment variables, no dependency tree, no installer IP address.
+- `ngaf:postinstall` — fires once per dependency/global install of a published `@threadplane/*` package. Properties: package name, package version, Node version, OS, CPU architecture, package manager name/version, installer-reported Node/OS/architecture, workspace/global install flags when npm exposes them, sample weight. It uses a per-process anonymous id. No project path, no raw environment variables, no dependency tree, no installer IP address.
 - `ngaf:runtime_instance_created` — server adapters (LangGraph, AG-UI) call this when they spin up. Properties: which transport, which model provider (string), Angular peer version. **No API keys**, no endpoint hostnames, no user data.
 - `ngaf:runtime_request_created` — server adapters call this when they create a transport request. Properties: transport, request type, provider, model. No prompts, thread IDs, assistant IDs, endpoint URLs, or headers.
 - `ngaf:stream_started` / `ngaf:stream_ended` / `ngaf:stream_errored` — per-request lifecycle on server adapters. Properties: provider, model name, duration, error class. No prompts, no completions, no message content.
 
 **Telemetered only on explicit opt-in (Browser):**
-- Nothing fires unless the consumer calls `provideNgafTelemetry({ enabled: true, sink })` or `provideNgafTelemetry({ enabled: true, endpoint })` in their root providers.
+- Nothing fires unless the consumer calls `provideThreadplaneTelemetry({ enabled: true, sink })` or `provideThreadplaneTelemetry({ enabled: true, endpoint })` in their root providers.
 - When opted in: `ngaf:browser_provided`, `ngaf:browser_chat_init`, and browser-side runtime lifecycle events explicitly captured by the app (`ngaf:runtime_instance_created`, `ngaf:runtime_request_created`, `ngaf:stream_started`, `ngaf:stream_ended`, `ngaf:stream_errored`). Anonymous, no message content.
 
 **Never telemetered (by anyone, at any time):**
@@ -53,7 +53,7 @@ Node telemetry is on by default. Three ways to opt out — any one turns it off.
 | Cross-vendor env var | `DO_NOT_TRACK=1` or `DO_NOT_TRACK=true` |
 | npm config env var | `npm_config_do_not_track=true` |
 | Package env var | `NGAF_TELEMETRY_DISABLED=1` or `NGAF_TELEMETRY_DISABLED=true` |
-| Programmatic | `import { disableTelemetry } from '@ngaf/telemetry/node'; disableTelemetry();` before any other `@ngaf/*` import |
+| Programmatic | `import { disableTelemetry } from '@threadplane/telemetry/node'; disableTelemetry();` before any other `@threadplane/*` import |
 
 CI environments (`CI=true`, `GITHUB_ACTIONS=true`, etc.) are auto-detected and treated as opt-out by default.
 
@@ -69,12 +69,12 @@ Browser telemetry is **off by default** and never fires from the library itself.
 
 ```ts
 // app.config.ts (or wherever you bootstrap)
-import { provideNgafTelemetry } from '@ngaf/telemetry/browser';
+import { provideThreadplaneTelemetry } from '@threadplane/telemetry/browser';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     // ...
-    provideNgafTelemetry({
+    provideThreadplaneTelemetry({
       enabled: true,
       endpoint: '/api/telemetry',
     }),
@@ -97,7 +97,7 @@ The endpoint receives neutral JSON:
 
 You can also pass `sink: async ({ event, properties }) => { ... }` and route events through your own analytics client. Legacy `posthogKey` / `posthogHost` options still work for existing adopters, but new app code should prefer `sink` or `endpoint` so the public API is vendor-neutral.
 
-If you don't call `provideNgafTelemetry({ enabled: true })`, every telemetry helper in `@ngaf/*` browser packages no-ops. No network calls, ever.
+If you don't call `provideThreadplaneTelemetry({ enabled: true })`, every telemetry helper in `@threadplane/*` browser packages no-ops. No network calls, ever.
 
 ## Sampling
 
@@ -119,14 +119,14 @@ Enterprise users can redirect Node telemetry to their own ingest:
 NGAF_TELEMETRY_INGEST_URL=https://telemetry.acme-internal.example.com/api/ingest
 ```
 
-Default ingest (when env var is unset) is a thin proxy on the ThreadPlane website (`https://threadplane.ai/api/ingest`) that accepts the `@ngaf/telemetry` JSON payload and forwards `ngaf:*` events to our PostHog project without forwarding installer IP addresses. Source of the proxy lives in `apps/website/src/app/api/ingest/`.
+Default ingest (when env var is unset) is a thin proxy on the Threadplane website (`https://threadplane.ai/api/ingest`) that accepts the `@threadplane/telemetry` JSON payload and forwards `ngaf:*` events to our PostHog project without forwarding installer IP addresses. Source of the proxy lives in `apps/website/src/app/api/ingest/`.
 
 ## Verifying telemetry is silent
 
-The `@ngaf/telemetry/browser` unit test suite includes a permanent trust test:
+The `@threadplane/telemetry/browser` unit test suite includes a permanent trust test:
 
 ```
-test('no network call occurs when provideNgafTelemetry is never called', ...)
+test('no network call occurs when provideThreadplaneTelemetry is never called', ...)
 ```
 
 If this test ever fails, the trust contract has been violated and the build blocks.

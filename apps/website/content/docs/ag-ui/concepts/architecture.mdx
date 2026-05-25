@@ -1,6 +1,6 @@
 # Architecture
 
-`@ngaf/ag-ui` is an adapter. It does not replace `@ngaf/chat`, and it does not define a new chat runtime.
+`@threadplane/ag-ui` is an adapter. It does not replace `@threadplane/chat`, and it does not define a new chat runtime.
 
 The package takes an AG-UI `AbstractAgent`, listens to its protocol events, and exposes the runtime-neutral `Agent` contract that the chat components already understand.
 
@@ -8,11 +8,11 @@ The package takes an AG-UI `AbstractAgent`, listens to its protocol events, and 
 Angular component
   |
   v
-@ngaf/chat Agent contract
+@threadplane/chat Agent contract
   |  messages, status, isLoading, error, toolCalls, state, events$
   |
   v
-@ngaf/ag-ui toAgent()
+@threadplane/ag-ui toAgent()
   |  reduces AG-UI events into Angular signals
   |
   v
@@ -24,14 +24,14 @@ AG-UI backend or in-process fake agent
 
 ## The boundary
 
-The important boundary is the `Agent` contract from `@ngaf/chat`.
+The important boundary is the `Agent` contract from `@threadplane/chat`.
 
 Your components should depend on `Agent`, not on AG-UI transport details. That keeps the UI portable across AG-UI, LangGraph, and custom adapters.
 
 `toAgent(source)` is the low-level boundary. It accepts any AG-UI `AbstractAgent` implementation:
 
 ```ts
-import { toAgent } from '@ngaf/ag-ui';
+import { toAgent } from '@threadplane/ag-ui';
 import { HttpAgent } from '@ag-ui/client';
 
 const source = new HttpAgent({ url: '/api/agent' });
@@ -42,7 +42,7 @@ Most Angular apps should use DI instead:
 
 ```ts
 import { ApplicationConfig } from '@angular/core';
-import { provideAgUiAgent } from '@ngaf/ag-ui';
+import { provideAgUiAgent } from '@threadplane/ag-ui';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -55,8 +55,8 @@ export const appConfig: ApplicationConfig = {
 
 ```ts
 import { Component } from '@angular/core';
-import { ChatComponent } from '@ngaf/chat';
-import { injectAgUiAgent } from '@ngaf/ag-ui';
+import { ChatComponent } from '@threadplane/chat';
+import { injectAgUiAgent } from '@threadplane/ag-ui';
 
 @Component({
   standalone: true,
@@ -72,7 +72,7 @@ You can also inject the token directly:
 
 ```ts
 import { inject } from '@angular/core';
-import { AG_UI_AGENT } from '@ngaf/ag-ui';
+import { AG_UI_AGENT } from '@threadplane/ag-ui';
 
 const agent = inject(AG_UI_AGENT);
 ```
@@ -111,12 +111,12 @@ The config maps directly to the AG-UI `HttpAgent` options currently exposed by t
 `threadId` here is a plain string consumed once at construction — the provider does not accept an Angular Signal, and the adapter does not observe changes to it at runtime. The AG-UI protocol carries events, not snapshots, and defines no server-side endpoint for "fetch the messages of thread X". To move a user between threads with their prior conversation restored, you have two options:
 
 - **Recreate the provider.** Inject `provideAgUiAgent({ ..., threadId: newId })` from a fresh injector when the active thread changes. Any prior message history must come from your own host service — pre-populate `setMessages()` on the source before the adapter boots, or render a "loading…" surface while you fetch it.
-- **Use the LangGraph adapter instead.** `@ngaf/langgraph` accepts `threadId: Signal<string | null>` and hydrates messages from the latest checkpoint on every change. See its [Persistence guide](/docs/agent/guides/persistence). Use AG-UI when your runtime publishes events without checkpoint storage; use LangGraph when the server owns durable thread state.
+- **Use the LangGraph adapter instead.** `@threadplane/langgraph` accepts `threadId: Signal<string | null>` and hydrates messages from the latest checkpoint on every change. See its [Persistence guide](/docs/agent/guides/persistence). Use AG-UI when your runtime publishes events without checkpoint storage; use LangGraph when the server owns durable thread state.
 
 Use `provideFakeAgUiAgent()` when you need the UI to run without a backend:
 
 ```ts
-import { provideFakeAgUiAgent } from '@ngaf/ag-ui';
+import { provideFakeAgUiAgent } from '@threadplane/ag-ui';
 
 providers: [
   provideFakeAgUiAgent({
@@ -157,7 +157,7 @@ These features are intentionally out of scope for the AG-UI adapter today:
 - Subagents.
 - **History and time-travel.** AG-UI is an event-stream protocol — it doesn't define a server-side "fetch state of thread X" endpoint, so the adapter can't hydrate prior messages on a `threadId` change the way a checkpoint-aware runtime can. The [Provider choices](#provider-choices) section above describes the two patterns AG-UI consumers use to work around this.
 
-If those are central to your product, use the LangGraph adapter for that surface or build a custom adapter against the `@ngaf/chat` `Agent` contract. The [Writing an Adapter guide](/docs/chat/guides/writing-an-adapter#hydrating-from-a-server-stored-thread) walks through the thread-loading design choice in detail.
+If those are central to your product, use the LangGraph adapter for that surface or build a custom adapter against the `@threadplane/chat` `Agent` contract. The [Writing an Adapter guide](/docs/chat/guides/writing-an-adapter#hydrating-from-a-server-stored-thread) walks through the thread-loading design choice in detail.
 
 ## Next steps
 

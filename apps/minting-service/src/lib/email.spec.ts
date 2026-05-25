@@ -24,7 +24,7 @@ describe('renderLicenseEmail', () => {
       expiresAt: new Date('2027-04-20T00:00:00Z'),
       stripeCustomerId: 'cus_test',
     });
-    expect(out.subject).toBe('Your ThreadPlane license — developer_seat (3 seats)');
+    expect(out.subject).toBe('Your Threadplane license — developer_seat (3 seats)');
   });
 
   it('subject uses singular seat for seats === 1', () => {
@@ -35,7 +35,7 @@ describe('renderLicenseEmail', () => {
       expiresAt: new Date('2027-04-20T00:00:00Z'),
       stripeCustomerId: 'cus_test',
     });
-    expect(out.subject).toBe('Your ThreadPlane license — team (1 seat)');
+    expect(out.subject).toBe('Your Threadplane license — team (1 seat)');
   });
 
   it('includes ISO 8601 UTC expiry in text body', () => {

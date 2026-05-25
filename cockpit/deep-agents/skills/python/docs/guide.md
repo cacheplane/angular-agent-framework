@@ -2,12 +2,12 @@
 
 <Summary>
 Build a chat interface that shows real-time skill invocations using `agent()` from
-`@ngaf/langgraph`. The agent selects from specialized tools (calculator, word counter,
+`@threadplane/langgraph`. The agent selects from specialized tools (calculator, word counter,
 summarizer) based on the user's request, and the sidebar displays each skill invocation as a card.
 </Summary>
 
 <Prompt>
-Add a skill invocation sidebar to this Angular component using `agent()` from `@ngaf/langgraph`. Use `stream.messages()` to access tool call data, derive `skillInvocations` with `computed()`, and bind them to the sidebar beside the `<chat>` component from `@ngaf/chat`.
+Add a skill invocation sidebar to this Angular component using `agent()` from `@threadplane/langgraph`. Use `stream.messages()` to access tool call data, derive `skillInvocations` with `computed()`, and bind them to the sidebar beside the `<chat>` component from `@threadplane/chat`.
 </Prompt>
 
 <Steps>
@@ -18,7 +18,7 @@ Set up `provideAgent()` in your app config with the LangGraph API URL:
 ```typescript
 // app.config.ts
 import { ApplicationConfig } from '@angular/core';
-import { provideAgent } from '@ngaf/langgraph';
+import { provideAgent } from '@threadplane/langgraph';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -38,7 +38,7 @@ In your component, call `agent()` with the `assistantId` pointing to your skills
 
 ```typescript
 // skills.component.ts
-import { agent } from '@ngaf/langgraph';
+import { agent } from '@threadplane/langgraph';
 
 export class SkillsComponent {
   protected readonly stream = agent({
@@ -94,7 +94,7 @@ Each tool call in an AI message maps to a skill invocation card. The `result` fi
 </Step>
 <Step title="Build the template with skill invocation sidebar">
 
-Use the `<chat>` component from `@ngaf/chat` and render a sibling sidebar:
+Use the `<chat>` component from `@threadplane/chat` and render a sibling sidebar:
 
 ```html
 <chat [agent]="stream" />

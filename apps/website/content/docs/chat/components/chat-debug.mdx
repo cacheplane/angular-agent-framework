@@ -7,15 +7,15 @@
 **Import:**
 
 ```typescript
-import { ChatDebugComponent } from '@ngaf/chat/debug';
+import { ChatDebugComponent } from '@threadplane/chat/debug';
 ```
 
 ## Basic Usage
 
 ```typescript
 import { Component, ChangeDetectionStrategy, signal } from '@angular/core';
-import { agent } from '@ngaf/langgraph';
-import { ChatDebugComponent } from '@ngaf/chat/debug';
+import { agent } from '@threadplane/langgraph';
+import { ChatDebugComponent } from '@threadplane/chat/debug';
 
 @Component({
   selector: 'app-debug-page',
@@ -93,6 +93,6 @@ The footer button is labelled in expanded and drawer modes. In collapsed mode it
 
 ## Production Bundles
 
-The debug implementation lives under `@ngaf/chat/debug`; the main `@ngaf/chat` entry point no longer exports it. In the canonical Angular demo, normal production builds set `NGAF_CHAT_DEBUG=false` and externalize `@ngaf/chat/debug`, so the debug implementation is absent from the emitted bundle. The `production-debug` build opts back in with `NGAF_CHAT_DEBUG=true`.
+The debug implementation lives under `@threadplane/chat/debug`; the main `@threadplane/chat` entry point no longer exports it. In the canonical Angular demo, normal production builds set `THREADPLANE_CHAT_DEBUG=false` and externalize `@threadplane/chat/debug`, so the debug implementation is absent from the emitted bundle. The `production-debug` build opts back in with `THREADPLANE_CHAT_DEBUG=true`.
 
 Keep debug controls for your app outside the debug panel. The debug panel intentionally exposes a small fixed surface so consumers do not expect demo-specific controls to appear in their own applications.

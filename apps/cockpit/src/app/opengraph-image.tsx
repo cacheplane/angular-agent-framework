@@ -10,10 +10,10 @@
  * don't need to bundle a serif TTF.
  */
 import { ImageResponse } from 'next/og';
-import { darkOverrides } from '@ngaf/design-tokens';
+import { darkOverrides } from '@threadplane/design-tokens';
 
 export const runtime = 'edge';
-export const alt = 'Cockpit — the live reference app for Agent UI for Angular';
+export const alt = 'Cockpit — the live reference app for Threadplane';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 
@@ -71,7 +71,7 @@ export default async function OpenGraphImage() {
             marginBottom: 24,
           }}
         >
-          Cockpit · Agent UI for Angular
+          Cockpit · Threadplane
         </div>
 
         {/* Headline — Inter Bold (cockpit chrome is sans-serif Linear-style) */}

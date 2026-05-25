@@ -1,8 +1,8 @@
 import { Component, computed } from '@angular/core';
-import { ChatComponent, views } from '@ngaf/chat';
-import { ExampleChatLayoutComponent } from '@ngaf/example-layouts';
-import { agent } from '@ngaf/langgraph';
-import { signalStateStore } from '@ngaf/render';
+import { ChatComponent, views } from '@threadplane/chat';
+import { ExampleChatLayoutComponent } from '@threadplane/example-layouts';
+import { agent } from '@threadplane/langgraph';
+import { signalStateStore } from '@threadplane/render';
 import { environment } from '../environments/environment';
 import { CodeExecutionComponent } from './views/code-execution.component';
 

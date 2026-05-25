@@ -9,19 +9,19 @@
 ## Install packages
 
 ```bash
-npm install @ngaf/chat @ngaf/ag-ui @ag-ui/client
+npm install @threadplane/chat @threadplane/ag-ui @ag-ui/client
 ```
 
-`@ngaf/chat` provides the chat UI primitives. `@ngaf/ag-ui` provides the adapter that wires an AG-UI backend into the `Agent` contract those primitives consume.
+`@threadplane/chat` provides the chat UI primitives. `@threadplane/ag-ui` provides the adapter that wires an AG-UI backend into the `Agent` contract those primitives consume.
 
 ## Peer Dependencies
 
-`@ngaf/ag-ui` declares the following peer dependencies:
+`@threadplane/ag-ui` declares the following peer dependencies:
 
 | Package | Version |
 |---|---|
-| `@ngaf/chat` | `*` |
-| `@ngaf/licensing` | `*` |
+| `@threadplane/chat` | `*` |
+| `@threadplane/licensing` | `*` |
 | `@angular/core` | `^20.0.0 \|\| ^21.0.0` |
 | `@ag-ui/client` | `*` |
 | `rxjs` | `~7.8.0` |
@@ -32,7 +32,7 @@ In your app config:
 
 ```ts
 import { ApplicationConfig } from '@angular/core';
-import { provideAgUiAgent } from '@ngaf/ag-ui';
+import { provideAgUiAgent } from '@threadplane/ag-ui';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -56,8 +56,8 @@ export const appConfig: ApplicationConfig = {
 
 ```ts
 import { Component, inject } from '@angular/core';
-import { ChatComponent } from '@ngaf/chat';
-import { AG_UI_AGENT } from '@ngaf/ag-ui';
+import { ChatComponent } from '@threadplane/chat';
+import { AG_UI_AGENT } from '@threadplane/ag-ui';
 
 @Component({
   selector: 'app-streaming',
@@ -75,7 +75,7 @@ export class StreamingComponent {
 Use the `FakeAgent` for offline demos:
 
 ```ts
-import { provideFakeAgUiAgent } from '@ngaf/ag-ui';
+import { provideFakeAgUiAgent } from '@threadplane/ag-ui';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -96,7 +96,7 @@ If you have a backend that speaks AG-UI but not over HTTP, subclass `AbstractAge
 ```ts
 import { AbstractAgent, type RunAgentInput, type BaseEvent } from '@ag-ui/client';
 import { Observable } from 'rxjs';
-import { toAgent } from '@ngaf/ag-ui';
+import { toAgent } from '@threadplane/ag-ui';
 
 class MyCustomAgent extends AbstractAgent {
   protected run(input: RunAgentInput): Observable<BaseEvent> {

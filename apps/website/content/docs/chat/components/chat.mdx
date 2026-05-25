@@ -11,7 +11,7 @@
 **Import:**
 
 ```typescript
-import { ChatComponent } from '@ngaf/chat';
+import { ChatComponent } from '@threadplane/chat';
 ```
 
 ## When to Use It
@@ -33,8 +33,8 @@ If you need to customize the message layout, add components between sections, or
 
 ```typescript
 import { Component, signal } from '@angular/core';
-import { agent } from '@ngaf/langgraph';
-import { ChatComponent } from '@ngaf/chat';
+import { agent } from '@threadplane/langgraph';
+import { ChatComponent } from '@threadplane/chat';
 
 @Component({
   selector: 'app-chat-page',
@@ -65,8 +65,8 @@ export class ChatPageComponent {
 
 | Input | Type | Default | Description |
 |-------|------|---------|-------------|
-| `agent` | `Agent` | **Required** | The runtime-neutral agent providing streaming state. `agent()` from `@ngaf/langgraph` returns a compatible `LangGraphAgent`. |
-| `views` | `ViewRegistry \| undefined` | `undefined` | View registry for generative UI. Maps spec type names to Angular components. Created with `views()` from `@ngaf/chat`. |
+| `agent` | `Agent` | **Required** | The runtime-neutral agent providing streaming state. `agent()` from `@threadplane/langgraph` returns a compatible `LangGraphAgent`. |
+| `views` | `ViewRegistry \| undefined` | `undefined` | View registry for generative UI. Maps spec type names to Angular components. Created with `views()` from `@threadplane/chat`. |
 | `store` | `StateStore \| undefined` | `undefined` | Optional state store for interactive generative UI specs. |
 | `handlers` | `Record<string, (params: Record<string, unknown>) => unknown \| Promise<unknown>>` | `{}` | Event handlers for generative UI specs and A2UI `functionCall` actions. Handlers run in Angular injection context — `inject()` is available inside handler functions. |
 | `threads` | `Thread[]` | `[]` | List of threads to display in the sidebar. Each thread must have an `id` property. |
@@ -141,7 +141,7 @@ When you pass a `[views]` registry, the component auto-detects JSON specs in AI 
 ```
 
 ```typescript
-import { views } from '@ngaf/chat';
+import { views } from '@threadplane/chat';
 import { WeatherCardComponent } from './weather-card.component';
 
 const myViews = views({
@@ -156,7 +156,7 @@ AI messages containing JSON are parsed character-by-character as tokens stream. 
 When AI messages contain A2UI content (prefixed with `---a2ui_JSON---`), the component auto-detects A2UI mode. Pass `a2uiBasicCatalog()` to `[views]` to render the built-in catalog:
 
 ```typescript
-import { ChatComponent, a2uiBasicCatalog } from '@ngaf/chat';
+import { ChatComponent, a2uiBasicCatalog } from '@threadplane/chat';
 
 views = a2uiBasicCatalog();
 ```

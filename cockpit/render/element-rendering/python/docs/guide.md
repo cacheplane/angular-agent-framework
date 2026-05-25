@@ -1,4 +1,4 @@
-# Element Rendering with @ngaf/render
+# Element Rendering with @threadplane/render
 
 <Summary>
 Recursively render nested element trees using RenderElementComponent.
@@ -8,7 +8,7 @@ conditions bound to a reactive state store.
 
 <Prompt>
 Add recursive element rendering to this Angular component using
-`RenderElementComponent` from `@ngaf/render`. Define a nested element
+`RenderElementComponent` from `@threadplane/render`. Define a nested element
 spec, create a state store for visibility toggling, and render the tree.
 </Prompt>
 
@@ -41,7 +41,7 @@ const spec = {
 Use `signalStateStore()` to manage visibility flags:
 
 ```typescript
-import { signalStateStore } from '@ngaf/render';
+import { signalStateStore } from '@threadplane/render';
 
 const store = signalStateStore({ showDetail: true });
 ```

@@ -5,7 +5,7 @@ import {
   updateLicenseToken,
   type Db,
   type License,
-} from '@ngaf/db';
+} from '@threadplane/db';
 import { loadEnv } from '../src/lib/env.js';
 import { mintToken } from '../src/lib/sign.js';
 import { sendLicenseEmail, renderLicenseEmail, type RenderedEmail } from '../src/lib/email.js';

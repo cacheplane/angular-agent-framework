@@ -1,4 +1,4 @@
-import { tokens } from '@ngaf/design-tokens';
+import { tokens } from '@threadplane/design-tokens';
 import { Container } from '../../components/ui/Container';
 import { Section } from '../../components/ui/Section';
 import { Eyebrow } from '../../components/ui/Eyebrow';
@@ -10,9 +10,9 @@ import { FinalCTA } from '../../components/landing/FinalCTA';
 import { createPageMetadata } from '../../lib/site-metadata';
 
 export const metadata = createPageMetadata({
-  title: 'Pricing — Agent UI for Angular',
+  title: 'Pricing — Threadplane',
   description:
-    '@ngaf/chat is free for noncommercial use under PolyForm Noncommercial 1.0.0. Commercial production use requires a ThreadPlane Commercial license. Other libraries remain MIT.',
+    '@threadplane/chat is free for noncommercial use under PolyForm Noncommercial 1.0.0. Commercial production use requires a Threadplane Commercial license. Other libraries remain MIT.',
   pathname: '/pricing',
   type: 'website',
 });

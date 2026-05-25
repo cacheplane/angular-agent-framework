@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 import { ApplicationConfig } from '@angular/core';
-import { provideAgent, LANGGRAPH_THREADS_CONFIG } from '@ngaf/langgraph';
-import { provideChat } from '@ngaf/chat';
+import { provideAgent, LANGGRAPH_THREADS_CONFIG } from '@threadplane/langgraph';
+import { provideChat } from '@threadplane/chat';
 import { environment } from '../environments/environment';
 
 export const appConfig: ApplicationConfig = {

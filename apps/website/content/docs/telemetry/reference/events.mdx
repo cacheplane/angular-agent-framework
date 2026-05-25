@@ -3,13 +3,13 @@
 The shared event union is:
 
 ```ts
-type NgafEvent = NgafNodeEvent | NgafBrowserEvent;
+type ThreadplaneEvent = ThreadplaneNodeEvent | ThreadplaneBrowserEvent;
 ```
 
 ## Node events
 
 ```ts
-type NgafNodeEvent =
+type ThreadplaneNodeEvent =
   | 'ngaf:postinstall'
   | 'ngaf:runtime_instance_created'
   | 'ngaf:stream_started'
@@ -32,13 +32,13 @@ type NgafNodeEvent =
 The shared event file lists these browser-only events:
 
 ```ts
-type NgafBrowserEvent = 'ngaf:browser_provided' | 'ngaf:browser_chat_init';
+type ThreadplaneBrowserEvent = 'ngaf:browser_provided' | 'ngaf:browser_chat_init';
 ```
 
 The browser Angular token broadens the local service event type to:
 
 ```ts
-type NgafTelemetryEvent =
+type ThreadplaneTelemetryEvent =
   | 'ngaf:browser_provided'
   | 'ngaf:browser_chat_init'
   | 'ngaf:runtime_instance_created'
@@ -86,4 +86,4 @@ Node delivery sends:
 }
 ```
 
-The public ingest key is a routing identifier accepted by the ThreadPlane ingest proxy. It is not a secret.
+The public ingest key is a routing identifier accepted by the Threadplane ingest proxy. It is not a secret.

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 import type { Type } from '@angular/core';
-import type { RenderViewEntry } from '@ngaf/render';
+import type { RenderViewEntry } from '@threadplane/render';
 
 /** Catalog entry for the A2UI surface renderer.
  *
@@ -11,7 +11,7 @@ import type { RenderViewEntry } from '@ngaf/render';
  * (`A2uiDefaultFallbackComponent`) is mounted.
  *
  * This is a chat-side alias for the shared `RenderViewEntry` shape so
- * consumers of `@ngaf/chat` don't have to import from `@ngaf/render`. */
+ * consumers of `@threadplane/chat` don't have to import from `@threadplane/render`. */
 export type A2uiViewEntry = RenderViewEntry;
 
 /** Catalog shape accepted by `<a2ui-surface>`. Each entry is either a

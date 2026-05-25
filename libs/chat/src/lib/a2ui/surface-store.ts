@@ -4,8 +4,8 @@ import type {
   A2uiMessage, A2uiSurface, A2uiComponent,
   A2uiSurfaceUpdate, A2uiDataModelUpdate, A2uiBeginRendering, A2uiDeleteSurface,
   A2uiDataModelEntry,
-} from '@ngaf/a2ui';
-import { setByPointer } from '@ngaf/a2ui';
+} from '@threadplane/a2ui';
+import { setByPointer } from '@threadplane/a2ui';
 import type { A2uiComponentView } from './component-view';
 import { extractBindings } from './extract-bindings';
 

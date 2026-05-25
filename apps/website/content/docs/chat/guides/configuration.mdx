@@ -1,6 +1,6 @@
 # Configuration
 
-`@ngaf/chat` uses Angular's dependency injection system for shared configuration. The `provideChat()` function registers a `ChatConfig` object under the `CHAT_CONFIG` injection token and starts the package license check.
+`@threadplane/chat` uses Angular's dependency injection system for shared configuration. The `provideChat()` function registers a `ChatConfig` object under the `CHAT_CONFIG` injection token and starts the package license check.
 
 ## provideChat()
 
@@ -9,7 +9,7 @@ Call `provideChat()` in your application's provider array when your application 
 ```typescript
 // app.config.ts
 import { ApplicationConfig } from '@angular/core';
-import { provideChat } from '@ngaf/chat';
+import { provideChat } from '@threadplane/chat';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -32,7 +32,7 @@ function provideChat(config: ChatConfig): EnvironmentProviders
 ## ChatConfig Interface
 
 ```typescript
-import type { AngularRegistry } from '@ngaf/render';
+import type { AngularRegistry } from '@threadplane/render';
 
 interface ChatConfig {
   /** Default render registry for consumers that read CHAT_CONFIG. */
@@ -64,8 +64,8 @@ The `CHAT_CONFIG` token is an `InjectionToken<ChatConfig>` that you can inject d
 
 ```typescript
 import { inject } from '@angular/core';
-import { CHAT_CONFIG } from '@ngaf/chat';
-import type { ChatConfig } from '@ngaf/chat';
+import { CHAT_CONFIG } from '@threadplane/chat';
+import type { ChatConfig } from '@threadplane/chat';
 
 @Component({ /* ... */ })
 export class MyComponent {
@@ -87,7 +87,7 @@ Because `provideChat()` returns `EnvironmentProviders`, you can provide differen
 
 ```typescript
 // app.routes.ts
-import { provideChat } from '@ngaf/chat';
+import { provideChat } from '@threadplane/chat';
 
 export const routes: Routes = [
   {

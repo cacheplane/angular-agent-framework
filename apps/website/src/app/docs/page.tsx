@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { tokens } from '@ngaf/design-tokens';
+import { tokens } from '@threadplane/design-tokens';
 import { Container } from '../../components/ui/Container';
 import { Section } from '../../components/ui/Section';
 import { Eyebrow } from '../../components/ui/Eyebrow';
@@ -9,8 +9,8 @@ import { docsConfig } from '../../lib/docs-config';
 import { createPageMetadata } from '../../lib/site-metadata';
 
 export const metadata = createPageMetadata({
-  title: 'Documentation — Agent UI for Angular',
-  description: 'Learn the framework. Library guides, API reference, and production patterns for Agent UI for Angular.',
+  title: 'Documentation — Threadplane',
+  description: 'Learn the framework. Library guides, API reference, and production patterns for Threadplane.',
   pathname: '/docs',
   type: 'website',
 });
@@ -24,7 +24,7 @@ interface PopularTopic {
 const POPULAR_TOPICS: PopularTopic[] = [
   {
     title: 'Streaming with signals',
-    description: 'Token-level streaming wired into Angular signals. The defining @ngaf/langgraph capability.',
+    description: 'Token-level streaming wired into Angular signals. The defining @threadplane/langgraph capability.',
     href: '/docs/agent/api/agent',
   },
   {
@@ -72,7 +72,7 @@ export default function DocsLandingPage() {
                 maxWidth: '52ch',
               }}
             >
-              Agent UI for Angular is a suite of MIT-licensed libraries for building AI agent interfaces. Pick a library to get started.
+              Threadplane is a suite of MIT-licensed libraries for building AI agent interfaces. Pick a library to get started.
             </p>
           </div>
         </Container>

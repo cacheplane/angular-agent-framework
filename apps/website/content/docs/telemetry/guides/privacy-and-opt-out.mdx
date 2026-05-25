@@ -25,7 +25,7 @@ The boolean parser treats `1`, `true`, `TRUE`, and `yes` as true values.
 You can also disable telemetry in process:
 
 ```ts
-import { disableTelemetry } from '@ngaf/telemetry/node';
+import { disableTelemetry } from '@threadplane/telemetry/node';
 
 disableTelemetry();
 ```
@@ -41,7 +41,7 @@ disableTelemetry();
 Browser capture requires an enabled config:
 
 ```ts
-provideNgafTelemetry({ enabled: true, sink });
+provideThreadplaneTelemetry({ enabled: true, sink });
 ```
 
 With `enabled: false` or no provider, browser capture no-ops.

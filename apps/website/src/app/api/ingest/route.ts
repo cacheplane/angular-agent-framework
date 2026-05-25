@@ -1,6 +1,6 @@
 import { PostHog } from 'posthog-node';
 import { NextRequest, NextResponse } from 'next/server';
-import { normalizePostHogHost, toSafeAnalyticsString } from '@ngaf/telemetry/shared';
+import { normalizePostHogHost, toSafeAnalyticsString } from '@threadplane/telemetry/shared';
 
 const PUBLIC_INGEST_KEY = 'phc_public_cacheplane_telemetry';
 

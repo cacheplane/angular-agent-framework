@@ -4,7 +4,7 @@ import { readFile, readdir } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
-  NGAF_RUNTIME_EVENTS,
+  THREADPLANE_RUNTIME_EVENTS,
   TELEMETRY_EVENT_CONTRACT,
   TELEMETRY_FORBIDDEN_PROPERTIES,
 } from './telemetry-contract.js';
@@ -174,7 +174,7 @@ test('runtime dashboard covers every runtime event exactly once', async () => {
   const actualCoverage = [...coveredEventCounts.entries()].sort(
     ([leftEvent], [rightEvent]) => leftEvent.localeCompare(rightEvent)
   );
-  const expectedCoverage: Array<[string, number]> = NGAF_RUNTIME_EVENTS.map(
+  const expectedCoverage: Array<[string, number]> = THREADPLANE_RUNTIME_EVENTS.map(
     (event): [string, number] => [event, 1]
   ).sort(([leftEvent], [rightEvent]) => leftEvent.localeCompare(rightEvent));
 
@@ -202,7 +202,7 @@ test('public AgentRuntimeTelemetryEvent union matches the runtime event contract
   const exportedEvents = [...match[1].matchAll(/'([^']+)'/g)]
     .map((m) => m[1])
     .sort();
-  assert.deepEqual(exportedEvents, [...NGAF_RUNTIME_EVENTS].sort());
+  assert.deepEqual(exportedEvents, [...THREADPLANE_RUNTIME_EVENTS].sort());
 });
 
 test('sensitive runtime fields are forbidden and never allowed by any event contract', () => {

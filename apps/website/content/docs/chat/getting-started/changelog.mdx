@@ -5,7 +5,7 @@
 ### Reasoning
 
 - New `<chat-reasoning>` primitive renders model reasoning content as a "Thinking…" / "Thought for Ns" pill, default-collapsed once streaming completes. Auto-rendered by `<chat>` when `Message.reasoning` is populated.
-- New `Message.reasoning` and `Message.reasoningDurationMs` optional fields on the shared agent contract. Both adapters populate them: `@ngaf/langgraph` from `{type:'reasoning'}` / `{type:'thinking'}` content blocks, `@ngaf/ag-ui` from `REASONING_MESSAGE_*` events.
+- New `Message.reasoning` and `Message.reasoningDurationMs` optional fields on the shared agent contract. Both adapters populate them: `@threadplane/langgraph` from `{type:'reasoning'}` / `{type:'thinking'}` content blocks, `@threadplane/ag-ui` from `REASONING_MESSAGE_*` events.
 
 ### Tool-call templates
 

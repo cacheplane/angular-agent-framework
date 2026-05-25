@@ -1,4 +1,4 @@
-import { tokens } from '@ngaf/design-tokens';
+import { tokens } from '@threadplane/design-tokens';
 import { Container } from '../../components/ui/Container';
 import { Section } from '../../components/ui/Section';
 import { Eyebrow } from '../../components/ui/Eyebrow';
@@ -12,7 +12,7 @@ import { ChatLandingCodeShowcase } from '../../components/landing/chat-landing/C
 import { createPageMetadata } from '../../lib/site-metadata';
 
 export const metadata = createPageMetadata({
-  title: '@ngaf/chat — Batteries-Included Agent Chat for Angular',
+  title: '@threadplane/chat — Batteries-Included Agent Chat for Angular',
   description: 'Production agent chat UI in days, not sprints. Built on Vercel json-render and Google A2UI specs.',
   pathname: '/chat',
   type: 'website',
@@ -25,7 +25,7 @@ export default async function ChatPage() {
       <Section surface="canvas" ariaLabelledBy="chat-hero-heading">
         <Container>
           <div style={{ maxWidth: 820, margin: '0 auto', textAlign: 'center' }}>
-            <Eyebrow tone="accent" style={{ marginBottom: 16 }}>@ngaf/chat</Eyebrow>
+            <Eyebrow tone="accent" style={{ marginBottom: 16 }}>@threadplane/chat</Eyebrow>
             <h1
               id="chat-hero-heading"
               style={{
@@ -84,7 +84,7 @@ export default async function ChatPage() {
           { title: 'chat-debug', description: 'Tool-call devtools.' },
           { title: 'sidenav', description: 'Thread navigation.' },
         ]}
-        cta={{ label: 'See @ngaf/chat docs', href: '/docs/chat/getting-started/introduction' }}
+        cta={{ label: 'See @threadplane/chat docs', href: '/docs/chat/getting-started/introduction' }}
         visual={
           <BrowserFrame url="cockpit.threadplane.ai/chat-debug" elevation="md">
             <div style={{ padding: 24, minHeight: 320, background: 'linear-gradient(180deg, #fff, #f8fafc)' }}>

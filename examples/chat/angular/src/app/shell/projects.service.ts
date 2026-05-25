@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 import { Injectable, signal } from '@angular/core';
-import type { Project } from '@ngaf/chat';
+import type { Project } from '@threadplane/chat';
 
-const STORAGE_KEY = 'ngaf-example-projects-v1';
+const STORAGE_KEY = 'threadplane-example-projects-v1';
 
 @Injectable({ providedIn: 'root' })
 export class ProjectsService {

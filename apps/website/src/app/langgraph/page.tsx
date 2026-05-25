@@ -1,4 +1,4 @@
-import { tokens } from '@ngaf/design-tokens';
+import { tokens } from '@threadplane/design-tokens';
 import { Container } from '../../components/ui/Container';
 import { Section } from '../../components/ui/Section';
 import { Eyebrow } from '../../components/ui/Eyebrow';
@@ -12,7 +12,7 @@ import { LangGraphCodeShowcase } from '../../components/landing/langgraph/LangGr
 import { createPageMetadata, SHORT_POSITIONING_DESCRIPTION } from '../../lib/site-metadata';
 
 export const metadata = createPageMetadata({
-  title: '@ngaf/langgraph — Agent UI for Angular',
+  title: '@threadplane/langgraph — Threadplane',
   description: SHORT_POSITIONING_DESCRIPTION,
   pathname: '/langgraph',
   type: 'website',
@@ -25,7 +25,7 @@ export default async function LangGraphPage() {
       <Section surface="canvas" ariaLabelledBy="angular-hero-heading">
         <Container>
           <div style={{ maxWidth: 820, margin: '0 auto', textAlign: 'center' }}>
-            <Eyebrow tone="angular" style={{ marginBottom: 16 }}>@ngaf/langgraph</Eyebrow>
+            <Eyebrow tone="angular" style={{ marginBottom: 16 }}>@threadplane/langgraph</Eyebrow>
             <h1
               id="angular-hero-heading"
               style={{
@@ -96,7 +96,7 @@ export default async function LangGraphPage() {
               minHeight: 320,
               overflow: 'auto',
             }}>
-{`import { provideAgent } from '@ngaf/langgraph';
+{`import { provideAgent } from '@threadplane/langgraph';
 
 export const appConfig: ApplicationConfig = {
   providers: [

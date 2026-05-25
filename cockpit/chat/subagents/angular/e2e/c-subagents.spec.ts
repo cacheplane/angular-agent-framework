@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 import { test, expect } from '@playwright/test';
-import { submitAndWaitForResponse } from '@ngaf-internal/e2e-harness';
+import { submitAndWaitForResponse } from '@threadplane-internal/e2e-harness';
 
 const PROMPT = 'Plan a trip from LAX to JFK';
 

@@ -20,7 +20,7 @@
 
 <!-- Cover -->
 <div style="height:100vh;display:flex;flex-direction:column;justify-content:flex-end;padding:80px 80px 100px;background:linear-gradient(135deg, #fafbfc 0%, #f3e8ff 100%);page-break-after:always">
-  <div style="font-family:monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.12em;color:#004090;font-weight:700;margin-bottom:24px">@ngaf/chat · Enterprise Guide</div>
+  <div style="font-family:monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.12em;color:#004090;font-weight:700;margin-bottom:24px">@threadplane/chat · Enterprise Guide</div>
   <h1 style="font-family:'EB Garamond',serif;font-size:52px;font-weight:800;line-height:1.1;color:#1a1a2e;margin-bottom:20px">The<br>Enterprise<br>Guide<br>to<br>Agent<br>Chat<br>Interfaces<br>in<br>Angular</h1>
   <p style="font-family:'EB Garamond',serif;font-style:italic;font-size:20px;color:#555770;margin-bottom:40px">Production agent chat UI in days, not sprints</p>
   <div style="font-size:13px;color:#8b8fa3;font-family:monospace">threadplane.ai · 2026</div>
@@ -80,8 +80,8 @@
 <h3>The Opportunity Cost</h3>
 <p>Here's the actual problem: you're paying senior Angular engineers to solve problems that have already been solved. Problems that have nothing to do with what makes your agent application valuable.</p>
 <p>While your team is debugging auto-scroll edge cases, your agent backend is ready and waiting. While they're implementing tool call state machines, your differentiating features aren't getting built. While they're fixing accessibility audit failures, your competitors are shipping.</p>
-<h3>The @ngaf/chat Thesis</h3>
-<p>`@ngaf/chat` ships the complete inventory: `<chat-message-list>`, `<chat-input>`, `<chat-tool-calls>`, `<chat-tool-call-card>`, `<chat-interrupt-panel>`. Production-grade. Accessible. Mobile-ready. Streaming-optimized.</p>
+<h3>The @threadplane/chat Thesis</h3>
+<p>`@threadplane/chat` ships the complete inventory: `<chat-message-list>`, `<chat-input>`, `<chat-tool-calls>`, `<chat-tool-call-card>`, `<chat-interrupt-panel>`. Production-grade. Accessible. Mobile-ready. Streaming-optimized.</p>
 <p>The thesis is simple: ship the chat UI on day one. Spend the sprints on what differentiates your product—the agent logic, the tool integrations, the domain-specific features that your competitors can't copy.</p>
 <p>The sprint tax is optional. Stop paying it.</p></div>
     </section>
@@ -89,7 +89,7 @@
       <div style="font-family:monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#004090;font-weight:700;margin-bottom:16px">Chapter 2</div>
       <h2 style="font-family:'EB Garamond',serif;font-size:36px;font-weight:800;color:#1a1a2e;margin-bottom:28px;line-height:1.15">Batteries-Included Components</h2>
       <div class="chapter-body"><p># Batteries-Included Components</p>
-<p>@ngaf/chat ships two component tiers: headless primitives that encapsulate behavior without styling opinions, and prebuilt compositions that deliver production-ready interfaces with minimal configuration. The separation lets teams adopt complete solutions immediately while preserving escape hatches for custom requirements.</p>
+<p>@threadplane/chat ships two component tiers: headless primitives that encapsulate behavior without styling opinions, and prebuilt compositions that deliver production-ready interfaces with minimal configuration. The separation lets teams adopt complete solutions immediately while preserving escape hatches for custom requirements.</p>
 <h3>The Headless Tier</h3>
 <p>Headless components own behavior and state management but emit no styled markup. They expose content projection slots and structural directives for complete template control.</p>
 <p>`<chat-message-list>` manages scroll position, virtualization hints, and message grouping logic. It consumes `Message[]` from the agent surface and handles the complexity of streaming message updates—partial content, role transitions, and optimistic UI states. Your templates define how each message renders.</p>
@@ -116,8 +116,8 @@ export class SupportComponent {
 <p>The practical pattern: use prebuilt components for standard sections, drop to headless for custom requirements. A typical enterprise implementation might use the prebuilt message list and input while providing a custom tool call renderer that integrates with internal component libraries.</p>
 <p>The `<chat>` component accepts content projection for this purpose. Override specific slots while retaining default behavior elsewhere. When projection proves insufficient, decompose to individual prebuilt components, then to headless primitives as customization needs escalate.</p>
 <h3>The Agent Contract</h3>
-<p>Both tiers consume the runtime-neutral `Agent` contract returned by `agent()` from @ngaf/langgraph. This contract exposes signals: `messages()` returns `Message[]` representing the conversation, `status()` indicates connection state, `isLoading()` reflects pending operations, `toolCalls()` surfaces invocations, and `state()` provides LangGraph checkpoint data.</p>
-<p>Components bind directly to these signals. When the agent streams a response, `messages()` updates reactively. Components re-render affected sections without manual change detection. The `Message` type from @ngaf/chat provides the runtime-neutral representation—role, content, metadata—that components consume regardless of the underlying LangGraph message format.</p>
+<p>Both tiers consume the runtime-neutral `Agent` contract returned by `agent()` from @threadplane/langgraph. This contract exposes signals: `messages()` returns `Message[]` representing the conversation, `status()` indicates connection state, `isLoading()` reflects pending operations, `toolCalls()` surfaces invocations, and `state()` provides LangGraph checkpoint data.</p>
+<p>Components bind directly to these signals. When the agent streams a response, `messages()` updates reactively. Components re-render affected sections without manual change detection. The `Message` type from @threadplane/chat provides the runtime-neutral representation—role, content, metadata—that components consume regardless of the underlying LangGraph message format.</p>
 <h3>Choosing Your Tier</h3>
 <p>Start with `<chat>`. It covers the common case and establishes baseline functionality in minutes. Drop to prebuilt companions when you need to rearrange layout or inject custom sections between standard elements. Move to headless primitives when your design system requires specific DOM structures or when you're building novel interaction patterns.</p>
 <p>Migration between tiers is mechanical: prebuilt components are compositions of headless primitives with styling applied. Extracting customization points means identifying which primitive to expose and which styling to preserve. The agent contract remains constant across tiers—your backend integration stays unchanged regardless of which component tier renders the interface.</p></div>
@@ -127,9 +127,9 @@ export class SupportComponent {
       <h2 style="font-family:'EB Garamond',serif;font-size:36px;font-weight:800;color:#1a1a2e;margin-bottom:28px;line-height:1.15">Theming & Design System Integration</h2>
       <div class="chapter-body"><p># Theming & Design System Integration</p>
 <p>A chat interface that looks like a demo is a liability in production. Users notice when components don't match the rest of the application—inconsistent border radius, wrong font stack, off-brand colors. These details erode trust in the product and in the AI features you're shipping.</p>
-<p>@ngaf/chat exposes its visual design decisions through CSS custom properties, giving you control over appearance without touching component internals or maintaining forks.</p>
+<p>@threadplane/chat exposes its visual design decisions through CSS custom properties, giving you control over appearance without touching component internals or maintaining forks.</p>
 <h3>The CSS Custom Property API</h3>
-<p>Every visual decision in @ngaf/chat maps to a custom property. The components read these values at runtime, so overriding them in your stylesheet changes the rendered output immediately.</p>
+<p>Every visual decision in @threadplane/chat maps to a custom property. The components read these values at runtime, so overriding them in your stylesheet changes the rendered output immediately.</p>
 <p>The naming convention follows a predictable pattern: `--chat-{component}-{property}`. Component-level tokens reference global tokens, which reference your design system tokens. This layering lets you override at whatever granularity makes sense—change one button's border radius or change every border radius in the chat interface with a single line.</p>
 <h3>Design Token Mapping</h3>
 <p>If your team already maintains design tokens, integration is direct assignment. Map your existing tokens to the chat component tokens in a single stylesheet:</p>
@@ -155,7 +155,7 @@ export class SupportComponent {
 <p>This mapping becomes your single source of truth. When design updates the brand's border radius, the chat components update automatically because they reference your tokens, not hardcoded values.</p>
 <h3>Typography Integration</h3>
 <p>Chat interfaces are text-heavy. Typography consistency matters more here than in most UI contexts.</p>
-<p>@ngaf/chat exposes tokens for font family, size scale (base, small, large), line height, and font weight. Message content, timestamps, tool call labels, and input placeholders all reference these tokens. Set them once, and the entire typographic hierarchy follows your design system.</p>
+<p>@threadplane/chat exposes tokens for font family, size scale (base, small, large), line height, and font weight. Message content, timestamps, tool call labels, and input placeholders all reference these tokens. Set them once, and the entire typographic hierarchy follows your design system.</p>
 <h3>Color System Integration</h3>
 <p>Surface colors control backgrounds—the chat container, message bubbles, input field. Text colors handle primary content and secondary metadata. Accent colors drive interactive elements and visual emphasis. Semantic state colors handle error states, success confirmations, and loading indicators.</p>
 <p>The token structure assumes you have these categories in your design system. If you don't, use literal values.</p>
@@ -178,7 +178,7 @@ export class SupportComponent {
       <div class="chapter-body"><p># Generative UI in Chat</p>
 <p>Text is a bottleneck. When a financial agent needs to present quarterly results, streaming prose about revenue figures wastes cognitive load. When a scheduling agent confirms a booking, a wall of text obscures the actionable details. The most capable agent interfaces solve this by rendering structured UI directly in the message stream—tables, forms, approval cards—alongside conversational text.</p>
 <h3>Structured UI in the Message Stream</h3>
-<p>@ngaf/chat treats generative UI as a first-class message type. When an agent emits a UI specification instead of text, the chat renders it inline using @ngaf/render. From the user's perspective, the conversation flows naturally: the agent explains context in prose, then presents a rendered component for interaction.</p>
+<p>@threadplane/chat treats generative UI as a first-class message type. When an agent emits a UI specification instead of text, the chat renders it inline using @threadplane/render. From the user's perspective, the conversation flows naturally: the agent explains context in prose, then presents a rendered component for interaction.</p>
 <p>This works because the Agent contract exposes messages as a heterogeneous stream. Text messages render as text. UI messages resolve to Angular components through a registry. The chat component handles both transparently.</p>
 <h3>The json-render Spec</h3>
 <p>The json-render specification defines a minimal contract for declarative UI. An agent emits a JSON object with a `type` field identifying the component and a `props` field containing its inputs:</p>
@@ -187,10 +187,10 @@ export class SupportComponent {
 <p>The renderer resolves `data-table` to an Angular component, binds `props` to its inputs, and inserts it into the DOM. No custom parsing, no message-type switches in templates. The specification stays minimal intentionally—agents describe *what* to render, not *how*.</p>
 <h3>A2UI: Agent-Specific Patterns</h3>
 <p>Google's A2UI specification extends json-render with patterns specific to agent interactions: approval workflows, structured actions, and rich data displays. Where json-render handles arbitrary components, A2UI codifies the common cases—confirmation dialogs, multi-step forms, action buttons with pending states.</p>
-<p>@ngaf/render supports both specifications. You can mix A2UI's structured patterns with custom json-render components in the same message stream.</p>
+<p>@threadplane/render supports both specifications. You can mix A2UI's structured patterns with custom json-render components in the same message stream.</p>
 <h3>Registry Integration</h3>
 <p>Component resolution flows through a registry. You define which component handles each type, then provide it to the chat context:</p>
-<pre><code>import { defineAngularRegistry, provideRender } from '@ngaf/render';
+<pre><code>import { defineAngularRegistry, provideRender } from '@threadplane/render';
 import { DataTableComponent } from './data-table.component';
 import { BookingFormComponent } from './booking-form.component';
 import { ApprovalCardComponent } from './approval-card.component';
@@ -204,7 +204,7 @@ provideRender({ registry })
 </code></pre></p>
 <p>The chat component picks up the registry through dependency injection. When a message contains a render spec, it resolves and instantiates the component automatically.</p>
 <h3>Streaming Patches</h3>
-<p>Agents rarely emit complete UI specifications in one shot. A data table streams rows as they arrive. A form populates fields progressively. @ngaf/render handles this through JSON Patch streaming—the agent emits an initial skeleton, then streams RFC 6902 patches that mutate the specification incrementally.</p>
+<p>Agents rarely emit complete UI specifications in one shot. A data table streams rows as they arrive. A form populates fields progressively. @threadplane/render handles this through JSON Patch streaming—the agent emits an initial skeleton, then streams RFC 6902 patches that mutate the specification incrementally.</p>
 <p>In the chat context, this creates the live update effect users expect. A table appears with headers, then rows populate one by one. A summary card fills in as the agent processes. The render layer applies patches reactively; bound components update without re-instantiation.</p>
 <p>This matters for perceived latency. Users see structure immediately, then watch it fill in—progress feels continuous rather than blocked on complete responses.</p></div>
     </section>
@@ -213,7 +213,7 @@ provideRender({ registry })
       <h2 style="font-family:'EB Garamond',serif;font-size:36px;font-weight:800;color:#1a1a2e;margin-bottom:28px;line-height:1.15">Debug Tooling</h2>
       <div class="chapter-body"><p># Debug Tooling</p>
 <p>Debugging agent chat is hard. The message stream is opaque, tool call state transitions happen in milliseconds, and interrupt flows have timing edge cases that only surface under load. You can't step through a streaming conversation the way you step through synchronous code.</p>
-<p>`<chat-debug>` is @ngaf/chat's built-in debug panel—a developer overlay that surfaces agent state, raw message events, tool call history, and interrupt state in real time. One component, zero configuration.</p>
+<p>`<chat-debug>` is @threadplane/chat's built-in debug panel—a developer overlay that surfaces agent state, raw message events, tool call history, and interrupt state in real time. One component, zero configuration.</p>
 <h3>What chat-debug Shows</h3>
 <p>The debug panel exposes four primary views:</p>
 <p><strong>Message State.</strong> The current `Message[]` array, rendered as expandable JSON. You see every message the agent has processed—user inputs, assistant responses, tool results—with full metadata intact.</p>
@@ -222,7 +222,7 @@ provideRender({ registry })
 <p><strong>Interrupt Payload.</strong> When the agent requests human intervention, the full interrupt payload appears in the panel—the interrupt type, the data the agent is requesting, and any context it provided. After user action, you see both the original payload and the response.</p>
 <h3>Adding chat-debug</h3>
 <p>Drop it into any chat interface:</p>
-<pre><code>import { ChatDebugComponent } from '@ngaf/chat';
+<pre><code>import { ChatDebugComponent } from '@threadplane/chat';
 <p>@Component({
   selector: 'app-support-chat',
   imports: [ChatComponent, ChatDebugComponent],

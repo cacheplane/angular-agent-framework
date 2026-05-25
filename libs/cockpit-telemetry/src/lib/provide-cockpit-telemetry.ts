@@ -8,7 +8,7 @@ import {
 import { COCKPIT_TELEMETRY_CONFIG, type CockpitTelemetryConfig } from './tokens';
 import { CockpitTelemetryService } from './cockpit-telemetry.service';
 import { ActivationAggregator } from './activation-aggregator';
-import { AgentLifecycleRegistry } from '@ngaf/langgraph';
+import { AgentLifecycleRegistry } from '@threadplane/langgraph';
 
 export function provideCockpitTelemetry(
   config: CockpitTelemetryConfig,

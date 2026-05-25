@@ -10,7 +10,7 @@ vi.mock('../../lib/analytics/client', () => ({ track: vi.fn() }));
 import { track } from '../../lib/analytics/client';
 import { NavigationGroups } from './navigation-groups';
 import { buildNavigationTree } from '../../lib/route-resolution';
-import { cockpitManifest } from '@ngaf/cockpit-registry';
+import { cockpitManifest } from '@threadplane/cockpit-registry';
 
 describe('NavigationGroups capability link instrumentation', () => {
   let container: HTMLDivElement | undefined;

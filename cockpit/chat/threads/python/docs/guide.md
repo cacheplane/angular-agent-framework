@@ -1,4 +1,4 @@
-# Chat Threads with @ngaf/chat
+# Chat Threads with @threadplane/chat
 
 <Summary>
 Manage multiple conversation threads using ChatThreadListComponent.
@@ -8,7 +8,7 @@ run parallel conversations with the same agent.
 
 <Prompt>
 Add multi-thread support to your chat interface using `ChatThreadListComponent`
-from `@ngaf/chat`. Display a thread list sidebar for creating and
+from `@threadplane/chat`. Display a thread list sidebar for creating and
 switching between conversations.
 </Prompt>
 

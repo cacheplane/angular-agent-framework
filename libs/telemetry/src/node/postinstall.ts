@@ -70,7 +70,7 @@ export async function capturePostinstallScript(deps: PostinstallDeps): Promise<v
     const result = await capturePostinstall({ pkg: pkg.name, version: pkg.version });
     if (debugEnabled(deps.env)) {
       deps.write(
-        `@ngaf/telemetry payload: ${
+        `@threadplane/telemetry payload: ${
           JSON.stringify({
             event: 'ngaf:postinstall',
             properties: createPostinstallProperties({ pkg: pkg.name, version: pkg.version }, deps.env),
@@ -80,7 +80,7 @@ export async function capturePostinstallScript(deps: PostinstallDeps): Promise<v
     }
     if (result.sent) {
       deps.write(
-        `@ngaf/telemetry: install telemetry sent (${pkg.name}@${pkg.version}). ` +
+        `@threadplane/telemetry: install telemetry sent (${pkg.name}@${pkg.version}). ` +
         `Disable: DO_NOT_TRACK=1 or NGAF_TELEMETRY_DISABLED=1. ` +
         `See https://github.com/cacheplane/angular-agent-framework/blob/main/libs/telemetry/README.md\n`,
       );

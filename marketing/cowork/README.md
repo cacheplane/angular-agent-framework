@@ -1,6 +1,6 @@
-# ThreadPlane GTM — Cowork skill
+# Threadplane GTM — Cowork skill
 
-A single Claude Cowork skill that operates ThreadPlane's GTM motion: weekly PostHog snapshots, lead triage, workstream scaffolding, and "where are we?" status questions.
+A single Claude Cowork skill that operates Threadplane's GTM motion: weekly PostHog snapshots, lead triage, workstream scaffolding, and "where are we?" status questions.
 
 The skill is **project-local**. It isn't published to a marketplace. Install steps are manual and one-time per machine.
 
@@ -61,7 +61,7 @@ Edit `marketing/cowork/gtm/SKILL.md` in this repo. If you symlinked, the change 
 ## Why one skill, not a plugin
 
 - **One file to grok** — anyone reading the repo can see what GTM operations look like.
-- **No plugin packaging ceremony** until the motion proves out and we want to ship it as `@ngaf/gtm-plugin` for other Angular agent startups to adopt.
+- **No plugin packaging ceremony** until the motion proves out and we want to ship it as `@threadplane/gtm-plugin` for other Angular agent startups to adopt.
 - **No per-workstream subagents** until context bleed proves to be a problem. Splitting later is a one-day refactor.
 
 ## See also

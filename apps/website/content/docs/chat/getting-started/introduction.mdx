@@ -1,9 +1,9 @@
 # Introduction
 
-`@ngaf/chat` is the Angular UI component library for building chat interfaces on top of a runtime-neutral `Agent` contract. It provides a complete set of composable, Signal-driven components that render messages, handle user input, display tool calls, manage interrupts, and support generative UI -- all styled with CSS custom properties and built for Angular 20+.
+`@threadplane/chat` is the Angular UI component library for building chat interfaces on top of a runtime-neutral `Agent` contract. It provides a complete set of composable, Signal-driven components that render messages, handle user input, display tool calls, manage interrupts, and support generative UI -- all styled with CSS custom properties and built for Angular 20+.
 
 <Callout type="info" title="What you'll learn">
-This guide explains the library's two-tier architecture, how it relates to the rest of the ThreadPlane stack, and when to reach for the all-in-one composition versus assembling primitives yourself.
+This guide explains the library's two-tier architecture, how it relates to the rest of the Threadplane stack, and when to reach for the all-in-one composition versus assembling primitives yourself.
 </Callout>
 
 ## Two-Tier Architecture
@@ -37,30 +37,30 @@ Compositions are opinionated, styled components that combine primitives into rea
 | `ChatInterruptPanelComponent` | `chat-interrupt-panel` | Styled interrupt card with accept/edit/respond/ignore actions |
 | `ChatToolCallCardComponent` | `chat-tool-call-card` | Expandable card showing tool name, inputs, and output |
 | `ChatSubagentCardComponent` | `chat-subagent-card` | Expandable card showing subagent status and messages |
-| `ChatDebugComponent` | `chat-debug` | Debug cockpit from `@ngaf/chat/debug` with timeline, state inspector, and diff viewer |
+| `ChatDebugComponent` | `chat-debug` | Debug cockpit from `@threadplane/chat/debug` with timeline, state inspector, and diff viewer |
 | `ChatTimelineSliderComponent` | `chat-timeline-slider` | Slider-based timeline navigation |
 
 ## How the Stack Fits Together
 
-`@ngaf/chat` sits between your application and two other ThreadPlane libraries:
+`@threadplane/chat` sits between your application and two other Threadplane libraries:
 
 ```
 Your App
   |
   v
-@ngaf/chat       <-- UI components (this library)
+@threadplane/chat       <-- UI components (this library)
   |         |
   v         v
-@ngaf/langgraph  @ngaf/render
+@threadplane/langgraph  @threadplane/render
   (streaming state)      (generative UI)
   |
   v
 LangGraph Platform
 ```
 
-- **`@ngaf/langgraph`** provides the `agent()` function and returns a `LangGraphAgent`, which satisfies the `Agent` contract consumed by `@ngaf/chat`. It exposes reactive Signals for `messages()`, `isLoading()`, `error()`, `interrupt()`, `toolCalls()`, `history()`, and more.
+- **`@threadplane/langgraph`** provides the `agent()` function and returns a `LangGraphAgent`, which satisfies the `Agent` contract consumed by `@threadplane/chat`. It exposes reactive Signals for `messages()`, `isLoading()`, `error()`, `interrupt()`, `toolCalls()`, `history()`, and more.
 
-- **`@ngaf/render`** provides `RenderSpecComponent` and view registries for rendering JSON UI specs as Angular components. The `ChatComponent` auto-detects JSON specs in AI messages and renders them through `@ngaf/render` - pass a view registry via the `[views]` input. The same `[views]` input enables A2UI rendering with `a2uiBasicCatalog()`, which currently maps 18 component types.
+- **`@threadplane/render`** provides `RenderSpecComponent` and view registries for rendering JSON UI specs as Angular components. The `ChatComponent` auto-detects JSON specs in AI messages and renders them through `@threadplane/render` - pass a view registry via the `[views]` input. The same `[views]` input enables A2UI rendering with `a2uiBasicCatalog()`, which currently maps 18 component types.
 
 ## When to Use `ChatComponent` vs. Custom Assembly
 

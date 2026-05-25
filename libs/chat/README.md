@@ -1,16 +1,16 @@
-# @ngaf/chat
+# @threadplane/chat
 
 Drop-in agent chat UI for Angular 20+. Headless primitives that read from a runtime-neutral `Agent` contract, plus opinionated compositions (`<chat>`, `<chat-debug>`, GenUI surfaces) you can ship in days.
 
-Part of [Agent UI for Angular](https://github.com/cacheplane/angular-agent-framework).
+Part of [Threadplane](https://github.com/cacheplane/angular-agent-framework).
 
-`@ngaf/chat` is source-available and free for noncommercial use under PolyForm Noncommercial License 1.0.0. Commercial production use requires a ThreadPlane Commercial license.
+`@threadplane/chat` is source-available and free for noncommercial use under PolyForm Noncommercial License 1.0.0. Commercial production use requires a Threadplane Commercial license.
 
-This package is not licensed as OSI open source because commercial use requires a license. ThreadPlane uses a source-available model for `@ngaf/chat` while keeping protocol and ecosystem packages permissively licensed where appropriate.
+This package is not licensed as OSI open source because commercial use requires a license. Threadplane uses a source-available model for `@threadplane/chat` while keeping protocol and ecosystem packages permissively licensed where appropriate.
 
 ## Commercial use
 
-Building a commercial product, SaaS application, internal business tool, agency deliverable, or paid client project with `@ngaf/chat` requires a ThreadPlane Commercial license.
+Building a commercial product, SaaS application, internal business tool, agency deliverable, or paid client project with `@threadplane/chat` requires a Threadplane Commercial license.
 
 Free under PolyForm Noncommercial:
 
@@ -18,16 +18,16 @@ Free under PolyForm Noncommercial:
 - Open-source applications released under an OSI-approved license
 - 30 calendar days of commercial evaluation from your first commercial use (good-faith — no tracking, no email required)
 
-See [COMMERCIAL-USE.md](./COMMERCIAL-USE.md) for the definition of commercial use, [LICENSE-COMMERCIAL.md](./LICENSE-COMMERCIAL.md) for the commercial license summary, and the [ThreadPlane pricing page](https://threadplane.ai/pricing) for plans.
+See [COMMERCIAL-USE.md](./COMMERCIAL-USE.md) for the definition of commercial use, [LICENSE-COMMERCIAL.md](./LICENSE-COMMERCIAL.md) for the commercial license summary, and the [Threadplane pricing page](https://threadplane.ai/pricing) for plans.
 
 ## Using a commercial license
 
-After purchase, ThreadPlane emails a signed license token to the address on your receipt. The license is valid for 12 months and the same email contains the token to paste into your app's `provideChat()` configuration:
+After purchase, Threadplane emails a signed license token to the address on your receipt. The license is valid for 12 months and the same email contains the token to paste into your app's `provideChat()` configuration:
 
 ```typescript
 // app.config.ts
 import { ApplicationConfig } from '@angular/core';
-import { provideChat } from '@ngaf/chat';
+import { provideChat } from '@threadplane/chat';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -38,7 +38,7 @@ export const appConfig: ApplicationConfig = {
 };
 ```
 
-The library verifies the token's signature on boot. A missing, expired, or tampered token logs a `console.warn` advisory but does not block rendering — chat continues to work either way. Tokens are validated offline; no calls to ThreadPlane are made at runtime.
+The library verifies the token's signature on boot. A missing, expired, or tampered token logs a `console.warn` advisory but does not block rendering — chat continues to work either way. Tokens are validated offline; no calls to Threadplane are made at runtime.
 
 The license string is safe to commit to source control if your repository is private, or to read from a build-time env var for public repositories:
 
@@ -58,8 +58,8 @@ providers: [
 
 Chat primitives consume a runtime-neutral `Agent` contract. Two adapters ship today:
 
-- **`@ngaf/langgraph`** — for LangGraph / LangGraph Platform backends.
-- **`@ngaf/ag-ui`** — for any AG-UI-compatible backend (LangGraph, CrewAI, Mastra, Microsoft Agent Framework, AG2, Pydantic AI, AWS Strands, CopilotKit runtime).
+- **`@threadplane/langgraph`** — for LangGraph / LangGraph Platform backends.
+- **`@threadplane/ag-ui`** — for any AG-UI-compatible backend (LangGraph, CrewAI, Mastra, Microsoft Agent Framework, AG2, Pydantic AI, AWS Strands, CopilotKit runtime).
 
 Custom backends can implement `Agent` directly with no library dependency.
 
@@ -133,10 +133,10 @@ Four CSS files ship in the package, each declaring `:root` overrides for the rel
 
 ```css
 /* In your global stylesheet */
-@import '@ngaf/chat/themes/default-dark.css';     /* lib defaults, explicit */
-@import '@ngaf/chat/themes/default-light.css';    /* neutral light, blue accent */
-@import '@ngaf/chat/themes/material-dark.css';    /* Material Design 3 dark */
-@import '@ngaf/chat/themes/material-light.css';   /* Material Design 3 light */
+@import '@threadplane/chat/themes/default-dark.css';     /* lib defaults, explicit */
+@import '@threadplane/chat/themes/default-light.css';    /* neutral light, blue accent */
+@import '@threadplane/chat/themes/material-dark.css';    /* Material Design 3 dark */
+@import '@threadplane/chat/themes/material-light.css';   /* Material Design 3 light */
 ```
 
 Material presets map [Material Design 3 color tokens](https://m3.material.io/styles/color/the-color-system/tokens) to the `--a2ui-*` vocabulary — no `@angular/material` runtime dep, just CSS custom-property declarations.

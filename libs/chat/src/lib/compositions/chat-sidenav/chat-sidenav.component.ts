@@ -403,7 +403,7 @@ export class ChatSidenavComponent {
     if (!host || !agent) return;
 
     if (!this.debugRef) {
-      const { ChatDebugComponent } = await import('@ngaf/chat/debug');
+      const { ChatDebugComponent } = await import('@threadplane/chat/debug');
       if (!this.showDebugButton()) return;
       this.debugRef = host.createComponent(ChatDebugComponent, {
         injector: this.injector,
@@ -458,11 +458,11 @@ export class ChatSidenavComponent {
 
   private setDebugEdgeClaim(dock: ChatDebugDock): void {
     if (typeof document === 'undefined') return;
-    document.documentElement.dataset['ngafChatDebug'] = dock;
+    document.documentElement.dataset['threadplaneChatDebug'] = dock;
   }
 
   private clearDebugEdgeClaim(): void {
     if (typeof document === 'undefined') return;
-    delete document.documentElement.dataset['ngafChatDebug'];
+    delete document.documentElement.dataset['threadplaneChatDebug'];
   }
 }

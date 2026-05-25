@@ -4,7 +4,7 @@ import {
   ChatWelcomeSuggestionComponent,
   ChatSelectComponent,
   type ChatSelectOption,
-} from '@ngaf/chat';
+} from '@threadplane/chat';
 import { FEATURED_SUGGESTIONS, MORE_SUGGESTIONS } from './welcome-suggestions';
 
 /**

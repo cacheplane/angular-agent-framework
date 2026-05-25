@@ -7,7 +7,7 @@
 **Import:**
 
 ```typescript
-import { ChatTraceComponent } from '@ngaf/chat';
+import { ChatTraceComponent } from '@threadplane/chat';
 ```
 
 ## When to Use It
@@ -90,8 +90,8 @@ When `state` transitions from any value to `'running'`, the trace automatically 
 
 ```typescript
 import { Component, ChangeDetectionStrategy, signal } from '@angular/core';
-import { agent } from '@ngaf/langgraph';
-import { ChatTraceComponent, ChatMessageListComponent } from '@ngaf/chat';
+import { agent } from '@threadplane/langgraph';
+import { ChatTraceComponent, ChatMessageListComponent } from '@threadplane/chat';
 
 @Component({
   selector: 'app-traced-chat',

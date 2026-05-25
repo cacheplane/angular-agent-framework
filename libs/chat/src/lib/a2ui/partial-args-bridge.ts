@@ -1,7 +1,7 @@
 // libs/chat/src/lib/a2ui/partial-args-bridge.ts
 // SPDX-License-Identifier: MIT
 import { createPartialJsonParser, materialize } from '@cacheplane/partial-json';
-import type { A2uiMessage, A2uiSurfaceUpdate } from '@ngaf/a2ui';
+import type { A2uiMessage, A2uiSurfaceUpdate } from '@threadplane/a2ui';
 import type { A2uiSurfaceStore } from './surface-store';
 import { normalizeEnvelopeArgs } from './envelope-normalizer';
 

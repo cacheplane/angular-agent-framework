@@ -2,7 +2,7 @@
 
 import { useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { cssVars, type Theme } from '@ngaf/design-tokens';
+import { cssVars, type Theme } from '@threadplane/design-tokens';
 import { useTheme } from './theme-context';
 
 const NEXT: Record<Theme, Theme> = { light: 'dark', dark: 'light' };

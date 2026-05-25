@@ -1,4 +1,4 @@
-import { tokens } from '@ngaf/design-tokens';
+import { tokens } from '@threadplane/design-tokens';
 import { Container } from '../ui/Container';
 import { Section } from '../ui/Section';
 import { Eyebrow } from '../ui/Eyebrow';
@@ -7,7 +7,7 @@ import { FAQ, type FAQItem } from '../ui/FAQ';
 const ITEMS: FAQItem[] = [
   {
     q: 'How is this different from CopilotKit or AG-UI directly?',
-    a: 'CopilotKit has an Angular SDK, and AG-UI is a protocol rather than a complete Angular UI layer. ThreadPlane gives Angular teams the production surface around those runtimes: headless chat, durable threads, interrupts, subagents, planning, memory, generative UI, and adapters for LangGraph and AG-UI-compatible backends.',
+    a: 'CopilotKit has an Angular SDK, and AG-UI is a protocol rather than a complete Angular UI layer. Threadplane gives Angular teams the production surface around those runtimes: headless chat, durable threads, interrupts, subagents, planning, memory, generative UI, and adapters for LangGraph and AG-UI-compatible backends.',
   },
   {
     q: 'Does it work with my existing Angular app?',
@@ -15,7 +15,7 @@ const ITEMS: FAQItem[] = [
   },
   {
     q: 'Can I use this without LangGraph?',
-    a: 'Yes. Use the @ngaf/ag-ui adapter for any AG-UI compliant backend, or implement the agent contract yourself. ThreadPlane keeps the Angular UI layer stable while the backend agent runtime can change.',
+    a: 'Yes. Use the @threadplane/ag-ui adapter for any AG-UI compliant backend, or implement the agent contract yourself. Threadplane keeps the Angular UI layer stable while the backend agent runtime can change.',
   },
   {
     q: 'Is the Pilot-to-Prod program required?',

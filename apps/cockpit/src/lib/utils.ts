@@ -1,1 +1,1 @@
-export { cn } from '@ngaf/ui-react';
+export { cn } from '@threadplane/ui-react';

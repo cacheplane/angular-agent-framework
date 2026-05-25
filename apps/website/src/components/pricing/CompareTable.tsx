@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { tokens } from '@ngaf/design-tokens';
+import { tokens } from '@threadplane/design-tokens';
 import { Button } from '../ui/Button';
 import { trackCtaClick } from '../../lib/analytics/client';
 import type { CtaId } from '../../lib/analytics/events';
@@ -24,7 +24,7 @@ const CTAS: Record<TierConfig['slug'], PlanCta> = {
   community: {
     cta: 'Start free',
     ctaId: 'pricing_tier_community',
-    ctaHref: 'https://www.npmjs.com/package/@ngaf/chat',
+    ctaHref: 'https://www.npmjs.com/package/@threadplane/chat',
     ctaExternal: true,
   },
   developer_seat: {

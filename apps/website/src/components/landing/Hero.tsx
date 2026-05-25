@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useCallback, useState } from 'react';
-import { tokens } from '@ngaf/design-tokens';
+import { tokens } from '@threadplane/design-tokens';
 import { Container } from '../ui/Container';
 import { Section } from '../ui/Section';
 import { Eyebrow } from '../ui/Eyebrow';
@@ -12,7 +12,7 @@ import { track } from '../../lib/analytics/client';
 import { analyticsEvents } from '../../lib/analytics/events';
 import { HERO_SUBHEAD, POSITIONING_PROOF_POINTS } from '../../lib/positioning';
 
-const INSTALL_COMMAND = 'npm install @ngaf/chat';
+const INSTALL_COMMAND = 'npm install @threadplane/chat';
 const COPY_FEEDBACK_MS = 1500;
 
 function PrimaryInstallButton() {
@@ -35,7 +35,7 @@ function PrimaryInstallButton() {
 
   return (
     <Button variant="primary" size="lg" onClick={onClick}>
-      {copied ? 'Copied ✓' : 'Install @ngaf/chat'}
+      {copied ? 'Copied ✓' : 'Install @threadplane/chat'}
     </Button>
   );
 }
@@ -77,7 +77,7 @@ export function Hero() {
           {/* Left column */}
           <div>
             <Eyebrow tone="accent" style={{ marginBottom: 16 }}>
-              Agent UI for Angular · MIT framework
+              Threadplane · MIT framework
             </Eyebrow>
             <h1
               id="hero-heading"
@@ -150,7 +150,7 @@ export function Hero() {
                 maxWidth: '60ch',
               }}
             >
-              Not another backend agent runtime. Keep LangGraph, Genkit, Mastra, CrewAI, or your own service. ThreadPlane solves the Angular UI layer.
+              Not another backend agent runtime. Keep LangGraph, Genkit, Mastra, CrewAI, or your own service. Threadplane solves the Angular UI layer.
             </p>
           </div>
 

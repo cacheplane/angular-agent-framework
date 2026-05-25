@@ -1,11 +1,11 @@
-# @ngaf/chat License
+# @threadplane/chat License
 
-`@ngaf/chat` is licensed under the PolyForm Noncommercial License 1.0.0. Commercial use requires a separate commercial license from Threadplane.
+`@threadplane/chat` is licensed under the PolyForm Noncommercial License 1.0.0. Commercial use requires a separate commercial license from Threadplane.
 
 For the definition of commercial use and which free uses are permitted, see [COMMERCIAL-USE.md](./COMMERCIAL-USE.md).
 For an overview of the commercial license terms, see [LICENSE-COMMERCIAL.md](./LICENSE-COMMERCIAL.md).
 
-Versions of `@ngaf/chat` published before this license change remain available under their original MIT terms.
+Versions of `@threadplane/chat` published before this license change remain available under their original MIT terms.
 
 ---
 

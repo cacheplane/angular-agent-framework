@@ -3,9 +3,9 @@ import {
   Component, computed, input, output, ChangeDetectionStrategy, Type,
 } from '@angular/core';
 import { NgComponentOutlet } from '@angular/common';
-import type { A2uiSurface, A2uiActionMessage } from '@ngaf/a2ui';
-import { RenderSpecComponent, toRenderRegistry } from '@ngaf/render';
-import type { ViewRegistry, RenderEvent } from '@ngaf/render';
+import type { A2uiSurface, A2uiActionMessage } from '@threadplane/a2ui';
+import { RenderSpecComponent, toRenderRegistry } from '@threadplane/render';
+import type { ViewRegistry, RenderEvent } from '@threadplane/render';
 import { surfaceToSpec } from './surface-to-spec';
 import { buildA2uiActionMessage } from './build-action-message';
 import { A2uiDefaultFallbackComponent } from './a2ui-default-fallback.component';

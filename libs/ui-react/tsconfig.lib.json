@@ -4,7 +4,7 @@
     "outDir": "../../dist/out-tsc",
     "declaration": true,
     "paths": {
-      "@ngaf/design-tokens": ["../../dist/libs/design-tokens/src/index.d.ts"]
+      "@threadplane/design-tokens": ["../../dist/libs/design-tokens/src/index.d.ts"]
     }
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"],
