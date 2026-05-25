@@ -37,7 +37,6 @@ export interface HandlerDeps {
   privateKeyHex: string;
   resendApiKey: string;
   emailFrom: string;
-  defaultTtlDays: number;
 }
 
 export async function handleEvent(event: Stripe.Event, deps: HandlerDeps): Promise<void> {

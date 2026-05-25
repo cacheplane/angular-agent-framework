@@ -26,7 +26,6 @@ function makeDeps(overrides: Partial<HandlerDeps> = {}): HandlerDeps {
     privateKeyHex: 'a'.repeat(64),
     resendApiKey: 're_test',
     emailFrom: 'noreply@example.com',
-    defaultTtlDays: 365,
     ...overrides,
   };
 }
