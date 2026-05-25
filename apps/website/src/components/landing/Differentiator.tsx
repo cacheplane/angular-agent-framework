@@ -1,6 +1,6 @@
 'use client';
 
-import { tokens } from '@ngaf/design-tokens';
+import { tokens } from '@threadplane/design-tokens';
 import { Container } from '../ui/Container';
 import { Section } from '../ui/Section';
 import { Eyebrow } from '../ui/Eyebrow';
@@ -36,7 +36,7 @@ const PRODUCTION_ROWS: ProductionRow[] = [
   {
     need: 'Generative UI on your design system',
     description: 'Vercel json-render + Google A2UI rendered into your Angular components.',
-    primitive: '@ngaf/render',
+    primitive: '@threadplane/render',
   },
   {
     need: 'Recoverable errors',
@@ -119,7 +119,7 @@ export function Differentiator() {
               maxWidth: 760,
             }}
           >
-            A streaming chat tutorial takes an hour. Shipping a real agent — durable, interruptible, observable, on your design system — takes most teams six months. NGAF gives the Angular surface that the rest of the stack assumes you&apos;ve already built.
+            A streaming chat tutorial takes an hour. Shipping a real agent — durable, interruptible, observable, on your design system — takes most teams six months. Threadplane gives the Angular surface that the rest of the stack assumes you&apos;ve already built.
           </p>
         </div>
 

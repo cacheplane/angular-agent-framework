@@ -2,7 +2,7 @@
 
 A2UI is the structured UI path for agent-built surfaces in chat.
 
-The important boundary is simple: the agent streams declarative messages, the client owns rendering, and Angular handlers stay inside your application. The model does not ship code. It emits a constrained surface description that `@ngaf/chat`, `@ngaf/a2ui`, and `@ngaf/render` turn into Angular UI.
+The important boundary is simple: the agent streams declarative messages, the client owns rendering, and Angular handlers stay inside your application. The model does not ship code. It emits a constrained surface description that `@threadplane/chat`, `@threadplane/a2ui`, and `@threadplane/render` turn into Angular UI.
 
 When an assistant message starts with `---a2ui_JSON---`, the chat streaming pipeline treats the rest of the content as newline-delimited A2UI JSON.
 
@@ -19,7 +19,7 @@ assistant text starts with ---a2ui_JSON---
 
 This is why A2UI sits between chat and render. Chat owns message streaming. A2UI owns the protocol shapes. The normal chat path uses progressive surface state and `a2uiSlot` so components can appear as their required data arrives.
 
-There is also a compatibility path: when `A2uiSurfaceComponent` receives a `surface` without a `state`, it calls `surfaceToSpec()` and renders through `@ngaf/render`. That fallback is where render-spec handlers, render events, and json-render state bindings apply.
+There is also a compatibility path: when `A2uiSurfaceComponent` receives a `surface` without a `state`, it calls `surfaceToSpec()` and renders through `@threadplane/render`. That fallback is where render-spec handlers, render events, and json-render state bindings apply.
 
 ## Message Envelopes
 
@@ -166,7 +166,7 @@ A2UI component props can point at the surface data model.
 In the render-spec compatibility path, `surfaceToSpec()` converts path references into json-render state bindings. Catalog input components can use `emitBinding()` to write back through the render event pipeline.
 
 ```ts
-import { emitBinding } from '@ngaf/chat';
+import { emitBinding } from '@threadplane/chat';
 
 onInput(event: Event): void {
   const value = (event.target as HTMLInputElement).value;
@@ -254,8 +254,8 @@ Pass the built-in A2UI catalog to chat:
 
 ```ts
 import { Component } from '@angular/core';
-import { ChatComponent, a2uiBasicCatalog } from '@ngaf/chat';
-import { agent } from '@ngaf/langgraph';
+import { ChatComponent, a2uiBasicCatalog } from '@threadplane/chat';
+import { agent } from '@threadplane/langgraph';
 
 @Component({
   standalone: true,
@@ -272,7 +272,7 @@ export class SupportChatComponent {
 }
 ```
 
-For custom component sets, build a catalog with the same view registry tools used by `@ngaf/render`.
+For custom component sets, build a catalog with the same view registry tools used by `@threadplane/render`.
 
 ## Gotchas
 

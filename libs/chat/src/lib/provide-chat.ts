@@ -4,10 +4,10 @@ import {
   runLicenseCheck,
   LICENSE_PUBLIC_KEY,
   inferNoncommercial,
-} from '@ngaf/licensing';
-import type { AngularRegistry } from '@ngaf/render';
+} from '@threadplane/licensing';
+import type { AngularRegistry } from '@threadplane/render';
 
-const PACKAGE_NAME = '@ngaf/chat';
+const PACKAGE_NAME = '@threadplane/chat';
 
 export interface ChatConfig {
   /** Shared render registry for consumers that read CHAT_CONFIG. */

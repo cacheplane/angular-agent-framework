@@ -7,9 +7,9 @@ import {
   ChatStreamingMdComponent,
   MessageTemplateDirective,
   messageContent,
-} from '@ngaf/chat';
-import { ExampleChatLayoutComponent } from '@ngaf/example-layouts';
-import { agent } from '@ngaf/langgraph';
+} from '@threadplane/chat';
+import { ExampleChatLayoutComponent } from '@threadplane/example-layouts';
+import { agent } from '@threadplane/langgraph';
 import { environment } from '../environments/environment';
 
 /**

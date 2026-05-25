@@ -1,7 +1,7 @@
-import { tokens } from '@ngaf/design-tokens';
+import { tokens } from '@threadplane/design-tokens';
 import { HighlightedCode } from '../HighlightedCode';
 
-const SNIPPET_1 = `import { agent } from '@ngaf/langgraph';
+const SNIPPET_1 = `import { agent } from '@threadplane/langgraph';
 
 const chat = agent({
   assistantId: 'my-agent',
@@ -13,7 +13,7 @@ chat.messages();    // Signal<Message[]>
 chat.isLoading();   // Signal<boolean>
 chat.interrupt();   // Signal<AgentInterrupt | undefined>`;
 
-const SNIPPET_2 = `import { agent, provideAgent, MockAgentTransport, FetchStreamTransport } from '@ngaf/langgraph';
+const SNIPPET_2 = `import { agent, provideAgent, MockAgentTransport, FetchStreamTransport } from '@threadplane/langgraph';
 
 provideAgent({
   apiUrl: environment.langgraphUrl,

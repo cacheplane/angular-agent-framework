@@ -1,20 +1,20 @@
-# @ngaf/ag-ui
+# @threadplane/ag-ui
 
-Adapter that wraps an [AG-UI](https://github.com/ag-ui-protocol/ag-ui) `AbstractAgent` into the runtime-neutral `Agent` contract from `@ngaf/chat`. Works with any AG-UI-compatible backend — LangGraph, CrewAI, Mastra, Microsoft Agent Framework, AG2, Pydantic AI, AWS Strands, CopilotKit runtime.
+Adapter that wraps an [AG-UI](https://github.com/ag-ui-protocol/ag-ui) `AbstractAgent` into the runtime-neutral `Agent` contract from `@threadplane/chat`. Works with any AG-UI-compatible backend — LangGraph, CrewAI, Mastra, Microsoft Agent Framework, AG2, Pydantic AI, AWS Strands, CopilotKit runtime.
 
-Part of [Agent UI for Angular](https://github.com/cacheplane/angular-agent-framework). MIT licensed.
+Part of [Threadplane](https://github.com/cacheplane/angular-agent-framework). MIT licensed.
 
 ## Install
 
 ```bash
-npm install @ngaf/ag-ui @ngaf/chat @ag-ui/client
+npm install @threadplane/ag-ui @threadplane/chat @ag-ui/client
 ```
 
 ## Quick start
 
 ```ts
-import { provideAgUiAgent, AG_UI_AGENT } from '@ngaf/ag-ui';
-import { ChatComponent } from '@ngaf/chat';
+import { provideAgUiAgent, AG_UI_AGENT } from '@threadplane/ag-ui';
+import { ChatComponent } from '@threadplane/chat';
 
 // app.config.ts
 export const appConfig: ApplicationConfig = {

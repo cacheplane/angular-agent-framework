@@ -9,7 +9,7 @@ export const TELEMETRY_FORBIDDEN_PROPERTIES = [
   'threadId',
 ] as const;
 
-export const NGAF_RUNTIME_EVENTS = [
+export const THREADPLANE_RUNTIME_EVENTS = [
   'ngaf:runtime_instance_created',
   'ngaf:runtime_request_created',
   'ngaf:stream_started',

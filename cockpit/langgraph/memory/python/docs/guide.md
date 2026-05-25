@@ -8,7 +8,7 @@ and displays it in a live sidebar.
 </Summary>
 
 <Prompt>
-Add persistent agent memory to this Angular component using `agent()` from `@ngaf/langgraph`. Use `stream.value()` to access the `memory` field in graph state, derive a reactive `memoryEntries` signal with Angular's `computed()`, and render the facts in a sidebar panel beside the `<chat>` component from `@ngaf/chat`.
+Add persistent agent memory to this Angular component using `agent()` from `@threadplane/langgraph`. Use `stream.value()` to access the `memory` field in graph state, derive a reactive `memoryEntries` signal with Angular's `computed()`, and render the facts in a sidebar panel beside the `<chat>` component from `@threadplane/chat`.
 </Prompt>
 
 <Steps>
@@ -19,7 +19,7 @@ Set up `provideAgent()` in your app config with the LangGraph API URL:
 ```typescript
 // app.config.ts
 import { ApplicationConfig } from '@angular/core';
-import { provideAgent } from '@ngaf/langgraph';
+import { provideAgent } from '@threadplane/langgraph';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -37,7 +37,7 @@ In your component, call `agent()` pointing at the `memory` assistant:
 
 ```typescript
 // memory.component.ts
-import { agent } from '@ngaf/langgraph';
+import { agent } from '@threadplane/langgraph';
 
 export class MemoryComponent {
   protected readonly stream = agent({
@@ -75,7 +75,7 @@ Cast the return type of `stream.value()` to your state shape to get proper type 
 </Step>
 <Step title="Build the template with memory sidebar">
 
-Use the `<chat>` component from `@ngaf/chat` and render a sibling memory panel:
+Use the `<chat>` component from `@threadplane/chat` and render a sibling memory panel:
 
 ```html
 <chat [agent]="stream" />

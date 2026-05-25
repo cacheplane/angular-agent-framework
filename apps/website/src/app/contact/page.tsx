@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 import React, { Suspense } from 'react';
-import { tokens } from '@ngaf/design-tokens';
+import { tokens } from '@threadplane/design-tokens';
 import { Container } from '../../components/ui/Container';
 import { Section } from '../../components/ui/Section';
 import { Eyebrow } from '../../components/ui/Eyebrow';
@@ -11,7 +11,7 @@ import { AltChannelRow } from '../../components/contact/AltChannelRow';
 import { createPageMetadata } from '../../lib/site-metadata';
 
 export const metadata = createPageMetadata({
-  title: 'Talk to an engineer — ThreadPlane',
+  title: 'Talk to an engineer — Threadplane',
   description: "Tell us what you're shipping. We'll reply within one business day — usually with code, not a calendar invite.",
   pathname: '/contact',
   type: 'website',

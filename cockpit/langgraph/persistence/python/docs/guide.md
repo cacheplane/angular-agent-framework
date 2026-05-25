@@ -2,12 +2,12 @@
 
 <Summary>
 Build a chat interface with thread persistence using `agent()` from
-`@ngaf/langgraph`. Conversations survive browser refreshes and
+`@threadplane/langgraph`. Conversations survive browser refreshes and
 can be resumed using `stream.switchThread(id)`.
 </Summary>
 
 <Prompt>
-Add thread persistence to this Angular component using `agent()` from `@ngaf/langgraph`. Use the `onThreadId` callback to capture thread IDs, `stream.switchThread(id)` to resume conversations, and `stream.switchThread(null)` to start fresh. Bind `stream.messages()` in the template beside the `<chat>` component from `@ngaf/chat`.
+Add thread persistence to this Angular component using `agent()` from `@threadplane/langgraph`. Use the `onThreadId` callback to capture thread IDs, `stream.switchThread(id)` to resume conversations, and `stream.switchThread(null)` to start fresh. Bind `stream.messages()` in the template beside the `<chat>` component from `@threadplane/chat`.
 </Prompt>
 
 <Steps>
@@ -18,7 +18,7 @@ Set up `provideAgent()` in your app config with the LangGraph API URL:
 ```typescript
 // app.config.ts
 import { ApplicationConfig } from '@angular/core';
-import { provideAgent } from '@ngaf/langgraph';
+import { provideAgent } from '@threadplane/langgraph';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -38,7 +38,7 @@ In your component, call `agent()` with the `onThreadId` callback to capture new 
 
 ```typescript
 // persistence.component.ts
-import { agent } from '@ngaf/langgraph';
+import { agent } from '@threadplane/langgraph';
 
 export class PersistenceComponent {
   protected readonly stream = agent({
@@ -63,7 +63,7 @@ Store thread IDs in `localStorage` to survive full page reloads. On app init, re
 </Step>
 <Step title="Build the template with thread sidebar">
 
-Use the `<chat>` component from `@ngaf/chat` and render a sibling sidebar:
+Use the `<chat>` component from `@threadplane/chat` and render a sibling sidebar:
 
 ```html
 <chat [agent]="stream" />

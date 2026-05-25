@@ -1,4 +1,4 @@
-# Chat Input with @ngaf/chat
+# Chat Input with @threadplane/chat
 
 <Summary>
 Configure and customize the ChatInputComponent for handling user input
@@ -8,7 +8,7 @@ disabled states, and loading indicators.
 
 <Prompt>
 Add a customized chat input to your Angular component using `ChatInputComponent`
-from `@ngaf/chat`. Configure placeholder text, keyboard handling,
+from `@threadplane/chat`. Configure placeholder text, keyboard handling,
 and loading state integration.
 </Prompt>
 
@@ -18,7 +18,7 @@ and loading state integration.
 Import the input component from the chat library:
 
 ```typescript
-import { ChatInputComponent } from '@ngaf/chat';
+import { ChatInputComponent } from '@threadplane/chat';
 ```
 
 </Step>

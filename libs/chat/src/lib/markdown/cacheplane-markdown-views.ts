@@ -1,6 +1,6 @@
 // libs/chat/src/lib/markdown/cacheplane-markdown-views.ts
 // SPDX-License-Identifier: MIT
-import { views, type ViewRegistry } from '@ngaf/render';
+import { views, type ViewRegistry } from '@threadplane/render';
 import { MarkdownDocumentComponent } from './views/markdown-document.component';
 import { MarkdownParagraphComponent } from './views/markdown-paragraph.component';
 import { MarkdownHeadingComponent } from './views/markdown-heading.component';

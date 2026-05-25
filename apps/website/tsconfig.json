@@ -20,14 +20,14 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
-      "@ngaf/cockpit-docs": ["../../libs/cockpit-docs/src/index.ts"],
-      "@ngaf/cockpit-registry": ["../../libs/cockpit-registry/src/index.ts"],
-      "@ngaf/cockpit-shell": ["../../libs/cockpit-shell/src/index.ts"],
-      "@ngaf/design-tokens": ["../../libs/design-tokens/src/index.ts"],
-      "@ngaf/telemetry/shared": [
+      "@threadplane/cockpit-docs": ["../../libs/cockpit-docs/src/index.ts"],
+      "@threadplane/cockpit-registry": ["../../libs/cockpit-registry/src/index.ts"],
+      "@threadplane/cockpit-shell": ["../../libs/cockpit-shell/src/index.ts"],
+      "@threadplane/design-tokens": ["../../libs/design-tokens/src/index.ts"],
+      "@threadplane/telemetry/shared": [
         "../../libs/telemetry/src/shared/public-api.ts"
       ],
-      "@ngaf/telemetry/browser": [
+      "@threadplane/telemetry/browser": [
         "../../libs/telemetry/src/browser/public-api.ts"
       ]
     }

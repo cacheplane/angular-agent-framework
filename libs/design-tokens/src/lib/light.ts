@@ -2,7 +2,7 @@ import { baseTokens } from './base';
 
 /**
  * Theme-variant tokens resolved for the light theme.
- * Aligned with @ngaf/chat library's polished consumer aesthetic
+ * Aligned with @threadplane/chat library's polished consumer aesthetic
  * (pure-white surfaces, near-black text, neutral grays) so embedded
  * chat surfaces visually unify with cockpit chrome and the marketing
  * website.

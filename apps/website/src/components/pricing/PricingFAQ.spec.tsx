@@ -15,7 +15,7 @@ vi.mock('../ui/Eyebrow', () => ({
 }));
 
 const EXPECTED_QUESTIONS = [
-  'Is @ngaf/chat open source?',
+  'Is @threadplane/chat open source?',
   'Can I use it for free?',
   'Can I use it at work?',
   'Do my end users need licenses?',

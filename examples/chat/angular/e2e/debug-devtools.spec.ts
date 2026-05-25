@@ -39,7 +39,7 @@ test.describe('chat-debug × chat-sidebar coexistence', () => {
 
     // The edge-claim attribute on <html> reflects the dock.
     await expect(page.locator('html')).toHaveAttribute(
-      'data-ngaf-chat-debug',
+      'data-threadplane-chat-debug',
       'bottom'
     );
 
@@ -52,7 +52,7 @@ test.describe('chat-debug × chat-sidebar coexistence', () => {
 
     // The edge-claim attribute reflects the open sidebar.
     await expect(page.locator('html')).toHaveAttribute(
-      'data-ngaf-chat-sidebar',
+      'data-threadplane-chat-sidebar',
       'open'
     );
   });

@@ -1,11 +1,11 @@
 # Parser, Resolver, and Guards
 
-`@ngaf/a2ui` exports small helpers that keep stream parsing and dynamic value resolution consistent across packages.
+`@threadplane/a2ui` exports small helpers that keep stream parsing and dynamic value resolution consistent across packages.
 
 ## createA2uiMessageParser()
 
 ```ts
-import { createA2uiMessageParser } from '@ngaf/a2ui';
+import { createA2uiMessageParser } from '@threadplane/a2ui';
 
 const parser = createA2uiMessageParser();
 const messages = parser.push(chunk);
@@ -28,7 +28,7 @@ The parser checks only for the known envelope key and a non-null object value. I
 ## resolveDynamic()
 
 ```ts
-import { resolveDynamic } from '@ngaf/a2ui';
+import { resolveDynamic } from '@threadplane/a2ui';
 
 const model = {
   customer: { name: 'Ada' },
@@ -69,7 +69,7 @@ resolveDynamic(
 ## Pointer helpers
 
 ```ts
-import { getByPointer, setByPointer, deleteByPointer } from '@ngaf/a2ui';
+import { getByPointer, setByPointer, deleteByPointer } from '@threadplane/a2ui';
 ```
 
 The pointer helpers use slash-separated paths:
@@ -112,8 +112,8 @@ This package does not run validation rules, map actions to Angular handlers, or 
 
 A practical boundary is:
 
-- use `@ngaf/a2ui` to parse and inspect the protocol stream;
+- use `@threadplane/a2ui` to parse and inspect the protocol stream;
 - use app or server validation to decide whether a message is trusted;
-- use `@ngaf/chat` and `@ngaf/render` to display surfaces and wire interactions.
+- use `@threadplane/chat` and `@threadplane/render` to display surfaces and wire interactions.
 
 That split keeps protocol parsing deterministic and keeps privileged behavior in the host application.

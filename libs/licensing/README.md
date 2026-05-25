@@ -1,12 +1,12 @@
-# @ngaf/licensing
+# @threadplane/licensing
 
-Offline Ed25519 license verification for the ThreadPlane Angular framework
+Offline Ed25519 license verification for the Threadplane Angular framework
 libraries.
 
 ## Status
 
-Private, pre-1.0. Consumed by `@ngaf/langgraph`, `@ngaf/render`, and
-`@ngaf/chat`. Not intended as a standalone import.
+Private, pre-1.0. Consumed by `@threadplane/langgraph`, `@threadplane/render`, and
+`@threadplane/chat`. Not intended as a standalone import.
 
 ## Behavior
 

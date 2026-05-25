@@ -1,6 +1,6 @@
-# @ngaf/cockpit-telemetry
+# @threadplane/cockpit-telemetry
 
-Private Nx library. **Not** part of the publishable `@ngaf/*` group — it is consumed only by the cockpit-harness build of the framework's example apps (the 32 Angular examples rendered inside the cockpit iframe).
+Private Nx library. **Not** part of the publishable `@threadplane/*` group — it is consumed only by the cockpit-harness build of the framework's example apps (the 32 Angular examples rendered inside the cockpit iframe).
 
 ## What it does
 
@@ -8,7 +8,7 @@ When the parent cockpit shell embeds an example as an iframe, it appends URL par
 
 1. Reads those params via `readCockpitConfigFromIframe()`.
 2. If present, registers `provideCockpitTelemetry(config)` and the service initializes PostHog (memory persistence, parent-provided `distinct_id`) on app bootstrap.
-3. Subscribes to optional `CHAT_LIFECYCLE`, `AGENT_LIFECYCLE`, and `RENDER_LIFECYCLE` signals from `@ngaf/chat`, `@ngaf/langgraph`, and `@ngaf/render` and emits `cockpit:*` events.
+3. Subscribes to optional `CHAT_LIFECYCLE`, `AGENT_LIFECYCLE`, and `RENDER_LIFECYCLE` signals from `@threadplane/chat`, `@threadplane/langgraph`, and `@threadplane/render` and emits `cockpit:*` events.
 
 ## No app telemetry by default
 

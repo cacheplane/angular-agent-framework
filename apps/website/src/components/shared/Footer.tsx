@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import Link from 'next/link';
-import { tokens } from '@ngaf/design-tokens';
+import { tokens } from '@threadplane/design-tokens';
 import { analyticsEvents } from '../../lib/analytics/events';
 import { track, trackCtaClick, trackExternalLinkClick } from '../../lib/analytics/client';
 import { SHORT_POSITIONING_DESCRIPTION } from '../../lib/positioning';
@@ -143,10 +143,10 @@ export function Footer() {
                 aria-label="GitHub">
                 <GitHubIcon />
               </a>
-              <a href="https://www.npmjs.com/package/@ngaf/langgraph"
+              <a href="https://www.npmjs.com/package/@threadplane/langgraph"
                 target="_blank"
                 rel="noopener noreferrer"
-                onClick={() => trackExternalLinkClick('https://www.npmjs.com/package/@ngaf/langgraph', {
+                onClick={() => trackExternalLinkClick('https://www.npmjs.com/package/@threadplane/langgraph', {
                   surface: 'footer',
                   cta_id: 'footer_npm_icon',
                   cta_text: 'npm',
@@ -289,10 +289,10 @@ export function Footer() {
               onMouseLeave={(e) => (e.currentTarget.style.color = tokens.colors.textSecondary)}>
               Blog
             </Link>
-            <a href="https://www.npmjs.com/package/@ngaf/langgraph"
+            <a href="https://www.npmjs.com/package/@threadplane/langgraph"
               target="_blank" rel="noopener noreferrer"
               className="transition-colors" style={{ color: tokens.colors.textSecondary }}
-              onClick={() => trackExternalLinkClick('https://www.npmjs.com/package/@ngaf/langgraph', {
+              onClick={() => trackExternalLinkClick('https://www.npmjs.com/package/@threadplane/langgraph', {
                 surface: 'footer',
                 cta_id: 'footer_npm_package',
                 cta_text: 'npm Package',
@@ -313,7 +313,7 @@ export function Footer() {
         {/* Bottom bar */}
         <div className="mt-12 pt-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs"
           style={{ borderTop: `1px solid ${tokens.surfaces.border}`, color: tokens.colors.textMuted }}>
-          <span>&copy; {new Date().getFullYear()} Agent UI for Angular. All rights reserved.</span>
+          <span>&copy; {new Date().getFullYear()} Threadplane. All rights reserved.</span>
           <span>
             <Link
               href="/docs/licensing"

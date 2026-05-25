@@ -1,6 +1,6 @@
 # Chat Lifecycle Signals
 
-The `@ngaf/chat` library exposes per-instance lifecycle signals via the `CHAT_LIFECYCLE` injection token. Consumers can subscribe to these signals for debugging, custom dashboards, or telemetry integrations.
+The `@threadplane/chat` library exposes per-instance lifecycle signals via the `CHAT_LIFECYCLE` injection token. Consumers can subscribe to these signals for debugging, custom dashboards, or telemetry integrations.
 
 ## Interface
 
@@ -25,7 +25,7 @@ export const CHAT_LIFECYCLE = new InjectionToken<ChatLifecycle>('CHAT_LIFECYCLE'
 
 ```typescript
 import { Component, inject, effect } from '@angular/core';
-import { CHAT_LIFECYCLE } from '@ngaf/chat';
+import { CHAT_LIFECYCLE } from '@threadplane/chat';
 
 @Component({ /* ... */ })
 export class MyComponent {

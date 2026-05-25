@@ -1,6 +1,6 @@
 # Render Lifecycle Signals
 
-The `@ngaf/render` library exposes per-context lifecycle signals via the `RENDER_LIFECYCLE` injection token. All five signals derive from the existing `RenderEvent` stream via `RenderLifecycleService.notify*` methods — no separate event source, no double-counting.
+The `@threadplane/render` library exposes per-context lifecycle signals via the `RENDER_LIFECYCLE` injection token. All five signals derive from the existing `RenderEvent` stream via `RenderLifecycleService.notify*` methods — no separate event source, no double-counting.
 
 ## Interface
 
@@ -39,7 +39,7 @@ All signals derive from `RenderEvent` (see [Events](/docs/render/guides/events))
 
 ```typescript
 import { Component, inject, effect } from '@angular/core';
-import { RENDER_LIFECYCLE } from '@ngaf/render';
+import { RENDER_LIFECYCLE } from '@threadplane/render';
 
 @Component({ /* ... */ })
 export class MyComponent {

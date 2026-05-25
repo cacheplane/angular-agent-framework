@@ -19,7 +19,7 @@ const HERE = fileURLToPath(new URL('.', import.meta.url));
 const OUTPUT_PATH = resolve(HERE, '..', 'src', 'lib', 'theme.css');
 
 const HEADER = `/*
- * @ngaf/design-tokens/theme.css
+ * @threadplane/design-tokens/theme.css
  *
  * GENERATED FILE — DO NOT EDIT BY HAND.
  *

@@ -1,6 +1,6 @@
 'use client';
 import { useState } from 'react';
-import { tokens } from '@ngaf/design-tokens';
+import { tokens } from '@threadplane/design-tokens';
 import { analyticsEvents } from '../../lib/analytics/events';
 import { track } from '../../lib/analytics/client';
 import { Container } from '../ui/Container';
@@ -11,7 +11,7 @@ import { Card } from '../ui/Card';
 
 const VALUE_PROPS = [
   {
-    title: 'ThreadPlane Commercial license',
+    title: 'Threadplane Commercial license',
     body: 'Multi-app coverage, unlimited developers, custom contract — built for procurement.',
   },
   {

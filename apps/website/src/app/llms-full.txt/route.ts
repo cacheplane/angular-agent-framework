@@ -48,7 +48,7 @@ function loadAllPrompts(): string {
 
 export async function GET() {
   const sections = [
-    '# Agent UI for Angular — Full Reference\n\nSee /llms.txt for a compact summary.\n',
+    '# Threadplane — Full Reference\n\nSee /llms.txt for a compact summary.\n',
     '## API Reference (TypeDoc)\n\n' + loadApiDocs(),
     '## Prompt Recipes\n\n' + loadAllPrompts(),
     [

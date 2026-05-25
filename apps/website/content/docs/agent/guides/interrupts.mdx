@@ -144,7 +144,7 @@ import {
   signal,
   ChangeDetectionStrategy,
 } from '@angular/core';
-import { agent } from '@ngaf/langgraph';
+import { agent } from '@threadplane/langgraph';
 import type { BaseMessage } from '@langchain/core/messages';
 
 interface ApprovalPayload {
@@ -363,7 +363,7 @@ import {
   computed,
   ChangeDetectionStrategy,
 } from '@angular/core';
-import { agent } from '@ngaf/langgraph';
+import { agent } from '@threadplane/langgraph';
 import type { BaseMessage } from '@langchain/core/messages';
 
 interface StepApproval {
@@ -465,7 +465,7 @@ By default, `interrupt()` returns an untyped value. The `BagTemplate` generic pa
 `BagTemplate` is an SDK type with an `InterruptType` slot. When you specify that slot, the raw `langGraphInterrupts()` signal is typed. The normalized runtime-neutral `interrupt()` signal still exposes `value` as `unknown`, so cast that payload at the UI boundary if you use the neutral signal.
 
 ```typescript
-import { agent, BagTemplate } from '@ngaf/langgraph';
+import { agent, BagTemplate } from '@threadplane/langgraph';
 
 // Define the exact shape of your interrupt payload
 interface DeployApproval {

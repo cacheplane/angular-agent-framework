@@ -38,7 +38,7 @@ export const metadata: Metadata = {
     icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🛩️</text></svg>',
   },
   openGraph: {
-    title: 'Agent UI for Angular',
+    title: 'Threadplane',
     description: LONG_SUBHEAD,
     type: 'website',
     siteName: SITE_NAME,
@@ -47,7 +47,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Agent UI for Angular',
+    title: 'Threadplane',
     description: LONG_SUBHEAD,
     images: [DEFAULT_SOCIAL_IMAGE],
   },

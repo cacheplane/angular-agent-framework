@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { tokens } from '@ngaf/design-tokens';
+import { tokens } from '@threadplane/design-tokens';
 import { analyticsEvents } from '../../lib/analytics/events';
 import { track, trackWhitepaperDownloadClick } from '../../lib/analytics/client';
 import { Button } from '../ui/Button';

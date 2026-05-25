@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { tokens } from '@ngaf/design-tokens';
+import { tokens } from '@threadplane/design-tokens';
 import { Container } from '../../components/ui/Container';
 import { Section } from '../../components/ui/Section';
 import { Eyebrow } from '../../components/ui/Eyebrow';
@@ -11,8 +11,8 @@ import { SOLUTIONS } from '../../lib/solutions-data';
 import { createPageMetadata } from '../../lib/site-metadata';
 
 export const metadata = createPageMetadata({
-  title: 'Solutions — Agent UI for Angular',
-  description: 'See how Agent UI for Angular solves enterprise challenges — compliance, analytics, and customer support.',
+  title: 'Solutions — Threadplane',
+  description: 'See how Threadplane solves enterprise challenges — compliance, analytics, and customer support.',
   pathname: '/solutions',
   type: 'website',
 });

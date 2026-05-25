@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 import { Component, input } from '@angular/core';
 import type { Spec } from '@json-render/core';
-import { RenderElementComponent } from '@ngaf/render';
+import { RenderElementComponent } from '@threadplane/render';
 
 @Component({
   selector: 'app-dashboard-grid',

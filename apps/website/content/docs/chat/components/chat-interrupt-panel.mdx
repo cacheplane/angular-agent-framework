@@ -7,8 +7,8 @@
 **Import:**
 
 ```typescript
-import { ChatInterruptPanelComponent } from '@ngaf/chat';
-import type { InterruptAction } from '@ngaf/chat';
+import { ChatInterruptPanelComponent } from '@threadplane/chat';
+import type { InterruptAction } from '@threadplane/chat';
 ```
 
 ## How It Works
@@ -27,7 +27,7 @@ When no interrupt is active, the component renders nothing.
 ```
 
 ```typescript
-import type { InterruptAction } from '@ngaf/chat';
+import type { InterruptAction } from '@threadplane/chat';
 
 handleInterrupt(action: InterruptAction) {
   switch (action) {
@@ -113,7 +113,7 @@ If you need full control over the interrupt UI, use the lower-level `ChatInterru
 The primitive also exports a `getInterrupt()` helper function:
 
 ```typescript
-import { getInterrupt } from '@ngaf/chat';
+import { getInterrupt } from '@threadplane/chat';
 
 const interrupt = getInterrupt(chatRef); // Interrupt<any> | undefined
 ```
@@ -122,9 +122,9 @@ const interrupt = getInterrupt(chatRef); // Interrupt<any> | undefined
 
 ```typescript
 import { Component, signal, ChangeDetectionStrategy } from '@angular/core';
-import { agent } from '@ngaf/langgraph';
-import { ChatComponent, ChatInterruptPanelComponent } from '@ngaf/chat';
-import type { InterruptAction } from '@ngaf/chat';
+import { agent } from '@threadplane/langgraph';
+import { ChatComponent, ChatInterruptPanelComponent } from '@threadplane/chat';
+import type { InterruptAction } from '@threadplane/chat';
 
 @Component({
   selector: 'app-interrupt-demo',

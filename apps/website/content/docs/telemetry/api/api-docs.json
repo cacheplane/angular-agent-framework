@@ -1,20 +1,20 @@
 [
   {
-    "name": "NgafBrowserEvent",
+    "name": "ThreadplaneBrowserEvent",
     "kind": "type",
     "description": "",
     "signature": "\"ngaf:browser_provided\" | \"ngaf:browser_chat_init\"",
     "examples": []
   },
   {
-    "name": "NgafEvent",
+    "name": "ThreadplaneEvent",
     "kind": "type",
     "description": "",
-    "signature": "NgafNodeEvent | NgafBrowserEvent",
+    "signature": "ThreadplaneNodeEvent | ThreadplaneBrowserEvent",
     "examples": []
   },
   {
-    "name": "NgafNodeEvent",
+    "name": "ThreadplaneNodeEvent",
     "kind": "type",
     "description": "",
     "signature": "\"ngaf:postinstall\" | \"ngaf:runtime_instance_created\" | \"ngaf:runtime_request_created\" | \"ngaf:stream_started\" | \"ngaf:stream_ended\" | \"ngaf:stream_errored\"",
@@ -221,11 +221,11 @@
     "name": "captureEvent",
     "kind": "function",
     "description": "",
-    "signature": "captureEvent(event: NgafNodeEvent, properties: Record<string, unknown>): Promise<CaptureResult>",
+    "signature": "captureEvent(event: ThreadplaneNodeEvent, properties: Record<string, unknown>): Promise<CaptureResult>",
     "params": [
       {
         "name": "event",
-        "type": "NgafNodeEvent",
+        "type": "ThreadplaneNodeEvent",
         "description": "",
         "optional": false
       },

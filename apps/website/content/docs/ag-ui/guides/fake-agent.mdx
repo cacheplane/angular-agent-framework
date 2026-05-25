@@ -19,7 +19,7 @@ For Angular apps, use `provideFakeAgUiAgent()`.
 
 ```ts
 import { ApplicationConfig } from '@angular/core';
-import { provideFakeAgUiAgent } from '@ngaf/ag-ui';
+import { provideFakeAgUiAgent } from '@threadplane/ag-ui';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -35,8 +35,8 @@ Your component stays the same as the real backend version:
 
 ```ts
 import { Component } from '@angular/core';
-import { ChatComponent } from '@ngaf/chat';
-import { injectAgUiAgent } from '@ngaf/ag-ui';
+import { ChatComponent } from '@threadplane/chat';
+import { injectAgUiAgent } from '@threadplane/ag-ui';
 
 @Component({
   standalone: true,
@@ -74,7 +74,7 @@ Reasoning events are emitted before text events and use the same message id, so 
 Use `FakeAgent` directly when a test needs an AG-UI source rather than Angular DI.
 
 ```ts
-import { FakeAgent, toAgent } from '@ngaf/ag-ui';
+import { FakeAgent, toAgent } from '@threadplane/ag-ui';
 
 const source = new FakeAgent({
   tokens: ['One', ' two', ' three.'],

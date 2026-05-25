@@ -261,7 +261,7 @@ def request_approval(reason: str) -> str:
 # Research subagent — a small compiled child graph the parent dispatches
 # via the `research` @tool. Running it as an actual subgraph (vs. inline
 # logic) is what causes LangGraph to emit stream events under namespace
-# prefix `tools:<id>` for the child run, which is what the @ngaf/langgraph
+# prefix `tools:<id>` for the child run, which is what the @threadplane/langgraph
 # SubagentTracker keys on to populate `agent.subagents()`.
 class ResearchState(TypedDict):
     messages: Annotated[list, add_messages]
@@ -300,7 +300,7 @@ async def research(topic: str, subagent_type: str = "research") -> str:
     the user, citing it with the inline citation syntax if appropriate.
 
     `subagent_type` is a free-form label the parent uses to identify the
-    subagent in the UI (the @ngaf/langgraph SubagentTracker keys on it
+    subagent in the UI (the @threadplane/langgraph SubagentTracker keys on it
     to populate `agent.subagents()` for the chat-subagents primitive).
     Always pass a stable identifier like "research".
     """

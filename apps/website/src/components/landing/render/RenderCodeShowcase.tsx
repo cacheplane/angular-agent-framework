@@ -1,7 +1,7 @@
-import { tokens } from '@ngaf/design-tokens';
+import { tokens } from '@threadplane/design-tokens';
 import { HighlightedCode } from '../HighlightedCode';
 
-const SNIPPET_1 = `import { defineAngularRegistry } from '@ngaf/render';
+const SNIPPET_1 = `import { defineAngularRegistry } from '@threadplane/render';
 import { TableComponent } from './table.component';
 import { ChartComponent } from './chart.component';
 

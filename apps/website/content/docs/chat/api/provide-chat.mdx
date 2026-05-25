@@ -1,9 +1,9 @@
 # provideChat()
 
-`provideChat` is the provider factory that registers `@ngaf/chat` configuration in Angular's dependency injection system and starts the package license check. Call it in your `ApplicationConfig` or at the route level when you need a shared `CHAT_CONFIG` value.
+`provideChat` is the provider factory that registers `@threadplane/chat` configuration in Angular's dependency injection system and starts the package license check. Call it in your `ApplicationConfig` or at the route level when you need a shared `CHAT_CONFIG` value.
 
 ```typescript
-import { provideChat } from '@ngaf/chat';
+import { provideChat } from '@threadplane/chat';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -40,7 +40,7 @@ This makes the `ChatConfig` object available throughout the application via the 
 ## CHAT_CONFIG Injection Token
 
 ```typescript
-import { CHAT_CONFIG } from '@ngaf/chat';
+import { CHAT_CONFIG } from '@threadplane/chat';
 
 const CHAT_CONFIG: InjectionToken<ChatConfig>;
 ```
@@ -49,7 +49,7 @@ The token is an `InjectionToken<ChatConfig>` that can be injected in any compone
 
 ```typescript
 import { inject } from '@angular/core';
-import { CHAT_CONFIG } from '@ngaf/chat';
+import { CHAT_CONFIG } from '@threadplane/chat';
 
 @Component({ /* ... */ })
 export class MyComponent {
@@ -78,8 +78,8 @@ See the [ChatConfig API reference](/docs/chat/api/chat-config) for the full inte
 
 ```typescript
 // app.config.ts
-import { provideAgent } from '@ngaf/langgraph';
-import { provideChat } from '@ngaf/chat';
+import { provideAgent } from '@threadplane/langgraph';
+import { provideChat } from '@threadplane/chat';
 
 export const appConfig: ApplicationConfig = {
   providers: [

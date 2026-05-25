@@ -1,16 +1,16 @@
 # Installation
 
-A complete walkthrough for installing `@ngaf/chat` in an Angular 20+ application, activating a commercial license, and rendering your first chat in under 30 minutes.
+A complete walkthrough for installing `@threadplane/chat` in an Angular 20+ application, activating a commercial license, and rendering your first chat in under 30 minutes.
 
 <Callout type="info" title="Just bought a license?">
-This guide is written for customers who purchased a Developer Seat, Team, or Enterprise plan and received a `THREADPLANE_LICENSE` token by email. If you're evaluating `@ngaf/chat` for noncommercial use, you can skip the license steps — the library runs without a token (with a one-time advisory warning).
+This guide is written for customers who purchased a Developer Seat, Team, or Enterprise plan and received a `THREADPLANE_LICENSE` token by email. If you're evaluating `@threadplane/chat` for noncommercial use, you can skip the license steps — the library runs without a token (with a one-time advisory warning).
 </Callout>
 
 ## Prerequisites
 
 <Steps>
 <Step title="Angular 20 or later">
-`@ngaf/chat` uses Angular Signals, `input()`, and `contentChildren()`. Run `ng version` to confirm. Upgrade with `ng update @angular/core @angular/cli` if you're below 20.
+`@threadplane/chat` uses Angular Signals, `input()`, and `contentChildren()`. Run `ng version` to confirm. Upgrade with `ng update @angular/core @angular/cli` if you're below 20.
 </Step>
 <Step title="Node.js 18+">
 Required for the Angular build toolchain. `node --version` should report `v18` or newer.
@@ -18,34 +18,34 @@ Required for the Angular build toolchain. `node --version` should report `v18` o
 <Step title="A running agent backend (or a mock)">
 You need something for the chat UI to talk to. Two officially supported adapters cover virtually every backend:
 
-- **`@ngaf/langgraph`** — pick this if your backend is LangGraph or LangGraph Platform.
-- **`@ngaf/ag-ui`** — pick this for any AG-UI compatible backend (CrewAI, Mastra, Microsoft Agent Framework, AG2, Pydantic AI, AWS Strands, CopilotKit runtime).
+- **`@threadplane/langgraph`** — pick this if your backend is LangGraph or LangGraph Platform.
+- **`@threadplane/ag-ui`** — pick this for any AG-UI compatible backend (CrewAI, Mastra, Microsoft Agent Framework, AG2, Pydantic AI, AWS Strands, CopilotKit runtime).
 
-Both adapters expose the same `Agent` contract to `@ngaf/chat`, so swapping later is a one-line change. If you don't have a backend yet, use `mockAgent()` from `@ngaf/chat` to wire up the UI first.
+Both adapters expose the same `Agent` contract to `@threadplane/chat`, so swapping later is a one-line change. If you don't have a backend yet, use `mockAgent()` from `@threadplane/chat` to wire up the UI first.
 </Step>
 </Steps>
 
 ## 1. Install the packages
 
-Install `@ngaf/chat`, your chosen runtime adapter, and the `marked` markdown parser:
+Install `@threadplane/chat`, your chosen runtime adapter, and the `marked` markdown parser:
 
 ```bash
 # LangGraph backends
-npm install @ngaf/chat @ngaf/langgraph marked
+npm install @threadplane/chat @threadplane/langgraph marked
 
 # AG-UI compatible backends
-npm install @ngaf/chat @ngaf/ag-ui marked
+npm install @threadplane/chat @threadplane/ag-ui marked
 ```
 
 `marked` is a required peer dependency used to render assistant message markdown (code blocks, tables, headings). The chat components ship with their own design tokens and component-scoped styles — no Tailwind, PostCSS, or global stylesheet import is required.
 
 <Callout type="info" title="Full peer dependency list">
-`@ngaf/chat` declares peers on `@angular/core`, `@angular/common`, `@angular/forms`, `@angular/platform-browser` (all `^20.0.0 || ^21.0.0`), plus `@ngaf/licensing`, `@ngaf/render`, `@ngaf/a2ui`, `@json-render/core` (`^0.16.0`), `@langchain/core` (`^1.1.33`), `rxjs` (`~7.8.0`), and `marked` (`^15 || ^16`). npm 7+ installs all of these automatically.
+`@threadplane/chat` declares peers on `@angular/core`, `@angular/common`, `@angular/forms`, `@angular/platform-browser` (all `^20.0.0 || ^21.0.0`), plus `@threadplane/licensing`, `@threadplane/render`, `@threadplane/a2ui`, `@json-render/core` (`^0.16.0`), `@langchain/core` (`^1.1.33`), `rxjs` (`~7.8.0`), and `marked` (`^15 || ^16`). npm 7+ installs all of these automatically.
 </Callout>
 
 ## 2. Add your license token
 
-After purchase, ThreadPlane emails a signed token that looks like:
+After purchase, Threadplane emails a signed token that looks like:
 
 ```
 eyJzdWIiOiJjdXN0QGV4YW1wbGUuY29tIiwidGllciI6ImRldmVsb3Blci1zZWF0IiwiaWF0IjoxNzM…
@@ -99,13 +99,13 @@ This is the lowest-friction path for small teams. Do **not** commit the token to
 
 ## 3. Wire `provideChat()` and `provideAgent()`
 
-Register both providers in your application config. Below is a minimal `app.config.ts` for a LangGraph backend (swap `@ngaf/langgraph` for `@ngaf/ag-ui` if you picked that adapter — the API surface is identical).
+Register both providers in your application config. Below is a minimal `app.config.ts` for a LangGraph backend (swap `@threadplane/langgraph` for `@threadplane/ag-ui` if you picked that adapter — the API surface is identical).
 
 ```ts
 // src/app/app.config.ts
 import { ApplicationConfig, provideZonelessChangeDetection } from '@angular/core';
-import { provideAgent } from '@ngaf/langgraph';
-import { provideChat } from '@ngaf/chat';
+import { provideAgent } from '@threadplane/langgraph';
+import { provideChat } from '@threadplane/chat';
 import { environment } from '../environments/environment';
 
 export const appConfig: ApplicationConfig = {
@@ -141,8 +141,8 @@ Create a component, import `ChatComponent`, and bind it to an `agent()` instance
 ```ts
 // src/app/chat-page.component.ts
 import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
-import { agent } from '@ngaf/langgraph';
-import { ChatComponent } from '@ngaf/chat';
+import { agent } from '@threadplane/langgraph';
+import { ChatComponent } from '@threadplane/chat';
 
 @Component({
   selector: 'app-chat-page',
@@ -172,10 +172,10 @@ Open the browser DevTools console and look for messages prefixed with `[threadpl
 | What you see | What it means |
 |--------------|---------------|
 | (no `[threadplane]` warnings) | Token verified successfully. You're licensed. |
-| `[threadplane] @ngaf/chat: license missing.` | No token was passed. Chat still works, but you're in advisory mode. |
-| `[threadplane] @ngaf/chat: license expired.` | Token is past `exp`. Renew at [threadplane.ai](https://threadplane.ai/pricing). |
-| `[threadplane] @ngaf/chat: license tampered.` | Token failed signature verification. Re-copy from the purchase email. |
-| `[threadplane] @ngaf/chat: license in grace period.` | Token expired recently but is still inside the 14-day grace window. |
+| `[threadplane] @threadplane/chat: license missing.` | No token was passed. Chat still works, but you're in advisory mode. |
+| `[threadplane] @threadplane/chat: license expired.` | Token is past `exp`. Renew at [threadplane.ai](https://threadplane.ai/pricing). |
+| `[threadplane] @threadplane/chat: license tampered.` | Token failed signature verification. Re-copy from the purchase email. |
+| `[threadplane] @threadplane/chat: license in grace period.` | Token expired recently but is still inside the 14-day grace window. |
 
 Each warning fires at most once per package per status, so the console stays quiet on subsequent renders. There is no UI badge, no banner, and no rate limit — verification is purely a one-time advisory.
 
@@ -210,7 +210,7 @@ Your 12-month term has lapsed. Renew at [threadplane.ai/pricing](https://threadp
 <Step title="Chat renders blank or 404s the backend">
 Verify `apiUrl` in `provideAgent()` points to a reachable LangGraph or AG-UI endpoint, and `assistantId` matches a deployed graph on that server. For LangGraph, `langgraph dev` defaults to `http://localhost:2024`.
 </Step>
-<Step title="`Cannot find module '@ngaf/chat'`">
+<Step title="`Cannot find module '@threadplane/chat'`">
 Double-check the install completed and your `tsconfig.json` `paths` does not shadow node_modules. The package ships ESM and CJS — both Angular CLI and Vite-based builds work out of the box.
 </Step>
 </Steps>

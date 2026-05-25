@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import type { Theme } from '@ngaf/design-tokens';
+import type { Theme } from '@threadplane/design-tokens';
 
 /**
  * Hook for the embedded app inside a `<ThemedFrame>`. Returns the current

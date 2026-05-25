@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 import { InjectionToken } from '@angular/core';
-import type { LangGraphAgent } from '@ngaf/langgraph';
+import type { LangGraphAgent } from '@threadplane/langgraph';
 
 /**
  * Shared agent provided by `DemoShell` and consumed by routed mode

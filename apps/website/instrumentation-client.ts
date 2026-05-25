@@ -1,5 +1,5 @@
 import posthog from 'posthog-js';
-import { shouldCaptureAnalytics } from '@ngaf/telemetry/browser';
+import { shouldCaptureAnalytics } from '@threadplane/telemetry/browser';
 
 const token = process.env.NEXT_PUBLIC_POSTHOG_TOKEN;
 const captureLocal = process.env.NEXT_PUBLIC_POSTHOG_CAPTURE_LOCAL === 'true';

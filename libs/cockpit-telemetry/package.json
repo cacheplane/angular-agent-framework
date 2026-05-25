@@ -1,5 +1,5 @@
 {
-  "name": "@ngaf/cockpit-telemetry",
+  "name": "@threadplane/cockpit-telemetry",
   "version": "0.0.0",
   "license": "MIT",
   "private": true,
@@ -8,9 +8,9 @@
   "peerDependencies": {
     "@angular/core": "^20.0.0 || ^21.0.0",
     "@angular/platform-browser": "^20.0.0 || ^21.0.0",
-    "@ngaf/chat": "*",
-    "@ngaf/langgraph": "*",
-    "@ngaf/render": "*"
+    "@threadplane/chat": "*",
+    "@threadplane/langgraph": "*",
+    "@threadplane/render": "*"
   },
   "dependencies": {
     "posthog-js": "^1.373.0"

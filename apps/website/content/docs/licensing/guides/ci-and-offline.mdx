@@ -22,7 +22,7 @@ If you call `runLicenseCheck()` directly, inject the current time only when you 
 
 ```ts
 await runLicenseCheck({
-  package: '@ngaf/example',
+  package: '@threadplane/example',
   token,
   publicKey,
   nowSec: 1_735_689_600,
@@ -34,7 +34,7 @@ await runLicenseCheck({
 Use `verifyLicense()` and `evaluateLicense()` directly when network access is unavailable or unwanted.
 
 ```ts
-import { evaluateLicense, verifyLicense } from '@ngaf/licensing';
+import { evaluateLicense, verifyLicense } from '@threadplane/licensing';
 
 const verified = await verifyLicense(token, publicKey);
 const result = evaluateLicense(verified, {
@@ -49,7 +49,7 @@ This does not emit warnings. The higher-level `runLicenseCheck()` helper can emi
 `signLicense()` is exported for token minting and tests:
 
 ```ts
-import { signLicense } from '@ngaf/licensing';
+import { signLicense } from '@threadplane/licensing';
 
 const token = await signLicense(claims, privateKey);
 ```

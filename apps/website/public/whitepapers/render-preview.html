@@ -20,7 +20,7 @@
 
 <!-- Cover -->
 <div style="height:100vh;display:flex;flex-direction:column;justify-content:flex-end;padding:80px 80px 100px;background:linear-gradient(135deg, #fafbfc 0%, #e8f5e9 100%);page-break-after:always">
-  <div style="font-family:monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.12em;color:#004090;font-weight:700;margin-bottom:24px">@ngaf/render · Enterprise Guide</div>
+  <div style="font-family:monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.12em;color:#004090;font-weight:700;margin-bottom:24px">@threadplane/render · Enterprise Guide</div>
   <h1 style="font-family:'EB Garamond',serif;font-size:52px;font-weight:800;line-height:1.1;color:#1a1a2e;margin-bottom:20px">The<br>Enterprise<br>Guide<br>to<br>Generative<br>UI<br>in<br>Angular</h1>
   <p style="font-family:'EB Garamond',serif;font-style:italic;font-size:20px;color:#555770;margin-bottom:40px">Agents that render UI — without coupling to your frontend</p>
   <div style="font-size:13px;color:#8b8fa3;font-family:monospace">threadplane.ai · 2026</div>
@@ -174,11 +174,11 @@ const registry = defineAngularRegistry({
 <p>Computed properties use template expressions. The renderer evaluates these against a provided context object, keeping the spec declarative while supporting dynamic data binding.</p>
 <h3>Google's A2UI Extension</h3>
 <p>Google's Agent-to-UI (A2UI) specification extends json-render with agent-specific patterns. It adds constructs for streaming updates, tool call visualization, and interrupt handling—concepts that don't exist in static UI rendering but are fundamental to agent interactions.</p>
-<p>A2UI defines how partial UI updates arrive during generation, how tool invocations surface to users, and how human-in-the-loop checkpoints integrate with component trees. The `@ngaf/render` package implements both specifications.</p>
-<h3>The @ngaf/render Implementation</h3>
+<p>A2UI defines how partial UI updates arrive during generation, how tool invocations surface to users, and how human-in-the-loop checkpoints integrate with component trees. The `@threadplane/render` package implements both specifications.</p>
+<h3>The @threadplane/render Implementation</h3>
 <p>The `<render-spec>` directive consumes json-render documents and instantiates Angular components:</p>
 <pre><code>import { Component, signal } from '@angular/core';
-import { RenderSpecComponent, defineAngularRegistry } from '@ngaf/render';
+import { RenderSpecComponent, defineAngularRegistry } from '@threadplane/render';
 import { CardComponent, MetricComponent, SparklineComponent } from './components';
 <p>const registry = defineAngularRegistry({
   card: CardComponent,
@@ -214,7 +214,7 @@ Available components: card, avatar, text, badge</p>
 <p>A render-spec document references components by string name. The registry resolves those names to Angular component classes at render time. Without this mapping layer, the open standard would be theoretical—the registry makes it executable.</p>
 <h3>Defining the Registry</h3>
 <p>`defineAngularRegistry()` accepts a record of component names to Angular component classes:</p>
-<pre><code>import { defineAngularRegistry } from '@ngaf/render';
+<pre><code>import { defineAngularRegistry } from '@threadplane/render';
 import { CardComponent } from './card.component';
 import { ButtonComponent } from './button.component';
 import { DataTableComponent } from './data-table.component';
@@ -276,7 +276,7 @@ export const appConfig: ApplicationConfig = {
       <h2 style="font-family:'EB Garamond',serif;font-size:36px;font-weight:800;color:#1a1a2e;margin-bottom:28px;line-height:1.15">Streaming JSON Patches</h2>
       <div class="chapter-body"><p># Streaming JSON Patches</p>
 <p>Generative UI collapses the moment you wait for complete responses. A data table with 50 rows, each containing nested product details, might produce 15KB of JSON. Sending the full document on every update—when a single cell changes—creates unnecessary latency and forces the UI to block until the entire payload arrives. Users stare at spinners while the agent has already produced usable content.</p>
-<p>@ngaf/render solves this with JSON Patch (RFC 6902), streaming incremental operations that mutate the UI spec in place as the agent generates it.</p>
+<p>@threadplane/render solves this with JSON Patch (RFC 6902), streaming incremental operations that mutate the UI spec in place as the agent generates it.</p>
 <h3>The Problem with Full-Document Streaming</h3>
 <p>Consider an agent building a dashboard. The initial render spec might be 8KB. Adding a chart adds 2KB. Traditional approaches either:</p>
 <p>1. Wait for the complete spec before rendering anything
@@ -297,7 +297,7 @@ Each operation targets a specific JSON Pointer location. The patch `[{"op": "add
 </code></pre>
 <p>Each line is independently parseable. The render layer applies patches immediately, updating only the affected portion of the component tree.</p>
 <h3>Partial-JSON Parsing and Skeleton States</h3>
-<p>Real streams don't arrive in neat lines. TCP chunks split mid-token. @ngaf/render handles incomplete JSON by maintaining parse state across chunks, rendering valid portions while buffering incomplete fragments.</p>
+<p>Real streams don't arrive in neat lines. TCP chunks split mid-token. @threadplane/render handles incomplete JSON by maintaining parse state across chunks, rendering valid portions while buffering incomplete fragments.</p>
 <p>Skeleton states emerge naturally from this model. The agent can emit structural placeholders first—empty arrays, loading indicators—then fill them progressively:</p>
 <pre><code>@Component({
   template: `<render-spec [spec]="spec()" [registry]="registry" />`,
@@ -311,7 +311,7 @@ export class DashboardComponent {
   }
 }
 </code></pre></p>
-<p>The `signalStateStore` from @ngaf/render manages immutable state updates. Each `applyPatch` call triggers fine-grained Angular signals, re-rendering only components bound to changed paths.</p>
+<p>The `signalStateStore` from @threadplane/render manages immutable state updates. Each `applyPatch` call triggers fine-grained Angular signals, re-rendering only components bound to changed paths.</p>
 <h3>Performance Characteristics</h3>
 <p>Patch-based updates are O(change), not O(spec size). Appending one row to a 500-row table touches one array slot. The differ doesn't walk the entire spec; it applies the operation directly to the target path.</p>
 <p>This matters at scale. A real-time monitoring dashboard receiving 10 updates per second would choke on full-document replacement. With patches, each update carries only the delta—typically under 200 bytes—and applies in microseconds.</p>
@@ -321,10 +321,10 @@ export class DashboardComponent {
       <div style="font-family:monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#004090;font-weight:700;margin-bottom:16px">Chapter 5</div>
       <h2 style="font-family:'EB Garamond',serif;font-size:36px;font-weight:800;color:#1a1a2e;margin-bottom:28px;line-height:1.15">State Management & Computed Functions</h2>
       <div class="chapter-body"><p># State Management & Computed Functions</p>
-<p>Static UI specs hit a wall fast. The moment you need a total that updates when line items change, or a button that disables based on form state, you're beyond what static JSON can express. Production generative UI requires computed properties and collection rendering—capabilities that @ngaf/render delivers through `signalStateStore()` and spec-level computed functions.</p>
+<p>Static UI specs hit a wall fast. The moment you need a total that updates when line items change, or a button that disables based on form state, you're beyond what static JSON can express. Production generative UI requires computed properties and collection rendering—capabilities that @threadplane/render delivers through `signalStateStore()` and spec-level computed functions.</p>
 <h3>Agent-Managed State with signalStateStore()</h3>
 <p>`signalStateStore()` creates a reactive state container that both agents and components can manipulate. The agent initializes state through the spec, components update it via user interaction, and computed properties derive new values automatically.</p>
-<pre><code>import { signalStateStore } from '@ngaf/render';
+<pre><code>import { signalStateStore } from '@threadplane/render';
 <p>const store = signalStateStore({
   items: [
     { name: 'Widget', price: 25, quantity: 2 },

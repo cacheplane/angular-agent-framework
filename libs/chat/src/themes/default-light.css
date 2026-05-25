@@ -1,5 +1,5 @@
 /*
- * @ngaf/chat — default light theme
+ * @threadplane/chat — default light theme
  * SPDX-License-Identifier: MIT
  *
  * Neutral light palette with blue accent. Off-white surface (#FAFAFA)
@@ -8,7 +8,7 @@
  * inversion + outline lightening + softer elevation.
  *
  * Usage in your global stylesheet:
- *   @import '@ngaf/chat/themes/default-light.css';
+ *   @import '@threadplane/chat/themes/default-light.css';
  */
 :root {
   /* === Color (light, blue accent) === */

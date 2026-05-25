@@ -5,7 +5,7 @@ Creates an `AngularRegistry` that maps element type names to Angular component c
 ## Import
 
 ```typescript
-import { defineAngularRegistry } from '@ngaf/render';
+import { defineAngularRegistry } from '@threadplane/render';
 ```
 
 ## Signature
@@ -45,7 +45,7 @@ interface AngularRegistry {
 ### Basic Registry
 
 ```typescript
-import { defineAngularRegistry } from '@ngaf/render';
+import { defineAngularRegistry } from '@threadplane/render';
 import { TextComponent } from './text.component';
 import { CardComponent } from './card.component';
 
@@ -63,7 +63,7 @@ registry.names();        // ['Text', 'Card']
 ### With provideRender()
 
 ```typescript
-import { provideRender, defineAngularRegistry } from '@ngaf/render';
+import { provideRender, defineAngularRegistry } from '@threadplane/render';
 
 export const appConfig: ApplicationConfig = {
   providers: [

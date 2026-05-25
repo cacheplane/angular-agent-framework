@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-import { tokens } from '@ngaf/design-tokens';
+import { tokens } from '@threadplane/design-tokens';
 import { Container } from '../../components/ui/Container';
 import { Section } from '../../components/ui/Section';
 import { Eyebrow } from '../../components/ui/Eyebrow';
@@ -7,8 +7,8 @@ import { Button } from '../../components/ui/Button';
 import { createPageMetadata } from '../../lib/site-metadata';
 
 export const metadata = createPageMetadata({
-  title: 'Payment received — ThreadPlane',
-  description: 'Your @ngaf/chat license token will be emailed shortly.',
+  title: 'Payment received — Threadplane',
+  description: 'Your @threadplane/chat license token will be emailed shortly.',
   pathname: '/thanks',
   type: 'website',
 });
@@ -52,7 +52,7 @@ export default async function ThanksPage({ searchParams }: PageProps) {
               margin: '0 auto 24px',
             }}
           >
-            Your <code style={{ fontFamily: tokens.typography.fontMono }}>@ngaf/chat</code> license token will be emailed to the address on your receipt within a few minutes. Paste it into your app's <code style={{ fontFamily: tokens.typography.fontMono }}>provideChat()</code> config to activate.
+            Your <code style={{ fontFamily: tokens.typography.fontMono }}>@threadplane/chat</code> license token will be emailed to the address on your receipt within a few minutes. Paste it into your app's <code style={{ fontFamily: tokens.typography.fontMono }}>provideChat()</code> config to activate.
           </p>
           <p
             style={{

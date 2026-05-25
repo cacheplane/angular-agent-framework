@@ -52,7 +52,7 @@ describe('renderMarkdown', () => {
   });
 
   it('parses inline markdown inside Summary blocks', async () => {
-    const md = '# Test\n\n<Summary>\nUse `agent()` from [`@ngaf/langgraph`](/docs/langgraph).\n</Summary>';
+    const md = '# Test\n\n<Summary>\nUse `agent()` from [`@threadplane/langgraph`](/docs/langgraph).\n</Summary>';
     const result = await renderMarkdown(md);
     expect(result.html).toContain('<code>agent()</code>');
     expect(result.html).toContain('<a href="/docs/langgraph">');

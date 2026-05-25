@@ -36,7 +36,7 @@ This file is for agents working in this repository. It is contributor-facing, no
 
 ## Repo Layout
 
-- `libs/langgraph`: main Angular library (`@ngaf/langgraph`).
+- `libs/langgraph`: main Angular library (`@threadplane/langgraph`).
 - `apps/website`: docs and marketing site.
 - `examples/chat/angular/e2e`: browser end-to-end coverage for the canonical chat example.
 

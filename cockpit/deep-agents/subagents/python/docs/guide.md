@@ -2,12 +2,12 @@
 
 <Summary>
 Build a chat interface that shows real-time subagent activity using `agent()` from
-`@ngaf/langgraph`. An orchestrator agent delegates subtasks to specialist child
+`@threadplane/langgraph`. An orchestrator agent delegates subtasks to specialist child
 agents, and the sidebar displays each subagent's status and message count as they stream.
 </Summary>
 
 <Prompt>
-Add a subagent activity sidebar to this Angular component using `agent()` from `@ngaf/langgraph`. Use `stream.subagents()` to access the live Map of child agent streams, derive `subagentEntries` with `computed()`, and render them beside the `<chat>` component.
+Add a subagent activity sidebar to this Angular component using `agent()` from `@threadplane/langgraph`. Use `stream.subagents()` to access the live Map of child agent streams, derive `subagentEntries` with `computed()`, and render them beside the `<chat>` component.
 </Prompt>
 
 <Steps>
@@ -18,7 +18,7 @@ Set up `provideAgent()` in your app config with the LangGraph API URL:
 ```typescript
 // app.config.ts
 import { ApplicationConfig } from '@angular/core';
-import { provideAgent } from '@ngaf/langgraph';
+import { provideAgent } from '@threadplane/langgraph';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -38,7 +38,7 @@ In your component, call `agent()` with the `assistantId` pointing to your subage
 
 ```typescript
 // subagents.component.ts
-import { agent } from '@ngaf/langgraph';
+import { agent } from '@threadplane/langgraph';
 
 export class SubagentsComponent {
   protected readonly stream = agent({
@@ -73,7 +73,7 @@ export class SubagentsComponent {
 </Step>
 <Step title="Build the template with subagent sidebar">
 
-Use the `<chat>` component from `@ngaf/chat` and render a sibling sidebar:
+Use the `<chat>` component from `@threadplane/chat` and render a sibling sidebar:
 
 ```html
 <chat [agent]="stream" />

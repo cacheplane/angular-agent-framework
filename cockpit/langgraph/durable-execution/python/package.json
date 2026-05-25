@@ -1,5 +1,6 @@
 {
-  "name": "@ngaf/cockpit-langgraph-durable-execution-python",
+  "name": "@threadplane/cockpit-langgraph-durable-execution-python",
+  "private": true,
   "version": "0.0.1",
   "license": "MIT",
   "sideEffects": false

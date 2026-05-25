@@ -106,7 +106,7 @@ export const environment = {
 Wire the environment into `provideAgent()`:
 
 ```typescript
-import { provideAgent } from '@ngaf/langgraph';
+import { provideAgent } from '@threadplane/langgraph';
 import { environment } from '../environments/environment';
 
 export const appConfig: ApplicationConfig = {
@@ -188,7 +188,7 @@ Production apps need graceful error handling. Build a reactive error boundary us
 ```typescript
 import { ChangeDetectionStrategy, Component, computed } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
-import { agent } from '@ngaf/langgraph';
+import { agent } from '@threadplane/langgraph';
 
 @Component({
   selector: 'app-chat',

@@ -1,5 +1,6 @@
 {
-  "name": "@ngaf/cockpit-render-state-management-python",
+  "name": "@threadplane/cockpit-render-state-management-python",
+  "private": true,
   "version": "0.0.1",
   "license": "MIT",
   "sideEffects": false

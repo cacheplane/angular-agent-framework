@@ -1,8 +1,9 @@
 {
-  "name": "@ngaf/cockpit-render-repeat-loops-angular",
+  "name": "@threadplane/cockpit-render-repeat-loops-angular",
+  "private": true,
   "version": "0.0.1",
   "peerDependencies": {
-    "@ngaf/render": "^0.0.1"
+    "@threadplane/render": "*"
   },
   "license": "MIT",
   "sideEffects": false

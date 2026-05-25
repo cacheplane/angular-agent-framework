@@ -19,7 +19,7 @@ import type {
   AgentRuntimeTelemetryEvent,
   AgentRuntimeTelemetryProperties,
   AgentRuntimeTelemetrySink,
-} from '@ngaf/chat';
+} from '@threadplane/chat';
 import {
   SubagentTracker,
   TrackedSubagent,
@@ -29,14 +29,14 @@ import {
 import type { BaseMessage } from '@langchain/core/messages';
 import type { Interrupt, Message as LangGraphMessage, ThreadState, ToolCallWithResult, ToolProgress } from '@langchain/langgraph-sdk';
 
-// Local copy of the trace harness — same gating as @ngaf/chat's trace.ts.
-// Duplicated here to avoid an @ngaf/chat dep on the langgraph internals path.
+// Local copy of the trace harness — same gating as @threadplane/chat's trace.ts.
+// Duplicated here to avoid an @threadplane/chat dep on the langgraph internals path.
 function isLgTraceEnabled(): boolean {
   if (typeof globalThis === 'undefined') return false;
-  const win = (globalThis as { window?: { __ngafChatTrace?: boolean; localStorage?: Storage } }).window;
+  const win = (globalThis as { window?: { __threadplaneChatTrace?: boolean; localStorage?: Storage } }).window;
   if (!win) return false;
-  if (win.__ngafChatTrace === true) return true;
-  try { return win.localStorage?.getItem('NGAF_CHAT_STREAM_TRACE') === '1'; } catch { return false; }
+  if (win.__threadplaneChatTrace === true) return true;
+  try { return win.localStorage?.getItem('THREADPLANE_CHAT_STREAM_TRACE') === '1'; } catch { return false; }
 }
 function lgTrace(...args: unknown[]): void {
   if (isLgTraceEnabled()) {

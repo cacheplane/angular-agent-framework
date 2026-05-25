@@ -1,5 +1,5 @@
 {
-  "name": "@ngaf/example-layouts",
+  "name": "@threadplane/example-layouts",
   "version": "0.0.32",
   "peerDependencies": {
     "@angular/core": "^20.0.0 || ^21.0.0",

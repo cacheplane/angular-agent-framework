@@ -2,12 +2,12 @@
 
 <Summary>
 Build a chat interface that visualizes nested agent delegation using `agent()` from
-`@ngaf/langgraph`. A parent orchestrator dispatches research tasks to a child
+`@threadplane/langgraph`. A parent orchestrator dispatches research tasks to a child
 subgraph, and the sidebar tracks each subagent's status in real time using `stream.subagents()`.
 </Summary>
 
 <Prompt>
-Add a subgraph-powered orchestrator to this Angular component using `agent()` from `@ngaf/langgraph`. Use `stream.subagents()` to track active child subgraph executions, and derive a `subagentEntries` signal with `computed()` for template iteration. Bind `stream.messages()` beside the `<chat>` component from `@ngaf/chat`.
+Add a subgraph-powered orchestrator to this Angular component using `agent()` from `@threadplane/langgraph`. Use `stream.subagents()` to track active child subgraph executions, and derive a `subagentEntries` signal with `computed()` for template iteration. Bind `stream.messages()` beside the `<chat>` component from `@threadplane/chat`.
 </Prompt>
 
 <Steps>
@@ -18,7 +18,7 @@ Set up `provideAgent()` in your app config with the LangGraph API URL:
 ```typescript
 // app.config.ts
 import { ApplicationConfig } from '@angular/core';
-import { provideAgent } from '@ngaf/langgraph';
+import { provideAgent } from '@threadplane/langgraph';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -37,7 +37,7 @@ In your component, call `agent()` with the assistant ID pointing to your subgrap
 ```typescript
 // subgraphs.component.ts
 import { Component, computed } from '@angular/core';
-import { agent } from '@ngaf/langgraph';
+import { agent } from '@threadplane/langgraph';
 
 export class SubgraphsComponent {
   protected readonly stream = agent({
@@ -53,7 +53,7 @@ export class SubgraphsComponent {
 </Step>
 <Step title="Build the template with subagent sidebar">
 
-Use `<chat>` from `@ngaf/chat` and render a sibling sidebar:
+Use `<chat>` from `@threadplane/chat` and render a sibling sidebar:
 
 ```html
 <chat [agent]="stream" />

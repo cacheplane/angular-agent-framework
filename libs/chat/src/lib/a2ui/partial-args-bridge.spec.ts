@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MIT
 import { describe, it, expect, beforeEach } from 'vitest';
 import { TestBed } from '@angular/core/testing';
-import type { A2uiMessage } from '@ngaf/a2ui';
+import type { A2uiMessage } from '@threadplane/a2ui';
 import { createPartialArgsBridge } from './partial-args-bridge';
 import { createA2uiSurfaceStore, type A2uiSurfaceStore } from './surface-store';
 

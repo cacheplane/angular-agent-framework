@@ -1,6 +1,6 @@
 /**
  * @deprecated Backwards-compat export. New code should resolve theme-aware
- * surface tokens via `cssVars(theme)` (in @ngaf/ui-react), or import
+ * surface tokens via `cssVars(theme)` (in @threadplane/ui-react), or import
  * `lightOverrides` / `darkOverrides` from this package directly.
  *
  * Preserves the original `surfaces` export shape by re-exporting the

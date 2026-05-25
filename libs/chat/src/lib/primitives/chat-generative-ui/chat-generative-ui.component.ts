@@ -7,8 +7,8 @@ import {
   ChangeDetectionStrategy,
 } from '@angular/core';
 import type { Spec, StateStore } from '@json-render/core';
-import type { AngularRegistry, RenderEvent } from '@ngaf/render';
-import { RenderSpecComponent } from '@ngaf/render';
+import type { AngularRegistry, RenderEvent } from '@threadplane/render';
+import { RenderSpecComponent } from '@threadplane/render';
 import { CHAT_HOST_TOKENS } from '../../styles/chat-tokens';
 import { CHAT_GENERATIVE_UI_STYLES } from '../../styles/chat-generative-ui.styles';
 

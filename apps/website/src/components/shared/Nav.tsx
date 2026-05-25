@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { tokens } from '@ngaf/design-tokens';
+import { tokens } from '@threadplane/design-tokens';
 import { docsConfig } from '../../lib/docs-config';
 import { trackCtaClick, trackExternalLinkClick } from '../../lib/analytics/client';
 import { LogoMark } from '../ui/LogoMark';

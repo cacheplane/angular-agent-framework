@@ -60,9 +60,9 @@ describe('Hero', () => {
   it('primary CTA copies the install command and fires cta_id=hero_install', async () => {
     const { Hero } = await import('./Hero');
     render(<Hero />);
-    const btn = screen.getByRole('button', { name: /Install @ngaf\/chat/i });
+    const btn = screen.getByRole('button', { name: /Install @threadplane\/chat/i });
     fireEvent.click(btn);
-    expect(writeTextMock).toHaveBeenCalledWith('npm install @ngaf/chat');
+    expect(writeTextMock).toHaveBeenCalledWith('npm install @threadplane/chat');
     expect(trackMock).toHaveBeenCalledWith('marketing:cta_click', expect.objectContaining({
       cta_id: 'hero_install',
       track: 'developer',

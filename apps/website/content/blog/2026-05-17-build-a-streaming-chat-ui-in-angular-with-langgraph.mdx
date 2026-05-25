@@ -7,7 +7,7 @@ author: brian
 featured: true
 ---
 
-Let's build a real streaming chat UI in Angular, wired to a LangGraph backend, using `@ngaf/chat` and `@ngaf/langgraph`.
+Let's build a real streaming chat UI in Angular, wired to a LangGraph backend, using `@threadplane/chat` and `@threadplane/langgraph`.
 
 Most AI chat features still ship without streaming. They buffer the full response on the server, then drop it into the UI in one big paste. For me, that's the line between a demo and a production interface.
 
@@ -18,7 +18,7 @@ This is the tutorial I wish I had when I started shipping agentic chat in Angula
 ## Goals
 
 - Understand *why* streaming is the production-vs-demo line for chat.
-- Scaffold a signal-native Angular chat with `@ngaf/chat` and `@ngaf/langgraph` in three files.
+- Scaffold a signal-native Angular chat with `@threadplane/chat` and `@threadplane/langgraph` in three files.
 - Wire a real LangGraph backend to the UI without writing any transport code.
 - Learn the three production patterns that matter once the scaffold is working: errors, threads, and generative UI.
 - Have fun!
@@ -43,9 +43,9 @@ Let's look at the seams before we touch any code.
 
 **LangGraph backend.** This is where your agent graph lives — nodes, edges, tools, interrupts. It exposes a streaming endpoint over SSE. You don't write the transport. LangGraph does.
 
-**`@ngaf/langgraph` adapter.** This is the Angular-side translator. It takes LangGraph's `ThreadState` and turns it into a signal-shaped `AgentCheckpoint` that the chat UI knows how to render. It also owns the run lifecycle — submit, cancel, retry — and the thread CRUD.
+**`@threadplane/langgraph` adapter.** This is the Angular-side translator. It takes LangGraph's `ThreadState` and turns it into a signal-shaped `AgentCheckpoint` that the chat UI knows how to render. It also owns the run lifecycle — submit, cancel, retry — and the thread CRUD.
 
-**`@ngaf/chat` UI.** This is the rendering layer. Message list, input, suggestions, interrupt panels, tool-call cards, reasoning blocks. Every piece is a signal, every signal flows through OnPush change detection, and everything is themeable through CSS custom properties.
+**`@threadplane/chat` UI.** This is the rendering layer. Message list, input, suggestions, interrupt panels, tool-call cards, reasoning blocks. Every piece is a signal, every signal flows through OnPush change detection, and everything is themeable through CSS custom properties.
 
 The contract between the adapter and the UI is small on purpose. The chat doesn't know it's talking to LangGraph. The adapter doesn't know how messages get rendered. That separation is what lets you swap the backend, theme the UI, or replace a single component without touching the rest.
 
@@ -64,21 +64,21 @@ Let's start with a fresh Angular 20 app. Three commands and three files.
 <Tab label="npm">
 
 ```bash
-npm install @ngaf/chat @ngaf/langgraph marked
+npm install @threadplane/chat @threadplane/langgraph marked
 ```
 
 </Tab>
 <Tab label="pnpm">
 
 ```bash
-pnpm add @ngaf/chat @ngaf/langgraph marked
+pnpm add @threadplane/chat @threadplane/langgraph marked
 ```
 
 </Tab>
 <Tab label="yarn">
 
 ```bash
-yarn add @ngaf/chat @ngaf/langgraph marked
+yarn add @threadplane/chat @threadplane/langgraph marked
 ```
 
 </Tab>
@@ -92,8 +92,8 @@ yarn add @ngaf/chat @ngaf/langgraph marked
 ```ts
 // app.config.ts
 import { ApplicationConfig } from '@angular/core';
-import { provideAgent } from '@ngaf/langgraph';
-import { provideChat } from '@ngaf/chat';
+import { provideAgent } from '@threadplane/langgraph';
+import { provideChat } from '@threadplane/chat';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -111,8 +111,8 @@ export const appConfig: ApplicationConfig = {
 ```ts
 // chat-page.component.ts
 import { Component, ChangeDetectionStrategy, signal } from '@angular/core';
-import { agent } from '@ngaf/langgraph';
-import { ChatComponent } from '@ngaf/chat';
+import { agent } from '@threadplane/langgraph';
+import { ChatComponent } from '@threadplane/chat';
 
 @Component({
   selector: 'app-chat-page',
@@ -246,12 +246,12 @@ Three places I'd look next:
 - The [interrupts guide](/docs/chat/guides/streaming) — how to handle human-in-the-loop pauses without breaking the streaming model.
 
 <Callout type="info" title="Building this for an enterprise team?">
-If you're wiring `@ngaf/chat` into a regulated, multi-tenant, or design-system-heavy environment, we have a paid track for that. [Talk to us about the enterprise track →](/contact?source=blog_streaming_pillar&track=enterprise)
+If you're wiring `@threadplane/chat` into a regulated, multi-tenant, or design-system-heavy environment, we have a paid track for that. [Talk to us about the enterprise track →](/contact?source=blog_streaming_pillar&track=enterprise)
 </Callout>
 
 ## Conclusion
 
-Streaming is the production-vs-demo line, and `@ngaf/chat` plus `@ngaf/langgraph` is the shortest path I've found to get an Angular app across it. Three files, signals all the way down, and a contract small enough that you can swap the backend without touching the UI.
+Streaming is the production-vs-demo line, and `@threadplane/chat` plus `@threadplane/langgraph` is the shortest path I've found to get an Angular app across it. Three files, signals all the way down, and a contract small enough that you can swap the backend without touching the UI.
 
 The interesting work in agentic software isn't the chat itself. It's everything the chat lets you *stop* building so you can get back to the part that actually matters.
 

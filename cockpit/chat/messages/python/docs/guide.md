@@ -1,4 +1,4 @@
-# Chat Messages with @ngaf/chat
+# Chat Messages with @threadplane/chat
 
 <Summary>
 Render chat messages using the primitive components ChatMessageListComponent,
@@ -8,7 +8,7 @@ give full control over message layout, input handling, and loading states.
 
 <Prompt>
 Build a chat interface using the individual message primitives from
-`@ngaf/chat`. Import `ChatMessageListComponent`, `ChatInputComponent`,
+`@threadplane/chat`. Import `ChatMessageListComponent`, `ChatInputComponent`,
 and `ChatTypingIndicatorComponent` separately instead of the composed
 `ChatComponent`.
 </Prompt>
@@ -23,7 +23,7 @@ import {
   ChatMessageListComponent,
   ChatInputComponent,
   ChatTypingIndicatorComponent,
-} from '@ngaf/chat';
+} from '@threadplane/chat';
 ```
 
 </Step>

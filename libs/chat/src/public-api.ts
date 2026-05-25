@@ -147,10 +147,10 @@ export {
   ICON_WARNING, ICON_AGENT, ICON_CHECK, ICON_SEND,
 } from './lib/styles/chat-icons';
 
-// Views (re-exported from @ngaf/render for convenience)
-export { views, withViews, withoutViews, toRenderRegistry } from '@ngaf/render';
-export type { ViewRegistry } from '@ngaf/render';
-export { provideViews, VIEW_REGISTRY } from '@ngaf/render';
+// Views (re-exported from @threadplane/render for convenience)
+export { views, withViews, withoutViews, toRenderRegistry } from '@threadplane/render';
+export type { ViewRegistry } from '@threadplane/render';
+export { provideViews, VIEW_REGISTRY } from '@threadplane/render';
 
 // Streaming / Generative UI
 export { createContentClassifier } from './lib/streaming/content-classifier';
@@ -193,19 +193,19 @@ export { A2uiTabsComponent } from './lib/a2ui/catalog/tabs.component';
 export { A2uiAudioPlayerComponent } from './lib/a2ui/catalog/audio-player.component';
 export { A2uiVideoComponent } from './lib/a2ui/catalog/video.component';
 
-// A2UI types (re-exported from @ngaf/a2ui for convenience)
+// A2UI types (re-exported from @threadplane/a2ui for convenience)
 export type {
   A2uiActionMessage, A2uiClientDataModel,
   A2uiSurface, A2uiComponent, A2uiTheme,
   DynamicString, DynamicNumber, DynamicBoolean,
   A2uiChildren, A2uiAction, A2uiActionContextEntry,
   A2uiComponentDef,
-} from '@ngaf/a2ui';
-export { isPathRef, isLiteralString, isLiteralNumber, isLiteralBoolean } from '@ngaf/a2ui';
+} from '@threadplane/a2ui';
+export { isPathRef, isLiteralString, isLiteralNumber, isLiteralBoolean } from '@threadplane/a2ui';
 
 // Test utilities (no vitest dep — safe to ship in the main runtime bundle)
 export { mockAgent } from './lib/testing/mock-agent';
 export type { MockAgent, MockAgentOptions } from './lib/testing/mock-agent';
 
-// Conformance helpers ship from the secondary entry point @ngaf/chat/testing
+// Conformance helpers ship from the secondary entry point @threadplane/chat/testing
 // (they import vitest at module level; keeping them out of the main bundle).

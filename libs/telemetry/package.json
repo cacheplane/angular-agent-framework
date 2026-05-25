@@ -1,5 +1,5 @@
 {
-  "name": "@ngaf/telemetry",
+  "name": "@threadplane/telemetry",
   "version": "0.0.46",
   "license": "MIT",
   "publishConfig": {
@@ -17,7 +17,7 @@
   "sideEffects": false,
   "type": "module",
   "bin": {
-    "ngaf-telemetry-postinstall": "./node/postinstall.js"
+    "threadplane-telemetry-postinstall": "./node/postinstall.js"
   },
   "exports": {
     ".": {
@@ -38,7 +38,7 @@
     },
     "./browser": {
       "types": "./browser/index.d.ts",
-      "default": "./browser/fesm2022/ngaf-telemetry.mjs"
+      "default": "./browser/fesm2022/threadplane-telemetry.mjs"
     },
     "./README.md": "./README.md"
   },

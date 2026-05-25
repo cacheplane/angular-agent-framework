@@ -16,11 +16,11 @@ const TEMPLATES: Record<string, () => { subject: string; html: string }> = {
     html: whitepaperDownloadHtml('Brian'),
   }),
   'newsletter-welcome': () => ({
-    subject: 'Welcome to Agent UI for Angular updates',
+    subject: 'Welcome to Threadplane updates',
     html: newsletterWelcomeHtml(),
   }),
   'lead-notification': () => ({
-    subject: 'New lead: Brian at ThreadPlane',
+    subject: 'New lead: Brian at Threadplane',
     html: leadNotificationHtml({
       name: 'Sample Lead',
       email: 'demo@example.com',

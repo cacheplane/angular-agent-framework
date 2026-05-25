@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { tokens } from '@ngaf/design-tokens';
+import { tokens } from '@threadplane/design-tokens';
 import type { Post } from '../../lib/blog';
 import { getAuthor } from '../../lib/blog-authors';
 import { AuthorByline } from './AuthorByline';

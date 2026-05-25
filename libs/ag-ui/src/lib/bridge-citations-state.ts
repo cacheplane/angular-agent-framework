@@ -1,6 +1,6 @@
 // libs/ag-ui/src/lib/bridge-citations-state.ts
 // SPDX-License-Identifier: MIT
-import type { Citation, Message } from '@ngaf/chat';
+import type { Citation, Message } from '@threadplane/chat';
 
 interface ThreadStateLike {
   state?: Record<string, unknown>;

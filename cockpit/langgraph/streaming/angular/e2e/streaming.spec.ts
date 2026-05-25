@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 import { test, expect } from '@playwright/test';
-import { submitAndWaitForResponse } from '@ngaf-internal/e2e-harness';
+import { submitAndWaitForResponse } from '@threadplane-internal/e2e-harness';
 
 test('streaming: assistant text from the mocked LLM renders in the cockpit chat composition', async ({ page }) => {
   const bubble = await submitAndWaitForResponse(

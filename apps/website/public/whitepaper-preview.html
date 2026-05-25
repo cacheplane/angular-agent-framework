@@ -20,7 +20,7 @@
 
 <!-- Cover -->
 <div style="height:100vh;display:flex;flex-direction:column;justify-content:flex-end;padding:80px 80px 100px;background:linear-gradient(135deg, #fafbfc 0%, #eaf3ff 100%);page-break-after:always">
-  <div style="font-family:monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.12em;color:#004090;font-weight:700;margin-bottom:24px">ThreadPlane · Enterprise Angular Agent UI</div>
+  <div style="font-family:monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.12em;color:#004090;font-weight:700;margin-bottom:24px">Threadplane · Enterprise Angular Agent UI</div>
   <h1 style="font-family:'EB Garamond',serif;font-size:52px;font-weight:800;line-height:1.1;color:#1a1a2e;margin-bottom:20px">Agent<br>UI<br>for<br>Angular</h1>
   <p style="font-family:'EB Garamond',serif;font-style:italic;font-size:20px;color:#555770;margin-bottom:40px">Production-ready chat, threads, and generative UI for AI agents</p>
   <div style="font-size:13px;color:#8b8fa3;font-family:monospace">threadplane.ai · 2026</div>
@@ -171,7 +171,7 @@ Thread persistence is table stakes for production agent UIs. The framework gives
 <p>Hand-parsing these events is fragile. You end up maintaining state machines to track which call is active, handling out-of-order delivery, and writing defensive code for malformed chunks. Testing becomes painful because you need to simulate realistic streaming sequences. Every edge case—interrupted calls, parallel tool execution, retry logic—adds branching complexity.</p>
 <p>The framework solves this by exposing `toolCalls()` as a normalized signal on the agent surface. Each tool call object includes its current status, accumulated steps, and final result. The stream parsing happens once, correctly, inside the transport layer.</p>
 <h3>Headless and Prebuilt Options</h3>
-<p>`@ngaf/chat` provides two components for tool call rendering. `<chat-tool-calls>` is the headless primitive—it manages the structural rendering of multiple concurrent calls but leaves visual presentation to you. `<chat-tool-call-card>` is the prebuilt option that handles common patterns: status indicators, step lists, collapsible sections, and error states.</p>
+<p>`@threadplane/chat` provides two components for tool call rendering. `<chat-tool-calls>` is the headless primitive—it manages the structural rendering of multiple concurrent calls but leaves visual presentation to you. `<chat-tool-call-card>` is the prebuilt option that handles common patterns: status indicators, step lists, collapsible sections, and error states.</p>
 <p>For most production apps, start with the prebuilt card and customize from there:</p>
 <pre><code><chat-message-list [messages]="chat.messages()">
   <ng-template #toolCalls let-calls>
@@ -215,7 +215,7 @@ Thread persistence is table stakes for production agent UIs. The framework gives
 <p>When `interrupt()` returns a defined value, the agent is paused and awaiting human input. The `AgentInterrupt` object contains the action metadata emitted by the graph—typically a description of the pending operation and any parameters the user might modify. When `interrupt()` returns `undefined`, no approval is pending.</p>
 <p>This signal-based approach eliminates the need for manual subscription management or imperative state tracking. Angular's reactivity system propagates interrupt state changes automatically, and the signal remains consistent across component re-renders.</p>
 <h3>UI Components for Interrupt Handling</h3>
-<p>The `@ngaf/chat` package provides two components for rendering interrupt flows. `<chat-interrupt-panel>` offers a prebuilt approval interface with sensible defaults. For custom designs, the headless `<chat-interrupt>` component exposes the interrupt state and action handlers without imposing markup or styling.</p>
+<p>The `@threadplane/chat` package provides two components for rendering interrupt flows. `<chat-interrupt-panel>` offers a prebuilt approval interface with sensible defaults. For custom designs, the headless `<chat-interrupt>` component exposes the interrupt state and action handlers without imposing markup or styling.</p>
 <p>Both components support three user actions that map directly to resume commands:</p>
 <ul><li><strong>Approve</strong>: Resume execution with the original parameters</li>
 <li><strong>Edit</strong>: Resume execution with user-modified parameters</li>
@@ -261,10 +261,10 @@ await writer.write({
     "rows": rows_so_far
 })
 </code></pre>
-<p>On the Angular side, `@ngaf/langgraph` surfaces these through the agent's event stream. The `@ngaf/render` package consumes these specs and resolves them to Angular components at runtime.</p>
+<p>On the Angular side, `@threadplane/langgraph` surfaces these through the agent's event stream. The `@threadplane/render` package consumes these specs and resolves them to Angular components at runtime.</p>
 <h3>Registry-Based Resolution</h3>
 <p>The registry pattern decouples agent output from component implementation. Your agent emits a type identifier. Your frontend maps that identifier to a component. Neither side knows implementation details of the other.</p>
-<pre><code>import { defineAngularRegistry } from '@ngaf/render';
+<pre><code>import { defineAngularRegistry } from '@threadplane/render';
 import { DataTableComponent } from './components/data-table.component';
 import { ReservationFormComponent } from './components/reservation-form.component';
 import { ChartComponent } from './components/chart.component';
@@ -282,7 +282,7 @@ import { ChartComponent } from './components/chart.component';
 <p>Or configure the registry at the provider level with `provideRender({ registry: uiRegistry })` and omit it from individual templates.</p>
 <h3>Progressive Updates Through JSON Patch</h3>
 <p>Static specs work for complete data. Streaming scenarios require progressive updates. When your agent processes a large dataset, users shouldn't wait for completion before seeing results.</p>
-<p>`@ngaf/render` supports JSON Patch streaming for incremental UI updates. The agent emits patches as data arrives:</p>
+<p>`@threadplane/render` supports JSON Patch streaming for incremental UI updates. The agent emits patches as data arrives:</p>
 <pre><code># Initial spec
 await writer.write({"type": "data_table", "columns": [...], "rows": []})
 <p># Patches as rows arrive

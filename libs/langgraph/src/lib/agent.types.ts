@@ -25,7 +25,7 @@ import type {
   AgentSubmitInput,
   AgentSubmitOptions,
   AgentWithHistory,
-} from '@ngaf/chat';
+} from '@threadplane/chat';
 import type { AgentLifecycle } from './lifecycle';
 
 // Re-export SDK types so consumers don't need to import from langgraph-sdk directly

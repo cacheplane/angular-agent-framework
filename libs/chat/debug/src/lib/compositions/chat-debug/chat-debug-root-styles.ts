@@ -6,15 +6,15 @@ const CHAT_DEBUG_ROOT_STYLES = `
     --ngaf-chat-debug-panel-size-h: 40vh;
     --ngaf-chat-debug-panel-size-w: 420px;
   }
-  :root[data-ngaf-chat-debug="bottom"] {
+  :root[data-threadplane-chat-debug="bottom"] {
     --ngaf-chat-debug-claim-bottom: var(--ngaf-chat-debug-panel-size-h, 40vh);
     --ngaf-chat-occupy-bottom: var(--ngaf-chat-debug-panel-size-h, 40vh);
   }
-  :root[data-ngaf-chat-debug="right"] {
+  :root[data-threadplane-chat-debug="right"] {
     --ngaf-chat-debug-claim-right: var(--ngaf-chat-debug-panel-size-w, 420px);
     --ngaf-chat-occupy-right: var(--ngaf-chat-debug-panel-size-w, 420px);
   }
-  :root[data-ngaf-chat-debug="left"] {
+  :root[data-threadplane-chat-debug="left"] {
     --ngaf-chat-debug-claim-left: var(--ngaf-chat-debug-panel-size-w, 420px);
     --ngaf-chat-occupy-left: var(--ngaf-chat-debug-panel-size-w, 420px);
   }

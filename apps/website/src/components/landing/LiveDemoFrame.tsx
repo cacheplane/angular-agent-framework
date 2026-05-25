@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
-import { tokens } from '@ngaf/design-tokens';
+import { tokens } from '@threadplane/design-tokens';
 import { BrowserFrame } from '../ui/BrowserFrame';
 
 export function LiveDemoFrame() {
@@ -32,7 +32,7 @@ export function LiveDemoFrame() {
         {shouldLoad ? (
           <iframe
             src="https://demo.threadplane.ai"
-            title="Canonical demo — @ngaf/chat running against the shared LangGraph backend"
+            title="Canonical demo — @threadplane/chat running against the shared LangGraph backend"
             loading="lazy"
             style={{
               width: '100%',

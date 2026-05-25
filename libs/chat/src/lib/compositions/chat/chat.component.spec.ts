@@ -11,7 +11,7 @@ import { createContentClassifier, type ContentClassifier } from '../../streaming
 import { mockAgent } from '../../testing/mock-agent';
 import { createPartialArgsBridge } from '../../a2ui/partial-args-bridge';
 import { createA2uiSurfaceStore } from '../../a2ui/surface-store';
-import { signalStateStore } from '@ngaf/render';
+import { signalStateStore } from '@threadplane/render';
 import type { AgentEvent } from '../../agent/agent-event';
 
 describe('ChatComponent', () => {

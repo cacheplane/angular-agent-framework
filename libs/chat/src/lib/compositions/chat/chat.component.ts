@@ -8,10 +8,10 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { KeyValuePipe } from '@angular/common';
 import type { Agent, Message } from '../../agent';
 import { ChatReasoningComponent } from '../../primitives/chat-reasoning/chat-reasoning.component';
-import type { ViewRegistry, RenderEvent } from '@ngaf/render';
-import type { A2uiActionMessage } from '@ngaf/a2ui';
+import type { ViewRegistry, RenderEvent } from '@threadplane/render';
+import type { A2uiActionMessage } from '@threadplane/a2ui';
 import type { StateStore } from '@json-render/core';
-import { toRenderRegistry, signalStateStore } from '@ngaf/render';
+import { toRenderRegistry, signalStateStore } from '@threadplane/render';
 import { ChatWindowComponent } from '../../primitives/chat-window/chat-window.component';
 import { ChatMessageListComponent } from '../../primitives/chat-message-list/chat-message-list.component';
 import { MessageTemplateDirective } from '../../primitives/chat-message-list/message-template.directive';
@@ -478,7 +478,7 @@ export class ChatComponent {
     // Spec 4: flip CHAT_LIFECYCLE.firstMessageSent when the agent's stream
     // starts, regardless of submit path (input-bound, programmatic, suggestion-
     // click). Sticky — guarded so we never re-set a flag that's already true.
-    // `lifecycle` is not on the base Agent contract; adapters like @ngaf/langgraph
+    // `lifecycle` is not on the base Agent contract; adapters like @threadplane/langgraph
     // attach it. Duck-type the read so non-lifecycle agents are a no-op.
     effect(() => {
       let agentRef: ReturnType<typeof this.agent>;

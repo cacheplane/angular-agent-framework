@@ -26,7 +26,7 @@ describe('provideAgent', () => {
     expect(config.transport).toBe(transport);
   });
 
-  it('does not perform license checks because @ngaf/langgraph is MIT-licensed', async () => {
+  it('does not perform license checks because @threadplane/langgraph is MIT-licensed', async () => {
     const warn = globalThis.console.warn as ReturnType<typeof vi.fn>;
     const legacyLicenseConfig = {
       apiUrl: '',

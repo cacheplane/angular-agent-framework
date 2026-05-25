@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { PalettePersistence } from './palette-persistence.service';
 
-const KEY = 'ngaf-chat-demo:palette';
+const KEY = 'threadplane-chat-demo:palette';
 
 describe('PalettePersistence', () => {
   beforeEach(() => {

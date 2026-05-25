@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 //
-// @ngaf/marketing-assets — Brand asset rendering for the marketing pipeline.
+// @threadplane/marketing-assets — Brand asset rendering for the marketing pipeline.
 // Skeleton only. Implementation lands in the brand-assets sub-spec.
 
 export interface CardInput {
@@ -20,6 +20,6 @@ export interface RenderedCard {
 
 export function renderCard(_input: CardInput): Promise<RenderedCard> {
   throw new Error(
-    '@ngaf/marketing-assets: renderCard() not yet implemented. See brand-assets sub-spec.',
+    '@threadplane/marketing-assets: renderCard() not yet implemented. See brand-assets sub-spec.',
   );
 }
