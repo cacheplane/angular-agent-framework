@@ -167,7 +167,7 @@ async function mintAndEmail(
     resendApiKey: deps.resendApiKey,
     from: deps.emailFrom,
     to: email,
-    vars: { tier, seats, token, expiresAt },
+    vars: { tier, seats, token, expiresAt, stripeCustomerId: customerId },
   });
 }
 
