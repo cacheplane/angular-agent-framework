@@ -15,6 +15,8 @@ const PILL_BASE: React.CSSProperties = {
   fontWeight: 500,
   textDecoration: 'none',
   lineHeight: 1.2,
+  cursor: 'pointer',
+  display: 'inline-block',
 };
 
 const ACTIVE: React.CSSProperties = {
@@ -46,7 +48,7 @@ export function BlogTagFilter({ activeTag, tags }: BlogTagFilterProps) {
           All
         </Link>
       ) : (
-        <span style={ACTIVE} aria-current="page">
+        <span style={{ ...ACTIVE, cursor: 'default' }} aria-current="page">
           All
         </span>
       )}

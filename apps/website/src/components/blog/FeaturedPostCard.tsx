@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { tokens } from '@ngaf/design-tokens';
 import type { Post } from '../../lib/blog';
-import { formatPostDate, readingTimeMin } from '../../lib/blog';
+import { formatCardDate, readingTimeMin } from '../../lib/blog';
 import { getAuthor } from '../../lib/blog-authors';
 import { AuthorByline } from './AuthorByline';
 import { Eyebrow } from '../ui/Eyebrow';
@@ -26,6 +26,7 @@ export function FeaturedPostCard({ post }: { post: Post }) {
         border: `1px solid ${tokens.colors.accent}`,
         color: tokens.colors.textPrimary,
         textDecoration: 'none',
+        cursor: 'pointer',
         marginBottom: 32,
       }}
     >
@@ -74,7 +75,7 @@ export function FeaturedPostCard({ post }: { post: Post }) {
             color: tokens.colors.textMuted,
           }}
         >
-          {formatPostDate(frontmatter.date)} · {minutes} min read
+          {formatCardDate(frontmatter.date)} · {minutes} min read
         </span>
       </div>
     </Link>

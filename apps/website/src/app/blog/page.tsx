@@ -51,7 +51,7 @@ export default async function BlogIndexPage({ searchParams }: Props) {
               margin: '0 0 16px',
             }}
           >
-            Notes from ThreadPlane
+            Articles from ThreadPlane
           </h1>
           <p
             style={{

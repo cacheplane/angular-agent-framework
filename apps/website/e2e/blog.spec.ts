@@ -6,7 +6,7 @@ test.describe('Blog landing page', () => {
 
     // Brand eyebrow + H1
     await expect(page.getByText('Blog', { exact: true }).first()).toBeVisible();
-    await expect(page.getByRole('heading', { level: 1, name: /Notes from ThreadPlane/i })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1, name: /Articles from ThreadPlane/i })).toBeVisible();
 
     // Filter row contains the "All" chip in active state
     await expect(page.getByText('All', { exact: true })).toBeVisible();

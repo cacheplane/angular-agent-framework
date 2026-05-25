@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { tokens } from '@ngaf/design-tokens';
 import type { Post } from '../../lib/blog';
-import { formatPostDate, readingTimeMin } from '../../lib/blog';
+import { formatCardDate, readingTimeMin } from '../../lib/blog';
 
 export function PostCard({ post }: { post: Post }) {
   const { slug, frontmatter, content } = post;
@@ -22,6 +22,7 @@ export function PostCard({ post }: { post: Post }) {
         border: `1px solid ${tokens.surfaces.border}`,
         color: tokens.colors.textPrimary,
         textDecoration: 'none',
+        cursor: 'pointer',
       }}
     >
       <span
@@ -34,7 +35,7 @@ export function PostCard({ post }: { post: Post }) {
           color: tokens.colors.textMuted,
         }}
       >
-        {formatPostDate(frontmatter.date)} · {minutes} min read
+        {formatCardDate(frontmatter.date)} · {minutes} min read
       </span>
       <h3
         style={{

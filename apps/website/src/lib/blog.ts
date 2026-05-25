@@ -116,6 +116,25 @@ export function formatPostDate(iso: string): string {
 }
 
 /**
+ * Compact card date: "May 17" when the post is in the current year,
+ * "May 17, 2025" otherwise. Matches the article-page tone but shaves
+ * visual noise on landing cards where the year is redundant.
+ *
+ * Parses as UTC midnight and uses timeZone: 'UTC' for stability across
+ * reader locales.
+ */
+export function formatCardDate(iso: string, now: Date = new Date()): string {
+  const d = new Date(`${iso}T00:00:00Z`);
+  const sameYear = d.getUTCFullYear() === now.getUTCFullYear();
+  return d.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    ...(sameYear ? {} : { year: 'numeric' }),
+    timeZone: 'UTC',
+  });
+}
+
+/**
  * Estimate reading time in minutes from a markdown source.
  *
  * Strips fenced code blocks (not real reading), normalizes markdown
@@ -130,3 +149,4 @@ export function readingTimeMin(markdown: string): number {
     .filter(Boolean).length;
   return Math.max(1, Math.round(words / 220));
 }
+
