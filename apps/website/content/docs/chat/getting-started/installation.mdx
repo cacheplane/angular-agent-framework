@@ -1,110 +1,239 @@
 # Installation
 
-Detailed setup guide for `@ngaf/chat`.
+A complete walkthrough for installing `@ngaf/chat` in an Angular 20+ application, activating a commercial license, and rendering your first chat in under 30 minutes.
 
-## Requirements
+<Callout type="info" title="Just bought a license?">
+This guide is written for customers who purchased a Developer Seat, Team, or Enterprise plan and received a `THREADPLANE_LICENSE` token by email. If you're evaluating `@ngaf/chat` for noncommercial use, you can skip the license steps — the library runs without a token (with a one-time advisory warning).
+</Callout>
+
+## Prerequisites
 
 <Steps>
-<Step title="Angular 20+">
-`@ngaf/chat` uses Angular Signals, the `input()` function, and `contentChildren()`. Angular 20 or later is required.
+<Step title="Angular 20 or later">
+`@ngaf/chat` uses Angular Signals, `input()`, and `contentChildren()`. Run `ng version` to confirm. Upgrade with `ng update @angular/core @angular/cli` if you're below 20.
 </Step>
 <Step title="Node.js 18+">
-Required for the build toolchain and package installation.
+Required for the Angular build toolchain. `node --version` should report `v18` or newer.
+</Step>
+<Step title="A running agent backend (or a mock)">
+You need something for the chat UI to talk to. Two officially supported adapters cover virtually every backend:
+
+- **`@ngaf/langgraph`** — pick this if your backend is LangGraph or LangGraph Platform.
+- **`@ngaf/ag-ui`** — pick this for any AG-UI compatible backend (CrewAI, Mastra, Microsoft Agent Framework, AG2, Pydantic AI, AWS Strands, CopilotKit runtime).
+
+Both adapters expose the same `Agent` contract to `@ngaf/chat`, so swapping later is a one-line change. If you don't have a backend yet, use `mockAgent()` from `@ngaf/chat` to wire up the UI first.
 </Step>
 </Steps>
 
-## Install the package
+## 1. Install the packages
+
+Install `@ngaf/chat`, your chosen runtime adapter, and the `marked` markdown parser:
 
 ```bash
-npm install @ngaf/chat marked
+# LangGraph backends
+npm install @ngaf/chat @ngaf/langgraph marked
+
+# AG-UI compatible backends
+npm install @ngaf/chat @ngaf/ag-ui marked
 ```
 
-`marked` is required for parsing assistant markdown. Beyond that: the chat components ship with their own design tokens and component-encapsulated styles. **No PostCSS config, no global stylesheet import, no Tailwind required.**
+`marked` is a required peer dependency used to render assistant message markdown (code blocks, tables, headings). The chat components ship with their own design tokens and component-scoped styles — no Tailwind, PostCSS, or global stylesheet import is required.
 
-## Peer Dependencies
-
-`@ngaf/chat` declares the following peer dependencies:
-
-| Package | Version | Required |
-|---------|---------|----------|
-| `@angular/core` | `^20.0.0 \|\| ^21.0.0` | Yes |
-| `@angular/common` | `^20.0.0 \|\| ^21.0.0` | Yes |
-| `@angular/forms` | `^20.0.0 \|\| ^21.0.0` | Yes |
-| `@angular/platform-browser` | `^20.0.0 \|\| ^21.0.0` | Yes |
-| `@ngaf/licensing` | `*` | Yes |
-| `@ngaf/render` | `*` | Yes |
-| `@ngaf/a2ui` | `*` | Yes |
-| `@json-render/core` | `^0.16.0` | Yes |
-| `@langchain/core` | `^1.1.33` | Yes |
-| `rxjs` | `~7.8.0` | Yes |
-| `marked` | `^15.0.0 \|\| ^16.0.0` | Yes |
-
-`@cacheplane/partial-json` is installed by `@ngaf/chat` for streaming JSON parsing.
-
-<Callout type="info" title="Markdown rendering">
-`marked` parses AI message content into HTML (headings, code blocks, tables, lists). It is a required peer; the library ships a defensive plain-text fallback for resilience, but the rendered output is unusable without `marked` installed.
+<Callout type="info" title="Full peer dependency list">
+`@ngaf/chat` declares peers on `@angular/core`, `@angular/common`, `@angular/forms`, `@angular/platform-browser` (all `^20.0.0 || ^21.0.0`), plus `@ngaf/licensing`, `@ngaf/render`, `@ngaf/a2ui`, `@json-render/core` (`^0.16.0`), `@langchain/core` (`^1.1.33`), `rxjs` (`~7.8.0`), and `marked` (`^15 || ^16`). npm 7+ installs all of these automatically.
 </Callout>
 
-## Configure provideChat() (optional)
+## 2. Add your license token
 
-Add `provideChat()` alongside your agent provider to register `CHAT_CONFIG` for global chat configuration:
+After purchase, ThreadPlane emails a signed token that looks like:
+
+```
+eyJzdWIiOiJjdXN0QGV4YW1wbGUuY29tIiwidGllciI6ImRldmVsb3Blci1zZWF0IiwiaWF0IjoxNzM…
+```
+
+The token is signed with Ed25519. Verification is **offline** and **advisory** — a missing or expired token logs one `console.warn` line on first boot and the chat keeps working. There is no kill switch, no network call, no telemetry.
+
+That makes how you store the token a matter of secret-management preference rather than runtime correctness. Pick whichever flow fits your team.
+
+### Option A: `.env` file (recommended for local dev)
+
+Create `.env` at the project root (add it to `.gitignore`):
+
+```bash
+# .env
+THREADPLANE_LICENSE=eyJzdWIi…
+```
+
+Wire the variable into your Angular environment file or read it directly in `app.config.ts` via your build's env-var mechanism (Vite/esbuild `define`, Angular CLI `fileReplacements`, etc.). For a typical Angular CLI setup:
 
 ```ts
-// app.config.ts
-import { ApplicationConfig } from '@angular/core';
+// src/environments/environment.ts
+export const environment = {
+  production: false,
+  threadplaneLicense: process.env['THREADPLANE_LICENSE'] ?? '',
+};
+```
+
+### Option B: CI secret / secret manager (recommended for production)
+
+Set `THREADPLANE_LICENSE` as a build-time secret in GitHub Actions, Vercel, Netlify, CircleCI, AWS Secrets Manager, Doppler, or whatever you already use. Reference it the same way as Option A — the token is baked into the bundle at build time.
+
+```yaml
+# .github/workflows/deploy.yml
+- run: npm run build
+  env:
+    THREADPLANE_LICENSE: ${{ secrets.THREADPLANE_LICENSE }}
+```
+
+### Option C: Commit to a private repo
+
+The token is signed — it cannot be forged. If your repository is private and you accept distributing the token to everyone with repo access, it's safe to commit. Paste the literal string into `app.config.ts`:
+
+```ts
+provideChat({
+  license: 'eyJzdWIi…',
+});
+```
+
+This is the lowest-friction path for small teams. Do **not** commit the token to a public repository — anyone with the token can use the seats it grants.
+
+## 3. Wire `provideChat()` and `provideAgent()`
+
+Register both providers in your application config. Below is a minimal `app.config.ts` for a LangGraph backend (swap `@ngaf/langgraph` for `@ngaf/ag-ui` if you picked that adapter — the API surface is identical).
+
+```ts
+// src/app/app.config.ts
+import { ApplicationConfig, provideZonelessChangeDetection } from '@angular/core';
+import { provideAgent } from '@ngaf/langgraph';
 import { provideChat } from '@ngaf/chat';
+import { environment } from '../environments/environment';
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideChat({ assistantName: 'Assistant' }),
+    provideZonelessChangeDetection(),
+    provideAgent({
+      apiUrl: environment.langgraphApiUrl, // e.g. 'http://localhost:2024'
+    }),
+    provideChat({
+      license: environment.threadplaneLicense,
+      assistantName: 'Assistant',
+    }),
   ],
 };
 ```
 
-`provideChat()` is optional - chat components fall back to sensible defaults.
+`provideChat()` accepts the license as a plain string — you can also inline a `typeof` guard if your build defines the token as a global:
 
-## Theming
+```ts
+declare const THREADPLANE_LICENSE: string | undefined;
 
-The chat ships with a complete light/dark token system. Three ways to customize:
+provideChat({
+  license: typeof THREADPLANE_LICENSE === 'string' ? THREADPLANE_LICENSE : undefined,
+});
+```
 
-### 1. Override a single token at app root
+`provideChat()` itself is optional — chat components fall back to sensible defaults — but you'll want it once you start passing a license, an `assistantName`, or other global config.
 
-```css
-/* src/styles.css */
-:root {
-  --ngaf-chat-primary: oklch(0.55 0.22 264);
+## 4. Render your first chat
+
+Create a component, import `ChatComponent`, and bind it to an `agent()` instance. The full working example:
+
+```ts
+// src/app/chat-page.component.ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { agent } from '@ngaf/langgraph';
+import { ChatComponent } from '@ngaf/chat';
+
+@Component({
+  selector: 'app-chat-page',
+  standalone: true,
+  imports: [ChatComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <div style="height: 100vh">
+      <chat [agent]="chatAgent" />
+    </div>
+  `,
+})
+export class ChatPageComponent {
+  protected readonly chatAgent = agent({
+    assistantId: 'chat_agent', // The graph/agent ID exposed by your backend
+    threadId: signal(null),    // null = new thread on first send
+  });
 }
 ```
 
-### 2. Force a theme via attribute
+Add the route, run `ng serve`, and open the page. You should see the chat surface mount, an input at the bottom, and streaming responses as the agent replies.
 
-```html
-<chat data-ngaf-chat-theme="dark" [agent]="agent" />
+## 5. Verify the license activated
+
+Open the browser DevTools console and look for messages prefixed with `[threadplane]`.
+
+| What you see | What it means |
+|--------------|---------------|
+| (no `[threadplane]` warnings) | Token verified successfully. You're licensed. |
+| `[threadplane] @ngaf/chat: license missing.` | No token was passed. Chat still works, but you're in advisory mode. |
+| `[threadplane] @ngaf/chat: license expired.` | Token is past `exp`. Renew at [threadplane.ai](https://threadplane.ai/pricing). |
+| `[threadplane] @ngaf/chat: license tampered.` | Token failed signature verification. Re-copy from the purchase email. |
+| `[threadplane] @ngaf/chat: license in grace period.` | Token expired recently but is still inside the 14-day grace window. |
+
+Each warning fires at most once per package per status, so the console stays quiet on subsequent renders. There is no UI badge, no banner, and no rate limit — verification is purely a one-time advisory.
+
+<Callout type="info" title="No console warnings = healthy">
+A successful boot is silent. If you see `[threadplane]` lines in production, fix them before shipping — but the app will continue to function either way.
+</Callout>
+
+## Troubleshooting
+
+<Steps>
+<Step title="`license missing` warning in production">
+You shipped without `THREADPLANE_LICENSE` defined at build time. Confirm the build secret is set in your CI environment, then verify the value actually reaches the bundle. A quick check:
+
+```ts
+console.log('license length:', environment.threadplaneLicense?.length ?? 0);
 ```
 
-### 3. Deep override via the optional global stylesheet
+It should print roughly 200+ characters. Zero means the env var didn't get inlined.
+</Step>
+<Step title="`license tampered` warning">
+The token failed Ed25519 verification. Common causes:
 
-```css
-/* src/styles.css */
-@import '@ngaf/chat/chat.css';
+- The string was truncated when copied from email (some clients break long lines).
+- A `.env` parser stripped a trailing character.
+- You pasted the token with a leading or trailing whitespace.
 
-:root {
-  --ngaf-chat-primary: oklch(0.55 0.22 264);
-}
-```
+Re-copy the full token from the original purchase email and try again. Tokens never expire silently — a tampered status always means string corruption.
+</Step>
+<Step title="`license expired` warning">
+Your 12-month term has lapsed. Renew at [threadplane.ai/pricing](https://threadplane.ai/pricing); you'll receive a new token by email. There's a 14-day grace window after `exp` (during which the status reports `grace` rather than `expired`) to give you time to renew without disruption.
+</Step>
+<Step title="Chat renders blank or 404s the backend">
+Verify `apiUrl` in `provideAgent()` points to a reachable LangGraph or AG-UI endpoint, and `assistantId` matches a deployed graph on that server. For LangGraph, `langgraph dev` defaults to `http://localhost:2024`.
+</Step>
+<Step title="`Cannot find module '@ngaf/chat'`">
+Double-check the install completed and your `tsconfig.json` `paths` does not shadow node_modules. The package ships ESM and CJS — both Angular CLI and Vite-based builds work out of the box.
+</Step>
+</Steps>
 
-See [Theming](/docs/chat/guides/theming) for the full token reference.
-
-## What's Next
+## What's next
 
 <CardGroup cols={3}>
   <Card title="Quick Start" icon="rocket" href="/docs/chat/getting-started/quickstart">
-    Build a working chat in 5 minutes.
+    The 5-minute version of this guide.
+  </Card>
+  <Card title="Licensing model" icon="key" href="/docs/licensing/getting-started/introduction">
+    Tiers, grace periods, status semantics.
   </Card>
   <Card title="Layout Modes" icon="layout" href="/docs/chat/guides/layout-modes">
-    Embedded, popup, or sidebar?
+    Embedded, popup, or sidebar.
   </Card>
   <Card title="Theming" icon="palette" href="/docs/chat/guides/theming">
-    Customize the visual design.
+    Override design tokens for your brand.
+  </Card>
+  <Card title="Streaming & interrupts" icon="bolt" href="/docs/chat/guides/streaming">
+    Tool calls, human-in-the-loop, durable threads.
+  </Card>
+  <Card title="Components" icon="components" href="/docs/chat/components/chat">
+    Full primitive and composition reference.
   </Card>
 </CardGroup>
