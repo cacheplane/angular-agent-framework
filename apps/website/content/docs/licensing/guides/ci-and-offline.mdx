@@ -9,13 +9,13 @@ No network call is needed to know whether a token is signed correctly.
 For CI builds, treat the license token like any other secret:
 
 ```bash
-NGAF_LICENSE=... npm test
+THREADPLANE_LICENSE=... npm test
 ```
 
 Then pass it through `provideChat()`.
 
 ```ts
-provideChat({ license: process.env['NGAF_LICENSE'] });
+provideChat({ license: process.env['THREADPLANE_LICENSE'] });
 ```
 
 If you call `runLicenseCheck()` directly, inject the current time only when you need deterministic tests:
