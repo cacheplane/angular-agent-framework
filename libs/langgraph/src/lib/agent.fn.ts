@@ -46,7 +46,7 @@ import type {
   ContentBlock,
   AgentSubmitInput,
   AgentSubmitOptions,
-} from '@ngaf/chat';
+} from '@threadplane/chat';
 
 import {
   AgentOptions,

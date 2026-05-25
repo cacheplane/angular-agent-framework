@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { tokens } from '@ngaf/design-tokens';
+import { tokens } from '@threadplane/design-tokens';
 import { Section } from '../ui/Section';
 import { Container } from '../ui/Container';
 import { Eyebrow } from '../ui/Eyebrow';

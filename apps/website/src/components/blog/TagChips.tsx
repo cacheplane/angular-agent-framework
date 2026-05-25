@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { tokens } from '@ngaf/design-tokens';
+import { tokens } from '@threadplane/design-tokens';
 
 /**
  * Tag pills on the article page. Each pill links to the blog landing page

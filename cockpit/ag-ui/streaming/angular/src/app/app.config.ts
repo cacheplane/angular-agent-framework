@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 import { ApplicationConfig } from '@angular/core';
-import { provideFakeAgUiAgent } from '@ngaf/ag-ui';
+import { provideFakeAgUiAgent } from '@threadplane/ag-ui';
 
 export const appConfig: ApplicationConfig = {
   providers: [

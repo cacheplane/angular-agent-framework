@@ -1,6 +1,6 @@
 // libs/langgraph/src/lib/internals/extract-citations.ts
 // SPDX-License-Identifier: MIT
-import type { Citation } from '@ngaf/chat';
+import type { Citation } from '@threadplane/chat';
 
 interface KwargsLike {
   additional_kwargs?: Record<string, unknown> | undefined;

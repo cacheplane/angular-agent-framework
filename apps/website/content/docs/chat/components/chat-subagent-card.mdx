@@ -7,7 +7,7 @@
 **Import:**
 
 ```typescript
-import { ChatSubagentCardComponent } from '@ngaf/chat';
+import { ChatSubagentCardComponent } from '@threadplane/chat';
 ```
 
 ## Basic Usage
@@ -26,7 +26,7 @@ import { ChatSubagentCardComponent } from '@ngaf/chat';
 
 ## Subagent
 
-The `Subagent` type comes from `@ngaf/chat`. It provides reactive state for a subagent:
+The `Subagent` type comes from `@threadplane/chat`. It provides reactive state for a subagent:
 
 | Property | Type | Description |
 |----------|------|-------------|
@@ -77,12 +77,12 @@ The `ChatSubagentsComponent` primitive iterates over active subagent streams fro
 
 ```typescript
 import { Component, signal, ChangeDetectionStrategy } from '@angular/core';
-import { agent } from '@ngaf/langgraph';
+import { agent } from '@threadplane/langgraph';
 import {
   ChatComponent,
   ChatSubagentsComponent,
   ChatSubagentCardComponent,
-} from '@ngaf/chat';
+} from '@threadplane/chat';
 
 @Component({
   selector: 'app-subagent-demo',

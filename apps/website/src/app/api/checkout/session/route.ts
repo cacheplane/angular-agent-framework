@@ -1,13 +1,19 @@
 // SPDX-License-Identifier: MIT
 import { NextRequest, NextResponse } from 'next/server';
 import { getStripe } from '../../../../lib/stripe';
-import { TIERS, type TierSlug } from '../../../../../../../pricing/tiers.config';
+import {
+  TIERS,
+  type TierSlug,
+  type BillingCycle,
+} from '../../../../../../../pricing/tiers.config';
 import { STRIPE_PRICE_IDS } from '../../../../../../../pricing/tiers.generated';
 
-const BUYABLE_SLUGS = new Set<TierSlug>(['indie', 'developer_seat', 'app_deployment']);
+const BUYABLE_SLUGS = new Set<TierSlug>(['developer_seat', 'team']);
+const VALID_CYCLES = new Set<BillingCycle>(['monthly', 'annual']);
 
 interface RequestBody {
   tier?: string;
+  billing_cycle?: string;
   quantity?: number;
 }
 
@@ -31,6 +37,8 @@ export async function POST(req: NextRequest) {
     const form = await req.formData();
     body = {
       tier: typeof form.get('tier') === 'string' ? (form.get('tier') as string) : undefined,
+      billing_cycle:
+        typeof form.get('billing_cycle') === 'string' ? (form.get('billing_cycle') as string) : undefined,
       quantity: form.get('quantity') ? Number(form.get('quantity')) : undefined,
     };
   }
@@ -41,10 +49,16 @@ export async function POST(req: NextRequest) {
   }
   const tierSlug = tier as Exclude<TierSlug, 'community' | 'enterprise'>;
 
-  const priceId = STRIPE_PRICE_IDS[tierSlug];
+  const cycle = (body.billing_cycle ?? 'annual') as BillingCycle;
+  if (!VALID_CYCLES.has(cycle)) {
+    return NextResponse.json({ error: 'Invalid billing_cycle (expected monthly or annual)' }, { status: 400 });
+  }
+
+  const tierPrices = STRIPE_PRICE_IDS[tierSlug];
+  const priceId = tierPrices?.[cycle];
   if (!priceId) {
     return NextResponse.json(
-      { error: 'Checkout not yet configured for this tier. Run scripts/stripe/sync-products.ts.' },
+      { error: `Checkout not yet configured for tier=${tierSlug} cycle=${cycle}. Run scripts/stripe/sync-products.ts.` },
       { status: 503 },
     );
   }
@@ -61,8 +75,7 @@ export async function POST(req: NextRequest) {
   const stripe = getStripe();
 
   const session = await stripe.checkout.sessions.create({
-    mode: 'payment',
-    customer_creation: 'always',
+    mode: 'subscription',
     line_items: [
       {
         price: priceId,
@@ -74,8 +87,10 @@ export async function POST(req: NextRequest) {
     ],
     success_url: `${origin}/thanks?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${origin}/pricing`,
-    metadata: { ngaf_tier_slug: tierSlug },
-    payment_intent_data: { metadata: { ngaf_tier_slug: tierSlug } },
+    metadata: { ngaf_tier_slug: tierSlug, ngaf_billing_cycle: cycle },
+    subscription_data: {
+      metadata: { ngaf_tier_slug: tierSlug, ngaf_billing_cycle: cycle },
+    },
   });
 
   if (!session.url) {

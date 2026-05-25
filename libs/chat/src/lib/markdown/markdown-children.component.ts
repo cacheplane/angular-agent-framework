@@ -9,7 +9,7 @@ import {
   Type,
 } from '@angular/core';
 import { NgComponentOutlet } from '@angular/common';
-import type { ViewRegistry } from '@ngaf/render';
+import type { ViewRegistry } from '@threadplane/render';
 import type { MarkdownNode } from '@cacheplane/partial-markdown';
 import { MARKDOWN_VIEW_REGISTRY } from './markdown-view-registry';
 

@@ -15,6 +15,13 @@
       "when": 1779388800000,
       "tag": "0001_rename_subscription_to_payment",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1779840000000,
+      "tag": "0002_rename_payment_to_subscription",
+      "breakpoints": true
     }
   ]
 }

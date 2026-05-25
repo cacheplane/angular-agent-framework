@@ -19,9 +19,9 @@ test.describe('Solutions detail pages', () => {
     });
   }
 
-  test('/solutions/compliance shows the @ngaf/langgraph package pill', async ({ page }) => {
+  test('/solutions/compliance shows the @threadplane/langgraph package pill', async ({ page }) => {
     await page.goto('/solutions/compliance');
-    await expect(page.getByText('@ngaf/langgraph').first()).toBeVisible();
+    await expect(page.getByText('@threadplane/langgraph').first()).toBeVisible();
   });
 
   test('/solutions/unknown-slug returns 404', async ({ page }) => {

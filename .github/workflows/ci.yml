@@ -48,7 +48,7 @@ jobs:
       # classifier walk.
       - run: npm ci
       - name: Test CI scope classifier
-        run: node --test scripts/ci-scope.spec.mjs
+        run: node --test scripts/ci-scope.spec.mjs scripts/cockpit-matrix.spec.mjs
       - name: Detect changed CI surfaces
         id: scope
         run: |
@@ -305,40 +305,52 @@ jobs:
           fi
           echo "All examples-chat-e2e matrix expansions passed."
 
+  cockpit-e2e-dispatcher:
+    name: Cockpit — e2e dispatcher
+    needs: ci-scope
+    if: github.event_name == 'push' || needs.ci-scope.outputs.cockpit_e2e == 'true'
+    runs-on: ubuntu-latest
+    outputs:
+      caps: ${{ steps.matrix.outputs.caps }}
+    steps:
+      - uses: actions/checkout@v6.0.2
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v6.3.0
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Compute affected base + head
+        id: refs
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "base=${{ github.event.pull_request.base.sha }}" >> "$GITHUB_OUTPUT"
+            echo "head=${{ github.event.pull_request.head.sha }}" >> "$GITHUB_OUTPUT"
+            echo "full=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "base=HEAD~1" >> "$GITHUB_OUTPUT"
+            echo "head=HEAD" >> "$GITHUB_OUTPUT"
+            echo "full=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Emit cap matrix
+        id: matrix
+        run: |
+          node scripts/cockpit-matrix.mjs \
+            --base "${{ steps.refs.outputs.base }}" \
+            --head "${{ steps.refs.outputs.head }}" \
+            --full-fleet "${{ steps.refs.outputs.full }}"
+
   cockpit-e2e:
     name: "Cockpit — e2e (${{ matrix.cap.angular }})"
-    needs: ci-scope
+    needs: [ci-scope, cockpit-e2e-dispatcher]
     if: github.event_name == 'push' || needs.ci-scope.outputs.cockpit_e2e == 'true'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       max-parallel: 5
       matrix:
-        cap:
-          - { angular: cockpit-langgraph-streaming-angular, python: cockpit/langgraph/streaming/python }
-          - { angular: cockpit-chat-tool-calls-angular,     python: cockpit/chat/tool-calls/python }
-          - { angular: cockpit-chat-subagents-angular,      python: cockpit/chat/subagents/python }
-          - { angular: cockpit-chat-interrupts-angular,     python: cockpit/chat/interrupts/python }
-          - { angular: cockpit-chat-messages-angular,          python: cockpit/chat/messages/python }
-          - { angular: cockpit-chat-input-angular,             python: cockpit/chat/input/python }
-          - { angular: cockpit-chat-threads-angular,           python: cockpit/chat/threads/python }
-          - { angular: cockpit-chat-timeline-angular,          python: cockpit/chat/timeline/python }
-          - { angular: cockpit-chat-theming-angular,           python: cockpit/chat/theming/python }
-          - { angular: cockpit-chat-generative-ui-angular,     python: cockpit/chat/generative-ui/python }
-          - { angular: cockpit-chat-a2ui-angular,              python: cockpit/chat/a2ui/python }
-          - { angular: cockpit-langgraph-persistence-angular,  python: cockpit/langgraph/persistence/python }
-          - { angular: cockpit-langgraph-interrupts-angular,   python: cockpit/langgraph/interrupts/python }
-          - { angular: cockpit-langgraph-memory-angular,       python: cockpit/langgraph/memory/python }
-          - { angular: cockpit-langgraph-durable-execution-angular, python: cockpit/langgraph/durable-execution/python }
-          - { angular: cockpit-langgraph-subgraphs-angular,    python: cockpit/langgraph/subgraphs/python }
-          - { angular: cockpit-langgraph-time-travel-angular,  python: cockpit/langgraph/time-travel/python }
-          - { angular: cockpit-langgraph-deployment-runtime-angular, python: cockpit/langgraph/deployment-runtime/python }
-          - { angular: cockpit-deep-agents-planning-angular,   python: cockpit/deep-agents/planning/python }
-          - { angular: cockpit-deep-agents-filesystem-angular, python: cockpit/deep-agents/filesystem/python }
-          - { angular: cockpit-deep-agents-subagents-angular,  python: cockpit/deep-agents/subagents/python }
-          - { angular: cockpit-deep-agents-memory-angular,     python: cockpit/deep-agents/memory/python }
-          - { angular: cockpit-deep-agents-skills-angular,     python: cockpit/deep-agents/skills/python }
-          - { angular: cockpit-deep-agents-sandboxes-angular,  python: cockpit/deep-agents/sandboxes/python }
+        cap: ${{ fromJson(needs.cockpit-e2e-dispatcher.outputs.caps) }}
     steps:
       - uses: actions/checkout@v6.0.2
       - uses: actions/setup-node@v6.3.0

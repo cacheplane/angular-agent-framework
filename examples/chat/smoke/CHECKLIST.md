@@ -1,6 +1,6 @@
-# NGAF chat smoke checklist
+# Threadplane chat smoke checklist
 
-Scope: validates the **published** `@ngaf/*` packages render and behave
+Scope: validates the **published** `@threadplane/*` packages render and behave
 correctly in a fresh consumer. Run after any release or whenever
 changes land in libs/chat, libs/langgraph, libs/render, libs/ag-ui.
 
@@ -142,13 +142,13 @@ renders correctly both during streaming and after completion.
 
 - [ ] Palette → APPEARANCE section shows a `Light` / `Dark` segmented control above the existing `Theme` dropdown
 - [ ] Default is `Dark` on first load
-- [ ] Toggle to `Light` — `<html>` flips to `data-color-scheme="light"` and `data-ngaf-chat-theme="light"`
+- [ ] Toggle to `Light` — `<html>` flips to `data-color-scheme="light"` and `data-threadplane-chat-theme="light"`
 - [ ] Page background flips to white; chat composition + sidenav backgrounds flip to light
 - [ ] A2UI surface text colors invert correctly (no white-on-white or black-on-black)
 - [ ] Toggle back to `Dark` — all of the above restore
 - [ ] When A2UI theme dropdown is on `default-dark` or `default-light`, it auto-syncs with the color scheme toggle
 - [ ] When A2UI theme is on a `material-*` preset, color scheme toggle does NOT change the A2UI theme (user override wins)
-- [ ] Selection persists across reload (`localStorage.ngaf-chat-demo:palette.colorScheme`)
+- [ ] Selection persists across reload (`localStorage.threadplane-chat-demo:palette.colorScheme`)
 - [ ] No FOUC on initial load — inline `<head>` script reads the persisted value before bootstrap
 - [ ] No `console.error` on toggle
 
@@ -433,14 +433,14 @@ Components NOT yet exercised by the demo (deferred to future media-focused sugge
 - [ ] Hovering a thread row in collapsed mode reveals the full title via native browser tooltip (`[title]` attribute)
 - [ ] Right-click any thread row (collapsed OR expanded) — opens the same overflow menu anchored to the cursor; OS native context menu is suppressed via `event.preventDefault()`
 - [ ] Click the chevron again (or Cmd+B) — restores expanded mode
-- [ ] Persists across reload (`localStorage.ngaf-chat-demo:palette.sidenavMode = 'collapsed'`)
+- [ ] Persists across reload (`localStorage.threadplane-chat-demo:palette.sidenavMode = 'collapsed'`)
 
 ## Projects
 
 - [ ] Sidenav renders a **PROJECTS** section between Search and RECENT
 - [ ] "+ New project" affordance visible at the top of the section
 - [ ] Clicking "+ New project" replaces the affordance with an inline input ("New project name", autofocused)
-- [ ] Typing a name + Enter creates the project, persists to `localStorage` (`ngaf-chat-demo:projects`), and **auto-selects** it
+- [ ] Typing a name + Enter creates the project, persists to `localStorage` (`threadplane-chat-demo:projects`), and **auto-selects** it
 - [ ] Escape (or blur with empty value) cancels the inline create
 - [ ] Selecting a project filters the RECENT list to threads whose `metadata.projectId` matches
 - [ ] Selecting an empty project leaves RECENT empty; ARCHIVED section unaffected

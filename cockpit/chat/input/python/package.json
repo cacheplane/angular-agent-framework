@@ -1,5 +1,6 @@
 {
-  "name": "@ngaf/cockpit-chat-input-python",
+  "name": "@threadplane/cockpit-chat-input-python",
+  "private": true,
   "version": "0.0.1",
   "license": "MIT",
   "sideEffects": false

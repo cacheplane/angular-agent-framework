@@ -1,5 +1,5 @@
 @import "tailwindcss";
-@import "@ngaf/design-tokens/theme.css";
+@import "@threadplane/design-tokens/theme.css";
 
 * {
   box-sizing: border-box;

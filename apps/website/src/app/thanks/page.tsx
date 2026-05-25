@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-import { tokens } from '@ngaf/design-tokens';
+import { tokens } from '@threadplane/design-tokens';
 import { Container } from '../../components/ui/Container';
 import { Section } from '../../components/ui/Section';
 import { Eyebrow } from '../../components/ui/Eyebrow';
@@ -8,12 +8,21 @@ import { createPageMetadata } from '../../lib/site-metadata';
 
 export const metadata = createPageMetadata({
   title: 'Payment received — Threadplane',
-  description: 'Your @ngaf/chat license token will be emailed shortly.',
+  description: 'Your @threadplane/chat license token will be emailed shortly.',
   pathname: '/thanks',
   type: 'website',
 });
 
-export default function ThanksPage() {
+interface PageProps {
+  searchParams: Promise<{ session_id?: string }>;
+}
+
+export default async function ThanksPage({ searchParams }: PageProps) {
+  const { session_id: sessionId } = await searchParams;
+  const portalHref =
+    sessionId && /^cs_(test|live)_[A-Za-z0-9]+$/.test(sessionId)
+      ? `/api/portal/session?session_id=${encodeURIComponent(sessionId)}`
+      : null;
   return (
     <Section surface="canvas" ariaLabelledBy="thanks-heading">
       <Container>
@@ -43,7 +52,7 @@ export default function ThanksPage() {
               margin: '0 auto 24px',
             }}
           >
-            Your <code style={{ fontFamily: tokens.typography.fontMono }}>@ngaf/chat</code> license token will be emailed to the address on your receipt within a few minutes. Paste it into your app's <code style={{ fontFamily: tokens.typography.fontMono }}>provideChat()</code> config to activate.
+            Your <code style={{ fontFamily: tokens.typography.fontMono }}>@threadplane/chat</code> license token will be emailed to the address on your receipt within a few minutes. Paste it into your app's <code style={{ fontFamily: tokens.typography.fontMono }}>provideChat()</code> config to activate.
           </p>
           <p
             style={{
@@ -57,9 +66,14 @@ export default function ThanksPage() {
             If you don't see the email within 10 minutes, check spam or contact us.
           </p>
           <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
-            <Button variant="primary" size="md" href="/docs/chat/getting-started/installation">
-              Installation docs
+            <Button variant="primary" size="md" href="/docs/licensing">
+              Installation & licensing
             </Button>
+            {portalHref && (
+              <Button variant="secondary" size="md" href={portalHref}>
+                Manage subscription
+              </Button>
+            )}
             <Button variant="ghost" size="md" href="/contact">
               Contact support
             </Button>

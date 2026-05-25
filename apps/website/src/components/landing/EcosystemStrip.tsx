@@ -1,4 +1,4 @@
-import { tokens } from '@ngaf/design-tokens';
+import { tokens } from '@threadplane/design-tokens';
 import { Container } from '../ui/Container';
 import { Section } from '../ui/Section';
 import { Eyebrow } from '../ui/Eyebrow';
@@ -144,7 +144,7 @@ export function EcosystemStrip() {
               margin: 0,
             }}
           >
-            NGAF gives Angular teams production-ready chat, durable threads, interrupts, subagents, planning, memory, and generative UI without locking the backend to one provider.
+            Threadplane gives Angular teams production-ready chat, durable threads, interrupts, subagents, planning, memory, and generative UI without locking the backend to one provider.
           </p>
         </div>
 

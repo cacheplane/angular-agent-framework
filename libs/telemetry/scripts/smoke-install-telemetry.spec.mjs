@@ -7,29 +7,29 @@ import {
 describe('smoke-install-telemetry', () => {
   it('expects every publishable package with a postinstall hook to emit install telemetry', () => {
     const roots = [
-      { manifest: { name: '@ngaf/chat', scripts: { postinstall: 'ngaf-telemetry-postinstall || true' } }, root: 'dist/libs/chat' },
-      { manifest: { name: '@ngaf/langgraph', scripts: { postinstall: 'ngaf-telemetry-postinstall || true' } }, root: 'dist/libs/langgraph' },
-      { manifest: { name: '@ngaf/telemetry', scripts: { postinstall: 'node ./node/postinstall.js || true' } }, root: 'dist/libs/telemetry' },
+      { manifest: { name: '@threadplane/chat', scripts: { postinstall: 'threadplane-telemetry-postinstall || true' } }, root: 'dist/libs/chat' },
+      { manifest: { name: '@threadplane/langgraph', scripts: { postinstall: 'threadplane-telemetry-postinstall || true' } }, root: 'dist/libs/langgraph' },
+      { manifest: { name: '@threadplane/telemetry', scripts: { postinstall: 'node ./node/postinstall.js || true' } }, root: 'dist/libs/telemetry' },
     ];
 
-    expect(expectedPostinstallPackages(roots)).toEqual(['@ngaf/chat', '@ngaf/langgraph', '@ngaf/telemetry']);
+    expect(expectedPostinstallPackages(roots)).toEqual(['@threadplane/chat', '@threadplane/langgraph', '@threadplane/telemetry']);
   });
 
   it('fails when an expected package did not send a postinstall event', () => {
     expect(() => assertObservedPostinstallEvents({
-      expectedPackages: ['@ngaf/chat', '@ngaf/langgraph'],
+      expectedPackages: ['@threadplane/chat', '@threadplane/langgraph'],
       events: [
-        { event: 'ngaf:postinstall', properties: { pkg: '@ngaf/chat' } },
+        { event: 'ngaf:postinstall', properties: { pkg: '@threadplane/chat' } },
       ],
-    })).toThrow(/Missing ngaf:postinstall events for @ngaf\/langgraph/);
+    })).toThrow(/Missing ngaf:postinstall events for @threadplane\/langgraph/);
   });
 
   it('ignores non-postinstall events when proving package coverage', () => {
     expect(() => assertObservedPostinstallEvents({
-      expectedPackages: ['@ngaf/chat'],
+      expectedPackages: ['@threadplane/chat'],
       events: [
-        { event: 'ngaf:runtime_request_created', properties: { pkg: '@ngaf/chat' } },
+        { event: 'ngaf:runtime_request_created', properties: { pkg: '@threadplane/chat' } },
       ],
-    })).toThrow(/Missing ngaf:postinstall events for @ngaf\/chat/);
+    })).toThrow(/Missing ngaf:postinstall events for @threadplane\/chat/);
   });
 });

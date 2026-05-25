@@ -1,7 +1,7 @@
-import { tokens } from '@ngaf/design-tokens';
+import { tokens } from '@threadplane/design-tokens';
 import { HighlightedCode } from '../HighlightedCode';
 
-const SNIPPET_1 = `import { agent } from '@ngaf/langgraph';
+const SNIPPET_1 = `import { agent } from '@threadplane/langgraph';
 
 const chat = agent({
   assistantId: 'my-agent',
@@ -13,7 +13,7 @@ chat.messages();    // Signal<Message[]>
 chat.isLoading();   // Signal<boolean>
 chat.interrupt();   // Signal<AgentInterrupt | undefined>`;
 
-const SNIPPET_2 = `import { agent, provideAgent, MockAgentTransport, FetchStreamTransport } from '@ngaf/langgraph';
+const SNIPPET_2 = `import { agent, provideAgent, MockAgentTransport, FetchStreamTransport } from '@threadplane/langgraph';
 
 provideAgent({
   apiUrl: environment.langgraphUrl,
@@ -34,7 +34,7 @@ const SNIPPETS = [
   { title: 'Full Configuration', code: SNIPPET_2, lang: 'typescript' },
 ];
 
-export async function AngularCodeShowcase() {
+export async function LangGraphCodeShowcase() {
   return (
     <section className="angular-code" style={{ padding: '80px 32px' }}>
       <style>{`@media (max-width: 767px) { .angular-code { padding: 60px 20px !important; } }`}</style>

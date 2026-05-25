@@ -7,7 +7,7 @@ LangGraph checkpoints agent state at every super-step. Each checkpoint is keyed 
 </Callout>
 
 <Callout type="info" title="Adapter-defined behavior">
-"Restore a prior thread's messages when the user switches to it" is a behavior the `@ngaf/langgraph` adapter implements because the LangGraph protocol exposes per-thread checkpoint history. The runtime-neutral `Agent` contract in `@ngaf/chat` doesn't require this — adapters built on event-stream protocols (like `@ngaf/ag-ui`) typically can't offer it. If you're writing your own adapter, the [Writing an Adapter guide](/docs/chat/guides/writing-an-adapter#hydrating-from-a-server-stored-thread) covers the design choice.
+"Restore a prior thread's messages when the user switches to it" is a behavior the `@threadplane/langgraph` adapter implements because the LangGraph protocol exposes per-thread checkpoint history. The runtime-neutral `Agent` contract in `@threadplane/chat` doesn't require this — adapters built on event-stream protocols (like `@threadplane/ag-ui`) typically can't offer it. If you're writing your own adapter, the [Writing an Adapter guide](/docs/chat/guides/writing-an-adapter#hydrating-from-a-server-stored-thread) covers the design choice.
 </Callout>
 
 ## Python: Checkpointer Setup
@@ -115,7 +115,7 @@ Save the thread ID to localStorage so conversations survive page refreshes. agen
 ```typescript
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { signal } from '@angular/core';
-import { agent } from '@ngaf/langgraph';
+import { agent } from '@threadplane/langgraph';
 
 @Component({
   selector: 'app-chat',
@@ -165,7 +165,7 @@ A real chat application needs a sidebar showing all conversations. Here is a ful
 
 ```typescript
 import { ChangeDetectionStrategy, Component, signal, computed } from '@angular/core';
-import { agent } from '@ngaf/langgraph';
+import { agent } from '@threadplane/langgraph';
 
 interface Thread {
   id: string;

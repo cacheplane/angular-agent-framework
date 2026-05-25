@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { tokens } from '@ngaf/design-tokens';
+import { tokens } from '@threadplane/design-tokens';
 import { MdxRenderer } from '../../../components/docs/MdxRenderer';
 import { DocsTOC } from '../../../components/docs/DocsTOC';
 import { AuthorByline } from '../../../components/blog/AuthorByline';

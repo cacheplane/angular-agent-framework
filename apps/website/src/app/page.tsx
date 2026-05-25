@@ -10,7 +10,7 @@ import { Promises } from '../components/landing/Promises';
 import { HomeFAQ } from '../components/landing/HomeFAQ';
 import { FinalCTA } from '../components/landing/FinalCTA';
 import { RecentArticles } from '../components/landing/RecentArticles';
-import { tokens } from '@ngaf/design-tokens';
+import { tokens } from '@threadplane/design-tokens';
 import { createPageMetadata, LONG_SUBHEAD, PRIMARY_TAGLINE } from '../lib/site-metadata';
 
 export const metadata = createPageMetadata({
@@ -40,7 +40,7 @@ export default async function HomePage() {
         bullets={[
           'Headless chat and durable thread state',
           'Interrupts, tool progress, branch/history',
-          'Adapters: LangGraph (@ngaf/langgraph), AG-UI (@ngaf/ag-ui)',
+          'Adapters: LangGraph (@threadplane/langgraph), AG-UI (@threadplane/ag-ui)',
           'One Angular UI layer, swappable runtimes',
         ]}
         supportingCards={[
@@ -79,7 +79,7 @@ export default async function HomePage() {
           { title: 'chat-debug', description: 'Live devtools for tool calls.' },
           { title: 'GenUI surfaces', description: 'Schema-driven UI from agent output.' },
         ]}
-        cta={{ label: 'See @ngaf/render', href: '/render' }}
+        cta={{ label: 'See @threadplane/render', href: '/render' }}
         visualLeft
         visual={
           <BrowserFrame url="cockpit.threadplane.ai/langgraph/api" elevation="md">

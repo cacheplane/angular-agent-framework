@@ -1,15 +1,15 @@
 Commercial License
 
-Copyright (c) 2026 Brian Love d/b/a ThreadPlane. All rights reserved.
+Copyright (c) 2026 Brian Love d/b/a Threadplane. All rights reserved.
 
 This Commercial License ("License") governs commercial use of the
-ThreadPlane minting service ("Software"), located in apps/minting-service/
+Threadplane minting service ("Software"), located in apps/minting-service/
 of the angular-agent-framework repository. This License applies solely to
 the minting service component and does not govern any other part of the
 repository, which is released separately under the MIT License.
 
 Use of the Software for commercial purposes requires a valid license
-purchased from ThreadPlane.
+purchased from Threadplane.
 
 --- LICENSE TIERS ---
 
@@ -34,7 +34,7 @@ purchased from ThreadPlane.
 
 --- TERMS ---
 
-Grant of License. Subject to payment of the applicable license fee, ThreadPlane
+Grant of License. Subject to payment of the applicable license fee, Threadplane
 grants you a non-exclusive, non-transferable, worldwide license to use,
 reproduce, and distribute the Software solely as integrated into your
 applications, in accordance with the scope of the purchased tier.
@@ -47,7 +47,7 @@ Restrictions. You may not:
 
 No Redistribution. You may not distribute the Software or make it available
 to third parties as a service, package, or SDK, whether modified or
-unmodified, without a separate written agreement with ThreadPlane.
+unmodified, without a separate written agreement with Threadplane.
 
 Warranty Disclaimer. THE SOFTWARE IS PROVIDED "AS IS" WITHOUT WARRANTY OF
 ANY KIND. CACHEPLANE DISCLAIMS ALL WARRANTIES, EXPRESS OR IMPLIED, INCLUDING

@@ -7,8 +7,9 @@ import {
   deleteProcessedEvent,
   upsertLicense,
   getLicense,
+  getLicensesByCustomerId,
   revokeLicense,
-} from '@ngaf/db';
+} from '@threadplane/db';
 import { loadEnv } from '../src/lib/env.js';
 import { getStripe } from '../src/lib/stripe.js';
 import { mintToken } from '../src/lib/sign.js';
@@ -58,6 +59,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     deleteProcessedEvent,
     upsertLicense,
     getLicense,
+    getLicensesByCustomerId,
     revokeLicense,
     mintToken,
     sendLicenseEmail,
@@ -65,7 +67,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     privateKeyHex: env.LICENSE_SIGNING_PRIVATE_KEY_HEX,
     resendApiKey: env.RESEND_API_KEY,
     emailFrom: env.EMAIL_FROM,
-    defaultTtlDays: env.LICENSE_DEFAULT_TTL_DAYS,
   };
 
   try {

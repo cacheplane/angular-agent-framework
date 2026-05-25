@@ -20,7 +20,7 @@ Let's wire one up.
 ## Goals
 
 - Understand what AG-UI is and why it matters for Angular devs.
-- Wire an AG-UI-compatible backend to an Angular 20+ app using `@ngaf/ag-ui` and `@ngaf/chat`.
+- Wire an AG-UI-compatible backend to an Angular 20+ app using `@threadplane/ag-ui` and `@threadplane/chat`.
 - See how 17 protocol events become a handful of signals you can read from a template.
 - Handle the parts that turn a demo into a product: tool calls, interrupts, threads, fallbacks.
 - Have fun!
@@ -67,7 +67,7 @@ Three boxes. Two seams.
 
 **The wire.** Server-Sent Events. Plain HTTP, no WebSocket gymnastics, no custom binary framing. Your firewall, load balancer, and reverse proxy already know what to do with it.
 
-**The Angular side.** This is what ThreadPlane provides. `@ngaf/ag-ui` is the adapter. It consumes the AG-UI event stream and exposes a runtime-neutral `Agent` contract built from signals. `@ngaf/chat` is the UI. It reads from that contract and renders. The two are decoupled on purpose. We'll get to why.
+**The Angular side.** This is what ThreadPlane provides. `@threadplane/ag-ui` is the adapter. It consumes the AG-UI event stream and exposes a runtime-neutral `Agent` contract built from signals. `@threadplane/chat` is the UI. It reads from that contract and renders. The two are decoupled on purpose. We'll get to why.
 
 ## Let's wire it up
 
@@ -79,21 +79,21 @@ We'll start with a fresh Angular 20+ app. I'll assume you already have one, or y
 <Tab label="npm">
 
 ```bash
-npm install @ngaf/ag-ui @ngaf/chat marked
+npm install @threadplane/ag-ui @threadplane/chat marked
 ```
 
 </Tab>
 <Tab label="pnpm">
 
 ```bash
-pnpm add @ngaf/ag-ui @ngaf/chat marked
+pnpm add @threadplane/ag-ui @threadplane/chat marked
 ```
 
 </Tab>
 <Tab label="yarn">
 
 ```bash
-yarn add @ngaf/ag-ui @ngaf/chat marked
+yarn add @threadplane/ag-ui @threadplane/chat marked
 ```
 
 </Tab>
@@ -106,8 +106,8 @@ yarn add @ngaf/ag-ui @ngaf/chat marked
 ```ts
 // app.config.ts
 import { ApplicationConfig } from '@angular/core';
-import { provideAgUiAgent } from '@ngaf/ag-ui';
-import { provideChat } from '@ngaf/chat';
+import { provideAgUiAgent } from '@threadplane/ag-ui';
+import { provideChat } from '@threadplane/chat';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -119,15 +119,15 @@ export const appConfig: ApplicationConfig = {
 
 That's the whole bootstrap. `provideAgUiAgent` is the AG-UI transport. It wraps the official `@ag-ui/client` `HttpAgent` and exposes the signal-shaped contract via DI. `provideChat` is the chat UI's configuration.
 
-Notice they're independent. `@ngaf/chat` doesn't know it's talking to an AG-UI backend. It just reads from the `Agent` contract. We'll lean on that boundary later.
+Notice they're independent. `@threadplane/chat` doesn't know it's talking to an AG-UI backend. It just reads from the `Agent` contract. We'll lean on that boundary later.
 
 ### Render the chat
 
 ```ts
 // chat-page.component.ts
 import { Component, ChangeDetectionStrategy, inject } from '@angular/core';
-import { AG_UI_AGENT } from '@ngaf/ag-ui';
-import { ChatComponent } from '@ngaf/chat';
+import { AG_UI_AGENT } from '@threadplane/ag-ui';
+import { ChatComponent } from '@threadplane/chat';
 
 @Component({
   selector: 'app-chat-page',
@@ -155,7 +155,7 @@ That's it. Three files, maybe twenty lines of code, and you have a working strea
     height="800"
     style={{ width: '100%', height: 'auto', borderRadius: '0.5rem' }}
   />
-  <figcaption>The AG-UI streaming demo running on @ngaf/chat with the @ngaf/ag-ui adapter — FakeAgent provides the events, but the same code drives real LangGraph/CrewAI/Mastra backends.</figcaption>
+  <figcaption>The AG-UI streaming demo running on @threadplane/chat with the @threadplane/ag-ui adapter — FakeAgent provides the events, but the same code drives real LangGraph/CrewAI/Mastra backends.</figcaption>
 </figure>
 
 No `EventSource`. No reducer. No manual subscribe-and-render plumbing. No store.
@@ -176,7 +176,7 @@ The AG-UI protocol has seventeen event types, grouped into five families:
 
 Having worked on the protocol from the inside, I'll tell you the families are doing real work. They're not arbitrary. Lifecycle is for "is something happening?" Text messages are the streaming triad you already know from chat UIs. Tool calls are deliberately incremental so you can render the *intent* before the arguments are fully formed. State sync uses RFC 6902 JSON Patch so the wire stays small even when the agent's state is large. Every event earns its keep.
 
-ThreadPlane's `@ngaf/ag-ui` runs each event through a small reducer that updates a handful of signals on the `Agent` contract:
+ThreadPlane's `@threadplane/ag-ui` runs each event through a small reducer that updates a handful of signals on the `Agent` contract:
 
 - `messages()`: `Message[]`, the chat history. `TEXT_MESSAGE_CONTENT` appends a delta to the in-flight assistant message.
 - `status()`: `'idle' | 'running' | 'error' | 'paused'`. Driven by the `RUN_*` events.
@@ -239,7 +239,7 @@ The slot pattern is intentional. The chat ships defaults so you can demo in a da
 
 An interrupt is the agent saying *"I need a human before I do this thing."*
 
-You see them in production agents constantly: approve this database write, confirm this email send, choose between these three branches, fill in this missing field. AG-UI surfaces interrupts as state on the agent, and `@ngaf/chat` renders them inline in the message list with whatever resume affordance you give it.
+You see them in production agents constantly: approve this database write, confirm this email send, choose between these three branches, fill in this missing field. AG-UI surfaces interrupts as state on the agent, and `@threadplane/chat` renders them inline in the message list with whatever resume affordance you give it.
 
 ```html
 @if (agent.interrupt(); as pause) {
@@ -279,7 +279,7 @@ constructor() {
 
 What you *do* with that capability is a product decision, not a framework one. Scope threads per project, per task, per user session. There's no right answer. From my experience, the wrong answer is to ignore the question entirely and ship a chat where every refresh starts from zero.
 
-If you want a starting point, `@ngaf/chat` exposes a `<chat-sidebar>` primitive that handles the layout without locking you into a persistence model.
+If you want a starting point, `@threadplane/chat` exposes a `<chat-sidebar>` primitive that handles the layout without locking you into a persistence model.
 
 ## Swap the backend without changing the UI
 
@@ -297,7 +297,7 @@ provideAgUiAgent({ url: '/agents/mastra' }),
 
 That's the diff.
 
-The same applies in reverse. If you're already on a LangGraph stack and want a slightly tighter coupling than AG-UI gives you, `@ngaf/langgraph` is a direct adapter for LangGraph's native streaming API. It speaks the same `Agent` contract to `@ngaf/chat`, so your UI doesn't change either way. Pick whichever fits your team.
+The same applies in reverse. If you're already on a LangGraph stack and want a slightly tighter coupling than AG-UI gives you, `@threadplane/langgraph` is a direct adapter for LangGraph's native streaming API. It speaks the same `Agent` contract to `@threadplane/chat`, so your UI doesn't change either way. Pick whichever fits your team.
 
 For me, the durable bet is AG-UI. I'm biased (I helped grow the ecosystem around it at CopilotKit, and I'm a contributor to the spec), but the list of backends that already speak it covers most of what you'd reach for in 2026, and the protocol is small enough that I trust it not to drift into a multi-page spec that breaks every six months. The community around it is healthy, the maintainers are responsive, and the design choices have aged well.
 
@@ -308,9 +308,9 @@ The scaffold above is *short* on purpose. The framework intentionally hides the 
 The parts you'll want on day thirty:
 
 - **Errors and retries.** Per-message retry, transport-level backoff for transient SSE drops, graceful degradation when streaming is unavailable. Some corporate proxies buffer SSE. You'll find out the hard way if you don't plan for it.
-- **Generative UI.** When the agent wants to render a richer surface than a tool-call card, `@ngaf/render` lets the backend stream a UI spec and the frontend resolves it against a registry of your approved Angular components. No arbitrary code, no `eval`, no design-system bypass. The agent picks from a menu you control.
-- **Observability.** `@ngaf/telemetry` ships a PostHog-shaped sink that is *off by default*. Turn it on per-environment, point it at your own analytics, never ship app content to a vendor you didn't pick.
-- **Testing.** Because the contract is signals all the way down, the testing story is "write a signal, the chat re-renders." `@ngaf/ag-ui` ships a `FakeAgent` you can hand-feed events to in a unit test. No SSE harness, no fixture loader, no test-only DI dance.
+- **Generative UI.** When the agent wants to render a richer surface than a tool-call card, `@threadplane/render` lets the backend stream a UI spec and the frontend resolves it against a registry of your approved Angular components. No arbitrary code, no `eval`, no design-system bypass. The agent picks from a menu you control.
+- **Observability.** `@threadplane/telemetry` ships a PostHog-shaped sink that is *off by default*. Turn it on per-environment, point it at your own analytics, never ship app content to a vendor you didn't pick.
+- **Testing.** Because the contract is signals all the way down, the testing story is "write a signal, the chat re-renders." `@threadplane/ag-ui` ships a `FakeAgent` you can hand-feed events to in a unit test. No SSE harness, no fixture loader, no test-only DI dance.
 
 Each of those is its own post. The point here is just that the protocol-to-signal-to-template chain is the *spine*, and everything else hangs off it.
 
@@ -318,9 +318,9 @@ Each of those is its own post. The point here is just that the protocol-to-signa
 
 AG-UI is the protocol Angular devs have been quietly waiting for, whether they knew it or not. It standardizes the wire between the agent and the UI, it's small enough to hold in your head, and the event model maps onto Angular signals so cleanly that the runtime almost writes itself. Markus and the CopilotKit crew deserve real credit for that. *Thank you* for designing something Angular could meet on its own terms.
 
-With ThreadPlane (`@ngaf/ag-ui` and `@ngaf/chat` on npm), the wiring is three lines: a provider, an inject, and a `<chat>`. The interesting work (your tool cards, your interrupt flows, your generative UI surfaces, your design system) is where you actually want to spend the day.
+With ThreadPlane (`@threadplane/ag-ui` and `@threadplane/chat` on npm), the wiring is three lines: a provider, an inject, and a `<chat>`. The interesting work (your tool cards, your interrupt flows, your generative UI surfaces, your design system) is where you actually want to spend the day.
 
-If you've been building agents in Angular by hand-rolling SSE parsing and gluing together React components in iframes, *stop*. The whole stack is here, it's open source (the adapters are MIT; `@ngaf/chat` is source-available with a free non-commercial tier), and the protocol underneath has real momentum from the community building it.
+If you've been building agents in Angular by hand-rolling SSE parsing and gluing together React components in iframes, *stop*. The whole stack is here, it's open source (the adapters are MIT; `@threadplane/chat` is source-available with a free non-commercial tier), and the protocol underneath has real momentum from the community building it.
 
 I'd love to hear what you ship. If you wire this up and the docs come up short, [open an issue](https://github.com/threadplane/angular-agent-framework/issues) or come find us on Discord. And if you're building this inside an enterprise Angular app (design system, multi-tenant, regulated), [talk to us](/contact?source=blog_ag_ui_pillar&track=enterprise). We've helped a few teams through that gauntlet already.
 

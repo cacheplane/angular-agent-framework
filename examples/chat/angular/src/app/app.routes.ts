@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-import { Routes, UrlMatcher, UrlSegment } from '@angular/router';
+import { Routes, UrlMatcher, UrlMatchResult, UrlSegment } from '@angular/router';
 
 /** Matcher factory: collapses `<mode>` and `<mode>/<threadId>` into a
  *  single route entry. Two separate route entries (`embed` + `embed/:threadId`)
@@ -16,7 +16,7 @@ import { Routes, UrlMatcher, UrlSegment } from '@angular/router';
  *  itself reads from `router.url` via `parseUrl()` and doesn't depend
  *  on the param being plumbed through ActivatedRoute. */
 function modeMatcher(modeName: string): UrlMatcher {
-  return (segments: UrlSegment[]) => {
+  return (segments: UrlSegment[]): UrlMatchResult | null => {
     if (segments.length === 0) return null;
     if (segments[0].path !== modeName) return null;
     if (segments.length === 1) {

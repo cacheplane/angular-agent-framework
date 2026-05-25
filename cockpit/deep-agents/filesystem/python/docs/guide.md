@@ -2,12 +2,12 @@
 
 <Summary>
 Build a chat interface that shows real-time file operation logs using `agent()` from
-`@ngaf/langgraph`. The agent reads and writes files using tool calls, and the
+`@threadplane/langgraph`. The agent reads and writes files using tool calls, and the
 sidebar displays each operation as it happens.
 </Summary>
 
 <Prompt>
-Add a file operations sidebar to this Angular component using `agent()` from `@ngaf/langgraph`. Use `stream.messages()` to access tool call data, derive `toolCallEntries` with `computed()`, and bind them to the sidebar beside the `<chat>` component from `@ngaf/chat`.
+Add a file operations sidebar to this Angular component using `agent()` from `@threadplane/langgraph`. Use `stream.messages()` to access tool call data, derive `toolCallEntries` with `computed()`, and bind them to the sidebar beside the `<chat>` component from `@threadplane/chat`.
 </Prompt>
 
 <Steps>
@@ -18,7 +18,7 @@ Set up `provideAgent()` in your app config with the LangGraph API URL:
 ```typescript
 // app.config.ts
 import { ApplicationConfig } from '@angular/core';
-import { provideAgent } from '@ngaf/langgraph';
+import { provideAgent } from '@threadplane/langgraph';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -38,7 +38,7 @@ In your component, call `agent()` with the `assistantId` pointing to your filesy
 
 ```typescript
 // filesystem.component.ts
-import { agent } from '@ngaf/langgraph';
+import { agent } from '@threadplane/langgraph';
 
 export class FilesystemComponent {
   protected readonly stream = agent({
@@ -90,7 +90,7 @@ Tool calls appear inside AI messages as `tool_calls`. Each entry has a `name` (e
 </Step>
 <Step title="Build the template with file operations sidebar">
 
-Use the `<chat>` component from `@ngaf/chat` and render a sibling sidebar:
+Use the `<chat>` component from `@threadplane/chat` and render a sibling sidebar:
 
 ```html
 <chat [agent]="stream" />

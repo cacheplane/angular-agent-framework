@@ -1,21 +1,21 @@
 // libs/chat/src/lib/streaming/trace.ts
 // SPDX-License-Identifier: MIT
 //
-// localStorage / window-flag-gated debug tracer for @ngaf/chat streaming.
+// localStorage / window-flag-gated debug tracer for @threadplane/chat streaming.
 // Off by default. Enable via:
-//   window.__ngafChatTrace = true
-//   localStorage.NGAF_CHAT_STREAM_TRACE = '1'
+//   window.__threadplaneChatTrace = true
+//   localStorage.THREADPLANE_CHAT_STREAM_TRACE = '1'
 //
 // All call sites should be guarded with `if (isTraceEnabled())` so the
 // argument-collection cost is paid only when tracing is on.
 
 export function isTraceEnabled(): boolean {
   if (typeof globalThis === 'undefined') return false;
-  const win = (globalThis as { window?: { __ngafChatTrace?: boolean; localStorage?: Storage } }).window;
+  const win = (globalThis as { window?: { __threadplaneChatTrace?: boolean; localStorage?: Storage } }).window;
   if (!win) return false;
-  if (win.__ngafChatTrace === true) return true;
+  if (win.__threadplaneChatTrace === true) return true;
   try {
-    return win.localStorage?.getItem('NGAF_CHAT_STREAM_TRACE') === '1';
+    return win.localStorage?.getItem('THREADPLANE_CHAT_STREAM_TRACE') === '1';
   } catch {
     return false;
   }

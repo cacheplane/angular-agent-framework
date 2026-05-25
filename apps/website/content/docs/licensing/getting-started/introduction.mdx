@@ -1,6 +1,6 @@
 # Introduction
 
-`@ngaf/licensing` is the shared license-check helper used by `@ngaf/chat` and by custom integrations that opt into the same warning behavior. It verifies compact Ed25519-signed tokens offline, evaluates the result into a small status set, and emits non-blocking warnings when appropriate.
+`@threadplane/licensing` is the shared license-check helper used by `@threadplane/chat` and by custom integrations that opt into the same warning behavior. It verifies compact Ed25519-signed tokens offline, evaluates the result into a small status set, and emits non-blocking warnings when appropriate.
 
 The package itself is MIT licensed. `COMMERCIAL.md` states that the libraries in this repository are free to use, modify, and distribute in commercial and noncommercial projects. The proprietary part called out there is the internal minting service, not this package.
 
@@ -67,4 +67,4 @@ The higher-level check is designed not to block app startup:
 - warning output goes through `console.warn` unless a custom `warn` function is supplied;
 - no network request is made by the licensing check.
 
-The code returns statuses instead of throwing for normal license states. Consumers can choose what to do with the status, and `@ngaf/chat` uses it as a warning and visibility mechanism, not as an app kill switch.
+The code returns statuses instead of throwing for normal license states. Consumers can choose what to do with the status, and `@threadplane/chat` uses it as a warning and visibility mechanism, not as an app kill switch.

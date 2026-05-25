@@ -1,5 +1,6 @@
 {
-  "name": "@ngaf/cockpit-chat-timeline-python",
+  "name": "@threadplane/cockpit-chat-timeline-python",
+  "private": true,
   "version": "0.0.1",
   "license": "MIT",
   "sideEffects": false

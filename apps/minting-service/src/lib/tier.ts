@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-import type { LicenseTier } from '@ngaf/licensing';
+import type { LicenseTier } from '@threadplane/licensing';
 
-export type MintableTier = Extract<LicenseTier, 'indie' | 'developer_seat' | 'app_deployment'>;
+export type MintableTier = Extract<LicenseTier, 'developer_seat' | 'team'>;
 
-const VALID_TIERS: readonly MintableTier[] = ['indie', 'developer_seat', 'app_deployment'] as const;
+const VALID_TIERS: readonly MintableTier[] = ['developer_seat', 'team'] as const;
 const METADATA_KEY = 'ngaf_tier_slug';
+
+const TEAM_SEAT_COUNT = 5;
 
 /**
  * Extract the tier slug from a Stripe price metadata bag.
@@ -27,12 +29,14 @@ export function extractTier(metadata: Record<string, string> | null | undefined)
 /**
  * Compute the `seats` claim from the Stripe line-item quantity.
  * - developer_seat: tracks Stripe quantity (minimum 1).
- * - indie: always 1.
- * - app_deployment: always 1.
+ * - team: always 5 (the bundle size baked into the SKU).
  */
 export function computeSeats(tier: MintableTier, quantity: number | null | undefined): number {
   if (tier === 'developer_seat') {
     return quantity && quantity > 0 ? quantity : 1;
+  }
+  if (tier === 'team') {
+    return TEAM_SEAT_COUNT;
   }
   return 1;
 }

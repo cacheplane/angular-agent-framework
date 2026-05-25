@@ -15,28 +15,27 @@ vi.mock('../ui/Eyebrow', () => ({
 }));
 
 const EXPECTED_QUESTIONS = [
-  'Is @ngaf/chat open source?',
+  'Is @threadplane/chat open source?',
   'Can I use it for free?',
   'Can I use it at work?',
   'Do my end users need licenses?',
   'Can I modify the source?',
   'Can I redistribute it?',
-  'What happens to older MIT versions?',
 ];
 
 describe('PricingFAQ', () => {
   it('renders the FAQ heading', () => {
     render(<PricingFAQ />);
     expect(
-      screen.getByRole('heading', { level: 2, name: 'Licensing FAQ' }),
+      screen.getByRole('heading', { level: 2, name: /Licensing FAQ/ }),
     ).toBeTruthy();
   });
 
-  it('renders all 7 questions as <summary> elements inside <details>', () => {
+  it('renders all questions as <summary> elements inside <details>', () => {
     const { container } = render(<PricingFAQ />);
     const summaries = container.querySelectorAll('details > summary');
-    expect(summaries.length).toBe(7);
-    const texts = Array.from(summaries, (s) => s.textContent);
+    expect(summaries.length).toBe(EXPECTED_QUESTIONS.length);
+    const texts = Array.from(summaries, (s) => s.querySelector('span')?.textContent?.trim());
     expect(texts).toEqual(EXPECTED_QUESTIONS);
   });
 

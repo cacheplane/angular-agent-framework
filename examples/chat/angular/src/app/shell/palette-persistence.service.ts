@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 import { Injectable } from '@angular/core';
 
-const KEY = 'ngaf-chat-demo:palette';
+const KEY = 'threadplane-chat-demo:palette';
 
 interface PaletteState {
   model?: string | null;
@@ -18,7 +18,7 @@ type PaletteKey = keyof PaletteState;
 
 /**
  * Tiny localStorage-backed persistence for control-palette state. Single
- * JSON object under `ngaf-chat-demo:palette` so reads/writes are
+ * JSON object under `threadplane-chat-demo:palette` so reads/writes are
  * atomic-per-key. Survives malformed JSON by returning `null` and
  * silently overwriting on next write.
  */

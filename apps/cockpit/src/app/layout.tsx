@@ -1,22 +1,22 @@
 import type { ReactNode } from 'react';
 import { cookies } from 'next/headers';
-import { cssVars, ThemeProvider } from '@ngaf/ui-react';
-import type { Theme } from '@ngaf/design-tokens';
+import { cssVars, ThemeProvider } from '@threadplane/ui-react';
+import type { Theme } from '@threadplane/design-tokens';
 import { AnalyticsBootstrap } from '../components/analytics-bootstrap';
 import './cockpit.css';
 
 export const metadata = {
-  title: 'Cockpit — Agent UI for Angular',
-  description: 'The live reference app for Agent UI for Angular. Real LangGraph + AG-UI agents through the Angular surface you’ll ship.',
+  title: 'Cockpit — Threadplane',
+  description: 'The live reference app for Threadplane. Real LangGraph + AG-UI agents through the Angular surface you’ll ship.',
   openGraph: {
-    title: 'Cockpit — Agent UI for Angular',
+    title: 'Cockpit — Threadplane',
     description: 'The live reference app for the framework. Real LangGraph + AG-UI agents through the same Angular surface you’ll ship.',
     type: 'website',
     siteName: 'Cockpit',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Cockpit — Agent UI for Angular',
+    title: 'Cockpit — Threadplane',
     description: 'The live reference app for the framework. Real LangGraph + AG-UI agents through the Angular surface you’ll ship.',
   },
 };

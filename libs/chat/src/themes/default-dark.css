@@ -1,5 +1,5 @@
 /*
- * @ngaf/chat — default dark theme
+ * @threadplane/chat — default dark theme
  * SPDX-License-Identifier: MIT
  *
  * The lib's `:host` defaults on `<a2ui-surface>` already declare these
@@ -7,7 +7,7 @@
  * for consumers who want their `:root` to make the choice explicit.
  *
  * Usage in your global stylesheet:
- *   @import '@ngaf/chat/themes/default-dark.css';
+ *   @import '@threadplane/chat/themes/default-dark.css';
  *
  * The agent's `beginRendering.styles.primaryColor` continues to override
  * `--a2ui-primary` per surface (host inline-style binding, highest

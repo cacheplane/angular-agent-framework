@@ -20,7 +20,7 @@
 
 <!-- Cover -->
 <div style="height:100vh;display:flex;flex-direction:column;justify-content:flex-end;padding:80px 80px 100px;background:linear-gradient(135deg, #fafbfc 0%, #eaf3ff 100%);page-break-after:always">
-  <div style="font-family:monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.12em;color:#004090;font-weight:700;margin-bottom:24px">ThreadPlane · Angular Agent UI Guide</div>
+  <div style="font-family:monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.12em;color:#004090;font-weight:700;margin-bottom:24px">Threadplane · Angular Agent UI Guide</div>
   <h1 style="font-family:'EB Garamond',serif;font-size:52px;font-weight:800;line-height:1.1;color:#1a1a2e;margin-bottom:20px">The<br>Enterprise<br>Guide<br>to<br>Agent<br>UI<br>in<br>Angular</h1>
   <p style="font-family:'EB Garamond',serif;font-style:italic;font-size:20px;color:#555770;margin-bottom:40px">Ship LangGraph and AG-UI-compatible agents without building the plumbing</p>
   <div style="font-size:13px;color:#8b8fa3;font-family:monospace">threadplane.ai · 2026</div>
@@ -226,7 +226,7 @@ The `MemorySaver` backend and Angular's signal-based reactivity create a clean s
       <div style="font-family:monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#004090;font-weight:700;margin-bottom:16px">Chapter 4</div>
       <h2 style="font-family:'EB Garamond',serif;font-size:36px;font-weight:800;color:#1a1a2e;margin-bottom:28px;line-height:1.15">Interrupt & Approval Flows</h2>
       <div class="chapter-body"><p># Interrupt & Approval Flows</p>
-<p>Agents that modify external systems—sending emails, executing database writes, triggering deployments—require human oversight. Autonomous execution without checkpoints creates liability, compliance violations, and irreversible mistakes. LangGraph's `interrupt()` primitive solves this at the graph level, pausing execution mid-stream until a human provides explicit authorization. `@ngaf/langgraph` surfaces this as a reactive signal, making approval workflows native to Angular's change detection without polling, websockets, or custom resume endpoints.</p>
+<p>Agents that modify external systems—sending emails, executing database writes, triggering deployments—require human oversight. Autonomous execution without checkpoints creates liability, compliance violations, and irreversible mistakes. LangGraph's `interrupt()` primitive solves this at the graph level, pausing execution mid-stream until a human provides explicit authorization. `@threadplane/langgraph` surfaces this as a reactive signal, making approval workflows native to Angular's change detection without polling, websockets, or custom resume endpoints.</p>
 <h3>How LangGraph Interrupt Works</h3>
 <p>When a LangGraph node calls `interrupt()`, the graph halts execution and persists its current state to the configured checkpointer. The interrupt payload—containing context about the pending action—is sent to the client as part of the stream. Execution remains suspended until the client sends a resume command with one of three directives: approve the action as-is, provide edited parameters, or cancel entirely.</p>
 <p>The resume payload structure is straightforward:</p>
@@ -246,7 +246,7 @@ The `MemorySaver` backend and Angular's signal-based reactivity create a clean s
 </code></pre>
 <p>This signal integrates directly with Angular's reactivity model. Components re-render automatically when an interrupt arrives—no subscription management, no manual change detection triggers. When the user responds and execution resumes, the signal returns to `undefined`.</p>
 <h3>Prebuilt Approval UI</h3>
-<p>`@ngaf/chat` provides `<chat-interrupt-panel>`, a ready-to-use approval interface:</p>
+<p>`@threadplane/chat` provides `<chat-interrupt-panel>`, a ready-to-use approval interface:</p>
 <pre><code>@Component({
   selector: 'app-agent',
   template: `
@@ -280,13 +280,13 @@ export class CustomApprovalComponent {
 <p><strong>Session expiration</strong>: Checkpointed state survives session boundaries. The interrupt signal repopulates on reconnection, though your application should handle re-authentication before allowing resume actions.</p>
 <p><strong>Cancel with partial state</strong>: Cancellation doesn't roll back prior node executions. If three nodes completed before the interrupt, those effects persist. Design graphs with compensation logic for actions that require atomicity, or structure interrupts to occur before side effects rather than after.</p>
 <p><strong>Multiple pending interrupts</strong>: LangGraph supports sequential interrupts within a single run. The `interrupt()` signal reflects the current pending interrupt; each resume advances to the next pause point or completion.</p>
-<p>Human-in-the-loop isn't optional for production agents. `@ngaf/langgraph` makes it reactive, type-safe, and compatible with Angular's rendering model—approval flows become UI state, not infrastructure problems.</p></div>
+<p>Human-in-the-loop isn't optional for production agents. `@threadplane/langgraph` makes it reactive, type-safe, and compatible with Angular's rendering model—approval flows become UI state, not infrastructure problems.</p></div>
     </section>
     <section style="padding:80px;page-break-before:always">
       <div style="font-family:monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#004090;font-weight:700;margin-bottom:16px">Chapter 5</div>
       <h2 style="font-family:'EB Garamond',serif;font-size:36px;font-weight:800;color:#1a1a2e;margin-bottom:28px;line-height:1.15">Full LangGraph Feature Coverage</h2>
       <div class="chapter-body"><p># Full LangGraph Feature Coverage</p>
-<p>Most Angular LLM integrations handle the basics: send a message, stream tokens, render a response. The moment you need tool calls, subgraphs, or multi-agent coordination, you're writing raw SSE parsers and manually reconciling state. @ngaf/langgraph exists specifically to avoid that cliff—every LangGraph feature surfaces through the same reactive signals your components already consume.</p>
+<p>Most Angular LLM integrations handle the basics: send a message, stream tokens, render a response. The moment you need tool calls, subgraphs, or multi-agent coordination, you're writing raw SSE parsers and manually reconciling state. @threadplane/langgraph exists specifically to avoid that cliff—every LangGraph feature surfaces through the same reactive signals your components already consume.</p>
 <h3>Tool Call Streaming</h3>
 <p>LangGraph emits tool invocations as structured events mid-stream. Rather than parsing `tool_call` chunks yourself, the agent ref exposes them directly:</p>
 <pre><code>readonly chat = agent({
@@ -300,7 +300,7 @@ export class CustomApprovalComponent {
 </code></pre></p>
 <p>The `toolCalls()` signal updates as invocations arrive, complete as the agent processes results, and clear when the turn ends. No manual event filtering. Tool call arguments stream incrementally—useful for showing users what data the agent is requesting before results return.</p>
 <h3>Subgraph Support</h3>
-<p>Nested graphs emit events with their own namespaces. @ngaf/langgraph flattens these into the primary stream while preserving hierarchy through the `subagents()` signal:</p>
+<p>Nested graphs emit events with their own namespaces. @threadplane/langgraph flattens these into the primary stream while preserving hierarchy through the `subagents()` signal:</p>
 <pre><code>// Parent agent spawns child graphs for specialized tasks
 const activeSubagents = this.chat.subagents();
 // Returns SubagentInfo[] with id, name, status for each active subgraph
@@ -346,11 +346,11 @@ const graphState = this.chat.langGraphState();
       <h2 style="font-family:'EB Garamond',serif;font-size:36px;font-weight:800;color:#1a1a2e;margin-bottom:28px;line-height:1.15">Deterministic Testing</h2>
       <div class="chapter-body"><p># Deterministic Testing</p>
 <p>Agent UIs are notoriously difficult to test. Real LLM calls introduce latency measured in seconds, non-deterministic outputs, rate limits, and network dependencies that make CI pipelines slow and flaky. A test that passes locally might fail in CI because the model returned a slightly different response, or the API throttled your request, or the stream took longer than your timeout.</p>
-<p>The solution is deterministic mocking at the transport layer. NGAF provides two complementary approaches: `MockAgentTransport` for scripting realistic SSE event sequences, and `mockLangGraphAgent()` for direct signal manipulation when you need fine-grained control.</p>
+<p>The solution is deterministic mocking at the transport layer. Threadplane provides two complementary approaches: `MockAgentTransport` for scripting realistic SSE event sequences, and `mockLangGraphAgent()` for direct signal manipulation when you need fine-grained control.</p>
 <h3>MockAgentTransport: Scripted Event Sequences</h3>
 <p>`MockAgentTransport` replaces `FetchStreamTransport` in tests, emitting a predetermined sequence of SSE events without any network calls. You script exactly what the agent receives—message chunks, tool calls, interrupts, errors—and the transport replays them synchronously or with configurable delays.</p>
 <pre><code>import { TestBed } from '@angular/core/testing';
-import { MockAgentTransport, provideAgent } from '@ngaf/langgraph';
+import { MockAgentTransport, provideAgent } from '@threadplane/langgraph';
 <p>describe('ChatComponent', () => {
   let transport: MockAgentTransport;</p>
 <p>beforeEach(() => {

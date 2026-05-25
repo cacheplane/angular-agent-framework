@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useContext, type ReactNode } from 'react';
-import type { Theme } from '@ngaf/design-tokens';
+import type { Theme } from '@threadplane/design-tokens';
 
 const ThemeContext = createContext<Theme>('dark');
 

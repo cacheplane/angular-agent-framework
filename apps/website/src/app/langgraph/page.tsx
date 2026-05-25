@@ -1,4 +1,4 @@
-import { tokens } from '@ngaf/design-tokens';
+import { tokens } from '@threadplane/design-tokens';
 import { Container } from '../../components/ui/Container';
 import { Section } from '../../components/ui/Section';
 import { Eyebrow } from '../../components/ui/Eyebrow';
@@ -8,24 +8,24 @@ import { BrowserFrame } from '../../components/ui/BrowserFrame';
 import { FeatureBlock } from '../../components/landing/FeatureBlock';
 import { WhitePaperBlock } from '../../components/landing/WhitePaperBlock';
 import { FinalCTA } from '../../components/landing/FinalCTA';
-import { AngularCodeShowcase } from '../../components/landing/angular/AngularCodeShowcase';
+import { LangGraphCodeShowcase } from '../../components/landing/langgraph/LangGraphCodeShowcase';
 import { createPageMetadata, SHORT_POSITIONING_DESCRIPTION } from '../../lib/site-metadata';
 
 export const metadata = createPageMetadata({
-  title: '@ngaf/langgraph — Agent UI for Angular',
+  title: '@threadplane/langgraph — Threadplane',
   description: SHORT_POSITIONING_DESCRIPTION,
-  pathname: '/angular',
+  pathname: '/langgraph',
   type: 'website',
 });
 
-export default async function AngularPage() {
+export default async function LangGraphPage() {
   return (
     <>
       {/* Hero */}
       <Section surface="canvas" ariaLabelledBy="angular-hero-heading">
         <Container>
           <div style={{ maxWidth: 820, margin: '0 auto', textAlign: 'center' }}>
-            <Eyebrow tone="angular" style={{ marginBottom: 16 }}>@ngaf/langgraph</Eyebrow>
+            <Eyebrow tone="angular" style={{ marginBottom: 16 }}>@threadplane/langgraph</Eyebrow>
             <h1
               id="angular-hero-heading"
               style={{
@@ -96,7 +96,7 @@ export default async function AngularPage() {
               minHeight: 320,
               overflow: 'auto',
             }}>
-{`import { provideAgent } from '@ngaf/langgraph';
+{`import { provideAgent } from '@threadplane/langgraph';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -136,7 +136,7 @@ export class ChatComponent {
         ]}
         cta={{ label: 'Read the streaming guide', href: '/docs/agent/api/agent' }}
         visualLeft
-        visual={<AngularCodeShowcase />}
+        visual={<LangGraphCodeShowcase />}
       />
 
       <WhitePaperBlock paper="angular" />

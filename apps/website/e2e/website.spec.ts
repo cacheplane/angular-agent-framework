@@ -23,7 +23,9 @@ test('landing page renders feature blocks (Stream/Render/Ship)', async ({ page }
 
 test('pricing page shows plan cards', async ({ page }) => {
   await page.goto('/pricing');
-  await expect(page.getByText('Open Source').first()).toBeVisible();
+  await expect(page.getByText('Community').first()).toBeVisible();
+  await expect(page.getByText('Developer Seat').first()).toBeVisible();
+  await expect(page.getByText('Team').first()).toBeVisible();
   await expect(page.getByText('Enterprise').first()).toBeVisible();
 });
 
@@ -37,7 +39,7 @@ test('pricing page lead form validates required fields', async ({ page }) => {
   await page.goto('/pricing');
   const leadForm = page.locator('#lead-form form');
   await expect(leadForm).toBeVisible();
-  await leadForm.getByRole('button', { name: 'Get in touch' }).click();
+  await leadForm.getByRole('button', { name: 'Request enterprise quote' }).click();
   await expect(leadForm).toBeVisible();
   expect(checkoutCalled).toBe(false);
   expect(await leadForm.evaluate((form) => (form as HTMLFormElement).checkValidity())).toBe(false);
@@ -59,7 +61,7 @@ test('contact page submits a lead payload and renders success state', async ({ p
   await contactForm.getByRole('textbox', { name: 'Email', exact: true }).fill('jane@acme.com');
   await contactForm.getByRole('textbox', { name: 'Name' }).fill('Jane Smith');
   await contactForm.getByRole('textbox', { name: 'Company' }).fill('Acme');
-  await contactForm.getByRole('textbox', { name: 'Message' }).fill('We are evaluating Agent UI for Angular.');
+  await contactForm.getByRole('textbox', { name: 'Message' }).fill('We are evaluating Threadplane.');
   await contactForm.getByRole('button', { name: 'Send' }).click();
 
   await expect(page.getByText("Thanks. We'll be in touch within one business day.")).toBeVisible();
@@ -67,7 +69,7 @@ test('contact page submits a lead payload and renders success state', async ({ p
     email: 'jane@acme.com',
     name: 'Jane Smith',
     company: 'Acme',
-    message: 'We are evaluating Agent UI for Angular.',
+    message: 'We are evaluating Threadplane.',
     source_page: 'e2e_contact',
     track: 'enterprise',
   });
@@ -85,11 +87,12 @@ test('pricing lead form posts to /api/leads and renders success state', async ({
   });
 
   await page.goto('/pricing#lead-form');
-  await page.getByLabel('Name').fill('Jane Smith');
-  await page.getByLabel('Work email').fill('jane@acme.com');
-  await page.getByLabel('Company').fill('Acme');
-  await page.getByLabel('Tell us about your use case').fill('Volume seats and security review.');
-  await page.getByRole('button', { name: 'Get in touch' }).click();
+  const leadForm = page.locator('#lead-form form');
+  await leadForm.getByLabel('Name').fill('Jane Smith');
+  await leadForm.getByLabel('Work email').fill('jane@acme.com');
+  await leadForm.getByLabel('Company').fill('Acme');
+  await leadForm.getByLabel('Tell us about your use case').fill('Volume seats and security review.');
+  await leadForm.getByRole('button', { name: 'Request enterprise quote' }).click();
 
   await expect(page.getByText(/we'll be in touch within one business day/i)).toBeVisible();
   expect(leadPayload).toMatchObject({
@@ -173,8 +176,8 @@ test('/llms.txt returns plain text', async ({ page }) => {
   const response = await page.goto('/llms.txt');
   expect(response?.headers()['content-type']).toContain('text/plain');
   const body = await page.locator('body').textContent();
-  expect(body).toContain('@ngaf/a2ui');
-  expect(body).toContain('@ngaf/telemetry');
+  expect(body).toContain('@threadplane/a2ui');
+  expect(body).toContain('@threadplane/telemetry');
   expect(body).toContain('ChatMessageListComponent');
   expect(body).not.toContain('ChatMessagesComponent');
 });
@@ -223,7 +226,7 @@ test('docs pages render canonical and social metadata', async ({ page }) => {
   );
   await expect(page.locator('meta[property="og:title"]')).toHaveAttribute(
     'content',
-    'Streaming - Agent Docs - Agent UI for Angular',
+    'Streaming - Agent Docs - Threadplane',
   );
   await expect(page.locator('meta[property="og:url"]')).toHaveAttribute(
     'content',
@@ -231,12 +234,12 @@ test('docs pages render canonical and social metadata', async ({ page }) => {
   );
   await expect(page.locator('meta[name="twitter:title"]')).toHaveAttribute(
     'content',
-    'Streaming - Agent Docs - Agent UI for Angular',
+    'Streaming - Agent Docs - Threadplane',
   );
 });
 
 test('marketing pages render canonical and page-specific social URLs', async ({ page }) => {
-  for (const route of ['/', '/angular', '/render', '/chat', '/pricing', '/contact', '/pilot-to-prod', '/solutions']) {
+  for (const route of ['/', '/langgraph', '/ag-ui', '/render', '/chat', '/pricing', '/contact', '/pilot-to-prod', '/solutions']) {
     await page.goto(route);
     const expectedUrl = route === '/' ? 'https://threadplane.ai' : `https://threadplane.ai${route}`;
 
@@ -273,7 +276,7 @@ test('representative docs pages do not create page-level horizontal overflow', a
 test('marketing pages link to downloadable whitepaper PDFs', async ({ page }) => {
   const expectedDownloads: Record<string, string> = {
     '/': '/whitepaper.pdf',
-    '/angular': '/whitepapers/angular.pdf',
+    '/langgraph': '/whitepapers/angular.pdf',
     '/render': '/whitepapers/render.pdf',
     '/chat': '/whitepapers/chat.pdf',
   };

@@ -63,17 +63,17 @@ export const SOLUTIONS: SolutionConfig[] = [
     architectureLayers: [
       {
         library: 'Agent',
-        pkg: '@ngaf/langgraph',
+        pkg: '@threadplane/langgraph',
         role: 'Production agent state with first-class interrupt support. Every agent action can require human approval before execution. Durable thread persistence preserves the full record of every tool call and state transition.',
       },
       {
         library: 'Render',
-        pkg: '@ngaf/render',
+        pkg: '@threadplane/render',
         role: 'Approval workflows rendered as structured UI — not chat messages. The agent proposes an action, renders a confirmation card, and waits for the human gate before proceeding.',
       },
       {
         library: 'Chat',
-        pkg: '@ngaf/chat',
+        pkg: '@threadplane/chat',
         role: 'Debug overlay shows every tool call, interrupt, and state transition. Your compliance team can review exactly what happened, when, and why — in a UI they can understand.',
       },
     ],
@@ -84,7 +84,7 @@ export const SOLUTIONS: SolutionConfig[] = [
     ],
     ctaHeadline: 'Ship compliant AI agents — without the compliance tax',
     ctaSubtext: 'Download the field report or start a pilot. Your compliance team will thank you.',
-    metaTitle: 'Compliance & Audit — Agent UI for Angular Solutions',
+    metaTitle: 'Compliance & Audit — Threadplane Solutions',
     metaDescription: 'Ship AI agents with human-in-the-loop approvals, auditable thread history, and deterministic testing. Built for SOX, HIPAA, and GDPR workflows.',
   },
   {
@@ -112,17 +112,17 @@ export const SOLUTIONS: SolutionConfig[] = [
     architectureLayers: [
       {
         library: 'Agent',
-        pkg: '@ngaf/langgraph',
+        pkg: '@threadplane/langgraph',
         role: 'Streams query results token-by-token as the LangGraph agent reasons over your data. Thread persistence means users can refine questions without re-running expensive queries.',
       },
       {
         library: 'Render',
-        pkg: '@ngaf/render',
+        pkg: '@threadplane/render',
         role: 'The agent emits chart specs, data tables, and KPI cards as structured render specs. Your Angular components render them with streaming JSON patches — live-updating visualizations as data arrives.',
       },
       {
         library: 'Chat',
-        pkg: '@ngaf/chat',
+        pkg: '@threadplane/chat',
         role: 'Generative UI surfaces render charts and tables inline with the conversation. Users ask follow-up questions and see updated visualizations without leaving the chat.',
       },
     ],
@@ -133,7 +133,7 @@ export const SOLUTIONS: SolutionConfig[] = [
     ],
     ctaHeadline: 'Turn your data into conversations',
     ctaSubtext: 'Download the field report or start a pilot. Ship a conversational BI experience in weeks, not quarters.',
-    metaTitle: 'Analytics & BI — Agent UI for Angular Solutions',
+    metaTitle: 'Analytics & BI — Threadplane Solutions',
     metaDescription: 'Build conversational BI with natural language queries, streaming results, and generative UI — all in Angular.',
   },
   {
@@ -161,17 +161,17 @@ export const SOLUTIONS: SolutionConfig[] = [
     architectureLayers: [
       {
         library: 'Agent',
-        pkg: '@ngaf/langgraph',
+        pkg: '@threadplane/langgraph',
         role: 'LangGraph interrupts let the agent pause before sensitive actions — refunds, account changes, escalations. Thread persistence preserves the full conversation across bot-to-human handoffs.',
       },
       {
         library: 'Render',
-        pkg: '@ngaf/render',
+        pkg: '@threadplane/render',
         role: 'The agent renders structured UI — order summaries, refund confirmations, knowledge base cards — instead of dumping text. Customers see clean, actionable information.',
       },
       {
         library: 'Chat',
-        pkg: '@ngaf/chat',
+        pkg: '@threadplane/chat',
         role: 'Production-ready chat UI with streaming messages, tool call visibility, and interrupt panels. When the agent escalates, the human agent sees the full debug overlay with every step the AI took.',
       },
     ],
@@ -182,7 +182,7 @@ export const SOLUTIONS: SolutionConfig[] = [
     ],
     ctaHeadline: 'Support agents that make your team better',
     ctaSubtext: 'Download the field report or start a pilot. Resolve routine tickets, escalate the rest with full context, keep your customers happy.',
-    metaTitle: 'Customer Support — Agent UI for Angular Solutions',
+    metaTitle: 'Customer Support — Threadplane Solutions',
     metaDescription: 'Build AI support agents with human escalation, full context handoff, and production-ready chat UI in Angular.',
   },
 ];

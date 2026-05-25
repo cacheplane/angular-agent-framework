@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { ThemedFrame } from '@ngaf/ui-react';
+import { ThemedFrame } from '@threadplane/ui-react';
 import { getCockpitSessionId } from '../../lib/analytics/distinct-id';
 
 interface RunModeProps {

@@ -7,6 +7,19 @@ export interface LicenseEmailVars {
   seats: number;
   token: string;
   expiresAt: Date;
+  /** Stripe customer id; used to mint a portal link inline in the email. */
+  stripeCustomerId: string;
+}
+
+/**
+ * Public URL where the buyer can reach the Stripe Customer Portal for
+ * their subscription. Reads from PORTAL_BASE_URL when set (e.g. on
+ * preview deploys), otherwise points at the production threadplane.ai
+ * host.
+ */
+function portalUrl(stripeCustomerId: string): string {
+  const base = process.env['PORTAL_BASE_URL'] ?? 'https://threadplane.ai';
+  return `${base}/api/portal/session?customer_id=${encodeURIComponent(stripeCustomerId)}`;
 }
 
 export interface RenderedEmail {
@@ -20,47 +33,57 @@ export interface RenderedEmail {
  */
 export function renderLicenseEmail(vars: LicenseEmailVars): RenderedEmail {
   const seatWord = vars.seats === 1 ? 'seat' : 'seats';
-  const subject = `Your ThreadPlane license — ${vars.tier} (${vars.seats} ${seatWord})`;
+  const subject = `Your Threadplane license — ${vars.tier} (${vars.seats} ${seatWord})`;
   const expiresIso = vars.expiresAt.toISOString();
 
-  const text = `Thanks for subscribing to ThreadPlane.
+  const portal = portalUrl(vars.stripeCustomerId);
+  const text = `Thanks for your Threadplane license purchase.
 
-Your license token is below. Set it as the CACHEPLANE_LICENSE
-environment variable in your application:
+Paste the token below into your @threadplane/chat configuration. Your subscription
+renews automatically on ${expiresIso.slice(0, 10)}; manage or cancel it via
+the link at the bottom of this email.
 
------BEGIN CACHEPLANE LICENSE-----
+-----BEGIN THREADPLANE LICENSE-----
 ${vars.token}
------END CACHEPLANE LICENSE-----
+-----END THREADPLANE LICENSE-----
 
 Tier: ${vars.tier}
 Seats: ${vars.seats}
 Expires: ${expiresIso}
 
 Installation:
-  export CACHEPLANE_LICENSE="<paste token above>"
+  // application bootstrap
+  provideChat({
+    license: process.env['THREADPLANE_LICENSE'],
+  });
 
-Or in a .env file:
-  CACHEPLANE_LICENSE=<paste token above>
+  // .env
+  THREADPLANE_LICENSE=<paste token above>
 
+Manage subscription: ${portal}
 Docs: https://threadplane.ai/docs/licensing
 Questions: reply to this email.
 
--- The ThreadPlane team
+-- The Threadplane team
 `;
 
-  const html = `<p>Thanks for subscribing to ThreadPlane.</p>
-<p>Your license token is below. Set it as the <code>CACHEPLANE_LICENSE</code> environment variable in your application:</p>
-<pre style="white-space:pre-wrap;word-break:break-all;font-family:monospace;font-size:12px;background:#f4f4f4;padding:12px;border-radius:4px">-----BEGIN CACHEPLANE LICENSE-----
+  const html = `<p>Thanks for your Threadplane license purchase.</p>
+<p>Paste the token below into your <code>@threadplane/chat</code> configuration. Your subscription renews automatically on ${escapeHtml(expiresIso.slice(0, 10))}; <a href="${escapeHtml(portal)}">manage or cancel</a> any time.</p>
+<pre style="white-space:pre-wrap;word-break:break-all;font-family:monospace;font-size:12px;background:#f4f4f4;padding:12px;border-radius:4px">-----BEGIN THREADPLANE LICENSE-----
 ${escapeHtml(vars.token)}
------END CACHEPLANE LICENSE-----</pre>
+-----END THREADPLANE LICENSE-----</pre>
 <p><strong>Tier:</strong> ${escapeHtml(vars.tier)}<br>
 <strong>Seats:</strong> ${vars.seats}<br>
 <strong>Expires:</strong> ${escapeHtml(expiresIso)}</p>
 <p><strong>Installation:</strong></p>
-<pre style="font-family:monospace;font-size:12px;background:#f4f4f4;padding:12px;border-radius:4px">export CACHEPLANE_LICENSE="&lt;paste token above&gt;"</pre>
-<p>Docs: <a href="https://threadplane.ai/docs/licensing">threadplane.ai/docs/licensing</a><br>
-Questions: reply to this email.</p>
-<p>-- The ThreadPlane team</p>
+<pre style="font-family:monospace;font-size:12px;background:#f4f4f4;padding:12px;border-radius:4px">provideChat({
+  license: process.env['THREADPLANE_LICENSE'],
+});
+
+// .env
+THREADPLANE_LICENSE=&lt;paste token above&gt;</pre>
+<p><a href="${escapeHtml(portal)}">Manage subscription</a> &middot; <a href="https://threadplane.ai/docs/licensing">Docs</a> &middot; Questions: reply to this email.</p>
+<p>-- The Threadplane team</p>
 `;
 
   return { subject, text, html };
@@ -107,23 +130,23 @@ export interface RevocationEmailVars {
 }
 
 export function renderRevocationEmail(vars: RevocationEmailVars): RenderedEmail {
-  const subject = `Your ThreadPlane license has been revoked`;
+  const subject = `Your Threadplane license has been revoked`;
 
-  const text = `Your ThreadPlane ${vars.tier} license has been revoked because the
+  const text = `Your Threadplane ${vars.tier} license has been revoked because the
 underlying payment was refunded.
 
 The token previously delivered will fail signature checks at boot and
-@ngaf/chat will fall back to a noncommercial-use warning.
+@threadplane/chat will fall back to a noncommercial-use warning.
 
 If you believe this is in error, reply to this email.
 
--- The ThreadPlane team
+-- The Threadplane team
 `;
 
-  const html = `<p>Your ThreadPlane <strong>${escapeHtml(vars.tier)}</strong> license has been revoked because the underlying payment was refunded.</p>
-<p>The token previously delivered will fail signature checks at boot and <code>@ngaf/chat</code> will fall back to a noncommercial-use warning.</p>
+  const html = `<p>Your Threadplane <strong>${escapeHtml(vars.tier)}</strong> license has been revoked because the underlying payment was refunded.</p>
+<p>The token previously delivered will fail signature checks at boot and <code>@threadplane/chat</code> will fall back to a noncommercial-use warning.</p>
 <p>If you believe this is in error, reply to this email.</p>
-<p>-- The ThreadPlane team</p>
+<p>-- The Threadplane team</p>
 `;
 
   return { subject, text, html };

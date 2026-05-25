@@ -13,10 +13,10 @@
     ],
     "baseUrl": "../../../../..",
     "paths": {
-      "@ngaf-internal/e2e-harness": [
+      "@threadplane-internal/e2e-harness": [
         "libs/e2e-harness/src/index.ts"
       ],
-      "@ngaf-internal/e2e-harness/global-teardown": [
+      "@threadplane-internal/e2e-harness/global-teardown": [
         "libs/e2e-harness/src/global-teardown.ts"
       ]
     }

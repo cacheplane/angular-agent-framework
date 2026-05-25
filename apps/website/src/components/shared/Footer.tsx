@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import Link from 'next/link';
-import { tokens } from '@ngaf/design-tokens';
+import { tokens } from '@threadplane/design-tokens';
 import { analyticsEvents } from '../../lib/analytics/events';
 import { track, trackCtaClick, trackExternalLinkClick } from '../../lib/analytics/client';
 import { SHORT_POSITIONING_DESCRIPTION } from '../../lib/positioning';
@@ -143,10 +143,10 @@ export function Footer() {
                 aria-label="GitHub">
                 <GitHubIcon />
               </a>
-              <a href="https://www.npmjs.com/package/@ngaf/langgraph"
+              <a href="https://www.npmjs.com/package/@threadplane/langgraph"
                 target="_blank"
                 rel="noopener noreferrer"
-                onClick={() => trackExternalLinkClick('https://www.npmjs.com/package/@ngaf/langgraph', {
+                onClick={() => trackExternalLinkClick('https://www.npmjs.com/package/@threadplane/langgraph', {
                   surface: 'footer',
                   cta_id: 'footer_npm_icon',
                   cta_text: 'npm',
@@ -219,11 +219,17 @@ export function Footer() {
           {/* Libraries column */}
           <div className="flex flex-col gap-2.5 text-sm">
             <Eyebrow tone="accent" style={{ marginBottom: 4 }}>Libraries</Eyebrow>
-            <Link href="/angular" className="transition-colors" style={{ color: tokens.colors.textSecondary }}
-              onClick={() => trackFooterCta('Angular', '/angular')}
+            <Link href="/langgraph" className="transition-colors" style={{ color: tokens.colors.textSecondary }}
+              onClick={() => trackFooterCta('LangGraph', '/langgraph')}
               onMouseEnter={(e) => (e.currentTarget.style.color = tokens.colors.accent)}
               onMouseLeave={(e) => (e.currentTarget.style.color = tokens.colors.textSecondary)}>
-              Angular
+              LangGraph
+            </Link>
+            <Link href="/ag-ui" className="transition-colors" style={{ color: tokens.colors.textSecondary }}
+              onClick={() => trackFooterCta('AG-UI', '/ag-ui')}
+              onMouseEnter={(e) => (e.currentTarget.style.color = tokens.colors.accent)}
+              onMouseLeave={(e) => (e.currentTarget.style.color = tokens.colors.textSecondary)}>
+              AG-UI
             </Link>
             <Link href="/render" className="transition-colors" style={{ color: tokens.colors.textSecondary }}
               onClick={() => trackFooterCta('Render', '/render')}
@@ -271,11 +277,11 @@ export function Footer() {
           {/* Resources column */}
           <div className="flex flex-col gap-2.5 text-sm">
             <Eyebrow tone="accent" style={{ marginBottom: 4 }}>Resources</Eyebrow>
-            <Link href="/docs" className="transition-colors" style={{ color: tokens.colors.textSecondary }}
-              onClick={() => trackFooterCta('Getting Started', '/docs')}
+            <Link href="/pilot-to-prod" className="transition-colors" style={{ color: tokens.colors.textSecondary }}
+              onClick={() => trackFooterCta('Pilot to Prod', '/pilot-to-prod')}
               onMouseEnter={(e) => (e.currentTarget.style.color = tokens.colors.accent)}
               onMouseLeave={(e) => (e.currentTarget.style.color = tokens.colors.textSecondary)}>
-              Getting Started
+              Pilot to Prod
             </Link>
             <Link href="/blog" className="transition-colors" style={{ color: tokens.colors.textSecondary }}
               onClick={() => trackFooterCta('Blog', '/blog')}
@@ -283,10 +289,10 @@ export function Footer() {
               onMouseLeave={(e) => (e.currentTarget.style.color = tokens.colors.textSecondary)}>
               Blog
             </Link>
-            <a href="https://www.npmjs.com/package/@ngaf/langgraph"
+            <a href="https://www.npmjs.com/package/@threadplane/langgraph"
               target="_blank" rel="noopener noreferrer"
               className="transition-colors" style={{ color: tokens.colors.textSecondary }}
-              onClick={() => trackExternalLinkClick('https://www.npmjs.com/package/@ngaf/langgraph', {
+              onClick={() => trackExternalLinkClick('https://www.npmjs.com/package/@threadplane/langgraph', {
                 surface: 'footer',
                 cta_id: 'footer_npm_package',
                 cta_text: 'npm Package',
@@ -295,8 +301,8 @@ export function Footer() {
               onMouseLeave={(e) => (e.currentTarget.style.color = tokens.colors.textSecondary)}>
               npm Package
             </a>
-            <Link href="/pricing#faq" className="transition-colors" style={{ color: tokens.colors.textSecondary }}
-              onClick={() => trackFooterCta('Licensing', '/pricing#faq')}
+            <Link href="/docs/licensing" className="transition-colors" style={{ color: tokens.colors.textSecondary }}
+              onClick={() => trackFooterCta('Licensing', '/docs/licensing')}
               onMouseEnter={(e) => (e.currentTarget.style.color = tokens.colors.accent)}
               onMouseLeave={(e) => (e.currentTarget.style.color = tokens.colors.textSecondary)}>
               Licensing
@@ -307,12 +313,12 @@ export function Footer() {
         {/* Bottom bar */}
         <div className="mt-12 pt-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs"
           style={{ borderTop: `1px solid ${tokens.surfaces.border}`, color: tokens.colors.textMuted }}>
-          <span>&copy; {new Date().getFullYear()} Agent UI for Angular. All rights reserved.</span>
+          <span>&copy; {new Date().getFullYear()} Threadplane. All rights reserved.</span>
           <span>
             <Link
-              href="/pricing#faq"
+              href="/docs/licensing"
               className="transition-colors"
-              onClick={() => trackFooterCta('Licensing Bottom', '/pricing#faq')}
+              onClick={() => trackFooterCta('Licensing Bottom', '/docs/licensing')}
               onMouseEnter={(e) => (e.currentTarget.style.color = tokens.colors.accent)}
               onMouseLeave={(e) => (e.currentTarget.style.color = tokens.colors.textMuted)}
             >

@@ -1,6 +1,6 @@
 # Introduction
 
-`@ngaf/ag-ui` is the runtime adapter that wraps an [AG-UI](https://github.com/ag-ui-protocol/ag-ui) `AbstractAgent` into the runtime-neutral `Agent` contract from `@ngaf/chat`. The chat UI primitives consume the Agent contract; the AG-UI adapter translates between the contract and the AG-UI event protocol.
+`@threadplane/ag-ui` is the runtime adapter that wraps an [AG-UI](https://github.com/ag-ui-protocol/ag-ui) `AbstractAgent` into the runtime-neutral `Agent` contract from `@threadplane/chat`. The chat UI primitives consume the Agent contract; the AG-UI adapter translates between the contract and the AG-UI event protocol.
 
 <Callout type="info" title="What is AG-UI?">
 AG-UI is the open agent-to-UI protocol from the CopilotKit ecosystem. It standardizes how agent runtimes stream events (messages, tool calls, state updates) to a frontend. Used by **CrewAI**, **Mastra**, **Microsoft Agent Framework**, **AG2**, **Pydantic AI**, **AWS Strands**, and the **CopilotKit runtime**. One adapter unlocks all of them.
@@ -9,16 +9,16 @@ AG-UI is the open agent-to-UI protocol from the CopilotKit ecosystem. It standar
 ## How it fits
 
 ```text
-@ngaf/chat
+@threadplane/chat
   <chat>, <chat-message-list>, <chat-input>
-  @ngaf/chat/debug -> <chat-debug>
+  @threadplane/chat/debug -> <chat-debug>
       |
       | Agent contract (signals + events$)
       |
-      +--> @ngaf/langgraph
+      +--> @threadplane/langgraph
       |      LangGraphAgent -> LangGraph Platform
       |
-      +--> @ngaf/ag-ui
+      +--> @threadplane/ag-ui
              toAgent(AbstractAgent) -> AG-UI backend
 ```
 
@@ -37,7 +37,7 @@ Scope of the first release:
 - `state` (snapshots and JSON-Patch deltas)
 - `events$` (custom events; discriminates `state_update`)
 
-Out of scope for now (use `@ngaf/langgraph` if you need these):
+Out of scope for now (use `@threadplane/langgraph` if you need these):
 - Interrupts
 - Subagents
 - History / time-travel

@@ -35,13 +35,13 @@ describe('node client', () => {
 
   test('capturePostinstall sends an event with pkg + version', async () => {
     await expect(
-      capturePostinstall({ pkg: '@ngaf/telemetry', version: '0.0.31' })
+      capturePostinstall({ pkg: '@threadplane/telemetry', version: '0.0.31' })
     ).resolves.toEqual({ sent: true });
     const body = JSON.parse(String(fetchMock.mock.calls[0][1].body));
     expect(body).toMatchObject({
       event: 'ngaf:postinstall',
       properties: expect.objectContaining({
-        pkg: '@ngaf/telemetry',
+        pkg: '@threadplane/telemetry',
         version: '0.0.31',
       }),
     });
@@ -71,7 +71,7 @@ describe('node client', () => {
     );
   });
 
-  test('capturePostinstall defaults to the live ThreadPlane ingest proxy', async () => {
+  test('capturePostinstall defaults to the live Threadplane ingest proxy', async () => {
     delete process.env.NGAF_TELEMETRY_INGEST_URL;
     await capturePostinstall({ pkg: 'x', version: '1' });
     expect(fetchMock.mock.calls[0][0]).toBe('https://threadplane.ai/api/ingest');
@@ -126,7 +126,7 @@ describe('node client', () => {
   test('createPostinstallProperties does not include derived install context', () => {
     expect(
       createPostinstallProperties(
-        { pkg: '@ngaf/chat', version: '0.0.31' },
+        { pkg: '@threadplane/chat', version: '0.0.31' },
         {
           CI: 'true',
           npm_config_global: 'true',

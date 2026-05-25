@@ -8,7 +8,7 @@ import type {
   AgentRuntimeTelemetryProperties,
   AgentRuntimeTelemetrySink,
   AgentSubmitInput, AgentSubmitOptions,
-} from '@ngaf/chat';
+} from '@threadplane/chat';
 import { reduceEvent, type ReducerStore } from './reducer';
 
 export interface ToAgentOptions {

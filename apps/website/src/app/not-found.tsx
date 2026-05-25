@@ -1,11 +1,11 @@
-import { tokens } from '@ngaf/design-tokens';
+import { tokens } from '@threadplane/design-tokens';
 import { Container } from '../components/ui/Container';
 import { Section } from '../components/ui/Section';
 import { Eyebrow } from '../components/ui/Eyebrow';
 import { Button } from '../components/ui/Button';
 
 export const metadata = {
-  title: 'Page not found — Agent UI for Angular',
+  title: 'Page not found — Threadplane',
   description: 'The page you were looking for doesn’t exist.',
 };
 

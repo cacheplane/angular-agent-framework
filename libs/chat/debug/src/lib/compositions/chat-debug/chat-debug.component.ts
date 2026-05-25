@@ -537,9 +537,9 @@ export class ChatDebugComponent {
       if (typeof document === 'undefined') return;
       const html = document.documentElement;
       if (this.open()) {
-        html.dataset['ngafChatDebug'] = this.dockState();
+        html.dataset['threadplaneChatDebug'] = this.dockState();
       } else {
-        delete html.dataset['ngafChatDebug'];
+        delete html.dataset['threadplaneChatDebug'];
       }
     });
 

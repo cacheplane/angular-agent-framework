@@ -1,12 +1,12 @@
 import { getAnonId } from '../shared/anon-id.js';
 import { isTelemetryDisabled } from '../shared/env.js';
 import { shouldSample } from '../shared/sample.js';
-import type { NgafNodeEvent } from '../shared/events.js';
+import type { ThreadplaneNodeEvent } from '../shared/events.js';
 import { isProgrammaticallyDisabled } from './disable.js';
 
 const DEFAULT_INGEST = 'https://threadplane.ai/api/ingest';
 const REQUEST_TIMEOUT_MS = 3_000;
-// Public identifier accepted by the ThreadPlane ingest proxy. The proxy re-keys
+// Public identifier accepted by the Threadplane ingest proxy. The proxy re-keys
 // server-side with the private PostHog token.
 const PUBLIC_INGEST_KEY = 'phc_public_cacheplane_telemetry';
 
@@ -105,7 +105,7 @@ async function postJson(url: string, body: unknown): Promise<void> {
 }
 
 export async function captureEvent(
-  event: NgafNodeEvent,
+  event: ThreadplaneNodeEvent,
   properties: Record<string, unknown> = {}
 ): Promise<CaptureResult> {
   if (isTelemetryDisabled() || isProgrammaticallyDisabled())

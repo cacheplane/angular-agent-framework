@@ -1,11 +1,11 @@
-# `@ngaf/chat` changelog
+# `@threadplane/chat` changelog
 
 ## [Unreleased]
 
 ### Changed
 
-- **License:** Changed the license for `@ngaf/chat` from MIT to PolyForm Noncommercial 1.0.0 plus commercial licensing. This change applies to future versions only. Historical MIT releases remain under their original license terms.
+- **License:** `@threadplane/chat` is dual-licensed under PolyForm Noncommercial 1.0.0 (free noncommercial use) or a Threadplane Commercial license (production use inside a for-profit context).
 
 ### Migration
 
-Commercial users upgrading to this version or later need a Threadplane commercial license before production deployment. See [COMMERCIAL-USE.md](./COMMERCIAL-USE.md) for the definition of commercial use and the 30-day evaluation window, and <https://threadplane.ai/pricing> for plans.
+Commercial users need a Threadplane Commercial license before production deployment. See [COMMERCIAL-USE.md](./COMMERCIAL-USE.md) for the definition of commercial use and the 30-day evaluation window, and <https://threadplane.ai/pricing> for plans.

@@ -5,7 +5,7 @@ import {
   updateLicenseToken,
   type Db,
   type License,
-} from '@ngaf/db';
+} from '@threadplane/db';
 import { loadEnv } from '../src/lib/env.js';
 import { mintToken } from '../src/lib/sign.js';
 import { sendLicenseEmail, renderLicenseEmail, type RenderedEmail } from '../src/lib/email.js';
@@ -57,7 +57,7 @@ export async function runRemint(args: RemintArgs, deps: RemintDeps): Promise<Rem
     token = await deps.mintToken(
       {
         stripeCustomerId: license.stripeCustomerId,
-        tier: license.tier as 'indie' | 'developer_seat' | 'app_deployment',
+        tier: license.tier as 'developer_seat' | 'team',
         seats: license.seats,
         expiresAt: license.expiresAt,
       },
@@ -68,7 +68,7 @@ export async function runRemint(args: RemintArgs, deps: RemintDeps): Promise<Rem
 
   const to = args.to ?? license.customerEmail;
   const vars = {
-    tier: license.tier as 'indie' | 'developer_seat' | 'app_deployment',
+    tier: license.tier as 'developer_seat' | 'team',
     seats: license.seats,
     token,
     expiresAt: license.expiresAt,

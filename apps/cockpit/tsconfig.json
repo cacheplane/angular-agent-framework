@@ -12,13 +12,13 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
-      "@ngaf/design-tokens": ["../../libs/design-tokens/src/index.ts"],
-      "@ngaf/ui-react": ["../../libs/ui-react/src/index.ts"],
-      "@ngaf/cockpit-registry": ["../../libs/cockpit-registry/src/index.ts"],
-      "@ngaf/telemetry/shared": [
+      "@threadplane/design-tokens": ["../../libs/design-tokens/src/index.ts"],
+      "@threadplane/ui-react": ["../../libs/ui-react/src/index.ts"],
+      "@threadplane/cockpit-registry": ["../../libs/cockpit-registry/src/index.ts"],
+      "@threadplane/telemetry/shared": [
         "../../libs/telemetry/src/shared/public-api.ts"
       ],
-      "@ngaf/telemetry/browser": [
+      "@threadplane/telemetry/browser": [
         "../../libs/telemetry/src/browser/public-api.ts"
       ]
     }

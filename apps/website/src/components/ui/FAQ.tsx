@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { tokens } from '@ngaf/design-tokens';
+import { tokens } from '@threadplane/design-tokens';
 import { cn } from '../../lib/cn';
 
 export interface FAQItem {

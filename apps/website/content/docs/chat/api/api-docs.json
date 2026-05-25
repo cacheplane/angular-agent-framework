@@ -2729,7 +2729,7 @@
       {
         "name": "views",
         "type": "InputSignal<Readonly<Record<string, Type<unknown> | RenderViewEntry>> | undefined>",
-        "description": "A2UI component catalog forwarded to the inner <chat>. Without it,\nmessages classified as A2UI parse correctly but never mount a\nsurface. Pass `a2uiBasicCatalog()` from `@ngaf/chat`.",
+        "description": "A2UI component catalog forwarded to the inner <chat>. Without it,\nmessages classified as A2UI parse correctly but never mount a\nsurface. Pass `a2uiBasicCatalog()` from `@threadplane/chat`.",
         "optional": false
       }
     ],
@@ -3224,7 +3224,7 @@
       {
         "name": "views",
         "type": "InputSignal<Readonly<Record<string, Type<unknown> | RenderViewEntry>> | undefined>",
-        "description": "A2UI component catalog forwarded to the inner <chat>. Without it,\nmessages classified as A2UI parse correctly but never mount a\nsurface. Pass `a2uiBasicCatalog()` from `@ngaf/chat`.",
+        "description": "A2UI component catalog forwarded to the inner <chat>. Without it,\nmessages classified as A2UI parse correctly but never mount a\nsurface. Pass `a2uiBasicCatalog()` from `@threadplane/chat`.",
         "optional": false
       }
     ],
@@ -3436,7 +3436,7 @@
   {
     "name": "ChatStreamingMdComponent",
     "kind": "class",
-    "description": "Renders streaming markdown by walking a @cacheplane/partial-markdown AST\nthrough @ngaf/render's view registry.\n\nReactivity model: the live `parser.root` keeps a stable JS reference\nacross pushes (partial-markdown's identity guarantee). To make Angular\nsignals propagate downstream when the underlying tree changes, we surface\na materialized snapshot via `materialize()`. The snapshot shares\nstructurally — unchanged subtrees keep the SAME reference, and any\ndescendant change yields a NEW root reference. This lets Angular's\n`Object.is` equality check both detect changes (root reference differs)\nand short-circuit unchanged subtrees (per-node references stable).\n\nOverride per-node-type renderers via the `[viewRegistry]` input or by\nsupplying a different `MARKDOWN_VIEW_REGISTRY` provider in the injector\ntree.",
+    "description": "Renders streaming markdown by walking a @cacheplane/partial-markdown AST\nthrough @threadplane/render's view registry.\n\nReactivity model: the live `parser.root` keeps a stable JS reference\nacross pushes (partial-markdown's identity guarantee). To make Angular\nsignals propagate downstream when the underlying tree changes, we surface\na materialized snapshot via `materialize()`. The snapshot shares\nstructurally — unchanged subtrees keep the SAME reference, and any\ndescendant change yields a NEW root reference. This lets Angular's\n`Object.is` equality check both detect changes (root reference differs)\nand short-circuit unchanged subtrees (per-node references stable).\n\nOverride per-node-type renderers via the `[viewRegistry]` input or by\nsupplying a different `MARKDOWN_VIEW_REGISTRY` provider in the injector\ntree.",
     "params": [],
     "examples": [],
     "properties": [
@@ -4972,7 +4972,7 @@
   {
     "name": "A2uiComponentView",
     "kind": "interface",
-    "description": "Chat-internal projection of an A2UI component, materialized by the\nsurface store. Distinct from the wire-format `A2uiComponent` in\n`@ngaf/a2ui` (which carries the raw `component: A2uiComponentDef`\npayload) — this type adds the per-component readiness fields the\nprogressive renderer consumes.",
+    "description": "Chat-internal projection of an A2UI component, materialized by the\nsurface store. Distinct from the wire-format `A2uiComponent` in\n`@threadplane/a2ui` (which carries the raw `component: A2uiComponentDef`\npayload) — this type adds the per-component readiness fields the\nprogressive renderer consumes.",
     "properties": [
       {
         "name": "bindings",
@@ -6337,7 +6337,7 @@
   {
     "name": "A2uiViewEntry",
     "kind": "type",
-    "description": "Catalog entry for the A2UI surface renderer.\n\n`component` is mounted once all of the component's bindings (data\nmodel paths referenced in its prop expressions) have resolved. While\nany binding is unpopulated, the `fallback` is mounted instead. If\n`fallback` is omitted, the lib's default fallback\n(`A2uiDefaultFallbackComponent`) is mounted.\n\nThis is a chat-side alias for the shared `RenderViewEntry` shape so\nconsumers of `@ngaf/chat` don't have to import from `@ngaf/render`.",
+    "description": "Catalog entry for the A2UI surface renderer.\n\n`component` is mounted once all of the component's bindings (data\nmodel paths referenced in its prop expressions) have resolved. While\nany binding is unpopulated, the `fallback` is mounted instead. If\n`fallback` is omitted, the lib's default fallback\n(`A2uiDefaultFallbackComponent`) is mounted.\n\nThis is a chat-side alias for the shared `RenderViewEntry` shape so\nconsumers of `@threadplane/chat` don't have to import from `@threadplane/render`.",
     "signature": "RenderViewEntry",
     "examples": []
   },

@@ -3,13 +3,13 @@ import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
-const TELEMETRY_DEP = '@ngaf/telemetry';
-const POSTINSTALL = 'ngaf-telemetry-postinstall || true';
+const TELEMETRY_DEP = '@threadplane/telemetry';
+const POSTINSTALL = 'threadplane-telemetry-postinstall || true';
 
 export function verifyInstallTelemetryManifest(pkg, manifestPath = 'package.json') {
   if (pkg?.name === TELEMETRY_DEP) return;
-  if (typeof pkg?.name !== 'string' || !pkg.name.startsWith('@ngaf/')) {
-    throw new Error(`${manifestPath} is not an @ngaf package manifest`);
+  if (typeof pkg?.name !== 'string' || !pkg.name.startsWith('@threadplane/')) {
+    throw new Error(`${manifestPath} is not an @threadplane package manifest`);
   }
 
   const actualDep = pkg.dependencies?.[TELEMETRY_DEP];

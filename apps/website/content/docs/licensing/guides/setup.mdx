@@ -1,11 +1,11 @@
 # Setup
 
-Most applications do not import `@ngaf/licensing` directly. `@ngaf/chat` calls `runLicenseCheck()` from `provideChat()` when you pass a license token.
+Most applications do not import `@threadplane/licensing` directly. `@threadplane/chat` calls `runLicenseCheck()` from `provideChat()` when you pass a license token.
 
 For example, chat exposes a `license` option:
 
 ```ts
-provideChat({ license: environment.ngafLicense });
+provideChat({ license: environment.threadplaneLicense });
 ```
 
 When no token is supplied, the licensing helper can evaluate the environment as `noncommercial` when the caller passes `isNoncommercial: true`.
@@ -19,11 +19,11 @@ import {
   LICENSE_PUBLIC_KEY,
   inferNoncommercial,
   runLicenseCheck,
-} from '@ngaf/licensing';
+} from '@threadplane/licensing';
 
 const status = await runLicenseCheck({
-  package: '@ngaf/example',
-  token: process.env.NGAF_LICENSE,
+  package: '@threadplane/example',
+  token: process.env.THREADPLANE_LICENSE,
   publicKey: LICENSE_PUBLIC_KEY,
   isNoncommercial: inferNoncommercial(),
 });
@@ -51,7 +51,7 @@ You can inject a custom warning sink:
 
 ```ts
 await runLicenseCheck({
-  package: '@ngaf/example',
+  package: '@threadplane/example',
   token,
   publicKey,
   warn: (message) => logger.warn(message),

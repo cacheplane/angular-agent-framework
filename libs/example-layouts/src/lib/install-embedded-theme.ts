@@ -1,4 +1,4 @@
-import { cssVars, type Theme } from '@ngaf/design-tokens';
+import { cssVars, type Theme } from '@threadplane/design-tokens';
 
 /**
  * Bootstraps an embedded example app's theme. Call once before the
@@ -6,8 +6,8 @@ import { cssVars, type Theme } from '@ngaf/design-tokens';
  *
  * Behavior:
  *   1. Applies the default theme synchronously: sets `data-theme` on
- *      `<html>` (which both `@ngaf/design-tokens`-aware code and
- *      `@ngaf/chat` honor) plus every `--ds-*` CSS variable on the
+ *      `<html>` (which both `@threadplane/design-tokens`-aware code and
+ *      `@threadplane/chat` honor) plus every `--ds-*` CSS variable on the
  *      same element.
  *   2. Posts `{ type: 'ngaf:theme-request' }` to `window.parent` so the
  *      host (cockpit's `<ThemedFrame>`) replies with the current theme

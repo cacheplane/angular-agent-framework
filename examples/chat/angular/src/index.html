@@ -2,18 +2,18 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <title>NGAF chat — canonical demo</title>
+    <title>Threadplane chat — canonical demo</title>
     <base href="/" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <script>
       // Pre-bootstrap color-scheme apply: read persisted palette and set
       // both `data-color-scheme` (drives the demo page bg/text) and
-      // `data-ngaf-chat-theme` (drives the chat lib's internal theming)
+      // `data-threadplane-chat-theme` (drives the chat lib's internal theming)
       // BEFORE stylesheets load to avoid FOUC. The DemoShell effect
       // takes over at runtime once Angular bootstraps.
       (function () {
         try {
-          var raw = localStorage.getItem('ngaf-chat-demo:palette');
+          var raw = localStorage.getItem('threadplane-chat-demo:palette');
           var scheme = 'dark';
           if (raw) {
             var p = JSON.parse(raw);
@@ -22,7 +22,7 @@
             }
           }
           document.documentElement.setAttribute('data-color-scheme', scheme);
-          document.documentElement.setAttribute('data-ngaf-chat-theme', scheme);
+          document.documentElement.setAttribute('data-threadplane-chat-theme', scheme);
         } catch (e) { /* localStorage blocked — defaults apply */ }
       })();
     </script>

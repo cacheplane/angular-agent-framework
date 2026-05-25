@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { tokens } from '@ngaf/design-tokens';
+import { tokens } from '@threadplane/design-tokens';
 
 type CalloutType = 'tip' | 'warning' | 'info' | 'danger';
 

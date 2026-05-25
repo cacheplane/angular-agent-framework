@@ -1,16 +1,16 @@
 # Browser Telemetry
 
-Browser telemetry is opt-in. If your Angular app never calls `provideNgafTelemetry()`, the service has no enabled config and `capture()` returns without sending.
+Browser telemetry is opt-in. If your Angular app never calls `provideThreadplaneTelemetry()`, the service has no enabled config and `capture()` returns without sending.
 
 ## Configure
 
 ```ts
 import type { ApplicationConfig } from '@angular/core';
-import { provideNgafTelemetry } from '@ngaf/telemetry/browser';
+import { provideThreadplaneTelemetry } from '@threadplane/telemetry/browser';
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideNgafTelemetry({
+    provideThreadplaneTelemetry({
       enabled: true,
       endpoint: '/api/telemetry',
       sampleRate: 1,
@@ -39,7 +39,7 @@ The browser distinct ID is generated per service instance. The source does not w
 Use `sink` when your app already has an analytics boundary.
 
 ```ts
-provideNgafTelemetry({
+provideThreadplaneTelemetry({
   enabled: true,
   sink: async ({ event, properties }) => {
     await analytics.track(event, properties);

@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { tokens } from '@ngaf/design-tokens';
+import { tokens } from '@threadplane/design-tokens';
 
 interface BlogTagFilterProps {
   /** Currently active tag from ?tag=. Undefined when on /blog. */

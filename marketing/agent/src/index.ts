@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 //
-// @ngaf/marketing-agent — LangGraph drafting agent for the marketing pipeline.
+// @threadplane/marketing-agent — LangGraph drafting agent for the marketing pipeline.
 // Skeleton only. Implementation lands in the content-agent sub-spec.
 
-import type { Draft } from '@ngaf/marketing-channels';
+import type { Draft } from '@threadplane/marketing-channels';
 
 export type Trigger =
   | { kind: 'blog-merge'; slug: string }
@@ -21,6 +21,6 @@ export interface DraftBundle {
 
 export function draft(_trigger: Trigger): Promise<DraftBundle> {
   throw new Error(
-    '@ngaf/marketing-agent: draft() not yet implemented. See content-agent sub-spec.',
+    '@threadplane/marketing-agent: draft() not yet implemented. See content-agent sub-spec.',
   );
 }

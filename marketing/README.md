@@ -6,11 +6,11 @@ Agentic marketing pipeline. Five composable subsystems that turn source content 
 
 ```
 marketing/
-├── assets/      # @ngaf/marketing-assets    — branded image rendering
-├── channels/    # @ngaf/marketing-channels  — X, LinkedIn, Dev.to, Reddit adapters
-├── agent/       # @ngaf/marketing-agent     — LangGraph drafting agent
+├── assets/      # @threadplane/marketing-assets    — branded image rendering
+├── channels/    # @threadplane/marketing-channels  — X, LinkedIn, Dev.to, Reddit adapters
+├── agent/       # @threadplane/marketing-agent     — LangGraph drafting agent
 ├── cowork/      # Claude skills (/gtm, /marketing) + inbox/outbox/archive
-└── metrics/     # @ngaf/marketing-metrics   — feedback ingestion → PostHog
+└── metrics/     # @threadplane/marketing-metrics   — feedback ingestion → PostHog
 ```
 
 All four packages are internal (`"private": true`). They are NOT published to npm.

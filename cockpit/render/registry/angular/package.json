@@ -1,8 +1,9 @@
 {
-  "name": "@ngaf/cockpit-render-registry-angular",
+  "name": "@threadplane/cockpit-render-registry-angular",
+  "private": true,
   "version": "0.0.1",
   "peerDependencies": {
-    "@ngaf/render": "^0.0.1"
+    "@threadplane/render": "*"
   },
   "license": "MIT",
   "sideEffects": false

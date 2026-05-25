@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { tokens } from '@ngaf/design-tokens';
+import { tokens } from '@threadplane/design-tokens';
 import { docsConfig } from '../../lib/docs-config';
 import { trackCtaClick, trackExternalLinkClick } from '../../lib/analytics/client';
 import { LogoMark } from '../ui/LogoMark';
@@ -11,6 +11,7 @@ import { Button } from '../ui/Button';
 const links = [
   { label: 'Pilot to Prod', href: '/pilot-to-prod', external: false },
   { label: 'Docs', href: '/docs', external: false },
+  { label: 'Pricing', href: '/pricing', external: false },
   { label: 'Demo', href: 'https://demo.threadplane.ai', external: true },
   { label: 'Examples', href: 'https://cockpit.threadplane.ai', external: true },
 ];

@@ -7,6 +7,7 @@ export {
   upsertLicense,
   getLicense,
   getLicensesByCustomerEmail,
+  getLicensesByCustomerId,
   revokeLicense,
   updateLicenseToken,
 } from './lib/queries/licenses.js';

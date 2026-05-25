@@ -1,4 +1,4 @@
-# Event & Property Taxonomy — ThreadPlane
+# Event & Property Taxonomy — Threadplane
 
 > Single source of truth for PostHog event names, properties, CTA ids, and surface ids. Implementation lands in `apps/website/src/lib/analytics/events.ts`, `apps/cockpit/src/lib/analytics/events.ts`, and `libs/telemetry/src/shared/events.ts`. Whenever those files change, this file changes.
 
@@ -75,13 +75,13 @@ sessions by design.
 
 | Event                           | When                                                       | Surface        | Default                                    |
 | ------------------------------- | ---------------------------------------------------------- | -------------- | ------------------------------------------ |
-| `ngaf:postinstall`              | Dependency/global install of a published `@ngaf/*` package | Node (script)  | **Opt-out**                                |
+| `ngaf:postinstall`              | Dependency/global install of a published `@threadplane/*` package | Node (script)  | **Opt-out**                                |
 | `ngaf:runtime_instance_created` | Runtime adapter init                                       | Node / Browser | **Opt-out** on Node, **Opt-in** in Browser |
 | `ngaf:runtime_request_created`  | Runtime adapter request created                            | Node / Browser | **Opt-out** on Node, **Opt-in** in Browser |
 | `ngaf:stream_started`           | Stream begins                                              | Node / Browser | **Opt-out** on Node, **Opt-in** in Browser |
 | `ngaf:stream_ended`             | Stream ends normally                                       | Node / Browser | **Opt-out** on Node, **Opt-in** in Browser |
 | `ngaf:stream_errored`           | Stream errors                                              | Node / Browser | **Opt-out** on Node, **Opt-in** in Browser |
-| `ngaf:browser_provided`         | `provideNgafTelemetry({enabled:true})`                     | Browser        | **Opt-in**                                 |
+| `ngaf:browser_provided`         | `provideThreadplaneTelemetry({enabled:true})`                     | Browser        | **Opt-in**                                 |
 | `ngaf:browser_chat_init`        | Browser chat surface initialized                           | Browser        | **Opt-in**                                 |
 
 Browser events never fire unless the consumer explicitly opts in. See `libs/telemetry/README.md` for the trust contract.
@@ -90,7 +90,7 @@ Browser events never fire unless the consumer explicitly opts in. See `libs/tele
 
 | Property                       | Type   | Notes                                                        |
 | ------------------------------ | ------ | ------------------------------------------------------------ |
-| `pkg`                          | string | Published `@ngaf/*` package name.                            |
+| `pkg`                          | string | Published `@threadplane/*` package name.                            |
 | `version`                      | string | Published package version.                                   |
 | `node`                         | string | Current `process.version`; kept for existing dashboards.     |
 | `node_version`                 | string | Current `process.version`.                                   |

@@ -1,5 +1,5 @@
 export const PRIMARY_TAGLINE =
-  'Agent UI for Angular. Durable threads, interrupts, subagents, planning, memory, and generative UI.';
+  'Threadplane. Durable threads, interrupts, subagents, planning, memory, and generative UI.';
 export const LONG_SUBHEAD =
   'The fullstack agentic Angular framework for LangGraph and AG-UI-compatible agents: durable threads, interrupts, subagents, planning, memory, and generative UI using Vercel json-render and Google A2UI.';
 export const HERO_SUBHEAD = `Build fullstack agentic apps in Angular with: durable threads, interrupts, subagents, planning, memory, and generative UI using Vercel json-render and Google A2UI.`;

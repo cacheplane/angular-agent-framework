@@ -1,5 +1,5 @@
 {
-  "name": "@ngaf/marketing-agent",
+  "name": "@threadplane/marketing-agent",
   "version": "0.0.0",
   "license": "MIT",
   "main": "./src/index.ts",

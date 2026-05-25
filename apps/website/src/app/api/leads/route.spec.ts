@@ -20,7 +20,7 @@ vi.mock('fs', () => ({
 }));
 
 vi.mock('../../../../lib/resend', () => ({
-  FROM: 'Agent UI for Angular <hello@cacheplane.ai>',
+  FROM: 'Threadplane <hello@cacheplane.ai>',
   NOTIFY_TO: 'hello@cacheplane.ai',
   sendEmail: sendEmailMock,
   addToAudience: addToAudienceMock,
@@ -76,7 +76,7 @@ describe('/api/leads', () => {
       name: 'Jane Smith',
       email: 'jane@acme.com',
       company: 'Acme',
-      message: 'We are evaluating Agent UI for Angular.',
+      message: 'We are evaluating Threadplane.',
     }) as never);
 
     expect(response.status).toBe(200);
@@ -87,7 +87,7 @@ describe('/api/leads', () => {
       'utf8',
     );
     expect(sendEmailMock).toHaveBeenCalledWith(expect.objectContaining({
-      from: 'Agent UI for Angular <hello@cacheplane.ai>',
+      from: 'Threadplane <hello@cacheplane.ai>',
       to: 'hello@cacheplane.ai',
       subject: 'New lead: Jane Smith at Acme',
       html: expect.stringContaining('jane@acme.com'),
@@ -131,9 +131,9 @@ describe('/api/newsletter', () => {
 
     expect(response.status).toBe(200);
     expect(sendEmailMock).toHaveBeenCalledWith(expect.objectContaining({
-      from: 'Agent UI for Angular <hello@cacheplane.ai>',
+      from: 'Threadplane <hello@cacheplane.ai>',
       to: 'reader@acme.com',
-      subject: 'Welcome to Agent UI for Angular updates',
+      subject: 'Welcome to Threadplane updates',
     }));
     expect(addToAudienceMock).toHaveBeenCalledWith('reader@acme.com');
     expect(loopsUpsertContactMock).toHaveBeenCalledWith(expect.objectContaining({
@@ -166,7 +166,7 @@ describe('/api/whitepaper-signup', () => {
       'utf8',
     );
     expect(sendEmailMock).toHaveBeenCalledWith(expect.objectContaining({
-      from: 'Agent UI for Angular <hello@cacheplane.ai>',
+      from: 'Threadplane <hello@cacheplane.ai>',
       to: 'reader@acme.com',
       subject: 'Your Enterprise Guide to Agent Chat Interfaces',
       html: expect.stringContaining('https://threadplane.ai/whitepapers/chat.pdf'),

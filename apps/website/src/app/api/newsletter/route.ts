@@ -3,7 +3,7 @@ import { sendEmail, FROM, addToAudience } from '../../../../lib/resend';
 import { loopsUpsertContact, loopsSendEvent } from '../../../../lib/loops';
 import { newsletterWelcomeHtml } from '../../../../emails/newsletter-welcome';
 import { captureNewsletterConversion } from '../../../lib/analytics/server';
-import { getSourcePage } from '@ngaf/telemetry/shared';
+import { getSourcePage } from '@threadplane/telemetry/shared';
 
 export async function POST(req: NextRequest) {
   let body: { email?: string };
@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
       sendEmail({
         from: FROM,
         to: email,
-        subject: 'Welcome to Agent UI for Angular updates',
+        subject: 'Welcome to Threadplane updates',
         html: newsletterWelcomeHtml(),
       }),
       addToAudience(email),

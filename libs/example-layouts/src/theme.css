@@ -1,5 +1,5 @@
 /*
- * @ngaf/example-layouts/theme.css
+ * @threadplane/example-layouts/theme.css
  *
  * Tailwind v4 entry point for embedded example apps. The host (cockpit)
  * applies `--ds-*` variables to `<html>` via `installEmbeddedTheme()`;

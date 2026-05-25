@@ -62,13 +62,14 @@ export type CtaId =
   | 'home_why_pilot_to_prod'
   // Pricing tier CTAs
   | 'pricing_tier_community'
-  | 'pricing_tier_indie'
   | 'pricing_tier_developer_seat'
-  | 'pricing_tier_app_deployment'
+  | 'pricing_tier_team'
   | 'pricing_tier_enterprise'
   // Footer licensing links
   | 'footer_licensing'
   | 'footer_licensing_bottom'
+  | 'footer_pilot_to_prod'
+  | 'footer_ag_ui'
   // Announcement toast
   | 'toast_get_guide'
   | 'toast_direct_download'

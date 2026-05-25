@@ -99,7 +99,7 @@ export default async function OpenGraphImage() {
             marginBottom: 28,
           }}
         >
-          Agent UI for Angular · MIT
+          Threadplane · MIT
         </div>
 
         {/* Headline — EB Garamond serif matches marketing-site h1 */}

@@ -31,10 +31,10 @@
       "configurations": {
         "production": {
           "define": {
-            "NGAF_CHAT_DEBUG": "false"
+            "THREADPLANE_CHAT_DEBUG": "false"
           },
           "externalDependencies": [
-            "@ngaf/chat/debug"
+            "@threadplane/chat/debug"
           ],
           "budgets": [
             {
@@ -52,7 +52,7 @@
         },
         "production-debug": {
           "define": {
-            "NGAF_CHAT_DEBUG": "true"
+            "THREADPLANE_CHAT_DEBUG": "true"
           },
           "budgets": [
             {
@@ -70,7 +70,7 @@
         },
         "development": {
           "define": {
-            "NGAF_CHAT_DEBUG": "false"
+            "THREADPLANE_CHAT_DEBUG": "false"
           },
           "optimization": false,
           "extractLicenses": false,

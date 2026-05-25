@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { tokens } from '@ngaf/design-tokens';
+import { tokens } from '@threadplane/design-tokens';
 import { createPageMetadata } from '../../lib/site-metadata';
 import { getAllPosts, getFeaturedPost, getAllTags } from '../../lib/blog';
 import { FeaturedPostCard } from '../../components/blog/FeaturedPostCard';

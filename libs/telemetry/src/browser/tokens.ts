@@ -1,6 +1,6 @@
 import { InjectionToken } from '@angular/core';
 
-export type NgafTelemetryEvent =
+export type ThreadplaneTelemetryEvent =
   | 'ngaf:browser_provided'
   | 'ngaf:browser_chat_init'
   | 'ngaf:runtime_instance_created'
@@ -9,20 +9,20 @@ export type NgafTelemetryEvent =
   | 'ngaf:stream_ended'
   | 'ngaf:stream_errored';
 
-export interface NgafTelemetryEventPayload {
-  event: NgafTelemetryEvent;
+export interface ThreadplaneTelemetryEventPayload {
+  event: ThreadplaneTelemetryEvent;
   properties?: Record<string, unknown>;
 }
 
-export type NgafTelemetrySink = (payload: NgafTelemetryEventPayload) => void | Promise<void>;
+export type ThreadplaneTelemetrySink = (payload: ThreadplaneTelemetryEventPayload) => void | Promise<void>;
 
-export interface NgafTelemetryConfig {
+export interface ThreadplaneTelemetryConfig {
   enabled: boolean;
   /**
    * Preferred app-owned delivery hook. Use this when the consuming app wants
    * to forward events through its own analytics boundary.
    */
-  sink?: NgafTelemetrySink;
+  sink?: ThreadplaneTelemetrySink;
   /**
    * Preferred app-owned ingest URL. The browser service POSTs neutral event
    * payloads here; the endpoint decides where they ultimately go.
@@ -35,6 +35,6 @@ export interface NgafTelemetryConfig {
   sampleRate?: number;
 }
 
-export const NGAF_TELEMETRY_CONFIG = new InjectionToken<NgafTelemetryConfig | null>(
-  'NGAF_TELEMETRY_CONFIG',
+export const THREADPLANE_TELEMETRY_CONFIG = new InjectionToken<ThreadplaneTelemetryConfig | null>(
+  'THREADPLANE_TELEMETRY_CONFIG',
 );

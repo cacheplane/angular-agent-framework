@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 import React from 'react';
-import { tokens } from '@ngaf/design-tokens';
+import { tokens } from '@threadplane/design-tokens';
 
 interface Row {
   label: string;

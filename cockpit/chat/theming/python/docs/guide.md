@@ -1,4 +1,4 @@
-# Chat Theming with @ngaf/chat
+# Chat Theming with @threadplane/chat
 
 <Summary>
 Customize chat appearance using `--ngaf-chat-*` CSS custom properties. Create theme presets and build a theme picker for runtime theme switching.

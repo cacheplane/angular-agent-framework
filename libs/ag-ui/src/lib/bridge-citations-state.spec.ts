@@ -1,7 +1,7 @@
 // libs/ag-ui/src/lib/bridge-citations-state.spec.ts
 // SPDX-License-Identifier: MIT
 import { bridgeCitationsState } from './bridge-citations-state';
-import type { Message } from '@ngaf/chat';
+import type { Message } from '@threadplane/chat';
 
 describe('bridgeCitationsState', () => {
   const baseMsg = (id: string): Message => ({ id, role: 'assistant', content: 'x' });

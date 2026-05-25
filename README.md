@@ -1,18 +1,18 @@
 <p align="center">
   <img
     src="https://threadplane.ai/assets/hero.svg"
-    alt="Agent UI for Angular — agent UI primitives for Angular"
+    alt="Threadplane — agent UI primitives for Angular"
     width="100%"
   />
 </p>
 
 <p align="center">
-  <em>Agent UI for Angular — Production-ready chat, threads, and generative UI for AI agents.</em>
+  <em>Threadplane — Production-ready chat, threads, and generative UI for AI agents.</em>
 </p>
 
 <p align="center">
-  <a href="https://www.npmjs.com/package/@ngaf/langgraph">
-    <img alt="npm version" src="https://img.shields.io/npm/v/@ngaf%2Flanggraph?color=6C8EFF&labelColor=080B14&style=flat-square" />
+  <a href="https://www.npmjs.com/package/@threadplane/langgraph">
+    <img alt="npm version" src="https://img.shields.io/npm/v/@threadplane%2Flanggraph?color=6C8EFF&labelColor=080B14&style=flat-square" />
   </a>
   <a href="https://angular.dev">
     <img alt="Angular 20+" src="https://img.shields.io/badge/Angular-20%2B-6C8EFF?labelColor=080B14&style=flat-square" />
@@ -24,16 +24,16 @@
 
 ---
 
-ThreadPlane is a production-ready agent UI framework for Angular. Use `@ngaf/chat` for chat surfaces, `@ngaf/langgraph` for LangGraph-backed agents, `@ngaf/ag-ui` for AG-UI event streams, and `@ngaf/render` for generative UI that stays inside your Angular design system.
+Threadplane is a production-ready agent UI framework for Angular. Use `@threadplane/chat` for chat surfaces, `@threadplane/langgraph` for LangGraph-backed agents, `@threadplane/ag-ui` for AG-UI event streams, and `@threadplane/render` for generative UI that stays inside your Angular design system.
 
-When you are building on LangGraph, `agent()` is the Angular equivalent of LangGraph's React `useStream()` hook, projected into a runtime-neutral `Agent` contract consumed by `@ngaf/chat`. Drop it into any Angular 20+ component, point it at your LangGraph Platform endpoint, and get signal-driven access to messages, status, tool calls, interrupts, subagents, regenerate, and thread history.
+When you are building on LangGraph, `agent()` is the Angular equivalent of LangGraph's React `useStream()` hook, projected into a runtime-neutral `Agent` contract consumed by `@threadplane/chat`. Drop it into any Angular 20+ component, point it at your LangGraph Platform endpoint, and get signal-driven access to messages, status, tool calls, interrupts, subagents, regenerate, and thread history.
 
 ---
 
 ## Install
 
 ```bash
-npm install @ngaf/langgraph @ngaf/chat
+npm install @threadplane/langgraph @threadplane/chat
 ```
 
 **Peer dependencies:** `@angular/core ^20.0.0 || ^21.0.0`, `@langchain/core ^1.1.0`, `@langchain/langgraph-sdk ^1.7.0`, `rxjs ~7.8.0`
@@ -44,12 +44,12 @@ npm install @ngaf/langgraph @ngaf/chat
 
 ```typescript
 import { Component } from '@angular/core';
-import { ChatComponent as NgafChatComponent } from '@ngaf/chat';
-import { agent } from '@ngaf/langgraph';
+import { ChatComponent as ThreadplaneChatComponent } from '@threadplane/chat';
+import { agent } from '@threadplane/langgraph';
 
 @Component({
   selector: 'app-support-chat',
-  imports: [NgafChatComponent],
+  imports: [ThreadplaneChatComponent],
   template: `
     <chat [agent]="chat" />
 
@@ -108,7 +108,7 @@ That's it. `chat.messages()` and `chat.status()` are Angular Signals. Bind them 
 <p align="center">
   <img
     src="https://threadplane.ai/assets/arch-diagram.svg"
-    alt="Agent UI for Angular architecture: Angular Component → agent() → StreamManager Bridge → LangGraph Platform, with signals returned reactively"
+    alt="Threadplane architecture: Angular Component → agent() → StreamManager Bridge → LangGraph Platform, with signals returned reactively"
     width="100%"
   />
 </p>
@@ -129,6 +129,6 @@ That's it. `chat.messages()` and `chat.status()` are Angular Signals. Bind them 
 
 ## License
 
-Most libraries in this repository (`@ngaf/render`, `@ngaf/agent`, `@ngaf/langgraph`, `@ngaf/ag-ui`, `@ngaf/a2ui`, `@ngaf/licensing`, `@ngaf/telemetry`, `@ngaf/design-tokens`) are released under the **MIT License** — free for any use, including commercial, with attribution.
+Most published libraries in this repository (`@threadplane/render`, `@threadplane/langgraph`, `@threadplane/ag-ui`, `@threadplane/a2ui`, `@threadplane/licensing`, `@threadplane/telemetry`) are released under the **MIT License** — free for any use, including commercial, with attribution.
 
-**`@ngaf/chat`** is the exception. Future versions are licensed under **PolyForm Noncommercial 1.0.0 OR a Threadplane commercial license**. Historical npm releases remain MIT. See [`libs/chat/LICENSE.md`](./libs/chat/LICENSE.md), [`libs/chat/COMMERCIAL-USE.md`](./libs/chat/COMMERCIAL-USE.md), and [`COMMERCIAL.md`](./COMMERCIAL.md) for details.
+**`@threadplane/chat`** is the exception. It is dual-licensed under **PolyForm Noncommercial 1.0.0** for free noncommercial use, or a **Threadplane Commercial license** for production use inside a for-profit context. See [`libs/chat/LICENSE.md`](./libs/chat/LICENSE.md), [`libs/chat/COMMERCIAL-USE.md`](./libs/chat/COMMERCIAL-USE.md), [`COMMERCIAL.md`](./COMMERCIAL.md), and [threadplane.ai/docs/licensing](https://threadplane.ai/docs/licensing) for details.

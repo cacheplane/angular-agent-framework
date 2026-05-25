@@ -1,6 +1,6 @@
 # Node Telemetry
 
-Node telemetry lives under `@ngaf/telemetry/node`. It is intended for package lifecycle hooks and server-side adapters.
+Node telemetry lives under `@threadplane/telemetry/node`. It is intended for package lifecycle hooks and server-side adapters.
 
 ```ts
 import {
@@ -9,7 +9,7 @@ import {
   captureStreamEnded,
   captureStreamErrored,
   disableTelemetry,
-} from '@ngaf/telemetry/node';
+} from '@threadplane/telemetry/node';
 ```
 
 ## Opt out programmatically
@@ -17,7 +17,7 @@ import {
 Call `disableTelemetry()` before capture helpers run.
 
 ```ts
-import { disableTelemetry } from '@ngaf/telemetry/node';
+import { disableTelemetry } from '@threadplane/telemetry/node';
 
 disableTelemetry();
 ```

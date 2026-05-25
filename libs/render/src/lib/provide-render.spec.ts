@@ -34,7 +34,7 @@ describe('provideRender', () => {
     expect(config).toBeDefined();
   });
 
-  it('does not perform license checks because @ngaf/render is MIT-licensed', async () => {
+  it('does not perform license checks because @threadplane/render is MIT-licensed', async () => {
     const legacyLicenseConfig = {
       license: 'invalid-token',
       __licenseEnvHint: { isNoncommercial: false },

@@ -1,6 +1,6 @@
 # Introduction
 
-`@ngaf/telemetry` is the shared telemetry package for the framework. It has separate surfaces for browser applications, Node adapters, and shared utilities.
+`@threadplane/telemetry` is the shared telemetry package for the framework. It has separate surfaces for browser applications, Node adapters, and shared utilities.
 
 The important boundary is simple:
 
@@ -14,16 +14,16 @@ Do not treat the browser and Node entry points as interchangeable. They have dif
 
 ```ts
 // Shared utilities
-import { isTelemetryDisabled, getDisableReason } from '@ngaf/telemetry';
+import { isTelemetryDisabled, getDisableReason } from '@threadplane/telemetry';
 
 // Browser Angular provider and service
-import { provideNgafTelemetry } from '@ngaf/telemetry/browser';
+import { provideThreadplaneTelemetry } from '@threadplane/telemetry/browser';
 
 // Node/server helpers
-import { disableTelemetry, capturePostinstall } from '@ngaf/telemetry/node';
+import { disableTelemetry, capturePostinstall } from '@threadplane/telemetry/node';
 ```
 
-The package also exports `@ngaf/telemetry/node/postinstall` for the package postinstall executable.
+The package also exports `@threadplane/telemetry/node/postinstall` for the package postinstall executable.
 
 ## Browser posture
 

@@ -8,7 +8,7 @@ parses it incrementally, and renders Angular components in real time.
 
 <Prompt>
 Add generative UI to your chat interface using `views()` from
-`@ngaf/chat`. Register view components and pass them to
+`@threadplane/chat`. Register view components and pass them to
 `ChatComponent` via the `[views]` input.
 </Prompt>
 
@@ -25,7 +25,7 @@ rendered spec.
 Use the `views()` function to map spec type names to Angular components:
 
 ```typescript
-import { views } from '@ngaf/chat';
+import { views } from '@threadplane/chat';
 
 const myViews = views({
   weather_card: WeatherCardComponent,

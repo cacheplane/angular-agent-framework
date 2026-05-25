@@ -21,7 +21,7 @@ import type {
   Subagent,
   ToolCall,
   AgentEvent,
-} from '@ngaf/chat';
+} from '@threadplane/chat';
 
 /**
  * A LangGraphAgent mock with writable signals for easy test control.

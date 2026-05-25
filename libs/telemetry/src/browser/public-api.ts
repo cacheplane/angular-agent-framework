@@ -1,17 +1,17 @@
-export { provideNgafTelemetry } from './provide';
-export { NgafTelemetryService } from './service';
-export { NGAF_TELEMETRY_CONFIG } from './tokens';
+export { provideThreadplaneTelemetry } from './provide';
+export { ThreadplaneTelemetryService } from './service';
+export { THREADPLANE_TELEMETRY_CONFIG } from './tokens';
 export type {
-  NgafTelemetryConfig,
-  NgafTelemetryEvent,
-  NgafTelemetryEventPayload,
-  NgafTelemetrySink,
+  ThreadplaneTelemetryConfig,
+  ThreadplaneTelemetryEvent,
+  ThreadplaneTelemetryEventPayload,
+  ThreadplaneTelemetrySink,
 } from './tokens';
 export type {
-  NgafBrowserEvent,
-  NgafBrowserRuntimeTelemetry,
-  NgafBrowserStreamErrorTelemetry,
-  NgafBrowserStreamTelemetry,
+  ThreadplaneBrowserEvent,
+  ThreadplaneBrowserRuntimeTelemetry,
+  ThreadplaneBrowserStreamErrorTelemetry,
+  ThreadplaneBrowserStreamTelemetry,
 } from './service';
 export { isLocalAnalyticsHost, shouldCaptureAnalytics } from './properties';
 export type { CaptureConfig } from './properties';

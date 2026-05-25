@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Assembles the publishable @ngaf/telemetry package after `nx run telemetry:build`.
+ * Assembles the publishable @threadplane/telemetry package after `nx run telemetry:build`.
  *
  * The build produces two disjoint outputs:
  *  - @nx/js:tsc        → dist/libs/telemetry/src/{index,shared,node}/*
@@ -70,10 +70,10 @@ async function removeNgPackagrManifest() {
 
 async function writeBrowserIndexReexport() {
   // Make `./browser` resolve a clean type entry path.
-  const fesmTypes = join(DIST, 'browser', 'types', 'ngaf-telemetry.d.ts');
+  const fesmTypes = join(DIST, 'browser', 'types', 'threadplane-telemetry.d.ts');
   const indexDts = join(DIST, 'browser', 'index.d.ts');
   if (!(await exists(fesmTypes))) {
-    console.warn('[assemble-dist] no browser/types/ngaf-telemetry.d.ts — skipping browser/index.d.ts');
+    console.warn('[assemble-dist] no browser/types/threadplane-telemetry.d.ts — skipping browser/index.d.ts');
     return;
   }
   if (await exists(indexDts)) return;  // idempotent
@@ -114,7 +114,7 @@ export function createCanonicalPackageJson(srcPkg) {
       },
       './browser': {
         types: './browser/index.d.ts',
-        default: './browser/fesm2022/ngaf-telemetry.mjs',
+        default: './browser/fesm2022/threadplane-telemetry.mjs',
       },
       './README.md': './README.md',
     },

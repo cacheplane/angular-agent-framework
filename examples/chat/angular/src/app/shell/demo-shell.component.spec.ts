@@ -1,8 +1,8 @@
 import { signal } from '@angular/core';
 import { describe, it, expect, beforeEach } from 'vitest';
 import { TestBed } from '@angular/core/testing';
-import { provideRouter, Router } from '@angular/router';
-import { LangGraphThreadsAdapter } from '@ngaf/langgraph';
+import { provideRouter, Router, NavigationEnd } from '@angular/router';
+import { LangGraphThreadsAdapter } from '@threadplane/langgraph';
 import { DemoShell } from './demo-shell.component';
 
 function createThreadsAdapterMock() {
@@ -181,14 +181,14 @@ describe('DemoShell — URL thread sync', () => {
     cmp.threadIdSignal.set('thread-created-by-agent');
     fx.detectChanges();
 
-    const raw = localStorage.getItem('ngaf-chat-demo:palette');
+    const raw = localStorage.getItem('threadplane-chat-demo:palette');
     const stored = raw ? JSON.parse(raw) : {};
     expect(stored.threadId).toBeUndefined();
   });
 
   it('ignores any legacy persisted threadId — bare mode URLs start fresh', async () => {
     localStorage.setItem(
-      'ngaf-chat-demo:palette',
+      'threadplane-chat-demo:palette',
       JSON.stringify({ threadId: 'legacy-persisted-thread' }),
     );
     const router = TestBed.inject(Router);
@@ -214,6 +214,38 @@ describe('DemoShell — URL thread sync', () => {
       threadIdSignal: { (): string | null };
     };
     expect(cmp.threadIdSignal()).toBe('url-thread');
+  });
+
+  it('does not re-navigate when hydrating from URL (no nav-loop)', async () => {
+    // Regression guard for the URL↔signal sync invariant that every PR
+    // in the routing chain (#500/#504/#514/#518/#527) was dancing
+    // around: when the URL→signal effect hydrates `threadIdSignal`
+    // from `/embed/<id>`, the subsequent signal→URL effect must see
+    // signal === urlId and short-circuit (compare-and-set guard).
+    // Without that guard we'd loop: URL → signal → router.navigate →
+    // URL again, observable as extra NavigationEnd events.
+    const router = TestBed.inject(Router);
+    await router.navigateByUrl('/embed/no-loop-thread');
+
+    // Subscribe BEFORE createComponent so we capture any NavigationEnd
+    // events the component's effects might emit. The initial nav above
+    // already fired before we subscribed, so it doesn't count.
+    const navEnds: string[] = [];
+    const sub = router.events.subscribe((e) => {
+      if (e instanceof NavigationEnd) navEnds.push(e.urlAfterRedirects);
+    });
+
+    const fx = TestBed.createComponent(DemoShell);
+    fx.detectChanges();
+    sub.unsubscribe();
+
+    const cmp = fx.componentInstance as unknown as {
+      threadIdSignal: { (): string | null };
+    };
+    expect(cmp.threadIdSignal()).toBe('no-loop-thread');
+    // Zero NavigationEnd events — the signal→URL effect short-circuited
+    // because signal already matched urlState (compare-and-set guard).
+    expect(navEnds).toEqual([]);
   });
 });
 
@@ -255,7 +287,7 @@ describe('DemoShell — URL knob hydration', () => {
     const fx = TestBed.createComponent(DemoShell);
     fx.detectChanges();
 
-    const raw = localStorage.getItem('ngaf-chat-demo:palette');
+    const raw = localStorage.getItem('threadplane-chat-demo:palette');
     const stored = raw ? JSON.parse(raw) : {};
     expect(stored.theme).toBeUndefined();
   });
@@ -302,7 +334,7 @@ describe('DemoShell — URL knob hydration', () => {
       onThemeChange(v: string): void;
     };
     cmp.onThemeChange('material-dark');
-    const raw = localStorage.getItem('ngaf-chat-demo:palette');
+    const raw = localStorage.getItem('threadplane-chat-demo:palette');
     const stored = raw ? JSON.parse(raw) : {};
     expect(stored.theme).toBe('material-dark');
   });

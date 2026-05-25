@@ -3,7 +3,7 @@
 
 import React, { useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { tokens } from '@ngaf/design-tokens';
+import { tokens } from '@threadplane/design-tokens';
 import { Button } from '../ui/Button';
 import { track } from '../../lib/analytics/client';
 import { analyticsEvents } from '../../lib/analytics/events';

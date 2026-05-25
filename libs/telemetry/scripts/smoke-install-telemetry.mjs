@@ -13,7 +13,7 @@ export function expectedPostinstallPackages(packageRoots) {
   return packageRoots
     .filter(({ manifest }) =>
       typeof manifest?.name === 'string'
-      && manifest.name.startsWith('@ngaf/')
+      && manifest.name.startsWith('@threadplane/')
       && typeof manifest.scripts?.postinstall === 'string'
     )
     .map(({ manifest }) => manifest.name);
@@ -150,7 +150,7 @@ export async function smokeInstallTelemetry(packageRootArgs) {
   const packageRoots = await loadPackageRoots(packageRootArgs);
   const expectedPackages = expectedPostinstallPackages(packageRoots);
   if (expectedPackages.length === 0) {
-    throw new Error('No publishable @ngaf/* packages require postinstall telemetry in the provided roots');
+    throw new Error('No publishable @threadplane/* packages require postinstall telemetry in the provided roots');
   }
 
   const tempRoot = await mkdtemp(join(tmpdir(), 'ngaf-install-telemetry-'));

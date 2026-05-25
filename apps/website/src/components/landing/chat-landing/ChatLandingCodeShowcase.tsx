@@ -1,8 +1,8 @@
-import { tokens } from '@ngaf/design-tokens';
+import { tokens } from '@threadplane/design-tokens';
 import { HighlightedCode } from '../HighlightedCode';
 
-const SNIPPET_1 = `import { agent } from '@ngaf/langgraph';
-import { ChatComponent, a2uiBasicCatalog } from '@ngaf/chat';
+const SNIPPET_1 = `import { agent } from '@threadplane/langgraph';
+import { ChatComponent, a2uiBasicCatalog } from '@threadplane/chat';
 
 @Component({
   template: \`
