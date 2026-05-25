@@ -181,6 +181,17 @@ describe('cockpit e2e wiring', () => {
 
       for (const workflowPath of workflows) {
         const workflow = readRepoFile(workflowPath);
+        // Dispatcher pattern (post-2026-05-23): the cockpit-e2e job's matrix
+        // is emitted at runtime by scripts/cockpit-matrix.mjs via
+        // `cap: ${{ fromJson(needs.cockpit-e2e-dispatcher.outputs.caps) }}`.
+        // Every cap with an e2e target is covered by definition — no per-cap
+        // literal needed in ci.yml.
+        const dispatcherCoversAllCaps = workflow.includes(
+          'fromJson(needs.cockpit-e2e-dispatcher.outputs.caps)',
+        );
+        if (dispatcherCoversAllCaps) {
+          continue;
+        }
         if (!workflow.includes(wiring.project)) {
           errors.push(`${wiring.project}: ${workflowPath} does not run the e2e target`);
         }
