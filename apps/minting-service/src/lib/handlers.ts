@@ -101,8 +101,17 @@ function readCustomerId(subscription: Stripe.Subscription): string {
 }
 
 function periodEnd(subscription: Stripe.Subscription): Date {
-  // current_period_end is unix seconds; convert to Date.
-  const epoch = (subscription as unknown as { current_period_end?: number }).current_period_end;
+  // current_period_end is unix seconds. As of Stripe API 2026-04-22, it moved
+  // off the subscription object and onto each subscription item. Read item
+  // first, fall back to the legacy subscription-level field for older API
+  // versions or replayed historical events.
+  const subRecord = subscription as unknown as {
+    current_period_end?: number;
+    items?: { data?: Array<{ current_period_end?: number }> };
+  };
+  const itemEpoch = subRecord.items?.data?.[0]?.current_period_end;
+  const subEpoch = subRecord.current_period_end;
+  const epoch = itemEpoch ?? subEpoch;
   if (!epoch) {
     throw new Error(`subscription ${subscription.id} has no current_period_end`);
   }
