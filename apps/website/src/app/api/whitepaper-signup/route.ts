@@ -9,7 +9,7 @@ import { angularDownloadHtml } from '../../../../emails/angular-download';
 import { renderDownloadHtml } from '../../../../emails/render-download';
 import { chatDownloadHtml } from '../../../../emails/chat-download';
 import { captureWhitepaperConversion } from '../../../lib/analytics/server';
-import { getSourcePage } from '@ngaf/telemetry/shared';
+import { getSourcePage } from '@threadplane/telemetry/shared';
 
 const SIGNUPS_FILE = path.join(process.cwd(), 'data', 'whitepaper-signups.ndjson');
 

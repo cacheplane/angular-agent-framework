@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 import { Component } from '@angular/core';
-import { ChatComponent, ChatInterruptPanelComponent, ChatWelcomeSuggestionComponent, views, type InterruptAction } from '@ngaf/chat';
-import { agent } from '@ngaf/langgraph';
-import { ExampleChatLayoutComponent } from '@ngaf/example-layouts';
-import { signalStateStore } from '@ngaf/render';
+import { ChatComponent, ChatInterruptPanelComponent, ChatWelcomeSuggestionComponent, views, type InterruptAction } from '@threadplane/chat';
+import { agent } from '@threadplane/langgraph';
+import { ExampleChatLayoutComponent } from '@threadplane/example-layouts';
+import { signalStateStore } from '@threadplane/render';
 import { environment } from '../environments/environment';
 import { ApprovalCardComponent } from './views/approval-card.component';
 

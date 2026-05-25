@@ -1,6 +1,6 @@
 # Citations
 
-`@ngaf/ag-ui` can copy citations from AG-UI state onto chat messages.
+`@threadplane/ag-ui` can copy citations from AG-UI state onto chat messages.
 
 The bridge is intentionally simple: put citations under `state.citations`, keyed by message id. When a `STATE_SNAPSHOT` or `STATE_DELTA` arrives, the adapter merges matching citations onto `messages`.
 
@@ -109,7 +109,7 @@ If your backend sends citations before the matching message exists, send another
 `bridgeCitationsState()` is exported for advanced adapters or custom reducers.
 
 ```ts
-import { bridgeCitationsState } from '@ngaf/ag-ui';
+import { bridgeCitationsState } from '@threadplane/ag-ui';
 
 const nextMessages = bridgeCitationsState(
   { state: threadState },

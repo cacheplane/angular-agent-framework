@@ -2,7 +2,7 @@ import { signal } from '@angular/core';
 import { describe, it, expect, beforeEach } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router, NavigationEnd } from '@angular/router';
-import { LangGraphThreadsAdapter } from '@ngaf/langgraph';
+import { LangGraphThreadsAdapter } from '@threadplane/langgraph';
 import { DemoShell } from './demo-shell.component';
 
 function createThreadsAdapterMock() {
@@ -181,14 +181,14 @@ describe('DemoShell — URL thread sync', () => {
     cmp.threadIdSignal.set('thread-created-by-agent');
     fx.detectChanges();
 
-    const raw = localStorage.getItem('ngaf-chat-demo:palette');
+    const raw = localStorage.getItem('threadplane-chat-demo:palette');
     const stored = raw ? JSON.parse(raw) : {};
     expect(stored.threadId).toBeUndefined();
   });
 
   it('ignores any legacy persisted threadId — bare mode URLs start fresh', async () => {
     localStorage.setItem(
-      'ngaf-chat-demo:palette',
+      'threadplane-chat-demo:palette',
       JSON.stringify({ threadId: 'legacy-persisted-thread' }),
     );
     const router = TestBed.inject(Router);
@@ -287,7 +287,7 @@ describe('DemoShell — URL knob hydration', () => {
     const fx = TestBed.createComponent(DemoShell);
     fx.detectChanges();
 
-    const raw = localStorage.getItem('ngaf-chat-demo:palette');
+    const raw = localStorage.getItem('threadplane-chat-demo:palette');
     const stored = raw ? JSON.parse(raw) : {};
     expect(stored.theme).toBeUndefined();
   });
@@ -334,7 +334,7 @@ describe('DemoShell — URL knob hydration', () => {
       onThemeChange(v: string): void;
     };
     cmp.onThemeChange('material-dark');
-    const raw = localStorage.getItem('ngaf-chat-demo:palette');
+    const raw = localStorage.getItem('threadplane-chat-demo:palette');
     const stored = raw ? JSON.parse(raw) : {};
     expect(stored.theme).toBe('material-dark');
   });

@@ -1,4 +1,4 @@
-import { tokens } from '@ngaf/design-tokens';
+import { tokens } from '@threadplane/design-tokens';
 
 export function TagChips({ tags }: { tags: string[] }) {
   if (tags.length === 0) return null;

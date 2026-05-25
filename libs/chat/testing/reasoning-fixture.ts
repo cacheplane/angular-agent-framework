@@ -13,7 +13,7 @@
 // `assertReasoningFixtureMessages(messages)` so each adapter's spec
 // just constructs the events and calls the assertion.
 
-import type { Message } from '@ngaf/chat';
+import type { Message } from '@threadplane/chat';
 
 export const REASONING_FIXTURE_MESSAGE_ID = 'fixture-msg-1';
 export const REASONING_FIXTURE_REASONING = 'I read the prompt and decided to greet the user.';

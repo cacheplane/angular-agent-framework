@@ -1,6 +1,6 @@
 # Quick Start
 
-Bind `<chat>` from `@ngaf/chat` to an AG-UI backend in 5 minutes.
+Bind `<chat>` from `@threadplane/chat` to an AG-UI backend in 5 minutes.
 
 <Callout type="info" title="Prerequisites">
 Angular 20+ project with Node.js 22+. If you need setup help, see the [Installation](/docs/ag-ui/getting-started/installation) guide.
@@ -10,7 +10,7 @@ Angular 20+ project with Node.js 22+. If you need setup help, see the [Installat
 <Step title="Install the packages">
 
 ```bash
-npm install @ngaf/chat @ngaf/ag-ui @ag-ui/client
+npm install @threadplane/chat @threadplane/ag-ui @ag-ui/client
 ```
 
 </Step>
@@ -21,7 +21,7 @@ Add `provideAgUiAgent()` to your application config with your AG-UI backend URL.
 ```ts
 // app.config.ts
 import { ApplicationConfig } from '@angular/core';
-import { provideAgUiAgent } from '@ngaf/ag-ui';
+import { provideAgUiAgent } from '@threadplane/ag-ui';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -37,8 +37,8 @@ For offline development without a backend, swap to `provideFakeAgUiAgent({})` - 
 
 ```ts
 import { Component, inject } from '@angular/core';
-import { ChatComponent } from '@ngaf/chat';
-import { AG_UI_AGENT } from '@ngaf/ag-ui';
+import { ChatComponent } from '@threadplane/chat';
+import { AG_UI_AGENT } from '@threadplane/ag-ui';
 
 @Component({
   selector: 'app-streaming',
@@ -62,8 +62,8 @@ That's it. The `<chat>` composition handles streaming messages, tool calls, erro
 - [Event Mapping](/docs/ag-ui/reference/event-mapping) is the backend compatibility checklist for emitted AG-UI events.
 - [Fake Agent](/docs/ag-ui/guides/fake-agent) covers offline demos and frontend tests.
 - [Troubleshooting](/docs/ag-ui/guides/troubleshooting) is the fastest place to start when a stream does not render.
-- The [`@ngaf/chat` Components](/docs/chat/components/chat) reference covers the primitives the `<chat>` composition uses internally - handy if you want to compose your own layout.
-- Looking for LangGraph instead of AG-UI? See [`@ngaf/langgraph`](/docs/agent/getting-started/quickstart).
+- The [`@threadplane/chat` Components](/docs/chat/components/chat) reference covers the primitives the `<chat>` composition uses internally - handy if you want to compose your own layout.
+- Looking for LangGraph instead of AG-UI? See [`@threadplane/langgraph`](/docs/agent/getting-started/quickstart).
 
 ## Switching backends without changing UI
 

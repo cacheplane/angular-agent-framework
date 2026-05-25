@@ -1,9 +1,9 @@
-# Agent UI for Angular v@VERSION@
+# Threadplane v@VERSION@
 
 Production-ready chat, durable threads, interrupts, subagents, planning, memory, and generative UI for Angular agent apps.
 
 ## Install
-npm install @ngaf/chat @ngaf/langgraph
+npm install @threadplane/chat @threadplane/langgraph
 
 ## Key requirement
 `agent()` MUST be called within an Angular injection context (component constructor or field initializer). Calling it in ngOnInit or any async context throws "NG0203: inject() must be called from an injection context".
@@ -12,18 +12,18 @@ npm install @ngaf/chat @ngaf/langgraph
 ```typescript
 // app.config.ts
 import type { ApplicationConfig } from '@angular/core';
-import { provideAgent } from '@ngaf/langgraph';
+import { provideAgent } from '@threadplane/langgraph';
 export const appConfig: ApplicationConfig = {
   providers: [provideAgent({ apiUrl: 'http://localhost:2024' })]
 };
 
 // chat.component.ts
 import { Component } from '@angular/core';
-import { agent } from '@ngaf/langgraph';
-import { ChatComponent as NgafChatComponent } from '@ngaf/chat';
+import { agent } from '@threadplane/langgraph';
+import { ChatComponent as ThreadplaneChatComponent } from '@threadplane/chat';
 
 @Component({
-  imports: [NgafChatComponent],
+  imports: [ThreadplaneChatComponent],
   template: `
     <chat [agent]="chat" />
   `,

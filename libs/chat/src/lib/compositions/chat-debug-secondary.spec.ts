@@ -7,7 +7,7 @@ import { ChatDebugComponent } from '../../../debug/public-api';
 import { StateInspectorComponent } from '../../../debug/src/lib/compositions/chat-debug/inspectors/state-inspector.component';
 
 describe('chat debug secondary entrypoint', () => {
-  it('exports ChatDebugComponent from @ngaf/chat/debug', () => {
+  it('exports ChatDebugComponent from @threadplane/chat/debug', () => {
     expect(typeof ChatDebugComponent).toBe('function');
   });
 

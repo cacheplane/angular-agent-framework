@@ -1,6 +1,6 @@
 /**
  * @deprecated Backwards-compat export. New code should resolve theme-aware
- * tokens via `cssVars(theme)` (in @ngaf/ui-react), or import `lightOverrides`
+ * tokens via `cssVars(theme)` (in @threadplane/ui-react), or import `lightOverrides`
  * / `darkOverrides` from this package directly.
  *
  * This shape preserves the original `colors` export by merging the

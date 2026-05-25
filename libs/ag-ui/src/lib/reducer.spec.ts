@@ -4,7 +4,7 @@ import { signal } from '@angular/core';
 import { Subject } from 'rxjs';
 import type {
   Message, AgentStatus, ToolCall, AgentEvent,
-} from '@ngaf/chat';
+} from '@threadplane/chat';
 import { reduceEvent, type ReducerStore } from './reducer';
 
 function makeStore(): ReducerStore {

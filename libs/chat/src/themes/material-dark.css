@@ -1,16 +1,16 @@
 /*
- * @ngaf/chat — Material Design 3 dark theme
+ * @threadplane/chat — Material Design 3 dark theme
  * SPDX-License-Identifier: MIT
  *
  * Maps Google's Material Design 3 dark color tokens (m3.material.io)
- * into the @ngaf/chat token vocabulary. No `@angular/material` runtime
+ * into the @threadplane/chat token vocabulary. No `@angular/material` runtime
  * dependency — pure CSS custom-property declarations.
  *
  * Color values from the Material Design 3 spec
  * (https://m3.material.io/styles/color/the-color-system/tokens).
  *
  * Usage in your global stylesheet:
- *   @import '@ngaf/chat/themes/material-dark.css';
+ *   @import '@threadplane/chat/themes/material-dark.css';
  */
 :root {
   /* === Color (M3 dark) === */

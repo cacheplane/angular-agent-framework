@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 //
-// @ngaf/marketing-channels — public types.
+// @threadplane/marketing-channels — public types.
 
 export type ChannelId = 'x' | 'linkedin' | 'devto' | 'reddit';
 

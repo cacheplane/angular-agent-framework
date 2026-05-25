@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 import { describe, it, expect } from 'vitest';
-import type { A2uiComponentDef } from '@ngaf/a2ui';
+import type { A2uiComponentDef } from '@threadplane/a2ui';
 import { extractBindings } from './extract-bindings';
 
 describe('extractBindings', () => {

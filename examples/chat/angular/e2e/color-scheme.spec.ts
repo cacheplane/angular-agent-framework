@@ -17,7 +17,7 @@ test('color scheme: dark default, light toggle persists and syncs default A2UI t
     'dark'
   );
   await expect(page.locator('html')).toHaveAttribute(
-    'data-ngaf-chat-theme',
+    'data-threadplane-chat-theme',
     'dark'
   );
   await expect(page.locator('html')).toHaveAttribute(
@@ -32,7 +32,7 @@ test('color scheme: dark default, light toggle persists and syncs default A2UI t
     'light'
   );
   await expect(page.locator('html')).toHaveAttribute(
-    'data-ngaf-chat-theme',
+    'data-threadplane-chat-theme',
     'light'
   );
   await expect(page.locator('html')).toHaveAttribute(
@@ -46,7 +46,7 @@ test('color scheme: dark default, light toggle persists and syncs default A2UI t
     'light'
   );
   await expect(page.locator('html')).toHaveAttribute(
-    'data-ngaf-chat-theme',
+    'data-threadplane-chat-theme',
     'light'
   );
 

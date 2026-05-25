@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-import type { RenderEvent } from '@ngaf/render';
+import type { RenderEvent } from '@threadplane/render';
 
 export interface ChatRenderEvent {
   readonly messageIndex: number;

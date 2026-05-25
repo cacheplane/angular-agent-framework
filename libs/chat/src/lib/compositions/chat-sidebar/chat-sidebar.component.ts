@@ -10,7 +10,7 @@ import {
   model,
 } from '@angular/core';
 import type { Agent } from '../../agent';
-import type { ViewRegistry } from '@ngaf/render';
+import type { ViewRegistry } from '@threadplane/render';
 import { ChatComponent } from '../chat/chat.component';
 import { ChatLauncherButtonComponent } from '../../primitives/chat-launcher-button/chat-launcher-button.component';
 import type { ChatSelectOption } from '../../primitives/chat-select/chat-select.component';
@@ -124,7 +124,7 @@ export class ChatSidebarComponent {
   readonly agent = input.required<Agent>();
   /** A2UI component catalog forwarded to the inner <chat>. Without it,
    * messages classified as A2UI parse correctly but never mount a
-   * surface. Pass `a2uiBasicCatalog()` from `@ngaf/chat`. */
+   * surface. Pass `a2uiBasicCatalog()` from `@threadplane/chat`. */
   readonly views = input<ViewRegistry | undefined>(undefined);
   /** Forwarded to the inner <chat>. When non-empty, a model picker pill
    * renders in the chat-input chrome. */
@@ -156,9 +156,9 @@ export class ChatSidebarComponent {
       if (typeof document === 'undefined') return;
       const html = document.documentElement;
       if (this.open()) {
-        html.dataset['ngafChatSidebar'] = 'open';
+        html.dataset['threadplaneChatSidebar'] = 'open';
       } else {
-        delete html.dataset['ngafChatSidebar'];
+        delete html.dataset['threadplaneChatSidebar'];
       }
     });
     effect((onCleanup) => {

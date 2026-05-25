@@ -1,4 +1,4 @@
-import { tokens } from '@ngaf/design-tokens';
+import { tokens } from '@threadplane/design-tokens';
 
 interface BoxProps {
   eyebrow: string;
@@ -121,14 +121,14 @@ export function AgUiArchDiagram() {
         <ArrowLabel label="AG-UI" sub="SSE" />
         <Box
           eyebrow="Adapter"
-          title="@ngaf/ag-ui"
+          title="@threadplane/ag-ui"
           meta="Signal-driven reducer over AG-UI events."
           tone="accent"
         />
         <ArrowLabel label="Agent contract" sub="signals" />
         <Box
           eyebrow="Chat UI"
-          title="@ngaf/chat"
+          title="@threadplane/chat"
           meta="<chat [agent]='…' /> + slots + themes."
         />
       </div>

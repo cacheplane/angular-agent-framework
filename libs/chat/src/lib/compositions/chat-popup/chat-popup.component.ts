@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MIT
 import { Component, ChangeDetectionStrategy, input, model, DestroyRef, inject, DOCUMENT, effect } from '@angular/core';
 import type { Agent } from '../../agent';
-import type { ViewRegistry } from '@ngaf/render';
+import type { ViewRegistry } from '@threadplane/render';
 import { ChatComponent } from '../chat/chat.component';
 import type { ChatSelectOption } from '../../primitives/chat-select/chat-select.component';
 import { ChatLauncherButtonComponent } from '../../primitives/chat-launcher-button/chat-launcher-button.component';
@@ -83,7 +83,7 @@ export class ChatPopupComponent {
   readonly agent = input.required<Agent>();
   /** A2UI component catalog forwarded to the inner <chat>. Without it,
    * messages classified as A2UI parse correctly but never mount a
-   * surface. Pass `a2uiBasicCatalog()` from `@ngaf/chat`. */
+   * surface. Pass `a2uiBasicCatalog()` from `@threadplane/chat`. */
   readonly views = input<ViewRegistry | undefined>(undefined);
   /** Forwarded to the inner <chat>. When non-empty, a model picker pill
    * renders in the chat-input chrome. */

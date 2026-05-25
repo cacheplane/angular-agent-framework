@@ -17,7 +17,7 @@ This inversion is intentional. Agent state can span multiple LLM calls, tool exe
 Your Angular component calls `agent.submit({ message: text })`. No state is stored in the component.
 </Step>
 <Step title="agent() sends the request">
-`@ngaf/langgraph` forwards the input to `FetchStreamTransport`, which opens an HTTP POST and SSE connection to LangGraph Platform.
+`@threadplane/langgraph` forwards the input to `FetchStreamTransport`, which opens an HTTP POST and SSE connection to LangGraph Platform.
 </Step>
 <Step title="LangGraph Platform executes the graph">
 The agent runs its nodes — calling the LLM, invoking tools, checking conditions — and streams SSE events back with incremental state updates.
@@ -424,7 +424,7 @@ def researcher_node(state: ResearchState) -> dict:
 
 ```typescript
 import { BaseMessage } from '@langchain/core/messages';
-import { agent } from '@ngaf/langgraph';
+import { agent } from '@threadplane/langgraph';
 
 interface ResearchState {
   messages: BaseMessage[];

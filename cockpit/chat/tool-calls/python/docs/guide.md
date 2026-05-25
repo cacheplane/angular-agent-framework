@@ -1,4 +1,4 @@
-# Chat Tool Calls with @ngaf/chat
+# Chat Tool Calls with @threadplane/chat
 
 <Summary>
 Display tool call execution and results using ChatToolCallsComponent
@@ -9,7 +9,7 @@ renders each call with its arguments and response.
 <Prompt>
 Add tool call visualization to your chat interface using
 `ChatToolCallsComponent` and `ChatToolCallCardComponent` from
-`@ngaf/chat`. Display active tool calls in a sidebar.
+`@threadplane/chat`. Display active tool calls in a sidebar.
 </Prompt>
 
 <Steps>

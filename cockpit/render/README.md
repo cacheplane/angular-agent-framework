@@ -4,7 +4,7 @@ The 6 render capability demos (`spec-rendering`, `element-rendering`, `state-man
 
 - **No chat-input**: render demos use a spec picker (hardcoded sample specs in `app/specs.ts`) instead of a chat surface.
 - **No LLM backend wiring at the UI**: each cap's python backend exists for the LangGraph manifest, but the Angular demo uses an in-process `StreamingSimulator` (see `cockpit/render/shared/streaming-simulator.ts`) to stream the chosen spec locally rather than calling the backend.
-- **No chat-message bubbles**: the cap renders directly via `<render-spec>` / `<render-element>` primitives from `@ngaf/render`.
+- **No chat-message bubbles**: the cap renders directly via `<render-spec>` / `<render-element>` primitives from `@threadplane/render`.
 
 The right testing approach here is **direct component testing of the render pipeline**:
 - Mount the `RenderSpecComponent` with a fixture spec.

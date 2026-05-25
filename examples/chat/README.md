@@ -1,6 +1,6 @@
-# examples/chat — canonical demo for `@ngaf/chat`
+# examples/chat — canonical demo for `@threadplane/chat`
 
-Full-stack demo of `@ngaf/chat` against a tiny LangGraph backend. Three
+Full-stack demo of `@threadplane/chat` against a tiny LangGraph backend. Three
 chat compositions (embed, popup, sidebar), regenerate, model picker,
 debug overlay — all in one page, switchable via a floating control
 palette.
@@ -45,12 +45,12 @@ examples/chat/
 └── smoke/     # Interactive CLI: scaffolds an npm-installed consumer
 ```
 
-The Angular app (`angular/`) consumes `@ngaf/*` via workspace TS paths
+The Angular app (`angular/`) consumes `@threadplane/*` via workspace TS paths
 (fast iteration: edit a lib, demo reloads). The Python graph (`python/`)
 is a single-node `__start__ → generate → __end__` LangGraph; the demo
 sets `state.model` on every submit so the model picker takes effect
 without reconnecting. The smoke generator (`smoke/cli.mjs`) creates a
-**second** consumer at `~/tmp/ngaf` (default) with `@ngaf/*` resolved
+**second** consumer at `~/tmp/threadplane` (default) with `@threadplane/*` resolved
 from npm — used to validate the published packages match the workspace
 behavior.
 
@@ -73,16 +73,16 @@ modes pick it up.
 
 ## Release smoke
 
-After publishing a new `@ngaf/*` version, validate it in a fresh
+After publishing a new `@threadplane/*` version, validate it in a fresh
 consumer:
 
 ```bash
 npx nx run examples-chat-smoke:run
-# Default target: ~/tmp/ngaf
+# Default target: ~/tmp/threadplane
 # Then in another terminal:
 cd examples/chat/python && uv run langgraph dev --port 2024 --no-browser
 # In a third:
-cd ~/tmp/ngaf && npm start
+cd ~/tmp/threadplane && npm start
 # Open http://localhost:4200, walk through CHECKLIST.md
 ```
 

@@ -1,8 +1,8 @@
 # Introduction
 
-`@ngaf/a2ui` is the protocol layer for A2UI messages. It gives the rest of the framework a shared TypeScript vocabulary for agent-built surfaces, streamed JSONL messages, dynamic values, and outbound action payloads.
+`@threadplane/a2ui` is the protocol layer for A2UI messages. It gives the rest of the framework a shared TypeScript vocabulary for agent-built surfaces, streamed JSONL messages, dynamic values, and outbound action payloads.
 
-It does not render Angular components. It does not register handler functions. It does not decide how an agent should respond to a button click. Those jobs sit in `@ngaf/chat` and `@ngaf/render`.
+It does not render Angular components. It does not register handler functions. It does not decide how an agent should respond to a button click. Those jobs sit in `@threadplane/chat` and `@threadplane/render`.
 
 ## What the package owns
 
@@ -15,7 +15,7 @@ The public entry point exports four groups of tools:
 | Data access | `getByPointer()`, `setByPointer()`, `deleteByPointer()` |
 | Dynamic values | `resolveDynamic()`, `A2uiScope`, literal/path guards |
 
-Use this package when you are building an adapter, validating an agent stream, testing A2UI payloads, or integrating a custom renderer with the same protocol surface that `@ngaf/chat` uses.
+Use this package when you are building an adapter, validating an agent stream, testing A2UI payloads, or integrating a custom renderer with the same protocol surface that `@threadplane/chat` uses.
 
 ## Message flow
 
@@ -31,7 +31,7 @@ deleteSurface
 When a line parses and has one of those envelope keys, it is returned as an `A2uiMessage`. Unknown envelopes are ignored. Malformed lines are skipped. Incomplete JSON waits in the internal buffer until a newline arrives.
 
 ```ts
-import { createA2uiMessageParser } from '@ngaf/a2ui';
+import { createA2uiMessageParser } from '@threadplane/a2ui';
 
 const parser = createA2uiMessageParser();
 
@@ -44,13 +44,13 @@ That posture is intentional. Agent streams are partial by nature. The low-level 
 
 ## Relationship to chat and render
 
-`@ngaf/chat` detects A2UI content in assistant output, feeds the JSONL stream into `createA2uiMessageParser()`, applies messages to its surface store, and renders those surfaces through the A2UI render components.
+`@threadplane/chat` detects A2UI content in assistant output, feeds the JSONL stream into `createA2uiMessageParser()`, applies messages to its surface store, and renders those surfaces through the A2UI render components.
 
-`@ngaf/render` owns Angular component resolution, event dispatch, state updates, and handler execution. The A2UI package only describes protocol shapes and helper behavior.
+`@threadplane/render` owns Angular component resolution, event dispatch, state updates, and handler execution. The A2UI package only describes protocol shapes and helper behavior.
 
 That separation matters when debugging:
 
-- If JSONL chunks are not becoming messages, inspect `@ngaf/a2ui`.
+- If JSONL chunks are not becoming messages, inspect `@threadplane/a2ui`.
 - If messages are not becoming surfaces, inspect the chat A2UI surface store.
 - If components render incorrectly or handlers do not run, inspect the render/chat integration.
 
@@ -68,7 +68,7 @@ This makes the protocol layer suitable for streaming, but it is not a full schem
 ## Install
 
 ```bash
-npm install @ngaf/a2ui
+npm install @threadplane/a2ui
 ```
 
 The package has no peer dependencies.

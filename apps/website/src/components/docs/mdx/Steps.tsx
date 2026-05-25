@@ -1,5 +1,5 @@
 import React from 'react';
-import { tokens } from '@ngaf/design-tokens';
+import { tokens } from '@threadplane/design-tokens';
 
 export function Steps({ children }: { children: React.ReactNode }) {
   const steps = React.Children.toArray(children);

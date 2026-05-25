@@ -65,7 +65,7 @@ test('url routing: ephemeral hydration does not write to localStorage', async ({
   // openDemo clears localStorage before the test starts; assert it's
   // still clean (no `theme: 'material-dark'` written by hydration).
   const stored = await page.evaluate(() => {
-    const raw = localStorage.getItem('ngaf-chat-demo:palette');
+    const raw = localStorage.getItem('threadplane-chat-demo:palette');
     return raw ? (JSON.parse(raw) as { theme?: string }).theme : null;
   });
   expect(stored).toBeNull();

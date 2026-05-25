@@ -31,8 +31,8 @@ function getConfiguredDocPath({ library, section, slug }: { library: string; sec
 }
 
 function findPackageImports(content: string): string[] {
-  const imports = Array.from(content.matchAll(/from\s+['"](?<pkg>@ngaf\/[^'"]+)['"]/g), (match) => match.groups?.pkg);
-  const dynamicImports = Array.from(content.matchAll(/import\(\s*['"](?<pkg>@ngaf\/[^'"]+)['"]\s*\)/g), (match) => match.groups?.pkg);
+  const imports = Array.from(content.matchAll(/from\s+['"](?<pkg>@threadplane\/[^'"]+)['"]/g), (match) => match.groups?.pkg);
+  const dynamicImports = Array.from(content.matchAll(/import\(\s*['"](?<pkg>@threadplane\/[^'"]+)['"]\s*\)/g), (match) => match.groups?.pkg);
   return [...imports, ...dynamicImports].filter((pkg): pkg is string => Boolean(pkg));
 }
 
@@ -75,17 +75,17 @@ describe('website docs bindings', () => {
     const metadata = getDocMetadata('ag-ui', 'reference', 'event-mapping');
 
     expect(metadata).toMatchObject({
-      title: 'Event Mapping - AG-UI Docs - Agent UI for Angular',
+      title: 'Event Mapping - AG-UI Docs - Threadplane',
       alternates: {
         canonical: '/docs/ag-ui/reference/event-mapping',
       },
       openGraph: {
-        title: 'Event Mapping - AG-UI Docs - Agent UI for Angular',
+        title: 'Event Mapping - AG-UI Docs - Threadplane',
         url: '/docs/ag-ui/reference/event-mapping',
       },
       twitter: {
         card: 'summary_large_image',
-        title: 'Event Mapping - AG-UI Docs - Agent UI for Angular',
+        title: 'Event Mapping - AG-UI Docs - Threadplane',
       },
     });
     expect(metadata?.description).toContain('AG-UI protocol events');
@@ -135,18 +135,18 @@ describe('website docs bindings', () => {
 
   it('uses package imports that match published package entry points', () => {
     const validPackages = new Set([
-      '@ngaf/a2ui',
-      '@ngaf/ag-ui',
-      '@ngaf/chat',
-      '@ngaf/chat/debug',
-      '@ngaf/chat/testing',
-      '@ngaf/langgraph',
-      '@ngaf/licensing',
-      '@ngaf/render',
-      '@ngaf/telemetry',
-      '@ngaf/telemetry/browser',
-      '@ngaf/telemetry/node',
-      '@ngaf/telemetry/shared',
+      '@threadplane/a2ui',
+      '@threadplane/ag-ui',
+      '@threadplane/chat',
+      '@threadplane/chat/debug',
+      '@threadplane/chat/testing',
+      '@threadplane/langgraph',
+      '@threadplane/licensing',
+      '@threadplane/render',
+      '@threadplane/telemetry',
+      '@threadplane/telemetry/browser',
+      '@threadplane/telemetry/node',
+      '@threadplane/telemetry/shared',
     ]);
 
     const invalidImports: string[] = [];

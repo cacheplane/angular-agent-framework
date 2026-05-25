@@ -9,7 +9,7 @@ import {
   getLicense,
   getLicensesByCustomerId,
   revokeLicense,
-} from '@ngaf/db';
+} from '@threadplane/db';
 import { loadEnv } from '../src/lib/env.js';
 import { getStripe } from '../src/lib/stripe.js';
 import { mintToken } from '../src/lib/sign.js';

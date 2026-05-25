@@ -1,7 +1,7 @@
 import { Component, computed } from '@angular/core';
-import { ChatComponent } from '@ngaf/chat';
-import { ExampleChatLayoutComponent } from '@ngaf/example-layouts';
-import { agent } from '@ngaf/langgraph';
+import { ChatComponent } from '@threadplane/chat';
+import { ExampleChatLayoutComponent } from '@threadplane/example-layouts';
+import { agent } from '@threadplane/langgraph';
 import { environment } from '../environments/environment';
 
 /**

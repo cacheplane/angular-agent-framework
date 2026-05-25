@@ -1,4 +1,4 @@
-# ThreadPlane GTM Strategy
+# Threadplane GTM Strategy
 
 > Durable strategy. Hand-edited. Operational details live in `docs/gtm/`.
 > Workstream plans live in `docs/superpowers/specs/gtm/`.
@@ -6,15 +6,15 @@
 
 ## 1. What we are
 
-ThreadPlane is the production agent UI framework for Angular teams. It turns LangGraph, AG-UI, A2UI, and custom agent streams into real Angular experiences — chat, threads, tool progress, human approvals, generative UI, fallbacks, observability, tests — without rewriting in React or adopting a proprietary cloud.
+Threadplane is the production agent UI framework for Angular teams. It turns LangGraph, AG-UI, A2UI, and custom agent streams into real Angular experiences — chat, threads, tool progress, human approvals, generative UI, fallbacks, observability, tests — without rewriting in React or adopting a proprietary cloud.
 
 ## 2. Category
 
-- **Primary:** Agent UI for Angular
+- **Primary:** Threadplane
 - **Secondary (only after "Agent UI"):** Angular Agent UI Framework
-- **Do not use:** "Angular Agent Framework" (ambiguous with backend runtimes and coding agents), "Enterprise Angular agent framework" (reads sales-first).
+- **Do not use:** "Threadplane" (ambiguous with backend runtimes and coding agents), "Enterprise Angular agent framework" (reads sales-first).
 
-The category claim is the **Angular final mile**: official streaming SDKs (LangChain, AG-UI, A2UI) get events into Angular; ThreadPlane turns those events into production-ready Angular experiences. We do not compete as a general agent UI framework. We do not compete with backend runtimes.
+The category claim is the **Angular final mile**: official streaming SDKs (LangChain, AG-UI, A2UI) get events into Angular; Threadplane turns those events into production-ready Angular experiences. We do not compete as a general agent UI framework. We do not compete with backend runtimes.
 
 ## 3. ICP
 
@@ -22,7 +22,7 @@ Two tracks, both addressed from the homepage via the CTA fork.
 
 | Track       | Buyer                                    | Channel                    | Primary CTA              | Secondary surface       |
 |-------------|------------------------------------------|----------------------------|--------------------------|-------------------------|
-| Developer   | Angular engineer on an agent project     | docs, GitHub, npm, search  | `Install @ngaf/chat`     | cockpit recipes         |
+| Developer   | Angular engineer on an agent project     | docs, GitHub, npm, search  | `Install @threadplane/chat`     | cockpit recipes         |
 | Enterprise  | Architect / eng lead at an Angular shop  | direct, partner, content   | `Talk to our engineers`  | `/contact` → LeadForm   |
 
 Detailed personas, buying signals, and disqualifiers: `docs/gtm/icp.md`.
@@ -32,7 +32,7 @@ Detailed personas, buying signals, and disqualifiers: `docs/gtm/icp.md`.
 Two funnels share acquisition surfaces and diverge at the homepage CTA.
 
 **Developer funnel:**
-`$pageview` → comparison/content view → `Install @ngaf/chat` (copy) → cockpit recipe start → cockpit recipe complete → cockpit six-signal activation.
+`$pageview` → comparison/content view → `Install @threadplane/chat` (copy) → cockpit recipe start → cockpit recipe complete → cockpit six-signal activation.
 
 **Enterprise funnel:**
 `$pageview` → `Talk to our engineers` click → `/contact` view → `LeadForm` submit → `lead_form_success` → `lead_qualified` (server-side enrichment) → discovery booked → pilot started → pilot shipped.
@@ -63,7 +63,7 @@ Four phases. Each phase = one or more workstream specs. Exit gates are blocking.
 
 | Phase | Goal                          | Specs                                                                   | Exit gate |
 |------:|-------------------------------|-------------------------------------------------------------------------|-----------|
-| 0     | Measurement foundation        | analytics-foundation-1a, 1b, 1c, 1d                                     | 5 dashboards live, 3 event namespaces emitting, `@ngaf/telemetry@0.0.1` published, weekly report runnable. |
+| 0     | Measurement foundation        | analytics-foundation-1a, 1b, 1c, 1d                                     | 5 dashboards live, 3 event namespaces emitting, `@threadplane/telemetry@0.0.1` published, weekly report runnable. |
 | 1     | Developer clarity in 30 sec   | positioning-and-risks, comparison-pages, cockpit-activation-recipes     | New hero shipped (incl. CTA fork), 4 comparison pages live, six-signal activation funnel non-zero, ≥1 qualified lead recorded. |
 | 2     | Ecosystem path (SEO + recipes)| content-pillar-pages                                                    | 6 pillar pages indexed, organic traffic baseline captured. |
 | 3     | Community launch              | community-launch                                                        | Launch executed, week-1 snapshot committed, post-mortem committed. |
@@ -92,7 +92,7 @@ Operational progress lives in agent runs and PostHog. The repo holds durable str
 ## 8. Non-goals (current phase)
 
 - We do not compete as a general agent UI framework. We claim the Angular final mile.
-- We do not ship telemetry from `@ngaf/*` browser packages by default. Opt-in only. Node-side package telemetry is minimal and honors `DO_NOT_TRACK`, `npm_config_do_not_track`, and `NGAF_TELEMETRY_DISABLED`; see [libs/telemetry/README.md](libs/telemetry/README.md) for the full contract.
+- We do not ship telemetry from `@threadplane/*` browser packages by default. Opt-in only. Node-side package telemetry is minimal and honors `DO_NOT_TRACK`, `npm_config_do_not_track`, and `NGAF_TELEMETRY_DISABLED`; see [libs/telemetry/README.md](libs/telemetry/README.md) for the full contract.
 - We do not run paid acquisition until Phase 2 organic baselines exist.
 - We do not pursue stars as a vanity metric.
 - We do not run A/B positioning experiments in Phase 1. Ship one hero, measure, iterate.

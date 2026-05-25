@@ -65,7 +65,7 @@ jobs:
 
       # Trusted publishing is configured per-package on npm; no NPM_TOKEN needed.
       # The OIDC token from id-token: write authenticates this workflow as a
-      # trusted publisher for each @ngaf/* package. Provenance attestations are
+      # trusted publisher for each @threadplane/* package. Provenance attestations are
       # generated automatically.
 
       - name: Publish to npm

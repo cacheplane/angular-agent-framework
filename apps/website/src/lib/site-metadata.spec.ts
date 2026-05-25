@@ -11,7 +11,7 @@ import {
 
 describe('site positioning copy', () => {
   it('exports the approved primary tagline and supporting copy', () => {
-    expect(PRIMARY_TAGLINE).toBe('Agent UI for Angular. Durable threads, interrupts, subagents, planning, memory, and generative UI.');
+    expect(PRIMARY_TAGLINE).toBe('Threadplane. Durable threads, interrupts, subagents, planning, memory, and generative UI.');
     expect(LONG_SUBHEAD).toContain('fullstack agentic Angular framework');
     expect(LONG_SUBHEAD).toContain('LangGraph and AG-UI-compatible agents');
     expect(LONG_SUBHEAD).toContain('Vercel json-render and Google A2UI');

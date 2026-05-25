@@ -1,5 +1,5 @@
 import type { HTMLAttributes } from 'react';
-import { tokens } from '@ngaf/design-tokens';
+import { tokens } from '@threadplane/design-tokens';
 import { cn } from '../../lib/cn';
 
 type LogoSize = 'sm' | 'md';
@@ -41,7 +41,7 @@ export function LogoMark({
       {...rest}
     >
       <span aria-hidden="true" style={{ fontSize: s.icon, lineHeight: 1 }}>🛩️</span>
-      {iconOnly ? null : <span>Agent UI for Angular</span>}
+      {iconOnly ? null : <span>Threadplane</span>}
     </span>
   );
 }

@@ -2,11 +2,11 @@
 
 <Summary>
 Build a real-time streaming chat interface using `agent()` from
-`@ngaf/langgraph` connected to a LangGraph backend on LangSmith Cloud.
+`@threadplane/langgraph` connected to a LangGraph backend on LangSmith Cloud.
 </Summary>
 
 <Prompt>
-Add real-time LLM streaming to this Angular component using `agent()` from `@ngaf/langgraph`. Configure `provideAgent({ apiUrl })` in the app config, then call `stream.submit()` to send messages. Bind `stream.messages()` in the template using `@for` - all Signals, no subscriptions needed.
+Add real-time LLM streaming to this Angular component using `agent()` from `@threadplane/langgraph`. Configure `provideAgent({ apiUrl })` in the app config, then call `stream.submit()` to send messages. Bind `stream.messages()` in the template using `@for` - all Signals, no subscriptions needed.
 </Prompt>
 
 <Steps>
@@ -17,7 +17,7 @@ Set up `provideAgent()` in your app config with the LangGraph Cloud URL:
 ```typescript
 // app.config.ts
 import { ApplicationConfig } from '@angular/core';
-import { provideAgent } from '@ngaf/langgraph';
+import { provideAgent } from '@threadplane/langgraph';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -37,7 +37,7 @@ In your component, call `agent()` in a field initializer (injection context requ
 
 ```typescript
 // streaming.component.ts
-import { agent } from '@ngaf/langgraph';
+import { agent } from '@threadplane/langgraph';
 
 export class StreamingComponent {
   protected readonly stream = agent({

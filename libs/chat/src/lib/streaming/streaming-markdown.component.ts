@@ -15,7 +15,7 @@ import {
   type MarkdownDocumentNode,
   type PartialMarkdownParser,
 } from '@cacheplane/partial-markdown';
-import type { ViewRegistry } from '@ngaf/render';
+import type { ViewRegistry } from '@threadplane/render';
 import { CHAT_MARKDOWN_STYLES } from '../styles/chat-markdown.styles';
 import { MARKDOWN_VIEW_REGISTRY } from '../markdown/markdown-view-registry';
 import { MarkdownChildrenComponent } from '../markdown/markdown-children.component';
@@ -24,7 +24,7 @@ import { CitationsResolverService } from '../markdown/citations-resolver.service
 
 /**
  * Renders streaming markdown by walking a @cacheplane/partial-markdown AST
- * through @ngaf/render's view registry.
+ * through @threadplane/render's view registry.
  *
  * Reactivity model: the live `parser.root` keeps a stable JS reference
  * across pushes (partial-markdown's identity guarantee). To make Angular

@@ -1,8 +1,8 @@
 import { Component, computed } from '@angular/core';
-import { ChatComponent, views } from '@ngaf/chat';
-import { agent } from '@ngaf/langgraph';
-import { signalStateStore } from '@ngaf/render';
-import { ExampleChatLayoutComponent } from '@ngaf/example-layouts';
+import { ChatComponent, views } from '@threadplane/chat';
+import { agent } from '@threadplane/langgraph';
+import { signalStateStore } from '@threadplane/render';
+import { ExampleChatLayoutComponent } from '@threadplane/example-layouts';
 import { environment } from '../environments/environment';
 import { StepPipelineComponent } from './views/step-pipeline.component';
 

@@ -32,33 +32,33 @@ describe('postinstall script', () => {
   test('calls capturePostinstall with the package name + version', async () => {
     const stdout: string[] = [];
     await capturePostinstallScript({
-      readPackageJson: () => ({ name: '@ngaf/telemetry', version: '0.0.31' }),
+      readPackageJson: () => ({ name: '@threadplane/telemetry', version: '0.0.31' }),
       write: (s: string) => stdout.push(s),
       env: { ...process.env },
-      cwd: () => '/tmp/project/node_modules/@ngaf/telemetry',
+      cwd: () => '/tmp/project/node_modules/@threadplane/telemetry',
     });
-    expect(capturePostinstall).toHaveBeenCalledWith({ pkg: '@ngaf/telemetry', version: '0.0.31' });
+    expect(capturePostinstall).toHaveBeenCalledWith({ pkg: '@threadplane/telemetry', version: '0.0.31' });
   });
 
   test('prints the opt-out notice to stdout when not CI', async () => {
     const stdout: string[] = [];
     await capturePostinstallScript({
-      readPackageJson: () => ({ name: '@ngaf/telemetry', version: '0.0.31' }),
+      readPackageJson: () => ({ name: '@threadplane/telemetry', version: '0.0.31' }),
       write: (s: string) => stdout.push(s),
       env: { ...process.env },
-      cwd: () => '/tmp/project/node_modules/@ngaf/telemetry',
+      cwd: () => '/tmp/project/node_modules/@threadplane/telemetry',
     });
-    expect(stdout.join('')).toMatch(/@ngaf\/telemetry: install telemetry sent/);
+    expect(stdout.join('')).toMatch(/@threadplane\/telemetry: install telemetry sent/);
     expect(stdout.join('')).toMatch(/DO_NOT_TRACK=1/);
   });
 
   test('CI=true is full opt-out: no event sent and no stdout notice', async () => {
     const stdout: string[] = [];
     await capturePostinstallScript({
-      readPackageJson: () => ({ name: '@ngaf/telemetry', version: '0.0.31' }),
+      readPackageJson: () => ({ name: '@threadplane/telemetry', version: '0.0.31' }),
       write: (s: string) => stdout.push(s),
       env: { ...process.env, CI: 'true' },
-      cwd: () => '/tmp/project/node_modules/@ngaf/telemetry',
+      cwd: () => '/tmp/project/node_modules/@threadplane/telemetry',
     });
     expect(stdout).toEqual([]);
     expect(capturePostinstall).not.toHaveBeenCalled();
@@ -67,10 +67,10 @@ describe('postinstall script', () => {
   test('DO_NOT_TRACK=1 is full opt-out: no event sent and no stdout notice', async () => {
     const stdout: string[] = [];
     await capturePostinstallScript({
-      readPackageJson: () => ({ name: '@ngaf/telemetry', version: '0.0.31' }),
+      readPackageJson: () => ({ name: '@threadplane/telemetry', version: '0.0.31' }),
       write: (s: string) => stdout.push(s),
       env: { ...process.env, DO_NOT_TRACK: '1' },
-      cwd: () => '/tmp/project/node_modules/@ngaf/telemetry',
+      cwd: () => '/tmp/project/node_modules/@threadplane/telemetry',
     });
     expect(stdout).toEqual([]);
     expect(capturePostinstall).not.toHaveBeenCalled();
@@ -82,7 +82,7 @@ describe('postinstall script', () => {
         readPackageJson: () => { throw new Error('not found'); },
         write: (_s: string) => undefined,
         env: { ...process.env },
-        cwd: () => '/tmp/project/node_modules/@ngaf/telemetry',
+        cwd: () => '/tmp/project/node_modules/@threadplane/telemetry',
       }),
     ).resolves.toBeUndefined();
     expect(capturePostinstall).not.toHaveBeenCalled();
@@ -92,17 +92,17 @@ describe('postinstall script', () => {
     vi.mocked(capturePostinstall).mockResolvedValueOnce({ sent: false, reason: 'failed' });
     const stdout: string[] = [];
     await capturePostinstallScript({
-      readPackageJson: () => ({ name: '@ngaf/telemetry', version: '0.0.31' }),
+      readPackageJson: () => ({ name: '@threadplane/telemetry', version: '0.0.31' }),
       write: (s: string) => stdout.push(s),
       env: { ...process.env },
-      cwd: () => '/tmp/project/node_modules/@ngaf/telemetry',
+      cwd: () => '/tmp/project/node_modules/@threadplane/telemetry',
     });
     expect(stdout.join('')).not.toMatch(/sent install ping|install telemetry sent/);
   });
 
   test('skips local top-level installs by default', async () => {
     await capturePostinstallScript({
-      readPackageJson: () => ({ name: '@ngaf/chat', version: '0.0.31' }),
+      readPackageJson: () => ({ name: '@threadplane/chat', version: '0.0.31' }),
       write: (_s: string) => undefined,
       env: { ...process.env, INIT_CWD: '/repo/libs/chat' },
       cwd: () => '/repo/libs/chat',
@@ -117,7 +117,7 @@ describe('postinstall script', () => {
       mkdirSync(join(root, 'pkg'), { recursive: true });
       symlinkSync(root, link, 'dir');
       await capturePostinstallScript({
-        readPackageJson: () => ({ name: '@ngaf/chat', version: '0.0.31' }),
+        readPackageJson: () => ({ name: '@threadplane/chat', version: '0.0.31' }),
         write: (_s: string) => undefined,
         env: { ...process.env, INIT_CWD: join(link, 'pkg') },
         cwd: () => join(root, 'pkg'),
@@ -131,27 +131,27 @@ describe('postinstall script', () => {
 
   test('allows global installs even when INIT_CWD matches cwd', async () => {
     await capturePostinstallScript({
-      readPackageJson: () => ({ name: '@ngaf/chat', version: '0.0.31' }),
+      readPackageJson: () => ({ name: '@threadplane/chat', version: '0.0.31' }),
       write: (_s: string) => undefined,
       env: { ...process.env, INIT_CWD: '/repo/libs/chat', npm_config_global: 'true' },
       cwd: () => '/repo/libs/chat',
     });
-    expect(capturePostinstall).toHaveBeenCalledWith({ pkg: '@ngaf/chat', version: '0.0.31' });
+    expect(capturePostinstall).toHaveBeenCalledWith({ pkg: '@threadplane/chat', version: '0.0.31' });
   });
 
   test('prints exact payload when DEBUG includes ngaf:telemetry', async () => {
     const stdout: string[] = [];
     await capturePostinstallScript({
-      readPackageJson: () => ({ name: '@ngaf/chat', version: '0.0.31' }),
+      readPackageJson: () => ({ name: '@threadplane/chat', version: '0.0.31' }),
       write: (s: string) => stdout.push(s),
       env: {
         ...process.env,
         DEBUG: 'foo,ngaf:telemetry',
         npm_config_user_agent: 'npm/10.9.2 node/v22.14.0 darwin arm64 workspaces/false',
       },
-      cwd: () => '/tmp/project/node_modules/@ngaf/chat',
+      cwd: () => '/tmp/project/node_modules/@threadplane/chat',
     });
-    expect(stdout.join('')).toMatch(/"pkg":"@ngaf\/chat"/);
+    expect(stdout.join('')).toMatch(/"pkg":"@threadplane\/chat"/);
     expect(stdout.join('')).toMatch(/"version":"0.0.31"/);
     expect(stdout.join('')).toMatch(/"package_manager":"npm"/);
     expect(stdout.join('')).toMatch(/"package_manager_version":"10.9.2"/);

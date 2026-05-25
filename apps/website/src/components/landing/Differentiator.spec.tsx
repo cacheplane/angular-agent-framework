@@ -57,9 +57,9 @@ describe('Differentiator', () => {
     }
   });
 
-  it('renders the @ngaf/render primitive for the generative UI row', () => {
+  it('renders the @threadplane/render primitive for the generative UI row', () => {
     render(<Differentiator />);
-    expect(screen.getByText('@ngaf/render')).toBeTruthy();
+    expect(screen.getByText('@threadplane/render')).toBeTruthy();
   });
 
   it('links the footer CTA to /pilot-to-prod', () => {

@@ -1,4 +1,4 @@
-import { tokens } from '@ngaf/design-tokens';
+import { tokens } from '@threadplane/design-tokens';
 import { Container } from '../ui/Container';
 import { Section } from '../ui/Section';
 import { Eyebrow } from '../ui/Eyebrow';
@@ -6,8 +6,8 @@ import { FAQ, type FAQItem } from '../ui/FAQ';
 
 const ITEMS: FAQItem[] = [
   {
-    q: 'Is @ngaf/chat open source?',
-    a: '@ngaf/chat is source-available under the PolyForm Noncommercial License 1.0.0. Because commercial use requires a license, it is not OSI open source.',
+    q: 'Is @threadplane/chat open source?',
+    a: '@threadplane/chat is source-available under the PolyForm Noncommercial License 1.0.0. Because commercial use requires a license, it is not OSI open source.',
   },
   {
     q: 'Can I use it for free?',
@@ -15,15 +15,15 @@ const ITEMS: FAQItem[] = [
   },
   {
     q: 'Can I use it at work?',
-    a: 'You can evaluate it at work for 30 calendar days from your first commercial use. After that, production use in a commercial product, internal tool, SaaS app, or client deliverable requires a ThreadPlane Commercial license. The eval window is good-faith — no telemetry, no registration.',
+    a: 'You can evaluate it at work for 30 calendar days from your first commercial use. After that, production use in a commercial product, internal tool, SaaS app, or client deliverable requires a Threadplane Commercial license. The eval window is good-faith — no telemetry, no registration.',
   },
   {
     q: 'Do my end users need licenses?',
-    a: 'No. Commercial licenses are for the developers, organization, or production application using @ngaf/chat, depending on the plan.',
+    a: 'No. Commercial licenses are for the developers, organization, or production application using @threadplane/chat, depending on the plan.',
   },
   {
     q: 'Can I modify the source?',
-    a: 'Yes, for permitted noncommercial use under the PolyForm Noncommercial license, or for commercial production use under a paid ThreadPlane Commercial license.',
+    a: 'Yes, for permitted noncommercial use under the PolyForm Noncommercial license, or for commercial production use under a paid Threadplane Commercial license.',
   },
   {
     q: 'Can I redistribute it?',

@@ -39,7 +39,7 @@ async function createWorkspace(projectVersions) {
       },
     });
     await writeJson(join(projectRoot, 'package.json'), {
-      name: `@ngaf/${projectName}`,
+      name: `@threadplane/${projectName}`,
       version,
     });
   }
@@ -59,7 +59,7 @@ describe('verifyReleaseVersions', () => {
       verifyReleaseVersions({ workspaceRoot, expectedTag: 'v0.0.13' })
     ).resolves.toEqual({
       version: '0.0.13',
-      packages: ['@ngaf/chat', '@ngaf/langgraph', '@ngaf/render'],
+      packages: ['@threadplane/chat', '@threadplane/langgraph', '@threadplane/render'],
     });
   });
 
@@ -109,12 +109,12 @@ describe('verifyReleaseVersions', () => {
       },
     });
     await writeJson(join(projectRoot, 'package.json'), {
-      name: '@ngaf/render',
+      name: '@threadplane/render',
       version: '0.0.13',
     });
 
     await expect(verifyReleaseVersions({ workspaceRoot })).rejects.toThrow(
-      'Public package @ngaf/render is not included in release group "publishable".'
+      'Public package @threadplane/render is not included in release group "publishable".'
     );
   });
 

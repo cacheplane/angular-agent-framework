@@ -1,10 +1,10 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, test, expect, vi } from 'vitest';
 import { TestBed } from '@angular/core/testing';
-import { NgafTelemetryService } from './service';
-import { NGAF_TELEMETRY_CONFIG } from './tokens';
+import { ThreadplaneTelemetryService } from './service';
+import { THREADPLANE_TELEMETRY_CONFIG } from './tokens';
 
-describe('NgafTelemetryService', () => {
+describe('ThreadplaneTelemetryService', () => {
   beforeEach(() => {
     vi.restoreAllMocks();
   });
@@ -12,33 +12,33 @@ describe('NgafTelemetryService', () => {
   test('capture() resolves without calling posthog when enabled is false', async () => {
     TestBed.configureTestingModule({
       providers: [
-        { provide: NGAF_TELEMETRY_CONFIG, useValue: { enabled: false } },
-        NgafTelemetryService,
+        { provide: THREADPLANE_TELEMETRY_CONFIG, useValue: { enabled: false } },
+        ThreadplaneTelemetryService,
       ],
     });
-    const svc = TestBed.inject(NgafTelemetryService);
+    const svc = TestBed.inject(ThreadplaneTelemetryService);
     await expect(svc.capture('ngaf:browser_provided')).resolves.toBeUndefined();
   });
 
   test('capture() resolves without calling posthog when no config provided', async () => {
     TestBed.configureTestingModule({
       providers: [
-        { provide: NGAF_TELEMETRY_CONFIG, useValue: null },
-        NgafTelemetryService,
+        { provide: THREADPLANE_TELEMETRY_CONFIG, useValue: null },
+        ThreadplaneTelemetryService,
       ],
     });
-    const svc = TestBed.inject(NgafTelemetryService);
+    const svc = TestBed.inject(ThreadplaneTelemetryService);
     await expect(svc.capture('ngaf:browser_provided')).resolves.toBeUndefined();
   });
 
   test('capture() no-ops when posthogKey is missing even with enabled:true', async () => {
     TestBed.configureTestingModule({
       providers: [
-        { provide: NGAF_TELEMETRY_CONFIG, useValue: { enabled: true } },
-        NgafTelemetryService,
+        { provide: THREADPLANE_TELEMETRY_CONFIG, useValue: { enabled: true } },
+        ThreadplaneTelemetryService,
       ],
     });
-    const svc = TestBed.inject(NgafTelemetryService);
+    const svc = TestBed.inject(ThreadplaneTelemetryService);
     await expect(svc.capture('ngaf:browser_provided')).resolves.toBeUndefined();
   });
 
@@ -46,11 +46,11 @@ describe('NgafTelemetryService', () => {
     const sink = vi.fn();
     TestBed.configureTestingModule({
       providers: [
-        { provide: NGAF_TELEMETRY_CONFIG, useValue: { enabled: true, sink } },
-        NgafTelemetryService,
+        { provide: THREADPLANE_TELEMETRY_CONFIG, useValue: { enabled: true, sink } },
+        ThreadplaneTelemetryService,
       ],
     });
-    const svc = TestBed.inject(NgafTelemetryService);
+    const svc = TestBed.inject(ThreadplaneTelemetryService);
 
     await svc.captureRuntimeInstanceCreated({
       transport: 'langgraph',
@@ -73,11 +73,11 @@ describe('NgafTelemetryService', () => {
     const sink = vi.fn();
     TestBed.configureTestingModule({
       providers: [
-        { provide: NGAF_TELEMETRY_CONFIG, useValue: { enabled: true, sink } },
-        NgafTelemetryService,
+        { provide: THREADPLANE_TELEMETRY_CONFIG, useValue: { enabled: true, sink } },
+        ThreadplaneTelemetryService,
       ],
     });
-    const svc = TestBed.inject(NgafTelemetryService);
+    const svc = TestBed.inject(ThreadplaneTelemetryService);
 
     await svc.captureRuntimeRequestCreated({
       transport: 'langgraph',
@@ -101,11 +101,11 @@ describe('NgafTelemetryService', () => {
     const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response('{}', { status: 202 }));
     TestBed.configureTestingModule({
       providers: [
-        { provide: NGAF_TELEMETRY_CONFIG, useValue: { enabled: true, endpoint: '/api/ingest' } },
-        NgafTelemetryService,
+        { provide: THREADPLANE_TELEMETRY_CONFIG, useValue: { enabled: true, endpoint: '/api/ingest' } },
+        ThreadplaneTelemetryService,
       ],
     });
-    const svc = TestBed.inject(NgafTelemetryService);
+    const svc = TestBed.inject(ThreadplaneTelemetryService);
 
     await svc.capture('ngaf:browser_chat_init', { surface: 'canonical_demo' });
 
@@ -133,11 +133,11 @@ describe('NgafTelemetryService', () => {
     const sink = vi.fn();
     TestBed.configureTestingModule({
       providers: [
-        { provide: NGAF_TELEMETRY_CONFIG, useValue: { enabled: true, sink } },
-        NgafTelemetryService,
+        { provide: THREADPLANE_TELEMETRY_CONFIG, useValue: { enabled: true, sink } },
+        ThreadplaneTelemetryService,
       ],
     });
-    const svc = TestBed.inject(NgafTelemetryService);
+    const svc = TestBed.inject(ThreadplaneTelemetryService);
 
     await svc.captureStreamErrored({
       transport: 'langgraph',
@@ -161,11 +161,11 @@ describe('NgafTelemetryService', () => {
     const sink = vi.fn();
     TestBed.configureTestingModule({
       providers: [
-        { provide: NGAF_TELEMETRY_CONFIG, useValue: { enabled: true, sink, sampleRate: 0 } },
-        NgafTelemetryService,
+        { provide: THREADPLANE_TELEMETRY_CONFIG, useValue: { enabled: true, sink, sampleRate: 0 } },
+        ThreadplaneTelemetryService,
       ],
     });
-    const svc = TestBed.inject(NgafTelemetryService);
+    const svc = TestBed.inject(ThreadplaneTelemetryService);
 
     await svc.capture('ngaf:browser_chat_init');
 
@@ -175,15 +175,15 @@ describe('NgafTelemetryService', () => {
   test('capture() with enabled:true and posthogKey invokes posthog-js (lazy)', async () => {
     TestBed.configureTestingModule({
       providers: [
-        { provide: NGAF_TELEMETRY_CONFIG, useValue: { enabled: true, posthogKey: 'phc_test' } },
-        NgafTelemetryService,
+        { provide: THREADPLANE_TELEMETRY_CONFIG, useValue: { enabled: true, posthogKey: 'phc_test' } },
+        ThreadplaneTelemetryService,
       ],
     });
-    const svc = TestBed.inject(NgafTelemetryService);
+    const svc = TestBed.inject(ThreadplaneTelemetryService);
     expect(typeof svc.capture).toBe('function');
   });
 
   test('service is provided as root-scoped', () => {
-    expect(NgafTelemetryService).toBeDefined();
+    expect(ThreadplaneTelemetryService).toBeDefined();
   });
 });

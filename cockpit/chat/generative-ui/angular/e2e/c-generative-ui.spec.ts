@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
 import { test, expect } from '@playwright/test';
-import { submitAndWaitForResponse } from '@ngaf-internal/e2e-harness';
+import { submitAndWaitForResponse } from '@threadplane-internal/e2e-harness';
 
 test('c-generative-ui: dashboard prompt renders chat-generative-ui surface', async ({ page }) => {
   await submitAndWaitForResponse(page, 'Show me a dashboard of airline operations.');
 
   // The render_spec tool call returns a dashboard JSON spec which the
-  // content-classifier in @ngaf/chat mounts as a tree of
+  // content-classifier in @threadplane/chat mounts as a tree of
   // <chat-generative-ui> hosts (one per node in the dashboard view).
   // Multiple matches expected (≥5 for the standard dashboard layout);
   // assert the count proves the GenUI tree wired up. .first() unblocks

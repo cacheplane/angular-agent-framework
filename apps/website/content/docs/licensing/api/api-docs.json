@@ -7,7 +7,7 @@
       {
         "name": "package",
         "type": "string",
-        "description": "Fully-qualified npm package name, e.g. \"@ngaf/langgraph\".",
+        "description": "Fully-qualified npm package name, e.g. \"@threadplane/langgraph\".",
         "optional": false
       },
       {

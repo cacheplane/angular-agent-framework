@@ -1,9 +1,10 @@
 {
-  "name": "@ngaf/cockpit-langgraph-interrupts-angular",
+  "name": "@threadplane/cockpit-langgraph-interrupts-angular",
+  "private": true,
   "version": "0.0.1",
   "peerDependencies": {
-    "@ngaf/chat": "^0.0.1",
-    "@ngaf/langgraph": "^0.0.1",
+    "@threadplane/chat": "*",
+    "@threadplane/langgraph": "*",
     "@langchain/langgraph-sdk": "^0.0.36"
   },
   "license": "MIT",

@@ -58,7 +58,7 @@ async function main(): Promise<void> {
   authorizeUrl.searchParams.set('code_challenge', challenge);
   authorizeUrl.searchParams.set('code_challenge_method', 'S256');
 
-  process.stdout.write(`\nOpening browser to authorize ThreadPlane marketing app...\n${authorizeUrl.toString()}\n\n`);
+  process.stdout.write(`\nOpening browser to authorize Threadplane marketing app...\n${authorizeUrl.toString()}\n\n`);
   openInBrowser(authorizeUrl.toString());
 
   const result = await new Promise<{ code: string }>((resolve, reject) => {

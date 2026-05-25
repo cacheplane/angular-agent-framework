@@ -61,19 +61,19 @@ function buildDevToDraft(): Draft {
     text: [
       '# Marketing Pipeline Smoke Test',
       '',
-      'This is an automated smoke test of the @ngaf/marketing-channels Dev.to adapter.',
+      'This is an automated smoke test of the @threadplane/marketing-channels Dev.to adapter.',
       '',
       `Posted at ${stamp}. Please ignore — this article will be deleted.`,
       '',
       '## Why this exists',
       '',
-      'The ThreadPlane marketing pipeline syndicates blog content to Dev.to. This run verifies the live wire works end-to-end.',
+      'The Threadplane marketing pipeline syndicates blog content to Dev.to. This run verifies the live wire works end-to-end.',
     ].join('\n'),
     article: {
       title: `Marketing Pipeline Smoke Test — ${stamp}`,
       tags: ['test'],
       canonicalUrl: 'https://threadplane.ai',
-      description: 'Automated smoke test of the ThreadPlane marketing pipeline Dev.to adapter.',
+      description: 'Automated smoke test of the Threadplane marketing pipeline Dev.to adapter.',
     },
   };
 }

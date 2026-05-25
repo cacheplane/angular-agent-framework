@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-export type { NgafEvent, NgafNodeEvent, NgafBrowserEvent } from './events';
+export type { ThreadplaneEvent, ThreadplaneNodeEvent, ThreadplaneBrowserEvent } from './events';
 export {
   getEmailDomain,
   getSourcePage,

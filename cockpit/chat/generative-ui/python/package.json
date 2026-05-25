@@ -1,5 +1,6 @@
 {
-  "name": "@ngaf/cockpit-chat-generative-ui-python",
+  "name": "@threadplane/cockpit-chat-generative-ui-python",
+  "private": true,
   "version": "0.0.1",
   "license": "MIT",
   "sideEffects": false

@@ -1,8 +1,8 @@
-# @cacheplane/minting-service
+# @threadplane/minting-service
 
-License minting service for ThreadPlane. Receives Stripe webhooks, signs
-Ed25519 license tokens via `@cacheplane/licensing`, persists them to
-Postgres via `@cacheplane/db`, and emails them to customers via Resend.
+License minting service for Threadplane. Receives Stripe webhooks, signs
+Ed25519 license tokens via `@threadplane/licensing`, persists them to
+Postgres via `@threadplane/db`, and emails them to customers via Resend.
 
 **Design spec:** `docs/superpowers/specs/2026-04-20-minting-service-design.md`
 
@@ -48,7 +48,7 @@ node -e "import('@noble/ed25519').then(async (e) => {
   const sk = e.utils.randomPrivateKey();
   const pk = await e.getPublicKeyAsync(sk);
   console.log('priv (LICENSE_SIGNING_PRIVATE_KEY_HEX):', Buffer.from(sk).toString('hex'));
-  console.log('pub  (LICENSE_PUBLIC_KEY in @cacheplane/licensing):', Buffer.from(pk).toString('hex'));
+  console.log('pub  (LICENSE_PUBLIC_KEY in @threadplane/licensing):', Buffer.from(pk).toString('hex'));
 });"
 ```
 
@@ -133,7 +133,7 @@ Steps:
 
 1. Generate new keypair (see "Generating a signing key").
 2. Update `libs/licensing/src/lib/license-public-key.generated.ts` with the new public key.
-3. Republish `@cacheplane/licensing` (minor version bump).
+3. Republish `@threadplane/licensing` (minor version bump).
 4. Update `LICENSE_SIGNING_PRIVATE_KEY_HEX` in Vercel env.
 5. Deploy minting service.
 6. Batch-remint all active licenses:

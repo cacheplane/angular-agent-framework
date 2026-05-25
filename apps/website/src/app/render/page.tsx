@@ -1,4 +1,4 @@
-import { tokens } from '@ngaf/design-tokens';
+import { tokens } from '@threadplane/design-tokens';
 import { Container } from '../../components/ui/Container';
 import { Section } from '../../components/ui/Section';
 import { Eyebrow } from '../../components/ui/Eyebrow';
@@ -12,7 +12,7 @@ import { RenderCodeShowcase } from '../../components/landing/render/RenderCodeSh
 import { createPageMetadata } from '../../lib/site-metadata';
 
 export const metadata = createPageMetadata({
-  title: '@ngaf/render — Generative UI for Angular',
+  title: '@threadplane/render — Generative UI for Angular',
   description: 'Agents that render UI without coupling to your frontend. Built on Vercel json-render spec.',
   pathname: '/render',
   type: 'website',
@@ -25,7 +25,7 @@ export default async function RenderPage() {
       <Section surface="canvas" ariaLabelledBy="render-hero-heading">
         <Container>
           <div style={{ maxWidth: 820, margin: '0 auto', textAlign: 'center' }}>
-            <Eyebrow tone="accent" style={{ marginBottom: 16 }}>@ngaf/render</Eyebrow>
+            <Eyebrow tone="accent" style={{ marginBottom: 16 }}>@threadplane/render</Eyebrow>
             <h1
               id="render-hero-heading"
               style={{
@@ -70,7 +70,7 @@ export default async function RenderPage() {
         id="schemas"
         eyebrow="Schemas"
         headline="One spec. Your components."
-        body="The agent emits structured UI as JSON. @ngaf/render maps each spec node to one of your Angular components — so the design system stays yours, and the agent gets to assemble it."
+        body="The agent emits structured UI as JSON. @threadplane/render maps each spec node to one of your Angular components — so the design system stays yours, and the agent gets to assemble it."
         bullets={[
           'Vercel json-render adapter',
           'Google A2UI v0.9-compatible protocol',
@@ -82,7 +82,7 @@ export default async function RenderPage() {
           { title: 'A2UI v0.9-compatible', description: 'Google protocol.' },
           { title: 'registry', description: 'Spec → component.' },
         ]}
-        cta={{ label: 'See @ngaf/render docs', href: '/docs/render/getting-started/introduction' }}
+        cta={{ label: 'See @threadplane/render docs', href: '/docs/render/getting-started/introduction' }}
         visual={
           <BrowserFrame url="render · spec → component" elevation="md">
             <div style={{ padding: 24, minHeight: 320, background: tokens.surfaces.surface }}>
@@ -129,7 +129,7 @@ export default async function RenderPage() {
         id="fallbacks"
         eyebrow="Fallbacks"
         headline="Readiness gate + per-component fallback."
-        body="When the agent emits a spec your registry doesn't know how to render, @ngaf/render falls back gracefully — and surfaces it to your observability layer. No mystery white screens."
+        body="When the agent emits a spec your registry doesn't know how to render, @threadplane/render falls back gracefully — and surfaces it to your observability layer. No mystery white screens."
         bullets={[
           'Per-component fallback API',
           'Readiness gate holds renders until safe',

@@ -3,7 +3,7 @@ import { BehaviorSubject, Subject } from 'rxjs';
 import { createStreamManagerBridge } from './stream-manager.bridge';
 import { MockAgentTransport } from '../transport/mock-stream.transport';
 import { ResourceStatus, AgentTransport, StreamSubjects, CustomStreamEvent, StreamEvent } from '../agent.types';
-import type { AgentRuntimeTelemetryPayload } from '@ngaf/chat';
+import type { AgentRuntimeTelemetryPayload } from '@threadplane/chat';
 import type { ThreadState } from '@langchain/langgraph-sdk';
 import { of } from 'rxjs';
 import { readFileSync } from 'node:fs';

@@ -61,7 +61,7 @@ test('contact page submits a lead payload and renders success state', async ({ p
   await contactForm.getByRole('textbox', { name: 'Email', exact: true }).fill('jane@acme.com');
   await contactForm.getByRole('textbox', { name: 'Name' }).fill('Jane Smith');
   await contactForm.getByRole('textbox', { name: 'Company' }).fill('Acme');
-  await contactForm.getByRole('textbox', { name: 'Message' }).fill('We are evaluating Agent UI for Angular.');
+  await contactForm.getByRole('textbox', { name: 'Message' }).fill('We are evaluating Threadplane.');
   await contactForm.getByRole('button', { name: 'Send' }).click();
 
   await expect(page.getByText("Thanks. We'll be in touch within one business day.")).toBeVisible();
@@ -69,7 +69,7 @@ test('contact page submits a lead payload and renders success state', async ({ p
     email: 'jane@acme.com',
     name: 'Jane Smith',
     company: 'Acme',
-    message: 'We are evaluating Agent UI for Angular.',
+    message: 'We are evaluating Threadplane.',
     source_page: 'e2e_contact',
     track: 'enterprise',
   });
@@ -176,8 +176,8 @@ test('/llms.txt returns plain text', async ({ page }) => {
   const response = await page.goto('/llms.txt');
   expect(response?.headers()['content-type']).toContain('text/plain');
   const body = await page.locator('body').textContent();
-  expect(body).toContain('@ngaf/a2ui');
-  expect(body).toContain('@ngaf/telemetry');
+  expect(body).toContain('@threadplane/a2ui');
+  expect(body).toContain('@threadplane/telemetry');
   expect(body).toContain('ChatMessageListComponent');
   expect(body).not.toContain('ChatMessagesComponent');
 });
@@ -226,7 +226,7 @@ test('docs pages render canonical and social metadata', async ({ page }) => {
   );
   await expect(page.locator('meta[property="og:title"]')).toHaveAttribute(
     'content',
-    'Streaming - Agent Docs - Agent UI for Angular',
+    'Streaming - Agent Docs - Threadplane',
   );
   await expect(page.locator('meta[property="og:url"]')).toHaveAttribute(
     'content',
@@ -234,7 +234,7 @@ test('docs pages render canonical and social metadata', async ({ page }) => {
   );
   await expect(page.locator('meta[name="twitter:title"]')).toHaveAttribute(
     'content',
-    'Streaming - Agent Docs - Agent UI for Angular',
+    'Streaming - Agent Docs - Threadplane',
   );
 });
 

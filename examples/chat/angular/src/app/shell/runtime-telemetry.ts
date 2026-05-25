@@ -2,7 +2,7 @@
 import type {
   AgentRuntimeTelemetryEvent,
   AgentRuntimeTelemetrySink,
-} from '@ngaf/chat';
+} from '@threadplane/chat';
 
 const CANONICAL_DEMO_SURFACE = 'canonical_demo';
 const BLOCKED_PROPERTY_KEYS = new Set([

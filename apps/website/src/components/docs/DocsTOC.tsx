@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { tokens } from '@ngaf/design-tokens';
+import { tokens } from '@threadplane/design-tokens';
 import type { DocHeading } from '../../lib/extract-headings';
 
 export function DocsTOC({ headings }: { headings: DocHeading[] }) {

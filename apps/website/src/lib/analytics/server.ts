@@ -1,7 +1,7 @@
 import { createHash } from 'crypto';
 import { PostHog } from 'posthog-node';
 import { analyticsEvents, type AnalyticsEventName, type AnalyticsProperties, type WhitepaperId } from './events';
-import { getEmailDomain, isPersonalEmailDomain, normalizePostHogHost, toSafeAnalyticsString } from '@ngaf/telemetry/shared';
+import { getEmailDomain, isPersonalEmailDomain, normalizePostHogHost, toSafeAnalyticsString } from '@threadplane/telemetry/shared';
 
 function getServerPostHogClient(): PostHog | null {
   const token = toSafeAnalyticsString(process.env.NEXT_PUBLIC_POSTHOG_TOKEN, 500);

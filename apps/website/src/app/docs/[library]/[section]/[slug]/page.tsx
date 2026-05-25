@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { tokens } from '@ngaf/design-tokens';
+import { tokens } from '@threadplane/design-tokens';
 import { DocsSidebar } from '../../../../../components/docs/DocsSidebar';
 import { MdxRenderer } from '../../../../../components/docs/MdxRenderer';
 import { DocsSearch } from '../../../../../components/docs/DocsSearch';
@@ -45,8 +45,8 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: DocsRouteProps): Promise<Metadata> {
   const { library, section, slug } = await params;
   return getDocMetadata(library, section, slug) ?? {
-    title: 'Docs - Agent UI for Angular',
-    description: 'Agent UI for Angular documentation',
+    title: 'Docs - Threadplane',
+    description: 'Threadplane documentation',
   };
 }
 

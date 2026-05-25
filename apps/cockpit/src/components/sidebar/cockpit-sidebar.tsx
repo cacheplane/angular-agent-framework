@@ -1,8 +1,8 @@
 import React from 'react';
-import { ThemeToggle } from '@ngaf/ui-react';
+import { ThemeToggle } from '@threadplane/ui-react';
 import type {
   CockpitManifestEntry,
-} from '@ngaf/cockpit-registry';
+} from '@threadplane/cockpit-registry';
 import type { NavigationProduct } from '../../lib/route-resolution';
 import { LanguagePicker } from './language-picker';
 import { NavigationGroups } from './navigation-groups';

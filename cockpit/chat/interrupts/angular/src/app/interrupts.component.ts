@@ -5,10 +5,10 @@ import {
   ChatComponent,
   ChatInterruptPanelComponent,
   ChatWelcomeSuggestionComponent,
-} from '@ngaf/chat';
-import type { InterruptAction } from '@ngaf/chat';
-import { ExampleChatLayoutComponent } from '@ngaf/example-layouts';
-import { agent } from '@ngaf/langgraph';
+} from '@threadplane/chat';
+import type { InterruptAction } from '@threadplane/chat';
+import { ExampleChatLayoutComponent } from '@threadplane/example-layouts';
+import { agent } from '@threadplane/langgraph';
 import { environment } from '../environments/environment';
 
 const SUGGESTIONS = [

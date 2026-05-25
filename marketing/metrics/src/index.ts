@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 //
-// @ngaf/marketing-metrics — Metrics ingestion for the marketing pipeline.
+// @threadplane/marketing-metrics — Metrics ingestion for the marketing pipeline.
 // Skeleton only. Implementation lands in the metrics-ingest sub-spec.
 
 export interface RunOptions {
@@ -14,6 +14,6 @@ export interface RunResult {
 
 export function run(_opts?: RunOptions): Promise<RunResult> {
   throw new Error(
-    '@ngaf/marketing-metrics: run() not yet implemented. See metrics-ingest sub-spec.',
+    '@threadplane/marketing-metrics: run() not yet implemented. See metrics-ingest sub-spec.',
   );
 }

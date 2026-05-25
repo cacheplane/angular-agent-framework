@@ -3,7 +3,7 @@ import { act } from 'react-dom/test-utils';
 import { createRoot } from 'react-dom/client';
 import { JSDOM } from 'jsdom';
 import { afterEach, describe, expect, it } from 'vitest';
-import { cockpitManifest } from '@ngaf/cockpit-registry';
+import { cockpitManifest } from '@threadplane/cockpit-registry';
 import { LanguagePicker } from './language-picker';
 
 describe('LanguagePicker', () => {

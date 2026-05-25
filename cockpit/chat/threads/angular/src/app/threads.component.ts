@@ -4,15 +4,15 @@ import {
   ChatComponent,
   ChatThreadListComponent,
   type ThreadActionAdapter,
-} from '@ngaf/chat';
-import { agent, LangGraphThreadsAdapter, refreshOnRunEnd } from '@ngaf/langgraph';
-import { ExampleChatLayoutComponent } from '@ngaf/example-layouts';
+} from '@threadplane/chat';
+import { agent, LangGraphThreadsAdapter, refreshOnRunEnd } from '@threadplane/langgraph';
+import { ExampleChatLayoutComponent } from '@threadplane/example-layouts';
 import { environment } from '../environments/environment';
 
 /**
  * ThreadsComponent demonstrates multi-thread conversation management
  * backed by the real LangGraph SDK. Consumes the shared
- * LangGraphThreadsAdapter from `@ngaf/langgraph` — same service the
+ * LangGraphThreadsAdapter from `@threadplane/langgraph` — same service the
  * canonical demo uses. Reads `metadata.title` written by this cap's
  * `generate_title` graph node (spec
  * 2026-05-19-llm-generated-labels-design.md, converged on `title`

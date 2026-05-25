@@ -13,8 +13,8 @@ import {
 import { Router, RouterOutlet, NavigationEnd } from '@angular/router';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { filter, map, startWith } from 'rxjs/operators';
-import { agent, LangGraphThreadsAdapter, refreshOnRunEnd } from '@ngaf/langgraph';
-import { NgafTelemetryService } from '@ngaf/telemetry/browser';
+import { agent, LangGraphThreadsAdapter, refreshOnRunEnd } from '@threadplane/langgraph';
+import { ThreadplaneTelemetryService } from '@threadplane/telemetry/browser';
 import {
   ChatInterruptPanelComponent,
   ChatSubagentsComponent,
@@ -28,7 +28,7 @@ import {
   type ThreadActionAdapter,
   type Thread,
   type ProjectActionAdapter,
-} from '@ngaf/chat';
+} from '@threadplane/chat';
 import { PalettePersistence } from './palette-persistence.service';
 import { ProjectsService } from './projects.service';
 import { DEMO_AGENT } from './shell-tokens';
@@ -75,7 +75,7 @@ export class DemoShell {
   private readonly document = inject(DOCUMENT);
   protected readonly threadsSvc = inject(LangGraphThreadsAdapter);
   protected readonly projectsSvc = inject(ProjectsService);
-  private readonly telemetry = inject(NgafTelemetryService);
+  private readonly telemetry = inject(ThreadplaneTelemetryService);
 
   constructor() {
     // Reflect the chosen theme onto <html data-theme="..."> so the
@@ -87,7 +87,7 @@ export class DemoShell {
 
     // App-wide color scheme: drives the demo page bg/text via
     // `data-color-scheme` and the chat-lib internals via
-    // `data-ngaf-chat-theme`. The pre-bootstrap script in index.html
+    // `data-threadplane-chat-theme`. The pre-bootstrap script in index.html
     // applies the initial value before stylesheets load; this effect
     // keeps both attrs synced after Angular takes over and also
     // auto-syncs the A2UI theme dropdown when it sits on a default
@@ -96,7 +96,7 @@ export class DemoShell {
       const scheme = this.colorScheme();
       const html = this.document.documentElement;
       html.setAttribute('data-color-scheme', scheme);
-      html.setAttribute('data-ngaf-chat-theme', scheme);
+      html.setAttribute('data-threadplane-chat-theme', scheme);
       const currentTheme = this.theme();
       if (currentTheme === 'default-dark' || currentTheme === 'default-light') {
         const next = scheme === 'light' ? 'default-light' : 'default-dark';
@@ -233,7 +233,7 @@ export class DemoShell {
 
   /**
    * App-wide color scheme. Single source of truth for the demo page bg,
-   * the chat lib's internal `data-ngaf-chat-theme`, and (when the A2UI
+   * the chat lib's internal `data-threadplane-chat-theme`, and (when the A2UI
    * theme is on a default preset) the base A2UI theme. Persisted.
    */
   readonly colorScheme = signal<'light' | 'dark'>(

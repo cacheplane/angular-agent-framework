@@ -3,7 +3,7 @@
  *
  * Kept as a barrel so existing imports of the form
  * `import { tokens } from '../../lib/design-tokens'` keep working.
- * New code should import directly from `@ngaf/design-tokens`.
+ * New code should import directly from `@threadplane/design-tokens`.
  */
 export {
   tokens,
@@ -14,4 +14,4 @@ export {
   shadows,
   radius,
   space,
-} from '@ngaf/design-tokens';
+} from '@threadplane/design-tokens';

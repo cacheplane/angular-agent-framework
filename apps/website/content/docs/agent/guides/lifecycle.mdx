@@ -1,6 +1,6 @@
 # Agent Lifecycle Signals
 
-The `@ngaf/langgraph` library exposes per-agent lifecycle signals on every `LangGraphAgent` returned by `agent()`. These are timestamps and classifications derived from the existing stream — useful for debugging, custom dashboards, or telemetry integrations.
+The `@threadplane/langgraph` library exposes per-agent lifecycle signals on every `LangGraphAgent` returned by `agent()`. These are timestamps and classifications derived from the existing stream — useful for debugging, custom dashboards, or telemetry integrations.
 
 ## Interface
 
@@ -53,7 +53,7 @@ Three signals require explicit hook points that the agent already invokes:
 
 ```typescript
 import { Component, effect } from '@angular/core';
-import { agent } from '@ngaf/langgraph';
+import { agent } from '@threadplane/langgraph';
 
 @Component({ /* ... */ })
 export class MyComponent {
@@ -76,7 +76,7 @@ For app-wide instrumentation, provide `AgentLifecycleRegistry` and read the life
 
 ```typescript
 import { ApplicationConfig, inject } from '@angular/core';
-import { AgentLifecycleRegistry } from '@ngaf/langgraph';
+import { AgentLifecycleRegistry } from '@threadplane/langgraph';
 
 export const appConfig: ApplicationConfig = {
   providers: [AgentLifecycleRegistry],

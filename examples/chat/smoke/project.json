@@ -10,6 +10,13 @@
         "cwd": "examples/chat/smoke",
         "command": "node cli.mjs"
       }
+    },
+    "verify-local": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "examples/chat/smoke",
+        "command": "node cli.mjs --non-interactive --target ../../../tmp/examples-chat-smoke --fresh --local-dist-root ../../../dist/libs --install --build"
+      }
     }
   },
   "tags": [

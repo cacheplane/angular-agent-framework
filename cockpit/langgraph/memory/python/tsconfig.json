@@ -7,7 +7,7 @@
     "declaration": true,
     "emitDeclarationOnly": false,
     "paths": {
-      "@ngaf/cockpit-registry": ["libs/cockpit-registry/src/index.ts"]
+      "@threadplane/cockpit-registry": ["libs/cockpit-registry/src/index.ts"]
     },
     "types": ["node", "react"]
   },

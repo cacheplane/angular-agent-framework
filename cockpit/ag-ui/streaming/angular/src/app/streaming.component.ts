@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 import { Component, inject } from '@angular/core';
-import { ChatComponent } from '@ngaf/chat';
-import { AG_UI_AGENT } from '@ngaf/ag-ui';
-import { ExampleChatLayoutComponent } from '@ngaf/example-layouts';
+import { ChatComponent } from '@threadplane/chat';
+import { AG_UI_AGENT } from '@threadplane/ag-ui';
+import { ExampleChatLayoutComponent } from '@threadplane/example-layouts';
 
 /**
- * Streaming demo — simplest possible @ngaf/chat integration with AG-UI.
+ * Streaming demo — simplest possible @threadplane/chat integration with AG-UI.
  *
  * Injects the AG_UI_AGENT token (provided by provideAgUiAgent) and passes it
  * to the prebuilt <chat> composition. The composition handles message rendering,

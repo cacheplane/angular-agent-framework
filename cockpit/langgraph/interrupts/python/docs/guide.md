@@ -2,12 +2,12 @@
 
 <Summary>
 Build a chat interface with human-in-the-loop approval using `agent()` from
-`@ngaf/langgraph`. The LangGraph backend pauses execution for approval,
+`@threadplane/langgraph`. The LangGraph backend pauses execution for approval,
 and the frontend resumes it with `stream.submit()`.
 </Summary>
 
 <Prompt>
-Add human-in-the-loop approval to this Angular component using `agent()` from `@ngaf/langgraph`. Use `stream.interrupt()` to display pending approvals, `stream.submit({ resume: true })` to approve and resume execution, and `stream.submit({ resume: false })` to reject. Bind `stream.messages()` in the template via the `<chat>` component from `@ngaf/chat`.
+Add human-in-the-loop approval to this Angular component using `agent()` from `@threadplane/langgraph`. Use `stream.interrupt()` to display pending approvals, `stream.submit({ resume: true })` to approve and resume execution, and `stream.submit({ resume: false })` to reject. Bind `stream.messages()` in the template via the `<chat>` component from `@threadplane/chat`.
 </Prompt>
 
 <Steps>
@@ -18,7 +18,7 @@ Set up `provideAgent()` in your app config with the LangGraph API URL:
 ```typescript
 // app.config.ts
 import { ApplicationConfig } from '@angular/core';
-import { provideAgent } from '@ngaf/langgraph';
+import { provideAgent } from '@threadplane/langgraph';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -38,7 +38,7 @@ In your component, call `agent()` with the assistant ID that maps to your interr
 
 ```typescript
 // interrupts.component.ts
-import { agent } from '@ngaf/langgraph';
+import { agent } from '@threadplane/langgraph';
 
 export class InterruptsComponent {
   protected readonly stream = agent({

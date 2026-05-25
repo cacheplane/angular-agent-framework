@@ -1,12 +1,12 @@
 # Theming
 
-`@ngaf/chat` uses CSS custom properties (variables) for all visual styling. Every color, radius, font, and spacing value is controlled by a variable prefixed with `--ngaf-chat-`, making it straightforward to match your application's design system.
+`@threadplane/chat` uses CSS custom properties (variables) for all visual styling. Every color, radius, font, and spacing value is controlled by a variable prefixed with `--ngaf-chat-`, making it straightforward to match your application's design system.
 
 ## How Theming Works
 
-Chat components define all design tokens using CSS custom properties on the `:host` element. The token system supports automatic light/dark switching via `prefers-color-scheme` and explicit override via a `[data-ngaf-chat-theme]` attribute.
+Chat components define all design tokens using CSS custom properties on the `:host` element. The token system supports automatic light/dark switching via `prefers-color-scheme` and explicit override via a `[data-threadplane-chat-theme]` attribute.
 
-No imported stylesheet is needed - tokens are applied automatically by each component's encapsulated styles. An optional global stylesheet (`@ngaf/chat/chat.css`) is available if you want to customize tokens at the `:root` level.
+No imported stylesheet is needed - tokens are applied automatically by each component's encapsulated styles. An optional global stylesheet (`@threadplane/chat/chat.css`) is available if you want to customize tokens at the `:root` level.
 
 ## CSS Custom Properties Reference
 
@@ -54,13 +54,13 @@ No imported stylesheet is needed - tokens are applied automatically by each comp
 
 ## Light and Dark Mode
 
-Tokens default to light values. Dark mode activates automatically when the user's system preference is `prefers-color-scheme: dark`, unless the host element has `data-ngaf-chat-theme="light"` set.
+Tokens default to light values. Dark mode activates automatically when the user's system preference is `prefers-color-scheme: dark`, unless the host element has `data-threadplane-chat-theme="light"` set.
 
 The switching logic is:
 
 1. Light variables are applied by default on `:host`
-2. `@media (prefers-color-scheme: dark)` overrides with dark variables, unless `data-ngaf-chat-theme="light"` is set
-3. `[data-ngaf-chat-theme="dark"]` forces dark variables regardless of system preference
+2. `@media (prefers-color-scheme: dark)` overrides with dark variables, unless `data-threadplane-chat-theme="light"` is set
+3. `[data-threadplane-chat-theme="dark"]` forces dark variables regardless of system preference
 
 ## Customizing the Theme
 
@@ -77,19 +77,19 @@ The switching logic is:
 
 ```html
 <!-- Force dark mode regardless of system preference -->
-<chat data-ngaf-chat-theme="dark" [agent]="agent" />
+<chat data-threadplane-chat-theme="dark" [agent]="agent" />
 
 <!-- Force light mode regardless of system preference -->
-<chat data-ngaf-chat-theme="light" [agent]="agent" />
+<chat data-threadplane-chat-theme="light" [agent]="agent" />
 ```
 
 ### Deep override via the optional global stylesheet
 
-Import `@ngaf/chat/chat.css` in your global styles to get a `:root`-level baseline you can override:
+Import `@threadplane/chat/chat.css` in your global styles to get a `:root`-level baseline you can override:
 
 ```css
 /* src/styles.css */
-@import '@ngaf/chat/chat.css';
+@import '@threadplane/chat/chat.css';
 
 :root {
   --ngaf-chat-primary: oklch(0.55 0.22 264);
@@ -135,5 +135,5 @@ If you previously customized `--chat-*` tokens, rename them to `--ngaf-chat-*`. 
 | `--chat-success` | `--ngaf-chat-success` |
 
 <Callout type="warning" title="CHAT_THEME_STYLES removed">
-The `CHAT_THEME_STYLES` named export no longer exists in `@ngaf/chat`. Remove imports of that constant - theme tokens are now applied automatically by each component. `CHAT_MARKDOWN_STYLES` remains available for custom markdown renderers.
+The `CHAT_THEME_STYLES` named export no longer exists in `@threadplane/chat`. Remove imports of that constant - theme tokens are now applied automatically by each component. `CHAT_MARKDOWN_STYLES` remains available for custom markdown renderers.
 </Callout>

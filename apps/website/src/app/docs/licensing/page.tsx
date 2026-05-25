@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { tokens } from '@ngaf/design-tokens';
+import { tokens } from '@threadplane/design-tokens';
 import { Container } from '../../../components/ui/Container';
 import { Section } from '../../../components/ui/Section';
 import { Eyebrow } from '../../../components/ui/Eyebrow';
@@ -7,9 +7,9 @@ import { Button } from '../../../components/ui/Button';
 import { createPageMetadata } from '../../../lib/site-metadata';
 
 export const metadata = createPageMetadata({
-  title: 'Licensing — ThreadPlane',
+  title: 'Licensing — Threadplane',
   description:
-    'How the ThreadPlane Commercial license works, who needs one, and how to install your license token in @ngaf/chat.',
+    'How the Threadplane Commercial license works, who needs one, and how to install your license token in @threadplane/chat.',
   pathname: '/docs/licensing',
   type: 'website',
 });
@@ -113,7 +113,7 @@ export default function LicensingPage() {
                 maxWidth: '60ch',
               }}
             >
-              How the ThreadPlane licensing model works, who needs a paid license, and how to install your license token.
+              How the Threadplane licensing model works, who needs a paid license, and how to install your license token.
             </p>
           </div>
         </Container>
@@ -124,22 +124,22 @@ export default function LicensingPage() {
           <div style={{ maxWidth: 760 }}>
             <h2 style={headingStyle}>The model</h2>
             <p style={bodyStyle}>
-              Agent UI for Angular is a suite of libraries. Most are{' '}
+              Threadplane is a suite of libraries. Most are{' '}
               <strong style={{ color: tokens.colors.textPrimary }}>MIT-licensed</strong> and free for any use,
-              commercial or not. Only <code style={{ fontFamily: tokens.typography.fontMono }}>@ngaf/chat</code> is
+              commercial or not. Only <code style={{ fontFamily: tokens.typography.fontMono }}>@threadplane/chat</code> is
               dual-licensed.
             </p>
             <p style={bodyStyle}>
-              <code style={{ fontFamily: tokens.typography.fontMono }}>@ngaf/chat</code> is source-available under{' '}
+              <code style={{ fontFamily: tokens.typography.fontMono }}>@threadplane/chat</code> is source-available under{' '}
               <strong style={{ color: tokens.colors.textPrimary }}>PolyForm Noncommercial 1.0.0</strong> for free
-              noncommercial use, or a <strong style={{ color: tokens.colors.textPrimary }}>ThreadPlane Commercial license</strong>{' '}
+              noncommercial use, or a <strong style={{ color: tokens.colors.textPrimary }}>Threadplane Commercial license</strong>{' '}
               for production use inside a for-profit context. The same source ships under both — you don't get a
               different build.
             </p>
 
             <h3 style={h3Style}>Do you need a paid license?</h3>
             <p style={bodyStyle}>
-              You need a ThreadPlane Commercial license if you use <code style={{ fontFamily: tokens.typography.fontMono }}>@ngaf/chat</code>{' '}
+              You need a Threadplane Commercial license if you use <code style={{ fontFamily: tokens.typography.fontMono }}>@threadplane/chat</code>{' '}
               in any of:
             </p>
             <ul style={{ ...bodyStyle, paddingLeft: 24 }}>
@@ -164,13 +164,13 @@ export default function LicensingPage() {
           <div style={{ maxWidth: 760 }}>
             <h2 style={headingStyle}>Install your license</h2>
             <p style={bodyStyle}>
-              After purchase, ThreadPlane emails a signed license token to the address on your receipt. Paste it
+              After purchase, Threadplane emails a signed license token to the address on your receipt. Paste it
               into your app's <code style={{ fontFamily: tokens.typography.fontMono }}>provideChat()</code>{' '}
               configuration:
             </p>
             <pre style={codeBlockStyle}>{`// app.config.ts
 import { ApplicationConfig } from '@angular/core';
-import { provideChat } from '@ngaf/chat';
+import { provideChat } from '@threadplane/chat';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -200,7 +200,7 @@ export const appConfig: ApplicationConfig = {
             <h2 style={headingStyle}>Tier scoping</h2>
             <p style={bodyStyle}>
               Pick the tier that matches how you'll deploy. All paid tiers grant the same{' '}
-              ThreadPlane Commercial license; the difference is the scope of use and the number of seats.
+              Threadplane Commercial license; the difference is the scope of use and the number of seats.
             </p>
             <div style={{ overflow: 'auto' }}>
               <table style={tableStyle}>
@@ -243,7 +243,7 @@ export const appConfig: ApplicationConfig = {
           <div style={{ maxWidth: 760 }}>
             <h2 style={headingStyle}>Evaluation</h2>
             <p style={bodyStyle}>
-              You may use <code style={{ fontFamily: tokens.typography.fontMono }}>@ngaf/chat</code> commercially
+              You may use <code style={{ fontFamily: tokens.typography.fontMono }}>@threadplane/chat</code> commercially
               for <strong style={{ color: tokens.colors.textPrimary }}>30 calendar days</strong> from your first
               commercial use as a good-faith evaluation. There is no telemetry, no registration, no email check —
               we trust you to count the days. After 30 days you must either purchase a license or stop the

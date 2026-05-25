@@ -113,7 +113,7 @@ export async function verifyReleaseVersions({
     if (
       packageInfo.packageJson.private !== true &&
       typeof packageInfo.packageName === 'string' &&
-      packageInfo.packageName.startsWith('@ngaf/') &&
+      packageInfo.packageName.startsWith('@threadplane/') &&
       project.targets['nx-release-publish'] &&
       !releaseProjectNames.has(project.name)
     ) {

@@ -1,13 +1,13 @@
-# @ngaf/langgraph
+# @threadplane/langgraph
 
-Adapter that wraps a LangGraph agent into the runtime-neutral `Agent` contract from `@ngaf/chat`. The Angular equivalent of LangGraph's React `useStream()` hook — signal-driven access to messages, status, tool calls, interrupts, subagents, regenerate, and thread history.
+Adapter that wraps a LangGraph agent into the runtime-neutral `Agent` contract from `@threadplane/chat`. The Angular equivalent of LangGraph's React `useStream()` hook — signal-driven access to messages, status, tool calls, interrupts, subagents, regenerate, and thread history.
 
-Part of [Agent UI for Angular](https://github.com/cacheplane/angular-agent-framework). MIT licensed.
+Part of [Threadplane](https://github.com/cacheplane/angular-agent-framework). MIT licensed.
 
 ## Install
 
 ```bash
-npm install @ngaf/langgraph @ngaf/chat
+npm install @threadplane/langgraph @threadplane/chat
 ```
 
 **Peer dependencies:** `@angular/core ^20.0.0 || ^21.0.0`, `@langchain/core ^1.1.0`, `@langchain/langgraph-sdk ^1.7.0`, `rxjs ~7.8.0`
@@ -24,7 +24,7 @@ npm install @ngaf/langgraph @ngaf/chat
 
 ```ts
 // app.config.ts
-import { provideAgent } from '@ngaf/langgraph';
+import { provideAgent } from '@threadplane/langgraph';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -38,8 +38,8 @@ export const appConfig: ApplicationConfig = {
 ```ts
 // chat.component.ts
 import { Component } from '@angular/core';
-import { agent } from '@ngaf/langgraph';
-import { ChatComponent } from '@ngaf/chat';
+import { agent } from '@threadplane/langgraph';
+import { ChatComponent } from '@threadplane/chat';
 
 @Component({
   imports: [ChatComponent],
@@ -76,7 +76,7 @@ return new AIMessage({
   },
 });
 
-// Message.citations auto-populates in @ngaf/chat via extractCitations()
+// Message.citations auto-populates in @threadplane/chat via extractCitations()
 ```
 
 ## Documentation

@@ -2,7 +2,7 @@
 import { Observable } from 'rxjs';
 import type { AbstractAgent, BaseEvent } from '@ag-ui/client';
 import type { RunAgentInput } from '@ag-ui/core';
-import { runAgentConformance } from '@ngaf/chat/testing';
+import { runAgentConformance } from '@threadplane/chat/testing';
 import { toAgent } from './to-agent';
 
 /**
@@ -49,11 +49,11 @@ import {
   REASONING_FIXTURE_MESSAGE_ID,
   assertReasoningFixtureMessages,
   type AbstractEvent,
-} from '@ngaf/chat/testing';
+} from '@threadplane/chat/testing';
 import { reduceEvent } from './reducer';
 import { signal } from '@angular/core';
 import { Subject } from 'rxjs';
-import type { Message, AgentStatus, ToolCall, AgentEvent } from '@ngaf/chat';
+import type { Message, AgentStatus, ToolCall, AgentEvent } from '@threadplane/chat';
 
 function abstractToAgUi(event: AbstractEvent, messageId: string): any {
   switch (event.kind) {

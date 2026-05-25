@@ -4,7 +4,7 @@ import type {
   Db,
   License,
   UpsertLicenseInput,
-} from '@ngaf/db';
+} from '@threadplane/db';
 import type { MintInput } from './sign.js';
 import type { LicenseEmailVars, RevocationEmailVars } from './email.js';
 import { extractTier, computeSeats, type MintableTier } from './tier.js';

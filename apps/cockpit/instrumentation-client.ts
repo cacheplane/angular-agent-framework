@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 import posthog from 'posthog-js';
 import { getCockpitSessionId } from './src/lib/analytics/distinct-id';
-import { shouldCaptureAnalytics } from '@ngaf/telemetry/browser';
+import { shouldCaptureAnalytics } from '@threadplane/telemetry/browser';
 
 const token = process.env.NEXT_PUBLIC_COCKPIT_POSTHOG_TOKEN;
 const captureLocal = process.env.NEXT_PUBLIC_COCKPIT_CAPTURE_LOCAL === 'true';

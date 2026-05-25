@@ -101,7 +101,7 @@ describe('CI workflow', () => {
     );
   });
 
-  it('runs production smoke against ThreadPlane domains', async () => {
+  it('runs production smoke against Threadplane domains', async () => {
     const productionSmokeJob = await readProductionSmokeJob();
 
     assert.match(productionSmokeJob, /BASE_URL:\s*https:\/\/cockpit\.threadplane\.ai/);
@@ -109,7 +109,7 @@ describe('CI workflow', () => {
     assert.match(productionSmokeJob, /DEMO_URL:\s*https:\/\/demo\.threadplane\.ai/);
   });
 
-  it('binds Vercel deploys to the renamed ThreadPlane projects', async () => {
+  it('binds Vercel deploys to the renamed Threadplane projects', async () => {
     const deployJob = await readDeployJob();
     const workflow = await readWorkflow();
 

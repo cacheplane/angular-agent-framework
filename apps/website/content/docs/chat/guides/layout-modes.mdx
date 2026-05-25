@@ -1,6 +1,6 @@
 # Layout Modes
 
-`@ngaf/chat` ships three ready-made layout compositions. Pick the one that best fits how chat fits into your application.
+`@threadplane/chat` ships three ready-made layout compositions. Pick the one that best fits how chat fits into your application.
 
 | Mode | Component | Best for |
 |---|---|---|
@@ -19,8 +19,8 @@ The embedded composition fills its parent container using `height: 100%` and a f
 
 ```typescript
 import { Component, ChangeDetectionStrategy, signal } from '@angular/core';
-import { agent } from '@ngaf/langgraph';
-import { ChatComponent } from '@ngaf/chat';
+import { agent } from '@threadplane/langgraph';
+import { ChatComponent } from '@threadplane/chat';
 
 @Component({
   selector: 'app-chat-page',
@@ -56,8 +56,8 @@ The popup composition renders a circular launcher button fixed to the bottom-rig
 
 ```typescript
 import { Component, ChangeDetectionStrategy, signal } from '@angular/core';
-import { agent } from '@ngaf/langgraph';
-import { ChatPopupComponent } from '@ngaf/chat';
+import { agent } from '@threadplane/langgraph';
+import { ChatPopupComponent } from '@threadplane/chat';
 
 @Component({
   selector: 'app-root',
@@ -102,8 +102,8 @@ The sidebar composition renders a slide-in panel anchored to the right edge. It 
 
 ```typescript
 import { Component, ChangeDetectionStrategy, signal } from '@angular/core';
-import { agent } from '@ngaf/langgraph';
-import { ChatSidebarComponent } from '@ngaf/chat';
+import { agent } from '@threadplane/langgraph';
+import { ChatSidebarComponent } from '@threadplane/chat';
 
 @Component({
   selector: 'app-shell',

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-import type { A2uiComponentDef } from '@ngaf/a2ui';
+import type { A2uiComponentDef } from '@threadplane/a2ui';
 
 const REF_PATTERN = /\{(\$\.[^}]+)\}/g;
 

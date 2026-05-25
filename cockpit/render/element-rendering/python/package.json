@@ -1,5 +1,6 @@
 {
-  "name": "@ngaf/cockpit-render-element-rendering-python",
+  "name": "@threadplane/cockpit-render-element-rendering-python",
+  "private": true,
   "version": "0.0.1",
   "license": "MIT",
   "sideEffects": false

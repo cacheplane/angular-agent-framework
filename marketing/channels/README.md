@@ -1,6 +1,6 @@
-# @ngaf/marketing-channels
+# @threadplane/marketing-channels
 
-Channel adapters for the ThreadPlane marketing pipeline. One adapter per channel, all behind a single `ChannelAdapter` interface.
+Channel adapters for the Threadplane marketing pipeline. One adapter per channel, all behind a single `ChannelAdapter` interface.
 
 ## Implemented
 
@@ -15,12 +15,12 @@ Channel adapters for the ThreadPlane marketing pipeline. One adapter per channel
 ## Quickstart
 
 ```ts
-import { getAdapter } from '@ngaf/marketing-channels';
+import { getAdapter } from '@threadplane/marketing-channels';
 
 const x = getAdapter('x');
 const result = await x.post({
   channel: 'x',
-  text: 'Hello from ThreadPlane.',
+  text: 'Hello from Threadplane.',
 });
 console.log(result.url);
 ```

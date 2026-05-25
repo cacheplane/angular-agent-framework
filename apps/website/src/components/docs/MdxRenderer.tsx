@@ -1,5 +1,5 @@
 import { MDXRemote } from 'next-mdx-remote/rsc';
-import { tokens } from '@ngaf/design-tokens';
+import { tokens } from '@threadplane/design-tokens';
 import { Callout } from './mdx/Callout';
 import { Steps, Step } from './mdx/Steps';
 import { Tabs, Tab } from './mdx/Tabs';
