@@ -7,6 +7,19 @@ export interface LicenseEmailVars {
   seats: number;
   token: string;
   expiresAt: Date;
+  /** Stripe customer id; used to mint a portal link inline in the email. */
+  stripeCustomerId: string;
+}
+
+/**
+ * Public URL where the buyer can reach the Stripe Customer Portal for
+ * their subscription. Reads from PORTAL_BASE_URL when set (e.g. on
+ * preview deploys), otherwise points at the production threadplane.ai
+ * host.
+ */
+function portalUrl(stripeCustomerId: string): string {
+  const base = process.env['PORTAL_BASE_URL'] ?? 'https://threadplane.ai';
+  return `${base}/api/portal/session?customer_id=${encodeURIComponent(stripeCustomerId)}`;
 }
 
 export interface RenderedEmail {
@@ -23,10 +36,12 @@ export function renderLicenseEmail(vars: LicenseEmailVars): RenderedEmail {
   const subject = `Your ThreadPlane license — ${vars.tier} (${vars.seats} ${seatWord})`;
   const expiresIso = vars.expiresAt.toISOString();
 
+  const portal = portalUrl(vars.stripeCustomerId);
   const text = `Thanks for your ThreadPlane license purchase.
 
-Your license is valid for 12 months from today. Paste the token below
-into your @ngaf/chat configuration:
+Paste the token below into your @ngaf/chat configuration. Your subscription
+renews automatically on ${expiresIso.slice(0, 10)}; manage or cancel it via
+the link at the bottom of this email.
 
 -----BEGIN THREADPLANE LICENSE-----
 ${vars.token}
@@ -45,6 +60,7 @@ Installation:
   // .env
   THREADPLANE_LICENSE=<paste token above>
 
+Manage subscription: ${portal}
 Docs: https://threadplane.ai/docs/licensing
 Questions: reply to this email.
 
@@ -52,7 +68,7 @@ Questions: reply to this email.
 `;
 
   const html = `<p>Thanks for your ThreadPlane license purchase.</p>
-<p>Your license is valid for 12 months from today. Paste the token below into your <code>@ngaf/chat</code> configuration:</p>
+<p>Paste the token below into your <code>@ngaf/chat</code> configuration. Your subscription renews automatically on ${escapeHtml(expiresIso.slice(0, 10))}; <a href="${escapeHtml(portal)}">manage or cancel</a> any time.</p>
 <pre style="white-space:pre-wrap;word-break:break-all;font-family:monospace;font-size:12px;background:#f4f4f4;padding:12px;border-radius:4px">-----BEGIN THREADPLANE LICENSE-----
 ${escapeHtml(vars.token)}
 -----END THREADPLANE LICENSE-----</pre>
@@ -66,8 +82,7 @@ ${escapeHtml(vars.token)}
 
 // .env
 THREADPLANE_LICENSE=&lt;paste token above&gt;</pre>
-<p>Docs: <a href="https://threadplane.ai/docs/licensing">threadplane.ai/docs/licensing</a><br>
-Questions: reply to this email.</p>
+<p><a href="${escapeHtml(portal)}">Manage subscription</a> &middot; <a href="https://threadplane.ai/docs/licensing">Docs</a> &middot; Questions: reply to this email.</p>
 <p>-- The ThreadPlane team</p>
 `;
 
