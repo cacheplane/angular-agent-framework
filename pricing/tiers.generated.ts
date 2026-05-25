@@ -4,7 +4,7 @@ import type { TierSlug, BillingCycle } from './tiers.config';
 
 type BuyableSlug = Exclude<TierSlug, 'community' | 'enterprise'>;
 
-// Empty stub — run `STRIPE_SECRET_KEY=sk_... pnpm tsx scripts/stripe/sync-products.ts`
-// to populate. Until that runs, the checkout API returns a 503 with a helpful
-// message.
-export const STRIPE_PRICE_IDS: Partial<Record<BuyableSlug, Record<BillingCycle, string>>> = {};
+export const STRIPE_PRICE_IDS: Partial<Record<BuyableSlug, Record<BillingCycle, string>>> = {
+  developer_seat: { monthly: "price_1TapR1GYRsLErhxb83221xMU", annual: "price_1TapR1GYRsLErhxb67dc67h1" },
+  team: { monthly: "price_1TapR2GYRsLErhxbBbrJMLpk", annual: "price_1TapR2GYRsLErhxbYsWAkYuE" },
+};
