@@ -145,4 +145,37 @@ describe('blog.ts', () => {
     const { getAllPosts } = await import('./blog');
     expect(getAllPosts().map((p) => p.slug)).toEqual(['first-post']);
   });
+
+  it('getRecentNonFeatured excludes the featured post', async () => {
+    setupFs({
+      '2026-05-01-first-post.mdx': post1,
+      '2026-05-10-second-post.mdx': post2,
+    });
+    const { getRecentNonFeatured } = await import('./blog');
+    // post2 is featured (see fixture at top of file). Expect only post1.
+    expect(getRecentNonFeatured().map((p) => p.slug)).toEqual(['first-post']);
+  });
+
+  it('getRecentNonFeatured caps at the limit', async () => {
+    setupFs({
+      '2026-05-01-first-post.mdx': post1,
+      '2026-05-05-extra-a.mdx': post1.replace('First Post', 'Extra A'),
+      '2026-05-06-extra-b.mdx': post1.replace('First Post', 'Extra B'),
+      '2026-05-07-extra-c.mdx': post1.replace('First Post', 'Extra C'),
+      '2026-05-10-second-post.mdx': post2,
+    });
+    const { getRecentNonFeatured } = await import('./blog');
+    // post2 is featured and filtered out; remaining 4 should be capped to 3.
+    const result = getRecentNonFeatured(3);
+    expect(result).toHaveLength(3);
+    expect(result.map((p) => p.slug)).not.toContain('second-post');
+  });
+
+  it('getRecentNonFeatured returns [] when only the featured post exists', async () => {
+    setupFs({
+      '2026-05-10-second-post.mdx': post2,
+    });
+    const { getRecentNonFeatured } = await import('./blog');
+    expect(getRecentNonFeatured()).toEqual([]);
+  });
 });

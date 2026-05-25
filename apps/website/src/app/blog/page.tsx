@@ -1,62 +1,122 @@
+import Link from 'next/link';
+import { tokens } from '@threadplane/design-tokens';
 import { createPageMetadata } from '../../lib/site-metadata';
 import { getAllPosts, getFeaturedPost, getAllTags } from '../../lib/blog';
 import { FeaturedPostCard } from '../../components/blog/FeaturedPostCard';
 import { PostCard } from '../../components/blog/PostCard';
-import { TagChips } from '../../components/blog/TagChips';
+import { BlogTagFilter } from '../../components/blog/BlogTagFilter';
+import { Eyebrow } from '../../components/ui/Eyebrow';
 
 export const metadata = createPageMetadata({
-  title: 'Blog — Threadplane',
+  title: 'Blog — ThreadPlane',
   description:
     'Long-form writing on agent UI for Angular: streaming, generative UI, threads, interrupts, production patterns.',
   pathname: '/blog',
   type: 'website',
 });
 
-export default function BlogIndexPage() {
+interface Props {
+  searchParams: Promise<{ tag?: string }>;
+}
+
+export default async function BlogIndexPage({ searchParams }: Props) {
+  const { tag: activeTag } = await searchParams;
+
   const all = getAllPosts();
-  const featured = getFeaturedPost();
-  const rest = featured ? all.filter((p) => p.slug !== featured.slug) : all;
   const tags = getAllTags().map((t) => t.tag);
 
+  const filtered = activeTag
+    ? all.filter((p) => p.frontmatter.tags?.includes(activeTag))
+    : all;
+
+  // Featured only when no filter is active — feels like a clean list otherwise.
+  const featured = activeTag ? null : getFeaturedPost();
+  const grid = featured ? filtered.filter((p) => p.slug !== featured.slug) : filtered;
+
   return (
-    <div style={{ maxWidth: 960, margin: '0 auto', padding: '64px 24px' }}>
-      <p
-        style={{
-          fontSize: 13,
-          textTransform: 'uppercase',
-          letterSpacing: '0.08em',
-          marginBottom: 8,
-          opacity: 0.7,
-        }}
-      >
-        Blog
-      </p>
-      <h1
-        style={{
-          fontSize: 48,
-          fontWeight: 600,
-          letterSpacing: '-0.02em',
-          marginBottom: 12,
-        }}
-      >
-        Notes from Threadplane
-      </h1>
-      <p style={{ fontSize: 18, opacity: 0.8, marginBottom: 32, maxWidth: '60ch' }}>
-        Writing on agent UI for Angular — production patterns, design choices,
-        and what we&apos;re shipping.
-      </p>
-      <TagChips tags={tags} />
-      {featured ? <FeaturedPostCard post={featured} /> : null}
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
-          gap: 16,
-        }}
-      >
-        {rest.map((p) => (
-          <PostCard key={p.slug} post={p} />
-        ))}
+    <div style={{ paddingTop: 80, background: tokens.surfaces.canvas, minHeight: '100vh' }}>
+      <div style={{ maxWidth: 960, margin: '0 auto', padding: '64px 24px' }}>
+        <header style={{ marginBottom: 32 }}>
+          <Eyebrow tone="accent" style={{ marginBottom: 16 }}>
+            Blog
+          </Eyebrow>
+          <h1
+            style={{
+              fontFamily: tokens.typography.h1.family,
+              fontSize: tokens.typography.h1.size,
+              lineHeight: tokens.typography.h1.line,
+              fontWeight: 700,
+              letterSpacing: '-0.02em',
+              color: tokens.colors.textPrimary,
+              margin: '0 0 16px',
+            }}
+          >
+            Articles from ThreadPlane
+          </h1>
+          <p
+            style={{
+              fontFamily: tokens.typography.bodyLg.family,
+              fontSize: tokens.typography.bodyLg.size,
+              lineHeight: tokens.typography.bodyLg.line,
+              color: tokens.colors.textSecondary,
+              margin: 0,
+              maxWidth: '60ch',
+            }}
+          >
+            Writing on agent UI for Angular &mdash; production patterns, design
+            choices, and what we&apos;re shipping.
+          </p>
+        </header>
+
+        <BlogTagFilter activeTag={activeTag} tags={tags} />
+
+        {featured ? <FeaturedPostCard post={featured} /> : null}
+
+        {grid.length === 0 ? (
+          <div
+            style={{
+              padding: 48,
+              textAlign: 'center',
+              background: tokens.surfaces.surfaceTinted,
+              border: `1px solid ${tokens.surfaces.border}`,
+              borderRadius: 12,
+            }}
+          >
+            <p
+              style={{
+                fontFamily: tokens.typography.bodyLg.family,
+                fontSize: tokens.typography.bodyLg.size,
+                lineHeight: tokens.typography.bodyLg.line,
+                color: tokens.colors.textSecondary,
+                margin: '0 0 16px',
+              }}
+            >
+              No posts tagged <em>{activeTag}</em> yet.
+            </p>
+            <Link
+              href="/blog"
+              style={{
+                color: tokens.colors.accent,
+                textDecoration: 'underline',
+                fontWeight: 500,
+              }}
+            >
+              View all posts
+            </Link>
+          </div>
+        ) : (
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+              gap: 16,
+            }}
+          >
+            {grid.map((p) => (
+              <PostCard key={p.slug} post={p} />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
