@@ -146,17 +146,17 @@ describe('blog.ts', () => {
     expect(getAllPosts().map((p) => p.slug)).toEqual(['first-post']);
   });
 
-  it('getRecentNonFeatured excludes the featured post', async () => {
+  it('getRecentPosts returns newest-first, including featured', async () => {
     setupFs({
       '2026-05-01-first-post.mdx': post1,
       '2026-05-10-second-post.mdx': post2,
     });
-    const { getRecentNonFeatured } = await import('./blog');
-    // post2 is featured (see fixture at top of file). Expect only post1.
-    expect(getRecentNonFeatured().map((p) => p.slug)).toEqual(['first-post']);
+    const { getRecentPosts } = await import('./blog');
+    // post2 is featured; it should still appear (sorted first by date).
+    expect(getRecentPosts().map((p) => p.slug)).toEqual(['second-post', 'first-post']);
   });
 
-  it('getRecentNonFeatured caps at the limit', async () => {
+  it('getRecentPosts caps at the limit', async () => {
     setupFs({
       '2026-05-01-first-post.mdx': post1,
       '2026-05-05-extra-a.mdx': post1.replace('First Post', 'Extra A'),
@@ -164,18 +164,16 @@ describe('blog.ts', () => {
       '2026-05-07-extra-c.mdx': post1.replace('First Post', 'Extra C'),
       '2026-05-10-second-post.mdx': post2,
     });
-    const { getRecentNonFeatured } = await import('./blog');
-    // post2 is featured and filtered out; remaining 4 should be capped to 3.
-    const result = getRecentNonFeatured(3);
+    const { getRecentPosts } = await import('./blog');
+    const result = getRecentPosts(3);
     expect(result).toHaveLength(3);
-    expect(result.map((p) => p.slug)).not.toContain('second-post');
+    // Should be the three newest by date.
+    expect(result.map((p) => p.slug)).toEqual(['second-post', 'extra-c', 'extra-b']);
   });
 
-  it('getRecentNonFeatured returns [] when only the featured post exists', async () => {
-    setupFs({
-      '2026-05-10-second-post.mdx': post2,
-    });
-    const { getRecentNonFeatured } = await import('./blog');
-    expect(getRecentNonFeatured()).toEqual([]);
+  it('getRecentPosts returns [] when no posts exist', async () => {
+    setupFs({});
+    const { getRecentPosts } = await import('./blog');
+    expect(getRecentPosts()).toEqual([]);
   });
 });
