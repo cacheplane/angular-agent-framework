@@ -1,6 +1,6 @@
 {
   "name": "@threadplane/langgraph",
-  "version": "0.0.46",
+  "version": "0.0.47",
   "peerDependencies": {
     "@threadplane/chat": "*",
     "@angular/core": "^20.0.0 || ^21.0.0",

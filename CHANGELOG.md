@@ -1,3 +1,39 @@
+## 0.0.47 (2026-05-26)
+
+### 🚀 Features
+
+- **billing:** Stripe Customer Portal route + email + /thanks link ([#537](https://github.com/cacheplane/angular-agent-framework/pull/537))
+- **blog:** brand-polish landing + Recent articles home section ([#543](https://github.com/cacheplane/angular-agent-framework/pull/543))
+- ⚠️  **chat:** relicense @ngaf/chat — MIT → PolyForm Noncommercial 1.0.0 OR commercial ([#501](https://github.com/cacheplane/angular-agent-framework/pull/501))
+- **examples-chat:** URL-based thread routing — /<mode>/:threadId ([#500](https://github.com/cacheplane/angular-agent-framework/pull/500))
+- **examples-chat:** round-trip agent knobs through URL query params ([#527](https://github.com/cacheplane/angular-agent-framework/pull/527))
+- **licensing:** verification runtime — minting deploy + prod public-key wiring (PR C) ([#510](https://github.com/cacheplane/angular-agent-framework/pull/510))
+- **minting:** handle charge.refunded to revoke license + email customer ([#529](https://github.com/cacheplane/angular-agent-framework/pull/529))
+- **website:** pricing rebuild + sitewide MIT-qualification (PR B) ([#502](https://github.com/cacheplane/angular-agent-framework/pull/502))
+- **website:** Stripe Checkout for paid pricing tiers (PR B-Stripe) ([#508](https://github.com/cacheplane/angular-agent-framework/pull/508))
+- **website:** AG-UI tutorial blog post + brand-polished blog template ([#528](https://github.com/cacheplane/angular-agent-framework/pull/528))
+
+### 🩹 Fixes
+
+- **ci:** minting-deploy health check uses correct domain mint.threadplane.ai ([#512](https://github.com/cacheplane/angular-agent-framework/pull/512), [#510](https://github.com/cacheplane/angular-agent-framework/issues/510))
+- **ci:** add required PR gate ([bd2bebb7](https://github.com/cacheplane/angular-agent-framework/commit/bd2bebb7))
+- **ci:** repair main test regressions ([9e17fcb6](https://github.com/cacheplane/angular-agent-framework/commit/9e17fcb6))
+- **examples-chat:** collapse mode routes via UrlMatcher to preserve component instance ([#504](https://github.com/cacheplane/angular-agent-framework/pull/504), [#500](https://github.com/cacheplane/angular-agent-framework/issues/500))
+- **graph:** use SDK in-process ASGI transport for thread metadata writes ([#493](https://github.com/cacheplane/angular-agent-framework/pull/493), [#492](https://github.com/cacheplane/angular-agent-framework/issues/492), [#474](https://github.com/cacheplane/angular-agent-framework/issues/474))
+- **minting:** handle one-time-payment Checkout sessions + align tier slugs (PR D) ([#516](https://github.com/cacheplane/angular-agent-framework/pull/516))
+- **minting:** rename DATABASE_URL → MINTING_DATABASE_URL to avoid Neon integration override ([#525](https://github.com/cacheplane/angular-agent-framework/pull/525))
+- **minting:** read current_period_end from subscription item ([#534](https://github.com/cacheplane/angular-agent-framework/pull/534), [#532](https://github.com/cacheplane/angular-agent-framework/issues/532))
+
+### ⚠️  Breaking Changes
+
+- **chat:** relicense @ngaf/chat — MIT → PolyForm Noncommercial 1.0.0 OR commercial  ([#501](https://github.com/cacheplane/angular-agent-framework/pull/501))
+
+### ❤️ Thank You
+
+- Brian Love @blove
+- Claude Opus 4.7 (1M context)
+- Claude Sonnet 4.6
+
 ## 0.0.35 (2026-05-16)
 
 ### 🚀 Features
