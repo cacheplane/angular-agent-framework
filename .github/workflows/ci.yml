@@ -789,42 +789,11 @@ jobs:
           });
           NODE
 
-  minting-deploy:
-    name: Minting service deploy
-    needs: [library]
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    steps:
-      - uses: actions/checkout@v6.0.2
-      - uses: actions/setup-node@v6.3.0
-        with:
-          node-version: 22
-          cache: npm
-      - run: npm ci
-      - name: Deploy minting service to Vercel (production)
-        working-directory: apps/minting-service
-        run: |
-          mkdir -p .vercel
-          cat > .vercel/project.json <<EOF
-          {"projectId":"${{ secrets.VERCEL_MINTING_PROJECT_ID }}","orgId":"${{ secrets.VERCEL_ORG_ID }}","projectName":"threadplane-minting-service"}
-          EOF
-          npx vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
-          npx vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
-          npx vercel deploy --prebuilt --prod --yes --token=${{ secrets.VERCEL_TOKEN }}
-      - name: Verify minting service health
-        env:
-          MINTING_URL: https://mint.threadplane.ai
-        run: |
-          for i in 1 2 3 4 5; do
-            if curl -sf -o /dev/null "$MINTING_URL/api/health"; then
-              echo "Minting service is healthy."
-              exit 0
-            fi
-            echo "Waiting for minting service; attempt $i/5..."
-            sleep 5
-          done
-          echo "::error::Minting service did not respond at $MINTING_URL/api/health"
-          exit 1
+  # Minting service deploys via Vercel's git integration on every push to main
+  # (configured in the Vercel project's git settings, not here). The previous
+  # manual `vercel deploy` step doubled the rootDirectory path and was always
+  # failing despite production being healthy. Dropped; rely on Vercel for the
+  # deploy itself.
 
   production-smoke:
     name: Production smoke
