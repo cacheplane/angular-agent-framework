@@ -4,15 +4,15 @@ import { Section } from '../ui/Section';
 import { Container } from '../ui/Container';
 import { Eyebrow } from '../ui/Eyebrow';
 import { PostCard } from '../blog/PostCard';
-import { getRecentNonFeatured } from '../../lib/blog';
+import { getRecentPosts } from '../../lib/blog';
 
 /**
- * Marketing-home strip showing the three most recent non-featured posts.
- * Renders nothing when no eligible posts exist, so the home page stays clean
- * while the blog catalog is small.
+ * Marketing-home strip showing the most recent posts (including any flagged
+ * `featured`). Renders nothing when no posts exist, so the home page stays
+ * clean while the blog catalog is small.
  */
 export function RecentArticles() {
-  const posts = getRecentNonFeatured(3);
+  const posts = getRecentPosts(3);
   if (posts.length === 0) return null;
 
   return (
