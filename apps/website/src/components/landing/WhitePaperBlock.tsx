@@ -168,6 +168,7 @@ export function WhitePaperBlock({ paper = 'overview' }: WhitePaperBlockProps = {
                 <input
                   id="wp-email"
                   type="email"
+                  autoComplete="email"
                   placeholder="you@company.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}

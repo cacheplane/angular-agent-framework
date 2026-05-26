@@ -176,7 +176,15 @@ export function Nav() {
           className="lg:hidden"
           onClick={() => { setOpen(!open); if (!open) setMobileTab(isDocsPage ? 'docs' : 'site'); }}
           aria-label={open ? 'Close menu' : 'Open menu'}
-          style={{ color: tokens.colors.textPrimary }}>
+          style={{
+            color: tokens.colors.textPrimary,
+            // Expand hit area to >=44x44 without shifting visual layout.
+            padding: 12,
+            margin: -12,
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}>
           {open ? <CloseIcon /> : <MenuIcon />}
         </button>
       </div>

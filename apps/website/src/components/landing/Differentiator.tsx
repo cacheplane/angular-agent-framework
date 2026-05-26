@@ -155,7 +155,7 @@ export function Differentiator() {
                   flexWrap: 'wrap',
                 }}
               >
-                <div style={{ flex: '1 1 360px', minWidth: 0 }}>
+                <div style={{ flex: '1 1 200px', minWidth: 0 }}>
                   <span
                     style={{
                       fontFamily: tokens.typography.body.family,

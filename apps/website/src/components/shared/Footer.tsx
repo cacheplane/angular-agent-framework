@@ -70,6 +70,7 @@ function NewsletterForm() {
       <input
         id="footer-email"
         type="email"
+        autoComplete="email"
         placeholder="Email address"
         value={email}
         onChange={e => setEmail(e.target.value)}
