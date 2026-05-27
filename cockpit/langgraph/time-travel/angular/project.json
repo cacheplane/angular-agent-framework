@@ -78,7 +78,7 @@
       },
       "defaultConfiguration": "development",
       "options": {
-        "proxyConfig": "cockpit/langgraph/time-travel/angular/proxy.conf.json"
+        "proxyConfig": "cockpit/langgraph/time-travel/angular/proxy.conf.mjs"
       }
     },
     "smoke": {

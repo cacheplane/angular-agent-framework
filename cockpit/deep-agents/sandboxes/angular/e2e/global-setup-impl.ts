@@ -1,11 +1,14 @@
 // SPDX-License-Identifier: MIT
 import { resolve } from 'node:path';
+import { portsFor } from '../../../../../cockpit/ports.mjs';
 import { createGlobalSetup } from '@threadplane-internal/e2e-harness';
+
+const ports = portsFor('cockpit-deep-agents-sandboxes-angular');
 
 export default createGlobalSetup({
   langgraphCwd: 'cockpit/deep-agents/sandboxes/python',
-  langgraphPort: 5315,
+  langgraphPort: ports.langgraph,
   angularProject: 'cockpit-deep-agents-sandboxes-angular',
-  angularPort: 4315,
+  angularPort: ports.angular,
   fixturesDir: resolve(__dirname, 'fixtures'),
 });
