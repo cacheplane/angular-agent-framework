@@ -5,6 +5,10 @@
   box-sizing: border-box;
 }
 
+html {
+  overflow-x: hidden;
+}
+
 body {
   background-color: var(--color-bg);
   color: var(--color-text-primary);
@@ -12,6 +16,14 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
+}
+
+/* Code blocks scroll internally; never expand the layout viewport. */
+pre, code {
+  max-width: 100%;
+}
+pre {
+  overflow-x: auto;
 }
 
 /* Long unbreakable tokens (e.g. package names like @threadplane/chat,
