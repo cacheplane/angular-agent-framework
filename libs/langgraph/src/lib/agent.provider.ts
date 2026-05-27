@@ -67,8 +67,10 @@ export function provideAgent<T = Record<string, unknown>>(
 ): Provider[] {
   return [
     // Keep AGENT_CONFIG functional so the legacy agent({...}) factory still
-    // reads its global defaults from it. Once the legacy factory is removed,
-    // AGENT_CONFIG and this provider line go away too.
+    // reads its global defaults from it. Removed in Task A1c, when the legacy
+    // `agent({...})` factory is deleted; AGENT_CONFIG and this provider line
+    // go away with it.
+    // See docs/superpowers/plans/2026-05-27-agent-to-langgraph-rename.md.
     { provide: AGENT_CONFIG, useValue: config },
     {
       provide: AGENT,

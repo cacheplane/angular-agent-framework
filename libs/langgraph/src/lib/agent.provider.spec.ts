@@ -60,6 +60,15 @@ describe('provideAgent', () => {
     expect(first).toBe(second);
   });
 
+  it('throws when AGENT is injected without an assistantId in config', () => {
+    TestBed.configureTestingModule({
+      providers: [provideAgent({ apiUrl: 'http://localhost' })],
+    });
+    expect(() =>
+      TestBed.runInInjectionContext(() => TestBed.inject(AGENT)),
+    ).toThrow(/`assistantId` is required to construct the AGENT singleton/);
+  });
+
   it('does not perform license checks because @threadplane/langgraph is MIT-licensed', async () => {
     const warn = globalThis.console.warn as ReturnType<typeof vi.fn>;
     const legacyLicenseConfig = {
