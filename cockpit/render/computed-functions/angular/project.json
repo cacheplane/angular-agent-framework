@@ -78,7 +78,7 @@
       },
       "defaultConfiguration": "development",
       "options": {
-        "proxyConfig": "cockpit/render/computed-functions/angular/proxy.conf.json"
+        "proxyConfig": "cockpit/render/computed-functions/angular/proxy.conf.mjs"
       }
     },
     "smoke": {

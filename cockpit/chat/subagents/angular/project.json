@@ -78,7 +78,7 @@
       },
       "defaultConfiguration": "development",
       "options": {
-        "proxyConfig": "cockpit/chat/subagents/angular/proxy.conf.json"
+        "proxyConfig": "cockpit/chat/subagents/angular/proxy.conf.mjs"
       }
     },
     "e2e": {
