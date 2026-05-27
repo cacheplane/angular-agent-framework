@@ -1,8 +1,10 @@
 # @threadplane/ag-ui
 
-Adapter that wraps an [AG-UI](https://github.com/ag-ui-protocol/ag-ui) `AbstractAgent` into the runtime-neutral `Agent` contract from `@threadplane/chat`. Works with any AG-UI-compatible backend — LangGraph, CrewAI, Mastra, Microsoft Agent Framework, AG2, Pydantic AI, AWS Strands, CopilotKit runtime.
+AG-UI protocol adapter for Angular. Wraps an [AG-UI](https://github.com/ag-ui-protocol/ag-ui) `AbstractAgent` into the runtime-neutral `Agent` contract from `@threadplane/chat`. Works with any AG-UI-compatible backend — CrewAI, Mastra, Microsoft Agent Framework, AG2, Pydantic AI, AWS Strands, CopilotKit runtime, or LangGraph fronted by AG-UI.
 
 Part of [Threadplane](https://github.com/cacheplane/angular-agent-framework). MIT licensed.
+
+> Talking to LangGraph Platform directly? See [`@threadplane/langgraph`](https://www.npmjs.com/package/@threadplane/langgraph) — same API shape, LangGraph SDK underneath.
 
 ## Install
 
@@ -59,9 +61,10 @@ Each citation object in the array supports `id`, `index`, `title`, `url`, `snipp
 
 ## Documentation
 
-- [Quickstart](https://threadplane.ai/docs/agent/getting-started/quickstart)
+- [Quickstart](https://threadplane.ai/docs/ag-ui/getting-started/quickstart)
 - [AG-UI adapter guide](https://threadplane.ai/docs/chat/guides/writing-an-adapter)
 - [AG-UI protocol](https://github.com/ag-ui-protocol/ag-ui)
+- [Choosing an adapter (LangGraph vs AG-UI)](https://threadplane.ai/docs/choosing-an-adapter)
 
 ## License
 
