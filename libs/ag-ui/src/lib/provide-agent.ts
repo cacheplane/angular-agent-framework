@@ -12,7 +12,7 @@ import { toAgent } from './to-agent';
  *   - threadId: string (optional) — thread identifier
  *   - headers: Record<string, string> (optional) — custom HTTP headers
  */
-export interface AgUiAgentConfig {
+export interface AgentConfig {
   url: string;
   agentId?: string;
   threadId?: string;
@@ -21,7 +21,8 @@ export interface AgUiAgentConfig {
   telemetry?: AgentRuntimeTelemetrySink | false;
 }
 
-export const AG_UI_AGENT = new InjectionToken<Agent>('AG_UI_AGENT');
+/** @internal — exported for spec access only. Consumers must use injectAgent(). */
+export const AGENT = new InjectionToken<Agent>('AGENT');
 
 /**
  * Provides an Agent instance wired through HttpAgent and toAgent.
@@ -29,10 +30,10 @@ export const AG_UI_AGENT = new InjectionToken<Agent>('AG_UI_AGENT');
  * Agent contract via toAgent(). Returns a provider array suitable for
  * bootstrapApplication or TestBed.configureTestingModule().
  */
-export function provideAgUiAgent(config: AgUiAgentConfig): Provider[] {
+export function provideAgent(config: AgentConfig): Provider[] {
   return [
     {
-      provide: AG_UI_AGENT,
+      provide: AGENT,
       useFactory: () => {
         const source = new HttpAgent({
           url: config.url,
@@ -47,9 +48,9 @@ export function provideAgUiAgent(config: AgUiAgentConfig): Provider[] {
 }
 
 /**
- * Injects the AG_UI_AGENT from Angular's dependency injection container.
- * Use this in components or services that have been provided via provideAgUiAgent().
+ * Injects the Agent from Angular's dependency injection container.
+ * Use this in components or services that have been provided via provideAgent().
  */
-export function injectAgUiAgent(): Agent {
-  return inject(AG_UI_AGENT);
+export function injectAgent(): Agent {
+  return inject(AGENT);
 }

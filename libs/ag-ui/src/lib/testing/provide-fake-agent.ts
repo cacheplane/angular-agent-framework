@@ -1,11 +1,11 @@
-// libs/ag-ui/src/lib/testing/provide-fake-ag-ui-agent.ts
+// libs/ag-ui/src/lib/testing/provide-fake-agent.ts
 // SPDX-License-Identifier: MIT
 import { type Provider } from '@angular/core';
-import { AG_UI_AGENT } from '../provide-ag-ui-agent';
+import { AGENT } from '../provide-agent';
 import { toAgent } from '../to-agent';
 import { FakeAgent } from './fake-agent';
 
-export interface FakeAgUiAgentConfig {
+export interface FakeAgentConfig {
   /** Tokens streamed back as the assistant reply. */
   tokens?: string[];
   /** Optional reasoning chunks emitted before the text reply. */
@@ -15,15 +15,15 @@ export interface FakeAgUiAgentConfig {
 }
 
 /**
- * Registers an in-process FakeAgent under AG_UI_AGENT.
+ * Registers an in-process FakeAgent under AGENT.
  *
  * Use for offline demos and development. Drop-in replacement for
- * provideAgUiAgent({ url }) when no real backend is available.
+ * provideAgent({ url }) when no real backend is available.
  */
-export function provideFakeAgUiAgent(config: FakeAgUiAgentConfig = {}): Provider[] {
+export function provideFakeAgent(config: FakeAgentConfig = {}): Provider[] {
   return [
     {
-      provide: AG_UI_AGENT,
+      provide: AGENT,
       useFactory: () => toAgent(new FakeAgent(config)),
     },
   ];

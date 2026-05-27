@@ -3,7 +3,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { Observable } from 'rxjs';
 import type { AbstractAgent, BaseEvent } from '@ag-ui/client';
 import type { RunAgentInput } from '@ag-ui/core';
-import { provideAgUiAgent, AG_UI_AGENT } from './provide-ag-ui-agent';
+import { provideAgent, AGENT } from './provide-agent';
 
 /**
  * Minimal stub that satisfies the AbstractAgent shape for provider testing.
@@ -57,18 +57,18 @@ class StubAgent {
   }
 }
 
-describe('provideAgUiAgent', () => {
+describe('provideAgent', () => {
   it('returns a provider array', () => {
-    const providers = provideAgUiAgent({ url: 'http://example.test/agent' });
+    const providers = provideAgent({ url: 'http://example.test/agent' });
     expect(Array.isArray(providers)).toBe(true);
     expect(providers.length).toBeGreaterThan(0);
   });
 
-  it('provides AG_UI_AGENT token', () => {
-    const providers = provideAgUiAgent({ url: 'http://example.test/agent' });
+  it('provides Agent under the internal AGENT token', () => {
+    const providers = provideAgent({ url: 'http://example.test/agent' });
     const agentProvider = providers[0];
     expect(agentProvider).toBeDefined();
-    expect(agentProvider.provide).toBe(AG_UI_AGENT);
+    expect(agentProvider.provide).toBe(AGENT);
   });
 
   it('factory creates agent with all methods', () => {
@@ -81,7 +81,7 @@ describe('provideAgUiAgent', () => {
       };
     });
 
-    const providers = provideAgUiAgent({ url: 'http://example.test/agent' });
+    const providers = provideAgent({ url: 'http://example.test/agent' });
     const agentProvider = providers[0] as any;
     const agent = agentProvider.useFactory();
 
@@ -107,20 +107,20 @@ describe('provideAgUiAgent', () => {
       headers: { Authorization: 'Bearer token' },
     };
 
-    const providers = provideAgUiAgent(config);
+    const providers = provideAgent(config);
     const agentProvider = providers[0] as any;
 
     // We can't easily test the actual HttpAgent call without mocking,
     // but we verify the provider structure is correct.
-    expect(agentProvider.provide).toBe(AG_UI_AGENT);
+    expect(agentProvider.provide).toBe(AGENT);
     expect(typeof agentProvider.useFactory).toBe('function');
   });
 
   it('handles optional config fields', () => {
-    const providers = provideAgUiAgent({ url: 'http://example.test/agent' });
+    const providers = provideAgent({ url: 'http://example.test/agent' });
     const agentProvider = providers[0] as any;
 
-    expect(agentProvider.provide).toBe(AG_UI_AGENT);
+    expect(agentProvider.provide).toBe(AGENT);
     expect(typeof agentProvider.useFactory).toBe('function');
   });
 });

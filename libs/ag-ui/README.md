@@ -13,12 +13,12 @@ npm install @threadplane/ag-ui @threadplane/chat @ag-ui/client
 ## Quick start
 
 ```ts
-import { provideAgUiAgent, AG_UI_AGENT } from '@threadplane/ag-ui';
+import { provideAgent, injectAgent } from '@threadplane/ag-ui';
 import { ChatComponent } from '@threadplane/chat';
 
 // app.config.ts
 export const appConfig: ApplicationConfig = {
-  providers: [provideAgUiAgent({ url: 'https://your.agent.endpoint' })],
+  providers: [provideAgent({ url: 'https://your.agent.endpoint' })],
 };
 
 // component
@@ -27,7 +27,7 @@ export const appConfig: ApplicationConfig = {
   template: `<chat [agent]="agent" />`,
 })
 export class App {
-  protected readonly agent = inject(AG_UI_AGENT);
+  protected readonly agent = injectAgent();
 }
 ```
 
