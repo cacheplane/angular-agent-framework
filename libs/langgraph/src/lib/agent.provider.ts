@@ -46,6 +46,11 @@ export interface AgentConfig<
   subagentToolNames?: string[];
 }
 
+/**
+ * @internal — exported only so the legacy in-tree `agent({...})` factory (and
+ * its tests) can read provider-supplied defaults. Not part of the public API;
+ * consumers should construct config inline at `provideAgent({...})`.
+ */
 export const AGENT_CONFIG = new InjectionToken<AgentConfig>('AGENT_CONFIG');
 
 /**
@@ -56,7 +61,8 @@ export const AGENT = new InjectionToken<LangGraphAgent>('AGENT');
 /**
  * Angular provider factory that registers a singleton agent instance
  * (under the internal `AGENT` token) and exposes the same config under
- * `AGENT_CONFIG` for the legacy `agent({...})` factory's global-default lookup.
+ * the internal `AGENT_CONFIG` token so the in-tree `agent({...})` factory's
+ * global-default lookup keeps working for internal tests.
  *
  * To use a different agent in a component subtree, re-provide
  * `provideAgent({...})` in that component's `providers: []` array —
@@ -66,10 +72,10 @@ export function provideAgent<T = Record<string, unknown>>(
   config: AgentConfig<T>,
 ): Provider[] {
   return [
-    // Keep AGENT_CONFIG functional so the legacy agent({...}) factory still
-    // reads its global defaults from it. Removed in Task A1c, when the legacy
-    // `agent({...})` factory is deleted; AGENT_CONFIG and this provider line
-    // go away with it.
+    // Keep AGENT_CONFIG functional so the in-tree agent({...}) factory (now
+    // internal-only after Task A1c) still reads its global defaults from it.
+    // Both token + provider entry go away when option (b) — deletion of the
+    // legacy factory — is taken in a future task.
     // See docs/superpowers/plans/2026-05-27-agent-to-langgraph-rename.md.
     { provide: AGENT_CONFIG, useValue: config },
     {

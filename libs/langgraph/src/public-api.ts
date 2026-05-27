@@ -1,9 +1,6 @@
 // SPDX-License-Identifier: MIT
-// Primary function
-export { agent } from './lib/agent.fn';
-
 // Provider
-export { provideAgent, AGENT_CONFIG } from './lib/agent.provider';
+export { provideAgent } from './lib/agent.provider';
 export type { AgentConfig } from './lib/agent.provider';
 
 // Symmetric inject helper — matches @threadplane/ag-ui's injectAgUiAgent()

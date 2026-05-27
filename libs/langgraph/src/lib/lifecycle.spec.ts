@@ -2,14 +2,19 @@
 // SPDX-License-Identifier: MIT
 import { describe, it, expect, beforeEach } from 'vitest';
 import { TestBed } from '@angular/core/testing';
-import { agent } from './agent.fn';
+import { provideAgent, type AgentConfig } from './agent.provider';
+import { injectAgent } from './inject-agent';
 import { MockAgentTransport } from './transport/mock-stream.transport';
 import type { ThreadState } from '@langchain/langgraph-sdk';
 
-function withInjectionContext<T>(fn: () => T): T {
-  let result!: T;
-  TestBed.runInInjectionContext(() => { result = fn(); });
-  return result;
+function configureAgent(config: AgentConfig): void {
+  TestBed.configureTestingModule({
+    providers: [provideAgent(config)],
+  });
+}
+
+function getAgent() {
+  return TestBed.runInInjectionContext(() => injectAgent());
 }
 
 function tick(ms = 30): Promise<void> {
@@ -34,21 +39,19 @@ function threadState(checkpointId: string): ThreadState<Record<string, unknown>>
 }
 
 describe('AGENT_LIFECYCLE', () => {
-  beforeEach(() => TestBed.configureTestingModule({}));
+  beforeEach(() => TestBed.resetTestingModule());
 
   it('streamStartedAt is null before any stream', () => {
     const transport = new MockAgentTransport();
-    const ref = withInjectionContext(() =>
-      agent({ apiUrl: '', assistantId: 'a', transport }),
-    );
+    configureAgent({ apiUrl: '', assistantId: 'a', transport });
+    const ref = getAgent();
     expect(ref.lifecycle.streamStartedAt()).toBeNull();
   });
 
   it('streamStartedAt fires on first stream chunk', async () => {
     const transport = new MockAgentTransport();
-    const ref = withInjectionContext(() =>
-      agent({ apiUrl: '', assistantId: 'a', transport }),
-    );
+    configureAgent({ apiUrl: '', assistantId: 'a', transport });
+    const ref = getAgent();
     ref.submit({ message: 'hi' });
     transport.emit([{ type: 'values', values: { x: 1 } }]);
     transport.close();
@@ -60,9 +63,8 @@ describe('AGENT_LIFECYCLE', () => {
 
   it('interruptReceivedAt fires when interrupt$ becomes non-null', async () => {
     const transport = new MockAgentTransport();
-    const ref = withInjectionContext(() =>
-      agent({ apiUrl: '', assistantId: 'a', transport }),
-    );
+    configureAgent({ apiUrl: '', assistantId: 'a', transport });
+    const ref = getAgent();
     ref.submit({ message: 'hi' });
     transport.emit([
       {
@@ -77,9 +79,8 @@ describe('AGENT_LIFECYCLE', () => {
 
   it('interruptResolvedAt fires on submit({ resume })', async () => {
     const transport = new MockAgentTransport();
-    const ref = withInjectionContext(() =>
-      agent({ apiUrl: '', assistantId: 'a', transport, threadId: 'thread-1' }),
-    );
+    configureAgent({ apiUrl: '', assistantId: 'a', transport, threadId: 'thread-1' });
+    const ref = getAgent();
     expect(ref.lifecycle.interruptResolvedAt()).toBeNull();
     void ref.submit({ resume: { approved: true } });
     await tick(10);
@@ -88,9 +89,8 @@ describe('AGENT_LIFECYCLE', () => {
 
   it('threadCreatedAt fires on first submit with no existing threadId', async () => {
     const transport = new MockAgentTransport();
-    const ref = withInjectionContext(() =>
-      agent({ apiUrl: '', assistantId: 'a', transport }),
-    );
+    configureAgent({ apiUrl: '', assistantId: 'a', transport });
+    const ref = getAgent();
     expect(ref.lifecycle.threadCreatedAt()).toBeNull();
     void ref.submit({ message: 'first' });
     await tick(10);
@@ -100,18 +100,16 @@ describe('AGENT_LIFECYCLE', () => {
   it('threadPersistedAt fires when agent restores from existing threadId', async () => {
     const transport = new MockAgentTransport();
     transport.history = [threadState('cp-1')];
-    const ref = withInjectionContext(() =>
-      agent({ apiUrl: '', assistantId: 'a', transport, threadId: 'thread-1' }),
-    );
+    configureAgent({ apiUrl: '', assistantId: 'a', transport, threadId: 'thread-1' });
+    const ref = getAgent();
     await tick(30);
     expect(ref.lifecycle.threadPersistedAt()).not.toBeNull();
   });
 
   it('toolCallStartedAt fires on first tool call append', async () => {
     const transport = new MockAgentTransport();
-    const ref = withInjectionContext(() =>
-      agent({ apiUrl: '', assistantId: 'a', transport }),
-    );
+    configureAgent({ apiUrl: '', assistantId: 'a', transport });
+    const ref = getAgent();
     ref.submit({ message: 'hi' });
     transport.emit([{
       type: 'messages',
@@ -129,9 +127,8 @@ describe('AGENT_LIFECYCLE', () => {
 
   it('toolCallCompletedAt fires on tool call result transition', async () => {
     const transport = new MockAgentTransport();
-    const ref = withInjectionContext(() =>
-      agent({ apiUrl: '', assistantId: 'a', transport, throttle: false }),
-    );
+    configureAgent({ apiUrl: '', assistantId: 'a', transport, throttle: false });
+    const ref = getAgent();
     ref.submit({ message: 'hi' });
     transport.emit([{
       type: 'messages',
@@ -158,9 +155,8 @@ describe('AGENT_LIFECYCLE', () => {
 
   it('streamErrorAt fires when transport errors', async () => {
     const transport = new MockAgentTransport();
-    const ref = withInjectionContext(() =>
-      agent({ apiUrl: '', assistantId: 'a', transport }),
-    );
+    configureAgent({ apiUrl: '', assistantId: 'a', transport });
+    const ref = getAgent();
     ref.submit({ message: 'hi' });
     transport.emitError(new Error('boom'));
     await tick();
@@ -172,9 +168,8 @@ describe('AGENT_LIFECYCLE', () => {
 
   it('all signals reset to null on switchThread(null)', async () => {
     const transport = new MockAgentTransport();
-    const ref = withInjectionContext(() =>
-      agent({ apiUrl: '', assistantId: 'a', transport }),
-    );
+    configureAgent({ apiUrl: '', assistantId: 'a', transport });
+    const ref = getAgent();
     ref.submit({ message: 'hi' });
     transport.emit([{ type: 'values', values: { x: 1 } }]);
     transport.emitError(new Error('boom'));

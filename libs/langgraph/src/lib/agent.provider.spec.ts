@@ -9,7 +9,7 @@ describe('provideAgent', () => {
     globalThis.console.warn = vi.fn();
   });
 
-  it('provides AGENT_CONFIG token', () => {
+  it('registers AGENT_CONFIG internally for the legacy factory defaults-merge path', () => {
     TestBed.configureTestingModule({
       providers: [provideAgent({ apiUrl: 'https://api.example.com' })],
     });
@@ -17,7 +17,7 @@ describe('provideAgent', () => {
     expect(config.apiUrl).toBe('https://api.example.com');
   });
 
-  it('provides custom transport via config', () => {
+  it('forwards custom transport through the internal AGENT_CONFIG entry', () => {
     const transport = new MockAgentTransport();
     TestBed.configureTestingModule({
       providers: [provideAgent({ apiUrl: '', transport })],
