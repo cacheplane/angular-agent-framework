@@ -18,7 +18,313 @@
 
 **PR scope:** `libs/langgraph/**`, `libs/ag-ui/**` only. No website changes in this phase.
 
-### Task A1: Add `injectAgent()` to `@threadplane/langgraph`
+### 🛠 Design amendment (post-initial-plan)
+
+The initial plan assumed `injectAgent()` could be a thin wrapper over the existing `agent({...})` factory. While investigating Task A1, the implementer discovered that `agent()` requires per-call `AgentOptions` (assistantId, threadId, onThreadId, initialValues, etc.) — meaning a no-args `injectAgent()` is impossible without **reshaping the provider to be a true singleton**.
+
+**Decision:** Adopt **Pattern α + hierarchical DI**. `AgentConfig` absorbs (nearly) all of `AgentOptions`. `provideAgent(config)` constructs the `LangGraphAgent` inside the injector via a factory, registers it under an internal `AGENT` token. `injectAgent()` becomes truly no-args (`return inject(AGENT)`). Multi-thread UIs are supported by Angular's hierarchical DI: re-provide `provideAgent({...})` in a child component's `providers: []` array to scope a different agent to that subtree.
+
+This matches how `@threadplane/ag-ui` already works (its `provideAgUiAgent()` constructs the HttpAgent via DI factory), so the two adapters become symmetric in both wiring **and** call signature.
+
+**Trade-off accepted:** Today, a single component can build multiple `agent({...})` instances by calling the factory multiple times. After this change, one component sees one agent (the one scoped to its injector). Multi-agent components must be split into sub-components with their own scoped providers. Common case (one agent per route/feature) is unaffected.
+
+Phase A's task list below is updated to reflect this design. Original Tasks A1+A2 are replaced by Tasks A1a–A1c. Tasks A3 (ag-ui) and onward remain as planned.
+
+### Task A1a: Reshape `AgentConfig` and `provideAgent` for singleton pattern
+
+**Files:**
+- Modify: `libs/langgraph/src/lib/agent.provider.ts`
+- Modify: `libs/langgraph/src/lib/agent.types.ts` (`AgentOptions` may become unused or pruned)
+- Modify: `libs/langgraph/src/lib/agent.fn.ts` (the heart of the construction logic; move into the provider factory)
+- Modify: `libs/langgraph/src/public-api.ts` (keep `agent` exported temporarily for the duration of this task)
+
+**Expand `AgentConfig` to absorb per-component options:**
+
+```ts
+// libs/langgraph/src/lib/agent.provider.ts
+export interface AgentConfig<T = Record<string, unknown>> {
+  /** Base URL of the LangGraph Platform API. */
+  apiUrl?: string;
+  /** Agent or graph identifier on the LangGraph platform. */
+  assistantId: string;
+  /** Thread ID to connect to. Pass a Signal for reactive thread switching. */
+  threadId?: Signal<string | null> | string | null;
+  /** Called when a new thread is auto-created by the transport. */
+  onThreadId?: (id: string) => void;
+  /** Initial state values before the first stream response arrives. */
+  initialValues?: Partial<T>;
+  /** Throttle signal updates in milliseconds. `false` to disable. */
+  throttle?: number | false;
+  /** Custom message deserializer for non-standard message formats. */
+  toMessage?: (msg: unknown) => BaseMessage;
+  /** Custom transport. Defaults to FetchStreamTransport. */
+  transport?: AgentTransport;
+  /** Optional app-owned telemetry sink. */
+  telemetry?: AgentRuntimeTelemetrySink | false;
+  /** When true, subagent messages are filtered from the main messages signal. */
+  filterSubagentMessages?: boolean;
+  /** Tool names that indicate a subagent invocation. */
+  subagentToolNames?: string[];
+}
+
+const AGENT = new InjectionToken<LangGraphAgent>('AGENT');
+
+export function provideAgent<T = Record<string, unknown>>(
+  config: AgentConfig<T>,
+): Provider[] {
+  return [
+    {
+      provide: AGENT,
+      useFactory: () => {
+        // Inside an injection context — safe to call inject() here.
+        // The construction logic from the old agent() function moves into this factory.
+        return constructLangGraphAgent(config);
+      },
+    },
+  ];
+}
+```
+
+The `AGENT_CONFIG` token is removed (no longer needed — config is consumed by the factory directly). The internal `AGENT` token is intentionally NOT exported; consumers use `injectAgent()`.
+
+**Migrate construction logic:** The body of the existing `agent()` function in `agent.fn.ts` becomes either:
+- An internal `constructLangGraphAgent(config)` function inside `agent.provider.ts` (or a new `internals/construct-agent.ts`), called by the factory
+- OR remains in `agent.fn.ts` with a renamed export like `_internalConstructAgent(config)` that the factory imports
+
+Either choice is fine — the goal is that the construction logic runs inside the DI factory's injection context, has access to the same `inject()`-time dependencies it does today, and produces the same `LangGraphAgent` instance.
+
+**Constraint on this task:** Do NOT remove the old `agent({...})` factory function yet. It will be removed in Task A1c. For now, leave it as an export of `public-api.ts` — it can wrap the new singleton construction (`return constructLangGraphAgent({ ...AGENT_CONFIG_value, ...options })`) so legacy callers keep working transiently. The spec files (`agent.fn.spec.ts`, `agent.conformance.spec.ts`, `agent-lifecycle-registry.spec.ts`, `lifecycle.spec.ts`, `agent.provider.spec.ts`) continue to call `agent({...})` until Task A1c migrates them.
+
+This is the trickiest task in the entire plan. Implement carefully, run the full langgraph test suite after, and commit only when green.
+
+- [ ] **Step 1: Read the current shape of `agent.fn.ts` (top to bottom) and `agent.provider.ts` end-to-end**
+
+The agent function is ~600+ lines (it's the heart of the lib). Identify which parts use `inject()` and which are pure logic.
+
+- [ ] **Step 2: Decide the construction-logic location**
+
+Move the body of `agent()` into either an internal helper or keep it in `agent.fn.ts` with a renamed export. Document the choice in a code comment so reviewers understand.
+
+- [ ] **Step 3: Update `AgentConfig` interface to include the absorbed fields**
+
+Add all the fields shown above. Keep documentation comments aligned with the current `AgentOptions` documentation.
+
+- [ ] **Step 4: Implement `provideAgent` as a factory provider that registers `AGENT`**
+
+The factory's body calls the construction helper with the config.
+
+- [ ] **Step 5: Keep the old `agent({})` factory working as a transitional wrapper**
+
+For test continuity, the public `agent()` function should still work. It can simply construct the agent using the same construction helper, merging any `AGENT_CONFIG`-provided defaults with the per-call options the same way it does today.
+
+Wait — actually, `AGENT_CONFIG` is being removed. The transitional `agent({})` should read the new `AGENT` token instead? But that would mean `agent({})` ignores its arguments. Two viable approaches:
+
+- **Approach (i):** Keep `AGENT_CONFIG` as an internal-only token (don't export). The legacy `agent({...})` uses it the same way it does today. The new `provideAgent()` provides BOTH `AGENT_CONFIG` (with the config fields the old API knows about) AND `AGENT` (the constructed agent). When Task A1c removes `agent()`, it also removes `AGENT_CONFIG`.
+- **Approach (ii):** Refactor `agent({...})` to ignore its arguments and just return `inject(AGENT)`. This makes the legacy specs likely fail because they call `agent({differentAssistantId})` and expect to get a different agent each call — which the singleton model breaks.
+
+**Use Approach (i).** Mark `AGENT_CONFIG` internal-only (don't export from public-api in this task either) but keep it functional for the legacy `agent({})` path.
+
+- [ ] **Step 6: Run the full langgraph test suite**
+
+Run: `npx nx test langgraph`
+Expected: PASS. All 169 existing tests still green.
+
+- [ ] **Step 7: Commit**
+
+```bash
+git add libs/langgraph/src/lib/ libs/langgraph/src/public-api.ts
+git commit -m "refactor(langgraph): absorb AgentOptions into AgentConfig; provide singleton AGENT token"
+```
+
+### Task A1b: Add no-args `injectAgent()` to `@threadplane/langgraph`
+
+**Files:**
+- Create: `libs/langgraph/src/lib/inject-agent.ts`
+- Create: `libs/langgraph/src/lib/inject-agent.spec.ts`
+- Modify: `libs/langgraph/src/public-api.ts`
+
+Now that `provideAgent` registers `AGENT`, `injectAgent()` is one-line:
+
+```ts
+// libs/langgraph/src/lib/inject-agent.ts
+// SPDX-License-Identifier: MIT
+import { inject } from '@angular/core';
+import { AGENT } from './agent.provider';
+import type { LangGraphAgent } from './agent.types';
+
+/**
+ * Retrieve the LangGraph-backed Agent from the current Angular injection context.
+ * Mirrors @threadplane/ag-ui's `injectAgent()` so consumer code is identical
+ * regardless of which adapter is wired in app.config.ts.
+ */
+export function injectAgent<T = Record<string, unknown>>(): LangGraphAgent<T> {
+  return inject(AGENT) as LangGraphAgent<T>;
+}
+```
+
+(Note: `AGENT` may need to be exported from `agent.provider.ts` with `/** @internal */` JSDoc so `inject-agent.ts` can import it without going through public-api.)
+
+- [ ] **Step 1: Read the new `agent.provider.ts` from Task A1a**
+
+Confirm whether `AGENT` is exported. If not, mark it `/** @internal */ export` so the spec and inject-agent.ts can use it.
+
+- [ ] **Step 2: Write the failing test**
+
+```ts
+// libs/langgraph/src/lib/inject-agent.spec.ts
+import { TestBed } from '@angular/core/testing';
+import { provideAgent } from './agent.provider';
+import { injectAgent } from './inject-agent';
+import { MockAgentTransport } from './transport/mock-stream.transport';
+
+describe('injectAgent', () => {
+  it('returns the singleton LangGraph agent provided via provideAgent', () => {
+    TestBed.configureTestingModule({
+      providers: [
+        provideAgent({
+          apiUrl: 'http://localhost/api',
+          assistantId: 'test-assistant',
+          transport: new MockAgentTransport(),
+        }),
+      ],
+    });
+    const a1 = TestBed.runInInjectionContext(() => injectAgent());
+    const a2 = TestBed.runInInjectionContext(() => injectAgent());
+    expect(a1).toBe(a2);  // singleton — same instance each call
+    expect(typeof a1.submit).toBe('function');
+    // Adjust this assertion to match the actual LangGraphAgent surface.
+  });
+
+  it('returns a different agent for each scoped provider tree', () => {
+    TestBed.configureTestingModule({
+      providers: [
+        provideAgent({
+          apiUrl: 'http://localhost/api',
+          assistantId: 'root-graph',
+          transport: new MockAgentTransport(),
+        }),
+      ],
+    });
+    const root = TestBed.runInInjectionContext(() => injectAgent());
+    // Create a child injector with a different scoped agent.
+    // Inspect the existing test patterns in libs/langgraph/src/lib/*.spec.ts
+    // for the right way to create a child injector in this codebase.
+    // ...
+  });
+});
+```
+
+The second test is encouraged but may be tricky — if the child-injector setup is non-obvious, skip it for this task and add an XXX comment to revisit in a follow-up.
+
+- [ ] **Step 3: Run test to verify it fails**
+
+Run: `npx nx test langgraph -- --testFile=inject-agent.spec.ts`
+Expected: FAIL with "Cannot find module './inject-agent'".
+
+- [ ] **Step 4: Implement `inject-agent.ts`** (as shown above)
+
+- [ ] **Step 5: Add to `public-api.ts`**
+
+```ts
+// In libs/langgraph/src/public-api.ts, near the top:
+export { injectAgent } from './lib/inject-agent';
+```
+
+(Keep `agent` and `AGENT_CONFIG` exports as-is for now; they're removed in Task A1c.)
+
+- [ ] **Step 6: Run the full langgraph suite**
+
+Run: `npx nx test langgraph`
+Expected: PASS (169 existing + new test(s) = 170+).
+
+- [ ] **Step 7: Commit**
+
+```bash
+git add libs/langgraph/src/lib/inject-agent.ts libs/langgraph/src/lib/inject-agent.spec.ts libs/langgraph/src/public-api.ts
+git commit -m "feat(langgraph): add no-args injectAgent() reading singleton AGENT token"
+```
+
+### Task A1c: Remove `agent()` factory and `AGENT_CONFIG` from public API + migrate internal specs
+
+**Files:**
+- Modify: `libs/langgraph/src/public-api.ts` (remove `agent` and `AGENT_CONFIG` exports)
+- Delete or strip: `libs/langgraph/src/lib/agent.fn.ts` (if it becomes empty) or leave the construction helper if not already moved out
+- Delete: `libs/langgraph/src/lib/agent.fn.spec.ts` (its tests will be reborn around `injectAgent()` and `provideAgent()` in this task)
+- Modify: `libs/langgraph/src/lib/agent-lifecycle-registry.spec.ts` (migrate `agent({...})` calls)
+- Modify: `libs/langgraph/src/lib/agent.conformance.spec.ts` (migrate `agent({...})` calls)
+- Modify: `libs/langgraph/src/lib/lifecycle.spec.ts` (migrate `agent({...})` calls)
+- Modify: `libs/langgraph/src/lib/agent.provider.spec.ts` (remove `AGENT_CONFIG` references; add tests around the new `AGENT` token and the factory)
+
+**The migration pattern for spec files:**
+
+OLD:
+```ts
+const a = agent({
+  assistantId: 'test',
+  apiUrl: 'http://localhost/api',
+  initialValues: { foo: 'bar' },
+});
+// ... assertions on a
+```
+
+NEW:
+```ts
+TestBed.configureTestingModule({
+  providers: [
+    provideAgent({
+      assistantId: 'test',
+      apiUrl: 'http://localhost/api',
+      initialValues: { foo: 'bar' },
+      transport: new MockAgentTransport(),
+    }),
+  ],
+});
+const a = TestBed.runInInjectionContext(() => injectAgent());
+// ... assertions on a
+```
+
+- [ ] **Step 1: Migrate `agent-lifecycle-registry.spec.ts`** (4 call-sites at lines 24, 40, 58, 66)
+
+- [ ] **Step 2: Migrate `agent.conformance.spec.ts`** (1 call-site at line 18)
+
+- [ ] **Step 3: Migrate `lifecycle.spec.ts`** (2 call-sites at lines 42, 50)
+
+- [ ] **Step 4: Migrate `agent.provider.spec.ts`**
+
+Remove all `AGENT_CONFIG`-token assertions. Add assertions that `provideAgent()` returns providers configuring `AGENT`. Verify `injectAgent()` resolves the configured agent.
+
+- [ ] **Step 5: Delete `agent.fn.spec.ts`**
+
+Its tests covered the legacy `agent({...})` factory which is being removed. The semantic coverage (every option behaves as documented) is now exercised by the migrated specs above plus the existing conformance suite.
+
+If the existing `agent.fn.spec.ts` has unique coverage that the other specs don't have (e.g., specific option-merging behavior), migrate those test cases into one of the other specs rather than deleting the coverage.
+
+- [ ] **Step 6: Remove `agent` and `AGENT_CONFIG` exports from `public-api.ts`**
+
+Keep `AgentConfig` (type) and `provideAgent`, `injectAgent`, plus the rest of the existing exports.
+
+- [ ] **Step 7: Delete `agent.fn.ts`** if all logic moved into the provider factory in Task A1a; OR keep it as an internal-only file holding the construction helper
+
+- [ ] **Step 8: Build and test**
+
+Run: `npx nx run-many -t build test --projects=langgraph`
+Expected: PASS.
+
+- [ ] **Step 9: Verify no stale exports**
+
+Run: `git grep -nE "^export.*\\b(agent|AGENT_CONFIG)\\b" -- libs/langgraph/src/public-api.ts`
+Expected: empty.
+
+- [ ] **Step 10: Commit**
+
+```bash
+git add libs/langgraph/src/
+git commit -m "refactor(langgraph): remove agent() factory; migrate specs to injectAgent()"
+```
+
+### Task A1 (legacy — superseded)
+
+The original "Task A1: Add `injectAgent()` to `@threadplane/langgraph`" task is superseded by Tasks A1a + A1b + A1c above. Skip directly to the next task.
 
 **Files:**
 - Create: `libs/langgraph/src/lib/inject-agent.ts`
