@@ -78,7 +78,7 @@
       },
       "defaultConfiguration": "development",
       "options": {
-        "proxyConfig": "cockpit/render/state-management/angular/proxy.conf.json"
+        "proxyConfig": "cockpit/render/state-management/angular/proxy.conf.mjs"
       }
     },
     "smoke": {
