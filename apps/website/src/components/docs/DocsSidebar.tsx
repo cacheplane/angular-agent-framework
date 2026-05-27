@@ -168,7 +168,7 @@ export function DocsSidebar({ activeLibrary, activeSection, activeSlug }: Props)
 
   return (
     <aside
-      className="w-64 shrink-0 py-6 overflow-y-auto hidden md:block"
+      className="w-64 shrink-0 py-6 overflow-y-auto hidden lg:block"
       style={{
         borderRight: `1px solid ${tokens.surfaces.border}`,
         background: tokens.surfaces.surface,
