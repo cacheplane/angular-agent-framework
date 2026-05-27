@@ -35,6 +35,18 @@ describe('ChatApprovalCardComponent', () => {
   let fixture: ReturnType<typeof TestBed.createComponent<HostComponent>>;
 
   beforeEach(() => {
+    // jsdom doesn't implement HTMLDialogElement.showModal/close.
+    // Stub them so the component's effect can call them under test.
+    if (!HTMLDialogElement.prototype.showModal) {
+      HTMLDialogElement.prototype.showModal = function () {
+        (this as unknown as { open: boolean }).open = true;
+      };
+    }
+    if (!HTMLDialogElement.prototype.close) {
+      HTMLDialogElement.prototype.close = function () {
+        (this as unknown as { open: boolean }).open = false;
+      };
+    }
     fixture = TestBed.createComponent(HostComponent);
     host = fixture.componentInstance;
   });
@@ -124,5 +136,37 @@ describe('ChatApprovalCardComponent', () => {
     expect(edit).not.toBeNull();
     edit.click();
     expect(host.lastAction).toBe('edit');
+  });
+
+  it('opens the dialog when an interrupt becomes present, closes when it goes away', () => {
+    const dialog = fixture.nativeElement.querySelector('dialog.chat-approval-card') as HTMLDialogElement;
+    expect(dialog.open).toBe(false);
+
+    host.agent.interrupt!.set({
+      id: 'int-open',
+      value: { kind: 'refund_approval', amount: 1, customer_id: 'cus_a' },
+      resumable: true,
+    });
+    fixture.detectChanges();
+    expect(dialog.open).toBe(true);
+
+    host.agent.interrupt!.set(undefined);
+    fixture.detectChanges();
+    expect(dialog.open).toBe(false);
+  });
+
+  it('emits "cancel" when the native dialog cancel event fires (Escape)', () => {
+    host.agent.interrupt!.set({
+      id: 'int-esc',
+      value: { kind: 'refund_approval', amount: 1, customer_id: 'cus_a' },
+      resumable: true,
+    });
+    fixture.detectChanges();
+    const dialog = fixture.nativeElement.querySelector('dialog.chat-approval-card') as HTMLDialogElement;
+    // Native dialog dispatches 'cancel' on Escape. Simulate it directly.
+    const cancelEvent = new Event('cancel', { cancelable: true });
+    dialog.dispatchEvent(cancelEvent);
+    expect(host.lastAction).toBe('cancel');
+    expect(cancelEvent.defaultPrevented).toBe(true);
   });
 });

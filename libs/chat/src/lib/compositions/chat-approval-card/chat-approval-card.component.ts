@@ -144,13 +144,10 @@ export class ChatApprovalCardComponent {
       const p = this.payload();
       const dialog = this.dialogRef()?.nativeElement;
       if (!dialog) return;
-      // jsdom (test env) doesn't implement HTMLDialogElement methods; guard.
-      const showModal = (dialog as { showModal?: () => void }).showModal;
-      const close = (dialog as { close?: () => void }).close;
       if (p && !dialog.open) {
-        if (typeof showModal === 'function') showModal.call(dialog);
+        dialog.showModal();
       } else if (!p && dialog.open) {
-        if (typeof close === 'function') close.call(dialog);
+        dialog.close();
       }
     });
   }
@@ -170,8 +167,7 @@ export class ChatApprovalCardComponent {
   private closeDialog(): void {
     const dialog = this.dialogRef()?.nativeElement;
     if (!dialog) return;
-    const close = (dialog as { close?: () => void }).close;
-    if (typeof close === 'function') close.call(dialog);
+    if (dialog.open) dialog.close();
   }
 
   protected onDialogClose(): void {
