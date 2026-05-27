@@ -6,6 +6,9 @@ export { agent } from './lib/agent.fn';
 export { provideAgent, AGENT_CONFIG } from './lib/agent.provider';
 export type { AgentConfig } from './lib/agent.provider';
 
+// Symmetric inject helper — matches @threadplane/ag-ui's injectAgUiAgent()
+export { injectAgent } from './lib/inject-agent';
+
 // Lifecycle monitoring
 export { AGENT_LIFECYCLE } from './lib/lifecycle';
 export type { AgentLifecycle } from './lib/lifecycle';
