@@ -1,11 +1,14 @@
 // SPDX-License-Identifier: MIT
 import { resolve } from 'node:path';
+import { portsFor } from '../../../../../cockpit/ports.mjs';
 import { createGlobalSetup } from '@threadplane-internal/e2e-harness';
+
+const ports = portsFor('cockpit-langgraph-memory-angular');
 
 export default createGlobalSetup({
   langgraphCwd: 'cockpit/langgraph/memory/python',
-  langgraphPort: 5303,
+  langgraphPort: ports.langgraph,
   angularProject: 'cockpit-langgraph-memory-angular',
-  angularPort: 4303,
+  angularPort: ports.angular,
   fixturesDir: resolve(__dirname, 'fixtures'),
 });

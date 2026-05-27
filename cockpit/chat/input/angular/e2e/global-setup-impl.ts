@@ -1,11 +1,14 @@
 // SPDX-License-Identifier: MIT
 import { resolve } from 'node:path';
+import { portsFor } from '../../../../../cockpit/ports.mjs';
 import { createGlobalSetup } from '@threadplane-internal/e2e-harness';
+
+const ports = portsFor('cockpit-chat-input-angular');
 
 export default createGlobalSetup({
   langgraphCwd: 'cockpit/chat/input/python',
-  langgraphPort: 5502,
+  langgraphPort: ports.langgraph,
   angularProject: 'cockpit-chat-input-angular',
-  angularPort: 4502,
+  angularPort: ports.angular,
   fixturesDir: resolve(__dirname, 'fixtures'),
 });

@@ -78,7 +78,7 @@
       },
       "defaultConfiguration": "development",
       "options": {
-        "proxyConfig": "cockpit/chat/interrupts/angular/proxy.conf.json"
+        "proxyConfig": "cockpit/chat/interrupts/angular/proxy.conf.mjs"
       }
     },
     "smoke": {

@@ -1,5 +1,9 @@
 // SPDX-License-Identifier: MIT
 import { defineConfig, devices } from '@playwright/test';
+import { portsFor } from '../../../../../cockpit/ports.mjs';
+
+const { angular: angularPort } = portsFor('cockpit-deep-agents-skills-angular');
+
 
 export default defineConfig({
   testDir: '.',
@@ -9,7 +13,7 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   reporter: process.env.CI ? [['list'], ['html', { open: 'never' }]] : 'list',
   use: {
-    baseURL: 'http://localhost:4314',
+    baseURL: `http://localhost:${angularPort}`,
     trace: 'retain-on-failure',
   },
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
