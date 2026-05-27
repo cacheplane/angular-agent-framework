@@ -107,6 +107,7 @@ export function ContactForm() {
         Email
         <input
           type="email"
+          autoComplete="email"
           required
           value={email}
           onChange={(e) => setEmail(e.target.value)}
@@ -117,6 +118,7 @@ export function ContactForm() {
         Name <span style={{ color: tokens.colors.textMuted }}>(optional)</span>
         <input
           type="text"
+          autoComplete="name"
           value={name}
           onChange={(e) => setName(e.target.value)}
           style={inputStyle}
@@ -126,6 +128,7 @@ export function ContactForm() {
         Company <span style={{ color: tokens.colors.textMuted }}>(optional)</span>
         <input
           type="text"
+          autoComplete="organization"
           value={company}
           onChange={(e) => setCompany(e.target.value)}
           style={inputStyle}
