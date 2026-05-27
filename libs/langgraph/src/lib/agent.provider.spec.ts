@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 import { beforeEach, describe, it, expect, vi } from 'vitest';
 import { TestBed } from '@angular/core/testing';
-import { provideAgent, AGENT_CONFIG, type AgentConfig } from './agent.provider';
+import { provideAgent, AGENT_CONFIG, AGENT, type AgentConfig } from './agent.provider';
 import { MockAgentTransport } from './transport/mock-stream.transport';
 
 describe('provideAgent', () => {
@@ -24,6 +24,40 @@ describe('provideAgent', () => {
     });
     const config = TestBed.inject(AGENT_CONFIG);
     expect(config.transport).toBe(transport);
+  });
+
+  it('provides AGENT singleton constructed from config', () => {
+    const transport = new MockAgentTransport();
+    TestBed.configureTestingModule({
+      providers: [
+        provideAgent({
+          apiUrl: '',
+          assistantId: 'test-graph',
+          transport,
+        }),
+      ],
+    });
+    const ag = TestBed.inject(AGENT);
+    expect(ag).toBeDefined();
+    // LangGraphAgent has a `submit` function and `messages` / `value` signals.
+    expect(typeof ag.submit).toBe('function');
+    expect(typeof ag.value).toBe('function');
+    expect(typeof ag.messages).toBe('function');
+  });
+
+  it('returns the same AGENT instance across injections (singleton)', () => {
+    TestBed.configureTestingModule({
+      providers: [
+        provideAgent({
+          apiUrl: '',
+          assistantId: 'test-graph',
+          transport: new MockAgentTransport(),
+        }),
+      ],
+    });
+    const first = TestBed.inject(AGENT);
+    const second = TestBed.inject(AGENT);
+    expect(first).toBe(second);
   });
 
   it('does not perform license checks because @threadplane/langgraph is MIT-licensed', async () => {
