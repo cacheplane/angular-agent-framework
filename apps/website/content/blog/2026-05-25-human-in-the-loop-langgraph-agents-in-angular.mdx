@@ -1,0 +1,243 @@
+---
+title: "Human-in-the-Loop LangGraph Agents in Angular"
+description: "Build a human-in-the-loop LangGraph agent in Angular — pause runs before money moves with an approval card from @threadplane/chat and @threadplane/langgraph interrupts."
+date: 2026-05-25
+tags: [tutorial, langgraph, angular, agents, hitl, interrupts]
+author: brian
+featured: false
+---
+
+Let's build a human-in-the-loop LangGraph agent in Angular, with an approval card that pauses the run before money moves.
+
+I learned this one the cheap way. The first time I let an agent call Stripe directly, it tried to refund the same customer twice in the same run. The second call failed because the first had already cleared. If I'd given it a slightly different prompt, it could have refunded ten times.
+
+That's the moment I started reaching for `interrupt()`.
+
+Streaming made chat feel alive. Interrupts make tool calls feel *safe*. They're the difference between a demo your team enjoys and a system you trust to call your own APIs.
+
+## Goals
+
+- Understand *why* human-in-the-loop is the production-vs-demo line for tool calls.
+- Wire a refund-approval gate using LangGraph's `interrupt()` primitive.
+- Render the approval card in Angular with the `<ng-template chatInterrupt>` slot.
+- Resume or reject the run idempotently, with an audit trail.
+- Have fun!
+
+## Why interrupts matter
+
+Streaming chat changed the conversation from "is it broken?" to "is this the answer I wanted?" Interrupts change a *different* question: "should this thing actually happen?"
+
+Most tool calls don't need approval. A read against your data warehouse, a vector search, a stock-price lookup — let the agent rip. But the moment a tool moves money, sends a message a customer will see, deletes a row, or kicks off a build, you want a human in the loop.
+
+Two reasons.
+
+The cheap one is cost. An LLM in a loop with a write API is a slot machine where the house is your bank account. Interrupts cap the blast radius.
+
+The deeper one is trust. The operator on the other side of the screen needs to feel like the agent is collaborating with them, not narrating a fait accompli. A pause for review tells them "you're still driving."
+
+In my opinion, interrupts are what turn an agent from a demo into a teammate. They're not friction — they're *consent*.
+
+## The architecture in three boxes
+
+Let's look at the seams before we touch any code.
+
+**LangGraph backend.** A tool node that, instead of calling Stripe directly, calls `interrupt({ kind: 'refund_approval', amount, customer })`. The run pauses there. The thread checkpointer persists the pending interrupt until something resumes it.
+
+**`@threadplane/langgraph` adapter.** Translates the pending interrupt into a signal the chat UI can react to. Owns `resume()` and `reject()` — the two ways out of the paused state.
+
+**`@threadplane/chat` UI.** Exposes `<ng-template chatInterrupt>` — a content-projection slot the chat invokes when the agent is paused. You render whatever Angular template fits the interrupt's `kind`, the operator clicks something, your component calls `agent.resume(...)`.
+
+The contract is narrow. The LangGraph node doesn't know how the UI renders. The Angular template doesn't know which graph it's paused inside. That separation is what lets you reuse one approval-card component across five different agents.
+
+## Scaffold
+
+Three files. Let's go.
+
+<Steps>
+<Step title="The LangGraph node">
+
+```python
+# refund_agent.py
+from langgraph.graph import StateGraph, START, END
+from langgraph.types import interrupt
+from typing import TypedDict
+
+class State(TypedDict):
+    customer_id: str
+    amount: float
+    refund_id: str | None
+
+def draft_refund(state: State) -> State:
+    # ... the model has decided a refund is appropriate ...
+    return state
+
+def request_approval(state: State) -> State:
+    decision = interrupt({
+        "kind": "refund_approval",
+        "amount": state["amount"],
+        "customer_id": state["customer_id"],
+    })
+    if not decision["approved"]:
+        return {"refund_id": None}
+    return state
+
+def issue_refund(state: State) -> State:
+    # actually call Stripe here
+    return {"refund_id": "re_..."}
+
+graph = StateGraph(State)
+graph.add_node("draft", draft_refund)
+graph.add_node("request_approval", request_approval)
+graph.add_node("issue", issue_refund)
+graph.add_edge(START, "draft")
+graph.add_edge("draft", "request_approval")
+graph.add_edge("request_approval", "issue")
+graph.add_edge("issue", END)
+refund_agent = graph.compile()
+```
+
+`interrupt()` is a function call inside a node. When it runs, the graph pauses and persists the interrupt payload to the thread checkpointer. The graph stays paused until `resume(value)` is called against the same thread — and `value` is what `interrupt()` returns when the node re-executes.
+
+That's it. No queues, no webhooks, no human-approval-service.
+
+</Step>
+<Step title="Wire the providers">
+
+```ts
+// app.config.ts
+import { ApplicationConfig } from '@angular/core';
+import { provideAgent } from '@threadplane/langgraph';
+import { provideChat } from '@threadplane/chat';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideAgent({ apiUrl: 'http://localhost:2024' }),
+    provideChat({ assistantName: 'Refund Agent' }),
+  ],
+};
+```
+
+Same wiring as any other LangGraph agent. The adapter doesn't need to know your graph contains interrupts — it discovers them at runtime from the thread state.
+
+</Step>
+<Step title="The component">
+
+```ts
+// refund-page.component.ts
+import { Component, ChangeDetectionStrategy, signal } from '@angular/core';
+import { agent } from '@threadplane/langgraph';
+import { ChatComponent } from '@threadplane/chat';
+import { CommonModule } from '@angular/common';
+
+@Component({
+  selector: 'app-refund-page',
+  standalone: true,
+  imports: [ChatComponent, CommonModule],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <div style="height: 100vh">
+      <chat [agent]="refundAgent">
+        <ng-template chatInterrupt let-pending>
+          @if (pending.kind === 'refund_approval') {
+            <div class="approval-card">
+              <p>
+                Refund <strong>{{ pending.amount | currency }}</strong>
+                to customer <code>{{ pending.customer_id }}</code>?
+              </p>
+              <div class="actions">
+                <button (click)="reject()">Reject</button>
+                <button (click)="approve()">Approve refund</button>
+              </div>
+            </div>
+          }
+        </ng-template>
+      </chat>
+    </div>
+  `,
+})
+export class RefundPageComponent {
+  protected readonly refundAgent = agent({
+    assistantId: 'refund_agent',
+    threadId: signal(null),
+  });
+
+  protected approve() {
+    this.refundAgent.resume({ approved: true });
+  }
+
+  protected reject() {
+    this.refundAgent.resume({ approved: false });
+  }
+}
+```
+
+`chatInterrupt` is a content-projection slot. The chat invokes it with the pending interrupt's payload bound as `let-pending`. You match on `kind` and render whatever Angular template makes sense — buttons, a form, a diff view, a map, whatever.
+
+`resume()` writes a value back to the paused graph. That value becomes the return value of `interrupt()` inside the node, which is why the LangGraph code can branch on `decision["approved"]`.
+
+</Step>
+</Steps>
+
+That's the whole HITL round-trip. No queue, no message bus, no separate approval service. The thread state *is* the queue.
+
+## What's happening under the hood
+
+Let's trace one full run.
+
+1. User: "Issue a refund to customer cus_123 for $47.50."
+2. The model decides a refund is the right tool.
+3. The `draft_refund` node runs, plans the refund.
+4. The `request_approval` node runs, calls `interrupt({ kind: 'refund_approval', ... })`. Graph pauses. Thread checkpointer persists the pending interrupt.
+5. The adapter receives the pause event, exposes it on the agent signal.
+6. The chat sees a pending interrupt, projects `<ng-template chatInterrupt>` into the message stream with the payload bound.
+7. Operator clicks Approve.
+8. Component calls `agent.resume({ approved: true })`.
+9. The adapter posts the resume to LangGraph. The `request_approval` node re-runs — `interrupt()` returns `{ approved: true }` this time instead of pausing.
+10. The graph continues to `issue_refund`. Stripe is called. The run finishes.
+
+The whole thing is one thread, one persisted state. If the operator closes the tab and comes back tomorrow, the interrupt is still there. Pretty freakin' cool. 💚
+
+## Production patterns
+
+Three things to know before this ships to a real customer.
+
+### Idempotency
+
+`interrupt()` re-executes the node when the graph resumes. That means any side effect *before* the `interrupt()` call has already run, and any side effect *after* will run again on resume. Put the write call (the Stripe `refund.create`) on the resumed side, never the planning side.
+
+And use an idempotency key. The `request_approval` node should generate one and pass it through state to `issue_refund` — so if the operator's network blips and they click Approve twice, Stripe deduplicates the second call.
+
+### Audit trail
+
+When the operator approves, log who approved, when, and what payload they saw. The cleanest place to do this is *in the resume handler*, before `agent.resume()` fires:
+
+```ts
+protected async approve() {
+  await this.audit.record({
+    actor: this.currentUser(),
+    decision: 'approved',
+    payload: this.refundAgent.pendingInterrupt(),
+  });
+  this.refundAgent.resume({ approved: true });
+}
+```
+
+Auditing is the difference between "the agent did a thing" and "I can prove who authorized it." Compliance teams care a lot about this.
+
+### When NOT to interrupt
+
+Resist the urge to interrupt on every tool call. A pause for an analytics query is friction with no upside. A pause for a `customers.search` is annoying.
+
+The rule I use: interrupt on writes the operator wouldn't want to undo by hand.
+
+For me, that's about three categories — money movement, customer-facing communication, and destructive deletes. Everything else, let the agent run. If you can undo it with a script in under a minute, it doesn't need approval.
+
+## Conclusion
+
+Streaming made agents feel alive. Interrupts make them safe to ship.
+
+The pattern is small — one `interrupt()` call in your LangGraph node, one `<ng-template chatInterrupt>` slot in your Angular component, one `resume()` call on the agent. The architecture is what's powerful: the thread state holds the pause, the adapter exposes it, the chat renders it, and the operator can close the laptop and come back tomorrow.
+
+The next post in this series wires the other half — durable threads — so the conversation (and the pending interrupt) survives a reload, a different device, or a different operator.
+
+If you're building an agent that touches money, sends messages, or deletes data, I think you owe your users a pause button. Now you have one.
