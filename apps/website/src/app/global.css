@@ -11,6 +11,16 @@ body {
   font-family: var(--font-inter);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+/* Long unbreakable tokens (e.g. package names like @threadplane/chat,
+ * file paths like app.config.ts) live inside marketing headings and pull
+ * the layout wider than the viewport on narrow phones. Allow breaking
+ * within these tokens to prevent horizontal overflow. */
+h1, h2, h3, h4, h5, h6 {
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 /* Scroll-triggered fade-in for server components */

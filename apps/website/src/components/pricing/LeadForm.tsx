@@ -220,6 +220,7 @@ export function LeadForm() {
                   <input
                     id="lf-name"
                     name="name"
+                    autoComplete="name"
                     aria-label="Name"
                     placeholder="Name"
                     required
@@ -232,6 +233,7 @@ export function LeadForm() {
                     id="lf-email"
                     name="email"
                     type="email"
+                    autoComplete="email"
                     aria-label="Work email"
                     placeholder="Work email"
                     required
@@ -243,6 +245,7 @@ export function LeadForm() {
                   <input
                     id="lf-company"
                     name="company"
+                    autoComplete="organization"
                     aria-label="Company"
                     placeholder="Company"
                     required
