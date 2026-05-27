@@ -1,9 +1,6 @@
 // SPDX-License-Identifier: MIT
-// Primary function (DEPRECATED — see injectAgent. Removed in Task A2.)
+// Primary function
 export { agent } from './lib/agent.fn';
-
-// Symmetric inject helper (new — matches @threadplane/ag-ui)
-export { injectAgent } from './lib/inject-agent';
 
 // Provider
 export { provideAgent, AGENT_CONFIG } from './lib/agent.provider';
