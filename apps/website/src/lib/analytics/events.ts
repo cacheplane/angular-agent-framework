@@ -82,7 +82,7 @@ export type CtaId =
   | `mobile_nav_${string}`
   | `footer_${string}`;
 
-export type AnalyticsLibrary = 'agent' | 'langgraph' | 'render' | 'chat' | 'unknown';
+export type AnalyticsLibrary = 'langgraph' | 'render' | 'chat' | 'unknown';
 
 export type WhitepaperId = 'overview' | 'angular' | 'render' | 'chat';
 

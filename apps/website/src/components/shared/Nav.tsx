@@ -60,7 +60,7 @@ export function Nav() {
     }
     return () => { document.body.style.overflow = ''; };
   }, [open]);
-  const [mobileLibrary, setMobileLibrary] = useState(activeLibrary || 'agent');
+  const [mobileLibrary, setMobileLibrary] = useState(activeLibrary || 'langgraph');
   const [openSections, setOpenSections] = useState<Set<string>>(() => new Set(activeSection ? [activeSection] : []));
 
   const toggleSection = (id: string) => {
