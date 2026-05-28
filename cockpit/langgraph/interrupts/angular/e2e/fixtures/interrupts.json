@@ -1,11 +1,35 @@
 {
   "fixtures": [
     {
-      "match": {
-        "userMessage": "Hello"
-      },
+      "match": { "responseFormat": "json_schema", "userMessage": "cus_a8x2k" },
       "response": {
-        "content": "Hello! How can I help you today? Please approve this response to continue."
+        "content": {
+          "customer_id": "cus_a8x2k",
+          "amount": 47.5,
+          "reason": "Customer was charged twice for the same order."
+        }
+      }
+    },
+    {
+      "match": { "responseFormat": "json_schema", "userMessage": "cus_z19fp" },
+      "response": {
+        "content": {
+          "customer_id": "cus_z19fp",
+          "amount": 129.0,
+          "reason": "Chargeback opened for unrecognized activity."
+        }
+      }
+    },
+    {
+      "match": { "systemMessage": "Refund Authorization Assistant", "userMessage": "cus_a8x2k" },
+      "response": {
+        "content": "Understood — a $47.50 refund to cus_a8x2k for a duplicate charge. Pausing for operator approval; no refund is issued until a human reviews and approves."
+      }
+    },
+    {
+      "match": { "systemMessage": "Refund Authorization Assistant", "userMessage": "cus_z19fp" },
+      "response": {
+        "content": "Understood — a $129.00 refund to cus_z19fp for a chargeback. Pausing for operator approval; no refund is issued until a human reviews and approves."
       }
     }
   ]
