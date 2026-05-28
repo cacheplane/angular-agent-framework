@@ -53,10 +53,13 @@ export default async function AgUiPage() {
             >
               Build an Angular agent UI on any AG-UI-compatible runtime — LangGraph, CrewAI, Mastra, Microsoft Agent Framework, AG2, Pydantic AI, AWS Strands, CopilotKit. Same primitives, same chat surface, same testing story.
             </p>
-            <div style={{ display: 'flex', justifyContent: 'center', gap: 12, flexWrap: 'wrap', marginBottom: 20 }}>
-              <Button variant="primary" size="lg" href="/docs/langgraph/getting-started/introduction">Get started</Button>
+            <div style={{ display: 'flex', justifyContent: 'center', gap: 12, flexWrap: 'wrap', marginBottom: 12 }}>
+              <Button variant="primary" size="lg" href="/docs/ag-ui/getting-started/quickstart">Get started</Button>
               <Button variant="secondary" size="lg" href="https://github.com/cacheplane/angular-agent-framework" target="_blank" rel="noopener noreferrer">View source</Button>
             </div>
+            <p style={{ fontSize: 13, color: tokens.colors.textMuted, marginBottom: 20 }}>
+              Talking to LangGraph Platform directly? See <a href="/docs/choosing-an-adapter" style={{ color: tokens.colors.accent }}>Choosing an adapter</a>.
+            </p>
             <div style={{ display: 'flex', justifyContent: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 24 }}>
               <Pill variant="accent">MIT</Pill>
               <Pill variant="angular">Angular 20+</Pill>

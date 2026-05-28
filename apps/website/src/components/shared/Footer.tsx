@@ -171,8 +171,8 @@ export function Footer() {
               onMouseLeave={(e) => (e.currentTarget.style.color = tokens.colors.textSecondary)}>
               Documentation
             </Link>
-            <Link href="/docs/langgraph/api/agent" className="transition-colors" style={{ color: tokens.colors.textSecondary }}
-              onClick={() => trackFooterCta('API Reference', '/docs/langgraph/api/agent')}
+            <Link href="/docs/langgraph/api/inject-agent" className="transition-colors" style={{ color: tokens.colors.textSecondary }}
+              onClick={() => trackFooterCta('API Reference', '/docs/langgraph/api/inject-agent')}
               onMouseEnter={(e) => (e.currentTarget.style.color = tokens.colors.accent)}
               onMouseLeave={(e) => (e.currentTarget.style.color = tokens.colors.textSecondary)}>
               API Reference

@@ -18,6 +18,10 @@ const ITEMS: FAQItem[] = [
     a: 'Yes. Use the @threadplane/ag-ui adapter for any AG-UI compliant backend, or implement the agent contract yourself. Threadplane keeps the Angular UI layer stable while the backend agent runtime can change.',
   },
   {
+    q: 'Which adapter should I use — @threadplane/langgraph or @threadplane/ag-ui?',
+    a: 'If your backend is LangGraph Platform, use @threadplane/langgraph. If your backend speaks the AG-UI protocol (CrewAI, Mastra, Microsoft Agent Framework, AG2, Pydantic AI, AWS Strands, CopilotKit runtime), use @threadplane/ag-ui. Both expose the same provideAgent/injectAgent API — see /docs/choosing-an-adapter for a side-by-side comparison.',
+  },
+  {
     q: 'Is the Pilot-to-Prod program required?',
     a: 'No. The libraries are MIT-licensed and complete on their own. Pilot-to-Prod is for teams who want concierge delivery, not a paywall.',
   },
