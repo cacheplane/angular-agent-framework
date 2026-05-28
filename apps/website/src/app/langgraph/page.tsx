@@ -54,7 +54,7 @@ export default async function LangGraphPage() {
               Ship LangGraph agents inside your Angular 20+ app with headless chat, durable threads, interrupts, branch/history, tool progress, and generative UI.
             </p>
             <div style={{ display: 'flex', justifyContent: 'center', gap: 12, flexWrap: 'wrap', marginBottom: 20 }}>
-              <Button variant="primary" size="lg" href="/docs/agent/getting-started/introduction">Get started</Button>
+              <Button variant="primary" size="lg" href="/docs/langgraph/getting-started/introduction">Get started</Button>
               <Button variant="secondary" size="lg" href="https://github.com/cacheplane/angular-agent-framework" target="_blank" rel="noopener noreferrer">View source</Button>
             </div>
             <div style={{ display: 'flex', justifyContent: 'center', gap: 8, flexWrap: 'wrap' }}>
@@ -82,7 +82,7 @@ export default async function LangGraphPage() {
           { title: 'provideAgUiAgent', description: 'AG-UI wiring.' },
           { title: 'MockAgentTransport', description: 'Deterministic tests.' },
         ]}
-        cta={{ label: 'API reference', href: '/docs/agent/api/agent' }}
+        cta={{ label: 'API reference', href: '/docs/langgraph/api/agent' }}
         visual={
           <BrowserFrame url="app.config.ts" elevation="md">
             <pre style={{
@@ -134,7 +134,7 @@ export class ChatComponent {
           { title: 'interrupt()', description: 'Approval-gate signal.' },
           { title: 'reload()', description: 'Recover from errors.' },
         ]}
-        cta={{ label: 'Read the streaming guide', href: '/docs/agent/api/agent' }}
+        cta={{ label: 'Read the streaming guide', href: '/docs/langgraph/api/agent' }}
         visualLeft
         visual={<LangGraphCodeShowcase />}
       />

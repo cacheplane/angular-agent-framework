@@ -43,7 +43,7 @@ const ITEMS: FAQItem[] = [
   },
   {
     q: 'How do I test agent-driven components?',
-    a: 'The agent is provided through Angular DI, so test doubles work the way you’re used to — supply a stub agent in your test module, drive it with signals, assert on the rendered output. See /docs/agent/guides/testing.',
+    a: 'The agent is provided through Angular DI, so test doubles work the way you’re used to — supply a stub agent in your test module, drive it with signals, assert on the rendered output. See /docs/langgraph/guides/testing.',
   },
 ];
 

@@ -25,7 +25,7 @@ const POPULAR_TOPICS: PopularTopic[] = [
   {
     title: 'Streaming with signals',
     description: 'Token-level streaming wired into Angular signals. The defining @threadplane/langgraph capability.',
-    href: '/docs/agent/api/agent',
+    href: '/docs/langgraph/api/agent',
   },
   {
     title: 'Generative UI fundamentals',
@@ -35,7 +35,7 @@ const POPULAR_TOPICS: PopularTopic[] = [
   {
     title: 'Production patterns',
     description: 'Deploy paths, error boundaries, and observability for shipping Angular agents.',
-    href: '/docs/agent/guides/deployment',
+    href: '/docs/langgraph/guides/deployment',
   },
 ];
 

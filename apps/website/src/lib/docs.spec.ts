@@ -112,7 +112,7 @@ describe('website docs bindings', () => {
   });
 
   it('resolves canonical URLs against the production origin', () => {
-    expect(getCanonicalUrl('/docs/agent/guides/streaming')).toBe('https://threadplane.ai/docs/agent/guides/streaming');
+    expect(getCanonicalUrl('/docs/langgraph/guides/streaming')).toBe('https://threadplane.ai/docs/langgraph/guides/streaming');
   });
 
   it('does not contain stale or broken internal docs links', () => {
