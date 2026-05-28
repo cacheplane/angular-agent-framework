@@ -69,6 +69,28 @@ describe('provideAgent', () => {
     ).toThrow(/`assistantId` is required to construct the AGENT singleton/);
   });
 
+  it('accepts a factory that resolves config inside an injection context', () => {
+    const transport = new MockAgentTransport();
+    // The factory form lets config depend on runtime/DI state. Here we prove
+    // the factory runs (the returned config drives the AGENT singleton) and is
+    // invoked exactly once.
+    let calls = 0;
+    TestBed.configureTestingModule({
+      providers: [
+        provideAgent(() => {
+          calls += 1;
+          return { apiUrl: '', assistantId: 'factory-graph', transport };
+        }),
+      ],
+    });
+    const config = TestBed.inject(AGENT_CONFIG);
+    expect(config.assistantId).toBe('factory-graph');
+    const ag = TestBed.inject(AGENT);
+    expect(typeof ag.submit).toBe('function');
+    // AGENT reads the already-resolved AGENT_CONFIG, so the factory ran once.
+    expect(calls).toBe(1);
+  });
+
   it('does not perform license checks because @threadplane/langgraph is MIT-licensed', async () => {
     const warn = globalThis.console.warn as ReturnType<typeof vi.fn>;
     const legacyLicenseConfig = {

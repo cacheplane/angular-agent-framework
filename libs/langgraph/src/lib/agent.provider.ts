@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-import { InjectionToken, type Provider, type Signal } from '@angular/core';
+import { InjectionToken, inject, type Provider, type Signal } from '@angular/core';
 import type { BaseMessage } from '@langchain/core/messages';
 import type { BagTemplate } from '@langchain/langgraph-sdk';
 import type { AgentRuntimeTelemetrySink } from '@threadplane/chat';
@@ -68,22 +68,41 @@ export const AGENT = new InjectionToken<LangGraphAgent>('AGENT');
  * To use a different agent in a component subtree, re-provide
  * `provideAgent({...})` in that component's `providers: []` array —
  * Angular's hierarchical DI scopes the singleton accordingly.
+ *
+ * **Static vs factory config.** Pass a plain `AgentConfig` object when the
+ * config is known up front. Pass a `() => AgentConfig` factory when the config
+ * depends on runtime/DI state — the factory runs inside an Angular injection
+ * context, so it may call `inject()` to read services, route params, or
+ * component-scoped signals:
+ *
+ * ```ts
+ * providers: [
+ *   provideAgent(() => {
+ *     const route = inject(ActivatedRoute);
+ *     return { assistantId: 'chat', threadId: toSignal(route.paramMap) };
+ *   }),
+ * ];
+ * ```
  */
 export function provideAgent<T = Record<string, unknown>>(
-  config: AgentConfig<T>,
+  configOrFactory: AgentConfig<T> | (() => AgentConfig<T>),
 ): Provider[] {
+  // Resolve the factory (if any) lazily, inside the injection context of the
+  // AGENT_CONFIG useFactory below — never at decoration time.
+  const resolveConfig = (): AgentConfig<T> =>
+    typeof configOrFactory === 'function' ? configOrFactory() : configOrFactory;
+
   return [
-    // Keep AGENT_CONFIG functional so the in-tree agent({...}) factory (now
-    // internal-only after Task A1c) still reads its global defaults from it.
-    // Both token + provider entry go away when option (b) — deletion of the
-    // legacy factory — is taken in a future task.
-    // See docs/superpowers/plans/2026-05-27-agent-to-langgraph-rename.md.
-    { provide: AGENT_CONFIG, useValue: config },
+    // AGENT_CONFIG resolves the config once (running the factory in an
+    // injection context if a factory was passed). AGENT reads the resolved
+    // config from here, so the factory is invoked exactly once.
+    { provide: AGENT_CONFIG, useFactory: resolveConfig },
     {
       provide: AGENT,
       useFactory: () => {
         // useFactory runs in an injection context, so the legacy `agent()`
-        // factory's `inject(DestroyRef)` / `inject(AGENT_CONFIG)` calls work.
+        // factory's `inject(DestroyRef)` calls work.
+        const config = inject(AGENT_CONFIG) as AgentConfig<T>;
         if (config.assistantId === undefined) {
           throw new Error(
             'provideAgent: `assistantId` is required to construct the AGENT singleton.',
