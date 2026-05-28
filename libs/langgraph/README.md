@@ -102,8 +102,8 @@ Resume by calling `chat.submit(response)`.
 ### Subagents
 
 ```ts
-chat.subagents()                       // all SubagentStreamRef entries
-chat.activeSubagents()                 // currently streaming subagents
+chat.subagents()                       // Signal<Map<string, Subagent>> of all subagents
+chat.activeSubagents()                 // currently streaming subagents (SubagentStreamRef[])
 chat.getSubagent(toolCallId)           // look up by tool call ID
 chat.getSubagentsByType(type)          // filter by subagent type
 chat.getSubagentsByMessage(msg)        // filter by parent message
@@ -160,7 +160,7 @@ refreshOnRunEnd(chat, () => threadsAdapter.loadThreads());
 
 ### Citations
 
-`extractCitations(msg)` reads citation metadata from a LangGraph message's `additional_kwargs`, returning a `Citation[]`. It checks `additional_kwargs.citations` first, falling back to `additional_kwargs.sources`.
+`extractCitations(msg)` reads citation metadata from a LangGraph message's `additional_kwargs`, returning `Citation[] | undefined` (`undefined` when no citation metadata is present). It checks `additional_kwargs.citations` first, falling back to `additional_kwargs.sources`.
 
 ```ts
 import { extractCitations } from '@threadplane/langgraph';
