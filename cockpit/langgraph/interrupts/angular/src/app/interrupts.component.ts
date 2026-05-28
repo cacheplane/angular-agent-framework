@@ -1,36 +1,43 @@
 // SPDX-License-Identifier: MIT
-import { Component } from '@angular/core';
-import { ChatComponent, ChatInterruptPanelComponent, ChatWelcomeSuggestionComponent, views, type InterruptAction } from '@threadplane/chat';
+import { Component, ChangeDetectionStrategy, signal } from '@angular/core';
+import { ChatComponent, ChatApprovalCardComponent, ChatWelcomeSuggestionComponent, type ChatApprovalAction } from '@threadplane/chat';
 import { agent } from '@threadplane/langgraph';
 import { ExampleChatLayoutComponent } from '@threadplane/example-layouts';
-import { signalStateStore } from '@threadplane/render';
+import { CurrencyPipe } from '@angular/common';
 import { environment } from '../environments/environment';
-import { ApprovalCardComponent } from './views/approval-card.component';
 
 const WELCOME_SUGGESTIONS = [
-  { label: 'Approve a tool call', value: 'Book a flight to Paris for next Tuesday.' },
+  { label: 'Refund a duplicate charge', value: 'Refund $47.50 to customer cus_a8x2k — they were charged twice for the same order.' },
+  { label: 'Refund a chargeback', value: 'Refund $129.00 to customer cus_z19fp who opened a chargeback for unrecognized activity.' },
 ] as const;
 
 /**
- * InterruptsComponent demonstrates human-in-the-loop with `agent()`.
+ * Refund authorization cockpit example.
  *
- * The LangGraph backend pauses execution when it needs human approval.
- * The `stream.interrupt()` signal provides the interrupt data, and
- * `stream.submit({ resume })` resumes execution with the human's decision.
+ * The LangGraph backend acknowledges the refund draft, then pauses at
+ * `request_approval` with a structured interrupt payload of the form
+ * `{ kind: 'refund_approval', amount, customer_id, reason }`.
  *
- * Key integration points:
- * - `stream.interrupt()` — current pause data (undefined when not interrupted)
- * - `ChatInterruptPanelComponent` — renders the approval UI with action buttons
- * - `stream.submit({ resume })` — resumes the graph with a payload
+ * The frontend uses `ChatApprovalCardComponent` to render the native-dialog
+ * modal and emit a `ChatApprovalAction` ('approve' | 'edit' | 'cancel').
+ * The handler maps each action to a structured resume payload back to the
+ * graph.
  */
 @Component({
   selector: 'app-interrupts',
   standalone: true,
-  imports: [ChatComponent, ChatInterruptPanelComponent, ChatWelcomeSuggestionComponent, ExampleChatLayoutComponent],
+  imports: [
+    ChatComponent,
+    ChatApprovalCardComponent,
+    ChatWelcomeSuggestionComponent,
+    ExampleChatLayoutComponent,
+    CurrencyPipe,
+  ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <example-chat-layout>
       <div main class="flex flex-col h-full">
-        <chat [agent]="agent" [views]="ui" [store]="uiStore" class="flex-1 min-w-0">
+        <chat [agent]="agent" class="flex-1 min-w-0">
           <div chatWelcomeSuggestions>
             @for (s of suggestions; track s.value) {
               <chat-welcome-suggestion
@@ -41,48 +48,69 @@ const WELCOME_SUGGESTIONS = [
             }
           </div>
         </chat>
-        @if (agent.interrupt()) {
-          <div class="p-4" style="border-top: 1px solid var(--ngaf-chat-separator);">
-            <chat-interrupt-panel [agent]="agent" (action)="onInterruptAction($event)" />
-          </div>
-        }
+
+        <chat-approval-card
+          [agent]="agent"
+          matchKind="refund_approval"
+          title="Refund approval required"
+          [showEdit]="true"
+          (action)="onAction($event)"
+        >
+          <ng-template #body let-payload>
+            <div style="display:flex; flex-direction:column; gap:6px;">
+              <div><span style="color:var(--ngaf-chat-text-muted); margin-right:6px;">Amount</span><strong>{{ payload.amount | currency }}</strong></div>
+              <div><span style="color:var(--ngaf-chat-text-muted); margin-right:6px;">Customer</span><code>{{ payload.customer_id }}</code></div>
+              @if (payload.reason) {
+                <div style="font-style:italic; color:var(--ngaf-chat-text-muted); margin-top:4px;">{{ payload.reason }}</div>
+              }
+              @if (editing()) {
+                <div style="margin-top:10px; display:flex; gap:6px; align-items:center;">
+                  <label style="color:var(--ngaf-chat-text-muted); font-size:12px;">Edit amount</label>
+                  <input type="number" step="0.01" [value]="editAmount() ?? payload.amount" (input)="editAmount.set(+($any($event.target).value))" style="padding:4px 8px; border:1px solid var(--ngaf-chat-separator); border-radius:6px; width:120px;" />
+                  <button type="button" (click)="submitEdit(payload)" style="padding:4px 10px; background:var(--ngaf-chat-primary); color:var(--ngaf-chat-on-primary); border:0; border-radius:6px; font-size:12px; cursor:pointer;">Save</button>
+                </div>
+              }
+            </div>
+          </ng-template>
+        </chat-approval-card>
       </div>
     </example-chat-layout>
   `,
 })
 export class InterruptsComponent {
-  readonly ui = views({ 'approval-card': ApprovalCardComponent });
-  readonly uiStore = signalStateStore({});
   protected readonly suggestions = WELCOME_SUGGESTIONS;
+  protected readonly editing = signal(false);
+  protected readonly editAmount = signal<number | null>(null);
 
-  protected send(text: string): void {
-    void this.agent.submit({ message: text });
-  }
-
-  /**
-   * The streaming resource with interrupt support.
-   *
-   * When the LangGraph backend calls `interrupt()`, the `stream.interrupt()`
-   * signal emits the interrupt payload for display via ChatInterruptPanelComponent.
-   */
   protected readonly agent = agent({
     apiUrl: environment.langGraphApiUrl,
     assistantId: environment.streamingAssistantId,
   });
 
-  /**
-   * Handle an interrupt action from the panel.
-   *
-   * Submitting a resume payload continues the graph.
-   *
-   * In a production app, 'edit' would let the user modify the response
-   * before approval, and 'respond' would send a reply payload.
-   * For this demo, all actions simply resume the graph.
-   */
-  protected onInterruptAction(action: InterruptAction): void {
-    // In a production app, 'edit' would let the user modify the response before approval.
-    // For this demo, all actions simply resume the graph.
-    void action; // Each branch intentionally does the same thing in this demo
-    void this.agent.submit({ resume: true });
+  protected send(text: string): void {
+    void this.agent.submit({ message: text });
+  }
+
+  protected onAction(action: ChatApprovalAction): void {
+    if (action === 'approve') {
+      void this.agent.submit({ resume: { approved: true } });
+      this.resetEdit();
+    } else if (action === 'cancel') {
+      void this.agent.submit({ resume: { approved: false } });
+      this.resetEdit();
+    } else if (action === 'edit') {
+      this.editing.set(true);
+    }
+  }
+
+  protected submitEdit(payload: { amount: number }): void {
+    const next = this.editAmount() ?? payload.amount;
+    void this.agent.submit({ resume: { approved: true, amount: next } });
+    this.resetEdit();
+  }
+
+  private resetEdit(): void {
+    this.editing.set(false);
+    this.editAmount.set(null);
   }
 }

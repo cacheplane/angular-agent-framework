@@ -138,6 +138,29 @@ describe('ChatApprovalCardComponent', () => {
     expect(host.lastAction).toBe('edit');
   });
 
+  it('keeps the dialog open after Edit (non-terminal), closes after Approve', () => {
+    host.showEdit = true;
+    host.agent.interrupt!.set({
+      id: 'int-edit-open',
+      value: { kind: 'refund_approval', amount: 10, customer_id: 'cus_a' },
+      resumable: true,
+    });
+    fixture.detectChanges();
+    const dialog = fixture.nativeElement.querySelector('dialog.chat-approval-card') as HTMLDialogElement;
+    expect(dialog.open).toBe(true);
+
+    // Edit is non-terminal — dialog must stay open so the caller can reveal
+    // an inline editor in the body slot.
+    (fixture.nativeElement.querySelector('.btn-secondary') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    expect(dialog.open).toBe(true);
+
+    // Approve is terminal — dialog closes.
+    (fixture.nativeElement.querySelector('.btn-primary') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    expect(dialog.open).toBe(false);
+  });
+
   it('opens the dialog when an interrupt becomes present, closes when it goes away', () => {
     const dialog = fixture.nativeElement.querySelector('dialog.chat-approval-card') as HTMLDialogElement;
     expect(dialog.open).toBe(false);
