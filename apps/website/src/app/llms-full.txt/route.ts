@@ -54,9 +54,9 @@ export async function GET() {
     [
       '## Common Gotchas',
       '',
-      'agent() MUST be called inside an Angular injection context.',
+      'injectAgent() MUST be called inside an Angular injection context.',
       'Do not call it in ngOnInit — use constructor or field initializer.',
-      'Do not mock agent() in tests — use MockAgentTransport.',
+      'Do not mock injectAgent() in tests — use MockAgentTransport via provideAgent({ transport: new MockAgentTransport(...) }).',
       'RxJS is an internal implementation detail — do not import rxjs in consumer code.',
     ].join('\n'),
   ];

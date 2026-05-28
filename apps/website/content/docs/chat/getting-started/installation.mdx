@@ -136,12 +136,25 @@ provideChat({
 
 ## 4. Render your first chat
 
-Create a component, import `ChatComponent`, and bind it to an `agent()` instance. The full working example:
+Wire `provideAgent({...})` into your `app.config.ts`, then bind `<chat>` to the result of `injectAgent()` in any component. The full working example:
 
 ```ts
+// src/app/app.config.ts
+import { signal } from '@angular/core';
+import { provideAgent } from '@threadplane/langgraph';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideAgent({
+      assistantId: 'chat_agent', // The graph/agent ID exposed by your backend
+      threadId: signal(null),    // null = new thread on first send
+    }),
+  ],
+};
+
 // src/app/chat-page.component.ts
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
-import { agent } from '@threadplane/langgraph';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { injectAgent } from '@threadplane/langgraph';
 import { ChatComponent } from '@threadplane/chat';
 
 @Component({
@@ -156,10 +169,7 @@ import { ChatComponent } from '@threadplane/chat';
   `,
 })
 export class ChatPageComponent {
-  protected readonly chatAgent = agent({
-    assistantId: 'chat_agent', // The graph/agent ID exposed by your backend
-    threadId: signal(null),    // null = new thread on first send
-  });
+  protected readonly chatAgent = injectAgent();
 }
 ```
 

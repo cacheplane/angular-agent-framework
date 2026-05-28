@@ -51,7 +51,7 @@ const chat = injectAgent();
 
 ## Test transports
 
-`transport` is an object that implements `AgentTransport`, not an Angular class token. Create an instance before passing it to `provideAgent()` or to an individual `agent()` call.
+`transport` is an object that implements `AgentTransport`, not an Angular class token. Create an instance before passing it to `provideAgent()`.
 
 ```ts
 const transport = new MockAgentTransport();
