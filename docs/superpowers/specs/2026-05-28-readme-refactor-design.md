@@ -233,7 +233,7 @@ Types:
 - `AgUiAgentConfig` — config shape for `provideAgUiAgent()`.
 - `FakeAgUiAgentConfig` — config shape for `provideFakeAgUiAgent()`.
 
-**Shipped capabilities:** AG-UI adapter — bridges any `@ag-ui/client`-compliant agent into the Threadplane chat surface. Exposes interrupts, subagents, tool calls, citations, and all `AgentWithHistory` capabilities as Angular Signals via the `toAgent()` translation layer. Includes test utilities (`FakeAgent`, `provideFakeAgUiAgent`).
+**Shipped capabilities:** AG-UI adapter — bridges any `@ag-ui/client`-compliant agent into the Threadplane chat surface. `toAgent()` exposes `messages`, `status`, `isLoading`, `error`, `toolCalls`, and `state` as Angular Signals, plus `events$` (Observable) and `submit()`/`stop()`/`regenerate()` actions. NOTE (verified `libs/ag-ui/src/lib/to-agent.ts`): `toAgent()` does NOT wire up `interrupt` or `subagents` signals — those `Agent`-contract fields are unpopulated by this adapter. Citations are bridged separately via `bridgeCitationsState()`. Includes test utilities (`FakeAgent`, `provideFakeAgUiAgent`).
 
 **Confirmed present vs. plan's symbol list:**
 - `provideAgUiAgent` ✓, `AG_UI_AGENT` ✓, `bridgeCitationsState` ✓, `injectAgUiAgent` ✓, `toAgent` ✓.

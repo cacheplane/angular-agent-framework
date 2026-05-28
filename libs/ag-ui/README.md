@@ -22,7 +22,7 @@ Part of [Threadplane](https://github.com/cacheplane/angular-agent-framework).
 
 - Bridges any AG-UI-compatible backend into the Threadplane chat surface via `toAgent()`.
 - Supports: LangGraph, CrewAI, Mastra, Microsoft Agent Framework, AG2, Pydantic AI, AWS Strands, CopilotKit runtime.
-- Exposes messages, status, tool calls, interrupts, subagents, citations, and history as Angular Signals — coverage depends on what the AG-UI backend emits.
+- Exposes messages, status, tool calls, and raw AG-UI state as Angular Signals, plus `submit()`/`stop()`/`regenerate()` actions — coverage depends on what the AG-UI backend emits.
 - Ships `FakeAgent` and `provideFakeAgUiAgent` test doubles for unit testing without a live backend.
 
 ---
@@ -86,7 +86,7 @@ Which capabilities populate depends on the events the AG-UI backend emits. `subm
 
 ### Citations
 
-`bridgeCitationsState(thread, messages)` populates `Message.citations` from AG-UI STATE_DELTA events. Citations are keyed by message ID at the JSON Pointer path `/citations/{messageId}` in the agent state.
+`bridgeCitationsState(thread, messages)` populates `Message.citations` from AG-UI state. Citations live under the `citations` key of the agent state, keyed by message ID (`state.citations[messageId]`).
 
 Example state shape:
 
