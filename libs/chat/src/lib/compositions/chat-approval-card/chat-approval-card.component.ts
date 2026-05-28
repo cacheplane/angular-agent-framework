@@ -29,6 +29,9 @@ export type ChatApprovalAction = 'approve' | 'edit' | 'cancel';
     dialog.chat-approval-card {
       width: 440px;
       max-width: calc(100vw - 32px);
+      /* Center in the viewport. The UA stylesheet sets margin:auto on open
+         modal dialogs, but our reset properties below shadow it. Re-assert. */
+      margin: auto;
       padding: 0;
       border: 0;
       border-radius: 12px;
@@ -37,7 +40,9 @@ export type ChatApprovalAction = 'approve' | 'edit' | 'cancel';
       box-shadow: 0 20px 50px rgba(0,0,0,0.18);
     }
     dialog.chat-approval-card::backdrop {
-      background: rgba(0,0,0,0.32);
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
     }
     .chat-approval-card__header {
       padding: 14px 16px 12px;
@@ -154,7 +159,13 @@ export class ChatApprovalCardComponent {
 
   protected emit(action: ChatApprovalAction): void {
     this.action.emit(action);
-    this.closeDialog();
+    // 'approve' and 'cancel' are terminal — they resolve the interrupt, so the
+    // dialog closes. 'edit' is non-terminal: the caller reveals an inline
+    // editor in the body slot and submits the resume itself, so we leave the
+    // dialog open.
+    if (action !== 'edit') {
+      this.closeDialog();
+    }
   }
 
   protected onCancelEvent(ev: Event): void {

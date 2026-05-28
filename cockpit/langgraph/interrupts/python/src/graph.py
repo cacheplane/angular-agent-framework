@@ -11,6 +11,7 @@ resuming with { approved: false } skips it.
 
 from pathlib import Path
 from typing import TypedDict, Annotated, Optional
+from pydantic import BaseModel, Field
 from langgraph.graph import StateGraph, START, END
 from langgraph.graph.message import add_messages
 from langgraph.types import interrupt
@@ -18,6 +19,14 @@ from langchain_openai import ChatOpenAI
 from langchain_core.messages import SystemMessage, AIMessage
 
 PROMPTS_DIR = Path(__file__).parent.parent / "prompts"
+
+
+class RefundDraft(BaseModel):
+    """Structured fields the agent extracts from the refund request."""
+
+    customer_id: str = Field(description="The customer identifier, e.g. cus_a8x2k. Use 'unknown' if not stated.")
+    amount: float = Field(description="The refund amount in USD. Use 0 if not stated.")
+    reason: str = Field(description="One sentence describing why the refund is justified.")
 
 
 class RefundState(TypedDict):
@@ -31,13 +40,31 @@ class RefundState(TypedDict):
 
 def build_interrupts_graph():
     llm = ChatOpenAI(model="gpt-5-mini", streaming=True)
+    extractor = ChatOpenAI(model="gpt-5-mini").with_structured_output(RefundDraft)
 
     async def draft_refund(state: RefundState) -> dict:
-        """Read the conversation, ask the LLM to acknowledge the draft."""
+        """Extract structured refund fields, then acknowledge the draft.
+
+        Two LLM calls: one structured-output extraction that populates
+        state.customer_id / amount / reason for the approval card, and one
+        streaming acknowledgement for the chat transcript.
+        """
         system_prompt = (PROMPTS_DIR / "interrupts.md").read_text()
-        messages = [SystemMessage(content=system_prompt)] + state["messages"]
-        response = await llm.ainvoke(messages)
-        return {"messages": [response]}
+
+        draft = await extractor.ainvoke(
+            [
+                SystemMessage(content="Extract the refund fields from the conversation."),
+                *state["messages"],
+            ]
+        )
+
+        response = await llm.ainvoke([SystemMessage(content=system_prompt)] + state["messages"])
+        return {
+            "messages": [response],
+            "customer_id": draft.customer_id,
+            "amount": draft.amount,
+            "reason": draft.reason,
+        }
 
     def request_approval(state: RefundState) -> dict:
         """Pause for human approval. Resume value is { approved: bool, amount?: number }."""
@@ -67,8 +94,11 @@ def build_interrupts_graph():
 
     def issue_refund(state: RefundState) -> dict:
         """Stand-in for the real Stripe call. Logs a fake refund ID."""
-        refund_id = "re_demo_" + (state.get("customer_id") or "anon")[-6:]
-        msg = f"Refund of ${state['amount']:.2f} issued to {state.get('customer_id')}. Refund ID: {refund_id}."
+        customer_id = state.get("customer_id") or "anon"
+        refund_id = "re_demo_" + customer_id[-6:]
+        # Wrap identifiers in backticks so markdown doesn't treat the
+        # underscores in cus_*/re_* as emphasis delimiters.
+        msg = f"Refund of ${state['amount']:.2f} issued to `{customer_id}`. Refund ID: `{refund_id}`."
         return {"refund_id": refund_id, "messages": [AIMessage(content=msg)]}
 
     def route_after_approval(state: RefundState) -> str:
