@@ -35,7 +35,7 @@ const ITEMS: FAQItem[] = [
   },
   {
     q: 'I’m using CopilotKit today — how hard is the migration?',
-    a: 'Component-by-component. CopilotKit’s chat hooks have rough equivalents in our agent() signal API, and CopilotKit actions map to LangGraph/AG-UI tool calls. Thread state lives in a service (not the component tree), so plan a session to port that. There isn’t a one-shot codemod.',
+    a: 'Component-by-component. CopilotKit’s chat hooks have rough equivalents in our injectAgent() signal API, and CopilotKit actions map to LangGraph/AG-UI tool calls. Thread state lives in a service (not the component tree), so plan a session to port that. There isn’t a one-shot codemod.',
   },
   {
     q: 'Does it work with Angular Universal / SSR?',

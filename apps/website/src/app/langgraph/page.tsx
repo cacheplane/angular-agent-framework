@@ -70,10 +70,10 @@ export default async function LangGraphPage() {
         id="providers"
         eyebrow="Providers"
         headline="Drop it into app.config.ts. Done."
-        body="provideAgent wires LangGraph (or AG-UI) into Angular's DI container. From any component, agent() returns a signal-based handle for messages, status, errors, and interrupts."
+        body="provideAgent wires LangGraph into Angular's DI container. From any component, injectAgent() returns a signal-based handle for messages, status, errors, and interrupts."
         bullets={[
-          'provideAgent + provideAgUiAgent — pick your runtime',
-          'agent() returns a typed signal-based handle',
+          'provideAgent — wire it once in app.config.ts',
+          'injectAgent() returns a typed signal-based handle',
           'OnPush tested',
           'Test transports for deterministic specs',
         ]}
@@ -109,7 +109,7 @@ export const appConfig: ApplicationConfig = {
 
 // any component
 export class ChatComponent {
-  agent = agent();
+  agent = injectAgent();
   messages = this.agent.messages;
   status = this.agent.status;
 }`}
