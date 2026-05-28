@@ -48,93 +48,73 @@ export function interruptReasonText(interrupt: AgentInterrupt | undefined): stri
       background: var(--ngaf-chat-surface);
       color: var(--ngaf-chat-text);
       border: 1px solid var(--ngaf-chat-separator);
-      border-left: 3px solid var(--ngaf-chat-warning-text);
       border-radius: var(--ngaf-chat-radius-card);
-      padding: 12px 16px;
+      padding: 14px 16px;
       font-size: var(--ngaf-chat-font-size-sm);
     }
-    .chat-interrupt-panel__title {
-      font-weight: 600;
-      margin: 0 0 4px;
+    .chat-interrupt-panel__eyebrow {
+      font-family: ui-monospace, Menlo, Consolas, monospace;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--ngaf-chat-warning-text);
+      margin: 0 0 8px;
       display: flex;
       align-items: center;
       gap: 6px;
-      color: var(--ngaf-chat-text);
     }
-    .chat-interrupt-panel__title svg {
-      color: var(--ngaf-chat-warning-text);
+    .chat-interrupt-panel__dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: var(--ngaf-chat-warning-text);
+      flex: 0 0 6px;
     }
     .chat-interrupt-panel__body {
       margin: 0 0 12px;
-      color: var(--ngaf-chat-text-muted);
+      color: var(--ngaf-chat-text);
       white-space: pre-wrap;
     }
     .chat-interrupt-panel__actions {
       display: flex;
-      gap: 8px;
+      gap: 6px;
       flex-wrap: wrap;
       align-items: center;
     }
-    .chat-interrupt-panel__btn {
-      padding: 6px 14px;
-      font-size: var(--ngaf-chat-font-size-sm);
-      border-radius: var(--ngaf-chat-radius-button);
+    .btn {
       border: 0;
-      cursor: pointer;
+      padding: 6px 14px;
+      border-radius: var(--ngaf-chat-radius-button);
+      font-size: 12px;
       font-weight: 500;
+      cursor: pointer;
       transition: transform 200ms ease, opacity 200ms ease;
     }
-    .chat-interrupt-panel__btn:hover { transform: scale(1.03); }
-    .chat-interrupt-panel__btn--primary {
-      background: var(--ngaf-chat-primary);
-      color: var(--ngaf-chat-on-primary);
-    }
-    .chat-interrupt-panel__btn--secondary {
-      background: transparent;
-      color: var(--ngaf-chat-text);
-      border: 1px solid var(--ngaf-chat-separator);
-    }
-    .chat-interrupt-panel__btn--tertiary {
+    .btn:hover { transform: scale(1.03); }
+    .btn-primary { background: var(--ngaf-chat-primary); color: var(--ngaf-chat-on-primary); }
+    .btn-secondary { background: transparent; color: var(--ngaf-chat-text); border: 1px solid var(--ngaf-chat-separator); }
+    .btn-text {
       background: transparent;
       color: var(--ngaf-chat-text-muted);
-      padding: 6px 8px;
-      font-size: var(--ngaf-chat-font-size-sm);
+      padding: 6px 10px;
     }
-    .chat-interrupt-panel__btn--tertiary:hover {
-      color: var(--ngaf-chat-text);
-    }
+    .btn-text:hover { color: var(--ngaf-chat-text); }
     `,
   ],
   template: `
     @if (interrupt()) {
       <div role="alert" class="chat-interrupt-panel">
-        <p class="chat-interrupt-panel__title">
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-          Agent paused
+        <p class="chat-interrupt-panel__eyebrow">
+          <span class="chat-interrupt-panel__dot" aria-hidden="true"></span>
+          Agent paused — review needed
         </p>
         <p class="chat-interrupt-panel__body">{{ interruptReason() }}</p>
-
         <div class="chat-interrupt-panel__actions">
-          <button
-            type="button"
-            class="chat-interrupt-panel__btn chat-interrupt-panel__btn--primary"
-            (click)="action.emit('accept')"
-          >Accept</button>
-          <button
-            type="button"
-            class="chat-interrupt-panel__btn chat-interrupt-panel__btn--secondary"
-            (click)="action.emit('edit')"
-          >Edit</button>
-          <button
-            type="button"
-            class="chat-interrupt-panel__btn chat-interrupt-panel__btn--secondary"
-            (click)="action.emit('respond')"
-          >Respond</button>
-          <button
-            type="button"
-            class="chat-interrupt-panel__btn chat-interrupt-panel__btn--tertiary"
-            (click)="action.emit('ignore')"
-          >Ignore</button>
+          <button type="button" class="btn btn-primary" (click)="action.emit('accept')">Accept</button>
+          <button type="button" class="btn btn-secondary" (click)="action.emit('edit')">Edit</button>
+          <button type="button" class="btn btn-secondary" (click)="action.emit('respond')">Respond</button>
+          <button type="button" class="btn btn-text" (click)="action.emit('ignore')">Ignore</button>
         </div>
       </div>
     }
