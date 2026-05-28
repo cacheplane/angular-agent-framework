@@ -260,7 +260,7 @@ export function Nav() {
                                     destination_url: `/docs/${currentLib.id}/${page.section}/${page.slug}`,
                                     cta_id: 'mobile_nav_docs_page',
                                     cta_text: page.title,
-                                    library: currentLib.id === 'agent' || currentLib.id === 'render' || currentLib.id === 'chat' ? currentLib.id : 'unknown',
+                                    library: currentLib.id === 'langgraph' || currentLib.id === 'render' || currentLib.id === 'chat' ? currentLib.id : 'unknown',
                                   });
                                   setOpen(false);
                                 }}

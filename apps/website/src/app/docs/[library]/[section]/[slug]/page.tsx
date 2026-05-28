@@ -26,8 +26,8 @@ function loadApiDocs(library: string): ApiDocEntry[] {
 }
 
 const API_NAME_MAP: Record<string, Record<string, string>> = {
-  agent: {
-    'agent': 'agent',
+  langgraph: {
+    'inject-agent': 'injectAgent',
     'provide-agent': 'provideAgent',
     'fetch-stream-transport': 'FetchStreamTransport',
     'mock-stream-transport': 'MockAgentTransport',

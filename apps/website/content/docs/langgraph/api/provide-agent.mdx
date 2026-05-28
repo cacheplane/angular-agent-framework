@@ -1,8 +1,8 @@
 # provideAgent()
 
-`provideAgent()` registers global defaults for every `agent()` call in an Angular application. Call it once in `bootstrapApplication` or an `ApplicationConfig` when multiple agents share the same LangGraph API URL or transport.
+`provideAgent()` registers the singleton agent configuration for every `injectAgent()` call in an Angular application. Call it once in `bootstrapApplication` or an `ApplicationConfig` to wire up the LangGraph API URL, assistant id, thread persistence, and transport.
 
-Per-call options still win over provider defaults, so you can configure the common case globally and override individual agents when needed.
+`injectAgent()` itself takes no arguments — all configuration flows through `provideAgent()`.
 
 ```ts
 import { bootstrapApplication } from '@angular/platform-browser';
@@ -16,6 +16,7 @@ bootstrapApplication(AppComponent, {
   providers: [
     provideAgent({
       apiUrl: 'http://localhost:2024',
+      assistantId: 'my-agent',
       transport: environment.testMode
         ? new MockAgentTransport()
         : undefined,
@@ -24,28 +25,28 @@ bootstrapApplication(AppComponent, {
 });
 ```
 
-## Global configuration
+## Configuration options
 
 | Option | Type | Description |
 |--------|------|-------------|
-| `apiUrl` | `string` | Default LangGraph Platform API base URL. Individual `agent()` calls may override it. |
+| `apiUrl` | `string` | LangGraph Platform API base URL. |
+| `assistantId` | `string` | LangGraph assistant id to bind to. |
+| `threadId` | `() => string \| undefined` | Optional thread id provider, used to resume a persisted thread. |
+| `onThreadId` | `(id: string) => void` | Optional callback fired when a new thread id is assigned. |
 | `transport` | `AgentTransport` | Optional transport instance. Defaults to `FetchStreamTransport` when omitted. |
 
-## Defaults and overrides
+## Singleton model
 
-Provider defaults are merged with call-site options. The call site takes precedence.
+A single `provideAgent({...})` call configures the entire application. Every `injectAgent()` call resolves to the same configured agent.
 
 ```ts
-provideAgent({ apiUrl: 'https://api.example.com' });
-
-const productionAgent = agent({
+provideAgent({
+  apiUrl: 'https://api.example.com',
   assistantId: 'support-agent',
 });
 
-const localAgent = agent({
-  apiUrl: 'http://localhost:2024',
-  assistantId: 'dev-agent',
-});
+// Elsewhere, inside an injection context:
+const chat = injectAgent();
 ```
 
 ## Test transports
@@ -59,16 +60,17 @@ TestBed.configureTestingModule({
   providers: [
     provideAgent({
       apiUrl: '',
+      assistantId: 'test-agent',
       transport,
     }),
   ],
 });
 ```
 
-<Callout type="info" title="Per-call override">
-  You do not need `provideAgent()` for one-off tests. Passing
-  `transport: new MockAgentTransport()` directly to `agent()` is often simpler
-  and keeps the test fixture explicit.
+<Callout type="info" title="Test transports">
+  Swap out the live transport for `MockAgentTransport` in tests by changing only
+  the `transport` field on `provideAgent()`. `injectAgent()` call sites stay
+  unchanged across environments.
 </Callout>
 
 ## What's Next
@@ -77,21 +79,21 @@ TestBed.configureTestingModule({
   <Card
     title="Installation"
     icon="package"
-    href="/docs/agent/getting-started/installation"
+    href="/docs/langgraph/getting-started/installation"
   >
     Step-by-step setup guide including peer dependencies and NgModule support.
   </Card>
   <Card
     title="Deployment"
     icon="server"
-    href="/docs/agent/guides/deployment"
+    href="/docs/langgraph/guides/deployment"
   >
     Configure transports for production, SSR, and edge runtimes.
   </Card>
   <Card
-    title="agent() API"
+    title="injectAgent() API"
     icon="code"
-    href="/docs/agent/api/agent"
+    href="/docs/langgraph/api/inject-agent"
   >
     Full reference for the core primitive you configure here.
   </Card>

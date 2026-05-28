@@ -1,20 +1,36 @@
-# agent()
+# injectAgent()
 
-`agent()` is the LangGraph adapter for Angular. It connects to a LangGraph Platform assistant, consumes the LangGraph SDK event stream, and projects the result into the runtime-neutral `Agent` contract used by `@threadplane/chat`.
+`injectAgent()` is the LangGraph adapter for Angular. It connects to a LangGraph Platform assistant, consumes the LangGraph SDK event stream, and projects the result into the runtime-neutral `Agent` contract used by `@threadplane/chat`.
 
 Call it in an Angular injection context, usually as a component field initializer. The returned object exposes Angular Signals for UI state and async methods for user actions.
 
-```ts
-import { agent } from '@threadplane/langgraph';
+Configuration is supplied globally via `provideAgent({...})` — `injectAgent()` itself takes no arguments.
 
-readonly chat = agent({
-  apiUrl: 'http://localhost:2024',
-  assistantId: 'my-agent',
-  threadId: this.threadId,
-  onThreadId: (id) => localStorage.setItem('threadId', id),
-});
+```ts
+import { injectAgent } from '@threadplane/langgraph';
+
+readonly chat = injectAgent();
 
 await this.chat.submit({ message: 'Hello' });
+```
+
+Pair it with `provideAgent()` at bootstrap to configure the API URL, assistant id, thread persistence, and transport:
+
+```ts
+import { bootstrapApplication } from '@angular/platform-browser';
+import { provideAgent } from '@threadplane/langgraph';
+import { AppComponent } from './app/app.component';
+
+bootstrapApplication(AppComponent, {
+  providers: [
+    provideAgent({
+      apiUrl: 'http://localhost:2024',
+      assistantId: 'my-agent',
+      threadId: () => localStorage.getItem('threadId') ?? undefined,
+      onThreadId: (id) => localStorage.setItem('threadId', id),
+    }),
+  ],
+});
 ```
 
 ## Runtime-neutral surface
@@ -37,7 +53,7 @@ These fields are stable across runtime adapters and are what chat components con
 
 ## LangGraph-specific surface
 
-`agent()` also returns LangGraph-specific signals and helpers for apps that need the raw platform model:
+`injectAgent()` also returns LangGraph-specific signals and helpers for apps that need the raw platform model:
 
 - `value()` and `hasValue()` for raw state values.
 - `langGraphMessages()`, `langGraphToolCalls()`, and `langGraphHistory()` for raw SDK-shaped data.
@@ -82,7 +98,7 @@ await chat.regenerate(3);
 The method throws when the selected index is not an assistant message, when no preceding user message exists, or while another response is already loading.
 
 <Callout type="warning" title="Injection context required">
-  `agent()` must be called during construction, inside an injection
+  `injectAgent()` must be called during construction, inside an injection
   context (e.g. a component constructor, field initializer, or a function
   passed to `runInInjectionContext`). Calling it outside an injection context
   will throw.
@@ -94,23 +110,23 @@ The method throws when the selected index is not an assistant message, when no p
   <Card
     title="Quickstart"
     icon="rocket"
-    href="/docs/agent/getting-started/quickstart"
+    href="/docs/langgraph/getting-started/quickstart"
   >
     Build your first streaming component end-to-end in under five minutes.
   </Card>
   <Card
     title="Streaming Guide"
     icon="wave-sine"
-    href="/docs/agent/guides/streaming"
+    href="/docs/langgraph/guides/streaming"
   >
     Deep dive into SSE lifecycle, error handling, and reconnect strategies.
   </Card>
   <Card
     title="Angular Signals"
     icon="bolt"
-    href="/docs/agent/concepts/angular-signals"
+    href="/docs/langgraph/concepts/angular-signals"
   >
-    Understand how `agent()` integrates with Angular's reactivity model.
+    Understand how `injectAgent()` integrates with Angular's reactivity model.
   </Card>
 </CardGroup>
 

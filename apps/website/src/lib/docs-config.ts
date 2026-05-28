@@ -1,5 +1,5 @@
 export type LibraryId =
-  | 'agent'
+  | 'langgraph'
   | 'render'
   | 'chat'
   | 'ag-ui'
@@ -29,9 +29,9 @@ export interface DocsLibrary {
 
 export const docsConfig: DocsLibrary[] = [
   {
-    id: 'agent',
-    title: 'Agent',
-    description: 'Production agent state for Angular UI',
+    id: 'langgraph',
+    title: 'LangGraph',
+    description: 'LangChain/LangGraph adapter for Angular UI',
     sections: [
       {
         title: 'Getting Started',
@@ -76,7 +76,7 @@ export const docsConfig: DocsLibrary[] = [
         id: 'api',
         color: 'blue',
         pages: [
-          { title: 'agent()', slug: 'agent', section: 'api' },
+          { title: 'injectAgent()', slug: 'inject-agent', section: 'api' },
           { title: 'provideAgent()', slug: 'provide-agent', section: 'api' },
           { title: 'FetchStreamTransport', slug: 'fetch-stream-transport', section: 'api' },
           { title: 'MockAgentTransport', slug: 'mock-stream-transport', section: 'api' },
