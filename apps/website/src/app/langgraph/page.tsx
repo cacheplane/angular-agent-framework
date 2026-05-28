@@ -79,10 +79,10 @@ export default async function LangGraphPage() {
         ]}
         supportingCards={[
           { title: 'provideAgent', description: 'LangGraph wiring.' },
-          { title: 'provideAgUiAgent', description: 'AG-UI wiring.' },
+          { title: 'injectAgent()', description: 'No-args helper.' },
           { title: 'MockAgentTransport', description: 'Deterministic tests.' },
         ]}
-        cta={{ label: 'API reference', href: '/docs/langgraph/api/agent' }}
+        cta={{ label: 'API reference', href: '/docs/langgraph/api/inject-agent' }}
         visual={
           <BrowserFrame url="app.config.ts" elevation="md">
             <pre style={{

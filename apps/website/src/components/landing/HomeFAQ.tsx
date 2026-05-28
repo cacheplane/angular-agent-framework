@@ -11,7 +11,7 @@ const ITEMS: FAQItem[] = [
   },
   {
     q: 'Does it work with my existing Angular app?',
-    a: 'Yes. Drop provideAgent (or provideAgUiAgent) into your app.config.ts. The headless primitives don’t impose any UI; the chat compositions are opt-in.',
+    a: 'Yes. Drop provideAgent (from @threadplane/langgraph or @threadplane/ag-ui) into your app.config.ts. The headless primitives don’t impose any UI; the chat compositions are opt-in.',
   },
   {
     q: 'Can I use this without LangGraph?',
