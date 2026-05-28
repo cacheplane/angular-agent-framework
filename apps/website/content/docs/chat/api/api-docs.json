@@ -1457,6 +1457,91 @@
     "methods": []
   },
   {
+    "name": "ChatApprovalCardComponent",
+    "kind": "class",
+    "description": "",
+    "params": [],
+    "examples": [],
+    "properties": [
+      {
+        "name": "action",
+        "type": "OutputEmitterRef<ChatApprovalAction>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "agent",
+        "type": "InputSignal<Agent>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "bodyTemplate",
+        "type": "Signal<TemplateRef<unknown> | undefined>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "matchKind",
+        "type": "InputSignal<string | undefined>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "payload",
+        "type": "Signal<object | undefined>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "showEdit",
+        "type": "InputSignal<boolean>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "title",
+        "type": "InputSignal<string>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "methods": [
+      {
+        "name": "emit",
+        "signature": "emit(action: ChatApprovalAction)",
+        "description": "",
+        "params": [
+          {
+            "name": "action",
+            "type": "ChatApprovalAction",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
+        "name": "onCancelEvent",
+        "signature": "onCancelEvent(ev: Event)",
+        "description": "",
+        "params": [
+          {
+            "name": "ev",
+            "type": "Event",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
+        "name": "onDialogClose",
+        "signature": "onDialogClose()",
+        "description": "",
+        "params": []
+      }
+    ]
+  },
+  {
     "name": "ChatCitationCardTemplateDirective",
     "kind": "class",
     "description": "ContentChild template directive for custom citation card rendering.\nUsage: <ng-template chatCitationCard let-citation>...</ng-template>",
@@ -6374,6 +6459,13 @@
     "kind": "type",
     "description": "",
     "signature": "\"idle\" | \"running\" | \"error\"",
+    "examples": []
+  },
+  {
+    "name": "ChatApprovalAction",
+    "kind": "type",
+    "description": "",
+    "signature": "\"approve\" | \"edit\" | \"cancel\"",
     "examples": []
   },
   {
