@@ -32,6 +32,7 @@ A standalone, internal library that renders branded social images from typed inp
 - `renderCard(input: CardInput): Promise<RenderedCard>` implemented with satori + @resvg/resvg-js.
 - Brand-token module (`brand.ts`) — colors, gradient, font families, wordmark — lifted verbatim from the website OG card so the visual language stays consistent.
 - Bundled fonts: `EBGaramond-Bold.ttf` (copied from the website), `Inter-Regular.ttf`, `Inter-SemiBold.ttf`. No runtime font fetch.
+- Bundled brand image: `marketing/assets/brand/plane.png` (160×160 RGBA, the Cacheplane plane logo). Rendered as an `<img>` data-URI in the card footer wordmark — satori does not render the bare `🛩️` emoji, so we use the real logo image instead.
 - 2 templates:
   - `x-card` — 1200×675 (X's 16:9 in-stream ratio)
   - `og-card` — 1200×630 (standard OG ratio; mirrors the website default card)
@@ -62,6 +63,8 @@ marketing/assets/
 │   ├── EBGaramond-Bold.ttf
 │   ├── Inter-Regular.ttf
 │   └── Inter-SemiBold.ttf
+├── brand/                    # NEW — committed, copied into dist on build
+│   └── plane.png             # 160×160 Cacheplane plane logo
 ├── preview/                  # gitignored output (.gitkeep + .gitignore)
 ├── scripts/
 │   └── preview.ts            # writes sample PNGs
@@ -71,6 +74,8 @@ marketing/assets/
     ├── brand.ts              # brand tokens
     ├── fonts.ts              # loadFonts() — memoized TTF reads
     ├── fonts.spec.ts
+    ├── logo.ts               # loadPlaneDataUri() — memoized base64 data-URI of plane.png
+    ├── logo.spec.ts
     ├── render.ts             # renderCard()
     ├── render.spec.ts
     └── templates/
@@ -87,7 +92,8 @@ Component responsibilities:
 | `types.ts` | Public types | — |
 | `brand.ts` | Palette / fonts / wordmark constants | — |
 | `fonts.ts` | Read + memoize bundled TTFs as satori font entries | node:fs |
-| `templates/card-shell.tsx` | The full card layout, parameterized by size | `brand.ts`, `types.ts` |
+| `logo.ts` | Read + memoize `plane.png` as a base64 `data:image/png` URI | node:fs |
+| `templates/card-shell.tsx` | The full card layout, parameterized by size | `brand.ts`, `logo.ts`, `types.ts` |
 | `templates/x-card.tsx` | Thin wrapper: CardShell at 1200×675 | `card-shell.tsx` |
 | `templates/og-card.tsx` | Thin wrapper: CardShell at 1200×630 | `card-shell.tsx` |
 | `templates/registry.ts` | Map id → component + dimensions | template wrappers |
@@ -100,6 +106,7 @@ Component responsibilities:
 import satori from 'satori';
 import { Resvg } from '@resvg/resvg-js';
 import { loadFonts } from './fonts';
+import { loadPlaneDataUri } from './logo';
 import { TEMPLATES } from './templates/registry';
 import type { CardInput, RenderedCard } from './types';
 
@@ -110,8 +117,8 @@ export async function renderCard(input: CardInput): Promise<RenderedCard> {
       `Unknown template "${input.template}". Known: ${Object.keys(TEMPLATES).join(', ')}.`,
     );
   }
-  const fonts = await loadFonts();
-  const svg = await satori(entry.component(input), {
+  const [fonts, planeDataUri] = await Promise.all([loadFonts(), loadPlaneDataUri()]);
+  const svg = await satori(entry.component(input, { planeDataUri }), {
     width: entry.width,
     height: entry.height,
     fonts,
@@ -127,6 +134,28 @@ export async function renderCard(input: CardInput): Promise<RenderedCard> {
 }
 ```
 
+Components receive a second `assets` arg (`{ planeDataUri }`) because satori needs a fully-resolved synchronous element tree — async asset loading happens once in `renderCard`, then the resolved data-URI is threaded into the component.
+
+### Logo loading (`logo.ts`)
+
+```ts
+import { readFile } from 'node:fs/promises';
+import { fileURLToPath } from 'node:url';
+import { dirname, join } from 'node:path';
+
+let cached: string | null = null;
+
+export async function loadPlaneDataUri(): Promise<string> {
+  if (cached) return cached;
+  const here = dirname(fileURLToPath(import.meta.url));
+  const png = await readFile(join(here, '..', 'brand', 'plane.png'));
+  cached = `data:image/png;base64,${png.toString('base64')}`;
+  return cached;
+}
+```
+
+Memoized — read once per process. Resolves `../brand/plane.png` relative to the compiled module (`dist/marketing/assets/brand/plane.png`).
+
 ### Font loading (`fonts.ts`)
 
 Memoized. Reads the three bundled TTFs once per process. Resolves the `fonts/` dir relative to the compiled module location (`../fonts` from `dist/marketing/assets/src/`).
@@ -137,11 +166,12 @@ Memoized. Reads the three bundled TTFs once per process. Resolves the `fonts/` d
 
 ```json
 "assets": [
-  { "input": "marketing/assets/fonts", "glob": "**/*", "output": "fonts" }
+  { "input": "marketing/assets/fonts", "glob": "**/*", "output": "fonts" },
+  { "input": "marketing/assets/brand", "glob": "**/*", "output": "brand" }
 ]
 ```
 
-This places the fonts at `dist/marketing/assets/fonts/`, matching the `../fonts` resolution from `dist/marketing/assets/src/fonts.js`.
+This places the fonts at `dist/marketing/assets/fonts/` and the logo at `dist/marketing/assets/brand/`, matching the `../fonts` and `../brand` resolutions from `dist/marketing/assets/src/{fonts,logo}.js`.
 
 ### satori constraints
 
@@ -191,14 +221,13 @@ export const brand = {
   accent: '#004090',
   angular: '#DD0031',
   wordmark: 'cacheplane.ai',
-  glyph: '🛩️',
   serif: 'EB Garamond, Georgia, serif',
   sans: 'Inter, sans-serif',
   defaultEyebrow: 'Agent UI for Angular · MIT',
 } as const;
 ```
 
-Values lifted verbatim from `apps/website/src/app/opengraph-image.tsx` so the marketing cards and the site share one palette.
+Palette + wordmark lifted verbatim from `apps/website/src/app/opengraph-image.tsx`. The plane `🛩️` emoji is NOT a brand token — it's the bundled `plane.png` image, loaded via `logo.ts` and rendered as an `<img>` (satori can't render the emoji glyph).
 
 ## 7. Template layout
 
@@ -209,9 +238,11 @@ Both templates render the same structure via `CardShell`, differing only in dime
 3. **Subtitle** — Inter 400, ~26px, `brand.inkSoft`, `maxWidth: 920`, `marginBottom: auto` (pushes footer down). Rendered only when `input.subtitle` is set.
 4. **Footer row** (bottom, `justify-content: space-between`):
    - **Left:** if `input.author` → `name` (Inter 600, ink) + ` · role` (Inter 400, inkSoft). Else → three trust pills (`MIT`, `LangGraph + AG-UI`, `Angular 20+`) reusing the website pill styling.
-   - **Right:** `{brand.glyph} {brand.wordmark}` (Garamond 700, ink).
+   - **Right:** `<img>` of the plane logo (28×28, from `planeDataUri`) + `{brand.wordmark}` (Garamond 700, ink), in a flex row with `gap: 10`.
 
-`CardShell({ input, headlineSize, padding })` renders all of the above. `XCard` = `CardShell({ input, headlineSize: 76, padding: '76px 84px' })`; `OgCard` = `CardShell({ input, headlineSize: 72, padding: '72px 80px' })`.
+`CardShell({ input, planeDataUri, headlineSize, padding })` renders all of the above. The template wrappers receive `(input, { planeDataUri })` from `renderCard` and forward both. `XCard` = `CardShell({ input, planeDataUri, headlineSize: 76, padding: '76px 84px' })`; `OgCard` = `CardShell({ input, planeDataUri, headlineSize: 72, padding: '72px 80px' })`.
+
+The template registry entry's `component` signature is `(input: CardInput, assets: { planeDataUri: string }) => JSX.Element`.
 
 The pill component is a small local helper inside `card-shell.tsx` (lifted from the website's `PillBadge`), three tones: `accent`, `neutral`, `angular`.
 
@@ -230,6 +261,11 @@ The pill component is a small local helper inside `card-shell.tsx` (lifted from 
 - `loadFonts()` returns 3 entries with names `EB Garamond`/`Inter`/`Inter` and weights `700`/`400`/`600`.
 - Second call returns the same array reference (memoization).
 
+`logo.spec.ts`:
+- `loadPlaneDataUri()` returns a string starting with `data:image/png;base64,`.
+- The decoded base64 payload starts with the PNG magic bytes.
+- Second call returns the same cached string reference (memoization).
+
 No pixel snapshots. PNG-validity + dimensions + the manual preview is the right level for v1.
 
 ## 9. Manual preview
@@ -241,7 +277,7 @@ No pixel snapshots. PNG-validity + dimensions + the manual preview is the right 
 | # | Risk | Mitigation |
 |--:|------|------------|
 | 1 | `@resvg/resvg-js` native binary doesn't install on CI's platform | resvg-js ships prebuilt binaries for linux-x64/arm64 + darwin; same platforms CI + dev use. If a platform is missing, it falls back to a wasm build. Verify in the build step. |
-| 2 | Emoji glyph (🛩️) doesn't render in satori without an emoji font | satori needs an explicit emoji font or a `loadAdditionalAsset` callback for emoji. If 🛩️ fails to render, fall back to a text wordmark with no glyph (the website card uses the glyph via ImageResponse which has emoji support built in; satori does not by default). Implementer tests this in the preview and drops the glyph if it doesn't render cleanly. |
+| 2 | Plane logo `<img>` doesn't render in satori | satori supports `<img>` with base64 `data:` URIs natively (no emoji-font issue since we render the bundled `plane.png`, not the 🛩️ glyph). The preview step confirms the logo appears. If the 160×160 source looks soft scaled to 28×28, swap to a higher-DPI export — but RGBA downscale should be clean. |
 | 3 | Bundled fonts bloat the package | ~1.5MB total, internal-only package, never published. Acceptable. |
 | 4 | satori flexbox subset rejects a layout property used in the website card | satori supports the subset the website card already uses (flex, padding, gap, borderRadius, gradients via background). The card was authored against the same engine constraints. Low risk. |
 | 5 | Fonts not copied into dist → runtime ENOENT | The `project.json` assets array handles this; the build test asserts `dist/marketing/assets/fonts/` exists. |
@@ -250,8 +286,8 @@ No pixel snapshots. PNG-validity + dimensions + the manual preview is the right 
 
 ## 11. Phases
 
-1. **Phase 0 — Deps + config + fonts.** Add satori + resvg deps, vitest config, copy the three TTFs into `fonts/`, wire the build assets array. ~2 commits.
-2. **Phase 1 — Brand + fonts module (TDD).** `brand.ts`, `fonts.ts` + `fonts.spec.ts`. ~2 commits.
+1. **Phase 0 — Deps + config + assets.** Add satori + resvg deps, vitest config, copy the three TTFs into `fonts/` (`plane.png` already in `brand/`), wire the build assets array for both `fonts/` + `brand/`. ~2 commits.
+2. **Phase 1 — Brand + fonts + logo modules (TDD).** `brand.ts`, `fonts.ts` + `fonts.spec.ts`, `logo.ts` + `logo.spec.ts`. ~2 commits.
 3. **Phase 2 — Templates.** `card-shell.tsx`, `x-card.tsx`, `og-card.tsx`, `registry.ts`. ~2 commits.
 4. **Phase 3 — renderCard (TDD).** `render.ts` + `render.spec.ts`, `index.ts` rewrite. ~2 commits.
 5. **Phase 4 — Preview + docs.** `scripts/preview.ts`, `preview/.gitkeep` + `.gitignore`, `README.md`. ~1 commit.
@@ -265,9 +301,11 @@ Total: ~9 commits.
 - ☐ `marketing/assets/project.json` — vitest test target
 - ☐ `marketing/assets/vite.config.mts`
 - ☐ `marketing/assets/fonts/{EBGaramond-Bold.ttf, Inter-Regular.ttf, Inter-SemiBold.ttf}`
+- ☐ `marketing/assets/brand/plane.png` (already in place)
 - ☐ `marketing/assets/src/types.ts`
 - ☐ `marketing/assets/src/brand.ts`
 - ☐ `marketing/assets/src/fonts.ts` + `fonts.spec.ts`
+- ☐ `marketing/assets/src/logo.ts` + `logo.spec.ts`
 - ☐ `marketing/assets/src/render.ts` + `render.spec.ts`
 - ☐ `marketing/assets/src/templates/{card-shell,x-card,og-card,registry}.tsx`
 - ☐ `marketing/assets/src/index.ts` rewritten
