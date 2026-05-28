@@ -482,12 +482,12 @@
   {
     "name": "provideAgent",
     "kind": "function",
-    "description": "Provides an Agent instance wired through HttpAgent and toAgent.\nConstructs an HttpAgent from config and wraps it in the runtime-neutral\nAgent contract via toAgent(). Returns a provider array suitable for\nbootstrapApplication or TestBed.configureTestingModule().",
-    "signature": "provideAgent(config: AgentConfig): Provider[]",
+    "description": "Provides an Agent instance wired through HttpAgent and toAgent.\nConstructs an HttpAgent from config and wraps it in the runtime-neutral\nAgent contract via toAgent(). Returns a provider array suitable for\nbootstrapApplication or TestBed.configureTestingModule().\n\n**Static vs factory config.** Pass a plain `AgentConfig` object when the\nconfig is known up front. Pass a `() => AgentConfig` factory when the config\ndepends on runtime/DI state — the factory runs inside an Angular injection\ncontext, so it may call `inject()` to read services or route params.",
+    "signature": "provideAgent(configOrFactory: AgentConfig | object): Provider[]",
     "params": [
       {
-        "name": "config",
-        "type": "AgentConfig",
+        "name": "configOrFactory",
+        "type": "AgentConfig | object",
         "description": "",
         "optional": false
       }

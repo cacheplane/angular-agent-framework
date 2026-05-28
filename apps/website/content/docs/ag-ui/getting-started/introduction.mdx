@@ -27,7 +27,7 @@ AG-UI is the open agent-to-UI protocol from the CopilotKit ecosystem. It standar
 ## What you get
 
 - **`toAgent(source: AbstractAgent): Agent`** - wraps any `AbstractAgent` subclass (custom transports, mocks) into the runtime-neutral `Agent` contract.
-- **`provideAgUiAgent({ url })`** - DI convenience that instantiates `HttpAgent` under the hood for the common SSE/HTTP case.
+- **`provideAgent({ url })`** - DI convenience that instantiates `HttpAgent` under the hood for the common SSE/HTTP case.
 - **`FakeAgent`** - in-process `AbstractAgent` subclass that emits canned streaming events for offline demos and tests.
 
 ## What's covered

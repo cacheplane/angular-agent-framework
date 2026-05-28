@@ -16,21 +16,21 @@ npm install @threadplane/chat @threadplane/ag-ui @ag-ui/client
 </Step>
 <Step title="Configure the provider">
 
-Add `provideAgUiAgent()` to your application config with your AG-UI backend URL.
+Add `provideAgent()` to your application config with your AG-UI backend URL.
 
 ```ts
 // app.config.ts
 import { ApplicationConfig } from '@angular/core';
-import { provideAgUiAgent } from '@threadplane/ag-ui';
+import { provideAgent } from '@threadplane/ag-ui';
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideAgUiAgent({ url: 'http://localhost:3000/agent' }),
+    provideAgent({ url: 'http://localhost:3000/agent' }),
   ],
 };
 ```
 
-For offline development without a backend, swap to `provideFakeAgUiAgent({})` - it serves canned streaming responses for UI work.
+For offline development without a backend, swap to `provideFakeAgent({})` - it serves canned streaming responses for UI work.
 
 </Step>
 <Step title="Use in a component">
@@ -38,7 +38,7 @@ For offline development without a backend, swap to `provideFakeAgUiAgent({})` - 
 ```ts
 import { Component, inject } from '@angular/core';
 import { ChatComponent } from '@threadplane/chat';
-import { AG_UI_AGENT } from '@threadplane/ag-ui';
+import { injectAgent } from '@threadplane/ag-ui';
 
 @Component({
   selector: 'app-streaming',
@@ -47,7 +47,7 @@ import { AG_UI_AGENT } from '@threadplane/ag-ui';
   template: `<chat [agent]="agent" />`,
 })
 export class StreamingComponent {
-  protected readonly agent = inject(AG_UI_AGENT);
+  protected readonly agent = injectAgent();
 }
 ```
 
@@ -58,7 +58,7 @@ That's it. The `<chat>` composition handles streaming messages, tool calls, erro
 
 ## What to read next
 
-- [Architecture](/docs/ag-ui/concepts/architecture) explains how `toAgent()`, `provideAgUiAgent()`, `AG_UI_AGENT`, and `injectAgUiAgent()` fit together.
+- [Architecture](/docs/ag-ui/concepts/architecture) explains how `toAgent()`, `provideAgent()`, and `injectAgent()` fit together.
 - [Event Mapping](/docs/ag-ui/reference/event-mapping) is the backend compatibility checklist for emitted AG-UI events.
 - [Fake Agent](/docs/ag-ui/guides/fake-agent) covers offline demos and frontend tests.
 - [Troubleshooting](/docs/ag-ui/guides/troubleshooting) is the fastest place to start when a stream does not render.
@@ -71,5 +71,5 @@ The point of the runtime-neutral `Agent` contract is that swapping backends is a
 
 ```diff
 - providers: [provideAgent({ apiUrl: '...' })],   // LangGraph
-+ providers: [provideAgUiAgent({ url: '...' })],  // AG-UI
++ providers: [provideAgent({ url: '...' })],  // AG-UI
 ```

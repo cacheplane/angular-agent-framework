@@ -7,7 +7,7 @@ import type { LangGraphAgent } from './agent.types';
 /**
  * Retrieve the LangGraph-backed Agent from the current Angular injection context.
  *
- * Mirrors `@threadplane/ag-ui`'s `injectAgUiAgent()` so consumer code is similar
+ * Mirrors `@threadplane/ag-ui`'s `injectAgent()` so consumer code is identical
  * regardless of which adapter is wired in `app.config.ts`. The agent is a
  * singleton scoped to the injector that called `provideAgent()` — re-provide
  * in a child component's `providers: []` to scope a different agent to that
