@@ -190,7 +190,7 @@ test('/llms-full.txt includes generated API reference content', async ({ request
   const body = await response.text();
   expect(body).toContain('## API Reference (TypeDoc)');
   expect(body).toContain('### a2ui');
-  expect(body).toContain('### agent');
+  expect(body).toContain('### langgraph');
   expect(body).toContain('### chat');
   expect(body).toContain('### licensing');
   expect(body).toContain('### telemetry');
