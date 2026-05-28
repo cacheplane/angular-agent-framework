@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: MIT
 import { Component } from '@angular/core';
 import { ChatDebugComponent } from '@threadplane/chat/debug';
-import { agent } from '@threadplane/langgraph';
+import { injectAgent } from '@threadplane/langgraph';
 import { ExampleChatLayoutComponent } from '@threadplane/example-layouts';
-import { environment } from '../environments/environment';
 
 /**
  * DebugComponent demonstrates the ChatDebugComponent which provides
@@ -21,8 +20,5 @@ import { environment } from '../environments/environment';
   `,
 })
 export class DebugPageComponent {
-  protected readonly agent = agent({
-    apiUrl: environment.langGraphApiUrl,
-    assistantId: environment.streamingAssistantId,
-  });
+  protected readonly agent = injectAgent();
 }

@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: MIT
 import { Component } from '@angular/core';
 import { ChatComponent, ChatInterruptPanelComponent, ChatWelcomeSuggestionComponent, views, type InterruptAction } from '@threadplane/chat';
-import { agent } from '@threadplane/langgraph';
+import { injectAgent } from '@threadplane/langgraph';
 import { ExampleChatLayoutComponent } from '@threadplane/example-layouts';
 import { signalStateStore } from '@threadplane/render';
-import { environment } from '../environments/environment';
 import { ApprovalCardComponent } from './views/approval-card.component';
 
 const WELCOME_SUGGESTIONS = [
@@ -12,7 +11,7 @@ const WELCOME_SUGGESTIONS = [
 ] as const;
 
 /**
- * InterruptsComponent demonstrates human-in-the-loop with `agent()`.
+ * InterruptsComponent demonstrates human-in-the-loop with `injectAgent()`.
  *
  * The LangGraph backend pauses execution when it needs human approval.
  * The `stream.interrupt()` signal provides the interrupt data, and
@@ -65,10 +64,7 @@ export class InterruptsComponent {
    * When the LangGraph backend calls `interrupt()`, the `stream.interrupt()`
    * signal emits the interrupt payload for display via ChatInterruptPanelComponent.
    */
-  protected readonly agent = agent({
-    apiUrl: environment.langGraphApiUrl,
-    assistantId: environment.streamingAssistantId,
-  });
+  protected readonly agent = injectAgent();
 
   /**
    * Handle an interrupt action from the panel.

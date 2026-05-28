@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: MIT
 import { Component } from '@angular/core';
 import { ChatComponent, ChatWelcomeSuggestionComponent } from '@threadplane/chat';
-import { agent } from '@threadplane/langgraph';
+import { injectAgent } from '@threadplane/langgraph';
 import { ExampleChatLayoutComponent } from '@threadplane/example-layouts';
-import { environment } from '../environments/environment';
 
 const WELCOME_SUGGESTIONS = [
   { label: 'Stream a long answer',             value: 'Explain LangGraph checkpointing in 200 words.' },
@@ -13,9 +12,9 @@ const WELCOME_SUGGESTIONS = [
 /**
  * Streaming demo — simplest possible @threadplane/chat integration.
  *
- * Creates a agent ref and passes it to the prebuilt <chat>
- * composition. The composition handles message rendering, input, typing
- * indicator, and error display internally.
+ * Injects the singleton agent (configured in app.config.ts) and passes it
+ * to the prebuilt <chat> composition. The composition handles message
+ * rendering, input, typing indicator, and error display internally.
  */
 @Component({
   selector: 'app-streaming',
@@ -38,10 +37,7 @@ const WELCOME_SUGGESTIONS = [
   `,
 })
 export class StreamingComponent {
-  protected readonly agent = agent({
-    apiUrl: environment.langGraphApiUrl,
-    assistantId: environment.streamingAssistantId,
-  });
+  protected readonly agent = injectAgent();
   protected readonly suggestions = WELCOME_SUGGESTIONS;
 
   protected send(text: string): void {

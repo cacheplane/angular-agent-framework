@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: MIT
 import { Component, computed } from '@angular/core';
 import { ChatComponent } from '@threadplane/chat';
-import { agent } from '@threadplane/langgraph';
+import { injectAgent } from '@threadplane/langgraph';
 import { ExampleChatLayoutComponent } from '@threadplane/example-layouts';
-import { environment } from '../environments/environment';
 
 /**
- * SubgraphsComponent demonstrates nested agent delegation with `agent()`.
+ * SubgraphsComponent demonstrates nested agent delegation with `injectAgent()`.
  *
  * This example shows how a parent orchestrator delegates tasks to child subgraphs.
  * The sidebar tracks active subagents in real time using `stream.subagents()`,
@@ -51,10 +50,7 @@ export class SubgraphsComponent {
    * `stream.subagents()` is a Signal<Map<string, SubagentStreamRef>> that updates
    * as the parent orchestrator dispatches work to child subgraphs.
    */
-  protected readonly agent = agent({
-    apiUrl: environment.langGraphApiUrl,
-    assistantId: environment.streamingAssistantId,
-  });
+  protected readonly agent = injectAgent();
 
   /**
    * Derived signal: converts the subagents Map to an array for template iteration.

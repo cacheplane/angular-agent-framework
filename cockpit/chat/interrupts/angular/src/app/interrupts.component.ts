@@ -8,8 +8,7 @@ import {
 } from '@threadplane/chat';
 import type { InterruptAction } from '@threadplane/chat';
 import { ExampleChatLayoutComponent } from '@threadplane/example-layouts';
-import { agent } from '@threadplane/langgraph';
-import { environment } from '../environments/environment';
+import { injectAgent } from '@threadplane/langgraph';
 
 const SUGGESTIONS = [
   // values match cockpit/chat/interrupts/angular/e2e/c-interrupts.spec.ts.
@@ -69,10 +68,7 @@ const SUGGESTIONS = [
   `,
 })
 export class InterruptsComponent {
-  protected readonly agent = agent({
-    apiUrl: environment.langGraphApiUrl,
-    assistantId: environment.streamingAssistantId,
-  });
+  protected readonly agent = injectAgent();
 
   protected readonly streamStatus = computed(() => this.agent.status());
   protected readonly suggestions = SUGGESTIONS;

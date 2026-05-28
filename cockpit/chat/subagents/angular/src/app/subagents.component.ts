@@ -7,8 +7,7 @@ import {
   ChatWelcomeSuggestionComponent,
 } from '@threadplane/chat';
 import { ExampleChatLayoutComponent } from '@threadplane/example-layouts';
-import { agent } from '@threadplane/langgraph';
-import { environment } from '../environments/environment';
+import { injectAgent } from '@threadplane/langgraph';
 
 const SUGGESTIONS = [
   // value matches cockpit/chat/subagents/angular/e2e/c-subagents.spec.ts PROMPT.
@@ -64,10 +63,7 @@ const SUGGESTIONS = [
   `,
 })
 export class SubagentsComponent {
-  protected readonly agent = agent({
-    apiUrl: environment.langGraphApiUrl,
-    assistantId: environment.streamingAssistantId,
-  });
+  protected readonly agent = injectAgent();
 
   protected readonly suggestions = SUGGESTIONS;
 

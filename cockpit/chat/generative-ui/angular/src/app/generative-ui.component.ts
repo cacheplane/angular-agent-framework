@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: MIT
 import { Component } from '@angular/core';
 import { ChatComponent, ChatWelcomeSuggestionComponent, views } from '@threadplane/chat';
-import { agent } from '@threadplane/langgraph';
+import { injectAgent } from '@threadplane/langgraph';
 import { ExampleChatLayoutComponent } from '@threadplane/example-layouts';
-import { environment } from '../environments/environment';
 
 import { StatCardComponent } from './views/stat-card.component';
 import { ContainerComponent } from './views/container.component';
@@ -47,10 +46,7 @@ const WELCOME_SUGGESTIONS = [
   `,
 })
 export class GenerativeUiComponent {
-  protected readonly agent = agent({
-    apiUrl: environment.langGraphApiUrl,
-    assistantId: environment.generativeUiAssistantId,
-  });
+  protected readonly agent = injectAgent();
   protected readonly dashboardViews = dashboardViews;
   protected readonly suggestions = WELCOME_SUGGESTIONS;
 
