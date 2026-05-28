@@ -78,7 +78,7 @@
       },
       "defaultConfiguration": "development",
       "options": {
-        "proxyConfig": "cockpit/langgraph/deployment-runtime/angular/proxy.conf.json"
+        "proxyConfig": "cockpit/langgraph/deployment-runtime/angular/proxy.conf.mjs"
       }
     },
     "smoke": {

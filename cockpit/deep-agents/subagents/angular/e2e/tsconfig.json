@@ -18,7 +18,8 @@
       "@threadplane-internal/e2e-harness/global-teardown": [
         "libs/e2e-harness/src/global-teardown.ts"
       ]
-    }
+    },
+    "allowJs": true
   },
   "include": [
     "**/*.ts"

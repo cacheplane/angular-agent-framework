@@ -2,6 +2,9 @@ import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { capabilities } from './scripts/capability-registry';
+// @ts-expect-error — .mjs ES module without .d.ts; the e2e tsconfig uses
+// allowJs:true but this top-level test file doesn't go through that config.
+import { portsFor } from '../../cockpit/ports.mjs';
 
 interface E2eWiring {
   angularPort: number;
@@ -84,12 +87,23 @@ function activeCockpitE2eWiring(): E2eWiring[] {
       const projectRoot = dirname(projectJsonPath);
       const globalSetupPath = join(projectRoot, 'e2e/global-setup-impl.ts');
       const globalSetup = readFileSync(globalSetupPath, 'utf8');
-      const proxyPath = join(projectRoot, 'proxy.conf.json');
-      const proxy = JSON.parse(readFileSync(proxyPath, 'utf8')) as Record<string, { target?: string }>;
-      const proxyPort = Number(proxy['/api']?.target?.match(/:(\d+)$/)?.[1]);
       const langgraphCwd = parseStringProperty(globalSetup, 'langgraphCwd');
-      const langgraphPort = parseNumberProperty(globalSetup, 'langgraphPort') ?? proxyPort;
-      const angularPort = parseNumberProperty(globalSetup, 'angularPort');
+
+      // Post-port-registry migration: ports are imported from
+      // cockpit/ports.mjs rather than living as literals in
+      // global-setup-impl.ts. Look them up by project name.
+      let langgraphPort: number | undefined;
+      let angularPort: number | undefined;
+      try {
+        const ports = portsFor(project.name) as { angular: number; langgraph: number };
+        langgraphPort = ports.langgraph;
+        angularPort = ports.angular;
+      } catch {
+        // Cap not in registry (e.g. cockpit-ag-ui-streaming-angular).
+        // Fall back to parsing literals if global-setup still has them.
+        langgraphPort = parseNumberProperty(globalSetup, 'langgraphPort');
+        angularPort = parseNumberProperty(globalSetup, 'angularPort');
+      }
 
       if (!project.name || !langgraphCwd || !langgraphPort || !angularPort) {
         throw new Error(`Unable to parse e2e wiring for ${relative(repoRoot, projectJsonPath)}`);
@@ -153,16 +167,29 @@ describe('cockpit e2e wiring', () => {
         errors.push(`${wiring.project}: registry pythonDir ${capability.pythonDir} != global setup langgraphCwd ${wiring.langgraphCwd}`);
       }
 
-      const proxyPath = join(wiring.projectRoot, 'proxy.conf.json');
-      if (!existsSync(proxyPath)) {
-        errors.push(`${wiring.project}: missing proxy.conf.json`);
-      } else {
-        const proxy = JSON.parse(readFileSync(proxyPath, 'utf8')) as Record<string, { target?: string }>;
+      // Post-port-registry: proxy.conf.mjs templates the target from
+      // cockpit/ports.mjs at runtime. Drift is impossible because the
+      // value comes from the same registry the test already checks via
+      // wiring.langgraphPort. So we just assert the .mjs file exists +
+      // imports portsFor with this cap's name.
+      const proxyMjs = join(wiring.projectRoot, 'proxy.conf.mjs');
+      const proxyJson = join(wiring.projectRoot, 'proxy.conf.json');
+      if (existsSync(proxyMjs)) {
+        const text = readFileSync(proxyMjs, 'utf8');
+        if (!text.includes(`portsFor('${wiring.project}')`)) {
+          errors.push(`${wiring.project}: proxy.conf.mjs does not call portsFor('${wiring.project}')`);
+        }
+      } else if (existsSync(proxyJson)) {
+        // Legacy (allowed for ag-ui exception only); not expected for any
+        // cap reaching this code path.
+        const proxy = JSON.parse(readFileSync(proxyJson, 'utf8')) as Record<string, { target?: string }>;
         const target = proxy['/api']?.target;
         const expectedTarget = `http://localhost:${wiring.langgraphPort}`;
         if (target !== expectedTarget) {
           errors.push(`${wiring.project}: proxy target ${target} != ${expectedTarget}`);
         }
+      } else {
+        errors.push(`${wiring.project}: missing proxy.conf (no .mjs or .json)`);
       }
 
       const scriptsDir = join(wiring.projectRoot, 'e2e/scripts');

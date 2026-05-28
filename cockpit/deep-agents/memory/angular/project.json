@@ -78,7 +78,7 @@
       },
       "defaultConfiguration": "development",
       "options": {
-        "proxyConfig": "cockpit/deep-agents/memory/angular/proxy.conf.json"
+        "proxyConfig": "cockpit/deep-agents/memory/angular/proxy.conf.mjs"
       }
     },
     "smoke": {

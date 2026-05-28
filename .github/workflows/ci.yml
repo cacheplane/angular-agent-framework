@@ -48,7 +48,7 @@ jobs:
       # classifier walk.
       - run: npm ci
       - name: Test CI scope classifier
-        run: node --test scripts/ci-scope.spec.mjs scripts/cockpit-matrix.spec.mjs
+        run: node --test scripts/ci-scope.spec.mjs scripts/cockpit-matrix.spec.mjs scripts/cockpit-ports.spec.mjs
       - name: Detect changed CI surfaces
         id: scope
         run: |
@@ -153,12 +153,29 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6.0.2
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v6.3.0
         with:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npx nx run-many -t build --projects='cockpit-*-angular' --skip-nx-cache
+      - name: Build cockpit examples (affected on PR, all on push)
+        run: |
+          if [ "${{ github.event_name }}" = "push" ]; then
+            npx nx run-many -t build --projects='cockpit-*-angular' --skip-nx-cache
+          else
+            BASE="${{ github.event.pull_request.base.sha }}"
+            HEAD="${{ github.event.pull_request.head.sha }}"
+            AFFECTED=$(npx nx show projects --affected --base="$BASE" --head="$HEAD" \
+              | grep -E '^cockpit-.*-angular$' | paste -sd, - || true)
+            if [ -z "$AFFECTED" ]; then
+              echo "No affected cockpit angular projects; nothing to build."
+            else
+              echo "Building affected: $AFFECTED"
+              npx nx run-many -t build --projects="$AFFECTED" --skip-nx-cache
+            fi
+          fi
 
   cockpit-smoke:
     name: Cockpit — representative capability smoke

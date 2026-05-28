@@ -259,6 +259,50 @@ describe('agent', () => {
     ]);
   });
 
+  it('forwards a multi-field structured resume payload verbatim', async () => {
+    const seen: Array<{ payload: unknown; options: unknown }> = [];
+    const transport = new MockAgentTransport();
+    transport.stream = async function* (
+      _assistantId: string,
+      _threadId: string | null,
+      payload: unknown,
+      _signal: AbortSignal,
+      options?: unknown,
+    ) {
+      seen.push({ payload, options });
+      yield* [];
+    };
+
+    const ref = withInjectionContext(() =>
+      agent({ apiUrl: '', assistantId: 'a', transport, threadId: 'thread-1', throttle: false })
+    );
+
+    await ref.submit(null, {
+      resume: {
+        approved: true,
+        amount: 47.5,
+        idempotency_key: 'idem_abc123',
+        meta: { reviewer: 'brian', at: '2026-05-25T18:00:00Z' },
+      },
+    });
+
+    expect(seen).toEqual([
+      {
+        payload: null,
+        options: expect.objectContaining({
+          command: {
+            resume: {
+              approved: true,
+              amount: 47.5,
+              idempotency_key: 'idem_abc123',
+              meta: { reviewer: 'brian', at: '2026-05-25T18:00:00Z' },
+            },
+          },
+        }),
+      },
+    ]);
+  });
+
   it('normalizes resume submit input state into a LangGraph command update', async () => {
     const seen: Array<{ payload: unknown; options: unknown }> = [];
     const transport = new MockAgentTransport();
