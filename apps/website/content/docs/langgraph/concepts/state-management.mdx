@@ -361,7 +361,7 @@ const branch = agent.branch();               // Signal<string> — active branch
 const branchTree = agent.experimentalBranchTree();
 ```
 
-For full checkpoint and time-travel patterns, see the [Persistence guide](/docs/agent/guides/persistence) and [Time Travel guide](/docs/agent/guides/time-travel).
+For full checkpoint and time-travel patterns, see the [Persistence guide](/docs/langgraph/guides/persistence) and [Time Travel guide](/docs/langgraph/guides/time-travel).
 
 ## Custom State Fields
 
@@ -517,22 +517,22 @@ readonly reportTitle = computed(() => this.agent.value().report?.title ?? '');
 ## What's Next
 
 <CardGroup cols={2}>
-  <Card title="Angular Signals" href="/docs/agent/concepts/angular-signals">
+  <Card title="Angular Signals" href="/docs/langgraph/concepts/angular-signals">
     How `injectAgent()` uses Angular Signals for zero-subscription reactive rendering.
   </Card>
-  <Card title="Streaming" href="/docs/agent/guides/streaming">
+  <Card title="Streaming" href="/docs/langgraph/guides/streaming">
     Configure stream modes — values, messages, events — for different use cases.
   </Card>
-  <Card title="Persistence" href="/docs/agent/guides/persistence">
+  <Card title="Persistence" href="/docs/langgraph/guides/persistence">
     Thread-based conversation persistence and checkpoint configuration.
   </Card>
-  <Card title="Time Travel" href="/docs/agent/guides/time-travel">
+  <Card title="Time Travel" href="/docs/langgraph/guides/time-travel">
     Fork threads at any checkpoint and replay with different input.
   </Card>
-  <Card title="Interrupts" href="/docs/agent/guides/interrupts">
+  <Card title="Interrupts" href="/docs/langgraph/guides/interrupts">
     Human-in-the-loop approval flows and how interrupt state surfaces in Angular.
   </Card>
-  <Card title="LangGraph Basics" href="/docs/agent/concepts/langgraph-basics">
+  <Card title="LangGraph Basics" href="/docs/langgraph/concepts/langgraph-basics">
     Nodes, edges, and the graph execution model behind the state machine.
   </Card>
 </CardGroup>
