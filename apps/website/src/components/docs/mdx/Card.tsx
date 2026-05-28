@@ -22,15 +22,21 @@ export function Card({
   title,
   href,
   icon,
+  external = false,
   children,
 }: {
   title: string;
   href: string;
   icon?: string;
+  /** When true, open in a new tab (for off-site links: demos, GitHub, etc.). */
+  external?: boolean;
   children: React.ReactNode;
 }) {
+  const externalProps = external
+    ? { target: '_blank', rel: 'noopener noreferrer' }
+    : {};
   return (
-    <Link href={href} style={{ textDecoration: 'none' }}>
+    <Link href={href} style={{ textDecoration: 'none' }} {...externalProps}>
       <div
         data-mdx="card"
         style={{
