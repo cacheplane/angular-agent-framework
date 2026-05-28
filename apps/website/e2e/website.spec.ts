@@ -143,7 +143,7 @@ test('whitepaper signup form posts to /api/whitepaper-signup and renders success
 });
 
 test('docs page renders sidebar and content', async ({ page }) => {
-  await page.goto('/docs/agent/getting-started/introduction');
+  await page.goto('/docs/langgraph/getting-started/introduction');
   await expect(page.locator('aside').first()).toBeVisible();
   await expect(page.locator('article')).toBeVisible();
 });
@@ -157,7 +157,7 @@ test('docs landing page shows library cards', async ({ page }) => {
 });
 
 test('api reference renders in docs', async ({ page }) => {
-  await page.goto('/docs/agent/api/agent');
+  await page.goto('/docs/langgraph/api/inject-agent');
   await expect(page.locator('article').first()).toBeVisible();
 });
 
@@ -213,16 +213,16 @@ test('sitemap.xml includes configured docs pages', async ({ request }) => {
 
   const body = await response.text();
   expect(body).toContain('https://threadplane.ai/docs');
-  expect(body).toContain('https://threadplane.ai/docs/agent/getting-started/introduction');
+  expect(body).toContain('https://threadplane.ai/docs/langgraph/getting-started/introduction');
   expect(body).toContain('https://threadplane.ai/docs/render/a2ui/overview');
 });
 
 test('docs pages render canonical and social metadata', async ({ page }) => {
-  await page.goto('/docs/agent/guides/streaming');
+  await page.goto('/docs/langgraph/guides/streaming');
 
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
     'href',
-    'https://threadplane.ai/docs/agent/guides/streaming',
+    'https://threadplane.ai/docs/langgraph/guides/streaming',
   );
   await expect(page.locator('meta[property="og:title"]')).toHaveAttribute(
     'content',
@@ -230,7 +230,7 @@ test('docs pages render canonical and social metadata', async ({ page }) => {
   );
   await expect(page.locator('meta[property="og:url"]')).toHaveAttribute(
     'content',
-    'https://threadplane.ai/docs/agent/guides/streaming',
+    'https://threadplane.ai/docs/langgraph/guides/streaming',
   );
   await expect(page.locator('meta[name="twitter:title"]')).toHaveAttribute(
     'content',
@@ -251,8 +251,8 @@ test('marketing pages render canonical and page-specific social URLs', async ({ 
 test('representative docs pages do not create page-level horizontal overflow', async ({ page }) => {
   const routes = [
     '/docs',
-    '/docs/agent/getting-started/introduction',
-    '/docs/agent/api/agent',
+    '/docs/langgraph/getting-started/introduction',
+    '/docs/langgraph/api/inject-agent',
     '/docs/chat/components/chat-tool-calls',
     '/docs/render/a2ui/overview',
     '/docs/telemetry/guides/browser',

@@ -6,7 +6,7 @@ test.describe('Docs landing page', () => {
     // Header
     await expect(page.locator('#docs-heading')).toBeVisible();
     // Library grid — all 4 libraries (agent, render, chat, ag-ui)
-    await expect(page.locator('main a[href="/docs/agent/getting-started/introduction"]').first()).toBeVisible();
+    await expect(page.locator('main a[href="/docs/langgraph/getting-started/introduction"]').first()).toBeVisible();
     await expect(page.locator('main a[href="/docs/render/getting-started/introduction"]').first()).toBeVisible();
     await expect(page.locator('main a[href="/docs/chat/getting-started/introduction"]').first()).toBeVisible();
     await expect(page.locator('main a[href="/docs/ag-ui/getting-started/introduction"]').first()).toBeVisible();
@@ -20,7 +20,7 @@ test.describe('Docs landing page', () => {
 });
 
 test.describe('Docs slug page', () => {
-  const route = '/docs/agent/getting-started/introduction';
+  const route = '/docs/langgraph/getting-started/introduction';
 
   test('renders breadcrumb + h1 + sidebar', async ({ page }) => {
     await page.goto(route);
@@ -51,14 +51,14 @@ test.describe('Docs slug page', () => {
   });
 
   test('breadcrumb renders exactly once', async ({ page }) => {
-    await page.goto('/docs/agent/getting-started/introduction');
+    await page.goto('/docs/langgraph/getting-started/introduction');
     await expect(page.locator('nav[aria-label="Breadcrumb"]')).toHaveCount(1);
   });
 });
 
 test.describe('Docs search', () => {
   test('Cmd+K opens the search modal', async ({ page, browserName }) => {
-    await page.goto('/docs/agent/getting-started/introduction');
+    await page.goto('/docs/langgraph/getting-started/introduction');
     // Mac uses Meta; other platforms emulate the same shortcut via keydown.
     const modifier = browserName === 'webkit' ? 'Meta' : 'Control';
     await page.keyboard.press(`${modifier}+KeyK`);
