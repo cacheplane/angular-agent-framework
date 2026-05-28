@@ -98,10 +98,14 @@ export function computeMessageCheckpoints(
 }
 
 /**
- * Creates a LangGraph-backed Angular agent.
+ * Internal factory that constructs a LangGraph-backed Angular agent.
  *
- * Must be called within an Angular injection context (component constructor,
- * field initializer, or `runInInjectionContext`). Returns a unified
+ * @internal Consumers do not call this directly. Configure the adapter with
+ * `provideAgent({...})` in `app.config.ts` (or a component's `providers`), then
+ * retrieve the agent with `injectAgent()`. This factory is the construction
+ * logic invoked by `provideAgent`'s DI factory.
+ *
+ * Must run within an Angular injection context. Returns a unified
  * {@link LangGraphAgent} whose properties are Angular Signals that update
  * in real time as LangGraph streams messages, values, tool calls, interrupts,
  * subagent state, and checkpoint history.
@@ -113,13 +117,18 @@ export function computeMessageCheckpoints(
  *
  * @example
  * ```typescript
- * // In a component field initializer
- * const chat = agent({
- *   assistantId: 'chat_agent',
- *   apiUrl: 'http://localhost:2024',
- *   threadId: signal(this.savedThreadId),
- *   onThreadId: (id) => localStorage.setItem('threadId', id),
- * });
+ * // app.config.ts — configure once
+ * providers: [
+ *   provideAgent({
+ *     assistantId: 'chat_agent',
+ *     apiUrl: 'http://localhost:2024',
+ *     threadId: signal(savedThreadId),
+ *     onThreadId: (id) => localStorage.setItem('threadId', id),
+ *   }),
+ * ];
+ *
+ * // component — retrieve from DI
+ * const chat = injectAgent();
  *
  * // Access signals in template
  * // chat.messages(), chat.status(), chat.error()

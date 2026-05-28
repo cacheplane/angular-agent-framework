@@ -59,10 +59,11 @@ export const AGENT_CONFIG = new InjectionToken<AgentConfig>('AGENT_CONFIG');
 export const AGENT = new InjectionToken<LangGraphAgent>('AGENT');
 
 /**
- * Angular provider factory that registers a singleton agent instance
- * (under the internal `AGENT` token) and exposes the same config under
- * the internal `AGENT_CONFIG` token so the in-tree `agent({...})` factory's
- * global-default lookup keeps working for internal tests.
+ * Wire the LangGraph adapter into Angular's dependency injection.
+ *
+ * Registers a singleton `LangGraphAgent` constructed from `config`. Retrieve it
+ * in any component with `injectAgent()`. Provide this at the application root
+ * (`app.config.ts`) for an app-wide agent.
  *
  * To use a different agent in a component subtree, re-provide
  * `provideAgent({...})` in that component's `providers: []` array —

@@ -731,7 +731,7 @@
   {
     "name": "AgentConfig",
     "kind": "interface",
-    "description": "Global configuration for agent instances.\nProperties set here serve as defaults that can be overridden per-call.",
+    "description": "Configuration for an agent instance.\nCombines connection defaults with per-component options so the\nagent can be constructed once at provider time and injected\neverywhere it is needed.",
     "properties": [
       {
         "name": "apiUrl",
@@ -740,9 +740,63 @@
         "optional": true
       },
       {
+        "name": "assistantId",
+        "type": "string",
+        "description": "Agent or graph identifier on the LangGraph platform.",
+        "optional": true
+      },
+      {
+        "name": "filterSubagentMessages",
+        "type": "boolean",
+        "description": "When true, subagent messages are filtered from the main messages signal.",
+        "optional": true
+      },
+      {
+        "name": "initialValues",
+        "type": "Partial<T>",
+        "description": "Initial state values before the first stream response arrives.",
+        "optional": true
+      },
+      {
+        "name": "onThreadId",
+        "type": "object",
+        "description": "Called when a new thread is auto-created by the transport.",
+        "optional": true
+      },
+      {
+        "name": "subagentToolNames",
+        "type": "string[]",
+        "description": "Tool names that indicate a subagent invocation.",
+        "optional": true
+      },
+      {
+        "name": "telemetry",
+        "type": "false | AgentRuntimeTelemetrySink",
+        "description": "Optional app-owned telemetry sink. No telemetry is emitted unless this is provided.",
+        "optional": true
+      },
+      {
+        "name": "threadId",
+        "type": "string | Signal<string | null> | null",
+        "description": "Thread ID to connect to. Pass a Signal for reactive thread switching.",
+        "optional": true
+      },
+      {
+        "name": "throttle",
+        "type": "number | false",
+        "description": "Throttle signal updates in milliseconds. `false` to disable.",
+        "optional": true
+      },
+      {
+        "name": "toMessage",
+        "type": "object",
+        "description": "Custom message deserializer for non-standard message formats.",
+        "optional": true
+      },
+      {
         "name": "transport",
         "type": "AgentTransport",
-        "description": "Custom transport implementation. Defaults to FetchStreamTransport.",
+        "description": "Custom transport. Defaults to FetchStreamTransport.",
         "optional": true
       }
     ],
@@ -1053,7 +1107,7 @@
   {
     "name": "LangGraphAgent",
     "kind": "interface",
-    "description": "Unified LangGraph agent surface returned by `agent({...})`.\n\nExtends the runtime-neutral `AgentWithHistory` contract (chat-consumable)\nwith the full LangGraph-specific API. One object drives both `<chat>` and\nany LangGraph-specific demo. Raw LangGraph signals are prefixed with\n`langGraph` to avoid collision with the runtime-neutral names.",
+    "description": "Unified LangGraph agent surface returned by `injectAgent()`.\n\nExtends the runtime-neutral `AgentWithHistory` contract (chat-consumable)\nwith the full LangGraph-specific API. One object drives both `<chat>` and\nany LangGraph-specific demo. Raw LangGraph signals are prefixed with\n`langGraph` to avoid collision with the runtime-neutral names.",
     "properties": [
       {
         "name": "activeSubagents",
@@ -1947,27 +2001,6 @@
     "examples": []
   },
   {
-    "name": "agent",
-    "kind": "function",
-    "description": "Creates a LangGraph-backed Angular agent.\n\nMust be called within an Angular injection context (component constructor,\nfield initializer, or `runInInjectionContext`). Returns a unified\nLangGraphAgent whose properties are Angular Signals that update\nin real time as LangGraph streams messages, values, tool calls, interrupts,\nsubagent state, and checkpoint history.",
-    "signature": "agent(options: AgentOptions<T, InferBag<T, Bag>>): LangGraphAgent<T, InferBag<T, Bag>>",
-    "params": [
-      {
-        "name": "options",
-        "type": "AgentOptions<T, InferBag<T, Bag>>",
-        "description": "Configuration for the LangGraph agent",
-        "optional": false
-      }
-    ],
-    "returns": {
-      "type": "LangGraphAgent<T, InferBag<T, Bag>>",
-      "description": ""
-    },
-    "examples": [
-      "```typescript\n// In a component field initializer\nconst chat = agent({\n  assistantId: 'chat_agent',\n  apiUrl: 'http://localhost:2024',\n  threadId: signal(this.savedThreadId),\n  onThreadId: (id) => localStorage.setItem('threadId', id),\n});\n\n// Access signals in template\n// chat.messages(), chat.status(), chat.error()\n```"
-    ]
-  },
-  {
     "name": "createLangGraphClient",
     "kind": "function",
     "description": "Construct a LangGraph SDK Client that accepts both absolute URLs\n(`http://localhost:2024`) and relative `/api`-style paths that get\nproxied by middleware in production. The SDK itself rejects\nrelative URLs, so this helper rewrites them against\n`window.location.origin` when running in the browser.\n\nSingle source of truth for the absolute-URL rewrite — the streaming\ntransport (`fetch-stream.transport.ts`) and the threads adapter\n(`LangGraphThreadsAdapter`) both go through here.",
@@ -2008,6 +2041,18 @@
     "examples": []
   },
   {
+    "name": "injectAgent",
+    "kind": "function",
+    "description": "Retrieve the LangGraph-backed Agent from the current Angular injection context.\n\nMirrors `@threadplane/ag-ui`'s `injectAgUiAgent()` so consumer code is similar\nregardless of which adapter is wired in `app.config.ts`. The agent is a\nsingleton scoped to the injector that called `provideAgent()` — re-provide\nin a child component's `providers: []` to scope a different agent to that\nsubtree (Angular's hierarchical DI handles the rest).",
+    "signature": "injectAgent(): LangGraphAgent<T, ResolvedBag>",
+    "params": [],
+    "returns": {
+      "type": "LangGraphAgent<T, ResolvedBag>",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
     "name": "mockLangGraphAgent",
     "kind": "function",
     "description": "Creates a mock LangGraphAgent with writable signals for testing.\nControl state by writing to the returned writable signals directly.",
@@ -2029,18 +2074,18 @@
   {
     "name": "provideAgent",
     "kind": "function",
-    "description": "Angular provider factory that registers global defaults for all\nagent instances in the application.",
-    "signature": "provideAgent(config: AgentConfig): Provider",
+    "description": "Wire the LangGraph adapter into Angular's dependency injection.\n\nRegisters a singleton `LangGraphAgent` constructed from `config`. Retrieve it\nin any component with `injectAgent()`. Provide this at the application root\n(`app.config.ts`) for an app-wide agent.\n\nTo use a different agent in a component subtree, re-provide\n`provideAgent({...})` in that component's `providers: []` array —\nAngular's hierarchical DI scopes the singleton accordingly.",
+    "signature": "provideAgent(config: AgentConfig<T>): Provider[]",
     "params": [
       {
         "name": "config",
-        "type": "AgentConfig",
+        "type": "AgentConfig<T>",
         "description": "",
         "optional": false
       }
     ],
     "returns": {
-      "type": "Provider",
+      "type": "Provider[]",
       "description": ""
     },
     "examples": []

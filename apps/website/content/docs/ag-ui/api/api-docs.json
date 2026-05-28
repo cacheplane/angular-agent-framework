@@ -365,7 +365,7 @@
     ]
   },
   {
-    "name": "AgUiAgentConfig",
+    "name": "AgentConfig",
     "kind": "interface",
     "description": "Configuration for the AG-UI agent provider.\nHttpAgentConfig shape (from @ag-ui/client@0.0.52):\n  - url: string (required) — endpoint for the HTTP agent\n  - agentId: string (optional) — agent identifier\n  - threadId: string (optional) — thread identifier\n  - headers: Record<string, string> (optional) — custom HTTP headers",
     "properties": [
@@ -403,7 +403,7 @@
     "examples": []
   },
   {
-    "name": "FakeAgUiAgentConfig",
+    "name": "FakeAgentConfig",
     "kind": "interface",
     "description": "",
     "properties": [
@@ -468,10 +468,10 @@
     "examples": []
   },
   {
-    "name": "injectAgUiAgent",
+    "name": "injectAgent",
     "kind": "function",
-    "description": "Injects the AG_UI_AGENT from Angular's dependency injection container.\nUse this in components or services that have been provided via provideAgUiAgent().",
-    "signature": "injectAgUiAgent(): Agent",
+    "description": "Injects the Agent from Angular's dependency injection container.\nUse this in components or services that have been provided via provideAgent().",
+    "signature": "injectAgent(): Agent",
     "params": [],
     "returns": {
       "type": "Agent",
@@ -480,14 +480,14 @@
     "examples": []
   },
   {
-    "name": "provideAgUiAgent",
+    "name": "provideAgent",
     "kind": "function",
     "description": "Provides an Agent instance wired through HttpAgent and toAgent.\nConstructs an HttpAgent from config and wraps it in the runtime-neutral\nAgent contract via toAgent(). Returns a provider array suitable for\nbootstrapApplication or TestBed.configureTestingModule().",
-    "signature": "provideAgUiAgent(config: AgUiAgentConfig): Provider[]",
+    "signature": "provideAgent(config: AgentConfig): Provider[]",
     "params": [
       {
         "name": "config",
-        "type": "AgUiAgentConfig",
+        "type": "AgentConfig",
         "description": "",
         "optional": false
       }
@@ -499,14 +499,14 @@
     "examples": []
   },
   {
-    "name": "provideFakeAgUiAgent",
+    "name": "provideFakeAgent",
     "kind": "function",
-    "description": "Registers an in-process FakeAgent under AG_UI_AGENT.\n\nUse for offline demos and development. Drop-in replacement for\nprovideAgUiAgent({ url }) when no real backend is available.",
-    "signature": "provideFakeAgUiAgent(config: FakeAgUiAgentConfig): Provider[]",
+    "description": "Registers an in-process FakeAgent under AGENT.\n\nUse for offline demos and development. Drop-in replacement for\nprovideAgent({ url }) when no real backend is available.",
+    "signature": "provideFakeAgent(config: FakeAgentConfig): Provider[]",
     "params": [
       {
         "name": "config",
-        "type": "FakeAgUiAgentConfig",
+        "type": "FakeAgentConfig",
         "description": "",
         "optional": false
       }
