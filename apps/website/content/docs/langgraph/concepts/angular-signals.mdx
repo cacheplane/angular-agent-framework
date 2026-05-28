@@ -1,6 +1,6 @@
 # Angular Signals
 
-Angular Signals are the reactive primitive that powers agent(). If you're coming from a Python AI/agent background and wondering how Angular handles real-time streaming data, this page is your guide. Every property on a LangGraphAgent is a Signal, which means your templates update automatically as tokens arrive — no manual subscriptions, no async pipes, no RxJS boilerplate.
+Angular Signals are the reactive primitive that powers `injectAgent()`. If you're coming from a Python AI/agent background and wondering how Angular handles real-time streaming data, this page is your guide. Every property on a LangGraphAgent is a Signal, which means your templates update automatically as tokens arrive — no manual subscriptions, no async pipes, no RxJS boilerplate.
 
 <Callout type="info" title="For Python developers">
 Think of Signals like a Python property with built-in change notification. When the value changes, every consumer — templates, computed values, effects — re-evaluates automatically. If you've used Pydantic models with validators that react to field changes, Signals are the Angular equivalent but deeply integrated into the rendering engine.
@@ -30,15 +30,15 @@ console.log(doubled()); // 4
 
 The key insight: Angular knows which Signals a template reads. When those Signals change, Angular re-renders only the affected parts of the DOM. No diffing the entire tree, no zone.js overhead.
 
-## How agent Uses Signals Internally
+## How `injectAgent` Uses Signals Internally
 
-Under the hood, agent() receives Server-Sent Events (SSE) over HTTP and feeds them into RxJS BehaviorSubjects. It then converts those BehaviorSubjects into Angular Signals using `toSignal()`. This is the bridge between the async streaming world and Angular's synchronous reactivity model.
+Under the hood, `injectAgent()` receives Server-Sent Events (SSE) over HTTP and feeds them into RxJS BehaviorSubjects. It then converts those BehaviorSubjects into Angular Signals using `toSignal()`. This is the bridge between the async streaming world and Angular's synchronous reactivity model.
 
 <Tabs>
 <Tab label="Internal flow">
 
 ```typescript
-// Simplified view of what agent does internally:
+// Simplified view of what injectAgent does internally:
 
 // 1. SSE events arrive as an observable stream
 const messages$ = new BehaviorSubject<Message[]>([]);
@@ -60,13 +60,11 @@ const status = toSignal(status$, { initialValue: 'idle' });
 <Tab label="What you see">
 
 ```typescript
-import { agent } from '@threadplane/langgraph';
+import { injectAgent } from '@threadplane/langgraph';
 
 // You never touch BehaviorSubjects or toSignal() yourself.
-// agent() hands you clean Signals:
-const chat = agent<ChatState>({
-  assistantId: 'chat_agent',
-});
+// injectAgent() hands you clean Signals (config comes from provideAgent):
+protected readonly chat = injectAgent<ChatState>();
 
 chat.messages();   // Signal<Message[]>
 chat.status();     // Signal<'idle' | 'running' | 'error'>
@@ -84,16 +82,14 @@ The BehaviorSubject-to-Signal conversion means you get the best of both worlds: 
 
 ## The Streaming Lifecycle as Signals
 
-Every agent() instance moves through a lifecycle: **idle**, **running** while work is in flight, then back to **idle** when the stream completes (or **error** when it fails). The `status()` Signal reflects each transition in real time, while `isLoading()` is the convenience signal for loading UI.
+Every `injectAgent()` instance moves through a lifecycle: **idle**, **running** while work is in flight, then back to **idle** when the stream completes (or **error** when it fails). The `status()` Signal reflects each transition in real time, while `isLoading()` is the convenience signal for loading UI.
 
 <Steps>
 <Step title="idle — Waiting for input">
 The resource has been created but no request has been submitted yet. All Signals hold their initial values.
 
 ```typescript
-const chat = agent<ChatState>({
-  assistantId: 'chat_agent',
-});
+protected readonly chat = injectAgent<ChatState>();
 
 console.log(chat.status());     // 'idle'
 console.log(chat.messages());   // []
@@ -154,11 +150,9 @@ console.log(chat.isLoading());  // false
 
 ```typescript
 import { computed } from '@angular/core';
-import { agent } from '@threadplane/langgraph';
+import { injectAgent } from '@threadplane/langgraph';
 
-const chat = agent<ChatState>({
-  assistantId: 'chat_agent',
-});
+protected readonly chat = injectAgent<ChatState>();
 
 // Count all messages in the conversation
 const messageCount = computed(() => chat.messages().length);
@@ -254,7 +248,7 @@ Angular's new control flow syntax (`@if`, `@for`, `@switch`) works naturally wit
 
 ```typescript
 import { ChangeDetectionStrategy, Component, computed, effect, ElementRef, ViewChild } from '@angular/core';
-import { agent } from '@threadplane/langgraph';
+import { injectAgent } from '@threadplane/langgraph';
 
 @Component({
   selector: 'app-chat',
@@ -326,9 +320,7 @@ import { agent } from '@threadplane/langgraph';
 export class ChatComponent {
   @ViewChild('chatContainer') chatContainer!: ElementRef<HTMLElement>;
 
-  chat = agent<ChatState>({
-    assistantId: 'chat_agent',
-  });
+  protected readonly chat = injectAgent<ChatState>();
 
   errorDisplay = computed(() => {
     const err = this.chat.error();
@@ -368,7 +360,7 @@ export class ChatComponent {
 
 ## OnPush Change Detection
 
-Every component using agent() should use `ChangeDetectionStrategy.OnPush`. Here's why it works and why it's efficient.
+Every component using `injectAgent()` should use `ChangeDetectionStrategy.OnPush`. Here's why it works and why it's efficient.
 
 With the default change detection strategy, Angular checks every component in the tree on every browser event — clicks, timers, HTTP responses. For a streaming agent emitting dozens of tokens per second, that means hundreds of unnecessary checks across your entire app.
 
@@ -378,11 +370,11 @@ With OnPush, Angular only checks a component when:
 2. An event fires inside the component's template
 3. A **Signal** that the template reads changes
 
-Since agent() exposes Signals, condition 3 handles everything. When a new token arrives and `messages()` updates, Angular marks only the components reading that Signal for check — not the entire tree.
+Since `injectAgent()` exposes Signals, condition 3 handles everything. When a new token arrives and `messages()` updates, Angular marks only the components reading that Signal for check — not the entire tree.
 
 ```typescript
 @Component({
-  // Always use OnPush with agent
+  // Always use OnPush with injectAgent
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <p>{{ chat.messages().length }} messages</p>
@@ -392,7 +384,7 @@ Since agent() exposes Signals, condition 3 handles everything. When a new token 
   `,
 })
 export class ChatComponent {
-  chat = agent<ChatState>({ assistantId: 'chat_agent' });
+  protected readonly chat = injectAgent<ChatState>();
 }
 ```
 
@@ -402,7 +394,7 @@ With older Observable-based patterns, you had to call `ChangeDetectorRef.markFor
 
 ## Python Agent to Angular Signals
 
-The real power of agent() is how it pairs a Python LangGraph agent with Angular Signals. The agent defines the logic; Signals surface the results in real time.
+The real power of `injectAgent()` is how it pairs a Python LangGraph agent with Angular Signals. The agent defines the logic; Signals surface the results in real time.
 
 <Tabs>
 <Tab label="agent.py">
@@ -448,7 +440,7 @@ graph = builder.compile()
 
 ```typescript
 import { ChangeDetectionStrategy, Component, computed, effect } from '@angular/core';
-import { agent } from '@threadplane/langgraph';
+import { injectAgent } from '@threadplane/langgraph';
 
 @Component({
   selector: 'app-chat',
@@ -479,9 +471,7 @@ import { agent } from '@threadplane/langgraph';
   `,
 })
 export class ChatComponent {
-  chat = agent<ChatState>({
-    assistantId: 'chat_agent',
-  });
+  protected readonly chat = injectAgent<ChatState>();
 
   // Derived state from the Python agent's output
   toolsUsed = computed(() =>
@@ -521,7 +511,7 @@ For a typical chat UI receiving 30-50 tokens per second:
 - **Observable + async pipe**: Works correctly but creates and destroys subscriptions each time an `@if` or `@for` block re-evaluates, adding GC pressure during rapid streaming.
 
 <Callout type="tip" title="Signal equality checks">
-Signals use referential equality (`===`) by default. agent() creates new array references for `messages()` only when the array actually changes (a new token arrives). Between updates, reading `messages()` returns the same reference and skips downstream recomputation. For custom equality, pass an `equal` function when creating a `computed()`.
+Signals use referential equality (`===`) by default. `injectAgent()` creates new array references for `messages()` only when the array actually changes (a new token arrives). Between updates, reading `messages()` returns the same reference and skips downstream recomputation. For custom equality, pass an `equal` function when creating a `computed()`.
 </Callout>
 
 ## What's Next

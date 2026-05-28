@@ -16,7 +16,7 @@ Your agent code needs a `langgraph.json` manifest at the project root. This file
 }
 ```
 
-The `graphs` key maps an assistant ID (used by `agent()` on the Angular side) to the Python module path and graph variable. The `env` key points to a file with secrets like `OPENAI_API_KEY` that will be injected at runtime.
+The `graphs` key maps an assistant ID (configured via `provideAgent({ assistantId: '...' })` on the Angular side) to the Python module path and graph variable. The `env` key points to a file with secrets like `OPENAI_API_KEY` that will be injected at runtime.
 
 ### Agent entry point
 
@@ -124,7 +124,7 @@ Angular CLI replaces `environment.ts` with `environment.prod.ts` during `ng buil
 
 ### Keep LangGraph credentials server-side
 
-Do not ship LangSmith or LangGraph API keys in an Angular bundle. The default `FetchStreamTransport` uses the LangGraph SDK client directly, not Angular `HttpClient`, so Angular HTTP interceptors do not attach headers to `agent()` requests.
+Do not ship LangSmith or LangGraph API keys in an Angular bundle. The default `FetchStreamTransport` uses the LangGraph SDK client directly, not Angular `HttpClient`, so Angular HTTP interceptors do not attach headers to `injectAgent()` requests.
 
 For production, put a same-origin backend route, edge function, or API gateway in front of LangGraph. The browser calls your relative URL, and that server-side layer adds the deployment credentials.
 
@@ -183,12 +183,12 @@ During local development with `langgraph dev`, CORS is permissive by default. Yo
 
 ## Error boundaries
 
-Production apps need graceful error handling. Build a reactive error boundary using `agent()` signals.
+Production apps need graceful error handling. Build a reactive error boundary using `injectAgent()` signals.
 
 ```typescript
 import { ChangeDetectionStrategy, Component, computed } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
-import { agent } from '@threadplane/langgraph';
+import { injectAgent } from '@threadplane/langgraph';
 
 @Component({
   selector: 'app-chat',
@@ -203,9 +203,7 @@ import { agent } from '@threadplane/langgraph';
   `,
 })
 export class ChatComponent {
-  chat = agent<MessagesState>({
-    assistantId: 'chat_agent',
-  });
+  protected readonly chat = injectAgent<MessagesState>();
 
   hasError = computed(() => this.chat.status() === 'error');
 
@@ -276,7 +274,7 @@ if (savedRunId) {
 `joinStream()` replays any events the client missed, then switches to live streaming. This works because all state lives on the LangGraph Platform, and the SSE endpoint supports event ID-based resumption.
 
 <Callout type="tip" title="Stateless client pattern">
-`agent()` is a stateless client. All state lives on the LangGraph Platform. This means your Angular app can be deployed anywhere (CDN, edge, SSR) without state management concerns. Scale your frontend independently of your agent infrastructure.
+`injectAgent()` is a stateless client. All state lives on the LangGraph Platform. This means your Angular app can be deployed anywhere (CDN, edge, SSR) without state management concerns. Scale your frontend independently of your agent infrastructure.
 </Callout>
 
 ## CI/CD pipeline

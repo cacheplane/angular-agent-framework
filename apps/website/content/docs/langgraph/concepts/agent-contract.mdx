@@ -112,13 +112,13 @@ Do not mirror `messages`, `status`, `toolCalls`, `interrupt`, or `subagents` thr
 
 ## Adapters And Transports
 
-`@threadplane/langgraph` exports `agent()`, `provideAgent()`, `FetchStreamTransport`, `MockAgentTransport`, and `AgentTransport`.
+`@threadplane/langgraph` exports `injectAgent()`, `provideAgent()`, `FetchStreamTransport`, `MockAgentTransport`, and `AgentTransport`.
 
-`agent()` is the Angular adapter. It connects to LangGraph, consumes stream events through a transport, and returns a `LangGraphAgent`. That object satisfies the neutral `Agent` contract and also exposes LangGraph-specific signals such as raw LangGraph messages, history, queue, branch state, and checkpoint helpers.
+`injectAgent()` is the Angular adapter. Configured by `provideAgent({...})` at bootstrap (or in a child component's `providers` array for hierarchical DI), it connects to LangGraph, consumes stream events through a transport, and returns a `LangGraphAgent`. That object satisfies the neutral `Agent` contract and also exposes LangGraph-specific signals such as raw LangGraph messages, history, queue, branch state, and checkpoint helpers.
 
 `AgentTransport` is lower level. Use it when the backend is LangGraph-compatible but the transport needs to change: custom fetch behavior, tests, local fixtures, or a nonstandard gateway.
 
-`@threadplane/ag-ui` exports `toAgent()`, `provideAgUiAgent()`, `injectAgUiAgent()`, `FakeAgent`, and `provideFakeAgUiAgent()`.
+`@threadplane/ag-ui` exports `toAgent()`, `provideAgent()`, `injectAgent()`, `FakeAgent`, and `provideFakeAgent()`.
 
 `toAgent()` wraps an AG-UI `AbstractAgent` into the same neutral contract. The AG-UI adapter reduces AG-UI events into chat signals, appends user messages on submit, calls `runAgent()`, and maps stop to `abortRun()`.
 
@@ -133,7 +133,7 @@ The UI lifecycle is intentionally boring.
 5. `stop()` aborts the active run when supported.
 6. `regenerate(index)` rolls back from an assistant message and reruns from the preceding user message.
 
-LangGraph adds deeper lifecycle and history surfaces. `@threadplane/langgraph` exposes `agent().lifecycle` and exports `AgentLifecycle`, `AgentLifecycleRegistry`, and the low-level `AGENT_LIFECYCLE` token. Those are useful for telemetry, debugging, persistence, and time-travel UI. They are not required by `@threadplane/chat`.
+LangGraph adds deeper lifecycle and history surfaces. `@threadplane/langgraph` exposes `injectAgent().lifecycle` and exports `AgentLifecycle`, `AgentLifecycleRegistry`, and the low-level `AGENT_LIFECYCLE` token. Those are useful for telemetry, debugging, persistence, and time-travel UI. They are not required by `@threadplane/chat`.
 
 ## Testing And Mocks
 
@@ -152,7 +152,7 @@ const agent = mockAgent({
 
 For LangGraph-specific code, use `mockLangGraphAgent()` or `MockAgentTransport` from `@threadplane/langgraph`. That lets you test queue, checkpoint, raw SDK, and transport behavior without pretending those details exist on every adapter.
 
-For AG-UI integration, use `FakeAgent` or `provideFakeAgUiAgent()` from `@threadplane/ag-ui`.
+For AG-UI integration, use `FakeAgent` or `provideFakeAgent()` from `@threadplane/ag-ui`.
 
 This matters because the contract is the seam you can test cheaply. Most component tests should not need a network, LangGraph server, or AG-UI runtime.
 

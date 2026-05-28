@@ -4,23 +4,28 @@
 
 ## When you interact with it directly
 
-In most apps you never instantiate `FetchStreamTransport` directly. When no custom transport is configured, `agent()` creates one from the resolved `apiUrl` and `onThreadId` callback.
+In most apps you never instantiate `FetchStreamTransport` directly. When no custom transport is configured, `provideAgent()` creates one from the resolved `apiUrl` and `onThreadId` callback.
 
 You reach for it explicitly when you want to share a transport instance, inspect behavior in tests, or implement a custom transport by matching the same `AgentTransport` interface.
 
 ```ts
-import { agent, FetchStreamTransport } from '@threadplane/langgraph';
+// app.config.ts
+import { provideAgent, FetchStreamTransport } from '@threadplane/langgraph';
 
 const transport = new FetchStreamTransport(
   'http://localhost:2024',
   (threadId) => localStorage.setItem('threadId', threadId),
 );
 
-const chat = agent({
-  apiUrl: 'http://localhost:2024',
-  assistantId: 'support-agent',
-  transport,
-});
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideAgent({
+      apiUrl: 'http://localhost:2024',
+      assistantId: 'support-agent',
+      transport,
+    }),
+  ],
+};
 ```
 
 ## How it works
@@ -34,7 +39,7 @@ The transport handles:
 - **Cancellation** — forwards `AbortSignal` to LangGraph run APIs.
 - **Queued runs** — supports create, cancel, and join flows when the backend supports them.
 - **History and state update** — loads checkpoint history and calls `threads.updateState()` for regenerate rollback.
-- **Error propagation** — SDK and network errors surface through `agent.error()`.
+- **Error propagation** — SDK and network errors surface through `injectAgent().error()`.
 
 <Callout type="tip" title="Transport interface">
   `FetchStreamTransport` implements `AgentTransport`. Custom transports must

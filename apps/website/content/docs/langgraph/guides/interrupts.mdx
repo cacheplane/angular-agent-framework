@@ -1,6 +1,6 @@
 # Interrupts
 
-Interrupts let your LangGraph agent pause mid-execution and hand control to a human. The agent proposes an action, the graph freezes, your Angular UI shows an approval dialog, the user decides, and the agent resumes with the human's decision. agent() surfaces interrupts as Angular Signals, so building approval flows, confirmation dialogs, and multi-step review experiences requires no manual event wiring.
+Interrupts let your LangGraph agent pause mid-execution and hand control to a human. The agent proposes an action, the graph freezes, your Angular UI shows an approval dialog, the user decides, and the agent resumes with the human's decision. `injectAgent()` surfaces interrupts as Angular Signals, so building approval flows, confirmation dialogs, and multi-step review experiences requires no manual event wiring.
 
 <Callout type="info" title="When to use interrupts">
 Use interrupts when an agent action is irreversible (sending an email, placing an order, deleting data), when the agent needs a human decision it cannot make on its own, or when compliance requires explicit approval before execution.
@@ -18,7 +18,7 @@ The agent reasons about the user's request and determines an action that require
 The agent node calls `interrupt({...})`, which freezes the graph. The interrupt payload is persisted in the checkpoint and streamed to the client.
 </Step>
 <Step title="UI Shows Dialog">
-agent() updates the `interrupt()` signal. Your Angular template detects the change through OnPush change detection and renders an approval dialog with the interrupt payload.
+`injectAgent()` updates the `interrupt()` signal. Your Angular template detects the change through OnPush change detection and renders an approval dialog with the interrupt payload.
 </Step>
 <Step title="User Decides">
 The user reviews the proposed action and clicks Approve or Reject. Your component calls `agent.submit()` with a resume payload containing the decision.
@@ -132,7 +132,7 @@ Place the `interrupt()` call in its own dedicated node. This gives you a clean t
 
 ## Angular: Building an Approval Component
 
-When the agent raises an interrupt, agent() populates the `interrupt()` signal with the interrupt payload. Your component reads this signal to render a dialog and calls `submit()` to resume.
+When the agent raises an interrupt, `injectAgent()` populates the `interrupt()` signal with the interrupt payload. Your component reads this signal to render a dialog and calls `submit()` to resume.
 
 <Tabs>
 <Tab label="approval.component.ts">
@@ -144,7 +144,7 @@ import {
   signal,
   ChangeDetectionStrategy,
 } from '@angular/core';
-import { agent } from '@threadplane/langgraph';
+import { injectAgent } from '@threadplane/langgraph';
 import type { BaseMessage } from '@langchain/core/messages';
 
 interface ApprovalPayload {
@@ -166,9 +166,7 @@ interface AgentState {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ApprovalComponent {
-  agent = agent<AgentState>({
-    assistantId: 'approval_agent',
-  });
+  protected readonly agent = injectAgent<AgentState>();
 
   messages = computed(() => this.agent.messages());
   pendingApproval = computed(() => this.agent.interrupt());
@@ -363,7 +361,7 @@ import {
   computed,
   ChangeDetectionStrategy,
 } from '@angular/core';
-import { agent } from '@threadplane/langgraph';
+import { injectAgent } from '@threadplane/langgraph';
 import type { BaseMessage } from '@langchain/core/messages';
 
 interface StepApproval {
@@ -374,21 +372,21 @@ interface StepApproval {
   completed: string[];
 }
 
+type DeployState = {
+  messages: BaseMessage[];
+  plan: { step: string; description: string }[];
+  current_step: number;
+  completed_steps: string[];
+  approval_result: { approved: boolean; reason?: string };
+};
+
 @Component({
   selector: 'app-deploy-approval',
   templateUrl: './approval.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DeployApprovalComponent {
-  agent = agent<{
-    messages: BaseMessage[];
-    plan: { step: string; description: string }[];
-    current_step: number;
-    completed_steps: string[];
-    approval_result: { approved: boolean; reason?: string };
-  }>({
-    assistantId: 'deploy_agent',
-  });
+  protected readonly agent = injectAgent<DeployState>();
 
   currentStep = computed(() => {
     const interrupt = this.agent.interrupt();
@@ -460,12 +458,12 @@ export class DeployApprovalComponent {
 
 ## Typed Interrupt Payloads with BagTemplate
 
-By default, `interrupt()` returns an untyped value. The `BagTemplate` generic parameter on `agent()` lets you define the exact shape of your interrupt payloads, giving you full TypeScript safety throughout your component.
+By default, `interrupt()` returns an untyped value. The `BagTemplate` generic parameter on `injectAgent()` lets you define the exact shape of your interrupt payloads, giving you full TypeScript safety throughout your component.
 
 `BagTemplate` is an SDK type with an `InterruptType` slot. When you specify that slot, the raw `langGraphInterrupts()` signal is typed. The normalized runtime-neutral `interrupt()` signal still exposes `value` as `unknown`, so cast that payload at the UI boundary if you use the neutral signal.
 
 ```typescript
-import { agent, BagTemplate } from '@threadplane/langgraph';
+import { injectAgent, BagTemplate } from '@threadplane/langgraph';
 
 // Define the exact shape of your interrupt payload
 interface DeployApproval {
@@ -480,9 +478,7 @@ type DeployBag = BagTemplate & {
   InterruptType: DeployApproval;
 };
 
-const agent = agent<DeployState, DeployBag>({
-  assistantId: 'deploy_agent',
-});
+const agent = injectAgent<DeployState, DeployBag>();
 
 const raw = agent.langGraphInterrupts();
 //    ^? Interrupt<DeployApproval>[]

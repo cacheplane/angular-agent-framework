@@ -1,6 +1,6 @@
 # Time Travel
 
-Time travel lets you inspect earlier states and replay alternate execution paths. `agent()` exposes the full checkpoint history and branch navigation through Angular Signals. Use it to debug agent decisions, explore alternate paths, and build undo/redo experiences.
+Time travel lets you inspect earlier states and replay alternate execution paths. `injectAgent()` exposes the full checkpoint history and branch navigation through Angular Signals. Use it to debug agent decisions, explore alternate paths, and build undo/redo experiences.
 
 <Callout type="info" title="Use cases">
 Debug agent decisions, explore alternate paths, and build undo/redo experiences for your users. Time travel works with any LangGraph agent that persists checkpoints to a thread.
@@ -60,9 +60,8 @@ past_state = graph.get_state(past_config)
 <Tab label="history-viewer.component.ts">
 
 ```typescript
-import { Component, inject, computed, ChangeDetectionStrategy } from '@angular/core';
-import { agent } from '@threadplane/langgraph';
-import { AgentService } from './agent.service';
+import { Component, computed, ChangeDetectionStrategy } from '@angular/core';
+import { injectAgent } from '@threadplane/langgraph';
 
 @Component({
   selector: 'app-history-viewer',
@@ -70,8 +69,7 @@ import { AgentService } from './agent.service';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class HistoryViewerComponent {
-  private agentService = inject(AgentService);
-  readonly agent = this.agentService.agent;
+  protected readonly agent = injectAgent();
 
   readonly checkpoints = computed(() => this.agent.history());
   readonly rawCheckpoints = computed(() => this.agent.langGraphHistory());
@@ -104,10 +102,8 @@ export class HistoryViewerComponent {
 The `history()` signal contains runtime-neutral `AgentCheckpoint` entries for the thread. For LangGraph-specific checkpoint metadata, `langGraphHistory()` exposes the raw `ThreadState[]`. The framework loads this history with `threads.getHistory()` when a thread is selected and refreshes it after a run completes.
 
 ```typescript
-const agent = agent<AgentState>({
-  assistantId: 'agent',
-  threadId: signal(threadId),
-});
+// Configured globally in app.config.ts via provideAgent({ ... threadId, assistantId }).
+const agent = injectAgent<AgentState>();
 
 // Runtime-neutral execution timeline
 const checkpoints = computed(() => agent.history());
@@ -174,9 +170,8 @@ Expose checkpoint history directly in your component to let users scrub through 
 <Tabs>
 <Tab label="history-viewer.component.ts">
 ```typescript
-import { Component, inject, computed, ChangeDetectionStrategy } from '@angular/core';
-import { agent } from '@threadplane/langgraph';
-import { AgentService } from './agent.service';
+import { Component, computed, ChangeDetectionStrategy } from '@angular/core';
+import { injectAgent } from '@threadplane/langgraph';
 
 @Component({
   selector: 'app-history-viewer',
@@ -184,8 +179,7 @@ import { AgentService } from './agent.service';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class HistoryViewerComponent {
-  private agentService = inject(AgentService);
-  readonly agent = this.agentService.agent;
+  protected readonly agent = injectAgent();
 
   readonly checkpoints = computed(() => this.agent.history());
   readonly rawCheckpoints = computed(() => this.agent.langGraphHistory());
@@ -301,12 +295,12 @@ Time travel is most useful during development. Inspect why an agent chose a part
     Configure thread storage so checkpoints survive page reloads and are available across sessions.
   </Card>
   <Card title="Streaming" href="/docs/agent/guides/streaming">
-    Understand how agent() surfaces incremental updates and how history integrates with live streaming state.
+    Understand how `injectAgent()` surfaces incremental updates and how history integrates with live streaming state.
   </Card>
   <Card title="Subgraphs" href="/docs/agent/guides/subgraphs">
     Compose multi-agent systems with orchestrators and track subagent execution.
   </Card>
   <Card title="API Reference" href="/docs/agent/api/agent">
-    Full reference for agent() options, signals, and the submit() API including checkpoint parameters.
+    Full reference for `injectAgent()` options, signals, and the submit() API including checkpoint parameters.
   </Card>
 </CardGroup>

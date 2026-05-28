@@ -1,9 +1,9 @@
 # Subgraphs
 
-Subgraphs let you compose complex agents from smaller, focused units. `agent()` streams their output through the same message, state, tool-call, and custom-event signals as the parent graph.
+Subgraphs let you compose complex agents from smaller, focused units. `injectAgent()` streams their output through the same message, state, tool-call, and custom-event signals as the parent graph.
 
 <Callout type="info" title="Subgraphs vs subagents">
-LangGraph subgraphs are graph nodes. Deep Agents-style subagents are delegated tool calls. `agent()` requests subgraph streams by default, but the `subagents()` signal is populated only for tool calls whose names match `subagentToolNames` and whose args include a `subagent_type`.
+LangGraph subgraphs are graph nodes. Deep Agents-style subagents are delegated tool calls. `injectAgent()` requests subgraph streams by default, but the `subagents()` signal is populated only for tool calls whose names match `subagentToolNames` and whose args include a `subagent_type`.
 </Callout>
 
 ## How subgraph composition works
@@ -75,7 +75,7 @@ graph = builder.compile()
 
 ```typescript
 import { Component, computed, inject, effect, ChangeDetectionStrategy } from '@angular/core';
-import { agent } from '@threadplane/langgraph';
+import { injectAgent } from '@threadplane/langgraph';
 
 @Component({
   selector: 'app-orchestrator',
@@ -83,9 +83,7 @@ import { agent } from '@threadplane/langgraph';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class OrchestratorComponent {
-  readonly orchestrator = agent<OrchestratorState>({
-    assistantId: 'orchestrator',
-  });
+  protected readonly orchestrator = injectAgent<OrchestratorState>();
 
   readonly messages = computed(() => this.orchestrator.messages());
   readonly isRunning = computed(() => this.orchestrator.isLoading());
@@ -104,10 +102,14 @@ export class OrchestratorComponent {
 The `subagents()` signal contains a Map of active delegated subagent streams. Use it when your graph delegates through tool calls, such as Deep Agents' default `task` tool or your own delegation tools. Plain subgraph nodes do not appear in this map.
 
 ```typescript
-const orchestrator = agent<OrchestratorState>({
-  assistantId: 'orchestrator',
-  subagentToolNames: ['task', 'delegate_to_researcher'],
-});
+// Configure in app.config.ts:
+// provideAgent({
+//   apiUrl: '...',
+//   assistantId: 'orchestrator',
+//   subagentToolNames: ['task', 'delegate_to_researcher'],
+// });
+
+const orchestrator = injectAgent<OrchestratorState>();
 
 // All subagent streams (active and completed)
 const subagents = computed(() => orchestrator.subagents());
@@ -158,11 +160,15 @@ const researchMessages = computed(() => researchAgent()?.messages() ?? []);
 The orchestrator pattern delegates specialised work to subagents and merges their results. Each subagent runs its own graph independently while the parent coordinates.
 
 ```typescript
-const pipeline = agent<PipelineState>({
-  assistantId: 'pipeline-orchestrator',
-  subagentToolNames: ['task'],
-  filterSubagentMessages: true,
-});
+// Configure in app.config.ts:
+// provideAgent({
+//   apiUrl: '...',
+//   assistantId: 'pipeline-orchestrator',
+//   subagentToolNames: ['task'],
+//   filterSubagentMessages: true,
+// });
+
+const pipeline = injectAgent<PipelineState>();
 
 // Derive a summary of all subagent states
 const pipelineStatus = computed(() => {
@@ -229,18 +235,22 @@ export class SubagentProgressComponent {
 By default, subagent messages appear in the parent's `messages()` signal. Filter them out for a cleaner parent view.
 
 ```typescript
-const orchestrator = agent<OrchestratorState>({
-  assistantId: 'orchestrator',
-  filterSubagentMessages: true,  // Hide subagent messages from parent
-  subagentToolNames: ['task'],
-});
+// Configure in app.config.ts:
+// provideAgent({
+//   apiUrl: '...',
+//   assistantId: 'orchestrator',
+//   filterSubagentMessages: true,  // Hide subagent messages from parent
+//   subagentToolNames: ['task'],
+// });
+
+const orchestrator = injectAgent<OrchestratorState>();
 
 // Parent messages only (no subagent chatter)
 const parentMessages = computed(() => orchestrator.messages());
 ```
 
 <Callout type="tip" title="Subagent tool names">
-Set `subagentToolNames` to the tool names that spawn subagents. `agent()` uses this to identify tool calls that create subagent streams. Those tool calls must include a `subagent_type` argument for type-based lookup helpers such as `getSubagentsByType()`.
+Set `subagentToolNames` to the tool names that spawn subagents. `injectAgent()` uses this to identify tool calls that create subagent streams. Those tool calls must include a `subagent_type` argument for type-based lookup helpers such as `getSubagentsByType()`.
 </Callout>
 
 ## Error handling per subagent
@@ -281,7 +291,7 @@ Use **subagents** when tasks are independent and can run in parallel, when each 
 
 <CardGroup cols={2}>
   <Card title="Streaming" href="/docs/agent/guides/streaming">
-    Understand how agent() surfaces tokens, status, and errors in real time.
+    Understand how `injectAgent()` surfaces tokens, status, and errors in real time.
   </Card>
   <Card title="Time Travel" href="/docs/agent/guides/time-travel">
     Inspect earlier states and replay alternate execution paths with checkpoint history.
@@ -290,6 +300,6 @@ Use **subagents** when tasks are independent and can run in parallel, when each 
     Write unit and integration tests for orchestrator graphs and subagent interactions.
   </Card>
   <Card title="API Reference" href="/docs/agent/api/agent">
-    Full reference for agent() options, signals, and subagent configuration.
+    Full reference for `injectAgent()` options, signals, and subagent configuration.
   </Card>
 </CardGroup>

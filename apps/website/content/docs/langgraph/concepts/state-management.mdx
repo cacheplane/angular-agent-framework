@@ -3,7 +3,7 @@
 How agent state flows from LangGraph's server-side state machine into Angular Signals — and why the separation between server state and UI state makes your app simpler, not more complex.
 
 <Callout type="info" title="Mental model">
-LangGraph Platform owns the state. Angular owns the view. `agent()` is the read-only bridge between them. You never manually sync, serialize, or manage agent state in your Angular code.
+LangGraph Platform owns the state. Angular owns the view. `injectAgent()` is the read-only bridge between them. You never manually sync, serialize, or manage agent state in your Angular code.
 </Callout>
 
 ## State Lives on the Server
@@ -16,7 +16,7 @@ This inversion is intentional. Agent state can span multiple LLM calls, tool exe
 <Step title="User submits input">
 Your Angular component calls `agent.submit({ message: text })`. No state is stored in the component.
 </Step>
-<Step title="agent() sends the request">
+<Step title="`injectAgent()` sends the request">
 `@threadplane/langgraph` forwards the input to `FetchStreamTransport`, which opens an HTTP POST and SSE connection to LangGraph Platform.
 </Step>
 <Step title="LangGraph Platform executes the graph">
@@ -25,7 +25,7 @@ The agent runs its nodes — calling the LLM, invoking tools, checking condition
 <Step title="FetchStreamTransport parses the stream">
 Incoming SSE chunks are parsed and pushed into BehaviorSubjects — one per signal type.
 </Step>
-<Step title="agent() converts to Signals">
+<Step title="`injectAgent()` converts to Signals">
 BehaviorSubjects are converted to Angular Signals via `toSignal()`. Every update triggers Angular's change detection automatically.
 </Step>
 <Step title="Templates re-render">
@@ -165,9 +165,7 @@ interface ProjectState {
   error: string | null;
 }
 
-const agent = agent<ProjectState>({
-  assistantId: 'project_agent',
-});
+const agent = injectAgent<ProjectState>();
 ```
 
 </Tab>
@@ -209,12 +207,10 @@ The agent doesn't wait until it's finished to send state updates. It streams par
 
 ### How Partial Updates Arrive
 
-`agent()` requests the stream modes it needs to populate its public signals by default. Use `values` when you only need state snapshots, and `messages-tuple` when you only need individual message tokens.
+`injectAgent()` requests the stream modes it needs to populate its public signals by default. Use `values` when you only need state snapshots, and `messages-tuple` when you only need individual message tokens.
 
 ```typescript
-const agent = agent<ProjectState>({
-  assistantId: 'project_agent',
-});
+const agent = injectAgent<ProjectState>();
 
 agent.submit(
   { message: 'Update the project plan.' },
@@ -248,9 +244,7 @@ Because every state update is a new signal value, your templates reflect the age
   `
 })
 export class ProjectComponent {
-  readonly agent = agent<ProjectState>({
-    assistantId: 'project_agent',
-  });
+  protected readonly agent = injectAgent<ProjectState>();
 }
 ```
 
@@ -275,14 +269,14 @@ const score = computed(() => agent.value().analysis?.score ?? 0);
 ```
 
 <Callout type="tip" title="No manual subscriptions">
-`agent()` uses `toSignal()` internally with `requireSync: false`. Signals always have a value — even before the first stream update. You never need to handle `undefined` explicitly for the signal itself, though individual state fields may be `null` until the agent populates them.
+`injectAgent()` uses `toSignal()` internally with `requireSync: false`. Signals always have a value — even before the first stream update. You never need to handle `undefined` explicitly for the signal itself, though individual state fields may be `null` until the agent populates them.
 </Callout>
 
 ## Thread State vs Application State
 
 There are two kinds of state in a LangGraph Angular app, and keeping them separate makes your code much easier to reason about.
 
-**Thread state** is owned by LangGraph Platform. You read it through `agent()` signals. You never write to it directly — you only send new input via `.submit()`.
+**Thread state** is owned by LangGraph Platform. You read it through `injectAgent()` signals. You never write to it directly — you only send new input via `.submit()`.
 
 **Application state** is owned by your Angular component or service. It's UI-only: sidebar visibility, active tab, selected message, form input values. It has nothing to do with the agent.
 
@@ -291,10 +285,8 @@ There are two kinds of state in a LangGraph Angular app, and keeping them separa
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ChatComponent {
-  // --- Thread state (from agent, read-only) ---
-  readonly agent = agent<ChatState>({
-    assistantId: 'chat_agent',
-  });
+  // --- Thread state (from injectAgent(), read-only) ---
+  protected readonly agent = injectAgent<ChatState>();
 
   // Convenience computed values from thread state
   readonly messages = this.agent.messages;           // Signal<Message[]>
@@ -340,14 +332,16 @@ Thread: "user_123_session"
 
 ### What This Means for Your Angular App
 
-**Resumable threads** — If the user refreshes the page or closes the browser, the thread is still there. Pass the same `threadId` and `agent()` will restore the full conversation history automatically.
+**Resumable threads** — If the user refreshes the page or closes the browser, the thread is still there. Pass the same `threadId` to `provideAgent()` and `injectAgent()` will restore the full conversation history automatically.
 
 **Time travel** — You can fork a thread at any checkpoint and replay it with different input. This powers the time-travel debugging guides.
 
 **Interrupt persistence** — When the agent raises an `Interrupt`, the checkpoint captures everything. The agent can be resumed hours or days later.
 
 ```typescript
-const agent = agent<ChatState>({
+// app.config.ts — configure threadId/onThreadId on the provider
+provideAgent({
+  apiUrl: '...',
   assistantId: 'chat_agent',
 
   // Same threadId = restored conversation history
@@ -356,6 +350,9 @@ const agent = agent<ChatState>({
   // New threadId auto-created for new conversations
   onThreadId: (id) => this.router.navigate(['/chat', id]),
 });
+
+// component.ts
+const agent = injectAgent<ChatState>();
 
 // Read checkpoint history for time-travel UI
 const history = agent.history();             // Signal<AgentCheckpoint[]>
@@ -424,7 +421,7 @@ def researcher_node(state: ResearchState) -> dict:
 
 ```typescript
 import { BaseMessage } from '@langchain/core/messages';
-import { agent } from '@threadplane/langgraph';
+import { injectAgent } from '@threadplane/langgraph';
 
 interface ResearchState {
   messages: BaseMessage[];
@@ -441,10 +438,11 @@ interface ResearchState {
   model_used: string;
 }
 
+// Configured globally in app.config.ts:
+// provideAgent({ apiUrl: '...', assistantId: 'research_agent' });
+
 // In your component:
-readonly agent = agent<ResearchState>({
-  assistantId: 'research_agent',
-});
+protected readonly agent = injectAgent<ResearchState>();
 ```
 
 </Tab>
@@ -490,9 +488,7 @@ readonly agent = agent<ResearchState>({
   `
 })
 export class ResearchComponent {
-  readonly agent = agent<ResearchState>({
-    assistantId: 'research_agent',
-  });
+  protected readonly agent = injectAgent<ResearchState>();
 
   startResearch(query: string) {
     this.agent.submit({ message: query });
@@ -508,9 +504,7 @@ export class ResearchComponent {
 You rarely need to consume `agent.value()` raw in your template. Use `computed()` to derive clean, focused values:
 
 ```typescript
-readonly agent = agent<ResearchState>({
-  assistantId: 'research_agent',
-});
+protected readonly agent = injectAgent<ResearchState>();
 
 // Derived signals — recalculate only when their dependencies change
 readonly progress = computed(() => this.agent.value().progress);
@@ -524,7 +518,7 @@ readonly reportTitle = computed(() => this.agent.value().report?.title ?? '');
 
 <CardGroup cols={2}>
   <Card title="Angular Signals" href="/docs/agent/concepts/angular-signals">
-    How agent() uses Angular Signals for zero-subscription reactive rendering.
+    How `injectAgent()` uses Angular Signals for zero-subscription reactive rendering.
   </Card>
   <Card title="Streaming" href="/docs/agent/guides/streaming">
     Configure stream modes — values, messages, events — for different use cases.

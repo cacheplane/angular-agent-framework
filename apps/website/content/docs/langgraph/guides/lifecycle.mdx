@@ -1,6 +1,6 @@
 # Agent Lifecycle Signals
 
-The `@threadplane/langgraph` library exposes per-agent lifecycle signals on every `LangGraphAgent` returned by `agent()`. These are timestamps and classifications derived from the existing stream — useful for debugging, custom dashboards, or telemetry integrations.
+The `@threadplane/langgraph` library exposes per-agent lifecycle signals on every `LangGraphAgent` returned by `injectAgent()`. These are timestamps and classifications derived from the existing stream — useful for debugging, custom dashboards, or telemetry integrations.
 
 ## Interface
 
@@ -53,13 +53,11 @@ Three signals require explicit hook points that the agent already invokes:
 
 ```typescript
 import { Component, effect } from '@angular/core';
-import { agent } from '@threadplane/langgraph';
+import { injectAgent } from '@threadplane/langgraph';
 
 @Component({ /* ... */ })
 export class MyComponent {
-  private chat = agent({
-    assistantId: 'chat_agent',
-  });
+  private chat = injectAgent();
 
   constructor() {
     effect(() => {
@@ -88,7 +86,7 @@ const registry = inject(AgentLifecycleRegistry);
 const lifecycles = registry.lifecycles();
 ```
 
-The exported `AGENT_LIFECYCLE` token is a low-level token for custom integrations. `agent()` does not automatically provide a different token instance for each agent.
+The exported `AGENT_LIFECYCLE` token is a low-level token for custom integrations. `injectAgent()` does not automatically provide a different token instance for each agent.
 
 ## Reset semantics
 

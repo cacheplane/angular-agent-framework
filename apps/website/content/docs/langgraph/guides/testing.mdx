@@ -41,24 +41,31 @@ With MemorySaver and a mocked LLM, agent tests run in milliseconds. Use `langcha
 
 ## MockAgentTransport: Basic Setup
 
-On the Angular side, MockAgentTransport replaces the real HTTP transport. Create it inside `TestBed.runInInjectionContext` so agent() has access to Angular's dependency injection.
+On the Angular side, MockAgentTransport replaces the real HTTP transport. Register it through `provideAgent({ transport })` in TestBed's `providers` array, then call `injectAgent()` inside `TestBed.runInInjectionContext`.
 
 <Tabs>
 <Tab label="chat.spec.ts">
 
 ```typescript
 import { TestBed } from '@angular/core/testing';
-import { MockAgentTransport, agent } from '@threadplane/langgraph';
+import { MockAgentTransport, provideAgent, injectAgent } from '@threadplane/langgraph';
 
 describe('ChatComponent', () => {
   it('should display agent messages', () => {
     const transport = new MockAgentTransport();
 
+    TestBed.configureTestingModule({
+      providers: [
+        provideAgent({
+          apiUrl: '',
+          assistantId: 'test_agent',
+          transport,
+        }),
+      ],
+    });
+
     TestBed.runInInjectionContext(() => {
-      const chat = agent({
-        assistantId: 'test_agent',
-        transport,
-      });
+      const chat = injectAgent();
 
       // Emit a values event — simulates the agent responding
       transport.emit([
@@ -80,7 +87,7 @@ describe('ChatComponent', () => {
 
 ```typescript
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { agent } from '@threadplane/langgraph';
+import { injectAgent } from '@threadplane/langgraph';
 
 @Component({
   selector: 'app-chat',
@@ -88,9 +95,7 @@ import { agent } from '@threadplane/langgraph';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ChatComponent {
-  chat = agent({
-    assistantId: 'chat_agent',
-  });
+  protected readonly chat = injectAgent();
 
   send(text: string) {
     this.chat.submit({ message: text });
@@ -113,11 +118,14 @@ const transport = new MockAgentTransport([
   [{ type: 'values', messages: [{ role: 'assistant', content: 'Here is your answer.' }] }],
 ]);
 
+TestBed.configureTestingModule({
+  providers: [
+    provideAgent({ apiUrl: '', assistantId: 'test_agent', transport }),
+  ],
+});
+
 TestBed.runInInjectionContext(() => {
-  const chat = agent({
-    assistantId: 'test_agent',
-    transport,
-  });
+  const chat = injectAgent();
 
   chat.submit({ message: 'Explain signals' });
 
@@ -139,7 +147,7 @@ The most common test pattern verifies the full submit-to-idle lifecycle: submit 
 
 ```typescript
 import { TestBed } from '@angular/core/testing';
-import { MockAgentTransport, agent } from '@threadplane/langgraph';
+import { MockAgentTransport, provideAgent, injectAgent } from '@threadplane/langgraph';
 
 describe('streaming lifecycle', () => {
   it('should transition through running → values → idle', () => {
@@ -148,11 +156,14 @@ describe('streaming lifecycle', () => {
       [{ type: 'values', messages: [{ role: 'assistant', content: 'Done!' }] }],
     ]);
 
+    TestBed.configureTestingModule({
+      providers: [
+        provideAgent({ apiUrl: '', assistantId: 'test_agent', transport }),
+      ],
+    });
+
     TestBed.runInInjectionContext(() => {
-      const chat = agent({
-        assistantId: 'test_agent',
-        transport,
-      });
+      const chat = injectAgent();
 
       // Initial state
       expect(chat.status()).toBe('idle');
@@ -186,7 +197,7 @@ describe('streaming lifecycle', () => {
 
 ```typescript
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { agent } from '@threadplane/langgraph';
+import { injectAgent } from '@threadplane/langgraph';
 
 @Component({
   selector: 'app-chat',
@@ -201,9 +212,7 @@ import { agent } from '@threadplane/langgraph';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ChatComponent {
-  chat = agent({
-    assistantId: 'chat_agent',
-  });
+  protected readonly chat = injectAgent();
 
   send(text: string) {
     this.chat.submit({ message: text });
@@ -223,17 +232,20 @@ Script an interrupt event to test human-in-the-loop flows. Verify the interrupt 
 
 ```typescript
 import { TestBed } from '@angular/core/testing';
-import { MockAgentTransport, agent } from '@threadplane/langgraph';
+import { MockAgentTransport, provideAgent, injectAgent } from '@threadplane/langgraph';
 
 describe('interrupt handling', () => {
   it('should surface interrupt and resume on approval', () => {
     const transport = new MockAgentTransport();
 
+    TestBed.configureTestingModule({
+      providers: [
+        provideAgent({ apiUrl: '', assistantId: 'approval_agent', transport }),
+      ],
+    });
+
     TestBed.runInInjectionContext(() => {
-      const chat = agent({
-        assistantId: 'approval_agent',
-        transport,
-      });
+      const chat = injectAgent();
 
       // Agent hits an interrupt
       transport.emit([
@@ -271,7 +283,7 @@ describe('interrupt handling', () => {
 
 ```typescript
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { agent } from '@threadplane/langgraph';
+import { injectAgent } from '@threadplane/langgraph';
 
 @Component({
   selector: 'app-approval',
@@ -288,9 +300,7 @@ import { agent } from '@threadplane/langgraph';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ApprovalComponent {
-  agent = agent({
-    assistantId: 'approval_agent',
-  });
+  protected readonly agent = injectAgent();
 
   approve() {
     this.agent.submit({ resume: { approved: true } });
@@ -314,17 +324,24 @@ Inject errors with `emitError()` to verify your component handles failures grace
 
 ```typescript
 import { TestBed } from '@angular/core/testing';
-import { MockAgentTransport, agent } from '@threadplane/langgraph';
+import { MockAgentTransport, provideAgent, injectAgent } from '@threadplane/langgraph';
 
 describe('error handling', () => {
+  function configureWithTransport(transport: MockAgentTransport) {
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({
+      providers: [
+        provideAgent({ apiUrl: '', assistantId: 'test_agent', transport }),
+      ],
+    });
+  }
+
   it('should surface errors and set error status', () => {
     const transport = new MockAgentTransport();
+    configureWithTransport(transport);
 
     TestBed.runInInjectionContext(() => {
-      const chat = agent({
-        assistantId: 'test_agent',
-        transport,
-      });
+      const chat = injectAgent();
 
       chat.submit({ message: 'Hello' });
 
@@ -340,12 +357,10 @@ describe('error handling', () => {
 
   it('should recover from errors on retry', () => {
     const transport = new MockAgentTransport();
+    configureWithTransport(transport);
 
     TestBed.runInInjectionContext(() => {
-      const chat = agent({
-        assistantId: 'test_agent',
-        transport,
-      });
+      const chat = injectAgent();
 
       // First attempt fails
       chat.submit({ message: 'Hello' });
@@ -373,7 +388,7 @@ describe('error handling', () => {
 
 ```typescript
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { agent } from '@threadplane/langgraph';
+import { injectAgent } from '@threadplane/langgraph';
 
 @Component({
   selector: 'app-chat',
@@ -388,9 +403,7 @@ import { agent } from '@threadplane/langgraph';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ChatComponent {
-  chat = agent({
-    assistantId: 'chat_agent',
-  });
+  protected readonly chat = injectAgent();
   private lastMessage = '';
 
   send(text: string) {
@@ -415,15 +428,21 @@ Verify that switching threads loads the correct conversation state and clears th
 describe('thread switching', () => {
   it('should load new thread state on switch', () => {
     const transport = new MockAgentTransport();
+    const threadId = signal<string | null>('thread_A');
+
+    TestBed.configureTestingModule({
+      providers: [
+        provideAgent({
+          apiUrl: '',
+          assistantId: 'test_agent',
+          threadId,
+          transport,
+        }),
+      ],
+    });
 
     TestBed.runInInjectionContext(() => {
-      const threadId = signal<string | null>('thread_A');
-
-      const chat = agent({
-        assistantId: 'test_agent',
-        threadId,
-        transport,
-      });
+      const chat = injectAgent();
 
       // Thread A has messages
       transport.emit([
@@ -451,11 +470,15 @@ describe('thread switching', () => {
   it('should create a new thread when switching to null', () => {
     const transport = new MockAgentTransport();
 
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({
+      providers: [
+        provideAgent({ apiUrl: '', assistantId: 'test_agent', transport }),
+      ],
+    });
+
     TestBed.runInInjectionContext(() => {
-      const chat = agent({
-        assistantId: 'test_agent',
-        transport,
-      });
+      const chat = injectAgent();
 
       // Start a conversation
       transport.emit([
@@ -483,10 +506,10 @@ Make sure `@threadplane/langgraph` is available in your test environment. MockAg
 Instantiate `MockAgentTransport` with optional pre-scripted batches for sequential playback, or leave it empty for imperative `emit()` calls.
 </Step>
 <Step title="Wrap in injection context">
-Call `TestBed.runInInjectionContext(() => { ... })` so agent() can access Angular's injector for signal creation and cleanup.
+Call `TestBed.runInInjectionContext(() => { ... })` so `injectAgent()` can access Angular's injector for signal creation and cleanup.
 </Step>
-<Step title="Create the resource">
-Pass the transport to agent() via the `transport` option. All other options (assistantId, threadId, onThreadId) work identically to production code.
+<Step title="Configure the provider">
+Pass the transport into `provideAgent({ ..., transport })` in TestBed's `providers` array. All other options (assistantId, threadId, onThreadId) work identically to production code.
 </Step>
 <Step title="Script events">
 Use `transport.emit()` for ad-hoc events, `transport.nextBatch()` for pre-scripted sequences, or `transport.emitError()` for failure scenarios.

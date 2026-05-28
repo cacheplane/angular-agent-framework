@@ -1,6 +1,6 @@
 # Memory
 
-Memory gives your LangGraph agent the ability to recall past interactions, user preferences, and learned facts. There are two distinct kinds: short-term memory scoped to a single thread (conversation), and long-term memory that persists across threads using the LangGraph Store API. agent() surfaces both through Angular Signals so your components stay reactive without manual state wiring.
+Memory gives your LangGraph agent the ability to recall past interactions, user preferences, and learned facts. There are two distinct kinds: short-term memory scoped to a single thread (conversation), and long-term memory that persists across threads using the LangGraph Store API. `injectAgent()` surfaces both through Angular Signals so your components stay reactive without manual state wiring.
 
 <Callout type="info" title="Short-term vs long-term">
 Short-term memory lives within a thread — it is the conversation history plus any custom state fields your agent accumulates during a run. Long-term memory lives in the LangGraph Store and survives across threads, users, and sessions. Think of short-term as "what happened in this conversation" and long-term as "what the agent knows about this user."
@@ -75,7 +75,7 @@ graph = builder.compile()
 
 ```typescript
 import { Component, computed, ChangeDetectionStrategy } from '@angular/core';
-import { agent } from '@threadplane/langgraph';
+import { injectAgent } from '@threadplane/langgraph';
 import type { BaseMessage } from '@langchain/core/messages';
 
 interface AgentState {
@@ -85,17 +85,21 @@ interface AgentState {
   mentioned_topics: string[];
 }
 
+// Configure in app.config.ts:
+// provideAgent({
+//   apiUrl: '...',
+//   assistantId: 'memory_agent',
+//   threadId: signal(localStorage.getItem('memory-thread')),
+//   onThreadId: (id) => localStorage.setItem('memory-thread', id),
+// });
+
 @Component({
   selector: 'app-memory-chat',
   templateUrl: './memory.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class MemoryChatComponent {
-  agent = agent<AgentState>({
-    assistantId: 'memory_agent',
-    threadId: signal(localStorage.getItem('memory-thread')),
-    onThreadId: (id) => localStorage.setItem('memory-thread', id),
-  });
+  protected readonly agent = injectAgent<AgentState>();
 
   // Reactive memory signals derived from agent state
   preferences = computed(() => this.agent.value()?.user_preferences ?? {});
@@ -182,13 +186,18 @@ result = graph.invoke(
 # Agent responds: "You mentioned you prefer dark mode."
 ```
 
-On the Angular side, thread-scoped memory requires no extra code. The `threadId` signal handles it:
+On the Angular side, thread-scoped memory requires no extra code. The `threadId` signal handles it — configure it once in `provideAgent({...})`:
 
 ```typescript
-const chat = agent<AgentState>({
+// app.config.ts
+provideAgent({
+  apiUrl: '...',
   assistantId: 'memory_agent',
   threadId: signal(userId()),  // Same user = same thread = same memory
 });
+
+// component.ts
+const chat = injectAgent<AgentState>();
 
 // chat.messages() restores full history on reconnect
 // chat.value() restores all custom state fields
@@ -266,8 +275,16 @@ graph = builder.compile()
 
 ```typescript
 import { Component, computed, signal, ChangeDetectionStrategy } from '@angular/core';
-import { agent } from '@threadplane/langgraph';
+import { injectAgent } from '@threadplane/langgraph';
 import type { BaseMessage } from '@langchain/core/messages';
+
+// Configure in app.config.ts so each conversation gets a new thread,
+// but the agent remembers the user across all of them via the Store:
+// provideAgent({
+//   apiUrl: '...',
+//   assistantId: 'memory_agent',
+//   config: { configurable: { user_id: 'user_42' } },
+// });
 
 @Component({
   selector: 'app-longterm-chat',
@@ -275,12 +292,7 @@ import type { BaseMessage } from '@langchain/core/messages';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class LongTermChatComponent {
-  // Each conversation gets a new thread, but the agent
-  // remembers the user across all of them via the Store.
-  agent = agent({
-    assistantId: 'memory_agent',
-    config: { configurable: { user_id: 'user_42' } },
-  });
+  protected readonly agent = injectAgent();
 
   messages = computed(() => this.agent.messages());
 

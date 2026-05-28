@@ -1,6 +1,6 @@
 # Quick Start
 
-Build a streaming chat component with agent() in 5 minutes.
+Build a streaming chat component with `injectAgent()` in 5 minutes.
 
 <Callout type="info" title="Prerequisites">
 Angular 20+ project with Node.js 18+. If you need setup help, see the [Installation](/docs/agent/getting-started/installation) guide.
@@ -16,16 +16,21 @@ npm install @threadplane/langgraph
 </Step>
 <Step title="Configure the provider">
 
-Add `provideAgent()` to your application config with your LangGraph Platform URL.
+Add `provideAgent()` to your application config with your LangGraph Platform URL, assistant id, and thread persistence wiring.
 
 ```typescript
 // app.config.ts
+import { signal } from '@angular/core';
 import { provideAgent } from '@threadplane/langgraph';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideAgent({
       apiUrl: 'http://localhost:2024',
+      // 'chat_agent' maps to the key in your langgraph.json "graphs" config
+      assistantId: 'chat_agent',
+      threadId: signal(localStorage.getItem('threadId')),
+      onThreadId: (id) => localStorage.setItem('threadId', id),
     }),
   ],
 };
@@ -34,7 +39,7 @@ export const appConfig: ApplicationConfig = {
 </Step>
 <Step title="Create a chat component">
 
-Use `agent()` in a component field initializer. Every property on the returned ref is an Angular Signal.
+Use `injectAgent()` in a component field initializer. Every property on the returned ref is an Angular Signal.
 
 <Tabs>
 <Tab label="TypeScript">
@@ -42,7 +47,7 @@ Use `agent()` in a component field initializer. Every property on the returned r
 ```typescript
 // chat.component.ts
 import { Component, ChangeDetectionStrategy, signal, computed } from '@angular/core';
-import { agent } from '@threadplane/langgraph';
+import { injectAgent } from '@threadplane/langgraph';
 
 @Component({
   selector: 'app-chat',
@@ -52,12 +57,7 @@ import { agent } from '@threadplane/langgraph';
 export class ChatComponent {
   input = signal('');
 
-  // 'chat_agent' maps to the key in your langgraph.json "graphs" config
-  chat = agent({
-    assistantId: 'chat_agent',
-    threadId: signal(localStorage.getItem('threadId')),
-    onThreadId: (id) => localStorage.setItem('threadId', id),
-  });
+  protected readonly chat = injectAgent();
 
   isStreaming = computed(() => this.chat.isLoading());
 
@@ -145,6 +145,6 @@ Open `http://localhost:4200` and start chatting with your agent.
     Graphs, nodes, edges, and state for Angular developers
   </Card>
   <Card title="API Reference" href="/docs/agent/api/agent">
-    Complete agent() function reference
+    Complete `injectAgent()` function reference
   </Card>
 </CardGroup>

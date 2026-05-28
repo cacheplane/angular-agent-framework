@@ -8,7 +8,7 @@ Make sure you've completed the Installation guide first.
 
 ## How streaming works
 
-Streaming starts on the agent side. LangGraph's `astream()` method controls what data is sent over the SSE connection. On the Angular side, `agent()` consumes those events and maps them to Signals.
+Streaming starts on the agent side. LangGraph's `astream()` method controls what data is sent over the SSE connection. On the Angular side, `injectAgent()` consumes those events and maps them to Signals.
 
 <Tabs>
 <Tab label="agent.py">
@@ -60,7 +60,7 @@ async for event in graph.astream_events(
 
 ```typescript
 import { Component, computed, ChangeDetectionStrategy } from '@angular/core';
-import { agent } from '@threadplane/langgraph';
+import { injectAgent } from '@threadplane/langgraph';
 
 @Component({
   selector: 'app-chat',
@@ -68,9 +68,7 @@ import { agent } from '@threadplane/langgraph';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ChatComponent {
-  readonly chat = agent({
-    assistantId: 'chat_agent',
-  });
+  protected readonly chat = injectAgent();
 
   readonly isStreaming = computed(() => this.chat.isLoading());
 
@@ -118,9 +116,9 @@ The connection was interrupted or the agent returned an error. Inspect `error()`
 
 ## Stream modes
 
-By default, `agent()` asks LangGraph Platform for the stream modes it needs to populate its public signals: `values`, `messages-tuple`, `updates`, and `custom`. It also enables `streamSubgraphs` so namespaced subgraph events can reach the client.
+By default, `injectAgent()` asks LangGraph Platform for the stream modes it needs to populate its public signals: `values`, `messages-tuple`, `updates`, and `custom`. It also enables `streamSubgraphs` so namespaced subgraph events can reach the client.
 
-Override `streamMode` per run when you need a narrower stream. `streamMode` is a submit option, not an `agent()` option.
+Override `streamMode` per run when you need a narrower stream. `streamMode` is a submit option, not a `provideAgent()` option.
 
 <Tabs>
 <Tab label="values only">
@@ -128,9 +126,7 @@ Override `streamMode` per run when you need a narrower stream. `streamMode` is a
 ```typescript
 // Receives the full agent state after every node execution.
 // Best when you only need state snapshots.
-const chat = agent({
-  assistantId: 'chat_agent',
-});
+const chat = injectAgent();
 
 await chat.submit(
   { message: 'Summarize this thread.' },
@@ -146,9 +142,7 @@ await chat.submit(
 ```typescript
 // Streams individual message tokens as they are generated.
 // Best for token-by-token rendering with lowest perceived latency.
-const chat = agent({
-  assistantId: 'chat_agent',
-});
+const chat = injectAgent();
 
 await chat.submit(
   { message: 'Draft a reply.' },
@@ -162,9 +156,7 @@ await chat.submit(
 ```typescript
 // Emits raw LangGraph run events (on_chain_start, on_llm_stream, etc.).
 // Best for advanced observability or custom progress indicators.
-const chat = agent({
-  assistantId: 'chat_agent',
-});
+const chat = injectAgent();
 
 await chat.submit(
   { message: 'Trace this run.' },
@@ -188,7 +180,7 @@ If the SSE connection drops or the agent throws, `status()` transitions to `'err
 
 ```typescript
 import { Component, computed, ChangeDetectionStrategy } from '@angular/core';
-import { agent } from '@threadplane/langgraph';
+import { injectAgent } from '@threadplane/langgraph';
 
 @Component({
   selector: 'app-chat',
@@ -196,9 +188,7 @@ import { agent } from '@threadplane/langgraph';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ChatComponent {
-  readonly chat = agent({
-    assistantId: 'chat_agent',
-  });
+  protected readonly chat = injectAgent();
 
   readonly hasError = computed(() => this.chat.status() === 'error');
 
@@ -233,7 +223,9 @@ export class ChatComponent {
 By default Agent coalesces state-like signal updates every 16 ms. That is close to a 60 fps render cadence and prevents fast SSE streams from triggering hundreds of state renders per second.
 
 ```typescript
-const chat = agent({
+// app.config.ts
+provideAgent({
+  apiUrl: '...',
   assistantId: 'chat_agent',
   // Batch incoming chunks and flush at most once every 50 ms
   throttle: 50,
@@ -265,6 +257,6 @@ Each call to `chat.submit()` opens a new SSE connection. Connections are automat
     Unit-test components that use agent with the built-in test harness.
   </Card>
   <Card title="API Reference" href="/docs/agent/api/agent">
-    Full option reference for agent(), including all configuration keys.
+    Full option reference for `injectAgent()` / `provideAgent()`, including all configuration keys.
   </Card>
 </CardGroup>

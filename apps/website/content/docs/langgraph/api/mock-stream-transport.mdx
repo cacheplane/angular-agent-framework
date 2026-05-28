@@ -12,16 +12,12 @@ import { TestBed } from '@angular/core/testing';
 import {
   provideAgent,
   MockAgentTransport,
-  agent,
+  injectAgent,
 } from '@threadplane/langgraph';
 
 @Component({ template: '' })
 class ChatComponent {
-  readonly chat = agent({
-    apiUrl: '',
-    assistantId: 'test-agent',
-    threadId: 'thread-1',
-  });
+  readonly chat = injectAgent();
 }
 
 describe('ChatComponent', () => {
@@ -31,7 +27,14 @@ describe('ChatComponent', () => {
     transport = new MockAgentTransport();
     TestBed.configureTestingModule({
       imports: [ChatComponent],
-      providers: [provideAgent({ apiUrl: '', transport })],
+      providers: [
+        provideAgent({
+          apiUrl: '',
+          assistantId: 'test-agent',
+          threadId: 'thread-1',
+          transport,
+        }),
+      ],
     });
   });
 
@@ -109,7 +112,7 @@ The transport also records calls in `streams`, `createdQueuedRuns`, `cancelledRu
     The production transport that MockAgentTransport replaces in tests.
   </Card>
   <Card
-    title="agent() API"
+    title="`injectAgent()` API"
     icon="code"
     href="/docs/agent/api/agent"
   >
