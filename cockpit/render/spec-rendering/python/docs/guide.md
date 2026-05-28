@@ -22,11 +22,16 @@ Set up `provideRender()` in your app config with a component registry:
 import { ApplicationConfig } from '@angular/core';
 import { provideRender } from '@threadplane/render';
 import { defineAngularRegistry } from '@threadplane/render';
+import { provideAgent } from '@threadplane/langgraph';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideRender({
       registry: defineAngularRegistry({}),
+    }),
+    provideAgent({
+      apiUrl: environment.langGraphApiUrl,
+      assistantId: environment.streamingAssistantId,
     }),
   ],
 };
@@ -78,14 +83,14 @@ store.get('/name'); // Signal<string>
 </Step>
 <Step title="Connect to the LangGraph backend">
 
-Use `agent()` to connect to the agent and display render specs
-from the conversation:
+With `provideAgent()` configured above, call `injectAgent()` in your component
+to connect to the agent and display render specs from the conversation:
 
 ```typescript
-protected readonly stream = agent({
-  apiUrl: environment.langGraphApiUrl,
-  assistantId: environment.streamingAssistantId,
-});
+// app.component.ts
+import { injectAgent } from '@threadplane/langgraph';
+
+protected readonly stream = injectAgent();
 ```
 
 </Step>

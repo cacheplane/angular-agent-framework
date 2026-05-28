@@ -1,13 +1,13 @@
 # File Operations with Angular
 
 <Summary>
-Build a chat interface that shows real-time file operation logs using `agent()` from
-`@threadplane/langgraph`. The agent reads and writes files using tool calls, and the
+Build a chat interface that shows real-time file operation logs using `provideAgent()` and
+`injectAgent()` from `@threadplane/langgraph`. The agent reads and writes files using tool calls, and the
 sidebar displays each operation as it happens.
 </Summary>
 
 <Prompt>
-Add a file operations sidebar to this Angular component using `agent()` from `@threadplane/langgraph`. Use `stream.messages()` to access tool call data, derive `toolCallEntries` with `computed()`, and bind them to the sidebar beside the `<chat>` component from `@threadplane/chat`.
+Add a file operations sidebar to this Angular component using `provideAgent()` and `injectAgent()` from `@threadplane/langgraph`. Use `stream.messages()` to access tool call data, derive `toolCallEntries` with `computed()`, and bind them to the sidebar beside the `<chat>` component from `@threadplane/chat`.
 </Prompt>
 
 <Steps>
@@ -24,26 +24,25 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideAgent({
       apiUrl: 'https://your-deployment.langgraph.app',
+      assistantId: 'da-filesystem',
     }),
   ],
 };
 ```
 
-This makes the API URL available to all `agent()` calls in your app.
+This makes the configured agent available to all `injectAgent()` calls in your app.
 
 </Step>
 <Step title="Create the streaming resource">
 
-In your component, call `agent()` with the `assistantId` pointing to your filesystem graph:
+In your component, call `injectAgent()` to retrieve the configured filesystem agent:
 
 ```typescript
 // filesystem.component.ts
-import { agent } from '@threadplane/langgraph';
+import { injectAgent } from '@threadplane/langgraph';
 
 export class FilesystemComponent {
-  protected readonly stream = agent({
-    assistantId: 'da-filesystem',
-  });
+  protected readonly stream = injectAgent();
 }
 ```
 
@@ -56,6 +55,7 @@ Use Angular's `computed()` to reactively extract tool calls from `stream.message
 
 ```typescript
 import { computed } from '@angular/core';
+import { injectAgent } from '@threadplane/langgraph';
 
 interface ToolCallEntry {
   name: string;
@@ -64,7 +64,7 @@ interface ToolCallEntry {
 }
 
 export class FilesystemComponent {
-  protected readonly stream = agent({ assistantId: 'da-filesystem' });
+  protected readonly stream = injectAgent();
 
   toolCallEntries = computed(() => {
     const msg = this.stream.messages();

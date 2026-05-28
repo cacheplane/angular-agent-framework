@@ -1,13 +1,13 @@
 # Human-in-the-Loop Interrupts with Angular
 
 <Summary>
-Build a chat interface with human-in-the-loop approval using `agent()` from
-`@threadplane/langgraph`. The LangGraph backend pauses execution for approval,
+Build a chat interface with human-in-the-loop approval using `provideAgent()` and
+`injectAgent()` from `@threadplane/langgraph`. The LangGraph backend pauses execution for approval,
 and the frontend resumes it with `stream.submit()`.
 </Summary>
 
 <Prompt>
-Add human-in-the-loop approval to this Angular component using `agent()` from `@threadplane/langgraph`. Use `stream.interrupt()` to display pending approvals, `stream.submit({ resume: true })` to approve and resume execution, and `stream.submit({ resume: false })` to reject. Bind `stream.messages()` in the template via the `<chat>` component from `@threadplane/chat`.
+Add human-in-the-loop approval to this Angular component using `provideAgent()` and `injectAgent()` from `@threadplane/langgraph`. Use `stream.interrupt()` to display pending approvals, `stream.submit({ resume: true })` to approve and resume execution, and `stream.submit({ resume: false })` to reject. Bind `stream.messages()` in the template via the `<chat>` component from `@threadplane/chat`.
 </Prompt>
 
 <Steps>
@@ -24,26 +24,25 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideAgent({
       apiUrl: 'https://your-deployment.langgraph.app',
+      assistantId: 'interrupts',
     }),
   ],
 };
 ```
 
-This makes the API URL available to all `agent()` calls in your app.
+This makes the configured agent available to all `injectAgent()` calls in your app.
 
 </Step>
 <Step title="Create the streaming resource">
 
-In your component, call `agent()` with the assistant ID that maps to your interrupts graph:
+In your component, call `injectAgent()` to retrieve the configured interrupts agent:
 
 ```typescript
 // interrupts.component.ts
-import { agent } from '@threadplane/langgraph';
+import { injectAgent } from '@threadplane/langgraph';
 
 export class InterruptsComponent {
-  protected readonly stream = agent({
-    assistantId: 'interrupts',
-  });
+  protected readonly stream = injectAgent();
 }
 ```
 

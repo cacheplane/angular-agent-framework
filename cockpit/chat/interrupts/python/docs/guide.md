@@ -15,14 +15,29 @@ and render approval/rejection controls.
 <Steps>
 <Step title="Configure the agent ref">
 
-Set up `agent()` which automatically detects interrupt states
-from the LangGraph backend:
+Configure `provideAgent()` in your app config, then call `injectAgent()` in your
+component - the agent automatically detects interrupt states from the LangGraph
+backend:
 
 ```typescript
-protected readonly stream = agent({
-  apiUrl: environment.langGraphApiUrl,
-  assistantId: environment.streamingAssistantId,
-});
+// app.config.ts
+import { provideAgent } from '@threadplane/langgraph';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideAgent({
+      apiUrl: environment.langGraphApiUrl,
+      assistantId: environment.streamingAssistantId,
+    }),
+  ],
+};
+```
+
+```typescript
+// app.component.ts
+import { injectAgent } from '@threadplane/langgraph';
+
+protected readonly stream = injectAgent();
 ```
 
 </Step>
