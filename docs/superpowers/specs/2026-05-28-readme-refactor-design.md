@@ -312,6 +312,7 @@ Types:
 - `Thread`, `ThreadActionAdapter` — thread record and action adapter for `<chat-thread-list>`.
 - `Project`, `ProjectActionAdapter` — project record and action adapter for `<chat-project-list>`.
 - `ResolvedCitation` — resolved citation with source metadata.
+- `ChatToolCallTemplateContext` — template context type for `ChatToolCallTemplateDirective`.
 - `ViewRegistry`, `RenderEvent`, `RenderHandlerEvent`, `RenderStateChangeEvent`, `RenderLifecycleEvent`, `RenderViewEntry` — re-exported from `@threadplane/render`.
 - `ContentClassifier`, `ContentType` — streaming content classifier types.
 - `ParseTreeStore`, `ElementAccumulationState` — parse tree streaming types.
@@ -379,6 +380,7 @@ Angular Components (UI primitives — `selector` in brackets):
 - `ChatGenuiSkeletonComponent` [`<chat-genui-skeleton>`] — loading skeleton for GenerativeUI surfaces.
 - `ChatTimelineComponent` [`<chat-timeline>`] — timeline/debug strip showing agent event history.
 - `ChatGenerativeUiComponent` [`<chat-generative-ui>`] — renders A2UI generative UI surfaces.
+- `A2uiSurfaceComponent` [`<a2ui-surface>`] — A2UI surface host; declares the `--a2ui-*` theming tokens and renders the catalog component tree.
 - `ChatWelcomeComponent` [`<chat-welcome>`] — empty-state welcome screen.
 - `ChatWelcomeSuggestionComponent` [`<chat-welcome-suggestion>`] — individual suggestion chip inside the welcome screen.
 - `ChatSelectComponent` [`<chat-select>`] — styled select / dropdown primitive.
@@ -404,12 +406,13 @@ Angular Components (Compositions):
 Angular Directives:
 - `MessageTemplateDirective` — structural directive for custom message templates in `<chat-message-list>`.
 - `ChatToolCallTemplateDirective` — structural directive for custom tool call templates in `<chat-tool-calls>`.
+- `ChatCitationCardTemplateDirective` — structural directive for custom citation card templates in `<chat-citations>`.
 
 Angular Services:
 - `CitationsResolverService` — resolves raw citation references into display-ready `ResolvedCitation` objects.
 
 Markdown view components (for per-node override via `withViews(cacheplaneMarkdownViews, {...})`):
-`MarkdownDocumentComponent`, `MarkdownParagraphComponent`, `MarkdownHeadingComponent`, `MarkdownBlockquoteComponent`, `MarkdownListComponent`, `MarkdownListItemComponent`, `MarkdownCodeBlockComponent`, `MarkdownThematicBreakComponent`, `MarkdownTextComponent`, `MarkdownEmphasisComponent`, `MarkdownStrongComponent`, `MarkdownStrikethroughComponent`, `MarkdownInlineCodeComponent`, `MarkdownLinkComponent`, `MarkdownAutolinkComponent`, `MarkdownImageComponent`, `MarkdownSoftBreakComponent`, `MarkdownHardBreakComponent`, `MarkdownCitationReferenceComponent`, `MarkdownTableComponent`, `MarkdownTableRowComponent`, `MarkdownTableCellComponent`.
+`MarkdownDocumentComponent`, `MarkdownParagraphComponent`, `MarkdownHeadingComponent`, `MarkdownBlockquoteComponent`, `MarkdownListComponent`, `MarkdownListItemComponent`, `MarkdownCodeBlockComponent`, `MarkdownThematicBreakComponent`, `MarkdownTextComponent`, `MarkdownEmphasisComponent`, `MarkdownStrongComponent`, `MarkdownStrikethroughComponent`, `MarkdownInlineCodeComponent`, `MarkdownLinkComponent`, `MarkdownAutolinkComponent`, `MarkdownImageComponent`, `MarkdownSoftBreakComponent`, `MarkdownHardBreakComponent`, `MarkdownCitationReferenceComponent`, `MarkdownTableComponent`, `MarkdownTableRowComponent`, `MarkdownTableCellComponent`, `MarkdownChildrenComponent` (renders child markdown nodes within a parent view).
 
 A2UI catalog components (for `withViews()` customization):
 `A2uiTextFieldComponent`, `A2uiCheckBoxComponent`, `A2uiButtonComponent`, `A2uiMultipleChoiceComponent`, `A2uiSliderComponent`, `A2uiDateTimeInputComponent`, `A2uiTextComponent`, `A2uiIconComponent`, `A2uiImageComponent`, `A2uiColumnComponent`, `A2uiRowComponent`, `A2uiCardComponent`, `A2uiDividerComponent`, `A2uiListComponent`, `A2uiModalComponent`, `A2uiTabsComponent`, `A2uiAudioPlayerComponent`, `A2uiVideoComponent`.
@@ -559,7 +562,7 @@ Constants:
 
 Types:
 - `LicenseClaims` — shape of the decoded JWT payload (tier, expiry, etc.).
-- `LicenseTier` — `'noncommercial' | 'commercial'` (or similar).
+- `LicenseTier` — `'developer_seat' | 'team' | 'enterprise'` (verified from `libs/licensing/src/lib/license-token.ts:4`).
 - `VerifyResult` — result of `verifyLicense()` (valid, invalid, expired, etc.).
 - `VerifyReason` — reason code for a `VerifyResult`.
 - `LicenseStatus` — runtime license state enum/union.
