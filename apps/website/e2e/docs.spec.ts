@@ -5,7 +5,7 @@ test.describe('Docs landing page', () => {
     await page.goto('/docs');
     // Header
     await expect(page.locator('#docs-heading')).toBeVisible();
-    // Library grid — all 4 libraries (agent, render, chat, ag-ui)
+    // Library grid — all 4 libraries (langgraph, render, chat, ag-ui)
     await expect(page.locator('main a[href="/docs/langgraph/getting-started/introduction"]').first()).toBeVisible();
     await expect(page.locator('main a[href="/docs/render/getting-started/introduction"]').first()).toBeVisible();
     await expect(page.locator('main a[href="/docs/chat/getting-started/introduction"]').first()).toBeVisible();

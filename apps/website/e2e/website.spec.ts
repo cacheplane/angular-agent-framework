@@ -150,7 +150,7 @@ test('docs page renders sidebar and content', async ({ page }) => {
 
 test('docs landing page shows library cards', async ({ page }) => {
   await page.goto('/docs');
-  await expect(page.getByText('Agent').first()).toBeVisible();
+  await expect(page.getByText('LangGraph').first()).toBeVisible();
   await expect(page.getByText('Render').first()).toBeVisible();
   await expect(page.getByText('Chat').first()).toBeVisible();
   await expect(page.getByText('AG-UI').first()).toBeVisible();
