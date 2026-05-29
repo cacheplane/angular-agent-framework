@@ -4,11 +4,11 @@ import { setTimeout as delay } from 'node:timers/promises';
 import { resolve } from 'node:path';
 import { startAimock, type AimockHandle } from './aimock-runner';
 
-export interface CreateGlobalSetupOpts {
-  /** Repo-relative path to the python langgraph project. */
-  langgraphCwd: string;
-  /** Port the langgraph dev server binds. Default: 8123. */
-  langgraphPort?: number;
+export interface CreateAgUiGlobalSetupOpts {
+  /** Repo-relative path to the python ag-ui-langgraph project (contains src/server.py). */
+  pythonCwd: string;
+  /** Port the uvicorn AG-UI server binds. */
+  backendPort: number;
   /** Nx project name of the Angular dev server. */
   angularProject: string;
   /** Port the Angular dev server should bind. */
@@ -16,7 +16,7 @@ export interface CreateGlobalSetupOpts {
   /** Absolute path to the per-example fixtures dir. */
   fixturesDir: string;
   /** Default 90_000. */
-  langgraphReadyTimeoutMs?: number;
+  backendReadyTimeoutMs?: number;
   /** Default 120_000. */
   angularReadyTimeoutMs?: number;
 }
@@ -52,7 +52,7 @@ async function waitForPort(url: string, timeoutMs: number, label: string): Promi
   throw new Error(`[${label}] not ready at ${url} within ${timeoutMs}ms`);
 }
 
-function repoRoot(opts: CreateGlobalSetupOpts): string {
+function repoRoot(opts: CreateAgUiGlobalSetupOpts): string {
   // The factory is called from per-example playwright configs that themselves
   // live many levels deep. We compute REPO_ROOT relative to the fixturesDir
   // (which the consumer passes as an absolute path) so the consumer doesn't
@@ -69,22 +69,21 @@ function repoRoot(opts: CreateGlobalSetupOpts): string {
   throw new Error('repo root not found from fixturesDir; passed: ' + opts.fixturesDir);
 }
 
-export function createGlobalSetup(opts: CreateGlobalSetupOpts): () => Promise<void> {
-  const langgraphPort = opts.langgraphPort ?? 8123;
-  const langgraphTimeout = opts.langgraphReadyTimeoutMs ?? 90_000;
+export function createAgUiGlobalSetup(opts: CreateAgUiGlobalSetupOpts): () => Promise<void> {
+  const backendTimeout = opts.backendReadyTimeoutMs ?? 90_000;
   const angularTimeout = opts.angularReadyTimeoutMs ?? 120_000;
 
   return async function globalSetup(): Promise<void> {
     const root = repoRoot(opts);
     const aimock = await startAimock({ mode: 'replay', fixturePath: opts.fixturesDir });
     // eslint-disable-next-line no-console
-    console.log(`[aimock-harness] aimock listening at ${aimock.baseUrl}`);
+    console.log(`[ag-ui-harness] aimock listening at ${aimock.baseUrl}`);
 
-    const langgraph = spawn(
+    const backend = spawn(
       'uv',
-      ['run', 'langgraph', 'dev', '--port', String(langgraphPort), '--no-browser'],
+      ['run', 'uvicorn', 'src.server:app', '--port', String(opts.backendPort)],
       {
-        cwd: resolve(root, opts.langgraphCwd),
+        cwd: resolve(root, opts.pythonCwd),
         env: {
           ...process.env,
           OPENAI_BASE_URL: aimock.baseUrl,
@@ -92,18 +91,18 @@ export function createGlobalSetup(opts: CreateGlobalSetupOpts): () => Promise<vo
         },
         stdio: 'pipe',
         // detached:true puts the process in its own group so teardown can
-        // kill the whole tree (uv → python → langgraph dev) via process.kill(-pid).
+        // kill the whole tree (uv → python → uvicorn) via process.kill(-pid).
         // Without this, SIGTERM to `uv` doesn't propagate to the Python child
-        // and the langgraph server keeps holding the port through teardown.
+        // and the uvicorn server keeps holding the port through teardown.
         detached: true,
       },
     );
-    langgraph.stdout?.on('data', (b) => process.stdout.write(`[langgraph] ${b}`));
-    langgraph.stderr?.on('data', (b) => process.stderr.write(`[langgraph] ${b}`));
+    backend.stdout?.on('data', (b) => process.stdout.write(`[ag-ui-backend] ${b}`));
+    backend.stderr?.on('data', (b) => process.stderr.write(`[ag-ui-backend] ${b}`));
 
-    await waitForPort(`http://localhost:${langgraphPort}/ok`, langgraphTimeout, 'langgraph');
+    await waitForPort(`http://localhost:${opts.backendPort}/ok`, backendTimeout, 'ag-ui-backend');
     // eslint-disable-next-line no-console
-    console.log(`[aimock-harness] langgraph ready on :${langgraphPort}`);
+    console.log(`[ag-ui-harness] backend ready on :${opts.backendPort}`);
 
     const angular = spawn(
       'npx',
@@ -112,7 +111,7 @@ export function createGlobalSetup(opts: CreateGlobalSetupOpts): () => Promise<vo
         cwd: root,
         env: { ...process.env },
         stdio: 'pipe',
-        // Same rationale as langgraph: npx → nx → angular dev server is a
+        // Same rationale as backend: npx → nx → angular dev server is a
         // process tree; detached so teardown can kill the whole group.
         detached: true,
       },
@@ -122,15 +121,15 @@ export function createGlobalSetup(opts: CreateGlobalSetupOpts): () => Promise<vo
 
     await waitForPort(`http://localhost:${opts.angularPort}/`, angularTimeout, 'angular');
     // eslint-disable-next-line no-console
-    console.log(`[aimock-harness] angular ready on :${opts.angularPort} (${opts.angularProject})`);
+    console.log(`[ag-ui-harness] angular ready on :${opts.angularPort} (${opts.angularProject})`);
 
     if (!globalThis.__AIMOCK_HARNESS_STATE__) {
       globalThis.__AIMOCK_HARNESS_STATE__ = new Map();
     }
     globalThis.__AIMOCK_HARNESS_STATE__.set(opts.angularProject, {
       aimock,
-      langgraph,
-      langgraphPort,
+      backend,
+      backendPort: opts.backendPort,
       angular,
       angularPort: opts.angularPort,
     });
