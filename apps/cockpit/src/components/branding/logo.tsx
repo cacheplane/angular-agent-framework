@@ -6,7 +6,7 @@ export function Logo({ className, style, ...rest }: HTMLAttributes<HTMLSpanEleme
     <span
       data-ui="cockpit-logo"
       className={className}
-      style={{ display: 'inline-flex', alignItems: 'center', gap: 8, lineHeight: 1, ...style }}
+      style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', lineHeight: 1, ...style }}
       {...rest}
     >
       <span aria-hidden="true" style={{ fontSize: 20, lineHeight: 1 }}>🛩️</span>
