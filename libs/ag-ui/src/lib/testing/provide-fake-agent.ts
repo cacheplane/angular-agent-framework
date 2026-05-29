@@ -1,18 +1,10 @@
 // libs/ag-ui/src/lib/testing/provide-fake-agent.ts
 // SPDX-License-Identifier: MIT
 import { type Provider } from '@angular/core';
+import type { FakeAgentConfig } from '@threadplane/chat/testing';
 import { AGENT } from '../provide-agent';
 import { toAgent } from '../to-agent';
 import { FakeAgent } from './fake-agent';
-
-export interface FakeAgentConfig {
-  /** Tokens streamed back as the assistant reply. */
-  tokens?: string[];
-  /** Optional reasoning chunks emitted before the text reply. */
-  reasoningTokens?: string[];
-  /** Milliseconds between successive token emissions. */
-  delayMs?: number;
-}
 
 /**
  * Registers an in-process FakeAgent under AGENT.
