@@ -133,7 +133,6 @@ pre.shiki {
 }
 .doc-codeblock__copy:hover { color: var(--ds-text-primary); border-color: var(--ds-border-strong); }
 .doc-codeblock pre.shiki { margin: 0; border-radius: 0; border: none; overflow-x: auto; }
-.code-mode-block pre.shiki { margin: 0; border-radius: 0; border: none; overflow-x: auto; }
 
 .doc-prompt {
   background: rgba(168, 85, 247, 0.04);

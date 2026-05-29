@@ -28,42 +28,20 @@ function CodeFileContent({
     return <p className="text-sm text-[var(--ds-text-muted)]">No source available for {getTabLabel(path)}</p>;
   }
 
+  const ext = (getTabLabel(path).split('.').pop() ?? '').toUpperCase();
+
   return (
-    <div className="code-mode-block" style={{
-      borderRadius: 'var(--ds-radius-md)',
-      border: '1px solid var(--ds-border)',
-      boxShadow: 'var(--ds-shadow-sm)',
-      overflow: 'hidden',
-    }}>
-      <div
-        className="border-b border-[var(--ds-border)]"
-        style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        padding: '6px 12px',
-        background: 'rgba(26, 27, 38, 0.95)',
-      }}>
-        <span style={{ fontFamily: 'var(--ds-font-mono)', fontSize: '0.7rem', color: '#a9b1d6' }}>{path}</span>
+    <div className="doc-codeblock">
+      <div className="doc-codeblock__header">
+        <span className="doc-codeblock__file">{getTabLabel(path)}</span>
+        {ext ? <span className="doc-codeblock__lang">{ext}</span> : null}
         <button
+          className="doc-codeblock__copy"
           aria-label={`Copy ${getTabLabel(path)}`}
           onClick={() => {
-            track('cockpit:code_copied', {
-              capability,
-              surface: 'code_mode',
-              file_path: path,
-            });
+            track('cockpit:code_copied', { capability, surface: 'code_mode', file_path: path });
             const el = document.querySelector(`[data-code-path="${CSS.escape(path)}"] pre code`);
             if (el) navigator.clipboard.writeText(el.textContent ?? '');
-          }}
-          style={{
-            padding: '2px 8px',
-            borderRadius: 4,
-            border: '1px solid rgba(255,255,255,0.1)',
-            background: 'transparent',
-            color: '#4A527A',
-            fontSize: '0.65rem',
-            cursor: 'pointer',
           }}
         >Copy</button>
       </div>
