@@ -179,14 +179,18 @@ export function reduceEvent(event: BaseEvent, store: ReducerStore): void {
     }
     case 'CUSTOM': {
       const e = event as unknown as { name: string; value: unknown };
+      // ag_ui_langgraph serializes interrupt payloads as JSON strings.
+      // Parse the value if it arrives as a string so downstream consumers
+      // (e.g. ChatApprovalCardComponent) receive a plain object, not a string.
+      const parsedValue = typeof e.value === 'string' ? safeParseJson(e.value) : e.value;
       if (e.name === 'on_interrupt') {
-        store.interrupt.set({ id: randomId(), value: e.value, resumable: true });
+        store.interrupt.set({ id: randomId(), value: parsedValue, resumable: true });
         return;
       }
-      if (e.name === 'state_update' && isRecord(e.value)) {
-        store.events$.next({ type: 'state_update', data: e.value });
+      if (e.name === 'state_update' && isRecord(parsedValue)) {
+        store.events$.next({ type: 'state_update', data: parsedValue });
       } else {
-        store.events$.next({ type: 'custom', name: e.name, data: e.value });
+        store.events$.next({ type: 'custom', name: e.name, data: parsedValue });
       }
       return;
     }
@@ -213,6 +217,15 @@ function safeParseArgs(delta: string): Record<string, unknown> {
     return isRecord(parsed) ? parsed : {};
   } catch {
     return {};
+  }
+}
+
+/** Parse a JSON string to its value; return the original string on failure. */
+function safeParseJson(s: string): unknown {
+  try {
+    return JSON.parse(s);
+  } catch {
+    return s;
   }
 }
 

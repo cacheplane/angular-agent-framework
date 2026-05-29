@@ -15,6 +15,7 @@ from pydantic import BaseModel, Field
 from langgraph.graph import StateGraph, START, END
 from langgraph.graph.message import add_messages
 from langgraph.types import interrupt
+from langgraph.checkpoint.memory import MemorySaver
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import SystemMessage, AIMessage
 
@@ -114,7 +115,7 @@ def build_interrupts_graph():
     graph.add_conditional_edges("request_approval", route_after_approval, {"issue": "issue", "end": END})
     graph.add_edge("issue", END)
 
-    return graph.compile()
+    return graph.compile(checkpointer=MemorySaver())
 
 
 graph = build_interrupts_graph()
