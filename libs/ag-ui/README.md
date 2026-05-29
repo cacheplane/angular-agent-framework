@@ -1,8 +1,33 @@
 # @threadplane/ag-ui
 
-Adapter that wraps an [AG-UI](https://github.com/ag-ui-protocol/ag-ui) `AbstractAgent` into the runtime-neutral `Agent` contract from `@threadplane/chat`. Works with any AG-UI-compatible backend — LangGraph, CrewAI, Mastra, Microsoft Agent Framework, AG2, Pydantic AI, AWS Strands, CopilotKit runtime.
+Adapter that wraps an [AG-UI](https://github.com/ag-ui-protocol/ag-ui) `AbstractAgent` into the runtime-neutral `Agent` contract from `@threadplane/chat`. Works with any AG-UI-compatible backend.
 
-Part of [Threadplane](https://github.com/cacheplane/angular-agent-framework). MIT licensed.
+<p align="center">
+  <a href="https://www.npmjs.com/package/@threadplane/ag-ui">
+    <img alt="npm version" src="https://img.shields.io/npm/v/@threadplane%2Fag-ui?color=6C8EFF&labelColor=080B14&style=flat-square" />
+  </a>
+  <a href="https://angular.dev">
+    <img alt="Angular 20+" src="https://img.shields.io/badge/Angular-20%2B%20%7C%2021-6C8EFF?labelColor=080B14&style=flat-square" />
+  </a>
+  <a href="../../LICENSE">
+    <img alt="MIT" src="https://img.shields.io/badge/License-MIT-6C8EFF?labelColor=080B14&style=flat-square" />
+  </a>
+</p>
+
+Part of [Threadplane](https://github.com/cacheplane/angular-agent-framework).
+
+> Talking to LangGraph Platform directly? See [`@threadplane/langgraph`](https://www.npmjs.com/package/@threadplane/langgraph) — same API shape, LangGraph SDK underneath.
+
+---
+
+## What it does
+
+- Bridges any AG-UI-compatible backend into the Threadplane chat surface via `toAgent()`.
+- Supports: LangGraph, CrewAI, Mastra, Microsoft Agent Framework, AG2, Pydantic AI, AWS Strands, CopilotKit runtime.
+- Exposes messages, status, tool calls, and raw AG-UI state as Angular Signals, plus `submit()`/`stop()`/`regenerate()` actions — coverage depends on what the AG-UI backend emits.
+- Ships `FakeAgent` and `provideFakeAgent` test doubles for unit testing without a live backend.
+
+---
 
 ## Install
 
@@ -10,32 +35,62 @@ Part of [Threadplane](https://github.com/cacheplane/angular-agent-framework). MI
 npm install @threadplane/ag-ui @threadplane/chat @ag-ui/client
 ```
 
+**Peer dependencies:** `@threadplane/chat: *`, `@angular/core: ^20.0.0 || ^21.0.0`, `@ag-ui/client: *`, `rxjs: ~7.8.0`
+
+---
+
 ## Quick start
 
+Register the agent in your `ApplicationConfig`, then inject it into a component and bind it to `<chat>`.
+
 ```ts
-import { provideAgUiAgent, AG_UI_AGENT } from '@threadplane/ag-ui';
-import { ChatComponent } from '@threadplane/chat';
-
 // app.config.ts
-export const appConfig: ApplicationConfig = {
-  providers: [provideAgUiAgent({ url: 'https://your.agent.endpoint' })],
-};
+import { provideAgent } from '@threadplane/ag-ui';
 
-// component
+export const appConfig: ApplicationConfig = {
+  providers: [provideAgent({ url: 'https://your.agent.endpoint' })],
+};
+```
+
+```ts
+// app.component.ts
+import { Component } from '@angular/core';
+import { ChatComponent } from '@threadplane/chat';
+import { injectAgent } from '@threadplane/ag-ui';
+
 @Component({
   imports: [ChatComponent],
   template: `<chat [agent]="agent" />`,
 })
-export class App {
-  protected readonly agent = inject(AG_UI_AGENT);
+export class AppComponent {
+  protected readonly agent = injectAgent();
 }
 ```
 
-## Citations
+Both `@threadplane/langgraph` and `@threadplane/ag-ui` expose `provideAgent`/`injectAgent` with the same shape — consumer code is identical regardless of which adapter is wired in.
 
-The `bridgeCitationsState()` function populates `Message.citations` from AG-UI STATE_DELTA events. Citations are located at JSON Pointer `/citations/{messageId}`.
+---
 
-### Example: AG-UI citations state shape
+## Capabilities
+
+`toAgent()` translates AG-UI events into Angular Signals on the runtime-neutral `Agent` contract:
+
+| Signal | Description |
+|---|---|
+| `messages()` | Chat message history |
+| `status()` | `'idle' \| 'running' \| 'error'` |
+| `isLoading()` | True while a run is active |
+| `toolCalls()` | In-progress and completed tool calls |
+| `error()` | Last run error, if any |
+| `state()` | Raw AG-UI state snapshot |
+
+Which capabilities populate depends on the events the AG-UI backend emits. `submit()`, `stop()`, and `regenerate()` are supported.
+
+### Citations
+
+`bridgeCitationsState(thread, messages)` populates `Message.citations` from AG-UI state. Citations live under the `citations` key of the agent state, keyed by message ID (`state.citations[messageId]`).
+
+Example state shape:
 
 ```json
 {
@@ -55,14 +110,29 @@ The `bridgeCitationsState()` function populates `Message.citations` from AG-UI S
 }
 ```
 
-Each citation object in the array supports `id`, `index`, `title`, `url`, `snippet`, and custom `extra` fields. The messageId key matches the corresponding message in the chat history.
+Each citation supports `id`, `index`, `title`, `url`, `snippet`, and custom `extra` fields. The message ID key matches the corresponding message in the chat history.
+
+### Testing
+
+`FakeAgent` is a test-only `AbstractAgent` implementation. `provideFakeAgent(config?)` registers it in the Angular injector so unit tests run without a live AG-UI backend.
+
+---
+
+## Reliability
+
+`@threadplane/ag-ui` shares the same runtime-neutral `Agent` contract as `@threadplane/langgraph`, making it interchangeable at the `<chat [agent]>` binding. The library follows a patch-only `0.0.x` release policy. The CI job "Library — lint / test / build" runs lint, test, and build on every pull request.
+
+---
 
 ## Documentation
 
-- [Quickstart](https://threadplane.ai/docs/agent/getting-started/quickstart)
+- [Quickstart](https://threadplane.ai/docs/ag-ui/getting-started/quickstart)
 - [AG-UI adapter guide](https://threadplane.ai/docs/chat/guides/writing-an-adapter)
 - [AG-UI protocol](https://github.com/ag-ui-protocol/ag-ui)
+- [Choosing an adapter (LangGraph vs AG-UI)](https://threadplane.ai/docs/choosing-an-adapter)
+
+---
 
 ## License
 
-MIT — free for any use. See [LICENSE](../../LICENSE).
+MIT. See [LICENSE](../../LICENSE).

@@ -1,6 +1,8 @@
 {
   "name": "@threadplane/ag-ui",
-  "version": "0.0.47",
+  "version": "0.0.48",
+  "description": "AG-UI protocol adapter for @threadplane/chat — works with any AG-UI-compatible backend.",
+  "keywords": ["angular", "ag-ui", "agent", "adapter", "threadplane"],
   "peerDependencies": {
     "@threadplane/chat": "*",
     "@angular/core": "^20.0.0 || ^21.0.0",

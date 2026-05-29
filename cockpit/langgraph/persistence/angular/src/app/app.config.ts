@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: MIT
 import { ApplicationConfig } from '@angular/core';
-import { provideAgent } from '@threadplane/langgraph';
 import { provideChat } from '@threadplane/chat';
-import { environment } from '../environments/environment';
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideAgent({ apiUrl: environment.langGraphApiUrl }),
+    // The agent is provided at the component (PersistenceComponent) because
+    // its onThreadId callback is per-instance — see persistence.component.ts.
     provideChat({}),
   ],
 };

@@ -1,9 +1,8 @@
 import { Component, computed } from '@angular/core';
 import { ChatComponent, views } from '@threadplane/chat';
-import { agent } from '@threadplane/langgraph';
+import { injectAgent } from '@threadplane/langgraph';
 import { signalStateStore } from '@threadplane/render';
 import { ExampleChatLayoutComponent } from '@threadplane/example-layouts';
-import { environment } from '../environments/environment';
 import { StepPipelineComponent } from './views/step-pipeline.component';
 
 /**
@@ -27,7 +26,7 @@ const STEP_LABELS: Record<string, string> = {
 
 /**
  * DurableExecutionComponent demonstrates fault-tolerant multi-step execution
- * with `agent()`.
+ * with `injectAgent()`.
  *
  * This example shows how a graph checkpoints at each node, enabling it to
  * resume after failures. The backend processes each request through three
@@ -98,10 +97,7 @@ export class DurableExecutionComponent {
   readonly ui = views({ 'step-pipeline': StepPipelineComponent });
   readonly uiStore = signalStateStore({});
 
-  protected readonly agent = agent({
-    apiUrl: environment.langGraphApiUrl,
-    assistantId: environment.streamingAssistantId,
-  });
+  protected readonly agent = injectAgent();
 
   /**
    * Derives the 3-step pipeline status from the graph's `state.step` field.

@@ -1,0 +1,97 @@
+# Agent Lifecycle Signals
+
+The `@threadplane/langgraph` library exposes per-agent lifecycle signals on every `LangGraphAgent` returned by `injectAgent()`. These are timestamps and classifications derived from the existing stream — useful for debugging, custom dashboards, or telemetry integrations.
+
+## Interface
+
+```typescript
+import { InjectionToken, Signal } from '@angular/core';
+
+export interface AgentLifecycle {
+  /** Epoch ms of the first stream chunk arrival. Resets on switchThread(). */
+  readonly streamStartedAt: Signal<number | null>;
+  /** Epoch ms + classification of the most recent stream error. Resets on switchThread(). */
+  readonly streamErrorAt: Signal<{ at: number; classification: string } | null>;
+  /** Epoch ms of the first interrupt$ non-null in this stream. Resets on switchThread(). */
+  readonly interruptReceivedAt: Signal<number | null>;
+  /** Epoch ms of the most recent submit({ resume }) call. Resets on switchThread(). */
+  readonly interruptResolvedAt: Signal<number | null>;
+  /** Epoch ms when the agent's "create new thread" branch fired. Resets on switchThread(). */
+  readonly threadCreatedAt: Signal<number | null>;
+  /** Epoch ms when an existing thread was restored from server (proves persistence). Resets on switchThread(). */
+  readonly threadPersistedAt: Signal<number | null>;
+  /** Epoch ms of the first tool call append. Resets on switchThread(). */
+  readonly toolCallStartedAt: Signal<number | null>;
+  /** Epoch ms of the first tool call result transition. Resets on switchThread(). */
+  readonly toolCallCompletedAt: Signal<number | null>;
+}
+
+export const AGENT_LIFECYCLE = new InjectionToken<AgentLifecycle>('AGENT_LIFECYCLE');
+```
+
+## Derivation
+
+Five of the eight signals derive directly from existing stream subjects on the agent (`values$`, `messages$`, `error$`, `interrupt$`, `toolCalls$`, `history$`):
+
+| Signal | Source |
+|--------|--------|
+| `streamStartedAt` | first non-empty `values$` or `messages$` emission |
+| `streamErrorAt` | `error$` emission, classified |
+| `interruptReceivedAt` | first non-null `interrupt$` value |
+| `toolCallStartedAt` | first tool-call append in `toolCalls$` |
+| `toolCallCompletedAt` | first tool-call `result` transition in `toolCalls$` |
+
+Three signals require explicit hook points that the agent already invokes:
+
+| Signal | Hook |
+|--------|------|
+| `interruptResolvedAt` | `submit({ resume })` |
+| `threadCreatedAt` | the agent's "create new thread" branch |
+| `threadPersistedAt` | restore-from-server path |
+
+## Subscribing
+
+```typescript
+import { Component, effect } from '@angular/core';
+import { injectAgent } from '@threadplane/langgraph';
+
+@Component({ /* ... */ })
+export class MyComponent {
+  private chat = injectAgent();
+
+  constructor() {
+    effect(() => {
+      const err = this.chat.lifecycle.streamErrorAt();
+      if (err) {
+        console.log('Stream error at', err.at, 'classification:', err.classification);
+      }
+    });
+  }
+}
+```
+
+For app-wide instrumentation, provide `AgentLifecycleRegistry` and read the lifecycles registered by agents created in that injection context:
+
+```typescript
+import { ApplicationConfig, inject } from '@angular/core';
+import { AgentLifecycleRegistry } from '@threadplane/langgraph';
+
+export const appConfig: ApplicationConfig = {
+  providers: [AgentLifecycleRegistry],
+};
+```
+
+```typescript
+const registry = inject(AgentLifecycleRegistry);
+const lifecycles = registry.lifecycles();
+```
+
+The exported `AGENT_LIFECYCLE` token is a low-level token for custom integrations. `injectAgent()` does not automatically provide a different token instance for each agent.
+
+## Reset semantics
+
+All eight signals reset on `switchThread()`. This keeps lifecycle observations scoped to the current thread.
+
+## Privacy
+
+These signals contain no message content, no model output, no PII. They are timestamps, counts, and short classification strings only. The trust contract at [libs/telemetry/README.md](https://github.com/cacheplane/angular-agent-framework/blob/main/libs/telemetry/README.md) applies: **no app telemetry by default.** Reading lifecycle signals or providing `AgentLifecycleRegistry` does not fire any telemetry; what you do with the signal values is your choice.

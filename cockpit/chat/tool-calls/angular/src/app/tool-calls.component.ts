@@ -7,8 +7,7 @@ import {
   ChatWelcomeSuggestionComponent,
 } from '@threadplane/chat';
 import { ExampleChatLayoutComponent } from '@threadplane/example-layouts';
-import { agent } from '@threadplane/langgraph';
-import { environment } from '../environments/environment';
+import { injectAgent } from '@threadplane/langgraph';
 
 const SUGGESTIONS = [
   // value matches cockpit/chat/tool-calls/angular/e2e/c-tool-calls.spec.ts PROMPT.
@@ -62,10 +61,7 @@ const SUGGESTIONS = [
   `,
 })
 export class ToolCallsComponent {
-  protected readonly agent = agent({
-    apiUrl: environment.langGraphApiUrl,
-    assistantId: environment.streamingAssistantId,
-  });
+  protected readonly agent = injectAgent();
 
   protected readonly suggestions = SUGGESTIONS;
 

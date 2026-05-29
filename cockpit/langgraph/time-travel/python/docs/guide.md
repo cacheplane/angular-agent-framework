@@ -1,14 +1,14 @@
 # Time Travel with Angular
 
 <Summary>
-Build a chat interface with time travel using `agent()` from
-`@threadplane/langgraph`. Browse the checkpoint history via `stream.history()`,
+Build a chat interface with time travel using `provideAgent()` and
+`injectAgent()` from `@threadplane/langgraph`. Browse the checkpoint history via `stream.history()`,
 see the active branch via `stream.branch()`, and fork the conversation from any
 past state with `stream.setBranch(checkpointId)`.
 </Summary>
 
 <Prompt>
-Add time travel to this Angular component using `agent()` from `@threadplane/langgraph`. Display checkpoint history from `stream.history()` in the sidebar. Highlight the active branch using `stream.branch()`. Call `stream.setBranch(id)` when the user clicks a checkpoint to fork the conversation from that point.
+Add time travel to this Angular component using `provideAgent()` and `injectAgent()` from `@threadplane/langgraph`. Display checkpoint history from `stream.history()` in the sidebar. Highlight the active branch using `stream.branch()`. Call `stream.setBranch(id)` when the user clicks a checkpoint to fork the conversation from that point.
 </Prompt>
 
 <Steps>
@@ -25,6 +25,7 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideAgent({
       apiUrl: 'https://your-deployment.langgraph.app',
+      assistantId: 'time-travel',
     }),
   ],
 };
@@ -33,17 +34,15 @@ export const appConfig: ApplicationConfig = {
 </Step>
 <Step title="Create the streaming resource">
 
-In your component, call `agent()`. The history and branch signals are
+In your component, call `injectAgent()`. The history and branch signals are
 available automatically - no extra config needed:
 
 ```typescript
 // time-travel.component.ts
-import { agent } from '@threadplane/langgraph';
+import { injectAgent } from '@threadplane/langgraph';
 
 export class TimeTravelComponent {
-  protected readonly stream = agent({
-    assistantId: 'time-travel',
-  });
+  protected readonly stream = injectAgent();
 }
 ```
 

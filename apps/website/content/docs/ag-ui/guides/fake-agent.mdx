@@ -15,15 +15,15 @@ It is for demos, story-like development, and tests. It is not a production trans
 
 ## Use the provider
 
-For Angular apps, use `provideFakeAgUiAgent()`.
+For Angular apps, use `provideFakeAgent()`.
 
 ```ts
 import { ApplicationConfig } from '@angular/core';
-import { provideFakeAgUiAgent } from '@threadplane/ag-ui';
+import { provideFakeAgent } from '@threadplane/ag-ui';
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideFakeAgUiAgent({
+    provideFakeAgent({
       tokens: ['Hello', ' from', ' a', ' fake', ' agent.'],
       delayMs: 50,
     }),
@@ -36,7 +36,7 @@ Your component stays the same as the real backend version:
 ```ts
 import { Component } from '@angular/core';
 import { ChatComponent } from '@threadplane/chat';
-import { injectAgUiAgent } from '@threadplane/ag-ui';
+import { injectAgent } from '@threadplane/ag-ui';
 
 @Component({
   standalone: true,
@@ -44,15 +44,15 @@ import { injectAgUiAgent } from '@threadplane/ag-ui';
   template: `<chat [agent]="agent" />`,
 })
 export class DemoChat {
-  protected readonly agent = injectAgUiAgent();
+  protected readonly agent = injectAgent();
 }
 ```
 
 Switching to a real backend is a provider change:
 
 ```diff
-- provideFakeAgUiAgent({ tokens: ['Offline', ' response.'] })
-+ provideAgUiAgent({ url: '/api/agent' })
+- provideFakeAgent({ tokens: ['Offline', ' response.'] })
++ provideAgent({ url: '/api/agent' })
 ```
 
 ## Add reasoning
@@ -60,7 +60,7 @@ Switching to a real backend is a provider change:
 Pass `reasoningTokens` when you need to exercise reasoning UI.
 
 ```ts
-provideFakeAgUiAgent({
+provideFakeAgent({
   reasoningTokens: ['Reading policy. ', 'Checking account status.'],
   tokens: ['The account is eligible.'],
   delayMs: 40,
@@ -84,7 +84,7 @@ const source = new FakeAgent({
 const agent = toAgent(source);
 ```
 
-That gives you the same `Agent` contract as `provideFakeAgUiAgent()`.
+That gives you the same `Agent` contract as `provideFakeAgent()`.
 
 ## Configuration
 
