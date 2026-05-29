@@ -174,13 +174,23 @@ const citations = extractCitations(message);
 
 `Citation` is a type from `@threadplane/chat`; `CitationsResolverService` and `provideChat` also live there.
 
-## Reliability
-
-**Testing.** `MockAgentTransport` is a deterministic in-memory transport that replays scripted stream events. The rule is: swap the transport, never mock `injectAgent()` itself. `mockLangGraphAgent(options?)` is a convenience factory for unit tests.
+## Testing
 
 ```ts
-import { MockAgentTransport, mockLangGraphAgent } from '@threadplane/langgraph';
+// Fake backend — streams canned tokens, no server:
+import { provideFakeAgent } from '@threadplane/langgraph';
+providers: [provideFakeAgent({ tokens: ['Hello', ' world'] })];
 ```
+
+For component/unit tests, use the writable-signal mock `mockLangGraphAgent()`
+(it extends the neutral `mockAgent` from `@threadplane/chat`). See
+[Choosing an adapter → Testing](https://threadplane.ai/docs/choosing-an-adapter#testing).
+
+Need to hand-script exact wire events (tool calls, interrupts, multi-batch
+lifecycles)? `MockAgentTransport` is the advanced escape hatch — swap the
+transport, never mock `injectAgent()` itself.
+
+## Reliability
 
 **Runtime-neutral contract.** `LangGraphAgent` implements the `Agent` contract from `@threadplane/chat`. Components that depend only on that contract are portable across adapters (`@threadplane/ag-ui`, future adapters) without modification.
 
