@@ -1,19 +1,37 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Docs landing page', () => {
-  test('renders library cards + popular topics + search prompt', async ({ page }) => {
+  test('renders the start-here funnel + search prompt', async ({ page }) => {
     await page.goto('/docs');
-    // Header
+
+    // Hero
     await expect(page.locator('#docs-heading')).toBeVisible();
-    // Library grid — all 4 libraries (langgraph, render, chat, ag-ui)
-    await expect(page.locator('main a[href="/docs/langgraph/getting-started/introduction"]').first()).toBeVisible();
+    await expect(page.locator('#docs-heading')).toContainText('Build AI agent UIs in Angular');
+
+    // Step headings (match on the plain substring to avoid the middle-dot char)
+    await expect(page.getByText('Pick your backend').first()).toBeVisible();
+    await expect(page.getByText('Generative UI').first()).toBeVisible();
+    await expect(page.getByText('Chat UI').first()).toBeVisible();
+
+    // Step 1 — backend quickstart links
+    await expect(page.locator('main a[href="/docs/langgraph/getting-started/quickstart"]').first()).toBeVisible();
+    await expect(page.locator('main a[href="/docs/ag-ui/getting-started/quickstart"]').first()).toBeVisible();
+
+    // Step 2 — generative UI links
+    await expect(page.locator('main a[href="/docs/a2ui/getting-started/introduction"]').first()).toBeVisible();
     await expect(page.locator('main a[href="/docs/render/getting-started/introduction"]').first()).toBeVisible();
+
+    // Step 3 — chat
     await expect(page.locator('main a[href="/docs/chat/getting-started/introduction"]').first()).toBeVisible();
-    await expect(page.locator('main a[href="/docs/ag-ui/getting-started/introduction"]').first()).toBeVisible();
-    // Popular topics — 3 cards
-    await expect(page.getByText('Streaming with signals').first()).toBeVisible();
-    await expect(page.getByText('Generative UI fundamentals').first()).toBeVisible();
-    await expect(page.getByText('Production patterns').first()).toBeVisible();
+
+    // Helper links
+    await expect(page.locator('main a[href="/docs/choosing-an-adapter"]').first()).toBeVisible();
+    await expect(page.locator('main a[href="/docs/render/concepts/json-render-vs-a2ui"]').first()).toBeVisible();
+
+    // Supporting libraries
+    await expect(page.locator('main a[href="/docs/licensing/getting-started/introduction"]').first()).toBeVisible();
+    await expect(page.locator('main a[href="/docs/telemetry/getting-started/introduction"]').first()).toBeVisible();
+
     // Search prompt
     await expect(page.getByText('Looking for something specific?').first()).toBeVisible();
   });
