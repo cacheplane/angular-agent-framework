@@ -135,7 +135,7 @@ interface LibraryEntryConfig {
 }
 
 const LIBRARIES: LibraryEntryConfig[] = [
-  { docSlug: 'agent',     entryPoints: ['libs/langgraph/src/public-api.ts'] },
+  { docSlug: 'langgraph', entryPoints: ['libs/langgraph/src/public-api.ts'] },
   { docSlug: 'chat',      entryPoints: ['libs/chat/src/public-api.ts', 'libs/chat/testing/public-api.ts'] },
   { docSlug: 'render',    entryPoints: ['libs/render/src/public-api.ts'] },
   { docSlug: 'ag-ui',     entryPoints: ['libs/ag-ui/src/public-api.ts'] },

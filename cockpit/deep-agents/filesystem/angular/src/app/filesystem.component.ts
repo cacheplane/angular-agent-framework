@@ -1,9 +1,8 @@
 import { Component, computed } from '@angular/core';
 import { ChatComponent, views } from '@threadplane/chat';
 import { ExampleChatLayoutComponent } from '@threadplane/example-layouts';
-import { agent } from '@threadplane/langgraph';
+import { injectAgent } from '@threadplane/langgraph';
 import { signalStateStore } from '@threadplane/render';
-import { environment } from '../environments/environment';
 import { FilePreviewComponent } from './views/file-preview.component';
 
 /**
@@ -70,10 +69,7 @@ export class FilesystemComponent {
    * The graph uses `read_file` and `write_file` tool calls that appear
    * in `stream.messages()`. We filter and display them in the sidebar.
    */
-  protected readonly agent = agent({
-    apiUrl: environment.langGraphApiUrl,
-    assistantId: environment.streamingAssistantId,
-  });
+  protected readonly agent = injectAgent();
 
   /**
    * Reactive list of file operations derived from the message history.

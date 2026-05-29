@@ -26,12 +26,12 @@ const PRODUCTION_ROWS: ProductionRow[] = [
   {
     need: 'Tool calls as events',
     description: 'Stream progress, structured args, surfaced errors.',
-    primitive: 'tool events on agent()',
+    primitive: 'tool events on injectAgent()',
   },
   {
     need: 'Streaming state as signals',
     description: 'messages(), status(), error() — not promises.',
-    primitive: 'signal-native agent()',
+    primitive: 'signal-native injectAgent()',
   },
   {
     need: 'Generative UI on your design system',

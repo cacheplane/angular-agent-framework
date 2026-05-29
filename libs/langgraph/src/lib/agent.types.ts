@@ -283,7 +283,7 @@ export interface SubagentStreamRef {
 // ── LangGraphAgent ────────────────────────────────────────────────────────────
 
 /**
- * Unified LangGraph agent surface returned by `agent({...})`.
+ * Unified LangGraph agent surface returned by `injectAgent()`.
  *
  * Extends the runtime-neutral `AgentWithHistory` contract (chat-consumable)
  * with the full LangGraph-specific API. One object drives both `<chat>` and

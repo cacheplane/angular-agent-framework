@@ -1,8 +1,7 @@
 import { Component, computed } from '@angular/core';
 import { ChatComponent } from '@threadplane/chat';
 import { ExampleChatLayoutComponent } from '@threadplane/example-layouts';
-import { agent } from '@threadplane/langgraph';
-import { environment } from '../environments/environment';
+import { injectAgent } from '@threadplane/langgraph';
 
 /**
  * Delegation status derived from matching tool calls with tool result messages.
@@ -55,10 +54,7 @@ export class SubagentsComponent {
   /**
    * The streaming resource connected to the subagents orchestrator graph.
    */
-  protected readonly agent = agent({
-    apiUrl: environment.langGraphApiUrl,
-    assistantId: environment.streamingAssistantId,
-  });
+  protected readonly agent = injectAgent();
 
   /**
    * Reactive delegation list derived from messages.

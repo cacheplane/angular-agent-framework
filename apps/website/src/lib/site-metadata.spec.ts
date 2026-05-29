@@ -25,11 +25,11 @@ describe('site positioning copy', () => {
       'json-render + A2UI',
     ]);
     expect(POSITIONING_PROOF_POINTS.map((p) => p.href)).toEqual([
-      '/docs/agent/concepts/langgraph-basics',
-      '/docs/agent/guides/persistence',
-      '/docs/agent/guides/interrupts',
-      '/docs/agent/guides/subgraphs',
-      '/docs/agent/guides/memory',
+      '/docs/langgraph/concepts/langgraph-basics',
+      '/docs/langgraph/guides/persistence',
+      '/docs/langgraph/guides/interrupts',
+      '/docs/langgraph/guides/subgraphs',
+      '/docs/langgraph/guides/memory',
       '/docs/render/concepts/json-render-vs-a2ui',
     ]);
     expect(DEFAULT_META_DESCRIPTION).toBe(SHORT_POSITIONING_DESCRIPTION);

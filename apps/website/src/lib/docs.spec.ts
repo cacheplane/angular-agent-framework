@@ -40,8 +40,8 @@ describe('website docs bindings', () => {
   it('lists all doc slugs from config', () => {
     const slugs = getAllDocSlugs();
     expect(slugs.length).toBe(allDocsPages.length);
-    expect(slugs).toContainEqual({ library: 'agent', section: 'getting-started', slug: 'introduction' });
-    expect(slugs).toContainEqual({ library: 'agent', section: 'guides', slug: 'streaming' });
+    expect(slugs).toContainEqual({ library: 'langgraph', section: 'getting-started', slug: 'introduction' });
+    expect(slugs).toContainEqual({ library: 'langgraph', section: 'guides', slug: 'streaming' });
     expect(slugs).toContainEqual({ library: 'render', section: 'getting-started', slug: 'introduction' });
     expect(slugs).toContainEqual({ library: 'chat', section: 'getting-started', slug: 'introduction' });
     expect(slugs).toContainEqual({ library: 'ag-ui', section: 'concepts', slug: 'architecture' });
@@ -66,7 +66,7 @@ describe('website docs bindings', () => {
   });
 
   it('loads a doc by library, section and slug', () => {
-    const doc = getDocBySlug('agent', 'getting-started', 'introduction');
+    const doc = getDocBySlug('langgraph', 'getting-started', 'introduction');
     expect(doc).not.toBeNull();
     expect(doc?.title).toBe('Introduction');
   });
@@ -112,7 +112,7 @@ describe('website docs bindings', () => {
   });
 
   it('resolves canonical URLs against the production origin', () => {
-    expect(getCanonicalUrl('/docs/agent/guides/streaming')).toBe('https://threadplane.ai/docs/agent/guides/streaming');
+    expect(getCanonicalUrl('/docs/langgraph/guides/streaming')).toBe('https://threadplane.ai/docs/langgraph/guides/streaming');
   });
 
   it('does not contain stale or broken internal docs links', () => {
@@ -166,7 +166,7 @@ describe('website docs bindings', () => {
   });
 
   it('has generated API docs for every documented package surface', () => {
-    const librariesWithApiDocs = ['agent', 'chat', 'render', 'ag-ui', 'a2ui', 'licensing', 'telemetry'];
+    const librariesWithApiDocs = ['langgraph', 'chat', 'render', 'ag-ui', 'a2ui', 'licensing', 'telemetry'];
     const missingApiDocs = librariesWithApiDocs.filter((library) => {
       const apiDocsPath = path.join(contentRoot, library, 'api', 'api-docs.json');
       if (!fs.existsSync(apiDocsPath)) return true;
@@ -179,7 +179,7 @@ describe('website docs bindings', () => {
   });
 
   it('returns null for non-existent doc', () => {
-    expect(getDocBySlug('agent', 'guides', 'nonexistent')).toBeNull();
+    expect(getDocBySlug('langgraph', 'guides', 'nonexistent')).toBeNull();
   });
 
   it('returns null for non-existent library', () => {
@@ -187,6 +187,6 @@ describe('website docs bindings', () => {
   });
 
   it('returns null metadata for non-existent docs', () => {
-    expect(getDocMetadata('agent', 'guides', 'nonexistent')).toBeNull();
+    expect(getDocMetadata('langgraph', 'guides', 'nonexistent')).toBeNull();
   });
 });

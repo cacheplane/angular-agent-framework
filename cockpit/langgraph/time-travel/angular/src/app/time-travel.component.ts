@@ -1,9 +1,8 @@
 import { Component, computed, signal } from '@angular/core';
 import { ChatComponent } from '@threadplane/chat';
-import { agent } from '@threadplane/langgraph';
+import { injectAgent } from '@threadplane/langgraph';
 import type { ThreadState } from '@threadplane/langgraph';
 import { ExampleChatLayoutComponent } from '@threadplane/example-layouts';
-import { environment } from '../environments/environment';
 
 /**
  * TimeTravelComponent demonstrates replaying and branching conversation history.
@@ -103,10 +102,7 @@ import { environment } from '../environments/environment';
   `,
 })
 export class TimeTravelComponent {
-  protected readonly agent = agent({
-    apiUrl: environment.langGraphApiUrl,
-    assistantId: environment.streamingAssistantId,
-  });
+  protected readonly agent = injectAgent();
 
   /** Index of the currently selected checkpoint in the sidebar. */
   protected readonly selectedIndex = signal<number>(-1);

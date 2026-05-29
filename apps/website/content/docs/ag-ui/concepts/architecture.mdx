@@ -42,21 +42,21 @@ Most Angular apps should use DI instead:
 
 ```ts
 import { ApplicationConfig } from '@angular/core';
-import { provideAgUiAgent } from '@threadplane/ag-ui';
+import { provideAgent } from '@threadplane/ag-ui';
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideAgUiAgent({ url: '/api/agent' }),
+    provideAgent({ url: '/api/agent' }),
   ],
 };
 ```
 
-`provideAgUiAgent()` creates an AG-UI `HttpAgent` and registers the wrapped `Agent` under `AG_UI_AGENT`.
+`provideAgent()` creates an AG-UI `HttpAgent` and registers the wrapped `Agent` under an internal DI token. Retrieve it with `injectAgent()`.
 
 ```ts
 import { Component } from '@angular/core';
 import { ChatComponent } from '@threadplane/chat';
-import { injectAgUiAgent } from '@threadplane/ag-ui';
+import { injectAgent } from '@threadplane/ag-ui';
 
 @Component({
   standalone: true,
@@ -64,7 +64,7 @@ import { injectAgUiAgent } from '@threadplane/ag-ui';
   template: `<chat [agent]="agent" />`,
 })
 export class ChatPage {
-  protected readonly agent = injectAgUiAgent();
+  protected readonly agent = injectAgent();
 }
 ```
 
@@ -72,9 +72,9 @@ You can also inject the token directly:
 
 ```ts
 import { inject } from '@angular/core';
-import { AG_UI_AGENT } from '@threadplane/ag-ui';
+import { injectAgent } from '@threadplane/ag-ui';
 
-const agent = inject(AG_UI_AGENT);
+const agent = injectAgent();
 ```
 
 ## Runtime data flow
@@ -95,10 +95,10 @@ This is optimistic on purpose. The user message appears immediately while the ba
 
 ## Provider choices
 
-Use `provideAgUiAgent()` when you have a real AG-UI HTTP endpoint.
+Use `provideAgent()` when you have a real AG-UI HTTP endpoint.
 
 ```ts
-provideAgUiAgent({
+provideAgent({
   url: '/api/agent',
   agentId: 'support-agent',
   threadId: 'thread-123',
@@ -110,16 +110,16 @@ The config maps directly to the AG-UI `HttpAgent` options currently exposed by t
 
 `threadId` here is a plain string consumed once at construction — the provider does not accept an Angular Signal, and the adapter does not observe changes to it at runtime. The AG-UI protocol carries events, not snapshots, and defines no server-side endpoint for "fetch the messages of thread X". To move a user between threads with their prior conversation restored, you have two options:
 
-- **Recreate the provider.** Inject `provideAgUiAgent({ ..., threadId: newId })` from a fresh injector when the active thread changes. Any prior message history must come from your own host service — pre-populate `setMessages()` on the source before the adapter boots, or render a "loading…" surface while you fetch it.
-- **Use the LangGraph adapter instead.** `@threadplane/langgraph` accepts `threadId: Signal<string | null>` and hydrates messages from the latest checkpoint on every change. See its [Persistence guide](/docs/agent/guides/persistence). Use AG-UI when your runtime publishes events without checkpoint storage; use LangGraph when the server owns durable thread state.
+- **Recreate the provider.** Inject `provideAgent({ ..., threadId: newId })` from a fresh injector when the active thread changes. Any prior message history must come from your own host service — pre-populate `setMessages()` on the source before the adapter boots, or render a "loading…" surface while you fetch it.
+- **Use the LangGraph adapter instead.** `@threadplane/langgraph` accepts `threadId: Signal<string | null>` and hydrates messages from the latest checkpoint on every change. See its [Persistence guide](/docs/langgraph/guides/persistence). Use AG-UI when your runtime publishes events without checkpoint storage; use LangGraph when the server owns durable thread state.
 
-Use `provideFakeAgUiAgent()` when you need the UI to run without a backend:
+Use `provideFakeAgent()` when you need the UI to run without a backend:
 
 ```ts
-import { provideFakeAgUiAgent } from '@threadplane/ag-ui';
+import { provideFakeAgent } from '@threadplane/ag-ui';
 
 providers: [
-  provideFakeAgUiAgent({
+  provideFakeAgent({
     tokens: ['Offline', ' demo', ' response.'],
     delayMs: 40,
   }),

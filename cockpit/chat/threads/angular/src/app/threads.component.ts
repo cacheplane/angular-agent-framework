@@ -5,9 +5,16 @@ import {
   ChatThreadListComponent,
   type ThreadActionAdapter,
 } from '@threadplane/chat';
-import { agent, LangGraphThreadsAdapter, refreshOnRunEnd } from '@threadplane/langgraph';
+import { injectAgent, provideAgent, LangGraphThreadsAdapter, refreshOnRunEnd } from '@threadplane/langgraph';
 import { ExampleChatLayoutComponent } from '@threadplane/example-layouts';
 import { environment } from '../environments/environment';
+
+// Writable signal the agent watches — assigning to it switches the active
+// thread without forcing a full agent rebuild. Shared between the
+// component-scoped provideAgent() config (threadId + onThreadId) and the
+// component. Module scope is safe: each demo app bootstraps one
+// ThreadsComponent instance.
+const activeThreadIdState = signal<string | null>(null);
 
 /**
  * ThreadsComponent demonstrates multi-thread conversation management
@@ -23,6 +30,19 @@ import { environment } from '../environments/environment';
   selector: 'app-threads',
   standalone: true,
   imports: [ChatComponent, ChatThreadListComponent, ExampleChatLayoutComponent],
+  // Scoped agent (Option B): threadId + onThreadId are per-instance, so the
+  // agent is provided at the component rather than in app.config.ts.
+  providers: [
+    provideAgent({
+      apiUrl: environment.langGraphApiUrl,
+      assistantId: environment.streamingAssistantId,
+      threadId: activeThreadIdState,
+      // When the agent auto-creates a thread on first submit, the
+      // adapter calls back with its id; mirror that into our signal so
+      // the sidenav highlights it immediately.
+      onThreadId: (id: string) => activeThreadIdState.set(id),
+    }),
+  ],
   template: `
     <example-chat-layout sidebarPosition="left" sidebarWidth="w-64">
       <chat main
@@ -55,17 +75,9 @@ export class ThreadsComponent {
 
   /** Writable signal the agent watches — assigning to it switches the
    *  active thread without forcing a full agent rebuild. */
-  protected readonly activeThreadId = signal<string | null>(null);
+  protected readonly activeThreadId = activeThreadIdState;
 
-  protected readonly agent = agent({
-    apiUrl: environment.langGraphApiUrl,
-    assistantId: environment.streamingAssistantId,
-    threadId: this.activeThreadId,
-    // When the agent auto-creates a thread on first submit, the
-    // adapter calls back with its id; mirror that into our signal so
-    // the sidenav highlights it immediately.
-    onThreadId: (id: string) => this.activeThreadId.set(id),
-  });
+  protected readonly agent = injectAgent();
 
   /** Action adapter: framework calls these on rename / delete / archive
    *  after confirmation. Adapter handles SDK round-trip + refresh. */

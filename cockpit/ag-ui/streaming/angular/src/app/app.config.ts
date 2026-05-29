@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: MIT
 import { ApplicationConfig } from '@angular/core';
-import { provideFakeAgUiAgent } from '@threadplane/ag-ui';
+import { provideFakeAgent } from '@threadplane/ag-ui';
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideFakeAgUiAgent({
+    provideFakeAgent({
       tokens: [
         'This', ' is', ' the', ' AG-UI', ' streaming', ' demo.',
         ' Messages', ' are', ' generated', ' in-process', ' by', ' a', ' FakeAgent',
         ' that', ' emits', ' canned', ' AG-UI', ' events.',
-        ' Swap', ' to', ' provideAgUiAgent({ url })', ' to', ' connect', ' a', ' real', ' backend.',
+        ' Swap', ' to', ' provideAgent({ url })', ' to', ' connect', ' a', ' real', ' backend.',
       ],
       delayMs: 50,
     }),

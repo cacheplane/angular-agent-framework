@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: MIT
 import { Component, ChangeDetectionStrategy, signal } from '@angular/core';
 import { ChatComponent, ChatApprovalCardComponent, ChatWelcomeSuggestionComponent, type ChatApprovalAction } from '@threadplane/chat';
-import { agent } from '@threadplane/langgraph';
+import { injectAgent } from '@threadplane/langgraph';
 import { ExampleChatLayoutComponent } from '@threadplane/example-layouts';
 import { CurrencyPipe } from '@angular/common';
-import { environment } from '../environments/environment';
 
 const WELCOME_SUGGESTIONS = [
   { label: 'Refund a duplicate charge', value: 'Refund $47.50 to customer cus_a8x2k — they were charged twice for the same order.' },
@@ -22,6 +21,9 @@ const WELCOME_SUGGESTIONS = [
  * modal and emit a `ChatApprovalAction` ('approve' | 'edit' | 'cancel').
  * The handler maps each action to a structured resume payload back to the
  * graph.
+ *
+ * The agent is wired in `app.config.ts` via `provideAgent({...})` and
+ * retrieved here with `injectAgent()`.
  */
 @Component({
   selector: 'app-interrupts',
@@ -82,10 +84,7 @@ export class InterruptsComponent {
   protected readonly editing = signal(false);
   protected readonly editAmount = signal<number | null>(null);
 
-  protected readonly agent = agent({
-    apiUrl: environment.langGraphApiUrl,
-    assistantId: environment.streamingAssistantId,
-  });
+  protected readonly agent = injectAgent();
 
   protected send(text: string): void {
     void this.agent.submit({ message: text });

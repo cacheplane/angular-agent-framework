@@ -32,18 +32,18 @@ In your app config:
 
 ```ts
 import { ApplicationConfig } from '@angular/core';
-import { provideAgUiAgent } from '@threadplane/ag-ui';
+import { provideAgent } from '@threadplane/ag-ui';
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideAgUiAgent({
+    provideAgent({
       url: 'http://localhost:3000/agent',  // your AG-UI backend
     }),
   ],
 };
 ```
 
-`provideAgUiAgent` accepts:
+`provideAgent` accepts:
 
 | Option | Type | Description |
 |---|---|---|
@@ -57,7 +57,7 @@ export const appConfig: ApplicationConfig = {
 ```ts
 import { Component, inject } from '@angular/core';
 import { ChatComponent } from '@threadplane/chat';
-import { AG_UI_AGENT } from '@threadplane/ag-ui';
+import { injectAgent } from '@threadplane/ag-ui';
 
 @Component({
   selector: 'app-streaming',
@@ -66,7 +66,7 @@ import { AG_UI_AGENT } from '@threadplane/ag-ui';
   template: `<chat [agent]="agent" />`,
 })
 export class StreamingComponent {
-  protected readonly agent = inject(AG_UI_AGENT);
+  protected readonly agent = injectAgent();
 }
 ```
 
@@ -75,11 +75,11 @@ export class StreamingComponent {
 Use the `FakeAgent` for offline demos:
 
 ```ts
-import { provideFakeAgUiAgent } from '@threadplane/ag-ui';
+import { provideFakeAgent } from '@threadplane/ag-ui';
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideFakeAgUiAgent({
+    provideFakeAgent({
       tokens: ['Hello', ' from', ' a', ' fake', ' agent.'],
       delayMs: 60,
     }),
@@ -87,7 +87,7 @@ export const appConfig: ApplicationConfig = {
 };
 ```
 
-`FakeAgent` extends `AbstractAgent` and emits a canned `RUN_STARTED -> TEXT_MESSAGE_START -> TEXT_MESSAGE_CONTENT x N -> TEXT_MESSAGE_END -> RUN_FINISHED` sequence. Drop-in replacement for `provideAgUiAgent({ url })` while you're prototyping.
+`FakeAgent` extends `AbstractAgent` and emits a canned `RUN_STARTED -> TEXT_MESSAGE_START -> TEXT_MESSAGE_CONTENT x N -> TEXT_MESSAGE_END -> RUN_FINISHED` sequence. Drop-in replacement for `provideAgent({ url })` while you're prototyping.
 
 ## Custom transport
 

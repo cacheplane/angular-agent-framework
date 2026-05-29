@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: MIT
 export { toAgent } from './lib/to-agent';
 export type { ToAgentOptions } from './lib/to-agent';
-export { provideAgUiAgent, AG_UI_AGENT, injectAgUiAgent } from './lib/provide-ag-ui-agent';
-export type { AgUiAgentConfig } from './lib/provide-ag-ui-agent';
+export { provideAgent, injectAgent } from './lib/provide-agent';
+export type { AgentConfig } from './lib/provide-agent';
 export { FakeAgent } from './lib/testing/fake-agent';
-export { provideFakeAgUiAgent } from './lib/testing/provide-fake-ag-ui-agent';
-export type { FakeAgUiAgentConfig } from './lib/testing/provide-fake-ag-ui-agent';
+export { provideFakeAgent } from './lib/testing/provide-fake-agent';
+export type { FakeAgentConfig } from './lib/testing/provide-fake-agent';
 
-// Citation state bridge — useful for advanced consumers building custom
-// reducers or merging citations from non-standard state paths.
+// Citation state bridge
 export { bridgeCitationsState } from './lib/bridge-citations-state';

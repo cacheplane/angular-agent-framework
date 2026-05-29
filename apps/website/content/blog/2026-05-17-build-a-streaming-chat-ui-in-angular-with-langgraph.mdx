@@ -9,33 +9,19 @@ featured: true
 
 Let's build a real streaming chat UI in Angular, wired to a LangGraph backend, using `@threadplane/chat` and `@threadplane/langgraph`.
 
-Most AI chat features still ship without streaming. They buffer the full response on the server, then drop it into the UI in one big paste. For me, that's the line between a demo and a production interface.
-
-Streaming isn't a polish item. It's the difference between a user waiting two seconds and a user waiting eight. It's also the difference between an interface that feels alive and one that feels broken.
-
-This is the tutorial I wish I had when I started shipping agentic chat in Angular. No buffered responses. No hand-rolled SSE plumbing. No fork of someone's React component. 💚
+Most AI chat features still ship without streaming — they buffer the full response on the server, then drop it into the UI in one paste. Streaming is the difference between a user waiting two seconds and waiting eight, and between an interface that feels alive and one that feels broken.
 
 ## Goals
 
-- Understand *why* streaming is the production-vs-demo line for chat.
 - Scaffold a signal-native Angular chat with `@threadplane/chat` and `@threadplane/langgraph` in three files.
 - Wire a real LangGraph backend to the UI without writing any transport code.
-- Learn the three production patterns that matter once the scaffold is working: errors, threads, and generative UI.
-- Have fun!
+- Cover the three production patterns that matter once the scaffold works: errors, threads, and generative UI.
 
 ## Why streaming matters
 
-A user reads at roughly 200 to 300 words per minute. A modern model produces tokens faster than that.
+A user reads at roughly 200 to 300 words per minute; a modern model produces tokens faster than that. If you stream, the user starts reading before the model has finished. If you buffer, every response feels like a page load with no progress indicator.
 
-If you stream, the user starts reading before the model has finished thinking. If you buffer, every response feels like a page load — except the user doesn't know how long the page will take.
-
-The numbers aren't subtle. Buffered chat measurably loses users. Streaming chat measurably keeps them. The longer the response, the wider the gap.
-
-But the deeper reason is psychological. A response that appears one token at a time tells the user the system is working. A response that hangs for six seconds and then dumps a wall of text tells the user nothing — until it's too late to course-correct.
-
-Streaming also unlocks a second behavior most teams forget about: **interruption**. If the response is incremental, the user can stop a run that's going the wrong direction before it finishes burning tokens. That's not just a cost story. It's a trust story. A system that can be steered mid-thought feels collaborative. A system that has to be waited out feels like a slot machine (haha).
-
-In my opinion, this is why streaming changes the conversation from "is it broken?" to "is this the answer I wanted?" That second question is the one your product actually needs the user to be asking.
+Streaming also enables **interruption**: if the response is incremental, the user can stop a run that's going the wrong direction before it finishes burning tokens.
 
 ## The architecture in three boxes
 
@@ -136,7 +122,7 @@ export class ChatPageComponent {
 
 That's the entire wiring. No global stylesheet to import. No PostCSS config. No Tailwind setup. The chat ships with its own design tokens and component-scoped styles.
 
-One thing worth calling out is the `assistantId`. That's the name of your LangGraph graph — the entry point the run will execute against. If you have multiple graphs, you have multiple `agent()` instances, and you decide which one mounts where. A support graph in one route, a coding graph in another, the same chat shell rendering both. Pretty freakin' cool.
+One thing worth calling out is the `assistantId`. That's the name of your LangGraph graph — the entry point the run will execute against. If you have multiple graphs, you have multiple `agent()` instances, and you decide which one mounts where: a support graph in one route, a coding graph in another, the same chat shell rendering both.
 
 ## Render the chat
 
@@ -170,11 +156,9 @@ template: `
 `,
 ```
 
-The slot pattern is intentional. The chat doesn't opinion-set your welcome state. It doesn't pick your suggestions. It hands you the slots and gets out of the way.
+The slot pattern is intentional: the chat doesn't set your welcome copy, pick your suggestions, or own your empty states. It exposes those as slots so you can grow past the demo phase without fighting the component.
 
-From my experience, this is the thing I wouldn't compromise on when picking a chat library. A chat component that owns its welcome copy, its suggestion list, and its empty states is a chat component that fights you the moment your product matures past the demo phase. A chat component that exposes those as slots is one you can grow with.
-
-Theming is a separate concern. The chat reads from CSS custom properties — `--chat-bg`, `--chat-fg`, `--chat-accent`, and a few dozen more. If you're already using a design system, you map your tokens onto theirs in a single stylesheet and the chat picks them up. Simple enough.
+Theming is a separate concern. The chat reads from CSS custom properties — `--chat-bg`, `--chat-fg`, `--chat-accent`, and a few dozen more. If you already use a design system, map your tokens onto theirs in a single stylesheet and the chat picks them up.
 
 ## What's happening under the hood
 
@@ -192,9 +176,7 @@ Notice what *isn't* in there. No event emitters. No observables to subscribe to.
 
 Everything is a signal. The chat template reads `messages()` directly. OnPush change detection picks up the writes and re-renders only the components that depend on the changed signal.
 
-This matters more than it looks. Angular's signal model maps cleanly onto streaming because streaming is, at the data-shape level, a sequence of small writes to a growing list. Signals are a sequence of small writes to a growing list. The mental model and the runtime model are the same shape. 🤔
-
-That's why the chat doesn't need an internal store, a reducer, or a state machine. The agent is the state. The signal is the read. The template is the render.
+Angular's signal model maps cleanly onto streaming: at the data-shape level, streaming is a sequence of small writes to a growing list, and so are signals. That's why the chat doesn't need an internal store, a reducer, or a state machine. The agent is the state, the signal is the read, the template is the render.
 
 It also matters for testing. Because the contract is signals all the way down, you can mock the agent with a plain object — no harness, no fakes, no subscription bookkeeping. Write a signal, the chat re-renders. Write another signal, the chat re-renders again. That's the entire testing story for the UI layer.
 
@@ -208,7 +190,7 @@ The scaffold above gets you to a working chat in about ten minutes. The remainin
 
 Models fail. Networks fail. Tools time out. The default behavior is to surface the error in the chat with a retry affordance, but most teams want more than the default.
 
-For me, two patterns are non-negotiable:
+Two patterns are worth setting up early:
 
 - **Per-message retry**, so a failed assistant response can be re-run without resubmitting the user's message.
 - **Transport-level retry with backoff**, so transient SSE drops don't surface as errors at all.
@@ -221,9 +203,9 @@ A single-thread chat is a demo. A real product remembers conversations across se
 
 LangGraph handles persistence on the backend. The adapter exposes thread CRUD through `@langchain/langgraph-sdk` — list threads, create a thread, switch threads, delete a thread.
 
-The pattern I reach for is to bind your `threadId` signal to your router or your sidebar selection. When the signal changes, the chat re-reads from the new thread automatically. No manual unsubscribe. No race conditions. 👍
+Bind your `threadId` signal to your router or sidebar selection. When the signal changes, the chat re-reads from the new thread automatically — no manual unsubscribe, no race conditions.
 
-What you do with that capability is a product decision, not a framework one. Some teams scope threads to a project. Others scope them to a task. Others scope them to the user's session and let the agent's memory do the cross-session work. There's no right answer — but there is a wrong one, which is to ignore the question and ship a chat where every refresh starts from zero.
+How you scope threads is a product decision: per project, per task, or per session with the agent's memory doing the cross-session work. The one thing to avoid is shipping a chat where every refresh starts from zero.
 
 If you're building a multi-thread sidebar, the [`<chat-sidebar>`](/docs/chat/components/chat-sidebar) primitive gives you the layout without locking you into a specific persistence model.
 
@@ -239,7 +221,7 @@ When you do need custom rendering — and you will — every one of these is a t
 
 The scaffold above is the smallest possible production-shaped chat. It's not the whole story.
 
-Three places I'd look next:
+Three places to look next:
 
 - The [cockpit chat example](/docs/chat/getting-started/quickstart) — a full multi-thread, multi-agent chat shell with real LangGraph graphs behind it.
 - The [persistence guide](/docs/chat/guides/lifecycle) — how to manage threads, runs, and resume state across sessions.
@@ -251,8 +233,4 @@ If you're wiring `@threadplane/chat` into a regulated, multi-tenant, or design-s
 
 ## Conclusion
 
-Streaming is the production-vs-demo line, and `@threadplane/chat` plus `@threadplane/langgraph` is the shortest path I've found to get an Angular app across it. Three files, signals all the way down, and a contract small enough that you can swap the backend without touching the UI.
-
-The interesting work in agentic software isn't the chat itself. It's everything the chat lets you *stop* building so you can get back to the part that actually matters.
-
-Go build something. Have fun! 💚
+`@threadplane/chat` plus `@threadplane/langgraph` gets an Angular app to a streaming, production-shaped chat in three files: signals all the way down, and a contract small enough that you can swap the backend without touching the UI.
