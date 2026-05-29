@@ -6,7 +6,7 @@
 import type { WritableSignal } from '@angular/core';
 import type { Subject } from 'rxjs';
 import type {
-  Message, AgentStatus, ToolCall, AgentEvent,
+  Message, AgentStatus, ToolCall, AgentEvent, AgentInterrupt,
 } from '@threadplane/chat';
 import type { BaseEvent } from '@ag-ui/client';
 import { applyPatch, type JsonPatchOp } from './internal/apply-patch';
@@ -19,6 +19,7 @@ export interface ReducerStore {
   error:     WritableSignal<unknown>;
   toolCalls: WritableSignal<ToolCall[]>;
   state:     WritableSignal<Record<string, unknown>>;
+  interrupt: WritableSignal<AgentInterrupt | undefined>;
   events$:   Subject<AgentEvent>;
 }
 
@@ -52,6 +53,7 @@ export function reduceEvent(event: BaseEvent, store: ReducerStore): void {
       store.status.set('running');
       store.isLoading.set(true);
       store.error.set(null);
+      store.interrupt.set(undefined);
       return;
     }
     case 'RUN_FINISHED': {
@@ -177,6 +179,10 @@ export function reduceEvent(event: BaseEvent, store: ReducerStore): void {
     }
     case 'CUSTOM': {
       const e = event as unknown as { name: string; value: unknown };
+      if (e.name === 'on_interrupt') {
+        store.interrupt.set({ id: randomId(), value: e.value, resumable: true });
+        return;
+      }
       if (e.name === 'state_update' && isRecord(e.value)) {
         store.events$.next({ type: 'state_update', data: e.value });
       } else {
@@ -191,6 +197,10 @@ export function reduceEvent(event: BaseEvent, store: ReducerStore): void {
       return;
     }
   }
+}
+
+function randomId(): string {
+  return Math.random().toString(36).slice(2);
 }
 
 function messageIdFrom(event: BaseEvent): string {

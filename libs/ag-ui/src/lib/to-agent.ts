@@ -4,6 +4,7 @@ import { Subject } from 'rxjs';
 import type { AbstractAgent } from '@ag-ui/client';
 import type {
   Agent, Message, AgentStatus, ToolCall, AgentEvent,
+  AgentInterrupt,
   AgentRuntimeTelemetryEvent,
   AgentRuntimeTelemetryProperties,
   AgentRuntimeTelemetrySink,
@@ -65,6 +66,7 @@ export function toAgent(source: AbstractAgent, options: ToAgentOptions = {}): Ag
     error:     signal<unknown>(null),
     toolCalls: signal<ToolCall[]>([]),
     state:     signal<Record<string, unknown>>({}),
+    interrupt: signal<AgentInterrupt | undefined>(undefined),
     events$:   new Subject<AgentEvent>(),
   };
   const telemetryProperties = { transport: 'ag-ui' as const, surface: 'to_agent' };
