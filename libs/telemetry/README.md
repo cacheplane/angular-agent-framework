@@ -199,7 +199,7 @@ DEBUG=ngaf:telemetry npm install
 The `@threadplane/telemetry/browser` unit test suite includes a permanent trust test:
 
 ```
-test('no network call occurs when provideThreadplaneTelemetry is never called', ...)
+test('no posthog-js import when provideThreadplaneTelemetry is never called', ...)
 ```
 
 If this test ever fails, the trust contract has been violated and the build blocks.
