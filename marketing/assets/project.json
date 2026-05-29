@@ -11,7 +11,17 @@
       "options": {
         "outputPath": "dist/marketing/assets",
         "main": "marketing/assets/src/index.ts",
-        "tsConfig": "marketing/assets/tsconfig.lib.json"
+        "tsConfig": "marketing/assets/tsconfig.lib.json",
+        "assets": [
+          { "input": "marketing/assets/fonts", "glob": "**/*", "output": "fonts" },
+          { "input": "marketing/assets/brand", "glob": "**/*", "output": "brand" }
+        ]
+      }
+    },
+    "test": {
+      "executor": "@nx/vitest:test",
+      "options": {
+        "configFile": "marketing/assets/vite.config.mts"
       }
     },
     "lint": {
