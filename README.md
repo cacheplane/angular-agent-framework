@@ -36,7 +36,7 @@ Threadplane is a production-ready agent UI framework for Angular. `@threadplane/
 npm install @threadplane/langgraph @threadplane/chat
 ```
 
-**Peer dependencies:** `@angular/core ^20.0.0 || ^21.0.0`, `@langchain/core ^1.1.0`, `@langchain/langgraph-sdk ^1.7.0`, `rxjs ~7.8.0`
+**Peer dependencies:** `@angular/core ^20.0.0 || ^21.0.0`, `@langchain/core ^1.1.33`, `@langchain/langgraph-sdk ^1.7.4`, `rxjs ~7.8.0`
 
 ---
 
