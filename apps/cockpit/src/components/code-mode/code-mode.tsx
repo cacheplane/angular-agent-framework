@@ -28,16 +28,18 @@ function CodeFileContent({
     return <p className="text-sm text-[var(--ds-text-muted)]">No source available for {getTabLabel(path)}</p>;
   }
 
-  const ext = (getTabLabel(path).split('.').pop() ?? '').toUpperCase();
+  const label = getTabLabel(path);
+  const dotIdx = label.lastIndexOf('.');
+  const ext = dotIdx > 0 ? label.slice(dotIdx + 1).toUpperCase() : '';
 
   return (
     <div className="doc-codeblock">
       <div className="doc-codeblock__header">
-        <span className="doc-codeblock__file">{getTabLabel(path)}</span>
+        <span className="doc-codeblock__file">{label}</span>
         {ext ? <span className="doc-codeblock__lang">{ext}</span> : null}
         <button
           className="doc-codeblock__copy"
-          aria-label={`Copy ${getTabLabel(path)}`}
+          aria-label={`Copy ${label}`}
           onClick={() => {
             track('cockpit:code_copied', { capability, surface: 'code_mode', file_path: path });
             const el = document.querySelector(`[data-code-path="${CSS.escape(path)}"] pre code`);
@@ -86,7 +88,7 @@ export function CodeMode({ entryTitle, codeAssetPaths, backendAssetPaths, codeFi
         </TabsList>
 
         {[...codeAssetPaths, ...backendAssetPaths].map((path) => (
-          <TabsContent key={path} value={path} className="flex-1 overflow-auto mt-4">
+          <TabsContent key={path} value={path} className="flex-1 overflow-auto">
             <CodeFileContent path={path} content={codeFiles[path]} capability={capability} />
           </TabsContent>
         ))}
