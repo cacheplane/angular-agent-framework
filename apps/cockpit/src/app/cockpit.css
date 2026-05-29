@@ -227,3 +227,7 @@ pre.shiki {
 .cockpit-prose a:hover { text-decoration: underline; }
 .cockpit-prose code { color: var(--ds-accent); background: var(--ds-accent-surface); padding: 0.1rem 0.3rem; border-radius: 0.25rem; font-size: 0.85em; font-family: var(--font-mono), "JetBrains Mono", monospace; }
 .cockpit-prose strong { color: var(--ds-text-primary); font-weight: 600; }
+
+.cockpit-prose table.params { border-collapse: collapse; margin: 0.5rem 0; }
+.cockpit-prose table.params th { font-family: var(--font-mono), monospace; font-size: 0.6rem; letter-spacing: 0.06em; text-transform: uppercase; padding-bottom: 0.5rem; border-bottom: 1px solid var(--ds-border); }
+.cockpit-prose table.params td { padding: 0.5rem 0.75rem 0.5rem 0; border-bottom: 1px solid var(--ds-border); }
