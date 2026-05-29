@@ -113,10 +113,10 @@ export function CardShell({ input, planeDataUri, headlineSize, padding }: CardSh
         }}
       >
         {input.author ? (
-          <div style={{ display: 'flex', alignItems: 'center', fontSize: 22 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 22 }}>
             <span style={{ fontWeight: 600, color: brand.ink }}>{input.author.name}</span>
             {input.author.role ? (
-              <span style={{ color: brand.inkSoft }}>{` · ${input.author.role}`}</span>
+              <span style={{ color: brand.inkSoft }}>{`· ${input.author.role}`}</span>
             ) : null}
           </div>
         ) : (
@@ -138,7 +138,7 @@ export function CardShell({ input, planeDataUri, headlineSize, padding }: CardSh
           }}
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={planeDataUri} width={28} height={28} alt="" />
+          <img src={planeDataUri} width={34} height={34} alt="" />
           <span>{brand.wordmark}</span>
         </div>
       </div>
