@@ -403,32 +403,6 @@
     "examples": []
   },
   {
-    "name": "FakeAgentConfig",
-    "kind": "interface",
-    "description": "",
-    "properties": [
-      {
-        "name": "delayMs",
-        "type": "number",
-        "description": "Milliseconds between successive token emissions.",
-        "optional": true
-      },
-      {
-        "name": "reasoningTokens",
-        "type": "string[]",
-        "description": "Optional reasoning chunks emitted before the text reply.",
-        "optional": true
-      },
-      {
-        "name": "tokens",
-        "type": "string[]",
-        "description": "Tokens streamed back as the assistant reply.",
-        "optional": true
-      }
-    ],
-    "examples": []
-  },
-  {
     "name": "ToAgentOptions",
     "kind": "interface",
     "description": "",
