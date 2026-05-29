@@ -46,7 +46,6 @@ const myRegistry = toRenderRegistry(
 export const appConfig: ApplicationConfig = {
   providers: [
     provideRender({ registry: myRegistry }),
-    provideViews(views({ card: CardComponent, hero: HeroComponent })),
   ],
 };
 ```
@@ -74,11 +73,11 @@ export class AgentUiComponent {
 
 ## Capabilities
 
-**View registry composition** — `views(map)` creates a frozen registry; `withViews(base, additions)` extends it non-destructively; `withoutViews(base, ...keys)` prunes entries. Convert to an `AngularRegistry` with `toRenderRegistry`. Provide app-wide with `provideViews` or pass directly as a `[registry]` input on `<render-spec>`.
+**View registry composition** — `views(map)` creates a frozen registry; `withViews(base, additions)` extends it non-destructively; `withoutViews(base, ...keys)` prunes entries. Convert to an `AngularRegistry` with `toRenderRegistry` and supply it app-wide via `provideRender({ registry })`, or pass one directly as the `[registry]` input on `<render-spec>` / `<render-element>`.
 
-**Signal state store** — `signalStateStore(initial)` provides a `StateStore` backed by Angular Signals, suitable for two-way bindings declared in a spec.
+**Signal state store** — `signalStateStore(initialState?)` provides a `StateStore` backed by Angular Signals, suitable for two-way bindings declared in a spec.
 
-**DI providers** — `provideRender(config)` registers `RenderConfig` (registry, store, functions, handlers) as environment-scoped defaults; `provideViews(registry)` registers a `ViewRegistry` token consumed by the render engine.
+**DI providers** — `provideRender(config)` registers `RenderConfig` (registry, store, functions, handlers) as environment-scoped defaults read by the render components; `provideViews(registry)` publishes a `ViewRegistry` under the `VIEW_REGISTRY` token for consumers to inject directly.
 
 **Fallback** — `DefaultFallbackComponent` renders when no component is registered for a spec node; individual entries in a `ViewRegistry` can supply their own `fallback` component via `RenderViewEntry`.
 
