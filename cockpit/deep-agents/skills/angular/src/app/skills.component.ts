@@ -1,9 +1,8 @@
 import { Component, computed } from '@angular/core';
 import { ChatComponent, views } from '@threadplane/chat';
 import { ExampleChatLayoutComponent } from '@threadplane/example-layouts';
-import { agent } from '@threadplane/langgraph';
+import { injectAgent } from '@threadplane/langgraph';
 import { signalStateStore } from '@threadplane/render';
-import { environment } from '../environments/environment';
 import { CalculatorResultComponent } from './views/calculator-result.component';
 import { WordCountResultComponent } from './views/word-count-result.component';
 
@@ -71,10 +70,7 @@ export class SkillsComponent {
   readonly ui = views({ 'calculator-result': CalculatorResultComponent, 'word-count-result': WordCountResultComponent });
   readonly uiStore = signalStateStore({});
 
-  protected readonly agent = agent({
-    apiUrl: environment.langGraphApiUrl,
-    assistantId: environment.streamingAssistantId,
-  });
+  protected readonly agent = injectAgent();
 
   private readonly SKILL_NAMES = new Set(['calculator', 'word_count', 'summarize']);
 

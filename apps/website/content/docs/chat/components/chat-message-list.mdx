@@ -16,7 +16,7 @@ import {
 
 ## How It Works
 
-1. The component reads `agent().messages()` to get the current message list
+1. The component reads `injectAgent().messages()` to get the current message list
 2. For each message, it calls `getMessageType()` to determine the template type
 3. It finds the matching `MessageTemplateDirective` among its content children
 4. It renders the message using `ngTemplateOutlet` with the message as the implicit context
@@ -184,10 +184,8 @@ import {
 export class MessagesDemoComponent {
   private sanitizer = inject(DomSanitizer);
 
-  chatAgent = agent({
-    assistantId: 'chat_agent',
-    threadId: signal(null),
-  });
+  // Configured at the app root via provideAgent({ assistantId, threadId, ... }).
+  chatAgent = injectAgent();
 
   renderMd(content: string | unknown) {
     if (typeof content !== 'string') return '';

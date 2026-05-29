@@ -26,7 +26,7 @@
 
 Threadplane is a production-ready agent UI framework for Angular. Use `@threadplane/chat` for chat surfaces, `@threadplane/langgraph` for LangGraph-backed agents, `@threadplane/ag-ui` for AG-UI event streams, and `@threadplane/render` for generative UI that stays inside your Angular design system.
 
-When you are building on LangGraph, `agent()` is the Angular equivalent of LangGraph's React `useStream()` hook, projected into a runtime-neutral `Agent` contract consumed by `@threadplane/chat`. Drop it into any Angular 20+ component, point it at your LangGraph Platform endpoint, and get signal-driven access to messages, status, tool calls, interrupts, subagents, regenerate, and thread history.
+When you are building on LangGraph, `injectAgent()` is the Angular equivalent of LangGraph's React `useStream()` hook, projected into a runtime-neutral `Agent` contract consumed by `@threadplane/chat`. Configure it once with `provideAgent({...})`, inject it into any Angular 20+ component, and get signal-driven access to messages, status, tool calls, interrupts, subagents, regenerate, and thread history.
 
 ---
 
@@ -43,9 +43,22 @@ npm install @threadplane/langgraph @threadplane/chat
 ## 30-Second Example
 
 ```typescript
+// app.config.ts — wire the adapter once
+import { provideAgent } from '@threadplane/langgraph';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideAgent({
+      apiUrl: 'https://your-langgraph-platform.com',
+      assistantId: 'my-agent',
+    }),
+  ],
+};
+
+// support-chat.component.ts
 import { Component } from '@angular/core';
 import { ChatComponent as ThreadplaneChatComponent } from '@threadplane/chat';
-import { agent } from '@threadplane/langgraph';
+import { injectAgent } from '@threadplane/langgraph';
 
 @Component({
   selector: 'app-support-chat',
@@ -61,10 +74,7 @@ import { agent } from '@threadplane/langgraph';
   `,
 })
 export class SupportChatComponent {
-  chat = agent({
-    apiUrl: 'https://your-langgraph-platform.com',
-    assistantId: 'my-agent',
-  });
+  protected readonly chat = injectAgent();
 
   send() {
     void this.chat.submit({ message: 'Hello' });
@@ -78,7 +88,7 @@ That's it. `chat.messages()` and `chat.status()` are Angular Signals. Bind them 
 
 ## Feature Comparison
 
-| Feature | `agent()` (Angular) | `useStream()` (React) |
+| Feature | `injectAgent()` (Angular) | `useStream()` (React) |
 |---|---|---|
 | Streaming state as reactive primitives | Angular Signals | React state |
 | Messages signal | `messages()` | `messages` |
@@ -113,17 +123,18 @@ That's it. `chat.messages()` and `chat.status()` are Angular Signals. Bind them 
   />
 </p>
 
-`agent()` creates its internal `BehaviorSubject`s at injection-context time — once, at component construction. The `StreamManager` bridge (the only file that touches `@langchain/langgraph-sdk` internals) pushes stream events into those subjects. `toSignal()` converts each subject to an Angular Signal, also at construction time. Dynamic actions (`submit`, `stop`, `switchThread`) push into the existing subjects — no new subjects are ever created after construction. This architecture is required because `toSignal()` must be called in an injection context and cannot be called again later.
+`injectAgent()` resolves an agent whose internal `BehaviorSubject`s were created at injection-context time — once, when `provideAgent()`'s factory ran. The `StreamManager` bridge (the only file that touches `@langchain/langgraph-sdk` internals) pushes stream events into those subjects. `toSignal()` converts each subject to an Angular Signal, also at construction time. Dynamic actions (`submit`, `stop`, `switchThread`) push into the existing subjects — no new subjects are ever created after construction. This architecture is required because `toSignal()` must be called in an injection context and cannot be called again later.
 
 ---
 
 ## Documentation
 
-- [Agent Quickstart](https://threadplane.ai/docs/agent/getting-started/quickstart)
-- [agent() API](https://threadplane.ai/docs/agent/api/agent)
+- [LangGraph Quickstart](https://threadplane.ai/docs/langgraph/getting-started/quickstart)
+- [injectAgent() API](https://threadplane.ai/docs/langgraph/api/inject-agent)
+- [Choosing an adapter (LangGraph vs AG-UI)](https://threadplane.ai/docs/choosing-an-adapter)
 - [Chat Introduction](https://threadplane.ai/docs/chat/getting-started/introduction)
-- [Human-in-the-Loop / Interrupts](https://threadplane.ai/docs/agent/guides/interrupts)
-- [Subgraph and Subagent Streaming](https://threadplane.ai/docs/agent/guides/subgraphs)
+- [Human-in-the-Loop / Interrupts](https://threadplane.ai/docs/langgraph/guides/interrupts)
+- [Subgraph and Subagent Streaming](https://threadplane.ai/docs/langgraph/guides/subgraphs)
 
 ---
 

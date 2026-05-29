@@ -1,13 +1,13 @@
 # Thread Persistence with Angular
 
 <Summary>
-Build a chat interface with thread persistence using `agent()` from
-`@threadplane/langgraph`. Conversations survive browser refreshes and
+Build a chat interface with thread persistence using `provideAgent()` and
+`injectAgent()` from `@threadplane/langgraph`. Conversations survive browser refreshes and
 can be resumed using `stream.switchThread(id)`.
 </Summary>
 
 <Prompt>
-Add thread persistence to this Angular component using `agent()` from `@threadplane/langgraph`. Use the `onThreadId` callback to capture thread IDs, `stream.switchThread(id)` to resume conversations, and `stream.switchThread(null)` to start fresh. Bind `stream.messages()` in the template beside the `<chat>` component from `@threadplane/chat`.
+Add thread persistence to this Angular component using `provideAgent()` and `injectAgent()` from `@threadplane/langgraph`. Use the `onThreadId` callback to capture thread IDs, `stream.switchThread(id)` to resume conversations, and `stream.switchThread(null)` to start fresh. Bind `stream.messages()` in the template beside the `<chat>` component from `@threadplane/chat`.
 </Prompt>
 
 <Steps>
@@ -29,28 +29,43 @@ export const appConfig: ApplicationConfig = {
 };
 ```
 
-This makes the API URL available to all `agent()` calls in your app.
+This makes the LangGraph API URL available to all `injectAgent()` calls in your app.
 
 </Step>
 <Step title="Create the streaming resource with onThreadId">
 
-In your component, call `agent()` with the `onThreadId` callback to capture new thread IDs:
+Because the `onThreadId` callback is per-instance, configure `provideAgent()` in
+the component's `providers: []` and capture thread IDs into module-scoped signals
+the template can read. Then call `injectAgent()` to retrieve the configured agent:
 
 ```typescript
 // persistence.component.ts
-import { agent } from '@threadplane/langgraph';
+import { Component, signal } from '@angular/core';
+import { injectAgent, provideAgent } from '@threadplane/langgraph';
 
+// Per-instance thread bookkeeping shared between the component-scoped
+// provideAgent() config and the component itself.
+const threadIdsState = signal<string[]>([]);
+const currentThreadIdState = signal<string>('');
+
+@Component({
+  // ...
+  providers: [
+    provideAgent({
+      assistantId: 'persistence',
+      onThreadId: (id: string) => {
+        currentThreadIdState.set(id);
+        if (!threadIdsState().includes(id)) {
+          threadIdsState.set([...threadIdsState(), id]);
+        }
+      },
+    }),
+  ],
+})
 export class PersistenceComponent {
-  protected readonly stream = agent({
-    assistantId: 'persistence',
-    onThreadId: (id: string) => {
-      this.currentThreadId = id;
-      if (!this.threadIds.includes(id)) this.threadIds.push(id);
-    },
-  });
-
-  threadIds: string[] = [];
-  currentThreadId = '';
+  protected readonly stream = injectAgent();
+  protected readonly threadIds = threadIdsState;
+  protected readonly currentThreadId = currentThreadIdState;
 }
 ```
 
@@ -70,7 +85,7 @@ Use the `<chat>` component from `@threadplane/chat` and render a sibling sidebar
 
 <aside>
     <h3>Threads</h3>
-    @for (id of threadIds; track id) {
+    @for (id of threadIds(); track id) {
       <button (click)="selectThread(id)">
         {{ id.substring(0, 12) }}...
       </button>
@@ -88,12 +103,12 @@ Add methods to switch between threads and start new conversations:
 
 ```typescript
 selectThread(id: string): void {
-  this.currentThreadId = id;
+  this.currentThreadId.set(id);
   this.stream.switchThread(id);
 }
 
 newThread(): void {
-  this.currentThreadId = '';
+  this.currentThreadId.set('');
   this.stream.switchThread(null);
 }
 ```

@@ -9,11 +9,11 @@ export interface PositioningProofPoint {
 }
 
 export const POSITIONING_PROOF_POINTS: readonly PositioningProofPoint[] = [
-  { label: 'LangGraph + AG-UI', href: '/docs/agent/concepts/langgraph-basics' },
-  { label: 'Durable threads', href: '/docs/agent/guides/persistence' },
-  { label: 'Interrupts', href: '/docs/agent/guides/interrupts' },
-  { label: 'Subagents', href: '/docs/agent/guides/subgraphs' },
-  { label: 'Planning + memory', href: '/docs/agent/guides/memory' },
+  { label: 'LangGraph + AG-UI', href: '/docs/langgraph/concepts/langgraph-basics' },
+  { label: 'Durable threads', href: '/docs/langgraph/guides/persistence' },
+  { label: 'Interrupts', href: '/docs/langgraph/guides/interrupts' },
+  { label: 'Subagents', href: '/docs/langgraph/guides/subgraphs' },
+  { label: 'Planning + memory', href: '/docs/langgraph/guides/memory' },
   { label: 'json-render + A2UI', href: '/docs/render/concepts/json-render-vs-a2ui' },
 ] as const;
 export const SHORT_POSITIONING_DESCRIPTION =

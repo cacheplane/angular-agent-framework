@@ -2,13 +2,13 @@
 
 <Summary>
 Deploy a LangGraph graph to LangGraph Cloud and connect an Angular app using
-`agent()` from `@threadplane/langgraph`. This tutorial covers
+`provideAgent()` and `injectAgent()` from `@threadplane/langgraph`. This tutorial covers
 `langgraph deploy`, environment configuration, Vercel hosting for Angular, and
 CI automation.
 </Summary>
 
 <Prompt>
-Build a production-ready Angular chat app that connects to a LangGraph Cloud deployment using `agent()` from `@threadplane/langgraph`. Configure the `apiUrl` to point to your deployed LangGraph Cloud endpoint and set `assistantId` to match the graph name in `langgraph.json`. Display the deployment status via `stream.status()` and show the thread ID from the `onThreadId` callback.
+Build a production-ready Angular chat app that connects to a LangGraph Cloud deployment using `provideAgent()` and `injectAgent()` from `@threadplane/langgraph`. Configure the `apiUrl` to point to your deployed LangGraph Cloud endpoint and set `assistantId` to match the graph name in `langgraph.json`. Display the deployment status via `stream.status()` and show the thread ID from the `onThreadId` callback.
 </Prompt>
 
 <Steps>
@@ -70,25 +70,36 @@ export const environment = {
 Angular's file replacement swaps the environment at build time.
 
 </Step>
-<Step title="Connect agent() to the deployment">
+<Step title="Connect injectAgent() to the deployment">
 
-In your component, pass the deployment URL and assistant ID to `agent()`:
+Configure `provideAgent()` with the deployment URL and assistant ID, then
+retrieve it with `injectAgent()`. Because the `onThreadId` callback is
+per-instance, provide the agent in the component's `providers: []` and capture
+the thread ID into a module-scoped signal:
 
 ```typescript
 // deployment-runtime.component.ts
-import { agent } from '@threadplane/langgraph';
+import { Component, signal } from '@angular/core';
+import { injectAgent, provideAgent } from '@threadplane/langgraph';
 import { environment } from '../environments/environment';
 
-export class DeploymentRuntimeComponent {
-  protected readonly stream = agent({
-    apiUrl: environment.langGraphApiUrl,
-    assistantId: environment.deploymentRuntimeAssistantId,
-    onThreadId: (id: string) => {
-      this.currentThreadId = id;
-    },
-  });
+const currentThreadIdState = signal<string>('');
 
-  currentThreadId = '';
+@Component({
+  // ...
+  providers: [
+    provideAgent({
+      apiUrl: environment.langGraphApiUrl,
+      assistantId: environment.deploymentRuntimeAssistantId,
+      onThreadId: (id: string) => {
+        currentThreadIdState.set(id);
+      },
+    }),
+  ],
+})
+export class DeploymentRuntimeComponent {
+  protected readonly stream = injectAgent();
+  protected readonly currentThreadId = currentThreadIdState;
 
   send(text: string): void {
     void this.stream.submit({ message: text });

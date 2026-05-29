@@ -1,13 +1,13 @@
 # Child Agent Delegation with Angular
 
 <Summary>
-Build a chat interface that shows real-time subagent activity using `agent()` from
-`@threadplane/langgraph`. An orchestrator agent delegates subtasks to specialist child
+Build a chat interface that shows real-time subagent activity using `provideAgent()` and
+`injectAgent()` from `@threadplane/langgraph`. An orchestrator agent delegates subtasks to specialist child
 agents, and the sidebar displays each subagent's status and message count as they stream.
 </Summary>
 
 <Prompt>
-Add a subagent activity sidebar to this Angular component using `agent()` from `@threadplane/langgraph`. Use `stream.subagents()` to access the live Map of child agent streams, derive `subagentEntries` with `computed()`, and render them beside the `<chat>` component.
+Add a subagent activity sidebar to this Angular component using `provideAgent()` and `injectAgent()` from `@threadplane/langgraph`. Use `stream.subagents()` to access the live Map of child agent streams, derive `subagentEntries` with `computed()`, and render them beside the `<chat>` component.
 </Prompt>
 
 <Steps>
@@ -24,26 +24,25 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideAgent({
       apiUrl: 'https://your-deployment.langgraph.app',
+      assistantId: 'subagents',
     }),
   ],
 };
 ```
 
-This makes the API URL available to all `agent()` calls in your app.
+This makes the configured agent available to all `injectAgent()` calls in your app.
 
 </Step>
 <Step title="Create the streaming resource">
 
-In your component, call `agent()` with the `assistantId` pointing to your subagents graph:
+In your component, call `injectAgent()` to retrieve the configured subagents agent:
 
 ```typescript
 // subagents.component.ts
-import { agent } from '@threadplane/langgraph';
+import { injectAgent } from '@threadplane/langgraph';
 
 export class SubagentsComponent {
-  protected readonly stream = agent({
-    assistantId: 'subagents',
-  });
+  protected readonly stream = injectAgent();
 }
 ```
 
@@ -56,9 +55,10 @@ Use Angular's `computed()` to convert the subagents Map into a renderable array:
 
 ```typescript
 import { computed } from '@angular/core';
+import { injectAgent } from '@threadplane/langgraph';
 
 export class SubagentsComponent {
-  protected readonly stream = agent({ assistantId: 'subagents' });
+  protected readonly stream = injectAgent();
 
   subagentEntries = computed(() => Array.from(this.stream.subagents().entries()));
 }

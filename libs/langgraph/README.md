@@ -1,8 +1,10 @@
 # @threadplane/langgraph
 
-Adapter that wraps a LangGraph agent into the runtime-neutral `Agent` contract from `@threadplane/chat`. The Angular equivalent of LangGraph's React `useStream()` hook — signal-driven access to messages, status, tool calls, interrupts, subagents, regenerate, and thread history.
+LangChain/LangGraph adapter for Angular. Wraps a LangGraph agent into the runtime-neutral `Agent` contract from `@threadplane/chat` — signal-driven access to messages, status, tool calls, interrupts, subagents, regenerate, and thread history. The Angular equivalent of LangGraph's React `useStream()` hook.
 
 Part of [Threadplane](https://github.com/cacheplane/angular-agent-framework). MIT licensed.
+
+> Talking to a non-LangGraph backend? See [`@threadplane/ag-ui`](https://www.npmjs.com/package/@threadplane/ag-ui) — same API shape, AG-UI protocol underneath.
 
 ## Install
 
@@ -14,10 +16,11 @@ npm install @threadplane/langgraph @threadplane/chat
 
 ## What it does
 
-- **`agent()`** — Angular Signal-based handle to a LangGraph streaming run. Returns `messages()`, `status()`, `isLoading()`, `error()`, `interrupt()`, `toolCalls()`, plus actions (`submit`, `stop`, `regenerate`, `reload`).
-- **`provideAgent()`** — configure the LangGraph endpoint once in `app.config.ts`. Per-call overrides are accepted by `agent()` itself.
-- **Thread persistence** — pass `threadId: signal(...)` + `onThreadId` to round-trip thread IDs through your own storage (localStorage, URL, etc.).
-- **`MockAgentTransport`** — deterministic in-memory transport for tests. Never mock `agent()` itself; swap the transport instead.
+- **`provideAgent()`** — wire the LangGraph adapter into Angular DI. Provided at the root injector or at any component subtree (multi-thread UIs work via Angular's hierarchical DI).
+- **`injectAgent()`** — retrieve the configured `LangGraphAgent` in any component. No arguments — config flows through DI.
+- **Signal-driven runtime** — `messages()`, `status()`, `isLoading()`, `error()`, `interrupt()`, `toolCalls()`, plus actions (`submit`, `stop`, `regenerate`, `reload`).
+- **Thread persistence** — pass `threadId: signal(...)` + `onThreadId` in the config to round-trip thread IDs through your own storage (localStorage, URL, etc.).
+- **`MockAgentTransport`** — deterministic in-memory transport for tests. Never mock `injectAgent()` itself; swap the transport instead.
 - **`extractCitations()`** — populates `Message.citations` from LangGraph message metadata. Reads from `additional_kwargs.citations` (preferred) or `additional_kwargs.sources` (fallback).
 
 ## Quick start
@@ -30,6 +33,7 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideAgent({
       apiUrl: 'https://your-langgraph-platform.com',
+      assistantId: 'my-agent',
     }),
   ],
 };
@@ -38,22 +42,19 @@ export const appConfig: ApplicationConfig = {
 ```ts
 // chat.component.ts
 import { Component } from '@angular/core';
-import { agent } from '@threadplane/langgraph';
+import { injectAgent } from '@threadplane/langgraph';
 import { ChatComponent } from '@threadplane/chat';
 
 @Component({
   imports: [ChatComponent],
-  template: `<chat [agent]="chat" />`,
+  template: `<chat [agent]="agent" />`,
 })
 export class ChatComponentHost {
-  chat = agent({
-    apiUrl: 'https://your-langgraph-platform.com',
-    assistantId: 'my-agent',
-  });
+  protected readonly agent = injectAgent();
 }
 ```
 
-> `agent()` must be called within an Angular injection context (component field initializer or constructor). Calling it in `ngOnInit` or any async context throws `NG0203: inject() must be called from an injection context`.
+> Need a different agent for a specific component subtree (e.g., a sidebar showing a separate conversation)? Re-provide `provideAgent({...})` in that component's `providers: []` array — Angular's hierarchical DI takes care of the rest.
 
 ## Citations example
 
@@ -81,11 +82,13 @@ return new AIMessage({
 
 ## Documentation
 
-- [Quickstart](https://threadplane.ai/docs/agent/getting-started/quickstart)
-- [`agent()` API reference](https://threadplane.ai/docs/agent/api/agent)
-- [Human-in-the-loop / interrupts](https://threadplane.ai/docs/agent/guides/interrupts)
-- [Thread persistence](https://threadplane.ai/docs/agent/guides/persistence)
-- [Testing with `MockAgentTransport`](https://threadplane.ai/docs/agent/guides/testing)
+- [Quickstart](https://threadplane.ai/docs/langgraph/getting-started/quickstart)
+- [`injectAgent()` API reference](https://threadplane.ai/docs/langgraph/api/inject-agent)
+- [`provideAgent()` API reference](https://threadplane.ai/docs/langgraph/api/provide-agent)
+- [Human-in-the-loop / interrupts](https://threadplane.ai/docs/langgraph/guides/interrupts)
+- [Thread persistence](https://threadplane.ai/docs/langgraph/guides/persistence)
+- [Testing with `MockAgentTransport`](https://threadplane.ai/docs/langgraph/guides/testing)
+- [Choosing an adapter (LangGraph vs AG-UI)](https://threadplane.ai/docs/choosing-an-adapter)
 
 ## License
 

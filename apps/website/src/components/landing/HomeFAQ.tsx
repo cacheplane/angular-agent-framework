@@ -11,11 +11,15 @@ const ITEMS: FAQItem[] = [
   },
   {
     q: 'Does it work with my existing Angular app?',
-    a: 'Yes. Drop provideAgent (or provideAgUiAgent) into your app.config.ts. The headless primitives don’t impose any UI; the chat compositions are opt-in.',
+    a: 'Yes. Drop provideAgent (from @threadplane/langgraph or @threadplane/ag-ui) into your app.config.ts. The headless primitives don’t impose any UI; the chat compositions are opt-in.',
   },
   {
     q: 'Can I use this without LangGraph?',
     a: 'Yes. Use the @threadplane/ag-ui adapter for any AG-UI compliant backend, or implement the agent contract yourself. Threadplane keeps the Angular UI layer stable while the backend agent runtime can change.',
+  },
+  {
+    q: 'Which adapter should I use — @threadplane/langgraph or @threadplane/ag-ui?',
+    a: 'If your backend is LangGraph Platform, use @threadplane/langgraph. If your backend speaks the AG-UI protocol (CrewAI, Mastra, Microsoft Agent Framework, AG2, Pydantic AI, AWS Strands, CopilotKit runtime), use @threadplane/ag-ui. Both expose the same provideAgent/injectAgent API — see /docs/choosing-an-adapter for a side-by-side comparison.',
   },
   {
     q: 'Is the Pilot-to-Prod program required?',
@@ -35,7 +39,7 @@ const ITEMS: FAQItem[] = [
   },
   {
     q: 'I’m using CopilotKit today — how hard is the migration?',
-    a: 'Component-by-component. CopilotKit’s chat hooks have rough equivalents in our agent() signal API, and CopilotKit actions map to LangGraph/AG-UI tool calls. Thread state lives in a service (not the component tree), so plan a session to port that. There isn’t a one-shot codemod.',
+    a: 'Component-by-component. CopilotKit’s chat hooks have rough equivalents in our injectAgent() signal API, and CopilotKit actions map to LangGraph/AG-UI tool calls. Thread state lives in a service (not the component tree), so plan a session to port that. There isn’t a one-shot codemod.',
   },
   {
     q: 'Does it work with Angular Universal / SSR?',
@@ -43,7 +47,7 @@ const ITEMS: FAQItem[] = [
   },
   {
     q: 'How do I test agent-driven components?',
-    a: 'The agent is provided through Angular DI, so test doubles work the way you’re used to — supply a stub agent in your test module, drive it with signals, assert on the rendered output. See /docs/agent/guides/testing.',
+    a: 'The agent is provided through Angular DI, so test doubles work the way you’re used to — supply a stub agent in your test module, drive it with signals, assert on the rendered output. See /docs/langgraph/guides/testing.',
   },
 ];
 

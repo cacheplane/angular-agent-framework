@@ -96,7 +96,7 @@ export default async function BlogPostPage({ params }: Params) {
         </header>
         <MdxRenderer
           source={post.content}
-          library="agent"
+          library="langgraph"
           section="blog"
           slug={post.slug}
           title={post.frontmatter.title}

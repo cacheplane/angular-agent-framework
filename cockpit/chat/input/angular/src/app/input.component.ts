@@ -9,8 +9,7 @@ import {
   messageContent,
 } from '@threadplane/chat';
 import { ExampleChatLayoutComponent } from '@threadplane/example-layouts';
-import { agent } from '@threadplane/langgraph';
-import { environment } from '../environments/environment';
+import { injectAgent } from '@threadplane/langgraph';
 
 /**
  * InputComponent showcases ChatInputComponent features including
@@ -90,10 +89,7 @@ import { environment } from '../environments/environment';
   `,
 })
 export class InputComponent {
-  protected readonly agent = agent({
-    apiUrl: environment.langGraphApiUrl,
-    assistantId: environment.streamingAssistantId,
-  });
+  protected readonly agent = injectAgent();
 
   protected readonly streamStatus = computed(() => this.agent.status());
   protected readonly isLoading = computed(() => this.agent.isLoading());

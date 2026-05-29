@@ -8,7 +8,7 @@ and displays it in a live sidebar.
 </Summary>
 
 <Prompt>
-Add persistent agent memory to this Angular component using `agent()` from `@threadplane/langgraph`. Use `stream.value()` to access the `memory` field in graph state, derive a reactive `memoryEntries` signal with Angular's `computed()`, and render the facts in a sidebar panel beside the `<chat>` component from `@threadplane/chat`.
+Add persistent agent memory to this Angular component using `provideAgent()` and `injectAgent()` from `@threadplane/langgraph`. Use `stream.value()` to access the `memory` field in graph state, derive a reactive `memoryEntries` signal with Angular's `computed()`, and render the facts in a sidebar panel beside the `<chat>` component from `@threadplane/chat`.
 </Prompt>
 
 <Steps>
@@ -25,6 +25,7 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideAgent({
       apiUrl: 'https://your-deployment.langgraph.app',
+      assistantId: 'memory',
     }),
   ],
 };
@@ -33,16 +34,14 @@ export const appConfig: ApplicationConfig = {
 </Step>
 <Step title="Create the streaming resource">
 
-In your component, call `agent()` pointing at the `memory` assistant:
+In your component, call `injectAgent()` to retrieve the configured `memory` assistant:
 
 ```typescript
 // memory.component.ts
-import { agent } from '@threadplane/langgraph';
+import { injectAgent } from '@threadplane/langgraph';
 
 export class MemoryComponent {
-  protected readonly stream = agent({
-    assistantId: 'memory',
-  });
+  protected readonly stream = injectAgent();
 }
 ```
 

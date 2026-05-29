@@ -1,0 +1,305 @@
+# Subgraphs
+
+Subgraphs let you compose complex agents from smaller, focused units. `injectAgent()` streams their output through the same message, state, tool-call, and custom-event signals as the parent graph.
+
+<Callout type="info" title="Subgraphs vs subagents">
+LangGraph subgraphs are graph nodes. Deep Agents-style subagents are delegated tool calls. `injectAgent()` requests subgraph streams by default, but the `subagents()` signal is populated only for tool calls whose names match `subagentToolNames` and whose args include a `subagent_type`.
+</Callout>
+
+## How subgraph composition works
+
+Subgraph composition starts on the agent side. Each subgraph is a fully compiled `StateGraph` that can be added as a node in a parent graph.
+
+<Tabs>
+<Tab label="agent.py">
+
+```python
+from langgraph.graph import END, START, MessagesState, StateGraph
+from langchain_openai import ChatOpenAI
+
+llm = ChatOpenAI(model="gpt-5-mini")
+
+# --- Research subgraph ---
+def search_web(state: MessagesState) -> dict:
+    query = state["messages"][-1].content
+    results = web_search(query)
+    return {"messages": [{"role": "assistant", "content": results}]}
+
+def summarize_results(state: MessagesState) -> dict:
+    response = llm.invoke(state["messages"])
+    return {"messages": [response]}
+
+research_builder = StateGraph(MessagesState)
+research_builder.add_node("search", search_web)
+research_builder.add_node("summarize", summarize_results)
+research_builder.add_edge(START, "search")
+research_builder.add_edge("search", "summarize")
+research_builder.add_edge("summarize", END)
+
+research_subgraph = research_builder.compile()
+
+# --- Analysis subgraph ---
+def analyze_data(state: MessagesState) -> dict:
+    response = llm.invoke([
+        {"role": "system", "content": "Analyze the data and provide insights."},
+        *state["messages"],
+    ])
+    return {"messages": [response]}
+
+analysis_builder = StateGraph(MessagesState)
+analysis_builder.add_node("analyze", analyze_data)
+analysis_builder.add_edge(START, "analyze")
+analysis_builder.add_edge("analyze", END)
+
+analysis_subgraph = analysis_builder.compile()
+
+# --- Parent orchestrator ---
+def route_task(state: MessagesState) -> str:
+    last = state["messages"][-1].content.lower()
+    if "research" in last or "search" in last:
+        return "research"
+    return "analyze"
+
+builder = StateGraph(MessagesState)
+builder.add_node("research", research_subgraph)
+builder.add_node("analyze", analysis_subgraph)
+builder.add_conditional_edges(START, route_task)
+builder.add_edge("research", END)
+builder.add_edge("analyze", END)
+
+graph = builder.compile()
+```
+
+</Tab>
+<Tab label="orchestrator.component.ts">
+
+```typescript
+import { Component, computed, inject, effect, ChangeDetectionStrategy } from '@angular/core';
+import { injectAgent } from '@threadplane/langgraph';
+
+@Component({
+  selector: 'app-orchestrator',
+  templateUrl: './orchestrator.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class OrchestratorComponent {
+  protected readonly orchestrator = injectAgent<OrchestratorState>();
+
+  readonly messages = computed(() => this.orchestrator.messages());
+  readonly isRunning = computed(() => this.orchestrator.isLoading());
+
+  send(text: string) {
+    this.orchestrator.submit({ message: text });
+  }
+}
+```
+
+</Tab>
+</Tabs>
+
+## Tracking delegated subagent execution
+
+The `subagents()` signal contains a Map of active delegated subagent streams. Use it when your graph delegates through tool calls, such as Deep Agents' default `task` tool or your own delegation tools. Plain subgraph nodes do not appear in this map.
+
+```typescript
+// Configure in app.config.ts:
+// provideAgent({
+//   apiUrl: '...',
+//   assistantId: 'orchestrator',
+//   subagentToolNames: ['task', 'delegate_to_researcher'],
+// });
+
+const orchestrator = injectAgent<OrchestratorState>();
+
+// All subagent streams (active and completed)
+const subagents = computed(() => orchestrator.subagents());
+
+// Only active ones
+const running = computed(() =>
+  [...orchestrator.subagents().values()].filter((subagent) =>
+    subagent.status() === 'pending' || subagent.status() === 'running'
+  )
+);
+const runningCount = computed(() => running().length);
+
+// Lookup helpers for common UI paths
+const specific = computed(() => orchestrator.getSubagent('research-tool-call-id'));
+const researchers = computed(() =>
+  orchestrator.getSubagentsByType('researcher')
+);
+
+// React to count changes
+effect(() => {
+  console.log(`${runningCount()} subagents currently running`);
+});
+```
+
+## Subagent stream details
+
+Each `SubagentStreamRef` exposes its own reactive signals — status, messages, and state — so you can surface granular progress in your UI.
+
+```typescript
+// Access a specific subagent by its tool call ID
+const researchAgent = computed(() =>
+  orchestrator.getSubagent('research-tool-call-id')
+);
+
+// Or get the subagents spawned by a specific AI message with tool calls
+const messageAgents = computed(() => {
+  const message = selectedAiMessage();
+  return message ? orchestrator.getSubagentsByMessage(message) : [];
+});
+
+// Track its progress
+const researchStatus = computed(() => researchAgent()?.status());
+const researchMessages = computed(() => researchAgent()?.messages() ?? []);
+```
+
+## Orchestrator pattern
+
+The orchestrator pattern delegates specialised work to subagents and merges their results. Each subagent runs its own graph independently while the parent coordinates.
+
+```typescript
+// Configure in app.config.ts:
+// provideAgent({
+//   apiUrl: '...',
+//   assistantId: 'pipeline-orchestrator',
+//   subagentToolNames: ['task'],
+//   filterSubagentMessages: true,
+// });
+
+const pipeline = injectAgent<PipelineState>();
+
+// Derive a summary of all subagent states
+const pipelineStatus = computed(() => {
+  const agents = pipeline.subagents();
+  const entries = [...agents.entries()];
+
+  return {
+    total: entries.length,
+    pending: entries.filter(([, a]) => a.status() === 'pending').length,
+    running: entries.filter(([, a]) => a.status() === 'running').length,
+    done: entries.filter(([, a]) => a.status() === 'complete').length,
+    failed: entries.filter(([, a]) => a.status() === 'error').length,
+  };
+});
+```
+
+## Subagent progress UI
+
+Render live progress for each subagent using the signals above.
+
+<Tabs>
+<Tab label="progress-panel.component.ts">
+```typescript
+import { Component, computed, inject, ChangeDetectionStrategy } from '@angular/core';
+
+@Component({
+  selector: 'app-subagent-progress',
+  templateUrl: './progress-panel.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class SubagentProgressComponent {
+  orchestrator = inject(OrchestratorService).resource;
+
+  subagentEntries = computed(() =>
+    [...this.orchestrator.subagents().entries()]
+  );
+}
+```
+</Tab>
+<Tab label="progress-panel.component.html">
+```html
+@for (entry of subagentEntries(); track entry[0]) {
+  <div class="subagent-card" [attr.data-status]="entry[1].status()">
+    <span class="label">{{ entry[0] }}</span>
+    <span class="status-badge status-{{ entry[1].status() }}">
+      {{ entry[1].status() }}
+    </span>
+
+    @if (entry[1].status() === 'running') {
+      <app-spinner />
+    }
+
+    @if (entry[1].status() === 'error') {
+      <p class="error-msg">Subagent failed</p>
+    }
+  </div>
+}
+```
+</Tab>
+</Tabs>
+
+## Filtering subagent messages
+
+By default, subagent messages appear in the parent's `messages()` signal. Filter them out for a cleaner parent view.
+
+```typescript
+// Configure in app.config.ts:
+// provideAgent({
+//   apiUrl: '...',
+//   assistantId: 'orchestrator',
+//   filterSubagentMessages: true,  // Hide subagent messages from parent
+//   subagentToolNames: ['task'],
+// });
+
+const orchestrator = injectAgent<OrchestratorState>();
+
+// Parent messages only (no subagent chatter)
+const parentMessages = computed(() => orchestrator.messages());
+```
+
+<Callout type="tip" title="Subagent tool names">
+Set `subagentToolNames` to the tool names that spawn subagents. `injectAgent()` uses this to identify tool calls that create subagent streams. Those tool calls must include a `subagent_type` argument for type-based lookup helpers such as `getSubagentsByType()`.
+</Callout>
+
+## Error handling per subagent
+
+Each subagent exposes its own `status()` signal. A failure changes that subagent's status to `'error'` without necessarily stopping sibling delegates.
+
+```typescript
+const agents = orchestrator.subagents();
+
+for (const [id, agent] of agents) {
+  effect(() => {
+    if (agent.status() === 'error') {
+      console.error(`Subagent ${id} failed`);
+      // Retry, surface to user, or fall back gracefully
+    }
+  });
+}
+
+// Collect all failed subagents reactively
+const failedAgents = computed(() =>
+  [...orchestrator.subagents().entries()].filter(
+    ([, agent]) => agent.status() === 'error'
+  )
+);
+```
+
+<Callout type="warning" title="Partial failures">
+Always check `failedAgents()` before presenting final results. A completed orchestrator can still have subagents that errored — success at the top level does not guarantee all delegates succeeded.
+</Callout>
+
+## When to use subagents vs a single agent
+
+<Callout type="info" title="Choosing your architecture">
+Use **subagents** when tasks are independent and can run in parallel, when each task needs its own context window, or when you want isolated error boundaries. Use a **single agent** for sequential reasoning, tasks that share tightly coupled state, or when latency from spawning subagents outweighs the parallelism benefit.
+</Callout>
+
+## What's Next
+
+<CardGroup cols={2}>
+  <Card title="Streaming" href="/docs/langgraph/guides/streaming">
+    Understand how `injectAgent()` surfaces tokens, status, and errors in real time.
+  </Card>
+  <Card title="Time Travel" href="/docs/langgraph/guides/time-travel">
+    Inspect earlier states and replay alternate execution paths with checkpoint history.
+  </Card>
+  <Card title="Testing" href="/docs/langgraph/guides/testing">
+    Write unit and integration tests for orchestrator graphs and subagent interactions.
+  </Card>
+  <Card title="API Reference" href="/docs/langgraph/api/inject-agent">
+    Full reference for `injectAgent()` options, signals, and subagent configuration.
+  </Card>
+</CardGroup>

@@ -1,13 +1,13 @@
 # Task Decomposition with Angular
 
 <Summary>
-Build a chat interface that shows real-time task decomposition using `agent()` from
-`@threadplane/langgraph`. The agent breaks complex requests into ordered steps, and the
+Build a chat interface that shows real-time task decomposition using `provideAgent()` and
+`injectAgent()` from `@threadplane/langgraph`. The agent breaks complex requests into ordered steps, and the
 sidebar displays each step's status as the agent works through them.
 </Summary>
 
 <Prompt>
-Add a task planning sidebar to this Angular component using `agent()` from `@threadplane/langgraph`. Use `stream.value()` to access the agent's plan state, derive `planSteps` with `computed()`, and bind them to the sidebar beside the `<chat>` component from `@threadplane/chat`.
+Add a task planning sidebar to this Angular component using `provideAgent()` and `injectAgent()` from `@threadplane/langgraph`. Use `stream.value()` to access the agent's plan state, derive `planSteps` with `computed()`, and bind them to the sidebar beside the `<chat>` component from `@threadplane/chat`.
 </Prompt>
 
 <Steps>
@@ -24,26 +24,25 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideAgent({
       apiUrl: 'https://your-deployment.langgraph.app',
+      assistantId: 'da-planning',
     }),
   ],
 };
 ```
 
-This makes the API URL available to all `agent()` calls in your app.
+This makes the configured agent available to all `injectAgent()` calls in your app.
 
 </Step>
 <Step title="Create the streaming resource">
 
-In your component, call `agent()` with the `assistantId` pointing to your planning graph:
+In your component, call `injectAgent()` to retrieve the configured planning agent:
 
 ```typescript
 // planning.component.ts
-import { agent } from '@threadplane/langgraph';
+import { injectAgent } from '@threadplane/langgraph';
 
 export class PlanningComponent {
-  protected readonly stream = agent({
-    assistantId: 'da-planning',
-  });
+  protected readonly stream = injectAgent();
 }
 ```
 
@@ -56,6 +55,7 @@ Use Angular's `computed()` to reactively derive the plan steps from `stream.valu
 
 ```typescript
 import { computed } from '@angular/core';
+import { injectAgent } from '@threadplane/langgraph';
 
 interface PlanStep {
   title: string;
@@ -63,7 +63,7 @@ interface PlanStep {
 }
 
 export class PlanningComponent {
-  protected readonly stream = agent({ assistantId: 'da-planning' });
+  protected readonly stream = injectAgent();
 
   planSteps = computed(() => {
     const val = this.stream.value() as { plan?: PlanStep[] } | undefined;

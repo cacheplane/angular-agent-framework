@@ -1,5 +1,7 @@
 # Introduction
 
+> **Picking an adapter?** This guide covers `@threadplane/ag-ui` — the AG-UI protocol adapter. If you're talking to LangGraph Platform directly via the LangGraph SDK, use [`@threadplane/langgraph`](/langgraph) instead. See [Choosing an adapter](/docs/choosing-an-adapter) for a side-by-side comparison.
+
 `@threadplane/ag-ui` is the runtime adapter that wraps an [AG-UI](https://github.com/ag-ui-protocol/ag-ui) `AbstractAgent` into the runtime-neutral `Agent` contract from `@threadplane/chat`. The chat UI primitives consume the Agent contract; the AG-UI adapter translates between the contract and the AG-UI event protocol.
 
 <Callout type="info" title="What is AG-UI?">
@@ -25,7 +27,7 @@ AG-UI is the open agent-to-UI protocol from the CopilotKit ecosystem. It standar
 ## What you get
 
 - **`toAgent(source: AbstractAgent): Agent`** - wraps any `AbstractAgent` subclass (custom transports, mocks) into the runtime-neutral `Agent` contract.
-- **`provideAgUiAgent({ url })`** - DI convenience that instantiates `HttpAgent` under the hood for the common SSE/HTTP case.
+- **`provideAgent({ url })`** - DI convenience that instantiates `HttpAgent` under the hood for the common SSE/HTTP case.
 - **`FakeAgent`** - in-process `AbstractAgent` subclass that emits canned streaming events for offline demos and tests.
 
 ## What's covered

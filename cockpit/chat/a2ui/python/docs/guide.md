@@ -15,11 +15,29 @@ to enable A2UI surface rendering with automatic event routing.
 <Steps>
 <Step title="Pass the A2UI catalog to ChatComponent">
 
-Import `a2uiBasicCatalog()` and pass it via the `[views]` input:
+Configure `provideAgent()` in your app config:
 
 ```typescript
+// app.config.ts
+import { provideAgent } from '@threadplane/langgraph';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideAgent({
+      apiUrl: environment.langGraphApiUrl,
+      assistantId: environment.a2uiAssistantId,
+    }),
+  ],
+};
+```
+
+Import `a2uiBasicCatalog()` and pass it via the `[views]` input, then retrieve
+the agent with `injectAgent()`:
+
+```typescript
+// a2ui.component.ts
 import { ChatComponent, a2uiBasicCatalog } from '@threadplane/chat';
-import { agent } from '@threadplane/langgraph';
+import { injectAgent } from '@threadplane/langgraph';
 
 @Component({
   selector: 'app-a2ui',
@@ -28,10 +46,7 @@ import { agent } from '@threadplane/langgraph';
   template: `<chat [agent]="agentRef" [views]="catalog" class="block h-screen" />`,
 })
 export class A2uiComponent {
-  protected readonly agentRef = agent({
-    apiUrl: environment.langGraphApiUrl,
-    assistantId: environment.a2uiAssistantId,
-  });
+  protected readonly agentRef = injectAgent();
   protected readonly catalog = a2uiBasicCatalog();
 }
 ```

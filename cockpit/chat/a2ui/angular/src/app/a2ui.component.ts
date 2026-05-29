@@ -2,8 +2,7 @@
 import { Component } from '@angular/core';
 import { ChatComponent, ChatWelcomeSuggestionComponent, a2uiBasicCatalog } from '@threadplane/chat';
 import { ExampleChatLayoutComponent } from '@threadplane/example-layouts';
-import { agent } from '@threadplane/langgraph';
-import { environment } from '../environments/environment';
+import { injectAgent } from '@threadplane/langgraph';
 
 const WELCOME_SUGGESTIONS = [
   { label: 'LAX → JFK',          value: 'I want to fly LAX to JFK' },
@@ -31,10 +30,7 @@ const WELCOME_SUGGESTIONS = [
   `,
 })
 export class A2uiComponent {
-  protected readonly agent = agent({
-    apiUrl: environment.langGraphApiUrl,
-    assistantId: environment.a2uiAssistantId,
-  });
+  protected readonly agent = injectAgent();
   protected readonly catalog = a2uiBasicCatalog();
   protected readonly suggestions = WELCOME_SUGGESTIONS;
 

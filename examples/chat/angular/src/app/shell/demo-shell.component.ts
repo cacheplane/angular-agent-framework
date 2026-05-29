@@ -13,7 +13,7 @@ import {
 import { Router, RouterOutlet, NavigationEnd } from '@angular/router';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { filter, map, startWith } from 'rxjs/operators';
-import { agent, LangGraphThreadsAdapter, refreshOnRunEnd } from '@threadplane/langgraph';
+import { injectAgent, provideAgent, LangGraphThreadsAdapter, refreshOnRunEnd } from '@threadplane/langgraph';
 import { ThreadplaneTelemetryService } from '@threadplane/telemetry/browser';
 import {
   ChatInterruptPanelComponent,
@@ -28,6 +28,7 @@ import {
   type ThreadActionAdapter,
   type Thread,
   type ProjectActionAdapter,
+  type AgentRuntimeTelemetrySink,
 } from '@threadplane/chat';
 import { PalettePersistence } from './palette-persistence.service';
 import { ProjectsService } from './projects.service';
@@ -39,6 +40,19 @@ export type DemoMode = 'embed' | 'popup' | 'sidebar';
 
 const MODES: readonly DemoMode[] = ['embed', 'popup', 'sidebar'] as const;
 const TELEMETRY_SURFACE = 'canonical_demo';
+
+// ── Per-instance agent wiring (Option B) ────────────────────────────────────
+// The agent's config is genuinely per-component: it watches the active-thread
+// signal, mirrors auto-created ids back, and routes telemetry through the
+// shell's model selection. `provideAgent({...})` takes a static config object,
+// so the pieces it needs at construction time live at module scope here and the
+// DemoShell instance reads/writes the same signals. The demo bootstraps a
+// single DemoShell, so module scope is equivalent to instance scope.
+const threadIdState = signal<string | null>(null);
+// Populated by the DemoShell `agent` field initializer. The agent provider's
+// static config delegates telemetry to this sink so it can read the live
+// model selection + injected telemetry service (which the static config can't).
+let telemetrySink: AgentRuntimeTelemetrySink | undefined;
 
 /** Parse `/embed`, `/embed/<threadId>`, `/popup/<threadId>` etc. into
  *  `{mode, threadId}`. Source of truth for URL ↔ signal sync — see
@@ -66,6 +80,27 @@ function parseUrl(url: string): { mode: DemoMode; threadId: string | null } {
   templateUrl: './demo-shell.component.html',
   styleUrl: './demo-shell.component.css',
   providers: [
+    // Scoped agent (Option B): the config watches the active-thread signal,
+    // mirrors auto-created ids back, and routes telemetry through the shell's
+    // model selection — all per-instance. The telemetry sink delegates to the
+    // shell-built sink (populated in the constructor) since the real sink needs
+    // the injected telemetry service + live model() read.
+    provideAgent({
+      apiUrl: environment.langGraphApiUrl,
+      assistantId: environment.assistantId,
+      threadId: threadIdState,
+      onThreadId: (id: string) => {
+        // The signal→URL effect picks this up and stamps the new id
+        // into the URL — no persistence write needed any more, URL is
+        // the source of truth.
+        threadIdState.set(id);
+      },
+      // Phase 3B: tells SubagentTracker to treat `research` tool calls as
+      // subagent dispatches and to materialize agent.subagents() from the
+      // resulting tools:<id>-namespaced stream events.
+      subagentToolNames: ['research'],
+      telemetry: (event) => telemetrySink?.(event),
+    }),
     { provide: DEMO_AGENT, useFactory: () => inject(DemoShell).agent },
   ],
 })
@@ -331,9 +366,13 @@ export class DemoShell {
    *
    *  Mode switches that should preserve the active thread go through
    *  `onModeChange`, which navigates to `/<next-mode>/<id>` directly. */
-  protected readonly threadIdSignal = signal<string | null>(
-    parseUrl(this.router.url).threadId,
-  );
+  // Alias the module-level signal the agent provider watches (see
+  // @Component providers), so the component's URL-sync logic and the agent
+  // share one source of truth. Seed it from the current URL.
+  protected readonly threadIdSignal = ((): typeof threadIdState => {
+    threadIdState.set(parseUrl(this.router.url).threadId);
+    return threadIdState;
+  })();
 
   /** Title of the currently-selected thread, or 'New chat' if none. The
    *  Python graph writes thread.metadata.title from the first user message
@@ -391,25 +430,16 @@ export class DemoShell {
    * a reconnect.
    */
   readonly agent = (() => {
-    const a = agent({
-      apiUrl: environment.langGraphApiUrl,
-      assistantId: environment.assistantId,
-      threadId: this.threadIdSignal,
-      onThreadId: (id: string) => {
-        // The signal→URL effect picks this up and stamps the new id
-        // into the URL — no persistence write needed any more, URL is
-        // the source of truth.
-        this.threadIdSignal.set(id);
-      },
-      // Phase 3B: tells SubagentTracker to treat `research` tool calls as
-      // subagent dispatches and to materialize agent.subagents() from the
-      // resulting tools:<id>-namespaced stream events.
-      subagentToolNames: ['research'],
-      telemetry: createCanonicalDemoRuntimeTelemetrySink(
-        this.telemetry,
-        () => this.model(),
-      ),
-    });
+    // The agent itself is constructed by `provideAgent({...})` in the
+    // @Component providers above (thread binding + subagentToolNames live
+    // there). That static config can't read component state, so it delegates
+    // telemetry to the module-level `telemetrySink` — which we populate here
+    // from the injected telemetry service + live model() read.
+    telemetrySink = createCanonicalDemoRuntimeTelemetrySink(
+      this.telemetry,
+      () => this.model(),
+    );
+    const a = injectAgent();
     void this.telemetry.capture('ngaf:browser_chat_init', { surface: TELEMETRY_SURFACE });
     const orig = a.submit.bind(a);
     (a as { submit: typeof a.submit }).submit = (async (

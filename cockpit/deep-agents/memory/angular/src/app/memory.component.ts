@@ -1,8 +1,7 @@
 import { Component, computed } from '@angular/core';
 import { ChatComponent } from '@threadplane/chat';
 import { ExampleChatLayoutComponent } from '@threadplane/example-layouts';
-import { agent } from '@threadplane/langgraph';
-import { environment } from '../environments/environment';
+import { injectAgent } from '@threadplane/langgraph';
 
 /**
  * MemoryComponent demonstrates persistent agent memory across sessions.
@@ -51,10 +50,7 @@ export class MemoryComponent {
    * The graph returns an `agent_memory` (or `memory`) dict alongside messages
    * in its state. We derive a reactive signal from `stream.value()` for display.
    */
-  protected readonly agent = agent({
-    apiUrl: environment.langGraphApiUrl,
-    assistantId: environment.streamingAssistantId,
-  });
+  protected readonly agent = injectAgent();
 
   /**
    * Reactive list of [key, value] memory entries derived from the graph state.
