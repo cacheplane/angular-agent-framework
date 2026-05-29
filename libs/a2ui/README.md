@@ -46,7 +46,7 @@ function onChunk(chunk: string): void {
     } else if ('surfaceUpdate' in msg) {
       console.log('Surface update for:', msg.surfaceUpdate.surfaceId);
     } else if ('dataModelUpdate' in msg) {
-      console.log('Data model delta:', msg.dataModelUpdate.entries);
+      console.log('Data model delta:', msg.dataModelUpdate.contents);
     } else if ('deleteSurface' in msg) {
       console.log('Delete surface:', msg.deleteSurface.surfaceId);
     }
