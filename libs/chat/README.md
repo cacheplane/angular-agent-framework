@@ -120,12 +120,12 @@ Custom content templates for message bubbles, tool call rows, and citation cards
 
 ### Tool calls and subagents
 
-`<chat-tool-calls>` renders in-progress and completed tool calls. Customize per-call layout with `ChatToolCallTemplateDirective`:
+`<chat-tool-calls>` renders in-progress and completed tool calls. Customize per-call layout with `ChatToolCallTemplateDirective` — the `chatToolCallTemplate` input takes a tool name to match, or `"*"` for all; the template context exposes the `ToolCall` (`$implicit`) and its `status`:
 
 ```html
 <chat-tool-calls [agent]="agent">
-  <ng-template chatToolCallTemplate let-ctx>
-    <my-tool-card [call]="ctx.toolCall" />
+  <ng-template chatToolCallTemplate="*" let-call let-status="status">
+    <my-tool-card [call]="call" [status]="status" />
   </ng-template>
 </chat-tool-calls>
 ```
@@ -164,7 +164,7 @@ Inline citation markers are rendered automatically by `MarkdownCitationReference
 
 **Adapter integration:**
 - **LangGraph** — reads from `message.additional_kwargs.citations` (preferred) or `.sources` (fallback).
-- **AG-UI** — reads from `STATE_DELTA` at JSON Pointer `/citations/{messageId}` via `bridgeCitationsState`.
+- **AG-UI** — `bridgeCitationsState` reads `state.citations[messageId]` from the agent state on `STATE_SNAPSHOT` and `STATE_DELTA` events.
 
 ### GenUI / A2UI surfaces
 
