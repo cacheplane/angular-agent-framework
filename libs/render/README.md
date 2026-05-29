@@ -1,8 +1,24 @@
 # @threadplane/render
 
-Generative UI for Angular. Agents emit structured JSON specs; this library renders them into Angular components you already own. Supports the Vercel `json-render` and Google A2UI v1-compatible protocols out of the box.
+`@json-render/core`-backed Angular render engine — maps JSON specs to Angular components via a registry, used internally by `@threadplane/chat` for generative-UI rendering.
 
-Part of [Threadplane](https://github.com/cacheplane/angular-agent-framework). MIT licensed.
+<p>
+  <a href="https://www.npmjs.com/package/@threadplane%2Frender">
+    <img alt="npm version" src="https://img.shields.io/npm/v/@threadplane%2Frender?color=6C8EFF&labelColor=080B14&style=flat-square" />
+  </a>
+  <a href="https://angular.dev">
+    <img alt="Angular 20+" src="https://img.shields.io/badge/Angular-20%2B%20%7C%2021-6C8EFF?labelColor=080B14&style=flat-square" />
+  </a>
+  <a href="../../LICENSE">
+    <img alt="MIT" src="https://img.shields.io/badge/license-MIT-6C8EFF?labelColor=080B14&style=flat-square" />
+  </a>
+</p>
+
+## What it does
+
+- Renders a JSON spec tree to Angular components via a named view registry (`<render-spec>`) or a single node (`<render-element>`).
+- Registry composition utilities (`views`, `withViews`, `withoutViews`) let you build, extend, and trim registries without mutation.
+- Signal-based state store (`signalStateStore`) and per-component fallback support keep UI consistent during streaming.
 
 ## Install
 
@@ -10,21 +26,66 @@ Part of [Threadplane](https://github.com/cacheplane/angular-agent-framework). MI
 npm install @threadplane/render
 ```
 
-## What it does
+**Peer dependencies:** `@angular/core ^20.0.0 || ^21.0.0`, `@angular/common ^20.0.0 || ^21.0.0`, `@json-render/core ^0.16.0`
 
-- **Spec-driven rendering** — agents return JSON; you map each node type to one of your Angular components via a registry
-- **Two protocols supported** — Vercel `json-render` and Google A2UI v1-compatible
-- **Per-component fallback API** — when a spec node has no registered component, you control what renders (and surface it to your observability layer)
-- **Readiness gate** — holds renders until the surface is real, so users never see mystery partial UI
-- **Streaming partial renders** — works with `@cacheplane/partial-json` to render progressive JSON as it streams
+## Quick start
 
-## Documentation
+**1. Define your view registry and provide it.**
 
-- [Quickstart](https://threadplane.ai/docs/render/getting-started/quickstart)
-- [Component registry](https://threadplane.ai/docs/render/guides/registry)
-- [Fallback patterns](https://threadplane.ai/docs/render/guides/fallback)
-- [A2UI v1-compatible protocol](https://threadplane.ai/docs/render/a2ui/overview)
+```typescript
+// app.config.ts
+import { ApplicationConfig } from '@angular/core';
+import { provideRender, provideViews, views, toRenderRegistry } from '@threadplane/render';
+import { CardComponent } from './card.component';
+import { HeroComponent } from './hero.component';
+
+const myRegistry = toRenderRegistry(
+  views({ card: CardComponent, hero: HeroComponent })
+);
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideRender({ registry: myRegistry }),
+    provideViews(views({ card: CardComponent, hero: HeroComponent })),
+  ],
+};
+```
+
+**2. Render a spec in your component.**
+
+```typescript
+import { Component, signal } from '@angular/core';
+import { RenderSpecComponent } from '@threadplane/render';
+import type { Spec } from '@json-render/core';
+
+@Component({
+  selector: 'app-agent-ui',
+  imports: [RenderSpecComponent],
+  template: `<render-spec [spec]="spec()" />`,
+})
+export class AgentUiComponent {
+  spec = signal<Spec | null>(null);
+
+  onAgentMessage(incoming: Spec) {
+    this.spec.set(incoming);
+  }
+}
+```
+
+## Capabilities
+
+**View registry composition** — `views(map)` creates a frozen registry; `withViews(base, additions)` extends it non-destructively; `withoutViews(base, ...keys)` prunes entries. Convert to an `AngularRegistry` with `toRenderRegistry`. Provide app-wide with `provideViews` or pass directly as a `[registry]` input on `<render-spec>`.
+
+**Signal state store** — `signalStateStore(initial)` provides a `StateStore` backed by Angular Signals, suitable for two-way bindings declared in a spec.
+
+**DI providers** — `provideRender(config)` registers `RenderConfig` (registry, store, functions, handlers) as environment-scoped defaults; `provideViews(registry)` registers a `ViewRegistry` token consumed by the render engine.
+
+**Fallback** — `DefaultFallbackComponent` renders when no component is registered for a spec node; individual entries in a `ViewRegistry` can supply their own `fallback` component via `RenderViewEntry`.
+
+## Reliability
+
+Powers `@threadplane/chat` generative-UI rendering in production. Patch-only `0.0.x` releases. Validated by the CI job "Library — lint / test / build" on every commit.
 
 ## License
 
-MIT — free for any use. See [LICENSE](../../LICENSE).
+MIT. See [LICENSE](../../LICENSE).
