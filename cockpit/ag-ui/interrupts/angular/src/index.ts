@@ -28,6 +28,7 @@ export const agUiInterruptsAngularModule: CockpitCapabilityModule = {
     'cockpit/ag-ui/interrupts/angular/prompts/interrupts.md',
   ],
   codeAssetPaths: [
-    'cockpit/ag-ui/interrupts/angular/src/app.component.ts',
+    'cockpit/ag-ui/interrupts/angular/src/app/interrupts.component.ts',
+    'cockpit/ag-ui/interrupts/angular/src/app/app.config.ts',
   ],
 };
