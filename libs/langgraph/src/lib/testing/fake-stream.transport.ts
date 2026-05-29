@@ -80,13 +80,19 @@ export class FakeStreamTransport implements AgentTransport {
     };
   }
 
-  async cancelRun(_threadId: string, _runId: string, _signal: AbortSignal): Promise<void> {}
+  async cancelRun(_threadId: string, _runId: string, _signal: AbortSignal): Promise<void> {
+    // No-op: the fake has no real runs to cancel.
+    return;
+  }
 
   async getHistory(_threadId: string, _signal: AbortSignal): Promise<ThreadState[]> {
     return [];
   }
 
-  async *joinStream(): AsyncIterable<StreamEvent> {}
+  async *joinStream(): AsyncIterable<StreamEvent> {
+    // No queued-run replay in the fake; yields nothing.
+    yield* [];
+  }
 }
 
 function delay(ms: number): Promise<void> {
