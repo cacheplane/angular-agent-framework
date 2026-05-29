@@ -3,7 +3,7 @@
 Adapter that wraps an [AG-UI](https://github.com/ag-ui-protocol/ag-ui) `AbstractAgent` into the runtime-neutral `Agent` contract from `@threadplane/chat`. Works with any AG-UI-compatible backend.
 
 <p align="center">
-  <a href="https://www.npmjs.com/package/@threadplane%2Fag-ui">
+  <a href="https://www.npmjs.com/package/@threadplane/ag-ui">
     <img alt="npm version" src="https://img.shields.io/npm/v/@threadplane%2Fag-ui?color=6C8EFF&labelColor=080B14&style=flat-square" />
   </a>
   <a href="https://angular.dev">

@@ -3,11 +3,11 @@
 Browser-safe Ed25519 license-token verification and evaluation — the engine behind `@threadplane/chat`'s commercial-license check.
 
 <p align="center">
-  <a href="https://www.npmjs.com/package/@threadplane%2Flicensing">
+  <a href="https://www.npmjs.com/package/@threadplane/licensing">
     <img alt="npm version" src="https://img.shields.io/npm/v/@threadplane%2Flicensing?color=6C8EFF&labelColor=080B14&style=flat-square" />
   </a>
   <a href="https://opensource.org/licenses/MIT">
-    <img alt="MIT" src="https://img.shields.io/badge/license-MIT-6C8EFF?labelColor=080B14&style=flat-square" />
+    <img alt="MIT" src="https://img.shields.io/badge/License-MIT-6C8EFF?labelColor=080B14&style=flat-square" />
   </a>
 </p>
 

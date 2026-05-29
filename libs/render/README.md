@@ -3,14 +3,14 @@
 `@json-render/core`-backed Angular render engine — maps JSON specs to Angular components via a registry, used internally by `@threadplane/chat` for generative-UI rendering.
 
 <p>
-  <a href="https://www.npmjs.com/package/@threadplane%2Frender">
+  <a href="https://www.npmjs.com/package/@threadplane/render">
     <img alt="npm version" src="https://img.shields.io/npm/v/@threadplane%2Frender?color=6C8EFF&labelColor=080B14&style=flat-square" />
   </a>
   <a href="https://angular.dev">
     <img alt="Angular 20+" src="https://img.shields.io/badge/Angular-20%2B%20%7C%2021-6C8EFF?labelColor=080B14&style=flat-square" />
   </a>
   <a href="../../LICENSE">
-    <img alt="MIT" src="https://img.shields.io/badge/license-MIT-6C8EFF?labelColor=080B14&style=flat-square" />
+    <img alt="MIT" src="https://img.shields.io/badge/License-MIT-6C8EFF?labelColor=080B14&style=flat-square" />
   </a>
 </p>
 
