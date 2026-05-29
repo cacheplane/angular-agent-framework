@@ -1503,8 +1503,14 @@
   {
     "name": "MockLangGraphAgent",
     "kind": "interface",
-    "description": "A LangGraphAgent mock with writable signals for easy test control.\n\nCast the result of `mockLangGraphAgent()` to this type to access\nwritable signals without unsafe casts in test files.",
+    "description": "A LangGraphAgent mock with writable signals for easy test control.\n\nBuilds on the runtime-neutral MockAgent from `@threadplane/chat`\n(which supplies the neutral `Agent`-contract writable signals plus\n`submit`/`stop`/`regenerate` call tracking) and layers the LangGraph-specific\nwritable signals on top.\n\nCast the result of `mockLangGraphAgent()` to this type to access\nwritable signals without unsafe casts in test files.",
     "properties": [
+      {
+        "name": "_internal",
+        "type": "object",
+        "description": "",
+        "optional": false
+      },
       {
         "name": "activeSubagents",
         "type": "WritableSignal<SubagentStreamRef[]>",
@@ -1692,6 +1698,12 @@
         "optional": false
       },
       {
+        "name": "stopCount",
+        "type": "number",
+        "description": "",
+        "optional": false
+      },
+      {
         "name": "subagents",
         "type": "WritableSignal<Map<string, Subagent>>",
         "description": "",
@@ -1701,6 +1713,12 @@
         "name": "submit",
         "type": "object",
         "description": "Submit input, resume commands, checkpoint forks, or other LangGraph run options.",
+        "optional": false
+      },
+      {
+        "name": "submitCalls",
+        "type": "object[]",
+        "description": "",
         "optional": false
       },
       {
@@ -2055,12 +2073,12 @@
   {
     "name": "mockLangGraphAgent",
     "kind": "function",
-    "description": "Creates a mock LangGraphAgent with writable signals for testing.\nControl state by writing to the returned writable signals directly.",
-    "signature": "mockLangGraphAgent(initial: object): MockLangGraphAgent<>",
+    "description": "Creates a mock LangGraphAgent with writable signals for testing.\nControl state by writing to the returned writable signals directly.\n\nNeutral `Agent`-contract signals come from mockAgent; LangGraph-specific\nsignals are declared here and layered on top.",
+    "signature": "mockLangGraphAgent(initial: MockAgentOptions & { hasValue?: boolean; isThreadLoading?: boolean; langGraphMessages?: BaseMessage<MessageStructure<MessageToolSet>, MessageType>[] }): MockLangGraphAgent<>",
     "params": [
       {
         "name": "initial",
-        "type": "object",
+        "type": "MockAgentOptions & { hasValue?: boolean; isThreadLoading?: boolean; langGraphMessages?: BaseMessage<MessageStructure<MessageToolSet>, MessageType>[] }",
         "description": "",
         "optional": false
       }
@@ -2080,6 +2098,25 @@
       {
         "name": "configOrFactory",
         "type": "AgentConfig<T, BagTemplate> | object",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "Provider[]",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "provideFakeAgent",
+    "kind": "function",
+    "description": "Wire an in-process fake LangGraph agent into Angular DI.\n\nStreams a canned assistant reply (see FakeAgentConfig) with no backend —\nthe symmetric counterpart to @threadplane/ag-ui's provideFakeAgent(). For\nadvanced manual scripting (tool calls, interrupts, multi-batch), provide\nthe agent yourself with\n`provideAgent({ assistantId, transport: new MockAgentTransport(...) })`.",
+    "signature": "provideFakeAgent(config: FakeAgentConfig): Provider[]",
+    "params": [
+      {
+        "name": "config",
+        "type": "FakeAgentConfig",
         "description": "",
         "optional": false
       }
