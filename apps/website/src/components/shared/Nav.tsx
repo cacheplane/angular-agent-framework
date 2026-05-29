@@ -173,17 +173,18 @@ export function Nav() {
 
         {/* Mobile hamburger */}
         <button
-          className="lg:hidden"
+          className="lg:hidden inline-flex items-center justify-center"
           onClick={() => { setOpen(!open); if (!open) setMobileTab(isDocsPage ? 'docs' : 'site'); }}
           aria-label={open ? 'Close menu' : 'Open menu'}
           style={{
             color: tokens.colors.textPrimary,
             // Expand hit area to >=44x44 without shifting visual layout.
+            // NOTE: display/centering live in the className (inline-flex
+            // items-center justify-center) so `lg:hidden` can win at >=lg.
+            // An inline `display` would override the utility and leak the
+            // hamburger onto desktop, pushing the nav links to center.
             padding: 12,
             margin: -12,
-            display: 'inline-flex',
-            alignItems: 'center',
-            justifyContent: 'center',
           }}>
           {open ? <CloseIcon /> : <MenuIcon />}
         </button>
