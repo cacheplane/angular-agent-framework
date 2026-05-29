@@ -53,10 +53,13 @@ export default async function AgUiPage() {
             >
               Build an Angular agent UI on any AG-UI-compatible runtime — LangGraph, CrewAI, Mastra, Microsoft Agent Framework, AG2, Pydantic AI, AWS Strands, CopilotKit. Same primitives, same chat surface, same testing story.
             </p>
-            <div style={{ display: 'flex', justifyContent: 'center', gap: 12, flexWrap: 'wrap', marginBottom: 20 }}>
-              <Button variant="primary" size="lg" href="/docs/agent/getting-started/introduction">Get started</Button>
+            <div style={{ display: 'flex', justifyContent: 'center', gap: 12, flexWrap: 'wrap', marginBottom: 12 }}>
+              <Button variant="primary" size="lg" href="/docs/ag-ui/getting-started/quickstart">Get started</Button>
               <Button variant="secondary" size="lg" href="https://github.com/cacheplane/angular-agent-framework" target="_blank" rel="noopener noreferrer">View source</Button>
             </div>
+            <p style={{ fontSize: 13, color: tokens.colors.textMuted, marginBottom: 20 }}>
+              Talking to LangGraph Platform directly? See <a href="/docs/choosing-an-adapter" style={{ color: tokens.colors.accent }}>Choosing an adapter</a>.
+            </p>
             <div style={{ display: 'flex', justifyContent: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 24 }}>
               <Pill variant="accent">MIT</Pill>
               <Pill variant="angular">Angular 20+</Pill>
@@ -108,19 +111,19 @@ export default async function AgUiPage() {
         id="primitives"
         eyebrow="Same primitives"
         headline="Drop-in for everything @threadplane/chat ships."
-        body="provideAgUiAgent registers an AG-UI client and exposes the same Agent contract that @threadplane/langgraph provides. Every chat primitive — durable threads, interrupts, subagents, generative UI, citations — works against any AG-UI runtime."
+        body="provideAgent registers an AG-UI client and exposes the same Agent contract that @threadplane/langgraph provides. Every chat primitive — durable threads, interrupts, subagents, generative UI, citations — works against any AG-UI runtime."
         bullets={[
-          'provideAgUiAgent + AG_UI_AGENT injection token',
+          'provideAgent + injectAgent — same names across adapters',
           'Identical Agent contract: messages() / status() / interrupt() / reload()',
           'Same A2UI surface, themes, and citations rendering',
           'MockAgentTransport works the same way for tests',
         ]}
         supportingCards={[
-          { title: 'provideAgUiAgent', description: 'AG-UI wiring.' },
-          { title: 'AG_UI_AGENT', description: 'Injection token.' },
+          { title: 'provideAgent', description: 'AG-UI wiring.' },
+          { title: 'injectAgent()', description: 'No-args helper.' },
           { title: '@threadplane/chat', description: 'Same components.' },
         ]}
-        cta={{ label: 'API reference', href: '/docs/agent/api/agent' }}
+        cta={{ label: 'API reference', href: '/docs/langgraph/api/inject-agent' }}
         visualLeft
         visual={
           <BrowserFrame url="app.config.ts" elevation="md">
@@ -135,13 +138,13 @@ export default async function AgUiPage() {
               minHeight: 320,
               overflow: 'auto',
             }}>
-{`import { provideAgUiAgent, AG_UI_AGENT } from '@threadplane/ag-ui';
+{`import { provideAgent, injectAgent } from '@threadplane/ag-ui';
 import { ChatComponent } from '@threadplane/chat';
 
 // app.config.ts
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideAgUiAgent({
+    provideAgent({
       url: 'https://your.agent.endpoint',
     }),
   ],
@@ -153,7 +156,7 @@ export const appConfig: ApplicationConfig = {
   template: \`<chat [agent]="agent" />\`,
 })
 export class App {
-  protected readonly agent = inject(AG_UI_AGENT);
+  protected readonly agent = injectAgent();
 }`}
             </pre>
           </BrowserFrame>

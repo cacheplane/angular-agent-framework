@@ -1,33 +1,43 @@
 import { tokens } from '@threadplane/design-tokens';
 import { HighlightedCode } from '../HighlightedCode';
 
-const SNIPPET_1 = `import { agent } from '@threadplane/langgraph';
+const SNIPPET_1 = `// app.config.ts
+import { provideAgent } from '@threadplane/langgraph';
 
-const chat = agent({
-  assistantId: 'my-agent',
-  apiUrl: 'https://my-langgraph.cloud',
-});
+providers: [
+  provideAgent({
+    assistantId: 'my-agent',
+    apiUrl: 'https://my-langgraph.cloud',
+  }),
+];
+
+// component
+import { injectAgent } from '@threadplane/langgraph';
+const chat = injectAgent();
 
 // Reactive signals — OnPush compatible
 chat.messages();    // Signal<Message[]>
 chat.isLoading();   // Signal<boolean>
 chat.interrupt();   // Signal<AgentInterrupt | undefined>`;
 
-const SNIPPET_2 = `import { agent, provideAgent, MockAgentTransport, FetchStreamTransport } from '@threadplane/langgraph';
+const SNIPPET_2 = `// app.config.ts
+import { provideAgent, MockAgentTransport, FetchStreamTransport } from '@threadplane/langgraph';
 
-provideAgent({
-  apiUrl: environment.langgraphUrl,
-  transport: isTest
-    ? new MockAgentTransport(fixtures)
-    : new FetchStreamTransport(),
-});
+providers: [
+  provideAgent({
+    apiUrl: environment.langgraphUrl,
+    assistantId: 'my-agent',
+    threadId: savedThreadId,
+    onThreadId: (id) => localStorage.setItem('threadId', id),
+    transport: isTest
+      ? new MockAgentTransport(fixtures)
+      : new FetchStreamTransport(),
+  }),
+];
 
-const chat = agent({
-  apiUrl: environment.langgraphUrl,
-  assistantId: 'my-agent',
-  threadId: savedThreadId,
-  onThreadId: (id) => localStorage.setItem('threadId', id),
-});`;
+// component
+import { injectAgent } from '@threadplane/langgraph';
+const chat = injectAgent();`;
 
 const SNIPPETS = [
   { title: 'Minimal Setup', code: SNIPPET_1, lang: 'typescript' },

@@ -1,12 +1,13 @@
 # Streaming with Angular
 
 <Summary>
-Build a real-time streaming chat interface using `agent()` from
-`@threadplane/langgraph` connected to a LangGraph backend on LangSmith Cloud.
+Build a real-time streaming chat interface using `provideAgent()` and
+`injectAgent()` from `@threadplane/langgraph` connected to a LangGraph backend
+on LangSmith Cloud.
 </Summary>
 
 <Prompt>
-Add real-time LLM streaming to this Angular component using `agent()` from `@threadplane/langgraph`. Configure `provideAgent({ apiUrl })` in the app config, then call `stream.submit()` to send messages. Bind `stream.messages()` in the template using `@for` - all Signals, no subscriptions needed.
+Add real-time LLM streaming to this Angular component using `@threadplane/langgraph`. Configure `provideAgent({ apiUrl })` in the app config, call `injectAgent()` in the component, then call `stream.submit()` to send messages. Bind `stream.messages()` in the template using `@for` - all Signals, no subscriptions needed.
 </Prompt>
 
 <Steps>
@@ -23,31 +24,30 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideAgent({
       apiUrl: 'https://your-deployment.langgraph.app',
+      assistantId: 'streaming',
     }),
   ],
 };
 ```
 
-This makes the API URL available to all `agent()` calls in your app.
+This makes the configured agent available to all `injectAgent()` calls in your app.
 
 </Step>
 <Step title="Create the streaming resource">
 
-In your component, call `agent()` in a field initializer (injection context required):
+In your component, call `injectAgent()` in a field initializer (injection context required):
 
 ```typescript
 // streaming.component.ts
-import { agent } from '@threadplane/langgraph';
+import { injectAgent } from '@threadplane/langgraph';
 
 export class StreamingComponent {
-  protected readonly stream = agent({
-    assistantId: 'streaming',
-  });
+  protected readonly stream = injectAgent();
 }
 ```
 
 <Note>
-`agent()` must be called within an Angular injection context - a component field initializer or constructor body.
+`injectAgent()` must be called within an Angular injection context - a component field initializer or constructor body.
 </Note>
 
 </Step>
@@ -112,7 +112,7 @@ Deploy with `langgraph deploy` from `langgraph-cli`. The `assistantId` in your A
 </Steps>
 
 <Tip>
-No service layer needed - `agent()` replaces wrapper services entirely. It handles connection lifecycle, state management, and error recovery.
+No service layer needed - `injectAgent()` replaces wrapper services entirely. It handles connection lifecycle, state management, and error recovery.
 </Tip>
 
 <Warning>

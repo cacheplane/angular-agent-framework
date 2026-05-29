@@ -1,14 +1,14 @@
 # Durable Execution with Angular
 
 <Summary>
-Build a fault-tolerant chat interface using `agent()` from
-`@threadplane/langgraph`. The backend graph checkpoints state after
+Build a fault-tolerant chat interface using `provideAgent()` and
+`injectAgent()` from `@threadplane/langgraph`. The backend graph checkpoints state after
 each node, enabling resume-on-failure. The sidebar monitors execution
 status in real time and exposes a "Retry" button when errors occur.
 </Summary>
 
 <Prompt>
-Add a durable multi-step execution workflow to this Angular component using `agent()` from `@threadplane/langgraph`. Display `stream.status()` as a colour-coded badge, show a `stream.hasValue()` indicator, and render a "Retry" button that calls `stream.reload()` when `stream.error()` is set. Bind the conversation with `<chat [agent]="stream" />` from `@threadplane/chat`.
+Add a durable multi-step execution workflow to this Angular component using `provideAgent()` and `injectAgent()` from `@threadplane/langgraph`. Display `stream.status()` as a colour-coded badge, show a `stream.hasValue()` indicator, and render a "Retry" button that calls `stream.reload()` when `stream.error()` is set. Bind the conversation with `<chat [agent]="stream" />` from `@threadplane/chat`.
 </Prompt>
 
 <Steps>
@@ -25,26 +25,25 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideAgent({
       apiUrl: 'https://your-deployment.langgraph.app',
+      assistantId: 'durable-execution',
     }),
   ],
 };
 ```
 
-This makes the API URL available to all `agent()` calls in your app.
+This makes the configured agent available to all `injectAgent()` calls in your app.
 
 </Step>
 <Step title="Create the streaming resource">
 
-In your component, call `agent()` with the `assistantId` pointing to your durable-execution graph:
+In your component, call `injectAgent()` to retrieve the configured durable-execution agent:
 
 ```typescript
 // durable-execution.component.ts
-import { agent } from '@threadplane/langgraph';
+import { injectAgent } from '@threadplane/langgraph';
 
 export class DurableExecutionComponent {
-  protected readonly stream = agent({
-    assistantId: 'durable-execution',
-  });
+  protected readonly stream = injectAgent();
 
   send(text: string): void {
     void this.stream.submit({ message: text });

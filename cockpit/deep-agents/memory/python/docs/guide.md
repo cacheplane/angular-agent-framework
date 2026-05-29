@@ -1,11 +1,11 @@
 # Persistent Agent Memory with Angular
 
 <Summary>
-Build a chat interface where the agent remembers facts about the user across turns using `agent()` from `@threadplane/langgraph`. The agent stores learned facts in `agent_memory` state, and the sidebar displays them in real time.
+Build a chat interface where the agent remembers facts about the user across turns using `provideAgent()` and `injectAgent()` from `@threadplane/langgraph`. The agent stores learned facts in `agent_memory` state, and the sidebar displays them in real time.
 </Summary>
 
 <Prompt>
-Add a memory sidebar to this Angular component using `agent()` from `@threadplane/langgraph`. Use `stream.value()` to access the agent's `agent_memory` state, derive `memoryEntries` with `computed()`, and bind them to the sidebar beside the `<chat>` component from `@threadplane/chat`.
+Add a memory sidebar to this Angular component using `provideAgent()` and `injectAgent()` from `@threadplane/langgraph`. Use `stream.value()` to access the agent's `agent_memory` state, derive `memoryEntries` with `computed()`, and bind them to the sidebar beside the `<chat>` component from `@threadplane/chat`.
 </Prompt>
 
 <Steps>
@@ -22,26 +22,25 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideAgent({
       apiUrl: 'https://your-deployment.langgraph.app',
+      assistantId: 'da-memory',
     }),
   ],
 };
 ```
 
-This makes the API URL available to all `agent()` calls in your app.
+This makes the configured agent available to all `injectAgent()` calls in your app.
 
 </Step>
 <Step title="Create the streaming resource">
 
-In your component, call `agent()` with the `assistantId` pointing to your memory graph:
+In your component, call `injectAgent()` to retrieve the configured memory agent:
 
 ```typescript
 // memory.component.ts
-import { agent } from '@threadplane/langgraph';
+import { injectAgent } from '@threadplane/langgraph';
 
 export class MemoryComponent {
-  protected readonly stream = agent({
-    assistantId: 'da-memory',
-  });
+  protected readonly stream = injectAgent();
 }
 ```
 
@@ -54,9 +53,10 @@ Use Angular's `computed()` to reactively derive the memory key/value pairs from 
 
 ```typescript
 import { computed } from '@angular/core';
+import { injectAgent } from '@threadplane/langgraph';
 
 export class MemoryComponent {
-  protected readonly stream = agent({ assistantId: 'da-memory' });
+  protected readonly stream = injectAgent();
 
   memoryEntries = computed(() => {
     const val = this.stream.value() as { agent_memory?: Record<string, string> } | undefined;

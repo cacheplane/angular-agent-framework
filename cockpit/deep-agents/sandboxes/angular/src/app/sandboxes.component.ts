@@ -1,9 +1,8 @@
 import { Component, computed } from '@angular/core';
 import { ChatComponent, views } from '@threadplane/chat';
 import { ExampleChatLayoutComponent } from '@threadplane/example-layouts';
-import { agent } from '@threadplane/langgraph';
+import { injectAgent } from '@threadplane/langgraph';
 import { signalStateStore } from '@threadplane/render';
-import { environment } from '../environments/environment';
 import { CodeExecutionComponent } from './views/code-execution.component';
 
 /**
@@ -64,10 +63,7 @@ export class SandboxesComponent {
   readonly ui = views({ 'code-execution': CodeExecutionComponent });
   readonly uiStore = signalStateStore({});
 
-  protected readonly agent = agent({
-    apiUrl: environment.langGraphApiUrl,
-    assistantId: environment.streamingAssistantId,
-  });
+  protected readonly agent = injectAgent();
 
   /**
    * Derived signal: extracts code executions from the message stream.

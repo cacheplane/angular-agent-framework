@@ -3,8 +3,7 @@ import { Component, signal } from '@angular/core';
 import { TitleCasePipe } from '@angular/common';
 import { ChatComponent } from '@threadplane/chat';
 import { ExampleChatLayoutComponent } from '@threadplane/example-layouts';
-import { agent } from '@threadplane/langgraph';
-import { environment } from '../environments/environment';
+import { injectAgent } from '@threadplane/langgraph';
 
 const THEMES: Record<string, Record<string, string>> = {
   dark: {
@@ -84,10 +83,7 @@ const THEMES: Record<string, Record<string, string>> = {
   `,
 })
 export class ThemingComponent {
-  protected readonly agent = agent({
-    apiUrl: environment.langGraphApiUrl,
-    assistantId: environment.streamingAssistantId,
-  });
+  protected readonly agent = injectAgent();
 
   protected readonly themeNames = Object.keys(THEMES);
   protected readonly activeTheme = signal('dark');

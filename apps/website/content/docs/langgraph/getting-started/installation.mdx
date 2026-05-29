@@ -1,0 +1,146 @@
+# Installation
+
+Detailed setup guide for `injectAgent()` in your Angular application.
+
+## Requirements
+
+<Steps>
+<Step title="Angular 20+">
+`injectAgent()` uses Angular Signals and the modern injection context API. Angular 20 or later is required.
+</Step>
+<Step title="Node.js 18+">
+Required for the build toolchain and package installation.
+</Step>
+<Step title="LangGraph Platform">
+A running LangGraph agent accessible via HTTP. Can be local (langgraph dev) or deployed (LangGraph Cloud).
+</Step>
+</Steps>
+
+## Install the package
+
+```bash
+npm install @threadplane/langgraph @threadplane/chat
+```
+
+`@threadplane/langgraph` provides `injectAgent()` and `provideAgent()`. `@threadplane/chat` provides the runtime-neutral chat UI consumed by the LangGraph adapter.
+
+## Peer Dependencies
+
+`@threadplane/langgraph` declares the following peer dependencies:
+
+| Package | Version |
+|---------|---------|
+| `@threadplane/chat` | `*` |
+| `@angular/core` | `^20.0.0 \|\| ^21.0.0` |
+| `@langchain/core` | `^1.1.33` |
+| `@langchain/langgraph-sdk` | `^1.7.4` |
+| `rxjs` | `~7.8.0` |
+
+## Configure the provider
+
+Add `provideAgent()` to your application configuration. This is the single source of truth for the agent singleton — `injectAgent()` consumes the config and takes no arguments of its own.
+
+```typescript
+// app.config.ts
+import { ApplicationConfig } from '@angular/core';
+import { provideAgent } from '@threadplane/langgraph';
+import { environment } from '../environments/environment';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideAgent({
+      apiUrl: environment.langgraphUrl,
+      assistantId: 'chat_agent',
+    }),
+  ],
+};
+```
+
+<Callout type="tip" title="Multiple agents in one app">
+Need more than one agent instance (e.g. a sidebar chat with a different assistant)? Use hierarchical DI: declare a component-scoped `providers: [provideAgent({...})]` array in the child component, and `injectAgent()` inside that subtree resolves to that override.
+</Callout>
+
+## Environment setup
+
+<Tabs>
+<Tab label="Development">
+
+For local development, configure your environment and run a LangGraph server:
+
+```typescript
+// src/environments/environment.ts
+export const environment = {
+  langgraphUrl: 'http://localhost:2024',
+};
+```
+
+```bash
+# Start LangGraph dev server
+langgraph dev
+
+# Your agent will be available at http://localhost:2024
+```
+
+</Tab>
+<Tab label="Production">
+
+For production, point to your LangGraph Cloud deployment:
+
+```typescript
+// src/environments/environment.prod.ts
+export const environment = {
+  langgraphUrl: 'https://your-project.langgraph.app',
+};
+```
+
+</Tab>
+</Tabs>
+
+## Verify installation
+
+Create a minimal component to verify the setup works. `injectAgent()` must be called in an injection context (a component field initializer or inside `inject()`).
+
+```typescript
+import { Component } from '@angular/core';
+import { injectAgent } from '@threadplane/langgraph';
+
+@Component({ selector: 'app-test', template: '' })
+export class TestComponent {
+  protected readonly test = injectAgent();
+
+  ngOnInit() {
+    console.log(this.test.status()); // 'idle' - setup is correct
+  }
+}
+```
+
+## Troubleshooting
+
+<Callout type="warning" title="Common issues">
+
+**Version mismatch** -- If you see errors about missing APIs or unknown decorators, confirm your Angular version is 20 or later. Run `ng version` to check. Earlier versions do not support the injection context APIs that `injectAgent()` relies on.
+
+**CORS errors** -- If the browser console shows `Access-Control-Allow-Origin` errors, your LangGraph server is not configured for cross-origin requests. The LangGraph dev server allows all origins by default. For production, make sure your deployment's CORS policy includes your Angular app's domain.
+
+**Connection refused** -- If you see `ERR_CONNECTION_REFUSED`, verify your LangGraph server is running and that the `apiUrl` matches the correct host and port. Run `langgraph dev` and confirm the server starts at the expected address (default `http://localhost:2024`).
+
+**Missing or incorrect API URL** -- The runtime needs an API URL configured in `provideAgent({ apiUrl })`. If the URL is missing or points at the wrong origin, the SDK request will fail when you submit the first run.
+
+</Callout>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Quick Start" href="/docs/langgraph/getting-started/quickstart">
+    Build your first chat component in 5 minutes
+  </Card>
+  <Card title="Angular Signals" href="/docs/langgraph/concepts/angular-signals">
+    Understand how Signals power agent
+  </Card>
+  <Card title="LangGraph Basics" href="/docs/langgraph/concepts/langgraph-basics">
+    Graphs, nodes, edges, and state for Angular developers
+  </Card>
+  <Card title="API Reference" href="/docs/langgraph/api/inject-agent">
+    Complete `injectAgent()` function reference
+  </Card>
+</CardGroup>

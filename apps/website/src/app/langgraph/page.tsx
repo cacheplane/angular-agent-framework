@@ -53,10 +53,13 @@ export default async function LangGraphPage() {
             >
               Ship LangGraph agents inside your Angular 20+ app with headless chat, durable threads, interrupts, branch/history, tool progress, and generative UI.
             </p>
-            <div style={{ display: 'flex', justifyContent: 'center', gap: 12, flexWrap: 'wrap', marginBottom: 20 }}>
-              <Button variant="primary" size="lg" href="/docs/agent/getting-started/introduction">Get started</Button>
+            <div style={{ display: 'flex', justifyContent: 'center', gap: 12, flexWrap: 'wrap', marginBottom: 12 }}>
+              <Button variant="primary" size="lg" href="/docs/langgraph/getting-started/introduction">Get started</Button>
               <Button variant="secondary" size="lg" href="https://github.com/cacheplane/angular-agent-framework" target="_blank" rel="noopener noreferrer">View source</Button>
             </div>
+            <p style={{ fontSize: 13, color: tokens.colors.textMuted, marginBottom: 20 }}>
+              Not sure if LangGraph is right for your backend? See <a href="/docs/choosing-an-adapter" style={{ color: tokens.colors.accent }}>Choosing an adapter</a>.
+            </p>
             <div style={{ display: 'flex', justifyContent: 'center', gap: 8, flexWrap: 'wrap' }}>
               <Pill variant="accent">MIT</Pill>
               <Pill variant="angular">Angular 20+</Pill>
@@ -70,19 +73,19 @@ export default async function LangGraphPage() {
         id="providers"
         eyebrow="Providers"
         headline="Drop it into app.config.ts. Done."
-        body="provideAgent wires LangGraph (or AG-UI) into Angular's DI container. From any component, agent() returns a signal-based handle for messages, status, errors, and interrupts."
+        body="provideAgent wires LangGraph into Angular's DI container. From any component, injectAgent() returns a signal-based handle for messages, status, errors, and interrupts."
         bullets={[
-          'provideAgent + provideAgUiAgent — pick your runtime',
-          'agent() returns a typed signal-based handle',
+          'provideAgent — wire it once in app.config.ts',
+          'injectAgent() returns a typed signal-based handle',
           'OnPush tested',
           'Test transports for deterministic specs',
         ]}
         supportingCards={[
           { title: 'provideAgent', description: 'LangGraph wiring.' },
-          { title: 'provideAgUiAgent', description: 'AG-UI wiring.' },
+          { title: 'injectAgent()', description: 'No-args helper.' },
           { title: 'MockAgentTransport', description: 'Deterministic tests.' },
         ]}
-        cta={{ label: 'API reference', href: '/docs/agent/api/agent' }}
+        cta={{ label: 'API reference', href: '/docs/langgraph/api/inject-agent' }}
         visual={
           <BrowserFrame url="app.config.ts" elevation="md">
             <pre style={{
@@ -109,7 +112,7 @@ export const appConfig: ApplicationConfig = {
 
 // any component
 export class ChatComponent {
-  agent = agent();
+  agent = injectAgent();
   messages = this.agent.messages;
   status = this.agent.status;
 }`}
@@ -134,7 +137,7 @@ export class ChatComponent {
           { title: 'interrupt()', description: 'Approval-gate signal.' },
           { title: 'reload()', description: 'Recover from errors.' },
         ]}
-        cta={{ label: 'Read the streaming guide', href: '/docs/agent/api/agent' }}
+        cta={{ label: 'Read the streaming guide', href: '/docs/langgraph/guides/streaming' }}
         visualLeft
         visual={<LangGraphCodeShowcase />}
       />

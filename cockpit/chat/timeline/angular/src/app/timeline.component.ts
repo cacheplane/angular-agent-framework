@@ -2,8 +2,7 @@
 import { Component } from '@angular/core';
 import { ChatComponent, ChatTimelineSliderComponent } from '@threadplane/chat';
 import { ExampleChatLayoutComponent } from '@threadplane/example-layouts';
-import { agent } from '@threadplane/langgraph';
-import { environment } from '../environments/environment';
+import { injectAgent } from '@threadplane/langgraph';
 
 /**
  * TimelineComponent demonstrates conversation timeline navigation
@@ -34,8 +33,5 @@ import { environment } from '../environments/environment';
   `,
 })
 export class TimelineComponent {
-  protected readonly agent = agent({
-    apiUrl: environment.langGraphApiUrl,
-    assistantId: environment.streamingAssistantId,
-  });
+  protected readonly agent = injectAgent();
 }

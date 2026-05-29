@@ -96,18 +96,18 @@ yarn add @threadplane/ag-ui @threadplane/chat marked
 ```ts
 // app.config.ts
 import { ApplicationConfig } from '@angular/core';
-import { provideAgUiAgent } from '@threadplane/ag-ui';
+import { provideAgent } from '@threadplane/ag-ui';
 import { provideChat } from '@threadplane/chat';
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideAgUiAgent({ url: 'http://localhost:8000/agent' }),
+    provideAgent({ url: 'http://localhost:8000/agent' }),
     provideChat({ assistantName: 'Astra' }),
   ],
 };
 ```
 
-That's the whole bootstrap. `provideAgUiAgent` is the AG-UI transport. It wraps the official `@ag-ui/client` `HttpAgent` and exposes the signal-shaped contract via DI. `provideChat` is the chat UI's configuration.
+That's the whole bootstrap. `provideAgent` is the AG-UI transport. It wraps the official `@ag-ui/client` `HttpAgent` and exposes the signal-shaped contract via DI. `provideChat` is the chat UI's configuration.
 
 Notice they're independent. `@threadplane/chat` doesn't know it's talking to an AG-UI backend. It just reads from the `Agent` contract. We'll lean on that boundary later.
 
@@ -116,7 +116,7 @@ Notice they're independent. `@threadplane/chat` doesn't know it's talking to an 
 ```ts
 // chat-page.component.ts
 import { Component, ChangeDetectionStrategy, inject } from '@angular/core';
-import { AG_UI_AGENT } from '@threadplane/ag-ui';
+import { injectAgent } from '@threadplane/ag-ui';
 import { ChatComponent } from '@threadplane/chat';
 
 @Component({
@@ -131,7 +131,7 @@ import { ChatComponent } from '@threadplane/chat';
   `,
 })
 export class ChatPageComponent {
-  protected readonly agent = inject(AG_UI_AGENT);
+  protected readonly agent = injectAgent();
 }
 ```
 
@@ -275,10 +275,10 @@ Say you started with a Python LangGraph backend, shipped to production, and a qu
 
 ```ts
 // before
-provideAgUiAgent({ url: '/agents/langgraph' }),
+provideAgent({ url: '/agents/langgraph' }),
 
 // after
-provideAgUiAgent({ url: '/agents/mastra' }),
+provideAgent({ url: '/agents/mastra' }),
 ```
 
 That's the diff.

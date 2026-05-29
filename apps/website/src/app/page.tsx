@@ -48,7 +48,7 @@ export default async function HomePage() {
           { title: 'AgUiAdapter', description: 'Any AG-UI compliant backend.' },
           { title: 'LangGraphAdapter', description: 'Native LangGraph streaming.' },
         ]}
-        cta={{ label: 'Read the streaming guide', href: '/docs/agent/api/agent' }}
+        cta={{ label: 'Read the streaming guide', href: '/docs/langgraph/guides/streaming' }}
         visual={
           <BrowserFrame url="cockpit.threadplane.ai/langgraph/streaming" elevation="md">
             <img
@@ -111,7 +111,7 @@ export default async function HomePage() {
           { title: 'readiness gate', description: 'Hold renders until the surface is real.' },
           { title: 'thread persistence', description: 'Restore conversations across sessions.' },
         ]}
-        cta={{ label: 'Production patterns', href: '/docs/agent/guides/deployment' }}
+        cta={{ label: 'Production patterns', href: '/docs/langgraph/guides/deployment' }}
         visual={<LiveDemoFrame />}
       />
 

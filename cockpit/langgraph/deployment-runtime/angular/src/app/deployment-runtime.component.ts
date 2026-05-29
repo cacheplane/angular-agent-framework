@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: MIT
 import { Component } from '@angular/core';
 import { ChatComponent } from '@threadplane/chat';
-import { agent } from '@threadplane/langgraph';
+import { injectAgent } from '@threadplane/langgraph';
 import { ExampleChatLayoutComponent } from '@threadplane/example-layouts';
-import { environment } from '../environments/environment';
 
 /**
  * Deployment-runtime demo — production deployment patterns.
  *
- * Shows how agent() connects to a deployed LangGraph Cloud
- * instance using environment-specific API URLs and assistant IDs.
+ * Shows how injectAgent() connects to a deployed LangGraph Cloud
+ * instance using environment-specific API URLs and assistant IDs
+ * configured at the provider in app.config.ts.
  */
 @Component({
   selector: 'app-deployment-runtime',
@@ -22,8 +22,5 @@ import { environment } from '../environments/environment';
   `,
 })
 export class DeploymentRuntimeComponent {
-  protected readonly agent = agent({
-    apiUrl: environment.langGraphApiUrl,
-    assistantId: environment.deploymentRuntimeAssistantId,
-  });
+  protected readonly agent = injectAgent();
 }

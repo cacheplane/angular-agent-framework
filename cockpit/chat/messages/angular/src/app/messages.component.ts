@@ -10,8 +10,7 @@ import {
   messageContent,
 } from '@threadplane/chat';
 import { ExampleChatLayoutComponent } from '@threadplane/example-layouts';
-import { agent } from '@threadplane/langgraph';
-import { environment } from '../environments/environment';
+import { injectAgent } from '@threadplane/langgraph';
 
 /**
  * MessagesComponent demonstrates the chat message primitives from @threadplane/chat.
@@ -85,10 +84,7 @@ import { environment } from '../environments/environment';
   `,
 })
 export class MessagesComponent {
-  protected readonly agent = agent({
-    apiUrl: environment.langGraphApiUrl,
-    assistantId: environment.streamingAssistantId,
-  });
+  protected readonly agent = injectAgent();
 
   protected readonly messageContent = messageContent;
 
