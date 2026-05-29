@@ -30,6 +30,147 @@
     ]
   },
   {
+    "name": "FakeStreamTransport",
+    "kind": "class",
+    "description": "In-process AgentTransport that auto-streams a canned assistant reply.\n\nBacks `provideFakeAgent()`. Unlike `MockAgentTransport` (passive, driven\nmanually from specs), this transport emits its tokens automatically on\n`stream()`, then completes — suitable for offline demos and integration tests.\n\nNOT for production use.",
+    "params": [
+      {
+        "name": "config",
+        "type": "FakeAgentConfig",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "examples": [],
+    "properties": [],
+    "methods": [
+      {
+        "name": "cancelRun",
+        "signature": "cancelRun(_threadId: string, _runId: string, _signal: AbortSignal)",
+        "description": "Optional: cancel a server-side run.",
+        "params": [
+          {
+            "name": "_threadId",
+            "type": "string",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "_runId",
+            "type": "string",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "_signal",
+            "type": "AbortSignal",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
+        "name": "createQueuedRun",
+        "signature": "createQueuedRun(_assistantId: string, threadId: string, payload: unknown, _signal: AbortSignal, options: LangGraphSubmitOptions)",
+        "description": "Optional: create a server-side queued run without joining it immediately.",
+        "params": [
+          {
+            "name": "_assistantId",
+            "type": "string",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "threadId",
+            "type": "string",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "payload",
+            "type": "unknown",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "_signal",
+            "type": "AbortSignal",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "options",
+            "type": "LangGraphSubmitOptions",
+            "description": "",
+            "optional": true
+          }
+        ]
+      },
+      {
+        "name": "getHistory",
+        "signature": "getHistory(_threadId: string, _signal: AbortSignal)",
+        "description": "Optional: load persisted checkpoint history for a thread.",
+        "params": [
+          {
+            "name": "_threadId",
+            "type": "string",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "_signal",
+            "type": "AbortSignal",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
+        "name": "joinStream",
+        "signature": "joinStream()",
+        "description": "Optional: join an already-started run without creating a new one.",
+        "params": []
+      },
+      {
+        "name": "stream",
+        "signature": "stream(_assistantId: string, _threadId: string | null, _payload: unknown, signal: AbortSignal, _options: LangGraphSubmitOptions)",
+        "description": "Open a streaming connection to an agent and yield events.",
+        "params": [
+          {
+            "name": "_assistantId",
+            "type": "string",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "_threadId",
+            "type": "string | null",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "_payload",
+            "type": "unknown",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "signal",
+            "type": "AbortSignal",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "_options",
+            "type": "LangGraphSubmitOptions",
+            "description": "",
+            "optional": true
+          }
+        ]
+      }
+    ]
+  },
+  {
     "name": "FetchStreamTransport",
     "kind": "class",
     "description": "Production transport that connects to a LangGraph Platform API via HTTP and SSE.\n\nCreates threads automatically if no threadId is provided, and streams events\nusing the LangGraph SDK client.",
