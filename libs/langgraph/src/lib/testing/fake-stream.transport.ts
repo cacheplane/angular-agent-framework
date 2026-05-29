@@ -27,7 +27,9 @@ export class FakeStreamTransport implements AgentTransport {
   constructor(config: FakeAgentConfig = {}) {
     this.tokens = config.tokens ?? DEFAULT_TOKENS;
     this.reasoningTokens = config.reasoningTokens ?? [];
-    this.delayMs = config.delayMs ?? 0;
+    // Default 60ms matches @threadplane/ag-ui's FakeAgent so both adapters'
+    // provideFakeAgent() stream at the same cadence for the same config.
+    this.delayMs = config.delayMs ?? 60;
   }
 
   async *stream(
