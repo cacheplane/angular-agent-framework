@@ -192,6 +192,34 @@ describe('toAgent', () => {
     expect(stub.addMessage).not.toHaveBeenCalled();
   });
 
+  it('exposes an interrupt signal reflecting on_interrupt events', () => {
+    const stub = new StubAgent();
+    const a = toAgent(stub as unknown as AbstractAgent);
+    stub.emit({ type: 'CUSTOM', name: 'on_interrupt', value: { kind: 'refund_approval' } } as unknown as BaseEvent);
+    expect(a.interrupt!()).toMatchObject({ value: { kind: 'refund_approval' }, resumable: true });
+  });
+
+  it('submit({ resume }) calls runAgent with forwardedProps.command.resume and appends no message', async () => {
+    const stub = new StubAgent();
+    const a = toAgent(stub as unknown as AbstractAgent);
+    const before = a.messages().length;
+    await a.submit({ resume: { approved: true } });
+    expect(stub.runAgent).toHaveBeenCalledWith({ forwardedProps: { command: { resume: { approved: true } } } });
+    expect(a.messages().length).toBe(before);
+    expect(a.interrupt!()).toBeUndefined();
+  });
+
+  it('submit({ message }) still appends a user message and runs with no args', async () => {
+    const stub = new StubAgent();
+    const a = toAgent(stub as unknown as AbstractAgent);
+    await a.submit({ message: 'hi' });
+    expect(a.messages().some((m) => m.role === 'user' && m.content === 'hi')).toBe(true);
+    // The message-path submit calls runAgent() with no arguments
+    const calls = stub.runAgent.mock.calls;
+    expect(calls.length).toBeGreaterThan(0);
+    expect(calls[calls.length - 1][0]).toBeUndefined();
+  });
+
   describe('regenerate()', () => {
     it('truncates messages inclusive of user (userIdx+1) and re-runs without re-appending', async () => {
       const stub = new StubAgent();

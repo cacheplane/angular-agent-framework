@@ -130,9 +130,28 @@ export function toAgent(source: AbstractAgent, options: ToAgentOptions = {}): Ag
     error:     store.error,
     toolCalls: store.toolCalls,
     state:     store.state,
+    interrupt: store.interrupt,
     events$:   store.events$.asObservable(),
 
     submit: async (input: AgentSubmitInput, _opts?: AgentSubmitOptions) => {
+      if (input.resume !== undefined) {
+        // Resume path: clear the pending interrupt and replay the run with the
+        // resume payload forwarded to the LangGraph backend via AG-UI's
+        // forwardedProps.command.resume mechanism.
+        store.interrupt.set(undefined);
+        const run = startRunTelemetry('resume');
+        try {
+          await source.runAgent({ forwardedProps: { command: { resume: input.resume } } });
+          finishRunTelemetry(run);
+        } catch (err) {
+          store.status.set('error');
+          store.isLoading.set(false);
+          store.error.set(err);
+          failRunTelemetry(err, run);
+        }
+        return;
+      }
+
       // Optimistic append of user message to our signals and to the source
       // agent's own message list so runAgent() sees the new message.
       const userMsg = buildUserMessage(input);
