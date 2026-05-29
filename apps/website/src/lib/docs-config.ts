@@ -250,6 +250,7 @@ export const docsConfig: DocsLibrary[] = [
         pages: [
           { title: 'Fake Agent', slug: 'fake-agent', section: 'guides' },
           { title: 'Citations', slug: 'citations', section: 'guides' },
+          { title: 'Testing', slug: 'testing', section: 'guides' },
           { title: 'Troubleshooting', slug: 'troubleshooting', section: 'guides' },
         ],
       },

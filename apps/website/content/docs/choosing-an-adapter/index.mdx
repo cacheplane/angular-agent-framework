@@ -72,6 +72,18 @@ import { provideAgent as provideAgUiAgent } from '@threadplane/ag-ui';
 
 Each adapter uses its own private DI token internally, so providing both does not cause a runtime DI collision — but the developer ergonomics get awkward, and `<chat [agent]="agent" />` can only bind one Agent at a time. We recommend picking one adapter per app.
 
+## Testing
+
+Three layers of test doubles, smallest scope first:
+
+| Layer | Use | What's real | When |
+|---|---|---|---|
+| **Contract mock** | `mockAgent()` (chat) / `mockLangGraphAgent()` (langgraph) | nothing — you set `messages()`, `status()` directly | component/unit tests |
+| **Fake backend** | `provideFakeAgent({ tokens })` (both adapters) | the real adapter pipeline; canned wire events | adapter-integration tests, in-browser, no server |
+| **LLM fixture replay** | aimock (cockpit/examples e2e) | the whole stack incl. a real graph; only the LLM is replayed | full end-to-end |
+
+Reach for the smallest layer that covers your test. Don't stand up aimock when a `mockAgent` unit test suffices; don't hand-roll a transport when `provideFakeAgent` exists.
+
 ## Why two adapters?
 
 The `Agent` contract from `@threadplane/chat` is intentionally runtime-neutral. The two adapters exist because they bridge different on-the-wire protocols into that contract:
