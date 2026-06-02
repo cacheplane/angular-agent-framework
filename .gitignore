@@ -49,4 +49,5 @@ libs/licensing/src/lib/license-public-key.generated.ts
 
 # superpowers brainstorming output
 .superpowers/
-tools/posthog/tsconfig.tsbuildinfo
+# TypeScript incremental build caches (any project)
+*.tsbuildinfo
