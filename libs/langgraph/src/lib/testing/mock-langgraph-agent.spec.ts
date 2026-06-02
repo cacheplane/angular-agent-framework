@@ -85,3 +85,14 @@ describe('mockLangGraphAgent', () => {
     expect(typeof ref.langGraphHistory).toBe('function');
   });
 });
+
+describe('mockLangGraphAgent extends mockAgent', () => {
+  it('exposes the neutral MockAgent writable signals', () => {
+    const m = mockLangGraphAgent({ status: 'running' });
+    expect(m.status()).toBe('running');   // neutral signal set via mockAgent opts
+    m.messages.set([]);                    // writable neutral signal
+    expect(m.submitCalls).toEqual([]);     // neutral submit tracking
+    m.branch.set('main');                  // LangGraph-specific signal still present
+    expect(m.branch()).toBe('main');
+  });
+});

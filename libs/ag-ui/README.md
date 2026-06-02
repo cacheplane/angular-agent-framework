@@ -112,9 +112,20 @@ Example state shape:
 
 Each citation supports `id`, `index`, `title`, `url`, `snippet`, and custom `extra` fields. The message ID key matches the corresponding message in the chat history.
 
-### Testing
+---
 
-`FakeAgent` is a test-only `AbstractAgent` implementation. `provideFakeAgent(config?)` registers it in the Angular injector so unit tests run without a live AG-UI backend.
+## Testing
+
+```ts
+// Fake backend — streams canned tokens, no server:
+import { provideFakeAgent } from '@threadplane/ag-ui';
+providers: [provideFakeAgent({ tokens: ['Hello', ' world'] })];
+```
+
+For component/unit tests, use the neutral writable-signal mock `mockAgent()`
+from `@threadplane/chat` — the ag-ui agent _is_ the neutral `Agent` contract,
+so there is no adapter-specific mock. See
+[Choosing an adapter → Testing](https://threadplane.ai/docs/choosing-an-adapter#testing).
 
 ---
 

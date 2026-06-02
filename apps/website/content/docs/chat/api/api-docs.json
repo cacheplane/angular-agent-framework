@@ -7184,6 +7184,32 @@
     "examples": []
   },
   {
+    "name": "FakeAgentConfig",
+    "kind": "interface",
+    "description": "Shared config for the adapters' `provideFakeAgent()` helpers\n(@threadplane/langgraph and @threadplane/ag-ui). Drives an in-process\nfake backend that streams a canned assistant reply.",
+    "properties": [
+      {
+        "name": "delayMs",
+        "type": "number",
+        "description": "Milliseconds between successive token emissions.",
+        "optional": true
+      },
+      {
+        "name": "reasoningTokens",
+        "type": "string[]",
+        "description": "Optional reasoning chunks emitted before the text reply.",
+        "optional": true
+      },
+      {
+        "name": "tokens",
+        "type": "string[]",
+        "description": "Assistant reply, streamed token-by-token.",
+        "optional": true
+      }
+    ],
+    "examples": []
+  },
+  {
     "name": "assertReasoningFixtureMessages",
     "kind": "function",
     "description": "Assertion — common to both adapters. Throws if the produced messages\ndon't match the shared expectation.",
