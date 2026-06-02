@@ -30,6 +30,10 @@ const APPROVED_TOPICS = {
       'deployment-runtime',
     ],
   },
+  'ag-ui': {
+    'getting-started': ['overview'],
+    'core-capabilities': ['streaming', 'interrupts'],
+  },
   render: {
     'getting-started': ['overview'],
     'core-capabilities': [
@@ -71,6 +75,8 @@ const getProductTitle = (product: CockpitProduct): string => {
       return 'Deep Agents';
     case 'langgraph':
       return 'LangGraph';
+    case 'ag-ui':
+      return 'AG-UI';
     case 'render':
       return 'Render';
     case 'chat':

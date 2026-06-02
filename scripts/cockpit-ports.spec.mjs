@@ -8,8 +8,6 @@ import { PORTS } from '../cockpit/ports.mjs';
 const repoRoot = resolve(fileURLToPath(import.meta.url), '..', '..');
 const cockpitDir = join(repoRoot, 'cockpit');
 
-const AGUI_EXCEPTION = 'cockpit-ag-ui-streaming-angular';
-
 function findCockpitAngularProjects() {
   const out = [];
   function walk(dir) {
@@ -37,8 +35,8 @@ function findCockpitAngularProjects() {
 const projects = findCockpitAngularProjects();
 
 describe('cockpit/ports.mjs registry', () => {
-  test('covers every cockpit-*-angular project on disk except ag-ui', () => {
-    const onDisk = projects.map((p) => p.name).filter((n) => n !== AGUI_EXCEPTION);
+  test('covers every cockpit-*-angular project on disk', () => {
+    const onDisk = projects.map((p) => p.name);
     const missing = onDisk.filter((n) => !(n in PORTS));
     assert.deepEqual(missing, [], `missing from PORTS: ${missing.join(', ')}`);
   });
@@ -47,10 +45,6 @@ describe('cockpit/ports.mjs registry', () => {
     const diskNames = new Set(projects.map((p) => p.name));
     const orphans = Object.keys(PORTS).filter((n) => !diskNames.has(n));
     assert.deepEqual(orphans, [], `orphan PORTS entries: ${orphans.join(', ')}`);
-  });
-
-  test('ag-ui is NOT in the registry (exception)', () => {
-    assert.equal(AGUI_EXCEPTION in PORTS, false);
   });
 
   test('every entry has angular + langgraph as positive integers', () => {
@@ -82,7 +76,6 @@ describe('cockpit/ports.mjs registry', () => {
   test('each cap python/project.json --port matches PORTS[name].langgraph', () => {
     const mismatches = [];
     for (const { name, dir } of projects) {
-      if (name === AGUI_EXCEPTION) continue;
       const pyProjectJson = join(dir, '..', 'python', 'project.json');
       if (!existsSync(pyProjectJson)) {
         mismatches.push(`${name}: missing python/project.json at ${pyProjectJson}`);
@@ -107,7 +100,6 @@ describe('cockpit/ports.mjs registry', () => {
   test('each active-e2e cap playwright.config.ts baseURL port matches PORTS[name].angular', () => {
     const mismatches = [];
     for (const { name, dir } of projects) {
-      if (name === AGUI_EXCEPTION) continue;
       const pwConfig = join(dir, 'e2e', 'playwright.config.ts');
       if (!existsSync(pwConfig)) continue;
       const text = readFileSync(pwConfig, 'utf8');

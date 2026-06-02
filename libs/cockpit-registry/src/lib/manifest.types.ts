@@ -1,4 +1,4 @@
-export type CockpitProduct = 'deep-agents' | 'langgraph' | 'render' | 'chat';
+export type CockpitProduct = 'deep-agents' | 'langgraph' | 'ag-ui' | 'render' | 'chat';
 
 export type CockpitSection = 'getting-started' | 'core-capabilities';
 

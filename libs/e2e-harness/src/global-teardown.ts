@@ -6,8 +6,12 @@ import type { AimockHandle } from './aimock-runner';
 
 interface SharedState {
   aimock: AimockHandle;
-  langgraph: ChildProcess;
-  langgraphPort: number;
+  /** Present when the backend is a langgraph dev server. */
+  langgraph?: ChildProcess;
+  langgraphPort?: number;
+  /** Present when the backend is a uvicorn ag-ui server. */
+  backend?: ChildProcess;
+  backendPort?: number;
   angular: ChildProcess;
   angularPort: number;
 }
@@ -81,12 +85,14 @@ export default async function globalTeardown(): Promise<void> {
   if (!states) return;
   for (const state of states.values()) {
     killGroup(state.angular);
-    killGroup(state.langgraph);
+    // Kill whichever backend variant is present (langgraph dev or uvicorn ag-ui).
+    if (state.langgraph) killGroup(state.langgraph);
+    if (state.backend) killGroup(state.backend);
     await state.aimock.stop();
-    await Promise.all([
-      waitForPortFree(state.langgraphPort),
-      waitForPortFree(state.angularPort),
-    ]);
+    const portWaits: Promise<void>[] = [waitForPortFree(state.angularPort)];
+    if (state.langgraphPort != null) portWaits.push(waitForPortFree(state.langgraphPort));
+    if (state.backendPort != null) portWaits.push(waitForPortFree(state.backendPort));
+    await Promise.all(portWaits);
   }
   globalThis.__AIMOCK_HARNESS_STATE__ = undefined;
 }

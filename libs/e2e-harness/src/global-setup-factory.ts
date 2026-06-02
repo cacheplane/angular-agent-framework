@@ -23,8 +23,12 @@ export interface CreateGlobalSetupOpts {
 
 interface SharedState {
   aimock: AimockHandle;
-  langgraph: ChildProcess;
-  langgraphPort: number;
+  /** Present when the backend is a langgraph dev server. */
+  langgraph?: ChildProcess;
+  langgraphPort?: number;
+  /** Present when the backend is a uvicorn ag-ui server. */
+  backend?: ChildProcess;
+  backendPort?: number;
   angular: ChildProcess;
   angularPort: number;
 }

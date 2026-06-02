@@ -6,7 +6,7 @@
 import type { WritableSignal } from '@angular/core';
 import type { Subject } from 'rxjs';
 import type {
-  Message, AgentStatus, ToolCall, AgentEvent,
+  Message, AgentStatus, ToolCall, AgentEvent, AgentInterrupt,
 } from '@threadplane/chat';
 import type { BaseEvent } from '@ag-ui/client';
 import { applyPatch, type JsonPatchOp } from './internal/apply-patch';
@@ -19,6 +19,7 @@ export interface ReducerStore {
   error:     WritableSignal<unknown>;
   toolCalls: WritableSignal<ToolCall[]>;
   state:     WritableSignal<Record<string, unknown>>;
+  interrupt: WritableSignal<AgentInterrupt | undefined>;
   events$:   Subject<AgentEvent>;
 }
 
@@ -52,6 +53,7 @@ export function reduceEvent(event: BaseEvent, store: ReducerStore): void {
       store.status.set('running');
       store.isLoading.set(true);
       store.error.set(null);
+      store.interrupt.set(undefined);
       return;
     }
     case 'RUN_FINISHED': {
@@ -177,10 +179,18 @@ export function reduceEvent(event: BaseEvent, store: ReducerStore): void {
     }
     case 'CUSTOM': {
       const e = event as unknown as { name: string; value: unknown };
-      if (e.name === 'state_update' && isRecord(e.value)) {
-        store.events$.next({ type: 'state_update', data: e.value });
+      // ag_ui_langgraph serializes interrupt payloads as JSON strings.
+      // Parse the value if it arrives as a string so downstream consumers
+      // (e.g. ChatApprovalCardComponent) receive a plain object, not a string.
+      const parsedValue = typeof e.value === 'string' ? safeParseJson(e.value) : e.value;
+      if (e.name === 'on_interrupt') {
+        store.interrupt.set({ id: randomId(), value: parsedValue, resumable: true });
+        return;
+      }
+      if (e.name === 'state_update' && isRecord(parsedValue)) {
+        store.events$.next({ type: 'state_update', data: parsedValue });
       } else {
-        store.events$.next({ type: 'custom', name: e.name, data: e.value });
+        store.events$.next({ type: 'custom', name: e.name, data: parsedValue });
       }
       return;
     }
@@ -193,6 +203,10 @@ export function reduceEvent(event: BaseEvent, store: ReducerStore): void {
   }
 }
 
+function randomId(): string {
+  return Math.random().toString(36).slice(2);
+}
+
 function messageIdFrom(event: BaseEvent): string {
   return (event as { messageId?: string }).messageId ?? 'unknown';
 }
@@ -203,6 +217,15 @@ function safeParseArgs(delta: string): Record<string, unknown> {
     return isRecord(parsed) ? parsed : {};
   } catch {
     return {};
+  }
+}
+
+/** Parse a JSON string to its value; return the original string on failure. */
+function safeParseJson(s: string): unknown {
+  try {
+    return JSON.parse(s);
+  } catch {
+    return s;
   }
 }
 

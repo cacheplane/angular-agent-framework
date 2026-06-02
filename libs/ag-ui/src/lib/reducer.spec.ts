@@ -15,6 +15,7 @@ function makeStore(): ReducerStore {
     error:     signal<unknown>(null),
     toolCalls: signal<ToolCall[]>([]),
     state:     signal<Record<string, unknown>>({}),
+    interrupt: signal(undefined),
     events$:   new Subject<AgentEvent>(),
   };
 }
@@ -134,6 +135,32 @@ describe('reduceEvent', () => {
     reduceEvent({ type: 'FUTURE_EVENT' } as any, store);
     expect(store.messages()).toEqual([]);
     expect(store.status()).toBe('idle');
+  });
+});
+
+describe('reduceEvent — interrupt', () => {
+  it('sets interrupt from a CUSTOM on_interrupt event', () => {
+    const store = makeStore();
+    reduceEvent({ type: 'CUSTOM', name: 'on_interrupt', value: { kind: 'refund_approval', amount: 42 } } as never, store);
+    const ix = store.interrupt();
+    expect(ix).toBeTruthy();
+    expect(ix!.value).toEqual({ kind: 'refund_approval', amount: 42 });
+    expect(ix!.resumable).toBe(true);
+    expect(typeof ix!.id).toBe('string');
+  });
+  it('clears interrupt on RUN_STARTED', () => {
+    const store = makeStore();
+    store.interrupt.set({ id: 'x', value: {}, resumable: true });
+    reduceEvent({ type: 'RUN_STARTED' } as never, store);
+    expect(store.interrupt()).toBeUndefined();
+  });
+  it('still forwards non-interrupt CUSTOM events to events$', () => {
+    const store = makeStore();
+    const seen: unknown[] = [];
+    store.events$.subscribe((e) => seen.push(e));
+    reduceEvent({ type: 'CUSTOM', name: 'state_update', value: { a: 1 } } as never, store);
+    expect(seen).toEqual([{ type: 'state_update', data: { a: 1 } }]);
+    expect(store.interrupt()).toBeUndefined();
   });
 });
 

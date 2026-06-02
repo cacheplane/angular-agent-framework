@@ -10,6 +10,9 @@
   "include": ["src/**/*.ts"],
   "references": [
     {
+      "path": "../../../../libs/cockpit-telemetry"
+    },
+    {
       "path": "../../../../libs/example-layouts"
     },
     {

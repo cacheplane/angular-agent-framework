@@ -8,9 +8,10 @@
 /**
  * Single source of truth for cockpit cap port allocation.
  *
- * Excludes cockpit-ag-ui-streaming-angular — uses a non-LangGraph
- * backend (Node ag-ui server on :3000, /agent proxy). Single-cap
- * exception; left as a literal in its own files.
+ * ag-ui examples (cockpit-ag-ui-*) run a uvicorn `ag-ui-langgraph`
+ * FastAPI backend; the `langgraph` field holds that backend port and
+ * the Angular dev-server proxies /agent to it — so "langgraph" means
+ * "backend port" for ag-ui caps, not a LangGraph Studio instance.
  *
  * Port ranges:
  *   - angular: [4000, 5000)
@@ -24,6 +25,8 @@
  * @type {PortsRegistry}
  */
 export const PORTS = Object.freeze({
+  'cockpit-ag-ui-interrupts-angular': { angular: 4320, langgraph: 5320 },
+  'cockpit-ag-ui-streaming-angular':  { angular: 4321, langgraph: 5321 },
   'cockpit-chat-a2ui-angular': { angular: 4511, langgraph: 5511 },
   'cockpit-chat-debug-angular': { angular: 4509, langgraph: 5509 },
   'cockpit-chat-generative-ui-angular': { angular: 4508, langgraph: 5508 },
