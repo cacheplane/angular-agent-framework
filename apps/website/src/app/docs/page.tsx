@@ -147,10 +147,16 @@ const helperLinkStyle = {
   fontWeight: 600,
 } as const;
 
-const forkCardStyle = {
+const accentCardStyle = {
   height: '100%',
   background: tokens.colors.accentSurface,
   border: `1px solid ${tokens.colors.accentBorder}`,
+} as const;
+
+const supportingTitleStyle = {
+  ...cardTitleStyle,
+  fontSize: 16,
+  marginBottom: 4,
 } as const;
 
 export default function DocsLandingPage() {
@@ -202,7 +208,7 @@ export default function DocsLandingPage() {
           <div style={gridStyle}>
             {BACKENDS.map((b) => (
               <Link key={b.href} href={b.href} style={{ textDecoration: 'none' }}>
-                <Card padding="lg" hoverable style={forkCardStyle}>
+                <Card padding="lg" hoverable style={accentCardStyle}>
                   <h3 style={cardTitleStyle}>{b.title}</h3>
                   <p style={{ ...cardBlurbStyle, marginBottom: 16 }}>{b.blurb}</p>
                   <code
@@ -241,7 +247,7 @@ export default function DocsLandingPage() {
           <div style={gridStyle}>
             {GENERATIVE_UI.map((g) => (
               <Link key={g.href} href={g.href} style={{ textDecoration: 'none' }}>
-                <Card padding="lg" hoverable style={forkCardStyle}>
+                <Card padding="lg" hoverable style={accentCardStyle}>
                   <Eyebrow tone="accent" style={{ marginBottom: 8 }}>
                     {g.vendor}
                   </Eyebrow>
@@ -276,7 +282,7 @@ export default function DocsLandingPage() {
               <h3 style={cardTitleStyle}>Chat</h3>
               <p style={cardBlurbStyle}>
                 Drop-in chat components — message list, input, streaming, tool
-                calls, interrupts, subagents. Renders A2UI &amp; json-render
+                calls, interrupts, subagents. Renders A2UI & json-render
                 surfaces inline.
               </p>
             </Card>
@@ -292,9 +298,7 @@ export default function DocsLandingPage() {
             {SUPPORTING.map((s) => (
               <Link key={s.href} href={s.href} style={{ textDecoration: 'none' }}>
                 <Card hoverable style={{ height: '100%' }}>
-                  <h3 style={{ ...cardTitleStyle, fontSize: 16, marginBottom: 4 }}>
-                    {s.title}
-                  </h3>
+                  <h3 style={supportingTitleStyle}>{s.title}</h3>
                   <p style={cardBlurbStyle}>{s.blurb}</p>
                 </Card>
               </Link>
