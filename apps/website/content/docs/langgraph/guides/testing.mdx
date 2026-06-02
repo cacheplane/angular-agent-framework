@@ -1,9 +1,89 @@
 # Testing
 
-MockAgentTransport lets you test agent interactions deterministically without a running LangGraph server. Script exact event sequences, step through streaming lifecycles, and verify every signal transition in your Angular test specs.
+`@threadplane/langgraph` ships two purpose-built test doubles, plus an advanced manual-scripting transport for the rare cases that need it:
+
+- **`provideFakeAgent()`** — a one-call fake backend that runs the real adapter pipeline and streams canned tokens. No server, no LLM. Reach for this first.
+- **`mockLangGraphAgent()`** — a writable-signal mock for component/unit tests, where you set `messages()`, `status()`, etc. directly.
+- **`MockAgentTransport`** — an advanced escape hatch for hand-scripting exact wire event sequences (tool calls, interrupts, multi-batch lifecycles).
 
 <Callout type="tip" title="No flaky tests">
-MockAgentTransport eliminates network dependencies, timing issues, and server state. Every test run produces identical results. Your CI pipeline stays green.
+None of these touch the network, the LLM, or server state. Every test run produces identical results. Your CI pipeline stays green.
+</Callout>
+
+See [Choosing an adapter → Testing](/docs/choosing-an-adapter#testing) for when to use each test double.
+
+## Fake backend: `provideFakeAgent()`
+
+`provideFakeAgent({ tokens, reasoningTokens, delayMs })` wires a fake backend into Angular DI in one call. It exercises the **real adapter pipeline** — `injectAgent()`, status transitions, message accumulation — but the wire events are canned, so there's no server and no LLM. Use it for adapter-integration tests, in-browser demos, and offline development.
+
+It drops in exactly where `provideAgent()` would go:
+
+<Tabs>
+<Tab label="app.config.ts">
+
+```typescript
+import { ApplicationConfig } from '@angular/core';
+import { provideFakeAgent } from '@threadplane/langgraph';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideFakeAgent({ tokens: ['Hello', ' world'] }),
+  ],
+};
+```
+
+</Tab>
+<Tab label="chat.component.ts">
+
+```typescript
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChatComponent } from '@threadplane/chat';
+import { injectAgent } from '@threadplane/langgraph';
+
+@Component({
+  selector: 'app-chat',
+  imports: [ChatComponent],
+  template: `<chat [agent]="agent" />`,
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class ChatHost {
+  protected readonly agent = injectAgent();
+}
+```
+
+</Tab>
+</Tabs>
+
+The component is byte-identical to production — only the provider changes. `FakeAgentConfig` (`{ tokens?, reasoningTokens?, delayMs? }`) lives in `@threadplane/chat/testing`:
+
+| Option | Type | Notes |
+| --- | --- | --- |
+| `tokens` | `string[]` | Emitted as streamed text deltas, in order. |
+| `reasoningTokens` | `string[]` | Emitted before text deltas to exercise reasoning UI. |
+| `delayMs` | `number` | Delay between streamed events. |
+
+## Contract mock: `mockLangGraphAgent()`
+
+For component and unit tests where you don't need a streaming pipeline at all, `mockLangGraphAgent(initial)` returns a `LangGraphAgent` whose state surface is exposed as **writable signals**. Set state directly and assert your component reacts — nothing is real.
+
+```typescript
+import { mockLangGraphAgent } from '@threadplane/langgraph';
+
+const m = mockLangGraphAgent({ status: 'running' });
+m.messages.set([{ role: 'assistant', content: 'Hello!' }]);
+
+expect(m.messages()[0].content).toBe('Hello!');
+expect(m.status()).toBe('running');
+```
+
+`mockLangGraphAgent()` extends the neutral [`mockAgent()`](/docs/chat/api/mock-agent) from `@threadplane/chat` — it supplies the neutral `Agent`-contract writable signals (`messages`, `status`, `isLoading`, `error`, `interrupt`, …) plus `submit`/`stop` call tracking, then layers the LangGraph-specific signals (`langGraphMessages`, `branch`, `queue`, …) on top.
+
+## Advanced: `MockAgentTransport`
+
+Lead with `provideFakeAgent()` for the simple case. Reach for `MockAgentTransport` only when you need to hand-script exact wire event sequences — tool calls, interrupts, or multi-batch streaming lifecycles that the canned-token fake can't express.
+
+<Callout type="tip" title="No flaky tests">
+`MockAgentTransport` eliminates network dependencies, timing issues, and server state. Every test run produces identical results.
 </Callout>
 
 ## Python: Testing the Agent
