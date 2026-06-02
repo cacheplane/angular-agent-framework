@@ -1,0 +1,76 @@
+# Testing
+
+`@threadplane/ag-ui` gives you two test doubles, smallest scope first:
+
+- **`provideFakeAgent()`** — a one-call fake backend that runs the real adapter pipeline and streams canned tokens. No server, no LLM.
+- **`mockAgent()`** (from `@threadplane/chat`) — a writable-signal mock for component/unit tests. The ag-ui agent _is_ the neutral `Agent` contract, so there is no ag-ui-specific mock — use the neutral one directly.
+
+See [Choosing an adapter → Testing](/docs/choosing-an-adapter#testing) for when to use each test double.
+
+## Fake backend: `provideFakeAgent()`
+
+`provideFakeAgent({ tokens, reasoningTokens, delayMs })` wires a fake backend into Angular DI in one call. It exercises the **real adapter pipeline** — `injectAgent()`, status transitions, message accumulation — but the wire events are canned, so there's no server and no LLM. Use it for adapter-integration tests, in-browser demos, and offline development.
+
+It drops in exactly where `provideAgent()` would go — the call shape matches the LangGraph adapter:
+
+<Tabs>
+<Tab label="app.config.ts">
+
+```typescript
+import { ApplicationConfig } from '@angular/core';
+import { provideFakeAgent } from '@threadplane/ag-ui';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideFakeAgent({ tokens: ['Hello'] }),
+  ],
+};
+```
+
+</Tab>
+<Tab label="chat.component.ts">
+
+```typescript
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChatComponent } from '@threadplane/chat';
+import { injectAgent } from '@threadplane/ag-ui';
+
+@Component({
+  selector: 'app-chat',
+  imports: [ChatComponent],
+  template: `<chat [agent]="agent" />`,
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class ChatHost {
+  protected readonly agent = injectAgent();
+}
+```
+
+</Tab>
+</Tabs>
+
+The component is byte-identical to production — only the provider changes. `FakeAgentConfig` (`{ tokens?, reasoningTokens?, delayMs? }`) lives in `@threadplane/chat/testing`:
+
+| Option | Type | Notes |
+| --- | --- | --- |
+| `tokens` | `string[]` | Emitted as streamed text deltas, in order. |
+| `reasoningTokens` | `string[]` | Emitted before text deltas to exercise reasoning UI. |
+| `delayMs` | `number` | Delay between streamed events. |
+
+For the underlying `FakeAgent` class and its canned event sequence, see [Fake Agent](/docs/ag-ui/guides/fake-agent).
+
+## Contract mock: `mockAgent()`
+
+For component and unit tests where you don't need a streaming pipeline at all, use the neutral `mockAgent(initial)` from `@threadplane/chat`. It returns an `Agent` whose state surface is exposed as **writable signals** — set state directly and assert your component reacts. Nothing is real.
+
+The ag-ui adapter exposes exactly the neutral `Agent` contract, so there is no ag-ui-specific mock — `mockAgent()` is the right tool.
+
+```typescript
+import { mockAgent } from '@threadplane/chat';
+
+const m = mockAgent({ status: 'running' });
+m.messages.set([{ role: 'assistant', content: 'Hello!' }]);
+
+expect(m.messages()[0].content).toBe('Hello!');
+expect(m.status()).toBe('running');
+```

@@ -1,3 +1,96 @@
+# Docs Landing Page Redesign Implementation Plan
+
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+
+**Goal:** Rebuild `/docs` as an evaluator-first "start here" funnel: pick backend (LangGraph/AG-UI) → generative UI (Google A2UI / Vercel json-render) → Chat → supporting libs → search.
+
+**Architecture:** A single Next.js **server component** at `apps/website/src/app/docs/page.tsx`, composed from existing UI primitives (`Section`, `Container`, `Eyebrow`, `Card`, `Pill`) and `@threadplane/design-tokens`. Curated content lives in local typed arrays in the page file (mirroring the existing `POPULAR_TOPICS` pattern). No new dependencies, no client JS. The Playwright e2e at `apps/website/e2e/docs.spec.ts` is updated first (TDD) to assert the new structure.
+
+**Tech Stack:** Next.js (App Router), React server components, TypeScript, `@threadplane/design-tokens`, Playwright.
+
+**Reference spec:** `docs/superpowers/specs/2026-05-29-docs-landing-page-design.md`
+
+---
+
+## File Structure
+
+- **Modify:** `apps/website/src/app/docs/page.tsx` — full rewrite of the landing page component. Single file, one responsibility (the `/docs` index). Content arrays + small in-file `StepLabel` helper + the page component.
+- **Modify:** `apps/website/e2e/docs.spec.ts` — replace the "Docs landing page" describe block's assertions. The other describe blocks (slug page, search) are unrelated and stay untouched.
+
+No other files change. `docsConfig`, the sidebar, and routing are out of scope.
+
+---
+
+## Task 1: Update the e2e test for the new landing page (TDD — failing first)
+
+**Files:**
+- Modify: `apps/website/e2e/docs.spec.ts:3-20` (the first `test.describe('Docs landing page', ...)` block only)
+
+- [ ] **Step 1: Replace the landing-page test block**
+
+In `apps/website/e2e/docs.spec.ts`, replace the entire first describe block (lines 3–20, `test.describe('Docs landing page', ...)`) with:
+
+```ts
+test.describe('Docs landing page', () => {
+  test('renders the start-here funnel + search prompt', async ({ page }) => {
+    await page.goto('/docs');
+
+    // Hero
+    await expect(page.locator('#docs-heading')).toBeVisible();
+    await expect(page.locator('#docs-heading')).toContainText('Build AI agent UIs in Angular');
+
+    // Step headings (match on the plain substring to avoid the middle-dot char)
+    await expect(page.getByText('Pick your backend').first()).toBeVisible();
+    await expect(page.getByText('Generative UI').first()).toBeVisible();
+    await expect(page.getByText('Chat UI').first()).toBeVisible();
+
+    // Step 1 — backend quickstart links
+    await expect(page.locator('main a[href="/docs/langgraph/getting-started/quickstart"]').first()).toBeVisible();
+    await expect(page.locator('main a[href="/docs/ag-ui/getting-started/quickstart"]').first()).toBeVisible();
+
+    // Step 2 — generative UI links
+    await expect(page.locator('main a[href="/docs/a2ui/getting-started/introduction"]').first()).toBeVisible();
+    await expect(page.locator('main a[href="/docs/render/getting-started/introduction"]').first()).toBeVisible();
+
+    // Step 3 — chat
+    await expect(page.locator('main a[href="/docs/chat/getting-started/introduction"]').first()).toBeVisible();
+
+    // Helper links
+    await expect(page.locator('main a[href="/docs/choosing-an-adapter"]').first()).toBeVisible();
+    await expect(page.locator('main a[href="/docs/render/concepts/json-render-vs-a2ui"]').first()).toBeVisible();
+
+    // Supporting libraries
+    await expect(page.locator('main a[href="/docs/licensing/getting-started/introduction"]').first()).toBeVisible();
+    await expect(page.locator('main a[href="/docs/telemetry/getting-started/introduction"]').first()).toBeVisible();
+
+    // Search prompt
+    await expect(page.getByText('Looking for something specific?').first()).toBeVisible();
+  });
+});
+```
+
+Leave the `Docs slug page` and `Docs search` describe blocks unchanged.
+
+- [ ] **Step 2: Run the test to verify it fails**
+
+Run:
+```bash
+cd apps/website && npx playwright test e2e/docs.spec.ts -g "start-here funnel"
+```
+Expected: FAIL. The current page still says "Learn the framework." and uses `/getting-started/introduction` backend links, so the new assertions (`Build AI agent UIs in Angular`, `quickstart` hrefs, `Pick your backend`) will not be found.
+
+---
+
+## Task 2: Rewrite the docs landing page component
+
+**Files:**
+- Modify: `apps/website/src/app/docs/page.tsx` (full rewrite — replace entire file contents)
+
+- [ ] **Step 1: Replace the file with the new implementation**
+
+Replace the entire contents of `apps/website/src/app/docs/page.tsx` with:
+
+```tsx
 import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { tokens } from '@threadplane/design-tokens';
@@ -147,16 +240,10 @@ const helperLinkStyle = {
   fontWeight: 600,
 } as const;
 
-const accentCardStyle = {
+const forkCardStyle = {
   height: '100%',
   background: tokens.colors.accentSurface,
   border: `1px solid ${tokens.colors.accentBorder}`,
-} as const;
-
-const supportingTitleStyle = {
-  ...cardTitleStyle,
-  fontSize: 16,
-  marginBottom: 4,
 } as const;
 
 export default function DocsLandingPage() {
@@ -208,7 +295,7 @@ export default function DocsLandingPage() {
           <div style={gridStyle}>
             {BACKENDS.map((b) => (
               <Link key={b.href} href={b.href} style={{ textDecoration: 'none' }}>
-                <Card padding="lg" hoverable style={accentCardStyle}>
+                <Card padding="lg" hoverable style={forkCardStyle}>
                   <h3 style={cardTitleStyle}>{b.title}</h3>
                   <p style={{ ...cardBlurbStyle, marginBottom: 16 }}>{b.blurb}</p>
                   <code
@@ -247,7 +334,7 @@ export default function DocsLandingPage() {
           <div style={gridStyle}>
             {GENERATIVE_UI.map((g) => (
               <Link key={g.href} href={g.href} style={{ textDecoration: 'none' }}>
-                <Card padding="lg" hoverable style={accentCardStyle}>
+                <Card padding="lg" hoverable style={forkCardStyle}>
                   <Eyebrow tone="accent" style={{ marginBottom: 8 }}>
                     {g.vendor}
                   </Eyebrow>
@@ -282,7 +369,7 @@ export default function DocsLandingPage() {
               <h3 style={cardTitleStyle}>Chat</h3>
               <p style={cardBlurbStyle}>
                 Drop-in chat components — message list, input, streaming, tool
-                calls, interrupts, subagents. Renders A2UI & json-render
+                calls, interrupts, subagents. Renders A2UI &amp; json-render
                 surfaces inline.
               </p>
             </Card>
@@ -298,7 +385,9 @@ export default function DocsLandingPage() {
             {SUPPORTING.map((s) => (
               <Link key={s.href} href={s.href} style={{ textDecoration: 'none' }}>
                 <Card hoverable style={{ height: '100%' }}>
-                  <h3 style={supportingTitleStyle}>{s.title}</h3>
+                  <h3 style={{ ...cardTitleStyle, fontSize: 16, marginBottom: 4 }}>
+                    {s.title}
+                  </h3>
                   <p style={cardBlurbStyle}>{s.blurb}</p>
                 </Card>
               </Link>
@@ -345,3 +434,78 @@ export default function DocsLandingPage() {
     </>
   );
 }
+```
+
+- [ ] **Step 2: Lint the changed files**
+
+Run:
+```bash
+npx nx lint website
+```
+Expected: PASS (no lint errors). If the linter flags the unused `LibraryId`/`docsConfig` import — note the new file does **not** import `docsConfig` anymore, which is intentional; there should be no unused-import error because the old imports are gone.
+
+- [ ] **Step 3: Typecheck the website**
+
+Run:
+```bash
+npx tsc --noEmit -p apps/website/tsconfig.json
+```
+Expected: PASS. Confirms the `as const` style objects and token references typecheck against React's `CSSProperties`.
+
+---
+
+## Task 3: Verify end-to-end and commit
+
+**Files:** none (verification + commit)
+
+- [ ] **Step 1: Run the landing-page e2e test**
+
+Run:
+```bash
+cd apps/website && npx playwright test e2e/docs.spec.ts -g "start-here funnel"
+```
+Expected: PASS. The dev server auto-starts via the `webServer` config in `apps/website/playwright.config.ts`.
+
+- [ ] **Step 2: Run the full docs e2e file to confirm no regressions**
+
+Run:
+```bash
+cd apps/website && npx playwright test e2e/docs.spec.ts
+```
+Expected: PASS for all blocks (landing page, slug page, search). The slug-page and search tests were not modified and should still pass.
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add apps/website/src/app/docs/page.tsx apps/website/e2e/docs.spec.ts
+git commit -m "$(cat <<'EOF'
+feat(website): docs landing page backend-first funnel
+
+Rebuild /docs as an evaluator-first start-here path: pick backend
+(LangGraph/AG-UI) -> generative UI (A2UI/json-render) -> Chat ->
+supporting libraries -> search.
+
+Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>
+EOF
+)"
+```
+
+---
+
+## Manual verification (browser)
+
+After the e2e passes, confirm visually with the preview tooling:
+
+- [ ] Start the dev server and open `/docs`.
+- [ ] Confirm the five sections render top to bottom: hero → Step 1 backend fork (two accent cards with install snippets) → Step 2 generative-UI fork (two accent cards with vendor eyebrows) → Step 3 Chat card → Supporting (Licensing, Telemetry) → tinted ⌘K search prompt.
+- [ ] Hover a fork card to confirm the `hoverable` lift.
+- [ ] Click each card/link and confirm it lands on the expected route.
+- [ ] Resize narrow to confirm the `auto-fit` grids collapse to one column.
+
+---
+
+## Self-Review (completed during planning)
+
+- **Spec coverage:** Hero ✓ (Task 2). Step 1 backend fork + install snippets + "Choosing an adapter" helper ✓. Step 2 generative-UI fork (A2UI→a2ui intro, json-render→render intro) + "json-render vs A2UI" helper ✓. Step 3 Chat ✓. Supporting (Licensing, Telemetry) ✓. Search prompt ✓. All 7 libraries homed ✓. Server component, no copy buttons ✓. Test assertions ✓ (Task 1). No spec requirement left without a task.
+- **Placeholder scan:** No TBD/TODO; all code blocks complete; no "add validation/error handling" hand-waves.
+- **Type consistency:** Interface names (`Backend`, `GenerativeUi`, `SupportingLib`) and array names (`BACKENDS`, `GENERATIVE_UI`, `SUPPORTING`) are consistent between definition and use. `StepLabel` signature matches every call site. Test hrefs match the `href` values in the content arrays exactly.

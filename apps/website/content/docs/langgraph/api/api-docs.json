@@ -30,6 +30,147 @@
     ]
   },
   {
+    "name": "FakeStreamTransport",
+    "kind": "class",
+    "description": "In-process AgentTransport that auto-streams a canned assistant reply.\n\nBacks `provideFakeAgent()`. Unlike `MockAgentTransport` (passive, driven\nmanually from specs), this transport emits its tokens automatically on\n`stream()`, then completes — suitable for offline demos and integration tests.\n\nNOT for production use.",
+    "params": [
+      {
+        "name": "config",
+        "type": "FakeAgentConfig",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "examples": [],
+    "properties": [],
+    "methods": [
+      {
+        "name": "cancelRun",
+        "signature": "cancelRun(_threadId: string, _runId: string, _signal: AbortSignal)",
+        "description": "Optional: cancel a server-side run.",
+        "params": [
+          {
+            "name": "_threadId",
+            "type": "string",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "_runId",
+            "type": "string",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "_signal",
+            "type": "AbortSignal",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
+        "name": "createQueuedRun",
+        "signature": "createQueuedRun(_assistantId: string, threadId: string, payload: unknown, _signal: AbortSignal, options: LangGraphSubmitOptions)",
+        "description": "Optional: create a server-side queued run without joining it immediately.",
+        "params": [
+          {
+            "name": "_assistantId",
+            "type": "string",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "threadId",
+            "type": "string",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "payload",
+            "type": "unknown",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "_signal",
+            "type": "AbortSignal",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "options",
+            "type": "LangGraphSubmitOptions",
+            "description": "",
+            "optional": true
+          }
+        ]
+      },
+      {
+        "name": "getHistory",
+        "signature": "getHistory(_threadId: string, _signal: AbortSignal)",
+        "description": "Optional: load persisted checkpoint history for a thread.",
+        "params": [
+          {
+            "name": "_threadId",
+            "type": "string",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "_signal",
+            "type": "AbortSignal",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
+        "name": "joinStream",
+        "signature": "joinStream()",
+        "description": "Optional: join an already-started run without creating a new one.",
+        "params": []
+      },
+      {
+        "name": "stream",
+        "signature": "stream(_assistantId: string, _threadId: string | null, _payload: unknown, signal: AbortSignal, _options: LangGraphSubmitOptions)",
+        "description": "Open a streaming connection to an agent and yield events.",
+        "params": [
+          {
+            "name": "_assistantId",
+            "type": "string",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "_threadId",
+            "type": "string | null",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "_payload",
+            "type": "unknown",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "signal",
+            "type": "AbortSignal",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "_options",
+            "type": "LangGraphSubmitOptions",
+            "description": "",
+            "optional": true
+          }
+        ]
+      }
+    ]
+  },
+  {
     "name": "FetchStreamTransport",
     "kind": "class",
     "description": "Production transport that connects to a LangGraph Platform API via HTTP and SSE.\n\nCreates threads automatically if no threadId is provided, and streams events\nusing the LangGraph SDK client.",
@@ -1503,8 +1644,14 @@
   {
     "name": "MockLangGraphAgent",
     "kind": "interface",
-    "description": "A LangGraphAgent mock with writable signals for easy test control.\n\nCast the result of `mockLangGraphAgent()` to this type to access\nwritable signals without unsafe casts in test files.",
+    "description": "A LangGraphAgent mock with writable signals for easy test control.\n\nBuilds on the runtime-neutral MockAgent from `@threadplane/chat`\n(which supplies the neutral `Agent`-contract writable signals plus\n`submit`/`stop`/`regenerate` call tracking) and layers the LangGraph-specific\nwritable signals on top.\n\nCast the result of `mockLangGraphAgent()` to this type to access\nwritable signals without unsafe casts in test files.",
     "properties": [
+      {
+        "name": "_internal",
+        "type": "object",
+        "description": "",
+        "optional": false
+      },
       {
         "name": "activeSubagents",
         "type": "WritableSignal<SubagentStreamRef[]>",
@@ -1692,6 +1839,12 @@
         "optional": false
       },
       {
+        "name": "stopCount",
+        "type": "number",
+        "description": "",
+        "optional": false
+      },
+      {
         "name": "subagents",
         "type": "WritableSignal<Map<string, Subagent>>",
         "description": "",
@@ -1701,6 +1854,12 @@
         "name": "submit",
         "type": "object",
         "description": "Submit input, resume commands, checkpoint forks, or other LangGraph run options.",
+        "optional": false
+      },
+      {
+        "name": "submitCalls",
+        "type": "object[]",
+        "description": "",
         "optional": false
       },
       {
@@ -2055,12 +2214,12 @@
   {
     "name": "mockLangGraphAgent",
     "kind": "function",
-    "description": "Creates a mock LangGraphAgent with writable signals for testing.\nControl state by writing to the returned writable signals directly.",
-    "signature": "mockLangGraphAgent(initial: object): MockLangGraphAgent<>",
+    "description": "Creates a mock LangGraphAgent with writable signals for testing.\nControl state by writing to the returned writable signals directly.\n\nNeutral `Agent`-contract signals come from mockAgent; LangGraph-specific\nsignals are declared here and layered on top.",
+    "signature": "mockLangGraphAgent(initial: MockAgentOptions & { hasValue?: boolean; isThreadLoading?: boolean; langGraphMessages?: BaseMessage<MessageStructure<MessageToolSet>, MessageType>[] }): MockLangGraphAgent<>",
     "params": [
       {
         "name": "initial",
-        "type": "object",
+        "type": "MockAgentOptions & { hasValue?: boolean; isThreadLoading?: boolean; langGraphMessages?: BaseMessage<MessageStructure<MessageToolSet>, MessageType>[] }",
         "description": "",
         "optional": false
       }
@@ -2080,6 +2239,25 @@
       {
         "name": "configOrFactory",
         "type": "AgentConfig<T, BagTemplate> | object",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "Provider[]",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "provideFakeAgent",
+    "kind": "function",
+    "description": "Wire an in-process fake LangGraph agent into Angular DI.\n\nStreams a canned assistant reply (see FakeAgentConfig) with no backend —\nthe symmetric counterpart to @threadplane/ag-ui's provideFakeAgent(). For\nadvanced manual scripting (tool calls, interrupts, multi-batch), provide\nthe agent yourself with\n`provideAgent({ assistantId, transport: new MockAgentTransport(...) })`.",
+    "signature": "provideFakeAgent(config: FakeAgentConfig): Provider[]",
+    "params": [
+      {
+        "name": "config",
+        "type": "FakeAgentConfig",
         "description": "",
         "optional": false
       }

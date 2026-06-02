@@ -4,6 +4,11 @@ import { cssVars, ThemeProvider } from '@threadplane/ui-react';
 import type { Theme } from '@threadplane/design-tokens';
 import { AnalyticsBootstrap } from '../components/analytics-bootstrap';
 import './cockpit.css';
+import { EB_Garamond, Inter, JetBrains_Mono } from 'next/font/google';
+
+const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'swap' });
+const mono = JetBrains_Mono({ subsets: ['latin'], variable: '--font-mono', display: 'swap' });
+const garamond = EB_Garamond({ subsets: ['latin'], weight: ['400', '500', '600'], variable: '--font-garamond', display: 'swap' });
 
 export const metadata = {
   title: 'Cockpit — Threadplane',
@@ -31,7 +36,12 @@ export default async function RootLayout({ children }: RootLayoutProps) {
   const theme: Theme = cookieValue === 'light' ? 'light' : 'dark';
 
   return (
-    <html lang="en" data-theme={theme} style={cssVars(theme) as React.CSSProperties}>
+    <html
+      lang="en"
+      data-theme={theme}
+      className={`${inter.variable} ${mono.variable} ${garamond.variable}`}
+      style={cssVars(theme) as React.CSSProperties}
+    >
       <body
         className="min-h-screen font-sans antialiased"
         style={{

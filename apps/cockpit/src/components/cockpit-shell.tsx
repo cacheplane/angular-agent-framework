@@ -94,8 +94,6 @@ export function CockpitShell({
               <MenuIcon />
             </button>
             <p className="hidden md:block text-[var(--ds-text-muted)] font-mono text-xs">{contextLabel}</p>
-            <span className="hidden md:block text-[var(--ds-accent-border)]">|</span>
-            <h2 className="text-sm font-medium text-[var(--ds-text-primary)]">{entryTitle}</h2>
           </div>
           <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0">
             <ModeSwitcher

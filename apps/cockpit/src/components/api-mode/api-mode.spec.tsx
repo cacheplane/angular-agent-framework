@@ -47,6 +47,8 @@ describe('ApiMode', () => {
     expect(html).toContain('stream');
     expect(html).toContain('prompt');
     expect(html).toContain('The user message');
+    expect(html).toContain('<table');
+    expect(html).toContain('Parameter');
     expect(html).toContain('Observable emitting tokens');
 
     expect(html).toContain('StreamingGraph');
