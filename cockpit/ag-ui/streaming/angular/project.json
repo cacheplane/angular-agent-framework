@@ -46,6 +46,18 @@
               "with": "cockpit/ag-ui/streaming/angular/src/environments/environment.development.ts"
             }
           ]
+        },
+        "cockpit": {
+          "optimization": false,
+          "extractLicenses": false,
+          "sourceMap": true,
+          "fileReplacements": [
+            {
+              "replace": "cockpit/ag-ui/streaming/angular/src/environments/environment.ts",
+              "with": "cockpit/ag-ui/streaming/angular/src/environments/environment.development.ts"
+            }
+          ],
+          "browser": "cockpit/ag-ui/streaming/angular/src/main.cockpit.ts"
         }
       },
       "defaultConfiguration": "production"
@@ -59,11 +71,14 @@
         },
         "development": {
           "buildTarget": "cockpit-ag-ui-streaming-angular:build:development"
+        },
+        "cockpit": {
+          "buildTarget": "cockpit-ag-ui-streaming-angular:build:cockpit"
         }
       },
       "defaultConfiguration": "development",
       "options": {
-        "proxyConfig": "cockpit/ag-ui/streaming/angular/proxy.conf.json"
+        "proxyConfig": "cockpit/ag-ui/streaming/angular/proxy.conf.mjs"
       }
     },
     "smoke": {
@@ -71,6 +86,12 @@
       "options": {
         "cwd": "cockpit/ag-ui/streaming/angular",
         "command": "npx tsx -e \"import { agUiStreamingAngularModule } from './src/index.ts'; const module = agUiStreamingAngularModule; if (module.id !== 'ag-ui-streaming-angular' || module.title !== 'AG-UI Streaming (Angular)') { throw new Error('Unexpected module shape for ' + module.id); }\""
+      }
+    },
+    "e2e": {
+      "executor": "@nx/playwright:playwright",
+      "options": {
+        "config": "cockpit/ag-ui/streaming/angular/e2e/playwright.config.ts"
       }
     }
   },
