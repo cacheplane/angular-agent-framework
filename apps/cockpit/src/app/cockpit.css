@@ -109,31 +109,30 @@ pre.shiki {
   align-items: center;
   gap: 0.5rem;
   padding: 0.4rem 0.75rem;
-  border-bottom: 1px solid rgba(138, 170, 214, 0.12);
-  background: var(--ds-surface);
+  border-bottom: 1px solid var(--ds-border);
+  background: var(--ds-surface-tinted);
   font-size: 0.7rem;
 }
-.doc-codeblock__file { color: #a9b1d6; font-family: var(--font-mono); }
+.doc-codeblock__file { color: var(--ds-text-secondary); font-family: var(--font-mono), "JetBrains Mono", monospace; }
 .doc-codeblock__lang {
   padding: 0.1rem 0.35rem;
   border-radius: 0.2rem;
-  background: var(--ds-accent-border);
-  color: var(--ds-accent-light);
+  background: var(--ds-accent-surface);
+  color: var(--ds-accent);
   font-size: 0.6rem;
+  font-family: var(--font-mono), "JetBrains Mono", monospace;
 }
 .doc-codeblock__copy {
   margin-left: auto;
   padding: 0.1rem 0.5rem;
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  border: 1px solid var(--ds-border);
   border-radius: 0.25rem;
   background: transparent;
-  color: #a9b1d6;
-  font-size: 0.65rem;
+  color: var(--ds-text-muted);
   cursor: pointer;
 }
-.doc-codeblock__copy:hover { color: #e0e0e0; }
+.doc-codeblock__copy:hover { color: var(--ds-text-primary); border-color: var(--ds-border-strong); }
 .doc-codeblock pre.shiki { margin: 0; border-radius: 0; border: none; overflow-x: auto; }
-.code-mode-block pre.shiki { margin: 0; border-radius: 0; border: none; overflow-x: auto; }
 
 .doc-prompt {
   background: rgba(168, 85, 247, 0.04);
@@ -206,12 +205,29 @@ pre.shiki {
   font-size: 0.75rem;
 }
 
-/* Narrative docs heading alignment with website */
-.docs-article h1,
-.docs-article h2,
-.docs-article h3 {
-  font-family: var(--ds-font-serif);
+/* Shared prose layer — docs + api */
+.cockpit-prose {
+  max-width: 42rem;
+  font-size: 0.9rem;
+  line-height: 1.7;
+  color: var(--ds-text-secondary);
 }
-.docs-article h1 { font-size: 1.875rem; }
-.docs-article h2 { font-size: 1.5rem; }
-.docs-article h3 { font-size: 1.25rem; }
+.cockpit-prose h1, .cockpit-prose h2, .cockpit-prose h3 {
+  font-family: var(--font-garamond), var(--ds-font-serif);
+  color: var(--ds-text-primary);
+  letter-spacing: -0.01em;
+}
+.cockpit-prose h1 { font-size: 1.875rem; line-height: 1.1; margin: 0 0 0.5rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--ds-accent-border); }
+.cockpit-prose h2 { font-size: 1.5rem; margin: 2.25rem 0 0.75rem; }
+.cockpit-prose h3 { font-size: 1.25rem; margin: 1.5rem 0 0.5rem; }
+.cockpit-prose p { margin: 0 0 0.75rem; }
+.cockpit-prose ul { margin: 0 0 0.75rem; padding-left: 1.25rem; list-style: disc; }
+.cockpit-prose li { margin-bottom: 0.25rem; }
+.cockpit-prose a { color: var(--ds-accent); text-decoration: none; }
+.cockpit-prose a:hover { text-decoration: underline; }
+.cockpit-prose code { color: var(--ds-accent); background: var(--ds-accent-surface); padding: 0.1rem 0.3rem; border-radius: 0.25rem; font-size: 0.85em; font-family: var(--font-mono), "JetBrains Mono", monospace; }
+.cockpit-prose strong { color: var(--ds-text-primary); font-weight: 600; }
+
+.cockpit-prose table.params { border-collapse: collapse; margin: 0.5rem 0; }
+.cockpit-prose table.params th { font-family: var(--font-mono), monospace; font-size: 0.6rem; letter-spacing: 0.06em; text-transform: uppercase; padding-bottom: 0.5rem; border-bottom: 1px solid var(--ds-border); }
+.cockpit-prose table.params td { padding: 0.5rem 0.75rem 0.5rem 0; border-bottom: 1px solid var(--ds-border); }

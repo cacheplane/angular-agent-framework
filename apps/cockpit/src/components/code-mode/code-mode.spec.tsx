@@ -47,6 +47,8 @@ describe('CodeMode', () => {
     });
 
     expect(container.querySelector('.shiki')).not.toBeNull();
+    const fileLabel = container.querySelector('.doc-codeblock__file');
+    expect(fileLabel?.textContent).toBe('page.tsx');
     expect(container.textContent).toContain('export default function Page() {}');
 
     const tabs = Array.from(container.querySelectorAll('[role="tab"]'));
