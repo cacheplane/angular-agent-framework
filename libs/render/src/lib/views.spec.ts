@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { Component } from '@angular/core';
-import { views, withViews, withoutViews, toRenderRegistry } from './views';
+import { views, withViews, withoutViews, toRenderRegistry, overrideViews } from './views';
 
 @Component({ selector: 'render-test-a', standalone: true, template: 'A' })
 class CompA {}
@@ -64,6 +64,33 @@ describe('withoutViews()', () => {
     const base = views({ 'a': CompA });
     const result = withoutViews(base, 'nonexistent');
     expect(result['a']).toBe(CompA);
+  });
+});
+
+describe('overrideViews()', () => {
+  it('replaces matching keys; overrides win over base', () => {
+    const base = views({ 'foo': CompA, 'bar': CompB });
+    const result = overrideViews(base, { 'foo': CompC });
+    expect(result['foo']).toBe(CompC);
+    expect(result['bar']).toBe(CompB);
+  });
+
+  it('adds new keys not present in base', () => {
+    const base = views({ 'foo': CompA });
+    const result = overrideViews(base, { 'bar': CompB });
+    expect(result['foo']).toBe(CompA);
+    expect(result['bar']).toBe(CompB);
+  });
+
+  it('does not mutate base', () => {
+    const base = views({ 'foo': CompA });
+    overrideViews(base, { 'foo': CompB });
+    expect(base['foo']).toBe(CompA);
+  });
+
+  it('returns a frozen object', () => {
+    const result = overrideViews(views({}), {});
+    expect(Object.isFrozen(result)).toBe(true);
   });
 });
 
