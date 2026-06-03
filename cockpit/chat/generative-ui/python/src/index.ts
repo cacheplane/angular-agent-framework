@@ -28,7 +28,7 @@ export const chatGenerativeUiPythonModule: CockpitCapabilityModule = {
   },
   title: 'Chat Generative UI (Python)',
   docsPath: '/docs/chat/core-capabilities/generative-ui/overview/python',
-  promptAssetPaths: ['cockpit/chat/generative-ui/python/prompts/dashboard.md'],
+  promptAssetPaths: ['cockpit/chat/generative-ui/python/prompts/generative-ui.md'],
   codeAssetPaths: [
     'cockpit/chat/generative-ui/angular/src/app/generative-ui.component.ts',
     'cockpit/chat/generative-ui/angular/src/app/app.config.ts',
