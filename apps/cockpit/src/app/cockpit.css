@@ -205,13 +205,16 @@ pre.shiki {
   font-size: 0.75rem;
 }
 
-/* Shared prose layer — docs + api */
+/* Shared prose layer — docs + api + code mode content */
 .cockpit-prose {
   max-width: 42rem;
+  margin-inline: auto;
   font-size: 0.9rem;
   line-height: 1.7;
   color: var(--ds-text-secondary);
 }
+.cockpit-prose--wide { max-width: 48rem; }
+.cockpit-prose--code { max-width: 56rem; }
 .cockpit-prose h1, .cockpit-prose h2, .cockpit-prose h3 {
   font-family: var(--font-garamond), var(--ds-font-serif);
   color: var(--ds-text-primary);

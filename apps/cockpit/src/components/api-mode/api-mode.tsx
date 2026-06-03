@@ -130,8 +130,8 @@ export function ApiMode({ docSections, hasCodeFiles = false }: ApiModeProps) {
   const pySections = docSections.filter((s) => s.language === 'python');
 
   return (
-    <section aria-label="API mode" className="h-full overflow-auto py-4 px-4 md:px-8">
-      <div className="cockpit-prose" style={{ maxWidth: '48rem' }}>
+    <section aria-label="API mode" className="h-full overflow-auto py-6 px-4 md:px-8">
+      <div className="cockpit-prose cockpit-prose--wide">
         {tsSections.length > 0 ? (
           <div>
             <h3

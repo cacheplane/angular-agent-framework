@@ -88,20 +88,24 @@ export function CodeMode({ entryTitle, codeAssetPaths, backendAssetPaths, codeFi
         </TabsList>
 
         {[...codeAssetPaths, ...backendAssetPaths].map((path) => (
-          <TabsContent key={path} value={path} className="flex-1 overflow-auto">
-            <CodeFileContent path={path} content={codeFiles[path]} capability={capability} />
+          <TabsContent key={path} value={path} className="flex-1 overflow-auto py-6 px-4 md:px-8">
+            <div className="cockpit-prose cockpit-prose--code">
+              <CodeFileContent path={path} content={codeFiles[path]} capability={capability} />
+            </div>
           </TabsContent>
         ))}
 
         {promptPaths.map((path) => {
           const content = promptFiles[path];
           return (
-            <TabsContent key={path} value={path} className="flex-1 overflow-auto mt-4">
-              {content ? (
-                <pre className="font-mono text-sm whitespace-pre-wrap">{content}</pre>
-              ) : (
-                <p className="text-sm text-[var(--ds-text-muted)]">No content for {getTabLabel(path)}</p>
-              )}
+            <TabsContent key={path} value={path} className="flex-1 overflow-auto py-6 px-4 md:px-8">
+              <div className="cockpit-prose cockpit-prose--code">
+                {content ? (
+                  <pre className="font-mono text-sm whitespace-pre-wrap">{content}</pre>
+                ) : (
+                  <p className="text-sm text-[var(--ds-text-muted)]">No content for {getTabLabel(path)}</p>
+                )}
+              </div>
             </TabsContent>
           );
         })}
