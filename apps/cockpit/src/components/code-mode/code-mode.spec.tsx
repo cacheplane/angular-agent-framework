@@ -146,6 +146,39 @@ describe('CodeMode', () => {
     expect(active?.textContent).toBe('a.ts');
   });
 
+  it('opens a closed file and activates it when the tree row is clicked', () => {
+    container = document.createElement('div');
+    document.body.appendChild(container);
+    root = createRoot(container);
+
+    act(() => {
+      root!.render(
+        <CodeMode
+          entryTitle="Planning"
+          codeAssetPaths={['src/a.ts', 'src/b.ts']}
+          backendAssetPaths={[]}
+          codeFiles={{
+            'src/a.ts': '<pre class="shiki"><code>a</code></pre>',
+            'src/b.ts': '<pre class="shiki"><code>b</code></pre>',
+          }}
+          promptFiles={{}}
+        />,
+      );
+    });
+
+    // Locate the tree row for b.ts and click it. Since FT5 has both files pre-opened,
+    // this verifies the tree-click path even before FT6 introduces close behaviour.
+    const bRow = Array.from(container.querySelectorAll('[data-file-row]')).find(
+      (el) => el.querySelector('[data-file-label]')?.textContent === 'b.ts',
+    ) as HTMLElement;
+    expect(bRow).toBeDefined();
+
+    act(() => { bRow.click(); });
+
+    const active = container.querySelector('[role="tab"][data-state="active"]');
+    expect(active?.textContent).toBe('b.ts');
+  });
+
   it('fires cockpit:code_copied when the Copy button is clicked', () => {
     container = document.createElement('div');
     document.body.appendChild(container);

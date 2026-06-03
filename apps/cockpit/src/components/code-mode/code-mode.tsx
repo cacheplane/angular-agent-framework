@@ -3,6 +3,7 @@
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { track } from '../../lib/analytics/client';
+import { FileTree } from './file-tree';
 
 interface CodeModeProps {
   entryTitle: string;
@@ -68,6 +69,11 @@ export function CodeMode({ entryTitle, codeAssetPaths, backendAssetPaths, codeFi
     setActivePath(allPaths[0] ?? null);
   }, [allPaths]);
 
+  const handleSelect = React.useCallback((path: string) => {
+    setOpenPaths((prev) => (prev.includes(path) ? prev : [...prev, path]));
+    setActivePath(path);
+  }, []);
+
   if (allPaths.length === 0) {
     return (
       <section aria-label="Code mode" className="grid place-items-center h-full text-[var(--ds-text-muted)] text-sm">
@@ -79,51 +85,60 @@ export function CodeMode({ entryTitle, codeAssetPaths, backendAssetPaths, codeFi
   const isPromptPath = (path: string) => promptPaths.includes(path);
 
   return (
-    <section aria-label="Code mode" className="h-full flex flex-col">
-      <Tabs
-        value={activePath ?? undefined}
-        onValueChange={(v) => setActivePath(v)}
-        className="flex flex-col h-full"
+    <section aria-label="Code mode" className="h-full lg:grid lg:grid-cols-[220px_1fr] lg:overflow-hidden">
+      <aside
+        aria-label="File tree"
+        className="hidden lg:block lg:overflow-y-auto border-r border-[var(--ds-border)] bg-[var(--ds-surface-tinted)]/40"
       >
-        <TabsList className="shrink-0">
-          {openPaths.map((path) => (
-            <TabsTrigger
-              key={path}
-              value={path}
-              className={
-                isPromptPath(path)
-                  ? 'text-[var(--ds-accent)]/70 data-[state=active]:text-[var(--ds-accent)]'
-                  : undefined
-              }
-            >
-              {getTabLabel(path)}
-            </TabsTrigger>
-          ))}
-        </TabsList>
+        <FileTree paths={allPaths} activePath={activePath} onSelect={handleSelect} />
+      </aside>
 
-        {openPaths.filter((p) => !isPromptPath(p)).map((path) => (
-          <TabsContent key={path} value={path} className="flex-1 overflow-auto py-6 px-4 md:px-8">
-            <div className="cockpit-prose cockpit-prose--code">
-              <CodeFileContent path={path} content={codeFiles[path]} capability={capability} />
-            </div>
-          </TabsContent>
-        ))}
+      <div className="flex flex-col h-full min-w-0">
+        <Tabs
+          value={activePath ?? undefined}
+          onValueChange={(v) => setActivePath(v)}
+          className="flex flex-col h-full"
+        >
+          <TabsList className="shrink-0">
+            {openPaths.map((path) => (
+              <TabsTrigger
+                key={path}
+                value={path}
+                className={
+                  isPromptPath(path)
+                    ? 'text-[var(--ds-accent)]/70 data-[state=active]:text-[var(--ds-accent)]'
+                    : undefined
+                }
+              >
+                {getTabLabel(path)}
+              </TabsTrigger>
+            ))}
+          </TabsList>
 
-        {openPaths.filter(isPromptPath).map((path) => {
-          const content = promptFiles[path];
-          return (
+          {openPaths.filter((p) => !isPromptPath(p)).map((path) => (
             <TabsContent key={path} value={path} className="flex-1 overflow-auto py-6 px-4 md:px-8">
               <div className="cockpit-prose cockpit-prose--code">
-                {content ? (
-                  <pre className="font-mono text-sm whitespace-pre-wrap">{content}</pre>
-                ) : (
-                  <p className="text-sm text-[var(--ds-text-muted)]">No content for {getTabLabel(path)}</p>
-                )}
+                <CodeFileContent path={path} content={codeFiles[path]} capability={capability} />
               </div>
             </TabsContent>
-          );
-        })}
-      </Tabs>
+          ))}
+
+          {openPaths.filter(isPromptPath).map((path) => {
+            const content = promptFiles[path];
+            return (
+              <TabsContent key={path} value={path} className="flex-1 overflow-auto py-6 px-4 md:px-8">
+                <div className="cockpit-prose cockpit-prose--code">
+                  {content ? (
+                    <pre className="font-mono text-sm whitespace-pre-wrap">{content}</pre>
+                  ) : (
+                    <p className="text-sm text-[var(--ds-text-muted)]">No content for {getTabLabel(path)}</p>
+                  )}
+                </div>
+              </TabsContent>
+            );
+          })}
+        </Tabs>
+      </div>
     </section>
   );
 }
