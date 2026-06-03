@@ -73,11 +73,11 @@ export class AgentUiComponent {
 
 ## Capabilities
 
-**View registry composition** — `views(map)` creates a frozen registry; `withViews(base, additions)` extends it non-destructively; `withoutViews(base, ...keys)` prunes entries. Convert to an `AngularRegistry` with `toRenderRegistry` and supply it app-wide via `provideRender({ registry })`, or pass one directly as the `[registry]` input on `<render-spec>` / `<render-element>`.
+**View registry composition** — `views(map)` creates a frozen registry; `withViews(base, additions)` adds NEW keys without touching existing entries — use it to extend a registry with previously-unhandled node types; `overrideViews(base, overrides)` replaces matching keys so overrides win over base — use it to swap an existing renderer; `withoutViews(base, ...keys)` prunes entries. Convert to an `AngularRegistry` with `toRenderRegistry` and supply it app-wide via `provideRender({ registry })`, or pass one directly as the `[registry]` input on `<render-spec>` / `<render-element>`.
 
 **Signal state store** — `signalStateStore(initialState?)` provides a `StateStore` backed by Angular Signals, suitable for two-way bindings declared in a spec.
 
-**DI providers** — `provideRender(config)` registers `RenderConfig` (registry, store, functions, handlers) as environment-scoped defaults read by the render components; `provideViews(registry)` publishes a `ViewRegistry` under the `VIEW_REGISTRY` token for consumers to inject directly.
+**DI providers** — `provideRender(config)` registers `RenderConfig` (registry, store, functions, handlers) as environment-scoped defaults read by the render components; `provideViews(registry)` publishes a `ViewRegistry` under the `VIEW_REGISTRY` token. `<render-spec>` and `<render-element>` resolve their registry in priority order: the `[registry]` template input, then `RENDER_CONFIG.registry` (from `provideRender(...)`), then `VIEW_REGISTRY` (from `provideViews(...)`), then the existing empty fallback.
 
 **Fallback** — `DefaultFallbackComponent` renders when no component is registered for a spec node; individual entries in a `ViewRegistry` can supply their own `fallback` component via `RenderViewEntry`.
 
