@@ -49,8 +49,12 @@ function peelPrefix(nodes: TreeNode[]): TreeNode[] {
 }
 
 export function buildTree(paths: readonly string[]): TreeNode[] {
-  if (paths.length === 0) return [];
+  const normalized = paths
+    .map((p) => p.replace(/^\/+/, '').replace(/\/+$/, ''))
+    .filter((p) => p.length > 0);
+  if (normalized.length === 0) return [];
+
   const root: FolderNode = { kind: 'folder', label: '', children: [] };
-  paths.forEach((p) => insert(root, p.split('/'), p));
+  normalized.forEach((p) => insert(root, p.split('/'), p));
   return peelPrefix(compact(root.children));
 }

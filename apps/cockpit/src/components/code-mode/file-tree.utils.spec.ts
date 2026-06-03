@@ -19,7 +19,8 @@ describe('buildTree', () => {
       'cockpit/planning/python/graph.py',
     ]);
     // common prefix "cockpit/planning/" is removed; "angular" and "python" become top-level folders
-    expect(tree.map((n) => (n.kind === 'folder' ? n.label : n.label))).toEqual(['angular', 'python']);
+    expect(tree.map((n) => n.kind)).toEqual(['folder', 'folder']);
+    expect(tree.map((n) => n.label)).toEqual(['angular', 'python']);
   });
 
   it('compacts single-child folder chains into one row', () => {
@@ -27,8 +28,8 @@ describe('buildTree', () => {
       'angular/src/app/planning.component.ts',
       'angular/src/app/app.config.ts',
     ]);
-    // angular > src > app each have one child folder beneath them on the way down;
-    // they merge into a single "angular/src/app" folder row.
+    // angular and src each have a single sub-folder; app has two files,
+    // so the merge produces one "angular/src/app" folder row.
     expect(tree).toHaveLength(1);
     expect(tree[0]).toMatchObject({ kind: 'folder', label: 'angular/src/app' });
     expect((tree[0] as { children: TreeNode[] }).children.map((c) => c.label).sort()).toEqual([
@@ -56,5 +57,17 @@ describe('buildTree', () => {
       { kind: 'file', path: 'a.ts', label: 'a.ts' },
       { kind: 'file', path: 'b.py', label: 'b.py' },
     ]);
+  });
+
+  it('normalizes leading and trailing slashes in paths', () => {
+    const tree = buildTree(['/angular/src/app/foo.ts', 'angular/src/app/bar.ts']);
+    expect(tree).toHaveLength(1);
+    const folder = tree[0] as { kind: 'folder'; label: string; children: TreeNode[] };
+    expect(folder.kind).toBe('folder');
+    expect(folder.label).toBe('angular/src/app');
+    expect(folder.children.map((c) => c.label).sort()).toEqual(['bar.ts', 'foo.ts']);
+    // FileNode.path must not retain the stripped leading slash
+    const foo = folder.children.find((c) => c.label === 'foo.ts') as { path: string };
+    expect(foo.path).toBe('angular/src/app/foo.ts');
   });
 });
