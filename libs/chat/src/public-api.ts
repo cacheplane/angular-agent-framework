@@ -152,7 +152,6 @@ export {
 // Views (re-exported from @threadplane/render for convenience)
 export { views, withViews, withoutViews, toRenderRegistry } from '@threadplane/render';
 export type { ViewRegistry } from '@threadplane/render';
-export { provideViews, VIEW_REGISTRY } from '@threadplane/render';
 
 // Streaming / Generative UI
 export { createContentClassifier } from './lib/streaming/content-classifier';
