@@ -6,6 +6,7 @@ import { Section } from '../../components/ui/Section';
 import { Eyebrow } from '../../components/ui/Eyebrow';
 import { Card } from '../../components/ui/Card';
 import { Pill } from '../../components/ui/Pill';
+import { CopyButton } from '../../components/docs/CopyButton';
 import { createPageMetadata } from '../../lib/site-metadata';
 
 export const metadata = createPageMetadata({
@@ -21,44 +22,53 @@ interface Backend {
   blurb: string;
   install: string;
   href: string;
+  logoSrc: string;
+  attribution: string;
 }
 
 const BACKENDS: Backend[] = [
   {
     title: 'LangGraph',
-    blurb: 'For LangChain / LangGraph backends',
+    blurb: 'For LangChain & LangGraph backends.',
     install: 'npm i @threadplane/langgraph',
     href: '/docs/langgraph/getting-started/quickstart',
+    logoSrc: '/logos/langgraph.svg',
+    attribution: 'LangChain',
   },
   {
     title: 'AG-UI',
-    blurb: 'CrewAI, Mastra, Pydantic AI, Strands…',
+    blurb: 'For CrewAI, Mastra, Pydantic AI, Strands, and more.',
     install: 'npm i @threadplane/ag-ui',
     href: '/docs/ag-ui/getting-started/quickstart',
+    logoSrc: '/logos/runtimes/copilotkit.svg',
+    attribution: 'AG-UI · CopilotKit',
   },
 ];
 
 interface GenerativeUi {
-  vendor: string;
   title: string;
   blurb: string;
   href: string;
+  logoSrc: string;
+  attribution: string;
 }
 
 const GENERATIVE_UI: GenerativeUi[] = [
   {
-    vendor: 'Google',
     title: 'A2UI',
     blurb:
       'Agent-to-UI protocol — the agent streams and updates surfaces over the conversation.',
     href: '/docs/a2ui/getting-started/introduction',
+    logoSrc: '/logos/providers/google.svg',
+    attribution: 'Google',
   },
   {
-    vendor: 'Vercel',
     title: 'json-render',
     blurb:
       'Render a fixed JSON spec into your own Angular components. You own the schema.',
     href: '/docs/render/getting-started/introduction',
+    logoSrc: '/logos/surface/vercel.svg',
+    attribution: 'Vercel',
   },
 ];
 
@@ -66,6 +76,7 @@ interface SupportingLib {
   title: string;
   blurb: string;
   href: string;
+  glyph: 'key' | 'pulse';
 }
 
 const SUPPORTING: SupportingLib[] = [
@@ -73,39 +84,130 @@ const SUPPORTING: SupportingLib[] = [
     title: 'Licensing',
     blurb: 'Token verification',
     href: '/docs/licensing/getting-started/introduction',
+    glyph: 'key',
   },
   {
     title: 'Telemetry',
     blurb: 'Browser & Node events',
     href: '/docs/telemetry/getting-started/introduction',
+    glyph: 'pulse',
   },
 ];
 
-function StepLabel({ id, children }: { id: string; children: ReactNode }) {
+function ChatGlyph() {
   return (
-    <h2
-      id={id}
-      style={{
-        fontFamily: tokens.typography.eyebrow.family,
-        fontSize: tokens.typography.eyebrow.size,
-        fontWeight: tokens.typography.eyebrow.weight,
-        letterSpacing: tokens.typography.eyebrow.letterSpacing,
-        textTransform: tokens.typography.eyebrow.transform,
-        lineHeight: tokens.typography.eyebrow.line,
-        color: tokens.colors.textMuted,
-        margin: 0,
-        marginBottom: 16,
-      }}
-    >
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M4 5h16v11H8l-4 4V5Z" />
+    </svg>
+  );
+}
+
+function KeyGlyph() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="8" cy="12" r="3" />
+      <path d="M11 12h9M17 12v4" />
+    </svg>
+  );
+}
+
+function PulseGlyph() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M3 13h4l3-8 4 16 3-8h4" />
+    </svg>
+  );
+}
+
+const GLYPHS = { key: KeyGlyph, pulse: PulseGlyph } as const;
+
+const stepLabelStyle = {
+  fontFamily: tokens.typography.eyebrow.family,
+  fontSize: tokens.typography.eyebrow.size,
+  fontWeight: tokens.typography.eyebrow.weight,
+  letterSpacing: tokens.typography.eyebrow.letterSpacing,
+  textTransform: tokens.typography.eyebrow.transform,
+  lineHeight: tokens.typography.eyebrow.line,
+  color: tokens.colors.textMuted,
+  margin: 0,
+  marginBottom: 16,
+  display: 'flex',
+  alignItems: 'center',
+  gap: 10,
+} as const;
+
+const stepBadgeStyle = {
+  width: 20,
+  height: 20,
+  borderRadius: tokens.radius.full,
+  background: tokens.colors.accent,
+  color: '#fff',
+  fontSize: 12,
+  fontWeight: 700,
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  flex: '0 0 auto',
+} as const;
+
+function StepLabel({ id, step, children }: { id: string; step?: number; children: ReactNode }) {
+  return (
+    <h2 id={id} style={stepLabelStyle}>
+      {step != null ? (
+        <span aria-hidden="true" style={stepBadgeStyle}>{step}</span>
+      ) : null}
       {children}
     </h2>
   );
 }
 
-const gridStyle = {
-  display: 'grid',
-  gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
-  gap: 16,
+const logoChipStyle = {
+  width: 30,
+  height: 30,
+  borderRadius: tokens.radius.md,
+  background: tokens.surfaces.surface,
+  border: `1px solid ${tokens.surfaces.border}`,
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  flex: '0 0 auto',
+} as const;
+
+const glyphChipStyle = {
+  borderRadius: tokens.radius.md,
+  background: tokens.colors.accentSurface,
+  border: `1px solid ${tokens.colors.accentBorder}`,
+  color: tokens.colors.accent,
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  flex: '0 0 auto',
+} as const;
+
+function LogoChip({ src }: { src: string }) {
+  return (
+    <span style={logoChipStyle}>
+      <img
+        src={src}
+        alt=""
+        aria-hidden="true"
+        loading="lazy"
+        decoding="async"
+        style={{ width: 18, height: 18, objectFit: 'contain' }}
+      />
+    </span>
+  );
+}
+
+function GlyphChip({ size, children }: { size: number; children: ReactNode }) {
+  return <span style={{ ...glyphChipStyle, width: size, height: size }}>{children}</span>;
+}
+
+const cardHeaderStyle = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: 12,
+  marginBottom: 12,
 } as const;
 
 const cardTitleStyle = {
@@ -115,7 +217,16 @@ const cardTitleStyle = {
   fontWeight: 600,
   color: tokens.colors.textPrimary,
   margin: 0,
-  marginBottom: 8,
+} as const;
+
+const attributionStyle = {
+  fontFamily: tokens.typography.fontMono,
+  fontSize: 10,
+  lineHeight: 1.4,
+  textTransform: 'uppercase',
+  letterSpacing: '0.08em',
+  color: tokens.colors.textMuted,
+  marginTop: 2,
 } as const;
 
 const cardBlurbStyle = {
@@ -131,6 +242,33 @@ const ctaStyle = {
   fontSize: 14,
   fontWeight: 600,
   color: tokens.colors.accent,
+} as const;
+
+const snippetRowStyle = {
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  gap: 8,
+  background: tokens.surfaces.surface,
+  border: `1px solid ${tokens.surfaces.border}`,
+  borderRadius: tokens.radius.md,
+  padding: '5px 6px 5px 12px',
+  margin: '14px 0 16px',
+} as const;
+
+const snippetCodeStyle = {
+  fontFamily: tokens.typography.fontMono,
+  fontSize: 13,
+  color: tokens.colors.textSecondary,
+  overflow: 'hidden',
+  textOverflow: 'ellipsis',
+  whiteSpace: 'nowrap',
+} as const;
+
+const gridStyle = {
+  display: 'grid',
+  gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+  gap: 16,
 } as const;
 
 const helperStyle = {
@@ -153,15 +291,26 @@ const accentCardStyle = {
   border: `1px solid ${tokens.colors.accentBorder}`,
 } as const;
 
-const supportingTitleStyle = {
-  ...cardTitleStyle,
-  fontSize: 16,
-  marginBottom: 4,
+const plainCardStyle = {
+  height: '100%',
+} as const;
+
+const dividerStyle = {
+  height: 1,
+  background: tokens.surfaces.border,
+  border: 'none',
+  margin: '0 0 40px',
 } as const;
 
 export default function DocsLandingPage() {
   return (
     <>
+      <style>{`
+        [data-ui="docs-card"] { transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease; }
+        [data-ui="docs-card"]:hover { border-color: ${tokens.colors.accentBorderHover}; box-shadow: ${tokens.shadows.md}; transform: translateY(-1px); }
+        @media (prefers-reduced-motion: reduce) { [data-ui="docs-card"]:hover { transform: none; } }
+      `}</style>
+
       {/* Hero */}
       <Section surface="canvas" ariaLabelledBy="docs-heading">
         <Container>
@@ -182,7 +331,7 @@ export default function DocsLandingPage() {
                 letterSpacing: '-0.02em',
               }}
             >
-              Build AI agent UIs in Angular
+              Start building with Threadplane
             </h1>
             <p
               style={{
@@ -204,28 +353,23 @@ export default function DocsLandingPage() {
       {/* Step 1 — backend */}
       <Section surface="canvas" tight ariaLabelledBy="backend-heading">
         <Container>
-          <StepLabel id="backend-heading">Step 1 · Pick your backend</StepLabel>
+          <StepLabel id="backend-heading" step={1}>Pick your backend</StepLabel>
           <div style={gridStyle}>
             {BACKENDS.map((b) => (
               <Link key={b.href} href={b.href} style={{ textDecoration: 'none' }}>
-                <Card padding="lg" hoverable style={accentCardStyle}>
-                  <h3 style={cardTitleStyle}>{b.title}</h3>
-                  <p style={{ ...cardBlurbStyle, marginBottom: 16 }}>{b.blurb}</p>
-                  <code
-                    style={{
-                      display: 'block',
-                      fontFamily: tokens.typography.fontMono,
-                      fontSize: 13,
-                      color: tokens.colors.textSecondary,
-                      background: tokens.surfaces.surfaceDim,
-                      border: `1px solid ${tokens.surfaces.border}`,
-                      borderRadius: tokens.radius.md,
-                      padding: '8px 12px',
-                      marginBottom: 16,
-                    }}
-                  >
-                    {b.install}
-                  </code>
+                <Card padding="lg" data-ui="docs-card" style={accentCardStyle}>
+                  <div style={cardHeaderStyle}>
+                    <LogoChip src={b.logoSrc} />
+                    <div>
+                      <h3 style={cardTitleStyle}>{b.title}</h3>
+                      <div style={attributionStyle}>{b.attribution}</div>
+                    </div>
+                  </div>
+                  <p style={cardBlurbStyle}>{b.blurb}</p>
+                  <div style={snippetRowStyle}>
+                    <code style={snippetCodeStyle}>{b.install}</code>
+                    <CopyButton text={b.install} />
+                  </div>
                   <span style={ctaStyle}>Quickstart →</span>
                 </Card>
               </Link>
@@ -243,27 +387,28 @@ export default function DocsLandingPage() {
       {/* Step 2 — generative UI */}
       <Section surface="canvas" tight ariaLabelledBy="genui-heading">
         <Container>
-          <StepLabel id="genui-heading">Step 2 · Generative UI</StepLabel>
+          <div style={dividerStyle} />
+          <StepLabel id="genui-heading" step={2}>Generative UI</StepLabel>
           <div style={gridStyle}>
             {GENERATIVE_UI.map((g) => (
               <Link key={g.href} href={g.href} style={{ textDecoration: 'none' }}>
-                <Card padding="lg" hoverable style={accentCardStyle}>
-                  <Eyebrow tone="accent" style={{ marginBottom: 8 }}>
-                    {g.vendor}
-                  </Eyebrow>
-                  <h3 style={cardTitleStyle}>{g.title}</h3>
-                  <p style={{ ...cardBlurbStyle, marginBottom: 16 }}>{g.blurb}</p>
-                  <span style={ctaStyle}>Get started →</span>
+                <Card padding="lg" data-ui="docs-card" style={accentCardStyle}>
+                  <div style={cardHeaderStyle}>
+                    <LogoChip src={g.logoSrc} />
+                    <div>
+                      <h3 style={cardTitleStyle}>{g.title}</h3>
+                      <div style={attributionStyle}>{g.attribution}</div>
+                    </div>
+                  </div>
+                  <p style={cardBlurbStyle}>{g.blurb}</p>
+                  <span style={{ ...ctaStyle, display: 'inline-block', marginTop: 14 }}>Get started →</span>
                 </Card>
               </Link>
             ))}
           </div>
           <p style={helperStyle}>
             Which fits my use case?{' '}
-            <Link
-              href="/docs/render/concepts/json-render-vs-a2ui"
-              style={helperLinkStyle}
-            >
+            <Link href="/docs/render/concepts/json-render-vs-a2ui" style={helperLinkStyle}>
               json-render vs A2UI →
             </Link>
           </p>
@@ -273,17 +418,21 @@ export default function DocsLandingPage() {
       {/* Step 3 — chat */}
       <Section surface="canvas" tight ariaLabelledBy="chat-heading">
         <Container>
-          <StepLabel id="chat-heading">Step 3 · Chat UI</StepLabel>
-          <Link
-            href="/docs/chat/getting-started/introduction"
-            style={{ textDecoration: 'none' }}
-          >
-            <Card padding="lg" hoverable>
-              <h3 style={cardTitleStyle}>Chat</h3>
+          <div style={dividerStyle} />
+          <StepLabel id="chat-heading" step={3}>Chat UI</StepLabel>
+          <Link href="/docs/chat/getting-started/introduction" style={{ textDecoration: 'none' }}>
+            <Card padding="lg" data-ui="docs-card" style={plainCardStyle}>
+              <div style={cardHeaderStyle}>
+                <GlyphChip size={30}><ChatGlyph /></GlyphChip>
+                <div>
+                  <h3 style={cardTitleStyle}>Chat</h3>
+                  <div style={attributionStyle}>Threadplane</div>
+                </div>
+              </div>
               <p style={cardBlurbStyle}>
                 Drop-in chat components — message list, input, streaming, tool
-                calls, interrupts, subagents. Renders A2UI & json-render
-                surfaces inline.
+                calls, interrupts, subagents. Renders A2UI & json-render surfaces
+                inline.
               </p>
             </Card>
           </Link>
@@ -293,16 +442,25 @@ export default function DocsLandingPage() {
       {/* Supporting libraries */}
       <Section surface="canvas" tight ariaLabelledBy="supporting-heading">
         <Container>
+          <div style={dividerStyle} />
           <StepLabel id="supporting-heading">Supporting libraries</StepLabel>
           <div style={gridStyle}>
-            {SUPPORTING.map((s) => (
-              <Link key={s.href} href={s.href} style={{ textDecoration: 'none' }}>
-                <Card hoverable style={{ height: '100%' }}>
-                  <h3 style={supportingTitleStyle}>{s.title}</h3>
-                  <p style={cardBlurbStyle}>{s.blurb}</p>
-                </Card>
-              </Link>
-            ))}
+            {SUPPORTING.map((s) => {
+              const Glyph = GLYPHS[s.glyph];
+              return (
+                <Link key={s.href} href={s.href} style={{ textDecoration: 'none' }}>
+                  <Card padding="lg" data-ui="docs-card" style={plainCardStyle}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                      <GlyphChip size={26}><Glyph /></GlyphChip>
+                      <div>
+                        <h3 style={{ ...cardTitleStyle, fontSize: 16 }}>{s.title}</h3>
+                        <p style={{ ...cardBlurbStyle, fontSize: 13, marginTop: 2 }}>{s.blurb}</p>
+                      </div>
+                    </div>
+                  </Card>
+                </Link>
+              );
+            })}
           </div>
         </Container>
       </Section>

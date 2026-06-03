@@ -6,9 +6,9 @@ test.describe('Docs landing page', () => {
 
     // Hero
     await expect(page.locator('#docs-heading')).toBeVisible();
-    await expect(page.locator('#docs-heading')).toContainText('Build AI agent UIs in Angular');
+    await expect(page.locator('#docs-heading')).toContainText('Start building with Threadplane');
 
-    // Step headings (match on the plain substring to avoid the middle-dot char)
+    // Step headings (match the label text; the numbered badge is a separate aria-hidden span)
     await expect(page.getByText('Pick your backend').first()).toBeVisible();
     await expect(page.getByText('Generative UI').first()).toBeVisible();
     await expect(page.getByText('Chat UI').first()).toBeVisible();
@@ -16,6 +16,15 @@ test.describe('Docs landing page', () => {
     // Step 1 — backend quickstart links
     await expect(page.locator('main a[href="/docs/langgraph/getting-started/quickstart"]').first()).toBeVisible();
     await expect(page.locator('main a[href="/docs/ag-ui/getting-started/quickstart"]').first()).toBeVisible();
+
+    // Vendor logo marks on the fork cards
+    await expect(page.locator('main img[src="/logos/langgraph.svg"]').first()).toBeVisible();
+    await expect(page.locator('main img[src="/logos/runtimes/copilotkit.svg"]').first()).toBeVisible();
+    await expect(page.locator('main img[src="/logos/providers/google.svg"]').first()).toBeVisible();
+    await expect(page.locator('main img[src="/logos/surface/vercel.svg"]').first()).toBeVisible();
+
+    // Install snippet copy buttons
+    await expect(page.locator('main button[aria-label="Copy install command"]').first()).toBeVisible();
 
     // Step 2 — generative UI links
     await expect(page.locator('main a[href="/docs/a2ui/getting-started/introduction"]').first()).toBeVisible();
