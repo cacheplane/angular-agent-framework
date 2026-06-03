@@ -32,7 +32,7 @@ describe('FileTree', () => {
       />
     );
 
-    const labels = Array.from(container!.querySelectorAll('[data-file-row]')).map((el) => el.textContent);
+    const labels = Array.from(container!.querySelectorAll('[data-file-label]')).map((el) => el.textContent);
     expect(labels).toContain('planning.component.ts');
     expect(labels).toContain('graph.py');
     expect(labels).toContain('planning.md');
@@ -48,7 +48,7 @@ describe('FileTree', () => {
     );
 
     const active = container!.querySelector('[data-file-row][aria-current="true"]');
-    expect(active?.textContent).toBe('b.py');
+    expect(active?.querySelector('[data-file-label]')?.textContent).toBe('b.py');
   });
 
   it('emits onSelect with the file path when a file row is clicked', () => {

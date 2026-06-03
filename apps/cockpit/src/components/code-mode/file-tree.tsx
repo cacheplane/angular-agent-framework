@@ -29,7 +29,7 @@ export function FileTree({ paths, activePath, onSelect }: FileTreeProps) {
   }, []);
 
   return (
-    <ul className="cockpit-file-tree" role="tree">
+    <ul className="cockpit-file-tree">
       {tree.map((node, i) => (
         <Node
           key={`${i}-${node.label}`}
@@ -61,7 +61,7 @@ function Node({ node, depth, folderId, activePath, collapsedFolders, onToggleFol
     const chip = langChip(node.label);
     const isActive = activePath === node.path;
     return (
-      <li className="cockpit-file-tree__file-row">
+      <li>
         <button
           type="button"
           data-file-row
@@ -70,9 +70,9 @@ function Node({ node, depth, folderId, activePath, collapsedFolders, onToggleFol
           className="cockpit-file-tree__file"
           style={{ paddingLeft: `${0.75 + depth * 0.75}rem` }}
         >
-          {node.label}
+          <span className="cockpit-file-tree__label" data-file-label>{node.label}</span>
+          {chip ? <span className="cockpit-file-tree__chip" aria-hidden="true">{chip}</span> : null}
         </button>
-        {chip ? <span className="cockpit-file-tree__chip" aria-hidden="true">{chip}</span> : null}
       </li>
     );
   }
