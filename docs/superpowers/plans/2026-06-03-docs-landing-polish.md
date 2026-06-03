@@ -1,3 +1,269 @@
+# Docs Landing Page Polish Implementation Plan
+
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+
+**Goal:** Polish the `/docs` landing into direction B (branded & iconic): vendor logo chips on the four fork cards, in-house glyphs for our own libraries, numbered step badges, a copy-able install snippet, hover lift, and dividers — plus the headline and blurb copy updates.
+
+**Architecture:** The page (`apps/website/src/app/docs/page.tsx`) stays a Next.js **server component**. One new **client component** (`CopyButton`) handles clipboard interaction. Marks reuse the existing `/logos/*.svg` assets and the `EcosystemStrip` image treatment; the copy button reuses `CodeBlock`'s icons + the existing `docs:copy_code_click` analytics event. No new dependencies or asset files.
+
+**Tech Stack:** Next.js (App Router), React server + client components, TypeScript, `@threadplane/design-tokens`, Vitest + Testing Library, Playwright.
+
+**Reference spec:** `docs/superpowers/specs/2026-06-03-docs-landing-polish-design.md`
+
+---
+
+## File Structure
+
+- **Create:** `apps/website/src/components/docs/CopyButton.tsx` — client component: an icon copy button that writes a passed string to the clipboard, shows a 2s "copied" state, and fires `docs:copy_code_click`. One responsibility.
+- **Create:** `apps/website/src/components/docs/CopyButton.spec.tsx` — unit test (vitest + jsdom).
+- **Modify:** `apps/website/src/app/docs/page.tsx` — full rewrite: new headline/blurbs, logo+glyph chips, numbered badges, snippet row with `CopyButton`, dividers, scoped hover `<style>`.
+- **Modify:** `apps/website/e2e/docs.spec.ts` — update the "Docs landing page" block: new h1 text, vendor-logo `<img>` assertions, copy-button assertion.
+
+`docsConfig`, routing, the sidebar, and the funnel order are unchanged.
+
+---
+
+## Task 1: CopyButton client component (TDD)
+
+**Files:**
+- Create: `apps/website/src/components/docs/CopyButton.spec.tsx`
+- Create: `apps/website/src/components/docs/CopyButton.tsx`
+
+- [ ] **Step 1: Write the failing test**
+
+Create `apps/website/src/components/docs/CopyButton.spec.tsx`:
+
+```tsx
+// SPDX-License-Identifier: MIT
+// @vitest-environment jsdom
+import { describe, expect, it, vi, beforeEach } from 'vitest';
+import { render, screen, fireEvent } from '@testing-library/react';
+
+const trackMock = vi.hoisted(() => vi.fn());
+const writeTextMock = vi.hoisted(() => vi.fn().mockResolvedValue(undefined));
+
+vi.mock('../../lib/analytics/client', () => ({
+  track: trackMock,
+}));
+
+beforeEach(() => {
+  trackMock.mockClear();
+  writeTextMock.mockClear();
+  Object.assign(navigator, { clipboard: { writeText: writeTextMock } });
+});
+
+describe('CopyButton', () => {
+  it('renders an accessible copy button by default', async () => {
+    const { CopyButton } = await import('./CopyButton');
+    render(<CopyButton text="npm i @threadplane/langgraph" />);
+    expect(screen.getByRole('button', { name: /copy install command/i })).toBeTruthy();
+  });
+
+  it('copies the text, shows copied state, and fires docs:copy_code_click with cta_id=copy_install', async () => {
+    const { CopyButton } = await import('./CopyButton');
+    render(<CopyButton text="npm i @threadplane/langgraph" />);
+    fireEvent.click(screen.getByRole('button', { name: /copy install command/i }));
+    expect(writeTextMock).toHaveBeenCalledWith('npm i @threadplane/langgraph');
+    // After click the accessible name flips to "Copied"
+    await screen.findByRole('button', { name: /copied/i });
+    expect(trackMock).toHaveBeenCalledWith(
+      'docs:copy_code_click',
+      expect.objectContaining({ surface: 'docs', cta_id: 'copy_install' }),
+    );
+  });
+});
+```
+
+- [ ] **Step 2: Run the test to verify it fails**
+
+Run:
+```bash
+cd apps/website && npx vitest run src/components/docs/CopyButton.spec.tsx
+```
+Expected: FAIL — cannot resolve `./CopyButton` (module does not exist yet).
+
+- [ ] **Step 3: Write the implementation**
+
+Create `apps/website/src/components/docs/CopyButton.tsx`:
+
+```tsx
+'use client';
+import { useState } from 'react';
+import { tokens } from '@threadplane/design-tokens';
+import { analyticsEvents } from '../../lib/analytics/events';
+import { track } from '../../lib/analytics/client';
+
+function CopyIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="5" y="5" width="9" height="9" rx="1.5" />
+      <path d="M11 5V3.5A1.5 1.5 0 009.5 2h-6A1.5 1.5 0 002 3.5v6A1.5 1.5 0 003.5 11H5" />
+    </svg>
+  );
+}
+
+function CheckIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M3 8.5l3.5 3.5L13 5" />
+    </svg>
+  );
+}
+
+interface Props {
+  /** The exact string copied to the clipboard. */
+  text: string;
+}
+
+export function CopyButton({ text }: Props) {
+  const [copied, setCopied] = useState(false);
+
+  const handleClick = async () => {
+    try {
+      await navigator.clipboard.writeText(text);
+      track(analyticsEvents.docsCopyCodeClick, {
+        surface: 'docs',
+        cta_id: 'copy_install',
+      });
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // clipboard access denied — silently ignore
+    }
+  };
+
+  return (
+    <button
+      type="button"
+      onClick={handleClick}
+      aria-label={copied ? 'Copied' : 'Copy install command'}
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: 28,
+        height: 28,
+        flex: '0 0 auto',
+        padding: 0,
+        border: `1px solid ${tokens.surfaces.border}`,
+        borderRadius: tokens.radius.sm,
+        background: tokens.surfaces.surface,
+        color: copied ? tokens.colors.accent : tokens.colors.textMuted,
+        cursor: 'pointer',
+        transition: 'color 0.15s, border-color 0.15s, background 0.15s',
+      }}
+    >
+      {copied ? <CheckIcon /> : <CopyIcon />}
+    </button>
+  );
+}
+```
+
+- [ ] **Step 4: Run the test to verify it passes**
+
+Run:
+```bash
+cd apps/website && npx vitest run src/components/docs/CopyButton.spec.tsx
+```
+Expected: PASS (2 passed).
+
+- [ ] **Step 5: Lint the new files**
+
+Run:
+```bash
+cd /Users/blove/repos/angular-agent-framework && npx eslint apps/website/src/components/docs/CopyButton.tsx apps/website/src/components/docs/CopyButton.spec.tsx
+```
+Expected: exit 0, no output. (Lint the files directly — `nx lint website` fails locally on the git-ignored, untracked `apps/website/public/demo/main.js`, which is not in the repo and not part of this change.)
+
+- [ ] **Step 6: Commit**
+
+```bash
+cd /Users/blove/repos/angular-agent-framework
+git add apps/website/src/components/docs/CopyButton.tsx apps/website/src/components/docs/CopyButton.spec.tsx
+git commit -m "feat(website): add CopyButton client component for docs install snippets"
+```
+
+---
+
+## Task 2: Update the e2e test for the polished page (failing first)
+
+**Files:**
+- Modify: `apps/website/e2e/docs.spec.ts` (the first `test.describe('Docs landing page', ...)` block only)
+
+- [ ] **Step 1: Replace the landing-page test block**
+
+In `apps/website/e2e/docs.spec.ts`, replace the entire first describe block (`test.describe('Docs landing page', () => { ... })`) with:
+
+```ts
+test.describe('Docs landing page', () => {
+  test('renders the start-here funnel + search prompt', async ({ page }) => {
+    await page.goto('/docs');
+
+    // Hero
+    await expect(page.locator('#docs-heading')).toBeVisible();
+    await expect(page.locator('#docs-heading')).toContainText('Start building with Threadplane');
+
+    // Step headings (plain substring avoids the badge/middle-dot chars)
+    await expect(page.getByText('Pick your backend').first()).toBeVisible();
+    await expect(page.getByText('Generative UI').first()).toBeVisible();
+    await expect(page.getByText('Chat UI').first()).toBeVisible();
+
+    // Step 1 — backend quickstart links
+    await expect(page.locator('main a[href="/docs/langgraph/getting-started/quickstart"]').first()).toBeVisible();
+    await expect(page.locator('main a[href="/docs/ag-ui/getting-started/quickstart"]').first()).toBeVisible();
+
+    // Vendor logo marks on the fork cards
+    await expect(page.locator('main img[src="/logos/langgraph.svg"]').first()).toBeVisible();
+    await expect(page.locator('main img[src="/logos/runtimes/copilotkit.svg"]').first()).toBeVisible();
+    await expect(page.locator('main img[src="/logos/providers/google.svg"]').first()).toBeVisible();
+    await expect(page.locator('main img[src="/logos/surface/vercel.svg"]').first()).toBeVisible();
+
+    // Install snippet copy buttons
+    await expect(page.locator('main button[aria-label="Copy install command"]').first()).toBeVisible();
+
+    // Step 2 — generative UI links
+    await expect(page.locator('main a[href="/docs/a2ui/getting-started/introduction"]').first()).toBeVisible();
+    await expect(page.locator('main a[href="/docs/render/getting-started/introduction"]').first()).toBeVisible();
+
+    // Step 3 — chat
+    await expect(page.locator('main a[href="/docs/chat/getting-started/introduction"]').first()).toBeVisible();
+
+    // Helper links
+    await expect(page.locator('main a[href="/docs/choosing-an-adapter"]').first()).toBeVisible();
+    await expect(page.locator('main a[href="/docs/render/concepts/json-render-vs-a2ui"]').first()).toBeVisible();
+
+    // Supporting libraries
+    await expect(page.locator('main a[href="/docs/licensing/getting-started/introduction"]').first()).toBeVisible();
+    await expect(page.locator('main a[href="/docs/telemetry/getting-started/introduction"]').first()).toBeVisible();
+
+    // Search prompt
+    await expect(page.getByText('Looking for something specific?').first()).toBeVisible();
+  });
+});
+```
+
+Leave the `Docs slug page` and `Docs search` describe blocks unchanged.
+
+- [ ] **Step 2: Run the test to verify it fails**
+
+Run:
+```bash
+cd apps/website && npx playwright test e2e/docs.spec.ts -g "start-here funnel"
+```
+Expected: FAIL — the live page still reads "Build AI agent UIs in Angular" and has no logo `<img>` or copy button, so the new assertions fail.
+
+---
+
+## Task 3: Rewrite the page component
+
+**Files:**
+- Modify: `apps/website/src/app/docs/page.tsx` (full rewrite — replace entire file contents)
+
+- [ ] **Step 1: Replace the file with the new implementation**
+
+Replace the entire contents of `apps/website/src/app/docs/page.tsx` with:
+
+```tsx
 import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { tokens } from '@threadplane/design-tokens';
@@ -503,3 +769,84 @@ export default function DocsLandingPage() {
     </>
   );
 }
+```
+
+- [ ] **Step 2: Lint the changed files**
+
+Run:
+```bash
+cd /Users/blove/repos/angular-agent-framework && npx eslint apps/website/src/app/docs/page.tsx
+```
+Expected: exit 0, no output. (Direct-file lint avoids the unrelated git-ignored `public/demo/main.js` failure.)
+
+- [ ] **Step 3: Typecheck the website**
+
+Run:
+```bash
+cd /Users/blove/repos/angular-agent-framework && npx tsc --noEmit -p apps/website/tsconfig.json 2>&1 | grep -E "docs/page.tsx|components/docs/CopyButton" || echo "no new type errors in changed files"
+```
+Expected: `no new type errors in changed files`. (The project has pre-existing `TS6305` stale-build-info baseline errors unrelated to this change; this command filters to only the files we touched.)
+
+---
+
+## Task 4: Verify end-to-end and commit
+
+**Files:** none (verification + commit)
+
+- [ ] **Step 1: Run the landing-page e2e test**
+
+Run:
+```bash
+cd apps/website && npx playwright test e2e/docs.spec.ts -g "start-here funnel"
+```
+Expected: PASS. The dev server auto-starts via `apps/website/playwright.config.ts`.
+
+- [ ] **Step 2: Run the full docs e2e file to confirm no regressions**
+
+Run:
+```bash
+cd apps/website && npx playwright test e2e/docs.spec.ts
+```
+Expected: PASS for all blocks (landing page, slug page, search).
+
+- [ ] **Step 3: Commit**
+
+```bash
+cd /Users/blove/repos/angular-agent-framework
+git add apps/website/src/app/docs/page.tsx apps/website/e2e/docs.spec.ts
+git commit -m "$(cat <<'EOF'
+feat(website): polish docs landing (direction B — branded & iconic)
+
+Vendor logo chips on the four fork cards, in-house glyphs for our own
+libraries, numbered step badges, copy-able install snippet, hover lift,
+and dividers. Headline -> "Start building with Threadplane"; tightened
+backend blurbs.
+
+Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>
+EOF
+)"
+```
+
+---
+
+## Manual verification (browser)
+
+After the e2e passes, confirm visually:
+
+- [ ] Open `/docs` on the dev server (port 3000).
+- [ ] Hero reads "Start building with Threadplane".
+- [ ] Step labels show numbered badges 1 / 2 / 3; "Supporting libraries" has no badge.
+- [ ] Each fork card shows its vendor mark in a white chip + uppercase attribution (LangChain, AG-UI · CopilotKit, Google, Vercel).
+- [ ] Chat / Licensing / Telemetry show accent-tinted glyph chips.
+- [ ] The backend install snippets have a working copy button (click → checkmark, command on clipboard).
+- [ ] Hairline dividers separate steps 1/2/3/supporting; hover lifts each card.
+- [ ] Resize to mobile — grids collapse to one column; no console errors.
+
+---
+
+## Self-Review (completed during planning)
+
+- **Spec coverage:** Numbered badges ✓ (Task 3 `StepBadge`/`StepLabel`). Vendor logo chips with the four exact `src`s + attributions ✓. In-house glyphs for Chat/Licensing/Telemetry ✓. Hover lift via `data-ui="docs-card"` + scoped style + reduced-motion guard ✓. h1 "Start building with Threadplane" ✓. Tightened backend blurbs ✓. A2UI link unchanged (`/docs/a2ui/getting-started/introduction`) ✓. CopyButton client component reusing CodeBlock icons + `docs:copy_code_click` + `cta_id: copy_install` ✓ (Task 1). Snippet row ✓. Dividers ✓. e2e + unit tests ✓ (Tasks 1, 2). No spec requirement left unimplemented.
+- **Placeholder scan:** No TBD/TODO; every code step shows complete code; no hand-waved error handling.
+- **Type consistency:** Interface names (`Backend`, `GenerativeUi`, `SupportingLib`) and array names (`BACKENDS`, `GENERATIVE_UI`, `SUPPORTING`) consistent between definition and use. `CopyButton` takes `{ text }` in both the component and every call site. `GLYPHS` keys (`key`, `pulse`) match the `glyph` union in `SupportingLib`. `LogoChip`/`GlyphChip`/`StepLabel` signatures match their call sites. e2e `src`/`aria-label` assertions match the values rendered by `page.tsx`.
+```
