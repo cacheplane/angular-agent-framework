@@ -234,3 +234,30 @@ pre.shiki {
 .cockpit-prose table.params { border-collapse: collapse; margin: 0.5rem 0; }
 .cockpit-prose table.params th { font-family: var(--font-mono), monospace; font-size: 0.6rem; letter-spacing: 0.06em; text-transform: uppercase; padding-bottom: 0.5rem; border-bottom: 1px solid var(--ds-border); }
 .cockpit-prose table.params td { padding: 0.5rem 0.75rem 0.5rem 0; border-bottom: 1px solid var(--ds-border); }
+
+/* Code-mode file tree */
+.cockpit-file-tree { list-style: none; padding: 0; margin: 0; font-size: 12px; line-height: 1.7; }
+.cockpit-file-tree ul { list-style: none; padding: 0; margin: 0; }
+.cockpit-file-tree__file-row { display: flex; align-items: center; }
+.cockpit-file-tree__file,
+.cockpit-file-tree__folder {
+  display: flex; align-items: center; gap: 0.4rem; flex: 1; min-width: 0;
+  padding: 3px 0.75rem 3px 0.75rem; background: transparent; border: 0; text-align: left; cursor: pointer;
+  color: var(--ds-text-secondary); font-family: var(--font-mono), "JetBrains Mono", monospace; font-size: 12px;
+  border-left: 2px solid transparent; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.cockpit-file-tree__folder { color: var(--ds-text-muted); display: flex; align-items: center; }
+.cockpit-file-tree__caret { font-size: 9px; color: var(--ds-text-muted); width: 0.65rem; flex-shrink: 0; }
+.cockpit-file-tree__label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cockpit-file-tree__chip {
+  font-family: var(--font-mono), monospace; font-size: 9px;
+  padding: 1px 5px; border-radius: 3px; margin-right: 0.5rem; flex-shrink: 0;
+  background: var(--ds-accent-surface); color: var(--ds-accent);
+  opacity: 0.85;
+}
+.cockpit-file-tree__file:hover { color: var(--ds-text-primary); }
+.cockpit-file-tree__file[aria-current="true"] {
+  background: var(--ds-accent-surface);
+  color: var(--ds-text-primary);
+  border-left-color: var(--ds-accent);
+}
