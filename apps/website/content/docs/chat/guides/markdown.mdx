@@ -128,6 +128,108 @@ export class ChatViewComponent {
 The markdown styles are scoped to `.chat-md`. Make sure the container element receiving `[innerHTML]` has this class, otherwise the rendered HTML will appear unstyled.
 </Callout>
 
+## Streaming Markdown with chat-streaming-md
+
+`<chat-streaming-md>` is the component that renders AI message content token-by-token using the node-based rendering pipeline. It resolves each markdown node type against `MARKDOWN_VIEW_REGISTRY` — a chat-internal DI token exported from `@threadplane/chat`.
+
+By default the component provides `cacheplaneMarkdownViews` (the full 22-node registry) on its own component injector. You can override this at two levels:
+
+- **App-wide** — provide a custom registry in your root or feature providers.
+- **Per-instance** — pass a `ViewRegistry` via the `[viewRegistry]` input; the component uses that value instead of the DI tree.
+
+## Overriding Markdown Components
+
+### App-wide override
+
+To replace a node-type renderer for every `<chat-streaming-md>` in your app, provide a custom `MARKDOWN_VIEW_REGISTRY` in your application config:
+
+```typescript
+import { ApplicationConfig } from '@angular/core';
+import { MARKDOWN_VIEW_REGISTRY, cacheplaneMarkdownViews } from '@threadplane/chat';
+import { overrideViews } from '@threadplane/render';
+import { MyCodeBlockComponent } from './my-code-block.component';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    {
+      provide: MARKDOWN_VIEW_REGISTRY,
+      useValue: overrideViews(cacheplaneMarkdownViews, {
+        'code-block': MyCodeBlockComponent,
+      }),
+    },
+  ],
+};
+```
+
+`overrideViews(base, overrides)` replaces every key listed in `overrides` and preserves all other entries from `base`. Import it from `@threadplane/render` (chat does not re-export it).
+
+<Callout type="info" title="overrideViews vs withViews">
+Use `overrideViews` when replacing an existing node type. Use `withViews` when adding a brand-new node type that `cacheplaneMarkdownViews` does not yet cover — `withViews` is additive-only and the base registry wins on conflicts. See the [render views API](/docs/render/api/views) for full signatures.
+</Callout>
+
+### Per-instance override
+
+Pass a `ViewRegistry` directly to a single `<chat-streaming-md>` via its `[viewRegistry]` input. The component uses the provided value and ignores the DI tree for that instance:
+
+```typescript
+import { Component } from '@angular/core';
+import { ChatStreamingMdComponent, cacheplaneMarkdownViews } from '@threadplane/chat';
+import { overrideViews } from '@threadplane/render';
+import { MyCodeBlockComponent } from './my-code-block.component';
+
+@Component({
+  selector: 'app-custom-chat',
+  standalone: true,
+  imports: [ChatStreamingMdComponent],
+  template: `
+    <chat-streaming-md [content]="content" [viewRegistry]="myRegistry" />
+  `,
+})
+export class CustomChatComponent {
+  content = '';
+  myRegistry = overrideViews(cacheplaneMarkdownViews, {
+    'code-block': MyCodeBlockComponent,
+  });
+}
+```
+
+## Node-Type Reference
+
+`cacheplaneMarkdownViews` covers every node type emitted by `@cacheplane/partial-markdown`. Use these keys when calling `overrideViews` or `withViews`.
+
+<Callout type="warning" title="Use 'code-block', not 'code'">
+The most common mistake is providing `'code'` as an override key — it does not match anything in the registry. The correct key for fenced code blocks is `'code-block'`.
+</Callout>
+
+| Key | Description |
+|-----|-------------|
+| `'document'` | Root node wrapping the entire parsed document |
+| `'paragraph'` | Block-level paragraph (`<p>`) |
+| `'heading'` | Heading element (`<h1>` through `<h6>`) |
+| `'blockquote'` | Block-level quotation (`<blockquote>`) |
+| `'list'` | Ordered or unordered list (`<ol>` / `<ul>`) |
+| `'list-item'` | Individual list item (`<li>`) |
+| `'code-block'` | Fenced code block (`<pre><code>`) |
+| `'thematic-break'` | Horizontal rule (`<hr>`) |
+| `'text'` | Inline text run |
+| `'emphasis'` | Italic emphasis (`<em>`) |
+| `'strong'` | Bold emphasis (`<strong>`) |
+| `'strikethrough'` | Strikethrough text (`<del>`) |
+| `'inline-code'` | Inline code span (`<code>`) |
+| `'link'` | Hyperlink (`<a>`) |
+| `'autolink'` | Auto-detected URL or email link |
+| `'image'` | Image (`<img>`) |
+| `'soft-break'` | Soft line break (space or newline within a paragraph) |
+| `'hard-break'` | Hard line break (`<br>`) |
+| `'citation-reference'` | In-text citation reference rendered by the chat pipeline |
+| `'table'` | Table container (`<table>`) |
+| `'table-row'` | Table row (`<tr>`) |
+| `'table-cell'` | Table header or data cell (`<th>` / `<td>`) |
+
+## Theming Markdown Components
+
+All built-in markdown view components consume the same `--ngaf-chat-*` and `--a2ui-*` CSS custom properties as the rest of the chat UI. No extra tokens are needed — changing the active theme automatically re-styles markdown output. See the [chat theming guide](/docs/chat/guides/theming) for the full token reference.
+
 ## Without marked
 
 If you choose not to install `marked`, markdown content will render as plain text with line breaks preserved. This can be appropriate for simple chat applications that do not need rich formatting.
