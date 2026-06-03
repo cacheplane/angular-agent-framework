@@ -119,6 +119,33 @@ describe('CodeMode', () => {
     expect(container.textContent).toContain('You are a helpful assistant.');
   });
 
+  it('pre-opens all code, backend, and prompt files as tabs with the first code file active', () => {
+    container = document.createElement('div');
+    document.body.appendChild(container);
+    root = createRoot(container);
+
+    act(() => {
+      root!.render(
+        <CodeMode
+          entryTitle="Planning"
+          codeAssetPaths={['src/a.ts']}
+          backendAssetPaths={['backend/graph.py']}
+          codeFiles={{
+            'src/a.ts': '<pre class="shiki"><code>a</code></pre>',
+            'backend/graph.py': '<pre class="shiki"><code>g</code></pre>',
+          }}
+          promptFiles={{ 'prompts/p.md': 'hello' }}
+        />,
+      );
+    });
+
+    const tabLabels = Array.from(container.querySelectorAll('[role="tab"]')).map((t) => t.textContent);
+    expect(tabLabels).toEqual(['a.ts', 'graph.py', 'p.md']);
+
+    const active = container.querySelector('[role="tab"][data-state="active"]');
+    expect(active?.textContent).toBe('a.ts');
+  });
+
   it('fires cockpit:code_copied when the Copy button is clicked', () => {
     container = document.createElement('div');
     document.body.appendChild(container);

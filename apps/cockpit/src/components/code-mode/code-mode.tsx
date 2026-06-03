@@ -53,8 +53,20 @@ function CodeFileContent({
 }
 
 export function CodeMode({ entryTitle, codeAssetPaths, backendAssetPaths, codeFiles, promptFiles, capability }: CodeModeProps) {
-  const promptPaths = Object.keys(promptFiles);
-  const allPaths = [...codeAssetPaths, ...backendAssetPaths, ...promptPaths];
+  const promptPaths = React.useMemo(() => Object.keys(promptFiles), [promptFiles]);
+  const allPaths = React.useMemo(
+    () => [...codeAssetPaths, ...backendAssetPaths, ...promptPaths],
+    [codeAssetPaths, backendAssetPaths, promptPaths],
+  );
+
+  const [openPaths, setOpenPaths] = React.useState<readonly string[]>(allPaths);
+  const [activePath, setActivePath] = React.useState<string | null>(allPaths[0] ?? null);
+
+  // If the capability changes (allPaths changes identity), reset open + active.
+  React.useEffect(() => {
+    setOpenPaths(allPaths);
+    setActivePath(allPaths[0] ?? null);
+  }, [allPaths]);
 
   if (allPaths.length === 0) {
     return (
@@ -64,30 +76,32 @@ export function CodeMode({ entryTitle, codeAssetPaths, backendAssetPaths, codeFi
     );
   }
 
-  const defaultPath = codeAssetPaths[0] ?? backendAssetPaths[0] ?? promptPaths[0];
+  const isPromptPath = (path: string) => promptPaths.includes(path);
 
   return (
     <section aria-label="Code mode" className="h-full flex flex-col">
-      <Tabs defaultValue={defaultPath} className="flex flex-col h-full">
+      <Tabs
+        value={activePath ?? undefined}
+        onValueChange={(v) => setActivePath(v)}
+        className="flex flex-col h-full"
+      >
         <TabsList className="shrink-0">
-          {codeAssetPaths.map((path) => (
-            <TabsTrigger key={path} value={path}>
-              {getTabLabel(path)}
-            </TabsTrigger>
-          ))}
-          {backendAssetPaths.map((path) => (
-            <TabsTrigger key={path} value={path}>
-              {getTabLabel(path)}
-            </TabsTrigger>
-          ))}
-          {promptPaths.map((path) => (
-            <TabsTrigger key={path} value={path} className="text-[var(--ds-accent)]/70 data-[state=active]:text-[var(--ds-accent)]">
+          {openPaths.map((path) => (
+            <TabsTrigger
+              key={path}
+              value={path}
+              className={
+                isPromptPath(path)
+                  ? 'text-[var(--ds-accent)]/70 data-[state=active]:text-[var(--ds-accent)]'
+                  : undefined
+              }
+            >
               {getTabLabel(path)}
             </TabsTrigger>
           ))}
         </TabsList>
 
-        {[...codeAssetPaths, ...backendAssetPaths].map((path) => (
+        {openPaths.filter((p) => !isPromptPath(p)).map((path) => (
           <TabsContent key={path} value={path} className="flex-1 overflow-auto py-6 px-4 md:px-8">
             <div className="cockpit-prose cockpit-prose--code">
               <CodeFileContent path={path} content={codeFiles[path]} capability={capability} />
@@ -95,7 +109,7 @@ export function CodeMode({ entryTitle, codeAssetPaths, backendAssetPaths, codeFi
           </TabsContent>
         ))}
 
-        {promptPaths.map((path) => {
+        {openPaths.filter(isPromptPath).map((path) => {
           const content = promptFiles[path];
           return (
             <TabsContent key={path} value={path} className="flex-1 overflow-auto py-6 px-4 md:px-8">
