@@ -328,3 +328,59 @@ The `matchKind` input is the discriminator pattern that keeps the dialog compone
 
 </Step>
 </Steps>
+
+## Walk the run
+
+### Streaming start → the draft
+
+The user clicks "Refund a duplicate charge." A run starts; token-level `TEXT_MESSAGE_CONTENT` events stream the assistant's draft and `messages()` updates incrementally. For more on the AG-UI streaming model, see [Build Fullstack Agentic Angular Apps Using AG-UI](/blog/2026-05-21-build-fullstack-agentic-angular-apps-using-ag-ui).
+
+### The interrupt arrives
+
+The structured-output call finishes, the graph hits `request_approval`, and `interrupt({ kind: 'refund_approval', … })` fires. `ag-ui-langgraph` emits the `CUSTOM` event on the SSE stream:
+
+```jsonc
+// AG-UI event on the wire
+{
+  "type": "CUSTOM",
+  "name": "on_interrupt",
+  "value": "{\"kind\":\"refund_approval\",\"amount\":99.0,\"customer_id\":\"cus_a8x2k\",\"reason\":\"Duplicate charge on 2024-12-01.\"}"
+}
+```
+
+`value` is a JSON string — that's the `dump_json_safe` quirk. The `@threadplane/ag-ui` reducer parses it and sets:
+
+```ts
+agent.interrupt() // → { id: 'r3w…', value: { kind, amount, customer_id, reason }, resumable: true }
+```
+
+`<chat-approval-card matchKind="refund_approval">` is bound to `agent.interrupt()`. The moment the signal becomes non-undefined, the dialog opens with the structured payload. The run has already finished (`RUN_FINISHED` arrived); the graph is parked at its checkpoint until something resumes it.
+
+### Approve, edit, or cancel → resume
+
+When the operator clicks Approve:
+
+```ts
+this.agent.submit({ resume: { approved: true, amount: this.editAmount() ?? payload.amount } });
+```
+
+The adapter clears `agent.interrupt()` immediately for snappy UX, then forwards the resume:
+
+```ts
+source.runAgent({ forwardedProps: { command: { resume: { approved: true, amount: 99 } } } });
+```
+
+A new `POST /agent` request fires. `ag-ui-langgraph` reads `forwarded_props.command.resume`, constructs a `Command(resume=…)`, and continues the graph from the checkpoint. Token-level streaming resumes; the assistant confirms the refund issued. Reject (`{ approved: false }`) takes the alternate branch in the graph; edit-then-approve carries a new `amount` through `Command(resume=…)`.
+
+On the langgraph adapter the same `submit({ resume })` becomes a native `Client.submit(thread, command={resume:…})` call. Different wire, same Angular surface.
+
+## Closing
+
+The runtime-neutral `Agent` contract isn't a marketing line; it's the reason this post existed without rewriting the component. `<chat-approval-card>`, `agent.interrupt()`, and `submit({ resume })` are the stable surface. `on_interrupt` and `forwardedProps.command.resume` are the AG-UI-specific wire details the adapter hides. Pick the adapter that matches your backend — LangGraph SDK direct → `@threadplane/langgraph`; anything AG-UI-fronted, including LangGraph-via-`ag-ui-langgraph` → `@threadplane/ag-ui`. Your chat surface doesn't pick.
+
+Pointers:
+
+- The working example: [`cockpit/ag-ui/interrupts`](https://github.com/cacheplane/angular-agent-framework/tree/main/cockpit/ag-ui/interrupts) — Angular + Python, e2e-tested.
+- The cross-adapter parity rendered in docs: [Choosing an adapter](https://threadplane.ai/docs/choosing-an-adapter).
+- The AG-UI interrupts guide for protocol-level detail: [/docs/ag-ui/guides/interrupts](https://threadplane.ai/docs/ag-ui/guides/interrupts).
+- The langgraph counterpart, if you want both sides side-by-side: [Human-in-the-Loop LangGraph Agents in Angular](/blog/2026-05-28-human-in-the-loop-langgraph-agents-in-angular).
