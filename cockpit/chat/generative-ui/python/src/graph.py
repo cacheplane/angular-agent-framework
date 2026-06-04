@@ -28,7 +28,7 @@ from langgraph_sdk import get_client
 
 from src.dashboard_tools import ALL_TOOLS as _DATA_TOOLS
 
-_PROMPT = (Path(__file__).parent.parent / "prompts" / "dashboard.md").read_text()
+_PROMPT = (Path(__file__).parent.parent / "prompts" / "generative-ui.md").read_text()
 
 _MAX_TOOL_ITERATIONS = 6
 

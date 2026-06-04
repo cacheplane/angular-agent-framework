@@ -537,6 +537,31 @@
     "examples": []
   },
   {
+    "name": "overrideViews",
+    "kind": "function",
+    "description": "Replaces views in a registry. Keys in `overrides` win over `base`.\nUse this to swap an existing renderer; use `withViews` to add NEW\nnode types without touching existing entries.",
+    "signature": "overrideViews(base: ViewRegistry, overrides: Record<string, Type<unknown> | RenderViewEntry>): ViewRegistry",
+    "params": [
+      {
+        "name": "base",
+        "type": "ViewRegistry",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "overrides",
+        "type": "Record<string, Type<unknown> | RenderViewEntry>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "ViewRegistry",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
     "name": "provideRender",
     "kind": "function",
     "description": "",

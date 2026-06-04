@@ -49,8 +49,9 @@ export const capabilities: readonly Capability[] = [
   { id: 'c-debug', product: 'chat', topic: 'debug', angularProject: 'cockpit-chat-debug-angular', port: 4509, pythonPort: 5509, pythonDir: 'cockpit/chat/debug/python', graphName: 'c-debug' },
   { id: 'c-theming', product: 'chat', topic: 'theming', angularProject: 'cockpit-chat-theming-angular', port: 4510, pythonPort: 5510, pythonDir: 'cockpit/chat/theming/python', graphName: 'c-theming' },
   { id: 'c-a2ui', product: 'chat', topic: 'a2ui', angularProject: 'cockpit-chat-a2ui-angular', port: 4511, pythonPort: 5511, pythonDir: 'cockpit/chat/a2ui/python', graphName: 'c-a2ui' },
-  // AG-UI capabilities (in-process FakeAgent; no Python backend, not deployed to LangSmith)
-  { id: 'ag-ui-streaming', product: 'ag-ui', topic: 'streaming', angularProject: 'cockpit-ag-ui-streaming-angular', port: 4600 },
+  // AG-UI capabilities (uvicorn ag-ui-langgraph backend; not deployed to LangSmith)
+  { id: 'ag-ui-interrupts', product: 'ag-ui', topic: 'interrupts', angularProject: 'cockpit-ag-ui-interrupts-angular', port: 4320, pythonPort: 5320, pythonDir: 'cockpit/ag-ui/interrupts/python' },
+  { id: 'ag-ui-streaming', product: 'ag-ui', topic: 'streaming', angularProject: 'cockpit-ag-ui-streaming-angular', port: 4321, pythonPort: 5321, pythonDir: 'cockpit/ag-ui/streaming/python' },
 ] as const;
 
 export function findCapability(id: string): Capability | undefined {

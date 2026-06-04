@@ -489,3 +489,70 @@ describe('RenderElementComponent — fallback gate', () => {
     expect(fx.nativeElement.querySelector('[data-test="fallback"]')).toBeNull();
   });
 });
+
+// --- VIEW_REGISTRY token-fallback tests (Task 2) ---
+
+import { RenderSpecComponent } from './render-spec.component';
+import { provideRender } from './provide-render';
+import { provideViews, VIEW_REGISTRY } from './provide-views';
+import { views } from './views';
+
+@Cmp2({ standalone: true, template: '<span data-test="token-comp">TOKEN</span>' })
+class TokenComp {}
+
+function specForTokenType(): Spec {
+  return {
+    root: 'el1',
+    elements: {
+      el1: { type: 'tokenType', props: {} },
+    },
+  } as Spec;
+}
+
+@Cmp2({
+  standalone: true,
+  imports: [RenderSpecComponent],
+  template: `<render-spec [spec]="spec" />`,
+})
+class TokenRegistryHost {
+  spec = specForTokenType();
+}
+
+describe('RenderSpecComponent — VIEW_REGISTRY token-fallback (Task 2)', () => {
+  it('VIEW_REGISTRY token: renders component resolved from token when config has no registry', () => {
+    // provideRender with no registry + provideViews with tokenType → TokenComp.
+    // RenderSpecComponent should fall back to VIEW_REGISTRY and render TokenComp.
+    TestBed.configureTestingModule({
+      imports: [TokenRegistryHost],
+      providers: [
+        provideRender({}),
+        provideViews(views({ tokenType: TokenComp })),
+      ],
+    });
+    const fx = TestBed.createComponent(TokenRegistryHost);
+    fx.detectChanges();
+    expect(fx.nativeElement.querySelector('[data-test="token-comp"]')).toBeTruthy();
+  });
+
+  it('null-path regression: unknown type with no registry anywhere renders nothing (mountClass null)', () => {
+    // No registry at all — component for an unknown type is null → nothing renders.
+    const emptyStore = signalStateStore({});
+    TestBed.configureTestingModule({
+      imports: [FallbackHost],
+      providers: [{
+        provide: RENDER_CONTEXT,
+        useValue: {
+          store: emptyStore,
+          registry: defineAngularRegistry({}),
+          functions: {},
+          handlers: {},
+        },
+      }],
+    });
+    // btn1 has type 'button' but registry is empty — nothing should render.
+    const fx = TestBed.createComponent(FallbackHost);
+    fx.detectChanges();
+    expect(fx.nativeElement.querySelector('[data-test="real"]')).toBeNull();
+    expect(fx.nativeElement.querySelector('[data-test="fallback"]')).toBeNull();
+  });
+});
