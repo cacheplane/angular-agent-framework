@@ -76,6 +76,11 @@ The data flow on resume:
 
 On the LangGraph adapter, the same `submit({ resume })` becomes a native `Client.submit(thread, command={resume:…})` call. Different wire, same Angular surface.
 
+<figure>
+  <img src="/blog/2026-06-04-human-in-the-loop-ag-ui-agents-in-angular/1.png" alt="The cockpit ag-ui/interrupts welcome screen showing two suggestion chips: 'Refund a duplicate charge' and 'Refund a chargeback.'" width="1280" height="800" />
+  <figcaption>The cockpit refund example on the AG-UI adapter.</figcaption>
+</figure>
+
 ## Scaffold
 
 Four steps.
@@ -354,6 +359,11 @@ The structured-output call finishes, the graph hits `request_approval`, and `int
 agent.interrupt() // → { id: 'r3w…', value: { kind, amount, customer_id, reason }, resumable: true }
 ```
 
+<figure>
+  <img src="/blog/2026-06-04-human-in-the-loop-ag-ui-agents-in-angular/2.png" alt="The approval card dialog open over the chat, showing the structured refund payload (customer id, amount, reason)." width="1280" height="800" />
+  <figcaption>The approval card with structured payload fields.</figcaption>
+</figure>
+
 `<chat-approval-card matchKind="refund_approval">` is bound to `agent.interrupt()`. The moment the signal becomes non-undefined, the dialog opens with the structured payload. The run has already finished (`RUN_FINISHED` arrived); the graph is parked at its checkpoint until something resumes it.
 
 ### Approve, edit, or cancel → resume
@@ -373,6 +383,11 @@ source.runAgent({ forwardedProps: { command: { resume: { approved: true, amount:
 A new `POST /agent` request fires. `ag-ui-langgraph` reads `forwarded_props.command.resume`, constructs a `Command(resume=…)`, and continues the graph from the checkpoint. Token-level streaming resumes; the assistant confirms the refund issued. Reject (`{ approved: false }`) takes the alternate branch in the graph; edit-then-approve carries a new `amount` through `Command(resume=…)`.
 
 On the langgraph adapter the same `submit({ resume })` becomes a native `Client.submit(thread, command={resume:…})` call. Different wire, same Angular surface.
+
+<figure>
+  <img src="/blog/2026-06-04-human-in-the-loop-ag-ui-agents-in-angular/3.png" alt="The chat history after the refund was approved and the run completed, showing the assistant's confirmation." width="1280" height="800" />
+  <figcaption>Run resumed and finished after Approve.</figcaption>
+</figure>
 
 ## Closing
 
