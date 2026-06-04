@@ -158,11 +158,7 @@ function SectionGroup({
                 data-docs-navlink
                 data-active={isActive || undefined}
                 className="px-4 py-1.5 text-sm mx-2 rounded-md transition-all"
-                style={{
-                  color: isActive ? tokens.colors.accent : tokens.colors.textSecondary,
-                  background: isActive ? tokens.colors.accentSurface : 'transparent',
-                  fontSize: '0.825rem',
-                }}
+                style={{ fontSize: '0.825rem' }}
               >
                 {page.title}
               </Link>
@@ -189,6 +185,14 @@ export function DocsSidebar({ activeLibrary, activeSection, activeSlug }: Props)
       }}
     >
       <style>{`
+        [data-docs-navlink] {
+          color: ${tokens.colors.textSecondary};
+          background: transparent;
+        }
+        [data-docs-navlink][data-active] {
+          color: ${tokens.colors.accent};
+          background: ${tokens.colors.accentSurface};
+        }
         [data-docs-navlink]:not([data-active]):hover {
           background: ${tokens.surfaces.surfaceDim};
           color: ${tokens.colors.textPrimary};
