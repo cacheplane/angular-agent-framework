@@ -64,6 +64,7 @@ export function CodeMode({ entryTitle, codeAssetPaths, backendAssetPaths, codeFi
   const [activePath, setActivePath] = React.useState<string | null>(allPaths[0] ?? null);
 
   const [treeCollapsed, setTreeCollapsed] = React.useState(false);
+  const [mounted, setMounted] = React.useState(false);
 
   React.useEffect(() => {
     try {
@@ -71,8 +72,12 @@ export function CodeMode({ entryTitle, codeAssetPaths, backendAssetPaths, codeFi
         setTreeCollapsed(true);
       }
     } catch {
-      /* localStorage unavailable — leave default */
+      /* ignore */
     }
+    // Mark mounted on next animation frame so the localStorage state lands BEFORE
+    // the transition class is applied — no animated collapse on hard reload.
+    const id = requestAnimationFrame(() => setMounted(true));
+    return () => cancelAnimationFrame(id);
   }, []);
 
   const toggleTreeCollapsed = React.useCallback(() => {
@@ -128,10 +133,10 @@ export function CodeMode({ entryTitle, codeAssetPaths, backendAssetPaths, codeFi
   const isPromptPath = (path: string) => promptPaths.includes(path);
 
   return (
-    <section aria-label="Code mode" className={`h-full lg:grid lg:overflow-hidden ${treeCollapsed ? 'lg:grid-cols-[0_1fr]' : 'lg:grid-cols-[220px_1fr]'}`}>
+    <section aria-label="Code mode" className="h-full lg:flex lg:overflow-hidden">
       <aside
         aria-label="File tree"
-        className={`hidden lg:flex lg:flex-col border-r border-[var(--ds-border)] transition-[width] duration-200 ${treeCollapsed ? 'lg:w-0 lg:overflow-hidden lg:border-r-0' : 'lg:w-[220px] lg:overflow-y-auto'}`}
+        className={`hidden lg:flex lg:flex-col flex-none overflow-hidden border-r border-[var(--ds-border)] ${mounted ? 'transition-[width] duration-200' : ''} ${treeCollapsed ? 'lg:w-0 lg:border-r-0' : 'lg:w-[220px]'}`}
         style={{ background: 'color-mix(in srgb, var(--ds-surface-tinted) 40%, transparent)' }}
       >
         <div className="flex items-center justify-between px-2 py-1.5 border-b border-[var(--ds-border)]" style={{ background: 'color-mix(in srgb, var(--ds-surface-tinted) 70%, transparent)' }}>
@@ -146,7 +151,7 @@ export function CodeMode({ entryTitle, codeAssetPaths, backendAssetPaths, codeFi
         <FileTree paths={allPaths} activePath={activePath} onSelect={handleSelect} />
       </aside>
 
-      <div className="flex flex-col h-full min-w-0">
+      <div className="flex flex-col h-full min-w-0 flex-1">
         {treeCollapsed ? (
           <button
             type="button"
