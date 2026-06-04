@@ -238,7 +238,6 @@ pre.shiki {
 /* Code-mode file tree */
 .cockpit-file-tree { list-style: none; padding: 0; margin: 0; font-size: 12px; line-height: 1.7; }
 .cockpit-file-tree ul { list-style: none; padding: 0; margin: 0; }
-.cockpit-file-tree__file-row { display: flex; align-items: center; }
 .cockpit-file-tree__file,
 .cockpit-file-tree__folder {
   display: flex; align-items: center; gap: 0.4rem; flex: 1; min-width: 0;

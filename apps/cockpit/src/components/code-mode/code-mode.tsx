@@ -88,7 +88,8 @@ export function CodeMode({ entryTitle, codeAssetPaths, backendAssetPaths, codeFi
     <section aria-label="Code mode" className="h-full lg:grid lg:grid-cols-[220px_1fr] lg:overflow-hidden">
       <aside
         aria-label="File tree"
-        className="hidden lg:block lg:overflow-y-auto border-r border-[var(--ds-border)] bg-[var(--ds-surface-tinted)]/40"
+        className="hidden lg:block lg:overflow-y-auto border-r border-[var(--ds-border)]"
+        style={{ background: 'color-mix(in srgb, var(--ds-surface-tinted) 40%, transparent)' }}
       >
         <FileTree paths={allPaths} activePath={activePath} onSelect={handleSelect} />
       </aside>
