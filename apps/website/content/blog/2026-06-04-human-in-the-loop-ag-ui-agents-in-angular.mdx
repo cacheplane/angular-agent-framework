@@ -47,3 +47,31 @@ The `app.config.ts` adapter swap is one line in the providers array:
 That's the whole client-side delta. The rest of the file — the template binding `<chat-approval-card>`, the `(action)` handler, the approve / edit / cancel branches, the `submit({ resume })` call — is unchanged.
 
 `<chat-approval-card>` reads `agent.interrupt()` (a `Signal<AgentInterrupt | undefined>`), and `submit({ resume })` is part of the runtime-neutral `Agent` contract declared in `@threadplane/chat`. Both adapters populate the signal and forward the resume; the chat surface above doesn't see the wire format.
+
+## When to use an interrupt
+
+Most tool calls don't need approval. Reads, searches, and lookups can run unattended. Reach for an interrupt when a tool does something the operator wouldn't want to undo by hand: moves money, sends a customer-facing message, deletes a record, or triggers a deploy.
+
+Two practical reasons hold up: it caps the cost of a misfiring agent looping over a write API, and it gives the operator a checkpoint to catch a wrong action before it lands.
+
+The AG-UI angle adds a third. Because AG-UI normalizes the wire across many backends, the same operator-approval checkpoint plugs into LangGraph, CrewAI, Mastra, Pydantic AI, or anything else that speaks AG-UI — with no UI rewrite. If your shop runs more than one agent backend, that's a real benefit. The `<chat-approval-card>` you build today survives the backend you swap in next year.
+
+## The architecture
+
+Three pieces:
+
+- **AG-UI-fronted LangGraph backend.** The same compiled graph as the LangGraph post, duplicated under `cockpit/ag-ui/interrupts/python` because cockpit examples are standalone. Wrapped with `ag-ui-langgraph`'s `LangGraphAgent(name, graph)` + `add_langgraph_fastapi_endpoint(app, agent, path='/agent')` and served by `uvicorn`. When `interrupt()` fires inside the graph, `ag-ui-langgraph` emits a `CUSTOM` AG-UI event with `name: 'on_interrupt'` and a `value` carrying the interrupt payload — serialized as a JSON string via `dump_json_safe`. The uvicorn server needs a `MemorySaver` checkpointer (`langgraph dev` and LangGraph Platform inject one automatically; plain uvicorn does not, and `aget_state` raises "No checkpointer set" without it).
+- **`@threadplane/ag-ui` adapter.** The reducer recognizes the `CUSTOM`/`on_interrupt` event, JSON-parses the string `value` so consumers see the structured object, and sets `agent.interrupt()` to `{ id, value, resumable: true }`. `agent.submit({ resume })` short-circuits the message-append path and calls `source.runAgent({ forwardedProps: { command: { resume } } })`. The server reads `forwarded_props.command.resume`. The adapter exposes the same `Agent` contract as `@threadplane/langgraph`.
+- **`@threadplane/chat` UI.** `<chat-approval-card matchKind="refund_approval">` reads `agent.interrupt()`, opens a `<dialog>`-backed modal, and emits `'approve' | 'edit' | 'cancel'`. Resume actions call `agent.submit({ resume: { approved, amount? } })`. Reject calls `submit({ resume: { approved: false } })`. The component doesn't know which adapter is wired. That's the point.
+
+The data flow on resume:
+
+```
+<chat-approval-card> (action: approve)
+  → agent.submit({ resume: { approved: true, amount: 99.00 } })
+    → source.runAgent({ forwardedProps: { command: { resume: { approved, amount } } } })
+      → POST /agent (body carries forwarded_props.command.resume)
+        → ag-ui-langgraph: Command(resume=value) → graph continues
+```
+
+On the LangGraph adapter, the same `submit({ resume })` becomes a native `Client.submit(thread, command={resume:…})` call. Different wire, same Angular surface.
