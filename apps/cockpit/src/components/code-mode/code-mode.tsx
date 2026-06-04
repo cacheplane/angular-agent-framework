@@ -85,7 +85,7 @@ export function CodeMode({ entryTitle, codeAssetPaths, backendAssetPaths, codeFi
         // Activate the left neighbor; if the closed tab was leftmost (idx 0),
         // the new leftmost (next[0]) becomes active.
         const neighborIdx = Math.max(0, idx - 1);
-        return next[neighborIdx] ?? next[0];
+        return next[neighborIdx];
       });
       return next;
     });
@@ -112,63 +112,75 @@ export function CodeMode({ entryTitle, codeAssetPaths, backendAssetPaths, codeFi
       </aside>
 
       <div className="flex flex-col h-full min-w-0">
-        <Tabs
-          value={activePath ?? undefined}
-          onValueChange={(v) => setActivePath(v)}
-          className="flex flex-col h-full"
-        >
-          <TabsList className="shrink-0">
-            {openPaths.map((path) => (
-              <TabsTrigger
-                key={path}
-                value={path}
-                className={
-                  isPromptPath(path)
-                    ? 'text-[var(--ds-accent)]/70 data-[state=active]:text-[var(--ds-accent)] cockpit-tab-trigger'
-                    : 'cockpit-tab-trigger'
-                }
-              >
-                <span>{getTabLabel(path)}</span>
-                <span
-                  role="button"
-                  aria-label={`Close ${getTabLabel(path)}`}
-                  data-tab-close
-                  onPointerDown={(e) => { e.stopPropagation(); }}
-                  onClick={(e) => { e.stopPropagation(); handleClose(path); }}
-                  className="cockpit-tab-trigger__close"
-                >×</span>
-              </TabsTrigger>
-            ))}
-          </TabsList>
-
-          {openPaths.filter((p) => !isPromptPath(p)).map((path) => (
-            <TabsContent key={path} value={path} className="flex-1 overflow-auto py-6 px-4 md:px-8">
-              <div className="cockpit-prose cockpit-prose--code">
-                <CodeFileContent path={path} content={codeFiles[path]} capability={capability} />
-              </div>
-            </TabsContent>
-          ))}
-
-          {openPaths.filter(isPromptPath).map((path) => {
-            const content = promptFiles[path];
-            return (
-              <TabsContent key={path} value={path} className="flex-1 overflow-auto py-6 px-4 md:px-8">
-                <div className="cockpit-prose cockpit-prose--code">
-                  {content ? (
-                    <pre className="font-mono text-sm whitespace-pre-wrap">{content}</pre>
-                  ) : (
-                    <p className="text-sm text-[var(--ds-text-muted)]">No content for {getTabLabel(path)}</p>
-                  )}
-                </div>
-              </TabsContent>
-            );
-          })}
-        </Tabs>
-        {activePath === null ? (
+        {openPaths.length === 0 || activePath === null ? (
           <div className="flex-1 grid place-items-center text-sm text-[var(--ds-text-muted)] px-4 text-center">
             <p>Select a file from the tree to begin.</p>
           </div>
-        ) : null}
+        ) : (
+          <Tabs
+            value={activePath}
+            onValueChange={(v) => setActivePath(v)}
+            className="flex flex-col h-full"
+          >
+            <TabsList className="shrink-0">
+              {openPaths.map((path) => {
+                const label = getTabLabel(path);
+                return (
+                  <TabsTrigger
+                    key={path}
+                    value={path}
+                    className={
+                      isPromptPath(path)
+                        ? 'text-[var(--ds-accent)]/70 data-[state=active]:text-[var(--ds-accent)] cockpit-tab-trigger'
+                        : 'cockpit-tab-trigger'
+                    }
+                  >
+                    <span>{label}</span>
+                    <span
+                      role="button"
+                      tabIndex={0}
+                      aria-label={`Close ${label}`}
+                      data-tab-close
+                      onPointerDown={(e) => { e.stopPropagation(); }}
+                      onClick={(e) => { e.stopPropagation(); handleClose(path); }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          handleClose(path);
+                        }
+                      }}
+                      className="cockpit-tab-trigger__close"
+                    >×</span>
+                  </TabsTrigger>
+                );
+              })}
+            </TabsList>
+
+            {openPaths.filter((p) => !isPromptPath(p)).map((path) => (
+              <TabsContent key={path} value={path} className="flex-1 overflow-auto py-6 px-4 md:px-8">
+                <div className="cockpit-prose cockpit-prose--code">
+                  <CodeFileContent path={path} content={codeFiles[path]} capability={capability} />
+                </div>
+              </TabsContent>
+            ))}
+
+            {openPaths.filter(isPromptPath).map((path) => {
+              const content = promptFiles[path];
+              return (
+                <TabsContent key={path} value={path} className="flex-1 overflow-auto py-6 px-4 md:px-8">
+                  <div className="cockpit-prose cockpit-prose--code">
+                    {content ? (
+                      <pre className="font-mono text-sm whitespace-pre-wrap">{content}</pre>
+                    ) : (
+                      <p className="text-sm text-[var(--ds-text-muted)]">No content for {getTabLabel(path)}</p>
+                    )}
+                  </div>
+                </TabsContent>
+              );
+            })}
+          </Tabs>
+        )}
       </div>
     </section>
   );

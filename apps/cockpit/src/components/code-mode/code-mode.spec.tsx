@@ -245,6 +245,45 @@ describe('CodeMode', () => {
     expect(container.textContent).toContain('Select a file from the tree');
   });
 
+  it('closes a tab when Enter is pressed on the close button', () => {
+    container = document.createElement('div');
+    document.body.appendChild(container);
+    root = createRoot(container);
+
+    act(() => {
+      root!.render(
+        <CodeMode
+          entryTitle="Planning"
+          codeAssetPaths={['src/a.ts', 'src/b.ts']}
+          backendAssetPaths={[]}
+          codeFiles={{
+            'src/a.ts': '<pre class="shiki"><code>a</code></pre>',
+            'src/b.ts': '<pre class="shiki"><code>b</code></pre>',
+          }}
+          promptFiles={{}}
+        />,
+      );
+    });
+
+    // The first tab (a.ts) is active by default; its close span is focusable.
+    const closeBtn = container.querySelector(
+      '[role="tab"][data-state="active"] [data-tab-close]',
+    ) as HTMLElement;
+    expect(closeBtn).not.toBeNull();
+    expect(closeBtn.getAttribute('tabindex')).toBe('0');
+
+    act(() => {
+      closeBtn.dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }),
+      );
+    });
+
+    const tabs = Array.from(container.querySelectorAll('[role="tab"]')).map((t) =>
+      (t.textContent ?? '').replace(/×/g, '').trim(),
+    );
+    expect(tabs).toEqual(['b.ts']);
+  });
+
   it('fires cockpit:code_copied when the Copy button is clicked', () => {
     container = document.createElement('div');
     document.body.appendChild(container);
