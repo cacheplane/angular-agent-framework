@@ -63,6 +63,32 @@ export function CodeMode({ entryTitle, codeAssetPaths, backendAssetPaths, codeFi
   const [openPaths, setOpenPaths] = React.useState<readonly string[]>(allPaths);
   const [activePath, setActivePath] = React.useState<string | null>(allPaths[0] ?? null);
 
+  const [treeCollapsed, setTreeCollapsed] = React.useState(false);
+
+  React.useEffect(() => {
+    try {
+      if (typeof window !== 'undefined' && window.localStorage.getItem('cockpit:codeTree:collapsed') === '1') {
+        setTreeCollapsed(true);
+      }
+    } catch {
+      /* localStorage unavailable — leave default */
+    }
+  }, []);
+
+  const toggleTreeCollapsed = React.useCallback(() => {
+    setTreeCollapsed((prev) => {
+      const next = !prev;
+      try {
+        if (typeof window !== 'undefined') {
+          window.localStorage.setItem('cockpit:codeTree:collapsed', next ? '1' : '0');
+        }
+      } catch {
+        /* ignore */
+      }
+      return next;
+    });
+  }, []);
+
   // If the capability changes (allPaths changes identity), reset open + active.
   React.useEffect(() => {
     setOpenPaths(allPaths);
@@ -102,16 +128,33 @@ export function CodeMode({ entryTitle, codeAssetPaths, backendAssetPaths, codeFi
   const isPromptPath = (path: string) => promptPaths.includes(path);
 
   return (
-    <section aria-label="Code mode" className="h-full lg:grid lg:grid-cols-[220px_1fr] lg:overflow-hidden">
+    <section aria-label="Code mode" className={`h-full lg:grid lg:overflow-hidden ${treeCollapsed ? 'lg:grid-cols-[0_1fr]' : 'lg:grid-cols-[220px_1fr]'}`}>
       <aside
         aria-label="File tree"
-        className="hidden lg:block lg:overflow-y-auto border-r border-[var(--ds-border)]"
+        className={`hidden lg:flex lg:flex-col border-r border-[var(--ds-border)] transition-[width] duration-200 ${treeCollapsed ? 'lg:w-0 lg:overflow-hidden lg:border-r-0' : 'lg:w-[220px] lg:overflow-y-auto'}`}
         style={{ background: 'color-mix(in srgb, var(--ds-surface-tinted) 40%, transparent)' }}
       >
+        <div className="flex items-center justify-between px-2 py-1.5 border-b border-[var(--ds-border)]" style={{ background: 'color-mix(in srgb, var(--ds-surface-tinted) 70%, transparent)' }}>
+          <span className="font-mono text-[10px] uppercase tracking-wide text-[var(--ds-text-muted)] pl-1">Files</span>
+          <button
+            type="button"
+            aria-label="Collapse file tree"
+            onClick={toggleTreeCollapsed}
+            className="text-[var(--ds-text-muted)] hover:text-[var(--ds-text-primary)] px-1.5 py-0.5 rounded"
+          >‹</button>
+        </div>
         <FileTree paths={allPaths} activePath={activePath} onSelect={handleSelect} />
       </aside>
 
       <div className="flex flex-col h-full min-w-0">
+        {treeCollapsed ? (
+          <button
+            type="button"
+            aria-label="Expand file tree"
+            onClick={toggleTreeCollapsed}
+            className="hidden lg:flex shrink-0 items-center justify-center w-7 self-start mt-1 ml-1 rounded text-[var(--ds-accent)] hover:bg-[var(--ds-accent-surface)]"
+          >›</button>
+        ) : null}
         {openPaths.length === 0 || activePath === null ? (
           <div className="flex-1 grid place-items-center text-sm text-[var(--ds-text-muted)] px-4 text-center">
             <p>Select a file from the tree to begin.</p>
