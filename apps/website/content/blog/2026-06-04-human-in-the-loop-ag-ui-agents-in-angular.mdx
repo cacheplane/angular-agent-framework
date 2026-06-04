@@ -1,0 +1,49 @@
+---
+title: "Human-in-the-Loop AG-UI Agents in Angular"
+description: "Build a human-in-the-loop AG-UI agent in Angular — the same `<chat-approval-card>` from the LangGraph version, wired to an AG-UI-fronted LangGraph backend via @threadplane/ag-ui."
+date: 2026-06-04
+tags: [tutorial, ag-ui, angular, agents, hitl, interrupts]
+author: brian
+featured: true
+---
+
+This is how to pause an AG-UI agent in Angular for human approval before it runs a high-stakes tool, using a `CUSTOM` `on_interrupt` event and the `<chat-approval-card>` composition from `@threadplane/chat`. The example is the same refund agent from [Human-in-the-Loop LangGraph Agents in Angular](/blog/2026-05-28-human-in-the-loop-langgraph-agents-in-angular) — wired through the AG-UI adapter instead. The Angular component is byte-identical except the import.
+
+Everything below is running code from the cockpit example at `cockpit/ag-ui/interrupts`. Clone the repo, run `nx serve cockpit-ag-ui-interrupts-angular`, and follow along.
+
+<div style={{ marginTop: 40, marginBottom: 44 }}>
+<CardGroup cols={2}>
+  <Card title="Run the live demo" icon="▶" external href="https://cockpit.threadplane.ai/ag-ui/core-capabilities/interrupts/overview/python">
+    The refund agent running in the cockpit. Walk the approve / edit / cancel flow yourself.
+  </Card>
+  <Card title="View the source" icon="⌥" external href="https://github.com/cacheplane/angular-agent-framework/tree/main/cockpit/ag-ui/interrupts">
+    The exact graph.py, server.py, and Angular component from this post.
+  </Card>
+</CardGroup>
+</div>
+
+## Goals
+
+- Wire the same refund-approval gate over the AG-UI protocol instead of the LangGraph SDK.
+- See how a single `CUSTOM` event named `on_interrupt` becomes `agent.interrupt()` in Angular.
+- Swap adapters without touching the component — the parity proof.
+
+## The parity proof
+
+The Angular component file is byte-identical to the LangGraph version from [the precedent post](/blog/2026-05-28-human-in-the-loop-langgraph-agents-in-angular) except for the `injectAgent` import:
+
+```diff
+- import { provideAgent, injectAgent } from '@threadplane/langgraph';
++ import { provideAgent, injectAgent } from '@threadplane/ag-ui';
+```
+
+The `app.config.ts` adapter swap is one line in the providers array:
+
+```diff
+- provideAgent({ apiUrl: '/api', assistantId: 'interrupts' }),
++ provideAgent({ url: '/agent' }),
+```
+
+That's the whole client-side delta. The rest of the file — the template binding `<chat-approval-card>`, the `(action)` handler, the approve / edit / cancel branches, the `submit({ resume })` call — is unchanged.
+
+`<chat-approval-card>` reads `agent.interrupt()` (a `Signal<AgentInterrupt | undefined>`), and `submit({ resume })` is part of the runtime-neutral `Agent` contract declared in `@threadplane/chat`. Both adapters populate the signal and forward the resume; the chat surface above doesn't see the wire format.
