@@ -52,7 +52,7 @@ describe('CodeMode', () => {
     expect(container.textContent).toContain('export default function Page() {}');
 
     const tabs = Array.from(container.querySelectorAll('[role="tab"]'));
-    expect(tabs.map((tab) => tab.textContent)).toEqual(['page.tsx', 'index.ts']);
+    expect(tabs.map((tab) => (tab.textContent ?? '').replace(/×/g, '').trim())).toEqual(['page.tsx', 'index.ts']);
 
     act(() => {
       (tabs[1] as HTMLElement).dispatchEvent(
@@ -105,12 +105,12 @@ describe('CodeMode', () => {
     });
 
     const tabs = Array.from(container.querySelectorAll('[role="tab"]'));
-    const tabLabels = tabs.map((tab) => tab.textContent);
+    const tabLabels = tabs.map((tab) => (tab.textContent ?? '').replace(/×/g, '').trim());
     expect(tabLabels).toContain('app.tsx');
     expect(tabLabels).toContain('system.md');
 
     act(() => {
-      const promptTab = tabs.find((tab) => tab.textContent === 'system.md') as HTMLElement;
+      const promptTab = tabs.find((tab) => (tab.textContent ?? '').replace(/×/g, '').trim() === 'system.md') as HTMLElement;
       promptTab.dispatchEvent(
         new MouseEvent('mousedown', { bubbles: true, cancelable: true, button: 0 })
       );
@@ -139,11 +139,11 @@ describe('CodeMode', () => {
       );
     });
 
-    const tabLabels = Array.from(container.querySelectorAll('[role="tab"]')).map((t) => t.textContent);
+    const tabLabels = Array.from(container.querySelectorAll('[role="tab"]')).map((t) => (t.textContent ?? '').replace(/×/g, '').trim());
     expect(tabLabels).toEqual(['a.ts', 'graph.py', 'p.md']);
 
     const active = container.querySelector('[role="tab"][data-state="active"]');
-    expect(active?.textContent).toBe('a.ts');
+    expect((active?.textContent ?? '').replace(/×/g, '').trim()).toBe('a.ts');
   });
 
   it('opens a closed file and activates it when the tree row is clicked', () => {
@@ -176,7 +176,73 @@ describe('CodeMode', () => {
     act(() => { bRow.click(); });
 
     const active = container.querySelector('[role="tab"][data-state="active"]');
-    expect(active?.textContent).toBe('b.ts');
+    expect((active?.textContent ?? '').replace(/×/g, '').trim()).toBe('b.ts');
+  });
+
+  it('closes a tab and activates its left neighbor', () => {
+    container = document.createElement('div');
+    document.body.appendChild(container);
+    root = createRoot(container);
+
+    act(() => {
+      root!.render(
+        <CodeMode
+          entryTitle="Planning"
+          codeAssetPaths={['src/a.ts', 'src/b.ts', 'src/c.ts']}
+          backendAssetPaths={[]}
+          codeFiles={{
+            'src/a.ts': '<pre class="shiki"><code>a</code></pre>',
+            'src/b.ts': '<pre class="shiki"><code>b</code></pre>',
+            'src/c.ts': '<pre class="shiki"><code>c</code></pre>',
+          }}
+          promptFiles={{}}
+        />,
+      );
+    });
+
+    // Activate b.ts, then close it.
+    const bTab = Array.from(container.querySelectorAll('[role="tab"]')).find(
+      (el) => el.textContent?.startsWith('b.ts'),
+    ) as HTMLElement;
+    act(() => {
+      bTab.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true, button: 0 }));
+    });
+
+    const closeBtn = container.querySelector('[role="tab"][data-state="active"] [data-tab-close]') as HTMLElement;
+    expect(closeBtn).not.toBeNull();
+    act(() => { closeBtn.click(); });
+
+    const tabs = Array.from(container.querySelectorAll('[role="tab"]')).map((t) =>
+      (t.textContent ?? '').replace(/×/g, '').trim(),
+    );
+    expect(tabs).toEqual(['a.ts', 'c.ts']);
+
+    const active = container.querySelector('[role="tab"][data-state="active"]');
+    expect((active?.textContent ?? '').startsWith('a.ts')).toBe(true);
+  });
+
+  it('shows the empty state after the last tab is closed', () => {
+    container = document.createElement('div');
+    document.body.appendChild(container);
+    root = createRoot(container);
+
+    act(() => {
+      root!.render(
+        <CodeMode
+          entryTitle="Planning"
+          codeAssetPaths={['src/only.ts']}
+          backendAssetPaths={[]}
+          codeFiles={{ 'src/only.ts': '<pre class="shiki"><code>x</code></pre>' }}
+          promptFiles={{}}
+        />,
+      );
+    });
+
+    const closeBtn = container.querySelector('[role="tab"] [data-tab-close]') as HTMLElement;
+    act(() => { closeBtn.click(); });
+
+    expect(container.querySelectorAll('[role="tab"]')).toHaveLength(0);
+    expect(container.textContent).toContain('Select a file from the tree');
   });
 
   it('fires cockpit:code_copied when the Copy button is clicked', () => {

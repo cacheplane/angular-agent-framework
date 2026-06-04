@@ -74,6 +74,23 @@ export function CodeMode({ entryTitle, codeAssetPaths, backendAssetPaths, codeFi
     setActivePath(path);
   }, []);
 
+  const handleClose = React.useCallback((path: string) => {
+    setOpenPaths((prev) => {
+      const idx = prev.indexOf(path);
+      if (idx < 0) return prev;
+      const next = prev.filter((p) => p !== path);
+      setActivePath((current) => {
+        if (current !== path) return current;
+        if (next.length === 0) return null;
+        // Activate the left neighbor; if the closed tab was leftmost (idx 0),
+        // the new leftmost (next[0]) becomes active.
+        const neighborIdx = Math.max(0, idx - 1);
+        return next[neighborIdx] ?? next[0];
+      });
+      return next;
+    });
+  }, []);
+
   if (allPaths.length === 0) {
     return (
       <section aria-label="Code mode" className="grid place-items-center h-full text-[var(--ds-text-muted)] text-sm">
@@ -107,11 +124,19 @@ export function CodeMode({ entryTitle, codeAssetPaths, backendAssetPaths, codeFi
                 value={path}
                 className={
                   isPromptPath(path)
-                    ? 'text-[var(--ds-accent)]/70 data-[state=active]:text-[var(--ds-accent)]'
-                    : undefined
+                    ? 'text-[var(--ds-accent)]/70 data-[state=active]:text-[var(--ds-accent)] cockpit-tab-trigger'
+                    : 'cockpit-tab-trigger'
                 }
               >
-                {getTabLabel(path)}
+                <span>{getTabLabel(path)}</span>
+                <span
+                  role="button"
+                  aria-label={`Close ${getTabLabel(path)}`}
+                  data-tab-close
+                  onPointerDown={(e) => { e.stopPropagation(); }}
+                  onClick={(e) => { e.stopPropagation(); handleClose(path); }}
+                  className="cockpit-tab-trigger__close"
+                >×</span>
               </TabsTrigger>
             ))}
           </TabsList>
@@ -139,6 +164,11 @@ export function CodeMode({ entryTitle, codeAssetPaths, backendAssetPaths, codeFi
             );
           })}
         </Tabs>
+        {activePath === null ? (
+          <div className="flex-1 grid place-items-center text-sm text-[var(--ds-text-muted)] px-4 text-center">
+            <p>Select a file from the tree to begin.</p>
+          </div>
+        ) : null}
       </div>
     </section>
   );

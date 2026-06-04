@@ -260,3 +260,15 @@ pre.shiki {
   color: var(--ds-text-primary);
   border-left-color: var(--ds-accent);
 }
+
+/* Tab close (×) on Code-mode tabs */
+.cockpit-tab-trigger { display: inline-flex; align-items: center; gap: 0.4rem; }
+.cockpit-tab-trigger__close {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 0.95rem; height: 0.95rem; border-radius: 0.2rem;
+  color: var(--ds-text-muted); font-size: 0.85rem; line-height: 1;
+  opacity: 0; cursor: pointer;
+}
+.cockpit-tab-trigger:hover .cockpit-tab-trigger__close,
+.cockpit-tab-trigger[data-state="active"] .cockpit-tab-trigger__close { opacity: 1; }
+.cockpit-tab-trigger__close:hover { background: var(--ds-accent-surface); color: var(--ds-text-primary); }
