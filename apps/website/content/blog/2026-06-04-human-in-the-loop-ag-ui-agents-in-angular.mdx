@@ -1,6 +1,6 @@
 ---
 title: "Human-in-the-Loop AG-UI Agents in Angular"
-description: "Build a human-in-the-loop AG-UI agent in Angular — the same `<chat-approval-card>` from the LangGraph version, wired to an AG-UI-fronted LangGraph backend via @threadplane/ag-ui."
+description: "Build a human-in-the-loop AG-UI agent in Angular — the same chat-approval-card composition from the LangGraph version, wired to an AG-UI-fronted LangGraph backend via @threadplane/ag-ui."
 date: 2026-06-04
 tags: [tutorial, ag-ui, angular, agents, hitl, interrupts]
 author: brian
@@ -33,8 +33,8 @@ Everything below is running code from the cockpit example at `cockpit/ag-ui/inte
 The Angular component file is byte-identical to the LangGraph version from [the precedent post](/blog/2026-05-28-human-in-the-loop-langgraph-agents-in-angular) except for the `injectAgent` import:
 
 ```diff
-- import { provideAgent, injectAgent } from '@threadplane/langgraph';
-+ import { provideAgent, injectAgent } from '@threadplane/ag-ui';
+- import { injectAgent } from '@threadplane/langgraph';
++ import { injectAgent } from '@threadplane/ag-ui';
 ```
 
 The `app.config.ts` adapter swap is one line in the providers array:
