@@ -29,6 +29,18 @@ export function withViews(
 }
 
 /**
+ * Replaces views in a registry. Keys in `overrides` win over `base`.
+ * Use this to swap an existing renderer; use `withViews` to add NEW
+ * node types without touching existing entries.
+ */
+export function overrideViews(
+  base: ViewRegistry,
+  overrides: Record<string, Type<unknown> | RenderViewEntry>,
+): ViewRegistry {
+  return Object.freeze({ ...base, ...overrides });
+}
+
+/**
  * Removes views from a registry by name.
  */
 export function withoutViews(

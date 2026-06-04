@@ -181,15 +181,19 @@ The built-in catalog ships via `a2uiBasicCatalog`. Compose a custom catalog with
 Override individual node renderers:
 
 ```typescript
-import { withViews, cacheplaneMarkdownViews, provideViews } from '@threadplane/chat';
+import { MARKDOWN_VIEW_REGISTRY, cacheplaneMarkdownViews } from '@threadplane/chat';
+import { overrideViews } from '@threadplane/render';
 import { MyCodeBlockComponent } from './my-code-block.component';
 
 providers: [
-  provideViews(
-    withViews(cacheplaneMarkdownViews, { code: MyCodeBlockComponent })
-  ),
-],
+  {
+    provide: MARKDOWN_VIEW_REGISTRY,
+    useValue: overrideViews(cacheplaneMarkdownViews, { 'code-block': MyCodeBlockComponent }),
+  },
+];
 ```
+
+Per-instance, bind the registry on `<chat-streaming-md [viewRegistry]="…" />` instead. Styling uses the existing `--ngaf-chat-*` / `--a2ui-*` tokens — see the [Theming](#theming) section.
 
 The `renderMarkdown(md, options?)` function produces a parse tree for use outside streaming contexts.
 

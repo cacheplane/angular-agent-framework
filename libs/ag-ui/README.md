@@ -86,6 +86,39 @@ Both `@threadplane/langgraph` and `@threadplane/ag-ui` expose `provideAgent`/`in
 
 Which capabilities populate depends on the events the AG-UI backend emits. `submit()`, `stop()`, and `regenerate()` are supported.
 
+### Interrupts (human-in-the-loop)
+
+`agent.interrupt()` is a `Signal<AgentInterrupt | undefined>` populated from AG-UI `CUSTOM` events with `name: 'on_interrupt'`. The reducer JSON-parses string-serialized `value` payloads automatically (e.g. `ag-ui-langgraph` ships interrupts via `dump_json_safe`), so consumers see the structured object directly.
+
+Resume with `agent.submit({ resume })` — this calls `runAgent({ forwardedProps: { command: { resume } } })`, and the server reads `forwarded_props.command.resume` (the `ag-ui-langgraph` convention).
+
+Pair with `<chat-approval-card>` from `@threadplane/chat` for the approve/reject/edit UX:
+
+```ts
+import { Component } from '@angular/core';
+import { ChatComponent, ChatApprovalCardComponent } from '@threadplane/chat';
+import { injectAgent } from '@threadplane/ag-ui';
+
+@Component({
+  imports: [ChatComponent, ChatApprovalCardComponent],
+  template: `
+    <chat [agent]="agent" />
+    <chat-approval-card
+      [agent]="agent"
+      matchKind="refund_approval"
+      (action)="onAction($event)" />
+  `,
+})
+export class App {
+  protected readonly agent = injectAgent();
+  onAction(a: 'approve' | 'cancel') {
+    void this.agent.submit({ resume: { approved: a === 'approve' } });
+  }
+}
+```
+
+See `cockpit/ag-ui/interrupts` for a complete working example, and the [LangGraph interrupts guide](https://threadplane.ai/docs/langgraph/guides/interrupts) for the broader HITL contract — the same `Agent.interrupt` / `submit({ resume })` API works across both adapters.
+
 ### Citations
 
 `bridgeCitationsState(thread, messages)` populates `Message.citations` from AG-UI state. Citations live under the `citations` key of the agent state, keyed by message ID (`state.citations[messageId]`).

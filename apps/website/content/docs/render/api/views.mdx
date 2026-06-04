@@ -68,6 +68,20 @@ const extended = withViews(base, {
 });
 ```
 
+### `overrideViews(base, overrides)`
+
+Replaces entries in a registry. Keys in `overrides` win over `base`. Use this when you want to swap an existing renderer; use [`withViews`](#withviewsbase-additions) when you want to add new node types without touching existing ones.
+
+```typescript
+import { overrideViews } from '@threadplane/render';
+
+const myRegistry = overrideViews(baseRegistry, {
+  'code-block': MyCodeBlockComponent,
+});
+```
+
+Returns a new frozen `ViewRegistry`. The `base` argument is not mutated.
+
 ### `withoutViews(base, ...names)`
 
 Removes views by name:
@@ -87,6 +101,8 @@ providers: [provideViews(ui)]
 // Route-scoped
 { path: 'planning', providers: [provideViews(planningViews)] }
 ```
+
+`<render-spec>` and `<render-element>` consume `VIEW_REGISTRY` as a third-priority fallback in registry resolution. The full priority order is: the `[registry]` template input → `RENDER_CONFIG.registry` (from `provideRender(...)`) → `VIEW_REGISTRY` (from `provideViews(...)`) → the existing empty fallback. So `provideViews(myRegistry)` drives rendering when no `provideRender({ registry })` is wired and no `[registry]` input is bound.
 
 ### `toRenderRegistry(registry)`
 
