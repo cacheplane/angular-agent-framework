@@ -5,6 +5,7 @@ import { DocsSidebar } from '../../../../../components/docs/DocsSidebar';
 import { MdxRenderer } from '../../../../../components/docs/MdxRenderer';
 import { DocsSearch } from '../../../../../components/docs/DocsSearch';
 import { DocsBreadcrumb } from '../../../../../components/docs/DocsBreadcrumb';
+import { DocsPageHeader } from '../../../../../components/docs/DocsPageHeader';
 import { DocsPrevNext } from '../../../../../components/docs/DocsPrevNext';
 import { getDocBySlug, getAllDocSlugs, getDocMetadata } from '../../../../../lib/docs';
 import { ApiDocRenderer, type ApiDocEntry } from '../../../../../components/docs/ApiDocRenderer';
@@ -73,6 +74,7 @@ export default async function DocsPage({ params }: DocsRouteProps) {
         <div className="flex-1 min-w-0">
           <div className="px-6 md:px-12 pt-6">
             <DocsBreadcrumb library={library as LibraryId} section={section} slug={slug} title={doc.title} />
+            <DocsPageHeader library={library as LibraryId} section={section} />
           </div>
           <article className="flex-1 py-8 px-4 sm:px-6 md:px-12 md:max-w-3xl overflow-x-hidden">
             <MdxRenderer
