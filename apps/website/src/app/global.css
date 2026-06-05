@@ -194,9 +194,15 @@ html {
 [data-ui="card"][data-hoverable] {
   cursor: pointer;
 }
-[data-ui="card"][data-hoverable]:hover {
-  box-shadow: var(--shadow-md);
-  border-color: var(--color-border-strong);
+/* !important so the hover lift wins over Card's inline border/box-shadow. */
+[data-ui="card"][data-hoverable]:not([data-accent]):hover {
+  box-shadow: var(--shadow-md) !important;
+  border-color: var(--color-border-strong) !important;
+  transform: translateY(-1px);
+}
+/* Accent cards keep their accent border and gain an accent ring on hover. */
+[data-ui="card"][data-hoverable][data-accent]:hover {
+  box-shadow: 0 0 0 3px var(--color-accent-glow), var(--shadow-md) !important;
   transform: translateY(-1px);
 }
 @media (prefers-reduced-motion: reduce) {

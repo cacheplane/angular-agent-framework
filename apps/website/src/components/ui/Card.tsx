@@ -9,6 +9,9 @@ interface CardProps extends HTMLAttributes<HTMLDivElement> {
   children: ReactNode;
   /** If true, applies a subtle hover lift via CSS. */
   hoverable?: boolean;
+  /** If true (with hoverable), the hover lift uses an accent ring instead of
+   * the neutral border treatment — for accent-bordered cards. */
+  accent?: boolean;
   /** Internal padding tier. */
   padding?: Padding;
   /** Override the surface color. */
@@ -29,6 +32,7 @@ const PADDING: Record<Padding, string> = {
 export function Card({
   children,
   hoverable = false,
+  accent = false,
   padding = 'md',
   surface = 'white',
   className,
@@ -39,6 +43,7 @@ export function Card({
     <div
       data-ui="card"
       data-hoverable={hoverable || undefined}
+      data-accent={accent || undefined}
       className={cn(className)}
       style={{
         background: SURFACE[surface],
