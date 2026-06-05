@@ -1,0 +1,5 @@
+{
+  "extends": "./tsconfig.json",
+  "include": ["middleware.ts"],
+  "compilerOptions": { "noEmit": true, "module": "esnext", "moduleResolution": "bundler", "declaration": false, "declarationMap": false }
+}
