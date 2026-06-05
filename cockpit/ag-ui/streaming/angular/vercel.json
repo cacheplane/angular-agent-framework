@@ -2,5 +2,11 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "buildCommand": "npx nx build cockpit-ag-ui-streaming-angular",
   "outputDirectory": "dist/cockpit/ag-ui/streaming/angular/browser",
-  "framework": null
+  "framework": null,
+  "rewrites": [
+    {
+      "source": "/agent/:path*",
+      "destination": "https://ag-ui-dev.up.railway.app/agent/streaming/:path*"
+    }
+  ]
 }
