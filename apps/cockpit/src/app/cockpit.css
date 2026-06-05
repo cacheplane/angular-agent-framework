@@ -208,7 +208,6 @@ pre.shiki {
 /* Shared prose layer — docs + api + code mode content */
 .cockpit-prose {
   max-width: 42rem;
-  margin-inline: auto;
   font-size: 0.9rem;
   line-height: 1.7;
   color: var(--ds-text-secondary);
@@ -235,6 +234,34 @@ pre.shiki {
 .cockpit-prose table.params th { font-family: var(--font-mono), monospace; font-size: 0.6rem; letter-spacing: 0.06em; text-transform: uppercase; padding-bottom: 0.5rem; border-bottom: 1px solid var(--ds-border); }
 .cockpit-prose table.params td { padding: 0.5rem 0.75rem 0.5rem 0; border-bottom: 1px solid var(--ds-border); }
 
+/* Sidebar navigation items — bg-only active/hover, no left border */
+.cockpit-nav-item {
+  display: block;
+  padding: 5px 14px;
+  margin: 0 8px;
+  border-radius: 6px;
+  font-size: 0.825rem;
+  color: var(--ds-text-secondary);
+  text-decoration: none;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.cockpit-nav-item:hover { background: var(--ds-surface-dim); color: var(--ds-text-primary); }
+.cockpit-nav-item[aria-current="page"] { background: var(--ds-accent-surface); color: var(--ds-accent); }
+
+/* Sidebar group caret — matches the file-tree chevron */
+.cockpit-nav-caret {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 0.85rem;
+  height: 0.85rem;
+  color: var(--ds-text-muted);
+  flex: none;
+  transition: transform 150ms ease;
+}
+.cockpit-nav-caret svg { display: block; }
+.cockpit-nav-caret--open { transform: rotate(90deg); }
+
 /* Code-mode file tree */
 .cockpit-file-tree { list-style: none; padding: 0; margin: 0; font-size: 12px; line-height: 1.7; }
 .cockpit-file-tree ul { list-style: none; padding: 0; margin: 0; }
@@ -246,7 +273,18 @@ pre.shiki {
   border-left: 2px solid transparent; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .cockpit-file-tree__folder { color: var(--ds-text-muted); display: flex; align-items: center; }
-.cockpit-file-tree__caret { font-size: 9px; color: var(--ds-text-muted); width: 0.65rem; flex-shrink: 0; }
+.cockpit-file-tree__caret {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 0.85rem;
+  height: 0.85rem;
+  color: var(--ds-text-muted);
+  flex: none;
+  transition: transform 150ms ease;
+}
+.cockpit-file-tree__caret svg { display: block; }
+.cockpit-file-tree__caret--open { transform: rotate(90deg); }
 .cockpit-file-tree__label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .cockpit-file-tree__chip {
   font-family: var(--font-mono), monospace; font-size: 9px;
@@ -272,3 +310,39 @@ pre.shiki {
 .cockpit-tab-trigger:hover .cockpit-tab-trigger__close,
 .cockpit-tab-trigger[data-state="active"] .cockpit-tab-trigger__close { opacity: 1; }
 .cockpit-tab-trigger__close:hover { background: var(--ds-accent-surface); color: var(--ds-text-primary); }
+
+/* Code-mode editor pane — no chrome, no separate background, full-bleed under the tab strip. */
+.cockpit-code-pane {
+  min-width: 0;
+}
+.cockpit-code-pane pre.shiki {
+  background: transparent !important;
+  margin: 0;
+  border-radius: 0;
+  padding: 1rem 1.25rem;
+  font-size: 0.8125rem;
+  white-space: pre;
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+/* Shiki dual-theme: light mode uses inline `color` (github-light), dark mode swaps to the --shiki-dark CSS variable (tokyo-night). */
+[data-theme="dark"] .shiki,
+[data-theme="dark"] .shiki span { color: var(--shiki-dark) !important; }
+[data-theme="dark"] .shiki { background-color: var(--shiki-dark-bg) !important; }
+[data-theme="dark"] .cockpit-code-pane .shiki { background-color: transparent !important; }
+.cockpit-code-pane--plain {
+  margin: 0;
+  padding: 1rem 1.25rem;
+  color: var(--ds-text-secondary);
+  font-family: var(--font-mono), "JetBrains Mono", monospace;
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  max-width: 100%;
+}
+.cockpit-code-pane__empty {
+  padding: 1rem 1.25rem;
+  color: var(--ds-text-muted);
+  font-size: 0.875rem;
+}

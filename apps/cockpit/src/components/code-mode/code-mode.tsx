@@ -2,7 +2,6 @@
 
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { track } from '../../lib/analytics/client';
 import { FileTree } from './file-tree';
 
 interface CodeModeProps {
@@ -19,38 +18,14 @@ const getTabLabel = (path: string): string => path.split('/').pop() ?? path;
 function CodeFileContent({
   path,
   content,
-  capability,
 }: {
   path: string;
   content: string | undefined;
-  capability?: string;
 }) {
   if (!content) {
-    return <p className="text-sm text-[var(--ds-text-muted)]">No source available for {getTabLabel(path)}</p>;
+    return <p className="cockpit-code-pane__empty">No source available for {getTabLabel(path)}</p>;
   }
-
-  const label = getTabLabel(path);
-  const dotIdx = label.lastIndexOf('.');
-  const ext = dotIdx > 0 ? label.slice(dotIdx + 1).toUpperCase() : '';
-
-  return (
-    <div className="doc-codeblock">
-      <div className="doc-codeblock__header">
-        <span className="doc-codeblock__file">{label}</span>
-        {ext ? <span className="doc-codeblock__lang">{ext}</span> : null}
-        <button
-          className="doc-codeblock__copy"
-          aria-label={`Copy ${label}`}
-          onClick={() => {
-            track('cockpit:code_copied', { capability, surface: 'code_mode', file_path: path });
-            const el = document.querySelector(`[data-code-path="${CSS.escape(path)}"] pre code`);
-            if (el) navigator.clipboard.writeText(el.textContent ?? '');
-          }}
-        >Copy</button>
-      </div>
-      <div data-code-path={path} dangerouslySetInnerHTML={{ __html: content }} />
-    </div>
-  );
+  return <div className="cockpit-code-pane" dangerouslySetInnerHTML={{ __html: content }} />;
 }
 
 export function CodeMode({ entryTitle, codeAssetPaths, backendAssetPaths, codeFiles, promptFiles, capability }: CodeModeProps) {
@@ -206,24 +181,20 @@ export function CodeMode({ entryTitle, codeAssetPaths, backendAssetPaths, codeFi
             </TabsList>
 
             {openPaths.filter((p) => !isPromptPath(p)).map((path) => (
-              <TabsContent key={path} value={path} className="flex-1 overflow-auto py-6 px-4 md:px-8">
-                <div className="cockpit-prose cockpit-prose--code">
-                  <CodeFileContent path={path} content={codeFiles[path]} capability={capability} />
-                </div>
+              <TabsContent key={path} value={path} className="flex-1 overflow-auto">
+                <CodeFileContent path={path} content={codeFiles[path]} />
               </TabsContent>
             ))}
 
             {openPaths.filter(isPromptPath).map((path) => {
               const content = promptFiles[path];
               return (
-                <TabsContent key={path} value={path} className="flex-1 overflow-auto py-6 px-4 md:px-8">
-                  <div className="cockpit-prose cockpit-prose--code">
-                    {content ? (
-                      <pre className="font-mono text-sm whitespace-pre-wrap">{content}</pre>
-                    ) : (
-                      <p className="text-sm text-[var(--ds-text-muted)]">No content for {getTabLabel(path)}</p>
-                    )}
-                  </div>
+                <TabsContent key={path} value={path} className="flex-1 overflow-auto">
+                  {content ? (
+                    <pre className="cockpit-code-pane cockpit-code-pane--plain">{content}</pre>
+                  ) : (
+                    <p className="cockpit-code-pane__empty">No content for {getTabLabel(path)}</p>
+                  )}
                 </TabsContent>
               );
             })}

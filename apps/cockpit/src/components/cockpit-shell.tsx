@@ -79,11 +79,11 @@ export function CockpitShell({
         onClose={() => setIsSidebarOpen(false)}
       />
 
-      <section className="grid grid-rows-[auto_1fr] overflow-hidden bg-[var(--ds-surface)]">
+      <section className="grid grid-rows-[auto_1fr] grid-cols-[minmax(0,1fr)] overflow-hidden bg-[var(--ds-surface)]">
         <header
-          className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between px-4 py-3 border-b border-[var(--ds-border)]"
+          className="flex items-center justify-between gap-3 px-4 py-3 border-b border-[var(--ds-border)]"
         >
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 min-w-0">
             <button
               className="md:hidden"
               onClick={() => setIsSidebarOpen(true)}
@@ -93,9 +93,9 @@ export function CockpitShell({
             >
               <MenuIcon />
             </button>
-            <p className="hidden md:block text-[var(--ds-text-muted)] font-mono text-xs">{contextLabel}</p>
+            <p className="hidden md:block text-[var(--ds-text-muted)] font-mono text-xs truncate">{contextLabel}</p>
           </div>
-          <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0">
+          <div className="shrink-0 overflow-x-auto">
             <ModeSwitcher
               modes={PRIMARY_MODES}
               activeMode={activeMode}
