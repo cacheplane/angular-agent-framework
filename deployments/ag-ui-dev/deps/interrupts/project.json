@@ -1,0 +1,38 @@
+{
+  "name": "cockpit-ag-ui-interrupts-python",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "cockpit/ag-ui/interrupts/python/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": [
+        "{workspaceRoot}/dist/cockpit/ag-ui/interrupts/python"
+      ],
+      "options": {
+        "outputPath": "dist/cockpit/ag-ui/interrupts/python",
+        "main": "cockpit/ag-ui/interrupts/python/src/index.ts",
+        "tsConfig": "cockpit/ag-ui/interrupts/python/tsconfig.json"
+      }
+    },
+    "smoke": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "cockpit/ag-ui/interrupts/python",
+        "command": "npx tsx -e \"import { agUiInterruptsPythonModule } from './src/index.ts'; const module = agUiInterruptsPythonModule; if (module.id !== 'ag-ui-interrupts-python' || module.title !== 'AG-UI Interrupts (Python)') { throw new Error('Unexpected module shape for ' + module.id); }\""
+      }
+    },
+    "serve": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "cockpit/ag-ui/interrupts/python",
+        "command": "uv run uvicorn src.server:app --port 5320"
+      }
+    }
+  },
+  "tags": [
+    "scope:cockpit-e2e",
+    "scope:cockpit-examples",
+    "scope:cockpit-smoke"
+  ]
+}
