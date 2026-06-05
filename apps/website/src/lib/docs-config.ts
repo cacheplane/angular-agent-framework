@@ -276,6 +276,17 @@ export const docsConfig: DocsLibrary[] = [
         color: 'blue',
         pages: [
           { title: 'Introduction', slug: 'introduction', section: 'getting-started' },
+          { title: 'Quick Start', slug: 'quickstart', section: 'getting-started' },
+        ],
+      },
+      {
+        title: 'Guides',
+        id: 'guides',
+        color: 'blue',
+        pages: [
+          { title: 'Message Protocol', slug: 'message-protocol', section: 'guides' },
+          { title: 'Data Model', slug: 'data-model', section: 'guides' },
+          { title: 'Validating & Adapting', slug: 'adapters-and-validation', section: 'guides' },
         ],
       },
       {

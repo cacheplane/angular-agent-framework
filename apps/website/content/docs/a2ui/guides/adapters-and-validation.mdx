@@ -1,0 +1,107 @@
+# Validating and adapting an A2UI stream
+
+Take a streaming agent response, turn it into typed A2UI messages, narrow the dynamic values, and feed a renderer — with the right amount of validation for your trust level.
+
+`@threadplane/a2ui` is the protocol layer beneath any A2UI integration. This guide shows how to consume a stream, guard the values, build test payloads, and back a custom renderer.
+
+## Consume a streaming response
+
+The parser is fed-by-chunk and line-oriented. Hand each chunk of the response to `push`; it returns the `A2uiMessage[]` it could complete from everything buffered so far.
+
+```ts
+import { createA2uiMessageParser } from '@threadplane/a2ui';
+
+const parser = createA2uiMessageParser();
+
+for await (const chunk of streamChunks) {
+  for (const message of parser.push(chunk)) {
+    applyToSurfaceStore(message);
+  }
+}
+```
+
+The posture (straight from `parser.ts`) is conservative fallback:
+
+- Malformed lines are skipped silently — partial JSONL is normal mid-stream.
+- Lines whose object has no known envelope key are ignored.
+- Incomplete JSON buffers until a newline arrives.
+
+That last point in practice:
+
+```ts
+parser.push('{"beginRendering":');                    // -> []  (buffers)
+parser.push('{"surfaceId":"s1","root":"root"}}\n');   // -> 1 message
+```
+
+A line is only attempted once its trailing newline lands, so a split-mid-value chunk never throws.
+
+## Validate and narrow values
+
+When you walk a component's props, you need to tell a literal from a path reference. The package exports four guards:
+
+```ts
+import {
+  isPathRef,
+  isLiteralString,
+  isLiteralNumber,
+  isLiteralBoolean,
+} from '@threadplane/a2ui';
+
+isPathRef({ path: '/x' });               // true
+isLiteralString({ literalString: 'x' }); // true
+```
+
+<Callout type="warning" title="There is no isLiteralArray">
+The package exports `isPathRef`, `isLiteralString`, `isLiteralNumber`, and `isLiteralBoolean` — and no array guard. `resolveDynamic` unwraps `literalArray` internally, but there's no exported predicate for it. If you need to detect a `literalArray` shape yourself, check for the `literalArray` key directly.
+</Callout>
+
+For most rendering you don't branch on guards at all — `resolveDynamic` already handles literals, paths, arrays, and passthrough in one call. Reach for the guards when you need to *narrow a type* or make a decision before resolving.
+
+## Build payloads for tests
+
+The cleanest way to test an adapter is to drive the real parser with assembled lines, then assert the envelope kinds. This mirrors the parser's own multi-message test.
+
+```ts
+import { createA2uiMessageParser } from '@threadplane/a2ui';
+
+const parser = createA2uiMessageParser();
+
+const chunk = [
+  JSON.stringify({ surfaceUpdate: { surfaceId: 's1', components: [] } }),
+  JSON.stringify({ dataModelUpdate: { surfaceId: 's1', contents: [] } }),
+  JSON.stringify({ beginRendering: { surfaceId: 's1', root: 'root' } }),
+].join('\n') + '\n';
+
+const messages = parser.push(chunk);
+
+messages.map(m => Object.keys(m)[0]);
+// ['surfaceUpdate', 'dataModelUpdate', 'beginRendering']
+```
+
+Each `A2uiMessage` is a single-key envelope object, so `Object.keys(m)[0]` is the envelope kind — handy for assertions.
+
+## Build a custom renderer
+
+To render a surface, resolve each component's props against the surface's data model and emit your own UI. The resolver does the literal/path collapsing:
+
+```ts
+import { resolveDynamic } from '@threadplane/a2ui';
+
+function renderText(props: { text: unknown }, model: Record<string, unknown>) {
+  const text = resolveDynamic(props.text, model); // literal or path -> string
+  return makeTextNode(text);
+}
+```
+
+The full mechanics — component resolution, event dispatch, action emission, surface store — are exactly what Threadplane's own Angular renderer, `@threadplane/chat`'s [`<a2ui-surface>`](/docs/chat/getting-started/introduction), already implements. If you're on Angular, use it rather than re-deriving it. A custom renderer makes sense when you're on another platform or have rendering needs the component doesn't cover.
+
+## A tradeoff: the parser swallows parse errors
+
+For me, the parser's silent-skip behavior is the right default — it's what lets a half-streamed line not blow up a live render, and it's why feeding raw agent output Just Works. The cost is honest: the parser is not a validator. It will quietly drop a malformed line and ignore an unknown envelope, so a structurally-wrong payload simply produces fewer messages, not an error you can catch.
+
+So the rule of thumb: if you need strictness, validate the parsed `A2uiMessage[]` *after* `push` returns — assert the envelope kinds and shapes you expect, rather than counting on the parser to reject bad input. The parser optimizes for streaming resilience; strict validation is your boundary's job.
+
+## Next
+
+- [Quick Start](/docs/a2ui/getting-started/quickstart) — the parse / build / resolve loop end to end.
+- [The A2UI message protocol](/docs/a2ui/guides/message-protocol) — surfaces, components, envelopes, and actions.

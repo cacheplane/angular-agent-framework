@@ -1,0 +1,126 @@
+# The A2UI message protocol
+
+A2UI is a declarative, streamed wire format: the agent describes a UI, sends it as newline-delimited JSON, and the client renders it and ships actions back.
+
+This page walks the shapes. Everything here is what `@threadplane/a2ui` types and parses; rendering belongs to `@threadplane/chat`'s [`<a2ui-surface>`](/docs/chat/getting-started/introduction).
+
+## What's a surface?
+
+A surface is one self-contained unit of UI. It owns its own component set and its own data model, and it's addressed by a `surfaceId`.
+
+Every envelope carries that `surfaceId`. A `dataModelUpdate` for `"booking"` only touches the `booking` surface's data; a `surfaceUpdate` for `"booking"` only defines its components. One stream can drive several surfaces in parallel, kept separate by id.
+
+## How are components described?
+
+As an **id-keyed adjacency list**. A `surfaceUpdate` carries a flat `components` array. Each entry has an `id` and a single `component` definition. Parent-child links are by id reference, not by nesting.
+
+```json
+{"surfaceUpdate":{"surfaceId":"booking","components":[{"id":"root","component":{"Column":{"children":{"explicitList":["title","origin","submit"]}}}},{"id":"title","component":{"Text":{"text":"Book a flight","usageHint":"h2"}}}]}}
+```
+
+The `component` value is a **keyed union**: a single-key object where the key names the component type and the value holds its props — `{ "<Name>": { props } }`. `{ "Text": { ... } }` is a Text, `{ "Column": { ... } }` is a Column. There's no separate `type` field; the key *is* the type.
+
+Containers reference their children with `A2uiChildren`, which has two forms:
+
+- `explicitList` — a fixed array of child ids, in order.
+
+  ```json
+  {"children":{"explicitList":["title","origin","submit"]}}
+  ```
+
+- `template` — one component repeated per item in a bound array.
+
+  ```json
+  {"children":{"template":{"componentId":"rowTemplate","dataBinding":"/items"}}}
+  ```
+
+  The container instantiates `componentId` once per element of the array at `dataBinding`. Each instance resolves its dynamic values against that element. The [data model guide](/docs/a2ui/guides/data-model) covers how that per-item resolution works.
+
+## What's a dynamic value?
+
+A prop that's either a literal baked into the message or a reference into the data model.
+
+In v1 the canonical form for a literal is a wrapper object, matched to the prop's type:
+
+- `{ literalString: "..." }`
+- `{ literalNumber: 7 }`
+- `{ literalBoolean: true }`
+- `{ literalArray: ["a", "b"] }`
+
+A reference is `{ path: "/origin" }` — a JSON-Pointer into the surface's data model.
+
+```json
+{"Text":{"text":{"literalString":"Book a flight"}}}
+{"Text":{"text":{"path":"/headline"}}}
+```
+
+A raw string in a value slot (`"text": "Book a flight"`) is tolerated — `resolveDynamic` passes plain values through unchanged — but the wrapper is the canonical shape. Prefer the wrapper when you author messages; rely on passthrough only when consuming.
+
+<Callout type="info">
+There's no `isLiteralArray` guard exported from this package. The resolver unwraps `literalArray` internally, and you get `isLiteralString`, `isLiteralNumber`, `isLiteralBoolean`, and `isPathRef` as exported guards — but not one for arrays. See [Validating and adapting](/docs/a2ui/guides/adapters-and-validation).
+</Callout>
+
+## What are the four envelopes?
+
+The stream is a sequence of single-key envelope objects. The parser recognizes exactly four keys; anything else is ignored.
+
+### `surfaceUpdate`
+
+Defines (or replaces) the components for a surface.
+
+```json
+{"surfaceUpdate":{"surfaceId":"booking","components":[{"id":"submit_label","component":{"Text":{"text":"Search flights"}}},{"id":"submit","component":{"Button":{"child":"submit_label","primary":true,"action":{"name":"bookingSubmit","context":[{"key":"origin","value":{"path":"/origin"}},{"key":"dest","value":{"path":"/dest"}}]}}}}]}}
+```
+
+### `dataModelUpdate`
+
+Sets data for a surface. `contents` is an array of typed entries — each has a `key` and one of `valueString`, `valueNumber`, `valueBoolean`, or `valueMap` (a nested array of entries). An optional top-level `path` scopes where the entries land.
+
+```json
+{"dataModelUpdate":{"surfaceId":"booking","contents":[{"key":"origin","valueString":"LAX"},{"key":"dest","valueString":"JFK"},{"key":"passengers","valueNumber":1}]}}
+```
+
+### `beginRendering`
+
+Names the `root` component id for the surface — the entry point the renderer mounts. It may also carry `styles` (`font`, `primaryColor`).
+
+```json
+{"beginRendering":{"surfaceId":"booking","root":"root"}}
+```
+
+### `deleteSurface`
+
+Tears a surface down by id.
+
+```json
+{"deleteSurface":{"surfaceId":"booking"}}
+```
+
+In the booking stream the order is `dataModelUpdate` -> `surfaceUpdate` -> `beginRendering`: data ready, tree defined, then render.
+
+## How do actions go back?
+
+A user interacts — clicks the Button — and the client sends an `A2uiActionMessage` back to the agent. The version is `v1`.
+
+```json
+{"version":"v1","action":{"name":"bookingSubmit","surfaceId":"booking","sourceComponentId":"submit","timestamp":"2026-06-05T12:34:56.789Z","context":{"origin":{"literalString":"LAX"},"dest":{"literalString":"JFK"}},"label":"Search flights"}}
+```
+
+Two details worth pinning down, because the inbound and outbound shapes differ:
+
+- **Context flips from list to map.** The inbound Button's `action.context` is a *list* of `{ key, value }` entries, where each `value` is still a dynamic value (often a `{ path }`). The outbound message's `action.context` is a *map* keyed by those keys, with each value already a wrapped literal — the path references resolved against the current model and re-wrapped (here `{ path: '/origin' }` became `{ literalString: 'LAX' }`).
+- **`label` is derived.** It comes from the source component's authored text — for a Button-with-Text-child, the child Text's literal string ("Search flights"). It's optional; the transcript renderer uses it to label the user bubble, and backends may ignore it.
+
+The client's current data model is only attached as `metadata.a2uiClientDataModel` when the surface opts in. It's omitted otherwise.
+
+## Relationship to Google's A2UI
+
+Threadplane implements Google's open [A2UI protocol](https://a2ui.org) ([source](https://github.com/google/A2UI)) — the same declarative, catalog-based model: surfaces, a per-surface data model, dynamic values (literals vs paths), and outbound actions.
+
+Threadplane's implementation version is `v1` — the value you'll see in `A2uiActionMessage` and `A2uiClientDataModel`. That's *our* version tag. It does not claim numbering parity with any particular Google release. Treat `v1` as the Threadplane wire contract, and the linked spec as the conceptual reference.
+
+## Next
+
+- [Working with the data model](/docs/a2ui/guides/data-model) — pointers, immutability, and template scopes.
+- [Validating and adapting an A2UI stream](/docs/a2ui/guides/adapters-and-validation) — guards and test payloads.
+- Rendering these surfaces in Angular: [`<a2ui-surface>`](/docs/chat/getting-started/introduction) in `@threadplane/chat`.
