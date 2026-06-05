@@ -187,3 +187,23 @@ test.describe('Production: canonical demo sends runtime telemetry', () => {
     );
   });
 });
+
+test.describe('ag-ui Railway runtime', () => {
+  const RAILWAY_URL = process.env['AG_UI_RAILWAY_URL'] ?? 'https://ag-ui-dev.up.railway.app';
+
+  test('healthcheck /ok responds 200', async ({ request }) => {
+    const res = await request.get(`${RAILWAY_URL}/ok`);
+    expect(res.status()).toBe(200);
+    expect(await res.json()).toMatchObject({ ok: true });
+  });
+
+  test('examples.threadplane.ai/ag-ui/interrupts is reachable', async ({ page }) => {
+    const res = await page.goto(`${EXAMPLES_URL}/ag-ui/interrupts/`);
+    expect(res?.status()).toBeLessThan(400);
+  });
+
+  test('examples.threadplane.ai/ag-ui/streaming is reachable', async ({ page }) => {
+    const res = await page.goto(`${EXAMPLES_URL}/ag-ui/streaming/`);
+    expect(res?.status()).toBeLessThan(400);
+  });
+});
