@@ -3,11 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { tokens } from '@threadplane/design-tokens';
 import { analyticsEvents } from '../../lib/analytics/events';
 import { track } from '../../lib/analytics/client';
-
-// NOTE: SITE_ORIGIN is duplicated from lib/site-metadata rather than imported,
-// because site-metadata transitively pulls in lib/blog (Node `fs`), which a
-// 'use client' component cannot bundle. Keep in sync with site-metadata.ts.
-const SITE_ORIGIN = 'https://threadplane.ai';
+import { SITE_ORIGIN } from '../../lib/site-origin';
 
 const GITHUB_EDIT_BASE =
   'https://github.com/cacheplane/angular-agent-framework/edit/main/apps/website/content/docs';

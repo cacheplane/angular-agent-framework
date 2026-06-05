@@ -50,13 +50,13 @@ function ProductGroup({
         }}>
           {label}
         </span>
-        <span style={{
-          color: 'var(--ds-text-muted)',
-          fontSize: 10,
-          transition: 'transform 0.2s',
-          transform: open ? 'rotate(0)' : 'rotate(-90deg)',
-        }}>
-          ▾
+        <span
+          className={`cockpit-nav-caret${open ? ' cockpit-nav-caret--open' : ''}`}
+          aria-hidden="true"
+        >
+          <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M3.5 2.5 6.5 5 3.5 7.5" />
+          </svg>
         </span>
       </button>
 
@@ -85,18 +85,7 @@ function ProductGroup({
                     });
                   }}
                   aria-current={isActive ? 'page' : undefined}
-                  className={isActive ? 'border-l-2 border-[var(--ds-accent)]' : 'border-l-2 border-transparent'}
-                  style={{
-                    display: 'block',
-                    padding: '5px 16px 5px 14px',
-                    margin: '0 8px',
-                    borderRadius: 6,
-                    fontSize: '0.825rem',
-                    color: isActive ? 'var(--ds-accent)' : 'var(--ds-text-secondary)',
-                    background: isActive ? 'var(--ds-accent-surface)' : 'transparent',
-                    textDecoration: 'none',
-                    transition: 'all 0.15s',
-                  }}
+                  className="cockpit-nav-item"
                 >
                   {stripProductPrefix(entry.title)}
                 </a>
