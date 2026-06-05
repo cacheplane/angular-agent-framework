@@ -47,7 +47,7 @@ describe('buildNavigationTree', () => {
   it('groups manifest entries by product and section', () => {
     const tree = buildNavigationTree(cockpitManifest);
 
-    expect(tree).toHaveLength(4);
+    expect(tree).toHaveLength(5);
     expect(tree[0]).toMatchObject({
       product: 'deep-agents',
     });
@@ -55,9 +55,12 @@ describe('buildNavigationTree', () => {
       product: 'langgraph',
     });
     expect(tree[2]).toMatchObject({
-      product: 'render',
+      product: 'ag-ui',
     });
     expect(tree[3]).toMatchObject({
+      product: 'render',
+    });
+    expect(tree[4]).toMatchObject({
       product: 'chat',
     });
   });
