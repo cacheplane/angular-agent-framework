@@ -1,0 +1,112 @@
+# Working with the data model
+
+A surface's data lives in a plain object, and you read and write it through three pointer helpers plus a resolver. This guide covers all four.
+
+The data model is just a `Record<string, unknown>`. A2UI components reference into it by JSON-Pointer-style path; `@threadplane/a2ui` gives you the helpers to read, write, and resolve against it.
+
+## The pointer helpers
+
+`getByPointer`, `setByPointer`, and `deleteByPointer` all take a model and a pointer string (`/user/name`, `/items/1`).
+
+`getByPointer` walks the path and returns the value, or `undefined` if any segment is missing:
+
+```ts
+import { getByPointer } from '@threadplane/a2ui';
+
+getByPointer({ items: ['a', 'b', 'c'] }, '/items/1'); // "b"
+```
+
+`setByPointer` writes immutably. It returns a clone with the change applied; the original is untouched.
+
+```ts
+import { setByPointer } from '@threadplane/a2ui';
+
+const original = { user: { name: 'Alice', age: 30 } };
+const next = setByPointer(original, '/user/name', 'Bob');
+
+next.user.name;     // "Bob"
+original.user.name; // "Alice" — unchanged
+```
+
+It also creates intermediate objects along the way, so you don't have to pre-build nesting:
+
+```ts
+setByPointer({}, '/a/b/c', 42); // { a: { b: { c: 42 } } }
+```
+
+`deleteByPointer` removes a key, again immutably:
+
+```ts
+import { deleteByPointer } from '@threadplane/a2ui';
+
+deleteByPointer({ a: 1, b: 2 }, '/a'); // { b: 2 }
+```
+
+If the parent of the target doesn't exist, `deleteByPointer` returns the original model unchanged rather than fabricating a path to delete from.
+
+<Callout type="warning" title="No RFC-6901 escaping">
+These helpers use JSON-Pointer-style syntax but do **not** implement RFC 6901's `~0` / `~1` unescaping. A path is split on `/` and the segments are used as literal keys. So keys that themselves contain `/` or `~` aren't addressable — there's no escape sequence to reach them.
+</Callout>
+
+## Resolving dynamic values
+
+`resolveDynamic` collapses a component's prop to a concrete value against the model. The order is fixed:
+
+1. `null` / `undefined` pass through as-is.
+2. Arrays are mapped recursively — each element resolved in turn.
+3. Literal wrappers unwrap first: `literalString`, `literalNumber`, `literalBoolean`, `literalArray`.
+4. A `{ path }` reference reads from the model.
+5. Anything else — a plain string, number, or unrecognized object — passes through unchanged.
+
+```ts
+import { resolveDynamic } from '@threadplane/a2ui';
+
+const model = { name: 'Brian', count: 7, active: true, tags: ['a', 'b'] };
+
+resolveDynamic({ literalString: 'hello' }, model); // "hello"
+resolveDynamic({ path: '/name' }, model);          // "Brian"
+resolveDynamic({ path: '/tags/0' }, model);        // "a"
+resolveDynamic({ path: '/missing' }, model);       // undefined
+```
+
+A missing path resolves to `undefined`, never an error. That keeps a half-streamed surface renderable while data is still arriving.
+
+## Scopes and template children
+
+How do you resolve a relative path, like inside a repeated template row?
+
+`resolveDynamic` takes an optional third argument, an `A2uiScope`:
+
+```ts
+export interface A2uiScope {
+  basePath: string;
+  item: unknown;
+}
+```
+
+Path resolution depends on the leading slash:
+
+- An **absolute** path (`/name`) always resolves from the model root, scope or not.
+- A **relative** path (`name`) resolves against `scope.basePath` when a scope is given.
+
+```ts
+resolveDynamic({ path: 'name' }, model, { basePath: '', item: undefined }); // "Brian"
+```
+
+With `basePath: ''`, the relative path `name` resolves to `/name`. That's the lever the `template` / `dataBinding` pattern pulls. When a container repeats a template over the array at, say, `/items`, it resolves each instance's props with a per-item scope:
+
+```ts
+items.forEach((_, i) => {
+  const scope = { basePath: `/items/${i}`, item: items[i] };
+  // a child prop of { path: 'label' } now resolves to /items/{i}/label
+  resolveDynamic({ path: 'label' }, model, scope);
+});
+```
+
+<Callout type="warning" title="scope.item is informational">
+`A2uiScope` carries an `item` field, but the resolver only reads `basePath` to rewrite relative paths. `item` is typed for callers that want the bound element on hand, yet `resolveDynamic` itself never touches it. Don't expect setting `item` to change resolution.
+</Callout>
+
+## Next
+
+- [Validating and adapting an A2UI stream](/docs/a2ui/guides/adapters-and-validation) — guards, test payloads, and wiring a custom renderer.
