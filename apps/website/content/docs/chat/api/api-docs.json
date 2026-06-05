@@ -6969,25 +6969,6 @@
     "examples": []
   },
   {
-    "name": "provideViews",
-    "kind": "function",
-    "description": "",
-    "signature": "provideViews(registry: ViewRegistry): EnvironmentProviders",
-    "params": [
-      {
-        "name": "registry",
-        "type": "ViewRegistry",
-        "description": "",
-        "optional": false
-      }
-    ],
-    "returns": {
-      "type": "EnvironmentProviders",
-      "description": ""
-    },
-    "examples": []
-  },
-  {
     "name": "renderMarkdown",
     "kind": "function",
     "description": "Renders markdown content to sanitized HTML.\nFalls back to plain text with newline->br conversion if `marked` is not installed.",

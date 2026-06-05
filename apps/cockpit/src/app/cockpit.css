@@ -205,13 +205,16 @@ pre.shiki {
   font-size: 0.75rem;
 }
 
-/* Shared prose layer — docs + api */
+/* Shared prose layer — docs + api + code mode content */
 .cockpit-prose {
   max-width: 42rem;
+  margin-inline: auto;
   font-size: 0.9rem;
   line-height: 1.7;
   color: var(--ds-text-secondary);
 }
+.cockpit-prose--wide { max-width: 48rem; }
+.cockpit-prose--code { max-width: 56rem; }
 .cockpit-prose h1, .cockpit-prose h2, .cockpit-prose h3 {
   font-family: var(--font-garamond), var(--ds-font-serif);
   color: var(--ds-text-primary);
@@ -231,3 +234,41 @@ pre.shiki {
 .cockpit-prose table.params { border-collapse: collapse; margin: 0.5rem 0; }
 .cockpit-prose table.params th { font-family: var(--font-mono), monospace; font-size: 0.6rem; letter-spacing: 0.06em; text-transform: uppercase; padding-bottom: 0.5rem; border-bottom: 1px solid var(--ds-border); }
 .cockpit-prose table.params td { padding: 0.5rem 0.75rem 0.5rem 0; border-bottom: 1px solid var(--ds-border); }
+
+/* Code-mode file tree */
+.cockpit-file-tree { list-style: none; padding: 0; margin: 0; font-size: 12px; line-height: 1.7; }
+.cockpit-file-tree ul { list-style: none; padding: 0; margin: 0; }
+.cockpit-file-tree__file,
+.cockpit-file-tree__folder {
+  display: flex; align-items: center; gap: 0.4rem; flex: 1; min-width: 0;
+  padding: 3px 0.75rem 3px 0.75rem; background: transparent; border: 0; text-align: left; cursor: pointer;
+  color: var(--ds-text-secondary); font-family: var(--font-mono), "JetBrains Mono", monospace; font-size: 12px;
+  border-left: 2px solid transparent; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.cockpit-file-tree__folder { color: var(--ds-text-muted); display: flex; align-items: center; }
+.cockpit-file-tree__caret { font-size: 9px; color: var(--ds-text-muted); width: 0.65rem; flex-shrink: 0; }
+.cockpit-file-tree__label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cockpit-file-tree__chip {
+  font-family: var(--font-mono), monospace; font-size: 9px;
+  padding: 1px 5px; border-radius: 3px; margin-right: 0.5rem; flex-shrink: 0;
+  background: var(--ds-accent-surface); color: var(--ds-accent);
+  opacity: 0.85;
+}
+.cockpit-file-tree__file:hover { color: var(--ds-text-primary); }
+.cockpit-file-tree__file[aria-current="true"] {
+  background: var(--ds-accent-surface);
+  color: var(--ds-text-primary);
+  border-left-color: var(--ds-accent);
+}
+
+/* Tab close (×) on Code-mode tabs */
+.cockpit-tab-trigger { display: inline-flex; align-items: center; gap: 0.4rem; }
+.cockpit-tab-trigger__close {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 0.95rem; height: 0.95rem; border-radius: 0.2rem;
+  color: var(--ds-text-muted); font-size: 0.85rem; line-height: 1;
+  opacity: 0; cursor: pointer;
+}
+.cockpit-tab-trigger:hover .cockpit-tab-trigger__close,
+.cockpit-tab-trigger[data-state="active"] .cockpit-tab-trigger__close { opacity: 1; }
+.cockpit-tab-trigger__close:hover { background: var(--ds-accent-surface); color: var(--ds-text-primary); }

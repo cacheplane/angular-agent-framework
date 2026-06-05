@@ -14,6 +14,8 @@ import type { ComputedFunction, Spec, StateStore } from '@json-render/core';
 
 import { RenderElementComponent } from './render-element.component';
 import { RENDER_CONFIG } from './provide-render';
+import { VIEW_REGISTRY } from './provide-views';
+import { toRenderRegistry } from './views';
 import { RENDER_CONTEXT } from './contexts/render-context';
 import type { RenderContext } from './contexts/render-context';
 import type { AngularRegistry } from './render.types';
@@ -63,6 +65,7 @@ export class RenderSpecComponent implements OnInit {
   readonly events = output<RenderEvent>();
 
   private readonly config = inject(RENDER_CONFIG, { optional: true });
+  private readonly viewRegistry = inject(VIEW_REGISTRY, { optional: true });
   private readonly destroyRef = inject(DestroyRef);
   private readonly lifecycle = inject(RenderLifecycleService, { optional: true });
 
@@ -85,12 +88,13 @@ export class RenderSpecComponent implements OnInit {
     return this.getOrCreateInternalStore();
   });
 
-  /** Resolved registry: input > config. */
+  /** Resolved registry: input > config > VIEW_REGISTRY token > empty fallback. */
   private readonly resolvedRegistry = computed<AngularRegistry>(() => {
     const inputRegistry = this.registry();
     if (inputRegistry) return inputRegistry;
     const configRegistry = this.config?.registry;
     if (configRegistry) return configRegistry;
+    if (this.viewRegistry) return toRenderRegistry(this.viewRegistry);
     // Fallback: empty registry
     return { get: () => undefined, getFallback: () => undefined, names: () => [] };
   });

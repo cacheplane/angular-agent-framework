@@ -28,7 +28,7 @@ export { RenderElementComponent } from './lib/render-element.component';
 export { RenderSpecComponent } from './lib/render-spec.component';
 
 // Views
-export { views, withViews, withoutViews, toRenderRegistry } from './lib/views';
+export { views, withViews, overrideViews, withoutViews, toRenderRegistry } from './lib/views';
 export type { ViewRegistry } from './lib/views';
 export { provideViews, VIEW_REGISTRY } from './lib/provide-views';
 

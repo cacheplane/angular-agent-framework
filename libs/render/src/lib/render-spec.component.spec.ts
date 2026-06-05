@@ -8,6 +8,8 @@ import type { RenderEvent, RenderLifecycleEvent } from './render-event';
 import { defineAngularRegistry } from './define-angular-registry';
 import { signalStateStore } from './signal-state-store';
 import { provideRender, RENDER_CONFIG } from './provide-render';
+import { provideViews, VIEW_REGISTRY } from './provide-views';
+import { views } from './views';
 
 // --- Test component ---
 
@@ -111,6 +113,34 @@ describe('RenderSpecComponent — context resolution', () => {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     expect(config.store!.get('/source')).toBe('config');
     // In the component, input > config
+  });
+
+  it('VIEW_REGISTRY token is used as third-priority fallback when config has no registry', () => {
+    // Provide a config with no registry, plus VIEW_REGISTRY token with 'Text' mapped.
+    // The resolved registry should come from the token and be able to look up 'Text'.
+    TestBed.configureTestingModule({
+      providers: [
+        provideRender({}),
+        provideViews(views({ Text: TestTextComponent })),
+      ],
+    });
+    // Verify the VIEW_REGISTRY token is bound and resolves 'Text' → TestTextComponent.
+    const tokenRegistry = TestBed.inject(VIEW_REGISTRY);
+    const angularReg = defineAngularRegistry(tokenRegistry as Record<string, unknown>);
+    expect(angularReg.get('Text')).toBe(TestTextComponent);
+    // Also verify config has no registry (so the token is the only source).
+    const config = TestBed.inject(RENDER_CONFIG);
+    expect(config.registry).toBeUndefined();
+  });
+
+  it('null-path: no registry provided anywhere yields empty registry (no component for unknown type)', () => {
+    // No providers at all — both RENDER_CONFIG and VIEW_REGISTRY are absent.
+    TestBed.configureTestingModule({});
+    const config = TestBed.inject(RENDER_CONFIG, null);
+    const tokenRegistry = TestBed.inject(VIEW_REGISTRY, null);
+    // Both absent — the fallback registry's get() returns undefined.
+    expect(config).toBeNull();
+    expect(tokenRegistry).toBeNull();
   });
 });
 

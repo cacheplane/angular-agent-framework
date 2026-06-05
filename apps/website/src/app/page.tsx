@@ -50,7 +50,7 @@ export default async function HomePage() {
         ]}
         cta={{ label: 'Read the streaming guide', href: '/docs/langgraph/guides/streaming' }}
         visual={
-          <BrowserFrame url="cockpit.threadplane.ai/langgraph/streaming" elevation="md">
+          <BrowserFrame url="cockpit.threadplane.ai/langgraph/core-capabilities/streaming/overview/python" elevation="md">
             <img
               src="/screenshots/cockpit-docs.webp"
               alt="Cockpit reference app — Angular streaming guide with provideAgent setup"
@@ -82,7 +82,7 @@ export default async function HomePage() {
         cta={{ label: 'See @threadplane/render', href: '/render' }}
         visualLeft
         visual={
-          <BrowserFrame url="cockpit.threadplane.ai/langgraph/api" elevation="md">
+          <BrowserFrame url="cockpit.threadplane.ai" elevation="md">
             <img
               src="/screenshots/cockpit-api.webp"
               alt="Cockpit reference app — API reference rendered as structured cards"
