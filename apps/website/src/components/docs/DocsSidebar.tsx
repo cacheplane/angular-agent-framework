@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { docsConfig, getLibraryConfig, type DocsSection, type LibraryId } from '../../lib/docs-config';
 import { tokens } from '@threadplane/design-tokens';
 import { Pill } from '../ui/Pill';
+import { LibraryMark } from './LibraryMark';
 
 interface Props {
   activeLibrary: LibraryId;
@@ -40,8 +41,11 @@ function LibraryDropdown({ activeLibrary }: { activeLibrary: LibraryId }) {
           fontWeight: 600,
         }}
       >
-        <span style={{ fontFamily: tokens.typography.fontMono, fontSize: '0.8rem' }}>
-          {currentLib?.title ?? activeLibrary}
+        <span style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+          <LibraryMark library={activeLibrary} size={20} />
+          <span style={{ fontFamily: tokens.typography.fontMono, fontSize: '0.8rem' }}>
+            {currentLib?.title ?? activeLibrary}
+          </span>
         </span>
         <span
           style={{
@@ -71,25 +75,30 @@ function LibraryDropdown({ activeLibrary }: { activeLibrary: LibraryId }) {
                 setOpen(false);
                 router.push(`/docs/${lib.id}/getting-started/introduction`);
               }}
-              className="w-full text-left px-3 py-2.5 text-sm flex flex-col"
+              className="w-full text-left px-3 py-2.5 text-sm flex items-start gap-2.5"
               style={{
                 background: lib.id === activeLibrary ? tokens.colors.accentSurface : 'transparent',
                 border: 'none',
                 cursor: 'pointer',
               }}
             >
-              <span
-                style={{
-                  fontFamily: tokens.typography.fontMono,
-                  fontWeight: 600,
-                  color: lib.id === activeLibrary ? tokens.colors.accent : tokens.colors.textPrimary,
-                  fontSize: '0.8rem',
-                }}
-              >
-                {lib.title}
+              <span style={{ marginTop: 1 }}>
+                <LibraryMark library={lib.id} size={20} />
               </span>
-              <span style={{ fontSize: '0.7rem', color: tokens.colors.textMuted, marginTop: 2 }}>
-                {lib.description}
+              <span className="flex flex-col" style={{ minWidth: 0 }}>
+                <span
+                  style={{
+                    fontFamily: tokens.typography.fontMono,
+                    fontWeight: 600,
+                    color: lib.id === activeLibrary ? tokens.colors.accent : tokens.colors.textPrimary,
+                    fontSize: '0.8rem',
+                  }}
+                >
+                  {lib.title}
+                </span>
+                <span style={{ fontSize: '0.7rem', color: tokens.colors.textMuted, marginTop: 2 }}>
+                  {lib.description}
+                </span>
               </span>
             </button>
           ))}
@@ -146,12 +155,10 @@ function SectionGroup({
               <Link
                 key={`${page.section}/${page.slug}`}
                 href={`/docs/${activeLibrary}/${page.section}/${page.slug}`}
+                data-docs-navlink
+                data-active={isActive || undefined}
                 className="px-4 py-1.5 text-sm mx-2 rounded-md transition-all"
-                style={{
-                  color: isActive ? tokens.colors.accent : tokens.colors.textSecondary,
-                  background: isActive ? tokens.colors.accentSurface : 'transparent',
-                  fontSize: '0.825rem',
-                }}
+                style={{ fontSize: '0.825rem' }}
               >
                 {page.title}
               </Link>
@@ -177,6 +184,20 @@ export function DocsSidebar({ activeLibrary, activeSection, activeSlug }: Props)
         top: '5rem',
       }}
     >
+      <style>{`
+        [data-docs-navlink] {
+          color: ${tokens.colors.textSecondary};
+          background: transparent;
+        }
+        [data-docs-navlink][data-active] {
+          color: ${tokens.colors.accent};
+          background: ${tokens.colors.accentSurface};
+        }
+        [data-docs-navlink]:not([data-active]):hover {
+          background: ${tokens.surfaces.surfaceDim};
+          color: ${tokens.colors.textPrimary};
+        }
+      `}</style>
       {/* Search trigger */}
       <div className="px-4 mb-4">
         <button
