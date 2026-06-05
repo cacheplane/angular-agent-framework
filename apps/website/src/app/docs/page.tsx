@@ -285,13 +285,7 @@ const helperLinkStyle = {
   fontWeight: 600,
 } as const;
 
-const accentCardStyle = {
-  height: '100%',
-  background: tokens.colors.accentSurface,
-  border: `1px solid ${tokens.colors.accentBorder}`,
-} as const;
-
-const plainCardStyle = {
+const fillHeightStyle = {
   height: '100%',
 } as const;
 
@@ -352,7 +346,7 @@ export default function DocsLandingPage() {
           <div style={gridStyle}>
             {BACKENDS.map((b) => (
               <Link key={b.href} href={b.href} style={{ textDecoration: 'none' }}>
-                <Card padding="lg" hoverable accent style={accentCardStyle}>
+                <Card padding="lg" hoverable accent style={fillHeightStyle}>
                   <div style={cardHeaderStyle}>
                     <LogoChip src={b.logoSrc} />
                     <div>
@@ -387,7 +381,7 @@ export default function DocsLandingPage() {
           <div style={gridStyle}>
             {GENERATIVE_UI.map((g) => (
               <Link key={g.href} href={g.href} style={{ textDecoration: 'none' }}>
-                <Card padding="lg" hoverable accent style={accentCardStyle}>
+                <Card padding="lg" hoverable accent style={fillHeightStyle}>
                   <div style={cardHeaderStyle}>
                     <LogoChip src={g.logoSrc} />
                     <div>
@@ -416,7 +410,7 @@ export default function DocsLandingPage() {
           <div style={dividerStyle} />
           <StepLabel id="chat-heading" step={3}>Chat UI</StepLabel>
           <Link href="/docs/chat/getting-started/introduction" style={{ textDecoration: 'none' }}>
-            <Card padding="lg" hoverable style={plainCardStyle}>
+            <Card padding="lg" hoverable style={fillHeightStyle}>
               <div style={cardHeaderStyle}>
                 <GlyphChip size={30}><ChatGlyph /></GlyphChip>
                 <div>
@@ -444,7 +438,7 @@ export default function DocsLandingPage() {
               const Glyph = GLYPHS[s.glyph];
               return (
                 <Link key={s.href} href={s.href} style={{ textDecoration: 'none' }}>
-                  <Card padding="lg" hoverable style={plainCardStyle}>
+                  <Card padding="lg" hoverable style={fillHeightStyle}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                       <GlyphChip size={26}><Glyph /></GlyphChip>
                       <div>

@@ -188,21 +188,42 @@ html {
 .docs-prose td { padding: 0.5rem 0.75rem; border-bottom: 1px solid rgba(0, 64, 144, 0.08); color: #555770; }
 .docs-prose td code { font-size: 0.8em; }
 
-/* UI primitive — Card hover.
- * Hoverable cards are virtually always links; pointer is the right default.
+/* UI primitive — Card.
+ * Resting background / border / shadow live here (not inline on the element)
+ * so the :hover rules below can override border-color and box-shadow. Inline
+ * styles beat any stylesheet :hover rule, which previously left the lift
+ * rendering only the transform. See components/ui/Card.tsx. */
+[data-ui="card"] {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow 160ms ease, border-color 160ms ease, transform 160ms ease;
+}
+[data-ui="card"][data-surface="tinted"] {
+  background: var(--color-surface-tinted);
+}
+[data-ui="card"][data-surface="dim"] {
+  background: var(--color-surface-dim);
+}
+/* Accent-filled cards (e.g. docs backend / generative-UI cards). */
+[data-ui="card"][data-accent] {
+  background: var(--color-accent-surface);
+  border-color: var(--color-accent-border);
+}
+
+/* Hoverable cards are virtually always links; pointer is the right default.
  * If a non-link gets `data-hoverable`, override inline. */
 [data-ui="card"][data-hoverable] {
   cursor: pointer;
 }
-/* !important so the hover lift wins over Card's inline border/box-shadow. */
 [data-ui="card"][data-hoverable]:not([data-accent]):hover {
-  box-shadow: var(--shadow-md) !important;
-  border-color: var(--color-border-strong) !important;
+  box-shadow: var(--shadow-md);
+  border-color: var(--color-border-strong);
   transform: translateY(-1px);
 }
 /* Accent cards keep their accent border and gain an accent ring on hover. */
 [data-ui="card"][data-hoverable][data-accent]:hover {
-  box-shadow: 0 0 0 3px var(--color-accent-glow), var(--shadow-md) !important;
+  box-shadow: 0 0 0 3px var(--color-accent-glow), var(--shadow-md);
   transform: translateY(-1px);
 }
 @media (prefers-reduced-motion: reduce) {
