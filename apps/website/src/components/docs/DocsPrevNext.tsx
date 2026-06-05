@@ -55,14 +55,9 @@ export function DocsPrevNext({ library, section, slug }: Props) {
         marginBottom: 16,
       }}
     >
-      <style>{`
-        [data-ui="docs-card"] { transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease; }
-        [data-ui="docs-card"]:hover { border-color: ${tokens.colors.accentBorderHover}; box-shadow: ${tokens.shadows.md}; transform: translateY(-1px); }
-        @media (prefers-reduced-motion: reduce) { [data-ui="docs-card"]:hover { transform: none; } }
-      `}</style>
       {prev ? (
         <Link href={prev.href} style={{ textDecoration: 'none' }}>
-          <Card padding="md" data-ui="docs-card" style={{ height: '100%' }}>
+          <Card padding="md" hoverable style={{ height: '100%' }}>
             <Eyebrow style={{ marginBottom: 8 }}>← Previous</Eyebrow>
             <div
               style={{
@@ -81,7 +76,7 @@ export function DocsPrevNext({ library, section, slug }: Props) {
       )}
       {next ? (
         <Link href={next.href} style={{ textDecoration: 'none' }}>
-          <Card padding="md" data-ui="docs-card" style={{ height: '100%', textAlign: 'right' }}>
+          <Card padding="md" hoverable style={{ height: '100%', textAlign: 'right' }}>
             <Eyebrow style={{ marginBottom: 8 }}>Next →</Eyebrow>
             <div
               style={{
