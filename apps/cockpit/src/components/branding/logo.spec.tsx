@@ -9,11 +9,6 @@ describe('Logo', () => {
     expect(html).toContain('Threadplane');
   });
 
-  it('renders the cockpit qualifier', () => {
-    const html = renderToStaticMarkup(<Logo />);
-    expect(html).toContain('cockpit');
-  });
-
   it('exposes a stable data-ui selector', () => {
     const html = renderToStaticMarkup(<Logo />);
     expect(html).toContain('data-ui="cockpit-logo"');

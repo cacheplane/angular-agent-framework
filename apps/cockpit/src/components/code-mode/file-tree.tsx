@@ -89,7 +89,14 @@ function Node({ node, depth, folderId, activePath, collapsedFolders, onToggleFol
         className="cockpit-file-tree__folder"
         style={{ paddingLeft: `${0.5 + depth * 0.75}rem` }}
       >
-        <span className="cockpit-file-tree__caret" aria-hidden="true">{isCollapsed ? '▸' : '▾'}</span>
+        <span
+          className={`cockpit-file-tree__caret${isCollapsed ? '' : ' cockpit-file-tree__caret--open'}`}
+          aria-hidden="true"
+        >
+          <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M3.5 2.5 6.5 5 3.5 7.5" />
+          </svg>
+        </span>
         <span className="cockpit-file-tree__label">{folder.label}</span>
       </button>
       {!isCollapsed ? (

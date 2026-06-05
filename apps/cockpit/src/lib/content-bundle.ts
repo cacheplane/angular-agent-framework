@@ -101,7 +101,7 @@ async function highlightCode(
   try {
     return await codeToHtml(source, {
       lang: detectLang(filePath),
-      theme: 'tokyo-night',
+      themes: { light: 'github-light', dark: 'tokyo-night' },
     });
   } catch {
     return `<pre><code>${escapeHtml(source)}</code></pre>`;

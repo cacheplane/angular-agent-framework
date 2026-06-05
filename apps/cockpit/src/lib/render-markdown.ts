@@ -112,7 +112,7 @@ async function parseStepContent(
     const codeToHighlight = filename ? cleanedCode : block.code;
     let highlighted: string;
     try {
-      highlighted = await codeToHtml(codeToHighlight, { lang: block.lang, theme: 'tokyo-night' });
+      highlighted = await codeToHtml(codeToHighlight, { lang: block.lang, themes: { light: 'github-light', dark: 'tokyo-night' } });
     } catch {
       const escaped = codeToHighlight.replace(/</g, '&lt;').replace(/>/g, '&gt;');
       highlighted = `<pre><code>${escaped}</code></pre>`;
@@ -169,7 +169,7 @@ export async function renderMarkdown(source: string): Promise<RenderedMarkdown> 
     const codeToHighlight = filename ? cleanedCode : block.code;
     let highlighted: string;
     try {
-      highlighted = await codeToHtml(codeToHighlight, { lang: block.lang, theme: 'tokyo-night' });
+      highlighted = await codeToHtml(codeToHighlight, { lang: block.lang, themes: { light: 'github-light', dark: 'tokyo-night' } });
     } catch {
       const escaped = codeToHighlight.replace(/</g, '&lt;').replace(/>/g, '&gt;');
       highlighted = `<pre><code>${escaped}</code></pre>`;
