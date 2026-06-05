@@ -56,6 +56,18 @@ test.describe('Docs slug page', () => {
     await expect(page.locator('article').first()).toBeVisible();
   });
 
+  test('renders the branded chrome (sidebar mark, page-header eyebrow, prev/next direction)', async ({ page }) => {
+    await page.goto(route);
+    // Sidebar shows the active library's logo mark
+    await expect(page.locator('aside img[src="/logos/langgraph.svg"]').first()).toBeVisible();
+    // Branded page header eyebrow
+    await expect(page.getByText(/LangGraph\s+·\s+Getting Started/i).first()).toBeVisible();
+    // Prev/Next: introduction is the first page, so a "Next →" card is present
+    await expect(page.getByText('Next →').first()).toBeVisible();
+    // Per-page LLM actions trigger
+    await expect(page.locator('main button[aria-label="Page actions"]').first()).toBeVisible();
+  });
+
   test('breadcrumb shows the library + page title', async ({ page }) => {
     await page.goto(route);
     const breadcrumb = page.locator('nav[aria-label="Breadcrumb"]').first();
