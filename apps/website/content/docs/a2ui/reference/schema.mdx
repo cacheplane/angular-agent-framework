@@ -186,13 +186,14 @@ When a rendered surface sends an action back to the agent, the typed outbound sh
 
 ```ts
 interface A2uiActionMessage {
-  version: 'v0.9';
+  version: 'v1';
   action: {
     name: string;
     surfaceId: string;
     sourceComponentId: string;
     timestamp: string;
     context: Record<string, unknown>;
+    label?: string;
   };
   metadata?: {
     a2uiClientDataModel: A2uiClientDataModel;
@@ -200,4 +201,4 @@ interface A2uiActionMessage {
 }
 ```
 
-The outbound action version is currently typed as `v0.9` in source.
+The outbound action version is `v1`. The optional `label` is a human-readable label derived from the source component's text (for example, a Button's child Text), used to describe the action in transcripts; backends may ignore it.
