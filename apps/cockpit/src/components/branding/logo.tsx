@@ -13,9 +13,6 @@ export function Logo({ className, style, ...rest }: HTMLAttributes<HTMLSpanEleme
       <span style={{ fontFamily: 'var(--font-garamond), "EB Garamond", Georgia, serif', fontSize: 16, fontWeight: 600, color: 'var(--ds-text-primary)' }}>
         Threadplane
       </span>
-      <span style={{ fontFamily: 'var(--font-mono), "JetBrains Mono", monospace', fontSize: 12, color: 'var(--ds-text-muted)' }}>
-        cockpit
-      </span>
     </span>
   );
 }

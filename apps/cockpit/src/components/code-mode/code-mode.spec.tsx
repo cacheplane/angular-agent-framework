@@ -2,11 +2,8 @@
 import React from 'react';
 import { act } from 'react';
 import { createRoot } from 'react-dom/client';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 
-vi.mock('../../lib/analytics/client', () => ({ track: vi.fn() }));
-
-import { track } from '../../lib/analytics/client';
 import { CodeMode } from './code-mode';
 
 describe('CodeMode', () => {
@@ -18,7 +15,6 @@ describe('CodeMode', () => {
       root?.unmount();
     });
     container?.remove();
-    vi.clearAllMocks();
   });
 
   it('renders Shiki-highlighted HTML for the active file', () => {
@@ -47,8 +43,9 @@ describe('CodeMode', () => {
     });
 
     expect(container.querySelector('.shiki')).not.toBeNull();
-    const fileLabel = container.querySelector('.doc-codeblock__file');
-    expect(fileLabel?.textContent).toBe('page.tsx');
+    // The filename now lives in the tab strip (no chrome around the code body).
+    const activeTab = container.querySelector('[role="tab"][data-state="active"]');
+    expect((activeTab?.textContent ?? '').replace(/×/g, '').trim()).toBe('page.tsx');
     expect(container.textContent).toContain('export default function Page() {}');
 
     const tabs = Array.from(container.querySelectorAll('[role="tab"]'));
@@ -284,41 +281,4 @@ describe('CodeMode', () => {
     expect(tabs).toEqual(['b.ts']);
   });
 
-  it('fires cockpit:code_copied when the Copy button is clicked', () => {
-    container = document.createElement('div');
-    document.body.appendChild(container);
-    root = createRoot(container);
-
-    Object.assign(navigator, {
-      clipboard: { writeText: vi.fn(() => Promise.resolve()) },
-    });
-
-    act(() => {
-      root!.render(
-        <CodeMode
-          entryTitle="Test"
-          codeAssetPaths={['src/app.tsx']}
-          backendAssetPaths={[]}
-          codeFiles={{ 'src/app.tsx': '<pre class="shiki"><code>const x = 1;</code></pre>' }}
-          promptFiles={{}}
-          capability="streaming"
-        />,
-      );
-    });
-
-    const copyBtn = container.querySelector(
-      'button[aria-label^="Copy"]',
-    ) as HTMLButtonElement | null;
-    expect(copyBtn).not.toBeNull();
-
-    act(() => {
-      copyBtn!.click();
-    });
-
-    expect(track).toHaveBeenCalledWith('cockpit:code_copied', {
-      capability: 'streaming',
-      surface: 'code_mode',
-      file_path: 'src/app.tsx',
-    });
-  });
 });
