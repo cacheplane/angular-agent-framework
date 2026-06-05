@@ -64,6 +64,8 @@ test.describe('Docs slug page', () => {
     await expect(page.getByText(/LangGraph\s+·\s+Getting Started/i).first()).toBeVisible();
     // Prev/Next: introduction is the first page, so a "Next →" card is present
     await expect(page.getByText('Next →').first()).toBeVisible();
+    // Per-page LLM actions trigger
+    await expect(page.locator('main button[aria-label="Page actions"]').first()).toBeVisible();
   });
 
   test('breadcrumb shows the library + page title', async ({ page }) => {
