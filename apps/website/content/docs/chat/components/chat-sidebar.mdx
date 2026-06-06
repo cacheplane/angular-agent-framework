@@ -39,7 +39,7 @@ import { ChatSidebarComponent } from '@threadplane/chat';
 })
 export class AppShellComponent {
   protected readonly chatAgent = agent({
-    assistantId: 'chat_agent',
+    assistantId: 'chat',
     threadId: signal(null),
   });
 }
@@ -110,7 +110,7 @@ In push-content mode, `ChatSidebarComponent` uses `display: flex` on its host. T
 })
 export class AppShellComponent {
   sidebarOpen = signal(false);
-  chatAgent = agent({ assistantId: 'chat_agent', threadId: signal(null) });
+  chatAgent = agent({ assistantId: 'chat', threadId: signal(null) });
 }
 ```
 
