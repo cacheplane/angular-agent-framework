@@ -242,6 +242,20 @@ describe('cockpit e2e wiring', () => {
     expect(errors).toEqual([]);
   });
 
+  it('keeps capability-registry ports aligned with cockpit/ports.mjs', async () => {
+    const mismatches: string[] = [];
+    for (const cap of capabilities) {
+      const ports = portsFor(cap.angularProject) as { angular: number; langgraph: number };
+      if (cap.port !== ports.angular) {
+        mismatches.push(`${cap.id}: registry.port ${cap.port} !== ports.angular ${ports.angular}`);
+      }
+      if (cap.pythonPort !== undefined && cap.pythonPort !== ports.langgraph) {
+        mismatches.push(`${cap.id}: registry.pythonPort ${cap.pythonPort} !== ports.langgraph ${ports.langgraph}`);
+      }
+    }
+    expect(mismatches).toEqual([]);
+  });
+
   it('every cockpit cap project declares the expected scope:* tags', () => {
     // Drift guard for the ci-scope thin-shim migration (PR #503/#507).
     // The shim reads scope:* tags off projects nx considers affected to
