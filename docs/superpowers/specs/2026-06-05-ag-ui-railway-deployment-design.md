@@ -162,36 +162,38 @@ wait "$UVICORN_PID"
 
 The script is idempotent and produces byte-identical output across runs (sorted keys, sorted imports).
 
-### 5. Per-example Vercel rewrite
+### 5. Vercel-side integration via `scripts/assemble-examples.ts`
 
-Each AG-UI example under `apps/website` gets a `vercel.json`:
+`examples.threadplane.ai` is served by a single Vercel project (`threadplane-examples`) populated via Vercel's Build Output API. `scripts/assemble-examples.ts` builds all cockpit examples, stages them under `deploy/examples/<product>/<topic>/`, and generates a unified `.vercel/output/config.json` that routes traffic. There are NO per-example Vercel projects, and per-example `vercel.json` files are not consumed by the production deploy.
 
-```json
-{
-  "rewrites": [
-    {
-      "source": "/agent/:path*",
-      "destination": "https://ag-ui-dev.up.railway.app/agent/interrupts/:path*"
-    }
-  ]
-}
-```
+Changes required:
 
-The cockpit hits `examples.threadplane.ai/ag-ui/interrupts/agent/...`, Vercel rewrites to Railway. Browsers never see the Railway hostname.
+1. **Add the two ag-ui topics to the `capabilities` list** in `assemble-examples.ts` so their Angular builds get staged.
+2. **Add `ag-ui` to the SPA route regex** so `examples.threadplane.ai/ag-ui/<topic>/` returns the static index.html.
+3. **Add a route ABOVE the filesystem handle** that proxies AG-UI runtime traffic:
+   ```json
+   { "src": "^/ag-ui/([^/]+)/agent(/.*)?$", "dest": "/api/ag-ui-proxy/$1$2", "check": true }
+   ```
+4. **Bundle a new serverless function** at `.vercel/output/functions/api/ag-ui-proxy/[[...path]].func` from `scripts/ag-ui-proxy.ts`.
 
-### 5b. Security hardening
+### 5b. ag-ui-proxy.ts — security hardening at the proxy layer
 
-The Railway service has an OpenAI key. Defense-in-depth:
+The proxy runs in Node 20 on Vercel and provides defense-in-depth before any request reaches the OpenAI-backed Railway service:
 
-**Vercel edge middleware** (each AG-UI example):
-- Origin allowlist: `examples.threadplane.ai`, `cockpit.threadplane.ai`, `localhost:4320`.
-- Upstash rate limit: 10 req/min per IP (token bucket via `@upstash/ratelimit`).
-- Injects `X-Internal-Token: $AG_UI_INTERNAL_TOKEN` header on the rewritten request.
+- **Origin allowlist:** `examples.threadplane.ai`, `cockpit.threadplane.ai`, plus `localhost:4320/4321` for dev. Other origins get 403.
+- **Per-IP token-bucket rate limit** via Upstash (`@upstash/ratelimit` + `@upstash/redis`): 10 req/min, prefix `ag-ui-dev:<topic>`. The proxy fails-open if Upstash creds are missing (rather than bricking the runtime) — origin check and token still apply.
+- **`X-Internal-Token` injection:** Reads `AG_UI_INTERNAL_TOKEN` from Vercel env, sets it on every upstream request. The Railway FastAPI middleware verifies and returns 401 on mismatch.
+- **Streaming-aware forwarding:** AG-UI uses SSE; the proxy pipes the upstream body chunk-by-chunk via `response.body.getReader()`.
 
-**Railway FastAPI middleware** (already shown in §2):
-- Rejects any request to `/agent/*` missing the matching `X-Internal-Token`.
+**Railway FastAPI middleware** (in `server.py`, generated):
+- Returns `JSONResponse(status_code=401)` if `X-Internal-Token` is missing/wrong. (We initially tried `raise HTTPException` but that bubbles past FastAPI's handler inside Starlette `BaseHTTPMiddleware` and surfaces as 500 — caught during T11 smoke.)
 
 **OpenAI account hard cap:** $50/mo project-level spending limit, set in OpenAI dashboard.
+
+**Vercel env vars** required on the `threadplane-examples` project:
+- `AG_UI_INTERNAL_TOKEN` (matches Railway)
+- `UPSTASH_REDIS_REST_URL`
+- `UPSTASH_REDIS_REST_TOKEN`
 
 This is materially stronger than the existing langgraph proxy (which has no rate limit, no origin check, no token, and relies on LangSmith billing limits). Backporting to langgraph is tracked in Out of Scope.
 
