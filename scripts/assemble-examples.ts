@@ -95,7 +95,10 @@ for (const cap of capabilities) {
 const outputDir = resolve(deployDir, '.vercel/output');
 const staticDir = resolve(outputDir, 'static');
 const funcDir = resolve(outputDir, 'functions/api/[[...path]].func');
-const agUiFuncDir = resolve(outputDir, 'functions/api/ag-ui-proxy/[[...path]].func');
+// NOTE: deliberately NOT under functions/api/ — that would re-trigger the
+// langgraph proxy rule on the rewrite (check: true causes re-evaluation,
+// and ^/api/(.*) would catch /api/ag-ui-proxy/* and shadow the function).
+const agUiFuncDir = resolve(outputDir, 'functions/ag-ui-proxy/[[...path]].func');
 
 // Copy static files to the output directory
 mkdirSync(staticDir, { recursive: true });
@@ -137,10 +140,15 @@ writeFileSync(resolve(agUiFuncDir, '.vc-config.json'), JSON.stringify({
 writeFileSync(resolve(outputDir, 'config.json'), JSON.stringify({
   version: 3,
   routes: [
-    // ag-ui proxy: /ag-ui/<topic>/agent[/rest] → /api/ag-ui-proxy/<topic>[/rest]
-    // Must precede the filesystem handle so static index.html lookups for
-    // /ag-ui/<topic>/ still resolve while POSTs to /agent are proxied.
-    { src: '^/ag-ui/([^/]+)/agent(/.*)?$', dest: '/api/ag-ui-proxy/$1$2', check: true },
+    // ag-ui proxy: /ag-ui/<topic>/agent[/rest] → ag-ui-proxy function.
+    // Mirrors the langgraph rule exactly: dest names the catch-all function
+    // (`[[...path]]`), which invokes it while PRESERVING the original request
+    // URL in req.url. The function (scripts/ag-ui-proxy.ts) parses the topic
+    // out of `/ag-ui/<topic>/agent`. A function is only reachable when a route
+    // dest names it like this — the filesystem handle does NOT auto-serve
+    // catch-all functions. Must precede the filesystem handle so static
+    // index.html lookups for /ag-ui/<topic>/ still resolve.
+    { src: '^/ag-ui/([^/]+)/agent(/.*)?$', dest: '/ag-ui-proxy/[[...path]]', check: true },
     { src: '^/api/(.*)', dest: '/api/[[...path]]', check: true },
     { handle: 'filesystem' },
     { src: '^/(langgraph|deep-agents|render|chat|ag-ui)/([^/]+)/(.+\\..+)$', dest: '/$1/$2/$3' },
