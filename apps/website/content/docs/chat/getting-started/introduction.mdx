@@ -58,7 +58,7 @@ Your App
 LangGraph Platform
 ```
 
-- **`@threadplane/langgraph`** provides `provideAgent()` and `injectAgent()` returning a `LangGraphAgent`, which satisfies the `Agent` contract consumed by `@threadplane/chat`. It exposes reactive Signals for `messages()`, `isLoading()`, `error()`, `interrupt()`, `toolCalls()`, `history()`, and more.
+- **`@threadplane/langgraph`** provides `provideAgent()` and `injectAgent()` returning a `LangGraphAgent`, which satisfies the `Agent` contract consumed by `@threadplane/chat`. The base `Agent` contract exposes reactive Signals for `messages()`, `status()`, `isLoading()`, `error()`, `toolCalls()`, and `state()`, plus optional `interrupt()` and `subagents()`. Adapters can layer on more: LangGraph implements `AgentWithHistory`, adding `history()` for checkpoint time-travel.
 
 - **`@threadplane/render`** provides `RenderSpecComponent` and view registries for rendering JSON UI specs as Angular components. The `ChatComponent` auto-detects JSON specs in AI messages and renders them through `@threadplane/render` - pass a view registry via the `[views]` input. The same `[views]` input enables A2UI rendering with `a2uiBasicCatalog()`, which currently maps 18 component types.
 

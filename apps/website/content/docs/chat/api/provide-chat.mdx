@@ -132,16 +132,21 @@ All chat components work without `provideChat()`. They use defaults:
 
 ```typescript
 // This works fine without provideChat()
+import { injectAgent, provideAgent } from '@threadplane/langgraph';
+
 @Component({
   imports: [ChatComponent],
+  providers: [
+    provideAgent({
+      apiUrl: 'http://localhost:2024',
+      assistantId: 'chat',
+      threadId: signal(null),
+    }),
+  ],
   template: `<chat [agent]="chatRef" />`,
 })
 export class SimpleChatComponent {
-  chatRef = agent({
-    apiUrl: 'http://localhost:2024',
-    assistantId: 'chat',
-    threadId: signal(null),
-  });
+  chatRef = injectAgent();
 }
 ```
 
