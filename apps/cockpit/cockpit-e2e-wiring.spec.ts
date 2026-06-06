@@ -298,4 +298,16 @@ describe('cockpit e2e wiring', () => {
 
     expect(errors).toEqual([]);
   });
+
+  it('smoke job represents every cockpit product', () => {
+    const ci = readFileSync(join(repoRoot, '.github/workflows/ci.yml'), 'utf8');
+    const smokeLine = ci.split('\n').find((l) => l.includes('-t smoke --projects=')) ?? '';
+    const products = [...new Set(capabilities.map((c) => c.product))];
+    const uncovered = products.filter(
+      (product) => !capabilities.some(
+        (c) => c.product === product && smokeLine.includes(c.angularProject.replace('-angular', '-python')),
+      ),
+    );
+    expect(uncovered).toEqual([]);
+  });
 });
