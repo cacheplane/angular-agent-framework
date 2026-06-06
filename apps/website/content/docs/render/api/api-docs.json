@@ -97,7 +97,7 @@
     "methods": [
       {
         "name": "ngOnInit",
-        "signature": "ngOnInit()",
+        "signature": "ngOnInit(): void",
         "description": "A callback method that is invoked immediately after the\ndefault change detector has checked the directive's\ndata-bound properties for the first time,\nand before any of the view or content children have been checked.\nIt is invoked only once when the directive is instantiated.",
         "params": []
       }
@@ -132,7 +132,7 @@
       },
       {
         "name": "handlers",
-        "type": "InputSignal<Record<string, object> | undefined>",
+        "type": "InputSignal<Record<string, (params: Record<string, unknown>) => unknown> | undefined>",
         "description": "",
         "optional": false
       },
@@ -164,7 +164,7 @@
     "methods": [
       {
         "name": "ngOnInit",
-        "signature": "ngOnInit()",
+        "signature": "ngOnInit(): void",
         "description": "A callback method that is invoked immediately after the\ndefault change detector has checked the directive's\ndata-bound properties for the first time,\nand before any of the view or content children have been checked.\nIt is invoked only once when the directive is instantiated.",
         "params": []
       }
@@ -189,7 +189,7 @@
       },
       {
         "name": "emit",
-        "type": "object",
+        "type": "(event: string) => void",
         "description": "Emit a named event",
         "optional": false
       },
@@ -212,24 +212,39 @@
     "name": "AngularRegistry",
     "kind": "interface",
     "description": "",
-    "properties": [
+    "properties": [],
+    "methods": [
       {
         "name": "get",
-        "type": "unknown",
+        "signature": "get(name: string): AngularComponentRenderer | undefined",
         "description": "",
-        "optional": false
+        "params": [
+          {
+            "name": "name",
+            "type": "string",
+            "description": "",
+            "optional": false
+          }
+        ]
       },
       {
         "name": "getFallback",
-        "type": "unknown",
-        "description": "",
-        "optional": false
+        "signature": "getFallback(name: string): AngularComponentRenderer | undefined",
+        "description": "Returns the configured fallback for a registered name, OR the\nlib's default fallback if the entry omits one, OR undefined if\nthe name is not registered.",
+        "params": [
+          {
+            "name": "name",
+            "type": "string",
+            "description": "",
+            "optional": false
+          }
+        ]
       },
       {
         "name": "names",
-        "type": "unknown",
+        "signature": "names(): string[]",
         "description": "",
-        "optional": false
+        "params": []
       }
     ],
     "examples": []
@@ -247,7 +262,7 @@
       },
       {
         "name": "handlers",
-        "type": "Record<string, object>",
+        "type": "Record<string, (params: Record<string, unknown>) => unknown>",
         "description": "",
         "optional": true
       },
@@ -273,7 +288,7 @@
     "properties": [
       {
         "name": "emitEvent",
-        "type": "object",
+        "type": "(event: RenderEvent) => void",
         "description": "",
         "optional": true
       },
@@ -285,7 +300,7 @@
       },
       {
         "name": "handlers",
-        "type": "Record<string, object>",
+        "type": "Record<string, (params: Record<string, unknown>) => unknown>",
         "description": "",
         "optional": true
       },
@@ -660,7 +675,7 @@
     "name": "withoutViews",
     "kind": "function",
     "description": "Removes views from a registry by name.",
-    "signature": "withoutViews(base: ViewRegistry, names: string[]): ViewRegistry",
+    "signature": "withoutViews(base: ViewRegistry, ...names: string[]): ViewRegistry",
     "params": [
       {
         "name": "base",
@@ -669,7 +684,7 @@
         "optional": false
       },
       {
-        "name": "names",
+        "name": "...names",
         "type": "string[]",
         "description": "",
         "optional": false
