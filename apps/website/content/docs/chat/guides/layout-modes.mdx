@@ -19,7 +19,7 @@ The embedded composition fills its parent container using `height: 100%` and a f
 
 ```typescript
 import { Component, ChangeDetectionStrategy, signal } from '@angular/core';
-import { agent } from '@threadplane/langgraph';
+import { injectAgent, provideAgent } from '@threadplane/langgraph';
 import { ChatComponent } from '@threadplane/chat';
 
 @Component({
@@ -27,6 +27,12 @@ import { ChatComponent } from '@threadplane/chat';
   standalone: true,
   imports: [ChatComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  providers: [
+    provideAgent({
+      assistantId: 'chat',
+      threadId: signal(null),
+    }),
+  ],
   template: `
     <div style="height: 100vh;">
       <chat [agent]="chatAgent" />
@@ -34,10 +40,7 @@ import { ChatComponent } from '@threadplane/chat';
   `,
 })
 export class ChatPageComponent {
-  protected readonly chatAgent = agent({
-    assistantId: 'chat',
-    threadId: signal(null),
-  });
+  protected readonly chatAgent = injectAgent();
 }
 ```
 
@@ -56,7 +59,7 @@ The popup composition renders a circular launcher button fixed to the bottom-rig
 
 ```typescript
 import { Component, ChangeDetectionStrategy, signal } from '@angular/core';
-import { agent } from '@threadplane/langgraph';
+import { injectAgent, provideAgent } from '@threadplane/langgraph';
 import { ChatPopupComponent } from '@threadplane/chat';
 
 @Component({
@@ -64,6 +67,12 @@ import { ChatPopupComponent } from '@threadplane/chat';
   standalone: true,
   imports: [ChatPopupComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  providers: [
+    provideAgent({
+      assistantId: 'support_agent',
+      threadId: signal(null),
+    }),
+  ],
   template: `
     <!-- your existing app content -->
     <router-outlet />
@@ -73,10 +82,7 @@ import { ChatPopupComponent } from '@threadplane/chat';
   `,
 })
 export class AppComponent {
-  protected readonly chatAgent = agent({
-    assistantId: 'support_agent',
-    threadId: signal(null),
-  });
+  protected readonly chatAgent = injectAgent();
 }
 ```
 
@@ -102,7 +108,7 @@ The sidebar composition renders a slide-in panel anchored to the right edge. It 
 
 ```typescript
 import { Component, ChangeDetectionStrategy, signal } from '@angular/core';
-import { agent } from '@threadplane/langgraph';
+import { injectAgent, provideAgent } from '@threadplane/langgraph';
 import { ChatSidebarComponent } from '@threadplane/chat';
 
 @Component({
@@ -110,6 +116,12 @@ import { ChatSidebarComponent } from '@threadplane/chat';
   standalone: true,
   imports: [ChatSidebarComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  providers: [
+    provideAgent({
+      assistantId: 'copilot_agent',
+      threadId: signal(null),
+    }),
+  ],
   template: `
     <chat-sidebar [agent]="chatAgent" [pushContent]="true">
       <!-- app content is projected here and shifts when sidebar opens -->
@@ -120,10 +132,7 @@ import { ChatSidebarComponent } from '@threadplane/chat';
   `,
 })
 export class AppShellComponent {
-  protected readonly chatAgent = agent({
-    assistantId: 'copilot_agent',
-    threadId: signal(null),
-  });
+  protected readonly chatAgent = injectAgent();
 }
 ```
 
