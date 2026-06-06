@@ -35,7 +35,7 @@ import { ChatPopupComponent } from '@threadplane/chat';
 })
 export class AppComponent {
   protected readonly chatAgent = agent({
-    assistantId: 'chat_agent',
+    assistantId: 'chat',
     threadId: signal(null),
   });
 }
@@ -87,7 +87,7 @@ Control the open state from your component:
 })
 export class AppComponent {
   chatOpen = false;
-  chatAgent = agent({ assistantId: 'chat_agent', threadId: signal(null) });
+  chatAgent = agent({ assistantId: 'chat', threadId: signal(null) });
 }
 ```
 

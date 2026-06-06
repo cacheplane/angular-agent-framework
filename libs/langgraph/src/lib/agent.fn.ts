@@ -120,7 +120,7 @@ export function computeMessageCheckpoints(
  * // app.config.ts — configure once
  * providers: [
  *   provideAgent({
- *     assistantId: 'chat_agent',
+ *     assistantId: 'chat',
  *     apiUrl: 'http://localhost:2024',
  *     threadId: signal(savedThreadId),
  *     onThreadId: (id) => localStorage.setItem('threadId', id),

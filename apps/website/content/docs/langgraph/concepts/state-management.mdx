@@ -342,7 +342,7 @@ Thread: "user_123_session"
 // app.config.ts — configure threadId/onThreadId on the provider
 provideAgent({
   apiUrl: '...',
-  assistantId: 'chat_agent',
+  assistantId: 'chat',
 
   // Same threadId = restored conversation history
   threadId: signal(this.route.snapshot.params['threadId']),

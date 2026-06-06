@@ -10,7 +10,7 @@ Your agent code needs a `langgraph.json` manifest at the project root. This file
 {
   "dependencies": ["."],
   "graphs": {
-    "chat_agent": "./agent/graph.py:graph"
+    "chat": "./agent/graph.py:graph"
   },
   "env": ".env"
 }
@@ -164,7 +164,7 @@ In `langgraph.json`, add an `http` section:
 {
   "dependencies": ["."],
   "graphs": {
-    "chat_agent": "./agent/graph.py:graph"
+    "chat": "./agent/graph.py:graph"
   },
   "http": {
     "cors": {
