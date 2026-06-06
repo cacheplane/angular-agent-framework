@@ -57,7 +57,7 @@ classifier.dispose();
 
 | Signal | Type | Description |
 |--------|------|-------------|
-| `type` | `Signal<ContentType>` | `'undetermined'`, `'markdown'`, `'json-render'`, `'a2ui'`, or `'mixed'` |
+| `type` | `Signal<ContentType>` | `'pending'`, `'markdown'`, `'json-render'`, `'a2ui'`, or `'mixed'` |
 | `markdown` | `Signal<string>` | Accumulated markdown prose (empty for pure JSON) |
 | `spec` | `Signal<Spec \| null>` | Materialized JSON-render spec with structural sharing |
 | `elementStates` | `Signal<Map<string, ElementAccumulationState>>` | Per-element tracking of which properties have been received |
@@ -66,7 +66,7 @@ classifier.dispose();
 ### ContentType
 
 ```typescript
-type ContentType = 'undetermined' | 'markdown' | 'json-render' | 'a2ui' | 'mixed';
+type ContentType = 'pending' | 'markdown' | 'json-render' | 'a2ui' | 'mixed';
 ```
 
 ## Using ParseTreeStore Directly
