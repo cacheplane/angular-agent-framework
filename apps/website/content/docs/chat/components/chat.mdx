@@ -82,12 +82,22 @@ export class ChatPageComponent {
 | `handlers` | `Record<string, (params: Record<string, unknown>) => unknown \| Promise<unknown>>` | `{}` | Event handlers for generative UI specs and A2UI `functionCall` actions. Handlers run in Angular injection context — `inject()` is available inside handler functions. |
 | `threads` | `Thread[]` | `[]` | List of threads to display in the sidebar. Each thread must have an `id` property. |
 | `activeThreadId` | `string` | `''` | The ID of the currently active thread, used for highlighting in the sidebar. |
+| `welcomeDisabled` | `boolean` | `false` | When `true`, suppresses the welcome screen shown for an empty conversation. |
+| `modelOptions` | `readonly ChatSelectOption[]` | `[]` | When non-empty, renders a `<chat-select>` model picker inside the input pill, wired to the two-way `selectedModel`. Leave empty to project your own `<chat-select chatInputModelSelect>`. |
+| `showModelPicker` | `boolean` | `true` | When `false`, hides the auto-rendered model picker even when `modelOptions` is non-empty. No effect on a consumer-projected `<chat-select>`. |
+| `selectedModel` | `string` (two-way) | `''` | The selected model `value`, bound to the auto-rendered model picker. Use with `[(selectedModel)]`. |
+| `modelPickerPlaceholder` | `string` | `'Choose a model'` | Placeholder shown in the auto-rendered model picker when no option matches. |
+| `genuiToolNames` | `readonly string[]` | `['generate_a2ui_schema', 'generate_json_render_spec', 'render_spec']` | Tool names whose calls produce a rendered GenUI surface rather than visible text. Used to filter `<chat-tool-calls>` and detect GenUI turns. |
 
 ### Outputs
 
 | Output | Type | Description |
 |--------|------|-------------|
 | `threadSelected` | `string` | Emits when a thread is clicked in the sidebar. Payload is the thread ID. |
+| `renderEvent` | `ChatRenderEvent` | Emits render lifecycle events from generative UI surfaces. |
+| `regenerate` | `void` | Emits when the user clicks the regenerate button on an assistant message. |
+| `rate` | `{ messageIndex: number; rating: 'up' \| 'down' }` | Emits when the user rates an assistant message. |
+| `messageCopy` | `{ messageIndex: number; content: string }` | Emits when the user copies an assistant message. |
 
 ### Thread Type
 
