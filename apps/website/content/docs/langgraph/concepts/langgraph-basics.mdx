@@ -270,7 +270,7 @@ result = graph.invoke(
 // app.config.ts
 provideAgent({
   apiUrl: '...',
-  assistantId: 'chat_agent',
+  assistantId: 'chat',
   threadId: signal(localStorage.getItem('threadId')),
   onThreadId: (id) => localStorage.setItem('threadId', id),
 });

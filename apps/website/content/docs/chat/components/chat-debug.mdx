@@ -38,7 +38,7 @@ export class DebugPageComponent {
 
   protected readonly chat = agent({
     apiUrl: '/api/langgraph',
-    assistantId: 'chat_agent',
+    assistantId: 'chat',
     threadId: signal(localStorage.getItem('threadId')),
     onThreadId: (id) => localStorage.setItem('threadId', id),
   });

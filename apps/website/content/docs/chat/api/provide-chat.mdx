@@ -139,7 +139,7 @@ All chat components work without `provideChat()`. They use defaults:
 export class SimpleChatComponent {
   chatRef = agent({
     apiUrl: 'http://localhost:2024',
-    assistantId: 'chat_agent',
+    assistantId: 'chat',
     threadId: signal(null),
   });
 }
