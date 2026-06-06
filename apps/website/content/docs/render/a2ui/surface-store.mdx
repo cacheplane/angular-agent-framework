@@ -37,12 +37,12 @@ Processes one `A2uiMessage` and updates the internal surfaces signal. All four m
 
 | Message type | Behavior |
 |--------------|----------|
-| `createSurface` | Creates a new `A2uiSurface` entry with an empty component map and data model |
-| `updateComponents` | Merges the provided components into the surface's component map by `id` — existing components are replaced, others are kept |
-| `updateDataModel` | Applies a JSON Pointer patch to the surface's data model (see below) |
+| `surfaceUpdate` | Delivers a surface's components — merges the provided components into the surface's component map by `id` so existing components are replaced and others are kept |
+| `dataModelUpdate` | Applies a JSON Pointer patch to the surface's data model (see below) |
+| `beginRendering` | Marks the surface root and commits the buffered components and data model into a live surface |
 | `deleteSurface` | Removes the surface from the map entirely |
 
-Messages for unknown surface IDs are silently ignored (except `createSurface`, which registers the surface).
+Messages for unknown surface IDs are silently ignored until a `surfaceUpdate` introduces the surface and a `beginRendering` commits it.
 
 ### `surfaces`
 
@@ -50,7 +50,7 @@ A readonly `Signal<Map<string, A2uiSurface>>` containing all active surfaces. Ea
 
 ### `surface(surfaceId)`
 
-Returns a `computed` signal for a single surface. The signal emits `undefined` until a `createSurface` message registers it, and `undefined` again after `deleteSurface` removes it.
+Returns a `computed` signal for a single surface. The signal emits `undefined` until a `beginRendering` message commits it, and `undefined` again after `deleteSurface` removes it.
 
 ```typescript
 const dashboard = store.surface('dashboard');
@@ -61,9 +61,9 @@ const dashboard = store.surface('dashboard');
 
 The surface's `dataModel` is synchronized into the render-lib `StateStore` when `surfaceToSpec()` converts the surface to a spec. The conversion sets `state: surface.dataModel` on the produced `Spec`, which initializes the render-lib's internal `StateStore` with the surface data. When components with `_bindings` update values (e.g., a text field changing), those updates flow through the render-lib `StateStore`, and each mutation emits a `RenderStateChangeEvent` through the render-lib event system. This means consumers observing the `events` output on `A2uiSurfaceComponent` see all data model changes as typed `RenderStateChangeEvent` objects with `path`, `value`, and `snapshot` fields.
 
-## updateDataModel Semantics
+## dataModelUpdate Semantics
 
-The `updateDataModel` message uses JSON Pointer (RFC 6901) paths to address values in the data model.
+The `dataModelUpdate` message uses JSON Pointer (RFC 6901) paths to address values in the data model.
 
 | `path` | `value` | Effect |
 |--------|---------|--------|
@@ -73,13 +73,13 @@ The `updateDataModel` message uses JSON Pointer (RFC 6901) paths to address valu
 
 ```json
 // Replace entire model
-{"updateDataModel": {"surfaceId": "s1", "value": {"name": "Alice", "score": 42}}}
+{"dataModelUpdate": {"surfaceId": "s1", "value": {"name": "Alice", "score": 42}}}
 
 // Set a single field
-{"updateDataModel": {"surfaceId": "s1", "path": "/score", "value": 99}}
+{"dataModelUpdate": {"surfaceId": "s1", "path": "/score", "value": 99}}
 
 // Delete a field
-{"updateDataModel": {"surfaceId": "s1", "path": "/score"}}
+{"dataModelUpdate": {"surfaceId": "s1", "path": "/score"}}
 ```
 
 ## Usage with createA2uiMessageParser
@@ -113,7 +113,7 @@ effect(() => {
 ```
 
 <Callout type="info" title="JSONL envelope format">
-The parser expects each line to be wrapped in an envelope object: `{"createSurface": {...}}`, `{"updateComponents": {...}}`, etc. The envelope key determines the message type; its value is the message payload.
+The parser expects each line to be wrapped in an envelope object: `{"surfaceUpdate": {...}}`, `{"dataModelUpdate": {...}}`, etc. The envelope key determines the message type; its value is the message payload.
 </Callout>
 
 ## A2uiSurface Shape

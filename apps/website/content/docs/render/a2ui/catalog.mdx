@@ -35,7 +35,7 @@ Renders a span of text.
 | `text` | `string` | The text content to display |
 
 ```json
-{"id": "greeting", "component": "Text", "text": "Hello, world!"}
+{"id": "greeting", "component": {"Text": {"text": {"literalString": "Hello, world!"}}}}
 ```
 
 ### Image
@@ -103,7 +103,7 @@ Arranges children vertically with a flex column layout.
 
 ### Card
 
-Renders children inside a rounded bordered card container with an optional title.
+Renders children inside a rounded bordered card container.
 
 | A2UI type | Angular component | Selector |
 |-----------|-------------------|----------|
@@ -111,7 +111,6 @@ Renders children inside a rounded bordered card container with an optional title
 
 | Prop | Type | Description |
 |------|------|-------------|
-| `title` | `string` | Optional card heading |
 | `childKeys` | `string[]` | Ordered list of child component IDs |
 | `spec` | `Spec` | Injected automatically by the render engine |
 
@@ -149,8 +148,8 @@ Renders a button that dispatches an action when clicked.
 
 | Prop | Type | Description |
 |------|------|-------------|
-| `label` | `string` | Button label text |
-| `variant` | `'primary' \| 'borderless'` | Visual style. Defaults to `'primary'` |
+| `childKeys` | `string[]` | Child component IDs whose rendered output is the button's content (e.g., a `Text` label) |
+| `primary` | `boolean` | Renders the primary visual style. Defaults to `true` |
 | `disabled` | `boolean` | Disables the button when `true` |
 | `action` | `A2uiAction` | Action to execute on click (event or function call) |
 | `validationResult` | `A2uiValidationResult` | Pre-computed validation result — button is disabled if `valid` is `false` |
@@ -183,7 +182,7 @@ A single-line text input with optional label and placeholder.
 | Prop | Type | Description |
 |------|------|-------------|
 | `label` | `string` | Input label |
-| `value` | `string` | Current value (resolved from path reference) |
+| `text` | `string` | Current value (resolved from path reference). `value` is a read-only computed alias |
 | `placeholder` | `string` | Placeholder text |
 | `validationResult` | `A2uiValidationResult` | Validation state — shows errors below input when invalid |
 | `_bindings` | `Record<string, string>` | Auto-populated by `surfaceToSpec()` from path references |
@@ -192,9 +191,12 @@ A single-line text input with optional label and placeholder.
 ```json
 {
   "id": "name-field",
-  "component": "TextField",
-  "label": "Your name",
-  "value": {"path": "/name"}
+  "component": {
+    "TextField": {
+      "label": {"literalString": "Your name"},
+      "text": {"path": "/name"}
+    }
+  }
 }
 ```
 
@@ -211,7 +213,8 @@ A labeled checkbox with two-way binding for its checked state.
 | Prop | Type | Description |
 |------|------|-------------|
 | `label` | `string` | Checkbox label |
-| `checked` | `boolean` | Current checked state (resolved from path reference) |
+| `value` | `boolean` | Current checked state (resolved from path reference) |
+| `checked` | `boolean` | Deprecated back-compat alias for `value` |
 | `validationResult` | `A2uiValidationResult` | Validation state — shows errors below checkbox when invalid |
 | `_bindings` | `Record<string, string>` | Auto-populated by `surfaceToSpec()` from path references |
 | `emit` | injected | Event emitter provided by the render engine |
@@ -245,20 +248,27 @@ A date, time, or datetime input with two-way binding.
 |------|------|-------------|
 | `label` | `string` | Input label |
 | `value` | `string` | Current value (resolved from path reference) |
-| `inputType` | `'date' \| 'time' \| 'datetime-local'` | HTML input type. Defaults to `'date'` |
+| `enableDate` | `boolean` | Include the date portion. Defaults to `true` |
+| `enableTime` | `boolean` | Include the time portion. Defaults to `false` |
 | `min` | `string` | Minimum allowed value |
 | `max` | `string` | Maximum allowed value |
 | `validationResult` | `A2uiValidationResult` | Validation state — shows errors below input when invalid |
 | `_bindings` | `Record<string, string>` | Auto-populated by `surfaceToSpec()` from path references |
 | `emit` | injected | Event emitter provided by the render engine |
 
+The HTML input type (`date`, `time`, or `datetime-local`) is derived internally from `enableDate` and `enableTime`.
+
 ```json
 {
   "id": "date-field",
-  "component": "DateTimeInput",
-  "label": "Appointment date",
-  "value": {"path": "/appointmentDate"},
-  "inputType": "date"
+  "component": {
+    "DateTimeInput": {
+      "label": {"literalString": "Appointment date"},
+      "value": {"path": "/appointmentDate"},
+      "enableDate": true,
+      "enableTime": false
+    }
+  }
 }
 ```
 
@@ -274,8 +284,8 @@ A range slider input with two-way binding.
 |------|------|-------------|
 | `label` | `string` | Slider label |
 | `value` | `number` | Current value (bind via `_bindings`) |
-| `min` | `number` | Minimum value |
-| `max` | `number` | Maximum value |
+| `minValue` | `number` | Minimum value |
+| `maxValue` | `number` | Maximum value |
 | `step` | `number` | Step increment |
 | `validationResult` | `A2uiValidationResult` | Validation state — shows errors below slider when invalid |
 | `_bindings` | `Record<string, string>` | Auto-populated by `surfaceToSpec()` from path references |
@@ -284,12 +294,15 @@ A range slider input with two-way binding.
 ```json
 {
   "id": "volume",
-  "component": "Slider",
-  "label": "Volume",
-  "value": {"path": "/volume"},
-  "min": 0,
-  "max": 100,
-  "step": 1
+  "component": {
+    "Slider": {
+      "label": {"literalString": "Volume"},
+      "value": {"path": "/volume"},
+      "minValue": 0,
+      "maxValue": 100,
+      "step": 1
+    }
+  }
 }
 ```
 
