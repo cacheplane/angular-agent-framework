@@ -94,28 +94,94 @@ ${mounts}
 `;
 }
 
+/**
+ * Build a combined requirements.txt by extracting only the DIRECT dependencies
+ * of each example (those whose `# via` comment names the cockpit project itself)
+ * and letting pip resolve transitives at install time.
+ *
+ * We previously took the union with "highest version wins" across both examples'
+ * full uv-exported requirements.txt. That produced internally-inconsistent sets:
+ * one example's resolved transitive could be a higher version than what the
+ * other example's direct dep accepted. Stripping to direct deps avoids that.
+ */
 function buildRequirementsTxt(repoRoot: string, topics: AgUiTopic[]): string {
-  const versions = new Map<string, string>();
+  const directVersions = new Map<string, string>();
   for (const topic of topics) {
     const reqPath = resolve(repoRoot, topic.pythonDir, 'requirements.txt');
     const content = readFileSync(reqPath, 'utf8');
-    for (const rawLine of content.split('\n')) {
-      const line = rawLine.trim();
-      if (!line || line.startsWith('#') || line.startsWith('-e ')) continue;
-      const semi = line.indexOf(';');
-      const beforeMarker = semi >= 0 ? line.slice(0, semi).trim() : line;
-      const match = beforeMarker.match(/^([A-Za-z0-9_.-]+)==([A-Za-z0-9_.+-]+)$/);
-      if (!match) continue;
-      const [, name, version] = match;
-      const existing = versions.get(name);
-      if (!existing || compareVersions(version, existing) > 0) {
-        versions.set(name, version);
+    for (const pkg of parseDirectDeps(content)) {
+      const existing = directVersions.get(pkg.name);
+      if (!existing || compareVersions(pkg.version, existing) > 0) {
+        directVersions.set(pkg.name, pkg.version);
       }
     }
   }
-  const sortedNames = [...versions.keys()].sort();
-  const lines = sortedNames.map((n) => `${n}==${versions.get(n)}`);
+  const sortedNames = [...directVersions.keys()].sort();
+  const lines = sortedNames.map((n) => `${n}==${directVersions.get(n)}`);
   return `${GENERATED_HEADER}\n${lines.join('\n')}\n`;
+}
+
+interface DirectDep {
+  name: string;
+  version: string;
+}
+
+/**
+ * Parse uv-exported requirements.txt and return only entries whose `# via`
+ * block names a cockpit-* project (i.e., the package was directly declared
+ * by the example, not pulled in transitively).
+ *
+ * uv export format:
+ *   <name>==<version> [; <marker>]
+ *       # via <single-via>
+ * or:
+ *   <name>==<version>
+ *       # via
+ *       #   <via-a>
+ *       #   <via-b>
+ */
+function parseDirectDeps(content: string): DirectDep[] {
+  const lines = content.split('\n');
+  const out: DirectDep[] = [];
+  let current: DirectDep | null = null;
+  let viaList: string[] = [];
+
+  const flush = () => {
+    if (current && viaList.some((v) => v.startsWith('cockpit-'))) {
+      out.push(current);
+    }
+    current = null;
+    viaList = [];
+  };
+
+  for (const rawLine of lines) {
+    if (rawLine.startsWith('-e ') || rawLine.startsWith('#')) {
+      flush();
+      continue;
+    }
+    const isIndented = rawLine.startsWith(' ') || rawLine.startsWith('\t');
+    if (!isIndented) {
+      flush();
+      const line = rawLine.trim();
+      if (!line) continue;
+      const semi = line.indexOf(';');
+      const beforeMarker = semi >= 0 ? line.slice(0, semi).trim() : line;
+      const match = beforeMarker.match(/^([A-Za-z0-9_.-]+)==([A-Za-z0-9_.+-]+)$/);
+      if (match) {
+        current = { name: match[1], version: match[2] };
+      }
+      continue;
+    }
+    // Indented line: part of a `# via ...` block for the current package.
+    const trimmed = rawLine.trim();
+    if (trimmed.startsWith('# via ')) {
+      viaList.push(trimmed.slice(6).trim());
+    } else if (trimmed.startsWith('#')) {
+      viaList.push(trimmed.replace(/^#\s*/, '').trim());
+    }
+  }
+  flush();
+  return out;
 }
 
 function compareVersions(a: string, b: string): number {
