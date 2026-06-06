@@ -3,9 +3,18 @@
   "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "cockpit/render/spec-rendering/python/src",
   "projectType": "library",
-  "targets": {},
+  "targets": {
+    "smoke": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "cockpit/render/spec-rendering/python",
+        "command": "npx tsx -e \"import { renderSpecRenderingPythonModule } from './src/index.ts'; const module = renderSpecRenderingPythonModule; if (module.id !== 'render-spec-rendering-python' || module.title !== 'Render Spec Rendering (Python)') { throw new Error('Unexpected module shape for ' + module.id); }\""
+      }
+    }
+  },
   "tags": [
     "scope:cockpit-e2e",
-    "scope:cockpit-examples"
+    "scope:cockpit-examples",
+    "scope:cockpit-smoke"
   ]
 }

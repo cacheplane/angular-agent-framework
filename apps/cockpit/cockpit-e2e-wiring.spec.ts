@@ -299,13 +299,25 @@ describe('cockpit e2e wiring', () => {
     expect(errors).toEqual([]);
   });
 
-  it('smoke job represents every cockpit product', () => {
+  it('smoke job represents every cockpit product with a real smoke target', () => {
     const ci = readFileSync(join(repoRoot, '.github/workflows/ci.yml'), 'utf8');
     const smokeLine = ci.split('\n').find((l) => l.includes('-t smoke --projects=')) ?? '';
+    const listed = (smokeLine.match(/--projects=(\S+)/)?.[1] ?? '').split(',').filter(Boolean);
+
+    // Every listed cockpit python project must actually declare a smoke target.
+    const missingTarget = listed.filter((name) => {
+      const cap = capabilities.find((c) => c.angularProject.replace('-angular', '-python') === name);
+      if (!cap?.pythonDir) return true; // listed a project not backed by a registry cap with python
+      const pj = JSON.parse(readFileSync(join(repoRoot, cap.pythonDir, 'project.json'), 'utf8'));
+      return !pj.targets?.smoke;
+    });
+    expect(missingTarget).toEqual([]);
+
+    // Every product must be represented by a listed project.
     const products = [...new Set(capabilities.map((c) => c.product))];
     const uncovered = products.filter(
       (product) => !capabilities.some(
-        (c) => c.product === product && smokeLine.includes(c.angularProject.replace('-angular', '-python')),
+        (c) => c.product === product && listed.includes(c.angularProject.replace('-angular', '-python')),
       ),
     );
     expect(uncovered).toEqual([]);
