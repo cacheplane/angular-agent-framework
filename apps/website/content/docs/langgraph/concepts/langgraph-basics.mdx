@@ -333,7 +333,9 @@ agent.state()          // Signal<Record<string, unknown>> — runtime-neutral st
 agent.interrupt()      // Signal<AgentInterrupt | undefined> — agent is paused
 agent.subagents()      // Signal<Map<string, Subagent>> — delegated agents
 
-// `injectAgent()` also returns the chat-consumable history signal:
+// ── AgentWithHistory sub-contract (adapters with checkpoint history) ─────────
+// Not on the bare `Agent` — request/response adapters omit it. The type and
+// signal are runtime-neutral; LangGraph implements this sub-contract.
 agent.history()        // Signal<AgentCheckpoint[]> — runtime-neutral timeline
 
 // ── LangGraph-specific signals (`LangGraphAgent`) ───────────────────────────
