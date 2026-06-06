@@ -2,6 +2,8 @@
 
 A complete walkthrough for installing `@threadplane/chat` in an Angular 20+ application, activating a commercial license, and rendering your first chat in under 30 minutes.
 
+This guide goes deeper than the Quick Start: license activation, peer dependencies, and the warnings you'll see in the console.
+
 <Callout type="info" title="Just bought a license?">
 This guide is written for customers who purchased a Developer Seat, Team, or Enterprise plan and received a `THREADPLANE_LICENSE` token by email. If you're evaluating `@threadplane/chat` for noncommercial use, you can skip the license steps — the library runs without a token (with a one-time advisory warning).
 </Callout>
@@ -16,7 +18,7 @@ This guide is written for customers who purchased a Developer Seat, Team, or Ent
 Required for the Angular build toolchain. `node --version` should report `v18` or newer.
 </Step>
 <Step title="A running agent backend (or a mock)">
-You need something for the chat UI to talk to. Two officially supported adapters cover virtually every backend:
+The chat UI needs something to talk to. Two officially supported adapters cover virtually every backend:
 
 - **`@threadplane/langgraph`** — pick this if your backend is LangGraph or LangGraph Platform.
 - **`@threadplane/ag-ui`** — pick this for any AG-UI compatible backend (CrewAI, Mastra, Microsoft Agent Framework, AG2, Pydantic AI, AWS Strands, CopilotKit runtime).
@@ -53,7 +55,7 @@ eyJzdWIiOiJjdXN0QGV4YW1wbGUuY29tIiwidGllciI6ImRldmVsb3Blci1zZWF0IiwiaWF0IjoxNzM�
 
 The token is signed with Ed25519. Verification is **offline** and **advisory** — a missing or expired token logs one `console.warn` line on first boot and the chat keeps working. There is no kill switch, no network call, no telemetry.
 
-That makes how you store the token a matter of secret-management preference rather than runtime correctness. Pick whichever flow fits your team.
+So how you store the token is a matter of secret-management preference, not runtime correctness. Pick whichever flow fits your team.
 
 ### Option A: `.env` file (recommended for local dev)
 
@@ -95,7 +97,7 @@ provideChat({
 });
 ```
 
-This is the lowest-friction path for small teams. Do **not** commit the token to a public repository — anyone with the token can use the seats it grants.
+For me, this is the lowest-friction path for a small team — the tradeoff is that everyone with repo access also gets the token. Do **not** commit it to a public repository — anyone with the token can use the seats it grants.
 
 ## 3. Wire `provideChat()` and `provideAgent()`
 
@@ -132,7 +134,7 @@ provideChat({
 });
 ```
 
-`provideChat()` itself is optional — chat components fall back to sensible defaults — but you'll want it once you start passing a license, an `assistantName`, or other global config.
+`provideChat()` itself is optional — chat components fall back to sensible defaults — but you'll want it once you start passing a license, an `assistantName`, or any other global config.
 
 ## 4. Render your first chat
 
