@@ -1794,7 +1794,7 @@
       {
         "name": "humanContent",
         "signature": "humanContent(message: unknown)",
-        "description": "Renderable content for a human-role message bubble. Most human\nmessages are typed prompts and pass through `messageContent`\nunchanged. A2UI action messages (e.g. form submits, button clicks\non a rendered surface) flow through the same submit channel and\nland in the message stream as a HumanMessage whose content is a\nJSON-serialized `A2uiActionMessage`. Showing the raw JSON as if\nthe user typed it leaks the protocol; per the A2UI v0.9 spec\nthose events resemble tool calls more than user utterances.\n\n`a2uiActionLabel` returns a short human-readable label for\nrecognized action shapes (\"Search flights\", \"Selected flight UA123\",\netc.) — or null for any non-action content, in which case we fall\nback to the original text.",
+        "description": "Renderable content for a human-role message bubble. Most human\nmessages are typed prompts and pass through `messageContent`\nunchanged. A2UI action messages (e.g. form submits, button clicks\non a rendered surface) flow through the same submit channel and\nland in the message stream as a HumanMessage whose content is a\nJSON-serialized `A2uiActionMessage`. Showing the raw JSON as if\nthe user typed it leaks the protocol; per the A2UI spec\nthose events resemble tool calls more than user utterances.\n\n`a2uiActionLabel` returns a short human-readable label for\nrecognized action shapes (\"Search flights\", \"Selected flight UA123\",\netc.) — or null for any non-action content, in which case we fall\nback to the original text.",
         "params": [
           {
             "name": "message",
