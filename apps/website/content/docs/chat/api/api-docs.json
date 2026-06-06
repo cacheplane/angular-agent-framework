@@ -1633,6 +1633,12 @@
         "optional": false
       },
       {
+        "name": "excludedToolNames",
+        "type": "Signal<readonly string[]>",
+        "description": "Union of GenUI dispatcher tool names and registered view tool names.",
+        "optional": false
+      },
+      {
         "name": "genuiToolNames",
         "type": "InputSignal<readonly string[]>",
         "description": "Tool names whose calls produce a rendered GenUI surface rather than\nvisible text. Used to (a) filter <chat-tool-calls> so internal\ndispatchers don't render args JSON as cards, and (b) detect\n\"this is a GenUI turn\" for the building-UI skeleton.\nDefault covers the canonical A2UI + json-render schema tools.",
@@ -1750,6 +1756,12 @@
         "name": "views",
         "type": "InputSignal<Readonly<Record<string, Type<unknown> | RenderViewEntry>> | undefined>",
         "description": "",
+        "optional": false
+      },
+      {
+        "name": "viewToolNames",
+        "type": "Signal<readonly string[]>",
+        "description": "Tool names that have a registered view (keys of the `views` registry).\n These render as inline tool-views and are excluded from the default\n tool-call card so they don't render twice.",
         "optional": false
       },
       {
@@ -4451,6 +4463,58 @@
       {
         "name": "templateRef",
         "type": "TemplateRef<any>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "methods": []
+  },
+  {
+    "name": "ChatToolViewsComponent",
+    "kind": "class",
+    "description": "Renders a frontend component for a tool call by reusing the chat\ncomposition's `views` registry. A tool call whose `name` matches a\nregistry key is bridged into a synthetic one-element render spec\n(`{ root: name, elements: { [name]: { type: name, props } } }`) and\nrendered through the existing render-spec pipeline.\n\nProps merge the live `args` (present while the call streams) with the\n`result` (on completion) and always include `status`, so a view\ncomponent can show its own loading/empty/error states. `RenderElement`\nfilters props down to the component's declared inputs, so extra keys\n(and a `status` a component chooses not to declare) are harmless.",
+    "params": [],
+    "examples": [],
+    "properties": [
+      {
+        "name": "agent",
+        "type": "InputSignal<Agent>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "handlers",
+        "type": "InputSignal<Record<string, (params: Record<string, unknown>) => unknown>>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "message",
+        "type": "InputSignal<Message | undefined>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "registry",
+        "type": "Signal<AngularRegistry | undefined>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "store",
+        "type": "InputSignal<StateStore | undefined>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "toolViews",
+        "type": "Signal<object[]>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "views",
+        "type": "InputSignal<Readonly<Record<string, Type<unknown> | RenderViewEntry>> | undefined>",
         "description": "",
         "optional": false
       }
