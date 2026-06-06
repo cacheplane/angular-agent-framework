@@ -602,7 +602,7 @@ jobs:
           if printf '%s\n' "$changed_files" | grep -E '^cockpit/.*/angular/' >/dev/null; then
             examples_changed=true
           fi
-          if printf '%s\n' "$changed_files" | grep -E '^(vercel\.examples\.json|scripts/assemble-examples\.ts)$' >/dev/null; then
+          if printf '%s\n' "$changed_files" | grep -E '^(vercel\.examples\.json|scripts/(assemble-examples|examples-middleware|langgraph-proxy|upstash-rate-limit)\.ts)$' >/dev/null; then
             examples_changed=true
           fi
           # Any libs/ change retriggers examples deploy. Previous hand-maintained
