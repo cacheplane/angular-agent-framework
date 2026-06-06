@@ -75,6 +75,8 @@ A surface has an id, catalog id, component map, data model, optional theme, opti
 interface A2uiSurface {
   surfaceId: string;
   catalogId: string;
+  theme?: A2uiTheme;
+  sendDataModel?: boolean;
   components: Map<string, A2uiComponent>;
   dataModel: Record<string, unknown>;
   styles?: { font?: string; primaryColor?: string };
@@ -173,6 +175,10 @@ interface A2uiActionMessage {
     sourceComponentId: string;
     timestamp: string;
     context: Record<string, unknown>;
+    label?: string;
+  };
+  metadata?: {
+    a2uiClientDataModel: A2uiClientDataModel;
   };
 }
 ```
