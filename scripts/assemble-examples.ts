@@ -140,12 +140,15 @@ writeFileSync(resolve(agUiFuncDir, '.vc-config.json'), JSON.stringify({
 writeFileSync(resolve(outputDir, 'config.json'), JSON.stringify({
   version: 3,
   routes: [
-    // ag-ui proxy: /ag-ui/<topic>/agent[/rest] → /ag-ui-proxy/<topic>[/rest]
-    // Must precede the filesystem handle so static index.html lookups for
-    // /ag-ui/<topic>/ still resolve while POSTs to /agent are proxied.
-    // Deliberately NOT under /api/ — that would re-match the langgraph
-    // proxy rule below via check: true re-evaluation.
-    { src: '^/ag-ui/([^/]+)/agent(/.*)?$', dest: '/ag-ui-proxy/$1$2', check: true },
+    // ag-ui proxy: /ag-ui/<topic>/agent[/rest] → ag-ui-proxy function.
+    // Mirrors the langgraph rule exactly: dest names the catch-all function
+    // (`[[...path]]`), which invokes it while PRESERVING the original request
+    // URL in req.url. The function (scripts/ag-ui-proxy.ts) parses the topic
+    // out of `/ag-ui/<topic>/agent`. A function is only reachable when a route
+    // dest names it like this — the filesystem handle does NOT auto-serve
+    // catch-all functions. Must precede the filesystem handle so static
+    // index.html lookups for /ag-ui/<topic>/ still resolve.
+    { src: '^/ag-ui/([^/]+)/agent(/.*)?$', dest: '/ag-ui-proxy/[[...path]]', check: true },
     { src: '^/api/(.*)', dest: '/api/[[...path]]', check: true },
     { handle: 'filesystem' },
     { src: '^/(langgraph|deep-agents|render|chat|ag-ui)/([^/]+)/(.+\\..+)$', dest: '/$1/$2/$3' },
