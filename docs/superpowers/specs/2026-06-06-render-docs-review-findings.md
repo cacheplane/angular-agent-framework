@@ -5,6 +5,22 @@
 **Source verified against:** `libs/render/src`, `libs/chat/src/lib/a2ui`, `libs/a2ui/src/lib/types.ts`, generated `api-docs.json`
 **Method:** 5 parallel read-only section auditors + completeness sweep; every finding cites a source line; borderline findings re-verified by the controller.
 
+## Resolution status — ✅ ALL 17 FINDINGS FIXED
+
+Fixed across 5 commits on `claude/render-docs-technical-review`, each gated by a source-cited accuracy review:
+- ✅ **a2ui** (#1-7, #11) — `ebe716c3` — envelope names + catalog props corrected.
+- ✅ **guides** (#8, #9, #16) — `b04aa7d7` — getFallback + fallback behavior + ChatComponent origin.
+- ✅ **api** (#8, #10, #15) — `29592752` — getFallback + emitEvent + signalStateStore signature.
+- ✅ **concepts** (#12, #13) — `bc68c2a3` — A2uiSurface/A2uiActionMessage optional fields.
+- ✅ **getting-started** (#14) — `36d7b290` — example `spec` inputs typed `input.required<Spec>()`.
+- (#17 thin-coverage required no action.)
+
+**Verification:** all 18 render routes return HTTP 200; no a2ui→render mis-attribution; no stale envelope names in the corrected pages (the two remaining mentions are an intentional "do not use" warning and a prose reference to the render compat path); no inbound links to the one renamed anchor.
+
+**Spawned as separate follow-ups (not in this PR):**
+- api-docs.json generator signature drift (`generate-api-docs.ts`).
+- a2ui-page relocation (information-architecture decision).
+
 ## Summary
 
 - **P0: 5** · **P1: 2** · **P2: 6** · **P3: 4**
