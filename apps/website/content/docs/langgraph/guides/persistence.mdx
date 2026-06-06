@@ -291,6 +291,10 @@ export class ThreadListComponent {
 </Tab>
 </Tabs>
 
+<Callout type="info" title="LANGGRAPH_CLIENT">
+`LANGGRAPH_CLIENT` is the DI token that holds the shared LangGraph SDK `Client` used by the threads adapter (`LangGraphThreadsAdapter`). The adapter injects it optionally and, when no client is provided, constructs one via `createLangGraphClient(apiUrl)`. Provide your own client through this token to share a single SDK instance — or to inject an explicit client in tests.
+</Callout>
+
 ## Reactive Thread Switching
 
 When you pass a Signal as `threadId` to `provideAgent({...})`, `injectAgent()` reacts to every change. Set the signal and the conversation switches automatically — no imperative calls needed.

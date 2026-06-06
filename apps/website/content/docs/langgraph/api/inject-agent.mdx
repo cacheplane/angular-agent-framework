@@ -4,7 +4,11 @@
 
 Call it in an Angular injection context, usually as a component field initializer. The returned object exposes Angular Signals for UI state and async methods for user actions.
 
-Configuration is supplied globally via `provideAgent({...})` — `injectAgent()` itself takes no arguments.
+Configuration is supplied globally via `provideAgent({...})` — `injectAgent()` itself takes no arguments. For typed state, supply its generics:
+
+```ts
+injectAgent<T, ResolvedBag>(): LangGraphAgent<T, ResolvedBag>
+```
 
 ```ts
 import { injectAgent } from '@threadplane/langgraph';
