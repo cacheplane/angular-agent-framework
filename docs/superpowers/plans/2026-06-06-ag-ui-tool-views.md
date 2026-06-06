@@ -8,7 +8,7 @@
 
 **Tech Stack:** Angular 20 (standalone, signals, `input()`/`computed()`), `@threadplane/chat`, `@threadplane/render` (`@json-render/core`), `@threadplane/ag-ui` adapter (AG-UI protocol), Python LangGraph + `ag-ui-langgraph` (FastAPI/uvicorn/SSE), Nx, Vitest, Playwright + aimock fixtures.
 
-**Constraint (verbatim from the repo owner):** Make no reference or mention of CopilotKit or Hashbrown in code, docs, comments, or commits. Describe all patterns generically.
+**Constraint (from the repo owner):** Make no reference or mention of the two external projects the owner flagged during brainstorming in code, docs, comments, or commits. Describe all patterns generically.
 
 **Branch:** `claude/ag-ui-tool-based-genui` (already checked out). Spec: `docs/superpowers/specs/2026-06-06-ag-ui-tool-views-design.md`.
 
@@ -1514,7 +1514,7 @@ git commit -m "feat(cockpit): register ag-ui tool-views capability (ports, regis
 Run: `npx nx run-many -t lint -p chat cockpit cockpit-registry cockpit-ag-ui-tool-views-angular cockpit-ag-ui-tool-views-python`
 Expected: PASS.
 
-Run: `git grep -in "copilot\|hashbrown" cockpit/ag-ui/tool-views libs/chat/src/lib/primitives/chat-tool-views docs/superpowers/specs/2026-06-06-ag-ui-tool-views-design.md docs/superpowers/plans/2026-06-06-ag-ui-tool-views.md`
+Run a forbidden-reference scan for the two flagged external project names across all new artifacts (`cockpit/ag-ui/tool-views`, `libs/chat/src/lib/primitives/chat-tool-views`, and the spec/plan docs).
 Expected: NO matches (constraint upheld across all new artifacts).
 
 ---
