@@ -38,7 +38,7 @@ export const appConfig: ApplicationConfig = {
 ```ts
 // chat-page.component.ts
 import { Component, ChangeDetectionStrategy, signal } from '@angular/core';
-import { agent } from '@threadplane/langgraph';
+import { injectAgent, provideAgent } from '@threadplane/langgraph';
 import { ChatComponent } from '@threadplane/chat';
 
 @Component({
@@ -46,13 +46,16 @@ import { ChatComponent } from '@threadplane/chat';
   standalone: true,
   imports: [ChatComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  providers: [
+    provideAgent({
+      assistantId: 'chat',
+      threadId: signal(null),
+    }),
+  ],
   template: `<div style="height: 100vh"><chat [agent]="chatAgent" /></div>`,
 })
 export class ChatPageComponent {
-  protected readonly chatAgent = agent({
-    assistantId: 'chat',
-    threadId: signal(null),
-  });
+  protected readonly chatAgent = injectAgent();
 }
 ```
 

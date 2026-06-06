@@ -87,7 +87,7 @@ export class MyChartComponent {
   readonly childKeys = input<string[]>([]);
   readonly spec = input.required<Spec>();
   readonly emit = input<(event: string) => void>(() => {});
-  readonly loading = input<boolean>(false);
+  readonly loading = input<boolean>();
 }
 ```
 

@@ -24,7 +24,7 @@ Pass a `ViewRegistry` via the `[views]` input on `ChatComponent`:
 
 ```typescript
 import { Component, signal } from '@angular/core';
-import { agent } from '@threadplane/langgraph';
+import { injectAgent, provideAgent } from '@threadplane/langgraph';
 import { ChatComponent, views } from '@threadplane/chat';
 import { WeatherCardComponent } from './weather-card.component';
 import { ChartComponent } from './chart.component';
@@ -38,6 +38,13 @@ const myViews = views({
   selector: 'app-chat',
   standalone: true,
   imports: [ChatComponent],
+  providers: [
+    provideAgent({
+      apiUrl: 'http://localhost:2024',
+      assistantId: 'gen_ui_agent',
+      threadId: signal(null),
+    }),
+  ],
   template: `
     <div style="height: 100vh;">
       <chat [agent]="chatRef" [views]="myViews" />
@@ -45,11 +52,7 @@ const myViews = views({
   `,
 })
 export class ChatPageComponent {
-  chatRef = agent({
-    apiUrl: 'http://localhost:2024',
-    assistantId: 'gen_ui_agent',
-    threadId: signal(null),
-  });
+  chatRef = injectAgent();
 
   myViews = myViews;
 }

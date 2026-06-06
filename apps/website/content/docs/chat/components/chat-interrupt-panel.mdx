@@ -122,7 +122,7 @@ const interrupt = getInterrupt(chatRef); // Interrupt<any> | undefined
 
 ```typescript
 import { Component, signal, ChangeDetectionStrategy } from '@angular/core';
-import { agent } from '@threadplane/langgraph';
+import { injectAgent, provideAgent } from '@threadplane/langgraph';
 import { ChatComponent, ChatInterruptPanelComponent } from '@threadplane/chat';
 import type { InterruptAction } from '@threadplane/chat';
 
@@ -130,6 +130,7 @@ import type { InterruptAction } from '@threadplane/chat';
   selector: 'app-interrupt-demo',
   standalone: true,
   imports: [ChatComponent, ChatInterruptPanelComponent],
+  providers: [provideAgent({ assistantId: 'interrupt_agent', threadId: signal(null) })],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div style="height: 100vh; display: flex; flex-direction: column;">
@@ -145,10 +146,7 @@ import type { InterruptAction } from '@threadplane/chat';
   `,
 })
 export class InterruptDemoComponent {
-  chatRef = agent({
-    assistantId: 'interrupt_agent',
-    threadId: signal(null),
-  });
+  chatRef = injectAgent();
 
   onInterruptAction(action: InterruptAction) {
     if (action === 'accept') {
