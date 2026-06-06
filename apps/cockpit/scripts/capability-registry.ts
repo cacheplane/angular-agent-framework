@@ -52,6 +52,7 @@ export const capabilities: readonly Capability[] = [
   // AG-UI capabilities (uvicorn ag-ui-langgraph backend; not deployed to LangSmith)
   { id: 'ag-ui-interrupts', product: 'ag-ui', topic: 'interrupts', angularProject: 'cockpit-ag-ui-interrupts-angular', port: 4320, pythonPort: 5320, pythonDir: 'cockpit/ag-ui/interrupts/python' },
   { id: 'ag-ui-streaming', product: 'ag-ui', topic: 'streaming', angularProject: 'cockpit-ag-ui-streaming-angular', port: 4321, pythonPort: 5321, pythonDir: 'cockpit/ag-ui/streaming/python' },
+  { id: 'ag-ui-tool-views', product: 'ag-ui', topic: 'tool-views', angularProject: 'cockpit-ag-ui-tool-views-angular', port: 4322, pythonPort: 5322, pythonDir: 'cockpit/ag-ui/tool-views/python' },
 ] as const;
 
 export function findCapability(id: string): Capability | undefined {
