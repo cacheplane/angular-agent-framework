@@ -146,7 +146,7 @@ import { provideAgent } from '@threadplane/langgraph';
 export const appConfig: ApplicationConfig = {
   providers: [
     provideAgent({
-      assistantId: 'chat_agent', // The graph/agent ID exposed by your backend
+      assistantId: 'chat', // The graph/agent ID exposed by your backend
       threadId: signal(null),    // null = new thread on first send
     }),
   ],

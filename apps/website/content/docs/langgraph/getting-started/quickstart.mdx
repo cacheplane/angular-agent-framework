@@ -27,8 +27,8 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideAgent({
       apiUrl: 'http://localhost:2024',
-      // 'chat_agent' maps to the key in your langgraph.json "graphs" config
-      assistantId: 'chat_agent',
+      // 'chat' maps to the key in your langgraph.json "graphs" config
+      assistantId: 'chat',
       threadId: signal(localStorage.getItem('threadId')),
       onThreadId: (id) => localStorage.setItem('threadId', id),
     }),

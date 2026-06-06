@@ -120,7 +120,7 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideAgent({
       apiUrl: 'http://localhost:2024',
-      assistantId: 'chat_agent',
+      assistantId: 'chat',
       // Restore thread from localStorage on app start
       threadId: signal(localStorage.getItem('threadId')),
       // Persist thread ID whenever a new thread is created
@@ -195,7 +195,7 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideAgent({
       apiUrl: 'http://localhost:2024',
-      assistantId: 'chat_agent',
+      assistantId: 'chat',
       threadId: activeThreadId,
       onThreadId: (id) => activeThreadId.set(id),
     }),
@@ -299,7 +299,7 @@ When you pass a Signal as `threadId` to `provideAgent({...})`, `injectAgent()` r
 // In app.config.ts:
 provideAgent({
   apiUrl: '...',
-  assistantId: 'chat_agent',
+  assistantId: 'chat',
   threadId: activeThreadId,           // Signal — switches reactively
   onThreadId: (id) => activeThreadId.set(id),
 });
