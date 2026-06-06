@@ -87,7 +87,7 @@ export const appConfig: ApplicationConfig = {
 };
 ```
 
-`FakeAgent` extends `AbstractAgent` and emits a canned `RUN_STARTED -> TEXT_MESSAGE_START -> TEXT_MESSAGE_CONTENT x N -> TEXT_MESSAGE_END -> RUN_FINISHED` sequence. Drop-in replacement for `provideAgent({ url })` while you're prototyping.
+`FakeAgent` extends `AbstractAgent` and emits a canned `RUN_STARTED -> TEXT_MESSAGE_START -> TEXT_MESSAGE_CONTENT x N -> TEXT_MESSAGE_END -> RUN_FINISHED` sequence. It's a drop-in replacement for `provideAgent({ url })` while you're prototyping.
 
 ## Custom transport
 

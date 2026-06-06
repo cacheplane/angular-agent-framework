@@ -4,9 +4,9 @@
 
 ## Why @threadplane/render?
 
-Building dynamic UIs from server-driven specifications is a common pattern in AI applications, form builders, and CMS-powered frontends. `@threadplane/render` bridges the gap between `@json-render/core` (a framework-agnostic spec evaluation engine) and Angular's component model.
+Building dynamic UIs from server-driven specs shows up everywhere -- AI apps, form builders, CMS-powered frontends. `@threadplane/render` bridges `@json-render/core` (a framework-agnostic spec evaluation engine) and Angular's component model.
 
-Instead of writing imperative rendering logic, you describe your UI as a JSON spec and let the library handle the rest:
+You don't write imperative rendering logic. You describe your UI as a JSON spec and let the library handle the rest:
 
 ```typescript
 const spec: Spec = {
@@ -25,7 +25,7 @@ const spec: Spec = {
 <render-spec [spec]="spec" [registry]="registry" />
 ```
 
-The library resolves `Text` from your component registry, evaluates the `$state` expression against the state store, and renders your `TextComponent` with `label` set to `"Hello, world!"`. When the state changes, the component updates automatically via Angular Signals.
+The library resolves `Text` from your component registry, evaluates the `$state` expression against the state store, and renders your `TextComponent` with `label` set to `"Hello, world!"`. When the state changes, the component updates on its own via Angular Signals.
 
 ## How It Relates to @json-render/core
 
