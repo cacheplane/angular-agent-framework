@@ -77,7 +77,7 @@ The `ChatSubagentsComponent` primitive iterates over active subagent streams fro
 
 ```typescript
 import { Component, signal, ChangeDetectionStrategy } from '@angular/core';
-import { agent } from '@threadplane/langgraph';
+import { injectAgent, provideAgent } from '@threadplane/langgraph';
 import {
   ChatComponent,
   ChatSubagentsComponent,
@@ -88,6 +88,7 @@ import {
   selector: 'app-subagent-demo',
   standalone: true,
   imports: [ChatComponent, ChatSubagentsComponent, ChatSubagentCardComponent],
+  providers: [provideAgent({ assistantId: 'multi_agent', threadId: signal(null) })],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div style="height: 100vh; display: flex; flex-direction: column;">
@@ -109,10 +110,7 @@ import {
   `,
 })
 export class SubagentDemoComponent {
-  chatRef = agent({
-    assistantId: 'multi_agent',
-    threadId: signal(null),
-  });
+  chatRef = injectAgent();
 }
 ```
 
