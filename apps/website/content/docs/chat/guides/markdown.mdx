@@ -115,7 +115,7 @@ import {
 export class ChatViewComponent {
   private sanitizer = inject(DomSanitizer);
 
-  // chatRef = agent(...)
+  // chatRef = injectAgent(); // with provideAgent({...}) in the component's providers
 
   renderMd(content: string | unknown) {
     if (typeof content !== 'string') return '';

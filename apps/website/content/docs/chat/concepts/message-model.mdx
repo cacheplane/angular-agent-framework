@@ -17,6 +17,9 @@ interface Message {
   reasoningDurationMs?: number;
   extra?: Record<string, unknown>;
   citations?: Citation[];
+  // IDs of tool calls emitted BY this assistant message (distinct from the
+  // singular `toolCallId` above, which is the call a `tool` message answers).
+  toolCallIds?: string[];
 }
 ```
 
@@ -124,6 +127,19 @@ Messages can carry provider-agnostic citations:
 
 ```ts
 message.citations;
+```
+
+Each entry has the following shape:
+
+```ts
+interface Citation {
+  id: string;       // stable id matched against [^id] markers in content
+  index: number;    // 1-based display order, stable per-message
+  title?: string;
+  url?: string;
+  snippet?: string;
+  extra?: Record<string, unknown>; // provider-specific extras
+}
 ```
 
 `@threadplane/langgraph` exports `extractCitations()` for advanced adapters that need to normalize nonstandard citation payloads. Chat markdown views can render citation markers against the message citation list.

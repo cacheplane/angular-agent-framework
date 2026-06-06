@@ -34,6 +34,7 @@ An `Agent` is a set of Angular **signals** (reactive state) plus an RxJS **obser
 | `events$` | `Observable<AgentEvent>` | Discriminated `state_update` / `custom` events |
 | `submit` | `(input, opts?) => Promise<void>` | Send a message or resume |
 | `stop` | `() => Promise<void>` | Abort the in-flight run |
+| `regenerate` | `(assistantMessageIndex: number) => Promise<void>` | Discard the assistant message at the index and everything after it, then re-run against the trimmed tail |
 | `interrupt?` | `Signal<AgentInterrupt \| undefined>` | (optional) Current pause-for-input |
 | `subagents?` | `Signal<Map<string, Subagent>>` | (optional) Spawned subagents |
 
@@ -108,6 +109,16 @@ export function createEchoAgent(opts: EchoAgentOptions = {}): Agent {
     isLoading.set(false);
   };
 
+  const regenerate = async (assistantMessageIndex: number) => {
+    // Discard the assistant message at the index AND everything after it,
+    // keeping the preceding user message, then re-run against the trimmed tail.
+    const prior = messages()[assistantMessageIndex - 1];
+    messages.update((prev) => prev.slice(0, assistantMessageIndex - 1));
+    if (prior?.role === 'user') {
+      await submit({ message: prior.content });
+    }
+  };
+
   return {
     messages,
     status,
@@ -118,6 +129,7 @@ export function createEchoAgent(opts: EchoAgentOptions = {}): Agent {
     events$: EMPTY satisfies Observable<AgentEvent>,
     submit,
     stop,
+    regenerate,
   };
 }
 
