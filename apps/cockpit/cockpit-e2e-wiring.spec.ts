@@ -64,11 +64,6 @@ function parseStringProperty(source: string, key: string): string | undefined {
   return match?.[1];
 }
 
-function parseNumberProperty(source: string, key: string): number | undefined {
-  const match = source.match(new RegExp(`${key}:\\s*(\\d+)`));
-  return match ? Number(match[1]) : undefined;
-}
-
 function activeCockpitE2eWiring(): E2eWiring[] {
   return listProjectJsonFiles(join(repoRoot, 'cockpit'))
     .map((projectJsonPath) => {
@@ -97,18 +92,9 @@ function activeCockpitE2eWiring(): E2eWiring[] {
       // Post-port-registry migration: ports are imported from
       // cockpit/ports.mjs rather than living as literals in
       // global-setup-impl.ts. Look them up by project name.
-      let langgraphPort: number | undefined;
-      let angularPort: number | undefined;
-      try {
-        const ports = portsFor(project.name) as { angular: number; langgraph: number };
-        langgraphPort = ports.langgraph;
-        angularPort = ports.angular;
-      } catch {
-        // Cap not in registry (e.g. cockpit-ag-ui-streaming-angular).
-        // Fall back to parsing literals if global-setup still has them.
-        langgraphPort = parseNumberProperty(globalSetup, 'langgraphPort');
-        angularPort = parseNumberProperty(globalSetup, 'angularPort');
-      }
+      const ports = portsFor(project.name) as { angular: number; langgraph: number };
+      const langgraphPort = ports.langgraph;
+      const angularPort = ports.angular;
 
       if (!project.name || !langgraphCwd || !langgraphPort || !angularPort) {
         throw new Error(`Unable to parse e2e wiring for ${relative(repoRoot, projectJsonPath)}`);
