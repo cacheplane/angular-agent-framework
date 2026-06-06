@@ -5,6 +5,17 @@
 **Source verified against:** `libs/chat` (+ cross-refs `libs/render`, `libs/langgraph`, `libs/a2ui`), generated `api-docs.json`
 **Method:** 6 parallel read-only auditors + completeness sweep; controller re-verified every high-impact finding against source (dropped 1 auditor false alarm).
 
+## Resolution status — ✅ ALL FINDINGS FIXED (3 PRs merged)
+
+Cutoff: P0+P1+P2 + cheap P3. Each fix re-verified against its cited source by an independent reviewer (all PASS, no over-reach).
+- ✅ **PR #594 — components:** systemic `agent()`→`injectAgent()`/`provideAgent()` across the component pages + folded-in `chat/a2ui/overview.mdx`; chat.mdx inputs/outputs; chat-input slots/inputs/outputs; chat-tool-calls, chat-select, chat-trace, popup/sidebar two-way, message-list reword.
+- ✅ **PR #595 — guides + concepts:** `agent()` migration (generative-ui, layout-modes ×3, markdown comment); streaming `'undetermined'`→`'pending'`; writing-an-adapter `regenerate`; custom-catalogs `loading` optional; message-model `toolCallIds` + `Citation` shape.
+- ✅ **PR #596 — api + getting-started:** `agent()` migration (quickstart, provide-chat); introduction base-Agent `history()` correction; content-classifier `'undetermined'`→`'pending'` + `a2uiSurfaceStates`; mock-agent `opts` + `events$`. (#4 parse-tree-store param and #22 provideChat return type were verified already-correct — no change.)
+
+**Verification:** no `agent()` factory or `'undetermined'` remains in chat docs; all edited routes returned HTTP 200.
+
+**Spawned as a separate follow-up (not in these PRs):** the `api-docs.json` default-valued-param `optional` flag (generator nuance — `mockAgent(opts = {})` marked `optional: false`).
+
 ## Summary
 
 - **P0: 4 (one systemic, ~13 files)** · **P1: 7** · **P2: 8** · **P3: 3**
