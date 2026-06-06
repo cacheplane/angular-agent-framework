@@ -21,6 +21,7 @@ import { ChatTypingIndicatorComponent } from '../../primitives/chat-typing-indic
 import { ChatErrorComponent } from '../../primitives/chat-error/chat-error.component';
 import { ChatThreadListComponent, type Thread } from '../../primitives/chat-thread-list/chat-thread-list.component';
 import { ChatGenerativeUiComponent } from '../../primitives/chat-generative-ui/chat-generative-ui.component';
+import { ChatToolViewsComponent } from '../../primitives/chat-tool-views/chat-tool-views.component';
 import { ChatStreamingMdComponent } from '../../streaming/streaming-markdown.component';
 import { ChatToolCallsComponent } from '../../primitives/chat-tool-calls/chat-tool-calls.component';
 import { ChatSubagentsComponent } from '../../primitives/chat-subagents/chat-subagents.component';
@@ -87,7 +88,7 @@ export function isPinned(
     ChatWindowComponent, ChatMessageListComponent, MessageTemplateDirective, ChatMessageComponent,
     ChatInputComponent, ChatTypingIndicatorComponent, ChatErrorComponent,
     ChatThreadListComponent, ChatGenerativeUiComponent,
-    ChatStreamingMdComponent, ChatToolCallsComponent, ChatSubagentsComponent, A2uiSurfaceComponent,
+    ChatStreamingMdComponent, ChatToolCallsComponent, ChatToolViewsComponent, ChatSubagentsComponent, A2uiSurfaceComponent,
     ChatMessageActionsComponent, ChatWelcomeComponent, ChatSelectComponent, ChatReasoningComponent,
     ChatScrollBubbleComponent,
   ],
@@ -202,11 +203,18 @@ export function isPinned(
                       [durationMs]="message.reasoningDurationMs"
                     />
                   }
-                  <chat-tool-calls [agent]="agent()" [message]="message" [excludeToolNames]="genuiToolNames()">
+                  <chat-tool-calls [agent]="agent()" [message]="message" [excludeToolNames]="excludedToolNames()">
                     <ng-container ngProjectAs="[chatToolCallTemplate]">
                       <ng-content select="[chatToolCallTemplate]" />
                     </ng-container>
                   </chat-tool-calls>
+                  <chat-tool-views
+                    [agent]="agent()"
+                    [message]="message"
+                    [views]="views()"
+                    [store]="resolvedStore()"
+                    [handlers]="handlers()"
+                  />
                   <chat-subagents [agent]="agent()" />
                   @if (classified.markdown(); as md) {
                     <chat-streaming-md [content]="md" [streaming]="agent().isLoading() && i === agent().messages().length - 1" />
@@ -358,6 +366,17 @@ export class ChatComponent {
     const v = this.views();
     return v ? toRenderRegistry(v) : undefined;
   });
+
+  /** Tool names that have a registered view (keys of the `views` registry).
+   *  These render as inline tool-views and are excluded from the default
+   *  tool-call card so they don't render twice. */
+  readonly viewToolNames = computed<readonly string[]>(() => Object.keys(this.views() ?? {}));
+
+  /** Union of GenUI dispatcher tool names and registered view tool names. */
+  readonly excludedToolNames = computed<readonly string[]>(() => [
+    ...this.genuiToolNames(),
+    ...this.viewToolNames(),
+  ]);
 
   readonly messageContent = messageContent;
 

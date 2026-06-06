@@ -13,6 +13,7 @@ import { langgraphTimeTravelPythonModule } from '../../../../cockpit/langgraph/t
 import { langgraphDeploymentRuntimePythonModule } from '../../../../cockpit/langgraph/deployment-runtime/python/src/index';
 import { agUiInterruptsPythonModule } from '../../../../cockpit/ag-ui/interrupts/python/src/index';
 import { agUiStreamingPythonModule } from '../../../../cockpit/ag-ui/streaming/python/src/index';
+import { agUiToolViewsPythonModule } from '../../../../cockpit/ag-ui/tool-views/python/src/index';
 import { deepAgentsMemoryPythonModule } from '../../../../cockpit/deep-agents/memory/python/src/index';
 import { deepAgentsPlanningPythonModule } from '../../../../cockpit/deep-agents/planning/python/src/index';
 import { deepAgentsFilesystemPythonModule } from '../../../../cockpit/deep-agents/filesystem/python/src/index';
@@ -85,6 +86,7 @@ const capabilityModules = [
   langgraphDeploymentRuntimePythonModule,
   agUiInterruptsPythonModule,
   agUiStreamingPythonModule,
+  agUiToolViewsPythonModule,
   deepAgentsMemoryPythonModule,
   deepAgentsPlanningPythonModule,
   deepAgentsFilesystemPythonModule,

@@ -1,0 +1,6 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "npx nx build cockpit-ag-ui-tool-views-angular",
+  "outputDirectory": "dist/cockpit/ag-ui/tool-views/angular/browser",
+  "framework": null
+}
