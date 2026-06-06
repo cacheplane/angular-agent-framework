@@ -1,6 +1,6 @@
 # Quick Start
 
-Bind `<chat>` from `@threadplane/chat` to an AG-UI backend in 5 minutes.
+Let's bind `<chat>` from `@threadplane/chat` to an AG-UI backend in 5 minutes.
 
 <Callout type="info" title="Prerequisites">
 Angular 20+ project with Node.js 22+. If you need setup help, see the [Installation](/docs/ag-ui/getting-started/installation) guide.
@@ -30,7 +30,7 @@ export const appConfig: ApplicationConfig = {
 };
 ```
 
-For offline development without a backend, swap to `provideFakeAgent({})` - it serves canned streaming responses for UI work.
+No backend yet? Swap to `provideFakeAgent({})` - it serves canned streaming responses so you can build UI offline.
 
 </Step>
 <Step title="Use in a component">
@@ -67,7 +67,9 @@ That's it. The `<chat>` composition handles streaming messages, tool calls, erro
 
 ## Switching backends without changing UI
 
-The point of the runtime-neutral `Agent` contract is that swapping backends is a one-line change in `app.config.ts`. The component code stays the same:
+For me, the runtime-neutral `Agent` contract is the whole payoff: your component never learns which protocol it's talking to. The cost is a thin translation layer per adapter, but you pay it once and your UI code stops caring.
+
+So swapping backends is a one-line change in `app.config.ts`, and the component code stays the same:
 
 ```diff
 - providers: [provideAgent({ apiUrl: '...' })],   // LangGraph
