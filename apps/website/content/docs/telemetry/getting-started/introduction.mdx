@@ -8,7 +8,7 @@ The important boundary is simple:
 - Node telemetry is opt-out and used by package lifecycle or server adapter code;
 - shared utilities expose event and environment helpers.
 
-Do not treat the browser and Node entry points as interchangeable. They have different runtime assumptions and different privacy defaults.
+Don't treat the browser and Node entry points as interchangeable. They have different runtime assumptions and different privacy defaults.
 
 ## Entry points
 
@@ -35,7 +35,7 @@ When enabled, delivery is chosen in this order:
 2. `endpoint`;
 3. `posthogKey`.
 
-`sink` and `endpoint` are the preferred app-owned paths. `posthogKey` and `posthogHost` still exist for older integrations and are marked deprecated in source comments.
+For me, `sink` and `endpoint` are the paths to reach for. They keep delivery app-owned, so you decide where events go. `posthogKey` and `posthogHost` still exist for older integrations, but they're marked deprecated in source comments, so don't build anything new on them.
 
 ## Node posture
 
