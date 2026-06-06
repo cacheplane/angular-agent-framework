@@ -120,17 +120,6 @@ export const docsConfig: DocsLibrary[] = [
         ],
       },
       {
-        title: 'A2UI',
-        id: 'a2ui',
-        color: 'red',
-        pages: [
-          { title: 'Overview', slug: 'overview', section: 'a2ui' },
-          { title: 'A2uiSurfaceComponent', slug: 'surface-component', section: 'a2ui' },
-          { title: 'createA2uiSurfaceStore()', slug: 'surface-store', section: 'a2ui' },
-          { title: 'Component Catalog', slug: 'catalog', section: 'a2ui' },
-        ],
-      },
-      {
         title: 'API Reference',
         id: 'api',
         color: 'blue',
@@ -204,6 +193,17 @@ export const docsConfig: DocsLibrary[] = [
           { title: 'ChatSubagentCard', slug: 'chat-subagent-card', section: 'components' },
           { title: 'ChatDebug', slug: 'chat-debug', section: 'components' },
           { title: 'ChatSelect', slug: 'chat-select', section: 'components' },
+        ],
+      },
+      {
+        title: 'A2UI',
+        id: 'a2ui',
+        color: 'red',
+        pages: [
+          { title: 'Overview', slug: 'overview', section: 'a2ui' },
+          { title: 'A2uiSurfaceComponent', slug: 'surface-component', section: 'a2ui' },
+          { title: 'createA2uiSurfaceStore()', slug: 'surface-store', section: 'a2ui' },
+          { title: 'Component Catalog', slug: 'catalog', section: 'a2ui' },
         ],
       },
       {
