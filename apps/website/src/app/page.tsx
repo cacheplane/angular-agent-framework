@@ -70,7 +70,7 @@ export default async function HomePage() {
         body="Server-emitted JSON specs become Angular components you already own. Vercel json-render and Google A2UI both supported, with per-component fallback and a readiness gate."
         bullets={[
           'Per-component fallback API + readiness gate',
-          'A2UI v0.9-compatible protocol + Vercel json-render adapter',
+          'A2UI v1 + Vercel json-render adapter',
           'Renders into your existing component library',
           'Server-side schema, client-side trust',
         ]}
