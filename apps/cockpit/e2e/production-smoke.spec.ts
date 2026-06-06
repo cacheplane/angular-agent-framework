@@ -189,7 +189,7 @@ test.describe('Production: canonical demo sends runtime telemetry', () => {
 });
 
 test.describe('ag-ui Railway runtime', () => {
-  const RAILWAY_URL = process.env['AG_UI_RAILWAY_URL'] ?? 'https://ag-ui-dev.up.railway.app';
+  const RAILWAY_URL = process.env['AG_UI_RAILWAY_URL'] ?? 'https://ag-ui-dev-production.up.railway.app';
 
   test('healthcheck /ok responds 200', async ({ request }) => {
     const res = await request.get(`${RAILWAY_URL}/ok`);

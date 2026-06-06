@@ -6,7 +6,7 @@
   "rewrites": [
     {
       "source": "/agent/:path*",
-      "destination": "https://ag-ui-dev.up.railway.app/agent/interrupts/:path*"
+      "destination": "https://ag-ui-dev-production.up.railway.app/agent/interrupts/:path*"
     }
   ]
 }
