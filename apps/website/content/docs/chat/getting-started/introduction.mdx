@@ -1,6 +1,6 @@
 # Introduction
 
-`@threadplane/chat` is the Angular UI component library for building chat interfaces on top of a runtime-neutral `Agent` contract. It provides a complete set of composable, Signal-driven components that render messages, handle user input, display tool calls, manage interrupts, and support generative UI -- all styled with CSS custom properties and built for Angular 20+.
+`@threadplane/chat` is the Angular UI component library for building chat interfaces on top of a runtime-neutral `Agent` contract. It's a set of composable, Signal-driven components that render messages, handle user input, display tool calls, manage interrupts, and support generative UI -- all styled with CSS custom properties and built for Angular 20+.
 
 <Callout type="info" title="What you'll learn">
 This guide explains the library's two-tier architecture, how it relates to the rest of the Threadplane stack, and when to reach for the all-in-one composition versus assembling primitives yourself.
@@ -12,7 +12,7 @@ The library is organized into two layers: **primitives** and **compositions**.
 
 ### Primitives
 
-Primitives are low-level, headless components that read from an `Agent` and expose their state through content projection (`ng-template`). They carry no opinion about layout or styling. Use them when you need full control over how chat elements render.
+Primitives are low-level, headless components that read from an `Agent` and expose their state through content projection (`ng-template`). They carry no opinion about layout or styling. Reach for them when you need full control over how chat elements render.
 
 | Primitive | Selector | Purpose |
 |-----------|----------|---------|
@@ -64,7 +64,7 @@ LangGraph Platform
 
 ## When to Use `ChatComponent` vs. Custom Assembly
 
-**Use `ChatComponent`** when you want a complete, styled chat interface with minimal setup. It includes message rendering (with markdown), a text input, typing indicator, error display, interrupt banner, and an optional thread sidebar. Drop it in, pass an `Agent`, and you have a working chat.
+**Use `ChatComponent`** when you want a complete, styled chat interface with minimal setup. It includes message rendering (with markdown), a text input, typing indicator, error display, interrupt banner, and an optional thread sidebar. Drop it in, pass an `Agent`, and you've got a working chat.
 
 ```html
 <chat [agent]="chatRef" />

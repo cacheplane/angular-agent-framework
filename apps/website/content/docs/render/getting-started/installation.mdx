@@ -30,12 +30,12 @@ The library requires the following peer dependencies:
 | `@json-render/core` | `^0.16.0` |
 
 <Callout type="info" title="Angular packages">
-`@angular/core` and `@angular/common` are already part of any Angular 20+ project. You only need to install `@json-render/core` as an additional dependency if your package manager does not install peer dependencies automatically.
+`@angular/core` and `@angular/common` are already part of any Angular 20+ project. You only need to install `@json-render/core` yourself if your package manager doesn't install peer dependencies automatically.
 </Callout>
 
 ## Configure the Provider
 
-Add `provideRender()` to your application configuration. This sets global defaults for all `<render-spec>` instances in your application.
+Add `provideRender()` to your application config. This sets global defaults for every `<render-spec>` instance in your app.
 
 ```typescript
 // app.config.ts
@@ -57,12 +57,12 @@ export const appConfig: ApplicationConfig = {
 ```
 
 <Callout type="tip" title="provideRender() is optional">
-`provideRender()` is a convenience for setting global defaults. You can skip it entirely and pass `registry`, `store`, `functions`, and `handlers` as inputs directly to `<render-spec>`. Inputs always take precedence over provider config.
+`provideRender()` is just a convenience for setting global defaults. You can skip it entirely and pass `registry`, `store`, `functions`, and `handlers` as inputs directly to `<render-spec>`. Inputs always win over provider config.
 </Callout>
 
 ## Minimal App Setup
 
-Here is a complete minimal application setup:
+Here's a complete minimal setup:
 
 <Tabs>
 <Tab label="app.config.ts">
@@ -132,13 +132,13 @@ export class AppComponent {
 
 ## Verify Installation
 
-After setting up, run your application and verify the rendered output:
+Once you're set up, run your app and check the rendered output:
 
 ```bash
 ng serve
 ```
 
-If you see your component rendered with the expected props, the installation is complete.
+If you see your component rendered with the expected props, you're done.
 
 ## Troubleshooting
 

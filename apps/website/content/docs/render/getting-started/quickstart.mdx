@@ -9,7 +9,7 @@ Angular 20+ project with `@threadplane/render` installed. See the [Installation]
 <Steps>
 <Step title="Create a component to render">
 
-Define a simple Angular component that will be rendered by the spec. Every rendered component receives inputs matching the `AngularComponentInputs` interface -- your custom props are spread alongside the standard inputs.
+Let's start with a simple Angular component for the spec to render. Every rendered component receives inputs matching the `AngularComponentInputs` interface -- your custom props are spread alongside the standard inputs.
 
 ```typescript
 // text.component.ts
@@ -46,7 +46,7 @@ export const uiRegistry = defineAngularRegistry({
 </Step>
 <Step title="Build a spec">
 
-A spec describes the UI tree as a flat map of elements. The `root` key points to the entry element.
+Now let's describe the UI tree itself. A spec is a flat map of elements, and the `root` key points to the entry element.
 
 ```typescript
 // app.component.ts
@@ -93,7 +93,7 @@ Open `http://localhost:4200`. You should see "Hello from @threadplane/render!" r
 
 ## Adding Reactive State
 
-Specs become powerful when you connect them to a state store. Props with `$state` expressions read from the store reactively.
+Specs get a lot more interesting once you connect them to a state store. Props with `$state` expressions read from the store reactively.
 
 ```typescript
 import { Component, ChangeDetectionStrategy } from '@angular/core';
@@ -135,7 +135,7 @@ Clicking the button updates the store, which reactively updates the rendered `Te
 
 ## Using Spec-Embedded State
 
-You can also embed initial state directly in the spec. When no external store is provided, `RenderSpecComponent` automatically creates an internal `signalStateStore` from `spec.state`:
+You can also embed initial state right in the spec. When you don't pass an external store, `RenderSpecComponent` creates an internal `signalStateStore` from `spec.state` for you:
 
 ```typescript
 spec: Spec = {
