@@ -60,7 +60,7 @@ export default async function RenderPage() {
             <div style={{ display: 'flex', justifyContent: 'center', gap: 8, flexWrap: 'wrap' }}>
               <Pill variant="accent">MIT</Pill>
               <Pill variant="neutral">Vercel json-render</Pill>
-              <Pill variant="neutral">Google A2UI v0.9-compatible</Pill>
+              <Pill variant="neutral">Google A2UI</Pill>
             </div>
           </div>
         </Container>
@@ -73,13 +73,13 @@ export default async function RenderPage() {
         body="The agent emits structured UI as JSON. @threadplane/render maps each spec node to one of your Angular components — so the design system stays yours, and the agent gets to assemble it."
         bullets={[
           'Vercel json-render adapter',
-          'Google A2UI v0.9-compatible protocol',
+          'Google A2UI protocol',
           'Component registry — declare once, use everywhere',
           'Server schema, client validation',
         ]}
         supportingCards={[
           { title: 'json-render', description: 'Vercel adapter.' },
-          { title: 'A2UI v0.9-compatible', description: 'Google protocol.' },
+          { title: 'A2UI v1', description: 'Google A2UI protocol.' },
           { title: 'registry', description: 'Spec → component.' },
         ]}
         cta={{ label: 'See @threadplane/render docs', href: '/docs/render/getting-started/introduction' }}
