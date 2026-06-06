@@ -214,7 +214,7 @@ test('sitemap.xml includes configured docs pages', async ({ request }) => {
   const body = await response.text();
   expect(body).toContain('https://threadplane.ai/docs');
   expect(body).toContain('https://threadplane.ai/docs/langgraph/getting-started/introduction');
-  expect(body).toContain('https://threadplane.ai/docs/render/a2ui/overview');
+  expect(body).toContain('https://threadplane.ai/docs/chat/a2ui/overview');
 });
 
 test('docs pages render canonical and social metadata', async ({ page }) => {
@@ -254,7 +254,7 @@ test('representative docs pages do not create page-level horizontal overflow', a
     '/docs/langgraph/getting-started/introduction',
     '/docs/langgraph/api/inject-agent',
     '/docs/chat/components/chat-tool-calls',
-    '/docs/render/a2ui/overview',
+    '/docs/chat/a2ui/overview',
     '/docs/telemetry/guides/browser',
   ];
   const widths = [320, 375, 768, 1280];
