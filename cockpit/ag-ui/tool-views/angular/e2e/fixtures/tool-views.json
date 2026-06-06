@@ -1,0 +1,28 @@
+{
+  "fixtures": [
+    {
+      "match": {
+        "userMessage": "What's the weather in San Francisco?",
+        "hasToolResult": true
+      },
+      "response": {
+        "content": "Here's the current weather for San Francisco."
+      }
+    },
+    {
+      "match": {
+        "userMessage": "What's the weather in San Francisco?"
+      },
+      "response": {
+        "toolCalls": [
+          {
+            "name": "weather_card",
+            "arguments": {
+              "location": "San Francisco"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

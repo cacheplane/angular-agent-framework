@@ -9,6 +9,7 @@ import type { Agent, Message, ToolCall } from '../../agent';
 import { ChatToolCallCardComponent, type ToolCallInfo } from '../../compositions/chat-tool-call-card/chat-tool-call-card.component';
 import { ChatToolCallTemplateDirective } from './chat-tool-call-template.directive';
 import { summarizeGroup as defaultSummarizeGroup } from './group-summary';
+import { resolveMessageToolCalls } from './resolve-message-tool-calls';
 
 interface Group {
   name: string;
@@ -111,30 +112,9 @@ export class ChatToolCallsComponent {
     return map;
   });
 
-  readonly toolCalls = computed((): ToolCall[] => {
-    const msg = this.message();
-    if (msg && msg.role === 'assistant') {
-      const all = this.agent().toolCalls();
-      // Prefer adapter-provided `toolCallIds` (LangGraph populates it from
-      // raw `tool_calls`). This is the per-message scope that prevents
-      // every AI bubble from re-rendering the entire thread's tool-call
-      // list when content is a flat string (the LangGraph adapter's
-      // default — extractTextContent reduces complex content to string).
-      if (msg.toolCallIds && msg.toolCallIds.length > 0) {
-        return msg.toolCallIds.map(id => all.find(tc => tc.id === id)).filter((x): x is ToolCall => !!x);
-      }
-      // Anthropic-style content-block path: extract tool_use IDs inline.
-      if (Array.isArray(msg.content)) {
-        const blocks = msg.content.filter((b) => b.type === 'tool_use');
-        return blocks.map(b => all.find(tc => tc.id === b.id)).filter((x): x is ToolCall => !!x);
-      }
-      // Assistant message provided but no tool-call linkage available:
-      // this message didn't emit any tool calls. Return empty.
-      return [];
-    }
-    // No message context at all (e.g. agent-level pinning) → global list.
-    return this.agent().toolCalls();
-  });
+  readonly toolCalls = computed((): ToolCall[] =>
+    resolveMessageToolCalls(this.agent(), this.message()),
+  );
 
   readonly groups = computed((): Group[] => {
     const excludeSet = new Set(this.excludeToolNames());

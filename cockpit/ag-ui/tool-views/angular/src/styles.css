@@ -1,0 +1,9 @@
+@import "@threadplane/example-layouts/theme.css";
+
+html, body {
+  height: 100%;
+  margin: 0;
+  background: var(--ngaf-chat-bg);
+  color: var(--ngaf-chat-text);
+  font-family: var(--ngaf-chat-font-family);
+}

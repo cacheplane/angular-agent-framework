@@ -1,0 +1,11 @@
+{
+  "name": "@threadplane/cockpit-ag-ui-tool-views-angular",
+  "private": true,
+  "version": "0.0.1",
+  "peerDependencies": {
+    "@threadplane/ag-ui": "*",
+    "@threadplane/chat": "*"
+  },
+  "license": "MIT",
+  "sideEffects": false
+}

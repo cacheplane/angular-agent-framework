@@ -66,6 +66,33 @@ describe('reduceEvent', () => {
     expect(store.toolCalls()).toEqual([{ id: 't1', name: 'search', args: {}, status: 'running' }]);
   });
 
+  it('TOOL_CALL_START links the tool call to its parent assistant message (creating the slot)', () => {
+    const store = makeStore();
+    reduceEvent({ type: 'TOOL_CALL_START', toolCallId: 't1', toolCallName: 'weather_card', parentMessageId: 'a1' } as any, store);
+    expect(store.toolCalls()).toEqual([{ id: 't1', name: 'weather_card', args: {}, status: 'running' }]);
+    const msg = store.messages().find((m) => m.id === 'a1');
+    expect(msg).toBeDefined();
+    expect(msg!.role).toBe('assistant');
+    expect(msg!.toolCallIds).toEqual(['t1']);
+  });
+
+  it('TOOL_CALL_START appends toolCallIds to an existing parent assistant message', () => {
+    const store = makeStore();
+    reduceEvent({ type: 'TEXT_MESSAGE_START', messageId: 'a1' } as any, store);
+    reduceEvent({ type: 'TOOL_CALL_START', toolCallId: 't1', toolCallName: 'weather_card', parentMessageId: 'a1' } as any, store);
+    reduceEvent({ type: 'TOOL_CALL_START', toolCallId: 't2', toolCallName: 'weather_card', parentMessageId: 'a1' } as any, store);
+    const a1 = store.messages().filter((m) => m.id === 'a1');
+    expect(a1).toHaveLength(1);
+    expect(a1[0].toolCallIds).toEqual(['t1', 't2']);
+  });
+
+  it('TOOL_CALL_START without parentMessageId does not create or modify messages', () => {
+    const store = makeStore();
+    reduceEvent({ type: 'TOOL_CALL_START', toolCallId: 't1', toolCallName: 'search' } as any, store);
+    expect(store.messages()).toEqual([]);
+    expect(store.toolCalls()).toEqual([{ id: 't1', name: 'search', args: {}, status: 'running' }]);
+  });
+
   it('TOOL_CALL_ARGS replaces args on the matching tool call', () => {
     const store = makeStore();
     reduceEvent({ type: 'TOOL_CALL_START', toolCallId: 't1', toolCallName: 'search' } as any, store);
@@ -85,6 +112,20 @@ describe('reduceEvent', () => {
     reduceEvent({ type: 'TOOL_CALL_START', toolCallId: 't1', toolCallName: 'search' } as any, store);
     reduceEvent({ type: 'TOOL_CALL_RESULT', toolCallId: 't1', content: 'found' } as any, store);
     expect(store.toolCalls()[0].result).toBe('found');
+  });
+
+  it('TOOL_CALL_RESULT parses JSON string content into an object', () => {
+    const store = makeStore();
+    reduceEvent({ type: 'TOOL_CALL_START', toolCallId: 't1', toolCallName: 'weather_card' } as any, store);
+    reduceEvent({ type: 'TOOL_CALL_RESULT', toolCallId: 't1', content: '{"temperatureF":68,"location":"San Francisco"}' } as any, store);
+    expect(store.toolCalls()[0].result).toEqual({ temperatureF: 68, location: 'San Francisco' });
+  });
+
+  it('TOOL_CALL_RESULT preserves non-JSON string result as-is', () => {
+    const store = makeStore();
+    reduceEvent({ type: 'TOOL_CALL_START', toolCallId: 't1', toolCallName: 'search' } as any, store);
+    reduceEvent({ type: 'TOOL_CALL_RESULT', toolCallId: 't1', content: 'plain text result' } as any, store);
+    expect(store.toolCalls()[0].result).toBe('plain text result');
   });
 
   it('STATE_SNAPSHOT replaces state wholesale', () => {
@@ -112,6 +153,52 @@ describe('reduceEvent', () => {
       messages: [{ id: 'new', role: 'assistant', content: 'fresh' }],
     } as any, store);
     expect(store.messages()).toEqual([{ id: 'new', role: 'assistant', content: 'fresh' }]);
+  });
+
+  it('MESSAGES_SNAPSHOT bridges assistant toolCalls to toolCallIds', () => {
+    const store = makeStore();
+    reduceEvent({
+      type: 'MESSAGES_SNAPSHOT',
+      messages: [
+        { id: 'u1', role: 'user', content: 'hello' },
+        { id: 'a1', role: 'assistant', content: '', toolCalls: [{ id: 'tc1', type: 'function', function: { name: 'weather_card', arguments: '{"location":"SF"}' } }] },
+        { id: 'a2', role: 'assistant', content: 'Here is the weather.' },
+      ],
+    } as any, store);
+    const a1 = store.messages().find((m) => m.id === 'a1');
+    expect(a1).toBeDefined();
+    expect(a1!.toolCallIds).toEqual(['tc1']);
+    expect((a1 as any).toolCalls).toBeUndefined();
+    const a2 = store.messages().find((m) => m.id === 'a2');
+    expect(a2!.toolCallIds).toBeUndefined();
+  });
+
+  it('MESSAGES_SNAPSHOT inserts snapshot-only tool calls into store.toolCalls', () => {
+    const store = makeStore();
+    reduceEvent({
+      type: 'MESSAGES_SNAPSHOT',
+      messages: [
+        { id: 'a1', role: 'assistant', content: '', toolCalls: [{ id: 'tc1', type: 'function', function: { name: 'weather_card', arguments: '{"location":"SF"}' } }] },
+      ],
+    } as any, store);
+    const tc = store.toolCalls().find((t) => t.id === 'tc1');
+    expect(tc).toBeDefined();
+    expect(tc!.name).toBe('weather_card');
+    expect(tc!.args).toEqual({ location: 'SF' });
+    expect(tc!.status).toBe('complete');
+  });
+
+  it('MESSAGES_SNAPSHOT does not duplicate a tool call already in store.toolCalls', () => {
+    const store = makeStore();
+    reduceEvent({ type: 'TOOL_CALL_START', toolCallId: 'tc1', toolCallName: 'weather_card', parentMessageId: 'a1' } as any, store);
+    reduceEvent({ type: 'TOOL_CALL_RESULT', toolCallId: 'tc1', content: '{"temperatureF":68}' } as any, store);
+    reduceEvent({
+      type: 'MESSAGES_SNAPSHOT',
+      messages: [{ id: 'a1', role: 'assistant', content: '', toolCalls: [{ id: 'tc1', type: 'function', function: { name: 'weather_card', arguments: '{}' } }] }],
+    } as any, store);
+    expect(store.toolCalls().filter((t) => t.id === 'tc1')).toHaveLength(1);
+    // The original entry (with result) is kept, not replaced by the snapshot entry.
+    expect(store.toolCalls().find((t) => t.id === 'tc1')!.result).toEqual({ temperatureF: 68 });
   });
 
   it('CUSTOM with name=state_update emits AgentStateUpdateEvent', async () => {
