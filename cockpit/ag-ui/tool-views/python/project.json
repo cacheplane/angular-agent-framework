@@ -1,0 +1,38 @@
+{
+  "name": "cockpit-ag-ui-tool-views-python",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "cockpit/ag-ui/tool-views/python/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": [
+        "{workspaceRoot}/dist/cockpit/ag-ui/tool-views/python"
+      ],
+      "options": {
+        "outputPath": "dist/cockpit/ag-ui/tool-views/python",
+        "main": "cockpit/ag-ui/tool-views/python/src/index.ts",
+        "tsConfig": "cockpit/ag-ui/tool-views/python/tsconfig.json"
+      }
+    },
+    "smoke": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "cockpit/ag-ui/tool-views/python",
+        "command": "npx tsx -e \"import { agUiToolViewsPythonModule } from './src/index.ts'; const module = agUiToolViewsPythonModule; if (module.id !== 'ag-ui-tool-views-python' || module.title !== 'AG-UI Tool Views (Python)') { throw new Error('Unexpected module shape for ' + module.id); }\""
+      }
+    },
+    "serve": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "cockpit/ag-ui/tool-views/python",
+        "command": "uv run uvicorn src.server:app --port 5322"
+      }
+    }
+  },
+  "tags": [
+    "scope:cockpit-e2e",
+    "scope:cockpit-examples",
+    "scope:cockpit-smoke"
+  ]
+}
