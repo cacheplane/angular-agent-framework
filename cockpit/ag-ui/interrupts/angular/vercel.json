@@ -1,0 +1,6 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "npx nx build cockpit-ag-ui-interrupts-angular",
+  "outputDirectory": "dist/cockpit/ag-ui/interrupts/angular/browser",
+  "framework": null
+}

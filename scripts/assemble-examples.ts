@@ -48,6 +48,8 @@ const capabilities = [
   { product: 'chat', topic: 'debug' },
   { product: 'chat', topic: 'theming' },
   { product: 'chat', topic: 'a2ui' },
+  { product: 'ag-ui', topic: 'interrupts' },
+  { product: 'ag-ui', topic: 'streaming' },
 ];
 
 if (!skipBuild) {
@@ -93,6 +95,7 @@ for (const cap of capabilities) {
 const outputDir = resolve(deployDir, '.vercel/output');
 const staticDir = resolve(outputDir, 'static');
 const funcDir = resolve(outputDir, 'functions/api/[[...path]].func');
+const agUiFuncDir = resolve(outputDir, 'functions/api/ag-ui-proxy/[[...path]].func');
 
 // Copy static files to the output directory
 mkdirSync(staticDir, { recursive: true });
@@ -102,15 +105,28 @@ for (const cap of capabilities) {
   cpSync(src, dest, { recursive: true });
 }
 
-// Build the serverless function
+// Build the langgraph proxy serverless function (existing)
 mkdirSync(funcDir, { recursive: true });
 execSync(`npx esbuild scripts/examples-middleware.ts --bundle --format=cjs --platform=node --outfile=${funcDir}/index.js`, {
   cwd: root,
   stdio: 'inherit',
 });
-
-// Write function config
 writeFileSync(resolve(funcDir, '.vc-config.json'), JSON.stringify({
+  runtime: 'nodejs20.x',
+  handler: 'index.js',
+  launcherType: 'Nodejs',
+  shouldAddHelpers: true,
+}, null, 2));
+
+// Build the ag-ui proxy serverless function (forwards /ag-ui/<topic>/agent
+// requests to the Railway-hosted FastAPI runtime with origin allowlist +
+// Upstash rate limit + X-Internal-Token injection).
+mkdirSync(agUiFuncDir, { recursive: true });
+execSync(`npx esbuild scripts/ag-ui-proxy.ts --bundle --format=cjs --platform=node --outfile=${agUiFuncDir}/index.js`, {
+  cwd: root,
+  stdio: 'inherit',
+});
+writeFileSync(resolve(agUiFuncDir, '.vc-config.json'), JSON.stringify({
   runtime: 'nodejs20.x',
   handler: 'index.js',
   launcherType: 'Nodejs',
@@ -121,15 +137,19 @@ writeFileSync(resolve(funcDir, '.vc-config.json'), JSON.stringify({
 writeFileSync(resolve(outputDir, 'config.json'), JSON.stringify({
   version: 3,
   routes: [
+    // ag-ui proxy: /ag-ui/<topic>/agent[/rest] → /api/ag-ui-proxy/<topic>[/rest]
+    // Must precede the filesystem handle so static index.html lookups for
+    // /ag-ui/<topic>/ still resolve while POSTs to /agent are proxied.
+    { src: '^/ag-ui/([^/]+)/agent(/.*)?$', dest: '/api/ag-ui-proxy/$1$2', check: true },
     { src: '^/api/(.*)', dest: '/api/[[...path]]', check: true },
     { handle: 'filesystem' },
-    { src: '^/(langgraph|deep-agents|render|chat)/([^/]+)/(.+\\..+)$', dest: '/$1/$2/$3' },
-    { src: '^/(langgraph|deep-agents|render|chat)/([^/]+)(/.*)?$', dest: '/$1/$2/index.html' },
+    { src: '^/(langgraph|deep-agents|render|chat|ag-ui)/([^/]+)/(.+\\..+)$', dest: '/$1/$2/$3' },
+    { src: '^/(langgraph|deep-agents|render|chat|ag-ui)/([^/]+)(/.*)?$', dest: '/$1/$2/index.html' },
     { handle: 'error' },
     { status: 404, src: '.*', dest: '/404.html' },
   ],
 }, null, 2));
 
-console.log('✅ .vercel/output/ (Build Output API with serverless proxy)');
+console.log('✅ .vercel/output/ (Build Output API with langgraph + ag-ui proxies)');
 
 console.log(`\nAssembled ${capabilities.length} apps + proxy to ${deployDir}`);
