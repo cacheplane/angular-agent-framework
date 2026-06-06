@@ -83,6 +83,7 @@ interface RenderContext {
   store: StateStore;
   functions?: Record<string, ComputedFunction>;
   handlers?: Record<string, (params: Record<string, unknown>) => unknown | Promise<unknown>>;
+  emitEvent?: (event: RenderEvent) => void;
   loading?: boolean;
 }
 ```
