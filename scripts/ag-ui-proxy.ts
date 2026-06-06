@@ -15,8 +15,11 @@
  * `.vercel/output/functions/ag-ui-proxy/[[...path]].func/index.js`
  * (NOT under functions/api/ — the route table's catch-all `^/api/(.*)` for
  * the langgraph proxy would otherwise re-match the rewrite via check:true
- * and shadow this function). Reachable via the route rewrite
- *   /ag-ui/<topic>/agent*  →  /ag-ui-proxy/<topic>*
+ * and shadow this function). Invoked by the route
+ *   { src: '^/ag-ui/([^/]+)/agent(/.*)?$', dest: '/ag-ui-proxy/[[...path]]' }
+ * The dest names the catch-all function, which Vercel invokes while
+ * PRESERVING the original request URL in req.url — so this function parses
+ * the public `/ag-ui/<topic>/agent` path, not the `/ag-ui-proxy/...` dest.
  *
  * AG-UI uses streaming responses (Server-Sent Events / chunked), so the
  * upstream body is piped chunk-by-chunk rather than buffered.
@@ -88,16 +91,22 @@ function getOrigin(headers: VercelRequest['headers']): string | undefined {
 }
 
 /**
- * Parse `/ag-ui-proxy/<topic>[/<rest>]` into { topic, rest } so the
- * upstream URL can be built as `<railway>/agent/<topic><rest>`.
+ * Parse the original public URL `/ag-ui/<topic>/agent[/<rest>]` into
+ * { topic, rest } so the upstream URL can be built as
+ * `<railway>/agent/<topic><rest>`.
+ *
+ * The route dest `/ag-ui-proxy/[[...path]]` invokes this function while
+ * Vercel PRESERVES the original request URL in req.url (same mechanism the
+ * langgraph proxy relies on), so what we parse here is the public path the
+ * browser requested, not the rewritten `/ag-ui-proxy/...` path.
  */
 function parseProxyPath(url: string): { topic: string; rest: string } | null {
   const u = new URL(url, 'http://placeholder');
   const segments = u.pathname.split('/').filter(Boolean);
-  // Expected: ['ag-ui-proxy', '<topic>', ...rest]
-  if (segments[0] !== 'ag-ui-proxy' || !segments[1]) return null;
+  // Expected: ['ag-ui', '<topic>', 'agent', ...rest]
+  if (segments[0] !== 'ag-ui' || !segments[1] || segments[2] !== 'agent') return null;
   const topic = segments[1];
-  const rest = segments.slice(2).join('/');
+  const rest = segments.slice(3).join('/');
   const restPath = rest ? `/${rest}` : '';
   return { topic, rest: restPath };
 }
@@ -147,7 +156,12 @@ module.exports = async function handler(req: VercelRequest, res: VercelResponse)
   // fail-open on rate-limit so a misconfigured Vercel project doesn't
   // brick the runtime. Origin allowlist + internal token still apply.
 
-  const upstreamUrl = `${RAILWAY_BASE_URL}/agent/${parsed.topic}${parsed.rest}`;
+  // Preserve any query string from the original request on the upstream call.
+  const query = (() => {
+    const qIndex = (req.url ?? '').indexOf('?');
+    return qIndex >= 0 ? (req.url as string).slice(qIndex) : '';
+  })();
+  const upstreamUrl = `${RAILWAY_BASE_URL}/agent/${parsed.topic}${parsed.rest}${query}`;
   const upstreamHeaders: Record<string, string> = {
     'x-internal-token': internalToken,
   };
