@@ -27,6 +27,8 @@ Incoming SSE chunks are parsed and pushed into BehaviorSubjects — one per sign
 </Step>
 <Step title="`injectAgent()` converts to Signals">
 BehaviorSubjects are converted to Angular Signals via `toSignal()`. Every update triggers Angular's change detection automatically.
+
+By default, signal updates are throttled to roughly one update per animation frame (~16ms) so a burst of SSE tokens batches into a single change-detection pass instead of a storm. The `messages` signal is exempt — it propagates token-by-token so streaming text renders as it arrives. Tune or disable throttling with the `throttle?: number | false` option on `provideAgent`.
 </Step>
 <Step title="Templates re-render">
 Components using `OnPush` re-render only when signal values change. No manual `detectChanges()`, no zone triggers, no subscriptions to manage.

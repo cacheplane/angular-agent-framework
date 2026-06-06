@@ -70,11 +70,17 @@ chat.messages();   // Signal<Message[]>
 chat.status();     // Signal<'idle' | 'running' | 'error'>
 chat.error();      // Signal<unknown>
 chat.isLoading();  // Signal<boolean>
+
+// LangGraph-specific (see note below):
 chat.value();      // Signal<ChatState>
 ```
 
 </Tab>
 </Tabs>
+
+<Callout type="note" title="`value()` is LangGraph-specific">
+`messages()`, `status()`, `error()`, and `isLoading()` are part of the runtime-neutral `Agent` contract that every adapter implements. `value()` is not — it lives on `LangGraphAgent`. You can call `chat.value()` here only because `injectAgent()` returns a `LangGraphAgent`. Code written against the neutral `Agent` contract should read agent state through `state()` rather than `value()`.
+</Callout>
 
 <Callout type="tip" title="Why this matters">
 The BehaviorSubject-to-Signal conversion means you get the best of both worlds: RxJS handles the async SSE transport (reconnection, backpressure, error recovery), while Signals handle the synchronous UI reactivity (change detection, template binding, computed derivations). You only interact with the Signal side.
