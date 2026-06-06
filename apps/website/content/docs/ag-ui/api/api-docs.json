@@ -59,13 +59,13 @@
     "methods": [
       {
         "name": "abortRun",
-        "signature": "abortRun()",
+        "signature": "abortRun(): void",
         "description": "",
         "params": []
       },
       {
         "name": "addMessage",
-        "signature": "addMessage(message: object | object | object | object | object | object | object)",
+        "signature": "addMessage(message: object | object | object | object | object | object | object): void",
         "description": "",
         "params": [
           {
@@ -78,7 +78,7 @@
       },
       {
         "name": "addMessages",
-        "signature": "addMessages(messages: object | object | object | object | object | object | object[])",
+        "signature": "addMessages(messages: object | object | object | object | object | object | object[]): void",
         "description": "",
         "params": [
           {
@@ -91,7 +91,7 @@
       },
       {
         "name": "apply",
-        "signature": "apply(input: object, events$: Observable<objectOutputType<object, ZodTypeAny, \"passthrough\">>, subscribers: AgentSubscriber[])",
+        "signature": "apply(input: object, events$: Observable<objectOutputType<object, ZodTypeAny, \"passthrough\">>, subscribers: AgentSubscriber[]): Observable<AgentStateMutation>",
         "description": "",
         "params": [
           {
@@ -116,13 +116,13 @@
       },
       {
         "name": "clone",
-        "signature": "clone()",
+        "signature": "clone(): any",
         "description": "",
         "params": []
       },
       {
         "name": "connect",
-        "signature": "connect(input: object)",
+        "signature": "connect(input: object): Observable<objectOutputType<object, ZodTypeAny, \"passthrough\">>",
         "description": "",
         "params": [
           {
@@ -135,7 +135,7 @@
       },
       {
         "name": "connectAgent",
-        "signature": "connectAgent(parameters: Partial<Pick<object, \"runId\" | \"tools\" | \"context\" | \"forwardedProps\">>, subscriber: AgentSubscriber)",
+        "signature": "connectAgent(parameters: Partial<Pick<object, \"runId\" | \"tools\" | \"context\" | \"forwardedProps\">>, subscriber: AgentSubscriber): Promise<RunAgentResult>",
         "description": "",
         "params": [
           {
@@ -154,19 +154,19 @@
       },
       {
         "name": "detachActiveRun",
-        "signature": "detachActiveRun()",
+        "signature": "detachActiveRun(): Promise<void>",
         "description": "",
         "params": []
       },
       {
         "name": "getCapabilities",
-        "signature": "getCapabilities()",
+        "signature": "getCapabilities(): Promise<object>",
         "description": "Returns the agent's current capabilities.\nOptional — subclasses implement this to advertise what they support.",
         "params": []
       },
       {
         "name": "legacy_to_be_removed_runAgentBridged",
-        "signature": "legacy_to_be_removed_runAgentBridged(config: Partial<Pick<object, \"runId\" | \"tools\" | \"context\" | \"forwardedProps\">>)",
+        "signature": "legacy_to_be_removed_runAgentBridged(config: Partial<Pick<object, \"runId\" | \"tools\" | \"context\" | \"forwardedProps\">>): Observable<object | object | object | object | object | object | object | object | object | object>",
         "description": "",
         "params": [
           {
@@ -179,7 +179,7 @@
       },
       {
         "name": "onError",
-        "signature": "onError(input: object, error: Error, subscribers: AgentSubscriber[])",
+        "signature": "onError(input: object, error: Error, subscribers: AgentSubscriber[]): Observable<AgentStateMutation>",
         "description": "",
         "params": [
           {
@@ -204,7 +204,7 @@
       },
       {
         "name": "onFinalize",
-        "signature": "onFinalize(input: object, subscribers: AgentSubscriber[])",
+        "signature": "onFinalize(input: object, subscribers: AgentSubscriber[]): Promise<void>",
         "description": "",
         "params": [
           {
@@ -223,7 +223,7 @@
       },
       {
         "name": "onInitialize",
-        "signature": "onInitialize(input: object, subscribers: AgentSubscriber[])",
+        "signature": "onInitialize(input: object, subscribers: AgentSubscriber[]): Promise<void>",
         "description": "",
         "params": [
           {
@@ -242,7 +242,7 @@
       },
       {
         "name": "prepareRunAgentInput",
-        "signature": "prepareRunAgentInput(parameters: Partial<Pick<object, \"runId\" | \"tools\" | \"context\" | \"forwardedProps\">>)",
+        "signature": "prepareRunAgentInput(parameters: Partial<Pick<object, \"runId\" | \"tools\" | \"context\" | \"forwardedProps\">>): object",
         "description": "",
         "params": [
           {
@@ -255,7 +255,7 @@
       },
       {
         "name": "processApplyEvents",
-        "signature": "processApplyEvents(input: object, events$: Observable<AgentStateMutation>, subscribers: AgentSubscriber[])",
+        "signature": "processApplyEvents(input: object, events$: Observable<AgentStateMutation>, subscribers: AgentSubscriber[]): Observable<AgentStateMutation>",
         "description": "",
         "params": [
           {
@@ -280,7 +280,7 @@
       },
       {
         "name": "run",
-        "signature": "run(input: object)",
+        "signature": "run(input: object): Observable<objectOutputType<object, ZodTypeAny, \"passthrough\">>",
         "description": "",
         "params": [
           {
@@ -293,7 +293,7 @@
       },
       {
         "name": "runAgent",
-        "signature": "runAgent(parameters: Partial<Pick<object, \"runId\" | \"tools\" | \"context\" | \"forwardedProps\">>, subscriber: AgentSubscriber)",
+        "signature": "runAgent(parameters: Partial<Pick<object, \"runId\" | \"tools\" | \"context\" | \"forwardedProps\">>, subscriber: AgentSubscriber): Promise<RunAgentResult>",
         "description": "",
         "params": [
           {
@@ -312,7 +312,7 @@
       },
       {
         "name": "setMessages",
-        "signature": "setMessages(messages: object | object | object | object | object | object | object[])",
+        "signature": "setMessages(messages: object | object | object | object | object | object | object[]): void",
         "description": "",
         "params": [
           {
@@ -325,7 +325,7 @@
       },
       {
         "name": "setState",
-        "signature": "setState(state: any)",
+        "signature": "setState(state: any): void",
         "description": "",
         "params": [
           {
@@ -338,7 +338,7 @@
       },
       {
         "name": "subscribe",
-        "signature": "subscribe(subscriber: AgentSubscriber)",
+        "signature": "subscribe(subscriber: AgentSubscriber): object",
         "description": "",
         "params": [
           {
@@ -351,11 +351,11 @@
       },
       {
         "name": "use",
-        "signature": "use(middlewares: Middleware<> | MiddlewareFunction[])",
+        "signature": "use(...middlewares: Middleware<> | MiddlewareFunction[]): this",
         "description": "",
         "params": [
           {
-            "name": "middlewares",
+            "name": "...middlewares",
             "type": "Middleware<> | MiddlewareFunction[]",
             "description": "",
             "optional": false
@@ -457,11 +457,11 @@
     "name": "provideAgent",
     "kind": "function",
     "description": "Provides an Agent instance wired through HttpAgent and toAgent.\nConstructs an HttpAgent from config and wraps it in the runtime-neutral\nAgent contract via toAgent(). Returns a provider array suitable for\nbootstrapApplication or TestBed.configureTestingModule().\n\n**Static vs factory config.** Pass a plain `AgentConfig` object when the\nconfig is known up front. Pass a `() => AgentConfig` factory when the config\ndepends on runtime/DI state — the factory runs inside an Angular injection\ncontext, so it may call `inject()` to read services or route params.",
-    "signature": "provideAgent(configOrFactory: AgentConfig | object): Provider[]",
+    "signature": "provideAgent(configOrFactory: AgentConfig | () => AgentConfig): Provider[]",
     "params": [
       {
         "name": "configOrFactory",
-        "type": "AgentConfig | object",
+        "type": "AgentConfig | () => AgentConfig",
         "description": "",
         "optional": false
       }

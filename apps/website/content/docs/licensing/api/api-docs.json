@@ -12,7 +12,7 @@
       },
       {
         "name": "warn",
-        "type": "object",
+        "type": "(message: string) => void",
         "description": "Injected warn channel; defaults to `console.warn`.",
         "optional": true
       }
@@ -140,7 +140,7 @@
       },
       {
         "name": "warn",
-        "type": "object",
+        "type": "(message: string) => void",
         "description": "Injected warn channel, defaults to console.warn.",
         "optional": true
       }

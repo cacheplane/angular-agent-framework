@@ -455,12 +455,20 @@
     "name": "A2uiMessageParser",
     "kind": "interface",
     "description": "",
-    "properties": [
+    "properties": [],
+    "methods": [
       {
         "name": "push",
-        "type": "unknown",
+        "signature": "push(chunk: string): A2uiMessage[]",
         "description": "",
-        "optional": false
+        "params": [
+          {
+            "name": "chunk",
+            "type": "string",
+            "description": "",
+            "optional": false
+          }
+        ]
       }
     ],
     "examples": []
