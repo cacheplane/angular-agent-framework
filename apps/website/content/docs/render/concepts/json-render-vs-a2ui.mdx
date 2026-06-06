@@ -15,7 +15,7 @@ This matters because the tradeoff is not "which renderer is better." The tradeof
   renders a Spec using an Angular registry, state store, functions, and handlers
 
 @threadplane/a2ui
-  defines A2UI v0.9 message and component types
+  defines A2UI v1 message and component types
 
 @threadplane/chat
   detects assistant content, manages streaming state, and mounts render or A2UI surfaces
@@ -166,7 +166,7 @@ A2UI actions produce `A2uiActionMessage` objects:
 
 ```ts
 interface A2uiActionMessage {
-  version: 'v0.9';
+  version: 'v1';
   action: {
     name: string;
     surfaceId: string;

@@ -95,6 +95,22 @@ test.describe('Docs slug page', () => {
   });
 });
 
+test.describe('a2ui docs', () => {
+  test('quickstart renders with sidebar + article', async ({ page }) => {
+    await page.goto('/docs/a2ui/getting-started/quickstart');
+    await expect(page.locator('aside').first()).toBeVisible();
+    await expect(page.locator('article').first()).toBeVisible();
+    await expect(page.locator('article h1').first()).toContainText('Quick Start');
+  });
+
+  test('sidebar lists the new guides', async ({ page }) => {
+    await page.goto('/docs/a2ui/getting-started/quickstart');
+    await expect(page.locator('aside').getByText('Message Protocol').first()).toBeVisible();
+    await expect(page.locator('aside').getByText('Data Model').first()).toBeVisible();
+    await expect(page.locator('aside').getByText('Validating & Adapting').first()).toBeVisible();
+  });
+});
+
 test.describe('Docs search', () => {
   test('Cmd+K opens the search modal', async ({ page, browserName }) => {
     await page.goto('/docs/langgraph/getting-started/introduction');
