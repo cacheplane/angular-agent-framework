@@ -2,6 +2,28 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
+> ### Postscript — actual execution diverged in §5 (Vercel side)
+>
+> During T11 (live Railway smoke), I discovered that `examples.threadplane.ai` is served by **one** Vercel project (`threadplane-examples`) populated via the Build Output API by `scripts/assemble-examples.ts` — **not** by per-example Vercel projects. The per-example `cockpit/ag-ui/<topic>/angular/vercel.json` files exist in the repo but Vercel never consumes them in production.
+>
+> Tasks T6–T8 as originally written added dead code (per-example `vercel.json` rewrites + edge `middleware.ts`). The correct integration is:
+>
+> 1. Add ag-ui topics to the `capabilities` list in `scripts/assemble-examples.ts`.
+> 2. Add `ag-ui` to the SPA route regex + a new route above the filesystem handle: `^/ag-ui/([^/]+)/agent(/.*)?$ → /api/ag-ui-proxy/$1$2`.
+> 3. New `scripts/ag-ui-proxy.ts` — Node Vercel function with origin allowlist + Upstash rate-limit (fail-open) + `X-Internal-Token` injection + streaming-aware upstream fetch.
+> 4. Bundle the proxy as `.vercel/output/functions/api/ag-ui-proxy/[[...path]].func` from `assemble-examples.ts` (parallel to the existing `/api/[[...path]].func` langgraph proxy).
+>
+> The rework commit (`759cdcca`) reverts T6/T7/T8 deltas, drops `@vercel/edge` from the root, and replaces them with the proxy. `peerDependencies` on the cockpit ag-ui packages were restored to just `@threadplane/*`.
+>
+> Bug fixes also landed during execution:
+> - T2 generator: switched from "union with highest version per package" to "only direct deps (via `# via cockpit-*` markers)" + let pip resolve transitives — the union strategy produced an incompatible pin set (`langgraph-sdk==0.4.2` + `websockets==16.0`).
+> - T11 surfaced that FastAPI `HTTPException` raised inside Starlette `BaseHTTPMiddleware` surfaces as 500, not 401. Fixed by returning `JSONResponse(status_code=401)` directly.
+> - Railway's actual service domain is `ag-ui-dev-production.up.railway.app` (not `ag-ui-dev.up.railway.app`); vercel.json + smoke tests updated.
+> - ag-ui Angular bundle budgets bumped from 500kb/1mb to 1mb/1.5mb (interrupts SPA is ~1.02mb).
+>
+> Below is the original plan as authored. T6–T8 are accurate as a *first attempt* — see the commit history (`759cdcca`) for the final shape.
+
+
 **Goal:** Host the cockpit AG-UI FastAPI runtimes on Railway so the cockpit "Run" tab reaches them in production, with defense-in-depth (Vercel edge middleware + Railway internal-token middleware).
 
 **Architecture:** A single Railway-hosted FastAPI app aggregates every `cockpit/ag-ui/*/python/` topic at `/agent/<topic>`. The app's `server.py`, `requirements.txt`, and `deps/` tree are generated from `apps/cockpit/scripts/capability-registry.ts` by a TypeScript script that mirrors `scripts/generate-shared-deployment-config.ts`. CI drift-checks the generated files and runs `railway up`. Each cockpit AG-UI Angular example gets a `vercel.json` rewrite forwarding `/agent/:path*` to Railway, plus a Vercel edge `middleware.ts` enforcing origin allowlist + Upstash rate limit + injecting an `X-Internal-Token` header that the Railway middleware verifies.
