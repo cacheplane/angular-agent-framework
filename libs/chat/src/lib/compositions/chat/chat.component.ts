@@ -368,7 +368,7 @@ export class ChatComponent {
    * on a rendered surface) flow through the same submit channel and
    * land in the message stream as a HumanMessage whose content is a
    * JSON-serialized `A2uiActionMessage`. Showing the raw JSON as if
-   * the user typed it leaks the protocol; per the A2UI v0.9 spec
+   * the user typed it leaks the protocol; per the A2UI spec
    * those events resemble tool calls more than user utterances.
    *
    * `a2uiActionLabel` returns a short human-readable label for

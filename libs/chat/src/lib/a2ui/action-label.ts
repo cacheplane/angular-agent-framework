@@ -4,7 +4,7 @@
  * message, so the chat composition can render "Search flights" instead
  * of a raw `{"version":"v1","action":...}` JSON dump as a user bubble.
  *
- * Per the A2UI v0.9 spec, action messages flow on the client → agent
+ * Per the A2UI spec, action messages flow on the client → agent
  * return channel and are framed as typed events (closer to tool calls
  * than user utterances). The spec is silent on chat-bubble rendering;
  * Google's "A2UI in Practice" article and the Stream Chat reference
