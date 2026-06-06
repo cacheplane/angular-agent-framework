@@ -5,6 +5,18 @@
 **Source verified against:** `libs/langgraph` (+ `libs/chat` Agent contract, `examples/chat/python`), generated `api-docs.json`
 **Method:** 6 parallel read-only auditors + completeness sweep; controller re-verified every borderline finding against source (dropped 1 auditor false alarm).
 
+## Resolution status — ✅ ALL FINDINGS FIXED (2 PRs merged)
+
+Cutoff: P0+P1+P2 + the P3 restructure. Each fix re-verified against its cited source by an independent reviewer (all PASS).
+- ✅ **PR #601 — concepts:** `value()` reclassified as LangGraph-specific (langgraph-basics + angular-signals); signal-mapping block restructured into "Agent contract" vs "LangGraph-specific"; `history()` placed under `AgentWithHistory`; `subagents()` vs `activeSubagents()` distinguished; state-management 16ms throttle documented. (A `Callout type="note"` introduced mid-fix 500'd a page — caught by the render check, corrected to `type="info"`.)
+- ✅ **PR #602 — api:** `threadId` type P0 fixed; `AgentConfig` table completed to all 11 keys; `injectAgent` generics shown; `mock-stream-transport` constructor `script` documented; `LANGGRAPH_CLIENT` documented in the persistence guide.
+
+**Guides + agent-contract were clean — no fixes needed.**
+
+**Verified:** the `threadId` type is correct on main; no unsupported Callout type remains; all edited routes returned HTTP 200.
+
+**Dropped (false alarm):** the `requireSync` claim — source provides `initialValue`, so the doc was already correct.
+
 ## Summary
 
 - **P0: 1** · **P1: 2** · **P2: 6** · **P3: 2**
