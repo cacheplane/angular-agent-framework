@@ -12,9 +12,11 @@
  *      middleware before any /agent/<topic> handler runs.
  *
  * Bundled by scripts/assemble-examples.ts into
- * `.vercel/output/functions/api/ag-ui-proxy/[[...path]].func/index.js`
- * and reachable via the route rewrite
- *   /ag-ui/<topic>/agent*  →  /api/ag-ui-proxy/<topic>*
+ * `.vercel/output/functions/ag-ui-proxy/[[...path]].func/index.js`
+ * (NOT under functions/api/ — the route table's catch-all `^/api/(.*)` for
+ * the langgraph proxy would otherwise re-match the rewrite via check:true
+ * and shadow this function). Reachable via the route rewrite
+ *   /ag-ui/<topic>/agent*  →  /ag-ui-proxy/<topic>*
  *
  * AG-UI uses streaming responses (Server-Sent Events / chunked), so the
  * upstream body is piped chunk-by-chunk rather than buffered.
@@ -86,16 +88,16 @@ function getOrigin(headers: VercelRequest['headers']): string | undefined {
 }
 
 /**
- * Parse `/api/ag-ui-proxy/<topic>[/<rest>]` into { topic, rest } so the
+ * Parse `/ag-ui-proxy/<topic>[/<rest>]` into { topic, rest } so the
  * upstream URL can be built as `<railway>/agent/<topic><rest>`.
  */
 function parseProxyPath(url: string): { topic: string; rest: string } | null {
   const u = new URL(url, 'http://placeholder');
   const segments = u.pathname.split('/').filter(Boolean);
-  // Expected: ['api', 'ag-ui-proxy', '<topic>', ...rest]
-  if (segments[0] !== 'api' || segments[1] !== 'ag-ui-proxy' || !segments[2]) return null;
-  const topic = segments[2];
-  const rest = segments.slice(3).join('/');
+  // Expected: ['ag-ui-proxy', '<topic>', ...rest]
+  if (segments[0] !== 'ag-ui-proxy' || !segments[1]) return null;
+  const topic = segments[1];
+  const rest = segments.slice(2).join('/');
   const restPath = rest ? `/${rest}` : '';
   return { topic, rest: restPath };
 }
