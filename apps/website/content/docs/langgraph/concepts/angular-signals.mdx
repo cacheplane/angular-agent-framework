@@ -78,7 +78,7 @@ chat.value();      // Signal<ChatState>
 </Tab>
 </Tabs>
 
-<Callout type="note" title="`value()` is LangGraph-specific">
+<Callout type="info" title="`value()` is LangGraph-specific">
 `messages()`, `status()`, `error()`, and `isLoading()` are part of the runtime-neutral `Agent` contract that every adapter implements. `value()` is not — it lives on `LangGraphAgent`. You can call `chat.value()` here only because `injectAgent()` returns a `LangGraphAgent`. Code written against the neutral `Agent` contract should read agent state through `state()` rather than `value()`.
 </Callout>
 
