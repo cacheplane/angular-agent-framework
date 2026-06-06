@@ -30,13 +30,15 @@ For a fully managed tool call display, see [`<chat-tool-call-card>`](/docs/chat/
 
 | Input | Type | Default | Description |
 |-------|------|---------|-------------|
-| `state` | `'pending' \| 'running' \| 'done' \| 'error'` | `'pending'` | Current execution state. Controls the status icon and auto-expand behavior |
+| `state` | `TraceState` | `'pending'` | Current execution state. Controls the status icon and auto-expand behavior. `TraceState` is exported from `@threadplane/chat` and is `'pending' \| 'running' \| 'done' \| 'error'`. |
 
 ### Outputs
 
 None. State transitions are driven by the `state` input.
 
 ### Slots
+
+All slots are optional.
 
 | Slot | Selector | Description |
 |------|----------|-------------|
@@ -90,13 +92,14 @@ When `state` transitions from any value to `'running'`, the trace automatically 
 
 ```typescript
 import { Component, ChangeDetectionStrategy, signal } from '@angular/core';
-import { agent } from '@threadplane/langgraph';
+import { injectAgent, provideAgent } from '@threadplane/langgraph';
 import { ChatTraceComponent, ChatMessageListComponent } from '@threadplane/chat';
 
 @Component({
   selector: 'app-traced-chat',
   standalone: true,
   imports: [ChatMessageListComponent, ChatTraceComponent],
+  providers: [provideAgent({ assistantId: 'chat', threadId: signal(null) })],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div style="height: 100vh; display: flex; flex-direction: column;">
@@ -116,10 +119,7 @@ import { ChatTraceComponent, ChatMessageListComponent } from '@threadplane/chat'
   `,
 })
 export class TracedChatComponent {
-  protected readonly chatAgent = agent({
-    assistantId: 'chat',
-    threadId: signal(null),
-  });
+  protected readonly chatAgent = injectAgent();
 }
 ```
 

@@ -18,6 +18,7 @@ import { ChatToolCallsComponent } from '@threadplane/chat';
 | `[message]` | `Message \| undefined` | `undefined` | Filter to calls referenced by this message's `tool_use` content blocks |
 | `[grouping]` | `'auto' \| 'none'` | `'auto'` | Auto-collapse adjacent same-name calls into a strip |
 | `[groupSummary]` | `(name: string, count: number) => string` | built-in registry | Override the default strip label |
+| `[excludeToolNames]` | `readonly string[]` | `[]` | Tool names whose groups are hidden. Used by chat compositions to filter out internal/orchestration tools (e.g. GenUI dispatchers). |
 
 ## Default group summaries
 

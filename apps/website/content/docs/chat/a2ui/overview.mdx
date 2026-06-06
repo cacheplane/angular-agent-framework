@@ -255,18 +255,16 @@ Pass the built-in A2UI catalog to chat:
 ```ts
 import { Component } from '@angular/core';
 import { ChatComponent, a2uiBasicCatalog } from '@threadplane/chat';
-import { agent } from '@threadplane/langgraph';
+import { injectAgent, provideAgent } from '@threadplane/langgraph';
 
 @Component({
   standalone: true,
   imports: [ChatComponent],
+  providers: [provideAgent({ apiUrl: '/api/langgraph', assistantId: 'support' })],
   template: `<chat [agent]="chat" [views]="catalog" />`,
 })
 export class SupportChatComponent {
-  protected readonly chat = agent({
-    apiUrl: '/api/langgraph',
-    assistantId: 'support',
-  });
+  protected readonly chat = injectAgent();
 
   protected readonly catalog = a2uiBasicCatalog();
 }

@@ -14,13 +14,21 @@ import { ChatDebugComponent } from '@threadplane/chat/debug';
 
 ```typescript
 import { Component, ChangeDetectionStrategy, signal } from '@angular/core';
-import { agent } from '@threadplane/langgraph';
+import { injectAgent, provideAgent } from '@threadplane/langgraph';
 import { ChatDebugComponent } from '@threadplane/chat/debug';
 
 @Component({
   selector: 'app-debug-page',
   standalone: true,
   imports: [ChatDebugComponent],
+  providers: [
+    provideAgent({
+      apiUrl: '/api/langgraph',
+      assistantId: 'chat',
+      threadId: signal(localStorage.getItem('threadId')),
+      onThreadId: (id) => localStorage.setItem('threadId', id),
+    }),
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <chat-debug
@@ -36,12 +44,7 @@ export class DebugPageComponent {
   protected readonly replayCheckpointId = signal<string | null>(null);
   protected readonly forkSourceCheckpointId = signal<string | null>(null);
 
-  protected readonly chat = agent({
-    apiUrl: '/api/langgraph',
-    assistantId: 'chat',
-    threadId: signal(localStorage.getItem('threadId')),
-    onThreadId: (id) => localStorage.setItem('threadId', id),
-  });
+  protected readonly chat = injectAgent();
 
   replay(checkpointId: string) {
     this.replayCheckpointId.set(checkpointId);
