@@ -17,13 +17,17 @@ Demonstrating both over AG-UI completes the "same UI capability, AG-UI runtime i
 
 ## Key architectural finding (why this is example-only work)
 
-No chat-lib or AG-UI adapter changes are required. Verified during exploration:
+**UI spec delivery** requires no changes; **dashboard data delivery for json-render** does (one small, runtime-neutral chat-lib enhancement). Verified during exploration + research:
 
 1. **The content classifier is adapter-agnostic** (`libs/chat/src/lib/streaming/content-classifier.ts`). It classifies any AI message content string by its first non-whitespace character: `{` → `json-render`, the `---a2ui_JSON---` prefix → `a2ui`, otherwise `markdown`. It does not know or care which runtime produced the string.
 2. **The AG-UI reducer preserves raw content intact** (`libs/ag-ui/src/lib/reducer.ts`): `TEXT_MESSAGE_CONTENT` accumulates the delta onto `message.content` verbatim, and `MESSAGES_SNAPSHOT` bridges `m.content` through unchanged. So a backend that emits spec JSON or an A2UI envelope as message content reaches the classifier exactly as sent.
 3. **Both runtimes share the same `<chat>` composition** — `provideAgent({...})` selects the adapter; `provideChat({})` and the `[views]` input are identical.
 
-Therefore each example is: a backend graph that emits the right content format + Angular wiring that passes the right `views` registry + registry/port configuration. No new unit tests in the libs.
+So the **spec/envelope** travels fine over AG-UI with no changes. The catch is the json-render dashboard's **data** (the numbers bound into the spec's `$state` props). The LangGraph `chat/generative-ui` backend pushes that data via `get_stream_writer()` custom stream events — and a runtime test confirmed those **do not survive `ag-ui-langgraph`** (it consumes `astream_events`, where stream-writer payloads never appear; the data is silently dropped). A2UI is unaffected (its data model lives inside the `---a2ui_JSON---` envelope in message content).
+
+The idiomatic AG-UI fix is to deliver dashboard data as **agent shared state**: AG-UI's first-class `STATE_SNAPSHOT` / `STATE_DELTA` events. `ag-ui-langgraph` auto-emits `STATE_SNAPSHOT` from the graph's state object (filtered to the graph's `output_schema` keys) at node boundaries, and the AG-UI reducer already maps `STATE_SNAPSHOT`/`STATE_DELTA` into the agent `state` signal (`reducer.ts:203-216`). The **one missing link** is that the `<chat>` composition does not currently feed `agent.state()` into the render store — it only feeds it from `events$` `state_update` custom events (`chat.component.ts:489-494`). So `ag-ui/json-render` adds a small, runtime-neutral effect that syncs the agent state signal into the render store. This makes `ag-ui/json-render` the cockpit's first demonstration of AG-UI's shared-state → generative-UI mechanism.
+
+Net: `ag-ui/json-render` (PR-B1) = backend graph (data in state) + the small chat-lib state→store effect + Angular wiring + registry. `ag-ui/a2ui` (PR-B2) = purely example work (no lib change).
 
 ## Constraint
 
@@ -33,26 +37,26 @@ Per the repo's **standalone-examples** rule: duplicate the graph/views code from
 
 ## Non-goals
 
-- Any chat-lib or `libs/ag-ui` adapter change (none needed).
+- Any `libs/ag-ui` adapter change (the reducer already supports `STATE_SNAPSHOT`/`STATE_DELTA`).
+- Any chat-lib change beyond the single state→render-store sync effect needed by json-render.
 - New rendering capabilities or new `views`/catalog primitives.
 - Changing the existing LangGraph `chat/generative-ui` or `chat/a2ui` examples.
+- Predictive/optimistic mid-run state (`STATE_DELTA` from streaming tool args) — out of scope; the backend emits authoritative state at node boundaries only.
 - Fresh domains — the ports reuse the existing airline domains verbatim (decided).
 
 ---
 
 ## PR-B1: `ag-ui/json-render` (ports 4323 / 5323)
 
-A faithful port of `chat/generative-ui` onto the AG-UI runtime.
+A port of `chat/generative-ui` onto the AG-UI runtime, with the data channel switched from custom stream events to **agent shared state** (the idiomatic AG-UI mechanism).
 
 ### Backend — `cockpit/ag-ui/json-render/python/`
 
-Duplicate `cockpit/chat/generative-ui/python/src/` graph code verbatim:
-- The `render_spec` tool (returns `{"elements": ..., "root": ...}` JSON).
-- The four airline dashboard data-tools.
-- The `wrap_spec_into_ai` post-processor that replaces the parent AI message's content with the spec JSON (via the id-match reducer), plus the continuation loop (`agent ↔ tools → wrap_spec_into_ai → agent`), `finalize`, `emit_state`, `respond`, and `generate_title` nodes — copied as-is.
-- The system prompt and any `dashboard_tools` module — copied into this example's `src/`.
+Duplicate `cockpit/chat/generative-ui/python/src/` graph code, with one substantive change to the data channel:
+- **Copied verbatim:** the `render_spec` tool (returns `{"elements": ..., "root": ...}` JSON), the four airline data-tools, the `wrap_spec_into_ai` post-processor (puts spec JSON in AI message content via the id-match reducer), the continuation loop (`agent ↔ tools → wrap_spec_into_ai → agent`), `finalize`, `respond`, and `generate_title` nodes, the system prompt, and the `dashboard_tools` module — copied into this example's `src/`.
+- **Changed — `emit_state`:** instead of `get_stream_writer()({"name":"state_update","data":...})` (which `ag-ui-langgraph` silently drops), the node **returns the accumulated data into graph state** so `ag-ui-langgraph` auto-emits it as `STATE_SNAPSHOT`. This requires: (a) `DashboardState` declares explicit typed fields for the data the spec binds to (e.g. `on_time_trend`, `flights_by_airline`, `recent_disruptions`, and the KPI sections) rather than being bare `MessagesState`; (b) those fields are in the graph's **output schema** (ag-ui-langgraph's `get_state_snapshot` filters the snapshot to output-schema keys, so a field not in the schema is dropped from the wire); (c) `emit_state` returns a dict of those fields (a state update) instead of calling the stream writer. The render spec's `$state` bindings (`/on_time_trend`, `/kpis/...`, etc.) must match these state field paths — keep the prompt's binding convention and the state field layout aligned. No tool result shape changes; only where the accumulated data lands.
 
-Swap only the server: `server.py` uses
+Swap the server: `server.py` uses
 ```python
 from ag_ui_langgraph import LangGraphAgent, add_langgraph_fastapi_endpoint
 from .graph import graph
@@ -64,6 +68,10 @@ Plus the standard `/ok` route, `pyproject.toml`, `requirements.txt` (generated v
 
 `generate_title` calls the LangGraph SDK against `LANGGRAPH_API_URL`. Under the ag-ui-langgraph runtime that env var is absent, and the existing node already swallows errors as a UX nicety — so title generation is a graceful no-op here. Keep the node for fidelity; no special handling needed.
 
+### Chat-lib change — sync agent state into the render store
+
+The `<chat>` composition currently feeds the render store only from `events$` `state_update` events (`chat.component.ts:489-494`); it never reads the agent `state` signal. Add one small, runtime-neutral effect to `ChatComponent`: when a render store is active (i.e. `resolvedStore()` is defined — which is the case whenever `views` is set) and the agent exposes a `state` signal, merge that state into the render store via `store.update(...)`. The agent `state` signal is on the neutral `Agent` contract and is populated by both adapters (the LangGraph adapter's neutral state projection and the AG-UI reducer's `STATE_SNAPSHOT`/`STATE_DELTA` handlers), so this benefits both runtimes and closes a latent gap. Exclude `messages` from the merged slice (the snapshot carries the message list, which the render store has no use for and which would bloat it on every token). This is the only shared-library change in PR-B; it ships with a unit test (drive a mock agent's `state` signal → assert the render store updates and that the `events$` path still works).
+
 ### Frontend — `cockpit/ag-ui/json-render/angular/`
 
 Mirror `ag-ui/tool-views/angular/` structure; duplicate the dashboard view components and registry from `chat/generative-ui/angular/`:
@@ -74,7 +82,7 @@ Mirror `ag-ui/tool-views/angular/` structure; duplicate the dashboard view compo
 
 ### e2e — `cockpit/ag-ui/json-render/angular/e2e/`
 
-Mirror the `ag-ui/tool-views` harness (`createAgUiGlobalSetup`, playwright.config, tsconfig). Port `chat/generative-ui`'s aimock fixtures into this example's `fixtures/json-render.json`, adapted to the AG-UI flow: the dashboard agent makes multiple LLM calls per turn (tool calls + `render_spec` + respond; structured-vs-text per call), so the fixture set must cover each — matching on `userMessage` + `responseFormat`/`hasToolResult` exactly as the chat example's fixtures do. The spec (`json-render.spec.ts`) submits the dashboard prompt and asserts the rendered dashboard surface (e.g. a known stat value) appears. Include a `manual/json-render.manual.ts` record harness documenting how to recapture fixtures against a live key.
+Mirror the `ag-ui/tool-views` harness (`createAgUiGlobalSetup`, playwright.config, tsconfig). Port `chat/generative-ui`'s aimock fixtures into this example's `fixtures/json-render.json`, adapted to the AG-UI flow: the dashboard agent makes multiple LLM calls per turn (tool calls + `render_spec` + respond; structured-vs-text per call), so the fixture set must cover each — matching on `userMessage` + `responseFormat`/`hasToolResult` exactly as the chat example's fixtures do. The spec (`json-render.spec.ts`) submits the dashboard prompt and asserts the rendered dashboard surface shows a **state-bound value** (e.g. a known KPI number that arrives via `STATE_SNAPSHOT`, not just spec structure) — this is the gate that proves the full data path (spec content → classifier → render; data → graph state → `STATE_SNAPSHOT` → reducer → state-sync effect → render store) works end-to-end over AG-UI. Include a `manual/json-render.manual.ts` record harness documenting how to recapture fixtures against a live key.
 
 ---
 
@@ -120,12 +128,15 @@ Each PR adds, for its example:
 
 Per example:
 - **smoke**: module-shape check (`agUi{JsonRender,A2ui}{Python,Angular}Module` id + title), `scope:cockpit-smoke` tag on python.
-- **e2e**: Playwright via `createAgUiGlobalSetup` (uvicorn under aimock replay + Angular dev server), asserting the rendered surface. Fixtures ported from the corresponding `chat/*` example and adapted to AG-UI's per-LLM-call matching.
+- **e2e**: Playwright via `createAgUiGlobalSetup` (uvicorn under aimock replay + Angular dev server), asserting the rendered surface (and, for json-render, a state-bound data value). Fixtures ported from the corresponding `chat/*` example and adapted to AG-UI's per-LLM-call matching.
 - **manual record harness** per example for fixture recapture.
-- No new lib unit tests (the content-classifier path is already covered and was verified over AG-UI in PR-A).
+- **chat-lib unit test (PR-B1 only)**: a vitest spec for the new state→render-store sync effect — drive a mock agent's `state` signal (with and without a render store / `views`), assert the render store receives the merged state (minus `messages`) and that the existing `events$` `state_update` path is unaffected.
+- A2UI (PR-B2): no new lib unit tests (the content-classifier + envelope path is already covered and verified over AG-UI).
 
 ## Risks
 
-- **Fixture surface** is the main risk: the full generative-ui agent makes several LLM calls per turn (tool loop + `render_spec` + respond + title) and a2ui uses structured output with retry, so the aimock fixture set is non-trivial. Porting the existing `chat/*` fixtures plus the manual record harness mitigates this; splitting into two PRs keeps each fixture surface reviewable.
-- **Standalone duplication drift**: the ported graphs duplicate the `chat/*` graphs. This is intentional per the repo rule, but the two copies can diverge over time. Acceptable — the examples are illustrative snapshots, not shared infrastructure.
+- **State-path correctness (json-render)** is the chief risk and the reason for Approach STATE: the dashboard data must (a) land in graph state fields that are (b) included in the graph's **output schema** (else `ag-ui-langgraph`'s `get_state_snapshot` filters them out), and (c) match the spec's `$state` binding paths, then (d) reach the render store via the new sync effect. A mismatch at any step renders an empty dashboard. The implementation plan front-loads a thin end-to-end vertical slice (minimal state field → STATE_SNAPSHOT → one stat card) before porting all six view components, so this path is proven early. The e2e asserts a state-bound value, not just spec structure.
+- **Render-store merge hygiene**: the state snapshot includes `messages`; the sync effect must exclude it so the render store isn't bloated per-token. Covered by the chat-lib unit test.
+- **Fixture surface**: the full generative-ui agent makes several LLM calls per turn (tool loop + `render_spec` + respond + title) and a2ui uses structured output with retry, so the aimock fixture set is non-trivial. Porting the existing `chat/*` fixtures plus the manual record harness mitigates this; splitting into two PRs keeps each fixture surface reviewable.
+- **Standalone duplication drift**: the ported graphs duplicate the `chat/*` graphs. Intentional per the repo rule; the two copies can diverge over time. Acceptable — the examples are illustrative snapshots, not shared infrastructure.
 - **Title-node env coupling** (json-render): relies on the existing node swallowing the missing-`LANGGRAPH_API_URL` error. Verified by reading the node; the e2e confirms the turn still completes.
