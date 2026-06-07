@@ -60,14 +60,15 @@ function agentRuntimeTelemetryErrorClass(error: unknown): string {
  */
 export function toAgent(source: AbstractAgent, options: ToAgentOptions = {}): Agent {
   const store: ReducerStore = {
-    messages:  signal<Message[]>([]),
-    status:    signal<AgentStatus>('idle'),
-    isLoading: signal<boolean>(false),
-    error:     signal<unknown>(null),
-    toolCalls: signal<ToolCall[]>([]),
-    state:     signal<Record<string, unknown>>({}),
-    interrupt: signal<AgentInterrupt | undefined>(undefined),
-    events$:   new Subject<AgentEvent>(),
+    messages:     signal<Message[]>([]),
+    status:       signal<AgentStatus>('idle'),
+    isLoading:    signal<boolean>(false),
+    error:        signal<unknown>(null),
+    toolCalls:    signal<ToolCall[]>([]),
+    state:        signal<Record<string, unknown>>({}),
+    interrupt:    signal<AgentInterrupt | undefined>(undefined),
+    events$:      new Subject<AgentEvent>(),
+    customEvents: signal([]),
   };
   const telemetryProperties = { transport: 'ag-ui' as const, surface: 'to_agent' };
   let activeRun: { startedAt: number; errored: boolean } | null = null;
