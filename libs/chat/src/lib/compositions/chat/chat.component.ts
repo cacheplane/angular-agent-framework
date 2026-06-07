@@ -494,6 +494,30 @@ export class ChatComponent {
       });
     });
 
+    // Sync the agent STATE signal into the render store. AG-UI delivers
+    // backend data as agent shared state (STATE_SNAPSHOT/STATE_DELTA); other
+    // adapters expose graph state via the same `state()` signal. The render
+    // store keys are JSON pointers, so map each top-level state key `k` to
+    // `/k`. Exclude `messages` (carried in the snapshot but irrelevant to the
+    // render store and large). Fires for any adapter whose `state()` carries
+    // non-message keys; no-op when no render store is active. Coexists with
+    // the events$ `state_update` path above (both merge into the same store).
+    effect(() => {
+      let agentRef: ReturnType<typeof this.agent>;
+      try { agentRef = this.agent(); } catch { return; }
+      const stateFn = (agentRef as unknown as { state?: () => unknown }).state;
+      if (typeof stateFn !== 'function') return;
+      const state = stateFn.call(agentRef);
+      const store = this.resolvedStore();
+      if (!store || state == null || typeof state !== 'object' || Array.isArray(state)) return;
+      const updates: Record<string, unknown> = {};
+      for (const [k, v] of Object.entries(state as Record<string, unknown>)) {
+        if (k === 'messages') continue;
+        updates['/' + k] = v;
+      }
+      if (Object.keys(updates).length > 0) store.update(updates);
+    });
+
     // Spec 4: flip CHAT_LIFECYCLE.firstMessageSent when the agent's stream
     // starts, regardless of submit path (input-bound, programmatic, suggestion-
     // click). Sticky — guarded so we never re-set a flag that's already true.
