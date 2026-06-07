@@ -1,0 +1,24 @@
+{
+  "fixtures": [
+    {
+      "match": {
+        "userMessage": "Show me a dashboard.",
+        "hasToolResult": true
+      },
+      "response": {
+        "content": "Here is your dashboard."
+      }
+    },
+    {
+      "match": { "userMessage": "Show me a dashboard." },
+      "response": {
+        "toolCalls": [
+          {
+            "name": "render_spec",
+            "arguments": "{\"elements\":{\"root\":{\"type\":\"stat_card\",\"props\":{\"label\":\"Demo\",\"value\":{\"$state\":\"/demo/value\"},\"delta\":{\"$state\":\"/demo/delta\"}}}},\"root\":\"root\"}"
+          }
+        ]
+      }
+    }
+  ]
+}
