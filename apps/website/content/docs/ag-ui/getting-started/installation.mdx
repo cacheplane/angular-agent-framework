@@ -81,6 +81,7 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideFakeAgent({
       tokens: ['Hello', ' from', ' a', ' fake', ' agent.'],
+      reasoningTokens: ['Thinking', ' it', ' over...'],
       delayMs: 60,
     }),
   ],
@@ -88,6 +89,14 @@ export const appConfig: ApplicationConfig = {
 ```
 
 `FakeAgent` extends `AbstractAgent` and emits a canned `RUN_STARTED -> TEXT_MESSAGE_START -> TEXT_MESSAGE_CONTENT x N -> TEXT_MESSAGE_END -> RUN_FINISHED` sequence. It's a drop-in replacement for `provideAgent({ url })` while you're prototyping.
+
+`provideFakeAgent` accepts:
+
+| Option | Type | Description |
+|---|---|---|
+| `tokens` | `string[]` | Optional. Tokens streamed back as the assistant reply. |
+| `reasoningTokens` | `string[]` | Optional. Reasoning chunks emitted before the text reply (defaults to `[]`). |
+| `delayMs` | `number` | Optional. Milliseconds between successive token emissions (defaults to `60`). |
 
 ## Custom transport
 
