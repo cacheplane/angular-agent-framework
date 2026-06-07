@@ -1,0 +1,38 @@
+{
+  "name": "cockpit-ag-ui-a2ui-python",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "cockpit/ag-ui/a2ui/python/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": [
+        "{workspaceRoot}/dist/cockpit/ag-ui/a2ui/python"
+      ],
+      "options": {
+        "outputPath": "dist/cockpit/ag-ui/a2ui/python",
+        "main": "cockpit/ag-ui/a2ui/python/src/index.ts",
+        "tsConfig": "cockpit/ag-ui/a2ui/python/tsconfig.json"
+      }
+    },
+    "smoke": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "cockpit/ag-ui/a2ui/python",
+        "command": "npx tsx -e \"import { agUiA2uiPythonModule } from './src/index.ts'; const module = agUiA2uiPythonModule; if (module.id !== 'ag-ui-a2ui-python' || module.title !== 'AG-UI A2UI (Python)') { throw new Error('Unexpected module shape for ' + module.id); }\""
+      }
+    },
+    "serve": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "cockpit/ag-ui/a2ui/python",
+        "command": "uv run uvicorn src.server:app --port 5324"
+      }
+    }
+  },
+  "tags": [
+    "scope:cockpit-e2e",
+    "scope:cockpit-examples",
+    "scope:cockpit-smoke"
+  ]
+}
