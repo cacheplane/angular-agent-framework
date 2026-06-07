@@ -166,6 +166,8 @@ When `update_memory` returns `user_preferences`, the dict is merged into the exi
 
 Short-term memory is the simplest form: the conversation history and any accumulated state fields within a single thread. Every message, tool call, and state update is automatically checkpointed. When a user reconnects with the same `threadId`, the full history is restored.
 
+Let's see it in Python first, then on the Angular side.
+
 ```python
 from langgraph.checkpoint.postgres import PostgresSaver
 
@@ -331,7 +333,7 @@ The checkpointer saves thread state (short-term memory). The Store saves cross-t
 
 ## Semantic Memory with Vector Search
 
-For agents that accumulate hundreds or thousands of memories, keyword matching is not enough. The Store API supports semantic search with embeddings, so your agent can retrieve the most relevant memories for any given context.
+For agents that accumulate hundreds or thousands of memories, keyword matching isn't enough. The Store API supports semantic search with embeddings, so your agent can retrieve the most relevant memories for any given context.
 
 ```python
 from langchain_openai import OpenAIEmbeddings
@@ -372,7 +374,7 @@ Semantic search requires an embedding model configured on the Store. LangGraph P
 
 ## Surfacing Memory in Angular with value()
 
-The `value()` signal is the primary way memory surfaces in your Angular components. It contains the full agent state object, including all custom memory fields. Because it is a Signal, your template re-renders automatically through OnPush change detection whenever the agent state changes.
+The `value()` signal is the primary way memory surfaces in your Angular components. It contains the full agent state object, including all custom memory fields. Because it's a Signal, your template re-renders automatically through OnPush change detection whenever the agent state changes.
 
 ```typescript
 // The value() signal contains everything the agent knows
