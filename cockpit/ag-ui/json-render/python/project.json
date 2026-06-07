@@ -1,0 +1,38 @@
+{
+  "name": "cockpit-ag-ui-json-render-python",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "cockpit/ag-ui/json-render/python/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": [
+        "{workspaceRoot}/dist/cockpit/ag-ui/json-render/python"
+      ],
+      "options": {
+        "outputPath": "dist/cockpit/ag-ui/json-render/python",
+        "main": "cockpit/ag-ui/json-render/python/src/index.ts",
+        "tsConfig": "cockpit/ag-ui/json-render/python/tsconfig.json"
+      }
+    },
+    "smoke": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "cockpit/ag-ui/json-render/python",
+        "command": "npx tsx -e \"import { agUiJsonRenderPythonModule } from './src/index.ts'; const module = agUiJsonRenderPythonModule; if (module.id !== 'ag-ui-json-render-python' || module.title !== 'AG-UI JSON Render (Python)') { throw new Error('Unexpected module shape for ' + module.id); }\""
+      }
+    },
+    "serve": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "cockpit/ag-ui/json-render/python",
+        "command": "uv run uvicorn src.server:app --port 5323"
+      }
+    }
+  },
+  "tags": [
+    "scope:cockpit-e2e",
+    "scope:cockpit-examples",
+    "scope:cockpit-smoke"
+  ]
+}

@@ -29,6 +29,7 @@ const expectedTopics = {
     ['core-capabilities', 'streaming'],
     ['core-capabilities', 'interrupts'],
     ['core-capabilities', 'tool-views'],
+    ['core-capabilities', 'json-render'],
   ],
   render: [
     ['getting-started', 'overview'],
@@ -103,7 +104,7 @@ describe('cockpitManifest', () => {
       (entry) => entry.entryKind === 'capability'
     );
 
-    expect(capabilityEntries).toHaveLength(34);
+    expect(capabilityEntries).toHaveLength(35);
 
     for (const entry of capabilityEntries) {
       expect(entry.supportedLanguages).toEqual(['python']);
