@@ -5,6 +5,17 @@
 **Source verified against:** `libs/a2ui`, `libs/licensing`, `libs/telemetry`
 **Method:** 4 parallel read-only auditors + per-lib completeness sweep; controller re-verified every high-impact finding against source (dropped 1 auditor false alarm).
 
+## Resolution status — ✅ ALL FINDINGS FIXED (3 per-lib PRs)
+
+Cutoff: P0+P1+P2 + cheap P3. Each fix verified against current source.
+- ✅ **PR #609 — licensing:** L1 (P0 `LicenseTier` values), L3 (P1 `runLicenseCheck` idempotency), L2 (P2 `EvaluateResult` documented), L4 (P3 env bracket-access).
+- ✅ **PR #610 — a2ui:** A1 (P2 `A2uiTheme` fields documented in schema). (False-alarm "package doesn't exist" dropped.)
+- ✅ **PR #611 — telemetry:** T1 (P2 `ngaf:runtime_request_created` event added to reference), T2 (P2 `captureRuntimeRequestCreated()` documented in browser + node guides).
+
+**Process note:** the licensing fix branch was cut from a stale local `main`; the source-freshness guard caught it (origin/main had advanced with an unrelated #606 ag-ui feature), and all 3 fix branches were re-based on current `origin/main` before fixes were applied/verified.
+
+**Verified:** all 16 routes returned HTTP 200; no `type="note"` Callout; no `libs/*` source bugs.
+
 ## Summary
 
 - **P0: 1** · **P1: 1** · **P2: 5** · **P3: 1** (a2ui: 1 P2; licensing: 1 P0 + 1 P1 + 1 P2 + 1 P3; telemetry: 2 P2)
