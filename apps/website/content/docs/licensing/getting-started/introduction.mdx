@@ -31,7 +31,7 @@ A token is:
 The payload must match `LicenseClaims`:
 
 ```ts
-type LicenseTier = 'developer-seat' | 'app-deployment' | 'enterprise';
+type LicenseTier = 'developer_seat' | 'team' | 'enterprise';
 
 interface LicenseClaims {
   sub: string;
