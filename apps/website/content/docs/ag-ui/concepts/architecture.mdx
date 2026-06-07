@@ -87,6 +87,7 @@ Every AG-UI event is passed through the reducer. The reducer updates Angular sig
 - `status`, `isLoading`, and `error` for run lifecycle.
 - `toolCalls` for tool call starts, arguments, results, and completion.
 - `state` for AG-UI state snapshots and JSON Patch deltas.
+- `interrupt` cleared on `RUN_STARTED` and set by the `CUSTOM` `on_interrupt` event.
 - `events$` for custom events.
 
 When the user submits input, the adapter builds a user message, appends it locally, adds it to the AG-UI source with `source.addMessage()`, then calls `source.runAgent()`.
