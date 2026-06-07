@@ -178,6 +178,16 @@ interface A2uiSurface {
 }
 ```
 
+`A2uiTheme` carries optional, agent-supplied presentation hints:
+
+```ts
+interface A2uiTheme {
+  primaryColor?: string;
+  iconUrl?: string;
+  agentDisplayName?: string;
+}
+```
+
 This shape is not constrained to the wire format. Do not assume an agent sends it directly.
 
 ## Outbound action messages
