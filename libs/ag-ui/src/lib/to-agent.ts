@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-import { signal } from '@angular/core';
+import { signal, type Signal } from '@angular/core';
 import { Subject } from 'rxjs';
 import type { AbstractAgent } from '@ag-ui/client';
 import type {
@@ -10,7 +10,7 @@ import type {
   AgentRuntimeTelemetrySink,
   AgentSubmitInput, AgentSubmitOptions,
 } from '@threadplane/chat';
-import { reduceEvent, type ReducerStore } from './reducer';
+import { reduceEvent, type ReducerStore, type CustomStreamEvent } from './reducer';
 
 export interface ToAgentOptions {
   /** Optional app-owned telemetry sink. No telemetry is emitted unless this is provided. */
@@ -45,6 +45,15 @@ function agentRuntimeTelemetryErrorClass(error: unknown): string {
 }
 
 /**
+ * The neutral Agent contract, widened with the AG-UI adapter's optional
+ * `customEvents` signal (the chat composition feature-detects it to enable
+ * live a2ui streaming). Mirrors langgraph's LangGraphAgent extension.
+ */
+export interface AgUiAgent extends Agent {
+  customEvents: Signal<CustomStreamEvent[]>;
+}
+
+/**
  * Wraps an AG-UI AbstractAgent into the runtime-neutral Agent contract.
  *
  * The adapter subscribes to source.subscribe({ onEvent }) and reduces every
@@ -58,7 +67,7 @@ function agentRuntimeTelemetryErrorClass(error: unknown): string {
  * agent instance they constructed. The subscriber registered via
  * source.subscribe() will fire for the lifetime of source.
  */
-export function toAgent(source: AbstractAgent, options: ToAgentOptions = {}): Agent {
+export function toAgent(source: AbstractAgent, options: ToAgentOptions = {}): AgUiAgent {
   const store: ReducerStore = {
     messages:     signal<Message[]>([]),
     status:       signal<AgentStatus>('idle'),
@@ -68,7 +77,7 @@ export function toAgent(source: AbstractAgent, options: ToAgentOptions = {}): Ag
     state:        signal<Record<string, unknown>>({}),
     interrupt:    signal<AgentInterrupt | undefined>(undefined),
     events$:      new Subject<AgentEvent>(),
-    customEvents: signal([]),
+    customEvents: signal<CustomStreamEvent[]>([]),
   };
   const telemetryProperties = { transport: 'ag-ui' as const, surface: 'to_agent' };
   let activeRun: { startedAt: number; errored: boolean } | null = null;
@@ -132,7 +141,8 @@ export function toAgent(source: AbstractAgent, options: ToAgentOptions = {}): Ag
     toolCalls: store.toolCalls,
     state:     store.state,
     interrupt: store.interrupt,
-    events$:   store.events$.asObservable(),
+    events$:      store.events$.asObservable(),
+    customEvents: store.customEvents,
 
     submit: async (input: AgentSubmitInput, _opts?: AgentSubmitOptions) => {
       if (input.resume !== undefined) {
