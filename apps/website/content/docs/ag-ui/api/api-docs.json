@@ -403,6 +403,112 @@
     "examples": []
   },
   {
+    "name": "AgUiAgent",
+    "kind": "interface",
+    "description": "The neutral Agent contract, widened with the AG-UI adapter's optional\n`customEvents` signal (the chat composition feature-detects it to enable\nlive a2ui streaming). Mirrors langgraph's LangGraphAgent extension.",
+    "properties": [
+      {
+        "name": "customEvents",
+        "type": "Signal<CustomStreamEvent[]>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "error",
+        "type": "Signal<unknown>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "events$",
+        "type": "Observable<AgentEvent>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "interrupt",
+        "type": "Signal<AgentInterrupt | undefined>",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "isLoading",
+        "type": "Signal<boolean>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "messages",
+        "type": "Signal<Message[]>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "regenerate",
+        "type": "(assistantMessageIndex: number) => Promise<void>",
+        "description": "Discards the assistant message at the given index AND all messages after\nit, then re-runs the agent against the trimmed conversation tail. The\npreceding user message (at index - 1) is preserved and re-submitted as\nthe agent's input. No new user message is added to the history.\n\nThrows if the message at `index` is not 'assistant' role, or if the\nagent is currently loading another response.",
+        "optional": false
+      },
+      {
+        "name": "state",
+        "type": "Signal<Record<string, unknown>>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "status",
+        "type": "Signal<AgentStatus>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "stop",
+        "type": "() => Promise<void>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "subagents",
+        "type": "Signal<Map<string, Subagent>>",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "submit",
+        "type": "(input: AgentSubmitInput, opts: AgentSubmitOptions) => Promise<void>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "toolCalls",
+        "type": "Signal<ToolCall[]>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "CustomStreamEvent",
+    "kind": "interface",
+    "description": "A custom event surfaced to consumers via the agent's `customEvents` signal.\nMirrors the LangGraph adapter's CustomStreamEvent shape so the chat\na2ui partial-args bridge consumes both transports identically.",
+    "properties": [
+      {
+        "name": "data",
+        "type": "unknown",
+        "description": "Arbitrary payload from the backend (JSON-string values are parsed).",
+        "optional": false
+      },
+      {
+        "name": "name",
+        "type": "string",
+        "description": "Event name set by the backend (e.g. 'a2ui-partial', 'state_update').",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
     "name": "ToAgentOptions",
     "kind": "interface",
     "description": "",
@@ -495,7 +601,7 @@
     "name": "toAgent",
     "kind": "function",
     "description": "Wraps an AG-UI AbstractAgent into the runtime-neutral Agent contract.\n\nThe adapter subscribes to source.subscribe({ onEvent }) and reduces every\nevent into the produced Agent's signals. submit() optimistically appends the\nuser message to both our signals and the source agent's internal message\nlist, then calls source.runAgent(). stop() calls source.abortRun().\n\nSubscription cleanup: the returned Agent does NOT manage its own lifetime.\nCallers using DI should rely on the provider's destroy hook; direct callers\nof toAgent() should treat the returned object's lifecycle as tied to the\nagent instance they constructed. The subscriber registered via\nsource.subscribe() will fire for the lifetime of source.",
-    "signature": "toAgent(source: AbstractAgent<>, options: ToAgentOptions): Agent",
+    "signature": "toAgent(source: AbstractAgent<>, options: ToAgentOptions): AgUiAgent",
     "params": [
       {
         "name": "source",
@@ -511,7 +617,7 @@
       }
     ],
     "returns": {
-      "type": "Agent",
+      "type": "AgUiAgent",
       "description": ""
     },
     "examples": []
