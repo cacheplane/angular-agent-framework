@@ -8,7 +8,7 @@ This page is the compatibility map. If your backend emits these events with the 
 
 | AG-UI event | Agent field | Behavior |
 | --- | --- | --- |
-| `RUN_STARTED` | `status`, `isLoading`, `error` | Sets `status` to `running`, `isLoading` to `true`, and clears `error`. |
+| `RUN_STARTED` | `status`, `isLoading`, `error`, `interrupt` | Sets `status` to `running`, `isLoading` to `true`, clears `error`, and clears any pending `interrupt`. |
 | `RUN_FINISHED` | `status`, `isLoading` | Sets `status` to `idle` and `isLoading` to `false`. |
 | `RUN_ERROR` | `status`, `isLoading`, `error` | Sets `status` to `error`, stops loading, and stores the event message when present. |
 | `TEXT_MESSAGE_START` | `messages` | Creates or reuses an assistant message slot. |
@@ -25,7 +25,8 @@ This page is the compatibility map. If your backend emits these events with the 
 | `STATE_SNAPSHOT` | `state`, `messages` | Replaces state and merges citations from `state.citations`. |
 | `STATE_DELTA` | `state`, `messages` | Applies JSON Patch to state and merges citations from `state.citations`. |
 | `MESSAGES_SNAPSHOT` | `messages` | Replaces the full message list. |
-| `CUSTOM` | `events$` | Emits a runtime-neutral custom event. |
+| `CUSTOM` (name: `on_interrupt`) | `interrupt` | Sets the `interrupt` signal to `{ id, value, resumable: true }`. The value is JSON-parsed when it arrives as a string. |
+| `CUSTOM` (other names) | `events$` | Emits a runtime-neutral custom event. |
 | unknown event | none | Ignored. Future protocol events do not crash the adapter. |
 
 ## Run lifecycle
