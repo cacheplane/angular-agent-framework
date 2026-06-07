@@ -123,7 +123,7 @@ Each runtime-neutral checkpoint exposes `id`, `label`, and `values`. Each raw `T
 
 ## Forking from a checkpoint
 
-Submit with a specific checkpoint to branch execution from an earlier state. This creates a new branch in the thread graph while leaving the original path intact.
+Submit with a specific checkpoint to branch execution from an earlier state. That creates a new branch in the thread graph while leaving the original path intact.
 
 ```typescript
 forkFromCheckpoint(index: number) {
@@ -242,7 +242,7 @@ compareCheckpoints(indexA: number, indexB: number) {
 }
 ```
 
-Use the comparison result to render a diff view, highlight changed fields in your UI, or log what the agent modified during a specific step.
+Use the comparison result to render a diff view, highlight changed fields in your UI, or log what the agent touched during a specific step.
 
 ## Replaying with modified input
 
