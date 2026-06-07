@@ -5,6 +5,15 @@
 **Source verified against:** `libs/ag-ui` (esp. `lib/reducer.ts`, `lib/to-agent.ts`, `lib/testing/fake-agent.ts`) + `libs/chat` Agent contract
 **Method:** 3 parallel read-only auditors + completeness sweep; controller re-verified every finding against source.
 
+## Resolution status — ✅ ALL FINDINGS FIXED (PR #604)
+
+All 7 findings fixed in a single PR, each re-verified against the current `reducer.ts` (313-line version) + `fake-agent.ts` by an independent reviewer (PASS):
+- ✅ **P1** CUSTOM `on_interrupt` row documented; **P2** RUN_STARTED clears `interrupt`, TOOL_CALL_START → `messages` (via `parentMessageId`), MESSAGES_SNAPSHOT → `toolCalls` (by id), architecture `interrupt` bullet, installation FakeAgent `reasoningTokens`. **P3** subsumed by the per-row fixes.
+
+**Process note:** the fix branch was initially cut from a stale local `main` (whose `reducer.ts` predated the `parentMessageId`/snapshot-toolCalls handling). The implementer correctly refused #4/#5 as ungrounded against that stale source; the controller caught the staleness via a blob-hash mismatch, rebased onto current `origin/main`, and the now-valid #4/#5 were applied and verified.
+
+**Verified:** all edited routes returned HTTP 200; no `type="note"` Callout; no `libs/*` source bugs.
+
 ## Summary
 
 - **P0: 0** · **P1: 1** · **P2: 5** · **P3: 1**
