@@ -5,7 +5,6 @@ import { TestBed } from '@angular/core/testing';
 import { A2uiSurfaceComponent } from './surface.component';
 import type { A2uiSurfaceState } from './surface-store';
 import { createA2uiSurfaceStore } from './surface-store';
-import type { A2uiViews } from './views';
 import { a2uiBasicCatalog } from './catalog';
 
 @Component({ standalone: true, selector: 'a2ui-test-real', template: '<span data-role="real"></span>', changeDetection: ChangeDetectionStrategy.OnPush })
