@@ -11,9 +11,16 @@ works locally with no env beyond OPENAI_API_KEY.
 import os
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
+from langgraph.checkpoint.memory import MemorySaver
 from ag_ui_langgraph import add_langgraph_fastapi_endpoint, LangGraphAgent
 
-from .graph import graph
+from .graph import _builder
+
+# The exported graph is checkpointer-free for LangGraph Platform (which manages
+# persistence). The standalone ag-ui-langgraph endpoint reads graph state via
+# aget_state, which requires a checkpointer — so compile a local copy with an
+# in-process MemorySaver. Mirrors the cockpit/ag-ui graphs.
+graph = _builder.compile(checkpointer=MemorySaver())
 
 AG_UI_INTERNAL_TOKEN = os.environ.get("AG_UI_INTERNAL_TOKEN")
 
