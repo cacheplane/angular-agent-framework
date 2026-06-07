@@ -31,15 +31,28 @@ interface AgUiSnapshotMessage {
   [key: string]: unknown;
 }
 
+/**
+ * A custom event surfaced to consumers via the agent's `customEvents` signal.
+ * Mirrors the LangGraph adapter's CustomStreamEvent shape so the chat
+ * a2ui partial-args bridge consumes both transports identically.
+ */
+export interface CustomStreamEvent {
+  /** Event name set by the backend (e.g. 'a2ui-partial', 'state_update'). */
+  name: string;
+  /** Arbitrary payload from the backend (JSON-string values are parsed). */
+  data: unknown;
+}
+
 export interface ReducerStore {
-  messages:  WritableSignal<Message[]>;
-  status:    WritableSignal<AgentStatus>;
-  isLoading: WritableSignal<boolean>;
-  error:     WritableSignal<unknown>;
-  toolCalls: WritableSignal<ToolCall[]>;
-  state:     WritableSignal<Record<string, unknown>>;
-  interrupt: WritableSignal<AgentInterrupt | undefined>;
-  events$:   Subject<AgentEvent>;
+  messages:     WritableSignal<Message[]>;
+  status:       WritableSignal<AgentStatus>;
+  isLoading:    WritableSignal<boolean>;
+  error:        WritableSignal<unknown>;
+  toolCalls:    WritableSignal<ToolCall[]>;
+  state:        WritableSignal<Record<string, unknown>>;
+  interrupt:    WritableSignal<AgentInterrupt | undefined>;
+  events$:      Subject<AgentEvent>;
+  customEvents: WritableSignal<CustomStreamEvent[]>;
 }
 
 /**
@@ -73,6 +86,7 @@ export function reduceEvent(event: BaseEvent, store: ReducerStore): void {
       store.isLoading.set(true);
       store.error.set(null);
       store.interrupt.set(undefined);
+      store.customEvents.set([]);
       return;
     }
     case 'RUN_FINISHED': {
@@ -262,6 +276,10 @@ export function reduceEvent(event: BaseEvent, store: ReducerStore): void {
         store.interrupt.set({ id: randomId(), value: parsedValue, resumable: true });
         return;
       }
+      // Surface every other custom event on the customEvents signal so the
+      // chat a2ui partial-args bridge (which reads agent.customEvents()) lights
+      // up live/progressive a2ui rendering — parity with the LangGraph adapter.
+      store.customEvents.update((prev) => [...prev, { name: e.name, data: parsedValue }]);
       if (e.name === 'state_update' && isRecord(parsedValue)) {
         store.events$.next({ type: 'state_update', data: parsedValue });
       } else {

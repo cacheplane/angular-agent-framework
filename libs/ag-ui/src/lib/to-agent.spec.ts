@@ -175,6 +175,19 @@ describe('toAgent', () => {
     expect(seen).toEqual([{ type: 'state_update', data: { x: 1 } }]);
   });
 
+  it('exposes a customEvents signal that reflects reduced CUSTOM events', () => {
+    const stub = new StubAgent();
+    const a = toAgent(stub as unknown as AbstractAgent);
+    expect(typeof a.customEvents).toBe('function');
+    expect(a.customEvents()).toEqual([]);
+
+    stub.emit({ type: 'CUSTOM', name: 'a2ui-partial', value: { tool_call_id: 't1', args_so_far: '{' } } as unknown as BaseEvent);
+
+    expect(a.customEvents()).toEqual([
+      { name: 'a2ui-partial', data: { tool_call_id: 't1', args_so_far: '{' } },
+    ]);
+  });
+
   it('sets error status when onRunFailed subscriber fires', () => {
     const stub = new StubAgent();
     const a = toAgent(stub as unknown as AbstractAgent);

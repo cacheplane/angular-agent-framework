@@ -5,7 +5,7 @@ import { Subject } from 'rxjs';
 import type {
   Message, AgentStatus, ToolCall, AgentEvent,
 } from '@threadplane/chat';
-import { reduceEvent, type ReducerStore } from './reducer';
+import { reduceEvent, type ReducerStore, type CustomStreamEvent } from './reducer';
 
 function makeStore(): ReducerStore {
   return {
@@ -17,6 +17,7 @@ function makeStore(): ReducerStore {
     state:     signal<Record<string, unknown>>({}),
     interrupt: signal(undefined),
     events$:   new Subject<AgentEvent>(),
+    customEvents: signal<CustomStreamEvent[]>([]),
   };
 }
 
@@ -299,5 +300,40 @@ describe('reduceEvent — REASONING_MESSAGE_*', () => {
     expect(msgs).toHaveLength(1);
     expect(msgs[0].reasoning).toBe('thinking');
     expect(msgs[0].content).toBe('hello');
+  });
+});
+
+describe('reduceEvent — customEvents accumulation', () => {
+  it('accumulates non-interrupt CUSTOM events as {name, data} in order', () => {
+    const store = makeStore();
+    reduceEvent({ type: 'CUSTOM', name: 'a2ui-partial', value: { tool_call_id: 't1', args_so_far: '{' } } as any, store);
+    reduceEvent({ type: 'CUSTOM', name: 'a2ui-partial', value: { tool_call_id: 't1', args_so_far: '{"a":1' } } as any, store);
+    expect(store.customEvents()).toEqual([
+      { name: 'a2ui-partial', data: { tool_call_id: 't1', args_so_far: '{' } },
+      { name: 'a2ui-partial', data: { tool_call_id: 't1', args_so_far: '{"a":1' } },
+    ]);
+  });
+
+  it('parses JSON-string CUSTOM values before storing', () => {
+    const store = makeStore();
+    reduceEvent({ type: 'CUSTOM', name: 'a2ui-partial', value: '{"tool_call_id":"t1","args_so_far":"{"}' } as any, store);
+    expect(store.customEvents()).toEqual([
+      { name: 'a2ui-partial', data: { tool_call_id: 't1', args_so_far: '{' } },
+    ]);
+  });
+
+  it('does NOT accumulate on_interrupt CUSTOM events (those drive the interrupt signal)', () => {
+    const store = makeStore();
+    reduceEvent({ type: 'CUSTOM', name: 'on_interrupt', value: { foo: 'bar' } } as any, store);
+    expect(store.customEvents()).toEqual([]);
+    expect(store.interrupt()).toMatchObject({ value: { foo: 'bar' } });
+  });
+
+  it('RUN_STARTED resets customEvents for the new run', () => {
+    const store = makeStore();
+    reduceEvent({ type: 'CUSTOM', name: 'a2ui-partial', value: { tool_call_id: 't1', args_so_far: '{' } } as any, store);
+    expect(store.customEvents()).toHaveLength(1);
+    reduceEvent({ type: 'RUN_STARTED' } as any, store);
+    expect(store.customEvents()).toEqual([]);
   });
 });
