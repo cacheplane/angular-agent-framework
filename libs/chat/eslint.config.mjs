@@ -42,6 +42,16 @@ export default [
     },
   },
   {
+    // Non-null assertions are acceptable in test code: the test author
+    // controls the fixtures, so a wrong assumption surfaces as a test
+    // failure rather than a production bug. The rule stays strict for
+    // library source (the `**/*.ts` block above).
+    files: ['**/*.spec.ts'],
+    rules: {
+      '@typescript-eslint/no-non-null-assertion': 'off',
+    },
+  },
+  {
     files: ['**/*.html'],
     // Override or add rules here
     rules: {},
