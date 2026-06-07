@@ -5,6 +5,7 @@ Node telemetry lives under `@threadplane/telemetry/node`. It is intended for pac
 ```ts
 import {
   captureRuntimeInstanceCreated,
+  captureRuntimeRequestCreated,
   captureStreamStarted,
   captureStreamEnded,
   captureStreamErrored,
@@ -36,6 +37,17 @@ await captureRuntimeInstanceCreated({
 ```
 
 The `RuntimeInstanceTelemetry` type includes `apiKey`, but the adapter strips it before sending. Do not pass secrets as telemetry properties anyway.
+
+Use `captureRuntimeRequestCreated()` when a runtime issues a request. The `RuntimeRequestTelemetry` type requires `transport` and `requestType`; `provider` and `model` are optional.
+
+```ts
+await captureRuntimeRequestCreated({
+  transport: 'langgraph',
+  requestType: 'stream',
+  provider: 'openai',
+  model: 'gpt-4.1',
+});
+```
 
 ## Capture streams
 
