@@ -20,14 +20,14 @@ export function attachBrowserHygiene(page: Page): {
   page.on('requestfailed', (request) => {
     const failure = request.failure()?.errorText ?? '';
     const url = request.url();
-    if (/runs\/stream/.test(url) && /abort|ERR_ABORTED/i.test(failure)) return;
+    if (/runs\/stream|\/agent/.test(url) && /abort|ERR_ABORTED/i.test(failure)) return;
     failedRequests.push(`${request.method()} ${url} ${failure}`.trim());
   });
 
   return { consoleErrors, failedRequests };
 }
 
-export async function openDemo(page: Page, path = '/embed'): Promise<void> {
+export async function openDemo(page: Page, path = '/'): Promise<void> {
   await page.goto(path);
   await page.evaluate(() => {
     localStorage.clear();
@@ -202,7 +202,7 @@ export async function sendPromptAndWait(
   page: Page,
   prompt: string
 ): Promise<Locator> {
-  await openDemo(page, '/embed');
+  await openDemo(page, '/');
   const input = messageInput(page);
   await input.fill(prompt);
   await sendButton(page).click();
