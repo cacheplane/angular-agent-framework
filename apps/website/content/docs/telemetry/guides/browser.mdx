@@ -71,6 +71,13 @@ telemetry.captureRuntimeInstanceCreated({
   model: 'gpt-4.1',
 });
 
+telemetry.captureRuntimeRequestCreated({
+  transport: 'langgraph',
+  requestType: 'stream',
+  provider: 'openai',
+  model: 'gpt-4.1',
+});
+
 telemetry.captureStreamStarted({ transport: 'langgraph', provider: 'openai', model: 'gpt-4.1' });
 telemetry.captureStreamEnded({ transport: 'langgraph', provider: 'openai', model: 'gpt-4.1', durationMs: 1200 });
 telemetry.captureStreamErrored({ transport: 'langgraph', provider: 'openai', model: 'gpt-4.1', error });
