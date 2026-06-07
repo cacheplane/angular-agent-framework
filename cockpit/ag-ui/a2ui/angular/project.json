@@ -1,0 +1,81 @@
+{
+  "name": "cockpit-ag-ui-a2ui-angular",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "cockpit/ag-ui/a2ui/angular/src",
+  "projectType": "application",
+  "targets": {
+    "build": {
+      "executor": "@angular/build:application",
+      "outputs": ["{options.outputPath.base}"],
+      "options": {
+        "outputPath": {
+          "base": "dist/cockpit/ag-ui/a2ui/angular",
+          "browser": ""
+        },
+        "browser": "cockpit/ag-ui/a2ui/angular/src/main.ts",
+        "tsConfig": "cockpit/ag-ui/a2ui/angular/tsconfig.app.json",
+        "styles": ["cockpit/ag-ui/a2ui/angular/src/styles.css"]
+      },
+      "configurations": {
+        "production": {
+          "budgets": [
+            { "type": "initial", "maximumWarning": "1mb", "maximumError": "1.5mb" },
+            { "type": "anyComponentStyle", "maximumWarning": "10kb", "maximumError": "16kb" }
+          ],
+          "outputHashing": "none"
+        },
+        "development": {
+          "optimization": false,
+          "extractLicenses": false,
+          "sourceMap": true,
+          "fileReplacements": [
+            {
+              "replace": "cockpit/ag-ui/a2ui/angular/src/environments/environment.ts",
+              "with": "cockpit/ag-ui/a2ui/angular/src/environments/environment.development.ts"
+            }
+          ]
+        },
+        "cockpit": {
+          "optimization": false,
+          "extractLicenses": false,
+          "sourceMap": true,
+          "fileReplacements": [
+            {
+              "replace": "cockpit/ag-ui/a2ui/angular/src/environments/environment.ts",
+              "with": "cockpit/ag-ui/a2ui/angular/src/environments/environment.development.ts"
+            }
+          ],
+          "browser": "cockpit/ag-ui/a2ui/angular/src/main.cockpit.ts"
+        }
+      },
+      "defaultConfiguration": "production"
+    },
+    "serve": {
+      "continuous": true,
+      "executor": "@angular/build:dev-server",
+      "configurations": {
+        "production": { "buildTarget": "cockpit-ag-ui-a2ui-angular:build:production" },
+        "development": { "buildTarget": "cockpit-ag-ui-a2ui-angular:build:development" },
+        "cockpit": { "buildTarget": "cockpit-ag-ui-a2ui-angular:build:cockpit" }
+      },
+      "defaultConfiguration": "development",
+      "options": {
+        "proxyConfig": "cockpit/ag-ui/a2ui/angular/proxy.conf.mjs"
+      }
+    },
+    "smoke": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "cockpit/ag-ui/a2ui/angular",
+        "command": "npx tsx -e \"import { agUiA2uiAngularModule } from './src/index.ts'; const module = agUiA2uiAngularModule; if (module.id !== 'ag-ui-a2ui-angular' || module.title !== 'AG-UI A2UI (Angular)') { throw new Error('Unexpected module shape for ' + module.id); }\""
+      }
+    },
+    "e2e": {
+      "executor": "@nx/playwright:playwright",
+      "options": {
+        "config": "cockpit/ag-ui/a2ui/angular/e2e/playwright.config.ts"
+      }
+    }
+  },
+  "tags": ["scope:cockpit-e2e", "scope:cockpit-examples"]
+}
