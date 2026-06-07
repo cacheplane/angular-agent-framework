@@ -18,8 +18,8 @@ test.describe('AG-UI JSON Render Example', () => {
     await page.waitForSelector('app-json-render', { state: 'attached' });
   });
 
-  test('renders the stat card for a dashboard request', async ({ page }) => {
-    await page.fill('textarea[name="messageText"]', 'Show me a dashboard.');
+  test('renders the airline dashboard for a dashboard request', async ({ page }) => {
+    await page.fill('textarea[name="messageText"]', 'Show me a dashboard of airline operations.');
     await page.click('button[type="submit"]');
     await expect(page.locator('app-stat-card')).toBeVisible({ timeout: 30000 });
   });

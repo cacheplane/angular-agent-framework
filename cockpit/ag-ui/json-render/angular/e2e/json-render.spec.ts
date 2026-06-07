@@ -2,11 +2,13 @@
 import { test, expect } from '@playwright/test';
 import { submitAndWaitForResponse } from '@threadplane-internal/e2e-harness';
 
-test('json-render: render spec mounts and the STATE_SNAPSHOT-bound value renders', async ({ page }) => {
-  await submitAndWaitForResponse(page, 'Show me a dashboard.');
-  // The render_spec content mounts <chat-generative-ui>; the /demo/value
-  // binding (42) arrives via STATE_SNAPSHOT → agent.state() → render store.
-  const card = page.locator('app-stat-card');
-  await expect(card.first()).toBeVisible({ timeout: 30000 });
-  await expect(card.first()).toContainText('42');
+test('json-render: dashboard renders with STATE_SNAPSHOT-bound KPI values', async ({ page }) => {
+  await submitAndWaitForResponse(page, 'Show me a dashboard of airline operations.');
+  // Spec content mounts the GenUI tree; the KPI numbers arrive via
+  // STATE_SNAPSHOT (graph state → agent.state() → render store).
+  await expect(page.locator('chat-generative-ui').first()).toBeVisible({ timeout: 30000 });
+  await expect(page.locator('chat-generative-ui')).not.toHaveCount(0);
+  // At least one stat card shows a non-skeleton value (proves the data path).
+  await expect(page.locator('app-stat-card .stat-card__value').first()).toBeVisible({ timeout: 30000 });
+  await expect(page.locator('app-stat-card .stat-card__value').first()).not.toBeEmpty();
 });
