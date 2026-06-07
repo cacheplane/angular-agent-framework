@@ -19,14 +19,13 @@ Configure `provideAgent()` in your app config:
 
 ```typescript
 // app.config.ts
-import { provideAgent } from '@threadplane/langgraph';
+import { provideAgent } from '@threadplane/ag-ui';
+import { provideChat } from '@threadplane/chat';
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideAgent({
-      apiUrl: environment.langGraphApiUrl,
-      assistantId: environment.a2uiAssistantId,
-    }),
+    provideAgent({ url: '/agent' }),
+    provideChat({}),
   ],
 };
 ```
@@ -37,7 +36,7 @@ the agent with `injectAgent()`:
 ```typescript
 // a2ui.component.ts
 import { ChatComponent, a2uiBasicCatalog } from '@threadplane/chat';
-import { injectAgent } from '@threadplane/langgraph';
+import { injectAgent } from '@threadplane/ag-ui';
 
 @Component({
   selector: 'app-a2ui',
