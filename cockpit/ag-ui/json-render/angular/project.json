@@ -1,0 +1,81 @@
+{
+  "name": "cockpit-ag-ui-json-render-angular",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "cockpit/ag-ui/json-render/angular/src",
+  "projectType": "application",
+  "targets": {
+    "build": {
+      "executor": "@angular/build:application",
+      "outputs": ["{options.outputPath.base}"],
+      "options": {
+        "outputPath": {
+          "base": "dist/cockpit/ag-ui/json-render/angular",
+          "browser": ""
+        },
+        "browser": "cockpit/ag-ui/json-render/angular/src/main.ts",
+        "tsConfig": "cockpit/ag-ui/json-render/angular/tsconfig.app.json",
+        "styles": ["cockpit/ag-ui/json-render/angular/src/styles.css"]
+      },
+      "configurations": {
+        "production": {
+          "budgets": [
+            { "type": "initial", "maximumWarning": "1mb", "maximumError": "1.5mb" },
+            { "type": "anyComponentStyle", "maximumWarning": "10kb", "maximumError": "16kb" }
+          ],
+          "outputHashing": "none"
+        },
+        "development": {
+          "optimization": false,
+          "extractLicenses": false,
+          "sourceMap": true,
+          "fileReplacements": [
+            {
+              "replace": "cockpit/ag-ui/json-render/angular/src/environments/environment.ts",
+              "with": "cockpit/ag-ui/json-render/angular/src/environments/environment.development.ts"
+            }
+          ]
+        },
+        "cockpit": {
+          "optimization": false,
+          "extractLicenses": false,
+          "sourceMap": true,
+          "fileReplacements": [
+            {
+              "replace": "cockpit/ag-ui/json-render/angular/src/environments/environment.ts",
+              "with": "cockpit/ag-ui/json-render/angular/src/environments/environment.development.ts"
+            }
+          ],
+          "browser": "cockpit/ag-ui/json-render/angular/src/main.cockpit.ts"
+        }
+      },
+      "defaultConfiguration": "production"
+    },
+    "serve": {
+      "continuous": true,
+      "executor": "@angular/build:dev-server",
+      "configurations": {
+        "production": { "buildTarget": "cockpit-ag-ui-json-render-angular:build:production" },
+        "development": { "buildTarget": "cockpit-ag-ui-json-render-angular:build:development" },
+        "cockpit": { "buildTarget": "cockpit-ag-ui-json-render-angular:build:cockpit" }
+      },
+      "defaultConfiguration": "development",
+      "options": {
+        "proxyConfig": "cockpit/ag-ui/json-render/angular/proxy.conf.mjs"
+      }
+    },
+    "smoke": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "cockpit/ag-ui/json-render/angular",
+        "command": "npx tsx -e \"import { agUiJsonRenderAngularModule } from './src/index.ts'; const module = agUiJsonRenderAngularModule; if (module.id !== 'ag-ui-json-render-angular' || module.title !== 'AG-UI JSON Render (Angular)') { throw new Error('Unexpected module shape for ' + module.id); }\""
+      }
+    },
+    "e2e": {
+      "executor": "@nx/playwright:playwright",
+      "options": {
+        "config": "cockpit/ag-ui/json-render/angular/e2e/playwright.config.ts"
+      }
+    }
+  },
+  "tags": ["scope:cockpit-e2e", "scope:cockpit-examples"]
+}

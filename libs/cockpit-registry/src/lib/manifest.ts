@@ -32,7 +32,7 @@ const APPROVED_TOPICS = {
   },
   'ag-ui': {
     'getting-started': ['overview'],
-    'core-capabilities': ['streaming', 'interrupts', 'tool-views'],
+    'core-capabilities': ['streaming', 'interrupts', 'tool-views', 'json-render'],
   },
   render: {
     'getting-started': ['overview'],
