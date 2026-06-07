@@ -10,7 +10,7 @@ import { ChatToolViewsComponent } from './chat-tool-views.component';
 // A minimal view component that renders the props it receives so the test
 // can assert which fields reached it.
 @Component({
-  selector: 'test-weather-card',
+  selector: 'chat-test-weather-card',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `<div class="loc">{{ location() }}</div><div class="temp">{{ temperatureF() }}</div><div class="st">{{ status() }}</div>`,
@@ -51,7 +51,7 @@ describe('ChatToolViewsComponent', () => {
     ] as ToolCall[]);
     const fixture = mountHost(agent, msg);
     const el = fixture.nativeElement as HTMLElement;
-    expect(el.querySelector('test-weather-card')).toBeTruthy();
+    expect(el.querySelector('chat-test-weather-card')).toBeTruthy();
     expect(el.querySelector('.loc')?.textContent).toContain('San Francisco');
     expect(el.querySelector('.st')?.textContent).toContain('running');
   });
@@ -77,7 +77,7 @@ describe('ChatToolViewsComponent', () => {
     ] as ToolCall[]);
     const fixture = mountHost(agent, msg);
     const el = fixture.nativeElement as HTMLElement;
-    expect(el.querySelector('test-weather-card')).toBeNull();
+    expect(el.querySelector('chat-test-weather-card')).toBeNull();
   });
 
   it('renders nothing when views is undefined', () => {
@@ -96,6 +96,6 @@ describe('ChatToolViewsComponent', () => {
     }
     const fixture = TestBed.createComponent(BareHost);
     fixture.detectChanges();
-    expect((fixture.nativeElement as HTMLElement).querySelector('test-weather-card')).toBeNull();
+    expect((fixture.nativeElement as HTMLElement).querySelector('chat-test-weather-card')).toBeNull();
   });
 });
