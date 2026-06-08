@@ -10,7 +10,7 @@ LangGraph Platform owns the state. Angular owns the view. `injectAgent()` is the
 
 In a traditional Angular app, state lives in an NgRx store or a signals-based service. In a LangGraph app, **the agent's state lives on the server** — in LangGraph Platform's checkpoint store. Your Angular app is a stateless view layer that reads state through signals as the agent streams it back.
 
-This inversion is intentional. Agent state can span multiple LLM calls, tool executions, and human-in-the-loop interrupts. It needs to survive browser refreshes, reconnections, and even server deployments. A server-side checkpoint store handles all of that automatically. Your Angular app just calls `.submit()` and reads signals.
+This inversion is intentional. Agent state can span multiple LLM calls, tool executions, and human-in-the-loop interrupts. It has to survive browser refreshes, reconnections, and even server deployments. A server-side checkpoint store handles all of that for you. Your Angular app just calls `.submit()` and reads signals.
 
 <Steps>
 <Step title="User submits input">
@@ -37,7 +37,7 @@ Components using `OnPush` re-render only when signal values change. No manual `d
 
 ## Python State Design
 
-On the Python side, your agent's state is a `TypedDict`. The fields you define here are exactly what `agent<T>()` exposes in TypeScript. Getting the Python state design right is the most important architectural decision in your agent.
+On the Python side, your agent's state is a `TypedDict`. The fields you define here are exactly what `agent<T>()` exposes in TypeScript. For me, getting the Python state design right is the most important architectural decision in your agent — everything downstream inherits its shape, so it's worth slowing down for.
 
 ### The TypedDict Pattern
 
@@ -276,7 +276,7 @@ const score = computed(() => agent.value().analysis?.score ?? 0);
 
 ## Thread State vs Application State
 
-There are two kinds of state in a LangGraph Angular app, and keeping them separate makes your code much easier to reason about.
+There are two kinds of state in a LangGraph Angular app, and keeping them separate makes your code far easier to reason about.
 
 **Thread state** is owned by LangGraph Platform. You read it through `injectAgent()` signals. You never write to it directly — you only send new input via `.submit()`.
 

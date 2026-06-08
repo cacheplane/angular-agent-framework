@@ -1,6 +1,6 @@
 # Streaming
 
-The `ChatComponent` automatically classifies AI message content and routes it to the appropriate renderer. This page explains how the streaming pipeline works and how to use the classification APIs directly for custom integrations.
+`ChatComponent` automatically classifies AI message content and routes it to the right renderer. This page walks through how the streaming pipeline works, and how to use the classification APIs directly for custom integrations.
 
 ## Content Classification
 
@@ -31,7 +31,7 @@ Tokens arrive character-by-character
 
 ## Using ContentClassifier Directly
 
-For custom message rendering outside of `ChatComponent`, use `createContentClassifier()`:
+For custom message rendering outside of `ChatComponent`, reach for `createContentClassifier()`:
 
 ```typescript
 import { createContentClassifier } from '@threadplane/chat';
@@ -114,7 +114,7 @@ The resulting surfaces are available via `classifier.a2uiSurfaces()`, which retu
 
 ## Error Handling
 
-Parse errors are captured in the `errors` signal and do not crash the rendering pipeline. When a malformed token arrives, the classifier records the error and continues processing subsequent tokens — partial results keep rendering.
+Parse errors are captured in the `errors` signal and don't crash the rendering pipeline. When a malformed token arrives, the classifier records the error and keeps processing the tokens that follow — partial results keep rendering.
 
 ```typescript
 const classifier = createContentClassifier();
