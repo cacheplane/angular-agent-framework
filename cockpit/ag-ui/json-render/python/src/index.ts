@@ -37,7 +37,7 @@ export const agUiJsonRenderPythonModule: CockpitCapabilityModule = {
     'cockpit/ag-ui/json-render/python/src/graph.py',
     'cockpit/ag-ui/json-render/python/src/server.py',
   ],
-  docsAssetPaths: [],
+  docsAssetPaths: ['cockpit/ag-ui/json-render/python/docs/guide.md'],
   runtimeUrl: 'ag-ui/json-render',
   devPort: 4323,
 };
