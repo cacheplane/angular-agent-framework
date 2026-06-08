@@ -8,7 +8,7 @@ Use interrupts when an agent action is irreversible (sending an email, placing a
 
 ## The Interrupt Lifecycle
 
-Before diving into code, understand the five-stage lifecycle that every interrupt follows:
+Before diving into code, let's walk the five-stage lifecycle that every interrupt follows:
 
 <Steps>
 <Step title="Agent Plans">
@@ -276,7 +276,7 @@ export class ApprovalComponent {
 
 ## Multi-Step Approval Pattern
 
-Some workflows require multiple approvals in sequence. For example, an agent that plans a multi-step deployment might need approval at each stage. Each node in the graph can raise its own interrupt.
+Some workflows need multiple approvals in sequence. An agent that plans a multi-step deployment might need a sign-off at each stage. Each node in the graph can raise its own interrupt.
 
 <Tabs>
 <Tab label="agent.py">
@@ -496,7 +496,9 @@ Define your interrupt payload interfaces alongside your Python state schema. Thi
 
 ## Timeout Handling
 
-Interrupts pause graph execution indefinitely by default — the agent waits until a human responds. In production, you often need to handle cases where no one responds within a reasonable time. There are two strategies for managing interrupt timeouts.
+Interrupts pause graph execution indefinitely by default — the agent waits until a human responds. In production, you often need to handle the case where no one responds within a reasonable time. There are two strategies for managing interrupt timeouts.
+
+For me, the server-side timeout is the safer default. It costs you a background job to run and maintain, but it fires even if the user closed the tab — which is exactly when you most need it to.
 
 **Server-side timeout with a background task:** Schedule a background job that checks for stale interrupts and resumes them with a default decision.
 

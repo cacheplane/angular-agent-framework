@@ -220,7 +220,7 @@ TestBed.runInInjectionContext(() => {
 
 ## Testing the Streaming Lifecycle
 
-The most common test pattern verifies the full submit-to-idle lifecycle: submit sets the agent running, values arrive, and the status settles back to idle.
+The most common test pattern verifies the full submit-to-idle lifecycle: submit sets the agent running, values arrive, and the status settles back to idle. Let's walk it end to end.
 
 <Tabs>
 <Tab label="lifecycle.spec.ts">
@@ -601,7 +601,7 @@ Read signals like `chat.messages()`, `chat.status()`, `chat.interrupt()`, and `c
 
 ## Integration Testing
 
-For end-to-end confidence, run tests against a real LangGraph dev server. The LangGraph CLI starts a local server that your tests can hit directly.
+For end-to-end confidence, run tests against a real LangGraph dev server. The LangGraph CLI starts a local server your tests can hit directly.
 
 ```bash
 # Start the dev server
