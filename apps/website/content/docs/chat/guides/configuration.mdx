@@ -1,6 +1,6 @@
 # Configuration
 
-`@threadplane/chat` uses Angular's dependency injection system for shared configuration. The `provideChat()` function registers a `ChatConfig` object under the `CHAT_CONFIG` injection token and starts the package license check.
+`@threadplane/chat` leans on Angular's dependency injection for shared configuration. The `provideChat()` function registers a `ChatConfig` object under the `CHAT_CONFIG` injection token and starts the package license check.
 
 ## provideChat()
 
@@ -116,10 +116,10 @@ export const routes: Routes = [
 
 ## Using Configuration Without provideChat()
 
-All composition components use sensible defaults. If you do not call `provideChat()`, components will:
+All composition components ship with sensible defaults. If you don't call `provideChat()`, components will:
 
 - Use `"A"` as the avatar label
 - Use `"Assistant"` as the assistant name
 - Have no injected `CHAT_CONFIG`
 
-This means you can use `ChatComponent`, `ChatInputComponent`, and all other components without global configuration for basic chat functionality. Generative UI is controlled by the `ChatComponent` `[views]`, `[store]`, and `[handlers]` inputs.
+So you can use `ChatComponent`, `ChatInputComponent`, and the rest without any global configuration for basic chat. Generative UI is controlled by the `ChatComponent` `[views]`, `[store]`, and `[handlers]` inputs.
