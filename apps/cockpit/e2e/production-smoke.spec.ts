@@ -241,3 +241,20 @@ test.describe('examples langgraph proxy hardening', () => {
     expect(await res.json()).toMatchObject({ error: 'payload_too_large' });
   });
 });
+
+test.describe('ag-ui demo (ag-ui.threadplane.ai)', () => {
+  const DEMO = process.env['AG_UI_DEMO_URL'] ?? 'https://ag-ui.threadplane.ai';
+
+  test('demo SPA is reachable', async ({ page }) => {
+    const res = await page.goto(`${DEMO}/`);
+    expect(res?.status()).toBeLessThan(400);
+  });
+
+  test('forbidden origin to /agent is rejected with 403', async ({ request }) => {
+    const res = await request.post(`${DEMO}/agent`, {
+      headers: { Origin: 'https://evil.example.com', 'content-type': 'application/json' },
+      data: {},
+    });
+    expect(res.status()).toBe(403);
+  });
+});

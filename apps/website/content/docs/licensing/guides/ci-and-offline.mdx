@@ -2,7 +2,7 @@
 
 License verification is offline. `verifyLicense(token, publicKey)` parses the compact token, checks the Ed25519 signature, and returns claims when the signature is valid.
 
-No network call is needed to know whether a token is signed correctly.
+You don't need a network call to know whether a token is signed correctly.
 
 ## CI
 
@@ -42,7 +42,7 @@ const result = evaluateLicense(verified, {
 });
 ```
 
-This does not emit warnings. The higher-level `runLicenseCheck()` helper can emit warnings, but it does not make network requests.
+This doesn't emit warnings. The higher-level `runLicenseCheck()` helper can emit warnings, but it never makes network requests.
 
 ## Signing tokens
 
@@ -56,4 +56,4 @@ const token = await signLicense(claims, privateKey);
 
 It signs the UTF-8 JSON payload with Ed25519 and returns the compact token format expected by `verifyLicense()`.
 
-Do not ship private keys in application code. Verification needs only the public key.
+Don't ship private keys in application code. Verification needs only the public key.
