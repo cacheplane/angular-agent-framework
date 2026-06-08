@@ -64,11 +64,6 @@ function parseStringProperty(source: string, key: string): string | undefined {
   return match?.[1];
 }
 
-function parseNumberProperty(source: string, key: string): number | undefined {
-  const match = source.match(new RegExp(`${key}:\\s*(\\d+)`));
-  return match ? Number(match[1]) : undefined;
-}
-
 function activeCockpitE2eWiring(): E2eWiring[] {
   return listProjectJsonFiles(join(repoRoot, 'cockpit'))
     .map((projectJsonPath) => {
@@ -97,18 +92,9 @@ function activeCockpitE2eWiring(): E2eWiring[] {
       // Post-port-registry migration: ports are imported from
       // cockpit/ports.mjs rather than living as literals in
       // global-setup-impl.ts. Look them up by project name.
-      let langgraphPort: number | undefined;
-      let angularPort: number | undefined;
-      try {
-        const ports = portsFor(project.name) as { angular: number; langgraph: number };
-        langgraphPort = ports.langgraph;
-        angularPort = ports.angular;
-      } catch {
-        // Cap not in registry (e.g. cockpit-ag-ui-streaming-angular).
-        // Fall back to parsing literals if global-setup still has them.
-        langgraphPort = parseNumberProperty(globalSetup, 'langgraphPort');
-        angularPort = parseNumberProperty(globalSetup, 'angularPort');
-      }
+      const ports = portsFor(project.name) as { angular: number; langgraph: number };
+      const langgraphPort = ports.langgraph;
+      const angularPort = ports.angular;
 
       if (!project.name || !langgraphCwd || !langgraphPort || !angularPort) {
         throw new Error(`Unable to parse e2e wiring for ${relative(repoRoot, projectJsonPath)}`);
@@ -242,6 +228,20 @@ describe('cockpit e2e wiring', () => {
     expect(errors).toEqual([]);
   });
 
+  it('keeps capability-registry ports aligned with cockpit/ports.mjs', async () => {
+    const mismatches: string[] = [];
+    for (const cap of capabilities) {
+      const ports = portsFor(cap.angularProject) as { angular: number; langgraph: number };
+      if (cap.port !== ports.angular) {
+        mismatches.push(`${cap.id}: registry.port ${cap.port} !== ports.angular ${ports.angular}`);
+      }
+      if (cap.pythonPort !== undefined && cap.pythonPort !== ports.langgraph) {
+        mismatches.push(`${cap.id}: registry.pythonPort ${cap.pythonPort} !== ports.langgraph ${ports.langgraph}`);
+      }
+    }
+    expect(mismatches).toEqual([]);
+  });
+
   it('every cockpit cap project declares the expected scope:* tags', () => {
     // Drift guard for the ci-scope thin-shim migration (PR #503/#507).
     // The shim reads scope:* tags off projects nx considers affected to
@@ -283,5 +283,29 @@ describe('cockpit e2e wiring', () => {
     }
 
     expect(errors).toEqual([]);
+  });
+
+  it('smoke job represents every cockpit product with a real smoke target', () => {
+    const ci = readFileSync(join(repoRoot, '.github/workflows/ci.yml'), 'utf8');
+    const smokeLine = ci.split('\n').find((l) => l.includes('-t smoke --projects=')) ?? '';
+    const listed = (smokeLine.match(/--projects=(\S+)/)?.[1] ?? '').split(',').filter(Boolean);
+
+    // Every listed cockpit python project must actually declare a smoke target.
+    const missingTarget = listed.filter((name) => {
+      const cap = capabilities.find((c) => c.angularProject.replace('-angular', '-python') === name);
+      if (!cap?.pythonDir) return true; // listed a project not backed by a registry cap with python
+      const pj = JSON.parse(readFileSync(join(repoRoot, cap.pythonDir, 'project.json'), 'utf8'));
+      return !pj.targets?.smoke;
+    });
+    expect(missingTarget).toEqual([]);
+
+    // Every product must be represented by a listed project.
+    const products = [...new Set(capabilities.map((c) => c.product))];
+    const uncovered = products.filter(
+      (product) => !capabilities.some(
+        (c) => c.product === product && listed.includes(c.angularProject.replace('-angular', '-python')),
+      ),
+    );
+    expect(uncovered).toEqual([]);
   });
 });
