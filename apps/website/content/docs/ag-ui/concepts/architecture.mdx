@@ -87,11 +87,22 @@ Every AG-UI event is passed through the reducer. The reducer updates Angular sig
 - `status`, `isLoading`, and `error` for run lifecycle.
 - `toolCalls` for tool call starts, arguments, results, and completion.
 - `state` for AG-UI state snapshots and JSON Patch deltas.
+- `interrupt` cleared on `RUN_STARTED` and set by the `CUSTOM` `on_interrupt` event.
 - `events$` for custom events.
 
 When the user submits input, the adapter builds a user message, appends it locally, adds it to the AG-UI source with `source.addMessage()`, then calls `source.runAgent()`.
 
 This is optimistic on purpose. The user message appears immediately while the backend starts the run.
+
+## Live a2ui streaming via `customEvents`
+
+The adapter exposes a `customEvents` signal on the agent returned by
+`toAgent` / `injectAgent`, accumulating every non-`on_interrupt` `CUSTOM`
+AG-UI event for the current run (reset on each `RUN_STARTED`). The chat
+composition feature-detects this signal to drive **progressive** a2ui
+surface rendering — token-by-token, as the backend streams `a2ui-partial`
+events — matching the LangGraph adapter. Without it, a2ui still renders from
+the final tool-call surface; with it, surfaces build up live.
 
 ## Provider choices
 

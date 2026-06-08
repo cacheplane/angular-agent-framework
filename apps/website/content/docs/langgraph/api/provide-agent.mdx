@@ -31,9 +31,15 @@ bootstrapApplication(AppComponent, {
 |--------|------|-------------|
 | `apiUrl` | `string` | LangGraph Platform API base URL. |
 | `assistantId` | `string` | LangGraph assistant id to bind to. |
-| `threadId` | `() => string \| undefined` | Optional thread id provider, used to resume a persisted thread. |
-| `onThreadId` | `(id: string) => void` | Optional callback fired when a new thread id is assigned. |
+| `threadId` | `Signal<string \| null> \| string \| null` | Thread ID to connect to. Pass a Signal for reactive thread switching. |
+| `onThreadId` | `(id: string) => void` | Called when a new thread is auto-created by the transport. |
+| `initialValues` | `Partial<T>` | Initial state values before the first stream response arrives. |
+| `throttle` | `number \| false` | Throttle signal updates in milliseconds. `false` to disable. (default 16) |
+| `toMessage` | `(msg: unknown) => BaseMessage` | Custom message deserializer for non-standard message formats. |
 | `transport` | `AgentTransport` | Optional transport instance. Defaults to `FetchStreamTransport` when omitted. |
+| `telemetry` | `AgentRuntimeTelemetrySink \| false` | Optional app-owned telemetry sink. No telemetry is emitted unless this is provided. |
+| `filterSubagentMessages` | `boolean` | When true, subagent messages are filtered from the main messages signal. |
+| `subagentToolNames` | `string[]` | Tool names that indicate a subagent invocation. |
 
 ## Singleton model
 

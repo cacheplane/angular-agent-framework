@@ -1,6 +1,6 @@
 # Layout Modes
 
-`@threadplane/chat` ships three ready-made layout compositions. Pick the one that best fits how chat fits into your application.
+`@threadplane/chat` ships three ready-made layout compositions. Pick the one that best fits how chat lives inside your app.
 
 | Mode | Component | Best for |
 |---|---|---|
@@ -10,7 +10,7 @@
 
 ## Embedded — `<chat>`
 
-The embedded composition fills its parent container using `height: 100%` and a flex column layout. Use it when the chat is the main feature of a route.
+The embedded composition fills its parent container using `height: 100%` and a flex column layout. Reach for it when chat is the main feature of a route.
 
 **When to pick this mode:**
 - Chat is the whole page (e.g., a dedicated `/chat` route)
@@ -159,4 +159,4 @@ Toggle the sidebar from a nav button:
 | Should chat and app content coexist? | Use `<chat-sidebar>` |
 | Should the sidebar push content aside? | Use `<chat-sidebar [pushContent]="true">` |
 
-All three compositions share the same `--ngaf-chat-*` token system. See [Theming](/docs/chat/guides/theming) to customize colors, shapes, and typography across all modes at once.
+All three compositions share the same `--ngaf-chat-*` token system, so whichever mode you land on, it'll match your brand. Next, head to [Theming](/docs/chat/guides/theming) to customize colors, shapes, and typography across all modes at once.

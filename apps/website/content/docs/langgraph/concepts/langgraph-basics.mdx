@@ -1,6 +1,6 @@
 # LangGraph Basics
 
-LangGraph is a framework for building stateful AI agents as directed graphs. If you're an Angular developer building AI-powered applications, this page teaches you how LangGraph agents work and why `injectAgent()` is the natural bridge between your frontend and your agent backend.
+LangGraph is a framework for building stateful AI agents as directed graphs. If you're an Angular developer building AI-powered applications, let's look at how LangGraph agents work and why `injectAgent()` is the natural bridge between your frontend and your agent backend.
 
 <Callout type="info" title="Why graphs?">
 Graphs give you explicit control over agent behavior. Instead of a black-box prompt-and-pray approach, you define exactly how your agent reasons, when it calls tools, and where it pauses for human input. Every step is visible, testable, and debuggable.
@@ -126,7 +126,7 @@ protected readonly chat = injectAgent();
 
 ## Agent Patterns
 
-The power of LangGraph is in the patterns you can build. Each pattern maps to specific `injectAgent()` signals.
+LangGraph shines in the patterns you can build. Each one maps to specific `injectAgent()` signals.
 
 ### Pattern 1: ReAct Agent (Tool Calling)
 
@@ -284,7 +284,7 @@ const chat = injectAgent<ChatState>();
 
 ## How `injectAgent()` Bridges the Gap
 
-Here's why `injectAgent()` is the natural Angular companion for LangGraph:
+Here's why `injectAgent()` is the natural Angular companion for LangGraph.
 
 <Tabs>
 <Tab label="The data flow">
@@ -317,31 +317,44 @@ Templates re-render automatically via OnPush change detection
 <Tab label="Signal mapping">
 
 ```typescript
-// Every LangGraph concept maps to a Signal:
+// Every LangGraph concept maps to a Signal. The surface splits into two
+// groups: the runtime-neutral `Agent` contract that every adapter implements,
+// and LangGraph-specific signals added by `LangGraphAgent`.
 
-// Agent state values
-agent.value()          // Signal<T> — full state object
-
-// Conversation
+// ── Signals on every agent (the `Agent` contract) ───────────────────────────
 agent.messages()       // Signal<Message[]> — runtime-neutral message history
-
-// Lifecycle
 agent.status()         // Signal<AgentStatus> — idle/running/error
 agent.isLoading()      // Signal<boolean> — is the agent running?
+agent.error()          // Signal<unknown> — last error, if any
+agent.toolCalls()      // Signal<ToolCall[]> — tool call progress and results
+agent.state()          // Signal<Record<string, unknown>> — runtime-neutral state
 
-// Human-in-the-loop
-agent.interrupt()      // Signal<Interrupt> — agent is paused
+// Optional on the contract (present when the runtime supports them):
+agent.interrupt()      // Signal<AgentInterrupt | undefined> — agent is paused
+agent.subagents()      // Signal<Map<string, Subagent>> — delegated agents
 
-// Debugging
+// ── AgentWithHistory sub-contract (adapters with checkpoint history) ─────────
+// Not on the bare `Agent` — request/response adapters omit it. The type and
+// signal are runtime-neutral; LangGraph implements this sub-contract.
 agent.history()        // Signal<AgentCheckpoint[]> — runtime-neutral timeline
+
+// ── LangGraph-specific signals (`LangGraphAgent`) ───────────────────────────
+// These exist because injectAgent() returns a LangGraphAgent. They are NOT
+// part of the runtime-neutral Agent contract.
+agent.value()          // Signal<T> — full LangGraph state object
+agent.hasValue()       // Signal<boolean> — true once any value/message arrived
 agent.langGraphHistory() // Signal<ThreadState[]> — raw LangGraph checkpoints
 agent.branch()         // Signal<string> — time-travel branch
 agent.experimentalBranchTree() // Signal<AgentBranchTree<T>> — branch tree
-
-agent.toolCalls()      // Signal<ToolCall[]> — tool call progress and results
+agent.toolProgress()   // Signal<ToolProgress[]> — in-flight tool progress
 agent.queue()          // Signal<AgentQueue> — pending enqueue runs
-agent.subagents()      // Signal<Map<string, Subagent>> — delegated agents
+agent.activeSubagents() // Signal<SubagentStreamRef[]> — running subagents
+agent.customEvents()   // Signal<CustomStreamEvent[]> — raw custom events
 ```
+
+The base `subagents()` signal exposes a `Map<string, Subagent>` from the
+runtime-neutral contract, while LangGraph adds `activeSubagents()` — a filtered
+`SubagentStreamRef[]` containing only subagents whose status is `running`.
 
 </Tab>
 </Tabs>

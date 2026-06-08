@@ -14,7 +14,7 @@ const store = signalStateStore({
 });
 ```
 
-The function accepts an optional initial state object (defaults to `{}`). It returns a `StateStore` that uses Angular Signals internally, so any state changes automatically trigger Angular's change detection.
+The function accepts an optional initial state object (defaults to `{}`). It returns a `StateStore` that uses Angular Signals internally, so any state change automatically triggers Angular's change detection.
 
 ## JSON Pointer Paths
 
@@ -55,7 +55,7 @@ store.get('/missing');    // undefined
 
 ### Single Value
 
-Use `set()` to write a single value. The store performs an immutable update -- it clones the path to the target and sets the new value. If the new value is referentially equal to the current value, the update is skipped.
+Use `set()` to write a single value. The store performs an immutable update -- it clones the path to the target and sets the new value. If the new value is referentially equal to the current one, the update is skipped.
 
 ```typescript
 store.set('/user/name', 'Bob');
@@ -112,7 +112,7 @@ Under the hood, `signalStateStore()` wraps the state in an Angular `signal()`. T
 
 - Components using `OnPush` change detection automatically update when the state changes
 - Props resolved via `$state` expressions in specs are re-evaluated when the underlying signal updates
-- The store integrates seamlessly with Angular's reactivity model -- no RxJS or manual subscription management needed
+- The store fits Angular's reactivity model -- no RxJS or manual subscription management needed
 
 ```typescript
 // In a spec, $state props are automatically reactive
@@ -141,7 +141,7 @@ Array.isArray(store.get('/items')); // true
 
 ## Providing the Store
 
-You can provide a store in three ways. `RenderSpecComponent` resolves the store using this priority chain:
+Let's wire the store in. You have three ways to provide one, and `RenderSpecComponent` resolves it using this priority chain:
 
 <Steps>
 <Step title="Input (highest priority)">

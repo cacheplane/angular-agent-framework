@@ -1,0 +1,32 @@
+{
+  "fixtures": [
+    {
+      "match": {
+        "userMessage": "I want to fly LAX to JFK"
+      },
+      "response": {
+        "toolCalls": [
+          {
+            "name": "BookingFormSpec",
+            "arguments": "{\"surface_id\":\"booking\",\"data_model\":{\"origin\":\"LAX\",\"dest\":\"JFK\",\"date\":\"\",\"passengers\":1,\"fare_class\":\"Economy\"},\"components\":[{\"id\":\"root\",\"component\":{\"Column\":{\"children\":{\"explicitList\":[\"card\"]}}}},{\"id\":\"card\",\"component\":{\"Card\":{\"child\":\"card_col\"}}},{\"id\":\"card_col\",\"component\":{\"Column\":{\"children\":{\"explicitList\":[\"title\",\"origin\",\"dest\",\"date\",\"passengers\",\"fare\",\"submit\"]}}}},{\"id\":\"title\",\"component\":{\"Text\":{\"text\":\"Book a flight\",\"usageHint\":\"h2\"}}},{\"id\":\"origin\",\"component\":{\"MultipleChoice\":{\"label\":\"Origin\",\"options\":[{\"label\":\"LAX\",\"value\":\"LAX\"},{\"label\":\"JFK\",\"value\":\"JFK\"},{\"label\":\"SFO\",\"value\":\"SFO\"},{\"label\":\"ORD\",\"value\":\"ORD\"},{\"label\":\"BOS\",\"value\":\"BOS\"},{\"label\":\"ATL\",\"value\":\"ATL\"},{\"label\":\"DFW\",\"value\":\"DFW\"},{\"label\":\"SEA\",\"value\":\"SEA\"},{\"label\":\"MIA\",\"value\":\"MIA\"},{\"label\":\"DEN\",\"value\":\"DEN\"}],\"selections\":{\"path\":\"/origin\"},\"maxAllowedSelections\":1}}},{\"id\":\"dest\",\"component\":{\"MultipleChoice\":{\"label\":\"Destination\",\"options\":[{\"label\":\"LAX\",\"value\":\"LAX\"},{\"label\":\"JFK\",\"value\":\"JFK\"},{\"label\":\"SFO\",\"value\":\"SFO\"},{\"label\":\"ORD\",\"value\":\"ORD\"},{\"label\":\"BOS\",\"value\":\"BOS\"},{\"label\":\"ATL\",\"value\":\"ATL\"},{\"label\":\"DFW\",\"value\":\"DFW\"},{\"label\":\"SEA\",\"value\":\"SEA\"},{\"label\":\"MIA\",\"value\":\"MIA\"},{\"label\":\"DEN\",\"value\":\"DEN\"}],\"selections\":{\"path\":\"/dest\"},\"maxAllowedSelections\":1}}},{\"id\":\"date\",\"component\":{\"TextField\":{\"label\":\"Departure date (YYYY-MM-DD)\",\"text\":{\"path\":\"/date\"},\"textFieldType\":\"date\"}}},{\"id\":\"passengers\",\"component\":{\"TextField\":{\"label\":\"Passengers\",\"text\":{\"path\":\"/passengers\"},\"textFieldType\":\"number\"}}},{\"id\":\"fare\",\"component\":{\"MultipleChoice\":{\"label\":\"Fare class\",\"options\":[{\"label\":\"Economy\",\"value\":\"Economy\"},{\"label\":\"Premium\",\"value\":\"Premium\"},{\"label\":\"Business\",\"value\":\"Business\"},{\"label\":\"First\",\"value\":\"First\"}],\"selections\":{\"path\":\"/fare_class\"},\"maxAllowedSelections\":1}}},{\"id\":\"submit_label\",\"component\":{\"Text\":{\"text\":\"Search flights\"}}},{\"id\":\"submit\",\"component\":{\"Button\":{\"child\":\"submit_label\",\"primary\":true,\"action\":{\"name\":\"bookingSubmit\",\"context\":[{\"key\":\"formId\",\"value\":\"booking\"},{\"key\":\"origin\",\"value\":{\"path\":\"/origin\"}},{\"key\":\"dest\",\"value\":{\"path\":\"/dest\"}},{\"key\":\"date\",\"value\":{\"path\":\"/date\"}},{\"key\":\"passengers\",\"value\":{\"path\":\"/passengers\"}},{\"key\":\"fare_class\",\"value\":{\"path\":\"/fare_class\"}}]}}}}]}",
+            "id": "call_DiKu9KXnOKtbRcNBtDlXwTzx"
+          }
+        ]
+      }
+    },
+    {
+      "match": {
+        "userMessage": "I want to fly SFO to SEA"
+      },
+      "response": {
+        "toolCalls": [
+          {
+            "name": "BookingFormSpec",
+            "arguments": "{\"surface_id\":\"booking\",\"data_model\":{\"origin\":\"SFO\",\"dest\":\"SEA\",\"date\":\"\",\"passengers\":1,\"fare_class\":\"Economy\"},\"components\":[{\"id\":\"root\",\"component\":{\"Column\":{\"children\":{\"explicitList\":[\"card\"]}}}},{\"id\":\"card\",\"component\":{\"Card\":{\"child\":\"card_col\"}}},{\"id\":\"card_col\",\"component\":{\"Column\":{\"children\":{\"explicitList\":[\"title\",\"origin\",\"dest\",\"date\",\"passengers\",\"fare\",\"submit\"]}}}},{\"id\":\"title\",\"component\":{\"Text\":{\"text\":\"Book a flight\",\"usageHint\":\"h2\"}}},{\"id\":\"origin\",\"component\":{\"MultipleChoice\":{\"label\":\"Origin\",\"options\":[{\"label\":\"LAX\",\"value\":\"LAX\"},{\"label\":\"JFK\",\"value\":\"JFK\"},{\"label\":\"SFO\",\"value\":\"SFO\"},{\"label\":\"ORD\",\"value\":\"ORD\"},{\"label\":\"BOS\",\"value\":\"BOS\"},{\"label\":\"ATL\",\"value\":\"ATL\"},{\"label\":\"DFW\",\"value\":\"DFW\"},{\"label\":\"SEA\",\"value\":\"SEA\"},{\"label\":\"MIA\",\"value\":\"MIA\"},{\"label\":\"DEN\",\"value\":\"DEN\"}],\"selections\":{\"path\":\"/origin\"},\"maxAllowedSelections\":1}}},{\"id\":\"dest\",\"component\":{\"MultipleChoice\":{\"label\":\"Destination\",\"options\":[{\"label\":\"LAX\",\"value\":\"LAX\"},{\"label\":\"JFK\",\"value\":\"JFK\"},{\"label\":\"SFO\",\"value\":\"SFO\"},{\"label\":\"ORD\",\"value\":\"ORD\"},{\"label\":\"BOS\",\"value\":\"BOS\"},{\"label\":\"ATL\",\"value\":\"ATL\"},{\"label\":\"DFW\",\"value\":\"DFW\"},{\"label\":\"SEA\",\"value\":\"SEA\"},{\"label\":\"MIA\",\"value\":\"MIA\"},{\"label\":\"DEN\",\"value\":\"DEN\"}],\"selections\":{\"path\":\"/dest\"},\"maxAllowedSelections\":1}}},{\"id\":\"date\",\"component\":{\"TextField\":{\"label\":\"Departure date (YYYY-MM-DD)\",\"text\":{\"path\":\"/date\"},\"textFieldType\":\"date\"}}},{\"id\":\"passengers\",\"component\":{\"TextField\":{\"label\":\"Passengers\",\"text\":{\"path\":\"/passengers\"},\"textFieldType\":\"number\"}}},{\"id\":\"fare\",\"component\":{\"MultipleChoice\":{\"label\":\"Fare class\",\"options\":[{\"label\":\"Economy\",\"value\":\"Economy\"},{\"label\":\"Premium\",\"value\":\"Premium\"},{\"label\":\"Business\",\"value\":\"Business\"},{\"label\":\"First\",\"value\":\"First\"}],\"selections\":{\"path\":\"/fare_class\"},\"maxAllowedSelections\":1}}},{\"id\":\"submit\",\"component\":{\"Button\":{\"child\":\"submit_label\",\"primary\":true,\"action\":{\"name\":\"bookingSubmit\",\"context\":[{\"key\":\"formId\",\"value\":\"booking\"},{\"key\":\"origin\",\"value\":{\"path\":\"/origin\"}},{\"key\":\"dest\",\"value\":{\"path\":\"/dest\"}},{\"key\":\"date\",\"value\":{\"path\":\"/date\"}},{\"key\":\"passengers\",\"value\":{\"path\":\"/passengers\"}},{\"key\":\"fare_class\",\"value\":{\"path\":\"/fare_class\"}}]}}}},{\"id\":\"submit_label\",\"component\":{\"Text\":{\"text\":\"Search flights\"}}}]}",
+            "id": "call_Miv5QrUKT95KeUOO7xzPGSEl"
+          }
+        ]
+      }
+    }
+  ]
+}
