@@ -10,5 +10,10 @@
     "directory": "marketing/assets"
   },
   "sideEffects": false,
-  "private": true
+  "private": true,
+  "dependencies": {
+    "satori": "^0.12.0",
+    "@resvg/resvg-js": "^2.6.2",
+    "react": "^19.0.0"
+  }
 }
