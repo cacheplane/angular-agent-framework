@@ -7,8 +7,11 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from ag_ui_langgraph import add_langgraph_fastapi_endpoint, LangGraphAgent
 
+from deps.a2ui.src.graph import graph as a2ui_graph
 from deps.interrupts.src.graph import graph as interrupts_graph
+from deps.json_render.src.graph import graph as json_render_graph
 from deps.streaming.src.graph import graph as streaming_graph
+from deps.tool_views.src.graph import graph as tool_views_graph
 
 AG_UI_INTERNAL_TOKEN = os.environ["AG_UI_INTERNAL_TOKEN"]
 
@@ -34,11 +37,26 @@ def ok() -> dict:
 
 add_langgraph_fastapi_endpoint(
     app,
+    LangGraphAgent(name="a2ui", graph=a2ui_graph),
+    path="/agent/a2ui",
+)
+add_langgraph_fastapi_endpoint(
+    app,
     LangGraphAgent(name="interrupts", graph=interrupts_graph),
     path="/agent/interrupts",
 )
 add_langgraph_fastapi_endpoint(
     app,
+    LangGraphAgent(name="json-render", graph=json_render_graph),
+    path="/agent/json-render",
+)
+add_langgraph_fastapi_endpoint(
+    app,
     LangGraphAgent(name="streaming", graph=streaming_graph),
     path="/agent/streaming",
+)
+add_langgraph_fastapi_endpoint(
+    app,
+    LangGraphAgent(name="tool-views", graph=tool_views_graph),
+    path="/agent/tool-views",
 )
