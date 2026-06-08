@@ -16,7 +16,7 @@
     "methods": [
       {
         "name": "register",
-        "signature": "register(lifecycle: AgentLifecycle)",
+        "signature": "register(lifecycle: AgentLifecycle): void",
         "description": "",
         "params": [
           {
@@ -46,7 +46,7 @@
     "methods": [
       {
         "name": "cancelRun",
-        "signature": "cancelRun(_threadId: string, _runId: string, _signal: AbortSignal)",
+        "signature": "cancelRun(_threadId: string, _runId: string, _signal: AbortSignal): Promise<void>",
         "description": "Optional: cancel a server-side run.",
         "params": [
           {
@@ -71,7 +71,7 @@
       },
       {
         "name": "createQueuedRun",
-        "signature": "createQueuedRun(_assistantId: string, threadId: string, payload: unknown, _signal: AbortSignal, options: LangGraphSubmitOptions)",
+        "signature": "createQueuedRun(_assistantId: string, threadId: string, payload: unknown, _signal: AbortSignal, options: LangGraphSubmitOptions): Promise<AgentQueueEntry<unknown>>",
         "description": "Optional: create a server-side queued run without joining it immediately.",
         "params": [
           {
@@ -108,7 +108,7 @@
       },
       {
         "name": "getHistory",
-        "signature": "getHistory(_threadId: string, _signal: AbortSignal)",
+        "signature": "getHistory(_threadId: string, _signal: AbortSignal): Promise<ThreadState<DefaultValues>[]>",
         "description": "Optional: load persisted checkpoint history for a thread.",
         "params": [
           {
@@ -127,13 +127,13 @@
       },
       {
         "name": "joinStream",
-        "signature": "joinStream()",
+        "signature": "joinStream(): AsyncIterable<StreamEvent>",
         "description": "Optional: join an already-started run without creating a new one.",
         "params": []
       },
       {
         "name": "stream",
-        "signature": "stream(_assistantId: string, _threadId: string | null, _payload: unknown, signal: AbortSignal, _options: LangGraphSubmitOptions)",
+        "signature": "stream(_assistantId: string, _threadId: string | null, _payload: unknown, signal: AbortSignal, _options: LangGraphSubmitOptions): AsyncIterable<StreamEvent>",
         "description": "Open a streaming connection to an agent and yield events.",
         "params": [
           {
@@ -183,7 +183,7 @@
       },
       {
         "name": "onThreadId",
-        "type": "object",
+        "type": "(id: string) => void",
         "description": "Optional callback invoked when a new thread is created",
         "optional": true
       }
@@ -195,7 +195,7 @@
     "methods": [
       {
         "name": "cancelRun",
-        "signature": "cancelRun(threadId: string, runId: string, signal: AbortSignal)",
+        "signature": "cancelRun(threadId: string, runId: string, signal: AbortSignal): Promise<void>",
         "description": "Cancel a server-side run.",
         "params": [
           {
@@ -220,7 +220,7 @@
       },
       {
         "name": "createQueuedRun",
-        "signature": "createQueuedRun(assistantId: string, threadId: string, payload: unknown, signal: AbortSignal, options: LangGraphSubmitOptions)",
+        "signature": "createQueuedRun(assistantId: string, threadId: string, payload: unknown, signal: AbortSignal, options: LangGraphSubmitOptions): Promise<AgentQueueEntry<unknown>>",
         "description": "Create a pending server-side run using LangGraph's enqueue strategy.",
         "params": [
           {
@@ -257,7 +257,7 @@
       },
       {
         "name": "getHistory",
-        "signature": "getHistory(threadId: string, signal: AbortSignal)",
+        "signature": "getHistory(threadId: string, signal: AbortSignal): Promise<ThreadState<DefaultValues>[]>",
         "description": "Load persisted checkpoint history for a thread.",
         "params": [
           {
@@ -276,7 +276,7 @@
       },
       {
         "name": "joinStream",
-        "signature": "joinStream(threadId: string, runId: string, lastEventId: string | undefined, signal: AbortSignal)",
+        "signature": "joinStream(threadId: string, runId: string, lastEventId: string | undefined, signal: AbortSignal): AsyncIterable<StreamEvent>",
         "description": "Join an already-started run without creating a new thread.",
         "params": [
           {
@@ -307,7 +307,7 @@
       },
       {
         "name": "stream",
-        "signature": "stream(assistantId: string, threadId: string | null, payload: unknown, signal: AbortSignal, options: LangGraphSubmitOptions)",
+        "signature": "stream(assistantId: string, threadId: string | null, payload: unknown, signal: AbortSignal, options: LangGraphSubmitOptions): AsyncIterable<StreamEvent>",
         "description": "Open a streaming connection, creating a thread if needed.",
         "params": [
           {
@@ -344,7 +344,7 @@
       },
       {
         "name": "updateState",
-        "signature": "updateState(threadId: string, values: Record<string, unknown>, _signal: AbortSignal, options: object)",
+        "signature": "updateState(threadId: string, values: Record<string, unknown>, _signal: AbortSignal, options: object): Promise<void>",
         "description": "Update server-side thread state, e.g. to remove messages for regenerate rollback.",
         "params": [
           {
@@ -400,7 +400,7 @@
     "methods": [
       {
         "name": "archive",
-        "signature": "archive(threadId: string)",
+        "signature": "archive(threadId: string): Promise<void>",
         "description": "",
         "params": [
           {
@@ -413,7 +413,7 @@
       },
       {
         "name": "create",
-        "signature": "create(metadata: Record<string, unknown>)",
+        "signature": "create(metadata: Record<string, unknown>): Promise<string | null>",
         "description": "",
         "params": [
           {
@@ -426,7 +426,7 @@
       },
       {
         "name": "delete",
-        "signature": "delete(threadId: string)",
+        "signature": "delete(threadId: string): Promise<void>",
         "description": "",
         "params": [
           {
@@ -439,7 +439,7 @@
       },
       {
         "name": "getThread",
-        "signature": "getThread(threadId: string)",
+        "signature": "getThread(threadId: string): Promise<Thread | null>",
         "description": "Fetch a single thread by id. Returns `null` when the server\n returns 404 (thread doesn't exist) so callers can distinguish\n \"missing\" from \"couldn't reach the server\" — genuine network\n errors rethrow. Used by URL-based thread routing to validate a\n pasted/shared thread id before activating it.",
         "params": [
           {
@@ -452,7 +452,7 @@
       },
       {
         "name": "moveToProject",
-        "signature": "moveToProject(threadId: string, projectId: string | null)",
+        "signature": "moveToProject(threadId: string, projectId: string | null): Promise<void>",
         "description": "",
         "params": [
           {
@@ -471,7 +471,7 @@
       },
       {
         "name": "pin",
-        "signature": "pin(threadId: string)",
+        "signature": "pin(threadId: string): Promise<void>",
         "description": "",
         "params": [
           {
@@ -484,13 +484,13 @@
       },
       {
         "name": "refresh",
-        "signature": "refresh()",
+        "signature": "refresh(): Promise<void>",
         "description": "Fetch the latest thread list from the server. Failures are\n logged via `console.error` (not swallowed silently — silent\n catches have masked prod issues in the past).\n\n Invocation and resolution are logged at `console.debug` so prod\n inspection can distinguish \"never called\" from \"called but\n resolved empty\" from \"called and threw.\" This was prompted by a\n demo.threadplane.ai cold-load bug where the sidenav stayed empty\n with no visible signal. Tighten the log volume if it becomes\n noisy.",
         "params": []
       },
       {
         "name": "rename",
-        "signature": "rename(threadId: string, newTitle: string)",
+        "signature": "rename(threadId: string, newTitle: string): Promise<void>",
         "description": "",
         "params": [
           {
@@ -509,7 +509,7 @@
       },
       {
         "name": "reorderPinned",
-        "signature": "reorderPinned(threadId: string, beforeId: string | null)",
+        "signature": "reorderPinned(threadId: string, beforeId: string | null): Promise<void>",
         "description": "Re-stamp `metadata.pinnedOrder = 0,1,2,...` for the pinned slice\n to reflect the new ordering.",
         "params": [
           {
@@ -528,7 +528,7 @@
       },
       {
         "name": "unarchive",
-        "signature": "unarchive(threadId: string)",
+        "signature": "unarchive(threadId: string): Promise<void>",
         "description": "",
         "params": [
           {
@@ -541,7 +541,7 @@
       },
       {
         "name": "unpin",
-        "signature": "unpin(threadId: string)",
+        "signature": "unpin(threadId: string): Promise<void>",
         "description": "",
         "params": [
           {
@@ -610,7 +610,7 @@
     "methods": [
       {
         "name": "cancelRun",
-        "signature": "cancelRun(threadId: string, runId: string, signal: AbortSignal)",
+        "signature": "cancelRun(threadId: string, runId: string, signal: AbortSignal): Promise<void>",
         "description": "Optional: cancel a server-side run.",
         "params": [
           {
@@ -635,13 +635,13 @@
       },
       {
         "name": "close",
-        "signature": "close()",
+        "signature": "close(): void",
         "description": "Close the stream. Remaining queued events are drained before completion.",
         "params": []
       },
       {
         "name": "createQueuedRun",
-        "signature": "createQueuedRun(_assistantId: string, threadId: string, payload: unknown, signal: AbortSignal, options: LangGraphSubmitOptions)",
+        "signature": "createQueuedRun(_assistantId: string, threadId: string, payload: unknown, signal: AbortSignal, options: LangGraphSubmitOptions): Promise<AgentQueueEntry<unknown>>",
         "description": "Optional: create a server-side queued run without joining it immediately.",
         "params": [
           {
@@ -678,7 +678,7 @@
       },
       {
         "name": "emit",
-        "signature": "emit(events: StreamEvent[])",
+        "signature": "emit(events: StreamEvent[]): void",
         "description": "Manually emit events into the stream.",
         "params": [
           {
@@ -691,7 +691,7 @@
       },
       {
         "name": "emitError",
-        "signature": "emitError(err: Error)",
+        "signature": "emitError(err: Error): void",
         "description": "Inject an error into the stream.",
         "params": [
           {
@@ -704,7 +704,7 @@
       },
       {
         "name": "getHistory",
-        "signature": "getHistory(threadId: string, signal: AbortSignal)",
+        "signature": "getHistory(threadId: string, signal: AbortSignal): Promise<ThreadState<DefaultValues>[]>",
         "description": "Optional: load persisted checkpoint history for a thread.",
         "params": [
           {
@@ -723,13 +723,13 @@
       },
       {
         "name": "isStreaming",
-        "signature": "isStreaming()",
+        "signature": "isStreaming(): boolean",
         "description": "Returns true if a stream is currently active.",
         "params": []
       },
       {
         "name": "joinStream",
-        "signature": "joinStream(threadId: string, runId: string, lastEventId: string | undefined, signal: AbortSignal)",
+        "signature": "joinStream(threadId: string, runId: string, lastEventId: string | undefined, signal: AbortSignal): AsyncIterable<StreamEvent>",
         "description": "Optional: join an already-started run without creating a new one.",
         "params": [
           {
@@ -760,13 +760,13 @@
       },
       {
         "name": "nextBatch",
-        "signature": "nextBatch()",
+        "signature": "nextBatch(): StreamEvent[]",
         "description": "Advance to the next scripted batch. Pass the returned events to `emit()`.",
         "params": []
       },
       {
         "name": "stream",
-        "signature": "stream(_assistantId: string, _threadId: string | null, _payload: unknown, signal: AbortSignal, options: LangGraphSubmitOptions)",
+        "signature": "stream(_assistantId: string, _threadId: string | null, _payload: unknown, signal: AbortSignal, options: LangGraphSubmitOptions): AsyncIterable<StreamEvent>",
         "description": "Open a streaming connection to an agent and yield events.",
         "params": [
           {
@@ -900,7 +900,7 @@
       },
       {
         "name": "onThreadId",
-        "type": "object",
+        "type": "(id: string) => void",
         "description": "Called when a new thread is auto-created by the transport.",
         "optional": true
       },
@@ -930,7 +930,7 @@
       },
       {
         "name": "toMessage",
-        "type": "object",
+        "type": "(msg: unknown) => BaseMessage<>",
         "description": "Custom message deserializer for non-standard message formats.",
         "optional": true
       },
@@ -1030,7 +1030,7 @@
       },
       {
         "name": "onThreadId",
-        "type": "object",
+        "type": "(id: string) => void",
         "description": "Called when a new thread is auto-created by the transport.",
         "optional": true
       },
@@ -1060,7 +1060,7 @@
       },
       {
         "name": "toMessage",
-        "type": "object",
+        "type": "(msg: unknown) => BaseMessage<>",
         "description": "Custom message deserializer for non-standard message formats.",
         "optional": true
       },
@@ -1080,13 +1080,13 @@
     "properties": [
       {
         "name": "cancel",
-        "type": "object",
+        "type": "(id: string) => Promise<boolean>",
         "description": "Cancel a specific pending run by server run ID.",
         "optional": false
       },
       {
         "name": "clear",
-        "type": "object",
+        "type": "() => Promise<void>",
         "description": "Cancel all pending runs and clear the queue.",
         "optional": false
       },
@@ -1147,42 +1147,187 @@
     "name": "AgentTransport",
     "kind": "interface",
     "description": "Transport interface for connecting to a LangGraph agent.",
-    "properties": [
+    "properties": [],
+    "methods": [
       {
         "name": "cancelRun",
-        "type": "unknown",
-        "description": "",
-        "optional": true
+        "signature": "cancelRun(threadId: string, runId: string, signal: AbortSignal): Promise<void>",
+        "description": "Optional: cancel a server-side run.",
+        "params": [
+          {
+            "name": "threadId",
+            "type": "string",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "runId",
+            "type": "string",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "signal",
+            "type": "AbortSignal",
+            "description": "",
+            "optional": false
+          }
+        ]
       },
       {
         "name": "createQueuedRun",
-        "type": "unknown",
-        "description": "",
-        "optional": true
+        "signature": "createQueuedRun(assistantId: string, threadId: string, payload: unknown, signal: AbortSignal, options: LangGraphSubmitOptions): Promise<AgentQueueEntry<unknown>>",
+        "description": "Optional: create a server-side queued run without joining it immediately.",
+        "params": [
+          {
+            "name": "assistantId",
+            "type": "string",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "threadId",
+            "type": "string",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "payload",
+            "type": "unknown",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "signal",
+            "type": "AbortSignal",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "options",
+            "type": "LangGraphSubmitOptions",
+            "description": "",
+            "optional": true
+          }
+        ]
       },
       {
         "name": "getHistory",
-        "type": "unknown",
-        "description": "",
-        "optional": true
+        "signature": "getHistory(threadId: string, signal: AbortSignal): Promise<ThreadState<DefaultValues>[]>",
+        "description": "Optional: load persisted checkpoint history for a thread.",
+        "params": [
+          {
+            "name": "threadId",
+            "type": "string",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "signal",
+            "type": "AbortSignal",
+            "description": "",
+            "optional": false
+          }
+        ]
       },
       {
         "name": "joinStream",
-        "type": "unknown",
-        "description": "",
-        "optional": true
+        "signature": "joinStream(threadId: string, runId: string, lastEventId: string | undefined, signal: AbortSignal): AsyncIterable<StreamEvent>",
+        "description": "Optional: join an already-started run without creating a new one.",
+        "params": [
+          {
+            "name": "threadId",
+            "type": "string",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "runId",
+            "type": "string",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "lastEventId",
+            "type": "string | undefined",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "signal",
+            "type": "AbortSignal",
+            "description": "",
+            "optional": false
+          }
+        ]
       },
       {
         "name": "stream",
-        "type": "unknown",
-        "description": "",
-        "optional": false
+        "signature": "stream(assistantId: string, threadId: string | null, payload: unknown, signal: AbortSignal, options: LangGraphSubmitOptions): AsyncIterable<StreamEvent>",
+        "description": "Open a streaming connection to an agent and yield events.",
+        "params": [
+          {
+            "name": "assistantId",
+            "type": "string",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "threadId",
+            "type": "string | null",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "payload",
+            "type": "unknown",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "signal",
+            "type": "AbortSignal",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "options",
+            "type": "LangGraphSubmitOptions",
+            "description": "",
+            "optional": true
+          }
+        ]
       },
       {
         "name": "updateState",
-        "type": "unknown",
-        "description": "",
-        "optional": true
+        "signature": "updateState(threadId: string, values: Record<string, unknown>, signal: AbortSignal, options: object): Promise<void>",
+        "description": "Optional: update server-side thread state (e.g. to emit RemoveMessage\nentries for regenerate rollback). Forwards to the LangGraph\n`threads.updateState` API.\n\n`options.asNode` corresponds to LangGraph's `as_node` parameter — the\nserver treats the update as if that node had just produced the values,\nwhich determines what the next pull resumes. `regenerate()` passes\n`asNode: '__start__'` so the next `submit(null)` resumes at the entry\nnode and re-runs `generate` against the rolled-back state.",
+        "params": [
+          {
+            "name": "threadId",
+            "type": "string",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "values",
+            "type": "Record<string, unknown>",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "signal",
+            "type": "AbortSignal",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "options",
+            "type": "object",
+            "description": "",
+            "optional": true
+          }
+        ]
       }
     ],
     "examples": []
@@ -1288,31 +1433,31 @@
       },
       {
         "name": "getMessagesMetadata",
-        "type": "object",
+        "type": "(msg: BaseMessage<>, idx: number) => MessageMetadata<Record<string, unknown>> | undefined",
         "description": "Get metadata for a specific message by index.",
         "optional": false
       },
       {
         "name": "getSubagent",
-        "type": "object",
+        "type": "(toolCallId: string) => SubagentStreamRef | undefined",
         "description": "Get a subagent stream by the tool call ID that spawned it.",
         "optional": false
       },
       {
         "name": "getSubagentsByMessage",
-        "type": "object",
+        "type": "(msg: AIMessage<>) => SubagentStreamRef[]",
         "description": "Get subagent streams spawned by the tool calls on a specific AI message.",
         "optional": false
       },
       {
         "name": "getSubagentsByType",
-        "type": "object",
+        "type": "(type: string) => SubagentStreamRef[]",
         "description": "Get subagent streams by their configured subagent type/name.",
         "optional": false
       },
       {
         "name": "getToolCalls",
-        "type": "object",
+        "type": "(msg: AIMessage<>) => ToolCallWithResult<>[]",
         "description": "Get tool call results associated with an AI message (LangGraph types).",
         "optional": false
       },
@@ -1348,7 +1493,7 @@
       },
       {
         "name": "joinStream",
-        "type": "object",
+        "type": "(runId: string, lastEventId: string) => Promise<void>",
         "description": "Join an already-running stream by run ID.",
         "optional": false
       },
@@ -1402,19 +1547,19 @@
       },
       {
         "name": "regenerate",
-        "type": "object",
+        "type": "(assistantMessageIndex: number) => Promise<void>",
         "description": "Discards the assistant message at the given index AND all messages after\nit, then re-runs the agent against the trimmed conversation tail. The\npreceding user message (at index - 1) is preserved and re-submitted as\nthe agent's input. No new user message is added to the history.\n\nThrows if the message at `index` is not 'assistant' role, or if the\nagent is currently loading another response.",
         "optional": false
       },
       {
         "name": "reload",
-        "type": "object",
+        "type": "() => void",
         "description": "Re-submit the last input to restart the stream.",
         "optional": false
       },
       {
         "name": "setBranch",
-        "type": "object",
+        "type": "(branch: string) => void",
         "description": "Set the active branch for time-travel navigation.",
         "optional": false
       },
@@ -1432,7 +1577,7 @@
       },
       {
         "name": "stop",
-        "type": "object",
+        "type": "() => Promise<void>",
         "description": "",
         "optional": false
       },
@@ -1444,13 +1589,13 @@
       },
       {
         "name": "submit",
-        "type": "object",
+        "type": "(input: AgentSubmitInput | null | undefined, opts: AgentSubmitOptions & LangGraphSubmitOptions) => Promise<void>",
         "description": "Submit input, resume commands, checkpoint forks, or other LangGraph run options.",
         "optional": false
       },
       {
         "name": "switchThread",
-        "type": "object",
+        "type": "(threadId: string | null) => void",
         "description": "Switch to a different thread, resetting derived state.",
         "optional": false
       },
@@ -1578,7 +1723,7 @@
       },
       {
         "name": "onRunCreated",
-        "type": "object",
+        "type": "(params: object) => void",
         "description": "",
         "optional": true
       },
@@ -1690,31 +1835,31 @@
       },
       {
         "name": "getMessagesMetadata",
-        "type": "object",
+        "type": "(msg: BaseMessage<>, idx: number) => MessageMetadata<Record<string, unknown>> | undefined",
         "description": "Get metadata for a specific message by index.",
         "optional": false
       },
       {
         "name": "getSubagent",
-        "type": "object",
+        "type": "(toolCallId: string) => SubagentStreamRef | undefined",
         "description": "Get a subagent stream by the tool call ID that spawned it.",
         "optional": false
       },
       {
         "name": "getSubagentsByMessage",
-        "type": "object",
+        "type": "(msg: AIMessage<>) => SubagentStreamRef[]",
         "description": "Get subagent streams spawned by the tool calls on a specific AI message.",
         "optional": false
       },
       {
         "name": "getSubagentsByType",
-        "type": "object",
+        "type": "(type: string) => SubagentStreamRef[]",
         "description": "Get subagent streams by their configured subagent type/name.",
         "optional": false
       },
       {
         "name": "getToolCalls",
-        "type": "object",
+        "type": "(msg: AIMessage<>) => ToolCallWithResult<>[]",
         "description": "Get tool call results associated with an AI message (LangGraph types).",
         "optional": false
       },
@@ -1750,7 +1895,7 @@
       },
       {
         "name": "joinStream",
-        "type": "object",
+        "type": "(runId: string, lastEventId: string) => Promise<void>",
         "description": "Join an already-running stream by run ID.",
         "optional": false
       },
@@ -1804,19 +1949,19 @@
       },
       {
         "name": "regenerate",
-        "type": "object",
+        "type": "(assistantMessageIndex: number) => Promise<void>",
         "description": "Discards the assistant message at the given index AND all messages after\nit, then re-runs the agent against the trimmed conversation tail. The\npreceding user message (at index - 1) is preserved and re-submitted as\nthe agent's input. No new user message is added to the history.\n\nThrows if the message at `index` is not 'assistant' role, or if the\nagent is currently loading another response.",
         "optional": false
       },
       {
         "name": "reload",
-        "type": "object",
+        "type": "() => void",
         "description": "Re-submit the last input to restart the stream.",
         "optional": false
       },
       {
         "name": "setBranch",
-        "type": "object",
+        "type": "(branch: string) => void",
         "description": "Set the active branch for time-travel navigation.",
         "optional": false
       },
@@ -1834,7 +1979,7 @@
       },
       {
         "name": "stop",
-        "type": "object",
+        "type": "() => Promise<void>",
         "description": "",
         "optional": false
       },
@@ -1852,7 +1997,7 @@
       },
       {
         "name": "submit",
-        "type": "object",
+        "type": "(input: AgentSubmitInput | null | undefined, opts: AgentSubmitOptions & LangGraphSubmitOptions) => Promise<void>",
         "description": "Submit input, resume commands, checkpoint forks, or other LangGraph run options.",
         "optional": false
       },
@@ -1864,7 +2009,7 @@
       },
       {
         "name": "switchThread",
-        "type": "object",
+        "type": "(threadId: string | null) => void",
         "description": "Switch to a different thread, resetting derived state.",
         "optional": false
       },
@@ -2038,13 +2183,13 @@
       },
       {
         "name": "onError",
-        "type": "object",
+        "type": "(error: unknown, run: RunCallbackMeta | undefined) => void",
         "description": "Callback that is called when an error occurs during this specific submit call.\nUnlike the hook-level `onError`, this allows handling errors on a per-submit basis,\ne.g. to show a retry button or a specific error message to the user.",
         "optional": true
       },
       {
         "name": "optimisticValues",
-        "type": "Partial<StateType> | object",
+        "type": "Partial<StateType> | (prev: StateType) => Partial<StateType>",
         "description": "",
         "optional": true
       },
@@ -2234,11 +2379,11 @@
     "name": "provideAgent",
     "kind": "function",
     "description": "Wire the LangGraph adapter into Angular's dependency injection.\n\nRegisters a singleton `LangGraphAgent` constructed from `config`. Retrieve it\nin any component with `injectAgent()`. Provide this at the application root\n(`app.config.ts`) for an app-wide agent.\n\nTo use a different agent in a component subtree, re-provide\n`provideAgent({...})` in that component's `providers: []` array —\nAngular's hierarchical DI scopes the singleton accordingly.\n\n**Static vs factory config.** Pass a plain `AgentConfig` object when the\nconfig is known up front. Pass a `() => AgentConfig` factory when the config\ndepends on runtime/DI state — the factory runs inside an Angular injection\ncontext, so it may call `inject()` to read services, route params, or\ncomponent-scoped signals:\n\n```ts\nproviders: [\n  provideAgent(() => {\n    const route = inject(ActivatedRoute);\n    return { assistantId: 'chat', threadId: toSignal(route.paramMap) };\n  }),\n];\n```",
-    "signature": "provideAgent(configOrFactory: AgentConfig<T, BagTemplate> | object): Provider[]",
+    "signature": "provideAgent(configOrFactory: AgentConfig<T, BagTemplate> | () => AgentConfig<T>): Provider[]",
     "params": [
       {
         "name": "configOrFactory",
-        "type": "AgentConfig<T, BagTemplate> | object",
+        "type": "AgentConfig<T, BagTemplate> | () => AgentConfig<T>",
         "description": "",
         "optional": false
       }
@@ -2272,7 +2417,7 @@
     "name": "refreshOnRunEnd",
     "kind": "function",
     "description": "Call `fn` whenever the agent's status transitions out of `'running'`\n(i.e. when a run completes — success, error, or interrupt). Useful\nfor refreshing thread lists, telemetry, or any other state that\nlags the agent.\n\nMust be called within an injection context (constructor or\n`runInInjectionContext`) — uses Angular's `effect` under the hood.",
-    "signature": "refreshOnRunEnd(agent: LangGraphAgent<>, fn: object): void",
+    "signature": "refreshOnRunEnd(agent: LangGraphAgent<>, fn: () => void | Promise<void>): void",
     "params": [
       {
         "name": "agent",
@@ -2282,7 +2427,7 @@
       },
       {
         "name": "fn",
-        "type": "object",
+        "type": "() => void | Promise<void>",
         "description": "",
         "optional": false
       }
@@ -2299,7 +2444,7 @@
     "name": "refreshOnTransition",
     "kind": "function",
     "description": "Call `fn` whenever any of the watched signals transitions from a\ntruthy \"active\" value to a non-active value. Generic version of\nrefreshOnRunEnd for callers tracking custom state machines.\n\nMust be called within an injection context.",
-    "signature": "refreshOnTransition(watch: Signal<T>, isActive: object, fn: object): void",
+    "signature": "refreshOnTransition(watch: Signal<T>, isActive: (v: T) => boolean, fn: () => void | Promise<void>): void",
     "params": [
       {
         "name": "watch",
@@ -2309,13 +2454,13 @@
       },
       {
         "name": "isActive",
-        "type": "object",
+        "type": "(v: T) => boolean",
         "description": "",
         "optional": false
       },
       {
         "name": "fn",
-        "type": "object",
+        "type": "() => void | Promise<void>",
         "description": "",
         "optional": false
       }

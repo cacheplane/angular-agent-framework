@@ -80,7 +80,7 @@ describe('ChatComponent', () => {
 
 | Method | Description |
 |--------|-------------|
-| `constructor(script?)` | Optionally seeds scripted event batches for manual stepping. |
+| `constructor(script?: StreamEvent[][])` | Optionally seeds scripted event batches for manual stepping (defaults to `[]`). |
 | `nextBatch()` | Returns the next scripted event batch. |
 | `emit(events)` | Pushes one or more `StreamEvent` objects into the active stream. |
 | `emitError(err)` | Causes the active stream to reject with `err`. |

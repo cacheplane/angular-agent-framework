@@ -1,6 +1,6 @@
 # A2UI Schema
 
-The `@threadplane/a2ui` schema is a TypeScript model of the protocol shapes used by the framework. It is useful as a contract for agent output and custom integrations, but it is not a runtime validator.
+The `@threadplane/a2ui` schema is a TypeScript model of the protocol shapes the framework uses. It's a contract for agent output and custom integrations, but it's not a runtime validator.
 
 ## Dynamic values
 
@@ -175,6 +175,16 @@ interface A2uiSurface {
   components: Map<string, A2uiComponent>;
   dataModel: Record<string, unknown>;
   styles?: { font?: string; primaryColor?: string };
+}
+```
+
+`A2uiTheme` carries optional, agent-supplied presentation hints:
+
+```ts
+interface A2uiTheme {
+  primaryColor?: string;
+  iconUrl?: string;
+  agentDisplayName?: string;
 }
 ```
 

@@ -1,6 +1,6 @@
 # Browser Telemetry
 
-Browser telemetry is opt-in. If your Angular app never calls `provideThreadplaneTelemetry()`, the service has no enabled config and `capture()` returns without sending.
+Browser telemetry is opt-in. If your Angular app never calls `provideThreadplaneTelemetry()`, the service has no enabled config and `capture()` returns without sending anything.
 
 ## Configure
 
@@ -32,7 +32,7 @@ The endpoint receives:
 }
 ```
 
-The browser distinct ID is generated per service instance. The source does not write it to storage.
+The browser distinct ID is generated per service instance. The source never writes it to storage.
 
 ## Prefer a sink for app-owned analytics
 
@@ -47,7 +47,7 @@ provideThreadplaneTelemetry({
 });
 ```
 
-When `sink` is present, the service does not use `endpoint` or PostHog.
+When `sink` is present, the service skips `endpoint` and PostHog entirely.
 
 ## Sampling
 
@@ -71,6 +71,13 @@ telemetry.captureRuntimeInstanceCreated({
   model: 'gpt-4.1',
 });
 
+telemetry.captureRuntimeRequestCreated({
+  transport: 'langgraph',
+  requestType: 'stream',
+  provider: 'openai',
+  model: 'gpt-4.1',
+});
+
 telemetry.captureStreamStarted({ transport: 'langgraph', provider: 'openai', model: 'gpt-4.1' });
 telemetry.captureStreamEnded({ transport: 'langgraph', provider: 'openai', model: 'gpt-4.1', durationMs: 1200 });
 telemetry.captureStreamErrored({ transport: 'langgraph', provider: 'openai', model: 'gpt-4.1', error });
@@ -82,4 +89,4 @@ telemetry.captureStreamErrored({ transport: 'langgraph', provider: 'openai', mod
 
 Browser capture is wrapped in a `try/catch`. A sink error, fetch failure, or dynamic import failure is swallowed.
 
-That keeps telemetry from becoming part of your application control flow.
+That keeps telemetry out of your application's control flow.

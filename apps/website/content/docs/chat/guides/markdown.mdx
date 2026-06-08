@@ -1,6 +1,6 @@
 # Markdown Rendering
 
-AI messages in `@threadplane/chat` can render full markdown -- headings, code blocks, tables, lists, blockquotes, and inline formatting. This is powered by the `renderMarkdown()` utility and styled with `CHAT_MARKDOWN_STYLES`.
+AI messages in `@threadplane/chat` can render full markdown -- headings, code blocks, tables, lists, blockquotes, and inline formatting. The `renderMarkdown()` utility does the work, and `CHAT_MARKDOWN_STYLES` handles the styling.
 
 ## How It Works
 
@@ -84,7 +84,7 @@ All colors reference `--ngaf-chat-*` CSS custom properties, so markdown elements
 
 ## Using Markdown in Custom Components
 
-To render markdown in a custom message template, apply both the styles and the `.chat-md` class:
+Let's render markdown in a custom message template. Apply both the styles and the `.chat-md` class:
 
 ```typescript
 import { Component, inject } from '@angular/core';
@@ -115,7 +115,7 @@ import {
 export class ChatViewComponent {
   private sanitizer = inject(DomSanitizer);
 
-  // chatRef = agent(...)
+  // chatRef = injectAgent(); // with provideAgent({...}) in the component's providers
 
   renderMd(content: string | unknown) {
     if (typeof content !== 'string') return '';
@@ -232,7 +232,7 @@ All built-in markdown view components consume the same `--ngaf-chat-*` and `--a2
 
 ## Without marked
 
-If you choose not to install `marked`, markdown content will render as plain text with line breaks preserved. This can be appropriate for simple chat applications that do not need rich formatting.
+If you skip installing `marked`, markdown content renders as plain text with line breaks preserved. That's fine for simple chat apps that don't need rich formatting.
 
 ```bash
 # Full markdown support:

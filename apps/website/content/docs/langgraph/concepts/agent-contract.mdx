@@ -4,7 +4,7 @@ The `Agent` contract is the spine between runtime adapters and chat UI.
 
 `@threadplane/chat` owns the contract. `@threadplane/langgraph` and `@threadplane/ag-ui` produce objects that satisfy it. Chat primitives and compositions consume it without knowing which runtime is behind the stream.
 
-This matters because the UI should not care whether a response came from LangGraph Platform, AG-UI, a local mock, or a custom HTTP service. The boundary is explicit: adapters translate runtime events into Angular signals and a small action surface.
+The UI shouldn't care whether a response came from LangGraph Platform, AG-UI, a local mock, or a custom HTTP service. That's the point. The boundary is explicit: adapters translate runtime events into Angular signals and a small action surface.
 
 ```text
 LangGraph Platform -- @threadplane/langgraph --+
@@ -61,7 +61,7 @@ await agent.submit({
 
 The input can carry a new user message, an interrupt resume payload, a state patch, or a combination. The adapter decides how that maps to the backend.
 
-This matters because chat UI can send user intent without learning backend protocol details. LangGraph can turn `resume` into a command. An AG-UI adapter can call `runAgent()`. A test mock can just record the call.
+So chat UI sends user intent without learning a single backend protocol detail. LangGraph turns `resume` into a command. An AG-UI adapter calls `runAgent()`. A test mock just records the call.
 
 The second argument is intentionally small at the contract layer:
 
@@ -88,7 +88,7 @@ Signals are the stable read model.
 | `interrupt?.()` | Current human-in-the-loop pause, if supported. |
 | `subagents?.()` | Delegated work keyed by tool-call id, if supported. |
 
-The optional signals are important. A simple echo adapter should not fake interrupts or subagents. Components that need those concepts feature-detect the signal and render a neutral fallback when it is absent.
+The optional signals matter. A simple echo adapter shouldn't fake interrupts or subagents. Components that need those concepts feature-detect the signal and render a neutral fallback when it's absent.
 
 ## Events
 
@@ -108,7 +108,7 @@ Current event variants are deliberately narrow:
 | `state_update` | Sync state intended for render/generative UI stores. |
 | `custom` | Runtime-specific escape hatch with `name` and `data`. |
 
-Do not mirror `messages`, `status`, `toolCalls`, `interrupt`, or `subagents` through `events$`. Put those on signals. Duplicating state creates ordering bugs and makes components guess which source wins.
+Don't mirror `messages`, `status`, `toolCalls`, `interrupt`, or `subagents` through `events$`. Put those on signals. Duplicating state creates ordering bugs and makes components guess which source wins.
 
 ## Adapters And Transports
 
@@ -124,7 +124,7 @@ Do not mirror `messages`, `status`, `toolCalls`, `interrupt`, or `subagents` thr
 
 ## Lifecycle
 
-The UI lifecycle is intentionally boring.
+The UI lifecycle is intentionally boring — and boring is the goal.
 
 1. User input calls `submit({ message })`.
 2. Adapter marks the run active through `status()` and `isLoading()`.
@@ -154,16 +154,16 @@ For LangGraph-specific code, use `mockLangGraphAgent()` or `MockAgentTransport` 
 
 For AG-UI integration, use `FakeAgent` or `provideFakeAgent()` from `@threadplane/ag-ui`.
 
-This matters because the contract is the seam you can test cheaply. Most component tests should not need a network, LangGraph server, or AG-UI runtime.
+The contract is the seam you can test cheaply. Most component tests shouldn't need a network, a LangGraph server, or an AG-UI runtime.
 
 ## What It Is Not
 
-The `Agent` contract is not a backend protocol. It does not define SSE frames, AG-UI event names, LangGraph thread state, or tool execution semantics.
+The `Agent` contract is not a backend protocol. It doesn't define SSE frames, AG-UI event names, LangGraph thread state, or tool execution semantics.
 
-It is not a message database. Persistence belongs to the runtime or application state, then gets projected back through signals.
+It's not a message database. Persistence belongs to the runtime or application state, then gets projected back through signals.
 
-It is not a full orchestration API. LangGraph-specific operations such as branch selection, queued runs, checkpoint history, and raw SDK messages stay on `LangGraphAgent`.
+It's not a full orchestration API. LangGraph-specific operations such as branch selection, queued runs, checkpoint history, and raw SDK messages stay on `LangGraphAgent`.
 
-It is not a UI renderer. Rendering belongs to `@threadplane/chat`, `@threadplane/render`, and A2UI surfaces. The agent only exposes the state and events those renderers need.
+It's not a UI renderer. Rendering belongs to `@threadplane/chat`, `@threadplane/render`, and A2UI surfaces. The agent only exposes the state and events those renderers need.
 
 Keep that boundary sharp. It makes adapters replaceable, tests smaller, and chat components more predictable.

@@ -1,6 +1,6 @@
 # Writing an Adapter
 
-Learn how to implement a custom `Agent` adapter so `@threadplane/chat` components work with any backend — whether that is a custom RPC service, an in-process mock, or an exotic streaming protocol.
+Learn how to implement a custom `Agent` adapter so `@threadplane/chat` components work with any backend — a custom RPC service, an in-process mock, or an exotic streaming protocol.
 
 ## When to Write Your Own Adapter
 
@@ -34,6 +34,7 @@ An `Agent` is a set of Angular **signals** (reactive state) plus an RxJS **obser
 | `events$` | `Observable<AgentEvent>` | Discriminated `state_update` / `custom` events |
 | `submit` | `(input, opts?) => Promise<void>` | Send a message or resume |
 | `stop` | `() => Promise<void>` | Abort the in-flight run |
+| `regenerate` | `(assistantMessageIndex: number) => Promise<void>` | Discard the assistant message at the index and everything after it, then re-run against the trimmed tail |
 | `interrupt?` | `Signal<AgentInterrupt \| undefined>` | (optional) Current pause-for-input |
 | `subagents?` | `Signal<Map<string, Subagent>>` | (optional) Spawned subagents |
 
@@ -47,7 +48,7 @@ The design invariant is: **state lives on signals; `events$` carries only things
 
 ## Worked Example: An In-Process Echo Adapter
 
-Below is a complete `EchoAgent` factory — roughly 80 lines — that satisfies the full `Agent` contract without any network call. It demonstrates the signal pattern clearly and is a solid starting point for your own adapter.
+Below is a complete `EchoAgent` factory — roughly 80 lines — that satisfies the full `Agent` contract without any network call. It shows the signal pattern clearly and is a solid starting point for your own adapter.
 
 On `submit`, the factory optimistically appends the user message, then after a short delay appends an assistant message that echoes the input back. There are no tool calls, no custom events, and no interrupts.
 
@@ -108,6 +109,16 @@ export function createEchoAgent(opts: EchoAgentOptions = {}): Agent {
     isLoading.set(false);
   };
 
+  const regenerate = async (assistantMessageIndex: number) => {
+    // Discard the assistant message at the index AND everything after it,
+    // keeping the preceding user message, then re-run against the trimmed tail.
+    const prior = messages()[assistantMessageIndex - 1];
+    messages.update((prev) => prev.slice(0, assistantMessageIndex - 1));
+    if (prior?.role === 'user') {
+      await submit({ message: prior.content });
+    }
+  };
+
   return {
     messages,
     status,
@@ -118,6 +129,7 @@ export function createEchoAgent(opts: EchoAgentOptions = {}): Agent {
     events$: EMPTY satisfies Observable<AgentEvent>,
     submit,
     stop,
+    regenerate,
   };
 }
 
@@ -128,7 +140,7 @@ function cryptoRandomId(): string {
 
 ## Wiring It Into a Component
 
-The cleanest approach is to register your factory behind an Angular injection token and inject it into your component.
+For me, the cleanest approach is to register your factory behind an Angular injection token and inject it into your component. It's a touch more boilerplate than a bare `new`, but it keeps the wiring testable and swappable.
 
 ```typescript
 // app.config.ts
@@ -216,7 +228,7 @@ If your protocol does store thread state, follow the LangGraph adapter's pattern
 
 ## Publishing Your Adapter
 
-If you want to distribute your adapter as an npm package, keep the following in mind.
+Want to distribute your adapter as an npm package? Keep the following in mind.
 
 **Peer dependencies** to declare in your `package.json`:
 

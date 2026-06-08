@@ -1,0 +1,81 @@
+{
+  "name": "cockpit-ag-ui-tool-views-angular",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "cockpit/ag-ui/tool-views/angular/src",
+  "projectType": "application",
+  "targets": {
+    "build": {
+      "executor": "@angular/build:application",
+      "outputs": ["{options.outputPath.base}"],
+      "options": {
+        "outputPath": {
+          "base": "dist/cockpit/ag-ui/tool-views/angular",
+          "browser": ""
+        },
+        "browser": "cockpit/ag-ui/tool-views/angular/src/main.ts",
+        "tsConfig": "cockpit/ag-ui/tool-views/angular/tsconfig.app.json",
+        "styles": ["cockpit/ag-ui/tool-views/angular/src/styles.css"]
+      },
+      "configurations": {
+        "production": {
+          "budgets": [
+            { "type": "initial", "maximumWarning": "1mb", "maximumError": "1.5mb" },
+            { "type": "anyComponentStyle", "maximumWarning": "10kb", "maximumError": "16kb" }
+          ],
+          "outputHashing": "none"
+        },
+        "development": {
+          "optimization": false,
+          "extractLicenses": false,
+          "sourceMap": true,
+          "fileReplacements": [
+            {
+              "replace": "cockpit/ag-ui/tool-views/angular/src/environments/environment.ts",
+              "with": "cockpit/ag-ui/tool-views/angular/src/environments/environment.development.ts"
+            }
+          ]
+        },
+        "cockpit": {
+          "optimization": false,
+          "extractLicenses": false,
+          "sourceMap": true,
+          "fileReplacements": [
+            {
+              "replace": "cockpit/ag-ui/tool-views/angular/src/environments/environment.ts",
+              "with": "cockpit/ag-ui/tool-views/angular/src/environments/environment.development.ts"
+            }
+          ],
+          "browser": "cockpit/ag-ui/tool-views/angular/src/main.cockpit.ts"
+        }
+      },
+      "defaultConfiguration": "production"
+    },
+    "serve": {
+      "continuous": true,
+      "executor": "@angular/build:dev-server",
+      "configurations": {
+        "production": { "buildTarget": "cockpit-ag-ui-tool-views-angular:build:production" },
+        "development": { "buildTarget": "cockpit-ag-ui-tool-views-angular:build:development" },
+        "cockpit": { "buildTarget": "cockpit-ag-ui-tool-views-angular:build:cockpit" }
+      },
+      "defaultConfiguration": "development",
+      "options": {
+        "proxyConfig": "cockpit/ag-ui/tool-views/angular/proxy.conf.mjs"
+      }
+    },
+    "smoke": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "cockpit/ag-ui/tool-views/angular",
+        "command": "npx tsx -e \"import { agUiToolViewsAngularModule } from './src/index.ts'; const module = agUiToolViewsAngularModule; if (module.id !== 'ag-ui-tool-views-angular' || module.title !== 'AG-UI Tool Views (Angular)') { throw new Error('Unexpected module shape for ' + module.id); }\""
+      }
+    },
+    "e2e": {
+      "executor": "@nx/playwright:playwright",
+      "options": {
+        "config": "cockpit/ag-ui/tool-views/angular/e2e/playwright.config.ts"
+      }
+    }
+  },
+  "tags": ["scope:cockpit-e2e", "scope:cockpit-examples"]
+}

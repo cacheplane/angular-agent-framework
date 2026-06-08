@@ -1,0 +1,25 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../../../../dist/out-tsc",
+    "lib": ["es2022", "dom"],
+    "types": [],
+    "emitDeclarationOnly": false
+  },
+  "files": ["src/main.ts"],
+  "include": ["src/**/*.ts"],
+  "references": [
+    {
+      "path": "../../../../libs/cockpit-telemetry"
+    },
+    {
+      "path": "../../../../libs/example-layouts"
+    },
+    {
+      "path": "../../../../libs/chat"
+    },
+    {
+      "path": "../../../../libs/ag-ui"
+    }
+  ]
+}

@@ -14,6 +14,7 @@ Let's start with a simple Angular component for the spec to render. Every render
 ```typescript
 // text.component.ts
 import { Component, ChangeDetectionStrategy, input } from '@angular/core';
+import type { Spec } from '@json-render/core';
 
 @Component({
   selector: 'app-text',
@@ -24,7 +25,7 @@ import { Component, ChangeDetectionStrategy, input } from '@angular/core';
 export class TextComponent {
   readonly label = input<string>('');
   readonly childKeys = input<string[]>([]);
-  readonly spec = input<unknown>(null);
+  readonly spec = input.required<Spec>();
 }
 ```
 

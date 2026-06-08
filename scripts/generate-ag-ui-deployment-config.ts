@@ -14,6 +14,17 @@ interface AgUiTopic {
   pythonDir: string;
 }
 
+/**
+ * A topic is a URL slug and may contain hyphens (e.g. `tool-views`,
+ * `json-render`). Python package/module names cannot, so the staged deps
+ * directory and the `from deps.<module>...` import must use an underscore
+ * form. The `/agent/<topic>` route and the LangGraphAgent `name` keep the
+ * original hyphenated slug.
+ */
+function pyModule(topic: string): string {
+  return topic.replace(/-/g, '_');
+}
+
 function collectTopics(): AgUiTopic[] {
   const topics = capabilities
     .filter((c) => c.product === 'ag-ui' && c.pythonDir)
@@ -31,7 +42,7 @@ function stageDeps(repoRoot: string, outDir: string, topics: AgUiTopic[]): void 
   mkdirSync(depsDir, { recursive: true });
   for (const topic of topics) {
     const src = resolve(repoRoot, topic.pythonDir);
-    const dst = resolve(depsDir, topic.topic);
+    const dst = resolve(depsDir, pyModule(topic.topic));
     cpSync(src, dst, {
       recursive: true,
       // Exclude virtualenvs / bytecode, plus repo-metadata files (nx project.json,
@@ -49,14 +60,14 @@ function stageDeps(repoRoot: string, outDir: string, topics: AgUiTopic[]): void 
 
 function buildServerPy(topics: AgUiTopic[]): string {
   const imports = topics
-    .map((t) => `from deps.${t.topic}.src.graph import graph as ${t.topic.replace(/-/g, '_')}_graph`)
+    .map((t) => `from deps.${pyModule(t.topic)}.src.graph import graph as ${pyModule(t.topic)}_graph`)
     .join('\n');
   const mounts = topics
     .map(
       (t) =>
         `add_langgraph_fastapi_endpoint(\n` +
         `    app,\n` +
-        `    LangGraphAgent(name="${t.topic}", graph=${t.topic.replace(/-/g, '_')}_graph),\n` +
+        `    LangGraphAgent(name="${t.topic}", graph=${pyModule(t.topic)}_graph),\n` +
         `    path="/agent/${t.topic}",\n` +
         `)`,
     )

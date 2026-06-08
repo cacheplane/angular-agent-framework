@@ -1,6 +1,6 @@
 # Angular Signals
 
-Angular Signals are the reactive primitive that powers `injectAgent()`. If you're coming from a Python AI/agent background and wondering how Angular handles real-time streaming data, this page is your guide. Every property on a LangGraphAgent is a Signal, which means your templates update automatically as tokens arrive — no manual subscriptions, no async pipes, no RxJS boilerplate.
+Angular Signals are the reactive primitive that powers `injectAgent()`. If you're coming from a Python AI/agent background and wondering how Angular handles real-time streaming data, you're in the right place. Every property on a LangGraphAgent is a Signal, so your templates update automatically as tokens arrive — no manual subscriptions, no async pipes, no RxJS boilerplate.
 
 <Callout type="info" title="For Python developers">
 Think of Signals like a Python property with built-in change notification. When the value changes, every consumer — templates, computed values, effects — re-evaluates automatically. If you've used Pydantic models with validators that react to field changes, Signals are the Angular equivalent but deeply integrated into the rendering engine.
@@ -28,7 +28,7 @@ const doubled = computed(() => count() * 2);
 console.log(doubled()); // 4
 ```
 
-The key insight: Angular knows which Signals a template reads. When those Signals change, Angular re-renders only the affected parts of the DOM. No diffing the entire tree, no zone.js overhead.
+Here's the key insight: Angular knows which Signals a template reads. When those Signals change, it re-renders only the affected parts of the DOM. No diffing the entire tree, no zone.js overhead.
 
 ## How `injectAgent` Uses Signals Internally
 
@@ -70,11 +70,17 @@ chat.messages();   // Signal<Message[]>
 chat.status();     // Signal<'idle' | 'running' | 'error'>
 chat.error();      // Signal<unknown>
 chat.isLoading();  // Signal<boolean>
+
+// LangGraph-specific (see note below):
 chat.value();      // Signal<ChatState>
 ```
 
 </Tab>
 </Tabs>
+
+<Callout type="info" title="`value()` is LangGraph-specific">
+`messages()`, `status()`, `error()`, and `isLoading()` are part of the runtime-neutral `Agent` contract that every adapter implements. `value()` is not — it lives on `LangGraphAgent`. You can call `chat.value()` here only because `injectAgent()` returns a `LangGraphAgent`. Code written against the neutral `Agent` contract should read agent state through `state()` rather than `value()`.
+</Callout>
 
 <Callout type="tip" title="Why this matters">
 The BehaviorSubject-to-Signal conversion means you get the best of both worlds: RxJS handles the async SSE transport (reconnection, backpressure, error recovery), while Signals handle the synchronous UI reactivity (change detection, template binding, computed derivations). You only interact with the Signal side.
@@ -394,7 +400,7 @@ With older Observable-based patterns, you had to call `ChangeDetectorRef.markFor
 
 ## Python Agent to Angular Signals
 
-The real power of `injectAgent()` is how it pairs a Python LangGraph agent with Angular Signals. The agent defines the logic; Signals surface the results in real time.
+Where `injectAgent()` really earns its keep is how it pairs a Python LangGraph agent with Angular Signals. The agent defines the logic; Signals surface the results in real time.
 
 <Tabs>
 <Tab label="agent.py">
@@ -495,7 +501,7 @@ When the Python agent calls `search_knowledge_base`, the tool call streams to An
 
 ## Performance: Signals vs Alternatives
 
-High-frequency token streaming puts unique pressure on a frontend framework. Here's why Signals with OnPush outperform the alternatives.
+High-frequency token streaming puts real pressure on a frontend framework. Here's why Signals with OnPush hold up better than the alternatives.
 
 | Approach | Token update cost | Memory overhead | Cleanup required |
 |---|---|---|---|

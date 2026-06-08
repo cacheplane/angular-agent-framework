@@ -1,6 +1,6 @@
 # Fake Agent
 
-`FakeAgent` is an in-process AG-UI `AbstractAgent` for frontend work when a backend is not ready.
+`FakeAgent` is an in-process AG-UI `AbstractAgent` for frontend work when the backend isn't ready yet.
 
 It emits a canned stream:
 
@@ -11,7 +11,7 @@ It emits a canned stream:
 5. `TEXT_MESSAGE_END`
 6. `RUN_FINISHED`
 
-It is for demos, story-like development, and tests. It is not a production transport.
+It's for demos, story-like development, and tests. It's not a production transport.
 
 ## Use the provider
 
@@ -98,6 +98,6 @@ That gives you the same `Agent` contract as `provideFakeAgent()`.
 
 `FakeAgent` does not call a model, execute tools, persist history, or simulate interrupts.
 
-It is deliberately small. Use it to keep UI work moving, not to validate backend behavior.
+It's deliberately small. Use it to keep UI work moving, not to validate backend behavior.
 
 For backend integration, test against your real AG-UI endpoint and the event map in [Event Mapping](/docs/ag-ui/reference/event-mapping).

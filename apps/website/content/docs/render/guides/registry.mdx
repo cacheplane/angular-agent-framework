@@ -1,10 +1,10 @@
 # Component Registry
 
-The component registry maps element type names from your spec to Angular component classes. It is the bridge between the declarative JSON spec and your Angular component tree.
+The component registry maps element type names from your spec to Angular component classes. It's the bridge between the declarative JSON spec and your Angular component tree.
 
 ## Creating a Registry
 
-Use `defineAngularRegistry()` to create a registry from a plain object mapping type names to component classes:
+Let's create a registry with `defineAngularRegistry()` from a plain object that maps type names to component classes:
 
 ```typescript
 import { defineAngularRegistry } from '@threadplane/render';
@@ -21,16 +21,22 @@ export const uiRegistry = defineAngularRegistry({
 });
 ```
 
-The returned `AngularRegistry` object has two methods:
+The returned `AngularRegistry` object has three methods:
 
 - `get(name: string)` -- returns the component class for the given type name, or `undefined` if not registered
+- `getFallback(name: string)` -- returns the configured fallback renderer for a registered name -- the entry's own `fallback`, or the library's default fallback if the entry omits one, or `undefined` if the name isn't registered
 - `names()` -- returns an array of all registered type names
 
 ```typescript
-uiRegistry.get('Text');    // TextComponent
-uiRegistry.get('Unknown'); // undefined
-uiRegistry.names();        // ['Text', 'Card', 'Button', 'Container']
+uiRegistry.get('Text');         // TextComponent
+uiRegistry.get('Unknown');      // undefined
+uiRegistry.getFallback('Text'); // fallback renderer (or default)
+uiRegistry.names();             // ['Text', 'Card', 'Button', 'Container']
 ```
+
+### Fallback Rendering
+
+When an element's type isn't registered, it renders that type's configured fallback if one exists, and otherwise renders nothing. Fallbacks also fill a transient gap during rendering: while an element's state-bound props are still resolving, the library can render a fallback to give visual feedback until the real component is ready. Once the real component mounts, it stays mounted -- later re-renders never revert to the fallback.
 
 ## The Component Input Contract
 
@@ -64,7 +70,7 @@ Your component receives `label` and `size` as inputs alongside the standard inpu
 
 ## Writing a Renderable Component
 
-Here is a complete example of a component designed to work with the rendering system:
+Here's a complete component designed to work with the rendering system:
 
 ```typescript
 import { Component, ChangeDetectionStrategy, input } from '@angular/core';
@@ -191,7 +197,7 @@ This enables deeply nested component trees -- containers render their children, 
 
 ## Providing the Registry
 
-You can provide the registry in two ways:
+Let's provide the registry. You have two ways to do it:
 
 <Tabs>
 <Tab label="Global (provideRender)">

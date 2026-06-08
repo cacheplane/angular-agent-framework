@@ -11,46 +11,23 @@
 import { execSync } from 'child_process';
 import { cpSync, mkdirSync, rmSync, existsSync, writeFileSync, readFileSync } from 'fs';
 import { resolve } from 'path';
+import { capabilities as registryCapabilities } from '../apps/cockpit/scripts/capability-registry';
 
 const root = resolve(__dirname, '..');
 const deployDir = resolve(root, 'deploy/examples');
 const skipBuild = process.argv.includes('--skip-build');
 
-const capabilities = [
-  { product: 'langgraph', topic: 'streaming' },
-  { product: 'langgraph', topic: 'persistence' },
-  { product: 'langgraph', topic: 'interrupts' },
-  { product: 'langgraph', topic: 'memory' },
-  { product: 'langgraph', topic: 'durable-execution' },
-  { product: 'langgraph', topic: 'subgraphs' },
-  { product: 'langgraph', topic: 'time-travel' },
-  { product: 'langgraph', topic: 'deployment-runtime' },
-  { product: 'deep-agents', topic: 'planning' },
-  { product: 'deep-agents', topic: 'filesystem' },
-  { product: 'deep-agents', topic: 'subagents' },
-  { product: 'deep-agents', topic: 'memory' },
-  { product: 'deep-agents', topic: 'skills' },
-  { product: 'deep-agents', topic: 'sandboxes' },
-  { product: 'render', topic: 'spec-rendering' },
-  { product: 'render', topic: 'element-rendering' },
-  { product: 'render', topic: 'state-management' },
-  { product: 'render', topic: 'registry' },
-  { product: 'render', topic: 'repeat-loops' },
-  { product: 'render', topic: 'computed-functions' },
-  { product: 'chat', topic: 'messages' },
-  { product: 'chat', topic: 'input' },
-  { product: 'chat', topic: 'interrupts' },
-  { product: 'chat', topic: 'tool-calls' },
-  { product: 'chat', topic: 'subagents' },
-  { product: 'chat', topic: 'threads' },
-  { product: 'chat', topic: 'timeline' },
-  { product: 'chat', topic: 'generative-ui' },
-  { product: 'chat', topic: 'debug' },
-  { product: 'chat', topic: 'theming' },
-  { product: 'chat', topic: 'a2ui' },
-  { product: 'ag-ui', topic: 'interrupts' },
-  { product: 'ag-ui', topic: 'streaming' },
-];
+// Derive the staged-example list from the capability registry — the single
+// source of truth (every entry has an `angularProject` that builds to
+// `dist/cockpit/<product>/<topic>/angular`). Hardcoding it previously let new
+// caps (tool-views, json-render, a2ui) silently 404 in production because they
+// were added to the registry but never to this list. The Railway deploy
+// generator already derives from the registry; this keeps the frontend deploy
+// in lockstep so a registry cap can never be missed again.
+const capabilities = registryCapabilities.map((c) => ({
+  product: c.product,
+  topic: c.topic,
+}));
 
 if (!skipBuild) {
   console.log(`Building all ${capabilities.length} Angular apps...`);
@@ -140,12 +117,15 @@ writeFileSync(resolve(agUiFuncDir, '.vc-config.json'), JSON.stringify({
 writeFileSync(resolve(outputDir, 'config.json'), JSON.stringify({
   version: 3,
   routes: [
-    // ag-ui proxy: /ag-ui/<topic>/agent[/rest] → /ag-ui-proxy/<topic>[/rest]
-    // Must precede the filesystem handle so static index.html lookups for
-    // /ag-ui/<topic>/ still resolve while POSTs to /agent are proxied.
-    // Deliberately NOT under /api/ — that would re-match the langgraph
-    // proxy rule below via check: true re-evaluation.
-    { src: '^/ag-ui/([^/]+)/agent(/.*)?$', dest: '/ag-ui-proxy/$1$2', check: true },
+    // ag-ui proxy: /ag-ui/<topic>/agent[/rest] → ag-ui-proxy function.
+    // Mirrors the langgraph rule exactly: dest names the catch-all function
+    // (`[[...path]]`), which invokes it while PRESERVING the original request
+    // URL in req.url. The function (scripts/ag-ui-proxy.ts) parses the topic
+    // out of `/ag-ui/<topic>/agent`. A function is only reachable when a route
+    // dest names it like this — the filesystem handle does NOT auto-serve
+    // catch-all functions. Must precede the filesystem handle so static
+    // index.html lookups for /ag-ui/<topic>/ still resolve.
+    { src: '^/ag-ui/([^/]+)/agent(/.*)?$', dest: '/ag-ui-proxy/[[...path]]', check: true },
     { src: '^/api/(.*)', dest: '/api/[[...path]]', check: true },
     { handle: 'filesystem' },
     { src: '^/(langgraph|deep-agents|render|chat|ag-ui)/([^/]+)/(.+\\..+)$', dest: '/$1/$2/$3' },

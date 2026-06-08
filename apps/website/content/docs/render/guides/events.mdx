@@ -167,7 +167,7 @@ const handlers = {
 };
 ```
 
-This works for handlers passed via `[handlers]` on `<render-spec>`, `provideRender()`, or `ChatComponent`.
+This works for handlers passed via `[handlers]` on `<render-spec>`, `provideRender()`, or other render-enabled components like `ChatComponent` (from `@threadplane/chat`).
 
 ### Resolution Priority
 
@@ -178,7 +178,7 @@ Handlers resolve with the same priority as other inputs:
 
 ## Action Dispatch Pattern
 
-A common pattern is to use handlers to update the state store in response to user interactions. This creates a unidirectional data flow:
+A common pattern is to use handlers to update the state store in response to user interactions. That creates a unidirectional data flow:
 
 ```
 User clicks button
@@ -188,7 +188,7 @@ User clicks button
     --> UI re-renders
 ```
 
-Here is a complete example:
+Here's a complete example:
 
 ```typescript
 const spec: Spec = {

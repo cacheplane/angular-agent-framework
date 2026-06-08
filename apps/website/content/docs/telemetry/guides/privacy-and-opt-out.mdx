@@ -1,6 +1,6 @@
 # Privacy and Opt-Out
 
-The telemetry source has two different privacy postures.
+The telemetry source has two distinct privacy postures.
 
 Browser telemetry is off unless the app opts in. Node telemetry can send from package lifecycle hooks or server adapters unless the environment or process disables it.
 
@@ -46,7 +46,7 @@ provideThreadplaneTelemetry({ enabled: true, sink });
 
 With `enabled: false` or no provider, browser capture no-ops.
 
-The browser service sends only when application code or framework browser code calls its capture methods. It does not install a global listener.
+The browser service sends only when application code or framework browser code calls its capture methods. It never installs a global listener.
 
 ## Anonymous IDs
 
@@ -54,7 +54,7 @@ Node uses `anon_<uuid>` from `node:crypto` and caches it for the current process
 
 Browser endpoint delivery uses `browser:<uuid>` when `crypto.randomUUID()` is available, with a `Math.random()` fallback. The value is kept in the service instance.
 
-The source does not persist either ID across process restarts or browser sessions.
+The source never persists either ID across process restarts or browser sessions.
 
 ## Data minimization from source
 
@@ -64,7 +64,7 @@ Runtime lifecycle helpers send transport/provider/model style metadata. Stream e
 
 The source strips `apiKey` in the Node runtime adapter before sending.
 
-There is no source path that sends prompts, completions, message content, tool call arguments, tool call outputs, or environment variable dumps.
+No source path sends prompts, completions, message content, tool call arguments, tool call outputs, or environment variable dumps.
 
 ## Custom ingest
 
