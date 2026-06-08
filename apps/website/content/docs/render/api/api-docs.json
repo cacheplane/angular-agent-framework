@@ -624,7 +624,7 @@
         "name": "initialState",
         "type": "StateModel",
         "description": "",
-        "optional": false
+        "optional": true
       }
     ],
     "returns": {

@@ -42,7 +42,7 @@
         "name": "env",
         "type": "ProcessEnv<>",
         "description": "",
-        "optional": false
+        "optional": true
       }
     ],
     "returns": {
@@ -61,7 +61,7 @@
         "name": "env",
         "type": "ProcessEnv<>",
         "description": "",
-        "optional": false
+        "optional": true
       }
     ],
     "returns": {
@@ -233,7 +233,7 @@
         "name": "properties",
         "type": "Record<string, unknown>",
         "description": "",
-        "optional": false
+        "optional": true
       }
     ],
     "returns": {
@@ -460,7 +460,7 @@
         "name": "maxLength",
         "type": "number",
         "description": "",
-        "optional": false
+        "optional": true
       }
     ],
     "returns": {
