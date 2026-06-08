@@ -106,7 +106,7 @@ A user interacts — clicks the Button — and the client sends an `A2uiActionMe
 {"version":"v1","action":{"name":"bookingSubmit","surfaceId":"booking","sourceComponentId":"submit","timestamp":"2026-06-05T12:34:56.789Z","context":{"origin":{"literalString":"LAX"},"dest":{"literalString":"JFK"}},"label":"Search flights"}}
 ```
 
-Two details worth pinning down, because the inbound and outbound shapes differ:
+Two details are worth pinning down, because the inbound and outbound shapes differ:
 
 - **Context flips from list to map.** The inbound Button's `action.context` is a *list* of `{ key, value }` entries, where each `value` is still a dynamic value (often a `{ path }`). The outbound message's `action.context` is a *map* keyed by those keys, with each value already a wrapped literal — the path references resolved against the current model and re-wrapped (here `{ path: '/origin' }` became `{ literalString: 'LAX' }`).
 - **`label` is derived.** It comes from the source component's authored text — for a Button-with-Text-child, the child Text's literal string ("Search flights"). It's optional; the transcript renderer uses it to label the user bubble, and backends may ignore it.
