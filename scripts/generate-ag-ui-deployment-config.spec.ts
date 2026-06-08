@@ -30,6 +30,30 @@ describe('generateAgUiDeployment', () => {
     expect(server).toContain('@app.get("/ok")');
   });
 
+  it('emits valid Python module names for hyphenated topics (deps dir + import underscored, URL path hyphenated)', () => {
+    // Regression: topics like `tool-views`/`json-render` are URL slugs with
+    // hyphens, which are illegal in Python module paths. The generator must
+    // stage them under an underscored deps dir and import them with
+    // underscores, while keeping the hyphenated `/agent/<topic>` route. A
+    // hyphen in a `from deps.<...>` line is a SyntaxError and breaks the
+    // whole server (which is what shipped before this fix).
+    generateAgUiDeployment({ repoRoot: REPO_ROOT, outDir });
+    const server = readFileSync(join(outDir, 'server.py'), 'utf8');
+    expect(server).toContain('from deps.json_render.src.graph import graph as json_render_graph');
+    expect(server).toContain('from deps.tool_views.src.graph import graph as tool_views_graph');
+    expect(server).toContain('path="/agent/json-render"');
+    expect(server).toContain('path="/agent/tool-views"');
+    expect(server).toContain('LangGraphAgent(name="json-render"');
+    // No hyphen may ever appear inside a `from deps.<module>` import path.
+    for (const line of server.split('\n').filter((l) => l.startsWith('from deps.'))) {
+      const modulePath = line.slice('from deps.'.length).split(' ')[0];
+      expect(modulePath).not.toContain('-');
+    }
+    // The underscored deps dir must exist for the import to resolve.
+    expect(statSync(join(outDir, 'deps/json_render/src/graph.py')).isFile()).toBe(true);
+    expect(statSync(join(outDir, 'deps/tool_views/src/graph.py')).isFile()).toBe(true);
+  });
+
   it('server.py enforces X-Internal-Token on /agent/*', () => {
     generateAgUiDeployment({ repoRoot: REPO_ROOT, outDir });
     const server = readFileSync(join(outDir, 'server.py'), 'utf8');

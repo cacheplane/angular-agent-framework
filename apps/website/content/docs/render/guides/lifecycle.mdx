@@ -1,6 +1,6 @@
 # Render Lifecycle Signals
 
-The `@threadplane/render` library exposes per-context lifecycle signals via the `RENDER_LIFECYCLE` injection token. All five signals derive from the existing `RenderEvent` stream via `RenderLifecycleService.notify*` methods — no separate event source, no double-counting.
+The `@threadplane/render` library exposes per-context lifecycle signals via the `RENDER_LIFECYCLE` injection token. All five signals derive from the existing `RenderEvent` stream via `RenderLifecycleService.notify*` methods — they share one event source, so there's no double-counting.
 
 ## Interface
 
