@@ -1,6 +1,6 @@
 # Subgraphs
 
-Subgraphs let you compose complex agents from smaller, focused units. `injectAgent()` streams their output through the same message, state, tool-call, and custom-event signals as the parent graph.
+Subgraphs let you compose larger agents from smaller, focused units. `injectAgent()` streams their output through the same message, state, tool-call, and custom-event signals as the parent graph.
 
 <Callout type="info" title="Subgraphs vs subagents">
 LangGraph subgraphs are graph nodes. Deep Agents-style subagents are delegated tool calls. `injectAgent()` requests subgraph streams by default, but the `subagents()` signal is populated only for tool calls whose names match `subagentToolNames` and whose args include a `subagent_type`.
@@ -157,7 +157,7 @@ const researchMessages = computed(() => researchAgent()?.messages() ?? []);
 
 ## Orchestrator pattern
 
-The orchestrator pattern delegates specialised work to subagents and merges their results. Each subagent runs its own graph independently while the parent coordinates.
+The orchestrator pattern delegates specialised work to subagents and merges their results. Each subagent runs its own graph independently while the parent coordinates the whole.
 
 ```typescript
 // Configure in app.config.ts:

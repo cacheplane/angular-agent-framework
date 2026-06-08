@@ -1,6 +1,6 @@
 # Streaming
 
-Agent provides token-by-token streaming from LangGraph agents via Server-Sent Events (SSE). Every update lands directly in Angular Signals — no subscriptions, no manual change detection.
+Agent streams token-by-token from LangGraph agents over Server-Sent Events (SSE). Every update lands directly in Angular Signals — no subscriptions, no manual change detection.
 
 <Callout type="tip" title="Prerequisites">
 Make sure you've completed the Installation guide first.
@@ -118,7 +118,7 @@ The connection was interrupted or the agent returned an error. Inspect `error()`
 
 By default, `injectAgent()` asks LangGraph Platform for the stream modes it needs to populate its public signals: `values`, `messages-tuple`, `updates`, and `custom`. It also enables `streamSubgraphs` so namespaced subgraph events can reach the client.
 
-Override `streamMode` per run when you need a narrower stream. `streamMode` is a submit option, not a `provideAgent()` option.
+Override `streamMode` per run when you need a narrower stream. It's a submit option, not a `provideAgent()` option.
 
 <Tabs>
 <Tab label="values only">
@@ -173,7 +173,7 @@ Use the default modes for most chat UIs. They keep `messages()`, `state()`, `too
 
 ## Error handling
 
-If the SSE connection drops or the agent throws, `status()` transitions to `'error'` and `error()` is populated. Use these signals to render fallback UI and retry.
+If the SSE connection drops or the agent throws, `status()` flips to `'error'` and `error()` is populated. Use these signals to render a fallback UI and retry.
 
 <Tabs>
 <Tab label="chat.component.ts">
@@ -233,6 +233,8 @@ provideAgent({
 ```
 
 The value is in milliseconds. Pass `false` or `0` to disable batching and forward state updates immediately. Token message updates are not throttled, so live markdown and typing indicators still receive every token emission.
+
+For me, the 16 ms default is the right starting point — it tracks a 60 fps render and you'll rarely feel it. The tradeoff of raising it is straightforward: a larger window costs you a touch of perceived latency on state signals to save renders, so only reach for it when profiling shows state updates are the bottleneck.
 
 | Use case | Recommended throttle |
 |---|---|

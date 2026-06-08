@@ -1,6 +1,6 @@
 # Agent Lifecycle Signals
 
-The `@threadplane/langgraph` library exposes per-agent lifecycle signals on every `LangGraphAgent` returned by `injectAgent()`. These are timestamps and classifications derived from the existing stream — useful for debugging, custom dashboards, or telemetry integrations.
+The `@threadplane/langgraph` library exposes per-agent lifecycle signals on every `LangGraphAgent` returned by `injectAgent()`. They're timestamps and classifications derived from the stream you already have — handy for debugging, custom dashboards, or telemetry integrations.
 
 ## Interface
 
@@ -70,7 +70,7 @@ export class MyComponent {
 }
 ```
 
-For app-wide instrumentation, provide `AgentLifecycleRegistry` and read the lifecycles registered by agents created in that injection context:
+For app-wide instrumentation, provide `AgentLifecycleRegistry` and read back the lifecycles registered by agents created in that injection context:
 
 ```typescript
 import { ApplicationConfig, inject } from '@angular/core';
