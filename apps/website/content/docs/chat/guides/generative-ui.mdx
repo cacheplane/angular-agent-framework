@@ -1,6 +1,6 @@
 # Generative UI
 
-Generative UI lets your LangGraph agent return structured JSON specs that render as Angular components in the chat. The `ChatComponent` auto-detects JSON specs in AI messages and renders them — no manual wiring needed.
+Generative UI lets your LangGraph agent return structured JSON specs that render as Angular components in the chat. `ChatComponent` auto-detects JSON specs in AI messages and renders them — no manual wiring needed.
 
 ## How It Works
 
@@ -58,7 +58,7 @@ export class ChatPageComponent {
 }
 ```
 
-That's it. When the agent returns a JSON spec as a message, `ChatComponent` detects it and renders through your view registry.
+That's it. When the agent returns a JSON spec as a message, `ChatComponent` detects it and renders it through your view registry.
 
 ## Creating View Components
 
@@ -116,7 +116,7 @@ Because the JSON is parsed character-by-character as tokens arrive:
 
 ## State Store
 
-For interactive generative UI (forms, selections), pass a `StateStore` via the `[store]` input:
+For interactive generative UI — forms, selections — pass a `StateStore` via the `[store]` input:
 
 ```typescript
 import { signalStateStore } from '@threadplane/render';
