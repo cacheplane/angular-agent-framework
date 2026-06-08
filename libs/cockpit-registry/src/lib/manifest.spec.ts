@@ -24,6 +24,14 @@ const expectedTopics = {
     ['core-capabilities', 'time-travel'],
     ['core-capabilities', 'deployment-runtime'],
   ],
+  'ag-ui': [
+    ['getting-started', 'overview'],
+    ['core-capabilities', 'streaming'],
+    ['core-capabilities', 'interrupts'],
+    ['core-capabilities', 'tool-views'],
+    ['core-capabilities', 'json-render'],
+    ['core-capabilities', 'a2ui'],
+  ],
   render: [
     ['getting-started', 'overview'],
     ['core-capabilities', 'spec-rendering'],
@@ -45,6 +53,7 @@ const expectedTopics = {
     ['core-capabilities', 'generative-ui'],
     ['core-capabilities', 'debug'],
     ['core-capabilities', 'theming'],
+    ['core-capabilities', 'a2ui'],
   ],
 } as const;
 
@@ -85,6 +94,7 @@ describe('cockpitManifest', () => {
     expect(docsOnlyEntries).toEqual([
       'deep-agents/getting-started/overview',
       'langgraph/getting-started/overview',
+      'ag-ui/getting-started/overview',
       'render/getting-started/overview',
       'chat/getting-started/overview',
     ]);
@@ -95,7 +105,7 @@ describe('cockpitManifest', () => {
       (entry) => entry.entryKind === 'capability'
     );
 
-    expect(capabilityEntries).toHaveLength(30);
+    expect(capabilityEntries).toHaveLength(36);
 
     for (const entry of capabilityEntries) {
       expect(entry.supportedLanguages).toEqual(['python']);
@@ -112,6 +122,14 @@ describe('cockpitManifest', () => {
         expect(fs.existsSync(assetPath)).toBe(true);
       }
     }
+  });
+
+  it('includes ag-ui after langgraph with streaming + interrupts topics', () => {
+    const products = cockpitManifest.map((e) => e.product);
+    expect(products).toContain('ag-ui');
+    expect(products.indexOf('ag-ui')).toBeGreaterThan(products.indexOf('langgraph'));
+    const aguiTopics = cockpitManifest.filter((e) => e.product === 'ag-ui').map((e) => e.topic);
+    expect(aguiTopics).toEqual(expect.arrayContaining(['streaming', 'interrupts']));
   });
 
   it('marks secret-gated integration explicitly for deployment runtime', () => {

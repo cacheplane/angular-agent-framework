@@ -1,6 +1,6 @@
 # ChatMessageListComponent
 
-`ChatMessageListComponent` is the core primitive for rendering chat messages. It iterates over the messages from an `Agent` and renders each one using a matching `MessageTemplateDirective`. This gives you full control over how each message type is displayed.
+`ChatMessageListComponent` is the core primitive for rendering chat messages. It receives an `agent` input and reads `agent.messages()`, rendering each message using a matching `MessageTemplateDirective`. This gives you full control over how each message type is displayed.
 
 **Selector:** `chat-message-list`
 
@@ -16,7 +16,7 @@ import {
 
 ## How It Works
 
-1. The component reads `agent().messages()` to get the current message list
+1. The component receives an `agent` input and reads `agent.messages()` to get the current message list
 2. For each message, it calls `getMessageType()` to determine the template type
 3. It finds the matching `MessageTemplateDirective` among its content children
 4. It renders the message using `ngTemplateOutlet` with the message as the implicit context
@@ -139,7 +139,7 @@ For custom templates, you can access `message.content` directly and handle the t
 ```typescript
 import { Component, inject, ChangeDetectionStrategy, signal } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
-import { agent } from '@threadplane/langgraph';
+import { injectAgent } from '@threadplane/langgraph';
 import {
   ChatMessageListComponent,
   MessageTemplateDirective,
@@ -184,10 +184,8 @@ import {
 export class MessagesDemoComponent {
   private sanitizer = inject(DomSanitizer);
 
-  chatAgent = agent({
-    assistantId: 'chat_agent',
-    threadId: signal(null),
-  });
+  // Configured at the app root via provideAgent({ assistantId, threadId, ... }).
+  chatAgent = injectAgent();
 
   renderMd(content: string | unknown) {
     if (typeof content !== 'string') return '';

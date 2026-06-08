@@ -30,12 +30,14 @@ import { ChatInputComponent, submitMessage } from '@threadplane/chat';
 | `agent` | `Agent` | **Required** | The agent to submit messages to |
 | `submitOnEnter` | `boolean` | `true` | When `true`, pressing Enter submits the message. Shift+Enter inserts a newline. When `false`, Enter always inserts a newline. |
 | `placeholder` | `string` | `''` | Placeholder text shown when the input is empty |
+| `showStopButton` | `boolean` | `true` | When `true`, shows a stop button in place of the send button while the agent is streaming. |
 
 ### Outputs
 
 | Output | Type | Description |
 |--------|------|-------------|
 | `submitted` | `string` | Emits the trimmed message text after successful submission |
+| `stopped` | `void` | Emits when the user clicks the stop button to halt a streaming response |
 
 ## Behavior
 
@@ -99,6 +101,17 @@ The function calls `agent.submit({ message: trimmed })` under the hood.
 
 ## Slots
 
+The component template exposes content-projection slots arranged around the input pill:
+
+| Slot | Selector | Description |
+|------|----------|-------------|
+| Banner | `[chatInputBanner]` | Rendered above the input pill (e.g., a notice or status banner). |
+| Attachments | `[chatInputAttachments]` | Rendered above the input pill, below the banner (e.g., attachment chips). |
+| Leading | `[chatInputLeading]` | Rendered inside the pill, before the textarea. |
+| Model select | `[chatInputModelSelect]` | Rendered in the controls row, before the trailing slot and send button. |
+| Trailing | `[chatInputTrailing]` | Rendered in the controls row, after the model-select slot and before the send button. |
+| Footer | `[chatInputFooter]` | Rendered below the input pill. |
+
 ### `[chatInputModelSelect]`
 
 Projects content into the controls row of the input pill, between `[chatInputTrailing]` and the send button. Designed for `<chat-select>` (a model picker), but accepts any element.
@@ -136,13 +149,14 @@ The component includes accessibility attributes:
 
 ```typescript
 import { Component, signal, ChangeDetectionStrategy } from '@angular/core';
-import { agent } from '@threadplane/langgraph';
+import { injectAgent, provideAgent } from '@threadplane/langgraph';
 import { ChatInputComponent } from '@threadplane/chat';
 
 @Component({
   selector: 'app-input-demo',
   standalone: true,
   imports: [ChatInputComponent],
+  providers: [provideAgent({ assistantId: 'chat', threadId: signal(null) })],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="border rounded-lg p-4">
@@ -161,10 +175,7 @@ import { ChatInputComponent } from '@threadplane/chat';
   `,
 })
 export class InputDemoComponent {
-  chatRef = agent({
-    assistantId: 'chat_agent',
-    threadId: signal(null),
-  });
+  chatRef = injectAgent();
 
   lastMessage = signal('');
 }

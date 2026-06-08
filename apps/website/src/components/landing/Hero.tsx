@@ -157,7 +157,7 @@ export function Hero() {
           {/* Right column — generative UI dashboard */}
           <div>
             <a
-              href="https://cockpit.threadplane.ai/chat/generative-ui"
+              href="https://cockpit.threadplane.ai/langgraph/core-capabilities/streaming/overview/python"
               target="_blank"
               rel="noopener noreferrer"
               onClick={() =>
@@ -195,7 +195,7 @@ export function Hero() {
               }}
             >
               <a
-                href="https://cockpit.threadplane.ai/chat/generative-ui"
+                href="https://cockpit.threadplane.ai/langgraph/core-capabilities/streaming/overview/python"
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() =>

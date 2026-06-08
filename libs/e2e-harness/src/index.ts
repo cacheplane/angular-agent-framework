@@ -6,3 +6,4 @@ export {
   submitAndWaitForResponse,
 } from './test-helpers';
 export { createGlobalSetup, type CreateGlobalSetupOpts } from './global-setup-factory';
+export { createAgUiGlobalSetup, type CreateAgUiGlobalSetupOpts } from './ag-ui-global-setup-factory';

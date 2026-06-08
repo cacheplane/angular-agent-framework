@@ -1,6 +1,6 @@
 # A2UI Schema
 
-The `@threadplane/a2ui` schema is a TypeScript model of the protocol shapes used by the framework. It is useful as a contract for agent output and custom integrations, but it is not a runtime validator.
+The `@threadplane/a2ui` schema is a TypeScript model of the protocol shapes the framework uses. It's a contract for agent output and custom integrations, but it's not a runtime validator.
 
 ## Dynamic values
 
@@ -178,6 +178,16 @@ interface A2uiSurface {
 }
 ```
 
+`A2uiTheme` carries optional, agent-supplied presentation hints:
+
+```ts
+interface A2uiTheme {
+  primaryColor?: string;
+  iconUrl?: string;
+  agentDisplayName?: string;
+}
+```
+
 This shape is not constrained to the wire format. Do not assume an agent sends it directly.
 
 ## Outbound action messages
@@ -186,13 +196,14 @@ When a rendered surface sends an action back to the agent, the typed outbound sh
 
 ```ts
 interface A2uiActionMessage {
-  version: 'v0.9';
+  version: 'v1';
   action: {
     name: string;
     surfaceId: string;
     sourceComponentId: string;
     timestamp: string;
     context: Record<string, unknown>;
+    label?: string;
   };
   metadata?: {
     a2uiClientDataModel: A2uiClientDataModel;
@@ -200,4 +211,4 @@ interface A2uiActionMessage {
 }
 ```
 
-The outbound action version is currently typed as `v0.9` in source.
+The outbound action version is `v1`. The optional `label` is a human-readable label derived from the source component's text (for example, a Button's child Text), used to describe the action in transcripts; backends may ignore it.

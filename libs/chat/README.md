@@ -1,12 +1,243 @@
 # @threadplane/chat
 
-Drop-in agent chat UI for Angular 20+. Headless primitives that read from a runtime-neutral `Agent` contract, plus opinionated compositions (`<chat>`, `<chat-debug>`, GenUI surfaces) you can ship in days.
+Drop-in agent chat UI for Angular 20+. Headless UI primitives plus opinionated compositions that read a runtime-neutral `Agent` contract — ship a production chat surface in days without coupling to a specific backend.
 
 Part of [Threadplane](https://github.com/cacheplane/angular-agent-framework).
 
-`@threadplane/chat` is source-available and free for noncommercial use under PolyForm Noncommercial License 1.0.0. Commercial production use requires a Threadplane Commercial license.
+<p>
+  <a href="https://www.npmjs.com/package/@threadplane/chat">
+    <img alt="npm version" src="https://img.shields.io/npm/v/@threadplane%2Fchat?color=6C8EFF&labelColor=080B14&style=flat-square" />
+  </a>
+  <img alt="Angular 20+" src="https://img.shields.io/badge/Angular-20%2B%20%7C%2021-6C8EFF?labelColor=080B14&style=flat-square" />
+  <img alt="License" src="https://img.shields.io/badge/License-PolyForm%20NC%20%7C%20Commercial-6C8EFF?labelColor=080B14&style=flat-square" />
+</p>
 
-This package is not licensed as OSI open source because commercial use requires a license. Threadplane uses a source-available model for `@threadplane/chat` while keeping protocol and ecosystem packages permissively licensed where appropriate.
+**Source-available.** Free for noncommercial use under PolyForm Noncommercial License 1.0.0. Commercial production use — SaaS, internal tools, agency work, paid client projects — requires a [Threadplane Commercial license](https://threadplane.ai/pricing).
+
+---
+
+## What it does
+
+- **Full chat surface in one tag.** `<chat [agent]="agent" />` wires up message history, streaming output, typing indicator, input, interrupts, tool calls, subagents, citations, and generative UI — all from a single binding.
+- **Layered architecture.** Use the opinionated compositions for fast shipping, drop down to individual primitives (30+) to build custom layouts, or mix both.
+- **Runtime-neutral.** Compositions consume an `Agent` contract. The library has no hard dependency on LangGraph, AG-UI, or any other backend — swap or combine adapters without touching your UI.
+- **A2UI generative UI.** Agents emit structured surface specs; `<a2ui-surface>` renders them as interactive Angular components with a themeable `--a2ui-*` token system.
+
+---
+
+## Install
+
+```bash
+npm install @threadplane/chat
+```
+
+**Peer dependencies:**
+
+```
+@angular/core              ^20.0.0 || ^21.0.0
+@angular/common            ^20.0.0 || ^21.0.0
+@angular/forms             ^20.0.0 || ^21.0.0
+@angular/platform-browser  ^20.0.0 || ^21.0.0
+@threadplane/licensing     *
+@threadplane/render        *
+@threadplane/a2ui          *
+@json-render/core          ^0.16.0
+@langchain/core            ^1.1.33
+rxjs                       ~7.8.0
+marked                     ^15.0.0 || ^16.0.0
+```
+
+---
+
+## Quick start
+
+```typescript
+// app.config.ts
+import { ApplicationConfig } from '@angular/core';
+import { provideChat } from '@threadplane/chat';
+
+export const appConfig: ApplicationConfig = {
+  providers: [provideChat({ license: 'eyJ…' })],
+};
+```
+
+```typescript
+// my.component.ts
+import { Component } from '@angular/core';
+import { ChatComponent } from '@threadplane/chat';
+import { agent } from '@threadplane/langgraph';
+
+@Component({
+  selector: 'app-root',
+  imports: [ChatComponent],
+  template: `<chat [agent]="myAgent" />`,
+})
+export class AppComponent {
+  myAgent = agent({ apiUrl: '/api/langgraph', graphId: 'agent' });
+}
+```
+
+Get the `agent` signal from `@threadplane/langgraph` (for LangGraph Platform backends) or `@threadplane/ag-ui` (for AG-UI-compatible backends). See those packages for setup details.
+
+---
+
+## Capabilities
+
+### Compositions
+
+Ready-to-use full-feature layouts:
+
+| Component | Selector | Description |
+|---|---|---|
+| `ChatComponent` | `<chat>` | Full-page chat layout; primary entry point |
+| `ChatPopupComponent` | `<chat-popup>` | Floating popup with a launcher button |
+| `ChatSidebarComponent` | `<chat-sidebar>` | Sidebar-docked layout |
+| `ChatSidenavComponent` | `<chat-sidenav>` | Sidenav host with project/thread list panel |
+| `ChatTimelineSliderComponent` | `<chat-timeline-slider>` | Time-travel slider for agent checkpoint history |
+| `ChatInterruptPanelComponent` | `<chat-interrupt-panel>` | Full interrupt-handling composition |
+| `ChatApprovalCardComponent` | `<chat-approval-card>` | Approval/rejection dialog for HITL flows |
+| `ChatToolCallCardComponent` | `<chat-tool-call-card>` | Rich card for a single tool call |
+| `ChatSubagentCardComponent` | `<chat-subagent-card>` | Rich card for a subagent delegation |
+
+### Primitives
+
+30+ standalone components for custom layouts:
+
+`<chat-message-list>`, `<chat-message>`, `<chat-message-actions>`, `<chat-window>`, `<chat-input>`, `<chat-typing-indicator>`, `<chat-tool-calls>`, `<chat-subagents>`, `<chat-citations>`, `<chat-streaming-md>`, `<chat-trace>`, `<chat-reasoning>`, `<chat-interrupt>`, `<chat-error>`, `<chat-scroll-bubble>`, `<chat-launcher-button>`, `<chat-suggestions>`, `<chat-welcome>`, `<chat-select>`, `<chat-thread-list>`, `<chat-project-list>`, `<chat-timeline>`, `<chat-generative-ui>`, `<chat-genui-skeleton>`, `<chat-overflow-menu>`, `<chat-confirm-dialog>`, `<chat-history-search-palette>`, `<chat-sidenav-scrim>`.
+
+Custom content templates for message bubbles, tool call rows, and citation cards use structural directives: `MessageTemplateDirective`, `ChatToolCallTemplateDirective`, and `ChatCitationCardTemplateDirective`.
+
+### Human-in-the-loop (interrupts)
+
+`<chat-interrupt-panel>` surfaces the current `AgentInterrupt` from an agent and renders approve/reject controls. `<chat-approval-card>` composes as a dialog for explicit approval workflows. Both emit typed action results (`InterruptAction`, `ChatApprovalAction`) that the caller submits back to the agent.
+
+```html
+<chat-interrupt-panel
+  [agent]="agent"
+  (interruptAction)="onAction($event)"
+/>
+```
+
+### Tool calls and subagents
+
+`<chat-tool-calls>` renders in-progress and completed tool calls. Customize per-call layout with `ChatToolCallTemplateDirective` — the `chatToolCallTemplate` input takes a tool name to match, or `"*"` for all; the template context exposes the `ToolCall` (`$implicit`) and its `status`:
+
+```html
+<chat-tool-calls [agent]="agent">
+  <ng-template chatToolCallTemplate="*" let-call let-status="status">
+    <my-tool-card [call]="call" [status]="status" />
+  </ng-template>
+</chat-tool-calls>
+```
+
+`<chat-subagents>` and `<chat-subagent-card>` track delegated subagent activity with live status.
+
+### Citations
+
+The `Citation` interface provides structured source metadata for assistant messages:
+
+```ts
+interface Citation {
+  id: string;
+  index?: number;     // 1-based display index for inline superscript markers
+  title?: string;
+  url?: string;
+  snippet?: string;
+  extra?: unknown;    // adapter-specific fields
+}
+```
+
+Use `<chat-citations>` to render a collapsible sources panel under assistant messages. Customize the card layout with the `chatCitationCard` template directive:
+
+```html
+<chat-citations [message]="message">
+  <ng-template chatCitationCard let-citation>
+    <a [href]="citation.url">{{ citation.title }}</a>
+    <p>{{ citation.snippet }}</p>
+  </ng-template>
+</chat-citations>
+```
+
+Inline citation markers are rendered automatically by `MarkdownCitationReferenceComponent` inside streaming markdown output — superscript indices link to the corresponding card in the sources panel.
+
+`CitationsResolverService` resolves raw `Citation` references into `ResolvedCitation` objects with full source metadata.
+
+**Adapter integration:**
+- **LangGraph** — reads from `message.additional_kwargs.citations` (preferred) or `.sources` (fallback).
+- **AG-UI** — `bridgeCitationsState` reads `state.citations[messageId]` from the agent state on `STATE_SNAPSHOT` and `STATE_DELTA` events.
+
+### GenUI / A2UI surfaces
+
+`<chat-generative-ui>` renders A2UI surface specs emitted by agents. `<a2ui-surface>` is the underlying host that maps the spec to Angular catalog components (`A2uiButtonComponent`, `A2uiTextFieldComponent`, `A2uiCheckBoxComponent`, etc.).
+
+Agents can emit surface specs via `buildA2uiActionMessage(...)`. Actions from catalog components flow back to the agent as structured messages.
+
+The built-in catalog ships via `a2uiBasicCatalog`. Compose a custom catalog with `withViews()` and pass it to the surface.
+
+### Streaming markdown
+
+`<chat-streaming-md>` renders markdown token-by-token as the agent streams. The `cacheplaneMarkdownViews` registry maps each CommonMark node type to an Angular component.
+
+Override individual node renderers:
+
+```typescript
+import { MARKDOWN_VIEW_REGISTRY, cacheplaneMarkdownViews } from '@threadplane/chat';
+import { overrideViews } from '@threadplane/render';
+import { MyCodeBlockComponent } from './my-code-block.component';
+
+providers: [
+  {
+    provide: MARKDOWN_VIEW_REGISTRY,
+    useValue: overrideViews(cacheplaneMarkdownViews, { 'code-block': MyCodeBlockComponent }),
+  },
+];
+```
+
+Per-instance, bind the registry on `<chat-streaming-md [viewRegistry]="…" />` instead. Styling uses the existing `--ngaf-chat-*` / `--a2ui-*` tokens — see the [Theming](#theming) section.
+
+The `renderMarkdown(md, options?)` function produces a parse tree for use outside streaming contexts.
+
+### Theming
+
+`<a2ui-surface>` declares ~50 `--a2ui-*` CSS custom properties at `:host` with dark-theme defaults covering color, spacing, typography, shape radius, focus ring, motion, and elevation. Catalog components consume them via `var(--a2ui-*)`.
+
+**Built-in presets** — import one in your global stylesheet:
+
+```css
+@import '@threadplane/chat/themes/default-dark.css';   /* lib defaults, explicit */
+@import '@threadplane/chat/themes/default-light.css';  /* neutral light, blue accent */
+@import '@threadplane/chat/themes/material-dark.css';  /* Material Design 3 dark */
+@import '@threadplane/chat/themes/material-light.css'; /* Material Design 3 light */
+```
+
+Material presets map M3 color tokens to the `--a2ui-*` vocabulary with no `@angular/material` runtime dependency.
+
+**Agent-driven theming.** Agents control two knobs per the A2UI v1 wire format, set via `beginRendering.styles`: `font` (font family string) and `primaryColor` (hex `#RRGGBB`). These flow to `<a2ui-surface>` as inline styles and take precedence over `:root` defaults for that surface.
+
+**Custom themes.** Override any token at `:root`:
+
+```css
+:root {
+  --a2ui-primary: #FF6B35;
+  --a2ui-shape-medium: 4px;
+  --a2ui-spacing-3: 16px;
+}
+```
+
+The full token vocabulary (`--a2ui-primary`, `--a2ui-spacing-1..7`, `--a2ui-typography-*`, `--a2ui-shape-*`, `--a2ui-elevation-*`, etc.) is documented at [threadplane.ai/docs/chat](https://threadplane.ai/docs/chat).
+
+---
+
+## Runtime adapters
+
+Chat compositions consume the runtime-neutral `Agent` contract. Two adapters ship today:
+
+- **`@threadplane/langgraph`** — for LangGraph / LangGraph Platform backends.
+- **`@threadplane/ag-ui`** — for AG-UI-compatible backends (LangGraph, CrewAI, Mastra, Microsoft Agent Framework, AG2, Pydantic AI, AWS Strands, CopilotKit runtime).
+
+Custom backends implement the `Agent` (or `AgentWithHistory`) interface directly with no library dependency.
+
+---
 
 ## Commercial use
 
@@ -14,7 +245,7 @@ Building a commercial product, SaaS application, internal business tool, agency 
 
 Free under PolyForm Noncommercial:
 
-- Personal, hobby, student, academic, nonprofit, public-demo use
+- Personal, hobby, student, academic, nonprofit, and public-demo use
 - Open-source applications released under an OSI-approved license
 - 30 calendar days of commercial evaluation from your first commercial use (good-faith — no tracking, no email required)
 
@@ -22,7 +253,7 @@ See [COMMERCIAL-USE.md](./COMMERCIAL-USE.md) for the definition of commercial us
 
 ## Using a commercial license
 
-After purchase, Threadplane emails a signed license token to the address on your receipt. The license is valid for 12 months and the same email contains the token to paste into your app's `provideChat()` configuration:
+After purchase, Threadplane emails a signed license token to the address on your receipt. The license is valid for 12 months. Pass the token to `provideChat()`:
 
 ```typescript
 // app.config.ts
@@ -32,7 +263,7 @@ import { provideChat } from '@threadplane/chat';
 export const appConfig: ApplicationConfig = {
   providers: [
     provideChat({
-      license: 'eyJ…',  // The token from your purchase email.
+      license: 'eyJ…',  // Token from your purchase email.
     }),
   ],
 };
@@ -40,7 +271,7 @@ export const appConfig: ApplicationConfig = {
 
 The library verifies the token's signature on boot. A missing, expired, or tampered token logs a `console.warn` advisory but does not block rendering — chat continues to work either way. Tokens are validated offline; no calls to Threadplane are made at runtime.
 
-The license string is safe to commit to source control if your repository is private, or to read from a build-time env var for public repositories:
+The license string is safe to commit to source control for private repositories, or read from a build-time env var for public ones:
 
 ```typescript
 declare const THREADPLANE_LICENSE: string | undefined;
@@ -52,112 +283,25 @@ providers: [
 ],
 ```
 
-(See `examples/chat/angular/` in the framework repo for a working example.)
+---
 
-## Runtime adapters
+## Reliability
 
-Chat primitives consume a runtime-neutral `Agent` contract. Two adapters ship today:
+`@threadplane/chat` follows a patch-only release cadence (`0.0.x`). The runtime-neutral `Agent` contract is a stability boundary: adapter updates do not break chat UI code and vice versa. The package is covered by the monorepo's CI lint, test, and build pipeline on every commit.
 
-- **`@threadplane/langgraph`** — for LangGraph / LangGraph Platform backends.
-- **`@threadplane/ag-ui`** — for any AG-UI-compatible backend (LangGraph, CrewAI, Mastra, Microsoft Agent Framework, AG2, Pydantic AI, AWS Strands, CopilotKit runtime).
+---
 
-Custom backends can implement `Agent` directly with no library dependency.
+## Documentation
 
-See the capability matrix in the docs site for which primitives require which runtime capabilities.
+Full API reference, capability matrix, and examples: [threadplane.ai/docs/chat](https://threadplane.ai/docs/chat).
 
-## Citations
+---
 
-Chat messages can include citations to sources. The `Citation` interface provides structured metadata for each source:
+## License
 
-```ts
-interface Citation {
-  id: string;          // Unique identifier for the citation
-  index?: number;      // Display index (1-based) for inline markers
-  title?: string;      // Source title
-  url?: string;        // Source URL
-  snippet?: string;    // Quoted excerpt
-  extra?: unknown;     // Custom fields per adapter
-}
-```
+`@threadplane/chat` is dual-licensed:
 
-### Message citations
+- **Noncommercial use:** [PolyForm Noncommercial License 1.0.0](./LICENSE.md)
+- **Commercial use:** [Threadplane Commercial License](./LICENSE-COMMERCIAL.md)
 
-Adapters populate `Message.citations?: Citation[]` from their respective backends. Messages are rendered with the `<chat-citations [message]="message" />` primitive, which displays a collapsible sources panel under assistant messages.
-
-### Rendering sources
-
-Use the `<chat-citations>` component to render a sources panel. Customize the card layout with the optional `chatCitationCard` ng-template:
-
-```html
-<chat [agent]="agent" />
-<!-- or explicit: -->
-<chat-citations [message]="message">
-  <ng-template chatCitationCard let-citation>
-    <div class="custom-card">
-      <a [href]="citation.url">{{ citation.title }}</a>
-      <p class="text-sm text-gray-600">{{ citation.snippet }}</p>
-    </div>
-  </ng-template>
-</chat-citations>
-```
-
-### Inline markers
-
-Markdown rendering registers `chat-md-citation-reference` in the markdown view registry. Citation indices are rendered as superscript markers inline with the message text. The markers link to the corresponding citation in the sources panel.
-
-### Adapter integration
-
-Each runtime adapter extracts citations into the `Message.citations` array:
-
-- **LangGraph** — reads from `message.additional_kwargs.citations` (preferred) or `message.additional_kwargs.sources` (fallback)
-- **AG-UI** — reads from STATE_DELTA at JSON Pointer `/citations/{messageId}`
-
-The `CitationsResolverService` is provided to query citations in message-first or markdown-fallback order.
-
-## A2UI surface theming
-
-`<a2ui-surface>` declares ~50 internal `--a2ui-*` tokens at `:host` with dark-theme defaults (spacing, typography, shape radius, focus ring, motion, elevation, color). Catalog components consume them via `var(--a2ui-*)`. Override at `:root` to retheme.
-
-### Agent-driven theming (v1 wire format)
-
-Agents control exactly two knobs per the canonical A2UI v1-compatible spec, set via `beginRendering.styles`:
-
-- `font` — primary font family
-- `primaryColor` — hex `#RRGGBB`
-
-Both flow through to the rendered surface as inline styles on `<a2ui-surface>` (highest specificity), overriding any consumer `:root` defaults for the lifetime of that surface.
-
-### Built-in theme presets
-
-Four CSS files ship in the package, each declaring `:root` overrides for the relevant tokens:
-
-```css
-/* In your global stylesheet */
-@import '@threadplane/chat/themes/default-dark.css';     /* lib defaults, explicit */
-@import '@threadplane/chat/themes/default-light.css';    /* neutral light, blue accent */
-@import '@threadplane/chat/themes/material-dark.css';    /* Material Design 3 dark */
-@import '@threadplane/chat/themes/material-light.css';   /* Material Design 3 light */
-```
-
-Material presets map [Material Design 3 color tokens](https://m3.material.io/styles/color/the-color-system/tokens) to the `--a2ui-*` vocabulary — no `@angular/material` runtime dep, just CSS custom-property declarations.
-
-### Custom themes
-
-Override any subset of the ~50 tokens at `:root`:
-
-```css
-:root {
-  --a2ui-primary: #FF6B35;        /* brand orange */
-  --a2ui-shape-medium: 4px;       /* sharper corners */
-  --a2ui-spacing-3: 16px;         /* roomier layouts */
-}
-```
-
-The token surface:
-- **Color** — `--a2ui-primary`, `--a2ui-on-primary`, `--a2ui-secondary`, `--a2ui-surface`, `--a2ui-on-surface`, `--a2ui-surface-variant`, `--a2ui-on-surface-variant`, `--a2ui-outline`, `--a2ui-outline-variant`, `--a2ui-error`, `--a2ui-on-error`, `--a2ui-scrim`
-- **Spacing** — `--a2ui-spacing-1` (4px) through `--a2ui-spacing-7` (40px)
-- **Typography** — `--a2ui-typography-{h1..h5,body,caption,label}-{size,weight,line-height}`
-- **Shape** — `--a2ui-shape-{extra-small,small,medium,large,extra-large}`
-- **Focus ring** — `--a2ui-focus-ring-color`, `--a2ui-focus-ring-width`
-- **Motion** — `--a2ui-motion-duration-{short,medium,long}`, `--a2ui-motion-easing-{standard,emphasized}`
-- **Elevation** — `--a2ui-elevation-{0,1,2,3,4,5}` (box-shadow tokens)
+See [COMMERCIAL-USE.md](./COMMERCIAL-USE.md) for the definition of commercial use.

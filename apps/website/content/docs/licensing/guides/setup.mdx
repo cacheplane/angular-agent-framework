@@ -1,8 +1,8 @@
 # Setup
 
-Most applications do not import `@threadplane/licensing` directly. `@threadplane/chat` calls `runLicenseCheck()` from `provideChat()` when you pass a license token.
+Most applications don't import `@threadplane/licensing` directly. `@threadplane/chat` calls `runLicenseCheck()` from `provideChat()` when you pass a license token.
 
-For example, chat exposes a `license` option:
+Chat exposes a `license` option:
 
 ```ts
 provideChat({ license: environment.threadplaneLicense });
@@ -12,7 +12,7 @@ When no token is supplied, the licensing helper can evaluate the environment as 
 
 ## Direct use
 
-Use the direct API when you are building a package inside the framework or a custom integration that needs the same behavior.
+Use the direct API when you're building a package inside the framework, or a custom integration that needs the same behavior.
 
 ```ts
 import {
@@ -23,7 +23,7 @@ import {
 
 const status = await runLicenseCheck({
   package: '@threadplane/example',
-  token: process.env.THREADPLANE_LICENSE,
+  token: process.env['THREADPLANE_LICENSE'],
   publicKey: LICENSE_PUBLIC_KEY,
   isNoncommercial: inferNoncommercial(),
 });
@@ -68,12 +68,12 @@ It returns:
 - `false` when `NODE_ENV` is `"production"`;
 - `false` when there is no `process` global.
 
-This is only a default hint. Callers can pass `isNoncommercial` explicitly.
+It's only a default hint. Callers can pass `isNoncommercial` explicitly.
 
 ## Gotchas
 
 `runLicenseCheck()` is idempotent for identical `package` and `token` values. A repeated call with the same key returns `licensed` without re-running the check.
 
-That keeps repeated provider initialization quiet, but it means package authors should not use repeated calls with identical inputs as a status polling mechanism.
+That keeps repeated provider initialization quiet, but it means package authors shouldn't use repeated calls with identical inputs to poll for status.
 
-`verifyLicense()` does not check time. Pair it with `evaluateLicense()` when you need expiration and grace behavior.
+`verifyLicense()` doesn't check time. Pair it with `evaluateLicense()` when you need expiration and grace behavior.

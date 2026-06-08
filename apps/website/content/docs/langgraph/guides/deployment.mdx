@@ -1,0 +1,423 @@
+# Deployment
+
+Deploy your LangGraph agent to the cloud and ship your Angular frontend to production with environment-based configuration, authentication, error handling, and observability.
+
+## Python: LangGraph Cloud deployment
+
+Your agent code needs a `langgraph.json` manifest at the project root. This file tells LangGraph Cloud how to build and serve your agent.
+
+Let's start there.
+
+```json
+{
+  "dependencies": ["."],
+  "graphs": {
+    "chat": "./agent/graph.py:graph"
+  },
+  "env": ".env"
+}
+```
+
+The `graphs` key maps an assistant ID (configured via `provideAgent({ assistantId: '...' })` on the Angular side) to the Python module path and graph variable. The `env` key points to a file with secrets like `OPENAI_API_KEY` that will be injected at runtime.
+
+### Agent entry point
+
+```python
+from langchain_openai import ChatOpenAI
+from langgraph.graph import StateGraph, MessagesState
+
+llm = ChatOpenAI(model="gpt-5-mini")
+
+def call_model(state: MessagesState):
+    return {"messages": [llm.invoke(state["messages"])]}
+
+graph = StateGraph(MessagesState)
+graph.add_node("model", call_model)
+graph.set_entry_point("model")
+graph = graph.compile()
+```
+
+### Push and deploy
+
+```bash
+# Initialize and push to GitHub
+git init && git add . && git commit -m "initial agent"
+gh repo create my-agent --public --source=. --push
+
+# Deploy via CLI (alternative to the LangSmith UI)
+pip install langgraph-cli
+langgraph deploy --project my-agent
+```
+
+The CLI watches your repository and builds a container image on LangGraph Cloud. First deployments take roughly 10-15 minutes. Subsequent pushes to the default branch trigger automatic redeployments.
+
+## LangSmith deployment walkthrough
+
+The LangSmith UI provides a visual deployment flow if you prefer not to use the CLI.
+
+<Steps>
+<Step title="Open LangSmith Deployments">
+
+Navigate to [smith.langchain.com](https://smith.langchain.com) and click **Deployments** in the left sidebar, then **+ New Deployment**.
+
+</Step>
+<Step title="Connect your GitHub repository">
+
+Authorize LangSmith to access your GitHub account. Select the repository containing your `langgraph.json`. LangSmith auto-detects the manifest and shows the graphs it found.
+
+</Step>
+<Step title="Configure environment variables">
+
+Add secrets like `OPENAI_API_KEY` in the deployment settings. These are encrypted at rest and injected into your container at runtime. You can also set `LANGCHAIN_TRACING_V2=true` here to enable automatic tracing.
+
+</Step>
+<Step title="Deploy and copy the URL">
+
+Click **Deploy**. Once the build succeeds, you will see a deployment URL like `https://my-agent-abc123.langgraph.app`. Copy this URL for your Angular environment configuration.
+
+</Step>
+</Steps>
+
+## Angular: environment configuration
+
+Angular uses file-based environment replacement at build time rather than `process.env`. Create separate environment files for development and production.
+
+<Tabs>
+<Tab label="Development">
+
+```typescript
+export const environment = {
+  production: false,
+  langgraphUrl: 'http://localhost:2024',
+};
+```
+
+</Tab>
+<Tab label="Production">
+
+```typescript
+export const environment = {
+  production: true,
+  langgraphUrl: '/api/langgraph',
+};
+```
+
+</Tab>
+</Tabs>
+
+Wire the environment into `provideAgent()`:
+
+```typescript
+import { provideAgent } from '@threadplane/langgraph';
+import { environment } from '../environments/environment';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideAgent({
+      apiUrl: environment.langgraphUrl,
+    }),
+  ],
+};
+```
+
+Angular CLI replaces `environment.ts` with `environment.prod.ts` during `ng build --configuration production` automatically via the `fileReplacements` array in `angular.json`.
+
+## Authentication
+
+### Keep LangGraph credentials server-side
+
+Do not ship LangSmith or LangGraph API keys in an Angular bundle. The default `FetchStreamTransport` uses the LangGraph SDK client directly, not Angular `HttpClient`, so Angular HTTP interceptors do not attach headers to `injectAgent()` requests.
+
+For production, put a same-origin backend route, edge function, or API gateway in front of LangGraph. The browser calls your relative URL, and that server-side layer adds the deployment credentials.
+
+For me, the same-origin proxy is worth the extra hop. You give up the simplicity of pointing Angular straight at the deployment, but your keys never leave the server, and HTTP-only cookies just work.
+
+```typescript
+// environment.prod.ts
+export const environment = {
+  production: true,
+  langgraphUrl: '/api/langgraph',
+};
+```
+
+```typescript
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideAgent({
+      apiUrl: environment.langgraphUrl,
+    }),
+  ],
+};
+```
+
+<Callout type="warning" title="Never expose API keys">
+Environment files that are bundled into Angular are public. Store LangGraph deployment credentials in your server-side proxy, hosting provider secret store, or CI/CD environment, not in `environment.prod.ts`.
+</Callout>
+
+### User-level authentication
+
+If your app has its own user authentication, authenticate the same-origin proxy with cookies or your usual app session. The proxy can forward user identity to LangGraph through safe, server-controlled metadata or headers.
+
+## CORS configuration
+
+When your Angular frontend and LangGraph backend are on different origins, you must configure CORS on the LangGraph side.
+
+In `langgraph.json`, add an `http` section:
+
+```json
+{
+  "dependencies": ["."],
+  "graphs": {
+    "chat": "./agent/graph.py:graph"
+  },
+  "http": {
+    "cors": {
+      "allow_origins": ["https://your-angular-app.com"],
+      "allow_methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+      "allow_headers": ["Content-Type", "Authorization"],
+      "allow_credentials": true
+    }
+  }
+}
+```
+
+<Callout type="tip" title="Local development">
+During local development with `langgraph dev`, CORS is permissive by default. You only need explicit CORS configuration for production deployments.
+</Callout>
+
+## Error boundaries
+
+Production apps need graceful error handling. Let's build a reactive error boundary using `injectAgent()` signals.
+
+```typescript
+import { ChangeDetectionStrategy, Component, computed } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
+import { injectAgent } from '@threadplane/langgraph';
+
+@Component({
+  selector: 'app-chat',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    @if (hasError()) {
+      <div class="error-banner">
+        <p>{{ errorMessage() }}</p>
+        <button (click)="retry()">Try again</button>
+      </div>
+    }
+  `,
+})
+export class ChatComponent {
+  protected readonly chat = injectAgent<MessagesState>();
+
+  hasError = computed(() => this.chat.status() === 'error');
+
+  errorMessage = computed(() => {
+    const err = this.chat.error();
+    if (err instanceof HttpErrorResponse) {
+      switch (err.status) {
+        case 401: return 'Authentication failed. Please check your API key.';
+        case 429: return 'Rate limit exceeded. Please wait a moment.';
+        case 503: return 'Agent is starting up. Please try again shortly.';
+        default:  return 'Something went wrong. Please try again.';
+      }
+    }
+    return err instanceof Error ? err.message : 'An unexpected error occurred.';
+  });
+
+  retry(): void {
+    this.chat.reload();
+  }
+}
+```
+
+### Retry with exponential backoff
+
+For automated retries (network blips, transient 5xx errors), wrap `.submit()` with a backoff utility:
+
+```typescript
+export async function retrySubmit(
+  chat: ReturnType<typeof agent>,
+  input: Record<string, unknown>,
+  maxAttempts = 3,
+): Promise<void> {
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    try {
+      await chat.submit(input);
+      return;
+    } catch {
+      if (attempt === maxAttempts - 1) throw new Error('Max retries exceeded');
+      await new Promise(r => setTimeout(r, 1000 * 2 ** attempt));
+    }
+  }
+}
+```
+
+## Stream recovery
+
+Use `joinStream()` to reconnect to a running agent execution after a network interruption, page refresh, or navigation event.
+
+```typescript
+// Store the run ID when LangGraph creates the run
+await this.chat.submit(
+  { message: input },
+  {
+    streamResumable: true,
+    onRunCreated: ({ run_id }) => {
+      localStorage.setItem('activeRunId', run_id);
+    },
+  },
+);
+
+// After reconnecting, resume from where the stream left off
+const savedRunId = localStorage.getItem('activeRunId');
+if (savedRunId) {
+  await this.chat.joinStream(savedRunId, lastEventId);
+}
+```
+
+`joinStream()` replays any events the client missed, then switches to live streaming. This works because all state lives on the LangGraph Platform, and the SSE endpoint supports event ID-based resumption.
+
+<Callout type="tip" title="Stateless client pattern">
+`injectAgent()` is a stateless client. All state lives on the LangGraph Platform. This means your Angular app can be deployed anywhere (CDN, edge, SSR) without state management concerns. Scale your frontend independently of your agent infrastructure.
+</Callout>
+
+## CI/CD pipeline
+
+A typical pipeline deploys the Python agent and Angular frontend in parallel since they are independent artifacts.
+
+```yaml
+name: Deploy
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy-agent:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install langgraph-cli
+      - run: langgraph deploy --project my-agent
+        env:
+          LANGSMITH_API_KEY: ${{ secrets.LANGSMITH_API_KEY }}
+
+  deploy-angular:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci
+      - name: Generate production environment
+        run: |
+          cat > src/environments/environment.prod.ts << 'EOF'
+          export const environment = {
+            production: true,
+            langgraphUrl: '${{ secrets.LANGGRAPH_URL }}',
+          };
+          EOF
+      - run: npx ng build --configuration production
+      - name: Deploy to hosting
+        run: |
+          # Replace with your hosting provider's CLI
+          # e.g., npx vercel deploy --prod dist/my-app/browser
+          echo "Deploy dist/ to your hosting platform"
+```
+
+## Monitoring
+
+### LangSmith observability
+
+When `LANGCHAIN_TRACING_V2=true` is set in your agent environment, every run is automatically traced in LangSmith. No code changes are needed.
+
+Key metrics to track in production:
+
+| Metric | Where to find it | Why it matters |
+|--------|-------------------|----------------|
+| End-to-end latency | LangSmith Runs tab | Directly affects user-perceived responsiveness |
+| Error rate | LangSmith Runs tab, filter by error | Spike detection for broken tools or provider outages |
+| Token usage | LangSmith per-run detail | Cost control and budget alerting |
+| Time to first token | Angular performance monitoring | Stream startup latency visible to users |
+| Thread count | LangGraph Platform dashboard | Capacity planning |
+
+### Client-side monitoring
+
+Track stream health from your Angular app:
+
+```typescript
+const status = this.chat.status(); // 'idle' | 'running' | 'error'
+const isStreaming = this.chat.isLoading();
+
+// Log stream lifecycle for your APM tool
+effect(() => {
+  const s = this.chat.status();
+  if (s === 'error') {
+    this.analytics.trackError('stream_error', this.chat.error());
+  }
+});
+```
+
+## Deployment checklist
+
+<Steps>
+<Step title="Set production apiUrl">
+Point `provideAgent({ apiUrl })` to your same-origin LangGraph proxy, or to a direct LangGraph URL only when that deployment is intentionally public.
+</Step>
+<Step title="Configure authentication">
+Route browser traffic through a server-side proxy or gateway that adds LangGraph credentials outside the Angular bundle.
+</Step>
+<Step title="Set up CORS">
+Add your Angular app's origin to the `allow_origins` list in `langgraph.json`.
+</Step>
+<Step title="Handle errors gracefully">
+Show user-friendly error messages for 401, 429, 503, and network failures. Provide retry buttons.
+</Step>
+<Step title="Implement stream recovery">
+Store `runId` and use `joinStream()` to reconnect after network interruptions.
+</Step>
+<Step title="Persist thread IDs">
+Store `threadId` in `localStorage` or a backend so users can resume conversations across sessions.
+</Step>
+<Step title="Configure throttle">
+Set the `throttle` option if token-by-token updates are too frequent for your UI rendering.
+</Step>
+<Step title="Enable LangSmith tracing">
+Set `LANGCHAIN_TRACING_V2=true` in your agent environment for production observability.
+</Step>
+<Step title="Secure environment files">
+Add `environment.prod.ts` to `.gitignore`. Generate it from CI secrets at build time.
+</Step>
+<Step title="Set up CI/CD">
+Automate agent and Angular deployments on push to your main branch.
+</Step>
+<Step title="Verify monitoring">
+Confirm LangSmith traces are arriving and set up alerts for error rate spikes and latency regressions.
+</Step>
+</Steps>
+
+## What's Next
+
+<CardGroup cols={2}>
+  <Card title="Testing" href="/docs/langgraph/guides/testing">
+    Test agent interactions deterministically before deploying to production.
+  </Card>
+  <Card title="Persistence" href="/docs/langgraph/guides/persistence">
+    Store thread IDs so users can resume conversations across sessions.
+  </Card>
+  <Card title="Streaming" href="/docs/langgraph/guides/streaming">
+    Tune streaming options like throttle and stream modes for production performance.
+  </Card>
+  <Card title="LangGraph Basics" href="/docs/langgraph/concepts/langgraph-basics">
+    Understand the agent patterns your deployment will serve.
+  </Card>
+  <Card title="API Reference" href="/docs/langgraph/api/provide-agent">
+    Full reference for provideAgent configuration options.
+  </Card>
+  <Card title="Error Handling" href="/docs/langgraph/guides/deployment">
+    Deep dive into error recovery patterns beyond basic error boundaries.
+  </Card>
+</CardGroup>

@@ -1,13 +1,13 @@
 # Code Execution Sandbox with Angular
 
 <Summary>
-Build a chat interface that shows real-time code execution logs using `agent()` from
-`@threadplane/langgraph`. The agent writes Python code and runs it in a sandbox, and the
+Build a chat interface that shows real-time code execution logs using `provideAgent()` and
+`injectAgent()` from `@threadplane/langgraph`. The agent writes Python code and runs it in a sandbox, and the
 sidebar displays each execution as a log entry with code input, stdout output, and exit status.
 </Summary>
 
 <Prompt>
-Add a code execution log sidebar to this Angular component using `agent()` from `@threadplane/langgraph`. Use `stream.messages()` to access tool call data from the `run_code` tool, derive `executionLogs` with `computed()`, and bind them to the sidebar beside the `<chat>` component from `@threadplane/chat`.
+Add a code execution log sidebar to this Angular component using `provideAgent()` and `injectAgent()` from `@threadplane/langgraph`. Use `stream.messages()` to access tool call data from the `run_code` tool, derive `executionLogs` with `computed()`, and bind them to the sidebar beside the `<chat>` component from `@threadplane/chat`.
 </Prompt>
 
 <Steps>
@@ -24,26 +24,25 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideAgent({
       apiUrl: 'https://your-deployment.langgraph.app',
+      assistantId: 'da-sandboxes',
     }),
   ],
 };
 ```
 
-This makes the API URL available to all `agent()` calls in your app.
+This makes the configured agent available to all `injectAgent()` calls in your app.
 
 </Step>
 <Step title="Create the streaming resource">
 
-In your component, call `agent()` with the `assistantId` pointing to your sandboxes graph:
+In your component, call `injectAgent()` to retrieve the configured sandboxes agent:
 
 ```typescript
 // sandboxes.component.ts
-import { agent } from '@threadplane/langgraph';
+import { injectAgent } from '@threadplane/langgraph';
 
 export class SandboxesComponent {
-  protected readonly stream = agent({
-    assistantId: 'da-sandboxes',
-  });
+  protected readonly stream = injectAgent();
 }
 ```
 
@@ -56,6 +55,7 @@ Use Angular's `computed()` to extract execution log entries from `run_code` tool
 
 ```typescript
 import { computed } from '@angular/core';
+import { injectAgent } from '@threadplane/langgraph';
 
 interface ExecutionLog {
   code: string;
@@ -64,7 +64,7 @@ interface ExecutionLog {
 }
 
 export class SandboxesComponent {
-  protected readonly stream = agent({ assistantId: 'da-sandboxes' });
+  protected readonly stream = injectAgent();
 
   executionLogs = computed(() => {
     const msgs = this.stream.messages();

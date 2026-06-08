@@ -5,7 +5,7 @@ import { Subject } from 'rxjs';
 import type {
   Message, AgentStatus, ToolCall, AgentEvent,
 } from '@threadplane/chat';
-import { reduceEvent, type ReducerStore } from './reducer';
+import { reduceEvent, type ReducerStore, type CustomStreamEvent } from './reducer';
 
 function makeStore(): ReducerStore {
   return {
@@ -15,7 +15,9 @@ function makeStore(): ReducerStore {
     error:     signal<unknown>(null),
     toolCalls: signal<ToolCall[]>([]),
     state:     signal<Record<string, unknown>>({}),
+    interrupt: signal(undefined),
     events$:   new Subject<AgentEvent>(),
+    customEvents: signal<CustomStreamEvent[]>([]),
   };
 }
 
@@ -65,6 +67,33 @@ describe('reduceEvent', () => {
     expect(store.toolCalls()).toEqual([{ id: 't1', name: 'search', args: {}, status: 'running' }]);
   });
 
+  it('TOOL_CALL_START links the tool call to its parent assistant message (creating the slot)', () => {
+    const store = makeStore();
+    reduceEvent({ type: 'TOOL_CALL_START', toolCallId: 't1', toolCallName: 'weather_card', parentMessageId: 'a1' } as any, store);
+    expect(store.toolCalls()).toEqual([{ id: 't1', name: 'weather_card', args: {}, status: 'running' }]);
+    const msg = store.messages().find((m) => m.id === 'a1');
+    expect(msg).toBeDefined();
+    expect(msg!.role).toBe('assistant');
+    expect(msg!.toolCallIds).toEqual(['t1']);
+  });
+
+  it('TOOL_CALL_START appends toolCallIds to an existing parent assistant message', () => {
+    const store = makeStore();
+    reduceEvent({ type: 'TEXT_MESSAGE_START', messageId: 'a1' } as any, store);
+    reduceEvent({ type: 'TOOL_CALL_START', toolCallId: 't1', toolCallName: 'weather_card', parentMessageId: 'a1' } as any, store);
+    reduceEvent({ type: 'TOOL_CALL_START', toolCallId: 't2', toolCallName: 'weather_card', parentMessageId: 'a1' } as any, store);
+    const a1 = store.messages().filter((m) => m.id === 'a1');
+    expect(a1).toHaveLength(1);
+    expect(a1[0].toolCallIds).toEqual(['t1', 't2']);
+  });
+
+  it('TOOL_CALL_START without parentMessageId does not create or modify messages', () => {
+    const store = makeStore();
+    reduceEvent({ type: 'TOOL_CALL_START', toolCallId: 't1', toolCallName: 'search' } as any, store);
+    expect(store.messages()).toEqual([]);
+    expect(store.toolCalls()).toEqual([{ id: 't1', name: 'search', args: {}, status: 'running' }]);
+  });
+
   it('TOOL_CALL_ARGS replaces args on the matching tool call', () => {
     const store = makeStore();
     reduceEvent({ type: 'TOOL_CALL_START', toolCallId: 't1', toolCallName: 'search' } as any, store);
@@ -84,6 +113,20 @@ describe('reduceEvent', () => {
     reduceEvent({ type: 'TOOL_CALL_START', toolCallId: 't1', toolCallName: 'search' } as any, store);
     reduceEvent({ type: 'TOOL_CALL_RESULT', toolCallId: 't1', content: 'found' } as any, store);
     expect(store.toolCalls()[0].result).toBe('found');
+  });
+
+  it('TOOL_CALL_RESULT parses JSON string content into an object', () => {
+    const store = makeStore();
+    reduceEvent({ type: 'TOOL_CALL_START', toolCallId: 't1', toolCallName: 'weather_card' } as any, store);
+    reduceEvent({ type: 'TOOL_CALL_RESULT', toolCallId: 't1', content: '{"temperatureF":68,"location":"San Francisco"}' } as any, store);
+    expect(store.toolCalls()[0].result).toEqual({ temperatureF: 68, location: 'San Francisco' });
+  });
+
+  it('TOOL_CALL_RESULT preserves non-JSON string result as-is', () => {
+    const store = makeStore();
+    reduceEvent({ type: 'TOOL_CALL_START', toolCallId: 't1', toolCallName: 'search' } as any, store);
+    reduceEvent({ type: 'TOOL_CALL_RESULT', toolCallId: 't1', content: 'plain text result' } as any, store);
+    expect(store.toolCalls()[0].result).toBe('plain text result');
   });
 
   it('STATE_SNAPSHOT replaces state wholesale', () => {
@@ -113,6 +156,52 @@ describe('reduceEvent', () => {
     expect(store.messages()).toEqual([{ id: 'new', role: 'assistant', content: 'fresh' }]);
   });
 
+  it('MESSAGES_SNAPSHOT bridges assistant toolCalls to toolCallIds', () => {
+    const store = makeStore();
+    reduceEvent({
+      type: 'MESSAGES_SNAPSHOT',
+      messages: [
+        { id: 'u1', role: 'user', content: 'hello' },
+        { id: 'a1', role: 'assistant', content: '', toolCalls: [{ id: 'tc1', type: 'function', function: { name: 'weather_card', arguments: '{"location":"SF"}' } }] },
+        { id: 'a2', role: 'assistant', content: 'Here is the weather.' },
+      ],
+    } as any, store);
+    const a1 = store.messages().find((m) => m.id === 'a1');
+    expect(a1).toBeDefined();
+    expect(a1!.toolCallIds).toEqual(['tc1']);
+    expect((a1 as any).toolCalls).toBeUndefined();
+    const a2 = store.messages().find((m) => m.id === 'a2');
+    expect(a2!.toolCallIds).toBeUndefined();
+  });
+
+  it('MESSAGES_SNAPSHOT inserts snapshot-only tool calls into store.toolCalls', () => {
+    const store = makeStore();
+    reduceEvent({
+      type: 'MESSAGES_SNAPSHOT',
+      messages: [
+        { id: 'a1', role: 'assistant', content: '', toolCalls: [{ id: 'tc1', type: 'function', function: { name: 'weather_card', arguments: '{"location":"SF"}' } }] },
+      ],
+    } as any, store);
+    const tc = store.toolCalls().find((t) => t.id === 'tc1');
+    expect(tc).toBeDefined();
+    expect(tc!.name).toBe('weather_card');
+    expect(tc!.args).toEqual({ location: 'SF' });
+    expect(tc!.status).toBe('complete');
+  });
+
+  it('MESSAGES_SNAPSHOT does not duplicate a tool call already in store.toolCalls', () => {
+    const store = makeStore();
+    reduceEvent({ type: 'TOOL_CALL_START', toolCallId: 'tc1', toolCallName: 'weather_card', parentMessageId: 'a1' } as any, store);
+    reduceEvent({ type: 'TOOL_CALL_RESULT', toolCallId: 'tc1', content: '{"temperatureF":68}' } as any, store);
+    reduceEvent({
+      type: 'MESSAGES_SNAPSHOT',
+      messages: [{ id: 'a1', role: 'assistant', content: '', toolCalls: [{ id: 'tc1', type: 'function', function: { name: 'weather_card', arguments: '{}' } }] }],
+    } as any, store);
+    expect(store.toolCalls().filter((t) => t.id === 'tc1')).toHaveLength(1);
+    // The original entry (with result) is kept, not replaced by the snapshot entry.
+    expect(store.toolCalls().find((t) => t.id === 'tc1')!.result).toEqual({ temperatureF: 68 });
+  });
+
   it('CUSTOM with name=state_update emits AgentStateUpdateEvent', async () => {
     const store = makeStore();
     const events: AgentEvent[] = [];
@@ -134,6 +223,32 @@ describe('reduceEvent', () => {
     reduceEvent({ type: 'FUTURE_EVENT' } as any, store);
     expect(store.messages()).toEqual([]);
     expect(store.status()).toBe('idle');
+  });
+});
+
+describe('reduceEvent — interrupt', () => {
+  it('sets interrupt from a CUSTOM on_interrupt event', () => {
+    const store = makeStore();
+    reduceEvent({ type: 'CUSTOM', name: 'on_interrupt', value: { kind: 'refund_approval', amount: 42 } } as never, store);
+    const ix = store.interrupt();
+    expect(ix).toBeTruthy();
+    expect(ix!.value).toEqual({ kind: 'refund_approval', amount: 42 });
+    expect(ix!.resumable).toBe(true);
+    expect(typeof ix!.id).toBe('string');
+  });
+  it('clears interrupt on RUN_STARTED', () => {
+    const store = makeStore();
+    store.interrupt.set({ id: 'x', value: {}, resumable: true });
+    reduceEvent({ type: 'RUN_STARTED' } as never, store);
+    expect(store.interrupt()).toBeUndefined();
+  });
+  it('still forwards non-interrupt CUSTOM events to events$', () => {
+    const store = makeStore();
+    const seen: unknown[] = [];
+    store.events$.subscribe((e) => seen.push(e));
+    reduceEvent({ type: 'CUSTOM', name: 'state_update', value: { a: 1 } } as never, store);
+    expect(seen).toEqual([{ type: 'state_update', data: { a: 1 } }]);
+    expect(store.interrupt()).toBeUndefined();
   });
 });
 
@@ -185,5 +300,40 @@ describe('reduceEvent — REASONING_MESSAGE_*', () => {
     expect(msgs).toHaveLength(1);
     expect(msgs[0].reasoning).toBe('thinking');
     expect(msgs[0].content).toBe('hello');
+  });
+});
+
+describe('reduceEvent — customEvents accumulation', () => {
+  it('accumulates non-interrupt CUSTOM events as {name, data} in order', () => {
+    const store = makeStore();
+    reduceEvent({ type: 'CUSTOM', name: 'a2ui-partial', value: { tool_call_id: 't1', args_so_far: '{' } } as any, store);
+    reduceEvent({ type: 'CUSTOM', name: 'a2ui-partial', value: { tool_call_id: 't1', args_so_far: '{"a":1' } } as any, store);
+    expect(store.customEvents()).toEqual([
+      { name: 'a2ui-partial', data: { tool_call_id: 't1', args_so_far: '{' } },
+      { name: 'a2ui-partial', data: { tool_call_id: 't1', args_so_far: '{"a":1' } },
+    ]);
+  });
+
+  it('parses JSON-string CUSTOM values before storing', () => {
+    const store = makeStore();
+    reduceEvent({ type: 'CUSTOM', name: 'a2ui-partial', value: '{"tool_call_id":"t1","args_so_far":"{"}' } as any, store);
+    expect(store.customEvents()).toEqual([
+      { name: 'a2ui-partial', data: { tool_call_id: 't1', args_so_far: '{' } },
+    ]);
+  });
+
+  it('does NOT accumulate on_interrupt CUSTOM events (those drive the interrupt signal)', () => {
+    const store = makeStore();
+    reduceEvent({ type: 'CUSTOM', name: 'on_interrupt', value: { foo: 'bar' } } as any, store);
+    expect(store.customEvents()).toEqual([]);
+    expect(store.interrupt()).toMatchObject({ value: { foo: 'bar' } });
+  });
+
+  it('RUN_STARTED resets customEvents for the new run', () => {
+    const store = makeStore();
+    reduceEvent({ type: 'CUSTOM', name: 'a2ui-partial', value: { tool_call_id: 't1', args_so_far: '{' } } as any, store);
+    expect(store.customEvents()).toHaveLength(1);
+    reduceEvent({ type: 'RUN_STARTED' } as any, store);
+    expect(store.customEvents()).toEqual([]);
   });
 });

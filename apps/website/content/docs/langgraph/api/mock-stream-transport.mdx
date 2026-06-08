@@ -1,0 +1,123 @@
+# MockAgentTransport
+
+`MockAgentTransport` is a deterministic `AgentTransport` implementation for tests. It records stream calls, lets tests emit LangGraph stream events manually, and avoids a running LangGraph server.
+
+## Complete test example
+
+The pattern below covers the full lifecycle: provide a transport instance, create the component, emit stream events, and assert signal state.
+
+```ts
+import { Component } from '@angular/core';
+import { TestBed } from '@angular/core/testing';
+import {
+  provideAgent,
+  MockAgentTransport,
+  injectAgent,
+} from '@threadplane/langgraph';
+
+@Component({ template: '' })
+class ChatComponent {
+  readonly chat = injectAgent();
+}
+
+describe('ChatComponent', () => {
+  let transport: MockAgentTransport;
+
+  beforeEach(() => {
+    transport = new MockAgentTransport();
+    TestBed.configureTestingModule({
+      imports: [ChatComponent],
+      providers: [
+        provideAgent({
+          apiUrl: '',
+          assistantId: 'test-agent',
+          threadId: 'thread-1',
+          transport,
+        }),
+      ],
+    });
+  });
+
+  it('reflects streamed messages', async () => {
+    const fixture = TestBed.createComponent(ChatComponent);
+    fixture.detectChanges();
+
+    const stream = fixture.componentInstance.chat.submit({ message: 'Hello' });
+    transport.emit([
+      {
+        type: 'values',
+        values: {
+          messages: [{ type: 'ai', id: 'a1', content: 'Hi there' }],
+        },
+      },
+    ]);
+    transport.close();
+    await stream;
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance.chat.messages()).toEqual([
+      expect.objectContaining({ role: 'assistant', content: 'Hi there' }),
+    ]);
+    expect(fixture.componentInstance.chat.status()).toBe('idle');
+  });
+
+  it('surfaces errors through the error signal', async () => {
+    const fixture = TestBed.createComponent(ChatComponent);
+    fixture.detectChanges();
+
+    const stream = fixture.componentInstance.chat.submit({ message: 'Hello' });
+    transport.emitError(new Error('not found'));
+    await expect(stream).rejects.toThrow('not found');
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance.chat.status()).toBe('error');
+    expect(fixture.componentInstance.chat.error()).toBeInstanceOf(Error);
+  });
+});
+```
+
+## MockAgentTransport API
+
+| Method | Description |
+|--------|-------------|
+| `constructor(script?: StreamEvent[][])` | Optionally seeds scripted event batches for manual stepping (defaults to `[]`). |
+| `nextBatch()` | Returns the next scripted event batch. |
+| `emit(events)` | Pushes one or more `StreamEvent` objects into the active stream. |
+| `emitError(err)` | Causes the active stream to reject with `err`. |
+| `close()` | Closes the active stream after queued events drain. |
+| `isStreaming()` | Returns whether a stream is currently active. |
+
+The transport also records calls in `streams`, `createdQueuedRuns`, `cancelledRuns`, `joinedRuns`, and `historyCalls`, which is useful for asserting payloads and options.
+
+<Callout type="tip" title="Deterministic tests">
+  `MockAgentTransport` emits only when your test calls `emit()`, `emitError()`,
+  or `close()`. This makes stream state and payload assertions deterministic.
+</Callout>
+
+## What's Next
+
+<CardGroup cols={3}>
+  <Card
+    title="Testing Guide"
+    icon="flask"
+    href="/docs/langgraph/guides/testing"
+  >
+    Full testing patterns including component harnesses and multi-stream scenarios.
+  </Card>
+  <Card
+    title="FetchStreamTransport"
+    icon="globe"
+    href="/docs/langgraph/api/fetch-stream-transport"
+  >
+    The production transport that MockAgentTransport replaces in tests.
+  </Card>
+  <Card
+    title="`injectAgent()` API"
+    icon="code"
+    href="/docs/langgraph/api/inject-agent"
+  >
+    Full reference for the primitive you are testing against.
+  </Card>
+</CardGroup>
+
+{/* Auto-rendered from api-docs.json — see page component */}

@@ -1,6 +1,6 @@
 {
   "name": "@threadplane/telemetry",
-  "version": "0.0.47",
+  "version": "0.0.49",
   "license": "MIT",
   "publishConfig": {
     "access": "public"

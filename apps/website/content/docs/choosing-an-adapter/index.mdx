@@ -1,0 +1,94 @@
+---
+title: Choosing an adapter
+description: Decide between @threadplane/langgraph and @threadplane/ag-ui for your Angular agent UI.
+---
+
+# Choosing an adapter
+
+Threadplane ships two adapters that connect a backend agent runtime to `<chat>` in `@threadplane/chat`. Both produce the same runtime-neutral `Agent` contract; pick one based on what your backend speaks.
+
+## At a glance
+
+| If your backend is... | Use |
+|---|---|
+| **LangGraph Platform** (cloud or self-hosted, via the LangGraph SDK) | `@threadplane/langgraph` |
+| **Any AG-UI-protocol backend** — CrewAI, Mastra, Microsoft Agent Framework, AG2, Pydantic AI, AWS Strands, CopilotKit runtime, or LangGraph fronted by AG-UI | `@threadplane/ag-ui` |
+
+## Code comparison
+
+The two adapters share the same public surface — `provideAgent`, `injectAgent`, `AgentConfig`. Swapping is a one-line import change.
+
+### LangGraph adapter
+
+```ts
+import { provideAgent, injectAgent } from '@threadplane/langgraph';
+import { ChatComponent } from '@threadplane/chat';
+
+// app.config.ts
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideAgent({
+      apiUrl: 'https://your-langgraph-deployment',
+      assistantId: 'your-graph-name',
+    }),
+  ],
+};
+
+// component
+@Component({ imports: [ChatComponent], template: `<chat [agent]="agent" />` })
+export class App {
+  protected readonly agent = injectAgent();
+}
+```
+
+### AG-UI adapter
+
+```ts
+import { provideAgent, injectAgent } from '@threadplane/ag-ui';
+import { ChatComponent } from '@threadplane/chat';
+
+// app.config.ts
+export const appConfig: ApplicationConfig = {
+  providers: [provideAgent({ url: 'https://your.agent.endpoint' })],
+};
+
+// component
+@Component({ imports: [ChatComponent], template: `<chat [agent]="agent" />` })
+export class App {
+  protected readonly agent = injectAgent();
+}
+```
+
+The component body is byte-identical. The only thing that changes is the import path and the config shape passed to `provideAgent()`.
+
+## What about both?
+
+Mixing both adapters in one app is unusual — most apps talk to one backend. If you genuinely need both, use TypeScript import renaming:
+
+```ts
+import { provideAgent as provideLangGraphAgent } from '@threadplane/langgraph';
+import { provideAgent as provideAgUiAgent } from '@threadplane/ag-ui';
+```
+
+Each adapter uses its own private DI token internally, so providing both does not cause a runtime DI collision — but the developer ergonomics get awkward, and `<chat [agent]="agent" />` can only bind one Agent at a time. We recommend picking one adapter per app.
+
+## Testing
+
+Three layers of test doubles, smallest scope first:
+
+| Layer | Use | What's real | When |
+|---|---|---|---|
+| **Contract mock** | `mockAgent()` (chat) / `mockLangGraphAgent()` (langgraph) | nothing — you set `messages()`, `status()` directly | component/unit tests |
+| **Fake backend** | `provideFakeAgent({ tokens })` (both adapters) | the real adapter pipeline; canned wire events | adapter-integration tests, in-browser, no server |
+| **LLM fixture replay** | aimock (cockpit/examples e2e) | the whole stack incl. a real graph; only the LLM is replayed | full end-to-end |
+
+Reach for the smallest layer that covers your test. Don't stand up aimock when a `mockAgent` unit test suffices; don't hand-roll a transport when `provideFakeAgent` exists.
+
+## Why two adapters?
+
+The `Agent` contract from `@threadplane/chat` is intentionally runtime-neutral. The two adapters exist because they bridge different on-the-wire protocols into that contract:
+
+- `@threadplane/langgraph` talks to the LangGraph SDK directly. You get LangGraph-specific features (thread state, branching, multitask strategies) typed end-to-end.
+- `@threadplane/ag-ui` consumes the AG-UI event protocol. Any backend that emits AG-UI events plugs in, regardless of what graph engine sits behind it.
+
+Both adapters are MIT-licensed and live in the same monorepo.

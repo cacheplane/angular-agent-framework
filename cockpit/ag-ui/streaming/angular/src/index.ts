@@ -11,6 +11,7 @@ export interface CockpitCapabilityModule {
   docsPath: string;
   promptAssetPaths: string[];
   codeAssetPaths: string[];
+  backendAssetPaths: string[];
 }
 
 export const agUiStreamingAngularModule: CockpitCapabilityModule = {
@@ -29,5 +30,10 @@ export const agUiStreamingAngularModule: CockpitCapabilityModule = {
   ],
   codeAssetPaths: [
     'cockpit/ag-ui/streaming/angular/src/app/streaming.component.ts',
+    'cockpit/ag-ui/streaming/angular/src/app/app.config.ts',
+  ],
+  backendAssetPaths: [
+    'cockpit/ag-ui/streaming/python/src/graph.py',
+    'cockpit/ag-ui/streaming/python/src/server.py',
   ],
 };

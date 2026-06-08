@@ -86,7 +86,7 @@ export default async function ChatPage() {
         ]}
         cta={{ label: 'See @threadplane/chat docs', href: '/docs/chat/getting-started/introduction' }}
         visual={
-          <BrowserFrame url="cockpit.threadplane.ai/chat-debug" elevation="md">
+          <BrowserFrame url="cockpit.threadplane.ai/chat/core-capabilities/debug/overview/python" elevation="md">
             <div style={{ padding: 24, minHeight: 320, background: 'linear-gradient(180deg, #fff, #f8fafc)' }}>
               <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
                 <Pill variant="accent">streaming</Pill>

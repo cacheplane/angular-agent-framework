@@ -1,0 +1,11 @@
+{
+  "name": "@threadplane/cockpit-ag-ui-interrupts-angular",
+  "private": true,
+  "version": "0.0.1",
+  "peerDependencies": {
+    "@threadplane/chat": "*",
+    "@threadplane/ag-ui": "*"
+  },
+  "license": "MIT",
+  "sideEffects": false
+}

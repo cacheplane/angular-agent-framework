@@ -1,0 +1,571 @@
+# Interrupts
+
+Interrupts let your LangGraph agent pause mid-execution and hand control to a human. The agent proposes an action, the graph freezes, your Angular UI shows an approval dialog, the user decides, and the agent resumes with the human's decision. `injectAgent()` surfaces interrupts as Angular Signals, so building approval flows, confirmation dialogs, and multi-step review experiences requires no manual event wiring.
+
+<Callout type="info" title="When to use interrupts">
+Use interrupts when an agent action is irreversible (sending an email, placing an order, deleting data), when the agent needs a human decision it cannot make on its own, or when compliance requires explicit approval before execution.
+</Callout>
+
+## The Interrupt Lifecycle
+
+Before diving into code, let's walk the five-stage lifecycle that every interrupt follows:
+
+<Steps>
+<Step title="Agent Plans">
+The agent reasons about the user's request and determines an action that requires human approval. It builds a structured payload describing what it wants to do.
+</Step>
+<Step title="Interrupt Fires">
+The agent node calls `interrupt({...})`, which freezes the graph. The interrupt payload is persisted in the checkpoint and streamed to the client.
+</Step>
+<Step title="UI Shows Dialog">
+`injectAgent()` updates the `interrupt()` signal. Your Angular template detects the change through OnPush change detection and renders an approval dialog with the interrupt payload.
+</Step>
+<Step title="User Decides">
+The user reviews the proposed action and clicks Approve or Reject. Your component calls `agent.submit()` with a resume payload containing the decision.
+</Step>
+<Step title="Agent Resumes">
+LangGraph resumes the graph from the interrupted checkpoint. The next node receives the human's decision and either executes or aborts the action.
+</Step>
+</Steps>
+
+## Python: Pausing With An Interrupt
+
+An interrupt is created inside any graph node by calling `interrupt({...})`. The value can be any JSON-serializable object — it becomes the payload your Angular component displays. When the UI resumes the run, the resume payload becomes the return value of the `interrupt()` call.
+
+<Tabs>
+<Tab label="agent.py">
+
+```python
+from langgraph.graph import END, START, StateGraph
+from langgraph.types import interrupt
+from langchain_openai import ChatOpenAI
+from typing_extensions import TypedDict, Annotated
+from operator import add
+
+llm = ChatOpenAI(model="gpt-5-mini")
+
+class State(TypedDict):
+    messages: Annotated[list, add]
+    proposed_action: dict
+    approval_result: dict
+
+def plan_action(state: State) -> dict:
+    """Agent analyzes the request and proposes an action."""
+    response = llm.invoke([
+        {"role": "system", "content": (
+            "Analyze the user's request. If it requires sending "
+            "an email, modifying data, or any irreversible action, "
+            "return a JSON action plan with keys: action, target, "
+            "description, risk_level."
+        )},
+        *state["messages"]
+    ])
+    action = parse_json(response.content)
+    return {
+        "proposed_action": action,
+        "messages": [response],
+    }
+
+def request_approval(state: State) -> dict:
+    """Pause the graph and ask the human for approval."""
+    action = state["proposed_action"]
+    approval = interrupt({
+        "action": action["action"],
+        "target": action["target"],
+        "description": action["description"],
+        "risk_level": action.get("risk_level", "medium"),
+    })
+    return {"approval_result": approval}
+
+def execute_action(state: State) -> dict:
+    """Run the approved action or explain the rejection."""
+    result = state.get("approval_result", {})
+    if result.get("approved"):
+        # Execute the real action
+        outcome = perform_action(state["proposed_action"])
+        return {
+            "messages": [{"role": "assistant", "content": (
+                f"Done. {outcome}"
+            )}]
+        }
+    else:
+        reason = result.get("reason", "No reason given")
+        return {
+            "messages": [{"role": "assistant", "content": (
+                f"Action cancelled. Reason: {reason}"
+            )}]
+        }
+
+# Build the graph: plan → approve → execute
+builder = StateGraph(State)
+builder.add_node("plan", plan_action)
+builder.add_node("approve", request_approval)
+builder.add_node("execute", execute_action)
+builder.add_edge(START, "plan")
+builder.add_edge("plan", "approve")
+builder.add_edge("approve", "execute")
+builder.add_edge("execute", END)
+
+graph = builder.compile()
+```
+
+</Tab>
+<Tab label="langgraph.json">
+
+```json
+{
+  "dependencies": ["."],
+  "graphs": {
+    "approval_agent": "./src/approval_agent/agent.py:graph"
+  },
+  "env": ".env",
+  "python_version": "3.12"
+}
+```
+
+</Tab>
+</Tabs>
+
+<Callout type="tip" title="Interrupt placement matters">
+Place the `interrupt()` call in its own dedicated node. This gives you a clean three-node pattern (plan, approve, execute) where the interrupt sits between reasoning and action. When a run resumes, LangGraph re-executes the node containing `interrupt()`, so any side effects before that call must be idempotent.
+</Callout>
+
+## Angular: Building an Approval Component
+
+When the agent raises an interrupt, `injectAgent()` populates the `interrupt()` signal with the interrupt payload. Your component reads this signal to render a dialog and calls `submit()` to resume.
+
+<Tabs>
+<Tab label="approval.component.ts">
+
+```typescript
+import {
+  Component,
+  computed,
+  signal,
+  ChangeDetectionStrategy,
+} from '@angular/core';
+import { injectAgent } from '@threadplane/langgraph';
+import type { BaseMessage } from '@langchain/core/messages';
+
+interface ApprovalPayload {
+  action: string;
+  target: string;
+  description: string;
+  risk_level: 'low' | 'medium' | 'high';
+}
+
+interface AgentState {
+  messages: BaseMessage[];
+  proposed_action: ApprovalPayload;
+  approval_result: { approved: boolean; reason?: string };
+}
+
+@Component({
+  selector: 'app-approval',
+  templateUrl: './approval.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class ApprovalComponent {
+  protected readonly agent = injectAgent<AgentState>();
+
+  messages = computed(() => this.agent.messages());
+  pendingApproval = computed(() => this.agent.interrupt());
+  isLoading = computed(() => this.agent.isLoading());
+
+  rejectionReason = signal('');
+
+  riskClass = computed(() => {
+    const interrupt = this.pendingApproval();
+    if (!interrupt) return '';
+    const level = interrupt.value?.risk_level ?? 'medium';
+    return `risk-${level}`;
+  });
+
+  send(input: string) {
+    this.agent.submit({ message: input });
+  }
+
+  approve() {
+    this.agent.submit({
+      resume: { approved: true },
+    });
+  }
+
+  reject() {
+    this.agent.submit({
+      resume: {
+        approved: false,
+        reason: this.rejectionReason() || 'User rejected',
+      },
+    });
+    this.rejectionReason.set('');
+  }
+}
+```
+
+</Tab>
+<Tab label="template">
+
+```html
+<!-- Chat messages -->
+<section class="chat">
+  @for (msg of messages(); track msg) {
+    <div [class]="msg.role">{{ msg.content }}</div>
+  }
+
+  @if (isLoading()) {
+    <div class="typing-indicator">Agent is working...</div>
+  }
+</section>
+
+<!-- Approval dialog — appears when agent interrupts -->
+@if (pendingApproval(); as approval) {
+  <div class="approval-dialog" [class]="riskClass()">
+    <h3>Agent Needs Approval</h3>
+
+    <dl class="action-details">
+      <dt>Action</dt>
+      <dd>{{ approval.value.action }}</dd>
+
+      <dt>Target</dt>
+      <dd>{{ approval.value.target }}</dd>
+
+      <dt>Description</dt>
+      <dd>{{ approval.value.description }}</dd>
+
+      <dt>Risk Level</dt>
+      <dd>
+        <span class="risk-badge" [class]="'risk-' + approval.value.risk_level">
+          {{ approval.value.risk_level | titlecase }}
+        </span>
+      </dd>
+    </dl>
+
+    <div class="rejection-input">
+      <label for="reason">Rejection reason (optional)</label>
+      <input
+        id="reason"
+        [value]="rejectionReason()"
+        (input)="rejectionReason.set($event.target.value)"
+        placeholder="Why are you rejecting this action?"
+      />
+    </div>
+
+    <div class="actions">
+      <button class="btn-approve" (click)="approve()">
+        Approve
+      </button>
+      <button class="btn-reject" (click)="reject()">
+        Reject
+      </button>
+    </div>
+  </div>
+}
+
+<!-- Input form -->
+@if (!pendingApproval()) {
+  <form (ngSubmit)="send(input.value); input.value = ''">
+    <input #input placeholder="Ask the agent to do something..." />
+    <button type="submit" [disabled]="isLoading()">Send</button>
+  </form>
+}
+```
+
+</Tab>
+</Tabs>
+
+## Multi-Step Approval Pattern
+
+Some workflows need multiple approvals in sequence. An agent that plans a multi-step deployment might need a sign-off at each stage. Each node in the graph can raise its own interrupt.
+
+<Tabs>
+<Tab label="agent.py">
+
+```python
+from langgraph.graph import END, START, StateGraph
+from langgraph.types import interrupt
+from typing_extensions import TypedDict, Annotated
+from operator import add
+
+class DeployState(TypedDict):
+    messages: Annotated[list, add]
+    plan: list[dict]
+    current_step: int
+    completed_steps: list[str]
+    approval_result: dict
+
+def create_plan(state: DeployState) -> dict:
+    """Generate a multi-step deployment plan."""
+    plan = [
+        {"step": "backup", "description": "Back up current database"},
+        {"step": "migrate", "description": "Run schema migrations"},
+        {"step": "deploy", "description": "Deploy new application version"},
+    ]
+    return {"plan": plan, "current_step": 0}
+
+def approve_step(state: DeployState) -> dict:
+    """Interrupt for each step that needs approval."""
+    step_index = state["current_step"]
+    step = state["plan"][step_index]
+    decision = interrupt({
+        "step_number": step_index + 1,
+        "total_steps": len(state["plan"]),
+        "step": step["step"],
+        "description": step["description"],
+        "completed": state.get("completed_steps", []),
+    })
+    return {"approval_result": decision}
+
+def execute_step(state: DeployState) -> dict:
+    """Execute the approved step and advance."""
+    decision = state.get("approval_result", {})
+    if not decision.get("approved"):
+        return {
+            "current_step": len(state["plan"]),
+            "messages": [{"role": "assistant", "content": "Deployment aborted."}],
+        }
+
+    step = state["plan"][state["current_step"]]
+    # ... perform the actual deployment step ...
+    return {
+        "completed_steps": [step["step"]],
+        "current_step": state["current_step"] + 1,
+        "messages": [{"role": "assistant", "content": (
+            f"Completed: {step['description']}"
+        )}],
+    }
+
+def should_continue(state: DeployState) -> str:
+    if state["current_step"] < len(state["plan"]):
+        return "approve_step"
+    return END
+
+builder = StateGraph(DeployState)
+builder.add_node("create_plan", create_plan)
+builder.add_node("approve_step", approve_step)
+builder.add_node("execute_step", execute_step)
+builder.add_edge(START, "create_plan")
+builder.add_edge("create_plan", "approve_step")
+builder.add_edge("approve_step", "execute_step")
+builder.add_conditional_edges("execute_step", should_continue)
+
+graph = builder.compile()
+```
+
+</Tab>
+<Tab label="approval.component.ts">
+
+```typescript
+import {
+  Component,
+  computed,
+  ChangeDetectionStrategy,
+} from '@angular/core';
+import { injectAgent } from '@threadplane/langgraph';
+import type { BaseMessage } from '@langchain/core/messages';
+
+interface StepApproval {
+  step_number: number;
+  total_steps: number;
+  step: string;
+  description: string;
+  completed: string[];
+}
+
+type DeployState = {
+  messages: BaseMessage[];
+  plan: { step: string; description: string }[];
+  current_step: number;
+  completed_steps: string[];
+  approval_result: { approved: boolean; reason?: string };
+};
+
+@Component({
+  selector: 'app-deploy-approval',
+  templateUrl: './approval.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class DeployApprovalComponent {
+  protected readonly agent = injectAgent<DeployState>();
+
+  currentStep = computed(() => {
+    const interrupt = this.agent.interrupt();
+    return interrupt?.value as StepApproval | null;
+  });
+
+  progress = computed(() => {
+    const step = this.currentStep();
+    if (!step) return 0;
+    return (step.completed.length / step.total_steps) * 100;
+  });
+
+  allInterrupts = computed(() => this.agent.interrupts());
+
+  approveStep() {
+    this.agent.submit({ resume: { approved: true } });
+  }
+
+  abortDeploy() {
+    this.agent.submit({
+      resume: { approved: false, reason: 'Deployment aborted by user' },
+    });
+  }
+}
+```
+
+</Tab>
+<Tab label="template">
+
+```html
+@if (currentStep(); as step) {
+  <div class="deploy-approval">
+    <h3>Step {{ step.step_number }} of {{ step.total_steps }}</h3>
+
+    <!-- Progress bar -->
+    <div class="progress-bar">
+      <div class="fill" [style.width.%]="progress()"></div>
+    </div>
+
+    <!-- Completed steps -->
+    @if (step.completed.length) {
+      <ul class="completed">
+        @for (done of step.completed; track done) {
+          <li class="done">{{ done }}</li>
+        }
+      </ul>
+    }
+
+    <!-- Current step details -->
+    <div class="current-step">
+      <strong>{{ step.step }}</strong>
+      <p>{{ step.description }}</p>
+    </div>
+
+    <div class="actions">
+      <button class="btn-approve" (click)="approveStep()">
+        Approve Step {{ step.step_number }}
+      </button>
+      <button class="btn-abort" (click)="abortDeploy()">
+        Abort Deployment
+      </button>
+    </div>
+  </div>
+}
+```
+
+</Tab>
+</Tabs>
+
+## Typed Interrupt Payloads with BagTemplate
+
+By default, `interrupt()` returns an untyped value. The `BagTemplate` generic parameter on `injectAgent()` lets you define the exact shape of your interrupt payloads, giving you full TypeScript safety throughout your component.
+
+`BagTemplate` is an SDK type with an `InterruptType` slot. When you specify that slot, the raw `langGraphInterrupts()` signal is typed. The normalized runtime-neutral `interrupt()` signal still exposes `value` as `unknown`, so cast that payload at the UI boundary if you use the neutral signal.
+
+```typescript
+import { injectAgent, BagTemplate } from '@threadplane/langgraph';
+
+// Define the exact shape of your interrupt payload
+interface DeployApproval {
+  step_number: number;
+  total_steps: number;
+  step: string;
+  description: string;
+  completed: string[];
+}
+
+type DeployBag = BagTemplate & {
+  InterruptType: DeployApproval;
+};
+
+const agent = injectAgent<DeployState, DeployBag>();
+
+const raw = agent.langGraphInterrupts();
+//    ^? Interrupt<DeployApproval>[]
+
+const step = agent.interrupt()?.value as DeployApproval | undefined;
+
+// TypeScript catches errors at compile time
+const num = step?.step_number;    // number — correct
+const bad = step?.nonexistent;    // Error — property doesn't exist
+```
+
+<Callout type="tip" title="Type your interrupts early">
+Define your interrupt payload interfaces alongside your Python state schema. This creates a contract between your agent and your UI. When the Python payload shape changes, the TypeScript interface should change too. Consider generating types from a shared schema to keep them in sync.
+</Callout>
+
+## Timeout Handling
+
+Interrupts pause graph execution indefinitely by default — the agent waits until a human responds. In production, you often need to handle the case where no one responds within a reasonable time. There are two strategies for managing interrupt timeouts.
+
+For me, the server-side timeout is the safer default. It costs you a background job to run and maintain, but it fires even if the user closed the tab — which is exactly when you most need it to.
+
+**Server-side timeout with a background task:** Schedule a background job that checks for stale interrupts and resumes them with a default decision.
+
+```python
+async def check_stale_interrupts():
+    """Periodic task to auto-reject stale interrupts."""
+    threads = await client.threads.search(
+        status="interrupted",
+        metadata={"interrupt_type": "approval"},
+    )
+    for thread in threads:
+        created = thread.updated_at
+        if (now() - created).total_seconds() > 3600:  # 1 hour timeout
+            await client.runs.create(
+                thread["thread_id"],
+                assistant_id="approval_agent",
+                input=None,
+                command={"resume": {
+                    "approved": False,
+                    "reason": "Auto-rejected: approval timeout",
+                }},
+            )
+```
+
+**Client-side timeout in Angular:** Use a timer in your component to auto-reject if the user does not act.
+
+```typescript
+import { effect } from '@angular/core';
+import { timer } from 'rxjs';
+
+// Watch for interrupts and start a timeout
+effect(() => {
+  const interrupt = this.agent.interrupt();
+  if (interrupt) {
+    const sub = timer(5 * 60 * 1000).subscribe(() => {
+      // Auto-reject after 5 minutes of inaction
+      this.agent.submit({
+        resume: { approved: false, reason: 'Approval timeout' },
+      });
+    });
+    // Clean up if user responds before timeout
+    return () => sub.unsubscribe();
+  }
+});
+```
+
+<Callout type="warning" title="Pick one timeout strategy">
+Avoid running both server-side and client-side timeouts simultaneously. If both fire, the second resume call will fail because the graph already moved past the interrupt. Choose server-side timeouts for reliability (works even if the browser closes) or client-side timeouts for immediacy.
+</Callout>
+
+<Callout type="info" title="Checkpoint persistence saves you">
+Because interrupts are checkpointed, the user can close their browser, come back hours later, and still approve or reject the pending action. The graph state is frozen in the checkpoint store, not in browser memory.
+</Callout>
+
+## What's Next
+
+<CardGroup cols={2}>
+  <Card title="Memory" href="/docs/langgraph/guides/memory">
+    Give your agent short-term and long-term memory with the Store API.
+  </Card>
+  <Card title="Persistence" href="/docs/langgraph/guides/persistence">
+    Configure checkpointers that keep interrupt state across deployments.
+  </Card>
+  <Card title="Streaming" href="/docs/langgraph/guides/streaming">
+    Stream token-by-token responses alongside interrupt events.
+  </Card>
+  <Card title="Testing" href="/docs/langgraph/guides/testing">
+    Script interrupt events deterministically with MockAgentTransport.
+  </Card>
+</CardGroup>

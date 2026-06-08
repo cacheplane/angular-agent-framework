@@ -1,0 +1,168 @@
+# Interrupts (Human-in-the-Loop)
+
+Interrupts let your AG-UI agent pause mid-run and hand control to a human.
+
+The agent proposes an action, the run freezes, your Angular UI shows an approval dialog, the user decides, and the agent resumes with the human's decision.
+
+This guide covers the AG-UI adapter specifics. For the broader conceptual model — lifecycle stages, timeout strategies, typed payloads — see the [LangGraph interrupts guide](/docs/langgraph/guides/interrupts).
+
+## The Wire Format
+
+AG-UI interrupts arrive as a `CUSTOM` event with `name: "on_interrupt"`:
+
+```json
+{
+  "type": "CUSTOM",
+  "name": "on_interrupt",
+  "value": "{\"kind\":\"refund_approval\",\"amount\":47.50,\"customer_id\":\"cus_a8x2k\",\"reason\":\"Duplicate charge\"}"
+}
+```
+
+Two things to note:
+
+- The `value` is a **JSON string**, not an object. The `ag-ui-langgraph` Python package serializes the interrupt payload via `dump_json_safe` before emitting the event.
+- The adapter `JSON.parse`s the string automatically. Consumers always see the structured object — you never need to parse it yourself.
+
+**Structuring the payload:** Use a `kind` field so `<chat-approval-card matchKind="…">` can match the right interrupt:
+
+```python
+decision = interrupt({
+    "kind": "refund_approval",
+    "amount": amount,
+    "customer_id": customer_id,
+    "reason": reason,
+})
+```
+
+## Reading the Interrupt in Your Component
+
+`injectAgent()` exposes a `interrupt()` signal that is populated whenever the adapter receives an `on_interrupt` CUSTOM event. Pair it with `<chat-approval-card>` from `@threadplane/chat` to render an approval dialog without manual event wiring:
+
+```typescript
+import { Component } from '@angular/core';
+import { ChatComponent, ChatApprovalCardComponent } from '@threadplane/chat';
+import { injectAgent } from '@threadplane/ag-ui';
+import type { ChatApprovalAction } from '@threadplane/chat';
+
+@Component({
+  standalone: true,
+  imports: [ChatComponent, ChatApprovalCardComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <chat [agent]="agent" />
+    <chat-approval-card
+      [agent]="agent"
+      matchKind="refund_approval"
+      title="Refund approval required"
+      (action)="onAction($event)"
+    />
+  `,
+})
+export class RefundApprovalComponent {
+  protected readonly agent = injectAgent();
+
+  onAction(action: ChatApprovalAction): void {
+    if (action === 'approve') {
+      void this.agent.submit({ resume: { approved: true } });
+    } else if (action === 'cancel') {
+      void this.agent.submit({ resume: { approved: false } });
+    }
+  }
+}
+```
+
+`matchKind` filters on `interrupt().value.kind`. The card renders only when the active interrupt matches — other interrupt kinds are ignored.
+
+## Resuming
+
+Call `agent.submit({ resume })` with your decision object:
+
+```typescript
+// Approve
+void this.agent.submit({ resume: { approved: true } });
+
+// Reject
+void this.agent.submit({ resume: { approved: false } });
+
+// Approve with an edited field
+void this.agent.submit({ resume: { approved: true, amount: 35.00 } });
+```
+
+Under the hood, `submit({ resume })` calls `runAgent({ forwardedProps: { command: { resume } } })`. The server receives `forwarded_props.command.resume` — the convention the [`ag-ui-langgraph`](https://pypi.org/project/ag-ui-langgraph/) package reads to resume the LangGraph checkpoint.
+
+<Callout type="info" title="Backend reads forwarded_props">
+In your LangGraph node, `interrupt({...})` returns the `resume` value directly. You do not need to unwrap `forwarded_props` yourself — `ag-ui-langgraph` does that before resuming the graph.
+</Callout>
+
+## End-to-End Example
+
+`cockpit/ag-ui/interrupts` is a complete Angular + Python example: a refund-authorization agent that drafts a refund, pauses for operator approval, and issues (or cancels) based on the decision.
+
+**Angular component** (`cockpit/ag-ui/interrupts/angular/src/app/interrupts.component.ts`):
+
+```typescript
+import { Component, ChangeDetectionStrategy, signal } from '@angular/core';
+import {
+  ChatComponent,
+  ChatApprovalCardComponent,
+  type ChatApprovalAction,
+} from '@threadplane/chat';
+import { injectAgent } from '@threadplane/ag-ui';
+
+@Component({
+  standalone: true,
+  imports: [ChatComponent, ChatApprovalCardComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <chat [agent]="agent" />
+    <chat-approval-card
+      [agent]="agent"
+      matchKind="refund_approval"
+      title="Refund approval required"
+      [showEdit]="true"
+      (action)="onAction($event)"
+    />
+  `,
+})
+export class InterruptsComponent {
+  protected readonly agent = injectAgent();
+
+  protected onAction(action: ChatApprovalAction): void {
+    if (action === 'approve') {
+      void this.agent.submit({ resume: { approved: true } });
+    } else if (action === 'cancel') {
+      void this.agent.submit({ resume: { approved: false } });
+    }
+  }
+}
+```
+
+**Python graph** (`cockpit/ag-ui/interrupts/python/src/graph.py`) uses `ag-ui-langgraph` to front a standard LangGraph graph:
+
+```python
+from langgraph.types import interrupt
+from ag_ui_langgraph import LangGraphAgent, add_langgraph_fastapi_endpoint
+
+def request_approval(state):
+    decision = interrupt({
+        "kind": "refund_approval",
+        "amount": state["amount"],
+        "customer_id": state["customer_id"],
+        "reason": state["reason"],
+    })
+    approved = isinstance(decision, dict) and decision.get("approved")
+    return {"decision_approved": approved}
+```
+
+The `LangGraphAgent` wrapper handles streaming the `CUSTOM on_interrupt` event and reading `forwarded_props.command.resume` on resume. Refer to [`ag-ui-langgraph` on PyPI](https://pypi.org/project/ag-ui-langgraph/) for installation and configuration.
+
+## Cross-Adapter Parity
+
+The consumer Angular code is byte-identical except the `injectAgent` import:
+
+```diff
+- import { injectAgent } from '@threadplane/langgraph';
++ import { injectAgent } from '@threadplane/ag-ui';
+```
+
+`<chat-approval-card>`, the `interrupt()` signal, and `submit({ resume })` are part of the runtime-neutral `Agent` contract from `@threadplane/chat`. Switching adapters is a provider change, not a component rewrite. See the [LangGraph interrupts guide](/docs/langgraph/guides/interrupts) for the full HITL pattern including multi-step approvals, typed payloads, and timeout strategies.

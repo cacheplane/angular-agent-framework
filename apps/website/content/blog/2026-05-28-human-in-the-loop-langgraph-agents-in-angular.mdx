@@ -1,0 +1,229 @@
+---
+title: "Human-in-the-Loop LangGraph Agents in Angular"
+description: "Build a human-in-the-loop LangGraph agent in Angular — pause runs before money moves with a structured approval dialog from @threadplane/chat and @threadplane/langgraph."
+date: 2026-05-28
+tags: [tutorial, langgraph, angular, agents, hitl, interrupts]
+author: brian
+featured: true
+---
+
+This is how to pause a LangGraph agent in Angular for human approval before it runs a high-stakes tool, using LangGraph's `interrupt()` and the `<chat-approval-card>` composition from `@threadplane/chat`.
+
+The example is a refund agent: it drafts a refund, then stops and asks an operator to approve, edit, or cancel before any charge is reversed.
+
+Everything below is running code from the cockpit example at `cockpit/langgraph/interrupts`. Clone the repo, run `nx serve cockpit-langgraph-interrupts-angular`, and follow along.
+
+<div style={{ marginTop: 40, marginBottom: 44 }}>
+<CardGroup cols={2}>
+  <Card title="Run the live demo" icon="▶" external href="https://cockpit.threadplane.ai/langgraph/core-capabilities/interrupts/overview/python">
+    The refund agent running in the cockpit. Walk the approve / edit / cancel flow yourself.
+  </Card>
+  <Card title="View the source" icon="⌥" external href="https://github.com/cacheplane/angular-agent-framework/tree/main/cockpit/langgraph/interrupts">
+    The exact graph.py and Angular component from this post.
+  </Card>
+</CardGroup>
+</div>
+
+## Goals
+
+- Wire a refund-approval gate using LangGraph's `interrupt()` primitive.
+- Render the approval dialog in Angular with the `<chat-approval-card>` composition.
+- Resume, reject, or edit-then-resume — with a distinct path for each.
+
+## When to use an interrupt
+
+Most tool calls don't need approval. Reads, searches, and lookups can run unattended. Reach for an interrupt when a tool does something the operator wouldn't want to undo by hand: moves money, sends a customer-facing message, deletes a record, or triggers a deploy.
+
+Two practical reasons: it caps the cost of a misfiring agent looping over a write API, and it gives the operator a checkpoint to catch a wrong action before it lands.
+
+## The architecture
+
+Three pieces:
+
+- **LangGraph backend.** A node calls `interrupt({ kind: 'refund_approval', amount, customer_id, reason })` instead of calling Stripe directly. The run pauses and the thread checkpointer persists the pending interrupt until something resumes it.
+- **`@threadplane/langgraph` adapter.** Surfaces the pending interrupt on an `agent.interrupt()` signal. `agent.submit({ resume })` writes a value back to the paused graph.
+- **`@threadplane/chat` UI.** `<chat-approval-card>` reads the pending interrupt, opens a native `<dialog>` modal, and emits `'approve' | 'edit' | 'cancel'`.
+
+The LangGraph node doesn't know how the UI renders, and the Angular component doesn't know which graph it's paused inside. That lets you reuse one approval dialog across multiple agents.
+
+<figure>
+  <img src="/blog/2026-05-28-human-in-the-loop-langgraph-agents-in-angular/1.png" alt="The refund agent's welcome screen with two suggestion chips: 'Refund a duplicate charge' and 'Refund a chargeback.'" width="1280" height="800" />
+  <figcaption>The cockpit refund example.</figcaption>
+</figure>
+
+## Scaffold
+
+Three files.
+
+<Steps>
+<Step title="The LangGraph node">
+
+A structured-output call populates the fields the approval card displays. Then `request_approval` pauses with `interrupt()`:
+
+```python
+# graph.py — cockpit/langgraph/interrupts/python/src/graph.py
+from langgraph.types import interrupt
+from pydantic import BaseModel, Field
+
+class RefundDraft(BaseModel):
+    customer_id: str = Field(description="Customer id, e.g. cus_a8x2k.")
+    amount: float = Field(description="Refund amount in USD.")
+    reason: str = Field(description="One sentence: why it's justified.")
+
+extractor = ChatOpenAI(model="gpt-5-mini").with_structured_output(RefundDraft)
+
+async def draft_refund(state: RefundState) -> dict:
+    draft = await extractor.ainvoke(
+        [SystemMessage(content="Extract the refund fields."), *state["messages"]]
+    )
+    ack = await llm.ainvoke([system_message, *state["messages"]])
+    return {
+        "messages": [ack],
+        "customer_id": draft.customer_id,
+        "amount": draft.amount,
+        "reason": draft.reason,
+    }
+
+def request_approval(state: RefundState) -> dict:
+    decision = interrupt({
+        "kind": "refund_approval",
+        "amount": state["amount"],
+        "customer_id": state["customer_id"],
+        "reason": state["reason"],
+    })
+    if not isinstance(decision, dict) or not decision.get("approved"):
+        return {"decision_approved": False}
+    edited = decision.get("amount")
+    return {
+        "decision_approved": True,
+        "amount": float(edited) if edited is not None else state["amount"],
+    }
+```
+
+`interrupt()` pauses the graph and persists its payload. The graph stays paused until `agent.submit({ resume })` runs against the same thread — and that value becomes the return value of `interrupt()` when the node re-executes. That's why `request_approval` can branch on `decision["approved"]` and pick up an edited `amount`.
+
+</Step>
+<Step title="Wire the providers">
+
+```ts
+// app.config.ts
+import { provideAgent } from '@threadplane/langgraph';
+import { provideChat } from '@threadplane/chat';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideAgent({ apiUrl: environment.langGraphApiUrl }),
+    provideChat({}),
+  ],
+};
+```
+
+The adapter discovers interrupts at runtime from the thread state.
+
+</Step>
+<Step title="The component">
+
+```ts
+// interrupts.component.ts
+import {
+  ChatComponent,
+  ChatApprovalCardComponent,
+  type ChatApprovalAction,
+} from '@threadplane/chat';
+import { agent } from '@threadplane/langgraph';
+
+@Component({
+  selector: 'app-interrupts',
+  standalone: true,
+  imports: [ChatComponent, ChatApprovalCardComponent, CurrencyPipe],
+  template: `
+    <chat [agent]="agent" />
+
+    <chat-approval-card
+      [agent]="agent"
+      matchKind="refund_approval"
+      title="Refund approval required"
+      [showEdit]="true"
+      (action)="onAction($event)"
+    >
+      <ng-template #body let-payload>
+        <div>Amount <strong>{{ payload.amount | currency }}</strong></div>
+        <div>Customer <code>{{ payload.customer_id }}</code></div>
+      </ng-template>
+    </chat-approval-card>
+  `,
+})
+export class InterruptsComponent {
+  protected readonly agent = agent({ assistantId: 'interrupts' });
+
+  protected onAction(action: ChatApprovalAction): void {
+    if (action === 'approve') {
+      this.agent.submit({ resume: { approved: true } });
+    } else if (action === 'cancel') {
+      this.agent.submit({ resume: { approved: false } });
+    }
+    // 'edit' reveals an inline editor in the body slot; see below.
+  }
+}
+```
+
+`<chat-approval-card>` reads `agent.interrupt()`, matches the `kind` you pass to `matchKind`, opens a native `<dialog>`, and emits an action on each button click. The body is a content-projected template — render whatever fits the payload.
+
+Approve and Cancel are terminal: they resolve the interrupt and close the dialog. Edit is not. Clicking Edit leaves the dialog open so you can reveal an inline editor and submit the resume yourself. That distinction lives in the composition.
+
+</Step>
+</Steps>
+
+<figure>
+  <img src="/blog/2026-05-28-human-in-the-loop-langgraph-agents-in-angular/2.png" alt="The approval dialog, centered over a blurred chat, showing Amount $47.50, Customer cus_a8x2k, a reason line, and Cancel / Edit / Approve buttons." width="1280" height="800" />
+  <figcaption>The native &lt;dialog&gt; modal. The structured payload renders through the body template slot.</figcaption>
+</figure>
+
+## The round trip
+
+1. User: "Refund $47.50 to customer cus_a8x2k — they were charged twice."
+2. `draft_refund` extracts `amount`, `customer_id`, `reason` into state and posts an acknowledgement.
+3. `request_approval` calls `interrupt()`. The graph pauses; the checkpointer persists the payload.
+4. The adapter exposes it on `agent.interrupt()`.
+5. `<chat-approval-card>` matches the `kind` and calls `dialog.showModal()`.
+6. The operator clicks Approve.
+7. The handler runs `agent.submit({ resume: { approved: true } })`.
+8. `request_approval` re-runs; `interrupt()` returns `{ approved: true }` instead of pausing.
+9. The graph continues to `issue_refund` and finishes.
+
+It's one thread and one persisted state. If the operator closes the tab and returns later, the interrupt is still pending.
+
+<figure>
+  <img src="/blog/2026-05-28-human-in-the-loop-langgraph-agents-in-angular/3.png" alt="The chat after approval, showing the agent's draft summary and a confirmation: 'Refund of $47.50 issued to cus_a8x2k. Refund ID: re_demo__a8x2k.'" width="1280" height="800" />
+  <figcaption>After Approve, the run continues into issue_refund and posts confirmation.</figcaption>
+</figure>
+
+## Production patterns
+
+### Idempotency
+
+`interrupt()` re-executes the node on resume. Side effects before the call have already run; side effects after run again on resume. Put the write (the Stripe `refund.create`) on the resumed side, and pass an idempotency key through state so a double-click doesn't issue two refunds.
+
+### Audit trail
+
+Log who approved, when, and what payload they saw — in the action handler, before `agent.submit`:
+
+```ts
+protected async onAction(action: ChatApprovalAction): Promise<void> {
+  if (action === 'approve') {
+    await this.audit.record({
+      actor: this.currentUser(),
+      payload: this.agent.interrupt()?.value,
+    });
+    this.agent.submit({ resume: { approved: true } });
+  }
+}
+```
+
+### What not to interrupt
+
+Interrupt on writes the operator wouldn't want to undo by hand — money movement, customer-facing messages, destructive deletes. If you can undo it with a script in under a minute, let the agent run.
+
+## Next
+
+The next post covers durable threads, so the conversation and any pending interrupt survive a reload or a different device.

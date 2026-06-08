@@ -62,28 +62,31 @@ function DocArticle({ section }: { section: DocSection }) {
 
         {section.params.length > 0 ? (
           <div>
-            <h5
-              className="text-xs font-mono uppercase tracking-wide mb-1.5"
-              style={{ color: 'var(--ds-text-muted)' }}
-            >
+            <h5 className="text-xs font-mono uppercase tracking-wide mb-1.5" style={{ color: 'var(--ds-text-muted)' }}>
               Parameters
             </h5>
-            <div className="space-y-1">
-              {section.params.map((param) => (
-                <div key={param.name} className="flex gap-2 text-sm">
-                  <code
-                    className="shrink-0 px-1 py-0.5 rounded text-xs font-mono"
-                    style={{
-                      background: 'var(--ds-accent-surface)',
-                      color: 'var(--ds-accent)',
-                    }}
-                  >
-                    {param.name}
-                  </code>
-                  <span style={{ color: 'var(--ds-text-muted)' }}>{renderInlineCode(param.description)}</span>
-                </div>
-              ))}
-            </div>
+            <table className="params w-full text-sm">
+              <thead>
+                <tr>
+                  <th style={{ textAlign: 'left', color: 'var(--ds-text-muted)' }}>Parameter</th>
+                  <th style={{ textAlign: 'left', color: 'var(--ds-text-muted)' }}>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                {section.params.map((param) => (
+                  <tr key={param.name}>
+                    <td style={{ verticalAlign: 'top', paddingRight: '1rem' }}>
+                      <code className="px-1 py-0.5 rounded text-xs font-mono" style={{ background: 'var(--ds-accent-surface)', color: 'var(--ds-accent)' }}>
+                        {param.name}
+                      </code>
+                    </td>
+                    <td style={{ verticalAlign: 'top', color: 'var(--ds-text-muted)' }}>
+                      {renderInlineCode(param.description)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         ) : null}
 
@@ -127,34 +130,36 @@ export function ApiMode({ docSections, hasCodeFiles = false }: ApiModeProps) {
   const pySections = docSections.filter((s) => s.language === 'python');
 
   return (
-    <section aria-label="API mode" className="h-full overflow-auto space-y-6 py-2 px-1">
-      {tsSections.length > 0 ? (
-        <div>
-          <h3
-            className="text-xs font-mono uppercase tracking-wide mb-3"
-            style={{ color: 'var(--ds-accent)' }}
-          >
-            {LANGUAGE_LABELS[tsSections[0]?.language] ?? 'TypeScript'}
-          </h3>
-          {tsSections.map((section) => (
-            <DocArticle key={`${section.sourceFile}:${section.title}`} section={section} />
-          ))}
-        </div>
-      ) : null}
+    <section aria-label="API mode" className="h-full overflow-auto py-6 px-4 md:px-8">
+      <div className="cockpit-prose cockpit-prose--wide">
+        {tsSections.length > 0 ? (
+          <div>
+            <h3
+              className="text-xs font-mono uppercase tracking-wide mb-3"
+              style={{ color: 'var(--ds-accent)' }}
+            >
+              {LANGUAGE_LABELS[tsSections[0]?.language] ?? 'TypeScript'}
+            </h3>
+            {tsSections.map((section) => (
+              <DocArticle key={`${section.sourceFile}:${section.title}`} section={section} />
+            ))}
+          </div>
+        ) : null}
 
-      {pySections.length > 0 ? (
-        <div>
-          <h3
-            className="text-xs font-mono uppercase tracking-wide mb-3"
-            style={{ color: 'var(--ds-accent)' }}
-          >
-            {LANGUAGE_LABELS[pySections[0]?.language] ?? 'Python'}
-          </h3>
-          {pySections.map((section) => (
-            <DocArticle key={`${section.sourceFile}:${section.title}`} section={section} />
-          ))}
-        </div>
-      ) : null}
+        {pySections.length > 0 ? (
+          <div>
+            <h3
+              className="text-xs font-mono uppercase tracking-wide mb-3"
+              style={{ color: 'var(--ds-accent)' }}
+            >
+              {LANGUAGE_LABELS[pySections[0]?.language] ?? 'Python'}
+            </h3>
+            {pySections.map((section) => (
+              <DocArticle key={`${section.sourceFile}:${section.title}`} section={section} />
+            ))}
+          </div>
+        ) : null}
+      </div>
     </section>
   );
 }

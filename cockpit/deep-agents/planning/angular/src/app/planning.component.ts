@@ -1,9 +1,8 @@
 import { Component, computed } from '@angular/core';
 import { ChatComponent, views } from '@threadplane/chat';
 import { ExampleChatLayoutComponent } from '@threadplane/example-layouts';
-import { agent } from '@threadplane/langgraph';
+import { injectAgent } from '@threadplane/langgraph';
 import { signalStateStore } from '@threadplane/render';
-import { environment } from '../environments/environment';
 import { PlanChecklistComponent } from './views/plan-checklist.component';
 import { CheckboxRowComponent } from './views/checkbox-row.component';
 
@@ -70,10 +69,7 @@ export class PlanningComponent {
    * The graph returns a `plan` array alongside messages in its state.
    * Each plan entry has a `title` and `status` that drive the sidebar checklist.
    */
-  protected readonly agent = agent({
-    apiUrl: environment.langGraphApiUrl,
-    assistantId: environment.streamingAssistantId,
-  });
+  protected readonly agent = injectAgent();
 
   /**
    * Reactive list of plan steps derived from the graph state.

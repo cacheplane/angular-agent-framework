@@ -187,3 +187,74 @@ test.describe('Production: canonical demo sends runtime telemetry', () => {
     );
   });
 });
+
+test.describe('ag-ui Railway runtime', () => {
+  const RAILWAY_URL = process.env['AG_UI_RAILWAY_URL'] ?? 'https://ag-ui-dev-production.up.railway.app';
+
+  test('healthcheck /ok responds 200', async ({ request }) => {
+    const res = await request.get(`${RAILWAY_URL}/ok`);
+    expect(res.status()).toBe(200);
+    expect(await res.json()).toMatchObject({ ok: true });
+  });
+
+  test('examples.threadplane.ai/ag-ui/interrupts is reachable', async ({ page }) => {
+    const res = await page.goto(`${EXAMPLES_URL}/ag-ui/interrupts/`);
+    expect(res?.status()).toBeLessThan(400);
+  });
+
+  test('examples.threadplane.ai/ag-ui/streaming is reachable', async ({ page }) => {
+    const res = await page.goto(`${EXAMPLES_URL}/ag-ui/streaming/`);
+    expect(res?.status()).toBeLessThan(400);
+  });
+});
+
+/**
+ * Regression guard for the examples LangGraph proxy hardening
+ * (scripts/examples-middleware.ts → createProxyHandler). These assert the
+ * origin allowlist and body-size cap stay live after future redeploys.
+ *
+ * Both checks are rejected by the proxy BEFORE the rate-limit gate and before
+ * any forward to LangGraph Cloud, so they burn no LLM tokens and consume no
+ * rate-limit budget. The rate-limit (429) path is deliberately NOT asserted
+ * here — it is stateful/time-windowed and would race with real traffic.
+ */
+test.describe('examples langgraph proxy hardening', () => {
+  const streamPath = () =>
+    `${EXAMPLES_URL}/api/threads/00000000-0000-0000-0000-000000000000/runs/stream`;
+  const runBody = { assistant_id: 'streaming', input: { messages: [] } };
+
+  test('rejects a forbidden Origin with 403', async ({ request }) => {
+    const res = await request.post(streamPath(), {
+      headers: { Origin: 'https://evil.example.com', 'content-type': 'application/json' },
+      data: runBody,
+    });
+    expect(res.status()).toBe(403);
+    expect(await res.json()).toMatchObject({ error: 'origin_not_allowed' });
+  });
+
+  test('rejects an oversized body with 413', async ({ request }) => {
+    const res = await request.post(streamPath(), {
+      headers: { Origin: EXAMPLES_URL, 'content-type': 'application/json' },
+      data: { assistant_id: 'streaming', input: { blob: 'A'.repeat(70_000) } },
+    });
+    expect(res.status()).toBe(413);
+    expect(await res.json()).toMatchObject({ error: 'payload_too_large' });
+  });
+});
+
+test.describe('ag-ui demo (ag-ui.threadplane.ai)', () => {
+  const DEMO = process.env['AG_UI_DEMO_URL'] ?? 'https://ag-ui.threadplane.ai';
+
+  test('demo SPA is reachable', async ({ page }) => {
+    const res = await page.goto(`${DEMO}/`);
+    expect(res?.status()).toBeLessThan(400);
+  });
+
+  test('forbidden origin to /agent is rejected with 403', async ({ request }) => {
+    const res = await request.post(`${DEMO}/agent`, {
+      headers: { Origin: 'https://evil.example.com', 'content-type': 'application/json' },
+      data: {},
+    });
+    expect(res.status()).toBe(403);
+  });
+});

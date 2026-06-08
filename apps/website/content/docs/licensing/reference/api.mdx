@@ -1,11 +1,11 @@
 # Licensing API
 
-This page documents the public exports from `@threadplane/licensing`.
+The public exports from `@threadplane/licensing`.
 
 ## Types
 
 ```ts
-type LicenseTier = 'developer-seat' | 'app-deployment' | 'enterprise';
+type LicenseTier = 'developer_seat' | 'team' | 'enterprise';
 
 interface LicenseClaims {
   sub: string;
@@ -32,6 +32,14 @@ type LicenseStatus =
   | 'missing'
   | 'tampered'
   | 'noncommercial';
+```
+
+```ts
+interface EvaluateResult {
+  status: LicenseStatus;
+  /** Populated when the token was valid (licensed / grace / expired). */
+  claims?: LicenseClaims;
+}
 ```
 
 ## verifyLicense()
@@ -98,7 +106,7 @@ Runs the full check:
 2. evaluates the license status;
 3. emits a warning when appropriate.
 
-Repeated calls with the same package and token are treated as already handled and return `licensed`.
+Repeated calls with the same package and token are treated as already handled and return the same status computed on the first call (idempotent; not necessarily `licensed`).
 
 ## emitNag()
 

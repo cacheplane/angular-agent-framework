@@ -1,15 +1,16 @@
 // SPDX-License-Identifier: MIT
-import { signal } from '@angular/core';
+import { signal, type Signal } from '@angular/core';
 import { Subject } from 'rxjs';
 import type { AbstractAgent } from '@ag-ui/client';
 import type {
   Agent, Message, AgentStatus, ToolCall, AgentEvent,
+  AgentInterrupt,
   AgentRuntimeTelemetryEvent,
   AgentRuntimeTelemetryProperties,
   AgentRuntimeTelemetrySink,
   AgentSubmitInput, AgentSubmitOptions,
 } from '@threadplane/chat';
-import { reduceEvent, type ReducerStore } from './reducer';
+import { reduceEvent, type ReducerStore, type CustomStreamEvent } from './reducer';
 
 export interface ToAgentOptions {
   /** Optional app-owned telemetry sink. No telemetry is emitted unless this is provided. */
@@ -44,6 +45,15 @@ function agentRuntimeTelemetryErrorClass(error: unknown): string {
 }
 
 /**
+ * The neutral Agent contract, widened with the AG-UI adapter's optional
+ * `customEvents` signal (the chat composition feature-detects it to enable
+ * live a2ui streaming). Mirrors langgraph's LangGraphAgent extension.
+ */
+export interface AgUiAgent extends Agent {
+  customEvents: Signal<CustomStreamEvent[]>;
+}
+
+/**
  * Wraps an AG-UI AbstractAgent into the runtime-neutral Agent contract.
  *
  * The adapter subscribes to source.subscribe({ onEvent }) and reduces every
@@ -57,15 +67,17 @@ function agentRuntimeTelemetryErrorClass(error: unknown): string {
  * agent instance they constructed. The subscriber registered via
  * source.subscribe() will fire for the lifetime of source.
  */
-export function toAgent(source: AbstractAgent, options: ToAgentOptions = {}): Agent {
+export function toAgent(source: AbstractAgent, options: ToAgentOptions = {}): AgUiAgent {
   const store: ReducerStore = {
-    messages:  signal<Message[]>([]),
-    status:    signal<AgentStatus>('idle'),
-    isLoading: signal<boolean>(false),
-    error:     signal<unknown>(null),
-    toolCalls: signal<ToolCall[]>([]),
-    state:     signal<Record<string, unknown>>({}),
-    events$:   new Subject<AgentEvent>(),
+    messages:     signal<Message[]>([]),
+    status:       signal<AgentStatus>('idle'),
+    isLoading:    signal<boolean>(false),
+    error:        signal<unknown>(null),
+    toolCalls:    signal<ToolCall[]>([]),
+    state:        signal<Record<string, unknown>>({}),
+    interrupt:    signal<AgentInterrupt | undefined>(undefined),
+    events$:      new Subject<AgentEvent>(),
+    customEvents: signal<CustomStreamEvent[]>([]),
   };
   const telemetryProperties = { transport: 'ag-ui' as const, surface: 'to_agent' };
   let activeRun: { startedAt: number; errored: boolean } | null = null;
@@ -128,9 +140,29 @@ export function toAgent(source: AbstractAgent, options: ToAgentOptions = {}): Ag
     error:     store.error,
     toolCalls: store.toolCalls,
     state:     store.state,
-    events$:   store.events$.asObservable(),
+    interrupt: store.interrupt,
+    events$:      store.events$.asObservable(),
+    customEvents: store.customEvents,
 
     submit: async (input: AgentSubmitInput, _opts?: AgentSubmitOptions) => {
+      if (input.resume !== undefined) {
+        // Resume path: clear the pending interrupt and replay the run with the
+        // resume payload forwarded to the LangGraph backend via AG-UI's
+        // forwardedProps.command.resume mechanism.
+        store.interrupt.set(undefined);
+        const run = startRunTelemetry('resume');
+        try {
+          await source.runAgent({ forwardedProps: { command: { resume: input.resume } } });
+          finishRunTelemetry(run);
+        } catch (err) {
+          store.status.set('error');
+          store.isLoading.set(false);
+          store.error.set(err);
+          failRunTelemetry(err, run);
+        }
+        return;
+      }
+
       // Optimistic append of user message to our signals and to the source
       // agent's own message list so runAgent() sees the new message.
       const userMsg = buildUserMessage(input);

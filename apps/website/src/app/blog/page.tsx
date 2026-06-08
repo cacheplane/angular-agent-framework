@@ -35,7 +35,7 @@ export default async function BlogIndexPage({ searchParams }: Props) {
 
   return (
     <div style={{ paddingTop: 80, background: tokens.surfaces.canvas, minHeight: '100vh' }}>
-      <div style={{ maxWidth: 960, margin: '0 auto', padding: '64px 24px' }}>
+      <div style={{ maxWidth: 960, margin: '0 auto', padding: '35px 24px 64px' }}>
         <header style={{ marginBottom: 32 }}>
           <Eyebrow tone="accent" style={{ marginBottom: 16 }}>
             Blog

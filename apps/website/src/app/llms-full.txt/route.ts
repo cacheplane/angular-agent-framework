@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
 import a2uiApiDocs from '../../../content/docs/a2ui/api/api-docs.json';
-import agentApiDocs from '../../../content/docs/agent/api/api-docs.json';
+import langgraphApiDocs from '../../../content/docs/langgraph/api/api-docs.json';
 import agUiApiDocs from '../../../content/docs/ag-ui/api/api-docs.json';
 import chatApiDocs from '../../../content/docs/chat/api/api-docs.json';
 import licensingApiDocs from '../../../content/docs/licensing/api/api-docs.json';
@@ -12,7 +12,7 @@ import telemetryApiDocs from '../../../content/docs/telemetry/api/api-docs.json'
 const API_DOCS: Record<string, unknown> = {
   a2ui: a2uiApiDocs,
   'ag-ui': agUiApiDocs,
-  agent: agentApiDocs,
+  langgraph: langgraphApiDocs,
   chat: chatApiDocs,
   licensing: licensingApiDocs,
   render: renderApiDocs,
@@ -54,9 +54,9 @@ export async function GET() {
     [
       '## Common Gotchas',
       '',
-      'agent() MUST be called inside an Angular injection context.',
+      'injectAgent() MUST be called inside an Angular injection context.',
       'Do not call it in ngOnInit — use constructor or field initializer.',
-      'Do not mock agent() in tests — use MockAgentTransport.',
+      'Do not mock injectAgent() in tests — use MockAgentTransport via provideAgent({ transport: new MockAgentTransport(...) }).',
       'RxJS is an internal implementation detail — do not import rxjs in consumer code.',
     ].join('\n'),
   ];

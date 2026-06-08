@@ -1,0 +1,150 @@
+# Quick Start
+
+Build a streaming chat component with `injectAgent()` in 5 minutes.
+
+<Callout type="info" title="Prerequisites">
+Angular 20+ project with Node.js 18+. If you need setup help, see the [Installation](/docs/langgraph/getting-started/installation) guide.
+</Callout>
+
+<Steps>
+<Step title="Install the package">
+
+```bash
+npm install @threadplane/langgraph
+```
+
+</Step>
+<Step title="Configure the provider">
+
+Add `provideAgent()` to your application config with your LangGraph Platform URL, assistant id, and thread persistence wiring.
+
+```typescript
+// app.config.ts
+import { signal } from '@angular/core';
+import { provideAgent } from '@threadplane/langgraph';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideAgent({
+      apiUrl: 'http://localhost:2024',
+      // 'chat' maps to the key in your langgraph.json "graphs" config
+      assistantId: 'chat',
+      threadId: signal(localStorage.getItem('threadId')),
+      onThreadId: (id) => localStorage.setItem('threadId', id),
+    }),
+  ],
+};
+```
+
+</Step>
+<Step title="Create a chat component">
+
+Now let's wire up the UI. Call `injectAgent()` in a component field initializer — every property on the returned ref is an Angular Signal.
+
+<Tabs>
+<Tab label="TypeScript">
+
+```typescript
+// chat.component.ts
+import { Component, ChangeDetectionStrategy, signal, computed } from '@angular/core';
+import { injectAgent } from '@threadplane/langgraph';
+
+@Component({
+  selector: 'app-chat',
+  templateUrl: './chat.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class ChatComponent {
+  input = signal('');
+
+  protected readonly chat = injectAgent();
+
+  isStreaming = computed(() => this.chat.isLoading());
+
+  send() {
+    const msg = this.input();
+    if (!msg.trim()) return;
+    this.chat.submit({ message: msg });
+    this.input.set('');
+  }
+}
+```
+
+</Tab>
+<Tab label="Template">
+
+```html
+<!-- chat.component.html -->
+<div class="chat">
+  @for (msg of chat.messages(); track $index) {
+    <div [class]="msg.role">
+      <p>{{ msg.content }}</p>
+    </div>
+  }
+
+  @if (isStreaming()) {
+    <div class="typing-indicator">Agent is thinking...</div>
+  }
+
+  <!-- Error display -->
+  @if (chat.error(); as err) {
+    <div class="error">{{ err.message }}</div>
+  }
+
+  <form (submit)="send(); $event.preventDefault()">
+    <input
+      [ngModel]="input()"
+      (ngModelChange)="input.set($event)"
+      placeholder="Type a message..."
+    />
+    <button type="submit" [disabled]="isStreaming()">Send</button>
+  </form>
+</div>
+```
+
+</Tab>
+</Tabs>
+
+</Step>
+<Step title="Start your LangGraph server">
+
+Make sure your LangGraph agent is running at the URL you configured.
+
+```bash
+langgraph dev
+```
+
+</Step>
+<Step title="Run your app">
+
+```bash
+ng serve
+```
+
+Open `http://localhost:4200` and start chatting with your agent.
+
+</Step>
+</Steps>
+
+## Next steps
+
+<CardGroup cols={3}>
+  <Card title="Streaming" href="/docs/langgraph/guides/streaming">
+    Learn about token-by-token updates and stream modes
+  </Card>
+  <Card title="Persistence" href="/docs/langgraph/guides/persistence">
+    Keep conversations alive across page refreshes
+  </Card>
+  <Card title="Interrupts" href="/docs/langgraph/guides/interrupts">
+    Add human-in-the-loop approval flows
+  </Card>
+  <Card title="Angular Signals" href="/docs/langgraph/concepts/angular-signals">
+    Deep dive into how Signals power agent
+  </Card>
+  <Card title="LangGraph Basics" href="/docs/langgraph/concepts/langgraph-basics">
+    Graphs, nodes, edges, and state for Angular developers
+  </Card>
+  <Card title="API Reference" href="/docs/langgraph/api/inject-agent">
+    Complete `injectAgent()` function reference
+  </Card>
+</CardGroup>

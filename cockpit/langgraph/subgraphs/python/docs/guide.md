@@ -1,13 +1,13 @@
 # Nested Agent Delegation with Subgraphs and Angular
 
 <Summary>
-Build a chat interface that visualizes nested agent delegation using `agent()` from
-`@threadplane/langgraph`. A parent orchestrator dispatches research tasks to a child
+Build a chat interface that visualizes nested agent delegation using `provideAgent()` and
+`injectAgent()` from `@threadplane/langgraph`. A parent orchestrator dispatches research tasks to a child
 subgraph, and the sidebar tracks each subagent's status in real time using `stream.subagents()`.
 </Summary>
 
 <Prompt>
-Add a subgraph-powered orchestrator to this Angular component using `agent()` from `@threadplane/langgraph`. Use `stream.subagents()` to track active child subgraph executions, and derive a `subagentEntries` signal with `computed()` for template iteration. Bind `stream.messages()` beside the `<chat>` component from `@threadplane/chat`.
+Add a subgraph-powered orchestrator to this Angular component using `provideAgent()` and `injectAgent()` from `@threadplane/langgraph`. Use `stream.subagents()` to track active child subgraph executions, and derive a `subagentEntries` signal with `computed()` for template iteration. Bind `stream.messages()` beside the `<chat>` component from `@threadplane/chat`.
 </Prompt>
 
 <Steps>
@@ -24,6 +24,7 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideAgent({
       apiUrl: 'https://your-deployment.langgraph.app',
+      assistantId: 'subgraphs',
     }),
   ],
 };
@@ -32,17 +33,15 @@ export const appConfig: ApplicationConfig = {
 </Step>
 <Step title="Create the streaming resource">
 
-In your component, call `agent()` with the assistant ID pointing to your subgraphs graph:
+In your component, call `injectAgent()` to retrieve the configured subgraphs agent:
 
 ```typescript
 // subgraphs.component.ts
 import { Component, computed } from '@angular/core';
-import { agent } from '@threadplane/langgraph';
+import { injectAgent } from '@threadplane/langgraph';
 
 export class SubgraphsComponent {
-  protected readonly stream = agent({
-    assistantId: 'subgraphs',
-  });
+  protected readonly stream = injectAgent();
 
   subagentEntries = computed(() => Array.from(this.stream.subagents().entries()));
 }

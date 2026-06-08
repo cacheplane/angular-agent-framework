@@ -65,7 +65,7 @@ export function DocsSearch({ library }: { library?: LibraryId }) {
     track(analyticsEvents.docsSearchResultClick, {
       surface: 'docs',
       destination_url: `/docs/${page.library}/${page.section}/${page.slug}`,
-      library: page.library === 'agent' || page.library === 'render' || page.library === 'chat' ? page.library : 'unknown',
+      library: page.library === 'langgraph' || page.library === 'render' || page.library === 'chat' ? page.library : 'unknown',
       query_length: query.length,
       result_count: results.length,
     });
@@ -109,7 +109,7 @@ export function DocsSearch({ library }: { library?: LibraryId }) {
               if (nextQuery.length === 1) {
                 track(analyticsEvents.docsSearchSubmit, {
                   surface: 'docs',
-                  library: library === 'agent' || library === 'render' || library === 'chat' ? library : 'unknown',
+                  library: library === 'langgraph' || library === 'render' || library === 'chat' ? library : 'unknown',
                 });
               }
             }}

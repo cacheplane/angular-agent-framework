@@ -1,10 +1,11 @@
 # Node Telemetry
 
-Node telemetry lives under `@threadplane/telemetry/node`. It is intended for package lifecycle hooks and server-side adapters.
+Node telemetry lives under `@threadplane/telemetry/node`. It's built for package lifecycle hooks and server-side adapters.
 
 ```ts
 import {
   captureRuntimeInstanceCreated,
+  captureRuntimeRequestCreated,
   captureStreamStarted,
   captureStreamEnded,
   captureStreamErrored,
@@ -22,7 +23,7 @@ import { disableTelemetry } from '@threadplane/telemetry/node';
 disableTelemetry();
 ```
 
-This sets an in-process flag. It does not mutate environment variables.
+This sets an in-process flag. It doesn't mutate environment variables.
 
 ## Capture runtime lifecycle
 
@@ -36,6 +37,17 @@ await captureRuntimeInstanceCreated({
 ```
 
 The `RuntimeInstanceTelemetry` type includes `apiKey`, but the adapter strips it before sending. Do not pass secrets as telemetry properties anyway.
+
+Use `captureRuntimeRequestCreated()` when a runtime issues a request. The `RuntimeRequestTelemetry` type requires `transport` and `requestType`; `provider` and `model` are optional.
+
+```ts
+await captureRuntimeRequestCreated({
+  transport: 'langgraph',
+  requestType: 'stream',
+  provider: 'openai',
+  model: 'gpt-4.1',
+});
+```
 
 ## Capture streams
 
@@ -58,7 +70,7 @@ await captureStreamErrored({
 });
 ```
 
-`captureStreamErrored()` records an error class. It does not send the full error object.
+`captureStreamErrored()` records an error class. It doesn't send the full error object.
 
 ## Ingest and sampling
 
@@ -92,4 +104,4 @@ type CaptureResult =
   | { sent: false; reason: 'disabled' | 'sampled' | 'failed' };
 ```
 
-Use the result in tests or diagnostics. Do not make application correctness depend on telemetry delivery.
+Use the result in tests or diagnostics. Don't make application correctness depend on telemetry delivery.

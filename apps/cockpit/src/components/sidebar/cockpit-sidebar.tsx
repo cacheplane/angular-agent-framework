@@ -4,6 +4,7 @@ import type {
   CockpitManifestEntry,
 } from '@threadplane/cockpit-registry';
 import type { NavigationProduct } from '../../lib/route-resolution';
+import { Logo } from '../branding/logo';
 import { LanguagePicker } from './language-picker';
 import { NavigationGroups } from './navigation-groups';
 
@@ -29,7 +30,7 @@ export function CockpitSidebar({
       }}
     >
       <header className="flex items-center justify-between px-4">
-        <p className="text-[var(--ds-text-muted)] font-mono text-xs font-medium tracking-wide uppercase">Cockpit</p>
+        <Logo />
         <LanguagePicker manifest={manifest} entry={entry} />
       </header>
       <NavigationGroups tree={navigationTree} currentEntry={entry} />

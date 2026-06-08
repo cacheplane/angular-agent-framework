@@ -1,0 +1,54 @@
+name: Deploy AG-UI Railway
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'cockpit/ag-ui/**/python/**'
+      - 'apps/cockpit/scripts/capability-registry.ts'
+      - 'scripts/generate-ag-ui-deployment-config.ts'
+      - 'deployments/ag-ui-dev/**'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  DO_NOT_TRACK: '1'
+
+jobs:
+  deploy:
+    name: Deploy ag-ui-dev to Railway
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6.0.2
+
+      - uses: actions/setup-node@v6.3.0
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Regenerate deployment artifacts
+        run: npx tsx scripts/generate-ag-ui-deployment-config.ts
+
+      - name: Drift check — committed artifacts must match regeneration
+        run: |
+          if ! git diff --exit-code -- deployments/ag-ui-dev/; then
+            echo "::error::deployments/ag-ui-dev/ is out of sync. Run 'npx tsx scripts/generate-ag-ui-deployment-config.ts' locally and commit the result."
+            exit 1
+          fi
+
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli@4
+
+      - name: Deploy
+        working-directory: deployments/ag-ui-dev
+        run: railway up --service ag-ui-dev --detach
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}

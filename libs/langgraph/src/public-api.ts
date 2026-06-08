@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
-// Primary function
-export { agent } from './lib/agent.fn';
-
 // Provider
-export { provideAgent, AGENT_CONFIG } from './lib/agent.provider';
+export { provideAgent } from './lib/agent.provider';
 export type { AgentConfig } from './lib/agent.provider';
+
+// Symmetric inject helper — matches @threadplane/ag-ui's injectAgent()
+export { injectAgent } from './lib/inject-agent';
 
 // Lifecycle monitoring
 export { AGENT_LIFECYCLE } from './lib/lifecycle';
@@ -42,6 +42,10 @@ export { FetchStreamTransport } from './lib/transport/fetch-stream.transport';
 // Mock test utility for LangGraph agent
 export { mockLangGraphAgent } from './lib/testing/mock-langgraph-agent';
 export type { MockLangGraphAgent } from './lib/testing/mock-langgraph-agent';
+export { provideFakeAgent } from './lib/testing/provide-fake-agent';
+// Low-level auto-emitting fake transport backing provideFakeAgent — exported
+// for advanced manual wiring (parity with @threadplane/ag-ui's FakeAgent).
+export { FakeStreamTransport } from './lib/testing/fake-stream.transport';
 
 // Citation normalizer — useful for advanced consumers building custom adapters
 // or bridging non-LangGraph message shapes into ngaf Citation[].

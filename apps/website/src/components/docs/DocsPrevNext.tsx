@@ -64,7 +64,7 @@ export function DocsPrevNext({ library, section, slug }: Props) {
                 fontFamily: tokens.typography.fontSans,
                 fontSize: 16,
                 fontWeight: 600,
-                color: tokens.colors.textPrimary,
+                color: tokens.colors.accent,
               }}
             >
               {prev.title}
@@ -83,7 +83,7 @@ export function DocsPrevNext({ library, section, slug }: Props) {
                 fontFamily: tokens.typography.fontSans,
                 fontSize: 16,
                 fontWeight: 600,
-                color: tokens.colors.textPrimary,
+                color: tokens.colors.accent,
               }}
             >
               {next.title}

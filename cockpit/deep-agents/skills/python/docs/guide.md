@@ -1,13 +1,13 @@
 # Multi-Skill Agent with Angular
 
 <Summary>
-Build a chat interface that shows real-time skill invocations using `agent()` from
-`@threadplane/langgraph`. The agent selects from specialized tools (calculator, word counter,
+Build a chat interface that shows real-time skill invocations using `provideAgent()` and
+`injectAgent()` from `@threadplane/langgraph`. The agent selects from specialized tools (calculator, word counter,
 summarizer) based on the user's request, and the sidebar displays each skill invocation as a card.
 </Summary>
 
 <Prompt>
-Add a skill invocation sidebar to this Angular component using `agent()` from `@threadplane/langgraph`. Use `stream.messages()` to access tool call data, derive `skillInvocations` with `computed()`, and bind them to the sidebar beside the `<chat>` component from `@threadplane/chat`.
+Add a skill invocation sidebar to this Angular component using `provideAgent()` and `injectAgent()` from `@threadplane/langgraph`. Use `stream.messages()` to access tool call data, derive `skillInvocations` with `computed()`, and bind them to the sidebar beside the `<chat>` component from `@threadplane/chat`.
 </Prompt>
 
 <Steps>
@@ -24,26 +24,25 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideAgent({
       apiUrl: 'https://your-deployment.langgraph.app',
+      assistantId: 'da-skills',
     }),
   ],
 };
 ```
 
-This makes the API URL available to all `agent()` calls in your app.
+This makes the configured agent available to all `injectAgent()` calls in your app.
 
 </Step>
 <Step title="Create the streaming resource">
 
-In your component, call `agent()` with the `assistantId` pointing to your skills graph:
+In your component, call `injectAgent()` to retrieve the configured skills agent:
 
 ```typescript
 // skills.component.ts
-import { agent } from '@threadplane/langgraph';
+import { injectAgent } from '@threadplane/langgraph';
 
 export class SkillsComponent {
-  protected readonly stream = agent({
-    assistantId: 'da-skills',
-  });
+  protected readonly stream = injectAgent();
 }
 ```
 
@@ -56,6 +55,7 @@ Use Angular's `computed()` to reactively extract skill invocations from tool cal
 
 ```typescript
 import { computed } from '@angular/core';
+import { injectAgent } from '@threadplane/langgraph';
 
 interface SkillInvocation {
   skillName: string;
@@ -64,7 +64,7 @@ interface SkillInvocation {
 }
 
 export class SkillsComponent {
-  protected readonly stream = agent({ assistantId: 'da-skills' });
+  protected readonly stream = injectAgent();
 
   skillInvocations = computed(() => {
     const msgs = this.stream.messages();

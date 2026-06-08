@@ -59,13 +59,13 @@
     "methods": [
       {
         "name": "abortRun",
-        "signature": "abortRun()",
+        "signature": "abortRun(): void",
         "description": "",
         "params": []
       },
       {
         "name": "addMessage",
-        "signature": "addMessage(message: object | object | object | object | object | object | object)",
+        "signature": "addMessage(message: object | object | object | object | object | object | object): void",
         "description": "",
         "params": [
           {
@@ -78,7 +78,7 @@
       },
       {
         "name": "addMessages",
-        "signature": "addMessages(messages: object | object | object | object | object | object | object[])",
+        "signature": "addMessages(messages: object | object | object | object | object | object | object[]): void",
         "description": "",
         "params": [
           {
@@ -91,7 +91,7 @@
       },
       {
         "name": "apply",
-        "signature": "apply(input: object, events$: Observable<objectOutputType<object, ZodTypeAny, \"passthrough\">>, subscribers: AgentSubscriber[])",
+        "signature": "apply(input: object, events$: Observable<objectOutputType<object, ZodTypeAny, \"passthrough\">>, subscribers: AgentSubscriber[]): Observable<AgentStateMutation>",
         "description": "",
         "params": [
           {
@@ -116,13 +116,13 @@
       },
       {
         "name": "clone",
-        "signature": "clone()",
+        "signature": "clone(): any",
         "description": "",
         "params": []
       },
       {
         "name": "connect",
-        "signature": "connect(input: object)",
+        "signature": "connect(input: object): Observable<objectOutputType<object, ZodTypeAny, \"passthrough\">>",
         "description": "",
         "params": [
           {
@@ -135,7 +135,7 @@
       },
       {
         "name": "connectAgent",
-        "signature": "connectAgent(parameters: Partial<Pick<object, \"runId\" | \"tools\" | \"context\" | \"forwardedProps\">>, subscriber: AgentSubscriber)",
+        "signature": "connectAgent(parameters: Partial<Pick<object, \"runId\" | \"tools\" | \"context\" | \"forwardedProps\">>, subscriber: AgentSubscriber): Promise<RunAgentResult>",
         "description": "",
         "params": [
           {
@@ -154,19 +154,19 @@
       },
       {
         "name": "detachActiveRun",
-        "signature": "detachActiveRun()",
+        "signature": "detachActiveRun(): Promise<void>",
         "description": "",
         "params": []
       },
       {
         "name": "getCapabilities",
-        "signature": "getCapabilities()",
+        "signature": "getCapabilities(): Promise<object>",
         "description": "Returns the agent's current capabilities.\nOptional — subclasses implement this to advertise what they support.",
         "params": []
       },
       {
         "name": "legacy_to_be_removed_runAgentBridged",
-        "signature": "legacy_to_be_removed_runAgentBridged(config: Partial<Pick<object, \"runId\" | \"tools\" | \"context\" | \"forwardedProps\">>)",
+        "signature": "legacy_to_be_removed_runAgentBridged(config: Partial<Pick<object, \"runId\" | \"tools\" | \"context\" | \"forwardedProps\">>): Observable<object | object | object | object | object | object | object | object | object | object>",
         "description": "",
         "params": [
           {
@@ -179,7 +179,7 @@
       },
       {
         "name": "onError",
-        "signature": "onError(input: object, error: Error, subscribers: AgentSubscriber[])",
+        "signature": "onError(input: object, error: Error, subscribers: AgentSubscriber[]): Observable<AgentStateMutation>",
         "description": "",
         "params": [
           {
@@ -204,7 +204,7 @@
       },
       {
         "name": "onFinalize",
-        "signature": "onFinalize(input: object, subscribers: AgentSubscriber[])",
+        "signature": "onFinalize(input: object, subscribers: AgentSubscriber[]): Promise<void>",
         "description": "",
         "params": [
           {
@@ -223,7 +223,7 @@
       },
       {
         "name": "onInitialize",
-        "signature": "onInitialize(input: object, subscribers: AgentSubscriber[])",
+        "signature": "onInitialize(input: object, subscribers: AgentSubscriber[]): Promise<void>",
         "description": "",
         "params": [
           {
@@ -242,7 +242,7 @@
       },
       {
         "name": "prepareRunAgentInput",
-        "signature": "prepareRunAgentInput(parameters: Partial<Pick<object, \"runId\" | \"tools\" | \"context\" | \"forwardedProps\">>)",
+        "signature": "prepareRunAgentInput(parameters: Partial<Pick<object, \"runId\" | \"tools\" | \"context\" | \"forwardedProps\">>): object",
         "description": "",
         "params": [
           {
@@ -255,7 +255,7 @@
       },
       {
         "name": "processApplyEvents",
-        "signature": "processApplyEvents(input: object, events$: Observable<AgentStateMutation>, subscribers: AgentSubscriber[])",
+        "signature": "processApplyEvents(input: object, events$: Observable<AgentStateMutation>, subscribers: AgentSubscriber[]): Observable<AgentStateMutation>",
         "description": "",
         "params": [
           {
@@ -280,7 +280,7 @@
       },
       {
         "name": "run",
-        "signature": "run(input: object)",
+        "signature": "run(input: object): Observable<objectOutputType<object, ZodTypeAny, \"passthrough\">>",
         "description": "",
         "params": [
           {
@@ -293,7 +293,7 @@
       },
       {
         "name": "runAgent",
-        "signature": "runAgent(parameters: Partial<Pick<object, \"runId\" | \"tools\" | \"context\" | \"forwardedProps\">>, subscriber: AgentSubscriber)",
+        "signature": "runAgent(parameters: Partial<Pick<object, \"runId\" | \"tools\" | \"context\" | \"forwardedProps\">>, subscriber: AgentSubscriber): Promise<RunAgentResult>",
         "description": "",
         "params": [
           {
@@ -312,7 +312,7 @@
       },
       {
         "name": "setMessages",
-        "signature": "setMessages(messages: object | object | object | object | object | object | object[])",
+        "signature": "setMessages(messages: object | object | object | object | object | object | object[]): void",
         "description": "",
         "params": [
           {
@@ -325,7 +325,7 @@
       },
       {
         "name": "setState",
-        "signature": "setState(state: any)",
+        "signature": "setState(state: any): void",
         "description": "",
         "params": [
           {
@@ -338,7 +338,7 @@
       },
       {
         "name": "subscribe",
-        "signature": "subscribe(subscriber: AgentSubscriber)",
+        "signature": "subscribe(subscriber: AgentSubscriber): object",
         "description": "",
         "params": [
           {
@@ -351,11 +351,11 @@
       },
       {
         "name": "use",
-        "signature": "use(middlewares: Middleware<> | MiddlewareFunction[])",
+        "signature": "use(...middlewares: Middleware<> | MiddlewareFunction[]): this",
         "description": "",
         "params": [
           {
-            "name": "middlewares",
+            "name": "...middlewares",
             "type": "Middleware<> | MiddlewareFunction[]",
             "description": "",
             "optional": false
@@ -365,7 +365,7 @@
     ]
   },
   {
-    "name": "AgUiAgentConfig",
+    "name": "AgentConfig",
     "kind": "interface",
     "description": "Configuration for the AG-UI agent provider.\nHttpAgentConfig shape (from @ag-ui/client@0.0.52):\n  - url: string (required) — endpoint for the HTTP agent\n  - agentId: string (optional) — agent identifier\n  - threadId: string (optional) — thread identifier\n  - headers: Record<string, string> (optional) — custom HTTP headers",
     "properties": [
@@ -403,27 +403,107 @@
     "examples": []
   },
   {
-    "name": "FakeAgUiAgentConfig",
+    "name": "AgUiAgent",
     "kind": "interface",
-    "description": "",
+    "description": "The neutral Agent contract, widened with the AG-UI adapter's optional\n`customEvents` signal (the chat composition feature-detects it to enable\nlive a2ui streaming). Mirrors langgraph's LangGraphAgent extension.",
     "properties": [
       {
-        "name": "delayMs",
-        "type": "number",
-        "description": "Milliseconds between successive token emissions.",
+        "name": "customEvents",
+        "type": "Signal<CustomStreamEvent[]>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "error",
+        "type": "Signal<unknown>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "events$",
+        "type": "Observable<AgentEvent>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "interrupt",
+        "type": "Signal<AgentInterrupt | undefined>",
+        "description": "",
         "optional": true
       },
       {
-        "name": "reasoningTokens",
-        "type": "string[]",
-        "description": "Optional reasoning chunks emitted before the text reply.",
+        "name": "isLoading",
+        "type": "Signal<boolean>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "messages",
+        "type": "Signal<Message[]>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "regenerate",
+        "type": "(assistantMessageIndex: number) => Promise<void>",
+        "description": "Discards the assistant message at the given index AND all messages after\nit, then re-runs the agent against the trimmed conversation tail. The\npreceding user message (at index - 1) is preserved and re-submitted as\nthe agent's input. No new user message is added to the history.\n\nThrows if the message at `index` is not 'assistant' role, or if the\nagent is currently loading another response.",
+        "optional": false
+      },
+      {
+        "name": "state",
+        "type": "Signal<Record<string, unknown>>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "status",
+        "type": "Signal<AgentStatus>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "stop",
+        "type": "() => Promise<void>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "subagents",
+        "type": "Signal<Map<string, Subagent>>",
+        "description": "",
         "optional": true
       },
       {
-        "name": "tokens",
-        "type": "string[]",
-        "description": "Tokens streamed back as the assistant reply.",
-        "optional": true
+        "name": "submit",
+        "type": "(input: AgentSubmitInput, opts: AgentSubmitOptions) => Promise<void>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "toolCalls",
+        "type": "Signal<ToolCall[]>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "CustomStreamEvent",
+    "kind": "interface",
+    "description": "A custom event surfaced to consumers via the agent's `customEvents` signal.\nMirrors the LangGraph adapter's CustomStreamEvent shape so the chat\na2ui partial-args bridge consumes both transports identically.",
+    "properties": [
+      {
+        "name": "data",
+        "type": "unknown",
+        "description": "Arbitrary payload from the backend (JSON-string values are parsed).",
+        "optional": false
+      },
+      {
+        "name": "name",
+        "type": "string",
+        "description": "Event name set by the backend (e.g. 'a2ui-partial', 'state_update').",
+        "optional": false
       }
     ],
     "examples": []
@@ -468,10 +548,10 @@
     "examples": []
   },
   {
-    "name": "injectAgUiAgent",
+    "name": "injectAgent",
     "kind": "function",
-    "description": "Injects the AG_UI_AGENT from Angular's dependency injection container.\nUse this in components or services that have been provided via provideAgUiAgent().",
-    "signature": "injectAgUiAgent(): Agent",
+    "description": "Injects the Agent from Angular's dependency injection container.\nUse this in components or services that have been provided via provideAgent().",
+    "signature": "injectAgent(): Agent",
     "params": [],
     "returns": {
       "type": "Agent",
@@ -480,14 +560,14 @@
     "examples": []
   },
   {
-    "name": "provideAgUiAgent",
+    "name": "provideAgent",
     "kind": "function",
-    "description": "Provides an Agent instance wired through HttpAgent and toAgent.\nConstructs an HttpAgent from config and wraps it in the runtime-neutral\nAgent contract via toAgent(). Returns a provider array suitable for\nbootstrapApplication or TestBed.configureTestingModule().",
-    "signature": "provideAgUiAgent(config: AgUiAgentConfig): Provider[]",
+    "description": "Provides an Agent instance wired through HttpAgent and toAgent.\nConstructs an HttpAgent from config and wraps it in the runtime-neutral\nAgent contract via toAgent(). Returns a provider array suitable for\nbootstrapApplication or TestBed.configureTestingModule().\n\n**Static vs factory config.** Pass a plain `AgentConfig` object when the\nconfig is known up front. Pass a `() => AgentConfig` factory when the config\ndepends on runtime/DI state — the factory runs inside an Angular injection\ncontext, so it may call `inject()` to read services or route params.",
+    "signature": "provideAgent(configOrFactory: AgentConfig | () => AgentConfig): Provider[]",
     "params": [
       {
-        "name": "config",
-        "type": "AgUiAgentConfig",
+        "name": "configOrFactory",
+        "type": "AgentConfig | () => AgentConfig",
         "description": "",
         "optional": false
       }
@@ -499,14 +579,14 @@
     "examples": []
   },
   {
-    "name": "provideFakeAgUiAgent",
+    "name": "provideFakeAgent",
     "kind": "function",
-    "description": "Registers an in-process FakeAgent under AG_UI_AGENT.\n\nUse for offline demos and development. Drop-in replacement for\nprovideAgUiAgent({ url }) when no real backend is available.",
-    "signature": "provideFakeAgUiAgent(config: FakeAgUiAgentConfig): Provider[]",
+    "description": "Registers an in-process FakeAgent under AGENT.\n\nUse for offline demos and development. Drop-in replacement for\nprovideAgent({ url }) when no real backend is available.",
+    "signature": "provideFakeAgent(config: FakeAgentConfig): Provider[]",
     "params": [
       {
         "name": "config",
-        "type": "FakeAgUiAgentConfig",
+        "type": "FakeAgentConfig",
         "description": "",
         "optional": false
       }
@@ -521,7 +601,7 @@
     "name": "toAgent",
     "kind": "function",
     "description": "Wraps an AG-UI AbstractAgent into the runtime-neutral Agent contract.\n\nThe adapter subscribes to source.subscribe({ onEvent }) and reduces every\nevent into the produced Agent's signals. submit() optimistically appends the\nuser message to both our signals and the source agent's internal message\nlist, then calls source.runAgent(). stop() calls source.abortRun().\n\nSubscription cleanup: the returned Agent does NOT manage its own lifetime.\nCallers using DI should rely on the provider's destroy hook; direct callers\nof toAgent() should treat the returned object's lifecycle as tied to the\nagent instance they constructed. The subscriber registered via\nsource.subscribe() will fire for the lifetime of source.",
-    "signature": "toAgent(source: AbstractAgent<>, options: ToAgentOptions): Agent",
+    "signature": "toAgent(source: AbstractAgent<>, options: ToAgentOptions): AgUiAgent",
     "params": [
       {
         "name": "source",
@@ -537,7 +617,7 @@
       }
     ],
     "returns": {
-      "type": "Agent",
+      "type": "AgUiAgent",
       "description": ""
     },
     "examples": []

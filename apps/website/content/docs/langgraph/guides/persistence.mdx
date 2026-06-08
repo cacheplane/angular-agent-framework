@@ -1,0 +1,396 @@
+# Persistence
+
+Thread persistence keeps conversations alive across page refreshes, browser restarts, and server deployments. This guide covers configuring checkpointers on the Python side and wiring up thread management in your Angular components with `injectAgent()`.
+
+<Callout type="info" title="How it works">
+LangGraph checkpoints agent state at every super-step. Each checkpoint is keyed by a thread ID. `injectAgent()` connects to these checkpoints automatically, so your users resume exactly where they left off — even if your server restarted between sessions.
+</Callout>
+
+<Callout type="info" title="Adapter-defined behavior">
+"Restore a prior thread's messages when the user switches to it" is a behavior the `@threadplane/langgraph` adapter implements because the LangGraph protocol exposes per-thread checkpoint history. The runtime-neutral `Agent` contract in `@threadplane/chat` doesn't require this — adapters built on event-stream protocols (like `@threadplane/ag-ui`) typically can't offer it. If you're writing your own adapter, the [Writing an Adapter guide](/docs/chat/guides/writing-an-adapter#hydrating-from-a-server-stored-thread) covers the design choice.
+</Callout>
+
+## Python: Checkpointer Setup
+
+Every LangGraph agent needs a checkpointer to persist state between invocations. Which one you choose depends on your environment.
+
+<Tabs>
+<Tab label="MemorySaver (dev)">
+
+```python
+from langgraph.checkpoint.memory import MemorySaver
+from langgraph.graph import START, END, MessagesState, StateGraph
+from langchain_openai import ChatOpenAI
+
+llm = ChatOpenAI(model="gpt-5-mini")
+
+def call_model(state: MessagesState) -> dict:
+    return {"messages": [llm.invoke(state["messages"])]}
+
+builder = StateGraph(MessagesState)
+builder.add_node("model", call_model)
+builder.add_edge(START, "model")
+builder.add_edge("model", END)
+
+# MemorySaver stores checkpoints in-process memory
+# Fast for development — lost when the process restarts
+graph = builder.compile(checkpointer=MemorySaver())
+```
+
+</Tab>
+<Tab label="SqliteSaver (prototype)">
+
+```python
+from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
+from langgraph.graph import START, END, MessagesState, StateGraph
+
+# Persists to a local file — survives restarts, zero infrastructure
+async with AsyncSqliteSaver.from_conn_string("checkpoints.db") as checkpointer:
+    builder = StateGraph(MessagesState)
+    builder.add_node("model", call_model)
+    builder.add_edge(START, "model")
+    builder.add_edge("model", END)
+
+    graph = builder.compile(checkpointer=checkpointer)
+```
+
+</Tab>
+<Tab label="PostgresSaver (production)">
+
+```python
+from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
+from langgraph.graph import START, END, MessagesState, StateGraph
+
+DATABASE_URL = "postgresql://user:pass@localhost:5432/myapp"
+
+async with AsyncPostgresSaver.from_conn_string(DATABASE_URL) as checkpointer:
+    # Run migrations once on startup
+    await checkpointer.setup()
+
+    builder = StateGraph(MessagesState)
+    builder.add_node("model", call_model)
+    builder.add_edge(START, "model")
+    builder.add_edge("model", END)
+
+    graph = builder.compile(checkpointer=checkpointer)
+```
+
+</Tab>
+</Tabs>
+
+<Callout type="warning" title="Production checkpointers">
+MemorySaver is for development only — all state vanishes when the process exits. For anything users depend on, use PostgresSaver. SqliteSaver is a middle ground for prototypes and single-server deployments where you need persistence without a database.
+</Callout>
+
+## Python: Thread IDs in Graph Invocation
+
+The thread ID is how LangGraph associates a conversation with its checkpoint history. Pass it in the `configurable` dict every time you invoke the graph:
+
+```python
+# First message creates the thread
+result = graph.invoke(
+    {"messages": [{"role": "user", "content": "What is LangGraph?"}]},
+    config={"configurable": {"thread_id": "user_123"}}
+)
+
+# Second message continues the same conversation
+result = graph.invoke(
+    {"messages": [{"role": "user", "content": "How does it handle state?"}]},
+    config={"configurable": {"thread_id": "user_123"}}
+)
+# The agent sees both messages — the full history is restored from the checkpoint
+```
+
+<Callout type="tip" title="Thread ID strategy">
+Use stable, user-scoped identifiers for thread IDs. A common pattern is `f"{user_id}_{session_id}"` — this prevents cross-user data leaks and lets one user have multiple conversations.
+</Callout>
+
+## Angular: Basic Thread Persistence
+
+Save the thread ID to localStorage so conversations survive page refreshes. `injectAgent()` handles thread creation and restoration automatically; the configuration lives in your root `provideAgent({...})` call.
+
+<Tabs>
+<Tab label="app.config.ts">
+
+```typescript
+import { signal } from '@angular/core';
+import { provideAgent } from '@threadplane/langgraph';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideAgent({
+      apiUrl: 'http://localhost:2024',
+      assistantId: 'chat',
+      // Restore thread from localStorage on app start
+      threadId: signal(localStorage.getItem('threadId')),
+      // Persist thread ID whenever a new thread is created
+      onThreadId: (id) => localStorage.setItem('threadId', id),
+    }),
+  ],
+};
+```
+
+</Tab>
+<Tab label="chat.component.ts">
+
+```typescript
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { injectAgent } from '@threadplane/langgraph';
+
+@Component({
+  selector: 'app-chat',
+  templateUrl: './chat.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class ChatComponent {
+  protected readonly chat = injectAgent();
+
+  send(text: string) {
+    this.chat.submit({ message: text });
+  }
+}
+```
+
+</Tab>
+<Tab label="chat.component.html">
+
+```html
+<!-- Messages restore automatically when the component remounts -->
+@for (msg of chat.messages(); track $index) {
+  <div [class]="msg.role">
+    <p>{{ msg.content }}</p>
+  </div>
+}
+
+@if (chat.isLoading()) {
+  <div class="loading-indicator">Agent is thinking...</div>
+}
+```
+
+</Tab>
+</Tabs>
+
+## Angular: Thread-List Component
+
+A real chat application needs a sidebar showing all conversations. Here's a full thread-list component that manages multiple threads alongside your chat singleton. The active-thread signal lives in shared state and is wired into `provideAgent({...})` at bootstrap; the component reads back through `injectAgent()`.
+
+<Tabs>
+<Tab label="thread-state.ts">
+
+```typescript
+// thread-state.ts — shared signals injected by app.config.ts
+import { signal } from '@angular/core';
+
+export const activeThreadId = signal<string | null>(null);
+```
+
+</Tab>
+<Tab label="app.config.ts">
+
+```typescript
+import { provideAgent } from '@threadplane/langgraph';
+import { activeThreadId } from './thread-state';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideAgent({
+      apiUrl: 'http://localhost:2024',
+      assistantId: 'chat',
+      threadId: activeThreadId,
+      onThreadId: (id) => activeThreadId.set(id),
+    }),
+  ],
+};
+```
+
+</Tab>
+<Tab label="thread-list.component.ts">
+
+```typescript
+import { ChangeDetectionStrategy, Component, signal, computed } from '@angular/core';
+import { injectAgent } from '@threadplane/langgraph';
+import { activeThreadId } from './thread-state';
+
+interface Thread {
+  id: string;
+  title: string;
+  updatedAt: Date;
+}
+
+@Component({
+  selector: 'app-thread-list',
+  templateUrl: './thread-list.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class ThreadListComponent {
+  threads = signal<Thread[]>(this.loadThreads());
+  protected readonly activeThreadId = activeThreadId;
+
+  protected readonly chat = injectAgent();
+
+  activeThread = computed(() =>
+    this.threads().find((t) => t.id === this.activeThreadId())
+  );
+
+  selectThread(id: string) {
+    this.activeThreadId.set(id);
+  }
+
+  newConversation() {
+    this.chat.switchThread(null);
+    // A new thread ID is assigned on the next submit
+  }
+
+  private addThread(id: string, title: string) {
+    this.threads.update((list) => [
+      { id, title, updatedAt: new Date() },
+      ...list.filter((t) => t.id !== id),
+    ]);
+    this.saveThreads();
+  }
+
+  private loadThreads(): Thread[] {
+    return JSON.parse(localStorage.getItem('threads') ?? '[]');
+  }
+
+  private saveThreads() {
+    localStorage.setItem('threads', JSON.stringify(this.threads()));
+  }
+}
+```
+
+</Tab>
+<Tab label="thread-list.component.html">
+
+```html
+<aside class="thread-sidebar">
+  <button (click)="newConversation()">+ New Chat</button>
+
+  @for (thread of threads(); track thread.id) {
+    <button
+      [class.active]="thread.id === activeThreadId()"
+      (click)="selectThread(thread.id)"
+    >
+      <span class="title">{{ thread.title }}</span>
+      <span class="date">{{ thread.updatedAt | date: 'short' }}</span>
+    </button>
+  }
+</aside>
+
+<main class="chat-area">
+  @if (chat.isThreadLoading()) {
+    <div class="skeleton">Loading conversation...</div>
+  } @else {
+    @for (msg of chat.messages(); track $index) {
+      <div [class]="msg.role">{{ msg.content }}</div>
+    }
+  }
+</main>
+```
+
+</Tab>
+</Tabs>
+
+<Callout type="info" title="LANGGRAPH_CLIENT">
+`LANGGRAPH_CLIENT` is the DI token that holds the shared LangGraph SDK `Client` used by the threads adapter (`LangGraphThreadsAdapter`). The adapter injects it optionally and, when no client is provided, constructs one via `createLangGraphClient(apiUrl)`. Provide your own client through this token to share a single SDK instance — or to inject an explicit client in tests.
+</Callout>
+
+## Reactive Thread Switching
+
+When you pass a Signal as `threadId` to `provideAgent({...})`, `injectAgent()` reacts to every change. Set the signal and the conversation switches automatically — no imperative calls needed.
+
+```typescript
+// In app.config.ts:
+provideAgent({
+  apiUrl: '...',
+  assistantId: 'chat',
+  threadId: activeThreadId,           // Signal — switches reactively
+  onThreadId: (id) => activeThreadId.set(id),
+});
+
+// Anywhere in the app — clicking a thread in the sidebar triggers a reactive switch
+selectThread(id: string) {
+  activeThreadId.set(id);
+  // injectAgent() detects the signal change, fetches the thread's
+  // checkpoint from the server, and updates all derived signals
+}
+```
+
+<Callout type="tip" title="Thread loading state">
+Use the `isThreadLoading()` signal to show a skeleton UI while `injectAgent()` fetches checkpoint state from the server. This avoids a flash of empty content when switching threads.
+</Callout>
+
+## Manual Thread Switching
+
+Use `switchThread()` for imperative thread changes. It's useful when you want to control exactly when the switch happens — for example, after an animation completes or a modal closes.
+
+```typescript
+// Start a fresh conversation (null = new thread on next submit)
+newConversation() {
+  this.chat.switchThread(null);
+}
+
+// Jump to a specific thread
+loadConversation(threadId: string) {
+  this.chat.switchThread(threadId);
+}
+
+// Fork a conversation — create a new thread from current state
+forkConversation() {
+  this.chat.switchThread(null);
+  this.chat.submit({
+    messages: this.chat.messages(),
+  });
+}
+```
+
+## Checkpoint Recovery
+
+When a connection drops mid-stream, `joinStream()` reconnects to an in-progress run without restarting the agent. That prevents duplicate work and lost tokens.
+
+```typescript
+// Rejoin a running stream after a network interruption
+await chat.joinStream(runId, lastEventId);
+// Picks up from the last event — no duplicate agent execution
+```
+
+<Callout type="info" title="Automatic recovery">
+In most cases `injectAgent()` handles reconnection internally. Use `joinStream()` directly only when you need explicit control — for example, when restoring a run ID from a URL parameter after a full page reload.
+</Callout>
+
+## Thread Lifecycle
+
+<Steps>
+<Step title="Component mounts">
+`injectAgent()` reads the `threadId` signal. If it contains a value, the existing thread's checkpoint is fetched from the server.
+</Step>
+<Step title="User sends first message">
+If `threadId` is null, `injectAgent()` creates a new thread via the LangGraph API and fires `onThreadId` with the new ID.
+</Step>
+<Step title="Agent streams response">
+Each super-step is checkpointed server-side. The `messages()` signal updates in real time as events arrive.
+</Step>
+<Step title="User switches threads">
+Setting the `threadId` signal (or calling `switchThread()`) loads the target thread's latest checkpoint. All signals update to reflect the restored state.
+</Step>
+<Step title="Connection drops">
+`joinStream()` reconnects to the in-progress run. The agent does not restart — streaming resumes from the last received event.
+</Step>
+</Steps>
+
+## What's Next
+
+<CardGroup cols={2}>
+  <Card title="Interrupts" href="/docs/langgraph/guides/interrupts">
+    Pause agent execution and wait for human approval before continuing.
+  </Card>
+  <Card title="Memory" href="/docs/langgraph/guides/memory">
+    Preserve long-term context across sessions with LangGraph's memory store.
+  </Card>
+  <Card title="Streaming" href="/docs/langgraph/guides/streaming">
+    Stream token-by-token responses and tool progress in real time.
+  </Card>
+  <Card title="Testing" href="/docs/langgraph/guides/testing">
+    Test thread persistence and switching deterministically with MockAgentTransport.
+  </Card>
+</CardGroup>

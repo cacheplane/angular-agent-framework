@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: MIT
 import { computed, signal, WritableSignal } from '@angular/core';
-import { Subject } from 'rxjs';
 import type {
   LangGraphAgent,
   SubagentStreamRef,
@@ -13,43 +12,60 @@ import type {
 import type { ToolProgress, ToolCallWithResult } from '@langchain/langgraph-sdk';
 import type { BaseMessage, AIMessage as CoreAIMessage } from '@langchain/core/messages';
 import type { MessageMetadata } from '@langchain/langgraph-sdk/ui';
+import { mockAgent } from '@threadplane/chat';
 import type {
-  AgentStatus,
+  MockAgent,
+  MockAgentOptions,
   AgentInterrupt,
   AgentCheckpoint,
+  AgentStatus,
   Message,
   Subagent,
   ToolCall,
-  AgentEvent,
 } from '@threadplane/chat';
 
 /**
  * A LangGraphAgent mock with writable signals for easy test control.
  *
+ * Builds on the runtime-neutral {@link MockAgent} from `@threadplane/chat`
+ * (which supplies the neutral `Agent`-contract writable signals plus
+ * `submit`/`stop`/`regenerate` call tracking) and layers the LangGraph-specific
+ * writable signals on top.
+ *
  * Cast the result of `mockLangGraphAgent()` to this type to access
  * writable signals without unsafe casts in test files.
  */
 export interface MockLangGraphAgent extends LangGraphAgent<any, any> {
-  // Writable versions of signals for direct test mutation
+  // Neutral writable signals — re-declared writable. (Dual-extends of MockAgent
+  // and LangGraphAgent is impossible because they declare incompatible
+  // `lifecycle` shapes, so we extend LangGraphAgent and layer the MockAgent
+  // call-tracking surface explicitly below.)
   messages: WritableSignal<Message[]>;
-  langGraphMessages: WritableSignal<BaseMessage[]>;
   status: WritableSignal<AgentStatus>;
   isLoading: WritableSignal<boolean>;
   error: WritableSignal<unknown>;
+  toolCalls: WritableSignal<ToolCall[]>;
+  interrupt: WritableSignal<AgentInterrupt | undefined>;
+  subagents: WritableSignal<Map<string, Subagent>>;
+  history: WritableSignal<AgentCheckpoint[]>;
+
+  // MockAgent call-tracking surface (delegated to mockAgent at runtime).
+  submitCalls: MockAgent['submitCalls'];
+  stopCount: MockAgent['stopCount'];
+  _internal: MockAgent['_internal'];
+
+  // LangGraph-specific writable signals.
+  langGraphMessages: WritableSignal<BaseMessage[]>;
   hasValue: WritableSignal<boolean>;
   value: WritableSignal<any>;
-  interrupt: WritableSignal<AgentInterrupt | undefined>;
   langGraphInterrupts: WritableSignal<Interrupt<any>[]>;
-  toolCalls: WritableSignal<ToolCall[]>;
   langGraphToolCalls: WritableSignal<ToolCallWithResult[]>;
   toolProgress: WritableSignal<ToolProgress[]>;
   queue: WritableSignal<AgentQueue>;
   branch: WritableSignal<string>;
-  history: WritableSignal<AgentCheckpoint[]>;
   langGraphHistory: WritableSignal<ThreadState<any>[]>;
   experimentalBranchTree: WritableSignal<AgentBranchTree<any>>;
   isThreadLoading: WritableSignal<boolean>;
-  subagents: WritableSignal<Map<string, Subagent>>;
   activeSubagents: WritableSignal<SubagentStreamRef[]>;
   customEvents: WritableSignal<CustomStreamEvent[]>;
 }
@@ -57,28 +73,29 @@ export interface MockLangGraphAgent extends LangGraphAgent<any, any> {
 /**
  * Creates a mock LangGraphAgent with writable signals for testing.
  * Control state by writing to the returned writable signals directly.
+ *
+ * Neutral `Agent`-contract signals come from {@link mockAgent}; LangGraph-specific
+ * signals are declared here and layered on top.
  */
 export function mockLangGraphAgent(
-  initial: {
-    messages?: Message[];
+  initial: MockAgentOptions & {
     langGraphMessages?: BaseMessage[];
-    status?: AgentStatus;
-    isLoading?: boolean;
-    error?: unknown;
     hasValue?: boolean;
     isThreadLoading?: boolean;
   } = {}
 ): MockLangGraphAgent {
-  const messages$ = signal<Message[]>(initial.messages ?? []);
+  const base = mockAgent({
+    ...initial,
+    withInterrupt: true,
+    withSubagents: true,
+    history: initial.history ?? [],
+  });
+
+  // ── LangGraph-specific writable signals (defaults copied verbatim) ────────
   const langGraphMessages$ = signal<BaseMessage[]>(initial.langGraphMessages ?? []);
-  const status$ = signal<AgentStatus>(initial.status ?? 'idle');
-  const isLoading$ = signal<boolean>(initial.isLoading ?? false);
-  const error$ = signal<unknown>(initial.error ?? null);
   const hasValue$ = signal<boolean>(initial.hasValue ?? false);
   const value$ = signal<any>(null);
-  const interrupt$ = signal<AgentInterrupt | undefined>(undefined);
   const langGraphInterrupts$ = signal<Interrupt<any>[]>([]);
-  const toolCalls$ = signal<ToolCall[]>([]);
   const langGraphToolCalls$ = signal<ToolCallWithResult[]>([]);
   const toolProgress$ = signal<ToolProgress[]>([]);
   const queue$ = signal<AgentQueue>({
@@ -88,36 +105,23 @@ export function mockLangGraphAgent(
     clear: async () => undefined,
   });
   const branch$ = signal<string>('');
-  const history$ = signal<AgentCheckpoint[]>([]);
   const langGraphHistory$ = signal<ThreadState<any>[]>([]);
   const experimentalBranchTree$ = signal<AgentBranchTree<any>>({ type: 'sequence', items: [] });
   const isThreadLoading$ = signal<boolean>(initial.isThreadLoading ?? false);
-  const subagents$ = signal<Map<string, Subagent>>(new Map());
   const activeSubagents$ = signal<SubagentStreamRef[]>([]);
   const customEvents$ = signal<CustomStreamEvent[]>([]);
 
+  // `state` derives from the raw LangGraph value (preserves current behavior).
   const state$ = computed<Record<string, unknown>>(() => {
     const v = value$();
     return v && typeof v === 'object' ? (v as Record<string, unknown>) : {};
   });
 
-  const eventsSubject = new Subject<AgentEvent>();
-
   const mock: MockLangGraphAgent = {
-    // ── AgentWithHistory (runtime-neutral surface) ────────────────────────
-    messages: messages$,
-    status: status$,
-    isLoading: isLoading$,
-    error: error$,
-    toolCalls: toolCalls$,
-    state: state$,
-    interrupt: interrupt$,
-    subagents: subagents$,
-    events$: eventsSubject.asObservable(),
-    history: history$,
-    submit: (_input: any, _opts?: any) => Promise.resolve(),
-    stop: () => Promise.resolve(),
-    regenerate: (_assistantMessageIndex: number) => Promise.resolve(),
+    ...base,
+
+    // ── Neutral surface: override `state` to derive from the LangGraph value ─
+    state: state$ as never,
 
     // ── Raw LangGraph signals ─────────────────────────────────────────────
     langGraphMessages: langGraphMessages$,
@@ -170,7 +174,7 @@ export function mockLangGraphAgent(
       toolCallStartedAt:   signal<number | null>(null),
       toolCallCompletedAt: signal<number | null>(null),
     },
-  };
+  } as MockLangGraphAgent;
 
   return mock;
 }

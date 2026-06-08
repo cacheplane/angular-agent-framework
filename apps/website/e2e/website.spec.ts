@@ -143,21 +143,21 @@ test('whitepaper signup form posts to /api/whitepaper-signup and renders success
 });
 
 test('docs page renders sidebar and content', async ({ page }) => {
-  await page.goto('/docs/agent/getting-started/introduction');
+  await page.goto('/docs/langgraph/getting-started/introduction');
   await expect(page.locator('aside').first()).toBeVisible();
   await expect(page.locator('article')).toBeVisible();
 });
 
 test('docs landing page shows library cards', async ({ page }) => {
   await page.goto('/docs');
-  await expect(page.getByText('Agent').first()).toBeVisible();
+  await expect(page.getByText('LangGraph').first()).toBeVisible();
   await expect(page.getByText('Render').first()).toBeVisible();
   await expect(page.getByText('Chat').first()).toBeVisible();
   await expect(page.getByText('AG-UI').first()).toBeVisible();
 });
 
 test('api reference renders in docs', async ({ page }) => {
-  await page.goto('/docs/agent/api/agent');
+  await page.goto('/docs/langgraph/api/inject-agent');
   await expect(page.locator('article').first()).toBeVisible();
 });
 
@@ -190,7 +190,7 @@ test('/llms-full.txt includes generated API reference content', async ({ request
   const body = await response.text();
   expect(body).toContain('## API Reference (TypeDoc)');
   expect(body).toContain('### a2ui');
-  expect(body).toContain('### agent');
+  expect(body).toContain('### langgraph');
   expect(body).toContain('### chat');
   expect(body).toContain('### licensing');
   expect(body).toContain('### telemetry');
@@ -213,28 +213,28 @@ test('sitemap.xml includes configured docs pages', async ({ request }) => {
 
   const body = await response.text();
   expect(body).toContain('https://threadplane.ai/docs');
-  expect(body).toContain('https://threadplane.ai/docs/agent/getting-started/introduction');
-  expect(body).toContain('https://threadplane.ai/docs/render/a2ui/overview');
+  expect(body).toContain('https://threadplane.ai/docs/langgraph/getting-started/introduction');
+  expect(body).toContain('https://threadplane.ai/docs/chat/a2ui/overview');
 });
 
 test('docs pages render canonical and social metadata', async ({ page }) => {
-  await page.goto('/docs/agent/guides/streaming');
+  await page.goto('/docs/langgraph/guides/streaming');
 
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
     'href',
-    'https://threadplane.ai/docs/agent/guides/streaming',
+    'https://threadplane.ai/docs/langgraph/guides/streaming',
   );
   await expect(page.locator('meta[property="og:title"]')).toHaveAttribute(
     'content',
-    'Streaming - Agent Docs - Threadplane',
+    'Streaming - LangGraph Docs - Threadplane',
   );
   await expect(page.locator('meta[property="og:url"]')).toHaveAttribute(
     'content',
-    'https://threadplane.ai/docs/agent/guides/streaming',
+    'https://threadplane.ai/docs/langgraph/guides/streaming',
   );
   await expect(page.locator('meta[name="twitter:title"]')).toHaveAttribute(
     'content',
-    'Streaming - Agent Docs - Threadplane',
+    'Streaming - LangGraph Docs - Threadplane',
   );
 });
 
@@ -251,10 +251,10 @@ test('marketing pages render canonical and page-specific social URLs', async ({ 
 test('representative docs pages do not create page-level horizontal overflow', async ({ page }) => {
   const routes = [
     '/docs',
-    '/docs/agent/getting-started/introduction',
-    '/docs/agent/api/agent',
+    '/docs/langgraph/getting-started/introduction',
+    '/docs/langgraph/api/inject-agent',
     '/docs/chat/components/chat-tool-calls',
-    '/docs/render/a2ui/overview',
+    '/docs/chat/a2ui/overview',
     '/docs/telemetry/guides/browser',
   ];
   const widths = [320, 375, 768, 1280];

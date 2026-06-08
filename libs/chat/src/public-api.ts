@@ -60,6 +60,7 @@ export type { ChatScrollBubbleMode } from './lib/primitives/chat-scroll-bubble/c
 export { ChatErrorComponent, extractErrorMessage } from './lib/primitives/chat-error/chat-error.component';
 export { ChatInterruptComponent, getInterrupt } from './lib/primitives/chat-interrupt/chat-interrupt.component';
 export { ChatToolCallsComponent } from './lib/primitives/chat-tool-calls/chat-tool-calls.component';
+export { ChatToolViewsComponent } from './lib/primitives/chat-tool-views/chat-tool-views.component';
 export { ChatToolCallTemplateDirective } from './lib/primitives/chat-tool-calls/chat-tool-call-template.directive';
 export type { ChatToolCallTemplateContext } from './lib/primitives/chat-tool-calls/chat-tool-call-template.directive';
 export { ChatSubagentsComponent } from './lib/primitives/chat-subagents/chat-subagents.component';
@@ -152,7 +153,6 @@ export {
 // Views (re-exported from @threadplane/render for convenience)
 export { views, withViews, withoutViews, toRenderRegistry } from '@threadplane/render';
 export type { ViewRegistry } from '@threadplane/render';
-export { provideViews, VIEW_REGISTRY } from '@threadplane/render';
 
 // Streaming / Generative UI
 export { createContentClassifier } from './lib/streaming/content-classifier';

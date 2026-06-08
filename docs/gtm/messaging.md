@@ -34,7 +34,7 @@ Repeat across the site, comparison pages, and content.
 
 - "No telemetry" → "**App telemetry off by default**" with link to `libs/telemetry/README.md` for the minimal opt-out package install ping.
 - "All Angular versions" (pricing) → **real compatibility matrix** with supported/experimental/planned/unsupported.
-- "A2UI v1" → **"A2UI v0.9-compatible"** until v1 is verified.
+- A2UI: present Threadplane's support as **"A2UI v1"**. Note Google-protocol compatibility without a version number (don't claim a Google "v1"; don't pin Google's protocol to a draft version).
 - "Threadplane" → **"Threadplane"** (category sweep, with care for substring overlap per existing memory note).
 
 ## Contact page (Direction A.v2, locked)

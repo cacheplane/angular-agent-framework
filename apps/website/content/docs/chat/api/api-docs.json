@@ -38,7 +38,7 @@
       },
       {
         "name": "emit",
-        "type": "InputSignal<object>",
+        "type": "InputSignal<(event: string) => void>",
         "description": "",
         "optional": false
       },
@@ -90,7 +90,7 @@
       },
       {
         "name": "emit",
-        "type": "InputSignal<object>",
+        "type": "InputSignal<(event: string) => void>",
         "description": "",
         "optional": false
       },
@@ -116,7 +116,7 @@
     "methods": [
       {
         "name": "handleClick",
-        "signature": "handleClick()",
+        "signature": "handleClick(): void",
         "description": "",
         "params": []
       }
@@ -143,7 +143,7 @@
       },
       {
         "name": "emit",
-        "type": "InputSignal<object>",
+        "type": "InputSignal<(event: string) => void>",
         "description": "",
         "optional": false
       },
@@ -201,7 +201,7 @@
       },
       {
         "name": "emit",
-        "type": "InputSignal<object>",
+        "type": "InputSignal<(event: string) => void>",
         "description": "",
         "optional": false
       },
@@ -233,7 +233,7 @@
     "methods": [
       {
         "name": "onChange",
-        "signature": "onChange(event: Event)",
+        "signature": "onChange(event: Event): void",
         "description": "",
         "params": [
           {
@@ -285,7 +285,7 @@
       },
       {
         "name": "emit",
-        "type": "InputSignal<object>",
+        "type": "InputSignal<(event: string) => void>",
         "description": "",
         "optional": false
       },
@@ -349,7 +349,7 @@
       },
       {
         "name": "emit",
-        "type": "InputSignal<object>",
+        "type": "InputSignal<(event: string) => void>",
         "description": "",
         "optional": false
       },
@@ -399,7 +399,7 @@
     "methods": [
       {
         "name": "onChange",
-        "signature": "onChange(event: Event)",
+        "signature": "onChange(event: Event): void",
         "description": "",
         "params": [
           {
@@ -445,7 +445,7 @@
       },
       {
         "name": "emit",
-        "type": "InputSignal<object>",
+        "type": "InputSignal<(event: string) => void>",
         "description": "",
         "optional": false
       },
@@ -497,7 +497,7 @@
       },
       {
         "name": "emit",
-        "type": "InputSignal<object>",
+        "type": "InputSignal<(event: string) => void>",
         "description": "",
         "optional": false
       },
@@ -561,7 +561,7 @@
       },
       {
         "name": "emit",
-        "type": "InputSignal<object>",
+        "type": "InputSignal<(event: string) => void>",
         "description": "",
         "optional": false
       },
@@ -611,19 +611,19 @@
     "methods": [
       {
         "name": "explicitHeight",
-        "signature": "explicitHeight()",
+        "signature": "explicitHeight(): string | null",
         "description": "",
         "params": []
       },
       {
         "name": "explicitWidth",
-        "signature": "explicitWidth()",
+        "signature": "explicitWidth(): string | null",
         "description": "",
         "params": []
       },
       {
         "name": "hintStyle",
-        "signature": "hintStyle()",
+        "signature": "hintStyle(): object | null",
         "description": "",
         "params": []
       }
@@ -668,7 +668,7 @@
       },
       {
         "name": "emit",
-        "type": "InputSignal<object>",
+        "type": "InputSignal<(event: string) => void>",
         "description": "",
         "optional": false
       },
@@ -720,7 +720,7 @@
       },
       {
         "name": "emit",
-        "type": "InputSignal<object>",
+        "type": "InputSignal<(event: string) => void>",
         "description": "",
         "optional": false
       },
@@ -784,7 +784,7 @@
       },
       {
         "name": "emit",
-        "type": "InputSignal<object>",
+        "type": "InputSignal<(event: string) => void>",
         "description": "",
         "optional": false
       },
@@ -840,7 +840,7 @@
     "methods": [
       {
         "name": "isSelected",
-        "signature": "isSelected(value: string)",
+        "signature": "isSelected(value: string): boolean",
         "description": "",
         "params": [
           {
@@ -853,7 +853,7 @@
       },
       {
         "name": "onCheckChange",
-        "signature": "onCheckChange(value: string, event: Event)",
+        "signature": "onCheckChange(value: string, event: Event): void",
         "description": "",
         "params": [
           {
@@ -872,7 +872,7 @@
       },
       {
         "name": "onSelectChange",
-        "signature": "onSelectChange(event: Event)",
+        "signature": "onSelectChange(event: Event): void",
         "description": "",
         "params": [
           {
@@ -924,7 +924,7 @@
       },
       {
         "name": "emit",
-        "type": "InputSignal<object>",
+        "type": "InputSignal<(event: string) => void>",
         "description": "",
         "optional": false
       },
@@ -994,7 +994,7 @@
       },
       {
         "name": "emit",
-        "type": "InputSignal<object>",
+        "type": "InputSignal<(event: string) => void>",
         "description": "",
         "optional": false
       },
@@ -1044,7 +1044,7 @@
     "methods": [
       {
         "name": "onInput",
-        "signature": "onInput(event: Event)",
+        "signature": "onInput(event: Event): void",
         "description": "",
         "params": [
           {
@@ -1090,7 +1090,7 @@
       },
       {
         "name": "handlers",
-        "type": "InputSignal<Record<string, object>>",
+        "type": "InputSignal<Record<string, (params: Record<string, unknown>) => unknown>>",
         "description": "",
         "optional": false
       },
@@ -1146,7 +1146,7 @@
     "methods": [
       {
         "name": "onRenderEvent",
-        "signature": "onRenderEvent(event: RenderEvent)",
+        "signature": "onRenderEvent(event: RenderEvent): void",
         "description": "",
         "params": [
           {
@@ -1192,7 +1192,7 @@
       },
       {
         "name": "emit",
-        "type": "InputSignal<object>",
+        "type": "InputSignal<(event: string) => void>",
         "description": "",
         "optional": false
       },
@@ -1218,7 +1218,7 @@
     "methods": [
       {
         "name": "selectTab",
-        "signature": "selectTab(index: number)",
+        "signature": "selectTab(index: number): void",
         "description": "",
         "params": [
           {
@@ -1252,7 +1252,7 @@
       },
       {
         "name": "emit",
-        "type": "InputSignal<object>",
+        "type": "InputSignal<(event: string) => void>",
         "description": "",
         "optional": false
       },
@@ -1284,7 +1284,7 @@
     "methods": [
       {
         "name": "cssClass",
-        "signature": "cssClass()",
+        "signature": "cssClass(): string",
         "description": "",
         "params": []
       }
@@ -1323,7 +1323,7 @@
       },
       {
         "name": "emit",
-        "type": "InputSignal<object>",
+        "type": "InputSignal<(event: string) => void>",
         "description": "",
         "optional": false
       },
@@ -1385,7 +1385,7 @@
     "methods": [
       {
         "name": "onInput",
-        "signature": "onInput(event: Event)",
+        "signature": "onInput(event: Event): void",
         "description": "",
         "params": [
           {
@@ -1431,7 +1431,7 @@
       },
       {
         "name": "emit",
-        "type": "InputSignal<object>",
+        "type": "InputSignal<(event: string) => void>",
         "description": "",
         "optional": false
       },
@@ -1509,7 +1509,7 @@
     "methods": [
       {
         "name": "emit",
-        "signature": "emit(action: ChatApprovalAction)",
+        "signature": "emit(action: ChatApprovalAction): void",
         "description": "",
         "params": [
           {
@@ -1522,7 +1522,7 @@
       },
       {
         "name": "onCancelEvent",
-        "signature": "onCancelEvent(ev: Event)",
+        "signature": "onCancelEvent(ev: Event): void",
         "description": "",
         "params": [
           {
@@ -1535,7 +1535,7 @@
       },
       {
         "name": "onDialogClose",
-        "signature": "onDialogClose()",
+        "signature": "onDialogClose(): void",
         "description": "",
         "params": []
       }
@@ -1633,6 +1633,12 @@
         "optional": false
       },
       {
+        "name": "excludedToolNames",
+        "type": "Signal<readonly string[]>",
+        "description": "Union of GenUI dispatcher tool names and registered view tool names.",
+        "optional": false
+      },
+      {
         "name": "genuiToolNames",
         "type": "InputSignal<readonly string[]>",
         "description": "Tool names whose calls produce a rendered GenUI surface rather than\nvisible text. Used to (a) filter <chat-tool-calls> so internal\ndispatchers don't render args JSON as cards, and (b) detect\n\"this is a GenUI turn\" for the building-UI skeleton.\nDefault covers the canonical A2UI + json-render schema tools.",
@@ -1640,7 +1646,7 @@
       },
       {
         "name": "handlers",
-        "type": "InputSignal<Record<string, object>>",
+        "type": "InputSignal<Record<string, (params: Record<string, unknown>) => unknown>>",
         "description": "",
         "optional": false
       },
@@ -1652,7 +1658,7 @@
       },
       {
         "name": "messageContent",
-        "type": "object",
+        "type": "(message: BaseMessage<>) => string",
         "description": "",
         "optional": false
       },
@@ -1753,6 +1759,12 @@
         "optional": false
       },
       {
+        "name": "viewToolNames",
+        "type": "Signal<readonly string[]>",
+        "description": "Tool names that have a registered view (keys of the `views` registry).\n These render as inline tool-views and are excluded from the default\n tool-call card so they don't render twice.",
+        "optional": false
+      },
+      {
         "name": "welcomeDisabled",
         "type": "InputSignal<boolean>",
         "description": "",
@@ -1762,7 +1774,7 @@
     "methods": [
       {
         "name": "classifyMessage",
-        "signature": "classifyMessage(content: string, message: object)",
+        "signature": "classifyMessage(content: string, message: object): ContentClassifier",
         "description": "",
         "params": [
           {
@@ -1781,20 +1793,20 @@
       },
       {
         "name": "clearClassifiers",
-        "signature": "clearClassifiers()",
+        "signature": "clearClassifiers(): void",
         "description": "",
         "params": []
       },
       {
         "name": "clearThread",
-        "signature": "clearThread()",
+        "signature": "clearThread(): void",
         "description": "Clears local view state (classifiers, surface store, lifecycle counters)\nfor a new thread.\n\nResets messageCount to 0 and inputSubmittedAt to null. componentReady and\nfirstMessageSent are NOT reset (sticky for the chat instance lifetime).",
         "params": []
       },
       {
         "name": "humanContent",
-        "signature": "humanContent(message: unknown)",
-        "description": "Renderable content for a human-role message bubble. Most human\nmessages are typed prompts and pass through `messageContent`\nunchanged. A2UI action messages (e.g. form submits, button clicks\non a rendered surface) flow through the same submit channel and\nland in the message stream as a HumanMessage whose content is a\nJSON-serialized `A2uiActionMessage`. Showing the raw JSON as if\nthe user typed it leaks the protocol; per the A2UI v0.9 spec\nthose events resemble tool calls more than user utterances.\n\n`a2uiActionLabel` returns a short human-readable label for\nrecognized action shapes (\"Search flights\", \"Selected flight UA123\",\netc.) — or null for any non-action content, in which case we fall\nback to the original text.",
+        "signature": "humanContent(message: unknown): string",
+        "description": "Renderable content for a human-role message bubble. Most human\nmessages are typed prompts and pass through `messageContent`\nunchanged. A2UI action messages (e.g. form submits, button clicks\non a rendered surface) flow through the same submit channel and\nland in the message stream as a HumanMessage whose content is a\nJSON-serialized `A2uiActionMessage`. Showing the raw JSON as if\nthe user typed it leaks the protocol; per the A2UI spec\nthose events resemble tool calls more than user utterances.\n\n`a2uiActionLabel` returns a short human-readable label for\nrecognized action shapes (\"Search flights\", \"Selected flight UA123\",\netc.) — or null for any non-action content, in which case we fall\nback to the original text.",
         "params": [
           {
             "name": "message",
@@ -1806,7 +1818,7 @@
       },
       {
         "name": "isGenuiTurn",
-        "signature": "isGenuiTurn(message: unknown, _prevMsg: unknown, index: number)",
+        "signature": "isGenuiTurn(message: unknown, _prevMsg: unknown, index: number): boolean",
         "description": "True when this assistant message is part of a GenUI render turn.\nWalks backward through messages from `index` until it finds either\nan assistant message with `tool_calls` referencing a GenUI tool\n(→ this turn produces a surface) or a human message (→ the\npreceding turn ended; this assistant message stands on its own).\n\nAlso checks the message itself for:\n  - `extra.tool_calls[].name` matching a GenUI tool (post-streaming\n    state of the tool-call AI message), OR\n  - `extra.content[].type === 'function_call' && .name` matching\n    (live during the OpenAI Responses-API streaming chunks before\n    `tool_calls` populates).\n\nThe walk-back approach is robust to LangGraph's in-place\nreplacement of the ToolMessage (which strips the `name` field),\nunlike a single prev-message check.",
         "params": [
           {
@@ -1831,7 +1843,7 @@
       },
       {
         "name": "isReasoningStreaming",
-        "signature": "isReasoningStreaming(message: Message, index: number)",
+        "signature": "isReasoningStreaming(message: Message, index: number): boolean",
         "description": "True while a message's reasoning is mid-stream — i.e. it's the latest\nmessage, the agent is loading, the message has reasoning content, and\nno response text has arrived yet. Once the response text begins, the\nreasoning pill collapses (per its internal logic).",
         "params": [
           {
@@ -1850,7 +1862,7 @@
       },
       {
         "name": "onA2uiAction",
-        "signature": "onA2uiAction(message: A2uiActionMessage)",
+        "signature": "onA2uiAction(message: A2uiActionMessage): void",
         "description": "",
         "params": [
           {
@@ -1863,7 +1875,7 @@
       },
       {
         "name": "onA2uiEvent",
-        "signature": "onA2uiEvent(event: RenderEvent, messageIndex: number, surfaceId: string)",
+        "signature": "onA2uiEvent(event: RenderEvent, messageIndex: number, surfaceId: string): void",
         "description": "",
         "params": [
           {
@@ -1888,7 +1900,7 @@
       },
       {
         "name": "onCopy",
-        "signature": "onCopy(message: unknown, content: string)",
+        "signature": "onCopy(message: unknown, content: string): void",
         "description": "",
         "params": [
           {
@@ -1907,7 +1919,7 @@
       },
       {
         "name": "onRate",
-        "signature": "onRate(message: unknown, value: \"up\" | \"down\")",
+        "signature": "onRate(message: unknown, value: \"up\" | \"down\"): void",
         "description": "",
         "params": [
           {
@@ -1926,7 +1938,7 @@
       },
       {
         "name": "onRegenerate",
-        "signature": "onRegenerate(messageIndex: number)",
+        "signature": "onRegenerate(messageIndex: number): void",
         "description": "Regenerate the assistant response at the given message index.",
         "params": [
           {
@@ -1939,19 +1951,19 @@
       },
       {
         "name": "onScroll",
-        "signature": "onScroll()",
+        "signature": "onScroll(): void",
         "description": "",
         "params": []
       },
       {
         "name": "onScrollBubbleClick",
-        "signature": "onScrollBubbleClick()",
+        "signature": "onScrollBubbleClick(): void",
         "description": "",
         "params": []
       },
       {
         "name": "onSpecEvent",
-        "signature": "onSpecEvent(event: RenderEvent, messageIndex: number)",
+        "signature": "onSpecEvent(event: RenderEvent, messageIndex: number): void",
         "description": "",
         "params": [
           {
@@ -1970,13 +1982,13 @@
       },
       {
         "name": "onUserSubmitted",
-        "signature": "onUserSubmitted()",
+        "signature": "onUserSubmitted(): void",
         "description": "",
         "params": []
       },
       {
         "name": "prevMessage",
-        "signature": "prevMessage(index: number)",
+        "signature": "prevMessage(index: number): unknown",
         "description": "Look up the previous message in the agent's messages list.\nReturns undefined for the first message.",
         "params": [
           {
@@ -1989,7 +2001,7 @@
       },
       {
         "name": "prevRole",
-        "signature": "prevRole(index: number)",
+        "signature": "prevRole(index: number): ChatMessageRole | undefined",
         "description": "",
         "params": [
           {
@@ -2002,7 +2014,7 @@
       },
       {
         "name": "submitMessage",
-        "signature": "submitMessage(text: string)",
+        "signature": "submitMessage(text: string): void",
         "description": "Programmatic submit. Calls `agent.submit({ message: text })` and updates\nthe CHAT_LIFECYCLE signals. Trimmed-empty text is a no-op.",
         "params": [
           {
@@ -2086,7 +2098,7 @@
     "methods": [
       {
         "name": "onDialogKeydown",
-        "signature": "onDialogKeydown(e: KeyboardEvent)",
+        "signature": "onDialogKeydown(e: KeyboardEvent): void",
         "description": "",
         "params": [
           {
@@ -2136,7 +2148,7 @@
       },
       {
         "name": "handlers",
-        "type": "InputSignal<Record<string, object> | undefined>",
+        "type": "InputSignal<Record<string, (params: Record<string, unknown>) => unknown> | undefined>",
         "description": "",
         "optional": false
       },
@@ -2241,13 +2253,13 @@
     "methods": [
       {
         "name": "activeRowId",
-        "signature": "activeRowId()",
+        "signature": "activeRowId(): string | null",
         "description": "",
         "params": []
       },
       {
         "name": "onInput",
-        "signature": "onInput(e: Event)",
+        "signature": "onInput(e: Event): void",
         "description": "",
         "params": [
           {
@@ -2260,7 +2272,7 @@
       },
       {
         "name": "onInputKeydown",
-        "signature": "onInputKeydown(e: KeyboardEvent)",
+        "signature": "onInputKeydown(e: KeyboardEvent): void",
         "description": "",
         "params": [
           {
@@ -2273,7 +2285,7 @@
       },
       {
         "name": "onRowClick",
-        "signature": "onRowClick(id: string)",
+        "signature": "onRowClick(id: string): void",
         "description": "",
         "params": [
           {
@@ -2286,7 +2298,7 @@
       },
       {
         "name": "rowId",
-        "signature": "rowId(index: number)",
+        "signature": "rowId(index: number): string",
         "description": "",
         "params": [
           {
@@ -2382,13 +2394,13 @@
     "methods": [
       {
         "name": "focusTextarea",
-        "signature": "focusTextarea()",
+        "signature": "focusTextarea(): void",
         "description": "",
         "params": []
       },
       {
         "name": "onKeydown",
-        "signature": "onKeydown(event: KeyboardEvent)",
+        "signature": "onKeydown(event: KeyboardEvent): void",
         "description": "",
         "params": [
           {
@@ -2401,13 +2413,13 @@
       },
       {
         "name": "onStop",
-        "signature": "onStop()",
+        "signature": "onStop(): void",
         "description": "Abort the current streaming response (if the adapter supports it).",
         "params": []
       },
       {
         "name": "onSubmit",
-        "signature": "onSubmit()",
+        "signature": "onSubmit(): void",
         "description": "",
         "params": []
       }
@@ -2442,7 +2454,7 @@
     "methods": [
       {
         "name": "defaultText",
-        "signature": "defaultText(i: AgentInterrupt)",
+        "signature": "defaultText(i: AgentInterrupt): string",
         "description": "",
         "params": [
           {
@@ -2558,13 +2570,13 @@
     "methods": [
       {
         "name": "onCopy",
-        "signature": "onCopy()",
+        "signature": "onCopy(): Promise<void>",
         "description": "",
         "params": []
       },
       {
         "name": "onRate",
-        "signature": "onRate(value: \"up\" | \"down\")",
+        "signature": "onRate(value: \"up\" | \"down\"): void",
         "description": "",
         "params": [
           {
@@ -2650,7 +2662,7 @@
       },
       {
         "name": "getMessageType",
-        "type": "object",
+        "type": "(message: Message) => MessageTemplateType",
         "description": "",
         "optional": false
       },
@@ -2670,7 +2682,7 @@
     "methods": [
       {
         "name": "findTemplate",
-        "signature": "findTemplate(type: MessageTemplateType)",
+        "signature": "findTemplate(type: MessageTemplateType): MessageTemplateDirective<> | undefined",
         "description": "",
         "params": [
           {
@@ -2736,7 +2748,7 @@
     "methods": [
       {
         "name": "onItemClick",
-        "signature": "onItemClick(item: OverflowMenuItem)",
+        "signature": "onItemClick(item: OverflowMenuItem): void",
         "description": "",
         "params": [
           {
@@ -2749,7 +2761,7 @@
       },
       {
         "name": "onMenuKeydown",
-        "signature": "onMenuKeydown(e: KeyboardEvent)",
+        "signature": "onMenuKeydown(e: KeyboardEvent): void",
         "description": "",
         "params": [
           {
@@ -2821,19 +2833,19 @@
     "methods": [
       {
         "name": "closeWindow",
-        "signature": "closeWindow()",
+        "signature": "closeWindow(): void",
         "description": "",
         "params": []
       },
       {
         "name": "openWindow",
-        "signature": "openWindow()",
+        "signature": "openWindow(): void",
         "description": "",
         "params": []
       },
       {
         "name": "toggle",
-        "signature": "toggle()",
+        "signature": "toggle(): void",
         "description": "",
         "params": []
       }
@@ -2940,25 +2952,25 @@
     "methods": [
       {
         "name": "cancelCreate",
-        "signature": "cancelCreate()",
+        "signature": "cancelCreate(): void",
         "description": "",
         "params": []
       },
       {
         "name": "cancelRename",
-        "signature": "cancelRename()",
+        "signature": "cancelRename(): void",
         "description": "",
         "params": []
       },
       {
         "name": "commitCreate",
-        "signature": "commitCreate()",
+        "signature": "commitCreate(): Promise<void>",
         "description": "",
         "params": []
       },
       {
         "name": "commitRename",
-        "signature": "commitRename(projectId: string)",
+        "signature": "commitRename(projectId: string): Promise<void>",
         "description": "",
         "params": [
           {
@@ -2971,7 +2983,7 @@
       },
       {
         "name": "onCreateInput",
-        "signature": "onCreateInput(e: Event)",
+        "signature": "onCreateInput(e: Event): void",
         "description": "",
         "params": [
           {
@@ -2984,7 +2996,7 @@
       },
       {
         "name": "onEditInput",
-        "signature": "onEditInput(e: Event)",
+        "signature": "onEditInput(e: Event): void",
         "description": "",
         "params": [
           {
@@ -2997,7 +3009,7 @@
       },
       {
         "name": "onMenuAction",
-        "signature": "onMenuAction(id: string)",
+        "signature": "onMenuAction(id: string): void",
         "description": "",
         "params": [
           {
@@ -3010,13 +3022,13 @@
       },
       {
         "name": "onNewProjectClicked",
-        "signature": "onNewProjectClicked()",
+        "signature": "onNewProjectClicked(): void",
         "description": "",
         "params": []
       },
       {
         "name": "openMenu",
-        "signature": "openMenu(projectId: string, anchor: HTMLElement)",
+        "signature": "openMenu(projectId: string, anchor: HTMLElement): void",
         "description": "",
         "params": [
           {
@@ -3035,13 +3047,13 @@
       },
       {
         "name": "performDelete",
-        "signature": "performDelete()",
+        "signature": "performDelete(): Promise<void>",
         "description": "",
         "params": []
       },
       {
         "name": "selectProject",
-        "signature": "selectProject(projectId: string)",
+        "signature": "selectProject(projectId: string): void",
         "description": "",
         "params": [
           {
@@ -3054,7 +3066,7 @@
       },
       {
         "name": "showKebab",
-        "signature": "showKebab()",
+        "signature": "showKebab(): boolean",
         "description": "",
         "params": []
       }
@@ -3125,7 +3137,7 @@
     "methods": [
       {
         "name": "toggle",
-        "signature": "toggle()",
+        "signature": "toggle(): void",
         "description": "",
         "params": []
       }
@@ -3212,7 +3224,7 @@
     "methods": [
       {
         "name": "onMenuKeydown",
-        "signature": "onMenuKeydown(e: KeyboardEvent)",
+        "signature": "onMenuKeydown(e: KeyboardEvent): void",
         "description": "",
         "params": [
           {
@@ -3225,7 +3237,7 @@
       },
       {
         "name": "onTriggerKeydown",
-        "signature": "onTriggerKeydown(e: KeyboardEvent)",
+        "signature": "onTriggerKeydown(e: KeyboardEvent): void",
         "description": "",
         "params": [
           {
@@ -3238,7 +3250,7 @@
       },
       {
         "name": "selectOption",
-        "signature": "selectOption(opt: ChatSelectOption)",
+        "signature": "selectOption(opt: ChatSelectOption): void",
         "description": "",
         "params": [
           {
@@ -3251,7 +3263,7 @@
       },
       {
         "name": "toggle",
-        "signature": "toggle()",
+        "signature": "toggle(): void",
         "description": "",
         "params": []
       }
@@ -3316,19 +3328,19 @@
     "methods": [
       {
         "name": "closeWindow",
-        "signature": "closeWindow()",
+        "signature": "closeWindow(): void",
         "description": "",
         "params": []
       },
       {
         "name": "openWindow",
-        "signature": "openWindow()",
+        "signature": "openWindow(): void",
         "description": "",
         "params": []
       },
       {
         "name": "toggle",
-        "signature": "toggle()",
+        "signature": "toggle(): void",
         "description": "",
         "params": []
       }
@@ -3471,19 +3483,19 @@
     "methods": [
       {
         "name": "onCollapseToggle",
-        "signature": "onCollapseToggle()",
+        "signature": "onCollapseToggle(): void",
         "description": "",
         "params": []
       },
       {
         "name": "onEscape",
-        "signature": "onEscape()",
+        "signature": "onEscape(): void",
         "description": "",
         "params": []
       },
       {
         "name": "openDebug",
-        "signature": "openDebug(event: MouseEvent)",
+        "signature": "openDebug(event: MouseEvent): void",
         "description": "",
         "params": [
           {
@@ -3773,13 +3785,13 @@
     "methods": [
       {
         "name": "cancelRename",
-        "signature": "cancelRename()",
+        "signature": "cancelRename(): void",
         "description": "",
         "params": []
       },
       {
         "name": "commitRename",
-        "signature": "commitRename(threadId: string)",
+        "signature": "commitRename(threadId: string): Promise<void>",
         "description": "",
         "params": [
           {
@@ -3792,7 +3804,7 @@
       },
       {
         "name": "dropPositionFor",
-        "signature": "dropPositionFor(threadId: string)",
+        "signature": "dropPositionFor(threadId: string): \"before\" | \"after\" | null",
         "description": "",
         "params": [
           {
@@ -3805,7 +3817,7 @@
       },
       {
         "name": "initialOf",
-        "signature": "initialOf(title: string)",
+        "signature": "initialOf(title: string): string",
         "description": "First grapheme of a title rendered as an uppercase initial for the\n collapsed sidenav. Falls back to \"?\" for empty/whitespace titles.",
         "params": [
           {
@@ -3818,13 +3830,13 @@
       },
       {
         "name": "onDragEnd",
-        "signature": "onDragEnd()",
+        "signature": "onDragEnd(): void",
         "description": "",
         "params": []
       },
       {
         "name": "onDragLeave",
-        "signature": "onDragLeave(_e: DragEvent, threadId: string)",
+        "signature": "onDragLeave(_e: DragEvent, threadId: string): void",
         "description": "",
         "params": [
           {
@@ -3843,7 +3855,7 @@
       },
       {
         "name": "onDragOver",
-        "signature": "onDragOver(e: DragEvent, threadId: string)",
+        "signature": "onDragOver(e: DragEvent, threadId: string): void",
         "description": "",
         "params": [
           {
@@ -3862,7 +3874,7 @@
       },
       {
         "name": "onDragStart",
-        "signature": "onDragStart(e: DragEvent, threadId: string)",
+        "signature": "onDragStart(e: DragEvent, threadId: string): void",
         "description": "",
         "params": [
           {
@@ -3881,7 +3893,7 @@
       },
       {
         "name": "onDrop",
-        "signature": "onDrop(e: DragEvent, targetThreadId: string)",
+        "signature": "onDrop(e: DragEvent, targetThreadId: string): void",
         "description": "",
         "params": [
           {
@@ -3900,7 +3912,7 @@
       },
       {
         "name": "onEditInput",
-        "signature": "onEditInput(e: Event)",
+        "signature": "onEditInput(e: Event): void",
         "description": "",
         "params": [
           {
@@ -3913,7 +3925,7 @@
       },
       {
         "name": "onMenuAction",
-        "signature": "onMenuAction(id: string)",
+        "signature": "onMenuAction(id: string): void",
         "description": "",
         "params": [
           {
@@ -3926,7 +3938,7 @@
       },
       {
         "name": "onMoveMenuAction",
-        "signature": "onMoveMenuAction(itemId: string)",
+        "signature": "onMoveMenuAction(itemId: string): void",
         "description": "",
         "params": [
           {
@@ -3939,7 +3951,7 @@
       },
       {
         "name": "onRowContextMenu",
-        "signature": "onRowContextMenu(threadId: string, event: MouseEvent)",
+        "signature": "onRowContextMenu(threadId: string, event: MouseEvent): void",
         "description": "Right-click on a row opens the same overflow menu anchored at the\n cursor. Always prevents the native context menu — including when the\n adapter exposes no row actions (in which case we open nothing rather\n than confusing the user with the OS menu on what looks like a custom\n list).",
         "params": [
           {
@@ -3958,7 +3970,7 @@
       },
       {
         "name": "openMenu",
-        "signature": "openMenu(threadId: string, anchor: HTMLElement)",
+        "signature": "openMenu(threadId: string, anchor: HTMLElement): void",
         "description": "",
         "params": [
           {
@@ -3977,7 +3989,7 @@
       },
       {
         "name": "performArchive",
-        "signature": "performArchive(threadId: string)",
+        "signature": "performArchive(threadId: string): Promise<void>",
         "description": "",
         "params": [
           {
@@ -3990,13 +4002,13 @@
       },
       {
         "name": "performDelete",
-        "signature": "performDelete()",
+        "signature": "performDelete(): Promise<void>",
         "description": "",
         "params": []
       },
       {
         "name": "performMoveDown",
-        "signature": "performMoveDown(threadId: string)",
+        "signature": "performMoveDown(threadId: string): Promise<void>",
         "description": "",
         "params": [
           {
@@ -4009,7 +4021,7 @@
       },
       {
         "name": "performMoveToProject",
-        "signature": "performMoveToProject(threadId: string, projectId: string | null)",
+        "signature": "performMoveToProject(threadId: string, projectId: string | null): Promise<void>",
         "description": "",
         "params": [
           {
@@ -4028,7 +4040,7 @@
       },
       {
         "name": "performMoveUp",
-        "signature": "performMoveUp(threadId: string)",
+        "signature": "performMoveUp(threadId: string): Promise<void>",
         "description": "",
         "params": [
           {
@@ -4041,7 +4053,7 @@
       },
       {
         "name": "performPin",
-        "signature": "performPin(threadId: string)",
+        "signature": "performPin(threadId: string): Promise<void>",
         "description": "",
         "params": [
           {
@@ -4054,7 +4066,7 @@
       },
       {
         "name": "performReorderPinned",
-        "signature": "performReorderPinned(threadId: string, beforeId: string | null)",
+        "signature": "performReorderPinned(threadId: string, beforeId: string | null): Promise<void>",
         "description": "",
         "params": [
           {
@@ -4073,7 +4085,7 @@
       },
       {
         "name": "performUnarchive",
-        "signature": "performUnarchive(threadId: string)",
+        "signature": "performUnarchive(threadId: string): Promise<void>",
         "description": "",
         "params": [
           {
@@ -4086,7 +4098,7 @@
       },
       {
         "name": "performUnpin",
-        "signature": "performUnpin(threadId: string)",
+        "signature": "performUnpin(threadId: string): Promise<void>",
         "description": "",
         "params": [
           {
@@ -4099,7 +4111,7 @@
       },
       {
         "name": "relativeTime",
-        "signature": "relativeTime(epochMs: number)",
+        "signature": "relativeTime(epochMs: number): string",
         "description": "",
         "params": [
           {
@@ -4112,7 +4124,7 @@
       },
       {
         "name": "selectThread",
-        "signature": "selectThread(threadId: string)",
+        "signature": "selectThread(threadId: string): void",
         "description": "",
         "params": [
           {
@@ -4125,13 +4137,13 @@
       },
       {
         "name": "showKebab",
-        "signature": "showKebab()",
+        "signature": "showKebab(): boolean",
         "description": "",
         "params": []
       },
       {
         "name": "threadLabel",
-        "signature": "threadLabel(thread: Thread)",
+        "signature": "threadLabel(thread: Thread): string",
         "description": "",
         "params": [
           {
@@ -4179,7 +4191,7 @@
     "methods": [
       {
         "name": "selectCheckpoint",
-        "signature": "selectCheckpoint(cp: AgentCheckpoint)",
+        "signature": "selectCheckpoint(cp: AgentCheckpoint): void",
         "description": "",
         "params": [
           {
@@ -4233,7 +4245,7 @@
     "methods": [
       {
         "name": "fork",
-        "signature": "fork(cp: AgentCheckpoint, index: number)",
+        "signature": "fork(cp: AgentCheckpoint, index: number): void",
         "description": "",
         "params": [
           {
@@ -4252,7 +4264,7 @@
       },
       {
         "name": "replay",
-        "signature": "replay(cp: AgentCheckpoint)",
+        "signature": "replay(cp: AgentCheckpoint): void",
         "description": "",
         "params": [
           {
@@ -4312,7 +4324,7 @@
     "methods": [
       {
         "name": "formatJson",
-        "signature": "formatJson(value: unknown)",
+        "signature": "formatJson(value: unknown): string",
         "description": "",
         "params": [
           {
@@ -4364,7 +4376,7 @@
       },
       {
         "name": "groupSummary",
-        "type": "InputSignal<object | undefined>",
+        "type": "InputSignal<(name: string, count: number) => string | undefined>",
         "description": "",
         "optional": false
       },
@@ -4390,7 +4402,7 @@
     "methods": [
       {
         "name": "summarize",
-        "signature": "summarize(name: string, count: number)",
+        "signature": "summarize(name: string, count: number): string",
         "description": "",
         "params": [
           {
@@ -4409,7 +4421,7 @@
       },
       {
         "name": "toggleGroup",
-        "signature": "toggleGroup(index: number)",
+        "signature": "toggleGroup(index: number): void",
         "description": "",
         "params": [
           {
@@ -4422,7 +4434,7 @@
       },
       {
         "name": "toToolCallInfo",
-        "signature": "toToolCallInfo(tc: ToolCall)",
+        "signature": "toToolCallInfo(tc: ToolCall): ToolCallInfo",
         "description": "",
         "params": [
           {
@@ -4451,6 +4463,58 @@
       {
         "name": "templateRef",
         "type": "TemplateRef<any>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "methods": []
+  },
+  {
+    "name": "ChatToolViewsComponent",
+    "kind": "class",
+    "description": "Renders a frontend component for a tool call by reusing the chat\ncomposition's `views` registry. A tool call whose `name` matches a\nregistry key is bridged into a synthetic one-element render spec\n(`{ root: name, elements: { [name]: { type: name, props } } }`) and\nrendered through the existing render-spec pipeline.\n\nProps merge the live `args` (present while the call streams) with the\n`result` (on completion) and always include `status`, so a view\ncomponent can show its own loading/empty/error states. `RenderElement`\nfilters props down to the component's declared inputs, so extra keys\n(and a `status` a component chooses not to declare) are harmless.",
+    "params": [],
+    "examples": [],
+    "properties": [
+      {
+        "name": "agent",
+        "type": "InputSignal<Agent>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "handlers",
+        "type": "InputSignal<Record<string, (params: Record<string, unknown>) => unknown>>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "message",
+        "type": "InputSignal<Message | undefined>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "registry",
+        "type": "Signal<AngularRegistry | undefined>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "store",
+        "type": "InputSignal<StateStore | undefined>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "toolViews",
+        "type": "Signal<object[]>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "views",
+        "type": "InputSignal<Readonly<Record<string, Type<unknown> | RenderViewEntry>> | undefined>",
         "description": "",
         "optional": false
       }
@@ -4492,7 +4556,7 @@
     "methods": [
       {
         "name": "toggle",
-        "signature": "toggle()",
+        "signature": "toggle(): void",
         "description": "",
         "params": []
       }
@@ -4589,7 +4653,7 @@
     "methods": [
       {
         "name": "lookup",
-        "signature": "lookup(refId: string)",
+        "signature": "lookup(refId: string): Signal<ResolvedCitation | null>",
         "description": "",
         "params": [
           {
@@ -4657,7 +4721,7 @@
     "methods": [
       {
         "name": "resolve",
-        "signature": "resolve(child: MarkdownNode)",
+        "signature": "resolve(child: MarkdownNode): Type<unknown> | null",
         "description": "",
         "params": [
           {
@@ -5134,36 +5198,79 @@
         "type": "Signal<Map<string, A2uiSurfaceState>>",
         "description": "Chat-side projections with per-component readiness.",
         "optional": false
-      },
+      }
+    ],
+    "methods": [
       {
         "name": "apply",
-        "type": "unknown",
+        "signature": "apply(message: A2uiMessage): void",
         "description": "",
-        "optional": false
+        "params": [
+          {
+            "name": "message",
+            "type": "A2uiMessage",
+            "description": "",
+            "optional": false
+          }
+        ]
       },
       {
         "name": "applyPartialArgs",
-        "type": "unknown",
-        "description": "",
-        "optional": false
+        "signature": "applyPartialArgs(toolCallId: string, envelopes: readonly A2uiMessage[]): void",
+        "description": "Live-stream entry point. Iterates envelopes and feeds each through\n`apply()`. Records the tool_call_id so the wrapped-content classifier\ncan short-circuit duplicate dispatch when the final AIMessage arrives.",
+        "params": [
+          {
+            "name": "toolCallId",
+            "type": "string",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "envelopes",
+            "type": "readonly A2uiMessage[]",
+            "description": "",
+            "optional": false
+          }
+        ]
       },
       {
         "name": "isPartialLive",
-        "type": "unknown",
-        "description": "",
-        "optional": false
+        "signature": "isPartialLive(toolCallId: string): boolean",
+        "description": "True if a tool_call_id has produced live envelopes via applyPartialArgs.",
+        "params": [
+          {
+            "name": "toolCallId",
+            "type": "string",
+            "description": "",
+            "optional": false
+          }
+        ]
       },
       {
         "name": "surface",
-        "type": "unknown",
+        "signature": "surface(surfaceId: string): Signal<any>",
         "description": "",
-        "optional": false
+        "params": [
+          {
+            "name": "surfaceId",
+            "type": "string",
+            "description": "",
+            "optional": false
+          }
+        ]
       },
       {
         "name": "surfaceState",
-        "type": "unknown",
+        "signature": "surfaceState(surfaceId: string): Signal<A2uiSurfaceState | undefined>",
         "description": "",
-        "optional": false
+        "params": [
+          {
+            "name": "surfaceId",
+            "type": "string",
+            "description": "",
+            "optional": false
+          }
+        ]
       }
     ],
     "examples": []
@@ -5205,7 +5312,7 @@
       },
       {
         "name": "regenerate",
-        "type": "object",
+        "type": "(assistantMessageIndex: number) => Promise<void>",
         "description": "Discards the assistant message at the given index AND all messages after\nit, then re-runs the agent against the trimmed conversation tail. The\npreceding user message (at index - 1) is preserved and re-submitted as\nthe agent's input. No new user message is added to the history.\n\nThrows if the message at `index` is not 'assistant' role, or if the\nagent is currently loading another response.",
         "optional": false
       },
@@ -5223,7 +5330,7 @@
       },
       {
         "name": "stop",
-        "type": "object",
+        "type": "() => Promise<void>",
         "description": "",
         "optional": false
       },
@@ -5235,7 +5342,7 @@
       },
       {
         "name": "submit",
-        "type": "object",
+        "type": "(input: AgentSubmitInput, opts: AgentSubmitOptions) => Promise<void>",
         "description": "",
         "optional": false
       },
@@ -5505,7 +5612,7 @@
       },
       {
         "name": "regenerate",
-        "type": "object",
+        "type": "(assistantMessageIndex: number) => Promise<void>",
         "description": "Discards the assistant message at the given index AND all messages after\nit, then re-runs the agent against the trimmed conversation tail. The\npreceding user message (at index - 1) is preserved and re-submitted as\nthe agent's input. No new user message is added to the history.\n\nThrows if the message at `index` is not 'assistant' role, or if the\nagent is currently loading another response.",
         "optional": false
       },
@@ -5523,7 +5630,7 @@
       },
       {
         "name": "stop",
-        "type": "object",
+        "type": "() => Promise<void>",
         "description": "",
         "optional": false
       },
@@ -5535,7 +5642,7 @@
       },
       {
         "name": "submit",
-        "type": "object",
+        "type": "(input: AgentSubmitInput, opts: AgentSubmitOptions) => Promise<void>",
         "description": "",
         "optional": false
       },
@@ -5792,18 +5899,27 @@
         "type": "Signal<ContentType>",
         "description": "",
         "optional": false
-      },
+      }
+    ],
+    "methods": [
       {
         "name": "dispose",
-        "type": "unknown",
+        "signature": "dispose(): void",
         "description": "",
-        "optional": false
+        "params": []
       },
       {
         "name": "update",
-        "type": "unknown",
+        "signature": "update(content: string): void",
         "description": "",
-        "optional": false
+        "params": [
+          {
+            "name": "content",
+            "type": "string",
+            "description": "",
+            "optional": false
+          }
+        ]
       }
     ],
     "examples": []
@@ -5963,7 +6079,7 @@
       },
       {
         "name": "regenerate",
-        "type": "object",
+        "type": "(assistantMessageIndex: number) => Promise<void>",
         "description": "Discards the assistant message at the given index AND all messages after\nit, then re-runs the agent against the trimmed conversation tail. The\npreceding user message (at index - 1) is preserved and re-submitted as\nthe agent's input. No new user message is added to the history.\n\nThrows if the message at `index` is not 'assistant' role, or if the\nagent is currently loading another response.",
         "optional": false
       },
@@ -5981,7 +6097,7 @@
       },
       {
         "name": "stop",
-        "type": "object",
+        "type": "() => Promise<void>",
         "description": "",
         "optional": false
       },
@@ -5999,7 +6115,7 @@
       },
       {
         "name": "submit",
-        "type": "object",
+        "type": "(input: AgentSubmitInput, opts: AgentSubmitOptions) => Promise<void>",
         "description": "",
         "optional": false
       },
@@ -6134,12 +6250,21 @@
         "type": "Signal<Spec | null>",
         "description": "",
         "optional": false
-      },
+      }
+    ],
+    "methods": [
       {
         "name": "push",
-        "type": "unknown",
+        "signature": "push(chunk: string): void",
         "description": "",
-        "optional": false
+        "params": [
+          {
+            "name": "chunk",
+            "type": "string",
+            "description": "",
+            "optional": false
+          }
+        ]
       }
     ],
     "examples": []
@@ -6148,18 +6273,39 @@
     "name": "PartialArgsBridge",
     "kind": "interface",
     "description": "",
-    "properties": [
+    "properties": [],
+    "methods": [
       {
         "name": "isPoisoned",
-        "type": "unknown",
-        "description": "",
-        "optional": false
+        "signature": "isPoisoned(toolCallId: string): boolean",
+        "description": "True if a tool_call_id has been poisoned by malformed input.",
+        "params": [
+          {
+            "name": "toolCallId",
+            "type": "string",
+            "description": "",
+            "optional": false
+          }
+        ]
       },
       {
         "name": "push",
-        "type": "unknown",
-        "description": "",
-        "optional": false
+        "signature": "push(toolCallId: string, argsSoFar: string): void",
+        "description": "Replace the cumulative argument-string buffer for `toolCallId` with\n`argsSoFar` and re-extract any newly-complete envelopes. The args\nstring is expected to grow monotonically.",
+        "params": [
+          {
+            "name": "toolCallId",
+            "type": "string",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "argsSoFar",
+            "type": "string",
+            "description": "",
+            "optional": false
+          }
+        ]
       }
     ],
     "examples": []
@@ -6168,24 +6314,52 @@
     "name": "ProjectActionAdapter",
     "kind": "interface",
     "description": "Consumer-provided adapter for project lifecycle actions. The framework calls\nthese methods after user confirmation (delete) or commit (create/rename) and\nmanages optimistic UI + rollback on rejection.",
-    "properties": [
+    "properties": [],
+    "methods": [
       {
         "name": "create",
-        "type": "unknown",
-        "description": "",
-        "optional": true
+        "signature": "create(name: string): Promise<object>",
+        "description": "Create a new project. Returns the new project id; consumer is expected\n to also refresh its projects signal.",
+        "params": [
+          {
+            "name": "name",
+            "type": "string",
+            "description": "",
+            "optional": false
+          }
+        ]
       },
       {
         "name": "delete",
-        "type": "unknown",
-        "description": "",
-        "optional": true
+        "signature": "delete(projectId: string): Promise<void>",
+        "description": "Permanently delete the project. The framework calls this AFTER user\n confirms via the confirm dialog.",
+        "params": [
+          {
+            "name": "projectId",
+            "type": "string",
+            "description": "",
+            "optional": false
+          }
+        ]
       },
       {
         "name": "rename",
-        "type": "unknown",
+        "signature": "rename(projectId: string, newName: string): Promise<void>",
         "description": "",
-        "optional": true
+        "params": [
+          {
+            "name": "projectId",
+            "type": "string",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "newName",
+            "type": "string",
+            "description": "",
+            "optional": false
+          }
+        ]
       }
     ],
     "examples": []
@@ -6252,54 +6426,129 @@
     "name": "ThreadActionAdapter",
     "kind": "interface",
     "description": "Per-thread row-action adapter. Consumer-provided. The framework calls\nthese methods after user confirmation (delete) or commit (rename) and\nmanages optimistic UI + rollback on rejection.\n\nConsumers MUST refresh their `threads` signal on success — the framework\nclears optimistic overrides in a `finally` block, so a successful adapter\ncall that leaves the input list unchanged would re-render the row.",
-    "properties": [
+    "properties": [],
+    "methods": [
       {
         "name": "archive",
-        "type": "unknown",
-        "description": "",
-        "optional": true
+        "signature": "archive(threadId: string): Promise<void>",
+        "description": "Archive a thread (reversible). No confirmation dialog — framework calls\n this immediately on click.",
+        "params": [
+          {
+            "name": "threadId",
+            "type": "string",
+            "description": "",
+            "optional": false
+          }
+        ]
       },
       {
         "name": "delete",
-        "type": "unknown",
+        "signature": "delete(threadId: string): Promise<void>",
         "description": "",
-        "optional": true
+        "params": [
+          {
+            "name": "threadId",
+            "type": "string",
+            "description": "",
+            "optional": false
+          }
+        ]
       },
       {
         "name": "moveToProject",
-        "type": "unknown",
-        "description": "",
-        "optional": true
+        "signature": "moveToProject(threadId: string, projectId: string | null): Promise<void>",
+        "description": "Move thread to a project (or pass null to remove from any project).\n Optimistically hides the row from the current project's visible list;\n consumer is expected to refresh the threads input.",
+        "params": [
+          {
+            "name": "threadId",
+            "type": "string",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "projectId",
+            "type": "string | null",
+            "description": "",
+            "optional": false
+          }
+        ]
       },
       {
         "name": "pin",
-        "type": "unknown",
-        "description": "",
-        "optional": true
+        "signature": "pin(threadId: string): Promise<void>",
+        "description": "Mark the thread as pinned.",
+        "params": [
+          {
+            "name": "threadId",
+            "type": "string",
+            "description": "",
+            "optional": false
+          }
+        ]
       },
       {
         "name": "rename",
-        "type": "unknown",
+        "signature": "rename(threadId: string, newTitle: string): Promise<void>",
         "description": "",
-        "optional": true
+        "params": [
+          {
+            "name": "threadId",
+            "type": "string",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "newTitle",
+            "type": "string",
+            "description": "",
+            "optional": false
+          }
+        ]
       },
       {
         "name": "reorderPinned",
-        "type": "unknown",
-        "description": "",
-        "optional": true
+        "signature": "reorderPinned(threadId: string, beforeId: string | null): Promise<void>",
+        "description": "Reorder a pinned thread. `beforeId` is the id of the pinned thread it\n should be placed before, or null to move to the end of the pinned list.\n Framework optimistically reorders the visible list and awaits this\n method; rejection rolls back.",
+        "params": [
+          {
+            "name": "threadId",
+            "type": "string",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "beforeId",
+            "type": "string | null",
+            "description": "",
+            "optional": false
+          }
+        ]
       },
       {
         "name": "unarchive",
-        "type": "unknown",
-        "description": "",
-        "optional": true
+        "signature": "unarchive(threadId: string): Promise<void>",
+        "description": "Restore an archived thread to the active list.",
+        "params": [
+          {
+            "name": "threadId",
+            "type": "string",
+            "description": "",
+            "optional": false
+          }
+        ]
       },
       {
         "name": "unpin",
-        "type": "unknown",
-        "description": "",
-        "optional": true
+        "signature": "unpin(threadId: string): Promise<void>",
+        "description": "Unpin a previously pinned thread.",
+        "params": [
+          {
+            "name": "threadId",
+            "type": "string",
+            "description": "",
+            "optional": false
+          }
+        ]
       }
     ],
     "examples": []
@@ -6451,7 +6700,7 @@
     "name": "AgentRuntimeTelemetrySink",
     "kind": "type",
     "description": "",
-    "signature": "object",
+    "signature": "(payload: AgentRuntimeTelemetryPayload) => void | Promise<void>",
     "examples": []
   },
   {
@@ -6669,11 +6918,11 @@
     "name": "emitBinding",
     "kind": "function",
     "description": "Emits a data model binding event if the prop has a binding path.",
-    "signature": "emitBinding(emit: object, bindings: Record<string, string> | undefined, prop: string, value: unknown): void",
+    "signature": "emitBinding(emit: (event: string) => void, bindings: Record<string, string> | undefined, prop: string, value: unknown): void",
     "params": [
       {
         "name": "emit",
-        "type": "object",
+        "type": "(event: string) => void",
         "description": "",
         "optional": false
       },
@@ -6969,25 +7218,6 @@
     "examples": []
   },
   {
-    "name": "provideViews",
-    "kind": "function",
-    "description": "",
-    "signature": "provideViews(registry: ViewRegistry): EnvironmentProviders",
-    "params": [
-      {
-        "name": "registry",
-        "type": "ViewRegistry",
-        "description": "",
-        "optional": false
-      }
-    ],
-    "returns": {
-      "type": "EnvironmentProviders",
-      "description": ""
-    },
-    "examples": []
-  },
-  {
     "name": "renderMarkdown",
     "kind": "function",
     "description": "Renders markdown content to sanitized HTML.\nFalls back to plain text with newline->br conversion if `marked` is not installed.",
@@ -7117,7 +7347,7 @@
     "name": "withoutViews",
     "kind": "function",
     "description": "Removes views from a registry by name.",
-    "signature": "withoutViews(base: ViewRegistry, names: string[]): ViewRegistry",
+    "signature": "withoutViews(base: ViewRegistry, ...names: string[]): ViewRegistry",
     "params": [
       {
         "name": "base",
@@ -7126,7 +7356,7 @@
         "optional": false
       },
       {
-        "name": "names",
+        "name": "...names",
         "type": "string[]",
         "description": "",
         "optional": false
@@ -7184,6 +7414,32 @@
     "examples": []
   },
   {
+    "name": "FakeAgentConfig",
+    "kind": "interface",
+    "description": "Shared config for the adapters' `provideFakeAgent()` helpers\n(@threadplane/langgraph and @threadplane/ag-ui). Drives an in-process\nfake backend that streams a canned assistant reply.",
+    "properties": [
+      {
+        "name": "delayMs",
+        "type": "number",
+        "description": "Milliseconds between successive token emissions.",
+        "optional": true
+      },
+      {
+        "name": "reasoningTokens",
+        "type": "string[]",
+        "description": "Optional reasoning chunks emitted before the text reply.",
+        "optional": true
+      },
+      {
+        "name": "tokens",
+        "type": "string[]",
+        "description": "Assistant reply, streamed token-by-token.",
+        "optional": true
+      }
+    ],
+    "examples": []
+  },
+  {
     "name": "assertReasoningFixtureMessages",
     "kind": "function",
     "description": "Assertion — common to both adapters. Throws if the produced messages\ndon't match the shared expectation.",
@@ -7206,7 +7462,7 @@
     "name": "runAgentConformance",
     "kind": "function",
     "description": "Runs a suite of contract conformance assertions against a factory that\nproduces a fresh Agent. Adapter packages should call this in their\nown test suites to verify the contract is satisfied.",
-    "signature": "runAgentConformance(label: string, factory: object): void",
+    "signature": "runAgentConformance(label: string, factory: () => Agent): void",
     "params": [
       {
         "name": "label",
@@ -7216,7 +7472,7 @@
       },
       {
         "name": "factory",
-        "type": "object",
+        "type": "() => Agent",
         "description": "",
         "optional": false
       }
@@ -7231,7 +7487,7 @@
     "name": "runAgentWithHistoryConformance",
     "kind": "function",
     "description": "Conformance suite for AgentWithHistory implementations.\n\nRuns the base Agent conformance suite, then verifies the history\nsignal is present and returns an array of AgentCheckpoint-shaped entries.",
-    "signature": "runAgentWithHistoryConformance(label: string, factory: object): void",
+    "signature": "runAgentWithHistoryConformance(label: string, factory: (seed: object) => AgentWithHistory): void",
     "params": [
       {
         "name": "label",
@@ -7241,7 +7497,7 @@
       },
       {
         "name": "factory",
-        "type": "object",
+        "type": "(seed: object) => AgentWithHistory",
         "description": "",
         "optional": false
       }

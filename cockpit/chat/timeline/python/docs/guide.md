@@ -15,14 +15,29 @@ to navigate checkpoints and branch from previous conversation states.
 <Steps>
 <Step title="Enable history tracking">
 
-History tracking is built into `agent()`. Each message exchange
-creates a checkpoint automatically:
+History tracking is built into the agent. Each message exchange
+creates a checkpoint automatically. Configure `provideAgent()` in your app
+config, then call `injectAgent()` in your component:
 
 ```typescript
-protected readonly stream = agent({
-  apiUrl: environment.langGraphApiUrl,
-  assistantId: environment.streamingAssistantId,
-});
+// app.config.ts
+import { provideAgent } from '@threadplane/langgraph';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideAgent({
+      apiUrl: environment.langGraphApiUrl,
+      assistantId: environment.streamingAssistantId,
+    }),
+  ],
+};
+```
+
+```typescript
+// app.component.ts
+import { injectAgent } from '@threadplane/langgraph';
+
+protected readonly stream = injectAgent();
 ```
 
 </Step>

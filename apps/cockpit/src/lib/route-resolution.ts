@@ -11,6 +11,11 @@ import { langgraphDurableExecutionPythonModule } from '../../../../cockpit/langg
 import { langgraphSubgraphsPythonModule } from '../../../../cockpit/langgraph/subgraphs/python/src/index';
 import { langgraphTimeTravelPythonModule } from '../../../../cockpit/langgraph/time-travel/python/src/index';
 import { langgraphDeploymentRuntimePythonModule } from '../../../../cockpit/langgraph/deployment-runtime/python/src/index';
+import { agUiInterruptsPythonModule } from '../../../../cockpit/ag-ui/interrupts/python/src/index';
+import { agUiStreamingPythonModule } from '../../../../cockpit/ag-ui/streaming/python/src/index';
+import { agUiToolViewsPythonModule } from '../../../../cockpit/ag-ui/tool-views/python/src/index';
+import { agUiJsonRenderPythonModule } from '../../../../cockpit/ag-ui/json-render/python/src/index';
+import { agUiA2uiPythonModule } from '../../../../cockpit/ag-ui/a2ui/python/src/index';
 import { deepAgentsMemoryPythonModule } from '../../../../cockpit/deep-agents/memory/python/src/index';
 import { deepAgentsPlanningPythonModule } from '../../../../cockpit/deep-agents/planning/python/src/index';
 import { deepAgentsFilesystemPythonModule } from '../../../../cockpit/deep-agents/filesystem/python/src/index';
@@ -81,6 +86,11 @@ const capabilityModules = [
   langgraphSubgraphsPythonModule,
   langgraphTimeTravelPythonModule,
   langgraphDeploymentRuntimePythonModule,
+  agUiInterruptsPythonModule,
+  agUiStreamingPythonModule,
+  agUiToolViewsPythonModule,
+  agUiJsonRenderPythonModule,
+  agUiA2uiPythonModule,
   deepAgentsMemoryPythonModule,
   deepAgentsPlanningPythonModule,
   deepAgentsFilesystemPythonModule,
@@ -169,7 +179,7 @@ export const resolveCockpitEntry = ({
 export const buildNavigationTree = (
   manifest: CockpitManifestEntry[]
 ): NavigationProduct[] => {
-  const products: CockpitManifestEntry['product'][] = ['deep-agents', 'langgraph', 'render', 'chat'];
+  const products: CockpitManifestEntry['product'][] = ['deep-agents', 'langgraph', 'ag-ui', 'render', 'chat'];
   const sections: CockpitManifestEntry['section'][] = [
     'getting-started',
     'core-capabilities',

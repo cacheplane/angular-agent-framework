@@ -2,8 +2,9 @@ import type { Metadata } from 'next';
 import { getAllSolutionSlugs } from './solutions-data';
 import { docsConfig } from './docs-config';
 import { getAllPosts } from './blog';
+import { SITE_ORIGIN } from './site-origin';
 
-export const SITE_ORIGIN = 'https://threadplane.ai';
+export { SITE_ORIGIN };
 export const SITE_NAME = 'Threadplane';
 export const DEFAULT_SOCIAL_IMAGE = '/opengraph-image';
 export {

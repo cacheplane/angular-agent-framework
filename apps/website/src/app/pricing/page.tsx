@@ -20,7 +20,7 @@ export const metadata = createPageMetadata({
 export default function PricingPage() {
   return (
     <>
-      <Section surface="canvas" tight ariaLabelledBy="pricing-heading">
+      <Section surface="canvas" ariaLabelledBy="pricing-heading">
         <Container>
           <div style={{ textAlign: 'center', maxWidth: 760, margin: '0 auto' }}>
             <Eyebrow tone="accent" style={{ marginBottom: 16 }}>Pricing</Eyebrow>

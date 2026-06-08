@@ -1,5 +1,5 @@
 export type LibraryId =
-  | 'agent'
+  | 'langgraph'
   | 'render'
   | 'chat'
   | 'ag-ui'
@@ -29,9 +29,9 @@ export interface DocsLibrary {
 
 export const docsConfig: DocsLibrary[] = [
   {
-    id: 'agent',
-    title: 'Agent',
-    description: 'Production agent state for Angular UI',
+    id: 'langgraph',
+    title: 'LangGraph',
+    description: 'LangChain/LangGraph adapter for Angular UI',
     sections: [
       {
         title: 'Getting Started',
@@ -76,7 +76,7 @@ export const docsConfig: DocsLibrary[] = [
         id: 'api',
         color: 'blue',
         pages: [
-          { title: 'agent()', slug: 'agent', section: 'api' },
+          { title: 'injectAgent()', slug: 'inject-agent', section: 'api' },
           { title: 'provideAgent()', slug: 'provide-agent', section: 'api' },
           { title: 'FetchStreamTransport', slug: 'fetch-stream-transport', section: 'api' },
           { title: 'MockAgentTransport', slug: 'mock-stream-transport', section: 'api' },
@@ -117,17 +117,6 @@ export const docsConfig: DocsLibrary[] = [
         color: 'red',
         pages: [
           { title: 'JSON Render vs A2UI', slug: 'json-render-vs-a2ui', section: 'concepts' },
-        ],
-      },
-      {
-        title: 'A2UI',
-        id: 'a2ui',
-        color: 'red',
-        pages: [
-          { title: 'Overview', slug: 'overview', section: 'a2ui' },
-          { title: 'A2uiSurfaceComponent', slug: 'surface-component', section: 'a2ui' },
-          { title: 'createA2uiSurfaceStore()', slug: 'surface-store', section: 'a2ui' },
-          { title: 'Component Catalog', slug: 'catalog', section: 'a2ui' },
         ],
       },
       {
@@ -207,6 +196,17 @@ export const docsConfig: DocsLibrary[] = [
         ],
       },
       {
+        title: 'A2UI',
+        id: 'a2ui',
+        color: 'red',
+        pages: [
+          { title: 'Overview', slug: 'overview', section: 'a2ui' },
+          { title: 'A2uiSurfaceComponent', slug: 'surface-component', section: 'a2ui' },
+          { title: 'createA2uiSurfaceStore()', slug: 'surface-store', section: 'a2ui' },
+          { title: 'Component Catalog', slug: 'catalog', section: 'a2ui' },
+        ],
+      },
+      {
         title: 'API Reference',
         id: 'api',
         color: 'blue',
@@ -250,6 +250,8 @@ export const docsConfig: DocsLibrary[] = [
         pages: [
           { title: 'Fake Agent', slug: 'fake-agent', section: 'guides' },
           { title: 'Citations', slug: 'citations', section: 'guides' },
+          { title: 'Interrupts', slug: 'interrupts', section: 'guides' },
+          { title: 'Testing', slug: 'testing', section: 'guides' },
           { title: 'Troubleshooting', slug: 'troubleshooting', section: 'guides' },
         ],
       },
@@ -274,6 +276,17 @@ export const docsConfig: DocsLibrary[] = [
         color: 'blue',
         pages: [
           { title: 'Introduction', slug: 'introduction', section: 'getting-started' },
+          { title: 'Quick Start', slug: 'quickstart', section: 'getting-started' },
+        ],
+      },
+      {
+        title: 'Guides',
+        id: 'guides',
+        color: 'blue',
+        pages: [
+          { title: 'Message Protocol', slug: 'message-protocol', section: 'guides' },
+          { title: 'Data Model', slug: 'data-model', section: 'guides' },
+          { title: 'Validating & Adapting', slug: 'adapters-and-validation', section: 'guides' },
         ],
       },
       {

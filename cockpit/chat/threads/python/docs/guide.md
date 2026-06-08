@@ -15,14 +15,29 @@ switching between conversations.
 <Steps>
 <Step title="Configure thread support">
 
-Thread management is built into `agent()`. Each thread gets
-a unique ID that persists its conversation state:
+Thread management is built into the agent. Each thread gets
+a unique ID that persists its conversation state. Configure `provideAgent()` in
+your app config, then call `injectAgent()` in your component:
 
 ```typescript
-protected readonly stream = agent({
-  apiUrl: environment.langGraphApiUrl,
-  assistantId: environment.streamingAssistantId,
-});
+// app.config.ts
+import { provideAgent } from '@threadplane/langgraph';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideAgent({
+      apiUrl: environment.langGraphApiUrl,
+      assistantId: environment.streamingAssistantId,
+    }),
+  ],
+};
+```
+
+```typescript
+// app.component.ts
+import { injectAgent } from '@threadplane/langgraph';
+
+protected readonly stream = injectAgent();
 ```
 
 </Step>

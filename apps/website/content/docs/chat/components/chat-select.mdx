@@ -57,6 +57,10 @@ interface ChatSelectOption {
 }
 ```
 
+### Outputs
+
+`value` is a signal-based `model<string>('')`, so Angular auto-creates a `valueChange` output (`string`) that emits the new selection. Bind it directly with `(valueChange)`, or use the `[(value)]` two-way shorthand below.
+
 ### Two-way binding
 
 Use `[(value)]` to bind a writable signal:

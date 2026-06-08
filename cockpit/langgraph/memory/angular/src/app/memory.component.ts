@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: MIT
 import { Component, computed } from '@angular/core';
 import { ChatComponent } from '@threadplane/chat';
-import { agent } from '@threadplane/langgraph';
+import { injectAgent } from '@threadplane/langgraph';
 import { ExampleChatLayoutComponent } from '@threadplane/example-layouts';
-import { environment } from '../environments/environment';
 
 /**
- * MemoryComponent demonstrates cross-thread persistent context with `agent()`.
+ * MemoryComponent demonstrates cross-thread persistent context with `injectAgent()`.
  *
  * This example shows how an agent can learn and remember facts about the user
  * across separate conversations. The graph maintains a `memory` dict in its
@@ -48,10 +47,7 @@ export class MemoryComponent {
    * The graph returns a `memory` dict alongside messages in its state.
    * We expose it via `stream.value()` and derive a reactive signal for display.
    */
-  protected readonly agent = agent({
-    apiUrl: environment.langGraphApiUrl,
-    assistantId: environment.streamingAssistantId,
-  });
+  protected readonly agent = injectAgent();
 
   /**
    * Reactive list of [key, value] memory entries derived from the graph state.

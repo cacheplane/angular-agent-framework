@@ -41,13 +41,33 @@ function extractExamples(comment: any): string[] {
     .map((t: any) => t.content.map((c: any) => c.text ?? '').join('').trim());
 }
 
+/** Renders a single parameter for a signature string, preserving rest (`...`) syntax. */
+function paramToSigString(p: any): string {
+  return `${p.flags?.isRest ? '...' : ''}${p.name}: ${extractType(p.type)}`;
+}
+
+/** Builds a `(a: A, ...rest: B[]): R` signature body from a TypeDoc signature reflection. */
+function signatureToString(name: string, sig: any): string {
+  const params = (sig?.parameters ?? []).map(paramToSigString).join(', ');
+  const ret = sig?.type ? `: ${extractType(sig.type)}` : '';
+  return `${name}(${params})${ret}`;
+}
+
 function extractType(typeObj: any): string {
   if (!typeObj) return 'unknown';
   if (typeObj.type === 'intrinsic') return typeObj.name;
   if (typeObj.type === 'reference') return typeObj.name + (typeObj.typeArguments ? `<${typeObj.typeArguments.map(extractType).join(', ')}>` : '');
   if (typeObj.type === 'union') return typeObj.types.map(extractType).join(' | ');
   if (typeObj.type === 'literal') return JSON.stringify(typeObj.value);
-  if (typeObj.type === 'reflection') return 'object';
+  if (typeObj.type === 'reflection') {
+    // Function-typed property/value: render its call signature, e.g. `(event: RenderEvent) => void`.
+    const sig = typeObj.declaration?.signatures?.[0];
+    if (sig) {
+      const params = (sig.parameters ?? []).map(paramToSigString).join(', ');
+      return `(${params}) => ${extractType(sig.type)}`;
+    }
+    return 'object';
+  }
   if (typeObj.type === 'array') return `${extractType(typeObj.elementType)}[]`;
   return typeObj.toString?.() ?? 'unknown';
 }
@@ -55,7 +75,7 @@ function extractType(typeObj: any): string {
 function extractParams(sig: any): ApiParam[] {
   if (!sig?.parameters) return [];
   return sig.parameters.map((p: any) => ({
-    name: p.name,
+    name: `${p.flags?.isRest ? '...' : ''}${p.name}`,
     type: extractType(p.type),
     description: extractDescription(p.comment),
     optional: p.flags?.isOptional ?? false,
@@ -73,7 +93,7 @@ function reflectionToEntry(ref: any): ApiDocEntry | null {
       name: ref.name,
       kind: 'function',
       description: desc || extractDescription(sig?.comment),
-      signature: sig ? `${ref.name}(${(sig.parameters ?? []).map((p: any) => `${p.name}: ${extractType(p.type)}`).join(', ')}): ${extractType(sig.type)}` : ref.name,
+      signature: sig ? signatureToString(ref.name, sig) : ref.name,
       params: extractParams(sig),
       returns: sig?.type ? { type: extractType(sig.type), description: '' } : undefined,
       examples: examples.length ? examples : extractExamples(sig?.comment),
@@ -88,7 +108,7 @@ function reflectionToEntry(ref: any): ApiDocEntry | null {
       .filter((c: any) => c.kind === ReflectionKind.Method)
       .map((c: any) => {
         const sig = c.signatures?.[0];
-        return { name: c.name, signature: `${c.name}(${(sig?.parameters ?? []).map((p: any) => `${p.name}: ${extractType(p.type)}`).join(', ')})`, description: extractDescription(c.comment) || extractDescription(sig?.comment), params: extractParams(sig) };
+        return { name: c.name, signature: signatureToString(c.name, sig), description: extractDescription(c.comment) || extractDescription(sig?.comment), params: extractParams(sig) };
       });
     const ctorSig = (ref.children ?? []).find((c: any) => c.kind === ReflectionKind.Constructor)?.signatures?.[0];
     return {
@@ -103,13 +123,27 @@ function reflectionToEntry(ref: any): ApiDocEntry | null {
   }
 
   if (kind === ReflectionKind.Interface) {
-    const props = (ref.children ?? []).map((c: any) => ({
-      name: c.name,
-      type: extractType(c.type),
-      description: extractDescription(c.comment),
-      optional: c.flags?.isOptional,
-    }));
-    return { name: ref.name, kind: 'interface', description: desc, properties: props, examples };
+    const children = ref.children ?? [];
+    const props = children
+      .filter((c: any) => c.kind !== ReflectionKind.Method)
+      .map((c: any) => ({
+        name: c.name,
+        type: extractType(c.type),
+        description: extractDescription(c.comment),
+        optional: c.flags?.isOptional,
+      }));
+    const methods = children
+      .filter((c: any) => c.kind === ReflectionKind.Method)
+      .map((c: any) => {
+        const sig = c.signatures?.[0];
+        return {
+          name: c.name,
+          signature: signatureToString(c.name, sig),
+          description: extractDescription(c.comment) || extractDescription(sig?.comment),
+          params: extractParams(sig),
+        };
+      });
+    return { name: ref.name, kind: 'interface', description: desc, properties: props, methods: methods.length ? methods : undefined, examples };
   }
 
   if (kind === ReflectionKind.TypeAlias) {
@@ -135,7 +169,7 @@ interface LibraryEntryConfig {
 }
 
 const LIBRARIES: LibraryEntryConfig[] = [
-  { docSlug: 'agent',     entryPoints: ['libs/langgraph/src/public-api.ts'] },
+  { docSlug: 'langgraph', entryPoints: ['libs/langgraph/src/public-api.ts'] },
   { docSlug: 'chat',      entryPoints: ['libs/chat/src/public-api.ts', 'libs/chat/testing/public-api.ts'] },
   { docSlug: 'render',    entryPoints: ['libs/render/src/public-api.ts'] },
   { docSlug: 'ag-ui',     entryPoints: ['libs/ag-ui/src/public-api.ts'] },

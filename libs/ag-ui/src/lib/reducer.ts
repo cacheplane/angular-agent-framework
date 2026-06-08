@@ -6,20 +6,53 @@
 import type { WritableSignal } from '@angular/core';
 import type { Subject } from 'rxjs';
 import type {
-  Message, AgentStatus, ToolCall, AgentEvent,
+  Message, AgentStatus, ToolCall, AgentEvent, AgentInterrupt,
 } from '@threadplane/chat';
 import type { BaseEvent } from '@ag-ui/client';
 import { applyPatch, type JsonPatchOp } from './internal/apply-patch';
 import { bridgeCitationsState } from './bridge-citations-state';
 
+/**
+ * AG-UI AssistantMessage shape as it arrives on the wire in a MESSAGES_SNAPSHOT.
+ * The `toolCalls` field carries full ToolCall objects (id + function { name, arguments }).
+ * This is distinct from the chat lib's `Message.toolCallIds` which is a plain string[].
+ */
+interface AgUiSnapshotToolCall {
+  id: string;
+  type: 'function';
+  function: { name: string; arguments: string };
+}
+
+interface AgUiSnapshotMessage {
+  id: string;
+  role: string;
+  content?: string;
+  toolCalls?: AgUiSnapshotToolCall[];
+  [key: string]: unknown;
+}
+
+/**
+ * A custom event surfaced to consumers via the agent's `customEvents` signal.
+ * Mirrors the LangGraph adapter's CustomStreamEvent shape so the chat
+ * a2ui partial-args bridge consumes both transports identically.
+ */
+export interface CustomStreamEvent {
+  /** Event name set by the backend (e.g. 'a2ui-partial', 'state_update'). */
+  name: string;
+  /** Arbitrary payload from the backend (JSON-string values are parsed). */
+  data: unknown;
+}
+
 export interface ReducerStore {
-  messages:  WritableSignal<Message[]>;
-  status:    WritableSignal<AgentStatus>;
-  isLoading: WritableSignal<boolean>;
-  error:     WritableSignal<unknown>;
-  toolCalls: WritableSignal<ToolCall[]>;
-  state:     WritableSignal<Record<string, unknown>>;
-  events$:   Subject<AgentEvent>;
+  messages:     WritableSignal<Message[]>;
+  status:       WritableSignal<AgentStatus>;
+  isLoading:    WritableSignal<boolean>;
+  error:        WritableSignal<unknown>;
+  toolCalls:    WritableSignal<ToolCall[]>;
+  state:        WritableSignal<Record<string, unknown>>;
+  interrupt:    WritableSignal<AgentInterrupt | undefined>;
+  events$:      Subject<AgentEvent>;
+  customEvents: WritableSignal<CustomStreamEvent[]>;
 }
 
 /**
@@ -52,6 +85,8 @@ export function reduceEvent(event: BaseEvent, store: ReducerStore): void {
       store.status.set('running');
       store.isLoading.set(true);
       store.error.set(null);
+      store.interrupt.set(undefined);
+      store.customEvents.set([]);
       return;
     }
     case 'RUN_FINISHED': {
@@ -127,11 +162,30 @@ export function reduceEvent(event: BaseEvent, store: ReducerStore): void {
       return;
     }
     case 'TOOL_CALL_START': {
-      const e = event as unknown as { toolCallId: string; toolCallName: string };
+      const e = event as unknown as { toolCallId: string; toolCallName: string; parentMessageId?: string };
       store.toolCalls.update((prev) => [
         ...prev,
         { id: e.toolCallId, name: e.toolCallName, args: {}, status: 'running' },
       ]);
+      // Link the tool call to its parent assistant message so the chat lib's
+      // per-message tool-call resolution (chat-tool-calls / chat-tool-views)
+      // can scope it. ag-ui-langgraph emits parentMessageId for every tool
+      // call. If the parent assistant message hasn't been created yet (a
+      // tool-call-only turn emits no TEXT_MESSAGE_START), create a slot.
+      const parentId = e.parentMessageId;
+      if (parentId) {
+        store.messages.update((prev) => {
+          const existing = prev.find((m) => m.id === parentId);
+          if (existing) {
+            return prev.map((m) =>
+              m.id === parentId
+                ? { ...m, toolCallIds: [...(m.toolCallIds ?? []), e.toolCallId] }
+                : m,
+            );
+          }
+          return [...prev, { id: parentId, role: 'assistant', content: '', toolCallIds: [e.toolCallId] }];
+        });
+      }
       return;
     }
     case 'TOOL_CALL_ARGS': {
@@ -151,8 +205,12 @@ export function reduceEvent(event: BaseEvent, store: ReducerStore): void {
     }
     case 'TOOL_CALL_RESULT': {
       const e = event as unknown as { toolCallId: string; content: unknown };
+      // ag_ui_langgraph serialises tool results via normalize_tool_content()
+      // which always returns a string. Parse it so downstream consumers
+      // (chat-tool-views / toToolViewSpec) can spread the object into props.
+      const result = typeof e.content === 'string' ? safeParseJson(e.content) : e.content;
       store.toolCalls.update((prev) =>
-        prev.map((t) => t.id === e.toolCallId ? { ...t, result: e.content } : t),
+        prev.map((t) => t.id === e.toolCallId ? { ...t, result } : t),
       );
       return;
     }
@@ -171,16 +229,61 @@ export function reduceEvent(event: BaseEvent, store: ReducerStore): void {
       return;
     }
     case 'MESSAGES_SNAPSHOT': {
-      const e = event as unknown as { messages: Message[] };
-      store.messages.set(e.messages ?? []);
+      const e = event as unknown as { messages: AgUiSnapshotMessage[] };
+      const raw = e.messages ?? [];
+      // AG-UI AssistantMessage carries `toolCalls` (ToolCall objects) on the
+      // snapshot wire. Bridge them to `toolCallIds` so that the chat lib's
+      // per-message tool-call resolution (resolveMessageToolCalls) can scope
+      // correctly. Also merge any snapshot-only tool calls into store.toolCalls
+      // so the data is visible to <chat-tool-views>.
+      const snapshotToolCalls: ToolCall[] = [];
+      const messages: Message[] = raw.map((m) => {
+        if (m.role !== 'assistant' || !m.toolCalls || m.toolCalls.length === 0) {
+          return m as unknown as Message;
+        }
+        const ids: string[] = [];
+        for (const tc of m.toolCalls) {
+          ids.push(tc.id);
+          snapshotToolCalls.push({
+            id: tc.id,
+            name: tc.function.name,
+            args: safeParseArgs(tc.function.arguments),
+            status: 'complete',
+          });
+        }
+        const { toolCalls: _dropped, ...rest } = m;
+        return { ...rest, toolCallIds: ids } as unknown as Message;
+      });
+      store.messages.set(messages);
+      if (snapshotToolCalls.length > 0) {
+        store.toolCalls.update((prev) => {
+          // Merge: keep existing entries (they may carry richer state from
+          // streaming) and only insert entries not already present by id.
+          const existingIds = new Set(prev.map((tc) => tc.id));
+          const toAdd = snapshotToolCalls.filter((tc) => !existingIds.has(tc.id));
+          return toAdd.length > 0 ? [...prev, ...toAdd] : prev;
+        });
+      }
       return;
     }
     case 'CUSTOM': {
       const e = event as unknown as { name: string; value: unknown };
-      if (e.name === 'state_update' && isRecord(e.value)) {
-        store.events$.next({ type: 'state_update', data: e.value });
+      // ag_ui_langgraph serializes interrupt payloads as JSON strings.
+      // Parse the value if it arrives as a string so downstream consumers
+      // (e.g. ChatApprovalCardComponent) receive a plain object, not a string.
+      const parsedValue = typeof e.value === 'string' ? safeParseJson(e.value) : e.value;
+      if (e.name === 'on_interrupt') {
+        store.interrupt.set({ id: randomId(), value: parsedValue, resumable: true });
+        return;
+      }
+      // Surface every other custom event on the customEvents signal so the
+      // chat a2ui partial-args bridge (which reads agent.customEvents()) lights
+      // up live/progressive a2ui rendering — parity with the LangGraph adapter.
+      store.customEvents.update((prev) => [...prev, { name: e.name, data: parsedValue }]);
+      if (e.name === 'state_update' && isRecord(parsedValue)) {
+        store.events$.next({ type: 'state_update', data: parsedValue });
       } else {
-        store.events$.next({ type: 'custom', name: e.name, data: e.value });
+        store.events$.next({ type: 'custom', name: e.name, data: parsedValue });
       }
       return;
     }
@@ -193,6 +296,10 @@ export function reduceEvent(event: BaseEvent, store: ReducerStore): void {
   }
 }
 
+function randomId(): string {
+  return Math.random().toString(36).slice(2);
+}
+
 function messageIdFrom(event: BaseEvent): string {
   return (event as { messageId?: string }).messageId ?? 'unknown';
 }
@@ -203,6 +310,15 @@ function safeParseArgs(delta: string): Record<string, unknown> {
     return isRecord(parsed) ? parsed : {};
   } catch {
     return {};
+  }
+}
+
+/** Parse a JSON string to its value; return the original string on failure. */
+function safeParseJson(s: string): unknown {
+  try {
+    return JSON.parse(s);
+  } catch {
+    return s;
   }
 }
 

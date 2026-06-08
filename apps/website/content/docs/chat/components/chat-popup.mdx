@@ -20,13 +20,14 @@ If you need the chat to always be visible, use [`<chat>`](/docs/chat/components/
 
 ```typescript
 import { Component, ChangeDetectionStrategy, signal } from '@angular/core';
-import { agent } from '@threadplane/langgraph';
+import { injectAgent, provideAgent } from '@threadplane/langgraph';
 import { ChatPopupComponent } from '@threadplane/chat';
 
 @Component({
   selector: 'app-root',
   standalone: true,
   imports: [ChatPopupComponent],
+  providers: [provideAgent({ assistantId: 'chat', threadId: signal(null) })],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <!-- your app content here -->
@@ -34,10 +35,7 @@ import { ChatPopupComponent } from '@threadplane/chat';
   `,
 })
 export class AppComponent {
-  protected readonly chatAgent = agent({
-    assistantId: 'chat_agent',
-    threadId: signal(null),
-  });
+  protected readonly chatAgent = injectAgent();
 }
 ```
 
@@ -52,7 +50,7 @@ export class AppComponent {
 | Input | Type | Default | Description |
 |-------|------|---------|-------------|
 | `agent` | `Agent` | **Required** | The agent providing streaming state |
-| `open` | `boolean` | `false` | Two-way bindable. Controls whether the chat window is open |
+| `open` | `boolean` (two-way) | `false` | Two-way bindable. Controls whether the chat window is open |
 
 ### Outputs
 
@@ -84,10 +82,11 @@ Control the open state from your component:
     <button (click)="popup.openWindow()">Open Chat</button>
     <chat-popup [(open)]="chatOpen" [agent]="chatAgent" #popup />
   `,
+  providers: [provideAgent({ assistantId: 'chat', threadId: signal(null) })],
 })
 export class AppComponent {
   chatOpen = false;
-  chatAgent = agent({ assistantId: 'chat_agent', threadId: signal(null) });
+  chatAgent = injectAgent();
 }
 ```
 

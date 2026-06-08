@@ -48,9 +48,9 @@ export default async function HomePage() {
           { title: 'AgUiAdapter', description: 'Any AG-UI compliant backend.' },
           { title: 'LangGraphAdapter', description: 'Native LangGraph streaming.' },
         ]}
-        cta={{ label: 'Read the streaming guide', href: '/docs/agent/api/agent' }}
+        cta={{ label: 'Read the streaming guide', href: '/docs/langgraph/guides/streaming' }}
         visual={
-          <BrowserFrame url="cockpit.threadplane.ai/langgraph/streaming" elevation="md">
+          <BrowserFrame url="cockpit.threadplane.ai/langgraph/core-capabilities/streaming/overview/python" elevation="md">
             <img
               src="/screenshots/cockpit-docs.webp"
               alt="Cockpit reference app — Angular streaming guide with provideAgent setup"
@@ -70,7 +70,7 @@ export default async function HomePage() {
         body="Server-emitted JSON specs become Angular components you already own. Vercel json-render and Google A2UI both supported, with per-component fallback and a readiness gate."
         bullets={[
           'Per-component fallback API + readiness gate',
-          'A2UI v0.9-compatible protocol + Vercel json-render adapter',
+          'A2UI v1 + Vercel json-render adapter',
           'Renders into your existing component library',
           'Server-side schema, client-side trust',
         ]}
@@ -82,7 +82,7 @@ export default async function HomePage() {
         cta={{ label: 'See @threadplane/render', href: '/render' }}
         visualLeft
         visual={
-          <BrowserFrame url="cockpit.threadplane.ai/langgraph/api" elevation="md">
+          <BrowserFrame url="cockpit.threadplane.ai" elevation="md">
             <img
               src="/screenshots/cockpit-api.webp"
               alt="Cockpit reference app — API reference rendered as structured cards"
@@ -111,7 +111,7 @@ export default async function HomePage() {
           { title: 'readiness gate', description: 'Hold renders until the surface is real.' },
           { title: 'thread persistence', description: 'Restore conversations across sessions.' },
         ]}
-        cta={{ label: 'Production patterns', href: '/docs/agent/guides/deployment' }}
+        cta={{ label: 'Production patterns', href: '/docs/langgraph/guides/deployment' }}
         visual={<LiveDemoFrame />}
       />
 

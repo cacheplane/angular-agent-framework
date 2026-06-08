@@ -1,0 +1,95 @@
+# Quick Start
+
+Parse an A2UI stream, build its data model, and resolve a dynamic value — end to end, in a few minutes.
+
+`@threadplane/a2ui` is the protocol layer. It parses the JSONL message stream, gives you typed envelopes, and resolves dynamic values against a data model. It does not render anything. Rendering is `@threadplane/chat`'s [`<a2ui-surface>`](/docs/chat/getting-started/introduction). This library is what sits underneath it.
+
+## Goals
+
+By the end of this page you'll be able to:
+
+- Install `@threadplane/a2ui`.
+- Parse a newline-delimited A2UI stream into typed messages.
+- Build a plain data-model object with `setByPointer`.
+- Resolve a dynamic value with `resolveDynamic`.
+
+## Install
+
+```bash
+npm install @threadplane/a2ui
+```
+
+The package has no peer dependencies.
+
+## Parse a stream
+
+Let's start with a real stream. An agent emits A2UI as newline-delimited JSON — one envelope per line. Here's a booking form, in emission order: data first, then the component tree, then the signal to render.
+
+```text
+---a2ui_JSON---
+{"dataModelUpdate":{"surfaceId":"booking","contents":[{"key":"origin","valueString":"LAX"},{"key":"dest","valueString":"JFK"},{"key":"passengers","valueNumber":1}]}}
+{"surfaceUpdate":{"surfaceId":"booking","components":[{"id":"root","component":{"Column":{"children":{"explicitList":["title","origin","submit"]}}}},{"id":"title","component":{"Text":{"text":"Book a flight","usageHint":"h2"}}},{"id":"origin","component":{"MultipleChoice":{"label":"Origin","options":[{"label":"LAX","value":"LAX"},{"label":"JFK","value":"JFK"}],"selections":{"path":"/origin"},"maxAllowedSelections":1}}},{"id":"submit_label","component":{"Text":{"text":"Search flights"}}},{"id":"submit","component":{"Button":{"child":"submit_label","primary":true,"action":{"name":"bookingSubmit","context":[{"key":"origin","value":{"path":"/origin"}},{"key":"dest","value":{"path":"/dest"}}]}}}}]}}
+{"beginRendering":{"surfaceId":"booking","root":"root"}}
+```
+
+Feed each chunk to a parser. `push` returns the `A2uiMessage[]` it could complete from everything buffered so far.
+
+```ts
+import { createA2uiMessageParser } from '@threadplane/a2ui';
+
+const parser = createA2uiMessageParser();
+
+const messages = parser.push(
+  '{"beginRendering":{"surfaceId":"s1","root":"root"}}\n',
+);
+// messages -> 1 message: { beginRendering: { surfaceId: 's1', root: 'root' } }
+```
+
+The parser is line-oriented. A line is only parsed once a newline arrives, so partial JSON buffers until it's complete:
+
+```ts
+parser.push('{"beginRendering":');           // -> []  (incomplete, buffered)
+parser.push('{"surfaceId":"s1","root":"root"}}\n'); // -> 1 message
+```
+
+That buffering is deliberate. Agent output streams in fragments, and a half-finished line shouldn't throw mid-render.
+
+## Build the data model
+
+A `dataModelUpdate` carries `contents` — an array of typed entries, each with a `key` and one of `valueString` / `valueNumber` / `valueBoolean` / `valueMap`. The parser hands you those entries verbatim. Turning them into a plain object the resolver can read is your code.
+
+For the booking stream that's three entries: `origin`, `dest`, `passengers`. `setByPointer` builds the object immutably — each call returns a new object, the input is untouched.
+
+```ts
+import { setByPointer } from '@threadplane/a2ui';
+
+let model: Record<string, unknown> = {};
+model = setByPointer(model, '/origin', 'LAX');
+model = setByPointer(model, '/dest', 'JFK');
+model = setByPointer(model, '/passengers', 1);
+// model -> { origin: 'LAX', dest: 'JFK', passengers: 1 }
+```
+
+To be clear: assembling the model from `contents` (reading `valueString` vs `valueNumber`, honoring the entry's optional `path`, recursing into `valueMap`) is the caller's job. This library gives you the pointer helpers; it doesn't ship a `contents` -> object reducer. The [data model guide](/docs/a2ui/guides/data-model) covers the helpers in depth.
+
+## Resolve a value
+
+A component's props can be literals or path references. `resolveDynamic` collapses both against the model.
+
+```ts
+import { resolveDynamic } from '@threadplane/a2ui';
+
+resolveDynamic({ path: '/origin' }, model);       // "LAX"
+resolveDynamic({ literalString: 'Search flights' }, model); // "Search flights"
+resolveDynamic({ path: '/missing' }, model);      // undefined
+```
+
+A literal wrapper unwraps to its value. A `{ path }` reads from the model by JSON-Pointer. A missing path resolves to `undefined` rather than throwing — same conservative posture as the parser.
+
+## Conclusion
+
+That's the full loop: stream in, model built, value resolved. From here, the three guides go deeper:
+
+- [The A2UI message protocol](/docs/a2ui/guides/message-protocol) — surfaces, components, dynamic values, and the four envelopes.
+- [Working with the data model](/docs/a2ui/guides/data-model) — the pointer helpers, immutability, and scopes.
+- [Validating and adapting an A2UI stream](/docs/a2ui/guides/adapters-and-validation) — guards, test payloads, and custom renderers.

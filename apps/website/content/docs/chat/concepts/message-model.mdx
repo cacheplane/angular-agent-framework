@@ -2,7 +2,7 @@
 
 `@threadplane/chat` renders a runtime-neutral message model. Adapters translate backend-specific messages into this shape, then components render from it.
 
-This matters because provider message formats are not stable enough to build customer UI against directly. LangGraph, AG-UI, OpenAI, Anthropic, and custom backends all have different event and content shapes. The chat layer needs one model.
+This matters because provider message formats aren't stable enough to build customer UI against directly. LangGraph, AG-UI, OpenAI, Anthropic, and custom backends all have different event and content shapes. The chat layer needs one model.
 
 ## Message Shape
 
@@ -17,6 +17,9 @@ interface Message {
   reasoningDurationMs?: number;
   extra?: Record<string, unknown>;
   citations?: Citation[];
+  // IDs of tool calls emitted BY this assistant message (distinct from the
+  // singular `toolCallId` above, which is the call a `tool` message answers).
+  toolCallIds?: string[];
 }
 ```
 
@@ -47,7 +50,7 @@ You will also see the words `human`, `ai`, and `function` in template APIs:
 
 `user` maps to `human`. `assistant` maps to `ai`. `tool` and `system` keep their names.
 
-`function` is present for compatibility with older function-call vocabulary. The current runtime-neutral `Role` type does not include `function`. New adapters should normalize function results into `tool` messages or carry backend-specific function details in `extra`.
+`function` is present for compatibility with older function-call vocabulary. The current runtime-neutral `Role` type doesn't include `function`. New adapters should normalize function results into `tool` messages or carry backend-specific function details in `extra`.
 
 ## Content
 
@@ -63,7 +66,7 @@ type ContentBlock =
 
 Plain text is the common case. `ChatComponent` treats assistant text as streamable content. Markdown, json-render specs, and A2UI payloads are detected from that text.
 
-Structured blocks are useful when the adapter can preserve more shape than a string. Custom templates should check whether `content` is a string before assuming it can be rendered directly.
+Structured blocks are useful when the adapter can preserve more shape than a string. Custom templates should check whether `content` is a string before assuming they can render it directly.
 
 ```ts
 function textOf(message: Message): string {
@@ -116,7 +119,7 @@ Tool result messages can also carry `toolCallId`.
 
 Use `toolCalls()` when rendering cross-message tool status. Use `tool` messages when rendering tool output inside the transcript.
 
-This matters because tool calls stream. Arguments may be partial while status is not `complete`. UI should treat `args` as unknown until the adapter marks the call complete or your tool template can handle partial data.
+This matters because tool calls stream. Arguments may be partial while status isn't `complete`. UI should treat `args` as unknown until the adapter marks the call complete, or until your tool template can handle partial data.
 
 ## Citations
 
@@ -124,6 +127,19 @@ Messages can carry provider-agnostic citations:
 
 ```ts
 message.citations;
+```
+
+Each entry has the following shape:
+
+```ts
+interface Citation {
+  id: string;       // stable id matched against [^id] markers in content
+  index: number;    // 1-based display order, stable per-message
+  title?: string;
+  url?: string;
+  snippet?: string;
+  extra?: Record<string, unknown>; // provider-specific extras
+}
 ```
 
 `@threadplane/langgraph` exports `extractCitations()` for advanced adapters that need to normalize nonstandard citation payloads. Chat markdown views can render citation markers against the message citation list.
@@ -156,7 +172,7 @@ agent.subagents?.(); // Map<string, Subagent>
 
 Each `Subagent` has a tool-call id, optional name, status signal, message signal, and state signal.
 
-Use subagents when the backend delegates work to child graphs or specialized workers. Do not encode subagent progress as fake assistant messages if the runtime can expose structured subagent state. Structured state lets UI render progress, nested transcripts, and failure states without parsing prose.
+Use subagents when the backend delegates work to child graphs or specialized workers. Don't encode subagent progress as fake assistant messages if the runtime can expose structured subagent state. Structured state lets UI render progress, nested transcripts, and failure states without parsing prose.
 
 ## A2UI And Generated Surfaces
 
@@ -176,7 +192,7 @@ The message still remains an assistant message. The generated UI is a rendering 
 
 Normalize at the adapter boundary. Components should not inspect raw LangGraph SDK messages or AG-UI events unless they are adapter-specific tools.
 
-Treat `content` as `string | ContentBlock[]`. Do not assume every message can be interpolated directly.
+Treat `content` as `string | ContentBlock[]`. Don't assume every message can be interpolated directly.
 
 Use the exported type guards when role-specific code helps:
 

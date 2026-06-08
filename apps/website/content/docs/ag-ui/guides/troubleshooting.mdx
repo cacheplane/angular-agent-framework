@@ -8,7 +8,7 @@ Check the provider first.
 
 ```ts
 providers: [
-  provideAgUiAgent({ url: '/api/agent' }),
+  provideAgent({ url: '/api/agent' }),
 ]
 ```
 
@@ -16,7 +16,7 @@ Then make sure the component uses the provided agent:
 
 ```ts
 import { ChatComponent } from '@threadplane/chat';
-import { injectAgUiAgent } from '@threadplane/ag-ui';
+import { injectAgent } from '@threadplane/ag-ui';
 
 @Component({
   standalone: true,
@@ -24,11 +24,11 @@ import { injectAgUiAgent } from '@threadplane/ag-ui';
   template: `<chat [agent]="agent" />`,
 })
 export class ChatPage {
-  protected readonly agent = injectAgUiAgent();
+  protected readonly agent = injectAgent();
 }
 ```
 
-If you inject `AG_UI_AGENT` manually, the token must be provided in the same Angular injector tree.
+If you call `injectAgent()`, the agent must have been provided via `provideAgent()` in the same Angular injector tree.
 
 ## User messages appear, but no assistant response
 
@@ -145,10 +145,10 @@ Use `@threadplane/langgraph` for the richer LangGraph-specific surface, or write
 When you are unsure whether the issue is UI wiring or backend events, swap in the fake provider:
 
 ```ts
-import { provideFakeAgUiAgent } from '@threadplane/ag-ui';
+import { provideFakeAgent } from '@threadplane/ag-ui';
 
 providers: [
-  provideFakeAgUiAgent({
+  provideFakeAgent({
     tokens: ['Fake', ' response.'],
     delayMs: 20,
   }),

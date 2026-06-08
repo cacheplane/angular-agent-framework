@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MIT
+export type { FakeAgentConfig } from './fake-agent-config';
 export { runAgentConformance } from './agent-conformance';
 export { runAgentWithHistoryConformance } from './agent-with-history-conformance';
 export {

@@ -1,0 +1,108 @@
+# provideAgent()
+
+`provideAgent()` registers the singleton agent configuration for every `injectAgent()` call in an Angular application. Call it once in `bootstrapApplication` or an `ApplicationConfig` to wire up the LangGraph API URL, assistant id, thread persistence, and transport.
+
+`injectAgent()` itself takes no arguments — all configuration flows through `provideAgent()`.
+
+```ts
+import { bootstrapApplication } from '@angular/platform-browser';
+import {
+  provideAgent,
+  MockAgentTransport,
+} from '@threadplane/langgraph';
+import { AppComponent } from './app/app.component';
+
+bootstrapApplication(AppComponent, {
+  providers: [
+    provideAgent({
+      apiUrl: 'http://localhost:2024',
+      assistantId: 'my-agent',
+      transport: environment.testMode
+        ? new MockAgentTransport()
+        : undefined,
+    }),
+  ],
+});
+```
+
+## Configuration options
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `apiUrl` | `string` | LangGraph Platform API base URL. |
+| `assistantId` | `string` | LangGraph assistant id to bind to. |
+| `threadId` | `Signal<string \| null> \| string \| null` | Thread ID to connect to. Pass a Signal for reactive thread switching. |
+| `onThreadId` | `(id: string) => void` | Called when a new thread is auto-created by the transport. |
+| `initialValues` | `Partial<T>` | Initial state values before the first stream response arrives. |
+| `throttle` | `number \| false` | Throttle signal updates in milliseconds. `false` to disable. (default 16) |
+| `toMessage` | `(msg: unknown) => BaseMessage` | Custom message deserializer for non-standard message formats. |
+| `transport` | `AgentTransport` | Optional transport instance. Defaults to `FetchStreamTransport` when omitted. |
+| `telemetry` | `AgentRuntimeTelemetrySink \| false` | Optional app-owned telemetry sink. No telemetry is emitted unless this is provided. |
+| `filterSubagentMessages` | `boolean` | When true, subagent messages are filtered from the main messages signal. |
+| `subagentToolNames` | `string[]` | Tool names that indicate a subagent invocation. |
+
+## Singleton model
+
+A single `provideAgent({...})` call configures the entire application. Every `injectAgent()` call resolves to the same configured agent.
+
+```ts
+provideAgent({
+  apiUrl: 'https://api.example.com',
+  assistantId: 'support-agent',
+});
+
+// Elsewhere, inside an injection context:
+const chat = injectAgent();
+```
+
+## Test transports
+
+`transport` is an object that implements `AgentTransport`, not an Angular class token. Create an instance before passing it to `provideAgent()`.
+
+```ts
+const transport = new MockAgentTransport();
+
+TestBed.configureTestingModule({
+  providers: [
+    provideAgent({
+      apiUrl: '',
+      assistantId: 'test-agent',
+      transport,
+    }),
+  ],
+});
+```
+
+<Callout type="info" title="Test transports">
+  Swap out the live transport for `MockAgentTransport` in tests by changing only
+  the `transport` field on `provideAgent()`. `injectAgent()` call sites stay
+  unchanged across environments.
+</Callout>
+
+## What's Next
+
+<CardGroup cols={3}>
+  <Card
+    title="Installation"
+    icon="package"
+    href="/docs/langgraph/getting-started/installation"
+  >
+    Step-by-step setup guide including peer dependencies and NgModule support.
+  </Card>
+  <Card
+    title="Deployment"
+    icon="server"
+    href="/docs/langgraph/guides/deployment"
+  >
+    Configure transports for production, SSR, and edge runtimes.
+  </Card>
+  <Card
+    title="injectAgent() API"
+    icon="code"
+    href="/docs/langgraph/api/inject-agent"
+  >
+    Full reference for the core primitive you configure here.
+  </Card>
+</CardGroup>
+
+{/* Auto-rendered from api-docs.json — see page component */}

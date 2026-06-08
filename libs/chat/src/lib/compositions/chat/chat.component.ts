@@ -21,6 +21,7 @@ import { ChatTypingIndicatorComponent } from '../../primitives/chat-typing-indic
 import { ChatErrorComponent } from '../../primitives/chat-error/chat-error.component';
 import { ChatThreadListComponent, type Thread } from '../../primitives/chat-thread-list/chat-thread-list.component';
 import { ChatGenerativeUiComponent } from '../../primitives/chat-generative-ui/chat-generative-ui.component';
+import { ChatToolViewsComponent } from '../../primitives/chat-tool-views/chat-tool-views.component';
 import { ChatStreamingMdComponent } from '../../streaming/streaming-markdown.component';
 import { ChatToolCallsComponent } from '../../primitives/chat-tool-calls/chat-tool-calls.component';
 import { ChatSubagentsComponent } from '../../primitives/chat-subagents/chat-subagents.component';
@@ -87,7 +88,7 @@ export function isPinned(
     ChatWindowComponent, ChatMessageListComponent, MessageTemplateDirective, ChatMessageComponent,
     ChatInputComponent, ChatTypingIndicatorComponent, ChatErrorComponent,
     ChatThreadListComponent, ChatGenerativeUiComponent,
-    ChatStreamingMdComponent, ChatToolCallsComponent, ChatSubagentsComponent, A2uiSurfaceComponent,
+    ChatStreamingMdComponent, ChatToolCallsComponent, ChatToolViewsComponent, ChatSubagentsComponent, A2uiSurfaceComponent,
     ChatMessageActionsComponent, ChatWelcomeComponent, ChatSelectComponent, ChatReasoningComponent,
     ChatScrollBubbleComponent,
   ],
@@ -202,11 +203,18 @@ export function isPinned(
                       [durationMs]="message.reasoningDurationMs"
                     />
                   }
-                  <chat-tool-calls [agent]="agent()" [message]="message" [excludeToolNames]="genuiToolNames()">
+                  <chat-tool-calls [agent]="agent()" [message]="message" [excludeToolNames]="excludedToolNames()">
                     <ng-container ngProjectAs="[chatToolCallTemplate]">
                       <ng-content select="[chatToolCallTemplate]" />
                     </ng-container>
                   </chat-tool-calls>
+                  <chat-tool-views
+                    [agent]="agent()"
+                    [message]="message"
+                    [views]="views()"
+                    [store]="resolvedStore()"
+                    [handlers]="handlers()"
+                  />
                   <chat-subagents [agent]="agent()" />
                   @if (classified.markdown(); as md) {
                     <chat-streaming-md [content]="md" [streaming]="agent().isLoading() && i === agent().messages().length - 1" />
@@ -359,6 +367,17 @@ export class ChatComponent {
     return v ? toRenderRegistry(v) : undefined;
   });
 
+  /** Tool names that have a registered view (keys of the `views` registry).
+   *  These render as inline tool-views and are excluded from the default
+   *  tool-call card so they don't render twice. */
+  readonly viewToolNames = computed<readonly string[]>(() => Object.keys(this.views() ?? {}));
+
+  /** Union of GenUI dispatcher tool names and registered view tool names. */
+  readonly excludedToolNames = computed<readonly string[]>(() => [
+    ...this.genuiToolNames(),
+    ...this.viewToolNames(),
+  ]);
+
   readonly messageContent = messageContent;
 
   /**
@@ -368,7 +387,7 @@ export class ChatComponent {
    * on a rendered surface) flow through the same submit channel and
    * land in the message stream as a HumanMessage whose content is a
    * JSON-serialized `A2uiActionMessage`. Showing the raw JSON as if
-   * the user typed it leaks the protocol; per the A2UI v0.9 spec
+   * the user typed it leaks the protocol; per the A2UI spec
    * those events resemble tool calls more than user utterances.
    *
    * `a2uiActionLabel` returns a short human-readable label for
@@ -473,6 +492,30 @@ export class ChatComponent {
         if (!store) return;
         store.update(event.data);
       });
+    });
+
+    // Sync the agent STATE signal into the render store. AG-UI delivers
+    // backend data as agent shared state (STATE_SNAPSHOT/STATE_DELTA); other
+    // adapters expose graph state via the same `state()` signal. The render
+    // store keys are JSON pointers, so map each top-level state key `k` to
+    // `/k`. Exclude `messages` (carried in the snapshot but irrelevant to the
+    // render store and large). Fires for any adapter whose `state()` carries
+    // non-message keys; no-op when no render store is active. Coexists with
+    // the events$ `state_update` path above (both merge into the same store).
+    effect(() => {
+      let agentRef: ReturnType<typeof this.agent>;
+      try { agentRef = this.agent(); } catch { return; }
+      const stateFn = (agentRef as unknown as { state?: () => unknown }).state;
+      if (typeof stateFn !== 'function') return;
+      const state = stateFn.call(agentRef);
+      const store = this.resolvedStore();
+      if (!store || state == null || typeof state !== 'object' || Array.isArray(state)) return;
+      const updates: Record<string, unknown> = {};
+      for (const [k, v] of Object.entries(state as Record<string, unknown>)) {
+        if (k === 'messages') continue;
+        updates['/' + k] = v;
+      }
+      if (Object.keys(updates).length > 0) store.update(updates);
     });
 
     // Spec 4: flip CHAT_LIFECYCLE.firstMessageSent when the agent's stream

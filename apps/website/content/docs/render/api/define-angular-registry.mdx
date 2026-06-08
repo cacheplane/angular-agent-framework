@@ -31,6 +31,7 @@ An `AngularRegistry` object with two methods:
 ```typescript
 interface AngularRegistry {
   get(name: string): AngularComponentRenderer | undefined;
+  getFallback(name: string): AngularComponentRenderer | undefined;
   names(): string[];
 }
 ```
@@ -38,6 +39,7 @@ interface AngularRegistry {
 | Method | Description |
 |--------|-------------|
 | `get(name)` | Returns the component class for the given type name, or `undefined` if not registered |
+| `getFallback(name)` | Returns the configured fallback renderer for a registered name -- the entry's own `fallback`, the library's default fallback if the entry omits one, or `undefined` if the name isn't registered. |
 | `names()` | Returns an array of all registered type name strings |
 
 ## Usage

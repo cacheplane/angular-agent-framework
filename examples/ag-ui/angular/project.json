@@ -1,0 +1,99 @@
+{
+  "name": "examples-ag-ui-angular",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "examples/ag-ui/angular/src",
+  "projectType": "application",
+  "prefix": "app",
+  "targets": {
+    "build": {
+      "executor": "@angular/build:application",
+      "outputs": [
+        "{options.outputPath.base}"
+      ],
+      "options": {
+        "outputPath": {
+          "base": "dist/examples/ag-ui/angular",
+          "browser": ""
+        },
+        "index": "examples/ag-ui/angular/src/index.html",
+        "browser": "examples/ag-ui/angular/src/main.ts",
+        "tsConfig": "examples/ag-ui/angular/tsconfig.app.json",
+        "assets": [
+          {
+            "glob": "**/*",
+            "input": "examples/ag-ui/angular/public"
+          }
+        ],
+        "styles": [
+          "examples/ag-ui/angular/src/styles.css"
+        ]
+      },
+      "configurations": {
+        "production": {
+          "budgets": [
+            {
+              "type": "initial",
+              "maximumWarning": "500kb",
+              "maximumError": "1.5mb"
+            },
+            {
+              "type": "anyComponentStyle",
+              "maximumWarning": "10kb",
+              "maximumError": "16kb"
+            }
+          ],
+          "outputHashing": "all"
+        },
+        "development": {
+          "optimization": false,
+          "extractLicenses": false,
+          "sourceMap": true,
+          "fileReplacements": [
+            {
+              "replace": "examples/ag-ui/angular/src/environments/environment.ts",
+              "with": "examples/ag-ui/angular/src/environments/environment.development.ts"
+            }
+          ]
+        }
+      },
+      "defaultConfiguration": "development"
+    },
+    "serve": {
+      "continuous": true,
+      "executor": "@angular/build:dev-server",
+      "options": {
+        "port": 4201,
+        "proxyConfig": "examples/ag-ui/angular/proxy.conf.mjs"
+      },
+      "configurations": {
+        "production": {
+          "buildTarget": "examples-ag-ui-angular:build:production"
+        },
+        "development": {
+          "buildTarget": "examples-ag-ui-angular:build:development"
+        }
+      },
+      "defaultConfiguration": "development"
+    },
+    "test": {
+      "executor": "@nx/vitest:test",
+      "options": {
+        "configFile": "examples/ag-ui/angular/vite.config.mts"
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    },
+    "e2e": {
+      "executor": "@nx/playwright:playwright",
+      "options": {
+        "config": "examples/ag-ui/angular/e2e/playwright.config.ts"
+      }
+    }
+  },
+  "tags": [
+    "scope:examples",
+    "scope:examples-ag-ui",
+    "type:app"
+  ]
+}

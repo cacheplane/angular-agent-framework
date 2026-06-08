@@ -71,13 +71,28 @@ const spec = {
 </Step>
 <Step title="Connect to the backend">
 
-Use `agent()` to receive specs with computed props from the agent:
+Configure `provideAgent()` in your app config, then call `injectAgent()` to
+receive specs with computed props from the agent:
 
 ```typescript
-protected readonly stream = agent({
-  apiUrl: environment.langGraphApiUrl,
-  assistantId: environment.streamingAssistantId,
-});
+// app.config.ts
+import { provideAgent } from '@threadplane/langgraph';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideAgent({
+      apiUrl: environment.langGraphApiUrl,
+      assistantId: environment.streamingAssistantId,
+    }),
+  ],
+};
+```
+
+```typescript
+// app.component.ts
+import { injectAgent } from '@threadplane/langgraph';
+
+protected readonly stream = injectAgent();
 ```
 
 </Step>
