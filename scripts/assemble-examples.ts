@@ -50,6 +50,9 @@ const capabilities = [
   { product: 'chat', topic: 'a2ui' },
   { product: 'ag-ui', topic: 'interrupts' },
   { product: 'ag-ui', topic: 'streaming' },
+  { product: 'ag-ui', topic: 'tool-views' },
+  { product: 'ag-ui', topic: 'json-render' },
+  { product: 'ag-ui', topic: 'a2ui' },
 ];
 
 if (!skipBuild) {

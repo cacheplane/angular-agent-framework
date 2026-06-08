@@ -83,6 +83,12 @@
     },
     "lint": {
       "executor": "@nx/eslint:lint"
+    },
+    "e2e": {
+      "executor": "@nx/playwright:playwright",
+      "options": {
+        "config": "examples/ag-ui/angular/e2e/playwright.config.ts"
+      }
     }
   },
   "tags": [

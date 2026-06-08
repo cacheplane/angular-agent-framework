@@ -322,6 +322,52 @@ jobs:
           fi
           echo "All examples-chat-e2e matrix expansions passed."
 
+  examples-ag-ui-e2e:
+    name: "examples/ag-ui — e2e"
+    needs: ci-scope
+    # No dedicated ci-scope output exists for examples/ag-ui yet, so this job
+    # runs on every push and pull_request rather than being scope-gated. It is
+    # deliberately NOT wired into the require_scoped aggregation in
+    # `required-pr-checks` (see Step 1 report) to avoid breaking that logic.
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v6.0.2
+      - uses: actions/setup-node@v6.3.0
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install uv
+        uses: astral-sh/setup-uv@v8.0.0
+        with:
+          python-version: '3.12'
+      - run: npm ci
+      - name: Cache examples-ag-ui python venv
+        uses: actions/cache@v4
+        with:
+          path: examples/ag-ui/python/.venv
+          key: uv-venv-${{ runner.os }}-py3.12-${{ hashFiles('examples/ag-ui/python/uv.lock') }}
+      - working-directory: examples/ag-ui/python
+        run: uv sync
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            playwright-${{ runner.os }}-
+      - run: npx playwright install --with-deps chromium
+      - run: npx nx e2e examples-ag-ui-angular --skip-nx-cache
+      - name: Upload Playwright trace on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: examples-ag-ui-e2e-trace
+          path: |
+            test-results/
+            examples/ag-ui/angular/e2e/test-results/
+          retention-days: 7
+
   cockpit-e2e-dispatcher:
     name: Cockpit — e2e dispatcher
     needs: ci-scope
@@ -805,6 +851,74 @@ jobs:
             process.exit(1);
           });
           NODE
+
+  ag-ui-demo-deploy:
+    name: ag-ui demo → Vercel
+    needs: [examples-ag-ui-e2e]
+    runs-on: ubuntu-latest
+    if: ${{ always() && !cancelled() && github.ref == 'refs/heads/main' && github.event_name == 'push' }}
+    steps:
+      - uses: actions/checkout@v6.0.2
+        with:
+          fetch-depth: 0
+      - name: Require ag-ui demo prerequisite jobs
+        run: |
+          if [ "${{ needs.examples-ag-ui-e2e.result }}" != "success" ]; then
+            echo "::error::examples/ag-ui — e2e finished with ${{ needs.examples-ag-ui-e2e.result }}; refusing to deploy the ag-ui demo."
+            exit 1
+          fi
+      - name: Check if ag-ui demo changed
+        id: ag_ui_changed
+        run: |
+          base_sha="${{ github.event.before }}"
+          head_sha="${{ github.sha }}"
+          if [ -z "$base_sha" ] || [ "$base_sha" = "0000000000000000000000000000000000000000" ]; then
+            base_sha="$(git rev-parse "$head_sha^")"
+          fi
+          if ! git cat-file -e "$base_sha^{commit}" 2>/dev/null; then
+            git fetch --no-tags origin "$base_sha"
+          fi
+          changed_files="$(git diff --name-only "$base_sha" "$head_sha")"
+          ag_ui_changed=false
+          if printf '%s\n' "$changed_files" | grep -E '^(examples/ag-ui/.*|scripts/(ag-ui-demo-middleware|assemble-ag-ui-demo)\.ts)$' >/dev/null; then
+            ag_ui_changed=true
+          fi
+          echo "changed=$ag_ui_changed" >> "$GITHUB_OUTPUT"
+          if [ "$ag_ui_changed" != "true" ]; then
+            echo "::notice::No ag-ui demo files changed; skipping ag-ui demo deploy."
+          fi
+      - uses: actions/setup-node@v6.3.0
+        if: steps.ag_ui_changed.outputs.changed == 'true'
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install uv
+        if: steps.ag_ui_changed.outputs.changed == 'true'
+        uses: astral-sh/setup-uv@v8.0.0
+        with:
+          python-version: '3.12'
+      - if: steps.ag_ui_changed.outputs.changed == 'true'
+        run: npm ci
+      - name: Build and assemble ag-ui demo
+        if: steps.ag_ui_changed.outputs.changed == 'true'
+        run: npx tsx scripts/assemble-ag-ui-demo.ts
+      - name: Deploy ag-ui demo SPA to Vercel (production)
+        if: steps.ag_ui_changed.outputs.changed == 'true'
+        run: |
+          mkdir -p deploy/ag-ui-demo/.vercel
+          cat > deploy/ag-ui-demo/.vercel/project.json <<EOF
+          {"projectId":"${{ secrets.VERCEL_AG_UI_DEMO_PROJECT_ID }}","orgId":"${{ secrets.VERCEL_ORG_ID }}","projectName":"threadplane-ag-ui-demo"}
+          EOF
+          cd deploy/ag-ui-demo
+          npx vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+          npx vercel deploy --prebuilt --prod --yes --token=${{ secrets.VERCEL_TOKEN }}
+      - name: Deploy ag-ui backend to Railway
+        if: steps.ag_ui_changed.outputs.changed == 'true'
+        working-directory: examples/ag-ui/python
+        env:
+          RAILWAY_TOKEN: ${{ secrets.AG_UI_DEMO_RAILWAY_TOKEN }}
+        run: |
+          npx --yes @railway/cli@4 up --service ag-ui-demo --detach
 
   # Minting service deploys via Vercel's git integration on every push to main
   # (configured in the Vercel project's git settings, not here). The previous
