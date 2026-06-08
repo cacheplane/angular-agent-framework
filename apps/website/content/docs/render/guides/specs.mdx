@@ -1,6 +1,6 @@
 # Specs
 
-A spec is the JSON object that describes your entire UI tree. It tells `@threadplane/render` what to render, how to wire state, and when to show or hide elements.
+A spec is the JSON object that describes your entire UI tree. It tells `@threadplane/render` what to render, how to wire state, and when to show or hide an element.
 
 ## Spec Format
 
@@ -29,7 +29,7 @@ const spec: Spec = {
 | `state` | `object` | (Optional) Initial state used to create an internal state store when no external store is provided |
 
 <Callout type="info" title="Flat element map">
-Elements are stored in a flat map rather than a nested tree. Parent-child relationships are expressed through the `children` property, which contains keys pointing to other elements in the map. This design enables efficient lookups and makes specs easy to generate from server-side tools.
+Elements are stored in a flat map rather than a nested tree. Parent-child relationships are expressed through the `children` property, which contains keys pointing to other elements in the map. This keeps lookups fast and makes specs easy to generate from server-side tools.
 </Callout>
 
 ## UIElement Properties
@@ -235,7 +235,7 @@ When an element has `repeat`, visibility evaluation is handled differently -- al
 
 ## Complete Example
 
-Here is a spec that combines children, state expressions, conditional rendering, and repeat loops:
+Let's put it together. Here's a spec that combines children, state expressions, conditional rendering, and repeat loops:
 
 ```typescript
 const spec: Spec = {
