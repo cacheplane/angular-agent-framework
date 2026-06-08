@@ -11,49 +11,23 @@
 import { execSync } from 'child_process';
 import { cpSync, mkdirSync, rmSync, existsSync, writeFileSync, readFileSync } from 'fs';
 import { resolve } from 'path';
+import { capabilities as registryCapabilities } from '../apps/cockpit/scripts/capability-registry';
 
 const root = resolve(__dirname, '..');
 const deployDir = resolve(root, 'deploy/examples');
 const skipBuild = process.argv.includes('--skip-build');
 
-const capabilities = [
-  { product: 'langgraph', topic: 'streaming' },
-  { product: 'langgraph', topic: 'persistence' },
-  { product: 'langgraph', topic: 'interrupts' },
-  { product: 'langgraph', topic: 'memory' },
-  { product: 'langgraph', topic: 'durable-execution' },
-  { product: 'langgraph', topic: 'subgraphs' },
-  { product: 'langgraph', topic: 'time-travel' },
-  { product: 'langgraph', topic: 'deployment-runtime' },
-  { product: 'deep-agents', topic: 'planning' },
-  { product: 'deep-agents', topic: 'filesystem' },
-  { product: 'deep-agents', topic: 'subagents' },
-  { product: 'deep-agents', topic: 'memory' },
-  { product: 'deep-agents', topic: 'skills' },
-  { product: 'deep-agents', topic: 'sandboxes' },
-  { product: 'render', topic: 'spec-rendering' },
-  { product: 'render', topic: 'element-rendering' },
-  { product: 'render', topic: 'state-management' },
-  { product: 'render', topic: 'registry' },
-  { product: 'render', topic: 'repeat-loops' },
-  { product: 'render', topic: 'computed-functions' },
-  { product: 'chat', topic: 'messages' },
-  { product: 'chat', topic: 'input' },
-  { product: 'chat', topic: 'interrupts' },
-  { product: 'chat', topic: 'tool-calls' },
-  { product: 'chat', topic: 'subagents' },
-  { product: 'chat', topic: 'threads' },
-  { product: 'chat', topic: 'timeline' },
-  { product: 'chat', topic: 'generative-ui' },
-  { product: 'chat', topic: 'debug' },
-  { product: 'chat', topic: 'theming' },
-  { product: 'chat', topic: 'a2ui' },
-  { product: 'ag-ui', topic: 'interrupts' },
-  { product: 'ag-ui', topic: 'streaming' },
-  { product: 'ag-ui', topic: 'tool-views' },
-  { product: 'ag-ui', topic: 'json-render' },
-  { product: 'ag-ui', topic: 'a2ui' },
-];
+// Derive the staged-example list from the capability registry — the single
+// source of truth (every entry has an `angularProject` that builds to
+// `dist/cockpit/<product>/<topic>/angular`). Hardcoding it previously let new
+// caps (tool-views, json-render, a2ui) silently 404 in production because they
+// were added to the registry but never to this list. The Railway deploy
+// generator already derives from the registry; this keeps the frontend deploy
+// in lockstep so a registry cap can never be missed again.
+const capabilities = registryCapabilities.map((c) => ({
+  product: c.product,
+  topic: c.topic,
+}));
 
 if (!skipBuild) {
   console.log(`Building all ${capabilities.length} Angular apps...`);
