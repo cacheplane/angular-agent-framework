@@ -38,7 +38,7 @@
         "name": "config",
         "type": "FakeAgentConfig",
         "description": "",
-        "optional": false
+        "optional": true
       }
     ],
     "examples": [],
@@ -420,7 +420,7 @@
             "name": "metadata",
             "type": "Record<string, unknown>",
             "description": "",
-            "optional": false
+            "optional": true
           }
         ]
       },
@@ -563,7 +563,7 @@
         "name": "script",
         "type": "StreamEvent[][]",
         "description": "Array of event batches. Each batch is emitted as a group.",
-        "optional": false
+        "optional": true
       }
     ],
     "examples": [
@@ -2366,7 +2366,7 @@
         "name": "initial",
         "type": "MockAgentOptions & { hasValue?: boolean; isThreadLoading?: boolean; langGraphMessages?: BaseMessage<MessageStructure<MessageToolSet>, MessageType>[] }",
         "description": "",
-        "optional": false
+        "optional": true
       }
     ],
     "returns": {
@@ -2404,7 +2404,7 @@
         "name": "config",
         "type": "FakeAgentConfig",
         "description": "",
-        "optional": false
+        "optional": true
       }
     ],
     "returns": {

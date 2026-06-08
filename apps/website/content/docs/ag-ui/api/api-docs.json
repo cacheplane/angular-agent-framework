@@ -8,7 +8,7 @@
         "name": "opts",
         "type": "object",
         "description": "",
-        "optional": false
+        "optional": true
       }
     ],
     "examples": [],
@@ -588,7 +588,7 @@
         "name": "config",
         "type": "FakeAgentConfig",
         "description": "",
-        "optional": false
+        "optional": true
       }
     ],
     "returns": {
@@ -613,7 +613,7 @@
         "name": "options",
         "type": "ToAgentOptions",
         "description": "",
-        "optional": false
+        "optional": true
       }
     ],
     "returns": {

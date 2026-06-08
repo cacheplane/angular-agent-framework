@@ -78,7 +78,10 @@ function extractParams(sig: any): ApiParam[] {
     name: `${p.flags?.isRest ? '...' : ''}${p.name}`,
     type: extractType(p.type),
     description: extractDescription(p.comment),
-    optional: p.flags?.isOptional ?? false,
+    // A parameter is optional if explicitly marked `?` OR it has a default
+    // value (e.g. `opts: MockAgentOptions = {}`) — TypeDoc only sets the
+    // `isOptional` flag for the former, so check `defaultValue` for the latter.
+    optional: (p.flags?.isOptional ?? false) || p.defaultValue !== undefined,
   }));
 }
 

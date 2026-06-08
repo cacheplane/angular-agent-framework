@@ -7151,7 +7151,7 @@
         "name": "opts",
         "type": "MockAgentOptions",
         "description": "",
-        "optional": false
+        "optional": true
       }
     ],
     "returns": {
