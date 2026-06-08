@@ -21,10 +21,18 @@
         "cwd": "cockpit/chat/messages/python",
         "command": "uv run langgraph dev --port 5501 --no-browser"
       }
+    },
+    "smoke": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "cockpit/chat/messages/python",
+        "command": "npx tsx -e \"import { chatMessagesPythonModule } from './src/index.ts'; const module = chatMessagesPythonModule; if (module.id !== 'chat-messages-python' || module.title !== 'Chat Messages (Python)') { throw new Error('Unexpected module shape for ' + module.id); }\""
+      }
     }
   },
   "tags": [
     "scope:cockpit-e2e",
-    "scope:cockpit-examples"
+    "scope:cockpit-examples",
+    "scope:cockpit-smoke"
   ]
 }
