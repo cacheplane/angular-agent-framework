@@ -6,6 +6,8 @@ Deploy your LangGraph agent to the cloud and ship your Angular frontend to produ
 
 Your agent code needs a `langgraph.json` manifest at the project root. This file tells LangGraph Cloud how to build and serve your agent.
 
+Let's start there.
+
 ```json
 {
   "dependencies": ["."],
@@ -128,6 +130,8 @@ Do not ship LangSmith or LangGraph API keys in an Angular bundle. The default `F
 
 For production, put a same-origin backend route, edge function, or API gateway in front of LangGraph. The browser calls your relative URL, and that server-side layer adds the deployment credentials.
 
+For me, the same-origin proxy is worth the extra hop. You give up the simplicity of pointing Angular straight at the deployment, but your keys never leave the server, and HTTP-only cookies just work.
+
 ```typescript
 // environment.prod.ts
 export const environment = {
@@ -183,7 +187,7 @@ During local development with `langgraph dev`, CORS is permissive by default. Yo
 
 ## Error boundaries
 
-Production apps need graceful error handling. Build a reactive error boundary using `injectAgent()` signals.
+Production apps need graceful error handling. Let's build a reactive error boundary using `injectAgent()` signals.
 
 ```typescript
 import { ChangeDetectionStrategy, Component, computed } from '@angular/core';
