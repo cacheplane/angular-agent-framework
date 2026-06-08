@@ -5,7 +5,7 @@ description: Compose custom component catalogs for generative UI using ViewRegis
 
 # Custom Catalogs
 
-Both json-render specs and A2UI surfaces render through the same `ViewRegistry`. Compose catalogs using `views`, `withViews`, and `withoutViews` from `@threadplane/render`.
+Both json-render specs and A2UI surfaces render through the same `ViewRegistry`. Let's compose catalogs using `views`, `withViews`, and `withoutViews` from `@threadplane/render`.
 
 ## Using the Built-In A2UI Catalog
 
@@ -65,7 +65,7 @@ const catalog = views({
 
 ## No Generative UI
 
-If `views` is not provided, no generative UI renders. Specs and A2UI surfaces are silently skipped.
+If you don't provide `views`, no generative UI renders. Specs and A2UI surfaces are silently skipped.
 
 ```html
 <chat [agent]="agentRef" />
@@ -91,4 +91,4 @@ export class MyChartComponent {
 }
 ```
 
-The component receives resolved props as inputs. `childKeys` and `spec` enable recursive child rendering. `emit` triggers event handlers defined in the spec's `on` bindings.
+The component receives resolved props as inputs. `childKeys` and `spec` enable recursive child rendering, and `emit` triggers event handlers defined in the spec's `on` bindings.

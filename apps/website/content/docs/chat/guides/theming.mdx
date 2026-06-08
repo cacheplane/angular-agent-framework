@@ -1,12 +1,12 @@
 # Theming
 
-`@threadplane/chat` uses CSS custom properties (variables) for all visual styling. Every color, radius, font, and spacing value is controlled by a variable prefixed with `--ngaf-chat-`, making it straightforward to match your application's design system.
+`@threadplane/chat` styles everything with CSS custom properties (variables). Every color, radius, font, and spacing value is controlled by a variable prefixed with `--ngaf-chat-`, so matching your app's design system is straightforward.
 
 ## How Theming Works
 
 Chat components define all design tokens using CSS custom properties on the `:host` element. The token system supports automatic light/dark switching via `prefers-color-scheme` and explicit override via a `[data-threadplane-chat-theme]` attribute.
 
-No imported stylesheet is needed - tokens are applied automatically by each component's encapsulated styles. An optional global stylesheet (`@threadplane/chat/chat.css`) is available if you want to customize tokens at the `:root` level.
+You don't need to import a stylesheet — each component's encapsulated styles apply the tokens automatically. An optional global stylesheet (`@threadplane/chat/chat.css`) is there if you want to customize tokens at the `:root` level.
 
 ## CSS Custom Properties Reference
 
@@ -85,7 +85,7 @@ The switching logic is:
 
 ### Deep override via the optional global stylesheet
 
-Import `@threadplane/chat/chat.css` in your global styles to get a `:root`-level baseline you can override:
+Import `@threadplane/chat/chat.css` in your global styles to get a `:root`-level baseline you can override. For me, this is the move when I'm theming several token groups at once — the cost is one more global import to keep track of, but you get everything in a single place:
 
 ```css
 /* src/styles.css */
