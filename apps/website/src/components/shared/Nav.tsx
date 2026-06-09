@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { tokens } from '@threadplane/design-tokens';
@@ -7,12 +7,12 @@ import { docsConfig } from '../../lib/docs-config';
 import { trackCtaClick, trackExternalLinkClick } from '../../lib/analytics/client';
 import { LogoMark } from '../ui/LogoMark';
 import { Button } from '../ui/Button';
+import { DEMOS, demoCtaSuffix } from '../../lib/demos';
 
 const links = [
   { label: 'Pilot to Prod', href: '/pilot-to-prod', external: false },
   { label: 'Docs', href: '/docs', external: false },
   { label: 'Pricing', href: '/pricing', external: false },
-  { label: 'Demo', href: 'https://demo.threadplane.ai', external: true },
   { label: 'Examples', href: 'https://cockpit.threadplane.ai', external: true },
 ];
 
@@ -37,6 +37,46 @@ function CloseIcon() {
     <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
       <path d="M5 5l10 10M15 5L5 15" />
     </svg>
+  );
+}
+
+function DemoDropdown() {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+  return (
+    <div ref={ref} style={{ position: 'relative' }}>
+      <button
+        onClick={() => setOpen((o) => !o)}
+        className="text-sm font-mono transition-colors"
+        style={{ color: tokens.colors.textSecondary, background: 'none', border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4 }}
+        onMouseEnter={(e) => (e.currentTarget.style.color = tokens.colors.accent)}
+        onMouseLeave={(e) => (e.currentTarget.style.color = tokens.colors.textSecondary)}
+        aria-haspopup="true" aria-expanded={open}
+      >
+        Demo <span style={{ fontSize: 10, transition: 'transform .2s', transform: open ? 'rotate(180deg)' : 'rotate(0)' }}>&#9662;</span>
+      </button>
+      {open && (
+        <div style={{ position: 'absolute', top: '100%', left: 0, marginTop: 8, minWidth: 180, background: tokens.surfaces.surface, border: `1px solid ${tokens.surfaces.border}`, borderRadius: 8, boxShadow: tokens.shadows.md, overflow: 'hidden', zIndex: 60 }}>
+          {DEMOS.map((demo) => (
+            <a key={demo.key} href={demo.href} target="_blank" rel="noopener noreferrer"
+              onClick={() => { setOpen(false); trackExternalLinkClick(demo.href, { surface: 'nav', cta_id: `nav_demo_${demoCtaSuffix(demo.key)}`, cta_text: demo.label }); }}
+              className="text-sm font-mono"
+              style={{ display: 'block', padding: '10px 14px', color: tokens.colors.textSecondary, textDecoration: 'none' }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = tokens.colors.accent)}
+              onMouseLeave={(e) => (e.currentTarget.style.color = tokens.colors.textSecondary)}>
+              {demo.label}
+            </a>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -141,6 +181,7 @@ export function Nav() {
               {l.label}
             </Link>
           ))}
+          <DemoDropdown />
           <a href="https://github.com/cacheplane/angular-agent-framework"
             target="_blank"
             rel="noopener noreferrer"
@@ -308,6 +349,13 @@ export function Nav() {
                     </LinkEl>
                   );
                 })}
+                {DEMOS.map((demo) => (
+                  <a key={demo.key} href={demo.href} target="_blank" rel="noopener noreferrer"
+                    onClick={() => { trackExternalLinkClick(demo.href, { surface: 'mobile_nav', cta_id: `mobile_nav_demo_${demoCtaSuffix(demo.key)}`, cta_text: demo.label }); setOpen(false); }}
+                    style={{ display: 'block', padding: '14px 14px', borderRadius: 8, fontSize: 16, lineHeight: '24px', minHeight: 48, color: tokens.colors.textSecondary, textDecoration: 'none', fontFamily: 'Inter, sans-serif' }}>
+                    {demo.label}
+                  </a>
+                ))}
                 <a href="https://github.com/cacheplane/angular-agent-framework"
                   target="_blank" rel="noopener noreferrer"
                   onClick={() => {
