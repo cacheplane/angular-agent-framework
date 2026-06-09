@@ -1,0 +1,38 @@
+{
+  "name": "cockpit-langgraph-client-tools-python",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "cockpit/langgraph/client-tools/python/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": [
+        "{workspaceRoot}/dist/cockpit/langgraph/client-tools/python"
+      ],
+      "options": {
+        "outputPath": "dist/cockpit/langgraph/client-tools/python",
+        "main": "cockpit/langgraph/client-tools/python/src/index.ts",
+        "tsConfig": "cockpit/langgraph/client-tools/python/tsconfig.json"
+      }
+    },
+    "serve": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "cockpit/langgraph/client-tools/python",
+        "command": "uv run langgraph dev --port 5308 --no-browser"
+      }
+    },
+    "smoke": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "cockpit/langgraph/client-tools/python",
+        "command": "npx tsx -e \"import { langgraphClientToolsPythonModule } from './src/index.ts'; const module = langgraphClientToolsPythonModule; if (module.id !== 'langgraph-client-tools-python' || module.title !== 'LangGraph Client Tools (Python)') { throw new Error('Unexpected module shape for ' + module.id); }\""
+      }
+    }
+  },
+  "tags": [
+    "scope:cockpit-e2e",
+    "scope:cockpit-examples",
+    "scope:cockpit-smoke"
+  ]
+}

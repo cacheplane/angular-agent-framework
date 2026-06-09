@@ -48,6 +48,7 @@ export const PORTS = Object.freeze({
   'cockpit-deep-agents-sandboxes-angular': { angular: 4315, langgraph: 5315 },
   'cockpit-deep-agents-skills-angular': { angular: 4314, langgraph: 5314 },
   'cockpit-deep-agents-subagents-angular': { angular: 4312, langgraph: 5312 },
+  'cockpit-langgraph-client-tools-angular': { angular: 4308, langgraph: 5308 },
   'cockpit-langgraph-deployment-runtime-angular': { angular: 4307, langgraph: 5307 },
   'cockpit-langgraph-durable-execution-angular': { angular: 4304, langgraph: 5304 },
   'cockpit-langgraph-interrupts-angular': { angular: 4302, langgraph: 5302 },

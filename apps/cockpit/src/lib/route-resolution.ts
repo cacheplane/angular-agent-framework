@@ -11,6 +11,7 @@ import { langgraphDurableExecutionPythonModule } from '../../../../cockpit/langg
 import { langgraphSubgraphsPythonModule } from '../../../../cockpit/langgraph/subgraphs/python/src/index';
 import { langgraphTimeTravelPythonModule } from '../../../../cockpit/langgraph/time-travel/python/src/index';
 import { langgraphDeploymentRuntimePythonModule } from '../../../../cockpit/langgraph/deployment-runtime/python/src/index';
+import { langgraphClientToolsPythonModule } from '../../../../cockpit/langgraph/client-tools/python/src/index';
 import { agUiInterruptsPythonModule } from '../../../../cockpit/ag-ui/interrupts/python/src/index';
 import { agUiStreamingPythonModule } from '../../../../cockpit/ag-ui/streaming/python/src/index';
 import { agUiToolViewsPythonModule } from '../../../../cockpit/ag-ui/tool-views/python/src/index';
@@ -87,6 +88,7 @@ const capabilityModules = [
   langgraphSubgraphsPythonModule,
   langgraphTimeTravelPythonModule,
   langgraphDeploymentRuntimePythonModule,
+  langgraphClientToolsPythonModule,
   agUiInterruptsPythonModule,
   agUiStreamingPythonModule,
   agUiToolViewsPythonModule,
