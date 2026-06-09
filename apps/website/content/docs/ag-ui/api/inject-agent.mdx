@@ -2,7 +2,7 @@
 
 `injectAgent()` retrieves the AG-UI agent from Angular's dependency injection container. Call it in an Angular injection context — typically as a component field initializer. The returned object exposes Angular Signals for reactive UI state and async methods for user actions.
 
-Configuration is supplied globally via `provideAgent({...})` — `injectAgent()` itself takes no arguments.
+Configuration is supplied globally via [provideAgent()](/docs/ag-ui/api/provide-agent) — `injectAgent()` itself takes no arguments.
 
 ```ts
 import { injectAgent } from '@threadplane/ag-ui';
