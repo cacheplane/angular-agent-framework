@@ -328,6 +328,7 @@ export const docsConfig: DocsLibrary[] = [
         color: 'blue',
         pages: [
           { title: 'Introduction', slug: 'introduction', section: 'getting-started' },
+          { title: 'Quick Start', slug: 'quickstart', section: 'getting-started' },
         ],
       },
       {

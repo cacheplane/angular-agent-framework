@@ -18,6 +18,8 @@ The main entry point exports:
 | `inferNoncommercial()` | returns a default noncommercial hint from `NODE_ENV` |
 | `LICENSE_PUBLIC_KEY` | bundled public key |
 
+This table covers the functions and the bundled key, not the full export list. The package also exports the supporting types — `LicenseClaims`, `LicenseTier`, `LicenseStatus`, `VerifyResult`/`VerifyReason`, `EvaluateResult`/`EvaluateOptions`, `RunLicenseCheckOptions`, and `EmitNagOptions`. See the [API reference](../reference/api.mdx) for the full type surface.
+
 `@noble/ed25519` is the only peer dependency.
 
 ## Token model
@@ -68,3 +70,9 @@ The higher-level check is built not to block app startup:
 - no network request is made by the licensing check.
 
 The code returns statuses instead of throwing for normal license states. For me, that's the right default here: you get to decide what a missing or expired license means for your app instead of having the check make that call for you. The tradeoff is that nothing stops a consumer from ignoring the status entirely. `@threadplane/chat` treats it as a warning and visibility mechanism, not an app kill switch.
+
+## Next steps
+
+- [Quickstart](./quickstart.mdx) — a runnable round-trip: sign, verify, and evaluate a token end to end.
+- [Setup](../guides/setup.mdx) — consume the check via `provideChat()` or call `runLicenseCheck()` directly.
+- [API reference](../reference/api.mdx) — the full type surface.
