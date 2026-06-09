@@ -12,6 +12,25 @@ readonly chat = injectAgent();
 await this.chat.submit({ message: 'Hello' });
 ```
 
+In practice you rarely call `submit()` yourself — you hand the agent to the `<chat>` composition from `@threadplane/chat`, which drives streaming, tool calls, errors, and submit for you:
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChatComponent } from '@threadplane/chat';
+import { injectAgent } from '@threadplane/ag-ui';
+
+@Component({
+  selector: 'app-chat',
+  standalone: true,
+  imports: [ChatComponent],
+  template: `<chat [agent]="agent" />`,
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class ChatPage {
+  protected readonly agent = injectAgent();
+}
+```
+
 Pair it with `provideAgent()` at bootstrap to configure the agent endpoint:
 
 ```ts
@@ -39,6 +58,7 @@ These fields are stable across runtime adapters and are what chat components con
 | `toolCalls()` | `ToolCall[]` | Tool calls projected into the chat contract. |
 | `state()` | `Record<string, unknown>` | Latest agent state projected as a plain object. |
 | `interrupt()` | `AgentInterrupt \| undefined` | Current interrupt, when the backend pauses for human input. |
+| `events$` | `Observable<AgentEvent>` | Runtime-neutral observable of transient events (`state_update` / `custom`). Subscribe for side-effects; not a signal. |
 | `submit(input, opts?)` | `Promise<void>` | Submit a user message or resume payload. |
 | `stop()` | `Promise<void>` | Abort the active run. |
 | `regenerate(index)` | `Promise<void>` | Remove the assistant message at `index` and rerun from the preceding user message. |
@@ -60,7 +80,9 @@ const chat = injectAgent() as AgUiAgent;
 chat.customEvents(); // Signal<CustomStreamEvent[]>
 ```
 
-The chat a2ui bridge reads `customEvents` to light up live generative-UI streaming when your backend emits `a2ui-partial` events. See the [Custom Events guide](/docs/ag-ui/guides/custom-events) for backend wiring details.
+The chat a2ui bridge reads `customEvents` to light up live generative-UI streaming when your backend emits `a2ui-partial` events. The consuming side is documented in chat's [A2UI overview](/docs/chat/a2ui/overview). See the [Custom Events guide](/docs/ag-ui/guides/custom-events) for backend wiring details.
+
+Don't confuse `customEvents()` with the neutral `events$` listed above. Each `CUSTOM` event is fanned out to **both**: `events$` is the runtime-neutral `Observable<AgentEvent>` you subscribe to for transient side-effects (telemetry, toasts), while `customEvents()` is the AG-UI-specific signal that accumulates `CustomStreamEvent[]` as a per-run snapshot for reactive rendering. See the [Event Mapping reference](/docs/ag-ui/reference/event-mapping#custom-events) for the full fan-out.
 
 ## Submit and resume
 

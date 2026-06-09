@@ -1,6 +1,8 @@
 # Generative UI
 
-Generative UI lets your LangGraph agent return structured JSON specs that render as Angular components in the chat. `ChatComponent` auto-detects JSON specs in AI messages and renders them — no manual wiring needed.
+Generative UI lets your agent return structured JSON specs that render as Angular components in the chat. `ChatComponent` auto-detects JSON specs in AI messages and renders them — no manual wiring needed.
+
+The detection and rendering are adapter-neutral: the same `[views]` path works whether the agent is driven by the LangGraph adapter or the [AG-UI adapter](/docs/ag-ui/guides/custom-events). The examples below use `@threadplane/langgraph`, but only the `provideAgent`/`injectAgent` imports change for AG-UI.
 
 ## How It Works
 
@@ -133,6 +135,50 @@ export class InteractiveChatComponent {
 ```
 
 The store enables two-way data binding between generative UI components and your application via `$state` and `$bindState` prop expressions in specs.
+
+## Event Handlers
+
+When a spec wires an `on` event binding (for example a button's `on: { click: 'submitForm' }`), the named handler is looked up in the `[handlers]` map you pass to `<chat>`. The map is `Record<string, (params) => unknown | Promise<unknown>>` — each key is a handler name a spec can reference, and the value runs when the event fires.
+
+```typescript
+import { Component, signal } from '@angular/core';
+import { injectAgent, provideAgent } from '@threadplane/langgraph';
+import { ChatComponent, views } from '@threadplane/chat';
+import { ContactFormComponent } from './contact-form.component';
+
+@Component({
+  selector: 'app-chat',
+  standalone: true,
+  imports: [ChatComponent],
+  providers: [
+    provideAgent({
+      apiUrl: 'http://localhost:2024',
+      assistantId: 'gen_ui_agent',
+      threadId: signal(null),
+    }),
+  ],
+  template: `
+    <div style="height: 100vh;">
+      <chat [agent]="chatRef" [views]="myViews" [handlers]="handlers" />
+    </div>
+  `,
+})
+export class ChatPageComponent {
+  protected readonly chatRef = injectAgent();
+
+  protected readonly myViews = views({ contact_form: ContactFormComponent });
+
+  // A spec's `on` binding referencing "submitForm" invokes this function,
+  // passing the element's resolved params.
+  protected readonly handlers = {
+    submitForm: (params: Record<string, unknown>) => {
+      console.log('form submitted', params);
+    },
+  };
+}
+```
+
+Handlers can return a value or a `Promise` — async handlers let a spec await a result (such as a network call) before the UI advances.
 
 ## A2UI Protocol
 

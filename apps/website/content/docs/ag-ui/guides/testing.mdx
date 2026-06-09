@@ -59,6 +59,32 @@ The component is byte-identical to production — only the provider changes. `Fa
 
 For the underlying `FakeAgent` class and its canned event sequence, see [Fake Agent](/docs/ag-ui/guides/fake-agent).
 
+### A runnable spec
+
+Set `delayMs: 0` to collapse the inter-token delay, drive `submit()`, then assert the streamed assistant content shows up on `agent.messages()`. Awaiting `submit()` is what guarantees the run finished — `runAgent()` resolves once the canned stream completes:
+
+```typescript
+import { describe, it, expect } from 'vitest';
+import { TestBed } from '@angular/core/testing';
+import { provideFakeAgent, injectAgent } from '@threadplane/ag-ui';
+
+describe('chat via provideFakeAgent', () => {
+  it('streams the canned tokens onto the agent', async () => {
+    TestBed.configureTestingModule({
+      providers: [provideFakeAgent({ tokens: ['Hello'], delayMs: 0 })],
+    });
+
+    const agent = TestBed.runInInjectionContext(() => injectAgent());
+    await agent.submit({ message: 'hi' });
+
+    const assistant = agent.messages().find((m) => m.role === 'assistant');
+    expect(assistant?.content).toBe('Hello');
+  });
+});
+```
+
+`injectAgent()` needs an injection context, so resolve it through `TestBed.runInInjectionContext()`. The `RUN_FINISHED` event has reduced by the time the awaited `submit()` resolves, so no fake-timer flushing is required.
+
 ## Contract mock: `mockAgent()`
 
 For component and unit tests where you don't need a streaming pipeline at all, use the neutral `mockAgent(initial)` from `@threadplane/chat`. It returns an `Agent` whose state surface is exposed as **writable signals** — set state directly and assert your component reacts. Nothing is real.
@@ -74,3 +100,51 @@ m.messages.set([{ role: 'assistant', content: 'Hello!' }]);
 expect(m.messages()[0].content).toBe('Hello!');
 expect(m.status()).toBe('running');
 ```
+
+## Testing tool calls, state, and custom events
+
+`FakeAgent` only scripts `RUN_*`, `REASONING_MESSAGE_*`, and `TEXT_MESSAGE_*` events — it never emits `TOOL_CALL_*`, `STATE_SNAPSHOT`/`STATE_DELTA`, or `CUSTOM`. To exercise the reducer's headline non-text features — tool-call rendering, shared state, citations, custom events — script your own `AbstractAgent` and feed it through `toAgent()`. The adapter reduces your scripted events into `toolCalls()`, `state()`, and `customEvents()` exactly as it would real wire events.
+
+```typescript
+import { describe, it, expect } from 'vitest';
+import {
+  AbstractAgent,
+  EventType,
+  type BaseEvent,
+  type RunAgentInput,
+} from '@ag-ui/client';
+import { Observable } from 'rxjs';
+import { toAgent } from '@threadplane/ag-ui';
+
+/** Emits a scripted tool-call + custom-event sequence, no backend. */
+class ScriptedAgent extends AbstractAgent {
+  run(input: RunAgentInput): Observable<BaseEvent> {
+    const events: BaseEvent[] = [
+      { type: EventType.RUN_STARTED, threadId: input.threadId, runId: input.runId } as BaseEvent,
+      { type: EventType.TOOL_CALL_START, toolCallId: 'search-1', toolCallName: 'search' } as BaseEvent,
+      { type: EventType.TOOL_CALL_ARGS, toolCallId: 'search-1', delta: '{"q":"Angular"}' } as BaseEvent,
+      { type: EventType.TOOL_CALL_END, toolCallId: 'search-1' } as BaseEvent,
+      { type: EventType.STATE_SNAPSHOT, snapshot: { topic: 'billing' } } as BaseEvent,
+      { type: EventType.CUSTOM, name: 'analysis_progress', value: { pct: 100 } } as BaseEvent,
+      { type: EventType.RUN_FINISHED, threadId: input.threadId, runId: input.runId } as BaseEvent,
+    ];
+    return new Observable<BaseEvent>((observer) => {
+      for (const event of events) observer.next(event);
+      observer.complete();
+    });
+  }
+}
+
+describe('scripted AG-UI events', () => {
+  it('reduces tool calls, state, and custom events', async () => {
+    const agent = toAgent(new ScriptedAgent());
+    await agent.submit({ message: 'find docs' });
+
+    expect(agent.toolCalls()[0]).toMatchObject({ name: 'search', args: { q: 'Angular' } });
+    expect(agent.state()).toMatchObject({ topic: 'billing' });
+    expect(agent.customEvents()).toContainEqual({ name: 'analysis_progress', data: { pct: 100 } });
+  });
+});
+```
+
+`customEvents()` is the AG-UI-specific signal — `toAgent()` returns an `AgUiAgent`, so it's reachable directly here without a cast. A `CUSTOM` event named `on_interrupt` would instead populate `agent.interrupt()`; see the [Interrupts guide](/docs/ag-ui/guides/interrupts).

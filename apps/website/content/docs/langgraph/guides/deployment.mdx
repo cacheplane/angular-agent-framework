@@ -189,10 +189,18 @@ During local development with `langgraph dev`, CORS is permissive by default. Yo
 
 Production apps need graceful error handling. Let's build a reactive error boundary using `injectAgent()` signals.
 
+The transport runs on the LangGraph SDK client, not Angular's `HttpClient`, so `error()` won't be an `HttpErrorResponse`. To branch on HTTP status, read `error()?.cause` — the SDK attaches the underlying status there (see [Streaming](/docs/langgraph/guides/streaming#stream-status)).
+
 ```typescript
 import { ChangeDetectionStrategy, Component, computed } from '@angular/core';
-import { HttpErrorResponse } from '@angular/common/http';
 import { injectAgent } from '@threadplane/langgraph';
+
+/** Pull an HTTP status off the error's `cause`, if present. */
+function httpStatus(err: unknown): number | undefined {
+  const cause = (err as { cause?: unknown } | null | undefined)?.cause;
+  const status = (cause as { status?: unknown } | undefined)?.status;
+  return typeof status === 'number' ? status : undefined;
+}
 
 @Component({
   selector: 'app-chat',
@@ -213,13 +221,10 @@ export class ChatComponent {
 
   errorMessage = computed(() => {
     const err = this.chat.error();
-    if (err instanceof HttpErrorResponse) {
-      switch (err.status) {
-        case 401: return 'Authentication failed. Please check your API key.';
-        case 429: return 'Rate limit exceeded. Please wait a moment.';
-        case 503: return 'Agent is starting up. Please try again shortly.';
-        default:  return 'Something went wrong. Please try again.';
-      }
+    switch (httpStatus(err)) {
+      case 401: return 'Authentication failed. Please check your API key.';
+      case 429: return 'Rate limit exceeded. Please wait a moment.';
+      case 503: return 'Agent is starting up. Please try again shortly.';
     }
     return err instanceof Error ? err.message : 'An unexpected error occurred.';
   });
@@ -235,8 +240,10 @@ export class ChatComponent {
 For automated retries (network blips, transient 5xx errors), wrap `.submit()` with a backoff utility:
 
 ```typescript
+import type { LangGraphAgent } from '@threadplane/langgraph';
+
 export async function retrySubmit(
-  chat: ReturnType<typeof agent>,
+  chat: LangGraphAgent,
   input: Record<string, unknown>,
   maxAttempts = 3,
 ): Promise<void> {
@@ -271,11 +278,16 @@ await this.chat.submit(
 // After reconnecting, resume from where the stream left off
 const savedRunId = localStorage.getItem('activeRunId');
 if (savedRunId) {
-  await this.chat.joinStream(savedRunId, lastEventId);
+  // The second arg is an optional last-event id. Omit it (or pass
+  // undefined) to replay the run from the start; pass a stored id to
+  // resume only the events after it.
+  await this.chat.joinStream(savedRunId);
 }
 ```
 
-`joinStream()` replays any events the client missed, then switches to live streaming. This works because all state lives on the LangGraph Platform, and the SSE endpoint supports event ID-based resumption.
+`joinStream(runId, lastEventId?)` replays any events the client missed, then switches to live streaming. The second argument is an optional last-event id: omit it (as above) and LangGraph replays from the start of the run; pass a stored id to resume only the events that came after it. Replaying from the start is the safe default — the run's full state is on the Platform, so the client just re-renders from scratch.
+
+This works because all state lives on the LangGraph Platform, and the SSE endpoint supports event ID-based resumption.
 
 <Callout type="tip" title="Stateless client pattern">
 `injectAgent()` is a stateless client. All state lives on the LangGraph Platform. This means your Angular app can be deployed anywhere (CDN, edge, SSR) without state management concerns. Scale your frontend independently of your agent infrastructure.
@@ -417,7 +429,7 @@ Confirm LangSmith traces are arriving and set up alerts for error rate spikes an
   <Card title="API Reference" href="/docs/langgraph/api/provide-agent">
     Full reference for provideAgent configuration options.
   </Card>
-  <Card title="Error Handling" href="/docs/langgraph/guides/deployment">
-    Deep dive into error recovery patterns beyond basic error boundaries.
+  <Card title="Error Handling" href="/docs/langgraph/guides/streaming#error-handling">
+    How error() surfaces transport vs agent failures, and how to retry.
   </Card>
 </CardGroup>

@@ -16,11 +16,10 @@ npm install @threadplane/langgraph
 </Step>
 <Step title="Configure the provider">
 
-Add `provideAgent()` to your application config with your LangGraph Platform URL, assistant id, and thread persistence wiring.
+Add `provideAgent()` to your application config with your LangGraph Platform URL and assistant id.
 
 ```typescript
 // app.config.ts
-import { signal } from '@angular/core';
 import { provideAgent } from '@threadplane/langgraph';
 
 export const appConfig: ApplicationConfig = {
@@ -29,12 +28,14 @@ export const appConfig: ApplicationConfig = {
       apiUrl: 'http://localhost:2024',
       // 'chat' maps to the key in your langgraph.json "graphs" config
       assistantId: 'chat',
-      threadId: signal(localStorage.getItem('threadId')),
-      onThreadId: (id) => localStorage.setItem('threadId', id),
     }),
   ],
 };
 ```
+
+<Callout type="info" title="Threads are optional here">
+Persisting a `threadId` so conversations survive a page refresh is opt-in — leave it out for the minimal path and add it later. See [Persistence](/docs/langgraph/guides/persistence).
+</Callout>
 
 </Step>
 <Step title="Create a chat component">
@@ -129,6 +130,9 @@ Open `http://localhost:4200` and start chatting with your agent.
 ## Next steps
 
 <CardGroup cols={3}>
+  <Card title="Drop-in chat UI" href="/docs/chat/getting-started/quickstart">
+    Skip the hand-rolled template — render this agent with `<chat [agent]>` from @threadplane/chat.
+  </Card>
   <Card title="Streaming" href="/docs/langgraph/guides/streaming">
     Learn about token-by-token updates and stream modes
   </Card>

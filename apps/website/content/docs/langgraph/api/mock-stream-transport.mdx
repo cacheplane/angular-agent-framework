@@ -46,9 +46,7 @@ describe('ChatComponent', () => {
     transport.emit([
       {
         type: 'values',
-        values: {
-          messages: [{ type: 'ai', id: 'a1', content: 'Hi there' }],
-        },
+        messages: [{ role: 'assistant', content: 'Hi there' }],
       },
     ]);
     transport.close();

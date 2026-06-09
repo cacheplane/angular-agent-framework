@@ -99,3 +99,8 @@ The footer button is labelled in expanded and drawer modes. In collapsed mode it
 The debug implementation lives under `@threadplane/chat/debug`; the main `@threadplane/chat` entry point no longer exports it. In the canonical Angular demo, normal production builds set `THREADPLANE_CHAT_DEBUG=false` and externalize `@threadplane/chat/debug`, so the debug implementation is absent from the emitted bundle. The `production-debug` build opts back in with `THREADPLANE_CHAT_DEBUG=true`.
 
 Keep debug controls for your app outside the debug panel. The debug panel intentionally exposes a small fixed surface so consumers do not expect demo-specific controls to appear in their own applications.
+
+## See also
+
+- [Time travel](/docs/langgraph/guides/time-travel) — what the `replayRequested` / `forkRequested` checkpoint hooks plug into, and how to wire replay and fork against the agent's history.
+- [`<chat-sidenav>`](/docs/chat/concepts/primitives-vs-compositions#compositions) — the layout composition that can own the debug launcher (see Sidenav Integration above).
