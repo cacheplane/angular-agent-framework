@@ -1,0 +1,138 @@
+# Custom Events
+
+AG-UI `CUSTOM` events let a backend node push arbitrary data to the Angular client while a run is in progress. The adapter accumulates these events into the `customEvents` signal on the `AgUiAgent` returned by `injectAgent()`.
+
+```ts
+interface CustomStreamEvent {
+  name: string;
+  data: unknown;
+}
+```
+
+`customEvents` is a `Signal<CustomStreamEvent[]>`. The list is reset to `[]` when `RUN_STARTED` arrives, so it only ever contains events from the current run.
+
+<Callout type="info" title="on_interrupt is not in customEvents">
+The special `CUSTOM` event with `name: "on_interrupt"` is handled separately — it populates `agent.interrupt` and does **not** appear in `customEvents`. See the [Interrupts guide](/docs/ag-ui/guides/interrupts).
+</Callout>
+
+## Where Custom Events Come From
+
+A LangGraph node emits a custom event by writing to the stream writer with `stream_mode='custom'`:
+
+```python
+from langchain_core.runnables import RunnableConfig
+from langgraph.config import get_stream_writer
+
+def analysis_node(state: State, config: RunnableConfig) -> State:
+    writer = get_stream_writer()
+
+    # Emit a partial result as the node runs
+    writer({"name": "analysis_progress", "data": {"step": "scoring", "pct": 42}})
+
+    # ... do more work ...
+
+    writer({"name": "analysis_progress", "data": {"step": "scoring", "pct": 100}})
+    return state
+```
+
+The `ag-ui-langgraph` package surfaces this as an AG-UI `CUSTOM` event on the wire:
+
+```json
+{
+  "type": "CUSTOM",
+  "name": "analysis_progress",
+  "value": { "step": "scoring", "pct": 42 }
+}
+```
+
+The adapter JSON-parses `value` when it arrives as a string, so consumers always receive the structured object. The event is appended to `customEvents` as `{ name: "analysis_progress", data: { step: "scoring", pct: 42 } }`.
+
+## Reading Custom Events in Angular
+
+`injectAgent()` returns the neutral `Agent` type; cast it to `AgUiAgent` (exported from `@threadplane/ag-ui`) to reach the `customEvents` signal.
+
+### Reactive effect
+
+Use an `effect` to react every time new events arrive:
+
+```typescript
+import { Component, ChangeDetectionStrategy, effect, signal } from '@angular/core';
+import { ChatComponent } from '@threadplane/chat';
+import { injectAgent, type AgUiAgent } from '@threadplane/ag-ui';
+
+@Component({
+  standalone: true,
+  imports: [ChatComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <chat [agent]="agent" />
+    @if (progress() !== null) {
+      <progress-bar [value]="progress()" />
+    }
+  `,
+})
+export class AnalysisComponent {
+  protected readonly agent = injectAgent() as AgUiAgent;
+  protected readonly progress = signal<number | null>(null);
+
+  constructor() {
+    effect(() => {
+      const events = this.agent.customEvents();
+      const last = [...events]
+        .reverse()
+        .find((e) => e.name === 'analysis_progress');
+      this.progress.set(
+        last ? (last.data as { pct: number }).pct : null,
+      );
+    });
+  }
+}
+```
+
+### Computed signal
+
+When you only need to derive a value, `computed` is more concise:
+
+```typescript
+import { Component, ChangeDetectionStrategy, computed } from '@angular/core';
+import { ChatComponent } from '@threadplane/chat';
+import { injectAgent, type AgUiAgent } from '@threadplane/ag-ui';
+import type { CustomStreamEvent } from '@threadplane/ag-ui';
+
+@Component({
+  standalone: true,
+  imports: [ChatComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <chat [agent]="agent" />
+    <event-log [events]="progressEvents()" />
+  `,
+})
+export class AnalysisComponent {
+  protected readonly agent = injectAgent() as AgUiAgent;
+
+  protected readonly progressEvents = computed(() =>
+    this.agent.customEvents().filter(
+      (e): e is CustomStreamEvent => e.name === 'analysis_progress',
+    ),
+  );
+}
+```
+
+Both patterns are zoneless-safe: Angular's signal graph tracks the `customEvents()` read and re-evaluates the derived value automatically.
+
+<Callout type="info" title="Live a2ui rendering">
+`customEvents` is the mechanism the chat composition uses for progressive a2ui surface updates — partial argument events accumulate here during a tool call and drive live rendering before the call completes. If you are building a custom a2ui integration over AG-UI, read `agent.customEvents()` the same way.
+</Callout>
+
+## Relation to Interrupts
+
+`CUSTOM` events named `on_interrupt` follow a separate path: the adapter routes them to `agent.interrupt` (a `Signal<AgentInterrupt | undefined>`) and they never enter `customEvents`. This keeps the two signals purpose-distinct — `interrupt` drives human-in-the-loop approval flows, while `customEvents` carries all other backend-pushed data.
+
+See the [Interrupts guide](/docs/ag-ui/guides/interrupts) for the full interrupt lifecycle including `<chat-approval-card>` and `submit({ resume })`.
+
+## See Also
+
+- [Architecture](/docs/ag-ui/concepts/architecture) — how the adapter reduces protocol events into Angular signals
+- [Event Mapping](/docs/ag-ui/reference/event-mapping) — full table of AG-UI event types and the agent fields they populate
+- [injectAgent()](/docs/ag-ui/api/inject-agent) — the injection function that returns `AgUiAgent`

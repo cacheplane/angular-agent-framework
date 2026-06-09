@@ -3,13 +3,15 @@ import { EcosystemStrip } from '../components/landing/EcosystemStrip';
 import { Differentiator } from '../components/landing/Differentiator';
 import { FeatureBlock } from '../components/landing/FeatureBlock';
 import { BrowserFrame } from '../components/ui/BrowserFrame';
-import { LiveDemoFrame } from '../components/landing/LiveDemoFrame';
+import { DemoShowcase } from '../components/landing/DemoShowcase';
 import { PilotBlock } from '../components/landing/PilotBlock';
 import { WhitePaperBlock } from '../components/landing/WhitePaperBlock';
 import { Promises } from '../components/landing/Promises';
 import { HomeFAQ } from '../components/landing/HomeFAQ';
 import { FinalCTA } from '../components/landing/FinalCTA';
 import { RecentArticles } from '../components/landing/RecentArticles';
+import { Section } from '../components/ui/Section';
+import { Container } from '../components/ui/Container';
 import { tokens } from '@threadplane/design-tokens';
 import { createPageMetadata, LONG_SUBHEAD, PRIMARY_TAGLINE } from '../lib/site-metadata';
 
@@ -26,6 +28,13 @@ export default async function HomePage() {
       <Hero />
       <EcosystemStrip />
       <Differentiator />
+
+      {/* Interactive demo showcase */}
+      <Section surface="canvas">
+        <Container>
+          <DemoShowcase />
+        </Container>
+      </Section>
 
       {/* Stream */}
       <FeatureBlock
@@ -112,7 +121,17 @@ export default async function HomePage() {
           { title: 'thread persistence', description: 'Restore conversations across sessions.' },
         ]}
         cta={{ label: 'Production patterns', href: '/docs/langgraph/guides/deployment' }}
-        visual={<LiveDemoFrame />}
+        visual={
+          <BrowserFrame url="demo.threadplane.ai" elevation="lg">
+            <img
+              src="/screenshots/canonical-demo-generative-ui.webp"
+              alt="Threadplane chat rendering a live generative-UI dashboard"
+              style={{ display: 'block', width: '100%', height: 'auto' }}
+              loading="lazy"
+              decoding="async"
+            />
+          </BrowserFrame>
+        }
       />
 
       <PilotBlock />

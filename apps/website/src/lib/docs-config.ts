@@ -24,6 +24,10 @@ export interface DocsLibrary {
   id: LibraryId;
   title: string;
   description: string;
+  /** Optional external live-demo URL, surfaced contextually in docs nav. */
+  demoUrl?: string;
+  /** Optional label override for the demo link. Defaults to 'Live demo'. */
+  demoLabel?: string;
   sections: DocsSection[];
 }
 
@@ -224,6 +228,7 @@ export const docsConfig: DocsLibrary[] = [
     id: 'ag-ui',
     title: 'AG-UI',
     description: 'Adapter for any AG-UI-compatible backend (CrewAI, Mastra, Microsoft AF, AG2, Pydantic AI, AWS Strands, CopilotKit runtime)',
+    demoUrl: 'https://ag-ui.threadplane.ai',
     sections: [
       {
         title: 'Getting Started',
@@ -250,6 +255,7 @@ export const docsConfig: DocsLibrary[] = [
         pages: [
           { title: 'Fake Agent', slug: 'fake-agent', section: 'guides' },
           { title: 'Citations', slug: 'citations', section: 'guides' },
+          { title: 'Custom Events', slug: 'custom-events', section: 'guides' },
           { title: 'Interrupts', slug: 'interrupts', section: 'guides' },
           { title: 'Testing', slug: 'testing', section: 'guides' },
           { title: 'Troubleshooting', slug: 'troubleshooting', section: 'guides' },
@@ -261,6 +267,17 @@ export const docsConfig: DocsLibrary[] = [
         color: 'blue',
         pages: [
           { title: 'Event Mapping', slug: 'event-mapping', section: 'reference' },
+        ],
+      },
+      {
+        title: 'API Reference',
+        id: 'api',
+        color: 'blue',
+        pages: [
+          { title: 'provideAgent()', slug: 'provide-agent', section: 'api' },
+          { title: 'injectAgent()', slug: 'inject-agent', section: 'api' },
+          { title: 'toAgent()', slug: 'to-agent', section: 'api' },
+          { title: 'FakeAgent', slug: 'fake-agent', section: 'api' },
         ],
       },
     ],
