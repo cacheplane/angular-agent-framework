@@ -277,7 +277,7 @@ const completedTools = computed(() =>
   agent.toolCalls().filter((tool) => tool.status === 'complete')
 );
 
-// Each entry has: name, args, result, duration
+// Each entry has: id, name, args, status, result, error
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -285,7 +285,6 @@ const completedTools = computed(() =>
       <details>
         <summary>
           {{ call.name }}
-          <span class="duration">{{ call.duration }}ms</span>
         </summary>
         <div class="args">
           <h4>Input</h4>
@@ -417,11 +416,11 @@ interface OrchestratorState {
 
     <aside class="agent-panel">
       <h3>Active Delegated Work</h3>
-      @for (tool of activeTools(); track tool.toolCallId ?? tool.name) {
+      @for (tool of activeTools(); track tool.id) {
         <app-agent-card
           [name]="tool.name"
-          [status]="tool.state"
-          [input]="tool.input" />
+          [status]="tool.status"
+          [input]="tool.args" />
       }
     </aside>
 
@@ -524,7 +523,7 @@ export class AgentComponent {
 | Agent exceeds recursion limit | Graph raises `GraphRecursionError` | `error()` fires with recursion message |
 
 <Callout type="warning" title="Recursion limits">
-LangGraph defaults to 25 recursion steps. If your agent loops between `model` and `tools` more than 25 times, it stops with a `GraphRecursionError`. Increase the limit in production with `graph.compile(recursion_limit=50)` or redesign the agent to converge faster.
+LangGraph defaults to 25 recursion steps. If your agent loops between `model` and `tools` more than 25 times, it stops with a `GraphRecursionError`. Increase the limit in production by passing it in the run config — `graph.invoke(input, config={"recursion_limit": 50})` — or redesign the agent to converge faster.
 </Callout>
 
 ## Checkpointing and Debugging
