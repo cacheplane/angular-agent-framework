@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MIT
 import {
   Component, ChangeDetectionStrategy, input, model, output, computed, effect, signal, untracked, viewChild, ElementRef,
-  DestroyRef, inject,
+  DestroyRef, inject, Injector, runInInjectionContext,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { KeyValuePipe } from '@angular/common';
@@ -11,7 +11,9 @@ import { ChatReasoningComponent } from '../../primitives/chat-reasoning/chat-rea
 import type { ViewRegistry, RenderEvent } from '@threadplane/render';
 import type { A2uiActionMessage } from '@threadplane/a2ui';
 import type { StateStore } from '@json-render/core';
-import { toRenderRegistry, signalStateStore } from '@threadplane/render';
+import { toRenderRegistry, signalStateStore, withViews } from '@threadplane/render';
+import type { ClientToolRegistry } from '../../client-tools/tool-def';
+import { createClientToolsCoordinator } from '../../client-tools/client-tools-coordinator';
 import { ChatWindowComponent } from '../../primitives/chat-window/chat-window.component';
 import { ChatMessageListComponent } from '../../primitives/chat-message-list/chat-message-list.component';
 import { MessageTemplateDirective } from '../../primitives/chat-message-list/message-template.directive';
@@ -211,9 +213,10 @@ export function isPinned(
                   <chat-tool-views
                     [agent]="agent()"
                     [message]="message"
-                    [views]="views()"
+                    [views]="effectiveViews()"
                     [store]="resolvedStore()"
                     [handlers]="handlers()"
+                    (events)="onClientToolEvent($event)"
                   />
                   <chat-subagents [agent]="agent()" />
                   @if (classified.markdown(); as md) {
@@ -302,6 +305,14 @@ export function isPinned(
 export class ChatComponent {
   readonly agent = input.required<Agent>();
   readonly views = input<ViewRegistry | undefined>(undefined);
+  /**
+   * Client-declared tools (`view`/`ask`/`function`) the model may call. When
+   * provided, a coordinator ships their catalog to the agent, runs `function`
+   * tools in the browser, and renders/resolves `view`/`ask` tools through the
+   * same tool-views pipeline as `views`. Additive — leave undefined for the
+   * classic server-tools-only experience.
+   */
+  readonly clientTools = input<ClientToolRegistry | undefined>(undefined);
   readonly store = input<StateStore | undefined>(undefined);
   readonly handlers = input<Record<string, (params: Record<string, unknown>) => unknown | Promise<unknown>>>({});
   readonly threads = input<Thread[]>([]);
@@ -358,8 +369,35 @@ export class ChatComponent {
   readonly resolvedStore = computed(() => {
     const explicit = this.store();
     if (explicit) return explicit;
-    if (this.views()) return this._internalStore;
+    // A render store is needed whenever there's any view registry to render
+    // through — user-supplied `views()` OR client-tool view/ask components.
+    if (this.effectiveViews()) return this._internalStore;
     return undefined;
+  });
+
+  /**
+   * Lazily-built client-tools coordinator, memoized on the `clientTools`
+   * registry input. Undefined when no client tools are declared. The
+   * coordinator owns the catalog/executor wiring and the view/ask render
+   * registry; the composition merges and connects it below.
+   */
+  private readonly coordinator = computed(() => {
+    const reg = this.clientTools();
+    return reg ? createClientToolsCoordinator(reg) : undefined;
+  });
+
+  /**
+   * The view registry actually used for rendering tool-views and for
+   * excluding view-backed tool names from default tool-call cards. Merges
+   * the coordinator's `view`/`ask` components (keyed by tool name) into the
+   * user-supplied `views()` so client-declared component tools render through
+   * the same pipeline. Falls back to `views()` when no client tools exist.
+   */
+  protected readonly effectiveViews = computed(() => {
+    const base = this.views();
+    const coord = this.coordinator();
+    if (!coord) return base;
+    return base ? withViews(base, coord.viewRegistry) : coord.viewRegistry;
   });
 
   readonly renderRegistry = computed(() => {
@@ -367,10 +405,11 @@ export class ChatComponent {
     return v ? toRenderRegistry(v) : undefined;
   });
 
-  /** Tool names that have a registered view (keys of the `views` registry).
-   *  These render as inline tool-views and are excluded from the default
-   *  tool-call card so they don't render twice. */
-  readonly viewToolNames = computed<readonly string[]>(() => Object.keys(this.views() ?? {}));
+  /** Tool names that have a registered view (keys of the effective view
+   *  registry, including client-declared view/ask tools). These render as
+   *  inline tool-views and are excluded from the default tool-call card so
+   *  they don't render twice. */
+  readonly viewToolNames = computed<readonly string[]>(() => Object.keys(this.effectiveViews() ?? {}));
 
   /** Union of GenUI dispatcher tool names and registered view tool names. */
   readonly excludedToolNames = computed<readonly string[]>(() => [
@@ -420,6 +459,7 @@ export class ChatComponent {
 
   private readonly classifiers = new Map<string, ContentClassifier>();
   private readonly destroyRef = inject(DestroyRef);
+  private readonly injector = inject(Injector);
   // Resolved against the component's own `providers` in normal use. The fallback
   // is for tests that construct ChatComponent via `new` inside a bare injection
   // context (no element injector, so component-level providers are skipped).
@@ -604,6 +644,29 @@ export class ChatComponent {
         this.partialBridge.push(d.tool_call_id, d.args_so_far);
       }
       this.partialEventsLastIndex = events.length;
+    });
+
+    // Connect the client-tools coordinator to the agent. connect() ships the
+    // tool catalog, starts the function-tool executor, and installs the view
+    // auto-ack effect. Those installs create effect()s of their own, which
+    // Angular forbids from *within* a running effect (NG0602). So this effect
+    // only detects readiness (both coordinator + agent present) and defers the
+    // actual connect() to a microtask that runs OUTSIDE the reactive context,
+    // re-entering the component's injection context so the coordinator's
+    // effects bind to this component's lifecycle. `connected` guards against
+    // re-running per coordinator identity (a new clientTools registry yields a
+    // new coordinator and re-connects; the old one's effects are abandoned).
+    let connected: unknown;
+    effect(() => {
+      const coord = this.coordinator();
+      let agentRef: ReturnType<typeof this.agent>;
+      try { agentRef = this.agent(); } catch { return; }
+      if (!coord || !agentRef) return;
+      if (connected === coord) return;
+      connected = coord;
+      queueMicrotask(() => {
+        runInInjectionContext(this.injector, () => coord.connect(agentRef));
+      });
     });
 
     effect(() => {
@@ -820,6 +883,20 @@ export class ChatComponent {
 
   onSpecEvent(event: RenderEvent, messageIndex: number): void {
     this.renderEvent.emit({ messageIndex, event });
+  }
+
+  /**
+   * Forwards a render event bubbled up from a `<chat-tool-views>` component
+   * (a client-declared `view`/`ask` tool's rendered UI) to the client-tools
+   * coordinator. The coordinator resolves the matching pending `ask` tool call
+   * when the event is a `result`. No-op when no client tools are wired.
+   */
+  protected onClientToolEvent(event: RenderEvent): void {
+    const coord = this.coordinator();
+    if (!coord) return;
+    let agentRef: ReturnType<typeof this.agent>;
+    try { agentRef = this.agent(); } catch { return; }
+    coord.handleRenderEvent(agentRef, event);
   }
 
   onA2uiAction(message: A2uiActionMessage): void {
