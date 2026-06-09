@@ -95,6 +95,24 @@ jsonClassifier.spec();  // { root: 'r1', elements: {} }
 classifier.dispose();
 ```
 
+### A2UI content
+
+When the snapshot starts with the `---a2ui_JSON---` prefix, the classifier switches to A2UI mode and parses the remaining lines as JSONL. Read `type()` (=> `'a2ui'`) and `a2uiSurfaces()` for the parsed surfaces:
+
+```typescript
+const a2uiClassifier = createContentClassifier();
+
+a2uiClassifier.update(
+  '---a2ui_JSON---\n' +
+  '{"surfaceId":"s1","components":[{"id":"root","component":{"Text":{"text":{"literalString":"Hi"}}}}]}',
+);
+
+a2uiClassifier.type();          // 'a2ui'
+a2uiClassifier.a2uiSurfaces();  // Map<string, A2uiSurface> keyed by surface ID
+
+a2uiClassifier.dispose();
+```
+
 <Callout type="tip" title="Delta processing">
 Pass the **full** message content each time, not just new characters. The classifier tracks `processedLength` internally and only processes the delta.
 </Callout>

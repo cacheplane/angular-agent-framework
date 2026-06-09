@@ -209,7 +209,7 @@ The agent doesn't wait until it's finished to send state updates. It streams par
 
 ### How Partial Updates Arrive
 
-`injectAgent()` requests the stream modes it needs to populate its public signals by default. Use `values` when you only need state snapshots, and `messages-tuple` when you only need individual message tokens.
+`injectAgent()` requests the stream modes it needs to populate its public signals by default: `['values', 'messages-tuple', 'updates', 'custom']`. Those feed state snapshots, streamed message tokens, per-node update events, and custom events respectively. Passing your own `streamMode` *replaces* that default set, so narrowing to a single mode means giving up the signals the others populate. Use `values` when you only need state snapshots, and `messages-tuple` when you only need individual message tokens.
 
 ```typescript
 const agent = injectAgent<ProjectState>();

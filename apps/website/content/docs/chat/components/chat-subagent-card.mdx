@@ -31,8 +31,10 @@ The `Subagent` type comes from `@threadplane/chat`. It provides reactive state f
 | Property | Type | Description |
 |----------|------|-------------|
 | `toolCallId` | `string` | The ID linking this subagent to its parent tool call |
+| `name` | `string \| undefined` | Optional human-readable name. The card's "Subagent" label uses it when present |
 | `status()` | `Signal<'pending' \| 'running' \| 'complete' \| 'error'>` | Current execution status |
 | `messages()` | `Signal<Message[]>` | Messages produced by the subagent |
+| `state()` | `Signal<Record<string, unknown>>` | Arbitrary subagent state exposed by the runtime |
 
 ## Card Behavior
 

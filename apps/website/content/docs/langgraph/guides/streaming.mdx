@@ -200,6 +200,11 @@ export class ChatComponent {
 ```
 
 </Tab>
+<Tab label="What no-arg `submit()` does">
+
+Calling `submit()` with no input opens a fresh stream against the current thread state without adding a new user message — the server resumes the run from where it left off, which is how you recover after an error. Pass `submit({ message })` only when you have new input to send. If you instead want to replay the exact last input you submitted, call `chat.reload()`.
+
+</Tab>
 <Tab label="chat.component.html">
 
 ```html

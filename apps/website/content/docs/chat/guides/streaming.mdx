@@ -2,6 +2,10 @@
 
 `ChatComponent` automatically classifies AI message content and routes it to the right renderer. This page walks through how the streaming pipeline works, and how to use the classification APIs directly for custom integrations.
 
+<Callout type="info" title="Looking for plain message streaming?">
+This page is the advanced generative-UI plumbing: how `<chat>` decides whether an AI message is markdown, a JSON-render spec, or A2UI, and how partial JSON is parsed as tokens arrive. If you just want to know how ordinary assistant text streams token-by-token into `<chat>` — no generative UI involved — start with the [LangGraph streaming guide](/docs/langgraph/guides/streaming). The basic case needs no setup: `<chat [agent]="agent" />` renders streaming markdown out of the box.
+</Callout>
+
 ## Content Classification
 
 Each AI message is processed by a `ContentClassifier` that examines the content as it streams token-by-token. The classifier determines the content type from the first non-whitespace character:
@@ -9,7 +13,10 @@ Each AI message is processed by a `ContentClassifier` that examines the content 
 | Trigger | Content Type | What Happens |
 |---------|-------------|--------------|
 | First non-whitespace is `{` | `json-render` | Parsed as a JSON spec via `@cacheplane/partial-json` |
+| Prose with inline JSON-render specs | `markdown` | Markdown path, with embedded specs rendered in place |
 | Any other text | `markdown` | Rendered as markdown prose |
+
+Prose that interleaves inline JSON-render specs still classifies as `'markdown'` — the markdown path renders the embedded specs in place. The `ContentType` union also includes `'mixed'`, but `createContentClassifier` doesn't currently emit it, so treat it as reserved: don't branch on `classifier.type() === 'mixed'` expecting inline-spec content to land there. (`'a2ui'` is covered under [A2UI Content Detection](#a2ui-content-detection) below.)
 
 <Callout type="info" title="Per-message classification">
 Each message gets its own classifier instance. Classification happens once per message — the type is determined by the first meaningful character and never changes.

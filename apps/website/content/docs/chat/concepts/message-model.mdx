@@ -144,6 +144,33 @@ interface Citation {
 
 `@threadplane/langgraph` exports `extractCitations()` for advanced adapters that need to normalize nonstandard citation payloads. Chat markdown views can render citation markers against the message citation list.
 
+The resolve path from a `[^id]` marker to a rendered citation runs through `CitationsResolverService` (exported from `@threadplane/chat`). A custom citation renderer provides the service, sets the current message, then calls `lookup(refId)` — which returns a reactive `Signal<ResolvedCitation | null>` matching the marker id against `message.citations` (falling back to inline markdown definitions):
+
+```ts
+import { Component, computed, inject, input } from '@angular/core';
+import { CitationsResolverService } from '@threadplane/chat';
+import type { Message } from '@threadplane/chat';
+
+@Component({
+  selector: 'app-citation-ref',
+  standalone: true,
+  providers: [CitationsResolverService],
+  template: `@if (resolved(); as r) {<sup>[{{ r.citation.index }}]</sup>}`,
+})
+export class CitationRefComponent {
+  private readonly resolver = inject(CitationsResolverService);
+
+  readonly message = input.required<Message>();
+  readonly refId = input.required<string>(); // the `id` from a [^id] marker
+
+  // lookup() returns a Signal; resolved.source is 'message' or 'markdown'.
+  protected readonly resolved = computed(() => {
+    this.resolver.message.set(this.message());
+    return this.resolver.lookup(this.refId())();
+  });
+}
+```
+
 Keep citation data on the message that owns the content. Avoid a separate global citation store unless your product has a cross-message source panel.
 
 ## Interrupts
@@ -170,7 +197,7 @@ Subagents are also optional agent state:
 agent.subagents?.(); // Map<string, Subagent>
 ```
 
-Each `Subagent` has a tool-call id, optional name, status signal, message signal, and state signal.
+Each `Subagent` has a tool-call id, optional name, status signal, messages signal (`Signal<Message[]>`), and state signal.
 
 Use subagents when the backend delegates work to child graphs or specialized workers. Don't encode subagent progress as fake assistant messages if the runtime can expose structured subagent state. Structured state lets UI render progress, nested transcripts, and failure states without parsing prose.
 
