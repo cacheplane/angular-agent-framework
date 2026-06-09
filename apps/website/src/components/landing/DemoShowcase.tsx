@@ -18,9 +18,15 @@ interface DemoMedia {
   href: string;
 }
 
+// Demo media is hosted on Vercel Blob (store: ngaf-website-assets) rather than
+// committed to the repo — these clips are large binaries that would bloat git
+// history on every recut. Re-uploading with the same pathnames keeps these URLs
+// stable. See apps/website/scripts/upload-demo-media.md for the upload steps.
+const DEMO_CDN = 'https://elgkdaxpsvqcrns1.public.blob.vercel-storage.com/demo';
+
 const MEDIA: DemoMedia[] = [
-  { key: 'langgraph', tabLabel: 'LangGraph', url: 'demo.threadplane.ai', videoMp4: '/demo/langgraph-demo.mp4', videoWebm: '/demo/langgraph-demo.webm', poster: '/demo/langgraph-demo-poster.webp', href: DEMOS.find((d) => d.key === 'langgraph')!.href },
-  { key: 'ag-ui', tabLabel: 'AG-UI', url: 'ag-ui.threadplane.ai', videoMp4: '/demo/ag-ui-demo.mp4', videoWebm: '/demo/ag-ui-demo.webm', poster: '/demo/ag-ui-demo-poster.webp', href: DEMOS.find((d) => d.key === 'ag-ui')!.href },
+  { key: 'langgraph', tabLabel: 'LangGraph', url: 'demo.threadplane.ai', videoMp4: `${DEMO_CDN}/langgraph-demo.mp4`, videoWebm: `${DEMO_CDN}/langgraph-demo.webm`, poster: `${DEMO_CDN}/langgraph-demo-poster.webp`, href: DEMOS.find((d) => d.key === 'langgraph')!.href },
+  { key: 'ag-ui', tabLabel: 'AG-UI', url: 'ag-ui.threadplane.ai', videoMp4: `${DEMO_CDN}/ag-ui-demo.mp4`, videoWebm: `${DEMO_CDN}/ag-ui-demo.webm`, poster: `${DEMO_CDN}/ag-ui-demo-poster.webp`, href: DEMOS.find((d) => d.key === 'ag-ui')!.href },
 ];
 
 export function DemoShowcase() {

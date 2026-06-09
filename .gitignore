@@ -14,6 +14,9 @@ deploy/
 .nx/workspace-data
 tmp/
 apps/website/test-results/
+# Demo media is hosted on Vercel Blob, not committed (see DemoShowcase.tsx /
+# apps/website/scripts/upload-demo-media.md). Keep these binaries out of git.
+apps/website/public/demo/
 cockpit/**/angular/test-results/
 /test-results/
 
