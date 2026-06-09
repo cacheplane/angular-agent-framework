@@ -157,6 +157,8 @@ For every other custom event name, it emits:
 
 Use `state` for durable UI state. Use `events$` for transient events, telemetry hooks, or UI side effects that should not be stored as conversation state.
 
+Every non-`on_interrupt` `CUSTOM` event is fanned out to **two** surfaces, not one. Alongside the `events$` emission above, the reducer also appends `{ name, data }` to the AG-UI-specific `customEvents()` signal documented on [`injectAgent()`](/docs/ag-ui/api/inject-agent#ag-ui-specific-surface) and [`toAgent()`](/docs/ag-ui/api/to-agent). Reach for the signal when you want an accumulated per-run snapshot for reactive rendering (for example, `a2ui-partial` generative UI); reach for `events$` when you want a transient stream for side-effects or telemetry.
+
 ## Submit and stop
 
 `agent.submit({ message })` performs three steps:
@@ -171,4 +173,4 @@ If `message` is omitted, no user message is appended, but `runAgent()` still run
 
 ## Unsupported protocol areas
 
-The current adapter does not implement customer-facing flows for interrupts, subagents, history, or time-travel. Unknown protocol events are ignored rather than treated as errors.
+Beyond the `on_interrupt` -> `interrupt` mapping documented above (and its `submit({ resume })` reply), the adapter implements no richer interrupt UI flow — no subagents, history, or time-travel. Unknown protocol events are ignored rather than treated as errors.
