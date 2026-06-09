@@ -1,5 +1,9 @@
 # Setup
 
+## Getting a token
+
+A license token comes from a Threadplane plan — grab one from [threadplane.ai/pricing](https://threadplane.ai/pricing). Once you have it, paste it into `environment.threadplaneLicense` or set `THREADPLANE_LICENSE` in your environment, and the rest of this page wires it up. The nag warnings the library emits point at the same URL.
+
 Most applications don't import `@threadplane/licensing` directly. `@threadplane/chat` calls `runLicenseCheck()` from `provideChat()` when you pass a license token.
 
 Chat exposes a `license` option:
@@ -30,6 +34,38 @@ const status = await runLicenseCheck({
 ```
 
 `runLicenseCheck()` returns the evaluated `LicenseStatus`.
+
+To see the status in action without a real token, mint one inline with `signLicense()` and log what `runLicenseCheck()` resolves to:
+
+```ts
+import * as ed from '@noble/ed25519';
+import { signLicense, runLicenseCheck } from '@threadplane/licensing';
+
+// Stand-in for the minting service: a throwaway keypair.
+const privateKey = ed.utils.randomPrivateKey();
+const publicKey = await ed.getPublicKeyAsync(privateKey);
+
+const nowSec = Math.floor(Date.now() / 1000);
+const token = await signLicense(
+  {
+    sub: 'cus_123',
+    tier: 'developer_seat',
+    iat: nowSec,
+    exp: nowSec + 60 * 60 * 24 * 365,
+    seats: 1,
+  },
+  privateKey,
+);
+
+const status = await runLicenseCheck({
+  package: '@threadplane/example',
+  token,
+  publicKey,
+});
+console.log(status); // 'licensed'
+```
+
+In production you verify against `LICENSE_PUBLIC_KEY` instead of a throwaway key, and the token comes from your environment — not from `signLicense()`.
 
 ## Warnings
 

@@ -1,0 +1,62 @@
+# Quickstart
+
+This page strings the whole API together into one runnable round-trip. Paste it into a Node script (or REPL) and run it. It mints a token, verifies it offline, and evaluates the result into a status — no network, no real license needed.
+
+You need `@threadplane/licensing` and its only peer dependency, `@noble/ed25519`:
+
+```bash
+npm install @threadplane/licensing @noble/ed25519
+```
+
+## A full round-trip
+
+```ts
+import * as ed from '@noble/ed25519';
+import {
+  signLicense,
+  verifyLicense,
+  evaluateLicense,
+  type LicenseClaims,
+} from '@threadplane/licensing';
+
+// 1. Generate an Ed25519 keypair. In production the minting service owns the
+//    private key; the public key is what `verifyLicense()` consumes.
+const privateKey = ed.utils.randomPrivateKey();
+const publicKey = await ed.getPublicKeyAsync(privateKey);
+
+// 2. Build claims and sign them into a compact token.
+const nowSec = Math.floor(Date.now() / 1000);
+const claims: LicenseClaims = {
+  sub: 'cus_123',
+  tier: 'developer_seat',
+  iat: nowSec,
+  exp: nowSec + 60 * 60 * 24 * 365, // one year out
+  seats: 1,
+};
+const token = await signLicense(claims, privateKey);
+
+// 3. Offline-verify the signature against the public key.
+const verified = await verifyLicense(token, publicKey);
+console.log(verified.ok); // true
+
+// 4. Evaluate the verify result into a status.
+console.log(evaluateLicense(verified, { nowSec }).status); // 'licensed'
+
+// 5. Sign a token that already expired to see the time-based statuses.
+const expiredToken = await signLicense({ ...claims, exp: nowSec - 60 }, privateKey);
+const expiredVerified = await verifyLicense(expiredToken, publicKey);
+// Expired but inside the 14-day grace window:
+console.log(evaluateLicense(expiredVerified, { nowSec }).status); // 'grace'
+// Outside the grace window (push `nowSec` past exp + grace):
+console.log(
+  evaluateLicense(expiredVerified, { nowSec: nowSec + 60 * 60 * 24 * 30 }).status,
+); // 'expired'
+```
+
+`signLicense()` here stands in for the minting service. Real consumers never sign — they verify a token they were issued against `LICENSE_PUBLIC_KEY`, the public key baked into the package.
+
+## Next steps
+
+- [Setup](../guides/setup.mdx) — consume the check via `provideChat()` or call `runLicenseCheck()` directly.
+- [CI and offline use](../guides/ci-and-offline.mdx) — verify and sign without network access.
+- [API reference](../reference/api.mdx) — the full type surface.
