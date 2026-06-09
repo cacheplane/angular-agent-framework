@@ -30,6 +30,7 @@ export const PORTS = Object.freeze({
   'cockpit-ag-ui-tool-views-angular': { angular: 4322, langgraph: 5322 },
   'cockpit-ag-ui-json-render-angular': { angular: 4323, langgraph: 5323 },
   'cockpit-ag-ui-a2ui-angular': { angular: 4324, langgraph: 5324 },
+  'cockpit-ag-ui-client-tools-angular': { angular: 4325, langgraph: 5325 },
   'cockpit-chat-a2ui-angular': { angular: 4511, langgraph: 5511 },
   'cockpit-chat-debug-angular': { angular: 4509, langgraph: 5509 },
   'cockpit-chat-generative-ui-angular': { angular: 4508, langgraph: 5508 },

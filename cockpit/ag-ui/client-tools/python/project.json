@@ -1,0 +1,38 @@
+{
+  "name": "cockpit-ag-ui-client-tools-python",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "cockpit/ag-ui/client-tools/python/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": [
+        "{workspaceRoot}/dist/cockpit/ag-ui/client-tools/python"
+      ],
+      "options": {
+        "outputPath": "dist/cockpit/ag-ui/client-tools/python",
+        "main": "cockpit/ag-ui/client-tools/python/src/index.ts",
+        "tsConfig": "cockpit/ag-ui/client-tools/python/tsconfig.json"
+      }
+    },
+    "smoke": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "cockpit/ag-ui/client-tools/python",
+        "command": "npx tsx -e \"import { agUiClientToolsPythonModule } from './src/index.ts'; const module = agUiClientToolsPythonModule; if (module.id !== 'ag-ui-client-tools-python' || module.title !== 'AG-UI Client Tools (Python)') { throw new Error('Unexpected module shape for ' + module.id); }\""
+      }
+    },
+    "serve": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "cockpit/ag-ui/client-tools/python",
+        "command": "uv run uvicorn src.server:app --port 5325"
+      }
+    }
+  },
+  "tags": [
+    "scope:cockpit-e2e",
+    "scope:cockpit-examples",
+    "scope:cockpit-smoke"
+  ]
+}
