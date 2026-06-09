@@ -41,7 +41,13 @@ import {
   defineAngularRegistry,
   signalStateStore,
 } from '@threadplane/render';
+
+const registry = defineAngularRegistry({
+  OrderSummary: OrderSummaryComponent,
+});
 ```
+
+When you render a spec directly through `<render-spec>`, build the registry with `defineAngularRegistry()`. The chat-facing `views()` helper shown in [Registries And Catalogs](#registries-and-catalogs) below produces a `ViewRegistry` that chat converts to this same `AngularRegistry` under the hood. See the [Registry guide](/docs/render/guides/registry) for the full registry contract.
 
 Choose json-render when:
 
@@ -106,9 +112,9 @@ The practical cost is protocol discipline. The agent must emit valid envelopes i
 | First non-whitespace character is `{` | json-render |
 | Starts with `---a2ui_JSON---` | A2UI JSONL |
 
-For json-render, chat parses the JSON into a spec and renders it with the `views` registry.
+For json-render, chat parses the JSON into a spec and renders it with the `views` registry. The [chat generative-UI guide](/docs/chat/guides/generative-ui) covers how to wire the agent and catalog for this path end to end.
 
-For A2UI, chat parses newline-delimited A2UI messages, applies them to an `A2uiSurfaceStore`, and renders each surface with `<a2ui-surface>`.
+For A2UI, chat parses newline-delimited A2UI messages, applies them to an `A2uiSurfaceStore`, and renders each surface with `<a2ui-surface>`. The [chat A2UI overview](/docs/chat/a2ui/overview) covers the `---a2ui_JSON---` detection path and the surface-store wiring.
 
 ```html
 <chat [agent]="agent" [views]="catalog" [handlers]="handlers" />
@@ -133,6 +139,8 @@ const registry = views({
   OrderSummary: OrderSummaryComponent,
 });
 ```
+
+`views()` produces a `ViewRegistry` -- the shape chat catalogs consume. `defineAngularRegistry()` produces the `AngularRegistry` that `<render-spec>` consumes directly. `toRenderRegistry()` converts the former into the latter, so a chat catalog and a direct render share one component map. Use `views()` when you're wiring components into chat; use `defineAngularRegistry()` when you're driving `<render-spec>` yourself. See the [Registry guide](/docs/render/guides/registry) for the low-level registry, and the [chat views guide](/docs/chat/guides/generative-ui) for the chat-facing path.
 
 A2UI catalogs use the same underlying registry shape in chat. Component names such as `Text`, `Button`, `Card`, `Column`, `Row`, `TextField`, `CheckBox`, `MultipleChoice`, and `Slider` resolve to Angular components.
 

@@ -125,6 +125,37 @@ props: {
 }
 ```
 
+The `name` references a function you register in a `functions` map. Each function is a `ComputedFunction` from `@json-render/core` -- `(args: Record<string, unknown>) => unknown`. The `args` object is resolved first (so `{ $state: '/name' }` becomes the current value at `/name`), then passed to your function:
+
+```typescript
+import type { ComputedFunction } from '@json-render/core';
+
+const functions: Record<string, ComputedFunction> = {
+  uppercase: (args) => String(args['text']).toUpperCase(),
+};
+```
+
+Wire the map through the `[functions]` input on `<render-spec>`:
+
+```html
+<render-spec [spec]="spec" [registry]="registry" [functions]="functions" />
+```
+
+Or register it globally via `provideRender()` so every `<render-spec>` resolves it:
+
+```typescript
+import { provideRender } from '@threadplane/render';
+
+provideRender({
+  registry: myRegistry,
+  functions: {
+    uppercase: (args) => String(args['text']).toUpperCase(),
+  },
+});
+```
+
+With either wiring, the `$fn` expression above resolves `label` to the uppercased value of `/name`. The input takes priority over the `provideRender()` config when both are present.
+
 ## Children
 
 The `children` property is an array of element keys that reference other entries in the `elements` map:
@@ -290,5 +321,8 @@ const spec: Spec = {
   </Card>
   <Card title="RenderSpecComponent API" href="/docs/render/api/render-spec-component">
     Full API reference for the entry-point component
+  </Card>
+  <Card title="Using this in chat" href="/docs/chat/guides/generative-ui">
+    How an agent streams a spec that chat renders inline
   </Card>
 </CardGroup>
