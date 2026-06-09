@@ -48,6 +48,54 @@ If the parent of the target doesn't exist, `deleteByPointer` returns the origina
 These helpers use JSON-Pointer-style syntax but do **not** implement RFC 6901's `~0` / `~1` unescaping. A path is split on `/` and the segments are used as literal keys. So keys that themselves contain `/` or `~` aren't addressable — there's no escape sequence to reach them.
 </Callout>
 
+## From contents to model
+
+The pointer helpers are the primitives. The most common real task is one level up: turning a `dataModelUpdate`'s `contents` array into the plain object the resolver reads. The library doesn't ship that reducer — you write it. Each `A2uiDataModelEntry` has a `key` and exactly one of `valueString`, `valueNumber`, `valueBoolean`, or `valueMap` (a nested array of entries). Branch on which is set, and recurse on `valueMap`:
+
+```ts
+import type { A2uiDataModelEntry } from '@threadplane/a2ui';
+
+function entriesToObject(entries: A2uiDataModelEntry[]): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  for (const e of entries) {
+    if (e.valueString !== undefined) out[e.key] = e.valueString;
+    else if (e.valueNumber !== undefined) out[e.key] = e.valueNumber;
+    else if (e.valueBoolean !== undefined) out[e.key] = e.valueBoolean;
+    else if (e.valueMap !== undefined) out[e.key] = entriesToObject(e.valueMap);
+  }
+  return out;
+}
+
+entriesToObject([
+  { key: 'name', valueString: 'Ada' },
+  { key: 'address', valueMap: [{ key: 'city', valueString: 'London' }] },
+]);
+// { name: 'Ada', address: { city: 'London' } }
+```
+
+A `dataModelUpdate` may also carry an optional top-level `path`. It scopes where the reduced object lands in the model — without it the entries write at the root; with `path: '/customer'` they nest under `customer`. Honor it by reducing first, then writing the result with `setByPointer`:
+
+```ts
+import { setByPointer } from '@threadplane/a2ui';
+import type { A2uiDataModelUpdate } from '@threadplane/a2ui';
+
+function applyDataModelUpdate(
+  model: Record<string, unknown>,
+  update: A2uiDataModelUpdate,
+): Record<string, unknown> {
+  const obj = entriesToObject(update.contents);
+  return setByPointer(model, update.path ?? '/', obj);
+}
+
+applyDataModelUpdate(
+  {},
+  { surfaceId: 's1', path: '/customer', contents: [{ key: 'name', valueString: 'Ada' }] },
+);
+// { customer: { name: 'Ada' } }
+```
+
+When `path` is absent, `setByPointer(model, '/', obj)` replaces the root with the reduced object. Pass a pointer like `/customer` to merge under a key instead.
+
 ## Resolving dynamic values
 
 `resolveDynamic` collapses a component's prop to a concrete value against the model. The order is fixed:

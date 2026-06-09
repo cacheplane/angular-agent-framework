@@ -52,6 +52,8 @@ resolveDynamic({ literalNumber: 2 }, model); // 2
 | `null` or `undefined` | returned as-is |
 | unrecognized shapes | returned as-is |
 
+Resolution order is fixed: literal wrappers are checked and unwrapped **first**, then a `{ path }` reference, then plain passthrough. So a value carrying both a literal key and a `path` key resolves as the literal — the `path` is never reached.
+
 Absolute paths start with `/`.
 
 Relative paths resolve against `scope.basePath` when a scope is supplied. Without a scope, a relative path is treated as root-relative by prefixing `/`.
