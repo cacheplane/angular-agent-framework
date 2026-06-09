@@ -3,38 +3,54 @@
 // spec is published expressly to be copied in rather than depended on. Zero
 // runtime; types only. Lets a RenderViewEntry carry any spec-compliant
 // validator (Zod/Valibot/ArkType) without a package dependency.
+//
+// The upstream spec models the nested types under a `StandardSchemaV1`
+// namespace; this repo forbids TS namespaces (@typescript-eslint/no-namespace),
+// so the nested types are flattened to top-level `StandardSchema*` aliases. The
+// `StandardSchemaV1` interface itself is unchanged from the spec.
+
 export interface StandardSchemaV1<Input = unknown, Output = Input> {
-  readonly '~standard': StandardSchemaV1.Props<Input, Output>;
+  readonly '~standard': StandardSchemaProps<Input, Output>;
 }
 
-export declare namespace StandardSchemaV1 {
-  export interface Props<Input = unknown, Output = Input> {
-    readonly version: 1;
-    readonly vendor: string;
-    readonly validate: (value: unknown) => Result<Output> | Promise<Result<Output>>;
-    readonly types?: Types<Input, Output> | undefined;
-  }
-  export type Result<Output> = SuccessResult<Output> | FailureResult;
-  export interface SuccessResult<Output> {
-    readonly value: Output;
-    readonly issues?: undefined;
-  }
-  export interface FailureResult {
-    readonly issues: ReadonlyArray<Issue>;
-  }
-  export interface Issue {
-    readonly message: string;
-    readonly path?: ReadonlyArray<PropertyKey | PathSegment> | undefined;
-  }
-  export interface PathSegment {
-    readonly key: PropertyKey;
-  }
-  export interface Types<Input = unknown, Output = Input> {
-    readonly input: Input;
-    readonly output: Output;
-  }
-  export type InferInput<Schema extends StandardSchemaV1> =
-    NonNullable<Schema['~standard']['types']>['input'];
-  export type InferOutput<Schema extends StandardSchemaV1> =
-    NonNullable<Schema['~standard']['types']>['output'];
+export interface StandardSchemaProps<Input = unknown, Output = Input> {
+  readonly version: 1;
+  readonly vendor: string;
+  readonly validate: (
+    value: unknown,
+  ) => StandardSchemaResult<Output> | Promise<StandardSchemaResult<Output>>;
+  readonly types?: StandardSchemaTypes<Input, Output> | undefined;
 }
+
+export type StandardSchemaResult<Output> =
+  | StandardSchemaSuccessResult<Output>
+  | StandardSchemaFailureResult;
+
+export interface StandardSchemaSuccessResult<Output> {
+  readonly value: Output;
+  readonly issues?: undefined;
+}
+
+export interface StandardSchemaFailureResult {
+  readonly issues: ReadonlyArray<StandardSchemaIssue>;
+}
+
+export interface StandardSchemaIssue {
+  readonly message: string;
+  readonly path?: ReadonlyArray<PropertyKey | StandardSchemaPathSegment> | undefined;
+}
+
+export interface StandardSchemaPathSegment {
+  readonly key: PropertyKey;
+}
+
+export interface StandardSchemaTypes<Input = unknown, Output = Input> {
+  readonly input: Input;
+  readonly output: Output;
+}
+
+export type StandardSchemaInferInput<Schema extends StandardSchemaV1> =
+  NonNullable<Schema['~standard']['types']>['input'];
+
+export type StandardSchemaInferOutput<Schema extends StandardSchemaV1> =
+  NonNullable<Schema['~standard']['types']>['output'];
