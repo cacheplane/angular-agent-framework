@@ -490,6 +490,76 @@ describe('RenderElementComponent — fallback gate', () => {
   });
 });
 
+// --- RenderHost tests (Task 4) ---
+
+import { Component as HostCmp, inject as hostInject } from '@angular/core';
+import { injectRenderHost } from './contexts/render-host';
+import type { RenderEvent } from './render-event';
+
+@HostCmp({ standalone: true, template: '<button (click)="fire()">go</button>' })
+class ResultEmitter {
+  private readonly host = injectRenderHost();
+  fire() { this.host.result({ picked: 2 }); }
+}
+
+@HostCmp({
+  standalone: true,
+  imports: [RenderElementComponent],
+  template: `<render-element [elementKey]="'w1'" [spec]="spec" />`,
+})
+class ResultHost {
+  spec = { root: 'w1', elements: { w1: { type: 'emitter', props: {} } } } as Spec;
+}
+
+describe('RenderElementComponent — RenderHost', () => {
+  it('result(value) reaches the host as a RenderResultEvent', () => {
+    const events: RenderEvent[] = [];
+    const store = signalStateStore({});
+    TestBed.configureTestingModule({
+      imports: [ResultHost],
+      providers: [{
+        provide: RENDER_CONTEXT,
+        useValue: {
+          store,
+          registry: defineAngularRegistry({ emitter: ResultEmitter }),
+          functions: {},
+          handlers: {},
+          emitEvent: (e: RenderEvent) => events.push(e),
+        },
+      }],
+    });
+    const fx = TestBed.createComponent(ResultHost);
+    fx.detectChanges();
+    fx.nativeElement.querySelector('button').click();
+    expect(events).toContainEqual({ type: 'result', value: { picked: 2 }, elementKey: 'w1' });
+  });
+
+  it('set(path, value) writes the render state store', () => {
+    const store = signalStateStore({});
+    @HostCmp({ standalone: true, template: '' })
+    class SetterCmp {
+      private readonly host = injectRenderHost();
+      constructor() { this.host.set('/seats', 3); }
+    }
+    @HostCmp({
+      standalone: true,
+      imports: [RenderElementComponent],
+      template: `<render-element [elementKey]="'s1'" [spec]="spec" />`,
+    })
+    class SetHost { spec = { root: 's1', elements: { s1: { type: 'setter', props: {} } } } as Spec; }
+    TestBed.configureTestingModule({
+      imports: [SetHost],
+      providers: [{
+        provide: RENDER_CONTEXT,
+        useValue: { store, registry: defineAngularRegistry({ setter: SetterCmp }), functions: {}, handlers: {} },
+      }],
+    });
+    const fx = TestBed.createComponent(SetHost);
+    fx.detectChanges();
+    expect(store.getSnapshot()).toMatchObject({ seats: 3 });
+  });
+});
+
 // --- VIEW_REGISTRY token-fallback tests (Task 2) ---
 
 import { RenderSpecComponent } from './render-spec.component';

@@ -24,6 +24,7 @@ import {
 import type { Spec, UIElement } from '@json-render/core';
 
 import { RENDER_CONTEXT } from './contexts/render-context';
+import { RENDER_HOST, type RenderHost } from './contexts/render-host';
 import { REPEAT_SCOPE } from './contexts/repeat-scope';
 import type { RepeatScope } from './contexts/repeat-scope';
 import { buildPropResolutionContext } from './internals/prop-signal';
@@ -106,6 +107,9 @@ function coerceValue(raw: string): unknown {
   standalone: true,
   imports: [NgComponentOutlet],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  providers: [
+    { provide: RENDER_HOST, useFactory: (el: RenderElementComponent) => el.host, deps: [RenderElementComponent] },
+  ],
   template: `
     @if (!element()?.repeat) {
       @if (visible()) {
@@ -235,6 +239,33 @@ export class RenderElementComponent implements OnInit {
     return evaluateVisibility(el.visible, this.propCtx());
   });
 
+  /** Invokes the element's `on[event]` handler bindings (shared by the
+   * legacy string `emit` input and the typed RenderHost). */
+  private invokeHandlers(event: string, payload?: Record<string, unknown>): void {
+    const el = this.element();
+    if (!el?.on) return;
+    const binding = el.on[event];
+    if (!binding) return;
+    const bindings = Array.isArray(binding) ? binding : [binding];
+    for (const b of bindings) {
+      const handler = this.ctx.handlers?.[b.action];
+      if (handler) {
+        const params = { ...(b.params as Record<string, unknown> ?? {}), ...(payload ?? {}) };
+        runInInjectionContext(this.parentInjector, () => handler(params));
+      }
+    }
+  }
+
+  /** Element-scoped host injected by mounted view components via
+   * injectRenderHost(). `set` writes the store; `emit` routes element
+   * handlers; `result` surfaces a RenderResultEvent for this element. */
+  readonly host: RenderHost = {
+    set: (path: string, value: unknown) => this.ctx.store?.set(path, value),
+    emit: (event: string, payload?: Record<string, unknown>) => this.invokeHandlers(event, payload),
+    result: (value: unknown) =>
+      this.ctx.emitEvent?.({ type: 'result', value, elementKey: this.elementKey() }),
+  };
+
   /** Emit function that delegates to context handlers AND handles the
    * canonical `a2ui:datamodel:<path>:<value>` write-back protocol that
    * input components (TextField, MultipleChoice, CheckBox, Slider,
@@ -257,19 +288,7 @@ export class RenderElementComponent implements OnInit {
       this.applyDatamodelWrite(event);
       return;
     }
-    const el = this.element();
-    if (!el?.on) return;
-    const binding = el.on[event];
-    if (!binding) return;
-    const bindings = Array.isArray(binding) ? binding : [binding];
-    for (const b of bindings) {
-      const handler = this.ctx.handlers?.[b.action];
-      if (handler) {
-        runInInjectionContext(this.parentInjector, () =>
-          handler(b.params as Record<string, unknown> ?? {}),
-        );
-      }
-    }
+    this.invokeHandlers(event);
   };
 
   private applyDatamodelWrite(event: string): void {
