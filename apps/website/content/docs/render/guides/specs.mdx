@@ -110,22 +110,20 @@ props: {
 }
 ```
 
-### $fn -- Computed Function
+### $computed -- Computed Function
 
 Calls a registered computed function with the given arguments:
 
 ```typescript
 props: {
   label: {
-    $fn: {
-      name: 'uppercase',
-      args: { text: { $state: '/name' } }
-    }
+    $computed: 'uppercase',
+    args: { text: { $state: '/name' } }
   },
 }
 ```
 
-The `name` references a function you register in a `functions` map. Each function is a `ComputedFunction` from `@json-render/core` -- `(args: Record<string, unknown>) => unknown`. The `args` object is resolved first (so `{ $state: '/name' }` becomes the current value at `/name`), then passed to your function:
+The `$computed` value names a function you register in a `functions` map. Each function is a `ComputedFunction` from `@json-render/core` -- `(args: Record<string, unknown>) => unknown`. The `args` object is resolved first (so `{ $state: '/name' }` becomes the current value at `/name`), then passed to your function:
 
 ```typescript
 import type { ComputedFunction } from '@json-render/core';
@@ -154,7 +152,7 @@ provideRender({
 });
 ```
 
-With either wiring, the `$fn` expression above resolves `label` to the uppercased value of `/name`. The input takes priority over the `provideRender()` config when both are present.
+With either wiring, the `$computed` expression above resolves `label` to the uppercased value of `/name`. The input takes priority over the `provideRender()` config when both are present.
 
 ## Children
 

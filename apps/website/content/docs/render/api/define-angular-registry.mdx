@@ -12,7 +12,7 @@ import { defineAngularRegistry } from '@threadplane/render';
 
 ```typescript
 function defineAngularRegistry(
-  componentMap: Record<string, AngularComponentRenderer>,
+  componentMap: Record<string, AngularComponentRenderer | RenderViewEntry>,
 ): AngularRegistry;
 ```
 
@@ -20,9 +20,18 @@ function defineAngularRegistry(
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `componentMap` | `Record<string, AngularComponentRenderer>` | An object mapping type name strings to Angular component classes |
+| `componentMap` | `Record<string, AngularComponentRenderer \| RenderViewEntry>` | An object mapping type name strings to Angular component classes, or to `{ component, fallback? }` objects |
 
-`AngularComponentRenderer` is defined as `Type<unknown>` -- any Angular component class.
+`AngularComponentRenderer` is defined as `Type<unknown>` -- any Angular component class. Each entry can be a bare component class or a `RenderViewEntry` object:
+
+```typescript
+interface RenderViewEntry {
+  component: AngularComponentRenderer;
+  fallback?: AngularComponentRenderer;
+}
+```
+
+Use the object form to configure a custom per-entry fallback (see [Per-Component Fallbacks](#per-component-fallbacks) below). A bare component class is shorthand for `{ component }` paired with the library's default fallback.
 
 ### Returns
 
@@ -118,15 +127,33 @@ An entry that omits `fallback` -- including every bare-component entry like `Tex
 
 ## Internal Behavior
 
-The function converts the input object to an internal `Map<string, AngularComponentRenderer>` for O(1) lookups:
+The function normalizes each input entry into a `{ component, fallback }` pair and stores them in an internal `Map` for O(1) lookups. A bare component class is paired with `DefaultFallbackComponent`; an object entry keeps its own `fallback` or falls back to the default:
 
 ```typescript
-function defineAngularRegistry(
-  componentMap: Record<string, AngularComponentRenderer>,
-): AngularRegistry {
-  const map = new Map(Object.entries(componentMap));
+function normalize(
+  entry: AngularComponentRenderer | RenderViewEntry,
+): NormalizedEntry {
+  // Bare Type — register with the default fallback.
+  if (typeof entry === 'function') {
+    return { component: entry, fallback: DefaultFallbackComponent };
+  }
+  // Object form — preserve component; use configured fallback or default.
   return {
-    get: (name: string) => map.get(name),
+    component: entry.component,
+    fallback: entry.fallback ?? DefaultFallbackComponent,
+  };
+}
+
+function defineAngularRegistry(
+  componentMap: Record<string, AngularComponentRenderer | RenderViewEntry>,
+): AngularRegistry {
+  const map = new Map<string, NormalizedEntry>();
+  for (const [name, entry] of Object.entries(componentMap)) {
+    map.set(name, normalize(entry));
+  }
+  return {
+    get: (name: string) => map.get(name)?.component,
+    getFallback: (name: string) => map.get(name)?.fallback,
     names: () => [...map.keys()],
   };
 }
