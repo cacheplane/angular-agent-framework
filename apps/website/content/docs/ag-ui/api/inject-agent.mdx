@@ -51,6 +51,15 @@ The AG-UI adapter extends the neutral `Agent` contract with one additional signa
 |-------|------|-------------|
 | `customEvents()` | `CustomStreamEvent[]` | Custom events emitted by the backend during a run. Accumulates per run; resets on each new `submit()`. |
 
+`injectAgent()` is typed as the neutral `Agent` interface; to access `customEvents` you must cast to `AgUiAgent`:
+
+```ts
+import { injectAgent, type AgUiAgent } from '@threadplane/ag-ui';
+
+const chat = injectAgent() as AgUiAgent;
+chat.customEvents(); // Signal<CustomStreamEvent[]>
+```
+
 The chat a2ui bridge reads `customEvents` to light up live generative-UI streaming when your backend emits `a2ui-partial` events. See the [Custom Events guide](/docs/ag-ui/guides/custom-events) for backend wiring details.
 
 ## Submit and resume

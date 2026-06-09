@@ -49,6 +49,8 @@ The adapter JSON-parses `value` when it arrives as a string, so consumers always
 
 ## Reading Custom Events in Angular
 
+`injectAgent()` returns the neutral `Agent` type; cast it to `AgUiAgent` (exported from `@threadplane/ag-ui`) to reach the `customEvents` signal.
+
 ### Reactive effect
 
 Use an `effect` to react every time new events arrive:
@@ -56,7 +58,7 @@ Use an `effect` to react every time new events arrive:
 ```typescript
 import { Component, ChangeDetectionStrategy, effect, signal } from '@angular/core';
 import { ChatComponent } from '@threadplane/chat';
-import { injectAgent } from '@threadplane/ag-ui';
+import { injectAgent, type AgUiAgent } from '@threadplane/ag-ui';
 
 @Component({
   standalone: true,
@@ -70,7 +72,7 @@ import { injectAgent } from '@threadplane/ag-ui';
   `,
 })
 export class AnalysisComponent {
-  protected readonly agent = injectAgent();
+  protected readonly agent = injectAgent() as AgUiAgent;
   protected readonly progress = signal<number | null>(null);
 
   constructor() {
@@ -94,7 +96,7 @@ When you only need to derive a value, `computed` is more concise:
 ```typescript
 import { Component, ChangeDetectionStrategy, computed } from '@angular/core';
 import { ChatComponent } from '@threadplane/chat';
-import { injectAgent } from '@threadplane/ag-ui';
+import { injectAgent, type AgUiAgent } from '@threadplane/ag-ui';
 import type { CustomStreamEvent } from '@threadplane/ag-ui';
 
 @Component({
@@ -107,7 +109,7 @@ import type { CustomStreamEvent } from '@threadplane/ag-ui';
   `,
 })
 export class AnalysisComponent {
-  protected readonly agent = injectAgent();
+  protected readonly agent = injectAgent() as AgUiAgent;
 
   protected readonly progressEvents = computed(() =>
     this.agent.customEvents().filter(

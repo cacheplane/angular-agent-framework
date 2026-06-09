@@ -19,8 +19,8 @@ interface DemoMedia {
 }
 
 const MEDIA: DemoMedia[] = [
-  { key: 'langgraph', tabLabel: 'LangGraph', url: 'demo.threadplane.ai', videoMp4: '/demo/langgraph-demo.mp4', videoWebm: '/demo/langgraph-demo.webm', poster: '/demo/langgraph-demo-poster.webp', href: DEMOS[0].href },
-  { key: 'ag-ui', tabLabel: 'AG-UI', url: 'ag-ui.threadplane.ai', videoMp4: '/demo/ag-ui-demo.mp4', videoWebm: '/demo/ag-ui-demo.webm', poster: '/demo/ag-ui-demo-poster.webp', href: DEMOS[1].href },
+  { key: 'langgraph', tabLabel: 'LangGraph', url: 'demo.threadplane.ai', videoMp4: '/demo/langgraph-demo.mp4', videoWebm: '/demo/langgraph-demo.webm', poster: '/demo/langgraph-demo-poster.webp', href: DEMOS.find((d) => d.key === 'langgraph')!.href },
+  { key: 'ag-ui', tabLabel: 'AG-UI', url: 'ag-ui.threadplane.ai', videoMp4: '/demo/ag-ui-demo.mp4', videoWebm: '/demo/ag-ui-demo.webm', poster: '/demo/ag-ui-demo-poster.webp', href: DEMOS.find((d) => d.key === 'ag-ui')!.href },
 ];
 
 export function DemoShowcase() {

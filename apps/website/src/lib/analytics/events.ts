@@ -87,7 +87,7 @@ export type CtaId =
   | `final_cta_${string}`
   | `home_demo_${string}`;
 
-export type AnalyticsLibrary = 'langgraph' | 'render' | 'chat' | 'unknown';
+export type AnalyticsLibrary = 'langgraph' | 'render' | 'chat' | 'ag-ui' | 'unknown';
 
 export type WhitepaperId = 'overview' | 'angular' | 'render' | 'chat';
 
