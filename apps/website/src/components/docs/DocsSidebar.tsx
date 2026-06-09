@@ -217,6 +217,17 @@ export function DocsSidebar({ activeLibrary, activeSection, activeSlug }: Props)
 
       <LibraryDropdown activeLibrary={activeLibrary} />
 
+      {libConfig?.demoUrl && (
+        <div className="px-4 mb-4">
+          <a href={libConfig.demoUrl} target="_blank" rel="noopener noreferrer"
+            className="w-full text-left px-3 py-2 rounded-lg text-sm flex items-center justify-between"
+            style={{ background: tokens.colors.accentSurface, color: tokens.colors.accent, border: `1px solid ${tokens.surfaces.border}`, textDecoration: 'none', fontWeight: 600 }}>
+            <span>{libConfig.demoLabel ?? 'Live demo'}</span>
+            <span aria-hidden="true">↗</span>
+          </a>
+        </div>
+      )}
+
       {libConfig?.sections.map((section) => (
         <SectionGroup
           key={section.id}

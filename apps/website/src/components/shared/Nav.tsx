@@ -269,6 +269,13 @@ export function Nav() {
             {/* Docs content */}
             {(mobileTab === 'docs' && isDocsPage && currentLib) && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                {currentLib.demoUrl && (
+                  <a href={currentLib.demoUrl} target="_blank" rel="noopener noreferrer"
+                    onClick={() => { trackExternalLinkClick(currentLib.demoUrl!, { surface: 'mobile_nav', cta_id: `mobile_nav_docs_demo_${currentLib.id}`, cta_text: currentLib.demoLabel ?? 'Live demo' }); setOpen(false); }}
+                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px', borderRadius: 8, minHeight: 44, color: tokens.colors.accent, background: tokens.colors.accentSurface, textDecoration: 'none', fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>
+                    <span>{currentLib.demoLabel ?? 'Live demo'}</span><span aria-hidden="true">↗</span>
+                  </a>
+                )}
                 {currentLib.sections.map((section) => {
                   return (
                     <div key={section.id}>

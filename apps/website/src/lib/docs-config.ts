@@ -24,6 +24,10 @@ export interface DocsLibrary {
   id: LibraryId;
   title: string;
   description: string;
+  /** Optional external live-demo URL, surfaced contextually in docs nav. */
+  demoUrl?: string;
+  /** Optional label override for the demo link. Defaults to 'Live demo'. */
+  demoLabel?: string;
   sections: DocsSection[];
 }
 
@@ -224,6 +228,7 @@ export const docsConfig: DocsLibrary[] = [
     id: 'ag-ui',
     title: 'AG-UI',
     description: 'Adapter for any AG-UI-compatible backend (CrewAI, Mastra, Microsoft AF, AG2, Pydantic AI, AWS Strands, CopilotKit runtime)',
+    demoUrl: 'https://ag-ui.threadplane.ai',
     sections: [
       {
         title: 'Getting Started',
