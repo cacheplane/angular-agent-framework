@@ -104,6 +104,8 @@ surface rendering — token-by-token, as the backend streams `a2ui-partial`
 events — matching the LangGraph adapter. Without it, a2ui still renders from
 the final tool-call surface; with it, surfaces build up live.
 
+The consuming side — how the chat composition turns these events into rendered surfaces — lives in chat's [A2UI overview](/docs/chat/a2ui/overview).
+
 ## Provider choices
 
 Use `provideAgent()` when you have a real AG-UI HTTP endpoint.
@@ -117,7 +119,34 @@ provideAgent({
 });
 ```
 
-The config maps directly to the AG-UI `HttpAgent` options currently exposed by this package: `url`, `agentId`, `threadId`, and `headers`.
+The config maps to the AG-UI `HttpAgent` options exposed by this package, plus an optional telemetry sink:
+
+| Option | Type | Description |
+|---|---|---|
+| `url` | `string` | **Required.** AG-UI backend HTTP/SSE endpoint. |
+| `agentId` | `string` | Optional. Identifies a specific agent on the backend. |
+| `threadId` | `string` | Optional. Resume an existing conversation thread. |
+| `headers` | `Record<string, string>` | Optional. Custom request headers (auth, tracing). |
+| `telemetry` | `AgentRuntimeTelemetrySink \| false` | Optional. App-owned telemetry sink — opt-in, emits nothing unless supplied. See [`@threadplane/telemetry`](/docs/telemetry/getting-started/introduction). |
+
+### Factory config for route params and DI
+
+`provideAgent()` also accepts a `() => AgentConfig` factory. The factory runs inside an Angular injection context, so it can call `inject()` to read services or route params when it builds the config:
+
+```ts
+import { inject } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
+import { provideAgent } from '@threadplane/ag-ui';
+
+providers: [
+  provideAgent(() => ({
+    url: '/api/agent',
+    threadId: inject(ActivatedRoute).snapshot.params['threadId'],
+  })),
+];
+```
+
+This is the cleanest way to derive `threadId` (or auth headers) from runtime state at construction time — see the threadId-recreation note below.
 
 `threadId` here is a plain string consumed once at construction — the provider does not accept an Angular Signal, and the adapter does not observe changes to it at runtime. The AG-UI protocol carries events, not snapshots, and defines no server-side endpoint for "fetch the messages of thread X". To move a user between threads with their prior conversation restored, you have two options:
 

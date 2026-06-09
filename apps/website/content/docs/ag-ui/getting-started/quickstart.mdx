@@ -76,6 +76,10 @@ For me, the runtime-neutral `Agent` contract is the whole payoff: your component
 So swapping backends is a one-line change in `app.config.ts`, and the component code stays the same:
 
 ```diff
+- import { provideAgent } from '@threadplane/langgraph';
 - providers: [provideAgent({ apiUrl: '...' })],   // LangGraph
++ import { provideAgent } from '@threadplane/ag-ui';
 + providers: [provideAgent({ url: '...' })],  // AG-UI
 ```
+
+These are two different `provideAgent` functions from two different packages — the import source changes along with the config key (`apiUrl` for LangGraph, `url` for AG-UI). It's not one symbol that accepts both.

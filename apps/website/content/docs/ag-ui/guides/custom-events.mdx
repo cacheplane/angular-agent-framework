@@ -1,6 +1,6 @@
 # Custom Events
 
-AG-UI `CUSTOM` events let a backend node push arbitrary data to the Angular client while a run is in progress. The adapter accumulates these events into the `customEvents` signal on the `AgUiAgent` returned by `injectAgent()`.
+AG-UI `CUSTOM` events let a backend node push arbitrary data to the Angular client while a run is in progress. The adapter accumulates these events into a `customEvents` signal. That signal lives on the widened `AgUiAgent` type — `injectAgent()` returns the neutral `Agent`, so you cast its result to `AgUiAgent` to reach `customEvents` (shown in [Reading Custom Events](#reading-custom-events-in-angular) below).
 
 ```ts
 interface CustomStreamEvent {
@@ -122,7 +122,7 @@ export class AnalysisComponent {
 Both patterns are zoneless-safe: Angular's signal graph tracks the `customEvents()` read and re-evaluates the derived value automatically.
 
 <Callout type="info" title="Live a2ui rendering">
-`customEvents` is the mechanism the chat composition uses for progressive a2ui surface updates — partial argument events accumulate here during a tool call and drive live rendering before the call completes. If you are building a custom a2ui integration over AG-UI, read `agent.customEvents()` the same way.
+`customEvents` is the mechanism the chat composition uses for progressive a2ui surface updates — partial argument events accumulate here during a tool call and drive live rendering before the call completes. The consuming side is documented in chat's [A2UI overview](/docs/chat/a2ui/overview). If you are building a custom a2ui integration over AG-UI, read `agent.customEvents()` the same way.
 </Callout>
 
 ## Relation to Interrupts
