@@ -268,6 +268,17 @@ export const docsConfig: DocsLibrary[] = [
           { title: 'Event Mapping', slug: 'event-mapping', section: 'reference' },
         ],
       },
+      {
+        title: 'API Reference',
+        id: 'api',
+        color: 'blue',
+        pages: [
+          { title: 'provideAgent()', slug: 'provide-agent', section: 'api' },
+          { title: 'injectAgent()', slug: 'inject-agent', section: 'api' },
+          { title: 'toAgent()', slug: 'to-agent', section: 'api' },
+          { title: 'FakeAgent', slug: 'fake-agent', section: 'api' },
+        ],
+      },
     ],
   },
   {

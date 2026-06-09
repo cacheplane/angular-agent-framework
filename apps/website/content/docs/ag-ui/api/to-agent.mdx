@@ -1,0 +1,80 @@
+# toAgent()
+
+`toAgent()` is the lower-level adapter function that wraps a raw AG-UI `AbstractAgent` into the runtime-neutral `Agent` contract used by `@threadplane/chat` components.
+
+```ts
+toAgent(source: AbstractAgent, options?: ToAgentOptions): AgUiAgent
+```
+
+Most applications should use [`provideAgent()`](/docs/ag-ui/api/provide-agent) instead — it constructs the `HttpAgent` source and calls `toAgent()` internally. Reach for `toAgent()` directly when you instantiate or customize the `AbstractAgent` yourself, for example to integrate a non-HTTP AG-UI transport.
+
+```ts
+import { HttpAgent } from '@ag-ui/client';
+import { toAgent } from '@threadplane/ag-ui';
+
+const source = new HttpAgent({ url: 'http://localhost:8000/my-agent' });
+const agent = toAgent(source, { telemetry: myTelemetrySink });
+```
+
+## ToAgentOptions
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `telemetry` | `AgentRuntimeTelemetrySink \| false` | Optional app-owned telemetry sink. No telemetry is emitted unless this is provided. |
+
+## AgUiAgent
+
+`toAgent()` returns an `AgUiAgent`, which extends the neutral `Agent` contract with one additional signal:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `customEvents()` | `Signal<CustomStreamEvent[]>` | Custom events accumulated during a run. Resets at the start of each new run. |
+
+The standard `Agent` signals (`messages`, `status`, `isLoading`, `error`, `toolCalls`, `state`, `interrupt`) and actions (`submit`, `stop`, `regenerate`) are all present.
+
+## CustomStreamEvent
+
+`CustomStreamEvent` is the element type of `AgUiAgent.customEvents`:
+
+```ts
+interface CustomStreamEvent {
+  /** Event name set by the backend (e.g. 'a2ui-partial', 'state_update'). */
+  name: string;
+  /** Arbitrary payload from the backend (JSON-string values are parsed). */
+  data: unknown;
+}
+```
+
+Custom events are surfaced from AG-UI `CUSTOM` protocol events whose `name` is not `on_interrupt`. The `on_interrupt` event is routed to the `interrupt` signal instead.
+
+## Lifecycle note
+
+The returned `AgUiAgent` does not manage its own lifetime. When using DI via `provideAgent()`, the provider's destroy hook handles cleanup. When calling `toAgent()` directly, treat the returned agent's lifecycle as tied to the `AbstractAgent` instance you constructed.
+
+## What's Next
+
+<CardGroup cols={3}>
+  <Card
+    title="provideAgent() API"
+    icon="settings"
+    href="/docs/ag-ui/api/provide-agent"
+  >
+    The DI-friendly wrapper around `toAgent()` for most Angular apps.
+  </Card>
+  <Card
+    title="Architecture"
+    icon="diagram"
+    href="/docs/ag-ui/concepts/architecture"
+  >
+    How the AG-UI adapter fits into the broader `@threadplane/chat` design.
+  </Card>
+  <Card
+    title="Event Mapping"
+    icon="list"
+    href="/docs/ag-ui/reference/event-mapping"
+  >
+    Which AG-UI protocol events map to which signals and actions.
+  </Card>
+</CardGroup>
+
+{/* Auto-rendered from api-docs.json — see page component */}

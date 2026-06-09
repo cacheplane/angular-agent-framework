@@ -1,0 +1,112 @@
+# injectAgent()
+
+`injectAgent()` retrieves the AG-UI agent from Angular's dependency injection container. Call it in an Angular injection context — typically as a component field initializer. The returned object exposes Angular Signals for reactive UI state and async methods for user actions.
+
+Configuration is supplied globally via `provideAgent({...})` — `injectAgent()` itself takes no arguments.
+
+```ts
+import { injectAgent } from '@threadplane/ag-ui';
+
+readonly chat = injectAgent();
+
+await this.chat.submit({ message: 'Hello' });
+```
+
+Pair it with `provideAgent()` at bootstrap to configure the agent endpoint:
+
+```ts
+import { bootstrapApplication } from '@angular/platform-browser';
+import { provideAgent } from '@threadplane/ag-ui';
+import { AppComponent } from './app/app.component';
+
+bootstrapApplication(AppComponent, {
+  providers: [
+    provideAgent({ url: 'http://localhost:8000/my-agent' }),
+  ],
+});
+```
+
+## Runtime-neutral surface
+
+These fields are stable across runtime adapters and are what chat components consume.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `messages()` | `Message[]` | Chat messages with `role`, `content`, optional `toolCallIds`, citations, and reasoning. |
+| `status()` | `'idle' \| 'running' \| 'error'` | UI lifecycle status. |
+| `isLoading()` | `boolean` | Convenience signal for active streaming. |
+| `error()` | `unknown` | Latest runtime error, when present. |
+| `toolCalls()` | `ToolCall[]` | Tool calls projected into the chat contract. |
+| `state()` | `Record<string, unknown>` | Latest agent state projected as a plain object. |
+| `interrupt()` | `AgentInterrupt \| undefined` | Current interrupt, when the backend pauses for human input. |
+| `submit(input, opts?)` | `Promise<void>` | Submit a user message or resume payload. |
+| `stop()` | `Promise<void>` | Abort the active run. |
+| `regenerate(index)` | `Promise<void>` | Remove the assistant message at `index` and rerun from the preceding user message. |
+
+## AG-UI-specific surface
+
+The AG-UI adapter extends the neutral `Agent` contract with one additional signal:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `customEvents()` | `CustomStreamEvent[]` | Custom events emitted by the backend during a run. Accumulates per run; resets on each new `submit()`. |
+
+The chat a2ui bridge reads `customEvents` to light up live generative-UI streaming when your backend emits `a2ui-partial` events. See the [Custom Events guide](/docs/ag-ui/guides/custom-events) for backend wiring details.
+
+## Submit and resume
+
+Use the runtime-neutral submit shape for normal chat input:
+
+```ts
+await chat.submit({ message: 'Summarize this document' });
+```
+
+Resume an interrupt by passing a `resume` payload:
+
+```ts
+await chat.submit({ resume: { approved: true } });
+```
+
+## Regenerate semantics
+
+`regenerate(assistantMessageIndex)` has replace semantics: it keeps the user message before the selected assistant message, removes the selected assistant message and all later messages, syncs the rollback to the AG-UI source, then reruns with no new user message appended.
+
+```ts
+await chat.regenerate(3);
+```
+
+The method throws when the selected index is not an assistant message, when no preceding user message exists, or while another response is already loading.
+
+<Callout type="warning" title="Injection context required">
+  `injectAgent()` must be called during construction, inside an injection context
+  (e.g. a component constructor, field initializer, or a function passed to
+  `runInInjectionContext`). Calling it outside an injection context will throw.
+</Callout>
+
+## What's Next
+
+<CardGroup cols={3}>
+  <Card
+    title="provideAgent() API"
+    icon="settings"
+    href="/docs/ag-ui/api/provide-agent"
+  >
+    Configure the endpoint URL, headers, and telemetry for the agent provider.
+  </Card>
+  <Card
+    title="Custom Events guide"
+    icon="wave-sine"
+    href="/docs/ag-ui/guides/custom-events"
+  >
+    Wire `customEvents` to live generative-UI streaming from any AG-UI backend.
+  </Card>
+  <Card
+    title="Testing guide"
+    icon="flask"
+    href="/docs/ag-ui/guides/testing"
+  >
+    Test components that call `injectAgent()` with the in-process FakeAgent.
+  </Card>
+</CardGroup>
+
+{/* Auto-rendered from api-docs.json — see page component */}
