@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 import { Type } from '@angular/core';
 import type { Spec, StateStore, ComputedFunction } from '@json-render/core';
+import type { StandardSchemaV1 } from './standard-schema';
 
 export interface AngularComponentInputs {
   /** Two-way binding paths: prop name → absolute state path */
@@ -30,6 +31,13 @@ export type AngularComponentRenderer = Type<unknown>;
 export interface RenderViewEntry {
   component: Type<unknown>;
   fallback?: Type<unknown>;
+  /** Optional props contract for this component (Zod/Valibot/ArkType via
+   * Standard Schema). Carried + exposed by the render lib but NOT enforced
+   * on mount; consumers (e.g. client-tools) read it to advertise the
+   * component to a model and to validate incoming props. */
+  schema?: StandardSchemaV1;
+  /** Optional human/model-facing description of what this component renders. */
+  description?: string;
 }
 
 export interface AngularRegistry {

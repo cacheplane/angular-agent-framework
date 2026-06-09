@@ -7,6 +7,7 @@ export type {
   AngularRegistry,
   RenderConfig,
 } from './lib/render.types';
+export type { StandardSchemaV1 } from './lib/standard-schema';
 
 // Contexts
 export { RENDER_CONTEXT } from './lib/contexts/render-context';
