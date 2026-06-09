@@ -255,7 +255,7 @@ Combine forking with new input to explore how the agent would have responded dif
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ReplayComponent {
-  readonly agent = inject(AgentService).agent;
+  protected readonly agent = injectAgent<AgentState>();
 
   readonly history = computed(() => this.agent.history());
   readonly rawHistory = computed(() => this.agent.langGraphHistory());

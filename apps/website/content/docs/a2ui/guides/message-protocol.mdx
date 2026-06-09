@@ -80,6 +80,14 @@ Sets data for a surface. `contents` is an array of typed entries — each has a 
 {"dataModelUpdate":{"surfaceId":"booking","contents":[{"key":"origin","valueString":"LAX"},{"key":"dest","valueString":"JFK"},{"key":"passengers","valueNumber":1}]}}
 ```
 
+`valueMap` nests. An entry whose value is a `valueMap` holds its own array of entries, which reduce to a nested object. And the envelope's optional top-level `path` scopes where the whole batch lands:
+
+```json
+{"dataModelUpdate":{"surfaceId":"booking","path":"/customer","contents":[{"key":"name","valueString":"Ada"},{"key":"address","valueMap":[{"key":"city","valueString":"London"}]}]}}
+```
+
+That reduces to `{ customer: { name: 'Ada', address: { city: 'London' } } }` — the `valueMap` becomes the nested `address` object, and `path: '/customer'` nests the batch under `customer`. The [data model guide](/docs/a2ui/guides/data-model#from-contents-to-model) shows the reducer that walks these entries.
+
 ### `beginRendering`
 
 Names the `root` component id for the surface — the entry point the renderer mounts. It may also carry `styles` (`font`, `primaryColor`).
@@ -111,7 +119,7 @@ Two details are worth pinning down, because the inbound and outbound shapes diff
 - **Context flips from list to map.** The inbound Button's `action.context` is a *list* of `{ key, value }` entries, where each `value` is still a dynamic value (often a `{ path }`). The outbound message's `action.context` is a *map* keyed by those keys, with each value already a wrapped literal — the path references resolved against the current model and re-wrapped (here `{ path: '/origin' }` became `{ literalString: 'LAX' }`).
 - **`label` is derived.** It comes from the source component's authored text — for a Button-with-Text-child, the child Text's literal string ("Search flights"). It's optional; the transcript renderer uses it to label the user bubble, and backends may ignore it.
 
-The client's current data model is only attached as `metadata.a2uiClientDataModel` when the surface opts in. It's omitted otherwise.
+The client's current data model is only attached as `metadata.a2uiClientDataModel` when the surface opts in. It's omitted otherwise. When present, it's an `A2uiClientDataModel` — `{ version: 'v1', surfaces: Record<surfaceId, Record<string, unknown>> }`, the per-surface model keyed by `surfaceId`. See [the schema reference](/docs/a2ui/reference/schema#outbound-action-messages) for the full outbound shape.
 
 ## Relationship to Google's A2UI
 

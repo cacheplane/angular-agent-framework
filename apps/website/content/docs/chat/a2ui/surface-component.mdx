@@ -14,16 +14,24 @@ import { A2uiSurfaceComponent } from '@threadplane/chat';
 
 | Input | Type | Required | Description |
 |-------|------|----------|-------------|
-| `surface` | `A2uiSurface` | Yes | The surface to render |
-| `catalog` | `ViewRegistry` | Yes | Component registry used to resolve A2UI type names to Angular components |
+| `surface` | `A2uiSurface` | No* | The surface to render (legacy input shape) |
+| `state` | `A2uiSurfaceState` | No* | Chat-side surface state driving progressive rendering. Preferred over `surface`; takes priority when both are set |
+| `catalog` | `A2uiViews \| ViewRegistry` | Yes | Component registry used to resolve A2UI type names to Angular components |
+| `handlers` | `Record<string, (params) => unknown \| Promise<unknown>>` | No | Consumer A2UI action handlers for `a2ui:localAction`. Merged with the built-in `a2ui:event` / `a2ui:localAction` handlers; consumer handlers take priority |
+| `surfaceFallback` | `Type<unknown> \| undefined` | No | Component mounted while no `root` component has arrived yet (instead of rendering nothing) |
+
+<Callout type="info" title="Provide one of surface or state">
+`surface` and `state` are both optional individually, but the component needs one of them to render. `state` is the preferred progressive-rendering path; `surface` is the legacy shape.
+</Callout>
 
 ## Outputs
 
 | Output | Type | Description |
 |--------|------|-------------|
 | `events` | `RenderEvent` | Emits render events from the underlying `RenderSpecComponent` -- handler execution, state changes, and lifecycle signals |
+| `action` | `A2uiActionMessage` | Emits an agent-bound action message when an A2UI `event` action fires. Forward it to your agent (e.g. `agent.submit`) to resume the agent loop |
 
-The `events` output forwards all `RenderEvent` emissions from the render engine. This includes events triggered by the default A2UI handlers (`a2ui:event` and `a2ui:localAction`) as well as any state change or lifecycle events.
+The `events` output forwards all `RenderEvent` emissions from the render engine. This includes events triggered by the default A2UI handlers (`a2ui:event` and `a2ui:localAction`) as well as any state change or lifecycle events. The `action` output is the agent-bound path: when a surface's `event` action fires, the component builds an `A2uiActionMessage` and emits it here so you can send it back to the agent.
 
 ## How It Works
 
@@ -89,6 +97,57 @@ export class AgentPanelComponent {
 <Callout type="info" title="Root component required">
 The surface must contain a component with `id: 'root'`. If no root component has been received yet (for example, while the agent is still streaming), `A2uiSurfaceComponent` renders nothing until one arrives.
 </Callout>
+
+### Wiring handlers and actions
+
+The example above renders a surface but ignores interaction. To run client-owned behavior and forward agent-bound events, pass `[handlers]` and bind `(action)` / `(events)`. Consumer handlers run for `a2ui:localAction`; the `(action)` output carries the agent-bound `A2uiActionMessage`.
+
+```typescript
+import { Component, inject, signal } from '@angular/core';
+import { Router } from '@angular/router';
+import { A2uiSurfaceComponent, a2uiBasicCatalog } from '@threadplane/chat';
+import { injectAgent } from '@threadplane/langgraph';
+import type { A2uiActionMessage, A2uiSurface } from '@threadplane/chat';
+import type { RenderEvent } from '@threadplane/render';
+
+@Component({
+  selector: 'app-interactive-surface',
+  standalone: true,
+  imports: [A2uiSurfaceComponent],
+  template: `
+    <a2ui-surface
+      [surface]="surface()"
+      [catalog]="catalog"
+      [handlers]="handlers"
+      (action)="sendToAgent($event)"
+      (events)="onEvent($event)"
+    />
+  `,
+})
+export class InteractiveSurfaceComponent {
+  private readonly router = inject(Router);
+  private readonly agent = injectAgent();
+
+  readonly catalog = a2uiBasicCatalog();
+  readonly surface = signal<A2uiSurface | undefined>(undefined);
+
+  // Client-owned local actions (a2ui:localAction).
+  readonly handlers = {
+    openDetails: async (args: Record<string, unknown>) => {
+      await this.router.navigate(['/orders', args['orderId']]);
+    },
+  };
+
+  // Agent-bound action: forward it back to the agent loop.
+  sendToAgent(message: A2uiActionMessage) {
+    this.agent.submit({ resume: message });
+  }
+
+  onEvent(event: RenderEvent) {
+    console.log('render event', event);
+  }
+}
+```
 
 ## surfaceToSpec()
 

@@ -1,5 +1,27 @@
 # Changelog
 
+<Callout type="info" title="Highlight releases only">
+This changelog tracks selected highlight releases, not every patch. The published package is at `0.0.49` — see the entry below for the notable additions since `0.0.19`.
+</Callout>
+
+## 0.0.49
+
+### Citations
+
+- New `<chat-citations>` primitive renders a message's `citations` list, with `chatCitationCardTemplate` for per-citation card customization and `CitationsResolverService` for resolving `[^id]` markers against the citation list. Adapters populate `Message.citations`; `@threadplane/langgraph` exposes `extractCitations()`.
+
+### A2UI
+
+- New A2UI surface rendering: `<a2ui-surface>` plus the `a2uiBasicCatalog` of catalog components (text field, checkbox, button, multiple choice, slider, date/time, card, row, column, list, modal, tabs, and more) for agent-driven generative UI. Compose custom catalogs with `withViews`.
+
+### Layout compositions
+
+- New layout compositions: `<chat-sidenav>` (collapsible side panel), `<chat-popup>` (floating launcher), and `<chat-sidebar>` (docked rail). See [Layout Modes](/docs/chat/guides/layout-modes).
+
+### Agent contract
+
+- New `regenerate(assistantMessageIndex)` action on the `Agent` contract. Discards the assistant message at the given index and everything after it, then re-runs against the preceding user message. Surfaced as the `(regenerate)` output on `<chat>`.
+
 ## 0.0.19
 
 ### Reasoning
