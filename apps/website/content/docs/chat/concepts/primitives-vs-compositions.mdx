@@ -56,7 +56,21 @@ import { ChatDebugComponent } from '@threadplane/chat/debug';
 
 Use `chat-debug` when you need timeline and state inspection while building. Don't treat it as a customer-facing control surface unless you intentionally design around that.
 
-If you use `<chat-sidenav>`, pass `[agent]="agent"` and `[debug]="true"` to get the built-in footer launcher instead of adding a separate floating debug button.
+Three more compositions wrap `<chat>` in a layout shell. Each takes `[agent]` and forwards the rest of the `<chat>` inputs:
+
+- `<chat-sidenav>` — a collapsible side panel with a built-in footer launcher.
+- `<chat-popup>` — a floating launcher button that opens chat in an overlay.
+- `<chat-sidebar>` — a docked rail pinned to the edge of the viewport.
+
+```ts
+import {
+  ChatSidenavComponent,
+  ChatPopupComponent,
+  ChatSidebarComponent,
+} from '@threadplane/chat';
+```
+
+See the [Layout Modes](/docs/chat/guides/layout-modes) guide for when to reach for each. If you use `<chat-sidenav>`, pass `[agent]="agent"` and `[debug]="true"` to get the built-in footer launcher instead of adding a separate floating debug button.
 
 ## Primitives
 
