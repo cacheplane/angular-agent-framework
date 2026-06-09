@@ -180,6 +180,58 @@ const spec: Spec = {
 </Step>
 </Steps>
 
+## Testing Rendered Output
+
+Because `signalStateStore()` is a plain factory and `RenderSpecComponent` is a standard standalone component, you can test the full render path in `TestBed` with no server and no LLM. Build a spec, mount `<render-spec>` with a store you control, mutate the store, and assert the projected component updated.
+
+This spec renders a `Text` component bound to `/message`, then checks that writing the store re-renders it:
+
+```typescript
+import { Component, input } from '@angular/core';
+import { TestBed } from '@angular/core/testing';
+import { RenderSpecComponent, defineAngularRegistry, signalStateStore } from '@threadplane/render';
+import type { Spec } from '@json-render/core';
+
+@Component({
+  selector: 'app-text',
+  standalone: true,
+  template: `<span data-testid="text">{{ label() }}</span>`,
+})
+class TextComponent {
+  readonly label = input<string>('');
+}
+
+describe('render output', () => {
+  it('re-renders when the store changes', () => {
+    const spec: Spec = {
+      root: 'msg',
+      elements: {
+        msg: { type: 'Text', props: { label: { $state: '/message' } } },
+      },
+    };
+    const store = signalStateStore({ message: 'hello' });
+    const registry = defineAngularRegistry({ Text: TextComponent });
+
+    const fixture = TestBed.createComponent(RenderSpecComponent);
+    fixture.componentRef.setInput('spec', spec);
+    fixture.componentRef.setInput('registry', registry);
+    fixture.componentRef.setInput('store', store);
+    fixture.detectChanges();
+
+    const span = (): HTMLElement =>
+      fixture.nativeElement.querySelector('[data-testid="text"]');
+    expect(span().textContent?.trim()).toBe('hello');
+
+    store.set('/message', 'updated');
+    fixture.detectChanges();
+    expect(span().textContent?.trim()).toBe('updated');
+    expect(store.get('/message')).toBe('updated');
+  });
+});
+```
+
+The same pattern covers handlers (assert the store after the rendered component calls `emit`), visibility (toggle a `$state` flag and assert the element appears or disappears), and repeat loops (set an array and count the rendered rows).
+
 ## Next Steps
 
 <CardGroup cols={2}>

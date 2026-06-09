@@ -97,6 +97,10 @@ export class OrchestratorComponent {
 </Tab>
 </Tabs>
 
+<Callout type="info" title="State type parameters">
+`OrchestratorState` and `PipelineState` below are placeholders for your own graph's state schema — the shape your subgraph's `StateGraph` produces. They mirror the Python state the same way `ChatState` does on the [State Management](/docs/langgraph/concepts/state-management) page. A `messages`-only graph is just `injectAgent<{ messages: BaseMessage[] }>()`.
+</Callout>
+
 ## Tracking delegated subagent execution
 
 The `subagents()` signal contains a Map of active delegated subagent streams. Use it when your graph delegates through tool calls, such as Deep Agents' default `task` tool or your own delegation tools. Plain subgraph nodes do not appear in this map.
@@ -192,7 +196,8 @@ Render live progress for each subagent using the signals above.
 <Tabs>
 <Tab label="progress-panel.component.ts">
 ```typescript
-import { Component, computed, inject, ChangeDetectionStrategy } from '@angular/core';
+import { Component, computed, ChangeDetectionStrategy } from '@angular/core';
+import { injectAgent } from '@threadplane/langgraph';
 
 @Component({
   selector: 'app-subagent-progress',
@@ -200,7 +205,7 @@ import { Component, computed, inject, ChangeDetectionStrategy } from '@angular/c
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SubagentProgressComponent {
-  orchestrator = inject(OrchestratorService).resource;
+  protected readonly orchestrator = injectAgent<OrchestratorState>();
 
   subagentEntries = computed(() =>
     [...this.orchestrator.subagents().entries()]

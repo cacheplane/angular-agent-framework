@@ -47,6 +47,22 @@ interface CustomStreamEvent {
 
 Custom events are surfaced from AG-UI `CUSTOM` protocol events whose `name` is not `on_interrupt`. The `on_interrupt` event is routed to the `interrupt` signal instead.
 
+Read the accumulated events after a run by calling the signal — inside an `effect`, it re-runs as new events arrive:
+
+```ts
+import { effect } from '@angular/core';
+import { HttpAgent } from '@ag-ui/client';
+import { toAgent } from '@threadplane/ag-ui';
+
+const agent = toAgent(new HttpAgent({ url: '/api/agent' }));
+
+effect(() => {
+  for (const e of agent.customEvents()) {
+    console.log(e.name, e.data);
+  }
+});
+```
+
 ## Lifecycle note
 
 The returned `AgUiAgent` does not manage its own lifetime. When using DI via `provideAgent()`, the provider's destroy hook handles cleanup. When calling `toAgent()` directly, treat the returned agent's lifecycle as tied to the `AbstractAgent` instance you constructed.

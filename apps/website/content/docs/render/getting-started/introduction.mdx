@@ -60,6 +60,8 @@ const registry = defineAngularRegistry({
 });
 ```
 
+`defineAngularRegistry()` is the canonical constructor for driving `<render-spec>` directly. When you wire components into `@threadplane/chat` instead, you'll see `views()` -- a chat-facing helper that produces a `ViewRegistry` chat converts to this same registry internally. Reach for `defineAngularRegistry()` here; reach for `views()` when feeding a chat catalog.
+
 ### State Store
 
 The **state store** holds the reactive state that drives your UI. Values are accessed via JSON Pointer paths (like `/user/name`). The library provides `signalStateStore()`, which uses Angular Signals internally so that state changes trigger change detection automatically.

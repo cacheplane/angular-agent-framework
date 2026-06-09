@@ -34,6 +34,39 @@ The endpoint receives:
 
 The browser distinct ID is generated per service instance. The source never writes it to storage.
 
+### Handle the endpoint
+
+`endpoint` only POSTs the payload above — your app owns the route that receives it. A minimal handler reads `{ event, distinctId, properties }` and forwards or stores it. Here's a Node-style handler (the same shape works in an Express route, an Angular SSR server route, or any framework API route):
+
+```ts
+import type { IncomingMessage, ServerResponse } from 'node:http';
+
+interface TelemetryRequest {
+  event: string;
+  distinctId: string;
+  properties?: Record<string, unknown>;
+}
+
+export async function handleTelemetry(req: IncomingMessage, res: ServerResponse): Promise<void> {
+  const chunks: Buffer[] = [];
+  for await (const chunk of req) chunks.push(chunk as Buffer);
+  const { event, distinctId, properties } = JSON.parse(Buffer.concat(chunks).toString()) as TelemetryRequest;
+
+  // Forward to your analytics backend, or store the row. Keep it off the
+  // request's critical path — the browser uses keepalive and ignores the response.
+  await fetch('https://example-analytics.invalid/track', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ event, distinctId, properties }),
+  });
+
+  res.statusCode = 204;
+  res.end();
+}
+```
+
+The browser POST sets `keepalive: true` and ignores the response body, so return a fast `204` and do any slow work asynchronously.
+
 ## Prefer a sink for app-owned analytics
 
 Use `sink` when your app already has an analytics boundary.
@@ -48,6 +81,56 @@ provideThreadplaneTelemetry({
 ```
 
 When `sink` is present, the service skips `endpoint` and PostHog entirely.
+
+## Wire the runtime to telemetry
+
+You rarely call the capture methods by hand. The agent runtime emits the stream and runtime-lifecycle events for you — you just hand it a sink. `provideAgent()` (from `@threadplane/langgraph`) takes a `telemetry?: AgentRuntimeTelemetrySink | false` option. No telemetry is emitted unless you pass a sink; pass `false` to disable it explicitly.
+
+The canonical pattern bridges that runtime sink into `ThreadplaneTelemetryService.capture()`, so runtime events flow through the same `sink`/`endpoint` config you set up above. This mirrors `createCanonicalDemoRuntimeTelemetrySink` in the chat example app — it strips conversational fields and stamps on a surface tag before forwarding:
+
+```ts
+import type {
+  AgentRuntimeTelemetryEvent,
+  AgentRuntimeTelemetrySink,
+} from '@threadplane/chat';
+import type { ThreadplaneTelemetryService } from '@threadplane/telemetry/browser';
+
+// Never forward conversational payloads through telemetry.
+const BLOCKED_PROPERTY_KEYS = new Set(['messages', 'threadId', 'assistantId', 'apiUrl']);
+
+export function createRuntimeTelemetrySink(
+  telemetry: Pick<ThreadplaneTelemetryService, 'capture'>,
+  surface: string,
+): AgentRuntimeTelemetrySink {
+  return ({ event, properties }) => {
+    const safeProperties: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(properties ?? {})) {
+      if (!BLOCKED_PROPERTY_KEYS.has(key)) safeProperties[key] = value;
+    }
+    return telemetry.capture(event as AgentRuntimeTelemetryEvent, {
+      ...safeProperties,
+      surface,
+    });
+  };
+}
+```
+
+Then pass the bridged sink to `provideAgent()`. Use the factory form (`provideAgent(() => ...)`) so `inject()` runs once inside the provider's injection context — calling `inject()` lazily inside the per-event sink callback throws `NG0203`, because the runtime fires those events outside any injection context:
+
+```ts
+import { inject } from '@angular/core';
+import { provideAgent } from '@threadplane/langgraph';
+import { ThreadplaneTelemetryService } from '@threadplane/telemetry/browser';
+import { createRuntimeTelemetrySink } from './runtime-telemetry';
+
+provideAgent(() => ({
+  apiUrl: 'http://localhost:2024',
+  assistantId: 'chat',
+  telemetry: createRuntimeTelemetrySink(inject(ThreadplaneTelemetryService), 'my_app'),
+}));
+```
+
+Now `ngaf:stream_started`, `ngaf:stream_ended`, and the other runtime events reach your sink or endpoint automatically — no per-event `capture()` call in your component.
 
 ## Sampling
 
@@ -84,6 +167,60 @@ telemetry.captureStreamErrored({ transport: 'langgraph', provider: 'openai', mod
 ```
 
 `captureStreamErrored()` sends `errorClass`, not the raw error object.
+
+## End-to-end example
+
+Here's the whole path firing in one place: a `sink` wired in `app.config.ts`, a component that injects `ThreadplaneTelemetryService` and calls a capture method on a click, and the sink logging the resulting `{ event, properties }`.
+
+```ts
+// app.config.ts
+import type { ApplicationConfig } from '@angular/core';
+import { provideThreadplaneTelemetry } from '@threadplane/telemetry/browser';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideThreadplaneTelemetry({
+      enabled: true,
+      // The sink receives every captured event. Here we just log it.
+      sink: ({ event, properties }) => {
+        console.log('telemetry', event, properties);
+      },
+    }),
+  ],
+};
+```
+
+```ts
+// telemetry-demo.component.ts
+import { Component, inject } from '@angular/core';
+import { ThreadplaneTelemetryService } from '@threadplane/telemetry/browser';
+
+@Component({
+  selector: 'app-telemetry-demo',
+  standalone: true,
+  template: `<button type="button" (click)="onStart()">Start stream</button>`,
+})
+export class TelemetryDemoComponent {
+  private readonly telemetry = inject(ThreadplaneTelemetryService);
+
+  onStart(): void {
+    // Returns a Promise; capture failures are swallowed, so no need to await.
+    void this.telemetry.captureStreamStarted({
+      transport: 'langgraph',
+      provider: 'openai',
+      model: 'gpt-4.1',
+    });
+  }
+}
+```
+
+Clicking the button logs:
+
+```text
+telemetry ngaf:stream_started { transport: 'langgraph', provider: 'openai', model: 'gpt-4.1', sample_weight: 1 }
+```
+
+`sample_weight` is added by the service from `sampleRate` (default `1`). In production you'd point `sink` at your analytics boundary instead of `console.log`, or use `endpoint` and the handler above.
 
 ## Delivery failures
 

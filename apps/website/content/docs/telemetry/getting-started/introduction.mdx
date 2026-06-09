@@ -48,3 +48,10 @@ Node capture failures return a failure result or are swallowed by adapter helper
 The source does not contain content capture for prompts, completions, tool inputs, or tool outputs. It also does not persist browser IDs to local storage or cookies.
 
 It does collect runtime metadata when the corresponding Node or browser capture APIs are called. Keep event properties short, operational, and free of application data.
+
+## Next steps
+
+- [Browser Telemetry](/docs/telemetry/guides/browser) - wire `provideThreadplaneTelemetry()` and bridge the agent runtime into a sink.
+- [Node Telemetry](/docs/telemetry/guides/node) - capture helpers for package lifecycle and server adapters.
+- [Privacy and opt-out](/docs/telemetry/guides/privacy-and-opt-out) - what's collected and how to turn it off.
+- [Events](/docs/telemetry/reference/events) - the event names and property shapes emitted by each surface.
