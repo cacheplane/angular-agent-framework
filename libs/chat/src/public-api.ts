@@ -205,6 +205,12 @@ export type {
 } from '@threadplane/a2ui';
 export { isPathRef, isLiteralString, isLiteralNumber, isLiteralBoolean } from '@threadplane/a2ui';
 
+// Client tools (declaration API — tools/action/view/ask + JSON-schema derivation)
+export { tools, action, view, ask } from './lib/client-tools/tools';
+export { deriveJsonSchema } from './lib/client-tools/to-json-schema';
+export type { ClientToolDef, FunctionToolDef, ViewToolDef, AskToolDef, ClientToolRegistry } from './lib/client-tools/tool-def';
+export type { ClientToolSpec } from './lib/client-tools/to-json-schema';
+
 // Test utilities (no vitest dep — safe to ship in the main runtime bundle)
 export { mockAgent } from './lib/testing/mock-agent';
 export type { MockAgent, MockAgentOptions } from './lib/testing/mock-agent';
