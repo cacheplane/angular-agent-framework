@@ -10,17 +10,62 @@
 
 ---
 
-### Task 1: Add `@standard-schema/spec` and extend `RenderViewEntry`
+### Task 1: Vendor the Standard Schema type and extend `RenderViewEntry`
 
 **Files:**
-- Modify: `libs/render/package.json` (add dependency)
+- Create: `libs/render/src/lib/standard-schema.ts` (vendored types-only interface)
 - Modify: `libs/render/src/lib/render.types.ts:27-32` (RenderViewEntry)
+- Modify: `libs/render/src/public-api.ts` (export `StandardSchemaV1`)
 - Test: `libs/render/src/lib/views.spec.ts`
 
-- [ ] **Step 1: Add the types-only Standard Schema dependency**
+> **Do NOT run `npm install`.** This repo's `package-lock.json` must not be regenerated on macOS (it drops Linux `@next/swc-*` bindings and breaks CI). The Standard Schema spec interface is explicitly designed to be vendored — copy the type in rather than adding a dependency.
 
-Run: `npm install --save --workspace=libs/render @standard-schema/spec@^1.0.0`
-Expected: `@standard-schema/spec` appears under `dependencies` in `libs/render/package.json`. (Zero-runtime; types only.)
+- [ ] **Step 1: Vendor the Standard Schema interface**
+
+Create `libs/render/src/lib/standard-schema.ts`:
+
+```typescript
+// SPDX-License-Identifier: MIT
+// Vendored from the Standard Schema spec (https://standardschema.dev) — the
+// spec is published expressly to be copied in rather than depended on. Zero
+// runtime; types only. Lets a RenderViewEntry carry any spec-compliant
+// validator (Zod/Valibot/ArkType) without a package dependency.
+export interface StandardSchemaV1<Input = unknown, Output = Input> {
+  readonly '~standard': StandardSchemaV1.Props<Input, Output>;
+}
+
+export declare namespace StandardSchemaV1 {
+  export interface Props<Input = unknown, Output = Input> {
+    readonly version: 1;
+    readonly vendor: string;
+    readonly validate: (value: unknown) => Result<Output> | Promise<Result<Output>>;
+    readonly types?: Types<Input, Output> | undefined;
+  }
+  export type Result<Output> = SuccessResult<Output> | FailureResult;
+  export interface SuccessResult<Output> {
+    readonly value: Output;
+    readonly issues?: undefined;
+  }
+  export interface FailureResult {
+    readonly issues: ReadonlyArray<Issue>;
+  }
+  export interface Issue {
+    readonly message: string;
+    readonly path?: ReadonlyArray<PropertyKey | PathSegment> | undefined;
+  }
+  export interface PathSegment {
+    readonly key: PropertyKey;
+  }
+  export interface Types<Input = unknown, Output = Input> {
+    readonly input: Input;
+    readonly output: Output;
+  }
+  export type InferInput<Schema extends StandardSchemaV1> =
+    NonNullable<Schema['~standard']['types']>['input'];
+  export type InferOutput<Schema extends StandardSchemaV1> =
+    NonNullable<Schema['~standard']['types']>['output'];
+}
+```
 
 - [ ] **Step 2: Write the failing test**
 
@@ -49,7 +94,13 @@ Expected: FAIL — TypeScript error that `schema`/`description` are not assignab
 In `libs/render/src/lib/render.types.ts`, add the import at the top (after the existing `@json-render/core` import):
 
 ```typescript
-import type { StandardSchemaV1 } from '@standard-schema/spec';
+import type { StandardSchemaV1 } from './standard-schema';
+```
+
+Also export the vendored type from the public API — in `libs/render/src/public-api.ts`, under the Types block:
+
+```typescript
+export type { StandardSchemaV1 } from './lib/standard-schema';
 ```
 
 Replace the `RenderViewEntry` interface (currently lines ~27-32):
@@ -76,7 +127,7 @@ Expected: PASS.
 - [ ] **Step 6: Commit**
 
 ```bash
-git add libs/render/package.json libs/render/src/lib/render.types.ts libs/render/src/lib/views.spec.ts
+git add libs/render/src/lib/standard-schema.ts libs/render/src/lib/render.types.ts libs/render/src/public-api.ts libs/render/src/lib/views.spec.ts
 git commit -m "feat(render): RenderViewEntry carries optional schema + description"
 ```
 
