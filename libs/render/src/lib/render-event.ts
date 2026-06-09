@@ -22,7 +22,14 @@ export interface RenderLifecycleEvent {
   readonly elementType?: string;
 }
 
+export interface RenderResultEvent {
+  readonly type: 'result';
+  readonly value: unknown;
+  readonly elementKey?: string;
+}
+
 export type RenderEvent =
   | RenderHandlerEvent
   | RenderStateChangeEvent
-  | RenderLifecycleEvent;
+  | RenderLifecycleEvent
+  | RenderResultEvent;

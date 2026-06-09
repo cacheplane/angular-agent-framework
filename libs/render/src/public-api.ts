@@ -39,6 +39,7 @@ export type {
   RenderHandlerEvent,
   RenderStateChangeEvent,
   RenderLifecycleEvent,
+  RenderResultEvent,
 } from './lib/render-event';
 
 // Lifecycle

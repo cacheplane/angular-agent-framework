@@ -5,6 +5,7 @@ import type {
   RenderHandlerEvent,
   RenderStateChangeEvent,
   RenderLifecycleEvent,
+  RenderResultEvent,
 } from './render-event';
 
 describe('RenderEvent types', () => {
@@ -75,4 +76,14 @@ describe('RenderEvent types', () => {
     expect(handlers).toHaveLength(1);
     expect(handlers[0].action).toBe('a');
   });
+});
+
+it('RenderResultEvent is assignable to RenderEvent', () => {
+  const ev: RenderResultEvent = { type: 'result', value: { ok: true }, elementKey: 'btn1' };
+  const wide: RenderEvent = ev;
+  expect(wide.type).toBe('result');
+  if (wide.type === 'result') {
+    expect(wide.value).toEqual({ ok: true });
+    expect(wide.elementKey).toBe('btn1');
+  }
 });
