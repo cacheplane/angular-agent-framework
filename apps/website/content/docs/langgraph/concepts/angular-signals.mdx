@@ -61,6 +61,12 @@ const status = toSignal(status$, { initialValue: 'idle' });
 
 ```typescript
 import { injectAgent } from '@threadplane/langgraph';
+import type { BaseMessage } from '@langchain/core/messages';
+
+// The type parameter mirrors your graph's state schema — see State Management.
+interface ChatState {
+  messages: BaseMessage[];
+}
 
 // You never touch BehaviorSubjects or toSignal() yourself.
 // injectAgent() hands you clean Signals (config comes from provideAgent):

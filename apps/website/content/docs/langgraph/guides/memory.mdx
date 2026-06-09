@@ -14,12 +14,17 @@ Every LangGraph agent has a state schema. You control what the agent remembers b
 <Tab label="agent.py">
 
 ```python
+import json
 from typing_extensions import TypedDict, Annotated
 from operator import add
 from langgraph.graph import END, START, StateGraph
 from langchain_openai import ChatOpenAI
 
 llm = ChatOpenAI(model="gpt-5-mini")
+
+def parse_json(text: str) -> dict:
+    """Your own JSON-extraction helper — here, a plain json.loads."""
+    return json.loads(text)
 
 class State(TypedDict):
     messages: Annotated[list, add]
@@ -213,11 +218,17 @@ Short-term memory disappears when you start a new thread. For knowledge that sho
 <Tab label="agent.py">
 
 ```python
+import json
+from uuid import uuid4
 from langgraph.graph import END, START, StateGraph, MessagesState
 from langgraph.store.base import BaseStore
 from langchain_openai import ChatOpenAI
 
 llm = ChatOpenAI(model="gpt-5-mini")
+
+def parse_json(text: str) -> dict:
+    """Your own JSON-extraction helper — here, a plain json.loads."""
+    return json.loads(text)
 
 def recall_memories(state: MessagesState, *, store: BaseStore, config) -> dict:
     """Load long-term memories for this user before responding."""

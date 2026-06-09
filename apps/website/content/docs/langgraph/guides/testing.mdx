@@ -62,6 +62,49 @@ The component is byte-identical to production — only the provider changes. `Fa
 | `reasoningTokens` | `string[]` | Emitted before text deltas to exercise reasoning UI. |
 | `delayMs` | `number` | Delay between streamed events. |
 
+### A runnable spec
+
+Wire `provideFakeAgent()` into `TestBed`, submit, and assert the streamed tokens accumulate onto the assistant message. Set `delayMs: 0` so the stream drains synchronously:
+
+```typescript
+import { Component } from '@angular/core';
+import { TestBed } from '@angular/core/testing';
+import { provideFakeAgent } from '@threadplane/langgraph';
+import { injectAgent } from '@threadplane/langgraph';
+
+@Component({ template: '' })
+class ChatHost {
+  readonly chat = injectAgent();
+}
+
+describe('ChatHost with provideFakeAgent', () => {
+  beforeEach(() => {
+    TestBed.configureTestingModule({
+      imports: [ChatHost],
+      providers: [
+        provideFakeAgent({ tokens: ['Hello', ' world'], delayMs: 0 }),
+      ],
+    });
+  });
+
+  it('accumulates streamed tokens onto the assistant message', async () => {
+    const fixture = TestBed.createComponent(ChatHost);
+    fixture.detectChanges();
+
+    await fixture.componentInstance.chat.submit({ message: 'Hi' });
+    fixture.detectChanges();
+
+    const messages = fixture.componentInstance.chat.messages();
+    const assistant = messages.at(-1);
+    expect(assistant?.role).toBe('assistant');
+    expect(assistant?.content).toBe('Hello world');
+    expect(fixture.componentInstance.chat.status()).toBe('idle');
+  });
+});
+```
+
+The assertions are framework-agnostic — swap `describe`/`it`/`expect` for your Vitest or Jasmine runner; the TestBed wiring is identical.
+
 ## Contract mock: `mockLangGraphAgent()`
 
 For component and unit tests where you don't need a streaming pipeline at all, `mockLangGraphAgent(initial)` returns a `LangGraphAgent` whose state surface is exposed as **writable signals**. Set state directly and assert your component reacts — nothing is real.
