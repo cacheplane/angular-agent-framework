@@ -244,6 +244,8 @@ Everything `injectAgent()` gives you out of the box — click any to learn more:
 
 <FeatureChips />
 
+That same agent also exposes `injectAgent().lifecycle` — eight read-only signals that capture key transitions (first chunk, first interrupt, tool start/complete, errors) for debugging and telemetry. See [Lifecycle Signals](/docs/langgraph/guides/lifecycle).
+
 ## Deploy to Production
 
 When you're ready to go live, deploy your agent to LangGraph Cloud and point your Angular app to the deployment URL.
