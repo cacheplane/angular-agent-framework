@@ -1,6 +1,6 @@
 # Custom Events
 
-AG-UI `CUSTOM` events let a backend node push arbitrary data to the Angular client while a run is in progress. The adapter accumulates these events into a `customEvents` signal. That signal lives on the widened `AgUiAgent` type — `injectAgent()` returns the neutral `Agent`, so you cast its result to `AgUiAgent` to reach `customEvents` (shown in [Reading Custom Events](#reading-custom-events-in-angular) below).
+AG-UI `CUSTOM` events let a backend node push arbitrary data to the Angular client while a run is in progress. The adapter accumulates these events into a `customEvents` signal on the `AgUiAgent` returned by `injectAgent()` — reachable directly, no cast required (shown in [Reading Custom Events](#reading-custom-events-in-angular) below).
 
 ```ts
 interface CustomStreamEvent {
@@ -49,7 +49,7 @@ The adapter JSON-parses `value` when it arrives as a string, so consumers always
 
 ## Reading Custom Events in Angular
 
-`injectAgent()` returns the neutral `Agent` type; cast it to `AgUiAgent` (exported from `@threadplane/ag-ui`) to reach the `customEvents` signal.
+`injectAgent()` returns an `AgUiAgent`, so the `customEvents` signal is available directly on the injected agent — no cast needed.
 
 ### Reactive effect
 
@@ -58,7 +58,7 @@ Use an `effect` to react every time new events arrive:
 ```typescript
 import { Component, ChangeDetectionStrategy, effect, signal } from '@angular/core';
 import { ChatComponent } from '@threadplane/chat';
-import { injectAgent, type AgUiAgent } from '@threadplane/ag-ui';
+import { injectAgent } from '@threadplane/ag-ui';
 
 @Component({
   standalone: true,
@@ -72,7 +72,7 @@ import { injectAgent, type AgUiAgent } from '@threadplane/ag-ui';
   `,
 })
 export class AnalysisComponent {
-  protected readonly agent = injectAgent() as AgUiAgent;
+  protected readonly agent = injectAgent();
   protected readonly progress = signal<number | null>(null);
 
   constructor() {
@@ -96,7 +96,7 @@ When you only need to derive a value, `computed` is more concise:
 ```typescript
 import { Component, ChangeDetectionStrategy, computed } from '@angular/core';
 import { ChatComponent } from '@threadplane/chat';
-import { injectAgent, type AgUiAgent } from '@threadplane/ag-ui';
+import { injectAgent } from '@threadplane/ag-ui';
 import type { CustomStreamEvent } from '@threadplane/ag-ui';
 
 @Component({
@@ -109,7 +109,7 @@ import type { CustomStreamEvent } from '@threadplane/ag-ui';
   `,
 })
 export class AnalysisComponent {
-  protected readonly agent = injectAgent() as AgUiAgent;
+  protected readonly agent = injectAgent();
 
   protected readonly progressEvents = computed(() =>
     this.agent.customEvents().filter(

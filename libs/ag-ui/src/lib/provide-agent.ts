@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 import { InjectionToken, inject, type Provider } from '@angular/core';
 import { HttpAgent } from '@ag-ui/client';
-import type { Agent, AgentRuntimeTelemetrySink } from '@threadplane/chat';
-import { toAgent } from './to-agent';
+import type { AgentRuntimeTelemetrySink } from '@threadplane/chat';
+import { toAgent, type AgUiAgent } from './to-agent';
 
 /**
  * Configuration for the AG-UI agent provider.
@@ -21,8 +21,12 @@ export interface AgentConfig {
   telemetry?: AgentRuntimeTelemetrySink | false;
 }
 
-/** @internal — exported for spec access only. Consumers must use injectAgent(). */
-export const AGENT = new InjectionToken<Agent>('AGENT');
+/**
+ * @internal — exported for spec access only. Consumers must use injectAgent().
+ * Both `provideAgent` and `provideFakeAgent` register the result of `toAgent()`,
+ * which is always an `AgUiAgent`, so the token is typed accordingly.
+ */
+export const AGENT = new InjectionToken<AgUiAgent>('AGENT');
 
 /**
  * Provides an Agent instance wired through HttpAgent and toAgent.
@@ -59,9 +63,14 @@ export function provideAgent(
 }
 
 /**
- * Injects the Agent from Angular's dependency injection container.
- * Use this in components or services that have been provided via provideAgent().
+ * Injects the AG-UI agent from Angular's dependency injection container.
+ * Use this in components or services provided via `provideAgent()` (or
+ * `provideFakeAgent()`).
+ *
+ * Returns an `AgUiAgent` — the runtime-neutral `Agent` contract plus the
+ * AG-UI-specific `customEvents` signal — so `customEvents` is reachable
+ * directly, without casting.
  */
-export function injectAgent(): Agent {
+export function injectAgent(): AgUiAgent {
   return inject(AGENT);
 }

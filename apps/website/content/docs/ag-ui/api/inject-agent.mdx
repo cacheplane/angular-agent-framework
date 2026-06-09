@@ -71,12 +71,12 @@ The AG-UI adapter extends the neutral `Agent` contract with one additional signa
 |-------|------|-------------|
 | `customEvents()` | `CustomStreamEvent[]` | Custom events emitted by the backend during a run. Accumulates per run; resets on each new `submit()`. |
 
-`injectAgent()` is typed as the neutral `Agent` interface; to access `customEvents` you must cast to `AgUiAgent`:
+`injectAgent()` returns the `AgUiAgent` type — the neutral `Agent` contract plus `customEvents` — so the signal is reachable directly, no cast required:
 
 ```ts
-import { injectAgent, type AgUiAgent } from '@threadplane/ag-ui';
+import { injectAgent } from '@threadplane/ag-ui';
 
-const chat = injectAgent() as AgUiAgent;
+const chat = injectAgent();
 chat.customEvents(); // Signal<CustomStreamEvent[]>
 ```
 
