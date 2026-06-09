@@ -1,8 +1,8 @@
 // libs/chat/src/lib/primitives/chat-tool-views/chat-tool-views.component.ts
 // SPDX-License-Identifier: MIT
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 import type { Spec, StateStore } from '@json-render/core';
-import type { ViewRegistry } from '@threadplane/render';
+import type { RenderEvent, ViewRegistry } from '@threadplane/render';
 import { toRenderRegistry } from '@threadplane/render';
 import type { Agent, Message, ToolCall } from '../../agent';
 import { resolveMessageToolCalls } from '../chat-tool-calls/resolve-message-tool-calls';
@@ -34,12 +34,14 @@ import { ChatGenerativeUiComponent } from '../chat-generative-ui/chat-generative
         [store]="store()"
         [handlers]="handlers()"
         [loading]="view.loading"
+        (events)="events.emit($event)"
       />
     }
   `,
 })
 export class ChatToolViewsComponent {
   readonly agent = input.required<Agent>();
+  readonly events = output<RenderEvent>();
   readonly message = input<Message | undefined>(undefined);
   readonly views = input<ViewRegistry | undefined>(undefined);
   readonly store = input<StateStore | undefined>(undefined);

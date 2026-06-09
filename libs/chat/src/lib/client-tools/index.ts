@@ -6,3 +6,5 @@ export type { ClientToolSpec } from './to-json-schema';
 export type { ClientToolsCapability, ClientToolResult } from './client-tools-capability';
 export { validateArgs, executeFunctionTool } from './execute';
 export { startClientToolExecutor } from './client-tool-executor';
+export { createClientToolsCoordinator, toClientToolSpecs } from './client-tools-coordinator';
+export type { ClientToolsCoordinator } from './client-tools-coordinator';

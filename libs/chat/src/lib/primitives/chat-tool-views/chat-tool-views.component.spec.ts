@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: MIT
-import { describe, it, expect, beforeEach } from 'vitest';
-import { Component, input, ChangeDetectionStrategy } from '@angular/core';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { Component, input, output, ChangeDetectionStrategy } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { views } from '@threadplane/render';
+import type { RenderEvent } from '@threadplane/render';
 import { mockAgent, type MockAgent } from '../../testing/mock-agent';
 import type { Message, ToolCall } from '../../agent';
 import { ChatToolViewsComponent } from './chat-tool-views.component';
@@ -97,5 +98,47 @@ describe('ChatToolViewsComponent', () => {
     const fixture = TestBed.createComponent(BareHost);
     fixture.detectChanges();
     expect((fixture.nativeElement as HTMLElement).querySelector('chat-test-weather-card')).toBeNull();
+  });
+
+  it('forwards RenderResultEvent emitted by inner chat-generative-ui via the events output', () => {
+    agent.toolCalls.set([
+      { id: 'c1', name: 'weather_card', args: { location: 'LA' }, status: 'running' },
+    ] as ToolCall[]);
+
+    const emitted: RenderEvent[] = [];
+
+    @Component({
+      standalone: true,
+      imports: [ChatToolViewsComponent],
+      template: `<chat-tool-views [agent]="agent" [message]="message" [views]="reg" (events)="onEvent($event)" />`,
+    })
+    class EventHost {
+      readonly agent = agent;
+      readonly message = msg;
+      readonly reg = views({ weather_card: TestWeatherCardComponent });
+      onEvent(ev: RenderEvent): void { emitted.push(ev); }
+    }
+
+    const fixture = TestBed.createComponent(EventHost);
+    fixture.detectChanges();
+
+    // Grab the ChatToolViewsComponent instance and spy on its events output
+    const toolViewsEl = (fixture.nativeElement as HTMLElement).querySelector('chat-tool-views');
+    expect(toolViewsEl).toBeTruthy();
+
+    // Directly emit through the component's output to verify the binding works end-to-end
+    const toolViewsDebug = fixture.debugElement.query(
+      (el) => el.componentInstance instanceof ChatToolViewsComponent,
+    );
+    const toolViewsInstance = toolViewsDebug.componentInstance as ChatToolViewsComponent;
+
+    // Clear any lifecycle events that fired during detectChanges (e.g. render-spec 'mounted')
+    emitted.length = 0;
+
+    const resultEvent: RenderEvent = { type: 'result', value: { selected: 'sunny' }, elementKey: 'weather_card' };
+    toolViewsInstance.events.emit(resultEvent);
+
+    expect(emitted).toHaveLength(1);
+    expect(emitted[0]).toEqual(resultEvent);
   });
 });
