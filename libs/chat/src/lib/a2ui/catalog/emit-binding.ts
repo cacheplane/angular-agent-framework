@@ -1,14 +1,15 @@
 // SPDX-License-Identifier: MIT
+import type { RenderHost } from '@threadplane/render';
 
-/** Emits a data model binding event if the prop has a binding path. */
+/** Writes a typed value to the render state store if the prop has a binding path. */
 export function emitBinding(
-  emit: (event: string) => void,
+  host: RenderHost,
   bindings: Record<string, string> | undefined,
   prop: string,
   value: unknown,
 ): void {
   const path = bindings?.[prop];
   if (path) {
-    emit(`a2ui:datamodel:${path}:${value}`);
+    host.set(path, value);
   }
 }

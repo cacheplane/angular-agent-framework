@@ -1,6 +1,17 @@
 // SPDX-License-Identifier: MIT
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
+import type { RenderHost } from '@threadplane/render';
 import { emitBinding } from './emit-binding';
+
+function makeHost(): { host: RenderHost; writes: Array<[string, unknown]> } {
+  const writes: Array<[string, unknown]> = [];
+  const host: RenderHost = {
+    set: (p, v) => writes.push([p, v]),
+    emit: () => { /* noop */ },
+    result: () => { /* noop */ },
+  };
+  return { host, writes };
+}
 
 describe('A2uiTextFieldComponent — v1 protocol', () => {
   // NOTE: Angular signal-based inputs can't be tested via TestBed without the
@@ -24,33 +35,31 @@ describe('A2uiTextFieldComponent — v1 protocol', () => {
   });
 
   describe('onInput emit logic', () => {
-    it('emits on text binding when present', () => {
-      const emit = vi.fn();
+    it('writes text binding path with typed value when present', () => {
+      const { host, writes } = makeHost();
       const bindings = { text: '/name' };
-      const val = 'Alice';
-      emitBinding(emit, bindings, 'text', val);
-      expect(emit).toHaveBeenCalledWith('a2ui:datamodel:/name:Alice');
+      emitBinding(host, bindings, 'text', 'Alice');
+      expect(writes).toEqual([['/name', 'Alice']]);
     });
 
-    it('emits on value binding as fallback', () => {
-      const emit = vi.fn();
+    it('writes value binding path as fallback', () => {
+      const { host, writes } = makeHost();
       const bindings = { value: '/name' };
-      const val = 'Alice';
-      emitBinding(emit, bindings, 'value', val);
-      expect(emit).toHaveBeenCalledWith('a2ui:datamodel:/name:Alice');
+      emitBinding(host, bindings, 'value', 'Alice');
+      expect(writes).toEqual([['/name', 'Alice']]);
     });
 
-    it('emits empty string for cleared input', () => {
-      const emit = vi.fn();
+    it('writes empty string for cleared input', () => {
+      const { host, writes } = makeHost();
       const bindings = { text: '/name' };
-      emitBinding(emit, bindings, 'text', '');
-      expect(emit).toHaveBeenCalledWith('a2ui:datamodel:/name:');
+      emitBinding(host, bindings, 'text', '');
+      expect(writes).toEqual([['/name', '']]);
     });
 
-    it('does not emit when no binding exists', () => {
-      const emit = vi.fn();
-      emitBinding(emit, {}, 'text', 'Alice');
-      expect(emit).not.toHaveBeenCalled();
+    it('does not write when no binding exists', () => {
+      const { host, writes } = makeHost();
+      emitBinding(host, {}, 'text', 'Alice');
+      expect(writes).toHaveLength(0);
     });
   });
 });

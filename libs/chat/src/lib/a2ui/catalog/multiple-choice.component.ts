@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 import { Component, computed, input, ChangeDetectionStrategy } from '@angular/core';
 import type { Spec } from '@json-render/core';
+import { injectRenderHost } from '@threadplane/render';
 import { emitBinding } from './emit-binding';
 
 /** Resolved option shape — label and value are plain strings after surface-to-spec resolves them. */
@@ -84,6 +85,8 @@ interface ResolvedOption {
   `],
 })
 export class A2uiMultipleChoiceComponent {
+  private readonly host = injectRenderHost();
+
   readonly label = input<string>('');
   /** Resolved current selections from surface-to-spec. Normalized in
    * `selectionsArray` because LLMs sometimes seed the data model with a
@@ -102,7 +105,6 @@ export class A2uiMultipleChoiceComponent {
   /** When ≤ 1 — render as single-select <select>; otherwise multi-select checkboxes. */
   readonly maxAllowedSelections = input<number>(1);
   readonly _bindings = input<Record<string, string>>({});
-  readonly emit = input<(event: string) => void>(() => { /* noop */ });
   // Framework inputs required by the render harness.
   readonly bindings = input<Record<string, string>>({});
   readonly loading = input<boolean>(false);
@@ -117,7 +119,7 @@ export class A2uiMultipleChoiceComponent {
 
   onSelectChange(event: Event): void {
     const val = (event.target as HTMLSelectElement).value;
-    emitBinding(this.emit(), this._bindings(), 'selections', val);
+    emitBinding(this.host, this._bindings(), 'selections', val);
   }
 
   onCheckChange(value: string, event: Event): void {
@@ -129,7 +131,7 @@ export class A2uiMultipleChoiceComponent {
     } else if (!checked && idx !== -1) {
       current.splice(idx, 1);
     }
-    // Emit the updated selections array as a JSON string so emitBinding can convey it.
-    emitBinding(this.emit(), this._bindings(), 'selections', JSON.stringify(current));
+    // Pass the updated selections array directly (typed value, no JSON stringification needed).
+    emitBinding(this.host, this._bindings(), 'selections', current);
   }
 }

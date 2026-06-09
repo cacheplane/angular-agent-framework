@@ -1,6 +1,17 @@
 // SPDX-License-Identifier: MIT
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
+import type { RenderHost } from '@threadplane/render';
 import { emitBinding } from './emit-binding';
+
+function makeHost(): { host: RenderHost; writes: Array<[string, unknown]> } {
+  const writes: Array<[string, unknown]> = [];
+  const host: RenderHost = {
+    set: (p, v) => writes.push([p, v]),
+    emit: () => { /* noop */ },
+    result: () => { /* noop */ },
+  };
+  return { host, writes };
+}
 
 describe('A2uiDateTimeInputComponent — v1 protocol', () => {
   // NOTE: Angular signal-based inputs can't be tested via TestBed without the
@@ -32,28 +43,28 @@ describe('A2uiDateTimeInputComponent — v1 protocol', () => {
   });
 
   describe('onChange emit logic', () => {
-    it('emits binding with date value', () => {
-      const emit = vi.fn();
+    it('writes binding with date value', () => {
+      const { host, writes } = makeHost();
       const bindings = { value: '/appointmentDate' };
       const event = { target: { value: '2026-04-15' } } as unknown as Event;
       const val = (event.target as HTMLInputElement).value;
-      emitBinding(emit, bindings, 'value', val);
-      expect(emit).toHaveBeenCalledWith('a2ui:datamodel:/appointmentDate:2026-04-15');
+      emitBinding(host, bindings, 'value', val);
+      expect(writes).toEqual([['/appointmentDate', '2026-04-15']]);
     });
 
-    it('emits binding with datetime-local value', () => {
-      const emit = vi.fn();
+    it('writes binding with datetime-local value', () => {
+      const { host, writes } = makeHost();
       const bindings = { value: '/scheduledAt' };
       const event = { target: { value: '2026-04-15T14:30' } } as unknown as Event;
       const val = (event.target as HTMLInputElement).value;
-      emitBinding(emit, bindings, 'value', val);
-      expect(emit).toHaveBeenCalledWith('a2ui:datamodel:/scheduledAt:2026-04-15T14:30');
+      emitBinding(host, bindings, 'value', val);
+      expect(writes).toEqual([['/scheduledAt', '2026-04-15T14:30']]);
     });
 
-    it('does not emit when no binding exists for value', () => {
-      const emit = vi.fn();
-      emitBinding(emit, {}, 'value', '2026-04-15');
-      expect(emit).not.toHaveBeenCalled();
+    it('does not write when no binding exists for value', () => {
+      const { host, writes } = makeHost();
+      emitBinding(host, {}, 'value', '2026-04-15');
+      expect(writes).toHaveLength(0);
     });
   });
 });
