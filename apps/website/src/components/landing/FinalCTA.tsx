@@ -2,27 +2,27 @@ import { tokens } from '@threadplane/design-tokens';
 import { Container } from '../ui/Container';
 import { Section } from '../ui/Section';
 import { Button } from '../ui/Button';
+import { DemoCtaPair } from './DemoCtaPair';
 
 interface FinalCTAProps {
   /** Headline. Defaults to the homepage closer. */
   headline?: string;
   /** Sub-headline. Defaults to the homepage closer. */
   subtext?: string;
-  /** Primary CTA. Defaults to "Try the demo →" → demo.threadplane.ai. */
-  primary?: { label: string; href: string; external?: boolean };
+  /** Override CTA. When omitted, renders the LangGraph + AG-UI demo pair. */
+  primary?: { label: string; href: string; external?: boolean } | null;
   /** Optional secondary CTA. Defaults to "See each feature in action →" → cockpit. */
   secondary?: { label: string; href: string; external?: boolean } | null;
   /** Optional trailing caption. Defaults to MIT line. Pass null to hide. */
   caption?: string | null;
 }
 
-const DEFAULT_PRIMARY = { label: 'Try the demo →', href: 'https://demo.threadplane.ai', external: true };
 const DEFAULT_SECONDARY = { label: 'See each feature in action →', href: 'https://cockpit.threadplane.ai', external: true };
 
 export function FinalCTA({
   headline = 'Stop stalling on agentic Angular.',
   subtext = 'Install the framework, read the docs, and have a streaming chat in your app this afternoon.',
-  primary = DEFAULT_PRIMARY,
+  primary = null,
   secondary = DEFAULT_SECONDARY,
   caption = 'MIT · No signup required · App telemetry off by default',
 }: FinalCTAProps = {}) {
@@ -58,23 +58,19 @@ export function FinalCTA({
           >
             {subtext}
           </p>
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'center',
-              gap: 12,
-              flexWrap: 'wrap',
-              marginBottom: 16,
-            }}
-          >
-            <Button
-              variant="primary"
-              size="lg"
-              href={primary.href}
-              {...((primary as { external?: boolean }).external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
-            >
-              {primary.label}
-            </Button>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: 12, flexWrap: 'wrap', marginBottom: 16 }}>
+            {primary ? (
+              <Button
+                variant="primary"
+                size="lg"
+                href={primary.href}
+                {...((primary as { external?: boolean }).external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+              >
+                {primary.label}
+              </Button>
+            ) : (
+              <DemoCtaPair surface="final_cta" size="lg" />
+            )}
             {secondary ? (
               <Button
                 variant="ghost"
