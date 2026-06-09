@@ -399,7 +399,7 @@ export class DeployApprovalComponent {
     return (step.completed.length / step.total_steps) * 100;
   });
 
-  allInterrupts = computed(() => this.agent.interrupts());
+  allInterrupts = computed(() => this.agent.langGraphInterrupts());
 
   approveStep() {
     this.agent.submit({ resume: { approved: true } });

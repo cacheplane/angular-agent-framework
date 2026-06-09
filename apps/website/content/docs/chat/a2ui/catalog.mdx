@@ -335,12 +335,15 @@ A tabbed container that shows one child panel at a time based on the selected ta
 ```json
 {
   "id": "info-tabs",
-  "component": "Tabs",
-  "tabs": [
-    {"label": "Overview", "childKeys": ["overview-content"]},
-    {"label": "Details", "childKeys": ["detail-list"]}
-  ],
-  "selected": {"path": "/activeTab"}
+  "component": {
+    "Tabs": {
+      "tabs": [
+        {"label": "Overview", "childKeys": ["overview-content"]},
+        {"label": "Details", "childKeys": ["detail-list"]}
+      ],
+      "selected": {"path": "/activeTab"}
+    }
+  }
 }
 ```
 
@@ -365,11 +368,14 @@ A dialog overlay that renders child content when open. Supports an optional titl
 ```json
 {
   "id": "confirm-dialog",
-  "component": "Modal",
-  "title": "Confirm Action",
-  "open": {"path": "/showConfirm"},
-  "childKeys": ["confirm-message", "confirm-buttons"],
-  "dismissible": true
+  "component": {
+    "Modal": {
+      "title": {"literalString": "Confirm Action"},
+      "open": {"path": "/showConfirm"},
+      "childKeys": ["confirm-message", "confirm-buttons"],
+      "dismissible": true
+    }
+  }
 }
 ```
 
@@ -393,10 +399,13 @@ Renders an HTML5 `<video>` element.
 ```json
 {
   "id": "intro-video",
-  "component": "Video",
-  "url": "https://example.com/intro.mp4",
-  "poster": "https://example.com/poster.jpg",
-  "controls": true
+  "component": {
+    "Video": {
+      "url": {"literalString": "https://example.com/intro.mp4"},
+      "poster": {"literalString": "https://example.com/poster.jpg"},
+      "controls": true
+    }
+  }
 }
 ```
 
@@ -417,9 +426,12 @@ Renders an HTML5 `<audio>` element.
 ```json
 {
   "id": "podcast",
-  "component": "AudioPlayer",
-  "url": "https://example.com/episode.mp3",
-  "controls": true
+  "component": {
+    "AudioPlayer": {
+      "url": {"literalString": "https://example.com/episode.mp3"},
+      "controls": true
+    }
+  }
 }
 ```
 
