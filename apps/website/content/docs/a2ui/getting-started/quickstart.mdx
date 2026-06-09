@@ -58,19 +58,50 @@ That buffering is deliberate. Agent output streams in fragments, and a half-fini
 
 A `dataModelUpdate` carries `contents` — an array of typed entries, each with a `key` and one of `valueString` / `valueNumber` / `valueBoolean` / `valueMap`. The parser hands you those entries verbatim. Turning them into a plain object the resolver can read is your code.
 
-For the booking stream that's three entries: `origin`, `dest`, `passengers`. `setByPointer` builds the object immutably — each call returns a new object, the input is untouched.
+The library gives you the pointer helpers but doesn't ship a `contents` -> object reducer — assembling the model from `contents` (reading `valueString` vs `valueNumber`, recursing into `valueMap`) is the caller's job. Here's a small one that walks the entries and writes the reduced object at the envelope's optional `path` (defaulting to the root):
 
 ```ts
 import { setByPointer } from '@threadplane/a2ui';
+import type { A2uiDataModelEntry, A2uiDataModelUpdate } from '@threadplane/a2ui';
 
+// Branch on the entry's value field; recurse into valueMap for nesting.
+function entriesToObject(entries: A2uiDataModelEntry[]): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  for (const e of entries) {
+    if (e.valueString !== undefined) out[e.key] = e.valueString;
+    else if (e.valueNumber !== undefined) out[e.key] = e.valueNumber;
+    else if (e.valueBoolean !== undefined) out[e.key] = e.valueBoolean;
+    else if (e.valueMap !== undefined) out[e.key] = entriesToObject(e.valueMap);
+  }
+  return out;
+}
+
+// Apply a dataModelUpdate to a model, honoring its optional `path`.
+function applyDataModelUpdate(
+  model: Record<string, unknown>,
+  update: A2uiDataModelUpdate,
+): Record<string, unknown> {
+  const obj = entriesToObject(update.contents);
+  return setByPointer(model, update.path ?? '/', obj);
+}
+```
+
+Run it against the booking stream's `dataModelUpdate` and you get the model back, derived from the entries you just parsed — not re-typed by hand:
+
+```ts
 let model: Record<string, unknown> = {};
-model = setByPointer(model, '/origin', 'LAX');
-model = setByPointer(model, '/dest', 'JFK');
-model = setByPointer(model, '/passengers', 1);
+model = applyDataModelUpdate(model, {
+  surfaceId: 'booking',
+  contents: [
+    { key: 'origin', valueString: 'LAX' },
+    { key: 'dest', valueString: 'JFK' },
+    { key: 'passengers', valueNumber: 1 },
+  ],
+});
 // model -> { origin: 'LAX', dest: 'JFK', passengers: 1 }
 ```
 
-To be clear: assembling the model from `contents` (reading `valueString` vs `valueNumber`, honoring the entry's optional `path`, recursing into `valueMap`) is the caller's job. This library gives you the pointer helpers; it doesn't ship a `contents` -> object reducer. The [data model guide](/docs/a2ui/guides/data-model) covers the helpers in depth.
+`setByPointer` builds the object immutably — each call returns a new object, the input is untouched. The [data model guide](/docs/a2ui/guides/data-model) covers the reducer, `path` scoping, and the pointer helpers in depth.
 
 ## Resolve a value
 
