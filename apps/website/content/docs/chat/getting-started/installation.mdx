@@ -138,22 +138,34 @@ provideChat({
 
 ## 4. Render your first chat
 
-Wire `provideAgent({...})` into your `app.config.ts`, then bind `<chat>` to the result of `injectAgent()` in any component. The full working example:
+Add `assistantId` and `threadId` to the same root `provideAgent({...})` from step 3, then bind `<chat>` to the result of `injectAgent()` in your component. Extend the config from step 3 rather than declaring a second provider:
 
 ```ts
 // src/app/app.config.ts
-import { signal } from '@angular/core';
+import { ApplicationConfig, provideZonelessChangeDetection, signal } from '@angular/core';
 import { provideAgent } from '@threadplane/langgraph';
+import { provideChat } from '@threadplane/chat';
+import { environment } from '../environments/environment';
 
 export const appConfig: ApplicationConfig = {
   providers: [
+    provideZonelessChangeDetection(),
     provideAgent({
-      assistantId: 'chat', // The graph/agent ID exposed by your backend
-      threadId: signal(null),    // null = new thread on first send
+      apiUrl: environment.langgraphApiUrl, // e.g. 'http://localhost:2024'
+      assistantId: 'chat',                 // The graph/agent ID exposed by your backend
+      threadId: signal(null),              // null = new thread on first send
+    }),
+    provideChat({
+      license: environment.threadplaneLicense,
+      assistantName: 'Assistant',
     }),
   ],
 };
+```
 
+The component just injects that agent — no second provider:
+
+```ts
 // src/app/chat-page.component.ts
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { injectAgent } from '@threadplane/langgraph';
@@ -176,6 +188,10 @@ export class ChatPageComponent {
 ```
 
 Add the route, run `ng serve`, and open the page. You should see the chat surface mount, an input at the bottom, and streaming responses as the agent replies.
+
+<Callout type="info" title="Multiple agents in one app">
+Want several `<chat>` surfaces pointing at different graphs? Keep `apiUrl` (and `license`) on the root provider, then re-provide `provideAgent({ assistantId, threadId })` in each component's `providers: []`. Angular's hierarchical DI merges the component-level config over the root, so each subtree gets its own `assistantId` while sharing the backend URL. `injectAgent()` resolves the nearest provider.
+</Callout>
 
 ## 5. Verify the license activated
 

@@ -138,6 +138,41 @@ export class ChatWithThreadsComponent {
 }
 ```
 
+## Message Feedback Outputs
+
+Beyond `threadSelected`, `<chat>` emits three outputs for assistant-message feedback and regeneration. Each fires from the hover controls on an assistant message:
+
+```typescript
+@Component({
+  template: `
+    <chat
+      [agent]="chatRef"
+      (regenerate)="onRegenerate()"
+      (rate)="onRate($event)"
+      (messageCopy)="onCopy($event)"
+    />
+  `,
+})
+export class ChatWithFeedbackComponent {
+  protected readonly chatRef = injectAgent();
+
+  // (regenerate) emits void — the agent already re-ran the last assistant turn.
+  onRegenerate() {
+    console.log('user requested regeneration');
+  }
+
+  // (rate) payload: { messageIndex, rating }
+  onRate(event: { messageIndex: number; rating: 'up' | 'down' }) {
+    console.log(`message ${event.messageIndex} rated ${event.rating}`);
+  }
+
+  // (messageCopy) payload: { messageIndex, content }
+  onCopy(event: { messageIndex: number; content: string }) {
+    console.log(`copied message ${event.messageIndex}`, event.content);
+  }
+}
+```
+
 ## Message Templates
 
 `ChatComponent` ships with four built-in message templates:
@@ -167,6 +202,31 @@ const myViews = views({
 ```
 
 AI messages containing JSON are parsed character-by-character as tokens stream. Components render incrementally — string props grow visibly as tokens arrive. See the [Generative UI guide](/docs/chat/guides/generative-ui) for full setup.
+
+### Interactive specs and `[store]`
+
+A **`StateStore`** is the shared reactive state that interactive generative-UI specs read from and write to. When a spec uses `$state` / `$bindState` prop expressions — for forms, selections, toggles — those bindings resolve against the store you pass via `[store]`. Read-only specs (a weather card, a chart) don't need one; reach for `[store]` only when a spec is interactive. Create it with `signalStateStore()` from `@threadplane/render`:
+
+```typescript
+import { Component } from '@angular/core';
+import { injectAgent } from '@threadplane/langgraph';
+import { ChatComponent } from '@threadplane/chat';
+import { signalStateStore } from '@threadplane/render';
+
+@Component({
+  selector: 'app-interactive-chat',
+  standalone: true,
+  imports: [ChatComponent],
+  template: `<chat [agent]="chatRef" [views]="myViews" [store]="store" />`,
+})
+export class InteractiveChatComponent {
+  protected readonly chatRef = injectAgent();
+  protected readonly myViews = myViews;
+  protected readonly store = signalStateStore({ selectedItem: null });
+}
+```
+
+See [State Store](/docs/chat/guides/generative-ui#state-store) in the Generative UI guide for the full binding model.
 
 ## A2UI Rendering
 
