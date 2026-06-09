@@ -241,11 +241,56 @@ const handlers = {
 };
 ```
 
+## Observing Render Events
+
+Beyond dispatching handlers, `<render-spec>` emits a single stream of every notable thing that happens during rendering through its `events` output. Bind to it to observe handler dispatch, state changes, and mount/destroy lifecycle in one place:
+
+```html
+<render-spec
+  [spec]="spec"
+  [registry]="registry"
+  [store]="store"
+  [handlers]="handlers"
+  (events)="onEvent($event)"
+/>
+```
+
+```typescript
+import type { RenderEvent } from '@threadplane/render';
+
+onEvent(event: RenderEvent) {
+  switch (event.type) {
+    case 'handler':
+      console.log('handler ran:', event.action, event.params, event.result);
+      break;
+    case 'stateChange':
+      console.log('state changed:', event.path, '=', event.value);
+      break;
+    case 'lifecycle':
+      console.log('lifecycle:', event.event, event.scope, event.elementType);
+      break;
+  }
+}
+```
+
+`RenderEvent` is a discriminated union of three variants, keyed by `type`:
+
+| `type` | Interface | Fires when | Notable fields |
+|--------|-----------|------------|----------------|
+| `'handler'` | `RenderHandlerEvent` | A handler finishes running | `action`, `params`, `result?` |
+| `'stateChange'` | `RenderStateChangeEvent` | The store value changes | `path`, `value`, `snapshot` |
+| `'lifecycle'` | `RenderLifecycleEvent` | A spec or element mounts/destroys | `event` (`'mounted'` \| `'destroyed'`), `scope` (`'spec'` \| `'element'`), `elementKey?`, `elementType?` |
+
+All three interfaces are exported from `@threadplane/render`. This output is the single source the [Lifecycle guide](/docs/render/guides/lifecycle) builds its `RENDER_LIFECYCLE` signals on top of -- both observe the same stream, so there's no double-counting.
+
 ## Next Steps
 
 <CardGroup cols={2}>
   <Card title="Registry Guide" href="/docs/render/guides/registry">
     The emit input and component contract
+  </Card>
+  <Card title="Lifecycle Guide" href="/docs/render/guides/lifecycle">
+    Per-context lifecycle signals derived from the events stream
   </Card>
   <Card title="State Store Guide" href="/docs/render/guides/state-store">
     Updating state from handlers

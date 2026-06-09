@@ -94,6 +94,28 @@ export class MyComponent {
 }
 ```
 
+### Per-Component Fallbacks
+
+Each entry can be a bare component class or a `{ component, fallback }` object. The `fallback` mounts while any state-bound prop on the element is still unresolved -- useful for streaming UI, where structure arrives before data:
+
+```typescript
+import { defineAngularRegistry } from '@threadplane/render';
+import { TextComponent } from './text.component';
+import { CardComponent } from './card.component';
+import { CardSkeletonComponent } from './card-skeleton.component';
+
+const registry = defineAngularRegistry({
+  Text: TextComponent,
+  Card: { component: CardComponent, fallback: CardSkeletonComponent },
+});
+
+registry.getFallback('Card'); // CardSkeletonComponent (the configured fallback)
+registry.getFallback('Text'); // DefaultFallbackComponent (entry omits one)
+registry.getFallback('Missing'); // undefined (not registered)
+```
+
+An entry that omits `fallback` -- including every bare-component entry like `Text` above -- falls back to the library's `DefaultFallbackComponent`. Once the real component mounts, the choice is monotonic for that element instance: a later prop resolving to `undefined` never reverts it to the fallback.
+
 ## Internal Behavior
 
 The function converts the input object to an internal `Map<string, AngularComponentRenderer>` for O(1) lookups:
