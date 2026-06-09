@@ -5,6 +5,7 @@ import { tokens } from '@threadplane/design-tokens';
 import { analyticsEvents } from '../../lib/analytics/events';
 import { track, trackCtaClick, trackExternalLinkClick } from '../../lib/analytics/client';
 import { SHORT_POSITIONING_DESCRIPTION } from '../../lib/positioning';
+import { DEMOS, demoCtaSuffix } from '../../lib/demos';
 import { LogoMark } from '../ui/LogoMark';
 import { Button } from '../ui/Button';
 import { Eyebrow } from '../ui/Eyebrow';
@@ -177,16 +178,18 @@ export function Footer() {
               onMouseLeave={(e) => (e.currentTarget.style.color = tokens.colors.textSecondary)}>
               API Reference
             </Link>
-            <a href="https://demo.threadplane.ai" className="transition-colors" style={{ color: tokens.colors.textSecondary }}
-              onClick={() => trackExternalLinkClick('https://demo.threadplane.ai', {
-                surface: 'footer',
-                cta_id: 'footer_demo',
-                cta_text: 'Demo',
-              })}
-              onMouseEnter={(e) => (e.currentTarget.style.color = tokens.colors.accent)}
-              onMouseLeave={(e) => (e.currentTarget.style.color = tokens.colors.textSecondary)}>
-              Demo
-            </a>
+            {DEMOS.map((demo) => (
+              <a key={demo.key} href={demo.href} className="transition-colors" style={{ color: tokens.colors.textSecondary }}
+                onClick={() => trackExternalLinkClick(demo.href, {
+                  surface: 'footer',
+                  cta_id: `footer_demo_${demoCtaSuffix(demo.key)}`,
+                  cta_text: demo.label,
+                })}
+                onMouseEnter={(e) => (e.currentTarget.style.color = tokens.colors.accent)}
+                onMouseLeave={(e) => (e.currentTarget.style.color = tokens.colors.textSecondary)}>
+                {demo.label}
+              </a>
+            ))}
             <a href="https://cockpit.threadplane.ai" className="transition-colors" style={{ color: tokens.colors.textSecondary }}
               onClick={() => trackExternalLinkClick('https://cockpit.threadplane.ai', {
                 surface: 'footer',

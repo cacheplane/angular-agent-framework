@@ -1,0 +1,83 @@
+# provideAgent()
+
+`provideAgent()` registers the singleton AG-UI agent configuration for every [injectAgent()](/docs/ag-ui/api/inject-agent) call in an Angular application. Call it once in `bootstrapApplication` or an `ApplicationConfig` to wire up the endpoint URL, optional identifiers, custom headers, and telemetry.
+
+`injectAgent()` itself takes no arguments — all configuration flows through `provideAgent()`.
+
+```ts
+import { bootstrapApplication } from '@angular/platform-browser';
+import { provideAgent } from '@threadplane/ag-ui';
+import { AppComponent } from './app/app.component';
+
+bootstrapApplication(AppComponent, {
+  providers: [
+    provideAgent({
+      url: 'http://localhost:8000/my-agent',
+    }),
+  ],
+});
+```
+
+## Configuration options
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `url` | `string` | HTTP endpoint for the AG-UI backend agent. Required. |
+| `agentId` | `string` | Optional agent identifier forwarded to the backend. |
+| `threadId` | `string` | Optional thread identifier for session continuity. |
+| `headers` | `Record<string, string>` | Optional custom HTTP headers included on every request. |
+| `telemetry` | `AgentRuntimeTelemetrySink \| false` | Optional app-owned telemetry sink. No telemetry is emitted unless this is provided. |
+
+## Static vs factory config
+
+Pass a plain `AgentConfig` object when the URL is known up front. Pass a `() => AgentConfig` factory when the config depends on runtime DI state — the factory runs inside an Angular injection context, so it may call `inject()` to read services or environment tokens.
+
+```ts
+// Factory form — reads an environment token at runtime
+provideAgent(() => {
+  const env = inject(APP_ENV);
+  return {
+    url: env.agentUrl,
+    headers: { Authorization: `Bearer ${env.apiKey}` },
+  };
+});
+```
+
+## Singleton model
+
+A single `provideAgent({...})` call configures the entire application. Every `injectAgent()` call resolves to the same configured agent.
+
+```ts
+provideAgent({ url: 'https://api.example.com/agent' });
+
+// Elsewhere, inside an injection context:
+const chat = injectAgent();
+```
+
+## What's Next
+
+<CardGroup cols={3}>
+  <Card
+    title="injectAgent() API"
+    icon="code"
+    href="/docs/ag-ui/api/inject-agent"
+  >
+    The primitive you call inside components after registering a provider.
+  </Card>
+  <Card
+    title="Quick Start"
+    icon="rocket"
+    href="/docs/ag-ui/getting-started/quickstart"
+  >
+    End-to-end setup connecting a real AG-UI backend in minutes.
+  </Card>
+  <Card
+    title="Fake Agent guide"
+    icon="flask"
+    href="/docs/ag-ui/guides/fake-agent"
+  >
+    Swap the live backend for an in-process test double during development.
+  </Card>
+</CardGroup>
+
+{/* Auto-rendered from api-docs.json — see page component */}

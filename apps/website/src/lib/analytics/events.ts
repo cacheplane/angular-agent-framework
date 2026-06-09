@@ -31,6 +31,7 @@ export type AnalyticsSurface =
   | 'mobile_nav'
   | 'footer'
   | 'home'
+  | 'home_demo'
   | 'home_whitepaper'
   | 'pricing'
   | 'docs'
@@ -38,7 +39,8 @@ export type AnalyticsSurface =
   | 'library_landing'
   | 'solution'
   | 'toast'
-  | 'contact';
+  | 'contact'
+  | 'final_cta';
 
 /**
  * Stable identifiers for marketing CTAs. New CTAs must be added to this
@@ -80,9 +82,12 @@ export type CtaId =
   // Nav + footer derive ids from labels at runtime
   | `nav_${string}`
   | `mobile_nav_${string}`
-  | `footer_${string}`;
+  | `footer_${string}`
+  // Landing section CTAs derive ids from surface + demo key at runtime
+  | `final_cta_${string}`
+  | `home_demo_${string}`;
 
-export type AnalyticsLibrary = 'langgraph' | 'render' | 'chat' | 'unknown';
+export type AnalyticsLibrary = 'langgraph' | 'render' | 'chat' | 'ag-ui' | 'unknown';
 
 export type WhitepaperId = 'overview' | 'angular' | 'render' | 'chat';
 

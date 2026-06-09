@@ -117,7 +117,7 @@ const nextMessages = bridgeCitationsState(
 );
 ```
 
-Most apps should not need this directly. The built-in AG-UI reducer already calls it for state snapshots and deltas.
+Most apps should not need this directly. The built-in AG-UI reducer already calls it for state snapshots and deltas. The `bridgeCitationsState(thread, messages)` helper merges thread-level citation state onto the message list; import it from `@threadplane/ag-ui` when you assemble messages yourself outside the standard adapter pipeline.
 
 ## Gotchas
 
