@@ -38,7 +38,7 @@ export class MyComponent {
 | `spec` | `Spec \| null` | `null` | The json-render spec to render. When `null`, nothing is rendered. |
 | `registry` | `AngularRegistry \| undefined` | `undefined` | Component registry mapping element types to Angular components. |
 | `store` | `StateStore \| undefined` | `undefined` | State store for reactive prop resolution. |
-| `functions` | `Record<string, ComputedFunction> \| undefined` | `undefined` | Computed functions for `$fn` prop expressions. |
+| `functions` | `Record<string, ComputedFunction> \| undefined` | `undefined` | Computed functions for `$computed` prop expressions. |
 | `handlers` | `Record<string, (params: Record<string, unknown>) => unknown \| Promise<unknown>> \| undefined` | `undefined` | Event handlers invoked when components call `emit()`. |
 | `loading` | `boolean` | `false` | Whether the spec is currently streaming. Passed to all rendered components as the `loading` input. |
 
