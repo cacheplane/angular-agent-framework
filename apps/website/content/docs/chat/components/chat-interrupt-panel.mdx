@@ -47,6 +47,22 @@ handleInterrupt(action: InterruptAction) {
 }
 ```
 
+<Callout type="info" title="The panel doesn't resume the agent for you">
+`chat-interrupt-panel` only emits which button the user clicked — it never calls `agent.submit()` itself. You own resumption. `openEditor()` and `focusInput()` above are your own helpers (collect an edited proposal or a typed reply); once you have the value, send it back with `agent.submit({ resume })`. The shape of `resume` is whatever your graph's interrupt handler expects.
+
+```typescript
+// After the user edits the agent's proposal:
+async resumeWithEdit(edited: Record<string, unknown>) {
+  await this.chatRef.submit({ resume: { action: 'edit', data: edited } });
+}
+
+// After the user types a free-text reply:
+async resumeWithResponse(text: string) {
+  await this.chatRef.submit({ resume: { action: 'respond', text } });
+}
+```
+</Callout>
+
 ## API
 
 ### Inputs

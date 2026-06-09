@@ -86,6 +86,26 @@ The exported component definitions are:
 | `MultipleChoice` | `selections`, `options`, `maxAllowedSelections`, `label` |
 | `Slider` | `value`, `minValue`, `maxValue`, `step`, `label` |
 
+Several of these fields are constrained to a fixed enum. Emit one of the listed values — an unknown value isn't validated at the protocol layer, but a renderer may ignore it or fall back to a default:
+
+| Field | On | Allowed values |
+|-------|----|----------------|
+| `usageHint` | `Text` | `'h1'` \| `'h2'` \| `'h3'` \| `'h4'` \| `'h5'` \| `'caption'` \| `'body'` |
+| `textFieldType` | `TextField` | `'date'` \| `'longText'` \| `'number'` \| `'shortText'` \| `'obscured'` |
+| `alignment` | `Row`, `Column` | `'start'` \| `'center'` \| `'end'` \| `'stretch'` |
+| `distribution` | `Row` | `'start'` \| `'center'` \| `'end'` \| `'space-between'` \| `'space-around'` |
+| `direction` | `List` | `'vertical'` \| `'horizontal'` |
+| `direction` | `Divider` | `'horizontal'` \| `'vertical'` |
+
+`Tabs` is the one container that doesn't use `A2uiChildren`. Its `tabItems` is an array of `A2uiTabItem`, each pairing a `title` (a `DynamicString`) with a single `child` id:
+
+```ts
+interface A2uiTabItem {
+  title: DynamicString;
+  child: string;
+}
+```
+
 The schema exposes `validationRegexp` on `TextField`, but validation execution is not implemented in this package. Treat schema fields as protocol data until a renderer wires behavior.
 
 ## Message envelopes

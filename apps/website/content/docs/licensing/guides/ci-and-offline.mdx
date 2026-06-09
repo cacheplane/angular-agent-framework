@@ -34,12 +34,20 @@ await runLicenseCheck({
 Use `verifyLicense()` and `evaluateLicense()` directly when network access is unavailable or unwanted.
 
 ```ts
-import { evaluateLicense, verifyLicense } from '@threadplane/licensing';
+import {
+  LICENSE_PUBLIC_KEY,
+  evaluateLicense,
+  verifyLicense,
+} from '@threadplane/licensing';
+
+const publicKey = LICENSE_PUBLIC_KEY;
+const token = process.env['THREADPLANE_LICENSE'] ?? '';
 
 const verified = await verifyLicense(token, publicKey);
 const result = evaluateLicense(verified, {
   nowSec: Math.floor(Date.now() / 1000),
 });
+console.log(result.status);
 ```
 
 This doesn't emit warnings. The higher-level `runLicenseCheck()` helper can emit warnings, but it never makes network requests.
@@ -49,7 +57,25 @@ This doesn't emit warnings. The higher-level `runLicenseCheck()` helper can emit
 `signLicense()` is exported for token minting and tests:
 
 ```ts
-import { signLicense } from '@threadplane/licensing';
+import * as ed from '@noble/ed25519';
+import {
+  signLicense,
+  type LicenseClaims,
+} from '@threadplane/licensing';
+
+// Generate a keypair. The public key is what `verifyLicense()` consumes;
+// the private key never leaves the minting side.
+const privateKey = ed.utils.randomPrivateKey();
+const publicKey = await ed.getPublicKeyAsync(privateKey);
+
+const nowSec = Math.floor(Date.now() / 1000);
+const claims: LicenseClaims = {
+  sub: 'cus_123',
+  tier: 'team',
+  iat: nowSec,
+  exp: nowSec + 60 * 60 * 24 * 365, // one year out
+  seats: 5,
+};
 
 const token = await signLicense(claims, privateKey);
 ```

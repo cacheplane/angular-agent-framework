@@ -46,6 +46,22 @@ const all = views({
 });
 ```
 
+## Per-View Fallbacks
+
+Each entry can be a bare component or a `{ component, fallback }` object. The fallback mounts while a state-bound prop on the view is still unresolved -- the same shape `defineAngularRegistry()` accepts:
+
+```typescript
+const ui = views({
+  'plan-checklist': {
+    component: PlanChecklistComponent,
+    fallback: PlanSkeletonComponent,
+  },
+  'file-preview': FilePreviewComponent, // bare form uses the default fallback
+});
+```
+
+`withViews()` and `overrideViews()` accept the same object form in their addition and override maps.
+
 ## API
 
 ### `views(map)`
@@ -149,3 +165,9 @@ The chat component checks each message for a `ui` field containing a valid spec:
 ```
 
 The `type` in the spec is matched against the view registry to resolve the Angular component.
+
+## Related
+
+- [defineAngularRegistry()](/docs/render/api/define-angular-registry) -- the low-level `AngularRegistry` that `toRenderRegistry()` converts a `ViewRegistry` into
+- [provideRender()](/docs/render/api/provide-render) -- global render config, including a registry
+- [Chat generative-UI guide](/docs/chat/guides/generative-ui) -- wiring `views()` into chat so an agent can stream specs that render inline

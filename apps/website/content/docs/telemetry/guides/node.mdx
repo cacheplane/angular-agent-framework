@@ -13,6 +13,12 @@ import {
 } from '@threadplane/telemetry/node';
 ```
 
+## When to call these
+
+These helpers are for server-side runtime and adapter code, not application request handlers. `captureRuntimeInstanceCreated()` fires when a runtime is constructed; `captureStreamStarted()`/`captureStreamEnded()` wrap a model stream. In a typical deployment that's adapter or framework-integration code — your route handlers and business logic don't call them directly.
+
+If you want to opt the whole process out, call `disableTelemetry()` once at startup, before any capture helper runs. The flag is checked at capture time, but it has to be set first to take effect for the calls you care about.
+
 ## Opt out programmatically
 
 Call `disableTelemetry()` before capture helpers run.
@@ -105,3 +111,24 @@ type CaptureResult =
 ```
 
 Use the result in tests or diagnostics. Don't make application correctness depend on telemetry delivery.
+
+### Asserting the disabled path
+
+Because `captureEvent()` returns a `CaptureResult`, you can assert that opting out actually short-circuits delivery. Call `disableTelemetry()` first, then check the result:
+
+```ts
+import { describe, expect, it } from 'vitest';
+import { captureEvent, disableTelemetry } from '@threadplane/telemetry/node';
+
+describe('telemetry opt-out', () => {
+  it('does not send when disabled', async () => {
+    disableTelemetry();
+
+    const result = await captureEvent('ngaf:runtime_instance_created', { transport: 'langgraph' });
+
+    expect(result).toEqual({ sent: false, reason: 'disabled' });
+  });
+});
+```
+
+`disableTelemetry()` sets a process-wide flag, so a test that asserts the enabled path must run in a process where it was never called.

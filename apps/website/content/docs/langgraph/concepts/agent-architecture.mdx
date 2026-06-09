@@ -567,6 +567,21 @@ const branch = computed(() => agent.branch());
 
 ### Building a Debug Timeline
 
+Each entry in `agent.history()` is an `AgentCheckpoint` — a runtime-neutral snapshot of one point in the run:
+
+```typescript
+interface AgentCheckpoint {
+  /** Adapter-opaque checkpoint id (LangGraph's checkpoint_id). Pass this back to time-travel. */
+  id?: string;
+  /** Human-friendly label — typically the next node to run. */
+  label?: string;
+  /** State snapshot captured at this checkpoint. */
+  values: Record<string, unknown>;
+}
+```
+
+Bind to those fields when you render the timeline (for the raw per-node metadata LangGraph attaches, read `agent.langGraphHistory()` instead):
+
 ```typescript
 @Component({
   selector: 'app-debug-timeline',

@@ -76,6 +76,9 @@ If you don't provide `views`, no generative UI renders. Specs and A2UI surfaces 
 Custom components receive the standard `AngularComponentInputs`:
 
 ```typescript
+import { Component, input } from '@angular/core';
+import type { AngularComponentInputs } from '@threadplane/render';
+
 @Component({
   selector: 'my-chart',
   standalone: true,
@@ -85,10 +88,24 @@ export class MyChartComponent {
   readonly data = input<number[]>([]);
   readonly title = input<string>('');
   readonly childKeys = input<string[]>([]);
-  readonly spec = input.required<Spec>();
+  readonly spec = input.required<AngularComponentInputs['spec']>();
   readonly emit = input<(event: string) => void>(() => {});
   readonly loading = input<boolean>();
 }
 ```
 
-The component receives resolved props as inputs. `childKeys` and `spec` enable recursive child rendering, and `emit` triggers event handlers defined in the spec's `on` bindings.
+The component receives resolved props as inputs. `childKeys` and `spec` enable recursive child rendering, and `emit` triggers event handlers defined in the spec's `on` bindings. `Spec` isn't exported on its own — type the input via `AngularComponentInputs['spec']` (or implement `AngularComponentInputs` directly).
+
+## What's Next
+
+<CardGroup cols={3}>
+  <Card title="Generative UI" icon="sparkles" href="/docs/chat/guides/generative-ui">
+    Wire `[views]`, `[store]`, and `[handlers]` on `<chat>`.
+  </Card>
+  <Card title="Render specs" icon="code" href="/docs/render/guides/specs">
+    The JSON spec shape catalogs render against.
+  </Card>
+  <Card title="A2UI overview" icon="layout" href="/docs/chat/a2ui/overview">
+    Agent-driven surfaces and the basic catalog.
+  </Card>
+</CardGroup>

@@ -55,3 +55,31 @@ interface ToolCallInfo {
 <!-- Always-expanded -->
 <chat-tool-call-card [toolCall]="tc" [defaultCollapsed]="false" />
 ```
+
+Define `tc` as a `ToolCallInfo` in the component class:
+
+```typescript
+import { Component } from '@angular/core';
+import { ChatToolCallCardComponent, type ToolCallInfo } from '@threadplane/chat';
+
+@Component({
+  selector: 'app-tool-call-demo',
+  standalone: true,
+  imports: [ChatToolCallCardComponent],
+  template: `<chat-tool-call-card [toolCall]="tc" />`,
+})
+export class ToolCallDemoComponent {
+  protected readonly tc: ToolCallInfo = {
+    id: 'call_1',
+    name: 'search_web',
+    args: { query: 'angular' },
+    status: 'complete',
+    result: [{ title: 'Angular', url: 'https://angular.dev' }],
+  };
+}
+```
+
+## See also
+
+- [`<chat-tool-calls>`](/docs/chat/components/chat-tool-calls) — renders many cards for an agent's tool-call list; the usual place this card is mounted.
+- [`chatToolCallTemplate`](/docs/chat/components/chat-tool-call-template) — replace the card UX for a specific tool name.

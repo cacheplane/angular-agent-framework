@@ -123,6 +123,61 @@ export class TracedChatComponent {
 }
 ```
 
+### Driving traces from `agent.toolCalls()`
+
+The agent's `toolCalls()` signal is the real source for tool-call traces. `ToolCall.status` and `TraceState` use almost the same names, but `ToolCall` reports `'complete'` where `TraceState` expects `'done'` — map that one explicitly:
+
+```typescript
+import { ChangeDetectionStrategy, Component, computed } from '@angular/core';
+import { injectAgent, provideAgent } from '@threadplane/langgraph';
+import { signal } from '@angular/core';
+import {
+  ChatTraceComponent,
+  ChatMessageListComponent,
+} from '@threadplane/chat';
+import type { ToolCallStatus } from '@threadplane/chat';
+import type { TraceState } from '@threadplane/chat';
+
+function toTraceState(status: ToolCallStatus): TraceState {
+  // 'pending' | 'running' | 'error' carry over; only 'complete' is renamed.
+  return status === 'complete' ? 'done' : status;
+}
+
+@Component({
+  selector: 'app-tool-traces',
+  standalone: true,
+  imports: [ChatMessageListComponent, ChatTraceComponent],
+  providers: [provideAgent({ assistantId: 'chat', threadId: signal(null) })],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <chat-message-list [agent]="chatAgent">
+      <ng-template chatMessageTemplate="ai" let-message>
+        @for (call of traces(); track call.id) {
+          <chat-trace [state]="call.state">
+            <span traceLabel>{{ call.name }}</span>
+            <pre>{{ call.args | json }}</pre>
+          </chat-trace>
+        }
+        <div>{{ message.content }}</div>
+      </ng-template>
+    </chat-message-list>
+  `,
+})
+export class ToolTracesComponent {
+  protected readonly chatAgent = injectAgent();
+
+  // Map each ToolCall to a trace-friendly view, translating status -> TraceState.
+  protected readonly traces = computed(() =>
+    this.chatAgent.toolCalls().map((call) => ({
+      id: call.id,
+      name: call.name,
+      args: call.args,
+      state: toTraceState(call.status),
+    })),
+  );
+}
+```
+
 ## Styling
 
 The component uses the following `--ngaf-chat-*` tokens:
