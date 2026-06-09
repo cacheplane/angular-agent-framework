@@ -51,6 +51,7 @@ export const appConfig: ApplicationConfig = {
 | `agentId` | `string` | Optional. Identifies a specific agent on the backend. |
 | `threadId` | `string` | Optional. Resume an existing conversation thread. |
 | `headers` | `Record<string, string>` | Optional. Custom request headers (auth, tracing). |
+| `telemetry` | `AgentRuntimeTelemetrySink \| false` | Optional. App-owned telemetry sink — opt-in, emits nothing unless supplied. See [`@threadplane/telemetry`](/docs/telemetry/getting-started/introduction). |
 
 ## Use in a component
 
