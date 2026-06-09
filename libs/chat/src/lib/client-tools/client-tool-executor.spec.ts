@@ -80,7 +80,10 @@ describe('startClientToolExecutor()', () => {
       startClientToolExecutor(agent, weatherRegistry);
     });
 
-    pending.set([{ id: 'c1', name: 'get_weather', args: { city: 'SF' }, status: 'running' }]);
+    // Regression: a client tool call is marked 'complete' once its args finish
+    // streaming, yet it still needs browser execution. The executor must NOT
+    // skip 'complete' calls (only `inFlight` + already-resolved/result guards).
+    pending.set([{ id: 'c1', name: 'get_weather', args: { city: 'SF' }, status: 'complete' }]);
     TestBed.flushEffects();
     await drainMicrotasks();
 

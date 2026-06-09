@@ -18,7 +18,12 @@ export function startClientToolExecutor(agent: Agent, registry: ClientToolRegist
     for (const tc of cap.pending()) {
       const def = registry[tc.name];
       if (!def || def.kind !== 'function') continue; // non-function handled elsewhere
-      if (inFlight.has(tc.id) || tc.status === 'complete') continue;
+      // NB: do NOT skip on `tc.status === 'complete'`. A client tool call is
+      // marked 'complete' once its args finish streaming, yet it still has no
+      // result and needs the browser to execute it. `pending` already excludes
+      // calls that have a result or were resolved; `inFlight` prevents a
+      // double-dispatch within a render cycle.
+      if (inFlight.has(tc.id)) continue;
       inFlight.add(tc.id);
       void executeFunctionTool(def, tc.args).then((result) => {
         cap.resolve(tc.id, result);
