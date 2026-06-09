@@ -28,13 +28,17 @@ npm install @threadplane/chat marked
 
 ```ts
 // app.config.ts
-import { ApplicationConfig } from '@angular/core';
+import { ApplicationConfig, signal } from '@angular/core';
 import { provideAgent } from '@threadplane/langgraph';
 import { provideChat } from '@threadplane/chat';
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideAgent({ apiUrl: 'http://localhost:2024' }),
+    provideAgent({
+      assistantId: 'chat',
+      apiUrl: 'http://localhost:2024',
+      threadId: signal(null),
+    }),
     provideChat({ assistantName: 'Assistant' }),
   ],
 };
@@ -45,8 +49,8 @@ export const appConfig: ApplicationConfig = {
 
 ```ts
 // chat-page.component.ts
-import { Component, ChangeDetectionStrategy, signal } from '@angular/core';
-import { injectAgent, provideAgent } from '@threadplane/langgraph';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
+import { injectAgent } from '@threadplane/langgraph';
 import { ChatComponent } from '@threadplane/chat';
 
 @Component({
@@ -54,12 +58,6 @@ import { ChatComponent } from '@threadplane/chat';
   standalone: true,
   imports: [ChatComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  providers: [
-    provideAgent({
-      assistantId: 'chat',
-      threadId: signal(null),
-    }),
-  ],
   template: `<div style="height: 100vh"><chat [agent]="chatAgent" /></div>`,
 })
 export class ChatPageComponent {
@@ -67,7 +65,7 @@ export class ChatPageComponent {
 }
 ```
 
-The second `provideAgent()` isn't a duplicate. Angular's hierarchical DI merges it with the root provider from Step 2: `apiUrl` comes from the root, `assistantId` and `threadId` come from this component-level call. Splitting config this way lets one app host several `<chat>` surfaces that share a backend URL but target different graphs. See the [Multiple agents](/docs/chat/getting-started/installation) note in Installation for the full pattern.
+`injectAgent()` returns the singleton wired up in Step 2 — no extra provider needed here. To host several `<chat>` surfaces that share a backend URL but target different graphs, re-provide `provideAgent({...})` in a component's `providers: []` array; Angular's hierarchical DI scopes that override to the subtree. See the [Multiple agents](/docs/chat/getting-started/installation) note in Installation for the full pattern.
 
 </Step>
 </Steps>
