@@ -550,11 +550,11 @@
   {
     "name": "injectAgent",
     "kind": "function",
-    "description": "Injects the Agent from Angular's dependency injection container.\nUse this in components or services that have been provided via provideAgent().",
-    "signature": "injectAgent(): Agent",
+    "description": "Injects the AG-UI agent from Angular's dependency injection container.\nUse this in components or services provided via `provideAgent()` (or\n`provideFakeAgent()`).\n\nReturns an `AgUiAgent` — the runtime-neutral `Agent` contract plus the\nAG-UI-specific `customEvents` signal — so `customEvents` is reachable\ndirectly, without casting.",
+    "signature": "injectAgent(): AgUiAgent",
     "params": [],
     "returns": {
-      "type": "Agent",
+      "type": "AgUiAgent",
       "description": ""
     },
     "examples": []
