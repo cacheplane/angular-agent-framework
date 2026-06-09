@@ -91,9 +91,15 @@ When `state` transitions from any value to `'running'`, the trace automatically 
 ### Full component example
 
 ```typescript
-import { Component, ChangeDetectionStrategy, signal } from '@angular/core';
+import { Component, ChangeDetectionStrategy, computed, signal } from '@angular/core';
 import { injectAgent, provideAgent } from '@threadplane/langgraph';
 import { ChatTraceComponent, ChatMessageListComponent } from '@threadplane/chat';
+import type { ToolCallStatus, TraceState } from '@threadplane/chat';
+
+function toTraceState(status: ToolCallStatus): TraceState {
+  // 'pending' | 'running' | 'error' carry over; only 'complete' is renamed.
+  return status === 'complete' ? 'done' : status;
+}
 
 @Component({
   selector: 'app-traced-chat',
@@ -106,10 +112,10 @@ import { ChatTraceComponent, ChatMessageListComponent } from '@threadplane/chat'
       <chat-message-list [agent]="chatAgent">
         <ng-template chatMessageTemplate="ai" let-message>
           <!-- Show tool traces before the AI message -->
-          @for (step of chatAgent.steps(); track step.id) {
-            <chat-trace [state]="step.state">
-              <span traceLabel>{{ step.name }}</span>
-              <pre>{{ step.output | json }}</pre>
+          @for (trace of traces(); track trace.id) {
+            <chat-trace [state]="trace.state">
+              <span traceLabel>{{ trace.name }}</span>
+              <pre>{{ trace.args | json }}</pre>
             </chat-trace>
           }
           <div>{{ message.content }}</div>
@@ -120,6 +126,16 @@ import { ChatTraceComponent, ChatMessageListComponent } from '@threadplane/chat'
 })
 export class TracedChatComponent {
   protected readonly chatAgent = injectAgent();
+
+  // The agent's toolCalls() signal is the real source for trace rows.
+  protected readonly traces = computed(() =>
+    this.chatAgent.toolCalls().map((call) => ({
+      id: call.id,
+      name: call.name,
+      args: call.args,
+      state: toTraceState(call.status),
+    })),
+  );
 }
 ```
 
