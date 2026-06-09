@@ -63,6 +63,7 @@ import type { MessageMetadata } from '@langchain/langgraph-sdk/ui';
 import { createStreamManagerBridge } from './internals/stream-manager.bridge';
 import { buildBranchTree } from './internals/branch-tree';
 import { extractCitations } from './internals/extract-citations';
+import { createClientToolsCapability, mergeClientTools } from './client-tools';
 
 /**
  * Walk LangGraph history (newest-first) and pair each AIMessage id with
@@ -376,6 +377,16 @@ export function agent<
 
   const events$ = buildEvents$(customSig);
 
+  // ── Client tools capability ──────────────────────────────────────────────
+  // The capability takes a direct reference to manager.submit so it can issue
+  // follow-up runs (resolve) without going through the full submit() wrapper.
+  // The catalog is injected into every outbound payload via mergeClientTools()
+  // in the submit wrapper below and in the resolve path inside the capability.
+  const clientToolsCap = createClientToolsCapability(
+    (payload, opts) => manager.submit(payload, opts),
+    { toolCalls: toolCallsNeutral, isLoading },
+  );
+
   return {
     // ── Runtime-neutral surface (AgentWithHistory) ────────────────────────
     messages:  messagesNeutral,
@@ -399,9 +410,15 @@ export function agent<
         lcInterruptResolvedAt.set(Date.now());
       }
       const request = buildSubmitRequest(input, opts);
-      return manager.submit(request.payload, request.options);
+      // Thread the client-tools catalog into every outbound payload so the
+      // backend middleware can merge them into the model's tool list. Null
+      // payloads (regenerate re-runs, command resumes) are left unchanged.
+      const payload = mergeClientTools(request.payload, clientToolsCap.catalog());
+      return manager.submit(payload, request.options);
     },
     stop: () => manager.stop(),
+
+    clientTools: clientToolsCap,
 
     regenerate: async (assistantMessageIndex: number): Promise<void> => {
       if (isLoading()) {
