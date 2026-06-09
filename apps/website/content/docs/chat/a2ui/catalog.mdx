@@ -75,6 +75,10 @@ Renders a horizontal rule. Has no props.
 
 Layout components receive `childKeys` — an array of component IDs — and render each child via json-render's `RenderElementComponent`. They also receive the full `spec` so that child elements can be looked up by key.
 
+<Callout type="info" title="Six layout components total">
+Row, Column, Card, and List are below. Two more layout components — [Tabs](#tabs) and [Modal](#modal) — live further down (after the Interactive section) because they also expose interactive state. All six share the same `childKeys` + `spec` rendering model.
+</Callout>
+
 ### Row
 
 Arranges children horizontally with a flex row layout.
@@ -154,6 +158,10 @@ Renders a button that dispatches an action when clicked.
 | `action` | `A2uiAction` | Action to execute on click (event or function call) |
 | `validationResult` | `A2uiValidationResult` | Pre-computed validation result — button is disabled if `valid` is `false` |
 | `emit` | injected | Event emitter provided by the render engine |
+
+<Callout type="info" title="child vs childKeys">
+The Angular `A2uiButtonComponent` input is `childKeys` (an array) — that's the resolved shape your component code sees. On the A2UI wire, a Button definition may use the singular `child` field (e.g. `"child": "submit_label"`, as shown in the [overview](/docs/chat/a2ui/overview)); the surface pipeline normalizes that singular `child` into the `childKeys` array before the component renders. Author surfaces with whichever the agent emits; both resolve to `childKeys` here.
+</Callout>
 
 **Action types:**
 

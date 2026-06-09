@@ -126,13 +126,15 @@ For custom templates, you can access `message.content` directly and handle the t
 
 ```html
 <ng-template chatMessageTemplate="ai" let-message>
-  @if (isString(message.content)) {
+  @if (typeof message.content === 'string') {
     <div [innerHTML]="renderMd(message.content)"></div>
   } @else {
     <pre>{{ message.content | json }}</pre>
   }
 </ng-template>
 ```
+
+`typeof message.content === 'string'` works directly in the template — `content` is `string | ContentBlock[]`, so the string branch renders markdown and the array branch falls back to serialized JSON. (If you prefer a named guard, the exported `messageContent()` utility above collapses both cases to a string for you.)
 
 ## Full Example
 
@@ -153,9 +155,9 @@ import {
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <chat-message-list [agent]="chatAgent">
-      <ng-template chatMessageTemplate="human" let-message>
+      <ng-template chatMessageTemplate="human" let-message let-idx="index">
         <div style="display: flex; justify-content: flex-end; margin-bottom: 1rem;">
-          <div style="background: var(--ngaf-chat-primary); color: var(--ngaf-chat-on-primary); border-radius: var(--ngaf-chat-radius-bubble); padding: 0.5rem 1rem; max-width: 70%;">
+          <div style="background: var(--ngaf-chat-primary); color: var(--ngaf-chat-on-primary); border-radius: var(--ngaf-chat-radius-bubble); padding: 0.5rem 1rem; max-width: 70%;" [attr.data-message-index]="idx">
             {{ message.content }}
           </div>
         </div>
