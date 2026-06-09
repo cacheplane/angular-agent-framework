@@ -115,6 +115,7 @@ export const appConfig: ApplicationConfig = {
     provideZonelessChangeDetection(),
     provideAgent({
       apiUrl: environment.langgraphApiUrl, // e.g. 'http://localhost:2024'
+      assistantId: 'chat',                 // The graph/agent ID exposed by your backend
     }),
     provideChat({
       license: environment.threadplaneLicense,
