@@ -4,6 +4,8 @@ import { tokens } from '@threadplane/design-tokens';
 import { BrowserFrame } from '../ui/BrowserFrame';
 import { Button } from '../ui/Button';
 import { DemoCtaPair } from './DemoCtaPair';
+import { DemoModal } from './DemoModal';
+import { trackCtaClick } from '../../lib/analytics/client';
 import { DEMOS } from '../../lib/demos';
 
 type TabKey = (typeof DEMOS)[number]['key'];
@@ -31,10 +33,12 @@ const MEDIA: DemoMedia[] = [
 
 export function DemoShowcase() {
   const [active, setActive] = useState<TabKey>('langgraph');
-  const [launched, setLaunched] = useState<Set<TabKey>>(new Set());
+  const [modalOpen, setModalOpen] = useState(false);
   const media = MEDIA.find((m) => m.key === active)!;
-  const isLaunched = launched.has(active);
-  const launch = () => setLaunched((prev) => new Set(prev).add(active));
+  const launch = () => {
+    trackCtaClick({ surface: 'home_demo', destination_url: media.href, cta_id: `home_demo_launch_${active.replace(/-/g, '_')}`, cta_text: 'Launch live demo' });
+    setModalOpen(true);
+  };
 
   return (
     <div style={{ maxWidth: 760, margin: '0 auto', textAlign: 'center' }}>
@@ -61,24 +65,17 @@ export function DemoShowcase() {
 
       <BrowserFrame url={media.url} elevation="lg">
         <div style={{ position: 'relative', width: '100%', aspectRatio: '16 / 10', background: '#15161f' }}>
-          {isLaunched ? (
-            <iframe src={media.href} title={`${media.tabLabel} live demo`} loading="lazy"
-              style={{ width: '100%', height: '100%', border: 'none', display: 'block' }} />
-          ) : (
-            <>
-              <video key={media.key} autoPlay muted loop playsInline poster={media.poster}
-                style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}>
-                <source src={media.videoWebm} type="video/webm" />
-                <source src={media.videoMp4} type="video/mp4" />
-              </video>
-              <button onClick={launch} aria-label={`Launch ${media.tabLabel} live demo`}
-                style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 10,
-                  background: 'linear-gradient(180deg, rgba(16,18,32,.15), rgba(16,18,32,.45))', border: 'none', cursor: 'pointer' }}>
-                <span style={{ width: 56, height: 56, borderRadius: '50%', background: 'rgba(255,255,255,.95)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#15161f', fontSize: 22 }}>&#9654;</span>
-                <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600, fontSize: 13, color: '#fff', background: 'rgba(0,0,0,.5)', padding: '8px 14px', borderRadius: 8 }}>Launch live demo</span>
-              </button>
-            </>
-          )}
+          <video key={media.key} autoPlay muted loop playsInline poster={media.poster}
+            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}>
+            <source src={media.videoWebm} type="video/webm" />
+            <source src={media.videoMp4} type="video/mp4" />
+          </video>
+          <button onClick={launch} aria-label={`Launch ${media.tabLabel} live demo`}
+            style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 10,
+              background: 'linear-gradient(180deg, rgba(16,18,32,.15), rgba(16,18,32,.45))', border: 'none', cursor: 'pointer' }}>
+            <span style={{ width: 56, height: 56, borderRadius: '50%', background: 'rgba(255,255,255,.95)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#15161f', fontSize: 22 }}>&#9654;</span>
+            <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600, fontSize: 13, color: '#fff', background: 'rgba(0,0,0,.5)', padding: '8px 14px', borderRadius: 8 }}>Launch live demo</span>
+          </button>
         </div>
       </BrowserFrame>
 
@@ -91,6 +88,13 @@ export function DemoShowcase() {
       <p style={{ fontFamily: tokens.typography.caption.family, fontSize: tokens.typography.caption.size, color: tokens.colors.textMuted, margin: '14px 0 0' }}>
         Video loops instantly · click Launch to open the live, interactive demo · MIT · no signup
       </p>
+      <DemoModal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        tabs={MEDIA}
+        active={active}
+        onActive={setActive}
+      />
     </div>
   );
 }
