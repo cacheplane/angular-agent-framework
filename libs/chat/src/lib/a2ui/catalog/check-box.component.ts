@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 import { Component, computed, input, ChangeDetectionStrategy } from '@angular/core';
 import type { Spec } from '@json-render/core';
+import { injectRenderHost } from '@threadplane/render';
 import { emitBinding } from './emit-binding';
 
 @Component({
@@ -31,13 +32,14 @@ import { emitBinding } from './emit-binding';
   `],
 })
 export class A2uiCheckBoxComponent {
+  private readonly host = injectRenderHost();
+
   readonly label = input<string>('');
   /** v1 canonical prop: boolean checked state. */
   readonly value = input<boolean | undefined>(undefined);
   /** Pre-v1 alias retained for back-compat. */
   readonly checked = input<boolean>(false);
   readonly _bindings = input<Record<string, string>>({});
-  readonly emit = input<(event: string) => void>(() => { /* noop */ });
   // Framework inputs required by the render harness.
   readonly bindings = input<Record<string, string>>({});
   readonly loading = input<boolean>(false);
@@ -52,9 +54,9 @@ export class A2uiCheckBoxComponent {
     // `value`; pre-v1 used `checked`.
     const bound = this._bindings();
     if (bound['value']) {
-      emitBinding(this.emit(), bound, 'value', val);
+      emitBinding(this.host, bound, 'value', val);
     } else {
-      emitBinding(this.emit(), bound, 'checked', val);
+      emitBinding(this.host, bound, 'checked', val);
     }
   }
 }

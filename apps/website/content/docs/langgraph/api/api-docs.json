@@ -1408,6 +1408,12 @@
         "optional": false
       },
       {
+        "name": "clientTools",
+        "type": "ClientToolsCapability",
+        "description": "Client-declared, client-executed tools. Call setCatalog() to register\ntool specs; the catalog is automatically shipped with every run via\n`input.client_tools`. Pending tool calls appear in pending() after\nthe run ends; resolve() returns a result and continues the run.",
+        "optional": false
+      },
+      {
         "name": "customEvents",
         "type": "Signal<CustomStreamEvent[]>",
         "description": "Raw custom events stream (signal of array). The runtime-neutral\n `events$` Observable is derived from this.",
@@ -1807,6 +1813,12 @@
         "name": "branch",
         "type": "WritableSignal<string>",
         "description": "Current branch identifier for time-travel navigation.",
+        "optional": false
+      },
+      {
+        "name": "clientTools",
+        "type": "ClientToolsCapability",
+        "description": "Client-declared, client-executed tools. Call setCatalog() to register\ntool specs; the catalog is automatically shipped with every run via\n`input.client_tools`. Pending tool calls appear in pending() after\nthe run ends; resolve() returns a result and continues the run.",
         "optional": false
       },
       {

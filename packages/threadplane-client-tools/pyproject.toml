@@ -1,0 +1,21 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "threadplane-client-tools"
+version = "0.0.1"
+description = "LangGraph middleware for binding client-declared tool stubs and routing client tool calls to END so the browser executes them."
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.10"
+dependencies = [
+    "langchain-core>=0.3.0",
+    "langgraph>=0.3.0",
+]
+
+[project.optional-dependencies]
+test = ["pytest>=8"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/threadplane"]

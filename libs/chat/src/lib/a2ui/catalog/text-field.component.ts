@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 import { Component, computed, input, ChangeDetectionStrategy } from '@angular/core';
 import type { Spec } from '@json-render/core';
+import { injectRenderHost } from '@threadplane/render';
 import { emitBinding } from './emit-binding';
 
 /** v1 textFieldType values from A2uiTextField. */
@@ -75,6 +76,8 @@ export class A2uiTextFieldComponent {
   private static _idCounter = 0;
   protected readonly _inputId = `a2ui-text-field-${++A2uiTextFieldComponent._idCounter}`;
 
+  private readonly host = injectRenderHost();
+
   readonly label = input<string>('');
   /** v1 prop: text (resolved string value). */
   readonly text = input<string>('');
@@ -84,7 +87,6 @@ export class A2uiTextFieldComponent {
   readonly textFieldType = input<TextFieldType>('shortText');
   readonly validationRegexp = input<string>('');
   readonly _bindings = input<Record<string, string>>({});
-  readonly emit = input<(event: string) => void>(() => { /* noop */ });
   // Framework inputs required by the render harness.
   readonly bindings = input<Record<string, string>>({});
   readonly loading = input<boolean>(false);
@@ -100,9 +102,9 @@ export class A2uiTextFieldComponent {
     // Emit on 'text' binding (v1 prop name); also try 'value' for compat.
     const bound = this._bindings();
     if (bound['text']) {
-      emitBinding(this.emit(), bound, 'text', val);
+      emitBinding(this.host, bound, 'text', val);
     } else {
-      emitBinding(this.emit(), bound, 'value', val);
+      emitBinding(this.host, bound, 'value', val);
     }
   }
 }

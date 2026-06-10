@@ -1,34 +1,44 @@
 // SPDX-License-Identifier: MIT
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
+import type { RenderHost } from '@threadplane/render';
 import { emitBinding } from './emit-binding';
+
+function makeHost(): { host: RenderHost; writes: Array<[string, unknown]> } {
+  const writes: Array<[string, unknown]> = [];
+  const host: RenderHost = {
+    set: (p, v) => writes.push([p, v]),
+    emit: () => { /* noop */ },
+    result: () => { /* noop */ },
+  };
+  return { host, writes };
+}
 
 describe('A2uiCheckBoxComponent — onChange logic', () => {
   // NOTE: Angular signal-based inputs can't be tested via TestBed without the
   // angular() vite plugin (NG0303). These tests verify the behavioral contract
-  // of onChange: extract boolean checked state from event → emit binding.
+  // of onChange: extract boolean checked state from event → write binding.
 
-  it('emits binding with true when checkbox is checked', () => {
-    const emit = vi.fn();
+  it('writes binding with true (boolean) when checkbox is checked', () => {
+    const { host, writes } = makeHost();
     const bindings = { checked: '/agreed' };
-    // Mirrors onChange: const val = (event.target as HTMLInputElement).checked;
     const event = { target: { checked: true } } as unknown as Event;
     const val = (event.target as HTMLInputElement).checked;
-    emitBinding(emit, bindings, 'checked', val);
-    expect(emit).toHaveBeenCalledWith('a2ui:datamodel:/agreed:true');
+    emitBinding(host, bindings, 'checked', val);
+    expect(writes).toEqual([['/agreed', true]]);
   });
 
-  it('emits binding with false when checkbox is unchecked', () => {
-    const emit = vi.fn();
+  it('writes binding with false (boolean) when checkbox is unchecked', () => {
+    const { host, writes } = makeHost();
     const bindings = { checked: '/agreed' };
     const event = { target: { checked: false } } as unknown as Event;
     const val = (event.target as HTMLInputElement).checked;
-    emitBinding(emit, bindings, 'checked', val);
-    expect(emit).toHaveBeenCalledWith('a2ui:datamodel:/agreed:false');
+    emitBinding(host, bindings, 'checked', val);
+    expect(writes).toEqual([['/agreed', false]]);
   });
 
-  it('does not emit when no binding exists for checked', () => {
-    const emit = vi.fn();
-    emitBinding(emit, {}, 'checked', true);
-    expect(emit).not.toHaveBeenCalled();
+  it('does not write when no binding exists for checked', () => {
+    const { host, writes } = makeHost();
+    emitBinding(host, {}, 'checked', true);
+    expect(writes).toHaveLength(0);
   });
 });

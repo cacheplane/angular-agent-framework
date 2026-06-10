@@ -7,12 +7,19 @@ export type {
   AngularRegistry,
   RenderConfig,
 } from './lib/render.types';
+export type {
+  StandardSchemaV1,
+  StandardSchemaInferInput,
+  StandardSchemaInferOutput,
+} from './lib/standard-schema';
 
 // Contexts
 export { RENDER_CONTEXT } from './lib/contexts/render-context';
 export type { RenderContext } from './lib/contexts/render-context';
 export { REPEAT_SCOPE } from './lib/contexts/repeat-scope';
 export type { RepeatScope } from './lib/contexts/repeat-scope';
+export { RENDER_HOST, injectRenderHost } from './lib/contexts/render-host';
+export type { RenderHost } from './lib/contexts/render-host';
 
 // Registry
 export { defineAngularRegistry } from './lib/define-angular-registry';
@@ -38,6 +45,7 @@ export type {
   RenderHandlerEvent,
   RenderStateChangeEvent,
   RenderLifecycleEvent,
+  RenderResultEvent,
 } from './lib/render-event';
 
 // Lifecycle

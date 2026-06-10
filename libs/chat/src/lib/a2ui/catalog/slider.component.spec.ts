@@ -1,19 +1,30 @@
 // SPDX-License-Identifier: MIT
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
+import type { RenderHost } from '@threadplane/render';
 import { emitBinding } from './emit-binding';
+
+function makeHost(): { host: RenderHost; writes: Array<[string, unknown]> } {
+  const writes: Array<[string, unknown]> = [];
+  const host: RenderHost = {
+    set: (p, v) => writes.push([p, v]),
+    emit: () => { /* noop */ },
+    result: () => { /* noop */ },
+  };
+  return { host, writes };
+}
 
 describe('A2uiSliderComponent — v1 protocol', () => {
   // NOTE: Angular signal-based inputs can't be tested via TestBed without the
   // angular() vite plugin (NG0303). v1: min/max renamed to minValue/maxValue;
   // validationResult was removed.
 
-  it('emits binding with numeric value from range input', () => {
-    const emit = vi.fn();
+  it('writes binding with numeric value from range input', () => {
+    const { host, writes } = makeHost();
     const bindings = { value: '/rating' };
     const event = { target: { value: '75' } } as unknown as Event;
     const val = Number((event.target as HTMLInputElement).value);
-    emitBinding(emit, bindings, 'value', val);
-    expect(emit).toHaveBeenCalledWith('a2ui:datamodel:/rating:75');
+    emitBinding(host, bindings, 'value', val);
+    expect(writes).toEqual([['/rating', 75]]);
   });
 
   it('coerces string range value to number', () => {
@@ -23,9 +34,9 @@ describe('A2uiSliderComponent — v1 protocol', () => {
     expect(typeof val).toBe('number');
   });
 
-  it('does not emit when no binding exists for value', () => {
-    const emit = vi.fn();
-    emitBinding(emit, {}, 'value', 50);
-    expect(emit).not.toHaveBeenCalled();
+  it('does not write when no binding exists for value', () => {
+    const { host, writes } = makeHost();
+    emitBinding(host, {}, 'value', 50);
+    expect(writes).toHaveLength(0);
   });
 });

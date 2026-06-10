@@ -1,0 +1,28 @@
+{
+  "fixtures": [
+    {
+      "match": { "userMessage": "What's the weather in San Francisco?", "hasToolResult": true },
+      "response": { "content": "It's 68°F and sunny in San Francisco right now." }
+    },
+    {
+      "match": { "userMessage": "What's the weather in San Francisco?" },
+      "response": { "toolCalls": [ { "name": "get_weather", "arguments": { "location": "San Francisco" } } ] }
+    },
+    {
+      "match": { "userMessage": "Show me a weather card for Tokyo", "hasToolResult": true },
+      "response": { "content": "Here's the weather card for Tokyo." }
+    },
+    {
+      "match": { "userMessage": "Show me a weather card for Tokyo" },
+      "response": { "toolCalls": [ { "name": "weather_card", "arguments": { "location": "Tokyo", "temperatureF": 72, "conditions": "Clear", "humidity": 50, "windMph": 6 } } ] }
+    },
+    {
+      "match": { "userMessage": "Book a table for two at 7pm", "hasToolResult": true },
+      "response": { "content": "Your booking is confirmed — see you at 7pm." }
+    },
+    {
+      "match": { "userMessage": "Book a table for two at 7pm" },
+      "response": { "toolCalls": [ { "name": "confirm_booking", "arguments": { "summary": "Table for two at 7pm" } } ] }
+    }
+  ]
+}

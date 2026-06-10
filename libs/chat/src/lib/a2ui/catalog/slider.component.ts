@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 import { Component, input, ChangeDetectionStrategy } from '@angular/core';
 import type { Spec } from '@json-render/core';
+import { injectRenderHost } from '@threadplane/render';
 import { emitBinding } from './emit-binding';
 
 @Component({
@@ -42,6 +43,8 @@ export class A2uiSliderComponent {
   private static _idCounter = 0;
   protected readonly _inputId = `a2ui-slider-${++A2uiSliderComponent._idCounter}`;
 
+  private readonly host = injectRenderHost();
+
   readonly label = input<string>('');
   /** v1 prop: value (resolved DynamicNumber). */
   readonly value = input<number>(0);
@@ -51,7 +54,6 @@ export class A2uiSliderComponent {
   readonly maxValue = input<number>(100);
   readonly step = input<number>(1);
   readonly _bindings = input<Record<string, string>>({});
-  readonly emit = input<(event: string) => void>(() => { /* noop */ });
   // Framework inputs required by the render harness.
   readonly bindings = input<Record<string, string>>({});
   readonly loading = input<boolean>(false);
@@ -60,6 +62,6 @@ export class A2uiSliderComponent {
 
   onInput(event: Event): void {
     const val = Number((event.target as HTMLInputElement).value);
-    emitBinding(this.emit(), this._bindings(), 'value', val);
+    emitBinding(this.host, this._bindings(), 'value', val);
   }
 }

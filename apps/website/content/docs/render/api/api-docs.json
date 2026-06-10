@@ -46,6 +46,12 @@
         "optional": false
       },
       {
+        "name": "host",
+        "type": "RenderHost",
+        "description": "Element-scoped host injected by mounted view components via\ninjectRenderHost(). `set` writes the store; `emit` routes element\nhandlers; `result` surfaces a RenderResultEvent for this element.",
+        "optional": false
+      },
+      {
         "name": "mountClass",
         "type": "Signal<AngularComponentRenderer | null>",
         "description": "Picks fallback or real based on notReady. The mountedReal latch is\n driven by a constructor effect (not this computed) — Angular forbids\n signal writes inside computed.",
@@ -358,6 +364,66 @@
     "examples": []
   },
   {
+    "name": "RenderHost",
+    "kind": "interface",
+    "description": "The element-scoped host a mounted view component talks back through.\nAgent-agnostic: `result(value)` just means \"this component produced a\nvalue\"; the render lib surfaces it as a RenderResultEvent and never\ninterprets it. Provided per-element by RenderElementComponent.",
+    "properties": [],
+    "methods": [
+      {
+        "name": "emit",
+        "signature": "emit(event: string, payload: Record<string, unknown>): void",
+        "description": "Fire a named event; routed to the element's `on[event]` handlers.",
+        "params": [
+          {
+            "name": "event",
+            "type": "string",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "payload",
+            "type": "Record<string, unknown>",
+            "description": "",
+            "optional": true
+          }
+        ]
+      },
+      {
+        "name": "result",
+        "signature": "result(value: unknown): void",
+        "description": "Announce this component's result value (e.g. a HITL submission).",
+        "params": [
+          {
+            "name": "value",
+            "type": "unknown",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
+        "name": "set",
+        "signature": "set(path: string, value: unknown): void",
+        "description": "Write a value to the render state store at a JSON-Pointer path.",
+        "params": [
+          {
+            "name": "path",
+            "type": "string",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "value",
+            "type": "unknown",
+            "description": "",
+            "optional": false
+          }
+        ]
+      }
+    ],
+    "examples": []
+  },
+  {
     "name": "RenderLifecycle",
     "kind": "interface",
     "description": "",
@@ -434,6 +500,32 @@
     "examples": []
   },
   {
+    "name": "RenderResultEvent",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "elementKey",
+        "type": "string",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "type",
+        "type": "\"result\"",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "value",
+        "type": "unknown",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
     "name": "RenderStateChangeEvent",
     "kind": "interface",
     "description": "",
@@ -477,9 +569,21 @@
         "optional": false
       },
       {
+        "name": "description",
+        "type": "string",
+        "description": "Optional human/model-facing description of what this component renders.",
+        "optional": true
+      },
+      {
         "name": "fallback",
         "type": "Type<unknown>",
         "description": "",
+        "optional": true
+      },
+      {
+        "name": "schema",
+        "type": "StandardSchemaV1<unknown, unknown>",
+        "description": "Optional props contract for this component (Zod/Valibot/ArkType via\nStandard Schema). Carried + exposed by the render lib but NOT enforced\non mount; consumers (e.g. client-tools) read it to advertise the\ncomponent to a model and to validate incoming props.",
         "optional": true
       }
     ],
@@ -512,6 +616,20 @@
     "examples": []
   },
   {
+    "name": "StandardSchemaV1",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "~standard",
+        "type": "StandardSchemaProps<Input, Output>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
     "name": "AngularComponentRenderer",
     "kind": "type",
     "description": "",
@@ -522,7 +640,21 @@
     "name": "RenderEvent",
     "kind": "type",
     "description": "",
-    "signature": "RenderHandlerEvent | RenderStateChangeEvent | RenderLifecycleEvent",
+    "signature": "RenderHandlerEvent | RenderStateChangeEvent | RenderLifecycleEvent | RenderResultEvent",
+    "examples": []
+  },
+  {
+    "name": "StandardSchemaInferInput",
+    "kind": "type",
+    "description": "",
+    "signature": "NonNullable<Schema[\"~standard\"][\"types\"]>[\"input\"]",
+    "examples": []
+  },
+  {
+    "name": "StandardSchemaInferOutput",
+    "kind": "type",
+    "description": "",
+    "signature": "NonNullable<Schema[\"~standard\"][\"types\"]>[\"output\"]",
     "examples": []
   },
   {
@@ -547,6 +679,18 @@
     ],
     "returns": {
       "type": "AngularRegistry",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "injectRenderHost",
+    "kind": "function",
+    "description": "Obtain the element-scoped RenderHost from inside a mounted view component.",
+    "signature": "injectRenderHost(): RenderHost",
+    "params": [],
+    "returns": {
+      "type": "RenderHost",
       "description": ""
     },
     "examples": []

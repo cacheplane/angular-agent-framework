@@ -1,6 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { Component } from '@angular/core';
 import { views, withViews, withoutViews, toRenderRegistry, overrideViews } from './views';
+import type { RenderViewEntry } from './render.types';
+import type { StandardSchemaV1 } from './standard-schema';
 
 @Component({ selector: 'render-test-a', standalone: true, template: 'A' })
 class CompA {}
@@ -102,5 +104,30 @@ describe('toRenderRegistry()', () => {
     expect(renderReg.get('b')).toBe(CompB);
     expect(renderReg.names()).toContain('a');
     expect(renderReg.names()).toContain('b');
+  });
+});
+
+describe('RenderViewEntry schema + description', () => {
+  it('preserves schema and description on object-form entries', () => {
+    const schema = { '~standard': { version: 1, vendor: 'test', validate: (v: unknown) => ({ value: v }) } } as never;
+    const reg = views({
+      weather_card: { component: CompA, schema, description: 'Show a weather card' },
+    });
+    const entry = reg['weather_card'] as { component: unknown; schema?: unknown; description?: string };
+    expect(entry.component).toBe(CompA);
+    expect(entry.schema).toBe(schema);
+    expect(entry.description).toBe('Show a weather card');
+  });
+
+  it('accepts schema + description without a cast (compile-time type gate)', () => {
+    const schema: StandardSchemaV1 = {
+      '~standard': { version: 1, vendor: 'test', validate: (v) => ({ value: v }) },
+    };
+    // This assignment is uncast — if `schema`/`description` were removed from
+    // RenderViewEntry, tsc would fail here, so the test gates on the interface
+    // change itself rather than on the runtime spread preserving extra keys.
+    const entry: RenderViewEntry = { component: CompA, schema, description: 'Test' };
+    expect(entry.schema).toBe(schema);
+    expect(entry.description).toBe('Test');
   });
 });

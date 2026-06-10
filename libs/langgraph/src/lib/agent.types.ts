@@ -25,6 +25,7 @@ import type {
   AgentSubmitInput,
   AgentSubmitOptions,
   AgentWithHistory,
+  ClientToolsCapability,
 } from '@threadplane/chat';
 import type { AgentLifecycle } from './lifecycle';
 
@@ -314,6 +315,14 @@ export interface LangGraphAgent<T = unknown, ResolvedBag extends BagTemplate = B
     input: AgentSubmitInput | null | undefined,
     opts?: AgentSubmitOptions & LangGraphSubmitOptions,
   ) => Promise<void>;
+
+  /**
+   * Client-declared, client-executed tools. Call setCatalog() to register
+   * tool specs; the catalog is automatically shipped with every run via
+   * `input.client_tools`. Pending tool calls appear in pending() after
+   * the run ends; resolve() returns a result and continues the run.
+   */
+  clientTools: ClientToolsCapability;
 
   // ── LangGraph-specific fields preserved on the unified surface ───────────
 

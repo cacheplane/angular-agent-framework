@@ -9,8 +9,10 @@ import type {
   AgentRuntimeTelemetryProperties,
   AgentRuntimeTelemetrySink,
   AgentSubmitInput, AgentSubmitOptions,
+  ClientToolsCapability,
 } from '@threadplane/chat';
 import { reduceEvent, type ReducerStore, type CustomStreamEvent } from './reducer';
+import { createClientToolsCapability } from './client-tools';
 
 export interface ToAgentOptions {
   /** Optional app-owned telemetry sink. No telemetry is emitted unless this is provided. */
@@ -47,10 +49,12 @@ function agentRuntimeTelemetryErrorClass(error: unknown): string {
 /**
  * The neutral Agent contract, widened with the AG-UI adapter's optional
  * `customEvents` signal (the chat composition feature-detects it to enable
- * live a2ui streaming). Mirrors langgraph's LangGraphAgent extension.
+ * live a2ui streaming) and the optional `clientTools` capability.
+ * Mirrors langgraph's LangGraphAgent extension.
  */
 export interface AgUiAgent extends Agent {
   customEvents: Signal<CustomStreamEvent[]>;
+  clientTools: ClientToolsCapability;
 }
 
 /**
@@ -81,6 +85,10 @@ export function toAgent(source: AbstractAgent, options: ToAgentOptions = {}): Ag
   };
   const telemetryProperties = { transport: 'ag-ui' as const, surface: 'to_agent' };
   let activeRun: { startedAt: number; errored: boolean } | null = null;
+
+  // Build the client-tools capability. catalogAsAgUiTools() is used below to
+  // thread the catalog into every runAgent() call.
+  const clientToolsCap = createClientToolsCapability(source, store);
 
   captureAgentRuntimeTelemetry(
     options.telemetry,
@@ -143,6 +151,7 @@ export function toAgent(source: AbstractAgent, options: ToAgentOptions = {}): Ag
     interrupt: store.interrupt,
     events$:      store.events$.asObservable(),
     customEvents: store.customEvents,
+    clientTools:  clientToolsCap,
 
     submit: async (input: AgentSubmitInput, _opts?: AgentSubmitOptions) => {
       if (input.resume !== undefined) {
@@ -151,8 +160,12 @@ export function toAgent(source: AbstractAgent, options: ToAgentOptions = {}): Ag
         // forwardedProps.command.resume mechanism.
         store.interrupt.set(undefined);
         const run = startRunTelemetry('resume');
+        const tools = clientToolsCap.catalogAsAgUiTools();
         try {
-          await source.runAgent({ forwardedProps: { command: { resume: input.resume } } });
+          await source.runAgent({
+            forwardedProps: { command: { resume: input.resume } },
+            ...(tools.length > 0 ? { tools } : {}),
+          });
           finishRunTelemetry(run);
         } catch (err) {
           store.status.set('error');
@@ -173,8 +186,9 @@ export function toAgent(source: AbstractAgent, options: ToAgentOptions = {}): Ag
       }
 
       const run = startRunTelemetry('submit');
+      const tools = clientToolsCap.catalogAsAgUiTools();
       try {
-        await source.runAgent();
+        await source.runAgent(tools.length > 0 ? { tools } : undefined);
         finishRunTelemetry(run);
       } catch (err) {
         // If the run was aborted via stop(), abortRun() resolves the promise
@@ -224,8 +238,9 @@ export function toAgent(source: AbstractAgent, options: ToAgentOptions = {}): Ag
       source.setMessages(trimmed as Parameters<typeof source.setMessages>[0]);
 
       const run = startRunTelemetry('regenerate');
+      const regenTools = clientToolsCap.catalogAsAgUiTools();
       try {
-        await source.runAgent();
+        await source.runAgent(regenTools.length > 0 ? { tools: regenTools } : undefined);
         finishRunTelemetry(run);
       } catch (err) {
         store.status.set('error');

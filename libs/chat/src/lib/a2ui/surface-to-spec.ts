@@ -83,9 +83,8 @@ export function surfaceToSpec(surface: A2uiSurface): Spec | null {
         // snapshot taken at conversion time and never reflects user
         // input writes back into the store. The `_bindings` map below
         // tells the catalog component which prop names map to which
-        // paths so its emit() callback can write back via the
-        // a2ui:datamodel:<path>:<value> magic-string protocol that
-        // render-element's emitFn intercepts.
+        // paths so its injectRenderHost().set(path, value) call can
+        // write the typed value back to the render state store.
         const path = (value as { path: string }).path;
         bindings[key] = path;
         resolvedProps[key] = { $bindState: path };

@@ -30,9 +30,9 @@ describe('surfaceToSpec (v1)', () => {
     // Path refs preserve their dynamic resolution: surface-to-spec emits
     // a `$bindState` marker so json-render reads the current value from
     // its state store on every render. This is what enables user input
-    // (TextField, MultipleChoice, etc.) to write back through the
-    // a2ui:datamodel:<path>:<value> emit protocol and have the UI
-    // reflect those writes immediately.
+    // (TextField, MultipleChoice, etc.) to call host.set(path, value)
+    // via injectRenderHost() and have the UI reflect those writes
+    // immediately.
     const surface = makeSurface(
       [{ id: 'root', component: { Text: { text: { path: '/greeting' } } } }],
       { greeting: 'Hello World' },
@@ -185,8 +185,8 @@ describe('surfaceToSpec (v1)', () => {
     const spec = surfaceToSpec(surface)!;
     // Path refs become $bindState markers (see "leaves DynamicString
     // path prop" test above). _bindings still maps prop name → path so
-    // catalog components emit a2ui:datamodel:<path>:<value> on user
-    // input.
+    // catalog components can call host.set(path, value) via
+    // injectRenderHost() on user input.
     expect(spec.elements['root'].props['text']).toEqual({ $bindState: '/name' });
     expect(spec.elements['root'].props['_bindings']).toEqual({ text: '/name' });
   });

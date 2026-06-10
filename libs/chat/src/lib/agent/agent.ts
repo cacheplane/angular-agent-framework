@@ -8,6 +8,7 @@ import type { AgentInterrupt } from './agent-interrupt';
 import type { Subagent } from './subagent';
 import type { AgentEvent } from './agent-event';
 import type { AgentSubmitInput, AgentSubmitOptions } from './agent-submit';
+import type { ClientToolsCapability } from '../client-tools/client-tools-capability';
 
 /**
  * Runtime-neutral contract chat primitives consume.
@@ -49,6 +50,8 @@ export interface Agent {
   // Extended (optional; absent when runtime does not support)
   interrupt?: Signal<AgentInterrupt | undefined>;
   subagents?: Signal<Map<string, Subagent>>;
+  /** Optional: client-declared, client-executed tools (see ClientToolsCapability). */
+  clientTools?: ClientToolsCapability;
 
   // Events stream (required; emit EMPTY if runtime produces no events)
   events$: Observable<AgentEvent>;

@@ -1,7 +1,18 @@
 // SPDX-License-Identifier: MIT
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
+import type { RenderHost } from '@threadplane/render';
 import { A2uiMultipleChoiceComponent } from './multiple-choice.component';
 import { emitBinding } from './emit-binding';
+
+function makeHost(): { host: RenderHost; writes: Array<[string, unknown]> } {
+  const writes: Array<[string, unknown]> = [];
+  const host: RenderHost = {
+    set: (p, v) => writes.push([p, v]),
+    emit: () => { /* noop */ },
+    result: () => { /* noop */ },
+  };
+  return { host, writes };
+}
 
 describe('A2uiMultipleChoiceComponent', () => {
   // NOTE: Angular signal-based inputs can't be tested via TestBed without the
@@ -34,13 +45,13 @@ describe('A2uiMultipleChoiceComponent', () => {
   });
 
   describe('onSelectChange emit logic (single-select)', () => {
-    it('emits binding with selected value', () => {
-      const emit = vi.fn();
+    it('writes binding with selected string value', () => {
+      const { host, writes } = makeHost();
       const bindings = { selections: '/department' };
       const event = { target: { value: 'Engineering' } } as unknown as Event;
       const val = (event.target as HTMLSelectElement).value;
-      emitBinding(emit, bindings, 'selections', val);
-      expect(emit).toHaveBeenCalledWith('a2ui:datamodel:/department:Engineering');
+      emitBinding(host, bindings, 'selections', val);
+      expect(writes).toEqual([['/department', 'Engineering']]);
     });
   });
 
@@ -64,6 +75,18 @@ describe('A2uiMultipleChoiceComponent', () => {
     });
     it('is a no-op when removing a value not in selections', () => {
       expect(toggle(['a'], 'b', false)).toEqual(['a']);
+    });
+
+    it('writes binding with actual array (not JSON string)', () => {
+      const { host, writes } = makeHost();
+      const bindings = { selections: '/colors' };
+      const current = ['red', 'blue'];
+      emitBinding(host, bindings, 'selections', current);
+      expect(writes).toHaveLength(1);
+      expect(writes[0][0]).toBe('/colors');
+      expect(writes[0][1]).toEqual(['red', 'blue']);
+      // Ensure it's the actual array, not a JSON string
+      expect(Array.isArray(writes[0][1])).toBe(true);
     });
   });
 });

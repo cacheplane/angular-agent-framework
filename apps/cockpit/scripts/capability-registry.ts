@@ -24,6 +24,7 @@ export const capabilities: readonly Capability[] = [
   { id: 'subgraphs', product: 'langgraph', topic: 'subgraphs', angularProject: 'cockpit-langgraph-subgraphs-angular', port: 4305, pythonPort: 5305, pythonDir: 'cockpit/langgraph/subgraphs/python', graphName: 'subgraphs' },
   { id: 'time-travel', product: 'langgraph', topic: 'time-travel', angularProject: 'cockpit-langgraph-time-travel-angular', port: 4306, pythonPort: 5306, pythonDir: 'cockpit/langgraph/time-travel/python', graphName: 'time-travel' },
   { id: 'deployment-runtime', product: 'langgraph', topic: 'deployment-runtime', angularProject: 'cockpit-langgraph-deployment-runtime-angular', port: 4307, pythonPort: 5307, pythonDir: 'cockpit/langgraph/deployment-runtime/python', graphName: 'deployment-runtime' },
+  { id: 'langgraph-client-tools', product: 'langgraph', topic: 'client-tools', angularProject: 'cockpit-langgraph-client-tools-angular', port: 4308, pythonPort: 5308, pythonDir: 'cockpit/langgraph/client-tools/python', graphName: 'client-tools' },
   { id: 'da-planning', product: 'deep-agents', topic: 'planning', angularProject: 'cockpit-deep-agents-planning-angular', port: 4310, pythonPort: 5310, pythonDir: 'cockpit/deep-agents/planning/python', graphName: 'da-planning' },
   { id: 'da-filesystem', product: 'deep-agents', topic: 'filesystem', angularProject: 'cockpit-deep-agents-filesystem-angular', port: 4311, pythonPort: 5311, pythonDir: 'cockpit/deep-agents/filesystem/python', graphName: 'da-filesystem' },
   { id: 'da-subagents', product: 'deep-agents', topic: 'subagents', angularProject: 'cockpit-deep-agents-subagents-angular', port: 4312, pythonPort: 5312, pythonDir: 'cockpit/deep-agents/subagents/python', graphName: 'subagents' },
@@ -54,6 +55,7 @@ export const capabilities: readonly Capability[] = [
   { id: 'ag-ui-streaming', product: 'ag-ui', topic: 'streaming', angularProject: 'cockpit-ag-ui-streaming-angular', port: 4321, pythonPort: 5321, pythonDir: 'cockpit/ag-ui/streaming/python' },
   { id: 'ag-ui-tool-views', product: 'ag-ui', topic: 'tool-views', angularProject: 'cockpit-ag-ui-tool-views-angular', port: 4322, pythonPort: 5322, pythonDir: 'cockpit/ag-ui/tool-views/python' },
   { id: 'ag-ui-json-render', product: 'ag-ui', topic: 'json-render', angularProject: 'cockpit-ag-ui-json-render-angular', port: 4323, pythonPort: 5323, pythonDir: 'cockpit/ag-ui/json-render/python' },
+  { id: 'ag-ui-client-tools', product: 'ag-ui', topic: 'client-tools', angularProject: 'cockpit-ag-ui-client-tools-angular', port: 4325, pythonPort: 5325, pythonDir: 'cockpit/ag-ui/client-tools/python' },
   { id: 'ag-ui-a2ui', product: 'ag-ui', topic: 'a2ui', angularProject: 'cockpit-ag-ui-a2ui-angular', port: 4324, pythonPort: 5324, pythonDir: 'cockpit/ag-ui/a2ui/python' },
 ] as const;
 

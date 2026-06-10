@@ -200,12 +200,6 @@
         "optional": false
       },
       {
-        "name": "emit",
-        "type": "InputSignal<(event: string) => void>",
-        "description": "",
-        "optional": false
-      },
-      {
         "name": "label",
         "type": "InputSignal<string>",
         "description": "",
@@ -344,12 +338,6 @@
       {
         "name": "childKeys",
         "type": "InputSignal<string[]>",
-        "description": "",
-        "optional": false
-      },
-      {
-        "name": "emit",
-        "type": "InputSignal<(event: string) => void>",
         "description": "",
         "optional": false
       },
@@ -783,12 +771,6 @@
         "optional": false
       },
       {
-        "name": "emit",
-        "type": "InputSignal<(event: string) => void>",
-        "description": "",
-        "optional": false
-      },
-      {
         "name": "isSingleSelect",
         "type": "Signal<boolean>",
         "description": "",
@@ -989,12 +971,6 @@
       {
         "name": "childKeys",
         "type": "InputSignal<string[]>",
-        "description": "",
-        "optional": false
-      },
-      {
-        "name": "emit",
-        "type": "InputSignal<(event: string) => void>",
         "description": "",
         "optional": false
       },
@@ -1322,12 +1298,6 @@
         "optional": false
       },
       {
-        "name": "emit",
-        "type": "InputSignal<(event: string) => void>",
-        "description": "",
-        "optional": false
-      },
-      {
         "name": "htmlInputType",
         "type": "Signal<string>",
         "description": "",
@@ -1627,9 +1597,21 @@
         "optional": false
       },
       {
+        "name": "clientTools",
+        "type": "InputSignal<Readonly<Record<string, ClientToolDef>> | undefined>",
+        "description": "Client-declared tools (`view`/`ask`/`function`) the model may call. When\nprovided, a coordinator ships their catalog to the agent, runs `function`\ntools in the browser, and renders/resolves `view`/`ask` tools through the\nsame tool-views pipeline as `views`. Additive — leave undefined for the\nclassic server-tools-only experience.",
+        "optional": false
+      },
+      {
         "name": "currentAssistantStreaming",
         "type": "Signal<boolean>",
         "description": "True iff there's a current (last-index) assistant message that's\nstill streaming. The bubble's own caret already signals loading;\nwe suppress the floor typing-indicator in that case so the user\ndoesn't see two loading affordances at once.\n\nMatches the same `streaming + current` condition the bubble uses\nto enable `.chat-message__caret`:\n  `agent().isLoading() && i === agent().messages().length - 1`\n  `i === agent().messages().length - 1`\n\nRestricted to assistant role because the caret only renders on\nassistant bubbles (`:host([data-role=\"assistant\"][data-current=...\n ][data-streaming=...])`).",
+        "optional": false
+      },
+      {
+        "name": "effectiveViews",
+        "type": "Signal<Readonly<Record<string, Type<unknown> | RenderViewEntry>> | undefined>",
+        "description": "The view registry actually used for rendering tool-views and for\nexcluding view-backed tool names from default tool-call cards. Merges\nthe coordinator's `view`/`ask` components (keyed by tool name) into the\nuser-supplied `views()` so client-declared component tools render through\nthe same pipeline. Falls back to `views()` when no client tools exist.",
         "optional": false
       },
       {
@@ -1761,7 +1743,7 @@
       {
         "name": "viewToolNames",
         "type": "Signal<readonly string[]>",
-        "description": "Tool names that have a registered view (keys of the `views` registry).\n These render as inline tool-views and are excluded from the default\n tool-call card so they don't render twice.",
+        "description": "Tool names that have a registered view (keys of the effective view\n registry, including client-declared view/ask tools). These render as\n inline tool-views and are excluded from the default tool-call card so\n they don't render twice.",
         "optional": false
       },
       {
@@ -1893,6 +1875,19 @@
           {
             "name": "surfaceId",
             "type": "string",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
+        "name": "onClientToolEvent",
+        "signature": "onClientToolEvent(event: RenderEvent): void",
+        "description": "Forwards a render event bubbled up from a `<chat-tool-views>` component\n(a client-declared `view`/`ask` tool's rendered UI) to the client-tools\ncoordinator. The coordinator resolves the matching pending `ask` tool call\nwhen the event is a `result`. No-op when no client tools are wired.",
+        "params": [
+          {
+            "name": "event",
+            "type": "RenderEvent",
             "description": "",
             "optional": false
           }
@@ -4483,6 +4478,12 @@
         "optional": false
       },
       {
+        "name": "events",
+        "type": "OutputEmitterRef<RenderEvent>",
+        "description": "",
+        "optional": false
+      },
+      {
         "name": "handlers",
         "type": "InputSignal<Record<string, (params: Record<string, unknown>) => unknown>>",
         "description": "",
@@ -5281,6 +5282,12 @@
     "description": "Runtime-neutral contract chat primitives consume.\n\nImplementations are produced by runtime adapters (e.g. a LangGraph or\nAG-UI adapter) or by user code for custom backends.\n\n`interrupt` and `subagents` are optional: runtimes that do not support these\nconcepts should leave them undefined, and primitives that need them check\npresence and render a neutral fallback when absent.\n\nInvariant: state lives on signals; `events$` carries only things that are\nnot derivable from signals.",
     "properties": [
       {
+        "name": "clientTools",
+        "type": "ClientToolsCapability",
+        "description": "Optional: client-declared, client-executed tools (see ClientToolsCapability).",
+        "optional": true
+      },
+      {
         "name": "error",
         "type": "Signal<unknown>",
         "description": "",
@@ -5569,6 +5576,12 @@
     "description": "Extension of Agent that exposes checkpoint history for time-travel UIs.\n\nConcrete adapters that record per-node checkpoints (e.g. LangGraph) should\nimplement this. Pure request/response runtimes that don't have checkpoints\nshould implement plain Agent.",
     "properties": [
       {
+        "name": "clientTools",
+        "type": "ClientToolsCapability",
+        "description": "Optional: client-declared, client-executed tools (see ClientToolsCapability).",
+        "optional": true
+      },
+      {
         "name": "error",
         "type": "Signal<unknown>",
         "description": "",
@@ -5649,6 +5662,38 @@
       {
         "name": "toolCalls",
         "type": "Signal<ToolCall[]>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "AskToolDef",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "component",
+        "type": "Type<unknown>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "description",
+        "type": "string",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "kind",
+        "type": "\"ask\"",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "schema",
+        "type": "StandardSchemaV1<>",
         "description": "",
         "optional": false
       }
@@ -5848,6 +5893,128 @@
     "examples": []
   },
   {
+    "name": "ClientToolsCapability",
+    "kind": "interface",
+    "description": "Optional Agent capability that lets the client declare tools to the model\nand return their results. Implemented per-transport by each adapter\n(AG-UI: native RunAgentInput.tools + addMessage/re-run; LangGraph: catalog\nvia run input + ToolMessage re-run).",
+    "properties": [
+      {
+        "name": "pending",
+        "type": "Signal<readonly ToolCall[]>",
+        "description": "Tool calls the model made for client tools that await a client result.",
+        "optional": false
+      }
+    ],
+    "methods": [
+      {
+        "name": "resolve",
+        "signature": "resolve(toolCallId: string, result: ClientToolResult): void",
+        "description": "Return a client tool's result (or error) and continue the run.",
+        "params": [
+          {
+            "name": "toolCallId",
+            "type": "string",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "result",
+            "type": "ClientToolResult",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
+        "name": "setCatalog",
+        "signature": "setCatalog(specs: readonly ClientToolSpec[]): void",
+        "description": "Ship the client tool catalog to the model at run start.",
+        "params": [
+          {
+            "name": "specs",
+            "type": "readonly ClientToolSpec[]",
+            "description": "",
+            "optional": false
+          }
+        ]
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "ClientToolsCoordinator",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "viewRegistry",
+        "type": "ViewRegistry",
+        "description": "Components for `view`/`ask` tools, keyed by tool name — merge into the chat `views`.",
+        "optional": false
+      }
+    ],
+    "methods": [
+      {
+        "name": "connect",
+        "signature": "connect(agent: Agent): void",
+        "description": "Wire the coordinator to an agent: ship the catalog, run function tools, auto-ack view tools.\n MUST be called inside an injection context (sets up effects). Safe no-op if the agent lacks\n the clientTools capability.",
+        "params": [
+          {
+            "name": "agent",
+            "type": "Agent",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
+        "name": "handleRenderEvent",
+        "signature": "handleRenderEvent(agent: Agent, event: RenderEvent): void",
+        "description": "Handle a render event bubbled up from a mounted view/ask component (resolves `ask` results).",
+        "params": [
+          {
+            "name": "agent",
+            "type": "Agent",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "event",
+            "type": "RenderEvent",
+            "description": "",
+            "optional": false
+          }
+        ]
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "ClientToolSpec",
+    "kind": "interface",
+    "description": "A client tool spec as shipped to the model / AG-UI RunAgentInput.tools.",
+    "properties": [
+      {
+        "name": "description",
+        "type": "string",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "name",
+        "type": "string",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "parameters",
+        "type": "Record<string, unknown>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
     "name": "ContentClassifier",
     "kind": "interface",
     "description": "",
@@ -5957,6 +6124,38 @@
     "examples": []
   },
   {
+    "name": "FunctionToolDef",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "description",
+        "type": "string",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "handler",
+        "type": "(args: StandardSchemaInferOutput<S>) => unknown",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "kind",
+        "type": "\"function\"",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "schema",
+        "type": "S",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
     "name": "Message",
     "kind": "interface",
     "description": "",
@@ -6034,6 +6233,12 @@
         "type": "object",
         "description": "Test-only escape hatch for driving lifecycle signals from a spec. Mirrors\nthe `_internal` pattern used by CHAT_LIFECYCLE so tests can flip the\nunderlying writable without going through a full submit/stream cycle.",
         "optional": false
+      },
+      {
+        "name": "clientTools",
+        "type": "ClientToolsCapability",
+        "description": "Optional: client-declared, client-executed tools (see ClientToolsCapability).",
+        "optional": true
       },
       {
         "name": "error",
@@ -6662,6 +6867,38 @@
     "examples": []
   },
   {
+    "name": "ViewToolDef",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "component",
+        "type": "Type<unknown>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "description",
+        "type": "string",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "kind",
+        "type": "\"view\"",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "schema",
+        "type": "StandardSchemaV1<>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
     "name": "A2uiActionMessage",
     "kind": "type",
     "description": "",
@@ -6736,6 +6973,27 @@
     "kind": "type",
     "description": "",
     "signature": "\"expanded\" | \"collapsed\" | \"drawer\"",
+    "examples": []
+  },
+  {
+    "name": "ClientToolDef",
+    "kind": "type",
+    "description": "A client tool the model can call; executed in the browser.",
+    "signature": "FunctionToolDef | ViewToolDef | AskToolDef",
+    "examples": []
+  },
+  {
+    "name": "ClientToolRegistry",
+    "kind": "type",
+    "description": "A frozen, name-keyed registry of client tools.",
+    "signature": "Readonly<Record<string, ClientToolDef>>",
+    "examples": []
+  },
+  {
+    "name": "ClientToolResult",
+    "kind": "type",
+    "description": "The outcome of running a client tool.",
+    "signature": "object | object",
     "examples": []
   },
   {
@@ -6828,6 +7086,68 @@
     "examples": []
   },
   {
+    "name": "action",
+    "kind": "function",
+    "description": "Async function tool — its resolved return value becomes the tool result.",
+    "signature": "action(description: string, schema: S, handler: (args: StandardSchemaInferOutput<S>) => unknown): FunctionToolDef<S>",
+    "params": [
+      {
+        "name": "description",
+        "type": "string",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "schema",
+        "type": "S",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "handler",
+        "type": "(args: StandardSchemaInferOutput<S>) => unknown",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "FunctionToolDef<S>",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "ask",
+    "kind": "function",
+    "description": "Interactive (HITL) component tool — the value it emits becomes the result.",
+    "signature": "ask(description: string, schema: StandardSchemaV1<>, component: Type<unknown>): ClientToolDef",
+    "params": [
+      {
+        "name": "description",
+        "type": "string",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "schema",
+        "type": "StandardSchemaV1<>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "component",
+        "type": "Type<unknown>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "ClientToolDef",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
     "name": "buildA2uiActionMessage",
     "kind": "function",
     "description": "Builds an A2uiActionMessage from handler params and the current surface.\n The action.context is serialized as v1 DynamicValue-wrapped entries.\n Sets action.label when the source component is a Button with a Text\n child whose literalString is non-empty.",
@@ -6860,6 +7180,25 @@
     "params": [],
     "returns": {
       "type": "A2uiSurfaceStore",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "createClientToolsCoordinator",
+    "kind": "function",
+    "description": "",
+    "signature": "createClientToolsCoordinator(registry: ClientToolRegistry): ClientToolsCoordinator",
+    "params": [
+      {
+        "name": "registry",
+        "type": "ClientToolRegistry",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "ClientToolsCoordinator",
       "description": ""
     },
     "examples": []
@@ -6915,14 +7254,39 @@
     "examples": []
   },
   {
-    "name": "emitBinding",
+    "name": "deriveJsonSchema",
     "kind": "function",
-    "description": "Emits a data model binding event if the prop has a binding path.",
-    "signature": "emitBinding(emit: (event: string) => void, bindings: Record<string, string> | undefined, prop: string, value: unknown): void",
+    "description": "Convert a Standard Schema to a JSON Schema for the model's `parameters`.\nUses Zod's converter; throws a clear error for non-Zod validators (callers\nshould supply a Zod schema — see the client-tools docs).",
+    "signature": "deriveJsonSchema(toolName: string, schema: StandardSchemaV1<>): Record<string, unknown>",
     "params": [
       {
-        "name": "emit",
-        "type": "(event: string) => void",
+        "name": "toolName",
+        "type": "string",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "schema",
+        "type": "StandardSchemaV1<>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "Record<string, unknown>",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "emitBinding",
+    "kind": "function",
+    "description": "Writes a typed value to the render state store if the prop has a binding path.",
+    "signature": "emitBinding(host: RenderHost, bindings: Record<string, string> | undefined, prop: string, value: unknown): void",
+    "params": [
+      {
+        "name": "host",
+        "type": "RenderHost",
         "description": "",
         "optional": false
       },
@@ -6947,6 +7311,31 @@
     ],
     "returns": {
       "type": "void",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "executeFunctionTool",
+    "kind": "function",
+    "description": "Validate args, run the handler, and normalize the outcome to a ClientToolResult.",
+    "signature": "executeFunctionTool(def: FunctionToolDef<>, rawArgs: unknown): Promise<ClientToolResult>",
+    "params": [
+      {
+        "name": "def",
+        "type": "FunctionToolDef<>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "rawArgs",
+        "type": "unknown",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "Promise<ClientToolResult>",
       "description": ""
     },
     "examples": []
@@ -7243,6 +7632,31 @@
     "examples": []
   },
   {
+    "name": "startClientToolExecutor",
+    "kind": "function",
+    "description": "Watches the agent's pending client tool calls and auto-runs FUNCTION tools,\nresolving each with its result. View/ask (component) tools are handled by the\nrendering layer, not here. No-op if the agent lacks the clientTools\ncapability. MUST be called in an injection context (sets up an effect).",
+    "signature": "startClientToolExecutor(agent: Agent, registry: ClientToolRegistry): void",
+    "params": [
+      {
+        "name": "agent",
+        "type": "Agent",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "registry",
+        "type": "ClientToolRegistry",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "void",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
     "name": "statusColor",
     "kind": "function",
     "description": "Returns a CSS style string for a subagent's status badge.\nKept exported for backward compatibility with existing consumers; the\npreferred way to style status visually is via the `data-status` attribute\n+ CSS selectors (see component styles below).",
@@ -7306,6 +7720,44 @@
     "examples": []
   },
   {
+    "name": "toClientToolSpecs",
+    "kind": "function",
+    "description": "Build the catalog spec list shipped to the model.",
+    "signature": "toClientToolSpecs(registry: ClientToolRegistry): ClientToolSpec[]",
+    "params": [
+      {
+        "name": "registry",
+        "type": "ClientToolRegistry",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "ClientToolSpec[]",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "tools",
+    "kind": "function",
+    "description": "Collect named client tools into a frozen registry (the key is the tool name).",
+    "signature": "tools(map: Record<string, ClientToolDef>): ClientToolRegistry",
+    "params": [
+      {
+        "name": "map",
+        "type": "Record<string, ClientToolDef>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "ClientToolRegistry",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
     "name": "toRenderRegistry",
     "kind": "function",
     "description": "Converts a ViewRegistry to an AngularRegistry for use with RenderSpecComponent.",
@@ -7320,6 +7772,62 @@
     ],
     "returns": {
       "type": "AngularRegistry",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "validateArgs",
+    "kind": "function",
+    "description": "Validate raw model args against a Standard Schema.",
+    "signature": "validateArgs(schema: StandardSchemaV1<>, args: unknown): Promise<object | object>",
+    "params": [
+      {
+        "name": "schema",
+        "type": "StandardSchemaV1<>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "args",
+        "type": "unknown",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "Promise<object | object>",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "view",
+    "kind": "function",
+    "description": "Render-only component tool — the model fills its props; auto-acknowledged.",
+    "signature": "view(description: string, schema: StandardSchemaV1<>, component: Type<unknown>): ClientToolDef",
+    "params": [
+      {
+        "name": "description",
+        "type": "string",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "schema",
+        "type": "StandardSchemaV1<>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "component",
+        "type": "Type<unknown>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "ClientToolDef",
       "description": ""
     },
     "examples": []
