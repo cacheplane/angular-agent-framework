@@ -111,9 +111,12 @@ export function createClientToolsCapability(
       // Mark as resolved first so pending() drops it immediately.
       resolvedIds.update((s) => new Set(s).add(id));
 
+      // Cast rather than rely on discriminant narrowing: consumer apps that
+      // compile this source with `strictNullChecks: false` don't narrow the
+      // ClientToolResult union in a ternary.
       const content = result.ok
-        ? safeStringify(result.value)
-        : `Error: ${result.error}`;
+        ? safeStringify((result as { value: unknown }).value)
+        : `Error: ${(result as { error: string }).error}`;
 
       // Issue a new run on the same thread. LangGraph's add_messages reducer
       // appends the ToolMessage to the thread state. `client_tools` is

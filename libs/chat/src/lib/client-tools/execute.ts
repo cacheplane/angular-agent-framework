@@ -12,7 +12,10 @@ export async function validateArgs(
   if (res.issues) {
     return { ok: false, error: res.issues.map((i) => i.message).join('; ') };
   }
-  return { ok: true, value: res.value };
+  // Cast rather than rely on discriminant narrowing: the cockpit example apps
+  // compile this source with `strictNullChecks: false`, where the
+  // `issues?: undefined` discriminant doesn't narrow `res` to the success type.
+  return { ok: true, value: (res as { value: unknown }).value };
 }
 
 /** Validate args, run the handler, and normalize the outcome to a ClientToolResult. */
@@ -21,9 +24,9 @@ export async function executeFunctionTool(
   rawArgs: unknown,
 ): Promise<ClientToolResult> {
   const v = await validateArgs(def.schema, rawArgs);
-  if (!v.ok) return { ok: false, error: `invalid arguments: ${v.error}` };
+  if (!v.ok) return { ok: false, error: `invalid arguments: ${(v as { error: string }).error}` };
   try {
-    const value = await def.handler(v.value as never);
+    const value = await def.handler((v as { value: unknown }).value as never);
     return { ok: true, value };
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : String(err) };
