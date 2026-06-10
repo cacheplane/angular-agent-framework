@@ -1,5 +1,21 @@
 # Staged PyPI publish workflow for threadplane-client-tools (Python package).
 #
+# This workflow uses PyPI TRUSTED PUBLISHING (OIDC) — no API token secret is
+# required. GitHub exchanges its OIDC token for a short-lived PyPI upload
+# credential automatically when the job has `id-token: write`.
+#
+# To enable trusted publishing on PyPI:
+#   1. Log into PyPI under the **cacheplane** organization.
+#   2. Navigate to threadplane-client-tools → Settings → "Trusted Publishers".
+#   3. Add a **Pending Publisher** with:
+#        Repository:   cacheplane/angular-agent-framework
+#        Workflow:     publish-client-tools-python.yml
+#        Environment:  (leave blank, or set to "pypi" if you create one)
+#   4. The FIRST-EVER publish must be bootstrapped locally by a maintainer
+#      using a PyPI API token (`uv publish --token <tok> dist/*`). After that
+#      initial upload creates the project on PyPI, all subsequent releases use
+#      OIDC from this workflow — no secret needed.
+#
 # This workflow is MANUALLY TRIGGERED ONLY — it will never run automatically
 # on push or pull_request. A maintainer must dispatch it from the Actions tab
 # (or via `gh workflow run`) after verifying the release is ready.
@@ -7,10 +23,6 @@
 # Inputs:
 #   dry_run (default: true) — when true, `uv publish --dry-run` is used and
 #     nothing is uploaded to PyPI. Set to false only for a real release.
-#
-# Prerequisites:
-#   - Add UV_PUBLISH_TOKEN as a repository secret (your PyPI API token or a
-#     scoped trusted-publishing token for threadplane-client-tools).
 
 name: Publish threadplane-client-tools (Python)
 
@@ -31,6 +43,10 @@ jobs:
   build-and-publish:
     name: Build and publish threadplane-client-tools
     runs-on: ubuntu-latest
+
+    permissions:
+      id-token: write   # Required for OIDC trusted publishing to PyPI
+      contents: read
 
     steps:
       - name: Checkout repository
@@ -55,13 +71,9 @@ jobs:
       - name: Publish to PyPI (dry run)
         if: ${{ inputs.dry_run == true }}
         working-directory: packages/threadplane-client-tools
-        env:
-          UV_PUBLISH_TOKEN: ${{ secrets.UV_PUBLISH_TOKEN }}
         run: uv publish --dry-run dist/*
 
-      - name: Publish to PyPI (real release)
+      - name: Publish to PyPI (real release — OIDC trusted publishing)
         if: ${{ inputs.dry_run == false }}
         working-directory: packages/threadplane-client-tools
-        env:
-          UV_PUBLISH_TOKEN: ${{ secrets.UV_PUBLISH_TOKEN }}
         run: uv publish dist/*

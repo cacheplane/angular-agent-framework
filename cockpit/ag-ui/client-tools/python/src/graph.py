@@ -17,7 +17,7 @@ from langgraph.graph.message import add_messages
 from langgraph.checkpoint.memory import MemorySaver
 from typing_extensions import Annotated, TypedDict
 
-from threadplane_client_tools import bind_client_tools
+from threadplane.client_tools import bind_client_tools
 
 PROMPTS_DIR = Path(__file__).parent.parent / "prompts"
 

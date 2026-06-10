@@ -1,8 +1,8 @@
 # SPDX-License-Identifier: MIT
-"""Tests for threadplane_client_tools.middleware — no LangChain import required."""
+"""Tests for threadplane.client_tools.middleware — no LangChain import required."""
 import pytest
 
-from threadplane_client_tools.middleware import (
+from threadplane.client_tools.middleware import (
     bind_client_tools,
     client_tool_names,
     client_tool_specs,
