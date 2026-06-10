@@ -405,8 +405,14 @@
   {
     "name": "AgUiAgent",
     "kind": "interface",
-    "description": "The neutral Agent contract, widened with the AG-UI adapter's optional\n`customEvents` signal (the chat composition feature-detects it to enable\nlive a2ui streaming). Mirrors langgraph's LangGraphAgent extension.",
+    "description": "The neutral Agent contract, widened with the AG-UI adapter's optional\n`customEvents` signal (the chat composition feature-detects it to enable\nlive a2ui streaming) and the optional `clientTools` capability.\nMirrors langgraph's LangGraphAgent extension.",
     "properties": [
+      {
+        "name": "clientTools",
+        "type": "ClientToolsCapability",
+        "description": "Optional: client-declared, client-executed tools (see ClientToolsCapability).",
+        "optional": false
+      },
       {
         "name": "customEvents",
         "type": "Signal<CustomStreamEvent[]>",
