@@ -9,11 +9,8 @@ dependencies = [
     "ag-ui-langgraph>=0.0.25",
     "fastapi>=0.110",
     "uvicorn[standard]>=0.29",
-    "threadplane-client-tools",
+    "threadplane-client-tools>=0.0.1",
 ]
-
-[tool.uv.sources]
-threadplane-client-tools = { path = "../../../../packages/threadplane-client-tools" }
 
 [build-system]
 requires = ["hatchling"]

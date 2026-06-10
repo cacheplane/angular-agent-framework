@@ -6,11 +6,8 @@ dependencies = [
     "langgraph>=0.3",
     "langchain-openai>=0.3",
     "langsmith>=0.2",
-    "threadplane-client-tools",
+    "threadplane-client-tools>=0.0.1",
 ]
-
-[tool.uv.sources]
-threadplane-client-tools = { path = "../../../../packages/threadplane-client-tools" }
 
 [tool.uv]
 dev-dependencies = [
