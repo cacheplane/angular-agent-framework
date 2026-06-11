@@ -48,6 +48,13 @@ export default async function globalSetup(): Promise<void> {
         ...process.env,
         OPENAI_BASE_URL: aimock.baseUrl,
         OPENAI_API_KEY: 'test-not-used',
+        // Run the backend in clone-and-run (unauthenticated) mode so the suite
+        // is hermetic. The dev proxy forwards /agent without an x-internal-token
+        // header, so if the developer's root .env defines AG_UI_INTERNAL_TOKEN
+        // (used for the Railway deploys) nx leaks it into process.env and the
+        // require_internal_token middleware 401s every run. Blanking it here
+        // matches what the proxy + transport expect.
+        AG_UI_INTERNAL_TOKEN: '',
       },
       stdio: 'pipe',
     },

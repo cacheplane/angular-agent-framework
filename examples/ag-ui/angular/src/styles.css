@@ -99,3 +99,25 @@ html[data-theme='material-light'] {
 .ag-ui-demo__header p { margin: 2px 0 0; font-size: 0.85rem; opacity: 0.7; }
 .ag-ui-demo__interrupt { padding: 12px 16px; border-bottom: 1px solid var(--tp-border, #e5e7eb); }
 .ag-ui-demo__chat { flex: 1 1 auto; min-height: 0; }
+
+/* Two-column body: itinerary panel beside the chat. */
+.ag-ui-demo__body { flex: 1 1 auto; min-height: 0; display: flex; }
+.ag-ui-demo__panel {
+  flex: 0 0 300px;
+  min-height: 0;
+  overflow-y: auto;
+  border-right: 1px solid var(--tp-border, #e5e7eb);
+}
+.ag-ui-demo__main { flex: 1 1 auto; min-width: 0; min-height: 0; display: flex; flex-direction: column; }
+
+/* Stack to a single column on narrow viewports; the panel goes full-width
+ * above the chat. */
+@media (max-width: 900px) {
+  .ag-ui-demo__body { flex-direction: column; }
+  .ag-ui-demo__panel {
+    flex: 0 0 auto;
+    max-height: 40dvh;
+    border-right: none;
+    border-bottom: 1px solid var(--tp-border, #e5e7eb);
+  }
+}

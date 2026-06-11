@@ -9,6 +9,7 @@ dependencies = [
     "fastapi>=0.115",
     "uvicorn>=0.30",
     "python-dotenv>=1.0",
+    "threadplane-client-tools>=0.0.1",
 ]
 
 [tool.uv]
