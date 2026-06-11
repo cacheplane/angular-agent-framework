@@ -8,6 +8,7 @@ from fastapi.responses import JSONResponse
 from ag_ui_langgraph import add_langgraph_fastapi_endpoint, LangGraphAgent
 
 from deps.a2ui.src.graph import graph as a2ui_graph
+from deps.client_tools.src.graph import graph as client_tools_graph
 from deps.interrupts.src.graph import graph as interrupts_graph
 from deps.json_render.src.graph import graph as json_render_graph
 from deps.streaming.src.graph import graph as streaming_graph
@@ -39,6 +40,11 @@ add_langgraph_fastapi_endpoint(
     app,
     LangGraphAgent(name="a2ui", graph=a2ui_graph),
     path="/agent/a2ui",
+)
+add_langgraph_fastapi_endpoint(
+    app,
+    LangGraphAgent(name="client-tools", graph=client_tools_graph),
+    path="/agent/client-tools",
 )
 add_langgraph_fastapi_endpoint(
     app,

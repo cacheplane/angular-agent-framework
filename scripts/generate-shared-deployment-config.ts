@@ -52,7 +52,14 @@ mkdirSync(stagedDependenciesDir, { recursive: true });
 
 for (const capability of capabilities) {
   if (!capability.pythonDir) {
-    continue; // ag-ui (in-process) and other no-Python caps
+    continue; // no-Python caps
+  }
+  if (capability.product === 'ag-ui') {
+    // ag-ui backends are uvicorn `ag-ui-langgraph` FastAPI apps deployed to
+    // Railway (scripts/generate-ag-ui-deployment-config.ts), not LangGraph
+    // Cloud. They have a pythonDir but no langgraph.json — including them
+    // here crashes the generator on every deploy.
+    continue;
   }
   const manifestPath = resolve(rootDir, capability.pythonDir, 'langgraph.json');
   const manifest = readManifest(manifestPath);
