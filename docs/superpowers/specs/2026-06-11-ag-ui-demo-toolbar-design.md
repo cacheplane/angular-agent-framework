@@ -64,10 +64,34 @@ Copy-and-trim the canonical `examples/chat/angular/src/app/shell/demo-shell.comp
 - No python/graph changes (unless the Part-1 fallback triggers, which adds only a small `server.py` mapping).
 - No website/homepage changes; the deployed demo updates via the existing `ag-ui demo → Vercel` CI path on merge.
 
+## Part 4 — Forcing function: AG-UI capability verification matrix
+
+This effort doubles as an **audit of the `@threadplane/ag-ui` adapter**: once the toolbar exposes the canonical demo's full surface, every capability is smoke-tested end-to-end over AG-UI via **Chrome MCP against the local servers** (real backend + real OpenAI key, like the approval verification on 2026-06-11). Each row gets a verdict; each gap becomes its own follow-up spec/plan.
+
+| # | Capability | How to smoke it | Expected over AG-UI |
+|---|------------|-----------------|---------------------|
+| 1 | Streaming + markdown | "Tell me about coral reefs" | works (e2e-covered) |
+| 2 | Citations | signals search+cite prompt | works (verified in recut) |
+| 3 | Interrupt — Accept | approval prompt → Accept | works (verified 2026-06-11) |
+| 4 | Interrupt — Edit / Respond / Ignore | same prompt, other three actions | **unverified** — exercise each resume payload |
+| 5 | Model select | pick gpt-5-nano → send | run uses chosen model (`state.model`) |
+| 6 | Effort select + reasoning display | Effort=high + puzzle prompt | reasoning honored; does `chat-reasoning` render over AG-UI (THINKING events)? **unverified** |
+| 7 | Gen-UI: a2ui | feedback form / product card | works (verified) |
+| 8 | Gen-UI: json-render | switch select → form prompt | **unverified** — tool-result rendering should be transport-neutral |
+| 9 | A2UI theme presets + dark/light | theme select + toggle | frontend; confirm surface theming applies |
+| 10 | Research-subagent prompt | suggestions chip | run completes; **no subagent card** (adapter exposes no `subagents`) — known gap, document UX |
+| 11 | Stop mid-stream | send long prompt → stop | `abortRun` cleanly idles |
+| 12 | Regenerate | regenerate icon on an answer | replace semantics work |
+| 13 | Error recovery | kill backend mid-run | alert + next send recovers (e2e-covered) |
+
+**Gap protocol:** (a) small adapter bug → fix inside this effort with a test; (b) real capability gap (e.g. subagent surfacing over AG-UI, json-render bridge, reasoning events) → record in a committed **findings report** (`docs/superpowers/specs/2026-06-11-ag-ui-capability-findings.md`) with repro + root cause, and create a follow-up spec/plan per gap (brainstorm with the user on priority before implementing). Gaps are never papered over in the demo — controls stay visible and honest.
+
+**Deliverables added by this part:** the findings report + zero or more follow-up plan documents.
+
 ## Risks / verify items
 
 1. **State→graph plumbing** (Part 1 spike). Fallback defined above.
-2. **`gen_ui_mode=json-render` over AG-UI:** the graph picks `generate_json_render_spec` and the chat composition renders json-render specs from tool results — transport-neutral in principle; verified manually during implementation. If broken, ship the select anyway, file the gap as an issue, and note it in the example README (don't fake it).
+2. **`gen_ui_mode=json-render` over AG-UI:** matrix row 8; if broken → findings report + follow-up plan (select stays visible; gap noted in the example README).
 3. **E2E stability:** the `/`→`/embed` redirect must keep all 10 existing specs green unchanged; mode components and suggestions render against aimock fixtures exactly as in examples/chat.
 
 ## Testing
@@ -83,4 +107,5 @@ Copy-and-trim the canonical `examples/chat/angular/src/app/shell/demo-shell.comp
 2. Shell scaffold: routing + mode components + welcome suggestions (toolbar mode control only).
 3. Toolbar selects + submit wrapper + persistence/URL knobs + theme/scheme.
 4. E2E: keep 10 green; add the 3 new specs.
-5. PR (single), merge on green; verify deployed demo.
+5. **Chrome MCP capability audit** (Part 4 matrix) against local servers; commit the findings report; create follow-up specs/plans per gap.
+6. PR (single), merge on green; verify deployed demo.
