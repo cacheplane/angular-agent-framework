@@ -96,6 +96,4 @@ html[data-theme='material-light'] {
 .ag-ui-demo { display: flex; flex-direction: column; height: 100dvh; }
 .ag-ui-demo__header { padding: 12px 16px; border-bottom: 1px solid var(--tp-border, #e5e7eb); }
 .ag-ui-demo__header h1 { margin: 0; font-size: 1.1rem; }
-.ag-ui-demo__header p { margin: 2px 0 0; font-size: 0.85rem; opacity: 0.7; }
-.ag-ui-demo__interrupt { padding: 12px 16px; border-bottom: 1px solid var(--tp-border, #e5e7eb); }
-.ag-ui-demo__chat { flex: 1 1 auto; min-height: 0; }
+.ag-ui-demo__header p { margin: 2px 0 0; font-size: 0.85rem; opacity: 0.7; }.ag-ui-demo__chat { flex: 1 1 auto; min-height: 0; }
