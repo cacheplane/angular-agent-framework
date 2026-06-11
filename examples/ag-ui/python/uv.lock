@@ -193,6 +193,7 @@ dependencies = [
     { name = "langchain-openai" },
     { name = "langgraph" },
     { name = "python-dotenv" },
+    { name = "threadplane-client-tools" },
     { name = "uvicorn" },
 ]
 
@@ -209,6 +210,7 @@ requires-dist = [
     { name = "langchain-openai", specifier = ">=0.3" },
     { name = "langgraph", specifier = ">=0.3" },
     { name = "python-dotenv", specifier = ">=1.0" },
+    { name = "threadplane-client-tools", specifier = ">=0.0.1" },
     { name = "uvicorn", specifier = ">=0.30" },
 ]
 
@@ -978,6 +980,19 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/47/c6/ee486fd809e357697ee8a44d3d69222b344920433d3b6666ccd9b374630c/tenacity-9.1.4.tar.gz", hash = "sha256:adb31d4c263f2bd041081ab33b498309a57c77f9acf2db65aadf0898179cf93a", size = 49413, upload-time = "2026-02-07T10:45:33.841Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/d7/c1/eb8f9debc45d3b7918a32ab756658a0904732f75e555402972246b0b8e71/tenacity-9.1.4-py3-none-any.whl", hash = "sha256:6095a360c919085f28c6527de529e76a06ad89b23659fa881ae0649b867a9d55", size = 28926, upload-time = "2026-02-07T10:45:32.24Z" },
+]
+
+[[package]]
+name = "threadplane-client-tools"
+version = "0.0.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "langchain-core" },
+    { name = "langgraph" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/2b/6d/142e2686892859dd9fae080a08e0173f4adad0e25566de8ce3bcf569e844/threadplane_client_tools-0.0.1.tar.gz", hash = "sha256:9fbc7aab0167145f56f5caddb667ad56df9bd847b681d80243085d2c6f1a8ac3", size = 95499, upload-time = "2026-06-10T00:29:44.847Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/5b/b7/6ca34dd8d642477e8558f1f9d2616ebe0b8189c44807af7f5e369867b1dc/threadplane_client_tools-0.0.1-py3-none-any.whl", hash = "sha256:0a898f4bd89101305fe0f9fd3e254902f0ddaadd41ab40a25bd4980c499bf3b8", size = 4288, upload-time = "2026-06-10T00:29:43.748Z" },
 ]
 
 [[package]]

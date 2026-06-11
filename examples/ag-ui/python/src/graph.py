@@ -42,6 +42,8 @@ from langchain_core.tools import tool
 from langgraph_sdk import get_client
 from langsmith import traceable
 
+from threadplane.client_tools import bind_client_tools, client_tool_names
+
 from src.streaming.a2ui_partial_handler import A2uiPartialHandler
 from src.streaming.envelope_tool import render_a2ui_surface
 from src.streaming.envelope_normalizer import normalize_envelope_args
@@ -367,6 +369,10 @@ class State(TypedDict):
     model: Optional[str]
     reasoning_effort: Optional[str]
     gen_ui_mode: Optional[str]
+    # ag-ui-langgraph merges RunAgentInput.tools into state["tools"]; the
+    # channel must exist here so the graph retains the client catalog across
+    # the generate → should_continue → attach_citations path.
+    tools: Optional[list]
 
 
 async def generate(state: State, config: RunnableConfig) -> dict:
@@ -402,8 +408,14 @@ async def generate(state: State, config: RunnableConfig) -> dict:
     # libs/chat/src/lib/a2ui/envelope-normalizer.ts) to canonicalize the
     # four observed argument shapes (envelopes / envelope / positional /
     # flat). The spike showed 80-93% canonical even without strict.
-    llm = ChatOpenAI(**kwargs).bind_tools(
+    #
+    # bind_client_tools appends the client catalog stubs (from state["tools"],
+    # populated by ag-ui-langgraph from RunAgentInput.tools) to the server
+    # tool list so the model can call any frontend-declared tool by name.
+    llm = bind_client_tools(
+        ChatOpenAI(**kwargs),
         [search_documents, request_approval, research, gen_ui_tool],
+        state,
     )
     # Append A2UI v1 schema to system prompt when in a2ui mode, so the parent
     # LLM knows how to construct the envelopes directly.
@@ -427,13 +439,21 @@ async def generate(state: State, config: RunnableConfig) -> dict:
 
 
 def should_continue(state: State) -> Literal["tools", "attach_citations"]:
-    """Conditional edge from generate: route to tools node when any
-    tool_call is present (GenUI tools, search, approval, research),
-    otherwise route to attach_citations terminal post-process."""
+    """Route to tools when any SERVER tool_call is present. A turn whose
+    calls are all client tools must END so the browser can execute them
+    and re-run with the ToolMessage; attach_citations is the terminal
+    post-process (a no-op without search results).
+
+    Mixed server+client calls keep the 'tools' route — ToolNode emits an
+    error ToolMessage for the unknown client tool name; accepted demo edge.
+    """
     last = state["messages"][-1]
-    if isinstance(last, AIMessage) and last.tool_calls:
-        return "tools"
-    return "attach_citations"
+    if not (isinstance(last, AIMessage) and last.tool_calls):
+        return "attach_citations"
+    client = client_tool_names(state)
+    if all(tc["name"] in client for tc in last.tool_calls):
+        return "attach_citations"
+    return "tools"
 
 
 def after_tools(state: State) -> Literal["emit_generated_surface", "generate"]:
