@@ -53,6 +53,13 @@ export interface ReducerStore {
   interrupt:    WritableSignal<AgentInterrupt | undefined>;
   events$:      Subject<AgentEvent>;
   customEvents: WritableSignal<CustomStreamEvent[]>;
+  /** Accumulated raw TOOL_CALL_ARGS text per toolCallId. A live model streams
+   *  args as many partial-JSON fragments, so each delta must be appended here
+   *  and the ACCUMULATED buffer parsed — parsing a lone delta only succeeds
+   *  when the whole payload happens to arrive in one chunk (e.g. test
+   *  fixtures). Lazily created by the reducer; entries dropped on
+   *  TOOL_CALL_END. */
+  argsBuffers?: Map<string, string>;
 }
 
 /**
@@ -190,16 +197,35 @@ export function reduceEvent(event: BaseEvent, store: ReducerStore): void {
     }
     case 'TOOL_CALL_ARGS': {
       const e = event as unknown as { toolCallId: string; delta: string };
-      const args = safeParseArgs(e.delta);
-      store.toolCalls.update((prev) =>
-        prev.map((t) => t.id === e.toolCallId ? { ...t, args } : t),
-      );
+      // Deltas are FRAGMENTS of a JSON document, not standalone JSON: a live
+      // model streams args token-by-token (`{"loca`, `tion":"Pa`, …), so we
+      // accumulate the raw text and parse the accumulated buffer. Until the
+      // buffer parses, keep the last-good args (initially {}).
+      const buffers = (store.argsBuffers ??= new Map<string, string>());
+      const buffer = (buffers.get(e.toolCallId) ?? '') + e.delta;
+      buffers.set(e.toolCallId, buffer);
+      const args = tryParseArgs(buffer);
+      if (args !== undefined) {
+        store.toolCalls.update((prev) =>
+          prev.map((t) => t.id === e.toolCallId ? { ...t, args } : t),
+        );
+      }
       return;
     }
     case 'TOOL_CALL_END': {
       const e = event as unknown as { toolCallId: string };
+      // Belt and braces: apply the final accumulated args (in case the last
+      // ARGS delta arrived but an intermediate state was left unparsed), then
+      // drop the buffer.
+      const finalBuffer = store.argsBuffers?.get(e.toolCallId);
+      store.argsBuffers?.delete(e.toolCallId);
+      const finalArgs = finalBuffer !== undefined ? tryParseArgs(finalBuffer) : undefined;
       store.toolCalls.update((prev) =>
-        prev.map((t) => t.id === e.toolCallId ? { ...t, status: 'complete' } : t),
+        prev.map((t) =>
+          t.id === e.toolCallId
+            ? { ...t, status: 'complete', ...(finalArgs !== undefined ? { args: finalArgs } : {}) }
+            : t,
+        ),
       );
       return;
     }
@@ -310,6 +336,17 @@ function safeParseArgs(delta: string): Record<string, unknown> {
     return isRecord(parsed) ? parsed : {};
   } catch {
     return {};
+  }
+}
+
+/** Parse an (accumulated) args buffer; `undefined` when it isn't valid JSON
+ *  yet — callers keep the previous args rather than clobbering them with {}. */
+function tryParseArgs(buffer: string): Record<string, unknown> | undefined {
+  try {
+    const parsed = JSON.parse(buffer);
+    return isRecord(parsed) ? parsed : undefined;
+  } catch {
+    return undefined;
   }
 }
 

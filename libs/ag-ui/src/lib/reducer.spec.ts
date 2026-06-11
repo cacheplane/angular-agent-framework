@@ -101,6 +101,43 @@ describe('reduceEvent', () => {
     expect(store.toolCalls()[0].args).toEqual({ q: 'hi' });
   });
 
+  it('TOOL_CALL_ARGS accumulates streamed fragments into the full args', () => {
+    // Regression: a live model streams args as many partial-JSON deltas
+    // (`{"loca`, `tion":"Pa`, …). Parsing each delta in isolation never
+    // succeeds, so args silently stayed {} and tool views rendered empty
+    // (stuck on their loading state). The reducer must accumulate the raw
+    // text and parse the accumulated buffer.
+    const store = makeStore();
+    reduceEvent({ type: 'TOOL_CALL_START', toolCallId: 't1', toolCallName: 'weather_card' } as any, store);
+    for (const delta of ['{"loca', 'tion":"Par', 'is","temperatureF":7', '2}']) {
+      reduceEvent({ type: 'TOOL_CALL_ARGS', toolCallId: 't1', delta } as any, store);
+    }
+    reduceEvent({ type: 'TOOL_CALL_END', toolCallId: 't1' } as any, store);
+    expect(store.toolCalls()[0].args).toEqual({ location: 'Paris', temperatureF: 72 });
+    expect(store.toolCalls()[0].status).toBe('complete');
+  });
+
+  it('TOOL_CALL_ARGS keeps last-good args while the buffer is mid-fragment', () => {
+    const store = makeStore();
+    reduceEvent({ type: 'TOOL_CALL_START', toolCallId: 't1', toolCallName: 'search' } as any, store);
+    reduceEvent({ type: 'TOOL_CALL_ARGS', toolCallId: 't1', delta: '{"q":"hi"}' } as any, store);
+    expect(store.toolCalls()[0].args).toEqual({ q: 'hi' });
+  });
+
+  it('TOOL_CALL_ARGS buffers independently per tool call', () => {
+    const store = makeStore();
+    reduceEvent({ type: 'TOOL_CALL_START', toolCallId: 't1', toolCallName: 'a' } as any, store);
+    reduceEvent({ type: 'TOOL_CALL_START', toolCallId: 't2', toolCallName: 'b' } as any, store);
+    reduceEvent({ type: 'TOOL_CALL_ARGS', toolCallId: 't1', delta: '{"x":' } as any, store);
+    reduceEvent({ type: 'TOOL_CALL_ARGS', toolCallId: 't2', delta: '{"y":' } as any, store);
+    reduceEvent({ type: 'TOOL_CALL_ARGS', toolCallId: 't1', delta: '1}' } as any, store);
+    reduceEvent({ type: 'TOOL_CALL_ARGS', toolCallId: 't2', delta: '2}' } as any, store);
+    reduceEvent({ type: 'TOOL_CALL_END', toolCallId: 't1' } as any, store);
+    reduceEvent({ type: 'TOOL_CALL_END', toolCallId: 't2' } as any, store);
+    expect(store.toolCalls().find((t) => t.id === 't1')!.args).toEqual({ x: 1 });
+    expect(store.toolCalls().find((t) => t.id === 't2')!.args).toEqual({ y: 2 });
+  });
+
   it('TOOL_CALL_END marks the matching tool call complete', () => {
     const store = makeStore();
     reduceEvent({ type: 'TOOL_CALL_START', toolCallId: 't1', toolCallName: 'search' } as any, store);
