@@ -23,6 +23,9 @@ class StubAgent {
   // We override runAgent to emit events through our subscriber pattern.
   private readonly _events = new Subject<BaseEvent>();
 
+  // Simulate AbstractAgent.state (typed as any in the base class).
+  state: Record<string, unknown> = {};
+
   // Simulate subscriber list just like AbstractAgent does
   private readonly _subscribers: Array<{ onEvent?: (p: { event: BaseEvent }) => void; onRunFailed?: (p: { error: Error }) => void }> = [];
 
@@ -231,6 +234,41 @@ describe('toAgent', () => {
     const calls = stub.runAgent.mock.calls;
     expect(calls.length).toBeGreaterThan(0);
     expect(calls[calls.length - 1][0]).toBeUndefined();
+  });
+
+  describe('input.state forwarding', () => {
+    it('merges input.state into the source agent state before running', async () => {
+      const stub = new StubAgent();
+      stub.state = { existing: 'value' };
+      const a = toAgent(stub as unknown as AbstractAgent);
+      await a.submit({ message: 'hi', state: { gen_ui_mode: 'json-render' } });
+      expect(stub.state).toMatchObject({ existing: 'value', gen_ui_mode: 'json-render' });
+    });
+
+    it('reflects the patch in the local state() signal optimistically', async () => {
+      const stub = new StubAgent();
+      const a = toAgent(stub as unknown as AbstractAgent);
+      await a.submit({ message: 'hi', state: { model: 'gpt-5-nano' } });
+      expect(a.state()['model']).toBe('gpt-5-nano');
+    });
+
+    it('forwards state on the resume path too', async () => {
+      const stub = new StubAgent();
+      const a = toAgent(stub as unknown as AbstractAgent);
+      // Arrange an active interrupt (mirrors existing interrupt tests)
+      stub.emit({ type: 'CUSTOM', name: 'on_interrupt', value: { kind: 'approval' } } as unknown as BaseEvent);
+      expect(a.interrupt!()).toBeDefined();
+      await a.submit({ resume: 'approved', state: { reasoning_effort: 'high' } });
+      expect(stub.state).toMatchObject({ reasoning_effort: 'high' });
+    });
+
+    it('leaves source state untouched when input.state is absent', async () => {
+      const stub = new StubAgent();
+      stub.state = { preserved: true };
+      const a = toAgent(stub as unknown as AbstractAgent);
+      await a.submit({ message: 'hi' });
+      expect(stub.state).toEqual({ preserved: true });
+    });
   });
 
   describe('regenerate()', () => {
