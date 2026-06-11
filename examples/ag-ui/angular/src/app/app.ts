@@ -7,12 +7,13 @@ import {
   a2uiBasicCatalog,
   type InterruptAction,
 } from '@threadplane/chat';
+import { ItineraryPanelComponent } from './itinerary-panel.component';
 
 @Component({
   selector: 'app-root',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ChatComponent, ChatInterruptPanelComponent],
+  imports: [ChatComponent, ChatInterruptPanelComponent, ItineraryPanelComponent],
   templateUrl: './app.html',
 })
 export class App {
