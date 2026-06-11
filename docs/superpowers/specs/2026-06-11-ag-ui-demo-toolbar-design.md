@@ -84,9 +84,15 @@ This effort doubles as an **audit of the `@threadplane/ag-ui` adapter**: once th
 | 12 | Regenerate | regenerate icon on an answer | replace semantics work |
 | 13 | Error recovery | kill backend mid-run | alert + next send recovers (e2e-covered) |
 
-**Gap protocol:** (a) small adapter bug → fix inside this effort with a test; (b) real capability gap (e.g. subagent surfacing over AG-UI, json-render bridge, reasoning events) → record in a committed **findings report** (`docs/superpowers/specs/2026-06-11-ag-ui-capability-findings.md`) with repro + root cause, and create a follow-up spec/plan per gap (brainstorm with the user on priority before implementing). Gaps are never papered over in the demo — controls stay visible and honest.
+**Gap protocol — gaps are IN SCOPE.** This is a forcing function: the toolbar exposes the full canonical surface precisely so the AG-UI library is forced to support it. When the audit finds a gap:
 
-**Deliverables added by this part:** the findings report + zero or more follow-up plan documents.
+- (a) **Small adapter/example bug** → fix immediately with a test, same PR.
+- (b) **Capability gap** (e.g. reasoning/THINKING events not reduced, json-render bridge broken, subagent runs invisible) → root-cause it, record it in the working **findings report** (`docs/superpowers/specs/2026-06-11-ag-ui-capability-findings.md`), then **design and implement the fix as a phase of this campaign** — its own mini spec/plan + PR (library change in `libs/ag-ui`, chat-lib wiring, and/or backend mapping as needed), landed before the campaign is called done. The audit re-runs the matrix row to confirm closure.
+- (c) The only deferral allowed: a gap whose fix requires changes **outside this repo** (the AG-UI protocol itself or the upstream `ag-ui-langgraph` package). Those get the findings-report treatment plus an explicit decision with the user on whether to work around (e.g. via CUSTOM events) — and a workaround, if chosen, is implemented in scope.
+
+Controls in the demo stay visible and honest at every intermediate state.
+
+**Deliverables added by this part:** the findings report (as a running log, ending with every row green or explicitly category-c), plus the gap-closure PRs themselves.
 
 ## Risks / verify items
 
@@ -103,9 +109,9 @@ This effort doubles as an **audit of the `@threadplane/ag-ui` adapter**: once th
 
 ## Decomposition (for the plan)
 
-1. Spike + adapter: `input.state` forwarding + unit tests (and fallback decision).
-2. Shell scaffold: routing + mode components + welcome suggestions (toolbar mode control only).
-3. Toolbar selects + submit wrapper + persistence/URL knobs + theme/scheme.
-4. E2E: keep 10 green; add the 3 new specs.
-5. **Chrome MCP capability audit** (Part 4 matrix) against local servers; commit the findings report; create follow-up specs/plans per gap.
-6. PR (single), merge on green; verify deployed demo.
+The campaign is phased; it is done only when the matrix is green (or explicitly category-c with a user decision):
+
+1. **Phase 1 — toolbar parity PR:** spike + adapter `input.state` forwarding (+tests); shell scaffold (routing, modes, suggestions); toolbar selects + submit wrapper + persistence + theme/scheme; e2e (10 green + 3 new). PR, merge on green.
+2. **Phase 2 — capability audit:** Chrome MCP smoke of the full Part-4 matrix against local servers; findings report committed with verdict + root cause per row.
+3. **Phase 3..N — gap closure:** one phase per gap, in priority order agreed with the user — mini spec/plan + implementation PR each (adapter / chat wiring / backend mapping), then re-run the matrix row to confirm. Category-(a) bugs are fixed wherever found without ceremony.
+4. **Wrap:** verify the deployed demo; final matrix re-run noted in the findings report.
