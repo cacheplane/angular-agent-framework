@@ -11,7 +11,19 @@
           <chat-interrupt-panel [agent]="agent" (action)="onInterruptAction($event)" />
         </div>
       }
-      <chat main [agent]="agent" [views]="catalog" class="ag-ui-demo__chat" />
+      <chat
+        main
+        [agent]="agent"
+        [views]="catalog"
+        [clientTools]="clientTools"
+        class="ag-ui-demo__chat"
+      >
+        <div chatWelcomeSuggestions>
+          @for (s of suggestions; track s.value) {
+            <chat-welcome-suggestion [label]="s.label" [value]="s.value" (selected)="send($event)" />
+          }
+        </div>
+      </chat>
     </div>
   </div>
 </main>
