@@ -6,12 +6,31 @@ import type { ToolCall } from '@threadplane/chat';
 import type { LangGraphSubmitOptions } from './agent.types';
 
 /**
+ * A patch written onto a local ToolCall when a client tool resolves.
+ * Mirrors the fields the ag-ui adapter writes directly onto its WritableSignal.
+ */
+export interface ClientToolResultPatch {
+  result: unknown;
+  error?: unknown;
+  status?: ToolCall['status'];
+}
+
+/**
  * Minimal store surface consumed by createClientToolsCapability.
  * Typed narrowly so the factory is easy to fake in tests.
  */
 export interface ClientToolsStore {
   toolCalls: Signal<readonly ToolCall[]>;
   isLoading: Signal<boolean>;
+  /**
+   * Write a client-tool outcome onto the local ToolCall with the given id.
+   * The LangGraph `toolCalls` signal is a read-only projection of the SDK's
+   * stream, so the adapter layers these patches over the projection rather
+   * than mutating it in place. This freezes the transcript card: toToolViewSpec
+   * spreads the result into the mounted ask component's props on the next
+   * render, letting it branch to a resolved/frozen state.
+   */
+  applyClientResult(id: string, patch: ClientToolResultPatch): void;
 }
 
 /**
@@ -114,9 +133,25 @@ export function createClientToolsCapability(
       // Cast rather than rely on discriminant narrowing: consumer apps that
       // compile this source with `strictNullChecks: false` don't narrow the
       // ClientToolResult union in a ternary.
-      const content = result.ok
-        ? safeStringify((result as { value: unknown }).value)
-        : `Error: ${(result as { error: string }).error}`;
+      const ok = result.ok;
+      const value = (result as { value: unknown }).value;
+      const error = (result as { error: string }).error;
+
+      // Write the outcome onto the LOCAL ToolCall (via the adapter's override
+      // layer). The client tool DID produce a result client-side, so this is
+      // semantically correct — and it freezes the transcript card: the mounted
+      // ask component re-renders with its own emitted value as props and can
+      // branch to a resolved/frozen state. Without this, the LOCAL tool call
+      // never gets a result (only the backend ToolMessage does) so the card
+      // stays interactive forever.
+      store.applyClientResult(id, {
+        result: ok ? value : { error },
+        ...(ok ? {} : { error, status: 'error' as const }),
+      });
+
+      const content = ok
+        ? safeStringify(value)
+        : `Error: ${error}`;
 
       // Issue a new run on the same thread. LangGraph's add_messages reducer
       // appends the ToolMessage to the thread state. `client_tools` is

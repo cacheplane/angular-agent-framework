@@ -10,19 +10,35 @@ import { ItineraryStore } from './itinerary-store';
  * HERE: Clear writes the shared `ItineraryStore` (so the panel updates live)
  * and then announces the outcome via `injectRenderHost().result(...)`, which
  * becomes the tool result that resumes the run. Cancel never touches the store.
+ *
+ * Once the ask resolves, the adapter writes the emitted value back onto the
+ * local tool call, so this component re-renders with `cleared`/`removed` as
+ * props (chat-tool-views spreads `{...args, ...result, status}` into it). When
+ * `cleared()` is defined we render a FROZEN line with no buttons; the live
+ * interactive card only shows while `cleared()` is still undefined.
  */
 @Component({
   selector: 'app-clear-day-confirm',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="cdc">
-      <p class="cdc__summary">Clear all {{ count() }} stops on day {{ day() }}?</p>
-      <div class="cdc__actions">
-        <button type="button" class="cdc__btn cdc__btn--primary" (click)="clear()">Clear</button>
-        <button type="button" class="cdc__btn" (click)="cancel()">Cancel</button>
+    @if (cleared() === undefined) {
+      <div class="cdc">
+        <p class="cdc__summary">Clear all {{ count() }} stops on day {{ day() }}?</p>
+        <div class="cdc__actions">
+          <button type="button" class="cdc__btn cdc__btn--primary" (click)="clear()">Clear</button>
+          <button type="button" class="cdc__btn" (click)="cancel()">Cancel</button>
+        </div>
       </div>
-    </div>
+    } @else if (cleared() === true) {
+      <div class="cdc cdc--resolved">
+        <p class="cdc__summary">Day {{ day() }} cleared — {{ removed() }} removed ✓</p>
+      </div>
+    } @else {
+      <div class="cdc cdc--resolved">
+        <p class="cdc__summary">Kept day {{ day() }} — clear cancelled</p>
+      </div>
+    }
   `,
   styles: [
     `
@@ -31,6 +47,10 @@ import { ItineraryStore } from './itinerary-store';
         border-radius: 12px;
         padding: 16px;
         max-width: 360px;
+      }
+      .cdc--resolved .cdc__summary {
+        margin: 0;
+        opacity: 0.85;
       }
       .cdc__summary {
         margin: 0 0 12px;
@@ -57,6 +77,9 @@ import { ItineraryStore } from './itinerary-store';
 })
 export class ClearDayConfirmComponent {
   readonly day = input.required<number>();
+  /** Spread back onto props after the ask resolves (undefined while interactive). */
+  readonly cleared = input<boolean | undefined>(undefined);
+  readonly removed = input<number | undefined>(undefined);
   private readonly store = inject(ItineraryStore);
   private readonly host = injectRenderHost();
 

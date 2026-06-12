@@ -20,6 +20,12 @@ function makeStore(overrides?: {
   return {
     toolCalls: toolCallsSig,
     isLoading: isLoadingSig,
+    // Mirror the real adapter: layer the client-side outcome onto the matching
+    // tool call so tests (and the render chain) can read the frozen result back.
+    applyClientResult: (id, patch) =>
+      toolCallsSig.update((calls) =>
+        calls.map((tc) => (tc.id === id ? { ...tc, ...patch } : tc)),
+      ),
     toolCallsSig,
     isLoadingSig,
   };
@@ -225,7 +231,7 @@ describe('createClientToolsCapability', () => {
     expect(payload['client_tools']).toEqual([WEATHER_SPEC]);
   });
 
-  it('resolve(ok) drops id from pending() immediately (resolvedIds guard)', () => {
+  it('resolve(ok) drops id from pending() AND writes the result onto the store tool call', () => {
     const store    = makeStore({ isLoading: false });
     const cap      = createClientToolsCapability(makeSubmitFn(), store);
     cap.setCatalog([WEATHER_SPEC]);
@@ -234,9 +240,14 @@ describe('createClientToolsCapability', () => {
     ]);
 
     expect(cap.pending()).toHaveLength(1);
-    cap.resolve('c1', { ok: true, value: { temp: 70 } });
-    // result is still undefined in the store — resolvedIds guard drops it
+    cap.resolve('c1', { ok: true, value: { cleared: true } });
+    // resolvedIds guard drops it, AND the result is now written onto the store
+    // tool call (belt-and-braces: the result write alone also excludes it).
     expect(cap.pending()).toHaveLength(0);
+    const tc = store.toolCalls().find((t) => t.id === 'c1');
+    expect(tc?.result).toEqual({ cleared: true });
+    expect(tc?.status).toBe('complete');
+    expect(tc?.error).toBeUndefined();
   });
 
   it('resolve does not affect other pending calls', () => {
@@ -294,7 +305,7 @@ describe('createClientToolsCapability', () => {
     expect(payload['client_tools']).toEqual([WEATHER_SPEC]);
   });
 
-  it('resolve(error) drops id from pending() immediately', () => {
+  it('resolve(error) drops id from pending() AND writes { error } + status=error onto the store', () => {
     const store = makeStore({ isLoading: false });
     const cap   = createClientToolsCapability(makeSubmitFn(), store);
     cap.setCatalog([WEATHER_SPEC]);
@@ -305,6 +316,10 @@ describe('createClientToolsCapability', () => {
     expect(cap.pending()).toHaveLength(1);
     cap.resolve('c2', { ok: false, error: 'boom' });
     expect(cap.pending()).toHaveLength(0);
+    const tc = store.toolCalls().find((t) => t.id === 'c2');
+    expect(tc?.result).toEqual({ error: 'boom' });
+    expect(tc?.error).toBe('boom');
+    expect(tc?.status).toBe('error');
   });
 
   // ── catalog shipping in normal submit ───────────────────────────────────────
