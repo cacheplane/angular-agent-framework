@@ -359,6 +359,66 @@ describe('toAgent', () => {
       expect(agent.status()).toBe('error');
       expect(agent.error()).toBeInstanceOf(Error);
     });
+
+    it('stop → regenerate → stop does NOT wedge the store in streaming', async () => {
+      const source = new StubAgent();
+
+      // Run A: make runAgent hang so we can stop it mid-flight.
+      let resolveRunA!: () => void;
+      source.runAgent.mockImplementationOnce(
+        () => new Promise((res) => {
+          resolveRunA = () => res({ result: undefined, newMessages: [] });
+        }),
+      );
+      const agent = toAgent(source as never);
+
+      // Submit run A and emit a complete assistant message before stop.
+      const pendingA = agent.submit({ message: 'first question' });
+      source.emit({ type: 'RUN_STARTED' } as BaseEvent);
+      source.emit({ type: 'TEXT_MESSAGE_START', messageId: 'ai-1', role: 'assistant' } as unknown as BaseEvent);
+      source.emit({ type: 'TEXT_MESSAGE_CONTENT', messageId: 'ai-1', delta: 'reply' } as unknown as BaseEvent);
+      source.emit({ type: 'TEXT_MESSAGE_END', messageId: 'ai-1' } as unknown as BaseEvent);
+      source.emit({ type: 'RUN_FINISHED' } as BaseEvent);
+
+      // Stop run A (abortSettled becomes true after this).
+      await agent.stop!();
+      source.failRun(new Error('BodyStreamBuffer was aborted'));
+      resolveRunA();
+      await pendingA;
+
+      // Run A settled: idle, no error.
+      expect(agent.status()).toBe('idle');
+      expect(agent.error()).toBeNull();
+
+      // There must be an assistant message at index 1 (user[0], assistant[1]).
+      expect(agent.messages()).toHaveLength(2);
+      expect(agent.messages()[1].role).toBe('assistant');
+
+      // Run B (regenerate): hang so we can stop it too.
+      let resolveRunB!: () => void;
+      source.runAgent.mockImplementationOnce(
+        () => new Promise((res) => {
+          resolveRunB = () => res({ result: undefined, newMessages: [] });
+        }),
+      );
+
+      const pendingB = agent.regenerate(1);
+
+      // Simulate the regeneration run starting (status → running, isLoading → true).
+      source.emit({ type: 'RUN_STARTED' } as BaseEvent);
+      expect(agent.isLoading()).toBe(true);
+
+      // Stop the regeneration mid-flight.
+      await agent.stop!();
+      source.failRun(new Error('BodyStreamBuffer was aborted'));
+      resolveRunB();
+      await pendingB;
+
+      // CRITICAL: must NOT be wedged in streaming/running/isLoading.
+      expect(agent.status()).toBe('idle');
+      expect(agent.error()).toBeNull();
+      expect(agent.isLoading()).toBe(false);
+    });
   });
 
   describe('regenerate()', () => {

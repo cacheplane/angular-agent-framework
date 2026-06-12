@@ -106,8 +106,15 @@ export function toAgent(source: AbstractAgent, options: ToAgentOptions = {}): Ag
   /** Settles the store as idle for stop()-induced failures; returns true if handled. */
   function settleIfAborted(error: unknown): boolean {
     // If we already settled this abort (duplicate delivery — e.g. RUN_ERROR
-    // event THEN onRunFailed), just swallow without touching the store again.
-    if (abortSettled && isAbortError(error)) return true;
+    // event THEN onRunFailed), defensively re-apply the idle settle so any
+    // state written between the two deliveries (e.g. RUN_STARTED from a new
+    // run that started before flags were reset) is corrected. Telemetry is
+    // not re-emitted — the guard returns true to suppress further processing.
+    if (abortSettled && isAbortError(error)) {
+      store.status.set('idle');
+      store.isLoading.set(false);
+      return true;
+    }
 
     if (!abortRequested || !isAbortError(error)) return false;
     abortRequested = false;
@@ -279,6 +286,12 @@ export function toAgent(source: AbstractAgent, options: ToAgentOptions = {}): Ag
       if (store.isLoading()) {
         throw new Error('Cannot regenerate while agent is loading another response');
       }
+      // Reset abort flags so a regenerate starts clean, exactly like submit().
+      // Without this, flags left over from a prior stop() would cause the
+      // duplicate-delivery guard in settleIfAborted() to silently swallow the
+      // abort error without settling, wedging the store in streaming/running.
+      abortRequested = false;
+      abortSettled = false;
       const msgs = store.messages();
       const target = msgs[assistantMessageIndex];
       if (!target || target.role !== 'assistant') {
@@ -314,10 +327,12 @@ export function toAgent(source: AbstractAgent, options: ToAgentOptions = {}): Ag
         await source.runAgent(regenTools.length > 0 ? { tools: regenTools } : undefined);
         finishRunTelemetry(run);
       } catch (err) {
-        store.status.set('error');
-        store.isLoading.set(false);
-        store.error.set(err);
-        failRunTelemetry(err, run);
+        if (!settleIfAborted(err)) {
+          store.status.set('error');
+          store.isLoading.set(false);
+          store.error.set(err);
+          failRunTelemetry(err, run);
+        }
       }
     },
   };
