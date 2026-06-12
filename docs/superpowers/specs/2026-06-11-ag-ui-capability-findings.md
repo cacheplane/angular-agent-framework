@@ -19,7 +19,7 @@
 | 8 | Gen-UI: json-render | ✅ (renders) + 🔶 F4 | interactive dashboard rendered (tabs/sliders/checkboxes); metric values show `[object Object]` — **reproduces identically on canonical prod** → shared render/graph issue, not AG-UI |
 | 9 | Theme presets + dark/light | ✅ + 🔶 F2 | toggle + URL knobs sync; itinerary panel & mode hosts stay dark in light scheme (example CSS) |
 | 10 | Research subagent | ✅ (runs) + 🔶 F5 | run completed with structured summary; renders as plain tool row — no subagent card (known adapter gap: no subagent metadata over AG-UI) |
-| 11 | Stop mid-stream | 🔴 F3 | stream halts, but: red error banner "BodyStreamBuffer was aborted" + stray "Success" text appended to the truncated message |
+| 11 | Stop mid-stream | 🔴 F3 | stream halts, but a red error banner "BodyStreamBuffer was aborted" presents the user's own stop as a failure |
 | 12 | Regenerate | ✅ | replaced the aborted message; fresh complete response, no artifacts |
 | 13 | Error recovery | ✅ | e2e (pre-verified) |
 | 14 | Client tools — embed | ✅ | #655 e2e (3 specs) |
@@ -35,8 +35,8 @@ Every conversation-state send leaves the sent text in the textarea. Probed live:
 ### F2 — Light scheme not honored by example chrome (low, example-level)
 `examples/ag-ui` itinerary panel (#655) and the popup/sidebar mode host backgrounds use hardcoded dark colors; with `scheme=light` the toolbar+chat go light but the panel and mode hosts stay dark. Fix with theme-aware CSS keyed off `data-threadplane-chat-theme`.
 
-### F3 — Stop surfaces as error + stray text — `@threadplane/ag-ui` adapter (high)
-User-initiated stop renders a red "BodyStreamBuffer was aborted" error banner and appended a stray "Success" item to the truncated message. The adapter should treat AbortError as graceful cancellation (no error state) and finalize the partial message without appending terminal-event artifacts. Canonical LangGraph stop is graceful — parity gap.
+### F3 — Stop surfaces as an error — `@threadplane/ag-ui` adapter (high)
+User-initiated stop renders a red "BodyStreamBuffer was aborted" error banner: `source.abortRun()` makes the underlying AG-UI client invoke `onRunFailed`, and the adapter's handler unconditionally sets `status: 'error'` + `error`. Fix: `stop()` sets an abort-requested flag; `onRunFailed`/submit-catch treat abort errors (flag set, or `AbortError`/abort-message) as graceful cancellation — status `idle`, no error, distinct telemetry. Canonical LangGraph stop is graceful — parity gap. (An earlier note about stray "Success" text was a misread: it was the final streamed delta "Succe|ssive…" truncated mid-word by the abort — expected.)
 
 ### F4 — json-render binds objects as text — shared render/graph issue (medium, NOT AG-UI-specific)
 Generated dashboard specs render `[object Object]` for metric values and a literal `trending_up` icon name. Reproduces byte-for-byte on `demo.threadplane.ai` (langgraph transport), so the bug is in the json-render engine's value/binding resolution (`@threadplane/render`) and/or the graph's `json_render` spec schema — not the AG-UI adapter. Track as its own fix; both demos benefit.
@@ -47,11 +47,17 @@ The research delegation runs fine but renders as a generic tool row; the canonic
 ### F6 — NG0956 console warnings during streaming — chat lib perf (low)
 Angular warns repeatedly that a tracked `@for` collection (size 1) is re-created per stream chunk (track-by-identity). Cheap fix: stable `track` keys in the streaming message list templates.
 
-## Proposed gap-closure order (Phase 3+)
+## Gap-closure status (updated 2026-06-12, Phase 3)
 
-1. **P3a — F2** example CSS (small, no lib surface).
-2. **P3b — F1** chat-input clear-on-send (lib, TDD; affects every consumer).
-3. **P3c — F3** ag-ui adapter graceful stop (lib, TDD; parity).
-4. **P3d — F4** json-render value binding (shared; fixes canonical prod too).
-5. **P3e — F5** subagent card over AG-UI (adapter design + impl).
-6. **P3f — F6** track-by keys (cleanup).
+Phase 3 (branch `ag-ui-gap-closure-p3`, plan `2026-06-11-ag-ui-gap-closure-p3.md`) closed F1, F2, F3, F4, and the main F6 source — each TDD'd, two-stage reviewed, and re-verified in a live Chrome smoke against the real backend:
+
+- **F1 ✅** — chat-input binds `[value]`/`(input)` directly (FormsModule dropped, `@angular/forms` peer removed from `@threadplane/chat`); composer verified clearing live, including mid-stream sends. The `name="messageText"` attribute was preserved for cockpit selectors.
+- **F2 ✅** — AgUiShell sets `data-color-scheme` + index.html pre-bootstrap script; page chrome (itinerary panel, mode hosts) verified light live.
+- **F3 ✅** — adapter settles abort-shaped failures as graceful cancellation on BOTH delivery paths (`onRunFailed` AND the synthesized `RUN_ERROR` event — the second path was caught only by the live smoke, not the stub harness). No banner on stop, verified live.
+- **F4 ✅** — json-render `{statePath}` props are normalized to the `$bindState` dialect + `_bindings` in `chat-generative-ui`; surfaces are store-isolated per instance unless a consumer passes an explicit `[store]` (the two cockpit dashboard capabilities now opt in explicitly — backend STATE_SNAPSHOT state requires an explicit store by design, matching a2ui). Live dashboard renders real values; zero `[object Object]`.
+- **F6 ✅ (main source)** — markdown children/table rows now track by `$index`; zero NG0956 during text/reasoning streaming. **Residual:** a handful of NG0956 warnings still fire during json-render *spec assembly* streaming; the source is not any identity-tracked `@for` in libs/chat, libs/render, or the example (all audited) — follow-up to pinpoint (likely inside the spec re-materialization path).
+- **F5 ⏳** — subagent card over AG-UI deferred to Phase 4 (needs design: mapping graph subagent custom events into the chat subagent contract in `toAgent()`).
+
+Additional follow-ups logged during Phase 3:
+- Icon rendering: the a2ui catalog icon component renders icon *names* as text (`trending_up`) — proper icon support is a new catalog feature, not built.
+- json-render normalizer handles top-level `{statePath}` props only (matches the documented schema); nested occurrences from model drift would still stringify.

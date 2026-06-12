@@ -5,6 +5,27 @@
     <title>AG-UI Chat — Threadplane Example</title>
     <base href="/" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script>
+      // Pre-bootstrap color-scheme apply: read persisted palette and set
+      // both `data-color-scheme` (drives the demo page bg/text) and
+      // `data-threadplane-chat-theme` (drives the chat lib's internal theming)
+      // BEFORE stylesheets load to avoid FOUC. The AgUiShell effect
+      // takes over at runtime once Angular bootstraps.
+      (function () {
+        try {
+          var raw = localStorage.getItem('threadplane-ag-ui-demo:palette');
+          var scheme = 'dark';
+          if (raw) {
+            var p = JSON.parse(raw);
+            if (p && (p.colorScheme === 'light' || p.colorScheme === 'dark')) {
+              scheme = p.colorScheme;
+            }
+          }
+          document.documentElement.setAttribute('data-color-scheme', scheme);
+          document.documentElement.setAttribute('data-threadplane-chat-theme', scheme);
+        } catch (e) { /* localStorage blocked — defaults apply */ }
+      })();
+    </script>
     <link rel="icon" type="image/x-icon" href="favicon.ico" />
   </head>
   <body>
