@@ -18,12 +18,12 @@ export function itineraryClientTools(): ClientToolRegistry {
       async () => ({ days: store.days() }),
     ),
     add_stop: action(
-      'Add a stop to a day of the trip itinerary.',
+      'Add a stop to a day of the trip itinerary. Afterwards, show the updated day with day_card.',
       z.object({ day: z.number().int().min(1), place: z.string(), note: z.string().optional() }),
       async ({ day, place, note }) => ({ added: store.add(day, place, note) }),
     ),
     move_stop: action(
-      'Move an existing stop (matched by place name) to another day.',
+      'Move an existing stop (matched by place name) to another day. Afterwards, show the updated day with day_card.',
       z.object({ place: z.string(), toDay: z.number().int().min(1) }),
       async ({ place, toDay }) => {
         const moved = store.move(place, toDay);
@@ -38,7 +38,7 @@ export function itineraryClientTools(): ClientToolRegistry {
       ClearDayConfirmComponent,
     ),
     day_card: view(
-      "Show the user a recap card for one itinerary day after you've changed it.",
+      "Show the user a visual recap card for one itinerary day. Call it after add_stop or move_stop with the day's full updated place list.",
       z.object({ day: z.number().int().min(1), places: z.array(z.string()) }),
       DayCardComponent,
     ),
