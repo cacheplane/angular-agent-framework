@@ -90,6 +90,17 @@ export function toAgent(source: AbstractAgent, options: ToAgentOptions = {}): Ag
   // thread the catalog into every runAgent() call.
   const clientToolsCap = createClientToolsCapability(source, store);
 
+  /** Forward a neutral-contract state patch onto the AG-UI run input.
+   *  Mirrors the canonical demo's `input.state` mechanism: the patch is
+   *  merged into the source agent's client state (carried on
+   *  RunAgentInput.state) and reflected optimistically in the local
+   *  state signal — the server's next STATE_SNAPSHOT stays authoritative. */
+  const applyStatePatch = (patch: Record<string, unknown> | undefined): void => {
+    if (!patch || Object.keys(patch).length === 0) return;
+    source.state = { ...((source.state as Record<string, unknown>) ?? {}), ...patch };
+    store.state.update((prev) => ({ ...prev, ...patch }));
+  };
+
   captureAgentRuntimeTelemetry(
     options.telemetry,
     'ngaf:runtime_instance_created',
@@ -158,6 +169,7 @@ export function toAgent(source: AbstractAgent, options: ToAgentOptions = {}): Ag
         // Resume path: clear the pending interrupt and replay the run with the
         // resume payload forwarded to the LangGraph backend via AG-UI's
         // forwardedProps.command.resume mechanism.
+        applyStatePatch(input.state);
         store.interrupt.set(undefined);
         const run = startRunTelemetry('resume');
         const tools = clientToolsCap.catalogAsAgUiTools();
@@ -175,6 +187,8 @@ export function toAgent(source: AbstractAgent, options: ToAgentOptions = {}): Ag
         }
         return;
       }
+
+      applyStatePatch(input.state);
 
       // Optimistic append of user message to our signals and to the source
       // agent's own message list so runAgent() sees the new message.

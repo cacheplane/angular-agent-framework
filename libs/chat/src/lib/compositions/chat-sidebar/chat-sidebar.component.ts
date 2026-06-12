@@ -11,6 +11,7 @@ import {
 } from '@angular/core';
 import type { Agent } from '../../agent';
 import type { ViewRegistry } from '@threadplane/render';
+import type { ClientToolRegistry } from '../../client-tools/tool-def';
 import { ChatComponent } from '../chat/chat.component';
 import { ChatLauncherButtonComponent } from '../../primitives/chat-launcher-button/chat-launcher-button.component';
 import type { ChatSelectOption } from '../../primitives/chat-select/chat-select.component';
@@ -109,6 +110,7 @@ import { CHAT_HOST_TOKENS, ensureChatRootStyles } from '../../styles/chat-tokens
       <chat
         [agent]="agent()"
         [views]="views()"
+        [clientTools]="clientTools()"
         [modelOptions]="modelOptions()"
         [showModelPicker]="showModelPicker()"
         [selectedModel]="selectedModel()"
@@ -126,6 +128,8 @@ export class ChatSidebarComponent {
    * messages classified as A2UI parse correctly but never mount a
    * surface. Pass `a2uiBasicCatalog()` from `@threadplane/chat`. */
   readonly views = input<ViewRegistry | undefined>(undefined);
+  /** Frontend-declared client tools forwarded to the inner `<chat>`. */
+  readonly clientTools = input<ClientToolRegistry | undefined>(undefined);
   /** Forwarded to the inner <chat>. When non-empty, a model picker pill
    * renders in the chat-input chrome. */
   readonly modelOptions = input<readonly ChatSelectOption[]>([]);
