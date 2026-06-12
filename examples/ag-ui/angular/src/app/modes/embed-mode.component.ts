@@ -12,6 +12,7 @@ import { WelcomeSuggestionsComponent } from './welcome-suggestions.component';
   template: `
     <chat
       [agent]="agent"
+      [clientTools]="shell.clientTools"
       [views]="catalog"
       [modelOptions]="shell.modelOptions()"
       [selectedModel]="shell.model()"

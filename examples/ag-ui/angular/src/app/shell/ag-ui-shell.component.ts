@@ -15,6 +15,8 @@ import {
   type InterruptAction,
 } from '@threadplane/chat';
 import { PalettePersistence } from './palette-persistence.service';
+import { ItineraryPanelComponent } from '../itinerary-panel.component';
+import { itineraryClientTools } from '../client-tools';
 
 export type DemoMode = 'embed' | 'popup' | 'sidebar';
 const MODES: readonly DemoMode[] = ['embed', 'popup', 'sidebar'] as const;
@@ -32,7 +34,7 @@ const DEFAULTS = {
   selector: 'ag-ui-shell',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterOutlet, ChatSelectComponent, ChatInterruptPanelComponent],
+  imports: [RouterOutlet, ChatSelectComponent, ChatInterruptPanelComponent, ItineraryPanelComponent],
   templateUrl: './ag-ui-shell.component.html',
   styleUrl: './ag-ui-shell.component.css',
   providers: [PalettePersistence],
@@ -95,6 +97,11 @@ export class AgUiShell {
     { value: 'material-dark', label: 'Material dark' },
     { value: 'material-light', label: 'Material light' },
   ]);
+
+  // Frontend-declared client tools (itinerary get/add/move/clear + day_card).
+  // Built in an injection context (field initializer) so itineraryClientTools()
+  // can inject the shared ItineraryStore. Modes bind this to <chat [clientTools]>.
+  readonly clientTools = itineraryClientTools();
 
   // ── Shared agent: submit wrapper merges the knobs into input.state ──────
   readonly agent = (() => {

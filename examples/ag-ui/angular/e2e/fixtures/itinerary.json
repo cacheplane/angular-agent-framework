@@ -1,0 +1,22 @@
+{
+  "fixtures": [
+    {
+      "match": { "userMessage": "What's on my itinerary?", "hasToolResult": true },
+      "response": {
+        "content": "You have 3 stops planned: the Louvre and the Eiffel Tower on day 1, and the Musée d'Orsay on day 2."
+      }
+    },
+    {
+      "match": { "userMessage": "What's on my itinerary?" },
+      "response": { "toolCalls": [ { "name": "get_itinerary", "arguments": {} } ] }
+    },
+    {
+      "match": { "userMessage": "Clear my day 2 plans", "hasToolResult": true },
+      "response": { "content": "Done — day 2 is cleared." }
+    },
+    {
+      "match": { "userMessage": "Clear my day 2 plans" },
+      "response": { "toolCalls": [ { "name": "clear_day", "arguments": { "day": 2 } } ] }
+    }
+  ]
+}
