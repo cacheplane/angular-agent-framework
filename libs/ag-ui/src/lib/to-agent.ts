@@ -90,6 +90,14 @@ export function toAgent(source: AbstractAgent, options: ToAgentOptions = {}): Ag
   // abort (graceful cancel) from a genuine stream failure.
   let abortRequested = false;
 
+  // Set to true the first time settleIfAborted() handles an abort error for the
+  // current run. The AG-UI client can surface the same abort via both the event
+  // stream (RUN_ERROR event) AND onRunFailed — abortSettled lets the second
+  // delivery see through as a no-op rather than re-writing store state or
+  // triggering a real error path. Both flags are reset together at the top of
+  // submit() so the next run starts clean.
+  let abortSettled = false;
+
   function isAbortError(error: unknown): boolean {
     return error instanceof Error
       && (error.name === 'AbortError' || /abort/i.test(error.message));
@@ -97,8 +105,13 @@ export function toAgent(source: AbstractAgent, options: ToAgentOptions = {}): Ag
 
   /** Settles the store as idle for stop()-induced failures; returns true if handled. */
   function settleIfAborted(error: unknown): boolean {
+    // If we already settled this abort (duplicate delivery — e.g. RUN_ERROR
+    // event THEN onRunFailed), just swallow without touching the store again.
+    if (abortSettled && isAbortError(error)) return true;
+
     if (!abortRequested || !isAbortError(error)) return false;
     abortRequested = false;
+    abortSettled = true;
     store.status.set('idle');
     store.isLoading.set(false);
     // Not a failure: leave store.error null and close out telemetry as a
@@ -170,6 +183,13 @@ export function toAgent(source: AbstractAgent, options: ToAgentOptions = {}): Ag
   // This subscription lives for the lifetime of `source`.
   source.subscribe({
     onEvent({ event }) {
+      // The AG-UI client surfaces a user-initiated abort both as a
+      // RUN_ERROR event (here) and via onRunFailed; guard the event path too
+      // so the reducer never marks a deliberate stop as an error.
+      if (event.type === 'RUN_ERROR') {
+        const message = (event as { message?: string }).message ?? '';
+        if (settleIfAborted(new Error(message))) return;
+      }
       reduceEvent(event, store);
     },
     onRunFailed({ error }) {
@@ -194,8 +214,10 @@ export function toAgent(source: AbstractAgent, options: ToAgentOptions = {}): Ag
     clientTools:  clientToolsCap,
 
     submit: async (input: AgentSubmitInput, _opts?: AgentSubmitOptions) => {
-      // Reset abort flag so a new submit doesn't swallow genuine failures.
+      // Reset both abort flags so a new submit starts clean and genuine
+      // failures after a previous stop are never swallowed.
       abortRequested = false;
+      abortSettled = false;
 
       if (input.resume !== undefined) {
         // Resume path: clear the pending interrupt and replay the run with the

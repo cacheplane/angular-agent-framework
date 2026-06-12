@@ -297,6 +297,56 @@ describe('toAgent', () => {
       expect(agent.isLoading()).toBe(false);
     });
 
+    it('treats an abort-shaped RUN_ERROR event as cancellation, not error', async () => {
+      const source = new StubAgent();
+      let resolveRun!: () => void;
+      source.runAgent.mockImplementation(
+        () => new Promise((res) => {
+          resolveRun = () => res({ result: undefined, newMessages: [] });
+        }),
+      );
+      const agent = toAgent(source as never);
+
+      const pending = agent.submit({ message: 'long story' });
+      await agent.stop!();
+
+      // The real HttpAgent also surfaces the abort as a RUN_ERROR event
+      // through the event stream (not just onRunFailed).
+      source.emit({ type: 'RUN_ERROR', message: 'BodyStreamBuffer was aborted' } as never);
+      resolveRun();
+      await pending;
+
+      expect(agent.status()).toBe('idle');
+      expect(agent.error()).toBeNull();
+      expect(agent.isLoading()).toBe(false);
+    });
+
+    it('handles duplicate abort delivery (RUN_ERROR event THEN onRunFailed) gracefully', async () => {
+      const source = new StubAgent();
+      let resolveRun!: () => void;
+      source.runAgent.mockImplementation(
+        () => new Promise((res) => {
+          resolveRun = () => res({ result: undefined, newMessages: [] });
+        }),
+      );
+      const agent = toAgent(source as never);
+
+      const pending = agent.submit({ message: 'long story' });
+      await agent.stop!();
+
+      // First delivery: via the event stream
+      source.emit({ type: 'RUN_ERROR', message: 'BodyStreamBuffer was aborted' } as never);
+      // Second delivery: via onRunFailed (same abort)
+      source.failRun(new Error('BodyStreamBuffer was aborted'));
+      resolveRun();
+      await pending;
+
+      // Duplicate delivery must NOT flip status back to error
+      expect(agent.status()).toBe('idle');
+      expect(agent.error()).toBeNull();
+      expect(agent.isLoading()).toBe(false);
+    });
+
     it('still surfaces real failures as errors after a previous stop', async () => {
       const source = new StubAgent();
       const agent = toAgent(source as never);
