@@ -2783,6 +2783,12 @@
         "optional": false
       },
       {
+        "name": "clientTools",
+        "type": "InputSignal<Readonly<Record<string, ClientToolDef>> | undefined>",
+        "description": "Frontend-declared client tools forwarded to the inner `<chat>`.",
+        "optional": false
+      },
+      {
         "name": "closeOnEscape",
         "type": "InputSignal<boolean>",
         "description": "Close the popup on Escape (default true).",
@@ -3275,6 +3281,12 @@
         "name": "agent",
         "type": "InputSignal<Agent>",
         "description": "",
+        "optional": false
+      },
+      {
+        "name": "clientTools",
+        "type": "InputSignal<Readonly<Record<string, ClientToolDef>> | undefined>",
+        "description": "Frontend-declared client tools forwarded to the inner `<chat>`.",
         "optional": false
       },
       {
