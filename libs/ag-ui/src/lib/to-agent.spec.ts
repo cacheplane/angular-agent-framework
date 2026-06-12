@@ -271,6 +271,46 @@ describe('toAgent', () => {
     });
   });
 
+  describe('stop() — graceful cancellation (F3)', () => {
+    it('treats an abort-induced onRunFailed as cancellation, not error', async () => {
+      const source = new StubAgent();
+      // Keep the run in flight so stop() races it like a real stream.
+      let resolveRun!: () => void;
+      source.runAgent.mockImplementation(
+        () => new Promise((res) => {
+          resolveRun = () => res({ result: undefined, newMessages: [] });
+        }),
+      );
+      const agent = toAgent(source as never);
+
+      const pending = agent.submit({ message: 'long story' });
+      await agent.stop!();
+      expect(source.abortRun).toHaveBeenCalledTimes(1);
+
+      // HttpAgent surfaces the abort as a run failure.
+      source.failRun(new Error('BodyStreamBuffer was aborted'));
+      resolveRun();
+      await pending;
+
+      expect(agent.status()).toBe('idle');
+      expect(agent.error()).toBeNull();
+      expect(agent.isLoading()).toBe(false);
+    });
+
+    it('still surfaces real failures as errors after a previous stop', async () => {
+      const source = new StubAgent();
+      const agent = toAgent(source as never);
+
+      // A stop on an earlier run must not swallow later genuine failures.
+      await agent.stop!();
+      await agent.submit({ message: 'hi' }); // submit resets the abort flag
+      source.failRun(new Error('boom'));
+
+      expect(agent.status()).toBe('error');
+      expect(agent.error()).toBeInstanceOf(Error);
+    });
+  });
+
   describe('regenerate()', () => {
     it('truncates messages inclusive of user (userIdx+1) and re-runs without re-appending', async () => {
       const stub = new StubAgent();

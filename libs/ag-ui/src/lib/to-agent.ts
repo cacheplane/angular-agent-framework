@@ -86,6 +86,34 @@ export function toAgent(source: AbstractAgent, options: ToAgentOptions = {}): Ag
   const telemetryProperties = { transport: 'ag-ui' as const, surface: 'to_agent' };
   let activeRun: { startedAt: number; errored: boolean } | null = null;
 
+  // Set by stop(); lets run-failure handlers distinguish a user-initiated
+  // abort (graceful cancel) from a genuine stream failure.
+  let abortRequested = false;
+
+  function isAbortError(error: unknown): boolean {
+    return error instanceof Error
+      && (error.name === 'AbortError' || /abort/i.test(error.message));
+  }
+
+  /** Settles the store as idle for stop()-induced failures; returns true if handled. */
+  function settleIfAborted(error: unknown): boolean {
+    if (!abortRequested || !isAbortError(error)) return false;
+    abortRequested = false;
+    store.status.set('idle');
+    store.isLoading.set(false);
+    // Not a failure: leave store.error null and close out telemetry as a
+    // normal finish so the aborted run doesn't count as errored.
+    const run = activeRun;
+    if (run) {
+      finishRunTelemetry(run);
+      // Mark errored so any subsequent finishRunTelemetry/failRunTelemetry
+      // call on the same run object (e.g. from submit's try block resolving
+      // after the abort) is a no-op — telemetry fires at most once per run.
+      run.errored = true;
+    }
+    return true;
+  }
+
   // Build the client-tools capability. catalogAsAgUiTools() is used below to
   // thread the catalog into every runAgent() call.
   const clientToolsCap = createClientToolsCapability(source, store);
@@ -145,6 +173,7 @@ export function toAgent(source: AbstractAgent, options: ToAgentOptions = {}): Ag
       reduceEvent(event, store);
     },
     onRunFailed({ error }) {
+      if (settleIfAborted(error)) return;
       store.status.set('error');
       store.isLoading.set(false);
       store.error.set(error);
@@ -165,6 +194,9 @@ export function toAgent(source: AbstractAgent, options: ToAgentOptions = {}): Ag
     clientTools:  clientToolsCap,
 
     submit: async (input: AgentSubmitInput, _opts?: AgentSubmitOptions) => {
+      // Reset abort flag so a new submit doesn't swallow genuine failures.
+      abortRequested = false;
+
       if (input.resume !== undefined) {
         // Resume path: clear the pending interrupt and replay the run with the
         // resume payload forwarded to the LangGraph backend via AG-UI's
@@ -180,10 +212,12 @@ export function toAgent(source: AbstractAgent, options: ToAgentOptions = {}): Ag
           });
           finishRunTelemetry(run);
         } catch (err) {
-          store.status.set('error');
-          store.isLoading.set(false);
-          store.error.set(err);
-          failRunTelemetry(err, run);
+          if (!settleIfAborted(err)) {
+            store.status.set('error');
+            store.isLoading.set(false);
+            store.error.set(err);
+            failRunTelemetry(err, run);
+          }
         }
         return;
       }
@@ -205,16 +239,17 @@ export function toAgent(source: AbstractAgent, options: ToAgentOptions = {}): Ag
         await source.runAgent(tools.length > 0 ? { tools } : undefined);
         finishRunTelemetry(run);
       } catch (err) {
-        // If the run was aborted via stop(), abortRun() resolves the promise
-        // rather than rejecting — but catch any unexpected errors here.
-        store.status.set('error');
-        store.isLoading.set(false);
-        store.error.set(err);
-        failRunTelemetry(err, run);
+        if (!settleIfAborted(err)) {
+          store.status.set('error');
+          store.isLoading.set(false);
+          store.error.set(err);
+          failRunTelemetry(err, run);
+        }
       }
     },
 
     stop: async () => {
+      abortRequested = true;
       source.abortRun();
     },
 
