@@ -88,9 +88,10 @@ describe('ChatGenerativeUiComponent — statePath resolution (F4)', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({ imports: [ChatGenerativeUiComponent] });
     fixture = TestBed.createComponent(ChatGenerativeUiComponent);
-    // The chat composition passes its own (initially EMPTY) shared store —
-    // replicate that so spec.state seeding is exercised, not render-spec's
-    // internal store creation.
+    // An EXPLICIT consumer-provided store (initially EMPTY) — replicate that
+    // so spec.state seeding is exercised, not render-spec's internal store
+    // creation. (The chat composition itself no longer passes its internal
+    // store; only a consumer-supplied store reaches this input.)
     store = signalStateStore({});
     fixture.componentRef.setInput('registry', toRenderRegistry(a2uiBasicCatalog()));
     fixture.componentRef.setInput('store', store);
@@ -143,6 +144,106 @@ describe('ChatGenerativeUiComponent — statePath resolution (F4)', () => {
     fixture.componentRef.setInput('spec', { ...statePathSpec } as Spec);
     render();
     expect(store.get('/minRevenue')).toBe(42000);
+  });
+
+  it('overwrites component-seeded partial chunk values when fuller state streams in', () => {
+    // First emission carries a partial streaming chunk of the value.
+    fixture.componentRef.setInput('spec', {
+      ...statePathSpec,
+      state: { totalRevenue: '$1.', minRevenue: 25000 },
+    } as unknown as Spec);
+    render();
+    expect(store.get('/totalRevenue')).toBe('$1.');
+
+    // Re-emit with the fuller value — the component wrote '$1.' itself, so
+    // it is safe to overwrite (only USER edits are preserved).
+    fixture.componentRef.setInput('spec', { ...statePathSpec } as Spec);
+    const text = render();
+    expect(store.get('/totalRevenue')).toBe('$1.2M');
+    expect(text).toContain('$1.2M');
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Store isolation vs. sharing across component instances.
+//
+// Without a consumer store, each <chat-generative-ui> must be fully isolated:
+// render-spec self-seeds a per-instance internal store from spec.state, so two
+// dashboards with overlapping state keys (e.g. /totalRevenue on every message
+// of a conversation) never collide. This is the regression test for the bug
+// where the chat composition's conversation-wide internal store was passed to
+// every surface. An EXPLICIT consumer store, by contrast, intentionally has
+// shared/live semantics across all surfaces bound to it.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Spec like statePathSpec but with a different value model for /totalRevenue. */
+const otherStatePathSpec = {
+  ...statePathSpec,
+  state: { totalRevenue: '$9.9M', minRevenue: 75000 },
+} as unknown as Spec;
+
+describe('ChatGenerativeUiComponent — store isolation across instances', () => {
+  beforeEach(() => {
+    TestBed.configureTestingModule({ imports: [ChatGenerativeUiComponent] });
+  });
+
+  function createInstance(spec: Spec, store?: StateStore): ComponentFixture<ChatGenerativeUiComponent> {
+    const fixture = TestBed.createComponent(ChatGenerativeUiComponent);
+    fixture.componentRef.setInput('registry', toRenderRegistry(a2uiBasicCatalog()));
+    if (store) fixture.componentRef.setInput('store', store);
+    fixture.componentRef.setInput('spec', spec);
+    return fixture;
+  }
+
+  function render(fixture: ComponentFixture<ChatGenerativeUiComponent>): string {
+    fixture.detectChanges();
+    TestBed.flushEffects();
+    fixture.detectChanges();
+    return (fixture.nativeElement as HTMLElement).textContent ?? '';
+  }
+
+  it('isolates instances WITHOUT a consumer store — overlapping paths never collide', () => {
+    const a = createInstance(statePathSpec);
+    const b = createInstance(otherStatePathSpec);
+    const textA = render(a);
+    const textB = render(b);
+
+    // Each instance renders ITS OWN spec.state values for the same paths.
+    expect(textA).toContain('$1.2M');
+    expect(textA).not.toContain('$9.9M');
+    expect(textB).toContain('$9.9M');
+    expect(textB).not.toContain('$1.2M');
+
+    // A user edit inside one surface must not leak into the other.
+    const sliderA = (a.nativeElement as HTMLElement).querySelector(
+      'input[type="range"]',
+    ) as HTMLInputElement;
+    sliderA.value = '30000';
+    sliderA.dispatchEvent(new Event('input'));
+    render(a);
+    expect(render(b)).toContain('Min revenue (USD): 75000');
+  });
+
+  it('shares one EXPLICIT consumer store across instances — first seeder wins, values are live', () => {
+    const shared = signalStateStore({});
+    const a = createInstance(statePathSpec, shared);
+    const textA = render(a);
+    expect(textA).toContain('$1.2M');
+
+    // Second instance binds the SAME store with different spec.state for the
+    // same paths. The paths are already populated (and not by THIS instance),
+    // so it must not clobber them: both surfaces show the shared values.
+    const b = createInstance(otherStatePathSpec, shared);
+    const textB = render(b);
+    expect(shared.get('/totalRevenue')).toBe('$1.2M');
+    expect(shared.get('/minRevenue')).toBe(25000);
+    expect(textB).toContain('$1.2M');
+    expect(textB).not.toContain('$9.9M');
+
+    // Live semantics: a write to the shared store is reflected in BOTH.
+    shared.set('/totalRevenue', '$3.0M');
+    expect(render(a)).toContain('$3.0M');
+    expect(render(b)).toContain('$3.0M');
   });
 });
 

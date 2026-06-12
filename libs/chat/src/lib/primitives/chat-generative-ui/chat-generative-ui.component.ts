@@ -6,6 +6,7 @@ import {
   effect,
   input,
   output,
+  untracked,
   ChangeDetectionStrategy,
 } from '@angular/core';
 import type { Spec, StateStore } from '@json-render/core';
@@ -58,27 +59,36 @@ export class ChatGenerativeUiComponent {
   private readonly seeded = new Map<string, unknown>();
 
   constructor() {
-    // Seed `spec.state` (the schema's "initial state model") into the
-    // store. When the chat composition supplies its shared store, it is
-    // initially EMPTY — render-spec only seeds spec.state into its own
-    // internal store when no store input is given — so without this,
-    // statePath/$bindState props would resolve to undefined.
+    // Seed `spec.state` (the schema's "initial state model") into an
+    // EXPLICIT consumer-provided store, which is typically EMPTY at first —
+    // without this, statePath/$bindState props would resolve to undefined.
+    // A consumer-provided store intentionally has shared/live semantics
+    // across surfaces: every surface bound to it reads (and writes) the same
+    // state, so the first surface to seed a path wins. When NO store input
+    // is given, this effect is a no-op and render-spec self-seeds its own
+    // per-instance internal store from spec.state, keeping surfaces with
+    // overlapping state keys isolated from each other (a2ui parity).
     effect(() => {
       const s = this.spec();
       const store = this.store();
       const state = s?.state as Record<string, unknown> | undefined;
       if (!state || !store) return;
-      for (const [key, value] of Object.entries(state)) {
-        const path = key.startsWith('/') ? key : `/${key}`;
-        const current = store.get(path);
-        const untouched =
-          current === undefined ||
-          (this.seeded.has(path) && current === this.seeded.get(path));
-        if (untouched) {
-          if (current !== value) store.set(path, value);
-          this.seeded.set(path, value);
+      // Untracked: store reads/writes must not become dependencies — the
+      // effect re-runs on spec/store-identity changes only, not on every
+      // write to the (possibly shared) store.
+      untracked(() => {
+        for (const [key, value] of Object.entries(state)) {
+          const path = key.startsWith('/') ? key : `/${key}`;
+          const current = store.get(path);
+          const untouched =
+            current === undefined ||
+            (this.seeded.has(path) && current === this.seeded.get(path));
+          if (untouched) {
+            if (current !== value) store.set(path, value);
+            this.seeded.set(path, value);
+          }
         }
-      }
+      });
     });
   }
 }
