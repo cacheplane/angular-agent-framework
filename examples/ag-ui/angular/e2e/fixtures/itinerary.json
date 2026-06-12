@@ -17,6 +17,22 @@
     {
       "match": { "userMessage": "Clear my day 2 plans" },
       "response": { "toolCalls": [ { "name": "clear_day", "arguments": { "day": 2 } } ] }
+    },
+    {
+      "match": { "userMessage": "Move the Eiffel Tower to day 2", "hasToolResult": true },
+      "response": { "content": "Done — the Eiffel Tower is now on day 2." }
+    },
+    {
+      "match": { "userMessage": "Move the Eiffel Tower to day 2" },
+      "response": { "toolCalls": [ { "name": "move_stop", "arguments": { "place": "Eiffel Tower", "toDay": 2 } } ] }
+    },
+    {
+      "match": { "userMessage": "Show me a recap card for day 1", "hasToolResult": true },
+      "response": { "content": "Here's your day 1 recap." }
+    },
+    {
+      "match": { "userMessage": "Show me a recap card for day 1" },
+      "response": { "toolCalls": [ { "name": "day_card", "arguments": { "day": 1, "places": ["Louvre", "Eiffel Tower"] } } ] }
     }
   ]
 }
