@@ -15,6 +15,14 @@ test('hi: assistant bubble renders non-empty text from the replayed fixture', as
   expect(finalText.trim()).toMatch(/hi/i);
 });
 
+test('composer clears after Enter-key send (F1 regression)', async ({ page }) => {
+  await openDemo(page);
+  const input = page.getByRole('textbox', { name: /message|prompt/i });
+  await input.pressSequentially('say hi briefly');
+  await page.keyboard.press('Enter');
+  await expect(input).toHaveValue('');
+});
+
 test('send and receive: input clears, user renders immediately, stream completes idle', async ({
   page,
 }) => {

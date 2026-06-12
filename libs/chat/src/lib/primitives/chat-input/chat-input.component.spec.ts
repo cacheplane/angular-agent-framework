@@ -136,3 +136,35 @@ describe('ChatInputComponent', () => {
     expect(textarea.style.height).not.toBe('');
   });
 });
+
+describe('ChatInputComponent — clears view on submit (F1 regression)', () => {
+  it('empties both the signal and the textarea DOM value after Enter submit', async () => {
+    const agent = mockAgent();
+    TestBed.configureTestingModule({ imports: [ChatInputComponent] });
+    const fixture = TestBed.createComponent(ChatInputComponent);
+    fixture.componentRef.setInput('agent', agent);
+    fixture.detectChanges();
+
+    const textarea: HTMLTextAreaElement =
+      fixture.nativeElement.querySelector('textarea');
+    // Simulate real typing: set the DOM value and fire the input event.
+    textarea.value = 'hello world';
+    textarea.dispatchEvent(new Event('input', { bubbles: true }));
+    fixture.detectChanges();
+    expect(fixture.componentInstance.messageText()).toBe('hello world');
+
+    // Enter-key submit (the (keydown.enter) path).
+    textarea.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }),
+    );
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(agent.submitCalls).toHaveLength(1);
+    expect(fixture.componentInstance.messageText()).toBe('');
+    // The DOM must reflect the clear — this is the bug: ngModel never
+    // writes the programmatic '' back to the view.
+    expect(textarea.value).toBe('');
+  });
+});
