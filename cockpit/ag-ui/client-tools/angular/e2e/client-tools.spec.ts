@@ -33,4 +33,11 @@ test('client-tools: ask tool collects user confirmation and resumes the run', as
   await expect(confirm).toContainText('Table for two at 7pm');
   await confirm.getByRole('button', { name: 'Confirm' }).click();
   await expect(page.getByText('Your booking is confirmed')).toBeVisible({ timeout: 30000 });
+
+  // The confirm card freezes once resolved: the adapter writes the emitted
+  // result back onto the local tool call, so the component re-renders into its
+  // frozen state — the interactive buttons disappear and a confirmed line shows.
+  await expect(confirm).toContainText('Booking confirmed');
+  await expect(confirm.getByRole('button', { name: 'Confirm' })).toHaveCount(0);
+  await expect(confirm.getByRole('button', { name: 'Cancel' })).toHaveCount(0);
 });
