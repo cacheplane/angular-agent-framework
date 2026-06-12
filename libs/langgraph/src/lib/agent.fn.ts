@@ -64,6 +64,7 @@ import { createStreamManagerBridge } from './internals/stream-manager.bridge';
 import { buildBranchTree } from './internals/branch-tree';
 import { extractCitations } from './internals/extract-citations';
 import { createClientToolsCapability, mergeClientTools } from './client-tools';
+import type { ClientToolResultPatch } from './client-tools';
 
 /**
  * Walk LangGraph history (newest-first) and pair each AIMessage id with
@@ -345,7 +346,22 @@ export function agent<
     rawMessages().map((m) => toMessage(m, manager.getReasoningDurationMs)),
   );
 
-  const toolCallsNeutral = computed<ToolCall[]>(() => rawToolCalls().map(toToolCall));
+  // Client-tool resolutions written client-side. The raw `toolCalls$` stream
+  // (and thus `rawToolCalls`) only ever carries backend results — a resolved
+  // client tool (`ask`/`view`) never receives a backend ToolMessage on its
+  // LOCAL call. These overrides layer the client-side outcome over the raw
+  // projection so the transcript card can freeze (see chat-tool-views
+  // toToolViewSpec, which spreads `result` into the mounted component's props).
+  const clientResultOverrides = signal<ReadonlyMap<string, ClientToolResultPatch>>(new Map());
+
+  const toolCallsNeutral = computed<ToolCall[]>(() => {
+    const overrides = clientResultOverrides();
+    return rawToolCalls().map((tc) => {
+      const neutral = toToolCall(tc);
+      const patch = overrides.get(neutral.id);
+      return patch ? { ...neutral, ...patch } : neutral;
+    });
+  });
 
   const statusNeutral = computed<AgentStatus>(() => mapStatus(statusSig()));
 
@@ -384,7 +400,12 @@ export function agent<
   // in the submit wrapper below and in the resolve path inside the capability.
   const clientToolsCap = createClientToolsCapability(
     (payload, opts) => manager.submit(payload, opts),
-    { toolCalls: toolCallsNeutral, isLoading },
+    {
+      toolCalls: toolCallsNeutral,
+      isLoading,
+      applyClientResult: (id, patch) =>
+        clientResultOverrides.update((m) => new Map(m).set(id, patch)),
+    },
   );
 
   return {

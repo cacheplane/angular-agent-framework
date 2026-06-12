@@ -164,7 +164,7 @@ describe('createClientToolsCapability', () => {
     expect((args.tools[0] as { name: string }).name).toBe('get_weather');
   });
 
-  it('resolve(ok) drops the id from pending() even though store.result stays undefined', () => {
+  it('resolve(ok) drops the id from pending() and writes the result onto the store tool call', () => {
     const source = makeSource();
     const store  = makeStore();
     const cap    = createClientToolsCapability(source, store);
@@ -173,12 +173,33 @@ describe('createClientToolsCapability', () => {
     store.toolCalls.set([{ id: 'c1', name: 'get_weather', args: {}, status: 'complete' }]);
 
     expect(cap.pending()).toHaveLength(1);
-    cap.resolve('c1', { ok: true, value: { temp: 70 } });
-    // result is still undefined in the store — resolvedIds guard should drop it
+    cap.resolve('c1', { ok: true, value: { cleared: true } });
+    // resolvedIds guard drops it, AND the result is now written onto the store
+    // tool call (belt-and-braces: the result write alone also excludes it).
     expect(cap.pending()).toHaveLength(0);
+    const tc = store.toolCalls().find((t) => t.id === 'c1');
+    expect(tc?.result).toEqual({ cleared: true });
+    expect(tc?.status).toBe('complete');
+    expect(tc?.error).toBeUndefined();
   });
 
   // ---- resolve — error result ------------------------------------------------
+
+  it('resolve(error) writes { error } result + error + status=error onto the store tool call', () => {
+    const source = makeSource();
+    const store  = makeStore();
+    const cap    = createClientToolsCapability(source, store);
+    cap.setCatalog([WEATHER_SPEC]);
+    store.isLoading.set(false);
+    store.toolCalls.set([{ id: 'c1', name: 'get_weather', args: {}, status: 'complete' }]);
+
+    cap.resolve('c1', { ok: false, error: 'boom' });
+
+    const tc = store.toolCalls().find((t) => t.id === 'c1');
+    expect(tc?.result).toEqual({ error: 'boom' });
+    expect(tc?.error).toBe('boom');
+    expect(tc?.status).toBe('error');
+  });
 
   it('resolve(error) adds message whose content contains the error string', () => {
     const source = makeSource();
