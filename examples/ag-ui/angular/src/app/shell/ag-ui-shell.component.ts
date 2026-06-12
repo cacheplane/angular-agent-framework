@@ -142,6 +142,7 @@ export class AgUiShell {
       html.setAttribute('data-theme', this.theme());
       const scheme = this.colorScheme();
       html.setAttribute('data-threadplane-chat-theme', scheme);
+      html.setAttribute('data-color-scheme', scheme);
       const t = this.theme();
       if (t === 'default-dark' || t === 'default-light') {
         const next = scheme === 'light' ? 'default-light' : 'default-dark';
