@@ -52,6 +52,7 @@ export function submitMessage(
           (compositionend)="composing.set(false)"
           (focus)="focused.set(true)"
           (blur)="focused.set(false)"
+          name="messageText"
           rows="1"
           aria-label="Type a message"
         ></textarea>

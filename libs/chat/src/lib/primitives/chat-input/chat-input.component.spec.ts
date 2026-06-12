@@ -138,13 +138,18 @@ describe('ChatInputComponent', () => {
 });
 
 describe('ChatInputComponent — clears view on submit (F1 regression)', () => {
-  it('empties both the signal and the textarea DOM value after Enter submit', async () => {
-    const agent = mockAgent();
+  let fixture: ComponentFixture<ChatInputComponent>;
+  let agent: ReturnType<typeof mockAgent>;
+
+  beforeEach(() => {
+    agent = mockAgent();
     TestBed.configureTestingModule({ imports: [ChatInputComponent] });
-    const fixture = TestBed.createComponent(ChatInputComponent);
+    fixture = TestBed.createComponent(ChatInputComponent);
     fixture.componentRef.setInput('agent', agent);
     fixture.detectChanges();
+  });
 
+  it('empties both the signal and the textarea DOM value after Enter submit', async () => {
     const textarea: HTMLTextAreaElement =
       fixture.nativeElement.querySelector('textarea');
     // Simulate real typing: set the DOM value and fire the input event.
@@ -163,8 +168,10 @@ describe('ChatInputComponent — clears view on submit (F1 regression)', () => {
 
     expect(agent.submitCalls).toHaveLength(1);
     expect(fixture.componentInstance.messageText()).toBe('');
-    // The DOM must reflect the clear — this is the bug: ngModel never
-    // writes the programmatic '' back to the view.
+    // The DOM must reflect the clear. (Historical bug: ngModel never wrote
+    // the programmatic '' back to the view in real browsers. In jsdom both
+    // the [value] binding and the explicit el.value='' clear satisfy this;
+    // the Playwright e2e regression covers the real-browser path.)
     expect(textarea.value).toBe('');
   });
 });
