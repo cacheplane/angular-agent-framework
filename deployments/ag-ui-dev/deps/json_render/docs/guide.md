@@ -10,18 +10,19 @@ as the backend updates the data.
 </Summary>
 
 <Prompt>
-Render a backend-authored dashboard with `@threadplane/chat` over the AG-UI adapter. Register your view components in the `views` map and pass it to `<chat>`. Have the agent emit a json-render spec (with `$state` bindings) as the assistant message content, and put the data the spec binds to in the LangGraph graph state so `ag-ui-langgraph` emits it as a `STATE_SNAPSHOT`. The chat composition resolves the bindings automatically.
+Render a backend-authored dashboard with `@threadplane/chat` over the AG-UI adapter. Register your view components in the `views` map and pass it to `<chat>`, along with an explicit `[store]` — the composition syncs incoming agent state into that store, and the spec's `$state` bindings resolve against it. Have the agent emit a json-render spec (with `$state` bindings) as the assistant message content, and put the data the spec binds to in the LangGraph graph state so `ag-ui-langgraph` emits it as a `STATE_SNAPSHOT`.
 </Prompt>
 
 <Steps>
 <Step title="Register the view components">
 
-Build a `views` registry keyed by the component types your spec will reference, and pass it to `<chat>`:
+Build a `views` registry keyed by the component types your spec will reference, and pass it to `<chat>` together with an explicit store. Without a `[store]`, each render surface seeds its own isolated store from the spec — the explicit store is what lets backend state (`STATE_SNAPSHOT`) reach the dashboard bindings:
 
 ```typescript
 // json-render.component.ts
 import { ChatComponent, views } from '@threadplane/chat';
 import { injectAgent } from '@threadplane/ag-ui';
+import { signalStateStore } from '@threadplane/render';
 import { StatCardComponent } from './views/stat-card.component';
 import { DashboardGridComponent } from './views/dashboard-grid.component';
 // …line-chart, bar-chart, data-grid, container
@@ -31,10 +32,13 @@ const dashboardViews = views({
   dashboard_grid: DashboardGridComponent,
   // …
 });
+
+// In the component class:
+readonly dashStore = signalStateStore({});
 ```
 
 ```html
-<chat main [agent]="agent" [views]="dashboardViews" />
+<chat main [agent]="agent" [views]="dashboardViews" [store]="dashStore" />
 ```
 
 </Step>
@@ -76,8 +80,8 @@ data prop uses a `$state` binding rather than a literal:
 This is the AG-UI-native part. Instead of pushing data through a side channel,
 put it in the **graph state** — `ag-ui-langgraph` emits the state object as a
 `STATE_SNAPSHOT`, the adapter writes it to the agent's `state` signal, and the
-chat composition syncs it into the render store where the `$state` bindings
-resolve:
+chat composition syncs it into the explicit `[store]` you passed, where the
+`$state` bindings resolve:
 
 ```python
 # graph.py — emit_state returns the accumulated tool data into state
