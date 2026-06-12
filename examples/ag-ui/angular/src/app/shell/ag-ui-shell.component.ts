@@ -7,7 +7,7 @@ import {
   inject,
   signal,
 } from '@angular/core';
-import { ActivatedRoute, Router, RouterOutlet } from '@angular/router';
+import { Router, RouterOutlet } from '@angular/router';
 import { injectAgent } from '@threadplane/ag-ui';
 import {
   ChatInterruptPanelComponent,
@@ -39,13 +39,17 @@ const DEFAULTS = {
 })
 export class AgUiShell {
   private readonly router = inject(Router);
-  private readonly route = inject(ActivatedRoute);
   private readonly document = inject(DOCUMENT);
   protected readonly persistence = inject(PalettePersistence);
 
   // ── Knob signals: URL > localStorage > default ───────────────────────────
   private urlKnob(name: string): string | null {
-    const v = this.route.snapshot.queryParamMap.get(name);
+    // AgUiShell is not a routed component so ActivatedRoute.snapshot may not
+    // carry query params at initialization time. Read from window.location.search
+    // (the real browser URL) which is available immediately at bootstrap.
+    const win = this.document.defaultView;
+    const search = win?.location.search ?? '';
+    const v = new URLSearchParams(search).get(name);
     return v && v.length > 0 ? v : null;
   }
 
