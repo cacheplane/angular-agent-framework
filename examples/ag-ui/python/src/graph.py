@@ -42,7 +42,7 @@ from langchain_core.tools import tool
 from langgraph_sdk import get_client
 from langsmith import traceable
 
-from threadplane.client_tools import bind_client_tools, client_tool_names
+from threadplane.middleware.langgraph import bind_client_tools, client_tool_names
 
 from src.streaming.a2ui_partial_handler import A2uiPartialHandler
 from src.streaming.envelope_tool import render_a2ui_surface
