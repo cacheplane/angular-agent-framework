@@ -6,13 +6,16 @@ dependencies = [
     "langgraph>=0.3",
     "langchain-openai>=0.3",
     "langsmith>=0.2",
-    "threadplane-client-tools>=0.0.1",
+    "threadplane-middleware>=0.0.1",
 ]
 
 [tool.uv]
 dev-dependencies = [
     "langgraph-cli[inmem]>=0.1",
 ]
+
+[tool.uv.sources]
+threadplane-middleware = { path = "../../../../packages/threadplane-middleware", editable = true }
 
 [build-system]
 requires = ["hatchling"]
