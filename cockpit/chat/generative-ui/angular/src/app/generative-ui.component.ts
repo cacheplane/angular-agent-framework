@@ -2,6 +2,7 @@
 import { Component } from '@angular/core';
 import { ChatComponent, ChatWelcomeSuggestionComponent, views } from '@threadplane/chat';
 import { injectAgent } from '@threadplane/langgraph';
+import { signalStateStore } from '@threadplane/render';
 import { ExampleChatLayoutComponent } from '@threadplane/example-layouts';
 
 import { StatCardComponent } from './views/stat-card.component';
@@ -31,7 +32,7 @@ const WELCOME_SUGGESTIONS = [
   imports: [ChatComponent, ChatWelcomeSuggestionComponent, ExampleChatLayoutComponent],
   template: `
     <example-chat-layout>
-      <chat main [agent]="agent" [views]="dashboardViews" class="flex-1 min-w-0">
+      <chat main [agent]="agent" [views]="dashboardViews" [store]="dashStore" class="flex-1 min-w-0">
         <div chatWelcomeSuggestions>
           @for (s of suggestions; track s.value) {
             <chat-welcome-suggestion
@@ -49,6 +50,12 @@ export class GenerativeUiComponent {
   protected readonly agent = injectAgent();
   protected readonly dashboardViews = dashboardViews;
   protected readonly suggestions = WELCOME_SUGGESTIONS;
+
+  /**
+   * Explicit shared store: backend graph state syncs into it via the chat
+   * composition, so every dashboard surface reads live values.
+   */
+  protected readonly dashStore = signalStateStore({});
 
   protected send(text: string): void {
     void this.agent.submit({ message: text });

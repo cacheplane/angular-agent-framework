@@ -2154,6 +2154,12 @@
         "optional": false
       },
       {
+        "name": "normalizedSpec",
+        "type": "Signal<Spec | null>",
+        "description": "The bound spec with schema-documented `{ statePath }` prop refs\nrewritten to engine-native `{ $bindState }` + `_bindings` so values\nresolve against the state store instead of interpolating as\n\"[object Object]\" (F4).",
+        "optional": false
+      },
+      {
         "name": "registry",
         "type": "InputSignal<AngularRegistry | undefined>",
         "description": "",
@@ -2392,6 +2398,19 @@
         "signature": "focusTextarea(): void",
         "description": "",
         "params": []
+      },
+      {
+        "name": "onInput",
+        "signature": "onInput(event: Event): void",
+        "description": "Sync the textarea's value into the signal on user input. A direct\n [value]/(input) pair is used instead of ngModel: NgModel does not\n reliably write a programmatic clear back to the view under zoneless\n + OnPush, leaving sent text visible in the composer (audit F1).",
+        "params": [
+          {
+            "name": "event",
+            "type": "Event",
+            "description": "",
+            "optional": false
+          }
+        ]
       },
       {
         "name": "onKeydown",
@@ -2780,6 +2799,12 @@
         "name": "agent",
         "type": "InputSignal<Agent>",
         "description": "",
+        "optional": false
+      },
+      {
+        "name": "clientTools",
+        "type": "InputSignal<Readonly<Record<string, ClientToolDef>> | undefined>",
+        "description": "Frontend-declared client tools forwarded to the inner `<chat>`.",
         "optional": false
       },
       {
@@ -3275,6 +3300,12 @@
         "name": "agent",
         "type": "InputSignal<Agent>",
         "description": "",
+        "optional": false
+      },
+      {
+        "name": "clientTools",
+        "type": "InputSignal<Readonly<Record<string, ClientToolDef>> | undefined>",
+        "description": "Frontend-declared client tools forwarded to the inner `<chat>`.",
         "optional": false
       },
       {
@@ -4702,7 +4733,7 @@
   {
     "name": "MarkdownChildrenComponent",
     "kind": "class",
-    "description": "Recursively dispatches a parent node's children through the markdown view\nregistry. Each child's `type` is looked up in the registry; the resolved\ncomponent is rendered with `[node]` bound to that child.\n\nIdentity-preserving: `track $any(child)` keys on the JS reference of the\nchild node. Because @cacheplane/partial-markdown preserves node identity\nacross pushes, unchanged subtrees never re-render.",
+    "description": "Recursively dispatches a parent node's children through the markdown view\nregistry. Each child's `type` is looked up in the registry; the resolved\ncomponent is rendered with `[node]` bound to that child.\n\nPosition-stable: `track $index` avoids NG0956 re-creation warnings that\noccur when the markdown pipeline re-parses content on every stream delta,\nproducing new child object references even for unchanged nodes.",
     "params": [],
     "examples": [],
     "properties": [

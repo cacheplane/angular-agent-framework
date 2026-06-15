@@ -17,8 +17,9 @@ until the LLM returns no tool_calls (cap _MAX_TOOL_ITERATIONS per turn).
 
 emit_state walks the message history for this turn and returns the tool
 results as top-level state fields — ag-ui-langgraph emits them as
-STATE_SNAPSHOT; the Angular chat-lib effect syncs them into the render
-store, where the spec's $state bindings resolve them.
+STATE_SNAPSHOT; the Angular chat-lib effect syncs them into the explicit
+[store] the app passes to <chat>, where the spec's $state bindings
+resolve them.
 """
 
 import json

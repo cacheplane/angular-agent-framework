@@ -11,7 +11,10 @@ import { createContentClassifier, type ContentClassifier } from '../../streaming
 import { mockAgent } from '../../testing/mock-agent';
 import { createPartialArgsBridge } from '../../a2ui/partial-args-bridge';
 import { createA2uiSurfaceStore } from '../../a2ui/surface-store';
-import { signalStateStore } from '@threadplane/render';
+import { signalStateStore, toRenderRegistry, views } from '@threadplane/render';
+import { a2uiBasicCatalog } from '../../a2ui/catalog/index';
+import { ChatGenerativeUiComponent } from '../../primitives/chat-generative-ui/chat-generative-ui.component';
+import type { Spec, StateStore } from '@json-render/core';
 import type { AgentEvent } from '../../agent/agent-event';
 
 describe('ChatComponent', () => {
@@ -491,5 +494,111 @@ describe('ChatComponent — no bubble-level GenUI skeleton', () => {
     const src = fs.readFileSync(path.join(here, 'chat.component.ts'), 'utf8');
     expect(src.includes('chat-genui-skeleton')).toBe(false);
     expect(src.includes('ChatGenuiSkeletonComponent')).toBe(false);
+  });
+});
+
+describe('ChatComponent — json-render surface store binding (composition isolation pin)', () => {
+  // Pins the one-line template binding on <chat-generative-ui>:
+  //
+  //     [store]="store()"
+  //
+  // The composition must hand each json-render surface ONLY the explicit
+  // consumer store — never resolvedStore()'s conversation-wide internal
+  // fallback. Full ChatComponent template rendering is not feasible under
+  // vitest JIT (see the left-flash notes above), so we pin the binding by
+  // extracting the LIVE expression from the template source, evaluating it on
+  // a real ChatComponent instance (exactly the value the template passes to
+  // every surface), and mounting two real <chat-generative-ui> surfaces whose
+  // specs carry an OVERLAPPING state key with different values.
+  //
+  // Fails-on-revert reasoning: with the correct binding, no consumer store is
+  // set, so the evaluated expression is undefined and each surface self-seeds
+  // a per-instance store → isolation. If the binding is reverted to
+  // resolvedStore(), both surfaces receive the SAME internal store (views are
+  // bound, so the fallback is active): the first surface seeds /totalRevenue
+  // and the second surface — which never seeded that path itself — must not
+  // clobber it, so it renders the FIRST message's value and the assertions
+  // below go red.
+
+  const contentA = JSON.stringify({
+    root: 'kpi',
+    elements: { kpi: { type: 'Text', props: { text: { statePath: '/totalRevenue' } } } },
+    state: { totalRevenue: '$1.2M' },
+  });
+  const contentB = JSON.stringify({
+    root: 'kpi',
+    elements: { kpi: { type: 'Text', props: { text: { statePath: '/totalRevenue' } } } },
+    state: { totalRevenue: '$9.9M' },
+  });
+
+  /** Extract the `[store]` binding expression from the `<chat-generative-ui>`
+   * element in the composition template (e.g. `store` or `resolvedStore`). */
+  function extractSurfaceStoreBinding(src: string): string {
+    const start = src.indexOf('<chat-generative-ui');
+    expect(start).toBeGreaterThan(-1);
+    const element = src.slice(start, src.indexOf('/>', start));
+    const match = /\[store\]="([A-Za-z_$][\w$]*)\(\)"/.exec(element);
+    if (!match) throw new Error('no [store]="fn()" binding found on <chat-generative-ui>');
+    return match[1];
+  }
+
+  it('two spec messages with overlapping state keys render their OWN values (isolation)', async () => {
+    const fs = await import('node:fs');
+    const path = await import('node:path');
+    const url = await import('node:url');
+    const here = path.dirname(url.fileURLToPath(import.meta.url));
+    const src = fs.readFileSync(path.join(here, 'chat.component.ts'), 'utf8');
+    const bindingFn = extractSurfaceStoreBinding(src);
+
+    TestBed.configureTestingModule({ imports: [ChatGenerativeUiComponent] });
+    const injector = TestBed.inject(Injector);
+
+    // Classify both assistant message contents exactly as the template does.
+    const classifierA = createContentClassifier();
+    classifierA.update(contentA);
+    const classifierB = createContentClassifier();
+    classifierB.update(contentB);
+    expect(classifierA.type()).toBe('json-render');
+    expect(classifierB.type()).toBe('json-render');
+    const specA = classifierA.spec() as Spec;
+    const specB = classifierB.spec() as Spec;
+    expect(specA).toBeTruthy();
+    expect(specB).toBeTruthy();
+
+    // Real composition instance carrying the two assistant spec messages,
+    // with [views] bound so the internal-store fallback would be ACTIVE if
+    // the surface binding were ever pointed back at resolvedStore().
+    let surfaceStore: StateStore | undefined;
+    runInInjectionContext(injector, () => {
+      const comp = new ChatComponent();
+      setSignalInput(comp.agent, mockAgent({
+        messages: [new AIMessage(contentA), new AIMessage(contentB)],
+      }));
+      setSignalInput(comp.views, views({}));
+      // Sanity: the internal fallback IS available — the isolation asserted
+      // below must come from the binding choice, not from a missing store.
+      expect(comp.resolvedStore()).toBeTruthy();
+      // Evaluate the template's actual binding expression for the surfaces.
+      surfaceStore = (comp as unknown as Record<string, () => StateStore | undefined>)[bindingFn]();
+    });
+
+    function mountSurface(spec: Spec): string {
+      const fixture = TestBed.createComponent(ChatGenerativeUiComponent);
+      fixture.componentRef.setInput('registry', toRenderRegistry(a2uiBasicCatalog()));
+      fixture.componentRef.setInput('store', surfaceStore);
+      fixture.componentRef.setInput('spec', spec);
+      fixture.detectChanges();
+      TestBed.flushEffects();
+      fixture.detectChanges();
+      return (fixture.nativeElement as HTMLElement).textContent ?? '';
+    }
+
+    const textA = mountSurface(specA);
+    const textB = mountSurface(specB);
+
+    expect(textA).toContain('$1.2M');
+    expect(textA).not.toContain('$9.9M');
+    expect(textB).toContain('$9.9M');
+    expect(textB).not.toContain('$1.2M');
   });
 });

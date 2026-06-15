@@ -86,6 +86,54 @@ export function toAgent(source: AbstractAgent, options: ToAgentOptions = {}): Ag
   const telemetryProperties = { transport: 'ag-ui' as const, surface: 'to_agent' };
   let activeRun: { startedAt: number; errored: boolean } | null = null;
 
+  // Set by stop(); lets run-failure handlers distinguish a user-initiated
+  // abort (graceful cancel) from a genuine stream failure.
+  let abortRequested = false;
+
+  // Set to true the first time settleIfAborted() handles an abort error for the
+  // current run. The AG-UI client can surface the same abort via both the event
+  // stream (RUN_ERROR event) AND onRunFailed — abortSettled lets the second
+  // delivery see through as a no-op rather than re-writing store state or
+  // triggering a real error path. Both flags are reset together at the top of
+  // submit() so the next run starts clean.
+  let abortSettled = false;
+
+  function isAbortError(error: unknown): boolean {
+    return error instanceof Error
+      && (error.name === 'AbortError' || /abort/i.test(error.message));
+  }
+
+  /** Settles the store as idle for stop()-induced failures; returns true if handled. */
+  function settleIfAborted(error: unknown): boolean {
+    // If we already settled this abort (duplicate delivery — e.g. RUN_ERROR
+    // event THEN onRunFailed), defensively re-apply the idle settle so any
+    // state written between the two deliveries (e.g. RUN_STARTED from a new
+    // run that started before flags were reset) is corrected. Telemetry is
+    // not re-emitted — the guard returns true to suppress further processing.
+    if (abortSettled && isAbortError(error)) {
+      store.status.set('idle');
+      store.isLoading.set(false);
+      return true;
+    }
+
+    if (!abortRequested || !isAbortError(error)) return false;
+    abortRequested = false;
+    abortSettled = true;
+    store.status.set('idle');
+    store.isLoading.set(false);
+    // Not a failure: leave store.error null and close out telemetry as a
+    // normal finish so the aborted run doesn't count as errored.
+    const run = activeRun;
+    if (run) {
+      finishRunTelemetry(run);
+      // Mark errored so any subsequent finishRunTelemetry/failRunTelemetry
+      // call on the same run object (e.g. from submit's try block resolving
+      // after the abort) is a no-op — telemetry fires at most once per run.
+      run.errored = true;
+    }
+    return true;
+  }
+
   // Build the client-tools capability. catalogAsAgUiTools() is used below to
   // thread the catalog into every runAgent() call.
   const clientToolsCap = createClientToolsCapability(source, store);
@@ -142,9 +190,17 @@ export function toAgent(source: AbstractAgent, options: ToAgentOptions = {}): Ag
   // This subscription lives for the lifetime of `source`.
   source.subscribe({
     onEvent({ event }) {
+      // The AG-UI client surfaces a user-initiated abort both as a
+      // RUN_ERROR event (here) and via onRunFailed; guard the event path too
+      // so the reducer never marks a deliberate stop as an error.
+      if (event.type === 'RUN_ERROR') {
+        const message = (event as { message?: string }).message ?? '';
+        if (settleIfAborted(new Error(message))) return;
+      }
       reduceEvent(event, store);
     },
     onRunFailed({ error }) {
+      if (settleIfAborted(error)) return;
       store.status.set('error');
       store.isLoading.set(false);
       store.error.set(error);
@@ -165,6 +221,11 @@ export function toAgent(source: AbstractAgent, options: ToAgentOptions = {}): Ag
     clientTools:  clientToolsCap,
 
     submit: async (input: AgentSubmitInput, _opts?: AgentSubmitOptions) => {
+      // Reset both abort flags so a new submit starts clean and genuine
+      // failures after a previous stop are never swallowed.
+      abortRequested = false;
+      abortSettled = false;
+
       if (input.resume !== undefined) {
         // Resume path: clear the pending interrupt and replay the run with the
         // resume payload forwarded to the LangGraph backend via AG-UI's
@@ -180,10 +241,12 @@ export function toAgent(source: AbstractAgent, options: ToAgentOptions = {}): Ag
           });
           finishRunTelemetry(run);
         } catch (err) {
-          store.status.set('error');
-          store.isLoading.set(false);
-          store.error.set(err);
-          failRunTelemetry(err, run);
+          if (!settleIfAborted(err)) {
+            store.status.set('error');
+            store.isLoading.set(false);
+            store.error.set(err);
+            failRunTelemetry(err, run);
+          }
         }
         return;
       }
@@ -205,16 +268,17 @@ export function toAgent(source: AbstractAgent, options: ToAgentOptions = {}): Ag
         await source.runAgent(tools.length > 0 ? { tools } : undefined);
         finishRunTelemetry(run);
       } catch (err) {
-        // If the run was aborted via stop(), abortRun() resolves the promise
-        // rather than rejecting — but catch any unexpected errors here.
-        store.status.set('error');
-        store.isLoading.set(false);
-        store.error.set(err);
-        failRunTelemetry(err, run);
+        if (!settleIfAborted(err)) {
+          store.status.set('error');
+          store.isLoading.set(false);
+          store.error.set(err);
+          failRunTelemetry(err, run);
+        }
       }
     },
 
     stop: async () => {
+      abortRequested = true;
       source.abortRun();
     },
 
@@ -222,6 +286,12 @@ export function toAgent(source: AbstractAgent, options: ToAgentOptions = {}): Ag
       if (store.isLoading()) {
         throw new Error('Cannot regenerate while agent is loading another response');
       }
+      // Reset abort flags so a regenerate starts clean, exactly like submit().
+      // Without this, flags left over from a prior stop() would cause the
+      // duplicate-delivery guard in settleIfAborted() to silently swallow the
+      // abort error without settling, wedging the store in streaming/running.
+      abortRequested = false;
+      abortSettled = false;
       const msgs = store.messages();
       const target = msgs[assistantMessageIndex];
       if (!target || target.role !== 'assistant') {
@@ -257,10 +327,12 @@ export function toAgent(source: AbstractAgent, options: ToAgentOptions = {}): Ag
         await source.runAgent(regenTools.length > 0 ? { tools: regenTools } : undefined);
         finishRunTelemetry(run);
       } catch (err) {
-        store.status.set('error');
-        store.isLoading.set(false);
-        store.error.set(err);
-        failRunTelemetry(err, run);
+        if (!settleIfAborted(err)) {
+          store.status.set('error');
+          store.isLoading.set(false);
+          store.error.set(err);
+          failRunTelemetry(err, run);
+        }
       }
     },
   };

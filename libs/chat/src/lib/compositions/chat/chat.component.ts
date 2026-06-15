@@ -223,10 +223,16 @@ export function isPinned(
                     <chat-streaming-md [content]="md" [streaming]="agent().isLoading() && i === agent().messages().length - 1" />
                   }
                   @if (classified.spec(); as spec) {
+                    <!-- Pass ONLY the explicit consumer store (may be
+                         undefined) — never the conversation-wide internal
+                         fallback. Without a consumer store, render-spec
+                         self-seeds a per-instance store from spec.state so
+                         same-key dashboards across messages stay isolated
+                         (a2ui parity). -->
                     <chat-generative-ui
                       [spec]="spec"
                       [registry]="renderRegistry()"
-                      [store]="resolvedStore()"
+                      [store]="store()"
                       [handlers]="handlers()"
                       [loading]="agent().isLoading()"
                       (events)="onSpecEvent($event, i)"

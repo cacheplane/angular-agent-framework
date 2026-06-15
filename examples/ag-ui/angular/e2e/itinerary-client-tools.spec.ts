@@ -75,3 +75,56 @@ test('ask chain: clear_day confirm mutates the panel and resumes the run', async
   await expect(confirm.getByRole('button', { name: 'Clear' })).toHaveCount(0);
   await expect(confirm.getByRole('button', { name: 'Cancel' })).toHaveCount(0);
 });
+
+test('move_stop action: panel mutates — Eiffel Tower moves from day 1 to day 2', async ({
+  page,
+}) => {
+  await openDemo(page);
+
+  // Seed has Eiffel Tower under Day 1 — verify it's there before sending.
+  const panel = page.getByRole('region', { name: 'Trip itinerary' });
+  await expect(panel).toBeVisible();
+
+  // Day sections are <section class="itin__day"> each containing an <h3> with
+  // "Day N" text and a <ul class="itin__stops"> with the stop rows.
+  const day1Section = panel.locator('section.itin__day').filter({ hasText: 'Day 1' });
+  const day2Section = panel.locator('section.itin__day').filter({ hasText: 'Day 2' });
+
+  await expect(day1Section).toContainText('Eiffel Tower');
+  await expect(day2Section).not.toContainText('Eiffel Tower');
+
+  await messageInput(page).fill('Move the Eiffel Tower to day 2');
+  await sendButton(page).click();
+
+  // move_stop is an action tool: the browser executes it immediately (no
+  // user interaction required). The store update is synchronous, so the panel
+  // re-renders before the continuation streams back. Wait on the continuation
+  // text to confirm both the tool execution AND the second run have finished.
+  await expect(page.getByText('Done — the Eiffel Tower is now on day 2.')).toBeVisible({
+    timeout: 30_000,
+  });
+
+  // Panel must reflect the mutation: Eiffel Tower is now under Day 2, gone from Day 1.
+  await expect(day2Section).toContainText('Eiffel Tower');
+  await expect(day1Section).not.toContainText('Eiffel Tower');
+});
+
+test('day_card view: component renders with model-filled props and run auto-continues', async ({
+  page,
+}) => {
+  await openDemo(page);
+
+  await messageInput(page).fill('Show me a recap card for day 1');
+  await sendButton(page).click();
+
+  // day_card is a `view` tool: it auto-acks without user interaction, so the
+  // run continues immediately (two runs total, same pattern as the read test).
+  // The card must be visible and contain the model-supplied day number and places.
+  const card = page.locator('app-day-card');
+  await expect(card).toBeVisible({ timeout: 30_000 });
+  await expect(card).toContainText('Day 1');
+  await expect(card).toContainText('Louvre');
+
+  // Continuation text confirms the second run finished.
+  await expect(page.getByText("Here's your day 1 recap.")).toBeVisible({ timeout: 30_000 });
+});

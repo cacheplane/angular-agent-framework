@@ -1,0 +1,63 @@
+# AG-UI Capability Audit — Findings
+
+**Campaign:** `2026-06-11-ag-ui-demo-toolbar-design.md` Phase 2 — **complete (2026-06-11)**.
+**Method:** Chrome MCP driving `localhost:4201` (AgUiShell toolbar build, merged in #656) against the real uvicorn backend (`:8000`, live OpenAI key). A fetch recorder captured every `POST /agent` `RunAgentInput` payload for transport-level proof. Cross-checks against the production canonical demo (`demo.threadplane.ai`) localized shared-vs-adapter issues.
+
+## Verdict matrix
+
+| # | Capability | Verdict | Evidence / notes |
+|---|------------|---------|------------------|
+| 1 | Streaming + markdown | ✅ | e2e + recut evidence (pre-verified) |
+| 2 | Citations | ✅ | references + [n] markers (recut 2026-06-11) |
+| 3 | Interrupt — Accept | ✅ | live resume proven 2026-06-11 |
+| 4a | Interrupt — Edit | ✅ | resume carried edited value; agent acknowledged "$25 not $50" change |
+| 4b | Interrupt — Respond | ✅ | payload: `forwardedProps.command.resume = "Manager approval confirmed in ticket OPS-88…"`; reply incorporated it |
+| 4c | Interrupt — Ignore | ✅ | payload: `resume: "denied"`; agent acknowledged denial and offered alternatives |
+| 5 | Model select (gpt-5-nano) | ✅ | request payload `state.model: "gpt-5-nano"`; **response_metadata echoed `model: "gpt-5-nano-2025-08-07"`** — served by OpenAI, end-to-end proof |
+| 6 | Effort=high + reasoning render | ✅ | "Thought for Ns" chips + live thinking text streamed over AG-UI; full final answer |
+| 7 | Gen-UI: a2ui | ✅ | pre-verified |
+| 8 | Gen-UI: json-render | ✅ (renders) + 🔶 F4 | interactive dashboard rendered (tabs/sliders/checkboxes); metric values show `[object Object]` — **reproduces identically on canonical prod** → shared render/graph issue, not AG-UI |
+| 9 | Theme presets + dark/light | ✅ + 🔶 F2 | toggle + URL knobs sync; itinerary panel & mode hosts stay dark in light scheme (example CSS) |
+| 10 | Research subagent | ✅ (runs) + 🔶 F5 | run completed with structured summary; renders as plain tool row — no subagent card (known adapter gap: no subagent metadata over AG-UI) |
+| 11 | Stop mid-stream | 🔴 F3 | stream halts, but a red error banner "BodyStreamBuffer was aborted" presents the user's own stop as a failure |
+| 12 | Regenerate | ✅ | replaced the aborted message; fresh complete response, no artifacts |
+| 13 | Error recovery | ✅ | e2e (pre-verified) |
+| 14 | Client tools — embed | ✅ | #655 e2e (3 specs) |
+| 15 | Client tools — popup/sidebar | ✅ | popup: `get_itinerary` listed the 4 panel items; sidebar: `add_stop` mutated the live panel (Sainte-Chapelle → Day 1). Proves the #656 `[clientTools]` pass-through fix |
+
+Also verified along the way: mid-conversation model switching (toolbar → composer pill → URL → next request payload), knob persistence across mode navigation, and one shared agent/thread across embed/popup/sidebar.
+
+## Findings (gaps to close in scope)
+
+### F1 — Composer keeps text after Enter send — `@threadplane/chat` bug (high)
+Every conversation-state send leaves the sent text in the textarea. Probed live: `chat-input.messageText()` is `""` after submit but the DOM textarea still holds the text — the `[ngModel]` write-back to the view never happens (OnPush + signal + FormsModule). **Reproduced on the production canonical demo** mid-thread; it's masked on first-send because thread-route navigation remounts the composer, and in e2e because Playwright `fill` replaces content. Fix in `libs/chat/src/lib/primitives/chat-input/` with a failing test that types via real DOM events, submits, and asserts the textarea value is empty.
+
+### F2 — Light scheme not honored by example chrome (low, example-level)
+`examples/ag-ui` itinerary panel (#655) and the popup/sidebar mode host backgrounds use hardcoded dark colors; with `scheme=light` the toolbar+chat go light but the panel and mode hosts stay dark. Fix with theme-aware CSS keyed off `data-threadplane-chat-theme`.
+
+### F3 — Stop surfaces as an error — `@threadplane/ag-ui` adapter (high)
+User-initiated stop renders a red "BodyStreamBuffer was aborted" error banner: `source.abortRun()` makes the underlying AG-UI client invoke `onRunFailed`, and the adapter's handler unconditionally sets `status: 'error'` + `error`. Fix: `stop()` sets an abort-requested flag; `onRunFailed`/submit-catch treat abort errors (flag set, or `AbortError`/abort-message) as graceful cancellation — status `idle`, no error, distinct telemetry. Canonical LangGraph stop is graceful — parity gap. (An earlier note about stray "Success" text was a misread: it was the final streamed delta "Succe|ssive…" truncated mid-word by the abort — expected.)
+
+### F4 — json-render binds objects as text — shared render/graph issue (medium, NOT AG-UI-specific)
+Generated dashboard specs render `[object Object]` for metric values and a literal `trending_up` icon name. Reproduces byte-for-byte on `demo.threadplane.ai` (langgraph transport), so the bug is in the json-render engine's value/binding resolution (`@threadplane/render`) and/or the graph's `json_render` spec schema — not the AG-UI adapter. Track as its own fix; both demos benefit.
+
+### F5 — No subagent card over AG-UI — adapter gap (medium, known)
+The research delegation runs fine but renders as a generic tool row; the canonical demo shows a `chat-subagent` card. The AG-UI adapter doesn't surface subagent metadata (custom events → subagent sub-contract). Needs design: map the graph's subagent custom events into the chat subagent contract in `toAgent()`.
+
+### F6 — NG0956 console warnings during streaming — chat lib perf (low)
+Angular warns repeatedly that a tracked `@for` collection (size 1) is re-created per stream chunk (track-by-identity). Cheap fix: stable `track` keys in the streaming message list templates.
+
+## Gap-closure status (updated 2026-06-12, Phase 3)
+
+Phase 3 (branch `ag-ui-gap-closure-p3`, plan `2026-06-11-ag-ui-gap-closure-p3.md`) closed F1, F2, F3, F4, and the main F6 source — each TDD'd, two-stage reviewed, and re-verified in a live Chrome smoke against the real backend:
+
+- **F1 ✅** — chat-input binds `[value]`/`(input)` directly (FormsModule dropped, `@angular/forms` peer removed from `@threadplane/chat`); composer verified clearing live, including mid-stream sends. The `name="messageText"` attribute was preserved for cockpit selectors.
+- **F2 ✅** — AgUiShell sets `data-color-scheme` + index.html pre-bootstrap script; page chrome (itinerary panel, mode hosts) verified light live.
+- **F3 ✅** — adapter settles abort-shaped failures as graceful cancellation on BOTH delivery paths (`onRunFailed` AND the synthesized `RUN_ERROR` event — the second path was caught only by the live smoke, not the stub harness). No banner on stop, verified live.
+- **F4 ✅** — json-render `{statePath}` props are normalized to the `$bindState` dialect + `_bindings` in `chat-generative-ui`; surfaces are store-isolated per instance unless a consumer passes an explicit `[store]` (the two cockpit dashboard capabilities now opt in explicitly — backend STATE_SNAPSHOT state requires an explicit store by design, matching a2ui). Live dashboard renders real values; zero `[object Object]`.
+- **F6 ✅ (main source)** — markdown children/table rows now track by `$index`; zero NG0956 during text/reasoning streaming. **Residual:** a handful of NG0956 warnings still fire during json-render *spec assembly* streaming; the source is not any identity-tracked `@for` in libs/chat, libs/render, or the example (all audited) — follow-up to pinpoint (likely inside the spec re-materialization path).
+- **F5 ⏳** — subagent card over AG-UI deferred to Phase 4 (needs design: mapping graph subagent custom events into the chat subagent contract in `toAgent()`).
+
+Additional follow-ups logged during Phase 3:
+- Icon rendering: the a2ui catalog icon component renders icon *names* as text (`trending_up`) — proper icon support is a new catalog feature, not built.
+- json-render normalizer handles top-level `{statePath}` props only (matches the documented schema); nested occurrences from model drift would still stringify.

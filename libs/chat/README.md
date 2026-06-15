@@ -36,7 +36,6 @@ npm install @threadplane/chat
 ```
 @angular/core              ^20.0.0 || ^21.0.0
 @angular/common            ^20.0.0 || ^21.0.0
-@angular/forms             ^20.0.0 || ^21.0.0
 @angular/platform-browser  ^20.0.0 || ^21.0.0
 @threadplane/licensing     *
 @threadplane/render        *

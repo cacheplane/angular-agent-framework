@@ -271,6 +271,156 @@ describe('toAgent', () => {
     });
   });
 
+  describe('stop() — graceful cancellation (F3)', () => {
+    it('treats an abort-induced onRunFailed as cancellation, not error', async () => {
+      const source = new StubAgent();
+      // Keep the run in flight so stop() races it like a real stream.
+      let resolveRun!: () => void;
+      source.runAgent.mockImplementation(
+        () => new Promise((res) => {
+          resolveRun = () => res({ result: undefined, newMessages: [] });
+        }),
+      );
+      const agent = toAgent(source as never);
+
+      const pending = agent.submit({ message: 'long story' });
+      await agent.stop!();
+      expect(source.abortRun).toHaveBeenCalledTimes(1);
+
+      // HttpAgent surfaces the abort as a run failure.
+      source.failRun(new Error('BodyStreamBuffer was aborted'));
+      resolveRun();
+      await pending;
+
+      expect(agent.status()).toBe('idle');
+      expect(agent.error()).toBeNull();
+      expect(agent.isLoading()).toBe(false);
+    });
+
+    it('treats an abort-shaped RUN_ERROR event as cancellation, not error', async () => {
+      const source = new StubAgent();
+      let resolveRun!: () => void;
+      source.runAgent.mockImplementation(
+        () => new Promise((res) => {
+          resolveRun = () => res({ result: undefined, newMessages: [] });
+        }),
+      );
+      const agent = toAgent(source as never);
+
+      const pending = agent.submit({ message: 'long story' });
+      await agent.stop!();
+
+      // The real HttpAgent also surfaces the abort as a RUN_ERROR event
+      // through the event stream (not just onRunFailed).
+      source.emit({ type: 'RUN_ERROR', message: 'BodyStreamBuffer was aborted' } as never);
+      resolveRun();
+      await pending;
+
+      expect(agent.status()).toBe('idle');
+      expect(agent.error()).toBeNull();
+      expect(agent.isLoading()).toBe(false);
+    });
+
+    it('handles duplicate abort delivery (RUN_ERROR event THEN onRunFailed) gracefully', async () => {
+      const source = new StubAgent();
+      let resolveRun!: () => void;
+      source.runAgent.mockImplementation(
+        () => new Promise((res) => {
+          resolveRun = () => res({ result: undefined, newMessages: [] });
+        }),
+      );
+      const agent = toAgent(source as never);
+
+      const pending = agent.submit({ message: 'long story' });
+      await agent.stop!();
+
+      // First delivery: via the event stream
+      source.emit({ type: 'RUN_ERROR', message: 'BodyStreamBuffer was aborted' } as never);
+      // Second delivery: via onRunFailed (same abort)
+      source.failRun(new Error('BodyStreamBuffer was aborted'));
+      resolveRun();
+      await pending;
+
+      // Duplicate delivery must NOT flip status back to error
+      expect(agent.status()).toBe('idle');
+      expect(agent.error()).toBeNull();
+      expect(agent.isLoading()).toBe(false);
+    });
+
+    it('still surfaces real failures as errors after a previous stop', async () => {
+      const source = new StubAgent();
+      const agent = toAgent(source as never);
+
+      // A stop on an earlier run must not swallow later genuine failures.
+      await agent.stop!();
+      await agent.submit({ message: 'hi' }); // submit resets the abort flag
+      source.failRun(new Error('boom'));
+
+      expect(agent.status()).toBe('error');
+      expect(agent.error()).toBeInstanceOf(Error);
+    });
+
+    it('stop → regenerate → stop does NOT wedge the store in streaming', async () => {
+      const source = new StubAgent();
+
+      // Run A: make runAgent hang so we can stop it mid-flight.
+      let resolveRunA!: () => void;
+      source.runAgent.mockImplementationOnce(
+        () => new Promise((res) => {
+          resolveRunA = () => res({ result: undefined, newMessages: [] });
+        }),
+      );
+      const agent = toAgent(source as never);
+
+      // Submit run A and emit a complete assistant message before stop.
+      const pendingA = agent.submit({ message: 'first question' });
+      source.emit({ type: 'RUN_STARTED' } as BaseEvent);
+      source.emit({ type: 'TEXT_MESSAGE_START', messageId: 'ai-1', role: 'assistant' } as unknown as BaseEvent);
+      source.emit({ type: 'TEXT_MESSAGE_CONTENT', messageId: 'ai-1', delta: 'reply' } as unknown as BaseEvent);
+      source.emit({ type: 'TEXT_MESSAGE_END', messageId: 'ai-1' } as unknown as BaseEvent);
+      source.emit({ type: 'RUN_FINISHED' } as BaseEvent);
+
+      // Stop run A (abortSettled becomes true after this).
+      await agent.stop!();
+      source.failRun(new Error('BodyStreamBuffer was aborted'));
+      resolveRunA();
+      await pendingA;
+
+      // Run A settled: idle, no error.
+      expect(agent.status()).toBe('idle');
+      expect(agent.error()).toBeNull();
+
+      // There must be an assistant message at index 1 (user[0], assistant[1]).
+      expect(agent.messages()).toHaveLength(2);
+      expect(agent.messages()[1].role).toBe('assistant');
+
+      // Run B (regenerate): hang so we can stop it too.
+      let resolveRunB!: () => void;
+      source.runAgent.mockImplementationOnce(
+        () => new Promise((res) => {
+          resolveRunB = () => res({ result: undefined, newMessages: [] });
+        }),
+      );
+
+      const pendingB = agent.regenerate(1);
+
+      // Simulate the regeneration run starting (status → running, isLoading → true).
+      source.emit({ type: 'RUN_STARTED' } as BaseEvent);
+      expect(agent.isLoading()).toBe(true);
+
+      // Stop the regeneration mid-flight.
+      await agent.stop!();
+      source.failRun(new Error('BodyStreamBuffer was aborted'));
+      resolveRunB();
+      await pendingB;
+
+      // CRITICAL: must NOT be wedged in streaming/running/isLoading.
+      expect(agent.status()).toBe('idle');
+      expect(agent.error()).toBeNull();
+      expect(agent.isLoading()).toBe(false);
+    });
+  });
+
   describe('regenerate()', () => {
     it('truncates messages inclusive of user (userIdx+1) and re-runs without re-appending', async () => {
       const stub = new StubAgent();

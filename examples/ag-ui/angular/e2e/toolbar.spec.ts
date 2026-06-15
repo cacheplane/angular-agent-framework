@@ -31,3 +31,13 @@ test('toolbar submit still streams (state merge does not break runs)', async ({ 
   const assistant = page.locator('chat-message').filter({ hasText: /./ }).last();
   await expect(assistant).toBeVisible({ timeout: 30_000 });
 });
+
+test('light scheme flips the page background (data-color-scheme parity)', async ({ page }) => {
+  await openDemo(page, '/embed?scheme=light&theme=default-light');
+  await expect(page.locator('html')).toHaveAttribute('data-color-scheme', 'light');
+  // The page background var must resolve to the light value, not the dark default.
+  const bg = await page.evaluate(() =>
+    getComputedStyle(document.documentElement).getPropertyValue('--demo-page-bg').trim(),
+  );
+  expect(bg).toBe('#ffffff');
+});
