@@ -17,7 +17,7 @@ import { MarkdownTableRowComponent } from './markdown-table-row.component';
         }
       </thead>
       <tbody>
-        @for (row of bodyRows(); track $any(row)) {
+        @for (row of bodyRows(); track $index) {
           <chat-md-table-row [node]="row" />
         }
       </tbody>

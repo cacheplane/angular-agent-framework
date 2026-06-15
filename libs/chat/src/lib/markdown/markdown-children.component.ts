@@ -18,9 +18,9 @@ import { MARKDOWN_VIEW_REGISTRY } from './markdown-view-registry';
  * registry. Each child's `type` is looked up in the registry; the resolved
  * component is rendered with `[node]` bound to that child.
  *
- * Identity-preserving: `track $any(child)` keys on the JS reference of the
- * child node. Because @cacheplane/partial-markdown preserves node identity
- * across pushes, unchanged subtrees never re-render.
+ * Position-stable: `track $index` avoids NG0956 re-creation warnings that
+ * occur when the markdown pipeline re-parses content on every stream delta,
+ * producing new child object references even for unchanged nodes.
  */
 @Component({
   selector: 'chat-md-children',
@@ -28,7 +28,7 @@ import { MARKDOWN_VIEW_REGISTRY } from './markdown-view-registry';
   imports: [NgComponentOutlet],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    @for (child of children(); track $any(child)) {
+    @for (child of children(); track $index) {
       @let comp = resolve(child);
       @if (comp) {
         <ng-container *ngComponentOutlet="comp; inputs: { node: child }" />

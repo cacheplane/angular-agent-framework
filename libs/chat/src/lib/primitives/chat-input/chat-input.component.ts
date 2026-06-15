@@ -11,7 +11,6 @@ import {
   ElementRef,
   ChangeDetectionStrategy,
 } from '@angular/core';
-import { FormsModule } from '@angular/forms';
 import type { Agent } from '../../agent';
 import { CHAT_HOST_TOKENS } from '../../styles/chat-tokens';
 import { CHAT_INPUT_STYLES } from '../../styles/chat-input.styles';
@@ -33,7 +32,7 @@ export function submitMessage(
 @Component({
   selector: 'chat-input',
   standalone: true,
-  imports: [FormsModule],
+  imports: [],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styles: [CHAT_HOST_TOKENS, CHAT_INPUT_STYLES],
   template: `
@@ -45,15 +44,15 @@ export function submitMessage(
         <textarea
           #textareaEl
           class="chat-input__textarea"
-          [ngModel]="messageText()"
-          (ngModelChange)="messageText.set($event)"
-          name="messageText"
+          [value]="messageText()"
+          (input)="onInput($event)"
           [placeholder]="placeholder()"
           (keydown.enter)="onKeydown($any($event))"
           (compositionstart)="composing.set(true)"
           (compositionend)="composing.set(false)"
           (focus)="focused.set(true)"
           (blur)="focused.set(false)"
+          name="messageText"
           rows="1"
           aria-label="Type a message"
         ></textarea>
@@ -149,8 +148,18 @@ export class ChatInputComponent {
     if (submitted !== null) {
       this.submitted.emit(submitted);
       this.messageText.set('');
+      const el = this.textareaEl()?.nativeElement;
+      if (el) el.value = '';
       requestAnimationFrame(() => this.textareaEl()?.nativeElement.focus());
     }
+  }
+
+  /** Sync the textarea's value into the signal on user input. A direct
+   *  [value]/(input) pair is used instead of ngModel: NgModel does not
+   *  reliably write a programmatic clear back to the view under zoneless
+   *  + OnPush, leaving sent text visible in the composer (audit F1). */
+  protected onInput(event: Event): void {
+    this.messageText.set((event.target as HTMLTextAreaElement).value);
   }
 
   /** Abort the current streaming response (if the adapter supports it). */
