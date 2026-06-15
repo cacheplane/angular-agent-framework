@@ -762,7 +762,7 @@ wheels = [
 ]
 
 [[package]]
-name = "threadplane-client-tools"
+name = "threadplane-middleware"
 version = "0.0.1"
 source = { editable = "." }
 dependencies = [
