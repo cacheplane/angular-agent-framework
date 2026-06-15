@@ -18,7 +18,7 @@ Declare client tools in the Angular app using `tools()`, `action()`, `view()`,
 and `ask()` from `@threadplane/chat`, with schemas authored in `zod/v4`. Pass
 the registry to `<chat [clientTools]="...">`. On the backend, declare a `tools`
 channel in your LangGraph `State`, call `bind_client_tools(llm, [], state)` from
-`threadplane_client_tools`, and route unconditionally to `END` — there are no
+`threadplane.client_tools`, and route unconditionally to `END` — there are no
 server-side tool implementations.
 </Prompt>
 
@@ -108,14 +108,23 @@ export class WeatherCardComponent {
 `ConfirmBookingComponent` is mounted. The model fills the `summary` input; the
 user responds by clicking Confirm or Cancel. The component calls
 `injectRenderHost().result(value)` — that value becomes the `ToolMessage`
-content that resumes the run:
+content that resumes the run.
+
+Once the ask resolves, the adapter writes the emitted result back onto the local
+tool call; `chat-tool-views` then spreads `{ ...args, ...result, status }` back
+into the component's inputs. The component declares an optional `confirmed`
+input (defaulting to `undefined`) and uses it to decide whether to render the
+interactive card or a frozen, button-less resolved state:
 
 ```typescript
 // confirm-booking.component.ts
+import { input } from '@angular/core';
 import { injectRenderHost } from '@threadplane/render';
 
 export class ConfirmBookingComponent {
   readonly summary = input<string>();
+  /** Spread back onto props after the ask resolves (undefined while interactive). */
+  readonly confirmed = input<boolean | undefined>(undefined);
   private readonly host = injectRenderHost();
 
   protected respond(confirmed: boolean): void {
@@ -124,13 +133,45 @@ export class ConfirmBookingComponent {
 }
 ```
 
+The template branches on `confirmed()` to freeze the card once resolved:
+
+```html
+@if (confirmed() === undefined) {
+  <div class="cb">
+    <p class="cb__summary">{{ summary() }}</p>
+    <div class="cb__actions">
+      <button type="button" (click)="respond(true)">Confirm</button>
+      <button type="button" (click)="respond(false)">Cancel</button>
+    </div>
+  </div>
+} @else if (confirmed() === true) {
+  <div class="cb cb--resolved">
+    <p class="cb__summary">Booking confirmed ✓</p>
+  </div>
+} @else {
+  <div class="cb cb--resolved">
+    <p class="cb__summary">Booking cancelled</p>
+  </div>
+}
+```
+
+<Tip>
+The `confirmed` input is `undefined` for the entire interactive lifetime of the
+card — buttons are live. The moment the user clicks, `host.result({ confirmed })`
+is called, the adapter resolves the tool call and writes the emitted value back
+onto the stored tool call, and `chat-tool-views` re-renders the component with
+`confirmed` set to the user's choice. Declare the input with a default of
+`undefined` (not `required`) so Angular does not throw when it is absent on the
+first render.
+</Tip>
+
 </Step>
 <Step title="Declare the State and bind client tools (backend)">
 
 The backend graph must declare a `tools` channel in its `State` so that
 `ag-ui-langgraph`'s merged client catalog is retained across the turn. The
 `agent` node calls `bind_client_tools(llm, [], state)` from
-`threadplane_client_tools`, which binds the client stubs (no server
+`threadplane.client_tools`, which binds the client stubs (no server
 implementation) onto the model for this invocation:
 
 ```python
@@ -142,7 +183,7 @@ from langgraph.graph.message import add_messages
 from langgraph.checkpoint.memory import MemorySaver
 from typing_extensions import Annotated, TypedDict
 
-from threadplane_client_tools import bind_client_tools
+from threadplane.client_tools import bind_client_tools
 
 class State(TypedDict):
     # `tools` holds the client tool catalog ag-ui-langgraph merges in from
