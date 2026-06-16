@@ -1,0 +1,21 @@
+{
+  "name": "@threadplane/middleware",
+  "version": "0.0.1",
+  "description": "Backend middleware for the Threadplane client-tools capability. The /langgraph entrypoint targets LangGraph.js.",
+  "keywords": ["langgraph", "agent", "client-tools", "middleware", "threadplane"],
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": false,
+  "publishConfig": { "access": "public" },
+  "repository": { "type": "git", "url": "https://github.com/cacheplane/angular-agent-framework.git", "directory": "libs/middleware" },
+  "homepage": "https://github.com/cacheplane/angular-agent-framework#readme",
+  "bugs": { "url": "https://github.com/cacheplane/angular-agent-framework/issues" },
+  "exports": {
+    "./langgraph": { "types": "./src/langgraph/index.d.ts", "default": "./src/langgraph/index.js" },
+    "./README.md": "./README.md"
+  },
+  "peerDependencies": {
+    "@langchain/core": "^1.0.0",
+    "@langchain/langgraph": "^1.0.0"
+  }
+}

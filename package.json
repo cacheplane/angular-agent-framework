@@ -24,6 +24,7 @@
     "rxjs": "~7.8.0"
   },
   "devDependencies": {
+    "@ag-ui/langgraph": "^0.0.41",
     "@analogjs/vite-plugin-angular": "^2.4.4",
     "@angular-devkit/build-angular": "^21.2.6",
     "@angular-devkit/core": "~21.1.0",
@@ -37,6 +38,7 @@
     "@copilotkit/aimock": "^1.23.0",
     "@eslint/js": "^9.8.0",
     "@json-render/core": "^0.16.0",
+    "@langchain/langgraph": "^1.4.2",
     "@nx/angular": "^22.5.4",
     "@nx/eslint": "22.5.4",
     "@nx/eslint-plugin": "22.5.4",

@@ -1,0 +1,21 @@
+{
+  "name": "middleware",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/middleware/src",
+  "projectType": "library",
+  "tags": ["type:lib", "scope:library", "scope:shared"],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{workspaceRoot}/dist/libs/middleware"],
+      "options": {
+        "outputPath": "dist/libs/middleware",
+        "main": "libs/middleware/src/langgraph/index.ts",
+        "tsConfig": "libs/middleware/tsconfig.lib.json",
+        "assets": ["libs/middleware/README.md", "libs/middleware/package.json"]
+      }
+    },
+    "test": { "executor": "@nx/vitest:test", "options": { "configFile": "libs/middleware/vite.config.mts" } },
+    "lint": { "executor": "@nx/eslint:lint" }
+  }
+}
