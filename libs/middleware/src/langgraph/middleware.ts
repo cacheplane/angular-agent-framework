@@ -64,3 +64,35 @@ export function hasServerToolCall(state: ClientToolsState, serverToolNames: Iter
     return n !== undefined && (server.has(n) || !client.has(n));
   });
 }
+
+/** A chat model that can bind tools (the LangChain `Runnable.bindTools` surface). */
+export interface BindableModel {
+  bindTools(tools: unknown[], kwargs?: unknown): unknown;
+}
+
+/**
+ * Bind server tools + the client catalog stubs onto `llm`. Call this INSIDE the
+ * agent node (per-run) — the client catalog arrives in state and may differ per run.
+ */
+export function bindClientTools<M extends BindableModel>(
+  llm: M,
+  serverTools: unknown[],
+  state: ClientToolsState,
+): ReturnType<M['bindTools']> {
+  return llm.bindTools([...serverTools, ...clientToolSpecs(state)]) as ReturnType<M['bindTools']>;
+}
+
+/**
+ * Routing helper for a LangGraph conditional edge. Returns `toolsNode` when the last
+ * message has a server tool call (dispatch to the server ToolNode); otherwise `end`
+ * (client-only calls — the browser executes them — and no-tool-call turns both end).
+ */
+export function routeAfterAgent(
+  state: ClientToolsState,
+  serverToolNames: Iterable<string>,
+  opts?: { toolsNode?: string; end?: string },
+): string {
+  const toolsNode = opts?.toolsNode ?? 'tools';
+  const end = opts?.end ?? '__end__';
+  return hasServerToolCall(state, serverToolNames) ? toolsNode : end;
+}

@@ -66,3 +66,47 @@ describe('hasServerToolCall', () => {
     expect(hasServerToolCall(stateWith([{ name: 'get_weather' }]), [])).toBe(false);
   });
 });
+
+import { bindClientTools, routeAfterAgent } from './langgraph/middleware';
+
+describe('bindClientTools', () => {
+  it('binds server tools then client stubs (server first), calling bindTools once', () => {
+    const calls: unknown[][] = [];
+    const fake = { bindTools: (tools: unknown[]) => { calls.push(tools); return 'BOUND'; } };
+    const SERVER = { name: 'search' };
+    const result = bindClientTools(fake as never, [SERVER as never], { messages: [], tools: [{ name: 'get_weather', description: '', parameters: {} }] });
+    expect(result).toBe('BOUND');
+    expect(calls).toHaveLength(1);
+    expect(calls[0][0]).toBe(SERVER);
+    expect((calls[0][1] as { function: { name: string } }).function.name).toBe('get_weather');
+  });
+  it('binds only server tools when there is no client catalog', () => {
+    let bound: unknown[] = [];
+    const fake = { bindTools: (tools: unknown[]) => { bound = tools; return fake; } };
+    bindClientTools(fake as never, [{ name: 'search' } as never], { messages: [] });
+    expect(bound).toHaveLength(1);
+  });
+});
+
+describe('routeAfterAgent', () => {
+  const st = (names: string[]) => ({
+    messages: [new AIMessage({ content: '', tool_calls: names.map((n) => ({ name: n, args: {}, id: n })) })],
+    tools: [{ name: 'get_weather', description: '', parameters: {} }],
+  });
+  it('routes a server tool call to the tools node', () => {
+    expect(routeAfterAgent(st(['search']), ['search'])).toBe('tools');
+  });
+  it('routes a client-only tool call to END', () => {
+    expect(routeAfterAgent(st(['get_weather']), [])).toBe('__end__');
+  });
+  it('routes no tool calls to END', () => {
+    expect(routeAfterAgent(st([]), [])).toBe('__end__');
+  });
+  it('routes a mixed call to the server (precedence)', () => {
+    expect(routeAfterAgent(st(['get_weather', 'search']), ['search'])).toBe('tools');
+  });
+  it('honors custom node names', () => {
+    expect(routeAfterAgent(st(['search']), ['search'], { toolsNode: 'act' })).toBe('act');
+    expect(routeAfterAgent(st([]), [], { end: 'DONE' })).toBe('DONE');
+  });
+});
