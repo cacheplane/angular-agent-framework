@@ -1,0 +1,6 @@
+node_modules
+.env
+package-lock.json
+
+# LangGraph API
+.langgraph_api
