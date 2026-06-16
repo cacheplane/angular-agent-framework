@@ -1,5 +1,5 @@
 """Maps a `subagent_activity` CUSTOM event (emitted by the research tool /
-SubagentStreamHandler via get_stream_writer) to a native AG-UI ACTIVITY event.
+SubagentStreamHandler via adispatch_custom_event) to a native AG-UI ACTIVITY event.
 
 Pure and stateless (1:1): the handler sends accumulated `text_so_far`, so each
 DELTA carries the full text via JSON-patch `replace` (JSON-patch has no string
