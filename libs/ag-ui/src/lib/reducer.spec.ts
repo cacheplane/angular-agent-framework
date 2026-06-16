@@ -421,4 +421,14 @@ describe('ACTIVITY events (F5 subagent activities)', () => {
     reduceEvent({ type: 'RUN_STARTED' } as any, store);
     expect(store.activities().size).toBe(0);
   });
+
+  it('ACTIVITY_SNAPSHOT without replace merges into existing content', () => {
+    const store = makeStore();
+    reduceEvent({ type: 'ACTIVITY_SNAPSHOT', messageId: 'tc-1', activityType: 'subagent',
+      content: { status: 'running', text: 'hello' } } as never, store);
+    reduceEvent({ type: 'ACTIVITY_SNAPSHOT', messageId: 'tc-1', activityType: 'subagent',
+      content: { status: 'complete' } } as never, store);
+    // merge: status updated, text preserved
+    expect(store.activities().get('tc-1')?.content()).toEqual({ status: 'complete', text: 'hello' });
+  });
 });
