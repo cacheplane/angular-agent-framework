@@ -11,7 +11,7 @@ import type {
   AgentSubmitInput, AgentSubmitOptions,
   ClientToolsCapability,
 } from '@threadplane/chat';
-import { reduceEvent, type ReducerStore, type CustomStreamEvent } from './reducer';
+import { reduceEvent, type ReducerStore, type CustomStreamEvent, type ActivityEntry } from './reducer';
 import { createClientToolsCapability } from './client-tools';
 
 export interface ToAgentOptions {
@@ -82,6 +82,7 @@ export function toAgent(source: AbstractAgent, options: ToAgentOptions = {}): Ag
     interrupt:    signal<AgentInterrupt | undefined>(undefined),
     events$:      new Subject<AgentEvent>(),
     customEvents: signal<CustomStreamEvent[]>([]),
+    activities:   signal<Map<string, ActivityEntry>>(new Map()),
   };
   const telemetryProperties = { transport: 'ag-ui' as const, surface: 'to_agent' };
   let activeRun: { startedAt: number; errored: boolean } | null = null;

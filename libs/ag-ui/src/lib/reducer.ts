@@ -3,7 +3,7 @@
 // Discriminator strings (e.g. 'RUN_STARTED') match EventType enum members
 // verbatim; the switch cases below use the string literals directly so this
 // file has no runtime dependency on the EventType enum import.
-import type { WritableSignal } from '@angular/core';
+import { signal, type WritableSignal } from '@angular/core';
 import type { Subject } from 'rxjs';
 import type {
   Message, AgentStatus, ToolCall, AgentEvent, AgentInterrupt,
@@ -43,6 +43,15 @@ export interface CustomStreamEvent {
   data: unknown;
 }
 
+/** A native AG-UI ACTIVITY (typed, identified, incrementally-streamed sub-process).
+ *  Generic — keyed by messageId, grouped by activityType. toAgent projects
+ *  activityType==='subagent' to the neutral Subagent contract. */
+export interface ActivityEntry {
+  messageId: string;
+  activityType: string;
+  content: WritableSignal<Record<string, unknown>>;
+}
+
 export interface ReducerStore {
   messages:     WritableSignal<Message[]>;
   status:       WritableSignal<AgentStatus>;
@@ -53,6 +62,7 @@ export interface ReducerStore {
   interrupt:    WritableSignal<AgentInterrupt | undefined>;
   events$:      Subject<AgentEvent>;
   customEvents: WritableSignal<CustomStreamEvent[]>;
+  activities: WritableSignal<Map<string, ActivityEntry>>;
   /** Accumulated raw TOOL_CALL_ARGS text per toolCallId. A live model streams
    *  args as many partial-JSON fragments, so each delta must be appended here
    *  and the ACCUMULATED buffer parsed — parsing a lone delta only succeeds
@@ -94,6 +104,7 @@ export function reduceEvent(event: BaseEvent, store: ReducerStore): void {
       store.error.set(null);
       store.interrupt.set(undefined);
       store.customEvents.set([]);
+      store.activities.set(new Map());
       return;
     }
     case 'RUN_FINISHED': {
@@ -311,6 +322,34 @@ export function reduceEvent(event: BaseEvent, store: ReducerStore): void {
       } else {
         store.events$.next({ type: 'custom', name: e.name, data: parsedValue });
       }
+      return;
+    }
+    case 'ACTIVITY_SNAPSHOT': {
+      const e = event as unknown as {
+        messageId: string; activityType: string;
+        content: Record<string, unknown>; replace?: boolean;
+      };
+      const map = new Map(store.activities());
+      const existing = map.get(e.messageId);
+      if (existing && existing.activityType === e.activityType && !e.replace) {
+        existing.content.update((c) => ({ ...c, ...e.content }));
+      } else {
+        map.set(e.messageId, {
+          messageId: e.messageId,
+          activityType: e.activityType,
+          content: signal<Record<string, unknown>>(e.content ?? {}),
+        });
+      }
+      store.activities.set(map);   // new ref → projection picks up membership change
+      return;
+    }
+    case 'ACTIVITY_DELTA': {
+      const e = event as unknown as {
+        messageId: string; patch: readonly JsonPatchOp[];
+      };
+      const entry = store.activities().get(e.messageId);
+      if (!entry) return;          // unknown activity — ignore
+      entry.content.update((c) => applyPatch(c, e.patch));  // inner signal → live, no map churn
       return;
     }
     default: {
