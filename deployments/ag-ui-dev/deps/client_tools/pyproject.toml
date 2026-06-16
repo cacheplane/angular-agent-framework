@@ -9,7 +9,7 @@ dependencies = [
     "ag-ui-langgraph>=0.0.25",
     "fastapi>=0.110",
     "uvicorn[standard]>=0.29",
-    "threadplane-client-tools>=0.0.1",
+    "threadplane-middleware>=0.0.1",
 ]
 
 [build-system]
@@ -18,3 +18,6 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src"]
+
+[tool.uv.sources]
+threadplane-middleware = { path = "../../../../packages/threadplane-middleware", editable = true }
