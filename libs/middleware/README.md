@@ -1,9 +1,88 @@
 # @threadplane/middleware
 
-Backend middleware for the Threadplane client-tools capability.
+Backend middleware for the [Threadplane](https://github.com/cacheplane/angular-agent-framework)
+client-tools capability — frontend-declared tools the model calls and the browser executes.
 
-## `@threadplane/middleware/langgraph`
+The `@threadplane/middleware/langgraph` entrypoint is the LangGraph.js twin of the Python
+`threadplane-middleware` package: it binds client-declared tool stubs onto your model and
+routes client-tool-only turns to `END` so the browser executes them.
 
-LangGraph.js helpers that bind frontend-declared client tools onto the model and route
-client-tool-only turns to `END` so the browser executes them. See the
-[client-tools guide](https://github.com/cacheplane/angular-agent-framework).
+## How it works
+
+When a browser client sends a tool catalog (`{ name, description, parameters }` objects)
+along with a run request, the graph exposes those tools to the model and routes their calls
+back to the browser instead of executing them server-side. The browser executes the call and
+re-runs the graph with a `ToolMessage` carrying the result.
+
+The catalog is read from `state.tools`, falling back to `state.client_tools` if `tools` is
+absent.
+
+## Installation
+
+```bash
+npm install @threadplane/middleware
+# peer deps:
+npm install @langchain/core @langchain/langgraph
+```
+
+## Usage
+
+```ts
+import { Annotation, MessagesAnnotation, StateGraph, END } from '@langchain/langgraph';
+import { ChatOpenAI } from '@langchain/openai';
+import {
+  bindClientTools,
+  clientToolsChannel,
+  clientToolsRouter,
+} from '@threadplane/middleware/langgraph';
+
+// Declare the client-tools state channels (tools + client_tools) in one line.
+const State = Annotation.Root({ ...MessagesAnnotation.spec, ...clientToolsChannel() });
+
+const SERVER_TOOLS: unknown[] = []; // your server-owned tools (if any)
+const baseLlm = new ChatOpenAI({ model: 'gpt-4o-mini' });
+
+async function agent(state: typeof State.State) {
+  // Call bindClientTools per-run inside the node — the client catalog arrives
+  // in state and may differ between runs.
+  const llm = bindClientTools(baseLlm, SERVER_TOOLS, state);
+  const response = await llm.invoke(state.messages);
+  return { messages: [response] };
+}
+
+const graph = new StateGraph(State)
+  .addNode('agent', agent)
+  .addEdge('__start__', 'agent')
+  // clientToolsRouter binds the server tool names once; pass [] when there are none.
+  .addConditionalEdges('agent', clientToolsRouter([]), ['tools', END])
+  .compile();
+```
+
+### What happens with a client tool call
+
+1. The model emits a tool call whose name matches a client-declared tool.
+2. `clientToolsRouter` (via `routeAfterAgent`) returns `"__end__"` — the run ends.
+3. The browser receives the partial output, executes the tool locally, and re-runs the graph
+   with a `ToolMessage` containing the result.
+4. The model continues from there as if it had called a server tool.
+
+A turn that mixes a server tool call and a client tool call routes to the **server**
+destination first (the server tool runs; the client call surfaces on a later turn).
+
+### Lower-level helpers
+
+```ts
+import {
+  clientToolSpecs,    // → OpenAI function-tool objects for model.bindTools
+  clientToolNames,    // → Set<string> of client tool names
+  hasClientToolCall,  // → boolean
+  hasServerToolCall,  // → boolean (takes serverToolNames)
+  lastMessage,        // → the last message from state.messages
+  routeAfterAgent,    // → routing string (takes serverToolNames)
+} from '@threadplane/middleware/langgraph';
+```
+
+## Peer dependencies
+
+`@langchain/core` and `@langchain/langgraph`. The package has no runtime dependencies of its
+own.
