@@ -476,8 +476,8 @@
       {
         "name": "subagents",
         "type": "Signal<Map<string, Subagent>>",
-        "description": "",
-        "optional": true
+        "description": "Subagent activities (activityType==='subagent') projected to the neutral\n Subagent contract, keyed by messageId. Narrows the base Agent's optional\n `subagents?` to a concrete signal for AG-UI consumers.",
+        "optional": false
       },
       {
         "name": "submit",
