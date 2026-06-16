@@ -38,13 +38,15 @@ from langchain_core.messages import (
     ToolMessage,
 )
 from langchain_core.runnables import RunnableConfig
-from langchain_core.tools import tool
+from langchain_core.tools import tool, InjectedToolCallId
+from langchain_core.callbacks import adispatch_custom_event
 from langgraph_sdk import get_client
 from langsmith import traceable
 
 from threadplane.client_tools import bind_client_tools, client_tool_names
 
 from src.streaming.a2ui_partial_handler import A2uiPartialHandler
+from src.streaming.subagent_stream_handler import SubagentStreamHandler
 from src.streaming.envelope_tool import render_a2ui_surface
 from src.streaming.envelope_normalizer import normalize_envelope_args
 from src.schemas.a2ui_v1 import A2UI_V1_SCHEMA_PROMPT
@@ -296,7 +298,11 @@ research_subgraph = _research_builder.compile()
 
 
 @tool
-async def research(topic: str, subagent_type: str = "research") -> str:
+async def research(
+    topic: str,
+    tool_call_id: Annotated[str, InjectedToolCallId],
+    subagent_type: str = "research",
+) -> str:
     """Dispatch a research subagent to gather facts on a focused topic.
     The subagent returns a concise summary; pass that summary back to
     the user, citing it with the inline citation syntax if appropriate.
@@ -305,12 +311,27 @@ async def research(topic: str, subagent_type: str = "research") -> str:
     subagent in the UI (the @threadplane/langgraph SubagentTracker keys on it
     to populate `agent.subagents()` for the chat-subagents primitive).
     Always pass a stable identifier like "research".
+
+    The subagent run is also surfaced to the UI as a native AG-UI ACTIVITY
+    (activityType "subagent"): started → message-per-token → finished, keyed
+    by this tool's own call id.
     """
-    # subagent_type is intentionally accepted but unused server-side —
-    # it travels in the tool call args so the SubagentTracker can
-    # register the dispatch and surface a card while the child graph runs.
-    del subagent_type
-    result = await research_subgraph.ainvoke({"topic": topic, "messages": []})
+
+    async def _emit(payload: dict) -> None:
+        try:
+            await adispatch_custom_event(
+                "subagent_activity", {"subagent_id": tool_call_id, **payload}
+            )
+        except Exception:
+            pass
+
+    await _emit({"phase": "started", "name": subagent_type})
+    result = await research_subgraph.ainvoke(
+        {"topic": topic, "messages": []},
+        config={"callbacks": [SubagentStreamHandler(tool_call_id)]},
+    )
+    await _emit({"phase": "finished", "status": "complete"})
+
     msgs = result.get("messages") if isinstance(result, dict) else None
     if not msgs:
         return "(no research returned)"
