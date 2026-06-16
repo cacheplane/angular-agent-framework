@@ -2,124 +2,134 @@
 
 **Campaign:** AG-UI demo, Phase 4. Closes finding **F5** from `2026-06-11-ag-ui-capability-findings.md`.
 
-**Status:** approved 2026-06-15.
+**Status:** approved 2026-06-15 (native-ACTIVITY architecture).
 
 ## Problem
 
-Over the AG-UI transport, a subagent delegation renders as a plain tool row — no `chat-subagent` card. The canonical LangGraph adapter populates `Agent.subagents` by keying on the LangGraph subgraph stream namespace (`tools:<tool_call_id>`). That namespace **does not survive the `ag_ui_langgraph` bridge**: the AG-UI wire protocol is flat (`TEXT_MESSAGE_*`, `TOOL_CALL_*`, `CUSTOM`, …) with no native subagent identity. Confirmed by reading the bridge (`ag_ui_langgraph/agent.py`): it tracks subgraph boundaries server-side only (to manage state/message snapshots) and emits nothing the client can key a subagent on.
+Over the AG-UI transport, a subagent delegation renders as a plain tool row — no `chat-subagent` card. The canonical LangGraph adapter keys on the LangGraph subgraph stream namespace (`tools:<tool_call_id>`), which **does not survive the `ag_ui_langgraph` bridge** (the bridge tracks subgraph boundaries server-side only, for state/message snapshots, and emits nothing the client can key a subagent on).
 
-The chat library already has everything it needs on the consumer side:
-- `Agent.subagents?: Signal<Map<string, Subagent>>` (`libs/chat/src/lib/agent/agent.ts`) — optional, adapters that don't support it leave it undefined.
+The chat library already has the consumer contract:
+- `Agent.subagents?: Signal<Map<string, Subagent>>` (`libs/chat/src/lib/agent/agent.ts`), optional.
 - `Subagent = { toolCallId, name?, status: Signal<SubagentStatus>, messages: Signal<Message[]>, state: Signal<Record<string, unknown>> }` (`libs/chat/src/lib/agent/subagent.ts`). `SubagentStatus = 'pending' | 'running' | 'complete' | 'error'`.
-- `ChatSubagentsComponent` renders only `pending`/`running` subagents (name, status, message count + latest message content).
+- `ChatSubagentsComponent` renders only `pending`/`running` subagents. **No chat-lib change.**
 
-So the work is entirely in the **graph** (emit subagent identity/lifecycle as CUSTOM events) and the **`@threadplane/ag-ui` adapter** (fold those events into `Agent.subagents`). No chat-lib change.
+## Decision: speak the protocol natively (ACTIVITY), not a private CUSTOM convention
 
-## Decisions (settled in brainstorming)
+`@threadplane/ag-ui` is a **transport library**; the example + cockpit are **reference producers**. The wire should be valid, idiomatic AG-UI so that *any* compliant server emitting subagent activity lights up our cards — not only servers that adopt a private `{name:"subagent"}` CUSTOM blob (which is lock-in by construction).
 
-- **Scope:** full parity — fix `examples/ag-ui` AND add a dedicated `cockpit/ag-ui/subagents` capability (registry + nav + aimock e2e + Railway deploy), mirroring `cockpit/chat/subagents`.
-- **Fidelity:** live token streaming — the card's child text animates as the subagent's LLM thinks.
-- **Event schema:** a single discriminated `subagent` CUSTOM event with a `phase` field (one reducer case, one docs entry), not three separate event names.
+AG-UI's native primitive for "a typed, identified, incrementally-streamed sub-process" is **ACTIVITY**:
+- `ACTIVITY_SNAPSHOT = { messageId, activityType: string, content: Record, replace? }`
+- `ACTIVITY_DELTA   = { messageId, activityType: string, patch: JsonPatch[] }`
+- (plus an `activity` message role)
 
-## Architecture
+`SubAgentInfo`/`MultiAgentCapabilities.subAgents` is only a *static capability descriptor* (`{name, description?}` for agent-picker UIs) — not a runtime carrier. So **`activityType: "subagent"`** over ACTIVITY is the correct native representation. The **envelope** (identity via `messageId`, snapshot/delta semantics, typing) is native and reusable; the **semantics** (`activityType` value + `content` schema) are our convention because AG-UI defines ACTIVITY generically and has not standardized a subagent activity type — if it does later, we adopt by changing one string.
+
+**Scope decision (brainstorming):** build the generic ACTIVITY infrastructure and use it for subagents now. Existing CUSTOM events (`state_update`, `on_interrupt`, `a2ui-partial`) stay on CUSTOM — migrating them to native (`STATE_*`, HITL, `TOOL_CALL_ARGS`) is a **separate follow-up brainstorm** (those paths are load-bearing with their own e2e; not destabilized in this PR). No backwards-compat is kept for subagents — the reducer consumes ACTIVITY only.
+
+**Fidelity (brainstorming):** live token streaming — the card's child text animates as the subagent's LLM thinks.
+
+## Architecture — three clean layers
 
 ```
-research child-subgraph LLM tokens
-   │  (tapped by SubagentStreamHandler callback)
-   ▼
-get_stream_writer()({"name":"subagent","data":{...phase...}})   [graph]
-   │  ag_ui_langgraph bridge → AG-UI CUSTOM event {name:"subagent", value:{...}}
-   ▼
-reducer 'CUSTOM' case, name==='subagent'  → store.subagents (Map of per-subagent signals)   [libs/ag-ui]
-   ▼
-toAgent exposes subagents: Signal<Map<string, Subagent>>
-   ▼
-ChatSubagentsComponent renders pending/running cards   [libs/chat — unchanged]
+research child-subgraph LLM token
+  │ (tapped by SubagentStreamHandler callback)
+  ▼  get_stream_writer()({"name":"subagent_activity","data":{phase,...}})         [Layer 3: graph]
+  │  ag_ui_langgraph bridge → CUSTOM{name:"subagent_activity", value}
+  ▼  ActivityEmittingAgent.run() wraps super().run(): CUSTOM(subagent_activity)
+  │  → ACTIVITY_SNAPSHOT / ACTIVITY_DELTA  (drops the CUSTOM)                       [Layer 2: owned server transform]
+  ▼  wire: native AG-UI ACTIVITY events
+  │  reducer ACTIVITY_SNAPSHOT/DELTA → generic activities store → subagent projection  [Layer 1: libs/ag-ui]
+  ▼  toAgent.subagents: Signal<Map<string, Subagent>>
+  ▼  ChatSubagentsComponent renders pending/running cards                          [libs/chat — unchanged]
 ```
 
-### 1. Event schema
+### Layer 1 — Library consumer (`libs/ag-ui`): native ACTIVITY → `Agent.subagents`
 
-CUSTOM event name `subagent`. On the wire (`ag_ui_langgraph` maps the writer's `data` → CUSTOM `value`), the reducer receives `{ name: "subagent", value: <payload> }`. Payload phases:
-
-```jsonc
-{ "tool_call_id": "<id>", "phase": "started",  "name": "research" }
-{ "tool_call_id": "<id>", "phase": "message",  "delta": "<token text>" }
-{ "tool_call_id": "<id>", "phase": "finished", "status": "complete" }   // status optional, defaults "complete"; "error" allowed
-```
-
-- `tool_call_id` keys the subagent (matches the neutral `Subagent.toolCallId`, and the parent tool call so the card associates with its tool row).
-- `started` carries the human-readable `name`.
-- `message` carries an incremental `delta` (mirrors `TEXT_MESSAGE_CONTENT`); the reducer accumulates it into the subagent's single assistant message.
-- `finished` carries an optional terminal `status`.
-
-### 2. Python graph emission
-
-**New callback** `SubagentStreamHandler` (in `examples/ag-ui/python/src/streaming/`, mirroring `A2uiPartialHandler`'s `get_stream_writer()` usage). Constructed with `(tool_call_id, name)`. Overrides:
-- `on_llm_start` → writer `{"name":"subagent","data":{"tool_call_id":id,"phase":"started","name":name}}`
-- `on_llm_new_token(token)` → writer `{...,"phase":"message","delta":token}`
-- `on_llm_end` → writer `{...,"phase":"finished","status":"complete"}`
-
-Guard `get_stream_writer()` for `RuntimeError` (no writer outside a stream run) exactly like `A2uiPartialHandler`, so unit tests can mock the writer.
-
-**`research` tool changes** (`examples/ag-ui/python/src/graph.py`):
-- Add `tool_call_id: Annotated[str, InjectedToolCallId]` (from `langchain_core.tools`) so the tool knows its own id.
-- Keep running the child as the compiled `research_subgraph` — subgraph isolation is what keeps the child's tokens OUT of the main assistant message over AG-UI. Attach `SubagentStreamHandler(tool_call_id, subagent_type)` via `config={"callbacks": [handler]}` on the subgraph invocation so the child LLM's tokens are tapped into `subagent` custom events.
-- Return the final summary string unchanged (the orchestrator still cites it).
-
-**Why a callback, not inline streaming:** running the child LLM directly with `.astream()` inside the ToolNode risks the bridge surfacing those tokens as main-thread `TEXT_MESSAGE_*` deltas. The subgraph + callback pattern is already proven for A2UI (`A2uiPartialHandler`) and keeps the child stream isolated.
-
-### 3. `@threadplane/ag-ui` reducer + toAgent
-
-**Store** (`libs/ag-ui/src/lib/reducer.ts`): add `store.subagents` — a `signal<Map<string, SubagentEntry>>` where
-
+**Generic activities store** in `ReducerStore` (`libs/ag-ui/src/lib/reducer.ts`):
 ```ts
-interface SubagentEntry {
-  toolCallId: string;
-  name?: string;
-  status: WritableSignal<SubagentStatus>;
-  messages: WritableSignal<Message[]>;   // single assistant message that grows
-  state: WritableSignal<Record<string, unknown>>;
+interface ActivityEntry {
+  messageId: string;
+  activityType: string;
+  content: WritableSignal<Record<string, unknown>>;
 }
+activities: WritableSignal<Map<string, ActivityEntry>>;   // keyed by messageId
 ```
 
-**Reducer `CUSTOM` case**, branch on `e.name === 'subagent'` (alongside the existing `on_interrupt` / `state_update` branches), reading `phase` from the parsed value:
-- `started`: create a new entry with `status: signal('running')`, empty `messages`/`state`; set a **new Map reference** on `store.subagents` so `activeSubagents` recomputes (membership changed).
-- `message`: look up entry by `tool_call_id`; append `delta` to its single assistant message's content via the inner `messages` signal (create the message on first delta). No Map-reference change needed — the card binds the inner signal directly. (Mirror the `TEXT_MESSAGE_CONTENT` accumulation logic.)
-- `finished`: set the entry's `status` signal to `value.status ?? 'complete'`; replace the Map reference so `activeSubagents` drops it from the rendered (pending/running) set.
+**Two new reducer cases** (generic — not subagent-specific):
+- `ACTIVITY_SNAPSHOT`: upsert entry for `messageId`. If new, create with `content: signal(snapshot.content)` and set a **new Map reference** (membership change). If existing, `replace ? set(content) : merge`.
+- `ACTIVITY_DELTA`: look up entry; apply the JSON-patch (`patch`) to a clone of `content()` and set the inner `content` signal (live update, no Map churn). Use a tiny RFC-6902 `applyPatch` helper (add/replace/remove are all we emit; keep it minimal and tested). Unknown `messageId` → ignore.
+- Reset `activities` to empty Map on `RUN_STARTED` (clean slate, like `customEvents`).
 
-Unknown/missing `tool_call_id` on `message`/`finished` → ignore safely (defensive, like other reducer guards).
+**Subagent projection** on `toAgent` (`libs/ag-ui/src/lib/to-agent.ts`), exposing `subagents: Signal<Map<string, Subagent>>`:
+- Filter activities to `activityType === 'subagent'`. For each, produce a `Subagent` keyed by `content.toolCallId ?? messageId`:
+  - `status`: `computed(() => entry.content()['status'] ?? 'running')`
+  - `messages`: `computed(() => [{ id: messageId, role: 'assistant', content: String(entry.content()['text'] ?? '') }])`
+  - `state`: `computed(() => (entry.content()['state'] as Record) ?? {})`
+  - `name`: `content.name`.
+- **Stable identity:** cache the `Subagent` wrapper per `messageId` (rebuild the outer Map only when activity membership changes) so `chat-subagents` (tracks by `toolCallId`) doesn't churn. Mirror the langgraph adapter's `toSubagent` stability pattern.
 
-**`toAgent`** (`libs/ag-ui/src/lib/to-agent.ts`): expose `subagents` on the returned `AgUiAgent`, projecting `store.subagents()` to `Map<string, Subagent>` (the entries already hold neutral-shaped signals, so projection is a shallow map — like langgraph's `toSubagent`). Reset `store.subagents` to an empty Map on `RUN_STARTED` (new run starts clean), consistent with how `customEvents` is reset.
+This layer is generic: a future `activityType` (plan, progress, tool-trace) reuses the activities store; only its own projection/renderer is new.
 
-### 4. Cockpit `ag-ui/subagents` capability
+### Layer 2 — Producer transport adapter (owned, server-side): subagent intent → ACTIVITY
 
-New standalone capability (cockpit-examples-standalone rule: **duplicate, never import across examples**). Mirror the file layout of `cockpit/ag-ui/streaming/` for the AG-UI scaffold (server.py, project.json, pyproject.toml, vercel.json, proxy.conf.mjs, angular app, e2e harness) and the orchestrator/`task`-tool shape of `cockpit/chat/subagents/python/src/graph.py` for the subagent logic — but emit `subagent` custom events via the `SubagentStreamHandler` (copied into this capability's `python/src/streaming/`).
+The bridge maps generic `get_stream_writer` writes to **CUSTOM** and only special-cases its own reserved names (`manually_emit_message/tool_call/state`, `exit`) — there is **no** `manually_emit_activity`. So we own the transform.
 
-- **Registry:** add to `apps/cockpit/scripts/capability-registry.ts`:
-  `{ id: 'ag-ui-subagents', product: 'ag-ui', topic: 'subagents', angularProject: 'cockpit-ag-ui-subagents-angular', port: 4326, pythonPort: 5326, pythonDir: 'cockpit/ag-ui/subagents/python' }` (4326/5326 are the next free ag-ui ports).
-- **Nav/website:** register in the cockpit capability modules + website/docs nav the same way the ag-ui product was wired in Phase 1 (the registry drives most of it; verify the capability appears in the matrix).
-- **Deploy:** regenerate the Railway bundle — `npx tsx scripts/generate-ag-ui-deployment-config.ts`, commit `deployments/ag-ui-dev/` drift, and confirm the proxy (`scripts/ag-ui-proxy.ts`) routes the new topic. This is the same machinery #664 resynced.
+New `ActivityEmittingAgent(LangGraphAgent)` (in the example's `python/src/streaming/`, duplicated into the cockpit capability):
+```python
+class ActivityEmittingAgent(LangGraphAgent):
+    async def run(self, input):
+        async for ev in super().run(input):
+            converted = subagent_custom_to_activity(ev)   # pure fn, unit-tested
+            if converted is None:
+                yield ev                                   # pass-through
+            else:
+                for activity_ev in converted:
+                    yield activity_ev                      # ACTIVITY_SNAPSHOT/DELTA, CUSTOM dropped
+    def clone(self):                                       # endpoint calls agent.clone()
+        return ActivityEmittingAgent(name=self.name, graph=self.graph)
+```
+`subagent_custom_to_activity(ev)` is a pure function: returns `None` for any event except `CUSTOM{name:"subagent_activity"}`; for those it maps `phase` → ACTIVITY events:
+- `started` → `ACTIVITY_SNAPSHOT(messageId=subagent_id, activityType="subagent", content={toolCallId, name, status:"running", text:""}, replace=True)`
+- `message` → `ACTIVITY_DELTA(messageId=subagent_id, activityType="subagent", patch=[{op:"replace", path:"/text", value:<buffer>}])` (the transform accumulates the running text buffer per subagent_id; JSON-patch has no string-append op, so it emits the full text via `replace`)
+- `finished` → `ACTIVITY_DELTA(... patch=[{op:"replace", path:"/status", value:<status>}])`
 
-### 5. Angular app component
+`server.py` swaps `LangGraphAgent(...)` → `ActivityEmittingAgent(...)` in the `add_langgraph_fastapi_endpoint(...)` call. This module is the natural future home for CUSTOM→native migrations.
 
-The cockpit `subagents.component.ts` hosts `<chat [agent]="agent">` with `injectAgent()` from `@threadplane/ag-ui` (no extra wiring — `chat` renders `chat-subagents` automatically when `agent.subagents` is populated). `examples/ag-ui` needs no app change: the shell already hosts `<chat>` and the welcome chips already include "Research subagent".
+### Layer 3 — Reference graph (example + cockpit): emit the intent
+
+- `research` tool gains `tool_call_id: Annotated[str, InjectedToolCallId]`. Keep the child as the compiled `research_subgraph` (subgraph isolation keeps child tokens out of the main bubble). The tool emits `started` before invoking and `finished` after; a `SubagentStreamHandler(tool_call_id)` attached via `config={"callbacks":[...]}` emits a `message` per child token.
+- Emission uses `get_stream_writer()({"name":"subagent_activity","data":{"subagent_id":tool_call_id,"phase":...,...}})`, mirroring `A2uiPartialHandler` (guard `RuntimeError` for the no-writer/test case).
+- Applied to `examples/ag-ui/python/src/graph.py` and the new cockpit capability graph (standalone copies — never share across examples).
+
+## Cockpit `ag-ui/subagents` capability + wiring
+
+New standalone capability mirroring `cockpit/ag-ui/streaming/`'s scaffold and `cockpit/chat/subagents/`'s orchestrator/`task` shape, emitting subagent activity via Layers 2+3.
+- **Registry** (`apps/cockpit/scripts/capability-registry.ts`): `{ id: 'ag-ui-subagents', product: 'ag-ui', topic: 'subagents', angularProject: 'cockpit-ag-ui-subagents-angular', port: 4326, pythonPort: 5326, pythonDir: 'cockpit/ag-ui/subagents/python' }` (4326/5326 next free).
+- **Nav/website:** registry-driven; verify it appears in the cockpit capability matrix + docs nav.
+- **Deploy:** `npx tsx scripts/generate-ag-ui-deployment-config.ts`; commit `deployments/ag-ui-dev/` drift; confirm `scripts/ag-ui-proxy.ts` routes the topic. Same machinery #664 resynced — its own task + post-merge deploy verification.
+
+## Angular app
+
+Cockpit `subagents.component.ts` hosts `<chat [agent]="agent">` with `injectAgent()` from `@threadplane/ag-ui` — `chat` renders `chat-subagents` automatically once `agent.subagents` is populated. `examples/ag-ui` needs no app change (shell already hosts `<chat>`; welcome chips already include "Research subagent").
 
 ## Testing
 
-- **`libs/ag-ui` reducer unit tests (TDD):** `subagent` started/message/finished → correct `subagents` Map; status lifecycle `running`→`complete`; delta accumulation into one growing message; two concurrent subagents keyed independently; `RUN_STARTED` resets; defensive ignore of unknown `tool_call_id`.
-- **`SubagentStreamHandler` unit test (python):** mock `get_stream_writer`, assert started/message/finished writes with correct payloads (mirror the `A2uiPartialHandler` test).
-- **examples/ag-ui e2e (aimock):** research prompt → a subagent card appears in `running`, accumulates streamed text, settles to `complete` (card leaves the active set). Fixture captures the `subagent` custom events.
-- **cockpit `ag-ui/subagents` e2e (aimock):** capability-specific spec + fixture, mirroring `cockpit/chat/subagents` assertions adapted to the AG-UI transport.
-- **Live-LLM Chrome smoke** before merge (real backend) and **post-merge production** (`ag-ui.threadplane.ai` + the cockpit deployment) — the live smoke is the gate that caught F3/F4 issues the stub harness missed.
+- **`libs/ag-ui` reducer unit (TDD):** `ACTIVITY_SNAPSHOT` creates entry; `ACTIVITY_DELTA` patch applies (replace `/text`, `/status`); `activityType:"subagent"` projects to a `Subagent` with correct toolCallId/name/status/messages; live text accumulation; two concurrent subagents keyed independently; stable subagent identity across deltas; `RUN_STARTED` resets; unknown `messageId` ignored. Plus `applyPatch` helper unit tests.
+- **Layer-2 transform unit (python):** `subagent_custom_to_activity` — started→SNAPSHOT, message→DELTA(replace /text, accumulated buffer), finished→DELTA(replace /status); pass-through returns None for non-subagent events; buffer isolation across two subagent_ids.
+- **`SubagentStreamHandler` unit (python):** mock `get_stream_writer`, assert `message` writes per token (mirror `A2uiPartialHandler` test).
+- **examples/ag-ui e2e (aimock):** research prompt → subagent card appears `running`, accumulates streamed text, settles `complete` (leaves active set); main bubble does NOT contain the child research text (isolation assertion). Fixture captures ACTIVITY events.
+- **cockpit `ag-ui/subagents` e2e (aimock):** capability spec + fixture, mirroring `cockpit/chat/subagents` adapted to AG-UI.
+- **Live-LLM Chrome smoke** before merge (real backend) + **production** after deploy (`ag-ui.threadplane.ai` + cockpit). The live smoke is the gate that caught F3/F4 issues the stub harness missed; here it verifies real ACTIVITY events flow end-to-end (the Layer-2 transform especially).
 
 ## Risks
 
-- **Token leak into main message:** if the child stream isn't fully isolated, child tokens could appear in the main assistant bubble. Mitigation: keep the compiled subgraph (proven isolation) + the callback-tap pattern; the examples e2e asserts the main bubble does NOT contain the child's research text.
-- **Deploy drift / Railway redeploy** (Section 4): same friction as #664. Treat the deployment regen as its own task with a post-merge deploy verification; expect a possible drift-guard resync.
-- **`InjectedToolCallId` availability:** confirm the installed `langchain_core` version exposes it (it's used widely; verify during T-graph).
+- **Layer-2 interposition** (load-bearing): `LangGraphAgent.run()` is `async def run(self, input) -> AsyncGenerator` and the endpoint does `async for event in request_agent.run(...)` after `agent.clone()`. The subclass override + `clone()` override is the seam — **de-risk first** with a spike (T1): confirm the override is honored and `clone()` preserves the subclass. If the bridge version differs, fall back to a custom route that wraps `agent.run()` and encodes SSE directly.
+- **Token leak into main message:** keep the compiled subgraph (proven isolation) + callback tap; the examples e2e asserts the main bubble excludes child text.
+- **Deploy drift / Railway redeploy:** same friction as #664; isolated task + post-merge verification.
+- **`InjectedToolCallId` availability:** confirm in the installed `langchain_core` (used widely; verify in the graph task).
 
-## Out of scope (logged follow-ups, not this spec)
+## Out of scope (logged follow-ups)
 
-- Residual NG0956 during json-render spec assembly.
-- a2ui icon catalog support (`trending_up` rendered as text).
-- Multi-message subagents (the research subagent returns one message; the design supports one growing assistant message per subagent — multiple distinct child messages would need a message-id in the `message` phase, deferred until a capability needs it).
+- **CUSTOM→native migration** of `state_update`/`on_interrupt`/`a2ui-partial` (separate brainstorm; the Layer-2 module is where they'd land).
+- Residual NG0956 during json-render spec assembly; a2ui icon catalog support.
+- Multi-message subagents (current research subagent returns one growing message; multiple distinct child messages would extend `content` to a messages array — deferred until a capability needs it).
