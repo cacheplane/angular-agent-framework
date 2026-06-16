@@ -27,3 +27,42 @@ describe('clientToolNames', () => {
     expect(clientToolNames({ messages: [], tools: [WEATHER] })).toEqual(new Set(['get_weather']));
   });
 });
+
+import { lastMessage, hasClientToolCall, hasServerToolCall } from './langgraph/middleware';
+import { AIMessage, HumanMessage } from '@langchain/core/messages';
+
+const stateWith = (toolCalls: { name: string }[]) => ({
+  messages: [new HumanMessage('hi'), new AIMessage({ content: '', tool_calls: toolCalls.map((c) => ({ name: c.name, args: {}, id: c.name })) })],
+  tools: [{ name: 'get_weather', description: '', parameters: {} }],
+});
+
+describe('lastMessage', () => {
+  it('returns the last message or undefined', () => {
+    expect(lastMessage({ messages: [] })).toBeUndefined();
+    expect(lastMessage({ messages: [new HumanMessage('a'), new HumanMessage('b')] })?.content).toBe('b');
+  });
+});
+
+describe('hasClientToolCall', () => {
+  it('true when the last AI message calls a client tool', () => {
+    expect(hasClientToolCall(stateWith([{ name: 'get_weather' }]))).toBe(true);
+  });
+  it('false when the last AI message calls only non-client tools', () => {
+    expect(hasClientToolCall(stateWith([{ name: 'search' }]))).toBe(false);
+  });
+  it('false when there are no tool calls', () => {
+    expect(hasClientToolCall(stateWith([]))).toBe(false);
+  });
+});
+
+describe('hasServerToolCall', () => {
+  it('true when a call name is in serverToolNames', () => {
+    expect(hasServerToolCall(stateWith([{ name: 'search' }]), ['search'])).toBe(true);
+  });
+  it('true when a call name is unknown (not a client tool)', () => {
+    expect(hasServerToolCall(stateWith([{ name: 'mystery' }]), [])).toBe(true);
+  });
+  it('false when the only call is a known client tool', () => {
+    expect(hasServerToolCall(stateWith([{ name: 'get_weather' }]), [])).toBe(false);
+  });
+});
