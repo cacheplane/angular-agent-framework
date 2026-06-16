@@ -122,3 +122,21 @@ describe('routeAfterAgent', () => {
     expect(routeAfterAgent(st([]), [], { end: 'DONE' })).toBe('DONE');
   });
 });
+
+import { clientToolsRouter } from './langgraph/router';
+
+describe('clientToolsRouter', () => {
+  const st = (names: string[]) => ({
+    messages: [new AIMessage({ content: '', tool_calls: names.map((n) => ({ name: n, args: {}, id: n })) })],
+    tools: [{ name: 'get_weather', description: '', parameters: {} }],
+  });
+  it('returns a callback that routes via routeAfterAgent with bound serverToolNames', () => {
+    const route = clientToolsRouter(['search']);
+    expect(route(st(['search']))).toBe('tools');
+    expect(route(st(['get_weather']))).toBe('__end__');
+  });
+  it('honors custom node names', () => {
+    const route = clientToolsRouter([], { end: 'DONE' });
+    expect(route(st([]))).toBe('DONE');
+  });
+});

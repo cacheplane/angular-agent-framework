@@ -10,6 +10,5 @@ export {
   routeAfterAgent,
   type BindableModel,
 } from './middleware';
-// extras (added in later tasks):
-// export { clientToolsChannel } from './channel';
-// export { clientToolsRouter } from './router';
+export { clientToolsChannel } from './channel';
+export { clientToolsRouter } from './router';
