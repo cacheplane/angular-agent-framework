@@ -278,12 +278,14 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 
 - [ ] **Step 1: Write the failing handler test** (mirrors `test_a2ui_partial_handler.py`)
 
+**Emission API (T1 spike finding):** emit via `adispatch_custom_event("subagent_activity", <data dict>)` from `langchain_core.callbacks`, NOT `get_stream_writer`. This bridge drives the graph with `astream_events` and turns `on_custom_event` callbacks into AG-UI `CUSTOM` events; `get_stream_writer` surfaces only as a RAW event that never reaches the `_dispatch_event` seam. `adispatch_custom_event` is async and picks up the ambient run config from contextvars (no explicit `config` needed inside a node/tool/LLM-callback). Verify the import path with `cd examples/ag-ui/python && uv run python -c "from langchain_core.callbacks import adispatch_custom_event; print('ok')"`.
+
 Create `examples/ag-ui/python/tests/test_subagent_stream_handler.py`:
 
 ```python
 """Tests for SubagentStreamHandler — accumulates child LLM text tokens and
 emits `subagent_activity` `message` events carrying the full `text_so_far`."""
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, patch
 from uuid import uuid4
 
 import pytest
@@ -295,33 +297,30 @@ class TestSubagentStreamHandler:
     @pytest.mark.asyncio
     async def test_emits_accumulated_text_so_far(self):
         handler = SubagentStreamHandler(subagent_id="tc-1")
-        writer = MagicMock()
-        with patch("src.streaming.subagent_stream_handler.get_stream_writer", return_value=writer):
+        with patch("src.streaming.subagent_stream_handler.adispatch_custom_event",
+                   new_callable=AsyncMock) as dispatch:
             await handler.on_llm_new_token("Paris ", run_id=uuid4())
             await handler.on_llm_new_token("is", run_id=uuid4())
-        assert writer.call_args_list[0].args[0] == {
-            "name": "subagent_activity",
-            "data": {"subagent_id": "tc-1", "phase": "message", "text": "Paris "},
-        }
-        assert writer.call_args_list[1].args[0] == {
-            "name": "subagent_activity",
-            "data": {"subagent_id": "tc-1", "phase": "message", "text": "Paris is"},
-        }
+        assert dispatch.call_args_list[0].args == (
+            "subagent_activity", {"subagent_id": "tc-1", "phase": "message", "text": "Paris "})
+        assert dispatch.call_args_list[1].args == (
+            "subagent_activity", {"subagent_id": "tc-1", "phase": "message", "text": "Paris is"})
 
     @pytest.mark.asyncio
     async def test_buffers_isolated_across_instances(self):
         h1, h2 = SubagentStreamHandler("a"), SubagentStreamHandler("b")
-        writer = MagicMock()
-        with patch("src.streaming.subagent_stream_handler.get_stream_writer", return_value=writer):
+        with patch("src.streaming.subagent_stream_handler.adispatch_custom_event",
+                   new_callable=AsyncMock) as dispatch:
             await h1.on_llm_new_token("x", run_id=uuid4())
             await h2.on_llm_new_token("y", run_id=uuid4())
-        assert writer.call_args_list[0].args[0]["data"]["text"] == "x"
-        assert writer.call_args_list[1].args[0]["data"]["text"] == "y"
+        assert dispatch.call_args_list[0].args[1]["text"] == "x"
+        assert dispatch.call_args_list[1].args[1]["text"] == "y"
 
     @pytest.mark.asyncio
-    async def test_no_writer_is_silent(self):
+    async def test_dispatch_failure_is_silent(self):
         handler = SubagentStreamHandler(subagent_id="tc-1")
-        with patch("src.streaming.subagent_stream_handler.get_stream_writer", side_effect=RuntimeError):
+        with patch("src.streaming.subagent_stream_handler.adispatch_custom_event",
+                   new_callable=AsyncMock, side_effect=RuntimeError):
             await handler.on_llm_new_token("hi", run_id=uuid4())  # must not raise
 ```
 
@@ -337,13 +336,13 @@ Create `examples/ag-ui/python/src/streaming/subagent_stream_handler.py`:
 ```python
 """Taps a child subagent LLM's text tokens and emits them as `subagent_activity`
 `message` events, keyed by the parent tool_call_id. Accumulates `text_so_far`
-(like A2uiPartialHandler's args_so_far) so the L2 transform stays stateless.
-`started`/`finished` are emitted by the research tool body."""
+so the L2 transform stays stateless. `started`/`finished` are emitted by the
+research tool body. Uses adispatch_custom_event (the bridge reads on_custom_event
+from astream_events; get_stream_writer would surface only as a RAW event)."""
 from typing import Any
 from uuid import UUID
 
-from langchain_core.callbacks import AsyncCallbackHandler
-from langgraph.config import get_stream_writer
+from langchain_core.callbacks import AsyncCallbackHandler, adispatch_custom_event
 
 
 class SubagentStreamHandler(AsyncCallbackHandler):
@@ -356,12 +355,14 @@ class SubagentStreamHandler(AsyncCallbackHandler):
             return
         self._buffer += token
         try:
-            writer = get_stream_writer()
-        except RuntimeError:
-            return  # outside a stream run (unit tests mock the writer)
-        writer({"name": "subagent_activity",
-                "data": {"subagent_id": self._id, "phase": "message", "text": self._buffer}})
+            await adispatch_custom_event(
+                "subagent_activity",
+                {"subagent_id": self._id, "phase": "message", "text": self._buffer},
+            )
+        except Exception:
+            return  # no ambient run context (e.g. some unit-test paths) — emit best-effort
 ```
+(Confirm the `adispatch_custom_event` import path in Step 2½ above; if it's `langchain_core.callbacks.manager`, import from there and patch that path in the test.)
 
 - [ ] **Step 4: Run the handler test to verify it passes**
 
@@ -373,7 +374,7 @@ Expected: PASS (3 tests).
 In `examples/ag-ui/python/src/graph.py`, replace the `research` tool (currently ~lines 298-328). Add imports near the top (with the other `langchain_core`/`langgraph` imports):
 ```python
 from langchain_core.tools import InjectedToolCallId
-from langgraph.config import get_stream_writer
+from langchain_core.callbacks import adispatch_custom_event
 from src.streaming.subagent_stream_handler import SubagentStreamHandler
 ```
 Replace the tool body:
@@ -389,19 +390,18 @@ async def research(
     citing it with the inline citation syntax if appropriate. The subagent run
     is surfaced to the UI as a native AG-UI ACTIVITY (activityType "subagent")."""
 
-    def _emit(payload: dict) -> None:
+    async def _emit(payload: dict) -> None:
         try:
-            get_stream_writer()({"name": "subagent_activity",
-                                 "data": {"subagent_id": tool_call_id, **payload}})
-        except RuntimeError:
+            await adispatch_custom_event("subagent_activity", {"subagent_id": tool_call_id, **payload})
+        except Exception:
             pass
 
-    _emit({"phase": "started", "name": subagent_type})
+    await _emit({"phase": "started", "name": subagent_type})
     result = await research_subgraph.ainvoke(
         {"topic": topic, "messages": []},
         config={"callbacks": [SubagentStreamHandler(tool_call_id)]},
     )
-    _emit({"phase": "finished", "status": "complete"})
+    await _emit({"phase": "finished", "status": "complete"})
 
     msgs = result.get("messages") if isinstance(result, dict) else None
     if not msgs:

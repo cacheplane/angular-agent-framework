@@ -97,8 +97,8 @@ Statelessness is possible because **the handler sends accumulated `text_so_far`*
 ### Layer 3 — Reference graph (example + cockpit): emit the intent
 
 - `research` tool gains `tool_call_id: Annotated[str, InjectedToolCallId]`. Keep the child as the compiled `research_subgraph` (subgraph isolation keeps child tokens out of the main bubble). The tool emits `started` before invoking and `finished` after; a `SubagentStreamHandler(tool_call_id)` attached via `config={"callbacks":[...]}` emits a `message` per child token.
-- The handler **accumulates** tokens into a per-id buffer and sends `text_so_far` (the full accumulated text) on each `message`, exactly as `A2uiPartialHandler` sends `args_so_far` — this is what lets Layer 2's transform stay stateless.
-- Emission uses `get_stream_writer()({"name":"subagent_activity","data":{"subagent_id":tool_call_id,"phase":...,"text":<text_so_far>,...}})`, mirroring `A2uiPartialHandler` (guard `RuntimeError` for the no-writer/test case).
+- The handler **accumulates** tokens into a per-id buffer and sends `text_so_far` (the full accumulated text) on each `message` (parallels `A2uiPartialHandler`'s `args_so_far`) — this is what lets Layer 2's transform stay stateless.
+- **Emission API (T1 spike finding):** emit via `await adispatch_custom_event("subagent_activity", {"subagent_id": tool_call_id, "phase": ..., "text": <text_so_far>, ...})` (from `langchain_core.callbacks`), **not** `get_stream_writer`. The installed `ag_ui_langgraph` bridge drives the graph with `astream_events` and converts `on_custom_event` callbacks into AG-UI `CUSTOM` events at `_dispatch_event`; `get_stream_writer` writes the `custom` stream which this bridge surfaces only as a RAW `on_chain_stream` (never reaching the seam). Confirmed empirically in the T1 seam test.
 - Applied to `examples/ag-ui/python/src/graph.py` and the new cockpit capability graph (standalone copies — never share across examples).
 
 ## Cockpit `ag-ui/subagents` capability + wiring
