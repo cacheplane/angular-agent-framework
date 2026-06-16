@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
-import { routeAfterAgent } from './middleware';
-import type { ClientToolsState } from './types';
+import { routeAfterAgent } from './middleware.js';
+import type { ClientToolsState } from './types.js';
 
 /**
  * A prebuilt conditional-edge callback. serverToolNames is bound once at construction;

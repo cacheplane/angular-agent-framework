@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-export type { ClientToolSpec, ClientToolsState, OpenAIFunctionTool, BaseMessage } from './types';
+export type { ClientToolSpec, ClientToolsState, OpenAIFunctionTool, BaseMessage } from './types.js';
 export {
   clientToolSpecs,
   clientToolNames,
@@ -9,6 +9,6 @@ export {
   bindClientTools,
   routeAfterAgent,
   type BindableModel,
-} from './middleware';
-export { clientToolsChannel } from './channel';
-export { clientToolsRouter } from './router';
+} from './middleware.js';
+export { clientToolsChannel } from './channel.js';
+export { clientToolsRouter } from './router.js';
