@@ -1,0 +1,92 @@
+{
+  "fixtures": [
+    {
+      "match": {
+        "userMessage": "Plan a trip from LAX to JFK",
+        "turnIndex": 0,
+        "hasToolResult": false
+      },
+      "response": {
+        "toolCalls": [
+          {
+            "name": "task",
+            "arguments": "{\"role\":\"research\",\"task_description\":\"Gather destination intel on LAX and JFK airports for a coast-to-coast trip.\"}",
+            "id": "call_research_001"
+          }
+        ]
+      }
+    },
+    {
+      "match": {
+        "userMessage": "Gather destination intel on LAX and JFK airports for a coast-to-coast trip.",
+        "turnIndex": 0,
+        "hasToolResult": false
+      },
+      "response": {
+        "content": "LAX sprawls across nine terminals while JFK runs six under the AirTrain loop. New York in spring is mild, mid-50s to low-70s with occasional showers, so pack layers for the JFK arrival."
+      }
+    },
+    {
+      "match": {
+        "userMessage": "Plan a trip from LAX to JFK",
+        "turnIndex": 1,
+        "hasToolResult": true
+      },
+      "response": {
+        "toolCalls": [
+          {
+            "name": "task",
+            "arguments": "{\"role\":\"booking\",\"task_description\":\"Find nonstop flight options from LAX to JFK and back for one adult.\"}",
+            "id": "call_booking_001"
+          }
+        ]
+      }
+    },
+    {
+      "match": {
+        "userMessage": "Find nonstop flight options from LAX to JFK and back for one adult.",
+        "turnIndex": 0,
+        "hasToolResult": false
+      },
+      "response": {
+        "content": "Three nonstop options: a low-cost JetBlue red-eye (~$210), a balanced mid-morning Delta departure (~$330), and a premium United widebody with extra legroom (~$780). All run roughly 5h30 westbound to eastbound."
+      }
+    },
+    {
+      "match": {
+        "userMessage": "Plan a trip from LAX to JFK",
+        "turnIndex": 2,
+        "hasToolResult": true
+      },
+      "response": {
+        "toolCalls": [
+          {
+            "name": "task",
+            "arguments": "{\"role\":\"itinerary\",\"task_description\":\"Synthesize a final LAX to JFK trip plan from the research and booking notes.\"}",
+            "id": "call_itinerary_001"
+          }
+        ]
+      }
+    },
+    {
+      "match": {
+        "userMessage": "Synthesize a final LAX to JFK trip plan from the research and booking notes.",
+        "turnIndex": 0,
+        "hasToolResult": false
+      },
+      "response": {
+        "content": "Take the balanced mid-morning Delta nonstop from LAX to JFK; arrive about two hours early and ride the AirTrain into the city. Expect mild spring weather in New York, so bring a light jacket and a compact umbrella."
+      }
+    },
+    {
+      "match": {
+        "userMessage": "Plan a trip from LAX to JFK",
+        "turnIndex": 3,
+        "hasToolResult": true
+      },
+      "response": {
+        "content": "All set — I researched both airports, found flights, and drafted an itinerary. Recommended plan: book the balanced mid-morning nonstop from LAX to JFK, arrive about two hours early, and take the AirTrain into the city. Pack for mild spring weather in New York."
+      }
+    }
+  ]
+}

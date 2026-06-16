@@ -57,6 +57,7 @@ export const capabilities: readonly Capability[] = [
   { id: 'ag-ui-json-render', product: 'ag-ui', topic: 'json-render', angularProject: 'cockpit-ag-ui-json-render-angular', port: 4323, pythonPort: 5323, pythonDir: 'cockpit/ag-ui/json-render/python' },
   { id: 'ag-ui-client-tools', product: 'ag-ui', topic: 'client-tools', angularProject: 'cockpit-ag-ui-client-tools-angular', port: 4325, pythonPort: 5325, pythonDir: 'cockpit/ag-ui/client-tools/python' },
   { id: 'ag-ui-a2ui', product: 'ag-ui', topic: 'a2ui', angularProject: 'cockpit-ag-ui-a2ui-angular', port: 4324, pythonPort: 5324, pythonDir: 'cockpit/ag-ui/a2ui/python' },
+  { id: 'ag-ui-subagents', product: 'ag-ui', topic: 'subagents', angularProject: 'cockpit-ag-ui-subagents-angular', port: 4326, pythonPort: 5326, pythonDir: 'cockpit/ag-ui/subagents/python' },
 ] as const;
 
 export function findCapability(id: string): Capability | undefined {
