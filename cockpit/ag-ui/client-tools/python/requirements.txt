@@ -70,7 +70,7 @@ langchain-core==1.4.2
     #   langgraph-checkpoint
     #   langgraph-prebuilt
     #   langgraph-sdk
-    #   threadplane-client-tools
+    #   threadplane-middleware
 langchain-openai==1.2.2
     # via cockpit-ag-ui-client-tools
 langchain-protocol==0.0.16
@@ -82,7 +82,7 @@ langgraph==1.2.4
     #   ag-ui-langgraph
     #   cockpit-ag-ui-client-tools
     #   langchain
-    #   threadplane-client-tools
+    #   threadplane-middleware
 langgraph-checkpoint==4.1.1
     # via
     #   langgraph
@@ -140,7 +140,7 @@ starlette==1.2.1
     # via fastapi
 tenacity==9.1.4
     # via langchain-core
-threadplane-client-tools==0.0.1
+threadplane-middleware==0.0.1
     # via cockpit-ag-ui-client-tools
 tiktoken==0.13.0
     # via langchain-openai

@@ -186,7 +186,7 @@ requires-dist = [
     { name = "langchain-openai", specifier = ">=0.3" },
     { name = "langgraph", specifier = ">=0.3" },
     { name = "langsmith", specifier = ">=0.2" },
-    { name = "threadplane-middleware", editable = "../../../../packages/threadplane-middleware" },
+    { name = "threadplane-middleware", specifier = ">=0.0.1" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.29" },
 ]
 
@@ -953,19 +953,15 @@ wheels = [
 [[package]]
 name = "threadplane-middleware"
 version = "0.0.1"
-source = { editable = "../../../../packages/threadplane-middleware" }
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "langchain-core" },
     { name = "langgraph" },
 ]
-
-[package.metadata]
-requires-dist = [
-    { name = "langchain-core", specifier = ">=0.3.0" },
-    { name = "langgraph", specifier = ">=0.3.0" },
-    { name = "pytest", marker = "extra == 'test'", specifier = ">=8" },
+sdist = { url = "https://files.pythonhosted.org/packages/01/5f/fee360e3547bede9388bb72a9ad20ca811935582b989c78dafeaae57558a/threadplane_middleware-0.0.1.tar.gz", hash = "sha256:60c931d0248ed2e701a3aa1330c6fd647e611a949500269c5ba82f3607102cef", size = 95505, upload-time = "2026-06-16T20:55:18.335Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/72/55/28e6b752f3f53f2c5d2c2fa3ef27ac62a255a3b29376384f2dfc96d8acb0/threadplane_middleware-0.0.1-py3-none-any.whl", hash = "sha256:c14e49d506e8bd3078f54df381c150d390f2d129f844694d8f5154a2cd8710ea", size = 4315, upload-time = "2026-06-16T20:55:19.044Z" },
 ]
-provides-extras = ["test"]
 
 [[package]]
 name = "tiktoken"
