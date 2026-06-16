@@ -6,7 +6,7 @@ in the Angular app with `tools()`, `action()`, `view()`, and `ask()` from
 `@threadplane/chat`; the `@threadplane/langgraph` adapter ships the catalog to
 the backend as `input.client_tools` on every run submission. The LangGraph graph
 declares a `client_tools` channel, binds the client stubs with
-`bind_client_tools` from `threadplane.client_tools` (no server implementation),
+`bind_client_tools` from `threadplane.middleware.langgraph` (no server implementation),
 and routes to `END` so the browser executes the tool and re-submits a
 `ToolMessage` the model then summarizes. The three behaviors (`action` async
 function, `view` inline component, `ask` HITL component) are identical to the
@@ -19,7 +19,7 @@ and `ask()` from `@threadplane/chat`, with schemas authored in `zod/v4`. Pass
 the registry to `<chat [clientTools]="...">`. Configure `provideAgent` from
 `@threadplane/langgraph` with `apiUrl` and `assistantId`. On the backend,
 declare a `client_tools` channel in your LangGraph `State`, call
-`bind_client_tools(llm, [], state)` from `threadplane.client_tools`, route
+`bind_client_tools(llm, [], state)` from `threadplane.middleware.langgraph`, route
 unconditionally to `END`, and compile the graph **without** a checkpointer —
 the LangGraph platform provides one.
 </Prompt>
@@ -142,7 +142,7 @@ from langgraph.graph import StateGraph, END
 from langgraph.graph.message import add_messages
 from typing_extensions import Annotated, TypedDict
 
-from threadplane.client_tools import bind_client_tools
+from threadplane.middleware.langgraph import bind_client_tools
 
 class State(TypedDict):
     messages: Annotated[list, add_messages]

@@ -5,7 +5,7 @@ import { provideChat } from '@threadplane/chat';
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideAgent({ url: '/agent' }),
+    provideAgent({ url: new URL('agent', document.baseURI).pathname }),
     provideChat({}),
   ],
 };

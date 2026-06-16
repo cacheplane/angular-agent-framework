@@ -1,4 +1,4 @@
-# threadplane-client-tools
+# threadplane-middleware
 
 LangGraph middleware for binding client-declared tool stubs and routing
 client tool calls to `END` so the browser executes them.
@@ -17,14 +17,14 @@ The catalog is read from `state["tools"]`, falling back to
 ## Installation
 
 ```bash
-pip install threadplane-client-tools
+pip install threadplane-middleware
 ```
 
 ## Usage
 
 ```python
 from langgraph.graph import END, StateGraph
-from threadplane.client_tools import bind_client_tools, route_after_agent
+from threadplane.middleware.langgraph import bind_client_tools, route_after_agent
 
 # Server-side tools your graph owns
 SERVER_TOOLS = [search_tool, calculator_tool]
@@ -59,7 +59,7 @@ graph.add_conditional_edges("agent", router, {"tools": "tools", "__end__": END})
 ### Lower-level helpers
 
 ```python
-from threadplane.client_tools import (
+from threadplane.middleware.langgraph import (
     client_tool_specs,   # → list of OpenAI function-tool dicts
     client_tool_names,   # → set[str] of client tool names
     has_client_tool_call,  # → bool

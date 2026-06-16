@@ -18,7 +18,7 @@ Declare client tools in the Angular app using `tools()`, `action()`, `view()`,
 and `ask()` from `@threadplane/chat`, with schemas authored in `zod/v4`. Pass
 the registry to `<chat [clientTools]="...">`. On the backend, declare a `tools`
 channel in your LangGraph `State`, call `bind_client_tools(llm, [], state)` from
-`threadplane.client_tools`, and route unconditionally to `END` — there are no
+`threadplane.middleware.langgraph`, and route unconditionally to `END` — there are no
 server-side tool implementations.
 </Prompt>
 
@@ -171,7 +171,7 @@ first render.
 The backend graph must declare a `tools` channel in its `State` so that
 `ag-ui-langgraph`'s merged client catalog is retained across the turn. The
 `agent` node calls `bind_client_tools(llm, [], state)` from
-`threadplane.client_tools`, which binds the client stubs (no server
+`threadplane.middleware.langgraph`, which binds the client stubs (no server
 implementation) onto the model for this invocation:
 
 ```python
@@ -183,7 +183,7 @@ from langgraph.graph.message import add_messages
 from langgraph.checkpoint.memory import MemorySaver
 from typing_extensions import Annotated, TypedDict
 
-from threadplane.client_tools import bind_client_tools
+from threadplane.middleware.langgraph import bind_client_tools
 
 class State(TypedDict):
     # `tools` holds the client tool catalog ag-ui-langgraph merges in from
