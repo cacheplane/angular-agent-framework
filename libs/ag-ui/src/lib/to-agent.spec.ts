@@ -536,4 +536,18 @@ describe('subagents projection (F5)', () => {
       content: {} } as never);
     expect(agent.subagents!().size).toBe(0);
   });
+  it('prunes the wrapper cache on RUN_STARTED (no stale binding on id reuse)', () => {
+    const source = new StubAgent();
+    const agent = toAgent(source as never);
+    source.emit(snapshot('tc-1', 'research') as never);
+    source.emit({ type: 'ACTIVITY_DELTA', messageId: 'tc-1', activityType: 'subagent',
+      patch: [{ op: 'replace', path: '/text', value: 'old run text' }] } as never);
+    expect(agent.subagents!().get('tc-1')?.messages()[0].content).toBe('old run text');
+    // New run resets activities; reuse the same id.
+    source.emit({ type: 'RUN_STARTED' } as never);
+    expect(agent.subagents!().size).toBe(0);   // pruned
+    source.emit(snapshot('tc-1', 'research') as never);
+    // Fresh wrapper bound to the NEW content signal — no stale 'old run text'.
+    expect(agent.subagents!().get('tc-1')?.messages()[0].content).toBe('');
+  });
 });

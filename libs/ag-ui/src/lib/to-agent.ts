@@ -250,6 +250,11 @@ export function toAgent(source: AbstractAgent, options: ToAgentOptions = {}): Ag
         if (entry.activityType !== 'subagent') continue;
         out.set(id, subagentFor(id, entry));
       }
+      // Prune stale wrappers: keeps the cache bounded and prevents a reused
+      // tool-call-id from binding to an orphaned (pre-RUN_STARTED) content signal.
+      for (const id of subagentWrappers.keys()) {
+        if (!out.has(id)) subagentWrappers.delete(id);
+      }
       return out;
     }),
     clientTools:  clientToolsCap,
