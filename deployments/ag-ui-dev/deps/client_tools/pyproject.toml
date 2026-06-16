@@ -18,6 +18,3 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src"]
-
-[tool.uv.sources]
-threadplane-middleware = { path = "../../../../packages/threadplane-middleware", editable = true }
