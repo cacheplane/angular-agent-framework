@@ -1,0 +1,6 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": { "outDir": "../../dist/out-tsc", "rootDir": "src", "declaration": true, "emitDeclarationOnly": false },
+  "include": ["src/langgraph/**/*.ts"],
+  "exclude": ["src/**/*.spec.ts"]
+}
