@@ -4,5 +4,5 @@ import { provideAgent } from '@threadplane/ag-ui';
 import { provideChat } from '@threadplane/chat';
 
 export const appConfig: ApplicationConfig = {
-  providers: [provideAgent({ url: '/agent' }), provideChat({})],
+  providers: [provideAgent({ url: new URL('agent', document.baseURI).pathname }), provideChat({})],
 };

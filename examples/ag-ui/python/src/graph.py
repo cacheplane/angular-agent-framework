@@ -43,7 +43,7 @@ from langchain_core.callbacks import adispatch_custom_event
 from langgraph_sdk import get_client
 from langsmith import traceable
 
-from threadplane.client_tools import bind_client_tools, client_tool_names
+from threadplane.middleware.langgraph import bind_client_tools, client_tool_names
 
 from src.streaming.a2ui_partial_handler import A2uiPartialHandler
 from src.streaming.subagent_stream_handler import SubagentStreamHandler

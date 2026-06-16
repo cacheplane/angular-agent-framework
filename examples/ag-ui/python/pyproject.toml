@@ -9,7 +9,7 @@ dependencies = [
     "fastapi>=0.115",
     "uvicorn>=0.30",
     "python-dotenv>=1.0",
-    "threadplane-client-tools>=0.0.1",
+    "threadplane-middleware>=0.0.1",
 ]
 
 [tool.uv]
@@ -17,6 +17,9 @@ dev-dependencies = [
     "pytest>=8.0",
     "pytest-asyncio>=0.23",
 ]
+
+[tool.uv.sources]
+threadplane-middleware = { path = "../../../packages/threadplane-middleware", editable = true }
 
 [build-system]
 requires = ["hatchling"]
