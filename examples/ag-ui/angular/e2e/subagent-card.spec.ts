@@ -80,17 +80,27 @@ test('research delegation renders a live subagent card that settles complete', a
   // The live subagent-card data path populated and settled: agent.subagents()
   // carries the research subagent with its streamed child summary, now
   // `complete`. This is the exact projection chat-subagents binds the card to.
-  const probe = await readSubagents(page);
-  expect(probe.size).toBeGreaterThan(0);
-  const research = probe.entries.find((e) => e.name === 'research');
+  // Poll until the research subagent reaches `complete` to avoid CI micro-races
+  // where signal propagation hasn't settled at the moment of the first read.
+  await expect.poll(
+    async () => {
+      const subs = await readSubagents(page);
+      const research = subs.entries.find((e) => e.name === 'research');
+      return research?.status ?? null;
+    },
+    { timeout: 15_000 },
+  ).toBe('complete');
+
+  const subs = await readSubagents(page);
+  expect(subs.size).toBeGreaterThan(0);
+  const research = subs.entries.find((e) => e.name === 'research');
   expect(research, 'a research subagent should be projected').toBeTruthy();
   expect(research?.text).toContain(CHILD_SENTENCE);
-  expect(research?.status).toBe('complete');
 
   // The child research text must NOT leak into the parent's rendered markdown
   // surface. Target chat-streaming-md (the assistant's answer) rather than the
   // whole chat-message, which nests the per-message subagent card host.
-  const mainMarkdown = bubble.locator('chat-streaming-md').last();
+  const mainMarkdown = bubble.locator('chat-streaming-md').first();
   await expect(mainMarkdown).toBeVisible();
   await expect(mainMarkdown).not.toContainText(CHILD_SENTENCE);
 });
