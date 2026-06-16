@@ -21,7 +21,10 @@ def subagent_custom_to_activity(event: BaseEvent) -> Optional[BaseEvent]:
         return None
     value = getattr(event, "value", None)
     if isinstance(value, str):  # bridge may JSON-serialize custom values
-        value = json.loads(value)
+        try:
+            value = json.loads(value)
+        except json.JSONDecodeError:
+            return None
     if not isinstance(value, dict):
         return None
 

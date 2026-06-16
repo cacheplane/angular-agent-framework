@@ -40,6 +40,11 @@ def test_non_subagent_event_returns_none():
         TextMessageStartEvent(type=EventType.TEXT_MESSAGE_START, message_id="m", role="assistant")) is None
 
 
+def test_malformed_json_string_value_returns_none():
+    ev = CustomEvent(type=EventType.CUSTOM, name="subagent_activity", value="not json {{{")
+    assert subagent_custom_to_activity(ev) is None
+
+
 import pytest
 from langgraph.graph import StateGraph, END
 from langchain_core.callbacks.manager import adispatch_custom_event
