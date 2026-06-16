@@ -86,7 +86,7 @@ langchain-core==1.4.2
     #   langgraph-checkpoint
     #   langgraph-prebuilt
     #   langgraph-sdk
-    #   threadplane-client-tools
+    #   threadplane-middleware
 langchain-openai==1.2.2
     # via cockpit-langgraph-client-tools
 langchain-protocol==0.0.16
@@ -99,7 +99,7 @@ langgraph==1.2.4
     #   cockpit-langgraph-client-tools
     #   langgraph-api
     #   langgraph-runtime-inmem
-    #   threadplane-client-tools
+    #   threadplane-middleware
 langgraph-api==0.9.0
     # via langgraph-cli
 langgraph-checkpoint==4.1.1
@@ -222,7 +222,7 @@ tenacity==9.1.4
     # via
     #   langchain-core
     #   langgraph-api
-threadplane-client-tools==0.0.1
+threadplane-middleware==0.0.1
     # via cockpit-langgraph-client-tools
 tiktoken==0.13.0
     # via langchain-openai
