@@ -12,9 +12,10 @@ import os
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from langgraph.checkpoint.memory import MemorySaver
-from ag_ui_langgraph import add_langgraph_fastapi_endpoint, LangGraphAgent
+from ag_ui_langgraph import add_langgraph_fastapi_endpoint
 
 from .graph import _builder
+from .streaming.activity_emitting_agent import ActivityEmittingAgent
 
 # The exported graph is checkpointer-free for LangGraph Platform (which manages
 # persistence). The standalone ag-ui-langgraph endpoint reads graph state via
@@ -41,4 +42,4 @@ def ok() -> dict:
     return {"ok": True}
 
 
-add_langgraph_fastapi_endpoint(app, LangGraphAgent(name="chat", graph=graph), path="/agent")
+add_langgraph_fastapi_endpoint(app, ActivityEmittingAgent(name="chat", graph=graph), path="/agent")

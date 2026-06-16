@@ -1,0 +1,37 @@
+{
+  "fixtures": [
+    {
+      "match": {
+        "userMessage": "Research the Louvre and summarize",
+        "hasToolResult": true
+      },
+      "response": {
+        "content": "Here's what I found about the Louvre: it's a major Paris museum and one of the most visited in the world, opened in the late 18th century and home to tens of thousands of works across many collections. Let me know if you'd like detail on a particular wing or era."
+      }
+    },
+    {
+      "match": {
+        "userMessage": "Research the Louvre and summarize"
+      },
+      "response": {
+        "toolCalls": [
+          {
+            "name": "research",
+            "arguments": {
+              "topic": "the Louvre",
+              "subagent_type": "research"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "match": {
+        "userMessage": "Topic: the Louvre"
+      },
+      "response": {
+        "content": "The Louvre opened in 1793 and holds about 35,000 works."
+      }
+    }
+  ]
+}

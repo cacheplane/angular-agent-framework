@@ -5,7 +5,7 @@ import { Subject } from 'rxjs';
 import type {
   Message, AgentStatus, ToolCall, AgentEvent,
 } from '@threadplane/chat';
-import { reduceEvent, type ReducerStore, type CustomStreamEvent } from './reducer';
+import { reduceEvent, type ReducerStore, type CustomStreamEvent, type ActivityEntry } from './reducer';
 
 function makeStore(): ReducerStore {
   return {
@@ -18,6 +18,7 @@ function makeStore(): ReducerStore {
     interrupt: signal(undefined),
     events$:   new Subject<AgentEvent>(),
     customEvents: signal<CustomStreamEvent[]>([]),
+    activities: signal<Map<string, ActivityEntry>>(new Map()),
   };
 }
 
@@ -372,5 +373,62 @@ describe('reduceEvent — customEvents accumulation', () => {
     expect(store.customEvents()).toHaveLength(1);
     reduceEvent({ type: 'RUN_STARTED' } as any, store);
     expect(store.customEvents()).toEqual([]);
+  });
+});
+
+describe('ACTIVITY events (F5 subagent activities)', () => {
+  it('ACTIVITY_SNAPSHOT creates an activity entry keyed by messageId', () => {
+    const store = makeStore();
+    reduceEvent({ type: 'ACTIVITY_SNAPSHOT', messageId: 'tc-1', activityType: 'subagent',
+      content: { toolCallId: 'tc-1', name: 'research', status: 'running', text: '' }, replace: true } as any, store);
+    const entry = store.activities().get('tc-1');
+    expect(entry?.activityType).toBe('subagent');
+    expect(entry?.content()).toEqual({ toolCallId: 'tc-1', name: 'research', status: 'running', text: '' });
+  });
+
+  it('ACTIVITY_DELTA applies a JSON-patch to the entry content (live)', () => {
+    const store = makeStore();
+    reduceEvent({ type: 'ACTIVITY_SNAPSHOT', messageId: 'tc-1', activityType: 'subagent',
+      content: { status: 'running', text: '' } } as any, store);
+    reduceEvent({ type: 'ACTIVITY_DELTA', messageId: 'tc-1', activityType: 'subagent',
+      patch: [{ op: 'replace', path: '/text', value: 'Paris is' }] } as any, store);
+    expect(store.activities().get('tc-1')?.content()['text']).toBe('Paris is');
+    reduceEvent({ type: 'ACTIVITY_DELTA', messageId: 'tc-1', activityType: 'subagent',
+      patch: [{ op: 'replace', path: '/status', value: 'complete' }] } as any, store);
+    expect(store.activities().get('tc-1')?.content()['status']).toBe('complete');
+  });
+
+  it('ACTIVITY_DELTA for an unknown messageId is ignored', () => {
+    const store = makeStore();
+    reduceEvent({ type: 'ACTIVITY_DELTA', messageId: 'nope', activityType: 'subagent',
+      patch: [{ op: 'replace', path: '/text', value: 'x' }] } as any, store);
+    expect(store.activities().size).toBe(0);
+  });
+
+  it('two concurrent subagents are keyed independently', () => {
+    const store = makeStore();
+    reduceEvent({ type: 'ACTIVITY_SNAPSHOT', messageId: 'a', activityType: 'subagent', content: { text: '' } } as any, store);
+    reduceEvent({ type: 'ACTIVITY_SNAPSHOT', messageId: 'b', activityType: 'subagent', content: { text: '' } } as any, store);
+    reduceEvent({ type: 'ACTIVITY_DELTA', messageId: 'a', activityType: 'subagent',
+      patch: [{ op: 'replace', path: '/text', value: 'AAA' }] } as any, store);
+    expect(store.activities().get('a')?.content()['text']).toBe('AAA');
+    expect(store.activities().get('b')?.content()['text']).toBe('');
+  });
+
+  it('RUN_STARTED resets activities', () => {
+    const store = makeStore();
+    reduceEvent({ type: 'ACTIVITY_SNAPSHOT', messageId: 'a', activityType: 'subagent', content: {} } as any, store);
+    reduceEvent({ type: 'RUN_STARTED' } as any, store);
+    expect(store.activities().size).toBe(0);
+  });
+
+  it('ACTIVITY_SNAPSHOT without replace merges into existing content', () => {
+    const store = makeStore();
+    reduceEvent({ type: 'ACTIVITY_SNAPSHOT', messageId: 'tc-1', activityType: 'subagent',
+      content: { status: 'running', text: 'hello' } } as never, store);
+    reduceEvent({ type: 'ACTIVITY_SNAPSHOT', messageId: 'tc-1', activityType: 'subagent',
+      content: { status: 'complete' } } as never, store);
+    // merge: status updated, text preserved
+    expect(store.activities().get('tc-1')?.content()).toEqual({ status: 'complete', text: 'hello' });
   });
 });

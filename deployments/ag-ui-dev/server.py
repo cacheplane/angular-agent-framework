@@ -12,6 +12,7 @@ from deps.client_tools.src.graph import graph as client_tools_graph
 from deps.interrupts.src.graph import graph as interrupts_graph
 from deps.json_render.src.graph import graph as json_render_graph
 from deps.streaming.src.graph import graph as streaming_graph
+from deps.subagents.src.graph import graph as subagents_graph
 from deps.tool_views.src.graph import graph as tool_views_graph
 
 AG_UI_INTERNAL_TOKEN = os.environ["AG_UI_INTERNAL_TOKEN"]
@@ -60,6 +61,11 @@ add_langgraph_fastapi_endpoint(
     app,
     LangGraphAgent(name="streaming", graph=streaming_graph),
     path="/agent/streaming",
+)
+add_langgraph_fastapi_endpoint(
+    app,
+    LangGraphAgent(name="subagents", graph=subagents_graph),
+    path="/agent/subagents",
 )
 add_langgraph_fastapi_endpoint(
     app,

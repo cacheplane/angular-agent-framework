@@ -500,3 +500,54 @@ describe('toAgent', () => {
     });
   });
 });
+
+describe('subagents projection (F5)', () => {
+  function snapshot(id: string, name: string) {
+    return { type: 'ACTIVITY_SNAPSHOT', messageId: id, activityType: 'subagent',
+      content: { toolCallId: id, name, status: 'running', text: '' }, replace: true };
+  }
+  it('projects a subagent activity to Agent.subagents', () => {
+    const source = new StubAgent();
+    const agent = toAgent(source as never);
+    source.emit(snapshot('tc-1', 'research') as never);
+    const sa = agent.subagents!().get('tc-1');
+    expect(sa?.toolCallId).toBe('tc-1');
+    expect(sa?.name).toBe('research');
+    expect(sa?.status()).toBe('running');
+    expect(sa?.messages()).toEqual([{ id: 'tc-1', role: 'assistant', content: '' }]);
+  });
+  it('text deltas flow into the subagent message; finished flips status', () => {
+    const source = new StubAgent();
+    const agent = toAgent(source as never);
+    source.emit(snapshot('tc-1', 'research') as never);
+    const before = agent.subagents!().get('tc-1');
+    source.emit({ type: 'ACTIVITY_DELTA', messageId: 'tc-1', activityType: 'subagent',
+      patch: [{ op: 'replace', path: '/text', value: 'Paris is the capital' }] } as never);
+    expect(agent.subagents!().get('tc-1')?.messages()[0].content).toBe('Paris is the capital');
+    source.emit({ type: 'ACTIVITY_DELTA', messageId: 'tc-1', activityType: 'subagent',
+      patch: [{ op: 'replace', path: '/status', value: 'complete' }] } as never);
+    expect(agent.subagents!().get('tc-1')?.status()).toBe('complete');
+    expect(agent.subagents!().get('tc-1')).toBe(before);  // stable identity across deltas
+  });
+  it('ignores non-subagent activityTypes', () => {
+    const source = new StubAgent();
+    const agent = toAgent(source as never);
+    source.emit({ type: 'ACTIVITY_SNAPSHOT', messageId: 'x', activityType: 'open-generative-ui',
+      content: {} } as never);
+    expect(agent.subagents!().size).toBe(0);
+  });
+  it('prunes the wrapper cache on RUN_STARTED (no stale binding on id reuse)', () => {
+    const source = new StubAgent();
+    const agent = toAgent(source as never);
+    source.emit(snapshot('tc-1', 'research') as never);
+    source.emit({ type: 'ACTIVITY_DELTA', messageId: 'tc-1', activityType: 'subagent',
+      patch: [{ op: 'replace', path: '/text', value: 'old run text' }] } as never);
+    expect(agent.subagents!().get('tc-1')?.messages()[0].content).toBe('old run text');
+    // New run resets activities; reuse the same id.
+    source.emit({ type: 'RUN_STARTED' } as never);
+    expect(agent.subagents!().size).toBe(0);   // pruned
+    source.emit(snapshot('tc-1', 'research') as never);
+    // Fresh wrapper bound to the NEW content signal — no stale 'old run text'.
+    expect(agent.subagents!().get('tc-1')?.messages()[0].content).toBe('');
+  });
+});
