@@ -72,33 +72,33 @@ This layer is generic: a future `activityType` (plan, progress, tool-trace) reus
 
 ### Layer 2 — Producer transport adapter (owned, server-side): subagent intent → ACTIVITY
 
-The bridge maps generic `get_stream_writer` writes to **CUSTOM** and only special-cases its own reserved names (`manually_emit_message/tool_call/state`, `exit`) — there is **no** `manually_emit_activity`. So we own the transform.
+The bridge maps generic `get_stream_writer` writes to **CUSTOM** and only special-cases its own reserved names (`manually_emit_message/tool_call/state`, `exit`) — there is **no** reserved name for activities. So we own the conversion.
 
-New `ActivityEmittingAgent(LangGraphAgent)` (in the example's `python/src/streaming/`, duplicated into the cockpit capability):
+**Primary seam — override `_dispatch_event` (1:1 event transform).** Every event the bridge produces passes through `LangGraphAgent._dispatch_event(self, event) -> event` (synchronous, returns one event; called as `yield self._dispatch_event(SomeEvent(...))`). This is the natural place to convert a reserved custom event into a typed event. New `ActivityEmittingAgent(LangGraphAgent)` (in the example's `python/src/streaming/`, duplicated into the cockpit capability):
 ```python
 class ActivityEmittingAgent(LangGraphAgent):
-    async def run(self, input):
-        async for ev in super().run(input):
-            converted = subagent_custom_to_activity(ev)   # pure fn, unit-tested
-            if converted is None:
-                yield ev                                   # pass-through
-            else:
-                for activity_ev in converted:
-                    yield activity_ev                      # ACTIVITY_SNAPSHOT/DELTA, CUSTOM dropped
-    def clone(self):                                       # endpoint calls agent.clone()
-        return ActivityEmittingAgent(name=self.name, graph=self.graph)
+    def _dispatch_event(self, event):
+        activity = subagent_custom_to_activity(event)   # pure fn, unit-tested; None if not ours
+        return super()._dispatch_event(activity if activity is not None else event)
+    # clone() returns Self via the base impl (constructs type(self)(...)); override only if
+    # the spike shows it drops the subclass.
 ```
-`subagent_custom_to_activity(ev)` is a pure function: returns `None` for any event except `CUSTOM{name:"subagent_activity"}`; for those it maps `phase` → ACTIVITY events:
+`subagent_custom_to_activity(event)` is a **pure, stateless 1:1** function: returns `None` for any event except `CUSTOM{name:"subagent_activity"}`; for those it maps `phase` → one ACTIVITY event (replacing the CUSTOM):
 - `started` → `ACTIVITY_SNAPSHOT(messageId=subagent_id, activityType="subagent", content={toolCallId, name, status:"running", text:""}, replace=True)`
-- `message` → `ACTIVITY_DELTA(messageId=subagent_id, activityType="subagent", patch=[{op:"replace", path:"/text", value:<buffer>}])` (the transform accumulates the running text buffer per subagent_id; JSON-patch has no string-append op, so it emits the full text via `replace`)
+- `message` → `ACTIVITY_DELTA(messageId=subagent_id, activityType="subagent", patch=[{op:"replace", path:"/text", value:<text_so_far>}])`
 - `finished` → `ACTIVITY_DELTA(... patch=[{op:"replace", path:"/status", value:<status>}])`
 
+Statelessness is possible because **the handler sends accumulated `text_so_far`** (Layer 3), exactly as `A2uiPartialHandler` sends `args_so_far` — JSON-patch has no string-append op, so each DELTA carries the full text via `replace`. No server-side buffer.
+
 `server.py` swaps `LangGraphAgent(...)` → `ActivityEmittingAgent(...)` in the `add_langgraph_fastapi_endpoint(...)` call. This module is the natural future home for CUSTOM→native migrations.
+
+**Fallback seam** (if the spike shows custom events don't flow through `_dispatch_event` in our bridge version, or `clone()` drops the subclass): override `async def run()` to wrap `super().run()` and map events on the way out — same pure `subagent_custom_to_activity` function, applied in the async loop.
 
 ### Layer 3 — Reference graph (example + cockpit): emit the intent
 
 - `research` tool gains `tool_call_id: Annotated[str, InjectedToolCallId]`. Keep the child as the compiled `research_subgraph` (subgraph isolation keeps child tokens out of the main bubble). The tool emits `started` before invoking and `finished` after; a `SubagentStreamHandler(tool_call_id)` attached via `config={"callbacks":[...]}` emits a `message` per child token.
-- Emission uses `get_stream_writer()({"name":"subagent_activity","data":{"subagent_id":tool_call_id,"phase":...,...}})`, mirroring `A2uiPartialHandler` (guard `RuntimeError` for the no-writer/test case).
+- The handler **accumulates** tokens into a per-id buffer and sends `text_so_far` (the full accumulated text) on each `message`, exactly as `A2uiPartialHandler` sends `args_so_far` — this is what lets Layer 2's transform stay stateless.
+- Emission uses `get_stream_writer()({"name":"subagent_activity","data":{"subagent_id":tool_call_id,"phase":...,"text":<text_so_far>,...}})`, mirroring `A2uiPartialHandler` (guard `RuntimeError` for the no-writer/test case).
 - Applied to `examples/ag-ui/python/src/graph.py` and the new cockpit capability graph (standalone copies — never share across examples).
 
 ## Cockpit `ag-ui/subagents` capability + wiring
@@ -115,15 +115,15 @@ Cockpit `subagents.component.ts` hosts `<chat [agent]="agent">` with `injectAgen
 ## Testing
 
 - **`libs/ag-ui` reducer unit (TDD):** `ACTIVITY_SNAPSHOT` creates entry; `ACTIVITY_DELTA` patch applies (replace `/text`, `/status`); `activityType:"subagent"` projects to a `Subagent` with correct toolCallId/name/status/messages; live text accumulation; two concurrent subagents keyed independently; stable subagent identity across deltas; `RUN_STARTED` resets; unknown `messageId` ignored. Plus `applyPatch` helper unit tests.
-- **Layer-2 transform unit (python):** `subagent_custom_to_activity` — started→SNAPSHOT, message→DELTA(replace /text, accumulated buffer), finished→DELTA(replace /status); pass-through returns None for non-subagent events; buffer isolation across two subagent_ids.
-- **`SubagentStreamHandler` unit (python):** mock `get_stream_writer`, assert `message` writes per token (mirror `A2uiPartialHandler` test).
+- **Layer-2 transform unit (python):** `subagent_custom_to_activity` (pure, stateless 1:1) — started→`ACTIVITY_SNAPSHOT`, message(`text_so_far`)→`ACTIVITY_DELTA`(replace `/text`), finished→`ACTIVITY_DELTA`(replace `/status`); returns `None` for any non-`subagent_activity` event. Plus `ActivityEmittingAgent._dispatch_event` returns the converted ACTIVITY for our events and passes everything else through unchanged.
+- **`SubagentStreamHandler` unit (python):** mock `get_stream_writer`, assert it accumulates tokens and emits growing `text_so_far` per `message`, with buffer isolation across two `subagent_id`s (mirror `A2uiPartialHandler` test).
 - **examples/ag-ui e2e (aimock):** research prompt → subagent card appears `running`, accumulates streamed text, settles `complete` (leaves active set); main bubble does NOT contain the child research text (isolation assertion). Fixture captures ACTIVITY events.
 - **cockpit `ag-ui/subagents` e2e (aimock):** capability spec + fixture, mirroring `cockpit/chat/subagents` adapted to AG-UI.
 - **Live-LLM Chrome smoke** before merge (real backend) + **production** after deploy (`ag-ui.threadplane.ai` + cockpit). The live smoke is the gate that caught F3/F4 issues the stub harness missed; here it verifies real ACTIVITY events flow end-to-end (the Layer-2 transform especially).
 
 ## Risks
 
-- **Layer-2 interposition** (load-bearing): `LangGraphAgent.run()` is `async def run(self, input) -> AsyncGenerator` and the endpoint does `async for event in request_agent.run(...)` after `agent.clone()`. The subclass override + `clone()` override is the seam — **de-risk first** with a spike (T1): confirm the override is honored and `clone()` preserves the subclass. If the bridge version differs, fall back to a custom route that wraps `agent.run()` and encodes SSE directly.
+- **Layer-2 interposition** (load-bearing): the primary seam is overriding `LangGraphAgent._dispatch_event(self, event) -> event` (every produced event passes through it; the endpoint does `async for event in request_agent.run(...)` after `agent.clone()`). **De-risk first** with a spike (T1): confirm (a) our `subagent_activity` CUSTOM events actually flow through `_dispatch_event`, and (b) `clone()` preserves the subclass (the base `clone()` returns `Self`). Fallbacks if not: override `run()` to wrap `super().run()`, or mount a custom route that wraps `agent.run()` and encodes SSE directly — same pure transform either way.
 - **Token leak into main message:** keep the compiled subgraph (proven isolation) + callback tap; the examples e2e asserts the main bubble excludes child text.
 - **Deploy drift / Railway redeploy:** same friction as #664; isolated task + post-merge verification.
 - **`InjectedToolCallId` availability:** confirm in the installed `langchain_core` (used widely; verify in the graph task).
