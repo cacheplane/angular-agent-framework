@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-import { signal, type Signal } from '@angular/core';
+import { computed, signal, type Signal } from '@angular/core';
 import { Subject } from 'rxjs';
 import type { AbstractAgent } from '@ag-ui/client';
 import type {
@@ -10,6 +10,7 @@ import type {
   AgentRuntimeTelemetrySink,
   AgentSubmitInput, AgentSubmitOptions,
   ClientToolsCapability,
+  Subagent, SubagentStatus,
 } from '@threadplane/chat';
 import { reduceEvent, type ReducerStore, type CustomStreamEvent, type ActivityEntry } from './reducer';
 import { createClientToolsCapability } from './client-tools';
@@ -55,6 +56,10 @@ function agentRuntimeTelemetryErrorClass(error: unknown): string {
 export interface AgUiAgent extends Agent {
   customEvents: Signal<CustomStreamEvent[]>;
   clientTools: ClientToolsCapability;
+  /** Subagent activities (activityType==='subagent') projected to the neutral
+   *  Subagent contract, keyed by messageId. Narrows the base Agent's optional
+   *  `subagents?` to a concrete signal for AG-UI consumers. */
+  subagents: Signal<Map<string, Subagent>>;
 }
 
 /**
@@ -209,6 +214,26 @@ export function toAgent(source: AbstractAgent, options: ToAgentOptions = {}): Ag
     },
   });
 
+  // Stable Subagent wrappers per messageId so chat-subagents (tracks by
+  // toolCallId) doesn't churn as activity content streams.
+  const subagentWrappers = new Map<string, Subagent>();
+  function subagentFor(id: string, entry: ActivityEntry): Subagent {
+    let w = subagentWrappers.get(id);
+    if (!w) {
+      w = {
+        toolCallId: (entry.content()['toolCallId'] as string) ?? id,
+        name: entry.content()['name'] as string | undefined,
+        status: computed(() => (entry.content()['status'] as SubagentStatus) ?? 'running'),
+        messages: computed<Message[]>(() => [
+          { id, role: 'assistant', content: String(entry.content()['text'] ?? '') },
+        ]),
+        state: computed(() => (entry.content()['state'] as Record<string, unknown>) ?? {}),
+      };
+      subagentWrappers.set(id, w);
+    }
+    return w;
+  }
+
   return {
     messages:  store.messages,
     status:    store.status,
@@ -219,6 +244,14 @@ export function toAgent(source: AbstractAgent, options: ToAgentOptions = {}): Ag
     interrupt: store.interrupt,
     events$:      store.events$.asObservable(),
     customEvents: store.customEvents,
+    subagents: computed<Map<string, Subagent>>(() => {
+      const out = new Map<string, Subagent>();
+      for (const [id, entry] of store.activities()) {
+        if (entry.activityType !== 'subagent') continue;
+        out.set(id, subagentFor(id, entry));
+      }
+      return out;
+    }),
     clientTools:  clientToolsCap,
 
     submit: async (input: AgentSubmitInput, _opts?: AgentSubmitOptions) => {
