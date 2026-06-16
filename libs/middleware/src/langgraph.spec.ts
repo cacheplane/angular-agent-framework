@@ -68,6 +68,18 @@ describe('hasServerToolCall', () => {
 });
 
 import { bindClientTools, routeAfterAgent } from './langgraph/middleware';
+import { clientToolsChannel } from './langgraph/channel';
+import { Annotation, MessagesAnnotation } from '@langchain/langgraph';
+
+describe('clientToolsChannel', () => {
+  it('produces tools + client_tools channels usable in Annotation.Root', () => {
+    const frag = clientToolsChannel();
+    expect(Object.keys(frag).sort()).toEqual(['client_tools', 'tools']);
+    const State = Annotation.Root({ ...MessagesAnnotation.spec, ...frag });
+    expect(State.spec).toHaveProperty('tools');
+    expect(State.spec).toHaveProperty('client_tools');
+  });
+});
 
 describe('bindClientTools', () => {
   it('binds server tools then client stubs (server first), calling bindTools once', () => {
