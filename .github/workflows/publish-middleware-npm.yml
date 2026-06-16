@@ -1,0 +1,91 @@
+# Staged npm publish workflow for @threadplane/middleware (TypeScript package).
+#
+# This workflow uses npm TRUSTED PUBLISHING (OIDC) — no NPM_TOKEN secret is
+# required. GitHub exchanges its OIDC token for a short-lived npm publish
+# credential automatically when the job has `id-token: write`. Provenance
+# attestations are generated automatically (NPM_CONFIG_PROVENANCE=true).
+#
+# To enable trusted publishing on npm:
+#   1. The FIRST-EVER publish must be bootstrapped locally by a maintainer with
+#      an npm token:
+#        npx nx build middleware
+#        npm publish dist/libs/middleware --access public
+#      That initial upload creates the @threadplane/middleware package on npm.
+#   2. On npmjs.com → @threadplane/middleware → Settings → "Trusted Publisher",
+#      add this repo + workflow:
+#        Repository:  cacheplane/angular-agent-framework
+#        Workflow:    publish-middleware-npm.yml
+#   3. After that, all releases use OIDC from this workflow — no secret needed.
+#
+# This workflow is MANUALLY TRIGGERED ONLY — it never runs on push or
+# pull_request. A maintainer dispatches it from the Actions tab (or via
+# `gh workflow run publish-middleware-npm.yml`) after bumping
+# libs/middleware/package.json and verifying the release is ready.
+#
+# @threadplane/middleware versions INDEPENDENTLY of the Angular libs — it is
+# NOT part of the `publishable` nx release group, so the tag-driven publish.yml
+# never touches it.
+#
+# Inputs:
+#   dry_run (default: true) — when true, `npm publish --dry-run` is used and
+#     nothing is uploaded to npm. Set to false only for a real release.
+
+name: Publish @threadplane/middleware (npm)
+
+on:
+  # STAGED: dispatch manually only. Never add push: or pull_request: triggers.
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Dry run — skip actual upload to npm (default: true)"
+        type: boolean
+        default: true
+
+concurrency:
+  group: publish-middleware-npm
+  cancel-in-progress: false
+
+env:
+  DO_NOT_TRACK: '1'
+
+jobs:
+  build-and-publish:
+    name: Build and publish @threadplane/middleware
+    runs-on: ubuntu-latest
+
+    permissions:
+      id-token: write   # Required for OIDC trusted publishing + provenance
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6.0.2
+
+      # Node 24 ships npm 11+, which fully implements npm trusted publishing
+      # over OIDC. (The rest of CI runs on Node 22; this job needs Node 24.)
+      - name: Setup Node
+        uses: actions/setup-node@v6.3.0
+        with:
+          node-version: 24
+          cache: npm
+          registry-url: https://registry.npmjs.org
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Trusted publishing requires npm CLI 11.5.1+.
+      - name: Upgrade npm to support trusted publishing
+        run: npm install -g npm@latest
+
+      - name: Lint, test, build middleware
+        run: npx nx run-many -t lint,test,build --projects=middleware --skip-nx-cache
+
+      - name: Publish to npm (dry run)
+        if: ${{ inputs.dry_run == true }}
+        run: npm publish dist/libs/middleware --access public --provenance --dry-run
+
+      - name: Publish to npm (real release — OIDC trusted publishing)
+        if: ${{ inputs.dry_run == false }}
+        run: npm publish dist/libs/middleware --access public --provenance
+        env:
+          NPM_CONFIG_PROVENANCE: 'true'
