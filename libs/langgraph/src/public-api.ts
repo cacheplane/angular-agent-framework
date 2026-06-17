@@ -14,6 +14,7 @@ export { AgentLifecycleRegistry } from './lib/agent-lifecycle-registry';
 // Public types
 export type {
   AgentOptions,
+  LangGraphClientOptions,
   AgentBranchTree,
   AgentBranchTreeFork,
   AgentBranchTreeNode,

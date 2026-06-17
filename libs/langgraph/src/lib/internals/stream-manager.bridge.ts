@@ -104,7 +104,7 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
     userOnThreadId?.(id);
   };
   const transport: AgentTransport =
-    options.transport ?? new FetchStreamTransport(options.apiUrl, wrappedOnThreadId);
+    options.transport ?? new FetchStreamTransport(options.apiUrl, wrappedOnThreadId, options.clientOptions);
 
   let currentThreadId: string | null = null;
   let lastPayload: unknown = null;
