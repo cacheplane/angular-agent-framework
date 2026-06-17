@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MIT
+import { describe, it, expect, afterEach } from 'vitest';
 import { e2eClientOptions } from './e2e-overrides';
 
 const KEY = 'THREADPLANE_E2E_MAX_RETRIES';
