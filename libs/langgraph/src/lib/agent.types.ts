@@ -240,6 +240,24 @@ export interface AgentTransport {
 // The second generic is retained for source compatibility with existing typed
 // AgentOptions references even though the options shape no longer depends on it.
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
+/**
+ * Tuning options for the underlying LangGraph SDK `Client` constructed by the
+ * default {@link FetchStreamTransport}. Ignored when a custom `transport` is
+ * supplied (the transport owns its own client).
+ */
+export interface LangGraphClientOptions {
+  /**
+   * How many times a failed request — including the initial stream connect —
+   * is retried with exponential backoff before the error surfaces. Maps to the
+   * SDK's `callerOptions.maxRetries`. Omitted → the SDK default (currently 4).
+   *
+   * Set `0` to fail fast: useful for e2e tests that force a connection failure
+   * and assert the error surfaces promptly, rather than after the full
+   * multi-second backoff window.
+   */
+  maxRetries?: number;
+}
+
 export interface AgentOptions<T, _ResolvedBag extends BagTemplate> {
   /** Base URL of the LangGraph Platform API. Defaults to `provideAgent({ apiUrl })` when omitted. */
   apiUrl?: string;
@@ -257,6 +275,8 @@ export interface AgentOptions<T, _ResolvedBag extends BagTemplate> {
   toMessage?: (msg: unknown) => BaseMessage;
   /** Custom transport. Defaults to FetchStreamTransport. */
   transport?: AgentTransport;
+  /** Tuning options for the default transport's LangGraph SDK client (e.g. retry budget). */
+  clientOptions?: LangGraphClientOptions;
   /** Optional app-owned telemetry sink. No telemetry is emitted unless this is provided. */
   telemetry?: AgentRuntimeTelemetrySink | false;
   /** When true, subagent messages are filtered from the main messages signal. */

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 import type { Client, StreamMode, ThreadState } from '@langchain/langgraph-sdk';
-import type { AgentQueueEntry, AgentTransport, LangGraphSubmitOptions, StreamEvent } from '../agent.types';
+import type { AgentQueueEntry, AgentTransport, LangGraphClientOptions, LangGraphSubmitOptions, StreamEvent } from '../agent.types';
 import { createLangGraphClient } from '../client/create-langgraph-client';
 
 /**
@@ -24,12 +24,13 @@ export class FetchStreamTransport implements AgentTransport {
   /**
    * @param apiUrl - Base URL of the LangGraph Platform API
    * @param onThreadId - Optional callback invoked when a new thread is created
+   * @param clientOptions - Optional SDK client tuning (e.g. `maxRetries`)
    */
-  constructor(apiUrl: string, onThreadId?: (id: string) => void) {
+  constructor(apiUrl: string, onThreadId?: (id: string) => void, clientOptions?: LangGraphClientOptions) {
     // createLangGraphClient handles the absolute-URL normalization
     // required by the SDK when `apiUrl` is a relative `/api`-style
     // path proxied by middleware in production.
-    this.client = createLangGraphClient(apiUrl);
+    this.client = createLangGraphClient(apiUrl, clientOptions);
     this.onThreadId = onThreadId;
   }
 

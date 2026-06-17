@@ -7,6 +7,7 @@ import { agent } from './agent.fn';
 import type {
   AgentTransport,
   LangGraphAgent,
+  LangGraphClientOptions,
 } from './agent.types';
 
 /**
@@ -38,6 +39,8 @@ export interface AgentConfig<
   toMessage?: (msg: unknown) => BaseMessage;
   /** Custom transport. Defaults to {@link FetchStreamTransport}. */
   transport?: AgentTransport;
+  /** Tuning options for the default transport's LangGraph SDK client (e.g. retry budget). */
+  clientOptions?: LangGraphClientOptions;
   /** Optional app-owned telemetry sink. No telemetry is emitted unless this is provided. */
   telemetry?: AgentRuntimeTelemetrySink | false;
   /** When true, subagent messages are filtered from the main messages signal. */
@@ -117,6 +120,7 @@ export function provideAgent<T = Record<string, unknown>>(
           ...(config.throttle !== undefined ? { throttle: config.throttle } : {}),
           ...(config.toMessage !== undefined ? { toMessage: config.toMessage } : {}),
           ...(config.transport !== undefined ? { transport: config.transport } : {}),
+          ...(config.clientOptions !== undefined ? { clientOptions: config.clientOptions } : {}),
           ...(config.telemetry !== undefined ? { telemetry: config.telemetry } : {}),
           ...(config.filterSubagentMessages !== undefined ? { filterSubagentMessages: config.filterSubagentMessages } : {}),
           ...(config.subagentToolNames !== undefined ? { subagentToolNames: config.subagentToolNames } : {}),

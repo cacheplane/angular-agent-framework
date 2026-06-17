@@ -186,6 +186,12 @@
         "type": "(id: string) => void",
         "description": "Optional callback invoked when a new thread is created",
         "optional": true
+      },
+      {
+        "name": "clientOptions",
+        "type": "LangGraphClientOptions",
+        "description": "Optional SDK client tuning (e.g. `maxRetries`)",
+        "optional": true
       }
     ],
     "examples": [
@@ -887,6 +893,12 @@
         "optional": true
       },
       {
+        "name": "clientOptions",
+        "type": "LangGraphClientOptions",
+        "description": "Tuning options for the default transport's LangGraph SDK client (e.g. retry budget).",
+        "optional": true
+      },
+      {
         "name": "filterSubagentMessages",
         "type": "boolean",
         "description": "When true, subagent messages are filtered from the main messages signal.",
@@ -1002,7 +1014,7 @@
   {
     "name": "AgentOptions",
     "kind": "interface",
-    "description": "Options for creating a LangGraph-backed agent via agent.",
+    "description": "",
     "properties": [
       {
         "name": "apiUrl",
@@ -1015,6 +1027,12 @@
         "type": "string",
         "description": "Agent or graph identifier on the LangGraph platform.",
         "optional": false
+      },
+      {
+        "name": "clientOptions",
+        "type": "LangGraphClientOptions",
+        "description": "Tuning options for the default transport's LangGraph SDK client (e.g. retry budget).",
+        "optional": true
       },
       {
         "name": "filterSubagentMessages",
@@ -1622,6 +1640,20 @@
         "type": "Signal<T>",
         "description": "Current agent state values (raw, typed per the type parameter T).",
         "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "LangGraphClientOptions",
+    "kind": "interface",
+    "description": "Tuning options for the underlying LangGraph SDK `Client` constructed by the\ndefault FetchStreamTransport. Ignored when a custom `transport` is\nsupplied (the transport owns its own client).",
+    "properties": [
+      {
+        "name": "maxRetries",
+        "type": "number",
+        "description": "How many times a failed request — including the initial stream connect —\nis retried with exponential backoff before the error surfaces. Maps to the\nSDK's `callerOptions.maxRetries`. Omitted → the SDK default (currently 4).\n\nSet `0` to fail fast: useful for e2e tests that force a connection failure\nand assert the error surfaces promptly, rather than after the full\nmulti-second backoff window.",
+        "optional": true
       }
     ],
     "examples": []
@@ -2319,14 +2351,20 @@
   {
     "name": "createLangGraphClient",
     "kind": "function",
-    "description": "Construct a LangGraph SDK Client that accepts both absolute URLs\n(`http://localhost:2024`) and relative `/api`-style paths that get\nproxied by middleware in production. The SDK itself rejects\nrelative URLs, so this helper rewrites them against\n`window.location.origin` when running in the browser.\n\nSingle source of truth for the absolute-URL rewrite — the streaming\ntransport (`fetch-stream.transport.ts`) and the threads adapter\n(`LangGraphThreadsAdapter`) both go through here.",
-    "signature": "createLangGraphClient(apiUrl: string): Client<>",
+    "description": "Construct a LangGraph SDK Client that accepts both absolute URLs\n(`http://localhost:2024`) and relative `/api`-style paths that get\nproxied by middleware in production. The SDK itself rejects\nrelative URLs, so this helper rewrites them against\n`window.location.origin` when running in the browser.\n\nSingle source of truth for the absolute-URL rewrite — the streaming\ntransport (`fetch-stream.transport.ts`) and the threads adapter\n(`LangGraphThreadsAdapter`) both go through here.\n\n`clientOptions.maxRetries` maps to the SDK's `callerOptions.maxRetries`,\nwhich governs how many times a failed request (including the initial\nstream connect) is retried with exponential backoff before the error\nsurfaces. Omitted → the SDK default (currently 4). Apps under test set\n`0` so a forced connection failure surfaces immediately instead of after\nthe full backoff window.",
+    "signature": "createLangGraphClient(apiUrl: string, clientOptions: LangGraphClientOptions): Client<>",
     "params": [
       {
         "name": "apiUrl",
         "type": "string",
         "description": "",
         "optional": false
+      },
+      {
+        "name": "clientOptions",
+        "type": "LangGraphClientOptions",
+        "description": "",
+        "optional": true
       }
     ],
     "returns": {
