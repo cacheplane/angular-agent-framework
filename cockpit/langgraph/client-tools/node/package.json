@@ -1,0 +1,19 @@
+{
+  "name": "cockpit-langgraph-client-tools-node",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "LangGraph.js client-tools backend — the TypeScript twin of ../python, built on @threadplane/middleware/langgraph.",
+  "scripts": {
+    "dev": "langgraphjs dev --port 5308 --no-browser"
+  },
+  "dependencies": {
+    "@langchain/core": "^1.1.49",
+    "@langchain/langgraph": "^1.4.2",
+    "@langchain/openai": "^1.4.7",
+    "@threadplane/middleware": "^0.0.1"
+  },
+  "devDependencies": {
+    "@langchain/langgraph-cli": "^1.3.1"
+  }
+}
