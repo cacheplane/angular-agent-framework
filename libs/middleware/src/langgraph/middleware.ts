@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-import type { ClientToolSpec, ClientToolsState, OpenAIFunctionTool } from './types';
+import type { ClientToolSpec, ClientToolsState, OpenAIFunctionTool } from './types.js';
 
 /** Read the catalog from state.tools, falling back to state.client_tools; drop nameless. */
 function catalog(state: ClientToolsState): ClientToolSpec[] {
@@ -20,7 +20,7 @@ export function clientToolNames(state: ClientToolsState): Set<string> {
   return new Set(catalog(state).map((t) => t.name));
 }
 
-import type { BaseMessage } from './types';
+import type { BaseMessage } from './types.js';
 
 interface ToolCallLike {
   name?: string;

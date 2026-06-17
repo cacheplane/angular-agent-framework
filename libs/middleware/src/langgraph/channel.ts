@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 import { Annotation } from '@langchain/langgraph';
-import type { ClientToolSpec } from './types';
+import type { ClientToolSpec } from './types.js';
 
 /**
  * State channels for the client-tools catalog. Spread into Annotation.Root so a graph
