@@ -1,0 +1,7 @@
+{
+  "graphs": {
+    "client-tools": "./src/graph.ts:graph"
+  },
+  "node_version": "20",
+  "env": ".env"
+}
