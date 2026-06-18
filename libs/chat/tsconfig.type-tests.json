@@ -1,18 +1,15 @@
 {
-  "extends": "./tsconfig.lib.json",
+  "extends": "./tsconfig.json",
   "compilerOptions": {
+    "outDir": "../../dist/out-tsc/type-tests",
     "noEmit": true,
-    "strict": true,
-    "strictFunctionTypes": true,
-    "skipLibCheck": true,
-    "types": [],
-    "inlineSources": false,
-    "declaration": false,
+    "composite": false,
     "declarationMap": false,
-    "noUnusedLocals": false
+    "emitDeclarationOnly": false,
+    "strict": true,
+    "noUnusedLocals": false,
+    "lib": ["es2022", "dom"],
+    "types": []
   },
-  "files": [],
-  "include": ["src/**/*.type-spec.ts"],
-  "exclude": ["src/**/*.spec.ts"],
-  "references": []
+  "include": ["src/**/*.type-spec.ts", "src/testing/type-assert.ts"]
 }

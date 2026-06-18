@@ -51,7 +51,7 @@
     "type-tests": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "npx tsc --noEmit -p libs/chat/tsconfig.type-tests.json"
+        "command": "npx tsc --project libs/chat/tsconfig.type-tests.json --noEmit"
       }
     }
   }

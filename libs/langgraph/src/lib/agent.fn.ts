@@ -36,6 +36,7 @@ import type { BagTemplate, InferBag } from '@langchain/langgraph-sdk';
 import type {
   AgentEvent,
   AgentCheckpoint,
+  AgentError,
   AgentInterrupt,
   AgentStatus,
   Message,
@@ -324,7 +325,10 @@ export function agent<
   // CD anyway.
   const rawMessages  = toSignal(messages$, { initialValue: [] as BaseMessage[] });
   const statusSig    = toSignal(status$,          { initialValue: ResourceStatus.Idle });
-  const errorSig     = toSignal(error$,           { initialValue: undefined as unknown });
+  // Cast justified: error$ accepts only AgentError | undefined (bridge catch normalizes all errors via
+  // toAgentError before calling next(); resetDerivedThreadState passes undefined). The BehaviorSubject
+  // is typed unknown to satisfy StreamSubjects<unknown> invariance at the subjects-bag assignment.
+  const errorSig     = toSignal(error$,           { initialValue: undefined }) as Signal<AgentError | undefined>;
   const hasValueSig  = toSignal(hasValue$,        { initialValue: false });
   const interruptSig = toSignal(interrupt$,       { initialValue: undefined });
   const interruptsSig= toSignal(interrupts$,      { initialValue: [] });
@@ -447,6 +451,12 @@ export function agent<
       return manager.submit(payload, request.options);
     },
     stop: () => manager.stop(),
+
+    retry: async () => {
+      if (isLoading()) return;          // no-op while a run is in flight
+      error$.next(undefined);           // clear the error before re-running
+      await manager.resubmitLast();
+    },
 
     clientTools: clientToolsCap,
 

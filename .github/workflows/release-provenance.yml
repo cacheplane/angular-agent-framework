@@ -7,6 +7,9 @@ on:
 permissions:
   contents: read
 
+env:
+  DO_NOT_TRACK: '1'
+
 jobs:
   build-artifacts:
     runs-on: ubuntu-latest
@@ -41,7 +44,7 @@ jobs:
       - name: Upload tarballs to the release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release upload "${{ github.event.release.tag_name }}" -- release-artifacts/*.tgz --clobber
+        run: gh release upload "${{ github.event.release.tag_name }}" --clobber -- release-artifacts/*.tgz
 
   provenance:
     needs: [build-artifacts]

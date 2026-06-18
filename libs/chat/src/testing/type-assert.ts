@@ -1,11 +1,20 @@
 // SPDX-License-Identifier: MIT
-/** Compile-time assertion helpers for *.type-spec.ts files (no runtime, no vitest dep). */
+/**
+ * Compile-time type-assertion helpers.
+ *
+ * Usage:
+ *   type _check = Expect<Equal<ActualType, ExpectedType>>;
+ *
+ * The assertion is enforced purely at compile time — no runtime code is emitted.
+ */
 
-/** Exact-type equality (invariant). `Equal<A, B>` is `true` iff A and B are identical. */
+/** Resolves to `true` only when A and B are mutually assignable (i.e. identical). */
 export type Equal<A, B> =
-  (<T>() => T extends A ? 1 : 2) extends (<T>() => T extends B ? 1 : 2) ? true : false;
+  (<T>() => T extends A ? 1 : 2) extends (<T>() => T extends B ? 1 : 2)
+    ? true
+    : false;
 
-/** Passes only when `T` is exactly `true`; otherwise a compile error. */
+/** Causes a compile error when T is not `true`. */
 export type Expect<T extends true> = T;
 
 /** True if `A` is assignable to `B`. */

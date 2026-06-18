@@ -8,11 +8,12 @@ describe('Agent interface', () => {
       messages: signal([]),
       status: signal('idle'),
       isLoading: signal(false),
-      error: signal(null),
+      error: signal(undefined),
       toolCalls: signal([]),
       state: signal({}),
       submit: async () => Promise.resolve(),
       stop: async () => Promise.resolve(),
+      retry: async () => Promise.resolve(),
     };
     expect(agent.status()).toBe('idle');
   });
@@ -22,13 +23,14 @@ describe('Agent interface', () => {
       messages: signal([]),
       status: signal('idle'),
       isLoading: signal(false),
-      error: signal(null),
+      error: signal(undefined),
       toolCalls: signal([]),
       state: signal({}),
       interrupt: signal(undefined),
       subagents: signal(new Map()),
       submit: async () => Promise.resolve(),
       stop: async () => Promise.resolve(),
+      retry: async () => Promise.resolve(),
     };
     expect(agent.interrupt?.()).toBeUndefined();
   });
