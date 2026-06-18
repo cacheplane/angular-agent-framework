@@ -20,6 +20,9 @@
   <a href="https://langchain-ai.github.io/langgraph/">
     <img alt="LangGraph" src="https://img.shields.io/badge/LangGraph-SDK-6C8EFF?labelColor=080B14&style=flat-square" />
   </a>
+  <a href="https://scorecard.dev/viewer/?uri=github.com/cacheplane/angular-agent-framework">
+    <img alt="OpenSSF Scorecard" src="https://api.scorecard.dev/projects/github.com/cacheplane/angular-agent-framework/badge" />
+  </a>
 </p>
 
 ---
