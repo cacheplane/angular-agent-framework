@@ -19,7 +19,7 @@ interface ApiMethod {
 
 interface ApiDocEntry {
   name: string;
-  kind: 'function' | 'class' | 'interface' | 'type';
+  kind: 'function' | 'class' | 'interface' | 'type' | 'const';
   description: string;
   signature?: string;
   params?: ApiParam[];
@@ -151,6 +151,10 @@ function reflectionToEntry(ref: any): ApiDocEntry | null {
 
   if (kind === ReflectionKind.TypeAlias) {
     return { name: ref.name, kind: 'type', description: desc, signature: extractType(ref.type), examples };
+  }
+
+  if (kind === ReflectionKind.Variable) {
+    return { name: ref.name, kind: 'const', description: desc, signature: extractType(ref.type), examples };
   }
 
   return null;

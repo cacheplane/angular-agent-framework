@@ -658,6 +658,48 @@
     "examples": []
   },
   {
+    "name": "RENDER_CONFIG",
+    "kind": "const",
+    "description": "",
+    "signature": "InjectionToken<RenderConfig>",
+    "examples": []
+  },
+  {
+    "name": "RENDER_CONTEXT",
+    "kind": "const",
+    "description": "",
+    "signature": "InjectionToken<RenderContext>",
+    "examples": []
+  },
+  {
+    "name": "RENDER_HOST",
+    "kind": "const",
+    "description": "",
+    "signature": "InjectionToken<RenderHost>",
+    "examples": []
+  },
+  {
+    "name": "RENDER_LIFECYCLE",
+    "kind": "const",
+    "description": "",
+    "signature": "InjectionToken<RenderLifecycle>",
+    "examples": []
+  },
+  {
+    "name": "REPEAT_SCOPE",
+    "kind": "const",
+    "description": "",
+    "signature": "InjectionToken<RepeatScope>",
+    "examples": []
+  },
+  {
+    "name": "VIEW_REGISTRY",
+    "kind": "const",
+    "description": "",
+    "signature": "InjectionToken<Readonly<Record<string, Type<unknown> | RenderViewEntry>>>",
+    "examples": []
+  },
+  {
     "name": "defineAngularRegistry",
     "kind": "function",
     "description": "",
