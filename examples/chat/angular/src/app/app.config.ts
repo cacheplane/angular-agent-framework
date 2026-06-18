@@ -2,8 +2,9 @@
 import { ApplicationConfig, provideBrowserGlobalErrorListeners, provideZonelessChangeDetection } from '@angular/core';
 import { provideRouter, withComponentInputBinding } from '@angular/router';
 import { provideThreadplaneTelemetry } from '@threadplane/telemetry/browser';
-import { LANGGRAPH_THREADS_CONFIG } from '@threadplane/langgraph';
+import { LANGGRAPH_THREADS_CONFIG, LANGGRAPH_CLIENT_OPTIONS } from '@threadplane/langgraph';
 import { provideChat } from '@threadplane/chat';
+import { e2eClientOptions } from './shell/e2e-overrides';
 import { routes } from './app.routes';
 import { environment } from '../environments/environment';
 
@@ -18,6 +19,12 @@ export const appConfig: ApplicationConfig = {
       provide: LANGGRAPH_THREADS_CONFIG,
       useValue: { apiUrl: environment.langGraphApiUrl },
     },
+    // Single source of truth for the SDK client retry budget — both the agent
+    // transport and the threads adapter read this. Production: e2eClientOptions()
+    // returns undefined → SDK default. Under e2e: the THREADPLANE_E2E_MAX_RETRIES
+    // localStorage flag → fail fast. useFactory runs at injection time (post-
+    // bootstrap), so the flag is readable.
+    { provide: LANGGRAPH_CLIENT_OPTIONS, useFactory: () => e2eClientOptions() },
     // Optional license token, populated from environment.license. When
     // unset (the default in main), @threadplane/chat runs in advisory mode and
     // logs a console.warn once. A smoke-test session can drop a real

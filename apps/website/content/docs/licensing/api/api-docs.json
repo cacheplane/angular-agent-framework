@@ -176,6 +176,13 @@
     "examples": []
   },
   {
+    "name": "LICENSE_PUBLIC_KEY",
+    "kind": "const",
+    "description": "Ed25519 public key baked into this build of `@threadplane/licensing`.",
+    "signature": "Uint8Array",
+    "examples": []
+  },
+  {
     "name": "emitNag",
     "kind": "function",
     "description": "",

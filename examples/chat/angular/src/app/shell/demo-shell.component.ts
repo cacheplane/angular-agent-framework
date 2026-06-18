@@ -34,7 +34,6 @@ import {
 import { PalettePersistence } from './palette-persistence.service';
 import { ProjectsService } from './projects.service';
 import { DEMO_AGENT } from './shell-tokens';
-import { e2eClientOptions } from './e2e-overrides';
 import { createCanonicalDemoRuntimeTelemetrySink } from './runtime-telemetry';
 import { environment } from '../../environments/environment';
 
@@ -87,17 +86,12 @@ function parseUrl(url: string): { mode: DemoMode; threadId: string | null } {
     // model selection — all per-instance. The telemetry sink delegates to the
     // shell-built sink (populated in the constructor) since the real sink needs
     // the injected telemetry service + live model() read.
-    // Factory form: the config is resolved lazily at injection time (when the
-    // AGENT singleton is first constructed), not at module-load. This matters
-    // for `clientOptions` below — the e2e flag in localStorage is only reliably
-    // readable once the app is running, after bootstrap.
-    provideAgent(DEMO_AGENT_REF, () => ({
+    // Typed via DEMO_AGENT_REF so injectAgent(DEMO_AGENT_REF) returns a
+    // LangGraphAgent<DemoState>. Static config: client retry options are
+    // single-sourced in the adapter, so no lazy factory is needed here.
+    provideAgent(DEMO_AGENT_REF, {
       apiUrl: environment.langGraphApiUrl,
       assistantId: environment.assistantId,
-      // Production keeps the SDK's default connect-retry budget. e2e specs that
-      // force a connection failure set localStorage['THREADPLANE_E2E_MAX_RETRIES']
-      // so the error surfaces immediately instead of after the backoff window.
-      ...(e2eClientOptions() ? { clientOptions: e2eClientOptions() } : {}),
       threadId: threadIdState,
       onThreadId: (id: string) => {
         // The signal→URL effect picks this up and stamps the new id
@@ -110,7 +104,7 @@ function parseUrl(url: string): { mode: DemoMode; threadId: string | null } {
       // resulting tools:<id>-namespaced stream events.
       subagentToolNames: ['research'],
       telemetry: (event) => telemetrySink?.(event),
-    })),
+    }),
     { provide: DEMO_AGENT, useFactory: () => inject(DemoShell).agent },
   ],
 })

@@ -369,6 +369,13 @@
     "examples": []
   },
   {
+    "name": "PERSONAL_EMAIL_DOMAINS",
+    "kind": "const",
+    "description": "",
+    "signature": "ReadonlySet<string>",
+    "examples": []
+  },
+  {
     "name": "getEmailDomain",
     "kind": "function",
     "description": "",
