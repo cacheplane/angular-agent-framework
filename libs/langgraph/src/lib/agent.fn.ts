@@ -415,7 +415,7 @@ export function agent<
     isLoading,
     error:     errorSig,
     toolCalls: toolCallsNeutral,
-    state:     stateNeutral,
+    state:     stateNeutral as Signal<T>,
     interrupt: interruptNeutral,
     subagents: subagentsNeutral,
     events$,
