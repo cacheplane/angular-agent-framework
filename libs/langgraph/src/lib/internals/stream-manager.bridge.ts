@@ -155,7 +155,7 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
     subjects.toolCalls$.next([]);
     subjects.messageMetadata$.next(new Map());
     subjects.subagents$.next(new Map());
-    void cancelQueueEntries(takeQueuedRuns()).catch(err => subjects.error$.next(err));
+    void cancelQueueEntries(takeQueuedRuns()).catch(err => subjects.error$.next(toAgentError(err)));
     publishQueue();
     subjects.custom$.next([]);
     subjects.isThreadLoading$.next(false);
@@ -240,7 +240,7 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
       }
     } catch (err) {
       if (!controller.signal.aborted && (err as Error)?.name !== 'AbortError') {
-        subjects.error$.next(err);
+        subjects.error$.next(toAgentError(err));
       }
     } finally {
       if (historyAbortController === controller) {
@@ -363,7 +363,7 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
         });
       }
     } catch (err) {
-      subjects.error$.next(err);
+      subjects.error$.next(toAgentError(err));
       subjects.status$.next(ResourceStatus.Error);
       captureAgentRuntimeTelemetry(options.telemetry, 'ngaf:stream_errored', {
         ...telemetryProperties,
@@ -446,11 +446,21 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
       if (isAbortError(err) && userAbortRequested) {
         // User explicitly called stop() — treat as graceful idle, not an error.
         subjects.status$.next(ResourceStatus.Idle);
-      } else {
-        const e = (streamingStarted && isAbortError(err))
+      } else if (isAbortError(err)) {
+        // A non-user-requested abort: interrupted if a stream had started, else a
+        // connect-phase failure. Never "aborted" (that's reserved for user stop).
+        const e = streamingStarted
           ? new AgentError({ kind: 'interrupted', message: 'The response was interrupted. Try again.', retryable: true, cause: err })
-          : toAgentError(err);
+          : new AgentError({ kind: 'connection', message: "Can't reach the server. Check your connection and try again.", retryable: true, cause: err });
         subjects.error$.next(e);
+        subjects.status$.next(ResourceStatus.Error);
+        captureAgentRuntimeTelemetry(options.telemetry, 'ngaf:stream_errored', {
+          ...telemetryProperties,
+          durationMs: Date.now() - startedAt,
+          errorClass: agentRuntimeTelemetryErrorClass(err),
+        });
+      } else {
+        subjects.error$.next(toAgentError(err));
         subjects.status$.next(ResourceStatus.Error);
         captureAgentRuntimeTelemetry(options.telemetry, 'ngaf:stream_errored', {
           ...telemetryProperties,
@@ -592,7 +602,7 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
         break;
       }
       case 'error':
-        subjects.error$.next(event['error']);
+        subjects.error$.next(toAgentError(event['error']));
         subjects.status$.next(ResourceStatus.Error);
         break;
       case 'interrupt':
@@ -791,7 +801,7 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
           durationMs: Date.now() - startedAt,
         });
       } catch (err) {
-        subjects.error$.next(err);
+        subjects.error$.next(toAgentError(err));
         subjects.status$.next(ResourceStatus.Error);
         captureAgentRuntimeTelemetry(options.telemetry, 'ngaf:stream_errored', {
           ...telemetryProperties,

@@ -4,6 +4,7 @@ import { createStreamManagerBridge } from './stream-manager.bridge';
 import { MockAgentTransport } from '../transport/mock-stream.transport';
 import { ResourceStatus, AgentTransport, StreamSubjects, CustomStreamEvent, StreamEvent } from '../agent.types';
 import type { AgentRuntimeTelemetryPayload } from '@threadplane/chat';
+import { AgentError } from '@threadplane/chat';
 import type { ThreadState } from '@langchain/langgraph-sdk';
 import { of } from 'rxjs';
 import { readFileSync } from 'node:fs';
@@ -779,6 +780,39 @@ describe('createStreamManagerBridge', () => {
     expect(subjects.status$.value).toBe(ResourceStatus.Idle);
     // No error published
     expect(subjects.error$.value).toBeUndefined();
+    destroy$.next();
+  });
+
+  it('classifies a non-user AbortError thrown BEFORE streaming as connection (kind:connection, retryable:true)', async () => {
+    // Simulate an SDK that surfaces a connect-phase failure as an AbortError-like
+    // error (name === 'AbortError') even though the user never called stop().
+    // The bridge must NOT classify this as 'aborted' (user stop) — it must
+    // classify it as 'connection' because streamingStarted is false.
+    const connectFailure = new Error('Connection timed out');
+    connectFailure.name = 'AbortError';
+
+    const transport: AgentTransport = {
+      async *stream() {
+        yield* []; // required by require-yield; yields nothing, so streamingStarted stays false
+        throw connectFailure; // throws before any event is processed
+      },
+    };
+    const subjects = makeSubjects();
+    const destroy$ = new Subject<void>();
+    const bridge = createStreamManagerBridge({
+      options: { apiUrl: '', assistantId: 'test', transport },
+      subjects,
+      threadId$: of('thread-1'),
+      destroy$: destroy$.asObservable(),
+    });
+
+    await bridge.submit({});
+
+    expect(subjects.status$.value).toBe(ResourceStatus.Error);
+    const err = subjects.error$.value;
+    expect(err).toBeInstanceOf(AgentError);
+    expect((err as AgentError).kind).toBe('connection');
+    expect((err as AgentError).retryable).toBe(true);
     destroy$.next();
   });
 
