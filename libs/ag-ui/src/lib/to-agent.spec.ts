@@ -677,4 +677,21 @@ describe('subagents transcript projection (F5-transcript)', () => {
     expect(sa?.messages()).toEqual([{ id: 'sub-1', role: 'assistant', content: 'partial' }]);
     expect(sa?.toolCalls!()).toEqual([]);
   });
+
+  it('coerces role:"tool" to role:"assistant" in subagent message projection', () => {
+    // Regression guard: a buggy/future emitter putting role:'tool' in messages[]
+    // must not leak into the rendered subagent card — the subagent transcript is
+    // assistant turns only; tool/system/user don't belong there.
+    const source = new StubAgent();
+    const agent = toAgent(source as never);
+    source.emit(snapshotWithContent('tc-1', {
+      status: 'running',
+      messages: [{ id: 'm1', role: 'tool', content: 'leak', toolCallIds: [] }],
+    }) as never);
+    const sa = agent.subagents!().get('tc-1');
+    expect(sa?.messages()[0].role).toBe('assistant');
+    // Content and id must pass through unchanged.
+    expect(sa?.messages()[0].content).toBe('leak');
+    expect(sa?.messages()[0].id).toBe('m1');
+  });
 });
