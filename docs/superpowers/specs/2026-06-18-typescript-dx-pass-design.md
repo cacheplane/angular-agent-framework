@@ -204,15 +204,37 @@ Whole existing unit suites stay green; one example app is built to confirm lib s
 - `libs/ag-ui/src/lib/provide-agent.ts`, `to-agent.ts`, `public-api.ts` — genericize `AgUiAgent<T>`, ref overloads.
 - JSDoc across all the above hero exports.
 - `*.type-spec.ts` + `tsconfig.type-tests.json` in `libs/chat`, `libs/langgraph` (+ project.json target wiring).
-- Docs/examples updated to the new signatures (`tools` typed registry, `view/ask` generic, `createAgentRef` usage). Examples keep their current `strict` setting; the type-test gate is the strict-mode guard.
+- **Tier-1 forcing-function apps flipped to `strict: true` and migrated to the typed APIs:** `cockpit/ag-ui/client-tools/angular`, `cockpit/langgraph/client-tools/angular`, `examples/ag-ui/angular` (tsconfig + the `client-tools*.ts` / `app.config.ts` call sites + the view/ask component input types). Fallout fixed in example code.
+- **Tier-2 representative migrations** to `createAgentRef` typed state: `examples/chat/angular` + one `cockpit/langgraph/*` + one `cockpit/chat/*`.
+- Docs updated to the new signatures (`tools` typed registry, `view/ask` generic, `createAgentRef` usage).
 
 ## Testing strategy
 
-TDD via WS5: write the failing strict type-test, then make it pass. Each workstream's type-spec is its acceptance gate. Existing vitest suites (render, chat, langgraph, ag-ui) must stay green. Build one example app (e.g. `examples-chat-angular`) to confirm lib source still compiles in an app context.
+TDD via WS5: write the failing strict type-test, then make it pass. Each workstream's type-spec is its acceptance gate. Existing vitest suites (render, chat, langgraph, ag-ui) must stay green.
+
+### Validation via examples (forcing functions) — required, thorough
+
+The unit type-tests are necessary but not sufficient: the critical bug survived precisely because every example compiles with `strict: false`. The real, non-negotiable acceptance gate is that the **cockpit examples and the canonical `langgraph` + `ag-ui` examples**, compiled the way a real consumer compiles, exercise the new typed APIs and pass. Four tiers:
+
+**Tier 1 — typed-API migration + full `strict: true` (deep forcing functions).** Migrate and flip these apps to `strict: true`, fixing any fallout in the example code:
+- `cockpit/ag-ui/client-tools/angular`
+- `cockpit/langgraph/client-tools/angular`
+- `examples/ag-ui/angular` (the canonical itinerary demo — uses `tools/view/ask` + `provideAgent`/`injectAgent`)
+
+Each is migrated to: a typed `tools({...})` registry; generic `view`/`ask` paired with components whose signal inputs match the schema output (WS2 linkage actively exercised, including at least one intentionally-correct non-trivial schema↔component pair); and `createAgentRef<TState>()` for typed agent state. Compiled under full `strict: true`, these reproduce exactly how an Angular CLI consumer builds — so if WS1/WS2/WS3 regress, these apps fail to compile.
+
+**Tier 2 — build-regression net (proves WS3 genericization is non-breaking).** All ~35 cockpit + canonical apps that call `provideAgent`/`injectAgent` must still build green on their existing settings (the `Agent<TState = Record<string, unknown>>` default must keep them untouched). Run `nx run-many -t build` across every affected angular project. Additionally migrate `examples/chat/angular` and one representative `cockpit/langgraph/*` and `cockpit/chat/*` app to `createAgentRef` typed state as extra forcing functions.
+
+**Tier 3 — live smoke (runtime correctness).** Per the live-LLM-smoke gate, serve with a real key and drive: both client-tools apps (`cockpit/ag-ui/client-tools`, `cockpit/langgraph/client-tools`), the canonical `examples/ag-ui` itinerary, and `examples/chat`. Confirm the typed-API changes did not alter runtime behavior — tool flows complete, zero console errors. (Type changes are erased at runtime, but the migrations touch real call sites, so this guards against accidental behavioral edits.)
+
+**Tier 4 — type-test gate (WS5).** The hand-rolled `strict:true` type-spec files remain the fast unit-level guard that runs in CI on every change.
+
+A workstream is "done" only when its Tier-1 forcing-function apps compile under `strict: true`, the Tier-2 build net is green, and (for the client-tools/canonical apps) the Tier-3 live smoke passes.
 
 ## Risks & decisions
 
-- **`Agent<TState>` genericization (WS3) is the highest-surface change.** The `= Record<string, unknown>` default contains the ripple, but it touches the shared contract and both adapters. Accepted as in-scope (comprehensive spec); WS3 is the natural split point if it later needs to be de-risked into its own PR.
+- **`Agent<TState>` genericization (WS3) is the highest-surface change.** The `= Record<string, unknown>` default contains the ripple, but it touches the shared contract and both adapters. The Tier-2 build net (all ~35 `provideAgent`/`injectAgent` apps building green on their existing settings) is the explicit proof that the default truly contains it. Accepted as in-scope (comprehensive spec); WS3 is the natural split point if it later needs to be de-risked into its own PR.
+- **Flipping Tier-1 apps to full `strict: true` may surface unrelated example-code issues** (implicit `any`, etc.) beyond the typed-API changes. These are fixed in the example code as part of the migration; if the fallout in any one app proves disproportionate, fall back to enabling `strictFunctionTypes: true` alone (the exact flag that masked the bug) for that app and note it.
 - **`const` type parameter on `tools()`** requires TypeScript ≥ 5.0; the repo is well past that.
 - **The `view`/`ask` `never`/error-tuple constraint** must keep `ViewToolDef`/`AskToolDef` assignable to `AnyClientToolDef` so `tools({...})` still accepts views/asks — covered by a WS5 type-test.
 
