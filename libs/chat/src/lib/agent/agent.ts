@@ -9,6 +9,7 @@ import type { Subagent } from './subagent';
 import type { AgentEvent } from './agent-event';
 import type { AgentSubmitInput, AgentSubmitOptions } from './agent-submit';
 import type { ClientToolsCapability } from '../client-tools/client-tools-capability';
+import type { AgentError } from './agent-error';
 
 /**
  * Runtime-neutral contract chat primitives consume.
@@ -28,13 +29,17 @@ export interface Agent {
   messages:  Signal<Message[]>;
   status:    Signal<AgentStatus>;
   isLoading: Signal<boolean>;
-  error:     Signal<unknown>;
+  error:     Signal<AgentError | undefined>;
   toolCalls: Signal<ToolCall[]>;
   state:     Signal<Record<string, unknown>>;
 
   // Actions
   submit: (input: AgentSubmitInput, opts?: AgentSubmitOptions) => Promise<void>;
   stop:   () => Promise<void>;
+
+  /** Re-run the last submitted input after a failure. No-op if a run is already
+   *  in flight or there is nothing to retry. Clears `error` and sets loading. */
+  retry: () => Promise<void>;
 
   /**
    * Discards the assistant message at the given index AND all messages after
