@@ -7,6 +7,9 @@ on:
 permissions:
   contents: read
 
+env:
+  DO_NOT_TRACK: '1'
+
 jobs:
   build-artifacts:
     runs-on: ubuntu-latest
