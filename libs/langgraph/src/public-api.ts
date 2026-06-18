@@ -55,6 +55,7 @@ export { extractCitations } from './lib/internals/extract-citations';
 // SDK Client helper — handles the SDK's absolute-URL requirement so
 // `/api`-style relative paths work in browser contexts.
 export { createLangGraphClient, toAbsoluteApiUrl } from './lib/client/create-langgraph-client';
+export { LANGGRAPH_CLIENT_OPTIONS } from './lib/client/client-options';
 
 // SDK-backed thread store — drop-in replacement for the
 // hand-rolled ThreadsService that consumers used to duplicate.
