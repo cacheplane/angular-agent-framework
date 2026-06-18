@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: MIT
 import type { Type } from '@angular/core';
 import type { StandardSchemaV1, StandardSchemaInferOutput } from '@threadplane/render';
-import type { ClientToolDef, ClientToolRegistry, FunctionToolDef } from './tool-def';
+import type { ClientToolDef, FunctionToolDef } from './tool-def';
 
 /** Async function tool — its resolved return value becomes the tool result. */
-export function action<S extends StandardSchemaV1>(
+export function action<S extends StandardSchemaV1, R>(
   description: string,
   schema: S,
-  handler: (args: StandardSchemaInferOutput<S>) => unknown | Promise<unknown>,
-): FunctionToolDef<S> {
+  handler: (args: StandardSchemaInferOutput<S>) => R | Promise<R>,
+): FunctionToolDef<S, R> {
   return { kind: 'function', description, schema, handler };
 }
 
@@ -22,7 +22,8 @@ export function ask(description: string, schema: StandardSchemaV1, component: Ty
   return { kind: 'ask', description, schema, component };
 }
 
-/** Collect named client tools into a frozen registry (the key is the tool name). */
-export function tools(map: Record<string, ClientToolDef>): ClientToolRegistry {
+/** Collect named client tools into a frozen registry (the key is the tool name).
+ *  Generic + `const` over the map so per-tool types and literal keys survive. */
+export function tools<const M extends Record<string, ClientToolDef>>(map: M): Readonly<M> {
   return Object.freeze({ ...map });
 }
