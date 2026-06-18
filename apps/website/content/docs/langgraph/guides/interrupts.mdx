@@ -491,10 +491,10 @@ type DeployBag = BagTemplate & {
   InterruptType: DeployApproval;
 };
 
-// createAgentRef accepts the BagTemplate as its second generic
-export const TYPED_DEPLOY_AGENT = createAgentRef<DeployState, DeployBag>('approval_agent');
+// The ref carries the state shape; pass the BagTemplate at the inject site.
+export const TYPED_DEPLOY_AGENT = createAgentRef<DeployState>('approval_agent');
 
-const agent = injectAgent(TYPED_DEPLOY_AGENT);
+const agent = injectAgent<DeployState, DeployBag>(TYPED_DEPLOY_AGENT);
 
 const raw = agent.langGraphInterrupts();
 //    ^? Interrupt<DeployApproval>[]
