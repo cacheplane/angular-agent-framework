@@ -34,6 +34,12 @@
         "optional": false
       },
       {
+        "name": "entry",
+        "type": "Signal<NormalizedEntry | undefined>",
+        "description": "The full normalized registry entry for this element type.",
+        "optional": false
+      },
+      {
         "name": "filteredRepeatInputs",
         "type": "Signal<Record<string, unknown>[]>",
         "description": "`repeatInputs` filtered per-item to declared component inputs.",
@@ -60,7 +66,7 @@
       {
         "name": "notReady",
         "type": "Signal<boolean>",
-        "description": "True when ANY resolved prop value is undefined (i.e. a state\n binding points at a path the store hasn't populated). Framework-\n injected keys (bindings, emit, loading, childKeys, spec) are\n excluded — only consumer-resolved props matter for readiness.",
+        "description": "True when the element is not yet ready to mount the real component.\n Delegates to `isElementReady` which checks:\n 1. Any undefined-valued resolved prop (state binding still loading).\n 2. A sync Standard-Schema gate if the registry entry declares a schema.\n Framework-injected keys (bindings, emit, loading, childKeys, spec) are\n excluded — only consumer-resolved props matter for readiness.",
         "optional": false
       },
       {
@@ -221,22 +227,9 @@
     "properties": [],
     "methods": [
       {
-        "name": "get",
-        "signature": "get(name: string): AngularComponentRenderer | undefined",
-        "description": "",
-        "params": [
-          {
-            "name": "name",
-            "type": "string",
-            "description": "",
-            "optional": false
-          }
-        ]
-      },
-      {
-        "name": "getFallback",
-        "signature": "getFallback(name: string): AngularComponentRenderer | undefined",
-        "description": "Returns the configured fallback for a registered name, OR the\nlib's default fallback if the entry omits one, OR undefined if\nthe name is not registered.",
+        "name": "getEntry",
+        "signature": "getEntry(name: string): NormalizedEntry | undefined",
+        "description": "The full normalized entry for a registered name, or undefined. The single\naccessor — component, fallback, schema, and description all hang off it.",
         "params": [
           {
             "name": "name",
@@ -583,7 +576,7 @@
       {
         "name": "schema",
         "type": "StandardSchemaV1<unknown, unknown>",
-        "description": "Optional props contract for this component (Zod/Valibot/ArkType via\nStandard Schema). Carried + exposed by the render lib but NOT enforced\non mount; consumers (e.g. client-tools) read it to advertise the\ncomponent to a model and to validate incoming props.",
+        "description": "Optional props contract for this component (Zod/Valibot/ArkType via\nStandard Schema). Enforced as a MOUNT-READINESS GATE: while a streaming\ntool call's props do not yet validate against this schema, the element's\nfallback is shown instead of the real component (sync validation only).\nConsumers (e.g. client-tools) also read it to advertise the component\nto a model and to validate incoming props.",
         "optional": true
       }
     ],

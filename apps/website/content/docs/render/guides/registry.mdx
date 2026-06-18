@@ -21,17 +21,16 @@ export const uiRegistry = defineAngularRegistry({
 });
 ```
 
-The returned `AngularRegistry` object has three methods:
+The returned `AngularRegistry` object has two methods:
 
-- `get(name: string)` -- returns the component class for the given type name, or `undefined` if not registered
-- `getFallback(name: string)` -- returns the configured fallback renderer for a registered name -- the entry's own `fallback`, or the library's default fallback if the entry omits one, or `undefined` if the name isn't registered
+- `getEntry(name: string)` -- returns the fully-normalized entry (`{ component, fallback, schema?, description? }`) for a registered name, or `undefined` if not registered. The resolved `fallback` is the entry's own renderer, or the library's default when the entry omits one.
 - `names()` -- returns an array of all registered type names
 
 ```typescript
-uiRegistry.get('Text');         // TextComponent
-uiRegistry.get('Unknown');      // undefined
-uiRegistry.getFallback('Text'); // fallback renderer (or default)
-uiRegistry.names();             // ['Text', 'Card', 'Button', 'Container']
+uiRegistry.getEntry('Text')?.component; // TextComponent
+uiRegistry.getEntry('Unknown');         // undefined
+uiRegistry.getEntry('Text')?.fallback;  // fallback renderer (or default)
+uiRegistry.names();                     // ['Text', 'Card', 'Button', 'Container']
 ```
 
 ### Fallback Rendering
