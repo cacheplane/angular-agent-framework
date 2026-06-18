@@ -53,7 +53,7 @@ function agentRuntimeTelemetryErrorClass(error: unknown): string {
  * live a2ui streaming) and the optional `clientTools` capability.
  * Mirrors langgraph's LangGraphAgent extension.
  */
-export interface AgUiAgent extends Agent {
+export interface AgUiAgent<TState = Record<string, unknown>> extends Agent<TState> {
   customEvents: Signal<CustomStreamEvent[]>;
   clientTools: ClientToolsCapability;
   /** Subagent activities (activityType==='subagent') projected to the neutral
