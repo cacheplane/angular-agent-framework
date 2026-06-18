@@ -2,23 +2,23 @@
   "fixtures": [
     {
       "match": {
-        "userMessage": "Research the Louvre and summarize",
+        "userMessage": "Research Angular signals and summarize",
         "hasToolResult": true
       },
       "response": {
-        "content": "Here's what I found about the Louvre: it's a major Paris museum and one of the most visited in the world, opened in the late 18th century and home to tens of thousands of works across many collections. Let me know if you'd like detail on a particular wing or era."
+        "content": "Here's what the research subagent found about Angular signals: they are a fine-grained reactivity primitive — a signal holds a value, computed() derives from other signals, and effect() reacts to changes, all without manual subscriptions. Let me know if you'd like a code example."
       }
     },
     {
       "match": {
-        "userMessage": "Research the Louvre and summarize"
+        "userMessage": "Research Angular signals and summarize"
       },
       "response": {
         "toolCalls": [
           {
             "name": "research",
             "arguments": {
-              "topic": "the Louvre",
+              "topic": "Angular signals",
               "subagent_type": "research"
             }
           }
@@ -27,10 +27,29 @@
     },
     {
       "match": {
-        "userMessage": "Topic: the Louvre"
+        "userMessage": "Topic: Angular signals",
+        "systemMessage": "Do NOT call any more tools",
+        "hasToolResult": true
       },
       "response": {
-        "content": "The Louvre opened in 1793 and holds about 35,000 works."
+        "content": "Angular signals are a fine-grained reactivity primitive. A signal holds a value, computed() derives from other signals, and effect() reacts to changes — all without manual subscriptions or zone.js. This makes change detection more precise and is the foundation for zoneless Angular."
+      }
+    },
+    {
+      "match": {
+        "userMessage": "Topic: Angular signals",
+        "systemMessage": "Call `lookup` exactly once",
+        "hasToolResult": false
+      },
+      "response": {
+        "toolCalls": [
+          {
+            "name": "lookup",
+            "arguments": {
+              "query": "Angular signals"
+            }
+          }
+        ]
       }
     }
   ]
