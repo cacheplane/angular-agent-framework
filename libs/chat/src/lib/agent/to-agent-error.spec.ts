@@ -41,4 +41,27 @@ describe('toAgentError', () => {
     const e = toAgentError({ status: 503, message: 'Service Unavailable' });
     expect(e.kind).toBe('server'); expect(e.status).toBe(503); expect(e.retryable).toBe(true);
   });
+
+  // NEW: bare 3-digit tokens in model names must NOT yield a bogus status
+  it('does NOT extract status from a bare 3-digit model version string', () => {
+    const e = toAgentError(new Error('model gpt-500 is not available'));
+    expect(e.kind).toBe('server');
+    expect(e.retryable).toBe(true);
+    expect(e.status).toBeUndefined();
+  });
+
+  // NEW: connection detection must fire BEFORE loose text parsing
+  it('classifies "Failed to fetch (502 upstream)" as connection, not server', () => {
+    const e = toAgentError(new TypeError('Failed to fetch (502 upstream)'));
+    expect(e.kind).toBe('connection');
+    expect(e.retryable).toBe(true);
+  });
+
+  // NEW: structured cause.status path
+  it('reads structured status via cause.status', () => {
+    const e = toAgentError({ cause: { status: 403 } });
+    expect(e.kind).toBe('auth');
+    expect(e.status).toBe(403);
+    expect(e.retryable).toBe(false);
+  });
 });

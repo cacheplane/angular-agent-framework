@@ -20,7 +20,7 @@ import type {
   AgentRuntimeTelemetryProperties,
   AgentRuntimeTelemetrySink,
 } from '@threadplane/chat';
-import { AgentError, toAgentError, isAbortError } from '@threadplane/chat';
+import { AgentError, AGENT_ERROR_MESSAGES, toAgentError, isAbortError } from '@threadplane/chat';
 import {
   SubagentTracker,
   TrackedSubagent,
@@ -450,8 +450,8 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
         // A non-user-requested abort: interrupted if a stream had started, else a
         // connect-phase failure. Never "aborted" (that's reserved for user stop).
         const e = streamingStarted
-          ? new AgentError({ kind: 'interrupted', message: 'The response was interrupted. Try again.', retryable: true, cause: err })
-          : new AgentError({ kind: 'connection', message: "Can't reach the server. Check your connection and try again.", retryable: true, cause: err });
+          ? new AgentError({ kind: 'interrupted', message: AGENT_ERROR_MESSAGES.interrupted, retryable: true, cause: err })
+          : new AgentError({ kind: 'connection', message: AGENT_ERROR_MESSAGES.connection, retryable: true, cause: err });
         subjects.error$.next(e);
         subjects.status$.next(ResourceStatus.Error);
         captureAgentRuntimeTelemetry(options.telemetry, 'ngaf:stream_errored', {

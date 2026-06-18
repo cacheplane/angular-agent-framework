@@ -2,7 +2,7 @@
 import { computed, signal, type Signal } from '@angular/core';
 import { Subject } from 'rxjs';
 import type { AbstractAgent } from '@ag-ui/client';
-import { toAgentError, type AgentError } from '@threadplane/chat';
+import { toAgentError, isAbortError, type AgentError } from '@threadplane/chat';
 import type {
   Agent, Message, AgentStatus, ToolCall, AgentEvent,
   AgentInterrupt,
@@ -108,11 +108,6 @@ export function toAgent(source: AbstractAgent, options: ToAgentOptions = {}): Ag
   // Tracks the last AgentSubmitInput so retry() can re-run it without
   // duplicating the user message. Set at the top of submit()'s message path.
   let lastInput: AgentSubmitInput | undefined;
-
-  function isAbortError(error: unknown): boolean {
-    return error instanceof Error
-      && (error.name === 'AbortError' || /abort/i.test(error.message));
-  }
 
   /** Settles the store as idle for stop()-induced failures; returns true if handled. */
   function settleIfAborted(error: unknown): boolean {
