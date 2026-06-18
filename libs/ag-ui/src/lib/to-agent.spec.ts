@@ -3,7 +3,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { Observable, Subject } from 'rxjs';
 import type { AbstractAgent, BaseEvent } from '@ag-ui/client';
 import type { RunAgentInput } from '@ag-ui/core';
-import type { AgentRuntimeTelemetryPayload } from '@threadplane/chat';
+import { AgentError, type AgentRuntimeTelemetryPayload } from '@threadplane/chat';
 import { toAgent } from './to-agent';
 
 /**
@@ -197,7 +197,7 @@ describe('toAgent', () => {
     stub.failRun(new Error('something went wrong'));
     expect(a.status()).toBe('error');
     expect(a.isLoading()).toBe(false);
-    expect(a.error()).toBeInstanceOf(Error);
+    expect(a.error()).toBeInstanceOf(AgentError);
   });
 
   it('does not append user message when input.message is undefined', async () => {
@@ -293,7 +293,7 @@ describe('toAgent', () => {
       await pending;
 
       expect(agent.status()).toBe('idle');
-      expect(agent.error()).toBeNull();
+      expect(agent.error()).toBeUndefined();
       expect(agent.isLoading()).toBe(false);
     });
 
@@ -317,7 +317,7 @@ describe('toAgent', () => {
       await pending;
 
       expect(agent.status()).toBe('idle');
-      expect(agent.error()).toBeNull();
+      expect(agent.error()).toBeUndefined();
       expect(agent.isLoading()).toBe(false);
     });
 
@@ -343,7 +343,7 @@ describe('toAgent', () => {
 
       // Duplicate delivery must NOT flip status back to error
       expect(agent.status()).toBe('idle');
-      expect(agent.error()).toBeNull();
+      expect(agent.error()).toBeUndefined();
       expect(agent.isLoading()).toBe(false);
     });
 
@@ -388,7 +388,7 @@ describe('toAgent', () => {
 
       // Run A settled: idle, no error.
       expect(agent.status()).toBe('idle');
-      expect(agent.error()).toBeNull();
+      expect(agent.error()).toBeUndefined();
 
       // There must be an assistant message at index 1 (user[0], assistant[1]).
       expect(agent.messages()).toHaveLength(2);
@@ -416,7 +416,7 @@ describe('toAgent', () => {
 
       // CRITICAL: must NOT be wedged in streaming/running/isLoading.
       expect(agent.status()).toBe('idle');
-      expect(agent.error()).toBeNull();
+      expect(agent.error()).toBeUndefined();
       expect(agent.isLoading()).toBe(false);
     });
   });
@@ -497,6 +497,79 @@ describe('toAgent', () => {
       if (a2.messages().slice(0, idx).every(m => m.role !== 'user')) {
         await expect(a2.regenerate(idx)).rejects.toThrow(/No user message/);
       }
+    });
+  });
+
+  describe('error normalization + retry()', () => {
+    it('onRunFailed with a non-abort error sets error() to AgentError with kind server for HTTP 500', () => {
+      const stub = new StubAgent();
+      const a = toAgent(stub as unknown as AbstractAgent);
+      const serverError = new Error('HTTP 500 Internal Server Error');
+      stub.failRun(serverError);
+      expect(a.status()).toBe('error');
+      const err = a.error();
+      expect(err).toBeInstanceOf(AgentError);
+      expect(err?.kind).toBe('server');
+    });
+
+    it('user-abort settles idle with error() undefined (not an AgentError)', async () => {
+      const source = new StubAgent();
+      let resolveRun!: () => void;
+      source.runAgent.mockImplementation(
+        () => new Promise((res) => {
+          resolveRun = () => res({ result: undefined, newMessages: [] });
+        }),
+      );
+      const agent = toAgent(source as never);
+      const pending = agent.submit({ message: 'test' });
+      await agent.stop!();
+      source.failRun(new Error('BodyStreamBuffer was aborted'));
+      resolveRun();
+      await pending;
+      expect(agent.status()).toBe('idle');
+      expect(agent.error()).toBeUndefined();
+    });
+
+    it('retry() clears error and re-runs via source.runAgent without adding a new user message', async () => {
+      const stub = new StubAgent();
+      const a = toAgent(stub as unknown as AbstractAgent);
+
+      // Initial submit appends a user message and runs.
+      await a.submit({ message: 'hello' });
+      const countAfterSubmit = a.messages().length;
+      expect(stub.runAgent).toHaveBeenCalledTimes(1);
+
+      // Simulate a failure.
+      stub.failRun(new Error('HTTP 503 Service Unavailable'));
+      expect(a.error()).toBeInstanceOf(AgentError);
+
+      // Retry: should clear error and call runAgent again, no new user message.
+      await a.retry();
+      expect(a.error()).toBeUndefined();
+      expect(stub.runAgent).toHaveBeenCalledTimes(2);
+      // Message count must be unchanged — no duplicate user message appended.
+      expect(a.messages().length).toBe(countAfterSubmit);
+      // addMessage must NOT have been called again during retry.
+      expect(stub.addMessage).toHaveBeenCalledTimes(1);
+    });
+
+    it('retry() is a no-op when loading', () => {
+      const stub = new StubAgent();
+      const a = toAgent(stub as unknown as AbstractAgent);
+      // Simulate a run in progress.
+      stub.emit({ type: 'RUN_STARTED' } as BaseEvent);
+      expect(a.isLoading()).toBe(true);
+      void a.retry();
+      // runAgent should NOT have been called (nothing submitted, and loading guard).
+      expect(stub.runAgent).not.toHaveBeenCalled();
+    });
+
+    it('retry() is a no-op when no prior input exists', async () => {
+      const stub = new StubAgent();
+      const a = toAgent(stub as unknown as AbstractAgent);
+      // No submit() has been called — lastInput is undefined.
+      await a.retry();
+      expect(stub.runAgent).not.toHaveBeenCalled();
     });
   });
 });

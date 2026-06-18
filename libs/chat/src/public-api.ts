@@ -34,7 +34,12 @@ export {
   isAssistantMessage,
   isToolMessage,
   isSystemMessage,
+  AgentError,
+  AGENT_ERROR_MESSAGES,
+  toAgentError,
+  isAbortError,
 } from './lib/agent';
+export type { AgentErrorKind } from './lib/agent';
 
 // Primitives
 export { ChatMessageListComponent, getMessageType } from './lib/primitives/chat-message-list/chat-message-list.component';

@@ -1,8 +1,11 @@
 // SPDX-License-Identifier: MIT
-import { describe, it, expect } from 'vitest';
-import { signal, computed } from '@angular/core';
-import { extractErrorMessage } from './chat-error.component';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { Component } from '@angular/core';
+import { TestBed } from '@angular/core/testing';
+import { extractErrorMessage, ChatErrorComponent } from './chat-error.component';
 import { mockAgent } from '../../testing/mock-agent';
+import { AgentError } from '../../agent/agent-error';
+import type { MockAgent } from '../../testing/mock-agent';
 
 describe('extractErrorMessage()', () => {
   it('returns null for null error', () => {
@@ -26,43 +29,67 @@ describe('extractErrorMessage()', () => {
   });
 });
 
-describe('ChatErrorComponent — errorMessage computed', () => {
-  it('errorMessage is null when agent.error is null', () => {
-    const agent = mockAgent({ error: null });
-    const agent$ = signal(agent);
+@Component({
+  standalone: true,
+  imports: [ChatErrorComponent],
+  template: `<chat-error [agent]="agent" />`,
+})
+class HostComponent {
+  agent: MockAgent = mockAgent();
+}
 
-    const errorMessage = computed(() => extractErrorMessage(agent$().error()));
+describe('ChatErrorComponent — rendering', () => {
+  let host: HostComponent;
+  let fixture: ReturnType<typeof TestBed.createComponent<HostComponent>>;
 
-    expect(errorMessage()).toBeNull();
+  beforeEach(() => {
+    fixture = TestBed.createComponent(HostComponent);
+    host = fixture.componentInstance;
   });
 
-  it('errorMessage reflects Error object message', () => {
-    const agent = mockAgent({ status: 'error', error: new Error('boom') });
-    const agent$ = signal(agent);
+  it('renders err.message text for a retryable AgentError', () => {
+    const err = new AgentError({ kind: 'server', message: 'The server ran into an error. You can try again.', retryable: true });
+    host.agent = mockAgent({ status: 'error', error: err });
+    fixture.detectChanges();
 
-    const errorMessage = computed(() => extractErrorMessage(agent$().error()));
-
-    expect(errorMessage()).toBe('boom');
+    const el: HTMLElement = fixture.nativeElement;
+    const msg = el.querySelector('.chat-error__msg');
+    expect(msg?.textContent?.trim()).toBe('The server ran into an error. You can try again.');
   });
 
-  it('errorMessage reflects string error', () => {
-    const agent = mockAgent({ error: 'timeout' });
-    const agent$ = signal(agent);
+  it('shows a Retry button when retryable is true', () => {
+    const err = new AgentError({ kind: 'server', message: 'The server ran into an error. You can try again.', retryable: true });
+    host.agent = mockAgent({ status: 'error', error: err });
+    fixture.detectChanges();
 
-    const errorMessage = computed(() => extractErrorMessage(agent$().error()));
-
-    expect(errorMessage()).toBe('timeout');
+    const el: HTMLElement = fixture.nativeElement;
+    const btn = el.querySelector<HTMLButtonElement>('button.chat-error__retry');
+    expect(btn).not.toBeNull();
+    expect(btn?.textContent?.trim().toLowerCase()).toMatch(/retry/i);
   });
 
-  it('errorMessage updates reactively when agent changes', () => {
-    const noErrorAgent = mockAgent({ error: null });
-    const errorAgent = mockAgent({ status: 'error', error: new Error('failed') });
-    const agent$ = signal(noErrorAgent);
+  it('hides the Retry button when retryable is false', () => {
+    const err = new AgentError({ kind: 'auth', message: 'Authentication failed. Check your API key or credentials.', retryable: false });
+    host.agent = mockAgent({ status: 'error', error: err });
+    fixture.detectChanges();
 
-    const errorMessage = computed(() => extractErrorMessage(agent$().error()));
+    const el: HTMLElement = fixture.nativeElement;
+    const btn = el.querySelector('button.chat-error__retry');
+    expect(btn).toBeNull();
+  });
 
-    expect(errorMessage()).toBeNull();
-    agent$.set(errorAgent);
-    expect(errorMessage()).toBe('failed');
+  it('clicking Retry calls agent.retry()', async () => {
+    const err = new AgentError({ kind: 'server', message: 'The server ran into an error. You can try again.', retryable: true });
+    const agent = mockAgent({ status: 'error', error: err });
+    const retrySpy = vi.spyOn(agent, 'retry');
+    host.agent = agent;
+    fixture.detectChanges();
+
+    const el: HTMLElement = fixture.nativeElement;
+    const btn = el.querySelector<HTMLButtonElement>('button.chat-error__retry');
+    expect(btn).not.toBeNull();
+    btn!.click();
+
+    expect(retrySpy).toHaveBeenCalledTimes(1);
   });
 });

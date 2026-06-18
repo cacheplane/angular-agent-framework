@@ -1439,7 +1439,7 @@
       },
       {
         "name": "error",
-        "type": "Signal<unknown>",
+        "type": "Signal<AgentError<> | undefined>",
         "description": "",
         "optional": false
       },
@@ -1579,6 +1579,12 @@
         "name": "reload",
         "type": "() => void",
         "description": "Re-submit the last input to restart the stream.",
+        "optional": false
+      },
+      {
+        "name": "retry",
+        "type": "() => Promise<void>",
+        "description": "Re-run the last submitted input after a failure. No-op if a run is already\n in flight or there is nothing to retry. Clears `error` and sets loading.",
         "optional": false
       },
       {
@@ -1861,7 +1867,7 @@
       },
       {
         "name": "error",
-        "type": "WritableSignal<unknown>",
+        "type": "WritableSignal<AgentError<> | undefined>",
         "description": "",
         "optional": false
       },
@@ -2001,6 +2007,12 @@
         "name": "reload",
         "type": "() => void",
         "description": "Re-submit the last input to restart the stream.",
+        "optional": false
+      },
+      {
+        "name": "retry",
+        "type": "() => Promise<void>",
+        "description": "Re-run the last submitted input after a failure. No-op if a run is already\n in flight or there is nothing to retry. Clears `error` and sets loading.",
         "optional": false
       },
       {

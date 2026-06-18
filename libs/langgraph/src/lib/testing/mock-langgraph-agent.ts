@@ -16,6 +16,7 @@ import { mockAgent } from '@threadplane/chat';
 import type {
   MockAgent,
   MockAgentOptions,
+  AgentError,
   AgentInterrupt,
   AgentCheckpoint,
   AgentStatus,
@@ -43,7 +44,7 @@ export interface MockLangGraphAgent extends LangGraphAgent<any, any> {
   messages: WritableSignal<Message[]>;
   status: WritableSignal<AgentStatus>;
   isLoading: WritableSignal<boolean>;
-  error: WritableSignal<unknown>;
+  error: WritableSignal<AgentError | undefined>;
   toolCalls: WritableSignal<ToolCall[]>;
   interrupt: WritableSignal<AgentInterrupt | undefined>;
   subagents: WritableSignal<Map<string, Subagent>>;
