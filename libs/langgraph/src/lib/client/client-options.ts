@@ -6,8 +6,9 @@ import type { LangGraphClientOptions } from '../agent.types';
  * App-wide LangGraph SDK client tuning (e.g. `maxRetries`). Provide once at the
  * app root; both the agent's default {@link FetchStreamTransport} and the
  * {@link LangGraphThreadsAdapter} read it so the retry budget is configured in
- * one place. A per-agent `provideAgent({ clientOptions })` overrides it for that
- * agent. Absent → the SDK default.
+ * one place. A call-site `agent({ clientOptions })` or per-agent
+ * `provideAgent({ clientOptions })` overrides it for that agent.
+ * Absent → the SDK default.
  */
 export const LANGGRAPH_CLIENT_OPTIONS = new InjectionToken<LangGraphClientOptions>(
   'LANGGRAPH_CLIENT_OPTIONS',
