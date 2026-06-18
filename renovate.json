@@ -6,7 +6,6 @@
     ":dependencyDashboard",
     ":semanticCommits"
   ],
-  "schedule": ["before 9am on monday"],
   "prConcurrentLimit": 5,
   "packageRules": [
     {
