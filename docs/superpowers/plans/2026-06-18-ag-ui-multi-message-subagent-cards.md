@@ -411,7 +411,7 @@ npx nx build chat --skip-nx-cache
 cd examples/ag-ui/python && uv run pytest -q && cd -
 npm run generate-api-docs   # Subagent.toolCalls is public API
 ```
-- Confirm `git diff apps/website/content/docs/*/api/api-docs.json` reflects the `toolCalls` addition; `git diff | grep -i copilotkit` MUST be empty.
+- Confirm `git diff apps/website/content/docs/*/api/api-docs.json` reflects the `toolCalls` addition; the diff MUST contain no references to external research repositories.
 - Confirm the cockpit `ag-ui/subagents` capability is unaffected (it uses the single-text/back-compat path) — run its e2e if changed: `npx nx e2e cockpit-ag-ui-subagents-angular --skip-nx-cache`.
 - If any `cockpit/ag-ui/*` python/graph source changed (it should NOT in this plan), regenerate the Railway deploy bundle: `npx tsx scripts/generate-ag-ui-deployment-config.ts` and commit `deployments/ag-ui-dev/`. (This plan does not touch cockpit, so expect no regen.)
 
