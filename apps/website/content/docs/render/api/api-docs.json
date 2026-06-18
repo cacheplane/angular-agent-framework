@@ -702,13 +702,13 @@
   {
     "name": "defineAngularRegistry",
     "kind": "function",
-    "description": "",
+    "description": "Build an AngularRegistry from a plain object mapping tool-call names\nto Angular components (or fully specified RenderViewEntry objects).\n\nThe returned registry is consumed by both `provideRender` (to drive\ndynamic component rendering) and `provideChat` (via `renderRegistry`) so\nthat a single `defineAngularRegistry` call wires both layers.\n\n**Entry forms**\n- Bare `Type<unknown>` — the component is paired with the built-in\n  `DefaultFallbackComponent` while its props are still streaming.\n- `RenderViewEntry` object — lets you supply a custom `fallback` component,\n  an optional Standard Schema (`schema`) used as a mount-readiness gate, and\n  an optional `description` for model-facing tool registration.\n\n**Registry accessor**\nThe returned object exposes a single `getEntry(name: string)` accessor that\nreturns the fully-normalized NormalizedEntry (component + fallback +\noptional schema + optional description) or `undefined` when the name is not\nregistered. Use `names()` to enumerate all registered names.",
     "signature": "defineAngularRegistry(componentMap: RegistryInput): AngularRegistry",
     "params": [
       {
         "name": "componentMap",
         "type": "RegistryInput",
-        "description": "",
+        "description": "Object whose keys are tool-call names and whose values\n  are either bare Angular component classes or RenderViewEntry objects.",
         "optional": false
       }
     ],
@@ -716,7 +716,9 @@
       "type": "AngularRegistry",
       "description": ""
     },
-    "examples": []
+    "examples": [
+      "```ts\nimport { defineAngularRegistry } from '@threadplane/render';\nimport { DayCardComponent } from './day-card.component';\nimport { LoadingSpinnerComponent } from './loading-spinner.component';\nimport { z } from 'zod';\n\nexport const registry = defineAngularRegistry({\n  // Bare component — uses DefaultFallbackComponent while streaming.\n  summary_card: SummaryCardComponent,\n\n  // Full entry — custom fallback + schema-gated mounting.\n  day_card: {\n    component: DayCardComponent,\n    fallback: LoadingSpinnerComponent,\n    schema: z.object({ label: z.string(), day: z.number() }),\n    description: 'Renders a single itinerary day card.',\n  },\n});\n\n// Look up a registered entry at runtime:\nconst entry = registry.getEntry('day_card'); // NormalizedEntry | undefined\n```"
+    ]
   },
   {
     "name": "injectRenderHost",
@@ -758,13 +760,13 @@
   {
     "name": "provideRender",
     "kind": "function",
-    "description": "",
+    "description": "Bootstrap `@threadplane/render` in an Angular application or standalone\ncomponent tree.\n\nRegisters the shared RenderConfig token and the internal\n`RenderLifecycleService` that coordinates mount/unmount events across\ndynamically rendered components. Call this once alongside `provideChat` in\n`bootstrapApplication` (or the root `ApplicationConfig`).",
     "signature": "provideRender(config: RenderConfig): EnvironmentProviders",
     "params": [
       {
         "name": "config",
         "type": "RenderConfig",
-        "description": "",
+        "description": "Options bag that controls the render feature set:\n  - `registry` — component registry returned by defineAngularRegistry;\n    maps tool-call names to Angular components.\n  - `store` — optional `StateStore` for `\\@json-render/core` state binding.\n  - `functions` — optional map of computed functions available inside specs.\n  - `handlers` — optional map of event handlers triggered by spec actions.",
         "optional": false
       }
     ],
@@ -772,7 +774,9 @@
       "type": "EnvironmentProviders",
       "description": ""
     },
-    "examples": []
+    "examples": [
+      "```ts\n// main.ts\nimport { bootstrapApplication } from '@angular/platform-browser';\nimport { defineAngularRegistry, provideRender } from '@threadplane/render';\nimport { provideChat } from '@threadplane/chat';\nimport { DayCardComponent } from './day-card.component';\n\nconst registry = defineAngularRegistry({ day_card: DayCardComponent });\n\nbootstrapApplication(AppComponent, {\n  providers: [\n    provideRender({ registry }),\n    provideChat({ renderRegistry: registry }),\n  ],\n});\n```"
+    ]
   },
   {
     "name": "provideViews",

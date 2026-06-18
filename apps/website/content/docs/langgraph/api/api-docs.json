@@ -1589,7 +1589,7 @@
       },
       {
         "name": "state",
-        "type": "Signal<Record<string, unknown>>",
+        "type": "Signal<T>",
         "description": "",
         "optional": false
       },
@@ -2011,7 +2011,7 @@
       },
       {
         "name": "state",
-        "type": "Signal<Record<string, unknown>>",
+        "type": "Signal<any>",
         "description": "",
         "optional": false
       },
@@ -2432,11 +2432,11 @@
   {
     "name": "injectAgent",
     "kind": "function",
-    "description": "Retrieve the LangGraph-backed Agent from the current Angular injection context.\n\nMirrors `@threadplane/ag-ui`'s `injectAgent()` so consumer code is identical\nregardless of which adapter is wired in `app.config.ts`. The agent is a\nsingleton scoped to the injector that called `provideAgent()` — re-provide\nin a child component's `providers: []` to scope a different agent to that\nsubtree (Angular's hierarchical DI handles the rest).",
-    "signature": "injectAgent(): LangGraphAgent<T, ResolvedBag>",
+    "description": "Retrieve the LangGraph-backed Agent from the current Angular injection context.\n\nMirrors `@threadplane/ag-ui`'s `injectAgent()` so consumer code is identical\nregardless of which adapter is wired in `app.config.ts`. The agent is a\nsingleton scoped to the injector that called `provideAgent()` — re-provide\nin a child component's `providers: []` to scope a different agent to that\nsubtree (Angular's hierarchical DI handles the rest).\n\n**Typed state via AgentRef.** Pass the same ref that was supplied to\n`provideAgent(ref, …)` to carry the state type through DI without repeating\nthe generic at every call site:\n\n```ts\nconst agent = injectAgent(TRIP); // LangGraphAgent<TripState>\n```\n\nThe no-arg form defaults to `LangGraphAgent<Record<string, unknown>>`.",
+    "signature": "injectAgent(): LangGraphAgent<Record<string, unknown>>",
     "params": [],
     "returns": {
-      "type": "LangGraphAgent<T, ResolvedBag>",
+      "type": "LangGraphAgent<Record<string, unknown>>",
       "description": ""
     },
     "examples": []
@@ -2463,9 +2463,15 @@
   {
     "name": "provideAgent",
     "kind": "function",
-    "description": "Wire the LangGraph adapter into Angular's dependency injection.\n\nRegisters a singleton `LangGraphAgent` constructed from `config`. Retrieve it\nin any component with `injectAgent()`. Provide this at the application root\n(`app.config.ts`) for an app-wide agent.\n\nTo use a different agent in a component subtree, re-provide\n`provideAgent({...})` in that component's `providers: []` array —\nAngular's hierarchical DI scopes the singleton accordingly.\n\n**Static vs factory config.** Pass a plain `AgentConfig` object when the\nconfig is known up front. Pass a `() => AgentConfig` factory when the config\ndepends on runtime/DI state — the factory runs inside an Angular injection\ncontext, so it may call `inject()` to read services, route params, or\ncomponent-scoped signals:\n\n```ts\nproviders: [\n  provideAgent(() => {\n    const route = inject(ActivatedRoute);\n    return { assistantId: 'chat', threadId: toSignal(route.paramMap) };\n  }),\n];\n```",
-    "signature": "provideAgent(configOrFactory: AgentConfig<T, BagTemplate> | () => AgentConfig<T>): Provider[]",
+    "description": "Wire the LangGraph adapter into Angular's dependency injection.\n\nRegisters a singleton `LangGraphAgent` constructed from `config`. Retrieve it\nin any component with `injectAgent()`. Provide this at the application root\n(`app.config.ts`) for an app-wide agent.\n\nTo use a different agent in a component subtree, re-provide\n`provideAgent({...})` in that component's `providers: []` array —\nAngular's hierarchical DI scopes the singleton accordingly.\n\n**Static vs factory config.** Pass a plain `AgentConfig` object when the\nconfig is known up front. Pass a `() => AgentConfig` factory when the config\ndepends on runtime/DI state — the factory runs inside an Angular injection\ncontext, so it may call `inject()` to read services, route params, or\ncomponent-scoped signals:\n\n```ts\nproviders: [\n  provideAgent(() => {\n    const route = inject(ActivatedRoute);\n    return { assistantId: 'chat', threadId: toSignal(route.paramMap) };\n  }),\n];\n```\n\n**Typed state via AgentRef.** Pass a typed ref as the first argument to flow\nthe state shape from `provideAgent` to `injectAgent` without repeating the\ngeneric at every call site:\n\n```ts\nexport const TRIP = createAgentRef<TripState>('trip');\n// app.config.ts:\nproviders: [provideAgent(TRIP, { assistantId: 'trip-graph' })]\n// component:\nconst agent = injectAgent(TRIP); // LangGraphAgent<TripState>\n```",
+    "signature": "provideAgent(ref: AgentRef<T>, configOrFactory: AgentConfig<T, BagTemplate> | () => AgentConfig<T>): Provider[]",
     "params": [
+      {
+        "name": "ref",
+        "type": "AgentRef<T>",
+        "description": "",
+        "optional": false
+      },
       {
         "name": "configOrFactory",
         "type": "AgentConfig<T, BagTemplate> | () => AgentConfig<T>",
