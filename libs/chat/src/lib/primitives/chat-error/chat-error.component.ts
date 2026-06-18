@@ -1,6 +1,6 @@
 // libs/chat/src/lib/primitives/chat-error/chat-error.component.ts
 // SPDX-License-Identifier: MIT
-import { Component, ChangeDetectionStrategy, input, computed } from '@angular/core';
+import { Component, ChangeDetectionStrategy, input } from '@angular/core';
 import type { Agent } from '../../agent';
 import { CHAT_HOST_TOKENS } from '../../styles/chat-tokens';
 import { CHAT_ERROR_STYLES } from '../../styles/chat-error.styles';
@@ -18,17 +18,19 @@ export function extractErrorMessage(error: unknown): string | null {
   changeDetection: ChangeDetectionStrategy.OnPush,
   styles: [CHAT_HOST_TOKENS, CHAT_ERROR_STYLES],
   template: `
-    @if (errorMessage(); as msg) {
+    @if (agent().error(); as err) {
       <div class="chat-error" role="alert">
         <svg class="chat-error__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
         </svg>
-        <span class="chat-error__msg">{{ msg }}</span>
+        <span class="chat-error__msg">{{ err.message }}</span>
+        @if (err.retryable) {
+          <button type="button" class="chat-error__retry" (click)="agent().retry()">Retry</button>
+        }
       </div>
     }
   `,
 })
 export class ChatErrorComponent {
   readonly agent = input.required<Agent>();
-  readonly errorMessage = computed(() => extractErrorMessage(this.agent().error()));
 }

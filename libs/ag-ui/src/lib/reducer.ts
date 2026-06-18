@@ -5,6 +5,7 @@
 // file has no runtime dependency on the EventType enum import.
 import { signal, type WritableSignal } from '@angular/core';
 import type { Subject } from 'rxjs';
+import { toAgentError, type AgentError } from '@threadplane/chat';
 import type {
   Message, AgentStatus, ToolCall, AgentEvent, AgentInterrupt,
 } from '@threadplane/chat';
@@ -56,7 +57,7 @@ export interface ReducerStore {
   messages:     WritableSignal<Message[]>;
   status:       WritableSignal<AgentStatus>;
   isLoading:    WritableSignal<boolean>;
-  error:        WritableSignal<unknown>;
+  error:        WritableSignal<AgentError | undefined>;
   toolCalls:    WritableSignal<ToolCall[]>;
   state:        WritableSignal<Record<string, unknown>>;
   interrupt:    WritableSignal<AgentInterrupt | undefined>;
@@ -101,7 +102,7 @@ export function reduceEvent(event: BaseEvent, store: ReducerStore): void {
     case 'RUN_STARTED': {
       store.status.set('running');
       store.isLoading.set(true);
-      store.error.set(null);
+      store.error.set(undefined);
       store.interrupt.set(undefined);
       store.customEvents.set([]);
       store.activities.set(new Map());
@@ -115,7 +116,10 @@ export function reduceEvent(event: BaseEvent, store: ReducerStore): void {
     case 'RUN_ERROR': {
       store.status.set('error');
       store.isLoading.set(false);
-      store.error.set((event as { message?: unknown }).message ?? event);
+      const runErrorMsg = (event as { message?: unknown }).message;
+      store.error.set(toAgentError(
+        typeof runErrorMsg === 'string' ? new Error(runErrorMsg) : (runErrorMsg ?? event),
+      ));
       return;
     }
     case 'TEXT_MESSAGE_START': {
@@ -349,7 +353,15 @@ export function reduceEvent(event: BaseEvent, store: ReducerStore): void {
       };
       const entry = store.activities().get(e.messageId);
       if (!entry) return;          // unknown activity — ignore
-      entry.content.update((c) => applyPatch(c, e.patch));  // inner signal → live, no map churn
+      entry.content.update((c) => {
+        try {
+          return applyPatch(c, e.patch);
+        } catch (err) {
+          // A malformed/out-of-order ACTIVITY_DELTA must not break the stream — drop it.
+          if (typeof console !== 'undefined') console.warn('[ag-ui] dropping malformed ACTIVITY_DELTA patch', err);
+          return c;
+        }
+      });  // inner signal → live, no map churn
       return;
     }
     default: {

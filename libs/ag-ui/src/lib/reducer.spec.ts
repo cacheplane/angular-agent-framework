@@ -2,9 +2,7 @@
 import { describe, it, expect } from 'vitest';
 import { signal } from '@angular/core';
 import { Subject } from 'rxjs';
-import type {
-  Message, AgentStatus, ToolCall, AgentEvent,
-} from '@threadplane/chat';
+import { AgentError, type AgentStatus, type Message, type ToolCall, type AgentEvent } from '@threadplane/chat';
 import { reduceEvent, type ReducerStore, type CustomStreamEvent, type ActivityEntry } from './reducer';
 
 function makeStore(): ReducerStore {
@@ -12,7 +10,7 @@ function makeStore(): ReducerStore {
     messages:  signal<Message[]>([]),
     status:    signal<AgentStatus>('idle'),
     isLoading: signal(false),
-    error:     signal<unknown>(null),
+    error:     signal<AgentError | undefined>(undefined),
     toolCalls: signal<ToolCall[]>([]),
     state:     signal<Record<string, unknown>>({}),
     interrupt: signal(undefined),
@@ -25,11 +23,12 @@ function makeStore(): ReducerStore {
 describe('reduceEvent', () => {
   it('RUN_STARTED sets status running, isLoading true, clears error', () => {
     const store = makeStore();
-    store.error.set('previous');
+    // Seed a previous AgentError so the clear can be observed.
+    store.error.set(new AgentError({ kind: 'server', message: 'previous', retryable: true }));
     reduceEvent({ type: 'RUN_STARTED' } as any, store);
     expect(store.status()).toBe('running');
     expect(store.isLoading()).toBe(true);
-    expect(store.error()).toBeNull();
+    expect(store.error()).toBeUndefined();
   });
 
   it('RUN_FINISHED sets status idle, isLoading false', () => {
@@ -41,11 +40,13 @@ describe('reduceEvent', () => {
     expect(store.isLoading()).toBe(false);
   });
 
-  it('RUN_ERROR sets status error, captures message', () => {
+  it('RUN_ERROR sets status error, normalizes to AgentError', () => {
     const store = makeStore();
     reduceEvent({ type: 'RUN_ERROR', message: 'boom' } as any, store);
     expect(store.status()).toBe('error');
-    expect(store.error()).toBe('boom');
+    const err = store.error();
+    expect(err).toBeInstanceOf(AgentError);
+    expect(err?.message).toContain('boom');
   });
 
   it('TEXT_MESSAGE_START appends an empty assistant message', () => {
@@ -430,5 +431,26 @@ describe('ACTIVITY events (F5 subagent activities)', () => {
       content: { status: 'complete' } } as never, store);
     // merge: status updated, text preserved
     expect(store.activities().get('tc-1')?.content()).toEqual({ status: 'complete', text: 'hello' });
+  });
+
+  it('ACTIVITY_DELTA with a malformed patch (non-existent path) does not throw and leaves content unchanged', () => {
+    // Regression guard: an out-of-order ACTIVITY_DELTA (e.g. replace /messages/5/content
+    // when there are 0 messages) must be dropped — not thrown — so the stream stays usable.
+    const store = makeStore();
+    reduceEvent({ type: 'ACTIVITY_SNAPSHOT', messageId: 'tc-1', activityType: 'subagent',
+      content: { status: 'running', text: 'prior' } } as any, store);
+    // Send a patch that targets a non-existent array index — applyPatch throws without the guard.
+    expect(() =>
+      reduceEvent({ type: 'ACTIVITY_DELTA', messageId: 'tc-1', activityType: 'subagent',
+        patch: [{ op: 'replace', path: '/messages/5/content', value: 'x' }] } as any, store),
+    ).not.toThrow();
+    // Prior content must be preserved unchanged.
+    const content = store.activities().get('tc-1')?.content();
+    expect(content?.['text']).toBe('prior');
+    expect(content?.['status']).toBe('running');
+    // Subsequent valid patches must still apply (store remains usable).
+    reduceEvent({ type: 'ACTIVITY_DELTA', messageId: 'tc-1', activityType: 'subagent',
+      patch: [{ op: 'replace', path: '/text', value: 'updated' }] } as any, store);
+    expect(store.activities().get('tc-1')?.content()['text']).toBe('updated');
   });
 });

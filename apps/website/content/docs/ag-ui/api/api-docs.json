@@ -421,7 +421,7 @@
       },
       {
         "name": "error",
-        "type": "Signal<unknown>",
+        "type": "Signal<AgentError<> | undefined>",
         "description": "",
         "optional": false
       },
@@ -453,6 +453,12 @@
         "name": "regenerate",
         "type": "(assistantMessageIndex: number) => Promise<void>",
         "description": "Discards the assistant message at the given index AND all messages after\nit, then re-runs the agent against the trimmed conversation tail. The\npreceding user message (at index - 1) is preserved and re-submitted as\nthe agent's input. No new user message is added to the history.\n\nThrows if the message at `index` is not 'assistant' role, or if the\nagent is currently loading another response.",
+        "optional": false
+      },
+      {
+        "name": "retry",
+        "type": "() => Promise<void>",
+        "description": "Re-run the last submitted input after a failure. No-op if a run is already\n in flight or there is nothing to retry. Clears `error` and sets loading.",
         "optional": false
       },
       {

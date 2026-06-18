@@ -2,6 +2,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { signal } from '@angular/core';
 import { Subject } from 'rxjs';
+import { type AgentError } from '@threadplane/chat';
 import type { AgentEvent, AgentStatus, Message, ToolCall } from '@threadplane/chat';
 import type { ReducerStore, CustomStreamEvent } from './reducer';
 import { createClientToolsCapability } from './client-tools';
@@ -12,7 +13,7 @@ function makeStore(): ReducerStore {
     messages:     signal<Message[]>([]),
     status:       signal<AgentStatus>('idle'),
     isLoading:    signal<boolean>(false),
-    error:        signal<unknown>(null),
+    error:        signal<AgentError | undefined>(undefined),
     toolCalls:    signal<ToolCall[]>([]),
     state:        signal<Record<string, unknown>>({}),
     interrupt:    signal(undefined),

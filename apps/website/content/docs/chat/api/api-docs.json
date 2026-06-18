@@ -1427,6 +1427,65 @@
     "methods": []
   },
   {
+    "name": "AgentError",
+    "kind": "class",
+    "description": "Structured, classified failure surfaced on `Agent.error`. Extends `Error`\n so existing `.message` / `instanceof Error` reads keep working.",
+    "params": [
+      {
+        "name": "init",
+        "type": "object",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "examples": [],
+    "properties": [
+      {
+        "name": "cause",
+        "type": "unknown",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "kind",
+        "type": "AgentErrorKind",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "message",
+        "type": "string",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "name",
+        "type": "string",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "retryable",
+        "type": "boolean",
+        "description": "connection | server | interrupted → true; auth | aborted | non-auth-4xx → false.",
+        "optional": false
+      },
+      {
+        "name": "stack",
+        "type": "string",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "status",
+        "type": "number",
+        "description": "",
+        "optional": true
+      }
+    ],
+    "methods": []
+  },
+  {
     "name": "ChatApprovalCardComponent",
     "kind": "class",
     "description": "",
@@ -2116,12 +2175,6 @@
       {
         "name": "agent",
         "type": "InputSignal<Agent>",
-        "description": "",
-        "optional": false
-      },
-      {
-        "name": "errorMessage",
-        "type": "Signal<string | null>",
         "description": "",
         "optional": false
       }
@@ -3604,12 +3657,6 @@
     "examples": [],
     "properties": [
       {
-        "name": "latestMessageContent",
-        "type": "Signal<string>",
-        "description": "",
-        "optional": false
-      },
-      {
         "name": "state",
         "type": "Signal<TraceState>",
         "description": "",
@@ -3622,7 +3669,47 @@
         "optional": false
       }
     ],
-    "methods": []
+    "methods": [
+      {
+        "name": "textOf",
+        "signature": "textOf(m: Message): string",
+        "description": "",
+        "params": [
+          {
+            "name": "m",
+            "type": "Message",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
+        "name": "toolCallsFor",
+        "signature": "toolCallsFor(m: Message): ToolCall[]",
+        "description": "",
+        "params": [
+          {
+            "name": "m",
+            "type": "Message",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
+        "name": "toToolCallInfo",
+        "signature": "toToolCallInfo(tc: ToolCall): ToolCallInfo",
+        "description": "",
+        "params": [
+          {
+            "name": "tc",
+            "type": "ToolCall",
+            "description": "",
+            "optional": false
+          }
+        ]
+      }
+    ]
   },
   {
     "name": "ChatSubagentsComponent",
@@ -5320,7 +5407,7 @@
       },
       {
         "name": "error",
-        "type": "Signal<unknown>",
+        "type": "Signal<AgentError<> | undefined>",
         "description": "",
         "optional": false
       },
@@ -5352,6 +5439,12 @@
         "name": "regenerate",
         "type": "(assistantMessageIndex: number) => Promise<void>",
         "description": "Discards the assistant message at the given index AND all messages after\nit, then re-runs the agent against the trimmed conversation tail. The\npreceding user message (at index - 1) is preserved and re-submitted as\nthe agent's input. No new user message is added to the history.\n\nThrows if the message at `index` is not 'assistant' role, or if the\nagent is currently loading another response.",
+        "optional": false
+      },
+      {
+        "name": "retry",
+        "type": "() => Promise<void>",
+        "description": "Re-run the last submitted input after a failure. No-op if a run is already\n in flight or there is nothing to retry. Clears `error` and sets loading.",
         "optional": false
       },
       {
@@ -5614,7 +5707,7 @@
       },
       {
         "name": "error",
-        "type": "Signal<unknown>",
+        "type": "Signal<AgentError<> | undefined>",
         "description": "",
         "optional": false
       },
@@ -5658,6 +5751,12 @@
         "name": "regenerate",
         "type": "(assistantMessageIndex: number) => Promise<void>",
         "description": "Discards the assistant message at the given index AND all messages after\nit, then re-runs the agent against the trimmed conversation tail. The\npreceding user message (at index - 1) is preserved and re-submitted as\nthe agent's input. No new user message is added to the history.\n\nThrows if the message at `index` is not 'assistant' role, or if the\nagent is currently loading another response.",
+        "optional": false
+      },
+      {
+        "name": "retry",
+        "type": "() => Promise<void>",
+        "description": "Re-run the last submitted input after a failure. No-op if a run is already\n in flight or there is nothing to retry. Clears `error` and sets loading.",
         "optional": false
       },
       {
@@ -6273,7 +6372,7 @@
       },
       {
         "name": "error",
-        "type": "WritableSignal<unknown>",
+        "type": "WritableSignal<AgentError<> | undefined>",
         "description": "",
         "optional": false
       },
@@ -6317,6 +6416,12 @@
         "name": "regenerate",
         "type": "(assistantMessageIndex: number) => Promise<void>",
         "description": "Discards the assistant message at the given index AND all messages after\nit, then re-runs the agent against the trimmed conversation tail. The\npreceding user message (at index - 1) is preserved and re-submitted as\nthe agent's input. No new user message is added to the history.\n\nThrows if the message at `index` is not 'assistant' role, or if the\nagent is currently loading another response.",
+        "optional": false
+      },
+      {
+        "name": "retry",
+        "type": "() => Promise<void>",
+        "description": "Re-run the last submitted input after a failure. No-op if a run is already\n in flight or there is nothing to retry. Clears `error` and sets loading.",
         "optional": false
       },
       {
@@ -6377,7 +6482,7 @@
     "properties": [
       {
         "name": "error",
-        "type": "unknown",
+        "type": "AgentError<>",
         "description": "",
         "optional": true
       },
@@ -6654,6 +6759,12 @@
         "type": "string",
         "description": "Tool call ID that spawned this subagent.",
         "optional": false
+      },
+      {
+        "name": "toolCalls",
+        "type": "Signal<ToolCall[]>",
+        "description": "The subagent's own tool calls (name/args/result), referenced by\n`Message.toolCallIds` in `messages`. Optional: adapters that don't surface\nsubagent tool calls omit it; consumers default to `[]`.",
+        "optional": true
       }
     ],
     "examples": []
@@ -6951,6 +7062,13 @@
     "examples": []
   },
   {
+    "name": "AgentErrorKind",
+    "kind": "type",
+    "description": "",
+    "signature": "\"connection\" | \"auth\" | \"server\" | \"interrupted\" | \"aborted\"",
+    "examples": []
+  },
+  {
     "name": "AgentEvent",
     "kind": "type",
     "description": "Discriminated union of events flowing on `Agent.events$`.\n\nInvariant: state lives on signals (`messages`, `status`, `toolCalls`,\n`state`, `interrupt`, `subagents`, `history`); events on `events$`\ncarry only things that are not derivable from signals. New variants\nare added purely additively when patterns prove necessary.",
@@ -7102,6 +7220,13 @@
     "kind": "type",
     "description": "A registry of view components available for generative UI rendering.\nEach entry is either a bare component Type (legacy shape) or a\n`RenderViewEntry` { component, fallback? }.",
     "signature": "Readonly<Record<string, Type<unknown> | RenderViewEntry>>",
+    "examples": []
+  },
+  {
+    "name": "AGENT_ERROR_MESSAGES",
+    "kind": "const",
+    "description": "Default human-facing copy per kind.",
+    "signature": "Record<AgentErrorKind, string>",
     "examples": []
   },
   {
@@ -7539,6 +7664,25 @@
     "examples": []
   },
   {
+    "name": "isAbortError",
+    "kind": "function",
+    "description": "True when `raw` represents a user-requested abort. Shared by adapters + classifier.",
+    "signature": "isAbortError(raw: unknown): boolean",
+    "params": [
+      {
+        "name": "raw",
+        "type": "unknown",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "boolean",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
     "name": "isAssistantMessage",
     "kind": "function",
     "description": "",
@@ -7837,6 +7981,25 @@
     ],
     "returns": {
       "type": "Spec | null",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "toAgentError",
+    "kind": "function",
+    "description": "Classify any raw error into a structured AgentError. Idempotent.",
+    "signature": "toAgentError(raw: unknown): AgentError<>",
+    "params": [
+      {
+        "name": "raw",
+        "type": "unknown",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "AgentError<>",
       "description": ""
     },
     "examples": []

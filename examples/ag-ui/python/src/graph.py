@@ -46,7 +46,10 @@ from langsmith import traceable
 from threadplane.middleware.langgraph import bind_client_tools, client_tool_names
 
 from src.streaming.a2ui_partial_handler import A2uiPartialHandler
-from src.streaming.subagent_stream_handler import SubagentStreamHandler
+from src.streaming.subagent_stream_handler import (
+    SubagentStreamHandler,
+    SubagentRunState,
+)
 from src.streaming.envelope_tool import render_a2ui_surface
 from src.streaming.envelope_normalizer import normalize_envelope_args
 from src.schemas.a2ui_v1 import A2UI_V1_SCHEMA_PROMPT
@@ -267,34 +270,168 @@ def request_approval(reason: str) -> str:
 # logic) is what causes LangGraph to emit stream events under namespace
 # prefix `tools:<id>` for the child run, which is what the @threadplane/langgraph
 # SubagentTracker keys on to populate `agent.subagents()`.
+#
+# The child runs a genuine reason → tool → answer loop: an `agent` node
+# (LLM bound to a single offline `lookup` tool) → conditional edge → a
+# `tools` node when the AIMessage carries tool_calls, else END; the tools
+# node loops back to `agent`. A per-run `iterations` counter caps the loop
+# so it always terminates (the agent is told to answer after one lookup).
+# Each node emits the structured transcript (`message_start` / `tool_call` /
+# `tool_result`) as `subagent_activity` CUSTOM events the L2 transform turns
+# into AG-UI ACTIVITY DELTAs; live token text is streamed separately by the
+# SubagentStreamHandler (which tags each `message` with the same
+# `message_index` the subgraph opened the turn with).
 class ResearchState(TypedDict):
     messages: Annotated[list, add_messages]
     topic: Optional[str]
+    iterations: int
 
 
-async def research_node(state: ResearchState) -> dict:
-    """Single-node child graph: focus on the topic, return a short brief.
+# Max reason→tool→answer round trips the subagent makes before it is forced
+# to answer. One lookup then an answer is enough for a deterministic demo.
+_RESEARCH_MAX_ITERATIONS = 1
 
-    Uses gpt-5-mini directly (the parent's model selection does not
-    propagate into the subagent — the subagent is a focused contractor).
+_RESEARCH_FACTS = {
+    "signals": (
+        "Angular signals are a fine-grained reactivity primitive: a signal "
+        "holds a value, computed() derives from signals, and effect() reacts "
+        "to changes — all without manual subscriptions or zone.js."
+    ),
+    "control flow": (
+        "Angular's built-in control flow (@if, @for, @switch) replaces the "
+        "*ngIf / *ngFor structural directives with native template syntax that "
+        "is faster to compile and ships less runtime."
+    ),
+    "zoneless": (
+        "Zoneless change detection lets Angular run without zone.js by "
+        "tracking signal reads and async state directly via "
+        "provideExperimentalZonelessChangeDetection."
+    ),
+}
+_RESEARCH_DEFAULT_FACT = (
+    "Angular is a TypeScript-first web framework built around components, "
+    "dependency injection, and (increasingly) signal-based reactivity."
+)
+
+
+@tool
+def lookup(query: str) -> str:
+    """Look up a short, authoritative fact about the given topic.
+
+    Deterministic and fully offline — returns a canned fact keyed by the
+    query so the demo (and its replay fixtures) stay reproducible.
     """
-    topic = state.get("topic") or ""
-    llm = ChatOpenAI(model="gpt-5-mini", streaming=True)
-    system = SystemMessage(content=(
-        "You are a focused research subagent. Given a topic, return a "
-        "concise factual summary (3-6 bullets). Do not ask the user "
-        "questions; the parent agent already gathered the topic."
-    ))
-    user = HumanMessage(content=f"Topic: {topic}")
-    response = await llm.ainvoke([system, user])
-    return {"messages": [response]}
+    q = (query or "").lower()
+    for key, fact in _RESEARCH_FACTS.items():
+        if key in q:
+            return fact
+    return _RESEARCH_DEFAULT_FACT
 
 
-_research_builder = StateGraph(ResearchState)
-_research_builder.add_node("research_node", research_node)
-_research_builder.set_entry_point("research_node")
-_research_builder.add_edge("research_node", END)
-research_subgraph = _research_builder.compile()
+def _make_research_llm(force_answer: bool):
+    """Build the subagent chat model for one turn. On the gathering turn it is
+    bound to the `lookup` tool; on the forced-answer turn it is plain so the
+    model can't keep calling tools. Isolated as a seam so tests can inject a
+    fake tool-calling model."""
+    base = ChatOpenAI(model="gpt-5-mini", streaming=True)
+    return base if force_answer else base.bind_tools([lookup])
+
+
+def _build_research_subgraph(emit, run_state, llm_factory=_make_research_llm):
+    """Compile a research subgraph whose nodes emit the structured transcript
+    through the captured `emit` closure and bump the shared `run_state`
+    counters. Built per research-tool invocation so each run gets its own
+    emission wiring + message/tool indices.
+
+    `emit(payload)` dispatches a `subagent_activity` CUSTOM event already
+    keyed by the parent tool_call_id. `run_state` is the SubagentRunState
+    the SubagentStreamHandler reads `message_index` from for live tokens.
+    `llm_factory(force_answer)` returns the model for a turn — overridable
+    in tests with a fake tool-calling chat model.
+    """
+
+    async def agent_node(state: ResearchState) -> dict:
+        topic = state.get("topic") or ""
+        iterations = state.get("iterations") or 0
+        # Open a new assistant turn. The handler reads this index for the
+        # live `message` tokens it streams during this LLM call.
+        run_state.message_index = iterations
+        await emit({"phase": "message_start", "message_index": iterations})
+
+        force_answer = iterations >= _RESEARCH_MAX_ITERATIONS
+        system = SystemMessage(content=(
+            "You are a focused research subagent. You have a `lookup` tool "
+            "for retrieving authoritative facts. " + (
+                "You have already gathered facts — now write the final "
+                "answer: a concise factual summary (3-6 bullets). Do NOT call "
+                "any more tools."
+                if force_answer else
+                "Call `lookup` exactly once to gather a fact about the topic, "
+                "then on your next turn write the final summary. Do not ask "
+                "the user questions; the parent agent already gathered the "
+                "topic."
+            )
+        ))
+        messages = [system, HumanMessage(content=f"Topic: {topic}")]
+        # Carry prior assistant/tool messages so the model sees the lookup result.
+        messages += list(state.get("messages") or [])
+
+        call_llm = llm_factory(force_answer)
+        response = await call_llm.ainvoke(messages)
+
+        # Emit one tool_call event per call on the returned AIMessage.
+        tool_calls = getattr(response, "tool_calls", None) or []
+        for tc in tool_calls:
+            await emit({
+                "phase": "tool_call",
+                "message_index": iterations,
+                "tool_call_id": tc.get("id"),
+                "name": tc.get("name"),
+                "args": tc.get("args"),
+            })
+
+        return {"messages": [response], "iterations": iterations + 1}
+
+    async def tools_node(state: ResearchState) -> dict:
+        last = state["messages"][-1]
+        tool_calls = getattr(last, "tool_calls", None) or []
+        out = []
+        for tc in tool_calls:
+            name = tc.get("name")
+            args = tc.get("args") or {}
+            if name == "lookup":
+                result = lookup.invoke(args)
+            else:
+                result = f"(unknown tool: {name})"
+            out.append(ToolMessage(content=result, tool_call_id=tc.get("id")))
+            # tool_index is the 0-based position of this call in the run's
+            # toolCalls[] (same order tool_call events were emitted).
+            await emit({
+                "phase": "tool_result",
+                "tool_index": run_state.tool_index,
+                "result": result,
+                "status": "complete",
+            })
+            run_state.tool_index += 1
+        return {"messages": out}
+
+    def should_continue(state: ResearchState) -> Literal["tools", "__end__"]:
+        last = state["messages"][-1]
+        if isinstance(last, AIMessage) and last.tool_calls:
+            return "tools"
+        return "__end__"
+
+    builder = StateGraph(ResearchState)
+    builder.add_node("agent", agent_node)
+    builder.add_node("tools", tools_node)
+    builder.set_entry_point("agent")
+    builder.add_conditional_edges(
+        "agent",
+        should_continue,
+        {"tools": "tools", "__end__": END},
+    )
+    builder.add_edge("tools", "agent")
+    return builder.compile()
 
 
 @tool
@@ -313,8 +450,8 @@ async def research(
     Always pass a stable identifier like "research".
 
     The subagent run is also surfaced to the UI as a native AG-UI ACTIVITY
-    (activityType "subagent"): started → message-per-token → finished, keyed
-    by this tool's own call id.
+    (activityType "subagent"): started → reason/tool/answer transcript →
+    finished, keyed by this tool's own call id.
     """
 
     async def _emit(payload: dict) -> None:
@@ -325,10 +462,13 @@ async def research(
         except Exception:
             pass
 
+    run_state = SubagentRunState()
+    subgraph = _build_research_subgraph(_emit, run_state)
+
     await _emit({"phase": "started", "name": subagent_type})
-    result = await research_subgraph.ainvoke(
-        {"topic": topic, "messages": []},
-        config={"callbacks": [SubagentStreamHandler(tool_call_id)]},
+    result = await subgraph.ainvoke(
+        {"topic": topic, "messages": [], "iterations": 0},
+        config={"callbacks": [SubagentStreamHandler(tool_call_id, run_state)]},
     )
     await _emit({"phase": "finished", "status": "complete"})
 
