@@ -9,6 +9,7 @@ import type { ThreadState } from '@langchain/langgraph-sdk';
 import { createLangGraphClient } from './client/create-langgraph-client';
 import { LANGGRAPH_CLIENT_OPTIONS } from './client/client-options';
 import { AGENT_CONFIG } from './agent.provider';
+import { AgentError } from '@threadplane/chat';
 
 vi.mock('./client/create-langgraph-client', async (importOriginal) => {
   const actual = await importOriginal<typeof import('./client/create-langgraph-client')>();
@@ -902,6 +903,81 @@ describe('agent', () => {
       await expect(ref.regenerate(0)).rejects.toThrow(/No user message/);
     });
   });
+
+  // ── Error-UX: normalize, abort→idle, retry() ─────────────────────────────
+
+  it('error() is AgentError with kind="server" on an HTTP 500 failure', async () => {
+    const transport = new MockAgentTransport();
+    const ref = withInjectionContext(() =>
+      agent({ apiUrl: '', assistantId: 'a', transport })
+    );
+    ref.submit({ message: 'hello' });
+    transport.emitError(new Error('HTTP 500: boom'));
+    await new Promise(r => setTimeout(r, 20));
+
+    expect(ref.status()).toBe('error');
+    const err = ref.error();
+    expect(err).toBeInstanceOf(AgentError);
+    expect((err as AgentError).kind).toBe('server');
+    expect((err as AgentError).retryable).toBe(true);
+  });
+
+  it('user stop() → status becomes idle and error() stays undefined', async () => {
+    const transport = new MockAgentTransport();
+    const ref = withInjectionContext(() =>
+      agent({ apiUrl: '', assistantId: 'a', transport })
+    );
+    ref.submit({ message: 'hello' });
+    // stop() is user-initiated — should NOT produce an error
+    await ref.stop();
+    await new Promise(r => setTimeout(r, 20));
+
+    expect(ref.status()).toBe('idle');
+    expect(ref.error()).toBeUndefined();
+  });
+
+  it('retry() clears error and calls resubmitLast', async () => {
+    const transport = new MockAgentTransport();
+    const ref = withInjectionContext(() =>
+      agent({ apiUrl: '', assistantId: 'a', transport })
+    );
+
+    // Drive to an error state
+    const submitted = ref.submit({ message: 'hello' });
+    transport.emitError(new Error('HTTP 503: service unavailable'));
+    await submitted.catch(() => undefined);
+    await new Promise(r => setTimeout(r, 20));
+
+    expect(ref.status()).toBe('error');
+    expect(ref.error()).toBeInstanceOf(AgentError);
+
+    // Invoke retry(); the error should clear and a new run should start
+    const retryPromise = ref.retry();
+    // error is cleared synchronously at the start of retry()
+    expect(ref.error()).toBeUndefined();
+    // isLoading should become true once resubmitLast kicks off runStream
+    expect(ref.isLoading()).toBe(true);
+
+    // Clean up the new run
+    transport.close();
+    await retryPromise;
+  });
+
+  it('retry() is a no-op while a run is already in flight', async () => {
+    const transport = new MockAgentTransport();
+    const ref = withInjectionContext(() =>
+      agent({ apiUrl: '', assistantId: 'a', transport })
+    );
+    ref.submit({ message: 'hello' });
+    expect(ref.isLoading()).toBe(true);
+
+    // retry() while loading should not start a second run or throw
+    await ref.retry();
+    // Still one active stream; transport only received one stream call
+    expect(transport.streams).toHaveLength(1);
+
+    await ref.stop();
+  });
 });
 
 describe('agent — LANGGRAPH_CLIENT_OPTIONS resolution (no mock transport)', () => {
@@ -918,6 +994,7 @@ describe('agent — LANGGRAPH_CLIENT_OPTIONS resolution (no mock transport)', ()
       search: vi.fn().mockResolvedValue([]),
     },
     runs: {
+      // eslint-disable-next-line @typescript-eslint/no-empty-function
       stream: vi.fn().mockReturnValue((async function* () {})()),
     },
   };

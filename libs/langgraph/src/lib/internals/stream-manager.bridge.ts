@@ -20,6 +20,7 @@ import type {
   AgentRuntimeTelemetryProperties,
   AgentRuntimeTelemetrySink,
 } from '@threadplane/chat';
+import { AgentError, toAgentError, isAbortError } from '@threadplane/chat';
 import {
   SubagentTracker,
   TrackedSubagent,
@@ -112,6 +113,8 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
   let abortController: AbortController | null = null;
   let historyAbortController: AbortController | null = null;
   let hasSeenThreadId = false;
+  /** True when the current abort was user-initiated (via stop()). Reset at the start of every new runStream(). */
+  let userAbortRequested = false;
   const toolProgressMap = new Map<string, ToolProgress>();
   const queuedRuns: AgentQueueEntry[] = [];
   let drainingQueue = false;
@@ -377,6 +380,7 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
   ): Promise<void> {
     abortController?.abort();
     abortController = new AbortController();
+    userAbortRequested = false;
     const startedAt = Date.now();
     captureRuntimeRequestTelemetry(requestType);
     captureAgentRuntimeTelemetry(options.telemetry, 'ngaf:stream_started', telemetryProperties);
@@ -388,6 +392,11 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
     toolProgressMap.clear();
     lastPayload = payload;
     lastOptions = opts;
+
+    // Tracks whether at least one stream event has been processed this run.
+    // Used to distinguish a mid-stream network interruption (kind:'interrupted')
+    // from a fresh connect failure (falls through to toAgentError classification).
+    let streamingStarted = false;
 
     // Optimistically inject human messages so they appear immediately
     // without waiting for the server to echo them back. Assign a stable id
@@ -418,6 +427,7 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
 
       for await (const event of iter) {
         if (abortController.signal.aborted) break;
+        streamingStarted = true;
         processEvent(event);
       }
 
@@ -433,10 +443,14 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
         });
       }
     } catch (err) {
-      if ((err as Error)?.name === 'AbortError') {
-        subjects.status$.next(ResourceStatus.Resolved);
+      if (isAbortError(err) && userAbortRequested) {
+        // User explicitly called stop() — treat as graceful idle, not an error.
+        subjects.status$.next(ResourceStatus.Idle);
       } else {
-        subjects.error$.next(err);
+        const e = (streamingStarted && isAbortError(err))
+          ? new AgentError({ kind: 'interrupted', message: 'The response was interrupted. Try again.', retryable: true, cause: err })
+          : toAgentError(err);
+        subjects.error$.next(e);
         subjects.status$.next(ResourceStatus.Error);
         captureAgentRuntimeTelemetry(options.telemetry, 'ngaf:stream_errored', {
           ...telemetryProperties,
@@ -736,9 +750,16 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
     },
 
     stop: async () => {
+      userAbortRequested = true;
       abortController?.abort();
       await clearQueue();
-      subjects.status$.next(ResourceStatus.Resolved);
+      // Note: status is set to Idle by the runStream() catch when it sees
+      // isAbortError && userAbortRequested. The explicit set here handles
+      // the case where stop() is called when no stream is active (so the
+      // catch never fires) or when clearQueue() raised an error.
+      if (subjects.status$.value !== ResourceStatus.Idle) {
+        subjects.status$.next(ResourceStatus.Idle);
+      }
     },
 
     switchThread: (id) => {

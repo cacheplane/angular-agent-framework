@@ -763,7 +763,7 @@ describe('createStreamManagerBridge', () => {
     destroy$.next();
   });
 
-  it('stop() aborts the active stream', async () => {
+  it('stop() aborts the active stream and sets status to Idle (user-stop is not an error)', async () => {
     const transport = new MockAgentTransport();
     const subjects = makeSubjects();
     const destroy$ = new Subject<void>();
@@ -775,7 +775,10 @@ describe('createStreamManagerBridge', () => {
     });
     bridge.submit({});
     await bridge.stop();
-    expect(subjects.status$.value).toBe(ResourceStatus.Resolved);
+    // User-initiated stop → Idle (not Resolved, not Error)
+    expect(subjects.status$.value).toBe(ResourceStatus.Idle);
+    // No error published
+    expect(subjects.error$.value).toBeUndefined();
     destroy$.next();
   });
 
