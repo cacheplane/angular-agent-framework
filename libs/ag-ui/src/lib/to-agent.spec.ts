@@ -551,3 +551,57 @@ describe('subagents projection (F5)', () => {
     expect(agent.subagents!().get('tc-1')?.messages()[0].content).toBe('');
   });
 });
+
+describe('subagents transcript projection (F5-transcript)', () => {
+  function snapshotWithContent(id: string, content: Record<string, unknown>) {
+    return {
+      type: 'ACTIVITY_SNAPSHOT',
+      messageId: id,
+      activityType: 'subagent',
+      content: { toolCallId: id, ...content },
+      replace: true,
+    };
+  }
+
+  it('projects content.messages[] to subagent.messages()', () => {
+    const source = new StubAgent();
+    const agent = toAgent(source as never);
+    source.emit(snapshotWithContent('tc-1', {
+      status: 'running',
+      messages: [
+        { id: 'm1', role: 'assistant', content: 'hi', toolCallIds: ['t1'], reasoning: 'think' },
+      ],
+    }) as never);
+    const sa = agent.subagents!().get('tc-1');
+    expect(sa?.messages()).toEqual([
+      { id: 'm1', role: 'assistant', content: 'hi', toolCallIds: ['t1'], reasoning: 'think' },
+    ]);
+  });
+
+  it('projects content.toolCalls[] to subagent.toolCalls!()', () => {
+    const source = new StubAgent();
+    const agent = toAgent(source as never);
+    source.emit(snapshotWithContent('tc-1', {
+      status: 'running',
+      toolCalls: [
+        { id: 't1', name: 'search', args: { q: 'x' }, status: 'complete', result: { n: 1 } },
+      ],
+    }) as never);
+    const sa = agent.subagents!().get('tc-1');
+    expect(sa?.toolCalls!()).toEqual([
+      { id: 't1', name: 'search', args: { q: 'x' }, status: 'complete', result: { n: 1 } },
+    ]);
+  });
+
+  it('falls back to text when content has no messages/toolCalls (back-compat)', () => {
+    const source = new StubAgent();
+    const agent = toAgent(source as never);
+    source.emit(snapshotWithContent('sub-1', {
+      status: 'running',
+      text: 'partial',
+    }) as never);
+    const sa = agent.subagents!().get('sub-1');
+    expect(sa?.messages()).toEqual([{ id: 'sub-1', role: 'assistant', content: 'partial' }]);
+    expect(sa?.toolCalls!()).toEqual([]);
+  });
+});
