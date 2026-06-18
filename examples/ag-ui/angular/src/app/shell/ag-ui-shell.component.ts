@@ -16,7 +16,7 @@ import {
 } from '@threadplane/chat';
 import { PalettePersistence } from './palette-persistence.service';
 import { ItineraryPanelComponent } from '../itinerary-panel.component';
-import { itineraryClientTools } from '../client-tools';
+import { itineraryClientTools, ITINERARY_AGENT } from '../client-tools';
 
 export type DemoMode = 'embed' | 'popup' | 'sidebar';
 const MODES: readonly DemoMode[] = ['embed', 'popup', 'sidebar'] as const;
@@ -104,8 +104,11 @@ export class AgUiShell {
   readonly clientTools = itineraryClientTools();
 
   // ── Shared agent: submit wrapper merges the knobs into input.state ──────
+  // injectAgent(ITINERARY_AGENT) returns AgUiAgent<ItineraryState>, so
+  // a.submit's input type carries { state?: ItineraryState } — no cast needed
+  // to spread the palette knobs into state.
   readonly agent = (() => {
-    const a = injectAgent();
+    const a = injectAgent(ITINERARY_AGENT);
     const orig = a.submit.bind(a);
     (a as { submit: typeof a.submit }).submit = (async (
       input: Parameters<typeof a.submit>[0],
@@ -115,7 +118,7 @@ export class AgUiShell {
         {
           ...(input ?? {}),
           state: {
-            ...((input as { state?: Record<string, unknown> })?.state ?? {}),
+            ...(input?.state ?? {}),
             model: this.model(),
             reasoning_effort: this.effort(),
             gen_ui_mode: this.genUiMode(),

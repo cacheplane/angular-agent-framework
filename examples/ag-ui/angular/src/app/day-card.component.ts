@@ -1,5 +1,21 @@
 // SPDX-License-Identifier: MIT
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import type { ViewProps } from '@threadplane/chat';
+import { z } from 'zod/v4';
+
+/**
+ * Schema for the `day_card` view tool — co-located with the component so the
+ * inputs and the schema shape can be kept in sync at a glance.
+ * `client-tools.ts` imports this schema to pass to `view(…, DAY_CARD_SCHEMA, …)`.
+ */
+export const DAY_CARD_SCHEMA = z.object({
+  day: z.number().int().min(1),
+  places: z.array(z.string()),
+});
+
+/** Input types derived directly from the `day_card` schema — guarantees this
+ *  component stays compatible with the view() check at compile time. */
+type Inputs = ViewProps<typeof DAY_CARD_SCHEMA>;
 
 /**
  * A frontend-owned view rendered for the `day_card` client tool. The model
@@ -51,6 +67,6 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
   ],
 })
 export class DayCardComponent {
-  readonly day = input.required<number>();
-  readonly places = input<string[]>([]);
+  readonly day = input.required<Inputs['day']>();
+  readonly places = input<Inputs['places']>([]);
 }

@@ -11,6 +11,7 @@ import { provideAgent } from '@threadplane/ag-ui';
 import { environment } from '../environments/environment';
 import { routes } from './app.routes';
 import { ItineraryStore } from './itinerary-store';
+import { ITINERARY_AGENT } from './client-tools';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -18,7 +19,9 @@ export const appConfig: ApplicationConfig = {
     provideZonelessChangeDetection(),
     provideRouter(routes),
     provideThreadplaneTelemetry(environment.telemetry),
-    provideAgent({ url: environment.agentUrl }),
+    // Typed agent provider: flows ItineraryState through DI so every
+    // injectAgent(ITINERARY_AGENT) call returns AgUiAgent<ItineraryState>.
+    provideAgent(ITINERARY_AGENT, { url: environment.agentUrl }),
     provideChat({ license: environment.license }),
     // The frontend-owned itinerary is a single shared instance: the panel,
     // the App component, and the client-tool ask component all inject it, so
