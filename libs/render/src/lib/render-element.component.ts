@@ -28,6 +28,7 @@ import { RENDER_HOST, type RenderHost } from './contexts/render-host';
 import { REPEAT_SCOPE } from './contexts/repeat-scope';
 import type { RepeatScope } from './contexts/repeat-scope';
 import { buildPropResolutionContext } from './internals/prop-signal';
+import { isElementReady } from './internals/element-readiness';
 import type { AngularComponentRenderer, NormalizedEntry } from './render.types';
 
 /** Cache of declared input names per component class. NgComponentOutlet
@@ -182,19 +183,18 @@ export class RenderElementComponent implements OnInit {
    *  prop later becomes undefined. Per-instance monotonic gate. */
   private readonly mountedReal = signal<boolean>(false);
 
-  /** True when ANY resolved prop value is undefined (i.e. a state
-   *  binding points at a path the store hasn't populated). Framework-
-   *  injected keys (bindings, emit, loading, childKeys, spec) are
+  /** True when the element is not yet ready to mount the real component.
+   *  Delegates to `isElementReady` which checks:
+   *  1. Any undefined-valued resolved prop (state binding still loading).
+   *  2. A sync Standard-Schema gate if the registry entry declares a schema.
+   *  Framework-injected keys (bindings, emit, loading, childKeys, spec) are
    *  excluded — only consumer-resolved props matter for readiness. */
   readonly notReady = computed<boolean>(() => {
     if (this.mountedReal()) return false;
     const el = this.element();
     if (!el || !el.props) return false;
     const resolved = resolveElementProps(el.props, this.propCtx());
-    for (const v of Object.values(resolved)) {
-      if (v === undefined) return true;
-    }
-    return false;
+    return !isElementReady(this.entry(), resolved);
   });
 
   /** Picks fallback or real based on notReady. The mountedReal latch is
