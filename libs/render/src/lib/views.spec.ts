@@ -100,8 +100,8 @@ describe('toRenderRegistry()', () => {
   it('converts ViewRegistry to AngularRegistry', () => {
     const reg = views({ 'a': CompA, 'b': CompB });
     const renderReg = toRenderRegistry(reg);
-    expect(renderReg.get('a')).toBe(CompA);
-    expect(renderReg.get('b')).toBe(CompB);
+    expect(renderReg.getEntry('a')?.component).toBe(CompA);
+    expect(renderReg.getEntry('b')?.component).toBe(CompB);
     expect(renderReg.names()).toContain('a');
     expect(renderReg.names()).toContain('b');
   });

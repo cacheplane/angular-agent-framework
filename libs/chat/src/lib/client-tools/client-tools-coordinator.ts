@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
-import { effect, type Type } from '@angular/core';
+import { effect } from '@angular/core';
 import { views, type ViewRegistry } from '@threadplane/render';
-import type { RenderEvent } from '@threadplane/render';
+import type { RenderEvent, RenderViewEntry } from '@threadplane/render';
 import type { Agent, ToolCall } from '../agent';
 import type { ClientToolRegistry, ClientToolDef } from './tool-def';
 import type { ClientToolSpec } from './to-json-schema';
@@ -28,10 +28,16 @@ export function toClientToolSpecs(registry: ClientToolRegistry): ClientToolSpec[
   }));
 }
 
-function viewComponents(registry: ClientToolRegistry): Record<string, Type<unknown>> {
-  const out: Record<string, Type<unknown>> = {};
+/** Map each view/ask tool to a RenderViewEntry that carries its schema, so the
+ *  render lib can gate the real component's mount on schema-readiness (showing
+ *  the fallback skeleton while a streaming tool call's args are still
+ *  incomplete) instead of mounting a required-input component too early. */
+function viewComponents(registry: ClientToolRegistry): Record<string, RenderViewEntry> {
+  const out: Record<string, RenderViewEntry> = {};
   for (const [name, def] of Object.entries(registry)) {
-    if (def.kind === 'view' || def.kind === 'ask') out[name] = def.component;
+    if (def.kind === 'view' || def.kind === 'ask') {
+      out[name] = { component: def.component, schema: def.schema };
+    }
   }
   return out;
 }

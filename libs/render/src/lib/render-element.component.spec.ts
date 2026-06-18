@@ -1,7 +1,10 @@
 // SPDX-License-Identifier: MIT
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { Component, input } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
+import { z } from 'zod/v4';
+import { isElementReady } from './internals/element-readiness';
+import { DefaultFallbackComponent } from './default-fallback.component';
 import type { Spec } from '@json-render/core';
 import {
   evaluateVisibility,
@@ -48,7 +51,7 @@ describe('RenderElementComponent — pipeline logic', () => {
     const el = spec.elements['root'];
     expect(el).toBeDefined();
     expect(el.type).toBe('Text');
-    expect(registry.get(el.type)).toBe(TestTextComponent);
+    expect(registry.getEntry(el.type)?.component).toBe(TestTextComponent);
   });
 
   it('should return undefined for unknown element type', () => {
@@ -57,7 +60,7 @@ describe('RenderElementComponent — pipeline logic', () => {
       root: { type: 'UnknownWidget', props: { label: 'Nope' } },
     });
     const el = spec.elements['root'];
-    expect(registry.get(el.type)).toBeUndefined();
+    expect(registry.getEntry(el.type)).toBeUndefined();
   });
 
   it('should return undefined for missing element key', () => {
@@ -232,7 +235,7 @@ describe('RenderElementComponent — children rendering', () => {
       for (const childKey of inputs.childKeys) {
         const childEl = spec.elements[childKey];
         expect(childEl).toBeDefined();
-        expect(registry.get(childEl.type)).toBe(TestTextComponent);
+        expect(registry.getEntry(childEl.type)?.component).toBe(TestTextComponent);
       }
     });
   });
@@ -624,5 +627,46 @@ describe('RenderSpecComponent — VIEW_REGISTRY token-fallback (Task 2)', () => 
     fx.detectChanges();
     expect(fx.nativeElement.querySelector('[data-test="real"]')).toBeNull();
     expect(fx.nativeElement.querySelector('[data-test="fallback"]')).toBeNull();
+  });
+});
+
+// --- Readiness gate tests — schema-aware (RT3) ---
+
+@Component({ selector: 'render-day-card', standalone: true, template: '<div>{{ day() }}</div>' })
+class DayCardStub {
+  readonly day = input.required<number>();
+  readonly places = input.required<string[]>();
+}
+
+describe('RenderElementComponent — readiness gate (schema)', () => {
+  const schema = z.object({ day: z.number(), places: z.array(z.string()) });
+  const registry = defineAngularRegistry({
+    day_card: { component: DayCardStub, fallback: DefaultFallbackComponent, schema },
+  });
+
+  it('is NOT ready (→ fallback) while streamed props miss required schema keys', () => {
+    TestBed.configureTestingModule({});
+    TestBed.runInInjectionContext(() => {
+      const ctx = buildPropResolutionContext(signalStateStore({}));
+      // mid-stream: only status present, day/places absent
+      const resolved = resolveElementProps({ status: 'running' }, ctx);
+      expect(isElementReady(registry.getEntry('day_card'), resolved)).toBe(false);
+      // → mountClass would pick the fallback (DefaultFallbackComponent), so the
+      //   real DayCardStub (with input.required) never mounts: no NG0950.
+      expect(registry.getEntry('day_card')?.fallback).toBe(DefaultFallbackComponent);
+    });
+  });
+
+  it('IS ready (→ real component) once streamed props satisfy the schema', () => {
+    TestBed.configureTestingModule({});
+    TestBed.runInInjectionContext(() => {
+      const ctx = buildPropResolutionContext(signalStateStore({}));
+      const resolved = resolveElementProps(
+        { day: 2, places: ['Eiffel'], status: 'complete' },
+        ctx,
+      );
+      expect(isElementReady(registry.getEntry('day_card'), resolved)).toBe(true);
+      expect(registry.getEntry('day_card')?.component).toBe(DayCardStub);
+    });
   });
 });
