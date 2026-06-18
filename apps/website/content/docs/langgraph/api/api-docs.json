@@ -2349,6 +2349,41 @@
     "examples": []
   },
   {
+    "name": "AGENT_LIFECYCLE",
+    "kind": "const",
+    "description": "",
+    "signature": "InjectionToken<AgentLifecycle>",
+    "examples": []
+  },
+  {
+    "name": "LANGGRAPH_CLIENT",
+    "kind": "const",
+    "description": "Optional adapter clients can pass an explicit Client (e.g. for\n testing). When omitted, the adapter constructs one via\n createLangGraphClient.",
+    "signature": "InjectionToken<Client<DefaultValues, DefaultValues, unknown>>",
+    "examples": []
+  },
+  {
+    "name": "LANGGRAPH_CLIENT_OPTIONS",
+    "kind": "const",
+    "description": "App-wide LangGraph SDK client tuning (e.g. `maxRetries`). Provide once at the\napp root; both the agent's default FetchStreamTransport and the\nLangGraphThreadsAdapter read it so the retry budget is configured in\none place. A call-site `agent({ clientOptions })` or per-agent\n`provideAgent({ clientOptions })` overrides it for that agent.\nAbsent → the SDK default.",
+    "signature": "InjectionToken<LangGraphClientOptions>",
+    "examples": []
+  },
+  {
+    "name": "LANGGRAPH_THREADS_CONFIG",
+    "kind": "const",
+    "description": "",
+    "signature": "InjectionToken<LangGraphThreadsConfig>",
+    "examples": []
+  },
+  {
+    "name": "ResourceStatus",
+    "kind": "const",
+    "description": "Runtime constant mirroring Angular's ResourceStatus string-union type.\nAngular 21 ships ResourceStatus as a pure string-union type (no runtime value),\nso we provide a const-object shim for code that needs runtime comparisons.",
+    "signature": "object",
+    "examples": []
+  },
+  {
     "name": "createLangGraphClient",
     "kind": "function",
     "description": "Construct a LangGraph SDK Client that accepts both absolute URLs\n(`http://localhost:2024`) and relative `/api`-style paths that get\nproxied by middleware in production. The SDK itself rejects\nrelative URLs, so this helper rewrites them against\n`window.location.origin` when running in the browser.\n\nSingle source of truth for the absolute-URL rewrite — the streaming\ntransport (`fetch-stream.transport.ts`) and the threads adapter\n(`LangGraphThreadsAdapter`) both go through here.\n\n`clientOptions.maxRetries` maps to the SDK's `callerOptions.maxRetries`,\nwhich governs how many times a failed request (including the initial\nstream connect) is retried with exponential backoff before the error\nsurfaces. Omitted → the SDK default (currently 4). Apps under test set\n`0` so a forced connection failure surfaces immediately instead of after\nthe full backoff window.",
