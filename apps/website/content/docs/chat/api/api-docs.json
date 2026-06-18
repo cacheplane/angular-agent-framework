@@ -3604,12 +3604,6 @@
     "examples": [],
     "properties": [
       {
-        "name": "latestMessageContent",
-        "type": "Signal<string>",
-        "description": "",
-        "optional": false
-      },
-      {
         "name": "state",
         "type": "Signal<TraceState>",
         "description": "",
@@ -3622,7 +3616,47 @@
         "optional": false
       }
     ],
-    "methods": []
+    "methods": [
+      {
+        "name": "textOf",
+        "signature": "textOf(m: Message): string",
+        "description": "",
+        "params": [
+          {
+            "name": "m",
+            "type": "Message",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
+        "name": "toolCallsFor",
+        "signature": "toolCallsFor(m: Message): ToolCall[]",
+        "description": "",
+        "params": [
+          {
+            "name": "m",
+            "type": "Message",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
+        "name": "toToolCallInfo",
+        "signature": "toToolCallInfo(tc: ToolCall): ToolCallInfo",
+        "description": "",
+        "params": [
+          {
+            "name": "tc",
+            "type": "ToolCall",
+            "description": "",
+            "optional": false
+          }
+        ]
+      }
+    ]
   },
   {
     "name": "ChatSubagentsComponent",
@@ -6654,6 +6688,12 @@
         "type": "string",
         "description": "Tool call ID that spawned this subagent.",
         "optional": false
+      },
+      {
+        "name": "toolCalls",
+        "type": "Signal<ToolCall[]>",
+        "description": "The subagent's own tool calls (name/args/result), referenced by\n`Message.toolCallIds` in `messages`. Optional: adapters that don't surface\nsubagent tool calls omit it; consumers default to `[]`.",
+        "optional": true
       }
     ],
     "examples": []
