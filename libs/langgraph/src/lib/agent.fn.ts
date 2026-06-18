@@ -61,6 +61,7 @@ import {
 import type { ThreadState, ToolProgress } from '@langchain/langgraph-sdk';
 import type { MessageMetadata } from '@langchain/langgraph-sdk/ui';
 import { createStreamManagerBridge } from './internals/stream-manager.bridge';
+import { LANGGRAPH_CLIENT_OPTIONS, resolveClientOptions } from './client/client-options';
 import { buildBranchTree } from './internals/branch-tree';
 import { extractCitations } from './internals/extract-citations';
 import { createClientToolsCapability, mergeClientTools } from './client-tools';
@@ -145,12 +146,20 @@ export function agent<
   // Injection context required
   const destroyRef   = inject(DestroyRef);
   const globalConfig = inject(AGENT_CONFIG, { optional: true });
+  const sharedClientOptions = inject(LANGGRAPH_CLIENT_OPTIONS, { optional: true });
   const destroy$     = new Subject<void>();
   destroyRef.onDestroy(() => { destroy$.next(); destroy$.complete(); });
 
   // Merge: call-site options take precedence over global provider config
   const apiUrl    = options.apiUrl    ?? globalConfig?.apiUrl    ?? '';
   const transport = options.transport ?? globalConfig?.transport;
+  // clientOptions precedence: agent({...}) call-site → provideAgent config →
+  // app-wide LANGGRAPH_CLIENT_OPTIONS token → SDK default.
+  const clientOptions = resolveClientOptions(
+    options.clientOptions,
+    globalConfig?.clientOptions,
+    sharedClientOptions,
+  );
 
   const init = (options.initialValues ?? {}) as T;
 
@@ -291,7 +300,7 @@ export function agent<
   });
 
   const manager = createStreamManagerBridge({
-    options: { ...options, apiUrl, transport },
+    options: { ...options, apiUrl, transport, clientOptions },
     subjects,
     threadId$,
     destroy$: destroy$.asObservable(),

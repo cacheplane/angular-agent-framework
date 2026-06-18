@@ -7,6 +7,13 @@ import {
   LANGGRAPH_CLIENT,
 } from './threads-adapter';
 import type { Client } from '@langchain/langgraph-sdk';
+import { createLangGraphClient } from '../client/create-langgraph-client';
+import { LANGGRAPH_CLIENT_OPTIONS } from '../client/client-options';
+
+vi.mock('../client/create-langgraph-client', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../client/create-langgraph-client')>();
+  return { ...actual, createLangGraphClient: vi.fn(actual.createLangGraphClient) };
+});
 
 function mockClient(searchReturn: unknown[] = []): {
   client: Client;
@@ -139,5 +146,46 @@ describe('LangGraphThreadsAdapter', () => {
       expect.objectContaining({ message: 'boom' }),
     );
     errSpy.mockRestore();
+  });
+});
+
+describe('LangGraphThreadsAdapter client options', () => {
+  beforeEach(() => {
+    TestBed.resetTestingModule();
+    vi.mocked(createLangGraphClient).mockClear();
+  });
+
+  it('threads LANGGRAPH_CLIENT_OPTIONS into createLangGraphClient', () => {
+    TestBed.configureTestingModule({
+      providers: [
+        { provide: LANGGRAPH_THREADS_CONFIG, useValue: { apiUrl: 'http://x' } },
+        { provide: LANGGRAPH_CLIENT_OPTIONS, useValue: { maxRetries: 0 } },
+      ],
+    });
+    TestBed.inject(LangGraphThreadsAdapter);
+    expect(createLangGraphClient).toHaveBeenCalledWith('http://x', { maxRetries: 0 });
+  });
+
+  it('passes undefined options when the token is absent', () => {
+    TestBed.configureTestingModule({
+      providers: [
+        { provide: LANGGRAPH_THREADS_CONFIG, useValue: { apiUrl: 'http://x' } },
+      ],
+    });
+    TestBed.inject(LangGraphThreadsAdapter);
+    expect(createLangGraphClient).toHaveBeenCalledWith('http://x', undefined);
+  });
+
+  it('does not construct a client when LANGGRAPH_CLIENT is provided (bypass intact)', () => {
+    const injected = { threads: {} } as unknown as Client;
+    TestBed.configureTestingModule({
+      providers: [
+        { provide: LANGGRAPH_THREADS_CONFIG, useValue: { apiUrl: 'http://x' } },
+        { provide: LANGGRAPH_CLIENT_OPTIONS, useValue: { maxRetries: 0 } },
+        { provide: LANGGRAPH_CLIENT, useValue: injected },
+      ],
+    });
+    TestBed.inject(LangGraphThreadsAdapter);
+    expect(createLangGraphClient).not.toHaveBeenCalled();
   });
 });
