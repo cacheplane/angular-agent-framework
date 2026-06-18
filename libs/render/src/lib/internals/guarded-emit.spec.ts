@@ -5,7 +5,7 @@ import { makeGuardedEmit } from './guarded-emit';
 describe('makeGuardedEmit', () => {
   it('forwards events while not destroyed', () => {
     const seen: number[] = [];
-    let destroyed = false;
+    const destroyed = false;
     const emit = makeGuardedEmit<number>((n) => seen.push(n), () => destroyed);
     emit(1);
     emit(2);
