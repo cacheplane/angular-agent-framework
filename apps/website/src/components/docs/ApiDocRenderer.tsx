@@ -16,7 +16,7 @@ interface ApiMethod {
 
 export interface ApiDocEntry {
   name: string;
-  kind: 'function' | 'class' | 'interface' | 'type';
+  kind: 'function' | 'class' | 'interface' | 'type' | 'const';
   description: string;
   signature?: string;
   params?: ApiParam[];

@@ -3,6 +3,7 @@ import { Injectable, InjectionToken, inject, signal, type Signal, type WritableS
 import type { Client, Thread as SdkThread } from '@langchain/langgraph-sdk';
 import type { Thread } from '@threadplane/chat';
 import { createLangGraphClient } from '../client/create-langgraph-client';
+import { LANGGRAPH_CLIENT_OPTIONS } from '../client/client-options';
 
 /**
  * Configuration consumed by {@link LangGraphThreadsAdapter}. Provide
@@ -61,8 +62,9 @@ export const LANGGRAPH_CLIENT = new InjectionToken<Client>('LANGGRAPH_CLIENT');
 @Injectable({ providedIn: 'root' })
 export class LangGraphThreadsAdapter {
   private readonly config = inject(LANGGRAPH_THREADS_CONFIG);
+  private readonly sharedClientOptions = inject(LANGGRAPH_CLIENT_OPTIONS, { optional: true }) ?? undefined;
   private readonly client: Client = inject(LANGGRAPH_CLIENT, { optional: true })
-    ?? createLangGraphClient(this.config.apiUrl);
+    ?? createLangGraphClient(this.config.apiUrl, this.sharedClientOptions);
 
   private readonly fallback: string = this.config.titleFallback ?? 'Untitled';
 

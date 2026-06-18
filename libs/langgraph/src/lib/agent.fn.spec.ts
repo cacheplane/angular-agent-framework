@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
 import type { AIMessage as CoreAIMessage } from '@langchain/core/messages';
@@ -6,6 +6,14 @@ import { agent } from './agent.fn';
 import { MockAgentTransport } from './transport/mock-stream.transport';
 import type { StreamEvent } from './agent.types';
 import type { ThreadState } from '@langchain/langgraph-sdk';
+import { createLangGraphClient } from './client/create-langgraph-client';
+import { LANGGRAPH_CLIENT_OPTIONS } from './client/client-options';
+import { AGENT_CONFIG } from './agent.provider';
+
+vi.mock('./client/create-langgraph-client', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('./client/create-langgraph-client')>();
+  return { ...actual, createLangGraphClient: vi.fn(actual.createLangGraphClient) };
+});
 
 function withInjectionContext<T>(fn: () => T): T {
   let result!: T;
@@ -893,6 +901,110 @@ describe('agent', () => {
 
       await expect(ref.regenerate(0)).rejects.toThrow(/No user message/);
     });
+  });
+});
+
+describe('agent — LANGGRAPH_CLIENT_OPTIONS resolution (no mock transport)', () => {
+  // Spy on createLangGraphClient so we can assert which clientOptions reach
+  // the FetchStreamTransport constructor, without making real network calls.
+  // The mock returns a minimal stub object that satisfies all downstream
+  // accesses (threads.create, runs.stream, etc. are never called in these
+  // construction-only tests).
+  const mockClientStub = {
+    threads: {
+      create: vi.fn().mockResolvedValue({ thread_id: 'stub-thread' }),
+      getState: vi.fn().mockResolvedValue({ values: {}, next: [] }),
+      patchState: vi.fn().mockResolvedValue(undefined),
+      search: vi.fn().mockResolvedValue([]),
+    },
+    runs: {
+      stream: vi.fn().mockReturnValue((async function* () {})()),
+    },
+  };
+
+  const createLangGraphClientMock = createLangGraphClient as ReturnType<typeof vi.fn>;
+
+  beforeEach(() => {
+    TestBed.resetTestingModule();
+    createLangGraphClientMock.mockClear();
+    createLangGraphClientMock.mockReturnValue(mockClientStub);
+  });
+
+  it('case 1 — token only: passes token clientOptions to createLangGraphClient', () => {
+    TestBed.configureTestingModule({
+      providers: [
+        { provide: LANGGRAPH_CLIENT_OPTIONS, useValue: { maxRetries: 0 } },
+      ],
+    });
+
+    TestBed.runInInjectionContext(() => {
+      agent({ apiUrl: 'http://localhost:2024', assistantId: 'a' });
+    });
+
+    expect(createLangGraphClientMock).toHaveBeenCalledWith(
+      'http://localhost:2024',
+      { maxRetries: 0 },
+    );
+  });
+
+  it('case 2 — call-site wins: call-site clientOptions override the token', () => {
+    TestBed.configureTestingModule({
+      providers: [
+        { provide: LANGGRAPH_CLIENT_OPTIONS, useValue: { maxRetries: 0 } },
+      ],
+    });
+
+    TestBed.runInInjectionContext(() => {
+      agent({
+        apiUrl: 'http://localhost:2024',
+        assistantId: 'a',
+        clientOptions: { maxRetries: 7 },
+      });
+    });
+
+    expect(createLangGraphClientMock).toHaveBeenCalledWith(
+      'http://localhost:2024',
+      { maxRetries: 7 },
+    );
+  });
+
+  it('case 3 — none provided: passes undefined clientOptions to createLangGraphClient', () => {
+    TestBed.configureTestingModule({});
+
+    TestBed.runInInjectionContext(() => {
+      agent({ apiUrl: 'http://localhost:2024', assistantId: 'a' });
+    });
+
+    expect(createLangGraphClientMock).toHaveBeenCalledWith(
+      'http://localhost:2024',
+      undefined,
+    );
+  });
+
+  it('case 4 — AGENT_CONFIG middle layer: provideAgent clientOptions override the token', () => {
+    TestBed.configureTestingModule({
+      providers: [
+        { provide: LANGGRAPH_CLIENT_OPTIONS, useValue: { maxRetries: 0 } },
+        {
+          provide: AGENT_CONFIG,
+          useValue: {
+            assistantId: 'a',
+            apiUrl: 'http://localhost:2024',
+            clientOptions: { maxRetries: 3 },
+          },
+        },
+      ],
+    });
+
+    TestBed.runInInjectionContext(() => {
+      // No call-site clientOptions — AGENT_CONFIG.clientOptions is the winner.
+      agent({ apiUrl: 'http://localhost:2024', assistantId: 'a' });
+    });
+
+    expect(createLangGraphClientMock).toHaveBeenCalledWith(
+      'http://localhost:2024',
+      { maxRetries: 3 },
+    );
   });
 });
 
