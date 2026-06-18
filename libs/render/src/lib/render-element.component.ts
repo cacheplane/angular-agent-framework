@@ -28,7 +28,8 @@ import { RENDER_HOST, type RenderHost } from './contexts/render-host';
 import { REPEAT_SCOPE } from './contexts/repeat-scope';
 import type { RepeatScope } from './contexts/repeat-scope';
 import { buildPropResolutionContext } from './internals/prop-signal';
-import type { AngularComponentRenderer } from './render.types';
+import { isElementReady } from './internals/element-readiness';
+import type { AngularComponentRenderer, NormalizedEntry } from './render.types';
 
 /** Cache of declared input names per component class. NgComponentOutlet
  * passes every key in its `inputs` prop to the target; Angular dev mode
@@ -108,6 +109,8 @@ export class RenderElementComponent implements OnInit {
   readonly parentInjector = inject(Injector);
   private readonly destroyRef = inject(DestroyRef);
 
+  private destroyed = false;
+
   constructor() {
     this.destroyRef.onDestroy(() => {
       const el = this.element();
@@ -120,6 +123,7 @@ export class RenderElementComponent implements OnInit {
           elementType: el.type,
         });
       }
+      this.destroyed = true;
     });
 
     // Latch mountedReal=true once the real component is selected. Lives in
@@ -131,7 +135,7 @@ export class RenderElementComponent implements OnInit {
       const el = this.element();
       if (!el) return;
       // Only latch when notReady is false AND a real component is registered.
-      if (!this.notReady() && this.ctx.registry.get(el.type)) {
+      if (!this.notReady() && this.entry()?.component) {
         this.mountedReal.set(true);
       }
     });
@@ -156,11 +160,17 @@ export class RenderElementComponent implements OnInit {
     { equal: Object.is },
   );
 
+  /** The full normalized registry entry for this element type. */
+  readonly entry = computed<NormalizedEntry | undefined>(() => {
+    const el = this.element();
+    return el ? this.ctx.registry.getEntry(el.type) : undefined;
+  });
+
   /** The Angular component class for this element type. */
   readonly componentClass = computed<AngularComponentRenderer | null>(() => {
     const el = this.element();
     if (!el) return null;
-    return this.ctx.registry.get(el.type) ?? null;
+    return this.entry()?.component ?? null;
   });
 
   /** Prop resolution context built from store + repeat scope. */
@@ -176,19 +186,18 @@ export class RenderElementComponent implements OnInit {
    *  prop later becomes undefined. Per-instance monotonic gate. */
   private readonly mountedReal = signal<boolean>(false);
 
-  /** True when ANY resolved prop value is undefined (i.e. a state
-   *  binding points at a path the store hasn't populated). Framework-
-   *  injected keys (bindings, emit, loading, childKeys, spec) are
+  /** True when the element is not yet ready to mount the real component.
+   *  Delegates to `isElementReady` which checks:
+   *  1. Any undefined-valued resolved prop (state binding still loading).
+   *  2. A sync Standard-Schema gate if the registry entry declares a schema.
+   *  Framework-injected keys (bindings, emit, loading, childKeys, spec) are
    *  excluded — only consumer-resolved props matter for readiness. */
   readonly notReady = computed<boolean>(() => {
     if (this.mountedReal()) return false;
     const el = this.element();
     if (!el || !el.props) return false;
     const resolved = resolveElementProps(el.props, this.propCtx());
-    for (const v of Object.values(resolved)) {
-      if (v === undefined) return true;
-    }
-    return false;
+    return !isElementReady(this.entry(), resolved);
   });
 
   /** Picks fallback or real based on notReady. The mountedReal latch is
@@ -197,9 +206,9 @@ export class RenderElementComponent implements OnInit {
   readonly mountClass = computed<AngularComponentRenderer | null>(() => {
     const el = this.element();
     if (!el) return null;
-    const real = this.ctx.registry.get(el.type) ?? null;
+    const real = this.entry()?.component ?? null;
     if (this.notReady()) {
-      return this.ctx.registry.getFallback(el.type) ?? null;
+      return this.entry()?.fallback ?? null;
     }
     return real;
   });
@@ -232,10 +241,9 @@ export class RenderElementComponent implements OnInit {
    * injectRenderHost(). `set` writes the store; `emit` routes element
    * handlers; `result` surfaces a RenderResultEvent for this element. */
   readonly host: RenderHost = {
-    set: (path: string, value: unknown) => this.ctx.store?.set(path, value),
-    emit: (event: string, payload?: Record<string, unknown>) => this.invokeHandlers(event, payload),
-    result: (value: unknown) =>
-      this.ctx.emitEvent?.({ type: 'result', value, elementKey: this.elementKey() }),
+    set: (path: string, value: unknown) => { if (this.destroyed) return; this.ctx.store?.set(path, value); },
+    emit: (event: string, payload?: Record<string, unknown>) => { if (this.destroyed) return; this.invokeHandlers(event, payload); },
+    result: (value: unknown) => { if (this.destroyed) return; this.ctx.emitEvent?.({ type: 'result', value, elementKey: this.elementKey() }); },
   };
 
   /** Emit function passed to mounted view components as the `emit` framework

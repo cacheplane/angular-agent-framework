@@ -35,20 +35,25 @@ Use the object form to configure a custom per-entry fallback (see [Per-Component
 
 ### Returns
 
-An `AngularRegistry` object with two methods:
+An `AngularRegistry` object with a single entry accessor:
 
 ```typescript
 interface AngularRegistry {
-  get(name: string): AngularComponentRenderer | undefined;
-  getFallback(name: string): AngularComponentRenderer | undefined;
+  getEntry(name: string): NormalizedEntry | undefined;
   names(): string[];
+}
+
+interface NormalizedEntry {
+  component: Type<unknown>;
+  fallback: Type<unknown>;
+  schema?: StandardSchemaV1;
+  description?: string;
 }
 ```
 
 | Method | Description |
 |--------|-------------|
-| `get(name)` | Returns the component class for the given type name, or `undefined` if not registered |
-| `getFallback(name)` | Returns the configured fallback renderer for a registered name -- the entry's own `fallback`, the library's default fallback if the entry omits one, or `undefined` if the name isn't registered. |
+| `getEntry(name)` | Returns the fully-normalized entry for a registered name, or `undefined` if not registered. The component, the resolved `fallback` (the entry's own or the library default), and any optional `schema`/`description` all hang off the returned object. |
 | `names()` | Returns an array of all registered type name strings |
 
 ## Usage
@@ -65,10 +70,10 @@ const registry = defineAngularRegistry({
   Card: CardComponent,
 });
 
-registry.get('Text');    // TextComponent
-registry.get('Card');    // CardComponent
-registry.get('Missing'); // undefined
-registry.names();        // ['Text', 'Card']
+registry.getEntry('Text')?.component;    // TextComponent
+registry.getEntry('Card')?.component;    // CardComponent
+registry.getEntry('Missing');            // undefined
+registry.names();                        // ['Text', 'Card']
 ```
 
 ### With provideRender()
@@ -118,16 +123,16 @@ const registry = defineAngularRegistry({
   Card: { component: CardComponent, fallback: CardSkeletonComponent },
 });
 
-registry.getFallback('Card'); // CardSkeletonComponent (the configured fallback)
-registry.getFallback('Text'); // DefaultFallbackComponent (entry omits one)
-registry.getFallback('Missing'); // undefined (not registered)
+registry.getEntry('Card')?.fallback; // CardSkeletonComponent (the configured fallback)
+registry.getEntry('Text')?.fallback; // DefaultFallbackComponent (entry omits one)
+registry.getEntry('Missing');        // undefined (not registered)
 ```
 
 An entry that omits `fallback` -- including every bare-component entry like `Text` above -- falls back to the library's `DefaultFallbackComponent`. Once the real component mounts, the choice is monotonic for that element instance: a later prop resolving to `undefined` never reverts it to the fallback.
 
 ## Internal Behavior
 
-The function normalizes each input entry into a `{ component, fallback }` pair and stores them in an internal `Map` for O(1) lookups. A bare component class is paired with `DefaultFallbackComponent`; an object entry keeps its own `fallback` or falls back to the default:
+The function normalizes each input entry into a `NormalizedEntry` (`{ component, fallback, schema?, description? }`) and stores them in an internal `Map` for O(1) lookups. A bare component class is paired with `DefaultFallbackComponent`; an object entry keeps its own `fallback` (or the default) and preserves any `schema`/`description`:
 
 ```typescript
 function normalize(
@@ -137,10 +142,13 @@ function normalize(
   if (typeof entry === 'function') {
     return { component: entry, fallback: DefaultFallbackComponent };
   }
-  // Object form — preserve component; use configured fallback or default.
+  // Object form — preserve component; use configured fallback or default;
+  // carry the optional schema/description through untouched.
   return {
     component: entry.component,
     fallback: entry.fallback ?? DefaultFallbackComponent,
+    schema: entry.schema,
+    description: entry.description,
   };
 }
 
@@ -152,8 +160,7 @@ function defineAngularRegistry(
     map.set(name, normalize(entry));
   }
   return {
-    get: (name: string) => map.get(name)?.component,
-    getFallback: (name: string) => map.get(name)?.fallback,
+    getEntry: (name: string) => map.get(name),
     names: () => [...map.keys()],
   };
 }

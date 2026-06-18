@@ -274,3 +274,23 @@ describe('createClientToolsCoordinator()', () => {
     }).not.toThrow();
   });
 });
+
+describe('viewRegistry carries each view/ask tool schema (render mount-readiness gate)', () => {
+  it('attaches the Standard Schema to view and ask registry entries', () => {
+    const viewSchema = z.object({ day: z.number(), places: z.array(z.string()) });
+    const askSchema = z.object({ day: z.number() });
+    const registry = tools({
+      get_it: action('read', z.object({}), async () => ({})),
+      day_card: view('show a day', viewSchema, FakeViewComponent),
+      clear_day: ask('confirm clear', askSchema, FakeAskComponent),
+    });
+    const { viewRegistry } = createClientToolsCoordinator(registry);
+    // Entries are RenderViewEntry objects { component, schema } — the schema must
+    // survive so the render lib can gate the real mount until streamed props validate.
+    expect((viewRegistry['day_card'] as { component: unknown }).component).toBe(FakeViewComponent);
+    expect((viewRegistry['day_card'] as { schema: unknown }).schema).toBe(viewSchema);
+    expect((viewRegistry['clear_day'] as { schema: unknown }).schema).toBe(askSchema);
+    // function (non-view/ask) tools are not in the view registry.
+    expect(viewRegistry['get_it']).toBeUndefined();
+  });
+});
