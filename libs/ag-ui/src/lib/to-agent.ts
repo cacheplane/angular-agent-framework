@@ -245,9 +245,24 @@ export function toAgent(source: AbstractAgent, options: ToAgentOptions = {}): Ag
         toolCallId: (entry.content()['toolCallId'] as string) ?? id,
         name: entry.content()['name'] as string | undefined,
         status: computed(() => (entry.content()['status'] as SubagentStatus) ?? 'running'),
-        messages: computed<Message[]>(() => [
-          { id, role: 'assistant', content: String(entry.content()['text'] ?? '') },
-        ]),
+        messages: computed<Message[]>(() => {
+          const c = entry.content();
+          const raw = c['messages'];
+          if (Array.isArray(raw)) {
+            return (raw as Array<Record<string, unknown>>).map((m, i) => ({
+              id: (m['id'] as string) ?? `${id}-${i}`,
+              role: (m['role'] as Message['role']) ?? 'assistant',
+              content: typeof m['content'] === 'string' ? (m['content'] as string) : (m['content'] as Message['content']) ?? '',
+              ...(Array.isArray(m['toolCallIds']) ? { toolCallIds: m['toolCallIds'] as string[] } : {}),
+              ...(typeof m['reasoning'] === 'string' ? { reasoning: m['reasoning'] as string } : {}),
+            }));
+          }
+          return [{ id, role: 'assistant', content: String(c['text'] ?? '') }];
+        }),
+        toolCalls: computed<ToolCall[]>(() => {
+          const raw = entry.content()['toolCalls'];
+          return Array.isArray(raw) ? (raw as ToolCall[]) : [];
+        }),
         state: computed(() => (entry.content()['state'] as Record<string, unknown>) ?? {}),
       };
       subagentWrappers.set(id, w);

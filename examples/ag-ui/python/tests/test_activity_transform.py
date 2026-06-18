@@ -14,16 +14,122 @@ def test_started_maps_to_activity_snapshot():
     assert ev.type == EventType.ACTIVITY_SNAPSHOT
     assert ev.message_id == "tc-1"
     assert ev.activity_type == "subagent"
-    assert ev.content == {"toolCallId": "tc-1", "name": "research", "status": "running", "text": ""}
+    assert ev.content == {
+        "toolCallId": "tc-1",
+        "name": "research",
+        "status": "running",
+        "messages": [],
+        "toolCalls": [],
+    }
     assert ev.replace is True
 
 
-def test_message_maps_to_activity_delta_replace_text():
+def test_message_start_maps_to_activity_delta_add_message():
     ev = subagent_custom_to_activity(_custom(
-        {"subagent_id": "tc-1", "phase": "message", "text": "Paris is"}))
+        {"subagent_id": "tc-1", "phase": "message_start", "message_index": 0}))
     assert ev.type == EventType.ACTIVITY_DELTA
     assert ev.message_id == "tc-1"
-    assert ev.patch == [{"op": "replace", "path": "/text", "value": "Paris is"}]
+    assert ev.patch == [
+        {
+            "op": "add",
+            "path": "/messages/-",
+            "value": {"id": "tc-1-0", "role": "assistant", "content": "", "toolCallIds": []},
+        }
+    ]
+
+
+def test_message_start_uses_message_index_in_id():
+    ev = subagent_custom_to_activity(_custom(
+        {"subagent_id": "tc-1", "phase": "message_start", "message_index": 2}))
+    assert ev.patch[0]["value"]["id"] == "tc-1-2"
+
+
+def test_message_maps_to_activity_delta_replace_content():
+    ev = subagent_custom_to_activity(_custom(
+        {"subagent_id": "tc-1", "phase": "message", "message_index": 0, "text": "Paris is"}))
+    assert ev.type == EventType.ACTIVITY_DELTA
+    assert ev.message_id == "tc-1"
+    assert ev.patch == [{"op": "replace", "path": "/messages/0/content", "value": "Paris is"}]
+
+
+def test_message_uses_correct_index_in_path():
+    ev = subagent_custom_to_activity(_custom(
+        {"subagent_id": "tc-1", "phase": "message", "message_index": 3, "text": "hello"}))
+    assert ev.patch == [{"op": "replace", "path": "/messages/3/content", "value": "hello"}]
+
+
+def test_tool_call_maps_to_two_op_patch():
+    ev = subagent_custom_to_activity(_custom({
+        "subagent_id": "tc-1",
+        "phase": "tool_call",
+        "message_index": 0,
+        "tool_call_id": "call-abc",
+        "name": "search",
+        "args": {"query": "Paris"},
+    }))
+    assert ev.type == EventType.ACTIVITY_DELTA
+    assert ev.message_id == "tc-1"
+    assert ev.patch == [
+        {
+            "op": "add",
+            "path": "/toolCalls/-",
+            "value": {"id": "call-abc", "name": "search", "args": {"query": "Paris"}, "status": "running"},
+        },
+        {
+            "op": "add",
+            "path": "/messages/0/toolCallIds/-",
+            "value": "call-abc",
+        },
+    ]
+
+
+def test_tool_call_uses_message_index_in_path():
+    ev = subagent_custom_to_activity(_custom({
+        "subagent_id": "tc-1",
+        "phase": "tool_call",
+        "message_index": 2,
+        "tool_call_id": "call-xyz",
+        "name": "lookup",
+        "args": {},
+    }))
+    assert ev.patch[1]["path"] == "/messages/2/toolCallIds/-"
+
+
+def test_tool_result_maps_to_two_op_patch():
+    ev = subagent_custom_to_activity(_custom({
+        "subagent_id": "tc-1",
+        "phase": "tool_result",
+        "tool_index": 0,
+        "result": "Paris, France",
+        "status": "complete",
+    }))
+    assert ev.type == EventType.ACTIVITY_DELTA
+    assert ev.message_id == "tc-1"
+    assert ev.patch == [
+        {"op": "replace", "path": "/toolCalls/0/status", "value": "complete"},
+        {"op": "replace", "path": "/toolCalls/0/result", "value": "Paris, France"},
+    ]
+
+
+def test_tool_result_defaults_status_to_complete():
+    ev = subagent_custom_to_activity(_custom({
+        "subagent_id": "tc-1",
+        "phase": "tool_result",
+        "tool_index": 1,
+        "result": "some result",
+    }))
+    assert ev.patch[0] == {"op": "replace", "path": "/toolCalls/1/status", "value": "complete"}
+
+
+def test_tool_result_uses_tool_index_in_path():
+    ev = subagent_custom_to_activity(_custom({
+        "subagent_id": "tc-1",
+        "phase": "tool_result",
+        "tool_index": 3,
+        "result": "done",
+    }))
+    assert ev.patch[0]["path"] == "/toolCalls/3/status"
+    assert ev.patch[1]["path"] == "/toolCalls/3/result"
 
 
 def test_finished_maps_to_activity_delta_replace_status():
@@ -31,6 +137,23 @@ def test_finished_maps_to_activity_delta_replace_status():
         {"subagent_id": "tc-1", "phase": "finished", "status": "complete"}))
     assert ev.type == EventType.ACTIVITY_DELTA
     assert ev.patch == [{"op": "replace", "path": "/status", "value": "complete"}]
+
+
+def test_finished_defaults_status_to_complete():
+    ev = subagent_custom_to_activity(_custom(
+        {"subagent_id": "tc-1", "phase": "finished"}))
+    assert ev.patch == [{"op": "replace", "path": "/status", "value": "complete"}]
+
+
+def test_finished_custom_status():
+    ev = subagent_custom_to_activity(_custom(
+        {"subagent_id": "tc-1", "phase": "finished", "status": "error"}))
+    assert ev.patch == [{"op": "replace", "path": "/status", "value": "error"}]
+
+
+def test_unknown_phase_returns_none():
+    assert subagent_custom_to_activity(_custom(
+        {"subagent_id": "tc-1", "phase": "unknown_phase"})) is None
 
 
 def test_non_subagent_event_returns_none():
