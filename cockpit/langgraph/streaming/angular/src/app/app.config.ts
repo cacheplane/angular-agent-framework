@@ -3,10 +3,11 @@ import { ApplicationConfig } from '@angular/core';
 import { provideAgent } from '@threadplane/langgraph';
 import { provideChat } from '@threadplane/chat';
 import { environment } from '../environments/environment';
+import { STREAMING_AGENT } from './agent-ref';
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideAgent({
+    provideAgent(STREAMING_AGENT, {
       apiUrl: environment.langGraphApiUrl,
       assistantId: environment.streamingAssistantId,
     }),

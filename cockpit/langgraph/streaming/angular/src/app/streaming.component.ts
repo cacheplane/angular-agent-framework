@@ -2,6 +2,7 @@
 import { Component } from '@angular/core';
 import { ChatComponent, ChatWelcomeSuggestionComponent } from '@threadplane/chat';
 import { injectAgent } from '@threadplane/langgraph';
+import { STREAMING_AGENT, type StreamingState } from './agent-ref';
 import { ExampleChatLayoutComponent } from '@threadplane/example-layouts';
 
 const WELCOME_SUGGESTIONS = [
@@ -37,7 +38,9 @@ const WELCOME_SUGGESTIONS = [
   `,
 })
 export class StreamingComponent {
-  protected readonly agent = injectAgent();
+  protected readonly agent = injectAgent(STREAMING_AGENT);
+  // Typed read: prove StreamingState flows through DI.
+  protected readonly _typedState: StreamingState = this.agent.value();
   protected readonly suggestions = WELCOME_SUGGESTIONS;
 
   protected send(text: string): void {

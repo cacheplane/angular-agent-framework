@@ -14,6 +14,7 @@ import { Router, RouterOutlet, NavigationEnd } from '@angular/router';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { filter, map, startWith } from 'rxjs/operators';
 import { injectAgent, provideAgent, LangGraphThreadsAdapter, refreshOnRunEnd } from '@threadplane/langgraph';
+import { DEMO_AGENT_REF, type DemoState } from './agent-ref';
 import { ThreadplaneTelemetryService } from '@threadplane/telemetry/browser';
 import {
   ChatInterruptPanelComponent,
@@ -90,7 +91,7 @@ function parseUrl(url: string): { mode: DemoMode; threadId: string | null } {
     // AGENT singleton is first constructed), not at module-load. This matters
     // for `clientOptions` below — the e2e flag in localStorage is only reliably
     // readable once the app is running, after bootstrap.
-    provideAgent(() => ({
+    provideAgent(DEMO_AGENT_REF, () => ({
       apiUrl: environment.langGraphApiUrl,
       assistantId: environment.assistantId,
       // Production keeps the SDK's default connect-retry budget. e2e specs that
@@ -448,7 +449,7 @@ export class DemoShell {
       this.telemetry,
       () => this.model(),
     );
-    const a = injectAgent();
+    const a = injectAgent(DEMO_AGENT_REF);
     void this.telemetry.capture('ngaf:browser_chat_init', { surface: TELEMETRY_SURFACE });
     const orig = a.submit.bind(a);
     (a as { submit: typeof a.submit }).submit = (async (
@@ -470,6 +471,9 @@ export class DemoShell {
     }) as typeof a.submit;
     return a;
   })();
+
+  /** Typed read: proves DemoState flows through DI. Not used at runtime. */
+  protected readonly _demoState: DemoState = this.agent.value();
 
   protected onModeChange(next: DemoMode | string): void {
     // Preserve the active thread across mode switches: /embed/abc →
