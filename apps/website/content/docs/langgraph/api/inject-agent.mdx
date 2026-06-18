@@ -45,6 +45,7 @@ export const MY_AGENT = createAgentRef<MyState>('my-agent');
 // Register in app.config.ts providers:
 provideAgent(MY_AGENT, {
   apiUrl: 'http://localhost:2024',
+  assistantId: 'my-graph',
   threadId: () => localStorage.getItem('threadId') ?? undefined,
   onThreadId: (id) => localStorage.setItem('threadId', id),
 });
@@ -55,7 +56,7 @@ readonly chat = injectAgent(MY_AGENT);
 // chat.state()  →  MyState
 ```
 
-See [`createAgentRef`](/docs/langgraph/api/create-agent-ref) for the full ref API, including the optional `BagTemplate` second generic for typed interrupt payloads.
+`createAgentRef<T>(debugName?)` is exported from `@threadplane/chat`; the ref carries the state shape `T`. For typed interrupt payloads, pass the `BagTemplate` as the second generic at the inject site — `injectAgent<T, Bag>(ref)` — as shown in the [Interrupts guide](/docs/langgraph/guides/interrupts).
 
 Pair it with `provideAgent()` at bootstrap to configure the API URL, assistant id, thread persistence, and transport:
 
@@ -71,6 +72,7 @@ bootstrapApplication(AppComponent, {
   providers: [
     provideAgent(MY_AGENT, {
       apiUrl: 'http://localhost:2024',
+      assistantId: 'my-graph',
       threadId: () => localStorage.getItem('threadId') ?? undefined,
       onThreadId: (id) => localStorage.setItem('threadId', id),
     }),

@@ -27,7 +27,15 @@ export type ComponentInputs<C> = {
 /** STRICT: every prop the schema PRODUCES must be a declared input with an
  *  assignable type. FLEXIBLE: the component may declare extra inputs the schema
  *  doesn't fill. A schema key absent from `Inputs` maps to `never`, so its
- *  (non-never) value fails assignment and the error pins to that prop. */
+ *  (non-never) value fails assignment and the error pins to that prop.
+ *
+ *  This mapped type is homomorphic over `keyof Out`, so it preserves the
+ *  optionality (`?`) of each schema prop. A consequence: an OPTIONAL schema prop
+ *  is accepted against a `required` component input — the compiler cannot know
+ *  the model will actually supply it. That residual case (required input not
+ *  guaranteed by the schema) is caught at runtime by the schema-readiness mount
+ *  gate, which holds the fallback until the streamed props validate. Compile
+ *  time blocks structural mismatches; runtime blocks missing-but-required props. */
 export type CompatibleProps<Out, Inputs> = {
   [K in keyof Out]: K extends keyof Inputs ? Inputs[K] : never;
 };
