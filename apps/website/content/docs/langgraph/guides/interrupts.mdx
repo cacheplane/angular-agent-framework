@@ -145,6 +145,7 @@ import {
   ChangeDetectionStrategy,
 } from '@angular/core';
 import { injectAgent } from '@threadplane/langgraph';
+import { createAgentRef } from '@threadplane/chat';
 import type { BaseMessage } from '@langchain/core/messages';
 
 interface ApprovalPayload {
@@ -160,13 +161,18 @@ interface AgentState {
   approval_result: { approved: boolean; reason?: string };
 }
 
+export const APPROVAL_AGENT = createAgentRef<AgentState>('approval_agent');
+
+// Configure in app.config.ts:
+// provideAgent(APPROVAL_AGENT, { apiUrl: '...' });
+
 @Component({
   selector: 'app-approval',
   templateUrl: './approval.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ApprovalComponent {
-  protected readonly agent = injectAgent<AgentState>();
+  protected readonly agent = injectAgent(APPROVAL_AGENT);
 
   messages = computed(() => this.agent.messages());
   pendingApproval = computed(() => this.agent.interrupt());
@@ -362,6 +368,7 @@ import {
   ChangeDetectionStrategy,
 } from '@angular/core';
 import { injectAgent } from '@threadplane/langgraph';
+import { createAgentRef } from '@threadplane/chat';
 import type { BaseMessage } from '@langchain/core/messages';
 
 interface StepApproval {
@@ -380,13 +387,18 @@ type DeployState = {
   approval_result: { approved: boolean; reason?: string };
 };
 
+export const DEPLOY_AGENT = createAgentRef<DeployState>('approval_agent');
+
+// Configure in app.config.ts:
+// provideAgent(DEPLOY_AGENT, { apiUrl: '...' });
+
 @Component({
   selector: 'app-deploy-approval',
   templateUrl: './approval.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DeployApprovalComponent {
-  protected readonly agent = injectAgent<DeployState>();
+  protected readonly agent = injectAgent(DEPLOY_AGENT);
 
   currentStep = computed(() => {
     const interrupt = this.agent.interrupt();
@@ -464,6 +476,7 @@ By default, `interrupt()` returns an untyped value. The `BagTemplate` generic pa
 
 ```typescript
 import { injectAgent, BagTemplate } from '@threadplane/langgraph';
+import { createAgentRef } from '@threadplane/chat';
 
 // Define the exact shape of your interrupt payload
 interface DeployApproval {
@@ -478,7 +491,10 @@ type DeployBag = BagTemplate & {
   InterruptType: DeployApproval;
 };
 
-const agent = injectAgent<DeployState, DeployBag>();
+// createAgentRef accepts the BagTemplate as its second generic
+export const TYPED_DEPLOY_AGENT = createAgentRef<DeployState, DeployBag>('approval_agent');
+
+const agent = injectAgent(TYPED_DEPLOY_AGENT);
 
 const raw = agent.langGraphInterrupts();
 //    ^? Interrupt<DeployApproval>[]
