@@ -10,7 +10,7 @@ import type { AgentCheckpoint } from './agent-checkpoint';
  * implement this. Pure request/response runtimes that don't have checkpoints
  * should implement plain Agent.
  */
-export interface AgentWithHistory extends Agent {
+export interface AgentWithHistory<TState = Record<string, unknown>> extends Agent<TState> {
   history: Signal<AgentCheckpoint[]>;
   /**
    * Optional reactive map of `messageId → checkpointId`, computed by
