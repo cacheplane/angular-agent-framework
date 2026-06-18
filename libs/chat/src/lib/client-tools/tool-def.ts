@@ -2,32 +2,47 @@
 import type { Type } from '@angular/core';
 import type { StandardSchemaV1, StandardSchemaInferOutput } from '@threadplane/render';
 
-/** A client tool the model can call; executed in the browser. */
-export type ClientToolDef =
-  | FunctionToolDef
-  | ViewToolDef
-  | AskToolDef;
-
-export interface FunctionToolDef<S extends StandardSchemaV1 = StandardSchemaV1> {
+/** Precise authored function tool — what `action()` returns. Carries the schema
+ *  `S` and the handler's resolved return type `R`. */
+export interface FunctionToolDef<S extends StandardSchemaV1 = StandardSchemaV1, R = unknown> {
   readonly kind: 'function';
   readonly description: string;
   readonly schema: S;
-  readonly handler: (args: StandardSchemaInferOutput<S>) => unknown | Promise<unknown>;
+  readonly handler: (args: StandardSchemaInferOutput<S>) => R | Promise<R>;
 }
 
-export interface ViewToolDef {
+/** Bivariant union member used only for registry storage/iteration. The handler
+ *  param is `any` (NOT `never`): `any` is simultaneously a supertype any precise
+ *  `FunctionToolDef<S,R>` is assignable to under `strictFunctionTypes`, AND
+ *  callable by internal code that has narrowed by `kind` and parsed runtime args.
+ *  A `never` param would satisfy the former but break the latter. */
+export interface AnyFunctionToolDef {
+  readonly kind: 'function';
+  readonly description: string;
+  readonly schema: StandardSchemaV1;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- bivariance escape hatch; see note above
+  readonly handler: (args: any) => unknown | Promise<unknown>;
+}
+
+export interface ViewToolDef<S extends StandardSchemaV1 = StandardSchemaV1, C = unknown> {
   readonly kind: 'view';
   readonly description: string;
-  readonly schema: StandardSchemaV1;
-  readonly component: Type<unknown>;
+  readonly schema: S;
+  readonly component: Type<C>;
 }
 
-export interface AskToolDef {
+export interface AskToolDef<S extends StandardSchemaV1 = StandardSchemaV1, C = unknown> {
   readonly kind: 'ask';
   readonly description: string;
-  readonly schema: StandardSchemaV1;
-  readonly component: Type<unknown>;
+  readonly schema: S;
+  readonly component: Type<C>;
 }
+
+/** A client tool the model can call; executed in the browser. */
+export type ClientToolDef =
+  | AnyFunctionToolDef
+  | ViewToolDef
+  | AskToolDef;
 
 /** A frozen, name-keyed registry of client tools. */
 export type ClientToolRegistry = Readonly<Record<string, ClientToolDef>>;

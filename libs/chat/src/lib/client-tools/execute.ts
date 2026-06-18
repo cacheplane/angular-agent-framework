@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 import type { StandardSchemaV1 } from '@threadplane/render';
-import type { FunctionToolDef } from './tool-def';
+import type { AnyFunctionToolDef } from './tool-def';
 import type { ClientToolResult } from './client-tools-capability';
 
 /** Validate raw model args against a Standard Schema. */
@@ -20,7 +20,7 @@ export async function validateArgs(
 
 /** Validate args, run the handler, and normalize the outcome to a ClientToolResult. */
 export async function executeFunctionTool(
-  def: FunctionToolDef,
+  def: AnyFunctionToolDef,
   rawArgs: unknown,
 ): Promise<ClientToolResult> {
   const v = await validateArgs(def.schema, rawArgs);
