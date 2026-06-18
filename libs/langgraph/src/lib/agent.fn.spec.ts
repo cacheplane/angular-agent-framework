@@ -918,7 +918,9 @@ describe('agent — LANGGRAPH_CLIENT_OPTIONS resolution (no mock transport)', ()
       search: vi.fn().mockResolvedValue([]),
     },
     runs: {
-      stream: vi.fn().mockReturnValue((async function* () {})()),
+      stream: vi.fn().mockReturnValue((async function* () {
+        /* empty stream — construction-only tests assert wiring, not events */
+      })()),
     },
   };
 
