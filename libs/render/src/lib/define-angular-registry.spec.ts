@@ -5,9 +5,9 @@ import { z } from 'zod/v4';
 import { defineAngularRegistry } from './define-angular-registry';
 import { DefaultFallbackComponent } from './default-fallback.component';
 
-@Component({ selector: 'x-real', standalone: true, template: '' })
+@Component({ selector: 'render-x-real', standalone: true, template: '' })
 class RealComponent {}
-@Component({ selector: 'x-fallback', standalone: true, template: '' })
+@Component({ selector: 'render-x-fallback', standalone: true, template: '' })
 class CustomFallback {}
 
 describe('defineAngularRegistry / getEntry', () => {
