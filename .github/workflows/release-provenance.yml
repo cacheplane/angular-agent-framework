@@ -11,7 +11,7 @@ jobs:
   build-artifacts:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write # gh release upload attaches tarballs to the release
     outputs:
       hashes: ${{ steps.hash.outputs.hashes }}
     env:
