@@ -34,7 +34,9 @@ export {
   isAssistantMessage,
   isToolMessage,
   isSystemMessage,
+  createAgentRef,
 } from './lib/agent';
+export type { AgentRef } from './lib/agent';
 
 // Primitives
 export { ChatMessageListComponent, getMessageType } from './lib/primitives/chat-message-list/chat-message-list.component';

@@ -16,6 +16,8 @@ export type {
 } from './agent-event';
 export type { AgentCheckpoint } from './agent-checkpoint';
 export type { AgentWithHistory } from './agent-with-history';
+export type { AgentRef } from './agent-ref';
+export { createAgentRef } from './agent-ref';
 export type {
   AgentRuntimeTelemetryEvent,
   AgentRuntimeTelemetryPayload,
