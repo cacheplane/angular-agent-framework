@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 import type { InputSignal, InputSignalWithTransform, Type } from '@angular/core';
 import type { StandardSchemaV1, StandardSchemaInferOutput } from '@threadplane/render';
+import type { Prettify } from '../internals/prettify';
 
 /** Value type carried by an Angular signal input. */
 type InputValue<P> =
@@ -54,4 +55,4 @@ export type AcceptComponent<S extends StandardSchemaV1, C> =
 
 /** Reverse helper: derive a component's input prop types FROM a schema, so a
  *  component authored straight from the schema is guaranteed compatible. */
-export type ViewProps<S extends StandardSchemaV1> = StandardSchemaInferOutput<S>;
+export type ViewProps<S extends StandardSchemaV1> = Prettify<StandardSchemaInferOutput<S>>;
