@@ -78,5 +78,7 @@ jobs:
 
       - name: Publish to PyPI (real release — OIDC trusted publishing)
         if: ${{ inputs.dry_run == false }}
-        working-directory: packages/threadplane-middleware
-        run: uv publish dist/*
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: packages/threadplane-middleware/dist
+          attestations: true
