@@ -1,0 +1,224 @@
+# TypeScript DX Pass — `@threadplane/*` Public API Design
+
+**Status:** Approved (brainstorm) — ready for implementation plan
+**Date:** 2026-06-18
+**Scope:** Developer-facing TypeScript surface of `@threadplane/chat`, `@threadplane/render`, `@threadplane/langgraph`, `@threadplane/ag-ui`.
+
+## Goal
+
+Make the hero primitives an app developer touches first — `tools/action/view/ask`, `provideAgent/injectAgent`, the render/registry providers — infer correctly under `strict: true`, link schemas to handler args / component inputs / tool results, carry types through Angular DI, and read cleanly on hover. The target bar is the authored-elsewhere reference framework whose TypeScript DX the project owner wants to carry over: precise inference from minimal annotations, readable quick-info, and consistent inline JSDoc guidance.
+
+No backwards-compatibility constraint (the packages are pre-1.0, `0.0.x`). Flat named exports are kept (no namespace wrapper).
+
+## Motivating findings (from the audit)
+
+An empirical probe compiled scratch consumer code against the real published types and read back the inferred types from `tsc`. The defects below ship to npm consumers exactly as written (the `.d.ts` rollup is otherwise clean — no internal-type leaks).
+
+1. **Critical — `tools()` rejects every typed tool under `strict: true`.** `tools(map: Record<string, ClientToolDef>)` takes the non-generic union whose handler is `(args: unknown) => …`. Under `strictFunctionTypes`, a typed `action()` whose handler demands `MoveInput` is not assignable there, so `tools({ move: action(...) })` is a compile error. It has never surfaced because both `examples/ag-ui/angular` and `examples/chat/angular` compile with `strict: false` (which disables `strictFunctionTypes`), while a default Angular CLI app is `strict: true`.
+2. **High — `tools()` widens keys + values.** Return type loses per-key tool types (all collapse to `ClientToolDef`) and literal keys (`'move' | 'show'` widen to `string`), so there is no autocomplete or per-tool typing off the registry.
+3. **High — `view()` / `ask()` have zero schema↔component linkage.** Signature is `(description, schema: StandardSchemaV1, component: Type<unknown>)`. Any component compiles regardless of whether it can receive the props the model fills from the schema.
+4. **High — `provideAgent<T>` does not propagate `T` to `injectAgent`.** DI erases the generic; a dev must restate `injectAgent<MyState>()` at every call site, and omitting it silently yields `Record<string, unknown>`.
+5. **High — typed state lives only on `.value`, not `.state`.** The runtime-neutral `state` signal that chat primitives and most docs reference stays `Signal<Record<string, unknown>>` even when the LangGraph-specific `value` is typed.
+6. **Medium — `action`'s handler return type is hardcoded `unknown`** (the resolved value becomes the tool result, but its type is discarded).
+7. **Medium — `view`/`ask` schema param is non-generic `StandardSchemaV1`** (output type discarded at the boundary; feeds #3).
+8. **Minor — `StandardSchemaV1` is not re-exported from `@threadplane/chat`**, though `action/view/ask` all take it; missing `@param`/`@returns`/`@example` JSDoc on several hero exports.
+
+## Architecture
+
+Five independently-testable workstreams. The shared neutral contract (`Agent`, the schema-infer helpers, the agent ref) lives in `@threadplane/chat` / `@threadplane/render`; the adapters (`langgraph`, `ag-ui`) consume it.
+
+### WS1 — `tools()` / `action()` inference
+
+Fixes findings #1, #2, #6.
+
+```ts
+// libs/chat/src/lib/client-tools/tool-def.ts
+
+/** Variance-safe base every tool-def kind extends. Handler param is the bottom
+ *  type so a handler that demands a *specific* arg type stays assignable to it
+ *  under strictFunctionTypes. Used only as the constraint bound in tools(). */
+export interface AnyClientToolDef {
+  kind: 'function' | 'view' | 'ask';
+  description: string;
+  schema: StandardSchemaV1;
+  // function kind:
+  handler?: (args: never) => unknown | Promise<unknown>;
+  // view/ask kind:
+  component?: Type<unknown>;
+}
+
+export interface FunctionToolDef<S extends StandardSchemaV1 = StandardSchemaV1, R = unknown> {
+  kind: 'function';
+  description: string;
+  schema: S;
+  handler: (args: StandardSchemaInferOutput<S>) => R | Promise<R>;
+}
+```
+
+```ts
+// libs/chat/src/lib/client-tools/tools.ts
+
+export function action<S extends StandardSchemaV1, R>(
+  description: string,
+  schema: S,
+  handler: (args: StandardSchemaInferOutput<S>) => R | Promise<R>,
+): FunctionToolDef<S, R> {
+  return { kind: 'function', description, schema, handler };
+}
+
+/** Collect named client tools into a frozen registry (the key is the tool name).
+ *  Generic + const over the map so per-tool types and literal keys survive. */
+export function tools<const M extends Record<string, AnyClientToolDef>>(map: M): Readonly<M> {
+  return Object.freeze({ ...map });
+}
+```
+
+Result: `tools({ move: action('…', moveSchema, h) })` compiles under `strict: true`; the returned registry's `move` key keeps its `FunctionToolDef<MoveSchema, R>` type and the key union is `'move'`.
+
+### WS2 — `view()` / `ask()` schema↔component linkage (strict-but-flexible)
+
+Fixes findings #3, #7. **Verified compiling under `strict: true`** (probe: good case + extra inputs accepted; typo, type-mismatch, and unrelated-component cases rejected).
+
+```ts
+// libs/chat/src/lib/client-tools/component-inputs.ts  (new)
+import type { InputSignal, InputSignalWithTransform, Type } from '@angular/core';
+
+type InputValue<P> =
+  P extends InputSignal<infer T> ? T :
+  P extends InputSignalWithTransform<infer T, any> ? T : never;
+
+/** The component instance's declared signal inputs, as a plain prop bag. */
+export type ComponentInputs<C> = {
+  [K in keyof C as C[K] extends InputSignal<any> | InputSignalWithTransform<any, any> ? K : never]:
+    InputValue<C[K]>;
+};
+
+/** STRICT: every prop the schema PRODUCES must be a real input with an assignable
+ *  type. FLEXIBLE: the component may declare extra inputs the schema doesn't fill.
+ *  A schema key absent from the inputs maps to `never`, so its (non-never) value
+ *  fails assignment and the error pins to that prop. */
+export type CompatibleProps<Out, Inputs> = {
+  [K in keyof Out]: K extends keyof Inputs ? Inputs[K] : never;
+};
+
+export type AcceptComponent<S extends StandardSchemaV1, C> =
+  StandardSchemaInferOutput<S> extends CompatibleProps<StandardSchemaInferOutput<S>, ComponentInputs<C>>
+    ? Type<C>
+    : ['✗ schema output is not assignable to this component’s inputs',
+       StandardSchemaInferOutput<S>, ComponentInputs<C>];
+```
+
+```ts
+// libs/chat/src/lib/client-tools/tools.ts
+export function view<S extends StandardSchemaV1, C>(
+  description: string, schema: S, component: AcceptComponent<S, C>,
+): ViewToolDef<S, C> { return { kind: 'view', description, schema, component: component as Type<C> }; }
+
+export function ask<S extends StandardSchemaV1, C>(
+  description: string, schema: S, component: AcceptComponent<S, C>,
+): AskToolDef<S, C> { return { kind: 'ask', description, schema, component: component as Type<C> }; }
+
+/** Reverse helper: derive component input types FROM a schema, so a component
+ *  authored straight from the schema is guaranteed compatible. */
+export type ViewProps<S extends StandardSchemaV1> = StandardSchemaInferOutput<S>;
+```
+
+`ViewToolDef<S, C>` / `AskToolDef<S, C>` carry both the schema and the component type. They remain assignable to `AnyClientToolDef` (component widened to `Type<unknown>` in the base), so `tools({...})` accepts them.
+
+**Known limitation (intentional):** "every *required* input must be covered by the schema" is not enforceable at compile time — Angular does not brand required inputs in the type system (`input.required<T>()` and `input<T>(default)` are both `InputSignal<T>`). The shipped runtime schema-readiness gate (holds the fallback until streamed props validate) is the backstop for that case. Compile-time blocks structural mismatches; runtime blocks incomplete/missing props.
+
+### WS3 — agent typing through DI
+
+Fixes findings #4, #5. Highest-surface workstream.
+
+```ts
+// libs/chat/src/lib/agent/agent.ts
+export interface Agent<TState = Record<string, unknown>> {
+  // …existing members…
+  readonly state: Signal<TState>;   // was Signal<Record<string, unknown>>
+}
+```
+
+The `= Record<string, unknown>` default means every existing use of bare `Agent` is unchanged.
+
+```ts
+// libs/chat/src/lib/agent/agent-ref.ts  (new)
+/** A typed handle that threads a state shape through Angular DI from
+ *  provideAgent() to injectAgent() without per-call-site restatement. */
+export interface AgentRef<TState> { readonly token: InjectionToken<Agent<TState>>; }
+export function createAgentRef<TState>(debugName?: string): AgentRef<TState> {
+  return { token: new InjectionToken<Agent<TState>>(debugName ?? 'ThreadplaneAgent') };
+}
+```
+
+Both adapters gain a ref-aware overload while keeping the no-arg form:
+
+```ts
+// libs/langgraph + libs/ag-ui (analogous)
+export function provideAgent<T>(ref: AgentRef<T>, config: AgentConfig<T> | (() => AgentConfig<T>)): Provider[];
+export function provideAgent<T>(config: AgentConfig<T> | (() => AgentConfig<T>)): Provider[]; // default token
+
+export function injectAgent(): LangGraphAgent;                 // default state
+export function injectAgent<T>(ref: AgentRef<T>): LangGraphAgent<T>;  // typed via ref
+```
+
+The bare generic `injectAgent<T>()` (which never propagated) is removed.
+
+### WS4 — hovers + discoverability
+
+Fixes finding #8 and readability across the board.
+
+- Internal `Prettify<T> = { [K in keyof T]: T[K] } & {}` applied to the public *inferred* types (`FunctionToolDef`, `ViewToolDef`/`AskToolDef`, `ViewProps`, the agent state surface) so quick-info shows the expanded object instead of raw conditional/mapped-type expressions. `Prettify` itself is `@internal`.
+- Re-export from `@threadplane/chat`: `StandardSchemaV1`, `StandardSchemaInferInput`, `StandardSchemaInferOutput`, and a convenience alias `ToolArgs<S> = StandardSchemaInferOutput<S>` so a consumer can type a handler/arg without reaching into `@threadplane/render`.
+- `@param` / `@returns` / `@example` JSDoc on every hero export: `tools`, `action`, `view`, `ask`, `provideChat`, `provideRender`, `defineAngularRegistry`, `injectRenderHost`, `provideAgent`/`injectAgent` (both adapters), `createAgentRef`, and the `views`/`withViews`/`overrideViews`/`withoutViews`/`toRenderRegistry` helpers.
+
+### WS5 — regression gate (the TDD spine)
+
+A hand-rolled type-assertion kit (no new dependency):
+
+```ts
+// libs/chat/src/testing/type-assert.ts (or a shared internal util)
+export type Equal<A, B> =
+  (<T>() => T extends A ? 1 : 2) extends (<T>() => T extends B ? 1 : 2) ? true : false;
+export type Expect<T extends true> = T;
+```
+
+`*.type-spec.ts` files compiled under a dedicated **`strict: true`** tsconfig per touched lib, run in CI via `tsc --noEmit -p tsconfig.type-tests.json`. They assert the public behavior:
+- `tools({ x: action('…', s, h) })` compiles; the result's `x` key keeps `FunctionToolDef<…>`; the key union is the literal `'x'`.
+- `action` handler arg is the schema output; the carried return type `R` flows.
+- the three `view`/`ask` rejection cases hold (typo prop, type mismatch, unrelated component) via `// @ts-expect-error`; the good case (incl. extra inputs) compiles.
+- `injectAgent(ref)` is `Agent<TState>`; `agent.state` is `Signal<TState>`.
+
+Whole existing unit suites stay green; one example app is built to confirm lib source still compiles.
+
+## Files touched
+
+- `libs/chat/src/lib/client-tools/tools.ts` — generic `tools`, `action<S,R>`, `view<S,C>`, `ask<S,C>`, `ViewProps`.
+- `libs/chat/src/lib/client-tools/tool-def.ts` — `AnyClientToolDef`, `FunctionToolDef<S,R>`, `ViewToolDef<S,C>`, `AskToolDef<S,C>`.
+- `libs/chat/src/lib/client-tools/component-inputs.ts` *(new)* — `ComponentInputs`, `CompatibleProps`, `AcceptComponent`.
+- `libs/chat/src/lib/agent/agent.ts` — `Agent<TState = Record<string, unknown>>`.
+- `libs/chat/src/lib/agent/agent-ref.ts` *(new)* — `AgentRef`, `createAgentRef`.
+- `libs/chat/src/public-api.ts` — re-exports (`StandardSchema*`, `ToolArgs`, `ViewProps`, `AgentRef`, `createAgentRef`) + barrel updates.
+- `libs/render/src/lib/standard-schema.ts` — confirm `StandardSchemaInfer{Input,Output}` are exported (already present); add `Prettify` internal if hosted here.
+- `libs/langgraph/src/lib/agent.provider.ts`, `inject-agent.ts`, `public-api.ts` — ref overloads, `LangGraphAgent<T>` already generic.
+- `libs/ag-ui/src/lib/provide-agent.ts`, `to-agent.ts`, `public-api.ts` — genericize `AgUiAgent<T>`, ref overloads.
+- JSDoc across all the above hero exports.
+- `*.type-spec.ts` + `tsconfig.type-tests.json` in `libs/chat`, `libs/langgraph` (+ project.json target wiring).
+- Docs/examples updated to the new signatures (`tools` typed registry, `view/ask` generic, `createAgentRef` usage). Examples keep their current `strict` setting; the type-test gate is the strict-mode guard.
+
+## Testing strategy
+
+TDD via WS5: write the failing strict type-test, then make it pass. Each workstream's type-spec is its acceptance gate. Existing vitest suites (render, chat, langgraph, ag-ui) must stay green. Build one example app (e.g. `examples-chat-angular`) to confirm lib source still compiles in an app context.
+
+## Risks & decisions
+
+- **`Agent<TState>` genericization (WS3) is the highest-surface change.** The `= Record<string, unknown>` default contains the ripple, but it touches the shared contract and both adapters. Accepted as in-scope (comprehensive spec); WS3 is the natural split point if it later needs to be de-risked into its own PR.
+- **`const` type parameter on `tools()`** requires TypeScript ≥ 5.0; the repo is well past that.
+- **The `view`/`ask` `never`/error-tuple constraint** must keep `ViewToolDef`/`AskToolDef` assignable to `AnyClientToolDef` so `tools({...})` still accepts views/asks — covered by a WS5 type-test.
+
+## Explicitly NOT in scope
+
+- A namespace/`s.*`-style export wrapper (decided: keep flat named exports).
+- Enforcing required-input coverage at compile time for `view`/`ask` (not expressible; runtime gate covers it).
+- `@threadplane/a2ui` JSDoc and the broader cockpit/internal packages (not developer-facing hero APIs).
+- The separate error-UX and thread-persistence follow-ups.
