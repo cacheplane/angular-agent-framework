@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: MIT
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import type { ViewProps } from '@threadplane/chat';
+import { weatherCardSchema } from './schemas';
 
 /**
  * A frontend-owned view rendered for the `weather_card` tool call. Receives
@@ -7,7 +9,14 @@ import { ChangeDetectionStrategy, Component, computed, input } from '@angular/co
  * on completion (`temperatureF`, `conditions`, `humidity`, `windMph`), and a
  * `status` of 'running' | 'complete'. Renders a loading affordance until the
  * result arrives.
+ *
+ * Input types are derived from {@link weatherCardSchema} via `ViewProps` so
+ * that a schema change is a compile error here under `strict: true`.
  */
+
+/** Props this component receives from the `weather_card` schema. */
+type WeatherCardProps = ViewProps<typeof weatherCardSchema>;
+
 @Component({
   selector: 'app-weather-card',
   standalone: true,
@@ -41,11 +50,15 @@ import { ChangeDetectionStrategy, Component, computed, input } from '@angular/co
   `],
 })
 export class WeatherCardComponent {
-  readonly location = input<string>();
-  readonly temperatureF = input<number>();
-  readonly conditions = input<string>();
-  readonly humidity = input<number>();
-  readonly windMph = input<number>();
+  // Schema-derived inputs — types anchored to WeatherCardProps so a schema
+  // change is a compile error. Optional because the framework sends partial
+  // props during streaming (args arrive before the tool result).
+  readonly location    = input<WeatherCardProps['location']>();
+  readonly temperatureF = input<WeatherCardProps['temperatureF']>();
+  readonly conditions  = input<WeatherCardProps['conditions']>();
+  readonly humidity    = input<WeatherCardProps['humidity']>();
+  readonly windMph     = input<WeatherCardProps['windMph']>();
+  /** Extra input not in the schema: injected by the framework for rendering state. */
   readonly status = input<'running' | 'complete'>();
 
   readonly pending = computed(() => this.status() !== 'complete' || this.temperatureF() === undefined);
