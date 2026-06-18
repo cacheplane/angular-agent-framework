@@ -34,26 +34,36 @@ Fixes findings #1, #2, #6.
 ```ts
 // libs/chat/src/lib/client-tools/tool-def.ts
 
-/** Variance-safe base every tool-def kind extends. Handler param is the bottom
- *  type so a handler that demands a *specific* arg type stays assignable to it
- *  under strictFunctionTypes. Used only as the constraint bound in tools(). */
-export interface AnyClientToolDef {
-  kind: 'function' | 'view' | 'ask';
-  description: string;
-  schema: StandardSchemaV1;
-  // function kind:
-  handler?: (args: never) => unknown | Promise<unknown>;
-  // view/ask kind:
-  component?: Type<unknown>;
+/** Precise authored type — what action() returns. Carries the schema (S) and
+ *  the handler's resolved return type (R). */
+export interface FunctionToolDef<S extends StandardSchemaV1 = StandardSchemaV1, R = unknown> {
+  readonly kind: 'function';
+  readonly description: string;
+  readonly schema: S;
+  readonly handler: (args: StandardSchemaInferOutput<S>) => R | Promise<R>;
 }
 
-export interface FunctionToolDef<S extends StandardSchemaV1 = StandardSchemaV1, R = unknown> {
-  kind: 'function';
-  description: string;
-  schema: S;
-  handler: (args: StandardSchemaInferOutput<S>) => R | Promise<R>;
+/** Bivariant union member used only for storage/iteration. The handler param is
+ *  `any` (NOT `never`): `any` is the one param type that is simultaneously
+ *  (a) a supertype any precise `FunctionToolDef<S,R>` is assignable to under
+ *  `strictFunctionTypes`, and (b) callable by internal code that has already
+ *  narrowed by `kind` and parsed runtime args. A `never` param satisfies (a)
+ *  but breaks (b) — the coordinator/executor could no longer call `handler()`. */
+export interface AnyFunctionToolDef {
+  readonly kind: 'function';
+  readonly description: string;
+  readonly schema: StandardSchemaV1;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- bivariance escape hatch; see above
+  readonly handler: (args: any) => unknown | Promise<unknown>;
 }
+
+export type ClientToolDef =
+  | AnyFunctionToolDef
+  | ViewToolDef
+  | AskToolDef;
 ```
+
+Verified under `strict: true`: a precise `FunctionToolDef<MoveSchema, number>` is assignable to `ClientToolDef`; `tools({...})` preserves per-key types and literal keys; and an internal consumer that does `if (def.kind === 'function') def.handler(parsedArgs)` type-checks.
 
 ```ts
 // libs/chat/src/lib/client-tools/tools.ts
@@ -68,12 +78,12 @@ export function action<S extends StandardSchemaV1, R>(
 
 /** Collect named client tools into a frozen registry (the key is the tool name).
  *  Generic + const over the map so per-tool types and literal keys survive. */
-export function tools<const M extends Record<string, AnyClientToolDef>>(map: M): Readonly<M> {
+export function tools<const M extends Record<string, ClientToolDef>>(map: M): Readonly<M> {
   return Object.freeze({ ...map });
 }
 ```
 
-Result: `tools({ move: action('…', moveSchema, h) })` compiles under `strict: true`; the returned registry's `move` key keeps its `FunctionToolDef<MoveSchema, R>` type and the key union is `'move'`.
+Result: `tools({ move: action('…', moveSchema, h) })` compiles under `strict: true`; the returned registry's `move` key keeps its `FunctionToolDef<MoveSchema, R>` type and the key union is `'move'`. The `ClientToolRegistry` alias becomes `Readonly<Record<string, ClientToolDef>>` (unchanged shape), and `createClientToolsCoordinator`/`toClientToolSpecs` keep accepting `Record<string, ClientToolDef>` — the bivariant member is what lets a typed registry pass that boundary too.
 
 ### WS2 — `view()` / `ask()` schema↔component linkage (strict-but-flexible)
 
@@ -123,7 +133,7 @@ export function ask<S extends StandardSchemaV1, C>(
 export type ViewProps<S extends StandardSchemaV1> = StandardSchemaInferOutput<S>;
 ```
 
-`ViewToolDef<S, C>` / `AskToolDef<S, C>` carry both the schema and the component type. They remain assignable to `AnyClientToolDef` (component widened to `Type<unknown>` in the base), so `tools({...})` accepts them.
+`ViewToolDef<S, C>` / `AskToolDef<S, C>` carry both the schema and the component type. Their `component: Type<C>` is assignable to the union members' `component: Type<unknown>` (covariant construct return), so they remain assignable to `ClientToolDef` and `tools({...})` accepts them.
 
 **Known limitation (intentional):** "every *required* input must be covered by the schema" is not enforceable at compile time — Angular does not brand required inputs in the type system (`input.required<T>()` and `input<T>(default)` are both `InputSignal<T>`). The shipped runtime schema-readiness gate (holds the fallback until streamed props validate) is the backstop for that case. Compile-time blocks structural mismatches; runtime blocks incomplete/missing props.
 
@@ -194,7 +204,7 @@ Whole existing unit suites stay green; one example app is built to confirm lib s
 ## Files touched
 
 - `libs/chat/src/lib/client-tools/tools.ts` — generic `tools`, `action<S,R>`, `view<S,C>`, `ask<S,C>`, `ViewProps`.
-- `libs/chat/src/lib/client-tools/tool-def.ts` — `AnyClientToolDef`, `FunctionToolDef<S,R>`, `ViewToolDef<S,C>`, `AskToolDef<S,C>`.
+- `libs/chat/src/lib/client-tools/tool-def.ts` — `AnyFunctionToolDef` (bivariant union member), `FunctionToolDef<S,R>`, `ViewToolDef<S,C>`, `AskToolDef<S,C>`, the `ClientToolDef` union.
 - `libs/chat/src/lib/client-tools/component-inputs.ts` *(new)* — `ComponentInputs`, `CompatibleProps`, `AcceptComponent`.
 - `libs/chat/src/lib/agent/agent.ts` — `Agent<TState = Record<string, unknown>>`.
 - `libs/chat/src/lib/agent/agent-ref.ts` *(new)* — `AgentRef`, `createAgentRef`.
@@ -236,7 +246,7 @@ A workstream is "done" only when its Tier-1 forcing-function apps compile under 
 - **`Agent<TState>` genericization (WS3) is the highest-surface change.** The `= Record<string, unknown>` default contains the ripple, but it touches the shared contract and both adapters. The Tier-2 build net (all ~35 `provideAgent`/`injectAgent` apps building green on their existing settings) is the explicit proof that the default truly contains it. Accepted as in-scope (comprehensive spec); WS3 is the natural split point if it later needs to be de-risked into its own PR.
 - **Flipping Tier-1 apps to full `strict: true` may surface unrelated example-code issues** (implicit `any`, etc.) beyond the typed-API changes. These are fixed in the example code as part of the migration; if the fallout in any one app proves disproportionate, fall back to enabling `strictFunctionTypes: true` alone (the exact flag that masked the bug) for that app and note it.
 - **`const` type parameter on `tools()`** requires TypeScript ≥ 5.0; the repo is well past that.
-- **The `view`/`ask` `never`/error-tuple constraint** must keep `ViewToolDef`/`AskToolDef` assignable to `AnyClientToolDef` so `tools({...})` still accepts views/asks — covered by a WS5 type-test.
+- **The `view`/`ask` error-tuple constraint** must keep `ViewToolDef<S,C>`/`AskToolDef<S,C>` assignable to `ClientToolDef` so `tools({...})` still accepts views/asks — covered by a WS5 type-test.
 
 ## Explicitly NOT in scope
 
