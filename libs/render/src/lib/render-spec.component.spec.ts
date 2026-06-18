@@ -127,7 +127,7 @@ describe('RenderSpecComponent — context resolution', () => {
     // Verify the VIEW_REGISTRY token is bound and resolves 'Text' → TestTextComponent.
     const tokenRegistry = TestBed.inject(VIEW_REGISTRY);
     const angularReg = defineAngularRegistry(tokenRegistry as Record<string, unknown>);
-    expect(angularReg.get('Text')).toBe(TestTextComponent);
+    expect(angularReg.getEntry('Text')?.component).toBe(TestTextComponent);
     // Also verify config has no registry (so the token is the only source).
     const config = TestBed.inject(RENDER_CONFIG);
     expect(config.registry).toBeUndefined();

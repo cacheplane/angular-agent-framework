@@ -32,22 +32,29 @@ export interface RenderViewEntry {
   component: Type<unknown>;
   fallback?: Type<unknown>;
   /** Optional props contract for this component (Zod/Valibot/ArkType via
-   * Standard Schema). Carried + exposed by the render lib but NOT enforced
-   * on mount; consumers (e.g. client-tools) read it to advertise the
-   * component to a model and to validate incoming props. */
+   * Standard Schema). Enforced as a MOUNT-READINESS GATE: while a streaming
+   * tool call's props do not yet validate against this schema, the element's
+   * fallback is shown instead of the real component (sync validation only).
+   * Consumers (e.g. client-tools) also read it to advertise the component
+   * to a model and to validate incoming props. */
   schema?: StandardSchemaV1;
   /** Optional human/model-facing description of what this component renders. */
   description?: string;
 }
 
+/** A fully-normalized registry entry: real component + a guaranteed fallback,
+ * plus the optional props schema (mount-readiness gate) and description. */
+export interface NormalizedEntry {
+  component: Type<unknown>;
+  fallback: Type<unknown>;
+  schema?: StandardSchemaV1;
+  description?: string;
+}
+
 export interface AngularRegistry {
-  get(name: string): AngularComponentRenderer | undefined;
-  /**
-   * Returns the configured fallback for a registered name, OR the
-   * lib's default fallback if the entry omits one, OR undefined if
-   * the name is not registered.
-   */
-  getFallback(name: string): AngularComponentRenderer | undefined;
+  /** The full normalized entry for a registered name, or undefined. The single
+   * accessor — component, fallback, schema, and description all hang off it. */
+  getEntry(name: string): NormalizedEntry | undefined;
   names(): string[];
 }
 

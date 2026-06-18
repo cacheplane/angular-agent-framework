@@ -96,7 +96,7 @@ export class RenderSpecComponent implements OnInit {
     if (configRegistry) return configRegistry;
     if (this.viewRegistry) return toRenderRegistry(this.viewRegistry);
     // Fallback: empty registry
-    return { get: () => undefined, getFallback: () => undefined, names: () => [] };
+    return { getEntry: () => undefined, names: () => [] };
   });
 
   /** Wraps input handlers to emit RenderHandlerEvent after execution. */

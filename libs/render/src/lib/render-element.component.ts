@@ -28,7 +28,7 @@ import { RENDER_HOST, type RenderHost } from './contexts/render-host';
 import { REPEAT_SCOPE } from './contexts/repeat-scope';
 import type { RepeatScope } from './contexts/repeat-scope';
 import { buildPropResolutionContext } from './internals/prop-signal';
-import type { AngularComponentRenderer } from './render.types';
+import type { AngularComponentRenderer, NormalizedEntry } from './render.types';
 
 /** Cache of declared input names per component class. NgComponentOutlet
  * passes every key in its `inputs` prop to the target; Angular dev mode
@@ -131,7 +131,7 @@ export class RenderElementComponent implements OnInit {
       const el = this.element();
       if (!el) return;
       // Only latch when notReady is false AND a real component is registered.
-      if (!this.notReady() && this.ctx.registry.get(el.type)) {
+      if (!this.notReady() && this.entry()?.component) {
         this.mountedReal.set(true);
       }
     });
@@ -156,11 +156,17 @@ export class RenderElementComponent implements OnInit {
     { equal: Object.is },
   );
 
+  /** The full normalized registry entry for this element type. */
+  readonly entry = computed<NormalizedEntry | undefined>(() => {
+    const el = this.element();
+    return el ? this.ctx.registry.getEntry(el.type) : undefined;
+  });
+
   /** The Angular component class for this element type. */
   readonly componentClass = computed<AngularComponentRenderer | null>(() => {
     const el = this.element();
     if (!el) return null;
-    return this.ctx.registry.get(el.type) ?? null;
+    return this.entry()?.component ?? null;
   });
 
   /** Prop resolution context built from store + repeat scope. */
@@ -197,9 +203,9 @@ export class RenderElementComponent implements OnInit {
   readonly mountClass = computed<AngularComponentRenderer | null>(() => {
     const el = this.element();
     if (!el) return null;
-    const real = this.ctx.registry.get(el.type) ?? null;
+    const real = this.entry()?.component ?? null;
     if (this.notReady()) {
-      return this.ctx.registry.getFallback(el.type) ?? null;
+      return this.entry()?.fallback ?? null;
     }
     return real;
   });

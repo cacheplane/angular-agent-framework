@@ -48,7 +48,7 @@ describe('RenderElementComponent — pipeline logic', () => {
     const el = spec.elements['root'];
     expect(el).toBeDefined();
     expect(el.type).toBe('Text');
-    expect(registry.get(el.type)).toBe(TestTextComponent);
+    expect(registry.getEntry(el.type)?.component).toBe(TestTextComponent);
   });
 
   it('should return undefined for unknown element type', () => {
@@ -57,7 +57,7 @@ describe('RenderElementComponent — pipeline logic', () => {
       root: { type: 'UnknownWidget', props: { label: 'Nope' } },
     });
     const el = spec.elements['root'];
-    expect(registry.get(el.type)).toBeUndefined();
+    expect(registry.getEntry(el.type)).toBeUndefined();
   });
 
   it('should return undefined for missing element key', () => {
@@ -232,7 +232,7 @@ describe('RenderElementComponent — children rendering', () => {
       for (const childKey of inputs.childKeys) {
         const childEl = spec.elements[childKey];
         expect(childEl).toBeDefined();
-        expect(registry.get(childEl.type)).toBe(TestTextComponent);
+        expect(registry.getEntry(childEl.type)?.component).toBe(TestTextComponent);
       }
     });
   });
