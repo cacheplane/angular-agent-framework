@@ -116,6 +116,11 @@ jobs:
       - run: npm run generate-api-docs
       - name: Commit generated API docs to same-repo PR
         if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        env:
+          # Bind the attacker-controllable PR branch name to an env var so it is
+          # passed as a literal value, never interpolated into the script text
+          # (prevents shell injection — OSSF Scorecard Dangerous-Workflow).
+          HEAD_REF: ${{ github.head_ref }}
         run: |
           if git diff --quiet -- apps/website/content/docs/*/api/api-docs.json; then
             echo "Generated API docs are already committed."
@@ -126,7 +131,7 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add apps/website/content/docs/*/api/api-docs.json
           git commit -m "chore(docs): regenerate api docs"
-          git push origin "HEAD:${{ github.head_ref }}"
+          git push origin "HEAD:$HEAD_REF"
       - name: Verify generated API docs are committed
         run: git diff --exit-code -- apps/website/content/docs/*/api/api-docs.json
       - run: npx nx build website
