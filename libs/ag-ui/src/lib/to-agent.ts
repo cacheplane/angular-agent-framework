@@ -2,6 +2,7 @@
 import { computed, signal, type Signal } from '@angular/core';
 import { Subject } from 'rxjs';
 import type { AbstractAgent } from '@ag-ui/client';
+import { toAgentError, type AgentError } from '@threadplane/chat';
 import type {
   Agent, Message, AgentStatus, ToolCall, AgentEvent,
   AgentInterrupt,
@@ -81,7 +82,7 @@ export function toAgent(source: AbstractAgent, options: ToAgentOptions = {}): Ag
     messages:     signal<Message[]>([]),
     status:       signal<AgentStatus>('idle'),
     isLoading:    signal<boolean>(false),
-    error:        signal<unknown>(null),
+    error:        signal<AgentError | undefined>(undefined),
     toolCalls:    signal<ToolCall[]>([]),
     state:        signal<Record<string, unknown>>({}),
     interrupt:    signal<AgentInterrupt | undefined>(undefined),
@@ -103,6 +104,10 @@ export function toAgent(source: AbstractAgent, options: ToAgentOptions = {}): Ag
   // triggering a real error path. Both flags are reset together at the top of
   // submit() so the next run starts clean.
   let abortSettled = false;
+
+  // Tracks the last AgentSubmitInput so retry() can re-run it without
+  // duplicating the user message. Set at the top of submit()'s message path.
+  let lastInput: AgentSubmitInput | undefined;
 
   function isAbortError(error: unknown): boolean {
     return error instanceof Error
@@ -192,6 +197,27 @@ export function toAgent(source: AbstractAgent, options: ToAgentOptions = {}): Ag
     if (activeRun === run) activeRun = null;
   }
 
+  /**
+   * Fires the current message list against the source agent (no append).
+   * Both submit() and retry() share this path; submit() appends the user
+   * message first, retry() skips the append and calls this directly.
+   */
+  async function runCurrentMessages(): Promise<void> {
+    const run = startRunTelemetry('submit');
+    const tools = clientToolsCap.catalogAsAgUiTools();
+    try {
+      await source.runAgent(tools.length > 0 ? { tools } : undefined);
+      finishRunTelemetry(run);
+    } catch (err) {
+      if (!settleIfAborted(err)) {
+        store.status.set('error');
+        store.isLoading.set(false);
+        store.error.set(toAgentError(err));
+        failRunTelemetry(err, run);
+      }
+    }
+  }
+
   // Tap all events from the source agent via the AgentSubscriber API.
   // This subscription lives for the lifetime of `source`.
   source.subscribe({
@@ -209,7 +235,7 @@ export function toAgent(source: AbstractAgent, options: ToAgentOptions = {}): Ag
       if (settleIfAborted(error)) return;
       store.status.set('error');
       store.isLoading.set(false);
-      store.error.set(error);
+      store.error.set(toAgentError(error));
       failRunTelemetry(error);
     },
   });
@@ -283,7 +309,7 @@ export function toAgent(source: AbstractAgent, options: ToAgentOptions = {}): Ag
           if (!settleIfAborted(err)) {
             store.status.set('error');
             store.isLoading.set(false);
-            store.error.set(err);
+            store.error.set(toAgentError(err));
             failRunTelemetry(err, run);
           }
         }
@@ -301,19 +327,21 @@ export function toAgent(source: AbstractAgent, options: ToAgentOptions = {}): Ag
         source.addMessage(userMsg as Parameters<typeof source.addMessage>[0]);
       }
 
-      const run = startRunTelemetry('submit');
-      const tools = clientToolsCap.catalogAsAgUiTools();
-      try {
-        await source.runAgent(tools.length > 0 ? { tools } : undefined);
-        finishRunTelemetry(run);
-      } catch (err) {
-        if (!settleIfAborted(err)) {
-          store.status.set('error');
-          store.isLoading.set(false);
-          store.error.set(err);
-          failRunTelemetry(err, run);
-        }
-      }
+      // Record the input so retry() can re-run it without re-appending the
+      // user message (the message is already in the list by this point).
+      lastInput = input;
+
+      await runCurrentMessages();
+    },
+
+    retry: async () => {
+      if (store.isLoading()) return;   // no-op while a run is in flight
+      if (lastInput === undefined) return; // nothing to retry
+      store.error.set(undefined);
+      // Re-run the same message list against the source without appending a
+      // duplicate user message — the message is already in store.messages and
+      // source's internal list from the original submit().
+      await runCurrentMessages();
     },
 
     stop: async () => {
@@ -369,7 +397,7 @@ export function toAgent(source: AbstractAgent, options: ToAgentOptions = {}): Ag
         if (!settleIfAborted(err)) {
           store.status.set('error');
           store.isLoading.set(false);
-          store.error.set(err);
+          store.error.set(toAgentError(err));
           failRunTelemetry(err, run);
         }
       }

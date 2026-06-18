@@ -53,6 +53,7 @@ import {
 import { reduceEvent } from './reducer';
 import { signal } from '@angular/core';
 import { Subject } from 'rxjs';
+import { type AgentError } from '@threadplane/chat';
 import type { Message, AgentStatus, ToolCall, AgentEvent } from '@threadplane/chat';
 
 function abstractToAgUi(event: AbstractEvent, messageId: string): any {
@@ -72,7 +73,7 @@ describe('AG-UI reducer — reasoning-fixture conformance', () => {
       messages:  signal<Message[]>([]),
       status:    signal<AgentStatus>('idle'),
       isLoading: signal<boolean>(false),
-      error:     signal<unknown>(null),
+      error:     signal<AgentError | undefined>(undefined),
       toolCalls: signal<ToolCall[]>([]),
       state:     signal<Record<string, unknown>>({}),
       events$:   new Subject<AgentEvent>(),
